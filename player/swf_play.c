@@ -42,6 +42,7 @@ static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data);
 static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data);
 static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data);
 static void embedded (GtkPlug *plug, gpointer data);
+static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer data);
 
 /* GIOChan callbacks */
 static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored);
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
 	s = swf_init();
 
 	while(1){
-		c = getopt_long(argc, argv, "x:", options, &index);
+		c = getopt_long(argc, argv, "x:w:h:", options, &index);
 		if(c==-1)break;
 
 		switch(c){
@@ -76,9 +77,11 @@ int main(int argc, char *argv[])
 			break;
 		case 'w':
 			width = strtoul(optarg, NULL, 0);
+			printf("width set to %d\n",width);
 			break;
 		case 'h':
 			height = strtoul(optarg, NULL, 0);
+			printf("height set to %d\n",height);
 			break;
 		default:
 			do_help();
@@ -118,6 +121,10 @@ static void new_gtk_window(void)
 		gtk_wind = gtk_plug_new(0);
 		gtk_signal_connect(GTK_OBJECT(gtk_wind), "embedded",
 			GTK_SIGNAL_FUNC(embedded), NULL);
+
+		gdk_parent = gdk_window_foreign_new(xid);
+		gdk_window_get_geometry(gdk_parent, NULL, NULL, &width, &height, NULL);
+		printf("width=%d height=%d\n",width,height);
 	}else{
 		gtk_wind = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	}
@@ -134,26 +141,22 @@ static void new_gtk_window(void)
 	g_signal_connect(G_OBJECT(drawing_area), "expose_event",
 		GTK_SIGNAL_FUNC(expose_cb), NULL);
 	g_signal_connect (G_OBJECT (drawing_area), "configure_event",
-		GTK_SIGNAL_FUNC(expose_cb), NULL);
+		GTK_SIGNAL_FUNC(configure_cb), NULL);
 
 	g_signal_connect (G_OBJECT(gtk_wind), "key_press_event",
 		GTK_SIGNAL_FUNC(key_press), NULL);
 	g_signal_connect (G_OBJECT(gtk_wind), "motion_notify_event",
 		GTK_SIGNAL_FUNC(motion_notify), NULL);
 
-	gdk_parent = gdk_window_foreign_new(xid);
-
 	gtk_widget_add_events(gtk_wind, GDK_POINTER_MOTION_MASK);
 
 	gtk_widget_show_all(gtk_wind);
 
 	if(plugged){
+		//XSync(GDK_WINDOW_XDISPLAY(gtk_wind->window),0);
 		XReparentWindow(GDK_WINDOW_XDISPLAY(gtk_wind->window),
 			GDK_WINDOW_XID(gtk_wind->window),
 			xid, 0, 0);
-#if 0
-		XSync(GDK_WINDOW_XDISPLAY(gtk_wind->window),0);
-#endif
 		XMapWindow(GDK_WINDOW_XDISPLAY(gtk_wind->window),
 			GDK_WINDOW_XID(gtk_wind->window));
 	}
@@ -252,6 +255,15 @@ static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data)
 	return FALSE;
 }
 
+static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer data)
+{
+	printf("configure!\n");
+
+	printf("width=%d height=%d\n", evt->width, evt->height);
+
+	return FALSE;
+}
+
 static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data)
 {
 	if(s->buffer){
@@ -322,7 +334,7 @@ static gboolean render_idle(gpointer data)
 			s->buffer,
 			s->width*3);
 	}
-	if(ret==SWF_CHANGE){
+	if(ret==SWF_CHANGE && !plugged){
 		gtk_window_resize(GTK_WINDOW(gtk_wind),
 			s->width, s->height);
 	}

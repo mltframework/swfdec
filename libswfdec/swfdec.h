@@ -3,6 +3,7 @@
 #define __SWFDEC_H__
 
 #include <glib.h>
+#include <swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -23,12 +24,10 @@ enum
   SWF_COLORSPACE_RGB565,
 };
 
-typedef struct swfdec_decoder_struct SwfdecDecoder;
-
 void swfdec_init (void);
 
 SwfdecDecoder *swfdec_decoder_new (void);
-int swfdec_decoder_addbits (SwfdecDecoder * s, unsigned char *bits, int len);
+int swfdec_decoder_addbits (SwfdecDecoder * s, SwfdecBuffer *buffer);
 int swfdec_decoder_parse (SwfdecDecoder * s);
 int swfdec_decoder_free (SwfdecDecoder * s);
 

@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "swfdec_internal.h"
+#include <swfdec_render_libart.h>
 
 
 static void swfdec_shapevec_free (SwfdecShapeVec *shapevec);
@@ -19,7 +20,7 @@ static void swfdec_shape_base_init (gpointer g_class)
 
 static void swfdec_shape_class_init (SwfdecShapeClass *g_class)
 {
-  SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_shape_prerender;
+  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_shape_render;
 }
 
 static void swfdec_shape_init (SwfdecShape *shape)
@@ -612,20 +613,21 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
     for (i = 0; i < width; i++) {
       int ix, iy;
 
+#if 0
       ix = x - floor (x * inv_width) * image->width;
       iy = y - floor (y * inv_height) * image->height;
-#if 0
-      if (x < 0)
-	x = 0;
-      if (x > image->width - 1)
-	x = image->width - 1;
-      if (y < 0)
-	y = 0;
-      if (y > image->height - 1)
-	y = image->height - 1;
-
+#else
       ix = x;
       iy = y;
+      if (x < 0)
+	ix = 0;
+      if (x > image->width - 1)
+	ix = image->width - 1;
+      if (y < 0)
+	iy = 0;
+      if (y > image->height - 1)
+	iy = image->height - 1;
+
 #endif
 #define RGBA8888_COPY(a,b) (*(guint32 *)(a) = *(guint32 *)(b))
       RGBA8888_COPY (dest, src + ix * 4 + iy * image->rowstride);

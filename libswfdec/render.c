@@ -167,26 +167,20 @@ tag_show_frame (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-SwfdecLayer *
-swfdec_spriteseg_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecLayer * oldlayer)
+void
+swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
 {
   SwfdecObject *object;
   SwfdecObjectClass *klass;
 
   object = swfdec_object_get (s, seg->id);
-  if (!object)
-    return NULL;
+  if (!object) return;
 
   klass = SWFDEC_OBJECT_GET_CLASS (object);
 
-  if (klass->prerender) {
-    return klass->prerender (s, seg, object, oldlayer);
+  if (klass->render) {
+    klass->render (s, seg, object);
   }
-
-  SWFDEC_ERROR ("why is prerender NULL?");
-
-  return NULL;
 }
 
 void

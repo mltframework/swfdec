@@ -1,3 +1,34 @@
+2004-08-27  David Schleef  <ds@schleef.org>
+
+	Merge prerender into render.  Use SwfdecBuffer.  Make sprites
+	work again.  Make sound work again.  Essentially back up to
+	the level of 0.2.2 now.
+	* libswfdec/render.c: (swfdec_spriteseg_render):
+	* libswfdec/swf.c: (swfdec_decoder_addbits):
+	* libswfdec/swfdec.h:
+	* libswfdec/swfdec_buffer.c:
+	* libswfdec/swfdec_button.c: (swfdec_button_class_init),
+	(swfdec_button_render):
+	* libswfdec/swfdec_button.h:
+	* libswfdec/swfdec_debug.c:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_object.h:
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate),
+	(swfdec_render_get_object_state), (swfdec_render_get_image),
+	(swfdec_render_get_audio):
+	* libswfdec/swfdec_render.h:
+	* libswfdec/swfdec_render_libart.c: (swfdec_shape_render),
+	(swfdec_text_render):
+	* libswfdec/swfdec_render_libart.h:
+	* libswfdec/swfdec_shape.c: (swfdec_shape_class_init),
+	(swfdec_shape_compose):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_class_init),
+	(swfdec_sprite_render), (tag_func_define_sprite):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_text.c: (swfdec_text_class_init):
+	* libswfdec/swfdec_types.h:
+
 2004-08-26  David Schleef  <ds@schleef.org>
 
 	Add new files

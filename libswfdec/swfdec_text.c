@@ -2,6 +2,7 @@
 #include <swfdec_text.h>
 #include "swfdec_internal.h"
 #include <swfdec_font.h>
+#include <swfdec_render_libart.h>
 
 
 static void swfdec_text_base_init (gpointer g_class);
@@ -49,7 +50,7 @@ static void swfdec_text_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (gobject_class);
 
-  SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_text_prerender;
+  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_text_render;
 }
 
 static void swfdec_text_init (GTypeInstance *instance, gpointer g_class)

@@ -2,17 +2,17 @@
 #ifndef _SWFDEC_TYPES_H_
 #define _SWFDEC_TYPES_H_
 
-#include "swfdec.h"
-
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
+typedef struct _SwfdecDecoder SwfdecDecoder;
 typedef struct _SwfdecFont SwfdecFont;
 typedef struct _SwfdecImage SwfdecImage;
 typedef struct _SwfdecObject SwfdecObject;
 typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeVec SwfdecShapeVec;
 typedef struct _SwfdecRect SwfdecRect;
+typedef struct _SwfdecRenderState SwfdecRenderState;
 typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 typedef struct _SwfdecSprite SwfdecSprite;

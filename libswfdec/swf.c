@@ -49,14 +49,14 @@ swfdec_decoder_new (void)
 }
 
 int
-swfdec_decoder_addbits (SwfdecDecoder * s, unsigned char *bits, int len)
+swfdec_decoder_addbits (SwfdecDecoder * s, SwfdecBuffer *buffer)
 {
   int offset;
   int ret;
 
   if (s->compressed) {
-    s->z->next_in = bits;
-    s->z->avail_in = len;
+    s->z->next_in = buffer->data;
+    s->z->avail_in = buffer->length;
     ret = inflate (s->z, Z_SYNC_FLUSH);
     if (ret < 0) {
       return SWF_ERROR;
@@ -70,9 +70,9 @@ swfdec_decoder_addbits (SwfdecDecoder * s, unsigned char *bits, int len)
       offset = 0;
     }
 
-    s->input_data = g_realloc (s->input_data, s->input_data_len + len);
-    memcpy (s->input_data + s->input_data_len, bits, len);
-    s->input_data_len += len;
+    s->input_data = g_realloc (s->input_data, s->input_data_len + buffer->length);
+    memcpy (s->input_data + s->input_data_len, buffer->data, buffer->length);
+    s->input_data_len += buffer->length;
 
     s->parse.ptr = s->input_data + offset;
     s->parse.end = s->input_data + s->input_data_len;

@@ -87,9 +87,9 @@ art_svp_bbox (ArtSVP * svp, ArtIRect * box)
   box->y1 = ceil (dbox.y1);
 }
 
-SwfdecLayer *
-swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * obj, SwfdecLayer * oldlayer)
+void
+swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * obj)
 {
   SwfdecLayer *layer;
   SwfdecShape *shape = SWFDEC_SHAPE (obj);
@@ -98,69 +98,9 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
 
-  if (oldlayer && oldlayer->seg == seg)
-    return oldlayer;
-
   layer = swfdec_layer_new ();
   layer->seg = seg;
   swfdec_transform_multiply (&layer->transform, &seg->transform, &s->transform);
-
-#if 1
-  if (oldlayer &&
-      oldlayer->seg->id == seg->id &&
-      swfdec_transform_is_translation (&layer->transform,
-        &oldlayer->transform)) {
-    double x, y;
-    SwfdecLayerVec *oldlayervec;
-
-    x = layer->transform.trans[4] - oldlayer->transform.trans[4];
-    y = layer->transform.trans[5] - oldlayer->transform.trans[5];
-
-    SWFDEC_LOG("translation");
-
-    g_array_set_size (layer->fills, shape->fills->len);
-    for (i = 0; i < shape->fills->len; i++) {
-      oldlayervec = &g_array_index (oldlayer->fills, SwfdecLayerVec, i);
-      layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-      shapevec = g_ptr_array_index (shape->fills, i);
-
-      layervec->svp = art_svp_translate (oldlayervec->svp, x, y);
-      layervec->color = swfdec_color_apply_transform (shapevec->color,
-          &seg->color_transform);
-      art_svp_bbox (layervec->svp, (ArtIRect *)&layervec->rect);
-      swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
-      layervec->compose = NULL;
-      if (shapevec->fill_id) {
-	swfdec_shape_compose (s, layervec, shapevec, &layer->transform);
-      }
-      if (shapevec->grad) {
-	swfdec_shape_compose_gradient (s, layervec, shapevec, &layer->transform,
-	    seg);
-      }
-    }
-
-    g_array_set_size (layer->lines, shape->lines->len);
-    for (i = 0; i < shape->lines->len; i++) {
-      oldlayervec = &g_array_index (oldlayer->lines, SwfdecLayerVec, i);
-      layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-      shapevec = g_ptr_array_index (shape->lines, i);
-
-      layervec->svp = art_svp_translate (oldlayervec->svp, x, y);
-      layervec->color = swfdec_color_apply_transform (shapevec->color,
-	  &seg->color_transform);
-      art_svp_bbox (layervec->svp, (ArtIRect *)&layervec->rect);
-      swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
-      layervec->compose = NULL;
-#if 0
-      if (shapevec->fill_id) {
-	swfdec_shape_compose (s, layervec, shapevec, layer->transform);
-      }
-#endif
-    }
-
-    return layer;
-  }
-#endif
 
   layer->rect.x0 = 0;
   layer->rect.x1 = 0;
@@ -246,13 +186,14 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 	&seg->color_transform);
   }
 
-  return layer;
+  swfdec_layer_render (s, layer);
+  swfdec_layer_free (layer);
 }
 
 
-SwfdecLayer *
-swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * oldlayer)
+void
+swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * object)
 {
   int i;
   SwfdecText *text;
@@ -261,9 +202,6 @@ swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecShapeVec *shapevec2;
   SwfdecObject *fontobj;
   SwfdecLayer *layer;
-
-  if (oldlayer && oldlayer->seg == seg)
-    return oldlayer;
 
   layer = swfdec_layer_new ();
   layer->seg = seg;
@@ -331,7 +269,8 @@ swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     g_free (vpath);
   }
 
-  return layer;
+  swfdec_layer_render (s, layer);
+  swfdec_layer_free (layer);
 }
 
 void

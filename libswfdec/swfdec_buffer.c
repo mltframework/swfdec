@@ -4,6 +4,7 @@
 #endif
 
 #include <swfdec_buffer.h>
+#include <glib.h>
 
 static void swfdec_buffer_free_mem (SwfdecBuffer *buffer, void *);
 static void swfdec_buffer_free_subbuffer (SwfdecBuffer *buffer, void *priv);

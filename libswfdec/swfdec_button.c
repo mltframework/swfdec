@@ -3,9 +3,9 @@
 #include <swfdec_button.h>
 #include <string.h>
 
-static SwfdecLayer *
-swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * oldlayer);
+static void
+swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * object);
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecButton, swfdec_button)
 
@@ -17,7 +17,7 @@ static void swfdec_button_base_init (gpointer g_class)
 
 static void swfdec_button_class_init (SwfdecButtonClass *g_class)
 {
-  SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_button_prerender;
+  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 
 static void swfdec_button_init (SwfdecButton *button)
@@ -36,65 +36,25 @@ static void swfdec_button_dispose (SwfdecButton *button)
   }
 }
 
-static SwfdecLayer *
-swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * oldlayer)
+static void
+swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * object)
 {
   SwfdecButton *button = SWFDEC_BUTTON (object);
-  SwfdecObject *obj;
-  SwfdecLayer *layer;
-  SwfdecSpriteSegment *tmpseg;
 
-  if (oldlayer && oldlayer->seg == seg)
-    return oldlayer;
-
-  layer = swfdec_layer_new ();
-  layer->seg = seg;
-
-  layer->rect.x0 = 0;
-  layer->rect.x1 = 0;
-  layer->rect.y0 = 0;
-  layer->rect.y1 = 0;
-
-  swfdec_transform_multiply (&layer->transform, &seg->transform, &s->transform);
   if (button->state[0]) {
-    SwfdecLayer *child_layer = NULL;
+    SwfdecSpriteSegment *tmpseg;
+    SwfdecObject *obj;
 
     obj = swfdec_object_get (s, button->state[0]->id);
-    if (!obj)
-      return NULL;
+    if (!obj) return;
 
     tmpseg = swfdec_spriteseg_dup (button->state[0]);
     swfdec_transform_multiply (&tmpseg->transform,
 	&button->state[0]->transform, &seg->transform);
 
-    child_layer = swfdec_spriteseg_prerender (s, tmpseg, NULL);
-
-    if (child_layer) {
-      layer->sublayers = g_list_append (layer->sublayers, child_layer);
-
-      swfdec_rect_union_to_masked (&layer->rect, &child_layer->rect, &s->irect);
-    }
+    swfdec_spriteseg_render (s, tmpseg);
     swfdec_spriteseg_free (tmpseg);
-  }
-
-  return layer;
-}
-
-void
-swfdec_button_render (SwfdecDecoder * s, SwfdecLayer * layer,
-    SwfdecObject * object)
-{
-  int i;
-  SwfdecLayerVec *layervec;
-
-  for (i = 0; i < layer->fills->len; i++) {
-    layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-  for (i = 0; i < layer->lines->len; i++) {
-    layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
   }
 }
 

@@ -44,8 +44,8 @@ struct _SwfdecObject {
 struct _SwfdecObjectClass {
   GObjectClass object_class;
 
-  SwfdecLayer *(*prerender) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
-      SwfdecObject *object, SwfdecLayer *oldlayer);
+  void (*render) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
+      SwfdecObject *object);
   
   void (*dump) (SwfdecObject *object);
 };

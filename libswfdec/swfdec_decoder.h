@@ -29,7 +29,7 @@ struct _SwfdecColorTransform {
   double add[4];
 };
 
-struct swfdec_decoder_struct
+struct _SwfdecDecoder
 {
   int version;
   int length;

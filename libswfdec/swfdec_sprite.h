@@ -52,8 +52,6 @@ struct _SwfdecSpriteClass {
 GType swfdec_sprite_get_type (void);
 
 void swfdec_sprite_decoder_free (SwfdecObject * object);
-void swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
-    SwfdecObject * parent_object);
 int tag_func_define_sprite (SwfdecDecoder * s);
 SwfdecSpriteSegment *swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth,
     int frame);
@@ -68,8 +66,7 @@ int swfdec_spriteseg_remove_object (SwfdecDecoder * s);
 int swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s);
 
 void swf_render_frame (SwfdecDecoder * s, int frame_index);
-SwfdecLayer *swfdec_spriteseg_prerender (SwfdecDecoder * s,
-    SwfdecSpriteSegment * seg, SwfdecLayer * oldlayer);
+void swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg);
 void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);
 
 

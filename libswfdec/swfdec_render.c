@@ -21,6 +21,8 @@ swfdec_render_free (SwfdecRender *render)
 void
 swfdec_render_iterate (SwfdecDecoder *s)
 {
+  GList *g;
+    
   if (s->render->seek_frame != -1) {
     s->render->frame_index = s->render->seek_frame;
     s->render->seek_frame = -1;
@@ -28,6 +30,25 @@ swfdec_render_iterate (SwfdecDecoder *s)
     s->render->frame_index++;
   }
 
+  for (g=g_list_first (s->render->object_states); g; g = g_list_next(g)) {
+    SwfdecRenderState *state = g->data;
+
+    state->frame_index++;
+  }
+}
+
+SwfdecRenderState *
+swfdec_render_get_object_state (SwfdecRender *render, int layer)
+{
+  GList *g;
+
+  for (g=g_list_first (render->object_states); g; g = g_list_next(g)) {
+    SwfdecRenderState *state = g->data;
+
+    if (state->layer == layer) return state;
+  }
+
+  return NULL;
 }
 
 void
@@ -38,12 +59,11 @@ swfdec_render_seek (SwfdecDecoder *s, int frame)
   s->render->seek_frame = frame;
 }
 
-unsigned char *
+SwfdecBuffer *
 swfdec_render_get_image (SwfdecDecoder *s)
 {
   SwfdecSpriteSegment *seg;
-  SwfdecLayer *layer;
-  unsigned char *buf;
+  SwfdecBuffer *buffer;
   GList *g;
 
   SWFDEC_DEBUG ("swf_render_frame");
@@ -82,28 +102,21 @@ swf_invalidate_irect (s, &s->irect);
 
     object = swfdec_object_get (s, seg->id);
     if (object) {
-      layer = SWFDEC_OBJECT_GET_CLASS(object)->prerender (s, seg, object, NULL);
-
-      if (layer) {
-        swfdec_layer_render (s, layer);
-        swfdec_layer_free (layer);
-      } else {
-        SWFDEC_WARNING ("prerender returned NULL");
-      }
+      SWFDEC_OBJECT_GET_CLASS(object)->render (s, seg, object);
     } else {
       SWFDEC_DEBUG ("could not find object (id = %d)", seg->id);
     }
   }
 
-  buf = s->buffer;
+  buffer = swfdec_buffer_new_with_data (s->buffer, s->stride * s->height);
+
   s->buffer = NULL;
-  return buf;
+  return buffer;
 }
 
-int
-swfdec_render_get_audio (SwfdecDecoder *s, unsigned char **data)
+SwfdecBuffer *
+swfdec_render_get_audio (SwfdecDecoder *s)
 {
-  int length;
   SwfdecBuffer *buffer;
   GList *g;
 
@@ -126,88 +139,14 @@ swfdec_render_get_audio (SwfdecDecoder *s, unsigned char **data)
   swfdec_sound_render (s);
 
   g = g_list_first (s->sound_buffers);
-  if (!g) return 0;
+  if (!g) return NULL;
 
   buffer = (SwfdecBuffer *) g->data;
   s->sound_buffers = g_list_delete_link (s->sound_buffers, g);
 
-  if (data) {
-    *data = buffer->data;
-  } else {
-    g_free (buffer->data);
-  }
-  length = buffer->length;
-  g_free(buffer);
-
-  return length;
+  return buffer;
 }
 
 
 
-
-
-#if 0
-
-SwfdecLayer *
-swfdec_spriteseg_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecLayer * oldlayer)
-{
-  SwfdecObject *object;
-  SwfdecObjectClass *klass;
-
-  object = swfdec_object_get (s, seg->id);
-  if (!object)
-    return NULL;
-
-  klass = SWFDEC_OBJECT_GET_CLASS (object);
-
-  if (klass->prerender) {
-    return klass->prerender (s, seg, object, oldlayer);
-  }
-
-  SWFDEC_ERROR ("why is prerender NULL?");
-
-  return NULL;
-}
-
-void
-swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer)
-{
-  int i;
-  SwfdecLayerVec *layervec;
-  SwfdecLayer *child_layer;
-  GList *g;
-
-#if 0
-  /* This rendering order seems to mostly fit the observed behavior
-   * of Macromedia's player.  */
-  /* or not */
-  for (i = 0; i < MAX (layer->fills->len, layer->lines->len); i++) {
-    if (i < layer->lines->len) {
-      layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-      swfdec_layervec_render (s, layervec);
-    }
-    if (i < layer->fills->len) {
-      layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-      swfdec_layervec_render (s, layervec);
-    }
-  }
-#else
-  for (i = 0; i < layer->fills->len; i++) {
-    layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-  for (i = 0; i < layer->lines->len; i++) {
-    layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-#endif
-
-  for (g = g_list_first (layer->sublayers); g; g = g_list_next (g)) {
-    child_layer = (SwfdecLayer *) g->data;
-    swfdec_layer_render (s, child_layer);
-  }
-}
-
-#endif
 

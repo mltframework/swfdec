@@ -1,5 +1,11 @@
 2004-08-05  David Schleef  <ds@schleef.org>
 
+	* libswfdec/art.c: (swfdec_art_bpath_from_points),
+	(art_bpath_affine_transform_inplace): Minor speedup.
+	* libswfdec/art.h:
+
+2004-08-05  David Schleef  <ds@schleef.org>
+
 	Store shape points as shorts, not doubles. (Saves 85% memory.)
 	* libswfdec/art.c: (swfdec_art_bpath_from_points):
 	* libswfdec/art.h:

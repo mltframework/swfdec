@@ -708,7 +708,6 @@ swfdec_art_bpath_from_points (GArray *array, const double trans[6])
 {
   int i;
   ArtBpath *bpath;
-  ArtBpath *bpath2;
   SwfdecShapePoint *points = (SwfdecShapePoint *)array->data;
 
   bpath = g_malloc (sizeof(ArtBpath) * (array->len + 1));
@@ -738,9 +737,29 @@ swfdec_art_bpath_from_points (GArray *array, const double trans[6])
 
   bpath[i].code = ART_END;
 
-  bpath2 = art_bpath_affine_transform (bpath, trans);
-  g_free (bpath);
+  art_bpath_affine_transform_inplace (bpath, trans);
 
-  return bpath2;
+  return bpath;
+}
+
+#define apply_affine(x,y,affine) do { \
+  double _x = (x); \
+  double _y = (y); \
+  (x) = _x * affine[0] + _y * affine[2] + affine[4]; \
+  (y) = _x * affine[1] + _y * affine[3] + affine[5]; \
+}while(0)
+
+void
+art_bpath_affine_transform_inplace (ArtBpath *bpath, const double trans[6])
+{
+  int i;
+
+  for(i=0; bpath[i].code != ART_END; i++) {
+    apply_affine (bpath[i].x3, bpath[i].y3, trans);
+    if (bpath[i].code == ART_CURVETO) {
+      apply_affine (bpath[i].x1, bpath[i].y1, trans);
+      apply_affine (bpath[i].x2, bpath[i].y2, trans);
+    }
+  }
 }
 

@@ -1,3 +1,9 @@
+swfdec (0.1.2.1-1) unstable; urgency=low
+
+  * CVS snapshot
+
+ -- David Schleef <ds@schleef.org>  Fri, 15 Nov 2002 14:15:54 -0800
+
 swfdec (0.1.2-2) unstable; urgency=low
 
   * debian/copyright: fix download location (Closes: #167906)

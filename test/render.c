@@ -36,6 +36,7 @@ int main (int argc, char *argv[])
   int i;
   char *contents;
   SwfdecBuffer *buffer;
+  int n_frames;
 
   swfdec_init ();
 
@@ -65,7 +66,8 @@ int main (int argc, char *argv[])
     }
   }
 
-  for (i=0;i<s->main_sprite->n_frames;i++){
+  swfdec_decoder_get_n_frames(s, &n_frames);
+  for (i=0;i<n_frames;i++){
     SwfdecBuffer *buffer;
 
     swfdec_render_seek (s, i);

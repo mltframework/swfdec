@@ -31,8 +31,13 @@ swfdec_render_iterate (SwfdecDecoder *s)
   GList *g;
     
   if (s->render->seek_frame != -1) {
+    SwfdecSound *sound;
+
     s->render->frame_index = s->render->seek_frame;
     s->render->seek_frame = -1;
+
+    sound = SWFDEC_SOUND(s->stream_sound_obj);
+    if (sound) sound->tmpbuflen = 0;
   } else {
     s->render->frame_index++;
   }
@@ -64,6 +69,12 @@ swfdec_render_seek (SwfdecDecoder *s, int frame)
   if (frame < 0 || frame >= s->n_frames) return;
 
   s->render->seek_frame = frame;
+}
+
+int
+swfdec_render_get_frame_index (SwfdecDecoder *s)
+{
+  return s->render->frame_index;
 }
 
 SwfdecBuffer *
@@ -133,13 +144,17 @@ swfdec_render_get_audio (SwfdecDecoder *s)
     chunk = s->main_sprite->sound_chunks[s->render->frame_index];
     if (chunk) {
       SwfdecSound *sound;
+      int n;
 
       sound = SWFDEC_SOUND(s->stream_sound_obj);
 
-      memcpy (sound->tmpbuf + sound->tmpbuflen, chunk->data, chunk->length);
-      sound->tmpbuflen += chunk->length;
+      n = chunk->length;
+      if (sound->tmpbuflen + n > 1024) {
+        n = 1024 - sound->tmpbuflen;
+      }
+      memcpy (sound->tmpbuf + sound->tmpbuflen, chunk->data, n);
+      sound->tmpbuflen += n;
       swfdec_sound_mp3_decode_stream (s, s->stream_sound_obj);
-
     }
   }
 

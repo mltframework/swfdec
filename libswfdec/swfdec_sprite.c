@@ -214,7 +214,7 @@ int
 tag_func_define_sprite (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  SwfdecBits save_parse;
+  SwfdecBits parse;
   int id;
   SwfdecSprite *sprite;
   int ret;
@@ -231,20 +231,44 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
 
-  memcpy (&save_parse, &s->parse, sizeof(SwfdecBits));
-  memcpy (&s->parse, bits, sizeof(SwfdecBits));
+  memcpy (&parse, bits, sizeof(SwfdecBits));
 
   while (1) {
     unsigned char *endptr;
+    int x;
+    int tag;
+    int tag_len;
+    SwfdecBuffer *buffer;
+    SwfdecTagFunc *func;
 
-    ret = swf_parse_tag (s);
-    SWFDEC_LOG("  ret = %d", ret);
+    x = swfdec_bits_get_u16 (&parse);
+    tag = (x>>6) & 0x3ff;
+    tag_len = x & 0x3f;
+    if (tag_len == 0x3f) {
+      tag_len = swfdec_bits_get_u32 (&parse);
+    }
+    SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
 
-    if (ret != SWF_OK) break;
+    if (tag_len > 0) {
+      buffer = swfdec_buffer_new_subbuffer (parse.buffer,
+          parse.ptr - parse.buffer->data, tag_len);
+      s->b.buffer = buffer;
+      s->b.ptr = buffer->data;
+      s->b.idx = 0;
+      s->b.end = buffer->data + buffer->length;
+    } else {
+      buffer = NULL;
+      s->b.buffer = NULL;
+      s->b.ptr = NULL;
+      s->b.idx = 0;
+      s->b.end = NULL;
+    }
 
-    endptr = s->b.ptr + s->tag_len;
+    func = swfdec_decoder_get_tag_func (tag);
+
+    endptr = parse.ptr + tag_len;
     s->parse_sprite = sprite;
-    ret = s->func (s);
+    ret = func (s);
     s->parse_sprite = NULL;
 
     swfdec_bits_syncbits (bits);
@@ -255,15 +279,12 @@ tag_func_define_sprite (SwfdecDecoder * s)
       SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
     }
     
-    s->parse.ptr = endptr;
+    parse.ptr = endptr;
 
-    if (s->tag == 0) break;
+    if (buffer) swfdec_buffer_unref (buffer);
+
+    if (tag == 0) break;
   }
-
-  s->tag = -1;
-
-  memcpy (bits, &s->parse, sizeof(SwfdecBits));
-  memcpy (&s->parse, &save_parse, sizeof(SwfdecBits));
 
   return SWF_OK;
 }

@@ -1,3 +1,31 @@
+2004-09-17  David Schleef  <ds@schleef.org>
+
+	Switch to using buffers for the input stream.
+	* libswfdec/swf.c: (swfdec_init), (swfdec_decoder_new),
+	(swfdec_decoder_add_buffer), (swfdec_decoder_parse),
+	(swfdec_decoder_free), (swf_parse_header1), (swf_inflate_init),
+	(swf_parse_header2), (swfdec_decoder_get_tag_name),
+	(swfdec_decoder_get_tag_func), (tag_func_ignore_quiet),
+	(tag_func_ignore):
+	* libswfdec/swfdec_bits.h:
+	* libswfdec/swfdec_buffer.c: (swfdec_buffer_queue_new),
+	(swfdec_buffer_queue_get_depth), (swfdec_buffer_queue_free),
+	(swfdec_buffer_queue_push), (swfdec_buffer_queue_pull),
+	(swfdec_buffer_queue_peek):
+	* libswfdec/swfdec_buffer.h:
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2):
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_image.c: (swfdec_image_jpegtables),
+	(tag_func_define_bits_jpeg), (tag_func_define_bits_jpeg_2),
+	(tag_func_define_bits_jpeg_3), (define_bits_lossless):
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate),
+	(swfdec_render_get_frame_index), (swfdec_render_get_audio):
+	* libswfdec/swfdec_sound.c: (tag_func_sound_stream_block),
+	(tag_func_define_sound), (swfdec_sound_mp3_decode_stream):
+	* libswfdec/swfdec_sprite.c: (tag_func_define_sprite):
+	* libswfdec/swfdec_types.h:
+	* test/render.c: (main):
+
 2004-09-13  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swf.c: (swfdec_init), (swfdec_decoder_new): Check

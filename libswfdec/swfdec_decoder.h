@@ -29,6 +29,8 @@ struct _SwfdecColorTransform {
   double add[4];
 };
 
+typedef int SwfdecTagFunc (SwfdecDecoder *);
+
 struct _SwfdecDecoder
 {
   int version;
@@ -50,9 +52,10 @@ struct _SwfdecDecoder
 
   /* End of legacy elements */
 
-  char *input_data;
-  int input_data_len;
   z_stream *z;
+  SwfdecBuffer *uncompressed_buffer;
+
+  SwfdecBufferQueue *input_queue;
 
   int stride;
   int bytespp;
@@ -74,10 +77,6 @@ struct _SwfdecDecoder
 
   /* defined objects */
   GList *objects;
-
-  int tag;
-  int tag_len;
-  int (*func) (SwfdecDecoder * s);
 
   SwfdecSound *stream_sound_obj;
 
@@ -115,6 +114,9 @@ int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
 
 void swfdec_decoder_eof (SwfdecDecoder *s);
+
+SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
+const char * swfdec_decoder_get_tag_name (int tag);
 
 
 #endif

@@ -3,6 +3,7 @@
 #define _SWFDEC_TYPES_H_
 
 typedef struct _SwfdecBuffer SwfdecBuffer;
+typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
 typedef struct _SwfdecDecoder SwfdecDecoder;

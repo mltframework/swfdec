@@ -62,7 +62,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
     return SWF_OK;
   }
 
-  if (s->tag_len - 4 == 0) {
+  if (s->b.buffer->length - 4 == 0) {
     /* the end? */
     return SWF_OK;
   }
@@ -71,7 +71,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
 
   chunk->n_samples = swfdec_bits_get_u16 (&s->b);
   chunk->n_left = swfdec_bits_get_u16 (&s->b);
-  chunk->length = s->tag_len - 4;
+  chunk->length = s->b.buffer->length - 4;
   chunk->data = g_memdup (s->b.ptr, chunk->length);
 
   s->b.ptr += chunk->length;
@@ -118,14 +118,14 @@ tag_func_define_sound (SwfdecDecoder * s)
       len = swfdec_bits_get_u16 (b);
 
       sound->orig_data = b->ptr;
-      sound->orig_len = s->tag_len - 9;
+      sound->orig_len = s->b.buffer->length - 9;
 
       sound->sound_len = 10000;
       sound->sound_buf = g_malloc (sound->sound_len);
 
       swfdec_sound_mp3_decode (sound);
 
-      s->b.ptr += s->tag_len - 9;
+      s->b.ptr += s->b.buffer->length - 9;
       break;
     case 1:
       //g_print("  size = %d (%d bit)\n", size, size ? 16 : 8);
@@ -482,6 +482,8 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
     }
     if (ret == -1) {
       SWFDEC_ERROR("stream error 0x%04x", sound->stream.error);
+      sound->tmpbuflen = 0;
+      mad_stream_sync (&sound->stream);
       return SWF_ERROR;
     }
 

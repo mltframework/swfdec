@@ -100,11 +100,11 @@ swfdec_image_jpegtables (SwfdecDecoder * s)
 
   SWFDEC_LOG ("swfdec_image_jpegtables");
 
-  s->jpegtables = g_malloc (s->tag_len);
-  s->jpegtables_len = s->tag_len;
+  s->jpegtables = g_malloc (bits->buffer->length);
+  s->jpegtables_len = bits->buffer->length;
 
-  memcpy (s->jpegtables, bits->ptr, s->tag_len);
-  bits->ptr += s->tag_len;
+  memcpy (s->jpegtables, bits->ptr, bits->buffer->length);
+  bits->ptr += bits->buffer->length;
 
   return SWF_OK;
 }
@@ -129,7 +129,7 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
   dec = jpeg_rgb_decoder_new ();
 
   jpeg_rgb_decoder_addbits (dec, s->jpegtables, s->jpegtables_len);
-  jpeg_rgb_decoder_addbits (dec, bits->ptr, s->tag_len - 2);
+  jpeg_rgb_decoder_addbits (dec, bits->ptr, bits->buffer->length - 2);
   jpeg_rgb_decoder_parse (dec);
   jpeg_rgb_decoder_get_image (dec, (unsigned char **) &image->image_data,
       &image->rowstride, &image->width, &image->height);
@@ -137,7 +137,7 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   merge_opaque (image);
 
-  bits->ptr += s->tag_len - 2;
+  bits->ptr += bits->buffer->length - 2;
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -159,10 +159,10 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
-  jpegdec (image, bits->ptr, s->tag_len - 2);
+  jpegdec (image, bits->ptr, bits->buffer->length - 2);
   merge_opaque (image);
 
-  bits->ptr += s->tag_len - 2;
+  bits->ptr += bits->buffer->length - 2;
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -176,7 +176,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   SwfdecBits *bits = &s->b;
   int id;
 
-  //unsigned char *endptr = s->b.ptr + s->tag_len;
+  //unsigned char *endptr = s->b.ptr + bits->buffer->length;
   int len;
 
   //int alpha_len;
@@ -185,7 +185,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   unsigned char *ptr;
   unsigned char *endptr;
 
-  endptr = bits->ptr + s->tag_len;
+  endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
@@ -257,7 +257,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
   int color_table_size;
   unsigned char *ptr;
   int len;
-  unsigned char *endptr = bits->ptr + s->tag_len;
+  unsigned char *endptr = bits->ptr + bits->buffer->length;
   SwfdecImage *image;
 
   id = swfdec_bits_get_u16 (bits);

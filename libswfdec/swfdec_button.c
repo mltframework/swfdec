@@ -71,7 +71,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   SwfdecButton *button;
   unsigned char *endptr;
 
-  endptr = bits->ptr + s->tag_len;
+  endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
   button = swfdec_object_new (SWFDEC_TYPE_BUTTON);

@@ -3,10 +3,12 @@
 #define __SWFDEC_BITS_H__
 
 #include "color.h"
+#include "swfdec_buffer.h"
 
 typedef struct _SwfdecBits SwfdecBits;
 
 struct _SwfdecBits {
+  SwfdecBuffer *buffer;
   unsigned char *ptr;
   int idx;
   unsigned char *end;

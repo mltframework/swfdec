@@ -33,12 +33,10 @@ swfdec_init (void)
   g_type_init ();
 
   s = g_getenv ("SWFDEC_DEBUG");
-g_print("%p\n", s);
   if (s && s[0]) {
     char *end;
     int level;
 
-g_print("%s\n", s);
     level = strtoul (s, &end, 0);
     if (end[0] == 0) {
       swfdec_debug_set_level (level);
@@ -56,6 +54,8 @@ swfdec_decoder_new (void)
   oil_init ();
 
   s = g_new0 (SwfdecDecoder, 1);
+
+  s->input_queue = swfdec_buffer_queue_new();
 
   s->bg_color = SWF_COLOR_COMBINE (0xff, 0xff, 0xff, 0xff);
   s->colorspace = SWF_COLORSPACE_RGB888;
@@ -85,10 +85,11 @@ swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data, int lengt
 int
 swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer)
 {
-  int offset;
   int ret;
 
   if (s->compressed) {
+    int offset = s->z->total_out;
+
     s->z->next_in = buffer->data;
     s->z->avail_in = buffer->length;
     ret = inflate (s->z, Z_SYNC_FLUSH);
@@ -96,23 +97,13 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer)
       return SWF_ERROR;
     }
 
-    s->parse.end = s->input_data + s->z->total_out;
     swfdec_buffer_unref(buffer);
+
+    buffer = swfdec_buffer_new_subbuffer (s->uncompressed_buffer, offset,
+        s->z->total_out - offset);
+    swfdec_buffer_queue_push (s->input_queue, buffer);
   } else {
-    if (s->parse.ptr) {
-      offset = (void *) s->parse.ptr - (void *) s->input_data;
-    } else {
-      offset = 0;
-    }
-
-    s->input_data = g_realloc (s->input_data, s->input_data_len + buffer->length);
-    memcpy (s->input_data + s->input_data_len, buffer->data, buffer->length);
-    s->input_data_len += buffer->length;
-
-    swfdec_buffer_unref(buffer);
-
-    s->parse.ptr = s->input_data + offset;
-    s->parse.end = s->input_data + s->input_data_len;
+    swfdec_buffer_queue_push (s->input_queue, buffer);
   }
 
   return SWF_OK;
@@ -131,58 +122,88 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 {
   int ret = SWF_OK;
   unsigned char *endptr;
+  SwfdecBuffer *buffer;
 
   while (ret == SWF_OK) {
     s->b = s->parse;
 
     switch (s->state) {
       case SWF_STATE_INIT1:
-	/* need to initialize */
 	ret = swf_parse_header1 (s);
-	if (ret != SWF_OK)
-	  break;
-
-	s->parse = s->b;
-	if (s->compressed) {
-	  swf_inflate_init (s);
-	}
-	s->state = SWF_STATE_INIT2;
-	ret = SWF_OK;
 	break;
       case SWF_STATE_INIT2:
 	ret = swf_parse_header2 (s);
-	if (ret == SWF_OK) {
-	  swfdec_bits_syncbits (&s->b);
-	  s->parse = s->b;
-	  s->state = SWF_STATE_PARSETAG;
-          swf_config_colorspace (s);
-	  {
-	    SwfdecRect rect;
-
-	    rect.x0 = 0;
-	    rect.y0 = 0;
-	    rect.x1 = s->width;
-	    rect.y1 = s->height;
-	    swf_invalidate_irect (s, &rect);
-	  }
-	  ret = SWF_CHANGE;
-	  break;
-	}
 	break;
       case SWF_STATE_PARSETAG:
-	/* we're parsing tags */
-	ret = swf_parse_tag (s);
-	if (ret != SWF_OK)
-	  break;
+        {
+        int header_length;
+        int x;
+        SwfdecTagFunc *func;
+        int tag;
+        int tag_len;
 
-	if (swfdec_bits_needbits (&s->b, s->tag_len)) {
-	  ret = SWF_NEEDBITS;
-	  break;
-	}
-	endptr = s->b.ptr + s->tag_len;
+	/* we're parsing tags */
+        buffer = swfdec_buffer_queue_peek (s->input_queue, 2);
+        if (buffer == NULL) {
+          return SWF_NEEDBITS;
+        }
+
+        s->b.buffer = buffer;
+        s->b.ptr = buffer->data;
+        s->b.idx = 0;
+        s->b.end = buffer->data + buffer->length;
+
+        x = swfdec_bits_get_u16 (&s->b);
+        tag = (x >> 6) & 0x3ff;
+        SWFDEC_DEBUG("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
+        tag_len = x & 0x3f;
+        if (tag_len == 0x3f) {
+          swfdec_buffer_unref (buffer);
+          buffer = swfdec_buffer_queue_peek (s->input_queue, 6);
+          if (buffer == NULL) {
+            return SWF_NEEDBITS;
+          }
+          s->b.buffer = buffer;
+          s->b.ptr = buffer->data;
+          s->b.idx = 0;
+          s->b.end = buffer->data + buffer->length;
+
+          swfdec_bits_get_u16 (&s->b);
+          tag_len = swfdec_bits_get_u32 (&s->b);
+          header_length = 6;
+        } else {
+          header_length = 2;
+        }
+        swfdec_buffer_unref (buffer);
+        SWFDEC_DEBUG("tag length %d", tag_len);
+
+        if (swfdec_buffer_queue_get_depth (s->input_queue) < tag_len +
+            header_length) {
+          return SWF_NEEDBITS;
+        }
+
+        buffer = swfdec_buffer_queue_pull (s->input_queue, header_length);
+        swfdec_buffer_unref (buffer);
+
+        if (tag_len > 0) {
+          buffer = swfdec_buffer_queue_pull (s->input_queue, tag_len);
+          s->b.buffer = buffer;
+          s->b.ptr = buffer->data;
+          s->b.idx = 0;
+          s->b.end = buffer->data + buffer->length;
+          endptr = s->b.ptr + tag_len;
+        } else {
+          buffer = NULL;
+          s->b.buffer = NULL;
+          s->b.ptr = NULL;
+          s->b.idx = 0;
+          s->b.end = NULL;
+          endptr = NULL;
+        }
+        func = swfdec_decoder_get_tag_func (tag);
 
 	s->parse_sprite = s->main_sprite;
-	ret = s->func (s);
+	ret = func (s);
 	s->parse_sprite = NULL;
 	//if(ret != SWF_OK)break;
 
@@ -195,14 +216,15 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	  SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
 	}
 
-	s->parse.ptr = endptr;
-
-	if (s->tag == 0) {
+	if (tag == 0) {
 	  s->state = SWF_STATE_EOF;
 
           SWFDEC_WARNING ("decoded points %d", s->stats_n_points);
 	}
 
+        if (buffer) swfdec_buffer_unref (buffer);
+
+        }
 	break;
       case SWF_STATE_EOF:
 	ret = SWF_EOF;
@@ -226,8 +248,8 @@ swfdec_decoder_free (SwfdecDecoder * s)
 
   if (s->buffer)
     g_free (s->buffer);
-  if (s->input_data)
-    g_free (s->input_data);
+
+  swfdec_buffer_queue_free (s->input_queue);
 
   swfdec_object_unref (SWFDEC_OBJECT(s->main_sprite));
   swfdec_render_free (s->render);
@@ -447,21 +469,40 @@ int
 swf_parse_header1 (SwfdecDecoder * s)
 {
   int sig1, sig2, sig3;
+  SwfdecBuffer *buffer;
 
-  if (swfdec_bits_needbits (&s->b, 8))
+  buffer = swfdec_buffer_queue_pull (s->input_queue, 8);
+  if (buffer == NULL) {
     return SWF_NEEDBITS;
+  }
+
+  s->b.buffer = buffer;
+  s->b.ptr = buffer->data;
+  s->b.idx = 0;
+  s->b.end = buffer->data + buffer->length;
 
   sig1 = swfdec_bits_get_u8 (&s->b);
   sig2 = swfdec_bits_get_u8 (&s->b);
   sig3 = swfdec_bits_get_u8 (&s->b);
 
-  if ((sig1 != 'F' && sig1 != 'C') || sig2 != 'W' || sig3 != 'S')
-    return SWF_ERROR;
-
-  s->compressed = (sig1 == 'C');
-
   s->version = swfdec_bits_get_u8 (&s->b);
   s->length = swfdec_bits_get_u32 (&s->b);
+
+  swfdec_buffer_unref (buffer);
+
+  if ((sig1 != 'F' && sig1 != 'C') || sig2 != 'W' || sig3 != 'S') {
+    return SWF_ERROR;
+  }
+
+  s->compressed = (sig1 == 'C');
+  if (s->compressed) {
+    SWFDEC_DEBUG ("compressed");
+    swf_inflate_init (s);
+  } else {
+    SWFDEC_DEBUG ("not compressed");
+  }
+
+  s->state = SWF_STATE_INIT2;
 
   return SWF_OK;
 }
@@ -469,40 +510,39 @@ swf_parse_header1 (SwfdecDecoder * s)
 int
 swf_inflate_init (SwfdecDecoder * s)
 {
+  SwfdecBuffer *buffer;
   z_stream *z;
-  char *compressed_data;
-  int compressed_len;
-  char *data;
   int ret;
+  int offset;
 
   z = g_new0 (z_stream, 1);
   s->z = z;
   z->zalloc = zalloc;
   z->zfree = zfree;
-
-  compressed_data = s->parse.ptr;
-  compressed_len = s->input_data_len -
-      ((void *) s->parse.ptr - (void *) s->input_data);
-
-  z->next_in = compressed_data;
-  z->avail_in = compressed_len;
-  z->opaque = NULL;
-  data = g_malloc (s->length);
-  z->next_out = data;
-  z->avail_out = s->length;
-
   ret = inflateInit (z);
   SWFDEC_DEBUG("inflateInit returned %d",ret);
+
+  s->uncompressed_buffer = swfdec_buffer_new_and_alloc (s->length);
+  z->next_out = s->uncompressed_buffer->data;
+  z->avail_out = s->length;
+  z->opaque = NULL;
+
+  offset = z->total_out;
+  buffer = swfdec_buffer_queue_pull (s->input_queue,
+      swfdec_buffer_queue_get_depth (s->input_queue));
+  z->next_in = buffer->data;
+  z->avail_in = buffer->length;
+
   ret = inflate (z, Z_SYNC_FLUSH);
   SWFDEC_DEBUG("inflate returned %d",ret);
-  SWFDEC_DEBUG("total out %d",(int)z->total_out);
-  SWFDEC_DEBUG("total in %d",(int)z->total_in);
 
-  g_free (s->input_data);
+  swfdec_buffer_unref (buffer);
 
-  s->input_data = data;
-  s->input_data_len = z->total_in;
-  s->parse.ptr = data;
+  s->input_queue = swfdec_buffer_queue_new();
+
+  buffer = swfdec_buffer_new_subbuffer (s->uncompressed_buffer, offset,
+      z->total_out - offset);
+  swfdec_buffer_queue_push (s->input_queue, buffer);
 
   return SWF_OK;
 }
@@ -512,9 +552,18 @@ swf_parse_header2 (SwfdecDecoder * s)
 {
   int rect[4];
   double width, height;
+  int n;
+  SwfdecBuffer *buffer;
 
-  if (swfdec_bits_needbits (&s->b, 32))
+  buffer = swfdec_buffer_queue_peek (s->input_queue, 32);
+  if (buffer == NULL) {
     return SWF_NEEDBITS;
+  }
+
+  s->b.buffer = buffer;
+  s->b.ptr = buffer->data;
+  s->b.idx = 0;
+  s->b.end = buffer->data + buffer->length;
 
   swfdec_bits_get_rect (&s->b, rect);
   width = rect[1] * SWF_SCALE_FACTOR;
@@ -550,11 +599,18 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->n_frames = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG("n_frames = %d", s->n_frames);
 
-  s->main_sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * s->n_frames);
+  n = s->b.ptr - s->b.buffer->data;
+  swfdec_buffer_unref (buffer);
 
+  buffer = swfdec_buffer_queue_pull (s->input_queue, n);
+
+  s->main_sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * s->n_frames);
   s->main_sprite->n_frames = s->n_frames;
 
-  return SWF_OK;
+  swf_config_colorspace (s);
+
+  s->state = SWF_STATE_PARSETAG;
+  return SWF_CHANGE;
 }
 
 
@@ -626,44 +682,28 @@ struct tag_func_struct tag_funcs[] = {
 };
 static const int n_tag_funcs = sizeof (tag_funcs) / sizeof (tag_funcs[0]);
 
-int
-swf_parse_tag (SwfdecDecoder * s)
+const char *
+swfdec_decoder_get_tag_name (int tag)
 {
-  unsigned int x;
-  SwfdecBits *b = &s->b;
-  char *name;
-
-  SWFDEC_DEBUG ("parsing at %d (%d left)",
-      (char *)s->parse.ptr - s->input_data,
-      s->parse.end - s->parse.ptr);
-
-  if (swfdec_bits_needbits (&s->b, 2))
-    return SWF_NEEDBITS;
-
-  x = swfdec_bits_get_u16 (b);
-  s->tag = (x >> 6) & 0x3ff;
-  s->tag_len = x & 0x3f;
-  if (s->tag_len == 0x3f) {
-    if (swfdec_bits_needbits (&s->b, 4))
-      return SWF_NEEDBITS;
-    s->tag_len = swfdec_bits_get_u32 (b);
+  if (tag >= 0 && tag < n_tag_funcs) {
+    if (tag_funcs[tag].name) {
+      return tag_funcs[tag].name;
+    }
   }
 
-  s->func = NULL;
-  name = "";
+  return "unknown";
+}
 
-  if (s->tag >= 0 && s->tag < n_tag_funcs) {
-    s->func = tag_funcs[s->tag].func;
-    name = tag_funcs[s->tag].name;
+SwfdecTagFunc *
+swfdec_decoder_get_tag_func (int tag)
+{
+  if (tag >= 0 && tag < n_tag_funcs) {
+    if (tag_funcs[tag].func) {
+      return tag_funcs[tag].func;
+    }
   }
 
-  if (!s->func) {
-    s->func = tag_func_ignore;
-  }
-
-  SWFDEC_DEBUG ("tag=%d len=%d name=\"%s\"", s->tag, s->tag_len, name);
-
-  return SWF_OK;
+  return tag_func_ignore;
 }
 
 int
@@ -675,7 +715,7 @@ tag_func_zero (SwfdecDecoder * s)
 int
 tag_func_ignore_quiet (SwfdecDecoder * s)
 {
-  s->b.ptr += s->tag_len;
+  s->b.ptr += s->b.buffer->length;
 
   return SWF_OK;
 }
@@ -683,6 +723,7 @@ tag_func_ignore_quiet (SwfdecDecoder * s)
 int
 tag_func_ignore (SwfdecDecoder * s)
 {
+#if 0
   char *name = "";
 
   if (s->tag >= 0 && s->tag < n_tag_funcs) {
@@ -690,8 +731,9 @@ tag_func_ignore (SwfdecDecoder * s)
   }
 
   SWFDEC_WARNING ("tag \"%s\" (%d) ignored", name, s->tag);
+#endif
 
-  s->b.ptr += s->tag_len;
+  s->b.ptr += s->b.buffer->length;
 
   return SWF_OK;
 }

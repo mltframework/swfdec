@@ -1,5 +1,28 @@
 2004-08-27  David Schleef  <ds@schleef.org>
 
+	Add mpeg decoding library ripped from ffmpeg.  Doesn't work.
+	* libswfdec/mpeg/Makefile.am:
+	* libswfdec/mpeg/avcodec.h:
+	* libswfdec/mpeg/bswap.h:
+	* libswfdec/mpeg/common.h:
+	* libswfdec/mpeg/dsputil.h:
+	* libswfdec/mpeg/mpeg_config.h:
+	* libswfdec/mpeg/mpegaudio.h:
+	* libswfdec/mpeg/mpegaudiodec.c: (l1_unscale), (l2_unscale_group),
+	(l3_unscale), (int_pow_init), (int_pow), (decode_init), (dct32),
+	(round_sample), (synth_filter), (imdct12), (imdct36),
+	(check_header), (decode_header), (mpa_decode_header),
+	(mp_decode_layer1), (l2_select_table), (mp_decode_layer2),
+	(seek_to_maindata), (lsf_sf_expand),
+	(exponents_from_scale_factors), (get_bitsz), (huffman_decode),
+	(reorder_block), (compute_stereo), (compute_antialias_integer),
+	(compute_antialias_float), (compute_imdct), (sample_dump),
+	(mp_decode_layer3), (mp_decode_frame), (decode_frame):
+	* libswfdec/mpeg/mpegaudiodectab.h:
+	* libswfdec/mpeg/rational.h:
+
+2004-08-27  David Schleef  <ds@schleef.org>
+
 	Merge prerender into render.  Use SwfdecBuffer.  Make sprites
 	work again.  Make sound work again.  Essentially back up to
 	the level of 0.2.2 now.

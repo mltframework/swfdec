@@ -11,7 +11,7 @@ libswfdec_la_SOURCES = actions.c art.c color.c get.c jpeg.c \
 	version_script
 libswfdec_la_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) \
 	-I$(srcdir)/jpeg/
-libswfdec_la_LDFLAGS = $(LIBART_LIBS) $(GLIB_LIBS) \
+libswfdec_la_LDFLAGS = $(LIBART_LIBS) $(GLIB_LIBS) $(MAD_LIBS) \
 	-Wl,--version-script=version_script
 
 libswfdec_la_LIBADD = mpglib/libmpglib.la jpeg/libjpeg.la

@@ -1,3 +1,10 @@
+swfdec (0.1.2-2) unstable; urgency=low
+
+  * debian/copyright: fix download location (Closes: #167906)
+  * debian/rules: actually install docs
+
+ -- David Schleef <ds@schleef.org>  Tue, 05 Nov 2002 17:22:57 -0800
+
 swfdec (0.1.2-1) unstable; urgency=low
 
   * new release

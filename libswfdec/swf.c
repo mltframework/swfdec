@@ -157,8 +157,6 @@ int swfdec_decoder_parse(SwfdecDecoder *s)
 		}
 	}
 
-	fflush(stdout);
-
 	return ret;
 }
 

@@ -410,6 +410,7 @@ static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
 	return TRUE;
 }
 
+#if 0
 static void tv_add_usec(struct timeval *a, unsigned int x)
 {
 	a->tv_usec += x;
@@ -436,6 +437,7 @@ static int tv_diff(struct timeval *a,struct timeval *b)
 	diff += (a->tv_usec - b->tv_usec);
 	return diff;
 }
+#endif
 
 static gboolean render_idle(gpointer data)
 {
@@ -444,11 +446,14 @@ static gboolean render_idle(gpointer data)
 
 	ack++;
 	if(ack>=1)ack=0;
+	/* disabled temporarily */
+#if 0
 	if(ack==0){
 		swfdec_decoder_enable_render(s);
 	}else{
 		swfdec_decoder_disable_render(s);
 	}
+#endif
 	ret = swfdec_decoder_parse(s);
 	if(ret==SWF_NEEDBITS){
 		gtk_idle_remove(render_idle_id);
@@ -466,7 +471,7 @@ static gboolean render_idle(gpointer data)
 		render_idle_id = 0;
 	}
 	if(ret==SWF_IMAGE){
-		struct timeval now;
+		//struct timeval now;
 
 		swfdec_decoder_peek_image(s,&image);
 		pull_sound(s);

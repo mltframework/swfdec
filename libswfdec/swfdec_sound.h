@@ -28,6 +28,7 @@ struct swfdec_sound_struct{
 
 struct swfdec_sound_buffer_struct{
 	int len;
+	int offset;
 	unsigned char *data;
 };
 
@@ -37,6 +38,7 @@ int tag_func_sound_stream_block(SwfdecDecoder *s);
 int tag_func_sound_stream_head(SwfdecDecoder *s);
 int tag_func_start_sound(SwfdecDecoder *s);
 int tag_func_define_button_sound(SwfdecDecoder *s);
+void swfdec_sound_render(SwfdecDecoder *s);
 
 #endif
 

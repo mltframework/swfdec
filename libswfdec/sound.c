@@ -261,7 +261,7 @@ int tag_func_define_sound(SwfdecDecoder *s)
 
 void swfdec_decoder_sound_buffer_append(SwfdecDecoder *s, SwfdecSoundBuffer *buffer)
 {
-	s->sound_buffers = g_list_append(s->sound_buffers, buffer);
+	s->stream_sound_buffers = g_list_append(s->stream_sound_buffers, buffer);
 }
 
 SwfdecSoundBuffer *swfdec_sound_buffer_new(int len)
@@ -271,6 +271,7 @@ SwfdecSoundBuffer *swfdec_sound_buffer_new(int len)
 	sb = g_new0(SwfdecSoundBuffer,1);
 
 	sb->len = len;
+	sb->offset = 0;
 	sb->data = g_malloc(len);
 
 	return sb;
@@ -550,5 +551,45 @@ void adpcm_decode(SwfdecDecoder *s,SwfdecObject *obj)
 		}
 		n_samples -= n;
 	}
+}
+
+void swfdec_sound_render(SwfdecDecoder *s)
+{
+	int len;
+	GList *g;
+	SwfdecSoundBuffer *buffer;
+	SwfdecSoundBuffer *buf;
+	int offset = 0;
+	int n;
+
+	len = 2*2*(44100/s->rate);
+	buffer = swfdec_sound_buffer_new(len);
+	memset(buffer->data,0,len);
+
+	while(1){
+		if(!s->stream_sound_buffers)break;
+		g = g_list_first(s->stream_sound_buffers);
+		if(!g)break;
+
+		buf = (SwfdecSoundBuffer *)g->data;
+		n = MIN(buf->len - buf->offset,len - offset);
+
+		/* FIXME this isn't composing */
+		memcpy(buffer->data + offset, buf->data + buf->offset,n);
+		offset += n;
+		buf->offset += n;
+
+		if(buf->offset >= buf->len){
+			g_free(buf->data);
+			s->stream_sound_buffers = 
+				g_list_delete_link(s->stream_sound_buffers,g);
+		}
+
+		if(offset >= len){
+			break;
+		}
+	}
+
+	s->sound_buffers = g_list_append(s->sound_buffers, buffer);
 }
 

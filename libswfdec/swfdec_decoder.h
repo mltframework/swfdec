@@ -88,6 +88,7 @@ struct swfdec_decoder_struct {
 	unsigned int jpegtables_len;
 
 	GList *sound_buffers;
+	GList *stream_sound_buffers;
 
 	gboolean subpixel;
 };

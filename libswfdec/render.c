@@ -182,6 +182,8 @@ int art_show_frame(SwfdecDecoder *s)
 	swf_render_frame_slow(s);
 
 	//swfdec_sprite_clean(s->main_sprite,s->frame_number);
+	
+	swfdec_sound_render(s);
 
 	s->frame_number++;
 	s->parse_sprite->parse_frame++;

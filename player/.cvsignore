@@ -1,0 +1,8 @@
+Makefile
+Makefile.in
+*.lo
+.cvsignore
+.deps
+.libs
+*.la
+swf_play

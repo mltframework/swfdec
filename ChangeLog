@@ -1,5 +1,20 @@
 2004-09-13  David Schleef  <ds@schleef.org>
 
+	* .cvsignore:  Some cvsignore files
+	* gimp-loader/.cvsignore:
+	* glib-compat/.cvsignore:
+	* libswfdec/.cvsignore:
+	* libswfdec/jpeg/.cvsignore:
+	* libswfdec/mpeg/.cvsignore:
+	* pixbuf-loader/.cvsignore:
+	* player/.cvsignore:
+	* plugin/.cvsignore:
+	* test/.cvsignore:
+	* test/dump.c: (main), (dump_sprite):  oops, these never got added
+	* test/render.c: (buffer_free), (main): same
+
+2004-09-13  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Bump soname for liboil and swfdec
 	* libswfdec/art.c: (art_rgb_run_alpha_2): adjust for liboil API
 	* libswfdec/jpeg/jpeg.c: (jpeg_decoder_decode_entropy_segment): same

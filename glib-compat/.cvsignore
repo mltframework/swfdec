@@ -1,0 +1,7 @@
+Makefile
+Makefile.in
+*.lo
+.cvsignore
+.deps
+.libs
+*.la

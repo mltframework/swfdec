@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+*.lo
+.cvsignore
+.deps
+.libs
+*.la
+dump
+render
+render-fast
+test-pixbuf

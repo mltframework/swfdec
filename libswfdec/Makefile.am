@@ -1,5 +1,5 @@
 
-SUBDIRS = mpglib jpeg
+SUBDIRS = jpeg
 
 lib_LTLIBRARIES = libswfdec.la
 

@@ -115,8 +115,8 @@ int tag_func_sound_stream_block(SwfdecDecoder *s)
 			if(sound->synth.pcm.channels==2){
 				for(i=0;i<sound->synth.pcm.length;i++){
 					short c0,c1;
-					c0 = sound->synth.pcm.samples[0][i]>>13;
-					c1 = sound->synth.pcm.samples[1][i]>>13;
+					c0 = sound->synth.pcm.samples[0][i]>>14;
+					c1 = sound->synth.pcm.samples[1][i]>>14;
 					*data++ = c0; *data++ = c1;
 					*data++ = c0; *data++ = c1;
 					*data++ = c0; *data++ = c1;
@@ -125,7 +125,7 @@ int tag_func_sound_stream_block(SwfdecDecoder *s)
 			}else{
 				for(i=0;i<sound->synth.pcm.length;i++){
 					short c0;
-					c0 = sound->synth.pcm.samples[0][i]>>13;
+					c0 = sound->synth.pcm.samples[0][i]>>14;
 					*data++ = c0; *data++ = c0;
 					*data++ = c0; *data++ = c0;
 					*data++ = c0; *data++ = c0;
@@ -143,15 +143,15 @@ int tag_func_sound_stream_block(SwfdecDecoder *s)
 			if(sound->synth.pcm.channels==2){
 				for(i=0;i<sound->synth.pcm.length;i++){
 					short c0,c1;
-					c0 = sound->synth.pcm.samples[0][i]>>13;
-					c1 = sound->synth.pcm.samples[1][i]>>13;
+					c0 = sound->synth.pcm.samples[0][i]>>14;
+					c1 = sound->synth.pcm.samples[1][i]>>14;
 					*data++ = c0; *data++ = c1;
 					*data++ = c0; *data++ = c1;
 				}
 			}else{
 				for(i=0;i<sound->synth.pcm.length;i++){
 					short c0;
-					c0 = sound->synth.pcm.samples[0][i]>>13;
+					c0 = sound->synth.pcm.samples[0][i]>>14;
 					*data++ = c0; *data++ = c0;
 					*data++ = c0; *data++ = c0;
 				}

@@ -29,8 +29,6 @@ struct _SwfdecButtonClass {
 
 GType swfdec_button_get_type (void);
 
-SwfdecLayer *swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * layer);
 void swfdec_button_render (SwfdecDecoder * s, SwfdecLayer * layer,
     SwfdecObject * object);
 

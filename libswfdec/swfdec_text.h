@@ -47,10 +47,6 @@ int tag_func_define_text (SwfdecDecoder * s);
 int tag_func_define_text_2 (SwfdecDecoder * s);
 
 void swfdec_font_free (SwfdecObject * object);
-SwfdecLayer *swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * layer);
-void swfdec_text_render (SwfdecDecoder * s, SwfdecLayer * layer,
-    SwfdecObject * object);
 
 
 G_END_DECLS

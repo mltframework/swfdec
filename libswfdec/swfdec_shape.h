@@ -72,8 +72,6 @@ int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);
 void dump_layers (SwfdecDecoder * s);
 
-SwfdecLayer *swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * shape, SwfdecLayer * oldlayer);
 void swfdec_shape_render (SwfdecDecoder * s, SwfdecLayer * layer,
     SwfdecObject * shape);
 

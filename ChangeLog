@@ -1,3 +1,41 @@
+2004-06-05  David Schleef  <ds@schleef.org>
+
+	* COPYING: switch to LGPL
+	* INSTALL:
+	* autogen.sh: bump libtool to 1.5
+	* compile: remove
+	* configure.ac: add majorminor
+	* depcomp: remove
+	* install-sh: remove
+	* libswfdec/Makefile.am: hacking
+	* libswfdec/proto.h:
+	* libswfdec/render.c: (art_show_frame), (swf_render_frame),
+	(swfdec_spriteseg_prerender):
+	* libswfdec/swfdec_button.c: (swfdec_button_class_init),
+	(tag_func_define_button_2):
+	* libswfdec/swfdec_button.h:
+	* libswfdec/swfdec_font.c: (tag_func_define_font),
+	(tag_func_define_font_2):
+	* libswfdec/swfdec_image.c: (tag_func_define_bits_jpeg),
+	(tag_func_define_bits_jpeg_2), (tag_func_define_bits_jpeg_3),
+	(define_bits_lossless):
+	* libswfdec/swfdec_object.c: (swfdec_object_class_init),
+	(swfdec_object_get):
+	* libswfdec/swfdec_object.h:
+	* libswfdec/swfdec_shape.c: (swfdec_shape_class_init),
+	(art_define_shape), (art_define_shape_3):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_sound.c: (tag_func_define_sound),
+	(tag_func_sound_stream_head):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_class_init),
+	(swfdec_sprite_render), (tag_func_define_sprite):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_text.c: (swfdec_text_class_init), (define_text):
+	* libswfdec/swfdec_text.h:
+	* libswfdec/version_script: remove
+	* missing: remove
+	* mkinstalldirs: remove
+
 2004-04-20  David Schleef  <ds@schleef.org>
 
 	Cleanups.

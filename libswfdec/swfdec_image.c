@@ -159,7 +159,7 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   dec = jpeg_rgb_decoder_new ();
 
@@ -192,7 +192,7 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   jpegdec (image, bits->ptr, s->tag_len - 2);
   merge_opaque (image);
@@ -227,7 +227,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   len = get_u32 (bits);
   SWF_DEBUG (0, "  len = %d\n", len);
@@ -300,7 +300,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   format = get_u8 (bits);
   SWF_DEBUG (0, "  format = %d\n", format);
@@ -418,6 +418,7 @@ tag_func_define_bits_lossless_2 (SwfdecDecoder * s)
 }
 
 
+#if 0
 int
 swfdec_image_render (SwfdecDecoder * s, SwfdecLayer * layer, SwfdecObject * obj)
 {
@@ -427,6 +428,7 @@ swfdec_image_render (SwfdecDecoder * s, SwfdecLayer * layer, SwfdecObject * obj)
 
   return SWF_OK;
 }
+#endif
 
 static void
 jpegdec (SwfdecImage * image, unsigned char *data, int len)

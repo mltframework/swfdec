@@ -92,7 +92,7 @@ tag_func_define_font (SwfdecDecoder * s)
   id = get_u16 (&s->b);
   font = g_object_new (SWFDEC_TYPE_FONT, NULL);
   SWFDEC_OBJECT (font)-> id = id;
-  g_list_append (s->objects, font);
+  s->objects = g_list_append (s->objects, font);
 
   offset = get_u16 (&s->b);
   n_glyphs = offset / 2;
@@ -174,7 +174,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   id = get_u16 (bits);
   font = g_object_new (SWFDEC_TYPE_FONT, NULL);
   SWFDEC_OBJECT (font)->id = id;
-  g_list_append (s->objects, font);
+  s->objects = g_list_append (s->objects, font);
 
   has_layout = getbit (bits);
   shift_jis = getbit (bits);

@@ -13,6 +13,9 @@ SWF_DEBUG="-Wall -Werror"
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(SWFDEC, 0, 1, 0, yes)
 
+SWFDEC_MAJORMINOR=0.2
+AC_SUBST(SWFDEC_MAJORMINOR)
+
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
@@ -161,7 +164,7 @@ AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
 SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec $SWF_DEBUG $GLIB_CFLAGS"
-SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec.la $MAD_LIBS $GLIB_LIBS -lz"
+SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $MAD_LIBS $GLIB_LIBS -lz"
 AC_SUBST(SWF_LIBS)
 AC_SUBST(SWF_CFLAGS)
 

@@ -8,6 +8,8 @@ static void swfdec_sprite_base_init (gpointer g_class);
 static void swfdec_sprite_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class);
 static void swfdec_sprite_dispose (GObject *object);
+static SwfdecLayer * swfdec_sprite_prerender (SwfdecDecoder * s,
+    SwfdecSpriteSegment * seg, SwfdecObject * object, SwfdecLayer * oldlayer);
 
 
 GType _swfdec_sprite_type;
@@ -49,6 +51,7 @@ static void swfdec_sprite_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (gobject_class);
 
+  SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_sprite_prerender;
 }
 
 static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class)
@@ -72,7 +75,7 @@ static void swfdec_sprite_dispose (GObject *object)
 }
 
 
-SwfdecLayer *
+static SwfdecLayer *
 swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
 {
@@ -158,62 +161,6 @@ void
 swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
     SwfdecObject * parent_object)
 {
-  SwfdecLayer *layer;
-  SwfdecDecoder *s2 = parent_object->priv;
-  SwfdecSprite *sprite = s2->main_sprite;
-  GList *g;
-  SwfdecObject *object;
-  double save_trans[6];
-
-  SWF_DEBUG (0, "rendering sprite frame %d of %d\n",
-      parent_layer->frame_number, s2->n_frames);
-  for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
-    layer = (SwfdecLayer *) g->data;
-
-    if (layer->first_frame > parent_layer->frame_number)
-      continue;
-    if (layer->last_frame <= parent_layer->frame_number)
-      continue;
-
-    art_affine_copy (save_trans, layer->transform);
-    art_affine_multiply (layer->transform, s2->transform, layer->transform);
-    swfdec_layer_prerender (s, layer);
-    art_affine_copy (layer->transform, save_trans);
-    object = swfdec_object_get (s, layer->id);
-    if (!object) {
-      /* WTF! */
-      SWF_DEBUG (4, "lost object!\n");
-      continue;
-    }
-
-    SWF_DEBUG (0, "rendering layer %d (id = %d, type = %d)\n", layer->depth,
-	layer->id, object->type);
-
-    switch (object->type) {
-      case SWF_OBJECT_SPRITE:
-	swfdec_sprite_render (s, layer, object);
-	break;
-      case SWF_OBJECT_TEXT:
-	swfdec_text_render (s, layer, object);
-	break;
-      case SWF_OBJECT_SHAPE:
-	swfdec_shape_render (s, layer, object);
-	break;
-      case SWF_OBJECT_BUTTON:
-	swfdec_button_render (s, layer, object);
-	break;
-      default:
-	SWF_DEBUG (4, "render_sprite: unknown object type %d\n", object->type);
-	break;
-    }
-  }
-}
-#endif
-
-void
-swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
-    SwfdecObject * parent_object)
-{
   SwfdecLayer *child_layer;
   SwfdecSprite *s2 = SWFDEC_SPRITE (parent_object);
   GList *g;
@@ -227,6 +174,8 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
     swfdec_layer_render (s, child_layer);
   }
 }
+#endif
+
 int
 tag_func_define_sprite (SwfdecDecoder * s)
 {
@@ -238,7 +187,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   id = get_u16 (bits);
   sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
   SWFDEC_OBJECT (sprite)->id = id;
-  g_list_append (s->objects, sprite);
+  s->objects = g_list_append (s->objects, sprite);
 
   sprite->main_sprite = s->main_sprite;
   //sprite->parse_sprite = sprite;

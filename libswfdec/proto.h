@@ -12,7 +12,7 @@ int art_remove_object (SwfdecDecoder * s);
 int art_remove_object_2 (SwfdecDecoder * s);
 void swf_clean (SwfdecDecoder * s, int frame);
 int art_show_frame (SwfdecDecoder * s);
-void swf_render_frame (SwfdecDecoder * s);
+void swf_render_frame (SwfdecDecoder * s, int frame_index);
 
 /* swf.c */
 

@@ -8,6 +8,9 @@ static void swfdec_button_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_button_init (GTypeInstance *instance, gpointer g_class);
 static void swfdec_button_dispose (GObject *object);
 
+static SwfdecLayer * swfdec_button_prerender (SwfdecDecoder * s,
+    SwfdecSpriteSegment * seg, SwfdecObject * object, SwfdecLayer * oldlayer);
+
 
 GType _swfdec_button_type;
 
@@ -48,6 +51,8 @@ static void swfdec_button_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (gobject_class);
 
+  SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_button_prerender;
+  //SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 
 static void swfdec_button_init (GTypeInstance *instance, gpointer g_class)
@@ -67,7 +72,7 @@ static void swfdec_button_dispose (GObject *object)
   }
 }
 
-SwfdecLayer *
+static SwfdecLayer *
 swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
 {
@@ -147,7 +152,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   id = get_u16 (bits);
   button = g_object_new (SWFDEC_TYPE_BUTTON, NULL);
   SWFDEC_OBJECT (button)->id = id;
-  g_list_append (s->objects, button);
+  s->objects = g_list_append (s->objects, button);
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 

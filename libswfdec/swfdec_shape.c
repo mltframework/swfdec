@@ -20,6 +20,8 @@ static void swfdec_shape_compose_gradient (SwfdecDecoder * s,
     SwfdecSpriteSegment * seg);
 static unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
     double *color_mult, double *color_add);
+static SwfdecLayer * swfdec_shape_prerender (SwfdecDecoder * s,
+    SwfdecSpriteSegment * seg, SwfdecObject * obj, SwfdecLayer * oldlayer);
 
 
 GType _swfdec_shape_type;
@@ -61,6 +63,7 @@ static void swfdec_shape_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (gobject_class);
 
+  SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_shape_prerender;
 }
 
 static void swfdec_shape_init (GTypeInstance *instance, gpointer g_class)
@@ -287,7 +290,7 @@ art_define_shape (SwfdecDecoder * s)
 
   shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
   SWFDEC_OBJECT (shape)->id = id;
-  g_list_append (s->objects, shape);
+  s->objects = g_list_append (s->objects, shape);
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 
@@ -315,7 +318,7 @@ art_define_shape_3 (SwfdecDecoder * s)
   id = get_u16 (bits);
   shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
   SWFDEC_OBJECT (shape)->id = id;
-  g_list_append (s->objects, shape);
+  s->objects = g_list_append (s->objects, shape);
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 
@@ -625,7 +628,7 @@ art_svp_bbox (ArtSVP * svp, ArtIRect * box)
   box->y1 = ceil (dbox.y1);
 }
 
-SwfdecLayer *
+static SwfdecLayer *
 swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * obj, SwfdecLayer * oldlayer)
 {
@@ -799,6 +802,7 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   return layer;
 }
 
+#if 0
 void
 swfdec_shape_render (SwfdecDecoder * s, SwfdecLayer * layer,
     SwfdecObject * object)
@@ -815,6 +819,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecLayer * layer,
     swfdec_layervec_render (s, layervec);
   }
 }
+#endif
 
 static void
 swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,

@@ -48,7 +48,6 @@ static void swfdec_object_class_init (gpointer g_class, gpointer class_data)
   gobject_class->dispose = swfdec_object_dispose;
 
   parent_class = g_type_class_peek_parent (gobject_class);
-
 }
 
 static void swfdec_object_init (GTypeInstance *instance, gpointer g_class)
@@ -85,7 +84,7 @@ swfdec_object_get (SwfdecDecoder * s, int id)
   GList *g;
 
   for (g = g_list_first (s->objects); g; g = g_list_next (g)) {
-    object = (SwfdecObject *) g->data;
+    object = SWFDEC_OBJECT (g->data);
     if (object->id == id)
       return object;
   }

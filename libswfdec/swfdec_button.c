@@ -84,10 +84,11 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	layer = swfdec_layer_new();
 	layer->id = seg->id;
 	layer->depth = seg->depth;
-	swfdec_sprite_add_layer(s->main_sprite, layer);
+	//swfdec_render_add_layer(s->render, layer);
 
 	art_affine_multiply(layer->transform, seg->transform, s->transform);
 	if(button->state[0]){
+		SwfdecLayer *child_layer = NULL;
 		obj = swfdec_object_get(s,button->state[0]->id);
 		if(!obj)return NULL;
 
@@ -95,12 +96,14 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		art_affine_multiply(tmpseg->transform,
 			button->state[0]->transform, seg->transform);
 
+		child_layer = swfdec_spriteseg_prerender(s,tmpseg);
+#if 0
 		switch(obj->type){
 		case SWF_OBJECT_SHAPE:
-			layer = swfdec_shape_prerender_slow(s,tmpseg,obj);
+			child_layer = swfdec_shape_prerender_slow(s,tmpseg,obj);
 			break;
 		case SWF_OBJECT_TEXT:
-			layer = swfdec_text_prerender_slow(s,tmpseg,obj);
+			child_layer = swfdec_text_prerender_slow(s,tmpseg,obj);
 			break;
 #if 0
 		case SWF_OBJECT_SPRITE:
@@ -114,7 +117,12 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 			SWF_DEBUG(4,"swfdec_button_prerender: object type not handled %d\n",obj->type);
 			break;
 		}
+#endif
 
+		if(child_layer){
+			layer->sublayers = g_list_append(layer->sublayers,
+				child_layer);
+		}
 		swfdec_spriteseg_free(tmpseg);
 	}
 

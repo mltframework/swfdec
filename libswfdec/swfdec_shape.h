@@ -29,6 +29,7 @@ struct swfdec_shape_struct {
 	int rgba;
 };
 
+SwfdecShape *swfdec_shape_new(void);
 void swfdec_shape_free(SwfdecObject *object);
 void _swfdec_shape_free(SwfdecShape *shape);
 int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits);

@@ -22,14 +22,11 @@ void swfdec_sprite_decoder_free(SwfdecObject *object)
 
 void swfdec_sprite_free(SwfdecSprite *sprite)
 {
-#if 1
 	GList *g;
 
-	/* FIXME */
-	for(g=sprite->layers;g;g=g_list_next(g)){
+	for(g=g_list_first(sprite->layers);g;g=g_list_next(g)){
 		g_free(g->data);
 	}
-#endif
 	g_list_free(sprite->layers);
 
 	g_free(sprite);
@@ -76,6 +73,7 @@ SwfdecLayer *swfdec_sprite_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	layer = swfdec_layer_new();
 	layer->id = seg->id;
 	art_affine_multiply(layer->transform, seg->transform, s->transform);
+	//swfdec_render_add_layer(s->render, layer);
 	
 	layer->frame_number = (s->frame_number - seg->first_frame) % sprite->n_frames;
 	frame = layer->frame_number;

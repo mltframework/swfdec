@@ -169,7 +169,7 @@ int swfdec_decoder_free(SwfdecDecoder *s)
 {
 	GList *g;
 
-	for(g=s->objects;g;g=g_list_next(g)){
+	for(g=g_list_first(s->objects);g;g=g_list_next(g)){
 		swfdec_object_free((SwfdecObject *)g->data);
 	}
 	g_list_free(s->objects);
@@ -194,7 +194,7 @@ int swfdec_decoder_free(SwfdecDecoder *s)
 		g_free(s->tmp_scanline);
 	}
 
-	for(g=s->sound_buffers;g;g=g_list_next(g)){
+	for(g=g_list_first(s->sound_buffers);g;g=g_list_next(g)){
 		g_free(g->data);
 	}
 	g_list_free(s->sound_buffers);

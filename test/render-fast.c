@@ -22,8 +22,6 @@ int main (int argc, char *argv[])
 
   read_swf_file(fn);
 
-	while(swf_parse(s)!=SWF_EOF);
-
   return 0;
 }
 
@@ -39,7 +37,7 @@ void read_swf_file(char *fn)
 	int ret;
 	int i;
 
-	s = swf_init();
+	s = swfdec_decoder_new();
 
 	fd = open(fn,O_RDONLY);
 	if(fd<0){
@@ -64,21 +62,24 @@ void read_swf_file(char *fn)
 	ret = SWF_NEEDBITS;
 	i = 0;
 	while(ret != SWF_EOF){
-		ret = swf_parse(s);
+		ret = swfdec_decoder_parse(s);
 		//fprintf(stderr,"swf_parse returned %d\n",ret);
 		if(ret == SWF_NEEDBITS){
 			if(i==len){
 				printf("needbits at eof\n");
 			}
 			if(i+1000 < len){
-				ret = swf_addbits(s,data + i,1000);
+				ret = swfdec_decoder_addbits(s,data + i,1000);
 				i += 1000;
 			}else{
-				ret = swf_addbits(s,data + i,len - i);
+				ret = swfdec_decoder_addbits(s,data + i,len - i);
 				i = len;
 			}
 			//fprintf(stderr,"swf_addbits returned %d\n",ret);
 		}
 	}
+
+	swfdec_decoder_free(s);
+	g_free(data);
 }
 

@@ -4,20 +4,27 @@
 
 void swfdec_font_free(SwfdecObject *object)
 {
-	GArray *array = object->priv;
+	GPtrArray *array = object->priv;
 	SwfdecShape *shape;
 	int i;
 
 	for(i=0;i<array->len;i++){
-		shape = &g_array_index(array,SwfdecShape,i);
+		shape = g_ptr_array_index(array,i);
 		_swfdec_shape_free(shape);
 	}
-	g_array_free(array,TRUE);
+	g_ptr_array_free(array,TRUE);
 }
 
 void swfdec_text_free(SwfdecObject *object)
 {
 	GArray *array = object->priv;
+	SwfdecText *text;
+	int i;
+
+	for(i=0;i<array->len;i++){
+		text = &g_array_index(array,SwfdecText,i);
+		g_array_free(text->glyphs,TRUE);
+	}
 
 	g_array_free(array,TRUE);
 }
@@ -31,7 +38,7 @@ int tag_func_define_font(SwfdecDecoder *s)
 	SwfdecShapeVec *shapevec;
 	SwfdecShape *shape;
 	SwfdecObject *object;
-	GArray *array;
+	GPtrArray *array;
 
 	id = get_u16(&s->b);
 	object = swfdec_object_new(s,id);
@@ -43,14 +50,13 @@ int tag_func_define_font(SwfdecDecoder *s)
 		offset = get_u16(&s->b);
 	}
 
-	array = g_array_sized_new(TRUE,TRUE,sizeof(SwfdecShape),
-			n_glyphs);
+	array = g_ptr_array_sized_new(n_glyphs);
 	object->priv = array;
 	object->type = SWF_OBJECT_FONT;
-	g_array_set_size(array,n_glyphs);
 
 	for(i=0;i<n_glyphs;i++){
-		shape = &g_array_index(array,SwfdecShape,i);
+		shape = swfdec_shape_new();
+		g_ptr_array_add(array,shape);
 
 		shape->fills = g_ptr_array_sized_new(1);
 		shapevec = swf_shape_vec_new();
@@ -91,7 +97,7 @@ int tag_func_define_font_2(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
-	GArray *array;
+	GPtrArray *array;
 	SwfdecShapeVec *shapevec;
 	SwfdecShape *shape;
 	SwfdecObject *object;
@@ -142,14 +148,13 @@ int tag_func_define_font_2(SwfdecDecoder *s)
 		code_table_offset = get_u16(bits);
 	}
 
-	array = g_array_sized_new(TRUE,TRUE,sizeof(SwfdecShape),
-			n_glyphs);
+	array = g_ptr_array_sized_new(n_glyphs);
 	object->priv = array;
 	object->type = SWF_OBJECT_FONT;
-	g_array_set_size(array,n_glyphs);
 
 	for(i=0;i<n_glyphs;i++){
-		shape = &g_array_index(array,SwfdecShape,i);
+		shape = swfdec_shape_new();
+		g_ptr_array_add(array,shape);
 
 		shape->fills = g_ptr_array_sized_new(1);
 		shapevec = swf_shape_vec_new();
@@ -412,8 +417,8 @@ SwfdecLayer *swfdec_text_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 
 			glyph = &g_array_index(text->glyphs,SwfdecTextGlyph,j);
 
-			shape = &g_array_index((GArray *)fontobj->priv,
-				SwfdecShape,glyph->glyph);
+			shape = g_ptr_array_index((GPtrArray *)fontobj->priv,
+				glyph->glyph);
 			art_affine_translate(pos,
 				glyph->x * SWF_SCALE_FACTOR,
 				glyph->y * SWF_SCALE_FACTOR);

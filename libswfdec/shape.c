@@ -7,6 +7,15 @@
 static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	SwfdecShapeVec *shapevec, double trans[6]);
 
+SwfdecShape *swfdec_shape_new(void)
+{
+	SwfdecShape *shape;
+
+	shape = g_new0(SwfdecShape,1);
+
+	return shape;
+}
+
 void swfdec_shape_free(SwfdecObject *object)
 {
 	_swfdec_shape_free(object->priv);

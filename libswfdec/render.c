@@ -29,8 +29,8 @@ int art_place_object_2(SwfdecDecoder *s)
 	int has_character;
 	int move;
 	int depth;
-	SwfdecLayer *layer;
-	SwfdecLayer *oldlayer;
+	SwfdecSpriteSeg *layer;
+	SwfdecSpriteSeg *oldlayer;
 
 	reserved = getbit(bits);
 	has_compose = getbit(bits);
@@ -54,18 +54,18 @@ int art_place_object_2(SwfdecDecoder *s)
 	SWF_DEBUG(0,"  has_matrix = %d\n",has_matrix);
 	SWF_DEBUG(0,"  has_character = %d\n",has_character);
 
-	oldlayer = swfdec_layer_get(s,depth);
+	oldlayer = swfdec_sprite_get_seg(s->parse_sprite,depth,s->parse_sprite->parse_frame);
 	if(oldlayer){
 		oldlayer->last_frame = s->frame_number;
 	}
 
-	layer = swfdec_layer_new();
+	layer = swfdec_spriteseg_new();
 
 	layer->depth = depth;
 	layer->first_frame = s->frame_number;
 	layer->last_frame = 0;
 
-	swfdec_sprite_add_layer(s->main_sprite,layer);
+	swfdec_sprite_add_seg(s->main_sprite,layer);
 
 	if(has_character){
 		layer->id = get_u16(bits);

@@ -7,7 +7,8 @@ libmpglib_la_SOURCES = layer1.c layer2.c common.c dct64_i386.c \
 libmpglib_la_CFLAGS = -DLAYER1 -DLAYER2 -DLAYER3 $(GLIB_CFLAGS)
 libmpglib_la_LDFLAGS = -lm $(GLIB_LIBS)
 
-noinst_HEADERS = huffman.h l2tables.h mpglib.h mpglib_internal.h
+noinst_HEADERS = clipconv_f32_s16.h dct32_f32.h huffman.h l2tables.h \
+	mpglib.h mpglib_config.h mpglib_internal.h
 
 noinst_PROGRAMS = mpglib_test
 

@@ -95,22 +95,33 @@ if test "$HAVE_LIBOIL" = "no"; then
   AC_MSG_ERROR([cannot find liboil-0.2, which is required for build])
 fi
 
-PKG_CHECK_MODULES(LIBART, libart-2.0, HAVE_LIBART=yes, HAVE_LIBART=no)
-AC_SUBST(LIBART_LIBS)
-AC_SUBST(LIBART_CFLAGS)
-if test "$HAVE_LIBART" = "no"; then
-  AC_MSG_ERROR([cannot find libart-2.0, which is required for build])
-else
-  AC_DEFINE(HAVE_LIBART, 1, [Define if swfdec uses libart for rendering])
+AC_ARG_WITH(backend,
+    [  --with-backend=BACKEND  Use a particular rendering backend [default=libart]],
+    BACKEND="$withval", BACKEND=libart)
+
+if test "x$BACKEND" = "xlibart" ; then
+  PKG_CHECK_MODULES(LIBART, libart-2.0, HAVE_LIBART=yes, HAVE_LIBART=no)
+  AC_SUBST(LIBART_LIBS)
+  AC_SUBST(LIBART_CFLAGS)
+  if test "$HAVE_LIBART" = "no"; then
+    AC_MSG_ERROR([cannot find libart-2.0, which is required for build])
+  else
+    AC_DEFINE(HAVE_LIBART, 1, [Define if swfdec uses libart for rendering])
+  fi
 fi
 AM_CONDITIONAL(HAVE_LIBART, test x$HAVE_LIBART = xyes)
 
-#PKG_CHECK_MODULES(CAIRO, cairo, HAVE_CAIRO=yes, HAVE_CAIRO=no)
-#AC_SUBST(CAIRO_LIBS)
-#AC_SUBST(CAIRO_CFLAGS)
-#if test "$HAVE_CAIRO" = "no"; then
-#  AC_MSG_ERROR([cannot find cairo, which is required for build])
-#fi
+if test "x$BACKEND" = "xcairo" ; then
+  PKG_CHECK_MODULES(CAIRO, cairo, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+  AC_SUBST(CAIRO_LIBS)
+  AC_SUBST(CAIRO_CFLAGS)
+  if test "$HAVE_CAIRO" = "no"; then
+    AC_MSG_ERROR([cannot find cairo, which is required for build])
+  else
+    AC_DEFINE(HAVE_CAIRO, 1, [Define if swfdec uses cairo for rendering])
+  fi
+fi
+AM_CONDITIONAL(HAVE_CAIRO, test x$HAVE_CAIRO = xyes)
 
 AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
 AC_SUBST(MAD_LIBS)

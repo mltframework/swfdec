@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "swfdec_internal.h"
-#include <swfdec_render_libart.h>
+#include <swfdec_render.h>
 
 
 static void swfdec_shapevec_free (SwfdecShapeVec * shapevec);

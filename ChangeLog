@@ -1,3 +1,30 @@
+2004-12-08  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add switch for using the cairo backend, and fix
+	cairo detection
+	* libswfdec/Makefile.am: add cairo backend
+	* libswfdec/swf.c: same
+	* libswfdec/swfdec_decoder.h: same
+	* libswfdec/swfdec_layer.c: same
+	* libswfdec/swfdec_render.c: (swfdec_render_get_image): move some
+	rendering stuff to backends
+	* libswfdec/swfdec_render.h: move backend functions to here, since
+	they're common to both
+	* libswfdec/swfdec_render_cairo.c: (swfdec_render_be_start),
+	(swfdec_render_be_stop), (swfdec_layervec_render), (draw),
+	(draw_rev), (draw_x), (swfdec_shape_render), (swfdec_text_render),
+	(swf_config_colorspace), (swfdec_render_layervec_free): add cairo
+	backend
+	* libswfdec/swfdec_render_libart.c: (swfdec_render_be_start),
+	(swfdec_render_be_stop): move some rendering stuff to backend
+	* libswfdec/swfdec_shape.c: add cairo backend
+	* libswfdec/swfdec_text.c: same
+	* libswfdec/swfdec_transform.h: same
+	* player/swf_play.c: (render_idle_audio): disable debugging and
+	add noskip
+	* test/render-fast.c: remove libart header
+	* test/render.c: same
+
 2004-11-24  David Schleef  <ds@schleef.org>
 
 	* configure.ac:

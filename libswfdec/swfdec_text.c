@@ -2,7 +2,7 @@
 #include <swfdec_text.h>
 #include "swfdec_internal.h"
 #include <swfdec_font.h>
-#include <swfdec_render_libart.h>
+#include <swfdec_render.h>
 
 
 static void swfdec_text_base_init (gpointer g_class);

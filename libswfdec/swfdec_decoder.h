@@ -106,6 +106,8 @@ struct _SwfdecDecoder
 
   /* should be in SwfdecRender */
   gboolean stopped;
+
+  void *backend_private;
 };
 
 SwfdecDecoder *swf_init (void);

@@ -3,6 +3,7 @@
 #define __SWFDEC_TRANSFORM_H__
 
 #include "swfdec_types.h"
+#include <glib.h>
 
 struct _SwfdecTransform
 {

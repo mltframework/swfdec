@@ -117,21 +117,12 @@ swfdec_render_get_image (SwfdecDecoder * s)
   s->render->drawrect.x1 = 0;
   s->render->drawrect.y0 = 0;
   s->render->drawrect.y1 = 0;
-  if (!s->buffer) {
-    s->buffer = g_malloc (s->stride * s->height);
-    swf_invalidate_irect (s, &s->irect);
-  }
   swf_invalidate_irect (s, &s->irect);
-  if (!s->tmp_scanline) {
-    s->tmp_scanline = g_malloc (s->width);
-  }
 
-  SWFDEC_DEBUG ("rendering frame %d", s->render->frame_index);
+  swfdec_render_be_start (s);
 
   SWFDEC_DEBUG ("inval rect %d %d %d %d", s->render->drawrect.x0,
       s->render->drawrect.x1, s->render->drawrect.y0, s->render->drawrect.y1);
-
-  s->fillrect (s->buffer, s->stride, s->bg_color, &s->render->drawrect);
 
   for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
     SwfdecObject *object;
@@ -184,10 +175,9 @@ swfdec_render_get_image (SwfdecDecoder * s)
     }
   }
 
-  buffer = swfdec_buffer_new_with_data (s->buffer, s->stride * s->height);
+  swfdec_render_be_stop (s);
 
-  g_free (s->tmp_scanline);
-  s->tmp_scanline = NULL;
+  buffer = swfdec_buffer_new_with_data (s->buffer, s->stride * s->height);
 
   s->buffer = NULL;
   return buffer;

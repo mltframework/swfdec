@@ -17,7 +17,8 @@
 #include <SDL.h>
 #include "spp.h"
 
-#define DEBUG(...) fprintf(stderr,__VA_ARGS__)
+//#define DEBUG(...) fprintf(stderr,__VA_ARGS__)
+#define DEBUG(...)
 
 typedef struct _Packet Packet;
 struct _Packet
@@ -47,6 +48,7 @@ static int width;
 static int height;
 
 static gboolean enable_sound = TRUE;
+static gboolean noskip = TRUE;
 static gboolean slow = FALSE;
 static gboolean safe = FALSE;
 static gboolean hidden = FALSE;
@@ -456,7 +458,7 @@ render_idle_audio (gpointer data)
     sound_bytes += audio_buffer->length;
   }
 
-  if (sound_bytes > 20000) {
+  if (sound_bytes > 20000 || noskip) {
     video_buffer = swfdec_render_get_image (s);
   } else {
     video_buffer = NULL;

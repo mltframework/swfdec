@@ -6,9 +6,7 @@
 #include <math.h>
 
 #include "swfdec_internal.h"
-#ifdef HAVE_LIBART
-#include "swfdec_render_libart.h"
-#endif
+#include "swfdec_render.h"
 
 
 SwfdecLayer *

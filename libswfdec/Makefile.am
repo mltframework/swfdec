@@ -12,6 +12,12 @@ renderer_sources = swfdec_render_libart.c art.c
 renderer_headers = swfdec_render_libart.h art.h
 endif
 
+if HAVE_CAIRO
+renderer_cflags = $(CAIRO_CFLAGS)
+renderer_libs = $(CAIRO_LIBS)
+renderer_sources = swfdec_render_cairo.c
+renderer_headers =
+endif
 
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c color.c swfdec_image.c \

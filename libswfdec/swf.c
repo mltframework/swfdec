@@ -9,9 +9,7 @@
 #include <stdlib.h>
 
 #include <liboil/liboil.h>
-#ifdef HAVE_LIBART
-#include "swfdec_render_libart.h"
-#endif
+#include "swfdec_render.h"
 
 #include "swfdec_internal.h"
 

@@ -1,4 +1,3 @@
-#include <libart_lgpl/libart.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdio.h>

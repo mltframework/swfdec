@@ -34,4 +34,18 @@ int swfdec_render_get_frame_index (SwfdecDecoder * s);
 SwfdecRenderState *swfdec_render_get_object_state (SwfdecRender * render,
     int layer, int id);
 
+/* functions implemented by rendering backends */
+
+void swfdec_render_be_start (SwfdecDecoder *s);
+void swfdec_render_be_stop (SwfdecDecoder *s);
+void swf_render_frame (SwfdecDecoder * s, int frame_index);
+void swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec);
+void swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * obj);
+void swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * object);
+void swf_config_colorspace (SwfdecDecoder * s);
+void swfdec_render_layervec_free (SwfdecLayerVec * layervec);
+
+
 #endif

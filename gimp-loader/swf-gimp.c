@@ -111,7 +111,9 @@ load_ok_callback (GtkWidget *widget,
 {
 	LoadDialogVals *vals = (LoadDialogVals *)data;
 	
-	load_vals.frame = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->frame));
+	if (vals->frame)
+		load_vals.frame = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->frame));
+
 	load_vals.width = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->width_adj));
 	load_vals.height = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->height_adj));
 	
@@ -159,7 +161,7 @@ load_dialog (const gchar *file_name)
 	
 	gimp_ui_init ("swf", FALSE);
 	
-	vals = g_new (LoadDialogVals, 1);
+	vals = g_new0 (LoadDialogVals, 1);
 	
 	vals->dialog = gimp_dialog_new (_("Load Shockwave Flash Image"), "swf",
 					NULL, NULL, /* gimp_standard_help_func, "swf, */
@@ -175,7 +177,6 @@ load_dialog (const gchar *file_name)
 			  G_CALLBACK (gtk_main_quit),
 			  NULL);
 	
-	/* Rendering */
 	frame = gtk_frame_new (g_strdup_printf (_("Rendering %s"), file_name));
 	gtk_container_set_border_width (GTK_CONTAINER (frame), 6);
 	gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_ETCHED_IN);
@@ -186,39 +187,45 @@ load_dialog (const gchar *file_name)
 	gtk_container_set_border_width (GTK_CONTAINER (vbox), 4);
 	gtk_container_add (GTK_CONTAINER (frame), vbox);
 	
-	/* Scale label */
-	table = gtk_table_new (3, 3, FALSE);
+	table = gtk_table_new (nframes == 1 ? 2 : 3, 
+			       nframes == 1 ? 2 : 3, FALSE);
 	gtk_table_set_row_spacings (GTK_TABLE (table), 2);
 	gtk_table_set_col_spacings (GTK_TABLE (table), 4);
 	gtk_box_pack_start (GTK_BOX (vbox), table, FALSE, FALSE, 0);
 	gtk_widget_show (table);
 	
-	vals->frame = gimp_scale_entry_new (GTK_TABLE (table), 0, 1,
-					    _("Frame:"), -1, -1,
-					    load_vals.frame, 1, nframes,
-					    1., 0.5, 0,
-					    TRUE, 0.0, 0.0,
-					    NULL, NULL);
+	if (nframes > 1) {
+		vals->frame = gimp_scale_entry_new (GTK_TABLE (table), 0, 1,
+						    _("Frame:"), -1, -1,
+						    load_vals.frame, 1, nframes,
+						    1., 0.5, 0,
+						    TRUE, 0.0, 0.0,
+						    NULL, NULL);
+	}
 
 	label = gtk_label_new (_("Width:"));
 	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
-	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 2, 3,
+	gtk_table_attach (GTK_TABLE (table), label, 0, 1, nframes == 1 ? 1 : 2, 
+			  nframes == 1 ? 2 : 3,
 			  GTK_FILL, GTK_FILL, 0, 0);
 	gtk_widget_show (label);	
 	adj = gimp_spin_button_new (&vals->width_adj, width, 1, width * 4,
 				    1.0, 0.5, 0.5, 1.0, 1);
-	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, 2, 3,
+	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, nframes == 1 ? 1 : 2, 
+			  nframes == 1 ? 2 : 3,
 			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 	gtk_widget_show (adj);
 
 	label = gtk_label_new (_("Height:"));
 	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
-	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 3, 4,
+	gtk_table_attach (GTK_TABLE (table), label, 0, 1, nframes == 1 ? 2 : 3, 
+			  nframes == 1 ? 3 : 4,
 			  GTK_FILL, GTK_FILL, 0, 0);
 	gtk_widget_show (label);	
 	adj = gimp_spin_button_new (&vals->height_adj, height, 1, height * 4,
 				    1.0, 0.5, 0.5, 1.0, 1);
-	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, 3, 4,
+	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, nframes == 1 ? 2 : 3, 
+			  nframes == 1 ? 3 : 4,
 			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 	gtk_widget_show (adj);
 	

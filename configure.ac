@@ -8,7 +8,7 @@ dnl *NOTE*: dnl this line before release, so release does static too
 dnl AM_DISABLE_STATIC
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(swfdec, SWFDEC, 0, 1, 0)
+AS_VERSION(libswfdec, SWFDEC, 0, 1, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(SWFDEC, 0, 0, 0, yes)
 
@@ -106,8 +106,15 @@ if test "$HAVE_MAD" = "no"; then
 fi
 AC_SUBST(MAD_LIBS)
 
-MOZ_PLUGIN_LDFLAGS='-module -avoid-version'
-AC_SUBST(MOZ_PLUGIN_LDFLAGS)
+if test -z "$MOZILLA_CONFIG"; then
+  AC_PATH_PROG(MOZILLA_CONFIG, mozilla-config, no)
+fi
+if test "$MOZILLA_CONFIG" = "no"; then
+  AC_MSG_ERROR([cannot find mozilla development headers, which is required for build])
+fi
+_mozilla_include_dir=`mozilla-config --cflags|sed 's/-I\(.*\) .*/\1/'`
+MOZILLA_CFLAGS="-I$_mozilla_include_dir/plugin -I$_mozilla_include_dir/java -I$_mozilla_include_dir/nspr"
+AC_SUBST(MOZILLA_CFLAGS)
 
 dnl Check for X11 extensions
 AC_PATH_XTRA
@@ -172,7 +179,7 @@ test/Makefile
 plugin/Makefile
 player/Makefile
 debian/Makefile
-libswfdecode.pc
+libswfdec.pc
 )
 
 AC_OUTPUT

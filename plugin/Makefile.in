@@ -80,7 +80,8 @@ LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 MAD_LIBS = @MAD_LIBS@
 MAINT = @MAINT@
-MOZ_PLUGIN_LDFLAGS = @MOZ_PLUGIN_LDFLAGS@
+MOZILLA_CFLAGS = @MOZILLA_CFLAGS@
+MOZILLA_CONFIG = @MOZILLA_CONFIG@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -104,20 +105,16 @@ plugindir = $(libdir)/mozilla/plugins/
 plugin_LTLIBRARIES = libmozswfdec.la
 
 libmozswfdec_la_SOURCES = plugin.c npunix.c
-libmozswfdec_la_CFLAGS = \
-	-I/usr/include/mozilla-1.0.0/plugin \
-	-I/usr/include/mozilla-1.0.0/java \
-	-I/usr/include/mozilla-1.0.0/nspr \
-	$(GLIB12_CFLAGS) $(GDK_CFLAGS)
-
-libmozswfdec_la_LDFLAGS = -L/usr/X11R6/lib -lXt $(MOZ_PLUGIN_LDFLAGS)
+libmozswfdec_la_CFLAGS = $(MOZILLA_CFLAGS) $(X_CFLAGS)
+libmozswfdec_la_LDFLAGS = $(X_LIBS)
+libmozswfdec_la_LIBADD = -lXt
 subdir = plugin
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(plugin_LTLIBRARIES)
 
-libmozswfdec_la_LIBADD =
+libmozswfdec_la_DEPENDENCIES =
 am_libmozswfdec_la_OBJECTS = libmozswfdec_la-plugin.lo \
 	libmozswfdec_la-npunix.lo
 libmozswfdec_la_OBJECTS = $(am_libmozswfdec_la_OBJECTS)

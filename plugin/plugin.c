@@ -46,9 +46,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include "npapi.h"
-//#include "nullplugin.h"
-#include "strings.h"
-#include "plstr.h"
+//#include "strings.h"
+//#include "plstr.h"
 
 #include "config.h"
 

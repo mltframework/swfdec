@@ -166,8 +166,12 @@ tag_remove_object_2 (SwfdecDecoder * s)
 int
 tag_show_frame (SwfdecDecoder * s)
 {
+  SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
+      s->parse_sprite->object.id);
+
   s->frame_number++;
   s->parse_sprite->parse_frame++;
+
   return SWF_OK;
 }
 

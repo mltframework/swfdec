@@ -1,3 +1,161 @@
+2005-04-04  Eric Anholt  <anholt@FreeBSD.org>
+
+	* .cvsignore:
+	* configure.ac:
+	* libswfdec/Makefile.am:
+	* libswfdec/actions.c:
+	* libswfdec/actions_builtin.c:
+	* libswfdec/actions_tags.c:
+	* libswfdec/js/.cvsignore:
+	* libswfdec/js/INTEGRATION:
+	* libswfdec/js/Makefile.am:
+	* libswfdec/js/js.c:
+	* libswfdec/js/js.msg:
+	* libswfdec/js/jsapi.c:
+	* libswfdec/js/jsapi.h:
+	* libswfdec/js/jsarena.c:
+	* libswfdec/js/jsarena.h:
+	* libswfdec/js/jsarray.c:
+	* libswfdec/js/jsarray.h:
+	* libswfdec/js/jsatom.c:
+	* libswfdec/js/jsatom.h:
+	* libswfdec/js/jsautocfg.h:
+	* libswfdec/js/jsbit.h:
+	* libswfdec/js/jsbool.c:
+	* libswfdec/js/jsbool.h:
+	* libswfdec/js/jsclist.h:
+	* libswfdec/js/jscntxt.c:
+	* libswfdec/js/jscntxt.h:
+	* libswfdec/js/jscompat.h:
+	* libswfdec/js/jsconfig.h:
+	* libswfdec/js/jscpucfg.c:
+	* libswfdec/js/jscpucfg.h:
+	* libswfdec/js/jsdate.c:
+	* libswfdec/js/jsdate.h:
+	* libswfdec/js/jsdbgapi.c:
+	* libswfdec/js/jsdbgapi.h:
+	* libswfdec/js/jsdhash.c:
+	* libswfdec/js/jsdhash.h:
+	* libswfdec/js/jsdtoa.c:
+	* libswfdec/js/jsdtoa.h:
+	* libswfdec/js/jsemit.c:
+	* libswfdec/js/jsemit.h:
+	* libswfdec/js/jsexn.c:
+	* libswfdec/js/jsexn.h:
+	* libswfdec/js/jsfile.c:
+	* libswfdec/js/jsfile.h:
+	* libswfdec/js/jsfun.c:
+	* libswfdec/js/jsfun.h:
+	* libswfdec/js/jsgc.c:
+	* libswfdec/js/jsgc.h:
+	* libswfdec/js/jshash.c:
+	* libswfdec/js/jshash.h:
+	* libswfdec/js/jsinterp.c:
+	* libswfdec/js/jsinterp.h:
+	* libswfdec/js/jslibmath.h:
+	* libswfdec/js/jslock.c:
+	* libswfdec/js/jslock.h:
+	* libswfdec/js/jslog2.c:
+	* libswfdec/js/jslong.c:
+	* libswfdec/js/jslong.h:
+	* libswfdec/js/jsmath.c:
+	* libswfdec/js/jsmath.h:
+	* libswfdec/js/jsnum.c:
+	* libswfdec/js/jsnum.h:
+	* libswfdec/js/jsobj.c:
+	* libswfdec/js/jsobj.h:
+	* libswfdec/js/jsopcode.c:
+	* libswfdec/js/jsopcode.h:
+	* libswfdec/js/jsopcode.tbl:
+	* libswfdec/js/jsosdep.h:
+	* libswfdec/js/jsotypes.h:
+	* libswfdec/js/jsparse.c:
+	* libswfdec/js/jsparse.h:
+	* libswfdec/js/jsprf.c:
+	* libswfdec/js/jsprf.h:
+	* libswfdec/js/jsprvtd.h:
+	* libswfdec/js/jspubtd.h:
+	* libswfdec/js/jsregexp.c:
+	* libswfdec/js/jsregexp.h:
+	* libswfdec/js/jsscan.c:
+	* libswfdec/js/jsscan.h:
+	* libswfdec/js/jsscope.c:
+	* libswfdec/js/jsscope.h:
+	* libswfdec/js/jsscript.c:
+	* libswfdec/js/jsscript.h:
+	* libswfdec/js/jsshell.msg:
+	* libswfdec/js/jsstddef.h:
+	* libswfdec/js/jsstr.c:
+	* libswfdec/js/jsstr.h:
+	* libswfdec/js/jstypes.h:
+	* libswfdec/js/jsutil.c:
+	* libswfdec/js/jsutil.h:
+	* libswfdec/js/jsxdrapi.c:
+	* libswfdec/js/jsxdrapi.h:
+	* libswfdec/js/prmjtime.c:
+	* libswfdec/js/prmjtime.h:
+	* libswfdec/render.c:
+	* libswfdec/swf.c:
+	* libswfdec/swfdec_actions.h:
+	* libswfdec/swfdec_bits.c:
+	* libswfdec/swfdec_debug.c:
+	* libswfdec/swfdec_font.c:
+	* libswfdec/swfdec_render.c:
+	(swfdec_render_get_image):
+	* libswfdec/swfdec_render.h:
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render_iterate),
+	(swfdec_sprite_render), (swfdec_spriteseg_free),
+	(swfdec_get_clipeventflags), (swfdec_spriteseg_place_object_2):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/tags.h:
+	Add initial support for ActionScript 2, used in Flash 5+ scripts:
+	- Bring in Mozilla's Spidermonkey JS code, and connect it to the build.
+	  Include an INTEGRATION file noting the changes made to the code from
+	  the upstream.
+	- Replace ActionVals with jsvals, the multiple-type value used in
+	  spidermonkey.
+	- Set up a JS context when initializing the AS context, including array
+	  objects for stack and registers.  We must be careful to store all
+	  jsvals used in our structs in some sort of rooted object, or they will
+	  be automatically garbage collected.  The spidermonkey code comes with
+	  the standard Math, String, Number, etc. classes from ECMA-262.
+	- Add support for function and method calls by moving the actionscript
+	  opcode parsing into a new action_script_call JS native function and
+	  wrapping it in JS function objects to call, including when doing
+	  the intial action_script_execute.
+	- Add implementations of the following actions: CallFunction,
+	  CallMethod, DefineFunction, GetMember, InitObject, NewObject,
+	  SetMember, ToNumber, ToString, Modulo, BitAnd, BitLShift, BitOr,
+	  BitRShift, BitURShift, BitXor, Decrement, Increment, PushDuplicate,
+	  Swap, StoreRegister, StringGreater
+	- Add incomplete implementations of the following actions: DefineLocal,
+	  DefineLocal2, Equals2, Typeof, Add2, Less2, Greater
+	- Add stubs of the following actions: Delete2, NewMethod, Enumerate2,
+	  Extends
+	- Stub out ActionMBAsciiToChar and ActionMBCharToAscii (oops).
+	- Support the DoInitAction control tag, which executes actionscript on a
+	  given sprite once, rather than on a specific frame.
+	- Note the names of the new MX* control tags described in the Flash 7
+	  spec.
+	- Add initial support for ClipEvents in PlaceObject2 control tag.
+	- Add a callback from PlaceObject2 to actions.c so that new MovieClip
+	  objects can be created corresponding to the object.
+	- Split the actions.c file into three -- actions_builtin.c for the
+	  native classes and functions, actions_tags.c for the Action*
+	  implementations, and actions.c contains the remainder of execution,
+	  object, type, stack, etc. support.
+	- Remove the RenderState object and replace it with a frame_index number
+	  in the SpriteSegment.  To deal with MovieClips, we will need to move
+	  more play control into the SpriteSegment (instance of a Sprite).
+	
+	This is a significant step towards playing Flash 5+ files correctly, but
+	there is significant work to do.  ActionNewObject appears to not call
+	the constructor necessary if it's one we set up (as in, any class
+	created by the script), which kills some scripts, and is a major
+	regression from the non-spidermonkey patch.  However, if this can be
+	resolved, the spidermonkey route is clearly the way to go.  MovieClip
+	class support is also critical and used regularly by scripts.
+
 2005-03-25  David Schleef  <ds@schleef.org>
 
 	* libswfdec/actions.c: (action_push): Check that the register

@@ -184,7 +184,6 @@ swfdec_decoder_parse (SwfdecDecoder * s)
           header_length = 2;
         }
         swfdec_buffer_unref (buffer);
-        SWFDEC_DEBUG ("tag length %d", tag_len);
 
         SWFDEC_INFO ("parsing at %d, tag %d %s, length %d",
             swfdec_buffer_queue_get_offset (s->input_queue), tag,
@@ -715,10 +714,10 @@ struct tag_func_struct tag_funcs[] = {
   [ST_EXPORTASSETS] = {"ExportAssets", NULL, 0},
   [ST_IMPORTASSETS] = {"ImportAssets", NULL, 0},
   [ST_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
-  [ST_MX0] = {"MX0", NULL, 0},
-  [ST_MX1] = {"MX1", NULL, 0},
-  [ST_MX2] = {"MX2", NULL, 0},
-  [ST_MX3] = {"MX3", NULL, 0},
+  [ST_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, 0},
+  [ST_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
+  [ST_VIDEOFRAME] = {"VideoFrame", NULL, 0},
+  [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", NULL, 0},
   [ST_MX4] = {"MX4", NULL, 0},
 //      [ ST_REFLEX             ] = { "Reflex", NULL,   0 },
 };

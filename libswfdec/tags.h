@@ -65,10 +65,10 @@
 #define ST_EXPORTASSETS		56
 #define ST_IMPORTASSETS		57
 #define ST_ENABLEDEBUGGER	58
-#define ST_MX0			59      /*(?) Components/InitClip */
-#define ST_MX1			60      /*(?) Sorensen Video */
-#define ST_MX2			61      /*(?) Sorensen Video */
-#define ST_MX3			62      /*(?) fontinfo2? */
+#define ST_DOINITACTION		59
+#define ST_DEFINEVIDEOSTREAM	60
+#define ST_VIDEOFRAME		61
+#define ST_DEFINEFONTINFO2	62
 #define ST_MX4			63      /*(?) */
 
 #define ST_REFLEX              777      /* to identify generator software */

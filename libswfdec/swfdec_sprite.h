@@ -12,16 +12,24 @@ typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
 
 //typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;
 
+#define CLIPEVENT_LOAD			0
+#define CLIPEVENT_ENTERFRAME		1
+#define CLIPEVENT_MAX			2
+
 struct _SwfdecSpriteSegment
 {
   int depth;
   int id;
+  int frame_index;
   int first_frame;
   int last_frame;
   int clip_depth;
 
   SwfdecTransform transform;
   SwfdecColorTransform color_transform;
+
+  int ran_load;
+  SwfdecBuffer *clipevent[CLIPEVENT_MAX];
 
   int ratio;
 };
@@ -73,11 +81,10 @@ int swfdec_spriteseg_place_object_2 (SwfdecDecoder * s);
 int swfdec_spriteseg_remove_object (SwfdecDecoder * s);
 int swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s);
 
+void swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSprite *sprite);
 void swf_render_frame (SwfdecDecoder * s, int frame_index);
 void swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg);
 void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);
-
-
 
 G_END_DECLS
 #endif

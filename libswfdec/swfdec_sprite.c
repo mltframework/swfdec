@@ -87,6 +87,48 @@ swfdec_sprite_add_action (SwfdecSprite * sprite,
   swfdec_buffer_ref (actions);
 }
 
+void
+swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSprite *sprite)
+{
+  SwfdecSprite *save_parse_sprite;
+  /*SwfdecSprite *child_sprite;
+  SwfdecObject *obj;*/
+  SwfdecSpriteSegment *seg;
+  GList *g;
+
+  save_parse_sprite = s->parse_sprite;
+  s->parse_sprite = sprite;
+
+  if (!s->stopped && sprite->actions[s->render->frame_index]) {
+    /* FIXME: This should be a segment frame index, not a global one */
+    swfdec_action_script_execute (s, sprite->actions[s->render->frame_index]);
+  }
+
+  for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
+    seg = (SwfdecSpriteSegment *) g->data;
+
+    if (!seg->ran_load && seg->clipevent[CLIPEVENT_LOAD]) {
+      seg->ran_load = TRUE;
+      swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_LOAD]);
+    }
+    if (seg->clipevent[CLIPEVENT_ENTERFRAME]) {
+      swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_ENTERFRAME]);
+    }
+
+    seg->frame_index++;
+
+    /* FIXME: recurse through sprites necessary.*/
+    /*obj = swfdec_object_get (s, seg->id);
+    if (!SWFDEC_IS_SPRITE(obj))
+      continue;
+    child_sprite = SWFDEC_SPRITE(obj);
+    swfdec_sprite_render_iterate(s, child_sprite);
+    */
+  }
+
+  s->parse_sprite = save_parse_sprite;
+}
+
 static void
 swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object)
@@ -94,29 +136,12 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecSprite *sprite = SWFDEC_SPRITE (object);
   SwfdecTransform save_transform;
   GList *g;
-  SwfdecRenderState *state;
   int clip_depth = 0;
 
   //memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
 
-  state = swfdec_render_get_object_state (s->render, seg->depth, seg->id);
-  if (state == NULL) {
-    state = g_new0 (SwfdecRenderState, 1);
-    state->layer = seg->depth;
-    state->id = seg->id;
-    state->frame_index = 0;
-    s->render->object_states = g_list_prepend (s->render->object_states, state);
-    SWFDEC_INFO ("new rendering state for layer %d", seg->depth);
-  } else {
-    if (state->id != seg->id) {
-      SWFDEC_INFO ("old id=%d new id=%d", state->id, seg->id);
-      state->id = seg->id;
-      state->frame_index = 0;
-      SWFDEC_INFO ("resetting rendering state of layer %d", seg->depth);
-    }
-  }
-  if (state->frame_index >= sprite->n_frames) {
-    state->frame_index = 0;
+  if (seg->frame_index >= sprite->n_frames) {
+    seg->frame_index = 0;
     SWFDEC_INFO ("looping rendering state of layer %d", seg->depth);
   }
 
@@ -129,9 +154,9 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     child_seg = (SwfdecSpriteSegment *) g->data;
 
-    if (child_seg->first_frame > state->frame_index)
+    if (child_seg->first_frame > child_seg->frame_index)
       continue;
-    if (child_seg->last_frame <= state->frame_index)
+    if (child_seg->last_frame <= child_seg->frame_index)
       continue;
 
     /* FIXME need to clip layers instead */
@@ -426,14 +451,30 @@ swfdec_spriteseg_dup (SwfdecSpriteSegment * seg)
 void
 swfdec_spriteseg_free (SwfdecSpriteSegment * seg)
 {
+  int i;
+
+  for (i = 0; i < CLIPEVENT_MAX; i++) {
+    if (seg->clipevent[i])
+      swfdec_buffer_unref(seg->clipevent[i]);
+  }
   g_free (seg);
+}
+
+static int
+swfdec_get_clipeventflags (SwfdecDecoder * s, SwfdecBits * bits)
+{
+  if (s->version <= 5) {
+    return swfdec_bits_get_u16 (bits);
+  } else {
+    return swfdec_bits_get_u32 (bits);
+  }
 }
 
 int
 swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  int reserved;
+  int has_clip_actions;
   int has_clip_depth;
   int has_name;
   int has_ratio;
@@ -445,7 +486,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SwfdecSpriteSegment *layer;
   SwfdecSpriteSegment *oldlayer;
 
-  reserved = swfdec_bits_getbit (bits);
+  has_clip_actions = swfdec_bits_getbit (bits);
   has_clip_depth = swfdec_bits_getbit (bits);
   has_name = swfdec_bits_getbit (bits);
   has_ratio = swfdec_bits_getbit (bits);
@@ -456,10 +497,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   depth = swfdec_bits_get_u16 (bits);
 
   /* reserved is somehow related to sprites */
-  SWFDEC_LOG ("  reserved = %d", reserved);
-  if (reserved) {
-    SWFDEC_WARNING ("  reserved bits non-zero %d", reserved);
-  }
+  SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
   SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
   SWFDEC_LOG ("  has_name = %d", has_name);
   SWFDEC_LOG ("  has_ratio = %d", has_ratio);
@@ -526,7 +564,9 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       layer->ratio = oldlayer->ratio;
   }
   if (has_name) {
-    g_free (swfdec_bits_get_string (bits));
+    char *name = swfdec_bits_get_string (bits);
+    action_register_sprite_name (s, name, layer->id);
+    g_free (name);
   }
   if (has_clip_depth) {
     layer->clip_depth = swfdec_bits_get_u16 (bits);
@@ -534,6 +574,35 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   } else {
     if (oldlayer) {
       layer->clip_depth = oldlayer->clip_depth;
+    }
+  }
+  if (has_clip_actions) {
+    int reserved, clip_event_flags, event_flags, record_size;
+    int i;
+
+    reserved = swfdec_bits_get_u16 (bits);
+    clip_event_flags = swfdec_get_clipeventflags (s, bits);
+
+    while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
+      record_size = swfdec_bits_get_u32 (bits);
+
+      /* This appears to be a copy'n'paste-o in the spec. */
+      /*key_code = swfdec_bits_get_u8 (bits);*/
+
+      SWFDEC_INFO ("clip event with flags 0x%x, %d record length (v%d)",
+	  event_flags, record_size, s->version);
+
+      for (i = 0; i < CLIPEVENT_MAX; i++) {
+        if (!(event_flags & (1 << i)))
+          continue;
+        layer->clipevent[i] = swfdec_buffer_new_subbuffer (bits->buffer,
+            bits->ptr - bits->buffer->data, record_size);
+	event_flags &= ~(1 << i);
+      }
+      if (event_flags != 0) {
+        SWFDEC_WARNING ("  clip actions other than onLoad/enterFrame unimplemented");
+      }
+      bits->ptr += record_size;
     }
   }
 

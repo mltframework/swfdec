@@ -1,7 +1,6 @@
+SUBDIRS = jpeg js
 
-SUBDIRS = jpeg
-
-DIST_SUBDIRS = jpeg mpeg
+DIST_SUBDIRS = jpeg js mpeg
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
@@ -20,7 +19,8 @@ renderer_headers =
 endif
 
 
-libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c color.c swfdec_image.c \
+libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
+	actions_tags.c color.c swfdec_image.c \
 	render.c swfdec_render.c swfdec_shape.c swf.c swfdec_object.c swfdec_text.c \
 	swfdec_display.c swfdec_sprite.c swfdec_button.c swfdec_layer.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
@@ -28,13 +28,13 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c color.c swfdec_image.c \
 	swfdec_rect.c swfdec_transform.c $(renderer_sources)
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
-	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS)
+	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS) -DXP_UNIX
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-export-symbols-regex '^(art_warn)|(swfdec_.*)' \
 	$(renderer_libs) $(GLIB_LIBS) $(MAD_LIBS) \
 	$(LIBOIL_LIBS)
 
-libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la
+libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la
 
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@
 

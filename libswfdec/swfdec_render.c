@@ -31,9 +31,7 @@ swfdec_render_free (SwfdecRender * render)
 gboolean
 swfdec_render_iterate (SwfdecDecoder * s)
 {
-  GList *g;
-
-
+  SWFDEC_INFO("iterate, frame_index = %d", s->render->frame_index);
   if (s->render->seek_frame != -1) {
     SwfdecSound *sound;
 
@@ -44,16 +42,11 @@ swfdec_render_iterate (SwfdecDecoder * s)
     if (sound)
       sound->tmpbuflen = 0;
   } else {
-    if (!s->stopped) {
-      if (s->main_sprite->actions[s->render->frame_index]) {
-        swfdec_action_script_execute (s,
-            s->main_sprite->actions[s->render->frame_index]);
-      }
-    }
     SWFDEC_DEBUG ("mouse button %d old_mouse_button %d active_button %p",
         s->mouse_button, s->old_mouse_button, s->render->active_button);
     if (s->mouse_button && !s->old_mouse_button &&
         s->render->active_button) {
+                /* FIXME? button down->up/up->down */
       swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
     }
 
@@ -72,32 +65,11 @@ swfdec_render_iterate (SwfdecDecoder * s)
 
   s->render->active_button = NULL;
 
-  for (g = g_list_first (s->render->object_states); g; g = g_list_next (g)) {
-    SwfdecRenderState *state = g->data;
-
-    state->frame_index++;
-    SWFDEC_INFO ("iterate layer=%d frame_index=%d", state->layer,
-        state->frame_index);
-  }
+  swfdec_sprite_render_iterate (s, s->main_sprite);
 
   s->old_mouse_button = s->mouse_button;
 
   return TRUE;
-}
-
-SwfdecRenderState *
-swfdec_render_get_object_state (SwfdecRender * render, int layer, int id)
-{
-  GList *g;
-
-  for (g = g_list_first (render->object_states); g; g = g_list_next (g)) {
-    SwfdecRenderState *state = g->data;
-
-    if (state->layer == layer && state->id == id)
-      return state;
-  }
-
-  return NULL;
 }
 
 void
@@ -155,7 +127,7 @@ swfdec_render_get_image (SwfdecDecoder * s)
 
   g_return_val_if_fail (s->render->frame_index < s->n_frames, NULL);
 
-  SWFDEC_DEBUG ("swf_render_frame");
+  SWFDEC_DEBUG ("swf_render_frame index %d", s->render->frame_index);
 
   s->render->drawrect.x0 = 0;
   s->render->drawrect.x1 = 0;

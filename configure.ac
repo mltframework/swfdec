@@ -235,6 +235,7 @@ glib-compat/Makefile
 glib-compat/glib/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
+libswfdec/js/Makefile
 libswfdec/mpeg/Makefile
 test/Makefile
 plugin/Makefile

@@ -35,8 +35,6 @@ view_pixbuf (const char * file)
 int 
 main (int argc, char **argv)
 {
-	GtkWidget * img;
-
 	/* initialize gtk+ */
 	gtk_init (&argc, &argv) ;
 	

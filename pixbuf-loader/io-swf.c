@@ -153,6 +153,16 @@ swf_animation_image (SwfContext * context)
 											  NULL);
 
 	context->animation->frames = g_list_append (context->animation->frames, frame);
+
+	if (context->prepared_func != NULL)
+		(* context->prepared_func) (frame->pixbuf, NULL, context->user_data);
+	
+	if (context->updated_func != NULL)
+		(* context->updated_func) (frame->pixbuf, 
+								   0, 0, 
+								   gdk_pixbuf_get_width (frame->pixbuf), 
+								   gdk_pixbuf_get_height (frame->pixbuf), 
+								   context->user_data);
 }
 
 static int
@@ -277,7 +287,7 @@ gdk_pixbuf__swf_image_begin_load (GdkPixbufModuleSizeFunc size_func,
 	if (error)
 		*error = NULL;
 
-	context->single_frame = TRUE;
+	/* context->single_frame = TRUE; */
 	return context;
 }
 
@@ -302,30 +312,12 @@ static gboolean
 gdk_pixbuf__swf_image_stop_load (gpointer data, GError **error)
 {
 	SwfContext *context = (SwfContext *)data;  
-	GdkPixbuf * pixbuf = NULL;
 
 	if (error)
 		*error = NULL;
 
 	while (SWF_OK == swf_flush (context))
 		;
-
-	pixbuf = gdk_pixbuf_animation_get_static_image (GDK_PIXBUF_ANIMATION (context->animation));
-	if (pixbuf) {
-		g_object_ref (pixbuf);
-
-		if (context->prepared_func != NULL)
-			(* context->prepared_func) (pixbuf, NULL, context->user_data);
-		
-		if (context->updated_func != NULL)
-			(* context->updated_func) (pixbuf, 
-									   0, 0, 
-									   gdk_pixbuf_get_width (pixbuf), 
-									   gdk_pixbuf_get_height (pixbuf), 
-									   context->user_data);
-	}
-	else
-		swf_gerror_build (SWF_ERROR, error);
 
 	swf_context_free (context);
 

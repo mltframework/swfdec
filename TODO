@@ -1,0 +1,31 @@
+
+plugin: size to window (?) if no embed bounds
+
+lib: global scaling
+
+General problems:
+
+- two areas that share a boundary are not drawn so that the boundary
+  is completely opaque
+
+- gradients are not rendered at all
+
+napsterbad.swf: the 'tickets $200' screen shows how the compose flag
+  is not rendered correctly.
+
+napsterbad.swf: dollar signs not rendered with transparency because the
+  shapes are inverted.
+
+fuyu.swf:  ears/antennae aren't rendered correctly.  May have something
+  to do with new styles in the shape definition.
+
+01F1D831d01.swf: many objects not being rendered at all
+
+01F1D831d01.swf: ADPCM sound stream
+
+1FE62EDBd01.swf: some of the shapes are inverted, causing rendering problems
+
+34CC04FAd01.swf: has DefineBitsJPEG2
+
+50F99216d01.swf: sound stream
+

@@ -1,0 +1,6 @@
+
+bin_PROGRAMS = swf_play
+
+swf_play_CFLAGS = $(SWF_CFLAGS) $(GTK_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS)
+swf_play_LDFLAGS = $(SWF_LIBS) $(GTK_LIBS) $(LIBART_LIBS) $(GLIB_LIBS)
+

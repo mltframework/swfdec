@@ -1,0 +1,46 @@
+
+swfdec is a decoder/renderer library for Macromedia Flash animations.
+Included is a simple GTK2-based player and an even simpler Mozilla
+plugin that allows the player to be embedded into your favorite
+browser.  (Note that it's not necessary to have a GTK+-2.0-based
+browser.)
+
+This release represents a significant milestone -- I can browse
+web sites looking for poorly handled SWF files without getting too
+annoyed by it crashing.
+
+However, this is alpha software.  Do not expect it to work for you.
+
+
+Notes:
+
+ - If you install into /usr/local, you'll need to add
+   /usr/local/lib/mozilla/plugins to MOZ_PLUGIN_PATH.  (I think.  I
+   generally copy it into ~ds/.mozilla/plugins.)  Also, some versions
+   of Mozilla are picky about permissions and symlinks.
+
+
+Limitations:
+
+ - Two MAJOR features are completely unsupported: action scripts and
+   user interaction.  This means that it is not yet possible to use
+   swfdec to navigate Flash-heavy web sites.
+
+ - The player is quite limited, doesn't play sound, and doesn't play
+   frames at the correct rate.
+
+ - A number of object types are not handled at all.
+
+ - Many features of Flash versions 4, 5, and 6 are not supported or
+   parsed.
+
+
+Dependencies:
+
+  libart_lgpl (>= 2.0)
+  libgtk+ (>= 2.0)
+  mad (>= 0.14.2b)
+  zlib (>= 1.1.4)
+  mozilla-1.0.0 development headers
+
+

@@ -1,0 +1,560 @@
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AMTAR = @AMTAR@
+AS = @AS@
+ASFLAGS = @ASFLAGS@
+AWK = @AWK@
+CC = @CC@
+CFLAGS = @CFLAGS@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_LIBS = @GTK_LIBS@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBART_CFLAGS = @LIBART_CFLAGS@
+LIBART_LIBS = @LIBART_LIBS@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+MAD_LIBS = @MAD_LIBS@
+MAINT = @MAINT@
+MOZ_PLUGIN_LDFLAGS = @MOZ_PLUGIN_LDFLAGS@
+OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+PACKAGE_PREFIX = @PACKAGE_PREFIX@
+PKG_CONFIG = @PKG_CONFIG@
+RANLIB = @RANLIB@
+STRIP = @STRIP@
+SWF_CFLAGS = @SWF_CFLAGS@
+SWF_LIBS = @SWF_LIBS@
+VERSION = @VERSION@
+X_CFLAGS = @X_CFLAGS@
+X_EXTRA_LIBS = @X_EXTRA_LIBS@
+X_LIBS = @X_LIBS@
+X_PRE_LIBS = @X_PRE_LIBS@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+
+lib_LTLIBRARIES = libswfdec.la
+
+libswfdec_la_SOURCES = art.c get.c swf.c shape.c sound.c render.c actions.c text.c jpeg.c
+libswfdec_la_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) $(MAD_CFLAGS) $(GTK_CFLAGS)
+libswfdec_la_LDFLAGS = $(LIBART_LIBS) $(GLIB_LIBS) $(MAD_LIBS) $(GTK_LIBS)
+
+pkginclude_HEADERS = swf.h
+
+noinst_HEADERS = internal.h proto.h bits.h tags.h
+subdir = libswfdecode
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = $(top_builddir)/config.h
+CONFIG_CLEAN_FILES =
+LTLIBRARIES = $(lib_LTLIBRARIES)
+
+libswfdec_la_LIBADD =
+am_libswfdec_la_OBJECTS = libswfdec_la-art.lo libswfdec_la-get.lo \
+	libswfdec_la-swf.lo libswfdec_la-shape.lo libswfdec_la-sound.lo \
+	libswfdec_la-render.lo libswfdec_la-actions.lo \
+	libswfdec_la-text.lo libswfdec_la-jpeg.lo
+libswfdec_la_OBJECTS = $(am_libswfdec_la_OBJECTS)
+
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/libswfdec_la-actions.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-art.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-get.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-jpeg.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-render.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-shape.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-sound.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-swf.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/libswfdec_la-text.Plo
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
+	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+DIST_SOURCES = $(libswfdec_la_SOURCES)
+HEADERS = $(noinst_HEADERS) $(pkginclude_HEADERS)
+
+DIST_COMMON = $(noinst_HEADERS) $(pkginclude_HEADERS) Makefile.am \
+	Makefile.in
+SOURCES = $(libswfdec_la_SOURCES)
+
+all: all-am
+
+.SUFFIXES:
+.SUFFIXES: .c .lo .o .obj
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --gnu  libswfdecode/Makefile
+Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p; \
+	  else :; fi; \
+	done
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p"; \
+	  $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+libswfdec_la-art.lo: art.c
+libswfdec_la-get.lo: get.c
+libswfdec_la-swf.lo: swf.c
+libswfdec_la-shape.lo: shape.c
+libswfdec_la-sound.lo: sound.c
+libswfdec_la-render.lo: render.c
+libswfdec_la-actions.lo: actions.c
+libswfdec_la-text.lo: text.c
+libswfdec_la-jpeg.lo: jpeg.c
+libswfdec.la: $(libswfdec_la_OBJECTS) $(libswfdec_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(libswfdec_la_LDFLAGS) $(libswfdec_la_OBJECTS) $(libswfdec_la_LIBADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-actions.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-art.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-get.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-jpeg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-render.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-shape.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-sound.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-swf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/libswfdec_la-text.Plo@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+
+.c.lo:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
+
+libswfdec_la-art.o: art.c
+@AMDEP_TRUE@	source='art.c' object='libswfdec_la-art.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-art.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-art.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-art.o `test -f art.c || echo '$(srcdir)/'`art.c
+
+libswfdec_la-art.obj: art.c
+@AMDEP_TRUE@	source='art.c' object='libswfdec_la-art.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-art.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-art.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-art.obj `cygpath -w art.c`
+
+libswfdec_la-art.lo: art.c
+@AMDEP_TRUE@	source='art.c' object='libswfdec_la-art.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-art.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-art.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-art.lo `test -f art.c || echo '$(srcdir)/'`art.c
+
+libswfdec_la-get.o: get.c
+@AMDEP_TRUE@	source='get.c' object='libswfdec_la-get.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-get.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-get.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-get.o `test -f get.c || echo '$(srcdir)/'`get.c
+
+libswfdec_la-get.obj: get.c
+@AMDEP_TRUE@	source='get.c' object='libswfdec_la-get.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-get.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-get.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-get.obj `cygpath -w get.c`
+
+libswfdec_la-get.lo: get.c
+@AMDEP_TRUE@	source='get.c' object='libswfdec_la-get.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-get.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-get.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-get.lo `test -f get.c || echo '$(srcdir)/'`get.c
+
+libswfdec_la-swf.o: swf.c
+@AMDEP_TRUE@	source='swf.c' object='libswfdec_la-swf.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-swf.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-swf.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-swf.o `test -f swf.c || echo '$(srcdir)/'`swf.c
+
+libswfdec_la-swf.obj: swf.c
+@AMDEP_TRUE@	source='swf.c' object='libswfdec_la-swf.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-swf.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-swf.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-swf.obj `cygpath -w swf.c`
+
+libswfdec_la-swf.lo: swf.c
+@AMDEP_TRUE@	source='swf.c' object='libswfdec_la-swf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-swf.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-swf.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-swf.lo `test -f swf.c || echo '$(srcdir)/'`swf.c
+
+libswfdec_la-shape.o: shape.c
+@AMDEP_TRUE@	source='shape.c' object='libswfdec_la-shape.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-shape.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-shape.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-shape.o `test -f shape.c || echo '$(srcdir)/'`shape.c
+
+libswfdec_la-shape.obj: shape.c
+@AMDEP_TRUE@	source='shape.c' object='libswfdec_la-shape.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-shape.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-shape.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-shape.obj `cygpath -w shape.c`
+
+libswfdec_la-shape.lo: shape.c
+@AMDEP_TRUE@	source='shape.c' object='libswfdec_la-shape.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-shape.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-shape.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-shape.lo `test -f shape.c || echo '$(srcdir)/'`shape.c
+
+libswfdec_la-sound.o: sound.c
+@AMDEP_TRUE@	source='sound.c' object='libswfdec_la-sound.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-sound.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-sound.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-sound.o `test -f sound.c || echo '$(srcdir)/'`sound.c
+
+libswfdec_la-sound.obj: sound.c
+@AMDEP_TRUE@	source='sound.c' object='libswfdec_la-sound.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-sound.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-sound.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-sound.obj `cygpath -w sound.c`
+
+libswfdec_la-sound.lo: sound.c
+@AMDEP_TRUE@	source='sound.c' object='libswfdec_la-sound.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-sound.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-sound.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-sound.lo `test -f sound.c || echo '$(srcdir)/'`sound.c
+
+libswfdec_la-render.o: render.c
+@AMDEP_TRUE@	source='render.c' object='libswfdec_la-render.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-render.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-render.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-render.o `test -f render.c || echo '$(srcdir)/'`render.c
+
+libswfdec_la-render.obj: render.c
+@AMDEP_TRUE@	source='render.c' object='libswfdec_la-render.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-render.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-render.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-render.obj `cygpath -w render.c`
+
+libswfdec_la-render.lo: render.c
+@AMDEP_TRUE@	source='render.c' object='libswfdec_la-render.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-render.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-render.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-render.lo `test -f render.c || echo '$(srcdir)/'`render.c
+
+libswfdec_la-actions.o: actions.c
+@AMDEP_TRUE@	source='actions.c' object='libswfdec_la-actions.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-actions.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-actions.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-actions.o `test -f actions.c || echo '$(srcdir)/'`actions.c
+
+libswfdec_la-actions.obj: actions.c
+@AMDEP_TRUE@	source='actions.c' object='libswfdec_la-actions.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-actions.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-actions.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-actions.obj `cygpath -w actions.c`
+
+libswfdec_la-actions.lo: actions.c
+@AMDEP_TRUE@	source='actions.c' object='libswfdec_la-actions.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-actions.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-actions.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-actions.lo `test -f actions.c || echo '$(srcdir)/'`actions.c
+
+libswfdec_la-text.o: text.c
+@AMDEP_TRUE@	source='text.c' object='libswfdec_la-text.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-text.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-text.o `test -f text.c || echo '$(srcdir)/'`text.c
+
+libswfdec_la-text.obj: text.c
+@AMDEP_TRUE@	source='text.c' object='libswfdec_la-text.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-text.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-text.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-text.obj `cygpath -w text.c`
+
+libswfdec_la-text.lo: text.c
+@AMDEP_TRUE@	source='text.c' object='libswfdec_la-text.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-text.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-text.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-text.lo `test -f text.c || echo '$(srcdir)/'`text.c
+
+libswfdec_la-jpeg.o: jpeg.c
+@AMDEP_TRUE@	source='jpeg.c' object='libswfdec_la-jpeg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-jpeg.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-jpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-jpeg.o `test -f jpeg.c || echo '$(srcdir)/'`jpeg.c
+
+libswfdec_la-jpeg.obj: jpeg.c
+@AMDEP_TRUE@	source='jpeg.c' object='libswfdec_la-jpeg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-jpeg.Po' tmpdepfile='$(DEPDIR)/libswfdec_la-jpeg.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-jpeg.obj `cygpath -w jpeg.c`
+
+libswfdec_la-jpeg.lo: jpeg.c
+@AMDEP_TRUE@	source='jpeg.c' object='libswfdec_la-jpeg.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/libswfdec_la-jpeg.Plo' tmpdepfile='$(DEPDIR)/libswfdec_la-jpeg.TPlo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswfdec_la_CFLAGS) $(CFLAGS) -c -o libswfdec_la-jpeg.lo `test -f jpeg.c || echo '$(srcdir)/'`jpeg.c
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
+install-pkgincludeHEADERS: $(pkginclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(pkgincludedir)
+	@list='$(pkginclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(pkgincludedir)/$$f"; \
+	  $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(pkgincludedir)/$$f; \
+	done
+
+uninstall-pkgincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkginclude_HEADERS)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(pkgincludedir)/$$f"; \
+	  rm -f $(DESTDIR)$(pkgincludedir)/$$f; \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = ..
+distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+check-am: all-am
+check: check-am
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+
+installdirs:
+	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(pkgincludedir)
+
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	mostlyclean-am
+
+distclean: distclean-am
+
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-libtool distclean-tags
+
+dvi: dvi-am
+
+dvi-am:
+
+info: info-am
+
+info-am:
+
+install-data-am: install-pkgincludeHEADERS
+
+install-exec-am: install-libLTLIBRARIES
+
+install-info: install-info-am
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-am
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
+
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-pkgincludeHEADERS
+
+.PHONY: GTAGS all all-am check check-am clean clean-generic \
+	clean-libLTLIBRARIES clean-libtool distclean distclean-compile \
+	distclean-depend distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am info info-am install \
+	install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pkgincludeHEADERS \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	tags uninstall uninstall-am uninstall-info-am \
+	uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

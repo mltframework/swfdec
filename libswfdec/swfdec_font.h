@@ -4,6 +4,7 @@
 
 #include <glib-object.h>
 #include <swfdec_types.h>
+#include <swfdec_object.h>
 
 G_BEGIN_DECLS
 
@@ -17,13 +18,13 @@ typedef struct _SwfdecFontClass SwfdecFontClass;
 #define SWFDEC_FONT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_FONT, SwfdecFontClass))
 
 struct _SwfdecFont {
-  GObject object;
+  SwfdecObject object;
 
   GPtrArray *glyphs;
 };
 
 struct _SwfdecFontClass {
-  GObjectClass object_class;
+  SwfdecObjectClass object_class;
 
 };
 

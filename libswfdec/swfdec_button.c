@@ -28,7 +28,7 @@ GType swfdec_button_get_type (void)
       swfdec_button_init,
       NULL
     };
-    _swfdec_button_type = g_type_register_static (G_TYPE_OBJECT,
+    _swfdec_button_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
         "SwfdecButton", &object_info, 0);
   }
   return _swfdec_button_type;

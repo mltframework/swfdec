@@ -49,7 +49,6 @@ struct _SwfdecSpriteClass {
 
 GType swfdec_sprite_get_type (void);
 
-SwfdecSprite *swfdec_sprite_new (void);
 void swfdec_sprite_decoder_free (SwfdecObject * object);
 SwfdecLayer *swfdec_sprite_prerender (SwfdecDecoder * s,
     SwfdecSpriteSegment * layer, SwfdecObject * object, SwfdecLayer * oldlayer);

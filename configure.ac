@@ -46,7 +46,7 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-PKG_CHECK_MODULES(GLIB, glib-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
+PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 if test "$HAVE_GLIB" = "no"; then

@@ -1,3 +1,24 @@
+2004-04-20  David Schleef  <ds@schleef.org>
+
+	Fixes to get swfdec compiling and semi-working again.
+	* configure.ac:
+	* libswfdec/swf.c: (swfdec_decoder_new):
+	* libswfdec/swfdec_button.c: (swfdec_button_get_type):
+	* libswfdec/swfdec_button.h:
+	* libswfdec/swfdec_font.c: (swfdec_font_get_type),
+	(tag_func_define_font), (tag_func_define_font_2):
+	* libswfdec/swfdec_font.h:
+	* libswfdec/swfdec_image.c: (swfdec_image_get_type):
+	* libswfdec/swfdec_image.h:
+	* libswfdec/swfdec_object.c:
+	* libswfdec/swfdec_object.h:
+	* libswfdec/swfdec_shape.c: (swfdec_shape_get_type),
+	(swfdec_shape_init):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_sprite.c: (tag_func_define_sprite):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_text.c: (swfdec_text_init):
+
 2004-02-25  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Add liboil dependency.

@@ -50,7 +50,6 @@ struct _SwfdecObjectClass {
 
 GType swfdec_object_get_type (void);
 
-SwfdecObject *swfdec_object_new (SwfdecDecoder * s, int id);
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
 
 

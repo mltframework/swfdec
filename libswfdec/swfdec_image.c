@@ -38,7 +38,7 @@ GType swfdec_image_get_type (void)
       swfdec_image_init,
       NULL
     };
-    _swfdec_image_type = g_type_register_static (G_TYPE_OBJECT,
+    _swfdec_image_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
         "SwfdecImage", &object_info, 0);
   }
   return _swfdec_image_type;

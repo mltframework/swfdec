@@ -3,6 +3,7 @@
 #define _SWFDEC_BUTTON_H_
 
 #include <glib-object.h>
+#include <swfdec_object.h>
 
 G_BEGIN_DECLS
 
@@ -16,13 +17,13 @@ typedef struct _SwfdecButtonClass SwfdecButtonClass;
 #define SWFDEC_BUTTON_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_BUTTON, SwfdecButtonClass))
 
 struct _SwfdecButton {
-  GObject object;
+  SwfdecObject object;
 
   SwfdecSpriteSegment *state[3];
 };
 
 struct _SwfdecButtonClass {
-  GObjectClass object_class;
+  SwfdecObjectClass object_class;
 
 };
 

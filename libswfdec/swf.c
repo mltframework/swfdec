@@ -53,7 +53,7 @@ swfdec_decoder_new (void)
 
   art_affine_identity (s->transform);
 
-  s->main_sprite = swfdec_sprite_new ();
+  s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
   s->render = swfdec_render_new ();
 
   s->flatness = 0.5;

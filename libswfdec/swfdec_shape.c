@@ -41,7 +41,7 @@ GType swfdec_shape_get_type (void)
       swfdec_shape_init,
       NULL
     };
-    _swfdec_shape_type = g_type_register_static (G_TYPE_OBJECT,
+    _swfdec_shape_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
         "SwfdecShape", &object_info, 0);
   }
   return _swfdec_shape_type;
@@ -65,7 +65,11 @@ static void swfdec_shape_class_init (gpointer g_class, gpointer class_data)
 
 static void swfdec_shape_init (GTypeInstance *instance, gpointer g_class)
 {
+  SwfdecShape *shape = SWFDEC_SHAPE (instance);
 
+  shape->fills = g_ptr_array_new();
+  shape->fills2 = g_ptr_array_new();
+  shape->lines = g_ptr_array_new();
 }
 
 static void swfdec_shape_dispose (GObject *object)
@@ -96,7 +100,6 @@ static void swfdec_shape_dispose (GObject *object)
   g_ptr_array_free (shape->lines, TRUE);
 
 }
-
 
 static int
 get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)

@@ -4,6 +4,7 @@
 
 #include <glib-object.h>
 #include <swfdec_types.h>
+#include <swfdec_object.h>
 #include <color.h>
 #include <bits.h>
 
@@ -36,7 +37,7 @@ struct _SwfdecShapeVec
 };
 
 struct _SwfdecShape {
-  GObject object;
+  SwfdecObject object;
 
   GPtrArray *lines;
   GPtrArray *fills;
@@ -51,13 +52,12 @@ struct _SwfdecShape {
 };
 
 struct _SwfdecShapeClass {
-  GObjectClass object_class;
+  SwfdecObjectClass object_class;
 
 };
 
 GType swfdec_shape_get_type (void);
 
-SwfdecShape *swfdec_shape_new (void);
 void swfdec_shape_free (SwfdecObject * object);
 void _swfdec_shape_free (SwfdecShape * shape);
 int tag_func_define_shape (SwfdecDecoder * s);

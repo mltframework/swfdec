@@ -29,7 +29,7 @@ GType swfdec_font_get_type (void)
       swfdec_font_init,
       NULL
     };
-    _swfdec_font_type = g_type_register_static (G_TYPE_OBJECT,
+    _swfdec_font_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
         "SwfdecFont", &object_info, 0);
   }
   return _swfdec_font_type;
@@ -103,7 +103,7 @@ tag_func_define_font (SwfdecDecoder * s)
   font->glyphs = g_ptr_array_sized_new (n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
-    shape = swfdec_shape_new ();
+    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
     g_ptr_array_add (font->glyphs, shape);
 
     shape->fills = g_ptr_array_sized_new (1);
@@ -201,7 +201,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   font->glyphs = g_ptr_array_sized_new (n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
-    shape = swfdec_shape_new ();
+    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
     g_ptr_array_add (font->glyphs, shape);
 
     shape->fills = g_ptr_array_sized_new (1);

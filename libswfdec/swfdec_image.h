@@ -4,6 +4,7 @@
 
 #include <glib-object.h>
 #include <swfdec_decoder.h>
+#include <swfdec_object.h>
 
 G_BEGIN_DECLS
 
@@ -17,7 +18,7 @@ typedef struct _SwfdecImageClass SwfdecImageClass;
 #define SWFDEC_IMAGE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_IMAGE, SwfdecImageClass))
 
 struct _SwfdecImage {
-  GObject object;
+  SwfdecObject object;
 
   int width, height;
   int rowstride;
@@ -25,7 +26,7 @@ struct _SwfdecImage {
 };
 
 struct _SwfdecImageClass {
-  GObjectClass object_class;
+  SwfdecObjectClass object_class;
 
 };
 

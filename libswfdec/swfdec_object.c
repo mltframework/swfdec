@@ -62,7 +62,7 @@ static void swfdec_object_dispose (GObject *object)
 }
 
 
-
+#if 0
 SwfdecObject *
 swfdec_object_new (SwfdecDecoder * s, int id)
 {
@@ -76,6 +76,7 @@ swfdec_object_new (SwfdecDecoder * s, int id)
 
   return obj;
 }
+#endif
 
 SwfdecObject *
 swfdec_object_get (SwfdecDecoder * s, int id)

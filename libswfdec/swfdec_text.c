@@ -53,7 +53,9 @@ static void swfdec_text_class_init (gpointer g_class, gpointer class_data)
 
 static void swfdec_text_init (GTypeInstance *instance, gpointer g_class)
 {
+  SwfdecText *text = SWFDEC_TEXT (instance);
 
+  text->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecTextGlyph));
 }
 
 static void swfdec_text_dispose (GObject *object)

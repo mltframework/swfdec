@@ -72,16 +72,6 @@ static void swfdec_sprite_dispose (GObject *object)
 }
 
 
-SwfdecSprite *
-swfdec_sprite_new (void)
-{
-  SwfdecSprite *sprite;
-
-  sprite = g_new0 (SwfdecSprite, 1);
-
-  return sprite;
-}
-
 SwfdecLayer *
 swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
@@ -247,6 +237,9 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   id = get_u16 (bits);
   sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
+
+  sprite->main_sprite = s->main_sprite;
+  //sprite->parse_sprite = sprite;
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 

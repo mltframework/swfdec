@@ -10,6 +10,8 @@ Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
 Source:		http://swfdec.sourceforge.net/download/%{name}-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-root
 BuildRequires:  mozilla-devel
+BuildRequires:	gtk2-devel => 2.2.0
+Requires:	gtk2 => 2.2.0
 Prereq:		/sbin/ldconfig
 
 %description
@@ -47,21 +49,28 @@ make
 # This is the recommended way of dealing with it for RH8
 rm -f $RPM_BUILD_ROOT%{_libdir}/mozilla/plugins/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/swf_loader.la
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 %post
 /sbin/ldconfig
+mkdir -p %{_sysconfdir}/gtk-2.0
+gdk-pixbuf-query-loaders > %{_sysconfdir}/gtk-2.0/gdk-pixbuf.loaders
 
 %postun
 /sbin/ldconfig
+gdk-pixbuf-query-loaders > %{_sysconfdir}/gtk-2.0/gdk-pixbuf.loaders
+
 
 %files
 %defattr(-,root,root)
 %doc AUTHORS COPYING NEWS README TODO 
 %{_bindir}/swf_play
 %{_libdir}/libswfdec.so.*
+%{_sysconfdir}/gtk-2.0/gdk-pixbuf.loaders
+%{_libdir}/gtk-2.0/2.2.0/loaders/swf_loader.so
 
 %files devel
 %defattr(-,root,root)
@@ -70,6 +79,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/pkgconfig/swfdec.pc
 %{_includedir}/swfdec/swf.h
 %{_includedir}/swfdec/swfdec.h
+%{_libdir}/gtk-2.0/2.2.0/loaders/swf_loader.a
 
 %files mozilla
 %defattr(-,root,root)
@@ -77,5 +87,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/mozilla/plugins/libmozswfdec.a
 
 %changelog
+* Wed Feb 05 2003 Christian F.K. Schaller <Uraeus@linuxrising.org>
+- Update spec to handle pixbuf loader
 * Sat Oct 26 2002 Christian F.K. Schaller <Uraeus@linuxrising.org>
 - First attempt at spec

@@ -43,8 +43,8 @@ guint input_idle_id;
 guint render_idle_id;
 
 unsigned long xid;
-int width = 100;
-int height = 100;
+int width;
+int height;
 int fast = FALSE;
 int enable_sound = TRUE;
 int quit_at_eof = FALSE;
@@ -131,6 +131,10 @@ int main(int argc, char *argv[])
 	}
 
 	if(optind != argc-1)do_help();
+
+	if(width){
+		swfdec_decoder_set_image_size(s,width,height);
+	}
 
 	if(strcmp(argv[optind],"-")==0){
 		read_swf_stdin();
@@ -249,6 +253,7 @@ static void read_swf_stdin(void)
 }
 
 GList *sound_buffers;
+int sound_bytes;
 
 static void fill_audio(void *udata, Uint8 *stream, int len)
 {
@@ -273,6 +278,7 @@ static void fill_audio(void *udata, Uint8 *stream, int len)
 	SDL_MixAudio(stream, buffer->data + buffer->offset, n,
 		SDL_MIX_MAXVOLUME);
 
+	sound_bytes -= n;
 	buffer->offset += n;
 	if(buffer->offset >= buffer->len){
 		sound_buffers = g_list_delete_link(sound_buffers,g);
@@ -299,6 +305,8 @@ static void pull_sound(SwfdecDecoder *s)
 			sb->data = data;
 
 			sound_buffers = g_list_append(sound_buffers, sb);
+
+			sound_bytes += n;
 		}else{
 			g_free(data);
 		}
@@ -450,6 +458,7 @@ static gboolean render_idle(gpointer data)
 		swfdec_decoder_peek_image(s,&image);
 		pull_sound(s);
 
+#if 0
 		gettimeofday(&now, NULL);
 		tv_add_usec(&image_time, interval);
 		if(tv_compare(&image_time, &now) > 0){
@@ -458,6 +467,10 @@ static gboolean render_idle(gpointer data)
 			if(!fast)usleep(x);
 		}else{
 			gettimeofday(&image_time, NULL);
+		}
+#endif
+		while(sound_bytes>=8000){
+			usleep(10000);
 		}
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 

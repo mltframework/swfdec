@@ -17,6 +17,7 @@ struct swfdec_text_glyph_struct {
 };
 
 int tag_func_define_font(SwfdecDecoder *s);
+int tag_func_define_font_2(SwfdecDecoder *s);
 int tag_func_define_text(SwfdecDecoder *s);
 int tag_func_define_text_2(SwfdecDecoder *s);
 

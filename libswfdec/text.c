@@ -56,6 +56,124 @@ int tag_func_define_font(SwfdecDecoder *s)
 	return SWF_OK;
 }
 
+static void get_kerning_record(bits_t *bits, int wide_codes)
+{
+	if(wide_codes){
+		get_u16(bits);
+		get_u16(bits);
+	}else{
+		get_u8(bits);
+		get_u8(bits);
+	}
+	get_s16(bits);
+}
+
+int tag_func_define_font_2(SwfdecDecoder *s)
+{
+	bits_t *bits = &s->b;
+	int id;
+	GArray *array;
+	SwfdecShapeVec *shapevec;
+	SwfdecShape *shape;
+	SwfdecObject *object;
+	int rect[4];
+
+	int has_layout;
+	int shift_jis;
+	int reserved;
+	int ansi;
+	int wide_offsets;
+	int wide_codes;
+	int italic;
+	int bold;
+	int langcode;
+	int font_name_len;
+	int n_glyphs;
+	int code_table_offset;
+	int font_ascent;
+	int font_descent;
+	int font_leading;
+	int kerning_count;
+	int i;
+
+	id = get_u16(bits);
+	object = swfdec_object_new(s,id);
+
+	has_layout = getbit(bits);
+	shift_jis = getbit(bits);
+	reserved = getbit(bits);
+	ansi = getbit(bits);
+	wide_offsets = getbit(bits);
+	wide_codes = getbit(bits);
+	italic = getbit(bits);
+	bold = getbit(bits);
+
+	langcode = get_u8(bits);
+
+	font_name_len = get_u8(bits);
+	//font_name = 
+	bits->ptr += font_name_len;
+
+	n_glyphs = get_u16(bits);
+	if(wide_offsets){
+		bits->ptr += 4*n_glyphs;
+		code_table_offset = get_u32(bits);
+	}else{
+		bits->ptr += 2*n_glyphs;
+		code_table_offset = get_u16(bits);
+	}
+
+	array = g_array_sized_new(TRUE,TRUE,sizeof(SwfdecShape),
+			n_glyphs);
+	object->priv = array;
+	object->type = SWF_OBJECT_FONT;
+	g_array_set_size(array,n_glyphs);
+
+	for(i=0;i<n_glyphs;i++){
+		shape = &g_array_index(array,SwfdecShape,i);
+
+		shape->fills = g_ptr_array_sized_new(1);
+		shapevec = swf_shape_vec_new();
+		g_ptr_array_add(shape->fills, shapevec);
+		shape->fills2 = g_ptr_array_sized_new(1);
+		shapevec = swf_shape_vec_new();
+		g_ptr_array_add(shape->fills2, shapevec);
+		shape->lines = g_ptr_array_sized_new(1);
+		shapevec = swf_shape_vec_new();
+		g_ptr_array_add(shape->lines, shapevec);
+
+		//swf_shape_add_styles(s,shape,&s->b);
+		syncbits(&s->b);
+		shape->n_fill_bits = getbits(&s->b,4);
+		SWF_DEBUG(0,"n_fill_bits = %d\n",shape->n_fill_bits);
+		shape->n_line_bits = getbits(&s->b,4);
+		SWF_DEBUG(0,"n_line_bits = %d\n",shape->n_line_bits);
+
+		swf_shape_get_recs(s,&s->b,shape);
+	}
+	if(wide_codes){
+		bits->ptr += 2*n_glyphs;
+	}else{
+		bits->ptr += 1*n_glyphs;
+	}
+	if(has_layout){
+		font_ascent = get_s16(bits);
+		font_descent = get_s16(bits);
+		font_leading = get_s16(bits);
+		//font_advance_table = get_s16(bits);
+		bits->ptr += 2*n_glyphs;
+		//font_bounds = get_s16(bits);
+		for(i=0;i<n_glyphs;i++){
+			get_rect(bits,rect);
+		}
+		kerning_count = get_u16(bits);
+		for(i=0;i<kerning_count;i++){
+			get_kerning_record(bits,wide_codes);
+		}
+	}
+
+	return SWF_OK;
+}
 
 static int define_text(SwfdecDecoder *s, int rgba)
 {
@@ -280,7 +398,7 @@ SwfdecLayer *swfdec_text_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 			art_affine_translate(pos,
 				glyph->x * SWF_SCALE_FACTOR,
 				glyph->y * SWF_SCALE_FACTOR);
-			pos[0] = text->heighte* SWF_TEXT_SCALE_FACTOR;
+			pos[0] = text->height * SWF_TEXT_SCALE_FACTOR;
 			pos[3] = text->height * SWF_TEXT_SCALE_FACTOR;
 			art_affine_multiply(glyph_trans,pos,object->trans);
 			art_affine_multiply(trans,glyph_trans,layer->transform);

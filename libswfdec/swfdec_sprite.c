@@ -77,3 +77,42 @@ void swfdec_sprite_render(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 	}
 }
 
+int tag_func_define_sprite(SwfdecDecoder *s)
+{
+	bits_t *bits = &s->b;
+	int id;
+	SwfdecObject *object;
+	SwfdecDecoder *sprite;
+	int ret;
+
+	id = get_u16(bits);
+	object = swfdec_object_new(s,id);
+
+	SWF_DEBUG(0,"  ID: %d\n", object->id);
+
+	sprite = swf_init();
+	object->priv = sprite;
+	object->type = SWF_OBJECT_SPRITE;
+
+	sprite->n_frames = get_u16(bits);
+
+	sprite->state = SWF_STATE_PARSETAG;
+	sprite->no_render = 1;
+
+	sprite->parse = *bits;
+
+	/* massive hack */
+	sprite->objects = s->objects;
+
+	ret = swf_parse(sprite);
+	SWF_DEBUG(0,"  ret = %d\n", ret);
+
+	*bits = sprite->parse;
+
+	sprite->frame_number = 0;
+
+	//dump_layers(sprite);
+
+	return SWF_OK;
+}
+

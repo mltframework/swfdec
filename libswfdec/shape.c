@@ -479,48 +479,6 @@ int art_define_shape_2(SwfdecDecoder *s)
 	return art_define_shape(s);
 }
 
-#undef SWF_DEBUG_LEVEL
-#define SWF_DEBUG_LEVEL 0
-
-int tag_func_define_sprite(SwfdecDecoder *s)
-{
-	bits_t *bits = &s->b;
-	int id;
-	SwfdecObject *object;
-	SwfdecDecoder *sprite;
-	int ret;
-
-	id = get_u16(bits);
-	object = swfdec_object_new(s,id);
-
-	SWF_DEBUG(0,"  ID: %d\n", object->id);
-
-	sprite = swf_init();
-	object->priv = sprite;
-	object->type = SWF_OBJECT_SPRITE;
-
-	sprite->n_frames = get_u16(bits);
-
-	sprite->state = SWF_STATE_PARSETAG;
-	sprite->no_render = 1;
-
-	sprite->parse = *bits;
-
-	/* massive hack */
-	sprite->objects = s->objects;
-
-	ret = swf_parse(sprite);
-	SWF_DEBUG(0,"  ret = %d\n", ret);
-
-	*bits = sprite->parse;
-
-	sprite->frame_number = 0;
-
-	//dump_layers(sprite);
-
-	return SWF_OK;
-}
-
 void dump_layers(SwfdecDecoder *s)
 {
 	GList *g;

@@ -254,37 +254,40 @@ static void read_swf_stdin(void)
 
 GList *sound_buffers;
 int sound_bytes;
+unsigned char *sound_buf;
 
 static void fill_audio(void *udata, Uint8 *stream, int len)
 {
 	GList *g;
 	SoundBuffer *buffer;
 	int n;
+	int offset = 0;
 
-	g = g_list_first(sound_buffers);
-	if(!g){
-		void *zero;
+	while(1){
+		g = g_list_first(sound_buffers);
+		if(!g)break;
 
-		zero = malloc(len*4);
-		memset(zero,0,len*4);
-		SDL_MixAudio(stream, zero, len, SDL_MIX_MAXVOLUME);
-		free(zero);
+		buffer = (SoundBuffer *)g->data;
+		n = MIN(buffer->len - buffer->offset,len - offset);
 
-		return;
+		memcpy(sound_buf + offset, buffer->data + buffer->offset, n);
+		sound_bytes -= n;
+		buffer->offset += n;
+		offset += n;
+		if(buffer->offset >= buffer->len){
+			sound_buffers = g_list_delete_link(sound_buffers,g);
+			free(buffer->data);
+			free(buffer);
+		}
+
+		if(offset >= len)break;
 	}
 
-	buffer = (SoundBuffer *)g->data;
-	n = MIN(buffer->len - buffer->offset,len);
-	SDL_MixAudio(stream, buffer->data + buffer->offset, n,
-		SDL_MIX_MAXVOLUME);
-
-	sound_bytes -= n;
-	buffer->offset += n;
-	if(buffer->offset >= buffer->len){
-		sound_buffers = g_list_delete_link(sound_buffers,g);
-		free(buffer->data);
-		free(buffer);
+	if(offset<len){
+		memset(sound_buf+offset,0,len-offset);
 	}
+
+	SDL_MixAudio(stream, sound_buf, len, SDL_MIX_MAXVOLUME);
 }
 
 static void pull_sound(SwfdecDecoder *s)
@@ -327,6 +330,8 @@ static void sound_setup(void)
 	wanted.samples = 1024;  /* Good low-latency value for callback */
 	wanted.callback = fill_audio;
 	wanted.userdata = NULL;
+
+	sound_buf = malloc(1024*2*2);
 
 	if ( SDL_OpenAudio(&wanted, NULL) < 0 ) {
 		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
@@ -435,7 +440,15 @@ static int tv_diff(struct timeval *a,struct timeval *b)
 static gboolean render_idle(gpointer data)
 {
 	int ret;
+	static int ack = 0;
 
+	ack++;
+	if(ack>=1)ack=0;
+	if(ack==0){
+		swfdec_decoder_enable_render(s);
+	}else{
+		swfdec_decoder_disable_render(s);
+	}
 	ret = swfdec_decoder_parse(s);
 	if(ret==SWF_NEEDBITS){
 		gtk_idle_remove(render_idle_id);
@@ -458,6 +471,7 @@ static gboolean render_idle(gpointer data)
 		swfdec_decoder_peek_image(s,&image);
 		pull_sound(s);
 
+		if(ack==0){
 #if 0
 		gettimeofday(&now, NULL);
 		tv_add_usec(&image_time, interval);
@@ -469,7 +483,7 @@ static gboolean render_idle(gpointer data)
 			gettimeofday(&image_time, NULL);
 		}
 #endif
-		while(sound_bytes>=8000){
+		while(sound_bytes>=40000){
 			usleep(10000);
 		}
 		gdk_draw_rgb_image (drawing_area->window,
@@ -478,6 +492,7 @@ static gboolean render_idle(gpointer data)
 			GDK_RGB_DITHER_NONE,
 			image,
 			width*3);
+		}
 	}
 	if(ret==SWF_CHANGE && !plugged){
 		double rate;

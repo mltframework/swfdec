@@ -365,7 +365,7 @@ swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height)
 int
 swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
 {
-  //double sw, sh;
+  double sw, sh;
 
   s->width = width;
   s->height = height;
@@ -375,24 +375,26 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   s->irect.x1 = s->width;
   s->irect.y1 = s->height;
 
-#if 0
-  sw = s->parse_width / s->width;
-  sh = s->parse_height / s->height;
+  sw = (double)s->width / s->parse_width;
+  sh = (double)s->height / s->parse_height;
   s->scale_factor = (sw < sh) ? sw : sh;
 
-  s->transform[0] = s->scale_factor;
-  s->transform[1] = 0;
-  s->transform[2] = 0;
-  s->transform[3] = s->scale_factor;
-  s->transform[4] = 0.5 * (s->width - s->parse_width * s->scale_factor);
-  s->transform[5] = 0.5 * (s->height - s->parse_height * s->scale_factor);
-#endif
+  s->transform.trans[0] = s->scale_factor;
+  s->transform.trans[1] = 0;
+  s->transform.trans[2] = 0;
+  s->transform.trans[3] = s->scale_factor;
+  s->transform.trans[4] = 0.5 * (s->width - s->parse_width * s->scale_factor);
+  s->transform.trans[5] = 0.5 * (s->height - s->parse_height * s->scale_factor);
+#if 0
   s->transform.trans[0] = (double)s->width / s->parse_width;
   s->transform.trans[1] = 0;
   s->transform.trans[2] = 0;
   s->transform.trans[3] = (double)s->height / s->parse_height;
   s->transform.trans[4] = 0;
   s->transform.trans[5] = 0;
+#endif
+
+  swf_config_colorspace (s);
 
   return SWF_OK;
 }

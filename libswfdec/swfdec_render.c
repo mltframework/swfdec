@@ -49,12 +49,12 @@ swfdec_render_iterate (SwfdecDecoder *s)
     if (!s->stopped) {
       s->render->frame_index++;
       if (s->render->frame_index >= s->n_frames) {
+#if 0
         SWFDEC_WARNING ("iterating past end");
         return FALSE;
-#if 0
+#endif
         s->stopped = TRUE;
         s->render->frame_index = s->n_frames - 1;
-#endif
       }
     }
   }

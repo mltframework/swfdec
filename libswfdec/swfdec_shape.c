@@ -9,6 +9,7 @@
 
 
 static void swfdec_shapevec_free (SwfdecShapeVec *shapevec);
+static int my_root (double x, double y);
 
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecShape, swfdec_shape)
@@ -735,15 +736,21 @@ swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
       x = mat.trans[2] * j + mat.trans[4];
       y = mat.trans[3] * j + mat.trans[5];
       for (i = 0; i < width; i++) {
+#if 0
 	double z;
+#endif
 	int index;
 
+#if 0
 	z = sqrt (x * x + y * y) / 16384.0 * 256;
 	if (z < 0)
 	  z = 0;
 	if (z > 255.0)
 	  z = 255;
 	index = z;
+#else
+        index = my_root (x, y);
+#endif
 	//index &= 0xff;
 	dest[0] = palette[index * 4 + 0];
 	dest[1] = palette[index * 4 + 1];
@@ -757,6 +764,24 @@ swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   }
 
   g_free (palette);
+}
+
+static int
+my_root (double x, double y)
+{
+  static int roots[65536];
+  static int _init = 0;
+  int i;
+
+  if (!_init) {
+    for(i=0;i<65536;i++){
+      roots[i] = sqrt(i);
+    }
+    _init = 1;
+  }
+  i = (x * x + y * y)/4096;
+  if (i > 65535) return 255;
+  return roots[i];
 }
 
 unsigned char *

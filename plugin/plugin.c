@@ -13,8 +13,9 @@
 #define MOZ_X11 1
 #include "npapi.h"
 #include "npupp.h"
+#include "spp.h"
 
-//#define DEBUG(x) printf(x "\n")
+//#define DEBUG(x) fprintf(stderr,x "\n")
 #define DEBUG(x)
 
 typedef struct {
@@ -28,6 +29,7 @@ typedef struct {
 	int player_pid;
 }Plugin;
 
+static void packet_write (int fd, int code, int len, void *data);
 
 static NPNetscapeFuncs mozilla_funcs;
 
@@ -48,6 +50,7 @@ static void plugin_fork(Plugin *plugin)
 		char height_str[20];
 		char *argv[20];
 		int argc = 0;
+                int i;
 
 		sprintf(xid_str,"%ld",plugin->window);
 
@@ -58,6 +61,7 @@ static void plugin_fork(Plugin *plugin)
 		argv[argc++] = "swf_play";
 		argv[argc++] = "--xid";
 		argv[argc++] = xid_str;
+#if 0
 		if(plugin->width){
 			sprintf(width_str,"%d",plugin->width);
 			argv[argc++] = "--width";
@@ -68,11 +72,15 @@ static void plugin_fork(Plugin *plugin)
 			argv[argc++] = "--height";
 			argv[argc++] = height_str;
 		}
+#endif
 		argv[argc++] = "-";
 		argv[argc] = NULL;
 
 		execvp("swf_play",argv);
 		execv(BINDIR "swf_play",argv);
+
+                DEBUG("plugin: failed to exec");
+
 		_exit(255);
 	}
 
@@ -103,7 +111,7 @@ static NPError plugin_newp(NPMIMEType mime_type, NPP instance,
 	plugin->instance = instance;
 
 	for(i=0;i<argc;i++){
-		printf("argv[%d] %s %s\n",i,argn[i],argv[i]);
+		//printf("argv[%d] %s %s\n",i,argn[i],argv[i]);
 		if(strcmp(argn[i],"width")==0){
 			plugin->width = strtol(argv[i],NULL,0);
 		}
@@ -133,8 +141,14 @@ static NPError plugin_destroy(NPP instance, NPSavedData **save)
 	close(plugin->send_fd);
 	close(plugin->recv_fd);
 
-	kill(plugin->player_pid, SIGKILL);
-	waitpid(plugin->player_pid,NULL,0);
+        if (plugin->player_pid) {
+#if 0
+          packet_write (plugin->send_fd, SPP_EXIT, 0, NULL);
+#endif
+
+	  kill(plugin->player_pid, SIGKILL);
+	  waitpid(plugin->player_pid,NULL,0);
+        }
 
 	mozilla_funcs.memfree(instance->pdata);
 	instance->pdata = NULL;
@@ -156,12 +170,16 @@ static NPError plugin_set_window(NPP instance, NPWindow* window)
 	if (plugin->window){
 		DEBUG("existing window");
 		if(plugin->window == (Window) window->window) {
+                  int size[2];
+
 			DEBUG("resize");
-			/* Resize event */
-			/* Not currently handled */
+                        size[0] = window->width;
+                        size[1] = window->height;
+
+                        packet_write (plugin->send_fd, SPP_SIZE, 8, size);
 		}else{
 			DEBUG("change");
-			printf("ack.  window changed!\n");
+			//printf("ack.  window changed!\n");
 		}
 	} else {
 		NPSetWindowCallbackStruct *ws_info;
@@ -191,7 +209,18 @@ static NPError plugin_new_stream(NPP instance, NPMIMEType type,
 static NPError plugin_destroy_stream(NPP instance, NPStream* stream,
 	NPError reason)
 {
+	Plugin *plugin;
+
 	DEBUG("plugin_destroy_stream");
+
+	if (instance == NULL) return 0;
+	plugin = (Plugin *) instance->pdata;
+
+	if (plugin == NULL) return 0;
+
+	if(!plugin->player_pid) return 0;
+
+        packet_write(plugin->send_fd, SPP_EOF,0,NULL);
 
 	return NPERR_NO_ERROR;
 }
@@ -219,7 +248,7 @@ static int32 plugin_write(NPP instance, NPStream *stream, int32 offset,
 
 	if(!plugin->player_pid) return 0;
 
-	write(plugin->send_fd, buffer, len);
+        packet_write (plugin->send_fd, SPP_DATA, len, buffer);
 
 	return len;
 }
@@ -236,7 +265,7 @@ static void plugin_stream_as_file(NPP instance, NPStream *stream,
 
 	if (plugin == NULL) return;
 
-	printf("plugin_stream_as_file\n");
+	//printf("plugin_stream_as_file\n");
 }
 
 /* exported functions */
@@ -251,13 +280,13 @@ NPError NP_GetValue(void *future, NPPVariable variable, void *value)
             break;
         case NPPVpluginDescriptionString:
             *((char **)value) =
-"Shockwave Flash 6.0 animation viewer handled by Swfdec-" VERSION ".  "
+"Shockwave Flash 6.0 animation viewer handled by swfdec-" VERSION ".  "
 "Plays SWF animations, commonly known as Macromedia&reg; Flash&reg;.<br><br>"
 "This is alpha software.  It will probably behave in many situations, but "
 "may also ride your motorcycle, drink all your milk, or use your computer "
 "to browse porn.  Comments, feature requests, and patches are welcome.<br><br>"
-"See <a href=\"http://swfdec.sourceforge.net/\">"
-"http://swfdec.sourceforge.net/</a> for information.<br><br>"
+"See <a href=\"http://www.schleef.org/swfdec/\">"
+"http://www.schleef.org/swfdec/</a> for information.<br><br>"
 "Flash, Shockwave, and Macromedia are trademarks of Macromedia, Inc.  Swfdec "
 "is not affiliated with Macromedia, Inc.";
             break;
@@ -275,7 +304,7 @@ char *NP_GetMIMEDescription(void)
 NPError NP_Initialize(NPNetscapeFuncs * moz_funcs, NPPluginFuncs *
 	plugin_funcs)
 {
-	printf("NP_Initialize\n");
+	DEBUG("NP_Initialize");
 
 	if(moz_funcs == NULL || plugin_funcs == NULL)
 		return NPERR_INVALID_FUNCTABLE_ERROR;
@@ -322,7 +351,7 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPError reason)
 
     close(This->send_fd);
 
-	printf("NPP_DestroyStream\n");
+	//printf("NPP_DestroyStream\n");
 
     return NPERR_NO_ERROR;
 }
@@ -342,4 +371,14 @@ void NPP_URLNotify(NPP instance, const char* url, NPReason reason,
 
 
 #endif
+
+static void
+packet_write (int fd, int code, int len, void *data)
+{
+  write(fd, &code, 4);
+  write(fd, &len, 4);
+  if (len > 0 && data) {
+    write(fd, data, len);
+  }
+}
 

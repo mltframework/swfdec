@@ -16,10 +16,21 @@
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
+#include <signal.h>
 
 #include <SDL.h>
+#include "spp.h"
 
-#define g_print printf
+#define g_print(...)
+
+typedef struct _Packet Packet;
+struct _Packet {
+  int code;
+  int length;
+  void *data;
+};
+static Packet * packet_get (int fd);
+static void packet_free (Packet *packet);
 
 gboolean debug = FALSE;
 int slow = 0;
@@ -41,6 +52,7 @@ int height;
 int fast = FALSE;
 int enable_sound = TRUE;
 int quit_at_eof = FALSE;
+int standalone = FALSE;
 
 double rate;
 int interval;
@@ -62,6 +74,7 @@ int main(int argc, char *argv[])
 	int c;
 	int index;
 	static struct option options[] = {
+          { "xid", 1, NULL, 'x' },
 		{ "width", 1, NULL, 'w' },
 		{ "height", 1, NULL, 'h' },
 		{ "fast", 0, NULL, 'f' },
@@ -72,10 +85,12 @@ int main(int argc, char *argv[])
         char *contents;
         int length;
         int ret;
+        int rendering = FALSE;
+        int starting = FALSE;
+        Packet *packet;
+        int fd = 0;
 
-        SDL_Init (SDL_INIT_NOPARACHUTE|SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER);
-
-	s = swfdec_decoder_new();
+        g_print("swf_play: starting player\n");
 
 	while(1){
 		c = getopt_long(argc, argv, "qsfx:w:h:", options, &index);
@@ -84,11 +99,11 @@ int main(int argc, char *argv[])
 		switch(c){
 		case 'w':
 			width = strtoul(optarg, NULL, 0);
-			printf("width set to %d\n",width);
+			g_print("width set to %d\n",width);
 			break;
 		case 'h':
 			height = strtoul(optarg, NULL, 0);
-			printf("height set to %d\n",height);
+			g_print("height set to %d\n",height);
 			break;
 		case 'f':
 			fast = TRUE;
@@ -99,57 +114,115 @@ int main(int argc, char *argv[])
 		case 'q':
 			quit_at_eof = TRUE;
 			break;
+                case 'x':
+                        setenv ("SDL_WINDOWID", optarg, 1);
+                        break;
 		default:
 			do_help();
 			break;
 		}
 	}
 
-	if(optind != argc-1)do_help();
+	if(optind != argc-1) do_help();
+
+        SDL_Init (SDL_INIT_NOPARACHUTE|SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER);
+        /* SDL thinks it's smart by overriding SIGINT.  It's not */
+        signal (SIGINT, SIG_DFL);
+	s = swfdec_decoder_new();
 
 	if(width){
 		swfdec_decoder_set_image_size(s,width,height);
 	}
 
-        ret = g_file_get_contents (argv[optind], &contents, &length, NULL);
-        if (!ret) {
-          g_print("error reading file\n");
-          exit(1);
-        }
-        swfdec_decoder_add_data (s, contents, length);
-
-        while (1) {
-          ret = swfdec_decoder_parse (s);
-          if (ret == SWF_NEEDBITS ) {
-            swfdec_decoder_eof (s);
+        if (standalone) {
+          ret = g_file_get_contents (argv[optind], &contents, &length, NULL);
+          if (!ret) {
+            g_print("error reading file\n");
+            exit(1);
           }
+          swfdec_decoder_add_data (s, contents, length);
+          swfdec_decoder_eof (s);
+          ret = swfdec_decoder_parse (s);
           if (ret == SWF_ERROR) {
             g_print("error while parsing\n");
             exit(1);
           }
-          if (ret == SWF_EOF) {
-            break;
-          }
         }
 
-        swfdec_decoder_get_rate (s, &rate);
-        interval = 1000.0/rate;
 
-        swfdec_decoder_get_image_size (s, &width, &height);
 
-	new_window();
+        while(1) {
+          int did_something = FALSE;
 
-	if(enable_sound)sound_setup();
-
-        render_time = 0;
-        while (go) {
-          int now = SDL_GetTicks ();
-          if (now >= render_time) {
-            if (enable_sound) {
-              render_idle_audio (NULL);
-            } else {
-              render_idle_noaudio (NULL);
+          if (!standalone) {
+            packet = packet_get (fd);
+            if (packet) {
+              switch (packet->code) {
+                case SPP_EXIT:
+                  exit(0);
+                  break;
+                case SPP_DATA:
+                  swfdec_decoder_add_data (s, packet->data, packet->length);
+                  packet->data = NULL;
+                  break;
+                case SPP_EOF:
+                  swfdec_decoder_eof (s);
+                  starting = TRUE;
+                  break;
+                case SPP_SIZE:
+                  width = ((int *)packet->data)[0];
+                  height = ((int *)packet->data)[1];
+                  swfdec_decoder_set_image_size (s, width, height);
+                  new_window();
+                  break;
+                default:
+                  /* ignore it */
+                  break;
+              }
+              packet_free (packet);
+              did_something = TRUE;
             }
+          }
+
+          if (starting) {
+            ret = swfdec_decoder_parse (s);
+            g_print("parse ret = %d\n", ret);
+            ret = swfdec_decoder_parse (s);
+            g_print("parse ret = %d\n", ret);
+            ret = swfdec_decoder_parse (s);
+            g_print("parse ret = %d\n", ret);
+            ret = swfdec_decoder_parse (s);
+            g_print("parse ret = %d\n", ret);
+
+            swfdec_decoder_get_rate (s, &rate);
+            interval = 1000.0/rate;
+
+            swfdec_decoder_get_image_size (s, &width, &height);
+            g_print("size %dx%d\n", width, height);
+
+            new_window();
+
+            if(enable_sound)sound_setup();
+            render_time = 0;
+            starting = FALSE;
+            rendering = TRUE;
+            did_something = TRUE;
+          }
+
+          if (rendering) {
+            int now = SDL_GetTicks ();
+            if (now >= render_time) {
+              if (enable_sound) {
+                render_idle_audio (NULL);
+              } else {
+                render_idle_noaudio (NULL);
+              }
+              did_something = TRUE;
+            }
+          }
+
+          if (!did_something) {
+            usleep(10000);
           }
         }
 
@@ -158,7 +231,7 @@ int main(int argc, char *argv[])
 
 static void do_help(void)
 {
-	fprintf(stderr,"swf_play file.swf\n");
+	g_print("swf_play file.swf\n");
 	exit(1);
 }
 
@@ -233,7 +306,7 @@ static void sound_setup(void)
 	sound_buf = malloc(1024*2*2);
 
 	if ( SDL_OpenAudio(&wanted, NULL) < 0 ) {
-		fprintf(stderr, "Couldn't open audio: %s, disabling\n", SDL_GetError());
+		g_print("Couldn't open audio: %s, disabling\n", SDL_GetError());
 		enable_sound = FALSE;
 	}
 
@@ -275,16 +348,20 @@ static gboolean render_idle_audio(gpointer data)
 	  sound_bytes += audio_buffer->length;
         }
 
-printf("%d\n", sound_bytes);
         if (sound_bytes > 20000) {
           video_buffer = swfdec_render_get_image (s);
         } else {
           video_buffer = NULL;
+          g_print("video_buffer == NULL\n");
         }
         if (video_buffer) {
           int ret;
           SDL_Surface *surface;
 
+          if (video_buffer->length != width * height * 4) {
+            g_print("video buffer wrong size (%d should be %d)\n",
+                video_buffer->length, width * height * 4);
+          }
 #if G_BYTE_ORDER == 4321
 #define RED_MASK 0x0000ff00
 #define GREEN_MASK 0x00ff0000
@@ -339,5 +416,42 @@ static gboolean render_idle_noaudio(gpointer data)
           render_time = SDL_GetTicks () + 10;
 
 	return FALSE;
+}
+
+
+static Packet *
+packet_get (int fd)
+{
+  Packet *packet;
+  fd_set readfds;
+  struct timeval tv = { 0 };
+
+  FD_ZERO(&readfds);
+  FD_SET(fd,&readfds);
+
+  select (fd + 1, &readfds, NULL, NULL, &tv);
+  if (!FD_ISSET(fd,&readfds)) {
+    return NULL;
+  }
+
+  packet = malloc (sizeof(Packet));
+  read (fd, &packet->code, 4);
+  read (fd, &packet->length, 4);
+  if (packet->length > 0) {
+    packet->data = malloc(packet->length);
+    read (fd, packet->data, packet->length);
+  }
+
+  g_print("swf_play: packet code=%d length=%d\n", packet->code,
+      packet->length);
+
+  return packet;
+}
+
+static void
+packet_free (Packet *packet)
+{
+  if (packet->data) free (packet->data);
+  free (packet);
 }
 

@@ -1,3 +1,23 @@
+2004-11-04  David Schleef  <ds@schleef.org>
+
+	* README: random fixes
+	* libswfdec/swf.c: (swfdec_decoder_set_image_size): change scaling
+	back to browser-friendly policy.
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate): change eof
+	policy back to being browser-friendly
+	* libswfdec/swfdec_shape.c: (swfdec_shape_compose_gradient),
+	(my_root): optimization for circular gradients
+	* player/Makefile.am: include plugin dir for spp.h
+	* player/swf_play.c: (main), (do_help), (sound_setup),
+	(render_idle_audio), (packet_get), (packet_free): Add SPP protocol
+	handling.  Additional fixes to make plugin work again.
+	* plugin/plugin.c: (plugin_fork), (plugin_newp), (plugin_destroy),
+	(plugin_set_window), (plugin_destroy_stream), (plugin_write),
+	(plugin_stream_as_file), (NP_GetValue), (NP_Initialize),
+	(NPP_DestroyStream), (packet_write): Add SPP protocol handling.
+	Other random fixes.
+	* plugin/spp.h: SPP protocol.
+
 2004-10-26  David Schleef  <ds@schleef.org>
 
 	* player/swf_play.c: (render_idle_audio): endianness fixes

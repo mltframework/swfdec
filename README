@@ -1,13 +1,12 @@
 
 Swfdec is a decoder/renderer library for Macromedia Flash animations.
-Included is a simple GTK2-based player and an even simpler Mozilla
+Included is a simple SDL-based player and an even simpler Mozilla
 plugin that allows the player to be embedded into your favorite
-browser.  (Note that it's not necessary to have a GTK+-2.0-based
-browser.)
+browser.
 
-Swfdec-0.2.1 now contains a GdkPixbuf loader module for SWF files.
-I have _no clue_ why anyone would want Flash animations as part of
-their GDK theme, but it is now possible.
+Swfdec contains a GdkPixbuf loader module for SWF files.  I have
+_no clue_ why anyone would want Flash animations as part of their
+GTK+ theme, but it is now possible.
 
 This is alpha software.  Do not expect it to work for you.
 

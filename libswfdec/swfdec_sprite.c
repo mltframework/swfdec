@@ -10,6 +10,31 @@ SwfdecSprite *swfdec_sprite_new(void)
 	return sprite;
 }
 
+void swfdec_sprite_decoder_free(SwfdecObject *object)
+{
+	SwfdecDecoder *s = object->priv;
+
+	swfdec_sprite_free(s->main_sprite);
+	swfdec_render_free(s->render);
+
+	g_free(s);
+}
+
+void swfdec_sprite_free(SwfdecSprite *sprite)
+{
+#if 1
+	GList *g;
+
+	/* FIXME */
+	for(g=sprite->layers;g;g=g_list_next(g)){
+		g_free(g->data);
+	}
+#endif
+	g_list_free(sprite->layers);
+
+	g_free(sprite);
+}
+
 void swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
 {
 	SwfdecLayer *l;
@@ -156,7 +181,7 @@ int tag_func_define_sprite(SwfdecDecoder *s)
 
 	SWF_DEBUG(0,"  ID: %d\n", object->id);
 
-	sprite = swf_init();
+	sprite = swfdec_decoder_new();
 	object->priv = sprite;
 	object->type = SWF_OBJECT_SPRITE;
 

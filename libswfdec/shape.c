@@ -7,6 +7,40 @@
 static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	SwfdecShapeVec *shapevec, double trans[6]);
 
+void swfdec_shape_free(SwfdecObject *object)
+{
+	_swfdec_shape_free(object->priv);
+}
+
+void _swfdec_shape_free(SwfdecShape *shape)
+{
+	SwfdecShapeVec *shapevec;
+	int i;
+
+	for(i=0;i<shape->fills->len;i++){
+		shapevec = g_ptr_array_index(shape->fills, i);
+		g_array_free(shapevec->path, TRUE);
+		g_free(shapevec);
+	}
+	g_ptr_array_free(shape->fills,TRUE);
+
+	for(i=0;i<shape->fills2->len;i++){
+		shapevec = g_ptr_array_index(shape->fills2, i);
+		g_array_free(shapevec->path, TRUE);
+		g_free(shapevec);
+	}
+	g_ptr_array_free(shape->fills2,TRUE);
+
+	for(i=0;i<shape->lines->len;i++){
+		shapevec = g_ptr_array_index(shape->lines, i);
+		g_array_free(shapevec->path, TRUE);
+		g_free(shapevec);
+	}
+	g_ptr_array_free(shape->lines,TRUE);
+
+	g_free(shape);
+}
+
 int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits)
 {
 	int type;

@@ -14,6 +14,17 @@ SwfdecRender *swfdec_render_new(void)
 	return render;
 }
 
+void swfdec_render_free(SwfdecRender *render)
+{
+	GList *g;
+
+	for(g=render->layers;g;g=g_list_next(g)){
+		swfdec_layer_free((SwfdecLayer *)g->data);
+	}
+	g_list_free(render->layers);
+
+	g_free(render);
+}
 
 
 SwfdecLayer *swfdec_layer_new(void)
@@ -43,11 +54,13 @@ void swfdec_layer_free(SwfdecLayer *layer)
 		art_svp_free(layervec->svp);
 		if(layervec->compose)g_free(layervec->compose);
 	}
+	g_array_free(layer->fills, TRUE);
 	for(i=0;i<layer->lines->len;i++){
 		layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 		art_svp_free(layervec->svp);
 		if(layervec->compose)g_free(layervec->compose);
 	}
+	g_array_free(layer->lines, TRUE);
 	
 	if(layer->sublayers){
 		GList *g;
@@ -57,8 +70,6 @@ void swfdec_layer_free(SwfdecLayer *layer)
 		g_list_free(layer->sublayers);
 	}
 
-	g_array_free(layer->fills,TRUE);
-	g_array_free(layer->lines,TRUE);
 	g_free(layer);
 }
 

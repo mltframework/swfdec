@@ -12,6 +12,7 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecObject *object);
 void swfdec_button_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object);
+void swfdec_button_free(SwfdecObject *object);
 
 #endif
 

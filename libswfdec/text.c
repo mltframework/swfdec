@@ -2,6 +2,25 @@
 #include "swfdec_internal.h"
 
 
+void swfdec_font_free(SwfdecObject *object)
+{
+	GArray *array = object->priv;
+	SwfdecShape *shape;
+	int i;
+
+	for(i=0;i<array->len;i++){
+		shape = &g_array_index(array,SwfdecShape,i);
+		_swfdec_shape_free(shape);
+	}
+	g_array_free(array,TRUE);
+}
+
+void swfdec_text_free(SwfdecObject *object)
+{
+	GArray *array = object->priv;
+
+	g_array_free(array,TRUE);
+}
 
 int tag_func_define_font(SwfdecDecoder *s)
 {

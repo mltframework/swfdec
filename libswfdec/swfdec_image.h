@@ -15,6 +15,7 @@ int tag_func_define_bits_jpeg_3(SwfdecDecoder *s);
 int tag_func_define_bits_lossless(SwfdecDecoder *s);
 int tag_func_define_bits_lossless_2(SwfdecDecoder *s);
 int swfdec_image_render(SwfdecDecoder *s, SwfdecLayer *layer, SwfdecObject *obj);
+void swfdec_image_free(SwfdecObject *obj);
 
 #endif
 

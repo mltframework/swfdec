@@ -41,6 +41,7 @@ struct swfdec_layer_struct{
 };
 
 SwfdecRender *swfdec_render_new(void);
+void swfdec_render_free(SwfdecRender *render);
 
 SwfdecLayer *swfdec_layer_new(void);
 void swfdec_layer_free(SwfdecLayer *layer);

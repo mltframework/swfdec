@@ -17,6 +17,16 @@ void adpcm_decode(SwfdecDecoder *s,SwfdecObject *obj);
 SwfdecSoundBuffer *swfdec_sound_buffer_new(int len);
 void swfdec_decoder_sound_buffer_append(SwfdecDecoder *s, SwfdecSoundBuffer *buffer);
 
+
+void swfdec_sound_free(SwfdecObject *object)
+{
+	SwfdecSound *sound = object->priv;
+
+	if(sound->sound_buf)g_free(sound->sound_buf);
+
+	g_free(sound);
+}
+
 #ifdef HAVE_MAD
 void mp3_decode_mad(SwfdecObject *obj)
 {

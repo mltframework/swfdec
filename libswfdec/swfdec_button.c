@@ -1,6 +1,18 @@
 
 #include "swfdec_internal.h"
 
+void swfdec_button_free(SwfdecObject *object)
+{
+	SwfdecButton *button = object->priv;
+	int i;
+
+	for(i=0;i<3;i++){
+		if(button->state[i]){
+			swfdec_spriteseg_free(button->state[i]);
+		}
+	}
+	g_free(button);
+}
 
 void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object)
@@ -71,6 +83,8 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 
 	layer = swfdec_layer_new();
 	layer->id = seg->id;
+	layer->depth = seg->depth;
+	swfdec_sprite_add_layer(s->main_sprite, layer);
 
 	art_affine_multiply(layer->transform, seg->transform, s->transform);
 	if(button->state[0]){
@@ -194,6 +208,10 @@ int tag_func_define_button_2(SwfdecDecoder *s)
 		SWF_DEBUG(0,"bits->ptr %p\n",bits->ptr);
 
 		if(up){
+			if(button->state[0]){
+				SWF_DEBUG(4,"button->state already set\n");
+				swfdec_spriteseg_free(button->state[0]);
+			}
 			button->state[0] = swfdec_spriteseg_new();
 			button->state[0]->id = character;
 			art_affine_copy(button->state[0]->transform,trans);
@@ -201,6 +219,10 @@ int tag_func_define_button_2(SwfdecDecoder *s)
 			memcpy(button->state[0]->color_add,color_add,4*sizeof(double));
 		}
 		if(over){
+			if(button->state[1]){
+				SWF_DEBUG(4,"button->state already set\n");
+				swfdec_spriteseg_free(button->state[1]);
+			}
 			button->state[1] = swfdec_spriteseg_new();
 			button->state[1]->id = character;
 			art_affine_copy(button->state[1]->transform,trans);
@@ -208,6 +230,10 @@ int tag_func_define_button_2(SwfdecDecoder *s)
 			memcpy(button->state[1]->color_add,color_add,4*sizeof(double));
 		}
 		if(down){
+			if(button->state[2]){
+				SWF_DEBUG(4,"button->state already set\n");
+				swfdec_spriteseg_free(button->state[2]);
+			}
 			button->state[2] = swfdec_spriteseg_new();
 			button->state[2]->id = character;
 			art_affine_copy(button->state[2]->transform,trans);

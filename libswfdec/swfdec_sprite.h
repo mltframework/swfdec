@@ -25,6 +25,8 @@ struct swfdec_sprite_seg_struct {
 };
 
 SwfdecSprite *swfdec_sprite_new(void);
+void swfdec_sprite_free(SwfdecSprite *object);
+void swfdec_sprite_decoder_free(SwfdecObject *object);
 void swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
 SwfdecLayer *swfdec_sprite_prerender_slow(SwfdecDecoder *s,
 	SwfdecSpriteSeg *layer, SwfdecObject *object);

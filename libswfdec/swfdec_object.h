@@ -27,6 +27,7 @@ enum {
 };
 
 SwfdecObject *swfdec_object_new(SwfdecDecoder *s, int id);
+void swfdec_object_free(SwfdecObject *object);
 SwfdecObject *swfdec_object_get(SwfdecDecoder *s, int id);
 
 #endif

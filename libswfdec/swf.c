@@ -167,8 +167,41 @@ int swfdec_decoder_parse(SwfdecDecoder *s)
 
 int swfdec_decoder_free(SwfdecDecoder *s)
 {
+	GList *g;
 
-	return SWF_ERROR;
+	for(g=s->objects;g;g=g_list_next(g)){
+		swfdec_object_free((SwfdecObject *)g->data);
+	}
+	g_list_free(s->objects);
+	if(s->stream_sound_obj){
+		swfdec_object_free(s->stream_sound_obj);
+	}
+
+	if(s->buffer)g_free(s->buffer);
+	if(s->input_data)g_free(s->input_data);
+
+	swfdec_sprite_free(s->main_sprite);
+	swfdec_render_free(s->render);
+
+	/* FIXME */
+	/* free stream->z */
+
+	if(s->jpegtables){
+		g_free(s->jpegtables);
+	}
+
+	if(s->tmp_scanline){
+		g_free(s->tmp_scanline);
+	}
+
+	for(g=s->sound_buffers;g;g=g_list_next(g)){
+		g_free(g->data);
+	}
+	g_list_free(s->sound_buffers);
+
+	g_free(s);
+
+	return SWF_OK;
 }
 
 int swfdec_decoder_get_n_frames(SwfdecDecoder *s, int *n_frames)

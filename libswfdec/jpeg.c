@@ -10,6 +10,14 @@ static void merge_alpha(SwfdecImage *image, unsigned char *alpha);
 static void swfdec_image_colormap_decode(SwfdecImage *image,
 	unsigned char *src, unsigned char *colormap, int colormap_len);
 
+void swfdec_image_free(SwfdecObject *object)
+{
+	SwfdecImage *image = object->priv;
+
+	g_free(image->image_data);
+	g_free(image);
+}
+
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
 {
 	return malloc(items*size);

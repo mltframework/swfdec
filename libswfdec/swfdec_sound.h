@@ -5,7 +5,6 @@
 #include "swfdec_types.h"
 
 struct swfdec_sound_struct{
-	unsigned char *uncompressed_data;
 	int format;
 
 	unsigned char *orig_data;
@@ -32,6 +31,7 @@ struct swfdec_sound_buffer_struct{
 	unsigned char *data;
 };
 
+void swfdec_sound_free(SwfdecObject *object);
 int tag_func_define_sound(SwfdecDecoder *s);
 int tag_func_sound_stream_block(SwfdecDecoder *s);
 int tag_func_sound_stream_head(SwfdecDecoder *s);

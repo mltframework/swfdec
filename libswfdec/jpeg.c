@@ -60,9 +60,9 @@ static void *lossless(void *zptr, int zlen, int *plen)
 		fprintf(stderr,"lossless: ret == %d\n",ret);
 	}
 
-	g_free(z);
-
 	if(plen)(*plen) = z->total_out;
+
+	g_free(z);
 	return data;
 }
 

@@ -11,6 +11,8 @@
 #include "proto.h"
 #include "bits.h"
 
+static void dumpbits(bits_t *b);
+
 int swf_parse_header1(swf_state_t *s);
 int swf_inflate_init(swf_state_t *s);
 int swf_parse_header2(swf_state_t *s);
@@ -132,6 +134,7 @@ int swf_parse(swf_state_t *s)
 			if(s->b.ptr < endptr){
 				SWF_DEBUG(3,"early parse finish (%d bytes)\n",
 					endptr - s->b.ptr);
+				dumpbits(&s->b);
 			}
 			if(s->b.ptr > endptr){
 				SWF_DEBUG(3,"parse overrun (%d bytes)\n",
@@ -169,7 +172,6 @@ static void zfree(void *opaque, void *addr)
 	free(addr);
 }
 
-#if 0
 static void dumpbits(bits_t *b)
 {
 	int i;
@@ -180,7 +182,6 @@ static void dumpbits(bits_t *b)
 	}
 	printf("\n");
 }
-#endif
 
 int swf_parse_header1(swf_state_t *s)
 {
@@ -293,7 +294,7 @@ struct tag_func_struct tag_funcs[] = {
 	[ ST_PLACEOBJECT	] = { "PlaceObject",	NULL,	0 },
 	[ ST_REMOVEOBJECT	] = { "RemoveObject",	art_remove_object,	0 },
 //	[ ST_DEFINEBITS		] = { "DefineBits",	NULL,	0 },
-	[ ST_DEFINEBITSJPEG	] = { "DefineBitsJPEG",	NULL,	0 },
+	[ ST_DEFINEBITSJPEG	] = { "DefineBitsJPEG",	tag_func_define_bits_jpeg,	0 },
 	[ ST_DEFINEBUTTON	] = { "DefineButton",	NULL,	0 },
 	[ ST_JPEGTABLES		] = { "JPEGTables",	NULL,	0 },
 	[ ST_SETBACKGROUNDCOLOR	] = { "SetBackgroundColor",	tag_func_set_background_color,	0 },
@@ -306,7 +307,7 @@ struct tag_func_struct tag_funcs[] = {
 	[ ST_DEFINEBUTTONSOUND	] = { "DefineButtonSound",	tag_func_define_button_sound,	0 },
 	[ ST_SOUNDSTREAMHEAD	] = { "SoundStreamHead",	tag_func_sound_stream_head,	0 },
 	[ ST_SOUNDSTREAMBLOCK	] = { "SoundStreamBlock",	tag_func_sound_stream_block,	0 },
-	[ ST_DEFINEBITSLOSSLESS	] = { "DefineBitsLossless",	NULL,	0 },
+	[ ST_DEFINEBITSLOSSLESS	] = { "DefineBitsLossless",	tag_func_define_bits_lossless,	0 },
 	[ ST_DEFINEBITSJPEG2	] = { "DefineBitsJPEG2",	tag_func_define_bits_jpeg_2,	0 },
 	[ ST_DEFINESHAPE2	] = { "DefineShape2",	art_define_shape_2,	0 },
 	[ ST_DEFINEBUTTONCXFORM	] = { "DefineButtonCXForm",	NULL,	0 },
@@ -316,8 +317,8 @@ struct tag_func_struct tag_funcs[] = {
 	[ ST_DEFINESHAPE3	] = { "DefineShape3",	art_define_shape_3,	0 },
 	[ ST_DEFINETEXT2	] = { "DefineText2",	tag_func_define_text_2,	0 },
 	[ ST_DEFINEBUTTON2	] = { "DefineButton2",	tag_func_define_button_2,	0 },
-	[ ST_DEFINEBITSJPEG3	] = { "DefineBitsJPEG3",	NULL,	0 },
-	[ ST_DEFINEBITSLOSSLESS2] = { "DefineBitsLossless2",	NULL,	0 },
+	[ ST_DEFINEBITSJPEG3	] = { "DefineBitsJPEG3",	tag_func_define_bits_jpeg_3,	0 },
+	[ ST_DEFINEBITSLOSSLESS2] = { "DefineBitsLossless2",	tag_func_define_bits_lossless_2,	0 },
 	[ ST_DEFINEEDITTEXT	] = { "DefineEditText",	NULL,	0 },
 	[ ST_DEFINEMOVIE	] = { "DefineMovie",	NULL,	0 },
 	[ ST_DEFINESPRITE	] = { "DefineSprite",	tag_func_define_sprite,	0 },
@@ -444,6 +445,7 @@ int tag_func_place_object_2(swf_state_t *s)
 {
 	bits_t *bits = &s->b;
 	int reserved;
+	int has_unknown;
 	int has_name;
 	int has_ratio;
 	int has_color_transform;
@@ -454,7 +456,8 @@ int tag_func_place_object_2(swf_state_t *s)
 	int character_id;
 	int ratio;
 
-	reserved = getbits(bits,2);
+	reserved = getbit(bits);
+	has_unknown = getbit(bits);
 	has_name = getbit(bits);
 	has_ratio = getbit(bits);
 	has_color_transform = getbit(bits);

@@ -1,8 +1,7 @@
 
 Swfdec is a decoder/renderer library for Macromedia Flash animations.
-Included is a simple SDL-based player and an even simpler Mozilla
-plugin that allows the player to be embedded into your favorite
-browser.
+Included is a simple SDL-based player and a Mozilla plugin that allows
+the player to be embedded into your favorite browser.
 
 Swfdec contains a GdkPixbuf loader module for SWF files.  I have
 _no clue_ why anyone would want Flash animations as part of their
@@ -13,9 +12,10 @@ This is alpha software.  Do not expect it to work for you.
 
 Notes:
 
- - If you install into /usr/local, you'll need to add
-   /usr/local/lib/mozilla/plugins to the MOZ_PLUGIN_PATH
-   environment variable.
+ - If you install into /usr/local, your browser may have difficulty
+   finding the plugin.  This can be solved for mozilla-based
+   browsers by adding /usr/local/lib/mozilla/plugins to the
+   MOZ_PLUGIN_PATH environment variable.
  
  - Sound output is handled by SDL, so the target device can be
    chosen by setting the SDL_AUDIODRIVER environment variable.
@@ -46,10 +46,7 @@ Dependencies:
   zlib (>= 1.1.4)
   MAD
   Mozilla (>= 1.0.0) development headers (optional)
+  liboil (>= 0.2.0)
 
-Places to find Flash files:  (this is mostly for my reference)
-
-  http://www.yetisports.net/
-  
 
 

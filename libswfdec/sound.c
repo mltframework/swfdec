@@ -185,14 +185,14 @@ void mp3_decode_mpglib(SwfdecObject *obj)
 	mp = mpglib_decoder_new();
 	ret = mpglib_decoder_decode(mp, (void *)sound->orig_data,
 		sound->orig_len, sound->sound_buf, sound->sound_len, &n);
-	printf("decoding %d bytes\n",sound->orig_len);
+	fprintf(stderr,"decoding %d bytes\n",sound->orig_len);
 	while(ret==MPGLIB_OK){
 		offset += n;
 		ret = mpglib_decoder_decode(mp, NULL, 0,
 			sound->sound_buf,
 			sound->sound_len, &n);
 	}
-	printf("total decoded %d\n",offset + n);
+	fprintf(stderr,"total decoded %d\n",offset + n);
 }
 #endif
 
@@ -588,6 +588,8 @@ void swfdec_sound_render(SwfdecDecoder *s)
 			break;
 		}
 	}
+
+	SWF_DEBUG(0,"sound buffer: len=%d filled %d\n",len,offset);
 
 	s->sound_buffers = g_list_append(s->sound_buffers, buffer);
 }

@@ -288,9 +288,10 @@ void swf_shape_add_styles(swf_state_t *s, swf_shape_t *shape, bits_t *bits)
 			}
 		}
 		if(fill_style_type == 0x40 || fill_style_type == 0x41){
-			get_u16(bits);
-		}
-		if(fill_style_type == 0x40 || fill_style_type == 0x41){
+			shapevec->fill_type = fill_style_type;
+			shapevec->fill_id = get_u16(bits);
+			SWF_DEBUG(0,"   background fill id = %d\n",shapevec->fill_id);
+
 			get_matrix(bits);
 		}
 	}

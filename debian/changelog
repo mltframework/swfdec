@@ -1,8 +1,9 @@
-swfdec (0.1.2.1-1) unstable; urgency=low
+swfdec (0.1.2-3) unstable; urgency=low
 
-  * CVS snapshot
+  * debian/control: Add depends on libart2.0-dev, since the headers
+    pull in libart (this fixes an upstream bug)
 
- -- David Schleef <ds@schleef.org>  Fri, 15 Nov 2002 14:15:54 -0800
+ -- David Schleef <ds@schleef.org>  Mon, 11 Nov 2002 14:36:09 -0800
 
 swfdec (0.1.2-2) unstable; urgency=low
 

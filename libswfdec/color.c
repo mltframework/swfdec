@@ -29,3 +29,36 @@ unsigned int transform_color(unsigned int in, double mult[4], double add[4])
 	return SWF_COLOR_COMBINE(r,g,b,a);
 }
 
+void swf_config_colorspace(SwfdecDecoder *s)
+{
+	switch(s->colorspace){
+	case SWF_COLORSPACE_RGB565:
+		s->stride = s->width * 2;
+		s->bytespp = 2;
+		s->callback = art_rgb565_svp_alpha_callback;
+		break;
+	case SWF_COLORSPACE_RGB888:
+	default:
+		s->stride = s->width * 3;
+		s->bytespp = 3;
+		s->callback = art_rgb_svp_alpha_callback;
+		break;
+	}
+}
+
+int tag_func_set_background_color(SwfdecDecoder *s)
+{
+	ArtIRect rect;
+
+	s->bg_color = get_color(&s->b);
+
+	rect.x0 = 0;
+	rect.y0 = 0;
+	rect.x1 = s->width;
+	rect.y1 = s->height;
+
+	swf_invalidate_irect(s,&rect);
+
+	return SWF_OK;
+}
+

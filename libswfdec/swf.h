@@ -17,6 +17,15 @@ struct swfdec_decoder_struct {
 	char *buffer;
 	int frame_number;
 
+	void *sound_buffer;
+	int sound_len;
+	int sound_offset;
+
+	int colorspace;
+	int no_render;
+	int debug;
+	int compressed;
+
 	/* other stuff */
 };
 

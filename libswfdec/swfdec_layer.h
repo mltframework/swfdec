@@ -31,5 +31,13 @@ struct swfdec_layer_struct{
 	//swf_image_t *image;
 };
 
+SwfdecLayer *swf_layer_new(void);
+void swf_layer_free(SwfdecLayer *layer);
+SwfdecLayer *swf_layer_get(SwfdecDecoder *s, int depth);
+void swf_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew);
+void swf_layer_del(SwfdecDecoder *s, SwfdecLayer *layer);
+void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
+void swf_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec);
+
 #endif
 

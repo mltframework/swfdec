@@ -74,6 +74,8 @@ struct swfdec_decoder_struct {
 	GList *layers;
 	ArtIRect irect;
 	ArtIRect drawrect;
+
+	double flatness;
 };
 
 SwfdecDecoder *swf_init(void);

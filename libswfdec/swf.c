@@ -15,6 +15,19 @@ extern __typeof (name) aliasname __attribute__ ((weak, alias (#name)))
 weak_alias(swfdec_decoder_new, swf_init);
 weak_alias(swfdec_decoder_addbits, swf_addbits);
 weak_alias(swfdec_decoder_parse, swf_parse);
+#else
+SwfdecDecoder *swf_init(void)
+{
+	return swfdec_decoder_new();
+}
+int swf_addbits(SwfdecDecoder *s, unsigned char *bits, int len)
+{
+	return swfdec_decoder_addbits(s,bits,len);
+}
+int swf_parse(SwfdecDecoder *s)
+{
+	return swfdec_decoder_parse(s);
+}
 #endif
 
 SwfdecDecoder *swfdec_decoder_new(void)
@@ -28,6 +41,8 @@ SwfdecDecoder *swfdec_decoder_new(void)
 	s->debug = 2;
 
 	art_affine_identity(s->transform);
+
+	s->flatness = 0.25;
 
 	return s;
 }
@@ -221,8 +236,6 @@ int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level)
 }
 
 
-#define bits_ret_if_needbits(bits, n_bytes)	if(bits_needbits(bits,n_bytes))return SWF_NEEDBITS
-
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
 {
 	return malloc(items*size);
@@ -248,7 +261,7 @@ int swf_parse_header1(SwfdecDecoder *s)
 {
 	int sig1,sig2,sig3;
 
-	bits_ret_if_needbits(&s->b, 8);
+	if(bits_needbits(&s->b, 8))return SWF_NEEDBITS;
 
 	sig1 = get_u8(&s->b);
 	sig2 = get_u8(&s->b);
@@ -309,7 +322,7 @@ int swf_parse_header2(SwfdecDecoder *s)
 {
 	int rect[4];
 
-	bits_ret_if_needbits(&s->b, 32);
+	if(bits_needbits(&s->b, 32))return SWF_NEEDBITS;
 
 	get_rect(&s->b, rect);
 	s->width = rect[1]/20;
@@ -397,13 +410,13 @@ int swf_parse_tag(SwfdecDecoder *s)
 	bits_t *b = &s->b;
 	char *name;
 
-	bits_ret_if_needbits(&s->b, 2);
+	if(bits_needbits(&s->b, 2))return SWF_NEEDBITS;
 
 	x = get_u16(b);
 	s->tag = (x>>6)&0x3ff;
 	s->tag_len = x&0x3f;
 	if(s->tag_len==0x3f){
-		bits_ret_if_needbits(&s->b, 4);
+		if(bits_needbits(&s->b, 4))return SWF_NEEDBITS;
 		s->tag_len = get_u32(b);
 	}
 
@@ -465,104 +478,12 @@ int tag_func_dumpbits(SwfdecDecoder *s)
 	return SWF_OK;
 }
 
-int tag_func_set_background_color(SwfdecDecoder *s)
-{
-	ArtIRect rect;
-
-	s->bg_color = get_color(&s->b);
-
-	rect.x0 = 0;
-	rect.y0 = 0;
-	rect.x1 = s->width;
-	rect.y1 = s->height;
-
-	swf_invalidate_irect(s,&rect);
-
-	return SWF_OK;
-}
-
 int tag_func_frame_label(SwfdecDecoder *s)
 {
 	free(get_string(&s->b));
 
 	return SWF_OK;
 }
-
-int tag_func_place_object_2(SwfdecDecoder *s)
-{
-	bits_t *bits = &s->b;
-	int reserved;
-	int has_unknown;
-	int has_name;
-	int has_ratio;
-	int has_color_transform;
-	int has_matrix;
-	int has_character;
-	int move;
-	int depth;
-	int character_id;
-	int ratio;
-
-	reserved = getbit(bits);
-	has_unknown = getbit(bits);
-	has_name = getbit(bits);
-	has_ratio = getbit(bits);
-	has_color_transform = getbit(bits);
-	has_matrix = getbit(bits);
-	has_character = getbit(bits);
-	move = getbit(bits);
-	depth = get_u16(bits);
-
-	printf("  reserved = %d\n",reserved);
-	printf("  depth = %d\n",depth);
-
-	if(has_character){
-		character_id = get_u16(bits);
-		printf("  id = %d\n",character_id);
-	}
-	if(has_matrix){
-		get_matrix(bits);
-	}
-	if(has_color_transform){
-		get_color_transform(bits);
-		syncbits(bits);
-	}
-	if(has_ratio){
-		ratio = get_u16(bits);
-		printf("  ratio = %d\n",ratio);
-	}
-	if(has_name){
-		free(get_string(bits));
-	}
-
-	return SWF_OK;
-}
-
-int tag_func_remove_object(SwfdecDecoder *s)
-{
-	int id;
-	int depth;
-
-	id = get_u16(&s->b);
-	depth = get_u16(&s->b);
-
-	printf("  id = %d\n",id);
-	printf("  depth = %d\n",depth);
-
-	return SWF_OK;
-}
-
-int tag_func_remove_object_2(SwfdecDecoder *s)
-{
-	int depth;
-
-	depth = get_u16(&s->b);
-
-	printf("  depth = %d\n",depth);
-
-	return SWF_OK;
-}
-
 
 void swf_debug(SwfdecDecoder *s, int n, char *format, ...)
 {

@@ -9,5 +9,7 @@ struct swfdec_button_struct{
 	double color_add[4];
 };
 
+void prerender_layer_button(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
+
 #endif
 

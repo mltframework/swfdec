@@ -40,5 +40,7 @@ int tag_func_define_button_2(SwfdecDecoder *s);
 int tag_func_define_sprite(SwfdecDecoder *s);
 void dump_layers(SwfdecDecoder *s);
 
+void prerender_layer_shape(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecShape *shape);
+
 #endif
 

@@ -20,5 +20,7 @@ int tag_func_define_font(SwfdecDecoder *s);
 int tag_func_define_text(SwfdecDecoder *s);
 int tag_func_define_text_2(SwfdecDecoder *s);
 
+void prerender_layer_text(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
+
 #endif
 

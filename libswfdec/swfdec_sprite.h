@@ -26,5 +26,8 @@ struct swf_sprite_struct {
 	ArtIRect drawrect;
 };
 
+void prerender_layer_sprite(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
+void render_sprite(SwfdecDecoder *s, SwfdecDecoder *sprite, int frame_number);
+
 #endif
 

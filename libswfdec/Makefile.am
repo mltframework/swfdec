@@ -6,7 +6,8 @@ SUBDIRS = mpglib jpeg
 lib_LTLIBRARIES = libswfdec.la
 
 libswfdec_la_SOURCES = actions.c art.c color.c get.c jpeg.c \
-	render.c shape.c sound.c swf.c swfdec_object.c text.c
+	render.c shape.c sound.c swf.c swfdec_object.c text.c \
+	swfdec_display.c swfdec_sprite.c swfdec_button.c
 libswfdec_la_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) $(GTK_CFLAGS) -I jpeg/
 libswfdec_la_LDFLAGS = $(LIBART_LIBS) $(GLIB_LIBS) $(GTK_LIBS)
 

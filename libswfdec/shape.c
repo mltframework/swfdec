@@ -661,6 +661,7 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	double mat0[6];
 	int i, j;
 	unsigned char *dest;
+	double inv_width, inv_height;
 
 	image_object = swfdec_object_get(s, shapevec->fill_id);
 	if(!image_object)return;
@@ -688,6 +689,8 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	art_affine_multiply(mat0, shapevec->fill_matrix, trans);
 	art_affine_invert(mat, mat0);
 	dest = layervec->compose;
+	inv_width = 1.0/image->width;
+	inv_height = 1.0/image->height;
 	for(j=0;j<s->height;j++){
 	for(i=0;i<s->width;i++){
 		int ix,iy;
@@ -696,8 +699,8 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 		x = mat[0]*i + mat[2]*j + mat[4];
 		y = mat[1]*i + mat[3]*j + mat[5];
 
-		ix = x - floor(x/image->width)*image->width;
-		iy = y - floor(y/image->height)*image->height;
+		ix = x - floor(x*inv_width)*image->width;
+		iy = y - floor(y*inv_height)*image->height;
 #if 0
 		if(x<0)x=0;
 		if(x>image->width-1)x=image->width-1;
@@ -710,7 +713,7 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 		dest[0] = image->image_data[ix*4 + iy*image->rowstride + 0];
 		dest[1] = image->image_data[ix*4 + iy*image->rowstride + 1];
 		dest[2] = image->image_data[ix*4 + iy*image->rowstride + 2];
-		dest[3] = 0;
+		dest[3] = image->image_data[ix*4 + iy*image->rowstride + 3];
 		dest+=4;
 	}
 	}

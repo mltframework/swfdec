@@ -213,7 +213,7 @@ static ActionFuncEntry swf_actions[] = {
   { 0x09, action_stop_sounds },
   { 0x8a, action_wait_for_frame },
   { 0x8b, action_set_target },
-  { 0x0c, action_go_to_label },
+  { 0x8c, action_go_to_label },
   /* version 4 */
   { 0x96, action_push },
   { 0x17, action_pop },

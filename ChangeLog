@@ -1,5 +1,13 @@
 2005-03-24  David Schleef  <ds@schleef.org>
 
+	Changes from Eric Anholt
+	* configure.ac: Create a stdint.h if it doesn't exist.
+	* libswfdec/actions.c: Fix go_to_label
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2): Use the
+	correct segment length -- fixes warning.
+
+2005-03-24  David Schleef  <ds@schleef.org>
+
 	* configure.ac: version bump
 
 2005-03-24  David Schleef  <ds@schleef.org>

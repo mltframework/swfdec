@@ -201,7 +201,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     action.buffer = swfdec_buffer_new_subbuffer (bits->buffer,
         bits->ptr - bits->buffer->data, len);
 
-    bits->ptr += offset - 4;
+    bits->ptr += len;
 
     g_array_append_val (button->actions, action);
   }

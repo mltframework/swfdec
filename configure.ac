@@ -32,9 +32,10 @@ dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 
 AC_PROG_CC
 AM_PROG_CC_STDC
-AC_ISC_POSIX
 
 AC_HEADER_STDC([])
+
+AC_NEED_STDINT(stdint.h)
 
 dnl ##############################
 dnl # Do automated configuration #

@@ -1,5 +1,6 @@
 
 #include <zlib.h>
+#include <math.h>
 
 #include "swfdec_internal.h"
 
@@ -260,6 +261,18 @@ int swfdec_decoder_get_image_size(SwfdecDecoder *s, int *width, int *height)
 	return SWF_OK;
 }
 
+int swfdec_decoder_set_image_size(SwfdecDecoder *s, int width, int height)
+{
+	if(s->state != SWF_STATE_INIT1){
+		return SWF_ERROR;
+	}
+
+	s->width = width;
+	s->height = height;
+
+	return SWF_OK;
+}
+
 int swfdec_decoder_set_colorspace(SwfdecDecoder *s, int colorspace)
 {
 	if(s->state != SWF_STATE_INIT1){
@@ -371,11 +384,11 @@ int swf_inflate_init(SwfdecDecoder *s)
 	z->avail_out = s->length;
 
 	ret = inflateInit(z);
-	printf("inflateInit returned %d\n",ret);
+	//printf("inflateInit returned %d\n",ret);
 	ret = inflate(z,Z_SYNC_FLUSH);
-	printf("inflate returned %d\n",ret);
-	printf("total out %d\n",(int)z->total_out);
-	printf("total in %d\n",(int)z->total_in);
+	//printf("inflate returned %d\n",ret);
+	//printf("total out %d\n",(int)z->total_out);
+	//printf("total in %d\n",(int)z->total_in);
 
 	free(s->input_data);
 
@@ -389,12 +402,32 @@ int swf_inflate_init(SwfdecDecoder *s)
 int swf_parse_header2(SwfdecDecoder *s)
 {
 	int rect[4];
+	double width, height;
 
 	if(bits_needbits(&s->b, 32))return SWF_NEEDBITS;
 
 	get_rect(&s->b, rect);
-	s->width = rect[1]/20;
-	s->height = rect[3]/20;
+	width = rect[1]*SWF_SCALE_FACTOR;
+	height = rect[3]*SWF_SCALE_FACTOR;
+	if(s->width==0){
+		s->width = floor(width);
+		s->height = floor(height);
+		s->scale_factor = 1.0;
+		art_affine_identity(s->transform);
+	}else{
+		double sw, sh;
+
+		sw = s->width / width;
+		sh = s->height / height;
+		s->scale_factor = (sw<sh) ? sw : sh;
+
+		s->transform[0] = s->scale_factor;
+		s->transform[1] = 0;
+		s->transform[2] = 0;
+		s->transform[3] = s->scale_factor;
+		s->transform[4] = 0.5*(s->width - width*s->scale_factor);
+		s->transform[5] = 0.5*(s->height - height*s->scale_factor);
+	}
 	s->irect.x0 = 0;
 	s->irect.y0 = 0;
 	s->irect.x1 = s->width;

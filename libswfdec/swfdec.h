@@ -35,6 +35,7 @@ int swfdec_decoder_peek_image(SwfdecDecoder *s, unsigned char **image);
 int swfdec_decoder_get_image_size(SwfdecDecoder *s, int *width, int *height);
 
 int swfdec_decoder_set_colorspace(SwfdecDecoder *s, int colorspace);
+int swfdec_decoder_set_image_size(SwfdecDecoder *s, int width, int height);
 int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level);
 
 void *swfdec_decoder_get_sound_chunk(SwfdecDecoder *s, int *length);

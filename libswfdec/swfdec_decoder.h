@@ -42,6 +42,8 @@ struct swfdec_decoder_struct {
 	int debug;
 	int compressed;
 
+	/* End of legacy elements */
+
 	char *input_data;
 	int input_data_len;
 	z_stream *z;
@@ -51,6 +53,7 @@ struct swfdec_decoder_struct {
 	void (*callback)(void *,int,int,ArtSVPRenderAAStep *,int);
 	void (*compose_callback)(void *,int,int,ArtSVPRenderAAStep *,int);
 
+	double scale_factor;
 	double transform[6];
 
 	/* where we are in the top-level state engine */

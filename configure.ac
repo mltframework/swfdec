@@ -166,6 +166,7 @@ AC_CONFIG_FILES(
 Makefile
 libswfdec/Makefile
 libswfdec/mpglib/Makefile
+libswfdec/jpeg/Makefile
 test/Makefile
 plugin/Makefile
 player/Makefile

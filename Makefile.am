@@ -1,13 +1,6 @@
+SUBDIRS=libswfdec test player plugin pixbuf-loader
 
-if WITH_MOZILLA
-MOZILLA_DIR=plugin
-else
-MOZILLA_DIR=
-endif
-
-SUBDIRS=libswfdec test player $(MOZILLA_DIR)
-
-DIST_SUBDIRS=libswfdec test player $(MOZILLA_DIR)
+DIST_SUBDIRS=libswfdec test player plugin pixbuf-loader
 
 EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.spec \
 	TODO m4

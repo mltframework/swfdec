@@ -73,7 +73,7 @@ static int define_text(SwfdecDecoder *s, int rgba)
 	id = get_u16(bits);
 	object = swfdec_object_new(s,id);
 
-	array = g_array_new(TRUE,FALSE,sizeof(SwfdecText));
+	array = g_array_new(FALSE,TRUE,sizeof(SwfdecText));
 	object->priv = array;
 	object->type = SWF_OBJECT_TEXT;
 
@@ -145,7 +145,7 @@ static int define_text(SwfdecDecoder *s, int rgba)
 			if(has_font || has_color){
 				g_array_append_val(array,newtext);
 				text = &g_array_index(array,SwfdecText,array->len-1);
-				text->glyphs = g_array_new(TRUE,FALSE,
+				text->glyphs = g_array_new(FALSE,TRUE,
 					sizeof(SwfdecTextGlyph));
 			}
 		}

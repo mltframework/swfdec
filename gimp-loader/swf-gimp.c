@@ -23,7 +23,6 @@
  *
  * TODO: 
  * *) image preview
- * *) better load dialog
  */
 
 #include <stdio.h>
@@ -40,21 +39,24 @@
 
 typedef struct
 {
-	double scale;
 	int frame;
+	int width;
+	int height;
 } SwfLoadVals;
 
 static SwfLoadVals load_vals =
 {
-	1.0,
-	1
+	1,
+	-1,
+	-1
 };
 
 typedef struct
 {
-	GtkWidget     *dialog;
-	GtkAdjustment *scale;
-	GtkAdjustment *frame;
+	GtkWidget *dialog;
+	GtkObject *frame;
+	GtkObject *width_adj;
+	GtkObject *height_adj;
 } LoadDialogVals;
 
 /* TODO: remove me, initialize gimp i18n services */
@@ -81,11 +83,15 @@ MAIN ()
 static void
 check_load_vals (void)
 {
-	load_vals.scale = CLAMP (load_vals.scale, 1.0 / 64.0, 64.0);
-
 	/* which frame to load */
 	if (load_vals.frame < 1)
 		load_vals.frame = 1;
+
+	if (load_vals.width < 0)
+		load_vals.width = -1;
+
+	if (load_vals.height < 0)
+		load_vals.height = -1;
 }
 
 typedef struct
@@ -105,9 +111,9 @@ load_ok_callback (GtkWidget *widget,
 {
 	LoadDialogVals *vals = (LoadDialogVals *)data;
 	
-	/* Read scale && frame */
-	load_vals.scale = pow (2, vals->scale->value);
-	load_vals.frame = (int)(vals->frame->value);
+	load_vals.frame = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->frame));
+	load_vals.width = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->width_adj));
+	load_vals.height = (int)gtk_adjustment_get_value (GTK_ADJUSTMENT (vals->height_adj));
 	
 	load_interface.run = TRUE;
 	gtk_widget_destroy (GTK_WIDGET (vals->dialog));
@@ -119,16 +125,44 @@ load_dialog (const gchar *file_name)
 	LoadDialogVals *vals;
 	GtkWidget *frame;
 	GtkWidget *vbox;
-	GtkWidget *label;
 	GtkWidget *table;
-	GtkWidget *slider;
+	GtkWidget *label;
+	GtkWidget *adj;
+
+	int nframes, width, height;
+
+	{
+		/* quickly get the # of frames without doing any real processing */
+		SwfdecDecoder * decoder = NULL;
+		FILE * file;
+		int got_nframes = 0, nread, result = SWF_OK;
+		char buf[SWF_BUFFER_SIZE];
+		
+		file = fopen (file_name, "rb");
+		if (!file)
+			return 0;
+		
+		decoder = swfdec_decoder_new ();
+		
+		while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWF_ERROR && !got_nframes)
+			if (SWF_OK == swfdec_decoder_addbits (decoder, (guint8*)buf, (int)nread))
+				if (SWF_CHANGE == swfdec_decoder_parse (decoder)) {
+					got_nframes = (swfdec_decoder_get_n_frames (decoder, &nframes) == SWF_OK);
+					swfdec_decoder_get_image_size (decoder, &width, &height);
+				}
+		fclose (file);
+		swfdec_decoder_free (decoder);
+
+		if (!got_nframes)
+			return 0;
+	}
 	
 	gimp_ui_init ("swf", FALSE);
 	
 	vals = g_new (LoadDialogVals, 1);
 	
 	vals->dialog = gimp_dialog_new (_("Load Shockwave Flash Image"), "swf",
-					NULL, NULL,
+					NULL, NULL, /* gimp_standard_help_func, "swf, */
 					GTK_WIN_POS_MOUSE,
 					FALSE, TRUE, FALSE,
 					GTK_STOCK_CANCEL, gtk_widget_destroy,
@@ -153,42 +187,40 @@ load_dialog (const gchar *file_name)
 	gtk_container_add (GTK_CONTAINER (frame), vbox);
 	
 	/* Scale label */
-	table = gtk_table_new (2, 2, FALSE);
+	table = gtk_table_new (3, 3, FALSE);
 	gtk_table_set_row_spacings (GTK_TABLE (table), 2);
 	gtk_table_set_col_spacings (GTK_TABLE (table), 4);
 	gtk_box_pack_start (GTK_BOX (vbox), table, FALSE, FALSE, 0);
 	gtk_widget_show (table);
 	
-	label = gtk_label_new (_("Scale (log 2):"));
-	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
-	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 0, 1,
-			  GTK_FILL, GTK_FILL, 0, 0);
-	gtk_widget_show (label);
-	
-	/* Scale slider */
-	vals->scale = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, -2.0, 2.0, 0.2, 0.2, 0.0));
-	slider = gtk_hscale_new (vals->scale);
-	gtk_table_attach (GTK_TABLE (table), slider, 1, 2, 0, 1,
-			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
-	gtk_scale_set_value_pos (GTK_SCALE (slider), GTK_POS_TOP);
-	gtk_range_set_update_policy (GTK_RANGE (slider), GTK_UPDATE_DELAYED);
-	gtk_widget_show (slider);
+	vals->frame = gimp_scale_entry_new (GTK_TABLE (table), 0, 1,
+					    _("Frame:"), -1, -1,
+					    load_vals.frame, 1, nframes,
+					    1., 0.5, 0,
+					    TRUE, 0.0, 0.0,
+					    NULL, NULL);
 
-	label = gtk_label_new (_("Frame:"));
+	label = gtk_label_new (_("Width:"));
 	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
-	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 1, 2,
+	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 2, 3,
 			  GTK_FILL, GTK_FILL, 0, 0);
-	gtk_widget_show (label);
-	
-	/* Scale slider */
-	vals->frame = GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 1.0, 100, 1.0, 1.0, 0.0));
-	slider = gtk_hscale_new (vals->frame);
-	gtk_scale_set_digits (GTK_SCALE(slider), 0);
-	gtk_table_attach (GTK_TABLE (table), slider, 1, 2, 1, 2,
+	gtk_widget_show (label);	
+	adj = gimp_spin_button_new (&vals->width_adj, width, 1, width * 4,
+				    1.0, 0.5, 0.5, 1.0, 1);
+	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, 2, 3,
 			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
-	gtk_scale_set_value_pos (GTK_SCALE (slider), GTK_POS_TOP);
-	gtk_range_set_update_policy (GTK_RANGE (slider), GTK_UPDATE_DELAYED);
-	gtk_widget_show (slider);
+	gtk_widget_show (adj);
+
+	label = gtk_label_new (_("Height:"));
+	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
+	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 3, 4,
+			  GTK_FILL, GTK_FILL, 0, 0);
+	gtk_widget_show (label);	
+	adj = gimp_spin_button_new (&vals->height_adj, height, 1, height * 4,
+				    1.0, 0.5, 0.5, 1.0, 1);
+	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, 3, 4,
+			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_widget_show (adj);
 	
 	gtk_widget_show (vbox);
 	gtk_widget_show (frame);
@@ -207,25 +239,12 @@ static void
 swf_animation_change (SwfdecDecoder * context)
 {
 	int nframes = 0;
-	int width   = 0, height = 0;
 
 	if (SWF_OK != swfdec_decoder_get_n_frames (context, &nframes))
 		return;
 
 	if (load_vals.frame > nframes)
 		load_vals.frame = nframes;
-
-	if (SWF_OK != swfdec_decoder_get_image_size (context, &width, &height))
-		return;
-
-	if (load_vals.scale > 0.) {
-		width *= load_vals.scale;
-		height *= load_vals.scale;
-	}
-
-	if (width > 0 && height > 0) {
-		swfdec_decoder_set_image_size (context, width, height);
-	}
 }
 
 static int
@@ -289,6 +308,9 @@ swf_load_file (const char * filename, gint * width, gint * height)
 		return NULL;
 
 	decoder = swfdec_decoder_new ();
+
+	if (load_vals.width != -1 && load_vals.height != -1)
+		swfdec_decoder_set_image_size (decoder, load_vals.width, load_vals.height);
 
 	while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWF_ERROR)
 		result = swf_add_bits (decoder, buf, nread, &nb_frames, &out_pixels, width, height);
@@ -401,7 +423,9 @@ query (void)
 
 	static GimpParamDef load_setargs_args[] =
 		{
-			{ GIMP_PDB_FLOAT, "scale", "Scale in which to load image" }
+			{ GIMP_PDB_INT32, "frame", "Which frame to load" },
+			{ GIMP_PDB_INT32, "width", "Image's width" },
+			{ GIMP_PDB_INT32, "heigt", "Image's height" }
 		};
 	
 	gimp_install_procedure ("file_swf_load",
@@ -469,9 +493,11 @@ run (const gchar      *name,
 					
 				case GIMP_RUN_NONINTERACTIVE:
 					if (nparams > 3)
-						load_vals.scale = param[3].data.d_float;
+						load_vals.frame = param[3].data.d_int32;
 					if (nparams > 4)
-						load_vals.frame = param[4].data.d_int32;
+						load_vals.width = param[4].data.d_int32;
+					if (nparams > 5)
+						load_vals.height = param[5].data.d_int32;
 					break;
 					
 				case GIMP_RUN_WITH_LAST_VALS:

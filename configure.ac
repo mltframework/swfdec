@@ -176,6 +176,7 @@ plugin/Makefile
 player/Makefile
 debian/Makefile
 swfdec.pc
+swfdec.spec
 )
 
 AC_OUTPUT

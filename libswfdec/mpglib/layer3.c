@@ -1916,6 +1916,9 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     real hybridIn[2][SBLIMIT][SSLIMIT];
     real hybridOut[2][SSLIMIT][SBLIMIT];
 
+    memset(hybridIn, 0, sizeof(hybridIn));
+    memset(hybridOut, 0, sizeof(hybridOut));
+
     {
       struct gr_info_s *gr_info = &(sideinfo.ch[0].gr[gr]);
       long part2bits;
@@ -1979,7 +1982,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
           break;
         case 1:
           {
-            int i;
+            //int i;
             real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
 #if 1
 	    memcpy(in0, in1, SSLIMIT * gr_info->maxb * sizeof(real));

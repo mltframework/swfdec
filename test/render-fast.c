@@ -78,7 +78,7 @@ void read_swf_file(char *fn)
 			//fprintf(stderr,"swf_addbits returned %d\n",ret);
 		}
 		if(ret == SWF_IMAGE){
-			char *data;
+			unsigned char *data;
 			int len;
 
 			swfdec_decoder_peek_image(s,&data);

@@ -290,6 +290,7 @@ tag_func_define_sound (SwfdecDecoder * s)
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
   SWFDEC_OBJECT (sound)->id = id;
+  g_list_append (s->objects, sound);
 
   sound->n_samples = n_samples;
   sound->format = format;
@@ -441,6 +442,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
   SWFDEC_OBJECT (sound)->id = 0;
+  g_list_append (s->objects, sound);
 
   s->stream_sound_obj = sound;
 

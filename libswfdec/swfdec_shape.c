@@ -287,6 +287,7 @@ art_define_shape (SwfdecDecoder * s)
 
   shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
   SWFDEC_OBJECT (shape)->id = id;
+  g_list_append (s->objects, shape);
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 
@@ -314,6 +315,7 @@ art_define_shape_3 (SwfdecDecoder * s)
   id = get_u16 (bits);
   shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
   SWFDEC_OBJECT (shape)->id = id;
+  g_list_append (s->objects, shape);
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 

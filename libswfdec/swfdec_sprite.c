@@ -237,6 +237,8 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   id = get_u16 (bits);
   sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
+  SWFDEC_OBJECT (sprite)->id = id;
+  g_list_append (s->objects, sprite);
 
   sprite->main_sprite = s->main_sprite;
   //sprite->parse_sprite = sprite;

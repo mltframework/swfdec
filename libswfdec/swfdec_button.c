@@ -147,6 +147,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   id = get_u16 (bits);
   button = g_object_new (SWFDEC_TYPE_BUTTON, NULL);
   SWFDEC_OBJECT (button)->id = id;
+  g_list_append (s->objects, button);
 
   SWF_DEBUG (0, "  ID: %d\n", id);
 

@@ -1,5 +1,22 @@
 2004-04-20  David Schleef  <ds@schleef.org>
 
+	Cleanups.
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2):
+	* libswfdec/swfdec_font.c: (tag_func_define_font),
+	(tag_func_define_font_2):
+	* libswfdec/swfdec_image.c: (tag_func_define_bits_jpeg),
+	(tag_func_define_bits_jpeg_2), (tag_func_define_bits_jpeg_3),
+	(define_bits_lossless):
+	* libswfdec/swfdec_shape.c: (art_define_shape),
+	(art_define_shape_3):
+	* libswfdec/swfdec_sound.c: (tag_func_define_sound),
+	(tag_func_sound_stream_head):
+	* libswfdec/swfdec_sprite.c: (tag_func_define_sprite):
+	* libswfdec/swfdec_text.c: (define_text):
+	* player/swf_play.c: (render_idle), (convert_image):
+
+2004-04-20  David Schleef  <ds@schleef.org>
+
 	Fixes to get swfdec compiling and semi-working again.
 	* configure.ac:
 	* libswfdec/swf.c: (swfdec_decoder_new):

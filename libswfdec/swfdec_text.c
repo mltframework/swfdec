@@ -79,6 +79,8 @@ define_text (SwfdecDecoder * s, int rgba)
 
   id = get_u16 (bits);
   text = g_object_new (SWFDEC_TYPE_TEXT, NULL);
+  SWFDEC_OBJECT (text)->id = id;
+  g_list_append (s->objects, text);
 
   glyph.color = 0xffffffff;
 

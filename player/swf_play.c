@@ -31,6 +31,7 @@ gboolean debug = FALSE;
 
 SwfdecDecoder *s;
 unsigned char *image;
+unsigned char *image4;
 
 GtkWidget *drawing_area;
 GtkWidget *gtk_wind;
@@ -58,6 +59,9 @@ static void read_swf_stdin(void);
 static void new_gtk_window(void);
 
 static void sound_setup(void);
+
+void convert_image (unsigned char *dest, unsigned char *src, int width,
+    int height);
 
 /* GTK callbacks */
 static void destroy_cb (GtkWidget *widget, gpointer data);
@@ -459,11 +463,12 @@ static gboolean render_idle(gpointer data)
 		render_idle_id = 0;
 	}
 	if(ret==SWF_EOF){
-		swfdec_decoder_get_image(s,&image);
+		swfdec_decoder_get_image(s,&image4);
 		swfdec_decoder_free(s);
 		s = NULL;
 		if(quit_at_eof){
 			if(image) g_free(image);
+			if(image4) g_free(image4);
 			gtk_exit(0);
 		}
 		gtk_idle_remove(render_idle_id);
@@ -472,7 +477,7 @@ static gboolean render_idle(gpointer data)
 	if(ret==SWF_IMAGE){
 		struct timeval now;
 
-		swfdec_decoder_peek_image(s,&image);
+		swfdec_decoder_peek_image(s,&image4);
 		pull_sound(s);
 
 		if(!enable_sound){
@@ -490,6 +495,11 @@ static gboolean render_idle(gpointer data)
 				usleep(10000);
 			}
 		}
+
+                if (image == NULL) {
+                  image = malloc (width * height *3);
+                }
+                convert_image (image, image4, width, height);
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
 			0, 0, width, height, 
@@ -510,6 +520,21 @@ static gboolean render_idle(gpointer data)
 	return TRUE;
 }
 
+void convert_image (unsigned char *dest, unsigned char *src, int width,
+    int height)
+{
+  int i,j;
+
+  for(j=0;j<height;j++){
+    for(i=0;i<width;i++){
+      dest[0] = src[0];
+      dest[1] = src[1];
+      dest[2] = src[2];
+      dest += 3;
+      src += 4;
+    }
+  }
+}
 
 extern volatile gboolean glib_on_error_halt;
 

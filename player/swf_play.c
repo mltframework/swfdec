@@ -476,6 +476,10 @@ static gboolean render_idle(gpointer data)
 	}
 	if(ret==SWF_IMAGE){
 		struct timeval now;
+
+		swfdec_decoder_peek_image(s,&image);
+		pull_sound(s);
+
 		gettimeofday(&now, NULL);
 		tv_add_usec(&image_time, interval);
 		if(tv_compare(&image_time, &now) > 0){
@@ -483,9 +487,6 @@ static gboolean render_idle(gpointer data)
 			//printf("sleeping for %d us\n",x);
 			if(!fast)usleep(x);
 		}
-		if(image)free(image);
-		swfdec_decoder_get_image(s,&image);
-		pull_sound(s);
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
 			0, 0, width, height, 

@@ -286,6 +286,21 @@ tag_func_do_action (SwfdecDecoder * s)
   return SWF_OK;
 }
 
+static int
+pc_is_valid (SwfdecActionContext *context, char *pc)
+{
+  char *startpc;
+  char *endpc;
+
+  startpc = (char *)context->bits.buffer->data;
+  endpc = (char *)context->bits.buffer->data + context->bits.buffer->length;
+  if (pc >= startpc && pc < endpc) {
+    return SWF_OK;
+  } else {
+    return SWF_ERROR;
+  }
+}
+  
 
 int
 swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
@@ -1053,8 +1068,11 @@ action_jump (SwfdecActionContext *context)
 
   offset = swfdec_bits_get_s16 (&context->bits);
 
-  /* FIXME check validity */
-  context->pc += offset;
+  if (pc_is_valid (context, context->pc + offset) == SWF_OK) {
+    context->pc += offset;
+  } else {
+    SWFDEC_ERROR ("bad jump of %d", offset);
+  }
 }
 
 static void
@@ -1069,9 +1087,11 @@ action_if (SwfdecActionContext *context)
   action_val_convert_to_boolean (a);
 
   if (a->number) {
-    /* FIXME check validity */
-    context->pc += offset;
-  } else {
+    if (pc_is_valid (context, context->pc + offset) == SWF_OK) {
+      context->pc += offset;
+    } else {
+      SWFDEC_ERROR ("bad branch of %d", offset);
+    }
   }
 }
 
@@ -1397,6 +1417,9 @@ action_constant_pool (SwfdecActionContext *context)
   n = swfdec_bits_get_u16 (&context->bits);
 
   if (context->constants) {
+    for (i=0;i<context->n_constants;i++){
+      g_free(context->constants[i]);
+    }
     g_free (context->constants);
   }
   context->n_constants = n;

@@ -1,5 +1,21 @@
 2005-03-24  David Schleef  <ds@schleef.org>
 
+	* Makefile.am: Re-add m4 directory
+	* configure.ac: Use a real macro to generate stdint.h
+	* libswfdec/actions.c: (pc_is_valid), (action_jump), (action_if),
+	(action_constant_pool): Check PC values when jumping.  Fix memleak
+	when freeing constant pools.  (From Eric Anholt)
+	* libswfdec/proto.h: cleanup
+	* libswfdec/swf.c: (tag_func_end), (tag_func_ignore): cleanup.
+	Make Protect tag quieter.
+	* libswfdec/swfdec_internal.h: include local stdint.h
+	* libswfdec/swfdec_shape.c: (swf_shape_get_recs),
+	(swf_shape_ignore_recs), (swf_morphshape_get_recs): fix
+	gratuitous use of int16_t.
+	* m4/ax_create_stdint_h.m4: add
+
+2005-03-24  David Schleef  <ds@schleef.org>
+
 	Changes from Eric Anholt
 	* configure.ac: Create a stdint.h if it doesn't exist.
 	* libswfdec/actions.c: Fix go_to_label

@@ -501,9 +501,9 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
       edge_flag = swfdec_bits_getbits (bits, 1);
 
       if (edge_flag == 0) {
-        int16_t x0, y0;
-        int16_t x1, y1;
-        int16_t x2, y2;
+        int x0, y0;
+        int x1, y1;
+        int x2, y2;
 
         x0 = x;
         y0 = y;
@@ -957,9 +957,9 @@ swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
       edge_flag = swfdec_bits_getbits (bits, 1);
 
       if (edge_flag == 0) {
-        int16_t x0, y0;
-        int16_t x1, y1;
-        int16_t x2, y2;
+        int x0, y0;
+        int x1, y1;
+        int x2, y2;
 
         x0 = x;
         y0 = y;
@@ -1193,9 +1193,9 @@ swf_morphshape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
       edge_flag = swfdec_bits_getbits (bits, 1);
 
       if (edge_flag == 0) {
-        int16_t x0, y0;
-        int16_t x1, y1;
-        int16_t x2, y2;
+        int x0, y0;
+        int x1, y1;
+        int x2, y2;
 
         x0 = x;
         y0 = y;

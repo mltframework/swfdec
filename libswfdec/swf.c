@@ -662,7 +662,7 @@ struct tag_func_struct
   int flag;
 };
 struct tag_func_struct tag_funcs[] = {
-  [ST_END] = {"End", tag_func_zero, 0},
+  [ST_END] = {"End", tag_func_end, 0},
   [ST_SHOWFRAME] = {"ShowFrame", tag_show_frame, 0},
   [ST_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
   [ST_FREECHARACTER] = {"FreeCharacter", NULL, 0},
@@ -677,7 +677,7 @@ struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
   [ST_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
   [ST_DOACTION] = {"DoAction", tag_func_do_action, 0},
-  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_ignore_quiet, 0},
+  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_ignore, 0},
   [ST_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
   [ST_STARTSOUND] = {"StartSound", tag_func_start_sound, 0},
   [ST_DEFINEBUTTONSOUND] =
@@ -689,7 +689,7 @@ struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
   [ST_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
   [ST_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
-  [ST_PROTECT] = {"Protect", tag_func_zero, 0},
+  [ST_PROTECT] = {"Protect", tag_func_ignore, 0},
   [ST_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, 0},
   [ST_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, 0},
   [ST_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
@@ -749,35 +749,15 @@ swfdec_decoder_get_tag_func (int tag)
 }
 
 int
-tag_func_zero (SwfdecDecoder * s)
+tag_func_end (SwfdecDecoder * s)
 {
-  return SWF_OK;
-}
-
-int
-tag_func_ignore_quiet (SwfdecDecoder * s)
-{
-  s->b.ptr += s->b.buffer->length;
-
   return SWF_OK;
 }
 
 int
 tag_func_ignore (SwfdecDecoder * s)
 {
-#if 0
-  char *name = "";
-
-  if (s->tag >= 0 && s->tag < n_tag_funcs) {
-    name = tag_funcs[s->tag].name;
-  }
-
-  SWFDEC_WARNING ("tag \"%s\" (%d) ignored", name, s->tag);
-#endif
-
-  if (s->b.buffer) {
-    s->b.ptr += s->b.buffer->length;
-  }
+  s->b.ptr += s->b.buffer->length;
 
   return SWF_OK;
 }

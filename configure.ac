@@ -35,7 +35,7 @@ AM_PROG_CC_STDC
 
 AC_HEADER_STDC([])
 
-AC_NEED_STDINT(stdint.h)
+AX_CREATE_STDINT_H()
 
 dnl ##############################
 dnl # Do automated configuration #

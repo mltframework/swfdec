@@ -88,6 +88,16 @@ static inline unsigned int get_u16(bits_t *b)
 	return r;
 }
 
+static inline int get_s16(bits_t *b)
+{
+	short r;
+
+	r = b->ptr[0] | (b->ptr[1]<<8);
+	b->ptr+=2;
+
+	return r;
+}
+
 static inline unsigned int get_be_u16(bits_t *b)
 {
 	unsigned int r;

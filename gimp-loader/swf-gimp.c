@@ -352,17 +352,15 @@ load_image (const gchar  *filename, 	/* I - File to load */
 	gint width, height;
 	
 	pixels = buf = swf_load_file (filename, &width, &height);
-	if (!pixels)
-		return -1;
-
-	rowstride = width * 3;
 
 	if (!pixels)
 		{
 			g_message (_("Can't open '%s'\n"), filename);
-			gimp_quit ();
+			return -1;
 		}
-	
+
+	rowstride = width * 3;	
+
 	status = g_strdup_printf (_("Loading %s:"), filename);
 	gimp_progress_init (status);
 	g_free (status);
@@ -372,7 +370,8 @@ load_image (const gchar  *filename, 	/* I - File to load */
 	if (image == -1)
 		{
 			g_message ("Can't allocate new image: %s\n", filename);
-			gimp_quit ();
+			g_free (pixels);
+			return -1;
 		}
 	
 	gimp_image_set_filename (image, filename);

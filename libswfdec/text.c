@@ -378,11 +378,7 @@ SwfdecLayer *swfdec_text_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 				trans);
 			vpath0 = art_bez_path_to_vec(bpath0,s->flatness);
 			vpath1 = art_bez_path_to_vec(bpath1,s->flatness);
-			if(art_affine_inverted(trans)){
-				vpath0 = art_vpath_reverse_free(vpath0);
-			}else{
-				vpath1 = art_vpath_reverse_free(vpath1);
-			}
+			vpath1 = art_vpath_reverse_free(vpath1);
 			vpath = art_vpath_cat(vpath0,vpath1);
 			art_vpath_bbox_irect(vpath, &layervec->rect);
 			layervec->svp = art_svp_from_vpath (vpath);

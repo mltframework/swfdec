@@ -120,9 +120,9 @@ tag_func_define_font (SwfdecDecoder * s)
     //swf_shape_add_styles(s,shape,&s->b);
     syncbits (&s->b);
     shape->n_fill_bits = getbits (&s->b, 4);
-    SWF_DEBUG (0, "n_fill_bits = %d\n", shape->n_fill_bits);
+    SWFDEC_LOG("n_fill_bits = %d", shape->n_fill_bits);
     shape->n_line_bits = getbits (&s->b, 4);
-    SWF_DEBUG (0, "n_line_bits = %d\n", shape->n_line_bits);
+    SWFDEC_LOG("n_line_bits = %d", shape->n_line_bits);
 
     swf_shape_get_recs (s, &s->b, shape);
   }
@@ -219,9 +219,9 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     //swf_shape_add_styles(s,shape,&s->b);
     syncbits (&s->b);
     shape->n_fill_bits = getbits (&s->b, 4);
-    SWF_DEBUG (0, "n_fill_bits = %d\n", shape->n_fill_bits);
+    SWFDEC_LOG("n_fill_bits = %d", shape->n_fill_bits);
     shape->n_line_bits = getbits (&s->b, 4);
-    SWF_DEBUG (0, "n_line_bits = %d\n", shape->n_line_bits);
+    SWFDEC_LOG("n_line_bits = %d", shape->n_line_bits);
 
     swf_shape_get_recs (s, &s->b, shape);
   }

@@ -1,5 +1,42 @@
 2004-06-05  David Schleef  <ds@schleef.org>
 
+	* libswfdec/Makefile.am: Global change from SWF_DEBUG to SWFDEC_LOG,
+	SWFDEC_DEBUG, etc.
+	* libswfdec/actions.c: (get_actions),
+	(swfdec_action_script_execute):
+	* libswfdec/color.c: (transform_color):
+	* libswfdec/render.c: (art_place_object_2), (swf_render_frame),
+	(swfdec_spriteseg_prerender):
+	* libswfdec/sound.c: (tag_func_sound_stream_block),
+	(tag_func_define_sound), (tag_func_sound_stream_head),
+	(swfdec_sound_render):
+	* libswfdec/swf.c: (swfdec_decoder_new), (swfdec_decoder_parse),
+	(swf_parse_header2), (swf_parse_tag), (tag_func_ignore):
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2):
+	* libswfdec/swfdec_debug.c: (swfdec_debug_log),
+	(swfdec_debug_set_level), (swfdec_debug_get_level):
+	* libswfdec/swfdec_debug.h:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_font.c: (tag_func_define_font),
+	(tag_func_define_font_2):
+	* libswfdec/swfdec_image.c: (swfdec_image_jpegtables),
+	(tag_func_define_bits_jpeg), (tag_func_define_bits_jpeg_2),
+	(tag_func_define_bits_jpeg_3), (define_bits_lossless):
+	* libswfdec/swfdec_internal.h:
+	* libswfdec/swfdec_object.c: (swfdec_object_get):
+	* libswfdec/swfdec_shape.c: (tag_func_define_shape),
+	(art_define_shape), (art_define_shape_3), (swf_shape_add_styles),
+	(swf_shape_get_recs), (swfdec_shape_prerender),
+	(swfdec_shape_compose), (swfdec_shape_compose_gradient):
+	* libswfdec/swfdec_sound.c: (tag_func_sound_stream_block),
+	(tag_func_define_sound), (tag_func_sound_stream_head),
+	(swfdec_sound_render):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_prerender),
+	(swfdec_sprite_render), (tag_func_define_sprite),
+	(swfdec_spriteseg_place_object_2):
+
+2004-06-05  David Schleef  <ds@schleef.org>
+
 	* COPYING: switch to LGPL
 	* INSTALL: unknown 
 	* autogen.sh: bump libtool to 1.5

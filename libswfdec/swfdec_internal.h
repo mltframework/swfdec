@@ -10,6 +10,7 @@
 #include "proto.h"
 #include "swfdec.h"
 #include "swfdec_button.h"
+#include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_display.h"
 #include "swfdec_image.h"

@@ -78,7 +78,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   sound = obj->priv;
 
   if (sound->format != 2) {
-    SWF_DEBUG (4, "tag_func_define_sound: unknown format %d\n", sound->format);
+    SWFDEC_WARNING ("tag_func_define_sound: unknown format %d", sound->format);
     return SWF_OK;
   }
 
@@ -273,7 +273,7 @@ tag_func_define_sound (SwfdecDecoder * s)
       adpcm_decode (s, obj);
       break;
     default:
-      SWF_DEBUG (4, "tag_func_define_sound: unknown format %d\n", format);
+      SWFDEC_WARNING ("tag_func_define_sound: unknown format %d", format);
   }
 
   return SWF_OK;
@@ -317,7 +317,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   sound = obj->priv;
 
   if (sound->format != 2) {
-    SWF_DEBUG (4, "tag_func_define_sound: unknown format %d\n", sound->format);
+    SWFDEC_WARNING ("tag_func_define_sound: unknown format %d", sound->format);
     return SWF_OK;
   }
 
@@ -351,7 +351,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   }
 
   if (ret == MPGLIB_ERR) {
-    SWF_DEBUG (4, "mp3 stream error\n");
+    SWFDEC_WARNING ("mp3 stream error");
   }
 
   g_free (buffer->data);
@@ -414,7 +414,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
 
       break;
     default:
-      SWF_DEBUG (4, "unimplemented sound format\n");
+      SWFDEC_WARNING ("unimplemented sound format");
   }
 
   return SWF_OK;
@@ -629,7 +629,7 @@ swfdec_sound_render (SwfdecDecoder * s)
     }
   }
 
-  SWF_DEBUG (0, "sound buffer: len=%d filled %d\n", len, offset);
+  SWFDEC_LOG("sound buffer: len=%d filled %d", len, offset);
 
   s->sound_buffers = g_list_append (s->sound_buffers, buffer);
 }

@@ -106,12 +106,12 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     layer->frame_number = oldlayer->frame_number + 1;
     if (layer->frame_number >= sprite->n_frames)
       layer->frame_number = 0;
-    SWF_DEBUG (0,
-	"iterating old sprite (depth=%d) old_frame=%d frame=%d n_frames=%d\n",
+    SWFDEC_DEBUG (
+        "iterating old sprite (depth=%d) old_frame=%d frame=%d n_frames=%d\n",
 	seg->depth, oldlayer->frame_number, layer->frame_number,
 	sprite->n_frames);
   } else {
-    SWF_DEBUG (0, "iterating new sprite (depth=%d)\n", seg->depth);
+    SWFDEC_LOG("iterating new sprite (depth=%d)", seg->depth);
     layer->frame_number = 0;
   }
   frame = layer->frame_number;
@@ -121,7 +121,7 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   layer->rect.y0 = 0;
   layer->rect.y1 = 0;
 
-  SWF_DEBUG (0, "swfdec_sprite_prerender %d frame %d\n", object->id,
+  SWFDEC_LOG("swfdec_sprite_prerender %d frame %d", object->id,
       layer->frame_number);
 
   for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
@@ -131,7 +131,7 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       continue;
     if (child_seg->last_frame <= frame)
       continue;
-    SWF_DEBUG (0, "prerendering layer %d\n", child_seg->depth);
+    SWFDEC_LOG("prerendering layer %d", child_seg->depth);
 
     tmpseg = swfdec_spriteseg_dup (child_seg);
     art_affine_multiply (tmpseg->transform,
@@ -165,7 +165,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
   SwfdecSprite *s2 = SWFDEC_SPRITE (parent_object);
   GList *g;
 
-  SWF_DEBUG (0, "rendering sprite frame %d of %d\n",
+  SWFDEC_LOG("rendering sprite frame %d of %d",
       parent_layer->frame_number, s2->n_frames);
   for (g = g_list_first (parent_layer->sublayers); g; g = g_list_next (g)) {
     child_layer = (SwfdecLayer *) g->data;
@@ -192,11 +192,11 @@ tag_func_define_sprite (SwfdecDecoder * s)
   sprite->main_sprite = s->main_sprite;
   //sprite->parse_sprite = sprite;
 
-  SWF_DEBUG (0, "  ID: %d\n", id);
+  SWFDEC_LOG("  ID: %d", id);
 
   sprite->n_frames = get_u16 (bits);
   sprite->main_sprite->n_frames = sprite->n_frames;
-  SWF_DEBUG (0, "n_frames = %d\n", sprite->n_frames);
+  SWFDEC_LOG("n_frames = %d", sprite->n_frames);
 
   sprite->state = SWF_STATE_PARSETAG;
   sprite->no_render = 1;
@@ -211,7 +211,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   sprite->objects = s->objects;
 
   ret = swf_parse (sprite);
-  SWF_DEBUG (0, "  ret = %d\n", ret);
+  SWFDEC_LOG("  ret = %d", ret);
 
   *bits = sprite->parse;
 
@@ -309,16 +309,16 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   depth = get_u16 (bits);
 
   /* reserved is somehow related to sprites */
-  SWF_DEBUG (0, "  reserved = %d\n", reserved);
+  SWFDEC_LOG("  reserved = %d", reserved);
   if (reserved) {
-    SWF_DEBUG (4, "  reserved bits non-zero %d\n", reserved);
+    SWFDEC_WARNING ("  reserved bits non-zero %d", reserved);
   }
-  SWF_DEBUG (0, "  has_compose = %d\n", has_compose);
-  SWF_DEBUG (0, "  has_name = %d\n", has_name);
-  SWF_DEBUG (0, "  has_ratio = %d\n", has_ratio);
-  SWF_DEBUG (0, "  has_color_transform = %d\n", has_color_transform);
-  SWF_DEBUG (0, "  has_matrix = %d\n", has_matrix);
-  SWF_DEBUG (0, "  has_character = %d\n", has_character);
+  SWFDEC_LOG("  has_compose = %d", has_compose);
+  SWFDEC_LOG("  has_name = %d", has_name);
+  SWFDEC_LOG("  has_ratio = %d", has_ratio);
+  SWFDEC_LOG("  has_color_transform = %d", has_color_transform);
+  SWFDEC_LOG("  has_matrix = %d", has_matrix);
+  SWFDEC_LOG("  has_character = %d", has_character);
 
   oldlayer = swfdec_sprite_get_seg (s->parse_sprite, depth,
       s->parse_sprite->parse_frame);
@@ -336,7 +336,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 
   if (has_character) {
     layer->id = get_u16 (bits);
-    SWF_DEBUG (0, "  id = %d\n", layer->id);
+    SWFDEC_LOG("  id = %d", layer->id);
   } else {
     if (oldlayer)
       layer->id = oldlayer->id;
@@ -367,7 +367,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   }
   if (has_ratio) {
     layer->ratio = get_u16 (bits);
-    SWF_DEBUG (0, "  ratio = %d\n", layer->ratio);
+    SWFDEC_LOG("  ratio = %d", layer->ratio);
   } else {
     if (oldlayer)
       layer->ratio = oldlayer->ratio;
@@ -379,7 +379,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     int id;
 
     id = get_u16 (bits);
-    SWF_DEBUG (4, "composing with %04x\n", id);
+    SWFDEC_WARNING ("composing with %04x", id);
   }
 
   return SWF_OK;

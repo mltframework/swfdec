@@ -154,13 +154,13 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   SWFDEC_OBJECT (button)->id = id;
   s->objects = g_list_append (s->objects, button);
 
-  SWF_DEBUG (0, "  ID: %d\n", id);
+  SWFDEC_LOG("  ID: %d", id);
 
   flags = get_u8 (bits);
   offset = get_u16 (bits);
 
-  SWF_DEBUG (0, "  flags = %d\n", flags);
-  SWF_DEBUG (0, "  offset = %d\n", offset);
+  SWFDEC_LOG("  flags = %d", flags);
+  SWFDEC_LOG("  offset = %d", offset);
 
   while (peek_u8 (bits)) {
     int reserved;
@@ -180,31 +180,31 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     character = get_u16 (bits);
     layer = get_u16 (bits);
 
-    SWF_DEBUG (0, "  reserved = %d\n", reserved);
+    SWFDEC_LOG("  reserved = %d", reserved);
     if (reserved) {
-      SWF_DEBUG (4, "reserved is supposed to be 0\n");
+      SWFDEC_WARNING ("reserved is supposed to be 0");
     }
-    SWF_DEBUG (0, "  hit_test = %d\n", hit_test);
-    SWF_DEBUG (0, "  down = %d\n", down);
-    SWF_DEBUG (0, "  over = %d\n", over);
-    SWF_DEBUG (0, "  up = %d\n", up);
-    SWF_DEBUG (0, "  character = %d\n", character);
-    SWF_DEBUG (0, "  layer = %d\n", layer);
+    SWFDEC_LOG("  hit_test = %d", hit_test);
+    SWFDEC_LOG("  down = %d", down);
+    SWFDEC_LOG("  over = %d", over);
+    SWFDEC_LOG("  up = %d", up);
+    SWFDEC_LOG("  character = %d", character);
+    SWFDEC_LOG("  layer = %d", layer);
 
-    SWF_DEBUG (0, "bits->ptr %p\n", bits->ptr);
+    SWFDEC_LOG("bits->ptr %p", bits->ptr);
 
     //get_art_matrix(bits, trans);
     get_art_matrix (bits, trans);
     syncbits (bits);
-    SWF_DEBUG (0, "bits->ptr %p\n", bits->ptr);
+    SWFDEC_LOG("bits->ptr %p", bits->ptr);
     get_art_color_transform (bits, color_mult, color_add);
     syncbits (bits);
 
-    SWF_DEBUG (0, "bits->ptr %p\n", bits->ptr);
+    SWFDEC_LOG("bits->ptr %p", bits->ptr);
 
     if (up) {
       if (button->state[0]) {
-	SWF_DEBUG (4, "button->state already set\n");
+	SWFDEC_WARNING ("button->state already set");
 	swfdec_spriteseg_free (button->state[0]);
       }
       button->state[0] = swfdec_spriteseg_new ();
@@ -215,7 +215,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     }
     if (over) {
       if (button->state[1]) {
-	SWF_DEBUG (4, "button->state already set\n");
+	SWFDEC_WARNING ("button->state already set");
 	swfdec_spriteseg_free (button->state[1]);
       }
       button->state[1] = swfdec_spriteseg_new ();
@@ -226,7 +226,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     }
     if (down) {
       if (button->state[2]) {
-	SWF_DEBUG (4, "button->state already set\n");
+	SWFDEC_WARNING ("button->state already set");
 	swfdec_spriteseg_free (button->state[2]);
       }
       button->state[2] = swfdec_spriteseg_new ();
@@ -243,8 +243,8 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     offset = get_u16 (bits);
     condition = get_u16 (bits);
 
-    SWF_DEBUG (0, "  offset = %d\n", offset);
-    SWF_DEBUG (0, "  condition = 0x%04x\n", condition);
+    SWFDEC_LOG("  offset = %d", offset);
+    SWFDEC_LOG("  condition = 0x%04x", condition);
 
     get_actions (s, bits);
   }

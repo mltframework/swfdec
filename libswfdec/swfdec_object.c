@@ -88,7 +88,7 @@ swfdec_object_get (SwfdecDecoder * s, int id)
     if (object->id == id)
       return object;
   }
-  SWF_DEBUG (2, "object not found (id==%d)\n", id);
+  SWFDEC_WARNING ("object not found (id==%d)", id);
 
   return NULL;
 }

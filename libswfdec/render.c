@@ -45,16 +45,16 @@ art_place_object_2 (SwfdecDecoder * s)
   depth = get_u16 (bits);
 
   /* reserved is somehow related to sprites */
-  SWF_DEBUG (0, "  reserved = %d\n", reserved);
+  SWFDEC_LOG("  reserved = %d", reserved);
   if (reserved) {
-    SWF_DEBUG (4, "  reserved bits non-zero %d\n", reserved);
+    SWFDEC_WARNING ("  reserved bits non-zero %d", reserved);
   }
-  SWF_DEBUG (0, "  has_compose = %d\n", has_compose);
-  SWF_DEBUG (0, "  has_name = %d\n", has_name);
-  SWF_DEBUG (0, "  has_ratio = %d\n", has_ratio);
-  SWF_DEBUG (0, "  has_color_transform = %d\n", has_color_transform);
-  SWF_DEBUG (0, "  has_matrix = %d\n", has_matrix);
-  SWF_DEBUG (0, "  has_character = %d\n", has_character);
+  SWFDEC_LOG("  has_compose = %d", has_compose);
+  SWFDEC_LOG("  has_name = %d", has_name);
+  SWFDEC_LOG("  has_ratio = %d", has_ratio);
+  SWFDEC_LOG("  has_color_transform = %d", has_color_transform);
+  SWFDEC_LOG("  has_matrix = %d", has_matrix);
+  SWFDEC_LOG("  has_character = %d", has_character);
 
   oldlayer =
       swfdec_sprite_get_seg (s->parse_sprite, depth,
@@ -73,7 +73,7 @@ art_place_object_2 (SwfdecDecoder * s)
 
   if (has_character) {
     layer->id = get_u16 (bits);
-    SWF_DEBUG (0, "  id = %d\n", layer->id);
+    SWFDEC_LOG("  id = %d", layer->id);
   } else {
     if (oldlayer)
       layer->id = oldlayer->id;
@@ -104,7 +104,7 @@ art_place_object_2 (SwfdecDecoder * s)
   }
   if (has_ratio) {
     layer->ratio = get_u16 (bits);
-    SWF_DEBUG (0, "  ratio = %d\n", layer->ratio);
+    SWFDEC_LOG("  ratio = %d", layer->ratio);
   } else {
     if (oldlayer)
       layer->ratio = oldlayer->ratio;
@@ -116,7 +116,7 @@ art_place_object_2 (SwfdecDecoder * s)
     int id;
 
     id = get_u16 (bits);
-    SWF_DEBUG (4, "composing with %04x\n", id);
+    SWFDEC_WARNING ("composing with %04x", id);
   }
   //swfdec_layer_prerender(s,layer);
 
@@ -196,7 +196,7 @@ art_show_frame (SwfdecDecoder * s)
   s->frame_number++;
   s->parse_sprite->parse_frame++;
 
-  SWF_DEBUG (0, "pixels_rendered = %d\n", s->pixels_rendered);
+  SWFDEC_LOG("pixels_rendered = %d", s->pixels_rendered);
 #endif
 
 void
@@ -207,7 +207,7 @@ swf_render_frame (SwfdecDecoder * s, int frame_index)
   SwfdecLayer *oldlayer;
   GList *g;
 
-  SWF_DEBUG (5, "swf_render_frame\n");
+  SWFDEC_ERROR ("swf_render_frame");
 
   s->drawrect.x0 = 0;
   s->drawrect.x1 = 0;
@@ -226,11 +226,11 @@ swf_invalidate_irect (s, &s->irect);
     }
   }
 
-  SWF_DEBUG (5, "rendering frame %d\n", frame_index);
+  SWFDEC_ERROR ("rendering frame %d", frame_index);
   for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
 
-    SWF_DEBUG (0, "testing seg %d <= %d < %d\n",
+    SWFDEC_LOG("testing seg %d <= %d < %d",
 	seg->first_frame, frame_index, seg->last_frame);
     if (seg->first_frame > frame_index)
       continue;
@@ -240,11 +240,11 @@ swf_invalidate_irect (s, &s->irect);
     oldlayer = swfdec_render_get_layer (s->render, seg->depth,
         frame_index - 1);
 
-    SWF_DEBUG (5, "layer %d seg=%p oldlayer=%p\n", seg->depth, seg, oldlayer);
+    SWFDEC_ERROR ("layer %d seg=%p oldlayer=%p", seg->depth, seg, oldlayer);
 
     layer = swfdec_spriteseg_prerender (s, seg, oldlayer);
     if (layer == NULL) {
-      SWF_DEBUG (5, "prerender returned NULL\n");
+      SWFDEC_ERROR ("prerender returned NULL");
       continue; 
     }
 
@@ -255,7 +255,7 @@ swf_invalidate_irect (s, &s->irect);
       if (oldlayer)
 	oldlayer->last_frame = frame_index;
     } else {
-      SWF_DEBUG (0, "cache hit\n");
+      SWFDEC_LOG("cache hit");
     }
   }
 
@@ -263,7 +263,7 @@ swf_invalidate_irect (s, &s->irect);
     layer = (SwfdecLayer *) g->data;
     if (layer->seg->first_frame <= frame_index - 1 &&
         layer->last_frame == frame_index) {
-      SWF_DEBUG (0, "invalidating (%d < %d == %d) %d %d %d %d\n",
+      SWFDEC_LOG("invalidating (%d < %d == %d) %d %d %d %d",
 	  layer->seg->first_frame, frame_index, layer->last_frame,
 	  layer->rect.x0, layer->rect.x1, layer->rect.y0, layer->rect.y1);
       swf_invalidate_irect (s, &layer->rect);
@@ -279,7 +279,7 @@ swf_invalidate_irect (s, &s->irect);
 #endif
 
   //art_irect_copy(&s->drawrect, &s->irect);
-  SWF_DEBUG (5, "inval rect %d %d %d %d\n", s->drawrect.x0, s->drawrect.x1,
+  SWFDEC_ERROR ("inval rect %d %d %d %d", s->drawrect.x0, s->drawrect.x1,
       s->drawrect.y0, s->drawrect.y1);
 
   switch (s->colorspace) {
@@ -294,7 +294,7 @@ swf_invalidate_irect (s, &s->irect);
 
   for (g = g_list_last (s->render->layers); g; g = g_list_previous (g)) {
     layer = (SwfdecLayer *) g->data;
-    SWF_DEBUG (5, "rendering %d < %d <= %d\n",
+    SWFDEC_ERROR ("rendering %d < %d <= %d",
 	layer->seg->first_frame, frame_index, layer->last_frame);
     if (layer->seg->first_frame <= frame_index &&
         frame_index < layer->last_frame) {
@@ -320,7 +320,7 @@ swfdec_spriteseg_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     return klass->prerender (s, seg, object, oldlayer);
   }
 
-  SWF_DEBUG (5, "why is prerender NULL?\n");
+  SWFDEC_ERROR ("why is prerender NULL?");
 
   return NULL;
 }

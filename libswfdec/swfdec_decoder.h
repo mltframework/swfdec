@@ -15,11 +15,6 @@
 #define SWF_SCALE_FACTOR		(1/20.0)
 #define SWF_TEXT_SCALE_FACTOR		(1/1024.0)
 
-#define SWF_DEBUG(n,format...)	do{ \
-	if((n)>=SWF_DEBUG_LEVEL)swf_debug(s,(n),format); \
-}while(0)
-#define SWF_DEBUG_LEVEL 0
-
 enum
 {
   SWF_STATE_INIT1 = 0,
@@ -44,7 +39,6 @@ struct swfdec_decoder_struct
 
   int colorspace;
   int no_render;
-  int debug;
   int compressed;
 
   /* End of legacy elements */
@@ -113,8 +107,6 @@ int swf_parse (SwfdecDecoder * s);
 int swf_parse_header (SwfdecDecoder * s);
 int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
-
-void swf_debug (SwfdecDecoder * s, int n, char *format, ...);
 
 
 #endif

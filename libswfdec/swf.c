@@ -49,8 +49,6 @@ swfdec_decoder_new (void)
 
   s->bg_color = SWF_COLOR_COMBINE (0xff, 0xff, 0xff, 0xff);
 
-  s->debug = 2;
-
   art_affine_identity (s->transform);
 
   s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
@@ -157,11 +155,11 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
 	syncbits (&s->b);
 	if (s->b.ptr < endptr) {
-	  SWF_DEBUG (3, "early parse finish (%d bytes)\n", endptr - s->b.ptr);
+	  SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
 	  dumpbits (&s->b);
 	}
 	if (s->b.ptr > endptr) {
-	  SWF_DEBUG (3, "parse overrun (%d bytes)\n", s->b.ptr - endptr);
+	  SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
 	}
 
 	s->parse.ptr = endptr;
@@ -314,14 +312,6 @@ swfdec_decoder_set_colorspace (SwfdecDecoder * s, int colorspace)
   }
 
   s->colorspace = colorspace;
-
-  return SWF_OK;
-}
-
-int
-swfdec_decoder_set_debug_level (SwfdecDecoder * s, int level)
-{
-  s->debug = level;
 
   return SWF_OK;
 }
@@ -487,9 +477,9 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y1 = s->height;
   syncbits (&s->b);
   s->rate = get_u16 (&s->b) / 256.0;
-  SWF_DEBUG (0, "rate = %g\n", s->rate);
+  SWFDEC_LOG("rate = %g", s->rate);
   s->n_frames = get_u16 (&s->b);
-  SWF_DEBUG (0, "n_frames = %d\n", s->n_frames);
+  SWFDEC_LOG("n_frames = %d", s->n_frames);
 
   s->main_sprite->n_frames = s->n_frames;
 
@@ -596,7 +586,7 @@ swf_parse_tag (SwfdecDecoder * s)
     s->func = tag_func_ignore;
   }
 
-  SWF_DEBUG (0, "tag=%d len=%d name=\"%s\"\n", s->tag, s->tag_len, name);
+  SWFDEC_LOG("tag=%d len=%d name=\"%s\"", s->tag, s->tag_len, name);
 
   return SWF_OK;
 }
@@ -624,7 +614,7 @@ tag_func_ignore (SwfdecDecoder * s)
     name = tag_funcs[s->tag].name;
   }
 
-  SWF_DEBUG (3, "tag \"%s\" (%d) ignored\n", name, s->tag);
+  SWFDEC_WARNING ("tag \"%s\" (%d) ignored", name, s->tag);
 
   s->b.ptr += s->tag_len;
 
@@ -654,22 +644,3 @@ tag_func_frame_label (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-void
-swf_debug (SwfdecDecoder * s, int n, char *format, ...)
-{
-  va_list args;
-  int offset;
-  char *name = "unknown";
-
-  if (n < s->debug)
-    return;
-
-  offset = (void *) s->parse.ptr - (void *) s->input_data;
-  if (s->tag >= 0 && s->tag < n_tag_funcs) {
-    name = tag_funcs[s->tag].name;
-  }
-  fprintf (stderr, "DEBUG: [%d,%s] ", offset, name);
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
-}

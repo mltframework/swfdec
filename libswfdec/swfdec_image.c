@@ -133,7 +133,7 @@ swfdec_image_jpegtables (SwfdecDecoder * s)
 {
   bits_t *bits = &s->b;
 
-  SWF_DEBUG (0, "swfdec_image_jpegtables\n");
+  SWFDEC_LOG ("swfdec_image_jpegtables");
 
   s->jpegtables = malloc (s->tag_len);
   s->jpegtables_len = s->tag_len;
@@ -153,9 +153,9 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
   SwfdecImage *image;
   JpegRGBDecoder *dec;
 
-  SWF_DEBUG (0, "tag_func_define_bits_jpeg\n");
+  SWFDEC_LOG ("tag_func_define_bits_jpeg");
   id = get_u16 (bits);
-  SWF_DEBUG (0, "  id = %d\n", id);
+  SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
@@ -174,8 +174,8 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   bits->ptr += s->tag_len - 2;
 
-  SWF_DEBUG (0, "  width = %d\n", image->width);
-  SWF_DEBUG (0, "  height = %d\n", image->height);
+  SWFDEC_LOG ("  width = %d", image->width);
+  SWFDEC_LOG ("  height = %d", image->height);
 
   return SWF_OK;
 }
@@ -188,7 +188,7 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
   SwfdecImage *image;
 
   id = get_u16 (bits);
-  SWF_DEBUG (0, "  id = %d\n", id);
+  SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
@@ -199,8 +199,8 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 
   bits->ptr += s->tag_len - 2;
 
-  SWF_DEBUG (0, "  width = %d\n", image->width);
-  SWF_DEBUG (0, "  height = %d\n", image->height);
+  SWFDEC_LOG ("  width = %d", image->width);
+  SWFDEC_LOG ("  height = %d", image->height);
 
   return SWF_OK;
 }
@@ -223,19 +223,19 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   endptr = bits->ptr + s->tag_len;
 
   id = get_u16 (bits);
-  SWF_DEBUG (0, "  id = %d\n", id);
+  SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
   len = get_u32 (bits);
-  SWF_DEBUG (0, "  len = %d\n", len);
+  SWFDEC_LOG ("  len = %d", len);
 
   jpegdec (image, bits->ptr, len);
 
-  SWF_DEBUG (0, "  width = %d\n", image->width);
-  SWF_DEBUG (0, "  height = %d\n", image->height);
+  SWFDEC_LOG ("  width = %d", image->width);
+  SWFDEC_LOG ("  height = %d", image->height);
 
   bits->ptr += len;
   //tag_func_dumpbits(s);
@@ -243,7 +243,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   ptr = lossless (bits->ptr, endptr - bits->ptr, &len);
   bits->ptr = endptr;
 
-  printf ("len = %d h x w=%d \n", len, image->width * image->height);
+  SWFDEC_LOG ("len = %d h x w=%d", len, image->width * image->height);
   g_assert (len == image->width * image->height);
 
   merge_alpha (image, ptr);
@@ -296,28 +296,28 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
   SwfdecImage *image;
 
   id = get_u16 (bits);
-  SWF_DEBUG (0, "  id = %d\n", id);
+  SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
   format = get_u8 (bits);
-  SWF_DEBUG (0, "  format = %d\n", format);
+  SWFDEC_LOG ("  format = %d", format);
   image->width = get_u16 (bits);
-  SWF_DEBUG (0, "  width = %d\n", image->width);
+  SWFDEC_LOG ("  width = %d", image->width);
   image->height = get_u16 (bits);
-  SWF_DEBUG (0, "  height = %d\n", image->height);
+  SWFDEC_LOG ("  height = %d", image->height);
   if (format == 3) {
     color_table_size = get_u8 (bits) + 1;
   } else {
     color_table_size = 0;
   }
 
-  SWF_DEBUG (0, "format = %d\n", format);
-  SWF_DEBUG (0, "width = %d\n", image->width);
-  SWF_DEBUG (0, "height = %d\n", image->height);
-  SWF_DEBUG (0, "color_table_size = %d\n", color_table_size);
+  SWFDEC_LOG ("format = %d", format);
+  SWFDEC_LOG ("width = %d", image->width);
+  SWFDEC_LOG ("height = %d", image->height);
+  SWFDEC_LOG ("color_table_size = %d", color_table_size);
 
   ptr = lossless (bits->ptr, endptr - bits->ptr, &len);
   bits->ptr = endptr;
@@ -360,7 +360,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
     unsigned char *idata;
 
     if (have_alpha) {
-      SWF_DEBUG (4, "illegal\n");
+      SWFDEC_ERROR ("illegal");
     }
 
     image->image_data = malloc (4 * image->width * image->height);

@@ -148,6 +148,7 @@ static struct action_struct actions[] = {
 };
 static int n_actions = sizeof (actions) / sizeof (actions[0]);
 
+#if 0
 static void
 hexdump (unsigned char *data, int len)
 {
@@ -171,6 +172,7 @@ hexdump (unsigned char *data, int len)
     len -= j;
   }
 }
+#endif
 
 void
 get_actions (SwfdecDecoder * s, bits_t * bits)
@@ -182,7 +184,7 @@ get_actions (SwfdecDecoder * s, bits_t * bits)
   //int skip_count;
   int i;
 
-  SWF_DEBUG (0, "get_actions\n");
+  SWFDEC_LOG ("get_actions");
 
   while (1) {
     action = get_u8 (bits);
@@ -197,21 +199,19 @@ get_actions (SwfdecDecoder * s, bits_t * bits)
 
     for (i = 0; i < n_actions; i++) {
       if (actions[i].action == action) {
-	if (s->debug < 1) {
-	  printf ("  [%02x] %s\n", action, actions[i].name);
-	}
+        SWFDEC_LOG ("  [%02x] %s", action, actions[i].name);
 	break;
       }
     }
     if (i == n_actions) {
-      if (s->debug < 3) {
-	printf ("  [%02x] *** unknown action\n", action);
-      }
+      SWFDEC_WARNING ("  [%02x] *** unknown action", action);
     }
 
+#if 0
     if (s->debug < 1) {
       hexdump (bits->ptr, len);
     }
+#endif
 
     bits->ptr += len;
   }
@@ -236,7 +236,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, bits_t * bits)
   //int skip_count;
   int i;
 
-  SWF_DEBUG (0, "swfdec_action_script_execute\n");
+  SWFDEC_LOG("swfdec_action_script_execute");
 
   while (1) {
     action = get_u8 (bits);
@@ -251,19 +251,17 @@ swfdec_action_script_execute (SwfdecDecoder * s, bits_t * bits)
 
     for (i = 0; i < n_actions; i++) {
       if (actions[i].action == action) {
-	if (s->debug < 1) {
-	  printf ("  [%02x] %s\n", action, actions[i].name);
-	}
+	SWFDEC_LOG ("  [%02x] %s", action, actions[i].name);
 	break;
       }
     }
     if (i == n_actions) {
-      if (s->debug < 3) {
-	printf ("  [%02x] *** unknown action\n", action);
-      }
+      SWFDEC_WARNING ("  [%02x] *** unknown action", action);
     }
 
+#if 0
     hexdump (bits->ptr, len);
+#endif
 
     bits->ptr += len;
   }

@@ -13,7 +13,7 @@ transform_color (unsigned int in, double mult[4], double add[4])
   b = SWF_COLOR_B (in);
   a = SWF_COLOR_A (in);
 
-  //SWF_DEBUG(0,"in rgba %d,%d,%d,%d\n",r,g,b,a);
+  SWFDEC_LOG ("in rgba %d,%d,%d,%d",r,g,b,a);
 
   r = rint ((r * mult[0] + add[0]));
   g = rint ((g * mult[1] + add[1]));
@@ -25,7 +25,7 @@ transform_color (unsigned int in, double mult[4], double add[4])
   b = CLAMP (b, 0, 255);
   a = CLAMP (a, 0, 255);
 
-  //SWF_DEBUG(0,"out rgba %d,%d,%d,%d\n",r,g,b,a);
+  SWFDEC_LOG("out rgba %d,%d,%d,%d",r,g,b,a);
 
   return SWF_COLOR_COMBINE (r, g, b, a);
 }

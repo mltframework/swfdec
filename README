@@ -1,23 +1,25 @@
 
-swfdec is a decoder/renderer library for Macromedia Flash animations.
+Swfdec is a decoder/renderer library for Macromedia Flash animations.
 Included is a simple GTK2-based player and an even simpler Mozilla
 plugin that allows the player to be embedded into your favorite
 browser.  (Note that it's not necessary to have a GTK+-2.0-based
 browser.)
 
-This release represents a significant milestone -- I can browse
-web sites looking for poorly handled SWF files without getting too
-annoyed by it crashing.
+Swfdec-0.2.1 now contains a GdkPixbuf loader module for SWF files.
+I have _no clue_ why anyone would want Flash animations as part of
+their GDK theme, but it is now possible.
 
-However, this is alpha software.  Do not expect it to work for you.
+This is alpha software.  Do not expect it to work for you.
 
 
 Notes:
 
  - If you install into /usr/local, you'll need to add
-   /usr/local/lib/mozilla/plugins to MOZ_PLUGIN_PATH.  (I think.  I
-   generally copy it into ~ds/.mozilla/plugins.)  Also, some versions
-   of Mozilla are picky about permissions and symlinks.
+   /usr/local/lib/mozilla/plugins to the MOZ_PLUGIN_PATH
+   environment variable.
+ 
+ - Sound output is handled by SDL, so the target device can be
+   chosen by setting the SDL_AUDIODRIVER environment variable.
 
 
 Limitations:
@@ -26,13 +28,16 @@ Limitations:
    user interaction.  This means that it is not yet possible to use
    swfdec to navigate Flash-heavy web sites.
 
- - The player is quite limited, e.g., it doesn't play sound.  These
-   problems may or may not be fixed.
+ - A few object types are not handled at all.  They don't appear very
+   often, however.
 
- - A number of object types are not handled at all.
-
- - Many features of Flash versions 4, 5, and 6 are not supported or
-   parsed.
+ - Flash versions 4, 5, and 6 are generally heavily dependent on
+   action scripting features, which are not currently supported.
+ 
+ - It is not possible to determine if a Flash animation has sound or
+   not until the sound starts.  Thus, the player always assumes there
+   is sound and attempts to aquire the sound device.  This can cause
+   problems on pages that have multiple embedded Flash animations.
 
 
 Dependencies:
@@ -40,6 +45,7 @@ Dependencies:
   libart_lgpl (>= 2.0)
   libgtk+ (>= 2.0)
   zlib (>= 1.1.4)
-  mozilla-1.0.0 development headers
+  MAD
+  Mozilla (>= 1.0.0) development headers (optional)
 
 

@@ -104,7 +104,11 @@ int huffman_table_decode_macroblock(short *block, HuffmanTable *dc_tab,
 
 	for(k=1;k<64;k++){
 		rs = huffman_table_decode_jpeg(ac_tab, bits);
-		if(rs<0 || bits->ptr >= bits->end){
+		if(rs<0){
+			JPEG_DEBUG(0,"huffman error\n");
+			return -1;
+		}
+		if(bits->ptr > bits->end){
 			JPEG_DEBUG(0,"overrun\n");
 			return -1;
 		}

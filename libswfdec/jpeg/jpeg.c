@@ -525,6 +525,10 @@ int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits)
 	JPEG_DEBUG(0,"approx range [%d,%d]\n",approx_low, approx_high);
 	syncbits(bits);
 
+	dec->x = 0;
+	dec->y = 0;
+	dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128*8;
+
 	if(bits->end != bits->ptr)JPEG_DEBUG(0,"endptr != bits\n");
 
 	return length;
@@ -624,11 +628,9 @@ int jpeg_decoder_restart_interval(JpegDecoder *dec, bits_t *bits)
 
 int jpeg_decoder_restart(JpegDecoder *dec, bits_t *bits)
 {
-	int length;
-
 	JPEG_DEBUG(0,"restart\n");
 
-	return length;
+	return 0;
 }
 
 void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
@@ -642,8 +644,8 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	int i;
 	int go;
 	int x,y;
-	int dc[4];
 	int n;
+	int ret;
 
 	len = 0;
 	j = 0;
@@ -671,13 +673,13 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	newptr[j] = 0;
 	newptr[j+1] = 0;
 	
+	dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128*8;
 	go = 1;
-	x = 0;
-	y = 0;
-	dc[0] = dc[1] = dc[2] = dc[3] = 128*8;
+	x = dec->x;
+	y = dec->y;
 	n = dec->restart_interval;
 	if(n==0)n=G_MAXINT;
-	while(--n){
+	while(n-->0){
 	for(i=0;i<dec->scan_list_length;i++){
 		int dc_table_index;
 		int ac_table_index;
@@ -696,14 +698,23 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 		ac_table_index = dec->scan_list[i].ac_table;
 		quant_index = dec->scan_list[i].quant_table;
 
-		huffman_table_decode_macroblock(block,
+		ret = huffman_table_decode_macroblock(block,
 			dec->dc_huff_table[dc_table_index],
 			dec->ac_huff_table[ac_table_index], bits2);
+		if(ret<0){
+			JPEG_DEBUG(0,"%d,%d: component=%d dc_table=%d ac_table=%d\n",
+				x,y,
+				dec->scan_list[i].component_index,
+				dec->scan_list[i].dc_table,
+				dec->scan_list[i].ac_table);
+			n = 0;
+			break;
+		}
 
 		JPEG_DEBUG(3,"using quant table %d\n", quant_index);
 		dequant8x8_s16(block2, block, dec->quant_table[quant_index]);
-		dc[component_index] += block2[0];
-		block2[0] = dc[component_index];
+		dec->dc[component_index] += block2[0];
+		block2[0] = dec->dc[component_index];
 		unzigzag8x8_s16(block, block2);
 		idct8x8_s16(block2, block, sizeof(short)*8, sizeof(short)*8);
 
@@ -728,6 +739,8 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 			go = 0;
 		}
 	}
+	dec->x = x;
+	dec->y = y;
 	g_free(newptr);
 }
 
@@ -762,9 +775,16 @@ void jpeg_decoder_free(JpegDecoder *dec)
 
 int jpeg_decoder_addbits(JpegDecoder *dec, unsigned char *data, unsigned int len)
 {
-	dec->bits.ptr = data;
-	dec->bits.idx = 0;
-	dec->bits.end = data + len;
+	unsigned int offset;
+
+	offset = dec->bits.ptr - dec->data;
+
+	dec->data = realloc(dec->data, dec->data_len + len);
+	memcpy(dec->data + dec->data_len, data, len);
+	dec->data_len += len;
+
+	dec->bits.ptr = dec->data + offset;
+	dec->bits.end = dec->data + dec->data_len;
 
 	return 0;
 }
@@ -864,7 +884,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level = 1;
+int jpeg_decoder_verbose_level = 0;
 
 void jpeg_debug(int n, const char *format, ... )
 {

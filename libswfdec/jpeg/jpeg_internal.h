@@ -29,6 +29,9 @@ struct jpeg_decoder_struct {
 
 	int restart_interval;
 
+	unsigned char *data;
+	unsigned int data_len;
+
 	struct{
 		int id;
 		int h_oversample;
@@ -57,7 +60,9 @@ struct jpeg_decoder_struct {
 	int scan_h_subsample;
 	int scan_v_subsample;
 
+	/* scan state */
 	int x,y;
+	int dc[4];
 };
 
 struct jpeg_scan_struct {

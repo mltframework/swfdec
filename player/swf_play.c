@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 gboolean debug = FALSE;
 
@@ -48,6 +50,10 @@ static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer dat
 static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored);
 static gboolean render_idle(gpointer data);
 
+/* fault handling stuff */
+void fault_handler(int signum, siginfo_t *si, void *misc);
+void fault_restore(void);
+void fault_setup(void);
 
 int main(int argc, char *argv[])
 {
@@ -59,6 +65,8 @@ int main(int argc, char *argv[])
 		{ "height", 1, NULL, 'h' },
 		{ 0 },
 	};
+
+	fault_setup();
 
 	gtk_init(&argc,&argv);
 	gdk_rgb_init ();
@@ -340,5 +348,75 @@ static gboolean render_idle(gpointer data)
 	}
 
 	return TRUE;
+}
+
+
+extern volatile gboolean glib_on_error_halt;
+
+void fault_handler(int signum, siginfo_t *si, void *misc)
+{
+	int spinning = TRUE;
+
+	fault_restore();
+
+	if(si->si_signo == SIGSEGV){
+		g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
+	}else if(si->si_signo == SIGQUIT){
+		g_print ("Caught SIGQUIT\n");
+	}else{
+		g_print ("signo:  %d\n",si->si_signo);
+		g_print ("errno:  %d\n",si->si_errno);
+		g_print ("code:   %d\n",si->si_code);
+	}
+
+	glib_on_error_halt = FALSE;
+	g_on_error_stack_trace("gst-launch");
+
+	wait(NULL);
+
+#if 0
+	/* FIXME how do we know if we were run by libtool? */
+	g_print("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
+		"Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
+		getpid());
+	while(spinning)usleep(1000000);
+#endif
+#if 0
+	/* This spawns a gdb and attaches it to gst-launch. */
+	{
+		char str[40];
+		sprintf(str,"gdb -quiet gst-launch %d",getpid());
+		system(str);
+	}
+
+	_exit(0);
+#endif
+#if 1
+	_exit(0);
+#endif
+
+}
+
+void fault_restore(void)
+{
+	struct sigaction action;
+
+	memset(&action,0,sizeof(action));
+	action.sa_handler = SIG_DFL;
+
+	sigaction(SIGSEGV, &action, NULL);
+	sigaction(SIGQUIT, &action, NULL);
+}
+
+void fault_setup(void)
+{
+	struct sigaction action;
+
+	memset(&action,0,sizeof(action));
+	action.sa_sigaction = fault_handler;
+	action.sa_flags = SA_SIGINFO;
+
+	sigaction(SIGSEGV, &action, NULL);
+	sigaction(SIGQUIT, &action, NULL);
 }
 

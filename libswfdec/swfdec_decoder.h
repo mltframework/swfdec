@@ -102,6 +102,9 @@ struct _SwfdecDecoder
   int pixels_rendered;
 
   int stats_n_points;
+
+  /* should be in SwfdecRender */
+  gboolean stopped;
 };
 
 SwfdecDecoder *swf_init (void);

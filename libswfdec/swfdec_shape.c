@@ -356,10 +356,12 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
       }
 
       swfdec_bits_get_transform (bits, &shapevec->fill_transform);
-      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR;
+      /* FIXME: the 0.965 is a mysterious factor that seems to improve
+       * rendering of images. */
+      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR * 0.965;
+      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR * 0.965;
+      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR * 0.965;
+      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR * 0.965;
     }
   }
 
@@ -391,7 +393,7 @@ static SwfdecShapeVec *swfdec_shape_get_fill0style(SwfdecShape *shape, int fill0
   if (shape->fills_offset + fill0style - 1 >= shape->fills->len) {
     SWFDEC_WARNING ("fill0style too large (%d >= %d)",
         shape->fills_offset + fill0style - 1, shape->fills->len);
-    return g_ptr_array_index (shape->fills, 0);
+    return NULL;
   }
   return g_ptr_array_index (shape->fills,
       shape->fills_offset + fill0style - 1);
@@ -402,7 +404,7 @@ static SwfdecShapeVec *swfdec_shape_get_fill1style(SwfdecShape *shape, int fill1
   if (shape->fills_offset + fill1style - 1 >= shape->fills2->len) {
     SWFDEC_WARNING ("fill1style too large (%d >= %d)",
         shape->fills_offset + fill1style - 1, shape->fills2->len);
-    return g_ptr_array_index (shape->fills2, 0);
+    return NULL;
   }
   return g_ptr_array_index (shape->fills2,
       shape->fills_offset + fill1style - 1);
@@ -413,7 +415,7 @@ static SwfdecShapeVec *swfdec_shape_get_linestyle(SwfdecShape *shape, int linest
   if (shape->lines_offset + linestyle - 1 >= shape->lines->len) {
     SWFDEC_WARNING ("linestyle too large (%d >= %d)",
         shape->lines_offset + linestyle - 1, shape->lines->len);
-    return g_ptr_array_index (shape->lines, 0);
+    return NULL;
   }
   return g_ptr_array_index (shape->lines, shape->lines_offset + linestyle - 1);
 }
@@ -529,17 +531,23 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
     }
     if (fill0style) {
       shapevec = swfdec_shape_get_fill0style (shape, fill0style);
-      g_array_append_val (shapevec->path, pt);
+      if (shapevec) {
+        g_array_append_val (shapevec->path, pt);
+      }
       s->stats_n_points++;
     }
     if (fill1style) {
       shapevec = swfdec_shape_get_fill1style (shape, fill1style);
-      g_array_append_val (shapevec->path, pt);
+      if (shapevec) {
+        g_array_append_val (shapevec->path, pt);
+      }
       s->stats_n_points++;
     }
     if (linestyle) {
       shapevec = swfdec_shape_get_linestyle(shape, linestyle);
-      g_array_append_val (shapevec->path, pt);
+      if (shapevec) {
+        g_array_append_val (shapevec->path, pt);
+      }
       s->stats_n_points++;
     }
 
@@ -572,6 +580,11 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   image_object = swfdec_object_get (s, shapevec->fill_id);
   if (!image_object)
     return;
+
+  if (!SWFDEC_IS_IMAGE (image_object)) {
+    SWFDEC_WARNING ("compose object is not image");
+    return;
+  }
 
   SWFDEC_LOG("swfdec_shape_compose: %d", shapevec->fill_id);
 

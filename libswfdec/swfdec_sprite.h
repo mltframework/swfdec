@@ -19,6 +19,7 @@ struct _SwfdecSpriteSegment
   int id;
   int first_frame;
   int last_frame;
+  int clip_depth;
 
   SwfdecTransform transform;
   SwfdecColorTransform color_transform;
@@ -41,7 +42,8 @@ struct _SwfdecSprite {
 
   GList *layers;
 
-  SwfdecSoundChunk **sound_chunks;
+  SwfdecBuffer **sound_chunks;
+  SwfdecBuffer **actions;
 };
 
 struct _SwfdecSpriteClass {
@@ -56,7 +58,8 @@ int tag_func_define_sprite (SwfdecDecoder * s);
 SwfdecSpriteSegment *swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth,
     int frame);
 void swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSegment * segnew);
-void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite, SwfdecSoundChunk *chunk, int frame);
+void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite, SwfdecBuffer *chunk, int frame);
+void swfdec_sprite_add_action (SwfdecSprite *sprite, SwfdecBuffer *action, int frame);
 
 SwfdecSpriteSegment *swfdec_spriteseg_new (void);
 SwfdecSpriteSegment *swfdec_spriteseg_dup (SwfdecSpriteSegment * seg);

@@ -219,37 +219,46 @@ int
 tag_func_do_action (SwfdecDecoder * s)
 {
   get_actions (s, &s->b);
+  swfdec_sprite_add_action(s->parse_sprite, s->b.buffer,
+      s->parse_sprite->parse_frame);
 
   return SWF_OK;
 }
 
 
 int
-swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBits * bits)
+swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
 {
   int action;
   int len;
-
+  SwfdecBits bits;
   //int index;
   //int skip_count;
   int i;
+  int skip_one = FALSE;
 
-  SWFDEC_LOG("swfdec_action_script_execute");
+  SWFDEC_LOG("swfdec_action_script_execute %p %p %d", buffer,
+      buffer->data, buffer->length);
+
+  bits.buffer = buffer;
+  bits.ptr = buffer->data;
+  bits.idx = 0;
+  bits.end = buffer->data + buffer->length;
 
   while (1) {
-    action = swfdec_bits_get_u8 (bits);
+    action = swfdec_bits_get_u8 (&bits);
     if (action == 0)
       break;
 
     if (action & 0x80) {
-      len = swfdec_bits_get_u16 (bits);
+      len = swfdec_bits_get_u16 (&bits);
     } else {
       len = 0;
     }
 
     for (i = 0; i < n_actions; i++) {
       if (actions[i].action == action) {
-	SWFDEC_LOG ("  [%02x] %s", action, actions[i].name);
+	SWFDEC_WARNING ("  [%02x] %s", action, actions[i].name);
 	break;
       }
     }
@@ -257,11 +266,37 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBits * bits)
       SWFDEC_WARNING ("  [%02x] *** unknown action", action);
     }
 
-#if 0
-    hexdump (bits->ptr, len);
-#endif
+    if (skip_one) {
+      skip_one = FALSE;
+    } else {
+      if (action == 0x07) { /* stop */
+        s->stopped = TRUE;
+      }
+      if (action == 0x81) { /* goto frame */
+        int frame;
 
-    bits->ptr += len;
+        s->stopped = TRUE;
+        frame = swfdec_bits_get_u16(&bits);
+        SWFDEC_WARNING ("goto frame %d\n", frame);
+        bits.ptr -= 2;
+
+        s->render->frame_index = frame - 1;
+      }
+      if (action == 0x06) { /* play */
+        s->stopped = FALSE;
+      }
+      if (action == 0x8a) { /* wait for frame */
+        int frame;
+
+        frame = swfdec_bits_get_u16(&bits);
+        SWFDEC_WARNING ("wait for frame %d\n", frame);
+        bits.ptr -= 2;
+
+        skip_one = FALSE;
+      }
+    }
+
+    bits.ptr += len;
   }
 
   return SWF_OK;

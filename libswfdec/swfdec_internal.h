@@ -5,6 +5,7 @@
 #include "color.h"
 #include "proto.h"
 #include "swfdec.h"
+#include "swfdec_actions.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_button.h"

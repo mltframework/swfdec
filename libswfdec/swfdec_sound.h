@@ -25,12 +25,14 @@ typedef struct _SwfdecSoundClass SwfdecSoundClass;
 #define SWFDEC_SOUND(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SOUND, SwfdecSound))
 #define SWFDEC_SOUND_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SOUND, SwfdecSoundClass))
 
+#if 0
 struct _SwfdecSoundChunk {
   int n_samples;
   int n_left;
   int length;
   unsigned char *data;
 };
+#endif
 
 struct _SwfdecSound {
   SwfdecObject object;
@@ -70,7 +72,9 @@ int tag_func_start_sound (SwfdecDecoder * s);
 int tag_func_define_button_sound (SwfdecDecoder * s);
 void swfdec_sound_render (SwfdecDecoder * s);
 
+#if 0
 void swfdec_sound_chunk_free (SwfdecSoundChunk *chunk);
+#endif
 
 int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
 

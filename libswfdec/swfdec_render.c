@@ -25,11 +25,11 @@ swfdec_render_free (SwfdecRender *render)
   g_free (render);
 }
 
-void
+gboolean
 swfdec_render_iterate (SwfdecDecoder *s)
 {
   GList *g;
-    
+  
   if (s->render->seek_frame != -1) {
     SwfdecSound *sound;
 
@@ -39,14 +39,31 @@ swfdec_render_iterate (SwfdecDecoder *s)
     sound = SWFDEC_SOUND(s->stream_sound_obj);
     if (sound) sound->tmpbuflen = 0;
   } else {
-    s->render->frame_index++;
+    if (!s->stopped) {
+      if (s->main_sprite->actions[s->render->frame_index]) {
+        swfdec_action_script_execute(s,
+            s->main_sprite->actions[s->render->frame_index]);
+      }
+    }
+
+    if (!s->stopped) {
+      s->render->frame_index++;
+      if (s->render->frame_index >= s->n_frames) {
+        SWFDEC_WARNING ("iterating past end");
+        return FALSE;
+      }
+    }
   }
 
   for (g=g_list_first (s->render->object_states); g; g = g_list_next(g)) {
     SwfdecRenderState *state = g->data;
 
     state->frame_index++;
+    SWFDEC_INFO ("iterate layer=%d frame_index=%d", state->layer,
+        state->frame_index);
   }
+
+  return TRUE;
 }
 
 SwfdecRenderState *
@@ -83,6 +100,9 @@ swfdec_render_get_image (SwfdecDecoder *s)
   SwfdecSpriteSegment *seg;
   SwfdecBuffer *buffer;
   GList *g;
+  int clip_depth = 0;
+
+  g_return_val_if_fail (s->render->frame_index < s->n_frames, NULL);
 
   SWFDEC_DEBUG ("swf_render_frame");
 
@@ -118,6 +138,32 @@ swf_invalidate_irect (s, &s->irect);
     if (seg->last_frame <= s->render->frame_index)
       continue;
 
+    /* FIXME need to clip layers instead */
+    if (seg->clip_depth) {
+      SWFDEC_INFO ("clip_depth=%d", seg->clip_depth);
+      clip_depth = seg->clip_depth;
+    }
+#if 0
+    /* don't render clipped layers */
+    if (clip_depth && seg->depth <= clip_depth) {
+      SWFDEC_INFO ("clipping depth=%d", seg->depth);
+      continue;
+    }
+#endif
+#if 0
+    /* render only the clipping layer */
+    if (seg->clip_depth == 0 && clip_depth && seg->depth <= clip_depth) {
+      SWFDEC_INFO ("clipping depth=%d", seg->depth);
+      continue;
+    }
+#endif
+#if 1
+    /* don't render clipping layer */
+    if (seg->clip_depth) {
+      continue;
+    }
+#endif
+
     object = swfdec_object_get (s, seg->id);
     if (object) {
       SWFDEC_OBJECT_GET_CLASS(object)->render (s, seg, object);
@@ -138,8 +184,10 @@ swfdec_render_get_audio (SwfdecDecoder *s)
   SwfdecBuffer *buffer;
   GList *g;
 
+  g_return_val_if_fail (s->render->frame_index < s->n_frames, NULL);
+
   if (s->stream_sound_obj) {
-    SwfdecSoundChunk *chunk;
+    SwfdecBuffer *chunk;
 
     chunk = s->main_sprite->sound_chunks[s->render->frame_index];
     if (chunk) {

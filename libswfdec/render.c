@@ -78,6 +78,10 @@ tag_place_object_2 (SwfdecDecoder * s)
     if (oldlayer)
       layer->id = oldlayer->id;
   }
+
+  SWFDEC_INFO ("placing %sobject layer=%d id=%d",
+      (has_character)?"":"(existing) ", depth, layer->id);
+
   if (has_matrix) {
     swfdec_bits_get_transform (bits, &layer->transform);
   } else {

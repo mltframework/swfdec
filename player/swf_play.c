@@ -23,6 +23,7 @@
 #include <SDL.h>
 
 gboolean debug = FALSE;
+int slow = 0;
 
 SwfdecDecoder *s;
 unsigned char *image;
@@ -359,29 +360,51 @@ static gboolean render_idle_audio(gpointer data)
 {
         SwfdecBuffer *video_buffer;
         SwfdecBuffer *audio_buffer;
+        gboolean ret;
 
-        if (sound_bytes >= 10000) {
+        if (sound_bytes >= 40000) {
           g_timeout_add (10, render_idle_audio, NULL);
           return FALSE;
         }
 
-        swfdec_render_iterate (s);
+        ret = swfdec_render_iterate (s);
+        if (!ret) {
+	  gtk_main_quit ();
+          return FALSE;
+        }
 
-        video_buffer = swfdec_render_get_image (s);
         audio_buffer = swfdec_render_get_audio (s);
+
+        if (audio_buffer == NULL) {
+          /* error */
+	  gtk_main_quit ();
+        }
 
         sound_buffers = g_list_append (sound_buffers, audio_buffer);
 	sound_bytes += audio_buffer->length;
+        if (slow) {
+          swfdec_buffer_ref (audio_buffer);
+          sound_buffers = g_list_append (sound_buffers, audio_buffer);
+	  sound_bytes += audio_buffer->length;
+        }
 
-        fixup_buffer (video_buffer);
+printf("%d\n", sound_bytes);
+        if (sound_bytes > 20000) {
+          video_buffer = swfdec_render_get_image (s);
+        } else {
+          video_buffer = NULL;
+        }
+        if (video_buffer) {
+          fixup_buffer (video_buffer);
 
-	gdk_draw_rgb_32_image (drawing_area->window,
-		drawing_area->style->black_gc, 
-		0, 0, width, height, 
-		GDK_RGB_DITHER_NONE,
-		video_buffer->data,
-		width*4);
+          gdk_draw_rgb_32_image (drawing_area->window,
+                  drawing_area->style->black_gc, 
+                  0, 0, width, height, 
+                  GDK_RGB_DITHER_NONE,
+                  video_buffer->data,
+                  width*4);
           swfdec_buffer_unref (video_buffer);
+        }
 
   g_timeout_add (10, render_idle_audio, NULL);
 

@@ -26,7 +26,7 @@ struct _SwfdecRenderState
 
 SwfdecRender * swfdec_render_new (void);
 void swfdec_render_free (SwfdecRender *render);
-void swfdec_render_iterate (SwfdecDecoder *s);
+gboolean swfdec_render_iterate (SwfdecDecoder *s);
 void swfdec_render_seek (SwfdecDecoder *s, int frame);
 SwfdecBuffer * swfdec_render_get_image (SwfdecDecoder *s);
 SwfdecBuffer * swfdec_render_get_audio (SwfdecDecoder *s);

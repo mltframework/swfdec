@@ -40,20 +40,38 @@ static void swfdec_sprite_dispose (SwfdecSprite *sprite)
   if (sprite->sound_chunks) {
     for (i=0;i<sprite->n_frames;i++) {
       if (sprite->sound_chunks[i]) {
-        swfdec_sound_chunk_free (sprite->sound_chunks[i]);
+        swfdec_buffer_unref (sprite->sound_chunks[i]);
       }
     }
     g_free (sprite->sound_chunks);
+  }
+  if (sprite->actions) {
+    for (i=0;i<sprite->n_frames;i++) {
+      if (sprite->actions[i]) {
+        swfdec_buffer_unref (sprite->actions[i]);
+      }
+    }
+    g_free (sprite->actions);
   }
 
 }
 
 void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite,
-    SwfdecSoundChunk *chunk, int frame)
+    SwfdecBuffer *chunk, int frame)
 {
   g_assert (sprite->sound_chunks != NULL);
 
   sprite->sound_chunks[frame] = chunk;
+  swfdec_buffer_ref (chunk);
+}
+
+void swfdec_sprite_add_action (SwfdecSprite *sprite,
+    SwfdecBuffer *actions, int frame)
+{
+  g_assert (sprite->actions != NULL);
+
+  sprite->actions[frame] = actions;
+  swfdec_buffer_ref (actions);
 }
 
 static void
@@ -64,6 +82,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecTransform save_transform;
   GList *g;
   SwfdecRenderState *state;
+  int clip_depth = 0;
 
   //memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
 
@@ -74,14 +93,18 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     state->id = seg->id;
     state->frame_index = 0;
     s->render->object_states = g_list_prepend (s->render->object_states, state);
+    SWFDEC_INFO("new rendering state for layer %d", seg->depth);
   } else {
     if (state->id != seg->id) {
+SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
       state->id = seg->id;
       state->frame_index = 0;
+      SWFDEC_INFO("resetting rendering state of layer %d", seg->depth);
     }
   }
   if (state->frame_index >= sprite->n_frames) {
     state->frame_index = 0;
+    SWFDEC_INFO("looping rendering state of layer %d", seg->depth);
   }
 
   memcpy (&save_transform, &s->transform, sizeof(SwfdecTransform));
@@ -96,10 +119,24 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     if (child_seg->first_frame > state->frame_index) continue;
     if (child_seg->last_frame <= state->frame_index) continue;
 
+    /* FIXME need to clip layers instead */
+    if (child_seg->clip_depth) {
+      SWFDEC_WARNING ("clip_depth=%d", child_seg->clip_depth);
+      clip_depth = child_seg->clip_depth;
+    }
+    
+    if (clip_depth && child_seg->depth <= clip_depth) {
+      SWFDEC_WARNING ("clipping depth=%d", child_seg->clip_depth);
+      continue;
+    }
+
     child_object = swfdec_object_get (s, child_seg->id);
     if (child_object) {
-      SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
-          child_object);
+      /* FIXME for now, don't render sprites inside sprites */
+      if (!SWFDEC_IS_SPRITE (child_object)) {
+        SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
+            child_object);
+      }
     } else {
       SWFDEC_DEBUG ("could not find object (id = %d)", child_seg->id);
     }
@@ -218,6 +255,9 @@ tag_func_define_sprite (SwfdecDecoder * s)
   int id;
   SwfdecSprite *sprite;
   int ret;
+  SwfdecBits save_bits;
+
+  save_bits = s->b;
 
   id = swfdec_bits_get_u16 (bits);
   sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
@@ -230,6 +270,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   SWFDEC_LOG("n_frames = %d", sprite->n_frames);
 
   sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
+  sprite->actions = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
 
   memcpy (&parse, bits, sizeof(SwfdecBits));
 
@@ -241,13 +282,17 @@ tag_func_define_sprite (SwfdecDecoder * s)
     SwfdecBuffer *buffer;
     SwfdecTagFunc *func;
 
+    //SWFDEC_INFO ("sprite parsing at %d", parse.ptr - parse.buffer->data);
     x = swfdec_bits_get_u16 (&parse);
     tag = (x>>6) & 0x3ff;
     tag_len = x & 0x3f;
     if (tag_len == 0x3f) {
       tag_len = swfdec_bits_get_u32 (&parse);
     }
-    SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
+    SWFDEC_INFO ("sprite parsing at %d, tag %d %s, length %d",
+        parse.ptr - parse.buffer->data, tag,
+        swfdec_decoder_get_tag_name (tag), tag_len);
+    //SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
 
     if (tag_len > 0) {
       buffer = swfdec_buffer_new_subbuffer (parse.buffer,
@@ -272,11 +317,13 @@ tag_func_define_sprite (SwfdecDecoder * s)
     s->parse_sprite = NULL;
 
     swfdec_bits_syncbits (bits);
-    if (s->b.ptr < endptr) {
-      SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
-    }
-    if (s->b.ptr > endptr) {
-      SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
+    if (tag_len > 0) {
+      if (s->b.ptr < endptr) {
+        SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
+      }
+      if (s->b.ptr > endptr) {
+        SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
+      }
     }
     
     parse.ptr = endptr;
@@ -285,6 +332,9 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
     if (tag == 0) break;
   }
+
+  s->b = save_bits;
+  s->b.ptr += s->b.buffer->length;
 
   return SWF_OK;
 }
@@ -354,7 +404,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int reserved;
-  int has_compose;
+  int has_clip_depth;
   int has_name;
   int has_ratio;
   int has_color_transform;
@@ -366,7 +416,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SwfdecSpriteSegment *oldlayer;
 
   reserved = swfdec_bits_getbit (bits);
-  has_compose = swfdec_bits_getbit (bits);
+  has_clip_depth = swfdec_bits_getbit (bits);
   has_name = swfdec_bits_getbit (bits);
   has_ratio = swfdec_bits_getbit (bits);
   has_color_transform = swfdec_bits_getbit (bits);
@@ -380,7 +430,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   if (reserved) {
     SWFDEC_WARNING ("  reserved bits non-zero %d", reserved);
   }
-  SWFDEC_LOG("  has_compose = %d", has_compose);
+  SWFDEC_LOG("  has_clip_depth = %d", has_clip_depth);
   SWFDEC_LOG("  has_name = %d", has_name);
   SWFDEC_LOG("  has_ratio = %d", has_ratio);
   SWFDEC_LOG("  has_color_transform = %d", has_color_transform);
@@ -408,6 +458,10 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     if (oldlayer)
       layer->id = oldlayer->id;
   }
+
+  SWFDEC_INFO ("%splacing object layer=%d id=%d first_frame=%d",
+      (has_character)?"":"[re-]", depth, layer->id, layer->first_frame);
+
   if (has_matrix) {
     swfdec_bits_get_transform (bits, &layer->transform);
   } else {
@@ -417,7 +471,6 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   }
   if (has_color_transform) {
     swfdec_bits_get_color_transform (bits, &layer->color_transform);
-    swfdec_bits_syncbits (bits);
   } else {
     if (oldlayer) {
       memcpy (&layer->color_transform, &oldlayer->color_transform, sizeof (SwfdecColorTransform));
@@ -432,6 +485,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       layer->color_transform.add[3] = 0;
     }
   }
+  swfdec_bits_syncbits (bits);
   if (has_ratio) {
     layer->ratio = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG("  ratio = %d", layer->ratio);
@@ -442,11 +496,13 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   if (has_name) {
     g_free (swfdec_bits_get_string (bits));
   }
-  if (has_compose) {
-    int id;
-
-    id = swfdec_bits_get_u16 (bits);
-    SWFDEC_WARNING ("composing with %04x", id);
+  if (has_clip_depth) {
+    layer->clip_depth = swfdec_bits_get_u16 (bits);
+    SWFDEC_LOG ("clip_depth = %04x", layer->clip_depth);
+  } else {
+    if (oldlayer) {
+      layer->clip_depth = oldlayer->clip_depth;
+    }
   }
 
   return SWF_OK;

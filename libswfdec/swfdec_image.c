@@ -202,6 +202,8 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
 
+  SWFDEC_INFO ("JPEG image id=%d size=%dx%d", id, image->width, image->height);
+
   bits->ptr += len;
   //tag_func_dumpbits(s);
 

@@ -220,7 +220,7 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
   int rowstride;
   int max_h_oversample = 0, max_v_oversample = 0;
 
-  JPEG_DEBUG (0, "start of frame (baseline DCT)\n");
+  JPEG_DEBUG ("start of frame (baseline DCT)");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
@@ -230,9 +230,8 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
   dec->width = get_be_u16 (bits);
   dec->n_components = get_u8 (bits);
 
-  JPEG_DEBUG (0,
-      "frame_length=%d depth=%d height=%d width=%d n_components=%d\n", length,
-      dec->depth, dec->height, dec->width, dec->n_components);
+  JPEG_DEBUG ("frame_length=%d depth=%d height=%d width=%d n_components=%d",
+      length, dec->depth, dec->height, dec->width, dec->n_components);
 
   for (i = 0; i < dec->n_components; i++) {
     dec->components[i].id = get_u8 (bits);
@@ -240,9 +239,10 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
     dec->components[i].v_oversample = getbits (bits, 4);
     dec->components[i].quant_table = get_u8 (bits);
 
-    JPEG_DEBUG (0,
-        "[%d] id=%d h_oversample=%d v_oversample=%d quant_table=%d\n", i,
-        dec->components[i].id, dec->components[i].h_oversample,
+    JPEG_DEBUG ("[%d] id=%d h_oversample=%d v_oversample=%d quant_table=%d",
+        i,
+        dec->components[i].id,
+        dec->components[i].h_oversample,
         dec->components[i].v_oversample, dec->components[i].quant_table);
 
     max_h_oversample = MAX (max_h_oversample, dec->components[i].h_oversample);
@@ -268,7 +268,7 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
   }
 
   if (bits->end != bits->ptr)
-    JPEG_DEBUG (0, "endptr != bits\n");
+    JPEG_WARNING ("endptr != bits");
 
   return length;
 }
@@ -282,7 +282,7 @@ jpeg_decoder_define_quant_table (JpegDecoder * dec, bits_t * bits)
   int i;
   short *q;
 
-  JPEG_DEBUG (0, "define quantization table\n");
+  JPEG_DEBUG ("define quantization table");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
@@ -302,9 +302,9 @@ jpeg_decoder_define_quant_table (JpegDecoder * dec, bits_t * bits)
       }
     }
 
-    JPEG_DEBUG (0, "quant table index %d:\n", tq);
+    JPEG_LOG ("quant table index %d:", tq);
     for (i = 0; i < 8; i++) {
-      JPEG_DEBUG (0, "%3d %3d %3d %3d %3d %3d %3d %3d\n",
+      JPEG_LOG ("%3d %3d %3d %3d %3d %3d %3d %3d",
           q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]);
       q += 8;
     }
@@ -328,7 +328,7 @@ generate_code_table (int *huffsize)
   k = 0;
   for (i = 0; i < 16; i++) {
     for (j = 0; j < huffsize[i]; j++) {
-      JPEG_DEBUG (0, "huffcode[%d] = %s\n", k,
+      JPEG_LOG ("huffcode[%d] = %s", k,
           sprintbits (str, code >> (15 - i), i + 1));
       code++;
       k++;
@@ -375,7 +375,7 @@ huffman_table_new_jpeg (bits_t * bits)
      * number of bits we think it is.  This is only triggered
      * for bad huffsize[] arrays. */
     if (symbol >= (1 << (i + 1))) {
-      JPEG_DEBUG (0, "bad huffsize[] array\n");
+      JPEG_WARNING ("bad huffsize[] array");
       return NULL;
     }
 
@@ -395,7 +395,7 @@ jpeg_decoder_define_huffman_table (JpegDecoder * dec, bits_t * bits)
   int th;
   HuffmanTable *hufftab;
 
-  JPEG_DEBUG (0, "define huffman table\n");
+  JPEG_DEBUG ("define huffman table");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
@@ -404,8 +404,8 @@ jpeg_decoder_define_huffman_table (JpegDecoder * dec, bits_t * bits)
     tc = getbits (bits, 4);
     th = getbits (bits, 4);
 
-    JPEG_DEBUG (0, "huff table index %d:\n", th);
-    JPEG_DEBUG (0, "type %d (%s)\n", tc, tc ? "ac" : "dc");
+    JPEG_DEBUG ("huff table index %d:", th);
+    JPEG_DEBUG ("type %d (%s)", tc, tc ? "ac" : "dc");
 
     hufftab = huffman_table_new_jpeg (bits);
     if (tc) {
@@ -439,7 +439,7 @@ dumpbits (bits_t * bits)
     for (j = 0; j < 8; j++) {
       s[j + 24] = (isprint (p[j])) ? p[j] : '.';
     }
-    JPEG_DEBUG (0, "%s\n", s);
+    JPEG_DEBUG ("%s", s);
     p += 8;
   }
 
@@ -454,7 +454,7 @@ jpeg_decoder_find_component_by_id (JpegDecoder * dec, int id)
     if (dec->components[i].id == id)
       return i;
   }
-  JPEG_DEBUG (0, "undefined component id %d\n", id);
+  JPEG_DEBUG ("undefined component id %d", id);
   return 0;
 }
 
@@ -471,11 +471,11 @@ jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
   int approx_low;
   int n;
 
-  JPEG_DEBUG (0, "start of scan\n");
+  JPEG_DEBUG ("start of scan");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
-  JPEG_DEBUG (0, "length=%d\n", length);
+  JPEG_DEBUG ("length=%d", length);
 
   n_components = get_u8 (bits);
   n = 0;
@@ -520,17 +520,17 @@ jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
 
     syncbits (bits);
 
-    JPEG_DEBUG (0, "component %d: index=%d dc_table=%d ac_table=%d n=%d\n",
+    JPEG_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
         component_id, index, dc_table, ac_table, n);
   }
   dec->scan_list_length = n;
 
   spectral_start = get_u8 (bits);
   spectral_end = get_u8 (bits);
-  JPEG_DEBUG (0, "spectral range [%d,%d]\n", spectral_start, spectral_end);
+  JPEG_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
   approx_high = getbits (bits, 4);
   approx_low = getbits (bits, 4);
-  JPEG_DEBUG (0, "approx range [%d,%d]\n", approx_low, approx_high);
+  JPEG_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
   syncbits (bits);
 
   dec->x = 0;
@@ -538,7 +538,7 @@ jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
   dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
 
   if (bits->end != bits->ptr)
-    JPEG_DEBUG (0, "endptr != bits\n");
+    JPEG_DEBUG ("endptr != bits");
 
   return length;
 }
@@ -548,10 +548,10 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG (0, "app0\n");
+  JPEG_DEBUG ("app0");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG (0, "length=%d\n", length);
+  JPEG_DEBUG ("length=%d", length);
 
   if (strncmp (bits->ptr, "JFIF", 4) == 0 && bits->ptr[4] == 0) {
     int version;
@@ -561,7 +561,7 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
     int x_thumbnail;
     int y_thumbnail;
 
-    JPEG_DEBUG (0, "JFIF\n");
+    JPEG_DEBUG ("JFIF");
     bits->ptr += 5;
 
     version = get_be_u16 (bits);
@@ -571,17 +571,17 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
     x_thumbnail = get_u8 (bits);
     y_thumbnail = get_u8 (bits);
 
-    JPEG_DEBUG (0, "version = %04x\n", version);
-    JPEG_DEBUG (0, "units = %d\n", units);
-    JPEG_DEBUG (0, "x_density = %d\n", x_density);
-    JPEG_DEBUG (0, "y_density = %d\n", y_density);
-    JPEG_DEBUG (0, "x_thumbnail = %d\n", x_thumbnail);
-    JPEG_DEBUG (0, "y_thumbnail = %d\n", y_thumbnail);
+    JPEG_DEBUG ("version = %04x", version);
+    JPEG_DEBUG ("units = %d", units);
+    JPEG_DEBUG ("x_density = %d", x_density);
+    JPEG_DEBUG ("y_density = %d", y_density);
+    JPEG_DEBUG ("x_thumbnail = %d", x_thumbnail);
+    JPEG_DEBUG ("y_thumbnail = %d", y_thumbnail);
 
   }
 
   if (strncmp (bits->ptr, "JFXX", 4) == 0 && bits->ptr[4] == 0) {
-    JPEG_DEBUG (0, "JFIF extension (not handled)\n");
+    JPEG_WARNING ("JFIF extension (not handled)");
     bits->ptr += length - 2;
   }
 
@@ -593,12 +593,12 @@ jpeg_decoder_application_misc (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG (0, "appX\n");
+  JPEG_DEBUG ("appX");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG (0, "length=%d\n", length);
+  JPEG_DEBUG ("length=%d", length);
 
-  JPEG_DEBUG (0, "JPEG application tag X ignored\n");
+  JPEG_WARNING ("JPEG application tag X ignored");
   dumpbits (bits);
 
   bits->ptr += length - 2;
@@ -611,10 +611,10 @@ jpeg_decoder_comment (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG (0, "comment\n");
+  JPEG_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG (0, "length=%d\n", length);
+  JPEG_DEBUG ("length=%d", length);
 
   dumpbits (bits);
 
@@ -628,13 +628,13 @@ jpeg_decoder_restart_interval (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG (0, "comment\n");
+  JPEG_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG (0, "length=%d\n", length);
+  JPEG_DEBUG ("length=%d", length);
 
   dec->restart_interval = get_be_u16 (bits);
-  JPEG_DEBUG (0, "restart_interval=%d\n", dec->restart_interval);
+  JPEG_DEBUG ("restart_interval=%d", dec->restart_interval);
 
   return length;
 }
@@ -642,7 +642,7 @@ jpeg_decoder_restart_interval (JpegDecoder * dec, bits_t * bits)
 int
 jpeg_decoder_restart (JpegDecoder * dec, bits_t * bits)
 {
-  JPEG_DEBUG (0, "restart\n");
+  JPEG_DEBUG ("restart");
 
   return 0;
 }
@@ -657,7 +657,6 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   int len;
   int j;
   int i;
-  int go;
   int x, y;
   int n;
   int ret;
@@ -670,11 +669,11 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
     }
     len++;
   }
-  JPEG_DEBUG (0, "entropy length = %d\n", len);
+  JPEG_DEBUG ("entropy length = %d", len);
 
   /* we allocate extra space, since the getbits() code can
    * potentially read past the end of the buffer */
-  newptr = g_malloc (len + 2);
+  newptr = g_malloc0 (len + 100);
   for (i = 0; i < len; i++) {
     newptr[j] = bits->ptr[i];
     j++;
@@ -686,17 +685,16 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   bits2->ptr = newptr;
   bits2->idx = 0;
   bits2->end = newptr + j;
-  newptr[j] = 0;
-  newptr[j + 1] = 0;
+  //newptr[j] = 0;
+  //newptr[j+1] = 0;
 
   dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
-  go = 1;
   x = dec->x;
   y = dec->y;
   n = dec->restart_interval;
   if (n == 0)
     n = G_MAXINT;
-  while (n-- > 0) {
+  while (n-- > 0 && y * dec->scan_v_subsample < dec->height) {
     for (i = 0; i < dec->scan_list_length; i++) {
       int dc_table_index;
       int ac_table_index;
@@ -704,7 +702,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       unsigned char *ptr;
       int component_index;
 
-      JPEG_DEBUG (3, "%d,%d: component=%d dc_table=%d ac_table=%d\n",
+      JPEG_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
           x, y,
           dec->scan_list[i].component_index,
           dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -718,7 +716,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
           dec->dc_huff_table[dc_table_index],
           dec->ac_huff_table[ac_table_index], bits2);
       if (ret < 0) {
-        JPEG_DEBUG (0, "%d,%d: component=%d dc_table=%d ac_table=%d\n",
+        JPEG_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
             x, y,
             dec->scan_list[i].component_index,
             dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -726,7 +724,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
         break;
       }
 
-      JPEG_DEBUG (3, "using quant table %d\n", quant_index);
+      JPEG_DEBUG ("using quant table %d", quant_index);
       dequant8x8_s16 (block2, block, dec->quant_table[quant_index]);
       dec->dc[component_index] += block2[0];
       block2[0] = dec->dc[component_index];
@@ -736,6 +734,12 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
 
       dump_block8x8_s16 (block2);
 
+#if 0
+      JPEG_DEBUG ("x=%d, y=%d, rowstride=%d, %dx%d, %dx%d", x, y,
+          dec->components[component_index].rowstride,
+          dec->scan_h_subsample, dec->scan_v_subsample,
+          dec->width, dec->height);
+#endif
       ptr = dec->components[component_index].image +
           x * dec->components[component_index].h_oversample +
           dec->scan_list[i].offset +
@@ -750,9 +754,6 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
     if (x * dec->scan_h_subsample >= dec->width) {
       x = 0;
       y += 8;
-    }
-    if (y * dec->scan_v_subsample >= dec->height) {
-      go = 0;
     }
   }
   dec->x = x;
@@ -888,13 +889,13 @@ jpeg_decoder_parse (JpegDecoder * dec)
         x = get_u8 (bits);
         n++;
       }
-      JPEG_DEBUG (0, "lost sync, skipped %d bytes\n", n);
+      JPEG_DEBUG ("lost sync, skipped %d bytes", n);
     }
     while (x == 0xff) {
       x = get_u8 (bits);
     }
     tag = x;
-    JPEG_DEBUG (0, "tag %02x\n", tag);
+    JPEG_DEBUG ("tag %02x", tag);
 
     b2 = *bits;
 
@@ -903,11 +904,11 @@ jpeg_decoder_parse (JpegDecoder * dec)
         break;
       }
     }
-    JPEG_DEBUG (0, "tag: %s\n", jpeg_markers[i].name);
+    JPEG_DEBUG ("tag: %s", jpeg_markers[i].name);
     if (jpeg_markers[i].func) {
       jpeg_markers[i].func (dec, &b2);
     } else {
-      JPEG_DEBUG (0, "unhandled or illegal JPEG marker (0x%02x)\n", tag);
+      JPEG_WARNING ("unhandled or illegal JPEG marker (0x%02x)", tag);
       dumpbits (&b2);
     }
     if (jpeg_markers[i].flags & JPEG_ENTROPY_SEGMENT) {
@@ -962,7 +963,7 @@ dump_block8x8_s16 (short *q)
   int i;
 
   for (i = 0; i < 8; i++) {
-    JPEG_DEBUG (3, "%3d %3d %3d %3d %3d %3d %3d %3d\n",
+    JPEG_LOG ("%3d %3d %3d %3d %3d %3d %3d %3d",
         q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]);
     q += 8;
   }

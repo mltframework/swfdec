@@ -153,6 +153,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
         s->b.idx = 0;
         s->b.end = buffer->data + buffer->length;
 
+
         x = swfdec_bits_get_u16 (&s->b);
         tag = (x >> 6) & 0x3ff;
         SWFDEC_DEBUG("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
@@ -176,6 +177,10 @@ swfdec_decoder_parse (SwfdecDecoder * s)
         }
         swfdec_buffer_unref (buffer);
         SWFDEC_DEBUG("tag length %d", tag_len);
+
+        SWFDEC_INFO ("parsing at %d, tag %d %s, length %d",
+            swfdec_buffer_queue_get_offset(s->input_queue), tag,
+            swfdec_decoder_get_tag_name (tag), tag_len);
 
         if (swfdec_buffer_queue_get_depth (s->input_queue) < tag_len +
             header_length) {
@@ -209,17 +214,23 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
 	swfdec_bits_syncbits (&s->b);
 	if (s->b.ptr < endptr) {
-	  SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
+	  SWFDEC_WARNING ("early finish (%d bytes) at %d, tag %d %s, length %d",
+              endptr - s->b.ptr,
+              swfdec_buffer_queue_get_offset(s->input_queue), tag,
+              swfdec_decoder_get_tag_name (tag), tag_len);
 	  //dumpbits (&s->b);
 	}
 	if (s->b.ptr > endptr) {
-	  SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
+	  SWFDEC_WARNING ("parse_overrun (%d bytes) at %d, tag %d %s, length %d",
+              s->b.ptr - endptr,
+              swfdec_buffer_queue_get_offset(s->input_queue), tag,
+              swfdec_decoder_get_tag_name (tag), tag_len);
 	}
 
 	if (tag == 0) {
 	  s->state = SWF_STATE_EOF;
 
-          SWFDEC_WARNING ("decoded points %d", s->stats_n_points);
+          SWFDEC_INFO ("decoded points %d", s->stats_n_points);
 	}
 
         if (buffer) swfdec_buffer_unref (buffer);
@@ -605,6 +616,7 @@ swf_parse_header2 (SwfdecDecoder * s)
   buffer = swfdec_buffer_queue_pull (s->input_queue, n);
 
   s->main_sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * s->n_frames);
+  s->main_sprite->actions = g_malloc0 (sizeof (gpointer) * s->n_frames);
   s->main_sprite->n_frames = s->n_frames;
 
   swf_config_colorspace (s);
@@ -733,7 +745,9 @@ tag_func_ignore (SwfdecDecoder * s)
   SWFDEC_WARNING ("tag \"%s\" (%d) ignored", name, s->tag);
 #endif
 
-  s->b.ptr += s->b.buffer->length;
+  if (s->b.buffer) {
+    s->b.ptr += s->b.buffer->length;
+  }
 
   return SWF_OK;
 }

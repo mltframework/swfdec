@@ -22,18 +22,20 @@ static void swfdec_button_class_init (SwfdecButtonClass *g_class)
 
 static void swfdec_button_init (SwfdecButton *button)
 {
+  button->records = g_array_new (FALSE, TRUE, sizeof(SwfdecButtonRecord));
 
 }
 
 static void swfdec_button_dispose (SwfdecButton *button)
 {
   int i;
+  SwfdecButtonRecord *record;
 
-  for (i = 0; i < 3; i++) {
-    if (button->state[i]) {
-      swfdec_spriteseg_free (button->state[i]);
-    }
+  for (i = 0; i < button->records->len; i++) {
+    record = &g_array_index (button->records, SwfdecButtonRecord, i);
+    swfdec_spriteseg_free (record->segment);
   }
+  g_array_free (button->records, TRUE);
 }
 
 static void
@@ -41,20 +43,25 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object)
 {
   SwfdecButton *button = SWFDEC_BUTTON (object);
+  SwfdecButtonRecord *record;
+  int i;
 
-  if (button->state[0]) {
+  for (i = 0; i < button->records->len; i++) {
     SwfdecSpriteSegment *tmpseg;
     SwfdecObject *obj;
 
-    obj = swfdec_object_get (s, button->state[0]->id);
-    if (!obj) return;
+    record = &g_array_index (button->records, SwfdecButtonRecord, i);
+    if (record->up) {
+      obj = swfdec_object_get (s, record->segment->id);
+      if (!obj) return;
 
-    tmpseg = swfdec_spriteseg_dup (button->state[0]);
-    swfdec_transform_multiply (&tmpseg->transform,
-	&button->state[0]->transform, &seg->transform);
+      tmpseg = swfdec_spriteseg_dup (record->segment);
+      swfdec_transform_multiply (&tmpseg->transform,
+          &record->segment->transform, &seg->transform);
 
-    swfdec_spriteseg_render (s, tmpseg);
-    swfdec_spriteseg_free (tmpseg);
+      swfdec_spriteseg_render (s, tmpseg);
+      swfdec_spriteseg_free (tmpseg);
+    }
   }
 }
 
@@ -94,6 +101,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     int up;
     int character;
     int layer;
+    SwfdecButtonRecord record = { 0 };
 
     swfdec_bits_syncbits (bits);
     reserved = swfdec_bits_getbits (bits, 4);
@@ -108,57 +116,26 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     if (reserved) {
       SWFDEC_WARNING ("reserved is supposed to be 0");
     }
-    SWFDEC_LOG("  hit_test = %d", hit_test);
-    SWFDEC_LOG("  down = %d", down);
-    SWFDEC_LOG("  over = %d", over);
-    SWFDEC_LOG("  up = %d", up);
-    SWFDEC_LOG("  character = %d", character);
-    SWFDEC_LOG("  layer = %d", layer);
-
-    SWFDEC_LOG("bits->ptr %p", bits->ptr);
+    SWFDEC_LOG("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
+        hit_test, down, over, up, character, layer);
 
     swfdec_bits_get_transform (bits, &trans);
     swfdec_bits_syncbits (bits);
-    SWFDEC_LOG("bits->ptr %p", bits->ptr);
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    SWFDEC_LOG("bits->ptr %p", bits->ptr);
+    record.hit = hit_test;
+    record.up = up;
+    record.over = over;
+    record.down = down;
 
-    if (up) {
-      if (button->state[0]) {
-	SWFDEC_WARNING ("button->state already set");
-	swfdec_spriteseg_free (button->state[0]);
-      }
-      button->state[0] = swfdec_spriteseg_new ();
-      button->state[0]->id = character;
-      memcpy (&button->state[0]->transform, &trans, sizeof (SwfdecTransform));
-      memcpy (&button->state[0]->color_transform, &color_trans,
-          sizeof (SwfdecColorTransform));
-    }
-    if (over) {
-      if (button->state[1]) {
-	SWFDEC_WARNING ("button->state already set");
-	swfdec_spriteseg_free (button->state[1]);
-      }
-      button->state[1] = swfdec_spriteseg_new ();
-      button->state[1]->id = character;
-      memcpy (&button->state[1]->transform, &trans, sizeof (SwfdecTransform));
-      memcpy (&button->state[1]->color_transform, &color_trans,
-          sizeof (SwfdecColorTransform));
-    }
-    if (down) {
-      if (button->state[2]) {
-	SWFDEC_WARNING ("button->state already set");
-	swfdec_spriteseg_free (button->state[2]);
-      }
-      button->state[2] = swfdec_spriteseg_new ();
-      button->state[2]->id = character;
-      memcpy (&button->state[2]->transform, &trans, sizeof (SwfdecTransform));
-      memcpy (&button->state[2]->color_transform, &color_trans,
-          sizeof (SwfdecColorTransform));
-    }
+    record.segment = swfdec_spriteseg_new ();
+    record.segment->id = character;
+    memcpy (&record.segment->transform, &trans, sizeof (SwfdecTransform));
+    memcpy (&record.segment->color_transform, &color_trans,
+        sizeof (SwfdecColorTransform));
 
+    g_array_append_val (button->records, record);
   }
   swfdec_bits_get_u8 (bits);
 

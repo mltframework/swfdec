@@ -105,6 +105,12 @@ swfdec_buffer_queue_get_depth (SwfdecBufferQueue *queue)
   return queue->depth;
 }
 
+int
+swfdec_buffer_queue_get_offset (SwfdecBufferQueue *queue)
+{
+  return queue->offset;
+}
+
 void
 swfdec_buffer_queue_free (SwfdecBufferQueue *queue)
 {
@@ -136,7 +142,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue *queue, int length)
     return NULL;
   }
 
-  SWFDEC_DEBUG ("pulling %d, %d available", length, queue->depth);
+  SWFDEC_LOG ("pulling %d, %d available", length, queue->depth);
 
   g = g_list_first (queue->buffers);
   buffer = g->data;
@@ -175,6 +181,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue *queue, int length)
   }
 
   queue->depth -= length;
+  queue->offset += length;
 
   return newbuffer;
 }
@@ -193,7 +200,7 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue *queue, int length)
     return NULL;
   }
 
-  SWFDEC_DEBUG ("peeking %d, %d available", length, queue->depth);
+  SWFDEC_LOG ("peeking %d, %d available", length, queue->depth);
 
   g = g_list_first (queue->buffers);
   buffer = g->data;

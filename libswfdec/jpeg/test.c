@@ -107,3 +107,10 @@ dump_pgm (unsigned char *ptr, int rowstride, int width, int height)
     ptr += rowstride;
   }
 }
+
+void
+swfdec_debug_log (int level, const char *file, const char *function,
+    int line, const char *format, ...)
+{
+
+}

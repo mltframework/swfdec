@@ -21,6 +21,7 @@ struct _SwfdecBuffer {
 struct _SwfdecBufferQueue {
   GList *buffers;
   int depth;
+  int offset;
 };
 
 SwfdecBuffer * swfdec_buffer_new (void);
@@ -34,6 +35,7 @@ void swfdec_buffer_unref (SwfdecBuffer *buffer);
 SwfdecBufferQueue * swfdec_buffer_queue_new (void);
 void swfdec_buffer_queue_free (SwfdecBufferQueue *queue);
 int swfdec_buffer_queue_get_depth (SwfdecBufferQueue *queue);
+int swfdec_buffer_queue_get_offset (SwfdecBufferQueue *queue);
 void swfdec_buffer_queue_push (SwfdecBufferQueue *queue, SwfdecBuffer *buffer);
 SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue *queue, int len);
 SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue *queue, int len);

@@ -1,3 +1,35 @@
+2004-10-04  David Schleef  <ds@schleef.org>
+
+	* libswfdec/Makefile.am: export art_warn
+	* libswfdec/actions.c: (tag_func_do_action),
+	(swfdec_action_script_execute): minimal AS execution
+	* libswfdec/jpeg/huffman.c: switch to swfdec debugging system
+	* libswfdec/jpeg/jpeg.c: same.  Check for image overruns when
+	decoding macroblocks.
+	* libswfdec/jpeg/jpeg_debug.h: same
+	* libswfdec/jpeg/test.c: same
+	* libswfdec/jpeg/test_rgb.c: same
+	* libswfdec/render.c: add debugging
+	* libswfdec/swf.c: add debugging.  allocate action buffer array
+	* libswfdec/swfdec_buffer.c: quiet debugging.  Add get_offset.
+	* libswfdec/swfdec_buffer.h: same
+	* libswfdec/swfdec_button.c: Fix button rendering.
+	* libswfdec/swfdec_button.h: same
+	* libswfdec/swfdec_debug.c: override art_warn.  it's annoying.
+	* libswfdec/swfdec_decoder.h: add stopped field.
+	* libswfdec/swfdec_image.c: add debugging
+	* libswfdec/swfdec_internal.h: add swfdec_actions.h
+	* libswfdec/swfdec_render.c: improve iteration, fix clipping.
+	* libswfdec/swfdec_render.h: improve iteration
+	* libswfdec/swfdec_shape.c: check for inconsistent SWF files
+	* libswfdec/swfdec_sound.c: replace SoundChunk with Buffer
+	* libswfdec/swfdec_sound.h: same
+	* libswfdec/swfdec_sprite.c: record actions.  Fix clipping
+	rendering and parsing.
+	* libswfdec/swfdec_sprite.h: Add action buffer array.
+	* player/swf_play.c: minor fixes
+	* test/dump.c: dump more information
+
 2004-09-22  David Schleef  <ds@schleef.org>
 
 	* libswfdec/jpeg/bits.h: reindent

@@ -189,8 +189,8 @@ struct swf_sound_struct{
 
 	int n_samples;
 
-	unsigned char tmpbuf[1000];
-	int tmpbuflen;
+	void *sound_buf;
+	int sound_len;
 };
 
 struct swf_button_struct{
@@ -245,6 +245,7 @@ struct swf_svp_render_struct{
 };
 
 swf_state_t *swf_init(void);
+swf_state_t *swfdec_decoder_new(void);
 int swf_addbits(swf_state_t *s, unsigned char *bits, int len);
 int swf_parse(swf_state_t *s);
 int swf_parse_header(swf_state_t *s);

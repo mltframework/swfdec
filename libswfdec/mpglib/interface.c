@@ -131,7 +131,7 @@ int mpglib_decoder_decode(MpglibDecoder *mp,char *in,int isize,char *out,
 	gmp = mp;
 
 	if(osize < 4608) {
-		fprintf(stderr,"Too small out space\n");
+		fprintf(stderr,"Too small out space (wanted 4608, got %d)\n",osize);
 		return MPGLIB_ERR;
 	}
 

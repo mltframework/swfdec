@@ -17,15 +17,22 @@ void adpcm_decode(swf_state_t *s,swf_object_t *obj);
 void mp3_decode(swf_object_t *obj)
 {
 	MpglibDecoder *mp;
-	int size;
+	int n;
+	int offset = 0;
 	int ret;
 	swf_sound_t *sound = obj->priv;
 
 	mp = mpglib_decoder_new();
-	do{
-		ret = mpglib_decoder_decode(&mp, sound->orig_data,
-			sound->orig_len, sound->tmpbuf, 1000, &size);
-	}while(ret==MPGLIB_OK);
+	ret = mpglib_decoder_decode(mp, (void *)sound->orig_data,
+		sound->orig_len, sound->sound_buf, sound->sound_len, &n);
+	printf("decoding %d bytes\n",sound->orig_len);
+	while(ret==MPGLIB_OK){
+		offset += n;
+		ret = mpglib_decoder_decode(mp, NULL, 0,
+			sound->sound_buf,
+			sound->sound_len, &n);
+	}
+	printf("total decoded %d\n",offset + n);
 }
 
 int tag_func_define_sound(swf_state_t *s)
@@ -41,6 +48,7 @@ int tag_func_define_sound(swf_state_t *s)
 	int n_samples;
 	swf_object_t *obj;
 	swf_sound_t *sound;
+	int len;
 
 	id = get_u16(b);
 	format = getbits(b,4);
@@ -60,10 +68,14 @@ int tag_func_define_sound(swf_state_t *s)
 	switch(format){
 	case 2:
 		/* unknown */
-		get_u16(b);
+		len = get_u16(b);
+		printf("len = %d\n",len);
 
 		sound->orig_data = b->ptr;
 		sound->orig_len = s->tag_len - 9;
+
+		sound->sound_len = 10000;
+		sound->sound_buf = malloc(sound->sound_len);
 
 		mp3_decode(obj);
 

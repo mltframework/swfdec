@@ -662,7 +662,7 @@ void swf_render_frame(swf_state_t *s)
 	}
 
 	if(!s->sound_buffer){
-		s->sound_len = 4*2*rint(44100/s->rate);
+		s->sound_len = 4*2*44100;
 		s->sound_buffer = malloc(s->sound_len);
 		s->sound_offset = 0;
 

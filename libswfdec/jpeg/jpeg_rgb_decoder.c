@@ -1,6 +1,7 @@
 
 #include <glib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "jpeg_rgb_internal.h"
 #include "jpeg.h"

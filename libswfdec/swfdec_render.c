@@ -50,10 +50,11 @@ swfdec_render_iterate (SwfdecDecoder *s)
       s->render->frame_index++;
       if (s->render->frame_index >= s->n_frames) {
         SWFDEC_WARNING ("iterating past end");
-        /* FIXME */
-        //return FALSE;
+        return FALSE;
+#if 0
         s->stopped = TRUE;
         s->render->frame_index = s->n_frames - 1;
+#endif
       }
     }
   }

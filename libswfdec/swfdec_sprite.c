@@ -312,23 +312,27 @@ tag_func_define_sprite (SwfdecDecoder * s)
     }
 
     func = swfdec_decoder_get_tag_func (tag);
+    if (func == NULL) {
+      SWFDEC_WARNING ("tag function not implemented for %d %s",
+          tag, swfdec_decoder_get_tag_name (tag));
+    } else {
+      endptr = parse.ptr + tag_len;
+      s->parse_sprite = sprite;
+      ret = func (s);
+      s->parse_sprite = NULL;
 
-    endptr = parse.ptr + tag_len;
-    s->parse_sprite = sprite;
-    ret = func (s);
-    s->parse_sprite = NULL;
-
-    swfdec_bits_syncbits (bits);
-    if (tag_len > 0) {
-      if (s->b.ptr < endptr) {
-        SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
+      swfdec_bits_syncbits (bits);
+      if (tag_len > 0) {
+        if (s->b.ptr < endptr) {
+          SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
+        }
+        if (s->b.ptr > endptr) {
+          SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
+        }
       }
-      if (s->b.ptr > endptr) {
-        SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
-      }
-    }
     
-    parse.ptr = endptr;
+      parse.ptr = endptr;
+    }
 
     if (buffer) swfdec_buffer_unref (buffer);
 

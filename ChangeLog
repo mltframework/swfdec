@@ -1,3 +1,11 @@
+2004-10-07  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swf.c: disable DefineMorphShape
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate): return FALSE
+	if we know the animation has ended.
+	* libswfdec/swfdec_sprite.c: (tag_func_define_sprite): fix parsing
+	to handle changes in tag lookup function.
+
 2004-10-05  David Schleef  <ds@schleef.org>
 
 	* Makefile.am: distcheck fixes

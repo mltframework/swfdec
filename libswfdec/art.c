@@ -448,3 +448,65 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
   data->buf += data->rowstride;
 }
 
+
+inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n)
+{
+	if(alpha>0xff)alpha=0xff;
+	memset(buf, alpha, n);
+}
+
+void
+art_grey_svp_alpha_callback (void *callback_data, int y,
+			    int start, ArtSVPRenderAAStep *steps, int n_steps)
+{
+  struct swf_svp_render_struct *data = callback_data;
+  art_u8 *linebuf;
+  int run_x0, run_x1;
+  art_u32 running_sum = start;
+  int x0, x1;
+  int k;
+  int alpha;
+
+  linebuf = data->buf;
+  x0 = data->x0;
+  x1 = data->x1;
+
+  if (n_steps > 0)
+    {
+      run_x1 = steps[0].x;
+      if (run_x1 > x0)
+	{
+	  alpha = running_sum >> 16;
+	  art_grey_run_alpha (linebuf, alpha, run_x1 - x0);
+	}
+
+      for (k = 0; k < n_steps - 1; k++)
+	{
+	  running_sum += steps[k].delta;
+	  run_x0 = run_x1;
+	  run_x1 = steps[k + 1].x;
+	  if (run_x1 > run_x0)
+	    {
+	      alpha = running_sum >> 16;
+		art_grey_run_alpha (linebuf + (run_x0 - x0),
+				   alpha, run_x1 - run_x0);
+	    }
+	}
+      running_sum += steps[k].delta;
+      if (x1 > run_x1)
+	{
+	  alpha = running_sum >> 16;
+	  if (alpha)
+	    art_grey_run_alpha (linebuf + (run_x1 - x0),
+			       alpha, x1 - run_x1);
+	}
+    }
+  else
+    {
+      alpha = running_sum >> 16;
+      art_grey_run_alpha (linebuf, alpha, x1 - x0);
+    }
+
+  data->buf += data->rowstride;
+}
+

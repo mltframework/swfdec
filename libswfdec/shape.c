@@ -687,6 +687,7 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		vpath = art_vpath_cat(vpath0,vpath1);
 		art_vpath_bbox_irect(vpath, &layervec->rect);
 		layervec->svp = art_svp_from_vpath (vpath);
+		art_svp_make_convex(layervec->svp);
 		art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
 
 		art_free(bpath0);

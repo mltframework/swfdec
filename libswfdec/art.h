@@ -30,6 +30,7 @@ ArtBpath *art_bpath_cat(ArtBpath *a, ArtBpath *b);
 ArtVpath *art_vpath_cat(ArtVpath *a, ArtVpath *b);
 ArtVpath *art_vpath_reverse(ArtVpath *a);
 ArtVpath *art_vpath_reverse_free(ArtVpath *a);
+void art_svp_make_convex(ArtSVP *svp);
 void art_rgb_svp_alpha2 (const ArtSVP *svp, int x0, int y0,
 	int x1, int y1, art_u32 rgba, art_u8 *buf, int rowstride,
 	ArtAlphaGamma *alphagamma);

@@ -214,6 +214,7 @@ struct swf_text_struct{
 
 struct swf_image_struct{
 	int width, height;
+	int rowstride;
 	char *image_data;
 };
 

@@ -1,8 +1,8 @@
-swfdec (0.1.1-20021028-1) unstable; urgency=low
+swfdec (0.1.2-1) unstable; urgency=low
 
-  * snapshot
+  * new release
 
- -- David Schleef <ds@schleef.org>  Mon, 28 Oct 2002 13:27:59 -0800
+ -- David Schleef <ds@schleef.org>  Fri, 01 Nov 2002 14:56:46 -0800
 
 libswfdec (0.1.1-1) unstable; urgency=low
 

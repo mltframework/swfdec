@@ -22,8 +22,8 @@ struct jpeg_rgb_decoder_struct {
 	struct{
 		unsigned char *image;
 		int rowstride;
-		int height;
-		int width;
+		int h_subsample;
+		int v_subsample;
 	}component[3];
 };
 

@@ -78,6 +78,8 @@ static struct jpeg_marker_struct jpeg_markers[] = {
 		"start of scan" },
 	{ 0xdb, jpeg_decoder_define_quant_table,
 		"define quantization table" },
+	{ 0xe0, jpeg_decoder_application0,
+		"application segment 0" },
 
 	{ 0x00, NULL,		"illegal" },
 	{ 0x01, NULL,		"TEM" },
@@ -105,14 +107,64 @@ static struct jpeg_marker_struct jpeg_markers[] = {
 	{ 0xde, NULL,		"define hierarchical progression" },
 	{ 0xdf, NULL,		"expand reference component(s)" },
 
-	{ 0xe0, NULL,		"application segment 0" },
-
 	{ 0xf0, NULL,		"JPEG extension 0" },
 	{ 0xfe, NULL,		"comment" },
 	
 	{ 0x00, NULL,		"illegal" },
 };
 static const int n_jpeg_markers = sizeof(jpeg_markers)/sizeof(jpeg_markers[0]);
+
+static unsigned char std_tables[] = {
+0x00,0x01,0x05,0x01,0x01,0x01,0x01,0x01,
+0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,
+	
+0x00,0x02,0x01,0x03,0x03,0x02,0x04,0x03,
+0x05,0x05,0x04,0x04,0x00,0x00,0x01,0x7d,
+0x01,0x02,0x03,0x00,0x04,0x11,0x05,0x12,0x21,0x31,
+0x41,0x06,0x13,0x51,0x61,0x07,0x22,0x71,0x14,0x32,
+0x81,0x91,0xa1,0x08,0x23,0x42,0xb1,0xc1,0x15,0x52,
+0xd1,0xf0,0x24,0x33,0x62,0x72,0x82,0x09,0x0a,0x16,
+0x17,0x18,0x19,0x1a,0x25,0x26,0x27,0x28,0x29,0x2a,
+0x34,0x35,0x36,0x37,0x38,0x39,0x3a,0x43,0x44,0x45,
+0x46,0x47,0x48,0x49,0x4a,0x53,0x54,0x55,0x56,0x57,
+0x58,0x59,0x5a,0x63,0x64,0x65,0x66,0x67,0x68,0x69,
+0x6a,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x83,
+0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x92,0x93,0x94,
+0x95,0x96,0x97,0x98,0x99,0x9a,0xa2,0xa3,0xa4,0xa5,
+0xa6,0xa7,0xa8,0xa9,0xaa,0xb2,0xb3,0xb4,0xb5,0xb6,
+0xb7,0xb8,0xb9,0xba,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,
+0xc8,0xc9,0xca,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,
+0xd9,0xda,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,
+0xe9,0xea,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,
+0xf9,0xfa,
+
+0x00,0x03,0x01,0x01,0x01,0x01,0x01,0x01,
+0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,
+0x00,0x01, 0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,
+0x0a,0x0b,
+
+0x00,0x02,0x01,0x02,0x04,0x04,0x03,0x04,
+0x07,0x05,0x04,0x04,0x00,0x01,0x02,0x77,
+0x00,0x01,0x02,0x03,0x11,0x04,0x05,0x21,0x31,0x06,
+0x12,0x41,0x51,0x07,0x61,0x71,0x13,0x22,0x32,0x81,
+0x08,0x14,0x42,0x91,0xa1,0xb1,0xc1,0x09,0x23,0x33,
+0x52,0xf0,0x15,0x62,0x72,0xd1,0x0a,0x16,0x24,0x34,
+0xe1,0x25,0xf1,0x17,0x18,0x19,0x1a,0x26,0x27,0x28,
+0x29,0x2a,0x35,0x36,0x37,0x38,0x39,0x3a,0x43,0x44,
+0x45,0x46,0x47,0x48,0x49,0x4a,0x53,0x54,0x55,0x56,
+0x57,0x58,0x59,0x5a,0x63,0x64,0x65,0x66,0x67,0x68,
+0x69,0x6a,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,
+0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x92,
+0x93,0x94,0x95,0x96,0x97,0x98,0x99,0x9a,0xa2,0xa3,
+0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xb2,0xb3,0xb4,
+0xb5,0xb6,0xb7,0xb8,0xb9,0xba,0xc2,0xc3,0xc4,0xc5,
+0xc6,0xc7,0xc8,0xc9,0xca,0xd2,0xd3,0xd4,0xd5,0xd6,
+0xd7,0xd8,0xd9,0xda,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,
+0xe8,0xe9,0xea,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,
+0xf9,0xfa,
+};
+
 
 /* misc helper function declarations */
 
@@ -123,6 +175,7 @@ static void dequant8x8_s16(short *dest, short *src, short *mult);
 static void addconst8x8_s16(short *dest, short *src, int c);
 static void divconst8x8_s16(short *dest, short *src, int c);
 static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
+static void huffman_table_load_std_jpeg(JpegDecoder *dec);
 
 
 int jpeg_decoder_soi(JpegDecoder *dec, bits_t *bits)
@@ -140,6 +193,8 @@ int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, bits_t *bits)
 	int i;
 	int length;
 	int image_size;
+	int rowstride;
+	int max_h_oversample = 0, max_v_oversample = 0;
 
 	JPEG_DEBUG(0,"start of frame (baseline DCT)\n");
 
@@ -157,19 +212,36 @@ int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, bits_t *bits)
 
 	for(i=0;i<dec->n_components;i++){
 		dec->components[i].id = get_u8(bits);
-		dec->components[i].h_subsample = getbits(bits,4);
-		dec->components[i].v_subsample = getbits(bits,4);
+		dec->components[i].h_oversample = getbits(bits,4);
+		dec->components[i].v_oversample = getbits(bits,4);
 		dec->components[i].quant_table = get_u8(bits);
 
-		JPEG_DEBUG(0,"[%d] id=%d h_subsample=%d v_subsample=%d quant_table=%d\n",
+		JPEG_DEBUG(0,"[%d] id=%d h_oversample=%d v_oversample=%d quant_table=%d\n",
 			i,
 			dec->components[i].id,
-			dec->components[i].h_subsample,
-			dec->components[i].v_subsample,
+			dec->components[i].h_oversample,
+			dec->components[i].v_oversample,
 			dec->components[i].quant_table);
 
-		dec->components[i].rowstride = (dec->width + 7)&~7;
-		image_size = ((dec->width + 7)&~7) * ((dec->height + 7)&~7);
+		max_h_oversample = MAX(max_h_oversample,
+			dec->components[i].h_oversample);
+		max_v_oversample = MAX(max_v_oversample,
+			dec->components[i].v_oversample);
+	}
+	dec->width_blocks = (dec->width + 8*max_h_oversample - 1)/(8*max_h_oversample);
+	dec->height_blocks = (dec->height + 8*max_v_oversample - 1)/(8*max_v_oversample);
+	for(i=0;i<dec->n_components;i++){
+		dec->components[i].h_subsample = max_h_oversample /
+			dec->components[i].h_oversample;
+		dec->components[i].v_subsample = max_v_oversample /
+			dec->components[i].v_oversample;
+
+		rowstride = dec->width_blocks * 8 * max_h_oversample /
+			dec->components[i].h_subsample;
+		image_size = rowstride * 
+			(dec->height_blocks * 8 * max_v_oversample /
+			 dec->components[i].v_subsample);
+		dec->components[i].rowstride = rowstride;
 		dec->components[i].image = malloc(image_size);
 	}
 
@@ -241,6 +313,38 @@ void generate_code_table(int *huffsize)
 
 }
 
+HuffmanTable *huffman_table_new_jpeg(bits_t *bits)
+{
+	int total;
+	int huffsize[16];
+	int i,j,k;
+	HuffmanTable *table;
+	unsigned int code;
+
+	table = huffman_table_new();
+
+	total = 0;
+	for(i=0;i<16;i++){
+		huffsize[i] = get_u8(bits);
+		total += huffsize[i];
+	}
+
+	code = 0;
+	k = 0;
+	for(i=0;i<16;i++){
+		for(j=0;j<huffsize[i];j++){
+			huffman_table_add(table, code, i+1, get_u8(bits));
+			code++;
+			k++;
+		}
+		code <<= 1;
+	}
+
+	huffman_table_dump(table);
+
+	return table;
+}
+
 int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits)
 {
 	int length;
@@ -310,7 +414,7 @@ int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits)
 	JPEG_DEBUG(0,"start of scan\n");
 
 	length = get_be_u16(bits);
-	//bits->end = ptr+length;
+	bits->end = bits->ptr + length - 2;
 	JPEG_DEBUG(0,"length=%d\n",length);
 
 	n_components = get_u8(bits);
@@ -333,18 +437,19 @@ int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits)
 		ac_table = getbits(bits,4);
 		index = jpeg_decoder_find_component_by_id(dec, component_id);
 
-		h_subsample = dec->components[index].h_subsample;
-		v_subsample = dec->components[index].v_subsample;
+		h_subsample = dec->components[index].h_oversample;
+		v_subsample = dec->components[index].v_oversample;
 		quant_index = dec->components[index].quant_table;
 
-		for(y=0;y<dec->components[index].v_subsample;y++){
-		for(x=0;x<dec->components[index].h_subsample;x++){
+		for(y=0;y<v_subsample;y++){
+		for(x=0;x<h_subsample;x++){
 			dec->scan_list[n].component_index = index;
 			dec->scan_list[n].dc_table = dc_table;
 			dec->scan_list[n].ac_table = ac_table;
 			dec->scan_list[n].quant_table = quant_index;
 			dec->scan_list[n].x = x;
 			dec->scan_list[n].y = y;
+			dec->scan_list[n].offset = y*8*dec->components[index].rowstride + x*8;
 			n++;
 		}}
 
@@ -487,11 +592,10 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 		dump_block8x8_s16(block2);
 
 		ptr = dec->components[component_index].image +
-			x*dec->components[component_index].h_subsample +
-			dec->scan_list[i].x * 8 +
-			dec->components[component_index].rowstride *
-				(y*dec->components[component_index].v_subsample 
-				 + dec->scan_list[i].y * 8);
+			x*dec->components[component_index].h_oversample +
+			dec->scan_list[i].offset +
+			dec->components[component_index].rowstride * y *
+				dec->components[component_index].v_oversample;
 
 		clipconv8x8_u8_s16(ptr,
 			dec->components[component_index].rowstride,
@@ -530,16 +634,48 @@ int jpeg_decoder_addbits(JpegDecoder *dec, unsigned char *data, unsigned int len
 	return 0;
 }
 
-int jpeg_decoder_get_component(JpegDecoder *dec, int id,
-	unsigned char **image, int *rowstride, int *width, int *height)
+int jpeg_decoder_get_image_size(JpegDecoder *dec, int *width, int *height)
+{
+	if(width) *width = dec->width;
+	if(height) *height = dec->height;
+
+	return 0;
+}
+
+int jpeg_decoder_get_component_ptr(JpegDecoder *dec, int id,
+	unsigned char **image, int *rowstride)
 {
 	int i;
 
 	i = jpeg_decoder_find_component_by_id(dec,id);
 	if(image)*image = dec->components[i].image;
 	if(rowstride)*rowstride = dec->components[i].rowstride;
-	if(width)*width = dec->width;
-	if(height)*height = dec->height;
+
+	return 0;
+}
+
+int jpeg_decoder_get_component_size(JpegDecoder *dec, int id,
+	int *width, int *height)
+{
+	int i;
+
+	/* subsampling sizes are rounded up */
+
+	i = jpeg_decoder_find_component_by_id(dec,id);
+	if(width) *width = (dec->width-1) / dec->components[i].h_subsample + 1;
+	if(height) *height = (dec->height-1) / dec->components[i].v_subsample + 1;
+
+	return 0;
+}
+
+int jpeg_decoder_get_component_subsampling(JpegDecoder *dec, int id,
+	int *h_subsample, int *v_subsample)
+{
+	int i;
+
+	i = jpeg_decoder_find_component_by_id(dec,id);
+	if(h_subsample) *h_subsample = dec->components[i].h_subsample;
+	if(v_subsample) *v_subsample = dec->components[i].v_subsample;
 
 	return 0;
 }
@@ -593,7 +729,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level = 0;
+int jpeg_decoder_verbose_level = 1;
 
 void jpeg_debug(int n, const char *format, ... )
 {
@@ -601,9 +737,9 @@ void jpeg_debug(int n, const char *format, ... )
 
 	if(n>jpeg_decoder_verbose_level)return;
 
-	printf("JPEG_DEBUG: ");
+	fprintf(stderr,"JPEG_DEBUG: ");
 	va_start(args, format);
-	vprintf(format, args);
+	vfprintf(stderr,format, args);
 	va_end(args);
 }
 
@@ -661,3 +797,16 @@ static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src)
 	}
 }
 
+static void huffman_table_load_std_jpeg(JpegDecoder *dec)
+{
+	bits_t b, *bits = &b;
+	
+	bits->ptr = std_tables;
+	bits->idx = 0;
+	bits->end = std_tables + sizeof(std_tables);
+
+	dec->dc_huff_table[0] = huffman_table_new_jpeg(bits);
+	dec->ac_huff_table[0] = huffman_table_new_jpeg(bits);
+	dec->dc_huff_table[1] = huffman_table_new_jpeg(bits);
+	dec->ac_huff_table[1] = huffman_table_new_jpeg(bits);
+}

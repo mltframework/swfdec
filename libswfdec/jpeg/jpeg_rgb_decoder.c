@@ -1,5 +1,6 @@
 
 #include <glib.h>
+#include <stdio.h>
 
 #include "jpeg_rgb_internal.h"
 #include "jpeg.h"
@@ -38,30 +39,24 @@ int jpeg_rgb_decoder_get_image(JpegRGBDecoder *rgbdec,
 {
 	int i;
 
-	rgbdec->width = 0;
-	rgbdec->height = 0;
+	jpeg_decoder_get_image_size(rgbdec->dec, &rgbdec->width,
+		&rgbdec->height);
 	for(i=0;i<3;i++){
-		jpeg_decoder_get_component(rgbdec->dec, i+1,
+		jpeg_decoder_get_component_ptr(rgbdec->dec, i+1,
 			&rgbdec->component[i].image,
-			&rgbdec->component[i].rowstride,
-			&rgbdec->component[i].width,
-			&rgbdec->component[i].height);
-		if(i>0){
-			rgbdec->component[i].width /= 2;
-			rgbdec->component[i].height /= 2;
+			&rgbdec->component[i].rowstride);
+		jpeg_decoder_get_component_subsampling(rgbdec->dec, i+1,
+			&rgbdec->component[i].h_subsample,
+			&rgbdec->component[i].v_subsample);
+		if(rgbdec->component[i].h_subsample>1){
+			upscale_x(rgbdec,i);
 		}
-		rgbdec->width = MAX(rgbdec->width,
-			rgbdec->component[i].width);
-		rgbdec->height = MAX(rgbdec->height,
-			rgbdec->component[i].height);
+		if(rgbdec->component[i].v_subsample>1){
+			upscale_y(rgbdec,i);
+		}
 	}
 
 	rgbdec->image = g_malloc(rgbdec->width * rgbdec->height * 4);
-
-	upscale_x(rgbdec,1);
-	upscale_x(rgbdec,2);
-	upscale_y(rgbdec,1);
-	upscale_y(rgbdec,2);
 
 	convert(rgbdec);
 
@@ -88,13 +83,13 @@ static void convert(JpegRGBDecoder *rgbdec)
 	for(y=0;y<rgbdec->height;y++){
 		for(x=0;x<rgbdec->width;x++){
 #if 1
-			rgbp[0] = yp[x] + 1.402*(vp[x]-128);
-			rgbp[1] = yp[x] - 0.34414*(up[x]-128) - 0.71414*(vp[x]-128);
-			rgbp[2] = yp[x] + 1.772*(up[x]-128);
+			rgbp[0] = CLAMP(yp[x] + 1.402*(vp[x]-128),0,255);
+			rgbp[1] = CLAMP(yp[x] - 0.34414*(up[x]-128) - 0.71414*(vp[x]-128),0,255);
+			rgbp[2] = CLAMP(yp[x] + 1.772*(up[x]-128),0,255);
 #else
-			rgbp[0] = yp[x];
-			rgbp[1] = yp[x];
-			rgbp[2] = yp[x];
+			rgbp[0] = up[x];
+			rgbp[1] = up[x];
+			rgbp[2] = up[x];
 #endif
 			rgbp[3] = 0;
 			rgbp+=4;
@@ -112,11 +107,11 @@ static void upscale_y(JpegRGBDecoder *rgbdec, int i)
 	int new_width;
 	int y;
 
-	new_height = rgbdec->component[i].height * 2;
-	new_width = rgbdec->component[i].width;
+	new_height = rgbdec->height;
+	new_width = rgbdec->width;
 	new_image = g_malloc(new_height * new_width);
 
-	for(y=0;y<rgbdec->component[i].height; y++){
+	for(y=0;y<new_height/rgbdec->component[i].v_subsample; y++){
 		memcpy(new_image + new_width*y*2,
 			rgbdec->component[i].image +
 			rgbdec->component[i].rowstride * y,
@@ -128,8 +123,7 @@ static void upscale_y(JpegRGBDecoder *rgbdec, int i)
 	}
 
 	rgbdec->component[i].image = new_image;
-	rgbdec->component[i].width = new_width;
-	rgbdec->component[i].height = new_height;
+	rgbdec->component[i].v_subsample = 1;
 	rgbdec->component[i].rowstride = new_width;
 }
 
@@ -141,14 +135,14 @@ static void upscale_x(JpegRGBDecoder *rgbdec, int i)
 	int x,y;
 	unsigned char *inp, *outp;
 
-	new_height = rgbdec->component[i].height;
-	new_width = rgbdec->component[i].width * 2;
+	new_height = rgbdec->height;
+	new_width = rgbdec->width;
 	new_image = g_malloc(new_height * new_width);
 
 	outp = new_image;
 	inp = rgbdec->component[i].image;
-	for(y=0;y<rgbdec->component[i].height; y++){
-		for(x=0;x<rgbdec->component[i].width;x++){
+	for(y=0;y<new_height/rgbdec->component[i].v_subsample; y++){
+		for(x=0;x<new_width;x+=2){
 			outp[x*2] = inp[x];
 			outp[x*2+1] = inp[x];
 		}
@@ -157,8 +151,7 @@ static void upscale_x(JpegRGBDecoder *rgbdec, int i)
 	}
 
 	rgbdec->component[i].image = new_image;
-	rgbdec->component[i].width = new_width;
-	rgbdec->component[i].height = new_height;
+	rgbdec->component[i].h_subsample = 1;
 	rgbdec->component[i].rowstride = new_width;
 }
 

@@ -146,7 +146,6 @@ static void pfork(PluginInstance *this)
 		argv[argc++] = "swf_play";
 		argv[argc++] = "--xid";
 		argv[argc++] = xid_str;
-#if 0
 		if(this->width){
 			sprintf(width_str,"%d",this->width);
 			argv[argc++] = "--width";
@@ -157,7 +156,6 @@ static void pfork(PluginInstance *this)
 			argv[argc++] = "--height";
 			argv[argc++] = height_str;
 		}
-#endif
 		argv[argc++] = "-";
 		argv[argc] = NULL;
 

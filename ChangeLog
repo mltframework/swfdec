@@ -1,3 +1,8 @@
+2004-11-16  David Schleef  <ds@schleef.org>
+
+	* libswfdec/Makefile.am: put headers in /usr/include/swfdec-0.3
+	* swfdec.pc.in: same
+
 2004-11-15  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_render.c: (swfdec_render_get_image): Fix crasher

@@ -202,7 +202,7 @@ get_actions (SwfdecDecoder * s, SwfdecBits * bits)
       }
     }
     if (i == n_actions) {
-      SWFDEC_WARNING ("  [%02x] *** unknown action", action);
+      SWFDEC_WARNING ("  [%02x] unknown action", action);
     }
 
 #if 0
@@ -235,7 +235,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
   //int index;
   //int skip_count;
   int i;
-  int skip_one = FALSE;
+  int skip = 0;
 
   SWFDEC_LOG("swfdec_action_script_execute %p %p %d", buffer,
       buffer->data, buffer->length);
@@ -258,26 +258,26 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
 
     for (i = 0; i < n_actions; i++) {
       if (actions[i].action == action) {
-	SWFDEC_WARNING ("  [%02x] %s", action, actions[i].name);
+	SWFDEC_INFO ("  [%02x] %s", action, actions[i].name);
 	break;
       }
     }
     if (i == n_actions) {
-      SWFDEC_WARNING ("  [%02x] *** unknown action", action);
+      SWFDEC_WARNING ("  [%02x] unknown action", action);
     }
 
-    if (skip_one) {
-      skip_one = FALSE;
+    if (skip > 0) {
+      skip--;
     } else {
       if (action == 0x07) { /* stop */
-        s->stopped = TRUE;
+        /* FIXME */
+        //s->stopped = TRUE;
       }
       if (action == 0x81) { /* goto frame */
         int frame;
 
-        s->stopped = TRUE;
         frame = swfdec_bits_get_u16(&bits);
-        SWFDEC_WARNING ("goto frame %d\n", frame);
+        SWFDEC_INFO ("goto frame %d\n", frame);
         bits.ptr -= 2;
 
         s->render->frame_index = frame - 1;
@@ -289,10 +289,14 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
         int frame;
 
         frame = swfdec_bits_get_u16(&bits);
-        SWFDEC_WARNING ("wait for frame %d\n", frame);
-        bits.ptr -= 2;
-
-        skip_one = FALSE;
+        skip = swfdec_bits_get_u8 (&bits);
+        SWFDEC_INFO ("wait for frame %d\n", frame);
+        bits.ptr -= 3;
+         
+        if (TRUE) {
+          /* frame is always loaded */
+          skip = 0;
+        }
       }
     }
 

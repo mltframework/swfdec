@@ -50,7 +50,10 @@ swfdec_render_iterate (SwfdecDecoder *s)
       s->render->frame_index++;
       if (s->render->frame_index >= s->n_frames) {
         SWFDEC_WARNING ("iterating past end");
-        return FALSE;
+        /* FIXME */
+        //return FALSE;
+        s->stopped = TRUE;
+        s->render->frame_index = s->n_frames - 1;
       }
     }
   }
@@ -197,8 +200,9 @@ swfdec_render_get_audio (SwfdecDecoder *s)
       sound = SWFDEC_SOUND(s->stream_sound_obj);
 
       n = chunk->length;
-      if (sound->tmpbuflen + n > 1024) {
-        n = 1024 - sound->tmpbuflen;
+      if (sound->tmpbuflen + n > 2048) {
+        n = 2048 - sound->tmpbuflen;
+        SWFDEC_WARNING ("clipping audio");
       }
       memcpy (sound->tmpbuf + sound->tmpbuflen, chunk->data, n);
       sound->tmpbuflen += n;

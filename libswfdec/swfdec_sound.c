@@ -459,9 +459,13 @@ swfdec_sound_mp3_decode (SwfdecSound *sound)
     if (ret == -1 && stream.error == MAD_ERROR_BUFLEN) {
       break;
     }
+    if (ret == -1 && stream.error == MAD_ERROR_LOSTSYNC) {
+      mad_stream_sync(&stream);
+      continue;
+    }
     if (ret == -1) {
       SWFDEC_ERROR ("stream error 0x%04x\n", stream.error);
-      return;
+      break;
     }
 
     mad_synth_frame (&synth, &frame);
@@ -483,6 +487,10 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
     ret = mad_frame_decode (&sound->frame, &sound->stream);
     if (ret == -1 && sound->stream.error == MAD_ERROR_BUFLEN) {
       break;
+    }
+    if (ret == -1 && sound->stream.error == MAD_ERROR_LOSTSYNC) {
+      mad_stream_sync(&sound->stream);
+      continue;
     }
     if (ret == -1) {
       SWFDEC_ERROR("stream error 0x%04x", sound->stream.error);

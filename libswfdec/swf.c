@@ -206,26 +206,30 @@ swfdec_decoder_parse (SwfdecDecoder * s)
           endptr = NULL;
         }
         func = swfdec_decoder_get_tag_func (tag);
+        if (func == NULL) {
+          SWFDEC_WARNING ("tag function not implemented for %d %s",
+              tag, swfdec_decoder_get_tag_name (tag));
+        } else {
+          s->parse_sprite = s->main_sprite;
+          ret = func (s);
+          s->parse_sprite = NULL;
+          //if(ret != SWF_OK)break;
 
-	s->parse_sprite = s->main_sprite;
-	ret = func (s);
-	s->parse_sprite = NULL;
-	//if(ret != SWF_OK)break;
-
-	swfdec_bits_syncbits (&s->b);
-	if (s->b.ptr < endptr) {
-	  SWFDEC_WARNING ("early finish (%d bytes) at %d, tag %d %s, length %d",
-              endptr - s->b.ptr,
-              swfdec_buffer_queue_get_offset(s->input_queue), tag,
-              swfdec_decoder_get_tag_name (tag), tag_len);
-	  //dumpbits (&s->b);
-	}
-	if (s->b.ptr > endptr) {
-	  SWFDEC_WARNING ("parse_overrun (%d bytes) at %d, tag %d %s, length %d",
-              s->b.ptr - endptr,
-              swfdec_buffer_queue_get_offset(s->input_queue), tag,
-              swfdec_decoder_get_tag_name (tag), tag_len);
-	}
+          swfdec_bits_syncbits (&s->b);
+          if (s->b.ptr < endptr) {
+            SWFDEC_WARNING ("early finish (%d bytes) at %d, tag %d %s, length %d",
+                endptr - s->b.ptr,
+                swfdec_buffer_queue_get_offset(s->input_queue), tag,
+                swfdec_decoder_get_tag_name (tag), tag_len);
+            //dumpbits (&s->b);
+          }
+          if (s->b.ptr > endptr) {
+            SWFDEC_WARNING ("parse_overrun (%d bytes) at %d, tag %d %s, length %d",
+                s->b.ptr - endptr,
+                swfdec_buffer_queue_get_offset(s->input_queue), tag,
+                swfdec_decoder_get_tag_name (tag), tag_len);
+          }
+        }
 
 	if (tag == 0) {
 	  s->state = SWF_STATE_EOF;
@@ -677,7 +681,7 @@ struct tag_func_struct tag_funcs[] = {
   [ST_GENERATORTEXT] = {"GeneratorText", NULL, 0},
   [ST_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, 0},
   [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", NULL, 0},
-  [ST_DEFINEMORPHSHAPE] = {"DefineMorphShape", NULL, 0},
+  [ST_DEFINEMORPHSHAPE] = {"DefineMorphShape", tag_define_morph_shape, 0},
   [ST_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
   [ST_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
   [ST_GENERATOR3] = {"Generator3", NULL, 0},
@@ -715,7 +719,7 @@ swfdec_decoder_get_tag_func (int tag)
     }
   }
 
-  return tag_func_ignore;
+  return NULL;
 }
 
 int

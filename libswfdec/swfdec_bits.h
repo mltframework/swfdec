@@ -34,6 +34,7 @@ unsigned int swfdec_bits_get_color (SwfdecBits * bits);
 unsigned int swfdec_bits_get_rgba (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_gradient (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_gradient_rgba (SwfdecBits * bits);
+SwfdecGradient * swfdec_bits_get_morph_gradient (SwfdecBits * bits);
 void swfdec_bits_get_fill_style (SwfdecBits * bits);
 void swfdec_bits_get_line_style (SwfdecBits * bits);
 void swfdec_bits_get_rect (SwfdecBits * bits, int *rect);

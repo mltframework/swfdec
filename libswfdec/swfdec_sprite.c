@@ -121,12 +121,12 @@ SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
 
     /* FIXME need to clip layers instead */
     if (child_seg->clip_depth) {
-      SWFDEC_WARNING ("clip_depth=%d", child_seg->clip_depth);
+      SWFDEC_INFO ("clip_depth=%d", child_seg->clip_depth);
       clip_depth = child_seg->clip_depth;
     }
     
     if (clip_depth && child_seg->depth <= clip_depth) {
-      SWFDEC_WARNING ("clipping depth=%d", child_seg->clip_depth);
+      SWFDEC_INFO ("clipping depth=%d", child_seg->clip_depth);
       continue;
     }
 
@@ -136,6 +136,8 @@ SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
       if (!SWFDEC_IS_SPRITE (child_object)) {
         SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
             child_object);
+      } else {
+        SWFDEC_WARNING ("not rendering sprite inside sprite");
       }
     } else {
       SWFDEC_DEBUG ("could not find object (id = %d)", child_seg->id);

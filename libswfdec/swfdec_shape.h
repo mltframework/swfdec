@@ -74,6 +74,7 @@ GType swfdec_shape_get_type (void);
 void swfdec_shape_free (SwfdecObject * object);
 void _swfdec_shape_free (SwfdecShape * shape);
 int tag_func_define_shape (SwfdecDecoder * s);
+int tag_define_morph_shape (SwfdecDecoder * s);
 SwfdecShapeVec *swf_shape_vec_new (void);
 int tag_define_shape (SwfdecDecoder * s);
 int tag_define_shape_3 (SwfdecDecoder * s);

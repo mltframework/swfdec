@@ -46,7 +46,7 @@ struct _SwfdecSound {
   struct mad_stream stream;
   struct mad_frame frame;
   struct mad_synth synth;
-  unsigned char tmpbuf[1024];
+  unsigned char tmpbuf[2048];
   int tmpbuflen;
 #else
   void *mp;

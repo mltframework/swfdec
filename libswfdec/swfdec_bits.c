@@ -308,6 +308,29 @@ swfdec_bits_get_gradient_rgba (SwfdecBits * bits)
   return grad;
 }
 
+SwfdecGradient *
+swfdec_bits_get_morph_gradient (SwfdecBits * bits)
+{
+  SwfdecGradient *grad;
+  int n_gradients;
+  int i;
+  int end_ratio;
+  unsigned int end_color;
+
+  swfdec_bits_syncbits (bits);
+  n_gradients = swfdec_bits_getbits (bits, 8);
+  grad = g_malloc (sizeof (SwfdecGradient) +
+      sizeof (SwfdecGradientEntry) * (n_gradients - 1));
+  grad->n_gradients = n_gradients;
+  for (i = 0; i < n_gradients; i++) {
+    grad->array[i].ratio = swfdec_bits_getbits (bits, 8);
+    grad->array[i].color = swfdec_bits_get_rgba (bits);
+    end_ratio = swfdec_bits_getbits (bits, 8);
+    end_color = swfdec_bits_get_rgba (bits);
+  }
+  return grad;
+}
+
 void
 swfdec_bits_get_fill_style (SwfdecBits * bits)
 {

@@ -1,3 +1,30 @@
+2004-10-05  David Schleef  <ds@schleef.org>
+
+	* TODO: random notes
+	* libswfdec/actions.c: (get_actions),
+	(swfdec_action_script_execute): minor execution improvements
+	* libswfdec/swf.c: (swfdec_decoder_parse),
+	(swfdec_decoder_get_tag_func): check for invalid tags
+	differently.
+	* libswfdec/swfdec_bits.c: (swfdec_bits_get_morph_gradient): add
+	function
+	* libswfdec/swfdec_bits.h: ditto
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate),
+	(swfdec_render_get_audio): stop if iterating past end.  Increase
+	audio buffer size.
+	* libswfdec/swfdec_shape.c: (tag_func_define_shape),
+	(tag_define_shape), (tag_define_shape_3), (swf_shape_add_styles),
+	(swfdec_gradient_to_palette), (tag_define_morph_shape),
+	(swf_shape_ignore_recs), (swf_morphshape_add_styles),
+	(swf_morphshape_get_recs): improve debugging.  Add morph shape
+	parsing (incomplete)
+	* libswfdec/swfdec_shape.h: add protos
+	* libswfdec/swfdec_sound.c: (swfdec_sound_mp3_decode),
+	(swfdec_sound_mp3_decode_stream): resync more correctly
+	* libswfdec/swfdec_sound.h: change buffer size
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render): decrease
+	warning level
+
 2004-10-04  David Schleef  <ds@schleef.org>
 
 	* libswfdec/Makefile.am:

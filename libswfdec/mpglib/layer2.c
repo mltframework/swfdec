@@ -5,6 +5,8 @@
  *
  */
 
+#include <math.h>
+
 #include "mpglib_internal.h"
 #include "l2tables.h"
 

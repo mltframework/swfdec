@@ -352,14 +352,14 @@ static void swfdec_image_colormap_decode(SwfdecImage *image,
 	int rowstride;
 	unsigned char *dest;
 
-	rowstride = (image->width+3)&(~0x3);
+	rowstride = (image->width+3)&~0x3;
+	fprintf(stderr,"rowstride %d\n",rowstride);
 
 	dest = image->image_data;
 
 	for(j=0;j<image->height;j++){
-	dest = src + rowstride * j;
 	for(i=0;i<image->width;i++){
-		c = *src;
+		c = src[i];
 		if(c>=colormap_len){
 			fprintf(stderr,"colormap index out of range (%d>=%d)\n",
 				c,colormap_len);
@@ -368,14 +368,15 @@ static void swfdec_image_colormap_decode(SwfdecImage *image,
 			dest[2] = 0;
 			dest[3] = 255;
 		}else{
-			dest[0] = colormap[c*3 + 0];
-			dest[1] = colormap[c*3 + 1];
-			dest[2] = colormap[c*3 + 2];
-			dest[3] = colormap[c*3 + 3];
+			dest[0] = colormap[c*4 + 0];
+			dest[1] = colormap[c*4 + 1];
+			dest[2] = colormap[c*4 + 2];
+			//dest[3] = colormap[c*4 + 3];
+			dest[3] = 255;
 		}
-		src++;
 		dest += 4;
 	}
+	src += rowstride;
 	}
 }
 

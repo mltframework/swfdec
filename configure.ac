@@ -16,7 +16,7 @@ AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="$ACLOCAL -I m4 -I common/m4 $ACLOCAL_FLAGS"
+ACLOCAL="$ACLOCAL -I m4"
 
 AM_MAINTAINER_MODE
 
@@ -71,10 +71,6 @@ esac
 
 dnl Determine endianness
 AC_C_BIGENDIAN
-
-dnl Check for fast float to int casting as defined in C99
-AC_C99_FUNC_LRINT()
-AC_C99_FUNC_LRINTF()
 
 dnl Check for essential libraries first:
 dnl ====================================

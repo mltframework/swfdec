@@ -2,6 +2,7 @@
 #ifndef __SWFDEC_DECODER_H__
 #define __SWFDEC_DECODER_H__
 
+#include <glib.h>
 #include <zlib.h>
 
 #include "swfdec_types.h"

@@ -66,6 +66,12 @@ if test "$HAVE_LIBART" = "no"; then
   AC_MSG_ERROR([cannot find libart-2.0, which is required for build])
 fi
 
+AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
+AC_SUBST(MAD_LIBS)
+if test "x$HAVE_MAD" = xyes; then
+  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
+fi
+
 if test -z "$MOZILLA_CONFIG"; then
   AC_PATH_PROG(MOZILLA_CONFIG, mozilla-config, no)
 fi
@@ -96,7 +102,7 @@ AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
 SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec -Wall $GLIB_CFLAGS"
-SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec.la $GLIB_LIBS -lz"
+SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec.la $MAD_LIBS $GLIB_LIBS -lz"
 AC_SUBST(SWF_LIBS)
 AC_SUBST(SWF_CFLAGS)
 

@@ -1,5 +1,10 @@
 2005-01-12  David Schleef  <ds@schleef.org>
 
+	* plugin/plugin.c: (NP_GetValue): Downgrade to flash 4.0, in
+	an attempt to get more web pages to work.
+
+2005-01-12  David Schleef  <ds@schleef.org>
+
 	* Makefile.am: autoregenify
 	* autogen.sh: same
 	* configure.ac: same

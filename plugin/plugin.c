@@ -409,7 +409,7 @@ NP_GetValue (void *future, NPPVariable variable, void *value)
       break;
     case NPPVpluginDescriptionString:
       *((char **) value) =
-          "Shockwave Flash 6.0 animation viewer handled by swfdec-" VERSION
+          "Shockwave Flash 4.0 animation viewer handled by swfdec-" VERSION
           ".  "
           "Plays SWF animations, commonly known as Macromedia&reg; Flash&reg;.<br><br>"
           "This is alpha software.  It will probably behave in many situations, but "
@@ -417,8 +417,9 @@ NP_GetValue (void *future, NPPVariable variable, void *value)
           "to browse porn.  Comments, feature requests, and patches are welcome.<br><br>"
           "See <a href=\"http://www.schleef.org/swfdec/\">"
           "http://www.schleef.org/swfdec/</a> for information.<br><br>"
-          "Flash, Shockwave, and Macromedia are trademarks of Macromedia, Inc.  Swfdec "
-          "is not affiliated with Macromedia, Inc.";
+          "Flash, Shockwave, and Macromedia are trademarks of Macromedia, Inc."
+          " The swfdec software and its contributors are"
+          " not affiliated with Macromedia, Inc.";
       break;
     default:
       err = NPERR_GENERIC_ERROR;

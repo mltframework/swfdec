@@ -1,5 +1,13 @@
 2005-02-11  David Schleef  <ds@schleef.org>
 
+	* Makefile.am: don't dist removed m4 files
+	* configure.ac: remove m4 from ACLOCAL_FLAGS.  Disable gimp
+	plugin whenever prefix is different from gimp's prefix.
+	Check for gstreamer.
+	* gimp-loader/Makefile.am: disable correctly
+
+2005-02-11  David Schleef  <ds@schleef.org>
+
 	Major plugin changes: start using a gstreamer-based player,
 	copying the appsrc element from gst-mozilla-player.  Merge
 	bugfixes from Debian packaging, including limiting the

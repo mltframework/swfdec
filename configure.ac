@@ -25,7 +25,7 @@ AM_PROG_LIBTOOL
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
+#ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 
 AC_PROG_CC
 AM_PROG_CC_STDC
@@ -171,11 +171,17 @@ AM_CONDITIONAL(ENABLE_PIXBUF_LOADER, test x$enable_pixbuf_loader = xyes)
 
 PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0],
   HAVE_GIMP=yes, HAVE_GIMP=no)
-AM_CONDITIONAL(HAVE_GIMP,[test $HAVE_GIMP = yes])
 if test "x$HAVE_GIMP" = xyes ; then
-  gimplibdir=`pkg-config --variable=gimplibdir gimp-2.0`
-  AC_SUBST(gimplibdir)
+  gimp_prefix=$(pkg-config --variable=prefix gimp-2.0)
+  if test "x$gimp_prefix" = "x$prefix" ; then
+    gimplibdir=`pkg-config --define-variable=prefix='${prefix}' --variable=gimplibdir gimp-2.0`
+  else
+    HAVE_GIMP=no
+    AC_MSG_WARN([gimp plugin disabled because gimp prefix is not the same as installation prefix])
+  fi
 fi
+AM_CONDITIONAL(HAVE_GIMP,[test $HAVE_GIMP = yes])
+AC_SUBST(gimplibdir)
 
 AC_SUBST(LIBGIMP_CFLAGS)
 AC_SUBST(LIBGIMP_LIBS)
@@ -193,6 +199,12 @@ AC_SUBST(X_LIBS)
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
+
+PKG_CHECK_MODULES(GST, gstreamer-0.8 > 0.8.0 gstreamer-gconf-0.8 gstreamer-interfaces-0.8,
+  HAVE_GST=yes, AC_MSG_ERROR([Need Gstreamer to build]))
+AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_LIBS)
+
 
 SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec $SWF_DEBUG $GLIB_CFLAGS"
 SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $MAD_LIBS $GLIB_LIBS -lz"

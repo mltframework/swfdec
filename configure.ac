@@ -9,6 +9,7 @@ dnl AM_DISABLE_STATIC
 
 dnl when going to/from release please set the nano (fourth number) right !
 AS_VERSION(swfdec, SWFDEC, 0, 2, 0, 1)
+SWF_DEBUG="-Wall -Werror"
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(SWFDEC, 0, 1, 0, yes)
 
@@ -132,13 +133,10 @@ AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
-SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec -Wall $GLIB_CFLAGS"
+SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec $SWF_DEBUG $GLIB_CFLAGS"
 SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec.la $MAD_LIBS $GLIB_LIBS -lz"
 AC_SUBST(SWF_LIBS)
 AC_SUBST(SWF_CFLAGS)
-
-CFLAGS="$CFLAGS -Wall"
-AC_SUBST(CFLAGS)
 
 if test "x${prefix}" = "xNONE"; then
   PACKAGE_PREFIX=${ac_default_prefix}

@@ -1,16 +1,170 @@
 
 #include <string.h>
+#include <config.h>
 
+#ifdef HAVE_MAD
+#include <mad.h>
+#else
 #define getbits mpg_getbits
 #include "mpglib/mpglib.h"
 #undef getbits
+#endif
 
 #include "swfdec_internal.h"
 
 
 void adpcm_decode(SwfdecDecoder *s,SwfdecObject *obj);
+SwfdecSoundBuffer *swfdec_sound_buffer_new(int len);
+void swfdec_decoder_sound_buffer_append(SwfdecDecoder *s, SwfdecSoundBuffer *buffer);
 
-void mp3_decode(SwfdecObject *obj)
+#ifdef HAVE_MAD
+void mp3_decode_mad(SwfdecObject *obj)
+{
+	struct mad_stream stream;
+	struct mad_frame frame;
+	struct mad_synth synth;
+	SwfdecSound *sound = obj->priv;
+	int ret;
+
+	mad_stream_init(&stream);
+	mad_frame_init(&frame);
+	mad_synth_init(&synth);
+
+	mad_stream_buffer(&stream, sound->orig_data, sound->orig_len);
+
+	while(1){
+		ret = mad_frame_decode(&frame, &stream);
+		if(ret == -1 && stream.error == MAD_ERROR_BUFLEN){
+			break;
+		}
+		if(ret == -1){
+			printf("stream error 0x%04x\n",stream.error);
+			return;
+		}
+
+		mad_synth_frame(&synth, &frame);
+	}
+
+	mad_synth_finish(&synth);
+	mad_frame_finish(&frame);
+	mad_stream_finish(&stream);
+}
+
+int tag_func_sound_stream_block(SwfdecDecoder *s)
+{
+	SwfdecObject *obj;
+	SwfdecSound *sound;
+	int ret;
+	int n_samples, n_left;
+
+	/* for MPEG, data starts after 4 byte header */
+
+	obj = s->stream_sound_obj;
+	sound = obj->priv;
+
+	if(sound->format != 2){
+		SWF_DEBUG(4,"tag_func_define_sound: unknown format %d\n",sound->format);
+		return SWF_OK;
+	}
+
+	n_samples = get_u16(&s->b);
+	n_left = get_u16(&s->b);
+	//printf("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
+
+	if(s->tag_len - 4 == 0){
+		/* the end? */
+		return SWF_OK;
+	}
+
+	memcpy(sound->tmpbuf + sound->tmpbuflen, s->b.ptr, s->tag_len - 4);
+	sound->tmpbuflen += s->tag_len - 4;
+
+	mad_stream_buffer(&sound->stream, sound->tmpbuf, sound->tmpbuflen);
+
+	while(sound->tmpbuflen >= 0){
+		ret = mad_frame_decode(&sound->frame, &sound->stream);
+		if(ret == -1 && sound->stream.error == MAD_ERROR_BUFLEN){
+			//fprintf(stderr,"error buflen\n");
+			break;
+		}
+		if(ret == -1){
+			fprintf(stderr,"stream error 0x%04x\n",
+				sound->stream.error);
+			return SWF_ERROR;
+		}
+
+		mad_synth_frame(&sound->synth, &sound->frame);
+		
+		if(sound->synth.pcm.samplerate==11025){
+			SwfdecSoundBuffer *buffer;
+			short *data;
+			int i;
+
+			buffer = swfdec_sound_buffer_new(sound->synth.pcm.length*2*2*4);
+			data = (short *)buffer->data;
+			if(sound->synth.pcm.channels==2){
+				for(i=0;i<sound->synth.pcm.length;i++){
+					short c0,c1;
+					c0 = sound->synth.pcm.samples[0][i]>>13;
+					c1 = sound->synth.pcm.samples[1][i]>>13;
+					*data++ = c0; *data++ = c1;
+					*data++ = c0; *data++ = c1;
+					*data++ = c0; *data++ = c1;
+					*data++ = c0; *data++ = c1;
+				}
+			}else{
+				for(i=0;i<sound->synth.pcm.length;i++){
+					short c0;
+					c0 = sound->synth.pcm.samples[0][i]>>13;
+					*data++ = c0; *data++ = c0;
+					*data++ = c0; *data++ = c0;
+					*data++ = c0; *data++ = c0;
+					*data++ = c0; *data++ = c0;
+				}
+			}
+			swfdec_decoder_sound_buffer_append(s,buffer);
+		}else if(sound->synth.pcm.samplerate==22050){
+			SwfdecSoundBuffer *buffer;
+			short *data;
+			int i;
+
+			buffer = swfdec_sound_buffer_new(sound->synth.pcm.length*2*2*2);
+			data = (short *)buffer->data;
+			if(sound->synth.pcm.channels==2){
+				for(i=0;i<sound->synth.pcm.length;i++){
+					short c0,c1;
+					c0 = sound->synth.pcm.samples[0][i]>>13;
+					c1 = sound->synth.pcm.samples[1][i]>>13;
+					*data++ = c0; *data++ = c1;
+					*data++ = c0; *data++ = c1;
+				}
+			}else{
+				for(i=0;i<sound->synth.pcm.length;i++){
+					short c0;
+					c0 = sound->synth.pcm.samples[0][i]>>13;
+					*data++ = c0; *data++ = c0;
+					*data++ = c0; *data++ = c0;
+				}
+			}
+			swfdec_decoder_sound_buffer_append(s,buffer);
+		}else{
+			fprintf(stderr,"sample rate not handled (%d)\n",
+				sound->synth.pcm.samplerate);
+		}
+	}
+
+	sound->tmpbuflen -= sound->stream.next_frame - sound->tmpbuf;
+	memmove(sound->tmpbuf, sound->stream.next_frame, sound->tmpbuflen);
+
+	s->b.ptr += s->tag_len - 4;
+
+	return SWF_OK;
+}
+#endif
+
+
+#ifndef HAVE_MAD
+void mp3_decode_mpglib(SwfdecObject *obj)
 {
 	MpglibDecoder *mp;
 	int n;
@@ -30,6 +184,7 @@ void mp3_decode(SwfdecObject *obj)
 	}
 	printf("total decoded %d\n",offset + n);
 }
+#endif
 
 int tag_func_define_sound(SwfdecDecoder *s)
 {
@@ -73,7 +228,11 @@ int tag_func_define_sound(SwfdecDecoder *s)
 		sound->sound_len = 10000;
 		sound->sound_buf = malloc(sound->sound_len);
 
-		mp3_decode(obj);
+#ifdef HAVE_MAD
+		mp3_decode_mad(obj);
+#else
+		mp3_decode_mpglib(obj);
+#endif
 
 		s->b.ptr += s->tag_len - 9;
 		break;
@@ -90,10 +249,29 @@ int tag_func_define_sound(SwfdecDecoder *s)
 	return SWF_OK;
 }
 
+void swfdec_decoder_sound_buffer_append(SwfdecDecoder *s, SwfdecSoundBuffer *buffer)
+{
+	s->sound_buffers = g_list_append(s->sound_buffers, buffer);
+}
+
+SwfdecSoundBuffer *swfdec_sound_buffer_new(int len)
+{
+	SwfdecSoundBuffer *sb;
+
+	sb = g_new0(SwfdecSoundBuffer,1);
+
+	sb->len = len;
+	sb->data = g_malloc(len);
+
+	return sb;
+}
+
+#ifndef HAVE_MAD
 int tag_func_sound_stream_block(SwfdecDecoder *s)
 {
 	SwfdecObject *obj;
 	SwfdecSound *sound;
+	SwfdecSoundBuffer *buffer;
 	int ret;
 	int n;
 	int n_samples, n_left;
@@ -108,18 +286,6 @@ int tag_func_sound_stream_block(SwfdecDecoder *s)
 		return SWF_OK;
 	}
 
-	if(s->sound_offset){
-		int chunk;
-
-		chunk = 44100.0/s->rate;
-		chunk *= 2;
-		if(chunk>s->sound_offset)chunk=s->sound_offset;
-
-		memmove(s->sound_buffer,s->sound_buffer + chunk*2,
-			s->sound_len - chunk*2);
-		s->sound_offset -= chunk;
-	}
-
 	n_samples = get_u16(&s->b);
 	n_left = get_u16(&s->b);
 	//printf("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
@@ -129,20 +295,36 @@ int tag_func_sound_stream_block(SwfdecDecoder *s)
 		return SWF_OK;
 	}
 
+	buffer = swfdec_sound_buffer_new(4608);
+
+	fwrite(s->b.ptr,s->tag_len - 4, 1, stdout);
 	ret = mpglib_decoder_decode(sound->mp, s->b.ptr, s->tag_len - 4,
-		s->sound_buffer + s->sound_offset,
-		s->sound_len - s->sound_offset, &n);
+		buffer->data, buffer->len, &n);
 	while(ret==MPGLIB_OK){
-		s->sound_offset += n;
+		int i;
+		for(i=0;i<64;i++){
+			fprintf(stderr,"%02x ",((unsigned char *)buffer->data)[i]);
+			if((i%16)==15)fprintf(stderr,"\n");
+		}
+		swfdec_decoder_sound_buffer_append(s,buffer);
+
+		buffer = swfdec_sound_buffer_new(4608);
 		ret = mpglib_decoder_decode(sound->mp, NULL, 0,
-			s->sound_buffer + s->sound_offset,
-			s->sound_len - s->sound_offset, &n);
+			buffer->data, buffer->len, &n);
 	}
+
+	if(ret==MPGLIB_ERR){
+		SWF_DEBUG(4,"mp3 stream error\n");
+	}
+
+	g_free(buffer->data);
+	g_free(buffer);
 
 	s->b.ptr += s->tag_len - 4;
 
 	return SWF_OK;
 }
+#endif
 
 int tag_func_sound_stream_head(SwfdecDecoder *s)
 {
@@ -184,7 +366,13 @@ int tag_func_sound_stream_head(SwfdecDecoder *s)
 
 	switch(format){
 	case 2:
+#ifdef HAVE_MAD
+		mad_stream_init(&sound->stream);
+		mad_frame_init(&sound->frame);
+		mad_synth_init(&sound->synth);
+#else
 		sound->mp = mpglib_decoder_new();
+#endif
 		
 		break;
 	default:

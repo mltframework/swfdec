@@ -204,14 +204,6 @@ void swf_render_frame(SwfdecDecoder *s)
 		s->tmp_scanline = malloc(s->width);
 	}
 
-	if(!s->sound_buffer){
-		s->sound_len = 4*2*44100;
-		s->sound_buffer = malloc(s->sound_len);
-		s->sound_offset = 0;
-
-		memset(s->sound_buffer,0,s->sound_len);
-	}
-
 	s->drawrect.x0 = 0;
 	s->drawrect.y0 = 0;
 	s->drawrect.x1 = 0;
@@ -314,14 +306,6 @@ void swf_render_frame_slow(SwfdecDecoder *s)
 	}
 	if(!s->tmp_scanline){
 		s->tmp_scanline = malloc(s->width);
-	}
-
-	if(!s->sound_buffer){
-		s->sound_len = 4*2*44100;
-		s->sound_buffer = malloc(s->sound_len);
-		s->sound_offset = 0;
-
-		memset(s->sound_buffer,0,s->sound_len);
 	}
 
 	s->drawrect = s->irect;

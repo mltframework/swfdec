@@ -13,6 +13,7 @@ typedef struct swfdec_render_struct SwfdecRender;
 typedef struct swfdec_shape_struct SwfdecShape;
 typedef struct swfdec_shape_vec_struct SwfdecShapeVec;
 typedef struct swfdec_sound_struct SwfdecSound;
+typedef struct swfdec_sound_buffer_struct SwfdecSoundBuffer;
 typedef struct swfdec_sprite_struct SwfdecSprite;
 typedef struct swfdec_sprite_seg_struct SwfdecSpriteSeg;
 typedef struct swfdec_text_struct SwfdecText;

@@ -11,12 +11,25 @@ struct swfdec_sound_struct{
 	unsigned char *orig_data;
 	int orig_len;
 
+#ifdef HAVE_MAD
+	struct mad_stream stream;
+	struct mad_frame frame;
+	struct mad_synth synth;
+	unsigned char tmpbuf[1024];
+	int tmpbuflen;
+#else
 	void *mp;
+#endif
 
 	int n_samples;
 
 	void *sound_buf;
 	int sound_len;
+};
+
+struct swfdec_sound_buffer_struct{
+	int len;
+	unsigned char *data;
 };
 
 int tag_func_define_sound(SwfdecDecoder *s);

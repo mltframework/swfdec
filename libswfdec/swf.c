@@ -239,18 +239,23 @@ int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level)
 
 void *swfdec_decoder_get_sound_chunk(SwfdecDecoder *s, int *length)
 {
-	void *ret;
+	GList *g;
+	SwfdecSoundBuffer *buffer;
+	void *data;
 
-	if(!s->sound_buffer)return NULL;
+	g = g_list_first(s->sound_buffers);
+	if(!g)return NULL;
 
-	ret = s->sound_buffer;
-	if(length) *length = s->sound_len;
+	buffer = (SwfdecSoundBuffer *)g->data;
 
-	s->sound_len = 0;
-	s->sound_buffer = NULL;
-	s->sound_offset = 0;
+	s->sound_buffers = g_list_delete_link(s->sound_buffers,g);
+	
+	data = buffer->data;
+	if(length) *length = buffer->len;
 
-	return ret;
+	free(buffer);
+
+	return data;
 }
 
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
@@ -407,7 +412,7 @@ struct tag_func_struct tag_funcs[] = {
 	[ ST_FRAMELABEL		] = { "FrameLabel",	tag_func_frame_label,	0 },
 	[ ST_SOUNDSTREAMHEAD2	] = { "SoundStreamHead2",	NULL,	0 },
 	[ ST_DEFINEMORPHSHAPE	] = { "DefineMorphShape",	NULL,	0 },
-	[ ST_DEFINEFONT2	] = { "DefineFont2",	NULL,	0 },
+	[ ST_DEFINEFONT2	] = { "DefineFont2",	tag_func_define_font_2,	0 },
 	[ ST_TEMPLATECOMMAND	] = { "TemplateCommand",	NULL,	0 },
 	[ ST_GENERATOR3		] = { "Generator3",	NULL,	0 },
 	[ ST_EXTERNALFONT	] = { "ExternalFont",	NULL,	0 },

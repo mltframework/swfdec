@@ -86,6 +86,8 @@ struct swfdec_decoder_struct {
 
 	unsigned char *jpegtables;
 	unsigned int jpegtables_len;
+
+	GList *sound_buffers;
 };
 
 SwfdecDecoder *swf_init(void);

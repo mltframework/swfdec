@@ -770,6 +770,8 @@ void jpeg_decoder_free(JpegDecoder *dec)
 		if(dec->components[i].image)g_free(dec->components[i].image);
 	}
 
+	if(dec->data) g_free(dec->data);
+
 	g_free(dec);
 }
 

@@ -10,8 +10,8 @@ SwfdecLayer *swfdec_layer_new(void)
 
 	layer = g_new0(SwfdecLayer,1);
 
-	layer->fills = g_array_new(TRUE,FALSE,sizeof(SwfdecLayerVec));
-	layer->lines = g_array_new(TRUE,FALSE,sizeof(SwfdecLayerVec));
+	layer->fills = g_array_new(FALSE,TRUE,sizeof(SwfdecLayerVec));
+	layer->lines = g_array_new(FALSE,TRUE,sizeof(SwfdecLayerVec));
 
 	return layer;
 }

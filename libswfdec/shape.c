@@ -175,7 +175,7 @@ SwfdecShapeVec *swf_shape_vec_new(void)
 
 	shapevec = g_new0(SwfdecShapeVec,1);
 
-	shapevec->path = g_array_new(TRUE,FALSE,sizeof(ArtBpath));
+	shapevec->path = g_array_new(FALSE,TRUE,sizeof(ArtBpath));
 
 	return shapevec;
 }

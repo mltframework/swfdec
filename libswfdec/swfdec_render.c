@@ -4,7 +4,10 @@
 
 #include "swfdec_internal.h"
 #include <swfdec_sound.h>
+#include <liboil/liboil.h>
 
+void swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
+    SwfdecBuffer * buffer);
 
 SwfdecRender *
 swfdec_render_new (void)
@@ -101,13 +104,43 @@ swfdec_render_get_frame_index (SwfdecDecoder * s)
   return s->render->frame_index;
 }
 
+void
+swfdec_render_resize (SwfdecDecoder *s)
+{
+  g_free(s->kept_buffer);
+  s->kept_buffer = NULL;
+  g_list_free (s->kept_list);
+  s->kept_list = NULL;
+  s->kept_layers = 0;
+
+}
+
+static int
+compare_lists (GList *a, GList *b)
+{
+  int n = 0;
+
+  while (a != NULL && b != NULL && a->data == b->data) {
+    a = g_list_next(a);
+    b = g_list_next(b);
+    n++;
+  }
+
+  return n;
+}
+
 SwfdecBuffer *
 swfdec_render_get_image (SwfdecDecoder * s)
 {
   SwfdecSpriteSegment *seg;
   SwfdecBuffer *buffer;
   GList *g;
+  GList *render_list = NULL;
   int clip_depth = 0;
+  int n_kept_layers;
+  int n_frames;
+  int n;
+  int i;
 
   g_return_val_if_fail (s->render->frame_index < s->n_frames, NULL);
 
@@ -119,14 +152,10 @@ swfdec_render_get_image (SwfdecDecoder * s)
   s->render->drawrect.y1 = 0;
   swf_invalidate_irect (s, &s->irect);
 
-  swfdec_render_be_start (s);
-
   SWFDEC_DEBUG ("inval rect %d %d %d %d", s->render->drawrect.x0,
       s->render->drawrect.x1, s->render->drawrect.y0, s->render->drawrect.y1);
 
   for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
-    SwfdecObject *object;
-
     seg = (SwfdecSpriteSegment *) g->data;
 
     SWFDEC_LOG ("testing seg %d <= %d < %d",
@@ -162,6 +191,80 @@ swfdec_render_get_image (SwfdecDecoder * s)
     }
 #endif
 
+    render_list = g_list_append (render_list, seg);
+  }
+
+  if (s->kept_layers) {
+    n = compare_lists (s->kept_list, render_list);
+    if (n < s->kept_layers) {
+      g_list_free (s->kept_list);
+      s->kept_list = NULL;
+      s->kept_layers = 0;
+    }
+  }
+
+#define MAX_KEPT_FRAMES 10
+  n_frames = MAX_KEPT_FRAMES;
+  i = 0;
+  n_kept_layers = 0;
+  for (g = render_list; g; g = g_list_next (g)) {
+    int n;
+
+    seg = (SwfdecSpriteSegment *) g->data;
+    n = seg->last_frame - s->render->frame_index - 1;
+    if (n==0) break;
+    if (i < s->kept_layers) {
+      if (n < n_frames) n_frames = n;
+      n_kept_layers++;
+    } else {
+      if ((n <= n_frames || n >= MAX_KEPT_FRAMES) &&
+          (n_kept_layers + 1) * n > n_kept_layers * n_frames) {
+        if (n < MAX_KEPT_FRAMES) n_frames = n;
+        n_kept_layers++;
+        SWFDEC_DEBUG ("keeping layer (%d frames)", n);
+      } else {
+        SWFDEC_DEBUG ("not keeping layer for %d frames", n);
+        break;
+      }
+    }
+    i++;
+  }
+  if (n_kept_layers < s->kept_layers) {
+    n_kept_layers = 0;
+  }
+  SWFDEC_DEBUG ("keeping %d layers for %d frames", n_kept_layers, n_frames);
+
+  swfdec_render_be_start (s);
+
+  g = render_list;
+  i = 0;
+  if (s->kept_layers) {
+    oil_copy_u8 (s->buffer, s->kept_buffer, s->stride * s->height);
+
+#if 0
+    /* this highlights areas that have been cached */
+    {
+      int i,j;
+      for(i=0;i<s->height;i++){
+        for(j=0;j<s->width;j++){
+          if ((i+j)&1){
+            *(uint32_t *)(s->buffer + i*s->stride + j*4) = 0;
+          }
+        }
+      }
+    }
+#endif
+
+    for(i=0;i<s->kept_layers;i++){
+      g = g_list_next (g);
+    }
+  } else {
+    swfdec_render_be_clear (s);
+  }
+  for (; g; g = g_list_next (g)) {
+    SwfdecObject *object;
+
+    seg = (SwfdecSpriteSegment *) g->data;
     object = swfdec_object_get (s, seg->id);
     if (object) {
       if (SWFDEC_OBJECT_GET_CLASS (object)->render) {
@@ -173,9 +276,30 @@ swfdec_render_get_image (SwfdecDecoder * s)
     } else {
       SWFDEC_DEBUG ("could not find object (id = %d)", seg->id);
     }
+    if (i < n_kept_layers) {
+      s->kept_list = g_list_append(s->kept_list, seg);
+      if (i == n_kept_layers - 1) {
+        if (s->kept_buffer == NULL) {
+          s->kept_buffer = g_malloc (s->stride * s->height);
+        }
+        oil_copy_u8 (s->kept_buffer, s->buffer, s->stride * s->height);
+        s->kept_layers = n_kept_layers;
+      }
+    }
+    i++;
   }
+  g_list_free (render_list);
 
   swfdec_render_be_stop (s);
+
+  {
+    int i,j;
+    for(j=MAX(0,s->mouse_y-10);j<MIN(s->height,s->mouse_y+10);j++){
+      for(i=MAX(0,s->mouse_x-10);i<MIN(s->width,s->mouse_x+10);i++){
+        *(guint32 *)(s->buffer + j*s->stride + i*4) = 0;
+      }
+    }
+  }
 
   buffer = swfdec_buffer_new_with_data (s->buffer, s->stride * s->height);
 
@@ -206,10 +330,43 @@ swfdec_render_get_audio (SwfdecDecoder * s)
         n = 2048 - sound->tmpbuflen;
         SWFDEC_WARNING ("clipping audio");
       }
-      memcpy (sound->tmpbuf + sound->tmpbuflen, chunk->data, n);
+      oil_copy_u8 (sound->tmpbuf + sound->tmpbuflen, chunk->data, n);
       sound->tmpbuflen += n;
       swfdec_sound_mp3_decode_stream (s, s->stream_sound_obj);
     }
+  }
+
+  if (s->main_sprite->sound_play[s->render->frame_index]) {
+    SwfdecSound *sound;
+    SwfdecSoundChunk *chunk =
+      s->main_sprite->sound_play[s->render->frame_index];
+
+    SWFDEC_ERROR("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",
+        chunk->object, chunk->start_sample, chunk->stop_sample,
+        chunk->stop, chunk->no_restart, chunk->loop_count);
+
+    sound = SWFDEC_SOUND(swfdec_object_get (s, chunk->object));
+    if (sound) {
+      int i;
+      GList *g;
+
+      SWFDEC_ERROR ("sound object n_samples=%d", sound->n_samples);
+
+      for(g=g_list_first(s->stream_sound_buffers);g;g=g_list_next(g)) {
+        swfdec_buffer_unref ((SwfdecBuffer *)g->data);
+      }
+      g_list_free (s->stream_sound_buffers);
+      s->stream_sound_buffers = NULL;
+
+      for(i=0;i<chunk->loop_count;i++){
+        for(g=g_list_first(sound->decoded_buffers);g;g=g_list_next(g)) {
+          SwfdecBuffer *buffer = (SwfdecBuffer *)g->data;
+          swfdec_buffer_ref (buffer);
+          swfdec_decoder_sound_buffer_append (s, buffer);
+        }
+      }
+    }
+    
   }
 
   swfdec_sound_render (s);

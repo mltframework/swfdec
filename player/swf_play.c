@@ -48,7 +48,7 @@ static int width;
 static int height;
 
 static gboolean enable_sound = TRUE;
-static gboolean noskip = TRUE;
+static gboolean noskip = FALSE;
 static gboolean slow = FALSE;
 static gboolean safe = FALSE;
 static gboolean hidden = FALSE;
@@ -201,8 +201,16 @@ main (int argc, char *argv[])
             swfdec_decoder_set_image_size (s, width, height);
             new_window ();
             break;
+          case SDL_MOUSEMOTION:
+            swfdec_decoder_set_mouse (s, event.motion.x, event.motion.y,
+                event.motion.state);
+            break;
           case SDL_ACTIVEEVENT:
-            DEBUG ("active: %d %d\n", event.active.gain, event.active.state);
+            if (event.active.state & SDL_APPMOUSEFOCUS) {
+              if (event.active.gain == 0) {
+                swfdec_decoder_set_mouse (s, -1, -1, 0);
+              }
+            }
             if (event.active.state & SDL_APPACTIVE) {
               hidden = !event.active.gain;
             }
@@ -326,6 +334,10 @@ do_safe (int standalone)
           SDL_FillRect (sdl_screen, NULL, 0x80808000);
           SDL_UpdateRect (sdl_screen, 0, 0, width, height);
           break;
+        case SDL_MOUSEMOTION:
+          swfdec_decoder_set_mouse (s, event.motion.x, event.motion.y,
+              event.motion.state);
+          break;
         default:
           break;
       }
@@ -394,7 +406,11 @@ sound_setup (void)
 {
   SDL_AudioSpec wanted;
 
+  if (slow) {
+  wanted.freq = 22050;
+  }else{
   wanted.freq = 44100;
+  }
 #if G_BYTE_ORDER == 4321
   wanted.format = AUDIO_S16MSB;
 #else
@@ -452,11 +468,13 @@ render_idle_audio (gpointer data)
 
   sound_buffers = g_list_append (sound_buffers, audio_buffer);
   sound_bytes += audio_buffer->length;
+#if 0
   if (slow) {
     swfdec_buffer_ref (audio_buffer);
     sound_buffers = g_list_append (sound_buffers, audio_buffer);
     sound_bytes += audio_buffer->length;
   }
+#endif
 
   if (sound_bytes > 20000 || noskip) {
     video_buffer = swfdec_render_get_image (s);

@@ -117,6 +117,14 @@ swfdec_decoder_eof (SwfdecDecoder * s)
   }
 }
 
+void
+swfdec_decoder_set_mouse(SwfdecDecoder *s, int x, int y, int button)
+{
+  s->mouse_x = x;
+  s->mouse_y = y;
+  s->mouse_button = button;
+}
+
 int
 swfdec_decoder_parse (SwfdecDecoder * s)
 {
@@ -397,6 +405,7 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   s->transform.trans[5] = 0;
 #endif
 
+  swfdec_render_resize (s);
   swf_config_colorspace (s);
 
   return SWF_OK;
@@ -626,6 +635,7 @@ swf_parse_header2 (SwfdecDecoder * s)
 
   s->main_sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * s->n_frames);
   s->main_sprite->actions = g_malloc0 (sizeof (gpointer) * s->n_frames);
+  s->main_sprite->sound_play = g_malloc0 (sizeof (gpointer) * s->n_frames);
   s->main_sprite->n_frames = s->n_frames;
 
   swf_config_colorspace (s);
@@ -685,7 +695,7 @@ struct tag_func_struct tag_funcs[] = {
   [ST_SERIALNUMBER] = {"SerialNumber", NULL, 0},
   [ST_GENERATORTEXT] = {"GeneratorText", NULL, 0},
   [ST_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, 0},
-  [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", NULL, 0},
+  [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, 0},
   [ST_DEFINEMORPHSHAPE] =
       {"DefineMorphShape", NULL /* tag_define_morph_shape */ , 0},
   [ST_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},

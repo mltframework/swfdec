@@ -108,6 +108,16 @@ struct _SwfdecDecoder
   gboolean stopped;
 
   void *backend_private;
+
+  char *kept_buffer;
+  GList *kept_list;
+  int kept_layers;
+
+  SwfdecActionContext *context;
+
+  int mouse_x;
+  int mouse_y;
+  int mouse_button;
 };
 
 SwfdecDecoder *swf_init (void);

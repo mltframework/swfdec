@@ -19,6 +19,12 @@ swfdec_render_be_start (SwfdecDecoder *s)
   if (!s->tmp_scanline) {
     s->tmp_scanline = g_malloc (s->width);
   }
+}
+
+void
+swfdec_render_be_clear (SwfdecDecoder *s)
+{
+
   s->fillrect (s->buffer, s->stride, s->bg_color, &s->render->drawrect);
 }
 

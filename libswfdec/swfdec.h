@@ -45,5 +45,7 @@ void *swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length);
 
 void swfdec_decoder_eof (SwfdecDecoder * s);
 
+void swfdec_decoder_set_mouse(SwfdecDecoder *s, int x, int y, int button);
+
 G_END_DECLS
 #endif

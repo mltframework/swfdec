@@ -2,6 +2,7 @@
 #ifndef _SWFDEC_TYPES_H_
 #define _SWFDEC_TYPES_H_
 
+typedef struct _SwfdecActionContext SwfdecActionContext;
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 typedef struct _SwfdecButton SwfdecButton;

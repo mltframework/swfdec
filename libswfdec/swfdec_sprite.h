@@ -44,6 +44,7 @@ struct _SwfdecSprite
 
   SwfdecBuffer **sound_chunks;
   SwfdecBuffer **actions;
+  SwfdecSoundChunk **sound_play;
 };
 
 struct _SwfdecSpriteClass

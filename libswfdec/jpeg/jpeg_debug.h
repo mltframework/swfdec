@@ -15,7 +15,7 @@
 #define JPEG_LOG(...) \
     JPEG_DEBUG_LEVEL(SWFDEC_LEVEL_LOG, __VA_ARGS__)
 
-#if 0
+#if 1
 #define JPEG_DEBUG_LEVEL(level,...) \
     swfdec_debug_log ((level), __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 #else

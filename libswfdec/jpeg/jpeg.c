@@ -192,10 +192,7 @@ static unsigned char std_tables[] = {
 
 static void dumpbits (bits_t * bits);
 static char *sprintbits (char *str, unsigned int bits, int n);
-static void dump_block8x8_s16 (short *q);
-static void dequant8x8_s16 (short *dest, short *src, short *mult);
 
-//static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
 static void huffman_table_load_std_jpeg (JpegDecoder * dec);
 
 
@@ -553,7 +550,7 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
   length = get_be_u16 (bits);
   JPEG_DEBUG ("length=%d", length);
 
-  if (strncmp (bits->ptr, "JFIF", 4) == 0 && bits->ptr[4] == 0) {
+  if (memcmp (bits->ptr, "JFIF", 4) == 0 && bits->ptr[4] == 0) {
     int version;
     int units;
     int x_density;
@@ -580,7 +577,7 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
 
   }
 
-  if (strncmp (bits->ptr, "JFXX", 4) == 0 && bits->ptr[4] == 0) {
+  if (memcmp (bits->ptr, "JFXX", 4) == 0 && bits->ptr[4] == 0) {
     JPEG_WARNING ("JFIF extension (not handled)");
     bits->ptr += length - 2;
   }
@@ -598,7 +595,7 @@ jpeg_decoder_application_misc (JpegDecoder * dec, bits_t * bits)
   length = get_be_u16 (bits);
   JPEG_DEBUG ("length=%d", length);
 
-  JPEG_WARNING ("JPEG application tag X ignored");
+  JPEG_INFO ("JPEG application tag X ignored");
   dumpbits (bits);
 
   bits->ptr += length - 2;
@@ -657,6 +654,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   int len;
   int j;
   int i;
+  int go;
   int x, y;
   int n;
   int ret;
@@ -673,7 +671,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
 
   /* we allocate extra space, since the getbits() code can
    * potentially read past the end of the buffer */
-  newptr = g_malloc0 (len + 100);
+  newptr = g_malloc (len + 2);
   for (i = 0; i < len; i++) {
     newptr[j] = bits->ptr[i];
     j++;
@@ -685,16 +683,17 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   bits2->ptr = newptr;
   bits2->idx = 0;
   bits2->end = newptr + j;
-  //newptr[j] = 0;
-  //newptr[j+1] = 0;
+  newptr[j] = 0;
+  newptr[j + 1] = 0;
 
   dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
+  go = 1;
   x = dec->x;
   y = dec->y;
   n = dec->restart_interval;
   if (n == 0)
     n = G_MAXINT;
-  while (n-- > 0 && y * dec->scan_v_subsample < dec->height) {
+  while (go && n-- > 0) {
     for (i = 0; i < dec->scan_list_length; i++) {
       int dc_table_index;
       int ac_table_index;
@@ -725,21 +724,15 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       }
 
       JPEG_DEBUG ("using quant table %d", quant_index);
-      dequant8x8_s16 (block2, block, dec->quant_table[quant_index]);
+      oil_mult8x8_s16 (block2, block, dec->quant_table[quant_index],
+          sizeof (short) * 8, sizeof(short) * 8, sizeof (short) * 8);
       dec->dc[component_index] += block2[0];
       block2[0] = dec->dc[component_index];
       oil_unzigzag8x8_s16 (block, sizeof (short) * 8, block2,
           sizeof (short) * 8);
       oil_idct8x8_s16 (block2, sizeof (short) * 8, block, sizeof (short) * 8);
+      oil_trans8x8_u16 (block, sizeof (short) * 8, block2, sizeof (short) * 8);
 
-      dump_block8x8_s16 (block2);
-
-#if 0
-      JPEG_DEBUG ("x=%d, y=%d, rowstride=%d, %dx%d, %dx%d", x, y,
-          dec->components[component_index].rowstride,
-          dec->scan_h_subsample, dec->scan_v_subsample,
-          dec->width, dec->height);
-#endif
       ptr = dec->components[component_index].image +
           x * dec->components[component_index].h_oversample +
           dec->scan_list[i].offset +
@@ -748,12 +741,15 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
 
       oil_clipconv8x8_u8_s16 (ptr,
           dec->components[component_index].rowstride,
-          block2, sizeof (short) * 8);
+          block, sizeof (short) * 8);
     }
     x += 8;
     if (x * dec->scan_h_subsample >= dec->width) {
       x = 0;
       y += 8;
+    }
+    if (y * dec->scan_v_subsample >= dec->height) {
+      go = 0;
     }
   }
   dec->x = x;
@@ -767,6 +763,8 @@ JpegDecoder *
 jpeg_decoder_new (void)
 {
   JpegDecoder *dec;
+
+  oil_init ();
 
   dec = g_new0 (JpegDecoder, 1);
 
@@ -955,28 +953,6 @@ sprintbits (char *str, unsigned int bits, int n)
   str[i] = 0;
 
   return str;
-}
-
-static void
-dump_block8x8_s16 (short *q)
-{
-  int i;
-
-  for (i = 0; i < 8; i++) {
-    JPEG_LOG ("%3d %3d %3d %3d %3d %3d %3d %3d",
-        q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]);
-    q += 8;
-  }
-}
-
-static void
-dequant8x8_s16 (short *dest, short *src, short *mult)
-{
-  int i;
-
-  for (i = 0; i < 64; i++) {
-    dest[i] = src[i] * mult[i];
-  }
 }
 
 static void

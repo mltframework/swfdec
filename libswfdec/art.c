@@ -44,8 +44,8 @@ art_bpath_cat (ArtBpath * a, ArtBpath * b)
   len_b = art_bpath_len (b);
   dest = g_malloc ((len_a + len_b + 1) * sizeof (ArtBpath));
 
-  memcpy (dest, a, sizeof (ArtBpath) * len_a);
-  memcpy (dest + len_a, b, sizeof (ArtBpath) * (len_b + 1));
+  oil_copy_u8 (dest, a, sizeof (ArtBpath) * len_a);
+  oil_copy_u8 (dest + len_a, b, sizeof (ArtBpath) * (len_b + 1));
 
   return dest;
 }
@@ -61,8 +61,9 @@ art_vpath_cat (ArtVpath * a, ArtVpath * b)
   len_b = art_vpath_len (b);
   dest = g_malloc ((len_a + len_b + 1) * sizeof (ArtVpath));
 
-  memcpy (dest, a, sizeof (ArtVpath) * len_a);
-  memcpy (dest + len_a, b, sizeof (ArtVpath) * (len_b + 1));
+  oil_copy_u8 ((void *)dest, (void *)a, sizeof (ArtVpath) * len_a);
+  oil_copy_u8 ((void *)(dest + len_a), (void *)b,
+      sizeof (ArtVpath) * (len_b + 1));
 
   return dest;
 }

@@ -150,7 +150,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     SWFDEC_LOG ("  offset = %d", offset);
     SWFDEC_LOG ("  condition = 0x%04x", condition);
 
-    get_actions (s, bits);
+    bits->ptr += offset - 4;
+
+    /* FIXME put actions in button */
   }
 
   return SWF_OK;

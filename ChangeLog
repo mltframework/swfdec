@@ -1,3 +1,43 @@
+2004-12-26  David Schleef  <ds@schleef.org>
+
+	* configure.ac: bump to liboil-0.3
+	* libswfdec/actions.c: major rewrite
+	* libswfdec/art.c: (art_bpath_cat), (art_vpath_cat): oilify
+	* libswfdec/jpeg/jpeg.c: merge code from liboil
+	* libswfdec/jpeg/jpeg_debug.h: debug jpeg code at swfdec level
+	* libswfdec/swf.c: (swfdec_decoder_set_mouse),
+	(swfdec_decoder_set_image_size), (swf_parse_header2): add mouse
+	handling, add SoundStreamHead2
+	* libswfdec/swfdec.h: add mouse handling
+	* libswfdec/swfdec_buffer.c: (swfdec_buffer_queue_pull),
+	(swfdec_buffer_queue_peek): oilify
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2): remove
+	get_actions() call
+	* libswfdec/swfdec_decoder.h: add some fields
+	* libswfdec/swfdec_render.c: (swfdec_render_resize),
+	(compare_lists), (swfdec_render_get_image),
+	(swfdec_render_get_audio): implement caching of partially-rendered
+	images
+	* libswfdec/swfdec_render.h: add protos
+	* libswfdec/swfdec_render_cairo.c: (swfdec_render_be_start),
+	(swfdec_render_be_clear), (draw_line), (draw), (draw_rev),
+	(draw_x), (swfdec_shape_render), (swfdec_text_render): cleanup
+	* libswfdec/swfdec_render_libart.c: (swfdec_render_be_start),
+	(swfdec_render_be_clear): add backend clearing
+	* libswfdec/swfdec_sound.c: (swfdec_sound_dispose),
+	(tag_func_define_sound), (tag_func_sound_stream_head),
+	(get_soundinfo), (tag_func_start_sound), (swfdec_sound_mp3_decode),
+	(swfdec_sound_mp3_decode_stream), (convert_synth_to_buffer):
+	implement decoding/playing of sound objects
+	* libswfdec/swfdec_sound.h: add protos
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_dispose),
+	(tag_func_define_sprite): primitive sound rendering
+	* libswfdec/swfdec_sprite.h: add field
+	* libswfdec/swfdec_types.h: add SwfdecActionContext
+	* player/swf_play.c: (main), (do_safe), (sound_setup),
+	(render_idle_audio): handle mouse events.
+	* swfdec.pc.in: add liboil to requires:
+
 2004-12-10  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_render_cairo.c: (swfdec_shape_render),

@@ -88,11 +88,11 @@ if test "$HAVE_SDL" = "yes"; then
 fi
 AM_CONDITIONAL(WITH_SDL,[test "$HAVE_SDL" = "yes"])
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)
 AC_SUBST(LIBOIL_CFLAGS)
 if test "$HAVE_LIBOIL" = "no"; then
-  AC_MSG_ERROR([cannot find liboil-0.2, which is required for build])
+  AC_MSG_ERROR([cannot find liboil-0.3, which is required for build])
 fi
 
 AC_ARG_WITH(backend,

@@ -56,6 +56,14 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
     }
     g_free (sprite->actions);
   }
+  if (sprite->sound_play) {
+    for (i = 0; i < sprite->n_frames; i++) {
+      if (sprite->sound_play[i]) {
+        g_free (sprite->sound_play[i]);
+      }
+    }
+    g_free(sprite->sound_play);
+  }
 
 }
 
@@ -286,6 +294,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
   sprite->actions = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
+  sprite->sound_play = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
 
   memcpy (&parse, bits, sizeof (SwfdecBits));
 

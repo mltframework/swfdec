@@ -14,6 +14,8 @@
 #endif
 
 G_BEGIN_DECLS
+
+//typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 //typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundClass SwfdecSoundClass;
 
@@ -23,15 +25,15 @@ typedef struct _SwfdecSoundClass SwfdecSoundClass;
 #define SWFDEC_SOUND(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SOUND, SwfdecSound))
 #define SWFDEC_SOUND_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SOUND, SwfdecSoundClass))
 
-#if 0
 struct _SwfdecSoundChunk
 {
-  int n_samples;
-  int n_left;
-  int length;
-  unsigned char *data;
+  int object;
+  int start_sample;
+  int stop_sample;
+  int loop_count;
+  int stop;
+  int no_restart;
 };
-#endif
 
 struct _SwfdecSound
 {
@@ -39,8 +41,7 @@ struct _SwfdecSound
 
   int format;
 
-  unsigned char *orig_data;
-  int orig_len;
+  SwfdecBuffer *orig_buffer;
 
 #ifdef HAVE_MAD
   struct mad_stream stream;
@@ -54,8 +55,10 @@ struct _SwfdecSound
 
   int n_samples;
 
-  void *sound_buf;
-  int sound_len;
+  //void *sound_buf;
+  //int sound_len;
+
+  GList *decoded_buffers;
 };
 
 struct _SwfdecSoundClass

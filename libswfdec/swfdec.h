@@ -2,9 +2,9 @@
 #ifndef __SWFDEC_H__
 #define __SWFDEC_H__
 
-#include <glib.h>
-
-G_BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum {
 	SWF_OK = 0,
@@ -40,7 +40,9 @@ int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level);
 
 void *swfdec_decoder_get_sound_chunk(SwfdecDecoder *s, int *length);
 
-G_END_DECLS
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

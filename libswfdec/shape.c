@@ -274,7 +274,7 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 			SWF_DEBUG(0,"    color %08x\n",shapevec->color);
 		}
 		if(fill_style_type == 0x10 || fill_style_type == 0x12){
-			get_matrix(bits);
+			get_art_matrix(bits,shapevec->fill_matrix);
 			if(shape->rgba){
 				shapevec->color = get_gradient_rgba(bits);
 			}else{
@@ -292,7 +292,7 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 				shapevec->color = SWF_COLOR_COMBINE(0,255,255,255);
 			}
 
-			get_matrix(bits);
+			get_art_matrix(bits,shapevec->fill_matrix);
 		}
 	}
 
@@ -647,6 +647,10 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 {
 	SwfdecObject *image_object;
 	SwfdecImage *image;
+	double mat[6];
+	double mat0[6];
+	int i, j;
+	unsigned char *dest;
 
 	image_object = swfdec_object_get(s, shapevec->fill_id);
 	if(!image_object)return;
@@ -658,9 +662,47 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	image = image_object->priv;
 	SWF_DEBUG(4,"image %p\n", image->image_data);
 
-	layervec->compose = image->image_data;
-	layervec->compose_rowstride = image->rowstride;
-	layervec->compose_height = image->height;
-	layervec->compose_width = image->width;
+	SWF_DEBUG(4,"%g %g %g %g %g %g\n",
+		shapevec->fill_matrix[0],
+		shapevec->fill_matrix[1],
+		shapevec->fill_matrix[2],
+		shapevec->fill_matrix[3],
+		shapevec->fill_matrix[4],
+		shapevec->fill_matrix[5]);
+
+	layervec->compose = g_malloc(s->width * s->height * 4);
+	layervec->compose_rowstride = s->width * 4;
+	layervec->compose_height = s->height;
+	layervec->compose_width = s->width;
+	
+	for(i=0;i<4;i++){
+		mat0[i] = shapevec->fill_matrix[i] / 20.0;
+	}
+	mat0[4] = shapevec->fill_matrix[4];
+	mat0[5] = shapevec->fill_matrix[5];
+	art_affine_invert(mat, mat0);
+	dest = layervec->compose;
+	for(j=0;j<s->height;j++){
+	for(i=0;i<s->width;i++){
+		int ix,iy;
+		double x,y;
+
+		x = mat[0]*i + mat[2]*j + mat[4];
+		y = mat[1]*i + mat[3]*j + mat[5];
+
+		if(x<0)x=0;
+		if(x>image->width-1)x=image->width-1;
+		if(y<0)y=0;
+		if(y>image->height-1)y=image->height-1;
+
+		ix = x;
+		iy = y;
+		dest[0] = image->image_data[ix*4 + iy*image->rowstride + 0];
+		dest[1] = image->image_data[ix*4 + iy*image->rowstride + 1];
+		dest[2] = image->image_data[ix*4 + iy*image->rowstride + 2];
+		dest[3] = 0;
+		dest+=4;
+	}
+	}
 }
 

@@ -488,14 +488,10 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
     }
 
   if(data->compose){
-    int x;
-    for(x=data->x0;x<data->x1;x+=data->compose_width){
-    	compose_rgb888_u8(data->buf, linebuf,
-		data->compose + data->compose_y * data->compose_rowstride,
-    		MIN(data->x1 - x, data->compose_width));
-    }
+    compose_rgb888_u8(data->buf, linebuf,
+	data->compose + data->compose_y * data->compose_rowstride + data->x0*4,
+    	data->x1 - data->x0);
     data->compose_y++;
-    if(data->compose_y >= data->compose_height)data->compose_y = 0;
   }else{
     compose_const_rgb888_u8(data->buf, linebuf, data->color, data->x1 - data->x0);
   }

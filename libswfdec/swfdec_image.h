@@ -5,7 +5,7 @@
 struct swfdec_image_struct{
 	int width, height;
 	int rowstride;
-	char *image_data;
+	unsigned char *image_data;
 };
 
 int swfdec_image_jpegtables(SwfdecDecoder *s);

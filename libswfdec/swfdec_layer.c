@@ -24,10 +24,12 @@ void swfdec_layer_free(SwfdecLayer *layer)
 	for(i=0;i<layer->fills->len;i++){
 		layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 		art_svp_free(layervec->svp);
+		if(layervec->compose)g_free(layervec->compose);
 	}
 	for(i=0;i<layer->lines->len;i++){
 		layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 		art_svp_free(layervec->svp);
+		if(layervec->compose)g_free(layervec->compose);
 	}
 	g_array_free(layer->fills,TRUE);
 	g_array_free(layer->lines,TRUE);
@@ -155,7 +157,7 @@ void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 	cb_data.compose = layervec->compose;
 	cb_data.compose_rowstride = layervec->compose_rowstride;
 	cb_data.compose_height = layervec->compose_height;
-	cb_data.compose_y = 0;
+	cb_data.compose_y = rect.y0;
 	cb_data.compose_width = layervec->compose_width;
 
 	g_assert(rect.x1 > rect.x0);

@@ -24,3 +24,5 @@ noinst_HEADERS = art.h bits.h color.h get.h internal.h proto.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_types.h tags.h swfdec_display.h
 
+EXTRA_DIST = version_script
+

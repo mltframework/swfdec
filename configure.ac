@@ -101,7 +101,7 @@ dnl GdkPixbuf loader
 AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, true)
 
 AC_ARG_ENABLE(pixbuf-loader,
-    [  --enable-pixbuf-loader  Enable a RSVG based GdkPixbuf loader [default=auto]],
+    [  --enable-pixbuf-loader  Enable a SWF based GdkPixbuf loader [default=auto]],
     enable_pixbuf_loader="$enableval", enable_pixbuf_loader=auto)
 
 if test x$enable_pixbuf_loader = xauto ; then

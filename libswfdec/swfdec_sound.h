@@ -43,15 +43,14 @@ struct _SwfdecSound
 
   SwfdecBuffer *orig_buffer;
 
+  void *decoder_private;
 #ifdef HAVE_MAD
   struct mad_stream stream;
   struct mad_frame frame;
   struct mad_synth synth;
+#endif
   unsigned char tmpbuf[2048];
   int tmpbuflen;
-#else
-  void *mp;
-#endif
 
   int n_samples;
 

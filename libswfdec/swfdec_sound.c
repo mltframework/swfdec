@@ -14,7 +14,9 @@ static void swfdec_sound_mp3_init (SwfdecSound * sound);
 static void swfdec_sound_mp3_decode (SwfdecSound * sound);
 int swfdec_sound_mp3_decode_stream (SwfdecDecoder * s, SwfdecSound * sound);
 static void swfdec_sound_mp3_cleanup (SwfdecSound * sound);
+#ifdef HAVE_MAD
 static SwfdecBuffer * convert_synth_to_buffer (SwfdecSound *sound);
+#endif
 void swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
     SwfdecBuffer * buffer);
 

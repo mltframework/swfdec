@@ -1,3 +1,9 @@
+2005-01-10  David Schleef  <ds@schleef.org>
+
+	* gimp-loader/Makefile.am: depends on HAVE_GIMP
+	* libswfdec/swfdec_sound.c: fixes from last checkin
+	* libswfdec/swfdec_sound.h: same
+
 2004-12-26  David Schleef  <ds@schleef.org>
 
 	* configure.ac: bump to liboil-0.3

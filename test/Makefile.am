@@ -1,5 +1,9 @@
 
+if WITH_GLIB_COMPAT
+noinst_PROGRAMS = dump
+else
 noinst_PROGRAMS = render-fast test-pixbuf dump render
+endif
 
 render_fast_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS)
 render_fast_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)

@@ -87,7 +87,7 @@ get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
   }
 
   type = swfdec_bits_getbits (bits, 1);
-  g_print ("   type = %d\n", type);
+  SWFDEC_DEBUG ("   type = %d\n", type);
 
   if (type == 0) {
     state_new_styles = swfdec_bits_getbits (bits, 1);
@@ -96,34 +96,34 @@ get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
     state_fill_styles0 = swfdec_bits_getbits (bits, 1);
     state_moveto = swfdec_bits_getbits (bits, 1);
 
-    g_print ("   state_new_styles = %d\n", state_new_styles);
-    g_print ("   state_line_styles = %d\n", state_line_styles);
-    g_print ("   state_fill_styles1 = %d\n", state_fill_styles1);
-    g_print ("   state_fill_styles0 = %d\n", state_fill_styles0);
-    g_print ("   state_moveto = %d\n", state_moveto);
+    SWFDEC_DEBUG ("   state_new_styles = %d\n", state_new_styles);
+    SWFDEC_DEBUG ("   state_line_styles = %d\n", state_line_styles);
+    SWFDEC_DEBUG ("   state_fill_styles1 = %d\n", state_fill_styles1);
+    SWFDEC_DEBUG ("   state_fill_styles0 = %d\n", state_fill_styles0);
+    SWFDEC_DEBUG ("   state_moveto = %d\n", state_moveto);
 
     if (state_moveto) {
       movebits = swfdec_bits_getbits (bits, 5);
-      g_print ("   movebits = %d\n", movebits);
+      SWFDEC_DEBUG ("   movebits = %d\n", movebits);
       movex = swfdec_bits_getsbits (bits, movebits);
       movey = swfdec_bits_getsbits (bits, movebits);
-      g_print ("   movex = %d\n", movex);
-      g_print ("   movey = %d\n", movey);
+      SWFDEC_DEBUG ("   movex = %d\n", movex);
+      SWFDEC_DEBUG ("   movey = %d\n", movey);
     }
     if (state_fill_styles0) {
       fill0style = swfdec_bits_getbits (bits, n_fill_bits);
-      g_print ("   fill0style = %d\n", fill0style);
+      SWFDEC_DEBUG ("   fill0style = %d\n", fill0style);
     }
     if (state_fill_styles1) {
       fill1style = swfdec_bits_getbits (bits, n_fill_bits);
-      g_print ("   fill1style = %d\n", fill1style);
+      SWFDEC_DEBUG ("   fill1style = %d\n", fill1style);
     }
     if (state_line_styles) {
       linestyle = swfdec_bits_getbits (bits, n_line_bits);
-      g_print ("   linestyle = %d\n", linestyle);
+      SWFDEC_DEBUG ("   linestyle = %d\n", linestyle);
     }
     if (state_new_styles) {
-      g_print ("***** new styles not implemented\n");
+      SWFDEC_DEBUG ("***** new styles not implemented\n");
     }
 
 
@@ -133,7 +133,7 @@ get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
     int edge_flag;
 
     edge_flag = swfdec_bits_getbits (bits, 1);
-    g_print ("   edge_flag = %d\n", edge_flag);
+    SWFDEC_DEBUG ("   edge_flag = %d\n", edge_flag);
 
     if (edge_flag == 0) {
       int control_delta_x;
@@ -147,9 +147,9 @@ get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
       anchor_delta_x = swfdec_bits_getsbits (bits, n_bits);
       anchor_delta_y = swfdec_bits_getsbits (bits, n_bits);
 
-      g_print ("   n_bits = %d\n", n_bits);
-      g_print ("   control_delta = %d,%d\n", control_delta_x, control_delta_y);
-      g_print ("   anchor_delta = %d,%d\n", anchor_delta_x, anchor_delta_y);
+      SWFDEC_DEBUG ("   n_bits = %d\n", n_bits);
+      SWFDEC_DEBUG ("   control_delta = %d,%d\n", control_delta_x, control_delta_y);
+      SWFDEC_DEBUG ("   anchor_delta = %d,%d\n", anchor_delta_x, anchor_delta_y);
     } else {
       int general_line_flag;
       int delta_x;
@@ -171,13 +171,13 @@ get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
 	  delta_y = swfdec_bits_getsbits (bits, n_bits);
 	}
       }
-      g_print ("   general_line_flag = %d\n", general_line_flag);
+      SWFDEC_DEBUG ("   general_line_flag = %d\n", general_line_flag);
       if (general_line_flag == 0) {
-	g_print ("   vert_line_flag = %d\n", vert_line_flag);
+	SWFDEC_DEBUG ("   vert_line_flag = %d\n", vert_line_flag);
       }
-      g_print ("   n_bits = %d\n", n_bits);
-      g_print ("   delta_x = %d\n", delta_x);
-      g_print ("   delta_y = %d\n", delta_y);
+      SWFDEC_DEBUG ("   n_bits = %d\n", n_bits);
+      SWFDEC_DEBUG ("   delta_x = %d\n", delta_x);
+      SWFDEC_DEBUG ("   delta_y = %d\n", delta_y);
     }
   }
 
@@ -198,7 +198,7 @@ tag_func_define_shape (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (b);
   SWFDEC_INFO("id=%d", id);
-  g_print ("  bounds = %s\n", "rect");
+  SWFDEC_DEBUG ("  bounds = %s\n", "rect");
   swfdec_bits_get_rect (b, rect);
   swfdec_bits_syncbits (b);
   n_fill_styles = swfdec_bits_get_u8 (b);

@@ -2,7 +2,6 @@
 #ifndef _SWFDEC_SOUND_H_
 #define _SWFDEC_SOUND_H_
 
-#include <glib-object.h>
 #include <swfdec_object.h>
 #include "swfdec_types.h"
 

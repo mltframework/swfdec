@@ -2,8 +2,10 @@
 #include "swfdec_internal.h"
 
 #include <swfdec_object.h>
+#include <string.h>
 
 
+#ifndef GLIB_COMPAT
 static void swfdec_object_base_init (gpointer g_class);
 static void swfdec_object_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_object_init (GTypeInstance *instance, gpointer g_class);
@@ -59,7 +61,7 @@ static void swfdec_object_dispose (GObject *object)
 {
 
 }
-
+#endif
 
 void *
 swfdec_object_new (GType type)
@@ -86,20 +88,5 @@ swfdec_object_get (SwfdecDecoder * s, int id)
   SWFDEC_WARNING ("object not found (id==%d)", id);
 
   return NULL;
-}
-
-void
-swfdec_object_dump (SwfdecObject *object)
-{
-  SwfdecObjectClass *klass;
-
-  klass = SWFDEC_OBJECT_GET_CLASS (object);
-
-  g_print ("Object %d:\n", object->id);
-  if (klass->dump) {
-    klass->dump (object);
-  } else {
-    g_print("  no dump\n");
-  }
 }
 

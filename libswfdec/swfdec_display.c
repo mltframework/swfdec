@@ -27,12 +27,12 @@ tag_func_place_object_2 (SwfdecDecoder * s)
   move = swfdec_bits_getbit (bits);
   depth = swfdec_bits_get_u16 (bits);
 
-  g_print ("  reserved = %d\n", reserved);
-  g_print ("  depth = %d\n", depth);
+  SWFDEC_DEBUG ("  reserved = %d\n", reserved);
+  SWFDEC_DEBUG ("  depth = %d\n", depth);
 
   if (has_character) {
     character_id = swfdec_bits_get_u16 (bits);
-    g_print ("  id = %d\n", character_id);
+    SWFDEC_DEBUG ("  id = %d\n", character_id);
   }
   if (has_matrix) {
     SwfdecTransform trans;
@@ -45,7 +45,7 @@ tag_func_place_object_2 (SwfdecDecoder * s)
   }
   if (has_ratio) {
     ratio = swfdec_bits_get_u16 (bits);
-    g_print ("  ratio = %d\n", ratio);
+    SWFDEC_DEBUG ("  ratio = %d\n", ratio);
   }
   if (has_name) {
     g_free (swfdec_bits_get_string (bits));
@@ -63,8 +63,8 @@ tag_func_remove_object (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (&s->b);
   depth = swfdec_bits_get_u16 (&s->b);
 
-  g_print ("  id = %d\n", id);
-  g_print ("  depth = %d\n", depth);
+  SWFDEC_DEBUG ("  id = %d\n", id);
+  SWFDEC_DEBUG ("  depth = %d\n", depth);
 
   return SWF_OK;
 }
@@ -76,7 +76,7 @@ tag_func_remove_object_2 (SwfdecDecoder * s)
 
   depth = swfdec_bits_get_u16 (&s->b);
 
-  g_print ("  depth = %d\n", depth);
+  SWFDEC_DEBUG ("  depth = %d\n", depth);
 
   return SWF_OK;
 }

@@ -11,6 +11,7 @@
 #include <swfdec_sprite.h>
 #include <swfdec_shape.h>
 
+#define g_print printf
 
 void dump_objects(SwfdecDecoder *s);
 void dump_sprite(SwfdecSprite *s);
@@ -23,7 +24,7 @@ int main (int argc, char *argv[])
   char *fn = "it.swf";
   SwfdecDecoder *s;
 
-  g_type_init();
+  swfdec_init();
 
   if(argc>=2){
 	fn = argv[1];

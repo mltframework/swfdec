@@ -2,7 +2,6 @@
 #ifndef _SWFDEC_FONT_H_
 #define _SWFDEC_FONT_H_
 
-#include <glib-object.h>
 #include <swfdec_types.h>
 #include <swfdec_object.h>
 

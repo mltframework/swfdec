@@ -1,5 +1,33 @@
 2004-10-08  David Schleef  <ds@schleef.org>
 
+	* Makefile.am: player no longer depends on glib
+	* glib-compat/glib-object.h: new
+	* glib-compat/glib.h: more compatibility
+	* glib-compat/glib/Makefile.am: add gobject.c
+	* glib-compat/glib/gobject.c: (g_type_init), (g_type_name),
+	(g_object_new), (g_object_unref): 
+	* libswfdec/jpeg/Makefile.am:
+	* libswfdec/swfdec_debug.c: (swfdec_debug_log): glib-compat stuff
+	* libswfdec/swfdec_display.c: (tag_func_place_object_2),
+	(tag_func_remove_object), (tag_func_remove_object_2): remove g_print()
+	* libswfdec/swfdec_font.h: glib-compat
+	* libswfdec/swfdec_image.h: same
+	* libswfdec/swfdec_object.c: same
+	* libswfdec/swfdec_object.h: same
+	* libswfdec/swfdec_render.c: (swfdec_render_get_image): same
+	* libswfdec/swfdec_shape.c: (get_shape_rec),
+	(tag_func_define_shape): remove g_print()
+	* libswfdec/swfdec_shape.h: glib-compat
+	* libswfdec/swfdec_sound.h: same
+	* libswfdec/swfdec_sprite.h: same
+	* libswfdec/swfdec_text.h: same
+	* player/swf_play.c: (main), (render_idle_audio),
+	(render_idle_noaudio): remove glib dependency
+	* test/Makefile.am: dump works with glib-compat
+	* test/dump.c: (main): same
+
+2004-10-08  David Schleef  <ds@schleef.org>
+
 	* libswfdec/swfdec_render.c: (swfdec_render_get_object_state):
 	add object id as identifier for object state.  Improves rendering
 	of sprites.

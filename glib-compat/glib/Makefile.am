@@ -8,7 +8,8 @@ libglib_la_SOURCES = \
 	gfileutils.c \
 	glist.c \
 	gmem.c \
-	gstrfuncs.c
+	gstrfuncs.c \
+	gobject.c
 
 noinst_HEADERS = \
 	config.h \

@@ -20,6 +20,10 @@ typedef struct _SwfdecObjectClass SwfdecObjectClass;
 
 #define SWFDEC_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_OBJECT, SwfdecObjectClass))
 
+#if 0
+#define SWFDEC_OBJECT_GET_CLASS(obj)          ((SwfdecObjectClass *)((obj)->object.klass))
+#endif
+
 struct _SwfdecObject {
   GObject object;
 
@@ -45,8 +49,8 @@ void swfdec_object_unref (SwfdecObject *object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
 
-void swfdec_object_dump (SwfdecObject *object);
 
+#ifndef GLIB_COMPAT
 
 #define SWFDEC_OBJECT_BOILERPLATE(type, type_as_function) \
 static void type_as_function ## _base_init (gpointer g_class); \
@@ -88,6 +92,33 @@ GType type_as_function ## _get_type (void) \
   return _type; \
 }
 
+#else
+
+#define SWFDEC_OBJECT_BOILERPLATE(type, type_as_function) \
+static void type_as_function ## _base_init (gpointer g_class); \
+static void type_as_function ## _class_init (type ## Class *g_class); \
+static void type_as_function ## _init (type *object); \
+static void type_as_function ## _dispose (type *object); \
+ \
+GType type_as_function ## _get_type (void) \
+{ \
+  static type ## Class klass; \
+  static int inited = FALSE; \
+  GObjectClass *gclass = (GObjectClass *)&klass; \
+  \
+  if (!inited) { \
+    gclass->size = sizeof(type); \
+    gclass->name = #type ; \
+    gclass->dispose = (void *)type_as_function ## _dispose; \
+    gclass->base_init = type_as_function ## _base_init; \
+    gclass->class_init = (void *)type_as_function ## _class_init; \
+    gclass->init = (void *)type_as_function ## _init; \
+    type_as_function ## _base_init (&klass); \
+    type_as_function ## _class_init (&klass); \
+  } \
+  return (unsigned long) &klass; \
+}
+#endif
 
 G_END_DECLS
 

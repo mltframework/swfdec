@@ -2,7 +2,6 @@
 #ifndef _SWFDEC_IMAGE_H_
 #define _SWFDEC_IMAGE_H_
 
-#include <glib-object.h>
 #include <swfdec_decoder.h>
 #include <swfdec_object.h>
 

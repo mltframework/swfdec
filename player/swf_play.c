@@ -19,17 +19,19 @@
 
 #include <SDL.h>
 
+#define g_print printf
+
 gboolean debug = FALSE;
 int slow = 0;
+
+gboolean go = TRUE;
+int render_time;
 
 SwfdecDecoder *s;
 unsigned char *image;
 unsigned char *image4;
 
 SDL_Surface *sdl_screen;
-GMainLoop *main_loop;
-
-GIOChannel *input_chan;
 
 guint input_idle_id;
 guint render_idle_id;
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
         int length;
         int ret;
 
-        SDL_Init (SDL_INIT_AUDIO|SDL_INIT_VIDEO);
+        SDL_Init (SDL_INIT_NOPARACHUTE|SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER);
 
 	s = swfdec_decoder_new();
 
@@ -139,14 +141,17 @@ int main(int argc, char *argv[])
 
 	if(enable_sound)sound_setup();
 
-        if (enable_sound) {
-          g_timeout_add (0, render_idle_audio, NULL);
-        } else {
-          g_timeout_add (0, render_idle_noaudio, NULL);
+        render_time = 0;
+        while (go) {
+          int now = SDL_GetTicks ();
+          if (now >= render_time) {
+            if (enable_sound) {
+              render_idle_audio (NULL);
+            } else {
+              render_idle_noaudio (NULL);
+            }
+          }
         }
-
-        main_loop = g_main_loop_new (NULL, TRUE);
-        g_main_loop_run (main_loop);
 
 	exit(0);
 }
@@ -243,13 +248,15 @@ static gboolean render_idle_audio(gpointer data)
         gboolean ret;
 
         if (sound_bytes >= 40000) {
-          g_timeout_add (10, render_idle_audio, NULL);
+          int now = SDL_GetTicks ();
+
+          render_time = now + 10;
           return FALSE;
         }
 
         ret = swfdec_render_iterate (s);
         if (!ret) {
-	  g_main_loop_quit (main_loop);
+          go = FALSE;
           return FALSE;
         }
 
@@ -257,7 +264,7 @@ static gboolean render_idle_audio(gpointer data)
 
         if (audio_buffer == NULL) {
           /* error */
-	  g_main_loop_quit (main_loop);
+          go = FALSE;
         }
 
         sound_buffers = g_list_append (sound_buffers, audio_buffer);
@@ -295,7 +302,7 @@ printf("%d\n", sound_bytes);
           SDL_FreeSurface (surface);
         }
 
-  g_timeout_add (10, render_idle_audio, NULL);
+          render_time = SDL_GetTicks () + 10;
 
 	return FALSE;
 }
@@ -322,7 +329,7 @@ static gboolean render_idle_noaudio(gpointer data)
           SDL_FreeSurface (surface);
         }
 
-  g_timeout_add (interval, render_idle_noaudio, NULL);
+          render_time = SDL_GetTicks () + 10;
 
 	return FALSE;
 }

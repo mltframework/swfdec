@@ -4,7 +4,6 @@
 
 #include "swfdec_types.h"
 #include <swfdec_object.h>
-#include <glib-object.h>
 
 G_BEGIN_DECLS
 

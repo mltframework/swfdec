@@ -1,13 +1,13 @@
 
 if WITH_GLIB_COMPAT
 glib_compat_subdirs = glib-compat
-#no_glib_compat_subdirs =
+no_glib_compat_subdirs =
 else
 glib_compat_subdirs =
+no_glib_compat_subdirs = gimp-loader pixbuf-loader
 endif
-no_glib_compat_subdirs = gimp-loader pixbuf-loader player plugin
 
-SUBDIRS=$(glib_compat_subdirs) libswfdec test $(no_glib_compat_subdirs)
+SUBDIRS=$(glib_compat_subdirs) libswfdec test player plugin $(no_glib_compat_subdirs)
 
 DIST_SUBDIRS= \
 	gimp-loader \

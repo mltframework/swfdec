@@ -27,6 +27,8 @@
 #ifndef __G_LIB_H__
 #define __G_LIB_H__
 
+#define GLIB_COMPAT 1
+
 //#include <glib/galloca.h>
 #include <glib/garray.h>
 //#include <glib/gasyncqueue.h>
@@ -77,5 +79,7 @@
 #define G_LOCK_DEFINE_STATIC(x)
 #define G_LOCK(x)
 #define G_UNLOCK(x)
+
+#define g_getenv(key) getenv(key)
 
 #endif /* __G_LIB_H__ */

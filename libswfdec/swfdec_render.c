@@ -170,7 +170,12 @@ swf_invalidate_irect (s, &s->irect);
 
     object = swfdec_object_get (s, seg->id);
     if (object) {
-      SWFDEC_OBJECT_GET_CLASS(object)->render (s, seg, object);
+      if (SWFDEC_OBJECT_GET_CLASS(object)->render) {
+        SWFDEC_OBJECT_GET_CLASS(object)->render (s, seg, object);
+      } else {
+        SWFDEC_ERROR ("class render function is NULL for class %s",
+            g_type_name (G_TYPE_FROM_INSTANCE (object)));
+      }
     } else {
       SWFDEC_DEBUG ("could not find object (id = %d)", seg->id);
     }

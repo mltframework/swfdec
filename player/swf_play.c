@@ -1,5 +1,7 @@
 
 #include <swfdec.h>
+#include <swfdec_render.h>
+#include <swfdec_buffer.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -20,13 +22,6 @@
 
 #include <SDL.h>
 
-struct sound_buffer_struct{
-	int len;
-	int offset;
-	void *data;
-};
-typedef struct sound_buffer_struct SoundBuffer;
-
 gboolean debug = FALSE;
 
 SwfdecDecoder *s;
@@ -35,7 +30,6 @@ unsigned char *image4;
 
 GtkWidget *drawing_area;
 GtkWidget *gtk_wind;
-int plugged;
 GdkWindow *gdk_parent;
 
 GIOChannel *input_chan;
@@ -43,19 +37,17 @@ GIOChannel *input_chan;
 guint input_idle_id;
 guint render_idle_id;
 
-unsigned long xid;
 int width;
 int height;
 int fast = FALSE;
 int enable_sound = TRUE;
 int quit_at_eof = FALSE;
 
+double rate;
 int interval;
 struct timeval image_time;
 
 static void do_help(void);
-static void read_swf_file(char *fn);
-static void read_swf_stdin(void);
 static void new_gtk_window(void);
 
 static void sound_setup(void);
@@ -68,24 +60,16 @@ static void destroy_cb (GtkWidget *widget, gpointer data);
 static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data);
 static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data);
 static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data);
-static void embedded (GtkPlug *plug, gpointer data);
 static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer data);
 
-/* GIOChan callbacks */
-static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored);
-static gboolean render_idle(gpointer data);
-
-/* fault handling stuff */
-void fault_handler(int signum, siginfo_t *si, void *misc);
-void fault_restore(void);
-void fault_setup(void);
+static gboolean render_idle_audio (gpointer data);
+static gboolean render_idle_noaudio (gpointer data);
 
 int main(int argc, char *argv[])
 {
 	int c;
 	int index;
 	static struct option options[] = {
-		{ "xid", 1, NULL, 'x' },
 		{ "width", 1, NULL, 'w' },
 		{ "height", 1, NULL, 'h' },
 		{ "fast", 0, NULL, 'f' },
@@ -93,8 +77,9 @@ int main(int argc, char *argv[])
 		{ "quit", 0, NULL, 'q' },
 		{ 0 },
 	};
-
-	//fault_setup();
+        char *contents;
+        int length;
+        int ret;
 
 	gtk_init(&argc,&argv);
 	gdk_rgb_init ();
@@ -108,9 +93,6 @@ int main(int argc, char *argv[])
 		if(c==-1)break;
 
 		switch(c){
-		case 'x':
-			xid = strtoul(optarg, NULL, 0);
-			break;
 		case 'w':
 			width = strtoul(optarg, NULL, 0);
 			printf("width set to %d\n",width);
@@ -140,18 +122,41 @@ int main(int argc, char *argv[])
 		swfdec_decoder_set_image_size(s,width,height);
 	}
 
-	if(strcmp(argv[optind],"-")==0){
-		read_swf_stdin();
-	}else{
-		read_swf_file(argv[optind]);
-	}
+        ret = g_file_get_contents (argv[optind], &contents, &length, NULL);
+        if (!ret) {
+          g_print("error reading file\n");
+          exit(1);
+        }
+        swfdec_decoder_add_data (s, contents, length);
 
-	if(xid){
-		plugged = 1;
-	}
+        while (1) {
+          ret = swfdec_decoder_parse (s);
+          if (ret == SWF_NEEDBITS ) {
+            swfdec_decoder_eof (s);
+          }
+          if (ret == SWF_ERROR) {
+            g_print("error while parsing\n");
+            exit(1);
+          }
+          if (ret == SWF_EOF) {
+            break;
+          }
+        }
+
+        swfdec_decoder_get_rate (s, &rate);
+        interval = 1000.0/rate;
+
+        swfdec_decoder_get_image_size (s, &width, &height);
+
 	new_gtk_window();
 
 	if(enable_sound)sound_setup();
+
+        if (enable_sound) {
+          g_timeout_add (0, render_idle_audio, NULL);
+        } else {
+          g_timeout_add (0, render_idle_noaudio, NULL);
+        }
 
 	gtk_main();
 
@@ -160,23 +165,14 @@ int main(int argc, char *argv[])
 
 static void do_help(void)
 {
-	fprintf(stderr,"swf_play [--xid NNN] file.swf\n");
+	fprintf(stderr,"swf_play file.swf\n");
 	exit(1);
 }
 
 static void new_gtk_window(void)
 {
-	if(plugged){
-		gtk_wind = gtk_plug_new(0);
-		gtk_signal_connect(GTK_OBJECT(gtk_wind), "embedded",
-			GTK_SIGNAL_FUNC(embedded), NULL);
+	gtk_wind = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-		gdk_parent = gdk_window_foreign_new(xid);
-		gdk_window_get_geometry(gdk_parent, NULL, NULL, &width, &height, NULL);
-		printf("width=%d height=%d\n",width,height);
-	}else{
-		gtk_wind = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	}
 	gtk_window_set_default_size(GTK_WINDOW(gtk_wind), width, height);
 	gtk_signal_connect(GTK_OBJECT(gtk_wind), "delete_event",
 		GTK_SIGNAL_FUNC (destroy_cb), NULL);
@@ -201,59 +197,6 @@ static void new_gtk_window(void)
 
 	gtk_widget_show_all(gtk_wind);
 
-	if(plugged){
-		XReparentWindow(GDK_WINDOW_XDISPLAY(gtk_wind->window),
-			GDK_WINDOW_XID(gtk_wind->window),
-			xid, 0, 0);
-		XMapWindow(GDK_WINDOW_XDISPLAY(gtk_wind->window),
-			GDK_WINDOW_XID(gtk_wind->window));
-	}
-}
-
-static void read_swf_file(char *fn)
-{
-	struct stat sb;
-	int fd;
-	int ret;
-	unsigned char *data;
-	int len;
-
-	fd = open(fn,O_RDONLY);
-	if(fd<0){
-		perror(fn);
-		exit(1);
-	}
-
-	ret = fstat(fd, &sb);
-	if(ret<0){
-		perror("stat");
-		exit(1);
-	}
-
-	len = sb.st_size;
-	data = malloc(len);
-	ret = read(fd, data, len);
-	if(ret<0){
-		perror("read");
-		exit(1);
-	}
-
-	ret = swfdec_decoder_addbits(s,data,len);
-	free(data);
-
-	if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
-}
-
-static void read_swf_stdin(void)
-{
-	GError *error = NULL;
-
-	input_chan = g_io_channel_unix_new(0);
-
-	g_io_channel_set_encoding(input_chan, NULL, &error);
-	g_io_channel_set_flags(input_chan, G_IO_FLAG_NONBLOCK, &error);
-
-	input_idle_id = g_io_add_watch(input_chan, G_IO_IN, input, NULL);
 }
 
 GList *sound_buffers;
@@ -263,7 +206,7 @@ unsigned char *sound_buf;
 static void fill_audio(void *udata, Uint8 *stream, int len)
 {
 	GList *g;
-	SoundBuffer *buffer;
+	SwfdecBuffer *buffer;
 	int n;
 	int offset = 0;
 
@@ -271,18 +214,25 @@ static void fill_audio(void *udata, Uint8 *stream, int len)
 		g = g_list_first(sound_buffers);
 		if(!g)break;
 
-		buffer = (SoundBuffer *)g->data;
-		n = MIN(buffer->len - buffer->offset,len - offset);
+		buffer = (SwfdecBuffer *)g->data;
+                if (buffer->length < len - offset) {
+                  n = buffer->length;
+		  memcpy(sound_buf + offset, buffer->data, n);
+                  swfdec_buffer_unref (buffer);
+                  sound_buffers = g_list_delete_link (sound_buffers, g);
+                } else {
+                  SwfdecBuffer *subbuffer;
 
-		memcpy(sound_buf + offset, buffer->data + buffer->offset, n);
+                  n = len - offset;
+		  memcpy(sound_buf + offset, buffer->data, n);
+                  subbuffer = swfdec_buffer_new_subbuffer (buffer, n,
+                      buffer->length - n);
+                  g->data = subbuffer;
+                  swfdec_buffer_unref (buffer);
+                }
+
 		sound_bytes -= n;
-		buffer->offset += n;
 		offset += n;
-		if(buffer->offset >= buffer->len){
-			sound_buffers = g_list_delete_link(sound_buffers,g);
-			free(buffer->data);
-			free(buffer);
-		}
 
 		if(offset >= len)break;
 	}
@@ -292,32 +242,6 @@ static void fill_audio(void *udata, Uint8 *stream, int len)
 	}
 
 	SDL_MixAudio(stream, sound_buf, len, SDL_MIX_MAXVOLUME);
-}
-
-static void pull_sound(SwfdecDecoder *s)
-{
-	SoundBuffer *sb;
-	void *data;
-	int n;
-
-	while(1){
-		data = swfdec_decoder_get_sound_chunk(s, &n);
-		if(!data)return;
-
-		if(enable_sound){
-			sb = g_new(SoundBuffer,1);
-
-			sb->len = n;
-			sb->offset = 0;
-			sb->data = data;
-
-			sound_buffers = g_list_append(sound_buffers, sb);
-
-			sound_bytes += n;
-		}else{
-			g_free(data);
-		}
-	}
 }
 
 static void sound_setup(void)
@@ -330,8 +254,8 @@ static void sound_setup(void)
 #else
 	wanted.format = AUDIO_S16LSB;
 #endif
-	wanted.channels = 2;    /* 1 = mono, 2 = stereo */
-	wanted.samples = 1024;  /* Good low-latency value for callback */
+	wanted.channels = 2;
+	wanted.samples = 1024;
 	wanted.callback = fill_audio;
 	wanted.userdata = NULL;
 
@@ -385,36 +309,8 @@ static void destroy_cb (GtkWidget *widget, gpointer data)
 	gtk_main_quit ();
 }
 
-static void embedded (GtkPlug *plug, gpointer data)
-{
-}
 
-/* idle stuff */
-
-static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
-{
-	char *data;
-	gsize bytes_read;
-	GError *error = NULL;
-	int ret;
-
-	data = malloc(4096);
-	ret = g_io_channel_read_chars(chan, data, 4096, &bytes_read, &error);
-	if(ret==G_IO_STATUS_NORMAL){
-		ret = swfdec_decoder_addbits(s,data,bytes_read);
-		if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
-	}else if(ret==G_IO_STATUS_ERROR){
-		exit(1);
-	}else if(ret==G_IO_STATUS_EOF){
-		gtk_idle_remove(input_idle_id);
-		if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
-	}
-
-	free(data);
-
-	return TRUE;
-}
-
+#if 0
 static void tv_add_usec(struct timeval *a, unsigned int x)
 {
 	a->tv_usec += x;
@@ -441,147 +337,79 @@ static int tv_diff(struct timeval *a,struct timeval *b)
 	diff += (a->tv_usec - b->tv_usec);
 	return diff;
 }
-
-static gboolean render_idle(gpointer data)
-{
-	int ret;
-	static int ack = 0;
-
-	ack++;
-	if(ack>=1)ack=0;
-	/* disabled temporarily */
-#if 0
-	if(ack==0){
-		swfdec_decoder_enable_render(s);
-	}else{
-		swfdec_decoder_disable_render(s);
-	}
 #endif
-	ret = swfdec_decoder_parse(s);
-	if(ret==SWF_NEEDBITS){
-		gtk_idle_remove(render_idle_id);
-		render_idle_id = 0;
-	}
-	if(ret==SWF_EOF){
-		swfdec_decoder_get_image(s,&image4);
-		swfdec_decoder_free(s);
-		s = NULL;
-		if(quit_at_eof){
-			if(image) g_free(image);
-			if(image4) g_free(image4);
-			gtk_exit(0);
-		}
-		gtk_idle_remove(render_idle_id);
-		render_idle_id = 0;
-	}
-	if(ret==SWF_IMAGE){
-		struct timeval now;
 
-		swfdec_decoder_peek_image(s,&image4);
-		pull_sound(s);
-
-		if(!enable_sound){
-			gettimeofday(&now, NULL);
-			tv_add_usec(&image_time, interval);
-			if(tv_compare(&image_time, &now) > 0){
-				int x = tv_diff(&image_time, &now);
-				//printf("sleeping for %d us\n",x);
-				if(!fast)usleep(x);
-			}else{
-				gettimeofday(&image_time, NULL);
-			}
-		}else{
-			while(sound_bytes>=10000){
-				usleep(10000);
-			}
-		}
-
-                if (image == NULL) {
-                  image = malloc (width * height *3);
-                }
-                convert_image (image, image4, width, height);
-		gdk_draw_rgb_image (drawing_area->window,
-			drawing_area->style->black_gc, 
-			0, 0, width, height, 
-			GDK_RGB_DITHER_NONE,
-			image,
-			width*3);
-	}
-	if(ret==SWF_CHANGE && !plugged){
-		double rate;
-
-		swfdec_decoder_get_rate(s, &rate);
-		interval = 1000000/rate;
-		swfdec_decoder_get_image_size(s, &width, &height);
-		gtk_window_resize(GTK_WINDOW(gtk_wind),
-			width, height);
-	}
-
-	return TRUE;
-}
-
-void convert_image (unsigned char *dest, unsigned char *src, int width,
-    int height)
+static void
+fixup_buffer (SwfdecBuffer *buffer)
 {
-  int i,j;
+  int i;
+  unsigned char tmp;
+  unsigned char *data = buffer->data;
 
-  for(j=0;j<height;j++){
-    for(i=0;i<width;i++){
-      dest[0] = src[0];
-      dest[1] = src[1];
-      dest[2] = src[2];
-      dest += 3;
-      src += 4;
-    }
+  for(i=0;i<buffer->length;i+=4){
+    tmp = data[2];
+    data[2] = data[0];
+    data[0] = tmp;
+    data+=4;
   }
+
 }
 
-extern volatile gboolean glib_on_error_halt;
-
-void fault_handler(int signum, siginfo_t *si, void *misc)
+static gboolean render_idle_audio(gpointer data)
 {
-	//int spinning = TRUE;
+        SwfdecBuffer *video_buffer;
+        SwfdecBuffer *audio_buffer;
 
-	fault_restore();
+        if (sound_bytes >= 10000) {
+          g_timeout_add (10, render_idle_audio, NULL);
+          return FALSE;
+        }
 
-	if(si->si_signo == SIGSEGV){
-		g_print ("Caught SIGSEGV accessing address %p\n", si->si_addr);
-	}else if(si->si_signo == SIGQUIT){
-		g_print ("Caught SIGQUIT\n");
-	}else{
-		g_print ("signo:  %d\n",si->si_signo);
-		g_print ("errno:  %d\n",si->si_errno);
-		g_print ("code:   %d\n",si->si_code);
-	}
+        swfdec_render_iterate (s);
 
-	glib_on_error_halt = FALSE;
-	g_on_error_stack_trace("swf_play");
+        video_buffer = swfdec_render_get_image (s);
+        audio_buffer = swfdec_render_get_audio (s);
 
-	wait(NULL);
+        sound_buffers = g_list_append (sound_buffers, audio_buffer);
+	sound_bytes += audio_buffer->length;
 
-	_exit(0);
+        fixup_buffer (video_buffer);
+
+	gdk_draw_rgb_32_image (drawing_area->window,
+		drawing_area->style->black_gc, 
+		0, 0, width, height, 
+		GDK_RGB_DITHER_NONE,
+		video_buffer->data,
+		width*4);
+          swfdec_buffer_unref (video_buffer);
+
+  g_timeout_add (10, render_idle_audio, NULL);
+
+	return FALSE;
 }
 
-void fault_restore(void)
+static gboolean render_idle_noaudio(gpointer data)
 {
-	struct sigaction action;
+        SwfdecBuffer *video_buffer;
+        SwfdecBuffer *audio_buffer;
 
-	memset(&action,0,sizeof(action));
-	action.sa_handler = SIG_DFL;
+        swfdec_render_iterate (s);
 
-	sigaction(SIGSEGV, &action, NULL);
-	sigaction(SIGQUIT, &action, NULL);
-}
+        video_buffer = swfdec_render_get_image (s);
+        audio_buffer = swfdec_render_get_audio (s);
 
-void fault_setup(void)
-{
-	struct sigaction action;
+        swfdec_buffer_unref (audio_buffer);
 
-	memset(&action,0,sizeof(action));
-	action.sa_sigaction = fault_handler;
-	action.sa_flags = SA_SIGINFO;
+	gdk_draw_rgb_32_image (drawing_area->window,
+		drawing_area->style->black_gc, 
+		0, 0, width, height, 
+		GDK_RGB_DITHER_NONE,
+		video_buffer->data,
+		width*4);
+          swfdec_buffer_unref (video_buffer);
 
-	sigaction(SIGSEGV, &action, NULL);
-	sigaction(SIGQUIT, &action, NULL);
+  g_timeout_add (interval, render_idle_noaudio, NULL);
+
+	return FALSE;
 }
 

@@ -122,7 +122,7 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
+  image = swfdec_object_new (SWFDEC_TYPE_IMAGE);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
@@ -155,7 +155,7 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
+  image = swfdec_object_new (SWFDEC_TYPE_IMAGE);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
@@ -190,7 +190,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
+  image = swfdec_object_new (SWFDEC_TYPE_IMAGE);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
@@ -263,7 +263,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
+  image = swfdec_object_new (SWFDEC_TYPE_IMAGE);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 

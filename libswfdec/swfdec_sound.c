@@ -105,7 +105,7 @@ tag_func_define_sound (SwfdecDecoder * s)
   type = swfdec_bits_getbits (b, 1);
   n_samples = swfdec_bits_get_u32 (b);
 
-  sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
+  sound = swfdec_object_new (SWFDEC_TYPE_SOUND);
   SWFDEC_OBJECT (sound)->id = id;
   //s->objects = g_list_append (s->objects, sound);
 
@@ -137,7 +137,7 @@ tag_func_define_sound (SwfdecDecoder * s)
       SWFDEC_WARNING ("tag_func_define_sound: unknown format %d", format);
   }
 
-g_object_unref (G_OBJECT (sound));
+  swfdec_object_unref (SWFDEC_OBJECT (sound));
 
   return SWF_OK;
 }
@@ -180,7 +180,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
   //g_print("  n_samples = %d\n", n_samples); /* XXX per frame? */
   //g_print("  unknown = %d\n", unknown);
 
-  sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
+  sound = swfdec_object_new (SWFDEC_TYPE_SOUND);
   SWFDEC_OBJECT (sound)->id = 0;
   s->objects = g_list_append (s->objects, sound);
 
@@ -398,8 +398,10 @@ swfdec_sound_render (SwfdecDecoder * s)
     offset += n;
 
     if (n < buf->length) {
-      buf = swfdec_buffer_new_subbuffer (buf, n, buf->length - n);
-      g->data = buf;
+      SwfdecBuffer *subbuffer;
+      subbuffer = swfdec_buffer_new_subbuffer (buf, n, buf->length - n);
+      g->data = subbuffer;
+      swfdec_buffer_unref (buf);
     } else {
       swfdec_buffer_unref (buf);
       s->stream_sound_buffers = g_list_delete_link (s->stream_sound_buffers, g);
@@ -592,7 +594,7 @@ swfdec_sound_mp3_cleanup (SwfdecSound *sound)
 
 void swfdec_sound_chunk_free (SwfdecSoundChunk *chunk)
 {
-  //g_free(chunk->data);
+  g_free(chunk->data);
   g_free(chunk);
 }
 

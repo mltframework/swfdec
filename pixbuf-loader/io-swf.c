@@ -26,6 +26,7 @@
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk-pixbuf/gdk-pixbuf-io.h>
+#include <swfdec_buffer.h>
 
 #define SWF_BUFFER_SIZE (1024 * 8)
 
@@ -200,7 +201,7 @@ swf_add_bits (SwfContext * context, const guint8 * buf, gsize nread)
 	if (context->single_frame && g_list_length (context->animation->frames) == 1)
 		return SWF_OK;	
 
-	result = swfdec_decoder_addbits (context->decoder, (guint8*)buf, (int)nread);
+	result = swfdec_decoder_add_data (context->decoder, buf, nread);
 	if (result == SWF_OK)
 		swf_flush (context);
 

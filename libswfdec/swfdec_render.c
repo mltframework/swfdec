@@ -15,6 +15,13 @@ swfdec_render_new (void)
 void
 swfdec_render_free (SwfdecRender *render)
 {
+  GList *g;
+
+  for (g=g_list_first (render->object_states); g; g = g_list_next(g)) {
+    g_free(g->data);
+  }
+  g_list_free(render->object_states);
+
   g_free (render);
 }
 

@@ -40,7 +40,7 @@ swfdec_decoder_new (void)
 
   swfdec_transform_init_identity (&s->transform);
 
-  s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
+  s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
   s->render = swfdec_render_new ();
 
   s->flatness = 0.5;
@@ -49,7 +49,18 @@ swfdec_decoder_new (void)
 }
 
 int
-swfdec_decoder_addbits (SwfdecDecoder * s, SwfdecBuffer *buffer)
+swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data, int length)
+{
+  SwfdecBuffer *buffer = swfdec_buffer_new();
+
+  buffer->data = (unsigned char *)data;
+  buffer->length = length;
+
+  return swfdec_decoder_add_buffer (s, buffer);
+}
+
+int
+swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer)
 {
   int offset;
   int ret;
@@ -63,6 +74,7 @@ swfdec_decoder_addbits (SwfdecDecoder * s, SwfdecBuffer *buffer)
     }
 
     s->parse.end = s->input_data + s->z->total_out;
+    swfdec_buffer_unref(buffer);
   } else {
     if (s->parse.ptr) {
       offset = (void *) s->parse.ptr - (void *) s->input_data;
@@ -73,6 +85,8 @@ swfdec_decoder_addbits (SwfdecDecoder * s, SwfdecBuffer *buffer)
     s->input_data = g_realloc (s->input_data, s->input_data_len + buffer->length);
     memcpy (s->input_data + s->input_data_len, buffer->data, buffer->length);
     s->input_data_len += buffer->length;
+
+    swfdec_buffer_unref(buffer);
 
     s->parse.ptr = s->input_data + offset;
     s->parse.end = s->input_data + s->input_data_len;
@@ -183,7 +197,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
   GList *g;
 
   for (g = g_list_first (s->objects); g; g = g_list_next (g)) {
-    g_object_unref (G_OBJECT (g->data));
+    swfdec_object_unref (SWFDEC_OBJECT (g->data));
   }
   g_list_free (s->objects);
 
@@ -192,7 +206,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
   if (s->input_data)
     g_free (s->input_data);
 
-  g_object_unref (G_OBJECT(s->main_sprite));
+  swfdec_object_unref (SWFDEC_OBJECT(s->main_sprite));
   swfdec_render_free (s->render);
 
   if (s->z) {
@@ -209,9 +223,14 @@ swfdec_decoder_free (SwfdecDecoder * s)
   }
 
   for (g = g_list_first (s->sound_buffers); g; g = g_list_next (g)) {
-    g_free (g->data);
+    swfdec_buffer_unref (g->data);
   }
   g_list_free (s->sound_buffers);
+
+  for (g = g_list_first (s->sound_buffers); g; g = g_list_next (g)) {
+    swfdec_buffer_unref (g->data);
+  }
+  g_list_free (s->stream_sound_buffers);
 
   g_free (s);
 
@@ -676,45 +695,4 @@ tag_func_frame_label (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-
-unsigned char *
-swfdec_decoder_render (SwfdecDecoder *s, int frame)
-{
-#if 0
-  GList *layer;
-  SwfdecSpriteSegment *seg;
-  SwfdecSprite *sprite;
-
-  buf = g_malloc (s->width * s->height * 4);
-  s->buffer = buf;
-
-  sprite = s->main_sprite;
-  g_print("rendering frame %d\n", frame);
-  for (layer = g_list_first(sprite->layers); layer; layer = g_list_next(layer)) {
-    seg = layer->data;
-
-    if (seg->first_frame <= frame && frame < seg->last_frame) {
-      g_print("id %d depth %d [%d,%d]\n",
-          seg->id,seg->depth,seg->first_frame,seg->last_frame);
-    }
-  }
-#endif
-  unsigned char *buf;
-
-  if (frame < 0 || frame >= s->n_frames) return NULL;
-
-  s->pixels_rendered = 0;
-
-  swf_config_colorspace (s);
-
-  swf_render_frame (s, frame);
-  //swfdec_render_clean (s->render, frame - 1);
-  swfdec_sound_render (s);
-
-  SWFDEC_LOG("pixels_rendered = %d", s->pixels_rendered);
-
-  buf = s->buffer;
-  s->buffer = NULL;
-  return buf;
-}
 

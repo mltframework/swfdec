@@ -61,21 +61,16 @@ static void swfdec_object_dispose (GObject *object)
 }
 
 
-#if 0
-SwfdecObject *
-swfdec_object_new (SwfdecDecoder * s, int id)
+void *
+swfdec_object_new (GType type)
 {
-  SwfdecObject *obj;
-
-  obj = g_new0 (SwfdecObject, 1);
-
-  obj->id = id;
-
-  s->objects = g_list_append (s->objects, obj);
-
-  return obj;
+  return g_object_new (type, NULL);
 }
-#endif
+
+void swfdec_object_unref (SwfdecObject *object)
+{
+  g_object_unref (G_OBJECT (object));
+}
 
 SwfdecObject *
 swfdec_object_get (SwfdecDecoder * s, int id)

@@ -1,3 +1,39 @@
+2004-09-01  David Schleef  <ds@schleef.org>
+
+	Make less dependent on gobject.  Change API to use SwfdecBuffer.
+	* libswfdec/Makefile.am: remove swf.h
+	* libswfdec/swf.c: (swfdec_decoder_new), (swfdec_decoder_add_data),
+	(swfdec_decoder_add_buffer), (swfdec_decoder_free):
+	* libswfdec/swf.h: remove
+	* libswfdec/swfdec.h:
+	* libswfdec/swfdec_buffer.c: (swfdec_buffer_unref):
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2):
+	* libswfdec/swfdec_button.h:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_font.c: (swfdec_font_dispose),
+	(tag_func_define_font), (tag_func_define_font_2):
+	* libswfdec/swfdec_image.c: (tag_func_define_bits_jpeg),
+	(tag_func_define_bits_jpeg_2), (tag_func_define_bits_jpeg_3),
+	(define_bits_lossless):
+	* libswfdec/swfdec_object.c: (swfdec_object_new),
+	(swfdec_object_unref):
+	* libswfdec/swfdec_object.h:
+	* libswfdec/swfdec_render.c: (swfdec_render_free): Fix memleak.
+	* libswfdec/swfdec_shape.c: (tag_define_shape),
+	(tag_define_shape_3):
+	* libswfdec/swfdec_sound.c: (tag_func_define_sound),
+	(tag_func_sound_stream_head), (swfdec_sound_render),
+	(swfdec_sound_chunk_free):
+	* libswfdec/swfdec_sprite.c: (tag_func_define_sprite):
+	* libswfdec/swfdec_text.c: (swfdec_text_base_init),
+	(swfdec_text_class_init), (swfdec_text_init),
+	(swfdec_text_dispose), (define_text):
+	* pixbuf-loader/io-swf.c: (swf_add_bits):
+	* player/swf_play.c: (main), (do_help), (new_gtk_window),
+	(fill_audio), (sound_setup), (tv_diff), (fixup_buffer),
+	(render_idle_audio), (render_idle_noaudio):
+	* test/render-fast.c: (read_swf_file):
+
 2004-08-27  David Schleef  <ds@schleef.org>
 
 	Add mpeg decoding library ripped from ffmpeg.  Doesn't work.

@@ -74,7 +74,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   endptr = bits->ptr + s->tag_len;
 
   id = swfdec_bits_get_u16 (bits);
-  button = g_object_new (SWFDEC_TYPE_BUTTON, NULL);
+  button = swfdec_object_new (SWFDEC_TYPE_BUTTON);
   SWFDEC_OBJECT (button)->id = id;
   s->objects = g_list_append (s->objects, button);
 

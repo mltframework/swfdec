@@ -29,7 +29,7 @@ static void swfdec_font_dispose (SwfdecFont *font)
 
   for (i = 0; i < font->glyphs->len; i++) {
     shape = g_ptr_array_index (font->glyphs, i);
-    g_object_unref (G_OBJECT (shape));
+    swfdec_object_unref (SWFDEC_OBJECT (shape));
   }
   g_ptr_array_free (font->glyphs, TRUE);
 }
@@ -55,7 +55,7 @@ tag_func_define_font (SwfdecDecoder * s)
   SwfdecFont *font;
 
   id = swfdec_bits_get_u16 (&s->b);
-  font = g_object_new (SWFDEC_TYPE_FONT, NULL);
+  font = swfdec_object_new (SWFDEC_TYPE_FONT);
   SWFDEC_OBJECT (font)-> id = id;
   s->objects = g_list_append (s->objects, font);
 
@@ -69,7 +69,7 @@ tag_func_define_font (SwfdecDecoder * s)
   font->glyphs = g_ptr_array_sized_new (n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
-    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
+    shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
     g_ptr_array_add (font->glyphs, shape);
 
     shape->fills = g_ptr_array_sized_new (1);
@@ -137,7 +137,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   int i;
 
   id = swfdec_bits_get_u16 (bits);
-  font = g_object_new (SWFDEC_TYPE_FONT, NULL);
+  font = swfdec_object_new (SWFDEC_TYPE_FONT);
   SWFDEC_OBJECT (font)->id = id;
   s->objects = g_list_append (s->objects, font);
 
@@ -168,7 +168,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   font->glyphs = g_ptr_array_sized_new (n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
-    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
+    shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
     g_ptr_array_add (font->glyphs, shape);
 
     shape->fills = g_ptr_array_sized_new (1);

@@ -27,7 +27,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la
 
-pkginclude_HEADERS = swf.h swfdec.h \
+pkginclude_HEADERS = swfdec.h \
 	color.h proto.h swfdec_buffer.h \
 	swfdec_button.h swfdec_decoder.h swfdec_image.h \
 	swfdec_internal.h swfdec_layer.h swfdec_object.h \

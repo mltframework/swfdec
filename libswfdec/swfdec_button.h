@@ -2,7 +2,6 @@
 #ifndef _SWFDEC_BUTTON_H_
 #define _SWFDEC_BUTTON_H_
 
-#include <glib-object.h>
 #include <swfdec_object.h>
 
 G_BEGIN_DECLS

@@ -27,7 +27,8 @@ enum
 void swfdec_init (void);
 
 SwfdecDecoder *swfdec_decoder_new (void);
-int swfdec_decoder_addbits (SwfdecDecoder * s, SwfdecBuffer *buffer);
+int swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data, int length);
+int swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer);
 int swfdec_decoder_parse (SwfdecDecoder * s);
 int swfdec_decoder_free (SwfdecDecoder * s);
 
@@ -44,7 +45,6 @@ int swfdec_decoder_set_debug_level (SwfdecDecoder * s, int level);
 
 void *swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length);
 
-unsigned char * swfdec_decoder_render (SwfdecDecoder *s, int frame);
 void swfdec_decoder_eof (SwfdecDecoder *s);
 
 G_END_DECLS

@@ -73,9 +73,9 @@ swfdec_buffer_unref (SwfdecBuffer *buffer)
 {
   buffer->ref_count--;
   if (buffer->ref_count == 0) {
-    buffer->free (buffer, buffer->priv);
+    if (buffer->free) buffer->free (buffer, buffer->priv);
+    g_free (buffer);
   }
-  g_free (buffer);
 }
 
 static void

@@ -6,10 +6,14 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <glib.h>
-#include "swf.h"
+#include <swfdec.h>
+#include <swfdec_render.h>
+#include <swfdec_decoder.h>
+#include <swfdec_sprite.h>
+#include <swfdec_buffer.h>
 
 
-swf_state_t *s;
+SwfdecDecoder *s;
 
 void read_swf_file(char *fn);
 
@@ -70,22 +74,27 @@ void read_swf_file(char *fn)
 				printf("needbits at eof\n");
 			}
 			if(i+1000 < len){
-				ret = swfdec_decoder_addbits(s,data + i,1000);
+				ret = swfdec_decoder_add_data(s,data + i,1000);
 				i += 1000;
 			}else{
-				ret = swfdec_decoder_addbits(s,data + i,len - i);
+				ret = swfdec_decoder_add_data(s,data + i,len - i);
 				i = len;
 			}
 			//fprintf(stderr,"swf_addbits returned %d\n",ret);
 		}
-		if(ret == SWF_IMAGE){
-			unsigned char *data;
-			int len;
+        }
+        for (i=0;i<s->main_sprite->n_frames;i++) {
+          SwfdecBuffer *buffer;
 
-			swfdec_decoder_peek_image(s,&data);
-			data = swfdec_decoder_get_sound_chunk(s,&len);
-			if(data)g_free(data);
-		}
+          swfdec_render_seek (s, i);
+
+          swfdec_render_iterate (s);
+
+          buffer = swfdec_render_get_image (s);
+          swfdec_buffer_unref (buffer);
+
+          buffer = swfdec_render_get_audio (s);
+          swfdec_buffer_unref (buffer);
 	}
 
 	swfdec_decoder_free(s);

@@ -248,7 +248,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (bits);
 
-  shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
+  shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
   SWFDEC_OBJECT (shape)->id = id;
   s->objects = g_list_append (s->objects, shape);
 
@@ -276,7 +276,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
   int id;
 
   id = swfdec_bits_get_u16 (bits);
-  shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
+  shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
   SWFDEC_OBJECT (shape)->id = id;
   s->objects = g_list_append (s->objects, shape);
 

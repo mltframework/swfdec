@@ -9,17 +9,6 @@
 
 G_BEGIN_DECLS
 
-enum
-{
-  SWF_OBJECT_SHAPE,
-  SWF_OBJECT_TEXT,
-  SWF_OBJECT_FONT,
-  SWF_OBJECT_SPRITE,
-  SWF_OBJECT_BUTTON,
-  SWF_OBJECT_SOUND,
-  SWF_OBJECT_IMAGE,
-};
-
 //typedef struct _SwfdecObject SwfdecObject;
 typedef struct _SwfdecObjectClass SwfdecObjectClass;
 
@@ -51,6 +40,8 @@ struct _SwfdecObjectClass {
 };
 
 GType swfdec_object_get_type (void);
+void *swfdec_object_new (GType type);
+void swfdec_object_unref (SwfdecObject *object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
 

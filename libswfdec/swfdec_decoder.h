@@ -114,7 +114,6 @@ int swf_parse_header (SwfdecDecoder * s);
 int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
 
-unsigned char * swfdec_decoder_render (SwfdecDecoder *s, int frame);
 void swfdec_decoder_eof (SwfdecDecoder *s);
 
 

@@ -6,64 +6,29 @@
 
 
 static void swfdec_text_base_init (gpointer g_class);
-static void swfdec_text_class_init (gpointer g_class, gpointer user_data);
-static void swfdec_text_init (GTypeInstance *instance, gpointer g_class);
-static void swfdec_text_dispose (GObject *object);
+static void swfdec_text_class_init (SwfdecTextClass *g_class);
+static void swfdec_text_init (SwfdecText *text);
+static void swfdec_text_dispose (SwfdecText *text);
 
-
-GType _swfdec_text_type;
-
-static GObjectClass *parent_class = NULL;
-
-GType swfdec_text_get_type (void)
-{
-  if (!_swfdec_text_type) {
-    static const GTypeInfo object_info = {
-      sizeof (SwfdecTextClass),
-      swfdec_text_base_init,
-      NULL,
-      swfdec_text_class_init,
-      NULL,
-      NULL,
-      sizeof (SwfdecText),
-      0,
-      swfdec_text_init,
-      NULL
-    };
-    _swfdec_text_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
-        "SwfdecText", &object_info, 0);
-  }
-  return _swfdec_text_type;
-}
+SWFDEC_OBJECT_BOILERPLATE (SwfdecText, swfdec_text)
 
 static void swfdec_text_base_init (gpointer g_class)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
 }
 
-static void swfdec_text_class_init (gpointer g_class, gpointer class_data)
+static void swfdec_text_class_init (SwfdecTextClass *g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
-  gobject_class->dispose = swfdec_text_dispose;
-
-  parent_class = g_type_class_peek_parent (gobject_class);
-
   SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_text_render;
 }
 
-static void swfdec_text_init (GTypeInstance *instance, gpointer g_class)
+static void swfdec_text_init (SwfdecText *text)
 {
-  SwfdecText *text = SWFDEC_TEXT (instance);
-
   text->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecTextGlyph));
 }
 
-static void swfdec_text_dispose (GObject *object)
+static void swfdec_text_dispose (SwfdecText *text)
 {
-  SwfdecText *text = SWFDEC_TEXT (object);
-
   g_array_free (text->glyphs, TRUE);
 }
 
@@ -80,7 +45,7 @@ define_text (SwfdecDecoder * s, int rgba)
   SwfdecTextGlyph glyph = { 0 };
 
   id = swfdec_bits_get_u16 (bits);
-  text = g_object_new (SWFDEC_TYPE_TEXT, NULL);
+  text = swfdec_object_new (SWFDEC_TYPE_TEXT);
   SWFDEC_OBJECT (text)->id = id;
   s->objects = g_list_append (s->objects, text);
 

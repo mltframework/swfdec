@@ -156,7 +156,8 @@ static void pfork(PluginInstance *this)
 		argv[argc++] = "-";
 		argv[argc] = NULL;
 
-		execv(PACKAGE_PREFIX "/bin/swf_play",argv);
+		execvp("swf_play",argv);
+		execv(BINDIR "swf_play",argv);
 		_exit(255);
 	}
 

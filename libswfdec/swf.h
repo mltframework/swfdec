@@ -35,6 +35,7 @@ enum {
 	SWF_OBJECT_SPRITE,
 	SWF_OBJECT_BUTTON,
 	SWF_OBJECT_SOUND,
+	SWF_OBJECT_IMAGE,
 };
 
 typedef unsigned int swf_color;
@@ -59,6 +60,7 @@ typedef struct swf_text_struct swf_text_t;
 typedef struct swf_text_glyph_struct swf_text_glyph_t;
 typedef struct swf_button_struct swf_button_t;
 typedef struct swf_sound_struct swf_sound_t;
+typedef struct swf_image_struct swf_image_t;
 typedef struct bits_struct bits_t;
 
 struct bits_struct {
@@ -152,6 +154,9 @@ struct swf_shape_vec_struct {
 
 	GArray *path;
 	int array_len;
+
+	int fill_type;
+	int fill_id;
 };
 
 struct swf_shape_struct {
@@ -207,6 +212,11 @@ struct swf_text_struct{
 	GArray *glyphs;
 };
 
+struct swf_image_struct{
+	int width, height;
+	char *image_data;
+};
+
 struct swf_text_glyph_struct{
 	int x,y;
 	int glyph;
@@ -235,6 +245,8 @@ struct swf_layer_struct{
 
 	GArray *lines;
 	GArray *fills;
+
+	swf_image_t *image;
 };
 
 struct swf_svp_render_struct{

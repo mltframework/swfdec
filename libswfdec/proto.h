@@ -59,7 +59,11 @@ void get_line_style(bits_t *bits);
 
 /* jpeg.c */
 
+int tag_func_define_bits_lossless(swf_state_t *s);
+int tag_func_define_bits_lossless_2(swf_state_t *s);
+int tag_func_define_bits_jpeg(swf_state_t *s);
 int tag_func_define_bits_jpeg_2(swf_state_t *s);
+int tag_func_define_bits_jpeg_3(swf_state_t *s);
 
 /* render.c */
 

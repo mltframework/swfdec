@@ -16,6 +16,8 @@ swf_loader_la_LDFLAGS = -avoid-version -module
 swf_loader_la_LIBADD = $(PIXBUF_LIBS)\
 	$(SWF_LIBS)
 
+noinst_HEADERS = io-swf-anim.h
+
 loader_LTLIBRARIES = $(target_pixbuf_loader)
 
 install-data-local: 

@@ -69,6 +69,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/libswfdec.so
 %{_libdir}/pkgconfig/swfdec.pc
 %{_includedir}/swfdec/swf.h
+%{_includedir}/swfdec/swfdec.h
 
 %files mozilla
 %defattr(-,root,root)

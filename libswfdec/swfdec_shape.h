@@ -32,7 +32,6 @@ struct swfdec_shape_struct {
 SwfdecShape *swfdec_shape_new(void);
 void swfdec_shape_free(SwfdecObject *object);
 void _swfdec_shape_free(SwfdecShape *shape);
-int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits);
 int tag_func_define_shape(SwfdecDecoder *s);
 SwfdecShapeVec *swf_shape_vec_new(void);
 int art_define_shape(SwfdecDecoder *s);
@@ -44,9 +43,7 @@ int tag_func_define_button_2(SwfdecDecoder *s);
 int tag_func_define_sprite(SwfdecDecoder *s);
 void dump_layers(SwfdecDecoder *s);
 
-void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
-	SwfdecObject *shape);
-SwfdecLayer *swfdec_shape_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecObject *shape);
 void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *shape);

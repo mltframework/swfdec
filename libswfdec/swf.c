@@ -238,6 +238,17 @@ int swfdec_decoder_get_image(SwfdecDecoder *s, unsigned char **image)
 	return SWF_OK;
 }
 
+int swfdec_decoder_peek_image(SwfdecDecoder *s, unsigned char **image)
+{
+	if(s->buffer == NULL){
+		return SWF_ERROR;
+	}
+
+	if(image) *image = s->buffer;
+
+	return SWF_OK;
+}
+
 int swfdec_decoder_get_image_size(SwfdecDecoder *s, int *width, int *height)
 {
 	if(s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2){

@@ -393,7 +393,7 @@ int tag_func_sound_stream_head(SwfdecDecoder *s)
 	return SWF_OK;
 }
 
-void get_soundinfo(bits_t *b)
+static void get_soundinfo(bits_t *b)
 {
 	int syncflags;
 	int has_envelope;

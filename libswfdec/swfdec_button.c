@@ -14,58 +14,7 @@ void swfdec_button_free(SwfdecObject *object)
 	g_free(button);
 }
 
-void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
-	SwfdecObject *object)
-{
-	SwfdecButton *button = object->priv;
-	SwfdecShape *shape;
-	SwfdecObject *obj;
-	double save_trans[6];
-	SwfdecShapeVec *shapevec;
-	SwfdecLayerVec *layervec;
-	int i;
-
-	art_affine_copy(save_trans, layer->transform);
-	art_affine_multiply(layer->transform, button->state[0]->transform, layer->transform);
-	if(button->state[0]->id){
-		obj = swfdec_object_get(s,button->state[0]->id);
-		if(!obj)return;
-
-		switch(obj->type){
-		case SWF_OBJECT_SHAPE:
-			shape=obj->priv;
-
-			swfdec_shape_prerender(s,layer,obj);
-			for(i=0;i<layer->fills->len;i++){
-				shapevec = g_ptr_array_index(shape->fills,i);
-				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
-
-				layervec->color = shapevec->color;
-			}
-			for(i=0;i<layer->lines->len;i++){
-				shapevec = g_ptr_array_index(shape->lines,i);
-				layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
-
-				layervec->color = shapevec->color;
-			}
-
-			break;
-		case SWF_OBJECT_TEXT:
-			swfdec_text_prerender(s,layer,obj);
-			break;
-		case SWF_OBJECT_SPRITE:
-			layer->frame_number = s->frame_number - layer->first_frame;
-			swfdec_sprite_prerender(s,layer,obj);
-			break;
-		default:
-			SWF_DEBUG(4,"swfdec_button_prerender: object type not handled %d\n",obj->type);
-			break;
-		}
-	}
-	art_affine_copy(layer->transform, save_trans);
-}
-
-SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+SwfdecLayer *swfdec_button_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecObject *object)
 {
 	SwfdecButton *button = object->priv;

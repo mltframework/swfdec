@@ -31,6 +31,7 @@ int swfdec_decoder_free(SwfdecDecoder *s);
 int swfdec_decoder_get_n_frames(SwfdecDecoder *s, int *n_frames);
 int swfdec_decoder_get_rate(SwfdecDecoder *s, double *rate);
 int swfdec_decoder_get_image(SwfdecDecoder *s, unsigned char **image);
+int swfdec_decoder_peek_image(SwfdecDecoder *s, unsigned char **image);
 int swfdec_decoder_get_image_size(SwfdecDecoder *s, int *width, int *height);
 
 int swfdec_decoder_set_colorspace(SwfdecDecoder *s, int colorspace);

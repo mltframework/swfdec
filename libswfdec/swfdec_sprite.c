@@ -32,33 +32,7 @@ void swfdec_sprite_free(SwfdecSprite *sprite)
 	g_free(sprite);
 }
 
-void swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
-{
-	SwfdecLayer *l;
-	GList *g;
-	SwfdecDecoder *s2 = object->priv;
-	SwfdecSprite *sprite = s2->main_sprite;
-
-	art_affine_multiply(s2->transform, layer->transform, s->transform);
-	
-	layer->frame_number %= s2->n_frames;
-
-	SWF_DEBUG(0,"swfdec_sprite_prerender %d frame %d\n",object->id,layer->frame_number);
-
-	for(g=g_list_last(sprite->layers); g; g=g_list_previous(g)){
-		l = (SwfdecLayer *)g->data;
-
-		if(l->first_frame > layer->frame_number)continue;
-		if(l->last_frame <= layer->frame_number)continue;
-		SWF_DEBUG(0,"prerendering layer %d\n",l->depth);
-
-		swfdec_layer_prerender(s2, l);
-	}
-
-	layer->prerendered = 0;
-}
-
-SwfdecLayer *swfdec_sprite_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecObject *object)
 {
 	SwfdecLayer *layer;
@@ -100,6 +74,7 @@ SwfdecLayer *swfdec_sprite_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	return layer;
 }
 
+#if 0
 void swfdec_sprite_render(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 	SwfdecObject *parent_object)
 {
@@ -150,8 +125,9 @@ void swfdec_sprite_render(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 		}
 	}
 }
+#endif
 
-void swfdec_sprite_render_slow(SwfdecDecoder *s, SwfdecLayer *parent_layer,
+void swfdec_sprite_render(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 	SwfdecObject *parent_object)
 {
 	SwfdecLayer *child_layer;
@@ -163,7 +139,7 @@ void swfdec_sprite_render_slow(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 	for(g=g_list_first(parent_layer->sublayers); g; g=g_list_next(g)){
 		child_layer = (SwfdecLayer *)g->data;
 		if(!child_layer)continue;
-		swfdec_layer_render_slow(s,child_layer);
+		swfdec_layer_render(s,child_layer);
 	}
 }
 int tag_func_define_sprite(SwfdecDecoder *s)

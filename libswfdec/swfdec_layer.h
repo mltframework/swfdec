@@ -50,7 +50,7 @@ void swfdec_render_add_layer(SwfdecRender *s, SwfdecLayer *lnew);
 void swfdec_render_del_layer(SwfdecRender *s, SwfdecLayer *layer);
 void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
 void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec);
-void swfdec_layer_render_slow(SwfdecDecoder *s, SwfdecLayer *layer);
+void swfdec_layer_render(SwfdecDecoder *s, SwfdecLayer *layer);
 
 #endif
 

@@ -121,59 +121,6 @@ void swfdec_render_delete_layer(SwfdecRender *render, SwfdecLayer *layer)
 }
 #endif
 
-void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
-{
-	SwfdecObject *object;
-	SwfdecShape *shape;
-
-	object = swfdec_object_get(s,layer->id);
-
-	if(!object)return;
-
-	switch(object->type){
-	case SWF_OBJECT_SHAPE:
-		shape = object->priv;
-
-		if(layer->prerendered)return;
-		layer->prerendered = 1;
-
-		swfdec_shape_prerender(s,layer,object);
-#if 0
-		for(i=0;i<layer->fills->len;i++){
-			shapevec = g_ptr_array_index(shape->fills,i);
-			layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
-	
-			layervec->color = transform_color(shapevec->color,
-				layer->color_mult, layer->color_add);
-		}
-		for(i=0;i<layer->lines->len;i++){
-			shapevec = g_ptr_array_index(shape->lines,i);
-			layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
-	
-			layervec->color = transform_color(shapevec->color,
-				layer->color_mult, layer->color_add);
-		}
-#endif
-		break;
-	case SWF_OBJECT_TEXT:
-		if(layer->prerendered)return;
-		layer->prerendered = 1;
-
-		swfdec_text_prerender(s,layer,object);
-		break;
-	case SWF_OBJECT_SPRITE:
-		layer->frame_number = s->frame_number - layer->first_frame;
-		swfdec_sprite_prerender(s,layer,object);
-		break;
-	case SWF_OBJECT_BUTTON:
-		swfdec_button_prerender(s,layer,object);
-		break;
-	default:
-		SWF_DEBUG(4,"unknown object type\n");
-		break;
-	}
-}
-
 void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 {
 	ArtIRect rect;

@@ -6,9 +6,9 @@
 
 
 #define JPEG_DEBUG(n, format...)	do{ \
-	if((n)>=SWF_DEBUG_LEVEL)jpeg_debug((n),format); \
+	if((n)<=JPEG_DEBUG_LEVEL)jpeg_debug((n),format); \
 }while(0)
-#define JPEG_DEBUG_LEVEL 0
+#define JPEG_DEBUG_LEVEL 4
 
 
 //#define N_COMPONENTS 256
@@ -87,13 +87,17 @@ int huffman_table_decode_macroblock(short *block, HuffmanTable *dc_tab,
 	HuffmanTable *ac_tab, bits_t *bits);
 int huffman_table_decode(HuffmanTable *dc_tab, HuffmanTable *ac_tab,
 	bits_t *bits);
+void huffman_table_load_std_jpeg(JpegDecoder *dec);
 
 /* jpeg.c */
 
-int jpeg_decoder_tag_0xc0(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_tag_0xdb(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_tag_0xc4(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_define_quant_table(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_soi(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_eoi(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_application0(JpegDecoder *dec, bits_t *bits);
 void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits);
 void jpeg_debug(int n, const char *format, ... );
 

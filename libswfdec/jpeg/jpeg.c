@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#include <string.h>
 
 #include <swf.h>
 #include "jpeg_internal.h"
@@ -16,11 +17,6 @@
 #define conv8x8_f64_s16 conv8x8_f64_s16_ref
 #include "unzigzag8x8_s16.h"
 #include "idct8x8_s16.h"
-
-#define JPEG_DEBUG(n, format...)	do{ \
-	if((n)>=SWF_DEBUG_LEVEL)jpeg_debug((n),format); \
-}while(0)
-#define JPEG_DEBUG_LEVEL 0
 
 
 #define JPEG_MARKER_STUFFED		0x00
@@ -66,9 +62,63 @@
 
 #define JPEG_MARKER_JFIF		JPEG_MARKER_APP(0)
 
+struct jpeg_marker_struct {
+	int tag;
+	int (*func)(JpegDecoder *dec, bits_t *bits);
+	char *name;
+};
+static struct jpeg_marker_struct jpeg_markers[] = {
+	{ 0xc0, jpeg_decoder_sof_baseline_dct,
+		"baseline DCT" },
+	{ 0xc4, jpeg_decoder_define_huffman_table,
+		"define Huffman table(s)" },
+	{ 0xd8, jpeg_decoder_soi,
+		"start of image" },
+	{ 0xd9, jpeg_decoder_eoi,
+		"end of image" },
+	{ 0xda, jpeg_decoder_sos,
+		"start of scan" },
+	{ 0xdb, jpeg_decoder_define_quant_table,
+		"define quantization table" },
+
+	{ 0x00, NULL,		"illegal" },
+	{ 0x01, NULL,		"TEM" },
+	{ 0x02, NULL,		"RES" },
+	
+	{ 0xc1, NULL,		"extended sequential DCT" },
+	{ 0xc2, NULL,		"progressive DCT" },
+	{ 0xc3, NULL,		"lossless (sequential)" },
+	{ 0xc5, NULL,		"differential sequential DCT" },
+	{ 0xc6, NULL,		"differential progressive DCT" },
+	{ 0xc7, NULL,		"differential lossless (sequential)" },
+	{ 0xc8, NULL,		"reserved" },
+	{ 0xc9, NULL,		"extended sequential DCT" },
+	{ 0xca, NULL,		"progressive DCT" },
+	{ 0xcb, NULL,		"lossless (sequential)" },
+	{ 0xcc, NULL,		"define arithmetic coding conditioning(s)" },
+	{ 0xcd, NULL,		"differential sequential DCT" },
+	{ 0xce, NULL,		"differential progressive DCT" },
+	{ 0xcf, NULL,		"differential lossless (sequential)" },
+
+	{ 0xd0, NULL,		"restart0" },
+
+	{ 0xdc, NULL,		"define number of lines" },
+	{ 0xdd, NULL,		"define restart interval" },
+	{ 0xde, NULL,		"define hierarchical progression" },
+	{ 0xdf, NULL,		"expand reference component(s)" },
+
+	{ 0xe0, NULL,		"application segment 0" },
+
+	{ 0xf0, NULL,		"JPEG extension 0" },
+	{ 0xfe, NULL,		"comment" },
+	
+	{ 0x00, NULL,		"illegal" },
+};
+static const int n_jpeg_markers = sizeof(jpeg_markers)/sizeof(jpeg_markers[0]);
 
 /* misc helper function declarations */
 
+static void dumpbits(bits_t *bits);
 static char *sprintbits(char *str, unsigned int bits, int n);
 static void dump_block8x8_s16(short *q);
 static void dequant8x8_s16(short *dest, short *src, short *mult);
@@ -76,7 +126,17 @@ static void addconst8x8_s16(short *dest, short *src, int c);
 static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
 
 
-int jpeg_decoder_tag_0xc0(JpegDecoder *dec, bits_t *bits)
+int jpeg_decoder_soi(JpegDecoder *dec, bits_t *bits)
+{
+	return 0;
+}
+
+int jpeg_decoder_eoi(JpegDecoder *dec, bits_t *bits)
+{
+	return 0;
+}
+
+int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, bits_t *bits)
 {
 	int i;
 	int length;
@@ -119,7 +179,7 @@ int jpeg_decoder_tag_0xc0(JpegDecoder *dec, bits_t *bits)
 	return length;
 }
 
-int jpeg_decoder_tag_0xdb(JpegDecoder *dec, bits_t *bits)
+int jpeg_decoder_define_quant_table(JpegDecoder *dec, bits_t *bits)
 {
 	int length;
 	int pq;
@@ -130,30 +190,31 @@ int jpeg_decoder_tag_0xdb(JpegDecoder *dec, bits_t *bits)
 	JPEG_DEBUG(0,"define quantization table\n");
 
 	length = get_be_u16(bits);
+	bits->end = bits->ptr + length - 2;
 
-	pq = getbits(bits,4);
-	tq = getbits(bits,4);
+	while(bits->ptr < bits->end){
+		pq = getbits(bits,4);
+		tq = getbits(bits,4);
 
-	q = dec->quant_table[tq];
-	if(pq){
-		for(i=0;i<64;i++){
-			q[i] = get_be_u16(bits);
+		q = dec->quant_table[tq];
+		if(pq){
+			for(i=0;i<64;i++){
+				q[i] = get_be_u16(bits);
+			}
+		}else{
+			for(i=0;i<64;i++){
+				q[i] = get_u8(bits);
+			}
 		}
-	}else{
-		for(i=0;i<64;i++){
-			q[i] = get_u8(bits);
+
+		JPEG_DEBUG(0,"quant table index %d:\n",tq);
+		for(i=0;i<8;i++){
+			JPEG_DEBUG(0,"%3d %3d %3d %3d %3d %3d %3d %3d\n",
+				q[0], q[1], q[2], q[3],
+				q[4], q[5], q[6], q[7]);
+			q+=8;
 		}
 	}
-
-	JPEG_DEBUG(0,"quant table index %d:\n",tq);
-	for(i=0;i<8;i++){
-		JPEG_DEBUG(0,"%3d %3d %3d %3d %3d %3d %3d %3d\n",
-			q[0], q[1], q[2], q[3],
-			q[4], q[5], q[6], q[7]);
-		q+=8;
-	}
-
-	if(bits->end != bits->ptr)JPEG_DEBUG(0,"endptr != bits\n");
 
 	return length;
 }
@@ -181,7 +242,7 @@ void generate_code_table(int *huffsize)
 
 }
 
-int jpeg_decoder_tag_0xc4(JpegDecoder *dec, bits_t *bits)
+int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits)
 {
 	int length;
 	int tc;
@@ -191,55 +252,35 @@ int jpeg_decoder_tag_0xc4(JpegDecoder *dec, bits_t *bits)
 	JPEG_DEBUG(0,"define huffman table\n");
 
 	length = get_be_u16(bits);
-	//bits->end = ptr+length;
+	bits->end = bits->ptr + length - 2;
 
-	tc = getbits(bits,4);
-	th = getbits(bits,4);
+	while(bits->ptr < bits->end){
+		tc = getbits(bits,4);
+		th = getbits(bits,4);
 
-	JPEG_DEBUG(0,"huff table index %d:\n",th);
-	JPEG_DEBUG(0,"type %d (%s)\n",tc,tc?"ac":"dc");
+		JPEG_DEBUG(0,"huff table index %d:\n",th);
+		JPEG_DEBUG(0,"type %d (%s)\n",tc,tc?"ac":"dc");
 
-	hufftab = huffman_table_new_jpeg(bits);
-	if(tc){
-		dec->ac_huff_table[th] = hufftab;
-	}else{
-		dec->dc_huff_table[th] = hufftab;
-	}
-	
-#if 0
-	for(i=0;i<16;i++){
-		l[i] = *bits++;
-	}
-
-
-	for(i=0;i<16;i++){
-		printf("%d:",i);
-		for(j=0;j<l[i];j++){
-			printf(" %d",*bits);
-			bits++;
+		hufftab = huffman_table_new_jpeg(bits);
+		if(tc){
+			dec->ac_huff_table[th] = hufftab;
+		}else{
+			dec->dc_huff_table[th] = hufftab;
 		}
-		printf("\n");
-	}
-
-	//generate_code_table(l);
-#endif
-
-	if(bits->ptr != bits->end)JPEG_DEBUG(0,"endptr != bits\n");
+	}	
 
 	return length;
 }
 
-#if 0
 static void dumpbits(bits_t *bits)
 {
 	int i;
 
 	for(i=0;i<8;i++){
-		printf("%c",getbit(bits) ? '1' : '0');
+		printf("%02x ",get_u8(bits));
 	}
 	printf("\n");
 }
-#endif
 
 int jpeg_decoder_find_component_by_id(JpegDecoder *dec, int id)
 {
@@ -251,7 +292,7 @@ int jpeg_decoder_find_component_by_id(JpegDecoder *dec, int id)
 	return 0;
 }
 
-int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits)
+int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits)
 {
 	int length;
 	int i;
@@ -323,6 +364,50 @@ int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits)
 	syncbits(bits);
 
 	if(bits->end != bits->ptr)JPEG_DEBUG(0,"endptr != bits\n");
+
+	return length;
+}
+
+int jpeg_decoder_application0(JpegDecoder *dec, bits_t *bits)
+{
+	int length;
+
+	JPEG_DEBUG(0,"app0\n");
+
+	length = get_be_u16(bits);
+	JPEG_DEBUG(0,"length=%d\n",length);
+
+	if(strncmp(bits->ptr,"JFIF",4)==0 && bits->ptr[4]==0){
+		int version;
+		int units;
+		int x_density;
+		int y_density;
+		int x_thumbnail;
+		int y_thumbnail;
+
+		JPEG_DEBUG(0,"JFIF\n");
+		bits->ptr += 5;
+
+		version = get_be_u16(bits);
+		units = get_u8(bits);
+		x_density = get_be_u16(bits);
+		y_density = get_be_u16(bits);
+		x_thumbnail = get_u8(bits);
+		y_thumbnail = get_u8(bits);
+
+		JPEG_DEBUG(0,"version = %04x\n",version);
+		JPEG_DEBUG(0,"units = %d\n",units);
+		JPEG_DEBUG(0,"x_density = %d\n",x_density);
+		JPEG_DEBUG(0,"y_density = %d\n",y_density);
+		JPEG_DEBUG(0,"x_thumbnail = %d\n",x_thumbnail);
+		JPEG_DEBUG(0,"y_thumbnail = %d\n",y_thumbnail);
+
+	}
+
+	if(strncmp(bits->ptr,"JFXX",4)==0 && bits->ptr[4]==0){
+		JPEG_DEBUG(0,"JFIF extension (not handled)\n");
+		bits->ptr += length - 2;
+	}
 
 	return length;
 }
@@ -427,6 +512,8 @@ JpegDecoder *jpeg_decoder_new(void)
 
 	dec = g_new0(JpegDecoder,1);
 
+	huffman_table_load_std_jpeg(dec);
+
 	return dec;
 }
 
@@ -459,47 +546,40 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 	bits_t b2;
 	unsigned int x;
 	unsigned int tag;
+	int i;
 
 	while(bits->ptr < bits->end){
 		x = get_u8(bits);
 		if(x != 0xff){
-			JPEG_DEBUG(0,"lost sync\n");
+			int n = 0;
 			while(x != 0xff){
 				x = get_u8(bits);
+				n++;
 			}
+			JPEG_DEBUG(0,"lost sync, skipped %d bytes\n",n);
 		}
 		while(x == 0xff){
 			x = get_u8(bits);
 		}
 		tag = x;
-		if(tag==0)continue;
 		JPEG_DEBUG(0,"tag %02x\n",tag);
 		
 		b2 = *bits;
 
-		switch(tag){
-		case JPEG_MARKER_SOF_0: /* baseline DCT */
-			jpeg_decoder_tag_0xc0(dec,&b2);
-			break;
-		case JPEG_MARKER_DHT: /* define huffman table */
-			jpeg_decoder_tag_0xc4(dec,&b2);
-			break;
-		case JPEG_MARKER_SOI: /* start of image */
-			break;
-		case JPEG_MARKER_EOI: /* end of image */
-			break;
-		case JPEG_MARKER_SOS: /* start of scan */
-			jpeg_decoder_tag_0xda(dec,&b2);
-			jpeg_decoder_decode_entropy_segment(dec, &b2);
-			break;
-		case JPEG_MARKER_DQT: /* define quantization table */
-			jpeg_decoder_tag_0xdb(dec,&b2);
-			break;
-		case JPEG_MARKER_JFIF: /* jpeg extension (JFIF) */
-			JPEG_DEBUG(0,"JFIF\n");
-			break;
-		default:
+		for(i=0;i<n_jpeg_markers - 1;i++){
+			if(tag==jpeg_markers[i].tag){
+				break;
+			}
+		}
+		JPEG_DEBUG(0,"tag: %s\n",jpeg_markers[i].name);
+		if(jpeg_markers[i].func){
+			jpeg_markers[i].func(dec,&b2);
+		}else{
 			JPEG_DEBUG(0,"unhandled or illegal JPEG marker (0x%02x)\n",tag);
+			dumpbits(&b2);
+		}
+		if(tag==JPEG_MARKER_SOS){
+			jpeg_decoder_decode_entropy_segment(dec,&b2);
 		}
 		syncbits(&b2);
 		bits->ptr = b2.ptr;
@@ -509,7 +589,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level;
+int jpeg_decoder_verbose_level = 4;
 
 void jpeg_debug(int n, const char *format, ... )
 {

@@ -304,7 +304,7 @@ action_add (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->num = src1->num + src2->num;
   } else if (ACTIONVAL_IS_STRING (src1) && ACTIONVAL_IS_STRING (src2)) {
     dest->type = ACTIONVAL_TYPE_STRING;
-    dest->s = malloc (strlen (src1->s) + strlen (src2->s) + 1);
+    dest->s = g_malloc (strlen (src1->s) + strlen (src2->s) + 1);
     strcpy (dest->s, src1->s);
     strcat (dest->s, src2->s);
   } else {
@@ -534,7 +534,7 @@ action_substring (SwfdecActionContext * context, SwfdecActionVal * dest,
     if (len > slen - offset)
       len = slen - offset;
 
-    dest->s = malloc (len + 1);
+    dest->s = g_malloc (len + 1);
     memcpy (dest->s, src1->s + offset, len);
     dest->s[len] = 0;
   } else {
@@ -574,7 +574,7 @@ action_string_concat (SwfdecActionContext * context, SwfdecActionVal * dest,
 
   if (ACTIONVAL_IS_STRING (src1) && ACTIONVAL_IS_STRING (src2)) {
     dest->type = ACTIONVAL_TYPE_STRING;
-    dest->s = malloc (strlen (src1->s) + strlen (src2->s) + 1);
+    dest->s = g_malloc (strlen (src1->s) + strlen (src2->s) + 1);
     strcpy (dest->s, src1->s);
     strcat (dest->s, src2->s);
   } else {

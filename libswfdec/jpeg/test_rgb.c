@@ -36,10 +36,10 @@ int main2(int argc, char *argv[])
 
 	dump_pnm(ptr, rowstride, width, height);
 
-	free(ptr);
+	g_free(ptr);
 
 	jpeg_rgb_decoder_free(dec);
-	free(data);
+	g_free(data);
 
 	return 0;
 }
@@ -71,7 +71,7 @@ void *getfile(char *path, int *n_bytes)
 		return NULL;
 	}
 	
-	ptr = malloc(st.st_size);
+	ptr = g_malloc(st.st_size);
 	if(!ptr){
 		close(fd);
 		return NULL;
@@ -79,7 +79,7 @@ void *getfile(char *path, int *n_bytes)
 
 	ret = read(fd, ptr, st.st_size);
 	if(ret!=st.st_size){
-		free(ptr);
+		g_free(ptr);
 		close(fd);
 		return NULL;
 	}

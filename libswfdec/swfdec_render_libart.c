@@ -190,11 +190,11 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     art_svp_make_convex (layervec->svp);
     swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
 
-    art_free (bpath0);
-    art_free (bpath1);
+    g_free (bpath0);
+    g_free (bpath1);
     art_free (vpath0);
-    art_free (vpath1);
-    art_free (vpath);
+    g_free (vpath1);
+    g_free (vpath);
 
     layervec->color = swfdec_color_apply_transform (shapevec->color,
 	&seg->color_transform);
@@ -241,7 +241,7 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 	ART_PATH_STROKE_CAP_ROUND, width, 1.0, s->flatness);
 
     art_free (vpath);
-    art_free (bpath);
+    g_free (bpath);
     layervec->color = swfdec_color_apply_transform (shapevec->color,
 	&seg->color_transform);
   }
@@ -324,11 +324,11 @@ swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     art_svp_make_convex (layervec->svp);
     swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
 
-    art_free (bpath0);
-    art_free (bpath1);
+    g_free (bpath0);
+    g_free (bpath1);
     art_free (vpath0);
-    art_free (vpath1);
-    art_free (vpath);
+    g_free (vpath1);
+    g_free (vpath);
   }
 
   return layer;

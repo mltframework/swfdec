@@ -12,7 +12,7 @@
 
 static void swfdec_sound_mp3_init (SwfdecSound *sound);
 static void swfdec_sound_mp3_decode (SwfdecSound *sound);
-static int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
+int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
 static void swfdec_sound_mp3_cleanup (SwfdecSound *sound);
 
 void adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound);
@@ -52,7 +52,7 @@ int
 tag_func_sound_stream_block (SwfdecDecoder * s)
 {
   SwfdecSound *sound;
-  int n_samples, n_left;
+  SwfdecSoundChunk *chunk;
 
   /* for MPEG, data starts after 4 byte header */
 
@@ -63,21 +63,22 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
     return SWF_OK;
   }
 
-  n_samples = swfdec_bits_get_u16 (&s->b);
-  n_left = swfdec_bits_get_u16 (&s->b);
-  //g_print("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
-
   if (s->tag_len - 4 == 0) {
     /* the end? */
     return SWF_OK;
   }
 
-  memcpy (sound->tmpbuf + sound->tmpbuflen, s->b.ptr, s->tag_len - 4);
-  sound->tmpbuflen += s->tag_len - 4;
+  chunk = g_new0(SwfdecSoundChunk, 1);
 
-  swfdec_sound_mp3_decode_stream (s, sound);
+  chunk->n_samples = swfdec_bits_get_u16 (&s->b);
+  chunk->n_left = swfdec_bits_get_u16 (&s->b);
+  chunk->length = s->tag_len - 4;
+  chunk->data = g_memdup (s->b.ptr, chunk->length);
 
-  s->b.ptr += s->tag_len - 4;
+  s->b.ptr += chunk->length;
+
+  swfdec_sprite_add_sound_chunk (s->parse_sprite, chunk,
+      s->parse_sprite->parse_frame);
 
   return SWF_OK;
 }
@@ -601,4 +602,10 @@ swfdec_sound_mp3_cleanup (SwfdecSound *sound)
 }
 
 #endif
+
+void swfdec_sound_chunk_free (SwfdecSoundChunk *chunk)
+{
+  //g_free(chunk->data);
+  g_free(chunk);
+}
 

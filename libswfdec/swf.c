@@ -159,6 +159,8 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
 	if (s->tag == 0) {
 	  s->state = SWF_STATE_EOF;
+
+          SWFDEC_ERROR ("decoded points %d\n", s->stats_n_points);
 	}
 
 	break;
@@ -192,7 +194,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
 
   if (s->z) {
     inflateEnd (s->z);
-    free (s->z);
+    g_free (s->z);
   }
 
   if (s->jpegtables) {
@@ -499,6 +501,8 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->n_frames = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG("n_frames = %d", s->n_frames);
 
+  s->main_sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * s->n_frames);
+
   s->main_sprite->n_frames = s->n_frames;
 
   return SWF_OK;
@@ -698,6 +702,7 @@ swfdec_decoder_render (SwfdecDecoder *s, int frame)
 
   swf_render_frame (s, frame);
   //swfdec_render_clean (s->render, frame - 1);
+  swfdec_sound_render (s);
 
   SWFDEC_LOG("pixels_rendered = %d", s->pixels_rendered);
 

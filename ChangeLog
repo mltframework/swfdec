@@ -1,3 +1,32 @@
+2004-08-24  David Schleef  <ds@schleef.org>
+
+	Change malloc/free to g_malloc/g_free.
+	* libswfdec/actions.c: (action_add), (action_substring),
+	(action_string_concat):
+	* libswfdec/art.c: (art_bpath_cat), (art_vpath_cat),
+	(art_vpath_reverse):
+	* libswfdec/jpeg/Makefile.am:
+	* libswfdec/jpeg/jpeg.c: (jpeg_decoder_sof_baseline_dct):
+	* libswfdec/jpeg/test.c: (getfile):
+	* libswfdec/jpeg/test_rgb.c: (main2), (getfile):
+	* libswfdec/render.c: (swf_render_frame):
+	* libswfdec/swf.c: (swfdec_decoder_parse), (swfdec_decoder_free),
+	(swf_parse_header2), (swfdec_decoder_render):
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_image.c: (tag_func_define_bits_jpeg),
+	(tag_func_define_bits_jpeg_2), (tag_func_define_bits_jpeg_3),
+	(define_bits_lossless):
+	* libswfdec/swfdec_render_libart.c: (swfdec_shape_prerender),
+	(swfdec_text_prerender):
+	* libswfdec/swfdec_shape.c: (swf_shape_get_recs):
+	* libswfdec/swfdec_sound.c: (tag_func_sound_stream_block),
+	(swfdec_sound_chunk_free):
+	* libswfdec/swfdec_sound.h:
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_dispose),
+	(swfdec_sprite_add_sound_chunk), (tag_func_define_sprite):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_types.h:
+
 2004-08-11  David Schleef  <ds@schleef.org>
 
 	Lots of hacking.  Modularizing libart dependency.

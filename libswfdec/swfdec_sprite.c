@@ -28,6 +28,7 @@ static void swfdec_sprite_init (SwfdecSprite *sprite)
 static void swfdec_sprite_dispose (SwfdecSprite *sprite)
 {
   GList *g;
+  int i;
 
   for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
     SwfdecSpriteSegment *seg = (SwfdecSpriteSegment *) g->data;
@@ -36,11 +37,24 @@ static void swfdec_sprite_dispose (SwfdecSprite *sprite)
   }
   g_list_free (sprite->layers);
 
-  /* FIXME */
-  //g_object_unref (G_OBJECT (s->main_sprite));
-  //swfdec_render_free (s->render);
+  if (sprite->sound_chunks) {
+    for (i=0;i<sprite->n_frames;i++) {
+      if (sprite->sound_chunks[i]) {
+        swfdec_sound_chunk_free (sprite->sound_chunks[i]);
+      }
+    }
+    g_free (sprite->sound_chunks);
+  }
+
 }
 
+void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite,
+    SwfdecSoundChunk *chunk, int frame)
+{
+  g_assert (sprite->sound_chunks != NULL);
+
+  sprite->sound_chunks[frame] = chunk;
+}
 
 static SwfdecLayer *
 swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
@@ -165,6 +179,8 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   sprite->n_frames = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG("n_frames = %d", sprite->n_frames);
+
+  sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
 
 #if 0
   //sprite->state = SWF_STATE_PARSETAG;

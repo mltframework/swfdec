@@ -529,14 +529,17 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
     if (fill0style) {
       shapevec = swfdec_shape_get_fill0style (shape, fill0style);
       g_array_append_val (shapevec->path, pt);
+      s->stats_n_points++;
     }
     if (fill1style) {
       shapevec = swfdec_shape_get_fill1style (shape, fill1style);
       g_array_append_val (shapevec->path, pt);
+      s->stats_n_points++;
     }
     if (linestyle) {
       shapevec = swfdec_shape_get_linestyle(shape, linestyle);
       g_array_append_val (shapevec->path, pt);
+      s->stats_n_points++;
     }
 
   }

@@ -14,6 +14,7 @@ typedef struct _SwfdecShapeVec SwfdecShapeVec;
 typedef struct _SwfdecRect SwfdecRect;
 typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundBuffer SwfdecSoundBuffer;
+typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;
 typedef struct _SwfdecText SwfdecText;

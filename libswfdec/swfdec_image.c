@@ -118,14 +118,13 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
   SwfdecImage *image;
   JpegRGBDecoder *dec;
 
-//return SWF_OK;
   SWFDEC_LOG ("tag_func_define_bits_jpeg");
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  //s->objects = g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   dec = jpeg_rgb_decoder_new ();
 
@@ -142,7 +141,6 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
-g_object_unref (G_OBJECT (image));
 
   return SWF_OK;
 }
@@ -154,13 +152,12 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
   int id;
   SwfdecImage *image;
 
-//return SWF_OK;
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  //s->objects = g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   jpegdec (image, bits->ptr, s->tag_len - 2);
   merge_opaque (image);
@@ -169,7 +166,6 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
-g_object_unref (G_OBJECT (image));
 
   return SWF_OK;
 }
@@ -189,7 +185,6 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   unsigned char *ptr;
   unsigned char *endptr;
 
-//return SWF_OK;
   endptr = bits->ptr + s->tag_len;
 
   id = swfdec_bits_get_u16 (bits);
@@ -197,7 +192,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
-  //s->objects = g_list_append (s->objects, image);
+  s->objects = g_list_append (s->objects, image);
 
   len = swfdec_bits_get_u32 (bits);
   SWFDEC_LOG ("  len = %d", len);
@@ -219,7 +214,6 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   merge_alpha (image, ptr);
 
   g_free (ptr);
-g_object_unref (G_OBJECT (image));
 
   return SWF_OK;
 }
@@ -266,7 +260,6 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
   unsigned char *endptr = bits->ptr + s->tag_len;
   SwfdecImage *image;
 
-//return SWF_OK;
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
@@ -299,7 +292,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
     unsigned char *indexed_data;
     int i;
 
-    image->image_data = malloc (4 * image->width * image->height);
+    image->image_data = g_malloc (4 * image->width * image->height);
     image->rowstride = image->width * 4;
 
     if (have_alpha) {
@@ -308,7 +301,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
       swfdec_image_colormap_decode (image, indexed_data,
 	  color_table, color_table_size);
     } else {
-      color_table = malloc (color_table_size * 4);
+      color_table = g_malloc (color_table_size * 4);
 
       for (i = 0; i < color_table_size; i++) {
 	color_table[i * 4 + 0] = ptr[i * 3 + 0];
@@ -335,7 +328,7 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
       SWFDEC_ERROR ("illegal");
     }
 
-    image->image_data = malloc (4 * image->width * image->height);
+    image->image_data = g_malloc (4 * image->width * image->height);
     idata = image->image_data;
     image->rowstride = image->width * 4;
 

@@ -63,7 +63,7 @@ void *getfile(char *path, int *n_bytes)
 		return NULL;
 	}
 	
-	ptr = malloc(st.st_size);
+	ptr = g_malloc(st.st_size);
 	if(!ptr){
 		close(fd);
 		return NULL;
@@ -71,7 +71,7 @@ void *getfile(char *path, int *n_bytes)
 
 	ret = read(fd, ptr, st.st_size);
 	if(ret!=st.st_size){
-		free(ptr);
+		g_free(ptr);
 		close(fd);
 		return NULL;
 	}

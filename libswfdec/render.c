@@ -204,7 +204,7 @@ swf_render_frame (SwfdecDecoder * s, int frame_index)
   }
 swf_invalidate_irect (s, &s->irect);
   if (!s->tmp_scanline) {
-    s->tmp_scanline = malloc (s->width);
+    s->tmp_scanline = g_malloc (s->width);
   }
 
   SWFDEC_DEBUG ("rendering frame %d", frame_index);

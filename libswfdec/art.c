@@ -42,7 +42,7 @@ art_bpath_cat (ArtBpath * a, ArtBpath * b)
 
   len_a = art_bpath_len (a);
   len_b = art_bpath_len (b);
-  dest = malloc ((len_a + len_b + 1) * sizeof (ArtBpath));
+  dest = g_malloc ((len_a + len_b + 1) * sizeof (ArtBpath));
 
   memcpy (dest, a, sizeof (ArtBpath) * len_a);
   memcpy (dest + len_a, b, sizeof (ArtBpath) * (len_b + 1));
@@ -59,7 +59,7 @@ art_vpath_cat (ArtVpath * a, ArtVpath * b)
 
   len_a = art_vpath_len (a);
   len_b = art_vpath_len (b);
-  dest = malloc ((len_a + len_b + 1) * sizeof (ArtVpath));
+  dest = g_malloc ((len_a + len_b + 1) * sizeof (ArtVpath));
 
   memcpy (dest, a, sizeof (ArtVpath) * len_a);
   memcpy (dest + len_a, b, sizeof (ArtVpath) * (len_b + 1));
@@ -77,7 +77,7 @@ art_vpath_reverse (ArtVpath * a)
   int i;
 
   len = art_vpath_len (a);
-  dest = malloc ((len + 1) * sizeof (ArtVpath));
+  dest = g_malloc ((len + 1) * sizeof (ArtVpath));
 
   for (i = 0; i < len; i++) {
     it = a[len - i - 1];

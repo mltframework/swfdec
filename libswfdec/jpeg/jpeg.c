@@ -260,7 +260,7 @@ int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, bits_t *bits)
 			(dec->height_blocks * 8 * max_v_oversample /
 			 dec->components[i].v_subsample);
 		dec->components[i].rowstride = rowstride;
-		dec->components[i].image = malloc(image_size);
+		dec->components[i].image = g_malloc(image_size);
 	}
 
 	if(bits->end != bits->ptr)JPEG_DEBUG(0,"endptr != bits\n");

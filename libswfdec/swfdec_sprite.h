@@ -40,6 +40,8 @@ struct _SwfdecSprite {
   int parse_frame;
 
   GList *layers;
+
+  SwfdecSoundChunk **sound_chunks;
 };
 
 struct _SwfdecSpriteClass {
@@ -56,6 +58,7 @@ int tag_func_define_sprite (SwfdecDecoder * s);
 SwfdecSpriteSegment *swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth,
     int frame);
 void swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSegment * segnew);
+void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite, SwfdecSoundChunk *chunk, int frame);
 
 SwfdecSpriteSegment *swfdec_spriteseg_new (void);
 SwfdecSpriteSegment *swfdec_spriteseg_dup (SwfdecSpriteSegment * seg);
@@ -68,6 +71,7 @@ void swf_render_frame (SwfdecDecoder * s, int frame_index);
 SwfdecLayer *swfdec_spriteseg_prerender (SwfdecDecoder * s,
     SwfdecSpriteSegment * seg, SwfdecLayer * oldlayer);
 void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);
+
 
 
 G_END_DECLS

@@ -103,6 +103,8 @@ struct swfdec_decoder_struct
   GList *stream_sound_buffers;
 
   int pixels_rendered;
+
+  int stats_n_points;
 };
 
 SwfdecDecoder *swf_init (void);

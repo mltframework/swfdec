@@ -234,6 +234,21 @@ int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level)
 	return SWF_OK;
 }
 
+void *swfdec_decoder_get_sound_chunk(SwfdecDecoder *s, int *length)
+{
+	void *ret;
+
+	if(!s->sound_buffer)return NULL;
+
+	ret = s->sound_buffer;
+	if(length) *length = s->sound_len;
+
+	s->sound_len = 0;
+	s->sound_buffer = NULL;
+	s->sound_offset = 0;
+
+	return ret;
+}
 
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
 {

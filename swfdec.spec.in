@@ -1,0 +1,80 @@
+Name:		swfdec
+Version:	@VERSION@
+Release:	gst.2
+Summary:	Flash animations redering library
+
+Group:		Libraries/Multimedia
+License:	LGPL
+URL:		http://swfdec.sourceforge.net/
+Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
+Source:		http://swfdec.sourceforge.net/download/%{name}-%{version}.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-root
+BuildRequires:  mozilla-devel
+Prereq:		/sbin/ldconfig
+
+%description
+Libswfdec is a library for rendering Flash animations. Currently it handles mostFlash 3 animations and some Flash 4. No interactivity is supported yet.
+
+%package devel
+Summary:	swfdec development files and static libraries.
+Group:		Development/Libraries
+Requires:	%{name} = %{version}-%{release}
+
+%description devel
+swfdec-devel contains the files needed to build packages that depend on swfdec.
+
+%package mozilla
+Summary: Mozilla plugin for Flash rendering
+Group:   Applications/Internet
+Requires:  %{name} = %{version}-%{release}
+Requires:  mozilla
+
+%description mozilla
+Mozilla plugin for rendering of Flash animations based on swfdec library
+
+%prep
+%setup -q 
+
+%build
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=/usr --enable-shared
+make
+
+%install
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+
+%makeinstall
+# Clean out files that should not be part of the rpm.
+# This is the recommended way of dealing with it for RH8
+rm -f $RPM_BUILD_ROOT%{_libdir}/mozilla/plugins/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+
+%clean
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
+
+%post
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
+
+%files
+%defattr(-,root,root)
+%doc AUTHORS COPYING NEWS README TODO 
+%{_bindir}/swf_play
+%{_libdir}/swfdec.so.*
+
+%files devel
+%defattr(-,root,root)
+%{_libdir}/swfdec.a
+%{_libdir}/swfdec.so
+%{_libdir}/pkgconfig/swfdec.pc
+%{_includedir}/swfdec/swf.h
+
+%files mozilla
+%defattr(-,root,root)
+%{_libdir}/mozilla/plugins/libmozswfdec.so*
+%{_libdir}/mozilla/plugins/libmozswfdec.a
+
+%changelog
+* Sat Oct 26 2002 Christian F.K. Schaller <Uraeus@linuxrising.org>
+- First attempt at spec

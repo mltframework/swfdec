@@ -462,7 +462,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 		unsigned char *ptr;
 		int component_index;
 
-		JPEG_DEBUG(0,"%d,%d: component=%d dc_table=%d ac_table=%d\n",
+		JPEG_DEBUG(3,"%d,%d: component=%d dc_table=%d ac_table=%d\n",
 			x,y,
 			dec->scan_list[i].component_index,
 			dec->scan_list[i].dc_table,
@@ -477,7 +477,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 			dec->dc_huff_table[dc_table_index],
 			dec->ac_huff_table[ac_table_index], bits2);
 
-		JPEG_DEBUG(0,"using quant table %d\n", quant_index);
+		JPEG_DEBUG(3,"using quant table %d\n", quant_index);
 		dequant8x8_s16(block2, block, dec->quant_table[quant_index]);
 		dc[component_index] += block2[0];
 		block2[0] = dc[component_index];
@@ -486,21 +486,23 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 
 		dump_block8x8_s16(block2);
 
-		ptr = dec->components[component_index].image + x +
+		ptr = dec->components[component_index].image +
+			x*dec->components[component_index].h_subsample +
 			dec->scan_list[i].x * 8 +
 			dec->components[component_index].rowstride *
-				(y + dec->scan_list[i].y * 8);
+				(y*dec->components[component_index].v_subsample 
+				 + dec->scan_list[i].y * 8);
 
 		clipconv8x8_u8_s16(ptr,
 			dec->components[component_index].rowstride,
 			block2);
 	}
-		x += dec->scan_h_subsample * 8;
-		if(x >= dec->width){
+		x += 8;
+		if(x*dec->scan_h_subsample >= dec->width){
 			x = 0;
-			y += dec->scan_v_subsample * 8;
+			y += 8;
 		}
-		if(y >= dec->height){
+		if(y*dec->scan_v_subsample >= dec->height){
 			go = 0;
 		}
 	}

@@ -2,63 +2,107 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <mad.h>
+#include <ctype.h>
+#include <math.h>
 
 #include "swf.h"
 #include "bits.h"
 #include "tags.h"
 #include "proto.h"
 
+#define DEBUG printf
+
+typedef struct {
+	void *swf_state_t;
+} SwfdecActionContext;
+
+typedef struct {
+	int type;
+	char *s;
+	double num;
+} SwfdecActionVal;
+
+enum {
+	ACTIONVAL_TYPE_UNKNOWN = 0,
+	ACTIONVAL_TYPE_BOOLEAN,
+	ACTIONVAL_TYPE_INTEGER,
+	ACTIONVAL_TYPE_DOUBLE,
+	ACTIONVAL_TYPE_STRING,
+};
+#define ACTIONVAL_IS_BOOLEAN(val) ((val)->type == ACTIONVAL_TYPE_BOOLEAN)
+#define ACTIONVAL_IS_INTEGER(val) ((val)->type == ACTIONVAL_TYPE_INTEGER)
+#define ACTIONVAL_IS_DOUBLE(val) ((val)->type == ACTIONVAL_TYPE_DOUBLE)
+#define ACTIONVAL_IS_STRING(val) ((val)->type == ACTIONVAL_TYPE_STRING)
+#define ACTIONVAL_IS_NUM(val) (ACTIONVAL_IS_BOOLEAN(val) || \
+		ACTIONVAL_IS_INTEGER(val) || ACTIONVAL_IS_DOUBLE(val))
+
+typedef int SwfdecActionFunc(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2);
+
+static SwfdecActionFunc
+	action_add,
+	action_subtract,
+	action_multiply,
+	action_divide,
+	action_equal,
+	action_less_than,
+	action_logical_and,
+	action_logical_or,
+	action_logical_not,
+	action_string_equal,
+	action_string_length,
+	action_substring,
+	action_int,
+	action_string_concat;
 
 struct action_struct {
 	int action;
 	char * name;
-	int (*func)(bits_t *bits);
+	SwfdecActionFunc *func;
+	int n_src;
+	int n_dest;
 };
 static struct action_struct actions[] = {
-	{ 0x04, "next frame",		NULL },
-	{ 0x05, "prev frame",		NULL },
-	{ 0x06, "play",			NULL },
-	{ 0x06, "play",			NULL },
-	{ 0x07, "stop",			NULL },
-	{ 0x08, "toggle quality",	NULL },
-	{ 0x08, "toggle quality",	NULL },
-	{ 0x09, "stop sounds",		NULL },
-	{ 0x0a, "add",			NULL },
-	{ 0x0b, "subtract",		NULL },
-	{ 0x0c, "multiply",		NULL },
-	{ 0x0d, "divide",		NULL },
-	{ 0x0e, "equal",		NULL },
-	{ 0x0f, "less than",		NULL },
-	{ 0x10, "and",			NULL },
-	{ 0x11, "or",			NULL },
-	{ 0x12, "not",			NULL },
-	{ 0x13, "string equal",		NULL },
-	{ 0x14, "string length",	NULL },
-	{ 0x15, "substring",		NULL },
+	{ 0x04, "next frame",		NULL,			0, 0 },
+	{ 0x05, "prev frame",		NULL,			0, 0 },
+	{ 0x06, "play",			NULL,			0, 0 },
+	{ 0x07, "stop",			NULL,			0, 0 },
+	{ 0x08, "toggle quality",	NULL,			0, 0 },
+	{ 0x09, "stop sounds",		NULL,			0, 0 },
+	{ 0x0a, "add",			action_add,		2, 1 },
+	{ 0x0b, "subtract",		action_subtract,	2, 1 },
+	{ 0x0c, "multiply",		action_multiply,	2, 1 },
+	{ 0x0d, "divide",		action_divide,		2, 1 },
+	{ 0x0e, "equal",		action_equal,		2, 1 },
+	{ 0x0f, "less than",		action_less_than,	2, 1 },
+	{ 0x10, "and",			action_logical_and,	2, 1 },
+	{ 0x11, "or",			action_logical_or,	2, 1 },
+	{ 0x12, "not",			action_logical_not,	1, 1 },
+	{ 0x13, "string equal",		action_string_equal,	2, 1 },
+	{ 0x14, "string length",	action_string_length,	1, 1 },
+	{ 0x15, "substring",		action_substring,	3, 1 },
 //	{ 0x17, "unknown",		NULL },
-	{ 0x18, "int",			NULL },
-	{ 0x1c, "eval",			NULL },
-	{ 0x1d, "set variable",		NULL },
-	{ 0x20, "set target expr",	NULL },
-	{ 0x21, "string concat",	NULL },
-	{ 0x22, "get property",		NULL },
-	{ 0x23, "set property",		NULL },
-	{ 0x24, "duplicate clip",	NULL },
-	{ 0x25, "remove clip",		NULL },
-	{ 0x26, "trace",		NULL },
-	{ 0x27, "start drag movie",	NULL },
-	{ 0x28, "stop drag movie",	NULL },
-	{ 0x29, "string compare",	NULL },
-	{ 0x30, "random",		NULL },
-	{ 0x31, "mb length",		NULL },
-	{ 0x32, "ord",			NULL },
-	{ 0x33, "chr",			NULL },
-	{ 0x34, "get timer",		NULL },
-	{ 0x35, "mb substring",		NULL },
-	{ 0x36, "mb ord",		NULL },
-	{ 0x37, "mb chr",		NULL },
+	{ 0x18, "int",			action_int,		1, 1 },
+	{ 0x1c, "eval",			NULL,			1, 1 },
+	{ 0x1d, "set variable",		NULL,			2, 0 },
+	{ 0x20, "set target expr",	NULL,			1, 0 },
+	{ 0x21, "string concat",	action_string_concat,	2, 1 },
+	{ 0x22, "get property",		NULL,			2, 1 },
+	{ 0x23, "set property",		NULL,			3, 0 },
+	{ 0x24, "duplicate clip",	NULL,			3, 0 },
+	{ 0x25, "remove clip",		NULL,			1, 0 },
+	{ 0x26, "trace",		NULL,			0, 0 },
+	{ 0x27, "start drag movie",	NULL,			3, 0 }, /* 3 or 7 */
+	{ 0x28, "stop drag movie",	NULL,			0, 0 },
+	{ 0x29, "string compare",	NULL,			2, 1 },
+	{ 0x30, "random",		NULL,			1, 1 },
+	{ 0x31, "mb length",		NULL,			1, 1 },
+	{ 0x32, "ord",			NULL,			1, 1 },
+	{ 0x33, "chr",			NULL,			1, 1 },
+	{ 0x34, "get timer",		NULL,			0, 1 },
+	{ 0x35, "mb substring",		NULL,			3, 1 },
+	{ 0x36, "mb ord",		NULL,			1, 1 },
+	{ 0x37, "mb chr",		NULL,			1, 1 },
 	{ 0x3b, "call function",	NULL },
 	{ 0x3a, "delete",		NULL },
 	{ 0x3c, "declare local var",	NULL },
@@ -91,21 +135,44 @@ static struct action_struct actions[] = {
 	{ 0x8a, "wait for frame",	NULL },
 //	{ 0x8b, "unknown",		NULL },
 //	{ 0x8c, "unknown",		NULL },
-	{ 0x8d, "wait for frame expr",	NULL },
+	{ 0x8d, "wait for frame expr",	NULL,			1, 0 },
 	{ 0x94, "with",			NULL },
 	{ 0x96, "push data",		NULL },
-	{ 0x99, "branch",		NULL },
-	{ 0x9a, "get url2",		NULL },
+	{ 0x99, "branch",		NULL,			0, 0 },
+	{ 0x9a, "get url2",		NULL,			2, 0 },
 	{ 0x9b, "declare function",	NULL },
-	{ 0x9d, "branch if",		NULL },
-	{ 0x9e, "call frame",		NULL },
-	{ 0x9f, "goto expr",		NULL },
+	{ 0x9d, "branch if",		NULL,			1, 0 },
+	{ 0x9e, "call frame",		NULL,			1, 0 },
+	{ 0x9f, "goto expr",		NULL,			1, 0 },
 //	{ 0xb7, "unknown",		NULL },
 /* in 1394C148d01.swf */
 	{ 0x8b, "unknown",		NULL },
 	{ 0x8c, "unknown",		NULL },
 };
 static int n_actions = sizeof(actions)/sizeof(actions[0]);
+
+static void hexdump(unsigned char *data, int len)
+{
+	int i;
+	int j;
+
+	while(len>0){
+		printf("    ");
+		j = (len<16)?len:16;
+		for(i=0;i<j;i++){
+			printf("%02x ",data[i]);
+		}
+		for(;i<16;i++){
+			printf("   ");
+		}
+		for(i=0;i<j;i++){
+			printf("%c",isprint(data[i])?data[i]:'.');
+		}
+		printf("\n");
+		data += j;
+		len -= j;
+	}
+}
 
 void get_actions(swf_state_t *s,bits_t *bits)
 {
@@ -140,6 +207,9 @@ void get_actions(swf_state_t *s,bits_t *bits)
 				printf("  [%02x] *** unknown action\n",action);
 			}
 		}
+
+		hexdump(bits->ptr, len);
+
 		bits->ptr += len;
 	}
 }
@@ -147,6 +217,345 @@ void get_actions(swf_state_t *s,bits_t *bits)
 int tag_func_do_action(swf_state_t *s)
 {
 	get_actions(s,&s->b);
+
+	return SWF_OK;
+}
+
+
+int swfdec_action_script_execute(swf_state_t *s, bits_t *bits)
+{
+	int action;
+	int len;
+	//int index;
+	//int skip_count;
+	int i;
+
+	SWF_DEBUG(0,"swfdec_action_script_execute\n");
+
+	while(1){
+		action = get_u8(bits);
+		if(action==0)break;
+
+		if(action&0x80){
+			len = get_u16(bits);
+		}else{
+			len = 0;
+		}
+
+		for(i=0;i<n_actions;i++){
+			if(actions[i].action == action){
+				if(s->debug<1){
+					printf("  [%02x] %s\n",action, actions[i].name);
+				}
+				break;
+			}
+		}
+		if(i==n_actions){
+			if(s->debug<3){
+				printf("  [%02x] *** unknown action\n",action);
+			}
+		}
+
+		hexdump(bits->ptr, len);
+
+		bits->ptr += len;
+	}
+
+	return SWF_OK;
+}
+
+
+static int action_promote(SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	if(ACTIONVAL_IS_DOUBLE(src1))return ACTIONVAL_TYPE_DOUBLE;
+	if(ACTIONVAL_IS_DOUBLE(src2))return ACTIONVAL_TYPE_DOUBLE;
+
+	if(ACTIONVAL_IS_INTEGER(src1))return ACTIONVAL_TYPE_INTEGER;
+	if(ACTIONVAL_IS_INTEGER(src2))return ACTIONVAL_TYPE_INTEGER;
+
+	return ACTIONVAL_TYPE_BOOLEAN;
+}
+
+static SwfdecActionVal *action_pop(SwfdecActionContext *context)
+{
+	/* FIXME unimplemented */
+	return NULL;
+}
+
+static int action_add(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_NUM(src1) && ACTIONVAL_IS_NUM(src2)){
+		dest->type = action_promote(src1,src2);
+		dest->num = src1->num + src2->num;
+	}else if(ACTIONVAL_IS_STRING(src1) && ACTIONVAL_IS_STRING(src2)){
+		dest->type = ACTIONVAL_TYPE_STRING;
+		dest->s = malloc(strlen(src1->s) + strlen(src2->s) + 1);
+		strcpy(dest->s, src1->s);
+		strcat(dest->s, src2->s);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_subtract(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_NUM(src1) && ACTIONVAL_IS_NUM(src2)){
+		dest->type = action_promote(src1,src2);
+		dest->num = src1->num - src2->num;
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_multiply(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_NUM(src1) && ACTIONVAL_IS_NUM(src2)){
+		dest->type = action_promote(src1,src2);
+		dest->num = src1->num * src2->num;
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_divide(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_NUM(src1) && ACTIONVAL_IS_NUM(src2)){
+		dest->type = action_promote(src1,src2);
+		dest->num = src1->num / src2->num;
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_equal(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_NUM(src1) && ACTIONVAL_IS_NUM(src2)){
+		dest->type = ACTIONVAL_TYPE_BOOLEAN;
+		dest->num = (src1->num == src2->num);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_less_than(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_NUM(src1) && ACTIONVAL_IS_NUM(src2)){
+		dest->type = ACTIONVAL_TYPE_BOOLEAN;
+		dest->num = (src1->num < src2->num);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_logical_and(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_BOOLEAN(src1) && ACTIONVAL_IS_BOOLEAN(src2)){
+		dest->type = ACTIONVAL_TYPE_BOOLEAN;
+		dest->num = (src1->num && src2->num);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_logical_or(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_BOOLEAN(src1) && ACTIONVAL_IS_BOOLEAN(src2)){
+		dest->type = ACTIONVAL_TYPE_BOOLEAN;
+		dest->num = (src1->num || src2->num);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_logical_not(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2==NULL);
+
+	if(ACTIONVAL_IS_BOOLEAN(src1)){
+		dest->type = ACTIONVAL_TYPE_BOOLEAN;
+		dest->num = !src1->num;
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_string_equal(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_STRING(src1) && ACTIONVAL_IS_STRING(src2)){
+		dest->type = ACTIONVAL_TYPE_BOOLEAN;
+		dest->num = (strcmp(src1->s,src2->s)==0);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_string_length(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2==NULL);
+
+	if(ACTIONVAL_IS_STRING(src1)){
+		dest->type = ACTIONVAL_TYPE_INTEGER;
+		dest->num = strlen(src1->s);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_substring(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	unsigned int len;
+	unsigned int slen;
+	unsigned int offset;
+	SwfdecActionVal *src3;
+
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	src3 = action_pop(context);
+	g_assert(src3);
+
+	if(ACTIONVAL_IS_STRING(src1) && ACTIONVAL_IS_NUM(src2) &&
+			ACTIONVAL_IS_NUM(src3)){
+		dest->type = ACTIONVAL_TYPE_STRING;
+		slen = strlen(src1->s);
+
+		offset = src2->num;
+		if(offset>slen)offset = slen;
+
+		len = src3->num;
+		if(len>slen - offset)len = slen - offset;
+
+		dest->s = malloc(len + 1);
+		memcpy(dest->s, src1->s + offset, len);
+		dest->s[len] = 0;
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_int(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2==NULL);
+
+	if(ACTIONVAL_IS_NUM(src1)){
+		dest->type = ACTIONVAL_TYPE_INTEGER;
+		dest->num = floor(src1->num);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
+
+	return SWF_OK;
+}
+
+static int action_string_concat(SwfdecActionContext *context, SwfdecActionVal *dest,
+	SwfdecActionVal *src1, SwfdecActionVal *src2)
+{
+	g_assert(dest);
+	g_assert(src1);
+	g_assert(src2);
+
+	if(ACTIONVAL_IS_STRING(src1) && ACTIONVAL_IS_STRING(src2)){
+		dest->type = ACTIONVAL_TYPE_STRING;
+		dest->s = malloc(strlen(src1->s) + strlen(src2->s) + 1);
+		strcpy(dest->s, src1->s);
+		strcat(dest->s, src2->s);
+	}else{
+		DEBUG("incompatible types\n");
+		return SWF_ERROR;
+	}
 
 	return SWF_OK;
 }

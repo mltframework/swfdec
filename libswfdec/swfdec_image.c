@@ -150,17 +150,14 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   bits_t *bits = &s->b;
   int id;
-  SwfdecObject *obj;
   SwfdecImage *image;
   JpegRGBDecoder *dec;
 
   SWF_DEBUG (0, "tag_func_define_bits_jpeg\n");
   id = get_u16 (bits);
   SWF_DEBUG (0, "  id = %d\n", id);
-  obj = swfdec_object_new (s, id);
-  image = g_new0 (SwfdecImage, 1);
-  obj->priv = image;
-  obj->type = SWF_OBJECT_IMAGE;
+
+  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
 
   dec = jpeg_rgb_decoder_new ();
 
@@ -186,15 +183,12 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 {
   bits_t *bits = &s->b;
   int id;
-  SwfdecObject *obj;
   SwfdecImage *image;
 
   id = get_u16 (bits);
   SWF_DEBUG (0, "  id = %d\n", id);
-  obj = swfdec_object_new (s, id);
-  image = g_new0 (SwfdecImage, 1);
-  obj->priv = image;
-  obj->type = SWF_OBJECT_IMAGE;
+
+  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
 
   jpegdec (image, bits->ptr, s->tag_len - 2);
   merge_opaque (image);
@@ -218,7 +212,6 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   //int alpha_len;
   //unsigned char *data;
-  SwfdecObject *obj;
   SwfdecImage *image;
   unsigned char *ptr;
   unsigned char *endptr;
@@ -227,10 +220,8 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   id = get_u16 (bits);
   SWF_DEBUG (0, "  id = %d\n", id);
-  obj = swfdec_object_new (s, id);
-  image = g_new0 (SwfdecImage, 1);
-  obj->priv = image;
-  obj->type = SWF_OBJECT_IMAGE;
+
+  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
 
   len = get_u32 (bits);
   SWF_DEBUG (0, "  len = %d\n", len);
@@ -296,15 +287,12 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
   unsigned char *ptr;
   int len;
   unsigned char *endptr = bits->ptr + s->tag_len;
-  SwfdecObject *obj;
   SwfdecImage *image;
 
   id = get_u16 (bits);
   SWF_DEBUG (0, "  id = %d\n", id);
-  obj = swfdec_object_new (s, id);
-  image = g_new0 (SwfdecImage, 1);
-  obj->priv = image;
-  obj->type = SWF_OBJECT_IMAGE;
+
+  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
 
   format = get_u8 (bits);
   SWF_DEBUG (0, "  format = %d\n", format);

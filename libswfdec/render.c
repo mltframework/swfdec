@@ -304,22 +304,16 @@ swfdec_spriteseg_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecLayer * oldlayer)
 {
   SwfdecObject *object;
+  SwfdecObjectClass *klass;
 
   object = swfdec_object_get (s, seg->id);
   if (!object)
     return NULL;
 
-  switch (object->type) {
-    case SWF_OBJECT_SHAPE:
-      return swfdec_shape_prerender (s, seg, object, oldlayer);
-    case SWF_OBJECT_TEXT:
-      return swfdec_text_prerender (s, seg, object, oldlayer);
-    case SWF_OBJECT_BUTTON:
-      return swfdec_button_prerender (s, seg, object, oldlayer);
-    case SWF_OBJECT_SPRITE:
-      return swfdec_sprite_prerender (s, seg, object, oldlayer);
-    default:
-      SWF_DEBUG (4, "unknown object trype\n");
+  klass = SWFDEC_OBJECT_GET_CLASS (object);
+
+  if (klass->prerender) {
+    return klass->prerender (object, s, seg, oldlayer);
   }
 
   return NULL;

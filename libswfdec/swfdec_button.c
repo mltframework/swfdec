@@ -71,7 +71,7 @@ SwfdecLayer *
 swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
 {
-  SwfdecButton *button = object->priv;
+  SwfdecButton *button = SWFDEC_BUTTON (object);
   SwfdecObject *obj;
   SwfdecLayer *layer;
   SwfdecSpriteSegment *tmpseg;
@@ -137,7 +137,6 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   int flags;
   int offset;
   int condition;
-  SwfdecObject *object;
   double trans[6];
   double color_add[4], color_mult[4];
   SwfdecButton *button;
@@ -146,13 +145,10 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   endptr = bits->ptr + s->tag_len;
 
   id = get_u16 (bits);
-  object = swfdec_object_new (s, id);
+  button = g_object_new (SWFDEC_TYPE_BUTTON, NULL);
+  SWFDEC_OBJECT (button)->id = id;
 
-  button = g_new0 (SwfdecButton, 1);
-  object->type = SWF_OBJECT_BUTTON;
-  object->priv = button;
-
-  SWF_DEBUG (0, "  ID: %d\n", object->id);
+  SWF_DEBUG (0, "  ID: %d\n", id);
 
   flags = get_u8 (bits);
   offset = get_u16 (bits);

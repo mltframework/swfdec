@@ -9,7 +9,7 @@ typedef struct _SwfdecFont SwfdecFont;
 typedef struct _SwfdecImage SwfdecImage;
 typedef struct _SwfdecObject SwfdecObject;
 typedef struct _SwfdecShape SwfdecShape;
-typedef struct swfdec_shape_vec_struct SwfdecShapeVec;
+typedef struct _SwfdecShapeVec SwfdecShapeVec;
 typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundBuffer SwfdecSoundBuffer;
 typedef struct _SwfdecSprite SwfdecSprite;

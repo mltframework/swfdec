@@ -28,22 +28,24 @@ typedef struct _SwfdecObjectClass SwfdecObjectClass;
 #define SWFDEC_OBJECT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_OBJECT, SwfdecObject))
 #define SWFDEC_OBJECT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_OBJECT, SwfdecObjectClass))
 
+#define SWFDEC_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_OBJECT, SwfdecObjectClass))
+
 struct _SwfdecObject {
   GObject object;
 
   int id;
-  int type;
 
   double trans[6];
 
   int number;
-
-  void *priv;
 };
 
 struct _SwfdecObjectClass {
   GObjectClass object_class;
 
+  SwfdecLayer *(*prerender) (SwfdecObject *object, SwfdecDecoder *decoder,
+      SwfdecSpriteSegment *seg, SwfdecLayer *oldlayer);
+  
 };
 
 GType swfdec_object_get_type (void);

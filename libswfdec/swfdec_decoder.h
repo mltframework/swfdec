@@ -77,7 +77,7 @@ struct swfdec_decoder_struct
   int tag_len;
   int (*func) (SwfdecDecoder * s);
 
-  SwfdecObject *stream_sound_obj;
+  SwfdecSound *stream_sound_obj;
 
   /* rendering state */
   unsigned int bg_color;

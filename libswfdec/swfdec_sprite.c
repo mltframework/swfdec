@@ -90,8 +90,10 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecLayer *child_layer;
   SwfdecLayer *old_child_layer;
   GList *g;
-  SwfdecDecoder *child_decoder = object->priv;
-  SwfdecSprite *sprite = child_decoder->main_sprite;
+  //SwfdecSprite *child_decoder = SWFDEC_SPRITE (object);
+  /* FIXME */
+  //SwfdecSprite *sprite = child_decoder->main_sprite;
+  SwfdecSprite *sprite = NULL;
   SwfdecSpriteSegment *tmpseg;
   SwfdecSpriteSegment *child_seg;
   int frame;
@@ -223,7 +225,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
     SwfdecObject * parent_object)
 {
   SwfdecLayer *child_layer;
-  SwfdecDecoder *s2 = parent_object->priv;
+  SwfdecSprite *s2 = SWFDEC_SPRITE (parent_object);
   GList *g;
 
   SWF_DEBUG (0, "rendering sprite frame %d of %d\n",
@@ -240,18 +242,13 @@ tag_func_define_sprite (SwfdecDecoder * s)
 {
   bits_t *bits = &s->b;
   int id;
-  SwfdecObject *object;
   SwfdecDecoder *sprite;
   int ret;
 
   id = get_u16 (bits);
-  object = swfdec_object_new (s, id);
+  sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
 
-  SWF_DEBUG (0, "  ID: %d\n", object->id);
-
-  sprite = swfdec_decoder_new ();
-  object->priv = sprite;
-  object->type = SWF_OBJECT_SPRITE;
+  SWF_DEBUG (0, "  ID: %d\n", id);
 
   sprite->n_frames = get_u16 (bits);
   sprite->main_sprite->n_frames = sprite->n_frames;

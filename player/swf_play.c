@@ -334,7 +334,8 @@ static void sound_setup(void)
 	sound_buf = malloc(1024*2*2);
 
 	if ( SDL_OpenAudio(&wanted, NULL) < 0 ) {
-		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+		fprintf(stderr, "Couldn't open audio: %s, disabling\n", SDL_GetError());
+		enable_sound = FALSE;
 	}
 
 	SDL_PauseAudio(0);
@@ -410,7 +411,6 @@ static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
 	return TRUE;
 }
 
-#if 0
 static void tv_add_usec(struct timeval *a, unsigned int x)
 {
 	a->tv_usec += x;
@@ -437,7 +437,6 @@ static int tv_diff(struct timeval *a,struct timeval *b)
 	diff += (a->tv_usec - b->tv_usec);
 	return diff;
 }
-#endif
 
 static gboolean render_idle(gpointer data)
 {
@@ -471,25 +470,25 @@ static gboolean render_idle(gpointer data)
 		render_idle_id = 0;
 	}
 	if(ret==SWF_IMAGE){
-		//struct timeval now;
+		struct timeval now;
 
 		swfdec_decoder_peek_image(s,&image);
 		pull_sound(s);
 
-		if(ack==0){
-#if 0
-		gettimeofday(&now, NULL);
-		tv_add_usec(&image_time, interval);
-		if(tv_compare(&image_time, &now) > 0){
-			int x = tv_diff(&image_time, &now);
-			//printf("sleeping for %d us\n",x);
-			if(!fast)usleep(x);
+		if(!enable_sound){
+			gettimeofday(&now, NULL);
+			tv_add_usec(&image_time, interval);
+			if(tv_compare(&image_time, &now) > 0){
+				int x = tv_diff(&image_time, &now);
+				//printf("sleeping for %d us\n",x);
+				if(!fast)usleep(x);
+			}else{
+				gettimeofday(&image_time, NULL);
+			}
 		}else{
-			gettimeofday(&image_time, NULL);
-		}
-#endif
-		while(sound_bytes>=10000){
-			usleep(10000);
+			while(sound_bytes>=10000){
+				usleep(10000);
+			}
 		}
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
@@ -497,7 +496,6 @@ static gboolean render_idle(gpointer data)
 			GDK_RGB_DITHER_NONE,
 			image,
 			width*3);
-		}
 	}
 	if(ret==SWF_CHANGE && !plugged){
 		double rate;

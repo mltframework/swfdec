@@ -4,7 +4,7 @@ INCLUDES = $(SWF_CFLAGS)\
 	$(LIBGIMP_CFLAGS)\
 	-I$(top_srcdir)
 
-if ENABLE_GIMP_LOADER
+if HAVE_GIMP
 gimp_PROGRAMS = swf
 else
 gimp_PROGRAMS =

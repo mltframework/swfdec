@@ -147,7 +147,7 @@ load_dialog (const gchar *file_name)
 		decoder = swfdec_decoder_new ();
 		
 		while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWF_ERROR && !got_nframes)
-			if (SWF_OK == swfdec_decoder_addbits (decoder, (guint8*)buf, (int)nread))
+			if (SWF_OK == swfdec_decoder_add_data (decoder, (guint8*)buf, (int)nread))
 				if (SWF_CHANGE == swfdec_decoder_parse (decoder)) {
 					got_nframes = (swfdec_decoder_get_n_frames (decoder, &nframes) == SWF_OK);
 					swfdec_decoder_get_image_size (decoder, &width, &height);
@@ -292,7 +292,7 @@ swf_add_bits (SwfdecDecoder * context, const guint8 * buf, gsize nread, guint32 
 	if (*nb_frames >= load_vals.frame)
 		return SWF_OK;
 
-	result = swfdec_decoder_addbits (context, (guint8*)buf, (int)nread);
+	result = swfdec_decoder_add_data (context, (guint8*)buf, (int)nread);
 	if (result == SWF_OK)
 		swf_flush (context, nb_frames, out_pixels, width, height);
 

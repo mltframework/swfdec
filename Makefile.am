@@ -1,6 +1,22 @@
-SUBDIRS=libswfdec test player plugin pixbuf-loader gimp-loader
 
-DIST_SUBDIRS=libswfdec test player plugin pixbuf-loader gimp-loader
+if WITH_GLIB_COMPAT
+glib_compat_subdirs = glib-compat
+#no_glib_compat_subdirs =
+else
+glib_compat_subdirs =
+endif
+no_glib_compat_subdirs = gimp-loader pixbuf-loader player plugin
+
+SUBDIRS=$(glib_compat_subdirs) libswfdec test $(no_glib_compat_subdirs)
+
+DIST_SUBDIRS= \
+	gimp-loader \
+	glib-compat \
+	libswfdec \
+	pixbuf-loader \
+	player \
+	plugin \
+	test
 
 EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.spec \
 	TODO m4

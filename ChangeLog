@@ -1,5 +1,38 @@
 2004-09-01  David Schleef  <ds@schleef.org>
 
+	Make more compatibile with glib-compat.
+	* Makefile.am:
+	* README:
+	* configure.ac:
+	* gimp-loader/Makefile.am:
+	* gimp-loader/swf-gimp.c:
+	* libswfdec/Makefile.am:
+	* swfdec.pc.in:
+
+	Glib compatibility stuff.  Mostly taken from glib.
+	* glib-compat/Makefile.am:
+	* glib-compat/glib.h:
+	* glib-compat/glib/Makefile.am:
+	* glib-compat/glib/config.h:
+	* glib-compat/glib/garray.c:
+	* glib-compat/glib/garray.h:
+	* glib-compat/glib/gdebug.h:
+	* glib-compat/glib/gfileutils.c:
+	* glib-compat/glib/gfileutils.h:
+	* glib-compat/glib/glist.c:
+	* glib-compat/glib/glist.h:
+	* glib-compat/glib/gmacros.h:
+	* glib-compat/glib/gmem.c:
+	* glib-compat/glib/gmem.h:
+	* glib-compat/glib/gmessages.h:
+	* glib-compat/glib/gprintfint.h:
+	* glib-compat/glib/gstrfuncs.c:
+	* glib-compat/glib/gstrfuncs.h:
+	* glib-compat/glib/gtypes.h:
+	* glib-compat/glibconfig.h:
+
+2004-09-01  David Schleef  <ds@schleef.org>
+
 	Make less dependent on gobject.  Change API to use SwfdecBuffer.
 	* libswfdec/Makefile.am: remove swf.h
 	* libswfdec/swf.c: (swfdec_decoder_new), (swfdec_decoder_add_data),

@@ -49,12 +49,26 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
+WITH_GLIB_COMPAT=no
+AC_ARG_ENABLE(glib-compat,
+  AC_HELP_STRING([--enable-glib-compat],
+    [uses internal glib compatibility code]),
+    [WITH_GLIB_COMPAT=${enableval}])
+AM_CONDITIONAL(WITH_GLIB_COMPAT, [test x"$WITH_GLIB_COMPAT" = xyes ])
+
+if test "x$WITH_GLIB_COMPAT" != "xyes" ; then
+  GLIB_REQUIRES=glib-2.0
+  PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
+  if test "$HAVE_GLIB" = "no"; then
+    AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
+  fi
+else
+  GLIB_REQUIRES=
+  GLIB_LIBS="\$(top_builddir)/glib-compat/glib/libglib.la"
+  GLIB_CFLAGS="-I\$(top_srcdir)/glib-compat"
+fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
-if test "$HAVE_GLIB" = "no"; then
-  AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
-fi
 
 PKG_CHECK_MODULES(GTK, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
 AC_SUBST(GTK_LIBS)
@@ -144,17 +158,9 @@ fi
 
 AM_CONDITIONAL(ENABLE_PIXBUF_LOADER, test x$enable_pixbuf_loader = xyes)
 
-dnl a Gimp plugin
-
-LIBGIMP_CFLAGS=""
-LIBGIMP_LIBS=""
-swf_gimp=no
-
-PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0], test_gimp=true, test_gimp=false)
-if test "x$test_gimp" = "xtrue"; then
-      swf_gimp=yes
-fi
-AM_CONDITIONAL(ENABLE_GIMP_LOADER,[test $swf_gimp = yes])
+PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0],
+  HAVE_GIMP=yes, HAVE_GIMP=no)
+AM_CONDITIONAL(HAVE_GIMP,[test $HAVE_GIMP = yes])
 
 AC_SUBST(LIBGIMP_CFLAGS)
 AC_SUBST(LIBGIMP_LIBS)
@@ -194,6 +200,8 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
+glib-compat/Makefile
+glib-compat/glib/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/mpeg/Makefile

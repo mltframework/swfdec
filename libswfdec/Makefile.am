@@ -22,6 +22,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
 	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS)
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
+	-export-symbols-regex swfdec_.* \
 	$(renderer_libs) $(GLIB_LIBS) $(MAD_LIBS) \
 	$(LIBOIL_LIBS)
 

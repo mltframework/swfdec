@@ -4,7 +4,6 @@
 
 #include <glib.h>
 #include <libart_lgpl/libart.h>
-#include <mad.h>
 #include <zlib.h>
 
 /* see openswf.org */
@@ -186,11 +185,9 @@ struct swf_sound_struct{
 	unsigned char *orig_data;
 	int orig_len;
 
-	int n_samples;
+	void *mp;
 
-	struct mad_stream stream;
-	struct mad_frame frame;
-	struct mad_synth synth;
+	int n_samples;
 
 	unsigned char tmpbuf[1000];
 	int tmpbuflen;

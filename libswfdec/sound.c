@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <mad.h>
+#define getbits mpg_getbits
+#include "mpglib/mpg123.h"
+#include "mpglib/mpglib.h"
+#undef getbits
 
 #include "swf.h"
 #include "tags.h"
@@ -14,37 +17,16 @@ void adpcm_decode(swf_state_t *s,swf_object_t *obj);
 
 void mp3_decode(swf_object_t *obj)
 {
-	struct mad_stream stream;
-	struct mad_frame frame;
-	struct mad_synth synth;
-	swf_sound_t *sound = obj->priv;
+	struct mpstr mp;
+	int size;
 	int ret;
+	swf_sound_t *sound = obj->priv;
 
-	mad_stream_init(&stream);
-	mad_frame_init(&frame);
-	mad_synth_init(&synth);
-
-	mad_stream_buffer(&stream, sound->orig_data, sound->orig_len);
-	
-	while(1){
-		ret = mad_frame_decode(&frame, &stream);
-		if(ret == -1 && stream.error == MAD_ERROR_BUFLEN){
-			break;
-		}
-		if(ret == -1){
-			printf("stream error 0x%04x\n",stream.error);
-			return;
-		}
-
-		mad_synth_frame(&synth, &frame);
-
-//		printf("  n_channels = %d\n", MAD_NCHANNELS(&frame.header));
-//		printf("  nsamples = %d\n", synth.pcm.length);
-	}
-
-	mad_synth_finish(&synth);
-	mad_frame_finish(&frame);
-	mad_stream_finish(&stream);
+	InitMP3(&mp);
+	do{
+		ret = decodeMP3(&mp, sound->orig_data, sound->orig_len,
+			sound->tmpbuf, 1000, &size);
+	}while(ret==MP3_OK);
 }
 
 int tag_func_define_sound(swf_state_t *s)
@@ -131,45 +113,20 @@ int tag_func_sound_stream_block(swf_state_t *s)
 	memcpy(sound->tmpbuf + sound->tmpbuflen, s->b.ptr + 4, s->tag_len - 4);
 	sound->tmpbuflen += s->tag_len - 4;
 
-	mad_stream_buffer(&sound->stream, sound->tmpbuf, sound->tmpbuflen);
-
 	while(sound->tmpbuflen >= 0){
+		int n;
 
-		ret = mad_frame_decode(&sound->frame, &sound->stream);
-		if(ret == -1 && sound->stream.error == MAD_ERROR_BUFLEN){
-			break;
-		}
-		if(ret == -1){
-			printf("stream error 0x%04x\n",sound->stream.error);
+		ret = decodeMP3(sound->mp, sound->tmpbuf, sound->tmpbuflen,
+			s->sound_buffer, 1000, &n);
+
+		if(ret == MP3_ERR){
 			return SWF_ERROR;
 		}
-
-		mad_synth_frame(&sound->synth, &sound->frame);
-
-		{
-		short *data = (void *)s->sound_buffer;
-
-		data += s->sound_offset;
-		if(sound->synth.pcm.samplerate==11025){
-			int i = 0;
-			for(i=0;i<sound->synth.pcm.length;i++){
-				*data++ = sound->synth.pcm.samples[0][i]>>13;
-				*data++ = sound->synth.pcm.samples[0][i]>>13;
-				*data++ = sound->synth.pcm.samples[0][i]>>13;
-				*data++ = sound->synth.pcm.samples[0][i]>>13;
-			}
-			s->sound_offset += i*4;
-		}else{
-			printf("sample rate not handled (%d)\n",
-				sound->synth.pcm.samplerate);
+		if(ret == MP3_NEED_MORE){
+			break;
 		}
-		}
-		//printf("  n_channels = %d\n", MAD_NCHANNELS(&obj->frame.header));
-		//printf("  nsamples = %d\n", obj->synth.pcm.length);
 	}
 
-	sound->tmpbuflen -= sound->stream.next_frame - sound->tmpbuf;
-	memmove(sound->tmpbuf, sound->stream.next_frame, sound->tmpbuflen);
 
 	//printf("  left over: %d\n",obj->tmpbuflen);
 
@@ -218,9 +175,9 @@ int tag_func_sound_stream_head(swf_state_t *s)
 
 	switch(format){
 	case 2:
-		mad_stream_init(&sound->stream);
-		mad_frame_init(&sound->frame);
-		mad_synth_init(&sound->synth);
+		sound->mp = g_new0(struct mpstr,1);
+		InitMP3(sound->mp);
+		
 		break;
 	default:
 		SWF_DEBUG(4,"unimplemented sound format\n");

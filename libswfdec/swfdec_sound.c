@@ -16,9 +16,8 @@ int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
 static void swfdec_sound_mp3_cleanup (SwfdecSound *sound);
 
 void adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound);
-SwfdecSoundBuffer *swfdec_sound_buffer_new (int len);
 void swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
-    SwfdecSoundBuffer * buffer);
+    SwfdecBuffer * buffer);
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecSound, swfdec_sound)
 
@@ -145,23 +144,9 @@ g_object_unref (G_OBJECT (sound));
 
 void
 swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
-    SwfdecSoundBuffer * buffer)
+    SwfdecBuffer * buffer)
 {
   s->stream_sound_buffers = g_list_append (s->stream_sound_buffers, buffer);
-}
-
-SwfdecSoundBuffer *
-swfdec_sound_buffer_new (int len)
-{
-  SwfdecSoundBuffer *sb;
-
-  sb = g_new0 (SwfdecSoundBuffer, 1);
-
-  sb->len = len;
-  sb->offset = 0;
-  sb->data = g_malloc (len);
-
-  return sb;
 }
 
 int
@@ -389,13 +374,13 @@ swfdec_sound_render (SwfdecDecoder * s)
 {
   int len;
   GList *g;
-  SwfdecSoundBuffer *buffer;
-  SwfdecSoundBuffer *buf;
+  SwfdecBuffer *buffer;
+  SwfdecBuffer *buf;
   int offset = 0;
   int n;
 
   len = 2 * 2 * (44100 / s->rate);
-  buffer = swfdec_sound_buffer_new (len);
+  buffer = swfdec_buffer_new_and_alloc (len);
   memset (buffer->data, 0, len);
 
   while (1) {
@@ -405,16 +390,18 @@ swfdec_sound_render (SwfdecDecoder * s)
     if (!g)
       break;
 
-    buf = (SwfdecSoundBuffer *) g->data;
-    n = MIN (buf->len - buf->offset, len - offset);
+    buf = (SwfdecBuffer *) g->data;
+    n = MIN (buf->length, len - offset);
 
     /* FIXME this isn't composing */
-    memcpy (buffer->data + offset, buf->data + buf->offset, n);
+    memcpy (buffer->data + offset, buf->data, n);
     offset += n;
-    buf->offset += n;
 
-    if (buf->offset >= buf->len) {
-      g_free (buf->data);
+    if (n < buf->length) {
+      buf = swfdec_buffer_new_subbuffer (buf, n, buf->length - n);
+      g->data = buf;
+    } else {
+      swfdec_buffer_unref (buf);
       s->stream_sound_buffers = g_list_delete_link (s->stream_sound_buffers, g);
     }
 
@@ -499,11 +486,11 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
     mad_synth_frame (&sound->synth, &sound->frame);
 
     if (sound->synth.pcm.samplerate == 11025) {
-      SwfdecSoundBuffer *buffer;
+      SwfdecBuffer *buffer;
       short *data;
       int i;
 
-      buffer = swfdec_sound_buffer_new (sound->synth.pcm.length * 2 * 2 * 4);
+      buffer = swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2 * 4);
       data = (short *) buffer->data;
       if (sound->synth.pcm.channels == 2) {
 	for (i = 0; i < sound->synth.pcm.length; i++) {
@@ -537,11 +524,11 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
       }
       swfdec_decoder_sound_buffer_append (s, buffer);
     } else if (sound->synth.pcm.samplerate == 22050) {
-      SwfdecSoundBuffer *buffer;
+      SwfdecBuffer *buffer;
       short *data;
       int i;
 
-      buffer = swfdec_sound_buffer_new (sound->synth.pcm.length * 2 * 2 * 2);
+      buffer = swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2 * 2);
       data = (short *) buffer->data;
       if (sound->synth.pcm.channels == 2) {
 	for (i = 0; i < sound->synth.pcm.length; i++) {

@@ -35,6 +35,8 @@ swfdec_decoder_new (void)
   s = g_new0 (SwfdecDecoder, 1);
 
   s->bg_color = SWF_COLOR_COMBINE (0xff, 0xff, 0xff, 0xff);
+  s->colorspace = SWF_COLORSPACE_RGB888;
+  swf_config_colorspace (s);
 
   swfdec_transform_init_identity (&s->transform);
 
@@ -116,6 +118,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	  swfdec_bits_syncbits (&s->b);
 	  s->parse = s->b;
 	  s->state = SWF_STATE_PARSETAG;
+          swf_config_colorspace (s);
 	  {
 	    SwfdecRect rect;
 
@@ -329,6 +332,8 @@ swfdec_decoder_set_colorspace (SwfdecDecoder * s, int colorspace)
 
   s->colorspace = colorspace;
 
+  swf_config_colorspace (s);
+
   return SWF_OK;
 }
 
@@ -344,6 +349,7 @@ swfdec_decoder_disable_render (SwfdecDecoder * s)
   s->disable_render = TRUE;
 }
 
+#if 0
 void *
 swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length)
 {
@@ -367,6 +373,7 @@ swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length)
 
   return data;
 }
+#endif
 
 static void *
 zalloc (void *opaque, unsigned int items, unsigned int size)

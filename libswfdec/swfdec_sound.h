@@ -61,12 +61,6 @@ struct _SwfdecSoundClass {
 
 };
 
-struct _SwfdecSoundBuffer {
-  int len;
-  int offset;
-  unsigned char *data;
-};
-
 GType swfdec_sound_get_type (void);
 
 int tag_func_define_sound (SwfdecDecoder * s);
@@ -78,6 +72,7 @@ void swfdec_sound_render (SwfdecDecoder * s);
 
 void swfdec_sound_chunk_free (SwfdecSoundChunk *chunk);
 
+int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
 
 G_END_DECLS
 

@@ -4,6 +4,7 @@
 
 #include "swfdec.h"
 
+typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
 typedef struct _SwfdecFont SwfdecFont;
@@ -13,7 +14,6 @@ typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeVec SwfdecShapeVec;
 typedef struct _SwfdecRect SwfdecRect;
 typedef struct _SwfdecSound SwfdecSound;
-typedef struct _SwfdecSoundBuffer SwfdecSoundBuffer;
 typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;

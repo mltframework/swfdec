@@ -82,14 +82,12 @@ struct swfdec_decoder_struct
   SwfdecSound *stream_sound_obj;
 
   /* rendering state */
+  SwfdecRender *render;
   unsigned int bg_color;
   SwfdecRect irect;
-  SwfdecRect drawrect;
 
   SwfdecSprite *main_sprite;
   SwfdecSprite *parse_sprite;
-
-  SwfdecRender *render;
 
   double flatness;
   int disable_render;

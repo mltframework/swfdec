@@ -7,14 +7,14 @@
 void
 swf_invalidate_irect (SwfdecDecoder * s, SwfdecRect * rect)
 {
-  if (swfdec_rect_is_empty (&s->drawrect)) {
-    swfdec_rect_intersect (&s->drawrect, &s->irect, rect);
+  if (swfdec_rect_is_empty (&s->render->drawrect)) {
+    swfdec_rect_intersect (&s->render->drawrect, &s->irect, rect);
   } else {
     SwfdecRect tmp1, tmp2;
 
-    swfdec_rect_copy (&tmp1, &s->drawrect);
+    swfdec_rect_copy (&tmp1, &s->render->drawrect);
     swfdec_rect_intersect (&tmp2, &s->irect, rect);
-    swfdec_rect_union (&s->drawrect, &tmp1, &tmp2);
+    swfdec_rect_union (&s->render->drawrect, &tmp1, &tmp2);
   }
 }
 
@@ -159,152 +159,12 @@ tag_remove_object_2 (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-void
-swfdec_render_clean (SwfdecRender * render, int frame)
-{
-  SwfdecLayer *l;
-  GList *g, *g_next;
-
-  for (g = g_list_first (render->layers); g; g = g_next) {
-    g_next = g_list_next (g);
-    l = (SwfdecLayer *) g->data;
-    if (l->last_frame <= frame + 1) {
-      render->layers = g_list_delete_link (render->layers, g);
-      swfdec_layer_free (l);
-    }
-  }
-}
-
-
 int
 tag_show_frame (SwfdecDecoder * s)
 {
   s->frame_number++;
   s->parse_sprite->parse_frame++;
   return SWF_OK;
-}
-
-void
-swf_render_frame (SwfdecDecoder * s, int frame_index)
-{
-  SwfdecSpriteSegment *seg;
-  SwfdecLayer *layer;
-  //SwfdecLayer *oldlayer;
-  GList *g;
-
-  SWFDEC_DEBUG ("swf_render_frame");
-
-  s->drawrect.x0 = 0;
-  s->drawrect.x1 = 0;
-  s->drawrect.y0 = 0;
-  s->drawrect.y1 = 0;
-  if (!s->buffer) {
-    s->buffer = g_malloc (s->stride * s->height);
-    swf_invalidate_irect (s, &s->irect);
-  }
-swf_invalidate_irect (s, &s->irect);
-  if (!s->tmp_scanline) {
-    s->tmp_scanline = g_malloc (s->width);
-  }
-
-  SWFDEC_DEBUG ("rendering frame %d", frame_index);
-#if 0
-  for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
-    seg = (SwfdecSpriteSegment *) g->data;
-
-    SWFDEC_LOG("testing seg %d <= %d < %d",
-	seg->first_frame, frame_index, seg->last_frame);
-    if (seg->first_frame > frame_index)
-      continue;
-    if (seg->last_frame <= frame_index)
-      continue;
-
-    oldlayer = swfdec_render_get_layer (s->render, seg->depth,
-        frame_index - 1);
-
-    SWFDEC_ERROR ("layer %d seg=%p oldlayer=%p", seg->depth, seg, oldlayer);
-
-    layer = swfdec_spriteseg_prerender (s, seg, oldlayer);
-    if (layer == NULL) {
-      SWFDEC_ERROR ("prerender returned NULL");
-      continue; 
-    }
-
-    layer->last_frame = frame_index + 1;
-    if (layer != oldlayer) {
-      layer->first_frame = frame_index;
-      swfdec_render_add_layer (s->render, layer);
-      if (oldlayer)
-	oldlayer->last_frame = frame_index;
-    } else {
-      SWFDEC_LOG("cache hit");
-    }
-  }
-#endif
-
-#if 0
-  for (g = g_list_last (s->render->layers); g; g = g_list_previous (g)) {
-    layer = (SwfdecLayer *) g->data;
-    if (layer->seg->first_frame <= frame_index - 1 &&
-        layer->last_frame == frame_index) {
-      SWFDEC_LOG("invalidating (%d < %d == %d) %d %d %d %d",
-	  layer->seg->first_frame, frame_index, layer->last_frame,
-	  layer->rect.x0, layer->rect.x1, layer->rect.y0, layer->rect.y1);
-      swf_invalidate_irect (s, &layer->rect);
-    }
-    if (layer->first_frame == frame_index) {
-      swf_invalidate_irect (s, &layer->rect);
-    }
-  }
-#endif
-
-  SWFDEC_DEBUG ("inval rect %d %d %d %d", s->drawrect.x0, s->drawrect.x1,
-      s->drawrect.y0, s->drawrect.y1);
-
-  s->fillrect (s->buffer, s->stride, s->bg_color, &s->drawrect);
-
-  for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
-    SwfdecObject *object;
-
-    seg = (SwfdecSpriteSegment *) g->data;
-
-    SWFDEC_LOG("testing seg %d <= %d < %d",
-	seg->first_frame, frame_index, seg->last_frame);
-    if (seg->first_frame > frame_index)
-      continue;
-    if (seg->last_frame <= frame_index)
-      continue;
-
-    object = swfdec_object_get (s, seg->id);
-    if (object) {
-      layer = SWFDEC_OBJECT_GET_CLASS(object)->prerender (s, seg, object, NULL);
-
-      if (layer) {
-        swfdec_layer_render (s, layer);
-        swfdec_layer_free (layer);
-      } else {
-        SWFDEC_WARNING ("prerender returned NULL");
-      }
-    } else {
-      SWFDEC_DEBUG ("could not find object (id = %d)", seg->id);
-    }
-  }
-
-#if 0
-  for (g = g_list_last (s->render->layers); g; g = g_list_previous (g)) {
-    layer = (SwfdecLayer *) g->data;
-    if (layer == NULL || layer->seg) {
-      SWFDEC_ERROR ("layer == NULL, odd\n");
-      continue;
-    }
-    SWFDEC_ERROR ("rendering %d < %d <= %d",
-	layer->seg->first_frame, frame_index, layer->last_frame);
-    if (layer->seg->first_frame <= frame_index &&
-        frame_index < layer->last_frame) {
-      swfdec_layer_render (s, layer);
-    }
-  }
-#endif
 }
 
 SwfdecLayer *

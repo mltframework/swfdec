@@ -10,11 +10,6 @@
 #include <libart_lgpl/libart.h>
 #endif
 
-struct swfdec_render_struct
-{
-  GList *layers;
-};
-
 struct swfdec_layer_vec_struct
 {
 #ifdef HAVE_LIBART
@@ -48,21 +43,11 @@ struct swfdec_layer_struct
   GList *sublayers;
 };
 
-SwfdecRender *swfdec_render_new (void);
-void swfdec_render_free (SwfdecRender * render);
-
 SwfdecLayer *swfdec_layer_new (void);
 void swfdec_layer_free (SwfdecLayer * layer);
-SwfdecLayer *swfdec_layer_get (SwfdecDecoder * s, int depth);
-void swfdec_render_add_layer (SwfdecRender * s, SwfdecLayer * lnew);
-void swfdec_render_del_layer (SwfdecRender * s, SwfdecLayer * layer);
 void swfdec_layer_prerender (SwfdecDecoder * s, SwfdecLayer * layer);
 void swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec);
 void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);
-SwfdecLayer *swfdec_render_get_seg (SwfdecRender * render,
-    SwfdecSpriteSegment * seg);
-SwfdecLayer *swfdec_render_get_layer (SwfdecRender * render, int layer,
-    int frame);
 SwfdecLayer *swfdec_render_get_sublayer (SwfdecLayer * layer, int depth,
     int frame);
 

@@ -11,30 +11,6 @@
 #endif
 
 
-SwfdecRender *
-swfdec_render_new (void)
-{
-  SwfdecRender *render;
-
-  render = g_new0 (SwfdecRender, 1);
-
-  return render;
-}
-
-void
-swfdec_render_free (SwfdecRender * render)
-{
-  GList *g;
-
-  for (g = g_list_first (render->layers); g; g = g_list_next (g)) {
-    swfdec_layer_free ((SwfdecLayer *) g->data);
-  }
-  g_list_free (render->layers);
-
-  g_free (render);
-}
-
-
 SwfdecLayer *
 swfdec_layer_new (void)
 {
@@ -89,49 +65,6 @@ swfdec_layer_free (SwfdecLayer * layer)
 }
 
 SwfdecLayer *
-swfdec_layer_get (SwfdecDecoder * s, int depth)
-{
-  SwfdecLayer *l;
-  GList *g;
-
-  for (g = g_list_first (s->render->layers); g; g = g_list_next (g)) {
-    l = (SwfdecLayer *) g->data;
-    if (l->seg->depth == depth && l->seg->first_frame <= s->frame_number - 1
-	&& (l->last_frame > s->frame_number - 1))
-      return l;
-  }
-
-  return NULL;
-}
-
-SwfdecLayer *
-swfdec_render_get_layer (SwfdecRender * render, int depth, int frame)
-{
-  SwfdecLayer *l;
-  GList *g;
-
-  if (!render)
-    return NULL;
-
-  for (g = g_list_first (render->layers); g; g = g_list_next (g)) {
-    l = (SwfdecLayer *) g->data;
-#if 0
-    printf ("compare %d==%d %d <= %d < %d\n",
-	l->seg->depth, depth, l->seg->first_frame, frame, l->last_frame);
-#endif
-    if (l == NULL || l->seg == NULL) {
-      SWFDEC_ERROR ("l is NULL, odd\n");
-      continue;
-    }
-    if (l->seg->depth == depth && l->first_frame <= frame
-	&& frame < l->last_frame)
-      return l;
-  }
-
-  return NULL;
-}
-
-SwfdecLayer *
 swfdec_render_get_sublayer (SwfdecLayer * layer, int depth, int frame)
 {
   SwfdecLayer *l;
@@ -152,37 +85,5 @@ swfdec_render_get_sublayer (SwfdecLayer * layer, int depth, int frame)
   }
 
   return NULL;
-}
-
-SwfdecLayer *
-swfdec_render_get_seg (SwfdecRender * render, SwfdecSpriteSegment * seg)
-{
-  SwfdecLayer *l;
-  GList *g;
-
-  for (g = g_list_first (render->layers); g; g = g_list_next (g)) {
-    l = (SwfdecLayer *) g->data;
-    if (l->seg == seg)
-      return l;
-  }
-
-  return NULL;
-}
-
-void
-swfdec_render_add_layer (SwfdecRender * render, SwfdecLayer * lnew)
-{
-  GList *g;
-  SwfdecLayer *l;
-
-  for (g = g_list_first (render->layers); g; g = g_list_next (g)) {
-    l = (SwfdecLayer *) g->data;
-    if (l->seg->depth < lnew->seg->depth) {
-      render->layers = g_list_insert_before (render->layers, g, lnew);
-      return;
-    }
-  }
-
-  render->layers = g_list_append (render->layers, lnew);
 }
 

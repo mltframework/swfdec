@@ -18,7 +18,6 @@ static void swfdec_button_base_init (gpointer g_class)
 static void swfdec_button_class_init (SwfdecButtonClass *g_class)
 {
   SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_button_prerender;
-  //SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 
 static void swfdec_button_init (SwfdecButton *button)

@@ -15,7 +15,7 @@ swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec)
   SwfdecRect rect;
   struct swf_svp_render_struct cb_data;
 
-  swfdec_rect_intersect (&rect, &s->drawrect, &layervec->rect);
+  swfdec_rect_intersect (&rect, &s->render->drawrect, &layervec->rect);
 
   if (swfdec_rect_is_empty (&rect)) {
     return;

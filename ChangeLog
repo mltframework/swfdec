@@ -1,3 +1,35 @@
+2004-08-26  David Schleef  <ds@schleef.org>
+
+	Remove these
+	* libswfdec/jpeg/conv8x8_f64_s16.h:
+	* libswfdec/jpeg/idct8_f64.h:
+	* libswfdec/jpeg/idct8x8_f64.h:
+	* libswfdec/jpeg/idct8x8_s16.h:
+	* libswfdec/jpeg/sl_block8x8.h:
+	* libswfdec/jpeg/sl_types.h:
+	* libswfdec/jpeg/unzigzag8x8_s16.h:
+
+	rewrite rendering code
+	* libswfdec/Makefile.am:
+	* libswfdec/render.c: (swf_invalidate_irect):
+	* libswfdec/swf.c: (swfdec_decoder_new), (swfdec_decoder_parse),
+	(swfdec_decoder_set_colorspace):
+	* libswfdec/swfdec_button.c: (swfdec_button_class_init):
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_internal.h:
+	* libswfdec/swfdec_layer.c:
+	* libswfdec/swfdec_layer.h:
+	* libswfdec/swfdec_render.c: (swfdec_render_new),
+	(swfdec_render_free), (swfdec_render_iterate),
+	(swfdec_render_seek), (swfdec_render_get_image),
+	(swfdec_render_get_audio), (swfdec_spriteseg_prerender),
+	(swfdec_layer_render):
+	* libswfdec/swfdec_render_libart.c: (swfdec_layervec_render):
+	* libswfdec/swfdec_sound.c: (swfdec_decoder_sound_buffer_append),
+	(swfdec_sound_render), (swfdec_sound_mp3_decode_stream):
+	* libswfdec/swfdec_sound.h:
+	* libswfdec/swfdec_types.h:
+
 2004-08-24  David Schleef  <ds@schleef.org>
 
 	Change malloc/free to g_malloc/g_free.

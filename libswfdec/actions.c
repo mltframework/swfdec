@@ -1117,7 +1117,7 @@ action_set_variable (SwfdecActionContext *context)
   action_val_convert_to_string (b);
 
   var = variable_get (context, b->string);
-  action_val_copy (var->value, b);
+  action_val_copy (var->value, a);
 
   action_val_free (a);
   action_val_free (b);

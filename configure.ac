@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.3.3.1)
+AC_INIT(swfdec,0.3.4)
 
 nano=$(echo $VERSION | sed 's/[0-9]\.[0-9]\.[0-9]\.*//')
 if test x"$nano" = x1 ; then
@@ -17,7 +17,10 @@ AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
 
-SWF_DEBUG="-Wall -Werror"
+SWF_DEBUG="-Wall"
+if test x$SWFDEC_CVS = xyes ; then
+  SWF_DEBUG="$SWF_DEBUG -Werror"
+fi
 
 SWFDEC_LIBVERSION="0:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)

@@ -1,7 +1,7 @@
 2004-06-05  David Schleef  <ds@schleef.org>
 
 	* COPYING: switch to LGPL
-	* INSTALL:
+	* INSTALL: unknown
 	* autogen.sh: bump libtool to 1.5
 	* compile: remove
 	* configure.ac: add majorminor

@@ -180,10 +180,17 @@ int art_place_object_2(swf_state_t *s)
 	move = getbit(bits);
 	depth = get_u16(bits);
 
+	/* reserved is somehow related to sprites */
 	SWF_DEBUG(0,"  reserved = %d\n",reserved);
 	if(reserved){
 		SWF_DEBUG(4,"  reserved bits non-zero %d\n",reserved);
 	}
+	SWF_DEBUG(0,"  has_compose = %d\n",has_compose);
+	SWF_DEBUG(0,"  has_name = %d\n",has_name);
+	SWF_DEBUG(0,"  has_ratio = %d\n",has_ratio);
+	SWF_DEBUG(0,"  has_color_transform = %d\n",has_color_transform);
+	SWF_DEBUG(0,"  has_matrix = %d\n",has_matrix);
+	SWF_DEBUG(0,"  has_character = %d\n",has_character);
 
 	oldlayer = swf_layer_get(s,depth);
 	if(oldlayer){
@@ -758,6 +765,9 @@ void swf_render_frame(swf_state_t *s)
 				layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
 				swf_layervec_render(s, layervec);
 			}
+			break;
+		case SWF_OBJECT_IMAGE:
+			swfdec_image_render(s, layer);
 			break;
 		default:
 			SWF_DEBUG(4,"swf_render_frame: unknown object type %d\n",object->type);

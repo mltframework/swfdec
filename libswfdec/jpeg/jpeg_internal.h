@@ -5,28 +5,40 @@
 #include "jpeg.h"
 
 
+#define JPEG_DEBUG(n, format...)	do{ \
+	if((n)>=SWF_DEBUG_LEVEL)jpeg_debug((n),format); \
+}while(0)
+#define JPEG_DEBUG_LEVEL 0
+
+
 //#define N_COMPONENTS 256
 #define N_COMPONENTS 4
 
-typedef struct{
+typedef struct huffman_entry_struct HuffmanEntry;
+typedef struct huffman_table_struct HuffmanTable;
+typedef struct jpeg_scan_struct JpegScan;
+
+
+struct huffman_entry_struct {
 	unsigned int symbol;
 	unsigned int mask;
 	int n_bits;
 	unsigned char value;
-}HuffmanEntry;
+};
 
-typedef struct{
+struct huffman_table_struct {
 	int length;
 
 	HuffmanEntry *symbols;
-}HuffmanTable;
+};
 
-typedef struct{
-
+struct jpeg_decoder_struct {
 	int width;
 	int height;
 	int depth;
 	int n_components;
+	bits_t bits;
+
 	struct{
 		int id;
 		int h_subsample;
@@ -39,18 +51,31 @@ typedef struct{
 	int quant_table[4][64];
 	HuffmanTable *dc_huff_table[4];
 	HuffmanTable *ac_huff_table[4];
-}JpegDecoder;
 
-typedef struct {
+	int scan_list_length;
+	struct{
+		int component_index;
+		int dc_table;
+		int ac_table;
+		int x;
+		int y;
+	}scan_list[10];
+	int scan_h_subsample;
+	int scan_v_subsample;
+
+	int x,y;
+};
+
+struct jpeg_scan_struct {
 	int length;
 	
 	int n_components;
 	struct {
 		int index;
-		/* ... */
-	}components[N_COMPONENTS];
-
-}JpegScan;
+		int dc_table;
+		int ac_table;
+	}block_list[10];
+};
 
 
 /* huffman.c */
@@ -64,11 +89,14 @@ int huffman_table_decode(HuffmanTable *dc_tab, HuffmanTable *ac_tab,
 
 /* jpeg.c */
 
-int jpeg_decoder_tag_0xc0(JpegDecoder *dec, unsigned char *bits);
-int jpeg_decoder_tag_0xdb(JpegDecoder *dec, unsigned char *bits);
-int jpeg_decoder_tag_0xc4(JpegDecoder *dec, unsigned char *ptr);
-int jpeg_decoder_tag_0xda(JpegDecoder *dec, unsigned char *ptr);
+int jpeg_decoder_tag_0xc0(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_tag_0xdb(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_tag_0xc4(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits);
+void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits);
+void jpeg_debug(int n, const char *format, ... );
 
 
 #endif
+
 

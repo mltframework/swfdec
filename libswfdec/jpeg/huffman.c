@@ -12,31 +12,26 @@
 
 #define DEBUG printf
 
+/* misc helper function definitions */
 
-#if 0
-static void generate_code_table(int *huffsize)
+static char *sprintbits(char *str, unsigned int bits, int n);
+
+
+static void huffman_table_dump(HuffmanTable *table)
 {
-	int code;
+	unsigned int n_bits;
+	unsigned int code;
+	char str[33];
 	int i;
-	int j;
-	int k;
-	//int l;
 
-	code = 0;
-	k = 0;
-	for(i=0;i<16;i++){
-		for(j=0;j<huffsize[i];j++){
-			printf("huffcode[%d] = ",k);
-			printbits(code>>(15-i), i+1);
-			printf("\n");
-			code++;
-			k++;
-		}
-		code <<= 1;
+	JPEG_DEBUG(0,"dumping huffman table %p\n",table);
+	for(i=0;i<table->length;i++){
+		n_bits = table->symbols[i].n_bits;
+		code = table->symbols[i].symbol >> (16-n_bits);
+		sprintbits(str, code, n_bits);
+		JPEG_DEBUG(0,"%s --> %d\n", str, table->symbols[i].value);
 	}
-
 }
-#endif
 
 HuffmanTable *huffman_table_new_jpeg(bits_t *bits)
 {
@@ -64,10 +59,6 @@ HuffmanTable *huffman_table_new_jpeg(bits_t *bits)
 	k = 0;
 	for(i=0;i<16;i++){
 		for(j=0;j<huffsize[i];j++){
-			//printf("huffcode[%d] = ",k);
-			//printbits(code>>(15-i), i+1);
-			//printf("\n");
-
 			table->symbols[k].symbol = code;
 			table->symbols[k].mask = 0xffff ^ (0xffff>>(i+1));
 			table->symbols[k].n_bits = i + 1;
@@ -76,12 +67,7 @@ HuffmanTable *huffman_table_new_jpeg(bits_t *bits)
 		}
 	}
 
-	for(i=0;i<total;i++){
-		DEBUG("symbol=0x%04x mask=0x%04x value=%d\n",
-			table->symbols[i].symbol,
-			table->symbols[i].mask,
-			table->symbols[i].value);
-	}
+	huffman_table_dump(table);
 
 	return table;
 }
@@ -168,5 +154,21 @@ int huffman_table_decode(HuffmanTable *dc_tab, HuffmanTable *ac_tab, bits_t *bit
 	}
 
 	return 0;
+}
+
+/* misc helper functins */
+
+static char *sprintbits(char *str, unsigned int bits, int n)
+{
+	int i;
+	int bit = 1<<(n-1);
+
+	for(i=0;i<n;i++){
+		str[i] = (bits&bit) ? '1' : '0';
+		bit>>=1;
+	}
+	str[i] = 0;
+
+	return str;
 }
 

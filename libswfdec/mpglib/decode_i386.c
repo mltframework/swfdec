@@ -15,14 +15,16 @@
 #include <string.h>
 
 #include <mpglib_internal.h>
+#include <clipconv_f32_s16.h>
 
 extern MpglibDecoder *gmp;
 
- /* old WRITE_SAMPLE */
-#define WRITE_SAMPLE(samples,sum,clip) \
-  if( (sum) > 32767.0) { *(samples) = 0x7fff; (clip)++; } \
-  else if( (sum) < -32768.0) { *(samples) = -0x8000; (clip)++; } \
-  else { *(samples) = sum; }
+#define clipconv_f32_s16 clipconv_f32_s16_i30_bits
+
+static inline void altmultsum16_f32_ref(float *dest, float *src1, float *src2);
+static inline void multsum_str_f32_ref(float *dest, float *src1, float *src2,
+	int sstr1, int sstr2, int n);
+
 
 int synth_1to1_mono(real *bandPtr,unsigned char *samples,int *pnt)
 {
@@ -47,10 +49,10 @@ int synth_1to1_mono(real *bandPtr,unsigned char *samples,int *pnt)
 
 int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
 {
-  static const int step = 2;
+  //static const int step = 2;
   int bo;
   short *samples = (short *) (out + *pnt);
-
+  float fsamples[32];
   real *b0,(*buf)[0x110];
   int clip = 0; 
   int bo1;
@@ -81,12 +83,15 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
   gmp->synth_bo = bo;
   
   {
-    int j;
+    int i;
     real *window = decwin + 16 - bo1;
 
-    for (j=16;j;j--,b0+=0x10,window+=0x20,samples+=step)
+    for (i=0; i<16; i++)
     {
-      real sum;
+#if 1
+      altmultsum16_f32_ref(fsamples+i, window, b0);
+#else
+
       sum  = window[0x0] * b0[0x0];
       sum -= window[0x1] * b0[0x1];
       sum += window[0x2] * b0[0x2];
@@ -103,11 +108,18 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
       sum -= window[0xD] * b0[0xD];
       sum += window[0xE] * b0[0xE];
       sum -= window[0xF] * b0[0xF];
+      fsamples[i] = sum;
+#endif
 
-      WRITE_SAMPLE(samples,sum,clip);
+      b0+=0x10;
+      window+=0x20;
     }
 
+    for (i=16; i<17; i++)
     {
+#if 0
+      multsum_str_f32_ref(fsamples + i, window, b0, 2*sizeof(float), 2*sizeof(float), 8);
+#else
       real sum;
       sum  = window[0x0] * b0[0x0];
       sum += window[0x2] * b0[0x2];
@@ -117,13 +129,21 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
       sum += window[0xA] * b0[0xA];
       sum += window[0xC] * b0[0xC];
       sum += window[0xE] * b0[0xE];
-      WRITE_SAMPLE(samples,sum,clip);
-      b0-=0x10,window-=0x20,samples+=step;
+      fsamples[i] = sum;
+#endif
+
+      b0-=0x10;
+      window-=0x20;
     }
     window += bo1<<1;
 
-    for (j=15;j;j--,b0-=0x10,window-=0x20,samples+=step)
+    for (i=17; i<32; i++)
     {
+#if 1
+      multsum_str_f32_ref(fsamples + i, window - 1, b0, -sizeof(float), sizeof(float), 15);
+      fsamples[i] += window[-0x0] * b0[0xF];
+      fsamples[i] = - fsamples[i];
+#else
       real sum;
       sum = -window[-0x1] * b0[0x0];
       sum -= window[-0x2] * b0[0x1];
@@ -142,11 +162,59 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
       sum -= window[-0xF] * b0[0xE];
       sum -= window[-0x0] * b0[0xF];
 
-      WRITE_SAMPLE(samples,sum,clip);
+      fsamples[i] = sum;
+#endif
+
+      b0-=0x10;
+      window-=0x20;
     }
   }
+
+#if 0
+  clipconv_str_f32_s16(samples, fsamples, 2*sizeof(short), sizeof(float), 32);
+#else
+  {
+    short ssamples[32];
+    int i;
+
+    clipconv_f32_s16(ssamples, fsamples, 32);
+
+    for(i=0;i<32;i++){
+      samples[i*2] = ssamples[i];
+    }
+  }
+#endif
+
   *pnt += 128;
 
   return clip;
+}
+
+
+
+static inline void altmultsum16_f32_ref(float *dest, float *src1, float *src2)
+{
+	float sum = 0;
+	int i;
+
+	for(i=0;i<16;i+=2){
+		sum += src1[i] * src2[i];
+		sum -= src1[i+1] * src2[i+1];
+	}
+	*dest = sum;
+}
+
+static inline void multsum_str_f32_ref(float *dest, float *src1, float *src2,
+	int sstr1, int sstr2, int n)
+{
+	int i;
+	float sum = 0;
+	void *s1 = src1, *s2 = src2;
+
+	for(i=0;i<n;i++){
+		sum += *(float *)(s1+sstr1*i) * *(float *)(s2 + sstr2*i);
+	}
+
+	*dest = sum;
 }
 

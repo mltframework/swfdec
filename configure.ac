@@ -1,4 +1,4 @@
-dnl autoconf configuration file for libswfdec
+dnl autoconf configuration file for swfdec
 AC_INIT
 AC_CANONICAL_TARGET([])
 
@@ -8,7 +8,7 @@ dnl *NOTE*: dnl this line before release, so release does static too
 dnl AM_DISABLE_STATIC
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(libswfdec, SWFDEC, 0, 1, 1, 1)
+AS_VERSION(swfdec, SWFDEC, 0, 1, 1, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(SWFDEC, 0, 0, 0, yes)
 
@@ -150,8 +150,8 @@ AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
-SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdecode -Wall $GLIB_CFLAGS"
-SWF_LIBS="$SWF_LIBS -L\$(top_srcdir)/libswfdecode -lswfdec $MAD_LIBS $GLIB_LIBS -lz"
+SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec -Wall $GLIB_CFLAGS"
+SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec.la $MAD_LIBS $GLIB_LIBS -lz"
 AC_SUBST(SWF_LIBS)
 AC_SUBST(SWF_CFLAGS)
 
@@ -174,12 +174,12 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
-libswfdecode/Makefile
+libswfdec/Makefile
 test/Makefile
 plugin/Makefile
 player/Makefile
 debian/Makefile
-libswfdec.pc
+swfdec.pc
 )
 
 AC_OUTPUT

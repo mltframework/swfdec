@@ -2,8 +2,8 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=libswfdec
-srcfile=libswfdecode/swf.c
+package=swfdec
+srcfile=libswfdec/swf.c
 
 # source helper functions
 if test ! -e common/gst-autogen.sh;

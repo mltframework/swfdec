@@ -1,3 +1,9 @@
+2004-12-09  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swfdec_render_cairo.c: (draw_line), (draw), (draw_rev),
+	(draw_x), (swfdec_shape_render): fixes to make the cairo backend
+	work somewhat correctly.
+
 2004-12-08  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_render_cairo.c: (draw_x): oops, fix typo.

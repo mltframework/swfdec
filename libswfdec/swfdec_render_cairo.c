@@ -78,22 +78,22 @@ swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec)
 }
 
 static void
-draw (cairo_t *cr, GArray *array)
+draw_line (cairo_t *cr, SwfdecShapePoint *points, int n_points)
 {
-  SwfdecShapePoint *points = (SwfdecShapePoint *)array->data;
   int j;
   double old_x = 0, old_y = 0;
   double x,y;
 
-  for (j=0;j<array->len;j++){
+  for (j=0;j<n_points;j++){
     x = points[j].to_x * SWF_SCALE_FACTOR;
     y = points[j].to_y * SWF_SCALE_FACTOR;
     if (points[j].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
       if (points[j].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
-//cairo_stroke(cr);
         cairo_move_to (cr, x, y);
+        //SWFDEC_ERROR("move to %g %g", x, y);
       } else {
         cairo_line_to (cr, x, y);
+        //SWFDEC_ERROR("line to %g %g", x, y);
       }
     } else {
       double xa, ya;
@@ -109,6 +109,7 @@ draw (cairo_t *cr, GArray *array)
       y2 = ya * WEIGHT + (1-WEIGHT) * y;
 
       cairo_curve_to (cr, x1, y1, x2, y2, x, y);
+      //SWFDEC_ERROR("curve to %g %g", x, y);
     }
     old_x = x;
     old_y = y;
@@ -116,29 +117,69 @@ draw (cairo_t *cr, GArray *array)
 }
 
 static void
-draw_rev (cairo_t *cr, GArray *array)
+draw (cairo_t *cr, SwfdecShapePoint *points, int n_points)
 {
-  SwfdecShapePoint *points = (SwfdecShapePoint *)array->data;
+  int j;
+  double old_x = 0, old_y = 0;
+  double x,y;
+
+  for (j=0;j<n_points;j++){
+    x = points[j].to_x * SWF_SCALE_FACTOR;
+    y = points[j].to_y * SWF_SCALE_FACTOR;
+    if (points[j].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
+      if (points[j].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
+        //cairo_move_to (cr, x, y);
+        //SWFDEC_ERROR("move to %g %g", x, y);
+      } else {
+        cairo_line_to (cr, x, y);
+        //SWFDEC_ERROR("line to %g %g", x, y);
+      }
+    } else {
+      double xa, ya;
+      double x1, y1;
+      double x2, y2;
+
+#define WEIGHT (2.0/3.0)
+      xa = points[j].control_x * SWF_SCALE_FACTOR;
+      ya = points[j].control_y * SWF_SCALE_FACTOR;
+      x1 = xa * WEIGHT + (1-WEIGHT) * old_x;
+      y1 = ya * WEIGHT + (1-WEIGHT) * old_y;
+      x2 = xa * WEIGHT + (1-WEIGHT) * x;
+      y2 = ya * WEIGHT + (1-WEIGHT) * y;
+
+      cairo_curve_to (cr, x1, y1, x2, y2, x, y);
+      //SWFDEC_ERROR("curve to %g %g", x, y);
+    }
+    old_x = x;
+    old_y = y;
+  }
+}
+
+static void
+draw_rev (cairo_t *cr, SwfdecShapePoint *points, int n_points)
+{
   int j;
   double x,y;
   double old_x, old_y;
 
-  if (array->len == 0) return;
+  if (n_points == 0) return;
 
-  x = points[array->len - 1].to_x * SWF_SCALE_FACTOR;
-  y = points[array->len - 1].to_y * SWF_SCALE_FACTOR;
-  cairo_move_to (cr, x, y);
+  x = points[n_points - 1].to_x * SWF_SCALE_FACTOR;
+  y = points[n_points - 1].to_y * SWF_SCALE_FACTOR;
+  //cairo_move_to (cr, x, y);
   old_x = x;
   old_y = y;
 
-  for (j=array->len-1;j>0;j--){
+  for (j=n_points-1;j>0;j--){
     x = points[j-1].to_x * SWF_SCALE_FACTOR;
     y = points[j-1].to_y * SWF_SCALE_FACTOR;
     if (points[j].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
       if (points[j].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
-        cairo_move_to (cr, x, y);
+        //cairo_move_to (cr, x, y);
+        //SWFDEC_ERROR("move to %g %g", x, y);
       } else {
         cairo_line_to (cr, x, y);
+        //SWFDEC_ERROR("line to %g %g", x, y);
       }
     } else {
       double xa, ya;
@@ -153,18 +194,149 @@ draw_rev (cairo_t *cr, GArray *array)
       y2 = ya * WEIGHT + (1-WEIGHT) * y;
 
       cairo_curve_to (cr, x1, y1, x2, y2, x, y);
+      //SWFDEC_ERROR("curve to %g %g", x, y);
     }
     old_x = x;
     old_y = y;
   }
 }
 
+typedef struct _LineChunk LineChunk;
+struct _LineChunk {
+  int used;
+  int direction;
+  int n_points;
+  SwfdecShapePoint *points;
+  double start_x, start_y;
+  double end_x, end_y;
+};
+
 static void
 draw_x (cairo_t *cr, GArray *array, GArray *array2)
 {
-  draw (cr, array);
-  draw_rev (cr, array2);
+  SwfdecShapePoint *points;
+  GArray *chunks_array;
+  LineChunk chunk = { 0 };
+  int j;
+  double x, y;
 
+  chunks_array = g_array_new (FALSE, TRUE, sizeof (LineChunk));
+
+  points = (SwfdecShapePoint *)array->data;
+  for (j=0;j<array->len;j++){
+    x = points[j].to_x * SWF_SCALE_FACTOR;
+    y = points[j].to_y * SWF_SCALE_FACTOR;
+    if (points[j].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
+      if (points[j].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
+        if (chunk.points) {
+          g_array_append_val (chunks_array, chunk);
+        }
+        chunk.direction = 0;
+        chunk.n_points = 1;
+        chunk.points = points + j;
+        chunk.start_x = x;
+        chunk.start_y = y;
+      } else {
+        chunk.n_points++;
+      }
+    } else {
+      chunk.n_points++;
+    }
+    chunk.end_x = x;
+    chunk.end_y = y;
+  }
+  if (chunk.points) {
+    g_array_append_val (chunks_array, chunk);
+  }
+
+  points = (SwfdecShapePoint *)array2->data;
+  chunk.points = NULL;
+  for (j=0;j<array2->len;j++){
+    x = points[j].to_x * SWF_SCALE_FACTOR;
+    y = points[j].to_y * SWF_SCALE_FACTOR;
+    if (points[j].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
+      if (points[j].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
+        if (chunk.points) {
+          g_array_append_val (chunks_array, chunk);
+        }
+        chunk.direction = 1;
+        chunk.n_points = 1;
+        chunk.points = points + j;
+        chunk.end_x = x;
+        chunk.end_y = y;
+      } else {
+        chunk.n_points++;
+      }
+    } else {
+      chunk.n_points++;
+    }
+    chunk.start_x = x;
+    chunk.start_y = y;
+  }
+  if (chunk.points) {
+    g_array_append_val (chunks_array, chunk);
+  }
+
+#if 0
+  for(j=0;j<chunks_array->len;j++){
+    LineChunk *c;
+
+    c = &g_array_index (chunks_array, LineChunk, j);
+    SWFDEC_ERROR("%d: %g %g -> %g %g", j, c->start_x, c->start_y, c->end_x,
+        c->end_y);
+  }
+#endif
+
+  for(j=0;j<chunks_array->len;j++){
+    LineChunk *c;
+    double start_x, start_y;
+    double end_x, end_y;
+
+    c = &g_array_index (chunks_array, LineChunk, j);
+    if (c->used) continue;
+
+    start_x = c->start_x;
+    start_y = c->start_y;
+    c->used = 1;
+    end_x = c->end_x;
+    end_y = c->end_y;
+    cairo_move_to (cr, start_x, start_y);
+    if (c->direction) {
+      draw_rev (cr, c->points, c->n_points);
+    } else {
+      draw (cr, c->points, c->n_points);
+    }
+
+    while (1) {
+      int i;
+
+      if (start_x == end_x && start_y == end_y) break;
+
+      for(i=0;i<chunks_array->len;i++){
+        c = &g_array_index (chunks_array, LineChunk, i);
+        if (c->used) continue;
+
+        if (end_x == c->start_x && end_y == c->start_y) {
+          end_x = c->end_x;
+          end_y = c->end_y;
+          c->used = 1;
+          if (c->direction) {
+            draw_rev (cr, c->points, c->n_points);
+          } else {
+            draw (cr, c->points, c->n_points);
+          }
+          break;
+        }
+      }
+      if (i==chunks_array->len) {
+        SWFDEC_ERROR("failed to complete loop");
+        break;
+      }
+    }
+  }
+  //cairo_fill(cr);
+
+  g_array_free (chunks_array, TRUE);
 }
 
 void
@@ -216,10 +388,8 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     cairo_concat_matrix (cr, cm);
     cairo_matrix_destroy (cm);
 
-    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_WINDING);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);
-    //draw (cr, shapevec->path);
-    //draw_rev (cr, shapevec2->path);
     cairo_fill (cr);
 #if 0
     {
@@ -303,7 +473,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     cairo_concat_matrix (cr, cm);
     cairo_matrix_destroy (cm);
 
-    draw (cr, shapevec->path);
+    draw_line (cr, (void *)shapevec->path->data, shapevec->path->len);
     cairo_stroke (cr);
 
     cairo_restore (cr);

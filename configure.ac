@@ -8,7 +8,7 @@ dnl *NOTE*: dnl this line before release, so release does static too
 dnl AM_DISABLE_STATIC
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(swfdec, SWFDEC, 0, 3, 1, 1)
+AS_VERSION(swfdec, SWFDEC, 0, 3, 2, 0)
 SWF_DEBUG="-Wall -Werror"
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 AS_LIBTOOL(SWFDEC, 0, 1, 0, yes)
@@ -162,6 +162,10 @@ AM_CONDITIONAL(ENABLE_PIXBUF_LOADER, test x$enable_pixbuf_loader = xyes)
 PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0],
   HAVE_GIMP=yes, HAVE_GIMP=no)
 AM_CONDITIONAL(HAVE_GIMP,[test $HAVE_GIMP = yes])
+if test "x$HAVE_GIMP" = xyes ; then
+  gimplibdir=`pkg-config --variable=gimplibdir gimp-2.0`
+  AC_SUBST(gimplibdir)
+fi
 
 AC_SUBST(LIBGIMP_CFLAGS)
 AC_SUBST(LIBGIMP_LIBS)

@@ -1,4 +1,4 @@
-gimpdir = $(libdir)/gimp/1.3/plug-ins
+gimpdir = $(gimplibdir)/plug-ins
 
 INCLUDES = $(SWF_CFLAGS)\
 	$(LIBGIMP_CFLAGS)\

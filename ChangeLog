@@ -1,3 +1,9 @@
+2004-11-24  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* gimp-loader/Makefile.am: Install gimp plugin into the directory
+	suggested by pkg-config.
+
 2004-11-16  David Schleef  <ds@schleef.org>
 
 	* libswfdec/Makefile.am: put headers in /usr/include/swfdec-0.3

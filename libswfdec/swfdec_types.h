@@ -20,4 +20,3 @@ typedef struct swfdec_text_struct SwfdecText;
 typedef struct swfdec_text_glyph_struct SwfdecTextGlyph;
 
 #endif
-

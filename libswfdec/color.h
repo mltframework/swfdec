@@ -9,14 +9,16 @@ typedef unsigned int swf_color;
 typedef struct swfdec_gradient_struct SwfdecGradient;
 typedef struct swfdec_gradient_entry_struct SwfdecGradientEntry;
 
-struct swfdec_gradient_entry_struct{
-	int ratio;
-	swf_color color;
+struct swfdec_gradient_entry_struct
+{
+  int ratio;
+  swf_color color;
 };
 
-struct swfdec_gradient_struct{
-	int n_gradients;
-	SwfdecGradientEntry array[1];
+struct swfdec_gradient_struct
+{
+  int n_gradients;
+  SwfdecGradientEntry array[1];
 };
 
 #define SWF_COLOR_COMBINE(r,g,b,a)	(((r)<<24) | ((g)<<16) | ((b)<<8) | (a))
@@ -31,9 +33,8 @@ struct swfdec_gradient_struct{
 #define RGB565_B(color) (((color)&0x001f)<<3)
 
 
-unsigned int transform_color(unsigned int in, double mult[4], double add[4]);
-void swf_config_colorspace(SwfdecDecoder *s);
-int tag_func_set_background_color(SwfdecDecoder *s);
+unsigned int transform_color (unsigned int in, double mult[4], double add[4]);
+void swf_config_colorspace (SwfdecDecoder * s);
+int tag_func_set_background_color (SwfdecDecoder * s);
 
 #endif
-

@@ -210,7 +210,7 @@ load_dialog (const gchar *file_name)
 			  GTK_FILL, GTK_FILL, 0, 0);
 	gtk_widget_show (label);	
 	adj = gimp_spin_button_new (&vals->width_adj, width, 1, width * 4,
-				    1.0, 0.5, 0.5, 1.0, 1);
+				    1.0, 0.5, 0.5, 1.0, 0);
 	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, nframes == 1 ? 1 : 2, 
 			  nframes == 1 ? 2 : 3,
 			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
@@ -223,7 +223,7 @@ load_dialog (const gchar *file_name)
 			  GTK_FILL, GTK_FILL, 0, 0);
 	gtk_widget_show (label);	
 	adj = gimp_spin_button_new (&vals->height_adj, height, 1, height * 4,
-				    1.0, 0.5, 0.5, 1.0, 1);
+				    1.0, 0.5, 0.5, 1.0, 0);
 	gtk_table_attach (GTK_TABLE (table), adj, 1, 2, nframes == 1 ? 2 : 3, 
 			  nframes == 1 ? 3 : 4,
 			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);

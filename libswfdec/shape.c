@@ -487,12 +487,22 @@ void swf_shape_get_recs(SwfdecDecoder *s, bits_t *bits, SwfdecShape *shape)
 			}
 		}
 		if(fill0style){
+			if(shape->fills_offset + fill0style - 1 >= shape->fills->len){
+				SWF_DEBUG(4,"fill0style too large (%d >= %d)\n",
+					shape->fills_offset + fill0style - 1,
+					shape->fills->len);
+			}
 			shapevec = g_ptr_array_index(shape->fills,
 				shape->fills_offset + fill0style-1);
 			g_array_append_val(shapevec->path,pt);
 		}
 		if(fill1style){
 			SWF_DEBUG(0,"   using shapevec %d\n",shape->fills_offset);
+			if(shape->fills_offset + fill1style - 1 >= shape->fills2->len){
+				SWF_DEBUG(4,"fill0style too large (%d >= %d)\n",
+					shape->fills_offset + fill1style - 1,
+					shape->fills2->len);
+			}
 			shapevec = g_ptr_array_index(shape->fills2,
 				shape->fills_offset + fill1style-1);
 			g_array_append_val(shapevec->path,pt);

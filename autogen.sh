@@ -43,8 +43,7 @@ tool_run "$aclocal" "-I m4 $ACLOCAL_FLAGS"
 
 # FIXME : why does libtoolize keep complaining about aclocal ?
 
-echo "+ not running libtoolize until libtool fix has flown downstream"
-# tool_run "libtoolize" "--copy --force"
+tool_run "libtoolize" "--copy --force"
 tool_run "autoheader"
 
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo

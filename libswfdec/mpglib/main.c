@@ -23,6 +23,10 @@ int main(int argc,char **argv)
 			write(1,out,size);
 			ret = decodeMP3(&mp,NULL,0,out,8192,&size);
 		}
+		if(ret == MP3_ERR){
+			fprintf(stderr,"stream error\n");
+			exit(1);
+		}
 	}
 
   return 0;

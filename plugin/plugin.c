@@ -46,8 +46,6 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include "npapi.h"
-//#include "strings.h"
-//#include "plstr.h"
 
 #include "config.h"
 
@@ -85,13 +83,16 @@ NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 
     switch (variable) {
         case NPPVpluginNameString:
-            *((char **)value) = "swfdec-0.1.0 Macromedia Flash decoder";
+            *((char **)value) = "swfdec-" VERSION " Macromedia Flash decoder";
             break;
         case NPPVpluginDescriptionString:
             *((char **)value) =
-"swfdec-0.1.0 - SWF (Macromedia Flash) movie decoding library\n"
-"This is alpha software.  See <a href=\"https://cvs.comedi.org/\">"
-"https://cvs.comedi.org/</a> for information.\n";
+"swfdec-" VERSION " - SWF (Macromedia Flash) Animation Decoder.<br>"
+"This is alpha software.  It will probably behave in many situations, but "
+"may also ride your motorcycle, drink all your milk, or use your computer "
+"to browse porn.  Comments, feature requests, and patches are welcome.<br>"
+"See <a href=\"http://swfdec.sourceforge.net/\">"
+"http://swfdec.sourceforge.net/</a> for information.";
             break;
         default:
             err = NPERR_GENERIC_ERROR;

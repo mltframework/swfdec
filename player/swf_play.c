@@ -3,9 +3,6 @@
 #include <swfdec_render.h>
 #include <swfdec_buffer.h>
 
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
 #include <glib.h>
 
 #include <getopt.h>
@@ -29,9 +26,8 @@ SwfdecDecoder *s;
 unsigned char *image;
 unsigned char *image4;
 
-GtkWidget *drawing_area;
-GtkWidget *gtk_wind;
-GdkWindow *gdk_parent;
+SDL_Surface *sdl_screen;
+GMainLoop *main_loop;
 
 GIOChannel *input_chan;
 
@@ -49,19 +45,12 @@ int interval;
 struct timeval image_time;
 
 static void do_help(void);
-static void new_gtk_window(void);
+static void new_window(void);
 
 static void sound_setup(void);
 
 void convert_image (unsigned char *dest, unsigned char *src, int width,
     int height);
-
-/* GTK callbacks */
-static void destroy_cb (GtkWidget *widget, gpointer data);
-static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data);
-static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data);
-static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data);
-static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer data);
 
 static gboolean render_idle_audio (gpointer data);
 static gboolean render_idle_noaudio (gpointer data);
@@ -82,10 +71,7 @@ int main(int argc, char *argv[])
         int length;
         int ret;
 
-	gtk_init(&argc,&argv);
-	gdk_rgb_init ();
-	gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
-	gtk_widget_set_default_visual(gdk_rgb_get_visual());
+        SDL_Init (SDL_INIT_AUDIO|SDL_INIT_VIDEO);
 
 	s = swfdec_decoder_new();
 
@@ -149,7 +135,7 @@ int main(int argc, char *argv[])
 
         swfdec_decoder_get_image_size (s, &width, &height);
 
-	new_gtk_window();
+	new_window();
 
 	if(enable_sound)sound_setup();
 
@@ -159,7 +145,8 @@ int main(int argc, char *argv[])
           g_timeout_add (0, render_idle_noaudio, NULL);
         }
 
-	gtk_main();
+        main_loop = g_main_loop_new (NULL, TRUE);
+        g_main_loop_run (main_loop);
 
 	exit(0);
 }
@@ -170,34 +157,12 @@ static void do_help(void)
 	exit(1);
 }
 
-static void new_gtk_window(void)
+static void new_window(void)
 {
-	gtk_wind = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-
-	gtk_window_set_default_size(GTK_WINDOW(gtk_wind), width, height);
-	gtk_signal_connect(GTK_OBJECT(gtk_wind), "delete_event",
-		GTK_SIGNAL_FUNC (destroy_cb), NULL);
-	gtk_signal_connect(GTK_OBJECT(gtk_wind), "destroy",
-		GTK_SIGNAL_FUNC(destroy_cb), NULL);
-
-	drawing_area = gtk_drawing_area_new();
-	gtk_container_add(GTK_CONTAINER(gtk_wind),
-		GTK_WIDGET(drawing_area));
-
-	g_signal_connect(G_OBJECT(drawing_area), "expose_event",
-		GTK_SIGNAL_FUNC(expose_cb), NULL);
-	g_signal_connect (G_OBJECT (drawing_area), "configure_event",
-		GTK_SIGNAL_FUNC(configure_cb), NULL);
-
-	g_signal_connect (G_OBJECT(gtk_wind), "key_press_event",
-		GTK_SIGNAL_FUNC(key_press), NULL);
-	g_signal_connect (G_OBJECT(gtk_wind), "motion_notify_event",
-		GTK_SIGNAL_FUNC(motion_notify), NULL);
-
-	gtk_widget_add_events(gtk_wind, GDK_POINTER_MOTION_MASK);
-
-	gtk_widget_show_all(gtk_wind);
-
+  sdl_screen = SDL_SetVideoMode(width, height, 32, SDL_SWSURFACE);
+  if (sdl_screen == NULL) {
+    g_print("SDL_SetVideoMode failed\n");
+  }
 }
 
 GList *sound_buffers;
@@ -271,91 +236,6 @@ static void sound_setup(void)
 }
 
 
-/* GTK callbacks */
-
-static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data)
-{
-	if(debug)fprintf(stderr,"key press\n");
-	
-	return FALSE;
-}
-
-static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data)
-{
-	if(debug)fprintf(stderr,"motion notify\n");
-	
-	return FALSE;
-}
-
-static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer data)
-{
-	return FALSE;
-}
-
-static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data)
-{
-	if(image){
-		gdk_draw_rgb_image (widget->window, widget->style->black_gc, 
-			0, 0, width, height, 
-			GDK_RGB_DITHER_NONE,
-			image,
-			width*3);
-	}
-
-	return FALSE;
-}
-
-static void destroy_cb (GtkWidget *widget, gpointer data)
-{
-	gtk_main_quit ();
-}
-
-
-#if 0
-static void tv_add_usec(struct timeval *a, unsigned int x)
-{
-	a->tv_usec += x;
-	while(a->tv_usec >= 1000000){
-		a->tv_sec++;
-		a->tv_usec-=1000000;
-	}
-}
-
-static int tv_compare(struct timeval *a,struct timeval *b)
-{
-	if(a->tv_sec > b->tv_sec)return 1;
-	if(a->tv_sec == b->tv_sec){
-		if(a->tv_usec > b->tv_usec)return 1;
-		if(a->tv_usec == b->tv_usec)return 0;
-	}
-	return -1;
-}
-
-static int tv_diff(struct timeval *a,struct timeval *b)
-{
-	int diff;
-	diff = (a->tv_sec - b->tv_sec)*1000000;
-	diff += (a->tv_usec - b->tv_usec);
-	return diff;
-}
-#endif
-
-static void
-fixup_buffer (SwfdecBuffer *buffer)
-{
-  int i;
-  unsigned char tmp;
-  unsigned char *data = buffer->data;
-
-  for(i=0;i<buffer->length;i+=4){
-    tmp = data[2];
-    data[2] = data[0];
-    data[0] = tmp;
-    data+=4;
-  }
-
-}
-
 static gboolean render_idle_audio(gpointer data)
 {
         SwfdecBuffer *video_buffer;
@@ -369,7 +249,7 @@ static gboolean render_idle_audio(gpointer data)
 
         ret = swfdec_render_iterate (s);
         if (!ret) {
-	  gtk_main_quit ();
+	  g_main_loop_quit (main_loop);
           return FALSE;
         }
 
@@ -377,7 +257,7 @@ static gboolean render_idle_audio(gpointer data)
 
         if (audio_buffer == NULL) {
           /* error */
-	  gtk_main_quit ();
+	  g_main_loop_quit (main_loop);
         }
 
         sound_buffers = g_list_append (sound_buffers, audio_buffer);
@@ -395,15 +275,24 @@ printf("%d\n", sound_bytes);
           video_buffer = NULL;
         }
         if (video_buffer) {
-          fixup_buffer (video_buffer);
+          int ret;
+          SDL_Surface *surface;
 
-          gdk_draw_rgb_32_image (drawing_area->window,
-                  drawing_area->style->black_gc, 
-                  0, 0, width, height, 
-                  GDK_RGB_DITHER_NONE,
-                  video_buffer->data,
-                  width*4);
+#define RED_MASK 0x00ff0000
+#define GREEN_MASK 0x0000ff00
+#define BLUE_MASK 0x000000ff
+#define ALPHA_MASK 0xff000000
+          surface = SDL_CreateRGBSurfaceFrom (video_buffer->data, width,
+              height, 32, width * 4,
+              RED_MASK, GREEN_MASK, BLUE_MASK, ALPHA_MASK);
+          SDL_SetAlpha (surface, 0, SDL_ALPHA_OPAQUE);
+          ret = SDL_BlitSurface (surface, NULL, sdl_screen, NULL);
+          if (ret < 0) {
+            g_print("SDL_BlitSurface failed\n");
+          }
+          SDL_UpdateRect (sdl_screen, 0, 0, width, height);
           swfdec_buffer_unref (video_buffer);
+          SDL_FreeSurface (surface);
         }
 
   g_timeout_add (10, render_idle_audio, NULL);
@@ -422,14 +311,16 @@ static gboolean render_idle_noaudio(gpointer data)
         audio_buffer = swfdec_render_get_audio (s);
 
         swfdec_buffer_unref (audio_buffer);
+        if (video_buffer) {
+          SDL_Surface *surface;
 
-	gdk_draw_rgb_32_image (drawing_area->window,
-		drawing_area->style->black_gc, 
-		0, 0, width, height, 
-		GDK_RGB_DITHER_NONE,
-		video_buffer->data,
-		width*4);
+          surface = SDL_CreateRGBSurfaceFrom (video_buffer->data, width,
+              height, 32, width * 4, 0xff000000, 0x00ff0000, 0x0000ff00,
+              0x000000ff);
+          SDL_BlitSurface (surface, NULL, sdl_screen, NULL);
           swfdec_buffer_unref (video_buffer);
+          SDL_FreeSurface (surface);
+        }
 
   g_timeout_add (interval, render_idle_noaudio, NULL);
 

@@ -1,3 +1,16 @@
+2004-10-08  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swfdec_render.c: (swfdec_render_get_object_state):
+	add object id as identifier for object state.  Improves rendering
+	of sprites.
+	* libswfdec/swfdec_render.h:
+	* libswfdec/swfdec_shape.c: (swfdec_shape_get_fill0style),
+	(swfdec_shape_get_fill1style), (swfdec_shape_get_linestyle):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render):
+	* player/Makefile.am: Remove gtk dependency.
+	* player/swf_play.c: (main), (new_window), (render_idle_audio),
+	(render_idle_noaudio): Remove gtk dependency.  SDL-only now.
+
 2004-10-07  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swf.c: disable DefineMorphShape

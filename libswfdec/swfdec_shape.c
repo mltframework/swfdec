@@ -402,6 +402,7 @@ static SwfdecShapeVec *swfdec_shape_get_fill0style(SwfdecShape *shape, int fill0
         shape->fills_offset + fill0style - 1, shape->fills->len);
     return NULL;
   }
+  if (fill0style < 1) return NULL;
   return g_ptr_array_index (shape->fills,
       shape->fills_offset + fill0style - 1);
 }
@@ -413,6 +414,7 @@ static SwfdecShapeVec *swfdec_shape_get_fill1style(SwfdecShape *shape, int fill1
         shape->fills_offset + fill1style - 1, shape->fills2->len);
     return NULL;
   }
+  if (fill1style < 1) return NULL;
   return g_ptr_array_index (shape->fills2,
       shape->fills_offset + fill1style - 1);
 }
@@ -424,6 +426,7 @@ static SwfdecShapeVec *swfdec_shape_get_linestyle(SwfdecShape *shape, int linest
         shape->lines_offset + linestyle - 1, shape->lines->len);
     return NULL;
   }
+  if (linestyle < 1) return NULL;
   return g_ptr_array_index (shape->lines, shape->lines_offset + linestyle - 1);
 }
 

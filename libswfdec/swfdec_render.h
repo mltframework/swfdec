@@ -31,7 +31,7 @@ void swfdec_render_seek (SwfdecDecoder *s, int frame);
 SwfdecBuffer * swfdec_render_get_image (SwfdecDecoder *s);
 SwfdecBuffer * swfdec_render_get_audio (SwfdecDecoder *s);
 int swfdec_render_get_frame_index (SwfdecDecoder *s);
-SwfdecRenderState * swfdec_render_get_object_state (SwfdecRender *render, int layer);
+SwfdecRenderState * swfdec_render_get_object_state (SwfdecRender *render, int layer, int id);
 
 #endif
 

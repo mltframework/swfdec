@@ -86,7 +86,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
   //memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
 
-  state = swfdec_render_get_object_state (s->render, seg->depth);
+  state = swfdec_render_get_object_state (s->render, seg->depth, seg->id);
   if (state == NULL) {
     state = g_new0(SwfdecRenderState, 1);
     state->layer = seg->depth;
@@ -132,6 +132,7 @@ SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
 
     child_object = swfdec_object_get (s, child_seg->id);
     if (child_object) {
+#if 0
       /* FIXME for now, don't render sprites inside sprites */
       if (!SWFDEC_IS_SPRITE (child_object)) {
         SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
@@ -139,6 +140,10 @@ SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
       } else {
         SWFDEC_WARNING ("not rendering sprite inside sprite");
       }
+#else
+      SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
+          child_object);
+#endif
     } else {
       SWFDEC_DEBUG ("could not find object (id = %d)", child_seg->id);
     }

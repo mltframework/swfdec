@@ -71,14 +71,14 @@ swfdec_render_iterate (SwfdecDecoder *s)
 }
 
 SwfdecRenderState *
-swfdec_render_get_object_state (SwfdecRender *render, int layer)
+swfdec_render_get_object_state (SwfdecRender *render, int layer, int id)
 {
   GList *g;
 
   for (g=g_list_first (render->object_states); g; g = g_list_next(g)) {
     SwfdecRenderState *state = g->data;
 
-    if (state->layer == layer) return state;
+    if (state->layer == layer && state->id == id) return state;
   }
 
   return NULL;

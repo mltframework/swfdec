@@ -23,7 +23,7 @@
  *
  * TODO: 
  * *) image preview
- * *) load dialog
+ * *) better load dialog
  */
 
 #include <stdio.h>
@@ -41,31 +41,26 @@
 typedef struct
 {
 	double scale;
-	double width;
-	double height;
 	int frame;
 } SwfLoadVals;
 
 static SwfLoadVals load_vals =
 {
-	-1.0,
-	-1.0,
-	-1.0,
+	1.0,
 	1
 };
 
 typedef struct
 {
-  GtkWidget     *dialog;
-  GtkAdjustment *scale;
+	GtkWidget     *dialog;
+	GtkAdjustment *scale;
+	GtkAdjustment *frame;
 } LoadDialogVals;
 
 /* TODO: remove me, initialize gimp i18n services */
-#ifdef _
-#undef _
-#endif
-
+#ifndef _
 #define _(String) (String)
+#endif
 
 static void query (void);
 static void run   (const gchar      *name,
@@ -86,22 +81,12 @@ MAIN ()
 static void
 check_load_vals (void)
 {
-	if (load_vals.width <= 0.)
-		load_vals.width = -1.;
-	if (load_vals.height <= 0.)
-		load_vals.height = -1.;
+	load_vals.scale = CLAMP (load_vals.scale, 1.0 / 64.0, 64.0);
 
 	/* which frame to load */
 	if (load_vals.frame < 1)
 		load_vals.frame = 1;
-
-	if (load_vals.scale > 100.)
-		load_vals.scale = 64.;
-	else if (load_vals.scale <= 0. && load_vals.scale != -1.)
-		load_vals.scale = -1;
 }
-
-#if 0
 
 typedef struct
 {
@@ -118,90 +103,105 @@ load_ok_callback (GtkWidget *widget,
                   gpointer   data)
 
 {
-  LoadDialogVals *vals = (LoadDialogVals *)data;
-
-  /* Read scale */
-  load_vals.scale = pow (2, vals->scale->value);
-
-  load_interface.run = TRUE;
-  gtk_widget_destroy (GTK_WIDGET (vals->dialog));
+	LoadDialogVals *vals = (LoadDialogVals *)data;
+	
+	/* Read scale && frame */
+	load_vals.scale = pow (2, vals->scale->value);
+	load_vals.frame = (int)(vals->frame->value);
+	
+	load_interface.run = TRUE;
+	gtk_widget_destroy (GTK_WIDGET (vals->dialog));
 }
 
 static gint
 load_dialog (const gchar *file_name)
 {
-  LoadDialogVals *vals;
-  GtkWidget *frame;
-  GtkWidget *vbox;
-  GtkWidget *label;
-  GtkWidget *table;
-  GtkWidget *slider;
+	LoadDialogVals *vals;
+	GtkWidget *frame;
+	GtkWidget *vbox;
+	GtkWidget *label;
+	GtkWidget *table;
+	GtkWidget *slider;
+	
+	gimp_ui_init ("swf", FALSE);
+	
+	vals = g_new (LoadDialogVals, 1);
+	
+	vals->dialog = gimp_dialog_new (_("Load Shockwave Flash Image"), "swf",
+					NULL, NULL,
+					GTK_WIN_POS_MOUSE,
+					FALSE, TRUE, FALSE,
+					GTK_STOCK_CANCEL, gtk_widget_destroy,
+					NULL, 1, NULL, FALSE, TRUE,
+					GTK_STOCK_OK, load_ok_callback,
+					vals, NULL, NULL, TRUE, FALSE,
+					NULL);
+	
+	g_signal_connect (vals->dialog, "destroy",
+			  G_CALLBACK (gtk_main_quit),
+			  NULL);
+	
+	/* Rendering */
+	frame = gtk_frame_new (g_strdup_printf (_("Rendering %s"), file_name));
+	gtk_container_set_border_width (GTK_CONTAINER (frame), 6);
+	gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_ETCHED_IN);
+	gtk_box_pack_start (GTK_BOX (GTK_DIALOG (vals->dialog)->vbox), frame,
+			    TRUE, TRUE, 0);
+	
+	vbox = gtk_vbox_new (FALSE, 4);
+	gtk_container_set_border_width (GTK_CONTAINER (vbox), 4);
+	gtk_container_add (GTK_CONTAINER (frame), vbox);
+	
+	/* Scale label */
+	table = gtk_table_new (2, 2, FALSE);
+	gtk_table_set_row_spacings (GTK_TABLE (table), 2);
+	gtk_table_set_col_spacings (GTK_TABLE (table), 4);
+	gtk_box_pack_start (GTK_BOX (vbox), table, FALSE, FALSE, 0);
+	gtk_widget_show (table);
+	
+	label = gtk_label_new (_("Scale (log 2):"));
+	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
+	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 0, 1,
+			  GTK_FILL, GTK_FILL, 0, 0);
+	gtk_widget_show (label);
+	
+	/* Scale slider */
+	vals->scale = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, -2.0, 2.0, 0.2, 0.2, 0.0));
+	slider = gtk_hscale_new (vals->scale);
+	gtk_table_attach (GTK_TABLE (table), slider, 1, 2, 0, 1,
+			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_scale_set_value_pos (GTK_SCALE (slider), GTK_POS_TOP);
+	gtk_range_set_update_policy (GTK_RANGE (slider), GTK_UPDATE_DELAYED);
+	gtk_widget_show (slider);
 
-  gimp_ui_init ("swf", FALSE);
+	label = gtk_label_new (_("Frame:"));
+	gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
+	gtk_table_attach (GTK_TABLE (table), label, 0, 1, 1, 2,
+			  GTK_FILL, GTK_FILL, 0, 0);
+	gtk_widget_show (label);
+	
+	/* Scale slider */
+	vals->frame = GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 1.0, 100, 1.0, 1.0, 0.0));
+	slider = gtk_hscale_new (vals->frame);
+	gtk_scale_set_digits (GTK_SCALE(slider), 0);
+	gtk_table_attach (GTK_TABLE (table), slider, 1, 2, 1, 2,
+			  GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+	gtk_scale_set_value_pos (GTK_SCALE (slider), GTK_POS_TOP);
+	gtk_range_set_update_policy (GTK_RANGE (slider), GTK_UPDATE_DELAYED);
+	gtk_widget_show (slider);
+	
+	gtk_widget_show (vbox);
+	gtk_widget_show (frame);
+	
+	gtk_widget_show (vals->dialog);
+	
+	gtk_main ();
+	gdk_flush ();
+	
+	g_free (vals);	
 
-  vals = g_new (LoadDialogVals, 1);
-
-  vals->dialog = gimp_dialog_new (_("Load Shockwave Flash Image"), "swf",
-				  NULL, NULL,
-				  GTK_WIN_POS_MOUSE,
-				  FALSE, TRUE, FALSE,
-				  GTK_STOCK_CANCEL, gtk_widget_destroy,
-				  NULL, 1, NULL, FALSE, TRUE,
-				  GTK_STOCK_OK, load_ok_callback,
-				  vals, NULL, NULL, TRUE, FALSE,
-				  NULL);
-
-  g_signal_connect (vals->dialog, "destroy",
-                    G_CALLBACK (gtk_main_quit),
-                    NULL);
-
-  /* Rendering */
-  frame = gtk_frame_new (g_strdup_printf (_("Rendering %s"), file_name));
-  gtk_container_set_border_width (GTK_CONTAINER (frame), 6);
-  gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_ETCHED_IN);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (vals->dialog)->vbox), frame,
-		      TRUE, TRUE, 0);
-
-  vbox = gtk_vbox_new (FALSE, 4);
-  gtk_container_set_border_width (GTK_CONTAINER (vbox), 4);
-  gtk_container_add (GTK_CONTAINER (frame), vbox);
-
-  /* Scale label */
-  table = gtk_table_new (1, 2, FALSE);
-  gtk_table_set_row_spacings (GTK_TABLE (table), 2);
-  gtk_table_set_col_spacings (GTK_TABLE (table), 4);
-  gtk_box_pack_start (GTK_BOX (vbox), table, FALSE, FALSE, 0);
-  gtk_widget_show (table);
-
-  label = gtk_label_new (_("Scale (log 2):"));
-  gtk_misc_set_alignment (GTK_MISC (label), 1.0, 1.0);
-  gtk_table_attach (GTK_TABLE (table), label, 0, 1, 0, 1,
-		    GTK_FILL, GTK_FILL, 0, 0);
-  gtk_widget_show (label);
-
-  /* Scale slider */
-  vals->scale = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, -2.0, 2.0, 0.2, 0.2, 0.0));
-  slider = gtk_hscale_new (vals->scale);
-  gtk_table_attach (GTK_TABLE (table), slider, 1, 2, 0, 1,
-		    GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
-  gtk_scale_set_value_pos (GTK_SCALE (slider), GTK_POS_TOP);
-  gtk_range_set_update_policy (GTK_RANGE (slider), GTK_UPDATE_DELAYED);
-  gtk_widget_show (slider);
-
-  gtk_widget_show (vbox);
-  gtk_widget_show (frame);
-
-  gtk_widget_show (vals->dialog);
-
-  gtk_main ();
-  gdk_flush ();
-
-  g_free (vals);
-
-  return load_interface.run;
+	return load_interface.run;
 }
-
-#endif
 
 static void
 swf_animation_change (SwfdecDecoder * context)
@@ -212,24 +212,20 @@ swf_animation_change (SwfdecDecoder * context)
 	if (SWF_OK != swfdec_decoder_get_n_frames (context, &nframes))
 		return;
 
+	if (load_vals.frame > nframes)
+		load_vals.frame = nframes;
+
 	if (SWF_OK != swfdec_decoder_get_image_size (context, &width, &height))
 		return;
 
 	if (load_vals.scale > 0.) {
 		width *= load_vals.scale;
-		height *= load_vals.height;
-	} else {
-		if (load_vals.width > 0.)
-			width  = load_vals.width;
-		if (load_vals.height > 0.)
-			height = load_vals.height;
+		height *= load_vals.scale;
 	}
 
-	if (nframes > load_vals.frame)
-		load_vals.frame = nframes;
-
-	if (width > 0 && height > 0)
+	if (width > 0 && height > 0) {
 		swfdec_decoder_set_image_size (context, width, height);
+	}
 }
 
 static int
@@ -317,11 +313,11 @@ load_image (const gchar  *filename, 	/* I - File to load */
 	    gboolean     preview)
 {
 	gint32        image;	        /* Image */
-	gint32	layer;		/* Layer */
-	GimpDrawable *drawable;	/* Drawable for layer */
-	GimpPixelRgn	pixel_rgn;	/* Pixel region for layer */
+	gint32	      layer;		/* Layer */
+	GimpDrawable *drawable;	        /* Drawable for layer */
+	GimpPixelRgn  pixel_rgn;	/* Pixel region for layer */
 	gchar        *status;
-	gint i, rowstride;
+	gint          i, rowstride;
 
 	guchar * pixels, * buf;
 	gint width, height;
@@ -467,19 +463,15 @@ run (const gchar      *name,
 			switch (run_mode)
 				{
 				case GIMP_RUN_INTERACTIVE:
-					/* if (!load_dialog (param[1].data.d_string))
-					   status = GIMP_PDB_CANCEL; */
+					if (!load_dialog (param[1].data.d_string))
+					   status = GIMP_PDB_CANCEL;
 					break;
 					
 				case GIMP_RUN_NONINTERACTIVE:
 					if (nparams > 3)
 						load_vals.scale = param[3].data.d_float;
 					if (nparams > 4)
-						load_vals.width = param[4].data.d_float;
-					if (nparams > 5)
-						load_vals.height = param[5].data.d_float;
-					if (nparams > 6)
-						load_vals.frame = param[6].data.d_int32;
+						load_vals.frame = param[4].data.d_int32;
 					break;
 					
 				case GIMP_RUN_WITH_LAST_VALS:

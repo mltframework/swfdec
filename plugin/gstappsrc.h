@@ -47,6 +47,8 @@ struct _GstAppSrc {
   gboolean need_flush;
   unsigned int seek_offset;
   gboolean eof;
+
+  gchar *source_url;
 };
 
 struct _GstAppSrcClass {

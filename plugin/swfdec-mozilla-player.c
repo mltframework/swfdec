@@ -80,6 +80,7 @@ static void desired_size (GObject * obj, int w, int h, gpointer closure);
 static void embed_url (GObject * obj, const char *url, gpointer closure);
 
 static void packet_write (int fd, int code, int len, const char *s);
+static void packet_go_to_url (const char *url, const char *target);
 
 /* GTK callbacks */
 static void destroy_cb (GtkWidget * widget, gpointer data);
@@ -412,6 +413,24 @@ timeout (gpointer closure)
   return TRUE;
 }
 
+static void
+menu_open (GtkMenuItem *item, gpointer user_data)
+{
+  char *url;
+
+  g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+
+  packet_go_to_url(url, "_self");
+
+  g_free (url);
+}
+
+static void
+menu_report_bug (GtkMenuItem *item, gpointer user_data)
+{
+  packet_go_to_url("http://www.schleef.org/swfdec/", "_self");
+}
+
 static int
 button_press_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
 {
@@ -424,14 +443,15 @@ button_press_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
     GtkWidget *item;
 
     menu = gtk_menu_new ();
-    item = gtk_menu_item_new_with_label ("Moo");
+    item = gtk_menu_item_new_with_label ("Open in new page");
+    g_signal_connect (G_OBJECT(item), "activate", G_CALLBACK(menu_open), NULL);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-    item = gtk_menu_item_new_with_label ("File bug...");
+    item = gtk_menu_item_new_with_label ("Report bug...");
+    g_signal_connect (G_OBJECT(item), "activate", G_CALLBACK(menu_report_bug), NULL);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     gtk_widget_show_all (menu);
 
     gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL, 3, evt->time);
-
   }
   if (evt->button == 1) {
     gst_navigation_send_mouse_event (GST_NAVIGATION (xoverlay),
@@ -634,11 +654,28 @@ desired_size (GObject * obj, int w, int h, gpointer closure)
 static void
 embed_url (GObject * obj, const char *url, gpointer closure)
 {
+  packet_go_to_url (url, "_self");
+}
+
+static void
+packet_go_to_url (const char *url, const char *target)
+{
+  char *buf;
+  int len;
+
+  len = strlen (url) + 1 + strlen (target) + 1;
+  buf = g_malloc (len);
+
+  memcpy (buf, url, strlen(url) + 1);
+  memcpy (buf + strlen(url) + 1, target, strlen (target) + 1);
+
   if (streaming) {
-    packet_write (1, SPP_GO_TO_URL, strlen (url), url);
+    packet_write (1, SPP_GO_TO_URL2, len, buf);
   } else {
     /* FIXME: start a browser? */
   }
+
+  g_free (buf);
 }
 
 static void

@@ -5,6 +5,7 @@
 
 #include <gst/gst.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "gstappsrc.h"
 
@@ -31,7 +32,8 @@ GstElementDetails gst_appsrc_details = GST_ELEMENT_DETAILS (
 
 enum {
   ARG_0,
-  ARG_LOCATION
+  ARG_LOCATION,
+  ARG_SOURCE_URL
 };
 
 GstStaticPadTemplate gst_appsrc_src_template = GST_STATIC_PAD_TEMPLATE (
@@ -106,6 +108,9 @@ gst_appsrc_class_init (GstAppSrcClass *klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
         "Location of the file to read", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOURCE_URL,
+      g_param_spec_string ("source_url", "Source URL",
+        "Source URL (as reported by mozilla)", NULL, G_PARAM_READABLE));
 
   //gstelement_class->change_state = gst_appsrc_change_state;
 }
@@ -126,6 +131,9 @@ gst_appsrc_init (GstAppSrc * appsrc)
   gst_element_add_pad (GST_ELEMENT (appsrc), appsrc->srcpad);
 
   appsrc->buffers = g_array_new(FALSE, FALSE, sizeof (GstAppsrcBufferinfo));
+
+  /* FIXME: this gets leaked */
+  appsrc->source_url = g_strdup("");
 }
 
 static gboolean
@@ -201,6 +209,9 @@ gst_appsrc_get_property (GObject *object, guint prop_id, GValue *value,
       g_value_set_string (value, s);
       g_free (s);
       break;
+    case ARG_SOURCE_URL:
+      g_value_set_string (value, appsrc->source_url);
+      break;
     default:
       break;
   }
@@ -245,6 +256,7 @@ gst_appsrc_loop (GstElement *element)
         bufferinfo.offset = appsrc->head_offset;
         bufferinfo.size = length;
         GST_BUFFER_DATA (bufferinfo.buffer) = data;
+        data = NULL;
         GST_BUFFER_SIZE (bufferinfo.buffer) = length;
         GST_BUFFER_OFFSET (bufferinfo.buffer) = bufferinfo.offset;
         g_array_append_val (appsrc->buffers, bufferinfo);
@@ -255,9 +267,32 @@ gst_appsrc_loop (GstElement *element)
         appsrc->eof = TRUE;
         break;
       case SPP_SIZE:
-      break;
+        break;
+      case SPP_METADATA:
+        {
+          char *tag;
+          char *value;
+
+          tag = g_strdup (data);
+          value = g_strdup (data + strlen (tag) + 1);
+
+          GST_ERROR ("%s=%s", tag, value);
+
+          if (strcmp(tag, "src") == 0) {
+            if (appsrc->source_url) g_free(appsrc->source_url);
+            appsrc->source_url = g_strdup(value);
+            g_object_notify(G_OBJECT(appsrc),"source_url");
+          }
+
+          g_free (tag);
+          g_free (value);
+        }
+        break;
       default:
         break;
+    }
+    if (data) {
+      g_free (data);
     }
   } else {
     if (appsrc->seeking) {

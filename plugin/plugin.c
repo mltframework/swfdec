@@ -38,6 +38,9 @@ typedef struct
   int buffer_offset;
   pthread_t thread;
   int run_thread;
+  int argc;
+  char **argn;
+  char **argv;
 } Plugin;
 
 void DEBUG (const char *format, ...);
@@ -161,6 +164,20 @@ plugin_thread (void *arg)
 
                 mozilla_funcs.geturl (plugin->instance, buf + 8, "_self");
               }
+            case SPP_GO_TO_URL2:
+              {
+                int len;
+                char *url;
+                char *target;
+                
+                len = *(int *)(buf + 4);
+
+                DEBUG ("%.*s", len, buf + 8);
+
+                url = buf + 8;
+                target = url + strlen(url) + 1;
+                mozilla_funcs.geturl (plugin->instance, url, target);
+              }
             default:
               break;
           }
@@ -218,6 +235,10 @@ plugin_newp (NPMIMEType mime_type, NPP instance,
       plugin->height = strtol (argv[i], NULL, 0);
     }
   }
+
+  plugin->argc = argc;
+  plugin->argn = argn;
+  plugin->argv = argv;
 
   plugin->run_thread = TRUE;
   pthread_create (&plugin->thread, NULL, plugin_thread, plugin);
@@ -293,6 +314,7 @@ plugin_set_window (NPP instance, NPWindow * window)
     }
   } else {
     NPSetWindowCallbackStruct *ws_info;
+    int i;
 
     DEBUG ("about to fork");
 
@@ -307,6 +329,19 @@ plugin_set_window (NPP instance, NPWindow * window)
 #endif
 
     plugin_fork (plugin, FALSE);
+
+    for (i=0;i<plugin->argc;i++){
+      char *buf;
+      int len;
+
+      len = strlen (plugin->argn[i]) + 1 + strlen(plugin->argv[i]) + 1;
+      buf = malloc (len);
+      memcpy (buf, plugin->argn[i], strlen (plugin->argn[i]) + 1);
+      memcpy (buf + strlen (plugin->argn[i]) + 1,
+          plugin->argv[i], strlen (plugin->argv[i]) + 1);
+      packet_write (plugin->send_fd, SPP_METADATA, len, buf);
+      free(buf);
+    }
 
     //fcntl(plugin->send_fd, F_SETFL, O_NONBLOCK);
   }
@@ -545,7 +580,7 @@ packet_write (int fd, int code, int len, void *data)
 
 void DEBUG (const char *format, ...)
 {
-#if 0
+#if 1
   va_list varargs;
   char s[100];
 

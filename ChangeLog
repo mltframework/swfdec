@@ -1,5 +1,21 @@
 2005-03-24  David Schleef  <ds@schleef.org>
 
+	* plugin/gstappsrc.c: (gst_appsrc_class_init), (gst_appsrc_init),
+	(gst_appsrc_get_property), (gst_appsrc_loop): Add source_url
+	property, for relaying metadata from Mozilla
+	* plugin/gstappsrc.h: add to object
+	* plugin/plugin.c: (plugin_thread), (plugin_newp),
+	(plugin_set_window): push metadata info from Mozilla to helper
+	app
+	* plugin/spp.h: Add new GO_TO_URL2 and METADATA methods.
+	GO_TO_URL2 sends both the target and URL.  METADATA sends
+	metadata from Mozilla to the app.
+	* plugin/swfdec-mozilla-player.c: (menu_open), (menu_report_bug),
+	(button_press_event), (embed_url), (packet_go_to_url): Use new
+	methods.
+
+2005-03-24  David Schleef  <ds@schleef.org>
+
 	* configure.ac: version bump
 	* libswfdec/actions.c: (action_set_variable): set variable to
 	the value, not the variable name. (fix from Eric Anholt)

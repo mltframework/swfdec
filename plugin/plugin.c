@@ -245,7 +245,7 @@ NPError NP_GetValue(NPP instance, NPPVariable variable, void *value)
 
     switch (variable) {
         case NPPVpluginNameString:
-            *((char **)value) = "Shockwave Flash (Swfdec-" VERSION ")";
+            *((char **)value) = "Shockwave Flash";
             break;
         case NPPVpluginDescriptionString:
             *((char **)value) =

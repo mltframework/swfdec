@@ -1,5 +1,5 @@
 
-#include <swf.h>
+#include <swfdec.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -19,7 +19,8 @@
 
 gboolean debug = FALSE;
 
-swf_state_t *s;
+SwfdecDecoder *s;
+unsigned char *image;
 
 GtkWidget *drawing_area;
 GtkWidget *gtk_wind;
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 	gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
 	gtk_widget_set_default_visual(gdk_rgb_get_visual());
 
-	s = swf_init();
+	s = swfdec_decoder_new();
 
 	while(1){
 		c = getopt_long(argc, argv, "x:w:h:", options, &index);
@@ -234,7 +235,7 @@ static void read_swf_file(char *fn)
 		exit(1);
 	}
 
-	ret = swf_addbits(s,data,len);
+	ret = swfdec_decoder_addbits(s,data,len);
 	free(data);
 
 	if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
@@ -279,12 +280,12 @@ static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer dat
 
 static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data)
 {
-	if(s->buffer){
+	if(image){
 		gdk_draw_rgb_image (widget->window, widget->style->black_gc, 
-			0, 0, s->width, s->height, 
+			0, 0, width, height, 
 			GDK_RGB_DITHER_NONE,
-			s->buffer,
-			s->width*3);
+			image,
+			width*3);
 	}
 
 	return FALSE;
@@ -313,7 +314,7 @@ static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
 	data = malloc(4096);
 	ret = g_io_channel_read_chars(chan, data, 4096, &bytes_read, &error);
 	if(ret==G_IO_STATUS_NORMAL){
-		ret = swf_addbits(s,data,bytes_read);
+		ret = swfdec_decoder_addbits(s,data,bytes_read);
 		//fprintf(stderr,"addbits %d\n",bytes_read);
 		if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
 	}else if(ret==G_IO_STATUS_ERROR){
@@ -361,7 +362,7 @@ static gboolean render_idle(gpointer data)
 {
 	int ret;
 
-	ret = swf_parse(s);
+	ret = swfdec_decoder_parse(s);
 	if(ret==SWF_NEEDBITS || ret==SWF_EOF){
 		gtk_idle_remove(render_idle_id);
 		render_idle_id = 0;
@@ -372,21 +373,27 @@ static gboolean render_idle(gpointer data)
 		tv_add_usec(&image_time, interval);
 		if(tv_compare(&image_time, &now) > 0){
 			int x = tv_diff(&image_time, &now);
-			printf("sleeping for %d us\n",x);
+			//printf("sleeping for %d us\n",x);
 			usleep(x);
 		}
+		if(image)free(image);
+		swfdec_decoder_get_image(s,&image);
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
-			0, 0, s->width, s->height, 
+			0, 0, width, height, 
 			GDK_RGB_DITHER_NONE,
-			s->buffer,
-			s->width*3);
+			image,
+			width*3);
 		gettimeofday(&image_time, NULL);
 	}
 	if(ret==SWF_CHANGE && !plugged){
-		interval = 1000000/s->rate;
+		double rate;
+
+		swfdec_decoder_get_rate(s, &rate);
+		interval = 1000000/rate;
+		swfdec_decoder_get_image_size(s, &width, &height);
 		gtk_window_resize(GTK_WINDOW(gtk_wind),
-			s->width, s->height);
+			width, height);
 	}
 
 	return TRUE;

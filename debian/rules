@@ -81,7 +81,7 @@ binary-arch: build install
 	dh_movefiles
 
 #	dh_installdebconf	
-	dh_installdocs
+	dh_installdocs -A README TODO
 	dh_installexamples
 	dh_installmenu
 #	dh_installlogrotate

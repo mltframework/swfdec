@@ -21,6 +21,7 @@
 
 struct sound_buffer_struct{
 	int len;
+	int offset;
 	void *data;
 };
 typedef struct sound_buffer_struct SoundBuffer;
@@ -281,37 +282,30 @@ static void fill_audio(void *udata, Uint8 *stream, int len)
 {
 	GList *g;
 	SoundBuffer *buffer;
-	int i;
+	int n;
 
 	g = g_list_first(sound_buffers);
 	if(!g){
 		void *zero;
 
-		//fprintf(stderr,"fill_audio (zero)\n");
-
 		zero = malloc(len*4);
 		memset(zero,0,len*4);
 		SDL_MixAudio(stream, zero, len, SDL_MIX_MAXVOLUME);
-		//free(zero);
+		free(zero);
 
 		return;
 	}
 
-	//fprintf(stderr,"fill_audio\n");
-
 	buffer = (SoundBuffer *)g->data;
-	sound_buffers = g_list_delete_link(sound_buffers,g);
+	n = MIN(buffer->len - buffer->offset,len);
+	SDL_MixAudio(stream, buffer->data, n, SDL_MIX_MAXVOLUME);
 
-#if 0
-	for(i=0;i<10;i++){
-		fprintf(stderr,"%d ",((short *)(buffer->data))[i]);
+	buffer->offset += n;
+	if(buffer->offset >= buffer->len){
+		sound_buffers = g_list_delete_link(sound_buffers,g);
+		free(buffer->data);
+		free(buffer);
 	}
-	fprintf(stderr,"\n");
-#endif
-
-	SDL_MixAudio(stream, buffer->data, buffer->len, SDL_MIX_MAXVOLUME);
-
-	free(buffer);
 }
 
 static void pull_sound(SwfdecDecoder *s)
@@ -324,12 +318,17 @@ static void pull_sound(SwfdecDecoder *s)
 		data = swfdec_decoder_get_sound_chunk(s, &n);
 		if(!data)return;
 
-		sb = g_new(SoundBuffer,1);
+		if(enable_sound){
+			sb = g_new(SoundBuffer,1);
 
-		sb->len = n;
-		sb->data = data;
+			sb->len = n;
+			sb->offset = 0;
+			sb->data = data;
 
-		sound_buffers = g_list_append(sound_buffers, sb);
+			sound_buffers = g_list_append(sound_buffers, sb);
+		}else{
+			g_free(data);
+		}
 	}
 }
 
@@ -462,7 +461,15 @@ static gboolean render_idle(gpointer data)
 	int ret;
 
 	ret = swfdec_decoder_parse(s);
-	if(ret==SWF_NEEDBITS || ret==SWF_EOF){
+	if(ret==SWF_NEEDBITS){
+		gtk_idle_remove(render_idle_id);
+		render_idle_id = 0;
+	}
+	if(ret==SWF_EOF){
+		swfdec_decoder_free(s);
+		s = NULL;
+		//if(image)free(image);
+		//gtk_exit(0);
 		gtk_idle_remove(render_idle_id);
 		render_idle_id = 0;
 	}

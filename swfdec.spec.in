@@ -50,7 +50,7 @@ make
 rm -f $RPM_BUILD_ROOT%{_libdir}/mozilla/plugins/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/2.2.0/loaders/swf_loader.la
-
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/gtk-2.0/gdk-pixbuf.loaders
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
@@ -69,7 +69,6 @@ gdk-pixbuf-query-loaders > %{_sysconfdir}/gtk-2.0/gdk-pixbuf.loaders
 %doc AUTHORS COPYING NEWS README TODO 
 %{_bindir}/swf_play
 %{_libdir}/libswfdec.so.*
-%{_sysconfdir}/gtk-2.0/gdk-pixbuf.loaders
 %{_libdir}/gtk-2.0/2.2.0/loaders/swf_loader.so
 
 %files devel

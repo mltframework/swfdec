@@ -1,6 +1,6 @@
 
 #ifndef __SWFDEC_LAYER_H__
-#define __SWFDEF_LAYER_H__
+#define __SWFDEC_LAYER_H__
 
 #include "swfdec_types.h"
 
@@ -31,13 +31,13 @@ struct swfdec_layer_struct{
 	//swf_image_t *image;
 };
 
-SwfdecLayer *swf_layer_new(void);
-void swf_layer_free(SwfdecLayer *layer);
-SwfdecLayer *swf_layer_get(SwfdecDecoder *s, int depth);
-void swf_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew);
-void swf_layer_del(SwfdecDecoder *s, SwfdecLayer *layer);
-void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
-void swf_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec);
+SwfdecLayer *swfdec_layer_new(void);
+void swfdec_layer_free(SwfdecLayer *layer);
+SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth);
+void swfdec_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew);
+void swfdec_layer_del(SwfdecDecoder *s, SwfdecLayer *layer);
+void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
+void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec);
 
 #endif
 

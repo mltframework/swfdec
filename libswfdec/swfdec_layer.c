@@ -4,7 +4,7 @@
 
 #include "swfdec_internal.h"
 
-SwfdecLayer *swf_layer_new(void)
+SwfdecLayer *swfdec_layer_new(void)
 {
 	SwfdecLayer *layer;
 
@@ -16,7 +16,7 @@ SwfdecLayer *swf_layer_new(void)
 	return layer;
 }
 
-void swf_layer_free(SwfdecLayer *layer)
+void swfdec_layer_free(SwfdecLayer *layer)
 {
 	int i;
 	SwfdecLayerVec *layervec;
@@ -33,7 +33,7 @@ void swf_layer_free(SwfdecLayer *layer)
 	g_array_free(layer->lines,TRUE);
 }
 
-SwfdecLayer *swf_layer_get(SwfdecDecoder *s, int depth)
+SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth)
 {
 	SwfdecLayer *l;
 	GList *g;
@@ -48,7 +48,7 @@ SwfdecLayer *swf_layer_get(SwfdecDecoder *s, int depth)
 	return NULL;
 }
 
-void swf_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew)
+void swfdec_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew)
 {
 	GList *g;
 	SwfdecLayer *l;
@@ -64,7 +64,7 @@ void swf_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew)
 	s->layers = g_list_append(s->layers,lnew);
 }
 
-void swf_layer_del(SwfdecDecoder *s, SwfdecLayer *layer)
+void swfdec_layer_del(SwfdecDecoder *s, SwfdecLayer *layer)
 {
 	GList *g;
 	SwfdecLayer *l;
@@ -73,13 +73,13 @@ void swf_layer_del(SwfdecDecoder *s, SwfdecLayer *layer)
 		l = (SwfdecLayer *)g->data;
 		if(l == layer){
 			s->layers = g_list_delete_link(s->layers,g);
-			swf_layer_free(l);
+			swfdec_layer_free(l);
 			return;
 		}
 	}
 }
 
-void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
+void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 {
 	SwfdecObject *object;
 	SwfdecLayerVec *layervec;
@@ -98,7 +98,7 @@ void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 		if(layer->prerendered)return;
 		layer->prerendered = 1;
 
-		prerender_layer_shape(s,layer,shape);
+		swfdec_shape_prerender(s,layer,object);
 		for(i=0;i<layer->fills->len;i++){
 			shapevec = g_ptr_array_index(shape->fills,i);
 			layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
@@ -118,14 +118,14 @@ void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 		if(layer->prerendered)return;
 		layer->prerendered = 1;
 
-		prerender_layer_text(s,layer,object);
+		swfdec_text_prerender(s,layer,object);
 		break;
 	case SWF_OBJECT_SPRITE:
 		layer->frame_number = s->frame_number - layer->first_frame;
-		prerender_layer_sprite(s,layer,object);
+		swfdec_sprite_prerender(s,layer,object);
 		break;
 	case SWF_OBJECT_BUTTON:
-		prerender_layer_button(s,layer,object);
+		swfdec_button_prerender(s,layer,object);
 		break;
 	default:
 		SWF_DEBUG(4,"unknown object type\n");
@@ -133,7 +133,7 @@ void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 	}
 }
 
-void swf_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
+void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 {
 	ArtIRect rect;
 	struct swf_svp_render_struct cb_data;

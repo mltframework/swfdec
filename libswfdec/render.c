@@ -54,18 +54,18 @@ int art_place_object_2(SwfdecDecoder *s)
 	SWF_DEBUG(0,"  has_matrix = %d\n",has_matrix);
 	SWF_DEBUG(0,"  has_character = %d\n",has_character);
 
-	oldlayer = swf_layer_get(s,depth);
+	oldlayer = swfdec_layer_get(s,depth);
 	if(oldlayer){
 		oldlayer->last_frame = s->frame_number;
 	}
 
-	layer = swf_layer_new();
+	layer = swfdec_layer_new();
 
 	layer->depth = depth;
 	layer->first_frame = s->frame_number;
 	layer->last_frame = 0;
 
-	swf_layer_add(s,layer);
+	swfdec_layer_add(s,layer);
 
 	if(has_character){
 		layer->id = get_u16(bits);
@@ -113,7 +113,7 @@ int art_place_object_2(SwfdecDecoder *s)
 		SWF_DEBUG(4,"composing with %04x\n",id);
 	}
 
-	//swf_layer_prerender(s,layer);
+	//swfdec_layer_prerender(s,layer);
 
 	return SWF_OK;
 }
@@ -130,7 +130,7 @@ int art_remove_object(SwfdecDecoder *s)
 
 	id = get_u16(&s->b);
 	depth = get_u16(&s->b);
-	layer = swf_layer_get(s,depth);
+	layer = swfdec_layer_get(s,depth);
 
 	layer->last_frame = s->frame_number;
 
@@ -145,7 +145,7 @@ int art_remove_object_2(SwfdecDecoder *s)
 	//int i;
 
 	depth = get_u16(&s->b);
-	layer = swf_layer_get(s,depth);
+	layer = swfdec_layer_get(s,depth);
 
 	layer->last_frame = s->frame_number;
 
@@ -162,7 +162,7 @@ void swf_clean(SwfdecDecoder *s, int frame)
 		l = (SwfdecLayer *)g->data;
 		if(l->last_frame && l->last_frame<=frame){
 			s->layers = g_list_delete_link(s->layers,g);
-			swf_layer_free(l);
+			swfdec_layer_free(l);
 		}
 	}
 }
@@ -189,8 +189,6 @@ int art_show_frame(SwfdecDecoder *s)
 void swf_render_frame(SwfdecDecoder *s)
 {
 	SwfdecLayer *layer;
-	int i;
-	SwfdecLayerVec *layervec;
 	GList *g;
 	SwfdecObject *object;
 
@@ -219,7 +217,7 @@ void swf_render_frame(SwfdecDecoder *s)
 		if(layer->last_frame != s->frame_number &&
 		   layer->first_frame != s->frame_number)continue;
 
-		//swf_layer_prerender(s,layer);
+		//swfdec_layer_prerender(s,layer);
 
 		SWF_DEBUG(0,"clearing layer %d [%d,%d)\n",layer->depth,
 			layer->first_frame,layer->last_frame);
@@ -263,7 +261,7 @@ void swf_render_frame(SwfdecDecoder *s)
 		if(layer->first_frame > s->frame_number)continue;
 		if(layer->last_frame && layer->last_frame <= s->frame_number)continue;
 
-		swf_layer_prerender(s,layer);
+		swfdec_layer_prerender(s,layer);
 
 		object = swfdec_object_get(s,layer->id);
 		if(!object){
@@ -275,23 +273,19 @@ void swf_render_frame(SwfdecDecoder *s)
 
 		switch(object->type){
 		case SWF_OBJECT_SPRITE:
-			layer->frame_number = s->frame_number - layer->first_frame;
-			render_sprite(s,object->priv,layer->frame_number);
+			swfdec_sprite_render(s, layer, object);
+			break;
+		case SWF_OBJECT_BUTTON:
+			swfdec_button_render(s, layer, object);
 			break;
 		case SWF_OBJECT_TEXT:
+			swfdec_text_render(s, layer, object);
+			break;
 		case SWF_OBJECT_SHAPE:
-		case SWF_OBJECT_BUTTON:
-			for(i=0;i<layer->fills->len;i++){
-				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
-				swf_layervec_render(s, layervec);
-			}
-			for(i=0;i<layer->lines->len;i++){
-				layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
-				swf_layervec_render(s, layervec);
-			}
+			swfdec_shape_render(s, layer, object);
 			break;
 		case SWF_OBJECT_IMAGE:
-			swfdec_image_render(s, layer);
+			swfdec_image_render(s, layer, object);
 			break;
 		default:
 			SWF_DEBUG(4,"swf_render_frame: unknown object type %d\n",object->type);

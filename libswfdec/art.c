@@ -219,11 +219,6 @@ void art_rgb565_run_alpha(unsigned char *buf, unsigned char r,
 	int ar,ag,ab;
 	int unalpha;
 
-#define RGB565_COMBINE(r,g,b) (((r)&0xf8)<<8)|(((g)&0xfc)<<3)|(((b)&0xf8)>>3);
-#define RGB565_R(color) (((color)&0xf800)>>8)
-#define RGB565_G(color) (((color)&0x07e0)>>3)
-#define RGB565_B(color) (((color)&0x001f)<<3)
-
 	if(alpha==0)return;
 	if(alpha>=0xff){
 		c = RGB565_COMBINE(r,g,b);

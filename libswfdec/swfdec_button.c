@@ -1,24 +1,26 @@
 
 #include "swfdec_internal.h"
 
-void prerender_layer_button(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
+
+void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
+	SwfdecObject *object)
 {
 	SwfdecShape *shape;
 	SwfdecObject *obj;
 	double save_trans[6];
 	SwfdecShapeVec *shapevec;
 	SwfdecLayerVec *layervec;
-	SwfdecButton *buttons = object->priv;
+	SwfdecButton *button = object->priv;
 	int i;
 
-//printf("prerender_layer_button %d [%d,%d,%d]\n",object->id,
+//printf("swfdec_button_prerender %d [%d,%d,%d]\n",object->id,
 //	object->button[0].id, object->button[1].id, object->button[2].id);
 	//art_affine_multiply(sprite->transform, layer->transform, s->transform);
 
 	art_affine_copy(save_trans, layer->transform);
-	art_affine_multiply(layer->transform, buttons[0].transform, layer->transform);
-	if(buttons[0].id){
-		obj = swfdec_object_get(s,buttons[0].id);
+	art_affine_multiply(layer->transform, button->state[0].transform, layer->transform);
+	if(button->state[0].id){
+		obj = swfdec_object_get(s,button->state[0].id);
 		if(!obj)return;
 
 		switch(obj->type){
@@ -27,7 +29,7 @@ void prerender_layer_button(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *ob
 //			if(layer->prerendered)return;
 //			layer->prerendered = 1;
 
-			prerender_layer_shape(s,layer,shape);
+			swfdec_shape_prerender(s,layer,object);
 			for(i=0;i<layer->fills->len;i++){
 				shapevec = g_ptr_array_index(shape->fills,i);
 				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
@@ -43,20 +45,36 @@ void prerender_layer_button(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *ob
 
 			break;
 		case SWF_OBJECT_TEXT:
-			prerender_layer_text(s,layer,obj);
+			swfdec_text_prerender(s,layer,obj);
 			break;
 		case SWF_OBJECT_SPRITE:
 			//printf("sprite\n");
 			//layer->type = 1;
 			layer->frame_number = s->frame_number - layer->first_frame;
-			prerender_layer_sprite(s,layer,obj);
+			swfdec_sprite_prerender(s,layer,obj);
 			break;
 		default:
-			SWF_DEBUG(4,"prerender_layer_button: object type not handled %d\n",obj->type);
+			SWF_DEBUG(4,"swfdec_button_prerender: object type not handled %d\n",obj->type);
 			break;
 		}
 	}
 	art_affine_copy(layer->transform, save_trans);
+}
+
+void swfdec_button_render(SwfdecDecoder *s,SwfdecLayer *layer,
+	SwfdecObject *object)
+{
+	int i;
+	SwfdecLayerVec *layervec;
+
+	for(i=0;i<layer->fills->len;i++){
+		layervec = &g_array_index(layer->fills, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+	for(i=0;i<layer->lines->len;i++){
+		layervec = &g_array_index(layer->lines, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
 }
 
 int tag_func_define_button_2(SwfdecDecoder *s)
@@ -77,7 +95,7 @@ int tag_func_define_button_2(SwfdecDecoder *s)
 	id = get_u16(bits);
 	object = swfdec_object_new(s,id);
 
-	button = g_new0(SwfdecButton,3);
+	button = g_new0(SwfdecButton,1);
 	object->type = SWF_OBJECT_BUTTON;
 	object->priv = button;
 
@@ -130,22 +148,22 @@ int tag_func_define_button_2(SwfdecDecoder *s)
 		SWF_DEBUG(0,"bits->ptr %p\n",bits->ptr);
 
 		if(up){
-			button[0].id = character;
-			art_affine_copy(button[0].transform,trans);
-			memcpy(button[0].color_mult,color_mult,4*sizeof(double));
-			memcpy(button[0].color_add,color_add,4*sizeof(double));
+			button->state[0].id = character;
+			art_affine_copy(button->state[0].transform,trans);
+			memcpy(button->state[0].color_mult,color_mult,4*sizeof(double));
+			memcpy(button->state[0].color_add,color_add,4*sizeof(double));
 		}
 		if(over){
-			button[1].id = character;
-			art_affine_copy(button[1].transform,trans);
-			memcpy(button[1].color_mult,color_mult,4*sizeof(double));
-			memcpy(button[1].color_add,color_add,4*sizeof(double));
+			button->state[1].id = character;
+			art_affine_copy(button->state[1].transform,trans);
+			memcpy(button->state[1].color_mult,color_mult,4*sizeof(double));
+			memcpy(button->state[1].color_add,color_add,4*sizeof(double));
 		}
 		if(down){
-			button[2].id = character;
-			art_affine_copy(button[2].transform,trans);
-			memcpy(button[2].color_mult,color_mult,4*sizeof(double));
-			memcpy(button[2].color_add,color_add,4*sizeof(double));
+			button->state[2].id = character;
+			art_affine_copy(button->state[2].transform,trans);
+			memcpy(button->state[2].color_mult,color_mult,4*sizeof(double));
+			memcpy(button->state[2].color_add,color_add,4*sizeof(double));
 		}
 
 	}

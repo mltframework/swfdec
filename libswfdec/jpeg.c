@@ -241,7 +241,7 @@ int tag_func_define_bits_lossless_2(SwfdecDecoder *s)
 
 
 
-int swfdec_image_render(SwfdecDecoder *s, SwfdecLayer *layer)
+int swfdec_image_render(SwfdecDecoder *s, SwfdecLayer *layer, SwfdecObject *obj)
 {
 	printf("got here\n");
 

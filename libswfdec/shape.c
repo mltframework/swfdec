@@ -525,8 +525,10 @@ void dump_layers(SwfdecDecoder *s)
 	}
 }
 
-void prerender_layer_shape(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecShape *shape)
+void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
+	SwfdecObject *obj)
 {
+	SwfdecShape *shape = obj->priv;
 	int i;
 	SwfdecLayerVec *layervec;
 	SwfdecShapeVec *shapevec;
@@ -605,3 +607,20 @@ void prerender_layer_shape(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecShape *shap
 	}
 
 }
+
+void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
+	SwfdecObject *object)
+{
+	int i;
+	SwfdecLayerVec *layervec;
+
+	for(i=0;i<layer->fills->len;i++){
+		layervec = &g_array_index(layer->fills, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+	for(i=0;i<layer->lines->len;i++){
+		layervec = &g_array_index(layer->lines, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+}
+

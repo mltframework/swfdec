@@ -4,7 +4,7 @@
 
 #include "swfdec_types.h"
 
-struct swf_sprite_struct {
+struct swfdec_sprite_struct {
 	int n_frames;
 
 	/* where we are in global parsing */
@@ -26,8 +26,8 @@ struct swf_sprite_struct {
 	ArtIRect drawrect;
 };
 
-void prerender_layer_sprite(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
-void render_sprite(SwfdecDecoder *s, SwfdecDecoder *sprite, int frame_number);
+void swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
+void swfdec_sprite_render(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
 
 #endif
 

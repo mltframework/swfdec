@@ -7,16 +7,12 @@
 /* render.c */
 
 void swf_invalidate_irect(SwfdecDecoder *s, ArtIRect *rect);
-unsigned int transform_color(unsigned int in, double mult[4], double add[4]);
-SwfdecLayer *swf_layer_get(SwfdecDecoder *s, int depth);
-void swf_layer_del(SwfdecDecoder *s, SwfdecLayer *layer);
 int art_place_object_2(SwfdecDecoder *s);
 int art_remove_object(SwfdecDecoder *s);
 int art_remove_object_2(SwfdecDecoder *s);
+void swf_clean(SwfdecDecoder *s, int frame);
 int art_show_frame(SwfdecDecoder *s);
-SwfdecObject *swfdec_object_get(SwfdecDecoder *s, int id);
 void swf_render_frame(SwfdecDecoder *s);
-void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
 
 /* swf.c */
 

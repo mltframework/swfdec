@@ -4,7 +4,6 @@
 #include <string.h>
 
 #define getbits mpg_getbits
-#include "mpglib/mpg123.h"
 #include "mpglib/mpglib.h"
 #undef getbits
 
@@ -17,16 +16,16 @@ void adpcm_decode(swf_state_t *s,swf_object_t *obj);
 
 void mp3_decode(swf_object_t *obj)
 {
-	struct mpstr mp;
+	MpglibDecoder *mp;
 	int size;
 	int ret;
 	swf_sound_t *sound = obj->priv;
 
-	InitMP3(&mp);
+	mp = mpglib_decoder_new();
 	do{
-		ret = decodeMP3(&mp, sound->orig_data, sound->orig_len,
-			sound->tmpbuf, 1000, &size);
-	}while(ret==MP3_OK);
+		ret = mpglib_decoder_decode(&mp, sound->orig_data,
+			sound->orig_len, sound->tmpbuf, 1000, &size);
+	}while(ret==MPGLIB_OK);
 }
 
 int tag_func_define_sound(swf_state_t *s)
@@ -122,12 +121,12 @@ int tag_func_sound_stream_block(swf_state_t *s)
 		return SWF_OK;
 	}
 
-	ret = decodeMP3(sound->mp, s->b.ptr, s->tag_len - 4,
+	ret = mpglib_decoder_decode(sound->mp, s->b.ptr, s->tag_len - 4,
 		s->sound_buffer + s->sound_offset,
 		s->sound_len - s->sound_offset, &n);
-	while(ret==MP3_OK){
+	while(ret==MPGLIB_OK){
 		s->sound_offset += n;
-		ret = decodeMP3(sound->mp, NULL, 0,
+		ret = mpglib_decoder_decode(sound->mp, NULL, 0,
 			s->sound_buffer + s->sound_offset,
 			s->sound_len - s->sound_offset, &n);
 	}
@@ -177,8 +176,7 @@ int tag_func_sound_stream_head(swf_state_t *s)
 
 	switch(format){
 	case 2:
-		sound->mp = g_new0(struct mpstr,1);
-		InitMP3(sound->mp);
+		sound->mp = mpglib_decoder_new();
 		
 		break;
 	default:

@@ -124,6 +124,21 @@ fi
 
 AM_CONDITIONAL(ENABLE_PIXBUF_LOADER, test x$enable_pixbuf_loader = xyes)
 
+dnl a Gimp plugin
+
+LIBGIMP_CFLAGS=""
+LIBGIMP_LIBS=""
+swf_gimp=no
+
+PKG_CHECK_MODULES(LIBGIMP,[gimp-1.3 >= 1.3.10 gimpui-1.3 >= 1.3.10 gtk+-2.0 >= 2.0.0], test_gimp=true, test_gimp=false)
+if test "x$test_gimp" = "xtrue"; then
+      swf_gimp=yes
+fi
+AM_CONDITIONAL(ENABLE_GIMP_LOADER,[test $swf_gimp = yes])
+
+AC_SUBST(LIBGIMP_CFLAGS)
+AC_SUBST(LIBGIMP_LIBS)
+
 dnl Check for X11 extensions
 AC_PATH_XTRA
 if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
@@ -166,6 +181,7 @@ test/Makefile
 plugin/Makefile
 player/Makefile
 pixbuf-loader/Makefile
+gimp-loader/Makefile
 swfdec.pc
 swfdec.spec
 )

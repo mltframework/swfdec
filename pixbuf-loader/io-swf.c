@@ -52,11 +52,6 @@ swf_context_new (void)
 	context->decoder       = swfdec_decoder_new ();
 	context->animation     = g_object_new (GDK_TYPE_PIXBUF_SWF_ANIM, NULL);
 
-	/* disabled temporarily */
-#if 0
-	swfdec_decoder_enable_render (context->decoder);
-#endif
-
 	return context;
 }
 
@@ -95,7 +90,8 @@ swf_gerror_build (int swf_err, GError ** error)
 	switch (swf_err) {
 	case SWF_ERROR: 
 	default: 
-		message = "Unknown Error";     break;
+		message = "Unknown Error";     
+		break;
 	}
 
 	if (error)
@@ -115,9 +111,15 @@ swf_animation_change (SwfContext * context)
 	int width   = 0, height = 0;
 	double rate = 0.;
 
-	swfdec_decoder_get_n_frames (context->decoder, &nframes);
-	swfdec_decoder_get_image_size (context->decoder, &width, &height);
-	swfdec_decoder_get_rate (context->decoder, &rate);
+	if (SWF_OK != swfdec_decoder_get_n_frames (context->decoder, &nframes))
+		return;
+
+	if (SWF_OK != swfdec_decoder_get_image_size (context->decoder, &width, 
+												 &height))
+		return;
+
+	if (SWF_OK != swfdec_decoder_get_rate (context->decoder, &rate))
+		return;
 
 	context->animation->n_frames   = nframes;
 	context->animation->width      = width;
@@ -138,7 +140,8 @@ swf_animation_image (SwfContext * context)
 	guchar * pixels = NULL;
 	GdkPixbufFrame * frame;
 
-	swfdec_decoder_get_image (context->decoder, &pixels);
+	if (swfdec_decoder_get_image (context->decoder, &pixels) != SWF_OK && pixels != NULL)
+		return;
 
 	nframe = g_list_length (context->animation->frames) + 1;	
 
@@ -287,7 +290,6 @@ gdk_pixbuf__swf_image_begin_load (GdkPixbufModuleSizeFunc size_func,
 	if (error)
 		*error = NULL;
 
-	/* context->single_frame = TRUE; */
 	return context;
 }
 

@@ -1,0 +1,18 @@
+gimpdir = $(libdir)/gimp/1.3/plug-ins
+
+INCLUDES = $(SWF_CFLAGS)\
+	$(LIBGIMP_CFLAGS)\
+	-I$(top_srcdir)
+
+if ENABLE_GIMP_LOADER
+gimp_PROGRAMS = swf
+else
+gimp_PROGRAMS =
+endif
+
+swf_SOURCES=swf-gimp.c
+swf_LDFLAGS = -no-undefined -avoid-version -module
+swf_LDADD = $(LIBGIMP_LIBS) $(SWF_LIBS)
+
+install-%: %
+	$(mkinstalldirs) $(gimpdir)

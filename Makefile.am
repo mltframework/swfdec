@@ -1,6 +1,6 @@
-SUBDIRS=libswfdec test player plugin pixbuf-loader
+SUBDIRS=libswfdec test player plugin pixbuf-loader gimp-loader
 
-DIST_SUBDIRS=libswfdec test player plugin pixbuf-loader
+DIST_SUBDIRS=libswfdec test player plugin pixbuf-loader gimp-loader
 
 EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.spec \
 	TODO m4

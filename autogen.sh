@@ -49,6 +49,8 @@ tool_run "autoheader"
 # touch the stamp-h.in build stamp so we don't re-run autoheader in maintainer mode -- wingo
 echo timestamp > stamp-h.in 2> /dev/null
 
+touch ChangeLog
+
 tool_run "$autoconf"
 tool_run "$automake" "-a -c"
 

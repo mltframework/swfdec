@@ -10,70 +10,38 @@
 #include "swfdec_internal.h"
 
 
-static void swfdec_sound_base_init (gpointer g_class);
-static void swfdec_sound_class_init (gpointer g_class, gpointer user_data);
-static void swfdec_sound_init (GTypeInstance *instance, gpointer g_class);
-static void swfdec_sound_dispose (GObject *object);
-
 static void swfdec_sound_mp3_init (SwfdecSound *sound);
 static void swfdec_sound_mp3_decode (SwfdecSound *sound);
 static int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
+static void swfdec_sound_mp3_cleanup (SwfdecSound *sound);
 
 void adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound);
 SwfdecSoundBuffer *swfdec_sound_buffer_new (int len);
 void swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
     SwfdecSoundBuffer * buffer);
 
-
-GType _swfdec_sound_type;
-
-static GObjectClass *parent_class = NULL;
-
-GType swfdec_sound_get_type (void)
-{
-  if (!_swfdec_sound_type) {
-    static const GTypeInfo object_info = {
-      sizeof (SwfdecSoundClass),
-      swfdec_sound_base_init,
-      NULL,
-      swfdec_sound_class_init,
-      NULL,
-      NULL,
-      sizeof (SwfdecSound),
-      32,
-      swfdec_sound_init,
-      NULL
-    };
-    _swfdec_sound_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
-        "SwfdecSound", &object_info, 0);
-  }
-  return _swfdec_sound_type;
-}
+SWFDEC_OBJECT_BOILERPLATE (SwfdecSound, swfdec_sound)
 
 static void swfdec_sound_base_init (gpointer g_class)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
 }
 
-static void swfdec_sound_class_init (gpointer g_class, gpointer class_data)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
-  gobject_class->dispose = swfdec_sound_dispose;
-
-  parent_class = g_type_class_peek_parent (gobject_class);
-
-}
-
-static void swfdec_sound_init (GTypeInstance *instance, gpointer g_class)
+static void swfdec_sound_class_init (SwfdecSoundClass *g_class)
 {
 
 }
 
-static void swfdec_sound_dispose (GObject *object)
+static void swfdec_sound_init (SwfdecSound *sound)
 {
-  SwfdecSound *sound = SWFDEC_SOUND (object);
+
+}
+
+static void swfdec_sound_dispose (SwfdecSound *sound)
+{
+  if (sound->format == 2) {
+    swfdec_sound_mp3_cleanup (sound);
+  }
 
   if (sound->sound_buf)
     g_free (sound->sound_buf);
@@ -97,7 +65,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
 
   n_samples = swfdec_bits_get_u16 (&s->b);
   n_left = swfdec_bits_get_u16 (&s->b);
-  //printf("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
+  //g_print("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
 
   if (s->tag_len - 4 == 0) {
     /* the end? */
@@ -139,7 +107,7 @@ tag_func_define_sound (SwfdecDecoder * s)
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
   SWFDEC_OBJECT (sound)->id = id;
-  s->objects = g_list_append (s->objects, sound);
+  //s->objects = g_list_append (s->objects, sound);
 
   sound->n_samples = n_samples;
   sound->format = format;
@@ -153,21 +121,23 @@ tag_func_define_sound (SwfdecDecoder * s)
       sound->orig_len = s->tag_len - 9;
 
       sound->sound_len = 10000;
-      sound->sound_buf = malloc (sound->sound_len);
+      sound->sound_buf = g_malloc (sound->sound_len);
 
       swfdec_sound_mp3_decode (sound);
 
       s->b.ptr += s->tag_len - 9;
       break;
     case 1:
-      //printf("  size = %d (%d bit)\n", size, size ? 16 : 8);
-      //printf("  type = %d (%d channels)\n", type, type + 1);
-      //printf("  n_samples = %d\n", n_samples);
+      //g_print("  size = %d (%d bit)\n", size, size ? 16 : 8);
+      //g_print("  type = %d (%d channels)\n", type, type + 1);
+      //g_print("  n_samples = %d\n", n_samples);
       adpcm_decode (s, sound);
       break;
     default:
       SWFDEC_WARNING ("tag_func_define_sound: unknown format %d", format);
   }
+
+g_object_unref (G_OBJECT (sound));
 
   return SWF_OK;
 }
@@ -216,13 +186,13 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
   n_samples = swfdec_bits_get_u16 (b);
   unknown = swfdec_bits_get_u16 (b);
 
-  //printf("  mix_format = %d\n", mix_format);
-  //printf("  format = %d (%s)\n", format, format_str[format]);
-  //printf("  rate = %d (%d Hz) [spec: reserved]\n", rate, rate_n[rate]);
-  //printf("  size = %d (%d bit)\n", size, size ? 16 : 8);
-  //printf("  type = %d (%d channels)\n", type, type + 1);
-  //printf("  n_samples = %d\n", n_samples); /* XXX per frame? */
-  //printf("  unknown = %d\n", unknown);
+  //g_print("  mix_format = %d\n", mix_format);
+  //g_print("  format = %d (%s)\n", format, format_str[format]);
+  //g_print("  rate = %d (%d Hz) [spec: reserved]\n", rate, rate_n[rate]);
+  //g_print("  size = %d (%d bit)\n", size, size ? 16 : 8);
+  //g_print("  type = %d (%d channels)\n", type, type + 1);
+  //g_print("  n_samples = %d\n", n_samples); /* XXX per frame? */
+  //g_print("  unknown = %d\n", unknown);
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
   SWFDEC_OBJECT (sound)->id = 0;
@@ -278,24 +248,24 @@ get_soundinfo (SwfdecBits * b)
   if (has_envelope) {
     envelope_n_points = swfdec_bits_get_u8 (b);
   }
-  //printf("  syncflags = %d\n", syncflags);
-  //printf("  has_envelope = %d\n", has_envelope);
-  //printf("  has_loops = %d\n", has_loops);
-  //printf("  has_out_point = %d\n", has_out_point);
-  //printf("  has_in_point = %d\n", has_in_point);
-  //printf("  in_point = %d\n", in_point);
-  //printf("  out_point = %d\n", out_point);
-  //printf("  loop_count = %d\n", loop_count);
-  //printf("  envelope_n_points = %d\n", envelope_n_points);
+  //g_print("  syncflags = %d\n", syncflags);
+  //g_print("  has_envelope = %d\n", has_envelope);
+  //g_print("  has_loops = %d\n", has_loops);
+  //g_print("  has_out_point = %d\n", has_out_point);
+  //g_print("  has_in_point = %d\n", has_in_point);
+  //g_print("  in_point = %d\n", in_point);
+  //g_print("  out_point = %d\n", out_point);
+  //g_print("  loop_count = %d\n", loop_count);
+  //g_print("  envelope_n_points = %d\n", envelope_n_points);
 
   for (i = 0; i < envelope_n_points; i++) {
     mark44 = swfdec_bits_get_u32 (b);
     level0 = swfdec_bits_get_u16 (b);
     level1 = swfdec_bits_get_u16 (b);
 
-    //printf("   mark44 = %d\n",mark44);
-    //printf("   level0 = %d\n",level0);
-    //printf("   level1 = %d\n",level1);
+    //g_print("   mark44 = %d\n",mark44);
+    //g_print("   level0 = %d\n",level0);
+    //g_print("   level1 = %d\n",level1);
   }
 
 }
@@ -308,7 +278,7 @@ tag_func_start_sound (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (b);
 
-  //printf("  id = %d\n", id);
+  //g_print("  id = %d\n", id);
   get_soundinfo (b);
 
   return SWF_OK;
@@ -322,10 +292,10 @@ tag_func_define_button_sound (SwfdecDecoder * s)
   int state;
 
   id = swfdec_bits_get_u16 (&s->b);
-  //printf("  id = %d\n",id);
+  //g_print("  id = %d\n",id);
   for (i = 0; i < 4; i++) {
     state = swfdec_bits_get_u16 (&s->b);
-    //printf("   state = %d\n",state);
+    //g_print("   state = %d\n",state);
     if (state) {
       get_soundinfo (&s->b);
     }
@@ -366,10 +336,10 @@ adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
 #if 0
   sample = swfdec_bits_get_u8 (bits) << 8;
   sample |= swfdec_bits_get_u8 (bits);
-  printf ("sample %d\n", sample);
+  g_print ("sample %d\n", sample);
 #endif
   n_bits = swfdec_bits_getbits (bits, 2) + 2;
-  //printf("n_bits = %d\n",n_bits);
+  //g_print("n_bits = %d\n",n_bits);
 
   if (n_bits != 4)
     return;
@@ -381,9 +351,9 @@ adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
       n = 4096;
 
     sample = swfdec_bits_getsbits (bits, 16);
-    //printf("sample = %d\n",sample);
+    //g_print("sample = %d\n",sample);
     index = swfdec_bits_getbits (bits, 6);
-    //printf("index = %d\n",index);
+    //g_print("index = %d\n",index);
 
 
     for (i = 1; i < n; i++) {
@@ -467,6 +437,14 @@ swfdec_sound_mp3_init (SwfdecSound *sound)
       mad_synth_init (&sound->synth);
 }
 
+static void
+swfdec_sound_mp3_cleanup (SwfdecSound *sound)
+{
+  mad_synth_finish (&sound->synth);
+  mad_frame_finish (&sound->frame);
+  mad_stream_finish (&sound->stream);
+}
+
 void
 swfdec_sound_mp3_decode (SwfdecSound *sound)
 {
@@ -487,7 +465,7 @@ swfdec_sound_mp3_decode (SwfdecSound *sound)
       break;
     }
     if (ret == -1) {
-      printf ("stream error 0x%04x\n", stream.error);
+      SWFDEC_ERROR ("stream error 0x%04x\n", stream.error);
       return;
     }
 
@@ -615,6 +593,11 @@ int
 swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
 {
   return SWF_OK;
+}
+
+static void
+swfdec_sound_mp3_cleanup (SwfdecSound *sound)
+{
 }
 
 #endif

@@ -1,69 +1,34 @@
 
 #include "swfdec_internal.h"
 #include <swfdec_button.h>
+#include <string.h>
 
+static SwfdecLayer *
+swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * object, SwfdecLayer * oldlayer);
 
-static void swfdec_button_base_init (gpointer g_class);
-static void swfdec_button_class_init (gpointer g_class, gpointer user_data);
-static void swfdec_button_init (GTypeInstance *instance, gpointer g_class);
-static void swfdec_button_dispose (GObject *object);
+SWFDEC_OBJECT_BOILERPLATE (SwfdecButton, swfdec_button)
 
-static SwfdecLayer * swfdec_button_prerender (SwfdecDecoder * s,
-    SwfdecSpriteSegment * seg, SwfdecObject * object, SwfdecLayer * oldlayer);
-
-
-GType _swfdec_button_type;
-
-static GObjectClass *parent_class = NULL;
-
-GType swfdec_button_get_type (void)
-{
-  if (!_swfdec_button_type) {
-    static const GTypeInfo object_info = {
-      sizeof (SwfdecButtonClass),
-      swfdec_button_base_init,
-      NULL,
-      swfdec_button_class_init,
-      NULL,
-      NULL,
-      sizeof (SwfdecButton),
-      32,
-      swfdec_button_init,
-      NULL
-    };
-    _swfdec_button_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
-        "SwfdecButton", &object_info, 0);
-  }
-  return _swfdec_button_type;
-}
 
 static void swfdec_button_base_init (gpointer g_class)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
 }
 
-static void swfdec_button_class_init (gpointer g_class, gpointer class_data)
+static void swfdec_button_class_init (SwfdecButtonClass *g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
-  gobject_class->dispose = swfdec_button_dispose;
-
-  parent_class = g_type_class_peek_parent (gobject_class);
-
   SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_button_prerender;
   //SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 
-static void swfdec_button_init (GTypeInstance *instance, gpointer g_class)
+static void swfdec_button_init (SwfdecButton *button)
 {
 
 }
 
-static void swfdec_button_dispose (GObject *object)
+static void swfdec_button_dispose (SwfdecButton *button)
 {
   int i;
-  SwfdecButton *button = SWFDEC_BUTTON(object);
 
   for (i = 0; i < 3; i++) {
     if (button->state[i]) {
@@ -92,7 +57,7 @@ swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   layer->rect.y0 = 0;
   layer->rect.y1 = 0;
 
-  art_affine_multiply (layer->transform, seg->transform, s->transform);
+  swfdec_transform_multiply (&layer->transform, &seg->transform, &s->transform);
   if (button->state[0]) {
     SwfdecLayer *child_layer = NULL;
 
@@ -101,15 +66,15 @@ swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       return NULL;
 
     tmpseg = swfdec_spriteseg_dup (button->state[0]);
-    art_affine_multiply (tmpseg->transform,
-	button->state[0]->transform, seg->transform);
+    swfdec_transform_multiply (&tmpseg->transform,
+	&button->state[0]->transform, &seg->transform);
 
     child_layer = swfdec_spriteseg_prerender (s, tmpseg, NULL);
 
     if (child_layer) {
       layer->sublayers = g_list_append (layer->sublayers, child_layer);
 
-      art_irect_union_to_masked (&layer->rect, &child_layer->rect, &s->irect);
+      swfdec_rect_union_to_masked (&layer->rect, &child_layer->rect, &s->irect);
     }
     swfdec_spriteseg_free (tmpseg);
   }
@@ -142,8 +107,8 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   int flags;
   int offset;
   int condition;
-  double trans[6];
-  double color_add[4], color_mult[4];
+  SwfdecTransform trans;
+  SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
 
@@ -193,11 +158,10 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
     SWFDEC_LOG("bits->ptr %p", bits->ptr);
 
-    //swfdec_bits_get_art_matrix(bits, trans);
-    swfdec_bits_get_art_matrix (bits, trans);
+    swfdec_bits_get_transform (bits, &trans);
     swfdec_bits_syncbits (bits);
     SWFDEC_LOG("bits->ptr %p", bits->ptr);
-    swfdec_bits_get_art_color_transform (bits, color_mult, color_add);
+    swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
     SWFDEC_LOG("bits->ptr %p", bits->ptr);
@@ -209,9 +173,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
       }
       button->state[0] = swfdec_spriteseg_new ();
       button->state[0]->id = character;
-      art_affine_copy (button->state[0]->transform, trans);
-      memcpy (button->state[0]->color_mult, color_mult, 4 * sizeof (double));
-      memcpy (button->state[0]->color_add, color_add, 4 * sizeof (double));
+      memcpy (&button->state[0]->transform, &trans, sizeof (SwfdecTransform));
+      memcpy (&button->state[0]->color_transform, &color_trans,
+          sizeof (SwfdecColorTransform));
     }
     if (over) {
       if (button->state[1]) {
@@ -220,9 +184,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
       }
       button->state[1] = swfdec_spriteseg_new ();
       button->state[1]->id = character;
-      art_affine_copy (button->state[1]->transform, trans);
-      memcpy (button->state[1]->color_mult, color_mult, 4 * sizeof (double));
-      memcpy (button->state[1]->color_add, color_add, 4 * sizeof (double));
+      memcpy (&button->state[1]->transform, &trans, sizeof (SwfdecTransform));
+      memcpy (&button->state[1]->color_transform, &color_trans,
+          sizeof (SwfdecColorTransform));
     }
     if (down) {
       if (button->state[2]) {
@@ -231,9 +195,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
       }
       button->state[2] = swfdec_spriteseg_new ();
       button->state[2]->id = character;
-      art_affine_copy (button->state[2]->transform, trans);
-      memcpy (button->state[2]->color_mult, color_mult, 4 * sizeof (double));
-      memcpy (button->state[2]->color_add, color_add, 4 * sizeof (double));
+      memcpy (&button->state[2]->transform, &trans, sizeof (SwfdecTransform));
+      memcpy (&button->state[2]->color_transform, &color_trans,
+          sizeof (SwfdecColorTransform));
     }
 
   }

@@ -85,7 +85,17 @@ AC_SUBST(LIBART_LIBS)
 AC_SUBST(LIBART_CFLAGS)
 if test "$HAVE_LIBART" = "no"; then
   AC_MSG_ERROR([cannot find libart-2.0, which is required for build])
+else
+  AC_DEFINE(HAVE_LIBART, 1, [Define if swfdec uses libart for rendering])
 fi
+AM_CONDITIONAL(HAVE_LIBART, test x$HAVE_LIBART = xyes)
+
+#PKG_CHECK_MODULES(CAIRO, cairo, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+#AC_SUBST(CAIRO_LIBS)
+#AC_SUBST(CAIRO_CFLAGS)
+#if test "$HAVE_CAIRO" = "no"; then
+#  AC_MSG_ERROR([cannot find cairo, which is required for build])
+#fi
 
 AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
 AC_SUBST(MAD_LIBS)
@@ -186,6 +196,7 @@ AC_CONFIG_FILES(
 Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
+libswfdec/mpeg/Makefile
 test/Makefile
 plugin/Makefile
 player/Makefile

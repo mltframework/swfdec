@@ -7,6 +7,7 @@
 #include <swfdec_object.h>
 #include <color.h>
 #include <swfdec_bits.h>
+#include "swfdec_transform.h"
 
 G_BEGIN_DECLS
 
@@ -43,7 +44,7 @@ struct _SwfdecShapeVec
 
   int fill_type;
   int fill_id;
-  double fill_matrix[6];
+  SwfdecTransform fill_transform;
 
   SwfdecGradient *grad;
 };
@@ -74,12 +75,12 @@ void swfdec_shape_free (SwfdecObject * object);
 void _swfdec_shape_free (SwfdecShape * shape);
 int tag_func_define_shape (SwfdecDecoder * s);
 SwfdecShapeVec *swf_shape_vec_new (void);
-int art_define_shape (SwfdecDecoder * s);
-int art_define_shape_3 (SwfdecDecoder * s);
+int tag_define_shape (SwfdecDecoder * s);
+int tag_define_shape_3 (SwfdecDecoder * s);
 void swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
 void swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape);
-int art_define_shape_2 (SwfdecDecoder * s);
+int tag_define_shape_2 (SwfdecDecoder * s);
 int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);
 void dump_layers (SwfdecDecoder * s);
@@ -87,6 +88,15 @@ void dump_layers (SwfdecDecoder * s);
 void swfdec_shape_render (SwfdecDecoder * s, SwfdecLayer * layer,
     SwfdecObject * shape);
 
+void swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
+    SwfdecShapeVec * shapevec, SwfdecTransform *trans);
+void swfdec_shape_compose_gradient (SwfdecDecoder * s,
+    SwfdecLayerVec * layervec, SwfdecShapeVec * shapevec,
+    SwfdecTransform *trans, SwfdecSpriteSegment * seg);
+unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
+    SwfdecColorTransform *color_transform);
+SwfdecLayer * swfdec_shape_prerender (SwfdecDecoder * s,
+    SwfdecSpriteSegment * seg, SwfdecObject * obj, SwfdecLayer * oldlayer);
 
 G_END_DECLS
 

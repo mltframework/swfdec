@@ -3,6 +3,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "swfdec_internal.h"
 #include <swfdec_bits.h>
 
@@ -143,7 +145,7 @@ swfdec_bits_syncbits (SwfdecBits * b)
 
 
 void
-swfdec_bits_get_art_color_transform (SwfdecBits * bits, double mult[4], double add[4])
+swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform *ct)
 {
   int has_add;
   int has_mult;
@@ -154,26 +156,26 @@ swfdec_bits_get_art_color_transform (SwfdecBits * bits, double mult[4], double a
   has_mult = swfdec_bits_getbit (bits);
   n_bits = swfdec_bits_getbits (bits, 4);
   if (has_mult) {
-    mult[0] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
-    mult[1] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
-    mult[2] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
-    mult[3] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
+    ct->mult[0] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
+    ct->mult[1] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
+    ct->mult[2] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
+    ct->mult[3] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
   } else {
-    mult[0] = 1.0;
-    mult[1] = 1.0;
-    mult[2] = 1.0;
-    mult[3] = 1.0;
+    ct->mult[0] = 1.0;
+    ct->mult[1] = 1.0;
+    ct->mult[2] = 1.0;
+    ct->mult[3] = 1.0;
   }
   if (has_add) {
-    add[0] = swfdec_bits_getsbits (bits, n_bits);
-    add[1] = swfdec_bits_getsbits (bits, n_bits);
-    add[2] = swfdec_bits_getsbits (bits, n_bits);
-    add[3] = swfdec_bits_getsbits (bits, n_bits);
+    ct->add[0] = swfdec_bits_getsbits (bits, n_bits);
+    ct->add[1] = swfdec_bits_getsbits (bits, n_bits);
+    ct->add[2] = swfdec_bits_getsbits (bits, n_bits);
+    ct->add[3] = swfdec_bits_getsbits (bits, n_bits);
   } else {
-    add[0] = 0;
-    add[1] = 0;
-    add[2] = 0;
-    add[3] = 0;
+    ct->add[0] = 0;
+    ct->add[1] = 0;
+    ct->add[2] = 0;
+    ct->add[3] = 0;
   }
 
   //printf("mult %g,%g,%g,%g\n",mult[0],mult[1],mult[2],mult[3]);
@@ -181,7 +183,7 @@ swfdec_bits_get_art_color_transform (SwfdecBits * bits, double mult[4], double a
 }
 
 void
-swfdec_bits_get_art_matrix (SwfdecBits * bits, double *trans)
+swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans)
 {
   int has_scale;
   int n_scale_bits;
@@ -195,12 +197,12 @@ swfdec_bits_get_art_matrix (SwfdecBits * bits, double *trans)
   int translate_x;
   int translate_y;
 
-  trans[0] = 1;
-  trans[1] = 0;
-  trans[2] = 0;
-  trans[3] = 1;
-  trans[4] = 0;
-  trans[5] = 0;
+  trans->trans[0] = 1;
+  trans->trans[1] = 0;
+  trans->trans[2] = 0;
+  trans->trans[3] = 1;
+  trans->trans[4] = 0;
+  trans->trans[5] = 0;
 
   swfdec_bits_syncbits (bits);
   has_scale = swfdec_bits_getbit (bits);
@@ -209,8 +211,8 @@ swfdec_bits_get_art_matrix (SwfdecBits * bits, double *trans)
     scale_x = swfdec_bits_getsbits (bits, n_scale_bits);
     scale_y = swfdec_bits_getsbits (bits, n_scale_bits);
 
-    trans[0] = scale_x * SWF_TRANS_SCALE_FACTOR;
-    trans[3] = scale_y * SWF_TRANS_SCALE_FACTOR;
+    trans->trans[0] = scale_x * SWF_TRANS_SCALE_FACTOR;
+    trans->trans[3] = scale_y * SWF_TRANS_SCALE_FACTOR;
   }
   has_rotate = swfdec_bits_getbit (bits);
   if (has_rotate) {
@@ -218,15 +220,15 @@ swfdec_bits_get_art_matrix (SwfdecBits * bits, double *trans)
     rotate_skew0 = swfdec_bits_getsbits (bits, n_rotate_bits);
     rotate_skew1 = swfdec_bits_getsbits (bits, n_rotate_bits);
 
-    trans[1] = rotate_skew0 * SWF_TRANS_SCALE_FACTOR;
-    trans[2] = rotate_skew1 * SWF_TRANS_SCALE_FACTOR;
+    trans->trans[1] = rotate_skew0 * SWF_TRANS_SCALE_FACTOR;
+    trans->trans[2] = rotate_skew1 * SWF_TRANS_SCALE_FACTOR;
   }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
   translate_x = swfdec_bits_getsbits (bits, n_translate_bits);
   translate_y = swfdec_bits_getsbits (bits, n_translate_bits);
 
-  trans[4] = translate_x * SWF_SCALE_FACTOR;
-  trans[5] = translate_y * SWF_SCALE_FACTOR;
+  trans->trans[4] = translate_x * SWF_SCALE_FACTOR;
+  trans->trans[5] = translate_y * SWF_SCALE_FACTOR;
 
   //printf("trans=%g,%g,%g,%g,%g,%g\n", trans[0], trans[1], trans[2], trans[3], trans[4], trans[5]);
 }
@@ -239,35 +241,6 @@ swfdec_bits_get_string (SwfdecBits * bits)
   bits->ptr += strlen (bits->ptr) + 1;
 
   return s;
-}
-
-void
-swfdec_bits_get_color_transform (SwfdecBits * bits)
-{
-  int has_add;
-  int has_mult;
-  int n_bits;
-  int mult_r, mult_g, mult_b, mult_a;
-  int add_r, add_g, add_b, add_a;
-
-  swfdec_bits_syncbits (bits);
-  has_add = swfdec_bits_getbit (bits);
-  has_mult = swfdec_bits_getbit (bits);
-  n_bits = swfdec_bits_getbits (bits, 4);
-  if (has_mult) {
-    mult_r = swfdec_bits_getsbits (bits, n_bits);
-    mult_g = swfdec_bits_getsbits (bits, n_bits);
-    mult_b = swfdec_bits_getsbits (bits, n_bits);
-    mult_a = swfdec_bits_getsbits (bits, n_bits);
-    //printf("  mult RGBA = %d,%d,%d,%d\n",mult_r,mult_g,mult_b,mult_a);
-  }
-  if (has_add) {
-    add_r = swfdec_bits_getsbits (bits, n_bits);
-    add_g = swfdec_bits_getsbits (bits, n_bits);
-    add_b = swfdec_bits_getsbits (bits, n_bits);
-    add_a = swfdec_bits_getsbits (bits, n_bits);
-    //printf("  add RGBA = %d,%d,%d,%d\n",add_r,add_g,add_b,add_a);
-  }
 }
 
 unsigned int
@@ -295,43 +268,6 @@ swfdec_bits_get_rgba (SwfdecBits * bits)
   a = swfdec_bits_get_u8 (bits);
 
   return SWF_COLOR_COMBINE (r, g, b, a);
-}
-
-void
-swfdec_bits_get_matrix (SwfdecBits * bits)
-{
-  int has_scale;
-  int n_scale_bits;
-  int scale_x = 0;
-  int scale_y = 0;
-  int has_rotate;
-  int n_rotate_bits;
-  int rotate_skew0 = 0;
-  int rotate_skew1 = 0;
-  int n_translate_bits;
-  int translate_x;
-  int translate_y;
-
-  swfdec_bits_syncbits (bits);
-  has_scale = swfdec_bits_getbit (bits);
-  if (has_scale) {
-    n_scale_bits = swfdec_bits_getbits (bits, 5);
-    scale_x = swfdec_bits_getbits (bits, n_scale_bits);
-    scale_y = swfdec_bits_getbits (bits, n_scale_bits);
-  }
-  has_rotate = swfdec_bits_getbit (bits);
-  if (has_rotate) {
-    n_rotate_bits = swfdec_bits_getbits (bits, 5);
-    rotate_skew0 = swfdec_bits_getbits (bits, n_rotate_bits);
-    rotate_skew1 = swfdec_bits_getbits (bits, n_rotate_bits);
-  }
-  n_translate_bits = swfdec_bits_getbits (bits, 5);
-  translate_x = swfdec_bits_getbits (bits, n_translate_bits);
-  translate_y = swfdec_bits_getbits (bits, n_translate_bits);
-
-  //printf("  scale = %d,%d\n", scale_x, scale_y);
-  //printf("  rotate_skew = %d,%d\n", rotate_skew0, rotate_skew1);
-  //printf("  translate = %d,%d\n", translate_x, translate_y);
 }
 
 SwfdecGradient *
@@ -384,14 +320,18 @@ swfdec_bits_get_fill_style (SwfdecBits * bits)
     swfdec_bits_get_color (bits);
   }
   if (fill_style_type == 0x10 || fill_style_type == 0x12) {
-    swfdec_bits_get_matrix (bits);
+    SwfdecTransform trans;
+
+    swfdec_bits_get_transform (bits, &trans);
     swfdec_bits_get_gradient (bits);
   }
   if (fill_style_type == 0x40 || fill_style_type == 0x41) {
     id = swfdec_bits_get_u16 (bits);
   }
   if (fill_style_type == 0x40 || fill_style_type == 0x41) {
-    swfdec_bits_get_matrix (bits);
+    SwfdecTransform trans;
+
+    swfdec_bits_get_transform (bits, &trans);
   }
 
 }

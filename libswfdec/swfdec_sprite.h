@@ -5,6 +5,7 @@
 #include "swfdec_types.h"
 #include <swfdec_object.h>
 #include <glib-object.h>
+#include "swfdec_transform.h"
 
 G_BEGIN_DECLS
 
@@ -19,9 +20,8 @@ struct _SwfdecSpriteSegment
   int first_frame;
   int last_frame;
 
-  double transform[6];
-  double color_mult[4];
-  double color_add[4];
+  SwfdecTransform transform;
+  SwfdecColorTransform color_transform;
 
   int ratio;
 };

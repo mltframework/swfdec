@@ -9,8 +9,6 @@ static void swfdec_text_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_text_init (GTypeInstance *instance, gpointer g_class);
 static void swfdec_text_dispose (GObject *object);
 
-static SwfdecLayer * swfdec_text_prerender (SwfdecDecoder * s,
-    SwfdecSpriteSegment * seg, SwfdecObject * object, SwfdecLayer * oldlayer);
 
 GType _swfdec_text_type;
 
@@ -27,7 +25,7 @@ GType swfdec_text_get_type (void)
       NULL,
       NULL,
       sizeof (SwfdecText),
-      32,
+      0,
       swfdec_text_init,
       NULL
     };
@@ -88,7 +86,7 @@ define_text (SwfdecDecoder * s, int rgba)
   glyph.color = 0xffffffff;
 
   swfdec_bits_get_rect (bits, rect);
-  swfdec_bits_get_art_matrix (bits, SWFDEC_OBJECT (text)->trans);
+  swfdec_bits_get_transform (bits, &SWFDEC_OBJECT (text)->transform);
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
   n_advance_bits = swfdec_bits_get_u8 (bits);
@@ -170,106 +168,4 @@ tag_func_define_text_2 (SwfdecDecoder * s)
   return define_text (s, 1);
 }
 
-
-static SwfdecLayer *
-swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * oldlayer)
-{
-  int i;
-  SwfdecText *text;
-  SwfdecLayerVec *layervec;
-  SwfdecShapeVec *shapevec;
-  SwfdecShapeVec *shapevec2;
-  SwfdecObject *fontobj;
-  SwfdecLayer *layer;
-
-  if (oldlayer && oldlayer->seg == seg)
-    return oldlayer;
-
-  layer = swfdec_layer_new ();
-  layer->seg = seg;
-  art_affine_multiply (layer->transform, seg->transform, s->transform);
-
-  layer->rect.x0 = 0;
-  layer->rect.x1 = 0;
-  layer->rect.y0 = 0;
-  layer->rect.y1 = 0;
-
-  text = SWFDEC_TEXT (object);
-  for (i = 0; i < text->glyphs->len; i++) {
-    ArtVpath *vpath, *vpath0, *vpath1;
-    ArtBpath *bpath0, *bpath1;
-    SwfdecTextGlyph *glyph;
-    SwfdecShape *shape;
-    double glyph_trans[6];
-    double trans[6];
-    double pos[6];
-
-    glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
-
-    fontobj = swfdec_object_get (s, glyph->font);
-    if (fontobj == NULL)
-      continue;
-
-    shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
-    if (shape == NULL) {
-      SWFDEC_ERROR("failed getting glyph %d\n", glyph->glyph);
-      continue;
-    }
-
-    art_affine_translate (pos,
-        glyph->x * SWF_SCALE_FACTOR, glyph->y * SWF_SCALE_FACTOR);
-    pos[0] = glyph->height * SWF_TEXT_SCALE_FACTOR;
-    pos[3] = glyph->height * SWF_TEXT_SCALE_FACTOR;
-    art_affine_multiply (glyph_trans, pos, object->trans);
-    art_affine_multiply (trans, glyph_trans, layer->transform);
-
-    layer->fills = g_array_set_size (layer->fills, layer->fills->len + 1);
-    layervec =
-        &g_array_index (layer->fills, SwfdecLayerVec, layer->fills->len - 1);
-
-    shapevec = g_ptr_array_index (shape->fills, 0);
-    shapevec2 = g_ptr_array_index (shape->fills2, 0);
-    layervec->color = transform_color (glyph->color,
-        seg->color_mult, seg->color_add);
-
-    bpath0 = swfdec_art_bpath_from_points (shapevec->path, trans);
-    bpath1 = swfdec_art_bpath_from_points (shapevec2->path, trans);
-    vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
-    vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
-    vpath1 = art_vpath_reverse_free (vpath1);
-    vpath = art_vpath_cat (vpath0, vpath1);
-    art_vpath_bbox_irect (vpath, &layervec->rect);
-    layervec->svp = art_svp_from_vpath (vpath);
-    art_svp_make_convex (layervec->svp);
-    art_irect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
-
-    art_free (bpath0);
-    art_free (bpath1);
-    art_free (vpath0);
-    art_free (vpath1);
-    art_free (vpath);
-  }
-
-  return layer;
-}
-
-#if 0
-void
-swfdec_text_render (SwfdecDecoder * s, SwfdecLayer * layer,
-    SwfdecObject * object)
-{
-  int i;
-  SwfdecLayerVec *layervec;
-
-  for (i = 0; i < layer->fills->len; i++) {
-    layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-  for (i = 0; i < layer->lines->len; i++) {
-    layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-}
-#endif
 

@@ -2,7 +2,13 @@
 #ifndef __SWFDEC_LAYER_H__
 #define __SWFDEC_LAYER_H__
 
+#include "config.h"
+
 #include "swfdec_types.h"
+#include "swfdec_transform.h"
+#ifdef HAVE_LIBART
+#include <libart_lgpl/libart.h>
+#endif
 
 struct swfdec_render_struct
 {
@@ -11,9 +17,11 @@ struct swfdec_render_struct
 
 struct swfdec_layer_vec_struct
 {
+#ifdef HAVE_LIBART
   ArtSVP *svp;
+#endif
   unsigned int color;
-  ArtIRect rect;
+  SwfdecRect rect;
 
   unsigned char *compose;
   unsigned int compose_rowstride;
@@ -26,13 +34,12 @@ struct swfdec_layer_struct
   SwfdecSpriteSegment *seg;
   int first_frame;
   int last_frame;
-  ArtIRect rect;
+  SwfdecRect rect;
 
   int frame_number;
 
-  double transform[6];
-  double color_mult[4];
-  double color_add[4];
+  SwfdecTransform transform;
+  SwfdecColorTransform color_transform;
   int ratio;
 
   GArray *lines;

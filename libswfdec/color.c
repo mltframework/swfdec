@@ -4,7 +4,7 @@
 #include "swfdec_internal.h"
 
 unsigned int
-transform_color (unsigned int in, double mult[4], double add[4])
+swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform *trans)
 {
   int r, g, b, a;
 
@@ -15,10 +15,10 @@ transform_color (unsigned int in, double mult[4], double add[4])
 
   SWFDEC_LOG ("in rgba %d,%d,%d,%d",r,g,b,a);
 
-  r = rint ((r * mult[0] + add[0]));
-  g = rint ((g * mult[1] + add[1]));
-  b = rint ((b * mult[2] + add[2]));
-  a = rint ((a * mult[3] + add[3]));
+  r = rint ((r * trans->mult[0] + trans->add[0]));
+  g = rint ((g * trans->mult[1] + trans->add[1]));
+  b = rint ((b * trans->mult[2] + trans->add[2]));
+  a = rint ((a * trans->mult[3] + trans->add[3]));
 
   r = CLAMP (r, 0, 255);
   g = CLAMP (g, 0, 255);
@@ -30,30 +30,10 @@ transform_color (unsigned int in, double mult[4], double add[4])
   return SWF_COLOR_COMBINE (r, g, b, a);
 }
 
-void
-swf_config_colorspace (SwfdecDecoder * s)
-{
-  switch (s->colorspace) {
-    case SWF_COLORSPACE_RGB565:
-      s->stride = s->width * 2;
-      s->bytespp = 2;
-      s->callback = art_rgb565_svp_alpha_callback;
-      s->compose_callback = art_rgb565_svp_alpha_callback;
-      break;
-    case SWF_COLORSPACE_RGB888:
-    default:
-      s->stride = s->width * 4;
-      s->bytespp = 4;
-      s->callback = art_rgb_svp_alpha_callback;
-      s->compose_callback = art_rgb_svp_alpha_compose_callback;
-      break;
-  }
-}
-
 int
 tag_func_set_background_color (SwfdecDecoder * s)
 {
-  ArtIRect rect;
+  SwfdecRect rect;
 
   s->bg_color = swfdec_bits_get_color (&s->b);
 

@@ -1,8 +1,16 @@
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <zlib.h>
 #include <math.h>
+#include <string.h>
 
 #include <liboil/liboil.h>
+#ifdef HAVE_LIBART
+#include "swfdec_render_libart.h"
+#endif
 
 #include "swfdec_internal.h"
 
@@ -28,7 +36,7 @@ swfdec_decoder_new (void)
 
   s->bg_color = SWF_COLOR_COMBINE (0xff, 0xff, 0xff, 0xff);
 
-  art_affine_identity (s->transform);
+  swfdec_transform_init_identity (&s->transform);
 
   s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
   s->render = swfdec_render_new ();
@@ -60,7 +68,7 @@ swfdec_decoder_addbits (SwfdecDecoder * s, unsigned char *bits, int len)
       offset = 0;
     }
 
-    s->input_data = realloc (s->input_data, s->input_data_len + len);
+    s->input_data = g_realloc (s->input_data, s->input_data_len + len);
     memcpy (s->input_data + s->input_data_len, bits, len);
     s->input_data_len += len;
 
@@ -109,7 +117,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	  s->parse = s->b;
 	  s->state = SWF_STATE_PARSETAG;
 	  {
-	    ArtIRect rect;
+	    SwfdecRect rect;
 
 	    rect.x0 = 0;
 	    rect.y0 = 0;
@@ -182,8 +190,10 @@ swfdec_decoder_free (SwfdecDecoder * s)
   g_object_unref (G_OBJECT(s->main_sprite));
   swfdec_render_free (s->render);
 
-  /* FIXME */
-  /* free stream->z */
+  if (s->z) {
+    inflateEnd (s->z);
+    free (s->z);
+  }
 
   if (s->jpegtables) {
     g_free (s->jpegtables);
@@ -293,12 +303,12 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   s->transform[4] = 0.5 * (s->width - s->parse_width * s->scale_factor);
   s->transform[5] = 0.5 * (s->height - s->parse_height * s->scale_factor);
 #endif
-  s->transform[0] = (double)s->width / s->parse_width;
-  s->transform[1] = 0;
-  s->transform[2] = 0;
-  s->transform[3] = (double)s->height / s->parse_height;
-  s->transform[4] = 0;
-  s->transform[5] = 0;
+  s->transform.trans[0] = (double)s->width / s->parse_width;
+  s->transform.trans[1] = 0;
+  s->transform.trans[2] = 0;
+  s->transform.trans[3] = (double)s->height / s->parse_height;
+  s->transform.trans[4] = 0;
+  s->transform.trans[5] = 0;
 
   return SWF_OK;
 }
@@ -351,7 +361,7 @@ swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length)
   if (length)
     *length = buffer->len;
 
-  free (buffer);
+  g_free (buffer);
 
   return data;
 }
@@ -359,13 +369,13 @@ swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length)
 static void *
 zalloc (void *opaque, unsigned int items, unsigned int size)
 {
-  return malloc (items * size);
+  return g_malloc (items * size);
 }
 
 static void
 zfree (void *opaque, void *addr)
 {
-  free (addr);
+  g_free (addr);
 }
 
 #if 0
@@ -426,7 +436,7 @@ swf_inflate_init (SwfdecDecoder * s)
   z->next_in = compressed_data;
   z->avail_in = compressed_len;
   z->opaque = NULL;
-  data = malloc (s->length);
+  data = g_malloc (s->length);
   z->next_out = data;
   z->avail_out = s->length;
 
@@ -437,7 +447,7 @@ swf_inflate_init (SwfdecDecoder * s)
   SWFDEC_DEBUG("total out %d",(int)z->total_out);
   SWFDEC_DEBUG("total in %d",(int)z->total_in);
 
-  free (s->input_data);
+  g_free (s->input_data);
 
   s->input_data = data;
   s->input_data_len = z->total_in;
@@ -464,7 +474,7 @@ swf_parse_header2 (SwfdecDecoder * s)
     s->width = floor (width);
     s->height = floor (height);
     s->scale_factor = 1.0;
-    art_affine_identity (s->transform);
+    swfdec_transform_init_identity (&s->transform);
   } else {
     double sw, sh;
 
@@ -472,12 +482,12 @@ swf_parse_header2 (SwfdecDecoder * s)
     sh = s->height / height;
     s->scale_factor = (sw < sh) ? sw : sh;
 
-    s->transform[0] = s->scale_factor;
-    s->transform[1] = 0;
-    s->transform[2] = 0;
-    s->transform[3] = s->scale_factor;
-    s->transform[4] = 0.5 * (s->width - width * s->scale_factor);
-    s->transform[5] = 0.5 * (s->height - height * s->scale_factor);
+    s->transform.trans[0] = s->scale_factor;
+    s->transform.trans[1] = 0;
+    s->transform.trans[2] = 0;
+    s->transform.trans[3] = s->scale_factor;
+    s->transform.trans[4] = 0.5 * (s->width - width * s->scale_factor);
+    s->transform.trans[5] = 0.5 * (s->height - height * s->scale_factor);
   }
   s->irect.x0 = 0;
   s->irect.y0 = 0;
@@ -503,8 +513,8 @@ struct tag_func_struct
 };
 struct tag_func_struct tag_funcs[] = {
   [ST_END] = {"End", tag_func_zero, 0},
-  [ST_SHOWFRAME] = {"ShowFrame", art_show_frame, 0},
-  [ST_DEFINESHAPE] = {"DefineShape", art_define_shape, 0},
+  [ST_SHOWFRAME] = {"ShowFrame", tag_show_frame, 0},
+  [ST_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
   [ST_FREECHARACTER] = {"FreeCharacter", NULL, 0},
   [ST_PLACEOBJECT] = {"PlaceObject", NULL, 0},
   [ST_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, 0},
@@ -527,12 +537,12 @@ struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEBITSLOSSLESS] =
       {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
   [ST_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
-  [ST_DEFINESHAPE2] = {"DefineShape2", art_define_shape_2, 0},
+  [ST_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
   [ST_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
   [ST_PROTECT] = {"Protect", tag_func_zero, 0},
   [ST_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, 0},
   [ST_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, 0},
-  [ST_DEFINESHAPE3] = {"DefineShape3", art_define_shape_3, 0},
+  [ST_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
   [ST_DEFINETEXT2] = {"DefineText2", tag_func_define_text_2, 0},
   [ST_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
   [ST_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
@@ -650,7 +660,7 @@ tag_func_dumpbits (SwfdecDecoder * s)
 int
 tag_func_frame_label (SwfdecDecoder * s)
 {
-  free (swfdec_bits_get_string (&s->b));
+  g_free (swfdec_bits_get_string (&s->b));
 
   return SWF_OK;
 }
@@ -664,7 +674,7 @@ swfdec_decoder_render (SwfdecDecoder *s, int frame)
   SwfdecSpriteSegment *seg;
   SwfdecSprite *sprite;
 
-  buf = malloc (s->width * s->height * 4);
+  buf = g_malloc (s->width * s->height * 4);
   s->buffer = buf;
 
   sprite = s->main_sprite;

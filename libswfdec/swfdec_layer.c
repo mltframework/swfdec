@@ -1,8 +1,14 @@
 
-#include <libart_lgpl/libart.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <math.h>
 
 #include "swfdec_internal.h"
+#ifdef HAVE_LIBART
+#include "swfdec_render_libart.h"
+#endif
 
 
 SwfdecRender *
@@ -55,16 +61,18 @@ swfdec_layer_free (SwfdecLayer * layer)
 
   for (i = 0; i < layer->fills->len; i++) {
     layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-    art_svp_free (layervec->svp);
-    if (layervec->compose)
+    swfdec_render_layervec_free (layervec);
+    if (layervec->compose) {
       g_free (layervec->compose);
+    }
   }
   g_array_free (layer->fills, TRUE);
   for (i = 0; i < layer->lines->len; i++) {
     layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-    art_svp_free (layervec->svp);
-    if (layervec->compose)
+    swfdec_render_layervec_free (layervec);
+    if (layervec->compose) {
       g_free (layervec->compose);
+    }
   }
   g_array_free (layer->lines, TRUE);
 
@@ -178,57 +186,3 @@ swfdec_render_add_layer (SwfdecRender * render, SwfdecLayer * lnew)
   render->layers = g_list_append (render->layers, lnew);
 }
 
-#if 0
-void
-swfdec_render_delete_layer (SwfdecRender * render, SwfdecLayer * layer)
-{
-  GList *g;
-  SwfdecLayer *l;
-
-  for (g = g_list_first (render->layers); g; g = g_list_next (g)) {
-    l = (SwfdecLayer *) g->data;
-    if (l == layer) {
-      render->layers = g_list_delete_link (render->layers, g);
-      swfdec_layer_free (l);
-      return;
-    }
-  }
-}
-#endif
-
-void
-swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec)
-{
-  ArtIRect rect;
-  struct swf_svp_render_struct cb_data;
-
-  art_irect_intersect (&rect, &s->drawrect, &layervec->rect);
-
-  if (art_irect_empty (&rect))
-    return;
-
-  cb_data.x0 = rect.x0;
-  cb_data.x1 = rect.x1;
-  cb_data.buf = s->buffer + rect.y0 * s->stride + rect.x0 * s->bytespp;
-  cb_data.color = layervec->color;
-  cb_data.rowstride = s->stride;
-  cb_data.scanline = s->tmp_scanline;
-  cb_data.compose = layervec->compose + (rect.x0 - layervec->rect.x0) * 4;
-  cb_data.compose_rowstride = layervec->compose_rowstride;
-  cb_data.compose_height = layervec->compose_height;
-  cb_data.compose_y = rect.y0 - layervec->rect.y0;
-  cb_data.compose_width = layervec->compose_width;
-
-  g_assert (rect.x1 > rect.x0);
-  /* This assertion fails occasionally. */
-  //g_assert(layervec->svp->n_segs > 0);
-  g_assert (layervec->svp->n_segs >= 0);
-
-  if (layervec->svp->n_segs > 0) {
-    art_svp_render_aa (layervec->svp, rect.x0, rect.y0,
-	rect.x1, rect.y1,
-	layervec->compose ? s->compose_callback : s->callback, &cb_data);
-  }
-
-  s->pixels_rendered += (rect.x1 - rect.x0) * (rect.y1 - rect.y0);
-}

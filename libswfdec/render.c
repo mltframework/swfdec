@@ -1,25 +1,25 @@
 
-#include <libart_lgpl/libart.h>
 #include <math.h>
+#include <string.h>
 
 #include "swfdec_internal.h"
 
 void
-swf_invalidate_irect (SwfdecDecoder * s, ArtIRect * rect)
+swf_invalidate_irect (SwfdecDecoder * s, SwfdecRect * rect)
 {
-  if (art_irect_empty (&s->drawrect)) {
-    art_irect_intersect (&s->drawrect, &s->irect, rect);
+  if (swfdec_rect_is_empty (&s->drawrect)) {
+    swfdec_rect_intersect (&s->drawrect, &s->irect, rect);
   } else {
-    ArtIRect tmp1, tmp2;
+    SwfdecRect tmp1, tmp2;
 
-    art_irect_copy (&tmp1, &s->drawrect);
-    art_irect_intersect (&tmp2, &s->irect, rect);
-    art_irect_union (&s->drawrect, &tmp1, &tmp2);
+    swfdec_rect_copy (&tmp1, &s->drawrect);
+    swfdec_rect_intersect (&tmp2, &s->irect, rect);
+    swfdec_rect_union (&s->drawrect, &tmp1, &tmp2);
   }
 }
 
 int
-art_place_object_2 (SwfdecDecoder * s)
+tag_place_object_2 (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int reserved;
@@ -79,27 +79,29 @@ art_place_object_2 (SwfdecDecoder * s)
       layer->id = oldlayer->id;
   }
   if (has_matrix) {
-    swfdec_bits_get_art_matrix (bits, layer->transform);
+    swfdec_bits_get_transform (bits, &layer->transform);
   } else {
-    if (oldlayer)
-      art_affine_copy (layer->transform, oldlayer->transform);
+    if (oldlayer) {
+      memcpy (&layer->transform, &oldlayer->transform,
+          sizeof(SwfdecTransform));
+    }
   }
   if (has_color_transform) {
-    swfdec_bits_get_art_color_transform (bits, layer->color_mult, layer->color_add);
+    swfdec_bits_get_color_transform (bits, &layer->color_transform);
     swfdec_bits_syncbits (bits);
   } else {
     if (oldlayer) {
-      memcpy (layer->color_mult, oldlayer->color_mult, sizeof (double) * 4);
-      memcpy (layer->color_add, oldlayer->color_add, sizeof (double) * 4);
+      memcpy (&layer->color_transform, &oldlayer->color_transform,
+          sizeof(SwfdecColorTransform));
     } else {
-      layer->color_mult[0] = 1;
-      layer->color_mult[1] = 1;
-      layer->color_mult[2] = 1;
-      layer->color_mult[3] = 1;
-      layer->color_add[0] = 0;
-      layer->color_add[1] = 0;
-      layer->color_add[2] = 0;
-      layer->color_add[3] = 0;
+      layer->color_transform.mult[0] = 1;
+      layer->color_transform.mult[1] = 1;
+      layer->color_transform.mult[2] = 1;
+      layer->color_transform.mult[3] = 1;
+      layer->color_transform.add[0] = 0;
+      layer->color_transform.add[1] = 0;
+      layer->color_transform.add[2] = 0;
+      layer->color_transform.add[3] = 0;
     }
   }
   if (has_ratio) {
@@ -110,7 +112,7 @@ art_place_object_2 (SwfdecDecoder * s)
       layer->ratio = oldlayer->ratio;
   }
   if (has_name) {
-    free (swfdec_bits_get_string (bits));
+    g_free (swfdec_bits_get_string (bits));
   }
   if (has_compose) {
     int id;
@@ -126,7 +128,7 @@ art_place_object_2 (SwfdecDecoder * s)
 
 
 int
-art_remove_object (SwfdecDecoder * s)
+tag_remove_object (SwfdecDecoder * s)
 {
   int depth;
   SwfdecSpriteSegment *seg;
@@ -143,7 +145,7 @@ art_remove_object (SwfdecDecoder * s)
 }
 
 int
-art_remove_object_2 (SwfdecDecoder * s)
+tag_remove_object_2 (SwfdecDecoder * s)
 {
   int depth;
   SwfdecSpriteSegment *seg;
@@ -175,7 +177,7 @@ swfdec_render_clean (SwfdecRender * render, int frame)
 
 
 int
-art_show_frame (SwfdecDecoder * s)
+tag_show_frame (SwfdecDecoder * s)
 {
   s->frame_number++;
   s->parse_sprite->parse_frame++;
@@ -197,7 +199,7 @@ swf_render_frame (SwfdecDecoder * s, int frame_index)
   s->drawrect.y0 = 0;
   s->drawrect.y1 = 0;
   if (!s->buffer) {
-    s->buffer = art_new (art_u8, s->stride * s->height);
+    s->buffer = g_malloc (s->stride * s->height);
     swf_invalidate_irect (s, &s->irect);
   }
 swf_invalidate_irect (s, &s->irect);
@@ -259,15 +261,7 @@ swf_invalidate_irect (s, &s->irect);
   SWFDEC_DEBUG ("inval rect %d %d %d %d", s->drawrect.x0, s->drawrect.x1,
       s->drawrect.y0, s->drawrect.y1);
 
-  switch (s->colorspace) {
-    case SWF_COLORSPACE_RGB565:
-      art_rgb565_fillrect (s->buffer, s->stride, s->bg_color, &s->drawrect);
-      break;
-    case SWF_COLORSPACE_RGB888:
-    default:
-      art_rgb_fillrect (s->buffer, s->stride, s->bg_color, &s->drawrect);
-      break;
-  }
+  s->fillrect (s->buffer, s->stride, s->bg_color, &s->drawrect);
 
   for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
     SwfdecObject *object;

@@ -4,61 +4,26 @@
 #include <swfdec_internal.h>
 
 
-static void swfdec_font_base_init (gpointer g_class);
-static void swfdec_font_class_init (gpointer g_class, gpointer user_data);
-static void swfdec_font_init (GTypeInstance *instance, gpointer g_class);
-static void swfdec_font_dispose (GObject *object);
+SWFDEC_OBJECT_BOILERPLATE (SwfdecFont, swfdec_font)
 
-
-GType _swfdec_font_type;
-
-static GObjectClass *parent_class = NULL;
-
-GType swfdec_font_get_type (void)
-{
-  if (!_swfdec_font_type) {
-    static const GTypeInfo object_info = {
-      sizeof (SwfdecFontClass),
-      swfdec_font_base_init,
-      NULL,
-      swfdec_font_class_init,
-      NULL,
-      NULL,
-      sizeof (SwfdecFont),
-      32,
-      swfdec_font_init,
-      NULL
-    };
-    _swfdec_font_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
-        "SwfdecFont", &object_info, 0);
-  }
-  return _swfdec_font_type;
-}
 
 static void swfdec_font_base_init (gpointer g_class)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
 }
 
-static void swfdec_font_class_init (gpointer g_class, gpointer class_data)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
-  gobject_class->dispose = swfdec_font_dispose;
-
-  parent_class = g_type_class_peek_parent (gobject_class);
-
-}
-
-static void swfdec_font_init (GTypeInstance *instance, gpointer g_class)
+static void swfdec_font_class_init (SwfdecFontClass *g_class)
 {
 
 }
 
-static void swfdec_font_dispose (GObject *object)
+static void swfdec_font_init (SwfdecFont *font)
 {
-  SwfdecFont *font = SWFDEC_FONT (object);
+
+}
+
+static void swfdec_font_dispose (SwfdecFont *font)
+{
   SwfdecShape *shape;
   int i;
 

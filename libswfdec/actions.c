@@ -5,8 +5,6 @@
 
 #include "swfdec_internal.h"
 
-#define DEBUG printf
-
 typedef struct
 {
   void *SwfdecDecoder;
@@ -310,7 +308,7 @@ action_add (SwfdecActionContext * context, SwfdecActionVal * dest,
     strcpy (dest->s, src1->s);
     strcat (dest->s, src2->s);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types");
     return SWF_ERROR;
   }
 
@@ -329,7 +327,7 @@ action_subtract (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = action_promote (src1, src2);
     dest->num = src1->num - src2->num;
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types");
     return SWF_ERROR;
   }
 
@@ -348,7 +346,7 @@ action_multiply (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = action_promote (src1, src2);
     dest->num = src1->num * src2->num;
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -367,7 +365,7 @@ action_divide (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = action_promote (src1, src2);
     dest->num = src1->num / src2->num;
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -386,7 +384,7 @@ action_equal (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_BOOLEAN;
     dest->num = (src1->num == src2->num);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -405,7 +403,7 @@ action_less_than (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_BOOLEAN;
     dest->num = (src1->num < src2->num);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -424,7 +422,7 @@ action_logical_and (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_BOOLEAN;
     dest->num = (src1->num && src2->num);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -443,7 +441,7 @@ action_logical_or (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_BOOLEAN;
     dest->num = (src1->num || src2->num);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -462,7 +460,7 @@ action_logical_not (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_BOOLEAN;
     dest->num = !src1->num;
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -481,7 +479,7 @@ action_string_equal (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_BOOLEAN;
     dest->num = (strcmp (src1->s, src2->s) == 0);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -500,7 +498,7 @@ action_string_length (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_INTEGER;
     dest->num = strlen (src1->s);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -540,7 +538,7 @@ action_substring (SwfdecActionContext * context, SwfdecActionVal * dest,
     memcpy (dest->s, src1->s + offset, len);
     dest->s[len] = 0;
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -559,7 +557,7 @@ action_int (SwfdecActionContext * context, SwfdecActionVal * dest,
     dest->type = ACTIONVAL_TYPE_INTEGER;
     dest->num = floor (src1->num);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 
@@ -580,7 +578,7 @@ action_string_concat (SwfdecActionContext * context, SwfdecActionVal * dest,
     strcpy (dest->s, src1->s);
     strcat (dest->s, src2->s);
   } else {
-    DEBUG ("incompatible types\n");
+    SWFDEC_DEBUG ("incompatible types\n");
     return SWF_ERROR;
   }
 

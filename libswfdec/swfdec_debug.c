@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include "swfdec_internal.h"
 
 static const char *swfdec_debug_level_names[] = {
@@ -28,7 +29,7 @@ swfdec_debug_log (int level, const char *file, const char *function,
 
   fprintf(stdout, "SWFDEC: %s: %s(%d): %s: %s\n",
       swfdec_debug_level_names[level], file, line, function, s);
-  free (s);
+  g_free (s);
 }
 
 void

@@ -4,10 +4,11 @@
 
 #include <glib.h>
 #include <zlib.h>
-#include <libart_lgpl/libart.h>
 #include "swfdec_bits.h"
 
 #include "swfdec_types.h"
+#include "swfdec_rect.h"
+#include "swfdec_transform.h"
 
 
 #define SWF_COLOR_SCALE_FACTOR		(1/256.0)
@@ -21,6 +22,11 @@ enum
   SWF_STATE_INIT2,
   SWF_STATE_PARSETAG,
   SWF_STATE_EOF,
+};
+
+struct _SwfdecColorTransform {
+  double mult[4];
+  double add[4];
 };
 
 struct swfdec_decoder_struct
@@ -50,11 +56,12 @@ struct swfdec_decoder_struct
 
   int stride;
   int bytespp;
-  void (*callback) (void *, int, int, ArtSVPRenderAAStep *, int);
-  void (*compose_callback) (void *, int, int, ArtSVPRenderAAStep *, int);
+  void (*callback) (void *, int, int, void *, int);
+  void (*compose_callback) (void *, int, int, void *, int);
+  void (*fillrect) (unsigned char *, int, unsigned int, SwfdecRect *);
 
   double scale_factor;
-  double transform[6];
+  SwfdecTransform transform;
 
   /* where we are in the top-level state engine */
   int state;
@@ -76,8 +83,8 @@ struct swfdec_decoder_struct
 
   /* rendering state */
   unsigned int bg_color;
-  ArtIRect irect;
-  ArtIRect drawrect;
+  SwfdecRect irect;
+  SwfdecRect drawrect;
 
   SwfdecSprite *main_sprite;
   SwfdecSprite *parse_sprite;

@@ -1,7 +1,10 @@
 
 #include "swfdec_internal.h"
+#include "art.h"
 
 #include <liboil/liboil.h>
+#include <libart_lgpl/libart.h>
+#include <string.h>
 
 /*
  * This file defines some libart-related functions that aren't
@@ -10,82 +13,8 @@
  */
 static inline void art_grey_run_alpha (unsigned char *buf, int alpha, int n);
 
-void
-art_irect_union_to_masked (ArtIRect * rect, ArtIRect * a, ArtIRect * mask)
-{
-  if (art_irect_empty (rect)) {
-    art_irect_intersect (rect, a, mask);
-  } else {
-    ArtIRect tmp1, tmp2;
-
-    art_irect_copy (&tmp1, rect);
-    art_irect_intersect (&tmp2, a, mask);
-    art_irect_union (rect, &tmp1, &tmp2);
-  }
-}
-
-void
-art_affine_subpixel (double trans[6])
-{
-  double a[6], b[6];
-
-  a[0] = 3;
-  a[1] = 0;
-  a[2] = 0;
-  a[3] = 1;
-  a[4] = 0;
-  a[5] = 0;
-
-  art_affine_multiply (b, trans, a);
-  art_affine_copy (trans, b);
-}
-
-int
-art_affine_inverted (double x[6])
-{
-  double det;
-
-  det = x[0] * x[4] - x[1] * x[3];
-
-  if (det < 0)
-    return 1;
-  return 0;
-}
-
-void
-art_vpath_dump (FILE * out, ArtVpath * vpath)
-{
-  while (vpath->code != ART_END) {
-    fprintf (out, "%d %g %g\n", vpath->code, vpath->x, vpath->y);
-    vpath++;
-  }
-}
-
-void
-art_bpath_dump (FILE * out, ArtBpath * vpath)
-{
-  while (1) {
-    switch (vpath->code) {
-      case ART_END:
-	fprintf (out, "end\n");
-	return;
-      case ART_LINETO:
-	fprintf (out, "lineto %g %g\n", vpath->x3, vpath->y3);
-	break;
-      case ART_MOVETO:
-	fprintf (out, "moveto %g %g\n", vpath->x3, vpath->y3);
-	break;
-      case ART_CURVETO:
-	fprintf (out, "curveto %g %g\n", vpath->x3, vpath->y3);
-	break;
-      default:
-	fprintf (out, "other\n");
-    }
-    vpath++;
-  }
-}
-
-int
+#ifdef unused
+static int
 art_bpath_len (ArtBpath * a)
 {
   int i;
@@ -93,8 +22,9 @@ art_bpath_len (ArtBpath * a)
   for (i = 0; a[i].code != ART_END; i++);
   return i;
 }
+#endif
 
-int
+static int
 art_vpath_len (ArtVpath * a)
 {
   int i;
@@ -103,6 +33,7 @@ art_vpath_len (ArtVpath * a)
   return i;
 }
 
+#ifdef unused
 ArtBpath *
 art_bpath_cat (ArtBpath * a, ArtBpath * b)
 {
@@ -118,6 +49,7 @@ art_bpath_cat (ArtBpath * a, ArtBpath * b)
 
   return dest;
 }
+#endif
 
 ArtVpath *
 art_vpath_cat (ArtVpath * a, ArtVpath * b)
@@ -182,7 +114,7 @@ art_svp_make_convex (ArtSVP * svp)
 {
   int i;
 
-  if (svp->segs[0].dir == 0) {
+  if (svp->n_segs > 0 && svp->segs[0].dir == 0) {
     for (i = 0; i < svp->n_segs; i++) {
       svp->segs[i].dir = !svp->segs[i].dir;
     }
@@ -321,8 +253,8 @@ art_rgb565_fill_run (unsigned char *buf, unsigned char r,
 }
 
 void
-art_rgb565_fillrect (char *buffer, int stride, unsigned int color,
-    ArtIRect * rect)
+art_rgb565_fillrect (unsigned char *buffer, int stride, unsigned int color,
+    SwfdecRect * rect)
 {
   int i;
 
@@ -336,7 +268,7 @@ art_rgb565_fillrect (char *buffer, int stride, unsigned int color,
 }
 
 void
-art_rgb_fillrect (char *buffer, int stride, unsigned int color, ArtIRect * rect)
+art_rgb_fillrect (unsigned char *buffer, int stride, unsigned int color, SwfdecRect * rect)
 {
   int i;
 
@@ -704,7 +636,7 @@ art_grey_svp_alpha_callback (void *callback_data, int y,
 #define WEIGHT (2.0/3.0)
 
 ArtBpath *
-swfdec_art_bpath_from_points (GArray *array, const double trans[6])
+swfdec_art_bpath_from_points (GArray *array, SwfdecTransform *trans)
 {
   int i;
   ArtBpath *bpath;
@@ -745,20 +677,20 @@ swfdec_art_bpath_from_points (GArray *array, const double trans[6])
 #define apply_affine(x,y,affine) do { \
   double _x = (x); \
   double _y = (y); \
-  (x) = _x * affine[0] + _y * affine[2] + affine[4]; \
-  (y) = _x * affine[1] + _y * affine[3] + affine[5]; \
+  (x) = _x * (affine)[0] + _y * (affine)[2] + (affine)[4]; \
+  (y) = _x * (affine)[1] + _y * (affine)[3] + (affine)[5]; \
 }while(0)
 
 void
-art_bpath_affine_transform_inplace (ArtBpath *bpath, const double trans[6])
+art_bpath_affine_transform_inplace (ArtBpath *bpath, SwfdecTransform *trans)
 {
   int i;
 
   for(i=0; bpath[i].code != ART_END; i++) {
-    apply_affine (bpath[i].x3, bpath[i].y3, trans);
+    apply_affine (bpath[i].x3, bpath[i].y3, trans->trans);
     if (bpath[i].code == ART_CURVETO) {
-      apply_affine (bpath[i].x1, bpath[i].y1, trans);
-      apply_affine (bpath[i].x2, bpath[i].y2, trans);
+      apply_affine (bpath[i].x1, bpath[i].y1, trans->trans);
+      apply_affine (bpath[i].x2, bpath[i].y2, trans->trans);
     }
   }
 }

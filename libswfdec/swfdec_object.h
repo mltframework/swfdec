@@ -5,6 +5,7 @@
 
 #include <glib-object.h>
 #include "swfdec_types.h"
+#include "swfdec_transform.h"
 
 G_BEGIN_DECLS
 
@@ -35,7 +36,7 @@ struct _SwfdecObject {
 
   int id;
 
-  double trans[6];
+  SwfdecTransform transform;
 
   int number;
 };
@@ -55,6 +56,46 @@ SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
 
 void swfdec_object_dump (SwfdecObject *object);
 
+
+#define SWFDEC_OBJECT_BOILERPLATE(type, type_as_function) \
+static void type_as_function ## _base_init (gpointer g_class); \
+static void type_as_function ## _class_init (type ## Class *g_class); \
+static void type_as_function ## _init (type *object); \
+static void type_as_function ## _dispose (type *object); \
+ \
+static SwfdecObjectClass *parent_class = NULL; \
+ \
+static void \
+type_as_function ## _class_init_trampoline (gpointer g_class, gpointer data) \
+{ \
+  parent_class = (SwfdecObjectClass *) g_type_class_peek_parent (g_class); \
+  \
+  G_OBJECT_CLASS (g_class)->dispose = (void (*)(GObject *)) \
+    type_as_function ## _dispose; \
+  type_as_function ## _class_init ((type ## Class *)g_class); \
+} \
+ \
+GType type_as_function ## _get_type (void) \
+{ \
+  static GType _type; \
+  if (!_type) { \
+    static const GTypeInfo object_info = { \
+      sizeof (type ## Class), \
+      type_as_function ## _base_init, \
+      NULL, \
+      type_as_function ## _class_init_trampoline, \
+      NULL, \
+      NULL, \
+      sizeof (type), \
+      0, \
+      (void (*)(GTypeInstance *,gpointer))type_as_function ## _init, \
+      NULL \
+    }; \
+    _type = g_type_register_static (SWFDEC_TYPE_OBJECT, \
+      #type , &object_info, 0); \
+  } \
+  return _type; \
+}
 
 
 G_END_DECLS

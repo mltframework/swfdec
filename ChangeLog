@@ -1,3 +1,92 @@
+2004-08-11  David Schleef  <ds@schleef.org>
+
+	Lots of hacking.  Modularizing libart dependency.
+	* configure.ac:
+	* libswfdec/Makefile.am:
+	* libswfdec/actions.c: (action_add), (action_subtract),
+	(action_multiply), (action_divide), (action_equal),
+	(action_less_than), (action_logical_and), (action_logical_or),
+	(action_logical_not), (action_string_equal),
+	(action_string_length), (action_substring), (action_int),
+	(action_string_concat):
+	* libswfdec/art.c: (art_svp_make_convex), (art_rgb565_fillrect),
+	(art_rgb_fillrect), (swfdec_art_bpath_from_points),
+	(art_bpath_affine_transform_inplace):
+	* libswfdec/art.h:
+	* libswfdec/color.c: (swfdec_color_apply_transform),
+	(tag_func_set_background_color):
+	* libswfdec/color.h:
+	* libswfdec/proto.h:
+	* libswfdec/render.c: (swf_invalidate_irect), (tag_place_object_2),
+	(tag_remove_object), (tag_remove_object_2), (tag_show_frame),
+	(swf_render_frame):
+	* libswfdec/swf.c: (swfdec_decoder_new), (swfdec_decoder_addbits),
+	(swfdec_decoder_parse), (swfdec_decoder_free),
+	(swfdec_decoder_set_image_size), (swfdec_decoder_get_sound_chunk),
+	(zalloc), (zfree), (swf_inflate_init), (swf_parse_header2),
+	(tag_func_frame_label), (swfdec_decoder_render):
+	* libswfdec/swfdec_bits.c: (swfdec_bits_get_color_transform),
+	(swfdec_bits_get_transform), (swfdec_bits_get_fill_style):
+	* libswfdec/swfdec_bits.h:
+	* libswfdec/swfdec_button.c: (swfdec_button_base_init),
+	(swfdec_button_class_init), (swfdec_button_init),
+	(swfdec_button_dispose), (swfdec_button_prerender),
+	(tag_func_define_button_2):
+	* libswfdec/swfdec_debug.c: (swfdec_debug_log):
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_display.c: (tag_func_place_object_2),
+	(tag_func_remove_object), (tag_func_remove_object_2):
+	* libswfdec/swfdec_font.c: (swfdec_font_base_init),
+	(swfdec_font_class_init), (swfdec_font_init),
+	(swfdec_font_dispose):
+	* libswfdec/swfdec_image.c: (swfdec_image_base_init),
+	(swfdec_image_class_init), (swfdec_image_init),
+	(swfdec_image_dispose), (zalloc), (zfree), (lossless),
+	(swfdec_image_jpegtables), (tag_func_define_bits_jpeg),
+	(tag_func_define_bits_jpeg_2), (tag_func_define_bits_jpeg_3),
+	(define_bits_lossless):
+	* libswfdec/swfdec_internal.h:
+	* libswfdec/swfdec_layer.c: (swfdec_layer_free):
+	* libswfdec/swfdec_layer.h:
+	* libswfdec/swfdec_object.h:
+	* libswfdec/swfdec_rect.c: (swfdec_rect_union_to_masked),
+	(swfdec_rect_intersect), (swfdec_rect_union), (swfdec_rect_copy),
+	(swfdec_rect_is_empty):
+	* libswfdec/swfdec_rect.h:
+	* libswfdec/swfdec_render_libart.c: (swfdec_layervec_render),
+	(art_svp_translate), (art_svp_bbox), (swfdec_shape_prerender),
+	(swfdec_text_prerender), (swf_config_colorspace),
+	(swfdec_render_layervec_free):
+	* libswfdec/swfdec_render_libart.h:
+	* libswfdec/swfdec_shape.c: (swfdec_shape_base_init),
+	(swfdec_shape_class_init), (swfdec_shape_init),
+	(swfdec_shape_dispose), (swfdec_shapevec_free), (get_shape_rec),
+	(tag_func_define_shape), (tag_define_shape), (tag_define_shape_3),
+	(swf_shape_add_styles), (tag_define_shape_2),
+	(swfdec_shape_compose), (swfdec_shape_compose_gradient),
+	(swfdec_gradient_to_palette):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_sound.c: (swfdec_sound_base_init),
+	(swfdec_sound_class_init), (swfdec_sound_init),
+	(swfdec_sound_dispose), (tag_func_sound_stream_block),
+	(tag_func_define_sound), (tag_func_sound_stream_head),
+	(get_soundinfo), (tag_func_start_sound),
+	(tag_func_define_button_sound), (adpcm_decode),
+	(swfdec_sound_mp3_cleanup), (swfdec_sound_mp3_decode):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_base_init),
+	(swfdec_sprite_class_init), (swfdec_sprite_init),
+	(swfdec_sprite_dispose), (swfdec_sprite_prerender),
+	(swfdec_spriteseg_place_object_2):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_text.c: (swfdec_text_get_type), (define_text):
+	* libswfdec/swfdec_text.h:
+	* libswfdec/swfdec_transform.c: (swfdec_transform_is_translation),
+	(swfdec_transform_multiply), (swfdec_transform_invert),
+	(swfdec_transform_init_identity), (swfdec_transform_translate),
+	(swfdec_transform_get_expansion):
+	* libswfdec/swfdec_transform.h:
+	* libswfdec/swfdec_types.h:
+
 2004-08-05  David Schleef  <ds@schleef.org>
 
 	* libswfdec/art.c: (swfdec_art_bpath_from_points),

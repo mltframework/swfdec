@@ -1,78 +1,44 @@
 
+#include <string.h>
+
 #include "swfdec_internal.h"
 
 #include <swfdec_sprite.h>
 
-static void swfdec_sprite_base_init (gpointer g_class);
-static void swfdec_sprite_class_init (gpointer g_class, gpointer user_data);
-static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class);
-static void swfdec_sprite_dispose (GObject *object);
 static SwfdecLayer * swfdec_sprite_prerender (SwfdecDecoder * s,
     SwfdecSpriteSegment * seg, SwfdecObject * object, SwfdecLayer * oldlayer);
 
-
-GType _swfdec_sprite_type;
-
-static GObjectClass *parent_class = NULL;
-
-GType swfdec_sprite_get_type (void)
-{
-  if (!_swfdec_sprite_type) {
-    static const GTypeInfo object_info = {
-      sizeof (SwfdecSpriteClass),
-      swfdec_sprite_base_init,
-      NULL,
-      swfdec_sprite_class_init,
-      NULL,
-      NULL,
-      sizeof (SwfdecSprite),
-      32,
-      swfdec_sprite_init,
-      NULL
-    };
-    _swfdec_sprite_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
-        "SwfdecSprite", &object_info, 0);
-  }
-  return _swfdec_sprite_type;
-}
+SWFDEC_OBJECT_BOILERPLATE (SwfdecSprite, swfdec_sprite)
 
 static void swfdec_sprite_base_init (gpointer g_class)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
 }
 
-static void swfdec_sprite_class_init (gpointer g_class, gpointer class_data)
+static void swfdec_sprite_class_init (SwfdecSpriteClass *g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
-  gobject_class->dispose = swfdec_sprite_dispose;
-
-  parent_class = g_type_class_peek_parent (gobject_class);
-
   SWFDEC_OBJECT_CLASS (g_class)->prerender = swfdec_sprite_prerender;
 }
 
-static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class)
+static void swfdec_sprite_init (SwfdecSprite *sprite)
 {
 
 }
 
-static void swfdec_sprite_dispose (GObject *object)
+static void swfdec_sprite_dispose (SwfdecSprite *sprite)
 {
-#if 0
-  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
   GList *g;
 
   for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
-    g_free (g->data);
+    SwfdecSpriteSegment *seg = (SwfdecSpriteSegment *) g->data;
+
+    swfdec_spriteseg_free (seg);
   }
   g_list_free (sprite->layers);
 
   /* FIXME */
   //g_object_unref (G_OBJECT (s->main_sprite));
   //swfdec_render_free (s->render);
-#endif
 }
 
 
@@ -101,7 +67,7 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   /* Not sure why this is wrong.  Somehow the top-level transform
    * gets applied twice. */
   //art_affine_multiply(layer->transform, seg->transform, s->transform);
-  art_affine_copy (layer->transform, seg->transform);
+  memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
 
   if (oldlayer) {
     layer->frame_number = oldlayer->frame_number + 1;
@@ -137,8 +103,8 @@ return layer;
     SWFDEC_LOG("prerendering layer %d", child_seg->depth);
 
     tmpseg = swfdec_spriteseg_dup (child_seg);
-    art_affine_multiply (tmpseg->transform,
-	child_seg->transform, layer->transform);
+    swfdec_transform_multiply (&tmpseg->transform,
+	&child_seg->transform, &layer->transform);
 
 #if 0
     old_child_layer = swfdec_render_get_sublayer (layer,
@@ -150,7 +116,7 @@ return layer;
     if (child_layer) {
       layer->sublayers = g_list_append (layer->sublayers, child_layer);
 
-      art_irect_union_to_masked (&layer->rect, &child_layer->rect, &s->irect);
+      swfdec_rect_union_to_masked (&layer->rect, &child_layer->rect, &s->irect);
     }
 
     swfdec_spriteseg_free (tmpseg);
@@ -346,27 +312,27 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       layer->id = oldlayer->id;
   }
   if (has_matrix) {
-    swfdec_bits_get_art_matrix (bits, layer->transform);
+    swfdec_bits_get_transform (bits, &layer->transform);
   } else {
-    if (oldlayer)
-      art_affine_copy (layer->transform, oldlayer->transform);
+    if (oldlayer) {
+      memcpy (&layer->transform, &oldlayer->transform, sizeof (SwfdecTransform));
+    }
   }
   if (has_color_transform) {
-    swfdec_bits_get_art_color_transform (bits, layer->color_mult, layer->color_add);
+    swfdec_bits_get_color_transform (bits, &layer->color_transform);
     swfdec_bits_syncbits (bits);
   } else {
     if (oldlayer) {
-      memcpy (layer->color_mult, oldlayer->color_mult, sizeof (double) * 4);
-      memcpy (layer->color_add, oldlayer->color_add, sizeof (double) * 4);
+      memcpy (&layer->color_transform, &oldlayer->color_transform, sizeof (SwfdecColorTransform));
     } else {
-      layer->color_mult[0] = 1;
-      layer->color_mult[1] = 1;
-      layer->color_mult[2] = 1;
-      layer->color_mult[3] = 1;
-      layer->color_add[0] = 0;
-      layer->color_add[1] = 0;
-      layer->color_add[2] = 0;
-      layer->color_add[3] = 0;
+      layer->color_transform.mult[0] = 1;
+      layer->color_transform.mult[1] = 1;
+      layer->color_transform.mult[2] = 1;
+      layer->color_transform.mult[3] = 1;
+      layer->color_transform.add[0] = 0;
+      layer->color_transform.add[1] = 0;
+      layer->color_transform.add[2] = 0;
+      layer->color_transform.add[3] = 0;
     }
   }
   if (has_ratio) {
@@ -377,7 +343,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       layer->ratio = oldlayer->ratio;
   }
   if (has_name) {
-    free (swfdec_bits_get_string (bits));
+    g_free (swfdec_bits_get_string (bits));
   }
   if (has_compose) {
     int id;

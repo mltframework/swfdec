@@ -152,16 +152,16 @@ int art_remove_object_2(SwfdecDecoder *s)
 	return SWF_OK;
 }
 
-void swfdec_sprite_clean(SwfdecSprite *sprite, int frame)
+void swfdec_render_clean(SwfdecRender *render, int frame)
 {
 	SwfdecLayer *l;
 	GList *g, *g_next;
 
-	for(g=g_list_first(sprite->layers); g; g=g_next){
+	for(g=g_list_first(render->layers); g; g=g_next){
 		g_next = g_list_next(g);
 		l = (SwfdecLayer *)g->data;
-		if(l->last_frame && l->last_frame<=frame){
-			sprite->layers = g_list_delete_link(sprite->layers,g);
+		if(l->last_frame<=frame){
+			render->layers = g_list_delete_link(render->layers,g);
 			swfdec_layer_free(l);
 		}
 	}
@@ -343,8 +343,10 @@ void swf_render_frame_slow(SwfdecDecoder *s)
 		if(!layer)continue;
 
 		swfdec_layer_render_slow(s,layer);
-		swfdec_layer_free(layer);
+
+		swfdec_render_add_layer(s->render, layer);
 	}
+	swfdec_render_clean(s->render, frame);
 }
 
 SwfdecLayer *swfdec_spriteseg_prerender(SwfdecDecoder *s, SwfdecSpriteSeg *seg)

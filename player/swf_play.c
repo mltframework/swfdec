@@ -483,7 +483,7 @@ static gboolean render_idle(gpointer data)
 			gettimeofday(&image_time, NULL);
 		}
 #endif
-		while(sound_bytes>=40000){
+		while(sound_bytes>=10000){
 			usleep(10000);
 		}
 		gdk_draw_rgb_image (drawing_area->window,

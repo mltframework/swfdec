@@ -33,6 +33,7 @@
 G_BEGIN_DECLS
 
 gchar*	              g_strdup	       (const gchar *str);
+gchar*	              g_memdup	       (const gchar *mem, int len);
 
 G_END_DECLS
 

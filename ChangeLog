@@ -1,5 +1,18 @@
 2004-09-13  David Schleef  <ds@schleef.org>
 
+	* configure.ac: export GLIB_REQUIRES
+	* glib-compat/glib/gfileutils.c: (g_file_test),
+	(g_file_error_quark), (g_file_error_from_errno),
+	(get_contents_stdio), (get_contents_regfile), (get_contents_posix),
+	(get_contents_win32), (g_mkstemp), (g_file_open_tmp),
+	(g_build_pathv), (g_build_path), (g_build_filename),
+	(g_file_read_link), (g_readfile_new), (g_readfile_get_length),
+	(g_readfile_get_contents), (g_readfile_free): more compat stuff
+	* glib-compat/glib/gstrfuncs.c: (g_memdup): same
+	* glib-compat/glib/gstrfuncs.h: same
+
+2004-09-13  David Schleef  <ds@schleef.org>
+
 	* .cvsignore:  Some cvsignore files
 	* gimp-loader/.cvsignore:
 	* glib-compat/.cvsignore:

@@ -16,3 +16,15 @@ gchar*	              g_strdup	       (const gchar *str)
   return s;
 }
 
+gchar*	              g_memdup	       (const gchar *mem, int len)
+{
+  char *s;
+
+  s = g_malloc(len);
+  memcpy (s,mem,len);
+
+  return s;
+}
+
+
+

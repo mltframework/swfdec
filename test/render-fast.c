@@ -77,6 +77,14 @@ void read_swf_file(char *fn)
 			}
 			//fprintf(stderr,"swf_addbits returned %d\n",ret);
 		}
+		if(ret == SWF_IMAGE){
+			char *data;
+			int len;
+
+			swfdec_decoder_peek_image(s,&data);
+			data = swfdec_decoder_get_sound_chunk(s,&len);
+			if(data)g_free(data);
+		}
 	}
 
 	swfdec_decoder_free(s);

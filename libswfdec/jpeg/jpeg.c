@@ -315,29 +315,45 @@ void generate_code_table(int *huffsize)
 
 HuffmanTable *huffman_table_new_jpeg(bits_t *bits)
 {
-	int total;
+	int n_symbols;
 	int huffsize[16];
 	int i,j,k;
 	HuffmanTable *table;
-	unsigned int code;
+	unsigned int symbol;
 
 	table = huffman_table_new();
 
-	total = 0;
+	/* huffsize[i] is the number of symbols that have length
+	 * (i+1) bits.  Maximum bit length is 16 bits, so there are
+	 * 16 entries. */
+	n_symbols = 0;
 	for(i=0;i<16;i++){
 		huffsize[i] = get_u8(bits);
-		total += huffsize[i];
+		n_symbols += huffsize[i];
 	}
 
-	code = 0;
+	/* Build up the symbol table.  The first symbol is all 0's, with
+	 * the number of bits determined by the first non-zero entry in
+	 * huffsize[].  Subsequent symbols with the same bit length are
+	 * incremented by 1.  Increasing the bit length shifts the
+	 * symbol 1 bit to the left. */
+	symbol = 0;
 	k = 0;
 	for(i=0;i<16;i++){
 		for(j=0;j<huffsize[i];j++){
-			huffman_table_add(table, code, i+1, get_u8(bits));
-			code++;
+			huffman_table_add(table, symbol, i+1, get_u8(bits));
+			symbol++;
 			k++;
 		}
-		code <<= 1;
+		/* This checks that our symbol is actually less than the
+		 * number of bits we think it is.  This is only triggered
+		 * for bad huffsize[] arrays. */
+		if(symbol>=(1<<(i+1))){
+			JPEG_DEBUG(0,"bad huffsize[] array\n");
+			return NULL;
+		}
+		
+		symbol <<= 1;
 	}
 
 	huffman_table_dump(table);

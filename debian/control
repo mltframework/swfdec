@@ -23,7 +23,7 @@ Description: SWF (Macromedia Flash) decoder libaray
  found on web sites.  This is the run-time portion of the library.
 
 Package: swf-player
-Section: x11
+Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: SWF (Macromedia Flash) player

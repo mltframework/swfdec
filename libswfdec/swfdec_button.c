@@ -5,12 +5,12 @@
 void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object)
 {
+	SwfdecButton *button = object->priv;
 	SwfdecShape *shape;
 	SwfdecObject *obj;
 	double save_trans[6];
 	SwfdecShapeVec *shapevec;
 	SwfdecLayerVec *layervec;
-	SwfdecButton *button = object->priv;
 	int i;
 
 //printf("swfdec_button_prerender %d [%d,%d,%d]\n",object->id,
@@ -29,7 +29,7 @@ void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 //			if(layer->prerendered)return;
 //			layer->prerendered = 1;
 
-			swfdec_shape_prerender(s,layer,object);
+			swfdec_shape_prerender(s,layer,obj);
 			for(i=0;i<layer->fills->len;i++){
 				shapevec = g_ptr_array_index(shape->fills,i);
 				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);

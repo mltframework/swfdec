@@ -1,3 +1,7 @@
+2005-03-19  David Schleef  <ds@schleef.org>
+
+	* configure.ac: use $MOZILLA_CONFIG, not mozilla-config
+
 2005-03-17  David Schleef  <ds@schleef.org>
 
 	* configure.ac: version bump

@@ -35,7 +35,6 @@ static void do_help(void);
 static void read_swf_file(char *fn);
 static void read_swf_stdin(void);
 static void new_gtk_window(void);
-static void steal_window(void);
 
 /* GTK callbacks */
 static void destroy_cb (GtkWidget *widget, gpointer data);
@@ -241,8 +240,6 @@ static void read_swf_stdin(void)
 
 static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data)
 {
-	int ret;
-
 	if(debug)fprintf(stderr,"key press\n");
 	
 	return FALSE;
@@ -250,8 +247,6 @@ static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data)
 
 static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data)
 {
-	int ret;
-
 	if(debug)fprintf(stderr,"motion notify\n");
 	
 	return FALSE;

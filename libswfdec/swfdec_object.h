@@ -46,11 +46,15 @@ struct _SwfdecObjectClass {
   SwfdecLayer *(*prerender) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
       SwfdecObject *object, SwfdecLayer *oldlayer);
   
+  void (*dump) (SwfdecObject *object);
 };
 
 GType swfdec_object_get_type (void);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
+
+void swfdec_object_dump (SwfdecObject *object);
+
 
 
 G_END_DECLS

@@ -1,3 +1,12 @@
+2004-07-02  David Schleef  <ds@schleef.org>
+
+	* libswfdec/Makefile.am:  Don't use mpglib
+	* libswfdec/swf.c: (swf_parse_tag):
+	* libswfdec/swfdec_debug.c:
+	* libswfdec/swfdec_object.c: (swfdec_object_dump):
+	* libswfdec/swfdec_object.h:
+	* test/Makefile.am:
+
 2004-06-05  David Schleef  <ds@schleef.org>
 
 	* libswfdec/Makefile.am: Global change from SWF_DEBUG to SWFDEC_LOG,

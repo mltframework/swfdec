@@ -14,7 +14,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	$(LIBART_LIBS) $(GLIB_LIBS) $(MAD_LIBS) \
 	$(LIBOIL_LIBS)
 
-libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = mpglib/libmpglib.la jpeg/libjpeg.la
+libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la
 
 pkginclude_HEADERS = swf.h swfdec.h
 

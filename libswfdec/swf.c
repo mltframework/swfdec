@@ -562,6 +562,8 @@ swf_parse_tag (SwfdecDecoder * s)
   bits_t *b = &s->b;
   char *name;
 
+  SWFDEC_DEBUG ("parsing at %d", (char *)s->parse.ptr - s->input_data);
+
   if (bits_needbits (&s->b, 2))
     return SWF_NEEDBITS;
 
@@ -586,7 +588,7 @@ swf_parse_tag (SwfdecDecoder * s)
     s->func = tag_func_ignore;
   }
 
-  SWFDEC_LOG("tag=%d len=%d name=\"%s\"", s->tag, s->tag_len, name);
+  SWFDEC_DEBUG ("tag=%d len=%d name=\"%s\"", s->tag, s->tag_len, name);
 
   return SWF_OK;
 }

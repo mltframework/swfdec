@@ -93,3 +93,18 @@ swfdec_object_get (SwfdecDecoder * s, int id)
   return NULL;
 }
 
+void
+swfdec_object_dump (SwfdecObject *object)
+{
+  SwfdecObjectClass *klass;
+
+  klass = SWFDEC_OBJECT_GET_CLASS (object);
+
+  g_print ("Object %d:\n", object->id);
+  if (klass->dump) {
+    klass->dump (object);
+  } else {
+    g_print("  no dump\n");
+  }
+}
+

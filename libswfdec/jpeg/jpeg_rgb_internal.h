@@ -13,24 +13,24 @@
 #define JPEG_DEBUG_LEVEL 4
 
 
-struct jpeg_rgb_decoder_struct {
-	JpegDecoder *dec;
+struct jpeg_rgb_decoder_struct
+{
+  JpegDecoder *dec;
 
-	unsigned char *image;
-	int height, width;
+  unsigned char *image;
+  int height, width;
 
-	struct{
-		unsigned char *image;
-		int rowstride;
-		int h_subsample;
-		int v_subsample;
-		int alloc;
-	}component[3];
+  struct
+  {
+    unsigned char *image;
+    int rowstride;
+    int h_subsample;
+    int v_subsample;
+    int alloc;
+  } component[3];
 };
 
 /* jpeg_rgb_decoder.c */
 
 
 #endif
-
-

@@ -7,7 +7,6 @@
 }while(0)
 #define JPEG_DEBUG_LEVEL 4
 
-void jpeg_debug(int n, const char *format, ... );
+void jpeg_debug (int n, const char *format, ...);
 
 #endif
-

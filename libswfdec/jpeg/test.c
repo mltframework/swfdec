@@ -10,35 +10,37 @@
 
 /* getfile */
 
-void *getfile(char *path, int *n_bytes);
-static void dump_pgm(unsigned char *ptr, int rowstride, int width, int height);
+void *getfile (char *path, int *n_bytes);
+static void dump_pgm (unsigned char *ptr, int rowstride, int width, int height);
 
 
-int main(int argc, char *argv[])
+int
+main (int argc, char *argv[])
 {
-	unsigned char *data;
-	int len;
-	JpegDecoder *dec;
-	char *fn = "biglebowski.jpg";
-	unsigned char *ptr;
-	int rowstride;
-	int width;
-	int height;
+  unsigned char *data;
+  int len;
+  JpegDecoder *dec;
+  char *fn = "biglebowski.jpg";
+  unsigned char *ptr;
+  int rowstride;
+  int width;
+  int height;
 
-	dec = jpeg_decoder_new();
+  dec = jpeg_decoder_new ();
 
-	if(argc>1)fn = argv[1];
-	data = getfile(fn,&len);
+  if (argc > 1)
+    fn = argv[1];
+  data = getfile (fn, &len);
 
-	jpeg_decoder_addbits(dec, data, len);
-	jpeg_decoder_parse(dec);
+  jpeg_decoder_addbits (dec, data, len);
+  jpeg_decoder_parse (dec);
 
-	jpeg_decoder_get_component_ptr(dec, 1, &ptr, &rowstride);
-	jpeg_decoder_get_component_size(dec, 1, &width, &height);
+  jpeg_decoder_get_component_ptr (dec, 1, &ptr, &rowstride);
+  jpeg_decoder_get_component_size (dec, 1, &width, &height);
 
-	dump_pgm(ptr, rowstride, width, height);
+  dump_pgm (ptr, rowstride, width, height);
 
-	return 0;
+  return 0;
 }
 
 
@@ -47,58 +49,61 @@ int main(int argc, char *argv[])
 
 /* getfile */
 
-void *getfile(char *path, int *n_bytes)
+void *
+getfile (char *path, int *n_bytes)
 {
-	int fd;
-	struct stat st;
-	void *ptr = NULL;
-	int ret;
+  int fd;
+  struct stat st;
+  void *ptr = NULL;
+  int ret;
 
-	fd = open(path, O_RDONLY);
-	if(!fd)return NULL;
+  fd = open (path, O_RDONLY);
+  if (!fd)
+    return NULL;
 
-	ret = fstat(fd, &st);
-	if(ret<0){
-		close(fd);
-		return NULL;
-	}
-	
-	ptr = g_malloc(st.st_size);
-	if(!ptr){
-		close(fd);
-		return NULL;
-	}
+  ret = fstat (fd, &st);
+  if (ret < 0) {
+    close (fd);
+    return NULL;
+  }
 
-	ret = read(fd, ptr, st.st_size);
-	if(ret!=st.st_size){
-		g_free(ptr);
-		close(fd);
-		return NULL;
-	}
+  ptr = g_malloc (st.st_size);
+  if (!ptr) {
+    close (fd);
+    return NULL;
+  }
 
-	if(n_bytes)*n_bytes = st.st_size;
+  ret = read (fd, ptr, st.st_size);
+  if (ret != st.st_size) {
+    g_free (ptr);
+    close (fd);
+    return NULL;
+  }
 
-	close(fd);
-	return ptr;
+  if (n_bytes)
+    *n_bytes = st.st_size;
+
+  close (fd);
+  return ptr;
 }
 
-static void dump_pgm(unsigned char *ptr, int rowstride, int width, int height)
+static void
+dump_pgm (unsigned char *ptr, int rowstride, int width, int height)
 {
-	int x,y;
+  int x, y;
 
-	printf("P2\n");
-	printf("%d %d\n",width,height);
-	printf("255\n");
+  printf ("P2\n");
+  printf ("%d %d\n", width, height);
+  printf ("255\n");
 
-	for(y=0;y<height;y++){
-		for(x=0;x<width;x++){
-			printf("%d ",ptr[x]);
-			if((x&15)==15){
-				printf("\n");
-			}
-		}
-		printf("\n");
-		ptr += rowstride;
-	}
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      printf ("%d ", ptr[x]);
+      if ((x & 15) == 15) {
+        printf ("\n");
+      }
+    }
+    printf ("\n");
+    ptr += rowstride;
+  }
 }
-

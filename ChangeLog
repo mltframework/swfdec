@@ -1,3 +1,18 @@
+2004-09-22  David Schleef  <ds@schleef.org>
+
+	* libswfdec/jpeg/bits.h: reindent
+	* libswfdec/jpeg/huffman.c:
+	* libswfdec/jpeg/huffman.h:
+	* libswfdec/jpeg/jpeg.c:
+	* libswfdec/jpeg/jpeg.h:
+	* libswfdec/jpeg/jpeg_debug.h:
+	* libswfdec/jpeg/jpeg_internal.h:
+	* libswfdec/jpeg/jpeg_rgb_decoder.c:
+	* libswfdec/jpeg/jpeg_rgb_decoder.h:
+	* libswfdec/jpeg/jpeg_rgb_internal.h:
+	* libswfdec/jpeg/test.c:
+	* libswfdec/jpeg/test_rgb.c:
+
 2004-09-17  David Schleef  <ds@schleef.org>
 
 	Switch to using buffers for the input stream.

@@ -1,6 +1,17 @@
 2005-03-19  David Schleef  <ds@schleef.org>
 
+	* configure.ac: version nano bump
+	* plugin/Makefile.am:
+	* plugin/gstswfdec.c: Pull from gst-plugins, since the only version
+	that works with swfdec-mozilla-player is unreleased.
+	* plugin/gstswfdec.h:
+	* plugin/swfdec-mozilla-player.c: (main): use local swfdec element
+
+2005-03-19  David Schleef  <ds@schleef.org>
+
 	* configure.ac: use $MOZILLA_CONFIG, not mozilla-config
+
+=== release 0.3.3 ===
 
 2005-03-17  David Schleef  <ds@schleef.org>
 

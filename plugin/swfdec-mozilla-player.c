@@ -225,14 +225,12 @@ main (int argc, char *argv[])
     g_object_set (src, "location", argv[optind], NULL);
   }
 
-  swfdec = gst_element_factory_make ("swfdec", NULL);
+  swfdec = gst_element_factory_make ("swfdec2", NULL);
   if (swfdec == NULL) {
     fprintf(stderr, "Could not create swfdec element\n");
     exit(1);
   }
 
-#define THREADED
-#ifdef THREADED
   thread2 = gst_element_factory_make ("thread", NULL);
   if (thread2 == NULL) {
     fprintf(stderr, "Could not create thread2 element\n");
@@ -257,7 +255,6 @@ main (int argc, char *argv[])
     exit(1);
   }
   g_object_set (G_OBJECT(queue2), "max-size-buffers", 1, NULL);
-#endif
 
   audioconvert = gst_element_factory_make ("audioconvert", NULL);
   if (audioconvert == NULL) {
@@ -277,9 +274,6 @@ main (int argc, char *argv[])
     exit(1);
   }
 
-  //video_sink = gst_gconf_get_default_video_sink ();
-  //xoverlay = gst_bin_get_by_interface (GST_BIN(video_sink),
-  //    GST_TYPE_X_OVERLAY);
   video_sink = gst_element_factory_make ("ximagesink", NULL);
   if (video_sink == NULL) {
     fprintf(stderr, "Could not create video sink (ximagesink)\n");
@@ -294,26 +288,16 @@ main (int argc, char *argv[])
       G_CALLBACK (embed_url), NULL);
 
   gst_bin_add (GST_BIN (pipeline), thread);
-#ifdef THREADED
   gst_bin_add_many (GST_BIN (thread), src, swfdec, thread2, thread3, NULL);
   gst_bin_add_many (GST_BIN (thread2), queue1, audioconvert, audioscale,
       audio_sink, NULL);
   gst_bin_add_many (GST_BIN (thread3), queue2, video_sink, NULL);
-#else
-  gst_bin_add_many (GST_BIN (thread), src, swfdec, audioconvert,
-      audioscale, audio_sink, video_sink, NULL);
-#endif
 
   ret = gst_element_link (src, swfdec);
-#ifdef THREADED
   ret &= gst_element_link (swfdec, queue2);
   ret &= gst_element_link (queue2, video_sink);
   ret &= gst_element_link (swfdec, queue1);
   ret &= gst_element_link (queue1, audioscale);
-#else
-  ret &= gst_element_link (swfdec, video_sink);
-  ret &= gst_element_link (swfdec, audioscale);
-#endif
   ret &= gst_element_link (audioscale, audioconvert);
   ret &= gst_element_link (audioconvert, audio_sink);
   if (ret == FALSE) {

@@ -15,7 +15,9 @@ swfdec_mozilla_player_SOURCES = \
 	swfdec-mozilla-player.c \
 	gstappsrc.c \
 	gstappsrc.h \
-	spp.h
+	spp.h \
+	gstswfdec.c \
+	gstswfdec.h
 
 swfdec_mozilla_player_CFLAGS = \
 	$(SWF_CFLAGS) \
@@ -24,5 +26,6 @@ swfdec_mozilla_player_CFLAGS = \
 
 swfdec_mozilla_player_LDADD = \
 	$(GST_LIBS) \
-	$(GTK_LIBS)
+	$(GTK_LIBS) \
+	$(SWF_LIBS)
 

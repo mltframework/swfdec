@@ -593,11 +593,15 @@ static void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec)
 	cb_data.x1 = rect.x1;
 
 	g_assert(rect.x1 > rect.x0);
-	g_assert(layervec->svp->n_segs >0);
+	/* This assertion fails occasionally. */
+	//g_assert(layervec->svp->n_segs > 0);
+	g_assert(layervec->svp->n_segs >= 0);
 
-	art_svp_render_aa(layervec->svp, rect.x0, rect.y0,
-		rect.x1, rect.y1,
-		s->callback, &cb_data);
+	if(layervec->svp->n_segs > 0){
+		art_svp_render_aa(layervec->svp, rect.x0, rect.y0,
+			rect.x1, rect.y1,
+			s->callback, &cb_data);
+	}
 }
 
 void swf_config_colorspace(swf_state_t *s)

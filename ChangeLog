@@ -1,3 +1,9 @@
+2004-12-10  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swfdec_render_cairo.c: (swfdec_shape_render),
+	(swfdec_text_render): Fix line rendering and add text
+	rendering.
+
 2004-12-09  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_render_cairo.c: (draw_line), (draw), (draw_rev),

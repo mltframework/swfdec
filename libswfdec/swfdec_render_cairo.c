@@ -391,58 +391,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);
     cairo_fill (cr);
-#if 0
-    {
-      SwfdecShapePoint *points = (SwfdecShapePoint *)shapevec->path->data;
-      int j;
-
-      for (j=0;j<shapevec->path->len;j++){
-        double x,y;
-        x = points[j].to_x * SWF_SCALE_FACTOR;
-        y = points[j].to_y * SWF_SCALE_FACTOR;
-        if (points[j].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
-          if (points[j].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
-            cairo_move_to (cr, x, y);
-          } else {
-            cairo_line_to (cr, x, y);
-          }
-        } else {
-          cairo_line_to (cr, x, y);
-        }
-      }
-    }
-    cairo_stroke(cr);
-#endif
     cairo_restore (cr);
-#if 0
-    bpath0 = swfdec_art_bpath_from_points (shapevec->path, &trans);
-    bpath1 = swfdec_art_bpath_from_points (shapevec2->path, &trans);
-    vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
-    vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
-    vpath1 = art_vpath_reverse_free (vpath1);
-    vpath = art_vpath_cat (vpath0, vpath1);
-    art_vpath_bbox_irect (vpath, (ArtIRect *) & layervec->rect);
-    layervec->svp = art_svp_from_vpath (vpath);
-    art_svp_make_convex (layervec->svp);
-    swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
-
-    g_free (bpath0);
-    g_free (bpath1);
-    art_free (vpath0);
-    g_free (vpath1);
-    g_free (vpath);
-
-    layervec->color = swfdec_color_apply_transform (shapevec->color,
-        &seg->color_transform);
-    layervec->compose = NULL;
-    if (shapevec->fill_id) {
-      swfdec_shape_compose (s, layervec, shapevec, &layer->transform);
-    }
-    if (shapevec->grad) {
-      swfdec_shape_compose_gradient (s, layervec, shapevec, &layer->transform,
-          seg);
-    }
-#endif
   }
 
   //g_array_set_size (layer->lines, shape->lines->len);
@@ -452,6 +401,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecTransform trans;
     cairo_matrix_t *cm;
     swf_color color;
+    double width;
 
     shapevec = g_ptr_array_index (shape->lines, i);
 
@@ -463,8 +413,6 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0);
     cairo_set_alpha (cr, SWF_COLOR_A(color)/255.0);
 
-    cairo_set_line_width (cr, shapevec->width);
-
     cairo_save (cr);
 
     cm = cairo_matrix_create ();
@@ -473,6 +421,8 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     cairo_concat_matrix (cr, cm);
     cairo_matrix_destroy (cm);
 
+    width = shapevec->width * swfdec_transform_get_expansion (&trans);
+    cairo_set_line_width (cr, shapevec->width * 20);
     draw_line (cr, (void *)shapevec->path->data, shapevec->path->len);
     cairo_stroke (cr);
 
@@ -488,14 +438,14 @@ void
 swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object)
 {
-#if 0
   int i;
   SwfdecText *text;
-  SwfdecLayerVec *layervec;
+  //SwfdecLayerVec *layervec;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
   SwfdecObject *fontobj;
   SwfdecLayer *layer;
+  cairo_t *cr = s->backend_private;
 
   layer = swfdec_layer_new ();
   layer->seg = seg;
@@ -508,13 +458,15 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
   text = SWFDEC_TEXT (object);
   for (i = 0; i < text->glyphs->len; i++) {
-    ArtVpath *vpath, *vpath0, *vpath1;
-    ArtBpath *bpath0, *bpath1;
+    //ArtVpath *vpath, *vpath0, *vpath1;
+    //ArtBpath *bpath0, *bpath1;
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
     SwfdecTransform glyph_trans;
     SwfdecTransform trans;
     SwfdecTransform pos;
+    swf_color color;
+    cairo_matrix_t *cm;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
 
@@ -537,35 +489,32 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     swfdec_transform_multiply (&trans, &glyph_trans, &layer->transform);
 
     layer->fills = g_array_set_size (layer->fills, layer->fills->len + 1);
-    layervec =
-        &g_array_index (layer->fills, SwfdecLayerVec, layer->fills->len - 1);
 
     shapevec = g_ptr_array_index (shape->fills, 0);
     shapevec2 = g_ptr_array_index (shape->fills2, 0);
-    layervec->color = swfdec_color_apply_transform (glyph->color,
-        &seg->color_transform);
 
-    bpath0 = swfdec_art_bpath_from_points (shapevec->path, &trans);
-    bpath1 = swfdec_art_bpath_from_points (shapevec2->path, &trans);
-    vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
-    vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
-    vpath1 = art_vpath_reverse_free (vpath1);
-    vpath = art_vpath_cat (vpath0, vpath1);
-    art_vpath_bbox_irect (vpath, (ArtIRect *) & layervec->rect);
-    layervec->svp = art_svp_from_vpath (vpath);
-    art_svp_make_convex (layervec->svp);
-    swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
+    color = swfdec_color_apply_transform (glyph->color, &seg->color_transform);
+    cairo_set_rgb_color (cr, SWF_COLOR_R(color)/255.0,
+        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0);
+    cairo_set_alpha (cr, SWF_COLOR_A(color)/255.0);
 
-    g_free (bpath0);
-    g_free (bpath1);
-    art_free (vpath0);
-    g_free (vpath1);
-    g_free (vpath);
+    cairo_save (cr);
+
+    cm = cairo_matrix_create ();
+    cairo_matrix_set_affine (cm, trans.trans[0], trans.trans[1],
+        trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
+    cairo_concat_matrix (cr, cm);
+    cairo_matrix_destroy (cm);
+
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+    draw_x (cr, shapevec->path, shapevec2->path);
+    cairo_fill (cr);
+
+    cairo_restore (cr);
   }
 
-  swfdec_layer_render (s, layer);
+  //swfdec_layer_render (s, layer);
   swfdec_layer_free (layer);
-#endif
 }
 
 void

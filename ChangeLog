@@ -1,5 +1,9 @@
 2005-03-17  David Schleef  <ds@schleef.org>
 
+	* configure.ac: version bump
+
+2005-03-17  David Schleef  <ds@schleef.org>
+
 	* libswfdec/actions.c: (swfdec_action_script_execute),
 	(action_get_url): quiet debugging
 	* libswfdec/art.c: (art_rgb_svp_alpha_callback): dynamically

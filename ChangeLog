@@ -1,3 +1,14 @@
+2005-04-05  David Schleef  <ds@schleef.org>
+
+	* configure.ac: disable creating _stdint.h
+	* libswfdec/Makefile.am: set CFLAGS correctly for js
+	* libswfdec/art.c: use glib types
+	* libswfdec/js/Makefile.am: create jsautocfg.h at compile time
+	* libswfdec/js/jsautocfg.h: remove
+	* libswfdec/js/jslibmath.h: disable math code that isn't slurped
+	* libswfdec/swfdec_internal.h: don't include _stdint.h
+	* libswfdec/swfdec_render.c: use glib types
+
 2005-04-04  Eric Anholt  <anholt@FreeBSD.org>
 
 	* .cvsignore:

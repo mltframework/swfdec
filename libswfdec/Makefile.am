@@ -18,6 +18,7 @@ renderer_sources = swfdec_render_cairo.c
 renderer_headers =
 endif
 
+js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
 	actions_tags.c color.c swfdec_image.c \
@@ -28,7 +29,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
 	swfdec_rect.c swfdec_transform.c $(renderer_sources)
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
-	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS) -DXP_UNIX
+	-I$(srcdir)/jpeg/ -I$(js_cflags) $(LIBOIL_CFLAGS)
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-export-symbols-regex '^(art_warn)|(swfdec_.*)' \
 	$(renderer_libs) $(GLIB_LIBS) $(MAD_LIBS) \

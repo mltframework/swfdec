@@ -241,7 +241,7 @@ swfdec_render_get_image (SwfdecDecoder * s)
       for(i=0;i<s->height;i++){
         for(j=0;j<s->width;j++){
           if ((i+j)&1){
-            *(uint32_t *)(s->buffer + i*s->stride + j*4) = 0;
+            *(guint32 *)(s->buffer + i*s->stride + j*4) = 0;
           }
         }
       }

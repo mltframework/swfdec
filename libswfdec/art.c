@@ -529,7 +529,7 @@ art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
 #define apply(a,b,c) (imult(a,255-c) + imult(b,c))
 
 static void
-paint (uint8_t *dest, uint8_t *color, uint8_t *alpha, int n)
+paint (guint8 *dest, guint8 *color, guint8 *alpha, int n)
 {
   int i;
 
@@ -561,7 +561,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
   art_u32 running_sum = start;
   int x0, x1;
   int k;
-  uint8_t color[4];
+  guint8 color[4];
   int alpha;
   unsigned char *alphabuf;
   int x;

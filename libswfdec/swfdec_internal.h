@@ -2,8 +2,6 @@
 #ifndef _SWFDEC_INTERNAL_H_
 #define _SWFDEC_INTERNAL_H_
 
-#include "_stdint.h"
-
 #include "color.h"
 #include "proto.h"
 #include "swfdec.h"

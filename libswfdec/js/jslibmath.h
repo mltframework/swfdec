@@ -54,6 +54,7 @@
  * by default since there can be problems with endian-ness and such.
  */
 
+#if 0
 #if defined(_WIN32) && !defined(__MWERKS__)
 #define JS_USE_FDLIBM_MATH 1
 
@@ -82,6 +83,8 @@
 #else
 #define JS_USE_FDLIBM_MATH 0
 #endif
+#endif
+#define JS_USE_FDLIBM_MATH 0
 
 #if !JS_USE_FDLIBM_MATH
 

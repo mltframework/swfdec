@@ -10,7 +10,6 @@ libjs_la_SOURCES = \
 	jsarray.h \
 	jsatom.c \
 	jsatom.h \
-	jsautocfg.h \
 	jsbit.h \
 	jsbool.c \
 	jsbool.h \
@@ -83,10 +82,20 @@ libjs_la_SOURCES = \
 	prmjtime.c \
 	prmjtime.h
 
-#	jscpucfg.c
-#	jscpucfg.h
+noinst_PROGRAMS = jscpucfg
+jscpucfg_SOURCES = \
+	jscpucfg.c  \
+	jscpucfg.h
 
-libjs_la_CFLAGS = $(SWF_CFLAGS) $(GLIB_CFLAGS) \
+libjs_la_CFLAGS = $(SWF_CFLAGS) $(GLIB_CFLAGS) -I. \
 	-DXP_UNIX
 libjs_la_LDFLAGS = -lm
+
+CLEANFILES = jsautocfg.h
+
+jsapi.c: jsautocfg.h
+
+jsautocfg.h: jscpucfg
+	./jscpucfg >jsautocfg.h
+
 

@@ -727,8 +727,8 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		layervec->rect.y1 += half_width;
 		art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
 		layervec->svp = art_svp_vpath_stroke (vpath,
-			ART_PATH_STROKE_JOIN_MITER,
-			ART_PATH_STROKE_CAP_BUTT,
+			ART_PATH_STROKE_JOIN_ROUND,
+			ART_PATH_STROKE_CAP_ROUND,
 			width, 1.0, s->flatness);
 
 		art_free(vpath);

@@ -1,35 +1,34 @@
-dnl autoconf configuration file for swfdec
-AC_INIT
-AC_CANONICAL_TARGET([])
+AC_PREREQ([2.58])
+AC_INIT(swfdec,0.3.2.1)
 
-dnl We disable static building for development, for time savings
-dnl this goes before AS_LIBTOOL to appease autoconf
-dnl *NOTE*: dnl this line before release, so release does static too
-dnl AM_DISABLE_STATIC
+nano=$(echo $VERSION | sed 's/[0-9]\.[0-9]\.[0-9]\.*//')
+if test x"$nano" = x1 ; then
+  SWFDEC_CVS="yes"
+else
+  SWFDEC_CVS="no"
+fi
 
-dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(swfdec, SWFDEC, 0, 3, 2, 0)
-SWF_DEBUG="-Wall -Werror"
-AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
-AS_LIBTOOL(SWFDEC, 0, 1, 0, yes)
+AM_INIT_AUTOMAKE(1.6)
+dnl AC_CANONICAL_TARGET([])
+AM_MAINTAINER_MODE
 
 SWFDEC_MAJORMINOR=0.3
 AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
 
+SWF_DEBUG="-Wall -Werror"
+
+SWFDEC_LIBVERSION="0:0:0"
+AC_SUBST(SWFDEC_LIBVERSION)
+AM_PROG_LIBTOOL
+
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL="$ACLOCAL -I m4"
-
-AM_MAINTAINER_MODE
+ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 
 AC_PROG_CC
 AM_PROG_CC_STDC
-AM_PROG_AS
-AS="${CC}"
-AC_PROG_CXX
-AC_PROG_CXXCPP
 AC_ISC_POSIX
 
 AC_HEADER_STDC([])

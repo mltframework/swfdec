@@ -1,3 +1,12 @@
+2005-01-12  David Schleef  <ds@schleef.org>
+
+	* Makefile.am: autoregenify
+	* autogen.sh: same
+	* configure.ac: same
+	* m4/as-ac-expand.m4: remove
+	* m4/as-libtool.m4: remove
+	* m4/as-version.m4: remove
+
 2005-01-10  David Schleef  <ds@schleef.org>
 
 	* gimp-loader/Makefile.am: depends on HAVE_GIMP

@@ -18,6 +18,8 @@ DIST_SUBDIRS= \
 	plugin \
 	test
 
+ACLOCAL_FLAGS = -I m4
+
 EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.spec \
 	TODO m4/as-ac-expand.m4 m4/as-libtool.m4 m4/as-version.m4
 

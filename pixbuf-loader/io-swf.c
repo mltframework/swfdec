@@ -27,7 +27,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk-pixbuf/gdk-pixbuf-io.h>
 
-#define SWF_BUFFER_SIZE (1024 * 4)
+#define SWF_BUFFER_SIZE (1024 * 8)
 
 typedef struct {
 	SwfdecDecoder             * decoder;
@@ -193,7 +193,12 @@ swf_flush (SwfContext * context)
 static int
 swf_add_bits (SwfContext * context, const guint8 * buf, gsize nread)
 {
-	int result = SWF_OK;
+	int result;
+
+	/* only load and render a single frame if required, return SWF image to note that
+	 * an image has been loaded */
+	if (context->single_frame && g_list_length (context->animation->frames) == 1)
+		return SWF_OK;	
 
 	result = swfdec_decoder_addbits (context->decoder, (guint8*)buf, (int)nread);
 	if (result == SWF_OK)
@@ -355,8 +360,8 @@ fill_info (GdkPixbufFormat *info)
 	static gchar *extensions[] = { 
 		"swf", 
 		NULL 
-	};
-	
+	};   
+
 	info->name        = "swf";
 	info->signature   = signature;
 	info->description = "Shockwave Flash";

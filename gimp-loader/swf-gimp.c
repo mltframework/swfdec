@@ -35,7 +35,7 @@
 #include <libgimp/gimp.h>
 #include <libgimp/gimpui.h>
 
-#define SWF_BUFFER_SIZE (1024 * 4)
+#define SWF_BUFFER_SIZE (1024 * 8)
 
 typedef struct
 {
@@ -288,6 +288,9 @@ swf_add_bits (SwfdecDecoder * context, const guint8 * buf, gsize nread, guint32 
 	      gint * width, gint * height)
 {
 	int result = SWF_OK;
+
+	if (*nb_frames >= load_vals.frame)
+		return SWF_OK;
 
 	result = swfdec_decoder_addbits (context, (guint8*)buf, (int)nread);
 	if (result == SWF_OK)

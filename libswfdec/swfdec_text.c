@@ -150,9 +150,6 @@ define_text (SwfdecDecoder * s, int rgba)
 	glyph.height = get_u16 (bits);
 	//printf("  height = %d\n",height);
       }
-      if (has_font || has_color) {
-	g_array_append_val (text->glyphs, glyph);
-      }
     }
     syncbits (bits);
   }
@@ -178,14 +175,13 @@ static SwfdecLayer *
 swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
 {
-  int i, j;
+  int i;
   SwfdecText *text;
   SwfdecLayerVec *layervec;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
   SwfdecObject *fontobj;
   SwfdecLayer *layer;
-  SwfdecTextGlyph *glyph;
 
   if (oldlayer && oldlayer->seg == seg)
     return oldlayer;
@@ -201,63 +197,62 @@ swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
   text = SWFDEC_TEXT (object);
   for (i = 0; i < text->glyphs->len; i++) {
+    ArtVpath *vpath, *vpath0, *vpath1;
+    ArtBpath *bpath0, *bpath1;
+    SwfdecTextGlyph *glyph;
+    SwfdecShape *shape;
+    double glyph_trans[6];
+    double trans[6];
+    double pos[6];
+
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
 
     fontobj = swfdec_object_get (s, glyph->font);
     if (fontobj == NULL)
       continue;
 
-    for (j = 0; j < text->glyphs->len; j++) {
-      ArtVpath *vpath, *vpath0, *vpath1;
-      ArtBpath *bpath0, *bpath1;
-      SwfdecTextGlyph *glyph;
-      SwfdecShape *shape;
-      double glyph_trans[6];
-      double trans[6];
-      double pos[6];
-
-      glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, j);
-
-      shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
-      art_affine_translate (pos,
-	  glyph->x * SWF_SCALE_FACTOR, glyph->y * SWF_SCALE_FACTOR);
-      pos[0] = glyph->height * SWF_TEXT_SCALE_FACTOR;
-      pos[3] = glyph->height * SWF_TEXT_SCALE_FACTOR;
-      art_affine_multiply (glyph_trans, pos, object->trans);
-      art_affine_multiply (trans, glyph_trans, layer->transform);
-      if (s->subpixel)
-	art_affine_subpixel (trans);
-
-      layer->fills = g_array_set_size (layer->fills, layer->fills->len + 1);
-      layervec =
-	  &g_array_index (layer->fills, SwfdecLayerVec, layer->fills->len - 1);
-
-      shapevec = g_ptr_array_index (shape->fills, 0);
-      shapevec2 = g_ptr_array_index (shape->fills2, 0);
-      layervec->color = transform_color (glyph->color,
-	  seg->color_mult, seg->color_add);
-
-      bpath0 =
-	  art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,
-	      0), trans);
-      bpath1 =
-	  art_bpath_affine_transform (&g_array_index (shapevec2->path, ArtBpath,
-	      0), trans);
-      vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
-      vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
-      vpath1 = art_vpath_reverse_free (vpath1);
-      vpath = art_vpath_cat (vpath0, vpath1);
-      art_vpath_bbox_irect (vpath, &layervec->rect);
-      layervec->svp = art_svp_from_vpath (vpath);
-      art_svp_make_convex (layervec->svp);
-      art_irect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
-
-      art_free (bpath0);
-      art_free (bpath1);
-      art_free (vpath0);
-      art_free (vpath1);
-      art_free (vpath);
+    shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
+    if (shape == NULL) {
+      SWFDEC_ERROR("failed getting glyph %d\n", glyph->glyph);
+      continue;
     }
+
+    art_affine_translate (pos,
+        glyph->x * SWF_SCALE_FACTOR, glyph->y * SWF_SCALE_FACTOR);
+    pos[0] = glyph->height * SWF_TEXT_SCALE_FACTOR;
+    pos[3] = glyph->height * SWF_TEXT_SCALE_FACTOR;
+    art_affine_multiply (glyph_trans, pos, object->trans);
+    art_affine_multiply (trans, glyph_trans, layer->transform);
+
+    layer->fills = g_array_set_size (layer->fills, layer->fills->len + 1);
+    layervec =
+        &g_array_index (layer->fills, SwfdecLayerVec, layer->fills->len - 1);
+
+    shapevec = g_ptr_array_index (shape->fills, 0);
+    shapevec2 = g_ptr_array_index (shape->fills2, 0);
+    layervec->color = transform_color (glyph->color,
+        seg->color_mult, seg->color_add);
+
+    bpath0 =
+        art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,
+            0), trans);
+    bpath1 =
+        art_bpath_affine_transform (&g_array_index (shapevec2->path, ArtBpath,
+            0), trans);
+    vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
+    vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
+    vpath1 = art_vpath_reverse_free (vpath1);
+    vpath = art_vpath_cat (vpath0, vpath1);
+    art_vpath_bbox_irect (vpath, &layervec->rect);
+    layervec->svp = art_svp_from_vpath (vpath);
+    art_svp_make_convex (layervec->svp);
+    art_irect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
+
+    art_free (bpath0);
+    art_free (bpath1);
+    art_free (vpath0);
+    art_free (vpath1);
+    art_free (vpath);
   }
 
   return layer;

@@ -182,32 +182,15 @@ art_show_frame (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-#if 0
-  s->pixels_rendered = 0;
-
-  swf_config_colorspace (s);
-
-  swf_render_frame (s);
-
-  swfdec_render_clean (s->render, s->frame_number - 1);
-
-  swfdec_sound_render (s);
-
-  s->frame_number++;
-  s->parse_sprite->parse_frame++;
-
-  SWFDEC_LOG("pixels_rendered = %d", s->pixels_rendered);
-#endif
-
 void
 swf_render_frame (SwfdecDecoder * s, int frame_index)
 {
   SwfdecSpriteSegment *seg;
   SwfdecLayer *layer;
-  SwfdecLayer *oldlayer;
+  //SwfdecLayer *oldlayer;
   GList *g;
 
-  SWFDEC_ERROR ("swf_render_frame");
+  SWFDEC_DEBUG ("swf_render_frame");
 
   s->drawrect.x0 = 0;
   s->drawrect.x1 = 0;
@@ -219,14 +202,11 @@ swf_render_frame (SwfdecDecoder * s, int frame_index)
   }
 swf_invalidate_irect (s, &s->irect);
   if (!s->tmp_scanline) {
-    if (s->subpixel) {
-      s->tmp_scanline = malloc (s->width * 3);
-    } else {
-      s->tmp_scanline = malloc (s->width);
-    }
+    s->tmp_scanline = malloc (s->width);
   }
 
-  SWFDEC_ERROR ("rendering frame %d", frame_index);
+  SWFDEC_DEBUG ("rendering frame %d", frame_index);
+#if 0
   for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
 
@@ -258,7 +238,9 @@ swf_invalidate_irect (s, &s->irect);
       SWFDEC_LOG("cache hit");
     }
   }
+#endif
 
+#if 0
   for (g = g_list_last (s->render->layers); g; g = g_list_previous (g)) {
     layer = (SwfdecLayer *) g->data;
     if (layer->seg->first_frame <= frame_index - 1 &&
@@ -272,14 +254,9 @@ swf_invalidate_irect (s, &s->irect);
       swf_invalidate_irect (s, &layer->rect);
     }
   }
-
-#if 0
-  if (s->disable_render)
-    return;
 #endif
 
-  //art_irect_copy(&s->drawrect, &s->irect);
-  SWFDEC_ERROR ("inval rect %d %d %d %d", s->drawrect.x0, s->drawrect.x1,
+  SWFDEC_DEBUG ("inval rect %d %d %d %d", s->drawrect.x0, s->drawrect.x1,
       s->drawrect.y0, s->drawrect.y1);
 
   switch (s->colorspace) {
@@ -292,8 +269,40 @@ swf_invalidate_irect (s, &s->irect);
       break;
   }
 
+  for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
+    SwfdecObject *object;
+
+    seg = (SwfdecSpriteSegment *) g->data;
+
+    SWFDEC_LOG("testing seg %d <= %d < %d",
+	seg->first_frame, frame_index, seg->last_frame);
+    if (seg->first_frame > frame_index)
+      continue;
+    if (seg->last_frame <= frame_index)
+      continue;
+
+    object = swfdec_object_get (s, seg->id);
+    if (object) {
+      layer = SWFDEC_OBJECT_GET_CLASS(object)->prerender (s, seg, object, NULL);
+
+      if (layer) {
+        swfdec_layer_render (s, layer);
+        swfdec_layer_free (layer);
+      } else {
+        SWFDEC_WARNING ("prerender returned NULL");
+      }
+    } else {
+      SWFDEC_DEBUG ("could not find object (id = %d)", seg->id);
+    }
+  }
+
+#if 0
   for (g = g_list_last (s->render->layers); g; g = g_list_previous (g)) {
     layer = (SwfdecLayer *) g->data;
+    if (layer == NULL || layer->seg) {
+      SWFDEC_ERROR ("layer == NULL, odd\n");
+      continue;
+    }
     SWFDEC_ERROR ("rendering %d < %d <= %d",
 	layer->seg->first_frame, frame_index, layer->last_frame);
     if (layer->seg->first_frame <= frame_index &&
@@ -301,6 +310,7 @@ swf_invalidate_irect (s, &s->irect);
       swfdec_layer_render (s, layer);
     }
   }
+#endif
 }
 
 SwfdecLayer *

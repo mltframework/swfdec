@@ -28,6 +28,7 @@ struct swfdec_decoder_struct
   int version;
   int length;
   int width, height;
+  int parse_width, parse_height;
   double rate;
   int n_frames;
   char *buffer;
@@ -94,8 +95,6 @@ struct swfdec_decoder_struct
   GList *sound_buffers;
   GList *stream_sound_buffers;
 
-  gboolean subpixel;
-
   int pixels_rendered;
 };
 
@@ -108,5 +107,9 @@ int swf_parse_header (SwfdecDecoder * s);
 int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
 
+unsigned char * swfdec_decoder_render (SwfdecDecoder *s, int frame);
+void swfdec_decoder_eof (SwfdecDecoder *s);
+
 
 #endif
+

@@ -426,6 +426,38 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
   shape->n_line_bits = getbits (bits, 4);
 }
 
+static SwfdecShapeVec *swfdec_shape_get_fill0style(SwfdecShape *shape, int fill0style)
+{
+  if (shape->fills_offset + fill0style - 1 >= shape->fills->len) {
+    SWFDEC_WARNING ("fill0style too large (%d >= %d)",
+        shape->fills_offset + fill0style - 1, shape->fills->len);
+    return g_ptr_array_index (shape->fills, 0);
+  }
+  return g_ptr_array_index (shape->fills,
+      shape->fills_offset + fill0style - 1);
+}
+
+static SwfdecShapeVec *swfdec_shape_get_fill1style(SwfdecShape *shape, int fill1style)
+{
+  if (shape->fills_offset + fill1style - 1 >= shape->fills2->len) {
+    SWFDEC_WARNING ("fill1style too large (%d >= %d)",
+        shape->fills_offset + fill1style - 1, shape->fills2->len);
+    return g_ptr_array_index (shape->fills2, 0);
+  }
+  return g_ptr_array_index (shape->fills2,
+      shape->fills_offset + fill1style - 1);
+}
+
+static SwfdecShapeVec *swfdec_shape_get_linestyle(SwfdecShape *shape, int linestyle)
+{
+  if (shape->lines_offset + linestyle - 1 >= shape->lines->len) {
+    SWFDEC_WARNING ("linestyle too large (%d >= %d)",
+        shape->lines_offset + linestyle - 1, shape->lines->len);
+    return g_ptr_array_index (shape->lines, 0);
+  }
+  return g_ptr_array_index (shape->lines, shape->lines_offset + linestyle - 1);
+}
+
 void
 swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
 {
@@ -539,27 +571,15 @@ swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
       }
     }
     if (fill0style) {
-      if (shape->fills_offset + fill0style - 1 >= shape->fills->len) {
-	SWFDEC_WARNING ("fill0style too large (%d >= %d)",
-	    shape->fills_offset + fill0style - 1, shape->fills->len);
-      }
-      shapevec = g_ptr_array_index (shape->fills,
-	  shape->fills_offset + fill0style - 1);
+      shapevec = swfdec_shape_get_fill0style (shape, fill0style);
       g_array_append_val (shapevec->path, pt);
     }
     if (fill1style) {
-      SWFDEC_LOG("   using shapevec %d", shape->fills_offset);
-      if (shape->fills_offset + fill1style - 1 >= shape->fills2->len) {
-	SWFDEC_WARNING ("fill0style too large (%d >= %d)",
-	    shape->fills_offset + fill1style - 1, shape->fills2->len);
-      }
-      shapevec = g_ptr_array_index (shape->fills2,
-	  shape->fills_offset + fill1style - 1);
+      shapevec = swfdec_shape_get_fill1style (shape, fill1style);
       g_array_append_val (shapevec->path, pt);
     }
     if (linestyle) {
-      shapevec = g_ptr_array_index (shape->lines,
-	  shape->lines_offset + linestyle - 1);
+      shapevec = swfdec_shape_get_linestyle(shape, linestyle);
       g_array_append_val (shapevec->path, pt);
     }
 
@@ -721,8 +741,6 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     shapevec2 = g_ptr_array_index (shape->fills2, i);
 
     art_affine_copy (trans, layer->transform);
-    if (s->subpixel)
-      art_affine_subpixel (trans);
 
     bpath0 =
 	art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,
@@ -769,8 +787,6 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     shapevec = g_ptr_array_index (shape->lines, i);
 
     art_affine_copy (trans, layer->transform);
-    if (s->subpixel)
-      art_affine_subpixel (trans);
 
     bpath =
 	art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,

@@ -12,31 +12,12 @@ int swf_parse_header1 (SwfdecDecoder * s);
 int swf_inflate_init (SwfdecDecoder * s);
 int swf_parse_header2 (SwfdecDecoder * s);
 
-#ifdef __GNUC__
-#define weak_alias(name, aliasname) \
-extern __typeof (name) aliasname __attribute__ ((weak, alias (#name)))
-weak_alias (swfdec_decoder_new, swf_init);
-weak_alias (swfdec_decoder_addbits, swf_addbits);
-weak_alias (swfdec_decoder_parse, swf_parse);
-#else
-SwfdecDecoder *
-swf_init (void)
-{
-  return swfdec_decoder_new ();
-}
 
-int
-swf_addbits (SwfdecDecoder * s, unsigned char *bits, int len)
+void
+swfdec_init (void)
 {
-  return swfdec_decoder_addbits (s, bits, len);
+  g_type_init ();
 }
-
-int
-swf_parse (SwfdecDecoder * s)
-{
-  return swfdec_decoder_parse (s);
-}
-#endif
 
 SwfdecDecoder *
 swfdec_decoder_new (void)
@@ -55,8 +36,6 @@ swfdec_decoder_new (void)
   s->render = swfdec_render_new ();
 
   s->flatness = 0.5;
-  //s->subpixel = TRUE;
-  s->subpixel = FALSE;
 
   return s;
 }
@@ -92,6 +71,14 @@ swfdec_decoder_addbits (SwfdecDecoder * s, unsigned char *bits, int len)
   }
 
   return SWF_OK;
+}
+
+void
+swfdec_decoder_eof (SwfdecDecoder *s)
+{
+  if (s->state == SWF_STATE_PARSETAG) {
+    s->state = SWF_STATE_EOF;
+  }
 }
 
 int
@@ -188,9 +175,6 @@ swfdec_decoder_free (SwfdecDecoder * s)
     g_object_unref (G_OBJECT (g->data));
   }
   g_list_free (s->objects);
-  if (s->stream_sound_obj) {
-    g_object_unref (G_OBJECT(s->stream_sound_obj));
-  }
 
   if (s->buffer)
     g_free (s->buffer);
@@ -289,12 +273,34 @@ swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height)
 int
 swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
 {
-  if (s->state != SWF_STATE_INIT1) {
-    return SWF_ERROR;
-  }
+  //double sw, sh;
 
   s->width = width;
   s->height = height;
+
+  s->irect.x0 = 0;
+  s->irect.y0 = 0;
+  s->irect.x1 = s->width;
+  s->irect.y1 = s->height;
+
+#if 0
+  sw = s->parse_width / s->width;
+  sh = s->parse_height / s->height;
+  s->scale_factor = (sw < sh) ? sw : sh;
+
+  s->transform[0] = s->scale_factor;
+  s->transform[1] = 0;
+  s->transform[2] = 0;
+  s->transform[3] = s->scale_factor;
+  s->transform[4] = 0.5 * (s->width - s->parse_width * s->scale_factor);
+  s->transform[5] = 0.5 * (s->height - s->parse_height * s->scale_factor);
+#endif
+  s->transform[0] = (double)s->width / s->parse_width;
+  s->transform[1] = 0;
+  s->transform[2] = 0;
+  s->transform[3] = (double)s->height / s->parse_height;
+  s->transform[4] = 0;
+  s->transform[5] = 0;
 
   return SWF_OK;
 }
@@ -425,11 +431,11 @@ swf_inflate_init (SwfdecDecoder * s)
   z->avail_out = s->length;
 
   ret = inflateInit (z);
-  //printf("inflateInit returned %d\n",ret);
+  SWFDEC_DEBUG("inflateInit returned %d",ret);
   ret = inflate (z, Z_SYNC_FLUSH);
-  //printf("inflate returned %d\n",ret);
-  //printf("total out %d\n",(int)z->total_out);
-  //printf("total in %d\n",(int)z->total_in);
+  SWFDEC_DEBUG("inflate returned %d",ret);
+  SWFDEC_DEBUG("total out %d",(int)z->total_out);
+  SWFDEC_DEBUG("total in %d",(int)z->total_in);
 
   free (s->input_data);
 
@@ -452,6 +458,8 @@ swf_parse_header2 (SwfdecDecoder * s)
   get_rect (&s->b, rect);
   width = rect[1] * SWF_SCALE_FACTOR;
   height = rect[3] * SWF_SCALE_FACTOR;
+  s->parse_width = width;
+  s->parse_height = height;
   if (s->width == 0) {
     s->width = floor (width);
     s->height = floor (height);
@@ -562,7 +570,9 @@ swf_parse_tag (SwfdecDecoder * s)
   bits_t *b = &s->b;
   char *name;
 
-  SWFDEC_DEBUG ("parsing at %d", (char *)s->parse.ptr - s->input_data);
+  SWFDEC_DEBUG ("parsing at %d (%d left)",
+      (char *)s->parse.ptr - s->input_data,
+      s->parse.end - s->parse.ptr);
 
   if (bits_needbits (&s->b, 2))
     return SWF_NEEDBITS;
@@ -644,5 +654,46 @@ tag_func_frame_label (SwfdecDecoder * s)
   free (get_string (&s->b));
 
   return SWF_OK;
+}
+
+
+unsigned char *
+swfdec_decoder_render (SwfdecDecoder *s, int frame)
+{
+#if 0
+  GList *layer;
+  SwfdecSpriteSegment *seg;
+  SwfdecSprite *sprite;
+
+  buf = malloc (s->width * s->height * 4);
+  s->buffer = buf;
+
+  sprite = s->main_sprite;
+  g_print("rendering frame %d\n", frame);
+  for (layer = g_list_first(sprite->layers); layer; layer = g_list_next(layer)) {
+    seg = layer->data;
+
+    if (seg->first_frame <= frame && frame < seg->last_frame) {
+      g_print("id %d depth %d [%d,%d]\n",
+          seg->id,seg->depth,seg->first_frame,seg->last_frame);
+    }
+  }
+#endif
+  unsigned char *buf;
+
+  if (frame < 0 || frame >= s->n_frames) return NULL;
+
+  s->pixels_rendered = 0;
+
+  swf_config_colorspace (s);
+
+  swf_render_frame (s, frame);
+  //swfdec_render_clean (s->render, frame - 1);
+
+  SWFDEC_LOG("pixels_rendered = %d", s->pixels_rendered);
+
+  buf = s->buffer;
+  s->buffer = NULL;
+  return buf;
 }
 

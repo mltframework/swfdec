@@ -70,7 +70,6 @@ static void swfdec_image_dispose (GObject *object)
   SwfdecImage *image = SWFDEC_IMAGE (object);
 
   g_free (image->image_data);
-  g_free (image);
 }
 
 

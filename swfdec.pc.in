@@ -7,5 +7,5 @@ Name: swfdec
 Description: Decodes SWF (Flash) files
 Version: @VERSION@
 Requires: glib-2.0
-Libs: -lswfdec
+Libs: -L${libdir} -lswfdec-0.2
 Cflags: -I${includedir}

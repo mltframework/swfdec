@@ -1,3 +1,53 @@
+2004-08-02  David Schleef  <ds@schleef.org>
+
+	Lots and lots of hacking.
+	* libswfdec/art.c: (art_rgb_run_alpha_2), (art_rgb_fillrect),
+	(art_rgb_svp_alpha_compose_callback), (art_rgb_svp_alpha_callback):
+	* libswfdec/art.h:
+	* libswfdec/mpglib/Makefile.am:
+	* libswfdec/mpglib/README:
+	* libswfdec/mpglib/clipconv_f32_s16.h:
+	* libswfdec/mpglib/common.c:
+	* libswfdec/mpglib/dct32_f32.h:
+	* libswfdec/mpglib/dct64_i386.c:
+	* libswfdec/mpglib/decode_i386.c:
+	* libswfdec/mpglib/huffman.h:
+	* libswfdec/mpglib/interface.c:
+	* libswfdec/mpglib/l2tables.h:
+	* libswfdec/mpglib/layer1.c:
+	* libswfdec/mpglib/layer2.c:
+	* libswfdec/mpglib/layer3.c:
+	* libswfdec/mpglib/main.c:
+	* libswfdec/mpglib/mpglib.h:
+	* libswfdec/mpglib/mpglib_config.h:
+	* libswfdec/mpglib/mpglib_internal.h:
+	* libswfdec/mpglib/tabinit.c:
+	* libswfdec/render.c: (swf_render_frame):
+	* libswfdec/sound.c:
+	* libswfdec/swf.c: (swfdec_init), (swfdec_decoder_new),
+	(swfdec_decoder_eof), (swfdec_decoder_free),
+	(swfdec_decoder_set_image_size), (swf_inflate_init),
+	(swf_parse_header2), (swf_parse_tag), (swfdec_decoder_render):
+	* libswfdec/swfdec.h:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_image.c: (swfdec_image_dispose):
+	* libswfdec/swfdec_layer.c: (swfdec_render_get_layer),
+	(swfdec_layervec_render):
+	* libswfdec/swfdec_shape.c: (swfdec_shape_get_fill0style),
+	(swfdec_shape_get_fill1style), (swfdec_shape_get_linestyle),
+	(swf_shape_get_recs), (swfdec_shape_prerender):
+	* libswfdec/swfdec_sound.c: (tag_func_sound_stream_block),
+	(tag_func_define_sound), (tag_func_sound_stream_head),
+	(swfdec_sound_mp3_init), (swfdec_sound_mp3_decode),
+	(swfdec_sound_mp3_decode_stream):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_dispose),
+	(swfdec_sprite_prerender), (tag_func_define_sprite),
+	(swfdec_spriteseg_remove_object),
+	(swfdec_spriteseg_remove_object_2):
+	* libswfdec/swfdec_text.c: (define_text), (swfdec_text_prerender):
+	* swfdec.pc.in:
+	* test/Makefile.am:
+
 2004-07-02  David Schleef  <ds@schleef.org>
 
 	* libswfdec/Makefile.am:  Don't use mpglib

@@ -238,7 +238,7 @@ art_rgb_fill_run (unsigned char *buf, unsigned char r,
 }
 
 void
-art_rgb_run_alpha (unsigned char *buf, unsigned char r,
+art_rgb_run_alpha_2 (unsigned char *buf, unsigned char r,
     unsigned char g, unsigned char b, int alpha, int n)
 {
   int i;
@@ -340,9 +340,9 @@ art_rgb_fillrect (char *buffer, int stride, unsigned int color, ArtIRect * rect)
 {
   int i;
 
-  buffer += rect->x0 * 3;
+  buffer += rect->x0 * 4;
   for (i = rect->y0; i < rect->y1; i++) {
-    art_rgb_run_alpha (buffer + i * stride,
+    art_rgb_run_alpha_2 (buffer + i * stride,
 	SWF_COLOR_R (color),
 	SWF_COLOR_G (color),
 	SWF_COLOR_B (color), SWF_COLOR_A (color), rect->x1 - rect->x0);
@@ -582,17 +582,10 @@ art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
     art_grey_run_alpha (linebuf, alpha, x1 - x0);
   }
 
-  if (data->subpixel) {
-    compose_rgb888_rgb888 (data->buf, linebuf,
-	data->compose + data->compose_y * data->compose_rowstride,
-	(data->x1 - data->x0) / 3);
-    data->compose_y++;
-  } else {
-    compose_rgb888_u8 (data->buf, linebuf,
-	data->compose + data->compose_y * data->compose_rowstride,
-	data->x1 - data->x0);
-    data->compose_y++;
-  }
+  compose_rgb888_u8 (data->buf, linebuf,
+      data->compose + data->compose_y * data->compose_rowstride,
+      data->x1 - data->x0);
+  data->compose_y++;
 
   data->buf += data->rowstride;
 }
@@ -624,7 +617,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
     if (run_x1 > x0) {
       alpha = (a * (running_sum >> 8)) >> 16;
       if (alpha)
-	art_rgb_run_alpha (linebuf, r, g, b, alpha, run_x1 - x0);
+	art_rgb_run_alpha_2 (linebuf, r, g, b, alpha, run_x1 - x0);
     }
 
     for (k = 0; k < n_steps - 1; k++) {
@@ -634,7 +627,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
       if (run_x1 > run_x0) {
 	alpha = (a * (running_sum >> 8)) >> 16;
 	if (alpha)
-	  art_rgb_run_alpha (linebuf + (run_x0 - x0) * 4,
+	  art_rgb_run_alpha_2 (linebuf + (run_x0 - x0) * 4,
 	      r, g, b, alpha, run_x1 - run_x0);
       }
     }
@@ -642,13 +635,13 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
     if (x1 > run_x1) {
       alpha = (a * (running_sum >> 8)) >> 16;
       if (alpha)
-	art_rgb_run_alpha (linebuf + (run_x1 - x0) * 4,
+	art_rgb_run_alpha_2 (linebuf + (run_x1 - x0) * 4,
 	    r, g, b, alpha, x1 - run_x1);
     }
   } else {
     alpha = (a * (running_sum >> 8)) >> 16;
     if (alpha)
-      art_rgb_run_alpha (linebuf, r, g, b, alpha, x1 - x0);
+      art_rgb_run_alpha_2 (linebuf, r, g, b, alpha, x1 - x0);
   }
 
   data->buf += data->rowstride;

@@ -3,7 +3,6 @@
 
 #include <swfdec_sprite.h>
 
-
 static void swfdec_sprite_base_init (gpointer g_class);
 static void swfdec_sprite_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class);
@@ -61,6 +60,7 @@ static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class)
 
 static void swfdec_sprite_dispose (GObject *object)
 {
+#if 0
   SwfdecSprite *sprite = SWFDEC_SPRITE (object);
   GList *g;
 
@@ -72,6 +72,7 @@ static void swfdec_sprite_dispose (GObject *object)
   /* FIXME */
   //g_object_unref (G_OBJECT (s->main_sprite));
   //swfdec_render_free (s->render);
+#endif
 }
 
 
@@ -124,6 +125,8 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SWFDEC_LOG("swfdec_sprite_prerender %d frame %d", object->id,
       layer->frame_number);
 
+/* don't render sprites correctly */
+return layer;
   for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
     child_seg = (SwfdecSpriteSegment *) g->data;
 
@@ -181,43 +184,44 @@ tag_func_define_sprite (SwfdecDecoder * s)
 {
   bits_t *bits = &s->b;
   int id;
-  SwfdecDecoder *sprite;
-  int ret;
+  SwfdecSprite *sprite;
+  //int ret;
 
   id = get_u16 (bits);
   sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
   SWFDEC_OBJECT (sprite)->id = id;
   s->objects = g_list_append (s->objects, sprite);
 
-  sprite->main_sprite = s->main_sprite;
+  //sprite->main_sprite = s->main_sprite;
   //sprite->parse_sprite = sprite;
 
   SWFDEC_LOG("  ID: %d", id);
 
   sprite->n_frames = get_u16 (bits);
-  sprite->main_sprite->n_frames = sprite->n_frames;
   SWFDEC_LOG("n_frames = %d", sprite->n_frames);
 
-  sprite->state = SWF_STATE_PARSETAG;
-  sprite->no_render = 1;
+#if 0
+  //sprite->state = SWF_STATE_PARSETAG;
+  //sprite->no_render = 1;
 
-  sprite->width = s->width;
-  sprite->height = s->height;
-  memcpy (sprite->transform, s->transform, sizeof (double) * 6);
+  //sprite->width = s->width;
+  //sprite->height = s->height;
+  //memcpy (sprite->transform, s->transform, sizeof (double) * 6);
 
-  sprite->parse = *bits;
+  //sprite->parse = *bits;
 
   /* massive hack */
-  sprite->objects = s->objects;
+  //sprite->objects = s->objects;
 
   ret = swf_parse (sprite);
   SWFDEC_LOG("  ret = %d", ret);
 
   *bits = sprite->parse;
 
-  sprite->frame_number = 0;
+  //sprite->frame_number = 0;
 
   //dump_layers(sprite);
+#endif
 
   return SWF_OK;
 }
@@ -399,6 +403,9 @@ swfdec_spriteseg_remove_object (SwfdecDecoder * s)
 
   if (seg) {
     seg->last_frame = s->parse_sprite->parse_frame;
+  } else {
+    SWFDEC_WARNING ("could not find object to remove (depth %d, frame %d)",
+        depth, s->parse_sprite->parse_frame - 1);
   }
 
   return SWF_OK;
@@ -416,6 +423,9 @@ swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
 
   if (seg) {
     seg->last_frame = s->parse_sprite->parse_frame;
+  } else {
+    SWFDEC_WARNING ("could not find object to remove (depth %d, frame %d)",
+        depth, s->parse_sprite->parse_frame - 1);
   }
 
   return SWF_OK;

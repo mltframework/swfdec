@@ -111,6 +111,10 @@ swfdec_render_get_layer (SwfdecRender * render, int depth, int frame)
     printf ("compare %d==%d %d <= %d < %d\n",
 	l->seg->depth, depth, l->seg->first_frame, frame, l->last_frame);
 #endif
+    if (l == NULL || l->seg == NULL) {
+      SWFDEC_ERROR ("l is NULL, odd\n");
+      continue;
+    }
     if (l->seg->depth == depth && l->first_frame <= frame
 	&& frame < l->last_frame)
       return l;
@@ -197,29 +201,15 @@ swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec)
 {
   ArtIRect rect;
   struct swf_svp_render_struct cb_data;
-  ArtIRect drawrect;
 
-  if (s->subpixel) {
-    drawrect.x0 = s->drawrect.x0 * 3;
-    drawrect.y0 = s->drawrect.y0;
-    drawrect.x1 = s->drawrect.x1 * 3;
-    drawrect.y1 = s->drawrect.y1;
-    art_irect_intersect (&rect, &drawrect, &layervec->rect);
-  } else {
-    art_irect_intersect (&rect, &s->drawrect, &layervec->rect);
-  }
+  art_irect_intersect (&rect, &s->drawrect, &layervec->rect);
 
   if (art_irect_empty (&rect))
     return;
 
-  cb_data.subpixel = s->subpixel;
   cb_data.x0 = rect.x0;
   cb_data.x1 = rect.x1;
-  if (cb_data.subpixel) {
-    cb_data.buf = s->buffer + rect.y0 * s->stride + (rect.x0 / 3) * s->bytespp;
-  } else {
-    cb_data.buf = s->buffer + rect.y0 * s->stride + rect.x0 * s->bytespp;
-  }
+  cb_data.buf = s->buffer + rect.y0 * s->stride + rect.x0 * s->bytespp;
   cb_data.color = layervec->color;
   cb_data.rowstride = s->stride;
   cb_data.scanline = s->tmp_scanline;

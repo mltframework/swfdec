@@ -18,7 +18,6 @@ struct swf_svp_render_struct
   int compose_y;
   int compose_height;
   int compose_width;
-  int subpixel;
 };
 
 void art_irect_union_to_masked (ArtIRect * rect, ArtIRect * a, ArtIRect * mask);
@@ -57,7 +56,6 @@ void art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
     int start, ArtSVPRenderAAStep * steps, int n_steps);
 void art_grey_svp_alpha_callback (void *callback_data, int y,
     int start, ArtSVPRenderAAStep * steps, int n_steps);
-void art_affine_subpixel (double trans[6]);
 
 static inline void
 art_affine_copy (double dst[6], const double src[6])

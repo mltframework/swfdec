@@ -296,6 +296,16 @@ int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level)
 	return SWF_OK;
 }
 
+void swfdec_decoder_enable_render(SwfdecDecoder *s)
+{
+	s->disable_render = FALSE;
+}
+
+void swfdec_decoder_disable_render(SwfdecDecoder *s)
+{
+	s->disable_render = TRUE;
+}
+
 void *swfdec_decoder_get_sound_chunk(SwfdecDecoder *s, int *length)
 {
 	GList *g;

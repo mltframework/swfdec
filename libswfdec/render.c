@@ -174,6 +174,8 @@ int art_show_frame(SwfdecDecoder *s)
 		return SWF_OK;
 	}
 
+	s->pixels_rendered = 0;
+
 	swf_config_colorspace(s);
 
 	swf_render_frame(s);
@@ -184,6 +186,8 @@ int art_show_frame(SwfdecDecoder *s)
 
 	s->frame_number++;
 	s->parse_sprite->parse_frame++;
+
+	printf("pixels_rendered = %d\n",s->pixels_rendered);
 
 	return SWF_IMAGE;
 }
@@ -232,8 +236,8 @@ void swf_render_frame(SwfdecDecoder *s)
 		if(layer==NULL)continue;
 
 		layer->last_frame = frame + 1;
-		layer->first_frame = frame;
 		if(layer!=oldlayer){
+			layer->first_frame = frame;
 			swfdec_render_add_layer(s->render, layer);
 			if(oldlayer) oldlayer->last_frame = frame;
 		}else{
@@ -256,6 +260,8 @@ void swf_render_frame(SwfdecDecoder *s)
 		}
 	}
 	
+	if(s->disable_render)return;
+
 	//art_irect_copy(&s->drawrect, &s->irect);
 	SWF_DEBUG(0,"inval rect %d %d %d %d\n",s->drawrect.x0,s->drawrect.x1,
 		s->drawrect.y0,s->drawrect.y1);

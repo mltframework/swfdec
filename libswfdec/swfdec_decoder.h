@@ -85,6 +85,7 @@ struct swfdec_decoder_struct {
 	SwfdecRender *render;
 
 	double flatness;
+	int disable_render;
 	
 	unsigned char *tmp_scanline;
 
@@ -95,6 +96,8 @@ struct swfdec_decoder_struct {
 	GList *stream_sound_buffers;
 
 	gboolean subpixel;
+
+	int pixels_rendered;
 };
 
 SwfdecDecoder *swf_init(void);

@@ -45,6 +45,8 @@ SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecSpriteSeg *child_seg;
 	int frame;
 
+	if(oldlayer && oldlayer->seg == seg && sprite->n_frames==1)return oldlayer;
+
 	layer = swfdec_layer_new();
 	layer->seg = seg;
 	art_affine_multiply(layer->transform, seg->transform, s->transform);

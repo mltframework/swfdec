@@ -554,13 +554,12 @@ art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
 
   if(data->subpixel){
     compose_rgb888_rgb888(data->buf, linebuf,
-	  data->compose + data->compose_y * data->compose_rowstride +
-	  	(data->x0/3)*4,
+	  data->compose + data->compose_y * data->compose_rowstride,
     	  (data->x1 - data->x0)/3);
     data->compose_y++;
   }else{
     compose_rgb888_u8(data->buf, linebuf,
-	  data->compose + data->compose_y * data->compose_rowstride + data->x0*4,
+	  data->compose + data->compose_y * data->compose_rowstride,
     	  data->x1 - data->x0);
     data->compose_y++;
   }

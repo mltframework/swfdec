@@ -207,10 +207,10 @@ void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 	cb_data.color = layervec->color;
 	cb_data.rowstride = s->stride;
 	cb_data.scanline = s->tmp_scanline;
-	cb_data.compose = layervec->compose;
+	cb_data.compose = layervec->compose + (rect.x0 - layervec->rect.x0)*4;
 	cb_data.compose_rowstride = layervec->compose_rowstride;
 	cb_data.compose_height = layervec->compose_height;
-	cb_data.compose_y = rect.y0;
+	cb_data.compose_y = rect.y0 - layervec->rect.y0;
 	cb_data.compose_width = layervec->compose_width;
 
 	g_assert(rect.x1 > rect.x0);
@@ -224,5 +224,7 @@ void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 			layervec->compose ? s->compose_callback : s->callback,
 			&cb_data);
 	}
+
+	s->pixels_rendered += (rect.x1 - rect.x0)*(rect.y1 - rect.y0);
 }
 

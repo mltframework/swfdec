@@ -526,6 +526,45 @@ int art_define_shape_2(SwfdecDecoder *s)
 	return art_define_shape(s);
 }
 
+ArtSVP *art_svp_translate(ArtSVP *svp, double x, double y)
+{
+	ArtSVP *newsvp;
+	int i, j;
+
+	newsvp = g_malloc(sizeof(ArtSVP) + sizeof(ArtSVPSeg)*svp->n_segs);
+
+	newsvp->n_segs = svp->n_segs;
+	for(i=0;i<svp->n_segs;i++){
+		newsvp->segs[i].n_points = svp->segs[i].n_points;
+		newsvp->segs[i].dir = svp->segs[i].dir;
+		newsvp->segs[i].bbox.x0 = svp->segs[i].bbox.x0 + x;
+		newsvp->segs[i].bbox.x1 = svp->segs[i].bbox.x1 + x;
+		newsvp->segs[i].bbox.y0 = svp->segs[i].bbox.y0 + y;
+		newsvp->segs[i].bbox.y1 = svp->segs[i].bbox.y1 + y;
+		newsvp->segs[i].points = g_new(ArtPoint, svp->segs[i].n_points);
+		for(j=0;j<svp->segs[i].n_points;j++){
+			newsvp->segs[i].points[j].x = 
+				svp->segs[i].points[j].x + x;
+			newsvp->segs[i].points[j].y = 
+				svp->segs[i].points[j].y + y;
+		}
+	}
+
+	return newsvp;
+}
+
+void art_svp_bbox(ArtSVP *svp, ArtIRect *box)
+{
+	ArtDRect dbox;
+
+	art_drect_svp(&dbox, svp);
+
+	box->x0 = floor(dbox.x0);
+	box->x1 = ceil(dbox.x1);
+	box->y0 = floor(dbox.y0);
+	box->y1 = ceil(dbox.y1);
+}
+
 SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecObject *obj, SwfdecLayer *oldlayer)
 {
@@ -541,6 +580,42 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	layer = swfdec_layer_new();
 	layer->seg = seg;
 	art_affine_multiply(layer->transform,seg->transform,s->transform);
+
+#if 0
+	if(oldlayer &&
+	   layer->transform[0] == oldlayer->transform[0] &&
+	   layer->transform[1] == oldlayer->transform[1] &&
+	   layer->transform[2] == oldlayer->transform[2] &&
+	   layer->transform[3] == oldlayer->transform[3]){
+		double x,y;
+		SwfdecLayerVec *oldlayervec;
+
+		x = layer->transform[4] - oldlayer->transform[4];
+		y = layer->transform[5] - oldlayer->transform[5];
+
+		SWF_DEBUG(4,"translation\n");
+
+		g_array_set_size(layer->fills, shape->fills->len);
+		for(i=0;i<shape->fills->len;i++){
+			oldlayervec = &g_array_index(oldlayer->fills,SwfdecLayerVec,i);
+			layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
+			shapevec = g_ptr_array_index(shape->fills,i);
+
+			layervec->svp = art_svp_translate (oldlayervec->svp, x, y);
+			layervec->color = transform_color(shapevec->color,
+				seg->color_mult, seg->color_add);
+			art_svp_bbox(layervec->svp, &layervec->rect);
+			art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
+			layervec->compose = NULL;
+			if(shapevec->fill_id){
+				swfdec_shape_compose(s, layervec, shapevec,
+					layer->transform);
+			}
+		}
+
+		return layer;
+	}
+#endif
 
 	layer->rect.x0 = 0;
 	layer->rect.x1 = 0;
@@ -661,7 +736,9 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	double mat0[6];
 	int i, j;
 	unsigned char *dest;
+	unsigned char *src;
 	double inv_width, inv_height;
+	int width, height;
 
 	image_object = swfdec_object_get(s, shapevec->fill_id);
 	if(!image_object)return;
@@ -681,23 +758,30 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 		shapevec->fill_matrix[4],
 		shapevec->fill_matrix[5]);
 
-	layervec->compose = g_malloc(s->width * s->height * 4);
-	layervec->compose_rowstride = s->width * 4;
-	layervec->compose_height = s->height;
-	layervec->compose_width = s->width;
+	width = layervec->rect.x1 - layervec->rect.x0;
+	height = layervec->rect.y1 - layervec->rect.y0;
+
+	layervec->compose = g_malloc(width * height * 4);
+	layervec->compose_rowstride = width * 4;
+	layervec->compose_height = height;
+	layervec->compose_width = width;
 	
 	art_affine_multiply(mat0, shapevec->fill_matrix, trans);
+
+	/* Need an offset in the compose information */
+	mat0[4] -= layervec->rect.x0;
+	mat0[5] -= layervec->rect.y0;
 	art_affine_invert(mat, mat0);
 	dest = layervec->compose;
+	src = image->image_data;
 	inv_width = 1.0/image->width;
 	inv_height = 1.0/image->height;
-	for(j=0;j<s->height;j++){
-	for(i=0;i<s->width;i++){
-		int ix,iy;
+	for(j=0;j<height;j++){
 		double x,y;
-
-		x = mat[0]*i + mat[2]*j + mat[4];
-		y = mat[1]*i + mat[3]*j + mat[5];
+		x = mat[2]*j + mat[4];
+		y = mat[3]*j + mat[5];
+	for(i=0;i<width;i++){
+		int ix,iy;
 
 		ix = x - floor(x*inv_width)*image->width;
 		iy = y - floor(y*inv_height)*image->height;
@@ -710,12 +794,14 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 		ix = x;
 		iy = y;
 #endif
-		dest[0] = image->image_data[ix*4 + iy*image->rowstride + 0];
-		dest[1] = image->image_data[ix*4 + iy*image->rowstride + 1];
-		dest[2] = image->image_data[ix*4 + iy*image->rowstride + 2];
-		dest[3] = image->image_data[ix*4 + iy*image->rowstride + 3];
+#define RGBA8888_COPY(a,b) (*(guint32 *)(a) = *(guint32 *)(b))
+		RGBA8888_COPY(dest,src+ix*4 + iy*image->rowstride);
 		dest+=4;
+		x += mat[0];
+		y += mat[1];
+
 	}
 	}
+
 }
 

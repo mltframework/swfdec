@@ -3,6 +3,7 @@
 #define _JPEG_INTERNAL_H_
 
 #include "jpeg.h"
+#include "bits.h"
 
 
 #define JPEG_DEBUG(n, format...)	do{ \

@@ -1,6 +1,6 @@
 
-#ifndef _JPEG_H_
-#define _JPEG_H_
+#ifndef _JPEG_DECODER_H_
+#define _JPEG_DECODER_H_
 
 typedef struct jpeg_decoder_struct JpegDecoder;
 

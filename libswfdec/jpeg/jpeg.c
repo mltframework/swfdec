@@ -7,9 +7,7 @@
 #include <glib.h>
 #include <string.h>
 
-#include <swf.h>
 #include "jpeg_internal.h"
-#include "../bits.h"
 
 #define unzigzag8x8_s16 unzigzag8x8_s16_ref
 #define idct8x8_s16 idct8x8_s16_ref
@@ -123,6 +121,7 @@ static char *sprintbits(char *str, unsigned int bits, int n);
 static void dump_block8x8_s16(short *q);
 static void dequant8x8_s16(short *dest, short *src, short *mult);
 static void addconst8x8_s16(short *dest, short *src, int c);
+static void divconst8x8_s16(short *dest, short *src, int c);
 static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
 
 
@@ -275,11 +274,15 @@ int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits)
 static void dumpbits(bits_t *bits)
 {
 	int i;
+	unsigned char *p;
 
+	p = bits->ptr;
 	for(i=0;i<8;i++){
-		printf("%02x ",get_u8(bits));
+		JPEG_DEBUG(0,"%02x %02x %02x %02x %02x %02x %02x %02x\n",
+			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+		p += 8;
 	}
-	printf("\n");
+
 }
 
 int jpeg_decoder_find_component_by_id(JpegDecoder *dec, int id)
@@ -450,7 +453,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	go = 1;
 	x = 0;
 	y = 0;
-	dc[0] = dc[1] = dc[2] = dc[3] = 128;
+	dc[0] = dc[1] = dc[2] = dc[3] = 128*8;
 	while(go){
 	for(i=0;i<dec->scan_list_length;i++){
 		int dc_table_index;
@@ -474,15 +477,14 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 			dec->dc_huff_table[dc_table_index],
 			dec->ac_huff_table[ac_table_index], bits2);
 
-		dc[component_index] += block[0];
-		block[0] = 0;
 		JPEG_DEBUG(0,"using quant table %d\n", quant_index);
 		dequant8x8_s16(block2, block, dec->quant_table[quant_index]);
+		dc[component_index] += block2[0];
+		block2[0] = dc[component_index];
 		unzigzag8x8_s16(block, block2);
 		idct8x8_s16(block2, block, sizeof(short)*8, sizeof(short)*8);
-		addconst8x8_s16(block, block2, dc[component_index]);
 
-		dump_block8x8_s16(block);
+		dump_block8x8_s16(block2);
 
 		ptr = dec->components[component_index].image + x +
 			dec->scan_list[i].x * 8 +
@@ -491,7 +493,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 
 		clipconv8x8_u8_s16(ptr,
 			dec->components[component_index].rowstride,
-			block);
+			block2);
 	}
 		x += dec->scan_h_subsample * 8;
 		if(x >= dec->width){
@@ -589,7 +591,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level = 4;
+int jpeg_decoder_verbose_level = 0;
 
 void jpeg_debug(int n, const char *format, ... )
 {
@@ -625,7 +627,7 @@ static void dump_block8x8_s16(short *q)
 	int i;
 
 	for(i=0;i<8;i++){
-		JPEG_DEBUG(0,"%3d %3d %3d %3d %3d %3d %3d %3d\n",
+		JPEG_DEBUG(3,"%3d %3d %3d %3d %3d %3d %3d %3d\n",
 			q[0], q[1], q[2], q[3],
 			q[4], q[5], q[6], q[7]);
 		q+=8;
@@ -638,15 +640,6 @@ static void dequant8x8_s16(short *dest, short *src, short *mult)
 
 	for(i=0;i<64;i++){
 		dest[i] = src[i] * mult[i];
-	}
-}
-
-static void addconst8x8_s16(short *dest, short *src, int c)
-{
-	int i;
-
-	for(i=0;i<64;i++){
-		dest[i] = src[i] + c;
 	}
 }
 

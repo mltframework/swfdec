@@ -49,7 +49,11 @@ SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 
 	layer = swfdec_layer_new();
 	layer->seg = seg;
-	art_affine_multiply(layer->transform, seg->transform, s->transform);
+
+	/* Not sure why this is wrong.  Somehow the top-level transform
+	 * gets applied twice. */
+	//art_affine_multiply(layer->transform, seg->transform, s->transform);
+	art_affine_copy(layer->transform, seg->transform);
 	
 	if(oldlayer){
 		layer->frame_number = oldlayer->frame_number + 1;

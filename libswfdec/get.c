@@ -187,38 +187,40 @@ void get_matrix(bits_t *bits)
 	//printf("  translate = %d,%d\n", translate_x, translate_y);
 }
 
-unsigned int get_gradient(bits_t *bits)
+SwfdecGradient *get_gradient(bits_t *bits)
 {
+	SwfdecGradient *grad;
 	int n_gradients;
-	int ratio;
 	int i;
-	unsigned int color = SWF_COLOR_COMBINE(0,0xff,0,0xff);
 
 	syncbits(bits);
 	n_gradients = getbits(bits,8);
-	//printf("   n_gradients = %d\n",n_gradients);
+	grad = g_malloc(sizeof(SwfdecGradient) +
+			sizeof(SwfdecGradientEntry)*(n_gradients-1));
+	grad->n_gradients = n_gradients;
 	for(i=0;i<n_gradients;i++){
-		ratio = getbits(bits,8);
-		//printf("   ratio = %d\n",ratio);
-		color = get_color(bits);
+		grad->array[i].ratio = getbits(bits,8);
+		grad->array[i].color = get_color(bits);
 	}
-	return color;
+	return grad;
 }
 
-unsigned int get_gradient_rgba(bits_t *bits)
+SwfdecGradient *get_gradient_rgba(bits_t *bits)
 {
+	SwfdecGradient *grad;
 	int n_gradients;
-	int ratio;
 	int i;
-	unsigned int color = 0xff0000ff;
 
 	syncbits(bits);
 	n_gradients = getbits(bits,8);
+	grad = g_malloc(sizeof(SwfdecGradient) +
+			sizeof(SwfdecGradientEntry)*(n_gradients-1));
+	grad->n_gradients = n_gradients;
 	for(i=0;i<n_gradients;i++){
-		ratio = getbits(bits,8);
-		color = get_rgba(bits);
+		grad->array[i].ratio = getbits(bits,8);
+		grad->array[i].color = get_rgba(bits);
 	}
-	return color;
+	return grad;
 }
 
 void get_fill_style(bits_t *bits)

@@ -14,6 +14,8 @@ struct swfdec_shape_vec_struct {
 	int fill_type;
 	int fill_id;
 	double fill_matrix[6];
+
+	SwfdecGradient *grad;
 };
 
 struct swfdec_shape_struct {

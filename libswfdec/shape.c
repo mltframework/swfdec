@@ -6,6 +6,10 @@
 
 static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	SwfdecShapeVec *shapevec, double trans[6]);
+static void swfdec_shape_compose_gradient(SwfdecDecoder *s, SwfdecLayerVec *layervec,
+	SwfdecShapeVec *shapevec, double trans[6], SwfdecSpriteSeg *seg);
+static unsigned char *swfdec_gradient_to_palette(SwfdecGradient *grad,
+	double *color_mult, double *color_add);
 
 SwfdecShape *swfdec_shape_new(void)
 {
@@ -317,12 +321,17 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 			SWF_DEBUG(0,"    color %08x\n",shapevec->color);
 		}
 		if(fill_style_type == 0x10 || fill_style_type == 0x12){
+			shapevec->fill_type = fill_style_type;
 			get_art_matrix(bits,shapevec->fill_matrix);
 			if(shape->rgba){
-				shapevec->color = get_gradient_rgba(bits);
+				shapevec->grad = get_gradient_rgba(bits);
 			}else{
-				shapevec->color = get_gradient(bits);
+				shapevec->grad = get_gradient(bits);
 			}
+			shapevec->fill_matrix[0] *= SWF_SCALE_FACTOR;
+			shapevec->fill_matrix[1] *= SWF_SCALE_FACTOR;
+			shapevec->fill_matrix[2] *= SWF_SCALE_FACTOR;
+			shapevec->fill_matrix[3] *= SWF_SCALE_FACTOR;
 		}
 		if(fill_style_type == 0x40 || fill_style_type == 0x41){
 			shapevec->fill_type = fill_style_type;
@@ -336,10 +345,10 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 			}
 
 			get_art_matrix(bits,shapevec->fill_matrix);
-			shapevec->fill_matrix[0] /= 20;
-			shapevec->fill_matrix[1] /= 20;
-			shapevec->fill_matrix[2] /= 20;
-			shapevec->fill_matrix[3] /= 20;
+			shapevec->fill_matrix[0] *= SWF_SCALE_FACTOR;
+			shapevec->fill_matrix[1] *= SWF_SCALE_FACTOR;
+			shapevec->fill_matrix[2] *= SWF_SCALE_FACTOR;
+			shapevec->fill_matrix[3] *= SWF_SCALE_FACTOR;
 		}
 	}
 
@@ -353,14 +362,7 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 		shapevec = swf_shape_vec_new();
 		g_ptr_array_add(shape->lines, shapevec);
 
-		/* FIXME  don't know why some animations use a scale
-		 * factor of 0.05.  It might be part of overall scaling.
-		 * We hack a correction here.
-		 */
-		shapevec->width = get_u16(bits);
-		//if(shapevec->width>10){
-			shapevec->width *= SWF_SCALE_FACTOR;
-		//}
+		shapevec->width = get_u16(bits) * SWF_SCALE_FACTOR;
 		if(shape->rgba){
 			shapevec->color = get_rgba(bits);
 		}else{
@@ -451,7 +453,7 @@ void swf_shape_get_recs(SwfdecDecoder *s, bits_t *bits, SwfdecShape *shape)
 				x2 = x*SWF_SCALE_FACTOR;
 				y2 = y*SWF_SCALE_FACTOR;
 
-#define WEIGHT 0.6
+#define WEIGHT (2.0/3.0)
 				pt.code = ART_CURVETO;
 				pt.x1 = WEIGHT*x1 + (1-WEIGHT)*x0;
 				pt.y1 = WEIGHT*y1 + (1-WEIGHT)*y0;
@@ -581,8 +583,9 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	layer->seg = seg;
 	art_affine_multiply(layer->transform,seg->transform,s->transform);
 
-#if 0
+#if 1
 	if(oldlayer &&
+	   oldlayer->seg->id == seg->id &&
 	   layer->transform[0] == oldlayer->transform[0] &&
 	   layer->transform[1] == oldlayer->transform[1] &&
 	   layer->transform[2] == oldlayer->transform[2] &&
@@ -593,7 +596,7 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		x = layer->transform[4] - oldlayer->transform[4];
 		y = layer->transform[5] - oldlayer->transform[5];
 
-		SWF_DEBUG(4,"translation\n");
+		SWF_DEBUG(0,"translation\n");
 
 		g_array_set_size(layer->fills, shape->fills->len);
 		for(i=0;i<shape->fills->len;i++){
@@ -611,6 +614,29 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 				swfdec_shape_compose(s, layervec, shapevec,
 					layer->transform);
 			}
+			if(shapevec->grad){
+				swfdec_shape_compose_gradient(s, layervec, shapevec, layer->transform, seg);
+			}
+		}
+
+		g_array_set_size(layer->lines, shape->lines->len);
+		for(i=0;i<shape->lines->len;i++){
+			oldlayervec = &g_array_index(oldlayer->lines,SwfdecLayerVec,i);
+			layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
+			shapevec = g_ptr_array_index(shape->lines,i);
+
+			layervec->svp = art_svp_translate (oldlayervec->svp, x, y);
+			layervec->color = transform_color(shapevec->color,
+				seg->color_mult, seg->color_add);
+			art_svp_bbox(layervec->svp, &layervec->rect);
+			art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
+			layervec->compose = NULL;
+#if 0
+			if(shapevec->fill_id){
+				swfdec_shape_compose(s, layervec, shapevec,
+					layer->transform);
+			}
+#endif
 		}
 
 		return layer;
@@ -664,6 +690,9 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		layervec->compose = NULL;
 		if(shapevec->fill_id){
 			swfdec_shape_compose(s, layervec, shapevec, layer->transform);
+		}
+		if(shapevec->grad){
+			swfdec_shape_compose_gradient(s, layervec, shapevec, layer->transform, seg);
 		}
 	}
 
@@ -803,5 +832,146 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	}
 	}
 
+}
+
+static void swfdec_shape_compose_gradient(SwfdecDecoder *s, SwfdecLayerVec *layervec,
+	SwfdecShapeVec *shapevec, double trans[6], SwfdecSpriteSeg *seg)
+{
+	SwfdecGradient *grad;
+	double mat[6];
+	double mat0[6];
+	int i, j;
+	unsigned char *dest;
+	unsigned char *palette;
+	int width, height;
+
+	SWF_DEBUG(0,"swfdec_shape_compose: %d\n", shapevec->fill_id);
+
+	grad = shapevec->grad;
+
+	SWF_DEBUG(0,"%g %g %g %g %g %g\n",
+		shapevec->fill_matrix[0],
+		shapevec->fill_matrix[1],
+		shapevec->fill_matrix[2],
+		shapevec->fill_matrix[3],
+		shapevec->fill_matrix[4],
+		shapevec->fill_matrix[5]);
+
+	width = layervec->rect.x1 - layervec->rect.x0;
+	height = layervec->rect.y1 - layervec->rect.y0;
+
+	layervec->compose = g_malloc(width * height * 4);
+	layervec->compose_rowstride = width * 4;
+	layervec->compose_height = height;
+	layervec->compose_width = width;
+	
+	art_affine_multiply(mat0, shapevec->fill_matrix, trans);
+
+	palette = swfdec_gradient_to_palette(grad,
+		seg->color_mult, seg->color_add);
+
+	mat0[4] -= layervec->rect.x0;
+	mat0[5] -= layervec->rect.y0;
+	art_affine_invert(mat, mat0);
+	dest = layervec->compose;
+	if(shapevec->fill_type==0x10){
+		for(j=0;j<height;j++){
+			double x,y;
+			x = mat[2]*j + mat[4];
+			y = mat[3]*j + mat[5];
+			for(i=0;i<width;i++){
+				double z;
+				int index;
+	
+				z = ((x+16384.0)/32768.0) * 256;
+				if(z<0)z=0;
+				if(z>255.0)z=255;
+				index = z;
+				//index &= 0xff;
+				dest[0] = palette[index*4 + 0];
+				dest[1] = palette[index*4 + 1];
+				dest[2] = palette[index*4 + 2];
+				dest[3] = palette[index*4 + 3];
+				dest+=4;
+				x += mat[0];
+				y += mat[1];
+			}
+		}
+	}else{
+		for(j=0;j<height;j++){
+			double x,y;
+			x = mat[2]*j + mat[4];
+			y = mat[3]*j + mat[5];
+			for(i=0;i<width;i++){
+				double z;
+				int index;
+	
+				z = sqrt(x*x+y*y)/16384.0 * 256;
+				if(z<0)z=0;
+				if(z>255.0)z=255;
+				index = z;
+				//index &= 0xff;
+				dest[0] = palette[index*4 + 0];
+				dest[1] = palette[index*4 + 1];
+				dest[2] = palette[index*4 + 2];
+				dest[3] = palette[index*4 + 3];
+				dest+=4;
+				x += mat[0];
+				y += mat[1];
+			}
+		}
+	}
+
+	g_free(palette);
+}
+
+static unsigned char *swfdec_gradient_to_palette(SwfdecGradient *grad,
+	double *color_mult, double *color_add)
+{
+	swf_color color;
+	unsigned char *p;
+	int i, j;
+
+	p = malloc(256*4);
+
+	color = transform_color(grad->array[0].color, color_mult, color_add);
+	for(i=0;i<grad->array[0].ratio;i++){
+		p[i*4 + 0] = SWF_COLOR_R(color);
+		p[i*4 + 1] = SWF_COLOR_G(color);
+		p[i*4 + 2] = SWF_COLOR_B(color);
+		p[i*4 + 3] = SWF_COLOR_A(color);
+	}
+
+	for(j=0;j<grad->n_gradients-1;j++){
+		double len = grad->array[j+1].ratio - grad->array[j].ratio;
+		double x;
+		swf_color color0 = transform_color(grad->array[j].color,
+			color_mult, color_add);
+		swf_color color1 = transform_color(grad->array[j+1].color,
+			color_mult, color_add);
+
+		for(i=grad->array[j].ratio;i<grad->array[j+1].ratio;i++){
+			x = (i-grad->array[j].ratio)/len;
+
+			p[i*4 + 0] = SWF_COLOR_R(color0) * (1-x) +
+				SWF_COLOR_R(color1) * x;
+			p[i*4 + 1] = SWF_COLOR_G(color0) * (1-x) +
+				SWF_COLOR_G(color1) * x;
+			p[i*4 + 2] = SWF_COLOR_B(color0) * (1-x) +
+				SWF_COLOR_B(color1) * x;
+			p[i*4 + 3] = SWF_COLOR_A(color0) * (1-x) +
+				SWF_COLOR_A(color1) * x;
+		}
+	}
+
+	color = transform_color(grad->array[j].color, color_mult, color_add);
+	for(i=grad->array[j].ratio;i<256;i++){
+		p[i*4 + 0] = SWF_COLOR_R(color);
+		p[i*4 + 1] = SWF_COLOR_G(color);
+		p[i*4 + 2] = SWF_COLOR_B(color);
+		p[i*4 + 3] = SWF_COLOR_A(color);
+	}
+
+	return p;
 }
 

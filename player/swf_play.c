@@ -16,6 +16,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <time.h>
+#include <string.h>
 
 #include <SDL.h>
 
@@ -46,6 +47,7 @@ int width = 100;
 int height = 100;
 int fast = FALSE;
 int enable_sound = TRUE;
+int quit_at_eof = FALSE;
 
 int interval;
 struct timeval image_time;
@@ -84,10 +86,11 @@ int main(int argc, char *argv[])
 		{ "height", 1, NULL, 'h' },
 		{ "fast", 0, NULL, 'f' },
 		{ "no-sound", 0, NULL, 's' },
+		{ "quit", 0, NULL, 'q' },
 		{ 0 },
 	};
 
-	fault_setup();
+	//fault_setup();
 
 	gtk_init(&argc,&argv);
 	gdk_rgb_init ();
@@ -97,7 +100,7 @@ int main(int argc, char *argv[])
 	s = swfdec_decoder_new();
 
 	while(1){
-		c = getopt_long(argc, argv, "sfx:w:h:", options, &index);
+		c = getopt_long(argc, argv, "qsfx:w:h:", options, &index);
 		if(c==-1)break;
 
 		switch(c){
@@ -117,6 +120,9 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 			enable_sound = FALSE;
+			break;
+		case 'q':
+			quit_at_eof = TRUE;
 			break;
 		default:
 			do_help();
@@ -152,8 +158,6 @@ static void do_help(void)
 
 static void new_gtk_window(void)
 {
-	//GdkWindow *gdk_wind;
-
 	if(plugged){
 		gtk_wind = gtk_plug_new(0);
 		gtk_signal_connect(GTK_OBJECT(gtk_wind), "embedded",
@@ -190,7 +194,6 @@ static void new_gtk_window(void)
 	gtk_widget_show_all(gtk_wind);
 
 	if(plugged){
-		//XSync(GDK_WINDOW_XDISPLAY(gtk_wind->window),0);
 		XReparentWindow(GDK_WINDOW_XDISPLAY(gtk_wind->window),
 			GDK_WINDOW_XID(gtk_wind->window),
 			xid, 0, 0);
@@ -198,37 +201,6 @@ static void new_gtk_window(void)
 			GDK_WINDOW_XID(gtk_wind->window));
 	}
 }
-
-#if 0
-static void steal_window(void)
-{
-	gtk_wind = gtk_plug_new(xid);
-
-	if(!gtk_wind){
-		fprintf(stderr,"Can't find window with XID %ld\n",xid);
-		exit(1);
-	}
-
-	gtk_signal_connect(GTK_OBJECT(gtk_wind), "delete_event",
-		GTK_SIGNAL_FUNC (destroy_cb), NULL);
-	gtk_signal_connect(GTK_OBJECT(gtk_wind), "destroy",
-		GTK_SIGNAL_FUNC(destroy_cb), NULL);
-
-	drawing_area = gtk_drawing_area_new();
-	gtk_container_add(GTK_CONTAINER(gtk_wind),
-		GTK_WIDGET(drawing_area));
-
-	gtk_signal_connect(GTK_OBJECT(drawing_area), "expose_event",
-		GTK_SIGNAL_FUNC(expose_cb), NULL);
-	gtk_signal_connect (GTK_OBJECT (drawing_area), "configure_event",
-		GTK_SIGNAL_FUNC(expose_cb), NULL);
-
-	gtk_signal_connect(GTK_OBJECT(drawing_area), "key_press_event",
-		GTK_SIGNAL_FUNC(key_press), NULL);
-
-	gtk_widget_show_all(gtk_wind);
-}
-#endif
 
 static void read_swf_file(char *fn)
 {
@@ -338,7 +310,11 @@ static void sound_setup(void)
 	SDL_AudioSpec wanted;
 
 	wanted.freq = 44100;
-	wanted.format = AUDIO_S16;
+#if G_BYTE_ORDER == 4321
+	wanted.format = AUDIO_S16MSB;
+#else
+	wanted.format = AUDIO_S16LSB;
+#endif
 	wanted.channels = 2;    /* 1 = mono, 2 = stereo */
 	wanted.samples = 1024;  /* Good low-latency value for callback */
 	wanted.callback = fill_audio;
@@ -370,10 +346,6 @@ static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data)
 
 static int configure_cb (GtkWidget *widget, GdkEventConfigure *evt, gpointer data)
 {
-	printf("configure!\n");
-
-	printf("width=%d height=%d\n", evt->width, evt->height);
-
 	return FALSE;
 }
 
@@ -397,8 +369,6 @@ static void destroy_cb (GtkWidget *widget, gpointer data)
 
 static void embedded (GtkPlug *plug, gpointer data)
 {
-	//printf("EMBEDDED!\n");
-	//gtk_widget_show_all(gtk_wind);
 }
 
 /* idle stuff */
@@ -414,13 +384,10 @@ static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
 	ret = g_io_channel_read_chars(chan, data, 4096, &bytes_read, &error);
 	if(ret==G_IO_STATUS_NORMAL){
 		ret = swfdec_decoder_addbits(s,data,bytes_read);
-		//fprintf(stderr,"addbits %d\n",bytes_read);
 		if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
 	}else if(ret==G_IO_STATUS_ERROR){
-		fprintf(stderr,"g_io_channel_read_chars: %s\n",error->message);
 		exit(1);
 	}else if(ret==G_IO_STATUS_EOF){
-		fprintf(stderr,"got eof\n");
 		gtk_idle_remove(input_idle_id);
 		if(!render_idle_id)render_idle_id = g_idle_add(render_idle,NULL);
 	}
@@ -467,10 +434,13 @@ static gboolean render_idle(gpointer data)
 		render_idle_id = 0;
 	}
 	if(ret==SWF_EOF){
+		swfdec_decoder_get_image(s,&image);
 		swfdec_decoder_free(s);
 		s = NULL;
-		//if(image)free(image);
-		//gtk_exit(0);
+		if(quit_at_eof){
+			if(image) g_free(image);
+			gtk_exit(0);
+		}
 		gtk_idle_remove(render_idle_id);
 		render_idle_id = 0;
 	}
@@ -533,27 +503,7 @@ void fault_handler(int signum, siginfo_t *si, void *misc)
 
 	wait(NULL);
 
-#if 0
-	/* FIXME how do we know if we were run by libtool? */
-	g_print("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
-		"Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
-		getpid());
-	while(spinning)usleep(1000000);
-#endif
-#if 0
-	/* This spawns a gdb and attaches it to gst-launch. */
-	{
-		char str[40];
-		sprintf(str,"gdb -quiet gst-launch %d",getpid());
-		system(str);
-	}
-
 	_exit(0);
-#endif
-#if 1
-	_exit(0);
-#endif
-
 }
 
 void fault_restore(void)

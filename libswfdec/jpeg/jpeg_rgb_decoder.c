@@ -142,7 +142,7 @@ static void upscale_x(JpegRGBDecoder *rgbdec, int i)
 	outp = new_image;
 	inp = rgbdec->component[i].image;
 	for(y=0;y<new_height/rgbdec->component[i].v_subsample; y++){
-		for(x=0;x<new_width;x+=2){
+		for(x=0;x<new_width/2;x++){
 			outp[x*2] = inp[x];
 			outp[x*2+1] = inp[x];
 		}

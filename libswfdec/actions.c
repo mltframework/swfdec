@@ -313,7 +313,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
 
   while (1) {
     action = swfdec_bits_get_u8 (&bits);
-    SWFDEC_ERROR ("executing action 0x%02x", action);
+    SWFDEC_DEBUG ("executing action 0x%02x", action);
     if (action & 0x80) {
       len = swfdec_bits_get_u16 (&bits);
       context->bits.buffer = bits.buffer;
@@ -547,7 +547,7 @@ action_get_url (SwfdecActionContext * context)
   url = swfdec_bits_get_string (&context->bits);
   target = swfdec_bits_get_string (&context->bits);
 
-  SWFDEC_ERROR ("get_url %s %s", url, target);
+  SWFDEC_DEBUG ("get_url %s %s", url, target);
 
   if (context->s->url) g_free (context->s->url);
   context->s->url = url;

@@ -1,3 +1,22 @@
+2005-03-17  David Schleef  <ds@schleef.org>
+
+	* libswfdec/actions.c: (swfdec_action_script_execute),
+	(action_get_url): quiet debugging
+	* libswfdec/art.c: (art_rgb_svp_alpha_callback): dynamically
+	allocate temp scanline
+	* libswfdec/swf.c: (swfdec_decoder_set_image_size): resize fixes
+	* libswfdec/swfdec_render.c: (swfdec_render_get_audio): quiet
+	debugging
+	* libswfdec/swfdec_render_libart.c: (swfdec_render_be_start):
+	dynamically allocate temp scanline
+	* plugin/gstappsrc.c: (gst_appsrc_loop): remove dead code
+	* plugin/plugin.c: (plugin_thread), (plugin_newp),
+	(plugin_destroy), (plugin_set_window): add instance to debugging
+	* plugin/swfdec-mozilla-player.c: (main), (new_gtk_window),
+	(timeout), (check_playing), (window_state_event),
+	(visibility_notify_event), (unmap), (desired_size): convert to
+	threaded pipeline, add window management stuff
+
 2005-02-11  David Schleef  <ds@schleef.org>
 
 	* Makefile.am: don't dist removed m4 files

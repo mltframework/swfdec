@@ -17,7 +17,7 @@ swfdec_render_be_start (SwfdecDecoder *s)
     swf_invalidate_irect (s, &s->irect);
   }
   if (!s->tmp_scanline) {
-    s->tmp_scanline = g_malloc (s->width);
+    s->tmp_scanline = g_malloc (s->width * 4);
   }
 }
 

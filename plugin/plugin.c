@@ -124,6 +124,7 @@ plugin_thread (void *arg)
     if (ret < 0) {
       DEBUG ("select failed %d", errno);
     } else if (ret == 0) {
+      DEBUG ("select timeout");
       /* timeout */
     } else {
       if (plugin->recv_fd > 0 && FD_ISSET (plugin->recv_fd, &read_fds)) {
@@ -186,7 +187,7 @@ plugin_newp (NPMIMEType mime_type, NPP instance,
   Plugin *plugin;
   int i;
 
-  DEBUG ("plugin_newp");
+  DEBUG ("plugin_newp instance=%p", instance);
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -230,7 +231,7 @@ plugin_destroy (NPP instance, NPSavedData ** save)
   Plugin *plugin;
   int status;
 
-  DEBUG ("plugin_destroy");
+  DEBUG ("plugin_destroy instance=%p", instance);
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -267,7 +268,7 @@ plugin_set_window (NPP instance, NPWindow * window)
 {
   Plugin *plugin;
 
-  DEBUG ("plugin_set_window");
+  DEBUG ("plugin_set_window instance=%p", instance);
 
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -319,7 +320,7 @@ static NPError
 plugin_new_stream (NPP instance, NPMIMEType type,
     const char *window, NPStream ** stream_ptr)
 {
-  DEBUG ("plugin_new_stream");
+  DEBUG ("plugin_new_stream instance=%p", instance);
 
   return NPERR_NO_ERROR;
 }
@@ -329,7 +330,7 @@ plugin_destroy_stream (NPP instance, NPStream * stream, NPError reason)
 {
   Plugin *plugin;
 
-  DEBUG ("plugin_destroy_stream");
+  DEBUG ("plugin_destroy_stream instance=%p", instance);
 
   if (instance == NULL)
     return 0;
@@ -361,7 +362,7 @@ plugin_write (NPP instance, NPStream * stream, int32 offset,
 {
   Plugin *plugin;
 
-  //DEBUG ("plugin_write");
+  DEBUG ("plugin_write instance=%p", instance);
 
   if (instance == NULL)
     return 0;
@@ -383,7 +384,7 @@ plugin_stream_as_file (NPP instance, NPStream * stream, const char *fname)
 {
   Plugin *plugin;
 
-  DEBUG ("plugin_stream_as_file");
+  DEBUG ("plugin_stream_as_file instance=%p", instance);
 
   if (instance == NULL)
     return;
@@ -398,7 +399,7 @@ plugin_stream_as_file (NPP instance, NPStream * stream, const char *fname)
 static int
 plugin_event (NPP instance, void *event)
 {
-  DEBUG ("plugin_event");
+  DEBUG ("plugin_event instance=%p", instance);
 
   return TRUE;
 }
@@ -406,7 +407,7 @@ plugin_event (NPP instance, void *event)
 static NPError
 plugin_set_value (NPP instance, NPNVariable var, void *value)
 {
-  DEBUG ("plugin_set_value");
+  DEBUG ("plugin_set_value instance=%p", instance);
 
   return NPERR_NO_ERROR;
 }

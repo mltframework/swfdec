@@ -353,8 +353,8 @@ swfdec_render_get_audio (SwfdecDecoder * s)
     SwfdecSoundChunk *chunk =
       s->main_sprite->sound_play[s->render->frame_index];
 
-    SWFDEC_ERROR("chunk %p frame_index %d", chunk, s->render->frame_index);
-    SWFDEC_ERROR("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",
+    SWFDEC_DEBUG("chunk %p frame_index %d", chunk, s->render->frame_index);
+    SWFDEC_DEBUG("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",
         chunk->object, chunk->start_sample, chunk->stop_sample,
         chunk->stop, chunk->no_restart, chunk->loop_count);
 
@@ -362,8 +362,9 @@ swfdec_render_get_audio (SwfdecDecoder * s)
     if (sound) {
       int i;
       GList *g;
+      int n_loops;
 
-      SWFDEC_ERROR ("sound object n_samples=%d", sound->n_samples);
+      SWFDEC_DEBUG ("sound object n_samples=%d", sound->n_samples);
 
       for(g=g_list_first(s->stream_sound_buffers);g;g=g_list_next(g)) {
         swfdec_buffer_unref ((SwfdecBuffer *)g->data);
@@ -371,7 +372,10 @@ swfdec_render_get_audio (SwfdecDecoder * s)
       g_list_free (s->stream_sound_buffers);
       s->stream_sound_buffers = NULL;
 
-      for(i=0;i<chunk->loop_count;i++){
+      /* FIXME: loop_count should be handled in some other way */
+      n_loops = chunk->loop_count;
+      if (n_loops > 10) n_loops = 10;
+      for(i=0;i<n_loops;i++){
         for(g=g_list_first(sound->decoded_buffers);g;g=g_list_next(g)) {
           SwfdecBuffer *buffer = (SwfdecBuffer *)g->data;
           swfdec_buffer_ref (buffer);

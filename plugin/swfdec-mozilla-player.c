@@ -67,6 +67,10 @@ int video_window_h;
 
 GdkWindow *video_window;
 
+gboolean visible;
+gboolean iconified;
+gboolean playing;
+
 static void do_help (void);
 static void print_formats (void);
 static void new_gtk_window (void);
@@ -90,6 +94,10 @@ static int motion_notify (GtkWidget * widget, GdkEventMotion * evt,
     gpointer data);
 static int configure_cb (GtkWidget * widget, GdkEventConfigure * evt,
     gpointer data);
+static int window_state_event (GtkWidget * widget, GdkEventWindowState * evt, gpointer data);
+static int visibility_notify_event (GtkWidget * widget, GdkEventVisibility * evt, gpointer data);
+static int unmap (GtkWidget *widget, gpointer closure);
+static gboolean timeout (gpointer closure);
 
 static void video_widget_realize (GtkWidget * widget, gpointer ignored);
 static void video_widget_allocate (GtkWidget * widget,
@@ -104,6 +112,10 @@ static GstElement *pipeline;
 static GstElement *thread;
 static GstElement *src;
 static GstElement *swfdec;
+static GstElement *thread2;
+static GstElement *thread3;
+static GstElement *queue1;
+static GstElement *queue2;
 static GstElement *audioconvert;
 static GstElement *audioscale;
 static GstElement *audio_sink;
@@ -219,6 +231,34 @@ main (int argc, char *argv[])
     exit(1);
   }
 
+#define THREADED
+#ifdef THREADED
+  thread2 = gst_element_factory_make ("thread", NULL);
+  if (thread2 == NULL) {
+    fprintf(stderr, "Could not create thread2 element\n");
+    exit(1);
+  }
+
+  queue1 = gst_element_factory_make ("queue", NULL);
+  if (queue1 == NULL) {
+    fprintf(stderr, "Could not create queue element\n");
+    exit(1);
+  }
+
+  thread3 = gst_element_factory_make ("thread", NULL);
+  if (thread3 == NULL) {
+    fprintf(stderr, "Could not create thread2 element\n");
+    exit(1);
+  }
+
+  queue2 = gst_element_factory_make ("queue", NULL);
+  if (queue2 == NULL) {
+    fprintf(stderr, "Could not create queue element\n");
+    exit(1);
+  }
+  g_object_set (G_OBJECT(queue2), "max-size-buffers", 1, NULL);
+#endif
+
   audioconvert = gst_element_factory_make ("audioconvert", NULL);
   if (audioconvert == NULL) {
     fprintf(stderr, "Could not create audioconvert element\n");
@@ -254,12 +294,26 @@ main (int argc, char *argv[])
       G_CALLBACK (embed_url), NULL);
 
   gst_bin_add (GST_BIN (pipeline), thread);
+#ifdef THREADED
+  gst_bin_add_many (GST_BIN (thread), src, swfdec, thread2, thread3, NULL);
+  gst_bin_add_many (GST_BIN (thread2), queue1, audioconvert, audioscale,
+      audio_sink, NULL);
+  gst_bin_add_many (GST_BIN (thread3), queue2, video_sink, NULL);
+#else
   gst_bin_add_many (GST_BIN (thread), src, swfdec, audioconvert,
       audioscale, audio_sink, video_sink, NULL);
+#endif
 
   ret = gst_element_link (src, swfdec);
+#ifdef THREADED
+  ret &= gst_element_link (swfdec, queue2);
+  ret &= gst_element_link (queue2, video_sink);
+  ret &= gst_element_link (swfdec, queue1);
+  ret &= gst_element_link (queue1, audioscale);
+#else
   ret &= gst_element_link (swfdec, video_sink);
   ret &= gst_element_link (swfdec, audioscale);
+#endif
   ret &= gst_element_link (audioscale, audioconvert);
   ret &= gst_element_link (audioconvert, audio_sink);
   if (ret == FALSE) {
@@ -270,13 +324,17 @@ main (int argc, char *argv[])
   if (xid) {
     plugged = 1;
   }
+
   new_gtk_window ();
 
+  playing = TRUE;
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   if (ret != GST_STATE_SUCCESS) {
     fprintf(stderr, "Failed to set pipeline to PLAYING\n");
     exit(1);
   }
+
+  g_timeout_add (1000, timeout, NULL);
 
   gtk_main ();
 
@@ -321,6 +379,13 @@ new_gtk_window (void)
   g_signal_connect (G_OBJECT (gtk_wind), "size_allocate",
       GTK_SIGNAL_FUNC (video_widget_allocate), NULL);
 
+  g_signal_connect (G_OBJECT (gtk_wind), "visibility-notify-event",
+      GTK_SIGNAL_FUNC (visibility_notify_event), NULL);
+  g_signal_connect (G_OBJECT (gtk_wind), "window-state-event",
+      GTK_SIGNAL_FUNC (window_state_event), NULL);
+  g_signal_connect (G_OBJECT (gtk_wind), "unmap",
+      GTK_SIGNAL_FUNC (unmap), NULL);
+
   g_signal_connect (G_OBJECT (gtk_wind), "key_press_event",
       GTK_SIGNAL_FUNC (key_press), NULL);
   g_signal_connect (G_OBJECT (gtk_wind), "motion_notify_event",
@@ -334,6 +399,7 @@ new_gtk_window (void)
       GDK_LEAVE_NOTIFY_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_BUTTON_RELEASE_MASK
+      | GDK_VISIBILITY_NOTIFY_MASK
       | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK);
 
   gtk_widget_show_all (gtk_wind);
@@ -347,6 +413,20 @@ new_gtk_window (void)
 }
 
 /* GTK callbacks */
+
+static gboolean
+timeout (gpointer closure)
+{
+  if (debug) {
+    if (GTK_WIDGET_MAPPED(gtk_wind)){
+      fprintf(stderr, "is mapped\n");
+    }else{
+      fprintf(stderr, "is unmapped\n");
+    }
+  }
+
+  return TRUE;
+}
 
 static int
 button_press_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
@@ -424,6 +504,79 @@ motion_notify (GtkWidget * widget, GdkEventMotion * evt, gpointer data)
   return TRUE;
 }
 
+static void
+check_playing (void)
+{
+  gboolean should_play;
+  int ret;
+
+  if (visible && !iconified) {
+    should_play = TRUE;
+  } else {
+    should_play = FALSE;
+  }
+
+should_play = TRUE;
+  if (should_play != playing) {
+    if (should_play) {
+      if (debug) fprintf(stderr, "setting pipeline to PLAYING");
+      ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+    } else {
+      if (debug) fprintf(stderr, "setting pipeline to PAUSED");
+      ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+    }
+    if (ret != GST_STATE_SUCCESS) {
+      fprintf(stderr, "Failed to set pipeline to PLAYING\n");
+      exit(1);
+    }
+    playing = should_play;
+  }
+
+}
+
+static int
+window_state_event (GtkWidget * widget, GdkEventWindowState * evt, gpointer data)
+{
+  if (debug)
+    fprintf(stderr, "window state 0x%08x\n", evt->new_window_state);
+
+  if (evt->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
+    iconified = TRUE;
+  } else {
+    iconified = FALSE;
+  }
+
+  check_playing();
+
+  return FALSE;
+}
+
+static int
+visibility_notify_event (GtkWidget * widget, GdkEventVisibility * evt, gpointer data)
+{
+  if (debug)
+    fprintf (stderr, "visibility notify\n");
+
+  if (evt->state == GDK_VISIBILITY_FULLY_OBSCURED) {
+    visible = FALSE;
+  } else {
+    visible = TRUE;
+  }
+
+  check_playing();
+    
+  return FALSE;
+}
+
+static int
+unmap (GtkWidget *widget, gpointer closure)
+{
+  if (debug)
+    fprintf (stderr, "unmap\n");
+
+  return FALSE;
+}
+
 static int
 configure_cb (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
 {
@@ -489,7 +642,7 @@ static void
 desired_size (GObject * obj, int w, int h, gpointer closure)
 {
   if (debug)
-    g_print ("got size %d %d\n", w, h);
+    fprintf (stderr, "got size %d %d\n", w, h);
 
   gtk_window_resize (GTK_WINDOW (gtk_wind), w, h);
 }

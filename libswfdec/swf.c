@@ -405,8 +405,8 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   s->transform.trans[5] = 0;
 #endif
 
-  swfdec_render_resize (s);
   swf_config_colorspace (s);
+  swfdec_render_resize (s);
 
   return SWF_OK;
 }

@@ -563,11 +563,12 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
   int k;
   uint8_t color[4];
   int alpha;
-  unsigned char alphabuf[1000];
+  unsigned char *alphabuf;
   int x;
   int a;
 
   linebuf = data->buf;
+  alphabuf = data->scanline;
   x0 = data->x0;
   x1 = data->x1;
 

@@ -325,6 +325,8 @@ gst_appsrc_loop (GstElement *element)
         gst_pad_push (appsrc->srcpad,
             GST_DATA (gst_event_new (GST_EVENT_EOS)));
         gst_element_set_eos (GST_ELEMENT(appsrc));
+      } else {
+        //usleep (1000);
       }
     }
   }

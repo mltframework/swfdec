@@ -1,3 +1,15 @@
+2004-11-15  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swfdec_render.c: (swfdec_render_get_image): Fix crasher
+	when increasing size of window.
+	* player/swf_play.c: (main), (do_safe), (new_window),
+	(render_idle_audio): Implement --safe.  Attempt to make SDL
+	handle events when plugged.
+	* plugin/plugin.c: (plugin_fork), (plugin_thread), (plugin_newp),
+	(plugin_destroy), (plugin_set_window), (plugin_write_ready),
+	(plugin_write), (plugin_event), (plugin_set_value),
+	(NP_Initialize), (DEBUG): Merge plugin code from gstreamer.
+
 2004-11-14  David Schleef  <ds@schleef.org>
 
 	* player/swf_play.c: (main): g_file_get_contents() takes gsize,

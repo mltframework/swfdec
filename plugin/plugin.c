@@ -1,10 +1,15 @@
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <config.h>
+#include <pthread.h>
+#include <errno.h>
+#include <string.h>
 
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
@@ -15,8 +20,7 @@
 #include "npupp.h"
 #include "spp.h"
 
-//#define DEBUG(x) fprintf(stderr,x "\n")
-#define DEBUG(x)
+
 
 typedef struct
 {
@@ -28,14 +32,20 @@ typedef struct
   int width, height;
   int recv_fd, send_fd;
   int player_pid;
+  void *buffer_data;
+  int buffer_len;
+  int buffer_offset;
+  pthread_t thread;
+  int run_thread;
 } Plugin;
 
-static void packet_write (int fd, int code, int len, void *data);
+void DEBUG (const char *format, ...);
 
+static void packet_write (int fd, int code, int len, void *data);
 static NPNetscapeFuncs mozilla_funcs;
 
 static void
-plugin_fork (Plugin * plugin)
+plugin_fork (Plugin * plugin, int safe)
 {
   int fds[4];
 
@@ -48,11 +58,11 @@ plugin_fork (Plugin * plugin)
   plugin->player_pid = fork ();
   if (plugin->player_pid == 0) {
     char xid_str[20];
-    char width_str[20];
-    char height_str[20];
+    //char width_str[20];
+    //char height_str[20];
     char *argv[20];
     int argc = 0;
-    int i;
+    //int i;
 
     sprintf (xid_str, "%ld", plugin->window);
 
@@ -75,11 +85,13 @@ plugin_fork (Plugin * plugin)
       argv[argc++] = height_str;
     }
 #endif
-    argv[argc++] = "-";
+    argv[argc++] = "--plugin";
+    if (safe) {
+      argv[argc++] = "--safe";
+    }
     argv[argc] = NULL;
 
-    execvp ("swf_play", argv);
-    execv (BINDIR "swf_play", argv);
+    execv (BINDIR "/swf_play", argv);
 
     DEBUG ("plugin: failed to exec");
 
@@ -89,6 +101,76 @@ plugin_fork (Plugin * plugin)
   close (fds[1]);
   close (fds[2]);
 }
+
+static void *
+plugin_thread (void *arg)
+{
+  Plugin *plugin = arg;
+  int safe = 0;
+
+  DEBUG ("starting thread");
+  while (plugin->run_thread) {
+    fd_set read_fds;
+    fd_set except_fds;
+    struct timeval timeout;
+    int max_fd = 0;
+    int ret;
+
+    FD_ZERO (&read_fds);
+    FD_ZERO (&except_fds);
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+
+    if (plugin->recv_fd > 0) {
+      FD_SET (plugin->recv_fd, &read_fds);
+      FD_SET (plugin->recv_fd, &except_fds);
+      max_fd = plugin->recv_fd;
+    }
+
+    ret = select (max_fd + 1, &read_fds, NULL, &except_fds, &timeout);
+    if (ret < 0) {
+      DEBUG ("select failed %d", errno);
+    } else if (ret == 0) {
+      /* timeout */
+    } else {
+      if (plugin->recv_fd > 0 && FD_ISSET (plugin->recv_fd, &read_fds)) {
+        char buf[100];
+        int n;
+
+        DEBUG ("something to read");
+        n = read (plugin->recv_fd, buf, 100);
+        if (n < 0) {
+          DEBUG ("read returned %d (%d)", n, errno);
+        } else if (n == 0) {
+          /* this means the child closed the descriptor, i.e., died */
+          DEBUG ("read returned 0");
+          close (plugin->recv_fd);
+          plugin->recv_fd = -1;
+
+          if (plugin->run_thread) {
+            if (safe == 0) {
+              plugin_fork (plugin, TRUE);
+              safe = 1;
+            } else {
+              /* helper app failed in safe mode.  oops. */
+            }
+          }
+        } else {
+          DEBUG ("%.*s", n, buf);
+        }
+
+      }
+      if (plugin->recv_fd > 0 && FD_ISSET (plugin->recv_fd, &except_fds)) {
+        DEBUG ("some exception");
+      }
+
+    }
+  }
+  DEBUG ("stopping thread");
+
+  return NULL;
+}
+
 
 static NPError
 plugin_newp (NPMIMEType mime_type, NPP instance,
@@ -111,12 +193,12 @@ plugin_newp (NPMIMEType mime_type, NPP instance,
   memset (plugin, 0, sizeof (Plugin));
 
   /* mode is NP_EMBED, NP_FULL, or NP_BACKGROUND (see npapi.h) */
-  //printf("mode %d\n",mode);
-  //printf("mime type: %s\n",pluginType);
+  //DEBUG ("mode %d",mode);
+  //DEBUG ("mime type: %s",pluginType);
   plugin->instance = instance;
 
   for (i = 0; i < argc; i++) {
-    //printf("argv[%d] %s %s\n",i,argn[i],argv[i]);
+    //DEBUG ("argv[%d] %s %s",i,argn[i],argv[i]);
     if (strcmp (argn[i], "width") == 0) {
       plugin->width = strtol (argv[i], NULL, 0);
     }
@@ -125,7 +207,8 @@ plugin_newp (NPMIMEType mime_type, NPP instance,
     }
   }
 
-  //plugin_fork(plugin, 0x32);
+  plugin->run_thread = TRUE;
+  pthread_create (&plugin->thread, NULL, plugin_thread, plugin);
 
   return NPERR_NO_ERROR;
 }
@@ -134,6 +217,7 @@ static NPError
 plugin_destroy (NPP instance, NPSavedData ** save)
 {
   Plugin *plugin;
+  int status;
 
   DEBUG ("plugin_destroy");
 
@@ -148,14 +232,16 @@ plugin_destroy (NPP instance, NPSavedData ** save)
   close (plugin->send_fd);
   close (plugin->recv_fd);
 
-  if (plugin->player_pid) {
+  if (plugin->player_pid > 0) {
 #if 0
     packet_write (plugin->send_fd, SPP_EXIT, 0, NULL);
 #endif
 
     kill (plugin->player_pid, SIGKILL);
-    waitpid (plugin->player_pid, NULL, 0);
+    waitpid (plugin->player_pid, &status, 0);
   }
+  plugin->run_thread = FALSE;
+  pthread_join (plugin->thread, NULL);
 
   mozilla_funcs.memfree (instance->pdata);
   instance->pdata = NULL;
@@ -189,7 +275,7 @@ plugin_set_window (NPP instance, NPWindow * window)
       packet_write (plugin->send_fd, SPP_SIZE, 8, size);
     } else {
       DEBUG ("change");
-      //printf("ack.  window changed!\n");
+      //DEBUG ("ack.  window changed!");
     }
   } else {
     NPSetWindowCallbackStruct *ws_info;
@@ -200,7 +286,13 @@ plugin_set_window (NPP instance, NPWindow * window)
     plugin->window = (Window) window->window;
     plugin->display = ws_info->display;
 
-    plugin_fork (plugin);
+    XSelectInput (plugin->display, plugin->window,
+        (EnterWindowMask | LeaveWindowMask | ButtonPressMask |
+         ButtonReleaseMask | PointerMotionMask | ExposureMask ));
+
+    plugin_fork (plugin, FALSE);
+
+    //fcntl(plugin->send_fd, F_SETFL, O_NONBLOCK);
   }
 
   DEBUG ("leaving plugin_set_window");
@@ -242,10 +334,9 @@ plugin_destroy_stream (NPP instance, NPStream * stream, NPError reason)
 static int32
 plugin_write_ready (NPP instance, NPStream * stream)
 {
+  //DEBUG ("plugin_write_ready");
+
   /* This is arbitrary */
-
-  DEBUG ("plugin_write_ready");
-
   return 4096;
 }
 
@@ -255,7 +346,7 @@ plugin_write (NPP instance, NPStream * stream, int32 offset,
 {
   Plugin *plugin;
 
-  DEBUG ("plugin_write");
+  //DEBUG ("plugin_write");
 
   if (instance == NULL)
     return 0;
@@ -287,6 +378,22 @@ plugin_stream_as_file (NPP instance, NPStream * stream, const char *fname)
     return;
 
   //printf("plugin_stream_as_file\n");
+}
+
+static int
+plugin_event (NPP instance, void *event)
+{
+  DEBUG ("plugin_event");
+
+  return TRUE;
+}
+
+static NPError
+plugin_set_value (NPP instance, NPNVariable var, void *value)
+{
+  DEBUG ("plugin_set_value");
+
+  return NPERR_NO_ERROR;
 }
 
 /* exported functions */
@@ -342,17 +449,23 @@ NP_Initialize (NPNetscapeFuncs * moz_funcs, NPPluginFuncs * plugin_funcs)
 
   memcpy (&mozilla_funcs, moz_funcs, sizeof (NPNetscapeFuncs));
 
-  plugin_funcs->version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
   plugin_funcs->size = sizeof (NPPluginFuncs);
+  plugin_funcs->version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
   plugin_funcs->newp = NewNPP_NewProc (plugin_newp);
   plugin_funcs->destroy = NewNPP_DestroyProc (plugin_destroy);
   plugin_funcs->setwindow = NewNPP_SetWindowProc (plugin_set_window);
   plugin_funcs->newstream = NewNPP_NewStreamProc (plugin_new_stream);
   plugin_funcs->destroystream =
       NewNPP_DestroyStreamProc (plugin_destroy_stream);
-  plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->asfile = NewNPP_StreamAsFileProc (plugin_stream_as_file);
+  plugin_funcs->writeready = NewNPP_WriteReadyProc (plugin_write_ready);
   plugin_funcs->write = NewNPP_WriteProc (plugin_write);
+  plugin_funcs->print = NULL;
+  plugin_funcs->event = NewNPP_HandleEventProc (plugin_event);
+  plugin_funcs->urlnotify = NULL;
+  plugin_funcs->javaClass = NULL;
+  plugin_funcs->getvalue = NULL;
+  plugin_funcs->setvalue = NewNPP_SetValueProc (plugin_set_value);
 
   return NPERR_NO_ERROR;
 }
@@ -406,4 +519,18 @@ packet_write (int fd, int code, int len, void *data)
   if (len > 0 && data) {
     write (fd, data, len);
   }
+}
+
+
+
+
+void DEBUG (const char *format, ...)
+{
+  va_list varargs;
+  char s[100];
+
+  va_start (varargs, format);
+  vsnprintf (s, 99, format, varargs);
+  va_end (varargs);
+  fprintf(stderr, "swfdec plugin: %s\n", s);
 }

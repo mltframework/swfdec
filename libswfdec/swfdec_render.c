@@ -186,6 +186,9 @@ swfdec_render_get_image (SwfdecDecoder * s)
 
   buffer = swfdec_buffer_new_with_data (s->buffer, s->stride * s->height);
 
+  g_free (s->tmp_scanline);
+  s->tmp_scanline = NULL;
+
   s->buffer = NULL;
   return buffer;
 }

@@ -11,10 +11,13 @@
 #include <string.h>
 #include <signal.h>
 
+#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
+
 #include <SDL.h>
 #include "spp.h"
 
-#define DEBUG(...)
+#define DEBUG(...) fprintf(stderr,__VA_ARGS__)
 
 typedef struct _Packet Packet;
 struct _Packet
@@ -28,6 +31,7 @@ static void packet_free (Packet * packet);
 static gboolean render_idle_audio (gpointer data);
 static gboolean render_idle_noaudio (gpointer data);
 static void do_help (void);
+static void do_safe (int standalone);
 static void new_window (void);
 static void sound_setup (void);
 
@@ -44,6 +48,10 @@ static int height;
 
 static gboolean enable_sound = TRUE;
 static gboolean slow = FALSE;
+static gboolean safe = FALSE;
+static gboolean hidden = FALSE;
+static gboolean embedded = FALSE;
+static unsigned long xid;
 
 static double rate;
 static int interval;
@@ -64,6 +72,7 @@ main (int argc, char *argv[])
     {"no-sound", 0, NULL, 's'},
     {"plugin", 0, NULL, 'p'},
     {"slow", 0, NULL, 'o'},
+    {"safe", 0, NULL, 'f'},
     {0},
   };
   int ret;
@@ -86,12 +95,17 @@ main (int argc, char *argv[])
         break;
       case 'x':
         setenv ("SDL_WINDOWID", optarg, 1);
+        xid = strtol (optarg, NULL, 0);
+        embedded = TRUE;
         break;
       case 'p':
         standalone = FALSE;
         break;
       case 'o':
         slow = TRUE;
+        break;
+      case 'f':
+        safe = TRUE;
         break;
       case 'h':
       default:
@@ -112,6 +126,12 @@ main (int argc, char *argv[])
       SDL_INIT_TIMER);
   /* SDL thinks it's smart by overriding SIGINT.  It's not */
   signal (SIGINT, SIG_DFL);
+
+  SDL_EventState (SDL_ACTIVEEVENT, SDL_ENABLE);
+
+  if (safe) {
+    do_safe(standalone);
+  }
 
   s = swfdec_decoder_new ();
 
@@ -135,6 +155,7 @@ main (int argc, char *argv[])
   }
 
   while (1) {
+    SDL_Event event;
     int did_something = FALSE;
 
     if (!standalone) {
@@ -164,6 +185,29 @@ main (int argc, char *argv[])
         }
         packet_free (packet);
         did_something = TRUE;
+      }
+    }
+
+    if (standalone) {
+      if (SDL_PollEvent (&event)) {
+        did_something = TRUE;
+        //DEBUG ("%d\n", event.type);
+        switch (event.type) {
+          case SDL_VIDEORESIZE:
+            width = event.resize.w;
+            height = event.resize.h;
+            swfdec_decoder_set_image_size (s, width, height);
+            new_window ();
+            break;
+          case SDL_ACTIVEEVENT:
+            DEBUG ("active: %d %d\n", event.active.gain, event.active.state);
+            if (event.active.state & SDL_APPACTIVE) {
+              hidden = !event.active.gain;
+            }
+            break;
+          default:
+            break;
+        }
       }
     }
 
@@ -223,10 +267,78 @@ do_help (void)
   exit (1);
 }
 
+static void 
+do_safe (int standalone)
+{
+  Packet *packet;
+  int fd = 0;
+
+  width = 100;
+  height = 100;
+  new_window ();
+  SDL_FillRect (sdl_screen, NULL, 0x80808000);
+  SDL_UpdateRect (sdl_screen, 0, 0, width, height);
+
+  while (1) {
+    int did_something = FALSE;
+    SDL_Event event;
+
+    if (!standalone) {
+      packet = packet_get (fd);
+      if (packet) {
+        switch (packet->code) {
+          case SPP_EXIT:
+            exit (0);
+            break;
+          case SPP_DATA:
+            swfdec_decoder_add_data (s, packet->data, packet->length);
+            packet->data = NULL;
+            break;
+          case SPP_EOF:
+            swfdec_decoder_eof (s);
+            //starting = TRUE;
+            break;
+          case SPP_SIZE:
+            width = ((int *) packet->data)[0];
+            height = ((int *) packet->data)[1];
+            new_window ();
+            SDL_FillRect (sdl_screen, NULL, 0x80808000);
+            SDL_UpdateRect (sdl_screen, 0, 0, width, height);
+            break;
+          default:
+            /* ignore it */
+            break;
+        }
+        packet_free (packet);
+        did_something = TRUE;
+      }
+    }
+
+    if (SDL_PollEvent (&event)) {
+      did_something = TRUE;
+      switch (event.type) {
+        case SDL_VIDEORESIZE:
+          width = event.resize.w;
+          height = event.resize.h;
+          new_window ();
+          SDL_FillRect (sdl_screen, NULL, 0x80808000);
+          SDL_UpdateRect (sdl_screen, 0, 0, width, height);
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (!did_something) {
+      usleep (10000);
+    }
+  }
+}
+
 static void
 new_window (void)
 {
-  sdl_screen = SDL_SetVideoMode (width, height, 32, SDL_SWSURFACE);
+  sdl_screen = SDL_SetVideoMode (width, height, 32, SDL_SWSURFACE|SDL_RESIZABLE);
   if (sdl_screen == NULL) {
     DEBUG ("SDL_SetVideoMode failed\n");
   }
@@ -308,6 +420,13 @@ render_idle_audio (gpointer data)
   SwfdecBuffer *video_buffer;
   SwfdecBuffer *audio_buffer;
   gboolean ret;
+
+  if (hidden) {
+    int now = SDL_GetTicks ();
+
+    render_time = now + 10;
+    return FALSE;
+  }
 
   if (sound_bytes >= 40000) {
     int now = SDL_GetTicks ();

@@ -52,7 +52,10 @@ swf_context_new (void)
 	context->decoder       = swfdec_decoder_new ();
 	context->animation     = g_object_new (GDK_TYPE_PIXBUF_SWF_ANIM, NULL);
 
+	/* disabled temporarily */
+#if 0
 	swfdec_decoder_enable_render (context->decoder);
+#endif
 
 	return context;
 }

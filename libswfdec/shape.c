@@ -5,7 +5,7 @@
 #include "swfdec_internal.h"
 
 static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
-	SwfdecShapeVec *shapevec);
+	SwfdecShapeVec *shapevec, double trans[6]);
 
 int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits)
 {
@@ -284,7 +284,7 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 		if(fill_style_type == 0x40 || fill_style_type == 0x41){
 			shapevec->fill_type = fill_style_type;
 			shapevec->fill_id = get_u16(bits);
-			SWF_DEBUG(4,"   background fill id = %d (type 0x%02x)\n",
+			SWF_DEBUG(0,"   background fill id = %d (type 0x%02x)\n",
 				shapevec->fill_id, fill_style_type);
 
 			if(shapevec->fill_id==65535){
@@ -293,6 +293,10 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 			}
 
 			get_art_matrix(bits,shapevec->fill_matrix);
+			shapevec->fill_matrix[0] /= 20;
+			shapevec->fill_matrix[1] /= 20;
+			shapevec->fill_matrix[2] /= 20;
+			shapevec->fill_matrix[3] /= 20;
 		}
 	}
 
@@ -539,9 +543,11 @@ void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 		layervec->color = transform_color(shapevec->color,
 			layer->color_mult, layer->color_add);
 		layervec->compose = NULL;
+#if 0
 		if(shapevec->fill_id){
 			swfdec_shape_compose(s, layervec, shapevec);
 		}
+#endif
 	}
 
 	g_array_set_size(layer->lines, shape->lines->len);
@@ -584,6 +590,98 @@ void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 
 }
 
+SwfdecLayer *swfdec_shape_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+	SwfdecObject *obj)
+{
+	SwfdecLayer *layer;
+	SwfdecShape *shape = obj->priv;
+	int i;
+	SwfdecLayerVec *layervec;
+	SwfdecShapeVec *shapevec;
+	SwfdecShapeVec *shapevec2;
+
+	layer = swfdec_layer_new();
+	layer->id = seg->id;
+	art_affine_multiply(layer->transform,seg->transform,s->transform);
+
+	g_array_set_size(layer->fills, shape->fills->len);
+	for(i=0;i<shape->fills->len;i++){
+		ArtVpath *vpath,*vpath0,*vpath1;
+		ArtBpath *bpath0,*bpath1;
+
+		layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
+		shapevec = g_ptr_array_index(shape->fills,i);
+		shapevec2 = g_ptr_array_index(shape->fills2,i);
+
+		bpath0 = art_bpath_affine_transform(
+			&g_array_index(shapevec->path,ArtBpath,0),
+			layer->transform);
+		bpath1 = art_bpath_affine_transform(
+			&g_array_index(shapevec2->path,ArtBpath,0),
+			layer->transform);
+		vpath0 = art_bez_path_to_vec(bpath0,s->flatness);
+		vpath1 = art_bez_path_to_vec(bpath1,s->flatness);
+		if(art_affine_inverted(layer->transform)){
+			vpath0 = art_vpath_reverse_free(vpath0);
+		}else{
+			vpath1 = art_vpath_reverse_free(vpath1);
+		}
+		vpath = art_vpath_cat(vpath0,vpath1);
+		art_vpath_bbox_irect(vpath, &layervec->rect);
+		layervec->svp = art_svp_from_vpath (vpath);
+
+		art_free(bpath0);
+		art_free(bpath1);
+		art_free(vpath0);
+		art_free(vpath1);
+		art_free(vpath);
+
+		layervec->color = transform_color(shapevec->color,
+			seg->color_mult, seg->color_add);
+		layervec->compose = NULL;
+		if(shapevec->fill_id){
+			swfdec_shape_compose(s, layervec, shapevec, layer->transform);
+		}
+	}
+
+	g_array_set_size(layer->lines, shape->lines->len);
+	for(i=0;i<shape->lines->len;i++){
+		ArtVpath *vpath;
+		ArtBpath *bpath;
+		double width;
+		int half_width;
+
+		layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
+		shapevec = g_ptr_array_index(shape->lines,i);
+
+		bpath = art_bpath_affine_transform(
+			&g_array_index(shapevec->path,ArtBpath,0),
+			layer->transform);
+		vpath = art_bez_path_to_vec(bpath,s->flatness);
+		art_vpath_bbox_irect(vpath, &layervec->rect);
+
+		width = shapevec->width*art_affine_expansion(layer->transform);
+		if(width<1)width=1;
+
+		half_width = floor(width*0.5) + 1;
+		layervec->rect.x0 -= half_width;
+		layervec->rect.y0 -= half_width;
+		layervec->rect.x1 += half_width;
+		layervec->rect.y1 += half_width;
+		layervec->svp = art_svp_vpath_stroke (vpath,
+			ART_PATH_STROKE_JOIN_MITER,
+			ART_PATH_STROKE_CAP_BUTT,
+			width, 1.0, s->flatness);
+
+		art_free(vpath);
+		art_free(bpath);
+		layervec->color = transform_color(shapevec->color,
+			seg->color_mult, seg->color_add);
+	}
+
+	return layer;
+}
+
 void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object)
 {
@@ -601,7 +699,7 @@ void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
 }
 
 static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
-	SwfdecShapeVec *shapevec)
+	SwfdecShapeVec *shapevec, double trans[6])
 {
 	SwfdecObject *image_object;
 	SwfdecImage *image;
@@ -613,14 +711,14 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	image_object = swfdec_object_get(s, shapevec->fill_id);
 	if(!image_object)return;
 
-	SWF_DEBUG(4,"swfdec_shape_compose: %d\n", shapevec->fill_id);
+	SWF_DEBUG(0,"swfdec_shape_compose: %d\n", shapevec->fill_id);
 
 	layervec->color = SWF_COLOR_COMBINE(255,0,0,255);
 
 	image = image_object->priv;
-	SWF_DEBUG(4,"image %p\n", image->image_data);
+	SWF_DEBUG(0,"image %p\n", image->image_data);
 
-	SWF_DEBUG(4,"%g %g %g %g %g %g\n",
+	SWF_DEBUG(0,"%g %g %g %g %g %g\n",
 		shapevec->fill_matrix[0],
 		shapevec->fill_matrix[1],
 		shapevec->fill_matrix[2],
@@ -633,11 +731,7 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 	layervec->compose_height = s->height;
 	layervec->compose_width = s->width;
 	
-	for(i=0;i<4;i++){
-		mat0[i] = shapevec->fill_matrix[i] / 20.0;
-	}
-	mat0[4] = shapevec->fill_matrix[4];
-	mat0[5] = shapevec->fill_matrix[5];
+	art_affine_multiply(mat0, shapevec->fill_matrix, trans);
 	art_affine_invert(mat, mat0);
 	dest = layervec->compose;
 	for(j=0;j<s->height;j++){

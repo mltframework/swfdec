@@ -4,6 +4,18 @@
 
 #include "swfdec_internal.h"
 
+
+SwfdecRender *swfdec_render_new(void)
+{
+	SwfdecRender *render;
+
+	render = g_new0(SwfdecRender, 1);
+
+	return render;
+}
+
+
+
 SwfdecLayer *swfdec_layer_new(void)
 {
 	SwfdecLayer *layer;
@@ -21,6 +33,11 @@ void swfdec_layer_free(SwfdecLayer *layer)
 	int i;
 	SwfdecLayerVec *layervec;
 
+	if(!layer){
+		g_warning("layer==NULL");
+		return;
+	}
+
 	for(i=0;i<layer->fills->len;i++){
 		layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 		art_svp_free(layervec->svp);
@@ -31,8 +48,18 @@ void swfdec_layer_free(SwfdecLayer *layer)
 		art_svp_free(layervec->svp);
 		if(layervec->compose)g_free(layervec->compose);
 	}
+	
+	if(layer->sublayers){
+		GList *g;
+		for(g=g_list_first(layer->sublayers);g;g=g_list_next(g)){
+			swfdec_layer_free((SwfdecLayer *)g->data);
+		}
+		g_list_free(layer->sublayers);
+	}
+
 	g_array_free(layer->fills,TRUE);
 	g_array_free(layer->lines,TRUE);
+	g_free(layer);
 }
 
 SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth)
@@ -40,7 +67,7 @@ SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth)
 	SwfdecLayer *l;
 	GList *g;
 
-	for(g=g_list_first(s->main_sprite->layers); g; g=g_list_next(g)){
+	for(g=g_list_first(s->render->layers); g; g=g_list_next(g)){
 		l = (SwfdecLayer *)g->data;
 		if(l->depth == depth && l->first_frame <= s->frame_number-1
 		  && (!l->last_frame || l->last_frame > s->frame_number-1))

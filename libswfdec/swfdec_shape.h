@@ -43,6 +43,8 @@ void dump_layers(SwfdecDecoder *s);
 
 void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *shape);
+SwfdecLayer *swfdec_shape_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+	SwfdecObject *shape);
 void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *shape);
 

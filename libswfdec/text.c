@@ -200,8 +200,8 @@ void swfdec_text_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *obj
 			art_affine_translate(pos,
 				glyph->x * SWF_SCALE_FACTOR,
 				glyph->y * SWF_SCALE_FACTOR);
-			pos[0] = text->height*0.001;
-			pos[3] = text->height*0.001;
+			pos[0] = text->height * SWF_TEXT_SCALE_FACTOR;
+			pos[3] = text->height * SWF_TEXT_SCALE_FACTOR;
 			art_affine_multiply(trans,pos,object->trans);
 			art_affine_multiply(trans,trans,layer->transform);
 			art_affine_multiply(trans,trans,s->transform);
@@ -239,6 +239,87 @@ void swfdec_text_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *obj
 			art_free(vpath);
 		}
 	}
+}
+
+SwfdecLayer *swfdec_text_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+	SwfdecObject *object)
+{
+	int i,j;
+	SwfdecText *text;
+	SwfdecLayerVec *layervec;
+	SwfdecShapeVec *shapevec;
+	SwfdecShapeVec *shapevec2;
+	SwfdecObject *fontobj;
+	SwfdecLayer *layer;
+	GArray *array;
+
+	layer = swfdec_layer_new();
+	layer->id = seg->id;
+	art_affine_multiply(layer->transform,seg->transform,s->transform);
+
+	array = object->priv;
+	for(i=0;i<array->len;i++){
+		text = &g_array_index(array,SwfdecText,i);
+
+		fontobj = swfdec_object_get(s,text->font);
+		if(fontobj == NULL)continue;
+
+		for(j=0;j<text->glyphs->len;j++){
+			ArtVpath *vpath,*vpath0,*vpath1;
+			ArtBpath *bpath0,*bpath1;
+			SwfdecTextGlyph *glyph;
+			SwfdecShape *shape;
+			double glyph_trans[6];
+			double trans[6];
+			double pos[6];
+
+			glyph = &g_array_index(text->glyphs,SwfdecTextGlyph,j);
+
+			shape = &g_array_index((GArray *)fontobj->priv,
+				SwfdecShape,glyph->glyph);
+			art_affine_translate(pos,
+				glyph->x * SWF_SCALE_FACTOR,
+				glyph->y * SWF_SCALE_FACTOR);
+			pos[0] = text->heighte* SWF_TEXT_SCALE_FACTOR;
+			pos[3] = text->height * SWF_TEXT_SCALE_FACTOR;
+			art_affine_multiply(glyph_trans,pos,object->trans);
+			art_affine_multiply(trans,glyph_trans,layer->transform);
+
+			layer->fills = g_array_set_size(layer->fills,layer->fills->len + 1);
+			layervec = &g_array_index(layer->fills,SwfdecLayerVec,layer->fills->len - 1);
+
+			shapevec = g_ptr_array_index(shape->fills,0);
+			shapevec2 = g_ptr_array_index(shape->fills2,0);
+			layervec->color = transform_color(
+				text->color,
+				seg->color_mult, seg->color_add);
+
+			bpath0 = art_bpath_affine_transform(
+				&g_array_index(shapevec->path,ArtBpath,0),
+				trans);
+			bpath1 = art_bpath_affine_transform(
+				&g_array_index(shapevec2->path,ArtBpath,0),
+				trans);
+			vpath0 = art_bez_path_to_vec(bpath0,s->flatness);
+			vpath1 = art_bez_path_to_vec(bpath1,s->flatness);
+			if(art_affine_inverted(trans)){
+				vpath0 = art_vpath_reverse_free(vpath0);
+			}else{
+				vpath1 = art_vpath_reverse_free(vpath1);
+			}
+			vpath = art_vpath_cat(vpath0,vpath1);
+			art_vpath_bbox_irect(vpath, &layervec->rect);
+			layervec->svp = art_svp_from_vpath (vpath);
+	
+			art_free(bpath0);
+			art_free(bpath1);
+			art_free(vpath0);
+			art_free(vpath1);
+			art_free(vpath);
+		}
+	}
+
+	return layer;
 }
 
 void swfdec_text_render(SwfdecDecoder *s,SwfdecLayer *layer,

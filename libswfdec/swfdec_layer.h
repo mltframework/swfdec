@@ -4,6 +4,10 @@
 
 #include "swfdec_types.h"
 
+struct swfdec_render_struct{
+	GList *layers;
+};
+
 struct swfdec_layer_vec_struct{
 	ArtSVP *svp;
 	unsigned int color;
@@ -33,8 +37,10 @@ struct swfdec_layer_struct{
 	GArray *lines;
 	GArray *fills;
 
-	//swf_image_t *image;
+	GList *sublayers;
 };
+
+SwfdecRender *swfdec_render_new(void);
 
 SwfdecLayer *swfdec_layer_new(void);
 void swfdec_layer_free(SwfdecLayer *layer);

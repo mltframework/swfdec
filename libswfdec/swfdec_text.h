@@ -22,6 +22,8 @@ int tag_func_define_text_2(SwfdecDecoder *s);
 
 void swfdec_text_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object);
+SwfdecLayer *swfdec_text_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+	SwfdecObject *object);
 void swfdec_text_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object);
 

@@ -43,6 +43,7 @@ SwfdecDecoder *swfdec_decoder_new(void)
 	art_affine_identity(s->transform);
 
 	s->main_sprite = swfdec_sprite_new();
+	s->render = swfdec_render_new();
 
 	s->flatness = 0.25;
 
@@ -131,7 +132,9 @@ int swfdec_decoder_parse(SwfdecDecoder *s)
 			}
 			endptr = s->b.ptr + s->tag_len;
 	
+			s->parse_sprite = s->main_sprite;
 			ret = s->func(s);
+			s->parse_sprite = NULL;
 			//if(ret != SWF_OK)break;
 
 			syncbits(&s->b);
@@ -347,9 +350,11 @@ int swf_parse_header2(SwfdecDecoder *s)
 	s->irect.y1 = s->height;
 	syncbits(&s->b);
 	s->rate = get_u16(&s->b)/256.0;
-	SWF_DEBUG(4,"rate = %g\n",s->rate);
+	SWF_DEBUG(0,"rate = %g\n",s->rate);
 	s->n_frames = get_u16(&s->b);
-	SWF_DEBUG(4,"n_frames = %d\n",s->n_frames);
+	SWF_DEBUG(0,"n_frames = %d\n",s->n_frames);
+
+	s->main_sprite->n_frames = s->n_frames;
 
 	return SWF_OK;
 }
@@ -366,7 +371,7 @@ struct tag_func_struct tag_funcs[] = {
 	[ ST_DEFINESHAPE	] = { "DefineShape",	art_define_shape,	0 },
 	[ ST_FREECHARACTER	] = { "FreeCharacter",	NULL,	0 },
 	[ ST_PLACEOBJECT	] = { "PlaceObject",	NULL,	0 },
-	[ ST_REMOVEOBJECT	] = { "RemoveObject",	art_remove_object,	0 },
+	[ ST_REMOVEOBJECT	] = { "RemoveObject",	swfdec_spriteseg_remove_object,	0 },
 //	[ ST_DEFINEBITS		] = { "DefineBits",	NULL,	0 },
 	[ ST_DEFINEBITSJPEG	] = { "DefineBitsJPEG",	tag_func_define_bits_jpeg,	0 },
 	[ ST_DEFINEBUTTON	] = { "DefineButton",	NULL,	0 },
@@ -386,8 +391,8 @@ struct tag_func_struct tag_funcs[] = {
 	[ ST_DEFINESHAPE2	] = { "DefineShape2",	art_define_shape_2,	0 },
 	[ ST_DEFINEBUTTONCXFORM	] = { "DefineButtonCXForm",	NULL,	0 },
 	[ ST_PROTECT		] = { "Protect",	tag_func_zero,	0 },
-	[ ST_PLACEOBJECT2	] = { "PlaceObject2",	art_place_object_2,	0 },
-	[ ST_REMOVEOBJECT2	] = { "RemoveObject2",	art_remove_object_2,	0 },
+	[ ST_PLACEOBJECT2	] = { "PlaceObject2",	swfdec_spriteseg_place_object_2,	0 },
+	[ ST_REMOVEOBJECT2	] = { "RemoveObject2",	swfdec_spriteseg_remove_object_2,	0 },
 	[ ST_DEFINESHAPE3	] = { "DefineShape3",	art_define_shape_3,	0 },
 	[ ST_DEFINETEXT2	] = { "DefineText2",	tag_func_define_text_2,	0 },
 	[ ST_DEFINEBUTTON2	] = { "DefineButton2",	tag_func_define_button_2,	0 },

@@ -18,9 +18,9 @@ void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 	//art_affine_multiply(sprite->transform, layer->transform, s->transform);
 
 	art_affine_copy(save_trans, layer->transform);
-	art_affine_multiply(layer->transform, button->state[0].transform, layer->transform);
-	if(button->state[0].id){
-		obj = swfdec_object_get(s,button->state[0].id);
+	art_affine_multiply(layer->transform, button->state[0]->transform, layer->transform);
+	if(button->state[0]->id){
+		obj = swfdec_object_get(s,button->state[0]->id);
 		if(!obj)return;
 
 		switch(obj->type){
@@ -59,6 +59,52 @@ void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 		}
 	}
 	art_affine_copy(layer->transform, save_trans);
+}
+
+SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
+	SwfdecObject *object)
+{
+	SwfdecButton *button = object->priv;
+	SwfdecObject *obj;
+	SwfdecLayer *layer;
+	SwfdecSpriteSeg *tmpseg;
+
+	layer = swfdec_layer_new();
+	layer->id = seg->id;
+
+	art_affine_multiply(layer->transform, seg->transform, s->transform);
+	if(button->state[0]){
+		obj = swfdec_object_get(s,button->state[0]->id);
+		if(!obj)return NULL;
+
+		tmpseg = swfdec_spriteseg_dup(button->state[0]);
+		art_affine_multiply(tmpseg->transform,
+			button->state[0]->transform, seg->transform);
+
+		switch(obj->type){
+		case SWF_OBJECT_SHAPE:
+			layer = swfdec_shape_prerender_slow(s,tmpseg,obj);
+			break;
+		case SWF_OBJECT_TEXT:
+			layer = swfdec_text_prerender_slow(s,tmpseg,obj);
+			break;
+#if 0
+		case SWF_OBJECT_SPRITE:
+			//printf("sprite\n");
+			//layer->type = 1;
+			layer->frame_number = s->frame_number - layer->first_frame;
+			swfdec_sprite_prerender(s,layer,obj);
+			break;
+#endif
+		default:
+			SWF_DEBUG(4,"swfdec_button_prerender: object type not handled %d\n",obj->type);
+			break;
+		}
+
+		swfdec_spriteseg_free(tmpseg);
+	}
+
+	return layer;
 }
 
 void swfdec_button_render(SwfdecDecoder *s,SwfdecLayer *layer,
@@ -148,22 +194,25 @@ int tag_func_define_button_2(SwfdecDecoder *s)
 		SWF_DEBUG(0,"bits->ptr %p\n",bits->ptr);
 
 		if(up){
-			button->state[0].id = character;
-			art_affine_copy(button->state[0].transform,trans);
-			memcpy(button->state[0].color_mult,color_mult,4*sizeof(double));
-			memcpy(button->state[0].color_add,color_add,4*sizeof(double));
+			button->state[0] = swfdec_spriteseg_new();
+			button->state[0]->id = character;
+			art_affine_copy(button->state[0]->transform,trans);
+			memcpy(button->state[0]->color_mult,color_mult,4*sizeof(double));
+			memcpy(button->state[0]->color_add,color_add,4*sizeof(double));
 		}
 		if(over){
-			button->state[1].id = character;
-			art_affine_copy(button->state[1].transform,trans);
-			memcpy(button->state[1].color_mult,color_mult,4*sizeof(double));
-			memcpy(button->state[1].color_add,color_add,4*sizeof(double));
+			button->state[1] = swfdec_spriteseg_new();
+			button->state[1]->id = character;
+			art_affine_copy(button->state[1]->transform,trans);
+			memcpy(button->state[1]->color_mult,color_mult,4*sizeof(double));
+			memcpy(button->state[1]->color_add,color_add,4*sizeof(double));
 		}
 		if(down){
-			button->state[2].id = character;
-			art_affine_copy(button->state[2].transform,trans);
-			memcpy(button->state[2].color_mult,color_mult,4*sizeof(double));
-			memcpy(button->state[2].color_add,color_add,4*sizeof(double));
+			button->state[2] = swfdec_spriteseg_new();
+			button->state[2]->id = character;
+			art_affine_copy(button->state[2]->transform,trans);
+			memcpy(button->state[2]->color_mult,color_mult,4*sizeof(double));
+			memcpy(button->state[2]->color_add,color_add,4*sizeof(double));
 		}
 
 	}

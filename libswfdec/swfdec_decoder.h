@@ -10,6 +10,7 @@
 #define SWF_COLOR_SCALE_FACTOR		(1/256.0)
 #define SWF_TRANS_SCALE_FACTOR		(1/63356.0)
 #define SWF_SCALE_FACTOR		(1/20.0)
+#define SWF_TEXT_SCALE_FACTOR		(1/1024.0)
 
 #define SWF_DEBUG(n,format...)	do{ \
 	if((n)>=SWF_DEBUG_LEVEL)swf_debug(s,(n),format); \
@@ -75,7 +76,9 @@ struct swfdec_decoder_struct {
 	ArtIRect drawrect;
 
 	SwfdecSprite *main_sprite;
-	//GList *layers;
+	SwfdecSprite *parse_sprite;
+
+	SwfdecRender *render;
 
 	double flatness;
 	

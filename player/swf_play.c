@@ -486,6 +486,8 @@ static gboolean render_idle(gpointer data)
 			int x = tv_diff(&image_time, &now);
 			//printf("sleeping for %d us\n",x);
 			if(!fast)usleep(x);
+		}else{
+			gettimeofday(&image_time, NULL);
 		}
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
@@ -493,7 +495,6 @@ static gboolean render_idle(gpointer data)
 			GDK_RGB_DITHER_NONE,
 			image,
 			width*3);
-		gettimeofday(&image_time, NULL);
 	}
 	if(ret==SWF_CHANGE && !plugged){
 		double rate;

@@ -1,0 +1,42 @@
+
+#ifndef __SWFDEC_BITS_H__
+#define __SWFDEC_BITS_H__
+
+#include "color.h"
+
+typedef struct _SwfdecBits SwfdecBits;
+
+struct _SwfdecBits {
+  unsigned char *ptr;
+  int idx;
+  unsigned char *end;
+};
+
+int swfdec_bits_needbits (SwfdecBits *b, int n_bytes);
+int swfdec_bits_getbit (SwfdecBits *b);
+unsigned int swfdec_bits_getbits (SwfdecBits * b, int n);
+unsigned int swfdec_bits_peekbits (SwfdecBits * b, int n);
+int swfdec_bits_getsbits (SwfdecBits * b, int n);
+unsigned int swfdec_bits_peek_u8 (SwfdecBits * b);
+unsigned int swfdec_bits_get_u8 (SwfdecBits * b);
+unsigned int swfdec_bits_get_u16 (SwfdecBits * b);
+int swfdec_bits_get_s16 (SwfdecBits * b);
+unsigned int swfdec_bits_get_be_u16 (SwfdecBits * b);
+unsigned int swfdec_bits_get_u32 (SwfdecBits * b);
+void swfdec_bits_syncbits (SwfdecBits * b);
+
+void swfdec_bits_get_art_color_transform (SwfdecBits * bits, double mult[4], double add[4]);
+void swfdec_bits_get_art_matrix (SwfdecBits * bits, double *trans);
+char *swfdec_bits_get_string (SwfdecBits * bits);
+void swfdec_bits_get_color_transform (SwfdecBits * bits);
+unsigned int swfdec_bits_get_color (SwfdecBits * bits);
+unsigned int swfdec_bits_get_rgba (SwfdecBits * bits);
+void swfdec_bits_get_matrix (SwfdecBits * bits);
+SwfdecGradient *swfdec_bits_get_gradient (SwfdecBits * bits);
+SwfdecGradient *swfdec_bits_get_gradient_rgba (SwfdecBits * bits);
+void swfdec_bits_get_fill_style (SwfdecBits * bits);
+void swfdec_bits_get_line_style (SwfdecBits * bits);
+void swfdec_bits_get_rect (SwfdecBits * bits, int *rect);
+
+
+#endif

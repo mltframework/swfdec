@@ -7,18 +7,10 @@
 #include <glib.h>
 #include <string.h>
 #include <ctype.h>
+#include <liboil/liboil.h>
 
 #include "jpeg_internal.h"
 
-#define unzigzag8x8_s16 unzigzag8x8_s16_ref
-#define idct8x8_s16 idct8x8_s16_fast
-#define idct8x8_f64 idct8x8_f64_1d
-#define idct8_f64 idct8x8_f64_fast
-#define conv8x8_f64_s16 conv8x8_f64_s16_ref
-
-#include "unzigzag8x8_s16.h"
-#include "idct8x8_s16.h"
-#include "conv8x8_f64_s16.h"
 
 
 #define JPEG_MARKER_STUFFED		0x00
@@ -200,7 +192,7 @@ static void dumpbits(bits_t *bits);
 static char *sprintbits(char *str, unsigned int bits, int n);
 static void dump_block8x8_s16(short *q);
 static void dequant8x8_s16(short *dest, short *src, short *mult);
-static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
+//static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
 static void huffman_table_load_std_jpeg(JpegDecoder *dec);
 
 
@@ -715,8 +707,8 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 		dequant8x8_s16(block2, block, dec->quant_table[quant_index]);
 		dec->dc[component_index] += block2[0];
 		block2[0] = dec->dc[component_index];
-		unzigzag8x8_s16(block, block2);
-		idct8x8_s16(block2, block, sizeof(short)*8, sizeof(short)*8);
+		unzigzag8x8_s16(block, sizeof(short)*8, block2, sizeof(short)*8);
+		idct8x8_s16(block2, sizeof(short)*8, block, sizeof(short)*8);
 
 		dump_block8x8_s16(block2);
 
@@ -728,7 +720,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 
 		clipconv8x8_u8_s16(ptr,
 			dec->components[component_index].rowstride,
-			block2);
+			block2, sizeof(short)*8);
 	}
 		x += 8;
 		if(x*dec->scan_h_subsample >= dec->width){
@@ -936,22 +928,6 @@ static void dequant8x8_s16(short *dest, short *src, short *mult)
 
 	for(i=0;i<64;i++){
 		dest[i] = src[i] * mult[i];
-	}
-}
-
-static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src)
-{
-	int i,j;
-	int x;
-
-	for(i=0;i<8;i++){
-		for(j=0;j<8;j++){
-			x = *src++;
-			if(x<0)x=0;
-			if(x>255)x=255;
-			dest[j] = x;
-		}
-		dest += stride;
 	}
 }
 

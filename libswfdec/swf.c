@@ -6,8 +6,6 @@
 
 #include "swfdec_internal.h"
 
-static void dumpbits (SwfdecBits * b);
-
 int swf_parse_header1 (SwfdecDecoder * s);
 int swf_inflate_init (SwfdecDecoder * s);
 int swf_parse_header2 (SwfdecDecoder * s);
@@ -143,7 +141,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	swfdec_bits_syncbits (&s->b);
 	if (s->b.ptr < endptr) {
 	  SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
-	  dumpbits (&s->b);
+	  //dumpbits (&s->b);
 	}
 	if (s->b.ptr > endptr) {
 	  SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
@@ -370,6 +368,7 @@ zfree (void *opaque, void *addr)
   free (addr);
 }
 
+#if 0
 static void
 dumpbits (SwfdecBits * b)
 {
@@ -381,6 +380,7 @@ dumpbits (SwfdecBits * b)
   }
   printf ("\n");
 }
+#endif
 
 int
 swf_parse_header1 (SwfdecDecoder * s)
@@ -637,13 +637,12 @@ int
 tag_func_dumpbits (SwfdecDecoder * s)
 {
   SwfdecBits *b = &s->b;
-  int i;
 
-  printf ("    ");
-  for (i = 0; i < 16; i++) {
-    printf ("%02x ", swfdec_bits_get_u8 (b));
-  }
-  printf ("\n");
+  SWFDEC_DEBUG ("%02x %02x %02x %02x %02x %02x %02x %02x",
+    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
+    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
+    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
+    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b));
 
   return SWF_OK;
 }

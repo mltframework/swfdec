@@ -1,3 +1,14 @@
+2004-08-04  David Schleef  <ds@schleef.org>
+
+	convert jpeg to liboil
+	* libswfdec/Makefile.am:
+	* libswfdec/jpeg/Makefile.am:
+	* libswfdec/jpeg/huffman.c:
+	* libswfdec/jpeg/jpeg.c: (jpeg_decoder_decode_entropy_segment):
+	* libswfdec/swf.c: (swfdec_decoder_parse), (tag_func_dumpbits): make
+	more quiet.
+	* libswfdec/swfdec_bits.h: compile fix
+
 2004-08-03  David Schleef  <ds@schleef.org>
 
 	Fixes for bits_t change

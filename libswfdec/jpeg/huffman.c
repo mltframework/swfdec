@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#include <string.h>
 
 #include "huffman.h"
 #include "jpeg_debug.h"

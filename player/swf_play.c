@@ -370,7 +370,7 @@ void fault_handler(int signum, siginfo_t *si, void *misc)
 	}
 
 	glib_on_error_halt = FALSE;
-	g_on_error_stack_trace("gst-launch");
+	g_on_error_stack_trace("swf_play");
 
 	wait(NULL);
 

@@ -6,11 +6,13 @@
  */ 
 
 #include <stdlib.h>
-#include "mpg123.h"
-#include "mpglib.h"
+#include <mpglib_internal.h>
+#include <math.h>
+#include <stdio.h>
+
 #include "huffman.h"
 
-extern struct mpstr *gmp;
+extern MpglibDecoder *gmp;
 
 #define MPEG1
 
@@ -315,7 +317,7 @@ static int III_get_side_info_1(struct III_sideinfo *si,int stereo,
    {
      for (ch=0; ch<stereo; ch++) 
      {
-       register struct gr_info_s *gr_info = &(si->ch[ch].gr[gr]);
+       struct gr_info_s *gr_info = &(si->ch[ch].gr[gr]);
 
        gr_info->part2_3_length = getbits(12);
        gr_info->big_values = getbits_fast(9);
@@ -389,7 +391,7 @@ static int III_get_side_info_2(struct III_sideinfo *si,int stereo,
 
    for (ch=0; ch<stereo; ch++) 
    {
-       register struct gr_info_s *gr_info = &(si->ch[ch].gr[0]);
+       struct gr_info_s *gr_info = &(si->ch[ch].gr[0]);
 
        gr_info->part2_3_length = getbits(12);
        gr_info->big_values = getbits_fast(9);
@@ -636,8 +638,8 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
      */
     int i,max[4];
     int step=0,lwin=0,cb=0;
-    register real v = 0.0;
-    register int *m,mc;
+    real v = 0.0;
+    int *m,mc;
 
     if(gr_info->mixed_block_flag) {
       max[3] = -1;
@@ -657,7 +659,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
       int lp = l[i];
       struct newhuff *h = ht+gr_info->table_select[i];
       for(;lp;lp--,mc--) {
-        register int x,y;
+        int x,y;
         if( (!mc) ) {
           mc = *m++;
           xrpnt = ((real *) xr) + (*m++);
@@ -673,7 +675,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
           }
         }
         {
-          register short *val = h->table;
+          short *val = h->table;
           while((y=*val++)<0) {
             if (get1bit())
               val -= y;
@@ -726,7 +728,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
     }
     for(;l3 && (part2remain > 0);l3--) {
       struct newhuff *h = htc+gr_info->count1table_select;
-      register short *val = h->table,a;
+      short *val = h->table,a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -816,9 +818,9 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
     int *pretab = gr_info->preflag ? pretab1 : pretab2;
     int i,max = -1;
     int cb = 0;
-    register int *m = map[sfreq][2];
-    register real v = 0.0;
-    register int mc = 0;
+    int *m = map[sfreq][2];
+    real v = 0.0;
+    int mc = 0;
 #if 0
     me = mapend[sfreq][2];
 #endif
@@ -839,7 +841,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
           cb = *m++;
         }
         {
-          register short *val = h->table;
+          short *val = h->table;
           while((y=*val++)<0) {
             if (get1bit())
               val -= y;
@@ -895,7 +897,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
      */
     for(;l3 && (part2remain > 0);l3--) {
       struct newhuff *h = htc+gr_info->count1table_select;
-      register short *val = h->table,a;
+      short *val = h->table,a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -997,8 +999,8 @@ static int III_dequantize_sample_ms(real xr[2][SBLIMIT][SSLIMIT],int *scf,
   if(gr_info->block_type == 2) {
     int i,max[4];
     int step=0,lwin=0,cb=0;
-    register real v = 0.0;
-    register int *m,mc = 0;
+    real v = 0.0;
+    int *m,mc = 0;
 
     if(gr_info->mixed_block_flag) {
       max[3] = -1;
@@ -1035,7 +1037,7 @@ static int III_dequantize_sample_ms(real xr[2][SBLIMIT][SSLIMIT],int *scf,
           }
         }
         {
-          register short *val = h->table;
+          short *val = h->table;
           while((y=*val++)<0) {
             if (get1bit())
               val -= y;
@@ -1116,7 +1118,7 @@ static int III_dequantize_sample_ms(real xr[2][SBLIMIT][SSLIMIT],int *scf,
 
     for(;l3 && (part2remain > 0);l3--) {
       struct newhuff *h = htc+gr_info->count1table_select;
-      register short *val = h->table,a;
+      short *val = h->table,a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -1211,8 +1213,8 @@ static int III_dequantize_sample_ms(real xr[2][SBLIMIT][SSLIMIT],int *scf,
     int *pretab = gr_info->preflag ? pretab1 : pretab2;
     int i,max = -1;
     int cb = 0;
-    register int mc=0,*m = map[sfreq][2];
-    register real v = 0.0;
+    int mc=0,*m = map[sfreq][2];
+    real v = 0.0;
 #if 0
     me = mapend[sfreq][2];
 #endif
@@ -1229,7 +1231,7 @@ static int III_dequantize_sample_ms(real xr[2][SBLIMIT][SSLIMIT],int *scf,
           v = gr_info->pow2gain[((*scf++) + (*pretab++)) << shift];
         }
         {
-          register short *val = h->table;
+          short *val = h->table;
           while((y=*val++)<0) {
             if (get1bit())
               val -= y;
@@ -1306,7 +1308,7 @@ static int III_dequantize_sample_ms(real xr[2][SBLIMIT][SSLIMIT],int *scf,
 
     for(;l3 && (part2remain > 0);l3--) {
       struct newhuff *h = htc+gr_info->count1table_select;
-      register short *val = h->table,a;
+      short *val = h->table,a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -1547,7 +1549,7 @@ static void III_antialias(real xr[SBLIMIT][SSLIMIT],struct gr_info_s *gr_info)
 
        for(ss=7;ss>=0;ss--)
        {       /* upper and lower butterfly inputs */
-         register real bu = *--xr2,bd = *xr1;
+         real bu = *--xr2,bd = *xr1;
          *xr2   = (bu * (*cs)   ) - (bd * (*ca)   );
          *xr1++ = (bd * (*cs++) ) + (bu * (*ca++) );
        }
@@ -1568,7 +1570,7 @@ static void III_antialias(real xr[SBLIMIT][SSLIMIT],struct gr_info_s *gr_info)
 static void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
 {
   {
-    register real *in = inbuf;
+    real *in = inbuf;
 
     in[17]+=in[16]; in[16]+=in[15]; in[15]+=in[14];
     in[14]+=in[13]; in[13]+=in[12]; in[12]+=in[11];
@@ -1601,11 +1603,11 @@ static void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
     sum1 = (tmp2b - tmp1b) * tfcos36[(v)]; \
 	MACRO0(v); }
 
-    register const real *c = COS9;
-    register real *out2 = o2;
-	register real *w = wintab;
-	register real *out1 = o1;
-	register real *ts = tsbuf;
+    const real *c = COS9;
+    real *out2 = o2;
+	real *w = wintab;
+	real *out1 = o1;
+	real *ts = tsbuf;
 
     real ta33,ta66,tb33,tb66;
 
@@ -1672,7 +1674,7 @@ static void dct36(real *inbuf,real *o1,real *o2,real *wintab,real *tsbuf)
 /*
  * new DCT12
  */
-static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,register real *ts)
+static void dct12(real *in,real *rawout1,real *rawout2,real *wi,real *ts)
 {
 #define DCT12_PART1 \
              in5 = in[5*3];  \
@@ -1707,7 +1709,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 
    {
      real in0,in1,in2,in3,in4,in5;
-     register real *out1 = rawout1;
+     real *out1 = rawout1;
      ts[SBLIMIT*0] = out1[0]; ts[SBLIMIT*1] = out1[1]; ts[SBLIMIT*2] = out1[2];
      ts[SBLIMIT*3] = out1[3]; ts[SBLIMIT*4] = out1[4]; ts[SBLIMIT*5] = out1[5];
  
@@ -1743,7 +1745,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 
   {
      real in0,in1,in2,in3,in4,in5;
-     register real *out2 = rawout2;
+     real *out2 = rawout2;
  
      DCT12_PART1
 
@@ -1777,7 +1779,7 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 
   {
      real in0,in1,in2,in3,in4,in5;
-     register real *out2 = rawout2;
+     real *out2 = rawout2;
      out2[12]=out2[13]=out2[14]=out2[15]=out2[16]=out2[17]=0.0;
 
      DCT12_PART1
@@ -1906,7 +1908,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 #endif
   }
 
-  if(set_pointer(sideinfo.main_data_begin) == MP3_ERR)
+  if(set_pointer(sideinfo.main_data_begin) == MPGLIB_ERR)
     return -1;
 
   for (gr=0;gr<granules;gr++) 
@@ -1969,16 +1971,16 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       switch(single) {
         case 3:
           {
-            register int i;
-            register real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
+            int i;
+            real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
             for(i=0;i<SSLIMIT*gr_info->maxb;i++,in0++)
               *in0 = (*in0 + *in1++); /* *0.5 done by pow-scale */ 
           }
           break;
         case 1:
           {
-            register int i;
-            register real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
+            int i;
+            real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
             for(i=0;i<SSLIMIT*gr_info->maxb;i++)
               *in0++ = *in1++;
           }

@@ -3,19 +3,20 @@
 #include <stdio.h>
 #include <glib.h>
 
-#include "mpg123.h"
-#include "mpglib.h"
+#include <mpglib_internal.h>
 
 /* Global mp .. it's a hack */
-struct mpstr *gmp;
+MpglibDecoder *gmp;
 
-static void remove_buf(struct mpstr *mp);
+static void remove_buf(MpglibDecoder *mp);
 
-gboolean InitMP3(struct mpstr *mp) 
+MpglibDecoder *mpglib_decoder_new(void)
 {
 	static int init = 0;
+	MpglibDecoder *mp;
 
-	memset(mp,0,sizeof(struct mpstr));
+	mp = malloc(sizeof(MpglibDecoder));
+	memset(mp,0,sizeof(MpglibDecoder));
 
 	mp->framesize = 0;
 	mp->fsizeold = -1;
@@ -35,18 +36,19 @@ gboolean InitMP3(struct mpstr *mp)
 		init_layer3(SBLIMIT);
 	}
 
-	return TRUE;
+	return mp;
 }
 
-void ExitMP3(struct mpstr *mp)
+void mpglib_decoder_free(MpglibDecoder *mp)
 {
 	free(mp->bsspace);
 	while(mp->buffers){
 		remove_buf(mp);
 	}
+	free(mp);
 }
 
-static struct buf *addbuf(struct mpstr *mp,char *buf,int size)
+static struct buf *addbuf(MpglibDecoder *mp,char *buf,int size)
 {
 	struct buf *nbuf;
 
@@ -69,7 +71,7 @@ static struct buf *addbuf(struct mpstr *mp,char *buf,int size)
 	return nbuf;
 }
 
-static void remove_buf(struct mpstr *mp)
+static void remove_buf(MpglibDecoder *mp)
 {
 	struct buf *buf;
   
@@ -81,7 +83,7 @@ static void remove_buf(struct mpstr *mp)
 	free(buf);
 }
 
-static int read_buf_byte(struct mpstr *mp)
+static int read_buf_byte(MpglibDecoder *mp)
 {
 	unsigned int b;
 	struct buf *buf;
@@ -106,7 +108,7 @@ static int read_buf_byte(struct mpstr *mp)
 	return b;
 }
 
-static void read_head(struct mpstr *mp)
+static void read_head(MpglibDecoder *mp)
 {
 	unsigned long head;
 
@@ -121,7 +123,7 @@ static void read_head(struct mpstr *mp)
 	mp->header = head;
 }
 
-int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
+int mpglib_decoder_decode(MpglibDecoder *mp,char *in,int isize,char *out,
 		int osize,int *done)
 {
 	int len;
@@ -130,24 +132,24 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 
 	if(osize < 4608) {
 		fprintf(stderr,"Too small out space\n");
-		return MP3_ERR;
+		return MPGLIB_ERR;
 	}
 
 	if(in) {
 		if(isize<1){
-			fprintf(stderr,"decodeMP3() called with isize<1\n");
+			fprintf(stderr,"mpglib_decoder_decode() called with isize<1\n");
 			abort();
-			return MP3_ERR;
+			return MPGLIB_ERR;
 		}
 		if(addbuf(mp,in,isize) == NULL) {
-			return MP3_ERR;
+			return MPGLIB_ERR;
 		}
 	}
 
 	/* First decode header */
 	if(mp->framesize == 0) {
 		if(mp->bsize < 4) {
-			return MP3_NEED_MORE;
+			return MPGLIB_NEED_MORE;
 		}
 		read_head(mp);
 		decode_header(&mp->fr,mp->header);
@@ -155,7 +157,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	}
 
 	if(mp->fr.framesize > mp->bsize)
-		return MP3_NEED_MORE;
+		return MPGLIB_NEED_MORE;
 
 	wordpointer = mp->bsspace[mp->bsnum] + 512;
 	mp->bsnum = (mp->bsnum + 1) & 0x1;
@@ -203,7 +205,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	mp->fsizeold = mp->framesize;
 	mp->framesize = 0;
 
-	return MP3_OK;
+	return MPGLIB_OK;
 }
 
 int set_pointer(long backstep)
@@ -211,14 +213,14 @@ int set_pointer(long backstep)
   unsigned char *bsbufold;
   if(gmp->fsizeold < 0 && backstep > 0) {
     fprintf(stderr,"Can't step back %ld!\n",backstep);
-    return MP3_ERR;
+    return MPGLIB_ERR;
   }
   bsbufold = gmp->bsspace[gmp->bsnum] + 512;
   wordpointer -= backstep;
   if (backstep)
     memcpy(wordpointer,bsbufold+gmp->fsizeold-backstep,backstep);
   bitindex = 0;
-  return MP3_OK;
+  return MPGLIB_OK;
 }
 
 

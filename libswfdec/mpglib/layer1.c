@@ -8,7 +8,7 @@
  *
  */
 
-#include "mpg123.h"
+#include <mpglib_internal.h>
 
 void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],struct frame *fr)
 {
@@ -56,13 +56,13 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
   int i,n;
   int smpb[2*SBLIMIT]; /* values: 0-65535 */
   int *sample;
-  register unsigned int *ba;
-  register unsigned int *sca = (unsigned int *) scale_index;
+  unsigned int *ba;
+  unsigned int *sca = (unsigned int *) scale_index;
 
   if(fr->stereo) {
     int jsbound = fr->jsbound;
-    register real *f0 = fraction[0];
-    register real *f1 = fraction[1];
+    real *f0 = fraction[0];
+    real *f1 = fraction[1];
     ba = balloc;
     for (sample=smpb,i=0;i<jsbound;i++)  {
       if ((n = *ba++))
@@ -96,7 +96,7 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
     }
   }
   else {
-    register real *f0 = fraction[0];
+    real *f0 = fraction[0];
     ba = balloc;
     for (sample=smpb,i=0;i<SBLIMIT;i++)
       if ((n = *ba++))

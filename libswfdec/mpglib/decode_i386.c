@@ -14,10 +14,9 @@
 #include <math.h>
 #include <string.h>
 
-#include "mpg123.h"
-#include "mpglib.h"
+#include <mpglib_internal.h>
 
-extern struct mpstr *gmp;
+extern MpglibDecoder *gmp;
 
  /* old WRITE_SAMPLE */
 #define WRITE_SAMPLE(samples,sum,clip) \
@@ -82,7 +81,7 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
   gmp->synth_bo = bo;
   
   {
-    register int j;
+    int j;
     real *window = decwin + 16 - bo1;
 
     for (j=16;j;j--,b0+=0x10,window+=0x20,samples+=step)

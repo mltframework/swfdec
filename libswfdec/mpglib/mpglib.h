@@ -2,57 +2,16 @@
 #ifndef _MPGLIB_H_
 #define _MPGLIB_H_
 
-#include <glib.h>
+typedef struct mpglib_decoder_struct MpglibDecoder;
 
-struct buf {
-        unsigned char *pnt;
-	long size;
-	long pos;
-};
+#define MPGLIB_ERR -1
+#define MPGLIB_OK  0
+#define MPGLIB_NEED_MORE 1
 
-struct framebuf {
-	struct buf *buf;
-	long pos;
-	struct frame *next;
-	struct frame *prev;
-};
-
-struct mpstr {
-	GList *buffers;
-
-	int bsize;
-	int framesize;
-        int fsizeold;
-	struct frame fr;
-        //unsigned char bsspace[2][MAXFRAMESIZE+512]; /* MAXFRAMESIZE */
-        unsigned char *bsspace[2];
-	real hybrid_block[2][2][SBLIMIT*SSLIMIT];
-	int hybrid_blc[2];
-	unsigned long header;
-	int bsnum;
-	real synth_buffs[2][2][0x110];
-        int  synth_bo;
-};
-
-
-#define MP3_ERR -1
-#define MP3_OK  0
-#define MP3_NEED_MORE 1
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-  
-gboolean InitMP3(struct mpstr *mp);
-int decodeMP3(struct mpstr *mp,char *inmemory,int inmemsize,
+MpglibDecoder *mpglib_decoder_new(void);
+int mpglib_decoder_decode(MpglibDecoder *mp,char *inmemory,int inmemsize,
      char *outmemory,int outmemsize,int *done);
-void ExitMP3(struct mpstr *mp);
-
-#ifdef __cplusplus
-}
-#endif
-
+void mpglib_decoder_free(MpglibDecoder *mp);
 
 
 #endif

@@ -1,12 +1,13 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdio.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "mpg123.h"
+#include <mpglib_internal.h>
 
 struct parameter param = { 1 , 1 , 0 , 0 };
 

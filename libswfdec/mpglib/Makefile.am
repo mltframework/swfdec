@@ -1,7 +1,5 @@
 
 
-CFLAGS=-Wall -g -DLAYER1 -DLAYER2 -DLAYER3
-
 noinst_LTLIBRARIES = libmpglib.la
 
 libmpglib_la_SOURCES = layer1.c layer2.c common.c dct64_i386.c \
@@ -9,7 +7,7 @@ libmpglib_la_SOURCES = layer1.c layer2.c common.c dct64_i386.c \
 libmpglib_la_CFLAGS = -DLAYER1 -DLAYER2 -DLAYER3 $(GLIB_CFLAGS)
 libmpglib_la_LDFLAGS = -lm $(GLIB_LIBS)
 
-noinst_HEADERS = huffman.h l2tables.h mpg123.h mpglib.h
+noinst_HEADERS = huffman.h l2tables.h mpglib.h mpglib_internal.h
 
 noinst_PROGRAMS = mpglib_test
 

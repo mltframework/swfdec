@@ -1,68 +1,24 @@
-#include        <stdio.h>
-#include        <string.h>
-#include        <signal.h>
 
-#ifndef WIN32
-#include        <sys/signal.h>
-#include        <unistd.h>
-#endif
+#ifndef _MPGLIB_INTERNAL_H_
+#define _MPGLIB_INTERNAL_H_
 
-#include        <math.h>
+#include <mpglib.h>
+#include "config.h"
 
-#ifdef _WIN32
-# undef WIN32
-# define WIN32
+#include <glib.h>
 
-# define M_PI       3.14159265358979323846
-# define M_SQRT2	1.41421356237309504880
-# define REAL_IS_FLOAT
-# define NEW_DCT9
+struct buf {
+        unsigned char *pnt;
+	long size;
+	long pos;
+};
 
-# define random rand
-# define srandom srand
-
-#endif
-
-#ifdef REAL_IS_FLOAT
-#  define real float
-#elif defined(REAL_IS_LONG_DOUBLE)
-#  define real long double
-#else
-#  define real double
-#endif
-
-#ifdef __GNUC__
-#define INLINE inline
-#else
-#define INLINE
-#endif
-
-/* AUDIOBUFSIZE = n*64 with n=1,2,3 ...  */
-#define		AUDIOBUFSIZE		16384
-
-#ifndef FALSE
-#define         FALSE                   0
-#endif
-#ifndef FALSE
-#define         TRUE                    1
-#endif
-
-#define         SBLIMIT                 32
-#define         SSLIMIT                 18
-
-#define         SCALE_BLOCK             12
-
-
-#define         MPG_MD_STEREO           0
-#define         MPG_MD_JOINT_STEREO     1
-#define         MPG_MD_DUAL_CHANNEL     2
-#define         MPG_MD_MONO             3
-
-#define MAXFRAMESIZE 1792
-
-
-/* Pre Shift fo 16 to 8 bit converter table */
-#define AUSHIFT (3)
+struct framebuf {
+	struct buf *buf;
+	long pos;
+	struct frame *next;
+	struct frame *prev;
+};
 
 struct frame {
     int stereo;
@@ -87,6 +43,23 @@ struct frame {
     /* layer2 stuff */
     int II_sblimit;
     void *alloc;
+};
+
+struct mpglib_decoder_struct {
+	GList *buffers;
+
+	int bsize;
+	int framesize;
+        int fsizeold;
+	struct frame fr;
+        //unsigned char bsspace[2][MAXFRAMESIZE+512]; /* MAXFRAMESIZE */
+        unsigned char *bsspace[2];
+	real hybrid_block[2][2][SBLIMIT*SSLIMIT];
+	int hybrid_blc[2];
+	unsigned long header;
+	int bsnum;
+	real synth_buffs[2][2][0x110];
+        int  synth_bo;
 };
 
 struct parameter {
@@ -190,4 +163,7 @@ extern real *pnts[5];
 
 extern struct parameter param;
 
+
+
+#endif
 

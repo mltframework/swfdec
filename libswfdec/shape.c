@@ -943,9 +943,9 @@ static unsigned char *swfdec_gradient_to_palette(SwfdecGradient *grad,
 
 	color = transform_color(grad->array[0].color, color_mult, color_add);
 	for(i=0;i<grad->array[0].ratio;i++){
-		p[i*4 + 0] = SWF_COLOR_R(color);
+		p[i*4 + 0] = SWF_COLOR_B(color);
 		p[i*4 + 1] = SWF_COLOR_G(color);
-		p[i*4 + 2] = SWF_COLOR_B(color);
+		p[i*4 + 2] = SWF_COLOR_R(color);
 		p[i*4 + 3] = SWF_COLOR_A(color);
 	}
 
@@ -960,12 +960,12 @@ static unsigned char *swfdec_gradient_to_palette(SwfdecGradient *grad,
 		for(i=grad->array[j].ratio;i<grad->array[j+1].ratio;i++){
 			x = (i-grad->array[j].ratio)/len;
 
-			p[i*4 + 0] = SWF_COLOR_R(color0) * (1-x) +
-				SWF_COLOR_R(color1) * x;
+			p[i*4 + 0] = SWF_COLOR_B(color0) * (1-x) +
+				SWF_COLOR_B(color1) * x;
 			p[i*4 + 1] = SWF_COLOR_G(color0) * (1-x) +
 				SWF_COLOR_G(color1) * x;
-			p[i*4 + 2] = SWF_COLOR_B(color0) * (1-x) +
-				SWF_COLOR_B(color1) * x;
+			p[i*4 + 2] = SWF_COLOR_R(color0) * (1-x) +
+				SWF_COLOR_R(color1) * x;
 			p[i*4 + 3] = SWF_COLOR_A(color0) * (1-x) +
 				SWF_COLOR_A(color1) * x;
 		}
@@ -973,9 +973,9 @@ static unsigned char *swfdec_gradient_to_palette(SwfdecGradient *grad,
 
 	color = transform_color(grad->array[j].color, color_mult, color_add);
 	for(i=grad->array[j].ratio;i<256;i++){
-		p[i*4 + 0] = SWF_COLOR_R(color);
+		p[i*4 + 0] = SWF_COLOR_B(color);
 		p[i*4 + 1] = SWF_COLOR_G(color);
-		p[i*4 + 2] = SWF_COLOR_B(color);
+		p[i*4 + 2] = SWF_COLOR_R(color);
 		p[i*4 + 3] = SWF_COLOR_A(color);
 	}
 

@@ -1,6 +1,7 @@
 
 #include "swfdec_internal.h"
 
+#include <liboil/liboil.h>
 
 /*
  * This file defines some libart-related functions that aren't
@@ -197,7 +198,7 @@ void art_rgb_svp_alpha2 (const ArtSVP *svp, int x0, int y0,
 					(uta->y0+y)*32 + 32,
 					rgba,
 					buf + rowstride*(uta->y0+y)*32 +
-						(uta->x0+x)*32*3,
+						(uta->x0+x)*32*4,
 					rowstride,
 					alphagamma);
 			}
@@ -213,9 +214,10 @@ void art_rgb_fill_run(unsigned char *buf, unsigned char r,
 	int i;
 
 	for(i=0;i<n;i++){
-		*buf++ = r;
-		*buf++ = g;
 		*buf++ = b;
+		*buf++ = g;
+		*buf++ = r;
+		*buf++ = 0;
 	}
 }
 
@@ -227,11 +229,14 @@ void art_rgb_run_alpha(unsigned char *buf, unsigned char r,
 
 	if(alpha==0)return;
 	if(alpha>=0xff){
-		for(i=0;i<n;i++){
-			*buf++ = r;
-			*buf++ = g;
-			*buf++ = b;
-		}
+		char color[4];
+
+		color[0] = b;
+		color[1] = g;
+		color[2] = r;
+		color[3] = 0;
+
+		splat_u32((void *)buf, 4, (void *)color, n);
 		return;
 	}
 #define APPLY_ALPHA(x,y,a) (x) = (((y)*(alpha)+(x)*(255-alpha))>>8)
@@ -240,11 +245,13 @@ void art_rgb_run_alpha(unsigned char *buf, unsigned char r,
 	add_g = g*alpha + 0x80;
 	add_b = b*alpha + 0x80;
 	for(i=0;i<n;i++){
-		*buf = (add_r + unalpha*(*buf))>>8;
+		*buf = (add_b + unalpha*(*buf))>>8;
 		buf++;
 		*buf = (add_g + unalpha*(*buf))>>8;
 		buf++;
-		*buf = (add_b + unalpha*(*buf))>>8;
+		*buf = (add_r + unalpha*(*buf))>>8;
+		buf++;
+		*buf = 0;
 		buf++;
 	}
 }
@@ -419,10 +426,11 @@ void compose_const_rgb888_u8_ref(unsigned char *dest, unsigned char *src,
 	b = SWF_COLOR_B(color);
 
 	for(i=0;i<n;i++){
-		dest[0] = COMPOSE(dest[0], r, src[0]);
+		dest[0] = COMPOSE(dest[2], b, src[0]);
 		dest[1] = COMPOSE(dest[1], g, src[0]);
-		dest[2] = COMPOSE(dest[2], b, src[0]);
-		dest+=3;
+		dest[2] = COMPOSE(dest[0], r, src[0]);
+		dest[2] = 0;
+		dest+=4;
 		src++;
 	}
 }
@@ -442,16 +450,18 @@ void compose_const_rgb888_u8_fast(unsigned char *dest, unsigned char *src,
 		a = src[0];
 		if(a==0){
 		}else if(a==255){
-			dest[0] = r;
+			dest[0] = b;
 			dest[1] = g;
-			dest[2] = b;
+			dest[2] = r;
+			dest[3] = 0;
 		}else{
 			un_a = 255 - a;
-			dest[0] = (un_a*dest[0] + a*r)>>8;
+			dest[0] = (un_a*dest[0] + a*b)>>8;
 			dest[1] = (un_a*dest[1] + a*g)>>8;
-			dest[2] = (un_a*dest[2] + a*b)>>8;
+			dest[2] = (un_a*dest[2] + a*r)>>8;
+			dest[3] = 0;
 		}
-		dest+=3;
+		dest+=4;
 		src++;
 	}
 }
@@ -468,7 +478,8 @@ void compose_rgb888_u8_ref(unsigned char *dest, unsigned char *a_src,
 		dest[0] = COMPOSE(dest[0], src[0], a);
 		dest[1] = COMPOSE(dest[1], src[1], a);
 		dest[2] = COMPOSE(dest[2], src[2], a);
-		dest+=3;
+		dest[3] = 0;
+		dest+=4;
 		src+=4;
 		a_src++;
 	}
@@ -486,11 +497,12 @@ void compose_const_rgb888_rgb888_ref(unsigned char *dest, unsigned char *src,
 	b = SWF_COLOR_B(color);
 
 	for(i=0;i<n;i++){
-		dest[0] = COMPOSE(dest[0], r, src[0]);
+		dest[0] = COMPOSE(dest[0], b, src[0]);
 		dest[1] = COMPOSE(dest[1], g, src[1]);
-		dest[2] = COMPOSE(dest[2], b, src[2]);
-		dest+=3;
-		src+=3;
+		dest[2] = COMPOSE(dest[2], r, src[2]);
+		dest[3] = 0;
+		dest+=4;
+		src+=4;
 	}
 }
 
@@ -506,9 +518,10 @@ void compose_rgb888_rgb888_ref(unsigned char *dest, unsigned char *a_src,
 		dest[0] = COMPOSE(dest[0], src[0], a_src[0]);
 		dest[1] = COMPOSE(dest[1], src[1], a_src[1]);
 		dest[2] = COMPOSE(dest[2], src[2], a_src[2]);
-		dest+=3;
+		dest[3] = 0;
+		dest+=4;
 		src+=4;
-		a_src+=3;
+		a_src+=4;
 	}
 }
 
@@ -621,7 +634,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
 	    {
 	      alpha = (a * (running_sum>>8)) >> 16;
 	      if (alpha)
-		art_rgb_run_alpha (linebuf + (run_x0 - x0) * 3,
+		art_rgb_run_alpha (linebuf + (run_x0 - x0) * 4,
 				   r, g, b, alpha,
 				   run_x1 - run_x0);
 	    }
@@ -631,7 +644,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
 	{
 	  alpha = (a * (running_sum>>8)) >> 16;
 	  if (alpha)
-	    art_rgb_run_alpha (linebuf + (run_x1 - x0) * 3,
+	    art_rgb_run_alpha (linebuf + (run_x1 - x0) * 4,
 			       r, g, b, alpha,
 			       x1 - run_x1);
 	}

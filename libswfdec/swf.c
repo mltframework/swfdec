@@ -2,6 +2,8 @@
 #include <zlib.h>
 #include <math.h>
 
+#include <liboil/liboil.h>
+
 #include "swfdec_internal.h"
 
 static void dumpbits(bits_t *b);
@@ -34,6 +36,8 @@ int swf_parse(SwfdecDecoder *s)
 SwfdecDecoder *swfdec_decoder_new(void)
 {
 	SwfdecDecoder *s;
+
+	oil_init();
 
 	s = g_new0(SwfdecDecoder,1);
 

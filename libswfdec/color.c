@@ -40,8 +40,8 @@ void swf_config_colorspace(SwfdecDecoder *s)
 		break;
 	case SWF_COLORSPACE_RGB888:
 	default:
-		s->stride = s->width * 3;
-		s->bytespp = 3;
+		s->stride = s->width * 4;
+		s->bytespp = 4;
 		s->callback = art_rgb_svp_alpha_callback;
 		s->compose_callback = art_rgb_svp_alpha_compose_callback;
 		break;

@@ -306,9 +306,9 @@ static int define_bits_lossless(SwfdecDecoder *s, int have_alpha)
 		for(j=0;j<image->height;j++){
 		for(i=0;i<image->width;i++){
 			c = p[0] | (p[1]<<8);
-			idata[0] = ((c>>7)&0xf8) | ((c>>12)&0x7);
+			idata[0] = (c<<3) | ((c>>2)&0x7);
 			idata[1] = ((c>>2)&0xf8) | ((c>>7)&0x7);
-			idata[2] = (c<<3) | ((c>>2)&0x7);
+			idata[2] = ((c>>7)&0xf8) | ((c>>12)&0x7);
 			idata[3] = 0xff;
 			p++;
 			idata += 4;
@@ -326,9 +326,9 @@ static int define_bits_lossless(SwfdecDecoder *s, int have_alpha)
 			/* image is stored in 0RGB format.  We use RGBA. */
 			for(j=0;j<image->height;j++){
 			for(i=0;i<image->width;i++){
-				ptr[0] = ptr[1];
+				ptr[0] = ptr[3];
 				ptr[1] = ptr[2];
-				ptr[2] = ptr[3];
+				ptr[2] = ptr[1];
 				ptr[3] = 255;
 				ptr+=4;
 			}}
@@ -398,9 +398,9 @@ static void swfdec_image_colormap_decode(SwfdecImage *image,
 			dest[2] = 0;
 			dest[3] = 255;
 		}else{
-			dest[0] = colormap[c*4 + 0];
+			dest[0] = colormap[c*4 + 2];
 			dest[1] = colormap[c*4 + 1];
-			dest[2] = colormap[c*4 + 2];
+			dest[2] = colormap[c*4 + 0];
 			dest[3] = colormap[c*4 + 3];
 		}
 		dest += 4;

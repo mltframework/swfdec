@@ -1,0 +1,16 @@
+2004-02-25  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Add liboil dependency.
+	* libswfdec/Makefile.am: Add liboil dependency.
+	* libswfdec/art.c: (art_rgb_svp_alpha2), (art_rgb_fill_run),
+	(art_rgb_run_alpha), (compose_const_rgb888_u8_ref),
+	(compose_const_rgb888_u8_fast), (compose_rgb888_u8_ref),
+	(compose_const_rgb888_rgb888_ref), (compose_rgb888_rgb888_ref),
+	(art_rgb_svp_alpha_callback): Convert to 32-bit RGB colorspace.
+	* libswfdec/color.c: (swf_config_colorspace): same
+	* libswfdec/jpeg/jpeg_rgb_decoder.c: (convert): same
+	* libswfdec/shape.c: (swfdec_gradient_to_palette): same
+	* libswfdec/swf.c: (swfdec_decoder_new): same
+	* libswfdec/swfdec_image.c: (define_bits_lossless),
+	(swfdec_image_colormap_decode): same
+

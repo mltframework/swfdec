@@ -139,9 +139,9 @@ static void convert(JpegRGBDecoder *rgbdec)
 	vp = rgbdec->component[2].image;
 	for(y=0;y<rgbdec->height;y++){
 		for(x=0;x<rgbdec->width;x++){
-			rgbp[0] = YUV_TO_R(yp[x], up[x], vp[x]);
+			rgbp[0] = YUV_TO_B(yp[x], up[x], vp[x]);
 			rgbp[1] = YUV_TO_G(yp[x], up[x], vp[x]);
-			rgbp[2] = YUV_TO_B(yp[x], up[x], vp[x]);
+			rgbp[2] = YUV_TO_R(yp[x], up[x], vp[x]);
 			rgbp[3] = 0;
 			rgbp+=4;
 		}

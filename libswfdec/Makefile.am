@@ -8,8 +8,9 @@ libswfdec_la_SOURCES = actions.c art.c color.c get.c swfdec_image.c \
 	swfdec_display.c swfdec_sprite.c swfdec_button.c swfdec_layer.c \
 	version_script
 libswfdec_la_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) \
-	-I$(srcdir)/jpeg/
+	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS)
 libswfdec_la_LDFLAGS = $(LIBART_LIBS) $(GLIB_LIBS) $(MAD_LIBS) \
+	$(LIBOIL_LIBS) \
 	-Wl,--version-script=$(srcdir)/version_script
 
 libswfdec_la_LIBADD = mpglib/libmpglib.la jpeg/libjpeg.la

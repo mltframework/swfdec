@@ -35,6 +35,6 @@ pkginclude_HEADERS = swfdec.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_types.h tags.h swfdec_display.h \
 	swfdec_bits.h swfdec_rect.h swfdec_transform.h \
-	swfdec_render.h \
+	swfdec_render.h swfdec_actions.h \
 	$(renderer_headers)
 

@@ -1,5 +1,10 @@
 2004-10-04  David Schleef  <ds@schleef.org>
 
+	* libswfdec/Makefile.am:
+	* libswfdec/swfdec_actions.h: new file
+
+2004-10-04  David Schleef  <ds@schleef.org>
+
 	* libswfdec/Makefile.am: export art_warn
 	* libswfdec/actions.c: (tag_func_do_action),
 	(swfdec_action_script_execute): minimal AS execution

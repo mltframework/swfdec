@@ -10,22 +10,25 @@ static void swfdec_sprite_render (SwfdecDecoder * s,
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecSprite, swfdec_sprite)
 
-static void swfdec_sprite_base_init (gpointer g_class)
+     static void swfdec_sprite_base_init (gpointer g_class)
 {
 
 }
 
-static void swfdec_sprite_class_init (SwfdecSpriteClass *g_class)
+static void
+swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 {
   SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_sprite_render;
 }
 
-static void swfdec_sprite_init (SwfdecSprite *sprite)
+static void
+swfdec_sprite_init (SwfdecSprite * sprite)
 {
 
 }
 
-static void swfdec_sprite_dispose (SwfdecSprite *sprite)
+static void
+swfdec_sprite_dispose (SwfdecSprite * sprite)
 {
   GList *g;
   int i;
@@ -38,7 +41,7 @@ static void swfdec_sprite_dispose (SwfdecSprite *sprite)
   g_list_free (sprite->layers);
 
   if (sprite->sound_chunks) {
-    for (i=0;i<sprite->n_frames;i++) {
+    for (i = 0; i < sprite->n_frames; i++) {
       if (sprite->sound_chunks[i]) {
         swfdec_buffer_unref (sprite->sound_chunks[i]);
       }
@@ -46,7 +49,7 @@ static void swfdec_sprite_dispose (SwfdecSprite *sprite)
     g_free (sprite->sound_chunks);
   }
   if (sprite->actions) {
-    for (i=0;i<sprite->n_frames;i++) {
+    for (i = 0; i < sprite->n_frames; i++) {
       if (sprite->actions[i]) {
         swfdec_buffer_unref (sprite->actions[i]);
       }
@@ -56,8 +59,9 @@ static void swfdec_sprite_dispose (SwfdecSprite *sprite)
 
 }
 
-void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite,
-    SwfdecBuffer *chunk, int frame)
+void
+swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite,
+    SwfdecBuffer * chunk, int frame)
 {
   g_assert (sprite->sound_chunks != NULL);
 
@@ -65,8 +69,9 @@ void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite,
   swfdec_buffer_ref (chunk);
 }
 
-void swfdec_sprite_add_action (SwfdecSprite *sprite,
-    SwfdecBuffer *actions, int frame)
+void
+swfdec_sprite_add_action (SwfdecSprite * sprite,
+    SwfdecBuffer * actions, int frame)
 {
   g_assert (sprite->actions != NULL);
 
@@ -88,26 +93,26 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
   state = swfdec_render_get_object_state (s->render, seg->depth, seg->id);
   if (state == NULL) {
-    state = g_new0(SwfdecRenderState, 1);
+    state = g_new0 (SwfdecRenderState, 1);
     state->layer = seg->depth;
     state->id = seg->id;
     state->frame_index = 0;
     s->render->object_states = g_list_prepend (s->render->object_states, state);
-    SWFDEC_INFO("new rendering state for layer %d", seg->depth);
+    SWFDEC_INFO ("new rendering state for layer %d", seg->depth);
   } else {
     if (state->id != seg->id) {
-SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
+      SWFDEC_INFO ("old id=%d new id=%d", state->id, seg->id);
       state->id = seg->id;
       state->frame_index = 0;
-      SWFDEC_INFO("resetting rendering state of layer %d", seg->depth);
+      SWFDEC_INFO ("resetting rendering state of layer %d", seg->depth);
     }
   }
   if (state->frame_index >= sprite->n_frames) {
     state->frame_index = 0;
-    SWFDEC_INFO("looping rendering state of layer %d", seg->depth);
+    SWFDEC_INFO ("looping rendering state of layer %d", seg->depth);
   }
 
-  memcpy (&save_transform, &s->transform, sizeof(SwfdecTransform));
+  memcpy (&save_transform, &s->transform, sizeof (SwfdecTransform));
   swfdec_transform_multiply (&s->transform, &seg->transform, &save_transform);
 
   for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
@@ -116,15 +121,17 @@ SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
 
     child_seg = (SwfdecSpriteSegment *) g->data;
 
-    if (child_seg->first_frame > state->frame_index) continue;
-    if (child_seg->last_frame <= state->frame_index) continue;
+    if (child_seg->first_frame > state->frame_index)
+      continue;
+    if (child_seg->last_frame <= state->frame_index)
+      continue;
 
     /* FIXME need to clip layers instead */
     if (child_seg->clip_depth) {
       SWFDEC_INFO ("clip_depth=%d", child_seg->clip_depth);
       clip_depth = child_seg->clip_depth;
     }
-    
+
     if (clip_depth && child_seg->depth <= clip_depth) {
       SWFDEC_INFO ("clipping depth=%d", child_seg->clip_depth);
       continue;
@@ -148,7 +155,7 @@ SWFDEC_INFO("old id=%d new id=%d", state->id, seg->id);
       SWFDEC_DEBUG ("could not find object (id = %d)", child_seg->id);
     }
   }
-  memcpy (&s->transform, &save_transform, sizeof(SwfdecTransform));
+  memcpy (&s->transform, &save_transform, sizeof (SwfdecTransform));
 }
 
 #if 0
@@ -160,6 +167,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecLayer *child_layer;
   SwfdecLayer *old_child_layer;
   GList *g;
+
   //SwfdecSprite *child_decoder = SWFDEC_SPRITE (object);
   /* FIXME */
   //SwfdecSprite *sprite = child_decoder->main_sprite;
@@ -177,18 +185,18 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   /* Not sure why this is wrong.  Somehow the top-level transform
    * gets applied twice. */
   //art_affine_multiply(layer->transform, seg->transform, s->transform);
-  memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
+  memcpy (&layer->transform, &seg->transform, sizeof (SwfdecTransform));
 
   if (oldlayer) {
     layer->frame_number = oldlayer->frame_number + 1;
     if (layer->frame_number >= sprite->n_frames)
       layer->frame_number = 0;
-    SWFDEC_DEBUG (
-        "iterating old sprite (depth=%d) old_frame=%d frame=%d n_frames=%d\n",
-	seg->depth, oldlayer->frame_number, layer->frame_number,
-	sprite->n_frames);
+    SWFDEC_DEBUG
+        ("iterating old sprite (depth=%d) old_frame=%d frame=%d n_frames=%d\n",
+        seg->depth, oldlayer->frame_number, layer->frame_number,
+        sprite->n_frames);
   } else {
-    SWFDEC_LOG("iterating new sprite (depth=%d)", seg->depth);
+    SWFDEC_LOG ("iterating new sprite (depth=%d)", seg->depth);
     layer->frame_number = 0;
   }
   frame = layer->frame_number;
@@ -198,7 +206,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   layer->rect.y0 = 0;
   layer->rect.y1 = 0;
 
-  SWFDEC_LOG("swfdec_sprite_render %d frame %d", object->id,
+  SWFDEC_LOG ("swfdec_sprite_render %d frame %d", object->id,
       layer->frame_number);
 
   for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
@@ -208,15 +216,15 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       continue;
     if (child_seg->last_frame <= frame)
       continue;
-    SWFDEC_LOG("rendering layer %d", child_seg->depth);
+    SWFDEC_LOG ("rendering layer %d", child_seg->depth);
 
     tmpseg = swfdec_spriteseg_dup (child_seg);
     swfdec_transform_multiply (&tmpseg->transform,
-	&child_seg->transform, &layer->transform);
+        &child_seg->transform, &layer->transform);
 
 #if 0
     old_child_layer = swfdec_render_get_sublayer (layer,
-	child_seg->depth, layer->frame_number - 1);
+        child_seg->depth, layer->frame_number - 1);
 #endif
     old_child_layer = NULL;
 
@@ -243,7 +251,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
   SwfdecSprite *s2 = SWFDEC_SPRITE (parent_object);
   GList *g;
 
-  SWFDEC_LOG("rendering sprite frame %d of %d",
+  SWFDEC_LOG ("rendering sprite frame %d of %d",
       parent_layer->frame_number, s2->n_frames);
   for (g = g_list_first (parent_layer->sublayers); g; g = g_list_next (g)) {
     child_layer = (SwfdecLayer *) g->data;
@@ -271,15 +279,15 @@ tag_func_define_sprite (SwfdecDecoder * s)
   SWFDEC_OBJECT (sprite)->id = id;
   s->objects = g_list_append (s->objects, sprite);
 
-  SWFDEC_LOG("  ID: %d", id);
+  SWFDEC_LOG ("  ID: %d", id);
 
   sprite->n_frames = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG("n_frames = %d", sprite->n_frames);
+  SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
 
   sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
   sprite->actions = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
 
-  memcpy (&parse, bits, sizeof(SwfdecBits));
+  memcpy (&parse, bits, sizeof (SwfdecBits));
 
   while (1) {
     unsigned char *endptr;
@@ -291,7 +299,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
     //SWFDEC_INFO ("sprite parsing at %d", parse.ptr - parse.buffer->data);
     x = swfdec_bits_get_u16 (&parse);
-    tag = (x>>6) & 0x3ff;
+    tag = (x >> 6) & 0x3ff;
     tag_len = x & 0x3f;
     if (tag_len == 0x3f) {
       tag_len = swfdec_bits_get_u32 (&parse);
@@ -335,13 +343,15 @@ tag_func_define_sprite (SwfdecDecoder * s)
           SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
         }
       }
-    
+
       parse.ptr = endptr;
     }
 
-    if (buffer) swfdec_buffer_unref (buffer);
+    if (buffer)
+      swfdec_buffer_unref (buffer);
 
-    if (tag == 0) break;
+    if (tag == 0)
+      break;
   }
 
   s->b = save_bits;
@@ -359,7 +369,7 @@ swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame)
   for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
     if (seg->depth == depth && seg->first_frame <= frame
-	&& seg->last_frame > frame)
+        && seg->last_frame > frame)
       return seg;
   }
 
@@ -437,16 +447,16 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   depth = swfdec_bits_get_u16 (bits);
 
   /* reserved is somehow related to sprites */
-  SWFDEC_LOG("  reserved = %d", reserved);
+  SWFDEC_LOG ("  reserved = %d", reserved);
   if (reserved) {
     SWFDEC_WARNING ("  reserved bits non-zero %d", reserved);
   }
-  SWFDEC_LOG("  has_clip_depth = %d", has_clip_depth);
-  SWFDEC_LOG("  has_name = %d", has_name);
-  SWFDEC_LOG("  has_ratio = %d", has_ratio);
-  SWFDEC_LOG("  has_color_transform = %d", has_color_transform);
-  SWFDEC_LOG("  has_matrix = %d", has_matrix);
-  SWFDEC_LOG("  has_character = %d", has_character);
+  SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
+  SWFDEC_LOG ("  has_name = %d", has_name);
+  SWFDEC_LOG ("  has_ratio = %d", has_ratio);
+  SWFDEC_LOG ("  has_color_transform = %d", has_color_transform);
+  SWFDEC_LOG ("  has_matrix = %d", has_matrix);
+  SWFDEC_LOG ("  has_character = %d", has_character);
 
   oldlayer = swfdec_sprite_get_seg (s->parse_sprite, depth,
       s->parse_sprite->parse_frame);
@@ -464,27 +474,29 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 
   if (has_character) {
     layer->id = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG("  id = %d", layer->id);
+    SWFDEC_LOG ("  id = %d", layer->id);
   } else {
     if (oldlayer)
       layer->id = oldlayer->id;
   }
 
   SWFDEC_INFO ("%splacing object layer=%d id=%d first_frame=%d",
-      (has_character)?"":"[re-]", depth, layer->id, layer->first_frame);
+      (has_character) ? "" : "[re-]", depth, layer->id, layer->first_frame);
 
   if (has_matrix) {
     swfdec_bits_get_transform (bits, &layer->transform);
   } else {
     if (oldlayer) {
-      memcpy (&layer->transform, &oldlayer->transform, sizeof (SwfdecTransform));
+      memcpy (&layer->transform, &oldlayer->transform,
+          sizeof (SwfdecTransform));
     }
   }
   if (has_color_transform) {
     swfdec_bits_get_color_transform (bits, &layer->color_transform);
   } else {
     if (oldlayer) {
-      memcpy (&layer->color_transform, &oldlayer->color_transform, sizeof (SwfdecColorTransform));
+      memcpy (&layer->color_transform, &oldlayer->color_transform,
+          sizeof (SwfdecColorTransform));
     } else {
       layer->color_transform.mult[0] = 1;
       layer->color_transform.mult[1] = 1;
@@ -499,7 +511,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   swfdec_bits_syncbits (bits);
   if (has_ratio) {
     layer->ratio = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG("  ratio = %d", layer->ratio);
+    SWFDEC_LOG ("  ratio = %d", layer->ratio);
   } else {
     if (oldlayer)
       layer->ratio = oldlayer->ratio;

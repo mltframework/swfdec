@@ -7,7 +7,7 @@
 #include "art.h"
 
 typedef void (*ArtSVPRenderAAFunc) (void *callback_data, int y,
-    int start, ArtSVPRenderAAStep *steps, int n_steps);
+    int start, ArtSVPRenderAAStep * steps, int n_steps);
 
 void
 swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec)
@@ -40,8 +40,9 @@ swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec)
 
   if (layervec->svp->n_segs > 0) {
     art_svp_render_aa (layervec->svp, rect.x0, rect.y0,
-	rect.x1, rect.y1,
-	(ArtSVPRenderAAFunc)(layervec->compose ? s->compose_callback : s->callback), &cb_data);
+        rect.x1, rect.y1,
+        (ArtSVPRenderAAFunc) (layervec->compose ? s->compose_callback : s->
+            callback), &cb_data);
   }
 
   s->pixels_rendered += (rect.x1 - rect.x0) * (rect.y1 - rect.y0);
@@ -125,7 +126,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
     vpath1 = art_vpath_reverse_free (vpath1);
     vpath = art_vpath_cat (vpath0, vpath1);
-    art_vpath_bbox_irect (vpath, (ArtIRect *)&layervec->rect);
+    art_vpath_bbox_irect (vpath, (ArtIRect *) & layervec->rect);
     layervec->svp = art_svp_from_vpath (vpath);
     art_svp_make_convex (layervec->svp);
     swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
@@ -137,14 +138,14 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     g_free (vpath);
 
     layervec->color = swfdec_color_apply_transform (shapevec->color,
-	&seg->color_transform);
+        &seg->color_transform);
     layervec->compose = NULL;
     if (shapevec->fill_id) {
       swfdec_shape_compose (s, layervec, shapevec, &layer->transform);
     }
     if (shapevec->grad) {
       swfdec_shape_compose_gradient (s, layervec, shapevec, &layer->transform,
-	  seg);
+          seg);
     }
   }
 
@@ -163,7 +164,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     bpath = swfdec_art_bpath_from_points (shapevec->path, &trans);
     vpath = art_bez_path_to_vec (bpath, s->flatness);
-    art_vpath_bbox_irect (vpath, (ArtIRect *)&layervec->rect);
+    art_vpath_bbox_irect (vpath, (ArtIRect *) & layervec->rect);
 
     /* FIXME for subpixel */
     width = shapevec->width * swfdec_transform_get_expansion (&trans);
@@ -177,13 +178,13 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     layervec->rect.y1 += half_width;
     swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
     layervec->svp = art_svp_vpath_stroke (vpath,
-	ART_PATH_STROKE_JOIN_ROUND,
-	ART_PATH_STROKE_CAP_ROUND, width, 1.0, s->flatness);
+        ART_PATH_STROKE_JOIN_ROUND,
+        ART_PATH_STROKE_CAP_ROUND, width, 1.0, s->flatness);
 
     art_free (vpath);
     g_free (bpath);
     layervec->color = swfdec_color_apply_transform (shapevec->color,
-	&seg->color_transform);
+        &seg->color_transform);
   }
 
   swfdec_layer_render (s, layer);
@@ -230,7 +231,7 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
     if (shape == NULL) {
-      SWFDEC_ERROR("failed getting glyph %d\n", glyph->glyph);
+      SWFDEC_ERROR ("failed getting glyph %d\n", glyph->glyph);
       continue;
     }
 
@@ -257,7 +258,7 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
     vpath1 = art_vpath_reverse_free (vpath1);
     vpath = art_vpath_cat (vpath0, vpath1);
-    art_vpath_bbox_irect (vpath, (ArtIRect *)&layervec->rect);
+    art_vpath_bbox_irect (vpath, (ArtIRect *) & layervec->rect);
     layervec->svp = art_svp_from_vpath (vpath);
     art_svp_make_convex (layervec->svp);
     swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
@@ -280,26 +281,26 @@ swf_config_colorspace (SwfdecDecoder * s)
     case SWF_COLORSPACE_RGB565:
       s->stride = s->width * 2;
       s->bytespp = 2;
-      s->callback = (void *)art_rgb565_svp_alpha_callback;
-      s->compose_callback = (void *)art_rgb565_svp_alpha_callback;
+      s->callback = (void *) art_rgb565_svp_alpha_callback;
+      s->compose_callback = (void *) art_rgb565_svp_alpha_callback;
       s->fillrect = art_rgb565_fillrect;
       break;
     case SWF_COLORSPACE_RGB888:
     default:
       s->stride = s->width * 4;
       s->bytespp = 4;
-      s->callback = (void *)art_rgb_svp_alpha_callback;
-      s->compose_callback = (void *)art_rgb_svp_alpha_compose_callback;
+      s->callback = (void *) art_rgb_svp_alpha_callback;
+      s->compose_callback = (void *) art_rgb_svp_alpha_compose_callback;
       s->fillrect = art_rgb_fillrect;
       break;
   }
 }
 
-void swfdec_render_layervec_free (SwfdecLayerVec *layervec)
+void
+swfdec_render_layervec_free (SwfdecLayerVec * layervec)
 {
   if (layervec->svp) {
     art_svp_free (layervec->svp);
   }
 
 }
-

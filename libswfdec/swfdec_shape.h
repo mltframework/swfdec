@@ -9,12 +9,11 @@
 #include "swfdec_transform.h"
 
 G_BEGIN_DECLS
-
 //typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeClass SwfdecShapeClass;
 typedef struct _SwfdecShapePoint SwfdecShapePoint;
 
-#define SWFDEC_TYPE_SHAPE                    (swfdec_shape_get_type()) 
+#define SWFDEC_TYPE_SHAPE                    (swfdec_shape_get_type())
 #define SWFDEC_IS_SHAPE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SHAPE))
 #define SWFDEC_IS_SHAPE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SHAPE))
 #define SWFDEC_SHAPE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SHAPE, SwfdecShape))
@@ -24,7 +23,8 @@ typedef struct _SwfdecShapePoint SwfdecShapePoint;
 #define SWFDEC_SHAPE_POINT_MOVETO 0
 #define SWFDEC_SHAPE_POINT_LINETO 1
 
-struct _SwfdecShapePoint {
+struct _SwfdecShapePoint
+{
   gint16 control_x;
   gint16 control_y;
   gint16 to_x;
@@ -48,7 +48,8 @@ struct _SwfdecShapeVec
   SwfdecGradient *grad;
 };
 
-struct _SwfdecShape {
+struct _SwfdecShape
+{
   SwfdecObject object;
 
   GPtrArray *lines;
@@ -63,7 +64,8 @@ struct _SwfdecShape {
   int rgba;
 };
 
-struct _SwfdecShapeClass {
+struct _SwfdecShapeClass
+{
   SwfdecObjectClass object_class;
 
 };
@@ -79,23 +81,22 @@ int tag_define_shape (SwfdecDecoder * s);
 int tag_define_shape_3 (SwfdecDecoder * s);
 void swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
-void swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape);
+void swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
+    SwfdecShape * shape);
 int tag_define_shape_2 (SwfdecDecoder * s);
 int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);
 void dump_layers (SwfdecDecoder * s);
 
 void swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, SwfdecTransform *trans);
+    SwfdecShapeVec * shapevec, SwfdecTransform * trans);
 void swfdec_shape_compose_gradient (SwfdecDecoder * s,
     SwfdecLayerVec * layervec, SwfdecShapeVec * shapevec,
-    SwfdecTransform *trans, SwfdecSpriteSegment * seg);
+    SwfdecTransform * trans, SwfdecSpriteSegment * seg);
 unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
-    SwfdecColorTransform *color_transform);
-SwfdecLayer * swfdec_shape_prerender (SwfdecDecoder * s,
+    SwfdecColorTransform * color_transform);
+SwfdecLayer *swfdec_shape_prerender (SwfdecDecoder * s,
     SwfdecSpriteSegment * seg, SwfdecObject * obj, SwfdecLayer * oldlayer);
 
 G_END_DECLS
-
 #endif
-

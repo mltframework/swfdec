@@ -14,18 +14,18 @@
 #endif
 
 G_BEGIN_DECLS
-
 //typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundClass SwfdecSoundClass;
 
-#define SWFDEC_TYPE_SOUND                    (swfdec_sound_get_type()) 
+#define SWFDEC_TYPE_SOUND                    (swfdec_sound_get_type())
 #define SWFDEC_IS_SOUND(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SOUND))
 #define SWFDEC_IS_SOUND_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SOUND))
 #define SWFDEC_SOUND(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SOUND, SwfdecSound))
 #define SWFDEC_SOUND_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SOUND, SwfdecSoundClass))
 
 #if 0
-struct _SwfdecSoundChunk {
+struct _SwfdecSoundChunk
+{
   int n_samples;
   int n_left;
   int length;
@@ -33,7 +33,8 @@ struct _SwfdecSoundChunk {
 };
 #endif
 
-struct _SwfdecSound {
+struct _SwfdecSound
+{
   SwfdecObject object;
 
   int format;
@@ -57,7 +58,8 @@ struct _SwfdecSound {
   int sound_len;
 };
 
-struct _SwfdecSoundClass {
+struct _SwfdecSoundClass
+{
   SwfdecObjectClass object_class;
 
 };
@@ -72,12 +74,10 @@ int tag_func_define_button_sound (SwfdecDecoder * s);
 void swfdec_sound_render (SwfdecDecoder * s);
 
 #if 0
-void swfdec_sound_chunk_free (SwfdecSoundChunk *chunk);
+void swfdec_sound_chunk_free (SwfdecSoundChunk * chunk);
 #endif
 
-int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
+int swfdec_sound_mp3_decode_stream (SwfdecDecoder * s, SwfdecSound * sound);
 
 G_END_DECLS
-
 #endif
-

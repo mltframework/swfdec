@@ -4,7 +4,7 @@
 #include "swfdec_internal.h"
 
 unsigned int
-swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform *trans)
+swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform * trans)
 {
   int r, g, b, a;
 
@@ -13,7 +13,7 @@ swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform *trans)
   b = SWF_COLOR_B (in);
   a = SWF_COLOR_A (in);
 
-  SWFDEC_LOG ("in rgba %d,%d,%d,%d",r,g,b,a);
+  SWFDEC_LOG ("in rgba %d,%d,%d,%d", r, g, b, a);
 
   r = rint ((r * trans->mult[0] + trans->add[0]));
   g = rint ((g * trans->mult[1] + trans->add[1]));
@@ -25,7 +25,7 @@ swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform *trans)
   b = CLAMP (b, 0, 255);
   a = CLAMP (a, 0, 255);
 
-  SWFDEC_LOG("out rgba %d,%d,%d,%d",r,g,b,a);
+  SWFDEC_LOG ("out rgba %d,%d,%d,%d", r, g, b, a);
 
   return SWF_COLOR_COMBINE (r, g, b, a);
 }

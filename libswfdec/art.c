@@ -88,7 +88,7 @@ art_vpath_reverse (ArtVpath * a)
       state = 1;
     }
     if (a[len - i - 1].code == ART_MOVETO ||
-	a[len - i - 1].code == ART_MOVETO_OPEN) {
+        a[len - i - 1].code == ART_MOVETO_OPEN) {
       state = 0;
     }
     dest[i] = it;
@@ -138,16 +138,16 @@ art_rgb_svp_alpha2 (const ArtSVP * svp, int x0, int y0,
     for (x = 0; x < uta->width; x++) {
       i = y * uta->width + x;
       if ((uta->x0 + x) * 32 < x0 || (uta->x0 + x + 1) * 32 > x1)
-	continue;
+        continue;
       if (uta->utiles[i]) {
-	art_rgb_svp_alpha (svp,
-	    (uta->x0 + x) * 32,
-	    (uta->y0 + y) * 32,
-	    (uta->x0 + x) * 32 + 32,
-	    (uta->y0 + y) * 32 + 32,
-	    rgba,
-	    buf + rowstride * (uta->y0 + y) * 32 +
-	    (uta->x0 + x) * 32 * 4, rowstride, alphagamma);
+        art_rgb_svp_alpha (svp,
+            (uta->x0 + x) * 32,
+            (uta->y0 + y) * 32,
+            (uta->x0 + x) * 32 + 32,
+            (uta->y0 + y) * 32 + 32,
+            rgba,
+            buf + rowstride * (uta->y0 + y) * 32 +
+            (uta->x0 + x) * 32 * 4, rowstride, alphagamma);
       }
     }
   }
@@ -261,23 +261,24 @@ art_rgb565_fillrect (unsigned char *buffer, int stride, unsigned int color,
   buffer += rect->x0 * 2;
   for (i = rect->y0; i < rect->y1; i++) {
     art_rgb565_run_alpha (buffer + i * stride,
-	SWF_COLOR_R (color),
-	SWF_COLOR_G (color),
-	SWF_COLOR_B (color), SWF_COLOR_A (color), rect->x1 - rect->x0);
+        SWF_COLOR_R (color),
+        SWF_COLOR_G (color),
+        SWF_COLOR_B (color), SWF_COLOR_A (color), rect->x1 - rect->x0);
   }
 }
 
 void
-art_rgb_fillrect (unsigned char *buffer, int stride, unsigned int color, SwfdecRect * rect)
+art_rgb_fillrect (unsigned char *buffer, int stride, unsigned int color,
+    SwfdecRect * rect)
 {
   int i;
 
   buffer += rect->x0 * 4;
   for (i = rect->y0; i < rect->y1; i++) {
     art_rgb_run_alpha_2 (buffer + i * stride,
-	SWF_COLOR_R (color),
-	SWF_COLOR_G (color),
-	SWF_COLOR_B (color), SWF_COLOR_A (color), rect->x1 - rect->x0);
+        SWF_COLOR_R (color),
+        SWF_COLOR_G (color),
+        SWF_COLOR_B (color), SWF_COLOR_A (color), rect->x1 - rect->x0);
   }
 }
 
@@ -322,7 +323,7 @@ art_rgb565_svp_alpha_callback (void *callback_data, int y,
     if (run_x1 > x0) {
       alpha = (a * running_sum >> 8) >> 16;
       if (alpha)
-	art_rgb565_run_alpha (linebuf, r, g, b, alpha, run_x1 - x0);
+        art_rgb565_run_alpha (linebuf, r, g, b, alpha, run_x1 - x0);
     }
 
     for (k = 0; k < n_steps - 1; k++) {
@@ -330,18 +331,18 @@ art_rgb565_svp_alpha_callback (void *callback_data, int y,
       run_x0 = run_x1;
       run_x1 = steps[k + 1].x;
       if (run_x1 > run_x0) {
-	alpha = (a * (running_sum >> 8)) >> 16;
-	if (alpha)
-	  art_rgb565_run_alpha (linebuf + (run_x0 - x0) * 2,
-	      r, g, b, alpha, run_x1 - run_x0);
+        alpha = (a * (running_sum >> 8)) >> 16;
+        if (alpha)
+          art_rgb565_run_alpha (linebuf + (run_x0 - x0) * 2,
+              r, g, b, alpha, run_x1 - run_x0);
       }
     }
     running_sum += steps[k].delta;
     if (x1 > run_x1) {
       alpha = (a * (running_sum >> 8)) >> 16;
       if (alpha)
-	art_rgb565_run_alpha (linebuf + (run_x1 - x0) * 2,
-	    r, g, b, alpha, x1 - run_x1);
+        art_rgb565_run_alpha (linebuf + (run_x1 - x0) * 2,
+            r, g, b, alpha, x1 - run_x1);
     }
   } else {
     alpha = (a * (running_sum >> 8)) >> 16;
@@ -500,8 +501,8 @@ art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
       run_x0 = run_x1;
       run_x1 = steps[k + 1].x;
       if (run_x1 > run_x0) {
-	alpha = (a * (running_sum >> 8)) >> 16;
-	art_grey_run_alpha (linebuf + (run_x0 - x0), alpha, run_x1 - run_x0);
+        alpha = (a * (running_sum >> 8)) >> 16;
+        art_grey_run_alpha (linebuf + (run_x0 - x0), alpha, run_x1 - run_x0);
       }
     }
     running_sum += steps[k].delta;
@@ -549,7 +550,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
     if (run_x1 > x0) {
       alpha = (a * (running_sum >> 8)) >> 16;
       if (alpha)
-	art_rgb_run_alpha_2 (linebuf, r, g, b, alpha, run_x1 - x0);
+        art_rgb_run_alpha_2 (linebuf, r, g, b, alpha, run_x1 - x0);
     }
 
     for (k = 0; k < n_steps - 1; k++) {
@@ -557,18 +558,18 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
       run_x0 = run_x1;
       run_x1 = steps[k + 1].x;
       if (run_x1 > run_x0) {
-	alpha = (a * (running_sum >> 8)) >> 16;
-	if (alpha)
-	  art_rgb_run_alpha_2 (linebuf + (run_x0 - x0) * 4,
-	      r, g, b, alpha, run_x1 - run_x0);
+        alpha = (a * (running_sum >> 8)) >> 16;
+        if (alpha)
+          art_rgb_run_alpha_2 (linebuf + (run_x0 - x0) * 4,
+              r, g, b, alpha, run_x1 - run_x0);
       }
     }
     running_sum += steps[k].delta;
     if (x1 > run_x1) {
       alpha = (a * (running_sum >> 8)) >> 16;
       if (alpha)
-	art_rgb_run_alpha_2 (linebuf + (run_x1 - x0) * 4,
-	    r, g, b, alpha, x1 - run_x1);
+        art_rgb_run_alpha_2 (linebuf + (run_x1 - x0) * 4,
+            r, g, b, alpha, x1 - run_x1);
     }
   } else {
     alpha = (a * (running_sum >> 8)) >> 16;
@@ -615,15 +616,15 @@ art_grey_svp_alpha_callback (void *callback_data, int y,
       run_x0 = run_x1;
       run_x1 = steps[k + 1].x;
       if (run_x1 > run_x0) {
-	alpha = running_sum >> 16;
-	art_grey_run_alpha (linebuf + (run_x0 - x0), alpha, run_x1 - run_x0);
+        alpha = running_sum >> 16;
+        art_grey_run_alpha (linebuf + (run_x0 - x0), alpha, run_x1 - run_x0);
       }
     }
     running_sum += steps[k].delta;
     if (x1 > run_x1) {
       alpha = running_sum >> 16;
       if (alpha)
-	art_grey_run_alpha (linebuf + (run_x1 - x0), alpha, x1 - run_x1);
+        art_grey_run_alpha (linebuf + (run_x1 - x0), alpha, x1 - run_x1);
     }
   } else {
     alpha = running_sum >> 16;
@@ -636,14 +637,14 @@ art_grey_svp_alpha_callback (void *callback_data, int y,
 #define WEIGHT (2.0/3.0)
 
 ArtBpath *
-swfdec_art_bpath_from_points (GArray *array, SwfdecTransform *trans)
+swfdec_art_bpath_from_points (GArray * array, SwfdecTransform * trans)
 {
   int i;
   ArtBpath *bpath;
-  SwfdecShapePoint *points = (SwfdecShapePoint *)array->data;
+  SwfdecShapePoint *points = (SwfdecShapePoint *) array->data;
 
-  bpath = g_malloc (sizeof(ArtBpath) * (array->len + 1));
-  for(i=0;i<array->len;i++) {
+  bpath = g_malloc (sizeof (ArtBpath) * (array->len + 1));
+  for (i = 0; i < array->len; i++) {
     if (points[i].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
       if (points[i].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
         bpath[i].code = ART_MOVETO_OPEN;
@@ -653,17 +654,17 @@ swfdec_art_bpath_from_points (GArray *array, SwfdecTransform *trans)
       bpath[i].x3 = points[i].to_x * SWF_SCALE_FACTOR;
       bpath[i].y3 = points[i].to_y * SWF_SCALE_FACTOR;
     } else {
-      double x,y;
+      double x, y;
 
       bpath[i].code = ART_CURVETO;
       x = points[i].control_x * SWF_SCALE_FACTOR;
       y = points[i].control_y * SWF_SCALE_FACTOR;
       bpath[i].x3 = points[i].to_x * SWF_SCALE_FACTOR;
       bpath[i].y3 = points[i].to_y * SWF_SCALE_FACTOR;
-      bpath[i].x1 = WEIGHT * x + (1-WEIGHT) * bpath[i-1].x3;
-      bpath[i].y1 = WEIGHT * y + (1-WEIGHT) * bpath[i-1].y3;
-      bpath[i].x2 = WEIGHT * x + (1-WEIGHT) * bpath[i].x3;
-      bpath[i].y2 = WEIGHT * y + (1-WEIGHT) * bpath[i].y3;
+      bpath[i].x1 = WEIGHT * x + (1 - WEIGHT) * bpath[i - 1].x3;
+      bpath[i].y1 = WEIGHT * y + (1 - WEIGHT) * bpath[i - 1].y3;
+      bpath[i].x2 = WEIGHT * x + (1 - WEIGHT) * bpath[i].x3;
+      bpath[i].y2 = WEIGHT * y + (1 - WEIGHT) * bpath[i].y3;
     }
   }
 
@@ -682,11 +683,11 @@ swfdec_art_bpath_from_points (GArray *array, SwfdecTransform *trans)
 }while(0)
 
 void
-art_bpath_affine_transform_inplace (ArtBpath *bpath, SwfdecTransform *trans)
+art_bpath_affine_transform_inplace (ArtBpath * bpath, SwfdecTransform * trans)
 {
   int i;
 
-  for(i=0; bpath[i].code != ART_END; i++) {
+  for (i = 0; bpath[i].code != ART_END; i++) {
     apply_affine (bpath[i].x3, bpath[i].y3, trans->trans);
     if (bpath[i].code == ART_CURVETO) {
       apply_affine (bpath[i].x1, bpath[i].y1, trans->trans);
@@ -694,4 +695,3 @@ art_bpath_affine_transform_inplace (ArtBpath *bpath, SwfdecTransform *trans)
     }
   }
 }
-

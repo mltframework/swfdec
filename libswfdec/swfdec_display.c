@@ -36,10 +36,12 @@ tag_func_place_object_2 (SwfdecDecoder * s)
   }
   if (has_matrix) {
     SwfdecTransform trans;
+
     swfdec_bits_get_transform (bits, &trans);
   }
   if (has_color_transform) {
     SwfdecColorTransform ct;
+
     swfdec_bits_get_color_transform (bits, &ct);
     swfdec_bits_syncbits (bits);
   }

@@ -77,13 +77,12 @@ swfdec_render_get_sublayer (SwfdecLayer * layer, int depth, int frame)
     l = (SwfdecLayer *) g->data;
 #if 0
     printf ("compare %d==%d %d <= %d < %d\n",
-	l->seg->depth, depth, l->seg->first_frame, frame, l->last_frame);
+        l->seg->depth, depth, l->seg->first_frame, frame, l->last_frame);
 #endif
     if (l->seg->depth == depth && l->first_frame <= frame
-	&& frame < l->last_frame)
+        && frame < l->last_frame)
       return l;
   }
 
   return NULL;
 }
-

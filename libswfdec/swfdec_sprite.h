@@ -7,9 +7,9 @@
 #include "swfdec_transform.h"
 
 G_BEGIN_DECLS
-
 //typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
+
 //typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;
 
 struct _SwfdecSpriteSegment
@@ -27,13 +27,14 @@ struct _SwfdecSpriteSegment
 };
 
 
-#define SWFDEC_TYPE_SPRITE                    (swfdec_sprite_get_type()) 
+#define SWFDEC_TYPE_SPRITE                    (swfdec_sprite_get_type())
 #define SWFDEC_IS_SPRITE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SPRITE))
 #define SWFDEC_IS_SPRITE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SPRITE))
 #define SWFDEC_SPRITE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SPRITE, SwfdecSprite))
 #define SWFDEC_SPRITE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SPRITE, SwfdecSpriteClass))
 
-struct _SwfdecSprite {
+struct _SwfdecSprite
+{
   SwfdecObject object;
 
   int n_frames;
@@ -45,7 +46,8 @@ struct _SwfdecSprite {
   SwfdecBuffer **actions;
 };
 
-struct _SwfdecSpriteClass {
+struct _SwfdecSpriteClass
+{
   SwfdecObjectClass object_class;
 
 };
@@ -56,9 +58,12 @@ void swfdec_sprite_decoder_free (SwfdecObject * object);
 int tag_func_define_sprite (SwfdecDecoder * s);
 SwfdecSpriteSegment *swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth,
     int frame);
-void swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSegment * segnew);
-void swfdec_sprite_add_sound_chunk (SwfdecSprite *sprite, SwfdecBuffer *chunk, int frame);
-void swfdec_sprite_add_action (SwfdecSprite *sprite, SwfdecBuffer *action, int frame);
+void swfdec_sprite_add_seg (SwfdecSprite * sprite,
+    SwfdecSpriteSegment * segnew);
+void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, SwfdecBuffer * chunk,
+    int frame);
+void swfdec_sprite_add_action (SwfdecSprite * sprite, SwfdecBuffer * action,
+    int frame);
 
 SwfdecSpriteSegment *swfdec_spriteseg_new (void);
 SwfdecSpriteSegment *swfdec_spriteseg_dup (SwfdecSpriteSegment * seg);
@@ -74,6 +79,4 @@ void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);
 
 
 G_END_DECLS
-
 #endif
-

@@ -6,28 +6,31 @@
 
 
 static void swfdec_text_base_init (gpointer g_class);
-static void swfdec_text_class_init (SwfdecTextClass *g_class);
-static void swfdec_text_init (SwfdecText *text);
-static void swfdec_text_dispose (SwfdecText *text);
+static void swfdec_text_class_init (SwfdecTextClass * g_class);
+static void swfdec_text_init (SwfdecText * text);
+static void swfdec_text_dispose (SwfdecText * text);
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecText, swfdec_text)
 
-static void swfdec_text_base_init (gpointer g_class)
+     static void swfdec_text_base_init (gpointer g_class)
 {
 
 }
 
-static void swfdec_text_class_init (SwfdecTextClass *g_class)
+static void
+swfdec_text_class_init (SwfdecTextClass * g_class)
 {
   SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_text_render;
 }
 
-static void swfdec_text_init (SwfdecText *text)
+static void
+swfdec_text_init (SwfdecText * text)
 {
   text->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecTextGlyph));
 }
 
-static void swfdec_text_dispose (SwfdecText *text)
+static void
+swfdec_text_dispose (SwfdecText * text)
 {
   g_array_free (text->glyphs, TRUE);
 }
@@ -72,10 +75,10 @@ define_text (SwfdecDecoder * s, int rgba)
 
       n_glyphs = swfdec_bits_getbits (bits, 7);
       for (i = 0; i < n_glyphs; i++) {
-	glyph.glyph = swfdec_bits_getbits (bits, n_glyph_bits);
+        glyph.glyph = swfdec_bits_getbits (bits, n_glyph_bits);
 
-	g_array_append_val (text->glyphs, glyph);
-	glyph.x += swfdec_bits_getbits (bits, n_advance_bits);
+        g_array_append_val (text->glyphs, glyph);
+        glyph.x += swfdec_bits_getbits (bits, n_advance_bits);
       }
     } else {
       /* state change */
@@ -91,28 +94,28 @@ define_text (SwfdecDecoder * s, int rgba)
       has_y_offset = swfdec_bits_getbit (bits);
       has_x_offset = swfdec_bits_getbit (bits);
       if (has_font) {
-	glyph.font = swfdec_bits_get_u16 (bits);
-	//printf("  font = %d\n",font);
+        glyph.font = swfdec_bits_get_u16 (bits);
+        //printf("  font = %d\n",font);
       }
       if (has_color) {
-	if (rgba) {
-	  glyph.color = swfdec_bits_get_rgba (bits);
-	} else {
-	  glyph.color = swfdec_bits_get_color (bits);
-	}
-	//printf("  color = %08x\n",glyph.color);
+        if (rgba) {
+          glyph.color = swfdec_bits_get_rgba (bits);
+        } else {
+          glyph.color = swfdec_bits_get_color (bits);
+        }
+        //printf("  color = %08x\n",glyph.color);
       }
       if (has_x_offset) {
-	glyph.x = swfdec_bits_get_u16 (bits);
-	//printf("  x = %d\n",x);
+        glyph.x = swfdec_bits_get_u16 (bits);
+        //printf("  x = %d\n",x);
       }
       if (has_y_offset) {
-	glyph.y = swfdec_bits_get_u16 (bits);
-	//printf("  y = %d\n",y);
+        glyph.y = swfdec_bits_get_u16 (bits);
+        //printf("  y = %d\n",y);
       }
       if (has_font) {
-	glyph.height = swfdec_bits_get_u16 (bits);
-	//printf("  height = %d\n",height);
+        glyph.height = swfdec_bits_get_u16 (bits);
+        //printf("  height = %d\n",height);
       }
     }
     swfdec_bits_syncbits (bits);
@@ -133,5 +136,3 @@ tag_func_define_text_2 (SwfdecDecoder * s)
 {
   return define_text (s, 1);
 }
-
-

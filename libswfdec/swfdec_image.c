@@ -16,22 +16,25 @@ static void swfdec_image_colormap_decode (SwfdecImage * image,
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecImage, swfdec_image)
 
-static void swfdec_image_base_init (gpointer g_class)
+     static void swfdec_image_base_init (gpointer g_class)
 {
 
 }
 
-static void swfdec_image_class_init (SwfdecImageClass *g_class)
+static void
+swfdec_image_class_init (SwfdecImageClass * g_class)
 {
 
 }
 
-static void swfdec_image_init (SwfdecImage *image)
+static void
+swfdec_image_init (SwfdecImage * image)
 {
 
 }
 
-static void swfdec_image_dispose (SwfdecImage *image)
+static void
+swfdec_image_dispose (SwfdecImage * image)
 {
   g_free (image->image_data);
 }
@@ -87,7 +90,7 @@ lossless (void *zptr, int zlen, int *plen)
     (*plen) = z->total_out;
 
   inflateEnd (z);
-  
+
   g_free (z);
   return data;
 }
@@ -301,19 +304,19 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
       color_table = ptr;
       indexed_data = ptr + color_table_size * 4;
       swfdec_image_colormap_decode (image, indexed_data,
-	  color_table, color_table_size);
+          color_table, color_table_size);
     } else {
       color_table = g_malloc (color_table_size * 4);
 
       for (i = 0; i < color_table_size; i++) {
-	color_table[i * 4 + 0] = ptr[i * 3 + 0];
-	color_table[i * 4 + 1] = ptr[i * 3 + 1];
-	color_table[i * 4 + 2] = ptr[i * 3 + 2];
-	color_table[i * 4 + 3] = 255;
+        color_table[i * 4 + 0] = ptr[i * 3 + 0];
+        color_table[i * 4 + 1] = ptr[i * 3 + 1];
+        color_table[i * 4 + 2] = ptr[i * 3 + 2];
+        color_table[i * 4 + 3] = 255;
       }
       indexed_data = ptr + color_table_size * 3;
       swfdec_image_colormap_decode (image, indexed_data,
-	  color_table, color_table_size);
+          color_table, color_table_size);
 
       g_free (color_table);
     }
@@ -337,13 +340,13 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
     /* 15 bit packed */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
-	c = p[0] | (p[1] << 8);
-	idata[0] = (c << 3) | ((c >> 2) & 0x7);
-	idata[1] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
-	idata[2] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
-	idata[3] = 0xff;
-	p++;
-	idata += 4;
+        c = p[0] | (p[1] << 8);
+        idata[0] = (c << 3) | ((c >> 2) & 0x7);
+        idata[1] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
+        idata[2] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
+        idata[3] = 0xff;
+        p++;
+        idata += 4;
       }
     }
     g_free (ptr);
@@ -357,13 +360,13 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
     if (!have_alpha) {
       /* image is stored in 0RGB format.  We use RGBA. */
       for (j = 0; j < image->height; j++) {
-	for (i = 0; i < image->width; i++) {
-	  ptr[0] = ptr[3];
-	  ptr[1] = ptr[2];
-	  ptr[2] = ptr[1];
-	  ptr[3] = 255;
-	  ptr += 4;
-	}
+        for (i = 0; i < image->width; i++) {
+          ptr[0] = ptr[3];
+          ptr[1] = ptr[2];
+          ptr[2] = ptr[1];
+          ptr[3] = 255;
+          ptr += 4;
+        }
       }
     }
   }
@@ -423,7 +426,7 @@ swfdec_image_colormap_decode (SwfdecImage * image,
   unsigned char *dest;
 
   rowstride = (image->width + 3) & ~0x3;
-  SWFDEC_DEBUG("rowstride %d",rowstride);
+  SWFDEC_DEBUG ("rowstride %d", rowstride);
 
   dest = image->image_data;
 
@@ -432,16 +435,16 @@ swfdec_image_colormap_decode (SwfdecImage * image,
       c = src[i];
       if (c >= colormap_len) {
         SWFDEC_DEBUG ("colormap index out of range (%d>=%d) (%d,%d)",
-	    c, colormap_len, i, j);
-	dest[0] = 255;
-	dest[1] = 0;
-	dest[2] = 0;
-	dest[3] = 255;
+            c, colormap_len, i, j);
+        dest[0] = 255;
+        dest[1] = 0;
+        dest[2] = 0;
+        dest[3] = 255;
       } else {
-	dest[0] = colormap[c * 4 + 2];
-	dest[1] = colormap[c * 4 + 1];
-	dest[2] = colormap[c * 4 + 0];
-	dest[3] = colormap[c * 4 + 3];
+        dest[0] = colormap[c * 4 + 2];
+        dest[1] = colormap[c * 4 + 1];
+        dest[2] = colormap[c * 4 + 0];
+        dest[3] = colormap[c * 4 + 3];
       }
       dest += 4;
     }

@@ -1,3 +1,124 @@
+2004-11-06  David Schleef  <ds@schleef.org>
+
+	Global reindent.
+	* libswfdec/actions.c: (get_actions), (tag_func_do_action),
+	(swfdec_action_script_execute):
+	* libswfdec/art.c: (art_vpath_reverse), (art_rgb_svp_alpha2),
+	(art_rgb565_fillrect), (art_rgb_fillrect),
+	(art_rgb565_svp_alpha_callback),
+	(art_rgb_svp_alpha_compose_callback), (art_rgb_svp_alpha_callback),
+	(art_grey_svp_alpha_callback), (swfdec_art_bpath_from_points),
+	(art_bpath_affine_transform_inplace):
+	* libswfdec/art.h:
+	* libswfdec/color.c: (swfdec_color_apply_transform):
+	* libswfdec/color.h:
+	* libswfdec/render.c: (tag_place_object_2),
+	(swfdec_spriteseg_render), (swfdec_layer_render):
+	* libswfdec/swf.c: (swfdec_init), (swfdec_decoder_new),
+	(swfdec_decoder_add_data), (swfdec_decoder_add_buffer),
+	(swfdec_decoder_eof), (swfdec_decoder_parse),
+	(swfdec_decoder_free), (swfdec_decoder_set_image_size),
+	(swf_inflate_init), (swf_parse_header2), (tag_func_dumpbits),
+	(tag_func_frame_label):
+	* libswfdec/swfdec.h:
+	* libswfdec/swfdec_actions.h:
+	* libswfdec/swfdec_bits.c: (swfdec_bits_get_color_transform),
+	(swfdec_bits_get_transform):
+	* libswfdec/swfdec_bits.h:
+	* libswfdec/swfdec_buffer.c: (swfdec_buffer_new),
+	(swfdec_buffer_new_and_alloc), (swfdec_buffer_new_with_data),
+	(swfdec_buffer_new_subbuffer), (swfdec_buffer_ref),
+	(swfdec_buffer_unref), (swfdec_buffer_free_mem),
+	(swfdec_buffer_free_subbuffer), (swfdec_buffer_queue_new),
+	(swfdec_buffer_queue_get_depth), (swfdec_buffer_queue_get_offset),
+	(swfdec_buffer_queue_free), (swfdec_buffer_queue_push),
+	(swfdec_buffer_queue_pull), (swfdec_buffer_queue_peek):
+	* libswfdec/swfdec_buffer.h:
+	* libswfdec/swfdec_button.c: (swfdec_button_base_init),
+	(swfdec_button_class_init), (swfdec_button_init),
+	(swfdec_button_dispose), (swfdec_button_render),
+	(tag_func_define_button_2):
+	* libswfdec/swfdec_button.h:
+	* libswfdec/swfdec_debug.c: (swfdec_debug_log), (art_warn):
+	* libswfdec/swfdec_debug.h:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_display.c: (tag_func_place_object_2):
+	* libswfdec/swfdec_font.c: (swfdec_font_base_init),
+	(swfdec_font_class_init), (swfdec_font_init),
+	(swfdec_font_dispose), (swfdec_font_get_glyph),
+	(tag_func_define_font), (tag_func_define_font_2):
+	* libswfdec/swfdec_font.h:
+	* libswfdec/swfdec_image.c: (swfdec_image_base_init),
+	(swfdec_image_class_init), (swfdec_image_init),
+	(swfdec_image_dispose), (lossless), (define_bits_lossless),
+	(swfdec_image_colormap_decode):
+	* libswfdec/swfdec_image.h:
+	* libswfdec/swfdec_layer.c: (swfdec_render_get_sublayer):
+	* libswfdec/swfdec_object.c: (swfdec_object_get_type),
+	(swfdec_object_base_init), (swfdec_object_class_init),
+	(swfdec_object_init), (swfdec_object_dispose),
+	(swfdec_object_unref), (swfdec_object_get):
+	* libswfdec/swfdec_object.h:
+	* libswfdec/swfdec_rect.c: (swfdec_rect_intersect),
+	(swfdec_rect_union), (swfdec_rect_is_empty):
+	* libswfdec/swfdec_rect.h:
+	* libswfdec/swfdec_render.c: (swfdec_render_free),
+	(swfdec_render_iterate), (swfdec_render_get_object_state),
+	(swfdec_render_seek), (swfdec_render_get_frame_index),
+	(swfdec_render_get_image), (swfdec_render_get_audio):
+	* libswfdec/swfdec_render.h:
+	* libswfdec/swfdec_render_libart.c: (swfdec_layervec_render),
+	(swfdec_shape_render), (swfdec_text_render),
+	(swf_config_colorspace), (swfdec_render_layervec_free):
+	* libswfdec/swfdec_render_libart.h:
+	* libswfdec/swfdec_shape.c: (swfdec_shape_base_init),
+	(swfdec_shape_class_init), (swfdec_shape_init),
+	(swfdec_shape_dispose), (swfdec_shapevec_free), (get_shape_rec),
+	(tag_func_define_shape), (tag_define_shape), (tag_define_shape_3),
+	(swf_shape_add_styles), (swfdec_shape_get_fill0style),
+	(swfdec_shape_get_fill1style), (swfdec_shape_get_linestyle),
+	(swf_shape_get_recs), (swfdec_shape_compose),
+	(swfdec_shape_compose_gradient), (my_root),
+	(swfdec_gradient_to_palette), (tag_define_morph_shape),
+	(swf_shape_ignore_recs), (swf_morphshape_add_styles),
+	(swf_morphshape_get_recs):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_sound.c: (swfdec_sound_base_init),
+	(swfdec_sound_class_init), (swfdec_sound_init),
+	(swfdec_sound_dispose), (tag_func_sound_stream_block),
+	(swfdec_decoder_sound_buffer_append), (adpcm_decode),
+	(swfdec_sound_render), (swfdec_sound_mp3_init),
+	(swfdec_sound_mp3_cleanup), (swfdec_sound_mp3_decode),
+	(swfdec_sound_mp3_decode_stream):
+	* libswfdec/swfdec_sound.h:
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_base_init),
+	(swfdec_sprite_class_init), (swfdec_sprite_init),
+	(swfdec_sprite_dispose), (swfdec_sprite_add_sound_chunk),
+	(swfdec_sprite_add_action), (swfdec_sprite_render),
+	(tag_func_define_sprite), (swfdec_sprite_get_seg),
+	(swfdec_spriteseg_place_object_2):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_text.c: (swfdec_text_base_init),
+	(swfdec_text_class_init), (swfdec_text_init),
+	(swfdec_text_dispose), (define_text), (tag_func_define_text_2):
+	* libswfdec/swfdec_text.h:
+	* libswfdec/swfdec_transform.c: (swfdec_transform_is_translation),
+	(swfdec_transform_multiply), (swfdec_transform_invert),
+	(swfdec_transform_init_identity), (swfdec_transform_translate),
+	(swfdec_transform_get_expansion):
+	* libswfdec/swfdec_transform.h:
+	* libswfdec/tags.h:
+	* player/swf_play.c: (main), (do_help), (new_window), (fill_audio),
+	(sound_setup), (render_idle_audio), (render_idle_noaudio),
+	(fd_is_ready), (packet_get), (packet_free):
+	* plugin/plugin.c: (plugin_fork), (plugin_newp), (plugin_destroy),
+	(plugin_set_window), (plugin_new_stream), (plugin_destroy_stream),
+	(plugin_write_ready), (plugin_write), (plugin_stream_as_file),
+	(NP_GetValue), (NP_GetMIMEDescription), (NP_Initialize),
+	(NP_Shutdown), (NPP_DestroyStream), (NPP_URLNotify),
+	(packet_write):
+	* plugin/spp.h:
+
 2004-11-04  David Schleef  <ds@schleef.org>
 
 	* configure.ac: bump nano

@@ -23,19 +23,19 @@ swfdec_rect_union_to_masked (SwfdecRect * rect, SwfdecRect * a,
 void
 swfdec_rect_intersect (SwfdecRect * dest, SwfdecRect * a, SwfdecRect * b)
 {
-  dest->x0 = MAX(a->x0, b->x0);
-  dest->y0 = MAX(a->y0, b->y0);
-  dest->x1 = MIN(a->x1, b->x1);
-  dest->y1 = MIN(a->y1, b->y1);
+  dest->x0 = MAX (a->x0, b->x0);
+  dest->y0 = MAX (a->y0, b->y0);
+  dest->x1 = MIN (a->x1, b->x1);
+  dest->y1 = MIN (a->y1, b->y1);
 }
 
 void
 swfdec_rect_union (SwfdecRect * dest, SwfdecRect * a, SwfdecRect * b)
 {
-  dest->x0 = MIN(a->x0, b->x0);
-  dest->y0 = MIN(a->y0, b->y0);
-  dest->x1 = MAX(a->x1, b->x1);
-  dest->y1 = MAX(a->y1, b->y1);
+  dest->x0 = MIN (a->x0, b->x0);
+  dest->y0 = MIN (a->y0, b->y0);
+  dest->x1 = MAX (a->x1, b->x1);
+  dest->y1 = MAX (a->y1, b->y1);
 }
 
 void
@@ -49,4 +49,3 @@ swfdec_rect_is_empty (SwfdecRect * a)
 {
   return (a->x1 <= a->x0) || (a->y1 <= a->y0);
 }
-

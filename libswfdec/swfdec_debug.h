@@ -2,7 +2,8 @@
 #ifndef __SWFDEC_DEBUG_H__
 #define __SWFDEC_DEBUG_H__
 
-enum {
+enum
+{
   SWFDEC_LEVEL_NONE = 0,
   SWFDEC_LEVEL_ERROR,
   SWFDEC_LEVEL_WARNING,
@@ -31,4 +32,3 @@ void swfdec_debug_set_level (int level);
 int swfdec_debug_get_level (void);
 
 #endif
-

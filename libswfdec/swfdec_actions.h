@@ -5,6 +5,6 @@
 #include <swfdec_decoder.h>
 #include <swfdec_buffer.h>
 
-int swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer);
+int swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer);
 
 #endif

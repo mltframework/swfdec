@@ -145,7 +145,7 @@ swfdec_bits_syncbits (SwfdecBits * b)
 
 
 void
-swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform *ct)
+swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
 {
   int has_add;
   int has_mult;
@@ -183,7 +183,7 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform *ct)
 }
 
 void
-swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans)
+swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform * trans)
 {
   int has_scale;
   int n_scale_bits;

@@ -8,11 +8,10 @@
 #include "swfdec_transform.h"
 
 G_BEGIN_DECLS
-
 //typedef struct _SwfdecObject SwfdecObject;
 typedef struct _SwfdecObjectClass SwfdecObjectClass;
 
-#define SWFDEC_TYPE_OBJECT                    (swfdec_object_get_type()) 
+#define SWFDEC_TYPE_OBJECT                    (swfdec_object_get_type())
 #define SWFDEC_IS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_OBJECT))
 #define SWFDEC_IS_OBJECT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_OBJECT))
 #define SWFDEC_OBJECT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_OBJECT, SwfdecObject))
@@ -24,7 +23,8 @@ typedef struct _SwfdecObjectClass SwfdecObjectClass;
 #define SWFDEC_OBJECT_GET_CLASS(obj)          ((SwfdecObjectClass *)((obj)->object.klass))
 #endif
 
-struct _SwfdecObject {
+struct _SwfdecObject
+{
   GObject object;
 
   int id;
@@ -34,18 +34,19 @@ struct _SwfdecObject {
   int number;
 };
 
-struct _SwfdecObjectClass {
+struct _SwfdecObjectClass
+{
   GObjectClass object_class;
 
-  void (*render) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
-      SwfdecObject *object);
-  
-  void (*dump) (SwfdecObject *object);
+  void (*render) (SwfdecDecoder * decoder, SwfdecSpriteSegment * seg,
+      SwfdecObject * object);
+
+  void (*dump) (SwfdecObject * object);
 };
 
 GType swfdec_object_get_type (void);
 void *swfdec_object_new (GType type);
-void swfdec_object_unref (SwfdecObject *object);
+void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
 
@@ -121,6 +122,4 @@ GType type_as_function ## _get_type (void) \
 #endif
 
 G_END_DECLS
-
 #endif
-

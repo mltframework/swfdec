@@ -45,16 +45,16 @@ tag_place_object_2 (SwfdecDecoder * s)
   depth = swfdec_bits_get_u16 (bits);
 
   /* reserved is somehow related to sprites */
-  SWFDEC_LOG("  reserved = %d", reserved);
+  SWFDEC_LOG ("  reserved = %d", reserved);
   if (reserved) {
     SWFDEC_WARNING ("  reserved bits non-zero %d", reserved);
   }
-  SWFDEC_LOG("  has_compose = %d", has_compose);
-  SWFDEC_LOG("  has_name = %d", has_name);
-  SWFDEC_LOG("  has_ratio = %d", has_ratio);
-  SWFDEC_LOG("  has_color_transform = %d", has_color_transform);
-  SWFDEC_LOG("  has_matrix = %d", has_matrix);
-  SWFDEC_LOG("  has_character = %d", has_character);
+  SWFDEC_LOG ("  has_compose = %d", has_compose);
+  SWFDEC_LOG ("  has_name = %d", has_name);
+  SWFDEC_LOG ("  has_ratio = %d", has_ratio);
+  SWFDEC_LOG ("  has_color_transform = %d", has_color_transform);
+  SWFDEC_LOG ("  has_matrix = %d", has_matrix);
+  SWFDEC_LOG ("  has_character = %d", has_character);
 
   oldlayer =
       swfdec_sprite_get_seg (s->parse_sprite, depth,
@@ -73,21 +73,21 @@ tag_place_object_2 (SwfdecDecoder * s)
 
   if (has_character) {
     layer->id = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG("  id = %d", layer->id);
+    SWFDEC_LOG ("  id = %d", layer->id);
   } else {
     if (oldlayer)
       layer->id = oldlayer->id;
   }
 
   SWFDEC_INFO ("placing %sobject layer=%d id=%d",
-      (has_character)?"":"(existing) ", depth, layer->id);
+      (has_character) ? "" : "(existing) ", depth, layer->id);
 
   if (has_matrix) {
     swfdec_bits_get_transform (bits, &layer->transform);
   } else {
     if (oldlayer) {
       memcpy (&layer->transform, &oldlayer->transform,
-          sizeof(SwfdecTransform));
+          sizeof (SwfdecTransform));
     }
   }
   if (has_color_transform) {
@@ -96,7 +96,7 @@ tag_place_object_2 (SwfdecDecoder * s)
   } else {
     if (oldlayer) {
       memcpy (&layer->color_transform, &oldlayer->color_transform,
-          sizeof(SwfdecColorTransform));
+          sizeof (SwfdecColorTransform));
     } else {
       layer->color_transform.mult[0] = 1;
       layer->color_transform.mult[1] = 1;
@@ -110,7 +110,7 @@ tag_place_object_2 (SwfdecDecoder * s)
   }
   if (has_ratio) {
     layer->ratio = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG("  ratio = %d", layer->ratio);
+    SWFDEC_LOG ("  ratio = %d", layer->ratio);
   } else {
     if (oldlayer)
       layer->ratio = oldlayer->ratio;
@@ -178,7 +178,8 @@ swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
   SwfdecObjectClass *klass;
 
   object = swfdec_object_get (s, seg->id);
-  if (!object) return;
+  if (!object)
+    return;
 
   klass = SWFDEC_OBJECT_GET_CLASS (object);
 
@@ -225,4 +226,3 @@ swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer)
     swfdec_layer_render (s, child_layer);
   }
 }
-

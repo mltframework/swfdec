@@ -87,7 +87,7 @@ static struct action_struct actions[] = {
   {0x24, "duplicate clip", NULL, 3, 0},
   {0x25, "remove clip", NULL, 1, 0},
   {0x26, "trace", NULL, 0, 0},
-  {0x27, "start drag movie", NULL, 3, 0},	/* 3 or 7 */
+  {0x27, "start drag movie", NULL, 3, 0},       /* 3 or 7 */
   {0x28, "stop drag movie", NULL, 0, 0},
   {0x29, "string compare", NULL, 2, 1},
   {0x30, "random", NULL, 1, 1},
@@ -198,13 +198,12 @@ get_actions (SwfdecDecoder * s, SwfdecBits * bits)
     for (i = 0; i < n_actions; i++) {
       if (actions[i].action == action) {
         SWFDEC_LOG ("  [%02x] %s", action, actions[i].name);
-	break;
+        break;
       }
     }
     if (i == n_actions) {
       SWFDEC_WARNING ("  [%02x] unknown action", action);
     }
-
 #if 0
     if (s->debug < 1) {
       hexdump (bits->ptr, len);
@@ -219,7 +218,7 @@ int
 tag_func_do_action (SwfdecDecoder * s)
 {
   get_actions (s, &s->b);
-  swfdec_sprite_add_action(s->parse_sprite, s->b.buffer,
+  swfdec_sprite_add_action (s->parse_sprite, s->b.buffer,
       s->parse_sprite->parse_frame);
 
   return SWF_OK;
@@ -227,17 +226,18 @@ tag_func_do_action (SwfdecDecoder * s)
 
 
 int
-swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
+swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
 {
   int action;
   int len;
   SwfdecBits bits;
+
   //int index;
   //int skip_count;
   int i;
   int skip = 0;
 
-  SWFDEC_LOG("swfdec_action_script_execute %p %p %d", buffer,
+  SWFDEC_LOG ("swfdec_action_script_execute %p %p %d", buffer,
       buffer->data, buffer->length);
 
   bits.buffer = buffer;
@@ -258,8 +258,8 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
 
     for (i = 0; i < n_actions; i++) {
       if (actions[i].action == action) {
-	SWFDEC_INFO ("  [%02x] %s", action, actions[i].name);
-	break;
+        SWFDEC_INFO ("  [%02x] %s", action, actions[i].name);
+        break;
       }
     }
     if (i == n_actions) {
@@ -269,30 +269,30 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer *buffer)
     if (skip > 0) {
       skip--;
     } else {
-      if (action == 0x07) { /* stop */
+      if (action == 0x07) {     /* stop */
         /* FIXME */
         //s->stopped = TRUE;
       }
-      if (action == 0x81) { /* goto frame */
+      if (action == 0x81) {     /* goto frame */
         int frame;
 
-        frame = swfdec_bits_get_u16(&bits);
+        frame = swfdec_bits_get_u16 (&bits);
         SWFDEC_INFO ("goto frame %d\n", frame);
         bits.ptr -= 2;
 
         s->render->frame_index = frame - 1;
       }
-      if (action == 0x06) { /* play */
+      if (action == 0x06) {     /* play */
         s->stopped = FALSE;
       }
-      if (action == 0x8a) { /* wait for frame */
+      if (action == 0x8a) {     /* wait for frame */
         int frame;
 
-        frame = swfdec_bits_get_u16(&bits);
+        frame = swfdec_bits_get_u16 (&bits);
         skip = swfdec_bits_get_u8 (&bits);
         SWFDEC_INFO ("wait for frame %d\n", frame);
         bits.ptr -= 3;
-         
+
         if (TRUE) {
           /* frame is always loaded */
           skip = 0;

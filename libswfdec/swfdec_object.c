@@ -8,15 +8,16 @@
 #ifndef GLIB_COMPAT
 static void swfdec_object_base_init (gpointer g_class);
 static void swfdec_object_class_init (gpointer g_class, gpointer user_data);
-static void swfdec_object_init (GTypeInstance *instance, gpointer g_class);
-static void swfdec_object_dispose (GObject *object);
+static void swfdec_object_init (GTypeInstance * instance, gpointer g_class);
+static void swfdec_object_dispose (GObject * object);
 
 
 GType _swfdec_object_type;
 
 static GObjectClass *parent_class = NULL;
 
-GType swfdec_object_get_type (void)
+GType
+swfdec_object_get_type (void)
 {
   if (!_swfdec_object_type) {
     static const GTypeInfo object_info = {
@@ -37,13 +38,15 @@ GType swfdec_object_get_type (void)
   return _swfdec_object_type;
 }
 
-static void swfdec_object_base_init (gpointer g_class)
+static void
+swfdec_object_base_init (gpointer g_class)
 {
   //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
 }
 
-static void swfdec_object_class_init (gpointer g_class, gpointer class_data)
+static void
+swfdec_object_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
@@ -52,12 +55,14 @@ static void swfdec_object_class_init (gpointer g_class, gpointer class_data)
   parent_class = g_type_class_peek_parent (gobject_class);
 }
 
-static void swfdec_object_init (GTypeInstance *instance, gpointer g_class)
+static void
+swfdec_object_init (GTypeInstance * instance, gpointer g_class)
 {
 
 }
 
-static void swfdec_object_dispose (GObject *object)
+static void
+swfdec_object_dispose (GObject * object)
 {
 
 }
@@ -69,7 +74,8 @@ swfdec_object_new (GType type)
   return g_object_new (type, NULL);
 }
 
-void swfdec_object_unref (SwfdecObject *object)
+void
+swfdec_object_unref (SwfdecObject * object)
 {
   g_object_unref (G_OBJECT (object));
 }
@@ -89,4 +95,3 @@ swfdec_object_get (SwfdecDecoder * s, int id)
 
   return NULL;
 }
-

@@ -22,26 +22,28 @@ swfdec_debug_log (int level, const char *file, const char *function,
   va_list varargs;
   char *s;
 
-  if (level > swfdec_debug_level) return;
+  if (level > swfdec_debug_level)
+    return;
 
   va_start (varargs, format);
-  s = g_strdup_vprintf(format, varargs);
+  s = g_strdup_vprintf (format, varargs);
   va_end (varargs);
 
-  fprintf(stderr, "SWFDEC: %s: %s(%d): %s: %s\n",
+  fprintf (stderr, "SWFDEC: %s: %s(%d): %s: %s\n",
       swfdec_debug_level_names[level], file, line, function, s);
   g_free (s);
 #else
   va_list varargs;
   char s[1000];
 
-  if (level > swfdec_debug_level) return;
+  if (level > swfdec_debug_level)
+    return;
 
   va_start (varargs, format);
-  vsnprintf(s,999,format, varargs);
+  vsnprintf (s, 999, format, varargs);
   va_end (varargs);
 
-  fprintf(stderr, "SWFDEC: %s: %s(%d): %s: %s\n",
+  fprintf (stderr, "SWFDEC: %s: %s(%d): %s: %s\n",
       swfdec_debug_level_names[level], file, line, function, s);
 #endif
 }
@@ -61,9 +63,5 @@ swfdec_debug_get_level (void)
 void
 art_warn (const char *fmt, ...)
 {
-  SWFDEC_DEBUG("caught art_warn");
+  SWFDEC_DEBUG ("caught art_warn");
 }
-
-
-
-

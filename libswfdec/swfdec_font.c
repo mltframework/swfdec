@@ -7,22 +7,25 @@
 SWFDEC_OBJECT_BOILERPLATE (SwfdecFont, swfdec_font)
 
 
-static void swfdec_font_base_init (gpointer g_class)
+     static void swfdec_font_base_init (gpointer g_class)
 {
 
 }
 
-static void swfdec_font_class_init (SwfdecFontClass *g_class)
+static void
+swfdec_font_class_init (SwfdecFontClass * g_class)
 {
 
 }
 
-static void swfdec_font_init (SwfdecFont *font)
+static void
+swfdec_font_init (SwfdecFont * font)
 {
 
 }
 
-static void swfdec_font_dispose (SwfdecFont *font)
+static void
+swfdec_font_dispose (SwfdecFont * font)
 {
   SwfdecShape *shape;
   int i;
@@ -34,7 +37,8 @@ static void swfdec_font_dispose (SwfdecFont *font)
   g_ptr_array_free (font->glyphs, TRUE);
 }
 
-SwfdecShape *swfdec_font_get_glyph (SwfdecFont *font, int glyph)
+SwfdecShape *
+swfdec_font_get_glyph (SwfdecFont * font, int glyph)
 {
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
   g_return_val_if_fail (glyph >= 0 && glyph < font->glyphs->len, NULL);
@@ -56,7 +60,7 @@ tag_func_define_font (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (&s->b);
   font = swfdec_object_new (SWFDEC_TYPE_FONT);
-  SWFDEC_OBJECT (font)-> id = id;
+  SWFDEC_OBJECT (font)->id = id;
   s->objects = g_list_append (s->objects, font);
 
   offset = swfdec_bits_get_u16 (&s->b);
@@ -85,9 +89,9 @@ tag_func_define_font (SwfdecDecoder * s)
     //swf_shape_add_styles(s,shape,&s->b);
     swfdec_bits_syncbits (&s->b);
     shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG("n_fill_bits = %d", shape->n_fill_bits);
+    SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG("n_line_bits = %d", shape->n_line_bits);
+    SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
     swf_shape_get_recs (s, &s->b, shape);
   }
@@ -184,9 +188,9 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     //swf_shape_add_styles(s,shape,&s->b);
     swfdec_bits_syncbits (&s->b);
     shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG("n_fill_bits = %d", shape->n_fill_bits);
+    SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG("n_line_bits = %d", shape->n_line_bits);
+    SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
     swf_shape_get_recs (s, &s->b, shape);
   }
@@ -213,4 +217,3 @@ tag_func_define_font_2 (SwfdecDecoder * s)
 
   return SWF_OK;
 }
-

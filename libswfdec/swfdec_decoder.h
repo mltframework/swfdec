@@ -24,7 +24,8 @@ enum
   SWF_STATE_EOF,
 };
 
-struct _SwfdecColorTransform {
+struct _SwfdecColorTransform
+{
   double mult[4];
   double add[4];
 };
@@ -116,11 +117,10 @@ int swf_parse_header (SwfdecDecoder * s);
 int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
 
-void swfdec_decoder_eof (SwfdecDecoder *s);
+void swfdec_decoder_eof (SwfdecDecoder * s);
 
 SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
-const char * swfdec_decoder_get_tag_name (int tag);
+const char *swfdec_decoder_get_tag_name (int tag);
 
 
 #endif
-

@@ -6,17 +6,17 @@
 #include <swfdec_object.h>
 
 G_BEGIN_DECLS
-
 //typedef struct _SwfdecImage SwfdecImage;
 typedef struct _SwfdecImageClass SwfdecImageClass;
 
-#define SWFDEC_TYPE_IMAGE                    (swfdec_image_get_type()) 
+#define SWFDEC_TYPE_IMAGE                    (swfdec_image_get_type())
 #define SWFDEC_IS_IMAGE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_IMAGE))
 #define SWFDEC_IS_IMAGE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_IMAGE))
 #define SWFDEC_IMAGE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_IMAGE, SwfdecImage))
 #define SWFDEC_IMAGE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_IMAGE, SwfdecImageClass))
 
-struct _SwfdecImage {
+struct _SwfdecImage
+{
   SwfdecObject object;
 
   int width, height;
@@ -24,7 +24,8 @@ struct _SwfdecImage {
   unsigned char *image_data;
 };
 
-struct _SwfdecImageClass {
+struct _SwfdecImageClass
+{
   SwfdecObjectClass object_class;
 
 };
@@ -41,6 +42,4 @@ int swfdec_image_render (SwfdecDecoder * s, SwfdecLayer * layer,
     SwfdecObject * obj);
 
 G_END_DECLS
-
 #endif
-

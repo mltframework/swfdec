@@ -10,33 +10,36 @@
 #include "swfdec_internal.h"
 
 
-static void swfdec_sound_mp3_init (SwfdecSound *sound);
-static void swfdec_sound_mp3_decode (SwfdecSound *sound);
-int swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound);
-static void swfdec_sound_mp3_cleanup (SwfdecSound *sound);
+static void swfdec_sound_mp3_init (SwfdecSound * sound);
+static void swfdec_sound_mp3_decode (SwfdecSound * sound);
+int swfdec_sound_mp3_decode_stream (SwfdecDecoder * s, SwfdecSound * sound);
+static void swfdec_sound_mp3_cleanup (SwfdecSound * sound);
 
-void adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound);
+void adpcm_decode (SwfdecDecoder * s, SwfdecSound * sound);
 void swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
     SwfdecBuffer * buffer);
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecSound, swfdec_sound)
 
-static void swfdec_sound_base_init (gpointer g_class)
+     static void swfdec_sound_base_init (gpointer g_class)
 {
 
 }
 
-static void swfdec_sound_class_init (SwfdecSoundClass *g_class)
+static void
+swfdec_sound_class_init (SwfdecSoundClass * g_class)
 {
 
 }
 
-static void swfdec_sound_init (SwfdecSound *sound)
+static void
+swfdec_sound_init (SwfdecSound * sound)
 {
 
 }
 
-static void swfdec_sound_dispose (SwfdecSound *sound)
+static void
+swfdec_sound_dispose (SwfdecSound * sound)
 {
   if (sound->format == 2) {
     swfdec_sound_mp3_cleanup (sound);
@@ -77,8 +80,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
     return SWF_OK;
   }
 
-  chunk = swfdec_buffer_new_subbuffer (s->b.buffer, 4,
-      s->b.buffer->length - 4);
+  chunk = swfdec_buffer_new_subbuffer (s->b.buffer, 4, s->b.buffer->length - 4);
   s->b.ptr += s->b.buffer->length - 4;
 
   swfdec_sprite_add_sound_chunk (s->parse_sprite, chunk,
@@ -148,8 +150,7 @@ tag_func_define_sound (SwfdecDecoder * s)
 }
 
 void
-swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
-    SwfdecBuffer * buffer)
+swfdec_decoder_sound_buffer_append (SwfdecDecoder * s, SwfdecBuffer * buffer)
 {
   s->stream_sound_buffers = g_list_append (s->stream_sound_buffers, buffer);
 }
@@ -312,7 +313,7 @@ int step_size[89] = {
 };
 
 void
-adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
+adpcm_decode (SwfdecDecoder * s, SwfdecSound * sound)
 {
   SwfdecBits *bits = &s->b;
   int n_bits;
@@ -353,20 +354,20 @@ adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
       diff = (step_size[index] * (x & 0x7)) >> 2;
       diff += step_size[index] >> 3;
       if (x & 8)
-	diff = -diff;
+        diff = -diff;
 
       sample += diff;
 
       if (sample < -32768)
-	sample = -32768;
+        sample = -32768;
       if (sample > 32767)
-	sample = 32767;
+        sample = 32767;
 
       index += index_adjust[x];
       if (index < 0)
-	index = 0;
+        index = 0;
       if (index > 88)
-	index = 88;
+        index = 88;
 
       j++;
     }
@@ -404,6 +405,7 @@ swfdec_sound_render (SwfdecDecoder * s)
 
     if (n < buf->length) {
       SwfdecBuffer *subbuffer;
+
       subbuffer = swfdec_buffer_new_subbuffer (buf, n, buf->length - n);
       g->data = subbuffer;
       swfdec_buffer_unref (buf);
@@ -417,7 +419,7 @@ swfdec_sound_render (SwfdecDecoder * s)
     }
   }
 
-  SWFDEC_LOG("sound buffer: len=%d filled %d", len, offset);
+  SWFDEC_LOG ("sound buffer: len=%d filled %d", len, offset);
 
   s->sound_buffers = g_list_append (s->sound_buffers, buffer);
 }
@@ -425,15 +427,15 @@ swfdec_sound_render (SwfdecDecoder * s)
 
 #ifdef HAVE_MAD
 static void
-swfdec_sound_mp3_init (SwfdecSound *sound)
+swfdec_sound_mp3_init (SwfdecSound * sound)
 {
-      mad_stream_init (&sound->stream);
-      mad_frame_init (&sound->frame);
-      mad_synth_init (&sound->synth);
+  mad_stream_init (&sound->stream);
+  mad_frame_init (&sound->frame);
+  mad_synth_init (&sound->synth);
 }
 
 static void
-swfdec_sound_mp3_cleanup (SwfdecSound *sound)
+swfdec_sound_mp3_cleanup (SwfdecSound * sound)
 {
   mad_synth_finish (&sound->synth);
   mad_frame_finish (&sound->frame);
@@ -441,7 +443,7 @@ swfdec_sound_mp3_cleanup (SwfdecSound *sound)
 }
 
 void
-swfdec_sound_mp3_decode (SwfdecSound *sound)
+swfdec_sound_mp3_decode (SwfdecSound * sound)
 {
   struct mad_stream stream;
   struct mad_frame frame;
@@ -460,7 +462,7 @@ swfdec_sound_mp3_decode (SwfdecSound *sound)
       break;
     }
     if (ret == -1 && stream.error == MAD_ERROR_LOSTSYNC) {
-      mad_stream_sync(&stream);
+      mad_stream_sync (&stream);
       continue;
     }
     if (ret == -1) {
@@ -477,7 +479,7 @@ swfdec_sound_mp3_decode (SwfdecSound *sound)
 }
 
 int
-swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
+swfdec_sound_mp3_decode_stream (SwfdecDecoder * s, SwfdecSound * sound)
 {
   int ret;
 
@@ -489,11 +491,11 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
       break;
     }
     if (ret == -1 && sound->stream.error == MAD_ERROR_LOSTSYNC) {
-      mad_stream_sync(&sound->stream);
+      mad_stream_sync (&sound->stream);
       continue;
     }
     if (ret == -1) {
-      SWFDEC_ERROR("stream error 0x%04x", sound->stream.error);
+      SWFDEC_ERROR ("stream error 0x%04x", sound->stream.error);
       sound->tmpbuflen = 0;
       mad_stream_sync (&sound->stream);
       return SWF_ERROR;
@@ -506,37 +508,38 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
       short *data;
       int i;
 
-      buffer = swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2 * 4);
+      buffer =
+          swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2 * 4);
       data = (short *) buffer->data;
       if (sound->synth.pcm.channels == 2) {
-	for (i = 0; i < sound->synth.pcm.length; i++) {
-	  short c0, c1;
+        for (i = 0; i < sound->synth.pcm.length; i++) {
+          short c0, c1;
 
-	  c0 = sound->synth.pcm.samples[0][i] >> 14;
-	  c1 = sound->synth.pcm.samples[1][i] >> 14;
-	  *data++ = c0;
-	  *data++ = c1;
-	  *data++ = c0;
-	  *data++ = c1;
-	  *data++ = c0;
-	  *data++ = c1;
-	  *data++ = c0;
-	  *data++ = c1;
-	}
+          c0 = sound->synth.pcm.samples[0][i] >> 14;
+          c1 = sound->synth.pcm.samples[1][i] >> 14;
+          *data++ = c0;
+          *data++ = c1;
+          *data++ = c0;
+          *data++ = c1;
+          *data++ = c0;
+          *data++ = c1;
+          *data++ = c0;
+          *data++ = c1;
+        }
       } else {
-	for (i = 0; i < sound->synth.pcm.length; i++) {
-	  short c0;
+        for (i = 0; i < sound->synth.pcm.length; i++) {
+          short c0;
 
-	  c0 = sound->synth.pcm.samples[0][i] >> 14;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	}
+          c0 = sound->synth.pcm.samples[0][i] >> 14;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+        }
       }
       swfdec_decoder_sound_buffer_append (s, buffer);
     } else if (sound->synth.pcm.samplerate == 22050) {
@@ -544,29 +547,30 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
       short *data;
       int i;
 
-      buffer = swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2 * 2);
+      buffer =
+          swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2 * 2);
       data = (short *) buffer->data;
       if (sound->synth.pcm.channels == 2) {
-	for (i = 0; i < sound->synth.pcm.length; i++) {
-	  short c0, c1;
+        for (i = 0; i < sound->synth.pcm.length; i++) {
+          short c0, c1;
 
-	  c0 = sound->synth.pcm.samples[0][i] >> 14;
-	  c1 = sound->synth.pcm.samples[1][i] >> 14;
-	  *data++ = c0;
-	  *data++ = c1;
-	  *data++ = c0;
-	  *data++ = c1;
-	}
+          c0 = sound->synth.pcm.samples[0][i] >> 14;
+          c1 = sound->synth.pcm.samples[1][i] >> 14;
+          *data++ = c0;
+          *data++ = c1;
+          *data++ = c0;
+          *data++ = c1;
+        }
       } else {
-	for (i = 0; i < sound->synth.pcm.length; i++) {
-	  short c0;
+        for (i = 0; i < sound->synth.pcm.length; i++) {
+          short c0;
 
-	  c0 = sound->synth.pcm.samples[0][i] >> 14;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	  *data++ = c0;
-	}
+          c0 = sound->synth.pcm.samples[0][i] >> 14;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+          *data++ = c0;
+        }
       }
       swfdec_decoder_sound_buffer_append (s, buffer);
     } else if (sound->synth.pcm.samplerate == 44100) {
@@ -577,27 +581,27 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
       buffer = swfdec_buffer_new_and_alloc (sound->synth.pcm.length * 2 * 2);
       data = (short *) buffer->data;
       if (sound->synth.pcm.channels == 2) {
-	for (i = 0; i < sound->synth.pcm.length; i++) {
-	  short c0, c1;
+        for (i = 0; i < sound->synth.pcm.length; i++) {
+          short c0, c1;
 
-	  c0 = sound->synth.pcm.samples[0][i] >> 14;
-	  c1 = sound->synth.pcm.samples[1][i] >> 14;
-	  *data++ = c0;
-	  *data++ = c1;
-	}
+          c0 = sound->synth.pcm.samples[0][i] >> 14;
+          c1 = sound->synth.pcm.samples[1][i] >> 14;
+          *data++ = c0;
+          *data++ = c1;
+        }
       } else {
-	for (i = 0; i < sound->synth.pcm.length; i++) {
-	  short c0;
+        for (i = 0; i < sound->synth.pcm.length; i++) {
+          short c0;
 
-	  c0 = sound->synth.pcm.samples[0][i] >> 14;
-	  *data++ = c0;
-	  *data++ = c0;
-	}
+          c0 = sound->synth.pcm.samples[0][i] >> 14;
+          *data++ = c0;
+          *data++ = c0;
+        }
       }
       swfdec_decoder_sound_buffer_append (s, buffer);
     } else {
       SWFDEC_ERROR ("sample rate not handled (%d)",
-	  sound->synth.pcm.samplerate);
+          sound->synth.pcm.samplerate);
     }
   }
 
@@ -609,26 +613,25 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
 #else
 
 static void
-swfdec_sound_mp3_init (SwfdecSound *sound)
+swfdec_sound_mp3_init (SwfdecSound * sound)
 {
 
 }
 
 void
-swfdec_sound_mp3_decode (SwfdecSound *sound)
+swfdec_sound_mp3_decode (SwfdecSound * sound)
 {
 }
 
 int
-swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
+swfdec_sound_mp3_decode_stream (SwfdecDecoder * s, SwfdecSound * sound)
 {
   return SWF_OK;
 }
 
 static void
-swfdec_sound_mp3_cleanup (SwfdecSound *sound)
+swfdec_sound_mp3_cleanup (SwfdecSound * sound)
 {
 }
 
 #endif
-

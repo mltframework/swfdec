@@ -6,13 +6,13 @@
 #include <swfdec_object.h>
 
 G_BEGIN_DECLS
-
 //typedef struct _SwfdecText SwfdecText;
 typedef struct _SwfdecTextClass SwfdecTextClass;
+
 //typedef struct _SwfdecTextGlyph SwfdecTextGlyph;
 typedef struct _SwfdecTextChunk SwfdecTextChunk;
 
-#define SWFDEC_TYPE_TEXT                    (swfdec_text_get_type()) 
+#define SWFDEC_TYPE_TEXT                    (swfdec_text_get_type())
 #define SWFDEC_IS_TEXT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEXT))
 #define SWFDEC_IS_TEXT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TEXT))
 #define SWFDEC_TEXT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT, SwfdecText))
@@ -27,13 +27,15 @@ struct _SwfdecTextGlyph
   unsigned int color;
 };
 
-struct _SwfdecText {
+struct _SwfdecText
+{
   SwfdecObject object;
 
   GArray *glyphs;
 };
 
-struct _SwfdecTextClass {
+struct _SwfdecTextClass
+{
   SwfdecObjectClass object_class;
 
 };
@@ -47,10 +49,8 @@ int tag_func_define_text_2 (SwfdecDecoder * s);
 
 void swfdec_font_free (SwfdecObject * object);
 
-SwfdecLayer * swfdec_text_prerender (SwfdecDecoder * s,
+SwfdecLayer *swfdec_text_prerender (SwfdecDecoder * s,
     SwfdecSpriteSegment * seg, SwfdecObject * object, SwfdecLayer * oldlayer);
 
 G_END_DECLS
-
 #endif
-

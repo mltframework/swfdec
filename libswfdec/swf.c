@@ -26,7 +26,8 @@ swfdec_init (void)
   static gboolean _inited = FALSE;
   const char *s;
 
-  if (_inited) return;
+  if (_inited)
+    return;
 
   _inited = TRUE;
 
@@ -55,7 +56,7 @@ swfdec_decoder_new (void)
 
   s = g_new0 (SwfdecDecoder, 1);
 
-  s->input_queue = swfdec_buffer_queue_new();
+  s->input_queue = swfdec_buffer_queue_new ();
 
   s->bg_color = SWF_COLOR_COMBINE (0xff, 0xff, 0xff, 0xff);
   s->colorspace = SWF_COLORSPACE_RGB888;
@@ -72,18 +73,19 @@ swfdec_decoder_new (void)
 }
 
 int
-swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data, int length)
+swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data,
+    int length)
 {
-  SwfdecBuffer *buffer = swfdec_buffer_new();
+  SwfdecBuffer *buffer = swfdec_buffer_new ();
 
-  buffer->data = (unsigned char *)data;
+  buffer->data = (unsigned char *) data;
   buffer->length = length;
 
   return swfdec_decoder_add_buffer (s, buffer);
 }
 
 int
-swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer)
+swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer)
 {
   int ret;
 
@@ -97,7 +99,7 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer)
       return SWF_ERROR;
     }
 
-    swfdec_buffer_unref(buffer);
+    swfdec_buffer_unref (buffer);
 
     buffer = swfdec_buffer_new_subbuffer (s->uncompressed_buffer, offset,
         s->z->total_out - offset);
@@ -110,7 +112,7 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer *buffer)
 }
 
 void
-swfdec_decoder_eof (SwfdecDecoder *s)
+swfdec_decoder_eof (SwfdecDecoder * s)
 {
   if (s->state == SWF_STATE_PARSETAG) {
     s->state = SWF_STATE_EOF;
@@ -129,20 +131,20 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
     switch (s->state) {
       case SWF_STATE_INIT1:
-	ret = swf_parse_header1 (s);
-	break;
+        ret = swf_parse_header1 (s);
+        break;
       case SWF_STATE_INIT2:
-	ret = swf_parse_header2 (s);
-	break;
+        ret = swf_parse_header2 (s);
+        break;
       case SWF_STATE_PARSETAG:
-        {
+      {
         int header_length;
         int x;
         SwfdecTagFunc *func;
         int tag;
         int tag_len;
 
-	/* we're parsing tags */
+        /* we're parsing tags */
         buffer = swfdec_buffer_queue_peek (s->input_queue, 2);
         if (buffer == NULL) {
           return SWF_NEEDBITS;
@@ -156,7 +158,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
         x = swfdec_bits_get_u16 (&s->b);
         tag = (x >> 6) & 0x3ff;
-        SWFDEC_DEBUG("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
+        SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
         tag_len = x & 0x3f;
         if (tag_len == 0x3f) {
           swfdec_buffer_unref (buffer);
@@ -176,10 +178,10 @@ swfdec_decoder_parse (SwfdecDecoder * s)
           header_length = 2;
         }
         swfdec_buffer_unref (buffer);
-        SWFDEC_DEBUG("tag length %d", tag_len);
+        SWFDEC_DEBUG ("tag length %d", tag_len);
 
         SWFDEC_INFO ("parsing at %d, tag %d %s, length %d",
-            swfdec_buffer_queue_get_offset(s->input_queue), tag,
+            swfdec_buffer_queue_get_offset (s->input_queue), tag,
             swfdec_decoder_get_tag_name (tag), tag_len);
 
         if (swfdec_buffer_queue_get_depth (s->input_queue) < tag_len +
@@ -217,34 +219,37 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
           swfdec_bits_syncbits (&s->b);
           if (s->b.ptr < endptr) {
-            SWFDEC_WARNING ("early finish (%d bytes) at %d, tag %d %s, length %d",
+            SWFDEC_WARNING
+                ("early finish (%d bytes) at %d, tag %d %s, length %d",
                 endptr - s->b.ptr,
-                swfdec_buffer_queue_get_offset(s->input_queue), tag,
+                swfdec_buffer_queue_get_offset (s->input_queue), tag,
                 swfdec_decoder_get_tag_name (tag), tag_len);
             //dumpbits (&s->b);
           }
           if (s->b.ptr > endptr) {
-            SWFDEC_WARNING ("parse_overrun (%d bytes) at %d, tag %d %s, length %d",
+            SWFDEC_WARNING
+                ("parse_overrun (%d bytes) at %d, tag %d %s, length %d",
                 s->b.ptr - endptr,
-                swfdec_buffer_queue_get_offset(s->input_queue), tag,
+                swfdec_buffer_queue_get_offset (s->input_queue), tag,
                 swfdec_decoder_get_tag_name (tag), tag_len);
           }
         }
 
-	if (tag == 0) {
-	  s->state = SWF_STATE_EOF;
+        if (tag == 0) {
+          s->state = SWF_STATE_EOF;
 
           SWFDEC_INFO ("decoded points %d", s->stats_n_points);
-	}
-
-        if (buffer) swfdec_buffer_unref (buffer);
-
         }
-	break;
-      case SWF_STATE_EOF:
-	ret = SWF_EOF;
 
-	break;
+        if (buffer)
+          swfdec_buffer_unref (buffer);
+
+      }
+        break;
+      case SWF_STATE_EOF:
+        ret = SWF_EOF;
+
+        break;
     }
   }
 
@@ -266,7 +271,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
 
   swfdec_buffer_queue_free (s->input_queue);
 
-  swfdec_object_unref (SWFDEC_OBJECT(s->main_sprite));
+  swfdec_object_unref (SWFDEC_OBJECT (s->main_sprite));
   swfdec_render_free (s->render);
 
   if (s->z) {
@@ -375,8 +380,8 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   s->irect.x1 = s->width;
   s->irect.y1 = s->height;
 
-  sw = (double)s->width / s->parse_width;
-  sh = (double)s->height / s->parse_height;
+  sw = (double) s->width / s->parse_width;
+  sh = (double) s->height / s->parse_height;
   s->scale_factor = (sw < sh) ? sw : sh;
 
   s->transform.trans[0] = s->scale_factor;
@@ -386,10 +391,10 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   s->transform.trans[4] = 0.5 * (s->width - s->parse_width * s->scale_factor);
   s->transform.trans[5] = 0.5 * (s->height - s->parse_height * s->scale_factor);
 #if 0
-  s->transform.trans[0] = (double)s->width / s->parse_width;
+  s->transform.trans[0] = (double) s->width / s->parse_width;
   s->transform.trans[1] = 0;
   s->transform.trans[2] = 0;
-  s->transform.trans[3] = (double)s->height / s->parse_height;
+  s->transform.trans[3] = (double) s->height / s->parse_height;
   s->transform.trans[4] = 0;
   s->transform.trans[5] = 0;
 #endif
@@ -537,7 +542,7 @@ swf_inflate_init (SwfdecDecoder * s)
   z->zalloc = zalloc;
   z->zfree = zfree;
   ret = inflateInit (z);
-  SWFDEC_DEBUG("inflateInit returned %d",ret);
+  SWFDEC_DEBUG ("inflateInit returned %d", ret);
 
   s->uncompressed_buffer = swfdec_buffer_new_and_alloc (s->length);
   z->next_out = s->uncompressed_buffer->data;
@@ -551,11 +556,11 @@ swf_inflate_init (SwfdecDecoder * s)
   z->avail_in = buffer->length;
 
   ret = inflate (z, Z_SYNC_FLUSH);
-  SWFDEC_DEBUG("inflate returned %d",ret);
+  SWFDEC_DEBUG ("inflate returned %d", ret);
 
   swfdec_buffer_unref (buffer);
 
-  s->input_queue = swfdec_buffer_queue_new();
+  s->input_queue = swfdec_buffer_queue_new ();
 
   buffer = swfdec_buffer_new_subbuffer (s->uncompressed_buffer, offset,
       z->total_out - offset);
@@ -612,9 +617,9 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y1 = s->height;
   swfdec_bits_syncbits (&s->b);
   s->rate = swfdec_bits_get_u16 (&s->b) / 256.0;
-  SWFDEC_LOG("rate = %g", s->rate);
+  SWFDEC_LOG ("rate = %g", s->rate);
   s->n_frames = swfdec_bits_get_u16 (&s->b);
-  SWFDEC_LOG("n_frames = %d", s->n_frames);
+  SWFDEC_LOG ("n_frames = %d", s->n_frames);
 
   n = s->b.ptr - s->b.buffer->data;
   swfdec_buffer_unref (buffer);
@@ -683,7 +688,8 @@ struct tag_func_struct tag_funcs[] = {
   [ST_GENERATORTEXT] = {"GeneratorText", NULL, 0},
   [ST_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, 0},
   [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", NULL, 0},
-  [ST_DEFINEMORPHSHAPE] = {"DefineMorphShape", NULL /* tag_define_morph_shape */, 0},
+  [ST_DEFINEMORPHSHAPE] =
+      {"DefineMorphShape", NULL /* tag_define_morph_shape */ , 0},
   [ST_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
   [ST_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
   [ST_GENERATOR3] = {"Generator3", NULL, 0},
@@ -764,10 +770,10 @@ tag_func_dumpbits (SwfdecDecoder * s)
   SwfdecBits *b = &s->b;
 
   SWFDEC_DEBUG ("%02x %02x %02x %02x %02x %02x %02x %02x",
-    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
-    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
-    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
-    swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b));
+      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
+      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
+      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
+      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b));
 
   return SWF_OK;
 }
@@ -779,5 +785,3 @@ tag_func_frame_label (SwfdecDecoder * s)
 
   return SWF_OK;
 }
-
-

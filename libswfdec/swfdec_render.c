@@ -13,35 +13,36 @@ swfdec_render_new (void)
 }
 
 void
-swfdec_render_free (SwfdecRender *render)
+swfdec_render_free (SwfdecRender * render)
 {
   GList *g;
 
-  for (g=g_list_first (render->object_states); g; g = g_list_next(g)) {
-    g_free(g->data);
+  for (g = g_list_first (render->object_states); g; g = g_list_next (g)) {
+    g_free (g->data);
   }
-  g_list_free(render->object_states);
+  g_list_free (render->object_states);
 
   g_free (render);
 }
 
 gboolean
-swfdec_render_iterate (SwfdecDecoder *s)
+swfdec_render_iterate (SwfdecDecoder * s)
 {
   GList *g;
-  
+
   if (s->render->seek_frame != -1) {
     SwfdecSound *sound;
 
     s->render->frame_index = s->render->seek_frame;
     s->render->seek_frame = -1;
 
-    sound = SWFDEC_SOUND(s->stream_sound_obj);
-    if (sound) sound->tmpbuflen = 0;
+    sound = SWFDEC_SOUND (s->stream_sound_obj);
+    if (sound)
+      sound->tmpbuflen = 0;
   } else {
     if (!s->stopped) {
       if (s->main_sprite->actions[s->render->frame_index]) {
-        swfdec_action_script_execute(s,
+        swfdec_action_script_execute (s,
             s->main_sprite->actions[s->render->frame_index]);
       }
     }
@@ -59,7 +60,7 @@ swfdec_render_iterate (SwfdecDecoder *s)
     }
   }
 
-  for (g=g_list_first (s->render->object_states); g; g = g_list_next(g)) {
+  for (g = g_list_first (s->render->object_states); g; g = g_list_next (g)) {
     SwfdecRenderState *state = g->data;
 
     state->frame_index++;
@@ -71,35 +72,37 @@ swfdec_render_iterate (SwfdecDecoder *s)
 }
 
 SwfdecRenderState *
-swfdec_render_get_object_state (SwfdecRender *render, int layer, int id)
+swfdec_render_get_object_state (SwfdecRender * render, int layer, int id)
 {
   GList *g;
 
-  for (g=g_list_first (render->object_states); g; g = g_list_next(g)) {
+  for (g = g_list_first (render->object_states); g; g = g_list_next (g)) {
     SwfdecRenderState *state = g->data;
 
-    if (state->layer == layer && state->id == id) return state;
+    if (state->layer == layer && state->id == id)
+      return state;
   }
 
   return NULL;
 }
 
 void
-swfdec_render_seek (SwfdecDecoder *s, int frame)
+swfdec_render_seek (SwfdecDecoder * s, int frame)
 {
-  if (frame < 0 || frame >= s->n_frames) return;
+  if (frame < 0 || frame >= s->n_frames)
+    return;
 
   s->render->seek_frame = frame;
 }
 
 int
-swfdec_render_get_frame_index (SwfdecDecoder *s)
+swfdec_render_get_frame_index (SwfdecDecoder * s)
 {
   return s->render->frame_index;
 }
 
 SwfdecBuffer *
-swfdec_render_get_image (SwfdecDecoder *s)
+swfdec_render_get_image (SwfdecDecoder * s)
 {
   SwfdecSpriteSegment *seg;
   SwfdecBuffer *buffer;
@@ -118,15 +121,15 @@ swfdec_render_get_image (SwfdecDecoder *s)
     s->buffer = g_malloc (s->stride * s->height);
     swf_invalidate_irect (s, &s->irect);
   }
-swf_invalidate_irect (s, &s->irect);
+  swf_invalidate_irect (s, &s->irect);
   if (!s->tmp_scanline) {
     s->tmp_scanline = g_malloc (s->width);
   }
 
   SWFDEC_DEBUG ("rendering frame %d", s->render->frame_index);
 
-  SWFDEC_DEBUG ("inval rect %d %d %d %d", s->render->drawrect.x0, s->render->drawrect.x1,
-      s->render->drawrect.y0, s->render->drawrect.y1);
+  SWFDEC_DEBUG ("inval rect %d %d %d %d", s->render->drawrect.x0,
+      s->render->drawrect.x1, s->render->drawrect.y0, s->render->drawrect.y1);
 
   s->fillrect (s->buffer, s->stride, s->bg_color, &s->render->drawrect);
 
@@ -135,8 +138,8 @@ swf_invalidate_irect (s, &s->irect);
 
     seg = (SwfdecSpriteSegment *) g->data;
 
-    SWFDEC_LOG("testing seg %d <= %d < %d",
-	seg->first_frame, s->render->frame_index, seg->last_frame);
+    SWFDEC_LOG ("testing seg %d <= %d < %d",
+        seg->first_frame, s->render->frame_index, seg->last_frame);
     if (seg->first_frame > s->render->frame_index)
       continue;
     if (seg->last_frame <= s->render->frame_index)
@@ -170,8 +173,8 @@ swf_invalidate_irect (s, &s->irect);
 
     object = swfdec_object_get (s, seg->id);
     if (object) {
-      if (SWFDEC_OBJECT_GET_CLASS(object)->render) {
-        SWFDEC_OBJECT_GET_CLASS(object)->render (s, seg, object);
+      if (SWFDEC_OBJECT_GET_CLASS (object)->render) {
+        SWFDEC_OBJECT_GET_CLASS (object)->render (s, seg, object);
       } else {
         SWFDEC_ERROR ("class render function is NULL for class %s",
             g_type_name (G_TYPE_FROM_INSTANCE (object)));
@@ -188,7 +191,7 @@ swf_invalidate_irect (s, &s->irect);
 }
 
 SwfdecBuffer *
-swfdec_render_get_audio (SwfdecDecoder *s)
+swfdec_render_get_audio (SwfdecDecoder * s)
 {
   SwfdecBuffer *buffer;
   GList *g;
@@ -203,7 +206,7 @@ swfdec_render_get_audio (SwfdecDecoder *s)
       SwfdecSound *sound;
       int n;
 
-      sound = SWFDEC_SOUND(s->stream_sound_obj);
+      sound = SWFDEC_SOUND (s->stream_sound_obj);
 
       n = chunk->length;
       if (sound->tmpbuflen + n > 2048) {
@@ -219,14 +222,11 @@ swfdec_render_get_audio (SwfdecDecoder *s)
   swfdec_sound_render (s);
 
   g = g_list_first (s->sound_buffers);
-  if (!g) return NULL;
+  if (!g)
+    return NULL;
 
   buffer = (SwfdecBuffer *) g->data;
   s->sound_buffers = g_list_delete_link (s->sound_buffers, g);
 
   return buffer;
 }
-
-
-
-

@@ -10,23 +10,26 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 SWFDEC_OBJECT_BOILERPLATE (SwfdecButton, swfdec_button)
 
 
-static void swfdec_button_base_init (gpointer g_class)
+     static void swfdec_button_base_init (gpointer g_class)
 {
 
 }
 
-static void swfdec_button_class_init (SwfdecButtonClass *g_class)
+static void
+swfdec_button_class_init (SwfdecButtonClass * g_class)
 {
   SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 
-static void swfdec_button_init (SwfdecButton *button)
+static void
+swfdec_button_init (SwfdecButton * button)
 {
-  button->records = g_array_new (FALSE, TRUE, sizeof(SwfdecButtonRecord));
+  button->records = g_array_new (FALSE, TRUE, sizeof (SwfdecButtonRecord));
 
 }
 
-static void swfdec_button_dispose (SwfdecButton *button)
+static void
+swfdec_button_dispose (SwfdecButton * button)
 {
   int i;
   SwfdecButtonRecord *record;
@@ -53,7 +56,8 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->up) {
       obj = swfdec_object_get (s, record->segment->id);
-      if (!obj) return;
+      if (!obj)
+        return;
 
       tmpseg = swfdec_spriteseg_dup (record->segment);
       swfdec_transform_multiply (&tmpseg->transform,
@@ -85,13 +89,13 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   SWFDEC_OBJECT (button)->id = id;
   s->objects = g_list_append (s->objects, button);
 
-  SWFDEC_LOG("  ID: %d", id);
+  SWFDEC_LOG ("  ID: %d", id);
 
   flags = swfdec_bits_get_u8 (bits);
   offset = swfdec_bits_get_u16 (bits);
 
-  SWFDEC_LOG("  flags = %d", flags);
-  SWFDEC_LOG("  offset = %d", offset);
+  SWFDEC_LOG ("  flags = %d", flags);
+  SWFDEC_LOG ("  offset = %d", offset);
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
@@ -112,11 +116,11 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     character = swfdec_bits_get_u16 (bits);
     layer = swfdec_bits_get_u16 (bits);
 
-    SWFDEC_LOG("  reserved = %d", reserved);
+    SWFDEC_LOG ("  reserved = %d", reserved);
     if (reserved) {
       SWFDEC_WARNING ("reserved is supposed to be 0");
     }
-    SWFDEC_LOG("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
+    SWFDEC_LOG ("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
         hit_test, down, over, up, character, layer);
 
     swfdec_bits_get_transform (bits, &trans);
@@ -143,8 +147,8 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     offset = swfdec_bits_get_u16 (bits);
     condition = swfdec_bits_get_u16 (bits);
 
-    SWFDEC_LOG("  offset = %d", offset);
-    SWFDEC_LOG("  condition = 0x%04x", condition);
+    SWFDEC_LOG ("  offset = %d", offset);
+    SWFDEC_LOG ("  condition = 0x%04x", condition);
 
     get_actions (s, bits);
   }

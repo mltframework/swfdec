@@ -8,15 +8,16 @@
 #include <string.h>
 #include <swfdec_debug.h>
 
-static void swfdec_buffer_free_mem (SwfdecBuffer *buffer, void *);
-static void swfdec_buffer_free_subbuffer (SwfdecBuffer *buffer, void *priv);
+static void swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *);
+static void swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv);
 
 
 SwfdecBuffer *
 swfdec_buffer_new (void)
 {
   SwfdecBuffer *buffer;
-  buffer = g_new0(SwfdecBuffer, 1);
+
+  buffer = g_new0 (SwfdecBuffer, 1);
   buffer->ref_count = 1;
   return buffer;
 }
@@ -24,7 +25,7 @@ swfdec_buffer_new (void)
 SwfdecBuffer *
 swfdec_buffer_new_and_alloc (int size)
 {
-  SwfdecBuffer *buffer = swfdec_buffer_new();
+  SwfdecBuffer *buffer = swfdec_buffer_new ();
 
   buffer->data = g_malloc (size);
   buffer->length = size;
@@ -36,7 +37,7 @@ swfdec_buffer_new_and_alloc (int size)
 SwfdecBuffer *
 swfdec_buffer_new_with_data (void *data, int size)
 {
-  SwfdecBuffer *buffer = swfdec_buffer_new();
+  SwfdecBuffer *buffer = swfdec_buffer_new ();
 
   buffer->data = data;
   buffer->length = size;
@@ -46,9 +47,9 @@ swfdec_buffer_new_with_data (void *data, int size)
 }
 
 SwfdecBuffer *
-swfdec_buffer_new_subbuffer (SwfdecBuffer *buffer, int offset, int length)
+swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, int offset, int length)
 {
-  SwfdecBuffer *subbuffer = swfdec_buffer_new();
+  SwfdecBuffer *subbuffer = swfdec_buffer_new ();
 
   if (buffer->parent) {
     swfdec_buffer_ref (buffer->parent);
@@ -65,29 +66,30 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer *buffer, int offset, int length)
 }
 
 void
-swfdec_buffer_ref (SwfdecBuffer *buffer)
+swfdec_buffer_ref (SwfdecBuffer * buffer)
 {
   buffer->ref_count++;
 }
 
 void
-swfdec_buffer_unref (SwfdecBuffer *buffer)
+swfdec_buffer_unref (SwfdecBuffer * buffer)
 {
   buffer->ref_count--;
   if (buffer->ref_count == 0) {
-    if (buffer->free) buffer->free (buffer, buffer->priv);
+    if (buffer->free)
+      buffer->free (buffer, buffer->priv);
     g_free (buffer);
   }
 }
 
 static void
-swfdec_buffer_free_mem (SwfdecBuffer *buffer, void *priv)
+swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *priv)
 {
-  g_free(buffer->data);
+  g_free (buffer->data);
 }
 
 static void
-swfdec_buffer_free_subbuffer (SwfdecBuffer *buffer, void *priv)
+swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv)
 {
   swfdec_buffer_unref (buffer->parent);
 }
@@ -96,40 +98,41 @@ swfdec_buffer_free_subbuffer (SwfdecBuffer *buffer, void *priv)
 SwfdecBufferQueue *
 swfdec_buffer_queue_new (void)
 {
-  return g_new0(SwfdecBufferQueue, 1);
+  return g_new0 (SwfdecBufferQueue, 1);
 }
 
 int
-swfdec_buffer_queue_get_depth (SwfdecBufferQueue *queue)
+swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue)
 {
   return queue->depth;
 }
 
 int
-swfdec_buffer_queue_get_offset (SwfdecBufferQueue *queue)
+swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue)
 {
   return queue->offset;
 }
 
 void
-swfdec_buffer_queue_free (SwfdecBufferQueue *queue)
+swfdec_buffer_queue_free (SwfdecBufferQueue * queue)
 {
   GList *g;
-  for (g=g_list_first(queue->buffers);g;g=g_list_next(g)) {
-    swfdec_buffer_unref((SwfdecBuffer *)g->data);
+
+  for (g = g_list_first (queue->buffers); g; g = g_list_next (g)) {
+    swfdec_buffer_unref ((SwfdecBuffer *) g->data);
   }
   g_list_free (queue->buffers);
 }
 
 void
-swfdec_buffer_queue_push (SwfdecBufferQueue *queue, SwfdecBuffer *buffer)
+swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
 {
   queue->buffers = g_list_append (queue->buffers, buffer);
   queue->depth += buffer->length;
 }
 
 SwfdecBuffer *
-swfdec_buffer_queue_pull (SwfdecBufferQueue *queue, int length)
+swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, int length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
@@ -159,10 +162,10 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue *queue, int length)
 
     newbuffer = swfdec_buffer_new_and_alloc (length);
 
-    while(offset < length) {
+    while (offset < length) {
       g = g_list_first (queue->buffers);
       buffer = g->data;
-      
+
       if (buffer->length > length - offset) {
         int n = length - offset;
 
@@ -187,7 +190,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue *queue, int length)
 }
 
 SwfdecBuffer *
-swfdec_buffer_queue_peek (SwfdecBufferQueue *queue, int length)
+swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, int length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
@@ -208,9 +211,9 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue *queue, int length)
     newbuffer = swfdec_buffer_new_subbuffer (buffer, 0, length);
   } else {
     newbuffer = swfdec_buffer_new_and_alloc (length);
-    while(offset < length) {
+    while (offset < length) {
       buffer = g->data;
-      
+
       if (buffer->length > length - offset) {
         int n = length - offset;
 
@@ -226,4 +229,3 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue *queue, int length)
 
   return newbuffer;
 }
-

@@ -51,8 +51,10 @@ void art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
 void art_grey_svp_alpha_callback (void *callback_data, int y,
     int start, ArtSVPRenderAAStep * steps, int n_steps);
 
-ArtBpath *swfdec_art_bpath_from_points (GArray *array, SwfdecTransform *trans);
-void art_bpath_affine_transform_inplace (ArtBpath *bpath, SwfdecTransform *trans);
+ArtBpath *swfdec_art_bpath_from_points (GArray * array,
+    SwfdecTransform * trans);
+void art_bpath_affine_transform_inplace (ArtBpath * bpath,
+    SwfdecTransform * trans);
 
 static inline void
 art_affine_copy (double dst[6], const double src[6])

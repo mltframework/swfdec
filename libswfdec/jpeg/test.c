@@ -11,6 +11,7 @@
 /* getfile */
 
 void *getfile(char *path, int *n_bytes);
+static void dump_pgm(unsigned char *ptr, int rowstride, int width, int height);
 
 
 int main(int argc, char *argv[])
@@ -19,6 +20,10 @@ int main(int argc, char *argv[])
 	int len;
 	JpegDecoder *dec;
 	char *fn = "biglebowski.jpg";
+	unsigned char *ptr;
+	int rowstride;
+	int width;
+	int height;
 
 	dec = jpeg_decoder_new();
 
@@ -26,8 +31,11 @@ int main(int argc, char *argv[])
 	data = getfile(fn,&len);
 
 	jpeg_decoder_addbits(dec, data, len);
-
 	jpeg_decoder_parse(dec);
+
+	jpeg_decoder_get_component(dec, 1, &ptr, &rowstride, &width, &height);
+
+	dump_pgm(ptr, rowstride, width, height);
 
 	return 0;
 }
@@ -71,5 +79,25 @@ void *getfile(char *path, int *n_bytes)
 
 	close(fd);
 	return ptr;
+}
+
+static void dump_pgm(unsigned char *ptr, int rowstride, int width, int height)
+{
+	int x,y;
+
+	printf("P2\n");
+	printf("%d %d\n",width,height);
+	printf("255\n");
+
+	for(y=0;y<height;y++){
+		for(x=0;x<width;x++){
+			printf("%d ",ptr[x]);
+			if((x&15)==15){
+				printf("\n");
+			}
+		}
+		printf("\n");
+		ptr += rowstride;
+	}
 }
 

@@ -76,11 +76,14 @@ unsigned int huffman_table_decode_jpeg(HuffmanTable *tab, bits_t *bits)
 {
 	unsigned int code;
 	int i;
+	char str[33];
 
 	code = peekbits(bits,16);
 	for(i=0;i<tab->length;i++){
 		if((code&tab->symbols[i].mask) == tab->symbols[i].symbol){
 			code = getbits(bits,tab->symbols[i].n_bits);
+			sprintbits(str, code, tab->symbols[i].n_bits);
+			JPEG_DEBUG(0,"%s --> %d\n", str, tab->symbols[i].value);
 			return tab->symbols[i].value;
 		}
 	}
@@ -94,6 +97,7 @@ int huffman_table_decode_macroblock(short *block, HuffmanTable *dc_tab,
 {
 	int r,s,x,rs;
 	int k;
+	char str[33];
 
 	memset(block,0,sizeof(short)*64);
 
@@ -103,18 +107,23 @@ int huffman_table_decode_macroblock(short *block, HuffmanTable *dc_tab,
 	if((x>>(s-1)) == 0){
 		x -= (1<<s) - 1;
 	}
+	JPEG_DEBUG(0,"s=%d (block[0]=%d)\n",s,x);
 	block[0] = x;
 
 	for(k=1;k<64;k++){
 		rs = huffman_table_decode_jpeg(ac_tab, bits);
-		if(rs<0)return -1;
-		if(bits->ptr >= bits->end)return -1;
+		if(rs<0 || bits->ptr >= bits->end){
+			JPEG_DEBUG(0,"overrun\n");
+			return -1;
+		}
 		s = rs & 0xf;
 		r = rs >> 4;
 		if(s==0){
 			if(r==15){
+				JPEG_DEBUG(0,"r=%d s=%d (skip 16)\n",r,s);
 				k+=15;
 			}else{
+				JPEG_DEBUG(0,"r=%d s=%d (eob)\n",r,s);
 				break;
 			}
 		}else{
@@ -124,10 +133,12 @@ int huffman_table_decode_macroblock(short *block, HuffmanTable *dc_tab,
 				return -1;
 			}
 			x = getbits(bits, s);
+			sprintbits(str, x, s);
 			if((x>>(s-1)) == 0){
 				x -= (1<<s) - 1;
 			}
 			block[k] = x;
+			JPEG_DEBUG(0,"r=%d s=%d (%s -> block[%d]=%d)\n",r,s,str,k,x);
 		}
 	}
 	return 0;

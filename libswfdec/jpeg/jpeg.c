@@ -10,6 +10,13 @@
 #include "jpeg_internal.h"
 #include "../bits.h"
 
+#define unzigzag8x8_s16 unzigzag8x8_s16_ref
+#define idct8x8_s16 idct8x8_s16_ref
+#define idct8x8_f64 idct8x8_f64_ref
+#define conv8x8_f64_s16 conv8x8_f64_s16_ref
+#include "unzigzag8x8_s16.h"
+#include "idct8x8_s16.h"
+
 #define JPEG_DEBUG(n, format...)	do{ \
 	if((n)>=SWF_DEBUG_LEVEL)jpeg_debug((n),format); \
 }while(0)
@@ -64,12 +71,16 @@
 
 static char *sprintbits(char *str, unsigned int bits, int n);
 static void dump_block8x8_s16(short *q);
+static void dequant8x8_s16(short *dest, short *src, short *mult);
+static void addconst8x8_s16(short *dest, short *src, int c);
+static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
 
 
 int jpeg_decoder_tag_0xc0(JpegDecoder *dec, bits_t *bits)
 {
 	int i;
 	int length;
+	int image_size;
 
 	JPEG_DEBUG(0,"start of frame (baseline DCT)\n");
 
@@ -97,6 +108,10 @@ int jpeg_decoder_tag_0xc0(JpegDecoder *dec, bits_t *bits)
 			dec->components[i].h_subsample,
 			dec->components[i].v_subsample,
 			dec->components[i].quant_table);
+
+		dec->components[i].rowstride = (dec->width + 7)&~7;
+		image_size = ((dec->width + 7)&~7) * ((dec->height + 7)&~7);
+		dec->components[i].image = malloc(image_size);
 	}
 
 	if(bits->end != bits->ptr)JPEG_DEBUG(0,"endptr != bits\n");
@@ -110,7 +125,7 @@ int jpeg_decoder_tag_0xdb(JpegDecoder *dec, bits_t *bits)
 	int pq;
 	int tq;
 	int i;
-	int *q;
+	short *q;
 
 	JPEG_DEBUG(0,"define quantization table\n");
 
@@ -267,6 +282,7 @@ int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits)
 		int index;
 		int h_subsample;
 		int v_subsample;
+		int quant_index;
 
 		component_id = get_u8(bits);
 		dc_table = getbits(bits,4);
@@ -275,12 +291,14 @@ int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits)
 
 		h_subsample = dec->components[index].h_subsample;
 		v_subsample = dec->components[index].v_subsample;
+		quant_index = dec->components[index].quant_table;
 
-		for(x=0;x<dec->components[index].h_subsample;x++){
 		for(y=0;y<dec->components[index].v_subsample;y++){
+		for(x=0;x<dec->components[index].h_subsample;x++){
 			dec->scan_list[n].component_index = index;
 			dec->scan_list[n].dc_table = dc_table;
 			dec->scan_list[n].ac_table = ac_table;
+			dec->scan_list[n].quant_table = quant_index;
 			dec->scan_list[n].x = x;
 			dec->scan_list[n].y = y;
 			n++;
@@ -298,8 +316,10 @@ int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits)
 
 	spectral_start = get_u8(bits);
 	spectral_end = get_u8(bits);
+	JPEG_DEBUG(0,"spectral range [%d,%d]\n",spectral_start,spectral_end);
 	approx_high = getbits(bits,4);
 	approx_low = getbits(bits,4);
+	JPEG_DEBUG(0,"approx range [%d,%d]\n",approx_low, approx_high);
 	syncbits(bits);
 
 	if(bits->end != bits->ptr)JPEG_DEBUG(0,"endptr != bits\n");
@@ -309,13 +329,16 @@ int jpeg_decoder_tag_0xda(JpegDecoder *dec, bits_t *bits)
 
 void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 {
+	bits_t b2, *bits2 = &b2;
 	short block[64];
+	short block2[64];
 	unsigned char *newptr;
 	int len;
 	int j;
 	int i;
 	int go;
 	int x,y;
+	int dc[4];
 
 	len = 0;
 	j = 0;
@@ -331,20 +354,25 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	for(i=0;i<len;i++){
 		newptr[j] = bits->ptr[i];
 		j++;
-		if(bits->ptr[i]==0xff) j++;
+		if(bits->ptr[i]==0xff) i++;
 	}
+	bits->ptr += len;
 
-	bits->ptr = newptr;
-	bits->idx = 0;
-	bits->end = newptr + j;
+	bits2->ptr = newptr;
+	bits2->idx = 0;
+	bits2->end = newptr + j;
 	
 	go = 1;
 	x = 0;
 	y = 0;
+	dc[0] = dc[1] = dc[2] = dc[3] = 128;
 	while(go){
 	for(i=0;i<dec->scan_list_length;i++){
 		int dc_table_index;
 		int ac_table_index;
+		int quant_index;
+		unsigned char *ptr;
+		int component_index;
 
 		JPEG_DEBUG(0,"%d,%d: component=%d dc_table=%d ac_table=%d\n",
 			x,y,
@@ -352,14 +380,33 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 			dec->scan_list[i].dc_table,
 			dec->scan_list[i].ac_table);
 
+		component_index = dec->scan_list[i].component_index;
 		dc_table_index = dec->scan_list[i].dc_table;
 		ac_table_index = dec->scan_list[i].ac_table;
+		quant_index = dec->scan_list[i].quant_table;
 
 		huffman_table_decode_macroblock(block,
 			dec->dc_huff_table[dc_table_index],
-			dec->ac_huff_table[ac_table_index], bits);
+			dec->ac_huff_table[ac_table_index], bits2);
+
+		dc[component_index] += block[0];
+		block[0] = 0;
+		JPEG_DEBUG(0,"using quant table %d\n", quant_index);
+		dequant8x8_s16(block2, block, dec->quant_table[quant_index]);
+		unzigzag8x8_s16(block, block2);
+		idct8x8_s16(block2, block, sizeof(short)*8, sizeof(short)*8);
+		addconst8x8_s16(block, block2, dc[component_index]);
 
 		dump_block8x8_s16(block);
+
+		ptr = dec->components[component_index].image + x +
+			dec->scan_list[i].x * 8 +
+			dec->components[component_index].rowstride *
+				(y + dec->scan_list[i].y * 8);
+
+		clipconv8x8_u8_s16(ptr,
+			dec->components[component_index].rowstride,
+			block);
 	}
 		x += dec->scan_h_subsample * 8;
 		if(x >= dec->width){
@@ -392,13 +439,26 @@ int jpeg_decoder_addbits(JpegDecoder *dec, unsigned char *data, unsigned int len
 	return 0;
 }
 
+int jpeg_decoder_get_component(JpegDecoder *dec, int id,
+	unsigned char **image, int *rowstride, int *width, int *height)
+{
+	int i;
+
+	i = jpeg_decoder_find_component_by_id(dec,id);
+	if(image)*image = dec->components[i].image;
+	if(rowstride)*rowstride = dec->components[i].rowstride;
+	if(width)*width = dec->width;
+	if(height)*height = dec->height;
+
+	return 0;
+}
+
 int jpeg_decoder_parse(JpegDecoder *dec)
 {
 	bits_t *bits = &dec->bits;
 	bits_t b2;
 	unsigned int x;
 	unsigned int tag;
-	int i;
 
 	while(bits->ptr < bits->end){
 		x = get_u8(bits);
@@ -419,21 +479,21 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 
 		switch(tag){
 		case JPEG_MARKER_SOF_0: /* baseline DCT */
-			i += jpeg_decoder_tag_0xc0(dec,&b2);
+			jpeg_decoder_tag_0xc0(dec,&b2);
 			break;
 		case JPEG_MARKER_DHT: /* define huffman table */
-			i += jpeg_decoder_tag_0xc4(dec,&b2);
+			jpeg_decoder_tag_0xc4(dec,&b2);
 			break;
 		case JPEG_MARKER_SOI: /* start of image */
 			break;
 		case JPEG_MARKER_EOI: /* end of image */
 			break;
 		case JPEG_MARKER_SOS: /* start of scan */
-			i += jpeg_decoder_tag_0xda(dec,&b2);
+			jpeg_decoder_tag_0xda(dec,&b2);
 			jpeg_decoder_decode_entropy_segment(dec, &b2);
 			break;
 		case JPEG_MARKER_DQT: /* define quantization table */
-			i += jpeg_decoder_tag_0xdb(dec,&b2);
+			jpeg_decoder_tag_0xdb(dec,&b2);
 			break;
 		case JPEG_MARKER_JFIF: /* jpeg extension (JFIF) */
 			JPEG_DEBUG(0,"JFIF\n");
@@ -441,6 +501,8 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 		default:
 			JPEG_DEBUG(0,"unhandled or illegal JPEG marker (0x%02x)\n",tag);
 		}
+		syncbits(&b2);
+		bits->ptr = b2.ptr;
 	}
 
 	return 0;
@@ -487,6 +549,40 @@ static void dump_block8x8_s16(short *q)
 			q[0], q[1], q[2], q[3],
 			q[4], q[5], q[6], q[7]);
 		q+=8;
+	}
+}
+
+static void dequant8x8_s16(short *dest, short *src, short *mult)
+{
+	int i;
+
+	for(i=0;i<64;i++){
+		dest[i] = src[i] * mult[i];
+	}
+}
+
+static void addconst8x8_s16(short *dest, short *src, int c)
+{
+	int i;
+
+	for(i=0;i<64;i++){
+		dest[i] = src[i] + c;
+	}
+}
+
+static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src)
+{
+	int i,j;
+	int x;
+
+	for(i=0;i<8;i++){
+		for(j=0;j<8;j++){
+			x = *src++;
+			if(x<0)x=0;
+			if(x>255)x=255;
+			dest[j] = x;
+		}
+		dest += stride;
 	}
 }
 

@@ -48,7 +48,7 @@ struct jpeg_decoder_struct {
 		int rowstride;
 	} components[N_COMPONENTS];
 
-	int quant_table[4][64];
+	short quant_table[4][64];
 	HuffmanTable *dc_huff_table[4];
 	HuffmanTable *ac_huff_table[4];
 
@@ -57,6 +57,7 @@ struct jpeg_decoder_struct {
 		int component_index;
 		int dc_table;
 		int ac_table;
+		int quant_table;
 		int x;
 		int y;
 	}scan_list[10];

@@ -72,14 +72,17 @@ if test "x$HAVE_MAD" = xyes; then
   AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
 fi
 
+MOZILLA_CFLAGS=
 if test -z "$MOZILLA_CONFIG"; then
   AC_PATH_PROG(MOZILLA_CONFIG, mozilla-config, no)
 fi
-if test "$MOZILLA_CONFIG" = "no"; then
-  AC_MSG_ERROR([cannot find mozilla development headers, which is required for build])
+if test "x$MOZILLA_CONFIG" != "xno"; then
+  _mozilla_include_dir=`mozilla-config --cflags|sed 's/-I\(.*\) .*/\1/'`
+  MOZILLA_CFLAGS="-I$_mozilla_include_dir/plugin -I$_mozilla_include_dir/java -I$_mozilla_include_dir/nspr"
+else
+  AC_MSG_WARN([mozilla-config not found. Mozilla/Netscape plugin will not be built])
 fi
-_mozilla_include_dir=`mozilla-config --cflags|sed 's/-I\(.*\) .*/\1/'`
-MOZILLA_CFLAGS="-I$_mozilla_include_dir/plugin -I$_mozilla_include_dir/java -I$_mozilla_include_dir/nspr"
+AM_CONDITIONAL(WITH_MOZILLA,[test "$MOZILLA_CFLAGS" != ""])
 AC_SUBST(MOZILLA_CFLAGS)
 
 dnl Check for X11 extensions

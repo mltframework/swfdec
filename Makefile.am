@@ -1,10 +1,16 @@
 
-SUBDIRS=libswfdec test plugin player
+if WITH_MOZILLA
+MOZILLA_DIR=plugin
+else
+MOZILLA_DIR=
+endif
 
-DIST_SUBDIRS=libswfdec test plugin player
+SUBDIRS=libswfdec test player $(MOZILLA_DIR)
+
+DIST_SUBDIRS=libswfdec test player $(MOZILLA_DIR)
 
 EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.spec \
-	TODO
+	TODO m4
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = swfdec.pc
@@ -14,4 +20,5 @@ dist-hook:
 	cp swfdec.spec $(distdir)
 	mkdir $(distdir)/debian
 	-cp debian/* $(distdir)/debian
+	rm -rf `find $(distdir)/m4 -name CVS`
 

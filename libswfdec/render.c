@@ -123,16 +123,15 @@ int art_place_object_2(SwfdecDecoder *s)
 int art_remove_object(SwfdecDecoder *s)
 {
 	int depth;
-	//SwfdecLayerVec *layervec;
-	SwfdecLayer *layer;
-	//int i;
+	SwfdecSpriteSeg *seg;
 	int id;
 
 	id = get_u16(&s->b);
 	depth = get_u16(&s->b);
-	layer = swfdec_layer_get(s,depth);
+	seg = swfdec_sprite_get_seg(s->parse_sprite,depth,
+		s->parse_sprite->parse_frame);
 
-	layer->last_frame = s->parse_sprite->parse_frame;
+	seg->last_frame = s->parse_sprite->parse_frame;
 
 	return SWF_OK;
 }
@@ -140,14 +139,13 @@ int art_remove_object(SwfdecDecoder *s)
 int art_remove_object_2(SwfdecDecoder *s)
 {
 	int depth;
-	//SwfdecLayerVec *layervec;
-	SwfdecLayer *layer;
-	//int i;
+	SwfdecSpriteSeg *seg;
 
 	depth = get_u16(&s->b);
-	layer = swfdec_layer_get(s,depth);
+	seg = swfdec_sprite_get_seg(s->parse_sprite,depth,
+		s->parse_sprite->parse_frame);
 
-	layer->last_frame = s->parse_sprite->parse_frame;
+	seg->last_frame = s->parse_sprite->parse_frame;
 
 	return SWF_OK;
 }
@@ -160,7 +158,7 @@ void swfdec_render_clean(SwfdecRender *render, int frame)
 	for(g=g_list_first(render->layers); g; g=g_next){
 		g_next = g_list_next(g);
 		l = (SwfdecLayer *)g->data;
-		if(l->last_frame<=frame){
+		if(l->last_frame <= frame + 1){
 			render->layers = g_list_delete_link(render->layers,g);
 			swfdec_layer_free(l);
 		}
@@ -180,7 +178,7 @@ int art_show_frame(SwfdecDecoder *s)
 
 	swf_render_frame(s);
 
-	swfdec_render_clean(s->render, s->frame_number);
+	swfdec_render_clean(s->render, s->frame_number - 1);
 	
 	swfdec_sound_render(s);
 
@@ -194,13 +192,19 @@ void swf_render_frame(SwfdecDecoder *s)
 {
 	SwfdecSpriteSeg *seg;
 	SwfdecLayer *layer;
+	SwfdecLayer *oldlayer;
 	GList *g;
 	int frame;
 
 	SWF_DEBUG(0,"swf_render_frame\n");
 
+	s->drawrect.x0 = 0;
+	s->drawrect.x1 = 0;
+	s->drawrect.y0 = 0;
+	s->drawrect.y1 = 0;
 	if(!s->buffer){
 		s->buffer = art_new (art_u8, s->stride*s->height);
+		swf_invalidate_irect(s,&s->irect);
 	}
 	if(!s->tmp_scanline){
 		if(s->subpixel){
@@ -208,17 +212,6 @@ void swf_render_frame(SwfdecDecoder *s)
 		}else{
 			s->tmp_scanline = malloc(s->width);
 		}
-	}
-
-	s->drawrect = s->irect;
-	switch(s->colorspace){
-	case SWF_COLORSPACE_RGB565:
-		art_rgb565_fillrect(s->buffer,s->stride,s->bg_color,&s->drawrect);
-		break;
-	case SWF_COLORSPACE_RGB888:
-	default:
-		art_rgb_fillrect(s->buffer,s->stride,s->bg_color,&s->drawrect);
-		break;
 	}
 
 	frame = s->frame_number;
@@ -231,16 +224,66 @@ void swf_render_frame(SwfdecDecoder *s)
 		if(seg->first_frame > frame)continue;
 		if(seg->last_frame <= frame)continue;
 
-		layer = swfdec_spriteseg_prerender(s,seg);
-		if(!layer)continue;
+		oldlayer = swfdec_render_get_layer(s->render, seg->depth, frame - 1);
 
-		swfdec_layer_render(s,layer);
+		SWF_DEBUG(0,"layer %d seg=%p oldlayer=%p\n",seg->depth, seg, oldlayer);
 
-		swfdec_render_add_layer(s->render, layer);
+		layer = swfdec_spriteseg_prerender(s,seg,oldlayer);
+		if(layer==NULL)continue;
+
+		layer->last_frame = frame + 1;
+		layer->first_frame = frame;
+		if(layer!=oldlayer){
+			swfdec_render_add_layer(s->render, layer);
+			if(oldlayer) oldlayer->last_frame = frame;
+		}else{
+			SWF_DEBUG(0,"cache hit\n");
+		}
+	}
+
+	for(g=g_list_last(s->render->layers); g; g=g_list_previous(g)){
+		layer = (SwfdecLayer *)g->data;
+		if(layer->seg->first_frame <= frame-1 &&
+		   layer->last_frame == frame){
+			SWF_DEBUG(0,"invalidating (%d < %d == %d) %d %d %d %d\n",
+				layer->seg->first_frame, frame, layer->last_frame,
+				layer->rect.x0,layer->rect.x1,
+				layer->rect.y0,layer->rect.y1);
+			swf_invalidate_irect(s,&layer->rect);
+		}
+		if(layer->first_frame == frame){
+			swf_invalidate_irect(s,&layer->rect);
+		}
+	}
+	
+	//art_irect_copy(&s->drawrect, &s->irect);
+	SWF_DEBUG(0,"inval rect %d %d %d %d\n",s->drawrect.x0,s->drawrect.x1,
+		s->drawrect.y0,s->drawrect.y1);
+
+	switch(s->colorspace){
+	case SWF_COLORSPACE_RGB565:
+		art_rgb565_fillrect(s->buffer,s->stride,s->bg_color,&s->drawrect);
+		break;
+	case SWF_COLORSPACE_RGB888:
+	default:
+		art_rgb_fillrect(s->buffer,s->stride,s->bg_color,&s->drawrect);
+		break;
+	}
+
+	for(g=g_list_last(s->render->layers); g; g=g_list_previous(g)){
+		layer = (SwfdecLayer *)g->data;
+		SWF_DEBUG(0,"rendering %d < %d <= %d\n",
+			layer->seg->first_frame, frame,
+			layer->last_frame);
+		if(layer->seg->first_frame <= frame &&
+		   frame < layer->last_frame){
+			swfdec_layer_render(s,layer);
+		}
 	}
 }
 
-SwfdecLayer *swfdec_spriteseg_prerender(SwfdecDecoder *s, SwfdecSpriteSeg *seg)
+SwfdecLayer *swfdec_spriteseg_prerender(SwfdecDecoder *s, SwfdecSpriteSeg *seg,
+	SwfdecLayer *oldlayer)
 {
 	SwfdecObject *object;
 
@@ -249,13 +292,13 @@ SwfdecLayer *swfdec_spriteseg_prerender(SwfdecDecoder *s, SwfdecSpriteSeg *seg)
 
 	switch(object->type){
 	case SWF_OBJECT_SHAPE:
-		return swfdec_shape_prerender(s,seg,object);
+		return swfdec_shape_prerender(s,seg,object,oldlayer);
 	case SWF_OBJECT_TEXT:
-		return swfdec_text_prerender(s,seg,object);
+		return swfdec_text_prerender(s,seg,object,oldlayer);
 	case SWF_OBJECT_BUTTON:
-		return swfdec_button_prerender(s,seg,object);
+		return swfdec_button_prerender(s,seg,object,oldlayer);
 	case SWF_OBJECT_SPRITE:
-		return swfdec_sprite_prerender(s,seg,object);
+		return swfdec_sprite_prerender(s,seg,object,oldlayer);
 	default:
 		SWF_DEBUG(4,"unknown object trype\n");
 	}

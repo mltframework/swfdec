@@ -9,6 +9,19 @@
  */
 static inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n);
 
+void art_irect_union_to_masked(ArtIRect *rect, ArtIRect *a, ArtIRect *mask)
+{
+	if(art_irect_empty(rect)){
+		art_irect_intersect(rect,a,mask);
+	}else{
+		ArtIRect tmp1, tmp2;
+
+		art_irect_copy(&tmp1, rect);
+		art_irect_intersect(&tmp2,a,mask);
+		art_irect_union(rect, &tmp1, &tmp2);
+	}
+}
+
 void art_affine_subpixel(double trans[6])
 {
 	double a[6],b[6];
@@ -489,7 +502,7 @@ void compose_rgb888_rgb888_ref(unsigned char *dest, unsigned char *a_src,
 }
 
 void
-art_rgb_svp_alpha_callback (void *callback_data, int y,
+art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
 			    int start, ArtSVPRenderAAStep *steps, int n_steps)
 {
   struct swf_svp_render_struct *data = callback_data;
@@ -540,30 +553,90 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
     }
 
   if(data->subpixel){
-    if(data->compose){
-      compose_rgb888_rgb888(data->buf, linebuf,
+    compose_rgb888_rgb888(data->buf, linebuf,
 	  data->compose + data->compose_y * data->compose_rowstride +
 	  	(data->x0/3)*4,
     	  (data->x1 - data->x0)/3);
-      data->compose_y++;
-    }else{
-      compose_const_rgb888_rgb888(data->buf, linebuf, data->color,
-	  (data->x1 - data->x0)/3);
-    }
+    data->compose_y++;
   }else{
-    if(data->compose){
-      compose_rgb888_u8(data->buf, linebuf,
+    compose_rgb888_u8(data->buf, linebuf,
 	  data->compose + data->compose_y * data->compose_rowstride + data->x0*4,
     	  data->x1 - data->x0);
-      data->compose_y++;
-    }else{
-      compose_const_rgb888_u8(data->buf, linebuf, data->color, data->x1 - data->x0);
-    }
+    data->compose_y++;
   }
 
   data->buf += data->rowstride;
 }
 
+void
+art_rgb_svp_alpha_callback (void *callback_data, int y,
+			    int start, ArtSVPRenderAAStep *steps, int n_steps)
+{
+  struct swf_svp_render_struct *data = callback_data;
+  art_u8 *linebuf;
+  int run_x0, run_x1;
+  art_u32 running_sum = start;
+  int x0, x1;
+  int k;
+  art_u8 r, g, b, a;
+  int alpha;
+
+  linebuf = data->buf;
+  x0 = data->x0;
+  x1 = data->x1;
+
+  r = SWF_COLOR_R(data->color);
+  g = SWF_COLOR_G(data->color);
+  b = SWF_COLOR_B(data->color);
+  a = SWF_COLOR_A(data->color);
+
+  if (n_steps > 0)
+    {
+      run_x1 = steps[0].x;
+      if (run_x1 > x0)
+	{
+	  alpha = (a * (running_sum>>8)) >> 16;
+	  if (alpha)
+	    art_rgb_run_alpha (linebuf,
+			       r, g, b, alpha,
+			       run_x1 - x0);
+	}
+
+      for (k = 0; k < n_steps - 1; k++)
+	{
+	  running_sum += steps[k].delta;
+	  run_x0 = run_x1;
+	  run_x1 = steps[k + 1].x;
+	  if (run_x1 > run_x0)
+	    {
+	      alpha = (a * (running_sum>>8)) >> 16;
+	      if (alpha)
+		art_rgb_run_alpha (linebuf + (run_x0 - x0) * 3,
+				   r, g, b, alpha,
+				   run_x1 - run_x0);
+	    }
+	}
+      running_sum += steps[k].delta;
+      if (x1 > run_x1)
+	{
+	  alpha = (a * (running_sum>>8)) >> 16;
+	  if (alpha)
+	    art_rgb_run_alpha (linebuf + (run_x1 - x0) * 3,
+			       r, g, b, alpha,
+			       x1 - run_x1);
+	}
+    }
+  else
+    {
+      alpha = (a * (running_sum>>8)) >> 16;
+      if (alpha)
+	art_rgb_run_alpha (linebuf,
+			   r, g, b, alpha,
+			   x1 - x0);
+    }
+
+  data->buf += data->rowstride;
+}
 
 static inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n)
 {

@@ -33,10 +33,11 @@ void swfdec_sprite_free(SwfdecSprite *sprite)
 }
 
 SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
-	SwfdecObject *object)
+	SwfdecObject *object, SwfdecLayer *oldlayer)
 {
 	SwfdecLayer *layer;
 	SwfdecLayer *child_layer;
+	SwfdecLayer *old_child_layer;
 	GList *g;
 	SwfdecDecoder *child_decoder = object->priv;
 	SwfdecSprite *sprite = child_decoder->main_sprite;
@@ -45,12 +46,27 @@ SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	int frame;
 
 	layer = swfdec_layer_new();
-	layer->id = seg->id;
+	layer->seg = seg;
 	art_affine_multiply(layer->transform, seg->transform, s->transform);
-	//swfdec_render_add_layer(s->render, layer);
 	
-	layer->frame_number = (s->frame_number - seg->first_frame) % sprite->n_frames;
+	if(oldlayer){
+		layer->frame_number = oldlayer->frame_number + 1;
+		if(layer->frame_number >= sprite->n_frames)layer->frame_number = 0;
+		SWF_DEBUG(0,"iterating old sprite (depth=%d) old_frame=%d frame=%d n_frames=%d\n",
+			seg->depth,
+			oldlayer->frame_number,
+			layer->frame_number,
+			sprite->n_frames);
+	}else{
+		SWF_DEBUG(0,"iterating new sprite (depth=%d)\n", seg->depth);
+		layer->frame_number = 0;
+	}
 	frame = layer->frame_number;
+
+	layer->rect.x0 = 0;
+	layer->rect.x1 = 0;
+	layer->rect.y0 = 0;
+	layer->rect.y1 = 0;
 
 	SWF_DEBUG(0,"swfdec_sprite_prerender %d frame %d\n",object->id,layer->frame_number);
 
@@ -65,8 +81,13 @@ SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		art_affine_multiply(tmpseg->transform,
 			child_seg->transform, layer->transform);
 
-		child_layer = swfdec_spriteseg_prerender(s, tmpseg);
+		old_child_layer = swfdec_render_get_sublayer(layer,
+			child_seg->depth,layer->frame_number - 1);
+
+		child_layer = swfdec_spriteseg_prerender(s, tmpseg, old_child_layer);
 		layer->sublayers = g_list_append(layer->sublayers, child_layer);
+
+		art_irect_union_to_masked(&layer->rect, &child_layer->rect, &s->irect);
 
 		swfdec_spriteseg_free(tmpseg);
 	}
@@ -161,6 +182,7 @@ int tag_func_define_sprite(SwfdecDecoder *s)
 
 	sprite->n_frames = get_u16(bits);
 	sprite->main_sprite->n_frames = sprite->n_frames;
+	SWF_DEBUG(0,"n_frames = %d\n",sprite->n_frames);
 
 	sprite->state = SWF_STATE_PARSETAG;
 	sprite->no_render = 1;

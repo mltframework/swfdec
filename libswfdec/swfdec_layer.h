@@ -20,14 +20,12 @@ struct swfdec_layer_vec_struct{
 };
 
 struct swfdec_layer_struct{
-	int depth;
-	int id;
+	SwfdecSpriteSeg *seg;
 	int first_frame;
 	int last_frame;
+	ArtIRect rect;
 
 	int frame_number;
-
-	unsigned int prerendered : 1;
 
 	double transform[6];
 	double color_mult[4];
@@ -51,6 +49,10 @@ void swfdec_render_del_layer(SwfdecRender *s, SwfdecLayer *layer);
 void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
 void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec);
 void swfdec_layer_render(SwfdecDecoder *s, SwfdecLayer *layer);
+SwfdecLayer *swfdec_render_get_seg(SwfdecRender *render, SwfdecSpriteSeg *seg);
+SwfdecLayer *swfdec_render_get_layer(SwfdecRender *render, int layer, int frame);
+SwfdecLayer *swfdec_render_get_sublayer(SwfdecLayer *layer, int depth, int frame);
+
 
 #endif
 

@@ -230,7 +230,6 @@ int tag_func_define_sound(SwfdecDecoder *s)
 	case 2:
 		/* unknown */
 		len = get_u16(b);
-		printf("len = %d\n",len);
 
 		sound->orig_data = b->ptr;
 		sound->orig_len = s->tag_len - 9;

@@ -15,16 +15,22 @@ void swfdec_button_free(SwfdecObject *object)
 }
 
 SwfdecLayer *swfdec_button_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
-	SwfdecObject *object)
+	SwfdecObject *object, SwfdecLayer *oldlayer)
 {
 	SwfdecButton *button = object->priv;
 	SwfdecObject *obj;
 	SwfdecLayer *layer;
 	SwfdecSpriteSeg *tmpseg;
 
+	if(oldlayer && oldlayer->seg == seg)return oldlayer;
+
 	layer = swfdec_layer_new();
-	layer->id = seg->id;
-	layer->depth = seg->depth;
+	layer->seg = seg;
+
+	layer->rect.x0 = 0;
+	layer->rect.x1 = 0;
+	layer->rect.y0 = 0;
+	layer->rect.y1 = 0;
 
 	art_affine_multiply(layer->transform, seg->transform, s->transform);
 	if(button->state[0]){
@@ -36,11 +42,14 @@ SwfdecLayer *swfdec_button_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		art_affine_multiply(tmpseg->transform,
 			button->state[0]->transform, seg->transform);
 
-		child_layer = swfdec_spriteseg_prerender(s,tmpseg);
+		child_layer = swfdec_spriteseg_prerender(s,tmpseg,NULL);
 
 		if(child_layer){
 			layer->sublayers = g_list_append(layer->sublayers,
 				child_layer);
+
+			art_irect_union_to_masked(&layer->rect,
+				&child_layer->rect, &s->irect);
 		}
 		swfdec_spriteseg_free(tmpseg);
 	}

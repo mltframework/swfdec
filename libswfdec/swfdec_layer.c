@@ -80,9 +80,66 @@ SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth)
 
 	for(g=g_list_first(s->render->layers); g; g=g_list_next(g)){
 		l = (SwfdecLayer *)g->data;
-		if(l->depth == depth && l->first_frame <= s->frame_number-1
-		  && (!l->last_frame || l->last_frame > s->frame_number-1))
+		if(l->seg->depth == depth && l->seg->first_frame <= s->frame_number-1
+		  && (l->last_frame > s->frame_number-1))
 			return l;
+	}
+
+	return NULL;
+}
+
+SwfdecLayer *swfdec_render_get_layer(SwfdecRender *render, int depth, int frame)
+{
+	SwfdecLayer *l;
+	GList *g;
+
+	if(!render)return NULL;
+
+	for(g=g_list_first(render->layers); g; g=g_list_next(g)){
+		l = (SwfdecLayer *)g->data;
+#if 0
+		printf("compare %d==%d %d <= %d < %d\n",
+			l->seg->depth, depth,
+			l->seg->first_frame, frame, l->last_frame);
+#endif
+		if(l->seg->depth == depth && l->first_frame <= frame
+		   && frame < l->last_frame)
+			return l;
+	}
+
+	return NULL;
+}
+
+SwfdecLayer *swfdec_render_get_sublayer(SwfdecLayer *layer, int depth, int frame)
+{
+	SwfdecLayer *l;
+	GList *g;
+
+	if(!layer)return NULL;
+
+	for(g=g_list_first(layer->sublayers); g; g=g_list_next(g)){
+		l = (SwfdecLayer *)g->data;
+#if 0
+		printf("compare %d==%d %d <= %d < %d\n",
+			l->seg->depth, depth,
+			l->seg->first_frame, frame, l->last_frame);
+#endif
+		if(l->seg->depth == depth && l->first_frame <= frame
+		   && frame < l->last_frame)
+			return l;
+	}
+
+	return NULL;
+}
+
+SwfdecLayer *swfdec_render_get_seg(SwfdecRender *render, SwfdecSpriteSeg *seg)
+{
+	SwfdecLayer *l;
+	GList *g;
+
+	for(g=g_list_first(render->layers); g; g=g_list_next(g)){
+		l = (SwfdecLayer *)g->data;
+		if(l->seg == seg)return l;
 	}
 
 	return NULL;
@@ -95,7 +152,7 @@ void swfdec_render_add_layer(SwfdecRender *render, SwfdecLayer *lnew)
 
 	for(g=g_list_first(render->layers); g; g=g_list_next(g)){
 		l = (SwfdecLayer *)g->data;
-		if(l->depth < lnew->depth){
+		if(l->seg->depth < lnew->seg->depth){
 			render->layers = g_list_insert_before(render->layers,g,lnew);
 			return;
 		}
@@ -164,7 +221,8 @@ void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 	if(layervec->svp->n_segs > 0){
 		art_svp_render_aa(layervec->svp, rect.x0, rect.y0,
 			rect.x1, rect.y1,
-			s->callback, &cb_data);
+			layervec->compose ? s->compose_callback : s->callback,
+			&cb_data);
 	}
 }
 

@@ -310,7 +310,7 @@ int tag_func_define_text_2(SwfdecDecoder *s)
 
 
 SwfdecLayer *swfdec_text_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
-	SwfdecObject *object)
+	SwfdecObject *object, SwfdecLayer *oldlayer)
 {
 	int i,j;
 	SwfdecText *text;
@@ -321,9 +321,16 @@ SwfdecLayer *swfdec_text_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecLayer *layer;
 	GArray *array;
 
+	if(oldlayer && oldlayer->seg == seg)return oldlayer;
+
 	layer = swfdec_layer_new();
-	layer->id = seg->id;
+	layer->seg = seg;
 	art_affine_multiply(layer->transform,seg->transform,s->transform);
+
+	layer->rect.x0 = 0;
+	layer->rect.x1 = 0;
+	layer->rect.y0 = 0;
+	layer->rect.y1 = 0;
 
 	array = object->priv;
 	for(i=0;i<array->len;i++){
@@ -379,6 +386,7 @@ SwfdecLayer *swfdec_text_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 			vpath = art_vpath_cat(vpath0,vpath1);
 			art_vpath_bbox_irect(vpath, &layervec->rect);
 			layervec->svp = art_svp_from_vpath (vpath);
+			art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
 	
 			art_free(bpath0);
 			art_free(bpath1);

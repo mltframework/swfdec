@@ -49,6 +49,7 @@ struct swfdec_decoder_struct {
 	int stride;
 	int bytespp;
 	void (*callback)(void *,int,int,ArtSVPRenderAAStep *,int);
+	void (*compose_callback)(void *,int,int,ArtSVPRenderAAStep *,int);
 
 	double transform[6];
 

@@ -7,7 +7,7 @@ struct swfdec_button_struct{
 };
 
 SwfdecLayer *swfdec_button_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
-	SwfdecObject *object);
+	SwfdecObject *object, SwfdecLayer *layer);
 void swfdec_button_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *object);
 void swfdec_button_free(SwfdecObject *object);

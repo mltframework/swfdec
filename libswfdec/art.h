@@ -20,6 +20,7 @@ struct swf_svp_render_struct{
 	int subpixel;
 };
 
+void art_irect_union_to_masked(ArtIRect *rect, ArtIRect *a, ArtIRect *mask);
 int art_affine_inverted(double x[6]);
 void art_vpath_dump(FILE *out, ArtVpath *vpath);
 void art_bpath_dump(FILE *out, ArtBpath *vpath);
@@ -49,6 +50,8 @@ void art_rgb_render_callback(void *data, int y, int start,
 void art_rgb565_svp_alpha_callback (void *callback_data, int y,
 	int start, ArtSVPRenderAAStep *steps, int n_steps);
 void art_rgb_svp_alpha_callback (void *callback_data, int y,
+	int start, ArtSVPRenderAAStep *steps, int n_steps);
+void art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
 	int start, ArtSVPRenderAAStep *steps, int n_steps);
 void art_grey_svp_alpha_callback (void *callback_data, int y,
 	int start, ArtSVPRenderAAStep *steps, int n_steps);

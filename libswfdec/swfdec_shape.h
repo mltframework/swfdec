@@ -44,7 +44,7 @@ int tag_func_define_sprite(SwfdecDecoder *s);
 void dump_layers(SwfdecDecoder *s);
 
 SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
-	SwfdecObject *shape);
+	SwfdecObject *shape, SwfdecLayer *oldlayer);
 void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecObject *shape);
 

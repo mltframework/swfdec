@@ -45,7 +45,7 @@ SwfdecDecoder *swfdec_decoder_new(void)
 	s->main_sprite = swfdec_sprite_new();
 	s->render = swfdec_render_new();
 
-	s->flatness = 0.25;
+	s->flatness = 0.5;
 	//s->subpixel = TRUE;
 	s->subpixel = FALSE;
 

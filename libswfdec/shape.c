@@ -527,7 +527,7 @@ int art_define_shape_2(SwfdecDecoder *s)
 }
 
 SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
-	SwfdecObject *obj)
+	SwfdecObject *obj, SwfdecLayer *oldlayer)
 {
 	SwfdecLayer *layer;
 	SwfdecShape *shape = obj->priv;
@@ -536,9 +536,16 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	SwfdecShapeVec *shapevec;
 	SwfdecShapeVec *shapevec2;
 
+	if(oldlayer && oldlayer->seg == seg)return oldlayer;
+
 	layer = swfdec_layer_new();
-	layer->id = seg->id;
+	layer->seg = seg;
 	art_affine_multiply(layer->transform,seg->transform,s->transform);
+
+	layer->rect.x0 = 0;
+	layer->rect.x1 = 0;
+	layer->rect.y0 = 0;
+	layer->rect.y1 = 0;
 
 	g_array_set_size(layer->fills, shape->fills->len);
 	for(i=0;i<shape->fills->len;i++){
@@ -569,6 +576,7 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		vpath = art_vpath_cat(vpath0,vpath1);
 		art_vpath_bbox_irect(vpath, &layervec->rect);
 		layervec->svp = art_svp_from_vpath (vpath);
+		art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
 
 		art_free(bpath0);
 		art_free(bpath1);
@@ -613,6 +621,7 @@ SwfdecLayer *swfdec_shape_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		layervec->rect.y0 -= half_width;
 		layervec->rect.x1 += half_width;
 		layervec->rect.y1 += half_width;
+		art_irect_union_to_masked(&layer->rect, &layervec->rect, &s->irect);
 		layervec->svp = art_svp_vpath_stroke (vpath,
 			ART_PATH_STROKE_JOIN_MITER,
 			ART_PATH_STROKE_CAP_BUTT,

@@ -884,7 +884,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level = 0;
+int jpeg_decoder_verbose_level = -1;
 
 void jpeg_debug(int n, const char *format, ... )
 {

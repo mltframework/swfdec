@@ -7,6 +7,7 @@
 
 static void jpegdec(SwfdecImage *image, unsigned char *ptr, int len);
 static void merge_alpha(SwfdecImage *image, unsigned char *alpha);
+static void merge_opaque(SwfdecImage *image);
 static void swfdec_image_colormap_decode(SwfdecImage *image,
 	unsigned char *src, unsigned char *colormap, int colormap_len);
 
@@ -108,6 +109,8 @@ int tag_func_define_bits_jpeg(SwfdecDecoder *s)
 		&image->rowstride, &image->width, &image->height);
 	jpeg_rgb_decoder_free(dec);
 
+	merge_opaque(image);
+
 	bits->ptr += s->tag_len - 2;
 
 	SWF_DEBUG(0,"  width = %d\n", image->width);
@@ -131,6 +134,8 @@ int tag_func_define_bits_jpeg_2(SwfdecDecoder *s)
 	obj->type = SWF_OBJECT_IMAGE;
 	
 	jpegdec(image, bits->ptr, s->tag_len - 2);
+	merge_opaque(image);
+
 	bits->ptr += s->tag_len - 2;
 
 	SWF_DEBUG(0,"  width = %d\n", image->width);
@@ -194,6 +199,20 @@ static void merge_alpha(SwfdecImage *image, unsigned char *alpha)
 		p = image->image_data + y*image->rowstride;
 		for(x=0;x<image->width;x++){
 			p[3] = *alpha++;
+			p+=4;
+		}
+	}
+}
+
+static void merge_opaque(SwfdecImage *image)
+{
+	int x,y;
+	unsigned char *p;
+
+	for(y=0;y<image->height;y++){
+		p = image->image_data + y*image->rowstride;
+		for(x=0;x<image->width;x++){
+			p[3] = 255;
 			p+=4;
 		}
 	}

@@ -14,6 +14,8 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <sys/time.h>
+#include <time.h>
 
 gboolean debug = FALSE;
 
@@ -32,6 +34,9 @@ guint render_idle_id;
 unsigned long xid;
 int width = 100;
 int height = 100;
+
+int interval;
+struct timeval image_time;
 
 static void do_help(void);
 static void read_swf_file(char *fn);
@@ -325,6 +330,33 @@ static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
 	return TRUE;
 }
 
+static void tv_add_usec(struct timeval *a, unsigned int x)
+{
+	a->tv_usec += x;
+	while(a->tv_usec >= 1000000){
+		a->tv_sec++;
+		a->tv_usec-=1000000;
+	}
+}
+
+static int tv_compare(struct timeval *a,struct timeval *b)
+{
+	if(a->tv_sec > b->tv_sec)return 1;
+	if(a->tv_sec == b->tv_sec){
+		if(a->tv_usec > b->tv_usec)return 1;
+		if(a->tv_usec == b->tv_usec)return 0;
+	}
+	return -1;
+}
+
+static int tv_diff(struct timeval *a,struct timeval *b)
+{
+	int diff;
+	diff = (a->tv_sec - b->tv_sec)*1000000;
+	diff += (a->tv_usec - b->tv_usec);
+	return diff;
+}
+
 static gboolean render_idle(gpointer data)
 {
 	int ret;
@@ -335,14 +367,24 @@ static gboolean render_idle(gpointer data)
 		render_idle_id = 0;
 	}
 	if(ret==SWF_IMAGE){
+		struct timeval now;
+		gettimeofday(&now, NULL);
+		tv_add_usec(&image_time, interval);
+		if(tv_compare(&image_time, &now) > 0){
+			int x = tv_diff(&image_time, &now);
+			printf("sleeping for %d us\n",x);
+			usleep(x);
+		}
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
 			0, 0, s->width, s->height, 
 			GDK_RGB_DITHER_NONE,
 			s->buffer,
 			s->width*3);
+		gettimeofday(&image_time, NULL);
 	}
 	if(ret==SWF_CHANGE && !plugged){
+		interval = 1000000/s->rate;
 		gtk_window_resize(GTK_WINDOW(gtk_wind),
 			s->width, s->height);
 	}

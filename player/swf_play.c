@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+gboolean debug = FALSE;
+
 swf_state_t *s;
 
 GtkWidget *drawing_area;
@@ -39,6 +41,7 @@ static void steal_window(void);
 static void destroy_cb (GtkWidget *widget, gpointer data);
 static int expose_cb (GtkWidget *widget, GdkEventExpose *evt, gpointer data);
 static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data);
+static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data);
 static void embedded (GtkPlug *plug, gpointer data);
 
 /* GIOChan callbacks */
@@ -129,15 +132,19 @@ static void new_gtk_window(void)
 	gtk_container_add(GTK_CONTAINER(gtk_wind),
 		GTK_WIDGET(drawing_area));
 
-	gtk_signal_connect(GTK_OBJECT(drawing_area), "expose_event",
+	g_signal_connect(G_OBJECT(drawing_area), "expose_event",
 		GTK_SIGNAL_FUNC(expose_cb), NULL);
-	gtk_signal_connect (GTK_OBJECT (drawing_area), "configure_event",
+	g_signal_connect (G_OBJECT (drawing_area), "configure_event",
 		GTK_SIGNAL_FUNC(expose_cb), NULL);
 
-	gtk_signal_connect(GTK_OBJECT(gtk_wind), "key_press_event",
+	g_signal_connect (G_OBJECT(gtk_wind), "key_press_event",
 		GTK_SIGNAL_FUNC(key_press), NULL);
+	g_signal_connect (G_OBJECT(gtk_wind), "motion_notify_event",
+		GTK_SIGNAL_FUNC(motion_notify), NULL);
 
 	gdk_parent = gdk_window_foreign_new(xid);
+
+	gtk_widget_add_events(gtk_wind, GDK_POINTER_MOTION_MASK);
 
 	gtk_widget_show_all(gtk_wind);
 
@@ -150,7 +157,6 @@ static void new_gtk_window(void)
 #endif
 		XMapWindow(GDK_WINDOW_XDISPLAY(gtk_wind->window),
 			GDK_WINDOW_XID(gtk_wind->window));
-		gtk_widget_add_events(gtk_wind, GDK_ALL_EVENTS_MASK);
 	}
 }
 
@@ -237,7 +243,16 @@ static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data)
 {
 	int ret;
 
-	//fprintf(stderr,"key press\n");
+	if(debug)fprintf(stderr,"key press\n");
+	
+	return FALSE;
+}
+
+static int motion_notify (GtkWidget *widget, GdkEventMotion *evt, gpointer data)
+{
+	int ret;
+
+	if(debug)fprintf(stderr,"motion notify\n");
 	
 	return FALSE;
 }

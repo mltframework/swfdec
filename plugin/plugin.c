@@ -237,8 +237,20 @@ plugin_newp (NPMIMEType mime_type, NPP instance,
   }
 
   plugin->argc = argc;
-  plugin->argn = argn;
-  plugin->argv = argv;
+  plugin->argn = malloc (sizeof (void *) * argc);
+  plugin->argv = malloc (sizeof (void *) * argc);
+  for(i=0;i<argc;i++){
+    if (argn[i]) {
+      plugin->argn[i] = strdup(argn[i]);
+    } else {
+      plugin->argn[i] = strdup("");
+    }
+    if (argv[i]) {
+      plugin->argv[i] = strdup(argv[i]);
+    } else {
+      plugin->argv[i] = strdup("");
+    }
+  }
 
   plugin->run_thread = TRUE;
   pthread_create (&plugin->thread, NULL, plugin_thread, plugin);
@@ -251,6 +263,7 @@ plugin_destroy (NPP instance, NPSavedData ** save)
 {
   Plugin *plugin;
   int status;
+  int i;
 
   DEBUG ("plugin_destroy instance=%p", instance);
 
@@ -277,6 +290,13 @@ plugin_destroy (NPP instance, NPSavedData ** save)
   }
   plugin->run_thread = FALSE;
   pthread_join (plugin->thread, NULL);
+
+  for (i=0;i<plugin->argc;i++){
+    free (plugin->argn[i]);
+    free (plugin->argv[i]);
+  }
+  free(plugin->argn);
+  free(plugin->argv);
 
   mozilla_funcs.memfree (instance->pdata);
   instance->pdata = NULL;
@@ -580,7 +600,7 @@ packet_write (int fd, int code, int len, void *data)
 
 void DEBUG (const char *format, ...)
 {
-#if 1
+#if 0
   va_list varargs;
   char s[100];
 

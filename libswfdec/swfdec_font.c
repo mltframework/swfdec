@@ -155,7 +155,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   bold = swfdec_bits_getbit (bits);
 
   langcode = swfdec_bits_get_u8 (bits);
-  SWFDEC_ERROR("langcode %d", langcode);
+  SWFDEC_DEBUG("langcode %d", langcode);
 
   font_name_len = swfdec_bits_get_u8 (bits);
   //font_name = 

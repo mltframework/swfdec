@@ -276,7 +276,7 @@ gst_appsrc_loop (GstElement *element)
           tag = g_strdup (data);
           value = g_strdup (data + strlen (tag) + 1);
 
-          GST_ERROR ("%s=%s", tag, value);
+          GST_DEBUG ("%s=%s", tag, value);
 
           if (strcmp(tag, "src") == 0) {
             if (appsrc->source_url) g_free(appsrc->source_url);

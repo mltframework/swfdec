@@ -666,7 +666,7 @@ gst_swfdec_get_property (GObject * object, guint prop_id, GValue * value,
 void
 art_warn (const char *fmt, ...)
 {
-  GST_ERROR ("caught art_warn");
+  GST_LOG ("caught art_warn");
 }
 
 static gboolean

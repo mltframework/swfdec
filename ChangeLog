@@ -1,5 +1,15 @@
 2005-03-24  David Schleef  <ds@schleef.org>
 
+	* libswfdec/swfdec_font.c: (tag_func_define_font_2): downgrade
+	a SWFDEC_ERROR()
+	* plugin/gstappsrc.c: (gst_appsrc_loop): quiet a GST_ERROR
+	* plugin/gstswfdec.c: (art_warn): quiet a GST_ERROR
+	* plugin/plugin.c: (plugin_newp), (plugin_destroy): Apparently
+	Mozilla sends NULLs instead of strings occasionally.  Account
+	for this.  Turn off debugging (again).
+
+2005-03-24  David Schleef  <ds@schleef.org>
+
 	* Makefile.am: Re-add m4 directory
 	* configure.ac: Use a real macro to generate stdint.h
 	* libswfdec/actions.c: (pc_is_valid), (action_jump), (action_if),

@@ -3,7 +3,7 @@
 #define _MPGLIB_INTERNAL_H_
 
 #include <mpglib.h>
-#include "config.h"
+#include "mpglib_config.h"
 
 #include <glib.h>
 

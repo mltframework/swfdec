@@ -6,6 +6,7 @@
 #include <zlib.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <liboil/liboil.h>
 #ifdef HAVE_LIBART
@@ -22,7 +23,28 @@ int swf_parse_header2 (SwfdecDecoder * s);
 void
 swfdec_init (void)
 {
+  static gboolean _inited = FALSE;
+  const char *s;
+
+  if (_inited) return;
+
+  _inited = TRUE;
+
   g_type_init ();
+
+  s = g_getenv ("SWFDEC_DEBUG");
+g_print("%p\n", s);
+  if (s && s[0]) {
+    char *end;
+    int level;
+
+g_print("%s\n", s);
+    level = strtoul (s, &end, 0);
+    if (end[0] == 0) {
+      swfdec_debug_set_level (level);
+    }
+  }
+
 }
 
 SwfdecDecoder *
@@ -30,6 +52,7 @@ swfdec_decoder_new (void)
 {
   SwfdecDecoder *s;
 
+  swfdec_init ();
   oil_init ();
 
   s = g_new0 (SwfdecDecoder, 1);

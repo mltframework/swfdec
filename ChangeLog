@@ -1,5 +1,10 @@
 2004-09-13  David Schleef  <ds@schleef.org>
 
+	* libswfdec/swf.c: (swfdec_init), (swfdec_decoder_new): Check
+	SWFDEC_DEBUG env var, and call init in decoder_new().
+
+2004-09-13  David Schleef  <ds@schleef.org>
+
 	* configure.ac: export GLIB_REQUIRES
 	* glib-compat/glib/gfileutils.c: (g_file_test),
 	(g_file_error_quark), (g_file_error_from_errno),

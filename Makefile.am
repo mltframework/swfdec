@@ -24,7 +24,7 @@ EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.sp
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = swfdec-@SWFDEC_MAJORMINOR@.pc
 
-EXTRA_CLEAN=swfdec.pc
+CLEANFILES = swfdec-$(SWFDEC_MAJORMINOR).pc
 
 swfdec-@SWFDEC_MAJORMINOR@.pc: swfdec.pc
 	cp swfdec.pc swfdec-@SWFDEC_MAJORMINOR@.pc

@@ -1,5 +1,7 @@
 
-SUBDIRS = jpeg mpeg
+SUBDIRS = jpeg
+
+DIST_SUBDIRS = jpeg mpeg
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
@@ -29,12 +31,12 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la
 
 pkginclude_HEADERS = swfdec.h \
-	color.h proto.h swfdec_buffer.h \
+	color.h proto.h swfdec_buffer.h swfdec_debug.h \
 	swfdec_button.h swfdec_decoder.h swfdec_image.h \
 	swfdec_internal.h swfdec_layer.h swfdec_object.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_types.h tags.h swfdec_display.h \
 	swfdec_bits.h swfdec_rect.h swfdec_transform.h \
-	swfdec_render.h swfdec_actions.h \
+	swfdec_render.h swfdec_actions.h swfdec_font.h \
 	$(renderer_headers)
 

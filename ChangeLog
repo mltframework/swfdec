@@ -1,5 +1,11 @@
 2004-10-05  David Schleef  <ds@schleef.org>
 
+	* Makefile.am: distcheck fixes
+	* configure.ac:
+	* libswfdec/Makefile.am:
+
+2004-10-05  David Schleef  <ds@schleef.org>
+
 	* TODO: random notes
 	* libswfdec/actions.c: (get_actions),
 	(swfdec_action_script_execute): minor execution improvements

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <mpglib.h>
+#include <stdlib.h>
 
 char buf[16384];
 MpglibDecoder *mp;

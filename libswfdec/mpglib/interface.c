@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#include <string.h>
 
 #include <mpglib_internal.h>
 

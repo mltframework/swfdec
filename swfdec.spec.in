@@ -65,8 +65,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %files devel
 %defattr(-,root,root)
-%{_libdir}/swfdec.a
-%{_libdir}/swfdec.so
+%{_libdir}/libswfdec.a
+%{_libdir}/libswfdec.so
 %{_libdir}/pkgconfig/swfdec.pc
 %{_includedir}/swfdec/swf.h
 

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "jpeg_internal.h"
 
@@ -67,6 +68,7 @@ struct jpeg_marker_struct {
 	int tag;
 	int (*func)(JpegDecoder *dec, bits_t *bits);
 	char *name;
+	unsigned int flags;
 };
 static struct jpeg_marker_struct jpeg_markers[] = {
 	{ 0xc0, jpeg_decoder_sof_baseline_dct,
@@ -78,7 +80,7 @@ static struct jpeg_marker_struct jpeg_markers[] = {
 	{ 0xd9, jpeg_decoder_eoi,
 		"end of image" },
 	{ 0xda, jpeg_decoder_sos,
-		"start of scan" },
+		"start of scan", JPEG_ENTROPY_SEGMENT },
 	{ 0xdb, jpeg_decoder_define_quant_table,
 		"define quantization table" },
 	{ 0xe0, jpeg_decoder_application0,
@@ -103,15 +105,38 @@ static struct jpeg_marker_struct jpeg_markers[] = {
 	{ 0xce, NULL,		"differential progressive DCT" },
 	{ 0xcf, NULL,		"differential lossless (sequential)" },
 
-	{ 0xd0, NULL,		"restart0" },
+	{ 0xd0, jpeg_decoder_restart, "restart0", JPEG_ENTROPY_SEGMENT },
+	{ 0xd1, jpeg_decoder_restart, "restart1", JPEG_ENTROPY_SEGMENT },
+	{ 0xd2, jpeg_decoder_restart, "restart2", JPEG_ENTROPY_SEGMENT },
+	{ 0xd3, jpeg_decoder_restart, "restart3", JPEG_ENTROPY_SEGMENT },
+	{ 0xd4, jpeg_decoder_restart, "restart4", JPEG_ENTROPY_SEGMENT },
+	{ 0xd5, jpeg_decoder_restart, "restart5", JPEG_ENTROPY_SEGMENT },
+	{ 0xd6, jpeg_decoder_restart, "restart6", JPEG_ENTROPY_SEGMENT },
+	{ 0xd7, jpeg_decoder_restart, "restart7", JPEG_ENTROPY_SEGMENT },
 
 	{ 0xdc, NULL,		"define number of lines" },
-	{ 0xdd, NULL,		"define restart interval" },
+	{ 0xdd, jpeg_decoder_restart_interval, "define restart interval" },
 	{ 0xde, NULL,		"define hierarchical progression" },
 	{ 0xdf, NULL,		"expand reference component(s)" },
 
+	{ 0xe1, jpeg_decoder_application_misc, "application segment 1" },
+	{ 0xe2, jpeg_decoder_application_misc, "application segment 2" },
+	{ 0xe3, jpeg_decoder_application_misc, "application segment 3" },
+	{ 0xe4, jpeg_decoder_application_misc, "application segment 4" },
+	{ 0xe5, jpeg_decoder_application_misc, "application segment 5" },
+	{ 0xe6, jpeg_decoder_application_misc, "application segment 6" },
+	{ 0xe7, jpeg_decoder_application_misc, "application segment 7" },
+	{ 0xe8, jpeg_decoder_application_misc, "application segment 8" },
+	{ 0xe9, jpeg_decoder_application_misc, "application segment 9" },
+	{ 0xea, jpeg_decoder_application_misc, "application segment a" },
+	{ 0xeb, jpeg_decoder_application_misc, "application segment b" },
+	{ 0xec, jpeg_decoder_application_misc, "application segment c" },
+	{ 0xed, jpeg_decoder_application_misc, "application segment d" },
+	{ 0xee, jpeg_decoder_application_misc, "application segment e" },
+	{ 0xef, jpeg_decoder_application_misc, "application segment f" },
+
 	{ 0xf0, NULL,		"JPEG extension 0" },
-	{ 0xfe, NULL,		"comment" },
+	{ 0xfe, jpeg_decoder_comment, "comment" },
 	
 	{ 0x00, NULL,		"illegal" },
 };
@@ -401,12 +426,18 @@ int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits)
 static void dumpbits(bits_t *bits)
 {
 	int i;
+	int j;
 	unsigned char *p;
+	char s[40];
 
 	p = bits->ptr;
 	for(i=0;i<8;i++){
-		JPEG_DEBUG(0,"%02x %02x %02x %02x %02x %02x %02x %02x\n",
+		sprintf(s,"%02x %02x %02x %02x %02x %02x %02x %02x ........",
 			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+		for(j=0;j<8;j++){
+			s[j+24] = (isprint(p[j]))?p[j]:'.';
+		}
+		JPEG_DEBUG(0,"%s\n",s);
 		p += 8;
 	}
 
@@ -418,7 +449,7 @@ int jpeg_decoder_find_component_by_id(JpegDecoder *dec, int id)
 	for(i=0;i<dec->n_components;i++){
 		if(dec->components[i].id == id)return i;
 	}
-	JPEG_DEBUG(0,"undefined component id\n");
+	JPEG_DEBUG(0,"undefined component id %d\n",id);
 	return 0;
 }
 
@@ -543,6 +574,63 @@ int jpeg_decoder_application0(JpegDecoder *dec, bits_t *bits)
 	return length;
 }
 
+int jpeg_decoder_application_misc(JpegDecoder *dec, bits_t *bits)
+{
+	int length;
+
+	JPEG_DEBUG(0,"appX\n");
+
+	length = get_be_u16(bits);
+	JPEG_DEBUG(0,"length=%d\n",length);
+
+	JPEG_DEBUG(0,"JPEG application tag X ignored\n");
+	dumpbits(bits);
+
+	bits->ptr += length - 2;
+
+	return length;
+}
+
+int jpeg_decoder_comment(JpegDecoder *dec, bits_t *bits)
+{
+	int length;
+
+	JPEG_DEBUG(0,"comment\n");
+
+	length = get_be_u16(bits);
+	JPEG_DEBUG(0,"length=%d\n",length);
+
+	dumpbits(bits);
+
+	bits->ptr += length - 2;
+
+	return length;
+}
+
+int jpeg_decoder_restart_interval(JpegDecoder *dec, bits_t *bits)
+{
+	int length;
+
+	JPEG_DEBUG(0,"comment\n");
+
+	length = get_be_u16(bits);
+	JPEG_DEBUG(0,"length=%d\n",length);
+
+	dec->restart_interval = get_be_u16(bits);
+	JPEG_DEBUG(0,"restart_interval=%d\n",dec->restart_interval);
+
+	return length;
+}
+
+int jpeg_decoder_restart(JpegDecoder *dec, bits_t *bits)
+{
+	int length;
+
+	JPEG_DEBUG(0,"restart\n");
+
+	return length;
+}
+
 void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 {
 	bits_t b2, *bits2 = &b2;
@@ -555,6 +643,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	int go;
 	int x,y;
 	int dc[4];
+	int n;
 
 	len = 0;
 	j = 0;
@@ -586,7 +675,9 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	x = 0;
 	y = 0;
 	dc[0] = dc[1] = dc[2] = dc[3] = 128*8;
-	while(go){
+	n = dec->restart_interval;
+	if(n==0)n=G_MAXINT;
+	while(--n){
 	for(i=0;i<dec->scan_list_length;i++){
 		int dc_table_index;
 		int ac_table_index;
@@ -762,7 +853,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 			JPEG_DEBUG(0,"unhandled or illegal JPEG marker (0x%02x)\n",tag);
 			dumpbits(&b2);
 		}
-		if(tag==JPEG_MARKER_SOS){
+		if(jpeg_markers[i].flags & JPEG_ENTROPY_SEGMENT){
 			jpeg_decoder_decode_entropy_segment(dec,&b2);
 		}
 		syncbits(&b2);
@@ -773,7 +864,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level = 2;
+int jpeg_decoder_verbose_level = 1;
 
 void jpeg_debug(int n, const char *format, ... )
 {
@@ -781,6 +872,7 @@ void jpeg_debug(int n, const char *format, ... )
 
 	if(n>jpeg_decoder_verbose_level)return;
 
+	fflush(stdout);
 	fprintf(stderr,"JPEG_DEBUG: ");
 	va_start(args, format);
 	vfprintf(stderr,format, args);

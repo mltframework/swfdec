@@ -14,6 +14,8 @@
 
 typedef struct jpeg_scan_struct JpegScan;
 
+#define JPEG_ENTROPY_SEGMENT 0x0001
+#define JPEG_LENGTH 0x0002
 
 struct jpeg_decoder_struct {
 	int width;
@@ -24,6 +26,8 @@ struct jpeg_decoder_struct {
 
 	int width_blocks;
 	int height_blocks;
+
+	int restart_interval;
 
 	struct{
 		int id;
@@ -77,6 +81,10 @@ int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits);
 int jpeg_decoder_soi(JpegDecoder *dec, bits_t *bits);
 int jpeg_decoder_eoi(JpegDecoder *dec, bits_t *bits);
 int jpeg_decoder_application0(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_application_misc(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_comment(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_restart_interval(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_restart(JpegDecoder *dec, bits_t *bits);
 void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits);
 
 

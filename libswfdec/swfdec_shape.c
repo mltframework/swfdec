@@ -273,7 +273,7 @@ swf_shape_vec_new (void)
 
   shapevec = g_new0 (SwfdecShapeVec, 1);
 
-  shapevec->path = g_array_new (FALSE, TRUE, sizeof (ArtBpath));
+  shapevec->path = g_array_new (FALSE, TRUE, sizeof (SwfdecShapePoint));
 
   return shapevec;
 }
@@ -467,8 +467,7 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
   int linestyle = 0;
   int n_vec = 0;
   SwfdecShapeVec *shapevec;
-  ArtBpath pt;
-  int i;
+  SwfdecShapePoint pt;
 
   while (swfdec_bits_peekbits (bits, 6) != 0) {
     int type;
@@ -506,9 +505,10 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
 	swf_shape_add_styles (s, shape, bits);
 	SWFDEC_LOG("swf_shape_get_recs: new styles");
       }
-      pt.code = ART_MOVETO_OPEN;
-      pt.x3 = x * SWF_SCALE_FACTOR;
-      pt.y3 = y * SWF_SCALE_FACTOR;
+      pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
+      pt.control_y = SWFDEC_SHAPE_POINT_MOVETO;
+      pt.to_x = x;
+      pt.to_y = y;
     } else {
       /* edge record */
       int n_bits;
@@ -517,34 +517,30 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
       edge_flag = swfdec_bits_getbits (bits, 1);
 
       if (edge_flag == 0) {
-	double x0, y0;
-	double x1, y1;
-	double x2, y2;
+	int16_t x0, y0;
+	int16_t x1, y1;
+	int16_t x2, y2;
 
-	x0 = x * SWF_SCALE_FACTOR;
-	y0 = y * SWF_SCALE_FACTOR;
+	x0 = x;
+	y0 = y;
 	n_bits = swfdec_bits_getbits (bits, 4) + 2;
 
 	x += swfdec_bits_getsbits (bits, n_bits);
 	y += swfdec_bits_getsbits (bits, n_bits);
 	SWFDEC_LOG("   control %d,%d", x, y);
-	x1 = x * SWF_SCALE_FACTOR;
-	y1 = y * SWF_SCALE_FACTOR;
+	x1 = x;
+	y1 = y;
 
 	x += swfdec_bits_getsbits (bits, n_bits);
 	y += swfdec_bits_getsbits (bits, n_bits);
 	SWFDEC_LOG("   anchor %d,%d", x, y);
-	x2 = x * SWF_SCALE_FACTOR;
-	y2 = y * SWF_SCALE_FACTOR;
+	x2 = x;
+	y2 = y;
 
-#define WEIGHT (2.0/3.0)
-	pt.code = ART_CURVETO;
-	pt.x1 = WEIGHT * x1 + (1 - WEIGHT) * x0;
-	pt.y1 = WEIGHT * y1 + (1 - WEIGHT) * y0;
-	pt.x2 = WEIGHT * x1 + (1 - WEIGHT) * x2;
-	pt.y2 = WEIGHT * y1 + (1 - WEIGHT) * y2;
-	pt.x3 = x2;
-	pt.y3 = y2;
+        pt.control_x = x1;
+        pt.control_y = y1;
+        pt.to_x = x2;
+        pt.to_y = y2;
 	n_vec++;
       } else {
 	int general_line_flag;
@@ -565,9 +561,10 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
 	}
 	SWFDEC_LOG("   delta %d,%d", x, y);
 
-	pt.code = ART_LINETO;
-	pt.x3 = x * SWF_SCALE_FACTOR;
-	pt.y3 = y * SWF_SCALE_FACTOR;
+        pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
+        pt.control_y = SWFDEC_SHAPE_POINT_LINETO;
+        pt.to_x = x;
+        pt.to_y = y;
       }
     }
     if (fill0style) {
@@ -587,20 +584,6 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
 
   swfdec_bits_getbits (bits, 6);
   swfdec_bits_syncbits (bits);
-
-  pt.code = ART_END;
-  for (i = 0; i < shape->fills->len; i++) {
-    shapevec = g_ptr_array_index (shape->fills, i);
-    g_array_append_val (shapevec->path, pt);
-
-    shapevec = g_ptr_array_index (shape->fills2, i);
-    g_array_append_val (shapevec->path, pt);
-  }
-  for (i = 0; i < shape->lines->len; i++) {
-
-    shapevec = g_ptr_array_index (shape->lines, i);
-    g_array_append_val (shapevec->path, pt);
-  }
 }
 
 int
@@ -742,12 +725,8 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     art_affine_copy (trans, layer->transform);
 
-    bpath0 =
-	art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,
-	    0), trans);
-    bpath1 =
-	art_bpath_affine_transform (&g_array_index (shapevec2->path, ArtBpath,
-	    0), trans);
+    bpath0 = swfdec_art_bpath_from_points (shapevec->path, trans);
+    bpath1 = swfdec_art_bpath_from_points (shapevec2->path, trans);
     vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
     vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
     vpath1 = art_vpath_reverse_free (vpath1);
@@ -788,9 +767,7 @@ swfdec_shape_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     art_affine_copy (trans, layer->transform);
 
-    bpath =
-	art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,
-	    0), trans);
+    bpath = swfdec_art_bpath_from_points (shapevec->path, trans);
     vpath = art_bez_path_to_vec (bpath, s->flatness);
     art_vpath_bbox_irect (vpath, &layervec->rect);
 

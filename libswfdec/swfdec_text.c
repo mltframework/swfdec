@@ -233,12 +233,8 @@ swfdec_text_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     layervec->color = transform_color (glyph->color,
         seg->color_mult, seg->color_add);
 
-    bpath0 =
-        art_bpath_affine_transform (&g_array_index (shapevec->path, ArtBpath,
-            0), trans);
-    bpath1 =
-        art_bpath_affine_transform (&g_array_index (shapevec2->path, ArtBpath,
-            0), trans);
+    bpath0 = swfdec_art_bpath_from_points (shapevec->path, trans);
+    bpath1 = swfdec_art_bpath_from_points (shapevec2->path, trans);
     vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
     vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
     vpath1 = art_vpath_reverse_free (vpath1);

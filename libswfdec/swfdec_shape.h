@@ -12,12 +12,24 @@ G_BEGIN_DECLS
 
 //typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeClass SwfdecShapeClass;
+typedef struct _SwfdecShapePoint SwfdecShapePoint;
 
 #define SWFDEC_TYPE_SHAPE                    (swfdec_shape_get_type()) 
 #define SWFDEC_IS_SHAPE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SHAPE))
 #define SWFDEC_IS_SHAPE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SHAPE))
 #define SWFDEC_SHAPE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SHAPE, SwfdecShape))
 #define SWFDEC_SHAPE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SHAPE, SwfdecShapeClass))
+
+#define SWFDEC_SHAPE_POINT_SPECIAL (-0x8000)
+#define SWFDEC_SHAPE_POINT_MOVETO 0
+#define SWFDEC_SHAPE_POINT_LINETO 1
+
+struct _SwfdecShapePoint {
+  gint16 control_x;
+  gint16 control_y;
+  gint16 to_x;
+  gint16 to_y;
+};
 
 struct _SwfdecShapeVec
 {

@@ -700,3 +700,47 @@ art_grey_svp_alpha_callback (void *callback_data, int y,
 
   data->buf += data->rowstride;
 }
+
+#define WEIGHT (2.0/3.0)
+
+ArtBpath *
+swfdec_art_bpath_from_points (GArray *array, const double trans[6])
+{
+  int i;
+  ArtBpath *bpath;
+  ArtBpath *bpath2;
+  SwfdecShapePoint *points = (SwfdecShapePoint *)array->data;
+
+  bpath = g_malloc (sizeof(ArtBpath) * (array->len + 1));
+  for(i=0;i<array->len;i++) {
+    if (points[i].control_x == SWFDEC_SHAPE_POINT_SPECIAL) {
+      if (points[i].control_y == SWFDEC_SHAPE_POINT_MOVETO) {
+        bpath[i].code = ART_MOVETO_OPEN;
+      } else {
+        bpath[i].code = ART_LINETO;
+      }
+      bpath[i].x3 = points[i].to_x * SWF_SCALE_FACTOR;
+      bpath[i].y3 = points[i].to_y * SWF_SCALE_FACTOR;
+    } else {
+      double x,y;
+
+      bpath[i].code = ART_CURVETO;
+      x = points[i].control_x * SWF_SCALE_FACTOR;
+      y = points[i].control_y * SWF_SCALE_FACTOR;
+      bpath[i].x3 = points[i].to_x * SWF_SCALE_FACTOR;
+      bpath[i].y3 = points[i].to_y * SWF_SCALE_FACTOR;
+      bpath[i].x1 = WEIGHT * x + (1-WEIGHT) * bpath[i-1].x3;
+      bpath[i].y1 = WEIGHT * y + (1-WEIGHT) * bpath[i-1].y3;
+      bpath[i].x2 = WEIGHT * x + (1-WEIGHT) * bpath[i].x3;
+      bpath[i].y2 = WEIGHT * y + (1-WEIGHT) * bpath[i].y3;
+    }
+  }
+
+  bpath[i].code = ART_END;
+
+  bpath2 = art_bpath_affine_transform (bpath, trans);
+  g_free (bpath);
+
+  return bpath2;
+}
+

@@ -1,3 +1,13 @@
+2004-08-05  David Schleef  <ds@schleef.org>
+
+	Store shape points as shorts, not doubles. (Saves 85% memory.)
+	* libswfdec/art.c: (swfdec_art_bpath_from_points):
+	* libswfdec/art.h:
+	* libswfdec/swfdec_shape.c: (swf_shape_vec_new),
+	(swf_shape_get_recs), (swfdec_shape_prerender):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_text.c: (swfdec_text_prerender):
+
 2004-08-04  David Schleef  <ds@schleef.org>
 
 	convert jpeg to liboil

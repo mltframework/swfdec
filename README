@@ -26,8 +26,8 @@ Limitations:
    user interaction.  This means that it is not yet possible to use
    swfdec to navigate Flash-heavy web sites.
 
- - The player is quite limited, doesn't play sound, and doesn't play
-   frames at the correct rate.
+ - The player is quite limited, e.g., it doesn't play sound.  These
+   problems may or may not be fixed.
 
  - A number of object types are not handled at all.
 
@@ -39,7 +39,6 @@ Dependencies:
 
   libart_lgpl (>= 2.0)
   libgtk+ (>= 2.0)
-  mad (>= 0.14.2b)
   zlib (>= 1.1.4)
   mozilla-1.0.0 development headers
 

@@ -572,7 +572,7 @@ int art_remove_object_2(swf_state_t *s)
 	return SWF_OK;
 }
 
-static inline void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec)
+static void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec)
 {
 	ArtIRect rect;
 	struct swf_svp_render_struct cb_data;
@@ -580,7 +580,7 @@ static inline void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec
 	art_irect_intersect(&rect, &s->drawrect,
 		&layervec->rect);
 			
-	//if(art_irect_empty(&rect))return;
+	if(art_irect_empty(&rect))return;
 
 #if 0
 	art_rgb_fillrect(s->buffer,s->width*3,layervec->color,
@@ -591,6 +591,10 @@ static inline void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec
 	cb_data.rowstride = s->stride;
 	cb_data.x0 = rect.x0;
 	cb_data.x1 = rect.x1;
+
+	g_assert(rect.x1 > rect.x0);
+	g_assert(layervec->svp->n_segs >0);
+
 	art_svp_render_aa(layervec->svp, rect.x0, rect.y0,
 		rect.x1, rect.y1,
 		s->callback, &cb_data);

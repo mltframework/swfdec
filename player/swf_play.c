@@ -298,7 +298,8 @@ static void fill_audio(void *udata, Uint8 *stream, int len)
 
 	buffer = (SoundBuffer *)g->data;
 	n = MIN(buffer->len - buffer->offset,len);
-	SDL_MixAudio(stream, buffer->data, n, SDL_MIX_MAXVOLUME);
+	SDL_MixAudio(stream, buffer->data + buffer->offset, n,
+		SDL_MIX_MAXVOLUME);
 
 	buffer->offset += n;
 	if(buffer->offset >= buffer->len){

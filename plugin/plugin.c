@@ -10,6 +10,7 @@
 #include <X11/Intrinsic.h>
 
 #define XP_UNIX 1
+#define MOZ_X11 1
 #include "npapi.h"
 #include "npupp.h"
 
@@ -240,7 +241,7 @@ static void plugin_stream_as_file(NPP instance, NPStream *stream,
 
 /* exported functions */
 
-NPError NP_GetValue(NPP instance, NPPVariable variable, void *value)
+NPError NP_GetValue(void *future, NPPVariable variable, void *value)
 {
     NPError err = NPERR_NO_ERROR;
 

@@ -285,10 +285,17 @@ printf("%d\n", sound_bytes);
           int ret;
           SDL_Surface *surface;
 
+#if G_BYTE_ORDER == 4321
+#define RED_MASK 0x0000ff00
+#define GREEN_MASK 0x00ff0000
+#define BLUE_MASK 0xff000000
+#define ALPHA_MASK 0x000000ff
+#else
 #define RED_MASK 0x00ff0000
 #define GREEN_MASK 0x0000ff00
 #define BLUE_MASK 0x000000ff
 #define ALPHA_MASK 0xff000000
+#endif
           surface = SDL_CreateRGBSurfaceFrom (video_buffer->data, width,
               height, 32, width * 4,
               RED_MASK, GREEN_MASK, BLUE_MASK, ALPHA_MASK);

@@ -1,3 +1,7 @@
+2004-10-26  David Schleef  <ds@schleef.org>
+
+	* player/swf_play.c: (render_idle_audio): endianness fixes
+
 2004-10-08  David Schleef  <ds@schleef.org>
 
 	* Makefile.am: player no longer depends on glib

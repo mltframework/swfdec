@@ -1,5 +1,9 @@
 2005-03-24  David Schleef  <ds@schleef.org>
 
+	* configure.ac: version bump
+
+2005-03-24  David Schleef  <ds@schleef.org>
+
 	* plugin/gstappsrc.c: (gst_appsrc_class_init), (gst_appsrc_init),
 	(gst_appsrc_get_property), (gst_appsrc_loop): Add source_url
 	property, for relaying metadata from Mozilla

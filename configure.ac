@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.3.4)
+AC_INIT(swfdec,0.3.4.1)
 
 nano=$(echo $VERSION | sed 's/[0-9]\.[0-9]\.[0-9]\.*//')
 if test x"$nano" = x1 ; then

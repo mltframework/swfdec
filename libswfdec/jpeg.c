@@ -5,6 +5,9 @@
 #include "jpeg_rgb_decoder.h"
 
 static void jpegdec(SwfdecImage *image, unsigned char *ptr, int len);
+static void merge_alpha(SwfdecImage *image, unsigned char *alpha);
+static void swfdec_image_colormap_decode(SwfdecImage *image,
+	unsigned char *src, unsigned char *colormap, int colormap_len);
 
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
 {
@@ -158,19 +161,37 @@ int tag_func_define_bits_jpeg_3(SwfdecDecoder *s)
 	ptr = lossless(bits->ptr, endptr - bits->ptr, &len);
 	bits->ptr = endptr;
 
-	/* FIXME */
-	SWF_DEBUG(4,"tag_func_define_bits_jpeg_3 incomplete\n");
+	g_assert(len == image->width*image->height);
+
+	merge_alpha(image, ptr);
+
+	free(ptr);
 
 	return SWF_OK;
 }
 
-int tag_func_define_bits_lossless(SwfdecDecoder *s)
+static void merge_alpha(SwfdecImage *image, unsigned char *alpha)
+{
+	int x,y;
+	unsigned char *p;
+
+	for(y=0;y<image->height;y++){
+		p = image->image_data + y*image->rowstride;
+		for(x=0;x<image->width;x++){
+			p[4] = alpha[0];
+			p+=4;
+			alpha++;
+		}
+	}
+}
+
+static int define_bits_lossless(SwfdecDecoder *s, int have_alpha)
 {
 	bits_t *bits = &s->b;
 	int id;
 	int format;
 	int color_table_size;
-	void *ptr;
+	unsigned char *ptr;
 	int len;
 	unsigned char *endptr = bits->ptr + s->tag_len;
 	SwfdecObject *obj;
@@ -206,55 +227,35 @@ int tag_func_define_bits_lossless(SwfdecDecoder *s)
 	//printf("len=%d h*w=%d\n",len,width*height);
 
 	if(format==3){	
-		unsigned char *ctab = ptr;
-		unsigned char *p = ptr + color_table_size * 3;
-		int c;
+		unsigned char *color_table;
+		unsigned char *indexed_data;
 		int i;
-		int j;
-		unsigned char *idata;
-		int rowstride;
-		int irowstride;
-
-#if 0
-		for(i=0;i<color_table_size;i++){
-			printf("rgb %d %d %d\n",
-				ctab[i*3+0],ctab[i*3+1],ctab[i*3+2]);
-		}
-#endif
 
 		image->image_data = malloc(4*image->width*image->height);
- 		idata = image->image_data;
-
-		rowstride = image->width*4;
-		irowstride = (image->width+3)&(~0x3);
 
 		printf("length = %d w=%d h=%d w*h=%d\n",len,
 			image->width, image->height,
 			image->width*image->height);
-		for(j=0;j<image->height;j++){
-		p = ptr + color_table_size * 3 + irowstride * j;
-		for(i=0;i<image->width;i++){
-			c = *p;
-			if(c>=color_table_size){
-				if(c==255){
-					idata[0] = 255;
-					idata[1] = 0;
-					idata[2] = 0;
-					idata[3] = 255;
-				}else{
-					SWF_DEBUG(4,"colormap index out of range (%d>=%d)\n",
-						c,color_table_size);
-					c = 0;
-				}
-			}else{
-				idata[0] = ctab[c*3 + 0];
-				idata[1] = ctab[c*3 + 1];
-				idata[2] = ctab[c*3 + 2];
-				idata[3] = 0xff;
+
+		if(have_alpha){
+			color_table = ptr;
+			indexed_data = ptr + color_table_size * 4;
+			swfdec_image_colormap_decode(image, indexed_data,
+				color_table, color_table_size);
+		}else{
+			color_table = malloc(color_table_size * 4);
+
+			for(i=0;i<color_table_size;i++){
+				color_table[i*4 + 0] = ptr[i*3 + 0];
+				color_table[i*4 + 1] = ptr[i*3 + 1];
+				color_table[i*4 + 2] = ptr[i*3 + 2];
+				color_table[i*4 + 3] = 255;
 			}
-			p++;
-			idata += 4;
-		}
+			indexed_data = ptr + color_table_size * 3;
+			swfdec_image_colormap_decode(image, indexed_data,
+				color_table, color_table_size);
+
+			free(color_table);
 		}
 
 		free(ptr);
@@ -265,13 +266,14 @@ int tag_func_define_bits_lossless(SwfdecDecoder *s)
 		unsigned int c;
 		unsigned char *idata;
 
+		if(have_alpha){
+			SWF_DEBUG(4,"illegal\n");
+		}
+
 		image->image_data = malloc(4*image->width*image->height);
  		idata = image->image_data;
 
-		/* 16 bit packed */
-		/* FIXME assume this means RGB-555 */
-		printf("Warning: assumption about colorspace\n");
-
+		/* 15 bit packed */
 		for(j=0;j<image->height;j++){
 		for(i=0;i<image->width;i++){
 			c = p[0] | (p[1]<<8);
@@ -286,26 +288,36 @@ int tag_func_define_bits_lossless(SwfdecDecoder *s)
 		free(ptr);
 	}
 	if(format==5){
+		int i,j;
+
 		image->image_data = ptr;
+
+		if(!have_alpha){
+			/* image is stored in 0RGB format.  We use RGBA. */
+			for(j=0;j<image->height;j++){
+			for(i=0;i<image->width;i++){
+				ptr[0] = ptr[1];
+				ptr[1] = ptr[2];
+				ptr[2] = ptr[3];
+				ptr[3] = 255;
+				ptr+=4;
+			}}
+		}
 	}
 
 
 	return SWF_OK;
 }
 
-int tag_func_define_bits_lossless_2(SwfdecDecoder *s)
+int tag_func_define_bits_lossless(SwfdecDecoder *s)
 {
-	bits_t *bits = &s->b;
-	int id;
-
-	SWF_DEBUG(4,"tag_func_define_bits_lossless_2 not implemented\n");
-	id = get_u16(bits);
-	
-	tag_func_dumpbits(s);
-
-	return SWF_OK;
+	return define_bits_lossless(s,FALSE);
 }
 
+int tag_func_define_bits_lossless_2(SwfdecDecoder *s)
+{
+	return define_bits_lossless(s,TRUE);
+}
 
 
 int swfdec_image_render(SwfdecDecoder *s, SwfdecLayer *layer, SwfdecObject *obj)
@@ -329,5 +341,41 @@ static void jpegdec(SwfdecImage *image, unsigned char *data, int len)
 		&image->rowstride, &image->width, &image->height);
 	jpeg_rgb_decoder_free(dec);
 
+}
+
+static void swfdec_image_colormap_decode(SwfdecImage *image,
+	unsigned char *src, unsigned char *colormap, int colormap_len)
+{
+	int c;
+	int i;
+	int j;
+	int rowstride;
+	unsigned char *dest;
+
+	rowstride = (image->width+3)&(~0x3);
+
+	dest = image->image_data;
+
+	for(j=0;j<image->height;j++){
+	dest = src + rowstride * j;
+	for(i=0;i<image->width;i++){
+		c = *src;
+		if(c>=colormap_len){
+			fprintf(stderr,"colormap index out of range (%d>=%d)\n",
+				c,colormap_len);
+			dest[0] = 255;
+			dest[1] = 0;
+			dest[2] = 0;
+			dest[3] = 255;
+		}else{
+			dest[0] = colormap[c*3 + 0];
+			dest[1] = colormap[c*3 + 1];
+			dest[2] = colormap[c*3 + 2];
+			dest[3] = colormap[c*3 + 3];
+		}
+		src++;
+		dest += 4;
+	}
+	}
 }
 

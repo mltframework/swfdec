@@ -1,3 +1,10 @@
+2004-09-13  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Bump soname for liboil and swfdec
+	* libswfdec/art.c: (art_rgb_run_alpha_2): adjust for liboil API
+	* libswfdec/jpeg/jpeg.c: (jpeg_decoder_decode_entropy_segment): same
+	* libswfdec/swf.c: (swfdec_decoder_parse): ERROR->WARNING
+
 2004-09-01  David Schleef  <ds@schleef.org>
 
 	Make more compatibile with glib-compat.

@@ -186,7 +186,7 @@ art_rgb_run_alpha_2 (unsigned char *buf, unsigned char r,
     color[2] = r;
     color[3] = 0;
 
-    splat_u32 ((void *) buf, 4, (void *) color, n);
+    oil_splat_u32 ((void *) buf, 4, (void *) color, n);
     return;
   }
 #define APPLY_ALPHA(x,y,a) (x) = (((y)*(alpha)+(x)*(255-alpha))>>8)

@@ -177,7 +177,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	if (s->tag == 0) {
 	  s->state = SWF_STATE_EOF;
 
-          SWFDEC_ERROR ("decoded points %d\n", s->stats_n_points);
+          SWFDEC_WARNING ("decoded points %d", s->stats_n_points);
 	}
 
 	break;

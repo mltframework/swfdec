@@ -707,8 +707,8 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 		dequant8x8_s16(block2, block, dec->quant_table[quant_index]);
 		dec->dc[component_index] += block2[0];
 		block2[0] = dec->dc[component_index];
-		unzigzag8x8_s16(block, sizeof(short)*8, block2, sizeof(short)*8);
-		idct8x8_s16(block2, sizeof(short)*8, block, sizeof(short)*8);
+		oil_unzigzag8x8_s16(block, sizeof(short)*8, block2, sizeof(short)*8);
+		oil_idct8x8_s16(block2, sizeof(short)*8, block, sizeof(short)*8);
 
 		dump_block8x8_s16(block2);
 
@@ -718,7 +718,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 			dec->components[component_index].rowstride * y *
 				dec->components[component_index].v_oversample;
 
-		clipconv8x8_u8_s16(ptr,
+		oil_clipconv8x8_u8_s16(ptr,
 			dec->components[component_index].rowstride,
 			block2, sizeof(short)*8);
 	}

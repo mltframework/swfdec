@@ -1,5 +1,12 @@
 2004-08-26  David Schleef  <ds@schleef.org>
 
+	Add new files
+	* libswfdec/swfdec_buffer.c:
+	* libswfdec/swfdec_buffer.h:
+	* libswfdec/swfdec_render.h:
+
+2004-08-26  David Schleef  <ds@schleef.org>
+
 	Remove these
 	* libswfdec/jpeg/conv8x8_f64_s16.h:
 	* libswfdec/jpeg/idct8_f64.h:

@@ -61,7 +61,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %defattr(-,root,root)
 %doc AUTHORS COPYING NEWS README TODO 
 %{_bindir}/swf_play
-%{_libdir}/swfdec.so.*
+%{_libdir}/libswfdec.so.*
 
 %files devel
 %defattr(-,root,root)

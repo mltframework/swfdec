@@ -648,6 +648,9 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 		x = mat[0]*i + mat[2]*j + mat[4];
 		y = mat[1]*i + mat[3]*j + mat[5];
 
+		ix = x - floor(x/image->width)*image->width;
+		iy = y - floor(y/image->height)*image->height;
+#if 0
 		if(x<0)x=0;
 		if(x>image->width-1)x=image->width-1;
 		if(y<0)y=0;
@@ -655,6 +658,7 @@ static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
 
 		ix = x;
 		iy = y;
+#endif
 		dest[0] = image->image_data[ix*4 + iy*image->rowstride + 0];
 		dest[1] = image->image_data[ix*4 + iy*image->rowstride + 1];
 		dest[2] = image->image_data[ix*4 + iy*image->rowstride + 2];

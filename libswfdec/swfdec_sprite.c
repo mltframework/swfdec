@@ -99,6 +99,10 @@ int tag_func_define_sprite(SwfdecDecoder *s)
 	sprite->state = SWF_STATE_PARSETAG;
 	sprite->no_render = 1;
 
+	sprite->width = s->width;
+	sprite->height = s->height;
+	memcpy(sprite->transform, s->transform, sizeof(double)*6);
+
 	sprite->parse = *bits;
 
 	/* massive hack */

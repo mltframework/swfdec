@@ -1,5 +1,12 @@
 2004-11-04  David Schleef  <ds@schleef.org>
 
+	* Makefile.am: prep for release
+	* configure.ac:
+	* player/Makefile.am:
+	* plugin/Makefile.am:
+
+2004-11-04  David Schleef  <ds@schleef.org>
+
 	* README: add dependency on liboil
 	* player/swf_play.c: (main), (do_help), (new_window),
 	(sound_setup), (render_idle_audio), (fd_is_ready), (packet_get):

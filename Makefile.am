@@ -19,7 +19,7 @@ DIST_SUBDIRS= \
 	test
 
 EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.spec \
-	TODO m4
+	TODO m4/as-ac-expand.m4 m4/as-libtool.m4 m4/as-version.m4
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = swfdec-@SWFDEC_MAJORMINOR@.pc
@@ -28,10 +28,4 @@ CLEANFILES = swfdec-$(SWFDEC_MAJORMINOR).pc
 
 swfdec-@SWFDEC_MAJORMINOR@.pc: swfdec.pc
 	cp swfdec.pc swfdec-@SWFDEC_MAJORMINOR@.pc
-
-dist-hook:
-	cp swfdec.spec $(distdir)
-	mkdir $(distdir)/debian
-	-cp debian/* $(distdir)/debian
-	rm -rf `find $(distdir)/m4 -name CVS`
 

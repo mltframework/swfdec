@@ -1981,8 +1981,12 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
           {
             int i;
             real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
+#if 1
+	    memcpy(in0, in1, SSLIMIT * gr_info->maxb * sizeof(real));
+#else
             for(i=0;i<SSLIMIT*gr_info->maxb;i++)
               *in0++ = *in1++;
+#endif
           }
           break;
       }

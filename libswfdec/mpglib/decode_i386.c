@@ -19,28 +19,31 @@
 
 extern MpglibDecoder *gmp;
 
-#define clipconv_f32_s16 clipconv_f32_s16_i30_bits
+#define clipconv_f32_s16 clipconv_f32_s16_ref
 
 static inline void altmultsum16_f32_ref(float *dest, float *src1, float *src2);
 static inline void multsum_str_f32_ref(float *dest, float *src1, float *src2,
 	int sstr1, int sstr2, int n);
-
+static inline void memcpy2_str(void *dest, void *src, int dstr, int sstr, int n);
 
 int synth_1to1_mono(real *bandPtr,unsigned char *samples,int *pnt)
 {
   short samples_tmp[64];
   short *tmp1 = samples_tmp;
-  int i,ret;
+  int ret;
   int pnt1 = 0;
 
   ret = synth_1to1(bandPtr,0,(unsigned char *) samples_tmp,&pnt1);
   samples += *pnt;
 
+  memcpy2_str(samples, tmp1, 4, 4, 32);
+#if 0
   for(i=0;i<32;i++) {
     *( (short *) samples) = *tmp1;
     samples += 2;
     tmp1 += 2;
   }
+#endif
   *pnt += 64;
 
   return ret;
@@ -216,5 +219,16 @@ static inline void multsum_str_f32_ref(float *dest, float *src1, float *src2,
 	}
 
 	*dest = sum;
+}
+
+static inline void memcpy2_str(void *dest, void *src, int dstr, int sstr, int n)
+{
+	int i;
+
+	for(i=0;i<n;i++){
+		*((short *)dest) = *((short *)src);
+		dest += dstr;
+		src += sstr;
+	}
 }
 

@@ -13,7 +13,8 @@
 #include "npapi.h"
 #include "npupp.h"
 
-#define DEBUG(x) printf(x "\n")
+//#define DEBUG(x) printf(x "\n")
+#define DEBUG(x)
 
 typedef struct {
 	NPP instance;

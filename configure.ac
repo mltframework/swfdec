@@ -57,8 +57,18 @@ PKG_CHECK_MODULES(GTK, gtk+-2.0, HAVE_GTK=yes, HAVE_GTK=no)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 if test "$HAVE_GTK" = "no"; then
-  AC_MSG_ERROR([cannot find GTK+-2.0, which is required for build])
+  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
 fi
+AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
+
+AC_CHECK_PROG(HAVE_SDL, sdl-config, "yes", "no")
+if test "$HAVE_SDL" = "yes"; then
+  SDL_CFLAGS=`sdl-config --cflags`
+  SDL_LIBS=`sdl-config --libs`
+  AC_SUBST(SDL_CFLAGS)
+  AC_SUBST(SDL_LIBS)
+fi
+AM_CONDITIONAL(WITH_SDL,[test "$HAVE_SDL" = "yes"])
 
 PKG_CHECK_MODULES(LIBART, libart-2.0, HAVE_LIBART=yes, HAVE_LIBART=no)
 AC_SUBST(LIBART_LIBS)
@@ -123,11 +133,6 @@ AC_SUBST(X_CFLAGS)
 AC_SUBST(X_PRE_LIBS)
 AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
-
-SDL_CFLAGS=`sdl-config --cflags`
-SDL_LIBS=`sdl-config --libs`
-AC_SUBST(SDL_CFLAGS)
-AC_SUBST(SDL_LIBS)
 
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")

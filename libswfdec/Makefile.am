@@ -3,7 +3,7 @@ SUBDIRS = mpglib jpeg
 
 lib_LTLIBRARIES = libswfdec.la
 
-libswfdec_la_SOURCES = actions.c art.c color.c get.c jpeg.c \
+libswfdec_la_SOURCES = actions.c art.c color.c get.c swfdec_image.c \
 	render.c shape.c sound.c swf.c swfdec_object.c text.c \
 	swfdec_display.c swfdec_sprite.c swfdec_button.c swfdec_layer.c \
 	version_script

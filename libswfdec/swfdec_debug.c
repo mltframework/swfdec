@@ -10,8 +10,8 @@ static const char *swfdec_debug_level_names[] = {
   "LOG"
 };
 
-//static int swfdec_debug_level = SWFDEC_LEVEL_ERROR;
-static int swfdec_debug_level = SWFDEC_LEVEL_DEBUG;
+static int swfdec_debug_level = SWFDEC_LEVEL_ERROR;
+//static int swfdec_debug_level = SWFDEC_LEVEL_DEBUG;
 
 void
 swfdec_debug_log (int level, const char *file, const char *function,

@@ -116,7 +116,7 @@ lossless (void *zptr, int zlen, int *plen)
       break;
   }
   if (ret != Z_STREAM_END) {
-    fprintf (stderr, "lossless: ret == %d\n", ret);
+    SWFDEC_WARNING ("lossless: ret == %d", ret);
   }
 
   if (plen)
@@ -455,7 +455,7 @@ swfdec_image_colormap_decode (SwfdecImage * image,
   unsigned char *dest;
 
   rowstride = (image->width + 3) & ~0x3;
-  //fprintf(stderr,"rowstride %d\n",rowstride);
+  SWFDEC_DEBUG("rowstride %d",rowstride);
 
   dest = image->image_data;
 
@@ -463,7 +463,7 @@ swfdec_image_colormap_decode (SwfdecImage * image,
     for (i = 0; i < image->width; i++) {
       c = src[i];
       if (c >= colormap_len) {
-	fprintf (stderr, "colormap index out of range (%d>=%d) (%d,%d)\n",
+        SWFDEC_DEBUG ("colormap index out of range (%d>=%d) (%d,%d)",
 	    c, colormap_len, i, j);
 	dest[0] = 255;
 	dest[1] = 0;

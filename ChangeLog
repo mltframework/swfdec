@@ -1,3 +1,14 @@
+2004-08-03  David Schleef  <ds@schleef.org>
+
+	Fixes for bits_t change
+	* libswfdec/internal.h:
+	* libswfdec/swfdec_bits.c: (swfdec_bits_needbits):
+	* libswfdec/swfdec_debug.c:
+	* libswfdec/swfdec_image.c: (lossless),
+	(swfdec_image_colormap_decode):
+	* libswfdec/swfdec_internal.h:
+	* libswfdec/swfdec_sound.c: (swfdec_sound_mp3_decode_stream):
+
 2004-08-02  David Schleef  <ds@schleef.org>
 
 	Global change bits_t -> SwfdecBits.  Prepend swfdec_bits_ to

@@ -9,7 +9,7 @@
 
 
 int
-swfdec_bits_bits_needbits (SwfdecBits * b, int n_bytes)
+swfdec_bits_needbits (SwfdecBits * b, int n_bytes)
 {
   if (b->ptr == NULL)
     return 1;

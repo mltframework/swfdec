@@ -4,7 +4,6 @@
 
 #include "art.h"
 #include "color.h"
-#include "internal.h"
 #include "proto.h"
 #include "swfdec.h"
 #include "swfdec_bits.h"

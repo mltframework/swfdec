@@ -509,11 +509,11 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
   while (sound->tmpbuflen >= 0) {
     ret = mad_frame_decode (&sound->frame, &sound->stream);
     if (ret == -1 && sound->stream.error == MAD_ERROR_BUFLEN) {
-      //fprintf(stderr,"error buflen\n");
+      SWFDEC_WARNING("error buflen");
       break;
     }
     if (ret == -1) {
-      fprintf (stderr, "stream error 0x%04x\n", sound->stream.error);
+      SWFDEC_ERROR("stream error 0x%04x", sound->stream.error);
       return SWF_ERROR;
     }
 
@@ -588,7 +588,7 @@ swfdec_sound_mp3_decode_stream (SwfdecDecoder *s, SwfdecSound *sound)
       }
       swfdec_decoder_sound_buffer_append (s, buffer);
     } else {
-      fprintf (stderr, "sample rate not handled (%d)\n",
+      SWFDEC_ERROR ("sample rate not handled (%d)",
 	  sound->synth.pcm.samplerate);
     }
   }

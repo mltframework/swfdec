@@ -7,9 +7,14 @@
 
 
 static void convert(JpegRGBDecoder *rgbdec);
-static void upscale_y(JpegRGBDecoder *rgbdec, int i);
-static void upscale_x(JpegRGBDecoder *rgbdec, int i);
 
+static void imagescale2h_u8(unsigned char *dest, int d_rowstride,
+	unsigned char *src, int src_rowstride, int width, int height);
+static void imagescale2v_u8(unsigned char *dest, int d_rowstride,
+	unsigned char *src, int src_rowstride, int width, int height);
+static void imagescale2h2v_u8(unsigned char *dest, int d_rowstride,
+	unsigned char *src, int src_rowstride, int width, int height);
+static void scanlinescale2_u8(unsigned char *dest, unsigned char *src, int len);
 
 
 JpegRGBDecoder *jpeg_rgb_decoder_new(void)
@@ -21,6 +26,21 @@ JpegRGBDecoder *jpeg_rgb_decoder_new(void)
 	rgbdec->dec = jpeg_decoder_new();
 
 	return rgbdec;
+}
+
+void jpeg_rgb_decoder_free(JpegRGBDecoder *rgbdec)
+{
+	int i;
+
+	jpeg_decoder_free(rgbdec->dec);
+
+	for(i=0;i<3;i++){
+		if(rgbdec->component[i].alloc){
+			g_free(rgbdec->component[i].image);
+		}
+	}
+
+	g_free(rgbdec);
 }
 
 int jpeg_rgb_decoder_addbits(JpegRGBDecoder *dec, unsigned char *data,
@@ -48,11 +68,41 @@ int jpeg_rgb_decoder_get_image(JpegRGBDecoder *rgbdec,
 		jpeg_decoder_get_component_subsampling(rgbdec->dec, i+1,
 			&rgbdec->component[i].h_subsample,
 			&rgbdec->component[i].v_subsample);
-		if(rgbdec->component[i].h_subsample>1){
-			upscale_x(rgbdec,i);
-		}
-		if(rgbdec->component[i].v_subsample>1){
-			upscale_y(rgbdec,i);
+		rgbdec->component[i].alloc = 0;
+		if(rgbdec->component[i].h_subsample>1 ||
+		   rgbdec->component[i].v_subsample>1){
+			unsigned char *dest;
+			
+			dest = g_malloc(rgbdec->width * rgbdec->height);
+			if(rgbdec->component[i].v_subsample>1){
+				if(rgbdec->component[i].h_subsample>1){
+					imagescale2h2v_u8(dest,
+						rgbdec->width,
+						rgbdec->component[i].image,
+						rgbdec->component[i].rowstride,
+						rgbdec->width,
+						rgbdec->height);
+				}else{
+					imagescale2v_u8(dest,
+						rgbdec->width,
+						rgbdec->component[i].image,
+						rgbdec->component[i].rowstride,
+						rgbdec->width,
+						rgbdec->height);
+				}
+			}else{
+				imagescale2h_u8(dest,
+					rgbdec->width,
+					rgbdec->component[i].image,
+					rgbdec->component[i].rowstride,
+					rgbdec->width,
+					rgbdec->height);
+			}
+			rgbdec->component[i].alloc = 1;
+			rgbdec->component[i].image = dest;
+			rgbdec->component[i].rowstride = rgbdec->width;
+			rgbdec->component[i].h_subsample = 1;
+			rgbdec->component[i].v_subsample = 1;
 		}
 	}
 
@@ -68,6 +118,12 @@ int jpeg_rgb_decoder_get_image(JpegRGBDecoder *rgbdec,
 	return 0;
 }
 
+
+/* from the JFIF spec */
+#define YUV_TO_R(y,u,v) CLAMP((y) + 1.402*((v)-128),0,255)
+#define YUV_TO_G(y,u,v) CLAMP((y) - 0.34414*((u)-128) - 0.71414*((v)-128),0,255)
+#define YUV_TO_B(y,u,v) CLAMP((y) + 1.772*((u)-128),0,255)
+
 static void convert(JpegRGBDecoder *rgbdec)
 {
 	int x,y;
@@ -82,15 +138,9 @@ static void convert(JpegRGBDecoder *rgbdec)
 	vp = rgbdec->component[2].image;
 	for(y=0;y<rgbdec->height;y++){
 		for(x=0;x<rgbdec->width;x++){
-#if 1
-			rgbp[0] = CLAMP(yp[x] + 1.402*(vp[x]-128),0,255);
-			rgbp[1] = CLAMP(yp[x] - 0.34414*(up[x]-128) - 0.71414*(vp[x]-128),0,255);
-			rgbp[2] = CLAMP(yp[x] + 1.772*(up[x]-128),0,255);
-#else
-			rgbp[0] = up[x];
-			rgbp[1] = up[x];
-			rgbp[2] = up[x];
-#endif
+			rgbp[0] = YUV_TO_R(yp[x], up[x], vp[x]);
+			rgbp[1] = YUV_TO_G(yp[x], up[x], vp[x]);
+			rgbp[2] = YUV_TO_B(yp[x], up[x], vp[x]);
 			rgbp[3] = 0;
 			rgbp+=4;
 		}
@@ -100,58 +150,49 @@ static void convert(JpegRGBDecoder *rgbdec)
 	}
 }
 
-static void upscale_y(JpegRGBDecoder *rgbdec, int i)
+
+static void imagescale2h_u8(unsigned char *dest, int d_rowstride,
+	unsigned char *src, int s_rowstride, int width, int height)
 {
-	unsigned char *new_image;
-	int new_height;
-	int new_width;
-	int y;
+	int i;
 
-	new_height = rgbdec->height;
-	new_width = rgbdec->width;
-	new_image = g_malloc(new_height * new_width);
-
-	for(y=0;y<new_height/rgbdec->component[i].v_subsample; y++){
-		memcpy(new_image + new_width*y*2,
-			rgbdec->component[i].image +
-			rgbdec->component[i].rowstride * y,
-			new_width);
-		memcpy(new_image + new_width*(y*2 + 1),
-			rgbdec->component[i].image +
-			rgbdec->component[i].rowstride * y,
-			new_width);
+	for(i=0;i<height;i++){
+		scanlinescale2_u8(dest + i*d_rowstride, src + i*s_rowstride,
+			width);
 	}
 
-	rgbdec->component[i].image = new_image;
-	rgbdec->component[i].v_subsample = 1;
-	rgbdec->component[i].rowstride = new_width;
 }
 
-static void upscale_x(JpegRGBDecoder *rgbdec, int i)
+static void imagescale2v_u8(unsigned char *dest, int d_rowstride,
+	unsigned char *src, int s_rowstride, int width, int height)
 {
-	unsigned char *new_image;
-	int new_height;
-	int new_width;
-	int x,y;
-	unsigned char *inp, *outp;
+	int i;
 
-	new_height = rgbdec->height;
-	new_width = rgbdec->width;
-	new_image = g_malloc(new_height * new_width);
-
-	outp = new_image;
-	inp = rgbdec->component[i].image;
-	for(y=0;y<new_height/rgbdec->component[i].v_subsample; y++){
-		for(x=0;x<new_width/2;x++){
-			outp[x*2] = inp[x];
-			outp[x*2+1] = inp[x];
-		}
-		outp += new_width;
-		inp += rgbdec->component[i].rowstride;
+	for(i=0;i<height;i++){
+		memcpy(dest + i*d_rowstride, src + (i/2)*s_rowstride,
+			width);
 	}
 
-	rgbdec->component[i].image = new_image;
-	rgbdec->component[i].h_subsample = 1;
-	rgbdec->component[i].rowstride = new_width;
+}
+
+static void imagescale2h2v_u8(unsigned char *dest, int d_rowstride,
+	unsigned char *src, int s_rowstride, int width, int height)
+{
+	int i;
+
+	for(i=0;i<height;i++){
+		scanlinescale2_u8(dest + i*d_rowstride,
+			src + (i/2)*s_rowstride, width);
+	}
+
+}
+
+static void scanlinescale2_u8(unsigned char *dest, unsigned char *src, int len)
+{
+	int i;
+
+	for(i=0;i<len;i++){
+		dest[i] = src[i/2];
+	}
 }
 

@@ -44,7 +44,7 @@ XXX
 
 /* IMPL idct8x8_f64_ref */
 SL_idct8x8_f64_storage
-void idct8x8_f64(f64 *dest, f64 *src, int dstr, int sstr)
+void idct8x8_f64_ref(f64 *dest, f64 *src, int dstr, int sstr)
 {
 	static f64 idct_coeff[8][8];
 	static int idct_coeff_init = 0;
@@ -80,5 +80,25 @@ void idct8x8_f64(f64 *dest, f64 *src, int dstr, int sstr)
 	}
 }
 
+#define f64_addr(base,str,i) ((f64 *)((void *)(base) + (str)*(i)))
+
+#include <idct8_f64.h>
+/* IMPL idct8x8_f64_1d */
+SL_idct8x8_f64_storage
+void idct8x8_f64_1d(f64 *dest, f64 *src, int dstr, int sstr)
+{
+	int i;
+	f64 tmp[64];
+
+	for(i=0;i<8;i++){
+		idct8_f64_fast(tmp + i*8, f64_addr(src,sstr,i), sizeof(f64), sizeof(f64));
+	}
+	for(i=0;i<8;i++){
+		idct8_f64_fast(dest + i, tmp + i, dstr, 8*sizeof(f64));
+	}
+}
+
+
 #endif
+
 

@@ -10,11 +10,14 @@
 #include "jpeg_internal.h"
 
 #define unzigzag8x8_s16 unzigzag8x8_s16_ref
-#define idct8x8_s16 idct8x8_s16_ref
-#define idct8x8_f64 idct8x8_f64_ref
+#define idct8x8_s16 idct8x8_s16_fast
+#define idct8x8_f64 idct8x8_f64_1d
+#define idct8_f64 idct8x8_f64_fast
 #define conv8x8_f64_s16 conv8x8_f64_s16_ref
+
 #include "unzigzag8x8_s16.h"
 #include "idct8x8_s16.h"
+#include "conv8x8_f64_s16.h"
 
 
 #define JPEG_MARKER_STUFFED		0x00
@@ -172,8 +175,6 @@ static void dumpbits(bits_t *bits);
 static char *sprintbits(char *str, unsigned int bits, int n);
 static void dump_block8x8_s16(short *q);
 static void dequant8x8_s16(short *dest, short *src, short *mult);
-static void addconst8x8_s16(short *dest, short *src, int c);
-static void divconst8x8_s16(short *dest, short *src, int c);
 static void clipconv8x8_u8_s16(unsigned char *dest, int stride, short *src);
 static void huffman_table_load_std_jpeg(JpegDecoder *dec);
 
@@ -382,8 +383,14 @@ int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits)
 
 		hufftab = huffman_table_new_jpeg(bits);
 		if(tc){
+			if(dec->ac_huff_table[th]){
+				huffman_table_free(dec->ac_huff_table[th]);
+			}
 			dec->ac_huff_table[th] = hufftab;
 		}else{
+			if(dec->dc_huff_table[th]){
+				huffman_table_free(dec->dc_huff_table[th]);
+			}
 			dec->dc_huff_table[th] = hufftab;
 		}
 	}	
@@ -559,7 +566,9 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	}
 	JPEG_DEBUG(0,"entropy length = %d\n", len);
 
-	newptr = malloc(len);
+	/* we allocate extra space, since the getbits() code can
+	 * potentially read past the end of the buffer */
+	newptr = g_malloc(len+2);
 	for(i=0;i<len;i++){
 		newptr[j] = bits->ptr[i];
 		j++;
@@ -570,6 +579,8 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 	bits2->ptr = newptr;
 	bits2->idx = 0;
 	bits2->end = newptr + j;
+	newptr[j] = 0;
+	newptr[j+1] = 0;
 	
 	go = 1;
 	x = 0;
@@ -626,6 +637,7 @@ void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits)
 			go = 0;
 		}
 	}
+	g_free(newptr);
 }
 
 
@@ -639,6 +651,22 @@ JpegDecoder *jpeg_decoder_new(void)
 	huffman_table_load_std_jpeg(dec);
 
 	return dec;
+}
+
+void jpeg_decoder_free(JpegDecoder *dec)
+{
+	int i;
+
+	huffman_table_free(dec->dc_huff_table[0]);
+	huffman_table_free(dec->ac_huff_table[0]);
+	huffman_table_free(dec->dc_huff_table[1]);
+	huffman_table_free(dec->ac_huff_table[1]);
+
+	for(i=0;i<JPEG_N_COMPONENTS;i++){
+		if(dec->components[i].image)g_free(dec->components[i].image);
+	}
+
+	g_free(dec);
 }
 
 int jpeg_decoder_addbits(JpegDecoder *dec, unsigned char *data, unsigned int len)
@@ -745,7 +773,7 @@ int jpeg_decoder_parse(JpegDecoder *dec)
 }
 
 
-int jpeg_decoder_verbose_level = 1;
+int jpeg_decoder_verbose_level = 2;
 
 void jpeg_debug(int n, const char *format, ... )
 {

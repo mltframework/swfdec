@@ -44,6 +44,11 @@ HuffmanTable *huffman_table_new(void)
 	return table;
 }
 
+void huffman_table_free(HuffmanTable *table)
+{
+	g_array_free(table,TRUE);
+}
+
 void huffman_table_add(HuffmanTable *table, guint32 code, gint n_bits,
 	gint value)
 {

@@ -13,8 +13,7 @@
 void *getfile(char *path, int *n_bytes);
 static void dump_pnm(unsigned char *ptr, int rowstride, int width, int height);
 
-
-int main(int argc, char *argv[])
+int main2(int argc, char *argv[])
 {
 	unsigned char *data;
 	int len;
@@ -37,7 +36,17 @@ int main(int argc, char *argv[])
 
 	dump_pnm(ptr, rowstride, width, height);
 
+	free(ptr);
+
+	jpeg_rgb_decoder_free(dec);
+	free(data);
+
 	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+	return main2(argc,argv);
 }
 
 

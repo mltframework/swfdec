@@ -10,7 +10,7 @@
 
 
 //#define N_COMPONENTS 256
-#define N_COMPONENTS 4
+#define JPEG_N_COMPONENTS 4
 
 typedef struct jpeg_scan_struct JpegScan;
 
@@ -34,7 +34,7 @@ struct jpeg_decoder_struct {
 		int quant_table;
 		unsigned char *image;
 		int rowstride;
-	} components[N_COMPONENTS];
+	} components[JPEG_N_COMPONENTS];
 
 	short quant_table[4][64];
 	HuffmanTable *dc_huff_table[4];

@@ -24,6 +24,7 @@ struct jpeg_rgb_decoder_struct {
 		int rowstride;
 		int h_subsample;
 		int v_subsample;
+		int alloc;
 	}component[3];
 };
 

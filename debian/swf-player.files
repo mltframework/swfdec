@@ -1,2 +1,4 @@
 usr/bin/*
 usr/lib/mozilla/plugins/*.so
+usr/lib/gtk-2.0/*/loaders/*.so
+usr/lib/gtk-2.0/*/loaders/*.la

@@ -8,9 +8,9 @@ dnl *NOTE*: dnl this line before release, so release does static too
 dnl AM_DISABLE_STATIC
 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(swfdec, SWFDEC, 0, 1, 3, 1)
+AS_VERSION(swfdec, SWFDEC, 0, 2, 0, 1)
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
-AS_LIBTOOL(SWFDEC, 0, 0, 0, yes)
+AS_LIBTOOL(SWFDEC, 0, 1, 0, yes)
 
 AM_CONFIG_HEADER(config.h)
 

@@ -6,6 +6,6 @@ includedir=@includedir@/swfdec
 Name: swfdec
 Description: Decodes SWF (Flash) files
 Version: @VERSION@
-Requires: libart-2.0
+Requires: glib-2.0
 Libs: -lswfdec
 Cflags: -I${includedir}

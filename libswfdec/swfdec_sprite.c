@@ -163,7 +163,7 @@ void swfdec_sprite_render_slow(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 	for(g=g_list_first(parent_layer->sublayers); g; g=g_list_next(g)){
 		child_layer = (SwfdecLayer *)g->data;
 		if(!child_layer)continue;
-		swfdec_layer_render(s,child_layer);
+		swfdec_layer_render_slow(s,child_layer);
 	}
 }
 int tag_func_define_sprite(SwfdecDecoder *s)

@@ -9,6 +9,21 @@
  */
 static inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n);
 
+void art_affine_subpixel(double trans[6])
+{
+	double a[6],b[6];
+
+	a[0] = 3;
+	a[1] = 0;
+	a[2] = 0;
+	a[3] = 1;
+	a[4] = 0;
+	a[5] = 0;
+
+	art_affine_multiply(b,trans,a);
+	art_affine_copy(trans,b);
+}
+
 int art_affine_inverted(double x[6])
 {
 	double det;
@@ -435,6 +450,43 @@ void compose_rgb888_u8_ref(unsigned char *dest, unsigned char *a_src,
 	}
 }
 
+#define compose_const_rgb888_rgb888 compose_const_rgb888_rgb888_ref
+void compose_const_rgb888_rgb888_ref(unsigned char *dest, unsigned char *src,
+	unsigned int color, int n)
+{
+	int r,g,b;
+	int i;
+
+	r = SWF_COLOR_R(color);
+	g = SWF_COLOR_G(color);
+	b = SWF_COLOR_B(color);
+
+	for(i=0;i<n;i++){
+		dest[0] = COMPOSE(dest[0], r, src[0]);
+		dest[1] = COMPOSE(dest[1], g, src[1]);
+		dest[2] = COMPOSE(dest[2], b, src[2]);
+		dest+=3;
+		src+=3;
+	}
+}
+
+#define compose_rgb888_rgb888 compose_rgb888_rgb888_ref
+void compose_rgb888_rgb888_ref(unsigned char *dest, unsigned char *a_src,
+	unsigned char *src, int n)
+{
+	int i;
+	int a;
+
+	for(i=0;i<n;i++){
+		a = a_src[0];
+		dest[0] = COMPOSE(dest[0], src[0], a_src[0]);
+		dest[1] = COMPOSE(dest[1], src[1], a_src[1]);
+		dest[2] = COMPOSE(dest[2], src[2], a_src[2]);
+		dest+=3;
+		src+=4;
+		a_src+=3;
+	}
+}
 
 void
 art_rgb_svp_alpha_callback (void *callback_data, int y,
@@ -487,13 +539,26 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
       art_grey_run_alpha(linebuf, alpha, x1 - x0);
     }
 
-  if(data->compose){
-    compose_rgb888_u8(data->buf, linebuf,
-	data->compose + data->compose_y * data->compose_rowstride + data->x0*4,
-    	data->x1 - data->x0);
-    data->compose_y++;
+  if(data->subpixel){
+    if(data->compose){
+      compose_rgb888_rgb888(data->buf, linebuf,
+	  data->compose + data->compose_y * data->compose_rowstride +
+	  	(data->x0/3)*4,
+    	  (data->x1 - data->x0)/3);
+      data->compose_y++;
+    }else{
+      compose_const_rgb888_rgb888(data->buf, linebuf, data->color,
+	  (data->x1 - data->x0)/3);
+    }
   }else{
-    compose_const_rgb888_u8(data->buf, linebuf, data->color, data->x1 - data->x0);
+    if(data->compose){
+      compose_rgb888_u8(data->buf, linebuf,
+	  data->compose + data->compose_y * data->compose_rowstride + data->x0*4,
+    	  data->x1 - data->x0);
+      data->compose_y++;
+    }else{
+      compose_const_rgb888_u8(data->buf, linebuf, data->color, data->x1 - data->x0);
+    }
   }
 
   data->buf += data->rowstride;

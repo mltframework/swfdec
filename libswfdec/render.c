@@ -201,7 +201,11 @@ void swf_render_frame(SwfdecDecoder *s)
 		s->buffer = art_new (art_u8, s->stride*s->height);
 	}
 	if(!s->tmp_scanline){
-		s->tmp_scanline = malloc(s->width);
+		if(s->subpixel){
+			s->tmp_scanline = malloc(s->width * 3);
+		}else{
+			s->tmp_scanline = malloc(s->width);
+		}
 	}
 
 	s->drawrect.x0 = 0;
@@ -305,7 +309,11 @@ void swf_render_frame_slow(SwfdecDecoder *s)
 		s->buffer = art_new (art_u8, s->stride*s->height);
 	}
 	if(!s->tmp_scanline){
-		s->tmp_scanline = malloc(s->width);
+		if(s->subpixel){
+			s->tmp_scanline = malloc(s->width * 3);
+		}else{
+			s->tmp_scanline = malloc(s->width);
+		}
 	}
 
 	s->drawrect = s->irect;
@@ -332,7 +340,7 @@ void swf_render_frame_slow(SwfdecDecoder *s)
 		layer = swfdec_spriteseg_prerender(s,seg);
 		if(!layer)continue;
 
-		swfdec_layer_render(s,layer);
+		swfdec_layer_render_slow(s,layer);
 		swfdec_layer_free(layer);
 	}
 }
@@ -358,6 +366,28 @@ SwfdecLayer *swfdec_spriteseg_prerender(SwfdecDecoder *s, SwfdecSpriteSeg *seg)
 	}
 
 	return NULL;
+}
+
+void swfdec_layer_render_slow(SwfdecDecoder *s, SwfdecLayer *layer)
+{
+	int i;
+	SwfdecLayerVec *layervec;
+	SwfdecLayer *child_layer;
+	GList *g;
+
+	for(i=0;i<layer->fills->len;i++){
+		layervec = &g_array_index(layer->fills, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+	for(i=0;i<layer->lines->len;i++){
+		layervec = &g_array_index(layer->lines, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+	
+	for(g=g_list_first(layer->sublayers);g;g=g_list_next(g)){
+		child_layer = (SwfdecLayer *)g->data;
+		swfdec_layer_render_slow(s,child_layer);
+	}
 }
 
 void swfdec_layer_render(SwfdecDecoder *s, SwfdecLayer *layer)

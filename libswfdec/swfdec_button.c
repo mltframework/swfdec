@@ -25,10 +25,6 @@ void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 	SwfdecLayerVec *layervec;
 	int i;
 
-//printf("swfdec_button_prerender %d [%d,%d,%d]\n",object->id,
-//	object->button[0].id, object->button[1].id, object->button[2].id);
-	//art_affine_multiply(sprite->transform, layer->transform, s->transform);
-
 	art_affine_copy(save_trans, layer->transform);
 	art_affine_multiply(layer->transform, button->state[0]->transform, layer->transform);
 	if(button->state[0]->id){
@@ -38,8 +34,6 @@ void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 		switch(obj->type){
 		case SWF_OBJECT_SHAPE:
 			shape=obj->priv;
-//			if(layer->prerendered)return;
-//			layer->prerendered = 1;
 
 			swfdec_shape_prerender(s,layer,obj);
 			for(i=0;i<layer->fills->len;i++){
@@ -60,8 +54,6 @@ void swfdec_button_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 			swfdec_text_prerender(s,layer,obj);
 			break;
 		case SWF_OBJECT_SPRITE:
-			//printf("sprite\n");
-			//layer->type = 1;
 			layer->frame_number = s->frame_number - layer->first_frame;
 			swfdec_sprite_prerender(s,layer,obj);
 			break;
@@ -84,7 +76,6 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	layer = swfdec_layer_new();
 	layer->id = seg->id;
 	layer->depth = seg->depth;
-	//swfdec_render_add_layer(s->render, layer);
 
 	art_affine_multiply(layer->transform, seg->transform, s->transform);
 	if(button->state[0]){
@@ -97,27 +88,6 @@ SwfdecLayer *swfdec_button_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 			button->state[0]->transform, seg->transform);
 
 		child_layer = swfdec_spriteseg_prerender(s,tmpseg);
-#if 0
-		switch(obj->type){
-		case SWF_OBJECT_SHAPE:
-			child_layer = swfdec_shape_prerender_slow(s,tmpseg,obj);
-			break;
-		case SWF_OBJECT_TEXT:
-			child_layer = swfdec_text_prerender_slow(s,tmpseg,obj);
-			break;
-#if 0
-		case SWF_OBJECT_SPRITE:
-			//printf("sprite\n");
-			//layer->type = 1;
-			layer->frame_number = s->frame_number - layer->first_frame;
-			swfdec_sprite_prerender(s,layer,obj);
-			break;
-#endif
-		default:
-			SWF_DEBUG(4,"swfdec_button_prerender: object type not handled %d\n",obj->type);
-			break;
-		}
-#endif
 
 		if(child_layer){
 			layer->sublayers = g_list_append(layer->sublayers,

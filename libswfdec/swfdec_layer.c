@@ -178,21 +178,30 @@ void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 {
 	ArtIRect rect;
 	struct swf_svp_render_struct cb_data;
+	ArtIRect drawrect;
 
-	art_irect_intersect(&rect, &s->drawrect,
-		&layervec->rect);
+	if(s->subpixel){
+		drawrect.x0 = s->drawrect.x0 * 3;
+		drawrect.y0 = s->drawrect.y0;
+		drawrect.x1 = s->drawrect.x1 * 3;
+		drawrect.y1 = s->drawrect.y1;
+		art_irect_intersect(&rect, &drawrect, &layervec->rect);
+	}else{
+		art_irect_intersect(&rect, &s->drawrect, &layervec->rect);
+	}
 			
 	if(art_irect_empty(&rect))return;
 
-#if 0
-	art_rgb_fillrect(s->buffer,s->width*3,layervec->color,
-		&rect);
-#endif
-	cb_data.buf = s->buffer + rect.y0*s->stride + rect.x0*s->bytespp;
-	cb_data.color = layervec->color;
-	cb_data.rowstride = s->stride;
+	cb_data.subpixel = s->subpixel;
 	cb_data.x0 = rect.x0;
 	cb_data.x1 = rect.x1;
+	if(cb_data.subpixel){
+		cb_data.buf = s->buffer + rect.y0*s->stride + (rect.x0/3)*s->bytespp;
+	}else{
+		cb_data.buf = s->buffer + rect.y0*s->stride + rect.x0*s->bytespp;
+	}
+	cb_data.color = layervec->color;
+	cb_data.rowstride = s->stride;
 	cb_data.scanline = s->tmp_scanline;
 	cb_data.compose = layervec->compose;
 	cb_data.compose_rowstride = layervec->compose_rowstride;

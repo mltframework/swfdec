@@ -559,6 +559,7 @@ void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 		shapevec2 = g_ptr_array_index(shape->fills2,i);
 
 		art_affine_multiply(trans,layer->transform,s->transform);
+		if(s->subpixel)art_affine_subpixel(trans);
 
 		bpath0 = art_bpath_affine_transform(
 			&g_array_index(shapevec->path,ArtBpath,0),
@@ -604,6 +605,7 @@ void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 		shapevec = g_ptr_array_index(shape->lines,i);
 
 		art_affine_multiply(trans,layer->transform,s->transform);
+		if(s->subpixel) art_affine_subpixel(trans);
 
 		bpath = art_bpath_affine_transform(
 			&g_array_index(shapevec->path,ArtBpath,0),
@@ -651,17 +653,21 @@ SwfdecLayer *swfdec_shape_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 	for(i=0;i<shape->fills->len;i++){
 		ArtVpath *vpath,*vpath0,*vpath1;
 		ArtBpath *bpath0,*bpath1;
+		double trans[6];
 
 		layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 		shapevec = g_ptr_array_index(shape->fills,i);
 		shapevec2 = g_ptr_array_index(shape->fills2,i);
 
+		art_affine_copy(trans,layer->transform);
+		if(s->subpixel) art_affine_subpixel(trans);
+		
 		bpath0 = art_bpath_affine_transform(
 			&g_array_index(shapevec->path,ArtBpath,0),
-			layer->transform);
+			trans);
 		bpath1 = art_bpath_affine_transform(
 			&g_array_index(shapevec2->path,ArtBpath,0),
-			layer->transform);
+			trans);
 		vpath0 = art_bez_path_to_vec(bpath0,s->flatness);
 		vpath1 = art_bez_path_to_vec(bpath1,s->flatness);
 		if(art_affine_inverted(layer->transform)){
@@ -693,17 +699,22 @@ SwfdecLayer *swfdec_shape_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		ArtBpath *bpath;
 		double width;
 		int half_width;
+		double trans[6];
 
 		layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 		shapevec = g_ptr_array_index(shape->lines,i);
 
+		art_affine_copy(trans,layer->transform);
+		if(s->subpixel) art_affine_subpixel(trans);
+		
 		bpath = art_bpath_affine_transform(
 			&g_array_index(shapevec->path,ArtBpath,0),
-			layer->transform);
+			trans);
 		vpath = art_bez_path_to_vec(bpath,s->flatness);
 		art_vpath_bbox_irect(vpath, &layervec->rect);
 
-		width = shapevec->width*art_affine_expansion(layer->transform);
+		/* FIXME for subpixel */
+		width = shapevec->width*art_affine_expansion(trans);
 		if(width<1)width=1;
 
 		half_width = floor(width*0.5) + 1;

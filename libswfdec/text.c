@@ -347,6 +347,7 @@ void swfdec_text_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *obj
 			art_affine_multiply(trans,pos,object->trans);
 			art_affine_multiply(trans,trans,layer->transform);
 			art_affine_multiply(trans,trans,s->transform);
+			if(s->subpixel) art_affine_subpixel(trans);
 
 			layer->fills = g_array_set_size(layer->fills,layer->fills->len + 1);
 			layervec = &g_array_index(layer->fills,SwfdecLayerVec,layer->fills->len - 1);
@@ -426,6 +427,7 @@ SwfdecLayer *swfdec_text_prerender_slow(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 			pos[3] = text->height * SWF_TEXT_SCALE_FACTOR;
 			art_affine_multiply(glyph_trans,pos,object->trans);
 			art_affine_multiply(trans,glyph_trans,layer->transform);
+			if(s->subpixel) art_affine_subpixel(trans);
 
 			layer->fills = g_array_set_size(layer->fills,layer->fills->len + 1);
 			layervec = &g_array_index(layer->fills,SwfdecLayerVec,layer->fills->len - 1);

@@ -1,10 +1,10 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/libswfdec
+includedir=@includedir@/swfdec
 
-Name: libswfdec
-Description: Decodes SWF (flash) files
+Name: swfdec
+Description: Decodes SWF (Flash) files
 Version: @VERSION@
 Requires: libart-2.0
 Libs: -lswfdec

@@ -1,3 +1,62 @@
+/* template for a 1-d dct32
+ * Copyright (C) 2001,2002  David A. Schleef <ds@schleef.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/*
+Kernel: dct32_f32
+Description: dct32 f32
+
+XXX
+*/
+
+#ifndef _dct32_f32_h_
+#define _dct32_f32_h_
+
+#include <math.h>
+//#include <sl_types.h>
+#define f32 float
+
+/* storage class */
+#ifndef SL_dct32_f32_storage
+ #ifdef SL_storage
+  #define SL_dct32_f32_storage SL_storage
+ #else
+  #define SL_dct32_f32_storage static inline
+ #endif
+#endif
+
+
+/* IMPL dct32_f32_ref */
+SL_dct32_f32_storage void dct32_f32_ref(f32 *dest, f32 *src)
+{
+	double x;
+	int i,j;
+	double coeff;
+
+	for(i=0;i<32;i++){
+		x = 0;
+		for(j=0;j<32;j++){
+			coeff = cos((M_PI/32)*i*(j+0.5));
+			x += coeff * src[j];
+		}
+		dest[i] = x;
+	}
+}
 
 /*
  * Discrete Cosine Tansform (DCT) for subband synthesis
@@ -7,59 +66,33 @@
  * even for Intel processors.
  */
 
-#include <math.h>
-
-#include <mpglib_internal.h>
-#include <dct32_f32.h>
-
-#define dct32_f32 dct32_f32_mpglib
-
-void dct64(real *out0,real *out1,real *samples)
+/* IMPL dct32_f32_mpglib */
+SL_dct32_f32_storage void dct32_f32_mpglib(float *dest,float *samples)
 {
-	float tmp[32];
-	int i;
-
-	dct32_f32(tmp,samples);
-
-	for(i=0;i<16;i++){
-		out0[16*(16-i)] = tmp[i];
-		out1[16*i] = tmp[i+16];
-	}
-	out0[0] = tmp[16];
-}
-
-#if 0
-static real cos64[16];
-static real cos32[16];
-static real cos16[16];
-static real cos8[16];
-static real cos4[16];
-
-static void __dct64_init(void)
-{
+	static float cos64[16];
+	static float cos32[16];
+	static float cos16[16];
+	static float cos8[16];
+	static float cos4[16];
+	float b1[32];
+	float b2[32];
 	static int done = 0;
-	int k;
 
-	if(done)return;
-	done = 1;
+	if(!done){
+		int k;
 
-	for(k=0;k<16;k++){
-		cos64[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 64.0));
-		cos32[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 32.0));
-		cos16[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 16.0));
-		cos8[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 8.0));
-		cos4[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 4.0));
+		done = 1;
+		for(k=0;k<16;k++){
+			cos64[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 64.0));
+			cos32[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 32.0));
+			cos16[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 16.0));
+			cos8[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 8.0));
+			cos4[k] = 1.0 / (2.0 * cos(M_PI * (k * 2.0 + 1.0) / 4.0));
+		}
 	}
-}
-
-void dct64(real *out0,real *out1,real *samples)
-{
-	real b1[32];
-	real b2[32];
-	__dct64_init();
 
  {
-  real *costab = cos64;
+  float *costab = cos64;
 
   b1[0x00] = samples[0x00] + samples[0x1F];
   b1[0x1F] = (samples[0x00] - samples[0x1F]) * costab[0x0];
@@ -112,7 +145,7 @@ void dct64(real *out0,real *out1,real *samples)
 
 
  {
-  real *costab = cos32;
+  float *costab = cos32;
 
   b2[0x00] = b1[0x00] + b1[0x0F]; 
   b2[0x0F] = (b1[0x00] - b1[0x0F]) * costab[0];
@@ -150,7 +183,7 @@ void dct64(real *out0,real *out1,real *samples)
  }
 
  {
-  real *costab = cos16;
+  float *costab = cos16;
 
   b1[0x00] = b2[0x00] + b2[0x07];
   b1[0x07] = (b2[0x00] - b2[0x07]) * costab[0];
@@ -190,8 +223,8 @@ void dct64(real *out0,real *out1,real *samples)
  }
 
  {
-  real const cos0 = cos8[0];
-  real const cos1 = cos8[1];
+  float cos0 = cos8[0];
+  float cos1 = cos8[1];
 
   b2[0x00] = b1[0x00] + b1[0x03];
   b2[0x03] = (b1[0x00] - b1[0x03]) * cos0;
@@ -235,7 +268,7 @@ void dct64(real *out0,real *out1,real *samples)
  }
 
  {
-  real const cos0 = cos4[0];
+  float cos0 = cos4[0];
 
   b1[0x00] = b2[0x00] + b2[0x01];
   b1[0x01] = (b2[0x00] - b2[0x01]) * cos0;
@@ -298,56 +331,122 @@ void dct64(real *out0,real *out1,real *samples)
   b1[0x1D] += b1[0x1F];
  }
 
- out0[0x10*16] = b1[0x00];
- out0[0x10*12] = b1[0x04];
- out0[0x10* 8] = b1[0x02];
- out0[0x10* 4] = b1[0x06];
- out0[0x10* 0] = b1[0x01];
- out1[0x10* 0] = b1[0x01];
- out1[0x10* 4] = b1[0x05];
- out1[0x10* 8] = b1[0x03];
- out1[0x10*12] = b1[0x07];
+ dest[ 0] = b1[0x00];
+ dest[ 4] = b1[0x04];
+ dest[ 8] = b1[0x02];
+ dest[12] = b1[0x06];
+// dest[0x10* 0] = b1[0x01];  /* I think this is wrong */
+ dest[16] = b1[0x01];
+ dest[20] = b1[0x05];
+ dest[24] = b1[0x03];
+ dest[28] = b1[0x07];
 
  b1[0x08] += b1[0x0C];
- out0[0x10*14] = b1[0x08];
+ dest[2] = b1[0x08];
  b1[0x0C] += b1[0x0a];
- out0[0x10*10] = b1[0x0C];
+ dest[6] = b1[0x0C];
  b1[0x0A] += b1[0x0E];
- out0[0x10* 6] = b1[0x0A];
+ dest[10] = b1[0x0A];
  b1[0x0E] += b1[0x09];
- out0[0x10* 2] = b1[0x0E];
+ dest[14] = b1[0x0E];
  b1[0x09] += b1[0x0D];
- out1[0x10* 2] = b1[0x09];
+ dest[18] = b1[0x09];
  b1[0x0D] += b1[0x0B];
- out1[0x10* 6] = b1[0x0D];
+ dest[22] = b1[0x0D];
  b1[0x0B] += b1[0x0F];
- out1[0x10*10] = b1[0x0B];
- out1[0x10*14] = b1[0x0F];
+ dest[26] = b1[0x0B];
+ dest[30] = b1[0x0F];
 
  b1[0x18] += b1[0x1C];
- out0[0x10*15] = b1[0x10] + b1[0x18];
- out0[0x10*13] = b1[0x18] + b1[0x14];
+ dest[1] = b1[0x10] + b1[0x18];
+ dest[3] = b1[0x18] + b1[0x14];
  b1[0x1C] += b1[0x1a];
- out0[0x10*11] = b1[0x14] + b1[0x1C];
- out0[0x10* 9] = b1[0x1C] + b1[0x12];
+ dest[5] = b1[0x14] + b1[0x1C];
+ dest[7] = b1[0x1C] + b1[0x12];
  b1[0x1A] += b1[0x1E];
- out0[0x10* 7] = b1[0x12] + b1[0x1A];
- out0[0x10* 5] = b1[0x1A] + b1[0x16];
+ dest[9] = b1[0x12] + b1[0x1A];
+ dest[11] = b1[0x1A] + b1[0x16];
  b1[0x1E] += b1[0x19];
- out0[0x10* 3] = b1[0x16] + b1[0x1E];
- out0[0x10* 1] = b1[0x1E] + b1[0x11];
+ dest[13] = b1[0x16] + b1[0x1E];
+ dest[15] = b1[0x1E] + b1[0x11];
  b1[0x19] += b1[0x1D];
- out1[0x10* 1] = b1[0x11] + b1[0x19];
- out1[0x10* 3] = b1[0x19] + b1[0x15];
+ dest[17] = b1[0x11] + b1[0x19];
+ dest[19] = b1[0x19] + b1[0x15];
  b1[0x1D] += b1[0x1B];
- out1[0x10* 5] = b1[0x15] + b1[0x1D];
- out1[0x10* 7] = b1[0x1D] + b1[0x13];
+ dest[21] = b1[0x15] + b1[0x1D];
+ dest[23] = b1[0x1D] + b1[0x13];
  b1[0x1B] += b1[0x1F];
- out1[0x10* 9] = b1[0x13] + b1[0x1B];
- out1[0x10*11] = b1[0x1B] + b1[0x17];
- out1[0x10*13] = b1[0x17] + b1[0x1F];
- out1[0x10*15] = b1[0x1F];
+ dest[25] = b1[0x13] + b1[0x1B];
+ dest[27] = b1[0x1B] + b1[0x17];
+ dest[29] = b1[0x17] + b1[0x1F];
+ dest[31] = b1[0x1F];
 }
 
+
+
+#endif /* _dct32_f32_h_ */
+
+#ifdef TEST_dct32_f32
+int TEST_dct32_f32(void)
+{
+	int i;
+	int pass;
+	int failures = 0;
+	f32 *src, *dest_ref, *dest_test;
+	struct sl_profile_struct t;
+	double sad;
+	double sad_max = 0;
+	double sad_sum = 0;
+
+	src = sl_malloc_f32(32);
+	dest_ref = sl_malloc_f32(32);
+	dest_test = sl_malloc_f32(32);
+
+	sl_profile_init(t);
+	srand(20021001);
+
+	printf("I: " sl_stringify(dct32_f32_FUNC) "\n");
+
+	for(pass=0;pass<N_PASS;pass++){
+		for(i=0;i<32;i++)src[i]=sl_rand_f32_0_1();
+
+		dct32_f32_ref(dest_ref,src);
+		sl_profile_start(t);
+		dct32_f32_FUNC(dest_test,src);
+		sl_profile_stop(t);
+
+		sad = 0;
+		for(i=0;i<32;i++){
+			sad += fabs(dest_test[i] - dest_ref[i]);
+		}
+		if(sad>sad_max)sad_max = sad;
+		sad_sum += sad;
+#if 0
+		if(sad>0){
+			printf("sad = %g\n",sad);
+		}
+#endif
+#if 0
+			if(dest_test[i] != dest_ref[i]){
+				printf("%d %g %g\n",i,dest_ref[i], dest_test[i]);
+			}
+#endif
+	}
+
+	printf("sad ave = %g\n",sad_sum/N_PASS);
+	printf("sad max = %g\n",sad_max);
+
+	sl_free(src);
+	sl_free(dest_ref);
+	sl_free(dest_test);
+
+	if(failures){
+		printf("E: %d failures\n",failures);
+	}
+
+	sl_profile_print(t);
+
+	return failures;
+}
 #endif
 

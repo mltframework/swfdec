@@ -4,8 +4,9 @@ SUBDIRS = jpeg
 lib_LTLIBRARIES = libswfdec.la
 
 libswfdec_la_SOURCES = actions.c art.c color.c get.c swfdec_image.c \
-	render.c shape.c sound.c swf.c swfdec_object.c text.c \
+	render.c swfdec_shape.c swf.c swfdec_object.c swfdec_text.c \
 	swfdec_display.c swfdec_sprite.c swfdec_button.c swfdec_layer.c \
+	swfdec_sound.c swfdec_font.c \
 	version_script
 libswfdec_la_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) \
 	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS)

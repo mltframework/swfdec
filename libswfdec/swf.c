@@ -187,11 +187,11 @@ swfdec_decoder_free (SwfdecDecoder * s)
   GList *g;
 
   for (g = g_list_first (s->objects); g; g = g_list_next (g)) {
-    swfdec_object_free ((SwfdecObject *) g->data);
+    g_object_unref (G_OBJECT (g->data));
   }
   g_list_free (s->objects);
   if (s->stream_sound_obj) {
-    swfdec_object_free (s->stream_sound_obj);
+    g_object_unref (G_OBJECT(s->stream_sound_obj));
   }
 
   if (s->buffer)
@@ -199,7 +199,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
   if (s->input_data)
     g_free (s->input_data);
 
-  swfdec_sprite_free (s->main_sprite);
+  g_object_unref (G_OBJECT(s->main_sprite));
   swfdec_render_free (s->render);
 
   /* FIXME */

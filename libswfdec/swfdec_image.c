@@ -1,9 +1,15 @@
 
+#include <swfdec_image.h>
 #include <stdio.h>
 #include <zlib.h>
 
 #include "swfdec_internal.h"
 #include "jpeg_rgb_decoder.h"
+
+static void swfdec_image_base_init (gpointer g_class);
+static void swfdec_image_class_init (gpointer g_class, gpointer user_data);
+static void swfdec_image_init (GTypeInstance *instance, gpointer g_class);
+static void swfdec_image_dispose (GObject *object);
 
 static void jpegdec (SwfdecImage * image, unsigned char *ptr, int len);
 static void merge_alpha (SwfdecImage * image, unsigned char *alpha);
@@ -11,14 +17,62 @@ static void merge_opaque (SwfdecImage * image);
 static void swfdec_image_colormap_decode (SwfdecImage * image,
     unsigned char *src, unsigned char *colormap, int colormap_len);
 
-void
-swfdec_image_free (SwfdecObject * object)
+
+
+GType _swfdec_image_type;
+
+static GObjectClass *parent_class = NULL;
+
+GType swfdec_image_get_type (void)
 {
-  SwfdecImage *image = object->priv;
+  if (!_swfdec_image_type) {
+    static const GTypeInfo object_info = {
+      sizeof (SwfdecImageClass),
+      swfdec_image_base_init,
+      NULL,
+      swfdec_image_class_init,
+      NULL,
+      NULL,
+      sizeof (SwfdecImage),
+      32,
+      swfdec_image_init,
+      NULL
+    };
+    _swfdec_image_type = g_type_register_static (G_TYPE_OBJECT,
+        "SwfdecImage", &object_info, 0);
+  }
+  return _swfdec_image_type;
+}
+
+static void swfdec_image_base_init (gpointer g_class)
+{
+  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+}
+
+static void swfdec_image_class_init (gpointer g_class, gpointer class_data)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+  gobject_class->dispose = swfdec_image_dispose;
+
+  parent_class = g_type_class_peek_parent (gobject_class);
+
+}
+
+static void swfdec_image_init (GTypeInstance *instance, gpointer g_class)
+{
+
+}
+
+static void swfdec_image_dispose (GObject *object)
+{
+  SwfdecImage *image = SWFDEC_IMAGE (object);
 
   g_free (image->image_data);
   g_free (image);
 }
+
 
 static void *
 zalloc (void *opaque, unsigned int items, unsigned int size)

@@ -31,8 +31,8 @@ art_place_object_2 (SwfdecDecoder * s)
   int has_character;
   int move;
   int depth;
-  SwfdecSpriteSeg *layer;
-  SwfdecSpriteSeg *oldlayer;
+  SwfdecSpriteSegment *layer;
+  SwfdecSpriteSegment *oldlayer;
 
   reserved = getbit (bits);
   has_compose = getbit (bits);
@@ -129,7 +129,7 @@ int
 art_remove_object (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
   int id;
 
   id = get_u16 (&s->b);
@@ -146,7 +146,7 @@ int
 art_remove_object_2 (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
 
   depth = get_u16 (&s->b);
   seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
@@ -204,7 +204,7 @@ art_show_frame (SwfdecDecoder * s)
 void
 swf_render_frame (SwfdecDecoder * s)
 {
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
   SwfdecLayer *layer;
   SwfdecLayer *oldlayer;
   GList *g;
@@ -231,7 +231,7 @@ swf_render_frame (SwfdecDecoder * s)
   frame = s->frame_number;
   SWF_DEBUG (1, "rendering frame %d\n", frame);
   for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
-    seg = (SwfdecSpriteSeg *) g->data;
+    seg = (SwfdecSpriteSegment *) g->data;
 
     SWF_DEBUG (0, "testing seg %d <= %d < %d\n",
 	seg->first_frame, frame, seg->last_frame);
@@ -300,7 +300,7 @@ swf_render_frame (SwfdecDecoder * s)
 }
 
 SwfdecLayer *
-swfdec_spriteseg_prerender (SwfdecDecoder * s, SwfdecSpriteSeg * seg,
+swfdec_spriteseg_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecLayer * oldlayer)
 {
   SwfdecObject *object;

@@ -143,7 +143,7 @@ swfdec_render_get_sublayer (SwfdecLayer * layer, int depth, int frame)
 }
 
 SwfdecLayer *
-swfdec_render_get_seg (SwfdecRender * render, SwfdecSpriteSeg * seg)
+swfdec_render_get_seg (SwfdecRender * render, SwfdecSpriteSegment * seg)
 {
   SwfdecLayer *l;
   GList *g;

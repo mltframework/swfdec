@@ -1,6 +1,67 @@
 
 #include "swfdec_internal.h"
 
+#include <swfdec_object.h>
+
+
+static void swfdec_object_base_init (gpointer g_class);
+static void swfdec_object_class_init (gpointer g_class, gpointer user_data);
+static void swfdec_object_init (GTypeInstance *instance, gpointer g_class);
+static void swfdec_object_dispose (GObject *object);
+
+
+GType _swfdec_object_type;
+
+static GObjectClass *parent_class = NULL;
+
+GType swfdec_object_get_type (void)
+{
+  if (!_swfdec_object_type) {
+    static const GTypeInfo object_info = {
+      sizeof (SwfdecObjectClass),
+      swfdec_object_base_init,
+      NULL,
+      swfdec_object_class_init,
+      NULL,
+      NULL,
+      sizeof (SwfdecObject),
+      32,
+      swfdec_object_init,
+      NULL
+    };
+    _swfdec_object_type = g_type_register_static (G_TYPE_OBJECT,
+        "SwfdecObject", &object_info, 0);
+  }
+  return _swfdec_object_type;
+}
+
+static void swfdec_object_base_init (gpointer g_class)
+{
+  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+}
+
+static void swfdec_object_class_init (gpointer g_class, gpointer class_data)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+  gobject_class->dispose = swfdec_object_dispose;
+
+  parent_class = g_type_class_peek_parent (gobject_class);
+
+}
+
+static void swfdec_object_init (GTypeInstance *instance, gpointer g_class)
+{
+
+}
+
+static void swfdec_object_dispose (GObject *object)
+{
+
+}
+
+
 
 SwfdecObject *
 swfdec_object_new (SwfdecDecoder * s, int id)
@@ -32,32 +93,3 @@ swfdec_object_get (SwfdecDecoder * s, int id)
   return NULL;
 }
 
-void
-swfdec_object_free (SwfdecObject * object)
-{
-  switch (object->type) {
-    case SWF_OBJECT_FONT:
-      swfdec_font_free (object);
-      break;
-    case SWF_OBJECT_TEXT:
-      swfdec_text_free (object);
-      break;
-    case SWF_OBJECT_IMAGE:
-      swfdec_image_free (object);
-      break;
-    case SWF_OBJECT_SPRITE:
-      /* FIXME */
-      swfdec_sprite_decoder_free (object);
-      break;
-    case SWF_OBJECT_SHAPE:
-      swfdec_shape_free (object);
-      break;
-    case SWF_OBJECT_SOUND:
-      swfdec_sound_free (object);
-      break;
-    case SWF_OBJECT_BUTTON:
-      swfdec_button_free (object);
-      break;
-  }
-  g_free (object);
-}

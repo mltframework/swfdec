@@ -4,19 +4,21 @@
 
 #include "swfdec.h"
 
-typedef struct swfdec_button_struct SwfdecButton;
-typedef struct swfdec_image_struct SwfdecImage;
+typedef struct _SwfdecButton SwfdecButton;
+typedef struct _SwfdecFont SwfdecFont;
+typedef struct _SwfdecImage SwfdecImage;
+typedef struct _SwfdecObject SwfdecObject;
+typedef struct _SwfdecShape SwfdecShape;
+typedef struct swfdec_shape_vec_struct SwfdecShapeVec;
+typedef struct _SwfdecSound SwfdecSound;
+typedef struct _SwfdecSoundBuffer SwfdecSoundBuffer;
+typedef struct _SwfdecSprite SwfdecSprite;
+typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;
+typedef struct _SwfdecText SwfdecText;
+typedef struct _SwfdecTextGlyph SwfdecTextGlyph;
+
 typedef struct swfdec_layer_struct SwfdecLayer;
 typedef struct swfdec_layer_vec_struct SwfdecLayerVec;
-typedef struct swfdec_object_struct SwfdecObject;
 typedef struct swfdec_render_struct SwfdecRender;
-typedef struct swfdec_shape_struct SwfdecShape;
-typedef struct swfdec_shape_vec_struct SwfdecShapeVec;
-typedef struct swfdec_sound_struct SwfdecSound;
-typedef struct swfdec_sound_buffer_struct SwfdecSoundBuffer;
-typedef struct swfdec_sprite_struct SwfdecSprite;
-typedef struct swfdec_sprite_seg_struct SwfdecSpriteSeg;
-typedef struct swfdec_text_struct SwfdecText;
-typedef struct swfdec_text_glyph_struct SwfdecTextGlyph;
 
 #endif

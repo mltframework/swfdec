@@ -1,28 +1,80 @@
 
 #include "swfdec_internal.h"
+#include <swfdec_button.h>
 
-void
-swfdec_button_free (SwfdecObject * object)
+
+static void swfdec_button_base_init (gpointer g_class);
+static void swfdec_button_class_init (gpointer g_class, gpointer user_data);
+static void swfdec_button_init (GTypeInstance *instance, gpointer g_class);
+static void swfdec_button_dispose (GObject *object);
+
+
+GType _swfdec_button_type;
+
+static GObjectClass *parent_class = NULL;
+
+GType swfdec_button_get_type (void)
 {
-  SwfdecButton *button = object->priv;
+  if (!_swfdec_button_type) {
+    static const GTypeInfo object_info = {
+      sizeof (SwfdecButtonClass),
+      swfdec_button_base_init,
+      NULL,
+      swfdec_button_class_init,
+      NULL,
+      NULL,
+      sizeof (SwfdecButton),
+      32,
+      swfdec_button_init,
+      NULL
+    };
+    _swfdec_button_type = g_type_register_static (G_TYPE_OBJECT,
+        "SwfdecButton", &object_info, 0);
+  }
+  return _swfdec_button_type;
+}
+
+static void swfdec_button_base_init (gpointer g_class)
+{
+  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+}
+
+static void swfdec_button_class_init (gpointer g_class, gpointer class_data)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+  gobject_class->dispose = swfdec_button_dispose;
+
+  parent_class = g_type_class_peek_parent (gobject_class);
+
+}
+
+static void swfdec_button_init (GTypeInstance *instance, gpointer g_class)
+{
+
+}
+
+static void swfdec_button_dispose (GObject *object)
+{
   int i;
+  SwfdecButton *button = SWFDEC_BUTTON(object);
 
   for (i = 0; i < 3; i++) {
     if (button->state[i]) {
       swfdec_spriteseg_free (button->state[i]);
     }
   }
-  g_free (button);
 }
 
 SwfdecLayer *
-swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSeg * seg,
+swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
 {
   SwfdecButton *button = object->priv;
   SwfdecObject *obj;
   SwfdecLayer *layer;
-  SwfdecSpriteSeg *tmpseg;
+  SwfdecSpriteSegment *tmpseg;
 
   if (oldlayer && oldlayer->seg == seg)
     return oldlayer;

@@ -1,6 +1,77 @@
 
 #include "swfdec_internal.h"
 
+#include <swfdec_sprite.h>
+
+
+static void swfdec_sprite_base_init (gpointer g_class);
+static void swfdec_sprite_class_init (gpointer g_class, gpointer user_data);
+static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class);
+static void swfdec_sprite_dispose (GObject *object);
+
+
+GType _swfdec_sprite_type;
+
+static GObjectClass *parent_class = NULL;
+
+GType swfdec_sprite_get_type (void)
+{
+  if (!_swfdec_sprite_type) {
+    static const GTypeInfo object_info = {
+      sizeof (SwfdecSpriteClass),
+      swfdec_sprite_base_init,
+      NULL,
+      swfdec_sprite_class_init,
+      NULL,
+      NULL,
+      sizeof (SwfdecSprite),
+      32,
+      swfdec_sprite_init,
+      NULL
+    };
+    _swfdec_sprite_type = g_type_register_static (SWFDEC_TYPE_OBJECT,
+        "SwfdecSprite", &object_info, 0);
+  }
+  return _swfdec_sprite_type;
+}
+
+static void swfdec_sprite_base_init (gpointer g_class)
+{
+  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+}
+
+static void swfdec_sprite_class_init (gpointer g_class, gpointer class_data)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+
+  gobject_class->dispose = swfdec_sprite_dispose;
+
+  parent_class = g_type_class_peek_parent (gobject_class);
+
+}
+
+static void swfdec_sprite_init (GTypeInstance *instance, gpointer g_class)
+{
+
+}
+
+static void swfdec_sprite_dispose (GObject *object)
+{
+  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
+  GList *g;
+
+  for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
+    g_free (g->data);
+  }
+  g_list_free (sprite->layers);
+
+  /* FIXME */
+  //g_object_unref (G_OBJECT (s->main_sprite));
+  //swfdec_render_free (s->render);
+}
+
+
 SwfdecSprite *
 swfdec_sprite_new (void)
 {
@@ -11,32 +82,8 @@ swfdec_sprite_new (void)
   return sprite;
 }
 
-void
-swfdec_sprite_decoder_free (SwfdecObject * object)
-{
-  SwfdecDecoder *s = object->priv;
-
-  swfdec_sprite_free (s->main_sprite);
-  swfdec_render_free (s->render);
-
-  g_free (s);
-}
-
-void
-swfdec_sprite_free (SwfdecSprite * sprite)
-{
-  GList *g;
-
-  for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
-    g_free (g->data);
-  }
-  g_list_free (sprite->layers);
-
-  g_free (sprite);
-}
-
 SwfdecLayer *
-swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSeg * seg,
+swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * oldlayer)
 {
   SwfdecLayer *layer;
@@ -45,8 +92,8 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSeg * seg,
   GList *g;
   SwfdecDecoder *child_decoder = object->priv;
   SwfdecSprite *sprite = child_decoder->main_sprite;
-  SwfdecSpriteSeg *tmpseg;
-  SwfdecSpriteSeg *child_seg;
+  SwfdecSpriteSegment *tmpseg;
+  SwfdecSpriteSegment *child_seg;
   int frame;
 
   if (oldlayer && oldlayer->seg == seg && sprite->n_frames == 1)
@@ -83,7 +130,7 @@ swfdec_sprite_prerender (SwfdecDecoder * s, SwfdecSpriteSeg * seg,
       layer->frame_number);
 
   for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
-    child_seg = (SwfdecSpriteSeg *) g->data;
+    child_seg = (SwfdecSpriteSegment *) g->data;
 
     if (child_seg->first_frame > frame)
       continue;
@@ -234,14 +281,14 @@ tag_func_define_sprite (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-SwfdecSpriteSeg *
+SwfdecSpriteSegment *
 swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame)
 {
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
   GList *g;
 
   for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
-    seg = (SwfdecSpriteSeg *) g->data;
+    seg = (SwfdecSpriteSegment *) g->data;
     if (seg->depth == depth && seg->first_frame <= frame
 	&& seg->last_frame > frame)
       return seg;
@@ -251,13 +298,13 @@ swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame)
 }
 
 void
-swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSeg * segnew)
+swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSegment * segnew)
 {
   GList *g;
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
 
   for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
-    seg = (SwfdecSpriteSeg *) g->data;
+    seg = (SwfdecSpriteSegment *) g->data;
     if (seg->depth < segnew->depth) {
       sprite->layers = g_list_insert_before (sprite->layers, g, segnew);
       return;
@@ -267,29 +314,29 @@ swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSeg * segnew)
   sprite->layers = g_list_append (sprite->layers, segnew);
 }
 
-SwfdecSpriteSeg *
+SwfdecSpriteSegment *
 swfdec_spriteseg_new (void)
 {
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
 
-  seg = g_new0 (SwfdecSpriteSeg, 1);
+  seg = g_new0 (SwfdecSpriteSegment, 1);
 
   return seg;
 }
 
-SwfdecSpriteSeg *
-swfdec_spriteseg_dup (SwfdecSpriteSeg * seg)
+SwfdecSpriteSegment *
+swfdec_spriteseg_dup (SwfdecSpriteSegment * seg)
 {
-  SwfdecSpriteSeg *newseg;
+  SwfdecSpriteSegment *newseg;
 
-  newseg = g_new (SwfdecSpriteSeg, 1);
+  newseg = g_new (SwfdecSpriteSegment, 1);
   memcpy (newseg, seg, sizeof (*seg));
 
   return newseg;
 }
 
 void
-swfdec_spriteseg_free (SwfdecSpriteSeg * seg)
+swfdec_spriteseg_free (SwfdecSpriteSegment * seg)
 {
   g_free (seg);
 }
@@ -307,8 +354,8 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   int has_character;
   int move;
   int depth;
-  SwfdecSpriteSeg *layer;
-  SwfdecSpriteSeg *oldlayer;
+  SwfdecSpriteSegment *layer;
+  SwfdecSpriteSegment *oldlayer;
 
   reserved = getbit (bits);
   has_compose = getbit (bits);
@@ -401,7 +448,7 @@ int
 swfdec_spriteseg_remove_object (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
   int id;
 
   id = get_u16 (&s->b);
@@ -420,7 +467,7 @@ int
 swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSeg *seg;
+  SwfdecSpriteSegment *seg;
 
   depth = get_u16 (&s->b);
   seg = swfdec_sprite_get_seg (s->parse_sprite, depth,

@@ -4,6 +4,8 @@
 
 #include <glib.h>
 #include <zlib.h>
+#include <libart_lgpl/libart.h>
+#include "bits.h"
 
 #include "swfdec_types.h"
 

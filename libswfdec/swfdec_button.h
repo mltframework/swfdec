@@ -1,16 +1,39 @@
 
-#ifndef __SWFDEC_BUTTON_H__
-#define __SWFDEC_BUTTON_H__
+#ifndef _SWFDEC_BUTTON_H_
+#define _SWFDEC_BUTTON_H_
 
-struct swfdec_button_struct
-{
-  SwfdecSpriteSeg *state[3];
+#include <glib-object.h>
+
+G_BEGIN_DECLS
+
+//typedef struct _SwfdecButton SwfdecButton;
+typedef struct _SwfdecButtonClass SwfdecButtonClass;
+
+#define SWFDEC_TYPE_BUTTON                    (swfdec_button_get_type()) 
+#define SWFDEC_IS_BUTTON(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_BUTTON))
+#define SWFDEC_IS_BUTTON_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_BUTTON))
+#define SWFDEC_BUTTON(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_BUTTON, SwfdecButton))
+#define SWFDEC_BUTTON_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_BUTTON, SwfdecButtonClass))
+
+struct _SwfdecButton {
+  GObject object;
+
+  SwfdecSpriteSegment *state[3];
 };
 
-SwfdecLayer *swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSeg * seg,
+struct _SwfdecButtonClass {
+  GObjectClass object_class;
+
+};
+
+GType swfdec_button_get_type (void);
+
+SwfdecLayer *swfdec_button_prerender (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object, SwfdecLayer * layer);
 void swfdec_button_render (SwfdecDecoder * s, SwfdecLayer * layer,
     SwfdecObject * object);
-void swfdec_button_free (SwfdecObject * object);
+
+G_END_DECLS
 
 #endif
+

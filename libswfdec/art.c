@@ -453,7 +453,7 @@ void compose_rgb888_u8_ref(unsigned char *dest, unsigned char *a_src,
 	int a;
 
 	for(i=0;i<n;i++){
-		a = a_src[0];
+		a = (a_src[0] * src[3] + 255)>>8;
 		dest[0] = COMPOSE(dest[0], src[0], a);
 		dest[1] = COMPOSE(dest[1], src[1], a);
 		dest[2] = COMPOSE(dest[2], src[2], a);

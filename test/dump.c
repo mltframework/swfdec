@@ -19,7 +19,7 @@ void dump_sprite(SwfdecSprite *s);
 int main (int argc, char *argv[])
 {
   char *contents;
-  int length;
+  gsize length;
   int ret;
   char *fn = "it.swf";
   SwfdecDecoder *s;

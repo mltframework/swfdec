@@ -117,7 +117,7 @@ main (int argc, char *argv[])
 
   if (standalone) {
     char *contents;
-    int length;
+    gsize length;
 
     ret = g_file_get_contents (argv[optind], &contents, &length, NULL);
     if (!ret) {

@@ -1,3 +1,10 @@
+2004-11-14  David Schleef  <ds@schleef.org>
+
+	* player/swf_play.c: (main): g_file_get_contents() takes gsize,
+	  not int.
+	* test/dump.c: (main):
+	* test/render.c: (main):
+
 2004-11-06  David Schleef  <ds@schleef.org>
 
 	Global reindent.

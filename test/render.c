@@ -29,7 +29,7 @@ static void buffer_free (SwfdecBuffer *buffer, void *priv)
 
 int main (int argc, char *argv[])
 {
-  int length;
+  gsize length;
   int ret;
   char *fn = "it.swf";
   SwfdecDecoder *s;

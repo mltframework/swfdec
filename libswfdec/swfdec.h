@@ -23,14 +23,18 @@ enum {
 
 typedef struct swfdec_decoder_struct SwfdecDecoder;
 
-/* deprecated  */
-SwfdecDecoder *swf_init(void);
-
 SwfdecDecoder *swfdec_decoder_new(void);
-int swf_addbits(SwfdecDecoder *s, unsigned char *bits, int len);
-int swf_parse(SwfdecDecoder *s);
-int swf_parse_header(SwfdecDecoder *s);
-int swf_parse_tag(SwfdecDecoder *s);
+int swfdec_decoder_addbits(SwfdecDecoder *s, unsigned char *bits, int len);
+int swfdec_decoder_parse(SwfdecDecoder *s);
+int swfdec_decoder_free(SwfdecDecoder *s);
+
+int swfdec_decoder_get_n_frames(SwfdecDecoder *s, int *n_frames);
+int swfdec_decoder_get_rate(SwfdecDecoder *s, double *rate);
+int swfdec_decoder_get_image(SwfdecDecoder *s, unsigned char **image);
+int swfdec_decoder_get_image_size(SwfdecDecoder *s, int *width, int *height);
+
+int swfdec_decoder_set_colorspace(SwfdecDecoder *s, int colorspace);
+int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level);
 
 G_END_DECLS
 

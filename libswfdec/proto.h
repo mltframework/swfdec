@@ -3,7 +3,6 @@
 #define _SWF_PROTO_H_
 
 #include "swfdec_types.h"
-#include "swf.h"
 
 /* render.c */
 

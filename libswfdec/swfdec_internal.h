@@ -8,7 +8,6 @@
 #include "get.h"
 #include "internal.h"
 #include "proto.h"
-#include "swf.h"
 #include "swfdec.h"
 #include "swfdec_button.h"
 #include "swfdec_decoder.h"

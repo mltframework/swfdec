@@ -9,10 +9,13 @@ int swf_parse_header1(SwfdecDecoder *s);
 int swf_inflate_init(SwfdecDecoder *s);
 int swf_parse_header2(SwfdecDecoder *s);
 
-SwfdecDecoder *swf_init(void)
-{
-	return swfdec_decoder_new();
-}
+#ifdef __GNUC__
+#define weak_alias(name, aliasname) \
+extern __typeof (name) aliasname __attribute__ ((weak, alias (#name)))
+weak_alias(swfdec_decoder_new, swf_init);
+weak_alias(swfdec_decoder_addbits, swf_addbits);
+weak_alias(swfdec_decoder_parse, swf_parse);
+#endif
 
 SwfdecDecoder *swfdec_decoder_new(void)
 {
@@ -29,7 +32,7 @@ SwfdecDecoder *swfdec_decoder_new(void)
 	return s;
 }
 
-int swf_addbits(SwfdecDecoder *s, unsigned char *bits, int len)
+int swfdec_decoder_addbits(SwfdecDecoder *s, unsigned char *bits, int len)
 {
 	int offset;
 	int ret;
@@ -61,7 +64,7 @@ int swf_addbits(SwfdecDecoder *s, unsigned char *bits, int len)
 	return SWF_OK;
 }
 
-int swf_parse(SwfdecDecoder *s)
+int swfdec_decoder_parse(SwfdecDecoder *s)
 {
 	int ret = SWF_OK;
 	unsigned char *endptr;
@@ -144,6 +147,79 @@ int swf_parse(SwfdecDecoder *s)
 
 	return ret;
 }
+
+int swfdec_decoder_free(SwfdecDecoder *s)
+{
+
+	return SWF_ERROR;
+}
+
+int swfdec_decoder_get_n_frames(SwfdecDecoder *s, int *n_frames)
+{
+	if(s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2){
+		return SWF_ERROR;
+	}
+
+	if(n_frames) *n_frames = s->n_frames;
+	return SWF_OK;
+}
+
+int swfdec_decoder_get_rate(SwfdecDecoder *s, double *rate)
+{
+	if(s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2){
+		return SWF_ERROR;
+	}
+
+	if(rate) *rate = s->rate;
+	return SWF_OK;
+}
+
+int swfdec_decoder_get_image(SwfdecDecoder *s, unsigned char **image)
+{
+	if(s->buffer == NULL){
+		return SWF_ERROR;
+	}
+
+	if(image) *image = s->buffer;
+	s->buffer = NULL;
+
+	return SWF_OK;
+}
+
+int swfdec_decoder_get_image_size(SwfdecDecoder *s, int *width, int *height)
+{
+	if(s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2){
+		return SWF_ERROR;
+	}
+
+	if(width) *width = s->width;
+	if(height) *height = s->height;
+	return SWF_OK;
+}
+
+int swfdec_decoder_set_colorspace(SwfdecDecoder *s, int colorspace)
+{
+	if(s->state != SWF_STATE_INIT1){
+		return SWF_ERROR;
+	}
+
+	if(colorspace != SWF_COLORSPACE_RGB888 &&
+	   colorspace != SWF_COLORSPACE_RGB565){
+		return SWF_ERROR;
+	}
+
+	s->colorspace = colorspace;
+
+	return SWF_OK;
+}
+
+int swfdec_decoder_set_debug_level(SwfdecDecoder *s, int level)
+{
+	s->debug = level;
+
+	return SWF_OK;
+}
+
 
 #define bits_ret_if_needbits(bits, n_bytes)	if(bits_needbits(bits,n_bytes))return SWF_NEEDBITS
 

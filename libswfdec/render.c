@@ -319,8 +319,10 @@ void swfdec_layer_render(SwfdecDecoder *s, SwfdecLayer *layer)
 	SwfdecLayer *child_layer;
 	GList *g;
 
+#if 0
 	/* This rendering order seems to mostly fit the observed behavior
 	 * of Macromedia's player.  */
+	/* or not */
 	for(i=0;i<MAX(layer->fills->len,layer->lines->len);i++){
 		if(i<layer->lines->len){
 			layervec = &g_array_index(layer->lines, SwfdecLayerVec, i);
@@ -331,6 +333,16 @@ void swfdec_layer_render(SwfdecDecoder *s, SwfdecLayer *layer)
 			swfdec_layervec_render(s, layervec);
 		}
 	}
+#else
+	for(i=0;i<layer->fills->len;i++){
+		layervec = &g_array_index(layer->fills, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+	for(i=0;i<layer->lines->len;i++){
+		layervec = &g_array_index(layer->lines, SwfdecLayerVec, i);
+		swfdec_layervec_render(s, layervec);
+	}
+#endif
 	
 	for(g=g_list_first(layer->sublayers);g;g=g_list_next(g)){
 		child_layer = (SwfdecLayer *)g->data;

@@ -687,7 +687,9 @@ action_push (SwfdecActionContext * context)
         reg = swfdec_bits_get_u8 (&context->bits);
         /* FIXME there can be 256 registers */
         if (reg >=0 && reg < 4) {
-          action_val_copy (value, context->registers[reg]);
+          if (context->registers[reg]) {
+            action_val_copy (value, context->registers[reg]);
+          }
         }
       }
       break;

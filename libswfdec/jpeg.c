@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <zlib.h>
 
 #include "swfdec_internal.h"

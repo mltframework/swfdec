@@ -81,13 +81,18 @@ SwfdecLayer *swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecSpriteSeg *seg,
 		art_affine_multiply(tmpseg->transform,
 			child_seg->transform, layer->transform);
 
+#if 0
 		old_child_layer = swfdec_render_get_sublayer(layer,
 			child_seg->depth,layer->frame_number - 1);
+#endif
+		old_child_layer = NULL;
 
 		child_layer = swfdec_spriteseg_prerender(s, tmpseg, old_child_layer);
-		layer->sublayers = g_list_append(layer->sublayers, child_layer);
+		if(child_layer){
+			layer->sublayers = g_list_append(layer->sublayers, child_layer);
 
-		art_irect_union_to_masked(&layer->rect, &child_layer->rect, &s->irect);
+			art_irect_union_to_masked(&layer->rect, &child_layer->rect, &s->irect);
+		}
 
 		swfdec_spriteseg_free(tmpseg);
 	}

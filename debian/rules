@@ -69,6 +69,8 @@ install: build
 	# Add here commands to install the package into debian/tmp
 	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
 
+	mkdir -p debian/tmp/usr/lib/mozilla-snapshot/plugins
+	cd debian/tmp/usr/lib/mozilla-snapshot/plugins && ln -s ../../mozilla/plugins/libmozswfdec.so .
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -93,7 +95,7 @@ binary-arch: build install
 	dh_installman
 	dh_installinfo
 #	dh_undocumented
-#	dh_installchangelogs
+	dh_installchangelogs
 	dh_link
 	dh_strip
 	dh_compress

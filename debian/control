@@ -1,7 +1,7 @@
 Source: swfdec
 Priority: optional
 Maintainer: David Schleef <ds@schleef.org>
-Build-Depends: debhelper (>> 3.0.0), libgtk2.0-dev, mozilla-dev, libart-2.0-dev, zlib1g-dev
+Build-Depends: debhelper (>> 3.0.0), libgtk2.0-dev, mozilla-dev, libart-2.0-dev, zlib1g-dev, libmad0-dev, libsdl1.2-dev
 Standards-Version: 3.5.6
 
 Package: libswfdec-dev
@@ -27,9 +27,10 @@ Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: SWF (Macromedia Flash) player
- A GTK+-based player for Macromedia Flash animations.  Includes a
- Mozilla plugin, that embeds the player into Mozilla-based browsers,
+ A GTK+ and SDL based player for Macromedia Flash animations.  Includes
+ a Mozilla plugin, that embeds the player into Mozilla-based browsers,
  in order to allow seamless viewing of Flash animations in web
  pages.  Includes a GdkPixbuf loader, so that SWF animations can be
  used seamlessly as images in Gtk+ applications.
+
 

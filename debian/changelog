@@ -1,3 +1,25 @@
+swfdec (0.2.0-2) unstable; urgency=low
+
+  * Remove installation of (empty) changelong (Closes: #179227)
+  * Fix swfdec.pc file and package dependency (Closes: #179223)
+  * Add workaround for mozilla-snapshot not loading plug-ins
+    from /usr/lib/mozilla/plugins. (might fix 169404)
+
+ -- David Schleef <ds@schleef.org>  Fri, 31 Jan 2003 11:23:07 -0800
+
+swfdec (0.2.0-1) unstable; urgency=low
+
+  * New upstream release
+   - Fixes image rendering (Closes: #170243)
+
+ -- David Schleef <ds@schleef.org>  Thu, 23 Jan 2003 01:29:59 -0800
+
+swfdec (0.1.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- David Schleef <ds@schleef.org>  Thu, 21 Nov 2002 01:37:53 -0800
+
 swfdec (0.1.2-3) unstable; urgency=low
 
   * debian/control: Add depends on libart2.0-dev, since the headers

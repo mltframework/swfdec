@@ -42,36 +42,6 @@ AC_ARG_WITH(pkg-config-path,
    AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
-dnl Set up conditionals for (target) architecture:
-dnl ==============================================
-
-dnl Determine CPU
-case "x${target_cpu}" in
-  xi?86 | k?) HAVE_CPU_I386=yes
-              AC_DEFINE(HAVE_CPU_I386, 1, [Define if the target CPU is an x86])
-              dnl FIXME could use some better detection
-              dnl       (ie CPUID)
-              case "x${target_cpu}" in
-                xi386 | xi486) ;;
-                *)             AC_DEFINE(HAVE_RDTSC, 1, [Define if RDTSC is available]) ;;
-              esac ;;
-  xpowerpc)   HAVE_CPU_PPC=yes
-              AC_DEFINE(HAVE_CPU_PPC, 1, [Define if the target CPU is a PPC]) ;;
-  xalpha)     HAVE_CPU_ALPHA=yes
-              AC_DEFINE(HAVE_CPU_ALPHA, 1, [Define if the target CPU is an Alpha]) ;;
-  xarm*)      HAVE_CPU_ARM=yes
-              AC_DEFINE(HAVE_CPU_ARM, 1, [Define if the target CPU is an ARM]) ;;
-  xsparc*)    HAVE_CPU_SPARC=yes
-              AC_DEFINE(HAVE_CPU_SPARC, 1, [Define if the target CPU is a PPC]) ;;
-  xmips*)     HAVE_CPU_MIPS=yes
-              AC_DEFINE(HAVE_CPU_MIPS, 1, [Define if the target CPU is a MIPS]) ;;
-  xhppa*)     HAVE_CPU_HPPA=yes
-              AC_DEFINE(HAVE_CPU_HPPA, 1, [Define if the target CPU is a HPPA]) ;;
-esac
-
-dnl Determine endianness
-AC_C_BIGENDIAN
-
 dnl Check for essential libraries first:
 dnl ====================================
 
@@ -116,25 +86,10 @@ AC_SUBST(X_PRE_LIBS)
 AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(X_LIBS)
 
-dnl ######################################################################
-dnl # Check command line parameters, and set shell variables accordingly #
-dnl ######################################################################
-
-dnl #############################
-dnl # Set automake conditionals #
-dnl #############################
-
-dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
-dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(HAVE_CPU_I386,       test "x$HAVE_CPU_I386" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_PPC,        test "x$HAVE_CPU_PPC" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ALPHA,      test "x$HAVE_CPU_ALPHA" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_ARM,        test "x$HAVE_CPU_ARM" = "xyes")
-AM_CONDITIONAL(HAVE_CPU_SPARC,      test "x$HAVE_CPU_SPARC" = "xyes")
-AM_CONDITIONAL(HAVE_LIBMMX,         test "x$USE_LIBMMX" = "xyes")
-
-AM_CONDITIONAL(EXPERIMENTAL,        test "$EXPERIMENTAL" = "$xyes")
-AM_CONDITIONAL(BROKEN,              test "$BROKEN" = "$xyes")
+SDL_CFLAGS=`sdl-config --cflags`
+SDL_LIBS=`sdl-config --libs`
+AC_SUBST(SDL_CFLAGS)
+AC_SUBST(SDL_LIBS)
 
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")

@@ -1,4 +1,6 @@
 
+clean up symbol leakage
+
 plugin: size to window (?) if no embed bounds
 
 lib: global scaling

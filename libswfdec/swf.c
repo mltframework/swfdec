@@ -17,6 +17,11 @@ int swf_parse_header2(swf_state_t *s);
 
 swf_state_t *swf_init(void)
 {
+	return swfdec_decoder_new();
+}
+
+swf_state_t *swfdec_decoder_new(void)
+{
 	swf_state_t *s;
 
 	s = malloc(sizeof(*s));

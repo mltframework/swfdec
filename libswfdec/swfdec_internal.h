@@ -3,12 +3,11 @@
 #define _SWFDEC_INTERNAL_H_
 
 #include "art.h"
-#include "bits.h"
 #include "color.h"
-#include "get.h"
 #include "internal.h"
 #include "proto.h"
 #include "swfdec.h"
+#include "swfdec_bits.h"
 #include "swfdec_button.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"

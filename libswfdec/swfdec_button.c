@@ -137,7 +137,7 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecLayer * layer,
 int
 tag_func_define_button_2 (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int id;
   int flags;
   int offset;
@@ -149,20 +149,20 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
   endptr = bits->ptr + s->tag_len;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   button = g_object_new (SWFDEC_TYPE_BUTTON, NULL);
   SWFDEC_OBJECT (button)->id = id;
   s->objects = g_list_append (s->objects, button);
 
   SWFDEC_LOG("  ID: %d", id);
 
-  flags = get_u8 (bits);
-  offset = get_u16 (bits);
+  flags = swfdec_bits_get_u8 (bits);
+  offset = swfdec_bits_get_u16 (bits);
 
   SWFDEC_LOG("  flags = %d", flags);
   SWFDEC_LOG("  offset = %d", offset);
 
-  while (peek_u8 (bits)) {
+  while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
     int hit_test;
     int down;
@@ -171,14 +171,14 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     int character;
     int layer;
 
-    syncbits (bits);
-    reserved = getbits (bits, 4);
-    hit_test = getbit (bits);
-    down = getbit (bits);
-    over = getbit (bits);
-    up = getbit (bits);
-    character = get_u16 (bits);
-    layer = get_u16 (bits);
+    swfdec_bits_syncbits (bits);
+    reserved = swfdec_bits_getbits (bits, 4);
+    hit_test = swfdec_bits_getbit (bits);
+    down = swfdec_bits_getbit (bits);
+    over = swfdec_bits_getbit (bits);
+    up = swfdec_bits_getbit (bits);
+    character = swfdec_bits_get_u16 (bits);
+    layer = swfdec_bits_get_u16 (bits);
 
     SWFDEC_LOG("  reserved = %d", reserved);
     if (reserved) {
@@ -193,12 +193,12 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
     SWFDEC_LOG("bits->ptr %p", bits->ptr);
 
-    //get_art_matrix(bits, trans);
-    get_art_matrix (bits, trans);
-    syncbits (bits);
+    //swfdec_bits_get_art_matrix(bits, trans);
+    swfdec_bits_get_art_matrix (bits, trans);
+    swfdec_bits_syncbits (bits);
     SWFDEC_LOG("bits->ptr %p", bits->ptr);
-    get_art_color_transform (bits, color_mult, color_add);
-    syncbits (bits);
+    swfdec_bits_get_art_color_transform (bits, color_mult, color_add);
+    swfdec_bits_syncbits (bits);
 
     SWFDEC_LOG("bits->ptr %p", bits->ptr);
 
@@ -237,11 +237,11 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     }
 
   }
-  get_u8 (bits);
+  swfdec_bits_get_u8 (bits);
 
   while (offset != 0) {
-    offset = get_u16 (bits);
-    condition = get_u16 (bits);
+    offset = swfdec_bits_get_u16 (bits);
+    condition = swfdec_bits_get_u16 (bits);
 
     SWFDEC_LOG("  offset = %d", offset);
     SWFDEC_LOG("  condition = 0x%04x", condition);

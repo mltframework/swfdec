@@ -95,8 +95,8 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
     return SWF_OK;
   }
 
-  n_samples = get_u16 (&s->b);
-  n_left = get_u16 (&s->b);
+  n_samples = swfdec_bits_get_u16 (&s->b);
+  n_left = swfdec_bits_get_u16 (&s->b);
   //printf("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
 
   if (s->tag_len - 4 == 0) {
@@ -120,7 +120,7 @@ tag_func_define_sound (SwfdecDecoder * s)
 {
   //static char *format_str[16] = { "uncompressed", "adpcm", "mpeg" };
   //static int rate_n[4] = { 5512.5, 11025, 22050, 44100 };
-  bits_t *b = &s->b;
+  SwfdecBits *b = &s->b;
   int id;
   int format;
   int rate;
@@ -130,12 +130,12 @@ tag_func_define_sound (SwfdecDecoder * s)
   SwfdecSound *sound;
   int len;
 
-  id = get_u16 (b);
-  format = getbits (b, 4);
-  rate = getbits (b, 2);
-  size = getbits (b, 1);
-  type = getbits (b, 1);
-  n_samples = get_u32 (b);
+  id = swfdec_bits_get_u16 (b);
+  format = swfdec_bits_getbits (b, 4);
+  rate = swfdec_bits_getbits (b, 2);
+  size = swfdec_bits_getbits (b, 1);
+  type = swfdec_bits_getbits (b, 1);
+  n_samples = swfdec_bits_get_u32 (b);
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
   SWFDEC_OBJECT (sound)->id = id;
@@ -147,7 +147,7 @@ tag_func_define_sound (SwfdecDecoder * s)
   switch (format) {
     case 2:
       /* unknown */
-      len = get_u16 (b);
+      len = swfdec_bits_get_u16 (b);
 
       sound->orig_data = b->ptr;
       sound->orig_len = s->tag_len - 9;
@@ -198,7 +198,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
 {
   //static char *format_str[16] = { "uncompressed", "adpcm", "mpeg" };
   //static int rate_n[4] = { 5512.5, 11025, 22050, 44100 };
-  bits_t *b = &s->b;
+  SwfdecBits *b = &s->b;
   int mix_format;
   int format;
   int rate;
@@ -208,13 +208,13 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
   int unknown;
   SwfdecSound *sound;
 
-  mix_format = get_u8 (b);
-  format = getbits (b, 4);
-  rate = getbits (b, 2);
-  size = getbits (b, 1);
-  type = getbits (b, 1);
-  n_samples = get_u16 (b);
-  unknown = get_u16 (b);
+  mix_format = swfdec_bits_get_u8 (b);
+  format = swfdec_bits_getbits (b, 4);
+  rate = swfdec_bits_getbits (b, 2);
+  size = swfdec_bits_getbits (b, 1);
+  type = swfdec_bits_getbits (b, 1);
+  n_samples = swfdec_bits_get_u16 (b);
+  unknown = swfdec_bits_get_u16 (b);
 
   //printf("  mix_format = %d\n", mix_format);
   //printf("  format = %d (%s)\n", format, format_str[format]);
@@ -245,7 +245,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
 }
 
 static void
-get_soundinfo (bits_t * b)
+get_soundinfo (SwfdecBits * b)
 {
   int syncflags;
   int has_envelope;
@@ -261,22 +261,22 @@ get_soundinfo (bits_t * b)
   int level1;
   int i;
 
-  syncflags = getbits (b, 4);
-  has_envelope = getbits (b, 1);
-  has_loops = getbits (b, 1);
-  has_out_point = getbits (b, 1);
-  has_in_point = getbits (b, 1);
+  syncflags = swfdec_bits_getbits (b, 4);
+  has_envelope = swfdec_bits_getbits (b, 1);
+  has_loops = swfdec_bits_getbits (b, 1);
+  has_out_point = swfdec_bits_getbits (b, 1);
+  has_in_point = swfdec_bits_getbits (b, 1);
   if (has_in_point) {
-    in_point = get_u32 (b);
+    in_point = swfdec_bits_get_u32 (b);
   }
   if (has_out_point) {
-    out_point = get_u32 (b);
+    out_point = swfdec_bits_get_u32 (b);
   }
   if (has_loops) {
-    loop_count = get_u16 (b);
+    loop_count = swfdec_bits_get_u16 (b);
   }
   if (has_envelope) {
-    envelope_n_points = get_u8 (b);
+    envelope_n_points = swfdec_bits_get_u8 (b);
   }
   //printf("  syncflags = %d\n", syncflags);
   //printf("  has_envelope = %d\n", has_envelope);
@@ -289,9 +289,9 @@ get_soundinfo (bits_t * b)
   //printf("  envelope_n_points = %d\n", envelope_n_points);
 
   for (i = 0; i < envelope_n_points; i++) {
-    mark44 = get_u32 (b);
-    level0 = get_u16 (b);
-    level1 = get_u16 (b);
+    mark44 = swfdec_bits_get_u32 (b);
+    level0 = swfdec_bits_get_u16 (b);
+    level1 = swfdec_bits_get_u16 (b);
 
     //printf("   mark44 = %d\n",mark44);
     //printf("   level0 = %d\n",level0);
@@ -303,10 +303,10 @@ get_soundinfo (bits_t * b)
 int
 tag_func_start_sound (SwfdecDecoder * s)
 {
-  bits_t *b = &s->b;
+  SwfdecBits *b = &s->b;
   int id;
 
-  id = get_u16 (b);
+  id = swfdec_bits_get_u16 (b);
 
   //printf("  id = %d\n", id);
   get_soundinfo (b);
@@ -321,10 +321,10 @@ tag_func_define_button_sound (SwfdecDecoder * s)
   int i;
   int state;
 
-  id = get_u16 (&s->b);
+  id = swfdec_bits_get_u16 (&s->b);
   //printf("  id = %d\n",id);
   for (i = 0; i < 4; i++) {
-    state = get_u16 (&s->b);
+    state = swfdec_bits_get_u16 (&s->b);
     //printf("   state = %d\n",state);
     if (state) {
       get_soundinfo (&s->b);
@@ -353,7 +353,7 @@ int step_size[89] = {
 void
 adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int n_bits;
   int sample;
   int index;
@@ -364,11 +364,11 @@ adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
   int j = 0;
 
 #if 0
-  sample = get_u8 (bits) << 8;
-  sample |= get_u8 (bits);
+  sample = swfdec_bits_get_u8 (bits) << 8;
+  sample |= swfdec_bits_get_u8 (bits);
   printf ("sample %d\n", sample);
 #endif
-  n_bits = getbits (bits, 2) + 2;
+  n_bits = swfdec_bits_getbits (bits, 2) + 2;
   //printf("n_bits = %d\n",n_bits);
 
   if (n_bits != 4)
@@ -380,14 +380,14 @@ adpcm_decode (SwfdecDecoder * s, SwfdecSound *sound)
     if (n > 4096)
       n = 4096;
 
-    sample = getsbits (bits, 16);
+    sample = swfdec_bits_getsbits (bits, 16);
     //printf("sample = %d\n",sample);
-    index = getbits (bits, 6);
+    index = swfdec_bits_getbits (bits, 6);
     //printf("index = %d\n",index);
 
 
     for (i = 1; i < n; i++) {
-      x = getbits (bits, n_bits);
+      x = swfdec_bits_getbits (bits, n_bits);
 
       diff = (step_size[index] * (x & 0x7)) >> 2;
       diff += step_size[index] >> 3;

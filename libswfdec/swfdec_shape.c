@@ -105,7 +105,7 @@ static void swfdec_shape_dispose (GObject *object)
 }
 
 static int
-get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
+get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
 {
   int type;
   int state_new_styles;
@@ -120,21 +120,21 @@ get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
   int fill1style;
   int linestyle = 0;
 
-  type = peekbits (bits, 6);
+  type = swfdec_bits_peekbits (bits, 6);
   if (type == 0) {
-    getbits (bits, 6);
+    swfdec_bits_getbits (bits, 6);
     return 0;
   }
 
-  type = getbits (bits, 1);
+  type = swfdec_bits_getbits (bits, 1);
   printf ("   type = %d\n", type);
 
   if (type == 0) {
-    state_new_styles = getbits (bits, 1);
-    state_line_styles = getbits (bits, 1);
-    state_fill_styles1 = getbits (bits, 1);
-    state_fill_styles0 = getbits (bits, 1);
-    state_moveto = getbits (bits, 1);
+    state_new_styles = swfdec_bits_getbits (bits, 1);
+    state_line_styles = swfdec_bits_getbits (bits, 1);
+    state_fill_styles1 = swfdec_bits_getbits (bits, 1);
+    state_fill_styles0 = swfdec_bits_getbits (bits, 1);
+    state_moveto = swfdec_bits_getbits (bits, 1);
 
     printf ("   state_new_styles = %d\n", state_new_styles);
     printf ("   state_line_styles = %d\n", state_line_styles);
@@ -143,23 +143,23 @@ get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
     printf ("   state_moveto = %d\n", state_moveto);
 
     if (state_moveto) {
-      movebits = getbits (bits, 5);
+      movebits = swfdec_bits_getbits (bits, 5);
       printf ("   movebits = %d\n", movebits);
-      movex = getsbits (bits, movebits);
-      movey = getsbits (bits, movebits);
+      movex = swfdec_bits_getsbits (bits, movebits);
+      movey = swfdec_bits_getsbits (bits, movebits);
       printf ("   movex = %d\n", movex);
       printf ("   movey = %d\n", movey);
     }
     if (state_fill_styles0) {
-      fill0style = getbits (bits, n_fill_bits);
+      fill0style = swfdec_bits_getbits (bits, n_fill_bits);
       printf ("   fill0style = %d\n", fill0style);
     }
     if (state_fill_styles1) {
-      fill1style = getbits (bits, n_fill_bits);
+      fill1style = swfdec_bits_getbits (bits, n_fill_bits);
       printf ("   fill1style = %d\n", fill1style);
     }
     if (state_line_styles) {
-      linestyle = getbits (bits, n_line_bits);
+      linestyle = swfdec_bits_getbits (bits, n_line_bits);
       printf ("   linestyle = %d\n", linestyle);
     }
     if (state_new_styles) {
@@ -172,7 +172,7 @@ get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
     int n_bits;
     int edge_flag;
 
-    edge_flag = getbits (bits, 1);
+    edge_flag = swfdec_bits_getbits (bits, 1);
     printf ("   edge_flag = %d\n", edge_flag);
 
     if (edge_flag == 0) {
@@ -181,11 +181,11 @@ get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
       int anchor_delta_x;
       int anchor_delta_y;
 
-      n_bits = getbits (bits, 4) + 2;
-      control_delta_x = getsbits (bits, n_bits);
-      control_delta_y = getsbits (bits, n_bits);
-      anchor_delta_x = getsbits (bits, n_bits);
-      anchor_delta_y = getsbits (bits, n_bits);
+      n_bits = swfdec_bits_getbits (bits, 4) + 2;
+      control_delta_x = swfdec_bits_getsbits (bits, n_bits);
+      control_delta_y = swfdec_bits_getsbits (bits, n_bits);
+      anchor_delta_x = swfdec_bits_getsbits (bits, n_bits);
+      anchor_delta_y = swfdec_bits_getsbits (bits, n_bits);
 
       printf ("   n_bits = %d\n", n_bits);
       printf ("   control_delta = %d,%d\n", control_delta_x, control_delta_y);
@@ -196,19 +196,19 @@ get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
       int delta_y;
       int vert_line_flag = 0;
 
-      n_bits = getbits (bits, 4) + 2;
-      general_line_flag = getbit (bits);
+      n_bits = swfdec_bits_getbits (bits, 4) + 2;
+      general_line_flag = swfdec_bits_getbit (bits);
       if (general_line_flag == 1) {
-	delta_x = getsbits (bits, n_bits);
-	delta_y = getsbits (bits, n_bits);
+	delta_x = swfdec_bits_getsbits (bits, n_bits);
+	delta_y = swfdec_bits_getsbits (bits, n_bits);
       } else {
-	vert_line_flag = getbit (bits);
+	vert_line_flag = swfdec_bits_getbit (bits);
 	if (vert_line_flag == 0) {
-	  delta_x = getsbits (bits, n_bits);
+	  delta_x = swfdec_bits_getsbits (bits, n_bits);
 	  delta_y = 0;
 	} else {
 	  delta_x = 0;
-	  delta_y = getsbits (bits, n_bits);
+	  delta_y = swfdec_bits_getsbits (bits, n_bits);
 	}
       }
       printf ("   general_line_flag = %d\n", general_line_flag);
@@ -227,7 +227,7 @@ get_shape_rec (bits_t * bits, int n_fill_bits, int n_line_bits)
 int
 tag_func_define_shape (SwfdecDecoder * s)
 {
-  bits_t *b = &s->b;
+  SwfdecBits *b = &s->b;
   int id;
   int n_fill_styles;
   int n_line_styles;
@@ -236,32 +236,32 @@ tag_func_define_shape (SwfdecDecoder * s)
   int rect[4];
   int i;
 
-  id = get_u16 (b);
+  id = swfdec_bits_get_u16 (b);
   SWFDEC_LOG("  id = %d", id);
   printf ("  bounds = %s\n", "rect");
-  get_rect (b, rect);
-  syncbits (b);
-  n_fill_styles = get_u8 (b);
+  swfdec_bits_get_rect (b, rect);
+  swfdec_bits_syncbits (b);
+  n_fill_styles = swfdec_bits_get_u8 (b);
   SWFDEC_LOG("  n_fill_styles = %d", n_fill_styles);
   for (i = 0; i < n_fill_styles; i++) {
-    get_fill_style (b);
+    swfdec_bits_get_fill_style (b);
   }
-  syncbits (b);
-  n_line_styles = get_u8 (b);
+  swfdec_bits_syncbits (b);
+  n_line_styles = swfdec_bits_get_u8 (b);
   SWFDEC_LOG("  n_line_styles = %d", n_line_styles);
   for (i = 0; i < n_line_styles; i++) {
-    get_line_style (b);
+    swfdec_bits_get_line_style (b);
   }
-  syncbits (b);
-  n_fill_bits = getbits (b, 4);
-  n_line_bits = getbits (b, 4);
+  swfdec_bits_syncbits (b);
+  n_fill_bits = swfdec_bits_getbits (b, 4);
+  n_line_bits = swfdec_bits_getbits (b, 4);
   SWFDEC_LOG("  n_fill_bits = %d", n_fill_bits);
   SWFDEC_LOG("  n_line_bits = %d", n_line_bits);
   do {
     SWFDEC_LOG("  shape_rec:");
   } while (get_shape_rec (b, n_fill_bits, n_line_bits));
 
-  syncbits (b);
+  swfdec_bits_syncbits (b);
 
   return SWF_OK;
 }
@@ -281,12 +281,12 @@ swf_shape_vec_new (void)
 int
 art_define_shape (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
   int rect[4];
   int id;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
 
   shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
   SWFDEC_OBJECT (shape)->id = id;
@@ -294,7 +294,7 @@ art_define_shape (SwfdecDecoder * s)
 
   SWFDEC_LOG("  ID: %d", id);
 
-  get_rect (bits, rect);
+  swfdec_bits_get_rect (bits, rect);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -310,19 +310,19 @@ art_define_shape (SwfdecDecoder * s)
 int
 art_define_shape_3 (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
   int rect[4];
   int id;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
   SWFDEC_OBJECT (shape)->id = id;
   s->objects = g_list_append (s->objects, shape);
 
   SWFDEC_LOG("  ID: %d", id);
 
-  get_rect (bits, rect);
+  swfdec_bits_get_rect (bits, rect);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -338,15 +338,15 @@ art_define_shape_3 (SwfdecDecoder * s)
 }
 
 void
-swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
+swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
 {
   int n_fill_styles;
   int n_line_styles;
   int i;
 
-  syncbits (bits);
+  swfdec_bits_syncbits (bits);
   shape->fills_offset = shape->fills->len;
-  n_fill_styles = get_u8 (bits);
+  n_fill_styles = swfdec_bits_get_u8 (bits);
   SWFDEC_LOG("   n_fill_styles %d", n_fill_styles);
   for (i = 0; i < n_fill_styles; i++) {
     int fill_style_type;
@@ -361,23 +361,23 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
 
     shapevec->color = SWF_COLOR_COMBINE (0, 255, 0, 255);
 
-    fill_style_type = get_u8 (bits);
+    fill_style_type = swfdec_bits_get_u8 (bits);
     SWFDEC_LOG("    type 0x%02x", fill_style_type);
     if (fill_style_type == 0x00) {
       if (shape->rgba) {
-	shapevec->color = get_rgba (bits);
+	shapevec->color = swfdec_bits_get_rgba (bits);
       } else {
-	shapevec->color = get_color (bits);
+	shapevec->color = swfdec_bits_get_color (bits);
       }
       SWFDEC_LOG("    color %08x", shapevec->color);
     }
     if (fill_style_type == 0x10 || fill_style_type == 0x12) {
       shapevec->fill_type = fill_style_type;
-      get_art_matrix (bits, shapevec->fill_matrix);
+      swfdec_bits_get_art_matrix (bits, shapevec->fill_matrix);
       if (shape->rgba) {
-	shapevec->grad = get_gradient_rgba (bits);
+	shapevec->grad = swfdec_bits_get_gradient_rgba (bits);
       } else {
-	shapevec->grad = get_gradient (bits);
+	shapevec->grad = swfdec_bits_get_gradient (bits);
       }
       shapevec->fill_matrix[0] *= SWF_SCALE_FACTOR;
       shapevec->fill_matrix[1] *= SWF_SCALE_FACTOR;
@@ -386,7 +386,7 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
     }
     if (fill_style_type == 0x40 || fill_style_type == 0x41) {
       shapevec->fill_type = fill_style_type;
-      shapevec->fill_id = get_u16 (bits);
+      shapevec->fill_id = swfdec_bits_get_u16 (bits);
       SWFDEC_LOG("   background fill id = %d (type 0x%02x)",
 	  shapevec->fill_id, fill_style_type);
 
@@ -395,7 +395,7 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
 	shapevec->color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       }
 
-      get_art_matrix (bits, shapevec->fill_matrix);
+      swfdec_bits_get_art_matrix (bits, shapevec->fill_matrix);
       shapevec->fill_matrix[0] *= SWF_SCALE_FACTOR;
       shapevec->fill_matrix[1] *= SWF_SCALE_FACTOR;
       shapevec->fill_matrix[2] *= SWF_SCALE_FACTOR;
@@ -403,9 +403,9 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
     }
   }
 
-  syncbits (bits);
+  swfdec_bits_syncbits (bits);
   shape->lines_offset = shape->lines->len;
-  n_line_styles = get_u8 (bits);
+  n_line_styles = swfdec_bits_get_u8 (bits);
   SWFDEC_LOG("   n_line_styles %d", n_line_styles);
   for (i = 0; i < n_line_styles; i++) {
     SwfdecShapeVec *shapevec;
@@ -413,17 +413,17 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, bits_t * bits)
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->lines, shapevec);
 
-    shapevec->width = get_u16 (bits) * SWF_SCALE_FACTOR;
+    shapevec->width = swfdec_bits_get_u16 (bits) * SWF_SCALE_FACTOR;
     if (shape->rgba) {
-      shapevec->color = get_rgba (bits);
+      shapevec->color = swfdec_bits_get_rgba (bits);
     } else {
-      shapevec->color = get_color (bits);
+      shapevec->color = swfdec_bits_get_color (bits);
     }
   }
 
-  syncbits (bits);
-  shape->n_fill_bits = getbits (bits, 4);
-  shape->n_line_bits = getbits (bits, 4);
+  swfdec_bits_syncbits (bits);
+  shape->n_fill_bits = swfdec_bits_getbits (bits, 4);
+  shape->n_line_bits = swfdec_bits_getbits (bits, 4);
 }
 
 static SwfdecShapeVec *swfdec_shape_get_fill0style(SwfdecShape *shape, int fill0style)
@@ -459,7 +459,7 @@ static SwfdecShapeVec *swfdec_shape_get_linestyle(SwfdecShape *shape, int linest
 }
 
 void
-swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
+swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
 {
   int x = 0, y = 0;
   int fill0style = 0;
@@ -470,36 +470,36 @@ swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
   ArtBpath pt;
   int i;
 
-  while (peekbits (bits, 6) != 0) {
+  while (swfdec_bits_peekbits (bits, 6) != 0) {
     int type;
     int n_bits;
 
-    type = getbits (bits, 1);
+    type = swfdec_bits_getbits (bits, 1);
 
     if (type == 0) {
-      int state_new_styles = getbits (bits, 1);
-      int state_line_styles = getbits (bits, 1);
-      int state_fill_styles1 = getbits (bits, 1);
-      int state_fill_styles0 = getbits (bits, 1);
-      int state_moveto = getbits (bits, 1);
+      int state_new_styles = swfdec_bits_getbits (bits, 1);
+      int state_line_styles = swfdec_bits_getbits (bits, 1);
+      int state_fill_styles1 = swfdec_bits_getbits (bits, 1);
+      int state_fill_styles0 = swfdec_bits_getbits (bits, 1);
+      int state_moveto = swfdec_bits_getbits (bits, 1);
 
       if (state_moveto) {
-	n_bits = getbits (bits, 5);
-	x = getsbits (bits, n_bits);
-	y = getsbits (bits, n_bits);
+	n_bits = swfdec_bits_getbits (bits, 5);
+	x = swfdec_bits_getsbits (bits, n_bits);
+	y = swfdec_bits_getsbits (bits, n_bits);
 
 	SWFDEC_LOG("   moveto %d,%d", x, y);
       }
       if (state_fill_styles0) {
-	fill0style = getbits (bits, shape->n_fill_bits);
+	fill0style = swfdec_bits_getbits (bits, shape->n_fill_bits);
 	SWFDEC_LOG("   * fill0style = %d", fill0style);
       }
       if (state_fill_styles1) {
-	fill1style = getbits (bits, shape->n_fill_bits);
+	fill1style = swfdec_bits_getbits (bits, shape->n_fill_bits);
 	SWFDEC_LOG("   * fill1style = %d", fill1style);
       }
       if (state_line_styles) {
-	linestyle = getbits (bits, shape->n_line_bits);
+	linestyle = swfdec_bits_getbits (bits, shape->n_line_bits);
 	SWFDEC_LOG("   * linestyle = %d", linestyle);
       }
       if (state_new_styles) {
@@ -514,7 +514,7 @@ swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
       int n_bits;
       int edge_flag;
 
-      edge_flag = getbits (bits, 1);
+      edge_flag = swfdec_bits_getbits (bits, 1);
 
       if (edge_flag == 0) {
 	double x0, y0;
@@ -523,16 +523,16 @@ swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
 
 	x0 = x * SWF_SCALE_FACTOR;
 	y0 = y * SWF_SCALE_FACTOR;
-	n_bits = getbits (bits, 4) + 2;
+	n_bits = swfdec_bits_getbits (bits, 4) + 2;
 
-	x += getsbits (bits, n_bits);
-	y += getsbits (bits, n_bits);
+	x += swfdec_bits_getsbits (bits, n_bits);
+	y += swfdec_bits_getsbits (bits, n_bits);
 	SWFDEC_LOG("   control %d,%d", x, y);
 	x1 = x * SWF_SCALE_FACTOR;
 	y1 = y * SWF_SCALE_FACTOR;
 
-	x += getsbits (bits, n_bits);
-	y += getsbits (bits, n_bits);
+	x += swfdec_bits_getsbits (bits, n_bits);
+	y += swfdec_bits_getsbits (bits, n_bits);
 	SWFDEC_LOG("   anchor %d,%d", x, y);
 	x2 = x * SWF_SCALE_FACTOR;
 	y2 = y * SWF_SCALE_FACTOR;
@@ -550,17 +550,17 @@ swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
 	int general_line_flag;
 	int vert_line_flag = 0;
 
-	n_bits = getbits (bits, 4) + 2;
-	general_line_flag = getbit (bits);
+	n_bits = swfdec_bits_getbits (bits, 4) + 2;
+	general_line_flag = swfdec_bits_getbit (bits);
 	if (general_line_flag == 1) {
-	  x += getsbits (bits, n_bits);
-	  y += getsbits (bits, n_bits);
+	  x += swfdec_bits_getsbits (bits, n_bits);
+	  y += swfdec_bits_getsbits (bits, n_bits);
 	} else {
-	  vert_line_flag = getbit (bits);
+	  vert_line_flag = swfdec_bits_getbit (bits);
 	  if (vert_line_flag == 0) {
-	    x += getsbits (bits, n_bits);
+	    x += swfdec_bits_getsbits (bits, n_bits);
 	  } else {
-	    y += getsbits (bits, n_bits);
+	    y += swfdec_bits_getsbits (bits, n_bits);
 	  }
 	}
 	SWFDEC_LOG("   delta %d,%d", x, y);
@@ -585,8 +585,8 @@ swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape)
 
   }
 
-  getbits (bits, 6);
-  syncbits (bits);
+  swfdec_bits_getbits (bits, 6);
+  swfdec_bits_syncbits (bits);
 
   pt.code = ART_END;
   for (i = 0; i < shape->fills->len; i++) {

@@ -163,15 +163,15 @@ load_dialog (const gchar *file_name)
 	
 	vals = g_new0 (LoadDialogVals, 1);
 	
-	vals->dialog = gimp_dialog_new (_("Load Shockwave Flash Image"), "swf",
-					NULL, NULL, /* gimp_standard_help_func, "swf, */
-					GTK_WIN_POS_MOUSE,
-					FALSE, TRUE, FALSE,
-					GTK_STOCK_CANCEL, gtk_widget_destroy,
-					NULL, 1, NULL, FALSE, TRUE,
-					GTK_STOCK_OK, load_ok_callback,
-					vals, NULL, NULL, TRUE, FALSE,
-					NULL);
+	vals->dialog = gimp_dialog_new (_("Load Shockwave Flash Image"),
+            "swf",
+            NULL,
+            0,
+            gimp_standard_help_func,
+            "swf",
+            GTK_STOCK_CANCEL, gtk_widget_destroy, NULL, 1, NULL, FALSE, TRUE,
+            GTK_STOCK_OK, load_ok_callback, vals, NULL, NULL, TRUE, FALSE,
+            NULL);
 	
 	g_signal_connect (vals->dialog, "destroy",
 			  G_CALLBACK (gtk_main_quit),

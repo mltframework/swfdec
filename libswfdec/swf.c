@@ -6,7 +6,7 @@
 
 #include "swfdec_internal.h"
 
-static void dumpbits (bits_t * b);
+static void dumpbits (SwfdecBits * b);
 
 int swf_parse_header1 (SwfdecDecoder * s);
 int swf_inflate_init (SwfdecDecoder * s);
@@ -107,7 +107,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
       case SWF_STATE_INIT2:
 	ret = swf_parse_header2 (s);
 	if (ret == SWF_OK) {
-	  syncbits (&s->b);
+	  swfdec_bits_syncbits (&s->b);
 	  s->parse = s->b;
 	  s->state = SWF_STATE_PARSETAG;
 	  {
@@ -129,7 +129,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	if (ret != SWF_OK)
 	  break;
 
-	if (bits_needbits (&s->b, s->tag_len)) {
+	if (swfdec_bits_needbits (&s->b, s->tag_len)) {
 	  ret = SWF_NEEDBITS;
 	  break;
 	}
@@ -140,7 +140,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 	s->parse_sprite = NULL;
 	//if(ret != SWF_OK)break;
 
-	syncbits (&s->b);
+	swfdec_bits_syncbits (&s->b);
 	if (s->b.ptr < endptr) {
 	  SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
 	  dumpbits (&s->b);
@@ -371,13 +371,13 @@ zfree (void *opaque, void *addr)
 }
 
 static void
-dumpbits (bits_t * b)
+dumpbits (SwfdecBits * b)
 {
   int i;
 
   printf ("    ");
   for (i = 0; i < 16; i++) {
-    printf ("%02x ", get_u8 (b));
+    printf ("%02x ", swfdec_bits_get_u8 (b));
   }
   printf ("\n");
 }
@@ -387,20 +387,20 @@ swf_parse_header1 (SwfdecDecoder * s)
 {
   int sig1, sig2, sig3;
 
-  if (bits_needbits (&s->b, 8))
+  if (swfdec_bits_needbits (&s->b, 8))
     return SWF_NEEDBITS;
 
-  sig1 = get_u8 (&s->b);
-  sig2 = get_u8 (&s->b);
-  sig3 = get_u8 (&s->b);
+  sig1 = swfdec_bits_get_u8 (&s->b);
+  sig2 = swfdec_bits_get_u8 (&s->b);
+  sig3 = swfdec_bits_get_u8 (&s->b);
 
   if ((sig1 != 'F' && sig1 != 'C') || sig2 != 'W' || sig3 != 'S')
     return SWF_ERROR;
 
   s->compressed = (sig1 == 'C');
 
-  s->version = get_u8 (&s->b);
-  s->length = get_u32 (&s->b);
+  s->version = swfdec_bits_get_u8 (&s->b);
+  s->length = swfdec_bits_get_u32 (&s->b);
 
   return SWF_OK;
 }
@@ -452,10 +452,10 @@ swf_parse_header2 (SwfdecDecoder * s)
   int rect[4];
   double width, height;
 
-  if (bits_needbits (&s->b, 32))
+  if (swfdec_bits_needbits (&s->b, 32))
     return SWF_NEEDBITS;
 
-  get_rect (&s->b, rect);
+  swfdec_bits_get_rect (&s->b, rect);
   width = rect[1] * SWF_SCALE_FACTOR;
   height = rect[3] * SWF_SCALE_FACTOR;
   s->parse_width = width;
@@ -483,10 +483,10 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y0 = 0;
   s->irect.x1 = s->width;
   s->irect.y1 = s->height;
-  syncbits (&s->b);
-  s->rate = get_u16 (&s->b) / 256.0;
+  swfdec_bits_syncbits (&s->b);
+  s->rate = swfdec_bits_get_u16 (&s->b) / 256.0;
   SWFDEC_LOG("rate = %g", s->rate);
-  s->n_frames = get_u16 (&s->b);
+  s->n_frames = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG("n_frames = %d", s->n_frames);
 
   s->main_sprite->n_frames = s->n_frames;
@@ -567,23 +567,23 @@ int
 swf_parse_tag (SwfdecDecoder * s)
 {
   unsigned int x;
-  bits_t *b = &s->b;
+  SwfdecBits *b = &s->b;
   char *name;
 
   SWFDEC_DEBUG ("parsing at %d (%d left)",
       (char *)s->parse.ptr - s->input_data,
       s->parse.end - s->parse.ptr);
 
-  if (bits_needbits (&s->b, 2))
+  if (swfdec_bits_needbits (&s->b, 2))
     return SWF_NEEDBITS;
 
-  x = get_u16 (b);
+  x = swfdec_bits_get_u16 (b);
   s->tag = (x >> 6) & 0x3ff;
   s->tag_len = x & 0x3f;
   if (s->tag_len == 0x3f) {
-    if (bits_needbits (&s->b, 4))
+    if (swfdec_bits_needbits (&s->b, 4))
       return SWF_NEEDBITS;
-    s->tag_len = get_u32 (b);
+    s->tag_len = swfdec_bits_get_u32 (b);
   }
 
   s->func = NULL;
@@ -636,12 +636,12 @@ tag_func_ignore (SwfdecDecoder * s)
 int
 tag_func_dumpbits (SwfdecDecoder * s)
 {
-  bits_t *b = &s->b;
+  SwfdecBits *b = &s->b;
   int i;
 
   printf ("    ");
   for (i = 0; i < 16; i++) {
-    printf ("%02x ", get_u8 (b));
+    printf ("%02x ", swfdec_bits_get_u8 (b));
   }
   printf ("\n");
 
@@ -651,7 +651,7 @@ tag_func_dumpbits (SwfdecDecoder * s)
 int
 tag_func_frame_label (SwfdecDecoder * s)
 {
-  free (get_string (&s->b));
+  free (swfdec_bits_get_string (&s->b));
 
   return SWF_OK;
 }

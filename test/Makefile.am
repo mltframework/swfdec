@@ -1,8 +1,5 @@
 
-noinst_PROGRAMS = display-shape render-fast test-pixbuf dump render
-
-display_shape_CFLAGS = $(SWF_CFLAGS) $(GTK_CFLAGS) $(LIBART_CFLAGS)
-display_shape_LDFLAGS = $(SWF_LIBS) $(GTK_LIBS) $(LIBART_LIBS)
+noinst_PROGRAMS = render-fast test-pixbuf dump render
 
 render_fast_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS)
 render_fast_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)

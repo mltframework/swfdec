@@ -6,7 +6,7 @@
 #include <swfdec_types.h>
 #include <swfdec_object.h>
 #include <color.h>
-#include <bits.h>
+#include <swfdec_bits.h>
 
 G_BEGIN_DECLS
 
@@ -65,8 +65,8 @@ SwfdecShapeVec *swf_shape_vec_new (void);
 int art_define_shape (SwfdecDecoder * s);
 int art_define_shape_3 (SwfdecDecoder * s);
 void swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
-    bits_t * bits);
-void swf_shape_get_recs (SwfdecDecoder * s, bits_t * bits, SwfdecShape * shape);
+    SwfdecBits * bits);
+void swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape);
 int art_define_shape_2 (SwfdecDecoder * s);
 int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);

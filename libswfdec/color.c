@@ -55,7 +55,7 @@ tag_func_set_background_color (SwfdecDecoder * s)
 {
   ArtIRect rect;
 
-  s->bg_color = get_color (&s->b);
+  s->bg_color = swfdec_bits_get_color (&s->b);
 
   rect.x0 = 0;
   rect.y0 = 0;

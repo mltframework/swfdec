@@ -175,7 +175,7 @@ hexdump (unsigned char *data, int len)
 #endif
 
 void
-get_actions (SwfdecDecoder * s, bits_t * bits)
+get_actions (SwfdecDecoder * s, SwfdecBits * bits)
 {
   int action;
   int len;
@@ -187,12 +187,12 @@ get_actions (SwfdecDecoder * s, bits_t * bits)
   SWFDEC_LOG ("get_actions");
 
   while (1) {
-    action = get_u8 (bits);
+    action = swfdec_bits_get_u8 (bits);
     if (action == 0)
       break;
 
     if (action & 0x80) {
-      len = get_u16 (bits);
+      len = swfdec_bits_get_u16 (bits);
     } else {
       len = 0;
     }
@@ -227,7 +227,7 @@ tag_func_do_action (SwfdecDecoder * s)
 
 
 int
-swfdec_action_script_execute (SwfdecDecoder * s, bits_t * bits)
+swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBits * bits)
 {
   int action;
   int len;
@@ -239,12 +239,12 @@ swfdec_action_script_execute (SwfdecDecoder * s, bits_t * bits)
   SWFDEC_LOG("swfdec_action_script_execute");
 
   while (1) {
-    action = get_u8 (bits);
+    action = swfdec_bits_get_u8 (bits);
     if (action == 0)
       break;
 
     if (action & 0x80) {
-      len = get_u16 (bits);
+      len = swfdec_bits_get_u16 (bits);
     } else {
       len = 0;
     }

@@ -182,12 +182,12 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
 int
 tag_func_define_sprite (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int id;
   SwfdecSprite *sprite;
   //int ret;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
   SWFDEC_OBJECT (sprite)->id = id;
   s->objects = g_list_append (s->objects, sprite);
@@ -197,7 +197,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   SWFDEC_LOG("  ID: %d", id);
 
-  sprite->n_frames = get_u16 (bits);
+  sprite->n_frames = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG("n_frames = %d", sprite->n_frames);
 
 #if 0
@@ -289,7 +289,7 @@ swfdec_spriteseg_free (SwfdecSpriteSegment * seg)
 int
 swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int reserved;
   int has_compose;
   int has_name;
@@ -302,15 +302,15 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SwfdecSpriteSegment *layer;
   SwfdecSpriteSegment *oldlayer;
 
-  reserved = getbit (bits);
-  has_compose = getbit (bits);
-  has_name = getbit (bits);
-  has_ratio = getbit (bits);
-  has_color_transform = getbit (bits);
-  has_matrix = getbit (bits);
-  has_character = getbit (bits);
-  move = getbit (bits);
-  depth = get_u16 (bits);
+  reserved = swfdec_bits_getbit (bits);
+  has_compose = swfdec_bits_getbit (bits);
+  has_name = swfdec_bits_getbit (bits);
+  has_ratio = swfdec_bits_getbit (bits);
+  has_color_transform = swfdec_bits_getbit (bits);
+  has_matrix = swfdec_bits_getbit (bits);
+  has_character = swfdec_bits_getbit (bits);
+  move = swfdec_bits_getbit (bits);
+  depth = swfdec_bits_get_u16 (bits);
 
   /* reserved is somehow related to sprites */
   SWFDEC_LOG("  reserved = %d", reserved);
@@ -339,21 +339,21 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   swfdec_sprite_add_seg (s->parse_sprite, layer);
 
   if (has_character) {
-    layer->id = get_u16 (bits);
+    layer->id = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG("  id = %d", layer->id);
   } else {
     if (oldlayer)
       layer->id = oldlayer->id;
   }
   if (has_matrix) {
-    get_art_matrix (bits, layer->transform);
+    swfdec_bits_get_art_matrix (bits, layer->transform);
   } else {
     if (oldlayer)
       art_affine_copy (layer->transform, oldlayer->transform);
   }
   if (has_color_transform) {
-    get_art_color_transform (bits, layer->color_mult, layer->color_add);
-    syncbits (bits);
+    swfdec_bits_get_art_color_transform (bits, layer->color_mult, layer->color_add);
+    swfdec_bits_syncbits (bits);
   } else {
     if (oldlayer) {
       memcpy (layer->color_mult, oldlayer->color_mult, sizeof (double) * 4);
@@ -370,19 +370,19 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     }
   }
   if (has_ratio) {
-    layer->ratio = get_u16 (bits);
+    layer->ratio = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG("  ratio = %d", layer->ratio);
   } else {
     if (oldlayer)
       layer->ratio = oldlayer->ratio;
   }
   if (has_name) {
-    free (get_string (bits));
+    free (swfdec_bits_get_string (bits));
   }
   if (has_compose) {
     int id;
 
-    id = get_u16 (bits);
+    id = swfdec_bits_get_u16 (bits);
     SWFDEC_WARNING ("composing with %04x", id);
   }
 
@@ -396,8 +396,8 @@ swfdec_spriteseg_remove_object (SwfdecDecoder * s)
   SwfdecSpriteSegment *seg;
   int id;
 
-  id = get_u16 (&s->b);
-  depth = get_u16 (&s->b);
+  id = swfdec_bits_get_u16 (&s->b);
+  depth = swfdec_bits_get_u16 (&s->b);
   seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
       s->parse_sprite->parse_frame - 1);
 
@@ -417,7 +417,7 @@ swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
   int depth;
   SwfdecSpriteSegment *seg;
 
-  depth = get_u16 (&s->b);
+  depth = swfdec_bits_get_u16 (&s->b);
   seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
       s->parse_sprite->parse_frame - 1);
 

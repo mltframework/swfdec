@@ -130,7 +130,7 @@ lossless (void *zptr, int zlen, int *plen)
 int
 swfdec_image_jpegtables (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
 
   SWFDEC_LOG ("swfdec_image_jpegtables");
 
@@ -147,13 +147,13 @@ int
 tag_func_define_bits_jpeg (SwfdecDecoder * s)
 {
 
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int id;
   SwfdecImage *image;
   JpegRGBDecoder *dec;
 
   SWFDEC_LOG ("tag_func_define_bits_jpeg");
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
@@ -182,11 +182,11 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 int
 tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int id;
   SwfdecImage *image;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
@@ -207,7 +207,7 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 int
 tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int id;
 
   //unsigned char *endptr = s->b.ptr + s->tag_len;
@@ -221,14 +221,14 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   endptr = bits->ptr + s->tag_len;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
-  len = get_u32 (bits);
+  len = swfdec_bits_get_u32 (bits);
   SWFDEC_LOG ("  len = %d", len);
 
   jpegdec (image, bits->ptr, len);
@@ -285,7 +285,7 @@ merge_opaque (SwfdecImage * image)
 static int
 define_bits_lossless (SwfdecDecoder * s, int have_alpha)
 {
-  bits_t *bits = &s->b;
+  SwfdecBits *bits = &s->b;
   int id;
   int format;
   int color_table_size;
@@ -294,21 +294,21 @@ define_bits_lossless (SwfdecDecoder * s, int have_alpha)
   unsigned char *endptr = bits->ptr + s->tag_len;
   SwfdecImage *image;
 
-  id = get_u16 (bits);
+  id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
   SWFDEC_OBJECT (image)->id = id;
   s->objects = g_list_append (s->objects, image);
 
-  format = get_u8 (bits);
+  format = swfdec_bits_get_u8 (bits);
   SWFDEC_LOG ("  format = %d", format);
-  image->width = get_u16 (bits);
+  image->width = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  width = %d", image->width);
-  image->height = get_u16 (bits);
+  image->height = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  height = %d", image->height);
   if (format == 3) {
-    color_table_size = get_u8 (bits) + 1;
+    color_table_size = swfdec_bits_get_u8 (bits) + 1;
   } else {
     color_table_size = 0;
   }

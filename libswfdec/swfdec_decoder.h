@@ -5,7 +5,7 @@
 #include <glib.h>
 #include <zlib.h>
 #include <libart_lgpl/libart.h>
-#include "bits.h"
+#include "swfdec_bits.h"
 
 #include "swfdec_types.h"
 
@@ -60,10 +60,10 @@ struct swfdec_decoder_struct
   int state;
 
   /* where we are in global parsing */
-  bits_t parse;
+  SwfdecBits parse;
 
   /* temporary state while parsing */
-  bits_t b;
+  SwfdecBits b;
 
   /* defined objects */
   GList *objects;

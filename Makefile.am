@@ -6,8 +6,12 @@ EXTRA_DIST=depcomp AUTHORS COPYING README RELEASE ChangeLog autogen.sh swfdec.sp
 	TODO m4
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = swfdec.pc
+pkgconfig_DATA = swfdec-@SWFDEC_MAJORMINOR@.pc
 
+EXTRA_CLEAN=swfdec.pc
+
+swfdec-@SWFDEC_MAJORMINOR@.pc: swfdec.pc
+	cp swfdec.pc swfdec-@SWFDEC_MAJORMINOR@.pc
 
 dist-hook:
 	cp swfdec.spec $(distdir)

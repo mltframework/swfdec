@@ -3,6 +3,7 @@
 #define _SWF_PROTO_H_
 
 #include "swfdec_types.h"
+#include "swfdec_bits.h"
 
 /* render.c */
 
@@ -25,7 +26,7 @@ int tag_func_zero (SwfdecDecoder * s);
 int tag_func_ignore_quiet (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
 int tag_func_dumpbits (SwfdecDecoder * s);
-void get_actions (SwfdecDecoder * s, bits_t * bits);
+void get_actions (SwfdecDecoder * s, SwfdecBits * bits);
 int tag_func_set_background_color (SwfdecDecoder * s);
 int tag_func_frame_label (SwfdecDecoder * s);
 int tag_func_do_action (SwfdecDecoder * s);

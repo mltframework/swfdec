@@ -140,7 +140,7 @@ LIBGIMP_CFLAGS=""
 LIBGIMP_LIBS=""
 swf_gimp=no
 
-PKG_CHECK_MODULES(LIBGIMP,[gimp-1.3 >= 1.3.10 gimpui-1.3 >= 1.3.10 gtk+-2.0 >= 2.0.0], test_gimp=true, test_gimp=false)
+PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0], test_gimp=true, test_gimp=false)
 if test "x$test_gimp" = "xtrue"; then
       swf_gimp=yes
 fi
@@ -185,7 +185,6 @@ dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
 libswfdec/Makefile
-libswfdec/mpglib/Makefile
 libswfdec/jpeg/Makefile
 test/Makefile
 plugin/Makefile

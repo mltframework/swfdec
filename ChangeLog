@@ -1,5 +1,52 @@
 2004-08-02  David Schleef  <ds@schleef.org>
 
+	Global change bits_t -> SwfdecBits.  Prepend swfdec_bits_ to
+	all bit related functions.
+	* Makefile.am:
+	* configure.ac:
+	* gimp-loader/swf-gimp.c: (load_dialog):
+	* libswfdec/Makefile.am:
+	* libswfdec/actions.c: (get_actions),
+	(swfdec_action_script_execute):
+	* libswfdec/bits.h:
+	* libswfdec/color.c: (tag_func_set_background_color):
+	* libswfdec/get.c:
+	* libswfdec/get.h:
+	* libswfdec/proto.h:
+	* libswfdec/render.c: (art_place_object_2), (art_remove_object),
+	(art_remove_object_2):
+	* libswfdec/swf.c: (swfdec_decoder_parse), (dumpbits),
+	(swf_parse_header1), (swf_parse_header2), (swf_parse_tag),
+	(tag_func_dumpbits), (tag_func_frame_label):
+	* libswfdec/swfdec_button.c: (tag_func_define_button_2):
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_display.c: (tag_func_place_object_2),
+	(tag_func_remove_object), (tag_func_remove_object_2):
+	* libswfdec/swfdec_font.c: (tag_func_define_font),
+	(get_kerning_record), (tag_func_define_font_2):
+	* libswfdec/swfdec_image.c: (swfdec_image_jpegtables),
+	(tag_func_define_bits_jpeg), (tag_func_define_bits_jpeg_2),
+	(tag_func_define_bits_jpeg_3), (define_bits_lossless):
+	* libswfdec/swfdec_internal.h:
+	* libswfdec/swfdec_shape.c: (get_shape_rec),
+	(tag_func_define_shape), (art_define_shape), (art_define_shape_3),
+	(swf_shape_add_styles), (swf_shape_get_recs):
+	* libswfdec/swfdec_shape.h:
+	* libswfdec/swfdec_sound.c: (tag_func_sound_stream_block),
+	(tag_func_define_sound), (tag_func_sound_stream_head),
+	(get_soundinfo), (tag_func_start_sound),
+	(tag_func_define_button_sound), (adpcm_decode):
+	* libswfdec/swfdec_sprite.c: (tag_func_define_sprite),
+	(swfdec_spriteseg_place_object_2),
+	(swfdec_spriteseg_remove_object),
+	(swfdec_spriteseg_remove_object_2):
+	* libswfdec/swfdec_text.c: (define_text):
+	* swfdec.pc.in:
+	* test/Makefile.am:
+	* test/display-shape.c:
+
+2004-08-02  David Schleef  <ds@schleef.org>
+
 	Lots and lots of hacking.
 	* libswfdec/art.c: (art_rgb_run_alpha_2), (art_rgb_fillrect),
 	(art_rgb_svp_alpha_compose_callback), (art_rgb_svp_alpha_callback):

@@ -6,10 +6,16 @@
 #include <stdio.h>
 
 struct swf_svp_render_struct{
+	unsigned char *scanline;
 	unsigned int color;
 	unsigned char *buf;
 	int rowstride;
 	int x0, x1;
+	unsigned char *compose;
+	int compose_rowstride;
+	int compose_y;
+	int compose_height;
+	int compose_width;
 };
 
 int art_affine_inverted(double x[6]);

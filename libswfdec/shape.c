@@ -4,6 +4,9 @@
 
 #include "swfdec_internal.h"
 
+static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
+	SwfdecShapeVec *shapevec);
+
 int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits)
 {
 	int type;
@@ -172,7 +175,7 @@ SwfdecShapeVec *swf_shape_vec_new(void)
 
 	shapevec = g_new0(SwfdecShapeVec,1);
 
-	shapevec->path = g_array_new(FALSE,FALSE,sizeof(ArtBpath));
+	shapevec->path = g_array_new(TRUE,FALSE,sizeof(ArtBpath));
 
 	return shapevec;
 }
@@ -281,7 +284,13 @@ void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 		if(fill_style_type == 0x40 || fill_style_type == 0x41){
 			shapevec->fill_type = fill_style_type;
 			shapevec->fill_id = get_u16(bits);
-			SWF_DEBUG(0,"   background fill id = %d\n",shapevec->fill_id);
+			SWF_DEBUG(4,"   background fill id = %d (type 0x%02x)\n",
+				shapevec->fill_id, fill_style_type);
+
+			if(shapevec->fill_id==65535){
+				shapevec->fill_id = 0;
+				shapevec->color = SWF_COLOR_COMBINE(0,255,255,255);
+			}
 
 			get_matrix(bits);
 		}
@@ -568,6 +577,13 @@ void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 		art_free(vpath0);
 		art_free(vpath1);
 		art_free(vpath);
+
+		layervec->color = transform_color(shapevec->color,
+			layer->color_mult, layer->color_add);
+		layervec->compose = NULL;
+		if(shapevec->fill_id){
+			swfdec_shape_compose(s, layervec, shapevec);
+		}
 	}
 
 	g_array_set_size(layer->lines, shape->lines->len);
@@ -604,6 +620,8 @@ void swfdec_shape_prerender(SwfdecDecoder *s,SwfdecLayer *layer,
 
 		art_free(vpath);
 		art_free(bpath);
+		layervec->color = transform_color(shapevec->color,
+			layer->color_mult, layer->color_add);
 	}
 
 }
@@ -622,5 +640,27 @@ void swfdec_shape_render(SwfdecDecoder *s,SwfdecLayer *layer,
 		layervec = &g_array_index(layer->lines, SwfdecLayerVec, i);
 		swfdec_layervec_render(s, layervec);
 	}
+}
+
+static void swfdec_shape_compose(SwfdecDecoder *s, SwfdecLayerVec *layervec,
+	SwfdecShapeVec *shapevec)
+{
+	SwfdecObject *image_object;
+	SwfdecImage *image;
+
+	image_object = swfdec_object_get(s, shapevec->fill_id);
+	if(!image_object)return;
+
+	SWF_DEBUG(4,"swfdec_shape_compose: %d\n", shapevec->fill_id);
+
+	layervec->color = SWF_COLOR_COMBINE(255,0,0,255);
+
+	image = image_object->priv;
+	SWF_DEBUG(4,"image %p\n", image->image_data);
+
+	layervec->compose = image->image_data;
+	layervec->compose_rowstride = image->rowstride;
+	layervec->compose_height = image->height;
+	layervec->compose_width = image->width;
 }
 

@@ -8,6 +8,7 @@ struct swfdec_image_struct{
 	char *image_data;
 };
 
+int swfdec_image_jpegtables(SwfdecDecoder *s);
 int tag_func_define_bits_jpeg(SwfdecDecoder *s);
 int tag_func_define_bits_jpeg_2(SwfdecDecoder *s);
 int tag_func_define_bits_jpeg_3(SwfdecDecoder *s);

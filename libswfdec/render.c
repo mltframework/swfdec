@@ -197,6 +197,9 @@ void swf_render_frame(SwfdecDecoder *s)
 	if(!s->buffer){
 		s->buffer = art_new (art_u8, s->stride*s->height);
 	}
+	if(!s->tmp_scanline){
+		s->tmp_scanline = malloc(s->width);
+	}
 
 	if(!s->sound_buffer){
 		s->sound_len = 4*2*44100;

@@ -7,6 +7,7 @@
  * in libart.
  *
  */
+static inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n);
 
 int art_affine_inverted(double x[6])
 {
@@ -365,6 +366,76 @@ art_rgb565_svp_alpha_callback (void *callback_data, int y,
   data->buf += data->rowstride;
 }
 
+#define COMPOSE(a, b, x) (((a)*(255 - (x)) + ((b)*(x)))>>8)
+#define compose_const_rgb888_u8 compose_const_rgb888_u8_fast
+
+void compose_const_rgb888_u8_ref(unsigned char *dest, unsigned char *src,
+	unsigned int color, int n)
+{
+	int r,g,b;
+	int i;
+
+	r = SWF_COLOR_R(color);
+	g = SWF_COLOR_G(color);
+	b = SWF_COLOR_B(color);
+
+	for(i=0;i<n;i++){
+		dest[0] = COMPOSE(dest[0], r, src[0]);
+		dest[1] = COMPOSE(dest[1], g, src[0]);
+		dest[2] = COMPOSE(dest[2], b, src[0]);
+		dest+=3;
+		src++;
+	}
+}
+
+void compose_const_rgb888_u8_fast(unsigned char *dest, unsigned char *src,
+	unsigned int color, int n)
+{
+	unsigned int r,g,b;
+	unsigned int un_a, a;
+	int i;
+
+	r = SWF_COLOR_R(color);
+	g = SWF_COLOR_G(color);
+	b = SWF_COLOR_B(color);
+
+	for(i=0;i<n;i++){
+		a = src[0];
+		if(a==0){
+		}else if(a==255){
+			dest[0] = r;
+			dest[1] = g;
+			dest[2] = b;
+		}else{
+			un_a = 255 - a;
+			dest[0] = (un_a*dest[0] + a*r)>>8;
+			dest[1] = (un_a*dest[1] + a*g)>>8;
+			dest[2] = (un_a*dest[2] + a*b)>>8;
+		}
+		dest+=3;
+		src++;
+	}
+}
+
+#define compose_rgb888_u8 compose_rgb888_u8_ref
+void compose_rgb888_u8_ref(unsigned char *dest, unsigned char *a_src,
+	unsigned char *src, int n)
+{
+	int i;
+	int a;
+
+	for(i=0;i<n;i++){
+		a = a_src[0];
+		dest[0] = COMPOSE(dest[0], src[0], a);
+		dest[1] = COMPOSE(dest[1], src[1], a);
+		dest[2] = COMPOSE(dest[2], src[2], a);
+		dest+=3;
+		src+=4;
+		a_src++;
+	}
+}
+
+
 void
 art_rgb_svp_alpha_callback (void *callback_data, int y,
 			    int start, ArtSVPRenderAAStep *steps, int n_steps)
@@ -375,17 +446,13 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
   art_u32 running_sum = start;
   int x0, x1;
   int k;
-  art_u8 r, g, b, a;
   int alpha;
+  int a;
 
-  linebuf = data->buf;
+  a = SWF_COLOR_A(data->color);
+  linebuf = data->scanline;
   x0 = data->x0;
   x1 = data->x1;
-
-  r = SWF_COLOR_R(data->color);
-  g = SWF_COLOR_G(data->color);
-  b = SWF_COLOR_B(data->color);
-  a = SWF_COLOR_A(data->color);
 
   if (n_steps > 0)
     {
@@ -393,10 +460,7 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
       if (run_x1 > x0)
 	{
 	  alpha = (a * (running_sum>>8)) >> 16;
-	  if (alpha)
-	    art_rgb_run_alpha (linebuf,
-			       r, g, b, alpha,
-			       run_x1 - x0);
+	  art_grey_run_alpha(linebuf, alpha, run_x1 - x0);
 	}
 
       for (k = 0; k < n_steps - 1; k++)
@@ -407,36 +471,40 @@ art_rgb_svp_alpha_callback (void *callback_data, int y,
 	  if (run_x1 > run_x0)
 	    {
 	      alpha = (a * (running_sum>>8)) >> 16;
-	      if (alpha)
-		art_rgb_run_alpha (linebuf + (run_x0 - x0) * 3,
-				   r, g, b, alpha,
-				   run_x1 - run_x0);
+	      art_grey_run_alpha(linebuf + (run_x0 - x0), alpha, run_x1 - run_x0);
 	    }
 	}
       running_sum += steps[k].delta;
       if (x1 > run_x1)
 	{
 	  alpha = (a * (running_sum>>8)) >> 16;
-	  if (alpha)
-	    art_rgb_run_alpha (linebuf + (run_x1 - x0) * 3,
-			       r, g, b, alpha,
-			       x1 - run_x1);
+	  art_grey_run_alpha(linebuf + (run_x1 - x0), alpha, x1 - run_x1);
 	}
     }
   else
     {
       alpha = (a * (running_sum>>8)) >> 16;
-      if (alpha)
-	art_rgb_run_alpha (linebuf,
-			   r, g, b, alpha,
-			   x1 - x0);
+      art_grey_run_alpha(linebuf, alpha, x1 - x0);
     }
+
+  if(data->compose){
+    int x;
+    for(x=data->x0;x<data->x1;x+=data->compose_width){
+    	compose_rgb888_u8(data->buf, linebuf,
+		data->compose + data->compose_y * data->compose_rowstride,
+    		MIN(data->x1 - x, data->compose_width));
+    }
+    data->compose_y++;
+    if(data->compose_y >= data->compose_height)data->compose_y = 0;
+  }else{
+    compose_const_rgb888_u8(data->buf, linebuf, data->color, data->x1 - data->x0);
+  }
 
   data->buf += data->rowstride;
 }
 
 
-inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n)
+static inline void art_grey_run_alpha(unsigned char *buf, int alpha, int n)
 {
 	if(alpha>0xff)alpha=0xff;
 	memset(buf, alpha, n);

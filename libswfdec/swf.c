@@ -85,7 +85,6 @@ int swfdec_decoder_parse(SwfdecDecoder *s)
 	unsigned char *endptr;
 
 	while(ret==SWF_OK){
-		//printf("iter\n");
 		s->b = s->parse;
 
 		switch(s->state){
@@ -356,7 +355,7 @@ struct tag_func_struct tag_funcs[] = {
 //	[ ST_DEFINEBITS		] = { "DefineBits",	NULL,	0 },
 	[ ST_DEFINEBITSJPEG	] = { "DefineBitsJPEG",	tag_func_define_bits_jpeg,	0 },
 	[ ST_DEFINEBUTTON	] = { "DefineButton",	NULL,	0 },
-	[ ST_JPEGTABLES		] = { "JPEGTables",	NULL,	0 },
+	[ ST_JPEGTABLES		] = { "JPEGTables",	swfdec_image_jpegtables, 0 },
 	[ ST_SETBACKGROUNDCOLOR	] = { "SetBackgroundColor",	tag_func_set_background_color,	0 },
 	[ ST_DEFINEFONT		] = { "DefineFont",	tag_func_define_font,	0 },
 	[ ST_DEFINETEXT		] = { "DefineText",	tag_func_define_text,	0 },
@@ -497,9 +496,9 @@ void swf_debug(SwfdecDecoder *s, int n, char *format, ...)
 	if(s->tag >=0 && s->tag < n_tag_funcs){
 		name = tag_funcs[s->tag].name;
 	}
-	printf("DEBUG: [%d,%s] ", offset, name);
+	fprintf(stderr,"DEBUG: [%d,%s] ", offset, name);
 	va_start(args, format);
-	vprintf(format,args);
+	vfprintf(stderr,format,args);
 	va_end(args);
 }
 

@@ -76,6 +76,11 @@ struct swfdec_decoder_struct {
 	ArtIRect drawrect;
 
 	double flatness;
+	
+	unsigned char *tmp_scanline;
+
+	unsigned char *jpegtables;
+	unsigned int jpegtables_len;
 };
 
 SwfdecDecoder *swf_init(void);

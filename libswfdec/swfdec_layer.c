@@ -10,8 +10,8 @@ SwfdecLayer *swfdec_layer_new(void)
 
 	layer = g_new0(SwfdecLayer,1);
 
-	layer->fills = g_array_new(FALSE,FALSE,sizeof(SwfdecLayerVec));
-	layer->lines = g_array_new(FALSE,FALSE,sizeof(SwfdecLayerVec));
+	layer->fills = g_array_new(TRUE,FALSE,sizeof(SwfdecLayerVec));
+	layer->lines = g_array_new(TRUE,FALSE,sizeof(SwfdecLayerVec));
 
 	return layer;
 }
@@ -82,9 +82,6 @@ void swfdec_layer_del(SwfdecDecoder *s, SwfdecLayer *layer)
 void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 {
 	SwfdecObject *object;
-	SwfdecLayerVec *layervec;
-	SwfdecShapeVec *shapevec;
-	int i;
 	SwfdecShape *shape;
 
 	object = swfdec_object_get(s,layer->id);
@@ -99,6 +96,7 @@ void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 		layer->prerendered = 1;
 
 		swfdec_shape_prerender(s,layer,object);
+#if 0
 		for(i=0;i<layer->fills->len;i++){
 			shapevec = g_ptr_array_index(shape->fills,i);
 			layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
@@ -113,6 +111,7 @@ void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 			layervec->color = transform_color(shapevec->color,
 				layer->color_mult, layer->color_add);
 		}
+#endif
 		break;
 	case SWF_OBJECT_TEXT:
 		if(layer->prerendered)return;
@@ -152,6 +151,12 @@ void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 	cb_data.rowstride = s->stride;
 	cb_data.x0 = rect.x0;
 	cb_data.x1 = rect.x1;
+	cb_data.scanline = s->tmp_scanline;
+	cb_data.compose = layervec->compose;
+	cb_data.compose_rowstride = layervec->compose_rowstride;
+	cb_data.compose_height = layervec->compose_height;
+	cb_data.compose_y = 0;
+	cb_data.compose_width = layervec->compose_width;
 
 	g_assert(rect.x1 > rect.x0);
 	/* This assertion fails occasionally. */

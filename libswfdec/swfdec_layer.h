@@ -8,6 +8,11 @@ struct swfdec_layer_vec_struct{
 	ArtSVP *svp;
 	unsigned int color;
 	ArtIRect rect;
+
+	unsigned char *compose;
+	unsigned int compose_rowstride;
+	unsigned int compose_height;
+	unsigned int compose_width;
 };
 
 struct swfdec_layer_struct{

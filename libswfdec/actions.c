@@ -203,7 +203,9 @@ void get_actions(SwfdecDecoder *s,bits_t *bits)
 			}
 		}
 
-		hexdump(bits->ptr, len);
+		if(s->debug<1){
+			hexdump(bits->ptr, len);
+		}
 
 		bits->ptr += len;
 	}

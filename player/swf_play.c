@@ -390,7 +390,7 @@ static void embedded (GtkPlug *plug, gpointer data)
 static gboolean input(GIOChannel *chan, GIOCondition cond, gpointer ignored)
 {
 	char *data;
-	int bytes_read;
+	gsize bytes_read;
 	GError *error = NULL;
 	int ret;
 

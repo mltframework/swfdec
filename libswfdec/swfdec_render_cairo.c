@@ -163,7 +163,7 @@ static void
 draw_x (cairo_t *cr, GArray *array, GArray *array2)
 {
   draw (cr, array);
-  draw_rev (cr, array);
+  draw_rev (cr, array2);
 
 }
 

@@ -1,5 +1,9 @@
 2004-12-08  David Schleef  <ds@schleef.org>
 
+	* libswfdec/swfdec_render_cairo.c: (draw_x): oops, fix typo.
+
+2004-12-08  David Schleef  <ds@schleef.org>
+
 	* configure.ac: Add switch for using the cairo backend, and fix
 	cairo detection
 	* libswfdec/Makefile.am: add cairo backend

@@ -1,15 +1,5 @@
-#include <libart_lgpl/libart.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <math.h>
-#include "swf.h"
-#include "proto.h"
-#include "bits.h"
+
+#include "swfdec_internal.h"
 
 
 void get_art_color_transform(bits_t *bits, double mult[4], double add[4])
@@ -101,7 +91,7 @@ void get_art_matrix(bits_t *bits, double *trans)
 
 char *get_string(bits_t *bits)
 {
-	char *s = strdup(bits->ptr);
+	char *s = g_strdup(bits->ptr);
 
 	bits->ptr += strlen(bits->ptr) + 1;
 
@@ -263,4 +253,14 @@ void get_line_style(bits_t *bits)
 	get_color(bits);
 }
 
+
+void get_rect(bits_t *bits, int *rect)
+{
+	int nbits = getbits(bits, 5);
+
+	rect[0] = getsbits(bits, nbits);
+	rect[1] = getsbits(bits, nbits);
+	rect[2] = getsbits(bits, nbits);
+	rect[3] = getsbits(bits, nbits);
+}
 

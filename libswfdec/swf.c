@@ -1,49 +1,35 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <zlib.h>
-#include <mad.h>
 
-#include "swf.h"
-#include "tags.h"
-#include "proto.h"
-#include "bits.h"
+#include "swfdec_internal.h"
 
 static void dumpbits(bits_t *b);
 
-int swf_parse_header1(swf_state_t *s);
-int swf_inflate_init(swf_state_t *s);
-int swf_parse_header2(swf_state_t *s);
+int swf_parse_header1(SwfdecDecoder *s);
+int swf_inflate_init(SwfdecDecoder *s);
+int swf_parse_header2(SwfdecDecoder *s);
 
-swf_state_t *swf_init(void)
+SwfdecDecoder *swf_init(void)
 {
 	return swfdec_decoder_new();
 }
 
-swf_state_t *swfdec_decoder_new(void)
+SwfdecDecoder *swfdec_decoder_new(void)
 {
-	swf_state_t *s;
+	SwfdecDecoder *s;
 
-	s = malloc(sizeof(*s));
-	memset(s,0,sizeof(*s));
+	s = g_new0(SwfdecDecoder,1);
 
 	s->bg_color = SWF_COLOR_COMBINE(0xff,0xff,0xff,0xff);
 
 	s->debug = 2;
 
 	art_affine_identity(s->transform);
-#if 0
-	art_affine_scale(s->transform,0.5,0.5);
-	s->transform[4] = 50;
-	s->transform[5] = 50;
-#endif
 
 	return s;
 }
 
-int swf_addbits(swf_state_t *s, unsigned char *bits, int len)
+int swf_addbits(SwfdecDecoder *s, unsigned char *bits, int len)
 {
 	int offset;
 	int ret;
@@ -73,10 +59,9 @@ int swf_addbits(swf_state_t *s, unsigned char *bits, int len)
 	}
 
 	return SWF_OK;
-	//return swf_parse(s);
 }
 
-int swf_parse(swf_state_t *s)
+int swf_parse(SwfdecDecoder *s)
 {
 	int ret = SWF_OK;
 	unsigned char *endptr;
@@ -183,7 +168,7 @@ static void dumpbits(bits_t *b)
 	printf("\n");
 }
 
-int swf_parse_header1(swf_state_t *s)
+int swf_parse_header1(SwfdecDecoder *s)
 {
 	int sig1,sig2,sig3;
 
@@ -204,7 +189,7 @@ int swf_parse_header1(swf_state_t *s)
 	return SWF_OK;
 }
 
-int swf_inflate_init(swf_state_t *s)
+int swf_inflate_init(SwfdecDecoder *s)
 {
 	z_stream *z;
 	char *compressed_data;
@@ -244,7 +229,7 @@ int swf_inflate_init(swf_state_t *s)
 	return SWF_OK;
 }
 
-int swf_parse_header2(swf_state_t *s)
+int swf_parse_header2(SwfdecDecoder *s)
 {
 	int rect[4];
 
@@ -267,23 +252,9 @@ int swf_parse_header2(swf_state_t *s)
 }
 
 
-swf_object_t *swf_object_new(swf_state_t *s, int id)
-{
-	swf_object_t *obj;
-
-	obj = g_new0(swf_object_t,1);
-
-	obj->id = id;
-
-	s->objects = g_list_append(s->objects, obj);
-
-	return obj;
-}
-
-
 struct tag_func_struct {
 	char *name;
-	int (*func)(swf_state_t *s);
+	int (*func)(SwfdecDecoder *s);
 	int flag;
 };
 struct tag_func_struct tag_funcs[] = {
@@ -344,7 +315,7 @@ struct tag_func_struct tag_funcs[] = {
 };
 static const int n_tag_funcs = sizeof(tag_funcs)/sizeof(tag_funcs[0]);
 
-int swf_parse_tag(swf_state_t *s)
+int swf_parse_tag(SwfdecDecoder *s)
 {
 	unsigned int x;
 	bits_t *b = &s->b;
@@ -377,19 +348,19 @@ int swf_parse_tag(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_zero(swf_state_t *s)
+int tag_func_zero(SwfdecDecoder *s)
 {
 	return SWF_OK;
 }
 
-int tag_func_ignore_quiet(swf_state_t *s)
+int tag_func_ignore_quiet(SwfdecDecoder *s)
 {
 	s->b.ptr += s->tag_len;
 
 	return SWF_OK;
 }
 
-int tag_func_ignore(swf_state_t *s)
+int tag_func_ignore(SwfdecDecoder *s)
 {
 	char *name = "";
 
@@ -404,7 +375,7 @@ int tag_func_ignore(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_dumpbits(swf_state_t *s)
+int tag_func_dumpbits(SwfdecDecoder *s)
 {
 	bits_t *b = &s->b;
 	int i;
@@ -418,7 +389,7 @@ int tag_func_dumpbits(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_set_background_color(swf_state_t *s)
+int tag_func_set_background_color(SwfdecDecoder *s)
 {
 	ArtIRect rect;
 
@@ -434,14 +405,14 @@ int tag_func_set_background_color(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_frame_label(swf_state_t *s)
+int tag_func_frame_label(SwfdecDecoder *s)
 {
 	free(get_string(&s->b));
 
 	return SWF_OK;
 }
 
-int tag_func_place_object_2(swf_state_t *s)
+int tag_func_place_object_2(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int reserved;
@@ -491,7 +462,7 @@ int tag_func_place_object_2(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_remove_object(swf_state_t *s)
+int tag_func_remove_object(SwfdecDecoder *s)
 {
 	int id;
 	int depth;
@@ -505,7 +476,7 @@ int tag_func_remove_object(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_remove_object_2(swf_state_t *s)
+int tag_func_remove_object_2(SwfdecDecoder *s)
 {
 	int depth;
 
@@ -517,7 +488,7 @@ int tag_func_remove_object_2(swf_state_t *s)
 }
 
 
-void swf_debug(swf_state_t *s, int n, char *format, ...)
+void swf_debug(SwfdecDecoder *s, int n, char *format, ...)
 {
 	va_list args;
 	int offset;

@@ -2,9 +2,13 @@
 #ifndef __BITS_H__
 #define __BITS_H__
 
-#include "swf.h"
+typedef struct bits_struct bits_t;
 
-#include <stdio.h> /* XXX */
+struct bits_struct {
+	unsigned char *ptr;
+	int idx;
+	unsigned char *end;
+};
 
 static inline int bits_needbits(bits_t *b, int n_bytes)
 {
@@ -111,31 +115,6 @@ static inline void syncbits(bits_t *b)
 		b->idx=0;
 	}
 
-}
-
-static inline char *getrect(bits_t *b)
-{
-	int nbits = getbits(b,5);
-	int xmin,xmax,ymin,ymax;
-	static char tmp[100];
-
-	xmin = getsbits(b,nbits);
-	ymin = getsbits(b,nbits);
-	xmax = getsbits(b,nbits);
-	ymax = getsbits(b,nbits);
-
-	sprintf(tmp,"%d,%d,%d,%d [nbits=%d]",xmin,ymin,xmax,ymax,nbits);
-	return tmp;
-}
-
-static inline void get_rect(bits_t *b,int *rect)
-{
-	int nbits = getbits(b,5);
-
-	rect[0] = getsbits(b,nbits);
-	rect[1] = getsbits(b,nbits);
-	rect[2] = getsbits(b,nbits);
-	rect[3] = getsbits(b,nbits);
 }
 
 #endif

@@ -1,25 +1,21 @@
 
-#include <stdio.h>
-
-#include "swf.h"
-#include "proto.h"
-#include "bits.h"
+#include "swfdec_internal.h"
 
 
 
-int tag_func_define_font(swf_state_t *s)
+int tag_func_define_font(SwfdecDecoder *s)
 {
 	int id;
 	int i;
 	int n_glyphs;
 	int offset;
-	swf_shape_vec_t *shapevec;
-	swf_shape_t *shape;
-	swf_object_t *object;
+	SwfdecShapeVec *shapevec;
+	SwfdecShape *shape;
+	SwfdecObject *object;
 	GArray *array;
 
 	id = get_u16(&s->b);
-	object = swf_object_new(s,id);
+	object = swfdec_object_new(s,id);
 
 	offset = get_u16(&s->b);
 	n_glyphs = offset/2;
@@ -28,14 +24,14 @@ int tag_func_define_font(swf_state_t *s)
 		offset = get_u16(&s->b);
 	}
 
-	array = g_array_sized_new(TRUE,TRUE,sizeof(swf_shape_t),
+	array = g_array_sized_new(TRUE,TRUE,sizeof(SwfdecShape),
 			n_glyphs);
 	object->priv = array;
 	object->type = SWF_OBJECT_FONT;
 	g_array_set_size(array,n_glyphs);
 
 	for(i=0;i<n_glyphs;i++){
-		shape = &g_array_index(array,swf_shape_t,i);
+		shape = &g_array_index(array,SwfdecShape,i);
 
 		shape->fills = g_ptr_array_sized_new(1);
 		shapevec = swf_shape_vec_new();
@@ -61,23 +57,23 @@ int tag_func_define_font(swf_state_t *s)
 }
 
 
-static int define_text(swf_state_t *s, int rgba)
+static int define_text(SwfdecDecoder *s, int rgba)
 {
 	bits_t *bits = &s->b;
 	int id;
 	int rect[4];
 	int n_glyph_bits;
 	int n_advance_bits;
-	swf_text_t *text = NULL;
-	swf_text_glyph_t glyph = { 0 };
-	swf_object_t *object;
-	swf_text_t newtext = { 0 };
+	SwfdecText *text = NULL;
+	SwfdecTextGlyph glyph = { 0 };
+	SwfdecObject *object;
+	SwfdecText newtext = { 0 };
 	GArray *array;
 
 	id = get_u16(bits);
-	object = swf_object_new(s,id);
+	object = swfdec_object_new(s,id);
 
-	array = g_array_new(TRUE,FALSE,sizeof(swf_text_t));
+	array = g_array_new(TRUE,FALSE,sizeof(SwfdecText));
 	object->priv = array;
 	object->type = SWF_OBJECT_TEXT;
 
@@ -148,9 +144,9 @@ static int define_text(swf_state_t *s, int rgba)
 			}
 			if(has_font || has_color){
 				g_array_append_val(array,newtext);
-				text = &g_array_index(array,swf_text_t,array->len-1);
+				text = &g_array_index(array,SwfdecText,array->len-1);
 				text->glyphs = g_array_new(TRUE,FALSE,
-					sizeof(swf_text_glyph_t));
+					sizeof(SwfdecTextGlyph));
 			}
 		}
 		syncbits(bits);
@@ -160,12 +156,12 @@ static int define_text(swf_state_t *s, int rgba)
 	return SWF_OK;
 }
 
-int tag_func_define_text(swf_state_t *s)
+int tag_func_define_text(SwfdecDecoder *s)
 {
 	return define_text(s,0);
 }
 
-int tag_func_define_text_2(swf_state_t *s)
+int tag_func_define_text_2(SwfdecDecoder *s)
 {
 	return define_text(s,1);
 }

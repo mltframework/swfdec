@@ -1,15 +1,10 @@
 
-#include <stdio.h>
-#include <jpeglib.h>
 #include <zlib.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include "swf.h"
-#include "proto.h"
-#include "bits.h"
+#include "swfdec_internal.h"
 #include "jpeg_rgb_decoder.h"
 
-static void jpegdec(swf_image_t *image, unsigned char *ptr, int len);
+static void jpegdec(SwfdecImage *image, unsigned char *ptr, int len);
 
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
 {
@@ -55,41 +50,37 @@ static void *lossless(void *zptr, int zlen, int *plen)
 }
 
 
-int tag_func_define_bits_jpeg(swf_state_t *s)
+int tag_func_define_bits_jpeg(SwfdecDecoder *s)
 {
 	tag_func_dumpbits(s);
 
 	return SWF_OK;
 }
 
-int tag_func_define_bits_jpeg_2(swf_state_t *s)
+int tag_func_define_bits_jpeg_2(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
-	//unsigned char *endptr = s->b.ptr + s->tag_len;
-	int len;
-	swf_object_t *obj;
-	swf_image_t *image;
+	SwfdecObject *obj;
+	SwfdecImage *image;
 
 	id = get_u16(bits);
 	SWF_DEBUG(0,"  id = %d\n",id);
-	obj = swf_object_new(s, id);
-	image = g_new0(swf_image_t, 1);
+	obj = swfdec_object_new(s, id);
+	image = g_new0(SwfdecImage, 1);
 	obj->priv = image;
 	obj->type = SWF_OBJECT_IMAGE;
 	
 	jpegdec(image, bits->ptr, s->tag_len - 2);
+	bits->ptr += s->tag_len - 2;
 
 	SWF_DEBUG(0,"  width = %d\n", image->width);
 	SWF_DEBUG(0,"  height = %d\n", image->height);
 
-	bits->ptr += len;
-	//tag_func_dumpbits(s);
-
 	return SWF_OK;
 }
 
-int tag_func_define_bits_jpeg_3(swf_state_t *s)
+int tag_func_define_bits_jpeg_3(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
@@ -97,13 +88,13 @@ int tag_func_define_bits_jpeg_3(swf_state_t *s)
 	int len;
 	//int alpha_len;
 	//unsigned char *data;
-	swf_object_t *obj;
-	swf_image_t *image;
+	SwfdecObject *obj;
+	SwfdecImage *image;
 
 	id = get_u16(bits);
 	SWF_DEBUG(0,"  id = %d\n",id);
-	obj = swf_object_new(s, id);
-	image = g_new0(swf_image_t, 1);
+	obj = swfdec_object_new(s, id);
+	image = g_new0(SwfdecImage, 1);
 	obj->priv = image;
 	obj->type = SWF_OBJECT_IMAGE;
 	
@@ -121,7 +112,7 @@ int tag_func_define_bits_jpeg_3(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_define_bits_lossless(swf_state_t *s)
+int tag_func_define_bits_lossless(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
@@ -130,13 +121,13 @@ int tag_func_define_bits_lossless(swf_state_t *s)
 	void *ptr;
 	int len;
 	unsigned char *endptr = bits->ptr + s->tag_len;
-	swf_object_t *obj;
-	swf_image_t *image;
+	SwfdecObject *obj;
+	SwfdecImage *image;
 
 	id = get_u16(bits);
 	SWF_DEBUG(0,"  id = %d\n",id);
-	obj = swf_object_new(s, id);
-	image = g_new0(swf_image_t, 1);
+	obj = swfdec_object_new(s, id);
+	image = g_new0(SwfdecImage, 1);
 	obj->priv = image;
 	obj->type = SWF_OBJECT_IMAGE;
 
@@ -236,7 +227,7 @@ int tag_func_define_bits_lossless(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_define_bits_lossless_2(swf_state_t *s)
+int tag_func_define_bits_lossless_2(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
@@ -250,7 +241,7 @@ int tag_func_define_bits_lossless_2(swf_state_t *s)
 
 
 
-int swfdec_image_render(swf_state_t *s, swf_layer_t *layer)
+int swfdec_image_render(SwfdecDecoder *s, SwfdecLayer *layer)
 {
 	printf("got here\n");
 
@@ -259,7 +250,7 @@ int swfdec_image_render(swf_state_t *s, swf_layer_t *layer)
 	return SWF_OK;
 }
 
-static void jpegdec(swf_image_t *image, unsigned char *data, int len)
+static void jpegdec(SwfdecImage *image, unsigned char *data, int len)
 {
 	JpegRGBDecoder *dec;
 
@@ -267,8 +258,8 @@ static void jpegdec(swf_image_t *image, unsigned char *data, int len)
 
 	jpeg_rgb_decoder_addbits(dec, data, len);
 	jpeg_rgb_decoder_parse(dec);
-	jpeg_rgb_decoder_get_image(dec, &image->image_data, &image->rowstride,
-		&image->width, &image->height);
+	jpeg_rgb_decoder_get_image(dec, (unsigned char **)&image->image_data,
+		&image->rowstride, &image->width, &image->height);
 	jpeg_rgb_decoder_free(dec);
 
 }

@@ -1,21 +1,7 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <libart_lgpl/libart.h>
 
-#include <mad.h>
-
-#include "swf.h"
-#include "tags.h"
-#include "proto.h"
-#include "bits.h"
-
-static inline void
-art_affine_copy(double *dest,double *src)
-{
-	memcpy(dest,src,sizeof(double)*6);
-}
+#include "swfdec_internal.h"
 
 int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits)
 {
@@ -138,7 +124,7 @@ int get_shape_rec(bits_t *bits,int n_fill_bits, int n_line_bits)
 	return 1;
 }
 
-int tag_func_define_shape(swf_state_t *s)
+int tag_func_define_shape(SwfdecDecoder *s)
 {
 	bits_t *b = &s->b;
 	int id;
@@ -146,11 +132,13 @@ int tag_func_define_shape(swf_state_t *s)
 	int n_line_styles;
 	int n_fill_bits;
 	int n_line_bits;
+	int rect[4];
 	int i;
 
 	id = get_u16(b);
 	SWF_DEBUG(0,"  id = %d\n", id);
-	printf("  bounds = %s\n",getrect(b));
+	printf("  bounds = %s\n","rect");
+	get_rect(b,rect);
 	syncbits(b);
 	n_fill_styles = get_u8(b);
 	SWF_DEBUG(0,"  n_fill_styles = %d\n",n_fill_styles);
@@ -177,33 +165,34 @@ int tag_func_define_shape(swf_state_t *s)
 	return SWF_OK;
 }
 
-swf_shape_vec_t *swf_shape_vec_new(void)
+SwfdecShapeVec *swf_shape_vec_new(void)
 {
-	swf_shape_vec_t *shapevec;
+	SwfdecShapeVec *shapevec;
 
-	shapevec = g_new0(swf_shape_vec_t,1);
+	shapevec = g_new0(SwfdecShapeVec,1);
 
 	shapevec->path = g_array_new(FALSE,FALSE,sizeof(ArtBpath));
 
 	return shapevec;
 }
 
-int art_define_shape(swf_state_t *s)
+int art_define_shape(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
-	swf_object_t *object;
-	swf_shape_t *shape;
+	SwfdecObject *object;
+	SwfdecShape *shape;
+	int rect[4];
 	int id;
 
 	id = get_u16(bits);
-	object = swf_object_new(s,id);
+	object = swfdec_object_new(s,id);
 
-	shape = g_new0(swf_shape_t,1);
+	shape = g_new0(SwfdecShape,1);
 	object->priv = shape;
 	object->type = SWF_OBJECT_SHAPE;
 	SWF_DEBUG(0,"  ID: %d\n", object->id);
 
-	getrect(bits);
+	get_rect(bits,rect);
 
 	shape->fills = g_ptr_array_new();
 	shape->fills2 = g_ptr_array_new();
@@ -216,22 +205,23 @@ int art_define_shape(swf_state_t *s)
 	return SWF_OK;
 }
 
-int art_define_shape_3(swf_state_t *s)
+int art_define_shape_3(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
-	swf_object_t *object;
-	swf_shape_t *shape;
+	SwfdecObject *object;
+	SwfdecShape *shape;
+	int rect[4];
 	int id;
 
 	id = get_u16(bits);
-	object = swf_object_new(s,id);
+	object = swfdec_object_new(s,id);
 
-	shape = g_new0(swf_shape_t,1);
+	shape = g_new0(SwfdecShape,1);
 	object->priv = shape;
 	object->type = SWF_OBJECT_SHAPE;
 	SWF_DEBUG(0,"  ID: %d\n", object->id);
 
-	getrect(bits);
+	get_rect(bits,rect);
 
 	shape->fills = g_ptr_array_new();
 	shape->fills2 = g_ptr_array_new();
@@ -246,7 +236,7 @@ int art_define_shape_3(swf_state_t *s)
 	return SWF_OK;
 }
 
-void swf_shape_add_styles(swf_state_t *s, swf_shape_t *shape, bits_t *bits)
+void swf_shape_add_styles(SwfdecDecoder *s, SwfdecShape *shape, bits_t *bits)
 {
 	int n_fill_styles;
 	int n_line_styles;
@@ -258,7 +248,7 @@ void swf_shape_add_styles(swf_state_t *s, swf_shape_t *shape, bits_t *bits)
 	SWF_DEBUG(0,"   n_fill_styles %d\n",n_fill_styles);
 	for(i=0;i<n_fill_styles;i++){
 		int fill_style_type;
-		swf_shape_vec_t *shapevec;
+		SwfdecShapeVec *shapevec;
 
 		SWF_DEBUG(0,"   fill style %d:\n",i);
 
@@ -301,7 +291,7 @@ void swf_shape_add_styles(swf_state_t *s, swf_shape_t *shape, bits_t *bits)
 	n_line_styles = get_u8(bits);
 	SWF_DEBUG(0,"   n_line_styles %d\n",n_line_styles);
 	for(i=0;i<n_line_styles;i++){
-		swf_shape_vec_t *shapevec;
+		SwfdecShapeVec *shapevec;
 
 		shapevec = swf_shape_vec_new();
 		g_ptr_array_add(shape->lines, shapevec);
@@ -326,14 +316,14 @@ void swf_shape_add_styles(swf_state_t *s, swf_shape_t *shape, bits_t *bits)
 	shape->n_line_bits = getbits(bits,4);
 }
 
-void swf_shape_get_recs(swf_state_t *s, bits_t *bits, swf_shape_t *shape)
+void swf_shape_get_recs(SwfdecDecoder *s, bits_t *bits, SwfdecShape *shape)
 {
 	int x = 0, y = 0;
 	int fill0style = 0;
 	int fill1style = 0;
 	int linestyle = 0;
 	int n_vec = 0;
-	swf_shape_vec_t *shapevec;
+	SwfdecShapeVec *shapevec;
 	ArtBpath pt;
 	int i;
 
@@ -474,30 +464,30 @@ void swf_shape_get_recs(swf_state_t *s, bits_t *bits, swf_shape_t *shape)
 	}
 }
 
-int art_define_shape_2(swf_state_t *s)
+int art_define_shape_2(SwfdecDecoder *s)
 {
 	return art_define_shape(s);
 }
 
-int tag_func_define_button_2(swf_state_t *s)
+int tag_func_define_button_2(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
 	int flags;
 	int offset;
 	int condition;
-	swf_object_t *object;
+	SwfdecObject *object;
 	double trans[6];
 	double color_add[4], color_mult[4];
-	swf_button_t *button;
+	SwfdecButton *button;
 	unsigned char *endptr;
 
 	endptr = bits->ptr + s->tag_len;
 
 	id = get_u16(bits);
-	object = swf_object_new(s,id);
+	object = swfdec_object_new(s,id);
 
-	button = g_new0(swf_button_t,3);
+	button = g_new0(SwfdecButton,3);
 	object->type = SWF_OBJECT_BUTTON;
 	object->priv = button;
 
@@ -587,16 +577,16 @@ int tag_func_define_button_2(swf_state_t *s)
 #undef SWF_DEBUG_LEVEL
 #define SWF_DEBUG_LEVEL 0
 
-int tag_func_define_sprite(swf_state_t *s)
+int tag_func_define_sprite(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int id;
-	swf_object_t *object;
-	swf_state_t *sprite;
+	SwfdecObject *object;
+	SwfdecDecoder *sprite;
 	int ret;
 
 	id = get_u16(bits);
-	object = swf_object_new(s,id);
+	object = swfdec_object_new(s,id);
 
 	SWF_DEBUG(0,"  ID: %d\n", object->id);
 
@@ -626,13 +616,13 @@ int tag_func_define_sprite(swf_state_t *s)
 	return SWF_OK;
 }
 
-void dump_layers(swf_state_t *s)
+void dump_layers(SwfdecDecoder *s)
 {
 	GList *g;
-	swf_layer_t *layer;
+	SwfdecLayer *layer;
 
 	for(g=g_list_last(s->layers); g; g=g_list_previous(g)){
-		layer = (swf_layer_t *)g->data;
+		layer = (SwfdecLayer *)g->data;
 
 		printf("  layer %d [%d,%d)\n",layer->depth,
 			layer->first_frame, layer->last_frame);

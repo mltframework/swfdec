@@ -1,28 +1,17 @@
-#include <libart_lgpl/libart.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <math.h>
-#include "swf.h"
-#include "proto.h"
-#include "bits.h"
 
-void render_sprite(swf_state_t *s, swf_state_t *sprite, int frame_number);
+#include <libart_lgpl/libart.h>
+#include <math.h>
+
+#include "swfdec_internal.h"
+
+void render_sprite(SwfdecDecoder *s, SwfdecDecoder *sprite, int frame_number);
 
 #define SCALE_FACTOR (1/65536.0)
 #define COLOR_SCALE_FACTOR (1/256.0)
 
 static const double flatness = 0.25;
 
-static inline void art_affine_copy(double dst[6],const double src[6])
-{
-	memcpy(dst,src,sizeof(double)*6);
-}
-
-void swf_invalidate_irect(swf_state_t *s, ArtIRect *rect)
+void swf_invalidate_irect(SwfdecDecoder *s, ArtIRect *rect)
 {
 	if(art_irect_empty(&s->drawrect)){
 		art_irect_intersect(&s->drawrect, &s->irect, rect);
@@ -35,39 +24,13 @@ void swf_invalidate_irect(swf_state_t *s, ArtIRect *rect)
 	}
 }
 
-unsigned int transform_color(unsigned int in, double mult[4], double add[4])
+SwfdecObject *swfdec_object_get(SwfdecDecoder *s, int id)
 {
-	int r, g, b, a;
-
-	r = SWF_COLOR_R(in);
-	g = SWF_COLOR_G(in);
-	b = SWF_COLOR_B(in);
-	a = SWF_COLOR_A(in);
-
-	//SWF_DEBUG(0,"in rgba %d,%d,%d,%d\n",r,g,b,a);
-
-	r = rint((r*mult[0] + add[0]));
-	g = rint((g*mult[1] + add[1]));
-	b = rint((b*mult[2] + add[2]));
-	a = rint((a*mult[3] + add[3]));
-
-	if(r<0)r=0; if(r>255)r=255;
-	if(g<0)g=0; if(g>255)g=255;
-	if(b<0)b=0; if(b>255)b=255;
-	if(a<0)a=0; if(a>255)a=255;
-
-	//SWF_DEBUG(0,"out rgba %d,%d,%d,%d\n",r,g,b,a);
-
-	return SWF_COLOR_COMBINE(r,g,b,a);
-}
-
-swf_object_t *swf_object_get(swf_state_t *s, int id)
-{
-	swf_object_t *object;
+	SwfdecObject *object;
 	GList *g;
 
 	for(g=g_list_first(s->objects);g;g=g_list_next(g)){
-		object = (swf_object_t *)g->data;
+		object = (SwfdecObject *)g->data;
 		if(object->id == id)return object;
 	}
 	SWF_DEBUG(2,"object not found (id==%d)\n",id);
@@ -75,42 +38,42 @@ swf_object_t *swf_object_get(swf_state_t *s, int id)
 	return NULL;
 }
 
-swf_layer_t *swf_layer_new(void)
+SwfdecLayer *swf_layer_new(void)
 {
-	swf_layer_t *layer;
+	SwfdecLayer *layer;
 
-	layer = g_new0(swf_layer_t,1);
+	layer = g_new0(SwfdecLayer,1);
 
-	layer->fills = g_array_new(FALSE,FALSE,sizeof(swf_layer_vec_t));
-	layer->lines = g_array_new(FALSE,FALSE,sizeof(swf_layer_vec_t));
+	layer->fills = g_array_new(FALSE,FALSE,sizeof(SwfdecLayerVec));
+	layer->lines = g_array_new(FALSE,FALSE,sizeof(SwfdecLayerVec));
 
 	return layer;
 }
 
-void swf_layer_free(swf_layer_t *layer)
+void swf_layer_free(SwfdecLayer *layer)
 {
 	int i;
-	swf_layer_vec_t *layervec;
+	SwfdecLayerVec *layervec;
 
 	for(i=0;i<layer->fills->len;i++){
-		layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+		layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 		art_svp_free(layervec->svp);
 	}
 	for(i=0;i<layer->lines->len;i++){
-		layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+		layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 		art_svp_free(layervec->svp);
 	}
 	g_array_free(layer->fills,TRUE);
 	g_array_free(layer->lines,TRUE);
 }
 
-swf_layer_t *swf_layer_get(swf_state_t *s, int depth)
+SwfdecLayer *swf_layer_get(SwfdecDecoder *s, int depth)
 {
-	swf_layer_t *l;
+	SwfdecLayer *l;
 	GList *g;
 
 	for(g=g_list_first(s->layers); g; g=g_list_next(g)){
-		l = (swf_layer_t *)g->data;
+		l = (SwfdecLayer *)g->data;
 		if(l->depth == depth && l->first_frame <= s->frame_number-1
 		  && (!l->last_frame || l->last_frame > s->frame_number-1))
 			return l;
@@ -119,13 +82,13 @@ swf_layer_t *swf_layer_get(swf_state_t *s, int depth)
 	return NULL;
 }
 
-void swf_layer_add(swf_state_t *s, swf_layer_t *lnew)
+void swf_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew)
 {
 	GList *g;
-	swf_layer_t *l;
+	SwfdecLayer *l;
 
 	for(g=g_list_first(s->layers); g; g=g_list_next(g)){
-		l = (swf_layer_t *)g->data;
+		l = (SwfdecLayer *)g->data;
 		if(l->depth < lnew->depth){
 			s->layers = g_list_insert_before(s->layers,g,lnew);
 			return;
@@ -135,13 +98,13 @@ void swf_layer_add(swf_state_t *s, swf_layer_t *lnew)
 	s->layers = g_list_append(s->layers,lnew);
 }
 
-void swf_layer_del(swf_state_t *s, swf_layer_t *layer)
+void swf_layer_del(SwfdecDecoder *s, SwfdecLayer *layer)
 {
 	GList *g;
-	swf_layer_t *l;
+	SwfdecLayer *l;
 
 	for(g=g_list_first(s->layers); g; g=g_list_next(g)){
-		l = (swf_layer_t *)g->data;
+		l = (SwfdecLayer *)g->data;
 		if(l == layer){
 			s->layers = g_list_delete_link(s->layers,g);
 			swf_layer_free(l);
@@ -150,12 +113,12 @@ void swf_layer_del(swf_state_t *s, swf_layer_t *layer)
 	}
 }
 
-void prerender_layer_shape(swf_state_t *s,swf_layer_t *layer,swf_shape_t *shape);
-void prerender_layer_text(swf_state_t *s,swf_layer_t *layer,swf_object_t *object);
-void prerender_layer_sprite(swf_state_t *s,swf_layer_t *layer,swf_object_t *object);
-void prerender_layer_button(swf_state_t *s,swf_layer_t *layer,swf_object_t *object);
+void prerender_layer_shape(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecShape *shape);
+void prerender_layer_text(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
+void prerender_layer_sprite(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
+void prerender_layer_button(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object);
 
-int art_place_object_2(swf_state_t *s)
+int art_place_object_2(SwfdecDecoder *s)
 {
 	bits_t *bits = &s->b;
 	int reserved;
@@ -167,8 +130,8 @@ int art_place_object_2(swf_state_t *s)
 	int has_character;
 	int move;
 	int depth;
-	swf_layer_t *layer;
-	swf_layer_t *oldlayer;
+	SwfdecLayer *layer;
+	SwfdecLayer *oldlayer;
 
 	reserved = getbit(bits);
 	has_compose = getbit(bits);
@@ -256,15 +219,15 @@ int art_place_object_2(swf_state_t *s)
 	return SWF_OK;
 }
 
-void swf_layer_prerender(swf_state_t *s, swf_layer_t *layer)
+void swf_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer)
 {
-	swf_object_t *object;
-	swf_layer_vec_t *layervec;
-	swf_shape_vec_t *shapevec;
+	SwfdecObject *object;
+	SwfdecLayerVec *layervec;
+	SwfdecShapeVec *shapevec;
 	int i;
-	swf_shape_t *shape;
+	SwfdecShape *shape;
 
-	object = swf_object_get(s,layer->id);
+	object = swfdec_object_get(s,layer->id);
 
 	if(!object)return;
 
@@ -278,14 +241,14 @@ void swf_layer_prerender(swf_state_t *s, swf_layer_t *layer)
 		prerender_layer_shape(s,layer,shape);
 		for(i=0;i<layer->fills->len;i++){
 			shapevec = g_ptr_array_index(shape->fills,i);
-			layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+			layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 	
 			layervec->color = transform_color(shapevec->color,
 				layer->color_mult, layer->color_add);
 		}
 		for(i=0;i<layer->lines->len;i++){
 			shapevec = g_ptr_array_index(shape->lines,i);
-			layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+			layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 	
 			layervec->color = transform_color(shapevec->color,
 				layer->color_mult, layer->color_add);
@@ -310,35 +273,35 @@ void swf_layer_prerender(swf_state_t *s, swf_layer_t *layer)
 	}
 }
 
-void prerender_layer_text(swf_state_t *s,swf_layer_t *layer,swf_object_t *object)
+void prerender_layer_text(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
 {
 	int i,j;
-	swf_text_t *text;
-	swf_layer_vec_t *layervec;
-	swf_shape_vec_t *shapevec;
-	swf_shape_vec_t *shapevec2;
-	swf_object_t *fontobj;
+	SwfdecText *text;
+	SwfdecLayerVec *layervec;
+	SwfdecShapeVec *shapevec;
+	SwfdecShapeVec *shapevec2;
+	SwfdecObject *fontobj;
 	GArray *array;
 
 	array = object->priv;
 	for(i=0;i<array->len;i++){
-		text = &g_array_index(array,swf_text_t,i);
+		text = &g_array_index(array,SwfdecText,i);
 
-		fontobj = swf_object_get(s,text->font);
+		fontobj = swfdec_object_get(s,text->font);
 		if(fontobj == NULL)continue;
 
 		for(j=0;j<text->glyphs->len;j++){
 			ArtVpath *vpath,*vpath0,*vpath1;
 			ArtBpath *bpath0,*bpath1;
-			swf_text_glyph_t *glyph;
-			swf_shape_t *shape;
+			SwfdecTextGlyph *glyph;
+			SwfdecShape *shape;
 			double trans[6];
 			double pos[6];
 
-			glyph = &g_array_index(text->glyphs,swf_text_glyph_t,j);
+			glyph = &g_array_index(text->glyphs,SwfdecTextGlyph,j);
 
 			shape = &g_array_index((GArray *)fontobj->priv,
-				swf_shape_t,glyph->glyph);
+				SwfdecShape,glyph->glyph);
 			art_affine_translate(pos,
 				glyph->x * SWF_SCALE_FACTOR,
 				glyph->y * SWF_SCALE_FACTOR);
@@ -349,7 +312,7 @@ void prerender_layer_text(swf_state_t *s,swf_layer_t *layer,swf_object_t *object
 			art_affine_multiply(trans,trans,s->transform);
 
 			layer->fills = g_array_set_size(layer->fills,layer->fills->len + 1);
-			layervec = &g_array_index(layer->fills,swf_layer_vec_t,layer->fills->len - 1);
+			layervec = &g_array_index(layer->fills,SwfdecLayerVec,layer->fills->len - 1);
 
 			shapevec = g_ptr_array_index(shape->fills,0);
 			shapevec2 = g_ptr_array_index(shape->fills2,0);
@@ -383,12 +346,12 @@ void prerender_layer_text(swf_state_t *s,swf_layer_t *layer,swf_object_t *object
 	}
 }
 
-void prerender_layer_shape(swf_state_t *s,swf_layer_t *layer,swf_shape_t *shape)
+void prerender_layer_shape(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecShape *shape)
 {
 	int i;
-	swf_layer_vec_t *layervec;
-	swf_shape_vec_t *shapevec;
-	swf_shape_vec_t *shapevec2;
+	SwfdecLayerVec *layervec;
+	SwfdecShapeVec *shapevec;
+	SwfdecShapeVec *shapevec2;
 	double trans[6];
 
 	g_array_set_size(layer->fills, shape->fills->len);
@@ -396,7 +359,7 @@ void prerender_layer_shape(swf_state_t *s,swf_layer_t *layer,swf_shape_t *shape)
 		ArtVpath *vpath,*vpath0,*vpath1;
 		ArtBpath *bpath0,*bpath1;
 
-		layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+		layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 		shapevec = g_ptr_array_index(shape->fills,i);
 		shapevec2 = g_ptr_array_index(shape->fills2,i);
 
@@ -433,7 +396,7 @@ void prerender_layer_shape(swf_state_t *s,swf_layer_t *layer,swf_shape_t *shape)
 		double width;
 		int half_width;
 
-		layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+		layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 		shapevec = g_ptr_array_index(shape->lines,i);
 
 		art_affine_multiply(trans,layer->transform,s->transform);
@@ -464,11 +427,11 @@ void prerender_layer_shape(swf_state_t *s,swf_layer_t *layer,swf_shape_t *shape)
 
 }
 
-void prerender_layer_sprite(swf_state_t *s,swf_layer_t *layer,swf_object_t *object)
+void prerender_layer_sprite(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
 {
-	swf_layer_t *l;
+	SwfdecLayer *l;
 	GList *g;
-	swf_state_t *sprite = object->priv;
+	SwfdecDecoder *sprite = object->priv;
 
 	art_affine_multiply(sprite->transform, layer->transform, s->transform);
 	
@@ -477,7 +440,7 @@ void prerender_layer_sprite(swf_state_t *s,swf_layer_t *layer,swf_object_t *obje
 	SWF_DEBUG(0,"prerender_layer_sprite %d frame %d\n",object->id,layer->frame_number);
 
 	for(g=g_list_last(sprite->layers); g; g=g_list_previous(g)){
-		l = (swf_layer_t *)g->data;
+		l = (SwfdecLayer *)g->data;
 
 		if(l->first_frame > layer->frame_number)continue;
 		if(l->last_frame && l->last_frame <= layer->frame_number)continue;
@@ -489,14 +452,14 @@ void prerender_layer_sprite(swf_state_t *s,swf_layer_t *layer,swf_object_t *obje
 	layer->prerendered = 0;
 }
 
-void prerender_layer_button(swf_state_t *s,swf_layer_t *layer,swf_object_t *object)
+void prerender_layer_button(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
 {
-	swf_shape_t *shape;
-	swf_object_t *obj;
+	SwfdecShape *shape;
+	SwfdecObject *obj;
 	double save_trans[6];
-	swf_shape_vec_t *shapevec;
-	swf_layer_vec_t *layervec;
-	swf_button_t *buttons = object->priv;
+	SwfdecShapeVec *shapevec;
+	SwfdecLayerVec *layervec;
+	SwfdecButton *buttons = object->priv;
 	int i;
 
 //printf("prerender_layer_button %d [%d,%d,%d]\n",object->id,
@@ -506,7 +469,7 @@ void prerender_layer_button(swf_state_t *s,swf_layer_t *layer,swf_object_t *obje
 	art_affine_copy(save_trans, layer->transform);
 	art_affine_multiply(layer->transform, buttons[0].transform, layer->transform);
 	if(buttons[0].id){
-		obj = swf_object_get(s,buttons[0].id);
+		obj = swfdec_object_get(s,buttons[0].id);
 		if(!obj)return;
 
 		switch(obj->type){
@@ -518,13 +481,13 @@ void prerender_layer_button(swf_state_t *s,swf_layer_t *layer,swf_object_t *obje
 			prerender_layer_shape(s,layer,shape);
 			for(i=0;i<layer->fills->len;i++){
 				shapevec = g_ptr_array_index(shape->fills,i);
-				layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 
 				layervec->color = shapevec->color;
 			}
 			for(i=0;i<layer->lines->len;i++){
 				shapevec = g_ptr_array_index(shape->lines,i);
-				layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+				layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 
 				layervec->color = shapevec->color;
 			}
@@ -547,11 +510,11 @@ void prerender_layer_button(swf_state_t *s,swf_layer_t *layer,swf_object_t *obje
 	art_affine_copy(layer->transform, save_trans);
 }
 
-int art_remove_object(swf_state_t *s)
+int art_remove_object(SwfdecDecoder *s)
 {
 	int depth;
-	//swf_layer_vec_t *layervec;
-	swf_layer_t *layer;
+	//SwfdecLayerVec *layervec;
+	SwfdecLayer *layer;
 	//int i;
 	int id;
 
@@ -564,11 +527,11 @@ int art_remove_object(swf_state_t *s)
 	return SWF_OK;
 }
 
-int art_remove_object_2(swf_state_t *s)
+int art_remove_object_2(SwfdecDecoder *s)
 {
 	int depth;
-	//swf_layer_vec_t *layervec;
-	swf_layer_t *layer;
+	//SwfdecLayerVec *layervec;
+	SwfdecLayer *layer;
 	//int i;
 
 	depth = get_u16(&s->b);
@@ -579,7 +542,7 @@ int art_remove_object_2(swf_state_t *s)
 	return SWF_OK;
 }
 
-static void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec)
+static void swf_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec)
 {
 	ArtIRect rect;
 	struct swf_svp_render_struct cb_data;
@@ -611,7 +574,7 @@ static void swf_layervec_render(swf_state_t *s, swf_layer_vec_t *layervec)
 	}
 }
 
-void swf_config_colorspace(swf_state_t *s)
+void swf_config_colorspace(SwfdecDecoder *s)
 {
 	switch(s->colorspace){
 	case SWF_COLORSPACE_RGB565:
@@ -628,14 +591,14 @@ void swf_config_colorspace(swf_state_t *s)
 	}
 }
 
-void swf_clean(swf_state_t *s, int frame)
+void swf_clean(SwfdecDecoder *s, int frame)
 {
-	swf_layer_t *l;
+	SwfdecLayer *l;
 	GList *g, *g_next;
 
 	for(g=g_list_first(s->layers); g; g=g_next){
 		g_next = g_list_next(g);
-		l = (swf_layer_t *)g->data;
+		l = (SwfdecLayer *)g->data;
 		if(l->last_frame && l->last_frame<=frame){
 			s->layers = g_list_delete_link(s->layers,g);
 			swf_layer_free(l);
@@ -644,7 +607,7 @@ void swf_clean(swf_state_t *s, int frame)
 }
 
 
-int art_show_frame(swf_state_t *s)
+int art_show_frame(SwfdecDecoder *s)
 {
 	if(s->no_render){
 		s->frame_number++;
@@ -662,13 +625,13 @@ int art_show_frame(swf_state_t *s)
 	return SWF_IMAGE;
 }
 
-void swf_render_frame(swf_state_t *s)
+void swf_render_frame(SwfdecDecoder *s)
 {
-	swf_layer_t *layer;
+	SwfdecLayer *layer;
 	int i;
-	swf_layer_vec_t *layervec;
+	SwfdecLayerVec *layervec;
 	GList *g;
-	swf_object_t *object;
+	SwfdecObject *object;
 
 	SWF_DEBUG(0,"swf_render_frame\n");
 
@@ -691,7 +654,7 @@ void swf_render_frame(swf_state_t *s)
 
 #if 0
 	for(g=g_list_last(s->layers); g; g=g_list_previous(g)){
-		layer = (swf_layer_t *)g->data;
+		layer = (SwfdecLayer *)g->data;
 		if(layer->last_frame != s->frame_number &&
 		   layer->first_frame != s->frame_number)continue;
 
@@ -701,11 +664,11 @@ void swf_render_frame(swf_state_t *s)
 			layer->first_frame,layer->last_frame);
 		
 		for(i=0;i<layer->fills->len;i++){
-			layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+			layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 			swf_invalidate_irect(s,&layervec->rect);
 		}
 		for(i=0;i<layer->lines->len;i++){
-			layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+			layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 			swf_invalidate_irect(s,&layervec->rect);
 		}
 	}
@@ -734,14 +697,14 @@ void swf_render_frame(swf_state_t *s)
 	}
 
 	for(g=g_list_last(s->layers); g; g=g_list_previous(g)){
-		layer = (swf_layer_t *)g->data;
+		layer = (SwfdecLayer *)g->data;
 
 		if(layer->first_frame > s->frame_number)continue;
 		if(layer->last_frame && layer->last_frame <= s->frame_number)continue;
 
 		swf_layer_prerender(s,layer);
 
-		object = swf_object_get(s,layer->id);
+		object = swfdec_object_get(s,layer->id);
 		if(!object){
 			SWF_DEBUG(4,"lost object\n");
 			continue;
@@ -758,11 +721,11 @@ void swf_render_frame(swf_state_t *s)
 		case SWF_OBJECT_SHAPE:
 		case SWF_OBJECT_BUTTON:
 			for(i=0;i<layer->fills->len;i++){
-				layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 				swf_layervec_render(s, layervec);
 			}
 			for(i=0;i<layer->lines->len;i++){
-				layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+				layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 				swf_layervec_render(s, layervec);
 			}
 			break;
@@ -776,20 +739,20 @@ void swf_render_frame(swf_state_t *s)
 	}
 }
 
-void render_sprite(swf_state_t *s, swf_state_t *sprite, int frame_number)
+void render_sprite(SwfdecDecoder *s, SwfdecDecoder *sprite, int frame_number)
 {
-	swf_layer_t *layer;
+	SwfdecLayer *layer;
 	int i;
-	swf_layer_vec_t *layervec;
+	SwfdecLayerVec *layervec;
 	GList *g;
-	swf_object_t *object;
+	SwfdecObject *object;
 	double save_trans[6];
 
 	frame_number %= sprite->n_frames;
 
 	SWF_DEBUG(0,"rendering sprite frame %d of %d\n",frame_number,sprite->n_frames);
 	for(g=g_list_last(sprite->layers); g; g=g_list_previous(g)){
-		layer = (swf_layer_t *)g->data;
+		layer = (SwfdecLayer *)g->data;
 
 		if(layer->first_frame > frame_number)continue;
 		if(layer->last_frame && layer->last_frame <= frame_number)continue;
@@ -798,7 +761,7 @@ art_affine_copy(save_trans, layer->transform);
 art_affine_multiply(layer->transform, sprite->transform, layer->transform);
 		swf_layer_prerender(s,layer);
 art_affine_copy(layer->transform, save_trans);
-		object = swf_object_get(s,layer->id);
+		object = swfdec_object_get(s,layer->id);
 		if(!object){
 			/* WTF! */
 			SWF_DEBUG(4,"lost object!\n");
@@ -817,12 +780,12 @@ art_affine_copy(layer->transform, save_trans);
 			SWF_DEBUG(0,"fills = %d, lines = %d\n",
 				layer->fills->len,layer->lines->len);
 			for(i=0;i<layer->fills->len;i++){
-				layervec = &g_array_index(layer->fills,swf_layer_vec_t,i);
+				layervec = &g_array_index(layer->fills,SwfdecLayerVec,i);
 				swf_layervec_render(s, layervec);
 //printf("[%d %d %d %d]\n",layervec->rect.x0,layervec->rect.y0,layervec->rect.x1,layervec->rect.y1);
 			}
 			for(i=0;i<layer->lines->len;i++){
-				layervec = &g_array_index(layer->lines,swf_layer_vec_t,i);
+				layervec = &g_array_index(layer->lines,SwfdecLayerVec,i);
 				swf_layervec_render(s, layervec);
 //printf("[%d %d %d %d]\n",layervec->rect.x0,layervec->rect.y0,layervec->rect.x1,layervec->rect.y1);
 			}

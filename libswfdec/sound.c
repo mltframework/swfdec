@@ -1,26 +1,22 @@
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define getbits mpg_getbits
 #include "mpglib/mpglib.h"
 #undef getbits
 
-#include "swf.h"
-#include "tags.h"
-#include "proto.h"
-#include "bits.h"
+#include "swfdec_internal.h"
 
-void adpcm_decode(swf_state_t *s,swf_object_t *obj);
 
-void mp3_decode(swf_object_t *obj)
+void adpcm_decode(SwfdecDecoder *s,SwfdecObject *obj);
+
+void mp3_decode(SwfdecObject *obj)
 {
 	MpglibDecoder *mp;
 	int n;
 	int offset = 0;
 	int ret;
-	swf_sound_t *sound = obj->priv;
+	SwfdecSound *sound = obj->priv;
 
 	mp = mpglib_decoder_new();
 	ret = mpglib_decoder_decode(mp, (void *)sound->orig_data,
@@ -35,7 +31,7 @@ void mp3_decode(swf_object_t *obj)
 	printf("total decoded %d\n",offset + n);
 }
 
-int tag_func_define_sound(swf_state_t *s)
+int tag_func_define_sound(SwfdecDecoder *s)
 {
 	//static char *format_str[16] = { "uncompressed", "adpcm", "mpeg" };
 	//static int rate_n[4] = { 5512.5, 11025, 22050, 44100 };
@@ -46,8 +42,8 @@ int tag_func_define_sound(swf_state_t *s)
 	int size;
 	int type;
 	int n_samples;
-	swf_object_t *obj;
-	swf_sound_t *sound;
+	SwfdecObject *obj;
+	SwfdecSound *sound;
 	int len;
 
 	id = get_u16(b);
@@ -57,8 +53,8 @@ int tag_func_define_sound(swf_state_t *s)
 	type = getbits(b,1);
 	n_samples = get_u32(b);
 
-	obj = swf_object_new(s,id);
-	sound = g_new0(swf_sound_t,1);
+	obj = swfdec_object_new(s,id);
+	sound = g_new0(SwfdecSound,1);
 	obj->priv = sound;
 	obj->type = SWF_OBJECT_SOUND;
 
@@ -94,10 +90,10 @@ int tag_func_define_sound(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_sound_stream_block(swf_state_t *s)
+int tag_func_sound_stream_block(SwfdecDecoder *s)
 {
-	swf_object_t *obj;
-	swf_sound_t *sound;
+	SwfdecObject *obj;
+	SwfdecSound *sound;
 	int ret;
 	int n;
 	int n_samples, n_left;
@@ -148,7 +144,7 @@ int tag_func_sound_stream_block(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_sound_stream_head(swf_state_t *s)
+int tag_func_sound_stream_head(SwfdecDecoder *s)
 {
 	//static char *format_str[16] = { "uncompressed", "adpcm", "mpeg" };
 	//static int rate_n[4] = { 5512.5, 11025, 22050, 44100 };
@@ -160,8 +156,8 @@ int tag_func_sound_stream_head(swf_state_t *s)
 	int type;
 	int n_samples;
 	int unknown;
-	swf_object_t *obj;
-	swf_sound_t *sound;
+	SwfdecObject *obj;
+	SwfdecSound *sound;
 
 	mix_format = get_u8(b);
 	format = getbits(b,4);
@@ -179,9 +175,9 @@ int tag_func_sound_stream_head(swf_state_t *s)
 	//printf("  n_samples = %d\n", n_samples); /* XXX per frame? */
 	//printf("  unknown = %d\n", unknown);
 
-	obj = swf_object_new(s,0);
+	obj = swfdec_object_new(s,0);
 	s->stream_sound_obj = obj;
-	sound = g_new0(swf_sound_t,1);
+	sound = g_new0(SwfdecSound,1);
 	obj->priv = sound;
 	obj->type = SWF_OBJECT_SOUND;
 	sound->format = format;
@@ -254,7 +250,7 @@ void get_soundinfo(bits_t *b)
 
 }
 
-int tag_func_start_sound(swf_state_t *s)
+int tag_func_start_sound(SwfdecDecoder *s)
 {
 	bits_t *b = &s->b;
 	int id;
@@ -267,7 +263,7 @@ int tag_func_start_sound(swf_state_t *s)
 	return SWF_OK;
 }
 
-int tag_func_define_button_sound(swf_state_t *s)
+int tag_func_define_button_sound(SwfdecDecoder *s)
 {
 	int id;
 	int i;
@@ -302,10 +298,10 @@ int step_size[89] = {
 	20350, 22385, 24623, 27086, 29794, 32767
 };
 
-void adpcm_decode(swf_state_t *s,swf_object_t *obj)
+void adpcm_decode(SwfdecDecoder *s,SwfdecObject *obj)
 {
 	bits_t *bits = &s->b;
-	swf_sound_t *sound = obj->priv;
+	SwfdecSound *sound = obj->priv;
 	int n_bits;
 	int sample;
 	int index;

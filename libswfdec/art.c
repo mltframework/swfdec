@@ -1,13 +1,5 @@
-#include <libart_lgpl/libart.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
-#include "swf.h"
-#include "proto.h"
-#include "bits.h"
+
+#include "swfdec_internal.h"
 
 
 /*

@@ -1,19 +1,14 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
+#include <string.h>
 #include <math.h>
 
-#include "swf.h"
-#include "bits.h"
-#include "tags.h"
-#include "proto.h"
+#include "swfdec_internal.h"
 
 #define DEBUG printf
 
 typedef struct {
-	void *swf_state_t;
+	void *SwfdecDecoder;
 } SwfdecActionContext;
 
 typedef struct {
@@ -174,7 +169,7 @@ static void hexdump(unsigned char *data, int len)
 	}
 }
 
-void get_actions(swf_state_t *s,bits_t *bits)
+void get_actions(SwfdecDecoder *s,bits_t *bits)
 {
 	int action;
 	int len;
@@ -214,7 +209,7 @@ void get_actions(swf_state_t *s,bits_t *bits)
 	}
 }
 
-int tag_func_do_action(swf_state_t *s)
+int tag_func_do_action(SwfdecDecoder *s)
 {
 	get_actions(s,&s->b);
 
@@ -222,7 +217,7 @@ int tag_func_do_action(swf_state_t *s)
 }
 
 
-int swfdec_action_script_execute(swf_state_t *s, bits_t *bits)
+int swfdec_action_script_execute(SwfdecDecoder *s, bits_t *bits)
 {
 	int action;
 	int len;

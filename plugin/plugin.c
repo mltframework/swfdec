@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
 
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
@@ -43,6 +44,9 @@ void DEBUG (const char *format, ...);
 
 static void packet_write (int fd, int code, int len, void *data);
 static NPNetscapeFuncs mozilla_funcs;
+static char * get_formats (void);
+
+static int n_helpers;
 
 static void
 plugin_fork (Plugin * plugin, int safe)
@@ -58,40 +62,29 @@ plugin_fork (Plugin * plugin, int safe)
   plugin->player_pid = fork ();
   if (plugin->player_pid == 0) {
     char xid_str[20];
-    //char width_str[20];
-    //char height_str[20];
     char *argv[20];
     int argc = 0;
-    //int i;
+    sigset_t sigset;
 
+    memset (&sigset, 0, sizeof(sigset_t));
+    sigprocmask (SIG_SETMASK, &sigset, NULL);
+    
     sprintf (xid_str, "%ld", plugin->window);
 
     /* child */
     dup2 (fds[2], 0);
-    dup2 (fds[1], 1);
+    dup2(fds[1],1);
 
-    argv[argc++] = "swf_play";
+    argv[argc++] = "swfdec-mozilla-player";
     argv[argc++] = "--xid";
     argv[argc++] = xid_str;
-#if 0
-    if (plugin->width) {
-      sprintf (width_str, "%d", plugin->width);
-      argv[argc++] = "--width";
-      argv[argc++] = width_str;
-    }
-    if (plugin->height) {
-      sprintf (height_str, "%d", plugin->height);
-      argv[argc++] = "--height";
-      argv[argc++] = height_str;
-    }
-#endif
     argv[argc++] = "--plugin";
     if (safe) {
       argv[argc++] = "--safe";
     }
     argv[argc] = NULL;
 
-    execv (BINDIR "/swf_play", argv);
+    execv (BINDIR "/swfdec-mozilla-player", argv);
 
     DEBUG ("plugin: failed to exec");
 
@@ -121,7 +114,6 @@ plugin_thread (void *arg)
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
 
-    DEBUG ("recv_fd %d", plugin->recv_fd);
     if (plugin->recv_fd > 0) {
       FD_SET (plugin->recv_fd, &read_fds);
       FD_SET (plugin->recv_fd, &except_fds);
@@ -134,7 +126,6 @@ plugin_thread (void *arg)
     } else if (ret == 0) {
       /* timeout */
     } else {
-      DEBUG ("select read");
       if (plugin->recv_fd > 0 && FD_ISSET (plugin->recv_fd, &read_fds)) {
         char buf[100];
         int n;
@@ -151,7 +142,7 @@ plugin_thread (void *arg)
 
           if (plugin->run_thread) {
             if (safe == 0) {
-              plugin_fork (plugin, TRUE);
+              //plugin_fork (plugin, TRUE);
               safe = 1;
             } else {
               /* helper app failed in safe mode.  oops. */
@@ -200,6 +191,11 @@ plugin_newp (NPMIMEType mime_type, NPP instance,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
+  if (n_helpers >= 4) {
+    return NPERR_OUT_OF_MEMORY_ERROR;
+  }
+  n_helpers++;
+
   instance->pdata = mozilla_funcs.memalloc (sizeof (Plugin));
   plugin = (Plugin *) instance->pdata;
 
@@ -243,6 +239,8 @@ plugin_destroy (NPP instance, NPSavedData ** save)
   if (plugin == NULL) {
     return NPERR_NO_ERROR;
   }
+
+  n_helpers--;
 
   close (plugin->send_fd);
   close (plugin->recv_fd);
@@ -301,12 +299,11 @@ plugin_set_window (NPP instance, NPWindow * window)
     plugin->window = (Window) window->window;
     plugin->display = ws_info->display;
 
+    XSelectInput (plugin->display, plugin->window, 0);
 #if 0
-    XSelectInput (plugin->display, plugin->window,
         (EnterWindowMask | LeaveWindowMask | ButtonPressMask |
          ButtonReleaseMask | PointerMotionMask | ExposureMask ));
 #endif
-    XSelectInput (plugin->display, plugin->window, 0);
 
     plugin_fork (plugin, FALSE);
 
@@ -427,17 +424,19 @@ NP_GetValue (void *future, NPPVariable variable, void *value)
       break;
     case NPPVpluginDescriptionString:
       *((char **) value) =
-          "Shockwave Flash 4.0 animation viewer handled by swfdec-" VERSION
-          ".  "
-          "Plays SWF animations, commonly known as Macromedia&reg; Flash&reg;.<br><br>"
-          "This is alpha software.  It will probably behave in many situations, but "
-          "may also ride your motorcycle, drink all your milk, or use your computer "
-          "to browse porn.  Comments, feature requests, and patches are welcome.<br><br>"
+          "Shockwave Flash 4.0 animation viewer handled by swfdec-"
+          VERSION
+          ".  Plays SWF animations, commonly known as Macromedia&reg; "
+          "Flash&reg;.<br><br>"
+          "This is alpha software.  It will probably behave in many "
+          "situations, but may also ride your motorcycle, drink all "
+          "your milk, or use your computer to browse porn.  Comments, "
+          "feature requests, and patches are welcome.<br><br>"
           "See <a href=\"http://www.schleef.org/swfdec/\">"
           "http://www.schleef.org/swfdec/</a> for information.<br><br>"
-          "Flash, Shockwave, and Macromedia are trademarks of Macromedia, Inc."
-          " The swfdec software and its contributors are"
-          " not affiliated with Macromedia, Inc.";
+          "Flash, Shockwave, and Macromedia are trademarks of "
+          "Macromedia, Inc. The swfdec software and its contributors "
+          "are not affiliated with Macromedia, Inc.";
       break;
     default:
       err = NPERR_GENERIC_ERROR;
@@ -448,7 +447,7 @@ NP_GetValue (void *future, NPPVariable variable, void *value)
 char *
 NP_GetMIMEDescription (void)
 {
-  return ("application/x-shockwave-flash:swf:Shockwave Flash");
+  return get_formats();
 }
 
 NPError
@@ -545,6 +544,7 @@ packet_write (int fd, int code, int len, void *data)
 
 void DEBUG (const char *format, ...)
 {
+#if 0
   va_list varargs;
   char s[100];
 
@@ -552,4 +552,95 @@ void DEBUG (const char *format, ...)
   vsnprintf (s, 99, format, varargs);
   va_end (varargs);
   fprintf(stderr, "swfdec plugin: %s\n", s);
+#endif
 }
+
+
+
+
+
+static char *
+get_formats (void)
+{
+  static char *formats = NULL;
+  int fds[4];
+  int alloc_length;
+  int length;
+  int player_pid;
+  int status = 0;
+  int ret;
+
+  if (formats) {
+    return formats;
+  }
+
+  pipe (fds);
+  pipe (fds + 2);
+
+  /*
+   * fds[0]  parent recv
+   * fds[1]  child send
+   * fds[2]  child recv
+   * fds[3]  parent send
+   */
+  //recv_fd = fds[0];
+  //send_fd = fds[3];
+
+  player_pid = fork ();
+  if (player_pid == 0) {
+    char *argv[20];
+    int argc = 0;
+
+    /* child */
+    dup2 (fds[2], 0);
+    dup2 (fds[1], 1);
+
+    argv[argc++] = "swfdec-mozilla-player";
+    argv[argc++] = "--print-formats";
+    argv[argc] = NULL;
+
+    execv (BINDIR "swfdec-mozilla-player", argv);
+    _exit (255);
+  }
+  close (fds[1]);
+  close (fds[2]);
+
+  alloc_length = 1024;
+  formats = malloc (alloc_length);
+  length = 0;
+  while (1) {
+
+    if (length == alloc_length - 1) {
+      alloc_length += 1024;
+      formats = realloc (formats, alloc_length);
+    }
+
+    ret = read (fds[0], formats + length, alloc_length - 1 - length);
+    if (ret < 0) {
+      goto error;
+    }
+    length += ret;
+
+    if (ret == 0)
+      break;
+  }
+
+  ret = waitpid (player_pid, &status, WNOHANG);
+
+  if (ret == 0 || (WIFEXITED (status) && WEXITSTATUS (status) == 0)) {
+    formats[length] = 0;
+
+    close (fds[0]);
+    close (fds[3]);
+
+    return formats;
+  }
+error:
+  close (fds[0]);
+  close (fds[3]);
+  free (formats);
+  formats = NULL;
+
+  return NULL;
+}
+

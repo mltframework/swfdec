@@ -1,3 +1,30 @@
+2005-02-11  David Schleef  <ds@schleef.org>
+
+	Major plugin changes: start using a gstreamer-based player,
+	copying the appsrc element from gst-mozilla-player.  Merge
+	bugfixes from Debian packaging, including limiting the
+	number of players and unblocking signals (esp. SIGHUP) so
+	that the helper player gets killed correctly.
+	* plugin/Makefile.am:
+	* plugin/gstappsrc.c: (gst_appsrc_get_event_mask),
+	(gst_appsrc_get_formats), (_do_init), (gst_appsrc_base_init),
+	(gst_appsrc_class_init), (gst_appsrc_init),
+	(gst_appsrc_event_handler), (gst_appsrc_set_property),
+	(gst_appsrc_get_property), (gst_appsrc_loop),
+	(gst_appsrc_change_state), (gst_appsrc_uri_get_type),
+	(gst_appsrc_uri_get_protocols), (gst_appsrc_uri_get_uri),
+	(gst_appsrc_uri_set_uri), (gst_appsrc_uri_handler_init),
+	(plugin_init):
+	* plugin/gstappsrc.h:
+	* plugin/plugin.c: (plugin_fork), (plugin_thread), (plugin_newp),
+	(plugin_destroy), (plugin_set_window):
+	* plugin/swfdec-mozilla-player.c: (main), (do_help),
+	(print_formats), (new_gtk_window), (button_press_event),
+	(button_release_event), (key_press), (motion_notify),
+	(configure_cb), (expose_cb), (destroy_cb), (embedded),
+	(video_widget_realize), (video_widget_allocate), (desired_size),
+	(embed_url), (packet_write):
+
 2005-01-28  David Schleef  <ds@schleef.org>
 
 	* configure.ac: fix liboil dependency

@@ -1,16 +1,28 @@
 
 plugindir = $(libdir)/mozilla/plugins/
 
-if WITH_MOZILLA
-plugin_LTLIBRARIES = libmozswfdec.la
-else
-plugin_LTLIBRARIES = 
-endif
+plugin_LTLIBRARIES = libswfdecmozilla.la
 
-noinst_HEADERS = spp.h
+libswfdecmozilla_la_SOURCES = plugin.c
+libswfdecmozilla_la_CFLAGS = $(SWF_CFLAGS) $(MOZILLA_CFLAGS) $(X_CFLAGS) \
+	-DBINDIR=\"$(bindir)/\"
+libswfdecmozilla_la_LDFLAGS = -module -avoid-version $(X_LIBS)
+libswfdecmozilla_la_LIBADD = -lXt
 
-libmozswfdec_la_SOURCES = plugin.c
-libmozswfdec_la_CFLAGS = $(MOZILLA_CFLAGS) $(X_CFLAGS) -DBINDIR=\"$(bindir)\"
-libmozswfdec_la_LDFLAGS = -module -avoid-version $(X_LIBS)
-libmozswfdec_la_LIBADD = -lXt
+bin_PROGRAMS = swfdec-mozilla-player
+
+swfdec_mozilla_player_SOURCES = \
+	swfdec-mozilla-player.c \
+	gstappsrc.c \
+	gstappsrc.h \
+	spp.h
+
+swfdec_mozilla_player_CFLAGS = \
+	$(SWF_CFLAGS) \
+	$(GST_CFLAGS) \
+	$(GTK_CFLAGS)
+
+swfdec_mozilla_player_LDADD = \
+	$(GST_LIBS) \
+	$(GTK_LIBS)
 

@@ -88,6 +88,8 @@ int tag_func_sound_stream_block(swf_state_t *s)
 	swf_object_t *obj;
 	swf_sound_t *sound;
 	int ret;
+	int n;
+	int n_samples, n_left;
 
 	/* for MPEG, data starts after 4 byte header */
 
@@ -103,6 +105,7 @@ int tag_func_sound_stream_block(swf_state_t *s)
 		int chunk;
 
 		chunk = 44100.0/s->rate;
+		chunk *= 2;
 		if(chunk>s->sound_offset)chunk=s->sound_offset;
 
 		memmove(s->sound_buffer,s->sound_buffer + chunk*2,
@@ -110,27 +113,26 @@ int tag_func_sound_stream_block(swf_state_t *s)
 		s->sound_offset -= chunk;
 	}
 
-	memcpy(sound->tmpbuf + sound->tmpbuflen, s->b.ptr + 4, s->tag_len - 4);
-	sound->tmpbuflen += s->tag_len - 4;
+	n_samples = get_u16(&s->b);
+	n_left = get_u16(&s->b);
+	//printf("sound stream %d %d %d\n", ack1, ack2, s->sound_offset/2);
 
-	while(sound->tmpbuflen >= 0){
-		int n;
-
-		ret = decodeMP3(sound->mp, sound->tmpbuf, sound->tmpbuflen,
-			s->sound_buffer, 1000, &n);
-
-		if(ret == MP3_ERR){
-			return SWF_ERROR;
-		}
-		if(ret == MP3_NEED_MORE){
-			break;
-		}
+	if(s->tag_len - 4 == 0){
+		/* the end? */
+		return SWF_OK;
 	}
 
+	ret = decodeMP3(sound->mp, s->b.ptr, s->tag_len - 4,
+		s->sound_buffer + s->sound_offset,
+		s->sound_len - s->sound_offset, &n);
+	while(ret==MP3_OK){
+		s->sound_offset += n;
+		ret = decodeMP3(sound->mp, NULL, 0,
+			s->sound_buffer + s->sound_offset,
+			s->sound_len - s->sound_offset, &n);
+	}
 
-	//printf("  left over: %d\n",obj->tmpbuflen);
-
-	s->b.ptr += s->tag_len;
+	s->b.ptr += s->tag_len - 4;
 
 	return SWF_OK;
 }
@@ -297,7 +299,6 @@ void adpcm_decode(swf_state_t *s,swf_object_t *obj)
 	int n_bits;
 	int sample;
 	int index;
-	void *endptr;
 	int x;
 	int i;
 	int diff;

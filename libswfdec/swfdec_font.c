@@ -155,6 +155,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   bold = swfdec_bits_getbit (bits);
 
   langcode = swfdec_bits_get_u8 (bits);
+  SWFDEC_ERROR("langcode %d", langcode);
 
   font_name_len = swfdec_bits_get_u8 (bits);
   //font_name = 
@@ -210,8 +211,10 @@ tag_func_define_font_2 (SwfdecDecoder * s)
       swfdec_bits_get_rect (bits, rect);
     }
     kerning_count = swfdec_bits_get_u16 (bits);
-    for (i = 0; i < kerning_count; i++) {
-      get_kerning_record (bits, wide_codes);
+    if (0) {
+      for (i = 0; i < kerning_count; i++) {
+        get_kerning_record (bits, wide_codes);
+      }
     }
   }
 

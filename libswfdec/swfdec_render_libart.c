@@ -166,6 +166,10 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     layervec->color = swfdec_color_apply_transform (shapevec->color,
         &seg->color_transform);
     layervec->compose = NULL;
+    if (s->render->mouse_check &&
+        art_svp_point_wind (layervec->svp, s->mouse_x, s->mouse_y)) {
+      s->render->mouse_in_button = TRUE;
+    }
     if (shapevec->fill_id) {
       swfdec_shape_compose (s, layervec, shapevec, &layer->transform);
     }
@@ -213,7 +217,9 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         &seg->color_transform);
   }
 
-  swfdec_layer_render (s, layer);
+  if (!s->render->mouse_check) {
+    swfdec_layer_render (s, layer);
+  }
   swfdec_layer_free (layer);
 }
 
@@ -289,6 +295,11 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     art_svp_make_convex (layervec->svp);
     swfdec_rect_union_to_masked (&layer->rect, &layervec->rect, &s->irect);
 
+    if (s->render->mouse_check &&
+        art_svp_point_wind (layervec->svp, s->mouse_x, s->mouse_y)) {
+      s->render->mouse_in_button = TRUE;
+    }
+
     g_free (bpath0);
     g_free (bpath1);
     art_free (vpath0);
@@ -296,7 +307,9 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     g_free (vpath);
   }
 
-  swfdec_layer_render (s, layer);
+  if (!s->render->mouse_check) {
+    swfdec_layer_render (s, layer);
+  }
   swfdec_layer_free (layer);
 }
 
@@ -330,3 +343,60 @@ swfdec_render_layervec_free (SwfdecLayerVec * layervec)
   }
 
 }
+
+int
+swfdec_render_in_button_area (SwfdecDecoder *s, SwfdecSpriteSegment * seg,
+        SwfdecObject * obj)
+{
+  SwfdecLayer *layer;
+  SwfdecShape *shape = SWFDEC_SHAPE (obj);
+  int i;
+  SwfdecShapeVec *shapevec;
+  SwfdecShapeVec *shapevec2;
+  ArtSVP *svp;
+  int ret;
+
+  layer = swfdec_layer_new ();
+  layer->seg = seg;
+  swfdec_transform_multiply (&layer->transform, &seg->transform, &s->transform);
+
+  layer->rect.x0 = 0;
+  layer->rect.x1 = 0;
+  layer->rect.y0 = 0;
+  layer->rect.y1 = 0;
+
+  g_array_set_size (layer->fills, shape->fills->len);
+  for (i = 0; i < shape->fills->len; i++) {
+    ArtVpath *vpath, *vpath0, *vpath1;
+    ArtBpath *bpath0, *bpath1;
+    SwfdecTransform trans;
+
+    shapevec = g_ptr_array_index (shape->fills, i);
+    shapevec2 = g_ptr_array_index (shape->fills2, i);
+
+    memcpy (&trans, &layer->transform, sizeof (SwfdecTransform));
+
+    bpath0 = swfdec_art_bpath_from_points (shapevec->path, &trans);
+    bpath1 = swfdec_art_bpath_from_points (shapevec2->path, &trans);
+    vpath0 = art_bez_path_to_vec (bpath0, s->flatness);
+    vpath1 = art_bez_path_to_vec (bpath1, s->flatness);
+    vpath1 = art_vpath_reverse_free (vpath1);
+    vpath = art_vpath_cat (vpath0, vpath1);
+    svp = art_svp_from_vpath (vpath);
+    art_svp_make_convex (svp);
+
+    g_free (bpath0);
+    g_free (bpath1);
+    art_free (vpath0);
+    g_free (vpath1);
+    g_free (vpath);
+
+    ret = art_svp_point_wind (svp, s->mouse_x, s->mouse_y);
+
+    art_svp_free (svp);
+
+    if (ret) return TRUE;
+  }
+  return FALSE;
+}
+

@@ -6,5 +6,6 @@
 #define SPP_DATA 1
 #define SPP_EOF 2
 #define SPP_SIZE 3
+#define SPP_GO_TO_URL 3
 
 #endif

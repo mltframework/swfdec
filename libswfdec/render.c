@@ -171,6 +171,7 @@ tag_show_frame (SwfdecDecoder * s)
   return SWF_OK;
 }
 
+#ifdef unused
 void
 swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
 {
@@ -187,6 +188,7 @@ swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
     klass->render (s, seg, object);
   }
 }
+#endif
 
 void
 swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer)

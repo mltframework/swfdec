@@ -1,3 +1,39 @@
+2005-01-28  David Schleef  <ds@schleef.org>
+
+	* configure.ac: fix liboil dependency
+	* libswfdec/actions.c: (swfdec_action_script_execute),
+	(action_goto_frame), (action_get_url), (action_stop),
+	(action_stop_sounds), (action_push), (action_get_property),
+	(action_constant_pool): implement constant pools, add warnings
+	* libswfdec/art.c: (paint), (art_rgb_svp_alpha_callback),
+	(swfdec_art_bpath_from_points): cleanups, use liboil
+	* libswfdec/render.c: cleanup
+	* libswfdec/swf.c: (swfdec_decoder_get_url): add get_url()
+	* libswfdec/swfdec.h: same
+	* libswfdec/swfdec_buffer.c: (swfdec_buffer_queue_free): fix leak
+	* libswfdec/swfdec_button.c: (swfdec_button_init),
+	(swfdec_button_dispose), (swfdec_button_render),
+	(tag_func_define_button_2), (tag_func_define_button),
+	(swfdec_button_execute): implement button actions
+	* libswfdec/swfdec_button.h: same
+	* libswfdec/swfdec_decoder.h: add url and button handling
+	* libswfdec/swfdec_font.c: (tag_func_define_font_2): check for
+	broken kerning entries
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate),
+	(swfdec_render_get_image), (swfdec_render_get_audio): implement
+	button actions.
+	* libswfdec/swfdec_render.h: same
+	* libswfdec/swfdec_render_libart.c: (swfdec_shape_render),
+	(swfdec_text_render), (swfdec_render_in_button_area): implement
+	button actions.
+	* libswfdec/swfdec_render_libart.h: add prototypes
+	* libswfdec/swfdec_shape.h: implement define_button
+	* player/swf_play.c: (main), (do_safe), (packet_write): implement
+	buttons and url handling.
+	* plugin/plugin.c: (plugin_fork), (plugin_thread),
+	(plugin_set_window): implement url handling
+	* plugin/spp.h: same
+
 2005-01-12  David Schleef  <ds@schleef.org>
 
 	* plugin/plugin.c: (NP_GetValue): Downgrade to flash 4.0, in

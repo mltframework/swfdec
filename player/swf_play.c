@@ -29,6 +29,7 @@ struct _Packet
 };
 static Packet *packet_get (int fd);
 static void packet_free (Packet * packet);
+static void packet_write (int fd, int code, int len, const char *s);
 static gboolean render_idle_audio (gpointer data);
 static gboolean render_idle_noaudio (gpointer data);
 static void do_help (void);
@@ -52,8 +53,7 @@ static gboolean noskip = FALSE;
 static gboolean slow = FALSE;
 static gboolean safe = FALSE;
 static gboolean hidden = FALSE;
-static gboolean embedded = FALSE;
-static unsigned long xid;
+//static unsigned long xid;
 
 static double rate;
 static int interval;
@@ -83,6 +83,7 @@ main (int argc, char *argv[])
   int starting = FALSE;
   Packet *packet;
   int fd = 0;
+  int send_fd = 1;
 
   DEBUG ("swf_play: starting player\n");
 
@@ -96,9 +97,8 @@ main (int argc, char *argv[])
         enable_sound = FALSE;
         break;
       case 'x':
-        setenv ("SDL_WINDOWID", optarg, 1);
-        xid = strtol (optarg, NULL, 0);
-        embedded = TRUE;
+        //setenv ("SDL_WINDOWID", optarg, 1);
+        //xid = strtol (optarg, NULL, 0);
         break;
       case 'p':
         standalone = FALSE;
@@ -190,10 +190,10 @@ main (int argc, char *argv[])
       }
     }
 
-    if (standalone) {
+    //if (standalone) {
       if (SDL_PollEvent (&event)) {
         did_something = TRUE;
-        //DEBUG ("%d\n", event.type);
+        DEBUG ("event %d\n", event.type);
         switch (event.type) {
           case SDL_VIDEORESIZE:
             width = event.resize.w;
@@ -204,6 +204,11 @@ main (int argc, char *argv[])
           case SDL_MOUSEMOTION:
             swfdec_decoder_set_mouse (s, event.motion.x, event.motion.y,
                 event.motion.state);
+            break;
+          case SDL_MOUSEBUTTONDOWN:
+          case SDL_MOUSEBUTTONUP:
+            swfdec_decoder_set_mouse (s, event.button.x, event.button.y,
+                event.button.state);
             break;
           case SDL_ACTIVEEVENT:
             if (event.active.state & SDL_APPMOUSEFOCUS) {
@@ -219,7 +224,7 @@ main (int argc, char *argv[])
             break;
         }
       }
-    }
+    //}
 
     if (starting) {
       ret = swfdec_decoder_parse (s);
@@ -251,12 +256,20 @@ main (int argc, char *argv[])
       int now = SDL_GetTicks ();
 
       if (now >= render_time) {
+        char *url;
+
         if (enable_sound) {
           render_idle_audio (NULL);
         } else {
           render_idle_noaudio (NULL);
         }
         did_something = TRUE;
+        url = swfdec_decoder_get_url (s);
+        if (url) {
+          DEBUG ("sending URL packet\n");
+          packet_write (send_fd, SPP_GO_TO_URL, strlen(url), url);
+          g_free (url);
+        }
       }
     }
 
@@ -337,6 +350,11 @@ do_safe (int standalone)
         case SDL_MOUSEMOTION:
           swfdec_decoder_set_mouse (s, event.motion.x, event.motion.y,
               event.motion.state);
+          break;
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+          swfdec_decoder_set_mouse (s, event.button.x, event.button.y,
+              event.button.state);
           break;
         default:
           break;
@@ -590,3 +608,18 @@ packet_free (Packet * packet)
     free (packet->data);
   free (packet);
 }
+
+static void
+packet_write (int fd, int code, int len, const char *s)
+{
+  char *buf;
+
+  buf = g_malloc (len + 8);
+  memcpy (buf, &code, 4);
+  memcpy (buf + 4, &len, 4);
+  memcpy (buf + 8, s, len);
+  write (fd, buf, len + 8);
+
+  g_free (buf);
+}
+

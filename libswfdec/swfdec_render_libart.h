@@ -14,5 +14,7 @@ void swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object);
 void swf_config_colorspace (SwfdecDecoder * s);
 void swfdec_render_layervec_free (SwfdecLayerVec * layervec);
+int swfdec_render_in_button_area (SwfdecDecoder *s, SwfdecSpriteSegment * seg,
+        SwfdecObject * obj);
 
 #endif

@@ -123,6 +123,7 @@ swfdec_buffer_queue_free (SwfdecBufferQueue * queue)
     swfdec_buffer_unref ((SwfdecBuffer *) g->data);
   }
   g_list_free (queue->buffers);
+  g_free (queue);
 }
 
 void

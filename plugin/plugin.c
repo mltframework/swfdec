@@ -68,7 +68,7 @@ plugin_fork (Plugin * plugin, int safe)
 
     /* child */
     dup2 (fds[2], 0);
-    //dup2(fds[1],1);
+    dup2 (fds[1], 1);
 
     argv[argc++] = "swf_play";
     argv[argc++] = "--xid";
@@ -121,6 +121,7 @@ plugin_thread (void *arg)
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
 
+    DEBUG ("recv_fd %d", plugin->recv_fd);
     if (plugin->recv_fd > 0) {
       FD_SET (plugin->recv_fd, &read_fds);
       FD_SET (plugin->recv_fd, &except_fds);
@@ -133,6 +134,7 @@ plugin_thread (void *arg)
     } else if (ret == 0) {
       /* timeout */
     } else {
+      DEBUG ("select read");
       if (plugin->recv_fd > 0 && FD_ISSET (plugin->recv_fd, &read_fds)) {
         char buf[100];
         int n;
@@ -156,7 +158,20 @@ plugin_thread (void *arg)
             }
           }
         } else {
-          DEBUG ("%.*s", n, buf);
+          switch (*(int *)buf) {
+            case SPP_GO_TO_URL:
+              {
+                int len;
+                
+                len = *(int *)(buf + 4);
+
+                DEBUG ("%.*s", len, buf + 8);
+
+                mozilla_funcs.geturl (plugin->instance, buf + 8, "_self");
+              }
+            default:
+              break;
+          }
         }
 
       }
@@ -286,9 +301,12 @@ plugin_set_window (NPP instance, NPWindow * window)
     plugin->window = (Window) window->window;
     plugin->display = ws_info->display;
 
+#if 0
     XSelectInput (plugin->display, plugin->window,
         (EnterWindowMask | LeaveWindowMask | ButtonPressMask |
          ButtonReleaseMask | PointerMotionMask | ExposureMask ));
+#endif
+    XSelectInput (plugin->display, plugin->window, 0);
 
     plugin_fork (plugin, FALSE);
 

@@ -33,6 +33,7 @@ swfdec_render_iterate (SwfdecDecoder * s)
 {
   GList *g;
 
+
   if (s->render->seek_frame != -1) {
     SwfdecSound *sound;
 
@@ -49,6 +50,12 @@ swfdec_render_iterate (SwfdecDecoder * s)
             s->main_sprite->actions[s->render->frame_index]);
       }
     }
+    SWFDEC_DEBUG ("mouse button %d old_mouse_button %d active_button %p",
+        s->mouse_button, s->old_mouse_button, s->render->active_button);
+    if (s->mouse_button && !s->old_mouse_button &&
+        s->render->active_button) {
+      swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
+    }
 
     if (!s->stopped) {
       s->render->frame_index++;
@@ -63,6 +70,8 @@ swfdec_render_iterate (SwfdecDecoder * s)
     }
   }
 
+  s->render->active_button = NULL;
+
   for (g = g_list_first (s->render->object_states); g; g = g_list_next (g)) {
     SwfdecRenderState *state = g->data;
 
@@ -70,6 +79,8 @@ swfdec_render_iterate (SwfdecDecoder * s)
     SWFDEC_INFO ("iterate layer=%d frame_index=%d", state->layer,
         state->frame_index);
   }
+
+  s->old_mouse_button = s->mouse_button;
 
   return TRUE;
 }
@@ -217,8 +228,18 @@ swfdec_render_get_image (SwfdecDecoder * s)
       if (n < n_frames) n_frames = n;
       n_kept_layers++;
     } else {
+      gboolean is_button;
+      SwfdecObject *obj;
+
+      obj = swfdec_object_get (s, seg->id);
+      if (obj) {
+        is_button = SWFDEC_IS_BUTTON (obj);
+      } else {
+        is_button = FALSE;
+      }
       if ((n <= n_frames || n >= MAX_KEPT_FRAMES) &&
-          (n_kept_layers + 1) * n > n_kept_layers * n_frames) {
+          (n_kept_layers + 1) * n > n_kept_layers * n_frames &&
+          !is_button) {
         if (n < MAX_KEPT_FRAMES) n_frames = n;
         n_kept_layers++;
         SWFDEC_DEBUG ("keeping layer (%d frames)", n);
@@ -292,15 +313,6 @@ swfdec_render_get_image (SwfdecDecoder * s)
 
   swfdec_render_be_stop (s);
 
-  {
-    int i,j;
-    for(j=MAX(0,s->mouse_y-10);j<MIN(s->height,s->mouse_y+10);j++){
-      for(i=MAX(0,s->mouse_x-10);i<MIN(s->width,s->mouse_x+10);i++){
-        *(guint32 *)(s->buffer + j*s->stride + i*4) = 0;
-      }
-    }
-  }
-
   buffer = swfdec_buffer_new_with_data (s->buffer, s->stride * s->height);
 
   s->buffer = NULL;
@@ -341,6 +353,7 @@ swfdec_render_get_audio (SwfdecDecoder * s)
     SwfdecSoundChunk *chunk =
       s->main_sprite->sound_play[s->render->frame_index];
 
+    SWFDEC_ERROR("chunk %p frame_index %d", chunk, s->render->frame_index);
     SWFDEC_ERROR("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",
         chunk->object, chunk->start_sample, chunk->stop_sample,
         chunk->stop, chunk->no_restart, chunk->loop_count);

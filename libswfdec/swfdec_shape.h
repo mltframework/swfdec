@@ -85,6 +85,7 @@ void swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
     SwfdecShape * shape);
 int tag_define_shape_2 (SwfdecDecoder * s);
 int tag_func_define_button_2 (SwfdecDecoder * s);
+int tag_func_define_button (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);
 void dump_layers (SwfdecDecoder * s);
 

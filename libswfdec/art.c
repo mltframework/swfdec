@@ -524,58 +524,93 @@ art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
   data->buf += data->rowstride;
 }
 
+#if 0
+#define imult(a,b) (((a)*(b) + (((a)*(b)) >> 8))>>8)
+#define apply(a,b,c) (imult(a,255-c) + imult(b,c))
+
+static void
+paint (uint8_t *dest, uint8_t *color, uint8_t *alpha, int n)
+{
+  int i;
+
+  for(i=0;i<n;i++){
+    if (alpha[0] == 0) {
+    } else if (alpha[0] == 0xff) {
+      dest[0] = color[1];
+      dest[1] = color[2];
+      dest[2] = color[3];
+      dest[3] = color[0];
+    } else {
+      dest[0] = apply(dest[0],color[1],alpha[0]);
+      dest[1] = apply(dest[1],color[2],alpha[0]);
+      dest[2] = apply(dest[2],color[3],alpha[0]);
+      dest[3] = apply(dest[3],color[0],alpha[0]);
+    }
+    dest+=4;
+    alpha++;
+  }
+}
+#endif
+
 void
 art_rgb_svp_alpha_callback (void *callback_data, int y,
     int start, ArtSVPRenderAAStep * steps, int n_steps)
 {
   struct swf_svp_render_struct *data = callback_data;
   art_u8 *linebuf;
-  int run_x0, run_x1;
   art_u32 running_sum = start;
   int x0, x1;
   int k;
-  art_u8 r, g, b, a;
+  uint8_t color[4];
   int alpha;
+  unsigned char alphabuf[1000];
+  int x;
+  int a;
 
   linebuf = data->buf;
   x0 = data->x0;
   x1 = data->x1;
 
-  r = SWF_COLOR_R (data->color);
-  g = SWF_COLOR_G (data->color);
-  b = SWF_COLOR_B (data->color);
+  color[0] = SWF_COLOR_B (data->color);
+  color[1] = SWF_COLOR_G (data->color);
+  color[2] = SWF_COLOR_R (data->color);
+  color[3] = SWF_COLOR_A (data->color);
   a = SWF_COLOR_A (data->color);
 
+  x = 0;
   if (n_steps > 0) {
-    run_x1 = steps[0].x;
-    if (run_x1 > x0) {
-      alpha = (a * (running_sum >> 8)) >> 16;
-      if (alpha)
-        art_rgb_run_alpha_2 (linebuf, r, g, b, alpha, run_x1 - x0);
+    alpha = (a * (running_sum >> 8)) >> 16;
+    while(x < steps[0].x) {
+      alphabuf[x] = alpha;
+      x++;
     }
 
     for (k = 0; k < n_steps - 1; k++) {
       running_sum += steps[k].delta;
-      run_x0 = run_x1;
-      run_x1 = steps[k + 1].x;
-      if (run_x1 > run_x0) {
-        alpha = (a * (running_sum >> 8)) >> 16;
-        if (alpha)
-          art_rgb_run_alpha_2 (linebuf + (run_x0 - x0) * 4,
-              r, g, b, alpha, run_x1 - run_x0);
+      alpha = (a * (running_sum >> 8)) >> 16;
+      while(x < steps[k+1].x) {
+        alphabuf[x] = alpha;
+        x++;
       }
     }
     running_sum += steps[k].delta;
-    if (x1 > run_x1) {
-      alpha = (a * (running_sum >> 8)) >> 16;
-      if (alpha)
-        art_rgb_run_alpha_2 (linebuf + (run_x1 - x0) * 4,
-            r, g, b, alpha, x1 - run_x1);
+    alpha = (a * (running_sum >> 8)) >> 16;
+    while(x < x1) {
+      alphabuf[x] = alpha;
+      x++;
     }
+
+    x=x0;
+    while(alphabuf[x]==0 && x < x1) {
+      x++;
+    }
+    oil_argb_paint_u8 (data->buf + 4*(x-x0), color, alphabuf + x, x1 - x);
   } else {
     alpha = (a * (running_sum >> 8)) >> 16;
     if (alpha)
-      art_rgb_run_alpha_2 (linebuf, r, g, b, alpha, x1 - x0);
+      art_rgb_run_alpha_2 (linebuf, SWF_COLOR_R (data->color),
+          SWF_COLOR_G (data->color), SWF_COLOR_B (data->color),
+          alpha, x1 - x0);
   }
 
   data->buf += data->rowstride;
@@ -662,8 +697,12 @@ swfdec_art_bpath_from_points (GArray * array, SwfdecTransform * trans)
       y = points[i].control_y * SWF_SCALE_FACTOR;
       bpath[i].x3 = points[i].to_x * SWF_SCALE_FACTOR;
       bpath[i].y3 = points[i].to_y * SWF_SCALE_FACTOR;
-      bpath[i].x1 = WEIGHT * x + (1 - WEIGHT) * bpath[i - 1].x3;
-      bpath[i].y1 = WEIGHT * y + (1 - WEIGHT) * bpath[i - 1].y3;
+      if (i > 0) {
+        bpath[i].x1 = WEIGHT * x + (1 - WEIGHT) * bpath[i - 1].x3;
+        bpath[i].y1 = WEIGHT * y + (1 - WEIGHT) * bpath[i - 1].y3;
+      } else {
+        g_assert_not_reached();
+      }
       bpath[i].x2 = WEIGHT * x + (1 - WEIGHT) * bpath[i].x3;
       bpath[i].y2 = WEIGHT * y + (1 - WEIGHT) * bpath[i].y3;
     }

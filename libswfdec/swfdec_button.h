@@ -8,6 +8,7 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecButtonClass SwfdecButtonClass;
 typedef struct _SwfdecButtonRecord SwfdecButtonRecord;
+typedef struct _SwfdecButtonAction SwfdecButtonAction;
 
 #define SWFDEC_TYPE_BUTTON                    (swfdec_button_get_type())
 #define SWFDEC_IS_BUTTON(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_BUTTON))
@@ -24,11 +25,18 @@ struct _SwfdecButtonRecord
   SwfdecSpriteSegment *segment;
 };
 
+struct _SwfdecButtonAction
+{
+  unsigned int condition;
+  SwfdecBuffer *buffer;
+};
+
 struct _SwfdecButton
 {
   SwfdecObject object;
 
   GArray *records;
+  GArray *actions;
 };
 
 struct _SwfdecButtonClass
@@ -38,6 +46,8 @@ struct _SwfdecButtonClass
 };
 
 GType swfdec_button_get_type (void);
+
+void swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button);
 
 G_END_DECLS
 #endif

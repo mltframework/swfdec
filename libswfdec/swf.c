@@ -411,6 +411,16 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   return SWF_OK;
 }
 
+char *
+swfdec_decoder_get_url (SwfdecDecoder * s)
+{
+  char *url = s->url;
+
+  s->url = NULL;
+
+  return url;
+}
+
 int
 swfdec_decoder_set_colorspace (SwfdecDecoder * s, int colorspace)
 {
@@ -660,7 +670,7 @@ struct tag_func_struct tag_funcs[] = {
   [ST_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, 0},
 //      [ ST_DEFINEBITS         ] = { "DefineBits",     NULL,   0 },
   [ST_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
-  [ST_DEFINEBUTTON] = {"DefineButton", NULL, 0},
+  [ST_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
   [ST_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
   [ST_SETBACKGROUNDCOLOR] =
       {"SetBackgroundColor", tag_func_set_background_color, 0},

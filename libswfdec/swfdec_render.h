@@ -17,6 +17,10 @@ struct swfdec_render_struct
   SwfdecRect drawrect;
 
   GList *object_states;
+
+  int mouse_check;
+  int mouse_in_button;
+  SwfdecObject *active_button;
 };
 
 struct _SwfdecRenderState

@@ -29,6 +29,9 @@ struct _SwfdecActionContext
   char *pc;
   int skip;
   GList *variables;
+
+  int n_constants;
+  char **constants;
 };
 
 enum
@@ -90,6 +93,7 @@ static SwfdecActionFunc action_wait_for_frame_2;
 static SwfdecActionFunc action_trace;
 static SwfdecActionFunc action_get_time;
 static SwfdecActionFunc action_random_number;
+static SwfdecActionFunc action_constant_pool;
 
 
 #if 0
@@ -253,6 +257,7 @@ static ActionFuncEntry swf_actions[] = {
   { 0x34, action_get_time },
   { 0x30, action_random_number },
   /* version 5 */
+  { 0x88, action_constant_pool },
   /* ... */
 };
 
@@ -291,7 +296,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
   ActionFuncEntry *func_entry;
   SwfdecActionContext *context;
 
-  SWFDEC_ERROR ("swfdec_action_script_execute %p %p %d", buffer,
+  SWFDEC_DEBUG ("swfdec_action_script_execute %p %p %d", buffer,
       buffer->data, buffer->length);
 
   if (s->context == NULL) {
@@ -337,6 +342,19 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
       context->error = 1;
     }
 
+    if (len) {
+      if (context->bits.ptr < context->bits.end) {
+        SWFDEC_ERROR ("action didn't read all data (%d < %d)",
+            context->bits.ptr - (bits.ptr - len),
+            context->bits.end - (bits.ptr - len));
+      }
+      if (context->bits.ptr > context->bits.end) {
+        SWFDEC_ERROR ("action read past end of buffer (%d > %d)",
+            context->bits.ptr - (bits.ptr - len),
+            context->bits.end - (bits.ptr - len));
+      }
+    }
+
     if (context->pc >= (char *)bits.buffer->data &&
         context->pc < (char *)bits.end) {
       bits.ptr = context->pc;
@@ -350,6 +368,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
       SWFDEC_ERROR ("action script error");
       //break;
     }
+
   }
 
   return SWF_OK;
@@ -512,7 +531,11 @@ action_goto_frame (SwfdecActionContext * context)
 
   frame = swfdec_bits_get_u16 (&context->bits);
 
+  /* FIXME hack */
   context->s->render->frame_index = frame - 1;
+  if (context->s->render->frame_index < 0) {
+    context->s->render->frame_index = 0;
+  }
 }
 
 static void
@@ -524,9 +547,11 @@ action_get_url (SwfdecActionContext * context)
   url = swfdec_bits_get_string (&context->bits);
   target = swfdec_bits_get_string (&context->bits);
 
-  SWFDEC_WARNING ("get_url unimplemented");
+  SWFDEC_ERROR ("get_url %s %s", url, target);
 
-  g_free(url);
+  if (context->s->url) g_free (context->s->url);
+  context->s->url = url;
+  
   g_free(target);
 }
 
@@ -551,7 +576,7 @@ action_play (SwfdecActionContext * context)
 static void
 action_stop (SwfdecActionContext * context)
 {
-  //context->s->stopped = TRUE;
+  context->s->stopped = TRUE;
 }
 
 static void
@@ -564,6 +589,7 @@ static void
 action_stop_sounds (SwfdecActionContext * context)
 {
   /* FIXME */
+  SWFDEC_WARNING ("stop_sounds unimplemented");
 }
 
 static void
@@ -613,6 +639,7 @@ action_push (SwfdecActionContext * context)
   ActionVal *value;
   int type;
 
+  while (context->bits.ptr < context->bits.end) {
   value = action_val_new();
 
   type = swfdec_bits_get_u8 (&context->bits);
@@ -635,6 +662,7 @@ action_push (SwfdecActionContext * context)
       }
       break;
     case 2: /* null */
+      /* FIXME what to do here */
       break;
     case 3: /* undefined */
       break;
@@ -671,18 +699,37 @@ action_push (SwfdecActionContext * context)
       value->number = swfdec_bits_get_u32 (&context->bits);
       break;
     case 8: /* constant8 */
-      swfdec_bits_get_u8 (&context->bits);
-      SWFDEC_WARNING ("constant pool unimplemented");
+      {
+        int i;
+        i = swfdec_bits_get_u8 (&context->bits);
+        if (i < context->n_constants) {
+          value->type = ACTIONVAL_TYPE_STRING;
+          value->string = g_strdup (context->constants[i]);
+        } else {
+          SWFDEC_ERROR ("request for constant outside constant pool");
+          context->error = 1;
+        }
+      }
       break;
     case 9: /* constant16 */
-      swfdec_bits_get_u16 (&context->bits);
-      SWFDEC_WARNING ("constant pool unimplemented");
+      {
+        int i;
+        i = swfdec_bits_get_u16 (&context->bits);
+        if (i < context->n_constants) {
+          value->type = ACTIONVAL_TYPE_STRING;
+          value->string = g_strdup (context->constants[i]);
+        } else {
+          SWFDEC_ERROR ("request for constant outside constant pool");
+          context->error = 1;
+        }
+      }
       break;
     default:
       SWFDEC_ERROR("illegal type");
   }
 
   stack_push (context, value);
+  }
 }
 
 static void
@@ -1149,11 +1196,40 @@ action_get_property (SwfdecActionContext *context)
   action_val_convert_to_string (b);
 
   d = action_val_new();
+  d->type = ACTIONVAL_TYPE_NUMBER;
 
   index = a->number;
   if (index >= 0 && index <= 21) {
-    SWFDEC_WARNING ("get property unimplemented");
-    /* FIXME need to get the property here */
+    switch (index) {
+      case 5:
+        d->number = context->s->n_frames; /* total frames */
+        break;
+      case 8:
+        d->number = context->s->width; /* width */
+        break;
+      case 9:
+        d->number = context->s->height; /* height */
+        break;
+      case 12:
+        d->number = context->s->n_frames; /* frames loaded */
+        break;
+      case 16:
+        d->number = 1; /* high quality */
+        break;
+      case 19:
+        d->number = 1; /* quality */
+        break;
+      case 20:
+        d->number = context->s->mouse_x; /* mouse x */
+        break;
+      case 21:
+        d->number = context->s->mouse_y; /* mouse y */
+        break;
+      default:
+        /* FIXME need to get the property here */
+        SWFDEC_WARNING ("get property unimplemented (index = %d)", index);
+        break;
+    }
   } else {
     SWFDEC_ERROR("property index out of range");
     context->error = 1;
@@ -1310,5 +1386,24 @@ action_random_number (SwfdecActionContext *context)
   a->number = g_random_int_range (0, a->number);
 
   stack_push (context, a);
+}
+
+static void
+action_constant_pool (SwfdecActionContext *context)
+{
+  int n;
+  int i;
+
+  n = swfdec_bits_get_u16 (&context->bits);
+
+  if (context->constants) {
+    g_free (context->constants);
+  }
+  context->n_constants = n;
+  context->constants = g_malloc(sizeof(char *) * n);
+
+  for(i=0;i<n;i++){
+    context->constants[i] = swfdec_bits_get_string (&context->bits);
+  }
 }
 

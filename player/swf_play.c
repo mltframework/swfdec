@@ -17,6 +17,14 @@
 #include <sys/time.h>
 #include <time.h>
 
+#include <SDL.h>
+
+struct sound_buffer_struct{
+	int len;
+	void *data;
+};
+typedef struct sound_buffer_struct SoundBuffer;
+
 gboolean debug = FALSE;
 
 SwfdecDecoder *s;
@@ -35,6 +43,8 @@ guint render_idle_id;
 unsigned long xid;
 int width = 100;
 int height = 100;
+int fast = FALSE;
+int enable_sound = TRUE;
 
 int interval;
 struct timeval image_time;
@@ -43,6 +53,8 @@ static void do_help(void);
 static void read_swf_file(char *fn);
 static void read_swf_stdin(void);
 static void new_gtk_window(void);
+
+static void sound_setup(void);
 
 /* GTK callbacks */
 static void destroy_cb (GtkWidget *widget, gpointer data);
@@ -69,6 +81,8 @@ int main(int argc, char *argv[])
 		{ "xid", 1, NULL, 'x' },
 		{ "width", 1, NULL, 'w' },
 		{ "height", 1, NULL, 'h' },
+		{ "fast", 0, NULL, 'f' },
+		{ "no-sound", 0, NULL, 's' },
 		{ 0 },
 	};
 
@@ -82,7 +96,7 @@ int main(int argc, char *argv[])
 	s = swfdec_decoder_new();
 
 	while(1){
-		c = getopt_long(argc, argv, "x:w:h:", options, &index);
+		c = getopt_long(argc, argv, "sfx:w:h:", options, &index);
 		if(c==-1)break;
 
 		switch(c){
@@ -96,6 +110,12 @@ int main(int argc, char *argv[])
 		case 'h':
 			height = strtoul(optarg, NULL, 0);
 			printf("height set to %d\n",height);
+			break;
+		case 'f':
+			fast = TRUE;
+			break;
+		case 's':
+			enable_sound = FALSE;
 			break;
 		default:
 			do_help();
@@ -115,6 +135,8 @@ int main(int argc, char *argv[])
 		plugged = 1;
 	}
 	new_gtk_window();
+
+	if(enable_sound)sound_setup();
 
 	gtk_main();
 
@@ -253,6 +275,83 @@ static void read_swf_stdin(void)
 	input_idle_id = g_io_add_watch(input_chan, G_IO_IN, input, NULL);
 }
 
+GList *sound_buffers;
+
+static void fill_audio(void *udata, Uint8 *stream, int len)
+{
+	GList *g;
+	SoundBuffer *buffer;
+	int i;
+
+	g = g_list_first(sound_buffers);
+	if(!g){
+		void *zero;
+
+		//fprintf(stderr,"fill_audio (zero)\n");
+
+		zero = malloc(len*4);
+		memset(zero,0,len*4);
+		SDL_MixAudio(stream, zero, len, SDL_MIX_MAXVOLUME);
+		//free(zero);
+
+		return;
+	}
+
+	//fprintf(stderr,"fill_audio\n");
+
+	buffer = (SoundBuffer *)g->data;
+	sound_buffers = g_list_delete_link(sound_buffers,g);
+
+#if 0
+	for(i=0;i<10;i++){
+		fprintf(stderr,"%d ",((short *)(buffer->data))[i]);
+	}
+	fprintf(stderr,"\n");
+#endif
+
+	SDL_MixAudio(stream, buffer->data, buffer->len, SDL_MIX_MAXVOLUME);
+
+	free(buffer);
+}
+
+static void pull_sound(SwfdecDecoder *s)
+{
+	SoundBuffer *sb;
+	void *data;
+	int n;
+
+	while(1){
+		data = swfdec_decoder_get_sound_chunk(s, &n);
+		if(!data)return;
+
+		sb = g_new(SoundBuffer,1);
+
+		sb->len = n;
+		sb->data = data;
+
+		sound_buffers = g_list_append(sound_buffers, sb);
+	}
+}
+
+static void sound_setup(void)
+{
+	SDL_AudioSpec wanted;
+
+	wanted.freq = 44100;
+	wanted.format = AUDIO_S16;
+	wanted.channels = 2;    /* 1 = mono, 2 = stereo */
+	wanted.samples = 1024;  /* Good low-latency value for callback */
+	wanted.callback = fill_audio;
+	wanted.userdata = NULL;
+
+	if ( SDL_OpenAudio(&wanted, NULL) < 0 ) {
+		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+	}
+
+	SDL_PauseAudio(0);
+}
+
+
 /* GTK callbacks */
 
 static int key_press (GtkWidget *widget, GdkEventKey *evt, gpointer data)
@@ -374,10 +473,11 @@ static gboolean render_idle(gpointer data)
 		if(tv_compare(&image_time, &now) > 0){
 			int x = tv_diff(&image_time, &now);
 			//printf("sleeping for %d us\n",x);
-			usleep(x);
+			if(!fast)usleep(x);
 		}
 		if(image)free(image);
 		swfdec_decoder_get_image(s,&image);
+		pull_sound(s);
 		gdk_draw_rgb_image (drawing_area->window,
 			drawing_area->style->black_gc, 
 			0, 0, width, height, 
@@ -404,7 +504,7 @@ extern volatile gboolean glib_on_error_halt;
 
 void fault_handler(int signum, siginfo_t *si, void *misc)
 {
-	int spinning = TRUE;
+	//int spinning = TRUE;
 
 	fault_restore();
 

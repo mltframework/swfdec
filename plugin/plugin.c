@@ -245,18 +245,19 @@ NPError NP_GetValue(NPP instance, NPPVariable variable, void *value)
 
     switch (variable) {
         case NPPVpluginNameString:
-            *((char **)value) = "swfdec-" VERSION " SWF Animation Player";
+            *((char **)value) = "Shockwave Flash (Swfdec-" VERSION ")";
             break;
         case NPPVpluginDescriptionString:
             *((char **)value) =
+"Shockwave Flash 6.0 animation viewer handled by Swfdec-" VERSION ".  "
 "Plays SWF animations, commonly known as Macromedia&reg; Flash&reg;.<br><br>"
 "This is alpha software.  It will probably behave in many situations, but "
 "may also ride your motorcycle, drink all your milk, or use your computer "
 "to browse porn.  Comments, feature requests, and patches are welcome.<br><br>"
 "See <a href=\"http://swfdec.sourceforge.net/\">"
 "http://swfdec.sourceforge.net/</a> for information.<br><br>"
-"Flash and Macromedia are trademarks of Macromedia, Inc.  Swfdec is not "
-"affiliated with Macromedia, Inc.";
+"Flash, Shockwave, and Macromedia are trademarks of Macromedia, Inc.  Swfdec "
+"is not affiliated with Macromedia, Inc.";
             break;
         default:
             err = NPERR_GENERIC_ERROR;

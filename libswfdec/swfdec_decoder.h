@@ -71,9 +71,11 @@ struct swfdec_decoder_struct {
 
 	/* rendering state */
 	unsigned int bg_color;
-	GList *layers;
 	ArtIRect irect;
 	ArtIRect drawrect;
+
+	SwfdecSprite *main_sprite;
+	//GList *layers;
 
 	double flatness;
 	

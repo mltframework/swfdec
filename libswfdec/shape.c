@@ -484,7 +484,7 @@ void dump_layers(SwfdecDecoder *s)
 	GList *g;
 	SwfdecLayer *layer;
 
-	for(g=g_list_last(s->layers); g; g=g_list_previous(g)){
+	for(g=g_list_last(s->main_sprite->layers); g; g=g_list_previous(g)){
 		layer = (SwfdecLayer *)g->data;
 
 		printf("  layer %d [%d,%d)\n",layer->depth,

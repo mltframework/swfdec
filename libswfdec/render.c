@@ -65,7 +65,7 @@ int art_place_object_2(SwfdecDecoder *s)
 	layer->first_frame = s->frame_number;
 	layer->last_frame = 0;
 
-	swfdec_layer_add(s,layer);
+	swfdec_sprite_add_layer(s->main_sprite,layer);
 
 	if(has_character){
 		layer->id = get_u16(bits);
@@ -152,16 +152,16 @@ int art_remove_object_2(SwfdecDecoder *s)
 	return SWF_OK;
 }
 
-void swf_clean(SwfdecDecoder *s, int frame)
+void swfdec_sprite_clean(SwfdecSprite *sprite, int frame)
 {
 	SwfdecLayer *l;
 	GList *g, *g_next;
 
-	for(g=g_list_first(s->layers); g; g=g_next){
+	for(g=g_list_first(sprite->layers); g; g=g_next){
 		g_next = g_list_next(g);
 		l = (SwfdecLayer *)g->data;
 		if(l->last_frame && l->last_frame<=frame){
-			s->layers = g_list_delete_link(s->layers,g);
+			sprite->layers = g_list_delete_link(sprite->layers,g);
 			swfdec_layer_free(l);
 		}
 	}
@@ -179,7 +179,7 @@ int art_show_frame(SwfdecDecoder *s)
 
 	swf_render_frame(s);
 
-	swf_clean(s,s->frame_number);
+	swfdec_sprite_clean(s->main_sprite,s->frame_number);
 
 	s->frame_number++;
 
@@ -258,7 +258,7 @@ void swf_render_frame(SwfdecDecoder *s)
 		break;
 	}
 
-	for(g=g_list_last(s->layers); g; g=g_list_previous(g)){
+	for(g=g_list_last(s->main_sprite->layers); g; g=g_list_previous(g)){
 		layer = (SwfdecLayer *)g->data;
 
 		if(layer->first_frame > s->frame_number)continue;

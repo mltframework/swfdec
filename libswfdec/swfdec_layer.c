@@ -40,7 +40,7 @@ SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth)
 	SwfdecLayer *l;
 	GList *g;
 
-	for(g=g_list_first(s->layers); g; g=g_list_next(g)){
+	for(g=g_list_first(s->main_sprite->layers); g; g=g_list_next(g)){
 		l = (SwfdecLayer *)g->data;
 		if(l->depth == depth && l->first_frame <= s->frame_number-1
 		  && (!l->last_frame || l->last_frame > s->frame_number-1))
@@ -50,31 +50,31 @@ SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth)
 	return NULL;
 }
 
-void swfdec_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew)
+void swfdec_sprite_add_layer(SwfdecSprite *sprite, SwfdecLayer *lnew)
 {
 	GList *g;
 	SwfdecLayer *l;
 
-	for(g=g_list_first(s->layers); g; g=g_list_next(g)){
+	for(g=g_list_first(sprite->layers); g; g=g_list_next(g)){
 		l = (SwfdecLayer *)g->data;
 		if(l->depth < lnew->depth){
-			s->layers = g_list_insert_before(s->layers,g,lnew);
+			sprite->layers = g_list_insert_before(sprite->layers,g,lnew);
 			return;
 		}
 	}
 
-	s->layers = g_list_append(s->layers,lnew);
+	sprite->layers = g_list_append(sprite->layers,lnew);
 }
 
-void swfdec_layer_del(SwfdecDecoder *s, SwfdecLayer *layer)
+void swfdec_sprite_delete_layer(SwfdecSprite *sprite, SwfdecLayer *layer)
 {
 	GList *g;
 	SwfdecLayer *l;
 
-	for(g=g_list_first(s->layers); g; g=g_list_next(g)){
+	for(g=g_list_first(sprite->layers); g; g=g_list_next(g)){
 		l = (SwfdecLayer *)g->data;
 		if(l == layer){
-			s->layers = g_list_delete_link(s->layers,g);
+			sprite->layers = g_list_delete_link(sprite->layers,g);
 			swfdec_layer_free(l);
 			return;
 		}

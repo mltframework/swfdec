@@ -1,15 +1,25 @@
 
 #include "swfdec_internal.h"
 
+SwfdecSprite *swfdec_sprite_new(void)
+{
+	SwfdecSprite *sprite;
+
+	sprite = g_new0(SwfdecSprite,1);
+
+	return sprite;
+}
+
 void swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *object)
 {
 	SwfdecLayer *l;
 	GList *g;
-	SwfdecDecoder *sprite = object->priv;
+	SwfdecDecoder *s2 = object->priv;
+	SwfdecSprite *sprite = s2->main_sprite;
 
-	art_affine_multiply(sprite->transform, layer->transform, s->transform);
+	art_affine_multiply(s2->transform, layer->transform, s->transform);
 	
-	layer->frame_number %= sprite->n_frames;
+	layer->frame_number %= s2->n_frames;
 
 	SWF_DEBUG(0,"swfdec_sprite_prerender %d frame %d\n",object->id,layer->frame_number);
 
@@ -20,7 +30,7 @@ void swfdec_sprite_prerender(SwfdecDecoder *s,SwfdecLayer *layer,SwfdecObject *o
 		if(l->last_frame && l->last_frame <= layer->frame_number)continue;
 		SWF_DEBUG(0,"prerendering layer %d\n",l->depth);
 
-		swfdec_layer_prerender(sprite, l);
+		swfdec_layer_prerender(s2, l);
 	}
 
 	layer->prerendered = 0;
@@ -30,13 +40,14 @@ void swfdec_sprite_render(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 	SwfdecObject *parent_object)
 {
 	SwfdecLayer *layer;
-	SwfdecDecoder *sprite = parent_object->priv;
+	SwfdecDecoder *s2 = parent_object->priv;
+	SwfdecSprite *sprite = s2->main_sprite;
 	GList *g;
 	SwfdecObject *object;
 	double save_trans[6];
 
 	SWF_DEBUG(0,"rendering sprite frame %d of %d\n",
-		parent_layer->frame_number,sprite->n_frames);
+		parent_layer->frame_number,s2->n_frames);
 	for(g=g_list_last(sprite->layers); g; g=g_list_previous(g)){
 		layer = (SwfdecLayer *)g->data;
 
@@ -45,7 +56,7 @@ void swfdec_sprite_render(SwfdecDecoder *s, SwfdecLayer *parent_layer,
 			parent_layer->frame_number)continue;
 
 		art_affine_copy(save_trans, layer->transform);
-		art_affine_multiply(layer->transform, sprite->transform, layer->transform);
+		art_affine_multiply(layer->transform, s2->transform, layer->transform);
 		swfdec_layer_prerender(s,layer);
 		art_affine_copy(layer->transform, save_trans);
 		object = swfdec_object_get(s,layer->id);

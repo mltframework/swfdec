@@ -39,8 +39,8 @@ struct swfdec_layer_struct{
 SwfdecLayer *swfdec_layer_new(void);
 void swfdec_layer_free(SwfdecLayer *layer);
 SwfdecLayer *swfdec_layer_get(SwfdecDecoder *s, int depth);
-void swfdec_layer_add(SwfdecDecoder *s, SwfdecLayer *lnew);
-void swfdec_layer_del(SwfdecDecoder *s, SwfdecLayer *layer);
+void swfdec_sprite_add_layer(SwfdecSprite *s, SwfdecLayer *lnew);
+void swfdec_sprite_del_layer(SwfdecSprite *s, SwfdecLayer *layer);
 void swfdec_layer_prerender(SwfdecDecoder *s, SwfdecLayer *layer);
 void swfdec_layervec_render(SwfdecDecoder *s, SwfdecLayerVec *layervec);
 

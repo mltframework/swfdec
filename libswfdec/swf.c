@@ -42,6 +42,8 @@ SwfdecDecoder *swfdec_decoder_new(void)
 
 	art_affine_identity(s->transform);
 
+	s->main_sprite = swfdec_sprite_new();
+
 	s->flatness = 0.25;
 
 	return s;

@@ -174,7 +174,6 @@ libswfdec/Makefile
 test/Makefile
 plugin/Makefile
 player/Makefile
-debian/Makefile
 swfdec.pc
 swfdec.spec
 )

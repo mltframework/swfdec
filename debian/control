@@ -30,5 +30,6 @@ Description: SWF (Macromedia Flash) player
  A GTK+-based player for Macromedia Flash animations.  Includes a
  Mozilla plugin, that embeds the player into Mozilla-based browsers,
  in order to allow seamless viewing of Flash animations in web
- pages.
+ pages.  Includes a GdkPixbuf loader, so that SWF animations can be
+ used seamlessly as images in Gtk+ applications.
 

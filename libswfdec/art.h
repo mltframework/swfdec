@@ -4,6 +4,7 @@
 
 #include <libart_lgpl/libart.h>
 #include <stdio.h>
+#include <string.h>
 
 struct swf_svp_render_struct{
 	unsigned char *scanline;

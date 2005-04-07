@@ -4,7 +4,7 @@ plugindir = $(libdir)/mozilla/plugins/
 plugin_LTLIBRARIES = libswfdecmozilla.la
 
 libswfdecmozilla_la_SOURCES = plugin.c
-libswfdecmozilla_la_CFLAGS = $(SWF_CFLAGS) $(MOZILLA_CFLAGS) $(X_CFLAGS) \
+libswfdecmozilla_la_CFLAGS = $(GLOBAL_CFLAGS) $(MOZILLA_CFLAGS) $(X_CFLAGS) \
 	-DBINDIR=\"$(bindir)/\"
 libswfdecmozilla_la_LDFLAGS = -module -avoid-version $(X_LIBS)
 libswfdecmozilla_la_LIBADD = -lXt
@@ -20,6 +20,7 @@ swfdec_mozilla_player_SOURCES = \
 	gstswfdec.h
 
 swfdec_mozilla_player_CFLAGS = \
+	$(GLOBAL_CFLAGS) \
 	$(SWF_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(GTK_CFLAGS)

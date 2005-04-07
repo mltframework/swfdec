@@ -5,6 +5,6 @@ else
 bin_PROGRAMS = 
 endif
 
-swf_play_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) $(SDL_CFLAGS) -I $(top_srcdir)/plugin
+swf_play_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS) $(GLIB_CFLAGS) $(SDL_CFLAGS) -I $(top_srcdir)/plugin
 swf_play_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS) $(GLIB_LIBS) $(SDL_LIBS)
 

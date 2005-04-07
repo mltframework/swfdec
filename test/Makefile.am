@@ -5,15 +5,15 @@ else
 noinst_PROGRAMS = render-fast test-pixbuf dump render
 endif
 
-render_fast_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS)
+render_fast_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
 render_fast_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 
-test_pixbuf_CFLAGS = $(GTK_CFLAGS)
+test_pixbuf_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS)
 test_pixbuf_LDFLAGS = $(GTK_LIBS)
 
-dump_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS)
+dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
 dump_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 
-render_CFLAGS = $(SWF_CFLAGS) $(LIBART_CFLAGS)
+render_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
 render_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 

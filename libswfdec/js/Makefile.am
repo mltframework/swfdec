@@ -87,7 +87,7 @@ jscpucfg_SOURCES = \
 	jscpucfg.c  \
 	jscpucfg.h
 
-libjs_la_CFLAGS = $(SWF_CFLAGS) $(GLIB_CFLAGS) -I. \
+libjs_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GLIB_CFLAGS) -I. \
 	-DXP_UNIX
 libjs_la_LDFLAGS = -lm
 

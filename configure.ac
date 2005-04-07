@@ -1,7 +1,7 @@
 AC_PREREQ([2.58])
 AC_INIT(swfdec,0.3.4.1)
 
-nano=$(echo $VERSION | sed 's/[0-9]\.[0-9]\.[0-9]\.*//')
+[nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9]\.*//')]
 if test x"$nano" = x1 ; then
   SWFDEC_CVS="yes"
 else
@@ -17,9 +17,9 @@ AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
 
-SWF_DEBUG="-Wall"
+GLOBAL_CFLAGS="-Wall"
 if test x$SWFDEC_CVS = xyes ; then
-  SWF_DEBUG="$SWF_DEBUG -Werror"
+  GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror"
 fi
 
 SWFDEC_LIBVERSION="0:0:0"
@@ -207,8 +207,9 @@ PKG_CHECK_MODULES(GST, gstreamer-0.8 > 0.8.0 gstreamer-gconf-0.8 gstreamer-inter
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+AC_SUBST(GLOBAL_CFLAGS)
 
-SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec $SWF_DEBUG $GLIB_CFLAGS"
+SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir)/libswfdec $GLIB_CFLAGS"
 SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $MAD_LIBS $GLIB_LIBS -lz"
 AC_SUBST(SWF_LIBS)
 AC_SUBST(SWF_CFLAGS)

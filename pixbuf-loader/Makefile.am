@@ -1,7 +1,8 @@
 loaderdir = $(libdir)/gtk-2.0/$(GTK_VERSION)/loaders
 
-INCLUDES = $(SWF_CFLAGS)\
-	$(PIXBUF_CFLAGS)\
+INCLUDES = $(GLOBAL_CFLAGS) \
+	$(SWF_CFLAGS) \
+	$(PIXBUF_CFLAGS) \
 	-DGDK_PIXBUF_ENABLE_BACKEND \
 	-I$(top_srcdir)
 

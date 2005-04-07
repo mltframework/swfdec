@@ -1,7 +1,7 @@
 
 noinst_LTLIBRARIES = libglib.la
 
-libglib_la_CFLAGS = $(GLIB_CFLAGS)
+libglib_la_CFLAGS = $(GLOBAL_CFLAGS) $(GLIB_CFLAGS)
 
 libglib_la_SOURCES = \
 	garray.c \

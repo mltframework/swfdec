@@ -3,7 +3,7 @@
 noinst_LTLIBRARIES = libjpeg.la
 
 libjpeg_la_SOURCES = jpeg.c huffman.c jpeg_rgb_decoder.c
-libjpeg_la_CFLAGS = $(SWF_CFLAGS) $(GLIB_CFLAGS) $(LIBOIL_CFLAGS)
+libjpeg_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GLIB_CFLAGS) $(LIBOIL_CFLAGS)
 libjpeg_la_LDFLAGS = -lm
 
 noinst_HEADERS = bits.h huffman.h jpeg.h jpeg_debug.h \

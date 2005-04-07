@@ -28,7 +28,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
 	swfdec_buffer.c \
 	swfdec_rect.c swfdec_transform.c $(renderer_sources)
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
-	$(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
+	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
 	-I$(srcdir)/jpeg/ -I$(js_cflags) $(LIBOIL_CFLAGS)
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-export-symbols-regex '^(art_warn)|(swfdec_.*)' \

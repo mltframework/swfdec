@@ -4,8 +4,9 @@ else
 gimpdir = 
 endif
 
-INCLUDES = $(SWF_CFLAGS)\
-	$(LIBGIMP_CFLAGS)\
+INCLUDES = $(GLOBAL_CFLAGS) \
+	$(SWF_CFLAGS) \
+	$(LIBGIMP_CFLAGS) \
 	-I$(top_srcdir)
 
 if HAVE_GIMP

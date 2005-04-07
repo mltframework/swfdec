@@ -756,7 +756,9 @@ tag_func_end (SwfdecDecoder * s)
 int
 tag_func_ignore (SwfdecDecoder * s)
 {
-  s->b.ptr += s->b.buffer->length;
+  if (s->b.buffer) {
+    s->b.ptr += s->b.buffer->length;
+  }
 
   return SWF_OK;
 }

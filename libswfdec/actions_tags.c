@@ -1082,6 +1082,7 @@ action_new_object (SwfdecActionContext *context)
 {
   JSString *a;
   JSObject *obj, *constructor;
+  JSClass *clasp;
   char *objname;
   int32 b;
   jsval rval = JSVAL_VOID;
@@ -1122,9 +1123,35 @@ action_new_object (SwfdecActionContext *context)
     argv[i] = stack_pop (context);
   }
 
-  obj = JS_ConstructObjectWithArguments (context->jscx,
-      JS_GetClass(constructor), constructor, NULL, b, argv);
-  rval = OBJECT_TO_JSVAL(obj);
+  clasp = JS_GetClass(constructor);
+  if (strcmp (objname, clasp->name) == 0) {
+    /* We're constructing a standard class, so use a proper constructor call. */
+    argv = g_malloc (sizeof(jsval) * b);
+    for (i = 0; i < b; i++) {
+      argv[i] = stack_pop (context);
+    }
+
+    rval = OBJECT_TO_JSVAL(JS_ConstructObjectWithArguments (context->jscx,
+        clasp, NULL, constructor, b, argv));
+  } else {
+    /* We're constructing something script-defined, we hope. Script-defined
+     * constructors don't get found by JS_ConstructObjectWithArguments, so we
+     * try to do the equivalent with a plain function call.
+     */
+    obj = JS_NewObject (context->jscx, NULL, NULL, constructor);
+
+    argv = g_malloc (sizeof(jsval) * b);
+    for (i = 0; i < b; i++) {
+      argv[i] = stack_pop (context);
+    }
+
+    if (!JS_CallFunctionValue (context->jscx, obj, OBJECT_TO_JSVAL(constructor),
+        b, argv, &rval)) {
+      SWFDEC_WARNING ("couldn't call constructor");
+      g_free (argv);
+      return;
+    }
+  }
 
   g_free (argv);
 

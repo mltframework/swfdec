@@ -1,3 +1,14 @@
+2005-04-07  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/actions_tags.c: (action_new_object):
+	Check if the class name of the object looked up during ActionNewObject
+	matches the object's name.  If not, then it's probably js_ObjectClass
+	(or is that js_FunctionClass?) and we're dealing with a class that was
+	defined by the script and not a standard one.  Since these classes don't
+	get their constructors found by JS_* functions, make a new object and
+	call the constructor ourselves.  Also, use the "parent" field properly,
+	I hope.
+
 2005-04-05  David Schleef  <ds@schleef.org>
 
 	* configure.ac: disable creating _stdint.h

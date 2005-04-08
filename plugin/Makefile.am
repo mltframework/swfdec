@@ -1,7 +1,10 @@
 
 plugindir = $(libdir)/mozilla/plugins/
 
+if WITH_MOZILLA
 plugin_LTLIBRARIES = libswfdecmozilla.la
+bin_PROGRAMS = swfdec-mozilla-player
+endif
 
 libswfdecmozilla_la_SOURCES = plugin.c
 libswfdecmozilla_la_CFLAGS = $(GLOBAL_CFLAGS) $(MOZILLA_CFLAGS) $(X_CFLAGS) \
@@ -9,7 +12,6 @@ libswfdecmozilla_la_CFLAGS = $(GLOBAL_CFLAGS) $(MOZILLA_CFLAGS) $(X_CFLAGS) \
 libswfdecmozilla_la_LDFLAGS = -module -avoid-version $(X_LIBS)
 libswfdecmozilla_la_LIBADD = -lXt
 
-bin_PROGRAMS = swfdec-mozilla-player
 
 swfdec_mozilla_player_SOURCES = \
 	swfdec-mozilla-player.c \

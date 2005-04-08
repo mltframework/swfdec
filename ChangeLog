@@ -1,3 +1,9 @@
+2005-04-07  Eric Anholt  <anholt@FreeBSD.org>
+
+	* plugin/Makefile.am:
+	Don't attempt to build the plugin or the associated player if
+	WITH_MOZILLA is unset.
+
 2005-04-07  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Switch to using GLOBAL_CFLAGS for -Wall and

@@ -1,5 +1,12 @@
 2005-04-07  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/actions.c: (pc_is_valid):
+	Allow jumps to endpc to handle functions which jump outside themselves
+	in order to return.  action_script_call correctly returns when this
+	happens.
+
+2005-04-07  Eric Anholt  <anholt@FreeBSD.org>
+
 	* plugin/Makefile.am:
 	Don't attempt to build the plugin or the associated player if
 	WITH_MOZILLA is unset.

@@ -43,7 +43,11 @@ pc_is_valid (SwfdecActionContext *context, unsigned char *pc)
 
   startpc = context->bits.buffer->data;
   endpc = context->bits.buffer->data + context->bits.buffer->length;
-  if (pc >= startpc && pc < endpc) {
+  /* Use a <= here because sometimes you'll get a jump to endpc in functions as
+   * a way of branching to return (without an ActionReturn).  action_script_call
+   * will handle making the return happen.
+   */
+  if (pc >= startpc && pc <= endpc) {
     return SWF_OK;
   } else {
     return SWF_ERROR;

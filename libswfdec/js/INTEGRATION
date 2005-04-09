@@ -1,3 +1,4 @@
 - Add jsautocfg.h
 - Add void *priv to JSFunction
 - Added the gc noisiness
+- Use G_VA_COPY in jsprf.c

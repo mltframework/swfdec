@@ -1,3 +1,11 @@
+2005-04-08  Eric Anholt  <anholt@FreeBSD.org>
+
+	* .cvsignore:
+	* glib-compat/glib/.cvsignore:
+	* libswfdec/js/.cvsignore:
+	* plugin/.cvsignore:
+	Add some more .cvsignore bits.
+
 2005-04-07  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/actions.c: (pc_is_valid):

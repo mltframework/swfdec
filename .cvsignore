@@ -1,3 +1,4 @@
+_stdint.h
 Makefile
 Makefile.in
 *.lo
@@ -16,6 +17,7 @@ config.h.in
 config.status
 config.sub
 configure
+configure.lineno
 depcomp
 install-sh
 libtool

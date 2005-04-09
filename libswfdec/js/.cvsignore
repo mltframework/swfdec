@@ -1,6 +1,9 @@
 *.la
 *.lo
+*.loT
 .deps
 .libs
 Makefile
 Makefile.in
+jsautocfg.h
+jscpucfg

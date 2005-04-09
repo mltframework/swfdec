@@ -69,6 +69,7 @@ tag_place_object_2 (SwfdecDecoder * s)
   layer->first_frame = s->frame_number;
   layer->last_frame = 0;
 
+  /* FIXME: s->parse_sprite, probably */
   swfdec_sprite_add_seg (s->main_sprite, layer);
 
   if (has_character) {

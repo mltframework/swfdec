@@ -88,45 +88,55 @@ swfdec_sprite_add_action (SwfdecSprite * sprite,
 }
 
 void
-swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSprite *sprite)
-{
-  SwfdecSprite *save_parse_sprite;
-  /*SwfdecSprite *child_sprite;
-  SwfdecObject *obj;*/
-  SwfdecSpriteSegment *seg;
+swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
+{  
+  SwfdecObject *obj;
+  SwfdecSprite *sprite, *save_parse_sprite;
+  SwfdecSpriteSegment *child_seg, *save_parse_sprite_seg;
   GList *g;
 
-  save_parse_sprite = s->parse_sprite;
-  s->parse_sprite = sprite;
+  if (seg->stopped)
+    return;
 
-  if (!s->stopped && sprite->actions[s->render->frame_index]) {
-    /* FIXME: This should be a segment frame index, not a global one */
-    swfdec_action_script_execute (s, sprite->actions[s->render->frame_index]);
+  if (seg->id != 0) {
+    obj = swfdec_object_get (s, seg->id);
+    if (!SWFDEC_IS_SPRITE(obj))
+      return;
+    sprite = SWFDEC_SPRITE(obj);
+  } else {
+    sprite = s->main_sprite;
   }
 
-  for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
-    seg = (SwfdecSpriteSegment *) g->data;
+  SWFDEC_WARNING("sprite %d frame %d", seg->id, seg->frame_index);
+  save_parse_sprite = s->parse_sprite;
+  save_parse_sprite_seg = s->parse_sprite_seg;
+  s->parse_sprite = sprite;
+  s->parse_sprite_seg = seg;
 
-    if (!seg->ran_load && seg->clipevent[CLIPEVENT_LOAD]) {
-      seg->ran_load = TRUE;
-      swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_LOAD]);
-    }
-    if (seg->clipevent[CLIPEVENT_ENTERFRAME]) {
-      swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_ENTERFRAME]);
-    }
+  if (sprite->actions[seg->frame_index]) {
+    swfdec_action_script_execute (s, sprite->actions[seg->frame_index]);
+  }
 
-    seg->frame_index++;
+  if (!seg->ran_load && seg->clipevent[CLIPEVENT_LOAD]) {
+    seg->ran_load = TRUE;
+    swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_LOAD]);
+  }
+  if (seg->clipevent[CLIPEVENT_ENTERFRAME]) {
+    swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_ENTERFRAME]);
+  }
 
-    /* FIXME: recurse through sprites necessary.*/
-    /*obj = swfdec_object_get (s, seg->id);
-    if (!SWFDEC_IS_SPRITE(obj))
-      continue;
-    child_sprite = SWFDEC_SPRITE(obj);
-    swfdec_sprite_render_iterate(s, child_sprite);
-    */
+  seg->frame_index++;
+  if (seg->frame_index >= sprite->n_frames)
+    seg->frame_index = 0;
+
+  for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
+    child_seg = (SwfdecSpriteSegment *) g->data;
+
+    swfdec_sprite_render_iterate(s, child_seg);
   }
 
   s->parse_sprite = save_parse_sprite;
+  s->parse_sprite_seg = save_parse_sprite_seg;
 }
 
 static void
@@ -139,11 +149,6 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   int clip_depth = 0;
 
   //memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
-
-  if (seg->frame_index >= sprite->n_frames) {
-    seg->frame_index = 0;
-    SWFDEC_INFO ("looping rendering state of layer %d", seg->depth);
-  }
 
   memcpy (&save_transform, &s->transform, sizeof (SwfdecTransform));
   swfdec_transform_multiply (&s->transform, &seg->transform, &save_transform);
@@ -444,6 +449,8 @@ swfdec_spriteseg_dup (SwfdecSpriteSegment * seg)
 
   newseg = g_new (SwfdecSpriteSegment, 1);
   memcpy (newseg, seg, sizeof (*seg));
+  if (seg->name)
+    newseg->name = g_strdup(seg->name);
 
   return newseg;
 }
@@ -457,6 +464,8 @@ swfdec_spriteseg_free (SwfdecSpriteSegment * seg)
     if (seg->clipevent[i])
       swfdec_buffer_unref(seg->clipevent[i]);
   }
+  if (seg->name)
+    g_free (seg->name);
   g_free (seg);
 }
 
@@ -564,9 +573,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       layer->ratio = oldlayer->ratio;
   }
   if (has_name) {
-    char *name = swfdec_bits_get_string (bits);
-    action_register_sprite_name (s, name, layer->id);
-    g_free (name);
+    layer->name = swfdec_bits_get_string (bits);
   }
   if (has_clip_depth) {
     layer->clip_depth = swfdec_bits_get_u16 (bits);
@@ -605,6 +612,8 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       bits->ptr += record_size;
     }
   }
+
+  action_register_sprite_seg (s, layer);
 
   return SWF_OK;
 }

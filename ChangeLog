@@ -1,5 +1,48 @@
 2005-04-08  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/actions.c: (action_script_call),
+	(swfdec_action_script_execute):
+	* libswfdec/actions_builtin.c: (mc_play), (mc_stop),
+	(mc_attachMovie), (movieclip_new), (movieclip_find),
+	(swfdec_init_context_builtins), (action_register_sprite_seg):
+	* libswfdec/actions_tags.c: (action_goto_frame),
+	(action_next_frame), (action_previous_frame), (action_play),
+	(action_stop), (action_call_function), (action_call_method):
+	* libswfdec/js/jslibmath.h:
+	* libswfdec/render.c: (tag_place_object_2):
+	* libswfdec/swf.c: (swfdec_decoder_new), (swfdec_decoder_parse),
+	(swfdec_decoder_free), (swf_parse_header2):
+	* libswfdec/swfdec_actions.h:
+	* libswfdec/swfdec_bits.c: (swfdec_bits_get_string):
+	* libswfdec/swfdec_debug.c:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_font.c: (tag_func_define_font_2):
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render_iterate),
+	(swfdec_sprite_render), (swfdec_spriteseg_dup),
+	(swfdec_spriteseg_free), (swfdec_spriteseg_place_object_2):
+	* libswfdec/swfdec_sprite.h:
+	- Make a sprite segment to handle the root Timeline, simplifying the
+	  swfdec_sprite_render_iterate loop and actionscript code.  "stopped" is
+	  now set in segments, rather than global render state, and some frame
+	  index control has moved there as well.  Fix the render_iterate loop
+	  for recursion.
+	- Attach a MovieClip instance to all segments, not just ones with
+	  PlaceObject2 performed on them with a name.
+	- Handle the "root" variable in actionscripts, mostly.  There's a
+	  lockroot property of movieclips which affects it, and we don't handle
+	  that.
+	- Make the "this" value of global functions and action_script_execute
+	  calls be "root" rather than "_global".  This is not quite correct, as
+	  clipevents (for example) use the movie clip they're associated with,
+	  not the root timeline.
+	- Flesh out the MovieClip class a little, providing a play and stop
+	  function and a stub attachMovie which is the next to be filled in,
+	  most likely.
+	- Eliminate some dead code.
+
+2005-04-08  Eric Anholt  <anholt@FreeBSD.org>
+
 	* .cvsignore:
 	* glib-compat/glib/.cvsignore:
 	* libswfdec/js/.cvsignore:

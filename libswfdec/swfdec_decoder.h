@@ -87,7 +87,9 @@ struct _SwfdecDecoder
   SwfdecRect irect;
 
   SwfdecSprite *main_sprite;
+  SwfdecSpriteSegment *main_sprite_seg;
   SwfdecSprite *parse_sprite;
+  SwfdecSpriteSegment *parse_sprite_seg;
 
   double flatness;
   int disable_render;
@@ -103,9 +105,6 @@ struct _SwfdecDecoder
   int pixels_rendered;
 
   int stats_n_points;
-
-  /* should be in SwfdecRender */
-  gboolean stopped;
 
   void *backend_private;
 

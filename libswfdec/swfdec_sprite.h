@@ -18,12 +18,14 @@ typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
 
 struct _SwfdecSpriteSegment
 {
+  char *name;
   int depth;
   int id;
   int frame_index;
   int first_frame;
   int last_frame;
   int clip_depth;
+  gboolean stopped;
 
   SwfdecTransform transform;
   SwfdecColorTransform color_transform;
@@ -81,7 +83,7 @@ int swfdec_spriteseg_place_object_2 (SwfdecDecoder * s);
 int swfdec_spriteseg_remove_object (SwfdecDecoder * s);
 int swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s);
 
-void swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSprite *sprite);
+void swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg);
 void swf_render_frame (SwfdecDecoder * s, int frame_index);
 void swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg);
 void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);

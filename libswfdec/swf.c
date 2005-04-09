@@ -63,6 +63,9 @@ swfdec_decoder_new (void)
   swfdec_transform_init_identity (&s->transform);
 
   s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
+  s->main_sprite_seg = swfdec_spriteseg_new ();
+  s->main_sprite_seg->id = SWFDEC_OBJECT(s->main_sprite)->id;
+  s->main_sprite_seg->first_frame = 0;
   s->render = swfdec_render_new ();
 
   s->flatness = 0.5;
@@ -218,8 +221,10 @@ swfdec_decoder_parse (SwfdecDecoder * s)
               tag, swfdec_decoder_get_tag_name (tag));
         } else {
           s->parse_sprite = s->main_sprite;
+          s->parse_sprite_seg = s->main_sprite_seg;
           ret = func (s);
           s->parse_sprite = NULL;
+          s->parse_sprite_seg = NULL;
           //if(ret != SWF_OK)break;
 
           swfdec_bits_syncbits (&s->b);
@@ -276,6 +281,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
 
   swfdec_buffer_queue_free (s->input_queue);
 
+  swfdec_spriteseg_free (s->main_sprite_seg);
   swfdec_object_unref (SWFDEC_OBJECT (s->main_sprite));
   swfdec_render_free (s->render);
 
@@ -646,6 +652,7 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->main_sprite->actions = g_malloc0 (sizeof (gpointer) * s->n_frames);
   s->main_sprite->sound_play = g_malloc0 (sizeof (gpointer) * s->n_frames);
   s->main_sprite->n_frames = s->n_frames;
+  s->main_sprite_seg->last_frame = s->n_frames;
 
   swf_config_colorspace (s);
 

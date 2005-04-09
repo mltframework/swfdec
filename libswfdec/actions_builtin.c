@@ -4,50 +4,118 @@
 
 #include "swfdec_internal.h"
 
-/*ScriptObject *
-obj_new_Object ()
+struct mc_list_entry {
+  JSObject *mc;
+  SwfdecSpriteSegment *seg;
+};
+
+static JSBool
+mc_play(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  ScriptObject *obj;
+  SwfdecSpriteSegment *seg;
 
-  obj = g_malloc0(sizeof(ScriptObject));
-  obj_ref (obj);
+  seg = JS_GetPrivate(cx, obj);
+  if (!seg) {
+    SWFDEC_WARNING("couldn't get segment");
+    return JS_FALSE;
+  }
+  seg->stopped = FALSE;
 
-  return obj;
+  return JS_TRUE;
 }
 
-ScriptObject *
-obj_new_Function ()
+static JSBool
+mc_stop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  ScriptObject *obj, *obj2;
-  ActionVal *a;
+  SwfdecSpriteSegment *seg;
 
-  obj = g_malloc0(sizeof(ScriptObject));
-  obj_ref (obj);
+  seg = JS_GetPrivate(cx, obj);
+  if (!seg) {
+    SWFDEC_WARNING("couldn't get segment");
+    return JS_FALSE;
+  }
+  seg->stopped = FALSE;
 
-  obj2 = obj_new_Object ();
-  a = action_val_new ();
-  action_val_set_to_object(a, obj);
-  obj_set_property (obj2, "constructor", a, OBJPROP_DONTENUM);
-  action_val_free (a);
-
-  a = action_val_new ();
-  action_val_set_to_object(a, obj2);
-  obj_set_property (obj, "prototype", a, OBJPROP_DONTDELETE);
-  action_val_free (a);
-
-  return obj;
+  return JS_TRUE;
 }
 
-ScriptObject *
-obj_new_MovieClip ()
+static JSBool
+mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+    jsval *rval)
 {
-  ScriptObject *obj;
+  SwfdecSpriteSegment *seg;
 
-  obj = obj_new_Object();
+  seg = JS_GetPrivate(cx, obj);
+  if (!seg) {
+    SWFDEC_WARNING("couldn't get segment");
+    return JS_FALSE;
+  }
 
-  return obj;
+  return JS_TRUE;
 }
-*/
+
+/* MovieClip AS standard class */
+
+enum {
+	MC_X = -1,
+	MC_Y = -2,
+};
+
+#define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
+static JSPropertySpec movieclip_props[] = {
+	{"_x",	MC_X,	MC_PROP_ATTRS, 0, 0},
+	{"_y",	MC_Y,	MC_PROP_ATTRS, 0, 0},
+};
+
+JSClass movieclip_class = {
+    "MovieClip", JSCLASS_NEW_RESOLVE,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   JS_FinalizeStub
+};
+
+static JSFunctionSpec movieclip_methods[] = {
+  {"play", mc_play, 0, 0},
+  {"stop", mc_stop, 0, 0},
+  {"attachMovie", mc_attachMovie, 4, 0},
+  {0, 0, 0, 0, 0}
+};
+
+static JSObject *
+movieclip_new (SwfdecActionContext *context, SwfdecSpriteSegment *seg)
+{
+  JSObject *mc;
+  struct mc_list_entry *listentry;
+
+  mc = JS_NewObject (context->jscx, &movieclip_class, NULL, NULL);
+  JS_AddRoot (context->jscx, mc);
+  JS_SetPrivate (context->jscx, mc, seg);
+
+  listentry = g_malloc (sizeof (struct mc_list_entry));
+  listentry->mc = mc;
+  listentry->seg = seg;
+  context->seglist = g_list_append (context->seglist, listentry);
+
+  return mc;
+}
+
+JSObject *
+movieclip_find (SwfdecActionContext *context,
+    SwfdecSpriteSegment *seg)
+{
+  GList *g;
+  struct mc_list_entry *listentry;
+
+  for (g = g_list_first (context->seglist); g; g = g_list_next (g)) {
+    listentry = (struct mc_list_entry *)g->data;
+SWFDEC_WARNING("%p %p", seg, listentry->seg);
+    if (listentry->seg == seg)
+      return listentry->mc;
+  }
+
+  return NULL;
+}
 
 #if 0
 static void
@@ -116,48 +184,47 @@ JSClass global_class = {
 };
 
 void swfdec_init_context_builtins (SwfdecActionContext *context)
-{ 
-  context->global = JS_NewObject(context->jscx, &global_class, NULL, NULL);
+{
+  JSObject *MovieClip, *root;
+  JSBool ok;
+  jsval val;
+
+  context->global = JS_NewObject (context->jscx, &global_class, NULL, NULL);
   if (!context->global)
     return;
-  if (!JS_InitStandardClasses(context->jscx, context->global))
+  if (!JS_InitStandardClasses (context->jscx, context->global))
     return;
-  /*if (!JS_DefineFunctions(context->jscx, context->global, shell_functions))
-    return;*/
 
-  /* _global.ASSetPropFlags */
-  /*add_native_method_property (_global, "ASSetPropFlags", 4,
-    swfdec_native_ASSetPropFlags);*/
+  MovieClip = JS_InitClass (context->jscx, context->global, NULL,
+      &movieclip_class, NULL, 0, movieclip_props, movieclip_methods,
+      NULL, NULL);
+
+  root = movieclip_new (context, context->s->main_sprite_seg);
+  ok = JS_SetProperty(context->jscx, context->global, "_root", &val);
+  if (!ok)
+    SWFDEC_WARNING("Failed to set _root");
 }
 
-JSClass movieclip_class = {
-    "MovieClip", JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   JS_FinalizeStub
-};
-
 void
-action_register_sprite_name (SwfdecDecoder * s, char *name, int id)
+action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
 {
   SwfdecActionContext *context;
-  JSObject *obj;
-  jsval val;
+  JSObject *mc;
   JSBool ok;
+  jsval val;
 
-  SWFDEC_DEBUG ("registering sprite %s", name);
+  SWFDEC_DEBUG ("Placing MovieClip %s", seg->name ? seg->name : "(no name)");
 
   if (s->context == NULL)
     swfdec_init_context (s);
   context = s->context;
 
-  obj = JS_NewObject(context->jscx, &movieclip_class, NULL, NULL);
-  val = OBJECT_TO_JSVAL(obj);
-  ok = JS_SetProperty(context->jscx, context->global, name, &val);
-  if (!ok)
-    SWFDEC_WARNING("Failed to register %s", name);
+  mc = movieclip_new (context, seg);
+  val = OBJECT_TO_JSVAL(mc);
 
-  val = INT_TO_JSVAL(id);
-  JS_SetProperty(context->jscx, obj, "__swfdec_id", &val);
+  if (seg->name) {
+    ok = JS_SetProperty(context->jscx, context->global, seg->name, &val);
+    if (!ok)
+      SWFDEC_WARNING("Failed to register %s", seg->name);
+  }
 }

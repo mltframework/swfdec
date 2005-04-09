@@ -152,7 +152,8 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       JS_SetElement (context->jscx, frame->registers, i++, &val);
     }
     if (func->preload_root) {
-      jsval val = JSVAL_VOID; /* FIXME */
+      jsval val = OBJECT_TO_JSVAL(movieclip_find(context,
+          context->s->main_sprite_seg));
       JS_SetElement (context->jscx, frame->registers, i++, &val);
     }
     if (func->preload_parent) {
@@ -258,9 +259,12 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
   jsval rval;
   JSFunction *jsfunc;
   ScriptFunction *func;
+  JSObject *root;
 
-  if (!s->parse_sprite)
+  if (!s->parse_sprite) {
     s->parse_sprite = s->main_sprite;
+    s->parse_sprite_seg = s->main_sprite_seg;
+  }
 
   SWFDEC_DEBUG ("swfdec_action_script_execute (sprite %d) %p %p %d",
       SWFDEC_OBJECT(s->parse_sprite)->id, buffer, buffer->data, buffer->length);
@@ -284,7 +288,8 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
     0, context->global, func->name);
   jsfunc->priv = func;
 
-  JS_CallFunction (context->jscx, context->global, jsfunc, 0, NULL, &rval);
+  root = movieclip_find(context, context->s->main_sprite_seg);
+  JS_CallFunction (context->jscx, root, jsfunc, 0, NULL, &rval);
 
   /* FIXME: as of Flash 6/7, stack gets emptied at the end of every action
    * block. -- flasm.sf.net

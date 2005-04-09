@@ -50,22 +50,21 @@ swfdec_render_iterate (SwfdecDecoder * s)
       swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
     }
 
-    if (!s->stopped) {
+    swfdec_sprite_render_iterate (s, s->main_sprite_seg);
+    if (!s->main_sprite_seg->stopped) {
       s->render->frame_index++;
       if (s->render->frame_index >= s->n_frames) {
 #if 0
         SWFDEC_WARNING ("iterating past end");
         return FALSE;
 #endif
-        s->stopped = TRUE;
+        s->main_sprite_seg->stopped = TRUE;
         s->render->frame_index = s->n_frames - 1;
       }
     }
   }
 
   s->render->active_button = NULL;
-
-  swfdec_sprite_render_iterate (s, s->main_sprite);
 
   s->old_mouse_button = s->mouse_button;
 

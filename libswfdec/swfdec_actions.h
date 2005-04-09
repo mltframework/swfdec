@@ -73,6 +73,8 @@ struct _SwfdecActionContext
   JSRuntime *jsrt;
   JSContext *jscx;
   JSObject *global;
+
+  GList *seglist;
 };
 
 typedef void SwfdecActionFunc (SwfdecActionContext * context);
@@ -95,7 +97,7 @@ void swfdec_init_context (SwfdecDecoder * s);
 int swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer);
 int tag_func_do_init_action (SwfdecDecoder * s);
 int tag_func_do_action (SwfdecDecoder * s);
-void action_register_sprite_name (SwfdecDecoder * s, char *name, int id);
+void action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg);
 void constant_pool_ref (ConstantPool *pool);
 void constant_pool_unref (ConstantPool *pool);
 jsval stack_pop (SwfdecActionContext *context);
@@ -110,5 +112,7 @@ ActionFuncEntry *get_action (int action);
 
 /* actions_builtin.c */
 void swfdec_init_context_builtins (SwfdecActionContext *context);
+JSObject *movieclip_find (SwfdecActionContext *context,
+    SwfdecSpriteSegment *seg);
 
 #endif

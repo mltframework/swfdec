@@ -9,6 +9,9 @@ struct mc_list_entry {
   SwfdecSpriteSegment *seg;
 };
 
+static JSObject *
+movieclip_new (SwfdecActionContext *context, SwfdecSpriteSegment *seg);
+
 static JSBool
 mc_play(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -43,14 +46,137 @@ static JSBool
 mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval *rval)
 {
-  SwfdecSpriteSegment *seg;
+  SwfdecSpriteSegment *parent_seg, *oldseg, *child_seg;
+  SwfdecSprite *parent_sprite, *attach_sprite;
+  JSString *idName, *newName;
+  int depth;
+  JSObject *initObject, *child_mc;
+  SwfdecActionContext *context;
 
-  seg = JS_GetPrivate(cx, obj);
-  if (!seg) {
-    SWFDEC_WARNING("couldn't get segment");
-    return JS_FALSE;
+  context = JS_GetContextPrivate (cx);
+
+  idName = JS_ValueToString (cx, argv[0]);
+  newName = JS_ValueToString (cx, argv[1]);
+  JS_ValueToInt32 (cx, argv[2], &depth);
+  JS_ValueToObject (cx, argv[3], &initObject);
+
+  SWFDEC_DEBUG("placing sprite %s as %s at depth %d",
+      JS_GetStringBytes (idName), JS_GetStringBytes (newName), depth);
+
+  attach_sprite = SWFDEC_SPRITE(swfdec_exports_lookup (context->s,
+    JS_GetStringBytes(idName)));
+  if (!attach_sprite) {
+    SWFDEC_WARNING("Couldn't find sprite %s", JS_GetStringBytes (idName));
+    *rval = JSVAL_VOID;
+    return JS_TRUE;
   }
 
+  parent_seg = JS_GetPrivate (cx, obj);
+  if (!parent_seg) {
+    SWFDEC_WARNING("couldn't get segment");
+    *rval = JSVAL_VOID;
+    return JS_TRUE;
+  }
+  if (parent_seg->id == 0)
+    parent_sprite = context->s->main_sprite;
+  else
+    parent_sprite = SWFDEC_SPRITE(swfdec_object_get (context->s,
+        parent_seg->id));
+
+  oldseg = swfdec_sprite_get_seg (parent_sprite, depth,
+      parent_seg->frame_index);
+  if (oldseg) {
+    oldseg->last_frame = parent_seg->frame_index;
+  }
+
+  child_seg = swfdec_spriteseg_new ();
+  child_seg->depth = depth;
+  child_seg->first_frame = parent_seg->frame_index;
+  child_seg->last_frame = parent_seg->frame_index + attach_sprite->n_frames;
+  swfdec_transform_init_identity (&child_seg->transform);
+  child_seg->color_transform.mult[0] = 1;
+  child_seg->color_transform.mult[1] = 1;
+  child_seg->color_transform.mult[2] = 1;
+  child_seg->color_transform.mult[3] = 1;
+  child_seg->color_transform.add[0] = 0;
+  child_seg->color_transform.add[1] = 0;
+  child_seg->color_transform.add[2] = 0;
+  child_seg->color_transform.add[3] = 0;
+
+  swfdec_sprite_add_seg (parent_sprite, child_seg);
+  child_mc = movieclip_new (context, child_seg);
+  *rval = OBJECT_TO_JSVAL(child_mc);
+
+  JS_SetProperty (cx, obj, JS_GetStringBytes(newName), rval);
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecSpriteSegment *seg;
+
+  seg = JS_GetPrivate (cx, obj);
+
+  *vp = JSVAL_VOID;
+  if (seg) {
+    JS_NewNumberValue (cx, seg->transform.trans[4], vp);
+  } else {
+    SWFDEC_WARNING("couldn't get segment");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecSpriteSegment *seg;
+  double num;
+
+  seg = JS_GetPrivate (cx, obj);
+
+  *vp = JSVAL_VOID;
+  if (seg) {
+    JS_ValueToNumber(cx, *vp, &num);
+    seg->transform.trans[4] = num;
+  } else {
+    SWFDEC_WARNING("couldn't get segment");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecSpriteSegment *seg;
+
+  seg = JS_GetPrivate (cx, obj);
+
+  *vp = JSVAL_VOID;
+  if (seg) {
+    JS_NewNumberValue (cx, seg->transform.trans[5], vp);
+  } else {
+    SWFDEC_WARNING("couldn't get segment");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecSpriteSegment *seg;
+  double num;
+
+  seg = JS_GetPrivate (cx, obj);
+
+  *vp = JSVAL_VOID;
+  if (seg) {
+    JS_ValueToNumber(cx, *vp, &num);
+    seg->transform.trans[5] = num;
+  } else {
+    SWFDEC_WARNING("couldn't get segment");
+  }
   return JS_TRUE;
 }
 
@@ -63,8 +189,8 @@ enum {
 
 #define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
 static JSPropertySpec movieclip_props[] = {
-	{"_x",	MC_X,	MC_PROP_ATTRS, 0, 0},
-	{"_y",	MC_Y,	MC_PROP_ATTRS, 0, 0},
+	{"_x",	MC_X,	MC_PROP_ATTRS, mc_x_get, mc_x_set},
+	{"_y",	MC_Y,	MC_PROP_ATTRS, mc_y_get, mc_y_set},
 };
 
 JSClass movieclip_class = {
@@ -109,7 +235,7 @@ movieclip_find (SwfdecActionContext *context,
 
   for (g = g_list_first (context->seglist); g; g = g_list_next (g)) {
     listentry = (struct mc_list_entry *)g->data;
-SWFDEC_WARNING("%p %p", seg, listentry->seg);
+
     if (listentry->seg == seg)
       return listentry->mc;
   }

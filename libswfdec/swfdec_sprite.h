@@ -88,5 +88,8 @@ void swf_render_frame (SwfdecDecoder * s, int frame_index);
 void swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg);
 void swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer);
 
+int tag_func_export_assets (SwfdecDecoder * s);
+SwfdecObject *swfdec_exports_lookup (SwfdecDecoder * s, char *name);
+
 G_END_DECLS
 #endif

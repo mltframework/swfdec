@@ -659,3 +659,41 @@ swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
 
   return SWF_OK;
 }
+
+typedef struct _SwfdecExport {
+  char *name;
+  int id;
+} SwfdecExport;
+
+SwfdecObject *
+swfdec_exports_lookup (SwfdecDecoder * s, char *name)
+{
+  GList *g;
+
+  for (g = g_list_first (s->exports); g; g = g_list_next (g)) {
+    SwfdecExport *exp = g->data;
+
+    if (strcmp(exp->name, name) == 0) {
+      return swfdec_object_get (s, exp->id);
+    }
+  }
+  return NULL;
+}
+
+int
+tag_func_export_assets (SwfdecDecoder * s)
+{
+  SwfdecBits *bits = &s->b;
+  SwfdecExport *exp;
+  int count, i;
+
+  count = swfdec_bits_get_u16 (bits);
+  for (i = 0; i < count; i++) {
+    exp = g_malloc (sizeof(SwfdecExport));
+    exp->id = swfdec_bits_get_u16 (bits);
+    exp->name = swfdec_bits_get_string (bits);
+    s->exports = g_list_append (s->exports, exp);
+  }
+
+  return SWF_OK;
+}

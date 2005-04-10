@@ -78,6 +78,7 @@ struct _SwfdecDecoder
 
   /* defined objects */
   GList *objects;
+  GList *exports;
 
   SwfdecSound *stream_sound_obj;
 

@@ -1,3 +1,17 @@
+2005-04-10  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/actions_builtin.c: (mc_attachMovie), (mc_x_get),
+	(mc_x_set), (mc_y_get), (mc_y_set), (movieclip_find):
+	* libswfdec/swf.c:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_sprite.c: (swfdec_exports_lookup),
+	(tag_func_export_assets):
+	* libswfdec/swfdec_sprite.h:
+	- Support ExportAssets, which is used in attachMovie to refer to sprites
+	  by name.
+	- Fill in MovieClip.attachMovie and add getters/setters for
+	  MovieClip._x and _y.
+
 2005-04-08  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/js/INTEGRATION:

@@ -107,7 +107,8 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
     sprite = s->main_sprite;
   }
 
-  SWFDEC_WARNING("sprite %d frame %d", seg->id, seg->frame_index);
+  SWFDEC_INFO("sprite %d frame %d", seg->id, seg->frame_index);
+
   save_parse_sprite = s->parse_sprite;
   save_parse_sprite_seg = s->parse_sprite_seg;
   s->parse_sprite = sprite;

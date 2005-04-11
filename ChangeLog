@@ -1,5 +1,10 @@
 2005-04-10  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render_iterate):
+	Logging of frame numbers during render_iterate isn't WARNING material.
+
+2005-04-10  Eric Anholt  <anholt@FreeBSD.org>
+
 	* libswfdec/actions_builtin.c: (mc_attachMovie), (mc_x_get),
 	(mc_x_set), (mc_y_get), (mc_y_set), (movieclip_find):
 	* libswfdec/swf.c:

@@ -19,7 +19,7 @@ mc_play(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   seg = JS_GetPrivate(cx, obj);
   if (!seg) {
-    SWFDEC_WARNING("couldn't get segment");
+    SWFDEC_WARNING("couldn't get segment from object %p", obj);
     return JS_FALSE;
   }
   seg->stopped = FALSE;
@@ -34,7 +34,7 @@ mc_stop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   seg = JS_GetPrivate(cx, obj);
   if (!seg) {
-    SWFDEC_WARNING("couldn't get segment");
+    SWFDEC_WARNING("couldn't get segment from object %p", obj);
     return JS_FALSE;
   }
   seg->stopped = FALSE;

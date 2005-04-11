@@ -1,5 +1,14 @@
 2005-04-10  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/actions_builtin.c: (mc_play), (mc_stop):
+	* libswfdec/actions_tags.c: (action_get_variable),
+	(action_get_member), (action_new_object),
+	(action_define_function_2):
+	Hook up named function2s (like original functions), and improve some
+	debugging output while I'm here.
+
+2005-04-10  Eric Anholt  <anholt@FreeBSD.org>
+
 	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render_iterate):
 	Logging of frame numbers during render_iterate isn't WARNING material.
 

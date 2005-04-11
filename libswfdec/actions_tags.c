@@ -563,9 +563,10 @@ action_get_variable (SwfdecActionContext *context)
     TAG_A = OBJECT_TO_JSVAL(context->global);
   } else if (strcmp (varname, "this") == 0) {
     TAG_A = context->tag_argv[-1];
-  } else if (!JS_GetProperty(context->jscx, context->global, varname, &TAG_A)) {
+  } else if (!JS_GetProperty(context->jscx, context->global, varname, &TAG_A) ||
+      TAG_A == JSVAL_VOID) {
     TAG_A = JSVAL_VOID;
-    SWFDEC_WARNING ("getting uninitialized variable \"%s\"", varname);
+    SWFDEC_DEBUG ("getting uninitialized variable \"%s\"", varname);
   }
 
   stack_push (context, TAG_A);
@@ -1047,7 +1048,7 @@ action_get_member (SwfdecActionContext *context)
   TAG_C = JSVAL_VOID;
   ok = JS_GetProperty (context->jscx, b, membername, &TAG_C);
 
-  if (!ok)
+  if (!ok || TAG_C == JSVAL_VOID)
     SWFDEC_DEBUG ("couldn't get property %s", membername);
 
   stack_push (context, TAG_C);
@@ -1111,7 +1112,8 @@ action_new_object (SwfdecActionContext *context)
     TAG_C = OBJECT_TO_JSVAL(context->global);
   } else if (strcmp (objname, "this") == 0) {
     TAG_C = context->tag_argv[-1];
-  } else if (!JS_GetProperty(context->jscx, context->global, objname, &TAG_C)) {
+  } else if (!JS_GetProperty(context->jscx, context->global, objname, &TAG_C) ||
+      TAG_C == JSVAL_VOID) {
     SWFDEC_WARNING ("getting uninitialized variable \"%s\"", objname);
     stack_push (context, JSVAL_VOID);
     return;
@@ -1495,7 +1497,9 @@ action_define_function_2 (SwfdecActionContext *context)
   if (strcmp (func->name, "") == 0) {
     stack_push (context, OBJECT_TO_JSVAL(obj));
   } else {
-    SWFDEC_WARNING ("named functions unsupported (%s)", func->name);
+    jsval funcv = OBJECT_TO_JSVAL(obj);
+
+    JS_SetProperty (context->jscx, context->global, func->name, &funcv);
   }
 }
 

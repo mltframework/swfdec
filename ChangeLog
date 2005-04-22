@@ -1,3 +1,25 @@
+2005-04-22  David Schleef  <ds@schleef.org>
+
+	* libswfdec/actions.c: (action_script_call),
+	(swfdec_action_script_execute): debug skipped action tags
+	* libswfdec/actions_builtin.c: (mc_attachMovie): properly
+	terminate movieclip_props.
+	* libswfdec/actions_tags.c: (action_goto_frame),
+	(action_call_method): hack fix for goto_frame.  Check for
+	bogus argc parameters in call_method.
+	* libswfdec/swf.c: (swfdec_decoder_get_version): Add function.
+	* libswfdec/swfdec.h: same.
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render_iterate):
+	Disable code that causes rendering problems.
+	* plugin/gstswfdec.c: (gst_swfdec_loop): create gst tag for
+	codec version.
+	* plugin/swfdec-mozilla-player.c: (main), (create_pipeline),
+	(new_gtk_window), (do_error_message), (timeout), (menu_report_bug),
+	(menu_copy_url), (button_press_event), (expose), (found_tags):
+	Random hacking: clean up error handling, print errors as a
+	label, add "Copy URL" to menu, check codec version (from tag)
+	and complain if it's too high.
+
 2005-04-10  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/actions_builtin.c: (mc_play), (mc_stop):

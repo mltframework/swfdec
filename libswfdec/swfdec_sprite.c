@@ -130,10 +130,13 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
   if (seg->frame_index >= sprite->n_frames)
     seg->frame_index = 0;
 
-  for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
-    child_seg = (SwfdecSpriteSegment *) g->data;
+  /* FIXME this is wrong */
+  if (0) {
+    for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
+      child_seg = (SwfdecSpriteSegment *) g->data;
 
-    swfdec_sprite_render_iterate(s, child_seg);
+      swfdec_sprite_render_iterate(s, child_seg);
+    }
   }
 
   s->parse_sprite = save_parse_sprite;

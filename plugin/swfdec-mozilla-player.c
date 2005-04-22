@@ -22,6 +22,8 @@
 #include "gstappsrc.h"
 #include "spp.h"
 
+#define MAX_VERSION 100
+
 #define static
 
 struct sound_buffer_struct
@@ -71,12 +73,17 @@ gboolean visible;
 gboolean iconified;
 gboolean playing;
 
+gboolean error_occurred;
+char *error_message;
+
 static void do_help (void);
 static void print_formats (void);
 static void new_gtk_window (void);
+static gboolean create_pipeline (int streaming, const char *location);
 
 static void got_source (GObject * playbin, GParamSpec pspec, gpointer closure);
 static void desired_size (GObject * obj, int w, int h, gpointer closure);
+static void found_tags (GObject * pipeline, GstElement * source, GstTagList * tags);
 static void embed_url (GObject * obj, const char *url, gpointer closure);
 
 static void packet_write (int fd, int code, int len, const char *s);
@@ -85,7 +92,7 @@ static void packet_go_to_url (const char *url, const char *target);
 /* GTK callbacks */
 static void destroy_cb (GtkWidget * widget, gpointer data);
 static void embedded (GtkPlug * plug, gpointer data);
-static int expose_cb (GtkWidget * widget, GdkEventExpose * evt, gpointer data);
+static int expose (GtkWidget * widget, GdkEventExpose * evt, gpointer data);
 static int button_press_event (GtkWidget * widget, GdkEventButton * evt,
     gpointer data);
 static int button_release_event (GtkWidget * widget, GdkEventButton * evt,
@@ -188,105 +195,96 @@ main (int argc, char *argv[])
     }
   }
 
-#if 0
-  if (optind != argc - 1)
-    do_help ();
-
-  if (strcmp (argv[optind], "-") == 0) {
-    streaming = TRUE;
-  } else {
-    streaming = FALSE;
-  }
-#endif
-
-  pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
-  if (pipeline == NULL) {
-    fprintf(stderr, "Could not create pipeline element\n");
-    exit(1);
+  ret = create_pipeline(streaming, argv[optind]);
+  if (!ret) {
+    error_occurred = TRUE;
   }
 
-  thread = GST_ELEMENT (gst_thread_new (NULL));
-  if (thread == NULL) {
-    fprintf(stderr, "Could not create thread element\n");
-    exit(1);
+  if (xid) {
+    plugged = 1;
   }
 
+  new_gtk_window ();
+
+  playing = TRUE;
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  if (ret != GST_STATE_SUCCESS) {
+    error_message = "Failed to set pipeline to PLAYING";
+    error_occurred = TRUE;
+  }
+
+  g_timeout_add (1000, timeout, NULL);
+
+  gtk_main ();
+
+  exit (0);
+}
+
+#define CREATE_ELEMENT(e,type) \
+  do { \
+    e = gst_element_factory_make (type, NULL); \
+    if (e == NULL) { \
+      char *s; \
+      if (bad_elements) { \
+        s = g_strconcat (bad_elements, " ", type, NULL); \
+        g_free(bad_elements); \
+        bad_elements = s; \
+      } else { \
+        bad_elements = g_strdup (type); \
+      } \
+    } \
+  } while (0)
+
+
+static gboolean
+create_pipeline (int streaming, const char *location)
+{
+  int ret;
+  char *bad_elements = NULL;
+  
+  CREATE_ELEMENT (pipeline, "pipeline");
+  CREATE_ELEMENT (thread, "thread");
   if (streaming) {
-    src = gst_element_factory_make ("appsrc", NULL);
-    if (src == NULL) {
-      fprintf(stderr, "Could not create source element (appsrc)\n");
-      exit(1);
-    }
+    CREATE_ELEMENT (src, "appsrc");
   } else {
-    src = gst_element_factory_make ("filesrc", NULL);
-    if (src == NULL) {
-      fprintf(stderr, "Could not create source element (filesrc)\n");
-      exit(1);
-    }
-    g_object_set (src, "location", argv[optind], NULL);
+    CREATE_ELEMENT (src, "filesrc");
   }
+  CREATE_ELEMENT (swfdec, "swfdec2");
+  CREATE_ELEMENT (thread2, "thread");
+  CREATE_ELEMENT (queue1, "queue");
+  CREATE_ELEMENT (thread3, "thread");
+  CREATE_ELEMENT (queue2, "queue");
+  CREATE_ELEMENT (audioconvert, "audioconvert");
+  CREATE_ELEMENT (audioscale, "audioscale");
+  CREATE_ELEMENT (video_sink, "ximagesink");
 
-  swfdec = gst_element_factory_make ("swfdec2", NULL);
-  if (swfdec == NULL) {
-    fprintf(stderr, "Could not create swfdec element\n");
-    exit(1);
-  }
-
-  thread2 = gst_element_factory_make ("thread", NULL);
-  if (thread2 == NULL) {
-    fprintf(stderr, "Could not create thread2 element\n");
-    exit(1);
-  }
-
-  queue1 = gst_element_factory_make ("queue", NULL);
-  if (queue1 == NULL) {
-    fprintf(stderr, "Could not create queue element\n");
-    exit(1);
-  }
-
-  thread3 = gst_element_factory_make ("thread", NULL);
-  if (thread3 == NULL) {
-    fprintf(stderr, "Could not create thread2 element\n");
-    exit(1);
-  }
-
-  queue2 = gst_element_factory_make ("queue", NULL);
-  if (queue2 == NULL) {
-    fprintf(stderr, "Could not create queue element\n");
-    exit(1);
-  }
-  g_object_set (G_OBJECT(queue2), "max-size-buffers", 1, NULL);
-
-  audioconvert = gst_element_factory_make ("audioconvert", NULL);
-  if (audioconvert == NULL) {
-    fprintf(stderr, "Could not create audioconvert element\n");
-    exit(1);
-  }
-
-  audioscale = gst_element_factory_make ("audioscale", NULL);
-  if (audioscale == NULL) {
-    fprintf(stderr, "Could not create audioscale element\n");
-    exit(1);
+  if (bad_elements) {
+    error_message = g_strdup_printf("Failed to create elements: %s",
+        bad_elements);
+    g_free(bad_elements);
+    return FALSE;
   }
 
   audio_sink = gst_gconf_get_default_audio_sink ();
   if (audio_sink == NULL) {
-    fprintf(stderr, "Could not create audio sink\n");
-    exit(1);
+    error_message = "Failed to create audio sink";
+    return FALSE;
   }
 
-  video_sink = gst_element_factory_make ("ximagesink", NULL);
-  if (video_sink == NULL) {
-    fprintf(stderr, "Could not create video sink (ximagesink)\n");
-    exit(1);
-  }
   xoverlay = video_sink;
+
+  if (!streaming) {
+    g_object_set (src, "location", location, NULL);
+  }
+  g_object_set (G_OBJECT(queue2), "max-size-buffers", 1, NULL);
 
   g_signal_connect (G_OBJECT (xoverlay), "desired-size-changed",
       G_CALLBACK (desired_size), NULL);
 
   g_signal_connect (G_OBJECT (swfdec), "embed-url",
       G_CALLBACK (embed_url), NULL);
+  g_signal_connect (G_OBJECT (swfdec), "found-tag",
+      G_CALLBACK (found_tags), NULL);
 
   gst_bin_add (GST_BIN (pipeline), thread);
   gst_bin_add_many (GST_BIN (thread), src, swfdec, thread2, thread3, NULL);
@@ -302,28 +300,11 @@ main (int argc, char *argv[])
   ret &= gst_element_link (audioscale, audioconvert);
   ret &= gst_element_link (audioconvert, audio_sink);
   if (ret == FALSE) {
-    fprintf(stderr, "Failed to link elements\n");
-    exit(1);
+    error_message = "Failed to link elements\n";
+    return FALSE;
   }
 
-  if (xid) {
-    plugged = 1;
-  }
-
-  new_gtk_window ();
-
-  playing = TRUE;
-  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  if (ret != GST_STATE_SUCCESS) {
-    fprintf(stderr, "Failed to set pipeline to PLAYING\n");
-    exit(1);
-  }
-
-  g_timeout_add (1000, timeout, NULL);
-
-  gtk_main ();
-
-  exit (0);
+  return TRUE;
 }
 
 static void
@@ -353,6 +334,7 @@ new_gtk_window (void)
   } else {
     gtk_wind = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   }
+  //g_object_set (G_OBJECT(gtk_wind), "visible", FALSE, NULL);
   gtk_window_set_default_size (GTK_WINDOW (gtk_wind), width, height);
   gtk_signal_connect (GTK_OBJECT (gtk_wind), "delete_event",
       GTK_SIGNAL_FUNC (destroy_cb), NULL);
@@ -379,6 +361,10 @@ new_gtk_window (void)
       GTK_SIGNAL_FUNC (button_press_event), NULL);
   g_signal_connect (G_OBJECT (gtk_wind), "button_release_event",
       GTK_SIGNAL_FUNC (button_release_event), NULL);
+#if 0
+  g_signal_connect (G_OBJECT (gtk_wind), "expose_event",
+      GTK_SIGNAL_FUNC (expose), NULL);
+#endif
 
   gtk_widget_add_events (gtk_wind,
       GDK_LEAVE_NOTIFY_MASK
@@ -397,6 +383,29 @@ new_gtk_window (void)
   }
 }
 
+static void
+do_error_message (void)
+{
+  GtkWidget *label;
+  GtkWidget *align;
+  char *s;
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+
+  s = g_strdup_printf("An error occurred playing SWF file:\n%s\n",
+      error_message);
+  label = gtk_label_new(s);
+  g_free(s);
+  
+  align = gtk_alignment_new (0.5, 0.5, 0, 0);
+  gtk_container_add (GTK_CONTAINER(gtk_wind), align);
+  gtk_container_add (GTK_CONTAINER(align), label);
+  gtk_widget_show_all (align);
+
+  g_signal_connect (G_OBJECT (align), "expose_event",
+      GTK_SIGNAL_FUNC (expose), NULL);
+}
+
 /* GTK callbacks */
 
 static gboolean
@@ -408,6 +417,11 @@ timeout (gpointer closure)
     }else{
       fprintf(stderr, "is unmapped\n");
     }
+  }
+
+  if (error_occurred) {
+    do_error_message();
+    error_occurred = FALSE;
   }
 
   return TRUE;
@@ -428,8 +442,29 @@ menu_open (GtkMenuItem *item, gpointer user_data)
 static void
 menu_report_bug (GtkMenuItem *item, gpointer user_data)
 {
-  packet_go_to_url("http://www.schleef.org/swfdec/", "_self");
+  char *url;
+  char *s;
+
+  g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+
+  s = g_strdup_printf("http://www.schleef.org/swfdec/?%s", url);
+  packet_go_to_url(s, "_self");
+  g_free(s);
 }
+
+static void
+menu_copy_url (GtkMenuItem *item, gpointer user_data)
+{
+  char *url;
+  GtkClipboard *clipboard;
+
+  g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+  clipboard = gtk_clipboard_get_for_display (gdk_display_get_default(),
+      GDK_SELECTION_PRIMARY);
+
+  gtk_clipboard_set_text (clipboard, url, strlen(url));
+}
+
 
 static int
 button_press_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
@@ -448,6 +483,9 @@ button_press_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     item = gtk_menu_item_new_with_label ("Report bug...");
     g_signal_connect (G_OBJECT(item), "activate", G_CALLBACK(menu_report_bug), NULL);
+    gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+    item = gtk_menu_item_new_with_label ("Copy URL");
+    g_signal_connect (G_OBJECT(item), "activate", G_CALLBACK(menu_copy_url), NULL);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
     gtk_widget_show_all (menu);
 
@@ -588,12 +626,9 @@ configure_cb (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
 }
 
 static int
-expose_cb (GtkWidget * widget, GdkEventExpose * evt, gpointer data)
+expose (GtkWidget * widget, GdkEventExpose * evt, gpointer data)
 {
-  if (image) {
-    gdk_draw_rgb_image (widget->window, widget->style->black_gc,
-        0, 0, width, height, GDK_RGB_DITHER_NONE, image, width * 3);
-  }
+  gst_x_overlay_expose (GST_X_OVERLAY(xoverlay));
 
   return FALSE;
 }
@@ -655,6 +690,19 @@ static void
 embed_url (GObject * obj, const char *url, gpointer closure)
 {
   packet_go_to_url (url, "_self");
+}
+
+static void
+found_tags (GObject * pipeline, GstElement * source, GstTagList * tags)
+{
+  int version = 0;
+
+  gst_tag_list_get_uint (tags, GST_TAG_ENCODER_VERSION, &version);
+
+  if (version >= MAX_VERSION) {
+    error_message = g_strdup_printf ("SWF version %d unsupported", version);
+    error_occurred = TRUE;
+  }
 }
 
 static void

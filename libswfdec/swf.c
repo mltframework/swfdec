@@ -338,6 +338,12 @@ swfdec_decoder_get_rate (SwfdecDecoder * s, double *rate)
 }
 
 int
+swfdec_decoder_get_version (SwfdecDecoder *s)
+{
+  return s->version;
+}
+
+int
 swfdec_decoder_get_image (SwfdecDecoder * s, unsigned char **image)
 {
   if (s->buffer == NULL) {

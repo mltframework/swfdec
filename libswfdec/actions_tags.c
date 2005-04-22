@@ -17,7 +17,7 @@ action_goto_frame (SwfdecActionContext * context)
   frame = swfdec_bits_get_u16 (&context->bits);
 
   /* FIXME hack */
-  context->s->parse_sprite_seg->frame_index = frame - 1;
+  context->s->parse_sprite_seg->frame_index = frame;
   if (context->s->parse_sprite_seg->frame_index < 0) {
     context->s->parse_sprite_seg->frame_index = 0;
   }
@@ -858,7 +858,7 @@ action_call_method (SwfdecActionContext *context)
   JSString *a;
   JSObject *b;
   JSBool ok;
-  int32 c;
+  int32 c = 10000000;
   jsval *argv;
   jsval rval = JSVAL_VOID;
   char *methodname;
@@ -871,6 +871,12 @@ action_call_method (SwfdecActionContext *context)
   JS_ValueToObject (context->jscx, TAG_B, &b);
   JS_ValueToInt32 (context->jscx, TAG_C, &c);
 
+  if (c > context->stack_top) {
+    SWFDEC_ERROR ("argc is larger than stack (%d > %d)", c, context->stack_top);
+    SWFDEC_ERROR ("%x", TAG_C);
+    c = context->stack_top;
+  }
+  
   argv = g_malloc (sizeof(jsval) * c);
   for (i = 0; i < c; i++) {
     argv[i] = stack_pop (context);

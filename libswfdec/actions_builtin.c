@@ -191,6 +191,7 @@ enum {
 static JSPropertySpec movieclip_props[] = {
 	{"_x",	MC_X,	MC_PROP_ATTRS, mc_x_get, mc_x_set},
 	{"_y",	MC_Y,	MC_PROP_ATTRS, mc_y_get, mc_y_set},
+        { 0 }
 };
 
 JSClass movieclip_class = {

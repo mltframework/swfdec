@@ -194,12 +194,15 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     context->pc = frame->bits.ptr;
     context->action = action;
 
+    func_entry = get_action (action);
+
     if (context->skip > 0) {
+      SWFDEC_DEBUG ("[skip] depth %d, action 0x%02x (%s)", context->call_depth,
+        action, func_entry ? func_entry->name : "(unknown)");
       context->skip--;
       continue;
     }
 
-    func_entry = get_action (action);
     SWFDEC_DEBUG ("depth %d, action 0x%02x (%s)", context->call_depth,
       action, func_entry ? func_entry->name : "(unknown)");
     if (func_entry) {
@@ -266,7 +269,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
     s->parse_sprite_seg = s->main_sprite_seg;
   }
 
-  SWFDEC_DEBUG ("swfdec_action_script_execute (sprite %d) %p %p %d",
+  SWFDEC_INFO ("swfdec_action_script_execute (sprite %d) %p %p %d",
       SWFDEC_OBJECT(s->parse_sprite)->id, buffer, buffer->data, buffer->length);
 
   if (s->context == NULL)

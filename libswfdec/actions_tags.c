@@ -867,14 +867,18 @@ action_call_method (SwfdecActionContext *context)
   TAG_A = stack_pop (context); /* property */
   TAG_B = stack_pop (context); /* object */
   TAG_C = stack_pop (context); /* argc */
+  /* FIXME: c is calculated first, since JS_ValueToString() seems to
+   * mangle it.  why? */
+  c = JSVAL_TO_INT (TAG_C);
   a = JS_ValueToString (context->jscx, TAG_A);
   JS_ValueToObject (context->jscx, TAG_B, &b);
-  JS_ValueToInt32 (context->jscx, TAG_C, &c);
+  //JS_ValueToInt32 (context->jscx, TAG_C, &c);
 
   if (c > context->stack_top) {
     SWFDEC_ERROR ("argc is larger than stack (%d > %d)", c, context->stack_top);
     SWFDEC_ERROR ("%x", TAG_C);
-    c = context->stack_top;
+    //c = context->stack_top;
+    c = 0;
   }
   
   argv = g_malloc (sizeof(jsval) * c);

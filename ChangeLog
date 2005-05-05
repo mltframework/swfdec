@@ -1,3 +1,8 @@
+2005-05-05  David Schleef  <ds@schleef.org>
+
+	* libswfdec/actions_tags.c: (action_call_method): workaround
+	for TAG_C corruption.
+
 2005-04-22  David Schleef  <ds@schleef.org>
 
 	* libswfdec/actions.c: (action_script_call),

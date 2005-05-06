@@ -1,3 +1,26 @@
+2005-05-05  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/actions.c: (jsval_as_object):
+	* libswfdec/actions_builtin.c: (mc_getBytesLoaded),
+	(mc_getBytesTotal):
+	* libswfdec/actions_tags.c: (action_call_function),
+	(action_call_method), (action_get_member), (action_new_object),
+	(action_set_member), (action_extends):
+	* libswfdec/swfdec_actions.h:
+	- Add a new jsval_as_object function.  This checks if the value is an
+	  object and returns it before trying to use JS_ValueToObject.
+	  JS_ValueToObject had some strange side effects when being called on
+	  objects, and we might not even need to use JS_ValueToObject in
+	  handling AS bytecode.  Workarounds were happening in the code for
+	  specific problems as a result of this already.  Leave an INFO message
+	  in to see if we ever hit the JS_ValueToObject case.
+	- Add stubs for getBytesLoaded and getBytesTotal, which are called
+	  frequently.  Returning 0 (undef) for getBytesTotal is likely to lead
+	  to divides by zero.
+	- Make CallFunction check for methods in the root object along with
+	  global.  It's not clear what the scope for functions is from the docs,
+	  so we'll have to settle with an accumulated list for now.
+
 2005-05-05  David Schleef  <ds@schleef.org>
 
 	* libswfdec/actions_tags.c: (action_call_method): workaround

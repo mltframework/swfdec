@@ -412,3 +412,26 @@ stack_show (SwfdecActionContext *context)
     }
   }
 }
+
+/* Given a jsval, convert it into an object.  JS_ValueToObject appears to have
+ * some side effect when working on an existing object, at least.  While I'm
+ * here, make it print out when we actually convert a non-object to object.
+ * Perhaps this never occurs in actionscript bytecode.
+ */
+JSObject *
+jsval_as_object (SwfdecActionContext *context, jsval val)
+{
+  if (JSVAL_IS_OBJECT(val)) {
+    return JSVAL_TO_OBJECT(val);
+  } else {
+    JSObject *obj = NULL;
+    JSBool ok;
+
+    SWFDEC_INFO("Converting value %x to object", val);
+    ok = JS_ValueToObject (context->jscx, val, &obj);
+    if (!ok) {
+      SWFDEC_ERROR("Couldn't convert value %x to object", val);
+    }
+    return obj;
+  }
+}

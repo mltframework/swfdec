@@ -828,12 +828,21 @@ action_call_function (SwfdecActionContext *context)
 
   SWFDEC_DEBUG("Calling function %s with %d args", funcname, b);
 
+  /* Currently we search for the function as a member of the global object, then
+   * as a member of the root movieclip.  I would guess that it should be
+   * according to some scope rules, but it's not clear what they are.
+   */
   JS_GetProperty (context->jscx, context->global, funcname, &fval);
   if (!JSVAL_IS_OBJECT(fval) || !JS_ObjectIsFunction(context->jscx,
       JSVAL_TO_OBJECT(fval))) {
-    SWFDEC_WARNING("Couldn't look up function %s", funcname);
-    stack_push (context, JSVAL_VOID);
-    return;
+    JSObject *root = movieclip_find(context, context->s->main_sprite_seg);
+    JS_GetProperty (context->jscx, root, funcname, &fval);
+    if (!JSVAL_IS_OBJECT(fval) || !JS_ObjectIsFunction(context->jscx,
+      JSVAL_TO_OBJECT(fval))) {
+      SWFDEC_WARNING("Couldn't look up function %s", funcname);
+      stack_push (context, JSVAL_VOID);
+      return;
+    }
   }
 
   argv = g_malloc (sizeof(jsval) * b);
@@ -867,18 +876,11 @@ action_call_method (SwfdecActionContext *context)
   TAG_A = stack_pop (context); /* property */
   TAG_B = stack_pop (context); /* object */
   TAG_C = stack_pop (context); /* argc */
-  /* FIXME: c is calculated first, since JS_ValueToString() seems to
-   * mangle it.  why? */
-  c = JSVAL_TO_INT (TAG_C);
   a = JS_ValueToString (context->jscx, TAG_A);
-  JS_ValueToObject (context->jscx, TAG_B, &b);
-  //JS_ValueToInt32 (context->jscx, TAG_C, &c);
-
-  if (c > context->stack_top) {
-    SWFDEC_ERROR ("argc is larger than stack (%d > %d)", c, context->stack_top);
-    SWFDEC_ERROR ("%x", TAG_C);
-    //c = context->stack_top;
-    c = 0;
+  b = jsval_as_object(context, TAG_B);
+  ok = JS_ValueToInt32 (context->jscx, TAG_C, &c);
+  if (!ok) {
+    SWFDEC_ERROR("failed to convert argc to integer");
   }
   
   argv = g_malloc (sizeof(jsval) * c);
@@ -1044,7 +1046,7 @@ action_get_member (SwfdecActionContext *context)
   TAG_A = stack_pop (context); /* property */
   TAG_B = stack_pop (context); /* object */
   a = JS_ValueToString (context->jscx, TAG_A);
-  JS_ValueToObject (context->jscx, TAG_B, &b);
+  b = jsval_as_object (context, TAG_B);
 
   membername = JS_GetStringBytes (a);
 
@@ -1129,7 +1131,7 @@ action_new_object (SwfdecActionContext *context)
     return;
   }
 
-  JS_ValueToObject (context->jscx, TAG_C, &constructor);
+  constructor = jsval_as_object (context, TAG_C);
   if (!constructor) {
     SWFDEC_WARNING ("couldn't convert variable \"%s\" (0x%x) to object",
       objname, TAG_C);
@@ -1193,15 +1195,7 @@ action_set_member (SwfdecActionContext *context)
   TAG_B = stack_pop (context); /* property */
   TAG_C = stack_pop (context); /* object */
   b = JS_ValueToString (context->jscx, TAG_B);
-
-  /* FIXME: Why is this necessary?  It seems that if we just JS_ValueToObject,
-   * something wonky happens with f5as_flakes.swf and calling randomBetween.
-   */
-  if (JSVAL_IS_OBJECT(TAG_C)) {
-    c = JSVAL_TO_OBJECT(TAG_C);
-  } else {
-    JS_ValueToObject (context->jscx, TAG_C, &c);
-  }
+  c = jsval_as_object (context, TAG_C);
 
   membername = JS_GetStringBytes (b);
 
@@ -1519,9 +1513,9 @@ action_extends (SwfdecActionContext * context)
   JSObject *a, *b;
 
   TAG_A = stack_pop (context); /* superclass */
-  JS_ValueToObject (context->jscx, TAG_A, &a);
   TAG_B = stack_pop (context); /* subclass */
-  JS_ValueToObject (context->jscx, TAG_B, &b);
+  a = jsval_as_object (context, TAG_A);
+  b = jsval_as_object (context, TAG_B);
 
   /*obj = obj_new_Object();
   c = action_val_new ();

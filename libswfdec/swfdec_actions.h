@@ -106,6 +106,7 @@ void stack_show (SwfdecActionContext *context);
 JSBool action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 	jsval *rval);
 int pc_is_valid (SwfdecActionContext *context, unsigned char *pc);
+JSObject *jsval_as_object (SwfdecActionContext *context, jsval val);
 
 /* actions_tags.c */
 ActionFuncEntry *get_action (int action);

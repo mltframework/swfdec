@@ -43,6 +43,24 @@ mc_stop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
+mc_getBytesLoaded(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  /* FIXME: Fill in mc_getBytesLoaded */
+  *rval = INT_TO_JSVAL(1);
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_getBytesTotal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  /* FIXME: Fill in mc_getBytesTotal */
+  *rval = INT_TO_JSVAL(1);
+
+  return JS_TRUE;
+}
+
+static JSBool
 mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval *rval)
 {
@@ -205,6 +223,8 @@ JSClass movieclip_class = {
 static JSFunctionSpec movieclip_methods[] = {
   {"play", mc_play, 0, 0},
   {"stop", mc_stop, 0, 0},
+  {"getBytesLoaded", mc_getBytesLoaded, 0, 0},
+  {"getBytesTotal", mc_getBytesTotal, 0, 0},
   {"attachMovie", mc_attachMovie, 4, 0},
   {0, 0, 0, 0, 0}
 };

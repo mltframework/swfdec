@@ -347,6 +347,7 @@ void swfdec_init_context_builtins (SwfdecActionContext *context)
       NULL, NULL);
 
   root = movieclip_new (context, context->s->main_sprite_seg);
+  context->root = root;
   ok = JS_SetProperty(context->jscx, context->global, "_root", &val);
   if (!ok)
     SWFDEC_WARNING("Failed to set _root");
@@ -370,7 +371,21 @@ action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
   val = OBJECT_TO_JSVAL(mc);
 
   if (seg->name) {
-    ok = JS_SetProperty(context->jscx, context->global, seg->name, &val);
+    JSObject *parentclip;
+    char *parentname;
+
+    parentclip = movieclip_find (context, s->parse_sprite_seg);
+    parentname = name_object (context, parentclip);
+    SWFDEC_INFO("%s is a child of %s", seg->name, parentname);
+    g_free (parentname);
+
+    /* FIXME: This helps sbemail out a bit, but I'm guessing it's wrong.  There
+     * are still some scope issues, it seems -- for example, a clip is created
+     * while parsing _root, but is then accessed as a member of another movie
+     * clip which is also a child of _root.
+     */
+    ok = JS_SetProperty (context->jscx, context->global, seg->name, &val);
+    ok &= JS_SetProperty (context->jscx, parentclip, seg->name, &val);
     if (!ok)
       SWFDEC_WARNING("Failed to register %s", seg->name);
   }

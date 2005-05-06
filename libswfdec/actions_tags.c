@@ -813,7 +813,6 @@ action_random_number (SwfdecActionContext *context)
 static void
 action_call_function (SwfdecActionContext *context)
 {
-  JSObject *root;
   JSString *a;
   int32 b;
   jsval *argv;
@@ -838,8 +837,7 @@ action_call_function (SwfdecActionContext *context)
   JS_GetProperty (context->jscx, context->global, funcname, &fval);
   if (!JSVAL_IS_OBJECT(fval) || !JS_ObjectIsFunction(context->jscx,
       JSVAL_TO_OBJECT(fval))) {
-    JSObject *root = movieclip_find(context, context->s->main_sprite_seg);
-    JS_GetProperty (context->jscx, root, funcname, &fval);
+    JS_GetProperty (context->jscx, context->root, funcname, &fval);
     if (!JSVAL_IS_OBJECT(fval) || !JS_ObjectIsFunction(context->jscx,
       JSVAL_TO_OBJECT(fval))) {
       SWFDEC_WARNING("Couldn't look up function %s", funcname);
@@ -853,8 +851,7 @@ action_call_function (SwfdecActionContext *context)
     argv[i] = stack_pop (context);
   }
 
-  root = movieclip_find(context, context->s->main_sprite_seg);
-  ok = JS_CallFunctionValue (context->jscx, root, fval, b, argv,
+  ok = JS_CallFunctionValue (context->jscx, context->root, fval, b, argv,
     &rval);
   if (!ok)
     SWFDEC_WARNING("Call of function %s failed", funcname);
@@ -900,8 +897,7 @@ action_call_method (SwfdecActionContext *context)
   }
 
   if (JS_GetStringLength(a) == 0) {
-    JSObject *root = movieclip_find(context, context->s->main_sprite_seg);
-    JS_CallFunctionValue (context->jscx, root, TAG_B, c, argv, &rval);
+    JS_CallFunctionValue (context->jscx, context->root, TAG_B, c, argv, &rval);
   } else {
     methodname = JS_GetStringBytes (a);
     SWFDEC_DEBUG("Calling method %s of object 0x%x", methodname, b);

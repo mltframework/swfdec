@@ -153,8 +153,7 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
     if (func->preload_root) {
-      jsval val = OBJECT_TO_JSVAL(movieclip_find(context,
-          context->s->main_sprite_seg));
+      jsval val = OBJECT_TO_JSVAL(context->root);
       JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
     if (func->preload_parent) {
@@ -261,7 +260,6 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
   jsval rval;
   JSFunction *jsfunc;
   ScriptFunction *func;
-  JSObject *root;
 
   if (!s->parse_sprite) {
     s->parse_sprite = s->main_sprite;
@@ -290,8 +288,7 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
     0, context->global, func->name);
   jsfunc->priv = func;
 
-  root = movieclip_find(context, context->s->main_sprite_seg);
-  JS_CallFunction (context->jscx, root, jsfunc, 0, NULL, &rval);
+  JS_CallFunction (context->jscx, context->root, jsfunc, 0, NULL, &rval);
 
   /* FIXME: as of Flash 6/7, stack gets emptied at the end of every action
    * block. -- flasm.sf.net
@@ -364,7 +361,7 @@ stack_push (SwfdecActionContext *context, jsval val)
     SWFDEC_WARNING("Couldn't push element");
 }
 
-static char *
+char *
 name_object (SwfdecActionContext *context, JSObject *obj)
 {
   /* FIXME: I envision this function walking the tree from _global, trying to
@@ -374,6 +371,8 @@ name_object (SwfdecActionContext *context, JSObject *obj)
 
   if (obj == context->global) {
     return g_strdup ("_global");
+  } else if (obj == context->root) {
+    return g_strdup ("_root");
   } else {
     char *name = g_malloc (20);
     g_snprintf(name, 20, "%p", obj);

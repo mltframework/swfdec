@@ -72,7 +72,8 @@ struct _SwfdecActionContext
 
   JSRuntime *jsrt;
   JSContext *jscx;
-  JSObject *global;
+  JSObject *global;		/* The _global object */
+  JSObject *root;		/* The current _root object */
 
   GList *seglist;
 };
@@ -107,6 +108,7 @@ JSBool action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	jsval *rval);
 int pc_is_valid (SwfdecActionContext *context, unsigned char *pc);
 JSObject *jsval_as_object (SwfdecActionContext *context, jsval val);
+char *name_object (SwfdecActionContext *context, JSObject *obj);
 
 /* actions_tags.c */
 ActionFuncEntry *get_action (int action);

@@ -1,3 +1,19 @@
+2005-05-06  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/actions.c: (action_script_call),
+	(swfdec_action_script_execute), (name_object):
+	* libswfdec/actions_builtin.c: (swfdec_init_context_builtins),
+	(action_register_sprite_seg):
+	* libswfdec/actions_tags.c: (action_call_function),
+	(action_call_method):
+	* libswfdec/swfdec_actions.h:
+	- Add new named movieclips as members of their parent movieclip.
+	- Store the root object in the actionscript context, and use that
+	  instead of looking it up all the time.
+	- Make name_object public (perhaps needs a better name) and make it
+	  recognize _root as well.  Use it in registering movieclips as well as
+	  stack_show().
+
 2005-05-05  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/actions_tags.c: (action_mb_char_to_ascii),

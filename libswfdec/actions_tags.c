@@ -587,9 +587,15 @@ action_set_variable (SwfdecActionContext *context)
 static void
 action_define_local (SwfdecActionContext *context)
 {
-  action_set_variable (context);
+  char *b;
 
-  SWFDEC_WARNING ("local variables unimplemented");
+  TAG_A = stack_pop (context);
+  TAG_B = stack_pop (context);
+  b = JS_GetStringBytes (JS_ValueToString (context->jscx, TAG_B));
+
+  SWFDEC_WARNING ("local variables unimplemented (\"%s\")", b);
+
+  JS_SetProperty(context->jscx, context->global, b, &TAG_A);
 }
 
 static void
@@ -1142,11 +1148,6 @@ action_new_object (SwfdecActionContext *context)
       objname);
   }
 
-  argv = g_malloc (sizeof(jsval) * b);
-  for (i = 0; i < b; i++) {
-    argv[i] = stack_pop (context);
-  }
-
   clasp = JS_GetClass(constructor);
   if (strcmp (objname, clasp->name) == 0) {
     /* We're constructing a standard class, so use a proper constructor call. */
@@ -1207,7 +1208,7 @@ action_set_member (SwfdecActionContext *context)
 
   ok = JS_SetProperty (context->jscx, c, membername, &TAG_A);
   if (ok) {
-    SWFDEC_DEBUG ("set property %s of object %p", membername, c);
+    SWFDEC_DEBUG ("set property %s of object %p to 0x%x", membername, c, TAG_A);
   } else {
     SWFDEC_WARNING ("failed to set property %s of object %p", membername, c);
   }

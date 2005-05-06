@@ -136,42 +136,41 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   context->call_depth++;
 
   if (func->is_function2) {
-    int i;
+    int reg, i;
 
     frame->registers = JS_NewArrayObject (context->jscx, 0, NULL);
     argv[argc + 3] = OBJECT_TO_JSVAL(frame->registers);
 
-    i = 1;
+    reg = 1;
     if (func->preload_this) {
       jsval val = OBJECT_TO_JSVAL(obj);
-      JS_SetElement (context->jscx, frame->registers, i++, &val);
+      JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
+    /* FIXME: load arguments */
     if (func->preload_super) {
       jsval val = OBJECT_TO_JSVAL(JS_GetConstructor (context->jscx,
         JS_GetParent (context->jscx, obj)));
-      JS_SetElement (context->jscx, frame->registers, i++, &val);
+      JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
     if (func->preload_root) {
       jsval val = OBJECT_TO_JSVAL(movieclip_find(context,
           context->s->main_sprite_seg));
-      JS_SetElement (context->jscx, frame->registers, i++, &val);
+      JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
     if (func->preload_parent) {
       jsval val = OBJECT_TO_JSVAL(JS_GetParent (context->jscx, obj));
-      JS_SetElement (context->jscx, frame->registers, i++, &val);
+      JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
     if (func->preload_global) {
       jsval val = OBJECT_TO_JSVAL(context->global);
-      JS_SetElement (context->jscx, frame->registers, i++, &val);
+      JS_SetElement (context->jscx, frame->registers, reg++, &val);
     }
 
     for (i = 0; (i < argc) && (i < func->num_params); i++) {
       if (func->param_regs[i]) {
-        jsval val = stack_pop (context);
         JS_SetElement (context->jscx, frame->registers, func->param_regs[i],
-            &val);
+            &argv[i]);
       } else {
-        (void)stack_pop (context);
         SWFDEC_WARNING ("named arguments unsupported");
       }
     }
@@ -398,7 +397,7 @@ stack_show (SwfdecActionContext *context)
     } else if (JSVAL_IS_STRING(val)) {
       SWFDEC_DEBUG (" %d: \"%s\"", i, JS_GetStringBytes(JSVAL_TO_STRING (val)));
     } else if (JSVAL_IS_INT(val)) {
-      SWFDEC_DEBUG (" %d: %f", i, JSVAL_TO_INT (val));
+      SWFDEC_DEBUG (" %d: %d", i, JSVAL_TO_INT (val));
     } else if (JSVAL_IS_DOUBLE(val)) {
       SWFDEC_DEBUG (" %d: %f", i, *JSVAL_TO_DOUBLE (val));
     } else if (JSVAL_IS_BOOLEAN(val)) {
@@ -427,7 +426,7 @@ jsval_as_object (SwfdecActionContext *context, jsval val)
     JSObject *obj = NULL;
     JSBool ok;
 
-    SWFDEC_INFO("Converting value %x to object", val);
+    SWFDEC_INFO("Converting value 0x%x to object", val);
     ok = JS_ValueToObject (context->jscx, val, &obj);
     if (!ok) {
       SWFDEC_ERROR("Couldn't convert value %x to object", val);

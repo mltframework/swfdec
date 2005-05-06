@@ -477,34 +477,29 @@ action_ascii_to_char (SwfdecActionContext * context)
 static void
 action_mb_char_to_ascii (SwfdecActionContext * context)
 {
-  /*ActionVal *a;
+  JSString *a;
+  char *bytes;
 
   TAG_A = stack_pop (context);
-  action_val_convert_to_string (a);
+  a = JS_ValueToString (context->jscx, TAG_C);
+  bytes = JS_GetStringBytes (a);
 
-  a->number = g_utf8_get_char (a->string);
-  g_free (a->string);
-  a->type = ACTIONVAL_TYPE_NUMBER;
-
-  stack_push (context, a);*/ /* FIXME */
+  stack_push (context, INT_TO_JSVAL(g_utf8_get_char (bytes)));
 }
 
 static void
 action_mb_ascii_to_char (SwfdecActionContext * context)
 {
-  /*ActionVal *a;
-  char s[6];
+  int32 a;
   int len;
+  char s[6];
 
   TAG_A = stack_pop (context);
-  action_val_convert_to_number (a);
+  JS_ValueToInt32(context->jscx, TAG_A, &a);
 
-  len = g_unichar_to_utf8 (a->number, s);
+  len = g_unichar_to_utf8 (a, s);
 
-  a->type = ACTIONVAL_TYPE_STRING;
-  a->string = g_strndup(s,len);
-
-  stack_push (context, a);*/ /* FIXME */
+  stack_push (context, STRING_TO_JSVAL(JS_NewStringCopyN (context->jscx, s, len)));
 }
 
 static void
@@ -795,6 +790,8 @@ action_get_time (SwfdecActionContext *context)
 {
   /* FIXME implement */
   //a->number = swfdec_decoder_get_time ();
+
+  SWFDEC_WARNING("ActionGetTime unimplemented");
 
   stack_push (context, INT_TO_JSVAL(0));
 }
@@ -1380,6 +1377,7 @@ action_store_register (SwfdecActionContext * context)
 static void
 action_enumerate_2 (SwfdecActionContext * context)
 {
+  SWFDEC_WARNING("ActionEnumerate unimplemented");
   /*GList *g;
 
   TAG_A = stack_pop (context);
@@ -1513,6 +1511,7 @@ action_extends (SwfdecActionContext * context)
 {
   JSObject *a, *b;
 
+  SWFDEC_WARNING("ActionExtends unimplemented");
   TAG_A = stack_pop (context); /* superclass */
   TAG_B = stack_pop (context); /* subclass */
   a = jsval_as_object (context, TAG_A);

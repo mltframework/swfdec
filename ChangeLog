@@ -1,10 +1,18 @@
 2005-05-05  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/actions_tags.c: (action_mb_char_to_ascii),
+	(action_mb_ascii_to_char), (action_get_time), (action_enumerate_2),
+	(action_extends):
+	- Re-add code for MB conversion actions, though it is untested.  These
+	  were removed with the conversion to js code.
+	- Add warnings in some unimplemented actions, along with the FIXMEs.
+
+2005-05-05  Eric Anholt  <anholt@FreeBSD.org>
+
 	* libswfdec/actions.c: (action_script_call), (stack_show),
 	(jsval_as_object):
 	* libswfdec/actions_tags.c: (action_define_local),
 	(action_new_object), (action_set_member):
-	* libswfdec/swfdec_debug.c:
 	- Fix setting of register arguments for Function2s.  It was still
 	  trying to stack_pop them from before when arguments were made to be
 	  passed through argv[].

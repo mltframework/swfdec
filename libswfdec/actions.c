@@ -343,8 +343,10 @@ stack_pop (SwfdecActionContext *context)
   ok = JS_GetElement (context->jscx, context->stack, --context->stack_top,
     &val);
 
-  if (!ok)
+  if (!ok) {
     SWFDEC_WARNING("Couldn't pop element");
+    return JSVAL_VOID;
+  }
 
   return val;
 }
@@ -386,28 +388,54 @@ stack_show (SwfdecActionContext *context)
   jsval val;
   int i = 0;
 
-  SWFDEC_DEBUG ("Stack:");
+  SWFDEC_INFO ("Stack:");
   for (i = context->stack_top - 1; i >= 0; i--) {
     JS_GetElement (context->jscx, context->stack, i, &val);
     if (JSVAL_IS_NULL(val)) {
-      SWFDEC_DEBUG (" %d: (null)", i);
+      SWFDEC_INFO (" %d: (null)", i);
     } else if (JSVAL_IS_VOID(val)) {
-      SWFDEC_DEBUG (" %d: (undefined)", i);
+      SWFDEC_INFO (" %d: (undefined)", i);
     } else if (JSVAL_IS_STRING(val)) {
-      SWFDEC_DEBUG (" %d: \"%s\"", i, JS_GetStringBytes(JSVAL_TO_STRING (val)));
+      SWFDEC_INFO (" %d: \"%s\"", i, JS_GetStringBytes(JSVAL_TO_STRING (val)));
     } else if (JSVAL_IS_INT(val)) {
-      SWFDEC_DEBUG (" %d: %d", i, JSVAL_TO_INT (val));
+      SWFDEC_INFO (" %d: %d", i, JSVAL_TO_INT (val));
     } else if (JSVAL_IS_DOUBLE(val)) {
-      SWFDEC_DEBUG (" %d: %f", i, *JSVAL_TO_DOUBLE (val));
+      SWFDEC_INFO (" %d: %g", i, *JSVAL_TO_DOUBLE (val));
     } else if (JSVAL_IS_BOOLEAN(val)) {
-      SWFDEC_DEBUG (" %d: %s", i, JSVAL_TO_BOOLEAN (val) ? "true" : "false");
+      SWFDEC_INFO (" %d: %s", i, JSVAL_TO_BOOLEAN (val) ? "true" : "false");
     } else if (JSVAL_IS_OBJECT(val)) {
       char *name = name_object (context, JSVAL_TO_OBJECT(val));
-      SWFDEC_DEBUG (" %d: obj (%s)", i, name);
+      SWFDEC_INFO (" %d: obj (%s)", i, name);
       g_free (name);
     } else {
-      SWFDEC_DEBUG (" %d: unknown type", i);
+      SWFDEC_INFO (" %d: unknown type", i);
     }
+  }
+}
+
+void
+stack_show_value (SwfdecActionContext *context, jsval val)
+{
+  int i = 0;
+
+  if (JSVAL_IS_NULL(val)) {
+    SWFDEC_INFO (" %d: (null)", i);
+  } else if (JSVAL_IS_VOID(val)) {
+    SWFDEC_INFO (" %d: (undefined)", i);
+  } else if (JSVAL_IS_STRING(val)) {
+    SWFDEC_INFO (" %d: \"%s\"", i, JS_GetStringBytes(JSVAL_TO_STRING (val)));
+  } else if (JSVAL_IS_INT(val)) {
+    SWFDEC_INFO (" %d: %d", i, JSVAL_TO_INT (val));
+  } else if (JSVAL_IS_DOUBLE(val)) {
+    SWFDEC_INFO (" %d: %g", i, *JSVAL_TO_DOUBLE (val));
+  } else if (JSVAL_IS_BOOLEAN(val)) {
+    SWFDEC_INFO (" %d: %s", i, JSVAL_TO_BOOLEAN (val) ? "true" : "false");
+  } else if (JSVAL_IS_OBJECT(val)) {
+    char *name = name_object (context, JSVAL_TO_OBJECT(val));
+    SWFDEC_INFO (" %d: obj (%s)", i, name);
+    g_free (name);
+  } else {
+    SWFDEC_INFO (" %d: unknown type", i);
   }
 }
 

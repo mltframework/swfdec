@@ -236,9 +236,9 @@ swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform * trans)
 char *
 swfdec_bits_get_string (SwfdecBits * bits)
 {
-  char *s = g_strdup (bits->ptr);
+  char *s = g_strdup ((char *)bits->ptr);
 
-  bits->ptr += strlen (bits->ptr) + 1;
+  bits->ptr += strlen ((char *)bits->ptr) + 1;
 
   return s;
 }

@@ -1377,7 +1377,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSBool ok, cond;
     JSTrapHandler interruptHandler;
     jsint depth, len;
-    jsval *sp, *newsp;
+    jsval *sp = NULL, *newsp;
     void *mark;
     jsbytecode *pc, *pc2, *endpc;
     JSOp op, op2;
@@ -1385,7 +1385,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSAtom *atom;
     uintN argc, slot, attrs;
     jsval *vp, lval, rval, ltmp, rtmp;
-    jsid id;
+    jsid id = 0;
     JSObject *withobj, *origobj, *propobj;
     jsval iter_state;
     JSProperty *prop;

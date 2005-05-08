@@ -989,7 +989,7 @@ static Bigint *diff(Bigint *a, Bigint *b)
 static double ulp(double x)
 {
     register Long L;
-    double a;
+    double a = 0;
 
     L = (word0(x) & Exp_mask) - (P-1)*Exp_msk1;
 #ifndef Sudden_Underflow
@@ -1020,7 +1020,7 @@ static double b2d(Bigint *a, int32 *e)
 {
     ULong *xa, *xa0, w, y, z;
     int32 k;
-    double d;
+    double d = 0;
 #define d0 word0(d)
 #define d1 word1(d)
 #define set_d0(x) set_word0(d, x)
@@ -1241,7 +1241,7 @@ JS_strtod(CONST char *s00, char **se, int *err)
     int32 bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, dsign,
         e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0, sign;
     CONST char *s, *s0, *s1;
-    double aadj, aadj1, adj, rv, rv0;
+    double aadj, aadj1, adj, rv, rv0 = 0;
     Long L;
     ULong y, z;
     Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;

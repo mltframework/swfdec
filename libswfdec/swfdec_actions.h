@@ -104,6 +104,7 @@ void constant_pool_unref (ConstantPool *pool);
 jsval stack_pop (SwfdecActionContext *context);
 void stack_push (SwfdecActionContext *context, jsval value);
 void stack_show (SwfdecActionContext *context);
+void stack_show_value (SwfdecActionContext *context, jsval val);
 JSBool action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 	jsval *rval);
 int pc_is_valid (SwfdecActionContext *context, unsigned char *pc);

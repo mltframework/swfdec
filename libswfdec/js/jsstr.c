@@ -1826,7 +1826,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v;
     JSBool ok, limited;
     JSRegExp *re;
-    JSSubString *sep, tmp;
+    JSSubString *sep, tmp = { 0 };
     jsdouble d;
     jsint i, j;
     uint32 len, limit;

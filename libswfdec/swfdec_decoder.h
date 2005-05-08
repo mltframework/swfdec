@@ -109,7 +109,7 @@ struct _SwfdecDecoder
 
   void *backend_private;
 
-  char *kept_buffer;
+  guint8 *kept_buffer;
   GList *kept_list;
   int kept_layers;
 

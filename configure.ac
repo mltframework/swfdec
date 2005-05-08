@@ -89,7 +89,7 @@ if test "$HAVE_SDL" = "yes"; then
 fi
 AM_CONDITIONAL(WITH_SDL,[test "$HAVE_SDL" = "yes"])
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.0, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.1.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)
 AC_SUBST(LIBOIL_CFLAGS)
 if test "$HAVE_LIBOIL" = "no"; then

@@ -731,7 +731,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       oil_unzigzag8x8_s16 (block, sizeof (short) * 8, block2,
           sizeof (short) * 8);
       oil_idct8x8_s16 (block2, sizeof (short) * 8, block, sizeof (short) * 8);
-      oil_trans8x8_u16 (block, sizeof (short) * 8, block2, sizeof (short) * 8);
+      oil_trans8x8_s16 (block, sizeof (short) * 8, block2, sizeof (short) * 8);
 
       ptr = dec->components[component_index].image +
           x * dec->components[component_index].h_oversample +

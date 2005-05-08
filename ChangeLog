@@ -1,5 +1,20 @@
 2005-05-08  David Schleef  <ds@schleef.org>
 
+	Fixes for -wsigned-compare, default in gcc-4.0:
+	* configure.ac: reenable -Werror
+	* libswfdec/actions.c: (stack_pop), (stack_show),
+	(stack_show_value):
+	* libswfdec/jpeg/jpeg.c: (jpeg_decoder_decode_entropy_segment):
+	* libswfdec/js/Makefile.am:
+	* libswfdec/js/jsdtoa.c: (ulp), (b2d), (JS_strtod):
+	* libswfdec/js/jsinterp.c: (js_Interpret):
+	* libswfdec/js/jsstr.c: (str_split):
+	* libswfdec/swfdec_actions.h:
+	* libswfdec/swfdec_bits.c: (swfdec_bits_get_string):
+	* libswfdec/swfdec_decoder.h:
+
+2005-05-08  David Schleef  <ds@schleef.org>
+
 	* configure.ac: oops, checked in a mistake.
 	* libswfdec/actions_tags.c: (action_define_function_2): fix warning
 	* libswfdec/swfdec_render_cairo.c: (swfdec_render_be_start),

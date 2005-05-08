@@ -273,8 +273,8 @@ gst_appsrc_loop (GstElement *element)
           char *tag;
           char *value;
 
-          tag = g_strdup (data);
-          value = g_strdup (data + strlen (tag) + 1);
+          tag = g_strdup ((char *)data);
+          value = g_strdup ((char *)data + strlen (tag) + 1);
 
           GST_DEBUG ("%s=%s", tag, value);
 

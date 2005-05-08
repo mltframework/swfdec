@@ -2,8 +2,10 @@
 plugindir = $(libdir)/mozilla/plugins/
 
 if WITH_MOZILLA
+if HAVE_GST
 plugin_LTLIBRARIES = libswfdecmozilla.la
 bin_PROGRAMS = swfdec-mozilla-player
+endif
 endif
 
 libswfdecmozilla_la_SOURCES = plugin.c

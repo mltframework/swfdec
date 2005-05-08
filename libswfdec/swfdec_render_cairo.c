@@ -13,15 +13,16 @@ void
 swfdec_render_be_start (SwfdecDecoder *s)
 {
   cairo_t *cr;
-
-  cr = cairo_create ();
-  s->backend_private = cr;
+  cairo_surface_t *cs;
 
   if (!s->buffer) {
     s->buffer = g_malloc (s->stride * s->height);
   }
-  cairo_set_target_image (cr, s->buffer, CAIRO_FORMAT_ARGB32, s->width,
-      s->height, s->stride);
+  cs = cairo_image_surface_create_for_data (s->buffer, CAIRO_FORMAT_ARGB32,
+      s->width, s->height, s->stride);
+
+  cr = cairo_create (cs);
+  s->backend_private = cr;
 
   cairo_set_tolerance (cr, s->flatness);
 }
@@ -34,7 +35,7 @@ swfdec_render_be_clear (SwfdecDecoder *s)
   cr = (cairo_t *) s->backend_private;
 
   cairo_rectangle (cr, 0, 0, s->width, s->height);
-  cairo_set_rgb_color (cr, SWF_COLOR_R(s->bg_color)/255.0,
+  cairo_set_source_rgb (cr, SWF_COLOR_R(s->bg_color)/255.0,
       SWF_COLOR_G(s->bg_color)/255.0, SWF_COLOR_B(s->bg_color)/255.0);
   cairo_fill (cr);
 }
@@ -352,7 +353,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   for (i = 0; i < shape->fills->len; i++) {
     SwfdecTransform trans;
     swf_color color;
-    cairo_matrix_t *cm;
+    cairo_matrix_t cm;
 
     shapevec = g_ptr_array_index (shape->fills, i);
     shapevec2 = g_ptr_array_index (shape->fills2, i);
@@ -361,18 +362,16 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     color = swfdec_color_apply_transform (shapevec->color,
         &seg->color_transform);
-    cairo_set_rgb_color (cr, SWF_COLOR_R(color)/255.0,
-        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0);
-    cairo_set_alpha (cr, SWF_COLOR_A(color)/255.0);
+    cairo_set_source_rgba (cr, SWF_COLOR_R(color)/255.0,
+        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0,
+        SWF_COLOR_A(color)/255.0);
     
     cairo_set_line_width (cr, 0.5);
     cairo_save (cr);
 
-    cm = cairo_matrix_create ();
-    cairo_matrix_set_affine (cm, trans.trans[0], trans.trans[1],
+    cairo_matrix_init (&cm, trans.trans[0], trans.trans[1],
         trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
-    cairo_concat_matrix (cr, cm);
-    cairo_matrix_destroy (cm);
+    cairo_transform (cr, &cm);
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);
@@ -382,7 +381,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
   for (i = 0; i < shape->lines->len; i++) {
     SwfdecTransform trans;
-    cairo_matrix_t *cm;
+    cairo_matrix_t cm;
     swf_color color;
     double width;
 
@@ -392,17 +391,15 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     color = swfdec_color_apply_transform (shapevec->color,
         &seg->color_transform);
-    cairo_set_rgb_color (cr, SWF_COLOR_R(color)/255.0,
-        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0);
-    cairo_set_alpha (cr, SWF_COLOR_A(color)/255.0);
+    cairo_set_source_rgba (cr, SWF_COLOR_R(color)/255.0,
+        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0,
+        SWF_COLOR_A(color)/255.0);
 
     cairo_save (cr);
 
-    cm = cairo_matrix_create ();
-    cairo_matrix_set_affine (cm, trans.trans[0], trans.trans[1],
+    cairo_matrix_init (&cm, trans.trans[0], trans.trans[1],
         trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
-    cairo_concat_matrix (cr, cm);
-    cairo_matrix_destroy (cm);
+    cairo_transform (cr, &cm);
 
     width = shapevec->width * swfdec_transform_get_expansion (&trans);
     cairo_set_line_width (cr, width);
@@ -445,7 +442,7 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecTransform trans;
     SwfdecTransform pos;
     swf_color color;
-    cairo_matrix_t *cm;
+    cairo_matrix_t cm;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
 
@@ -473,17 +470,15 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     shapevec2 = g_ptr_array_index (shape->fills2, 0);
 
     color = swfdec_color_apply_transform (glyph->color, &seg->color_transform);
-    cairo_set_rgb_color (cr, SWF_COLOR_R(color)/255.0,
-        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0);
-    cairo_set_alpha (cr, SWF_COLOR_A(color)/255.0);
+    cairo_set_source_rgba (cr, SWF_COLOR_R(color)/255.0,
+        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0,
+        SWF_COLOR_A(color)/255.0);
 
     cairo_save (cr);
 
-    cm = cairo_matrix_create ();
-    cairo_matrix_set_affine (cm, trans.trans[0], trans.trans[1],
+    cairo_matrix_init (&cm, trans.trans[0], trans.trans[1],
         trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
-    cairo_concat_matrix (cr, cm);
-    cairo_matrix_destroy (cm);
+    cairo_transform (cr, &cm);
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);

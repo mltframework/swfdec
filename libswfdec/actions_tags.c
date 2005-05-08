@@ -1467,7 +1467,7 @@ action_define_function_2 (SwfdecActionContext *context)
 
     func->param_regs[i] = swfdec_bits_get_u8 (&context->bits);
     param_name = swfdec_bits_get_string (&context->bits);
-    free(param_name);
+    g_free(param_name);
   }
 
   func->pc = context->pc;

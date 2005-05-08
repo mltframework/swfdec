@@ -1,3 +1,23 @@
+2005-05-08  David Schleef  <ds@schleef.org>
+
+	* configure.ac: oops, checked in a mistake.
+	* libswfdec/actions_tags.c: (action_define_function_2): fix warning
+	* libswfdec/swfdec_render_cairo.c: (swfdec_render_be_start),
+	(swfdec_render_be_clear), (swfdec_shape_render),
+	(swfdec_text_render): Update to new cairo API.
+	* libswfdec/jpeg/huffman.c: (huffman_table_decode_macroblock):
+	remove random printf
+	* plugin/Makefile.am: Disable plugin building if gstreamer isn't
+	around.
+
+	Fixes for -wsigned-compare, default in gcc-4.0:
+	* libswfdec/swfdec_decoder.h: fix endianness
+	* pixbuf-loader/io-swf.c: (fill_info):
+	* player/swf_play.c: (main):
+	* plugin/gstappsrc.c: (gst_appsrc_loop):
+	* plugin/swfdec-mozilla-player.c: (found_tags):
+	* test/dump.c: (main):
+
 2005-05-06  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/actions.c: (action_script_call),

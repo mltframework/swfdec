@@ -349,8 +349,8 @@ void
 fill_info (GdkPixbufFormat *info)
 {
 	static GdkPixbufModulePattern signature[] = {
-		{ "FWS", NULL, 100 },
-		{ "CWS", NULL, 100 },
+		{ (unsigned char *)"FWS", NULL, 100 },
+		{ (unsigned char *)"CWS", NULL, 100 },
 		{ NULL, NULL, 0 }
 	};
 	static gchar *mime_types[] = { 

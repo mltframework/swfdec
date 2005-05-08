@@ -37,7 +37,7 @@ int main (int argc, char *argv[])
 
   s = swfdec_decoder_new();
 
-  ret = swfdec_decoder_add_data(s,contents,length);
+  ret = swfdec_decoder_add_data(s, (unsigned char *)contents,length);
   printf("%d\n", ret);
 
   while (ret != SWF_EOF) {

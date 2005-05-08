@@ -146,7 +146,7 @@ main (int argc, char *argv[])
       DEBUG ("error reading file\n");
       exit (1);
     }
-    swfdec_decoder_add_data (s, contents, length);
+    swfdec_decoder_add_data (s, (unsigned char *)contents, length);
     swfdec_decoder_eof (s);
     ret = swfdec_decoder_parse (s);
     if (ret == SWF_ERROR) {

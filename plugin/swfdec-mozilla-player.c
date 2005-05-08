@@ -695,7 +695,7 @@ embed_url (GObject * obj, const char *url, gpointer closure)
 static void
 found_tags (GObject * pipeline, GstElement * source, GstTagList * tags)
 {
-  int version = 0;
+  unsigned int version = 0;
 
   gst_tag_list_get_uint (tags, GST_TAG_ENCODER_VERSION, &version);
 

@@ -113,7 +113,7 @@ fi
 AM_CONDITIONAL(HAVE_LIBART, test x$HAVE_LIBART = xyes)
 
 if test "x$BACKEND" = "xcairo" ; then
-  PKG_CHECK_MODULES(CAIRO, cairo, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+  PKG_CHECK_MODULES(CAIRO, cairo >= 0.4.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
   AC_SUBST(CAIRO_LIBS)
   AC_SUBST(CAIRO_CFLAGS)
   if test "$HAVE_CAIRO" = "no"; then
@@ -203,9 +203,10 @@ AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
 PKG_CHECK_MODULES(GST, gstreamer-0.8 > 0.8.0 gstreamer-gconf-0.8 gstreamer-interfaces-0.8,
-  HAVE_GST=yes, AC_MSG_ERROR([Need Gstreamer to build]))
+  HAVE_GST=yes, HAVE_GST=no)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
+AM_CONDITIONAL(HAVE_GST, [test $HAVE_GST = yes])
 
 AC_SUBST(GLOBAL_CFLAGS)
 

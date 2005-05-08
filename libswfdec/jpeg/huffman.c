@@ -134,7 +134,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
         return -1;
       }
       x = getbits (bits, s);
-      sprintbits (str, x, s);
+      //sprintbits (str, x, s);
       if ((x >> (s - 1)) == 0) {
         x -= (1 << s) - 1;
       }

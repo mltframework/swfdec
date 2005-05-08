@@ -40,7 +40,7 @@ struct _SwfdecDecoder
   int parse_width, parse_height;
   double rate;
   int n_frames;
-  char *buffer;
+  guint8 *buffer;
   int frame_number;
 
   void *sound_buffer;

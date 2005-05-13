@@ -127,6 +127,7 @@ static GstElement *queue2;
 static GstElement *audioconvert;
 static GstElement *audioscale;
 static GstElement *audio_sink;
+static GstElement *colorspace;
 static GstElement *video_sink;
 static GstElement *xoverlay;
 
@@ -256,6 +257,7 @@ create_pipeline (int streaming, const char *location)
   CREATE_ELEMENT (queue2, "queue");
   CREATE_ELEMENT (audioconvert, "audioconvert");
   CREATE_ELEMENT (audioscale, "audioscale");
+  CREATE_ELEMENT (colorspace, "ffmpegcolorspace");
   CREATE_ELEMENT (video_sink, "ximagesink");
 
   if (bad_elements) {
@@ -290,11 +292,12 @@ create_pipeline (int streaming, const char *location)
   gst_bin_add_many (GST_BIN (thread), src, swfdec, thread2, thread3, NULL);
   gst_bin_add_many (GST_BIN (thread2), queue1, audioconvert, audioscale,
       audio_sink, NULL);
-  gst_bin_add_many (GST_BIN (thread3), queue2, video_sink, NULL);
+  gst_bin_add_many (GST_BIN (thread3), queue2, colorspace, video_sink, NULL);
 
   ret = gst_element_link (src, swfdec);
   ret &= gst_element_link (swfdec, queue2);
-  ret &= gst_element_link (queue2, video_sink);
+  ret &= gst_element_link (queue2, colorspace);
+  ret &= gst_element_link (colorspace, video_sink);
   ret &= gst_element_link (swfdec, queue1);
   ret &= gst_element_link (queue1, audioscale);
   ret &= gst_element_link (audioscale, audioconvert);

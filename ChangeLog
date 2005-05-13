@@ -1,3 +1,10 @@
+2005-05-12  David Schleef  <ds@schleef.org>
+
+	* plugin/swfdec-mozilla-player.c: (create_pipeline): Add a
+	colorspace to the pipeline, since a negotiation failure will
+	occur unless the XImage format is exactly the same as swfdec's
+	colorspace.
+
 2005-05-08  David Schleef  <ds@schleef.org>
 
 	Fixes for -wsigned-compare, default in gcc-4.0:

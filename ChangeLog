@@ -1,5 +1,10 @@
 2005-05-21  David Schleef  <ds@schleef.org>
 
+	* libswfdec/swfdec_audio.c: (swfdec_audio_render): Fix
+	  copy-past-end-of-buffer bug that was causing noise.
+
+2005-05-21  David Schleef  <ds@schleef.org>
+
 	* libswfdec/Makefile.am:
 	* libswfdec/swf.c:
 	* libswfdec/swfdec_audio.c:

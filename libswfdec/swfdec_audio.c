@@ -132,11 +132,11 @@ swfdec_audio_render (SwfdecDecoder *decoder, int n_samples)
       }
     }
     n = swfdec_buffer_queue_get_depth (stream->queue) / 4;
-    if (n >= n_samples) n = n_samples;
-    if (n>0) {
+    if (n > n_samples) n = n_samples;
+    if (n > 0) {
       buffer = swfdec_buffer_queue_pull (stream->queue, n * 4);
       merge((int16_t *)out_buffer->data, (int16_t *)buffer->data,
-          stream->volume, n_samples*2);
+          stream->volume, n*2);
       swfdec_buffer_unref(buffer);
     }
     if (stream->sound && stream->n_loops == 0 &&

@@ -66,10 +66,11 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, int offset, int length)
   return subbuffer;
 }
 
-void
+SwfdecBuffer *
 swfdec_buffer_ref (SwfdecBuffer * buffer)
 {
   buffer->ref_count++;
+  return buffer;
 }
 
 void

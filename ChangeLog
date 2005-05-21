@@ -1,3 +1,17 @@
+2005-05-21  David Schleef  <ds@schleef.org>
+
+	* libswfdec/Makefile.am:
+	* libswfdec/swf.c:
+	* libswfdec/swfdec_audio.c:
+	* libswfdec/swfdec_audio.h:
+	* libswfdec/swfdec_buffer.c:
+	* libswfdec/swfdec_buffer.h:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_internal.h:
+	* libswfdec/swfdec_render.c:
+	* libswfdec/swfdec_sound.c:
+	  Mostly implement an audio mixing subsystem.
+
 2005-05-12  David Schleef  <ds@schleef.org>
 
 	* plugin/swfdec-mozilla-player.c: (create_pipeline): Add a

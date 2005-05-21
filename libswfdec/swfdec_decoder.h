@@ -100,9 +100,6 @@ struct _SwfdecDecoder
   unsigned char *jpegtables;
   unsigned int jpegtables_len;
 
-  GList *sound_buffers;
-  GList *stream_sound_buffers;
-
   int pixels_rendered;
 
   int stats_n_points;
@@ -121,6 +118,10 @@ struct _SwfdecDecoder
   int old_mouse_button;
 
   char *url;
+
+  GList *audio_streams;
+  int audio_stream_index;
+
 };
 
 SwfdecDecoder *swf_init (void);

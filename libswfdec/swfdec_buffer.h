@@ -31,7 +31,7 @@ SwfdecBuffer *swfdec_buffer_new_and_alloc (int size);
 SwfdecBuffer *swfdec_buffer_new_with_data (void *data, int size);
 SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, int offset,
     int length);
-void swfdec_buffer_ref (SwfdecBuffer * buffer);
+SwfdecBuffer * swfdec_buffer_ref (SwfdecBuffer * buffer);
 void swfdec_buffer_unref (SwfdecBuffer * buffer);
 
 SwfdecBufferQueue *swfdec_buffer_queue_new (void);

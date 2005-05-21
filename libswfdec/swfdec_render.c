@@ -293,9 +293,6 @@ swfdec_render_get_image (SwfdecDecoder * s)
 SwfdecBuffer *
 swfdec_render_get_audio (SwfdecDecoder * s)
 {
-  SwfdecBuffer *buffer;
-  GList *g;
-
   g_return_val_if_fail (s->render->frame_index < s->n_frames, NULL);
 
   if (s->stream_sound_obj) {
@@ -331,40 +328,9 @@ swfdec_render_get_audio (SwfdecDecoder * s)
 
     sound = SWFDEC_SOUND(swfdec_object_get (s, chunk->object));
     if (sound) {
-      int i;
-      GList *g;
-      int n_loops;
-
-      SWFDEC_DEBUG ("sound object n_samples=%d", sound->n_samples);
-
-      for(g=g_list_first(s->stream_sound_buffers);g;g=g_list_next(g)) {
-        swfdec_buffer_unref ((SwfdecBuffer *)g->data);
-      }
-      g_list_free (s->stream_sound_buffers);
-      s->stream_sound_buffers = NULL;
-
-      /* FIXME: loop_count should be handled in some other way */
-      n_loops = chunk->loop_count;
-      if (n_loops > 10) n_loops = 10;
-      for(i=0;i<n_loops;i++){
-        for(g=g_list_first(sound->decoded_buffers);g;g=g_list_next(g)) {
-          SwfdecBuffer *buffer = (SwfdecBuffer *)g->data;
-          swfdec_buffer_ref (buffer);
-          swfdec_decoder_sound_buffer_append (s, buffer);
-        }
-      }
+      swfdec_audio_add_sound (s, sound, chunk->loop_count);
     }
-    
   }
 
-  swfdec_sound_render (s);
-
-  g = g_list_first (s->sound_buffers);
-  if (!g)
-    return NULL;
-
-  buffer = (SwfdecBuffer *) g->data;
-  s->sound_buffers = g_list_delete_link (s->sound_buffers, g);
-
-  return buffer;
+  return swfdec_audio_render (s, 44100/s->rate);
 }

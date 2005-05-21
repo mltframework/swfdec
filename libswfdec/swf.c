@@ -70,6 +70,8 @@ swfdec_decoder_new (void)
 
   s->flatness = 0.5;
 
+  swfdec_audio_add_stream(s);
+
   return s;
 }
 
@@ -297,16 +299,6 @@ swfdec_decoder_free (SwfdecDecoder * s)
   if (s->tmp_scanline) {
     g_free (s->tmp_scanline);
   }
-
-  for (g = g_list_first (s->sound_buffers); g; g = g_list_next (g)) {
-    swfdec_buffer_unref (g->data);
-  }
-  g_list_free (s->sound_buffers);
-
-  for (g = g_list_first (s->sound_buffers); g; g = g_list_next (g)) {
-    swfdec_buffer_unref (g->data);
-  }
-  g_list_free (s->stream_sound_buffers);
 
   g_free (s);
 

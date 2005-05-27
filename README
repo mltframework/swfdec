@@ -10,6 +10,10 @@ GTK+ theme, but it is now possible.
 This is alpha software.  Do not expect it to work for you.
 
 
+Maintainer:
+
+   David Schleef <ds@schleef.org>
+
 Notes:
 
  - If you install into /usr/local, your browser may have difficulty

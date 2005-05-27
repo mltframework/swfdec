@@ -1,3 +1,8 @@
+2005-05-27  David Schleef  <ds@schleef.org>
+
+	* MAINTAINERS: add contact info
+	* README:
+
 2005-05-21  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_audio.c: (swfdec_audio_render): Fix

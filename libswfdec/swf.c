@@ -724,6 +724,9 @@ struct tag_func_struct tag_funcs[] = {
   [ST_VIDEOFRAME] = {"VideoFrame", NULL, 0},
   [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", NULL, 0},
   [ST_MX4] = {"MX4", NULL, 0},
+  [ST_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
+  [ST_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
+  [ST_SETTABINDEX] = {"SetTabIndex", NULL, 0},
 //      [ ST_REFLEX             ] = { "Reflex", NULL,   0 },
 };
 static const int n_tag_funcs = sizeof (tag_funcs) / sizeof (tag_funcs[0]);

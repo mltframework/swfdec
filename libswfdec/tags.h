@@ -70,6 +70,9 @@
 #define ST_VIDEOFRAME		61
 #define ST_DEFINEFONTINFO2	62
 #define ST_MX4			63      /*(?) */
+#define ST_ENABLEDEBUGGER2	64
+#define ST_SCRIPTLIMITS		65
+#define ST_SETTABINDEX		66
 
 #define ST_REFLEX              777      /* to identify generator software */
 

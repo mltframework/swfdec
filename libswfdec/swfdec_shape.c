@@ -352,7 +352,13 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
       shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR;
       shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR;
       shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR;
-    } else if (fill_style_type == 0x40 || fill_style_type == 0x41) {
+    } else if (fill_style_type >= 0x40 || fill_style_type <= 0x43) {
+      /* FIXME: We need to properly support these:
+       * 0x40: repeating bitmap
+       * 0x41: clipped bitmap
+       * 0x42: non-smoothed repeating bitmap
+       * 0x42: non-smoothed clipped bitmap.
+       */
       shapevec->fill_type = fill_style_type;
       shapevec->fill_id = swfdec_bits_get_u16 (bits);
       SWFDEC_LOG ("   background fill id = %d (type 0x%02x)",
@@ -654,14 +660,27 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
 #else
       ix = x;
       iy = y;
-      if (x < 0)
-        ix = 0;
-      if (x > image->width - 1)
-        ix = image->width - 1;
-      if (y < 0)
-        iy = 0;
-      if (y > image->height - 1)
-        iy = image->height - 1;
+      if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
+	/* Repeating image */
+        while (ix < 0)
+	  ix += image->width;
+        if (ix > image->width - 1)
+          ix %= image->width;
+        while (iy < 0)
+          iy += image->height;
+        if (iy > image->height - 1)
+          iy %= image->height;
+      } else {
+	/* Clipped image */
+        if (ix < 0)
+          ix = 0;
+        if (ix > image->width - 1)
+          ix = image->width - 1;
+        if (iy < 0)
+          iy = 0;
+        if (iy > image->height - 1)
+          iy = image->height - 1;
+      }
 
 #endif
 #define RGBA8888_COPY(a,b) (*(guint32 *)(a) = *(guint32 *)(b))

@@ -1,3 +1,12 @@
+2005-06-16  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/swfdec_shape.c: (swf_shape_add_styles),
+	(swfdec_shape_compose):
+	Add support for fill style type 0x42 and 0x43, the unsmoothed versions
+	of the previous two fill styles.  Actually, the previous two are
+	unsmoothed in our current implementation.  Also, attempt to support
+	repeating fill styles, though I don't have a good test for them.
+
 2005-05-27  David Schleef  <ds@schleef.org>
 
 	* MAINTAINERS: add contact info

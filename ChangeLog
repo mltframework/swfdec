@@ -1,3 +1,12 @@
+2005-06-28  David Schleef  <ds@schleef.org>
+
+	* configure.ac: Make cairo backend default, because I like it.
+	* libswfdec/swfdec_audio.c: (swfdec_audio_render): remove debugging
+	* libswfdec/swfdec_render_cairo.c: (swfdec_matrix_to_cairo),
+	(swfdec_shape_render): Add gradients and images.
+	* plugin/swfdec-mozilla-player.c: (create_pipeline): use
+	gconfaudiosink element instead of gconf stuff.
+
 2005-06-16  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/swf.c:

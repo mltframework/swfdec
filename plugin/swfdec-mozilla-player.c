@@ -3,7 +3,6 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <glib.h>
-#include <gst/gconf/gconf.h>
 #include <gst/xoverlay/xoverlay.h>
 #include <gst/navigation/navigation.h>
 
@@ -259,17 +258,12 @@ create_pipeline (int streaming, const char *location)
   CREATE_ELEMENT (audioscale, "audioscale");
   CREATE_ELEMENT (colorspace, "ffmpegcolorspace");
   CREATE_ELEMENT (video_sink, "ximagesink");
+  CREATE_ELEMENT (audio_sink, "gconfaudiosink");
 
   if (bad_elements) {
     error_message = g_strdup_printf("Failed to create elements: %s",
         bad_elements);
     g_free(bad_elements);
-    return FALSE;
-  }
-
-  audio_sink = gst_gconf_get_default_audio_sink ();
-  if (audio_sink == NULL) {
-    error_message = "Failed to create audio sink";
     return FALSE;
   }
 

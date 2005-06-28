@@ -97,8 +97,8 @@ if test "$HAVE_LIBOIL" = "no"; then
 fi
 
 AC_ARG_WITH(backend,
-    [  --with-backend=BACKEND  Use a particular rendering backend [default=libart]],
-    BACKEND="$withval", BACKEND=libart)
+    [  --with-backend=BACKEND  Use a particular rendering backend [default=cairo]],
+    BACKEND="$withval", BACKEND=cairo)
 
 if test "x$BACKEND" = "xlibart" ; then
   PKG_CHECK_MODULES(LIBART, libart-2.0, HAVE_LIBART=yes, HAVE_LIBART=no)
@@ -202,7 +202,7 @@ AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
-PKG_CHECK_MODULES(GST, gstreamer-0.8 > 0.8.0 gstreamer-gconf-0.8 gstreamer-interfaces-0.8,
+PKG_CHECK_MODULES(GST, gstreamer-0.8 > 0.8.0 gstreamer-interfaces-0.8,
   HAVE_GST=yes, HAVE_GST=no)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)

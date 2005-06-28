@@ -143,7 +143,6 @@ swfdec_audio_render (SwfdecDecoder *decoder, int n_samples)
         swfdec_buffer_queue_get_depth (stream->queue) == 0) {
       decoder->audio_streams = g_list_delete_link (decoder->audio_streams, g);
       swfdec_audio_stream_free(stream);
-      SWFDEC_ERROR("freeing stream");
     }
   }
 

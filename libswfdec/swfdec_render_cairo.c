@@ -450,7 +450,16 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
                 image->rowstride);
             pattern = cairo_pattern_create_for_surface (src_surface);
             cairo_pattern_set_matrix(pattern, &matrix);
-            cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+            if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
+              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+            } else {
+              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_NONE);
+            }
+            if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x41) {
+              cairo_pattern_set_filter (pattern, CAIRO_FILTER_BILINEAR);
+            } else {
+              cairo_pattern_set_filter (pattern, CAIRO_FILTER_NEAREST);
+            }
             cairo_set_source (cr, pattern);
           } else {
             cairo_set_source_rgba (cr, SWF_COLOR_R(color)/255.0,
@@ -470,6 +479,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         break;
     }
     
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_set_line_width (cr, 0.5);
     cairo_save (cr);
 

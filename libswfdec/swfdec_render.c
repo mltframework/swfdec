@@ -31,7 +31,11 @@ swfdec_render_free (SwfdecRender * render)
 gboolean
 swfdec_render_iterate (SwfdecDecoder * s)
 {
-  SWFDEC_INFO("iterate, frame_index = %d", s->render->frame_index);
+  GList *g;
+
+  SWFDEC_ERROR("iterate, frame_index = %d", s->render->frame_index);
+
+  s->next_frame = -1;
   if (s->render->seek_frame != -1) {
     SwfdecSound *sound;
 
@@ -41,32 +45,40 @@ swfdec_render_iterate (SwfdecDecoder * s)
     sound = SWFDEC_SOUND (s->stream_sound_obj);
     if (sound)
       sound->tmpbuflen = 0;
-  } else {
-    SWFDEC_DEBUG ("mouse button %d old_mouse_button %d active_button %p",
-        s->mouse_button, s->old_mouse_button, s->render->active_button);
-    if (s->mouse_button && !s->old_mouse_button &&
-        s->render->active_button) {
-                /* FIXME? button down->up/up->down */
-      swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
-    }
-
-    swfdec_sprite_render_iterate (s, s->main_sprite_seg);
-    if (!s->main_sprite_seg->stopped) {
-      s->render->frame_index++;
-      if (s->render->frame_index >= s->n_frames) {
-#if 0
-        SWFDEC_WARNING ("iterating past end");
-        return FALSE;
-#endif
-        s->main_sprite_seg->stopped = TRUE;
-        s->render->frame_index = s->n_frames - 1;
-      }
-    }
   }
 
-  s->render->active_button = NULL;
+  swfdec_sprite_render_iterate (s, s->main_sprite_seg, s->render);
 
+  SWFDEC_ERROR ("mouse button %d old_mouse_button %d active_button %p",
+      s->mouse_button, s->old_mouse_button, s->render->active_button);
+  if (s->mouse_button && !s->old_mouse_button &&
+      s->render->active_button) {
+              /* FIXME? button down->up/up->down */
+    SWFDEC_ERROR("executing button");
+    swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
+  }
+
+  for (g=s->execute_list; g; g = g->next) {
+    SwfdecBuffer *buffer = g->data;
+    swfdec_action_script_execute (s, buffer);
+  }
+  g_list_free (s->execute_list);
+  s->execute_list = NULL;
+
+  s->render->active_button = NULL;
   s->old_mouse_button = s->mouse_button;
+
+  if (s->next_frame != -1) {
+    /* if the next frame was explicitly set, go to it */
+    s->render->frame_index = s->next_frame;
+  } else if (!s->main_sprite_seg->stopped) {
+    /* if we're not stopped, go to the next frame */
+    s->render->frame_index++;
+    if (s->next_frame >= s->n_frames) {
+      s->next_frame = s->n_frames - 1;
+      //s->main_sprite_seg->stopped = TRUE;
+    }
+  }
 
   return TRUE;
 }

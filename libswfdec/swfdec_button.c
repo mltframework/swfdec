@@ -306,7 +306,7 @@ swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button)
 
     SWFDEC_DEBUG ("button condition %04x", action->condition);
     if (action->condition & 0x0008) {
-      swfdec_action_script_execute (s, action->buffer);
+      s->execute_list = g_list_append (s->execute_list, action->buffer);
     }
   }
   

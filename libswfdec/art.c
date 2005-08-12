@@ -160,51 +160,38 @@ void
 art_rgb_fill_run (unsigned char *buf, unsigned char r,
     unsigned char g, unsigned char b, int n)
 {
-  int i;
+  char color[4];
 
-  for (i = 0; i < n; i++) {
-    *buf++ = b;
-    *buf++ = g;
-    *buf++ = r;
-    *buf++ = 0;
-  }
+  color[0] = b;
+  color[1] = g;
+  color[2] = r;
+  color[3] = 0;
+
+  oil_splat_u32_ns ((void *) buf, (void *) color, n);
 }
 
 void
 art_rgb_run_alpha_2 (unsigned char *buf, unsigned char r,
     unsigned char g, unsigned char b, int alpha, int n)
 {
-  int i;
-  int add_r, add_g, add_b, unalpha;
+  char color[4];
 
   if (alpha == 0)
     return;
-  if (alpha >= 0xff) {
-    char color[4];
 
-    color[0] = b;
-    color[1] = g;
-    color[2] = r;
+  color[0] = b;
+  color[1] = g;
+  color[2] = r;
+
+  if (alpha >= 0xff) {
     color[3] = 0;
 
-    oil_splat_u32 ((void *) buf, 4, (void *) color, n);
+    oil_splat_u32_ns ((void *) buf, (void *) color, n);
     return;
   }
-#define APPLY_ALPHA(x,y,a) (x) = (((y)*(alpha)+(x)*(255-alpha))>>8)
-  unalpha = 255 - alpha;
-  add_r = r * alpha + 0x80;
-  add_g = g * alpha + 0x80;
-  add_b = b * alpha + 0x80;
-  for (i = 0; i < n; i++) {
-    *buf = (add_b + unalpha * (*buf)) >> 8;
-    buf++;
-    *buf = (add_g + unalpha * (*buf)) >> 8;
-    buf++;
-    *buf = (add_r + unalpha * (*buf)) >> 8;
-    buf++;
-    *buf = 0;
-    buf++;
-  }
+
+  color[3] = alpha;
+  oil_rgba_splat_u8 (buf, color, n);
 }
 
 void
@@ -355,64 +342,23 @@ art_rgb565_svp_alpha_callback (void *callback_data, int y,
 }
 
 #define COMPOSE(a, b, x) (((a)*(255 - (x)) + ((b)*(x)))>>8)
-#define compose_const_rgb888_u8 compose_const_rgb888_u8_fast
 
 void
-compose_const_rgb888_u8_ref (unsigned char *dest, unsigned char *src,
+compose_const_rgb888_u8 (unsigned char *dest, unsigned char *src,
     unsigned int color, int n)
 {
-  int r, g, b;
-  int i;
+  uint8_t c[4];
 
-  r = SWF_COLOR_R (color);
-  g = SWF_COLOR_G (color);
-  b = SWF_COLOR_B (color);
+  c[0] = SWF_COLOR_B (color);
+  c[1] = SWF_COLOR_G (color);
+  c[2] = SWF_COLOR_R (color);
+  c[3] = 0;
 
-  for (i = 0; i < n; i++) {
-    dest[0] = COMPOSE (dest[2], b, src[0]);
-    dest[1] = COMPOSE (dest[1], g, src[0]);
-    dest[2] = COMPOSE (dest[0], r, src[0]);
-    dest[2] = 0;
-    dest += 4;
-    src++;
-  }
+  oil_argb_paint_u8 (dest, c, src, n);
 }
 
 void
-compose_const_rgb888_u8_fast (unsigned char *dest, unsigned char *src,
-    unsigned int color, int n)
-{
-  unsigned int r, g, b;
-  unsigned int un_a, a;
-  int i;
-
-  r = SWF_COLOR_R (color);
-  g = SWF_COLOR_G (color);
-  b = SWF_COLOR_B (color);
-
-  for (i = 0; i < n; i++) {
-    a = src[0];
-    if (a == 0) {
-    } else if (a == 255) {
-      dest[0] = b;
-      dest[1] = g;
-      dest[2] = r;
-      dest[3] = 0;
-    } else {
-      un_a = 255 - a;
-      dest[0] = (un_a * dest[0] + a * b) >> 8;
-      dest[1] = (un_a * dest[1] + a * g) >> 8;
-      dest[2] = (un_a * dest[2] + a * r) >> 8;
-      dest[3] = 0;
-    }
-    dest += 4;
-    src++;
-  }
-}
-
-#define compose_rgb888_u8 compose_rgb888_u8_ref
-void
-compose_rgb888_u8_ref (unsigned char *dest, unsigned char *a_src,
+compose_rgb888_u8 (unsigned char *dest, unsigned char *a_src,
     unsigned char *src, int n)
 {
   int i;
@@ -523,34 +469,6 @@ art_rgb_svp_alpha_compose_callback (void *callback_data, int y,
 
   data->buf += data->rowstride;
 }
-
-#if 0
-#define imult(a,b) (((a)*(b) + (((a)*(b)) >> 8))>>8)
-#define apply(a,b,c) (imult(a,255-c) + imult(b,c))
-
-static void
-paint (guint8 *dest, guint8 *color, guint8 *alpha, int n)
-{
-  int i;
-
-  for(i=0;i<n;i++){
-    if (alpha[0] == 0) {
-    } else if (alpha[0] == 0xff) {
-      dest[0] = color[1];
-      dest[1] = color[2];
-      dest[2] = color[3];
-      dest[3] = color[0];
-    } else {
-      dest[0] = apply(dest[0],color[1],alpha[0]);
-      dest[1] = apply(dest[1],color[2],alpha[0]);
-      dest[2] = apply(dest[2],color[3],alpha[0]);
-      dest[3] = apply(dest[3],color[0],alpha[0]);
-    }
-    dest+=4;
-    alpha++;
-  }
-}
-#endif
 
 void
 art_rgb_svp_alpha_callback (void *callback_data, int y,

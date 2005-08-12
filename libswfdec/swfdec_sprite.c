@@ -88,7 +88,8 @@ swfdec_sprite_add_action (SwfdecSprite * sprite,
 }
 
 void
-swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
+swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
+    SwfdecRender *render)
 {  
   SwfdecObject *obj;
   SwfdecSprite *sprite, *save_parse_sprite;
@@ -107,35 +108,36 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
     sprite = s->main_sprite;
   }
 
-  SWFDEC_INFO("sprite %d frame %d", seg->id, seg->frame_index);
+  SWFDEC_INFO ("sprite %d frame %d", seg->id, render->frame_index);
 
   save_parse_sprite = s->parse_sprite;
   save_parse_sprite_seg = s->parse_sprite_seg;
   s->parse_sprite = sprite;
   s->parse_sprite_seg = seg;
 
-  if (sprite->actions[seg->frame_index]) {
-    swfdec_action_script_execute (s, sprite->actions[seg->frame_index]);
+  if (sprite->actions[render->frame_index]) {
+    s->execute_list = g_list_append (s->execute_list,
+        sprite->actions[render->frame_index]);
   }
 
+#if 0
   if (!seg->ran_load && seg->clipevent[CLIPEVENT_LOAD]) {
     seg->ran_load = TRUE;
-    swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_LOAD]);
+    s->execute_list = g_list_append (s->execute_list,
+        seg->clipevent[CLIPEVENT_LOAD]);
   }
   if (seg->clipevent[CLIPEVENT_ENTERFRAME]) {
-    swfdec_action_script_execute (s, seg->clipevent[CLIPEVENT_ENTERFRAME]);
+    s->execute_list = g_list_append (s->execute_list,
+        seg->clipevent[CLIPEVENT_ENTERFRAME]);
   }
-
-  seg->frame_index++;
-  if (seg->frame_index >= sprite->n_frames)
-    seg->frame_index = 0;
+#endif
 
   /* FIXME this is wrong */
   if (0) {
     for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
       child_seg = (SwfdecSpriteSegment *) g->data;
 
-      swfdec_sprite_render_iterate(s, child_seg);
+      swfdec_sprite_render_iterate(s, child_seg, NULL);
     }
   }
 

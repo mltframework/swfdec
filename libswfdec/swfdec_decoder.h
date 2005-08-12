@@ -122,6 +122,8 @@ struct _SwfdecDecoder
   GList *audio_streams;
   int audio_stream_index;
 
+  GList *execute_list;
+  int next_frame;
 };
 
 SwfdecDecoder *swf_init (void);

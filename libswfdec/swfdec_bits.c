@@ -9,6 +9,20 @@
 #include <swfdec_bits.h>
 
 
+int
+swfdec_bits_valid (SwfdecBits *b)
+{
+  if (b->ptr == NULL || b->ptr > b->end) return 0;
+  return 1;
+}
+
+#define SWFDEC_BITS_CHECK(b) do { \
+  if (!swfdec_bits_valid(b)) { \
+    SWFDEC_ERROR("reading past end of buffer"); \
+    g_assert_not_reached(); \
+    return 0; \
+  } \
+}while(0)
 
 int
 swfdec_bits_needbits (SwfdecBits * b, int n_bytes)
@@ -26,6 +40,8 @@ swfdec_bits_getbit (SwfdecBits * b)
 {
   int r;
 
+  SWFDEC_BITS_CHECK(b);
+
   r = ((*b->ptr) >> (7 - b->idx)) & 1;
 
   b->idx++;
@@ -42,6 +58,8 @@ swfdec_bits_getbits (SwfdecBits * b, int n)
 {
   unsigned long r = 0;
   int i;
+
+  SWFDEC_BITS_CHECK(b);
 
   for (i = 0; i < n; i++) {
     r <<= 1;
@@ -65,6 +83,8 @@ swfdec_bits_getsbits (SwfdecBits * b, int n)
   unsigned long r = 0;
   int i;
 
+  SWFDEC_BITS_CHECK(b);
+
   if (n == 0)
     return 0;
   r = -swfdec_bits_getbit (b);
@@ -79,12 +99,16 @@ swfdec_bits_getsbits (SwfdecBits * b, int n)
 unsigned int
 swfdec_bits_peek_u8 (SwfdecBits * b)
 {
+  SWFDEC_BITS_CHECK(b);
+
   return *b->ptr;
 }
 
 unsigned int
 swfdec_bits_get_u8 (SwfdecBits * b)
 {
+  SWFDEC_BITS_CHECK(b);
+
   return *b->ptr++;
 }
 
@@ -92,6 +116,8 @@ unsigned int
 swfdec_bits_get_u16 (SwfdecBits * b)
 {
   unsigned int r;
+
+  SWFDEC_BITS_CHECK(b);
 
   r = b->ptr[0] | (b->ptr[1] << 8);
   b->ptr += 2;
@@ -104,6 +130,8 @@ swfdec_bits_get_s16 (SwfdecBits * b)
 {
   short r;
 
+  SWFDEC_BITS_CHECK(b);
+
   r = b->ptr[0] | (b->ptr[1] << 8);
   b->ptr += 2;
 
@@ -114,6 +142,8 @@ unsigned int
 swfdec_bits_get_be_u16 (SwfdecBits * b)
 {
   unsigned int r;
+
+  SWFDEC_BITS_CHECK(b);
 
   r = (b->ptr[0] << 8) | b->ptr[1];
   b->ptr += 2;
@@ -126,6 +156,8 @@ swfdec_bits_get_u32 (SwfdecBits * b)
 {
   unsigned int r;
 
+  SWFDEC_BITS_CHECK(b);
+
   r = b->ptr[0] | (b->ptr[1] << 8) | (b->ptr[2] << 16) | (b->ptr[3] << 24);
   b->ptr += 4;
 
@@ -135,6 +167,11 @@ swfdec_bits_get_u32 (SwfdecBits * b)
 void
 swfdec_bits_syncbits (SwfdecBits * b)
 {
+  if (!swfdec_bits_valid(b)) {
+    SWFDEC_ERROR("reading past end of buffer");
+    return;
+  }
+
   if (b->idx) {
     b->ptr++;
     b->idx = 0;

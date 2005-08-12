@@ -93,7 +93,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
 {
   int r, s, x, rs;
   int k;
-  char str[33];
+  char str[33] = "NA";
 
   memset (block, 0, sizeof (short) * 64);
 

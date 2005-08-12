@@ -701,7 +701,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       unsigned char *ptr;
       int component_index;
 
-      JPEG_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+      JPEG_LOG ("%d,%d: component=%d dc_table=%d ac_table=%d",
           x, y,
           dec->scan_list[i].component_index,
           dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -715,7 +715,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
           dec->dc_huff_table[dc_table_index],
           dec->ac_huff_table[ac_table_index], bits2);
       if (ret < 0) {
-        JPEG_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+        JPEG_LOG ("%d,%d: component=%d dc_table=%d ac_table=%d",
             x, y,
             dec->scan_list[i].component_index,
             dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -723,7 +723,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
         break;
       }
 
-      JPEG_DEBUG ("using quant table %d", quant_index);
+      JPEG_LOG ("using quant table %d", quant_index);
       oil_mult8x8_s16 (block2, block, dec->quant_table[quant_index],
           sizeof (short) * 8, sizeof(short) * 8, sizeof (short) * 8);
       dec->dc[component_index] += block2[0];
@@ -801,7 +801,7 @@ jpeg_decoder_addbits (JpegDecoder * dec, unsigned char *data, unsigned int len)
 
   offset = dec->bits.ptr - dec->data;
 
-  dec->data = realloc (dec->data, dec->data_len + len);
+  dec->data = g_realloc (dec->data, dec->data_len + len);
   memcpy (dec->data + dec->data_len, data, len);
   dec->data_len += len;
 

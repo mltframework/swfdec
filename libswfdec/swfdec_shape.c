@@ -334,6 +334,7 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
     fill_style_type = swfdec_bits_get_u8 (bits);
     SWFDEC_LOG ("    type 0x%02x", fill_style_type);
     if (fill_style_type == 0x00) {
+      shapevec->fill_type = fill_style_type;
       if (shape->rgba) {
         shapevec->color = swfdec_bits_get_rgba (bits);
       } else {
@@ -348,17 +349,12 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
       } else {
         shapevec->grad = swfdec_bits_get_gradient (bits);
       }
+      swfdec_bits_syncbits (bits);
       shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR;
       shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR;
       shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR;
       shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR;
-    } else if (fill_style_type >= 0x40 || fill_style_type <= 0x43) {
-      /* FIXME: We need to properly support these:
-       * 0x40: repeating bitmap
-       * 0x41: clipped bitmap
-       * 0x42: non-smoothed repeating bitmap
-       * 0x42: non-smoothed clipped bitmap.
-       */
+    } else if (fill_style_type >= 0x40 && fill_style_type <= 0x43) {
       shapevec->fill_type = fill_style_type;
       shapevec->fill_id = swfdec_bits_get_u16 (bits);
       SWFDEC_LOG ("   background fill id = %d (type 0x%02x)",
@@ -370,14 +366,18 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
       }
 
       swfdec_bits_get_transform (bits, &shapevec->fill_transform);
+      swfdec_bits_syncbits (bits);
       /* FIXME: the 0.965 is a mysterious factor that seems to improve
        * rendering of images. */
-      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR * 0.965;
-      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR * 0.965;
-      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR * 0.965;
-      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR * 0.965;
+//#define MYSTERIOUS_FACTOR 0.965
+#define MYSTERIOUS_FACTOR 1.0
+      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
+      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
+      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
+      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
+      shapevec->fill_type = 0;
     }
   }
 
@@ -1087,6 +1087,7 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     fill_style_type = swfdec_bits_get_u8 (bits);
     SWFDEC_LOG ("    type 0x%02x", fill_style_type);
     if (fill_style_type == 0x00) {
+      shapevec->fill_type = fill_style_type;
       shapevec->color = swfdec_bits_get_rgba (bits);
       end_color = swfdec_bits_get_rgba (bits);
       SWFDEC_LOG ("    color %08x", shapevec->color);
@@ -1120,6 +1121,7 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
       shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR * 0.965;
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
+      shapevec->fill_type = 0;
     }
   }
 

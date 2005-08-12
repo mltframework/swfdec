@@ -16,11 +16,8 @@ action_goto_frame (SwfdecActionContext * context)
 
   frame = swfdec_bits_get_u16 (&context->bits);
 
-  /* FIXME hack */
-  context->s->parse_sprite_seg->frame_index = frame;
-  if (context->s->parse_sprite_seg->frame_index < 0) {
-    context->s->parse_sprite_seg->frame_index = 0;
-  }
+  SWFDEC_DEBUG("going to frame %d", frame);
+  context->s->next_frame = frame;
 }
 
 static void
@@ -43,13 +40,13 @@ action_get_url (SwfdecActionContext * context)
 static void
 action_next_frame (SwfdecActionContext * context)
 {
-  context->s->parse_sprite_seg->frame_index++;
+  context->s->next_frame++;
 }
 
 static void
 action_previous_frame (SwfdecActionContext * context)
 {
-  context->s->parse_sprite_seg->frame_index--;
+  context->s->next_frame--;
 }
 
 static void

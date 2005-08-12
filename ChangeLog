@@ -1,3 +1,33 @@
+2005-08-11  David Schleef  <ds@schleef.org>
+
+	* libswfdec/actions_tags.c: (action_goto_frame),
+	(action_next_frame), (action_previous_frame): Trying to make
+	all the frame navigation code work together.
+	* libswfdec/art.c: (art_rgb_fill_run), (art_rgb_run_alpha_2),
+	(compose_const_rgb888_u8), (compose_rgb888_u8):
+	* libswfdec/jpeg/huffman.c: (huffman_table_decode_macroblock): bug
+	fix in debugging output.
+	* libswfdec/jpeg/jpeg.c: (jpeg_decoder_decode_entropy_segment),
+	(jpeg_decoder_addbits): Make debugging quieter.
+	* libswfdec/swfdec_bits.c: (swfdec_bits_valid),
+	(swfdec_bits_getbit), (swfdec_bits_getbits),
+	(swfdec_bits_getsbits), (swfdec_bits_peek_u8),
+	(swfdec_bits_get_u8), (swfdec_bits_get_u16), (swfdec_bits_get_s16),
+	(swfdec_bits_get_be_u16), (swfdec_bits_get_u32),
+	(swfdec_bits_syncbits): Check validity of pointers.
+	* libswfdec/swfdec_button.c: (swfdec_button_execute): execute
+	code at the end of a frame.
+	* libswfdec/swfdec_decoder.h: same
+	* libswfdec/swfdec_render.c: (swfdec_render_iterate): same
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_render_iterate): same
+	* libswfdec/swfdec_sprite.h: same
+	* libswfdec/swfdec_render_cairo.c: (swfdec_shape_render): set
+	pattern extension correctly.
+	* libswfdec/swfdec_shape.c: (swf_shape_add_styles),
+	(swf_morphshape_add_styles): remove mysterious factor, because it's
+	not necessary with cairo.
+	* libswfdec/swfdec_text.c: (define_text): more checking.
+
 2005-06-28  David Schleef  <ds@schleef.org>
 
 	* configure.ac: Make cairo backend default, because I like it.

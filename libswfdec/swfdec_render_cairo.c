@@ -489,7 +489,17 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);
-    cairo_fill (cr);
+    if (s->render->mouse_check) {
+      double x,y;
+      x = s->mouse_x;
+      y = s->mouse_y;
+      cairo_device_to_user (cr, &x, &y);
+      s->render->mouse_in_button = cairo_in_fill (cr, x, y);
+      SWFDEC_DEBUG("checking mouse %d %d,%d", s->render->mouse_in_button,
+          s->mouse_x, s->mouse_y);
+    } else {
+      cairo_fill (cr);
+    }
     cairo_restore (cr);
     if (pattern) {
       cairo_pattern_destroy (pattern);
@@ -524,7 +534,9 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     width = shapevec->width * swfdec_transform_get_expansion (&trans);
     cairo_set_line_width (cr, width);
     draw_line (cr, (void *)shapevec->path->data, shapevec->path->len);
-    cairo_stroke (cr);
+    if (!s->render->mouse_check) {
+      cairo_stroke (cr);
+    }
 
     cairo_restore (cr);
   }

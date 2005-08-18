@@ -33,7 +33,7 @@ swfdec_render_iterate (SwfdecDecoder * s)
 {
   GList *g;
 
-  SWFDEC_ERROR("iterate, frame_index = %d", s->render->frame_index);
+  SWFDEC_DEBUG("iterate, frame_index = %d", s->render->frame_index);
 
   s->next_frame = -1;
   if (s->render->seek_frame != -1) {
@@ -49,7 +49,7 @@ swfdec_render_iterate (SwfdecDecoder * s)
 
   swfdec_sprite_render_iterate (s, s->main_sprite_seg, s->render);
 
-  SWFDEC_ERROR ("mouse button %d old_mouse_button %d active_button %p",
+  SWFDEC_DEBUG ("mouse button %d old_mouse_button %d active_button %p",
       s->mouse_button, s->old_mouse_button, s->render->active_button);
   if (s->mouse_button && !s->old_mouse_button &&
       s->render->active_button) {

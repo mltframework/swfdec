@@ -167,10 +167,12 @@ swfdec_bits_get_u32 (SwfdecBits * b)
 void
 swfdec_bits_syncbits (SwfdecBits * b)
 {
+#if 0
   if (!swfdec_bits_valid(b)) {
     SWFDEC_ERROR("reading past end of buffer");
     return;
   }
+#endif
 
   if (b->idx) {
     b->ptr++;

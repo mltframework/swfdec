@@ -4,6 +4,8 @@
 #include "swfdec_internal.h"
 #include "js/jsfun.h"
 
+#define SWFDEC_ACTIONS_DEBUG_GC 0
+
 void
 constant_pool_ref (ConstantPool *pool)
 {
@@ -73,18 +75,18 @@ void swfdec_init_context (SwfdecDecoder * s)
 
   JS_SetContextPrivate (context->jscx, context);
 
+  swfdec_init_context_builtins (context);
+
   context->stack = JS_NewArrayObject (context->jscx, 0, NULL);
+  JS_AddRoot (context->jscx, &context->stack);
   context->stack_top = 0;
-  JS_AddRoot (context->jscx, context->stack);
 
   context->registers = JS_NewArrayObject (context->jscx, 0, NULL);
-  JS_AddRoot (context->jscx, context->registers);
+  JS_AddRoot (context->jscx, &context->registers);
   for (i = 0; i < 4; i++) {
       val = JSVAL_VOID;
       JS_SetElement (context->jscx, context->registers, i, &val);
   }
-
-  swfdec_init_context_builtins (context);
 }
 
 JSBool
@@ -178,6 +180,10 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   context->bits.buffer = frame->bits.buffer; /* for pc_is_valid () */
 
   while (context->pc < frame->bits.end) {
+#if SWFDEC_ACTIONS_DEBUG_GC
+    JS_GC(context->jscx);
+#endif
+
     action = swfdec_bits_get_u8 (&frame->bits);
     if (action & 0x80) {
       len = swfdec_bits_get_u16 (&frame->bits);
@@ -273,6 +279,10 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
     swfdec_init_context (s);
   context = s->context;
 
+#if SWFDEC_ACTIONS_DEBUG_GC
+    JS_GC(context->jscx);
+#endif
+
   func = g_malloc0 (sizeof (ScriptFunction));
   if (func == NULL) {
     SWFDEC_ERROR ("out of memory");
@@ -285,10 +295,12 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
   func->buffer = buffer;
 
   jsfunc = JS_NewFunction (context->jscx, action_script_call, func->num_params,
-    0, context->global, func->name);
+    0, context->global, "");
   jsfunc->priv = func;
 
   JS_CallFunction (context->jscx, context->root, jsfunc, 0, NULL, &rval);
+
+  /* FIXME: Deallocate the function? */
 
   /* FIXME: as of Flash 6/7, stack gets emptied at the end of every action
    * block. -- flasm.sf.net
@@ -356,6 +368,10 @@ stack_push (SwfdecActionContext *context, jsval val)
 {
   JSBool ok;
 
+#if SWFDEC_ACTIONS_DEBUG_GC
+  JS_GC(context->jscx);
+#endif
+	  
   ok = JS_SetElement (context->jscx, context->stack, context->stack_top++,
     &val);
 

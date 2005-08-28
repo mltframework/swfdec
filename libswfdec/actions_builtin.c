@@ -236,7 +236,7 @@ movieclip_new (SwfdecActionContext *context, SwfdecSpriteSegment *seg)
   struct mc_list_entry *listentry;
 
   mc = JS_NewObject (context->jscx, &movieclip_class, NULL, NULL);
-  JS_AddRoot (context->jscx, mc);
+  JS_AddRoot (context->jscx, &mc);
   JS_SetPrivate (context->jscx, mc, seg);
 
   listentry = g_malloc (sizeof (struct mc_list_entry));

@@ -1,3 +1,33 @@
+2005-08-27  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/actions.c: (swfdec_init_context), (action_script_call),
+	(swfdec_action_script_execute), (stack_push):
+	* libswfdec/actions_builtin.c: (movieclip_new):
+	* libswfdec/actions_tags.c: (stack_pop_to_string),
+	(stack_pop_to_object), (stack_pop_to_number), (stack_pop_to_int32),
+	(stack_pop_to_bool), (action_alloc_stack_argv),
+	(action_free_stack_argv), (action_push), (action_binary_op),
+	(action_string_equals), (action_string_length),
+	(action_string_add), (action_string_extract), (action_string_less),
+	(action_mb_string_length), (action_mb_string_extract),
+	(action_to_integer), (action_char_to_ascii),
+	(action_ascii_to_char), (action_mb_char_to_ascii),
+	(action_mb_ascii_to_char), (action_if), (action_get_variable),
+	(action_set_variable), (action_define_local),
+	(action_get_property), (action_set_property),
+	(action_clone_sprite), (action_start_drag), (action_trace),
+	(action_random_number), (action_call_function),
+	(action_call_method), (action_define_function),
+	(action_get_member), (action_init_object), (action_new_method),
+	(action_new_object), (action_set_member), (action_to_number),
+	(action_to_string), (action_add_2), (action_less_2),
+	(action_unary_op), (action_string_greater), (action_extends):
+	Improve GC-safety of actionscript code by being more careful with
+	storage of short-lived values and results of conversions.  Also corrects
+	some misuse of the result of JS_ValueToNumber, improves error checking,
+	and fixes JS_AddRoot arguments.  Finally, a define is added to allow for
+	forcing frequent GCing, which exposes that we've got issues (still).
+
 2005-08-17  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_bits.c: (swfdec_bits_syncbits): disable the

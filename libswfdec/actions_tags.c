@@ -9,6 +9,119 @@
 #define TAG_B		context->tag_argv[context->tag_argc + 1]
 #define TAG_C		context->tag_argv[context->tag_argc + 2]
 
+/* The stack_pop_to_* are convenience functions for dealing with conversions of
+ * stack_pop() results.  Without storing back into the *val (which should be a
+ * TAG_* or other rooted value), if there's conversion between object types to
+ * achieve the desired type, then the result would be unrooted and therefore
+ * hazardous to use after subsequent JS_* calls.
+ */
+static JSString *
+stack_pop_to_string(SwfdecActionContext * context, jsval *val)
+{
+  JSString *str;
+
+  *val = stack_pop (context);
+  str = JS_ValueToString (context->jscx, *val);
+  *val = STRING_TO_JSVAL(str);
+
+  return str;
+}
+
+static JSObject *
+stack_pop_to_object(SwfdecActionContext * context, jsval *val)
+{
+  JSObject *obj;
+
+  *val = stack_pop (context);
+  obj = jsval_as_object (context, *val);
+  *val = OBJECT_TO_JSVAL(obj);
+
+  return obj;
+}
+
+static jsdouble
+stack_pop_to_number(SwfdecActionContext * context, jsval *val)
+{
+  jsdouble d;
+  JSBool ok;
+
+  *val = stack_pop (context);
+  ok = JS_ValueToNumber (context->jscx, *val, &d);
+  if (!ok) {
+    SWFDEC_ERROR("Couldn't convert value %x to number", *val);
+    d = 0.0;
+  }
+
+  return d;
+}
+
+static int32
+stack_pop_to_int32(SwfdecActionContext * context, jsval *val)
+{
+  int32 num;
+  JSBool ok;
+
+  *val = stack_pop (context);
+  ok = JS_ValueToInt32 (context->jscx, *val, &num);
+  if (!ok) {
+    SWFDEC_ERROR("Couldn't convert value %x to int32", *val);
+    num = 0;
+  }
+
+  return num;
+}
+
+static int
+stack_pop_to_bool(SwfdecActionContext * context, jsval *val)
+{
+  int a;
+  JSBool ok;
+
+  *val = stack_pop (context);
+  ok = JS_ValueToBoolean (context->jscx, *val, &a);
+  if (!ok) {
+    SWFDEC_ERROR("Couldn't convert value %x to int32", *val);
+    a = 0;
+  }
+
+  return a;
+}
+
+/* action_alloc_stack_argv is used to create a gc-rooted array of n jsvals.  The
+ * mark pointer is used to free the array later.
+ */
+static jsval *
+action_alloc_stack_argv(SwfdecActionContext * context, int n, void **markp)
+{
+  jsval *argv;
+  char *format;
+  int i;
+
+  /* Create a format string for JS_PushArguments: We will drop in the popped
+   * values later, so provide "*" formats.
+   */
+  format = g_malloc (n + 1);
+  for (i = 0; i < n; i++)
+    format[i] = '*';
+  format[n] = '\0';
+
+  argv = JS_PushArguments (context->jscx, markp, format);
+
+  g_free(format);
+
+  for (i = 0; i < n; i++) {
+    argv[i] = stack_pop (context);
+  }
+
+  return argv;
+}
+
+static void
+action_free_stack_argv(SwfdecActionContext * context, void *mark)
+{
+  JS_PopArguments (context->jscx, mark);
+}
+
 static void
 action_goto_frame (SwfdecActionContext * context)
 {
@@ -122,14 +235,13 @@ action_push (SwfdecActionContext * context)
   JSString *string;
 
   while (context->bits.ptr < context->bits.end) {
-  jsval val = JSVAL_VOID;
 
   type = swfdec_bits_get_u8 (&context->bits);
   switch (type) {
     case 0: /* string */
       string = JS_NewStringCopyZ (context->jscx,
         swfdec_bits_get_string (&context->bits));
-      val = STRING_TO_JSVAL(string);
+      TAG_A = STRING_TO_JSVAL(string);
       break;
     case 1: /* float */
       {
@@ -140,14 +252,14 @@ action_push (SwfdecActionContext * context)
 
         /* FIXME check endianness */
         x.i = swfdec_bits_get_u32 (&context->bits);
-        JS_NewDoubleValue (context->jscx, x.f, &val);
+        JS_NewDoubleValue (context->jscx, x.f, &TAG_A);
       }
       break;
     case 2: /* null */
-      val = JSVAL_NULL;
+      TAG_A = JSVAL_NULL;
       break;
     case 3: /* undefined */
-      val = JSVAL_VOID;
+      TAG_A = JSVAL_VOID;
       break;
     case 4: /* register number */
       {
@@ -156,14 +268,14 @@ action_push (SwfdecActionContext * context)
         reg = swfdec_bits_get_u8 (&context->bits);
         frame = g_queue_peek_head (context->call_stack);
         if (frame->is_function2) {
-          JS_GetElement (context->jscx, frame->registers, reg, &val);
+          JS_GetElement (context->jscx, frame->registers, reg, &TAG_A);
         } else if (reg >= 0 && reg < 4) {
-          JS_GetElement (context->jscx, context->registers, reg, &val);
+          JS_GetElement (context->jscx, context->registers, reg, &TAG_A);
         }
       }
       break;
     case 5: /* boolean */
-      val = BOOLEAN_TO_JSVAL(swfdec_bits_get_u8 (&context->bits) != 0);
+      TAG_A = BOOLEAN_TO_JSVAL(swfdec_bits_get_u8 (&context->bits) != 0);
       break;
     case 6: /* double */
       {
@@ -175,15 +287,15 @@ action_push (SwfdecActionContext * context)
         /* FIXME check endianness */
         x.i[0] = swfdec_bits_get_u32 (&context->bits);
         x.i[1] = swfdec_bits_get_u32 (&context->bits);
-        JS_NewDoubleValue (context->jscx, x.f, &val);
+        JS_NewDoubleValue (context->jscx, x.f, &TAG_A);
       }
       break;
     case 7: /* int32 */
       number = swfdec_bits_get_u32 (&context->bits);
       if (INT_FITS_IN_JSVAL (number)) {
-        val = INT_TO_JSVAL(number);
+        TAG_A = INT_TO_JSVAL(number);
       } else {
-        JS_NewDoubleValue (context->jscx, number, &val);
+        JS_NewDoubleValue (context->jscx, number, &TAG_A);
       }
       break;
     case 8: /* constant8 */
@@ -193,7 +305,7 @@ action_push (SwfdecActionContext * context)
         i = swfdec_bits_get_u8 (&context->bits);
         if (pool && i < pool->n_constants) {
           string = JS_NewStringCopyZ (context->jscx, pool->constants[i]);
-          val = STRING_TO_JSVAL(string);
+          TAG_A = STRING_TO_JSVAL(string);
         } else {
           SWFDEC_ERROR ("request for constant outside constant pool");
           context->error = 1;
@@ -207,7 +319,7 @@ action_push (SwfdecActionContext * context)
         i = swfdec_bits_get_u16 (&context->bits);
         if (pool && i < pool->n_constants) {
           string = JS_NewStringCopyZ (context->jscx, pool->constants[i]);
-          val = STRING_TO_JSVAL(string);
+          TAG_A = STRING_TO_JSVAL(string);
         } else {
           SWFDEC_ERROR ("request for constant outside constant pool");
           context->error = 1;
@@ -218,7 +330,7 @@ action_push (SwfdecActionContext * context)
       SWFDEC_ERROR("illegal type");
   }
 
-  stack_push (context, val);
+  stack_push (context, TAG_A);
   }
 }
 
@@ -233,10 +345,8 @@ action_binary_op (SwfdecActionContext * context)
 {
   double a, b;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  JS_ValueToNumber (context->jscx, TAG_A, &a);
-  JS_ValueToNumber (context->jscx, TAG_B, &b);
+  a = stack_pop_to_number (context, &TAG_A);
+  b = stack_pop_to_number (context, &TAG_B);
 
   /* FIXME: need to treat the bit operators as integers? */
 
@@ -311,10 +421,8 @@ action_string_equals (SwfdecActionContext * context)
 {
   JSString *a, *b;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
-  b = JS_ValueToString (context->jscx, TAG_B);
+  a = stack_pop_to_string (context, &TAG_A);
+  b = stack_pop_to_string (context, &TAG_B);
 
   stack_push (context, BOOLEAN_TO_JSVAL(JS_CompareStrings (a, b) == 0));
 }
@@ -324,8 +432,7 @@ action_string_length (SwfdecActionContext * context)
 {
   JSString *a;
 
-  TAG_A = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
+  a = stack_pop_to_string (context, &TAG_A);
 
   stack_push (context, INT_TO_JSVAL(JS_GetStringLength (a)));
 }
@@ -335,10 +442,8 @@ action_string_add (SwfdecActionContext * context)
 {
   JSString *a, *b;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
-  b = JS_ValueToString (context->jscx, TAG_B);
+  a = stack_pop_to_string (context, &TAG_A);
+  b = stack_pop_to_string (context, &TAG_B);
 
   stack_push (context, STRING_TO_JSVAL(JS_ConcatStrings (context->jscx, a, b)));
 }
@@ -354,12 +459,9 @@ action_string_extract (SwfdecActionContext * context)
   char *chars;
   JSString *new_string;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  TAG_C = stack_pop (context);
-  a = JS_ValueToInt32 (context->jscx, TAG_A, &a);
-  b = JS_ValueToInt32 (context->jscx, TAG_B, &b);
-  c = JS_ValueToString (context->jscx, TAG_C);
+  a = stack_pop_to_int32 (context, &TAG_A);
+  b = stack_pop_to_int32 (context, &TAG_B);
+  c = stack_pop_to_string (context, &TAG_C);
 
   n = JS_GetStringLength (c);
   count = a;
@@ -371,8 +473,9 @@ action_string_extract (SwfdecActionContext * context)
 
   chars = JS_GetStringBytes(c);
   new_string = JS_NewStringCopyN(context->jscx, chars + index, count);
+  TAG_C = STRING_TO_JSVAL(new_string);
 
-  stack_push (context, STRING_TO_JSVAL(new_string));
+  stack_push (context, TAG_C);
 }
 
 static void
@@ -380,10 +483,8 @@ action_string_less (SwfdecActionContext * context)
 {
   JSString *a, *b;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
-  b = JS_ValueToString (context->jscx, TAG_B);
+  a = stack_pop_to_string (context, &TAG_A);
+  b = stack_pop_to_string (context, &TAG_B);
 
   stack_push (context, BOOLEAN_TO_JSVAL (JS_CompareStrings(a, b) < 0));
 }
@@ -393,8 +494,7 @@ action_mb_string_length (SwfdecActionContext * context)
 {
   JSString *a;
 
-  TAG_A = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
+  a = stack_pop_to_string (context, &TAG_A);
 
   stack_push (context, INT_TO_JSVAL(JS_GetStringLength (a)));
 }
@@ -410,12 +510,9 @@ action_mb_string_extract (SwfdecActionContext * context)
   jschar *chars;
   JSString *new_string;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  TAG_C = stack_pop (context);
-  a = JS_ValueToInt32 (context->jscx, TAG_A, &a);
-  b = JS_ValueToInt32 (context->jscx, TAG_B, &b);
-  c = JS_ValueToString (context->jscx, TAG_C);
+  a = stack_pop_to_int32 (context, &TAG_A);
+  b = stack_pop_to_int32 (context, &TAG_B);
+  c = stack_pop_to_string (context, &TAG_C);
 
   n = JS_GetStringLength (c);
   count = a;
@@ -427,18 +524,18 @@ action_mb_string_extract (SwfdecActionContext * context)
 
   chars = JS_GetStringChars(c);
   new_string = JS_NewUCStringCopyN(context->jscx, chars + index, count);
+  TAG_C = STRING_TO_JSVAL(new_string);
 
-  stack_push (context, STRING_TO_JSVAL(new_string));
+  stack_push (context, TAG_C);
 }
 
 static void
 action_to_integer (SwfdecActionContext * context)
 {
-  jsdouble d;
+  jsdouble a;
 
-  TAG_A = stack_pop (context);
-  JS_ValueToNumber (context->jscx, TAG_A, &d);
-  JS_NewNumberValue (context->jscx, floor(d), &TAG_A);
+  a = stack_pop_to_number (context, &TAG_A);
+  JS_NewNumberValue (context->jscx, floor(a), &TAG_A);
 
   stack_push (context, TAG_A);
 }
@@ -449,8 +546,7 @@ action_char_to_ascii (SwfdecActionContext * context)
   JSString *a;
   char *bytes;
 
-  TAG_A = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_C);
+  a = stack_pop_to_string (context, &TAG_A);
   bytes = JS_GetStringBytes (a);
 
   stack_push (context, INT_TO_JSVAL(bytes[0]));
@@ -462,13 +558,13 @@ action_ascii_to_char (SwfdecActionContext * context)
   int32 a;
   char s[2];
 
-  TAG_A = stack_pop (context);
-  JS_ValueToInt32(context->jscx, TAG_A, &a);
+  a = stack_pop_to_int32 (context, &TAG_A);
 
   s[0] = a;
   s[1] = 0;
 
-  stack_push (context, STRING_TO_JSVAL(JS_NewStringCopyN (context->jscx, s, 1)));
+  TAG_C = STRING_TO_JSVAL(JS_NewStringCopyN (context->jscx, s, 1));
+  stack_push (context, TAG_C);
 }
 
 static void
@@ -477,8 +573,7 @@ action_mb_char_to_ascii (SwfdecActionContext * context)
   JSString *a;
   char *bytes;
 
-  TAG_A = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_C);
+  a = stack_pop_to_string (context, &TAG_A);
   bytes = JS_GetStringBytes (a);
 
   stack_push (context, INT_TO_JSVAL(g_utf8_get_char (bytes)));
@@ -491,12 +586,12 @@ action_mb_ascii_to_char (SwfdecActionContext * context)
   int len;
   char s[6];
 
-  TAG_A = stack_pop (context);
-  JS_ValueToInt32(context->jscx, TAG_A, &a);
+  a = stack_pop_to_int32 (context, &TAG_A);
 
   len = g_unichar_to_utf8 (a, s);
 
-  stack_push (context, STRING_TO_JSVAL(JS_NewStringCopyN (context->jscx, s, len)));
+  TAG_C = STRING_TO_JSVAL(JS_NewStringCopyN (context->jscx, s, len));
+  stack_push (context, TAG_C);
 }
 
 static void
@@ -521,8 +616,7 @@ action_if (SwfdecActionContext *context)
 
   offset = swfdec_bits_get_s16 (&context->bits);
 
-  TAG_A = stack_pop (context);
-  JS_ValueToBoolean (context->jscx, TAG_A, &a);
+  a = stack_pop_to_bool (context, &TAG_A);
 
   if (a) {
     if (pc_is_valid (context, context->pc + offset) == SWF_OK) {
@@ -546,8 +640,7 @@ action_get_variable (SwfdecActionContext *context)
   JSString *a;
   char *varname;
 
-  TAG_A = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
+  a = stack_pop_to_string (context, &TAG_A);
   varname = JS_GetStringBytes (a);
 
   /* FIXME: Is this the best way to deal with _global? */
@@ -567,27 +660,31 @@ action_get_variable (SwfdecActionContext *context)
 static void
 action_set_variable (SwfdecActionContext *context)
 {
-  char *b;
+  JSString *b;
+  char *varname;
 
   TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  b = JS_GetStringBytes (JS_ValueToString (context->jscx, TAG_B));
+  b = stack_pop_to_string (context, &TAG_B);
 
-  JS_SetProperty(context->jscx, context->global, b, &TAG_A);
+  varname = JS_GetStringBytes (b);
+
+  JS_SetProperty(context->jscx, context->global, varname, &TAG_A);
 }
 
 static void
 action_define_local (SwfdecActionContext *context)
 {
-  char *b;
+  JSString *b;
+  char *varname;
 
   TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  b = JS_GetStringBytes (JS_ValueToString (context->jscx, TAG_B));
+  b = stack_pop_to_string (context, &TAG_B);
 
-  SWFDEC_WARNING ("local variables unimplemented (\"%s\")", b);
+  varname = JS_GetStringBytes (b);
 
-  JS_SetProperty(context->jscx, context->global, b, &TAG_A);
+  SWFDEC_WARNING ("local variables unimplemented (\"%s\")", varname);
+
+  JS_SetProperty(context->jscx, context->global, varname, &TAG_A);
 }
 
 static void
@@ -645,12 +742,13 @@ static void
 action_get_property (SwfdecActionContext *context)
 {
   int32 a;
-  char *b;
+  JSString *b;
+  char *prop;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  a = JS_ValueToInt32 (context->jscx, TAG_A, &a);
-  b = JS_GetStringBytes (JS_ValueToString (context->jscx, TAG_B));
+  a = stack_pop_to_int32 (context, &TAG_A);
+  b = stack_pop_to_string (context, &TAG_B);
+
+  prop = JS_GetStringBytes (b);
 
   if (a >= 0 && a <= 21) {
     switch (a) {
@@ -695,16 +793,18 @@ static void
 action_set_property (SwfdecActionContext *context)
 {
   int32 b;
-  char *c;
+  JSString *c;
+  char *prop;
 
   TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  TAG_C = stack_pop (context);
-  b = JS_ValueToInt32 (context->jscx, TAG_B, &b);
-  c = JS_GetStringBytes (JS_ValueToString (context->jscx, TAG_C));
+
+  b = stack_pop_to_int32 (context, &TAG_B);
+  c = stack_pop_to_string (context, &TAG_C);
+
+  prop = JS_GetStringBytes (c);
 
   if (b >= 0 && b <= 21) {
-    SWFDEC_WARNING ("set property unimplemented");
+    SWFDEC_WARNING ("set property %d unimplemented", b);
     /* FIXME need to set the property here */
   } else {
     SWFDEC_ERROR("property index out of range");
@@ -717,10 +817,9 @@ action_clone_sprite (SwfdecActionContext *context)
 {
   int32 a;
 
-  TAG_A = stack_pop (context);
+  a = stack_pop_to_int32 (context, &TAG_A);
   TAG_B = stack_pop (context);
   TAG_C = stack_pop (context);
-  a = JS_ValueToInt32 (context->jscx, TAG_A, &a);
 
   SWFDEC_WARNING ("clone sprite unimplemented");
 }
@@ -740,10 +839,8 @@ action_start_drag (SwfdecActionContext *context)
   JSBool c;
 
   TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  JS_ValueToBoolean (context->jscx, TAG_B, &b);
-  TAG_C = stack_pop (context);
-  JS_ValueToBoolean (context->jscx, TAG_C, &c);
+  b = stack_pop_to_bool (context, &TAG_B);
+  c = stack_pop_to_bool (context, &TAG_C);
   if (c) {
     (void)stack_pop (context);
     (void)stack_pop (context);
@@ -774,10 +871,12 @@ action_wait_for_frame_2 (SwfdecActionContext *context)
 static void
 action_trace (SwfdecActionContext *context)
 {
-  char *a;
+  JSString *a;
+  char *str;
 
-  TAG_A = stack_pop (context);
-  a = JS_GetStringBytes (JS_ValueToString (context->jscx, TAG_A));
+  a = stack_pop_to_string (context, &TAG_A);
+
+  str = JS_GetStringBytes (a);
 
   SWFDEC_DEBUG ("trace: %s", a);
 }
@@ -798,8 +897,7 @@ action_random_number (SwfdecActionContext *context)
 {
   jsdouble a;
 
-  TAG_A = stack_pop (context);
-  JS_ValueToNumber (context->jscx, TAG_A, &a);
+  a = stack_pop_to_number (context, &TAG_A);
 
   a = g_random_int_range (0, a);
   JS_NewNumberValue (context->jscx, a, &TAG_A);
@@ -813,15 +911,13 @@ action_call_function (SwfdecActionContext *context)
   JSString *a;
   int32 b;
   jsval *argv;
-  jsval rval, fval;
-  int i;
+  jsval rval;
   JSBool ok;
   char *funcname;
+  void *mark;
 
-  TAG_A = stack_pop (context); /* name */
-  TAG_B = stack_pop (context); /* argc */
-  a = JS_ValueToString (context->jscx, TAG_A);
-  JS_ValueToInt32 (context->jscx, TAG_B, &b);
+  a = stack_pop_to_string (context, &TAG_A); /* name */
+  b = stack_pop_to_int32 (context, &TAG_B); /* argc */
 
   funcname = JS_GetStringBytes (a);
 
@@ -831,29 +927,29 @@ action_call_function (SwfdecActionContext *context)
    * as a member of the root movieclip.  I would guess that it should be
    * according to some scope rules, but it's not clear what they are.
    */
-  JS_GetProperty (context->jscx, context->global, funcname, &fval);
-  if (!JSVAL_IS_OBJECT(fval) || !JS_ObjectIsFunction(context->jscx,
-      JSVAL_TO_OBJECT(fval))) {
-    JS_GetProperty (context->jscx, context->root, funcname, &fval);
-    if (!JSVAL_IS_OBJECT(fval) || !JS_ObjectIsFunction(context->jscx,
-      JSVAL_TO_OBJECT(fval))) {
+  JS_GetProperty (context->jscx, context->global, funcname, &TAG_C);
+  if (!JSVAL_IS_OBJECT(TAG_C) || !JS_ObjectIsFunction(context->jscx,
+      JSVAL_TO_OBJECT(TAG_C))) {
+    JS_GetProperty (context->jscx, context->root, funcname, &TAG_C);
+    if (!JSVAL_IS_OBJECT(TAG_C) || !JS_ObjectIsFunction(context->jscx,
+      JSVAL_TO_OBJECT(TAG_C))) {
       SWFDEC_WARNING("Couldn't look up function %s", funcname);
       stack_push (context, JSVAL_VOID);
       return;
     }
   }
 
-  argv = g_malloc (sizeof(jsval) * b);
-  for (i = 0; i < b; i++) {
-    argv[i] = stack_pop (context);
-  }
+  argv = action_alloc_stack_argv (context, b, &mark);
 
-  ok = JS_CallFunctionValue (context->jscx, context->root, fval, b, argv,
+  /* Call the function stored in TAG_C */
+  ok = JS_CallFunctionValue (context->jscx, context->root, TAG_C, b, argv,
     &rval);
+  TAG_C = rval;
+
   if (!ok)
     SWFDEC_WARNING("Call of function %s failed", funcname);
 
-  g_free (argv);
+  action_free_stack_argv (context, mark);
 
   stack_push (context, rval);
 }
@@ -864,46 +960,39 @@ action_call_method (SwfdecActionContext *context)
   JSString *a;
   JSObject *b;
   JSBool ok;
-  int32 c = 10000000;
+  int32 c;
   jsval *argv;
   jsval rval = JSVAL_VOID;
+  void *mark;
   char *methodname;
-  int i;
 
-  TAG_A = stack_pop (context); /* property */
-  TAG_B = stack_pop (context); /* object */
-  TAG_C = stack_pop (context); /* argc */
-  a = JS_ValueToString (context->jscx, TAG_A);
-  b = jsval_as_object(context, TAG_B);
-  ok = JS_ValueToInt32 (context->jscx, TAG_C, &c);
-  if (!ok) {
-    SWFDEC_ERROR("failed to convert argc to integer");
-  }
-  
-  argv = g_malloc (sizeof(jsval) * c);
-  for (i = 0; i < c; i++) {
-    argv[i] = stack_pop (context);
-  }
+  a = stack_pop_to_string (context, &TAG_A);	/* property */
+  b = stack_pop_to_object (context, &TAG_B);	/* object */
+  c = stack_pop_to_int32 (context, &TAG_C);	/* argc */
+
+  argv = action_alloc_stack_argv (context, c, &mark);
 
   if (b == NULL) {
     SWFDEC_DEBUG ("couldn't convert value 0x%x to object while trying to call "
       "method \"%s\"", TAG_B, JS_GetStringBytes (a));
-    g_free (argv);
+    action_free_stack_argv (context, mark);
     stack_push (context, JSVAL_VOID);
     return;
   }
 
   if (JS_GetStringLength(a) == 0) {
     JS_CallFunctionValue (context->jscx, context->root, TAG_B, c, argv, &rval);
+    TAG_C = rval;
   } else {
     methodname = JS_GetStringBytes (a);
     SWFDEC_DEBUG("Calling method %s of object 0x%x", methodname, b);
     ok = JS_CallFunctionName (context->jscx, b, methodname, c, argv, &rval);
+    TAG_C = rval;
     if (!ok)
       SWFDEC_WARNING("Call of method %s of object 0x%x failed", methodname, b);
   }
 
-  g_free (argv);
+  action_free_stack_argv (context, mark);
 
   stack_push (context, rval);
 }
@@ -937,7 +1026,6 @@ action_define_function (SwfdecActionContext *context)
   int i;
   ScriptFunction *func;
   JSFunction *jsfunc;
-  JSObject *obj;
 
   func = g_malloc0 (sizeof (ScriptFunction));
   if (func == NULL) {
@@ -971,14 +1059,12 @@ action_define_function (SwfdecActionContext *context)
   jsfunc = JS_NewFunction (context->jscx, action_script_call,
     func->num_params + FUNCTION_TEMPORARIES, 0, NULL, func->name);
   jsfunc->priv = func;
-  obj = JS_GetFunctionObject (jsfunc);
+  TAG_C = OBJECT_TO_JSVAL(JS_GetFunctionObject (jsfunc));
   
   if (strcmp (func->name, "") == 0) {
-    stack_push (context, OBJECT_TO_JSVAL(obj));
+    stack_push (context, TAG_C);
   } else {
-    jsval funcv = OBJECT_TO_JSVAL(obj);
-
-    JS_SetProperty (context->jscx, context->global, func->name, &funcv);
+    JS_SetProperty (context->jscx, context->global, func->name, &TAG_C);
   }
 }
 
@@ -1039,10 +1125,8 @@ action_get_member (SwfdecActionContext *context)
   char *membername;
   JSBool ok;
 
-  TAG_A = stack_pop (context); /* property */
-  TAG_B = stack_pop (context); /* object */
-  a = JS_ValueToString (context->jscx, TAG_A);
-  b = jsval_as_object (context, TAG_B);
+  a = stack_pop_to_string (context, &TAG_A);	/* property */
+  b = stack_pop_to_object (context, &TAG_B);	/* object */
 
   membername = JS_GetStringBytes (a);
 
@@ -1068,17 +1152,16 @@ action_init_object (SwfdecActionContext *context)
   int32 a;
   int i;
 
-  TAG_A = stack_pop (context); /* number of properties */
-  JS_ValueToInt32 (context->jscx, TAG_A, &a);
+  a = stack_pop_to_int32 (context, &TAG_A); /* number of properties */
 
   TAG_C = OBJECT_TO_JSVAL(JS_NewObject (context->jscx, NULL, NULL, NULL));
 
   for (i = 0; i < a; i++) {
     JSString *str;
 
-    TAG_A = stack_pop (context);
+    str = stack_pop_to_string (context, &TAG_A);
     TAG_B = stack_pop (context);
-    str = JS_ValueToString (context->jscx, TAG_A);
+
     JS_SetProperty (context->jscx, JSVAL_TO_OBJECT(TAG_C),
       JS_GetStringBytes (str), &TAG_B);
   }
@@ -1089,9 +1172,12 @@ action_init_object (SwfdecActionContext *context)
 static void
 action_new_method (SwfdecActionContext *context)
 {
-  TAG_A = stack_pop (context); /* method name (or "") */
+  JSString *a;
+  int32 c;
+
+  a = stack_pop_to_string (context, &TAG_A); /* method name (or "") */
   TAG_B = stack_pop (context); /* ScriptObject (function if method == "") */
-  TAG_C = stack_pop (context); /* num args */
+  c = stack_pop_to_int32 (context, &TAG_C); /* argc */
 
   SWFDEC_WARNING ("unimplemented");
 }
@@ -1106,12 +1192,10 @@ action_new_object (SwfdecActionContext *context)
   int32 b;
   jsval rval = JSVAL_VOID;
   jsval *argv;
-  int i;
+  void *mark;
 
-  TAG_A = stack_pop (context); /* object name */
-  TAG_B = stack_pop (context); /* num args */
-  a = JS_ValueToString (context->jscx, TAG_A);
-  JS_ValueToInt32 (context->jscx, TAG_B, &b);
+  a = stack_pop_to_string (context, &TAG_A);	/* object name */
+  b = stack_pop_to_int32 (context, &TAG_B);	/* argc */
 
   objname = JS_GetStringBytes (a);
   /* FIXME: Is this the best way to deal with _global? */
@@ -1128,6 +1212,7 @@ action_new_object (SwfdecActionContext *context)
   }
 
   constructor = jsval_as_object (context, TAG_C);
+  TAG_C = OBJECT_TO_JSVAL(constructor);
   if (!constructor) {
     SWFDEC_WARNING ("couldn't convert variable \"%s\" (0x%x) to object",
       objname, TAG_C);
@@ -1138,15 +1223,12 @@ action_new_object (SwfdecActionContext *context)
       objname);
   }
 
+  argv = action_alloc_stack_argv (context, b, &mark);
+
   clasp = JS_GetClass(constructor);
   if (strcmp (objname, clasp->name) == 0) {
     /* We're constructing a standard class, so use a proper constructor call. */
-    argv = g_malloc (sizeof(jsval) * b);
-    for (i = 0; i < b; i++) {
-      argv[i] = stack_pop (context);
-    }
-
-    rval = OBJECT_TO_JSVAL(JS_ConstructObjectWithArguments (context->jscx,
+    TAG_C = OBJECT_TO_JSVAL(JS_ConstructObjectWithArguments (context->jscx,
         clasp, NULL, constructor, b, argv));
   } else {
     /* We're constructing something script-defined, we hope. Script-defined
@@ -1155,22 +1237,18 @@ action_new_object (SwfdecActionContext *context)
      */
     obj = JS_NewObject (context->jscx, NULL, NULL, constructor);
 
-    argv = g_malloc (sizeof(jsval) * b);
-    for (i = 0; i < b; i++) {
-      argv[i] = stack_pop (context);
-    }
-
     if (!JS_CallFunctionValue (context->jscx, obj, OBJECT_TO_JSVAL(constructor),
         b, argv, &rval)) {
       SWFDEC_WARNING ("couldn't call constructor");
-      g_free (argv);
+      action_free_stack_argv (context, mark);
       return;
     }
+    TAG_C = rval;
   }
 
-  g_free (argv);
+  action_free_stack_argv (context, mark);
 
-  stack_push (context, rval);
+  stack_push (context, TAG_C);
 }
 
 
@@ -1183,10 +1261,8 @@ action_set_member (SwfdecActionContext *context)
   char *membername;
 
   TAG_A = stack_pop (context); /* value */
-  TAG_B = stack_pop (context); /* property */
-  TAG_C = stack_pop (context); /* object */
-  b = JS_ValueToString (context->jscx, TAG_B);
-  c = jsval_as_object (context, TAG_C);
+  b = stack_pop_to_string (context, &TAG_B);
+  c = stack_pop_to_object (context, &TAG_C);
 
   membername = JS_GetStringBytes (b);
 
@@ -1209,8 +1285,7 @@ action_to_number (SwfdecActionContext * context)
 {
   jsdouble a;
 
-  TAG_A = stack_pop (context);
-  JS_ValueToNumber (context->jscx, TAG_A, &a);
+  a = stack_pop_to_number (context, &TAG_A);
 
   TAG_A = JSVAL_VOID;
   JS_NewNumberValue (context->jscx, a, &TAG_A);
@@ -1223,8 +1298,7 @@ action_to_string (SwfdecActionContext * context)
 {
   JSString *a;
 
-  TAG_A = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
+  a = stack_pop_to_string (context, &TAG_A);
 
   stack_push (context, STRING_TO_JSVAL(a));
 }
@@ -1253,13 +1327,20 @@ action_add_2 (SwfdecActionContext * context)
     JSString *a, *b;
 
     a = JS_ValueToString (context->jscx, TAG_A);
+    TAG_A = STRING_TO_JSVAL(a);
     b = JS_ValueToString (context->jscx, TAG_B);
+    TAG_B = STRING_TO_JSVAL(b);
     TAG_C = STRING_TO_JSVAL(JS_ConcatStrings (context->jscx, b, a));
   } else {
-    jsdouble a, b;
+    jsdouble a = 0.0, b = 0.0;
+    JSBool ok;
 
-    a = JS_ValueToNumber (context->jscx, TAG_A, &a);
-    b = JS_ValueToNumber (context->jscx, TAG_B, &b);
+    ok = JS_ValueToNumber (context->jscx, TAG_A, &a);
+    if (!ok)
+      SWFDEC_WARNING("failure to convert %x to number\n", TAG_A);
+    ok = JS_ValueToNumber (context->jscx, TAG_B, &b);
+    if (!ok)
+      SWFDEC_WARNING("failure to convert %x to number\n", TAG_B);
     JS_NewNumberValue (context->jscx, a + b, &TAG_C);
   }
 
@@ -1279,10 +1360,15 @@ action_less_2 (SwfdecActionContext * context)
     b = JSVAL_TO_STRING(TAG_A);
     TAG_C = BOOLEAN_TO_JSVAL(JS_CompareStrings (b, a) < 0);
   } else {
-    jsdouble a, b;
+    jsdouble a = 0.0, b = 0.0;
+    JSBool ok;
 
-    JS_ValueToNumber (context->jscx, TAG_A, &a);
-    JS_ValueToNumber (context->jscx, TAG_B, &b);
+    ok = JS_ValueToNumber (context->jscx, TAG_A, &a);
+    if (!ok)
+      SWFDEC_WARNING("failure to convert %x to number\n", TAG_A);
+    ok = JS_ValueToNumber (context->jscx, TAG_B, &b);
+    if (!ok)
+      SWFDEC_WARNING("failure to convert %x to number\n", TAG_B);
     /* FIXME: Handle NaN, +/- 0, +/- inf */
     TAG_C = BOOLEAN_TO_JSVAL(b < a);
   }
@@ -1295,8 +1381,7 @@ action_unary_op (SwfdecActionContext * context)
 {
   jsdouble a;
 
-  TAG_A = stack_pop (context);
-  JS_ValueToNumber (context->jscx, TAG_A, &a);
+  a = stack_pop_to_number (context, &TAG_A);
 
   switch (context->action) {
     case 0x50:
@@ -1422,10 +1507,8 @@ action_string_greater (SwfdecActionContext * context)
 {
   JSString *a, *b;
 
-  TAG_A = stack_pop (context);
-  TAG_B = stack_pop (context);
-  a = JS_ValueToString (context->jscx, TAG_A);
-  b = JS_ValueToString (context->jscx, TAG_B);
+  a = stack_pop_to_string (context, &TAG_A);
+  b = stack_pop_to_string (context, &TAG_B);
 
   stack_push (context, BOOLEAN_TO_JSVAL (JS_CompareStrings(a, b) > 0));
 }
@@ -1505,10 +1588,8 @@ action_extends (SwfdecActionContext * context)
   JSObject *a, *b;
 
   SWFDEC_WARNING("ActionExtends unimplemented");
-  TAG_A = stack_pop (context); /* superclass */
-  TAG_B = stack_pop (context); /* subclass */
-  a = jsval_as_object (context, TAG_A);
-  b = jsval_as_object (context, TAG_B);
+  a = stack_pop_to_object (context, &TAG_A); /* superclass */
+  b = stack_pop_to_object (context, &TAG_B); /* subclass */
 
   /*obj = obj_new_Object();
   c = action_val_new ();

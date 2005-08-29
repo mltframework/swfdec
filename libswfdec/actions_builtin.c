@@ -348,6 +348,8 @@ void swfdec_init_context_builtins (SwfdecActionContext *context)
 
   root = movieclip_new (context, context->s->main_sprite_seg);
   context->root = root;
+
+  val = OBJECT_TO_JSVAL(context->root);
   ok = JS_SetProperty(context->jscx, context->global, "_root", &val);
   if (!ok)
     SWFDEC_WARNING("Failed to set _root");

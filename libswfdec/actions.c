@@ -4,8 +4,6 @@
 #include "swfdec_internal.h"
 #include "js/jsfun.h"
 
-#define SWFDEC_ACTIONS_DEBUG_GC 0
-
 void
 constant_pool_ref (ConstantPool *pool)
 {
@@ -87,6 +85,10 @@ void swfdec_init_context (SwfdecDecoder * s)
       val = JSVAL_VOID;
       JS_SetElement (context->jscx, context->registers, i, &val);
   }
+
+#if SWFDEC_ACTIONS_DEBUG_GC
+  JS_GC(context->jscx);
+#endif
 }
 
 JSBool

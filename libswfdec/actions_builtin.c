@@ -368,6 +368,9 @@ action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
   if (s->context == NULL)
     swfdec_init_context (s);
   context = s->context;
+#if SWFDEC_ACTIONS_DEBUG_GC
+  JS_GC(context->jscx);
+#endif
 
   mc = movieclip_new (context, seg);
   val = OBJECT_TO_JSVAL(mc);

@@ -87,6 +87,11 @@ typedef struct
   char *name;
 } ActionFuncEntry;
 
+/* Turns on forcing of GC at various points, which is useful in debugging JS
+ * misuse.
+ */
+#define SWFDEC_ACTIONS_DEBUG_GC 0
+
 /* action_script_call relies on a number of spare entries in argv which are
  * rooted for the GC.  3 are for the TAG_[ABC] used in tag funcs, and one is the
  * array containing the registers.

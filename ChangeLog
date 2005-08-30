@@ -1,5 +1,15 @@
 2005-08-29  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/actions_builtin.c: (movieclip_new):
+	Fix another GC breakage in movieclip rooting.  Roots are added as
+	pointers to gc-things (where a gc-thing is a pointer to a JS_object,
+	jdouble, etc.).  However, the pointer-to-gcthing must remain valid until
+	JS_RemoveRoot, while we were passing a pointer to a stack variable.
+	Many thanks to Brendan Eich (spidermonkey developer) for giving me the
+	pointer on how to fix it.
+
+2005-08-29  Eric Anholt  <anholt@FreeBSD.org>
+
 	* libswfdec/actions.c: (swfdec_init_context):
 	* libswfdec/actions_builtin.c: (action_register_sprite_seg):
 	* libswfdec/swfdec_actions.h:

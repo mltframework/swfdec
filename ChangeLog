@@ -1,3 +1,9 @@
+2005-10-10  David Schleef  <ds@schleef.org>
+
+	* libswfdec/jpeg/huffman.c: (huffman_table_decode_macroblock):
+	* libswfdec/jpeg/jpeg.c: (generate_code_table):
+	* libswfdec/jpeg/jpeg_debug.h: Turn off JPEG debugging.
+
 2005-08-29  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/actions_builtin.c: (movieclip_new):

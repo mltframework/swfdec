@@ -14,6 +14,8 @@
 
 static char *sprintbits (char *str, unsigned int bits, int n);
 
+#undef JPEG_LOG
+#define JPEG_LOG(...)
 
 
 void
@@ -93,7 +95,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
 {
   int r, s, x, rs;
   int k;
-  char str[33] = "NA";
+  //char str[33] = "NA";
 
   memset (block, 0, sizeof (short) * 64);
 
@@ -139,7 +141,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
         x -= (1 << s) - 1;
       }
       block[k] = x;
-      JPEG_LOG ("r=%d s=%d (%s -> block[%d]=%d)", r, s, str, k, x);
+      //JPEG_LOG ("r=%d s=%d (%s -> block[%d]=%d)", r, s, str, k, x);
     }
   }
   return 0;

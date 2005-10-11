@@ -191,7 +191,9 @@ static unsigned char std_tables[] = {
 /* misc helper function declarations */
 
 static void dumpbits (bits_t * bits);
+#if 0
 static char *sprintbits (char *str, unsigned int bits, int n);
+#endif
 
 static void huffman_table_load_std_jpeg (JpegDecoder * dec);
 
@@ -317,7 +319,7 @@ generate_code_table (int *huffsize)
   int i;
   int j;
   int k;
-  char str[33];
+  //char str[33];
 
   //int l;
 
@@ -940,6 +942,7 @@ jpeg_debug (int n, const char *format, ...)
 
 /* misc helper functins */
 
+#if 0
 static char *
 sprintbits (char *str, unsigned int bits, int n)
 {
@@ -954,6 +957,7 @@ sprintbits (char *str, unsigned int bits, int n)
 
   return str;
 }
+#endif
 
 static void
 huffman_table_load_std_jpeg (JpegDecoder * dec)

@@ -232,15 +232,18 @@ static void
 action_push (SwfdecActionContext * context)
 {
   int type, number;
+  char *string2;
   JSString *string;
 
   while (context->bits.ptr < context->bits.end) {
 
+  TAG_A = JSVAL_VOID;
   type = swfdec_bits_get_u8 (&context->bits);
   switch (type) {
     case 0: /* string */
-      string = JS_NewStringCopyZ (context->jscx,
-        swfdec_bits_get_string (&context->bits));
+      string2 = swfdec_bits_get_string (&context->bits);
+      string = JS_NewStringCopyZ (context->jscx, string2);
+      g_free(string2);
       TAG_A = STRING_TO_JSVAL(string);
       break;
     case 1: /* float */

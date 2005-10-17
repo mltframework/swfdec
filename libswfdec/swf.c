@@ -665,7 +665,7 @@ struct tag_func_struct
   int (*func) (SwfdecDecoder * s);
   int flag;
 };
-struct tag_func_struct tag_funcs[] = {
+static struct tag_func_struct tag_funcs[] = {
   [ST_END] = {"End", tag_func_end, 0},
   [ST_SHOWFRAME] = {"ShowFrame", tag_show_frame, 0},
   [ST_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},

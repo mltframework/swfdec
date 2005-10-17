@@ -915,7 +915,7 @@ tag_define_morph_shape (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-void
+static void
 swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
     SwfdecShape * shape)
 {

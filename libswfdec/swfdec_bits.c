@@ -9,7 +9,7 @@
 #include <swfdec_bits.h>
 
 
-int
+static int
 swfdec_bits_valid (SwfdecBits *b)
 {
   if (b->ptr == NULL || b->ptr > b->end) return 0;

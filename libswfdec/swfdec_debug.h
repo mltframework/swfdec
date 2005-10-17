@@ -30,5 +30,6 @@ void swfdec_debug_log (int level, const char *file, const char *function,
     int line, const char *format, ...);
 void swfdec_debug_set_level (int level);
 int swfdec_debug_get_level (void);
+void art_warn (const char *fmt, ...);
 
 #endif

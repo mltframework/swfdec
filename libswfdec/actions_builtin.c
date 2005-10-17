@@ -209,10 +209,10 @@ enum {
 static JSPropertySpec movieclip_props[] = {
 	{"_x",	MC_X,	MC_PROP_ATTRS, mc_x_get, mc_x_set},
 	{"_y",	MC_Y,	MC_PROP_ATTRS, mc_y_get, mc_y_set},
-        { 0 }
+        {NULL}
 };
 
-JSClass movieclip_class = {
+static JSClass movieclip_class = {
     "MovieClip", JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
@@ -226,7 +226,7 @@ static JSFunctionSpec movieclip_methods[] = {
   {"getBytesLoaded", mc_getBytesLoaded, 0, 0},
   {"getBytesTotal", mc_getBytesTotal, 0, 0},
   {"attachMovie", mc_attachMovie, 4, 0},
-  {0, 0, 0, 0, 0}
+  {NULL}
 };
 
 static JSObject *
@@ -323,7 +323,7 @@ swfdec_native_ASSetPropFlags (SwfdecActionContext *context, int num_args,
 }
 #endif
 
-JSClass global_class = {
+static JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,

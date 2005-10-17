@@ -12,7 +12,7 @@ static void swfdec_object_init (GTypeInstance * instance, gpointer g_class);
 static void swfdec_object_dispose (GObject * object);
 
 
-GType _swfdec_object_type;
+static GType _swfdec_object_type;
 
 static GObjectClass *parent_class = NULL;
 

@@ -8,7 +8,7 @@
 
 static void merge (int16_t *dest, int16_t *src, double multiplier, int n);
 
-void
+static void
 swfdec_audio_stream_free (SwfdecAudioStream *stream)
 {
   swfdec_buffer_queue_free (stream->queue);

@@ -1,5 +1,21 @@
 2005-10-16  Eric Anholt  <anholt@FreeBSD.org>
 
+	* libswfdec/Makefile.am:
+	* libswfdec/actions_builtin.c:
+	* libswfdec/actions_tags.c:
+	* libswfdec/swf.c:
+	* libswfdec/swfdec_audio.c:
+	* libswfdec/swfdec_bits.c:
+	* libswfdec/swfdec_debug.h:
+	* libswfdec/swfdec_object.c:
+	* libswfdec/swfdec_shape.c:
+	* libswfdec/swfdec_sound.c:
+	Minor cleanups exposed by sparse: mark several things static, add
+	a prototype for another, and add descriptions for some MB actions.  Fix
+	a broken include path that sparse choked on.
+
+2005-10-16  Eric Anholt  <anholt@FreeBSD.org>
+
 	* libswfdec/actions_tags.c: (action_push):
 	Fix a memory leak in string pushes.
 

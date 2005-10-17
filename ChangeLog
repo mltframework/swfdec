@@ -1,3 +1,7 @@
+2005-10-17  David Schleef  <ds@schleef.org>
+
+	* plugin/plugin.c: Update message.
+
 2005-10-16  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/Makefile.am:

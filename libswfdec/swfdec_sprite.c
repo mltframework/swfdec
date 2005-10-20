@@ -30,39 +30,29 @@ swfdec_sprite_init (SwfdecSprite * sprite)
 static void
 swfdec_sprite_dispose (SwfdecSprite * sprite)
 {
-  GList *g;
+  //GList *g;
   int i;
 
-  for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
-    SwfdecSpriteSegment *seg = (SwfdecSpriteSegment *) g->data;
+  if (sprite->frames) {
+    for (i = 0; i < sprite->n_frames; i++) {
+      if (sprite->frames[i].sound_chunk) {
+        swfdec_buffer_unref (sprite->frames[i].sound_chunk);
+      }
+      if (sprite->frames[i].action) {
+        swfdec_buffer_unref (sprite->frames[i].action);
+      }
+      if (sprite->frames[i].sound_play) {
+        g_free (sprite->frames[i].sound_play);
+      }
+    }
+#if 0
+    for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
+      SwfdecSpriteSegment *seg = (SwfdecSpriteSegment *) g->data;
 
-    swfdec_spriteseg_free (seg);
-  }
-  g_list_free (sprite->layers);
-
-  if (sprite->sound_chunks) {
-    for (i = 0; i < sprite->n_frames; i++) {
-      if (sprite->sound_chunks[i]) {
-        swfdec_buffer_unref (sprite->sound_chunks[i]);
-      }
+      swfdec_spriteseg_free (seg);
     }
-    g_free (sprite->sound_chunks);
-  }
-  if (sprite->actions) {
-    for (i = 0; i < sprite->n_frames; i++) {
-      if (sprite->actions[i]) {
-        swfdec_buffer_unref (sprite->actions[i]);
-      }
-    }
-    g_free (sprite->actions);
-  }
-  if (sprite->sound_play) {
-    for (i = 0; i < sprite->n_frames; i++) {
-      if (sprite->sound_play[i]) {
-        g_free (sprite->sound_play[i]);
-      }
-    }
-    g_free(sprite->sound_play);
+#endif
+    g_free(sprite->frames);
   }
 
 }
@@ -71,9 +61,9 @@ void
 swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite,
     SwfdecBuffer * chunk, int frame)
 {
-  g_assert (sprite->sound_chunks != NULL);
+  g_assert (sprite->frames != NULL);
 
-  sprite->sound_chunks[frame] = chunk;
+  sprite->frames[frame].sound_chunk = chunk;
   swfdec_buffer_ref (chunk);
 }
 
@@ -81,9 +71,9 @@ void
 swfdec_sprite_add_action (SwfdecSprite * sprite,
     SwfdecBuffer * actions, int frame)
 {
-  g_assert (sprite->actions != NULL);
+  g_assert (sprite->frames != NULL);
 
-  sprite->actions[frame] = actions;
+  sprite->frames[frame].action = actions;
   swfdec_buffer_ref (actions);
 }
 
@@ -93,8 +83,9 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
 {  
   SwfdecObject *obj;
   SwfdecSprite *sprite, *save_parse_sprite;
-  SwfdecSpriteSegment *child_seg, *save_parse_sprite_seg;
-  GList *g;
+  //SwfdecSpriteSegment *child_seg;
+  SwfdecSpriteSegment *save_parse_sprite_seg;
+  //GList *g;
 
   if (seg->stopped)
     return;
@@ -115,9 +106,9 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
   s->parse_sprite = sprite;
   s->parse_sprite_seg = seg;
 
-  if (sprite->actions[render->frame_index]) {
+  if (sprite->frames[render->frame_index].action) {
     s->execute_list = g_list_append (s->execute_list,
-        sprite->actions[render->frame_index]);
+        sprite->frames[render->frame_index].action);
   }
 
 #if 0
@@ -132,6 +123,7 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
   }
 #endif
 
+#if 0
   /* FIXME this is wrong */
   if (0) {
     for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
@@ -140,6 +132,7 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
       swfdec_sprite_render_iterate(s, child_seg, NULL);
     }
   }
+#endif
 
   s->parse_sprite = save_parse_sprite;
   s->parse_sprite_seg = save_parse_sprite_seg;
@@ -150,6 +143,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object)
 {
   SwfdecSprite *sprite = SWFDEC_SPRITE (object);
+  SwfdecSpriteFrame *frame;
   SwfdecTransform save_transform;
   GList *g;
   int clip_depth = 0;
@@ -159,16 +153,13 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   memcpy (&save_transform, &s->transform, sizeof (SwfdecTransform));
   swfdec_transform_multiply (&s->transform, &seg->transform, &save_transform);
 
-  for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
+  /* FIXME 0 is wrong */
+  frame = &sprite->frames[0];
+  for (g = g_list_last (frame->segments); g; g = g_list_previous (g)) {
     SwfdecObject *child_object;
     SwfdecSpriteSegment *child_seg;
 
     child_seg = (SwfdecSpriteSegment *) g->data;
-
-    if (child_seg->first_frame > child_seg->frame_index)
-      continue;
-    if (child_seg->last_frame <= child_seg->frame_index)
-      continue;
 
     /* FIXME need to clip layers instead */
     if (child_seg->clip_depth) {
@@ -328,9 +319,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   sprite->n_frames = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
 
-  sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
-  sprite->actions = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
-  sprite->sound_play = g_malloc0 (sizeof (gpointer) * sprite->n_frames);
+  sprite->frames = g_malloc0 (sizeof (SwfdecSpriteFrame) * sprite->n_frames);
 
   memcpy (&parse, bits, sizeof (SwfdecBits));
 
@@ -406,15 +395,16 @@ tag_func_define_sprite (SwfdecDecoder * s)
 }
 
 SwfdecSpriteSegment *
-swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame)
+swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame_index)
 {
   SwfdecSpriteSegment *seg;
   GList *g;
+  SwfdecSpriteFrame *frame;
 
-  for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
+  frame = &sprite->frames[frame_index];
+  for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
-    if (seg->depth == depth && seg->first_frame <= frame
-        && seg->last_frame > frame)
+    if (seg->depth == depth)
       return seg;
   }
 
@@ -422,20 +412,34 @@ swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame)
 }
 
 void
-swfdec_sprite_add_seg (SwfdecSprite * sprite, SwfdecSpriteSegment * segnew)
+swfdec_sprite_frame_add_seg (SwfdecSpriteFrame * frame, SwfdecSpriteSegment * segnew)
 {
-  GList *g;
   SwfdecSpriteSegment *seg;
+  GList *g;
 
-  for (g = g_list_first (sprite->layers); g; g = g_list_next (g)) {
+  for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
     if (seg->depth < segnew->depth) {
-      sprite->layers = g_list_insert_before (sprite->layers, g, segnew);
+      frame->segments = g_list_insert_before (frame->segments, g, segnew);
       return;
     }
   }
+  frame->segments = g_list_append (frame->segments, segnew);
+}
 
-  sprite->layers = g_list_append (sprite->layers, segnew);
+void
+swfdec_sprite_frame_remove_seg (SwfdecSpriteFrame * frame, int depth)
+{
+  SwfdecSpriteSegment *seg;
+  GList *g;
+
+  for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
+    seg = (SwfdecSpriteSegment *) g->data;
+    if (seg->depth == depth) {
+      frame->segments = g_list_delete_link (frame->segments, g);
+      return;
+    }
+  }
 }
 
 SwfdecSpriteSegment *
@@ -522,17 +526,15 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 
   oldlayer = swfdec_sprite_get_seg (s->parse_sprite, depth,
       s->parse_sprite->parse_frame);
-  if (oldlayer) {
-    oldlayer->last_frame = s->parse_sprite->parse_frame;
-  }
+  swfdec_sprite_frame_remove_seg (&s->parse_sprite->frames[
+      s->parse_sprite->parse_frame], depth);
 
   layer = swfdec_spriteseg_new ();
 
   layer->depth = depth;
-  layer->first_frame = s->parse_sprite->parse_frame;
-  layer->last_frame = s->parse_sprite->n_frames;
 
-  swfdec_sprite_add_seg (s->parse_sprite, layer);
+  swfdec_sprite_frame_add_seg (
+      &s->parse_sprite->frames[s->parse_sprite->parse_frame], layer);
 
   if (has_character) {
     layer->id = swfdec_bits_get_u16 (bits);
@@ -619,7 +621,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     }
   }
 
-  action_register_sprite_seg (s, layer);
+  //action_register_sprite_seg (s, layer);
 
   return SWF_OK;
 }
@@ -628,20 +630,12 @@ int
 swfdec_spriteseg_remove_object (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSegment *seg;
   int id;
 
   id = swfdec_bits_get_u16 (&s->b);
   depth = swfdec_bits_get_u16 (&s->b);
-  seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
-      s->parse_sprite->parse_frame - 1);
-
-  if (seg) {
-    seg->last_frame = s->parse_sprite->parse_frame;
-  } else {
-    SWFDEC_WARNING ("could not find object to remove (depth %d, frame %d)",
-        depth, s->parse_sprite->parse_frame - 1);
-  }
+  swfdec_sprite_frame_remove_seg (
+      &s->parse_sprite->frames[s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;
 }
@@ -650,18 +644,10 @@ int
 swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSegment *seg;
 
   depth = swfdec_bits_get_u16 (&s->b);
-  seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
-      s->parse_sprite->parse_frame - 1);
-
-  if (seg) {
-    seg->last_frame = s->parse_sprite->parse_frame;
-  } else {
-    SWFDEC_WARNING ("could not find object to remove (depth %d, frame %d)",
-        depth, s->parse_sprite->parse_frame - 1);
-  }
+  swfdec_sprite_frame_remove_seg (
+      &s->parse_sprite->frames[s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;
 }

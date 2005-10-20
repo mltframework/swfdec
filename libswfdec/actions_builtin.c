@@ -107,10 +107,10 @@ mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     oldseg->last_frame = parent_seg->frame_index;
   }
 
+  /* FIXME we need a separate list of added segments */
   child_seg = swfdec_spriteseg_new ();
   child_seg->depth = depth;
   child_seg->first_frame = parent_seg->frame_index;
-  child_seg->last_frame = parent_seg->frame_index + attach_sprite->n_frames;
   swfdec_transform_init_identity (&child_seg->transform);
   child_seg->color_transform.mult[0] = 1;
   child_seg->color_transform.mult[1] = 1;
@@ -121,7 +121,8 @@ mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   child_seg->color_transform.add[2] = 0;
   child_seg->color_transform.add[3] = 0;
 
-  swfdec_sprite_add_seg (parent_sprite, child_seg);
+  swfdec_sprite_frame_add_seg (&parent_sprite->frames[parent_seg->frame_index],
+      child_seg);
   child_mc = movieclip_new (context, child_seg);
   *rval = OBJECT_TO_JSVAL(child_mc);
 

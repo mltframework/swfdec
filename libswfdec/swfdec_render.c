@@ -128,6 +128,7 @@ swfdec_render_get_image (SwfdecDecoder * s)
 {
   SwfdecSpriteSegment *seg;
   SwfdecBuffer *buffer;
+  SwfdecSpriteFrame *frame;
   GList *g;
   GList *render_list = NULL;
   int clip_depth = 0;
@@ -149,15 +150,9 @@ swfdec_render_get_image (SwfdecDecoder * s)
   SWFDEC_DEBUG ("inval rect %d %d %d %d", s->render->drawrect.x0,
       s->render->drawrect.x1, s->render->drawrect.y0, s->render->drawrect.y1);
 
-  for (g = g_list_last (s->main_sprite->layers); g; g = g_list_previous (g)) {
+  frame = &s->main_sprite->frames[s->render->frame_index];
+  for (g = g_list_last (frame->segments); g; g = g_list_previous (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
-
-    SWFDEC_LOG ("testing seg %d <= %d < %d",
-        seg->first_frame, s->render->frame_index, seg->last_frame);
-    if (seg->first_frame > s->render->frame_index)
-      continue;
-    if (seg->last_frame <= s->render->frame_index)
-      continue;
 
     /* FIXME need to clip layers instead */
     if (seg->clip_depth) {
@@ -310,7 +305,7 @@ swfdec_render_get_audio (SwfdecDecoder * s)
   if (s->stream_sound_obj) {
     SwfdecBuffer *chunk;
 
-    chunk = s->main_sprite->sound_chunks[s->render->frame_index];
+    chunk = s->main_sprite->frames[s->render->frame_index].sound_chunk;
     if (chunk) {
       SwfdecSound *sound;
       int n;
@@ -328,10 +323,10 @@ swfdec_render_get_audio (SwfdecDecoder * s)
     }
   }
 
-  if (s->main_sprite->sound_play[s->render->frame_index]) {
+  if (s->main_sprite->frames[s->render->frame_index].sound_play) {
     SwfdecSound *sound;
     SwfdecSoundChunk *chunk =
-      s->main_sprite->sound_play[s->render->frame_index];
+      s->main_sprite->frames[s->render->frame_index].sound_play;
 
     SWFDEC_DEBUG("chunk %p frame_index %d", chunk, s->render->frame_index);
     SWFDEC_DEBUG("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",

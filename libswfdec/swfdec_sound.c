@@ -266,7 +266,7 @@ tag_func_start_sound (SwfdecDecoder * s)
   chunk = get_soundinfo (b);
   chunk->object = id;
 
-  s->parse_sprite->sound_play[s->parse_sprite->parse_frame] = chunk;
+  s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_play = chunk;
 
   return SWF_OK;
 }

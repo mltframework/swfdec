@@ -57,6 +57,7 @@ int main (int argc, char *argv[])
 
 void dump_sprite(SwfdecSprite *s)
 {
+#if 0
   GList *layer;
   SwfdecSpriteSegment *seg;
 
@@ -67,6 +68,7 @@ void dump_sprite(SwfdecSprite *s)
         seg->id,seg->depth,seg->first_frame,seg->last_frame,
         seg->clip_depth);
   }
+#endif
 }
 
 void dump_shape(SwfdecShape *shape)

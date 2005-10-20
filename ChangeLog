@@ -1,3 +1,31 @@
+2005-10-19  David Schleef  <ds@schleef.org>
+
+	* libswfdec/actions_builtin.c: (mc_attachMovie): Change sprite
+	  data structure so that each frame has a struct that contains
+	  information about the frame, including layers and sprite
+	  segments to display.
+	* libswfdec/render.c: (tag_place_object_2), (tag_remove_object),
+	(tag_remove_object_2), (tag_show_frame):
+	* libswfdec/swf.c: (swf_parse_header2):
+	* libswfdec/swfdec_render.c: (swfdec_render_get_image),
+	(swfdec_render_get_audio):
+	* libswfdec/swfdec_sound.c: (tag_func_start_sound):
+	* libswfdec/swfdec_sprite.c: (swfdec_sprite_dispose),
+	(swfdec_sprite_add_sound_chunk), (swfdec_sprite_add_action),
+	(swfdec_sprite_render_iterate), (swfdec_sprite_render),
+	(tag_func_define_sprite), (swfdec_sprite_get_seg),
+	(swfdec_sprite_frame_add_seg), (swfdec_sprite_frame_remove_seg),
+	(swfdec_spriteseg_place_object_2),
+	(swfdec_spriteseg_remove_object),
+	(swfdec_spriteseg_remove_object_2):
+	* libswfdec/swfdec_sprite.h:
+	* libswfdec/swfdec_types.h:
+
+	* test/Makefile.am: add parse
+	* test/dump.c: (dump_sprite): Disable code instead of fixing it.
+	* test/parse.c: (buffer_free), (main): only parse input, don't
+	  render.
+
 2005-10-19  Eric Anholt  <anholt@FreeBSD.org>
 
 	* libswfdec/actions_tags.c: (action_extends):

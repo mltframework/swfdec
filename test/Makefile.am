@@ -2,7 +2,7 @@
 if WITH_GLIB_COMPAT
 noinst_PROGRAMS = dump
 else
-noinst_PROGRAMS = render-fast test-pixbuf dump render
+noinst_PROGRAMS = render-fast test-pixbuf dump render parse
 endif
 
 render_fast_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
@@ -16,4 +16,7 @@ dump_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 
 render_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
 render_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
+
+parse_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
+parse_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 

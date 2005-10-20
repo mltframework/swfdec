@@ -646,9 +646,7 @@ swf_parse_header2 (SwfdecDecoder * s)
 
   buffer = swfdec_buffer_queue_pull (s->input_queue, n);
 
-  s->main_sprite->sound_chunks = g_malloc0 (sizeof (gpointer) * s->n_frames);
-  s->main_sprite->actions = g_malloc0 (sizeof (gpointer) * s->n_frames);
-  s->main_sprite->sound_play = g_malloc0 (sizeof (gpointer) * s->n_frames);
+  s->main_sprite->frames = g_malloc0 (sizeof (SwfdecSpriteFrame) * s->n_frames);
   s->main_sprite->n_frames = s->n_frames;
   s->main_sprite_seg->last_frame = s->n_frames;
 

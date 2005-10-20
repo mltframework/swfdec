@@ -56,21 +56,16 @@ tag_place_object_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
 
-  oldlayer =
-      swfdec_sprite_get_seg (s->parse_sprite, depth,
-      s->parse_sprite->parse_frame);
-  if (oldlayer) {
-    oldlayer->last_frame = s->frame_number;
-  }
+  oldlayer = swfdec_sprite_get_seg (s->main_sprite, depth, s->frame_number);
+  swfdec_sprite_frame_remove_seg (&s->main_sprite->frames[s->frame_number],
+      depth);
 
   layer = swfdec_spriteseg_new ();
 
   layer->depth = depth;
-  layer->first_frame = s->frame_number;
-  layer->last_frame = 0;
 
   /* FIXME: s->parse_sprite, probably */
-  swfdec_sprite_add_seg (s->main_sprite, layer);
+  swfdec_sprite_frame_add_seg (&s->main_sprite->frames[s->frame_number], layer);
 
   if (has_character) {
     layer->id = swfdec_bits_get_u16 (bits);
@@ -136,15 +131,12 @@ int
 tag_remove_object (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSegment *seg;
   int id;
 
   id = swfdec_bits_get_u16 (&s->b);
   depth = swfdec_bits_get_u16 (&s->b);
-  seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
-      s->parse_sprite->parse_frame);
-
-  seg->last_frame = s->parse_sprite->parse_frame;
+  swfdec_sprite_frame_remove_seg (&s->parse_sprite->frames[
+      s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;
 }
@@ -153,13 +145,10 @@ int
 tag_remove_object_2 (SwfdecDecoder * s)
 {
   int depth;
-  SwfdecSpriteSegment *seg;
 
   depth = swfdec_bits_get_u16 (&s->b);
-  seg = swfdec_sprite_get_seg (s->parse_sprite, depth,
-      s->parse_sprite->parse_frame);
-
-  seg->last_frame = s->parse_sprite->parse_frame;
+  swfdec_sprite_frame_remove_seg (&s->parse_sprite->frames[
+      s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;
 }
@@ -172,6 +161,11 @@ tag_show_frame (SwfdecDecoder * s)
 
   s->frame_number++;
   s->parse_sprite->parse_frame++;
+  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
+    s->parse_sprite->frames[s->parse_sprite->parse_frame].segments =
+      g_list_copy (
+          s->parse_sprite->frames[s->parse_sprite->parse_frame - 1].segments);
+  }
 
   return SWF_OK;
 }

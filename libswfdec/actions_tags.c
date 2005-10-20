@@ -1588,28 +1588,25 @@ action_define_function_2 (SwfdecActionContext *context)
 static void
 action_extends (SwfdecActionContext * context)
 {
-  JSObject *a, *b;
+  JSObject *a, *b, *obj;
+  jsval superclass_prototype, superclass;
 
-  SWFDEC_WARNING("ActionExtends unimplemented");
   a = stack_pop_to_object (context, &TAG_A); /* superclass */
   b = stack_pop_to_object (context, &TAG_B); /* subclass */
 
-  /*obj = obj_new_Object();
-  c = action_val_new ();
-  action_val_set_to_object (c, obj);
+  obj = JS_NewObject (context->jscx, NULL, NULL, NULL);
+  TAG_C = OBJECT_TO_JSVAL(obj);
+  JS_SetProperty (context->jscx, b, "prototype", &TAG_C);
+  JS_GetProperty (context->jscx, a, "prototype", &superclass_prototype);
+  JS_SetPrototype (context->jscx, obj, jsval_as_object(context,
+						       superclass_prototype));
+  /* FIXME: I think spidermonkey really doesn't care what __constructor__ is,
+   * which is a bad thing.
+   */
+  superclass = OBJECT_TO_JSVAL(a);
+  JS_SetProperty (context->jscx, obj, "__constructor__", &superclass);
 
-  d = obj_get_property (a->obj, "prototype");
-  if (d) {
-    obj_set_property (obj, "__proto__", d,
-      OBJPROP_DONTENUM | OBJPROP_DONTDELETE | OBJPROP_DONTWRITE);
-  } else {
-    SWFDEC_WARNING("superclass has no prototype");
-  }
-  obj_set_property (obj, "__constructor__", a, 0);
-  obj_set_property (b->obj, "prototype", c,
-    OBJPROP_DONTENUM | OBJPROP_DONTDELETE | OBJPROP_DONTWRITE);*/ /* FIXME */
-
-  stack_push (context, TAG_A);
+  stack_push (context, TAG_C);
 }
 
 extern ActionFuncEntry swf_actions[];

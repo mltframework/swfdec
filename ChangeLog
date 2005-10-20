@@ -1,3 +1,9 @@
+2005-10-19  Eric Anholt  <anholt@FreeBSD.org>
+
+	* libswfdec/actions_tags.c: (action_extends):
+	Throw together a slightly less stubbed ActionExtends.  May still have
+	issues with the constructor getting hooked up.
+
 2005-10-17  David Schleef  <ds@schleef.org>
 
 	* plugin/plugin.c: Update message.

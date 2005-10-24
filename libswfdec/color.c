@@ -30,19 +30,3 @@ swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform * trans)
   return SWF_COLOR_COMBINE (r, g, b, a);
 }
 
-int
-tag_func_set_background_color (SwfdecDecoder * s)
-{
-  SwfdecRect rect;
-
-  s->bg_color = swfdec_bits_get_color (&s->b);
-
-  rect.x0 = 0;
-  rect.y0 = 0;
-  rect.x1 = s->width;
-  rect.y1 = s->height;
-
-  swf_invalidate_irect (s, &rect);
-
-  return SWF_OK;
-}

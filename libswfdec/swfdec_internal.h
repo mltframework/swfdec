@@ -12,7 +12,6 @@
 #include "swfdec_button.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
-#include "swfdec_display.h"
 #include "swfdec_font.h"
 #include "swfdec_image.h"
 #include "swfdec_layer.h"

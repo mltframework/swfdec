@@ -200,7 +200,8 @@ swfdec_render_get_image (SwfdecDecoder * s)
     int n;
 
     seg = (SwfdecSpriteSegment *) g->data;
-    n = seg->last_frame - s->render->frame_index - 1;
+    //n = seg->last_frame - s->render->frame_index - 1;
+    n = 1;
     if (n==0) break;
     if (i < s->kept_layers) {
       if (n < n_frames) n_frames = n;

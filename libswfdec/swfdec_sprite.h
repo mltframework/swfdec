@@ -9,6 +9,7 @@
 G_BEGIN_DECLS
 //typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
+typedef struct _SwfdecExport SwfdecExport;
 
 //typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;
 
@@ -32,6 +33,11 @@ struct _SwfdecSpriteSegment
   SwfdecBuffer *clipevent[CLIPEVENT_MAX];
 
   int ratio;
+};
+
+struct _SwfdecExport {
+  char *name;
+  int id;
 };
 
 

@@ -297,103 +297,6 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
 }
 #endif
 
-int
-tag_func_define_sprite (SwfdecDecoder * s)
-{
-  SwfdecBits *bits = &s->b;
-  SwfdecBits parse;
-  int id;
-  SwfdecSprite *sprite;
-  int ret;
-  SwfdecBits save_bits;
-
-  save_bits = s->b;
-
-  id = swfdec_bits_get_u16 (bits);
-  sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
-  SWFDEC_OBJECT (sprite)->id = id;
-  s->objects = g_list_append (s->objects, sprite);
-
-  SWFDEC_LOG ("  ID: %d", id);
-
-  sprite->n_frames = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
-
-  sprite->frames = g_malloc0 (sizeof (SwfdecSpriteFrame) * sprite->n_frames);
-
-  memcpy (&parse, bits, sizeof (SwfdecBits));
-
-  while (1) {
-    unsigned char *endptr;
-    int x;
-    int tag;
-    int tag_len;
-    SwfdecBuffer *buffer;
-    SwfdecTagFunc *func;
-
-    //SWFDEC_INFO ("sprite parsing at %d", parse.ptr - parse.buffer->data);
-    x = swfdec_bits_get_u16 (&parse);
-    tag = (x >> 6) & 0x3ff;
-    tag_len = x & 0x3f;
-    if (tag_len == 0x3f) {
-      tag_len = swfdec_bits_get_u32 (&parse);
-    }
-    SWFDEC_INFO ("sprite parsing at %d, tag %d %s, length %d",
-        parse.ptr - parse.buffer->data, tag,
-        swfdec_decoder_get_tag_name (tag), tag_len);
-    //SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
-
-    if (tag_len > 0) {
-      buffer = swfdec_buffer_new_subbuffer (parse.buffer,
-          parse.ptr - parse.buffer->data, tag_len);
-      s->b.buffer = buffer;
-      s->b.ptr = buffer->data;
-      s->b.idx = 0;
-      s->b.end = buffer->data + buffer->length;
-    } else {
-      buffer = NULL;
-      s->b.buffer = NULL;
-      s->b.ptr = NULL;
-      s->b.idx = 0;
-      s->b.end = NULL;
-    }
-
-    func = swfdec_decoder_get_tag_func (tag);
-    if (func == NULL) {
-      SWFDEC_WARNING ("tag function not implemented for %d %s",
-          tag, swfdec_decoder_get_tag_name (tag));
-    } else {
-      endptr = parse.ptr + tag_len;
-      s->parse_sprite = sprite;
-      ret = func (s);
-      s->parse_sprite = NULL;
-
-      swfdec_bits_syncbits (bits);
-      if (tag_len > 0) {
-        if (s->b.ptr < endptr) {
-          SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
-        }
-        if (s->b.ptr > endptr) {
-          SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
-        }
-      }
-
-      parse.ptr = endptr;
-    }
-
-    if (buffer)
-      swfdec_buffer_unref (buffer);
-
-    if (tag == 0)
-      break;
-  }
-
-  s->b = save_bits;
-  s->b.ptr += s->b.buffer->length;
-
-  return SWF_OK;
-}
-
 SwfdecSpriteSegment *
 swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame_index)
 {
@@ -544,8 +447,8 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       layer->id = oldlayer->id;
   }
 
-  SWFDEC_INFO ("%splacing object layer=%d id=%d first_frame=%d",
-      (has_character) ? "" : "[re-]", depth, layer->id, layer->first_frame);
+  SWFDEC_INFO ("%splacing object layer=%d id=%d",
+      (has_character) ? "" : "[re-]", depth, layer->id);
 
   if (has_matrix) {
     swfdec_bits_get_transform (bits, &layer->transform);
@@ -652,11 +555,6 @@ swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-typedef struct _SwfdecExport {
-  char *name;
-  int id;
-} SwfdecExport;
-
 SwfdecObject *
 swfdec_exports_lookup (SwfdecDecoder * s, char *name)
 {
@@ -672,20 +570,3 @@ swfdec_exports_lookup (SwfdecDecoder * s, char *name)
   return NULL;
 }
 
-int
-tag_func_export_assets (SwfdecDecoder * s)
-{
-  SwfdecBits *bits = &s->b;
-  SwfdecExport *exp;
-  int count, i;
-
-  count = swfdec_bits_get_u16 (bits);
-  for (i = 0; i < count; i++) {
-    exp = g_malloc (sizeof(SwfdecExport));
-    exp->id = swfdec_bits_get_u16 (bits);
-    exp->name = swfdec_bits_get_string (bits);
-    s->exports = g_list_append (s->exports, exp);
-  }
-
-  return SWF_OK;
-}

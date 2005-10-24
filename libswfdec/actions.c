@@ -25,17 +25,6 @@ constant_pool_unref (ConstantPool *pool)
 }
 
 int
-tag_func_do_action (SwfdecDecoder * s)
-{
-  swfdec_sprite_add_action (s->parse_sprite, s->b.buffer,
-      s->parse_sprite->parse_frame);
-
-  s->b.ptr += s->b.buffer->length;
-
-  return SWF_OK;
-}
-
-int
 pc_is_valid (SwfdecActionContext *context, unsigned char *pc)
 {
   unsigned char *startpc;
@@ -308,39 +297,6 @@ swfdec_action_script_execute (SwfdecDecoder * s, SwfdecBuffer * buffer)
    * block. -- flasm.sf.net
    */
   return SWF_OK;
-}
-
-int
-tag_func_do_init_action (SwfdecDecoder * s)
-{
-  SwfdecBits *bits = &s->b;
-  int len;
-  SwfdecBuffer *buffer;
-  SwfdecObject *obj;
-  SwfdecSprite *save_parse_sprite;
-  unsigned char *endptr;
-  int retcode = SWF_ERROR;
-
-  endptr = bits->ptr + bits->buffer->length;
-
-  obj = swfdec_object_get (s, swfdec_bits_get_u16 (bits));
-
-  len = bits->end - bits->ptr;
-
-  buffer = swfdec_buffer_new_subbuffer (bits->buffer,
-    bits->ptr - bits->buffer->data, len);
-
-  bits->ptr += len;
-
-  if (SWFDEC_IS_SPRITE(obj)) {
-    save_parse_sprite = s->parse_sprite;
-    s->parse_sprite = SWFDEC_SPRITE(obj);
-    retcode = swfdec_action_script_execute (s, buffer);
-    s->parse_sprite = save_parse_sprite;
-  }
-  swfdec_buffer_unref (buffer);
-
-  return retcode;
 }
 
 /* stack ops */

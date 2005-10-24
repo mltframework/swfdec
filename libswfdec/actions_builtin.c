@@ -64,7 +64,7 @@ static JSBool
 mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval *rval)
 {
-  SwfdecSpriteSegment *parent_seg, *oldseg, *child_seg;
+  SwfdecSpriteSegment *parent_seg, *child_seg;
   SwfdecSprite *parent_sprite, *attach_sprite;
   JSString *idName, *newName;
   int depth;
@@ -101,16 +101,12 @@ mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     parent_sprite = SWFDEC_SPRITE(swfdec_object_get (context->s,
         parent_seg->id));
 
-  oldseg = swfdec_sprite_get_seg (parent_sprite, depth,
-      parent_seg->frame_index);
-  if (oldseg) {
-    oldseg->last_frame = parent_seg->frame_index;
-  }
+  swfdec_sprite_frame_remove_seg (&parent_sprite->frames[parent_seg->frame_index],
+      depth);
 
   /* FIXME we need a separate list of added segments */
   child_seg = swfdec_spriteseg_new ();
   child_seg->depth = depth;
-  child_seg->first_frame = parent_seg->frame_index;
   swfdec_transform_init_identity (&child_seg->transform);
   child_seg->color_transform.mult[0] = 1;
   child_seg->color_transform.mult[1] = 1;

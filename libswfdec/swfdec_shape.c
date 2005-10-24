@@ -69,6 +69,7 @@ swfdec_shapevec_free (SwfdecShapeVec * shapevec)
   g_free (shapevec);
 }
 
+#if 0
 static int
 get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
 {
@@ -190,48 +191,7 @@ get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
 
   return 1;
 }
-
-int
-tag_func_define_shape (SwfdecDecoder * s)
-{
-  SwfdecBits *b = &s->b;
-  int id;
-  int n_fill_styles;
-  int n_line_styles;
-  int n_fill_bits;
-  int n_line_bits;
-  int rect[4];
-  int i;
-
-  id = swfdec_bits_get_u16 (b);
-  SWFDEC_INFO ("id=%d", id);
-  SWFDEC_DEBUG ("  bounds = %s\n", "rect");
-  swfdec_bits_get_rect (b, rect);
-  swfdec_bits_syncbits (b);
-  n_fill_styles = swfdec_bits_get_u8 (b);
-  SWFDEC_LOG ("  n_fill_styles = %d", n_fill_styles);
-  for (i = 0; i < n_fill_styles; i++) {
-    swfdec_bits_get_fill_style (b);
-  }
-  swfdec_bits_syncbits (b);
-  n_line_styles = swfdec_bits_get_u8 (b);
-  SWFDEC_LOG ("  n_line_styles = %d", n_line_styles);
-  for (i = 0; i < n_line_styles; i++) {
-    swfdec_bits_get_line_style (b);
-  }
-  swfdec_bits_syncbits (b);
-  n_fill_bits = swfdec_bits_getbits (b, 4);
-  n_line_bits = swfdec_bits_getbits (b, 4);
-  SWFDEC_LOG ("  n_fill_bits = %d", n_fill_bits);
-  SWFDEC_LOG ("  n_line_bits = %d", n_line_bits);
-  do {
-    SWFDEC_LOG ("  shape_rec:");
-  } while (get_shape_rec (b, n_fill_bits, n_line_bits));
-
-  swfdec_bits_syncbits (b);
-
-  return SWF_OK;
-}
+#endif
 
 SwfdecShapeVec *
 swf_shape_vec_new (void)

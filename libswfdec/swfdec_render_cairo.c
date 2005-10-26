@@ -442,10 +442,12 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
           image = (SwfdecImage *)swfdec_object_get (s, shapevec->fill_id);
-          if (image) {
+          if (image && SWFDEC_IS_IMAGE (image)) {
+            unsigned char *image_data = swfdec_handle_get_data(image->handle);
+
             swfdec_matrix_to_cairo (&matrix, &mat);
             //swfdec_matrix_to_cairo (&matrix, &shapevec->fill_transform);
-            src_surface = cairo_image_surface_create_for_data (image->image_data,
+            src_surface = cairo_image_surface_create_for_data (image_data,
                 CAIRO_FORMAT_ARGB32, image->width, image->height,
                 image->rowstride);
             pattern = cairo_pattern_create_for_surface (src_surface);

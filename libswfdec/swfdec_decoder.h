@@ -97,8 +97,7 @@ struct _SwfdecDecoder
 
   unsigned char *tmp_scanline;
 
-  unsigned char *jpegtables;
-  unsigned int jpegtables_len;
+  SwfdecBuffer *jpegtables;
 
   int pixels_rendered;
 
@@ -124,6 +123,8 @@ struct _SwfdecDecoder
 
   GList *execute_list;
   int next_frame;
+
+  SwfdecCache *cache;
 };
 
 SwfdecDecoder *swf_init (void);

@@ -579,7 +579,6 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   layervec->color = SWF_COLOR_COMBINE (255, 0, 0, 255);
 
   image = SWFDEC_IMAGE (image_object);
-  SWFDEC_LOG ("image %p", image->image_data);
 
   SWFDEC_LOG ("%g %g %g %g %g %g",
       shapevec->fill_transform.trans[0],
@@ -603,7 +602,7 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   mat0.trans[5] -= layervec->rect.y0;
   swfdec_transform_invert (&mat, &mat0);
   dest = layervec->compose;
-  src = image->image_data;
+  src = swfdec_handle_get_data (image->handle);
   inv_width = 1.0 / image->width;
   inv_height = 1.0 / image->height;
   for (j = 0; j < height; j++) {

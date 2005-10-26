@@ -71,6 +71,8 @@ swfdec_decoder_new (void)
 
   swfdec_audio_add_stream(s);
 
+  s->cache = swfdec_cache_new();
+
   return s;
 }
 
@@ -292,12 +294,14 @@ swfdec_decoder_free (SwfdecDecoder * s)
   }
 
   if (s->jpegtables) {
-    g_free (s->jpegtables);
+    swfdec_buffer_unref (s->jpegtables);
   }
 
   if (s->tmp_scanline) {
     g_free (s->tmp_scanline);
   }
+
+  swfdec_cache_free (s->cache);
 
   g_free (s);
 

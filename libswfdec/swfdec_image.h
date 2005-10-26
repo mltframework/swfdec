@@ -15,13 +15,27 @@ typedef struct _SwfdecImageClass SwfdecImageClass;
 #define SWFDEC_IMAGE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_IMAGE, SwfdecImage))
 #define SWFDEC_IMAGE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_IMAGE, SwfdecImageClass))
 
+typedef enum {
+  SWFDEC_IMAGE_TYPE_UNKNOWN = 0,
+  SWFDEC_IMAGE_TYPE_JPEG,
+  SWFDEC_IMAGE_TYPE_JPEG2,
+  SWFDEC_IMAGE_TYPE_JPEG3,
+  SWFDEC_IMAGE_TYPE_LOSSLESS,
+  SWFDEC_IMAGE_TYPE_LOSSLESS2,
+} SwfdecImageType;
+
 struct _SwfdecImage
 {
   SwfdecObject object;
+  SwfdecHandle *handle;
 
   int width, height;
   int rowstride;
-  unsigned char *image_data;
+
+  SwfdecBuffer *jpegtables;
+  SwfdecBuffer *raw_data;
+
+  SwfdecImageType type;
 };
 
 struct _SwfdecImageClass

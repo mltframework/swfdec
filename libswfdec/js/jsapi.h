@@ -236,7 +236,7 @@ JS_PopArguments(JSContext *cx, void *mark);
  * The handler function has this signature (see jspubtd.h):
  *
  *   JSBool MyArgumentFormatter(JSContext *cx, const char *format,
- *                              JSBool fromJS, jsval **vpp, va_list *app);
+ *                              JSBool fromJS, jsval **vpp, va_list app);
  *
  * It should return true on success, and return false after reporting an error
  * or detecting an already-reported error.

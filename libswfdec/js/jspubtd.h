@@ -516,7 +516,7 @@ typedef const JSErrorFormatString *
 typedef JSBool
 (* JS_DLL_CALLBACK JSArgumentFormatter)(JSContext *cx, const char *format,
                                         JSBool fromJS, jsval **vpp,
-                                        va_list *app);
+                                        va_list app);
 #endif
 
 typedef JSBool

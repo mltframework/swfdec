@@ -12,7 +12,6 @@
 #include <signal.h>
 
 #include <X11/Xlib.h>
-#include <X11/Intrinsic.h>
 
 #include <SDL.h>
 #include "spp.h"

@@ -1,3 +1,14 @@
+2005-11-30  David Schleef  <ds@schleef.org>
+
+	* libswfdec/js/js.c: (ZZ_formatter):
+	* libswfdec/js/jsapi.c: (TryArgumentFormatter):
+	* libswfdec/js/jsapi.h:
+	* libswfdec/js/jspubtd.h:
+	  Fix usage of 'va_list *', it's wrong and doesn't work on powerpc.
+	  Noticed (and mostly fixed) by David Woodhouse.
+	* player/swf_play.c:
+	  Remove unnecessary header.
+
 2005-10-25  David Schleef  <ds@schleef.org>
 
 	* libswfdec/swfdec_cache.c: New code to help with caching data.

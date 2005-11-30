@@ -81,11 +81,7 @@
 #include "jsfile.h"
 #endif
 
-#ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) (ap)
-#else
-#define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
-#endif
 
 #if defined(JS_PARANOID_REQUEST) && defined(JS_THREADSAFE)
 #define CHECK_REQUEST(cx)       JS_ASSERT(cx->requestDepth)
@@ -125,7 +121,7 @@ JS_GetEmptyStringValue(JSContext *cx)
 
 static JSBool
 TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS,
-                     jsval **vpp, va_list *app)
+                     jsval **vpp, va_list app)
 {
     const char *format;
     JSArgumentFormatMap *map;

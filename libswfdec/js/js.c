@@ -1373,7 +1373,7 @@ EscapeWideString(jschar *w)
 
 static JSBool
 ZZ_formatter(JSContext *cx, const char *format, JSBool fromJS, jsval **vpp,
-             va_list *app)
+             va_list app)
 {
     jsval *vp;
     va_list ap;

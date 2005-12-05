@@ -1,3 +1,7 @@
+2005-12-05  David Schleef  <ds@schleef.org>
+
+	* README:  The Limitations section was out of date.
+
 2005-11-30  David Schleef  <ds@schleef.org>
 
 	* libswfdec/js/js.c: (ZZ_formatter):
@@ -8,6 +12,10 @@
 	  Noticed (and mostly fixed) by David Woodhouse.
 	* player/swf_play.c:
 	  Remove unnecessary header.
+
+2005-10-25  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swfdec_button.c: Fix silly crasher and memleak.
 
 2005-10-25  David Schleef  <ds@schleef.org>
 

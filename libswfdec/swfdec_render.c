@@ -12,7 +12,11 @@ void swfdec_decoder_sound_buffer_append (SwfdecDecoder * s,
 SwfdecRender *
 swfdec_render_new (void)
 {
-  return g_new0 (SwfdecRender, 1);
+  SwfdecRender *render;
+
+  render = g_new0 (SwfdecRender, 1);
+
+  return render;
 }
 
 void
@@ -35,17 +39,8 @@ swfdec_render_iterate (SwfdecDecoder * s)
 
   SWFDEC_DEBUG("iterate, frame_index = %d", s->render->frame_index);
 
+  s->render->frame_index = s->next_frame;
   s->next_frame = -1;
-  if (s->render->seek_frame != -1) {
-    SwfdecSound *sound;
-
-    s->render->frame_index = s->render->seek_frame;
-    s->render->seek_frame = -1;
-
-    sound = SWFDEC_SOUND (s->stream_sound_obj);
-    if (sound)
-      sound->tmpbuflen = 0;
-  }
 
   swfdec_sprite_render_iterate (s, s->main_sprite_seg, s->render);
 
@@ -68,28 +63,22 @@ swfdec_render_iterate (SwfdecDecoder * s)
   s->render->active_button = NULL;
   s->old_mouse_button = s->mouse_button;
 
-  if (s->next_frame != -1) {
-    /* if the next frame was explicitly set, go to it */
-    s->render->frame_index = s->next_frame;
-  } else if (!s->main_sprite_seg->stopped) {
-    /* if we're not stopped, go to the next frame */
-    s->render->frame_index++;
-    if (s->next_frame >= s->n_frames) {
-      s->next_frame = s->n_frames - 1;
-      //s->main_sprite_seg->stopped = TRUE;
+  if (s->next_frame == -1) {
+    if (!s->main_sprite_seg->stopped) {
+      s->next_frame = s->render->frame_index + 1;
+      if (s->next_frame >= s->n_frames) {
+        if (0 /*s->repeat*/) {
+          s->next_frame = 0;
+        } else {
+          s->next_frame = s->n_frames - 1;
+        }
+      }
+    } else {
+      s->next_frame = s->render->frame_index;
     }
   }
 
   return TRUE;
-}
-
-void
-swfdec_render_seek (SwfdecDecoder * s, int frame)
-{
-  if (frame < 0 || frame >= s->n_frames)
-    return;
-
-  s->render->seek_frame = frame;
 }
 
 int

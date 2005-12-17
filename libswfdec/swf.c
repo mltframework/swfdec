@@ -63,11 +63,15 @@ swfdec_decoder_new (void)
   swfdec_transform_init_identity (&s->transform);
 
   s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
+  s->main_sprite->object.id = 0;
+  s->objects = g_list_append (s->objects, s->main_sprite);
   s->main_sprite_seg = swfdec_spriteseg_new ();
   s->main_sprite_seg->id = SWFDEC_OBJECT(s->main_sprite)->id;
   s->render = swfdec_render_new ();
 
   s->flatness = 0.5;
+
+  s->allow_experimental = TRUE;
 
   swfdec_audio_add_stream(s);
 
@@ -662,7 +666,7 @@ int
 swfdec_decoder_experimental(SwfdecDecoder *s)
 {
   if (!s->using_experimental) {
-    SWFDEC_WARNING("using experimental code");
+    SWFDEC_ERROR ("using experimental code");
     s->using_experimental = TRUE;
   }
   return s->allow_experimental;

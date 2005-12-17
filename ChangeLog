@@ -1,5 +1,19 @@
 2005-12-16  David Schleef  <ds@schleef.org>
 
+	* libswfdec/actions.c:
+	* libswfdec/actions_tags.c:
+	* libswfdec/swf.c:
+	* libswfdec/swfdec_render.c:
+	* libswfdec/swfdec_render.h:
+	* libswfdec/swfdec_render_cairo.c:
+	  Add some debuggering code.  Fix some bugs:
+	   - fix image translation matrix
+	   - fix (finally?) how the next frame is decided
+	   - assume id==0 is the main sprite
+	   - fix random crashes
+
+2005-12-16  David Schleef  <ds@schleef.org>
+
 	* libswfdec/Makefile.am:
 	* libswfdec/actions_tags.c:
 	* libswfdec/swf.c:

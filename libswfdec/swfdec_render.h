@@ -13,7 +13,6 @@ G_BEGIN_DECLS
 struct swfdec_render_struct
 {
   int frame_index;
-  int seek_frame;
   SwfdecRect drawrect;
 
   GList *object_states;

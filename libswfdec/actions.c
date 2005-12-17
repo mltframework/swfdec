@@ -209,12 +209,14 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (len) {
       if (context->bits.ptr < context->bits.end) {
-        SWFDEC_ERROR ("action didn't read all data (%d < %d)",
+        SWFDEC_ERROR ("action 0x%02x didn't read all data (%d < %d)",
+            action,
             context->bits.ptr - (frame->bits.ptr - len),
             context->bits.end - (frame->bits.ptr - len));
       }
       if (context->bits.ptr > context->bits.end) {
-        SWFDEC_ERROR ("action read past end of buffer (%d > %d)",
+        SWFDEC_ERROR ("action 0x%02x read past end of buffer (%d > %d)",
+            action,
             context->bits.ptr - (frame->bits.ptr - len),
             context->bits.end - (frame->bits.ptr - len));
       }
@@ -227,7 +229,7 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (context->error) {
       context->error = 0;
-      SWFDEC_ERROR ("action script error");
+      SWFDEC_ERROR ("action script error (see warnings)");
     }
   }
 

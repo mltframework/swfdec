@@ -185,6 +185,7 @@ action_stop_sounds (SwfdecActionContext * context)
 {
   /* FIXME */
   SWFDEC_WARNING ("stop_sounds unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -212,6 +213,7 @@ action_set_target (SwfdecActionContext * context)
   target = swfdec_bits_get_string (&context->bits);
 
   SWFDEC_WARNING ("set_target unimplemented");
+  context->error = TRUE;
 
   g_free(target);
 }
@@ -224,6 +226,7 @@ action_go_to_label (SwfdecActionContext * context)
   label = swfdec_bits_get_string (&context->bits);
 
   SWFDEC_WARNING ("go_to_label unimplemented");
+  context->error = TRUE;
 
   g_free(label);
 }
@@ -635,6 +638,7 @@ action_call (SwfdecActionContext *context)
 {
   TAG_A = stack_pop (context);
   SWFDEC_ERROR ("action call unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -686,6 +690,7 @@ action_define_local (SwfdecActionContext *context)
   varname = JS_GetStringBytes (b);
 
   SWFDEC_WARNING ("local variables unimplemented (\"%s\")", varname);
+  context->error = TRUE;
 
   JS_SetProperty(context->jscx, context->global, varname, &TAG_A);
 }
@@ -696,6 +701,7 @@ action_define_local_2 (SwfdecActionContext *context)
   TAG_A = stack_pop (context);
 
   SWFDEC_WARNING ("local variables unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -715,6 +721,7 @@ action_get_url_2 (SwfdecActionContext *context)
   TAG_B = stack_pop (context);
 
   SWFDEC_WARNING ("action get_url_2 unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -731,6 +738,7 @@ action_goto_frame_2 (SwfdecActionContext *context)
   TAG_A = stack_pop (context);
 
   SWFDEC_WARNING ("action goto_frame_2 unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -739,6 +747,7 @@ action_set_target_2 (SwfdecActionContext *context)
   TAG_A = stack_pop (context);
 
   SWFDEC_WARNING ("action set_target_2 unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -782,6 +791,7 @@ action_get_property (SwfdecActionContext *context)
       default:
         /* FIXME need to get the property here */
         SWFDEC_WARNING ("get property unimplemented (index = %d)", a);
+        context->error = TRUE;
         break;
     }
   } else {
@@ -808,6 +818,7 @@ action_set_property (SwfdecActionContext *context)
 
   if (b >= 0 && b <= 21) {
     SWFDEC_WARNING ("set property %d unimplemented", b);
+    context->error = TRUE;
     /* FIXME need to set the property here */
   } else {
     SWFDEC_ERROR("property index out of range");
@@ -825,6 +836,7 @@ action_clone_sprite (SwfdecActionContext *context)
   TAG_C = stack_pop (context);
 
   SWFDEC_WARNING ("clone sprite unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -833,6 +845,7 @@ action_remove_sprite (SwfdecActionContext *context)
   TAG_A = stack_pop (context);
 
   SWFDEC_WARNING ("remove sprite unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -852,12 +865,14 @@ action_start_drag (SwfdecActionContext *context)
   }
 
   SWFDEC_WARNING ("start drag unimplemented");
+  context->error = TRUE;
 }
 
 static void
 action_end_drag (SwfdecActionContext *context)
 {
   SWFDEC_WARNING ("end drag unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -891,6 +906,7 @@ action_get_time (SwfdecActionContext *context)
   //a->number = swfdec_decoder_get_time ();
 
   SWFDEC_WARNING("ActionGetTime unimplemented");
+  context->error = TRUE;
 
   stack_push (context, INT_TO_JSVAL(0));
 }
@@ -988,7 +1004,7 @@ action_call_method (SwfdecActionContext *context)
     TAG_C = rval;
   } else {
     methodname = JS_GetStringBytes (a);
-    SWFDEC_DEBUG("Calling method %s of object 0x%x", methodname, b);
+    SWFDEC_WARNING("Calling method %s of object 0x%x", methodname, b);
     ok = JS_CallFunctionName (context->jscx, b, methodname, c, argv, &rval);
     TAG_C = rval;
     if (!ok)
@@ -1077,6 +1093,7 @@ action_delete_2 (SwfdecActionContext *context)
   TAG_A = stack_pop (context);
 
   SWFDEC_WARNING ("unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -1108,6 +1125,7 @@ action_equals_2 (SwfdecActionContext * context)
       TAG_C = BOOLEAN_TO_JSVAL(TRUE);
     } else if (JSVAL_IS_OBJECT(TAG_B) || JSVAL_IS_OBJECT(TAG_B)) {
       SWFDEC_WARNING ("object toprimitive unimplemented");
+      context->error = TRUE;
       TAG_C = BOOLEAN_TO_JSVAL(FALSE);
     } else {
       jsdouble a, b;
@@ -1183,6 +1201,7 @@ action_new_method (SwfdecActionContext *context)
   c = stack_pop_to_int32 (context, &TAG_C); /* argc */
 
   SWFDEC_WARNING ("unimplemented");
+  context->error = TRUE;
 }
 
 static void
@@ -1461,6 +1480,7 @@ static void
 action_enumerate_2 (SwfdecActionContext * context)
 {
   SWFDEC_WARNING("ActionEnumerate unimplemented");
+  context->error = TRUE;
   /*GList *g;
 
   TAG_A = stack_pop (context);

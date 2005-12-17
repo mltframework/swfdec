@@ -379,11 +379,11 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           int j;
           cairo_matrix_t matrix;
           SwfdecTransform mat;
-          //SwfdecTransform trans;
+          SwfdecTransform trans;
 
-          //swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
-          //swfdec_transform_invert (&mat, &trans);
-          swfdec_transform_invert (&mat, &shapevec->fill_transform);
+          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
+          swfdec_transform_invert (&mat, &trans);
+          //swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
           swfdec_matrix_to_cairo (&matrix, &mat);
           pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
@@ -406,11 +406,11 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           int j;
           cairo_matrix_t matrix;
           SwfdecTransform mat;
-          //SwfdecTransform trans;
+          SwfdecTransform trans;
 
-          //swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
-          //swfdec_transform_invert (&mat, &trans);
-          swfdec_transform_invert (&mat, &shapevec->fill_transform);
+          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
+          swfdec_transform_invert (&mat, &trans);
+          //swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
           swfdec_matrix_to_cairo (&matrix, &mat);
           pattern = cairo_pattern_create_radial (0,0,0,
@@ -436,10 +436,11 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           SwfdecImage *image;
           cairo_matrix_t matrix;
           SwfdecTransform mat;
-          //SwfdecTransform trans;
+          SwfdecTransform trans;
 
-          //swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
-          swfdec_transform_invert (&mat, &shapevec->fill_transform);
+          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
+          swfdec_transform_invert (&mat, &trans);
+          //swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
           image = (SwfdecImage *)swfdec_object_get (s, shapevec->fill_id);
           if (image && SWFDEC_IS_IMAGE (image)) {

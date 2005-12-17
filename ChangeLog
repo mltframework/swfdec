@@ -1,3 +1,8 @@
+2005-12-16  David Schleef  <ds@schleef.org>
+
+	* libswfdec/swfdec_button.c: (swfdec_button_dispose): Fix
+	  a leak.
+
 2005-12-05  David Schleef  <ds@schleef.org>
 
 	* README:  The Limitations section was out of date.

@@ -40,11 +40,12 @@ swfdec_button_dispose (SwfdecButton * button)
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     swfdec_spriteseg_free (record->segment);
   }
-  for (i = 0; i < button->records->len; i++) {
+  for (i = 0; i < button->actions->len; i++) {
     action = &g_array_index (button->actions, SwfdecButtonAction, i);
     swfdec_buffer_unref (action->buffer);
   }
   g_array_free (button->records, TRUE);
+  g_array_free (button->actions, TRUE);
 }
 
 static void

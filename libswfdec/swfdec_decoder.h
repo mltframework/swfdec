@@ -125,6 +125,9 @@ struct _SwfdecDecoder
   int next_frame;
 
   SwfdecCache *cache;
+
+  int using_experimental;
+  int allow_experimental;
 };
 
 SwfdecDecoder *swf_init (void);

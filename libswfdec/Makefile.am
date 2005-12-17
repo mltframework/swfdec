@@ -26,7 +26,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
 	swfdec_sprite.c swfdec_button.c swfdec_layer.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
 	swfdec_buffer.c swfdec_audio.c swfdec_tag.c \
-	swfdec_cache.c \
+	swfdec_cache.c swfdec_internal.h swfdec_decoder_internal.h \
 	swfdec_rect.c swfdec_transform.c $(renderer_sources)
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
@@ -43,7 +43,7 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec.h \
 	color.h proto.h swfdec_buffer.h swfdec_debug.h \
 	swfdec_button.h swfdec_decoder.h swfdec_image.h \
-	swfdec_internal.h swfdec_layer.h swfdec_object.h \
+	swfdec_layer.h swfdec_object.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_types.h tags.h \
 	swfdec_bits.h swfdec_rect.h swfdec_transform.h \

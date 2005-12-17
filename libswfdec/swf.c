@@ -658,3 +658,13 @@ swf_parse_header2 (SwfdecDecoder * s)
   return SWF_CHANGE;
 }
 
+int
+swfdec_decoder_experimental(SwfdecDecoder *s)
+{
+  if (!s->using_experimental) {
+    SWFDEC_WARNING("using experimental code");
+    s->using_experimental = TRUE;
+  }
+  return s->allow_experimental;
+}
+

@@ -1,5 +1,15 @@
 2005-12-16  David Schleef  <ds@schleef.org>
 
+	* libswfdec/Makefile.am:
+	* libswfdec/actions_tags.c:
+	* libswfdec/swf.c:
+	* libswfdec/swfdec_decoder.h:
+	* libswfdec/swfdec_decoder_internal.h:
+	* libswfdec/swfdec_internal.h:
+	  Add a function to flag running experimental code.
+
+2005-12-16  David Schleef  <ds@schleef.org>
+
 	* libswfdec/swfdec_button.c: (swfdec_button_dispose): Fix
 	  a leak.
 

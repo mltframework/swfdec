@@ -1197,6 +1197,8 @@ action_new_object (SwfdecActionContext *context)
   jsval *argv;
   void *mark;
 
+  if (!swfdec_decoder_experimental(context->s)) return;
+  
   a = stack_pop_to_string (context, &TAG_A);	/* object name */
   b = stack_pop_to_int32 (context, &TAG_B);	/* argc */
 
@@ -1590,6 +1592,8 @@ action_extends (SwfdecActionContext * context)
 {
   JSObject *a, *b, *obj;
   jsval superclass_prototype, superclass;
+
+  if (!swfdec_decoder_experimental(context->s)) return;
 
   a = stack_pop_to_object (context, &TAG_A); /* superclass */
   b = stack_pop_to_object (context, &TAG_B); /* subclass */

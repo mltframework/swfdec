@@ -82,7 +82,7 @@ struct _GstSwfdecClass
 {
   GstElementClass parent_class;
 
-  void (*embed_url) (GstElement *element, const char *url);
+  void (*embed_url) (GstElement *element, const char *url, const char *target);
 };
 
 GType gst_swfdec_get_type (void);

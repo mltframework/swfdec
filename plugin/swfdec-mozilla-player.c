@@ -33,15 +33,13 @@ struct sound_buffer_struct
 };
 typedef struct sound_buffer_struct SoundBuffer;
 
-gboolean debug = FALSE;
+gboolean debug = TRUE;
 
-gboolean streaming = FALSE;
 unsigned char *image;
 
 GtkWidget *gtk_wind;
 
 //GtkWidget *video_widget;
-int plugged;
 GdkWindow *gdk_parent;
 
 GIOChannel *input_chan;
@@ -51,8 +49,6 @@ guint render_idle_id;
 
 unsigned long xid;
 unsigned long eb_xid;
-int width;
-int height;
 int fast = FALSE;
 int enable_sound = TRUE;
 int quit_at_eof = FALSE;
@@ -61,29 +57,37 @@ int safe = FALSE;
 int interval;
 struct timeval image_time;
 
-int video_window_x;
-int video_window_y;
-int video_window_w;
-int video_window_h;
+//int video_window_x;
+//int video_window_y;
+//int video_window_w;
+//int video_window_h;
 
-GdkWindow *video_window;
+//GdkWindow *video_window;
+
+char *filename;
 
 gboolean visible;
 gboolean iconified;
+
+/* state variables */
+gboolean have_pipeline;
+gboolean is_plugged;
+gboolean error_occurred;
+gboolean streaming = FALSE;
 gboolean playing;
 
-gboolean error_occurred;
-char *error_message;
-
+/* functions */
 static void do_help (void);
 static void print_formats (void);
-static void new_gtk_window (void);
+static gboolean create_ui (void);
+gboolean ui_create_pipeline(gpointer ignored);
 static gboolean create_pipeline (int streaming, const char *location);
+static void handle_error (const char *format, ...);
+static void map_xoverlay (void);
 
-static void got_source (GObject * playbin, GParamSpec pspec, gpointer closure);
+/* Gstreamer callbacks */
 static void desired_size (GObject * obj, int w, int h, gpointer closure);
-static void found_tags (GObject * pipeline, GstElement * source, GstTagList * tags);
-static void embed_url (GObject * obj, const char *url, gpointer closure);
+static void embed_url (GObject * obj, const char *url, const char *target, gpointer closure);
 
 static void packet_write (int fd, int code, int len, const char *s);
 static void packet_go_to_url (const char *url, const char *target);
@@ -148,7 +152,6 @@ main (int argc, char *argv[])
     {"print-formats", 0, NULL, 0x1000},
     {0},
   };
-  int ret;
 
 #if 0
   log_fd = g_file_open_tmp ("gst-mozilla-plugin.log.XXXXXX", NULL, NULL);
@@ -195,29 +198,48 @@ main (int argc, char *argv[])
     }
   }
 
-  ret = create_pipeline(streaming, argv[optind]);
-  if (!ret) {
-    error_occurred = TRUE;
-  }
-
   if (xid) {
-    plugged = 1;
+    is_plugged = 1;
   }
 
-  new_gtk_window ();
+  create_ui ();
 
-  playing = TRUE;
-  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  if (ret != GST_STATE_SUCCESS) {
-    error_message = "Failed to set pipeline to PLAYING";
-    error_occurred = TRUE;
-  }
+  filename = argv[optind];
+
+  g_idle_add (ui_create_pipeline, NULL);
 
   g_timeout_add (1000, timeout, NULL);
 
   gtk_main ();
 
   exit (0);
+}
+
+gboolean
+ui_create_pipeline(gpointer ignored)
+{
+  int ret;
+
+  if (filename || streaming) {
+    have_pipeline = create_pipeline(streaming, filename);
+    if (!have_pipeline) {
+      handle_error ("Creation of pipeline failed.");
+    }
+  } else {
+    have_pipeline = FALSE;
+  }
+
+  if (safe) {
+    handle_error ("Safe mode");
+  } else {
+    ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+    if (ret != GST_STATE_SUCCESS) {
+      handle_error ("Failed to set pipeline to PLAYING");
+    }
+    playing = TRUE;
+  }
+  
+  return FALSE;
 }
 
 #define CREATE_ELEMENT(e,type) \
@@ -247,6 +269,10 @@ create_pipeline (int streaming, const char *location)
   if (streaming) {
     CREATE_ELEMENT (src, "appsrc");
   } else {
+    if (location == NULL) {
+      handle_error ("No file specified");
+      return FALSE;
+    }
     CREATE_ELEMENT (src, "filesrc");
   }
   CREATE_ELEMENT (swfdec, "swfdec2");
@@ -261,8 +287,7 @@ create_pipeline (int streaming, const char *location)
   CREATE_ELEMENT (audio_sink, "gconfaudiosink");
 
   if (bad_elements) {
-    error_message = g_strdup_printf("Failed to create elements: %s",
-        bad_elements);
+    handle_error ("Failed to create elements: %s", bad_elements);
     g_free(bad_elements);
     return FALSE;
   }
@@ -274,13 +299,12 @@ create_pipeline (int streaming, const char *location)
   }
   g_object_set (G_OBJECT(queue2), "max-size-buffers", 1, NULL);
 
+  map_xoverlay();
   g_signal_connect (G_OBJECT (xoverlay), "desired-size-changed",
       G_CALLBACK (desired_size), NULL);
 
   g_signal_connect (G_OBJECT (swfdec), "embed-url",
       G_CALLBACK (embed_url), NULL);
-  g_signal_connect (G_OBJECT (swfdec), "found-tag",
-      G_CALLBACK (found_tags), NULL);
 
   gst_bin_add (GST_BIN (pipeline), thread);
   gst_bin_add_many (GST_BIN (thread), src, swfdec, thread2, thread3, NULL);
@@ -297,7 +321,7 @@ create_pipeline (int streaming, const char *location)
   ret &= gst_element_link (audioscale, audioconvert);
   ret &= gst_element_link (audioconvert, audio_sink);
   if (ret == FALSE) {
-    error_message = "Failed to link elements\n";
+    handle_error ("Failed to link elements");
     return FALSE;
   }
 
@@ -318,21 +342,21 @@ print_formats (void)
   exit (0);
 }
 
-static void
-new_gtk_window (void)
+static gboolean
+create_ui (void)
 {
-  if (plugged) {
+  if (is_plugged) {
     gtk_wind = gtk_plug_new (0);
     gtk_signal_connect (GTK_OBJECT (gtk_wind), "embedded",
         GTK_SIGNAL_FUNC (embedded), NULL);
 
     gdk_parent = gdk_window_foreign_new (xid);
-    gdk_window_get_geometry (gdk_parent, NULL, NULL, &width, &height, NULL);
+    //gdk_window_get_geometry (gdk_parent, NULL, NULL, &width, &height, NULL);
   } else {
     gtk_wind = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   }
   //g_object_set (G_OBJECT(gtk_wind), "visible", FALSE, NULL);
-  gtk_window_set_default_size (GTK_WINDOW (gtk_wind), width, height);
+  gtk_window_set_default_size (GTK_WINDOW (gtk_wind), 320, 200);
   gtk_signal_connect (GTK_OBJECT (gtk_wind), "delete_event",
       GTK_SIGNAL_FUNC (destroy_cb), NULL);
   gtk_signal_connect (GTK_OBJECT (gtk_wind), "destroy",
@@ -372,25 +396,36 @@ new_gtk_window (void)
 
   gtk_widget_show_all (gtk_wind);
 
-  if (plugged) {
+  if (is_plugged) {
     XReparentWindow (GDK_WINDOW_XDISPLAY (gtk_wind->window),
         GDK_WINDOW_XID (gtk_wind->window), xid, 0, 0);
     XMapWindow (GDK_WINDOW_XDISPLAY (gtk_wind->window),
         GDK_WINDOW_XID (gtk_wind->window));
   }
+
+  return TRUE;
 }
 
 static void
-do_error_message (void)
+handle_error (const char *format, ...)
 {
   GtkWidget *label;
   GtkWidget *align;
+  char *error_message;
   char *s;
+  va_list varargs;
 
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  va_start (varargs, format);
+  error_message = g_strdup_vprintf (format, varargs);
+  va_end (varargs);
+
+  if (playing) {
+    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  }
 
   s = g_strdup_printf("An error occurred playing SWF file:\n%s\n",
       error_message);
+  g_free(error_message);
   label = gtk_label_new(s);
   g_free(s);
   
@@ -408,6 +443,7 @@ do_error_message (void)
 static gboolean
 timeout (gpointer closure)
 {
+#if 0
   if (debug) {
     if (GTK_WIDGET_MAPPED(gtk_wind)){
       fprintf(stderr, "is mapped\n");
@@ -415,11 +451,7 @@ timeout (gpointer closure)
       fprintf(stderr, "is unmapped\n");
     }
   }
-
-  if (error_occurred) {
-    do_error_message();
-    error_occurred = FALSE;
-  }
+#endif
 
   return TRUE;
 }
@@ -442,11 +474,13 @@ menu_report_bug (GtkMenuItem *item, gpointer user_data)
   char *url;
   char *s;
 
-  g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+  if (streaming) {
+    g_object_get (G_OBJECT(src), "source_url", &url, NULL);
 
-  s = g_strdup_printf("http://www.schleef.org/swfdec/?%s", url);
-  packet_go_to_url(s, "_self");
-  g_free(s);
+    s = g_strdup_printf("http://www.schleef.org/swfdec/?%s", url);
+    packet_go_to_url(s, "_self");
+    g_free(s);
+  }
 }
 
 static void
@@ -455,11 +489,13 @@ menu_copy_url (GtkMenuItem *item, gpointer user_data)
   char *url;
   GtkClipboard *clipboard;
 
-  g_object_get (G_OBJECT(src), "source_url", &url, NULL);
-  clipboard = gtk_clipboard_get_for_display (gdk_display_get_default(),
-      GDK_SELECTION_PRIMARY);
+  if (streaming) {
+    g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+    clipboard = gtk_clipboard_get_for_display (gdk_display_get_default(),
+        GDK_SELECTION_PRIMARY);
 
-  gtk_clipboard_set_text (clipboard, url, strlen(url));
+    gtk_clipboard_set_text (clipboard, url, strlen(url));
+  }
 }
 
 
@@ -489,8 +525,10 @@ button_press_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
     gtk_menu_popup (GTK_MENU (menu), NULL, NULL, NULL, NULL, 3, evt->time);
   }
   if (evt->button == 1) {
-    gst_navigation_send_mouse_event (GST_NAVIGATION (xoverlay),
-        "mouse-button-press", 0, evt->x, evt->y);
+    if (xoverlay) {
+      gst_navigation_send_mouse_event (GST_NAVIGATION (xoverlay),
+          "mouse-button-press", 0, evt->x, evt->y);
+    }
   }
 
   return FALSE;
@@ -503,8 +541,10 @@ button_release_event (GtkWidget * widget, GdkEventButton * evt, gpointer data)
     fprintf (stderr, "button release\n");
 
   if (evt->button == 1) {
-    gst_navigation_send_mouse_event (GST_NAVIGATION (xoverlay),
-        "mouse-button-release", 0, evt->x, evt->y);
+    if (xoverlay) {
+      gst_navigation_send_mouse_event (GST_NAVIGATION (xoverlay),
+          "mouse-button-release", 0, evt->x, evt->y);
+    }
   }
 
   return FALSE;
@@ -547,7 +587,7 @@ static void
 check_playing (void)
 {
   gboolean should_play;
-  int ret;
+  //int ret;
 
   if (visible && !iconified) {
     should_play = TRUE;
@@ -555,6 +595,7 @@ check_playing (void)
     should_play = FALSE;
   }
 
+#if 0
 should_play = TRUE;
   if (should_play != playing) {
     if (should_play) {
@@ -570,6 +611,7 @@ should_play = TRUE;
     }
     playing = should_play;
   }
+#endif
 
 }
 
@@ -619,13 +661,17 @@ unmap (GtkWidget *widget, gpointer closure)
 static int
 configure_cb (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
 {
+  map_xoverlay();
+
   return FALSE;
 }
 
 static int
 expose (GtkWidget * widget, GdkEventExpose * evt, gpointer data)
 {
-  gst_x_overlay_expose (GST_X_OVERLAY(xoverlay));
+  if (xoverlay) {
+    gst_x_overlay_expose (GST_X_OVERLAY(xoverlay));
+  }
 
   return FALSE;
 }
@@ -646,17 +692,25 @@ static void
 video_widget_realize (GtkWidget * widget, gpointer ignored)
 {
 
-  video_window = widget->window;
+  //video_window = widget->window;
 
-  if (xoverlay && GST_IS_X_OVERLAY (xoverlay) && GDK_IS_WINDOW (video_window)) {
-    /* This is necessary because we're sending an XID for a window that
-     * the X server doesn't necessarily know about yet. */
-    XSync (GDK_DISPLAY (), False);
-    /* Now it knows. */
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (xoverlay),
-        GDK_WINDOW_XID (video_window));
-  } else {
-    g_warning ("Could not find an XOVERLAY element for reparenting");
+  //map_xoverlay();
+}
+
+static void
+map_xoverlay (void)
+{
+  if (xoverlay) {
+    if (GST_IS_X_OVERLAY (xoverlay) && GDK_IS_WINDOW (gtk_wind->window)) {
+      /* This is necessary because we're sending an XID for a window that
+       * the X server doesn't necessarily know about yet. */
+      XSync (GDK_DISPLAY (), False);
+      /* Now it knows. */
+      gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (xoverlay),
+          GDK_WINDOW_XID (gtk_wind->window));
+    } else {
+      g_warning ("Could not find an XOVERLAY element for reparenting");
+    }
   }
 }
 
@@ -666,12 +720,12 @@ video_widget_allocate (GtkWidget * widget,
 {
   gint x, y, w, h;
 
-  gdk_window_get_geometry (video_window, &x, &y, &w, &h, NULL);
+  gdk_window_get_geometry (gtk_wind->window, &x, &y, &w, &h, NULL);
 
-  video_window_x = x;
-  video_window_y = y;
-  video_window_w = w;
-  video_window_h = h;
+  //video_window_x = x;
+  //video_window_y = y;
+  //video_window_w = w;
+  //video_window_h = h;
 }
 
 static void
@@ -681,25 +735,14 @@ desired_size (GObject * obj, int w, int h, gpointer closure)
     fprintf (stderr, "got size %d %d\n", w, h);
 
   gtk_window_resize (GTK_WINDOW (gtk_wind), w, h);
+
+  map_xoverlay();
 }
 
 static void
-embed_url (GObject * obj, const char *url, gpointer closure)
+embed_url (GObject * obj, const char *url, const char *target, gpointer closure)
 {
-  packet_go_to_url (url, "_self");
-}
-
-static void
-found_tags (GObject * pipeline, GstElement * source, GstTagList * tags)
-{
-  unsigned int version = 0;
-
-  gst_tag_list_get_uint (tags, GST_TAG_ENCODER_VERSION, &version);
-
-  if (version >= MAX_VERSION) {
-    error_message = g_strdup_printf ("SWF version %d unsupported", version);
-    error_occurred = TRUE;
-  }
+  packet_go_to_url (url, target);
 }
 
 static void
@@ -717,7 +760,7 @@ packet_go_to_url (const char *url, const char *target)
   if (streaming) {
     packet_write (1, SPP_GO_TO_URL2, len, buf);
   } else {
-    /* FIXME: start a browser? */
+    fprintf(stderr, "go to URL %s\n", url);
   }
 
   g_free (buf);
@@ -736,3 +779,4 @@ packet_write (int fd, int code, int len, const char *s)
 
   g_free (buf);
 }
+

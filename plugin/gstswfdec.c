@@ -25,6 +25,8 @@
 #include <string.h>
 #include <gst/video/video.h>
 #include <swfdec_buffer.h>
+#include <swfdec_decoder.h>
+#include <gstswfdecmarshal.h>
 
 /* elementfactory information */
 static GstElementDetails gst_swfdec_details =
@@ -156,7 +158,8 @@ gst_swfdec_class_init (GstSwfdecClass * klass)
     g_signal_new ("embed-url", G_TYPE_FROM_CLASS (klass),
         G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstSwfdecClass, embed_url), NULL, NULL,
-        g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+        gst_swfdec_marshal_VOID__STRING_STRING, G_TYPE_NONE, 2,
+        G_TYPE_STRING, G_TYPE_STRING);
 }
 
 static GstCaps *
@@ -361,7 +364,7 @@ gst_swfdec_loop (GstElement * element)
     url = swfdec_decoder_get_url (swfdec->decoder);
     if (url) {
       g_signal_emit (G_OBJECT (swfdec), gst_swfdec_signals[SIGNAL_EMBED_URL],
-          0, url);
+          0, url, "_self");
     }
   }
 }
@@ -410,6 +413,7 @@ gst_swfdec_init (GstSwfdec * swfdec)
   g_return_if_fail (swfdec->decoder != NULL);
 
   swfdec_decoder_set_colorspace (swfdec->decoder, SWF_COLORSPACE_RGB888);
+  swfdec->decoder->allow_experimental = FALSE;
 
   GST_FLAG_SET (GST_ELEMENT (swfdec), GST_ELEMENT_EVENT_AWARE);
 
@@ -417,7 +421,7 @@ gst_swfdec_init (GstSwfdec * swfdec)
   swfdec->x = -1;
   swfdec->y = -1;
 
-  swfdec->skip_frames = 2;
+  swfdec->skip_frames = 4;
   swfdec->skip_index = 0;
 }
 
@@ -534,6 +538,7 @@ gst_swfdec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
       /* the all-formats seek logic */
+#if 0
     case GST_EVENT_SEEK:
     {
       int new_frame;
@@ -562,6 +567,7 @@ gst_swfdec_src_event (GstPad * pad, GstEvent * event)
       res = TRUE;
       break;
     }
+#endif
     case GST_EVENT_NAVIGATION:
     {
       GstStructure *structure = event->event_data.structure.structure;

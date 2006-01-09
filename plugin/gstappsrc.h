@@ -3,6 +3,7 @@
 #define __GST_APPSRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
 
@@ -19,20 +20,11 @@ G_BEGIN_DECLS
 
 typedef struct _GstAppSrc GstAppSrc;
 typedef struct _GstAppSrcClass GstAppSrcClass;
-typedef struct _GstAppsrcBufferinfo GstAppsrcBufferinfo;
-
-struct _GstAppsrcBufferinfo {
-  GstBuffer *buffer;
-  int offset;
-  int size;
-};
 
 struct _GstAppSrc {
-  GstElement element;
+  GstPushSrc base_src;
 
-  GstPad *srcpad;
-
-  GArray *buffers;
+  GQueue *buffer_queue;
   unsigned int head_offset;
   unsigned int head_index;
   unsigned int current_offset;
@@ -52,7 +44,7 @@ struct _GstAppSrc {
 };
 
 struct _GstAppSrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 
 };
 

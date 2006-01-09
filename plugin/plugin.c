@@ -41,6 +41,7 @@ typedef struct
   int argc;
   char **argn;
   char **argv;
+  int safe;
 } Plugin;
 
 void DEBUG (const char *format, ...);
@@ -52,12 +53,15 @@ static char * get_formats (void);
 static int n_helpers;
 
 static void
-plugin_fork (Plugin * plugin, int safe)
+plugin_fork (Plugin * plugin)
 {
   int fds[4];
+  int i;
 
   pipe (fds);
   pipe (fds + 2);
+
+  DEBUG("fds %d %d %d %d", fds[0], fds[1], fds[2], fds[3]);
 
   plugin->recv_fd = fds[0];
   plugin->send_fd = fds[3];
@@ -82,7 +86,7 @@ plugin_fork (Plugin * plugin, int safe)
     argv[argc++] = "--xid";
     argv[argc++] = xid_str;
     argv[argc++] = "--plugin";
-    if (safe) {
+    if (plugin->safe) {
       argv[argc++] = "--safe";
     }
     argv[argc] = NULL;
@@ -96,13 +100,27 @@ plugin_fork (Plugin * plugin, int safe)
 
   close (fds[1]);
   close (fds[2]);
+
+  for (i=0;i<plugin->argc;i++){
+    char *buf;
+    int len;
+
+    DEBUG ("sending: %s %s", plugin->argn[i], plugin->argv[i]);
+    len = strlen (plugin->argn[i]) + 1 + strlen(plugin->argv[i]) + 1;
+    buf = malloc (len);
+    memcpy (buf, plugin->argn[i], strlen (plugin->argn[i]) + 1);
+    memcpy (buf + strlen (plugin->argn[i]) + 1,
+        plugin->argv[i], strlen (plugin->argv[i]) + 1);
+    packet_write (plugin->send_fd, SPP_METADATA, len, buf);
+    free(buf);
+  }
+
 }
 
 static void *
 plugin_thread (void *arg)
 {
   Plugin *plugin = arg;
-  int safe = 0;
 
   DEBUG ("starting thread");
   while (plugin->run_thread) {
@@ -142,14 +160,17 @@ plugin_thread (void *arg)
           /* this means the child closed the descriptor, i.e., died */
           DEBUG ("read returned 0");
           close (plugin->recv_fd);
+          close (plugin->send_fd);
           plugin->recv_fd = -1;
+          plugin->send_fd = -1;
 
           if (plugin->run_thread) {
-            if (safe == 0) {
-              //plugin_fork (plugin, TRUE);
-              safe = 1;
-            } else {
+            if (plugin->safe) {
               /* helper app failed in safe mode.  oops. */
+            } else {
+              plugin->safe = 1;
+
+              plugin_fork (plugin);
             }
           }
         } else {
@@ -334,7 +355,6 @@ plugin_set_window (NPP instance, NPWindow * window)
     }
   } else {
     NPSetWindowCallbackStruct *ws_info;
-    int i;
 
     DEBUG ("about to fork");
 
@@ -348,20 +368,7 @@ plugin_set_window (NPP instance, NPWindow * window)
          ButtonReleaseMask | PointerMotionMask | ExposureMask ));
 #endif
 
-    plugin_fork (plugin, FALSE);
-
-    for (i=0;i<plugin->argc;i++){
-      char *buf;
-      int len;
-
-      len = strlen (plugin->argn[i]) + 1 + strlen(plugin->argv[i]) + 1;
-      buf = malloc (len);
-      memcpy (buf, plugin->argn[i], strlen (plugin->argn[i]) + 1);
-      memcpy (buf + strlen (plugin->argn[i]) + 1,
-          plugin->argv[i], strlen (plugin->argv[i]) + 1);
-      packet_write (plugin->send_fd, SPP_METADATA, len, buf);
-      free(buf);
-    }
+    plugin_fork (plugin);
 
     //fcntl(plugin->send_fd, F_SETFL, O_NONBLOCK);
   }
@@ -589,11 +596,16 @@ NPP_URLNotify (NPP instance, const char *url, NPReason reason, void *notifyData)
 static void
 packet_write (int fd, int code, int len, void *data)
 {
-  write (fd, &code, 4);
-  write (fd, &len, 4);
-  if (len > 0 && data) {
-    write (fd, data, len);
-  }
+  char *tmp;
+  
+  tmp = malloc (len + 8);
+  memcpy (tmp, &code, 4);
+  memcpy (tmp+4, &len, 4);
+  memcpy (tmp+8, data, len);
+
+  write (fd, tmp, len + 8);
+
+  free (tmp);
 }
 
 

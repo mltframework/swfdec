@@ -11,15 +11,10 @@
 
 #include "spp.h"
 
-static void gst_appsrc_base_init (gpointer g_class);
-static void gst_appsrc_class_init (GstAppSrcClass *klass);
-static void gst_appsrc_init (GstAppSrc * appsrc);
-static gboolean gst_appsrc_event_handler (GstPad *pad, GstEvent *event);
 static void gst_appsrc_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *param_spec);
 static void gst_appsrc_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
-static void gst_appsrc_loop (GstElement *element);
-//static GstElementStateReturn gst_appsrc_change_state (GstElement * element);
 static void gst_appsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
+static GstFlowReturn gst_appsrc_create (GstPushSrc *push_src, GstBuffer **buffer);
 
 GST_DEBUG_CATEGORY_STATIC (gst_appsrc_debug);
 #define GST_CAT_DEFAULT gst_appsrc_debug
@@ -42,6 +37,7 @@ GstStaticPadTemplate gst_appsrc_src_template = GST_STATIC_PAD_TEMPLATE (
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+#if 0
 static const GstEventMask *
 gst_appsrc_get_event_mask (GstPad *pad)
 {
@@ -63,6 +59,7 @@ gst_appsrc_get_formats (GstPad *pad)
 
   return formats;
 }
+#endif
 
 static void
 _do_init (GType appsrc_type)
@@ -79,7 +76,7 @@ _do_init (GType appsrc_type)
   GST_DEBUG_CATEGORY_INIT (gst_appsrc_debug, "appsrc", 0, "appsrc element");
 }
 
-GST_BOILERPLATE_FULL (GstAppSrc, gst_appsrc, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (GstAppSrc, gst_appsrc, GstPushSrc, GST_TYPE_PUSH_SRC,
     _do_init);
 
 
@@ -98,9 +95,11 @@ gst_appsrc_class_init (GstAppSrcClass *klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstpushsrc_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property = gst_appsrc_set_property;
   gobject_class->get_property = gst_appsrc_get_property;
@@ -112,68 +111,23 @@ gst_appsrc_class_init (GstAppSrcClass *klass)
       g_param_spec_string ("source_url", "Source URL",
         "Source URL (as reported by mozilla)", NULL, G_PARAM_READABLE));
 
-  //gstelement_class->change_state = gst_appsrc_change_state;
+  //gstbasesrc_class->is_seekable = gst_appsrc_is_seekable;
+  //gstbasesrc_class->do_seek = gst_appsrc_do_seek;
+  //gstbasesrc_class->query = gst_appsrc_query;
+  //gstbasesrc_class->get_times = gst_appsrc_get_times;
+
+  gstpushsrc_class->create = gst_appsrc_create;
 }
 
 static void
-gst_appsrc_init (GstAppSrc * appsrc)
+gst_appsrc_init (GstAppSrc * appsrc, GstAppSrcClass *appsrc_class)
 {
-  appsrc->srcpad = gst_pad_new_from_template (gst_static_pad_template_get (
-          &gst_appsrc_src_template), "src");
-
-  gst_pad_set_event_function (appsrc->srcpad, gst_appsrc_event_handler);
-  gst_pad_set_event_mask_function (appsrc->srcpad, gst_appsrc_get_event_mask);
-  //gst_pad_set_query_function (appsrc->srcpad, gst_appsrc_query);
-  //gst_pad_set_query_mask_function (appsrc->srcpad, gst_appsrc_get_query_mask);
-  gst_pad_set_formats_function (appsrc->srcpad, gst_appsrc_get_formats);
-  gst_element_set_loop_function (GST_ELEMENT (appsrc), gst_appsrc_loop);
-
-  gst_element_add_pad (GST_ELEMENT (appsrc), appsrc->srcpad);
-
-  appsrc->buffers = g_array_new(FALSE, FALSE, sizeof (GstAppsrcBufferinfo));
-
   /* FIXME: this gets leaked */
   appsrc->source_url = g_strdup("");
-}
 
-static gboolean
-gst_appsrc_event_handler (GstPad *pad, GstEvent *event)
-{
-  GstAppSrc *appsrc;
+  //gst_base_src_set_live (GST_BASE_SRC (appsrc), TRUE);
 
-  appsrc = GST_APPSRC (gst_pad_get_parent(pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-      appsrc->seeking = TRUE;
-      switch (GST_EVENT_SEEK_METHOD (event)) {
-        case GST_SEEK_METHOD_SET:
-          GST_DEBUG("seek method set");
-          appsrc->seek_offset = GST_EVENT_SEEK_OFFSET (event);
-          break;
-        case GST_SEEK_METHOD_CUR:
-          GST_DEBUG("seek method cur");
-          appsrc->seek_offset = appsrc->current_offset +
-            GST_EVENT_SEEK_OFFSET (event);
-          break;
-        default:
-          GST_DEBUG("unknown seek method %d", GST_EVENT_SEEK_METHOD(event));
-          break;
-      }
-      GST_DEBUG ("got seek event offset=%d", appsrc->seek_offset);
-      appsrc->need_discont = TRUE;
-      appsrc->need_flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-      break;
-    case GST_EVENT_SEEK_SEGMENT:
-      break;
-    case GST_EVENT_FLUSH:
-      break;
-    default:
-      break;
-  }
-  gst_event_unref (event);
-
-  return TRUE;
+  appsrc->buffer_queue = g_queue_new();
 }
 
 
@@ -217,50 +171,44 @@ gst_appsrc_get_property (GObject *object, guint prop_id, GValue *value,
   }
 }
 
-static void
-gst_appsrc_loop (GstElement *element)
+static int
+gst_appsrc_read_packet (GstAppSrc *appsrc, int timeout_usec)
 {
-  GstAppSrc *appsrc = GST_APPSRC(element);
-  //GstBuffer *buffer;
   int ret;
+  guint8 *data;
+  struct timeval timeout;
+  fd_set readfds;
+  GstBuffer *buffer;
   int code;
   int length;
-  guint8 *data;
-  GstAppsrcBufferinfo bufferinfo = { 0 };
-  fd_set readfds;
-  struct timeval timeout;
-
-  GST_DEBUG("loop");
 
   FD_ZERO (&readfds);
   FD_SET(appsrc->fd, &readfds);
   timeout.tv_sec = 0;
-  timeout.tv_usec = 0;
+  timeout.tv_usec = timeout_usec;
   ret = select (appsrc->fd + 1, &readfds, NULL, NULL, &timeout);
   GST_DEBUG("select returned %d", ret);
+  
   if (ret > 0 && FD_ISSET (appsrc->fd, &readfds)) {
     ret = read (appsrc->fd, &code, 4);
     ret = read (appsrc->fd, &length, 4);
+    
+    GST_DEBUG ("got packet code=%d size=%d", code, length);
 
     data = g_malloc (length);
     ret = read (appsrc->fd, data, length);
-
-    GST_DEBUG ("got packet code=%d size=%d", code, length);
 
     switch (code) {
       case SPP_EXIT:
         //exit(0);
         break;
       case SPP_DATA:
-        bufferinfo.buffer = gst_buffer_new ();
-        bufferinfo.offset = appsrc->head_offset;
-        bufferinfo.size = length;
-        GST_BUFFER_DATA (bufferinfo.buffer) = data;
+        buffer = gst_buffer_new ();
+        GST_BUFFER_DATA (buffer) = data;
         data = NULL;
-        GST_BUFFER_SIZE (bufferinfo.buffer) = length;
-        GST_BUFFER_OFFSET (bufferinfo.buffer) = bufferinfo.offset;
-        g_array_append_val (appsrc->buffers, bufferinfo);
-        appsrc->head_offset += length;
+        GST_BUFFER_SIZE (buffer) = length;
+        //GST_BUFFER_OFFSET (buffer) = offset;
+        g_queue_push_tail (appsrc->buffer_queue, buffer);
         appsrc->head_index++;
         break;
       case SPP_EOF:
@@ -294,115 +242,39 @@ gst_appsrc_loop (GstElement *element)
     if (data) {
       g_free (data);
     }
-  } else {
-    if (appsrc->seeking) {
-      int i;
-
-      GST_DEBUG ("handling seek");
-
-      appsrc->seeking = FALSE;
-      for(i=0;i<appsrc->head_index;i++){
-        GstAppsrcBufferinfo *bip;
-
-        bip = &g_array_index (appsrc->buffers, GstAppsrcBufferinfo, i);
-        if (appsrc->seek_offset < bip->offset + bip->size) break;
-      }
-
-      appsrc->current_index = i;
-      appsrc->current_offset = appsrc->seek_offset;
-      GST_DEBUG ("seek to index=%d", i);
-      if (appsrc->need_flush) {
-        appsrc->need_flush = FALSE;
-        GST_DEBUG ("sending flush");
-        gst_pad_push (appsrc->srcpad, GST_DATA (gst_event_new_flush()));
-      }
-      if (appsrc->need_discont) {
-        GstEvent *event;
-
-        event = gst_event_new_discontinuous (FALSE, GST_FORMAT_BYTES,
-            (guint64) appsrc->current_offset, GST_FORMAT_UNDEFINED);
-
-        GST_DEBUG ("sending discont");
-        appsrc->need_discont = FALSE;
-        gst_pad_push (appsrc->srcpad, GST_DATA (event));
-      }
-    }
-
-    if (appsrc->current_index < appsrc->head_index) {
-      GstAppsrcBufferinfo *bip;
-
-      bip = &g_array_index (appsrc->buffers, GstAppsrcBufferinfo,
-          appsrc->current_index);
-      if (bip->offset == appsrc->current_offset) {
-        GST_DEBUG ("pushing normal buffer offset=%d", bip->offset);
-        gst_buffer_ref (bip->buffer);
-        gst_pad_push (appsrc->srcpad, GST_DATA (bip->buffer));
-        appsrc->current_index++;
-        appsrc->current_offset += bip->size;
-      } else {
-        GstBuffer *buffer;
-        int offset;
-        int size;
-
-        offset = appsrc->current_offset - bip->offset;
-        size = bip->size - offset;
-        GST_DEBUG ("pushing sub buffer offset=%d size=%d", offset, size);
-
-        buffer = gst_buffer_create_sub (bip->buffer, offset, size);
-        GST_BUFFER_OFFSET (buffer) = appsrc->current_offset;
-        gst_pad_push (appsrc->srcpad, GST_DATA(buffer));
-        appsrc->current_index++;
-        appsrc->current_offset += size;
-      }
-    } else {
-      if (appsrc->eof) {
-        GST_DEBUG ("pushing EOS");
-        gst_pad_push (appsrc->srcpad,
-            GST_DATA (gst_event_new (GST_EVENT_EOS)));
-        gst_element_set_eos (GST_ELEMENT(appsrc));
-      } else {
-        //usleep (1000);
-      }
-    }
+    return 1;
   }
+
+  return 0;
 }
 
-#if 0
-static GstElementStateReturn
-gst_appsrc_change_state (GstElement * element)
+static GstFlowReturn
+gst_appsrc_create (GstPushSrc *push_src, GstBuffer **buffer)
 {
-  GstAppSrc *appsrc;
+  GstAppSrc *appsrc = GST_APPSRC(push_src);
+  //GstBuffer *buffer;
 
-  appsrc = GST_APPSRC (element);
+  GST_DEBUG("create");
 
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_NULL_TO_READY:
-      break;
-    case GST_STATE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_READY_TO_NULL:
-      break;
+  gst_appsrc_read_packet (appsrc, 0);
+  while (1) {
+    if (!g_queue_is_empty(appsrc->buffer_queue)) {
+      *buffer = g_queue_pop_head (appsrc->buffer_queue);
+      return GST_FLOW_OK;
+    }
+    if (appsrc->eof) {
+      return GST_FLOW_UNEXPECTED;
+    }
+    gst_appsrc_read_packet (appsrc, 10000);
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-
-  return GST_STATE_SUCCESS;
 }
-#endif
 
 /* uri interface */
 
 static guint
 gst_appsrc_uri_get_type (void)
 {
-  return GST_URI_SRC;
+return GST_URI_SRC;
 }
 
 static gchar **

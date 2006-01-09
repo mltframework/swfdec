@@ -21,9 +21,7 @@ swfdec_mozilla_player_SOURCES = \
 	gstappsrc.h \
 	spp.h \
 	gstswfdec.c \
-	gstswfdec.h \
-	gstswfdecmarshal.c \
-	gstswfdecmarshal.h
+	gstswfdec.h
 
 swfdec_mozilla_player_CFLAGS = \
 	$(GLOBAL_CFLAGS) \
@@ -32,15 +30,7 @@ swfdec_mozilla_player_CFLAGS = \
 	$(GTK_CFLAGS)
 
 swfdec_mozilla_player_LDADD = \
-	$(GST_LIBS) \
+	$(GST_LIBS) -lgstinterfaces-0.10 -lgstbase-0.10 \
 	$(GTK_LIBS) \
 	$(SWF_LIBS)
-
-gstswfdecmarshal.h: $(srcdir)/gstswfdecmarshal.list
-	glib-genmarshal --header --prefix=gst_swfdec_marshal $(srcdir)/gstswfdecmarshal.list > gstswfdecmarshal.h.tmp
-	mv gstswfdecmarshal.h.tmp gstswfdecmarshal.h
-
-gstswfdecmarshal.c: $(srcdir)/gstswfdecmarshal.list
-	glib-genmarshal --body --prefix=gst_swfdec_marshal $(srcdir)/gstswfdecmarshal.list > gstswfdecmarshal.c.tmp
-	mv gstswfdecmarshal.c.tmp gstswfdecmarshal.c
 

@@ -1,3 +1,14 @@
+2006-01-09  David Schleef  <ds@schleef.org>
+
+	* plugin/Makefile.am:
+	* plugin/gstappsrc.c:
+	* plugin/gstappsrc.h:
+	* plugin/gstswfdec.c:
+	* plugin/gstswfdec.h:
+	* plugin/plugin.c:
+	* plugin/swfdec-mozilla-player.c:
+	  Dude, the mojira plugin all works and shit.
+
 2006-01-08  David Schleef  <ds@schleef.org>
 
 	* plugin/Makefile.am:

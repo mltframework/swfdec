@@ -3,8 +3,8 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <glib.h>
-#include <gst/xoverlay/xoverlay.h>
-#include <gst/navigation/navigation.h>
+#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 #include <getopt.h>
 #include <stdlib.h>
@@ -33,13 +33,12 @@ struct sound_buffer_struct
 };
 typedef struct sound_buffer_struct SoundBuffer;
 
-gboolean debug = TRUE;
+gboolean debug = FALSE;
 
 unsigned char *image;
 
 GtkWidget *gtk_wind;
 
-//GtkWidget *video_widget;
 GdkWindow *gdk_parent;
 
 GIOChannel *input_chan;
@@ -56,13 +55,6 @@ int safe = FALSE;
 
 int interval;
 struct timeval image_time;
-
-//int video_window_x;
-//int video_window_y;
-//int video_window_w;
-//int video_window_h;
-
-//GdkWindow *video_window;
 
 char *filename;
 
@@ -83,7 +75,7 @@ static gboolean create_ui (void);
 gboolean ui_create_pipeline(gpointer ignored);
 static gboolean create_pipeline (int streaming, const char *location);
 static void handle_error (const char *format, ...);
-static void map_xoverlay (void);
+static const char * get_playbin_uri (void);
 
 /* Gstreamer callbacks */
 static void desired_size (GObject * obj, int w, int h, gpointer closure);
@@ -91,6 +83,7 @@ static void embed_url (GObject * obj, const char *url, const char *target, gpoin
 
 static void packet_write (int fd, int code, int len, const char *s);
 static void packet_go_to_url (const char *url, const char *target);
+static GstBusSyncReply map_xoverlay (GstBus * bus, GstMessage * message, GstPipeline * pipeline);
 
 /* GTK callbacks */
 static void destroy_cb (GtkWidget * widget, gpointer data);
@@ -120,19 +113,12 @@ void fault_restore (void);
 void fault_setup (void);
 
 static GstElement *pipeline;
-static GstElement *thread;
-static GstElement *src;
-static GstElement *swfdec;
-static GstElement *thread2;
-static GstElement *thread3;
-static GstElement *queue1;
-static GstElement *queue2;
-static GstElement *audioconvert;
-static GstElement *audioscale;
-static GstElement *audio_sink;
-static GstElement *colorspace;
 static GstElement *video_sink;
 static GstElement *xoverlay;
+static GstElement *playbin;
+
+static GstElement *appsrc;
+static GstElement *fakesink;
 
 
 int
@@ -229,14 +215,16 @@ ui_create_pipeline(gpointer ignored)
     have_pipeline = FALSE;
   }
 
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    handle_error ("Failed to set pipeline to PLAYING");
+  }
+  if (debug)
+    fprintf(stderr, "state change %d\n", ret);
+  playing = TRUE;
+
   if (safe) {
     handle_error ("Safe mode");
-  } else {
-    ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-    if (ret != GST_STATE_SUCCESS) {
-      handle_error ("Failed to set pipeline to PLAYING");
-    }
-    playing = TRUE;
   }
   
   return FALSE;
@@ -261,30 +249,27 @@ ui_create_pipeline(gpointer ignored)
 static gboolean
 create_pipeline (int streaming, const char *location)
 {
-  int ret;
+  GstBus *bus;
   char *bad_elements = NULL;
+  char *uri;
   
   CREATE_ELEMENT (pipeline, "pipeline");
-  CREATE_ELEMENT (thread, "thread");
   if (streaming) {
-    CREATE_ELEMENT (src, "appsrc");
+    uri = g_strdup_printf("appsrc://");
   } else {
     if (location == NULL) {
       handle_error ("No file specified");
       return FALSE;
     }
-    CREATE_ELEMENT (src, "filesrc");
+    uri = g_strdup_printf("file://%s", location);
   }
-  CREATE_ELEMENT (swfdec, "swfdec2");
-  CREATE_ELEMENT (thread2, "thread");
-  CREATE_ELEMENT (queue1, "queue");
-  CREATE_ELEMENT (thread3, "thread");
-  CREATE_ELEMENT (queue2, "queue");
-  CREATE_ELEMENT (audioconvert, "audioconvert");
-  CREATE_ELEMENT (audioscale, "audioscale");
-  CREATE_ELEMENT (colorspace, "ffmpegcolorspace");
-  CREATE_ELEMENT (video_sink, "ximagesink");
-  CREATE_ELEMENT (audio_sink, "gconfaudiosink");
+  if (safe) {
+    CREATE_ELEMENT (appsrc, "appsrc");
+    CREATE_ELEMENT (fakesink, "fakesink");
+  } else {
+    CREATE_ELEMENT (video_sink, "ximagesink");
+    CREATE_ELEMENT (playbin, "playbin");
+  }
 
   if (bad_elements) {
     handle_error ("Failed to create elements: %s", bad_elements);
@@ -292,37 +277,32 @@ create_pipeline (int streaming, const char *location)
     return FALSE;
   }
 
-  xoverlay = video_sink;
+  if (safe) {
+    int ret;
 
-  if (!streaming) {
-    g_object_set (src, "location", location, NULL);
-  }
-  g_object_set (G_OBJECT(queue2), "max-size-buffers", 1, NULL);
+    gst_bin_add_many (GST_BIN (pipeline), appsrc, fakesink, NULL);
+    ret = gst_element_link (appsrc, fakesink);
+    if (!ret) {
+      handle_error("link error between appsrc and fakesink");
+    }
 
-  map_xoverlay();
-  g_signal_connect (G_OBJECT (xoverlay), "desired-size-changed",
-      G_CALLBACK (desired_size), NULL);
+  } else {
+    g_object_set (playbin,
+        "video-sink", video_sink,
+        "uri", uri,
+        "queue-size", (guint64)(GST_MSECOND * 1),
+        //"queue-threshold", (guint64)(GST_MSECOND * 10),
+        NULL);
 
-  g_signal_connect (G_OBJECT (swfdec), "embed-url",
-      G_CALLBACK (embed_url), NULL);
+    xoverlay = video_sink;
 
-  gst_bin_add (GST_BIN (pipeline), thread);
-  gst_bin_add_many (GST_BIN (thread), src, swfdec, thread2, thread3, NULL);
-  gst_bin_add_many (GST_BIN (thread2), queue1, audioconvert, audioscale,
-      audio_sink, NULL);
-  gst_bin_add_many (GST_BIN (thread3), queue2, colorspace, video_sink, NULL);
+    /* FIXME */
+    //g_signal_connect (G_OBJECT (xoverlay), "desired-size-changed", G_CALLBACK (desired_size), NULL);
 
-  ret = gst_element_link (src, swfdec);
-  ret &= gst_element_link (swfdec, queue2);
-  ret &= gst_element_link (queue2, colorspace);
-  ret &= gst_element_link (colorspace, video_sink);
-  ret &= gst_element_link (swfdec, queue1);
-  ret &= gst_element_link (queue1, audioscale);
-  ret &= gst_element_link (audioscale, audioconvert);
-  ret &= gst_element_link (audioconvert, audio_sink);
-  if (ret == FALSE) {
-    handle_error ("Failed to link elements");
-    return FALSE;
+    gst_bin_add_many (GST_BIN (pipeline), playbin, NULL);
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) map_xoverlay, pipeline);
   }
 
   return TRUE;
@@ -345,18 +325,21 @@ print_formats (void)
 static gboolean
 create_ui (void)
 {
+  int width = 320;
+  int height = 240;
+
   if (is_plugged) {
     gtk_wind = gtk_plug_new (0);
     gtk_signal_connect (GTK_OBJECT (gtk_wind), "embedded",
         GTK_SIGNAL_FUNC (embedded), NULL);
 
     gdk_parent = gdk_window_foreign_new (xid);
-    //gdk_window_get_geometry (gdk_parent, NULL, NULL, &width, &height, NULL);
+    gdk_window_get_geometry (gdk_parent, NULL, NULL, &width, &height, NULL);
   } else {
     gtk_wind = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   }
   //g_object_set (G_OBJECT(gtk_wind), "visible", FALSE, NULL);
-  gtk_window_set_default_size (GTK_WINDOW (gtk_wind), 320, 200);
+  gtk_window_set_default_size (GTK_WINDOW (gtk_wind), width, height);
   gtk_signal_connect (GTK_OBJECT (gtk_wind), "delete_event",
       GTK_SIGNAL_FUNC (destroy_cb), NULL);
   gtk_signal_connect (GTK_OBJECT (gtk_wind), "destroy",
@@ -419,9 +402,11 @@ handle_error (const char *format, ...)
   error_message = g_strdup_vprintf (format, varargs);
   va_end (varargs);
 
+#if 0
   if (playing) {
     gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
   }
+#endif
 
   s = g_strdup_printf("An error occurred playing SWF file:\n%s\n",
       error_message);
@@ -443,15 +428,6 @@ handle_error (const char *format, ...)
 static gboolean
 timeout (gpointer closure)
 {
-#if 0
-  if (debug) {
-    if (GTK_WIDGET_MAPPED(gtk_wind)){
-      fprintf(stderr, "is mapped\n");
-    }else{
-      fprintf(stderr, "is unmapped\n");
-    }
-  }
-#endif
 
   return TRUE;
 }
@@ -459,38 +435,36 @@ timeout (gpointer closure)
 static void
 menu_open (GtkMenuItem *item, gpointer user_data)
 {
-  char *url;
+  const char *url = get_playbin_uri();
 
-  g_object_get (G_OBJECT(src), "source_url", &url, NULL);
-
-  packet_go_to_url(url, "_self");
-
-  g_free (url);
+  if (url) {
+    packet_go_to_url(url, "_self");
+  }
 }
 
 static void
 menu_report_bug (GtkMenuItem *item, gpointer user_data)
 {
-  char *url;
   char *s;
 
   if (streaming) {
-    g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+    const char *url = get_playbin_uri();
 
-    s = g_strdup_printf("http://www.schleef.org/swfdec/?%s", url);
-    packet_go_to_url(s, "_self");
-    g_free(s);
+    if (url) {
+      s = g_strdup_printf("http://www.schleef.org/swfdec/bugreport.html?%s", url);
+      packet_go_to_url(s, "_self");
+      g_free(s);
+    }
   }
 }
 
 static void
 menu_copy_url (GtkMenuItem *item, gpointer user_data)
 {
-  char *url;
+  const char *url = get_playbin_uri();
   GtkClipboard *clipboard;
 
-  if (streaming) {
-    g_object_get (G_OBJECT(src), "source_url", &url, NULL);
+  if (url) {
     clipboard = gtk_clipboard_get_for_display (gdk_display_get_default(),
         GDK_SELECTION_PRIMARY);
 
@@ -556,8 +530,6 @@ key_press (GtkWidget * widget, GdkEventKey * evt, gpointer data)
   if (debug)
     fprintf (stderr, "key press\n");
 
-  //gtk_exit(0);
-
   return FALSE;
 }
 
@@ -566,19 +538,6 @@ motion_notify (GtkWidget * widget, GdkEventMotion * evt, gpointer data)
 {
   if (debug)
     fprintf (stderr, "motion notify\n");
-
-  /* ximagesink gets these automatically */
-#if 0
-  {
-    int x, y;
-    GdkModifierType state;
-
-    gdk_window_get_pointer (evt->window, &x, &y, &state);
-
-    gst_navigation_send_mouse_event (GST_NAVIGATION (xoverlay),
-        "mouse-move", 0, x, y);
-  }
-#endif
 
   return TRUE;
 }
@@ -661,7 +620,10 @@ unmap (GtkWidget *widget, gpointer closure)
 static int
 configure_cb (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
 {
-  map_xoverlay();
+  if (debug)
+    fprintf(stderr, "configure\n");
+
+  //map_xoverlay();
 
   return FALSE;
 }
@@ -692,26 +654,6 @@ static void
 video_widget_realize (GtkWidget * widget, gpointer ignored)
 {
 
-  //video_window = widget->window;
-
-  //map_xoverlay();
-}
-
-static void
-map_xoverlay (void)
-{
-  if (xoverlay) {
-    if (GST_IS_X_OVERLAY (xoverlay) && GDK_IS_WINDOW (gtk_wind->window)) {
-      /* This is necessary because we're sending an XID for a window that
-       * the X server doesn't necessarily know about yet. */
-      XSync (GDK_DISPLAY (), False);
-      /* Now it knows. */
-      gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (xoverlay),
-          GDK_WINDOW_XID (gtk_wind->window));
-    } else {
-      g_warning ("Could not find an XOVERLAY element for reparenting");
-    }
-  }
 }
 
 static void
@@ -735,8 +677,6 @@ desired_size (GObject * obj, int w, int h, gpointer closure)
     fprintf (stderr, "got size %d %d\n", w, h);
 
   gtk_window_resize (GTK_WINDOW (gtk_wind), w, h);
-
-  map_xoverlay();
 }
 
 static void
@@ -778,5 +718,50 @@ packet_write (int fd, int code, int len, const char *s)
   write (fd, buf, len + 8);
 
   g_free (buf);
+}
+
+static GstBusSyncReply
+map_xoverlay (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  const GstStructure *s;
+
+  s = gst_message_get_structure (message);
+  if (gst_structure_has_name (s, "prepare-xwindow-id")) {
+    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+        GDK_WINDOW_XID (gtk_wind->window));
+
+    return GST_BUS_DROP;
+  } 
+  if (gst_structure_has_name (s, "embedded-url")) {
+    const char *url;
+    const char *target;
+
+    url = gst_structure_get_string (s, "url");
+    target = gst_structure_get_string (s, "target");
+
+    packet_go_to_url (url, target);
+
+    return GST_BUS_DROP;
+  }
+
+  return GST_BUS_PASS;
+}
+
+static const char *
+get_playbin_uri (void)
+{
+  char *s = NULL;
+
+  if (appsrc == NULL) {
+    g_object_get(playbin, "source", &appsrc, NULL);
+    if (appsrc == NULL || !GST_IS_APPSRC(appsrc)) {
+      fprintf(stderr, "failed to find appsrc inside playbin\n");
+      return NULL;
+    }
+  }
+
+  g_object_get (appsrc, "source_url", &s, NULL);
+
+  return s;
 }
 

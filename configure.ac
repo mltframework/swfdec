@@ -228,7 +228,6 @@ libswfdec/js/Makefile
 libswfdec/mpeg/Makefile
 test/Makefile
 plugin/Makefile
-player/Makefile
 pixbuf-loader/Makefile
 gimp-loader/Makefile
 swfdec.pc

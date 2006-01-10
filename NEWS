@@ -1,0 +1,19 @@
+
+ 0.3.6 ("5.11d")
+
+This is less of a release and more of a "toss a bunch of code into
+the air".  You're not going to like this release, really.  So don't
+bother compiling it.  Don't even bother downloading it.  It really
+just differently buggy than the last release.  Certain parts may
+feel more solid, like the mozilla plugin, but the entire experience
+will probably just be slower and less featureful.  I already know
+there are problems, don't bother reporting them, since it will
+simply remind me of how crappy this release is.  The only redeeming
+factor of this release is that it doesn't crash.  Ever.  Well,
+except for the bugs.  Backtraces and media files welcome.  You
+could even use the handy new pop-up menu in the Mozilla plugin to
+report a bug, except that I don't have the website backend running
+yet.
+
+
+

@@ -1,5 +1,10 @@
 2006-01-09  David Schleef  <ds@schleef.org>
 
+	* NEWS: update the news
+	* configure.ac: bump version
+
+2006-01-09  David Schleef  <ds@schleef.org>
+
 	* configure.ac: remove more player bits
 	* player/.cvsignore:
 

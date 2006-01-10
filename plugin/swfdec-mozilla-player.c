@@ -83,7 +83,8 @@ static void embed_url (GObject * obj, const char *url, const char *target, gpoin
 
 static void packet_write (int fd, int code, int len, const char *s);
 static void packet_go_to_url (const char *url, const char *target);
-static GstBusSyncReply map_xoverlay (GstBus * bus, GstMessage * message, GstPipeline * pipeline);
+static GstBusSyncReply bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline);
+static gboolean bus_async_handler (GstBus * bus, GstMessage * message, gpointer ignored);
 
 /* GTK callbacks */
 static void destroy_cb (GtkWidget * widget, gpointer data);
@@ -208,23 +209,21 @@ ui_create_pipeline(gpointer ignored)
 
   if (filename || streaming) {
     have_pipeline = create_pipeline(streaming, filename);
-    if (!have_pipeline) {
-      handle_error ("Creation of pipeline failed.");
-    }
   } else {
     have_pipeline = FALSE;
   }
 
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
-    handle_error ("Failed to set pipeline to PLAYING");
+    handle_error ("GStreamer error: Failed to set pipeline to PLAYING.");
   }
   if (debug)
     fprintf(stderr, "state change %d\n", ret);
   playing = TRUE;
 
   if (safe) {
-    handle_error ("Safe mode");
+    handle_error ("The SWF file caused a fatal error in the swfdec decoder. "
+      " This likely means that there is a bug in swfdec.");
   }
   
   return FALSE;
@@ -258,7 +257,7 @@ create_pipeline (int streaming, const char *location)
     uri = g_strdup_printf("appsrc://");
   } else {
     if (location == NULL) {
-      handle_error ("No file specified");
+      handle_error ("No file specified on command line and not in streaming mode.");
       return FALSE;
     }
     uri = g_strdup_printf("file://%s", location);
@@ -272,7 +271,8 @@ create_pipeline (int streaming, const char *location)
   }
 
   if (bad_elements) {
-    handle_error ("Failed to create elements: %s", bad_elements);
+    handle_error ("The following GStreamer elements are required, but are missing: %s",
+        bad_elements);
     g_free(bad_elements);
     return FALSE;
   }
@@ -283,7 +283,7 @@ create_pipeline (int streaming, const char *location)
     gst_bin_add_many (GST_BIN (pipeline), appsrc, fakesink, NULL);
     ret = gst_element_link (appsrc, fakesink);
     if (!ret) {
-      handle_error("link error between appsrc and fakesink");
+      handle_error("GStreamer error: could not link appsrc and fakesink elements");
     }
 
   } else {
@@ -302,7 +302,9 @@ create_pipeline (int streaming, const char *location)
     gst_bin_add_many (GST_BIN (pipeline), playbin, NULL);
 
     bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) map_xoverlay, pipeline);
+    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, pipeline);
+
+    gst_bus_add_watch (bus, (GstBusFunc) bus_async_handler, NULL);
   }
 
   return TRUE;
@@ -395,7 +397,6 @@ handle_error (const char *format, ...)
   GtkWidget *label;
   GtkWidget *align;
   char *error_message;
-  char *s;
   va_list varargs;
 
   va_start (varargs, format);
@@ -408,11 +409,8 @@ handle_error (const char *format, ...)
   }
 #endif
 
-  s = g_strdup_printf("An error occurred playing SWF file:\n%s\n",
-      error_message);
+  label = gtk_label_new(error_message);
   g_free(error_message);
-  label = gtk_label_new(s);
-  g_free(s);
   
   align = gtk_alignment_new (0.5, 0.5, 0, 0);
   gtk_container_add (GTK_CONTAINER(gtk_wind), align);
@@ -438,7 +436,7 @@ menu_open (GtkMenuItem *item, gpointer user_data)
   const char *url = get_playbin_uri();
 
   if (url) {
-    packet_go_to_url(url, "_self");
+    packet_go_to_url(url, "_top");
   }
 }
 
@@ -452,7 +450,7 @@ menu_report_bug (GtkMenuItem *item, gpointer user_data)
 
     if (url) {
       s = g_strdup_printf("http://www.schleef.org/swfdec/bugreport.html?%s", url);
-      packet_go_to_url(s, "_self");
+      packet_go_to_url(s, "_top");
       g_free(s);
     }
   }
@@ -623,8 +621,6 @@ configure_cb (GtkWidget * widget, GdkEventConfigure * evt, gpointer data)
   if (debug)
     fprintf(stderr, "configure\n");
 
-  //map_xoverlay();
-
   return FALSE;
 }
 
@@ -721,27 +717,77 @@ packet_write (int fd, int code, int len, const char *s)
 }
 
 static GstBusSyncReply
-map_xoverlay (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
+  GstMessageType type;
 
+  type = GST_MESSAGE_TYPE (message);
   s = gst_message_get_structure (message);
-  if (gst_structure_has_name (s, "prepare-xwindow-id")) {
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        GDK_WINDOW_XID (gtk_wind->window));
 
-    return GST_BUS_DROP;
-  } 
-  if (gst_structure_has_name (s, "embedded-url")) {
-    const char *url;
-    const char *target;
+  switch (type) {
+    case GST_MESSAGE_ELEMENT:
+      if (gst_structure_has_name (s, "prepare-xwindow-id")) {
+        gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+            GDK_WINDOW_XID (gtk_wind->window));
 
-    url = gst_structure_get_string (s, "url");
-    target = gst_structure_get_string (s, "target");
+        return GST_BUS_DROP;
+      } 
+#if 0
+      if (gst_structure_has_name (s, "embedded-url")) {
+        const char *url;
+        const char *target;
 
-    packet_go_to_url (url, target);
+        url = gst_structure_get_string (s, "url");
+        target = gst_structure_get_string (s, "target");
 
-    return GST_BUS_DROP;
+        packet_go_to_url (url, target);
+
+        return GST_BUS_DROP;
+      }
+#endif
+      break;
+    default:
+      break;
+  }
+
+  return GST_BUS_PASS;
+}
+
+static gboolean
+bus_async_handler (GstBus * bus, GstMessage * message, gpointer ignored)
+{
+  const GstStructure *s;
+  GstMessageType type;
+
+  type = GST_MESSAGE_TYPE (message);
+  s = gst_message_get_structure (message);
+
+#if 0
+  fprintf(stderr, "async message type %s\n", gst_structure_to_string(s));
+  fprintf(stderr, "async message type %d\n", type);
+#endif
+
+  switch (type) {
+    case GST_MESSAGE_ELEMENT:
+      if (gst_structure_has_name (s, "embedded-url")) {
+        const char *url;
+        const char *target;
+
+        url = gst_structure_get_string (s, "url");
+        target = gst_structure_get_string (s, "target");
+
+        packet_go_to_url (url, target);
+
+        return GST_BUS_DROP;
+      }
+      break;
+    case GST_MESSAGE_ERROR:
+      gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+      handle_error("This SWF file is known to trigger bugs in the swfdec decoder.  Playback is cancelled.");
+      break;
+    default:
+      break;
   }
 
   return GST_BUS_PASS;

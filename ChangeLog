@@ -1,5 +1,25 @@
 2006-01-09  David Schleef  <ds@schleef.org>
 
+	* INSTALL: updated by autoconf.
+	* configure.ac: we only use pkg-config to detect mozilla now.
+	  start using gstreamer-0.10.  Remove SDL check.
+	* Makefile.am: remove SDL player subdir
+	* libswfdec/actions_tags.c: add audio_stop_sounds()
+	* libswfdec/proto.h: add protect()
+	* libswfdec/swf.c: disable experimental code by default
+	* libswfdec/swfdec_audio.c: implement audio_stop_sounds()
+	* libswfdec/swfdec_audio.h: same
+	* libswfdec/swfdec_image.c: handle jpegtables better
+	* libswfdec/swfdec_render.c: change ERROR to DEBUG
+	* libswfdec/swfdec_tag.c: implement protect
+	* plugin/gstswfdec.c: hacking to make plugin better
+	* plugin/swfdec-mozilla-player.c: same
+	* test/Makefile.am: disable some tests that don't compile
+	* player/Makefile.am: remove SDL player
+	* player/swf_play.c: remove SDL player
+
+2006-01-09  David Schleef  <ds@schleef.org>
+
 	* plugin/Makefile.am:
 	* plugin/gstappsrc.c:
 	* plugin/gstappsrc.h:

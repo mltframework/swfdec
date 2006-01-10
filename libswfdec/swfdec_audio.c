@@ -67,6 +67,26 @@ swfdec_audio_add_stream (SwfdecDecoder *decoder)
 }
 
 void
+swfdec_audio_stop_sounds (SwfdecDecoder *decoder)
+{
+  GList *g;
+
+  g=g_list_first(decoder->audio_streams);
+  while(g) {
+    SwfdecAudioStream *stream = g->data;
+    GList *next;
+
+    next = g->next;
+    if (stream->sound) {
+      decoder->audio_streams = g_list_delete_link (decoder->audio_streams, g);
+      swfdec_audio_stream_free(stream);
+    }
+    g = next;
+  }
+
+}
+
+void
 swfdec_audio_remove_all_streams (SwfdecDecoder *decoder)
 {
   GList *g;
@@ -101,7 +121,17 @@ swfdec_audio_stream_push_buffer (SwfdecDecoder *decoder, int id,
 void
 swfdec_audio_set_volume (SwfdecDecoder *decoder, int id, double volume)
 {
-  g_warning("unimplemented");
+  GList *g;
+
+  for(g=g_list_first(decoder->audio_streams);g;g=g_list_next(g)){
+    SwfdecAudioStream *stream = g->data;
+
+    if (stream->id == id) {
+      stream->volume = volume;
+      return;
+    }
+  }
+  g_warning("not reached");
 }
 
 SwfdecBuffer *

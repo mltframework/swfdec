@@ -80,15 +80,6 @@ if test "$HAVE_GTK" = "no"; then
 fi
 AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
 
-AC_CHECK_PROG(HAVE_SDL, sdl-config, "yes", "no")
-if test "$HAVE_SDL" = "yes"; then
-  SDL_CFLAGS=`sdl-config --cflags`
-  SDL_LIBS=`sdl-config --libs`
-  AC_SUBST(SDL_CFLAGS)
-  AC_SUBST(SDL_LIBS)
-fi
-AM_CONDITIONAL(WITH_SDL,[test "$HAVE_SDL" = "yes"])
-
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.1.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)
 AC_SUBST(LIBOIL_CFLAGS)
@@ -130,18 +121,16 @@ if test "x$HAVE_MAD" = xyes; then
   AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
 fi
 
-MOZILLA_CFLAGS=
-if test -z "$MOZILLA_CONFIG"; then
-  AC_PATH_PROG(MOZILLA_CONFIG, mozilla-config, no)
+PKG_CHECK_MODULES(MOZILLA, mozilla-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
+if test "$HAVE_MOZILLA" = no ; then
+  PKG_CHECK_MODULES(MOZILLA, firefox-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
 fi
-if test "x$MOZILLA_CONFIG" != "xno"; then
-  _mozilla_include_dir=`$MOZILLA_CONFIG --cflags|sed 's/-I\(.*\) .*/\1/'`
-  MOZILLA_CFLAGS="-I$_mozilla_include_dir/plugin -I$_mozilla_include_dir/java -I$_mozilla_include_dir/nspr"
-else
+AC_SUBST(MOZILLA_CFLAGS)
+AC_SUBST(MOZILLA_LIBS)
+AM_CONDITIONAL(HAVE_MOZILLA, [test $HAVE_MOZILLA = yes])
+if test "x$HAVE_MOZILLA" = "xno"; then
   AC_MSG_WARN([mozilla-config not found. Mozilla/Netscape plugin will not be built])
 fi
-AM_CONDITIONAL(WITH_MOZILLA,[test "$MOZILLA_CFLAGS" != ""])
-AC_SUBST(MOZILLA_CFLAGS)
 
 dnl GdkPixbuf loader
 
@@ -202,7 +191,7 @@ AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
 
-PKG_CHECK_MODULES(GST, gstreamer-0.8 > 0.8.0 gstreamer-interfaces-0.8,
+PKG_CHECK_MODULES(GST, gstreamer-0.10 > 0.10.0 gstreamer-plugins-base-0.10,
   HAVE_GST=yes, HAVE_GST=no)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)

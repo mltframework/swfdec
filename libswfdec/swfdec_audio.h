@@ -31,6 +31,7 @@ int swfdec_audio_add_stream (SwfdecDecoder *decoder);
 void swfdec_audio_remove_all_streams (SwfdecDecoder *decoder);
 void swfdec_audio_stream_push_buffer (SwfdecDecoder *decoder, int id,
     SwfdecBuffer *buffer);
+void swfdec_audio_stop_sounds (SwfdecDecoder *decoder);
 
 void swfdec_audio_set_volume (SwfdecDecoder *decoder, int id, double volume);
 

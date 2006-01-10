@@ -71,7 +71,7 @@ swfdec_decoder_new (void)
 
   s->flatness = 0.5;
 
-  s->allow_experimental = TRUE;
+  s->allow_experimental = FALSE;
 
   swfdec_audio_add_stream(s);
 

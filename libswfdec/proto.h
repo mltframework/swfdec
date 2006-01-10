@@ -24,6 +24,7 @@ int swf_parse_header (SwfdecDecoder * s);
 int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_end (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
+int tag_func_protect (SwfdecDecoder * s);
 int tag_func_dumpbits (SwfdecDecoder * s);
 void get_actions (SwfdecDecoder * s, SwfdecBits * bits);
 int tag_func_set_background_color (SwfdecDecoder * s);

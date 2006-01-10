@@ -111,7 +111,7 @@ swfdec_image_jpegtables (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
 
-  SWFDEC_LOG ("swfdec_image_jpegtables");
+  SWFDEC_DEBUG ("swfdec_image_jpegtables");
 
   s->jpegtables = swfdec_buffer_ref (bits->buffer);
   bits->ptr += bits->buffer->length;
@@ -138,8 +138,14 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
   image->type = SWFDEC_IMAGE_TYPE_JPEG;
   image->handle = swfdec_handle_new (swfdec_image_jpeg_load,
       (SwfdecHandleFreeFunc)g_free, image);
-  image->jpegtables = swfdec_buffer_ref (s->jpegtables);
+  if (!s->jpegtables) {
+    SWFDEC_ERROR("No global JPEG tables available");
+  } else {
+    image->jpegtables = swfdec_buffer_ref (s->jpegtables);
+  }
   image->raw_data = swfdec_buffer_ref (bits->buffer);
+
+  bits->ptr += bits->buffer->length - 2;
 
   return SWF_OK;
 }

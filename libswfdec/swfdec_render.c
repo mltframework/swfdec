@@ -49,7 +49,7 @@ swfdec_render_iterate (SwfdecDecoder * s)
   if (s->mouse_button && !s->old_mouse_button &&
       s->render->active_button) {
               /* FIXME? button down->up/up->down */
-    SWFDEC_ERROR("executing button");
+    SWFDEC_DEBUG("executing button");
     swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
   }
 

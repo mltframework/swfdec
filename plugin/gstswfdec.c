@@ -25,7 +25,7 @@
 #include <string.h>
 #include <gst/video/video.h>
 #include <swfdec_buffer.h>
-#include "gstswfdecmarshal.h"
+#include <swfdec_decoder.h>
 
 GST_DEBUG_CATEGORY_STATIC (swfdec_debug);
 #define GST_CAT_DEFAULT swfdec_debug
@@ -358,10 +358,7 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     GstCaps *caps;
     double rate;
 
-    /* Let's not depend on features that are only in CVS */
-#ifdef HAVE_SWFDEC_0_3_5
     GstTagList *taglist;
-#endif
 
     GST_DEBUG_OBJECT (swfdec, "SWF_CHANGE");
     gst_adapter_push (swfdec->adapter, buffer);
@@ -402,15 +399,11 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     gst_caps_unref (caps);
 
 
-#ifdef HAVE_SWFDEC_0_3_5
     taglist = gst_tag_list_new ();
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_ENCODER_VERSION, swfdec_decoder_get_version (swfdec->decoder),
         NULL);
     gst_element_found_tags (GST_ELEMENT (swfdec), taglist);
-    gst_tag_list_free (taglist);
-#endif
-
   } else if (ret == SWF_EOF) {
     GST_DEBUG_OBJECT (swfdec, "SWF_EOF");
     gst_swfdec_render (swfdec, ret);
@@ -449,6 +442,13 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
         swfdec->button);
 
     ret = swfdec_render_iterate (swfdec->decoder);
+
+    if (swfdec->decoder->using_experimental) {
+      GST_ELEMENT_ERROR(swfdec, LIBRARY, FAILED,
+          ("SWF file contains features known to trigger bugs."),
+          ("SWF file contains features known to trigger bugs."));
+      gst_task_stop (swfdec->task);
+    }
 
     if (!ret) {
       gst_task_stop (swfdec->task);

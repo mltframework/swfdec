@@ -183,9 +183,7 @@ action_toggle_quality (SwfdecActionContext * context)
 static void
 action_stop_sounds (SwfdecActionContext * context)
 {
-  /* FIXME */
-  SWFDEC_WARNING ("stop_sounds unimplemented");
-  context->error = TRUE;
+  swfdec_audio_stop_sounds (context->s);
 }
 
 static void

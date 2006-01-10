@@ -48,7 +48,7 @@ static struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
   [ST_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
   [ST_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
-  [ST_PROTECT] = {"Protect", tag_func_ignore, 0},
+  [ST_PROTECT] = {"Protect", tag_func_protect, 0},
   [ST_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, 0},
   [ST_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, 0},
   [ST_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
@@ -117,6 +117,12 @@ tag_func_end (SwfdecDecoder * s)
 }
 
 int
+tag_func_protect (SwfdecDecoder * s)
+{
+  return SWF_OK;
+}
+
+int
 tag_func_ignore (SwfdecDecoder * s)
 {
   if (s->b.buffer) {
@@ -162,7 +168,7 @@ define_text (SwfdecDecoder * s, int rgba)
   SwfdecText *text = NULL;
   SwfdecTextGlyph glyph = { 0 };
 
-  if (swfdec_bits_needbits(bits,2)) return 0;
+  if (swfdec_bits_needbits(bits,2)) return SWF_ERROR;
 
   id = swfdec_bits_get_u16 (bits);
   text = swfdec_object_new (SWFDEC_TYPE_TEXT);

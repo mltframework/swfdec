@@ -1,13 +1,12 @@
 
-Swfdec is a decoder/renderer library for Macromedia Flash animations.
-Included is a simple SDL-based player and a Mozilla plugin that allows
-the player to be embedded into your favorite browser.
+Swfdec is a decoder/renderer for Macromedia Flash animations.  The
+decoding and rendering engine is provided in a library that can
+be used by other applications.  A Mozilla plugin is provided that
+uses the library for playing SWF files in a 
 
-Swfdec contains a GdkPixbuf loader module for SWF files.  I have
-_no clue_ why anyone would want Flash animations as part of their
-GTK+ theme, but it is now possible.
-
-This is alpha software.  Do not expect it to work for you.
+Swfdec also contains a GdkPixbuf loader module for SWF files, which
+means that GTK+ themes can use SWF files as images.  I have no clue
+why someone would want to do this, but it's possible.
 
 
 Maintainer:
@@ -30,23 +29,22 @@ Limitations:
  - A few object types are not handled at all.  They don't appear very
    often, however.
 
- - Flash versions 5 and 6 are generally heavily dependent on
-   ActionScript2 features, which are rather buggy at the moment.
- 
- - It is not possible to determine if a Flash animation has sound or
-   not until the sound starts.  Thus, the player always assumes there
-   is sound and attempts to aquire the sound device.  This can cause
-   problems on pages that have multiple embedded Flash animations.
+ - SWF files that use Flash versions 5 and 6 are generally heavily
+   dependent on ActionScript2 features, which are rather buggy at
+   the moment.  The default action is to stop playing if known-buggy
+   codepaths are used.  This is a runtime switch, but it's likely
+   that only developers would want to change this behavior.
 
 
 Dependencies:
 
-  libart_lgpl (>= 2.0)
-  libgtk+ (>= 2.0)
+  cairo (>= 1.0.0)
+  GStreamer (>= 0.10.0)
+  GTK+ (>= 2.0)
   zlib (>= 1.1.4)
-  MAD
-  Mozilla (>= 1.0.0) development headers (optional)
-  liboil (>= 0.2.0)
+  MAD (>= 0.15.1b)
+  Mozilla (>= 1.0.0)
+  liboil (>= 0.3.6)
 
 
 

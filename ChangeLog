@@ -1,3 +1,9 @@
+2006-01-22  David Schleef  <ds@schleef.org>
+
+	* plugin/Makefile.am:
+	  Don't link against mozilla libs, since we don't actually
+	  use them.
+
 2006-01-09  David Schleef  <ds@schleef.org>
 
 	* NEWS: update the news

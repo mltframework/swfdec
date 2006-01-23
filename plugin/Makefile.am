@@ -11,7 +11,7 @@ endif
 libswfdecmozilla_la_SOURCES = plugin.c
 libswfdecmozilla_la_CFLAGS = $(GLOBAL_CFLAGS) $(MOZILLA_CFLAGS) $(X_CFLAGS) \
 	-DBINDIR=\"$(bindir)/\"
-libswfdecmozilla_la_LDFLAGS = -module -avoid-version $(X_LIBS) $(MOZILLA_LIBS)
+libswfdecmozilla_la_LDFLAGS = -module -avoid-version $(X_LIBS)
 libswfdecmozilla_la_LIBADD = -lXt
 
 

@@ -42,16 +42,15 @@ swfdec_render_iterate (SwfdecDecoder * s)
   s->render->frame_index = s->next_frame;
   s->next_frame = -1;
 
+  /* FIXME: do smarter grab management instead of just releaseing the grab
+   * if the mouse button changed */
+  if (s->mouse_button != s->old_mouse_button) {
+    s->mouse_grab = NULL;
+  }
   swfdec_sprite_render_iterate (s, s->main_sprite_seg, s->render);
 
-  SWFDEC_DEBUG ("mouse button %d old_mouse_button %d active_button %p",
-      s->mouse_button, s->old_mouse_button, s->render->active_button);
-  if (s->mouse_button && !s->old_mouse_button &&
-      s->render->active_button) {
-              /* FIXME? button down->up/up->down */
-    SWFDEC_DEBUG("executing button");
-    swfdec_button_execute (s, SWFDEC_BUTTON (s->render->active_button));
-  }
+  SWFDEC_DEBUG ("mouse button %d old_mouse_button %d",
+      s->mouse_button, s->old_mouse_button);
 
   for (g=s->execute_list; g; g = g->next) {
     SwfdecBuffer *buffer = g->data;
@@ -60,7 +59,6 @@ swfdec_render_iterate (SwfdecDecoder * s)
   g_list_free (s->execute_list);
   s->execute_list = NULL;
 
-  s->render->active_button = NULL;
   s->old_mouse_button = s->mouse_button;
 
   if (s->next_frame == -1) {

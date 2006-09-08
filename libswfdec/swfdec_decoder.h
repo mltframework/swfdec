@@ -115,6 +115,7 @@ struct _SwfdecDecoder
   int mouse_y;
   int mouse_button;
   int old_mouse_button;
+  SwfdecObject *mouse_grab;
 
   char *url;
 

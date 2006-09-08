@@ -27,6 +27,7 @@ swfdec_button_init (SwfdecButton * button)
   button->records = g_array_new (FALSE, TRUE, sizeof (SwfdecButtonRecord));
   button->actions = g_array_new (FALSE, TRUE, sizeof (SwfdecButtonAction));
 
+  button->state = SWFDEC_BUTTON_UP;
 }
 
 static void
@@ -48,6 +49,138 @@ swfdec_button_dispose (SwfdecButton * button)
   g_array_free (button->actions, TRUE);
 }
 
+static gboolean
+swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button)
+{
+  guint i;
+  SwfdecButtonRecord *record;
+
+  for (i = 0; i < button->records->len; i++) {
+    SwfdecSpriteSegment *tmpseg;
+    SwfdecObject *obj;
+
+    record = &g_array_index (button->records, SwfdecButtonRecord, i);
+    if (record->states & SWFDEC_BUTTON_HIT) {
+      g_print ("%d\n", i);
+      obj = swfdec_object_get (s, record->segment->id);
+      if (!obj)
+        return FALSE;
+
+      tmpseg = swfdec_spriteseg_dup (record->segment);
+      //swfdec_transform_multiply (&tmpseg->transform,
+      //    &record->segment->transform, &seg->transform);
+
+      if (swfdec_decoder_has_mouse (s, tmpseg, obj)) {
+	swfdec_spriteseg_free (tmpseg);
+	return TRUE;
+      }
+      swfdec_spriteseg_free (tmpseg);
+    }
+  }
+  return FALSE;
+}
+
+static void
+swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondition condition)
+{
+  int i;
+  SwfdecButtonAction *action;
+
+  if (button->menubutton) {
+    g_assert ((condition & (SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN \
+	                  | SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN \
+	                  | SWFDEC_BUTTON_OUT_DOWN_TO_IDLE)) == 0);
+  } else {
+    g_assert ((condition & (SWFDEC_BUTTON_IDLE_TO_OVER_DOWN \
+	                  | SWFDEC_BUTTON_OVER_DOWN_TO_IDLE)) == 0);
+  }
+
+  for(i=0;i<button->actions->len;i++){
+    action = &g_array_index (button->actions, SwfdecButtonAction, i);
+
+    SWFDEC_DEBUG ("button condition %04x", action->condition);
+    if (action->condition & condition) {
+      s->execute_list = g_list_append (s->execute_list, action->buffer);
+    }
+  }
+}
+
+
+static void 
+swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button)
+{
+  gboolean has_mouse;
+
+  if (s->mouse_grab && s->mouse_grab != (SwfdecObject *) button)
+    return;
+
+  has_mouse = swfdec_button_has_mouse (s, button);
+  g_print ("%s %d %d\n", has_mouse ? "T" : "f", s->mouse_x, s->mouse_y);
+  switch (button->state) {
+    case SWFDEC_BUTTON_UP:
+      if (!has_mouse)
+	break;
+      if (s->mouse_button) {
+	button->state = SWFDEC_BUTTON_DOWN;
+	if (button->menubutton) {
+	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
+	} else {
+	  /* simulate entering then clicking */
+	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
+	  swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
+	  swfdec_decoder_grab_mouse (s, SWFDEC_OBJECT (button));
+	}
+      } else {
+	button->state = SWFDEC_BUTTON_OVER;
+	swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
+      }
+      break;
+    case SWFDEC_BUTTON_OVER:
+      if (!has_mouse) {
+	button->state = SWFDEC_BUTTON_UP;
+	swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
+      } else if (button->has_mouse) {
+	button->state = SWFDEC_BUTTON_DOWN;
+	swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
+	swfdec_decoder_grab_mouse (s, SWFDEC_OBJECT (button));
+      }
+      break;
+    case SWFDEC_BUTTON_DOWN:
+      /* this is quite different for push and menu buttons */
+      if (!s->mouse_button) {
+	if (!has_mouse) {
+	  button->state = SWFDEC_BUTTON_UP;
+	  if (button->menubutton || button->has_mouse) {
+	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
+	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
+	  } else {
+	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OUT_DOWN_TO_IDLE);
+	  }
+	} else {
+	  button->state = SWFDEC_BUTTON_OVER;
+	  swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
+	}
+      } else {
+	if (has_mouse) {
+	  if (!button->has_mouse && !button->menubutton)
+	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN);
+	} else if (button->has_mouse) {
+	  if (button->menubutton) {
+	    button->state = SWFDEC_BUTTON_UP;
+	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE);
+	  } else {
+	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN);
+	  }
+	}
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  button->has_mouse = has_mouse;
+}
+
 static void
 swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object)
@@ -56,16 +189,15 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecButtonRecord *record;
   SwfdecObjectClass *klass;
   int i;
-  gboolean in_button;
 
-  s->render->mouse_check = TRUE;
-  s->render->mouse_in_button = FALSE;
+  swfdec_button_change_state (s, button);
+
   for (i = 0; i < button->records->len; i++) {
     SwfdecSpriteSegment *tmpseg;
     SwfdecObject *obj;
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
-    if (record->hit) {
+    if (record->states & button->state) {
       obj = swfdec_object_get (s, record->segment->id);
       if (!obj)
         return;
@@ -81,50 +213,5 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       swfdec_spriteseg_free (tmpseg);
     }
   }
-  s->render->mouse_check = FALSE;
-  in_button = s->render->mouse_in_button;
-  if (in_button) {
-    s->render->active_button = object;
-    SWFDEC_DEBUG ("in button");
-  }
-
-  for (i = 0; i < button->records->len; i++) {
-    SwfdecSpriteSegment *tmpseg;
-    SwfdecObject *obj;
-
-    record = &g_array_index (button->records, SwfdecButtonRecord, i);
-    if ((!in_button && record->up) || (in_button && record->over)) {
-      obj = swfdec_object_get (s, record->segment->id);
-      if (!obj)
-        return;
-
-      tmpseg = swfdec_spriteseg_dup (record->segment);
-      swfdec_transform_multiply (&tmpseg->transform,
-          &record->segment->transform, &seg->transform);
-
-      klass = SWFDEC_OBJECT_GET_CLASS (obj);
-      if (klass->render) {
-        klass->render (s, tmpseg, obj);
-      }
-      swfdec_spriteseg_free (tmpseg);
-    }
-  }
-}
-
-void
-swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button)
-{
-  int i;
-  SwfdecButtonAction *action;
-
-  for(i=0;i<button->actions->len;i++){
-    action = &g_array_index (button->actions, SwfdecButtonAction, i);
-
-    SWFDEC_DEBUG ("button condition %04x", action->condition);
-    if (action->condition & 0x0008) {
-      s->execute_list = g_list_append (s->execute_list, action->buffer);
-    }
-  }
-  
 }
 

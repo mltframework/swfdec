@@ -326,11 +326,18 @@ gdk_pixbuf_swf_anim_iter_get_pixbuf (GdkPixbufAnimationIter *anim_iter)
 {
         GdkPixbufSwfAnimIter *iter;
         GdkPixbufFrame *frame;
+	GList *list;
         
         iter = GDK_PIXBUF_SWF_ANIM_ITER (anim_iter);
 
-        frame = iter->current_frame ? iter->current_frame->data : g_list_last (iter->swf_anim->frames)->data;
+	if (iter->current_frame)
+	  list = iter->current_frame;
+	else 
+	  list = g_list_last (iter->swf_anim->frames);
+	if (list == NULL)
+	  return NULL;
 
+	frame = list->data;
         if (frame == NULL)
                 return NULL;
 

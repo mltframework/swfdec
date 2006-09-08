@@ -1,21 +1,10 @@
-
-if WITH_GLIB_COMPAT
-noinst_PROGRAMS = dump
-else
 noinst_PROGRAMS = test-pixbuf dump parse
-endif
-
-#render_fast_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
-#render_fast_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 
 test_pixbuf_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS)
 test_pixbuf_LDFLAGS = $(GTK_LIBS)
 
 dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
 dump_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
-
-#render_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
-#render_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)
 
 parse_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(LIBART_CFLAGS)
 parse_LDFLAGS = $(SWF_LIBS) $(LIBART_LIBS)

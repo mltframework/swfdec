@@ -40,6 +40,8 @@ struct _SwfdecObjectClass
 
   void (*render) (SwfdecDecoder * decoder, SwfdecSpriteSegment * seg,
       SwfdecObject * object);
+  gboolean (*has_mouse) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
+      SwfdecObject * object);
 
   void (*dump) (SwfdecObject * object);
 };

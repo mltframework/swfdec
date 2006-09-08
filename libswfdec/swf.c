@@ -276,12 +276,9 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 int
 swfdec_decoder_free (SwfdecDecoder * s)
 {
-  GList *g;
-
-  for (g = g_list_first (s->objects); g; g = g_list_next (g)) {
-    swfdec_object_unref (SWFDEC_OBJECT (g->data));
-  }
+  g_list_foreach (s->objects, (GFunc) swfdec_object_unref, NULL);
   g_list_free (s->objects);
+  /* s->main_sprite is already freed now */
 
   if (s->buffer)
     g_free (s->buffer);
@@ -289,7 +286,6 @@ swfdec_decoder_free (SwfdecDecoder * s)
   swfdec_buffer_queue_free (s->input_queue);
 
   swfdec_spriteseg_free (s->main_sprite_seg);
-  swfdec_object_unref (SWFDEC_OBJECT (s->main_sprite));
   swfdec_render_free (s->render);
 
   if (s->z) {
@@ -672,3 +668,41 @@ swfdec_decoder_experimental(SwfdecDecoder *s)
   return s->allow_experimental;
 }
 
+gboolean
+swfdec_decoder_has_mouse (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
+    SwfdecObject *obj)
+{
+  SwfdecObjectClass *klass;
+
+  g_return_val_if_fail (s != NULL, FALSE);
+  g_return_val_if_fail (seg != NULL, FALSE);
+  g_return_val_if_fail (SWFDEC_IS_OBJECT (obj), FALSE);
+
+  if (s->mouse_grab != NULL) {
+    return s->mouse_grab == obj;
+  }
+  klass = SWFDEC_OBJECT_GET_CLASS (obj);
+  if (klass->has_mouse == NULL)
+    return FALSE;
+  return klass->has_mouse (s, seg, obj);
+}
+
+/**
+ * swfdec_decoder_grab_mouse:
+ * @s: a #SwfdecDecoder
+ * @obj: the object to grab the mouse
+ *
+ * Makes this object grab the mouse button. All mouse events will be directed
+ * to this object.
+ **/
+void
+swfdec_decoder_grab_mouse (SwfdecDecoder * s, SwfdecObject *obj)
+{
+  g_return_if_fail (s != NULL);
+  g_return_if_fail (SWFDEC_IS_OBJECT (obj));
+  /* fail if we try to grab while a grab is in effect */
+  g_return_if_fail (s->mouse_grab == NULL);
+
+  SWFDEC_DEBUG ("mouse grab by %s %p", G_OBJECT_TYPE_NAME (obj), obj);
+  s->mouse_grab = obj;
+}

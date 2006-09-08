@@ -337,28 +337,21 @@ swfdec_matrix_to_cairo (cairo_matrix_t *cm, SwfdecTransform *trans)
       trans->trans[2],trans->trans[3], trans->trans[4], trans->trans[5]);
 }
 
-void
-swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * obj)
+/* this is some kind of travesty because it does both mouse detection and rendering */
+static gboolean
+swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * obj, gboolean mouse_check)
 {
-  SwfdecLayer *layer;
   SwfdecShape *shape = SWFDEC_SHAPE (obj);
   int i;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
   cairo_t *cr = s->backend_private;
+  SwfdecTransform base;
 
-  layer = swfdec_layer_new ();
-  layer->seg = seg;
-  swfdec_transform_multiply (&layer->transform, &seg->transform, &s->transform);
-
-  layer->rect.x0 = 0;
-  layer->rect.x1 = 0;
-  layer->rect.y0 = 0;
-  layer->rect.y1 = 0;
+  swfdec_transform_multiply (&base, &seg->transform, &s->transform);
 
   for (i = 0; i < shape->fills->len; i++) {
-    SwfdecTransform trans;
     swf_color color;
     cairo_matrix_t cm;
     cairo_pattern_t *pattern = NULL;
@@ -366,8 +359,6 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     shapevec = g_ptr_array_index (shape->fills, i);
     shapevec2 = g_ptr_array_index (shape->fills2, i);
-
-    memcpy (&trans, &layer->transform, sizeof (SwfdecTransform));
 
     color = swfdec_color_apply_transform (shapevec->color,
         &seg->color_transform);
@@ -381,7 +372,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           SwfdecTransform mat;
           SwfdecTransform trans;
 
-          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
+          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &base);
           swfdec_transform_invert (&mat, &trans);
           //swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
@@ -408,7 +399,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           SwfdecTransform mat;
           SwfdecTransform trans;
 
-          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
+          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &base);
           swfdec_transform_invert (&mat, &trans);
           //swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
@@ -438,7 +429,7 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
           SwfdecTransform mat;
           SwfdecTransform trans;
 
-          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &layer->transform);
+          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &base);
           swfdec_transform_invert (&mat, &trans);
           //swfdec_transform_invert (&mat, &shapevec->fill_transform);
 
@@ -486,41 +477,41 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     cairo_set_line_width (cr, 0.5);
     cairo_save (cr);
 
-    cairo_matrix_init (&cm, trans.trans[0], trans.trans[1],
-        trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
+    cairo_matrix_init (&cm, base.trans[0], base.trans[1],
+        base.trans[2], base.trans[3], base.trans[4], base.trans[5]);
     cairo_transform (cr, &cm);
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);
-    if (s->render->mouse_check) {
-      double x,y;
-      x = s->mouse_x;
-      y = s->mouse_y;
-      cairo_device_to_user (cr, &x, &y);
-      s->render->mouse_in_button = cairo_in_fill (cr, x, y);
-      SWFDEC_DEBUG("checking mouse %d %d,%d", s->render->mouse_in_button,
-          s->mouse_x, s->mouse_y);
-    } else {
-      cairo_fill (cr);
-    }
-    cairo_restore (cr);
     if (pattern) {
       cairo_pattern_destroy (pattern);
     }
     if (src_surface) {
       cairo_surface_destroy (src_surface);
     }
+    if (mouse_check) {
+      double x,y;
+      x = s->mouse_x;
+      y = s->mouse_y;
+      cairo_device_to_user (cr, &x, &y);
+      SWFDEC_DEBUG("checking mouse %d,%d",
+          s->mouse_x, s->mouse_y);
+      if (cairo_in_fill (cr, x, y))
+	return TRUE;
+    } else {
+      cairo_fill (cr);
+    }
+    cairo_restore (cr);
   }
+  if (mouse_check)
+    return FALSE;
 
   for (i = 0; i < shape->lines->len; i++) {
-    SwfdecTransform trans;
     cairo_matrix_t cm;
     swf_color color;
     double width;
 
     shapevec = g_ptr_array_index (shape->lines, i);
-
-    memcpy (&trans, &layer->transform, sizeof (SwfdecTransform));
 
     color = swfdec_color_apply_transform (shapevec->color,
         &seg->color_transform);
@@ -530,23 +521,34 @@ swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     cairo_save (cr);
 
-    cairo_matrix_init (&cm, trans.trans[0], trans.trans[1],
-        trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
+    cairo_matrix_init (&cm, base.trans[0], base.trans[1],
+        base.trans[2],base.trans[3], base.trans[4], base.trans[5]);
     cairo_transform (cr, &cm);
 
-    width = shapevec->width * swfdec_transform_get_expansion (&trans);
+    width = shapevec->width * swfdec_transform_get_expansion (&base);
     cairo_set_line_width (cr, width);
     draw_line (cr, (void *)shapevec->path->data, shapevec->path->len);
-    if (!s->render->mouse_check) {
-      cairo_stroke (cr);
-    }
+    cairo_stroke (cr);
 
     cairo_restore (cr);
   }
 
-  swfdec_layer_free (layer);
+  return TRUE;
 }
 
+gboolean
+swfdec_shape_has_mouse (SwfdecDecoder *s, SwfdecSpriteSegment *seg,
+    SwfdecObject *obj)
+{
+  return swfdec_shape_render_internal (s, seg, obj, TRUE);
+}
+
+void
+swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
+    SwfdecObject * obj)
+{
+  swfdec_shape_render_internal (s, seg, obj, FALSE);
+}
 
 void
 swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,

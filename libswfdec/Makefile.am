@@ -4,20 +4,6 @@ DIST_SUBDIRS = jpeg js mpeg
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
-if HAVE_LIBART
-renderer_cflags = $(LIBART_CFLAGS)
-renderer_libs = $(LIBART_LIBS)
-renderer_sources = swfdec_render_libart.c art.c
-renderer_headers = swfdec_render_libart.h art.h
-endif
-
-if HAVE_CAIRO
-renderer_cflags = $(CAIRO_CFLAGS)
-renderer_libs = $(CAIRO_LIBS)
-renderer_sources = swfdec_render_cairo.c
-renderer_headers =
-endif
-
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
@@ -27,13 +13,13 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
 	swfdec_buffer.c swfdec_audio.c swfdec_tag.c \
 	swfdec_cache.c swfdec_internal.h swfdec_decoder_internal.h \
-	swfdec_rect.c swfdec_transform.c $(renderer_sources)
+	swfdec_rect.c swfdec_transform.c swfdec_render_cairo.c
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
-	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(renderer_cflags) $(GLIB_CFLAGS) \
+	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) \
 	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS)
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
-	-export-symbols-regex '^(art_warn)|(swfdec_.*)' \
-	$(renderer_libs) $(GLIB_LIBS) $(MAD_LIBS) \
+	-export-symbols-regex '^(swfdec_.*)' \
+	$(CAIRO_LIBS) $(GLIB_LIBS) $(MAD_LIBS) \
 	$(LIBOIL_LIBS)
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la

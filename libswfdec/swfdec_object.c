@@ -58,13 +58,16 @@ swfdec_object_class_init (gpointer g_class, gpointer class_data)
 static void
 swfdec_object_init (GTypeInstance * instance, gpointer g_class)
 {
+  SWFDEC_LOG ("ref: created %s %p", G_OBJECT_CLASS_NAME (g_class), instance);
 
 }
 
 static void
 swfdec_object_dispose (GObject * object)
 {
-
+  SWFDEC_LOG ("ref: disposed %s %p", G_OBJECT_TYPE_NAME (object), object);
+  
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 #endif
 
@@ -77,6 +80,8 @@ swfdec_object_new (GType type)
 void
 swfdec_object_unref (SwfdecObject * object)
 {
+  SWFDEC_LOG ("ref: unreffing %p", object);
+
   g_object_unref (G_OBJECT (object));
 }
 

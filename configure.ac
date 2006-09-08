@@ -50,23 +50,10 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-WITH_GLIB_COMPAT=no
-AC_ARG_ENABLE(glib-compat,
-  AC_HELP_STRING([--enable-glib-compat],
-    [uses internal glib compatibility code]),
-    [WITH_GLIB_COMPAT=${enableval}])
-AM_CONDITIONAL(WITH_GLIB_COMPAT, [test x"$WITH_GLIB_COMPAT" = xyes ])
-
-if test "x$WITH_GLIB_COMPAT" != "xyes" ; then
-  GLIB_REQUIRES=glib-2.0
-  PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
-  if test "$HAVE_GLIB" = "no"; then
-    AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
-  fi
-else
-  GLIB_REQUIRES=
-  GLIB_LIBS="\$(top_builddir)/glib-compat/glib/libglib.la"
-  GLIB_CFLAGS="-I\$(top_srcdir)/glib-compat"
+GLIB_REQUIRES=glib-2.0
+PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
+if test "$HAVE_GLIB" = "no"; then
+  AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
 fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
@@ -87,33 +74,14 @@ if test "$HAVE_LIBOIL" = "no"; then
   AC_MSG_ERROR([cannot find liboil-0.3, which is required for build])
 fi
 
-AC_ARG_WITH(backend,
-    [  --with-backend=BACKEND  Use a particular rendering backend [default=cairo]],
-    BACKEND="$withval", BACKEND=cairo)
-
-if test "x$BACKEND" = "xlibart" ; then
-  PKG_CHECK_MODULES(LIBART, libart-2.0, HAVE_LIBART=yes, HAVE_LIBART=no)
-  AC_SUBST(LIBART_LIBS)
-  AC_SUBST(LIBART_CFLAGS)
-  if test "$HAVE_LIBART" = "no"; then
-    AC_MSG_ERROR([cannot find libart-2.0, which is required for build])
-  else
-    AC_DEFINE(HAVE_LIBART, 1, [Define if swfdec uses libart for rendering])
-  fi
+PKG_CHECK_MODULES(CAIRO, cairo >= 0.4.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+AC_SUBST(CAIRO_LIBS)
+AC_SUBST(CAIRO_CFLAGS)
+if test "$HAVE_CAIRO" = "no"; then
+  AC_MSG_ERROR([cannot find cairo, which is required for build])
+else
+  AC_DEFINE(HAVE_CAIRO, 1, [Define if swfdec uses cairo for rendering])
 fi
-AM_CONDITIONAL(HAVE_LIBART, test x$HAVE_LIBART = xyes)
-
-if test "x$BACKEND" = "xcairo" ; then
-  PKG_CHECK_MODULES(CAIRO, cairo >= 0.4.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
-  AC_SUBST(CAIRO_LIBS)
-  AC_SUBST(CAIRO_CFLAGS)
-  if test "$HAVE_CAIRO" = "no"; then
-    AC_MSG_ERROR([cannot find cairo, which is required for build])
-  else
-    AC_DEFINE(HAVE_CAIRO, 1, [Define if swfdec uses cairo for rendering])
-  fi
-fi
-AM_CONDITIONAL(HAVE_CAIRO, test x$HAVE_CAIRO = xyes)
 
 AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
 AC_SUBST(MAD_LIBS)
@@ -129,7 +97,7 @@ AC_SUBST(MOZILLA_CFLAGS)
 AC_SUBST(MOZILLA_LIBS)
 AM_CONDITIONAL(HAVE_MOZILLA, [test $HAVE_MOZILLA = yes])
 if test "x$HAVE_MOZILLA" = "xno"; then
-  AC_MSG_WARN([mozilla-config not found. Mozilla/Netscape plugin will not be built])
+  AC_MSG_WARN([Mozilla not found. Mozilla/Netscape plugin will not be built.])
 fi
 
 dnl GdkPixbuf loader
@@ -220,13 +188,12 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
-glib-compat/Makefile
-glib-compat/glib/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
 libswfdec/mpeg/Makefile
 test/Makefile
+player/Makefile
 plugin/Makefile
 pixbuf-loader/Makefile
 gimp-loader/Makefile

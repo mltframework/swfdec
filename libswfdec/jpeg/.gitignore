@@ -1,0 +1,14 @@
+*~
+CVS
+.cvsignore
+.deps
+.libs
+
+Makefile
+Makefile.in
+*.o
+*.la
+*.lo
+
+jpeg_test
+jpeg_rgb_test

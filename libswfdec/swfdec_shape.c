@@ -22,7 +22,10 @@ SWFDEC_OBJECT_BOILERPLATE (SwfdecShape, swfdec_shape)
 static void
 swfdec_shape_class_init (SwfdecShapeClass * g_class)
 {
-  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_shape_render;
+  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+  
+  object_class->render = swfdec_shape_render;
+  object_class->has_mouse = swfdec_shape_has_mouse;
 }
 
 static void

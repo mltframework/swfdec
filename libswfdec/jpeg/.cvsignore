@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-*.lo
-.cvsignore
-.deps
-.libs
-*.la
-jpeg_rgb_test
-jpeg_test

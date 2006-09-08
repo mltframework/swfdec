@@ -16,24 +16,47 @@ typedef struct _SwfdecButtonAction SwfdecButtonAction;
 #define SWFDEC_BUTTON(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_BUTTON, SwfdecButton))
 #define SWFDEC_BUTTON_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_BUTTON, SwfdecButtonClass))
 
+/* these values have to be kept in line with record parsing */
+typedef enum {
+  SWFDEC_BUTTON_UP = (1 << 0),
+  SWFDEC_BUTTON_OVER = (1 << 1),
+  SWFDEC_BUTTON_DOWN = (1 << 2),
+  SWFDEC_BUTTON_HIT = (1 << 3)
+} SwfdecButtonState;
+
+/* these values have to be kept in line with condition parsing */
+typedef enum {
+  SWFDEC_BUTTON_IDLE_TO_OVER_UP = (1 << 0),
+  SWFDEC_BUTTON_OVER_UP_TO_IDLE = (1 << 1),
+  SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN = (1 << 2),
+  SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP = (1 << 3),
+  SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN = (1 << 4),
+  SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN = (1 << 5),
+  SWFDEC_BUTTON_OUT_DOWN_TO_IDLE = (1 << 6),
+  SWFDEC_BUTTON_IDLE_TO_OVER_DOWN = (1 << 7),
+  SWFDEC_BUTTON_OVER_DOWN_TO_IDLE = (1 << 8)
+} SwfdecButtonCondition;
+
 struct _SwfdecButtonRecord
 {
-  int hit;
-  int down;
-  int over;
-  int up;
+  SwfdecButtonState states;
   SwfdecSpriteSegment *segment;
 };
 
 struct _SwfdecButtonAction
 {
-  unsigned int condition;
+  SwfdecButtonCondition condition;
+  unsigned int key;
   SwfdecBuffer *buffer;
 };
 
 struct _SwfdecButton
 {
   SwfdecObject object;
+
+  gboolean menubutton;
+  SwfdecButtonState state;
+  gboolean has_mouse;
 
   GArray *records;
   GArray *actions;
@@ -46,8 +69,6 @@ struct _SwfdecButtonClass
 };
 
 GType swfdec_button_get_type (void);
-
-void swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button);
 
 G_END_DECLS
 #endif

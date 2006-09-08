@@ -445,6 +445,8 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  ID: %d", id);
 
   flags = swfdec_bits_get_u8 (bits);
+  if (flags & 0x01)
+    button->menubutton = TRUE;
   offset = swfdec_bits_get_u16 (bits);
 
   SWFDEC_LOG ("  flags = %d", flags);
@@ -452,20 +454,13 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    int hit_test;
-    int down;
-    int over;
-    int up;
     int character;
     int layer;
     SwfdecButtonRecord record = { 0 };
 
     swfdec_bits_syncbits (bits);
     reserved = swfdec_bits_getbits (bits, 4);
-    hit_test = swfdec_bits_getbit (bits);
-    down = swfdec_bits_getbit (bits);
-    over = swfdec_bits_getbit (bits);
-    up = swfdec_bits_getbit (bits);
+    record.states = swfdec_bits_getbits (bits, 4);
     character = swfdec_bits_get_u16 (bits);
     layer = swfdec_bits_get_u16 (bits);
 
@@ -474,17 +469,14 @@ tag_func_define_button_2 (SwfdecDecoder * s)
       SWFDEC_WARNING ("reserved is supposed to be 0");
     }
     SWFDEC_LOG ("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
-        hit_test, down, over, up, character, layer);
+        record.states & SWFDEC_BUTTON_HIT, record.states & SWFDEC_BUTTON_DOWN, 
+        record.states & SWFDEC_BUTTON_OVER, record.states & SWFDEC_BUTTON_UP, 
+	character, layer);
 
     swfdec_bits_get_transform (bits, &trans);
     swfdec_bits_syncbits (bits);
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
-
-    record.hit = hit_test;
-    record.up = up;
-    record.over = over;
-    record.down = down;
 
     record.segment = swfdec_spriteseg_new ();
     record.segment->id = character;
@@ -502,6 +494,8 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
     offset = swfdec_bits_get_u16 (bits);
     action.condition = swfdec_bits_get_u16 (bits);
+    action.key = action.condition >> 9;
+    action.condition &= 0x1FF;
 
     if (offset) {
       len = offset - 4;
@@ -544,20 +538,13 @@ tag_func_define_button (SwfdecDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    int hit_test;
-    int down;
-    int over;
-    int up;
     int character;
     int layer;
     SwfdecButtonRecord record = { 0 };
 
     swfdec_bits_syncbits (bits);
     reserved = swfdec_bits_getbits (bits, 4);
-    hit_test = swfdec_bits_getbit (bits);
-    down = swfdec_bits_getbit (bits);
-    over = swfdec_bits_getbit (bits);
-    up = swfdec_bits_getbit (bits);
+    record.states = swfdec_bits_getbits (bits, 4);
     character = swfdec_bits_get_u16 (bits);
     layer = swfdec_bits_get_u16 (bits);
 
@@ -566,17 +553,14 @@ tag_func_define_button (SwfdecDecoder * s)
       SWFDEC_WARNING ("reserved is supposed to be 0");
     }
     SWFDEC_LOG ("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
-        hit_test, down, over, up, character, layer);
+        record.states & SWFDEC_BUTTON_HIT, record.states & SWFDEC_BUTTON_DOWN, 
+        record.states & SWFDEC_BUTTON_OVER, record.states & SWFDEC_BUTTON_UP, 
+	character, layer);
 
     swfdec_bits_get_transform (bits, &trans);
     swfdec_bits_syncbits (bits);
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
-
-    record.hit = hit_test;
-    record.up = up;
-    record.over = over;
-    record.down = down;
 
     record.segment = swfdec_spriteseg_new ();
     record.segment->id = character;

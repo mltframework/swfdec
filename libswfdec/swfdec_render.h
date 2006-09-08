@@ -17,8 +17,6 @@ struct swfdec_render_struct
 
   GList *object_states;
 
-  int mouse_check;
-  int mouse_in_button;
   SwfdecObject *active_button;
 };
 
@@ -40,6 +38,8 @@ void swf_render_frame (SwfdecDecoder * s, int frame_index);
 void swfdec_layervec_render (SwfdecDecoder * s, SwfdecLayerVec * layervec);
 void swfdec_shape_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * obj);
+gboolean swfdec_shape_has_mouse (SwfdecDecoder *s, SwfdecSpriteSegment *seg,
+    SwfdecObject *obj);
 void swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object);
 void swf_config_colorspace (SwfdecDecoder * s);

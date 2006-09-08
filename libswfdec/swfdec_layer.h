@@ -6,15 +6,9 @@
 
 #include "swfdec_types.h"
 #include "swfdec_transform.h"
-#ifdef HAVE_LIBART
-#include <libart_lgpl/libart.h>
-#endif
 
 struct swfdec_layer_vec_struct
 {
-#ifdef HAVE_LIBART
-  ArtSVP *svp;
-#endif
   unsigned int color;
   SwfdecRect rect;
 

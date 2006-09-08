@@ -1,9 +1,13 @@
-*.la
-*.lo
-*.loT
+*~
+CVS
+.cvsignore
 .deps
 .libs
+
 Makefile
 Makefile.in
-jsautocfg.h
+*.o
+*.la
+*.lo
+
 jscpucfg

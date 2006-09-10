@@ -74,7 +74,7 @@ void dump_sprite(SwfdecSprite *s)
 void dump_shape(SwfdecShape *shape)
 {
   SwfdecShapeVec *shapevec;
-  int i;
+  unsigned int i;
 
   g_print("  lines:\n");
   for(i=0;i<shape->lines->len;i++){

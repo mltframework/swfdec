@@ -8,7 +8,6 @@
 
 #include "swfdec_types.h"
 #include "swfdec_rect.h"
-#include "swfdec_transform.h"
 
 
 #define SWF_COLOR_SCALE_FACTOR		(1/256.0)
@@ -65,7 +64,7 @@ struct _SwfdecDecoder
   void (*fillrect) (unsigned char *, int, unsigned int, SwfdecRect *);
 
   double scale_factor;
-  SwfdecTransform transform;
+  cairo_matrix_t transform;
 
   /* where we are in the top-level state engine */
   int state;

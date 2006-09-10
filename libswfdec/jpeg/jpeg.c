@@ -266,8 +266,10 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
     dec->components[i].image = g_malloc (image_size);
   }
 
+#ifdef JPEG_DEBUG_ON
   if (bits->end != bits->ptr)
     JPEG_WARNING ("endptr != bits");
+#endif
 
   return length;
 }
@@ -373,7 +375,7 @@ huffman_table_new_jpeg (bits_t * bits)
     /* This checks that our symbol is actually less than the
      * number of bits we think it is.  This is only triggered
      * for bad huffsize[] arrays. */
-    if (symbol >= (1 << (i + 1))) {
+    if ( symbol >= (unsigned int) (1 << (i + 1))) {
       JPEG_WARNING ("bad huffsize[] array");
       return NULL;
     }
@@ -536,8 +538,10 @@ jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
   dec->y = 0;
   dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
 
+#ifdef JPEG_DEBUG_ON
   if (bits->end != bits->ptr)
     JPEG_DEBUG ("endptr != bits");
+#endif
 
   return length;
 }
@@ -877,7 +881,7 @@ jpeg_decoder_parse (JpegDecoder * dec)
   bits_t *bits = &dec->bits;
   bits_t b2;
   unsigned int x;
-  unsigned int tag;
+  int tag;
   int i;
 
   while (bits->ptr < bits->end) {

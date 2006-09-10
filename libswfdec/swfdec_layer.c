@@ -25,7 +25,7 @@ swfdec_layer_new (void)
 void
 swfdec_layer_free (SwfdecLayer * layer)
 {
-  int i;
+  unsigned int i;
   SwfdecLayerVec *layervec;
 
   if (!layer) {

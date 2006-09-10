@@ -134,7 +134,7 @@ typedef union jsdpun {
  */
 #define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d)                          \
                                && !JSDOUBLE_IS_NEGZERO(d)                     \
-			       && ((d) == (i = (jsint)(d))))
+			       && !((d) > (i = (jsint)(d))) && !((d) < i))
 
 /* Initialize number constants and runtime state for the first context. */
 extern JSBool

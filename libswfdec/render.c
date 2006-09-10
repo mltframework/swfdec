@@ -70,21 +70,21 @@ tag_place_object_2 (SwfdecDecoder * s)
   if (has_character) {
     layer->id = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG ("  id = %d", layer->id);
+  } else if (oldlayer) {
+    layer->id = oldlayer->id;
   } else {
-    if (oldlayer)
-      layer->id = oldlayer->id;
+    layer->id = 0;
   }
 
   SWFDEC_INFO ("placing %sobject layer=%d id=%d",
       (has_character) ? "" : "(existing) ", depth, layer->id);
 
   if (has_matrix) {
-    swfdec_bits_get_transform (bits, &layer->transform);
+    swfdec_bits_get_matrix (bits, &layer->transform);
+  } else if (oldlayer) {
+    layer->transform = oldlayer->transform;
   } else {
-    if (oldlayer) {
-      memcpy (&layer->transform, &oldlayer->transform,
-          sizeof (SwfdecTransform));
-    }
+    cairo_matrix_init_identity (&layer->transform);
   }
   if (has_color_transform) {
     swfdec_bits_get_color_transform (bits, &layer->color_transform);
@@ -192,7 +192,7 @@ swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
 void
 swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer)
 {
-  int i;
+  unsigned int i;
   SwfdecLayerVec *layervec;
   SwfdecLayer *child_layer;
   GList *g;

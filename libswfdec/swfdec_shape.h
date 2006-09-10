@@ -6,7 +6,6 @@
 #include <swfdec_object.h>
 #include <color.h>
 #include <swfdec_bits.h>
-#include "swfdec_transform.h"
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecShape SwfdecShape;
@@ -43,7 +42,7 @@ struct _SwfdecShapeVec
 
   int fill_type;
   int fill_id;
-  SwfdecTransform fill_transform;
+  cairo_matrix_t fill_transform;
 
   SwfdecGradient *grad;
 };
@@ -57,8 +56,8 @@ struct _SwfdecShape
   GPtrArray *fills2;
 
   /* used while defining */
-  int fills_offset;
-  int lines_offset;
+  unsigned int fills_offset;
+  unsigned int lines_offset;
   int n_fill_bits;
   int n_line_bits;
   int rgba;
@@ -90,10 +89,10 @@ int tag_func_define_sprite (SwfdecDecoder * s);
 void dump_layers (SwfdecDecoder * s);
 
 void swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, SwfdecTransform * trans);
+    SwfdecShapeVec * shapevec, cairo_matrix_t * trans);
 void swfdec_shape_compose_gradient (SwfdecDecoder * s,
     SwfdecLayerVec * layervec, SwfdecShapeVec * shapevec,
-    SwfdecTransform * trans, SwfdecSpriteSegment * seg);
+    cairo_matrix_t * trans, SwfdecSpriteSegment * seg);
 unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
     SwfdecColorTransform * color_transform);
 SwfdecLayer *swfdec_shape_prerender (SwfdecDecoder * s,

@@ -1512,7 +1512,7 @@ dig_done:
                 rv = 2.*rv0;
                 rv *= tinytens[j];
 #endif
-                if (!rv) {
+                if (!(int) rv) {
                 undfl:
                     rv = 0.;
                     *err = JS_DTOA_ERANGE;
@@ -1693,7 +1693,7 @@ dig_done:
             else {
                 rv -= ulp(rv);
 #ifndef Sudden_Underflow
-                if (!rv)
+                if (!(int) rv)
                     goto undfl;
 #endif
             }
@@ -2123,7 +2123,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     S = NULL;
     mlo = mhi = NULL;
     
-    if (!d) {
+    if (!(int) d) {
       no_digits:
         *decpt = 1;
         if (bufsize < 2) {
@@ -2197,7 +2197,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     /* At this point d = f*2^i, where 1 <= f < 2.  d2 is an approximation of f. */
     ds = (d2-1.5)*0.289529654602168 + 0.1760912590558 + i*0.301029995663981;
     k = (int32)ds;
-    if (ds < 0. && ds != k)
+    if (ds < 0. && !(ds > k || ds < k))
         k--;    /* want k = floor(ds) */
     k_check = 1;
     if (k >= 0 && k <= Ten_pmax) {
@@ -2386,7 +2386,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         ds = tens[k];
         if (ndigits < 0 && ilim <= 0) {
             S = mhi = 0;
-            if (ilim < 0 || d < 5*ds || (!biasUp && d == 5*ds))
+            if (ilim < 0 || d < 5*ds || (!biasUp && !(d > 5*ds)))
                 goto no_digits;
             goto one_digit;
         }
@@ -2403,7 +2403,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
             *s++ = '0' + (char)L;
             if (i == ilim) {
                 d += d;
-                if ((d > ds) || (d == ds && (L & 1 || biasUp))) {
+                if ((d > ds) || (!(ds > d) && (L & 1 || biasUp))) {
                 bump_up:
                     while(*--s == '9')
                         if (s == buf) {
@@ -2415,8 +2415,9 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
                 }
                 break;
             }
-            if (!(d *= 10.))
+            if (!(d * 10. > d))
                 break;
+	    d *= 10.;
         }
         goto ret1;
     }
@@ -2997,7 +2998,7 @@ JS_dtobasestr(int base, double d)
         }
         
         df = d - di;
-        if (df != 0.0) {
+        if (!(d > di || d < di)) { /* df != 0.0 */
             /* We have a fraction. */
             int32 e, bbits, s2, done;
             Bigint *b, *s, *mlo, *mhi;

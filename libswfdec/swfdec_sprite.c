@@ -144,14 +144,14 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 {
   SwfdecSprite *sprite = SWFDEC_SPRITE (object);
   SwfdecSpriteFrame *frame;
-  SwfdecTransform save_transform;
+  cairo_matrix_t save_transform;
   GList *g;
   int clip_depth = 0;
 
   //memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
 
-  memcpy (&save_transform, &s->transform, sizeof (SwfdecTransform));
-  swfdec_transform_multiply (&s->transform, &seg->transform, &save_transform);
+  save_transform = s->transform;
+  cairo_matrix_multiply (&s->transform, &seg->transform, &save_transform);
 
   /* FIXME 0 is wrong */
   frame = &sprite->frames[0];
@@ -190,7 +190,7 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       SWFDEC_DEBUG ("could not find object (id = %d)", child_seg->id);
     }
   }
-  memcpy (&s->transform, &save_transform, sizeof (SwfdecTransform));
+  s->transform = save_transform;
 }
 
 #if 0
@@ -451,29 +451,18 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       (has_character) ? "" : "[re-]", depth, layer->id);
 
   if (has_matrix) {
-    swfdec_bits_get_transform (bits, &layer->transform);
+    swfdec_bits_get_matrix (bits, &layer->transform);
+  } else if (oldlayer) {
+    layer->transform = oldlayer->transform;
   } else {
-    if (oldlayer) {
-      memcpy (&layer->transform, &oldlayer->transform,
-          sizeof (SwfdecTransform));
-    }
+    cairo_matrix_init_identity (&layer->transform);
   }
   if (has_color_transform) {
     swfdec_bits_get_color_transform (bits, &layer->color_transform);
+  } else if (oldlayer) {
+    layer->color_transform = oldlayer->color_transform;
   } else {
-    if (oldlayer) {
-      memcpy (&layer->color_transform, &oldlayer->color_transform,
-          sizeof (SwfdecColorTransform));
-    } else {
-      layer->color_transform.mult[0] = 1;
-      layer->color_transform.mult[1] = 1;
-      layer->color_transform.mult[2] = 1;
-      layer->color_transform.mult[3] = 1;
-      layer->color_transform.add[0] = 0;
-      layer->color_transform.add[1] = 0;
-      layer->color_transform.add[2] = 0;
-      layer->color_transform.add[3] = 0;
-    }
+    swfdec_color_transform_init_identity (&layer->color_transform);
   }
   swfdec_bits_syncbits (bits);
   if (has_ratio) {

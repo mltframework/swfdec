@@ -4,8 +4,8 @@
 #define _SWFDEC_OBJECT_H_
 
 #include <glib-object.h>
+#include <cairo.h>
 #include "swfdec_types.h"
-#include "swfdec_transform.h"
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecObject SwfdecObject;
@@ -29,7 +29,7 @@ struct _SwfdecObject
 
   int id;
 
-  SwfdecTransform transform;
+  cairo_matrix_t transform;
 
   int number;
 };

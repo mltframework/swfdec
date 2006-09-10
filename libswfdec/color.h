@@ -33,6 +33,7 @@ struct swfdec_gradient_struct
 #define RGB565_B(color) (((color)&0x001f)<<3)
 
 
+void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
 unsigned int swfdec_color_apply_transform (unsigned int in,
     SwfdecColorTransform * trans);
 int tag_func_set_background_color (SwfdecDecoder * s);

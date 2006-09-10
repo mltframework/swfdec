@@ -564,7 +564,7 @@ date_parseString(JSString *str, jsdouble *result)
     int sec = -1;
     int c = -1;
     int n = -1;
-    jsdouble tzoffset = -1;  /* was an int, overflowed on win16!!! */
+    int tzoffset = -1;  /* overflowed on win16!!! */
     int prevc = 0;
     JSBool seenplusminus = JS_FALSE;
 
@@ -1490,7 +1490,7 @@ new_explode(jsdouble timeval, PRMJTime *split, JSBool findEquivalent)
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
-    split->tm_isdst = (DaylightSavingTA(timeval) != 0);
+    split->tm_isdst = (DaylightSavingTA(timeval) > 0.0001);
 }
 
 typedef enum formatspec {

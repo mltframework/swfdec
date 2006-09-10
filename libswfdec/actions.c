@@ -129,7 +129,8 @@ action_script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   context->call_depth++;
 
   if (func->is_function2) {
-    int reg, i;
+    int reg;
+    unsigned int i;
 
     frame->registers = JS_NewArrayObject (context->jscx, 0, NULL);
     argv[argc + 3] = OBJECT_TO_JSVAL(frame->registers);

@@ -30,3 +30,23 @@ swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform * trans)
   return SWF_COLOR_COMBINE (r, g, b, a);
 }
 
+/**
+ * swfdec_color_transform_init_identity:
+ * @trans: a #SwfdecColorTransform
+ *
+ * Initializes the color transform so it doesn't transform any colors.
+ **/
+void
+swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
+{
+  g_return_if_fail (trans != NULL);
+  
+  trans->mult[0] = 1.0;
+  trans->mult[1] = 1.0;
+  trans->mult[2] = 1.0;
+  trans->mult[3] = 1.0;
+  trans->add[0] = 0.0;
+  trans->add[1] = 0.0;
+  trans->add[2] = 0.0;
+  trans->add[3] = 0.0;
+}

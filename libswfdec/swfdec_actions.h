@@ -21,7 +21,8 @@ typedef struct
   char *name;
   unsigned char *pc;
   SwfdecNativeMethod *meth;
-  int num_params, register_count, code_size;
+  unsigned int num_params;
+  int register_count, code_size;
   char preload_parent, preload_root, suppress_super, preload_super;
   char suppress_args, preload_args, suppress_this, preload_this;
   char preload_global, is_function2;

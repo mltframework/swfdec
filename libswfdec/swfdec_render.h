@@ -5,7 +5,6 @@
 #include "config.h"
 
 #include "swfdec_types.h"
-#include "swfdec_transform.h"
 #include <swfdec_rect.h>
 
 G_BEGIN_DECLS

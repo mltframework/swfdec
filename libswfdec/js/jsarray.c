@@ -149,7 +149,7 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
                              JSMSG_BAD_ARRAY_LENGTH);
         return JS_FALSE;
     }
-    if (JSDOUBLE_IS_NaN(d) || d != *lengthp) {
+    if (JSDOUBLE_IS_NaN(d) || (uint32) d != *lengthp) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_ARRAY_LENGTH);
         return JS_FALSE;
@@ -776,8 +776,12 @@ sort_compare(const void *a, const void *b, void *arg)
                  * ignore it.
                  */
                 cmp = 0;
-            } else if (cmp != 0) {
-                cmp = cmp > 0 ? 1 : -1;
+            } else if (cmp > 0) {
+                cmp = 1; 
+	    } else if (cmp < 0) {
+		cmp = -1;
+	    } else {
+		cmp = 0;
             }
         } else {
             ca->status = ok;
@@ -839,7 +843,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * of the malloc'd vector.
      */
     nbytes = len * sizeof(jsval);
-    if (nbytes != (double) len * sizeof(jsval)) {
+    if ((double) nbytes < (double) len * sizeof(jsval)) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }

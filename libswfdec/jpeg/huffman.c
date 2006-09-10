@@ -24,7 +24,7 @@ huffman_table_dump (HuffmanTable * table)
   unsigned int n_bits;
   unsigned int code;
   char str[33];
-  int i;
+  unsigned int i;
   HuffmanEntry *entry;
 
   JPEG_LOG ("dumping huffman table %p", table);
@@ -70,7 +70,7 @@ unsigned int
 huffman_table_decode_jpeg (HuffmanTable * tab, bits_t * bits)
 {
   unsigned int code;
-  int i;
+  unsigned int i;
   char str[33];
   HuffmanEntry *entry;
 

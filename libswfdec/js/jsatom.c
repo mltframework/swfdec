@@ -182,7 +182,7 @@ js_compare_atom_keys(const void *k1, const void *k2)
         if (JSDOUBLE_IS_NaN(d2))
             return JS_FALSE;
 #endif
-        return d1 == d2;
+        return (d1 - d2) < 0.00000001;
     }
     return v1 == v2;
 }

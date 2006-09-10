@@ -2,6 +2,8 @@
 #ifndef _SWFDEC_TYPES_H_
 #define _SWFDEC_TYPES_H_
 
+#include <glib.h>
+
 typedef struct _SwfdecActionContext SwfdecActionContext;
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecBufferQueue SwfdecBufferQueue;

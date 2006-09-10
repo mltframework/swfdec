@@ -4,7 +4,6 @@
 
 #include "swfdec_types.h"
 #include <swfdec_object.h>
-#include "swfdec_transform.h"
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecSprite SwfdecSprite;
@@ -26,7 +25,7 @@ struct _SwfdecSpriteSegment
   int clip_depth;
   gboolean stopped;
 
-  SwfdecTransform transform;
+  cairo_matrix_t transform;
   SwfdecColorTransform color_transform;
 
   int ran_load;

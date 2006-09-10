@@ -368,16 +368,16 @@ action_binary_op (SwfdecActionContext * context)
       JS_NewDoubleValue (context->jscx, b / a, &TAG_A);
       break;
     case 0x0e:
-      TAG_A = BOOLEAN_TO_JSVAL(b == a);
+      TAG_A = BOOLEAN_TO_JSVAL(b - a < 0.00001);
       break;
     case 0x0f:
       TAG_A = BOOLEAN_TO_JSVAL(b < a);
       break;
     case 0x10:
-      TAG_A = BOOLEAN_TO_JSVAL(b && a);
+      TAG_A = BOOLEAN_TO_JSVAL(ABS (b) > 0 && ABS (a) > 0);
       break;
     case 0x11:
-      TAG_A = BOOLEAN_TO_JSVAL(b ||a);
+      TAG_A = BOOLEAN_TO_JSVAL(ABS (b) > 0 || ABS (a) > 0);
       break;
     case 0x3f:
       JS_NewDoubleValue (context->jscx, (int)b % (int)a, &TAG_A);
@@ -1040,7 +1040,7 @@ action_constant_pool (SwfdecActionContext *context)
 static void
 action_define_function (SwfdecActionContext *context)
 {
-  int i;
+  unsigned int i;
   ScriptFunction *func;
   JSFunction *jsfunc;
 
@@ -1113,7 +1113,7 @@ action_equals_2 (SwfdecActionContext * context)
     } else if (atag == JSVAL_DOUBLE) {
       jsdouble a = *JSVAL_TO_DOUBLE(TAG_A);
       jsdouble b = *JSVAL_TO_DOUBLE(TAG_B);
-      TAG_C = BOOLEAN_TO_JSVAL(a == b);
+      TAG_C = BOOLEAN_TO_JSVAL(a - b < 0.00001);
     } else {
       TAG_C = BOOLEAN_TO_JSVAL(TAG_A == TAG_B);
     }
@@ -1129,7 +1129,7 @@ action_equals_2 (SwfdecActionContext * context)
       jsdouble a, b;
       JS_ValueToNumber (context->jscx, TAG_A, &a);
       JS_ValueToNumber (context->jscx, TAG_B, &b);
-      TAG_C = BOOLEAN_TO_JSVAL(a == b);
+      TAG_C = BOOLEAN_TO_JSVAL(a - b < 0.00001);
     }
   }
 
@@ -1539,7 +1539,7 @@ action_string_greater (SwfdecActionContext * context)
 static void
 action_define_function_2 (SwfdecActionContext *context)
 {
-  int i;
+  unsigned int i;
   ScriptFunction *func;
   JSFunction *jsfunc;
   JSObject *obj;
@@ -1746,7 +1746,7 @@ ActionFuncEntry swf_actions[] = {
 ActionFuncEntry *
 get_action (int action)
 {
-  int i;
+  unsigned int i;
 
   for (i=0;i<sizeof(swf_actions)/sizeof(swf_actions[0]);i++){
     if (swf_actions[i].action == action) {

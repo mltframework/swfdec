@@ -107,7 +107,7 @@ mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   /* FIXME we need a separate list of added segments */
   child_seg = swfdec_spriteseg_new ();
   child_seg->depth = depth;
-  swfdec_transform_init_identity (&child_seg->transform);
+  cairo_matrix_init_identity (&child_seg->transform);
   child_seg->color_transform.mult[0] = 1;
   child_seg->color_transform.mult[1] = 1;
   child_seg->color_transform.mult[2] = 1;
@@ -136,7 +136,7 @@ mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   *vp = JSVAL_VOID;
   if (seg) {
-    JS_NewNumberValue (cx, seg->transform.trans[4], vp);
+    JS_NewNumberValue (cx, seg->transform.x0, vp);
   } else {
     SWFDEC_WARNING("couldn't get segment");
   }
@@ -154,7 +154,7 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   *vp = JSVAL_VOID;
   if (seg) {
     JS_ValueToNumber(cx, *vp, &num);
-    seg->transform.trans[4] = num;
+    seg->transform.x0 = num;
   } else {
     SWFDEC_WARNING("couldn't get segment");
   }
@@ -170,7 +170,7 @@ mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   *vp = JSVAL_VOID;
   if (seg) {
-    JS_NewNumberValue (cx, seg->transform.trans[5], vp);
+    JS_NewNumberValue (cx, seg->transform.y0, vp);
   } else {
     SWFDEC_WARNING("couldn't get segment");
   }
@@ -188,7 +188,7 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   *vp = JSVAL_VOID;
   if (seg) {
     JS_ValueToNumber(cx, *vp, &num);
-    seg->transform.trans[5] = num;
+    seg->transform.y0 = num;
   } else {
     SWFDEC_WARNING("couldn't get segment");
   }

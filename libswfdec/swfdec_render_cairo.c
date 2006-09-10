@@ -218,7 +218,7 @@ draw_x (cairo_t *cr, GArray *array, GArray *array2)
   SwfdecShapePoint *points;
   GArray *chunks_array;
   LineChunk chunk = { 0 };
-  int j;
+  unsigned int j;
   double x, y;
 
   chunks_array = g_array_new (FALSE, TRUE, sizeof (LineChunk));
@@ -299,15 +299,16 @@ draw_x (cairo_t *cr, GArray *array, GArray *array2)
     }
 
     while (1) {
-      int i;
+      unsigned int i;
 
-      if (start_x == end_x && start_y == end_y) break;
+#define DOUBLE_EQUAL(x, y) (ABS ((x) - (y)) < 0.000001)
+      if (DOUBLE_EQUAL (start_x, end_x) && DOUBLE_EQUAL (start_y, end_y)) break;
 
       for(i=0;i<chunks_array->len;i++){
         c = &g_array_index (chunks_array, LineChunk, i);
         if (c->used) continue;
 
-        if (end_x == c->start_x && end_y == c->start_y) {
+        if (DOUBLE_EQUAL (end_x, c->start_x) && DOUBLE_EQUAL (end_y, c->start_y)) {
           end_x = c->end_x;
           end_y = c->end_y;
           c->used = 1;
@@ -330,11 +331,12 @@ draw_x (cairo_t *cr, GArray *array, GArray *array2)
   g_array_free (chunks_array, TRUE);
 }
 
-static void
-swfdec_matrix_to_cairo (cairo_matrix_t *cm, SwfdecTransform *trans)
+static double
+swfdec_matrix_get_expansion (cairo_matrix_t *matrix)
 {
-  cairo_matrix_init (cm, trans->trans[0], trans->trans[1],
-      trans->trans[2],trans->trans[3], trans->trans[4], trans->trans[5]);
+  double x = 1, y = 1;
+  cairo_matrix_transform_distance (matrix, &x, &y);
+  return sqrt (x * x + y * y);
 }
 
 /* this is some kind of travesty because it does both mouse detection and rendering */
@@ -343,17 +345,16 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * obj, gboolean mouse_check)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (obj);
-  int i;
+  unsigned int i;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
   cairo_t *cr = s->backend_private;
-  SwfdecTransform base;
+  cairo_matrix_t base;
 
-  swfdec_transform_multiply (&base, &seg->transform, &s->transform);
+  cairo_matrix_multiply (&base, &seg->transform, &s->transform);
 
   for (i = 0; i < shape->fills->len; i++) {
     swf_color color;
-    cairo_matrix_t cm;
     cairo_pattern_t *pattern = NULL;
     cairo_surface_t *src_surface = NULL;
 
@@ -368,17 +369,15 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         {
           SwfdecGradient *grad = shapevec->grad;
           int j;
-          cairo_matrix_t matrix;
-          SwfdecTransform mat;
-          SwfdecTransform trans;
+          cairo_matrix_t mat;
 
-          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &base);
-          swfdec_transform_invert (&mat, &trans);
-          //swfdec_transform_invert (&mat, &shapevec->fill_transform);
+          cairo_matrix_multiply (&mat, &shapevec->fill_transform, &base);
+          if (cairo_matrix_invert (&mat)) {
+	    g_assert_not_reached ();
+	  }
 
-          swfdec_matrix_to_cairo (&matrix, &mat);
           pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
-          cairo_pattern_set_matrix(pattern, &matrix);
+          cairo_pattern_set_matrix(pattern, &mat);
           for (j=0;j<grad->n_gradients;j++){
             color = swfdec_color_apply_transform (grad->array[j].color,
                 &seg->color_transform);
@@ -395,18 +394,16 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         {
           SwfdecGradient *grad = shapevec->grad;
           int j;
-          cairo_matrix_t matrix;
-          SwfdecTransform mat;
-          SwfdecTransform trans;
+          cairo_matrix_t mat;
 
-          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &base);
-          swfdec_transform_invert (&mat, &trans);
-          //swfdec_transform_invert (&mat, &shapevec->fill_transform);
+          cairo_matrix_multiply (&mat, &shapevec->fill_transform, &base);
+          if (cairo_matrix_invert (&mat)) {
+	    g_assert_not_reached ();
+	  }
 
-          swfdec_matrix_to_cairo (&matrix, &mat);
           pattern = cairo_pattern_create_radial (0,0,0,
              0, 0, 16384);
-          cairo_pattern_set_matrix(pattern, &matrix);
+          cairo_pattern_set_matrix(pattern, &mat);
           for (j=0;j<grad->n_gradients;j++){
             color = swfdec_color_apply_transform (grad->array[j].color,
                 &seg->color_transform);
@@ -425,25 +422,22 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       case 0x43:
         {
           SwfdecImage *image;
-          cairo_matrix_t matrix;
-          SwfdecTransform mat;
-          SwfdecTransform trans;
+          cairo_matrix_t mat;
 
-          swfdec_transform_multiply (&trans, &shapevec->fill_transform, &base);
-          swfdec_transform_invert (&mat, &trans);
-          //swfdec_transform_invert (&mat, &shapevec->fill_transform);
+          cairo_matrix_multiply (&mat, &shapevec->fill_transform, &base);
+          if (cairo_matrix_invert (&mat)) {
+	    g_assert_not_reached ();
+	  }
 
           image = (SwfdecImage *)swfdec_object_get (s, shapevec->fill_id);
           if (image && SWFDEC_IS_IMAGE (image)) {
             unsigned char *image_data = swfdec_handle_get_data(image->handle);
 
-            swfdec_matrix_to_cairo (&matrix, &mat);
-            //swfdec_matrix_to_cairo (&matrix, &shapevec->fill_transform);
             src_surface = cairo_image_surface_create_for_data (image_data,
                 CAIRO_FORMAT_ARGB32, image->width, image->height,
                 image->rowstride);
             pattern = cairo_pattern_create_for_surface (src_surface);
-            cairo_pattern_set_matrix(pattern, &matrix);
+            cairo_pattern_set_matrix(pattern, &mat);
             if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
               cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
             } else {
@@ -477,9 +471,7 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     cairo_set_line_width (cr, 0.5);
     cairo_save (cr);
 
-    cairo_matrix_init (&cm, base.trans[0], base.trans[1],
-        base.trans[2], base.trans[3], base.trans[4], base.trans[5]);
-    cairo_transform (cr, &cm);
+    cairo_transform (cr, &base);
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);
@@ -507,7 +499,6 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     return FALSE;
 
   for (i = 0; i < shape->lines->len; i++) {
-    cairo_matrix_t cm;
     swf_color color;
     double width;
 
@@ -521,11 +512,9 @@ swfdec_shape_render_internal (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     cairo_save (cr);
 
-    cairo_matrix_init (&cm, base.trans[0], base.trans[1],
-        base.trans[2],base.trans[3], base.trans[4], base.trans[5]);
-    cairo_transform (cr, &cm);
+    cairo_transform (cr, &base);
 
-    width = shapevec->width * swfdec_transform_get_expansion (&base);
+    width = shapevec->width * swfdec_matrix_get_expansion (&base);
     cairo_set_line_width (cr, width);
     draw_line (cr, (void *)shapevec->path->data, shapevec->path->len);
     cairo_stroke (cr);
@@ -554,7 +543,7 @@ void
 swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
     SwfdecObject * object)
 {
-  int i;
+  unsigned int i;
   SwfdecText *text;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
@@ -564,7 +553,7 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
   layer = swfdec_layer_new ();
   layer->seg = seg;
-  swfdec_transform_multiply (&layer->transform, &seg->transform, &s->transform);
+  cairo_matrix_multiply (&layer->transform, &seg->transform, &s->transform);
 
   layer->rect.x0 = 0;
   layer->rect.x1 = 0;
@@ -575,11 +564,8 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
-    SwfdecTransform glyph_trans;
-    SwfdecTransform trans;
-    SwfdecTransform pos;
+    cairo_matrix_t glyph_trans, trans, pos;
     swf_color color;
-    cairo_matrix_t cm;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
 
@@ -593,13 +579,12 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
       continue;
     }
 
-    swfdec_transform_init_identity (&pos);
-    swfdec_transform_translate (&pos,
-        glyph->x * SWF_SCALE_FACTOR, glyph->y * SWF_SCALE_FACTOR);
-    pos.trans[0] = glyph->height * SWF_TEXT_SCALE_FACTOR;
-    pos.trans[3] = glyph->height * SWF_TEXT_SCALE_FACTOR;
-    swfdec_transform_multiply (&glyph_trans, &pos, &object->transform);
-    swfdec_transform_multiply (&trans, &glyph_trans, &layer->transform);
+    cairo_matrix_init_translate (&pos,
+	glyph->x * SWF_SCALE_FACTOR, glyph->y * SWF_SCALE_FACTOR);
+    pos.xx = glyph->height * SWF_TEXT_SCALE_FACTOR;
+    pos.yy = glyph->height * SWF_TEXT_SCALE_FACTOR;
+    cairo_matrix_multiply (&glyph_trans, &pos, &object->transform);
+    cairo_matrix_multiply (&trans, &glyph_trans, &layer->transform);
 
     layer->fills = g_array_set_size (layer->fills, layer->fills->len + 1);
 
@@ -612,10 +597,6 @@ swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         SWF_COLOR_A(color)/255.0);
 
     cairo_save (cr);
-
-    cairo_matrix_init (&cm, trans.trans[0], trans.trans[1],
-        trans.trans[2],trans.trans[3], trans.trans[4], trans.trans[5]);
-    cairo_transform (cr, &cm);
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
     draw_x (cr, shapevec->path, shapevec2->path);

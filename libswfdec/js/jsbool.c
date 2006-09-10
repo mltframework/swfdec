@@ -225,7 +225,7 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     } ELSE
     if (JSVAL_IS_DOUBLE(v)) {
 	d = *JSVAL_TO_DOUBLE(v);
-	b = (!JSDOUBLE_IS_NaN(d) && d != 0) ? JS_TRUE : JS_FALSE;
+	b = (!JSDOUBLE_IS_NaN(d) && (int) d != 0) ? JS_TRUE : JS_FALSE;
     } ELSE
 #if defined _MSC_VER && _MSC_VER <= 800
     if (JSVAL_IS_BOOLEAN(v)) {

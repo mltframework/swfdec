@@ -30,7 +30,7 @@ struct _SwfdecFontClass
 
 GType swfdec_font_get_type (void);
 
-SwfdecShape *swfdec_font_get_glyph (SwfdecFont * font, int glyph);
+SwfdecShape *swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph);
 
 
 G_END_DECLS

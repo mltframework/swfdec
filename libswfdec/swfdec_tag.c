@@ -178,7 +178,7 @@ define_text (SwfdecDecoder * s, int rgba)
   glyph.color = 0xffffffff;
 
   swfdec_bits_get_rect (bits, rect);
-  swfdec_bits_get_transform (bits, &SWFDEC_OBJECT (text)->transform);
+  swfdec_bits_get_matrix (bits, &SWFDEC_OBJECT (text)->transform);
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
   n_advance_bits = swfdec_bits_get_u8 (bits);
@@ -430,7 +430,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   int id;
   int flags;
   int offset;
-  SwfdecTransform trans;
+  cairo_matrix_t trans;
   SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
@@ -473,16 +473,15 @@ tag_func_define_button_2 (SwfdecDecoder * s)
         record.states & SWFDEC_BUTTON_OVER, record.states & SWFDEC_BUTTON_UP, 
 	character, layer);
 
-    swfdec_bits_get_transform (bits, &trans);
+    swfdec_bits_get_matrix (bits, &trans);
     swfdec_bits_syncbits (bits);
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
     record.segment = swfdec_spriteseg_new ();
     record.segment->id = character;
-    memcpy (&record.segment->transform, &trans, sizeof (SwfdecTransform));
-    memcpy (&record.segment->color_transform, &color_trans,
-        sizeof (SwfdecColorTransform));
+    record.segment->transform = trans;
+    record.segment->color_transform = color_trans;
 
     g_array_append_val (button->records, record);
   }
@@ -522,7 +521,7 @@ tag_func_define_button (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int id;
-  SwfdecTransform trans;
+  cairo_matrix_t trans;
   SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
@@ -557,16 +556,15 @@ tag_func_define_button (SwfdecDecoder * s)
         record.states & SWFDEC_BUTTON_OVER, record.states & SWFDEC_BUTTON_UP, 
 	character, layer);
 
-    swfdec_bits_get_transform (bits, &trans);
+    swfdec_bits_get_matrix (bits, &trans);
     swfdec_bits_syncbits (bits);
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
     record.segment = swfdec_spriteseg_new ();
     record.segment->id = character;
-    memcpy (&record.segment->transform, &trans, sizeof (SwfdecTransform));
-    memcpy (&record.segment->color_transform, &color_trans,
-        sizeof (SwfdecColorTransform));
+    record.segment->transform = trans;
+    record.segment->color_transform = color_trans;
 
     g_array_append_val (button->records, record);
   }
@@ -627,9 +625,9 @@ tag_func_place_object_2 (SwfdecDecoder * s)
     SWFDEC_DEBUG ("  id = %d\n", character_id);
   }
   if (has_matrix) {
-    SwfdecTransform trans;
+    cairo_matrix_t trans;
 
-    swfdec_bits_get_transform (bits, &trans);
+    swfdec_bits_get_matrix (bits, &trans);
   }
   if (has_color_transform) {
     SwfdecColorTransform ct;

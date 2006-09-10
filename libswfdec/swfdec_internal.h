@@ -24,7 +24,6 @@
 #include "swfdec_sound.h"
 #include "swfdec_sprite.h"
 #include "swfdec_text.h"
-#include "swfdec_transform.h"
 #include "swfdec_types.h"
 #include "tags.h"
 

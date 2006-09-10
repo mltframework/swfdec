@@ -40,7 +40,7 @@ static void
 swfdec_shape_dispose (SwfdecShape * shape)
 {
   SwfdecShapeVec *shapevec;
-  int i;
+  unsigned int i;
 
   for (i = 0; i < shape->fills->len; i++) {
     shapevec = g_ptr_array_index (shape->fills, i);
@@ -306,17 +306,14 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
       SWFDEC_LOG ("    color %08x", shapevec->color);
     } else if (fill_style_type == 0x10 || fill_style_type == 0x12) {
       shapevec->fill_type = fill_style_type;
-      swfdec_bits_get_transform (bits, &shapevec->fill_transform);
+      swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
       if (shape->rgba) {
         shapevec->grad = swfdec_bits_get_gradient_rgba (bits);
       } else {
         shapevec->grad = swfdec_bits_get_gradient (bits);
       }
       swfdec_bits_syncbits (bits);
-      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR;
+      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
     } else if (fill_style_type >= 0x40 && fill_style_type <= 0x43) {
       shapevec->fill_type = fill_style_type;
       shapevec->fill_id = swfdec_bits_get_u16 (bits);
@@ -328,16 +325,13 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
         shapevec->color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       }
 
-      swfdec_bits_get_transform (bits, &shapevec->fill_transform);
+      swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
       swfdec_bits_syncbits (bits);
       /* FIXME: the 0.965 is a mysterious factor that seems to improve
        * rendering of images. */
 //#define MYSTERIOUS_FACTOR 0.965
 #define MYSTERIOUS_FACTOR 1.0
-      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
-      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
-      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
-      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR * MYSTERIOUS_FACTOR;
+      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
       shapevec->fill_type = 0;
@@ -556,12 +550,11 @@ tag_define_shape_2 (SwfdecDecoder * s)
 
 void
 swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, SwfdecTransform * trans)
+    SwfdecShapeVec * shapevec, cairo_matrix_t * trans)
 {
   SwfdecObject *image_object;
   SwfdecImage *image;
-  SwfdecTransform mat;
-  SwfdecTransform mat0;
+  cairo_matrix_t mat, mat0;
   int i, j;
   unsigned char *dest;
   unsigned char *src;
@@ -583,12 +576,12 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
 
   image = SWFDEC_IMAGE (image_object);
 
-  SWFDEC_LOG ("%g %g %g %g %g %g",
-      shapevec->fill_transform.trans[0],
-      shapevec->fill_transform.trans[1],
-      shapevec->fill_transform.trans[2],
-      shapevec->fill_transform.trans[3],
-      shapevec->fill_transform.trans[4], shapevec->fill_transform.trans[5]);
+  SWFDEC_LOG ("%g %g %g %g  %g %g",
+      shapevec->fill_transform.xx,
+      shapevec->fill_transform.yx,
+      shapevec->fill_transform.xy,
+      shapevec->fill_transform.yy,
+      shapevec->fill_transform.x0, shapevec->fill_transform.y0);
 
   width = layervec->rect.x1 - layervec->rect.x0;
   height = layervec->rect.y1 - layervec->rect.y0;
@@ -598,12 +591,14 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   layervec->compose_height = height;
   layervec->compose_width = width;
 
-  swfdec_transform_multiply (&mat0, &shapevec->fill_transform, trans);
+  cairo_matrix_multiply (&mat0, &shapevec->fill_transform, trans);
 
   /* Need an offset in the compose information */
-  mat0.trans[4] -= layervec->rect.x0;
-  mat0.trans[5] -= layervec->rect.y0;
-  swfdec_transform_invert (&mat, &mat0);
+  cairo_matrix_translate (&mat0, -layervec->rect.x0, -layervec->rect.y0);
+  mat = mat0;
+  if (cairo_matrix_invert (&mat)) {
+    g_assert_not_reached ();
+  }
   dest = layervec->compose;
   src = swfdec_handle_get_data (image->handle);
   inv_width = 1.0 / image->width;
@@ -611,8 +606,8 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   for (j = 0; j < height; j++) {
     double x, y;
 
-    x = mat.trans[2] * j + mat.trans[4];
-    y = mat.trans[3] * j + mat.trans[5];
+    x = mat.xy * j + mat.x0;
+    y = mat.yy * j + mat.y0;
     for (i = 0; i < width; i++) {
       int ix, iy;
 
@@ -648,9 +643,8 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
 #define RGBA8888_COPY(a,b) (*(guint32 *)(a) = *(guint32 *)(b))
       RGBA8888_COPY (dest, src + ix * 4 + iy * image->rowstride);
       dest += 4;
-      x += mat.trans[0];
-      y += mat.trans[1];
-
+      x += mat.xx;
+      y += mat.yx;
     }
   }
 
@@ -658,12 +652,11 @@ swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
 
 void
 swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, SwfdecTransform * trans,
+    SwfdecShapeVec * shapevec, cairo_matrix_t * trans,
     SwfdecSpriteSegment * seg)
 {
   SwfdecGradient *grad;
-  SwfdecTransform mat;
-  SwfdecTransform mat0;
+  cairo_matrix_t mat ,mat0;
   int i, j;
   unsigned char *dest;
   unsigned char *palette;
@@ -673,12 +666,12 @@ swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
 
   grad = shapevec->grad;
 
-  SWFDEC_LOG ("%g %g %g %g %g %g",
-      shapevec->fill_transform.trans[0],
-      shapevec->fill_transform.trans[1],
-      shapevec->fill_transform.trans[2],
-      shapevec->fill_transform.trans[3],
-      shapevec->fill_transform.trans[4], shapevec->fill_transform.trans[5]);
+  SWFDEC_LOG ("%g %g %g %g  %g %g",
+      shapevec->fill_transform.xx,
+      shapevec->fill_transform.yx,
+      shapevec->fill_transform.xy,
+      shapevec->fill_transform.yy,
+      shapevec->fill_transform.x0, shapevec->fill_transform.y0);
 
   width = layervec->rect.x1 - layervec->rect.x0;
   height = layervec->rect.y1 - layervec->rect.y0;
@@ -688,20 +681,22 @@ swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
   layervec->compose_height = height;
   layervec->compose_width = width;
 
-  swfdec_transform_multiply (&mat0, &shapevec->fill_transform, trans);
+  cairo_matrix_multiply (&mat0, &shapevec->fill_transform, trans);
 
   palette = swfdec_gradient_to_palette (grad, &seg->color_transform);
 
-  mat0.trans[4] -= layervec->rect.x0;
-  mat0.trans[5] -= layervec->rect.y0;
-  swfdec_transform_invert (&mat, &mat0);
+  cairo_matrix_scale (&mat0, -layervec->rect.x0, -layervec->rect.y0);
+  mat = mat0;
+  if (!cairo_matrix_invert (&mat)) {
+    g_assert_not_reached ();
+  }
   dest = layervec->compose;
   if (shapevec->fill_type == 0x10) {
     for (j = 0; j < height; j++) {
       double x, y;
 
-      x = mat.trans[2] * j + mat.trans[4];
-      y = mat.trans[3] * j + mat.trans[5];
+      x = mat.xy * j + mat.x0;
+      y = mat.yy * j + mat.y0;
       for (i = 0; i < width; i++) {
         double z;
         int index;
@@ -718,16 +713,16 @@ swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
         dest[2] = palette[index * 4 + 2];
         dest[3] = palette[index * 4 + 3];
         dest += 4;
-        x += mat.trans[0];
-        y += mat.trans[1];
+        x += mat.xx;
+        y += mat.yx;
       }
     }
   } else {
     for (j = 0; j < height; j++) {
       double x, y;
 
-      x = mat.trans[2] * j + mat.trans[4];
-      y = mat.trans[3] * j + mat.trans[5];
+      x = mat.xy * j + mat.x0;
+      y = mat.yy * j + mat.y0;
       for (i = 0; i < width; i++) {
 #if 0
         double z;
@@ -750,8 +745,8 @@ swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
         dest[2] = palette[index * 4 + 2];
         dest[3] = palette[index * 4 + 3];
         dest += 4;
-        x += mat.trans[0];
-        y += mat.trans[1];
+        x += mat.xx;
+        y += mat.yx;
       }
     }
   }
@@ -1034,7 +1029,7 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
   for (i = 0; i < n_fill_styles; i++) {
     int fill_style_type;
     SwfdecShapeVec *shapevec;
-    SwfdecTransform end_transform;
+    cairo_matrix_t end_transform;
     unsigned int end_color;
 
     SWFDEC_LOG ("fill style %d:", i);
@@ -1055,13 +1050,10 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
       SWFDEC_LOG ("    color %08x", shapevec->color);
     } else if (fill_style_type == 0x10 || fill_style_type == 0x12) {
       shapevec->fill_type = fill_style_type;
-      swfdec_bits_get_transform (bits, &shapevec->fill_transform);
-      swfdec_bits_get_transform (bits, &end_transform);
+      swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
+      swfdec_bits_get_matrix (bits, &end_transform);
       shapevec->grad = swfdec_bits_get_morph_gradient (bits);
-      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR;
-      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR;
+      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
     } else if (fill_style_type == 0x40 || fill_style_type == 0x41) {
       shapevec->fill_type = fill_style_type;
       shapevec->fill_id = swfdec_bits_get_u16 (bits);
@@ -1073,14 +1065,11 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
         shapevec->color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       }
 
-      swfdec_bits_get_transform (bits, &shapevec->fill_transform);
-      swfdec_bits_get_transform (bits, &end_transform);
+      swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
+      swfdec_bits_get_matrix (bits, &end_transform);
       /* FIXME: the 0.965 is a mysterious factor that seems to improve
        * rendering of images. */
-      shapevec->fill_transform.trans[0] *= SWF_SCALE_FACTOR * 0.965;
-      shapevec->fill_transform.trans[1] *= SWF_SCALE_FACTOR * 0.965;
-      shapevec->fill_transform.trans[2] *= SWF_SCALE_FACTOR * 0.965;
-      shapevec->fill_transform.trans[3] *= SWF_SCALE_FACTOR * 0.965;
+      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR * 0.965, SWF_SCALE_FACTOR * 0.965);
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
       shapevec->fill_type = 0;

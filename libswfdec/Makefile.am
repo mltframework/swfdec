@@ -13,7 +13,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = actions.c actions_builtin.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
 	swfdec_buffer.c swfdec_audio.c swfdec_tag.c \
 	swfdec_cache.c swfdec_internal.h swfdec_decoder_internal.h \
-	swfdec_rect.c swfdec_transform.c swfdec_render_cairo.c
+	swfdec_rect.c swfdec_render_cairo.c
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) \
 	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS)
@@ -32,7 +32,7 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec.h \
 	swfdec_layer.h swfdec_object.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_types.h tags.h \
-	swfdec_bits.h swfdec_rect.h swfdec_transform.h \
+	swfdec_bits.h swfdec_rect.h \
 	swfdec_render.h swfdec_actions.h swfdec_font.h \
 	swfdec_cache.h \
 	swfdec_audio.h \

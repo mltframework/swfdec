@@ -2,6 +2,7 @@
 #ifndef __SWFDEC_BITS_H__
 #define __SWFDEC_BITS_H__
 
+#include <cairo.h>
 #include "color.h"
 #include "swfdec_buffer.h"
 
@@ -30,7 +31,7 @@ void swfdec_bits_syncbits (SwfdecBits * b);
 
 void swfdec_bits_get_color_transform (SwfdecBits * bits,
     SwfdecColorTransform * ct);
-void swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform * trans);
+void swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix);
 char *swfdec_bits_get_string (SwfdecBits * bits);
 unsigned int swfdec_bits_get_color (SwfdecBits * bits);
 unsigned int swfdec_bits_get_rgba (SwfdecBits * bits);

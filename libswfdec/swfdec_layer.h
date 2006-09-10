@@ -5,7 +5,6 @@
 #include "config.h"
 
 #include "swfdec_types.h"
-#include "swfdec_transform.h"
 
 struct swfdec_layer_vec_struct
 {
@@ -27,7 +26,7 @@ struct swfdec_layer_struct
 
   int frame_number;
 
-  SwfdecTransform transform;
+  cairo_matrix_t transform;
   SwfdecColorTransform color_transform;
   int ratio;
 

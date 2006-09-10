@@ -28,7 +28,7 @@ static void
 swfdec_font_dispose (SwfdecFont * font)
 {
   SwfdecShape *shape;
-  int i;
+  unsigned int i;
 
   for (i = 0; i < font->glyphs->len; i++) {
     shape = g_ptr_array_index (font->glyphs, i);
@@ -38,10 +38,10 @@ swfdec_font_dispose (SwfdecFont * font)
 }
 
 SwfdecShape *
-swfdec_font_get_glyph (SwfdecFont * font, int glyph)
+swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
 {
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
-  g_return_val_if_fail (glyph >= 0 && glyph < font->glyphs->len, NULL);
+  g_return_val_if_fail (glyph < font->glyphs->len, NULL);
 
   return g_ptr_array_index (font->glyphs, glyph);
 }

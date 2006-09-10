@@ -33,7 +33,7 @@ swfdec_button_init (SwfdecButton * button)
 static void
 swfdec_button_dispose (SwfdecButton * button)
 {
-  int i;
+  unsigned int i;
   SwfdecButtonRecord *record;
   SwfdecButtonAction *action;
 
@@ -61,7 +61,6 @@ swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button)
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & SWFDEC_BUTTON_HIT) {
-      g_print ("%d\n", i);
       obj = swfdec_object_get (s, record->segment->id);
       if (!obj)
         return FALSE;
@@ -83,7 +82,7 @@ swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button)
 static void
 swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondition condition)
 {
-  int i;
+  unsigned int i;
   SwfdecButtonAction *action;
 
   if (button->menubutton) {
@@ -115,7 +114,6 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button)
     return;
 
   has_mouse = swfdec_button_has_mouse (s, button);
-  g_print ("%s %d %d\n", has_mouse ? "T" : "f", s->mouse_x, s->mouse_y);
   switch (button->state) {
     case SWFDEC_BUTTON_UP:
       if (!has_mouse)
@@ -188,7 +186,7 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
   SwfdecButton *button = SWFDEC_BUTTON (object);
   SwfdecButtonRecord *record;
   SwfdecObjectClass *klass;
-  int i;
+  unsigned int i;
 
   swfdec_button_change_state (s, button);
 
@@ -203,7 +201,7 @@ swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
         return;
 
       tmpseg = swfdec_spriteseg_dup (record->segment);
-      swfdec_transform_multiply (&tmpseg->transform,
+      cairo_matrix_multiply (&tmpseg->transform,
           &record->segment->transform, &seg->transform);
 
       klass = SWFDEC_OBJECT_GET_CLASS (obj);

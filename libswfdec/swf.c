@@ -60,7 +60,7 @@ swfdec_decoder_new (void)
   s->colorspace = SWF_COLORSPACE_RGB888;
   swf_config_colorspace (s);
 
-  swfdec_transform_init_identity (&s->transform);
+  cairo_matrix_init_identity (&s->transform);
 
   s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
@@ -396,20 +396,12 @@ swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
   sh = (double) s->height / s->parse_height;
   s->scale_factor = (sw < sh) ? sw : sh;
 
-  s->transform.trans[0] = s->scale_factor;
-  s->transform.trans[1] = 0;
-  s->transform.trans[2] = 0;
-  s->transform.trans[3] = s->scale_factor;
-  s->transform.trans[4] = 0.5 * (s->width - s->parse_width * s->scale_factor);
-  s->transform.trans[5] = 0.5 * (s->height - s->parse_height * s->scale_factor);
-#if 0
-  s->transform.trans[0] = (double) s->width / s->parse_width;
-  s->transform.trans[1] = 0;
-  s->transform.trans[2] = 0;
-  s->transform.trans[3] = (double) s->height / s->parse_height;
-  s->transform.trans[4] = 0;
-  s->transform.trans[5] = 0;
-#endif
+  s->transform.xx = s->scale_factor;
+  s->transform.xy = 0;
+  s->transform.yx = 0;
+  s->transform.yy = s->scale_factor;
+  s->transform.x0 = 0.5 * (s->width - s->parse_width * s->scale_factor);
+  s->transform.y0 = 0.5 * (s->height - s->parse_height * s->scale_factor);
 
   swf_config_colorspace (s);
   swfdec_render_resize (s);
@@ -619,7 +611,7 @@ swf_parse_header2 (SwfdecDecoder * s)
     s->width = floor (width);
     s->height = floor (height);
     s->scale_factor = 1.0;
-    swfdec_transform_init_identity (&s->transform);
+    cairo_matrix_init_identity (&s->transform);
   } else {
     double sw, sh;
 
@@ -627,12 +619,12 @@ swf_parse_header2 (SwfdecDecoder * s)
     sh = s->height / height;
     s->scale_factor = (sw < sh) ? sw : sh;
 
-    s->transform.trans[0] = s->scale_factor;
-    s->transform.trans[1] = 0;
-    s->transform.trans[2] = 0;
-    s->transform.trans[3] = s->scale_factor;
-    s->transform.trans[4] = 0.5 * (s->width - width * s->scale_factor);
-    s->transform.trans[5] = 0.5 * (s->height - height * s->scale_factor);
+    s->transform.xx = s->scale_factor;
+    s->transform.xy = 0;
+    s->transform.yx = 0;
+    s->transform.yy = s->scale_factor;
+    s->transform.x0 = 0.5 * (s->width - width * s->scale_factor);
+    s->transform.y0 = 0.5 * (s->height - height * s->scale_factor);
   }
   s->irect.x0 = 0;
   s->irect.y0 = 0;

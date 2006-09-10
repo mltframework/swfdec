@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.3.6)
+AC_INIT(swfdec,0.3.6.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9]\.*//')]
 if test x"$nano" = x1 ; then
@@ -17,9 +17,16 @@ AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
 
-GLOBAL_CFLAGS="-Wall"
+dnl decide on error flags
+dnl if we support them, we set them unconditionally
+AS_COMPILER_FLAG(-Wall, GLOBAL_CFLAGS="-Wall", GLOBAL_CFLAGS="")
+dnl I want this but stupid headers don't let me
+dnl AS_COMPILER_FLAG(-Wshadow, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wshadow")
+AS_COMPILER_FLAG(-Wfloat-equal, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wfloat-equal")
+AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
+dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then
-  GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror"
+  AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
 fi
 
 SWFDEC_LIBVERSION="0:0:0"

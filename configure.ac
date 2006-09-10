@@ -22,7 +22,6 @@ dnl if we support them, we set them unconditionally
 AS_COMPILER_FLAG(-Wall, GLOBAL_CFLAGS="-Wall", GLOBAL_CFLAGS="")
 dnl I want this but stupid headers don't let me
 dnl AS_COMPILER_FLAG(-Wshadow, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wshadow")
-AS_COMPILER_FLAG(-Wfloat-equal, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wfloat-equal")
 AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then

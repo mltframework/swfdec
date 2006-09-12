@@ -8,8 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "swfdec_render.h"
-
 #include "swfdec_internal.h"
 
 int swf_parse_header1 (SwfdecDecoder * s);
@@ -54,9 +52,6 @@ swfdec_decoder_new (void)
 
   s->input_queue = swfdec_buffer_queue_new ();
 
-  s->colorspace = SWF_COLORSPACE_RGB888;
-  swf_config_colorspace (s);
-
   cairo_matrix_init_identity (&s->transform);
 
   s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
@@ -64,7 +59,6 @@ swfdec_decoder_new (void)
   s->objects = g_list_append (s->objects, s->main_sprite);
   s->main_sprite_seg = swfdec_spriteseg_new ();
   s->main_sprite_seg->id = SWFDEC_OBJECT(s->main_sprite)->id;
-  s->render = swfdec_render_new ();
 
   s->flatness = 0.5;
 
@@ -275,7 +269,6 @@ swfdec_decoder_free (SwfdecDecoder * s)
   swfdec_buffer_queue_free (s->input_queue);
 
   swfdec_spriteseg_free (s->main_sprite_seg);
-  swfdec_render_free (s->render);
 
   if (s->z) {
     inflateEnd (s->z);
@@ -368,36 +361,6 @@ swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height)
   return SWF_OK;
 }
 
-int
-swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height)
-{
-  double sw, sh;
-
-  s->width = width;
-  s->height = height;
-
-  s->irect.x0 = 0;
-  s->irect.y0 = 0;
-  s->irect.x1 = s->width;
-  s->irect.y1 = s->height;
-
-  sw = (double) s->width / s->parse_width;
-  sh = (double) s->height / s->parse_height;
-  s->scale_factor = (sw < sh) ? sw : sh;
-
-  s->transform.xx = s->scale_factor;
-  s->transform.xy = 0;
-  s->transform.yx = 0;
-  s->transform.yy = s->scale_factor;
-  s->transform.x0 = 0.5 * (s->width - s->parse_width * s->scale_factor);
-  s->transform.y0 = 0.5 * (s->height - s->parse_height * s->scale_factor);
-
-  swf_config_colorspace (s);
-  swfdec_render_resize (s);
-
-  return SWF_OK;
-}
-
 char *
 swfdec_decoder_get_url (SwfdecDecoder * s)
 {
@@ -406,37 +369,6 @@ swfdec_decoder_get_url (SwfdecDecoder * s)
   s->url = NULL;
 
   return url;
-}
-
-int
-swfdec_decoder_set_colorspace (SwfdecDecoder * s, int colorspace)
-{
-  if (s->state != SWF_STATE_INIT1) {
-    return SWF_ERROR;
-  }
-
-  if (colorspace != SWF_COLORSPACE_RGB888 &&
-      colorspace != SWF_COLORSPACE_RGB565) {
-    return SWF_ERROR;
-  }
-
-  s->colorspace = colorspace;
-
-  swf_config_colorspace (s);
-
-  return SWF_OK;
-}
-
-void
-swfdec_decoder_enable_render (SwfdecDecoder * s)
-{
-  s->disable_render = FALSE;
-}
-
-void
-swfdec_decoder_disable_render (SwfdecDecoder * s)
-{
-  s->disable_render = TRUE;
 }
 
 #if 0
@@ -631,8 +563,6 @@ swf_parse_header2 (SwfdecDecoder * s)
   buffer = swfdec_buffer_queue_pull (s->input_queue, n);
 
   swfdec_sprite_set_n_frames (s->main_sprite, s->n_frames);
-
-  swf_config_colorspace (s);
 
   s->state = SWF_STATE_PARSETAG;
   return SWF_CHANGE;

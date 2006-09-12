@@ -16,12 +16,6 @@ G_BEGIN_DECLS enum
   SWF_CHANGE,
 };
 
-enum
-{
-  SWF_COLORSPACE_RGB888 = 0,
-  SWF_COLORSPACE_RGB565,
-};
-
 void swfdec_init (void);
 
 SwfdecDecoder *swfdec_decoder_new (void);
@@ -38,8 +32,6 @@ int swfdec_decoder_peek_image (SwfdecDecoder * s, unsigned char **image);
 int swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height);
 int swfdec_decoder_get_version (SwfdecDecoder *s);
 
-int swfdec_decoder_set_colorspace (SwfdecDecoder * s, int colorspace);
-int swfdec_decoder_set_image_size (SwfdecDecoder * s, int width, int height);
 int swfdec_decoder_set_debug_level (SwfdecDecoder * s, int level);
 
 void *swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length);

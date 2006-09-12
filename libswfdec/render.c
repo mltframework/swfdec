@@ -4,20 +4,6 @@
 
 #include "swfdec_internal.h"
 
-void
-swf_invalidate_irect (SwfdecDecoder * s, SwfdecRect * rect)
-{
-  if (swfdec_rect_is_empty (&s->render->drawrect)) {
-    swfdec_rect_intersect (&s->render->drawrect, &s->irect, rect);
-  } else {
-    SwfdecRect tmp1, tmp2;
-
-    swfdec_rect_copy (&tmp1, &s->render->drawrect);
-    swfdec_rect_intersect (&tmp2, &s->irect, rect);
-    swfdec_rect_union (&s->render->drawrect, &tmp1, &tmp2);
-  }
-}
-
 int
 tag_place_object_2 (SwfdecDecoder * s)
 {

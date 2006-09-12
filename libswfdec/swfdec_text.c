@@ -2,7 +2,6 @@
 #include <swfdec_text.h>
 #include "swfdec_internal.h"
 #include <swfdec_font.h>
-#include <swfdec_render.h>
 
 static void
 swfdec_color_transform_init_color (SwfdecColorTransform *trans, swf_color color)

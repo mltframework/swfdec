@@ -8,8 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "swfdec_render.h"
-
 #include "swfdec_internal.h"
 
 

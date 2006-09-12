@@ -85,17 +85,9 @@ int tag_define_shape_2 (SwfdecDecoder * s);
 int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_button (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);
-void dump_layers (SwfdecDecoder * s);
 
-void swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, cairo_matrix_t * trans);
-void swfdec_shape_compose_gradient (SwfdecDecoder * s,
-    SwfdecLayerVec * layervec, SwfdecShapeVec * shapevec,
-    cairo_matrix_t * trans, SwfdecSpriteSegment * seg);
 unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
     SwfdecColorTransform * color_transform);
-SwfdecLayer *swfdec_shape_prerender (SwfdecDecoder * s,
-    SwfdecSpriteSegment * seg, SwfdecObject * obj, SwfdecLayer * oldlayer);
 
 G_END_DECLS
 #endif

@@ -1,7 +1,6 @@
 #include <gtk/gtk.h>
 #include <math.h>
 #include <swfdec.h>
-#include <swfdec_render.h>
 #include <swfdec_buffer.h>
 #include <swfdec_decoder.h>
 
@@ -54,8 +53,9 @@ release_notify (GtkWidget *widget, GdkEventButton *event, gpointer data)
 static gboolean
 next_image (gpointer data)
 {
-  SwfdecRect inval;
   GtkWidget *win = data;
+#if 0
+  SwfdecRect inval;
   SwfdecDecoder *dec = g_object_get_data (G_OBJECT (win), "swfdec");
   MouseData *mouse = g_object_get_data (G_OBJECT (win), "swfmouse");
 
@@ -63,6 +63,9 @@ next_image (gpointer data)
   g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
   gtk_widget_queue_draw_area (win, floor (inval.x0), floor (inval.y0),
       ceil (inval.x1) - floor (inval.x0), ceil (inval.y1) - floor (inval.y0));
+#else
+  gtk_widget_queue_draw (win);
+#endif
   
   return TRUE;
 }
@@ -126,8 +129,7 @@ view_swf (SwfdecDecoder *dec)
   gtk_window_set_default_size (GTK_WINDOW (win), width, height);
   gtk_widget_show_all (win);
   swfdec_decoder_get_rate (dec, &rate);
-  if (FALSE)
-    g_timeout_add (1000 / rate, next_image, win);
+  g_timeout_add (1000 / rate, next_image, win);
   
   gtk_main ();
 }

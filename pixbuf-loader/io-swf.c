@@ -115,8 +115,7 @@ swf_animation_change (SwfContext * context)
 	if (SWF_OK != swfdec_decoder_get_n_frames (context->decoder, &nframes))
 		return;
 
-	if (SWF_OK != swfdec_decoder_get_image_size (context->decoder, &width, 
-												 &height))
+	if (SWF_OK != swfdec_decoder_get_image_size (context->decoder, &width, &height))
 		return;
 
 	if (SWF_OK != swfdec_decoder_get_rate (context->decoder, &rate))
@@ -129,8 +128,10 @@ swf_animation_change (SwfContext * context)
 
 	if (context->size_func) {
 		(*context->size_func) (&width, &height, context->user_data);
-		if (width > 0 && height > 0)
-			swfdec_decoder_set_image_size (context->decoder, width, height);
+		if (width > 0 && height > 0) {
+			context->animation->width      = width;
+			context->animation->height     = height;
+		}
 	}
 }
 

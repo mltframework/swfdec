@@ -1,7 +1,7 @@
 loaderdir = $(libdir)/gtk-2.0/$(GTK_VERSION)/loaders
 
 INCLUDES = $(GLOBAL_CFLAGS) \
-	$(SWF_CFLAGS) \
+	$(SWF_CFLAGS) $(CAIRO_CFLAGS) \
 	$(PIXBUF_CFLAGS) \
 	-DGDK_PIXBUF_ENABLE_BACKEND \
 	-I$(top_srcdir)
@@ -15,7 +15,7 @@ endif
 swf_loader_la_SOURCES = io-swf.c io-swf-anim.c
 swf_loader_la_LDFLAGS = -avoid-version -module
 swf_loader_la_LIBADD = $(PIXBUF_LIBS)\
-	$(SWF_LIBS)
+	$(SWF_LIBS) $(CAIRO_LIBS)
 
 noinst_HEADERS = io-swf-anim.h
 

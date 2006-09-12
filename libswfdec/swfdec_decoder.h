@@ -52,7 +52,6 @@ struct _SwfdecDecoder
   int sound_len;
   int sound_offset;
 
-  int colorspace;
   int no_render;
   int compressed;
 
@@ -88,7 +87,6 @@ struct _SwfdecDecoder
   SwfdecSound *stream_sound_obj;
 
   /* rendering state */
-  SwfdecRender *render;
   SwfdecRect irect;
 
   SwfdecSprite *main_sprite;

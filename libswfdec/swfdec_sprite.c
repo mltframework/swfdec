@@ -68,6 +68,7 @@ swfdec_sprite_add_action (SwfdecSprite * sprite,
   swfdec_buffer_ref (actions);
 }
 
+#if 0
 void
 swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
     SwfdecRender *render)
@@ -128,6 +129,7 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
   s->parse_sprite = save_parse_sprite;
   s->parse_sprite_seg = save_parse_sprite_seg;
 }
+#endif
 
 static void 
 swfdec_sprite_iterate (SwfdecDecoder *decoder, SwfdecObject *object, 

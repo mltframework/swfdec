@@ -5,7 +5,6 @@
 #include <math.h>
 
 #include "swfdec_internal.h"
-#include <swfdec_render.h>
 
 /*** PATHS ***/
 
@@ -138,8 +137,167 @@ swfdec_path_append (cairo_path_t *path, const cairo_path_t *append)
 
 /*** SHAPE ***/
 
+static void
+swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr, 
+    const SwfdecColorTransform *trans, SwfdecObject *obj, SwfdecRect *inval)
+{
+  SwfdecShape *shape = SWFDEC_SHAPE (obj);
+  unsigned int i;
+  SwfdecShapeVec *shapevec;
+  SwfdecShapeVec *shapevec2;
+
+  if (obj->id == 7)
+    return;
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+  for (i = 0; i < shape->fills->len; i++) {
+    swf_color color;
+
+    shapevec = g_ptr_array_index (shape->fills, i);
+    shapevec2 = g_ptr_array_index (shape->fills2, i);
+
+    color = swfdec_color_apply_transform (shapevec->color, trans);
+
+    switch (shapevec->fill_type) {
+      case 0x10:
+        {
+          SwfdecGradient *grad = shapevec->grad;
+          int j;
+	  cairo_pattern_t *pattern;
+          cairo_matrix_t mat;
+
+          mat = shapevec->fill_transform;
+          if (cairo_matrix_invert (&mat)) {
+	    g_assert_not_reached ();
+	  }
+
+          pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
+          cairo_pattern_set_matrix(pattern, &mat);
+          for (j=0;j<grad->n_gradients;j++){
+            color = swfdec_color_apply_transform (grad->array[j].color,
+                trans);
+
+            cairo_pattern_add_color_stop_rgba (pattern,
+                grad->array[j].ratio/256.0,
+                SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
+                SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
+          }
+          cairo_set_source (cr, pattern);
+	  cairo_pattern_destroy (pattern);
+        }
+        break;
+      case 0x12:
+        {
+          SwfdecGradient *grad = shapevec->grad;
+          int j;
+          cairo_matrix_t mat;
+	  cairo_pattern_t *pattern;
+
+          mat = shapevec->fill_transform;
+          if (cairo_matrix_invert (&mat)) {
+	    g_assert_not_reached ();
+	  }
+
+          pattern = cairo_pattern_create_radial (0,0,0,
+             0, 0, 16384);
+          cairo_pattern_set_matrix(pattern, &mat);
+          for (j=0;j<grad->n_gradients;j++){
+            color = swfdec_color_apply_transform (grad->array[j].color,
+		trans);
+
+            cairo_pattern_add_color_stop_rgba (pattern,
+                grad->array[j].ratio/256.0,
+                SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
+                SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
+          }
+          cairo_set_source (cr, pattern);
+	  cairo_pattern_destroy (pattern);
+        }
+        break;
+      case 0x40:
+      case 0x41:
+      case 0x42:
+      case 0x43:
+        {
+          SwfdecImage *image;
+          cairo_matrix_t mat;
+
+          mat = shapevec->fill_transform;
+          if (cairo_matrix_invert (&mat)) {
+	    g_assert_not_reached ();
+	  }
+
+          image = (SwfdecImage *)swfdec_object_get (s, shapevec->fill_id);
+          if (image && SWFDEC_IS_IMAGE (image)) {
+	    cairo_surface_t *src_surface;
+	    cairo_pattern_t *pattern;
+            unsigned char *image_data = swfdec_handle_get_data(image->handle);
+
+            src_surface = cairo_image_surface_create_for_data (image_data,
+                CAIRO_FORMAT_ARGB32, image->width, image->height,
+                image->rowstride);
+            pattern = cairo_pattern_create_for_surface (src_surface);
+	    cairo_surface_destroy (src_surface);
+            cairo_pattern_set_matrix(pattern, &mat);
+            if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
+              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+            } else {
+              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_NONE);
+            }
+            if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x41) {
+              cairo_pattern_set_filter (pattern, CAIRO_FILTER_BILINEAR);
+            } else {
+              cairo_pattern_set_filter (pattern, CAIRO_FILTER_NEAREST);
+            }
+            cairo_set_source (cr, pattern);
+	    cairo_pattern_destroy (pattern);
+          } else {
+            swfdec_color_set_source (cr, color);
+          }
+        }
+        break;
+      case 0x00:
+        swfdec_color_set_source (cr, color);
+        break;
+      default:
+        SWFDEC_ERROR("unhandled fill type 0x%02x", shapevec->fill_type);
+        cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
+        break;
+    }
+    
+    if (shapevec->path.num_data || shapevec2->path.num_data) {
+      cairo_new_path (cr);
+      if (shapevec->path.num_data)
+	cairo_append_path (cr, &shapevec->path);
+      if (shapevec2->path.num_data)
+	cairo_append_path (cr, &shapevec2->path);
+      cairo_fill (cr);
+    }
+  }
+
+  for (i = 0; i < shape->lines->len; i++) {
+    swf_color color;
+    cairo_matrix_t matrix;
+
+    shapevec = g_ptr_array_index (shape->lines, i);
+
+    color = swfdec_color_apply_transform (shapevec->color, trans);
+    cairo_set_source_rgba (cr, SWF_COLOR_R(color)/255.0,
+        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0,
+        SWF_COLOR_A(color)/255.0);
+
+    cairo_get_matrix (cr, &matrix);
+    cairo_set_line_width (cr, shapevec->width);
+    if (shapevec->path.num_data) {
+      cairo_new_path (cr);
+      cairo_append_path (cr, &shapevec->path);
+      cairo_stroke (cr);
+    }
+  }
+}
+
 static void swfdec_shapevec_free (SwfdecShapeVec * shapevec);
-static int my_root (double x, double y);
 
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecShape, swfdec_shape)
@@ -534,231 +692,6 @@ tag_define_shape_2 (SwfdecDecoder * s)
   return tag_define_shape (s);
 }
 
-void
-swfdec_shape_compose (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, cairo_matrix_t * trans)
-{
-  SwfdecObject *image_object;
-  SwfdecImage *image;
-  cairo_matrix_t mat, mat0;
-  int i, j;
-  unsigned char *dest;
-  unsigned char *src;
-  double inv_width, inv_height;
-  int width, height;
-
-  image_object = swfdec_object_get (s, shapevec->fill_id);
-  if (!image_object)
-    return;
-
-  if (!SWFDEC_IS_IMAGE (image_object)) {
-    SWFDEC_WARNING ("compose object is not image");
-    return;
-  }
-
-  SWFDEC_LOG ("swfdec_shape_compose: %d", shapevec->fill_id);
-
-  layervec->color = SWF_COLOR_COMBINE (255, 0, 0, 255);
-
-  image = SWFDEC_IMAGE (image_object);
-
-  SWFDEC_LOG ("%g %g %g %g  %g %g",
-      shapevec->fill_transform.xx,
-      shapevec->fill_transform.yx,
-      shapevec->fill_transform.xy,
-      shapevec->fill_transform.yy,
-      shapevec->fill_transform.x0, shapevec->fill_transform.y0);
-
-  width = layervec->rect.x1 - layervec->rect.x0;
-  height = layervec->rect.y1 - layervec->rect.y0;
-
-  layervec->compose = g_malloc (width * height * 4);
-  layervec->compose_rowstride = width * 4;
-  layervec->compose_height = height;
-  layervec->compose_width = width;
-
-  cairo_matrix_multiply (&mat0, &shapevec->fill_transform, trans);
-
-  /* Need an offset in the compose information */
-  cairo_matrix_translate (&mat0, -layervec->rect.x0, -layervec->rect.y0);
-  mat = mat0;
-  if (cairo_matrix_invert (&mat)) {
-    g_assert_not_reached ();
-  }
-  dest = layervec->compose;
-  src = swfdec_handle_get_data (image->handle);
-  inv_width = 1.0 / image->width;
-  inv_height = 1.0 / image->height;
-  for (j = 0; j < height; j++) {
-    double x, y;
-
-    x = mat.xy * j + mat.x0;
-    y = mat.yy * j + mat.y0;
-    for (i = 0; i < width; i++) {
-      int ix, iy;
-
-#if 0
-      ix = x - floor (x * inv_width) * image->width;
-      iy = y - floor (y * inv_height) * image->height;
-#else
-      ix = x;
-      iy = y;
-      if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
-	/* Repeating image */
-        while (ix < 0)
-	  ix += image->width;
-        if (ix > image->width - 1)
-          ix %= image->width;
-        while (iy < 0)
-          iy += image->height;
-        if (iy > image->height - 1)
-          iy %= image->height;
-      } else {
-	/* Clipped image */
-        if (ix < 0)
-          ix = 0;
-        if (ix > image->width - 1)
-          ix = image->width - 1;
-        if (iy < 0)
-          iy = 0;
-        if (iy > image->height - 1)
-          iy = image->height - 1;
-      }
-
-#endif
-#define RGBA8888_COPY(a,b) (*(guint32 *)(a) = *(guint32 *)(b))
-      RGBA8888_COPY (dest, src + ix * 4 + iy * image->rowstride);
-      dest += 4;
-      x += mat.xx;
-      y += mat.yx;
-    }
-  }
-
-}
-
-void
-swfdec_shape_compose_gradient (SwfdecDecoder * s, SwfdecLayerVec * layervec,
-    SwfdecShapeVec * shapevec, cairo_matrix_t * trans,
-    SwfdecSpriteSegment * seg)
-{
-  SwfdecGradient *grad;
-  cairo_matrix_t mat ,mat0;
-  int i, j;
-  unsigned char *dest;
-  unsigned char *palette;
-  int width, height;
-
-  SWFDEC_LOG ("swfdec_shape_compose: %d", shapevec->fill_id);
-
-  grad = shapevec->grad;
-
-  SWFDEC_LOG ("%g %g %g %g  %g %g",
-      shapevec->fill_transform.xx,
-      shapevec->fill_transform.yx,
-      shapevec->fill_transform.xy,
-      shapevec->fill_transform.yy,
-      shapevec->fill_transform.x0, shapevec->fill_transform.y0);
-
-  width = layervec->rect.x1 - layervec->rect.x0;
-  height = layervec->rect.y1 - layervec->rect.y0;
-
-  layervec->compose = g_malloc (width * height * 4);
-  layervec->compose_rowstride = width * 4;
-  layervec->compose_height = height;
-  layervec->compose_width = width;
-
-  cairo_matrix_multiply (&mat0, &shapevec->fill_transform, trans);
-
-  palette = swfdec_gradient_to_palette (grad, &seg->color_transform);
-
-  cairo_matrix_scale (&mat0, -layervec->rect.x0, -layervec->rect.y0);
-  mat = mat0;
-  if (!cairo_matrix_invert (&mat)) {
-    g_assert_not_reached ();
-  }
-  dest = layervec->compose;
-  if (shapevec->fill_type == 0x10) {
-    for (j = 0; j < height; j++) {
-      double x, y;
-
-      x = mat.xy * j + mat.x0;
-      y = mat.yy * j + mat.y0;
-      for (i = 0; i < width; i++) {
-        double z;
-        int index;
-
-        z = ((x + 16384.0) / 32768.0) * 256;
-        if (z < 0)
-          z = 0;
-        if (z > 255.0)
-          z = 255;
-        index = z;
-        //index &= 0xff;
-        dest[0] = palette[index * 4 + 0];
-        dest[1] = palette[index * 4 + 1];
-        dest[2] = palette[index * 4 + 2];
-        dest[3] = palette[index * 4 + 3];
-        dest += 4;
-        x += mat.xx;
-        y += mat.yx;
-      }
-    }
-  } else {
-    for (j = 0; j < height; j++) {
-      double x, y;
-
-      x = mat.xy * j + mat.x0;
-      y = mat.yy * j + mat.y0;
-      for (i = 0; i < width; i++) {
-#if 0
-        double z;
-#endif
-        int index;
-
-#if 0
-        z = sqrt (x * x + y * y) / 16384.0 * 256;
-        if (z < 0)
-          z = 0;
-        if (z > 255.0)
-          z = 255;
-        index = z;
-#else
-        index = my_root (x, y);
-#endif
-        //index &= 0xff;
-        dest[0] = palette[index * 4 + 0];
-        dest[1] = palette[index * 4 + 1];
-        dest[2] = palette[index * 4 + 2];
-        dest[3] = palette[index * 4 + 3];
-        dest += 4;
-        x += mat.xx;
-        y += mat.yx;
-      }
-    }
-  }
-
-  g_free (palette);
-}
-
-static int
-my_root (double x, double y)
-{
-  static int roots[65536];
-  static int _init = 0;
-  int i;
-
-  if (!_init) {
-    for (i = 0; i < 65536; i++) {
-      roots[i] = sqrt (i);
-    }
-    _init = 1;
-  }
-  i = (x * x + y * y) / 4096;
-  if (i > 65535)
-    return 255;
-  return roots[i];
-}
-
 unsigned char *
 swfdec_gradient_to_palette (SwfdecGradient * grad,
     SwfdecColorTransform * color_transform)
@@ -1076,3 +1009,4 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
 
   swfdec_bits_syncbits (bits);
 }
+

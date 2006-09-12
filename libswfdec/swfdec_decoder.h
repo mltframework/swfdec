@@ -29,6 +29,12 @@ struct _SwfdecColorTransform
   double add[4];
 };
 
+struct _SwfdecMouseInfo {
+  double x;
+  double y;
+  int button;
+};
+
 typedef int SwfdecTagFunc (SwfdecDecoder *);
 
 struct _SwfdecDecoder
@@ -83,7 +89,6 @@ struct _SwfdecDecoder
 
   /* rendering state */
   SwfdecRender *render;
-  unsigned int bg_color;
   SwfdecRect irect;
 
   SwfdecSprite *main_sprite;
@@ -110,10 +115,7 @@ struct _SwfdecDecoder
 
   SwfdecActionContext *context;
 
-  int mouse_x;
-  int mouse_y;
-  int mouse_button;
-  int old_mouse_button;
+  SwfdecMouseInfo mouse;
   SwfdecObject *mouse_grab;
 
   char *url;

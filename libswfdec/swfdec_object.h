@@ -19,10 +19,6 @@ typedef struct _SwfdecObjectClass SwfdecObjectClass;
 
 #define SWFDEC_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_OBJECT, SwfdecObjectClass))
 
-#if 0
-#define SWFDEC_OBJECT_GET_CLASS(obj)          ((SwfdecObjectClass *)((obj)->object.klass))
-#endif
-
 struct _SwfdecObject
 {
   GObject object;
@@ -38,8 +34,11 @@ struct _SwfdecObjectClass
 {
   GObjectClass object_class;
 
-  void (*render) (SwfdecDecoder * decoder, SwfdecSpriteSegment * seg,
-      SwfdecObject * object);
+  void (*render) (SwfdecDecoder * decoder, 
+      cairo_t *cr, const SwfdecColorTransform *trans,
+      SwfdecObject * object, SwfdecRect *inval);
+  void (*iterate) (SwfdecDecoder *decoder, SwfdecObject *object, 
+      unsigned int frame, const SwfdecMouseInfo *info, SwfdecRect *inval);
   gboolean (*has_mouse) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
       SwfdecObject * object);
 
@@ -51,6 +50,11 @@ void *swfdec_object_new (GType type);
 void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
+void swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, unsigned int frame, 
+    const cairo_matrix_t *matrix, const SwfdecMouseInfo *mouse, SwfdecRect *inval);
+void swfdec_object_render (SwfdecDecoder *s, SwfdecObject *object, 
+    cairo_t *cr, const cairo_matrix_t *matrix, 
+    const SwfdecColorTransform *color, const SwfdecRect *inval);
 
 
 #ifndef GLIB_COMPAT

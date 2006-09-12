@@ -118,7 +118,7 @@ swfdec_handle_free (SwfdecHandle *handle)
 {
   g_return_if_fail (handle != NULL);
   if (handle->data) {
-    handle->free (handle);
+    handle->free (handle->data);
   }
   g_free(handle);
 }

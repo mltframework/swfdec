@@ -781,10 +781,10 @@ action_get_property (SwfdecActionContext *context)
         a = 1; /* quality */
         break;
       case 20:
-        a = context->s->mouse_x; /* mouse x */
+        a = context->s->mouse.x; /* mouse x */
         break;
       case 21:
-        a = context->s->mouse_y; /* mouse y */
+        a = context->s->mouse.y; /* mouse y */
         break;
       default:
         /* FIXME need to get the property here */

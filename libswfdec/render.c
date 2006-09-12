@@ -153,23 +153,6 @@ tag_remove_object_2 (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-int
-tag_show_frame (SwfdecDecoder * s)
-{
-  SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
-      s->parse_sprite->object.id);
-
-  s->frame_number++;
-  s->parse_sprite->parse_frame++;
-  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
-    s->parse_sprite->frames[s->parse_sprite->parse_frame].segments =
-      g_list_copy (
-          s->parse_sprite->frames[s->parse_sprite->parse_frame - 1].segments);
-  }
-
-  return SWF_OK;
-}
-
 #ifdef unused
 void
 swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
@@ -188,42 +171,3 @@ swfdec_spriteseg_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg)
   }
 }
 #endif
-
-void
-swfdec_layer_render (SwfdecDecoder * s, SwfdecLayer * layer)
-{
-  unsigned int i;
-  SwfdecLayerVec *layervec;
-  SwfdecLayer *child_layer;
-  GList *g;
-
-#if 0
-  /* This rendering order seems to mostly fit the observed behavior
-   * of Macromedia's player.  */
-  /* or not */
-  for (i = 0; i < MAX (layer->fills->len, layer->lines->len); i++) {
-    if (i < layer->lines->len) {
-      layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-      swfdec_layervec_render (s, layervec);
-    }
-    if (i < layer->fills->len) {
-      layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-      swfdec_layervec_render (s, layervec);
-    }
-  }
-#else
-  for (i = 0; i < layer->fills->len; i++) {
-    layervec = &g_array_index (layer->fills, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-  for (i = 0; i < layer->lines->len; i++) {
-    layervec = &g_array_index (layer->lines, SwfdecLayerVec, i);
-    swfdec_layervec_render (s, layervec);
-  }
-#endif
-
-  for (g = g_list_first (layer->sublayers); g; g = g_list_next (g)) {
-    child_layer = (SwfdecLayer *) g->data;
-    swfdec_layer_render (s, child_layer);
-  }
-}

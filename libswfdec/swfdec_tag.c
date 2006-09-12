@@ -8,107 +8,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <liboil/liboil.h>
 #include "swfdec_render.h"
 
 #include "swfdec_internal.h"
 
-
-struct tag_func_struct
-{
-  char *name;
-  int (*func) (SwfdecDecoder * s);
-  int flag;
-};
-static struct tag_func_struct tag_funcs[] = {
-  [ST_END] = {"End", tag_func_end, 0},
-  [ST_SHOWFRAME] = {"ShowFrame", tag_show_frame, 0},
-  [ST_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
-  [ST_FREECHARACTER] = {"FreeCharacter", NULL, 0},
-  [ST_PLACEOBJECT] = {"PlaceObject", NULL, 0},
-  [ST_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, 0},
-//      [ ST_DEFINEBITS         ] = { "DefineBits",     NULL,   0 },
-  [ST_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
-  [ST_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
-  [ST_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
-  [ST_SETBACKGROUNDCOLOR] =
-      {"SetBackgroundColor", tag_func_set_background_color, 0},
-  [ST_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
-  [ST_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
-  [ST_DOACTION] = {"DoAction", tag_func_do_action, 0},
-  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_ignore, 0},
-  [ST_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
-  [ST_STARTSOUND] = {"StartSound", tag_func_start_sound, 0},
-  [ST_DEFINEBUTTONSOUND] =
-      {"DefineButtonSound", tag_func_define_button_sound, 0},
-  [ST_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, 0},
-  [ST_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, 0},
-  [ST_DEFINEBITSLOSSLESS] =
-      {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
-  [ST_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
-  [ST_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
-  [ST_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
-  [ST_PROTECT] = {"Protect", tag_func_protect, 0},
-  [ST_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, 0},
-  [ST_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, 0},
-  [ST_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
-  [ST_DEFINETEXT2] = {"DefineText2", tag_func_define_text_2, 0},
-  [ST_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
-  [ST_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
-  [ST_DEFINEBITSLOSSLESS2] =
-      {"DefineBitsLossless2", tag_func_define_bits_lossless_2, 0},
-  [ST_DEFINEEDITTEXT] = {"DefineEditText", NULL, 0},
-  [ST_DEFINEMOVIE] = {"DefineMovie", NULL, 0},
-  [ST_DEFINESPRITE] = {"DefineSprite", tag_func_define_sprite, 0},
-  [ST_NAMECHARACTER] = {"NameCharacter", NULL, 0},
-  [ST_SERIALNUMBER] = {"SerialNumber", NULL, 0},
-  [ST_GENERATORTEXT] = {"GeneratorText", NULL, 0},
-  [ST_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, 0},
-  [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, 0},
-  [ST_DEFINEMORPHSHAPE] =
-      {"DefineMorphShape", NULL /* tag_define_morph_shape */ , 0},
-  [ST_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
-  [ST_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
-  [ST_GENERATOR3] = {"Generator3", NULL, 0},
-  [ST_EXTERNALFONT] = {"ExternalFont", NULL, 0},
-  [ST_EXPORTASSETS] = {"ExportAssets", tag_func_export_assets, 0},
-  [ST_IMPORTASSETS] = {"ImportAssets", NULL, 0},
-  [ST_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
-  [ST_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, 0},
-  [ST_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
-  [ST_VIDEOFRAME] = {"VideoFrame", NULL, 0},
-  [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", NULL, 0},
-  [ST_MX4] = {"MX4", NULL, 0},
-  [ST_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
-  [ST_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
-  [ST_SETTABINDEX] = {"SetTabIndex", NULL, 0},
-//      [ ST_REFLEX             ] = { "Reflex", NULL,   0 },
-};
-static const int n_tag_funcs = sizeof (tag_funcs) / sizeof (tag_funcs[0]);
-
-const char *
-swfdec_decoder_get_tag_name (int tag)
-{
-  if (tag >= 0 && tag < n_tag_funcs) {
-    if (tag_funcs[tag].name) {
-      return tag_funcs[tag].name;
-    }
-  }
-  
-  return "unknown";
-}
-
-SwfdecTagFunc *
-swfdec_decoder_get_tag_func (int tag)
-{ 
-  if (tag >= 0 && tag < n_tag_funcs) {
-    if (tag_funcs[tag].func) {
-      return tag_funcs[tag].func;
-    }
-  }
-  
-  return NULL;
-}
 
 int
 tag_func_end (SwfdecDecoder * s)
@@ -197,6 +100,7 @@ define_text (SwfdecDecoder * s, int rgba)
       int i;
 
       n_glyphs = swfdec_bits_getbits (bits, 7);
+      glyph.x = 0;
       for (i = 0; i < n_glyphs; i++) {
         glyph.glyph = swfdec_bits_getbits (bits, n_glyph_bits);
 
@@ -281,10 +185,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
 
   SWFDEC_LOG ("  ID: %d", id);
 
-  sprite->n_frames = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
-
-  sprite->frames = g_malloc0 (sizeof (SwfdecSpriteFrame) * sprite->n_frames);
+  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (bits));
 
   memcpy (&parse, bits, sizeof (SwfdecBits));
 
@@ -362,16 +263,11 @@ tag_func_define_sprite (SwfdecDecoder * s)
 int
 tag_func_set_background_color (SwfdecDecoder * s)
 {
-  SwfdecRect rect;
-
-  s->bg_color = swfdec_bits_get_color (&s->b);
-
-  rect.x0 = 0;
-  rect.y0 = 0;
-  rect.x1 = s->width;
-  rect.y1 = s->height;
-
-  swf_invalidate_irect (s, &rect);
+  s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color = 
+    swfdec_bits_get_color (&s->b);
+  g_print ("bg: %0X (frame %d)\n", s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color,
+      s->parse_sprite->parse_frame);
+  SWFDEC_LOG ("bg color %0X", s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color);
 
   return SWF_OK;
 }
@@ -723,7 +619,7 @@ tag_func_define_font (SwfdecDecoder * s)
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swf_shape_get_recs (s, &s->b, shape);
+    swf_shape_get_recs (s, &s->b, shape, FALSE);
   }
 
   return SWF_OK;
@@ -823,7 +719,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swf_shape_get_recs (s, &s->b, shape);
+    swf_shape_get_recs (s, &s->b, shape, FALSE);
   }
   if (wide_codes) {
     bits->ptr += 2 * n_glyphs;
@@ -851,7 +747,6 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-
 int
 tag_func_export_assets (SwfdecDecoder * s)
 {
@@ -868,5 +763,120 @@ tag_func_export_assets (SwfdecDecoder * s)
   }
 
   return SWF_OK;
+}
+
+int
+tag_show_frame (SwfdecDecoder * s)
+{
+  SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
+      s->parse_sprite->object.id);
+
+  s->frame_number++;
+  s->parse_sprite->parse_frame++;
+  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
+    s->parse_sprite->frames[s->parse_sprite->parse_frame].segments =
+      g_list_copy (
+          s->parse_sprite->frames[s->parse_sprite->parse_frame - 1].segments);
+    s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color = 
+      s->parse_sprite->frames[s->parse_sprite->parse_frame - 1].bg_color;
+  }
+
+  return SWF_OK;
+}
+
+struct tag_func_struct
+{
+  char *name;
+  int (*func) (SwfdecDecoder * s);
+  int flag;
+};
+static struct tag_func_struct tag_funcs[] = {
+  [ST_END] = {"End", tag_func_end, 0},
+  [ST_SHOWFRAME] = {"ShowFrame", tag_show_frame, 0},
+  [ST_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
+  [ST_FREECHARACTER] = {"FreeCharacter", NULL, 0},
+  [ST_PLACEOBJECT] = {"PlaceObject", NULL, 0},
+  [ST_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, 0},
+//      [ ST_DEFINEBITS         ] = { "DefineBits",     NULL,   0 },
+  [ST_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
+  [ST_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
+  [ST_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
+  [ST_SETBACKGROUNDCOLOR] =
+      {"SetBackgroundColor", tag_func_set_background_color, 0},
+  [ST_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
+  [ST_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
+  [ST_DOACTION] = {"DoAction", tag_func_do_action, 0},
+  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_ignore, 0},
+  [ST_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
+  [ST_STARTSOUND] = {"StartSound", tag_func_start_sound, 0},
+  [ST_DEFINEBUTTONSOUND] =
+      {"DefineButtonSound", tag_func_define_button_sound, 0},
+  [ST_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, 0},
+  [ST_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, 0},
+  [ST_DEFINEBITSLOSSLESS] =
+      {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
+  [ST_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
+  [ST_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
+  [ST_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
+  [ST_PROTECT] = {"Protect", tag_func_protect, 0},
+  [ST_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, 0},
+  [ST_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, 0},
+  [ST_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
+  [ST_DEFINETEXT2] = {"DefineText2", tag_func_define_text_2, 0},
+  [ST_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
+  [ST_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
+  [ST_DEFINEBITSLOSSLESS2] =
+      {"DefineBitsLossless2", tag_func_define_bits_lossless_2, 0},
+  [ST_DEFINEEDITTEXT] = {"DefineEditText", NULL, 0},
+  [ST_DEFINEMOVIE] = {"DefineMovie", NULL, 0},
+  [ST_DEFINESPRITE] = {"DefineSprite", tag_func_define_sprite, 0},
+  [ST_NAMECHARACTER] = {"NameCharacter", NULL, 0},
+  [ST_SERIALNUMBER] = {"SerialNumber", NULL, 0},
+  [ST_GENERATORTEXT] = {"GeneratorText", NULL, 0},
+  [ST_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, 0},
+  [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, 0},
+  [ST_DEFINEMORPHSHAPE] =
+      {"DefineMorphShape", NULL /* tag_define_morph_shape */ , 0},
+  [ST_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
+  [ST_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
+  [ST_GENERATOR3] = {"Generator3", NULL, 0},
+  [ST_EXTERNALFONT] = {"ExternalFont", NULL, 0},
+  [ST_EXPORTASSETS] = {"ExportAssets", tag_func_export_assets, 0},
+  [ST_IMPORTASSETS] = {"ImportAssets", NULL, 0},
+  [ST_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
+  [ST_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, 0},
+  [ST_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
+  [ST_VIDEOFRAME] = {"VideoFrame", NULL, 0},
+  [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", NULL, 0},
+  [ST_MX4] = {"MX4", NULL, 0},
+  [ST_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
+  [ST_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
+  [ST_SETTABINDEX] = {"SetTabIndex", NULL, 0},
+//      [ ST_REFLEX             ] = { "Reflex", NULL,   0 },
+};
+static const int n_tag_funcs = sizeof (tag_funcs) / sizeof (tag_funcs[0]);
+
+const char *
+swfdec_decoder_get_tag_name (int tag)
+{
+  if (tag >= 0 && tag < n_tag_funcs) {
+    if (tag_funcs[tag].name) {
+      return tag_funcs[tag].name;
+    }
+  }
+  
+  return "unknown";
+}
+
+SwfdecTagFunc *
+swfdec_decoder_get_tag_func (int tag)
+{ 
+  if (tag >= 0 && tag < n_tag_funcs) {
+    if (tag_funcs[tag].func) {
+      return tag_funcs[tag].func;
+    }
+  }
+  
+  return NULL;
 }
 

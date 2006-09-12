@@ -52,6 +52,7 @@ struct _SwfdecSpriteFrame
   SwfdecBuffer *action;
   SwfdecSoundChunk *sound_play;
 
+  swf_color bg_color;
   GList *segments;
 };
 
@@ -63,6 +64,7 @@ struct _SwfdecSprite
   int parse_frame;
 
   SwfdecSpriteFrame *frames;
+  unsigned int current_frame;
 };
 
 struct _SwfdecSpriteClass
@@ -85,6 +87,7 @@ void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, SwfdecBuffer * chunk,
     int frame);
 void swfdec_sprite_add_action (SwfdecSprite * sprite, SwfdecBuffer * action,
     int frame);
+void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
 
 SwfdecSpriteSegment *swfdec_spriteseg_new (void);
 SwfdecSpriteSegment *swfdec_spriteseg_dup (SwfdecSpriteSegment * seg);

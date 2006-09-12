@@ -7,7 +7,11 @@
 #include <glib.h>
 #include <string.h>
 #include <swfdec_debug.h>
+#if 0
 #include <liboil/liboil.h>
+#else
+#define oil_copy_u8 memcpy
+#endif
 
 static void swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *);
 static void swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv);

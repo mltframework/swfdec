@@ -3,22 +3,12 @@
 #include <swfdec_button.h>
 #include <string.h>
 
-static void
-swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object);
-
 SWFDEC_OBJECT_BOILERPLATE (SwfdecButton, swfdec_button)
 
 
      static void swfdec_button_base_init (gpointer g_class)
 {
 
-}
-
-static void
-swfdec_button_class_init (SwfdecButtonClass * g_class)
-{
-  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 
 static void
@@ -50,8 +40,9 @@ swfdec_button_dispose (SwfdecButton * button)
 }
 
 static gboolean
-swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button)
+swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, const SwfdecMouseInfo *mouse)
 {
+#if 0
   guint i;
   SwfdecButtonRecord *record;
 
@@ -76,6 +67,7 @@ swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button)
       swfdec_spriteseg_free (tmpseg);
     }
   }
+#endif
   return FALSE;
 }
 
@@ -106,19 +98,19 @@ swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondi
 
 
 static void 
-swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button)
+swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, const SwfdecMouseInfo *info)
 {
   gboolean has_mouse;
 
   if (s->mouse_grab && s->mouse_grab != (SwfdecObject *) button)
     return;
 
-  has_mouse = swfdec_button_has_mouse (s, button);
+  has_mouse = swfdec_button_has_mouse (s, button, info);
   switch (button->state) {
     case SWFDEC_BUTTON_UP:
       if (!has_mouse)
 	break;
-      if (s->mouse_button) {
+      if (info->button) {
 	button->state = SWFDEC_BUTTON_DOWN;
 	if (button->menubutton) {
 	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
@@ -145,7 +137,7 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button)
       break;
     case SWFDEC_BUTTON_DOWN:
       /* this is quite different for push and menu buttons */
-      if (!s->mouse_button) {
+      if (!info->button) {
 	if (!has_mouse) {
 	  button->state = SWFDEC_BUTTON_UP;
 	  if (button->menubutton || button->has_mouse) {
@@ -179,37 +171,46 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button)
   button->has_mouse = has_mouse;
 }
 
+void
+swfdec_button_iterate (SwfdecDecoder *s, SwfdecObject *object, 
+  unsigned int frame, const SwfdecMouseInfo *info, SwfdecRect *inval)
+{
+  SwfdecButton *button = SWFDEC_BUTTON (object);
+
+  swfdec_button_change_state (s, button, info);
+}
+
 static void
-swfdec_button_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object)
+swfdec_button_render (SwfdecDecoder * s, 
+      cairo_t *cr, const SwfdecColorTransform *trans,
+      SwfdecObject * object, SwfdecRect *inval)
 {
   SwfdecButton *button = SWFDEC_BUTTON (object);
   SwfdecButtonRecord *record;
-  SwfdecObjectClass *klass;
   unsigned int i;
 
-  swfdec_button_change_state (s, button);
-
   for (i = 0; i < button->records->len; i++) {
-    SwfdecSpriteSegment *tmpseg;
     SwfdecObject *obj;
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & button->state) {
       obj = swfdec_object_get (s, record->segment->id);
-      if (!obj)
-        return;
-
-      tmpseg = swfdec_spriteseg_dup (record->segment);
-      cairo_matrix_multiply (&tmpseg->transform,
-          &record->segment->transform, &seg->transform);
-
-      klass = SWFDEC_OBJECT_GET_CLASS (obj);
-      if (klass->render) {
-        klass->render (s, tmpseg, obj);
+      if (obj) {
+	SwfdecColorTransform color_trans;
+	swfdec_color_transform_chain (&color_trans, &record->segment->color_transform,
+	    trans);
+	swfdec_object_render (s, obj, cr, &record->segment->transform,
+	    &color_trans, inval);
+      } else {
+	SWFDEC_WARNING ("couldn't find object id %d", record->segment->id);
       }
-      swfdec_spriteseg_free (tmpseg);
     }
   }
+}
+
+static void
+swfdec_button_class_init (SwfdecButtonClass * g_class)
+{
+  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
 }
 

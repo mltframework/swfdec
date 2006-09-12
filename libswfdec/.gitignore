@@ -9,5 +9,6 @@ Makefile.in
 *.o
 *.la
 *.lo
+*.loT
 
 swfdec-mozilla-player

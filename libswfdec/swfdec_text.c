@@ -20,7 +20,7 @@ SWFDEC_OBJECT_BOILERPLATE (SwfdecText, swfdec_text)
 static void
 swfdec_text_class_init (SwfdecTextClass * g_class)
 {
-  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_text_render;
+  //SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_text_render;
 }
 
 static void

@@ -3,8 +3,16 @@
 
 #include "swfdec_internal.h"
 
+void 
+swfdec_color_set_source (cairo_t *cr, swf_color color)
+{
+  cairo_set_source_rgba (cr, 
+      SWF_COLOR_R (color) / 255.0, SWF_COLOR_G (color) / 255.0,
+      SWF_COLOR_B (color) / 255.0, SWF_COLOR_A (color) / 255.0);
+}
+
 unsigned int
-swfdec_color_apply_transform (unsigned int in, SwfdecColorTransform * trans)
+swfdec_color_apply_transform (unsigned int in, const SwfdecColorTransform * trans)
 {
   int r, g, b, a;
 
@@ -50,3 +58,29 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
   trans->add[2] = 0.0;
   trans->add[3] = 0.0;
 }
+
+/**
+ * swfdec_color_transform_chain:
+ * @dest: #SwfdecColorTransform to take the result
+ * @last: a #SwfdecColorTransform
+ * @first: a #SwfdecColorTransform
+ *
+ * Computes a color transform that has the same effect as if the color 
+ * transforms @first and @last would have been applied one after another.
+ **/
+void
+swfdec_color_transform_chain (SwfdecColorTransform *dest,
+    const SwfdecColorTransform *last, const SwfdecColorTransform *first)
+{
+  unsigned int i;
+
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (last != NULL);
+  g_return_if_fail (first != NULL);
+  
+  for (i = 0; i < 4; i++) {
+    dest->add[i] = last->mult[i] * first->add[i] + last->add[i];
+    dest->mult[i] = last->mult[i] * first->mult[i];
+  }
+}
+

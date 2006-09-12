@@ -22,61 +22,7 @@ swfdec_render_new (void)
 void
 swfdec_render_free (SwfdecRender * render)
 {
-  GList *g;
-
-  for (g = g_list_first (render->object_states); g; g = g_list_next (g)) {
-    g_free (g->data);
-  }
-  g_list_free (render->object_states);
-
   g_free (render);
-}
-
-gboolean
-swfdec_render_iterate (SwfdecDecoder * s)
-{
-  GList *g;
-
-  SWFDEC_DEBUG("iterate, frame_index = %d", s->render->frame_index);
-
-  s->render->frame_index = s->next_frame;
-  s->next_frame = -1;
-
-  /* FIXME: do smarter grab management instead of just releaseing the grab
-   * if the mouse button changed */
-  if (s->mouse_button != s->old_mouse_button) {
-    s->mouse_grab = NULL;
-  }
-  swfdec_sprite_render_iterate (s, s->main_sprite_seg, s->render);
-
-  SWFDEC_DEBUG ("mouse button %d old_mouse_button %d",
-      s->mouse_button, s->old_mouse_button);
-
-  for (g=s->execute_list; g; g = g->next) {
-    SwfdecBuffer *buffer = g->data;
-    swfdec_action_script_execute (s, buffer);
-  }
-  g_list_free (s->execute_list);
-  s->execute_list = NULL;
-
-  s->old_mouse_button = s->mouse_button;
-
-  if (s->next_frame == -1) {
-    if (!s->main_sprite_seg->stopped) {
-      s->next_frame = s->render->frame_index + 1;
-      if (s->next_frame >= s->n_frames) {
-        if (0 /*s->repeat*/) {
-          s->next_frame = 0;
-        } else {
-          s->next_frame = s->n_frames - 1;
-        }
-      }
-    } else {
-      s->next_frame = s->render->frame_index;
-    }
-  }
-
-  return TRUE;
 }
 
 int
@@ -96,6 +42,7 @@ swfdec_render_resize (SwfdecDecoder *s)
 
 }
 
+#if 0
 static int
 compare_lists (GList *a, GList *b)
 {
@@ -109,7 +56,9 @@ compare_lists (GList *a, GList *b)
 
   return n;
 }
+#endif
 
+#if 0
 SwfdecBuffer *
 swfdec_render_get_image (SwfdecDecoder * s)
 {
@@ -329,3 +278,4 @@ swfdec_render_get_audio (SwfdecDecoder * s)
 
   return swfdec_audio_render (s, 44100/s->rate);
 }
+#endif

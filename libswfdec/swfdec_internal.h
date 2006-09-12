@@ -3,7 +3,6 @@
 #define _SWFDEC_INTERNAL_H_
 
 #include "color.h"
-#include "proto.h"
 #include "swfdec.h"
 #include "swfdec_actions.h"
 #include "swfdec_audio.h"

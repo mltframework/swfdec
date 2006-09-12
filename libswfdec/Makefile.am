@@ -27,7 +27,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@
 
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec.h \
-	color.h proto.h swfdec_buffer.h swfdec_debug.h \
+	color.h swfdec_buffer.h swfdec_debug.h \
 	swfdec_button.h swfdec_decoder.h swfdec_image.h \
 	swfdec_layer.h swfdec_object.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \

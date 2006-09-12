@@ -47,7 +47,9 @@ char *swfdec_decoder_get_url (SwfdecDecoder * s);
 
 void swfdec_decoder_eof (SwfdecDecoder * s);
 
-void swfdec_decoder_set_mouse(SwfdecDecoder *s, int x, int y, int button);
+void swfdec_decoder_iterate (SwfdecDecoder *dec, int mouse_x, int mouse_y, 
+    int mouse_button, SwfdecRect *invalidated);
+void swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area);
 
 G_END_DECLS
 #endif

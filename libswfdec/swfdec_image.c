@@ -40,12 +40,17 @@ swfdec_image_init (SwfdecImage * image)
 static void
 swfdec_image_dispose (SwfdecImage * image)
 {
-  swfdec_handle_free (image->handle);
+  if (image->handle) {
+    swfdec_handle_free (image->handle);
+    image->handle = NULL;
+  }
   if (image->jpegtables) {
     swfdec_buffer_unref (image->jpegtables);
+    image->jpegtables = NULL;
   }
   if (image->raw_data) {
     swfdec_buffer_unref (image->raw_data);
+    image->raw_data = NULL;
   }
 }
 
@@ -171,7 +176,7 @@ swfdec_image_jpeg_load (SwfdecHandle *handle)
   merge_opaque (image, image_data);
 
   swfdec_handle_set_data (handle, image_data);
-  swfdec_handle_add_size (handle, image->width * image->height * 4);
+  swfdec_handle_add_size (handle, image->rowstride * image->height);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);

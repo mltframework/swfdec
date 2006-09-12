@@ -37,8 +37,7 @@ struct _SwfdecShapeVec
   unsigned int color;
   double width;
 
-  GArray *path;
-  int array_len;
+  cairo_path_t path;
 
   int fill_type;
   int fill_id;
@@ -81,7 +80,7 @@ int tag_define_shape_3 (SwfdecDecoder * s);
 void swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
 void swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
-    SwfdecShape * shape);
+    SwfdecShape * shape, gboolean morphshape);
 int tag_define_shape_2 (SwfdecDecoder * s);
 int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_button (SwfdecDecoder * s);

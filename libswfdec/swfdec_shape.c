@@ -7,6 +7,136 @@
 #include "swfdec_internal.h"
 #include <swfdec_render.h>
 
+/*** PATHS ***/
+
+static void
+swfdec_path_init (cairo_path_t *path)
+{
+  path->status = CAIRO_STATUS_SUCCESS;
+  path->data = NULL;
+  path->num_data = 0;
+}
+
+static void
+swfdec_path_reset (cairo_path_t *path)
+{
+  path->status = CAIRO_STATUS_SUCCESS;
+  g_free (path->data);
+  path->data = NULL;
+  path->num_data = 0;
+}
+
+static void
+swfdec_path_get_current_point (cairo_path_t *path, double *x, double *y)
+{
+  int i;
+  cairo_path_data_t *data;
+
+  *x = *y = 0.0;
+  i = 0;
+  data = path->data;
+  while (i < path->num_data) {
+    switch (data[i].header.type) {
+      case CAIRO_PATH_CURVE_TO:
+	i += 2;
+	/* fall through */
+      case CAIRO_PATH_MOVE_TO:
+      case CAIRO_PATH_LINE_TO:
+	i++;
+	g_assert (i < path->num_data);
+	*x = data[i].point.x;
+	*y = data[i].point.y;
+	break;
+      case CAIRO_PATH_CLOSE_PATH:
+	*x = *y = 0.0;
+	break;
+      default:
+	g_assert_not_reached ();
+	return;
+    }
+    i++;
+  }
+}
+
+#define swfdec_path_require_size(path, steps) \
+  swfdec_path_ensure_size ((path), (path)->num_data + steps)
+static void
+swfdec_path_ensure_size (cairo_path_t *path, int size)
+{
+#define SWFDEC_PATH_STEPS 32
+  /* round up to next multiple of SWFDEC_PATH_STEPS */
+  int current_size = path->num_data + 
+    (SWFDEC_PATH_STEPS - path->num_data) % SWFDEC_PATH_STEPS;
+
+  g_assert (current_size % SWFDEC_PATH_STEPS == 0);
+  while (size > current_size)
+    current_size += SWFDEC_PATH_STEPS;
+  path->data = g_renew (cairo_path_data_t, path->data, current_size);
+}
+
+static void
+swfdec_path_move_to (cairo_path_t *path, double x, double y)
+{
+  cairo_path_data_t *cur;
+
+  swfdec_path_require_size (path, 2);
+  cur = &path->data[path->num_data++];
+  cur->header.type = CAIRO_PATH_MOVE_TO;
+  cur->header.length = 2;
+  cur = &path->data[path->num_data++];
+  cur->point.x = x;
+  cur->point.y = y;
+}
+
+static void
+swfdec_path_line_to (cairo_path_t *path, double x, double y)
+{
+  cairo_path_data_t *cur;
+
+  swfdec_path_require_size (path, 2);
+  cur = &path->data[path->num_data++];
+  cur->header.type = CAIRO_PATH_LINE_TO;
+  cur->header.length = 2;
+  cur = &path->data[path->num_data++];
+  cur->point.x = x;
+  cur->point.y = y;
+}
+
+static void
+swfdec_path_curve_to (cairo_path_t *path, double end_x, double end_y, 
+    double control_x, double control_y)
+{
+  cairo_path_data_t *cur;
+  double start_x, start_y;
+
+  swfdec_path_require_size (path, 4);
+  swfdec_path_get_current_point (path, &start_x, &start_y);
+  cur = &path->data[path->num_data++];
+  cur->header.type = CAIRO_PATH_CURVE_TO;
+  cur->header.length = 4;
+#define WEIGHT (2.0/3.0)
+  cur = &path->data[path->num_data++];
+  cur->point.x = control_x * WEIGHT + (1-WEIGHT) * start_x;
+  cur->point.y = control_y * WEIGHT + (1-WEIGHT) * start_y;
+  cur = &path->data[path->num_data++];
+  cur->point.x = control_x * WEIGHT + (1-WEIGHT) * end_x;
+  cur->point.y = control_y * WEIGHT + (1-WEIGHT) * end_y;
+  cur = &path->data[path->num_data++];
+  cur->point.x = end_x;
+  cur->point.y = end_y;
+}
+
+#if 0
+static void
+swfdec_path_append (cairo_path_t *path, const cairo_path_t *append)
+{
+  swfdec_path_require_size (path, append->num_data);
+  memcpy (&path->data[path->num_data], append->data, sizeof (cairo_path_data_t) * append->num_data);
+  path->num_data += append->num_data;
+}
+#endif
+
+/*** SHAPE ***/
 
 static void swfdec_shapevec_free (SwfdecShapeVec * shapevec);
 static int my_root (double x, double y);
@@ -25,7 +155,6 @@ swfdec_shape_class_init (SwfdecShapeClass * g_class)
   SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
   
   object_class->render = swfdec_shape_render;
-  object_class->has_mouse = swfdec_shape_has_mouse;
 }
 
 static void
@@ -68,7 +197,7 @@ swfdec_shapevec_free (SwfdecShapeVec * shapevec)
   if (shapevec->grad) {
     g_free (shapevec->grad);
   }
-  g_array_free (shapevec->path, TRUE);
+  swfdec_path_reset (&shapevec->path);
   g_free (shapevec);
 }
 
@@ -202,8 +331,7 @@ swf_shape_vec_new (void)
   SwfdecShapeVec *shapevec;
 
   shapevec = g_new0 (SwfdecShapeVec, 1);
-
-  shapevec->path = g_array_new (FALSE, TRUE, sizeof (SwfdecShapePoint));
+  swfdec_path_init (&shapevec->path);
 
   return shapevec;
 }
@@ -232,7 +360,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   swf_shape_add_styles (s, shape, bits);
 
-  swf_shape_get_recs (s, bits, shape);
+  swf_shape_get_recs (s, bits, shape, FALSE);
 
   return SWF_OK;
 }
@@ -262,7 +390,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
 
   swf_shape_add_styles (s, shape, bits);
 
-  swf_shape_get_recs (s, bits, shape);
+  swf_shape_get_recs (s, bits, shape, FALSE);
 
   return SWF_OK;
 }
@@ -327,11 +455,10 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
 
       swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
       swfdec_bits_syncbits (bits);
-      /* FIXME: the 0.965 is a mysterious factor that seems to improve
-       * rendering of images. */
-//#define MYSTERIOUS_FACTOR 0.965
-#define MYSTERIOUS_FACTOR 1.0
-      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
+    {
+      cairo_matrix_t mat = shapevec->fill_transform;
+      g_print ("%g %g %g %g  %g %g\n", mat.xx, mat.xy, mat.yx, mat.yy, mat.x0, mat.y0);
+    }
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
       shapevec->fill_type = 0;
@@ -403,143 +530,6 @@ swfdec_shape_get_linestyle (SwfdecShape * shape, int linestyle)
   if (linestyle < 1)
     return NULL;
   return g_ptr_array_index (shape->lines, shape->lines_offset + linestyle - 1);
-}
-
-void
-swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits, SwfdecShape * shape)
-{
-  int x = 0, y = 0;
-  int fill0style = 0;
-  int fill1style = 0;
-  int linestyle = 0;
-  int n_vec = 0;
-  SwfdecShapeVec *shapevec;
-  SwfdecShapePoint pt;
-
-  while (swfdec_bits_peekbits (bits, 6) != 0) {
-    int type;
-    int n_bits;
-
-    type = swfdec_bits_getbits (bits, 1);
-
-    if (type == 0) {
-      int state_new_styles = swfdec_bits_getbits (bits, 1);
-      int state_line_styles = swfdec_bits_getbits (bits, 1);
-      int state_fill_styles1 = swfdec_bits_getbits (bits, 1);
-      int state_fill_styles0 = swfdec_bits_getbits (bits, 1);
-      int state_moveto = swfdec_bits_getbits (bits, 1);
-
-      if (state_moveto) {
-        n_bits = swfdec_bits_getbits (bits, 5);
-        x = swfdec_bits_getsbits (bits, n_bits);
-        y = swfdec_bits_getsbits (bits, n_bits);
-
-        SWFDEC_LOG ("   moveto %d,%d", x, y);
-      }
-      if (state_fill_styles0) {
-        fill0style = swfdec_bits_getbits (bits, shape->n_fill_bits);
-        SWFDEC_LOG ("   * fill0style = %d", fill0style);
-      }
-      if (state_fill_styles1) {
-        fill1style = swfdec_bits_getbits (bits, shape->n_fill_bits);
-        SWFDEC_LOG ("   * fill1style = %d", fill1style);
-      }
-      if (state_line_styles) {
-        linestyle = swfdec_bits_getbits (bits, shape->n_line_bits);
-        SWFDEC_LOG ("   * linestyle = %d", linestyle);
-      }
-      if (state_new_styles) {
-        swf_shape_add_styles (s, shape, bits);
-        SWFDEC_LOG ("swf_shape_get_recs: new styles");
-      }
-      pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
-      pt.control_y = SWFDEC_SHAPE_POINT_MOVETO;
-      pt.to_x = x;
-      pt.to_y = y;
-    } else {
-      /* edge record */
-      int n_bits;
-      int edge_flag;
-
-      edge_flag = swfdec_bits_getbits (bits, 1);
-
-      if (edge_flag == 0) {
-        int x0, y0;
-        int x1, y1;
-        int x2, y2;
-
-        x0 = x;
-        y0 = y;
-        n_bits = swfdec_bits_getbits (bits, 4) + 2;
-
-        x += swfdec_bits_getsbits (bits, n_bits);
-        y += swfdec_bits_getsbits (bits, n_bits);
-        SWFDEC_LOG ("   control %d,%d", x, y);
-        x1 = x;
-        y1 = y;
-
-        x += swfdec_bits_getsbits (bits, n_bits);
-        y += swfdec_bits_getsbits (bits, n_bits);
-        SWFDEC_LOG ("   anchor %d,%d", x, y);
-        x2 = x;
-        y2 = y;
-
-        pt.control_x = x1;
-        pt.control_y = y1;
-        pt.to_x = x2;
-        pt.to_y = y2;
-        n_vec++;
-      } else {
-        int general_line_flag;
-        int vert_line_flag = 0;
-
-        n_bits = swfdec_bits_getbits (bits, 4) + 2;
-        general_line_flag = swfdec_bits_getbit (bits);
-        if (general_line_flag == 1) {
-          x += swfdec_bits_getsbits (bits, n_bits);
-          y += swfdec_bits_getsbits (bits, n_bits);
-        } else {
-          vert_line_flag = swfdec_bits_getbit (bits);
-          if (vert_line_flag == 0) {
-            x += swfdec_bits_getsbits (bits, n_bits);
-          } else {
-            y += swfdec_bits_getsbits (bits, n_bits);
-          }
-        }
-        SWFDEC_LOG ("   delta %d,%d", x, y);
-
-        pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
-        pt.control_y = SWFDEC_SHAPE_POINT_LINETO;
-        pt.to_x = x;
-        pt.to_y = y;
-      }
-    }
-    if (fill0style) {
-      shapevec = swfdec_shape_get_fill0style (shape, fill0style);
-      if (shapevec) {
-        g_array_append_val (shapevec->path, pt);
-      }
-      s->stats_n_points++;
-    }
-    if (fill1style) {
-      shapevec = swfdec_shape_get_fill1style (shape, fill1style);
-      if (shapevec) {
-        g_array_append_val (shapevec->path, pt);
-      }
-      s->stats_n_points++;
-    }
-    if (linestyle) {
-      shapevec = swfdec_shape_get_linestyle (shape, linestyle);
-      if (shapevec) {
-        g_array_append_val (shapevec->path, pt);
-      }
-      s->stats_n_points++;
-    }
-
-  }
-
-  swfdec_bits_getbits (bits, 6);
-  swfdec_bits_syncbits (bits);
 }
 
 int
@@ -823,12 +813,8 @@ swfdec_gradient_to_palette (SwfdecGradient * grad,
   return p;
 }
 
-static void swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
-    SwfdecShape * shape);
 void swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
-void swf_morphshape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
-    SwfdecShape * shape);
 
 int
 tag_define_morph_shape (SwfdecDecoder * s)
@@ -863,26 +849,24 @@ tag_define_morph_shape (SwfdecDecoder * s)
   swf_morphshape_add_styles (s, shape, bits);
 
   swfdec_bits_syncbits (bits);
-  swf_morphshape_get_recs (s, bits, shape);
+  swf_shape_get_recs (s, bits, shape, TRUE);
   swfdec_bits_syncbits (bits);
   if (1) {
-    swf_shape_ignore_recs (s, bits, shape);
+    g_assert_not_reached ();
+    swf_shape_get_recs (s, bits, shape, TRUE);
   }
 
   return SWF_OK;
 }
 
-static void
-swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
-    SwfdecShape * shape)
+void
+swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
+    SwfdecShape * shape, gboolean morphshape)
 {
   int x = 0, y = 0;
-  int fill0style = 0;
-  int fill1style = 0;
-  int linestyle = 0;
-  int n_vec = 0;
-  SwfdecShapeVec *shapevec;
-  SwfdecShapePoint pt;
+  SwfdecShapeVec *fill0style = NULL;
+  SwfdecShapeVec *fill1style = NULL;
+  SwfdecShapeVec *linestyle = NULL;
 
   while (swfdec_bits_peekbits (bits, 6) != 0) {
     int type;
@@ -891,8 +875,7 @@ swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
     type = swfdec_bits_getbits (bits, 1);
 
     if (type == 0) {
-      //int state_new_styles = swfdec_bits_getbits (bits, 1);
-      int state_new_styles = 0;
+      int state_new_styles = swfdec_bits_getbits (bits, 1);
       int state_line_styles = swfdec_bits_getbits (bits, 1);
       int state_fill_styles1 = swfdec_bits_getbits (bits, 1);
       int state_fill_styles0 = swfdec_bits_getbits (bits, 1);
@@ -900,31 +883,40 @@ swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
 
       if (state_moveto) {
         n_bits = swfdec_bits_getbits (bits, 5);
-        x = swfdec_bits_getsbits (bits, n_bits);
-        y = swfdec_bits_getsbits (bits, n_bits);
+        x += swfdec_bits_getsbits (bits, n_bits);
+        y += swfdec_bits_getsbits (bits, n_bits);
 
         SWFDEC_LOG ("   moveto %d,%d", x, y);
       }
       if (state_fill_styles0) {
-        fill0style = swfdec_bits_getbits (bits, shape->n_fill_bits);
-        SWFDEC_LOG ("   * fill0style = %d", fill0style);
+        state_fill_styles0 = swfdec_bits_getbits (bits, shape->n_fill_bits);
+        SWFDEC_LOG ("   * fill0style = %d", state_fill_styles0);
       }
       if (state_fill_styles1) {
-        fill1style = swfdec_bits_getbits (bits, shape->n_fill_bits);
-        SWFDEC_LOG ("   * fill1style = %d", fill1style);
+        state_fill_styles1 = swfdec_bits_getbits (bits, shape->n_fill_bits);
+        SWFDEC_LOG ("   * fill1style = %d", state_fill_styles1);
       }
       if (state_line_styles) {
-        linestyle = swfdec_bits_getbits (bits, shape->n_line_bits);
-        SWFDEC_LOG ("   * linestyle = %d", linestyle);
+        state_line_styles = swfdec_bits_getbits (bits, shape->n_line_bits);
+        SWFDEC_LOG ("   * linestyle = %d", state_line_styles);
       }
       if (state_new_styles) {
-        SWFDEC_ERROR ("unexpected new styles");
-        swf_morphshape_add_styles (s, shape, bits);
+        SWFDEC_LOG ("   * new styles");
+	if (morphshape)
+	  swf_morphshape_add_styles (s, shape, bits);
+	else
+	  swf_shape_add_styles (s, shape, bits);
       }
-      pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
-      pt.control_y = SWFDEC_SHAPE_POINT_MOVETO;
-      pt.to_x = x;
-      pt.to_y = y;
+      /* FIXME: reset or don't care when not set? Currently we reset */
+      fill0style = swfdec_shape_get_fill0style (shape, state_fill_styles0);
+      fill1style = swfdec_shape_get_fill1style (shape, state_fill_styles1);
+      linestyle = swfdec_shape_get_linestyle (shape, state_line_styles);
+      if (fill0style)
+	swfdec_path_move_to (&fill0style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+      if (fill1style)
+	swfdec_path_move_to (&fill1style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+      if (linestyle)
+	swfdec_path_move_to (&linestyle->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
     } else {
       /* edge record */
       int n_bits;
@@ -933,31 +925,31 @@ swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
       edge_flag = swfdec_bits_getbits (bits, 1);
 
       if (edge_flag == 0) {
-        int x0, y0;
-        int x1, y1;
-        int x2, y2;
+        int control_x, control_y;
 
-        x0 = x;
-        y0 = y;
         n_bits = swfdec_bits_getbits (bits, 4) + 2;
 
         x += swfdec_bits_getsbits (bits, n_bits);
         y += swfdec_bits_getsbits (bits, n_bits);
         SWFDEC_LOG ("   control %d,%d", x, y);
-        x1 = x;
-        y1 = y;
+        control_x = x;
+        control_y = y;
 
         x += swfdec_bits_getsbits (bits, n_bits);
         y += swfdec_bits_getsbits (bits, n_bits);
         SWFDEC_LOG ("   anchor %d,%d", x, y);
-        x2 = x;
-        y2 = y;
-
-        pt.control_x = x1;
-        pt.control_y = y1;
-        pt.to_x = x2;
-        pt.to_y = y2;
-        n_vec++;
+	if (fill0style)
+	  swfdec_path_curve_to (&fill0style->path, 
+	      control_x * SWF_SCALE_FACTOR, control_y * SWF_SCALE_FACTOR, 
+	      x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	if (fill1style)
+	  swfdec_path_curve_to (&fill1style->path,
+	      control_x * SWF_SCALE_FACTOR, control_y * SWF_SCALE_FACTOR, 
+	      x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	if (linestyle)
+	  swfdec_path_curve_to (&linestyle->path,
+	      control_x * SWF_SCALE_FACTOR, control_y * SWF_SCALE_FACTOR, 
+	      x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
       } else {
         int general_line_flag;
         int vert_line_flag = 0;
@@ -975,36 +967,15 @@ swf_shape_ignore_recs (SwfdecDecoder * s, SwfdecBits * bits,
             y += swfdec_bits_getsbits (bits, n_bits);
           }
         }
-        SWFDEC_LOG ("   delta %d,%d", x, y);
-
-        pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
-        pt.control_y = SWFDEC_SHAPE_POINT_LINETO;
-        pt.to_x = x;
-        pt.to_y = y;
+        SWFDEC_LOG ("   line to %d,%d", x, y);
+	if (fill0style)
+	  swfdec_path_line_to (&fill0style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	if (fill1style)
+	  swfdec_path_line_to (&fill1style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	if (linestyle)
+	  swfdec_path_line_to (&linestyle->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
       }
     }
-    if (fill0style) {
-      shapevec = swfdec_shape_get_fill0style (shape, fill0style);
-      if (shapevec) {
-        swfdec_shapevec_free (shapevec);
-      }
-      s->stats_n_points++;
-    }
-    if (fill1style) {
-      shapevec = swfdec_shape_get_fill1style (shape, fill1style);
-      if (shapevec) {
-        swfdec_shapevec_free (shapevec);
-      }
-      s->stats_n_points++;
-    }
-    if (linestyle) {
-      shapevec = swfdec_shape_get_linestyle (shape, linestyle);
-      if (shapevec) {
-        swfdec_shapevec_free (shapevec);
-      }
-      s->stats_n_points++;
-    }
-
   }
 
   swfdec_bits_getbits (bits, 6);
@@ -1053,7 +1024,6 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
       swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
       swfdec_bits_get_matrix (bits, &end_transform);
       shapevec->grad = swfdec_bits_get_morph_gradient (bits);
-      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
     } else if (fill_style_type == 0x40 || fill_style_type == 0x41) {
       shapevec->fill_type = fill_style_type;
       shapevec->fill_id = swfdec_bits_get_u16 (bits);
@@ -1067,9 +1037,6 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
 
       swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
       swfdec_bits_get_matrix (bits, &end_transform);
-      /* FIXME: the 0.965 is a mysterious factor that seems to improve
-       * rendering of images. */
-      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR * 0.965, SWF_SCALE_FACTOR * 0.965);
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
       shapevec->fill_type = 0;
@@ -1099,146 +1066,5 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
         shapevec->width, end_width, shapevec->color, end_color);
   }
 
-  swfdec_bits_syncbits (bits);
-}
-
-void
-swf_morphshape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
-    SwfdecShape * shape)
-{
-  int x = 0, y = 0;
-  int fill0style = 0;
-  int fill1style = 0;
-  int linestyle = 0;
-  int n_vec = 0;
-  SwfdecShapeVec *shapevec;
-  SwfdecShapePoint pt;
-
-  shape->n_line_bits = swfdec_bits_getbits (bits, 4);
-  shape->n_fill_bits = swfdec_bits_getbits (bits, 4);
-  while (swfdec_bits_peekbits (bits, 6) != 0) {
-    int type;
-    int n_bits;
-
-    type = swfdec_bits_getbits (bits, 1);
-
-    if (type == 0) {
-      //int state_new_styles = swfdec_bits_getbits (bits, 1);
-      int state_new_styles = 0;
-      int state_line_styles = swfdec_bits_getbits (bits, 1);
-      int state_fill_styles1 = swfdec_bits_getbits (bits, 1);
-      int state_fill_styles0 = swfdec_bits_getbits (bits, 1);
-      int state_moveto = swfdec_bits_getbits (bits, 1);
-
-      if (state_moveto) {
-        n_bits = swfdec_bits_getbits (bits, 5);
-        x = swfdec_bits_getsbits (bits, n_bits);
-        y = swfdec_bits_getsbits (bits, n_bits);
-
-        SWFDEC_LOG ("   moveto %d,%d", x, y);
-      }
-      if (state_fill_styles0) {
-        fill0style = swfdec_bits_getbits (bits, shape->n_fill_bits);
-        SWFDEC_LOG ("   * fill0style = %d", fill0style);
-      }
-      if (state_fill_styles1) {
-        fill1style = swfdec_bits_getbits (bits, shape->n_fill_bits);
-        SWFDEC_LOG ("   * fill1style = %d", fill1style);
-      }
-      if (state_line_styles) {
-        linestyle = swfdec_bits_getbits (bits, shape->n_line_bits);
-        SWFDEC_LOG ("   * linestyle = %d", linestyle);
-      }
-      if (state_new_styles) {
-        SWFDEC_ERROR ("unexpected new styles");
-        //swf_morphshape_add_styles (s, shape, bits);
-      }
-      pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
-      pt.control_y = SWFDEC_SHAPE_POINT_MOVETO;
-      pt.to_x = x;
-      pt.to_y = y;
-    } else {
-      /* edge record */
-      int n_bits;
-      int edge_flag;
-
-      edge_flag = swfdec_bits_getbits (bits, 1);
-
-      if (edge_flag == 0) {
-        int x0, y0;
-        int x1, y1;
-        int x2, y2;
-
-        x0 = x;
-        y0 = y;
-        n_bits = swfdec_bits_getbits (bits, 4) + 2;
-
-        x += swfdec_bits_getsbits (bits, n_bits);
-        y += swfdec_bits_getsbits (bits, n_bits);
-        SWFDEC_LOG ("   control %d,%d", x, y);
-        x1 = x;
-        y1 = y;
-
-        x += swfdec_bits_getsbits (bits, n_bits);
-        y += swfdec_bits_getsbits (bits, n_bits);
-        SWFDEC_LOG ("   anchor %d,%d", x, y);
-        x2 = x;
-        y2 = y;
-
-        pt.control_x = x1;
-        pt.control_y = y1;
-        pt.to_x = x2;
-        pt.to_y = y2;
-        n_vec++;
-      } else {
-        int general_line_flag;
-        int vert_line_flag = 0;
-
-        n_bits = swfdec_bits_getbits (bits, 4) + 2;
-        general_line_flag = swfdec_bits_getbit (bits);
-        if (general_line_flag == 1) {
-          x += swfdec_bits_getsbits (bits, n_bits);
-          y += swfdec_bits_getsbits (bits, n_bits);
-        } else {
-          vert_line_flag = swfdec_bits_getbit (bits);
-          if (vert_line_flag == 0) {
-            x += swfdec_bits_getsbits (bits, n_bits);
-          } else {
-            y += swfdec_bits_getsbits (bits, n_bits);
-          }
-        }
-        SWFDEC_LOG ("   delta %d,%d", x, y);
-
-        pt.control_x = SWFDEC_SHAPE_POINT_SPECIAL;
-        pt.control_y = SWFDEC_SHAPE_POINT_LINETO;
-        pt.to_x = x;
-        pt.to_y = y;
-      }
-    }
-    if (fill0style) {
-      shapevec = swfdec_shape_get_fill0style (shape, fill0style);
-      if (shapevec) {
-        g_array_append_val (shapevec->path, pt);
-      }
-      s->stats_n_points++;
-    }
-    if (fill1style) {
-      shapevec = swfdec_shape_get_fill1style (shape, fill1style);
-      if (shapevec) {
-        g_array_append_val (shapevec->path, pt);
-      }
-      s->stats_n_points++;
-    }
-    if (linestyle) {
-      shapevec = swfdec_shape_get_linestyle (shape, linestyle);
-      if (shapevec) {
-        g_array_append_val (shapevec->path, pt);
-      }
-      s->stats_n_points++;
-    }
-
-  }
-
-  swfdec_bits_getbits (bits, 6);
   swfdec_bits_syncbits (bits);
 }

@@ -5,20 +5,11 @@
 
 #include <swfdec_sprite.h>
 
-static void swfdec_sprite_render (SwfdecDecoder * s,
-    SwfdecSpriteSegment * seg, SwfdecObject * object);
-
 SWFDEC_OBJECT_BOILERPLATE (SwfdecSprite, swfdec_sprite)
 
      static void swfdec_sprite_base_init (gpointer g_class)
 {
 
-}
-
-static void
-swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
-{
-  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_sprite_render;
 }
 
 static void
@@ -138,23 +129,32 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
   s->parse_sprite_seg = save_parse_sprite_seg;
 }
 
+static void 
+swfdec_sprite_iterate (SwfdecDecoder *decoder, SwfdecObject *object, 
+      unsigned int frame, const SwfdecMouseInfo *info, SwfdecRect *inval)
+{
+  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
+  
+  sprite->current_frame = frame;
+}
+
 static void
-swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object)
+swfdec_sprite_render (SwfdecDecoder * s, cairo_t *cr,
+    const SwfdecColorTransform *trans, SwfdecObject * object, 
+    SwfdecRect *inval)
 {
   SwfdecSprite *sprite = SWFDEC_SPRITE (object);
   SwfdecSpriteFrame *frame;
-  cairo_matrix_t save_transform;
   GList *g;
   int clip_depth = 0;
 
-  //memcpy (&layer->transform, &seg->transform, sizeof(SwfdecTransform));
+  frame = &sprite->frames[sprite->current_frame];
+  
+  /* FIXME: we don't paint because there's no clipping yet */
+  swfdec_color_set_source (cr, frame->bg_color);
+  cairo_rectangle (cr, inval->x0, inval->y0, inval->x1 - inval->x0, inval->y1 - inval->y0);
+  cairo_fill (cr);
 
-  save_transform = s->transform;
-  cairo_matrix_multiply (&s->transform, &seg->transform, &save_transform);
-
-  /* FIXME 0 is wrong */
-  frame = &sprite->frames[0];
   for (g = g_list_last (frame->segments); g; g = g_list_previous (g)) {
     SwfdecObject *child_object;
     SwfdecSpriteSegment *child_seg;
@@ -174,128 +174,18 @@ swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
 
     child_object = swfdec_object_get (s, child_seg->id);
     if (child_object) {
-#if 0
-      /* FIXME for now, don't render sprites inside sprites */
-      if (!SWFDEC_IS_SPRITE (child_object)) {
-        SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
-            child_object);
-      } else {
-        SWFDEC_WARNING ("not rendering sprite inside sprite");
-      }
-#else
-      SWFDEC_OBJECT_GET_CLASS (child_object)->render (s, child_seg,
-          child_object);
-#endif
+      SwfdecColorTransform color_trans;
+      swfdec_color_transform_chain (&color_trans, &child_seg->color_transform,
+	  trans);
+      g_print ("rendering %s %p with depth %d\n", G_OBJECT_TYPE_NAME (child_object),
+	  child_object, child_seg->depth);
+      swfdec_object_render (s, child_object, cr, &child_seg->transform,
+	  &color_trans, inval);
     } else {
-      SWFDEC_DEBUG ("could not find object (id = %d)", child_seg->id);
+      SWFDEC_WARNING ("could not find object (id = %d)", child_seg->id);
     }
   }
-  s->transform = save_transform;
 }
-
-#if 0
-static SwfdecLayer *
-swfdec_sprite_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object, SwfdecLayer * oldlayer)
-{
-  SwfdecLayer *layer;
-  SwfdecLayer *child_layer;
-  SwfdecLayer *old_child_layer;
-  GList *g;
-
-  //SwfdecSprite *child_decoder = SWFDEC_SPRITE (object);
-  /* FIXME */
-  //SwfdecSprite *sprite = child_decoder->main_sprite;
-  SwfdecSprite *sprite = NULL;
-  SwfdecSpriteSegment *tmpseg;
-  SwfdecSpriteSegment *child_seg;
-  int frame;
-
-  if (oldlayer && oldlayer->seg == seg && sprite->n_frames == 1)
-    return oldlayer;
-
-  layer = swfdec_layer_new ();
-  layer->seg = seg;
-
-  /* Not sure why this is wrong.  Somehow the top-level transform
-   * gets applied twice. */
-  //art_affine_multiply(layer->transform, seg->transform, s->transform);
-  memcpy (&layer->transform, &seg->transform, sizeof (SwfdecTransform));
-
-  if (oldlayer) {
-    layer->frame_number = oldlayer->frame_number + 1;
-    if (layer->frame_number >= sprite->n_frames)
-      layer->frame_number = 0;
-    SWFDEC_DEBUG
-        ("iterating old sprite (depth=%d) old_frame=%d frame=%d n_frames=%d\n",
-        seg->depth, oldlayer->frame_number, layer->frame_number,
-        sprite->n_frames);
-  } else {
-    SWFDEC_LOG ("iterating new sprite (depth=%d)", seg->depth);
-    layer->frame_number = 0;
-  }
-  frame = layer->frame_number;
-
-  layer->rect.x0 = 0;
-  layer->rect.x1 = 0;
-  layer->rect.y0 = 0;
-  layer->rect.y1 = 0;
-
-  SWFDEC_LOG ("swfdec_sprite_render %d frame %d", object->id,
-      layer->frame_number);
-
-  for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
-    child_seg = (SwfdecSpriteSegment *) g->data;
-
-    if (child_seg->first_frame > frame)
-      continue;
-    if (child_seg->last_frame <= frame)
-      continue;
-    SWFDEC_LOG ("rendering layer %d", child_seg->depth);
-
-    tmpseg = swfdec_spriteseg_dup (child_seg);
-    swfdec_transform_multiply (&tmpseg->transform,
-        &child_seg->transform, &layer->transform);
-
-#if 0
-    old_child_layer = swfdec_render_get_sublayer (layer,
-        child_seg->depth, layer->frame_number - 1);
-#endif
-    old_child_layer = NULL;
-
-    child_layer = swfdec_spriteseg_render (s, tmpseg, old_child_layer);
-    if (child_layer) {
-      layer->sublayers = g_list_append (layer->sublayers, child_layer);
-
-      swfdec_rect_union_to_masked (&layer->rect, &child_layer->rect, &s->irect);
-    }
-
-    swfdec_spriteseg_free (tmpseg);
-  }
-
-  return layer;
-}
-#endif
-
-#if 0
-void
-swfdec_sprite_render (SwfdecDecoder * s, SwfdecLayer * parent_layer,
-    SwfdecObject * parent_object)
-{
-  SwfdecLayer *child_layer;
-  SwfdecSprite *s2 = SWFDEC_SPRITE (parent_object);
-  GList *g;
-
-  SWFDEC_LOG ("rendering sprite frame %d of %d",
-      parent_layer->frame_number, s2->n_frames);
-  for (g = g_list_first (parent_layer->sublayers); g; g = g_list_next (g)) {
-    child_layer = (SwfdecLayer *) g->data;
-    if (!child_layer)
-      continue;
-    swfdec_layer_render (s, child_layer);
-  }
-}
-#endif
 
 SwfdecSpriteSegment *
 swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame_index)
@@ -325,6 +215,10 @@ swfdec_sprite_frame_add_seg (SwfdecSpriteFrame * frame, SwfdecSpriteSegment * se
     if (seg->depth < segnew->depth) {
       frame->segments = g_list_insert_before (frame->segments, g, segnew);
       return;
+    } else if (seg->depth == segnew->depth) {
+      SWFDEC_WARNING ("replacing frame with id %d, is that legal?", seg->depth);
+      g->data = segnew;
+      return;
     }
   }
   frame->segments = g_list_append (frame->segments, segnew);
@@ -351,6 +245,8 @@ swfdec_spriteseg_new (void)
   SwfdecSpriteSegment *seg;
 
   seg = g_new0 (SwfdecSpriteSegment, 1);
+  cairo_matrix_init_identity (&seg->transform);
+  swfdec_color_transform_init_identity (&seg->color_transform);
 
   return seg;
 }
@@ -557,5 +453,25 @@ swfdec_exports_lookup (SwfdecDecoder * s, char *name)
     }
   }
   return NULL;
+}
+
+static void
+swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
+{
+  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+
+  object_class->iterate = swfdec_sprite_iterate;
+  object_class->render = swfdec_sprite_render;
+}
+
+void
+swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames)
+{
+  g_return_if_fail (SWFDEC_IS_SPRITE (sprite));
+
+  sprite->frames = g_new0 (SwfdecSpriteFrame, n_frames);
+  sprite->n_frames = n_frames;
+
+  SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
 }
 

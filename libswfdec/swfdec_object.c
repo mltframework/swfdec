@@ -100,3 +100,66 @@ swfdec_object_get (SwfdecDecoder * s, int id)
 
   return NULL;
 }
+
+void 
+swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, unsigned int frame, 
+    const cairo_matrix_t *matrix, const SwfdecMouseInfo *mouse, SwfdecRect *inval)
+{
+  SwfdecObjectClass *klass;
+
+  g_return_if_fail (s != NULL);
+  g_return_if_fail (SWFDEC_IS_OBJECT (object));
+  g_return_if_fail (inval != NULL);
+
+  klass = SWFDEC_OBJECT_GET_CLASS (object);
+  if (klass->iterate == NULL)
+    return;
+
+  if (matrix) {
+    SwfdecRect rect;
+    SwfdecMouseInfo tmp;
+    tmp = *mouse;
+    cairo_matrix_transform_point (matrix, &tmp.x, &tmp.y);
+    klass->iterate (s, object, frame, &tmp, &rect);
+    swfdec_rect_apply_matrix (inval, &rect, matrix);
+    g_print ("%s %p: invalid area now %g %g  %g %g\n", G_OBJECT_TYPE_NAME (object),
+	object, inval->x0, inval->y0, inval->x1, inval->y1);
+  } else {
+    klass->iterate (s, object, frame, mouse, inval);
+  }
+}
+
+void
+swfdec_object_render (SwfdecDecoder *s, SwfdecObject *object, cairo_t *cr, 
+    const cairo_matrix_t *matrix, const SwfdecColorTransform *color, const SwfdecRect *inval)
+{
+  SwfdecObjectClass *klass;
+  SwfdecRect rect;
+
+  g_return_if_fail (s != NULL);
+  g_return_if_fail (SWFDEC_IS_OBJECT (object));
+  g_return_if_fail (cr != NULL);
+  if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
+    g_warning ("%s", cairo_status_to_string (cairo_status (cr)));
+  }
+  g_return_if_fail (color != NULL);
+  g_return_if_fail (inval != NULL);
+  
+  klass = SWFDEC_OBJECT_GET_CLASS (object);
+  if (klass->render == NULL)
+    return;
+
+  cairo_save (cr);
+  if (matrix) {
+    cairo_transform (cr, matrix);
+    swfdec_rect_apply_matrix (&rect, inval, matrix);
+  } else {
+    rect = *inval;
+  }
+  //if (swfdec_rect_intersect (NULL, &object->extents, &rect)) {
+    SWFDEC_LOG ("really rendering %s %p (id %d)", G_OBJECT_TYPE_NAME (object), object, object->id);
+    klass->render (s, cr, color, object, &rect);
+  //}
+  cairo_restore (cr);
+}
+

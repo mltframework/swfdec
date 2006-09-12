@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <math.h>
 #include <swfdec.h>
 #include <swfdec_render.h>
 #include <swfdec_buffer.h>
@@ -8,7 +9,6 @@ typedef struct {
   int x;
   int y;
   int button;
-  gboolean changed;
 } MouseData;
 
 static gboolean
@@ -18,7 +18,6 @@ motion_notify (GtkWidget *widget, GdkEventMotion *event, gpointer data)
 
   mouse->x = event->x;
   mouse->y = event->y;
-  mouse->changed = TRUE;
   return FALSE;
 }
 
@@ -29,7 +28,6 @@ leave_notify (GtkWidget *widget, GdkEventCrossing *event, gpointer data)
 
   mouse->x = -1;
   mouse->y = -1;
-  mouse->changed = TRUE;
   return FALSE;
 }
 
@@ -38,8 +36,8 @@ press_notify (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   MouseData *mouse = data;
 
-  mouse->button = 1;
-  mouse->changed = TRUE;
+  if (event->button == 1)
+    mouse->button = 1;
   return FALSE;
 }
 
@@ -48,27 +46,23 @@ release_notify (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   MouseData *mouse = data;
 
-  mouse->button = 0;
-  mouse->changed = TRUE;
+  if (event->button == 1)
+    mouse->button = 0;
   return FALSE;
 }
 
 static gboolean
 next_image (gpointer data)
 {
+  SwfdecRect inval;
   GtkWidget *win = data;
   SwfdecDecoder *dec = g_object_get_data (G_OBJECT (win), "swfdec");
   MouseData *mouse = g_object_get_data (G_OBJECT (win), "swfmouse");
 
-  if (mouse->changed) {
-    swfdec_decoder_set_mouse (dec, mouse->x, mouse->y, mouse->button);
-    mouse->changed = FALSE;
-  }
-  if (!swfdec_render_iterate (dec)) {
-    gtk_main_quit ();
-    return FALSE;
-  }
-  gtk_widget_queue_draw (win);
+  swfdec_decoder_iterate (dec, mouse->x, mouse->y, mouse->button, &inval);
+  g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
+  gtk_widget_queue_draw_area (win, floor (inval.x0), floor (inval.y0),
+      ceil (inval.x1) - floor (inval.x0), ceil (inval.y1) - floor (inval.y0));
   
   return TRUE;
 }
@@ -76,22 +70,29 @@ next_image (gpointer data)
 static gboolean
 draw_current_image (GtkWidget *win, GdkEventExpose *event, SwfdecDecoder *dec)
 {
-  SwfdecBuffer *buf = swfdec_render_get_image (dec);
-  cairo_surface_t *surface;
+  SwfdecRect rect;
   cairo_t *cr;
-  int width, height;
 
-  if (!buf) {
-    g_assert_not_reached ();
-    return FALSE;
-  }
-  swfdec_decoder_get_image_size (dec, &width, &height);
-  surface = cairo_image_surface_create_for_data (buf->data,
-      CAIRO_FORMAT_ARGB32, width, height, width * 4);
   cr = gdk_cairo_create (win->window);
-  cairo_set_source_surface (cr, surface, 0, 0);
-  cairo_surface_destroy (surface);
-  cairo_paint (cr);
+  swfdec_rect_init (&rect, event->area.x, event->area.y, event->area.width, event->area.height);
+#if 1
+  {
+    cairo_t *crs;
+    cairo_surface_t *surface;
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 
+	event->area.width, event->area.height);
+    crs = cairo_create (surface);
+    cairo_translate (crs, -event->area.x, -event->area.y);
+    swfdec_decoder_render (dec, crs, &rect);
+    cairo_destroy (crs);
+    //cairo_surface_write_to_png (surface, "image.png");
+    cairo_set_source_surface (cr, surface, event->area.x, event->area.y);
+    cairo_paint (cr);
+    cairo_surface_destroy (surface);
+  }
+#else
+  swfdec_decoder_render (dec, cr, &rect);
+#endif
   cairo_destroy (cr);
 
   return TRUE;
@@ -103,7 +104,7 @@ view_swf (SwfdecDecoder *dec)
   GtkWidget *win;
   double rate;
   int width, height;
-  MouseData mouse = { 0, 0, 0, FALSE };
+  MouseData mouse = { 0, 0, 0 };
   
   /* create toplevel window and set its title */
   win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -125,11 +126,10 @@ view_swf (SwfdecDecoder *dec)
   gtk_window_set_default_size (GTK_WINDOW (win), width, height);
   gtk_widget_show_all (win);
   swfdec_decoder_get_rate (dec, &rate);
-  g_timeout_add (1000 / rate, next_image, win);
+  if (FALSE)
+    g_timeout_add (1000 / rate, next_image, win);
   
   gtk_main ();
-
-  g_object_unref (win);
 }
 
 static void buffer_free (SwfdecBuffer *buffer, void *priv)

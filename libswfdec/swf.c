@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <liboil/liboil.h>
 #include "swfdec_render.h"
 
 #include "swfdec_internal.h"
@@ -50,13 +49,11 @@ swfdec_decoder_new (void)
   SwfdecDecoder *s;
 
   swfdec_init ();
-  oil_init ();
 
   s = g_new0 (SwfdecDecoder, 1);
 
   s->input_queue = swfdec_buffer_queue_new ();
 
-  s->bg_color = SWF_COLOR_COMBINE (0xff, 0xff, 0xff, 0xff);
   s->colorspace = SWF_COLORSPACE_RGB888;
   swf_config_colorspace (s);
 
@@ -125,14 +122,6 @@ swfdec_decoder_eof (SwfdecDecoder * s)
   if (s->state == SWF_STATE_PARSETAG) {
     s->state = SWF_STATE_EOF;
   }
-}
-
-void
-swfdec_decoder_set_mouse(SwfdecDecoder *s, int x, int y, int button)
-{
-  s->mouse_x = x;
-  s->mouse_y = y;
-  s->mouse_button = button;
 }
 
 int
@@ -641,8 +630,7 @@ swf_parse_header2 (SwfdecDecoder * s)
 
   buffer = swfdec_buffer_queue_pull (s->input_queue, n);
 
-  s->main_sprite->frames = g_malloc0 (sizeof (SwfdecSpriteFrame) * s->n_frames);
-  s->main_sprite->n_frames = s->n_frames;
+  swfdec_sprite_set_n_frames (s->main_sprite, s->n_frames);
 
   swf_config_colorspace (s);
 
@@ -698,3 +686,95 @@ swfdec_decoder_grab_mouse (SwfdecDecoder * s, SwfdecObject *obj)
   SWFDEC_DEBUG ("mouse grab by %s %p", G_OBJECT_TYPE_NAME (obj), obj);
   s->mouse_grab = obj;
 }
+
+/**
+ * swfdec_decoder_iterate:
+ * @dec: the #SwfdecDecoder to iterate
+ * @mouse_x: x position of mouse. Use -1 if mouse isn't over the movie
+ * @mouse_y: y position of mouse. Use -1 if mouse isn't over the movie
+ * @mouse_button: 1 if the button is down, 0 otherwise
+ * @invalidated: if not NULL, will be set to the area that changed
+ *
+ * Advances #dec to the next frame. You should make sure to call this function
+ * as often per second as swfdec_decoder_get_rate() indicates.
+ * After calling this function @invalidated will be set to the area that 
+ * changed. This value can be passed to swfdec_player_render() to get an 
+ * updated image.
+ **/
+void
+swfdec_decoder_iterate (SwfdecDecoder *dec, int mouse_x, int mouse_y, 
+    int mouse_button, SwfdecRect *invalidated)
+{
+  GList *g;
+  SwfdecRect invalidate_dontcare;
+  int current_frame;
+
+  g_return_if_fail (dec != NULL);
+  g_return_if_fail (mouse_button == 0 || mouse_button == 1);
+
+  current_frame = dec->next_frame;
+  SWFDEC_DEBUG ("iterate, frame_index = %d", current_frame);
+  dec->next_frame = -1;
+  if (invalidated == NULL)
+    invalidated = &invalidate_dontcare;
+
+  /* FIXME: do smarter grab management instead of just releasing the grab
+   * if the mouse button changed */
+  if (mouse_button != dec->mouse.button) {
+    dec->mouse_grab = NULL;
+    SWFDEC_DEBUG ("mouse button %d old_mouse_button %d",
+	mouse_button, dec->mouse.button);
+  }
+  dec->mouse.x = mouse_x;
+  dec->mouse.y = mouse_y;
+  dec->mouse.button = mouse_button;
+  g_assert (dec->execute_list == NULL);
+  swfdec_object_iterate (dec, SWFDEC_OBJECT (dec->main_sprite), current_frame, 
+      &dec->main_sprite_seg->transform, &dec->mouse, invalidated);
+
+  for (g=dec->execute_list; g; g = g->next) {
+    SwfdecBuffer *buffer = g->data;
+    swfdec_action_script_execute (dec, buffer);
+  }
+  g_list_free (dec->execute_list);
+  dec->execute_list = NULL;
+
+  if (dec->next_frame == -1) {
+    if (!dec->main_sprite_seg->stopped) {
+      dec->next_frame = current_frame + 1;
+      if (dec->next_frame >= dec->n_frames) {
+        if (0 /*s->repeat*/) {
+          dec->next_frame = 0;
+        } else {
+          dec->next_frame = dec->n_frames - 1;
+        }
+      }
+    } else {
+      dec->next_frame = current_frame;
+    }
+  }
+}
+
+/**
+ * swfdec_decoder_render:
+ * @dec: a #SwfdecDecoder
+ * @cr: #cairo_t to render to
+ * @area: #SwfdecRect describing the area to render or NULL for whole area
+ *
+ * Renders the given @area of the current frame to @cr.
+ **/
+void
+swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
+{
+  g_return_if_fail (dec != NULL);
+  g_return_if_fail (cr != NULL);
+  g_return_if_fail (area != NULL);
+  if (area == NULL)
+    area = &dec->irect;
+  if (swfdec_rect_is_empty (area))
+    return;
+
+  swfdec_object_render (dec, SWFDEC_OBJECT (dec->main_sprite), cr, 
+      &dec->main_sprite_seg->transform, &dec->main_sprite_seg->color_transform, area);
+}
+

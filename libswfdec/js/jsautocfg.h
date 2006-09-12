@@ -3,8 +3,8 @@
 
 /* AUTOMATICALLY GENERATED - DO NOT EDIT */
 
-#undef  IS_LITTLE_ENDIAN
-#define IS_BIG_ENDIAN 1
+#define IS_LITTLE_ENDIAN 1
+#undef  IS_BIG_ENDIAN
 
 #define JS_BYTES_PER_BYTE   1L
 #define JS_BYTES_PER_SHORT  2L
@@ -37,9 +37,9 @@
 #define JS_ALIGN_OF_SHORT   2L
 #define JS_ALIGN_OF_INT     4L
 #define JS_ALIGN_OF_LONG    4L
-#define JS_ALIGN_OF_INT64   8L
+#define JS_ALIGN_OF_INT64   4L
 #define JS_ALIGN_OF_FLOAT   4L
-#define JS_ALIGN_OF_DOUBLE  8L
+#define JS_ALIGN_OF_DOUBLE  4L
 #define JS_ALIGN_OF_POINTER 4L
 #define JS_ALIGN_OF_WORD    4L
 

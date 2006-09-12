@@ -177,7 +177,7 @@ swfdec_sprite_render (SwfdecDecoder * s, cairo_t *cr,
       SwfdecColorTransform color_trans;
       swfdec_color_transform_chain (&color_trans, &child_seg->color_transform,
 	  trans);
-      g_print ("rendering %s %p with depth %d\n", G_OBJECT_TYPE_NAME (child_object),
+      SWFDEC_LOG ("rendering %s %p with depth %d", G_OBJECT_TYPE_NAME (child_object),
 	  child_object, child_seg->depth);
       swfdec_object_render (s, child_object, cr, &child_seg->transform,
 	  &color_trans, inval);

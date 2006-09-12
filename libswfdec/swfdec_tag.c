@@ -265,9 +265,7 @@ tag_func_set_background_color (SwfdecDecoder * s)
 {
   s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color = 
     swfdec_bits_get_color (&s->b);
-  g_print ("bg: %0X (frame %d)\n", s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color,
-      s->parse_sprite->parse_frame);
-  SWFDEC_LOG ("bg color %0X", s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color);
+  SWFDEC_LOG ("bg color %08X", s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color);
 
   return SWF_OK;
 }

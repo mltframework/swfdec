@@ -75,7 +75,7 @@ draw_current_image (GtkWidget *win, GdkEventExpose *event, SwfdecDecoder *dec)
 
   cr = gdk_cairo_create (win->window);
   swfdec_rect_init (&rect, event->area.x, event->area.y, event->area.width, event->area.height);
-#if 1
+#if 0
   {
     cairo_t *crs;
     cairo_surface_t *surface;

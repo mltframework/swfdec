@@ -63,6 +63,32 @@ dump_path (cairo_path_t *path)
 }
 
 static void
+print_fill_info (SwfdecShapeVec *shapevec)
+{
+  switch (shapevec->fill_type) {
+    case 0x10:
+      g_print ("linear gradient\n");
+      break;
+    case 0x12:
+      g_print ("radial gradient\n");
+      break;
+    case 0x40:
+    case 0x41:
+    case 0x42:
+    case 0x43:
+      g_print ("%s%simage (id %d)\n", shapevec->fill_type % 2 ? "" : "repeating ", 
+	  shapevec->fill_type < 0x42 ? "bilinear " : "", shapevec->fill_id);
+      break;
+    case 0x00:
+      g_print ("solid color 0x%08X\n", shapevec->color);
+      break;
+    default:
+      g_print ("unknown fill type %d\n", shapevec->fill_type);
+      break;
+  }
+}
+
+static void
 dump_shape(SwfdecShape *shape)
 {
   SwfdecShapeVec *shapevec;
@@ -72,27 +98,20 @@ dump_shape(SwfdecShape *shape)
   for(i=0;i<shape->lines->len;i++){
     shapevec = g_ptr_array_index (shape->lines, i);
 
-    g_print("    %d: fill_type=0x%X fill_id=%d\n", i, 
-        shapevec->fill_type, shapevec->fill_id);
+    g_print("    %d: ", i);
+    print_fill_info (shapevec);
     dump_path (&shapevec->path);
   }
   g_print("  fills:\n");
   for(i=0;i<shape->fills->len;i++){
     shapevec = g_ptr_array_index (shape->fills, i);
 
-    g_print("    %d: fill_type=0x%X fill_id=%d\n", i, 
-        shapevec->fill_type, shapevec->fill_id);
+    g_print("    %d: ", i);
+    print_fill_info (shapevec);
     dump_path (&shapevec->path);
-  }
-  g_print("  fills1:\n");
-  for(i=0;i<shape->fills2->len;i++){
     shapevec = g_ptr_array_index (shape->fills2, i);
-
-    g_print("    %d: fill_type=0x%X fill_id=%d\n", i, 
-        shapevec->fill_type, shapevec->fill_id);
     dump_path (&shapevec->path);
   }
-
 }
 
 static void

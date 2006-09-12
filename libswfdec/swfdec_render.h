@@ -31,8 +31,6 @@ void swfdec_shape_render (SwfdecDecoder * decoder, cairo_t *cr,
 void swfdec_shape_render (SwfdecDecoder * decoder, 
       cairo_t *cr, const SwfdecColorTransform *trans,
       SwfdecObject * object, SwfdecRect *inval);
-void swfdec_text_render (SwfdecDecoder * s, SwfdecSpriteSegment * seg,
-    SwfdecObject * object);
 void swf_config_colorspace (SwfdecDecoder * s);
 void swfdec_render_layervec_free (SwfdecLayerVec * layervec);
 

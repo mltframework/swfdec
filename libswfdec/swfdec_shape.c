@@ -455,10 +455,6 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
 
       swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
       swfdec_bits_syncbits (bits);
-    {
-      cairo_matrix_t mat = shapevec->fill_transform;
-      g_print ("%g %g %g %g  %g %g\n", mat.xx, mat.xy, mat.yx, mat.yy, mat.x0, mat.y0);
-    }
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
       shapevec->fill_type = 0;
@@ -495,26 +491,26 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
 static SwfdecShapeVec *
 swfdec_shape_get_fill0style (SwfdecShape * shape, int fill0style)
 {
+  if (fill0style < 1)
+    return NULL;
   if (shape->fills_offset + fill0style - 1 >= shape->fills->len) {
     SWFDEC_WARNING ("fill0style too large (%d >= %d)",
         shape->fills_offset + fill0style - 1, shape->fills->len);
     return NULL;
   }
-  if (fill0style < 1)
-    return NULL;
   return g_ptr_array_index (shape->fills, shape->fills_offset + fill0style - 1);
 }
 
 static SwfdecShapeVec *
 swfdec_shape_get_fill1style (SwfdecShape * shape, int fill1style)
 {
+  if (fill1style < 1)
+    return NULL;
   if (shape->fills_offset + fill1style - 1 >= shape->fills2->len) {
     SWFDEC_WARNING ("fill1style too large (%d >= %d)",
         shape->fills_offset + fill1style - 1, shape->fills2->len);
     return NULL;
   }
-  if (fill1style < 1)
-    return NULL;
   return g_ptr_array_index (shape->fills2,
       shape->fills_offset + fill1style - 1);
 }
@@ -522,13 +518,13 @@ swfdec_shape_get_fill1style (SwfdecShape * shape, int fill1style)
 static SwfdecShapeVec *
 swfdec_shape_get_linestyle (SwfdecShape * shape, int linestyle)
 {
+  if (linestyle < 1)
+    return NULL;
   if (shape->lines_offset + linestyle - 1 >= shape->lines->len) {
     SWFDEC_WARNING ("linestyle too large (%d >= %d)",
         shape->lines_offset + linestyle - 1, shape->lines->len);
     return NULL;
   }
-  if (linestyle < 1)
-    return NULL;
   return g_ptr_array_index (shape->lines, shape->lines_offset + linestyle - 1);
 }
 
@@ -883,22 +879,31 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
 
       if (state_moveto) {
         n_bits = swfdec_bits_getbits (bits, 5);
-        x += swfdec_bits_getsbits (bits, n_bits);
-        y += swfdec_bits_getsbits (bits, n_bits);
+        x = swfdec_bits_getsbits (bits, n_bits);
+        y = swfdec_bits_getsbits (bits, n_bits);
 
         SWFDEC_LOG ("   moveto %d,%d", x, y);
       }
       if (state_fill_styles0) {
         state_fill_styles0 = swfdec_bits_getbits (bits, shape->n_fill_bits);
         SWFDEC_LOG ("   * fill0style = %d", state_fill_styles0);
+      } else {
+	state_fill_styles0 = -1;
+	SWFDEC_LOG ("   * not changing fill0style");
       }
       if (state_fill_styles1) {
         state_fill_styles1 = swfdec_bits_getbits (bits, shape->n_fill_bits);
         SWFDEC_LOG ("   * fill1style = %d", state_fill_styles1);
+      } else {
+	state_fill_styles1 = -1;
+	SWFDEC_LOG ("   * not changing fill1style");
       }
       if (state_line_styles) {
         state_line_styles = swfdec_bits_getbits (bits, shape->n_line_bits);
         SWFDEC_LOG ("   * linestyle = %d", state_line_styles);
+      } else {
+	state_line_styles = -1;
+	SWFDEC_LOG ("   * not changing linestyle");
       }
       if (state_new_styles) {
         SWFDEC_LOG ("   * new styles");
@@ -907,10 +912,13 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
 	else
 	  swf_shape_add_styles (s, shape, bits);
       }
-      /* FIXME: reset or don't care when not set? Currently we reset */
-      fill0style = swfdec_shape_get_fill0style (shape, state_fill_styles0);
-      fill1style = swfdec_shape_get_fill1style (shape, state_fill_styles1);
-      linestyle = swfdec_shape_get_linestyle (shape, state_line_styles);
+      /* FIXME: reset or ignore when not set? Currently we ignore */
+      if (state_fill_styles0 >= 0)
+	fill0style = swfdec_shape_get_fill0style (shape, state_fill_styles0);
+      if (state_fill_styles1 >= 0)
+	fill1style = swfdec_shape_get_fill1style (shape, state_fill_styles1);
+      if (state_line_styles >= 0)
+	linestyle = swfdec_shape_get_linestyle (shape, state_line_styles);
       if (fill0style)
 	swfdec_path_move_to (&fill0style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
       if (fill1style)

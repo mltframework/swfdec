@@ -20,6 +20,7 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
 
   if (obj->id == 7)
     return;
+
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
   for (i = 0; i < shape->fills->len; i++) {
@@ -137,14 +138,12 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
         break;
     }
     
-    if (shapevec->path.num_data) {
+    if (shapevec->path.num_data || shapevec2->path.num_data) {
       cairo_new_path (cr);
-      cairo_append_path (cr, &shapevec->path);
-      cairo_fill (cr);
-    }
-    if (shapevec2->path.num_data) {
-      cairo_new_path (cr);
-      cairo_append_path (cr, &shapevec2->path);
+      if (shapevec->path.num_data)
+	cairo_append_path (cr, &shapevec->path);
+      if (shapevec2->path.num_data)
+	cairo_append_path (cr, &shapevec2->path);
       cairo_fill (cr);
     }
   }

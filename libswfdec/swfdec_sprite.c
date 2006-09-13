@@ -68,69 +68,6 @@ swfdec_sprite_add_action (SwfdecSprite * sprite,
   swfdec_buffer_ref (actions);
 }
 
-#if 0
-void
-swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
-    SwfdecRender *render)
-{  
-  SwfdecObject *obj;
-  SwfdecSprite *sprite, *save_parse_sprite;
-  //SwfdecSpriteSegment *child_seg;
-  SwfdecSpriteSegment *save_parse_sprite_seg;
-  //GList *g;
-
-  if (seg->stopped)
-    return;
-
-  if (seg->id != 0) {
-    obj = swfdec_object_get (s, seg->id);
-    if (!SWFDEC_IS_SPRITE(obj))
-      return;
-    sprite = SWFDEC_SPRITE(obj);
-  } else {
-    sprite = s->main_sprite;
-  }
-
-  SWFDEC_INFO ("sprite %d frame %d", seg->id, render->frame_index);
-
-  save_parse_sprite = s->parse_sprite;
-  save_parse_sprite_seg = s->parse_sprite_seg;
-  s->parse_sprite = sprite;
-  s->parse_sprite_seg = seg;
-
-  if (sprite->frames[render->frame_index].action) {
-    s->execute_list = g_list_append (s->execute_list,
-        sprite->frames[render->frame_index].action);
-  }
-
-#if 0
-  if (!seg->ran_load && seg->clipevent[CLIPEVENT_LOAD]) {
-    seg->ran_load = TRUE;
-    s->execute_list = g_list_append (s->execute_list,
-        seg->clipevent[CLIPEVENT_LOAD]);
-  }
-  if (seg->clipevent[CLIPEVENT_ENTERFRAME]) {
-    s->execute_list = g_list_append (s->execute_list,
-        seg->clipevent[CLIPEVENT_ENTERFRAME]);
-  }
-#endif
-
-#if 0
-  /* FIXME this is wrong */
-  if (0) {
-    for (g = g_list_last (sprite->layers); g; g = g_list_previous (g)) {
-      child_seg = (SwfdecSpriteSegment *) g->data;
-
-      swfdec_sprite_render_iterate(s, child_seg, NULL);
-    }
-  }
-#endif
-
-  s->parse_sprite = save_parse_sprite;
-  s->parse_sprite_seg = save_parse_sprite_seg;
-}
-#endif
-
 static void 
 swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval)
 {
@@ -187,6 +124,9 @@ swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval
     }
     swfdec_rect_transform (&child_inval, &child_inval, &child_seg->transform);
   }
+
+  if (frame->action)
+    swfdec_decoder_queue_script (s, (JSScript *) frame->action);
 }
 
 static SwfdecMouseResult 

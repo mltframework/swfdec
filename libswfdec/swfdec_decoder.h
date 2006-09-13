@@ -139,6 +139,8 @@ void swfdec_decoder_eof (SwfdecDecoder * s);
 
 SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
 const char *swfdec_decoder_get_tag_name (int tag);
+void swfdec_decoder_queue_script (SwfdecDecoder *s, JSScript *script);
+void swfdec_decoder_execute_scripts (SwfdecDecoder *s);
 
 
 #endif

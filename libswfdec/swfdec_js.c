@@ -25,6 +25,7 @@ swfdec_js_init (guint runtime_size)
     runtime_size = 8 * 1024 * 1024; /* some default size */
 
   swfdec_js_runtime = JS_NewRuntime (runtime_size);
+  SWFDEC_INFO ("initialized JS runtime with %u bytes", runtime_size);
 }
 
 static JSClass global_class = {
@@ -70,6 +71,40 @@ swfdec_js_finish_decoder (SwfdecDecoder *s)
     s->jscx = NULL;
   }
 }
+
+/**
+ * swfdec_decoder_queue_script:
+ * @s: a #SwfdecDecoder
+ * @script: script to queue for execution
+ *
+ * Queues a script for execution at the next execution point.
+ **/
+void
+swfdec_decoder_queue_script (SwfdecDecoder *s, JSScript *script)
+{
+  SWFDEC_DEBUG ("adding script %p to list", script);
+  s->execute_list = g_list_prepend (s->execute_list, script);
+}
+
+/**
+ * swfdec_decoder_execute_scripts:
+ * @s: a #SwfdecDecoder
+ *
+ * Executes all queued up scripts in the order they were queued.
+ **/
+void
+swfdec_decoder_execute_scripts (SwfdecDecoder *s)
+{
+  GList *walk;
+
+  s->execute_list = g_list_reverse (s->execute_list);
+  for (walk = s->execute_list; walk; walk = walk->next) {
+    /* lalala */
+  }
+  g_list_free (s->execute_list);
+  s->execute_list = NULL;
+}
+
 
 G_END_DECLS
 

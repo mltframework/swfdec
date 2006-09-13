@@ -285,7 +285,6 @@ tag_func_do_action (SwfdecDecoder * s)
   return SWF_OK;
 }
 
-
 int
 tag_func_do_init_action (SwfdecDecoder * s)
 {
@@ -293,7 +292,6 @@ tag_func_do_init_action (SwfdecDecoder * s)
   int len;
   SwfdecBuffer *buffer;
   SwfdecObject *obj;
-  SwfdecSprite *save_parse_sprite;
   unsigned char *endptr;
   int retcode = SWF_ERROR;
 
@@ -309,10 +307,12 @@ tag_func_do_init_action (SwfdecDecoder * s)
   bits->ptr += len;
 
   if (SWFDEC_IS_SPRITE(obj)) {
-    save_parse_sprite = s->parse_sprite;
+#if 0
+    SwfdecSprite *save_parse_sprite = s->parse_sprite;
     s->parse_sprite = SWFDEC_SPRITE(obj);
     retcode = swfdec_action_script_execute (s, buffer);
     s->parse_sprite = save_parse_sprite;
+#endif
   }
   swfdec_buffer_unref (buffer);
 

@@ -87,9 +87,9 @@ swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondi
   for(i=0;i<button->actions->len;i++){
     action = &g_array_index (button->actions, SwfdecButtonAction, i);
 
-    SWFDEC_DEBUG ("button condition %04x", action->condition);
+    SWFDEC_LOG ("button condition %04x", action->condition);
     if (action->condition & condition) {
-      s->execute_list = g_list_append (s->execute_list, action->buffer);
+      swfdec_decoder_queue_script (s, (JSScript *) action->buffer);
     }
   }
 }
@@ -116,7 +116,6 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, do
 	  /* simulate entering then clicking */
 	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
 	  swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
-	  swfdec_decoder_grab_mouse (s, SWFDEC_OBJECT (button));
 	}
       } else {
 	button->state = SWFDEC_BUTTON_OVER;
@@ -130,7 +129,6 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, do
       } else if (button->has_mouse) {
 	button->state = SWFDEC_BUTTON_DOWN;
 	swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
-	swfdec_decoder_grab_mouse (s, SWFDEC_OBJECT (button));
       }
       break;
     case SWFDEC_BUTTON_DOWN:

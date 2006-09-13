@@ -597,45 +597,6 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
   return swfdec_audio_render (s, 44100/s->rate);
 }
 
-gboolean
-swfdec_decoder_has_mouse (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
-    SwfdecObject *obj)
-{
-  SwfdecObjectClass *klass;
-
-  g_return_val_if_fail (s != NULL, FALSE);
-  g_return_val_if_fail (seg != NULL, FALSE);
-  g_return_val_if_fail (SWFDEC_IS_OBJECT (obj), FALSE);
-
-  if (s->mouse_grab != NULL) {
-    return s->mouse_grab == obj;
-  }
-  klass = SWFDEC_OBJECT_GET_CLASS (obj);
-  //if (klass->has_mouse == NULL)
-    return FALSE;
-  //return klass->has_mouse (s, seg, obj);
-}
-
-/**
- * swfdec_decoder_grab_mouse:
- * @s: a #SwfdecDecoder
- * @obj: the object to grab the mouse
- *
- * Makes this object grab the mouse button. All mouse events will be directed
- * to this object.
- **/
-void
-swfdec_decoder_grab_mouse (SwfdecDecoder * s, SwfdecObject *obj)
-{
-  g_return_if_fail (s != NULL);
-  g_return_if_fail (SWFDEC_IS_OBJECT (obj));
-  /* fail if we try to grab while a grab is in effect */
-  g_return_if_fail (s->mouse_grab == NULL);
-
-  SWFDEC_DEBUG ("mouse grab by %s %p", G_OBJECT_TYPE_NAME (obj), obj);
-  s->mouse_grab = obj;
-}
-
 /**
  * swfdec_decoder_iterate:
  * @dec: the #SwfdecDecoder to iterate
@@ -650,7 +611,6 @@ swfdec_decoder_grab_mouse (SwfdecDecoder * s, SwfdecObject *obj)
 void
 swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
 {
-  GList *g;
   SwfdecRect invalidate_dontcare;
 
   g_return_if_fail (dec != NULL);
@@ -666,12 +626,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
   swfdec_object_iterate (dec, SWFDEC_OBJECT (dec->main_sprite), invalidated);
   swfdec_rect_transform (invalidated, invalidated, &dec->main_sprite_seg->transform);
 
-  for (g=dec->execute_list; g; g = g->next) {
-    SwfdecBuffer *buffer = g->data;
-    swfdec_action_script_execute (dec, buffer);
-  }
-  g_list_free (dec->execute_list);
-  dec->execute_list = NULL;
+  swfdec_decoder_execute_scripts (dec);
 
   if (dec->next_frame == -1) {
     if (!dec->main_sprite_seg->stopped) {
@@ -740,7 +695,9 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   dec->mouse.y = y;
   dec->mouse.button = button;
 
+  g_assert (dec->execute_list == NULL);
   swfdec_matrix_transform_point_inverse (&dec->main_sprite_seg->transform, &x, &y);
   swfdec_object_handle_mouse (dec, SWFDEC_OBJECT (dec->main_sprite), x, y, button, TRUE, inval);
   swfdec_rect_transform (inval, inval, &dec->main_sprite_seg->transform);
+  swfdec_decoder_execute_scripts (dec);
 }

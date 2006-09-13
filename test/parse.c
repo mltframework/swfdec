@@ -7,8 +7,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <swfdec.h>
-#include <swfdec_decoder.h>
-#include <swfdec_sprite.h>
 #include <swfdec_buffer.h>
 #include <ucontext.h>
 #include <sys/mman.h>

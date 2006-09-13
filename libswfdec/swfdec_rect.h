@@ -24,4 +24,7 @@ gboolean swfdec_rect_contains (const SwfdecRect *rect, double x, double y);
 void swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix);
 void swfdec_rect_transform_inverse (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix);
 
+/* FIXME: where to put this? */
+void swfdec_matrix_transform_point_inverse (cairo_matrix_t *matrix, double *x, double *y);
+
 #endif

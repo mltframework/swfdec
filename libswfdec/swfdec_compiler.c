@@ -36,6 +36,8 @@ swfdec_compile (SwfdecDecoder *s)
 
   bits = &s->b;
   g_print ("Creating new script for frame %d\n", s->parse_sprite->parse_frame);
+  g_print ("compiling %02X %02X %02X %02X\n", bits->ptr[0],
+      bits->ptr[1], bits->ptr[2], bits->ptr[3]);
   while ((action = swfdec_bits_get_u8 (bits))) {
     if (action & 0x80) {
       len = swfdec_bits_get_u16 (bits);
@@ -47,8 +49,8 @@ swfdec_compile (SwfdecDecoder *s)
       g_print ("  %s\n", current->name);
     } else {
       g_print ("  unknown action 0x%02X\n", action);
-      swfdec_bits_getbits (bits, len);
     }
+    swfdec_bits_getbits (bits, len * 8);
   }
   return NULL;
 }
@@ -56,22 +58,29 @@ swfdec_compile (SwfdecDecoder *s)
 /* must be sorted! */
 SwfdecActionSpec actions[] = {
   /* version 3 */
-  { 0x81, "ActionGoToFrame" },
-  { 0x83, "ActionGetURL" },
   { 0x04, "ActionNextFrame" },
   { 0x05, "ActionPreviousFrame" },
   { 0x06, "ActionPlay" },
   { 0x07, "ActionStop" },
   { 0x08, "ActionToggleQuality" },
   { 0x09, "ActionStopSounds" },
+  /* version 3 */
+  { 0x81, "ActionGoToFrame" },
+  { 0x83, "ActionGetURL" },
   { 0x8a, "ActionWaitForFrame" },
   { 0x8b, "ActionSetTarget" },
   { 0x8c, "ActionGoToLabel" },
 };
 
+int
+uint_compare (gconstpointer v1, gconstpointer v2)
+{
+  return *((const unsigned int*) v1) - *((const unsigned int*) v2);
+}
+
 static const SwfdecActionSpec *
 swfdec_action_find (guint action)
 {
   return bsearch (&action, actions, G_N_ELEMENTS (actions), 
-      sizeof (SwfdecActionSpec), g_int_equal);
+      sizeof (SwfdecActionSpec), uint_compare);
 }

@@ -165,7 +165,7 @@ swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval
   }
 
   frame = &sprite->frames[s->current_frame];
-  for (g = frame->segments; g; g = g_list_previous (g)) {
+  for (g = frame->segments; g; g = g_list_next (g)) {
     SwfdecObject *child_object;
     SwfdecSpriteSegment *child_seg;
     SwfdecRect child_inval;
@@ -187,6 +187,64 @@ swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval
     }
     swfdec_rect_transform (&child_inval, &child_inval, &child_seg->transform);
   }
+}
+
+static SwfdecMouseResult 
+swfdec_sprite_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
+      double x, double y, int button, SwfdecRect *inval)
+{
+  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
+  SwfdecSpriteFrame *frame;
+  GList *g;
+  SwfdecMouseResult ret;
+  double tmpx, tmpy;
+  SwfdecObject *child_object;
+  SwfdecSpriteSegment *child_seg;
+  int clip_depth = 0;
+  SwfdecRect rect;
+
+  frame = &sprite->frames[s->current_frame];
+  g = frame->segments;
+  if (sprite->mouse_grab) {
+    child_seg = sprite->mouse_grab;
+    sprite->mouse_grab = NULL;
+    goto grab_exists;
+  }
+  while (g) {
+    child_seg = g->data;
+    g = g->next;
+grab_exists:
+    if (child_seg->clip_depth) {
+      SWFDEC_INFO ("clip_depth=%d", child_seg->clip_depth);
+      clip_depth = child_seg->clip_depth;
+    }
+
+    if (clip_depth && child_seg->depth <= clip_depth) {
+      SWFDEC_INFO ("clipping depth=%d", child_seg->clip_depth);
+      continue;
+    }
+
+    child_object = swfdec_object_get (s, child_seg->id);
+    if (child_object == NULL)
+      continue;
+    tmpx = x;
+    tmpy = y;
+    swfdec_matrix_transform_point_inverse (&child_seg->transform, &tmpx, &tmpy);
+    /* ignore extents for grab object */
+    ret = swfdec_object_handle_mouse (s, child_object, tmpx, tmpy, button, 
+	g == frame->segments, &rect);
+    swfdec_rect_union (inval, inval, &rect);
+    switch (ret) {
+      case SWFDEC_MOUSE_GRABBED:
+	sprite->mouse_grab = child_seg;
+	/* fall through */
+      case SWFDEC_MOUSE_HIT:
+	return ret;
+      case SWFDEC_MOUSE_MISSED:
+	break;
+    }
+  }
+  return ret;
 }
 
 static void
@@ -515,6 +573,7 @@ swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 
   object_class->iterate = swfdec_sprite_iterate;
   object_class->render = swfdec_sprite_render;
+  object_class->handle_mouse = swfdec_sprite_handle_mouse;
 }
 
 void

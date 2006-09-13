@@ -65,6 +65,7 @@ struct _SwfdecSprite
   int parse_frame;
 
   SwfdecSpriteFrame *frames;
+  SwfdecSpriteSegment *mouse_grab;
 };
 
 struct _SwfdecSpriteClass

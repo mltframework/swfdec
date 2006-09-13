@@ -63,14 +63,9 @@ struct _SwfdecDecoder
 
   SwfdecBufferQueue *input_queue;
 
-  int stride;
-  int bytespp;
   void (*callback) (void *, int, int, void *, int);
   void (*compose_callback) (void *, int, int, void *, int);
   void (*fillrect) (unsigned char *, int, unsigned int, SwfdecRect *);
-
-  double scale_factor;
-  cairo_matrix_t transform;
 
   /* where we are in the top-level state engine */
   int state;
@@ -129,9 +124,6 @@ struct _SwfdecDecoder
   int next_frame;
 
   SwfdecCache *cache;
-
-  int using_experimental;
-  int allow_experimental;
 };
 
 SwfdecDecoder *swf_init (void);

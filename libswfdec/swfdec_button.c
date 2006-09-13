@@ -60,7 +60,7 @@ swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, double x, doub
 
       tmpx = x;
       tmpy = y;
-      cairo_matrix_transform_point (&record->segment->transform, &tmpx, &tmpy);
+      swfdec_matrix_transform_point_inverse (&record->segment->transform, &tmpx, &tmpy);
 
       if (swfdec_object_handle_mouse (s, obj, tmpx, tmpy, mouse_button, TRUE, &rect))
 	return TRUE;
@@ -176,9 +176,11 @@ swfdec_button_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
   SwfdecButton *button = SWFDEC_BUTTON (object);
   SwfdecButtonState old_state = button->state;
 
+  g_print ("mouse at %g %g\n", x, y);
   swfdec_button_change_state (s, button, x, y, mouse_button);
   if (old_state != button->state) {
     guint i;
+    g_print ("button state changed from %d to %d\n", old_state, button->state);
     for (i = 0; i < button->records->len; i++) {
       SwfdecButtonRecord *record;
       SwfdecObject *obj;

@@ -365,9 +365,11 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     if (reserved) {
       SWFDEC_WARNING ("reserved is supposed to be 0");
     }
-    SWFDEC_LOG ("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
-        record.states & SWFDEC_BUTTON_HIT, record.states & SWFDEC_BUTTON_DOWN, 
-        record.states & SWFDEC_BUTTON_OVER, record.states & SWFDEC_BUTTON_UP, 
+    SWFDEC_LOG ("states: %s%s%s%scharacter=%d layer=%d",
+        record.states & SWFDEC_BUTTON_HIT ? "HIT " : "", 
+	record.states & SWFDEC_BUTTON_DOWN ? "DOWN " : "", 
+        record.states & SWFDEC_BUTTON_OVER ? "OVER " : "",
+	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
 	character, layer);
 
     swfdec_bits_get_matrix (bits, &trans);
@@ -453,9 +455,11 @@ tag_func_define_button (SwfdecDecoder * s)
     if (reserved) {
       SWFDEC_WARNING ("reserved is supposed to be 0");
     }
-    SWFDEC_LOG ("hit_test=%d down=%d over=%d up=%d character=%d layer=%d",
-        record.states & SWFDEC_BUTTON_HIT, record.states & SWFDEC_BUTTON_DOWN, 
-        record.states & SWFDEC_BUTTON_OVER, record.states & SWFDEC_BUTTON_UP, 
+    SWFDEC_LOG ("states: %s%s%s%scharacter=%d layer=%d",
+        record.states & SWFDEC_BUTTON_HIT ? "HIT " : "", 
+	record.states & SWFDEC_BUTTON_DOWN ? "DOWN " : "", 
+        record.states & SWFDEC_BUTTON_OVER ? "OVER " : "",
+	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
 	character, layer);
 
     swfdec_bits_get_matrix (bits, &trans);

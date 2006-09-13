@@ -53,8 +53,6 @@ swfdec_decoder_new (void)
 
   s->input_queue = swfdec_buffer_queue_new ();
 
-  cairo_matrix_init_identity (&s->transform);
-
   s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->objects = g_list_append (s->objects, s->main_sprite);
@@ -62,8 +60,6 @@ swfdec_decoder_new (void)
   s->main_sprite_seg->id = SWFDEC_OBJECT(s->main_sprite)->id;
 
   s->flatness = 0.5;
-
-  s->allow_experimental = FALSE;
 
   swfdec_audio_add_stream(s);
 
@@ -533,25 +529,8 @@ swf_parse_header2 (SwfdecDecoder * s)
   height = rect.y1;
   s->parse_width = width;
   s->parse_height = height;
-  if (s->width == 0) {
-    s->width = floor (width);
-    s->height = floor (height);
-    s->scale_factor = 1.0;
-    cairo_matrix_init_identity (&s->transform);
-  } else {
-    double sw, sh;
-
-    sw = s->width / width;
-    sh = s->height / height;
-    s->scale_factor = (sw < sh) ? sw : sh;
-
-    s->transform.xx = s->scale_factor;
-    s->transform.xy = 0;
-    s->transform.yx = 0;
-    s->transform.yy = s->scale_factor;
-    s->transform.x0 = 0.5 * (s->width - width * s->scale_factor);
-    s->transform.y0 = 0.5 * (s->height - height * s->scale_factor);
-  }
+  s->width = floor (width);
+  s->height = floor (height);
   s->irect.x0 = 0;
   s->irect.y0 = 0;
   s->irect.x1 = s->width;
@@ -571,16 +550,6 @@ swf_parse_header2 (SwfdecDecoder * s)
 
   s->state = SWF_STATE_PARSETAG;
   return SWF_CHANGE;
-}
-
-int
-swfdec_decoder_experimental(SwfdecDecoder *s)
-{
-  if (!s->using_experimental) {
-    SWFDEC_ERROR ("using experimental code");
-    s->using_experimental = TRUE;
-  }
-  return s->allow_experimental;
 }
 
 SwfdecBuffer *
@@ -771,7 +740,7 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   dec->mouse.y = y;
   dec->mouse.button = button;
 
-  cairo_matrix_transform_point (&dec->main_sprite_seg->transform, &x, &y);
+  swfdec_matrix_transform_point_inverse (&dec->main_sprite_seg->transform, &x, &y);
   swfdec_object_handle_mouse (dec, SWFDEC_OBJECT (dec->main_sprite), x, y, button, TRUE, inval);
   swfdec_rect_transform (inval, inval, &dec->main_sprite_seg->transform);
 }

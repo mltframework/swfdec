@@ -25,7 +25,7 @@ swfdec_text_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
   SwfdecObject *fontobj;
   SwfdecText *text = SWFDEC_TEXT (object);
 
-  cairo_matrix_transform_point (&text->transform, &x, &y);
+  swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -37,7 +37,7 @@ swfdec_text_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
 
     shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
     ret = swfdec_object_handle_mouse (s, SWFDEC_OBJECT (shape),
-	x + glyph->x, y + glyph->y * SWF_SCALE_FACTOR, button, TRUE, inval);
+	x - glyph->x, y - glyph->y * SWF_SCALE_FACTOR, button, TRUE, inval);
     /* it's just shapes and shapes don't invalidate anything */
     if (ret != SWFDEC_MOUSE_MISSED)
       return ret;

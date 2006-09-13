@@ -130,3 +130,14 @@ swfdec_rect_transform_inverse (SwfdecRect *dest, const SwfdecRect *src, const ca
   }
   swfdec_rect_transform (dest, src, &tmp);
 }
+
+void 
+swfdec_matrix_transform_point_inverse (cairo_matrix_t *matrix, double *x, double *y)
+{
+  cairo_matrix_t tmp = *matrix;
+  if (cairo_matrix_invert (&tmp)) {
+    /* FIXME: do we need to handle this sanely? */
+    g_assert_not_reached ();
+  }
+  cairo_matrix_transform_point (&tmp, x, y);
+}

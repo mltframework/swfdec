@@ -583,6 +583,51 @@ swfdec_decoder_experimental(SwfdecDecoder *s)
   return s->allow_experimental;
 }
 
+SwfdecBuffer *
+swfdec_decoder_get_audio (SwfdecDecoder * s)
+{
+  g_return_val_if_fail (s->current_frame < s->n_frames, NULL);
+
+  if (s->stream_sound_obj) {
+    SwfdecBuffer *chunk;
+
+    chunk = s->main_sprite->frames[s->current_frame].sound_chunk;
+    if (chunk) {
+      SwfdecSound *sound;
+      int n;
+
+      sound = SWFDEC_SOUND (s->stream_sound_obj);
+
+      n = chunk->length;
+      if (sound->tmpbuflen + n > 2048) {
+        n = 2048 - sound->tmpbuflen;
+        SWFDEC_WARNING ("clipping audio");
+      }
+      memcpy (sound->tmpbuf + sound->tmpbuflen, chunk->data, n);
+      sound->tmpbuflen += n;
+      swfdec_sound_mp3_decode_stream (s, s->stream_sound_obj);
+    }
+  }
+
+  if (s->main_sprite->frames[s->current_frame].sound_play) {
+    SwfdecSound *sound;
+    SwfdecSoundChunk *chunk =
+      s->main_sprite->frames[s->current_frame].sound_play;
+
+    SWFDEC_DEBUG("chunk %p frame_index %d", chunk, s->current_frame);
+    SWFDEC_DEBUG("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",
+        chunk->object, chunk->start_sample, chunk->stop_sample,
+        chunk->stop, chunk->no_restart, chunk->loop_count);
+
+    sound = SWFDEC_SOUND(swfdec_object_get (s, chunk->object));
+    if (sound) {
+      swfdec_audio_add_sound (s, sound, chunk->loop_count);
+    }
+  }
+
+  return swfdec_audio_render (s, 44100/s->rate);
+}
+
 gboolean
 swfdec_decoder_has_mouse (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
     SwfdecObject *obj)
@@ -688,7 +733,6 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
 {
   g_return_if_fail (dec != NULL);
   g_return_if_fail (cr != NULL);
-  g_return_if_fail (area != NULL);
   if (area == NULL)
     area = &dec->irect;
   SWFDEC_LOG ("%p: starting rendering of frame %d, area %g %g  %g %g", dec, dec->current_frame,

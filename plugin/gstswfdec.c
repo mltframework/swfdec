@@ -25,7 +25,6 @@
 #include <string.h>
 #include <gst/video/video.h>
 #include <swfdec_buffer.h>
-#include <swfdec_decoder.h>
 
 GST_DEBUG_CATEGORY_STATIC (swfdec_debug);
 #define GST_CAT_DEFAULT swfdec_debug
@@ -268,27 +267,16 @@ gst_swfdec_video_link (GstPad * pad, GstCaps * caps)
 {
   GstSwfdec *swfdec;
   GstStructure *structure;
-  int width, height;
-  int ret;
-  gboolean res = FALSE;
 
   swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
-
-  ret = swfdec_decoder_set_image_size (swfdec->decoder, width, height);
-  if (ret == SWF_OK) {
-    swfdec->width = width;
-    swfdec->height = height;
-
-    res = TRUE;
-  }
+  gst_structure_get_int (structure, "width", &swfdec->width);
+  gst_structure_get_int (structure, "height", &swfdec->height);
 
   gst_object_unref (swfdec);
-  return res;
+  return TRUE;
 
 }
 
@@ -419,36 +407,52 @@ done:
 static void
 gst_swfdec_loop (GstSwfdec * swfdec)
 {
-
   gst_swfdec_render (swfdec, swfdec_decoder_parse (swfdec->decoder));
+}
 
+GstBuffer *
+gst_swfdec_render_image (GstSwfdec *swfdec, SwfdecRect *area)
+{
+  cairo_surface_t *surface;
+  cairo_t *cr;
+  GstBuffer *buffer;
+
+  if (gst_pad_alloc_buffer_and_set_caps (swfdec->videopad, 0, 
+      swfdec->width * swfdec->height * 4, GST_PAD_CAPS (swfdec->videopad),
+      &buffer) != GST_FLOW_OK) {
+    buffer = gst_buffer_new_and_alloc (swfdec->width * swfdec->height * 4);
+    gst_buffer_set_caps (buffer, GST_PAD_CAPS (swfdec->videopad));
+  }
+  surface = cairo_image_surface_create_for_data (GST_BUFFER_DATA (buffer),
+      CAIRO_FORMAT_ARGB32, swfdec->width, swfdec->height, swfdec->width * 4);
+  cr = cairo_create (surface);
+  cairo_surface_destroy (surface);
+
+  swfdec_decoder_render (swfdec->decoder, cr, NULL);
+
+  cairo_destroy (cr);
+  return buffer;
 }
 
 static void
 gst_swfdec_render (GstSwfdec * swfdec, int ret)
 {
-
   if (ret == SWF_EOF) {
     SwfdecBuffer *audio_buffer;
-    SwfdecBuffer *video_buffer;
     GstBuffer *videobuf;
     GstBuffer *audiobuf;
     gboolean ret;
     GstFlowReturn res;
     const char *url;
+    SwfdecRect inval, inval2;
 
     GST_DEBUG_OBJECT (swfdec, "render:SWF_EOF");
-    swfdec_decoder_set_mouse (swfdec->decoder, swfdec->x, swfdec->y,
-        swfdec->button);
+    swfdec_decoder_handle_mouse (swfdec->decoder, swfdec->x, swfdec->y,
+        swfdec->button, &inval);
 
-    ret = swfdec_render_iterate (swfdec->decoder);
-
-    if (swfdec->decoder->using_experimental) {
-      GST_ELEMENT_ERROR(swfdec, LIBRARY, FAILED,
-          ("SWF file contains features known to trigger bugs."),
-          ("SWF file contains features known to trigger bugs."));
-      gst_task_stop (swfdec->task);
-    }
+    swfdec_decoder_iterate (swfdec->decoder, &inval2);
+    swfdec->total_frames++;
+    swfdec_rect_union (&inval, &inval, &inval2);
 
     if (!ret) {
       gst_task_stop (swfdec->task);
@@ -461,7 +465,7 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     if (swfdec->send_discont) {
       GstEvent *event;
 
-      swfdec->timestamp = swfdec_render_get_frame_index (swfdec->decoder) *
+      swfdec->timestamp = swfdec->total_frames *
           swfdec->interval;
 
       GST_DEBUG ("sending discont %" G_GINT64_FORMAT, swfdec->timestamp);
@@ -480,30 +484,17 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     GST_DEBUG ("pushing image/sound %" G_GINT64_FORMAT, swfdec->timestamp);
 
     if (swfdec->skip_index) {
-      video_buffer = NULL;
       swfdec->skip_index--;
     } else {
-
-
-      video_buffer = swfdec_render_get_image (swfdec->decoder);
-
-      if (!video_buffer) {
-        gst_task_stop (swfdec->task);
-        gst_pad_push_event (swfdec->videopad, gst_event_new_eos ());
-        gst_pad_push_event (swfdec->audiopad, gst_event_new_eos ());
-        return;
-      }
-
       swfdec->skip_index = swfdec->skip_frames - 1;
 
-      videobuf = gst_swfdec_buffer_from_swf (video_buffer);
+      videobuf = gst_swfdec_render_image (swfdec, &inval);
       GST_BUFFER_TIMESTAMP (videobuf) = swfdec->timestamp;
-      gst_buffer_set_caps (videobuf, GST_PAD_CAPS (swfdec->videopad));
 
       gst_pad_push (swfdec->videopad, videobuf);
     }
 
-    audio_buffer = swfdec_render_get_audio (swfdec->decoder);
+    audio_buffer = swfdec_decoder_get_audio (swfdec->decoder);
 
     if (audio_buffer) {
 
@@ -571,8 +562,6 @@ gst_swfdec_init (GstSwfdec * swfdec)
   swfdec->decoder = swfdec_decoder_new ();
   g_return_if_fail (swfdec->decoder != NULL);
 
-  swfdec_decoder_set_colorspace (swfdec->decoder, SWF_COLORSPACE_RGB888);
-
   swfdec->frame_rate_n = 0;
   swfdec->frame_rate_d = 1;
   swfdec->x = -1;
@@ -635,8 +624,7 @@ gst_swfdec_src_query (GstPad * pad, GstQuery * query)
 
       switch (format) {
         case GST_FORMAT_TIME:
-          value = swfdec_render_get_frame_index (swfdec->decoder) *
-              swfdec->interval;
+          value = swfdec->total_frames * swfdec->interval;
           gst_query_set_position (query, GST_FORMAT_TIME, value);
           res = TRUE;
         default:

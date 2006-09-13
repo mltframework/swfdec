@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <swfdec.h>
-#include <swfdec_render.h>
 
 G_BEGIN_DECLS
 

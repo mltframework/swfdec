@@ -22,14 +22,6 @@ typedef struct _SwfdecShapePoint SwfdecShapePoint;
 #define SWFDEC_SHAPE_POINT_MOVETO 0
 #define SWFDEC_SHAPE_POINT_LINETO 1
 
-struct _SwfdecShapePoint
-{
-  gint16 control_x;
-  gint16 control_y;
-  gint16 to_x;
-  gint16 to_y;
-};
-
 struct _SwfdecShapeVec
 {
   int type;
@@ -60,6 +52,9 @@ struct _SwfdecShape
   int n_fill_bits;
   int n_line_bits;
   int rgba;
+
+  /* cache */
+  cairo_t *fill_cr;
 };
 
 struct _SwfdecShapeClass

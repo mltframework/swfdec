@@ -397,12 +397,12 @@ swfdec_bits_get_line_style (SwfdecBits * bits)
 
 
 void
-swfdec_bits_get_rect (SwfdecBits * bits, int *rect)
+swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
 {
   int nbits = swfdec_bits_getbits (bits, 5);
 
-  rect[0] = swfdec_bits_getsbits (bits, nbits);
-  rect[1] = swfdec_bits_getsbits (bits, nbits);
-  rect[2] = swfdec_bits_getsbits (bits, nbits);
-  rect[3] = swfdec_bits_getsbits (bits, nbits);
+  rect->x0 = swfdec_bits_getsbits (bits, nbits) * SWF_SCALE_FACTOR;
+  rect->x1 = swfdec_bits_getsbits (bits, nbits) * SWF_SCALE_FACTOR;
+  rect->y0 = swfdec_bits_getsbits (bits, nbits) * SWF_SCALE_FACTOR;
+  rect->y1 = swfdec_bits_getsbits (bits, nbits) * SWF_SCALE_FACTOR;
 }

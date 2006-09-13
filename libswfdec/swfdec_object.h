@@ -4,8 +4,8 @@
 #define _SWFDEC_OBJECT_H_
 
 #include <glib-object.h>
-#include <cairo.h>
 #include "swfdec_types.h"
+#include "swfdec_rect.h"
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecObject SwfdecObject;
@@ -24,11 +24,14 @@ struct _SwfdecObject
   GObject object;
 
   int id;
-
-  cairo_matrix_t transform;
-
-  int number;
+  SwfdecRect extents;
 };
+
+typedef enum {
+  SWFDEC_MOUSE_MISSED,
+  SWFDEC_MOUSE_HIT,
+  SWFDEC_MOUSE_GRABBED
+} SwfdecMouseResult;
 
 struct _SwfdecObjectClass
 {
@@ -37,10 +40,9 @@ struct _SwfdecObjectClass
   void (*render) (SwfdecDecoder * decoder, 
       cairo_t *cr, const SwfdecColorTransform *trans,
       SwfdecObject * object, SwfdecRect *inval);
-  void (*iterate) (SwfdecDecoder *decoder, SwfdecObject *object, 
-      unsigned int frame, const SwfdecMouseInfo *info, SwfdecRect *inval);
-  gboolean (*has_mouse) (SwfdecDecoder *decoder, SwfdecSpriteSegment *seg,
-      SwfdecObject * object);
+  void (*iterate) (SwfdecDecoder *decoder, SwfdecObject *object, SwfdecRect *inval);
+  SwfdecMouseResult (*handle_mouse) (SwfdecDecoder *decoder, SwfdecObject *object,
+      double x, double y, int button, SwfdecRect *inval);
 
   void (*dump) (SwfdecObject * object);
 };
@@ -50,8 +52,9 @@ void *swfdec_object_new (GType type);
 void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
-void swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, unsigned int frame, 
-    const cairo_matrix_t *matrix, const SwfdecMouseInfo *mouse, SwfdecRect *inval);
+void swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval);
+SwfdecMouseResult swfdec_object_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
+    double x, double y, int button, gboolean use_extents, SwfdecRect *inval);
 void swfdec_object_render (SwfdecDecoder *s, SwfdecObject *object, 
     cairo_t *cr, const cairo_matrix_t *matrix, 
     const SwfdecColorTransform *color, const SwfdecRect *inval);

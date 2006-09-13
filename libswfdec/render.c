@@ -43,7 +43,7 @@ tag_place_object_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  has_character = %d", has_character);
 
   oldlayer = swfdec_sprite_get_seg (s->main_sprite, depth, s->frame_number);
-  swfdec_sprite_frame_remove_seg (&s->main_sprite->frames[s->frame_number],
+  swfdec_sprite_frame_remove_seg (s, &s->main_sprite->frames[s->frame_number],
       depth);
 
   layer = swfdec_spriteseg_new ();
@@ -121,7 +121,7 @@ tag_remove_object (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (&s->b);
   depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_frame_remove_seg (&s->parse_sprite->frames[
+  swfdec_sprite_frame_remove_seg (s, &s->parse_sprite->frames[
       s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;
@@ -133,7 +133,7 @@ tag_remove_object_2 (SwfdecDecoder * s)
   int depth;
 
   depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_frame_remove_seg (&s->parse_sprite->frames[
+  swfdec_sprite_frame_remove_seg (s, &s->parse_sprite->frames[
       s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;

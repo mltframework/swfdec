@@ -2,8 +2,8 @@
 #ifndef __SWFDEC_H__
 #define __SWFDEC_H__
 
-#include <glib.h>
 #include <swfdec_types.h>
+#include <swfdec_rect.h>
 
 G_BEGIN_DECLS enum
 {
@@ -39,9 +39,10 @@ char *swfdec_decoder_get_url (SwfdecDecoder * s);
 
 void swfdec_decoder_eof (SwfdecDecoder * s);
 
-void swfdec_decoder_iterate (SwfdecDecoder *dec, int mouse_x, int mouse_y, 
-    int mouse_button, SwfdecRect *invalidated);
+void swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated);
 void swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area);
+void swfdec_decoder_handle_mouse (SwfdecDecoder *dec, 
+    double x, double y, int button, SwfdecRect *inval);
 
 G_END_DECLS
 #endif

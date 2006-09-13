@@ -32,6 +32,7 @@ struct _SwfdecText
   SwfdecObject object;
 
   GArray *glyphs;
+  cairo_matrix_t transform;
 };
 
 struct _SwfdecTextClass

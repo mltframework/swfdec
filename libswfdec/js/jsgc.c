@@ -1151,7 +1151,7 @@ js_GC(JSContext *cx, uintN gcflags)
         return;
 
 #endif /* !JS_THREADSAFE */
-fprintf(stderr, "Doing the GC thing!\n"); /* FIXME */
+//fprintf(stderr, "Doing the GC thing!\n"); /* FIXME */
     /*
      * Set rt->gcRunning here within the GC lock, and after waiting for any
      * active requests to end, so that new requests that try to JS_AddRoot,

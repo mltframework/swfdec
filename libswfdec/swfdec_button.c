@@ -40,34 +40,32 @@ swfdec_button_dispose (SwfdecButton * button)
 }
 
 static gboolean
-swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, const SwfdecMouseInfo *mouse)
+swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, double x, double y, int mouse_button)
 {
-#if 0
   guint i;
   SwfdecButtonRecord *record;
 
   for (i = 0; i < button->records->len; i++) {
-    SwfdecSpriteSegment *tmpseg;
     SwfdecObject *obj;
+    double tmpx, tmpy;
+    SwfdecRect rect;
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & SWFDEC_BUTTON_HIT) {
       obj = swfdec_object_get (s, record->segment->id);
-      if (!obj)
-        return FALSE;
-
-      tmpseg = swfdec_spriteseg_dup (record->segment);
-      //swfdec_transform_multiply (&tmpseg->transform,
-      //    &record->segment->transform, &seg->transform);
-
-      if (swfdec_decoder_has_mouse (s, tmpseg, obj)) {
-	swfdec_spriteseg_free (tmpseg);
-	return TRUE;
+      if (!obj) {
+        SWFDEC_WARNING ("couldn't get object with id %d", record->segment->id);
+	continue;
       }
-      swfdec_spriteseg_free (tmpseg);
+
+      tmpx = x;
+      tmpy = y;
+      cairo_matrix_transform_point (&record->segment->transform, &tmpx, &tmpy);
+
+      if (swfdec_object_handle_mouse (s, obj, tmpx, tmpy, mouse_button, TRUE, &rect))
+	return TRUE;
     }
   }
-#endif
   return FALSE;
 }
 
@@ -98,19 +96,19 @@ swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondi
 
 
 static void 
-swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, const SwfdecMouseInfo *info)
+swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, double y, int mouse_button)
 {
   gboolean has_mouse;
 
   if (s->mouse_grab && s->mouse_grab != (SwfdecObject *) button)
     return;
 
-  has_mouse = swfdec_button_has_mouse (s, button, info);
+  has_mouse = swfdec_button_has_mouse (s, button, x, y, mouse_button);
   switch (button->state) {
     case SWFDEC_BUTTON_UP:
       if (!has_mouse)
 	break;
-      if (info->button) {
+      if (mouse_button) {
 	button->state = SWFDEC_BUTTON_DOWN;
 	if (button->menubutton) {
 	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
@@ -137,7 +135,7 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, const Swfdec
       break;
     case SWFDEC_BUTTON_DOWN:
       /* this is quite different for push and menu buttons */
-      if (!info->button) {
+      if (!mouse_button) {
 	if (!has_mouse) {
 	  button->state = SWFDEC_BUTTON_UP;
 	  if (button->menubutton || button->has_mouse) {
@@ -171,13 +169,42 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, const Swfdec
   button->has_mouse = has_mouse;
 }
 
-void
-swfdec_button_iterate (SwfdecDecoder *s, SwfdecObject *object, 
-  unsigned int frame, const SwfdecMouseInfo *info, SwfdecRect *inval)
+static SwfdecMouseResult
+swfdec_button_handle_mouse (SwfdecDecoder *s, SwfdecObject *object, 
+  double x, double y, int mouse_button, SwfdecRect *inval)
 {
   SwfdecButton *button = SWFDEC_BUTTON (object);
+  SwfdecButtonState old_state = button->state;
 
-  swfdec_button_change_state (s, button, info);
+  swfdec_button_change_state (s, button, x, y, mouse_button);
+  if (old_state != button->state) {
+    guint i;
+    for (i = 0; i < button->records->len; i++) {
+      SwfdecButtonRecord *record;
+      SwfdecObject *obj;
+      SwfdecRect rect;
+
+      record = &g_array_index (button->records, SwfdecButtonRecord, i);
+      if ((record->states & old_state && (record->states & button->state) == 0) ||
+	  ((record->states & old_state) == 0 && record->states & button->state)) {
+	obj = swfdec_object_get (s, record->segment->id);
+	if (!obj) {
+	  SWFDEC_WARNING ("couldn't get object with id %d", record->segment->id);
+	  continue;
+	}
+
+	swfdec_rect_transform (&rect, &obj->extents, &record->segment->transform);
+	swfdec_rect_union (inval, &rect, inval);
+      }
+    }
+  }
+
+  if (button->state == SWFDEC_BUTTON_DOWN)
+    return SWFDEC_MOUSE_GRABBED;
+  else if (button->state == SWFDEC_BUTTON_OVER)
+    return SWFDEC_MOUSE_HIT;
+  else
+    return SWFDEC_MOUSE_MISSED;
 }
 
 static void
@@ -211,6 +238,9 @@ swfdec_button_render (SwfdecDecoder * s,
 static void
 swfdec_button_class_init (SwfdecButtonClass * g_class)
 {
-  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_button_render;
+  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+
+  object_class->render = swfdec_button_render;
+  object_class->handle_mouse = swfdec_button_handle_mouse;
 }
 

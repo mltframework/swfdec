@@ -28,6 +28,15 @@ swfdec_rect_init (SwfdecRect *rect, double x, double y,
   rect->y1 = y + height;
 }
 
+void
+swfdec_rect_init_whole (SwfdecRect *rect)
+{
+  g_return_if_fail (rect != NULL);
+
+  rect->x0 = rect->y0 = -G_MAXDOUBLE;
+  rect->x1 = rect->y1 = G_MAXDOUBLE;
+}
+
 gboolean
 swfdec_rect_intersect (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b)
 {
@@ -43,9 +52,19 @@ swfdec_rect_intersect (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect
   dest->x1 = MIN (a->x1, b->x1);
   dest->y1 = MIN (a->y1, b->y1);
 
-  return swfdec_rect_is_empty (dest);
+  return !swfdec_rect_is_empty (dest);
 }
 
+/**
+ * swfdec_rect_union:
+ * @dest: destination rectangle
+ * @a: first source rectangle, may be emtpy
+ * @b: second source rectangle, may be empty
+ *
+ * Stores the union of @a and @b into @dest. The union is the smallest 
+ * rectangle that includes both source rectangles. @a, @b and @dest may point 
+ * to the same rectangle.
+ **/
 void
 swfdec_rect_union (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b)
 {
@@ -53,10 +72,16 @@ swfdec_rect_union (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b
   g_return_if_fail (a != NULL);
   g_return_if_fail (b != NULL);
 
-  dest->x0 = MIN (a->x0, b->x0);
-  dest->y0 = MIN (a->y0, b->y0);
-  dest->x1 = MAX (a->x1, b->x1);
-  dest->y1 = MAX (a->y1, b->y1);
+  if (swfdec_rect_is_empty (a)) {
+    *dest = *b;
+  } else if (swfdec_rect_is_empty (b)) {
+    *dest = *a;
+  } else {
+    dest->x0 = MIN (a->x0, b->x0);
+    dest->y0 = MIN (a->y0, b->y0);
+    dest->x1 = MAX (a->x1, b->x1);
+    dest->y1 = MAX (a->y1, b->y1);
+  }
 }
 
 void
@@ -74,8 +99,17 @@ swfdec_rect_is_empty (const SwfdecRect * a)
   return (a->x1 <= a->x0) || (a->y1 <= a->y0);
 }
 
+gboolean 
+swfdec_rect_contains (const SwfdecRect *rect, double x, double y)
+{
+  return x >= rect->x0 &&
+    x <= rect->x1 &&
+    y >= rect->y0 &&
+    y <= rect->y1;
+}
+
 void
-swfdec_rect_apply_matrix (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
+swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
 {
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
@@ -86,3 +120,13 @@ swfdec_rect_apply_matrix (SwfdecRect *dest, const SwfdecRect *src, const cairo_m
   cairo_matrix_transform_point (matrix, &dest->x1, &dest->y1);
 }
 
+void
+swfdec_rect_transform_inverse (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
+{
+  cairo_matrix_t tmp = *matrix;
+  if (cairo_matrix_invert (&tmp)) {
+    /* FIXME: do we need to handle this sanely? */
+    g_assert_not_reached ();
+  }
+  swfdec_rect_transform (dest, src, &tmp);
+}

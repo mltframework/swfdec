@@ -16,6 +16,35 @@ swfdec_color_transform_init_color (SwfdecColorTransform *trans, swf_color color)
   trans->add[3] = SWF_COLOR_A (color);
 }
 
+static SwfdecMouseResult 
+swfdec_text_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
+      double x, double y, int button, SwfdecRect *inval)
+{
+  unsigned int i;
+  SwfdecMouseResult ret;
+  SwfdecObject *fontobj;
+  SwfdecText *text = SWFDEC_TEXT (object);
+
+  cairo_matrix_transform_point (&text->transform, &x, &y);
+  for (i = 0; i < text->glyphs->len; i++) {
+    SwfdecTextGlyph *glyph;
+    SwfdecShape *shape;
+
+    glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
+    fontobj = swfdec_object_get (s, glyph->font);
+    if (fontobj == NULL)
+      continue;
+
+    shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
+    ret = swfdec_object_handle_mouse (s, SWFDEC_OBJECT (shape),
+	x + glyph->x, y + glyph->y * SWF_SCALE_FACTOR, button, TRUE, inval);
+    /* it's just shapes and shapes don't invalidate anything */
+    if (ret != SWFDEC_MOUSE_MISSED)
+      return ret;
+  }
+  return SWFDEC_MOUSE_MISSED;
+}
+
 static void
 swfdec_text_render (SwfdecDecoder *s, cairo_t *cr, 
     const SwfdecColorTransform *trans, SwfdecObject *obj, SwfdecRect *inval)
@@ -24,8 +53,8 @@ swfdec_text_render (SwfdecDecoder *s, cairo_t *cr,
   SwfdecText *text = SWFDEC_TEXT (obj);
   SwfdecObject *fontobj;
   SwfdecColorTransform force_color;
-  int x = 0;
 
+  cairo_transform (cr, &text->transform);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -51,7 +80,6 @@ swfdec_text_render (SwfdecDecoder *s, cairo_t *cr,
     swfdec_color_transform_init_color (&force_color, color);
     swfdec_object_render (s, SWFDEC_OBJECT (shape), cr, &pos,
 	&force_color, inval);
-    x += glyph->x;
   }
 }
 
@@ -65,13 +93,17 @@ SWFDEC_OBJECT_BOILERPLATE (SwfdecText, swfdec_text)
 static void
 swfdec_text_class_init (SwfdecTextClass * g_class)
 {
-  SWFDEC_OBJECT_CLASS (g_class)->render = swfdec_text_render;
+  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+
+  object_class->render = swfdec_text_render;
+  object_class->handle_mouse = swfdec_text_handle_mouse;
 }
 
 static void
 swfdec_text_init (SwfdecText * text)
 {
   text->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecTextGlyph));
+  cairo_matrix_init_identity (&text->transform);
 }
 
 static void

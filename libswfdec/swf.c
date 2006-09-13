@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "swfdec_internal.h"
+#include "swfdec_js.h"
 
 int swf_parse_header1 (SwfdecDecoder * s);
 int swf_inflate_init (SwfdecDecoder * s);
@@ -38,7 +39,7 @@ swfdec_init (void)
       swfdec_debug_set_level (level);
     }
   }
-
+  swfdec_js_init (0);
 }
 
 SwfdecDecoder *
@@ -67,6 +68,8 @@ swfdec_decoder_new (void)
   swfdec_audio_add_stream(s);
 
   s->cache = swfdec_cache_new();
+
+  swfdec_js_init_decoder (s);
 
   return s;
 }
@@ -259,6 +262,8 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 int
 swfdec_decoder_free (SwfdecDecoder * s)
 {
+  swfdec_js_finish_decoder (s);
+
   g_list_foreach (s->objects, (GFunc) swfdec_object_unref, NULL);
   g_list_free (s->objects);
   /* s->main_sprite is already freed now */
@@ -508,7 +513,7 @@ swf_inflate_init (SwfdecDecoder * s)
 int
 swf_parse_header2 (SwfdecDecoder * s)
 {
-  int rect[4];
+  SwfdecRect rect;
   double width, height;
   int n;
   SwfdecBuffer *buffer;
@@ -523,9 +528,9 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->b.idx = 0;
   s->b.end = buffer->data + buffer->length;
 
-  swfdec_bits_get_rect (&s->b, rect);
-  width = rect[1] * SWF_SCALE_FACTOR;
-  height = rect[3] * SWF_SCALE_FACTOR;
+  swfdec_bits_get_rect (&s->b, &rect);
+  width = rect.x1;
+  height = rect.y1;
   s->parse_width = width;
   s->parse_height = height;
   if (s->width == 0) {
@@ -592,9 +597,9 @@ swfdec_decoder_has_mouse (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
     return s->mouse_grab == obj;
   }
   klass = SWFDEC_OBJECT_GET_CLASS (obj);
-  if (klass->has_mouse == NULL)
+  //if (klass->has_mouse == NULL)
     return FALSE;
-  return klass->has_mouse (s, seg, obj);
+  //return klass->has_mouse (s, seg, obj);
 }
 
 /**
@@ -620,9 +625,6 @@ swfdec_decoder_grab_mouse (SwfdecDecoder * s, SwfdecObject *obj)
 /**
  * swfdec_decoder_iterate:
  * @dec: the #SwfdecDecoder to iterate
- * @mouse_x: x position of mouse. Use -1 if mouse isn't over the movie
- * @mouse_y: y position of mouse. Use -1 if mouse isn't over the movie
- * @mouse_button: 1 if the button is down, 0 otherwise
  * @invalidated: if not NULL, will be set to the area that changed
  *
  * Advances #dec to the next frame. You should make sure to call this function
@@ -632,35 +634,23 @@ swfdec_decoder_grab_mouse (SwfdecDecoder * s, SwfdecObject *obj)
  * updated image.
  **/
 void
-swfdec_decoder_iterate (SwfdecDecoder *dec, int mouse_x, int mouse_y, 
-    int mouse_button, SwfdecRect *invalidated)
+swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
 {
   GList *g;
   SwfdecRect invalidate_dontcare;
-  int current_frame;
 
   g_return_if_fail (dec != NULL);
-  g_return_if_fail (mouse_button == 0 || mouse_button == 1);
 
-  current_frame = dec->next_frame;
-  SWFDEC_DEBUG ("iterate, frame_index = %d", current_frame);
+  dec->last_frame = dec->current_frame;
+  dec->current_frame = dec->next_frame;
+  SWFDEC_DEBUG ("iterate, frame_index = %d", dec->current_frame);
   dec->next_frame = -1;
   if (invalidated == NULL)
     invalidated = &invalidate_dontcare;
 
-  /* FIXME: do smarter grab management instead of just releasing the grab
-   * if the mouse button changed */
-  if (mouse_button != dec->mouse.button) {
-    dec->mouse_grab = NULL;
-    SWFDEC_DEBUG ("mouse button %d old_mouse_button %d",
-	mouse_button, dec->mouse.button);
-  }
-  dec->mouse.x = mouse_x;
-  dec->mouse.y = mouse_y;
-  dec->mouse.button = mouse_button;
   g_assert (dec->execute_list == NULL);
-  swfdec_object_iterate (dec, SWFDEC_OBJECT (dec->main_sprite), current_frame, 
-      &dec->main_sprite_seg->transform, &dec->mouse, invalidated);
+  swfdec_object_iterate (dec, SWFDEC_OBJECT (dec->main_sprite), invalidated);
+  swfdec_rect_transform (invalidated, invalidated, &dec->main_sprite_seg->transform);
 
   for (g=dec->execute_list; g; g = g->next) {
     SwfdecBuffer *buffer = g->data;
@@ -671,7 +661,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, int mouse_x, int mouse_y,
 
   if (dec->next_frame == -1) {
     if (!dec->main_sprite_seg->stopped) {
-      dec->next_frame = current_frame + 1;
+      dec->next_frame = dec->current_frame + 1;
       if (dec->next_frame >= dec->n_frames) {
         if (0 /*s->repeat*/) {
           dec->next_frame = 0;
@@ -680,7 +670,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, int mouse_x, int mouse_y,
         }
       }
     } else {
-      dec->next_frame = current_frame;
+      dec->next_frame = dec->current_frame;
     }
   }
 }
@@ -701,10 +691,43 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
   g_return_if_fail (area != NULL);
   if (area == NULL)
     area = &dec->irect;
-  if (swfdec_rect_is_empty (area))
-    return;
-
-  swfdec_object_render (dec, SWFDEC_OBJECT (dec->main_sprite), cr, 
-      &dec->main_sprite_seg->transform, &dec->main_sprite_seg->color_transform, area);
+  SWFDEC_LOG ("%p: starting rendering of frame %d, area %g %g  %g %g", dec, dec->current_frame,
+      area->x0, area->y0, area->x1, area->y1);
+  if (!swfdec_rect_is_empty (area))
+    swfdec_object_render (dec, SWFDEC_OBJECT (dec->main_sprite), cr, 
+	&dec->main_sprite_seg->transform, &dec->main_sprite_seg->color_transform, area);
+  SWFDEC_LOG ("%p: finished rendering", dec);
 }
 
+/**
+ * swfdec_decoder_handle_mouse:
+ * @dec: a #SwfdecDecoder
+ * @x: x coordinate of mouse
+ * @y: y coordinate of mouse
+ * @button: 1 for pressed, 0 for not pressed
+ * @inval: area that was invalidated during the mouse update or NULL
+ *
+ * Updates the current mouse status. If the mouse has left the area of @dec,
+ * you should pass values outside the movie size for @x and @y.
+ * The area passed in as @inval takes the area that was updated during the mouse 
+ * handling.
+ **/
+void
+swfdec_decoder_handle_mouse (SwfdecDecoder *dec, 
+    double x, double y, int button, SwfdecRect *inval)
+{
+  SwfdecRect invalidate_dontcare;
+
+  g_return_if_fail (dec != NULL);
+  g_return_if_fail (button == 0 || button == 1);
+
+  if (inval == NULL)
+    inval = &invalidate_dontcare;
+  dec->mouse.x = x;
+  dec->mouse.y = y;
+  dec->mouse.button = button;
+
+  cairo_matrix_transform_point (&dec->main_sprite_seg->transform, &x, &y);
+  swfdec_object_handle_mouse (dec, SWFDEC_OBJECT (dec->main_sprite), x, y, button, TRUE, inval);
+  swfdec_rect_transform (inval, inval, &dec->main_sprite_seg->transform);
+}

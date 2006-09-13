@@ -146,9 +146,6 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
 
-  if (obj->id == 7)
-    return;
-
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
   for (i = 0; i < shape->fills->len; i++) {
@@ -278,16 +275,12 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
 
   for (i = 0; i < shape->lines->len; i++) {
     swf_color color;
-    cairo_matrix_t matrix;
 
     shapevec = g_ptr_array_index (shape->lines, i);
 
     color = swfdec_color_apply_transform (shapevec->color, trans);
-    cairo_set_source_rgba (cr, SWF_COLOR_R(color)/255.0,
-        SWF_COLOR_G(color)/255.0, SWF_COLOR_B(color)/255.0,
-        SWF_COLOR_A(color)/255.0);
+    swfdec_color_set_source (cr, color);
 
-    cairo_get_matrix (cr, &matrix);
     cairo_set_line_width (cr, shapevec->width);
     if (shapevec->path.num_data) {
       cairo_new_path (cr);
@@ -295,6 +288,41 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
       cairo_stroke (cr);
     }
   }
+}
+
+SwfdecMouseResult 
+swfdec_shape_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
+      double x, double y, int button, SwfdecRect *inval)
+{
+  SwfdecShapeVec *shapevec;
+  SwfdecShapeVec *shapevec2;
+  SwfdecShape *shape = SWFDEC_SHAPE (object);
+  static cairo_surface_t *surface = NULL;
+
+  if (shape->fill_cr == NULL) {
+    if (surface == NULL)
+      surface = cairo_image_surface_create (CAIRO_FORMAT_A8, 1, 1);
+    guint i;
+    shape->fill_cr = cairo_create (surface);
+    cairo_set_fill_rule (shape->fill_cr, CAIRO_FILL_RULE_EVEN_ODD);
+    for (i = 0; i < shape->fills->len; i++) {
+      shapevec = g_ptr_array_index (shape->fills, i);
+      shapevec2 = g_ptr_array_index (shape->fills2, i);
+      if (shapevec->path.num_data || shapevec2->path.num_data) {
+	cairo_new_path (shape->fill_cr);
+	if (shapevec->path.num_data)
+	  cairo_append_path (shape->fill_cr, &shapevec->path);
+	if (shapevec2->path.num_data)
+	  cairo_append_path (shape->fill_cr, &shapevec2->path);
+	cairo_fill (shape->fill_cr);
+      }
+    }
+  }
+  /* FIXME: handle strokes */
+  if (cairo_in_fill (shape->fill_cr, x, y))
+    return SWFDEC_MOUSE_HIT;
+  else 
+    return SWFDEC_MOUSE_MISSED;
 }
 
 static void swfdec_shapevec_free (SwfdecShapeVec * shapevec);
@@ -313,6 +341,7 @@ swfdec_shape_class_init (SwfdecShapeClass * g_class)
   SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
   
   object_class->render = swfdec_shape_render;
+  object_class->handle_mouse = swfdec_shape_handle_mouse;
 }
 
 static void
@@ -328,6 +357,9 @@ swfdec_shape_dispose (SwfdecShape * shape)
 {
   SwfdecShapeVec *shapevec;
   unsigned int i;
+
+  if (shape->fill_cr)
+    cairo_destroy (shape->fill_cr);
 
   for (i = 0; i < shape->fills->len; i++) {
     shapevec = g_ptr_array_index (shape->fills, i);
@@ -499,7 +531,6 @@ tag_define_shape (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
-  int rect[4];
   int id;
 
   id = swfdec_bits_get_u16 (bits);
@@ -510,7 +541,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, rect);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -528,7 +559,6 @@ tag_define_shape_3 (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
-  int rect[4];
   int id;
 
   id = swfdec_bits_get_u16 (bits);
@@ -538,7 +568,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, rect);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -750,8 +780,8 @@ tag_define_morph_shape (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
-  int start_rect[4];
-  int end_rect[4];
+  SwfdecRect start_rect;
+  SwfdecRect end_rect;
   int id;
   int offset;
 
@@ -763,9 +793,9 @@ tag_define_morph_shape (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, start_rect);
+  swfdec_bits_get_rect (bits, &start_rect);
   swfdec_bits_syncbits (bits);
-  swfdec_bits_get_rect (bits, end_rect);
+  swfdec_bits_get_rect (bits, &end_rect);
 
   swfdec_bits_syncbits (bits);
   offset = swfdec_bits_get_u32 (bits);

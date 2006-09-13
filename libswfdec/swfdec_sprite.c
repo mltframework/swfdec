@@ -132,12 +132,61 @@ swfdec_sprite_render_iterate (SwfdecDecoder * s, SwfdecSpriteSegment *seg,
 #endif
 
 static void 
-swfdec_sprite_iterate (SwfdecDecoder *decoder, SwfdecObject *object, 
-      unsigned int frame, const SwfdecMouseInfo *info, SwfdecRect *inval)
+swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval)
 {
   SwfdecSprite *sprite = SWFDEC_SPRITE (object);
+  SwfdecSpriteFrame *frame;
+  GList *g;
   
-  sprite->current_frame = frame;
+  /* FIXME: don't include clipped objects */
+  /* FIXME: this code breaks if objects suddenly show up - how do we handle this case? */
+
+  swfdec_rect_init_empty (inval);
+  if (s->last_frame >= 0) {
+    /* invalidate areas for removed elements */
+    frame = &sprite->frames[s->last_frame];
+    for (g = frame->segments; g; g = g_list_previous (g)) {
+      SwfdecSpriteSegment *child_seg = g->data;
+      SwfdecObject *child_object;
+      SwfdecRect child_inval;
+      
+      if (child_seg->first_index > s->current_frame ||
+	  s->current_frame >= child_seg->last_index)
+	continue;
+      
+      child_object = swfdec_object_get (s, child_seg->id);
+      if (child_object == NULL) {
+	SWFDEC_WARNING ("could not find object (id = %d)", child_seg->id);
+	continue;
+      }
+      swfdec_rect_transform (&child_inval, &child_object->extents, &child_seg->transform);
+      swfdec_rect_union (inval, inval, &child_inval);
+    }
+  }
+
+  frame = &sprite->frames[s->current_frame];
+  for (g = frame->segments; g; g = g_list_previous (g)) {
+    SwfdecObject *child_object;
+    SwfdecSpriteSegment *child_seg;
+    SwfdecRect child_inval;
+
+    child_seg = (SwfdecSpriteSegment *) g->data;
+    child_object = swfdec_object_get (s, child_seg->id);
+    swfdec_rect_init_empty (&child_inval);
+
+    if (child_object == NULL) {
+      SWFDEC_WARNING ("could not find object (id = %d)", child_seg->id);
+      continue;
+    }
+    swfdec_object_iterate (s, child_object, &child_inval);
+
+    if (child_seg->first_index > s->last_frame ||
+	s->last_frame >= child_seg->last_index) {
+      /* wasn't visible last frame */
+      child_inval = object->extents;
+    }
+    swfdec_rect_transform (&child_inval, &child_inval, &child_seg->transform);
+  }
 }
 
 static void
@@ -150,9 +199,9 @@ swfdec_sprite_render (SwfdecDecoder * s, cairo_t *cr,
   GList *g;
   int clip_depth = 0;
 
-  frame = &sprite->frames[sprite->current_frame];
+  frame = &sprite->frames[s->current_frame];
   
-  /* FIXME: we don't paint because there's no clipping yet */
+  /* FIXME: we don't cairo_paint because there's no clipping yet */
   swfdec_color_set_source (cr, frame->bg_color);
   cairo_rectangle (cr, inval->x0, inval->y0, inval->x1 - inval->x0, inval->y1 - inval->y0);
   cairo_fill (cr);
@@ -218,8 +267,8 @@ swfdec_sprite_frame_add_seg (SwfdecSpriteFrame * frame, SwfdecSpriteSegment * se
       frame->segments = g_list_insert_before (frame->segments, g, segnew);
       return;
     } else if (seg->depth == segnew->depth) {
-      SWFDEC_WARNING ("replacing frame with id %d, is that legal?", seg->depth);
-      g->data = segnew;
+      /* all code should call swfdec_sprite_frame_remove_seg before */
+      g_assert_not_reached ();
       return;
     }
   }
@@ -227,7 +276,7 @@ swfdec_sprite_frame_add_seg (SwfdecSpriteFrame * frame, SwfdecSpriteSegment * se
 }
 
 void
-swfdec_sprite_frame_remove_seg (SwfdecSpriteFrame * frame, int depth)
+swfdec_sprite_frame_remove_seg (SwfdecDecoder *s, SwfdecSpriteFrame * frame, int depth)
 {
   SwfdecSpriteSegment *seg;
   GList *g;
@@ -235,6 +284,7 @@ swfdec_sprite_frame_remove_seg (SwfdecSpriteFrame * frame, int depth)
   for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
     seg = (SwfdecSpriteSegment *) g->data;
     if (seg->depth == depth) {
+      seg->last_index = s->parse_sprite->parse_frame;
       frame->segments = g_list_delete_link (frame->segments, g);
       return;
     }
@@ -249,6 +299,7 @@ swfdec_spriteseg_new (void)
   seg = g_new0 (SwfdecSpriteSegment, 1);
   cairo_matrix_init_identity (&seg->transform);
   swfdec_color_transform_init_identity (&seg->color_transform);
+  seg->last_index = G_MAXINT;
 
   return seg;
 }
@@ -327,12 +378,13 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 
   oldlayer = swfdec_sprite_get_seg (s->parse_sprite, depth,
       s->parse_sprite->parse_frame);
-  swfdec_sprite_frame_remove_seg (&s->parse_sprite->frames[
+  swfdec_sprite_frame_remove_seg (s, &s->parse_sprite->frames[
       s->parse_sprite->parse_frame], depth);
 
   layer = swfdec_spriteseg_new ();
 
   layer->depth = depth;
+  layer->first_index = s->parse_sprite->parse_frame;
 
   swfdec_sprite_frame_add_seg (
       &s->parse_sprite->frames[s->parse_sprite->parse_frame], layer);
@@ -340,9 +392,8 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   if (has_character) {
     layer->id = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG ("  id = %d", layer->id);
-  } else {
-    if (oldlayer)
-      layer->id = oldlayer->id;
+  } else if (oldlayer) {
+    layer->id = oldlayer->id;
   }
 
   SWFDEC_INFO ("%splacing object layer=%d id=%d",
@@ -424,7 +475,7 @@ swfdec_spriteseg_remove_object (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (&s->b);
   depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_frame_remove_seg (
+  swfdec_sprite_frame_remove_seg (s, 
       &s->parse_sprite->frames[s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;
@@ -436,7 +487,7 @@ swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
   int depth;
 
   depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_frame_remove_seg (
+  swfdec_sprite_frame_remove_seg (s, 
       &s->parse_sprite->frames[s->parse_sprite->parse_frame], depth);
 
   return SWF_OK;

@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <zlib.h>
+#include <js/jspubtd.h>
 #include "swfdec_bits.h"
 
 #include "swfdec_types.h"
@@ -112,6 +113,7 @@ struct _SwfdecDecoder
   int kept_layers;
 
   SwfdecActionContext *context;
+  JSContext *jscx;
 
   SwfdecMouseInfo mouse;
   SwfdecObject *mouse_grab;
@@ -122,6 +124,8 @@ struct _SwfdecDecoder
   int audio_stream_index;
 
   GList *execute_list;
+  int last_frame;
+  int current_frame;
   int next_frame;
 
   SwfdecCache *cache;

@@ -21,7 +21,8 @@ struct _SwfdecSpriteSegment
   char *name;
   int depth;
   int id;
-  int frame_index;
+  int first_index; /* index of first frame that includes us */
+  int last_index; /* index of first frame that doesn't include us */
   int clip_depth;
   gboolean stopped;
 
@@ -64,7 +65,6 @@ struct _SwfdecSprite
   int parse_frame;
 
   SwfdecSpriteFrame *frames;
-  unsigned int current_frame;
 };
 
 struct _SwfdecSpriteClass
@@ -81,7 +81,7 @@ SwfdecSpriteSegment *swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth,
     int frame);
 void swfdec_sprite_frame_add_seg (SwfdecSpriteFrame * frame,
     SwfdecSpriteSegment * segnew);
-void swfdec_sprite_frame_remove_seg (SwfdecSpriteFrame * frame,
+void swfdec_sprite_frame_remove_seg (SwfdecDecoder *s, SwfdecSpriteFrame * frame,
     int layer);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, SwfdecBuffer * chunk,
     int frame);

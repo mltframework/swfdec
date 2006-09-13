@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "swfdec_internal.h"
+#include "swfdec_compiler.h"
 
 
 int
@@ -63,7 +64,6 @@ define_text (SwfdecDecoder * s, int rgba)
 {
   SwfdecBits *bits = &s->b;
   int id;
-  int rect[4];
   int n_glyph_bits;
   int n_advance_bits;
   SwfdecText *text = NULL;
@@ -78,8 +78,8 @@ define_text (SwfdecDecoder * s, int rgba)
 
   glyph.color = 0xffffffff;
 
-  swfdec_bits_get_rect (bits, rect);
-  swfdec_bits_get_matrix (bits, &SWFDEC_OBJECT (text)->transform);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (text)->extents);
+  swfdec_bits_get_matrix (bits, &text->transform);
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
   n_advance_bits = swfdec_bits_get_u8 (bits);
@@ -272,6 +272,11 @@ tag_func_set_background_color (SwfdecDecoder * s)
 int
 tag_func_do_action (SwfdecDecoder * s)
 {
+  {
+    SwfdecBits tmp = s->b;
+    swfdec_compile (s);
+    s->b = tmp;
+  }
   swfdec_sprite_add_action (s->parse_sprite, s->b.buffer,
       s->parse_sprite->parse_frame);
 
@@ -396,6 +401,11 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
     SWFDEC_LOG ("  offset = %d", offset);
 
+    {
+      SwfdecBits tmp = s->b;
+      swfdec_compile (s);
+      s->b = tmp;
+    }
     action.buffer = swfdec_buffer_new_subbuffer (bits->buffer,
         bits->ptr - bits->buffer->data, len);
 
@@ -466,7 +476,12 @@ tag_func_define_button (SwfdecDecoder * s)
     SwfdecButtonAction action = { 0 };
     int len;
 
-    action.condition = 0x08; /* over to down */
+    {
+      SwfdecBits tmp = s->b;
+      swfdec_compile (s);
+      s->b = tmp;
+    }
+    action.condition = SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN;
 
     len = bits->end - bits->ptr;
 
@@ -642,7 +657,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   SwfdecShapeVec *shapevec;
   SwfdecShape *shape;
   SwfdecFont *font;
-  int rect[4];
+  SwfdecRect rect;
 
   int has_layout;
   int shift_jis;
@@ -728,9 +743,8 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     font_leading = swfdec_bits_get_s16 (bits);
     //font_advance_table = swfdec_bits_get_s16(bits);
     bits->ptr += 2 * n_glyphs;
-    //font_bounds = swfdec_bits_get_s16(bits);
     for (i = 0; i < n_glyphs; i++) {
-      swfdec_bits_get_rect (bits, rect);
+      swfdec_bits_get_rect (bits, &rect);
     }
     kerning_count = swfdec_bits_get_u16 (bits);
     if (0) {

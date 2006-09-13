@@ -41,7 +41,7 @@ swfdec_object_get_type (void)
 static void
 swfdec_object_base_init (gpointer g_class)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
+  //GObjectClass *object_class = G_OBJECT_CLASS (g_class);
 
 }
 
@@ -58,8 +58,11 @@ swfdec_object_class_init (gpointer g_class, gpointer class_data)
 static void
 swfdec_object_init (GTypeInstance * instance, gpointer g_class)
 {
+  SwfdecObject *object = SWFDEC_OBJECT (instance);
+
   SWFDEC_LOG ("ref: created %s %p", G_OBJECT_CLASS_NAME (g_class), instance);
 
+  swfdec_rect_init_whole (&object->extents);
 }
 
 static void
@@ -102,8 +105,7 @@ swfdec_object_get (SwfdecDecoder * s, int id)
 }
 
 void 
-swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, unsigned int frame, 
-    const cairo_matrix_t *matrix, const SwfdecMouseInfo *mouse, SwfdecRect *inval)
+swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval)
 {
   SwfdecObjectClass *klass;
 
@@ -115,18 +117,7 @@ swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, unsigned int fram
   if (klass->iterate == NULL)
     return;
 
-  if (matrix) {
-    SwfdecRect rect;
-    SwfdecMouseInfo tmp;
-    tmp = *mouse;
-    cairo_matrix_transform_point (matrix, &tmp.x, &tmp.y);
-    klass->iterate (s, object, frame, &tmp, &rect);
-    swfdec_rect_apply_matrix (inval, &rect, matrix);
-    g_print ("%s %p: invalid area now %g %g  %g %g\n", G_OBJECT_TYPE_NAME (object),
-	object, inval->x0, inval->y0, inval->x1, inval->y1);
-  } else {
-    klass->iterate (s, object, frame, mouse, inval);
-  }
+  klass->iterate (s, object, inval);
 }
 
 void
@@ -152,14 +143,55 @@ swfdec_object_render (SwfdecDecoder *s, SwfdecObject *object, cairo_t *cr,
   cairo_save (cr);
   if (matrix) {
     cairo_transform (cr, matrix);
-    swfdec_rect_apply_matrix (&rect, inval, matrix);
+    swfdec_rect_transform_inverse (&rect, inval, matrix);
   } else {
     rect = *inval;
   }
-  //if (swfdec_rect_intersect (NULL, &object->extents, &rect)) {
+
+  if (swfdec_rect_intersect (NULL, &object->extents, &rect)) {
     SWFDEC_LOG ("really rendering %s %p (id %d)", G_OBJECT_TYPE_NAME (object), object, object->id);
     klass->render (s, cr, color, object, &rect);
-  //}
+  } else {
+    SWFDEC_LOG ("not rendering %s %p (id %d), not in invalid area %g %g  %g %g",
+	G_OBJECT_TYPE_NAME (object), object, object->id,
+	rect.x0, rect.y0, rect.x1, rect.y1);
+  }
   cairo_restore (cr);
 }
 
+/**
+ * swfdec_object_handle_mouse:
+ * @decoder: the decoder
+ * @object: the object that should handle the mouse
+ * @x: x position of mouse
+ * @y: y position of mouse
+ * @button: 1 if the mouse button was pressed, 0 otherwise
+ * @use_extents: if TRUE the mouse will automatically miss when the coordinates 
+ *               are outside the extents of @object
+ * @inval: return location for areas that should be invalidated
+ *
+ * Handles a mouse button update. This function can also be used for collision 
+ * detection.
+ *
+ * Returns: a #SwfdecMouseResult
+ **/
+SwfdecMouseResult 
+swfdec_object_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
+    double x, double y, int button, gboolean use_extents, SwfdecRect *inval)
+{
+  SwfdecObjectClass *klass;
+
+  g_return_val_if_fail (decoder != NULL, SWFDEC_MOUSE_MISSED);
+  g_return_val_if_fail (SWFDEC_IS_OBJECT (object), SWFDEC_MOUSE_MISSED);
+  g_return_val_if_fail (button == 0 || button == 1, SWFDEC_MOUSE_MISSED);
+  g_return_val_if_fail (inval != NULL, SWFDEC_MOUSE_MISSED);
+
+  swfdec_rect_init_empty (inval);
+  klass = SWFDEC_OBJECT_GET_CLASS (object);
+  if (klass->handle_mouse == NULL)
+    return SWFDEC_MOUSE_MISSED;
+  if (!use_extents && !swfdec_rect_contains (&object->extents, x, y))
+    return SWFDEC_MOUSE_MISSED;
+
+  return klass->handle_mouse (decoder, object, x, y, button, inval);
+}

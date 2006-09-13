@@ -10,4 +10,5 @@ Makefile.in
 *.la
 *.lo
 
+jsautocfg.h
 jscpucfg

@@ -4,7 +4,7 @@ DIST_SUBDIRS = jpeg js mpeg
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
-js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX
+js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
 	swfdec_rect.c swfdec_image.c \

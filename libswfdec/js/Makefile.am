@@ -88,7 +88,7 @@ jscpucfg_SOURCES = \
 	jscpucfg.h
 
 libjs_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GLIB_CFLAGS) -I. \
-	-DXP_UNIX -fno-strict-aliasing
+	-DXP_UNIX -DDEBUG -fno-strict-aliasing
 libjs_la_LDFLAGS = -lm
 
 CLEANFILES = jsautocfg.h

@@ -74,10 +74,18 @@ swfdec_object_dispose (GObject * object)
 }
 #endif
 
-void *
-swfdec_object_new (GType type)
+gpointer
+swfdec_object_new (SwfdecDecoder *dec, GType type)
 {
-  return g_object_new (type, NULL);
+  SwfdecObject *object;
+
+  g_return_val_if_fail (dec != NULL, NULL);
+  g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_OBJECT), NULL);
+  
+  object = g_object_new (type, NULL);
+  object->decoder = dec;
+
+  return object;
 }
 
 void

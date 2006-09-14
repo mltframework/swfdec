@@ -100,9 +100,6 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, do
 {
   gboolean has_mouse;
 
-  if (s->mouse_grab && s->mouse_grab != (SwfdecObject *) button)
-    return;
-
   has_mouse = swfdec_button_has_mouse (s, button, x, y, mouse_button);
   switch (button->state) {
     case SWFDEC_BUTTON_UP:

@@ -21,10 +21,11 @@ typedef struct _SwfdecObjectClass SwfdecObjectClass;
 
 struct _SwfdecObject
 {
-  GObject object;
+  GObject		object;
 
-  int id;
-  SwfdecRect extents;
+  SwfdecDecoder *	decoder;	/* the decoder this object belongs to */
+  int			id;		/* id of this object in the global object list or -1 for none */
+  SwfdecRect		extents;	/* for visible objects only: bounding box that enclose this object */
 };
 
 typedef enum {
@@ -48,7 +49,7 @@ struct _SwfdecObjectClass
 };
 
 GType swfdec_object_get_type (void);
-void *swfdec_object_new (GType type);
+gpointer swfdec_object_new (SwfdecDecoder *dec, GType type);
 void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);

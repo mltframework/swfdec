@@ -1,9 +1,12 @@
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <string.h>
 
-#include "swfdec_internal.h"
+#include <js/jsapi.h>
 
-#include <swfdec_sprite.h>
+#include "swfdec_sprite.h"
+#include "swfdec_internal.h"
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecSprite, swfdec_sprite)
 
@@ -30,7 +33,7 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
         swfdec_buffer_unref (sprite->frames[i].sound_chunk);
       }
       if (sprite->frames[i].action) {
-        swfdec_buffer_unref (sprite->frames[i].action);
+	JS_DestroyScript (SWFDEC_OBJECT (sprite)->decoder->jscx, sprite->frames[i].action);
       }
       if (sprite->frames[i].sound_play) {
         g_free (sprite->frames[i].sound_play);
@@ -59,13 +62,15 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite,
 }
 
 void
-swfdec_sprite_add_action (SwfdecSprite * sprite,
-    SwfdecBuffer * actions, int frame)
+swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script)
 {
   g_assert (sprite->frames != NULL);
 
-  sprite->frames[frame].action = actions;
-  swfdec_buffer_ref (actions);
+  if (sprite->frames[frame].action) {
+    SWFDEC_ERROR ("frame %d already contains a script!", frame);
+  } else {
+    sprite->frames[frame].action = script;
+  }
 }
 
 static void 

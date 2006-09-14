@@ -72,7 +72,7 @@ define_text (SwfdecDecoder * s, int rgba)
   if (swfdec_bits_needbits(bits,2)) return SWF_ERROR;
 
   id = swfdec_bits_get_u16 (bits);
-  text = swfdec_object_new (SWFDEC_TYPE_TEXT);
+  text = swfdec_object_new (s, SWFDEC_TYPE_TEXT);
   SWFDEC_OBJECT (text)->id = id;
   s->objects = g_list_append (s->objects, text);
 
@@ -177,7 +177,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   save_bits = s->b;
 
   id = swfdec_bits_get_u16 (bits);
-  sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
+  sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   SWFDEC_OBJECT (sprite)->id = id;
   s->objects = g_list_append (s->objects, sprite);
 
@@ -272,15 +272,11 @@ tag_func_set_background_color (SwfdecDecoder * s)
 int
 tag_func_do_action (SwfdecDecoder * s)
 {
-  {
-    SwfdecBits tmp = s->b;
-    swfdec_compile (s);
-    s->b = tmp;
-  }
-  swfdec_sprite_add_action (s->parse_sprite, s->b.buffer,
-      s->parse_sprite->parse_frame);
-
-  s->b.ptr += s->b.buffer->length;
+  JSScript *script;
+  
+  script = swfdec_compile (s);
+  if (script)
+    swfdec_sprite_add_script (s->parse_sprite, s->parse_sprite->parse_frame, script);
 
   return SWF_OK;
 }
@@ -336,7 +332,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
-  button = swfdec_object_new (SWFDEC_TYPE_BUTTON);
+  button = swfdec_object_new (s, SWFDEC_TYPE_BUTTON);
   SWFDEC_OBJECT (button)->id = id;
   s->objects = g_list_append (s->objects, button);
 
@@ -434,7 +430,7 @@ tag_func_define_button (SwfdecDecoder * s)
   endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
-  button = swfdec_object_new (SWFDEC_TYPE_BUTTON);
+  button = swfdec_object_new (s, SWFDEC_TYPE_BUTTON);
   SWFDEC_OBJECT (button)->id = id;
   s->objects = g_list_append (s->objects, button);
 
@@ -601,7 +597,7 @@ tag_func_define_font (SwfdecDecoder * s)
   SwfdecFont *font;
 
   id = swfdec_bits_get_u16 (&s->b);
-  font = swfdec_object_new (SWFDEC_TYPE_FONT);
+  font = swfdec_object_new (s, SWFDEC_TYPE_FONT);
   SWFDEC_OBJECT (font)->id = id;
   s->objects = g_list_append (s->objects, font);
 
@@ -615,7 +611,7 @@ tag_func_define_font (SwfdecDecoder * s)
   font->glyphs = g_ptr_array_sized_new (n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
-    shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
+    shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
     g_ptr_array_add (font->glyphs, shape);
 
     shape->fills = g_ptr_array_sized_new (1);
@@ -683,7 +679,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   int i;
 
   id = swfdec_bits_get_u16 (bits);
-  font = swfdec_object_new (SWFDEC_TYPE_FONT);
+  font = swfdec_object_new (s, SWFDEC_TYPE_FONT);
   SWFDEC_OBJECT (font)->id = id;
   s->objects = g_list_append (s->objects, font);
 
@@ -715,7 +711,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   font->glyphs = g_ptr_array_sized_new (n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
-    shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
+    shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
     g_ptr_array_add (font->glyphs, shape);
 
     shape->fills = g_ptr_array_sized_new (1);

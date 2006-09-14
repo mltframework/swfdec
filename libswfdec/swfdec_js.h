@@ -10,6 +10,10 @@ G_BEGIN_DECLS
 void		swfdec_js_init			(guint		runtime_size);
 void		swfdec_js_init_decoder		(SwfdecDecoder *s);
 void		swfdec_js_finish_decoder	(SwfdecDecoder *s);
+gboolean	swfdec_js_execute_script	(SwfdecDecoder *s,
+						 JSScript *	script);
+gboolean	swfdec_js_run			(SwfdecDecoder *dec,
+						 const char *	s);
 
 void		swfdec_js_add_movieclip		(SwfdecDecoder *s);
 

@@ -2,8 +2,9 @@
 #ifndef _SWFDEC_SPRITE_H_
 #define _SWFDEC_SPRITE_H_
 
-#include "swfdec_types.h"
+#include <swfdec_types.h>
 #include <swfdec_object.h>
+#include <color.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecSprite SwfdecSprite;
@@ -50,7 +51,7 @@ struct _SwfdecExport {
 struct _SwfdecSpriteFrame
 {
   SwfdecBuffer *sound_chunk;
-  SwfdecBuffer *action;
+  JSScript *action;
   SwfdecSoundChunk *sound_play;
 
   swf_color bg_color;
@@ -86,8 +87,7 @@ void swfdec_sprite_frame_remove_seg (SwfdecDecoder *s, SwfdecSpriteFrame * frame
     int layer);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, SwfdecBuffer * chunk,
     int frame);
-void swfdec_sprite_add_action (SwfdecSprite * sprite, SwfdecBuffer * action,
-    int frame);
+void swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
 
 SwfdecSpriteSegment *swfdec_spriteseg_new (void);

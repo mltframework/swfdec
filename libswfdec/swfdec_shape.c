@@ -290,7 +290,7 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
   }
 }
 
-SwfdecMouseResult 
+static SwfdecMouseResult 
 swfdec_shape_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
       double x, double y, int button, SwfdecRect *inval)
 {
@@ -300,8 +300,9 @@ swfdec_shape_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
   static cairo_surface_t *surface = NULL;
 
   if (shape->fill_cr == NULL) {
+    /* FIXME: do less memeory intensive fill checking plz */
     if (surface == NULL)
-      surface = cairo_image_surface_create (CAIRO_FORMAT_A8, 1, 1);
+      surface = cairo_image_surface_create (CAIRO_FORMAT_A8, 1000, 1000);
     guint i;
     shape->fill_cr = cairo_create (surface);
     cairo_set_fill_rule (shape->fill_cr, CAIRO_FILL_RULE_EVEN_ODD);
@@ -319,10 +320,12 @@ swfdec_shape_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
     }
   }
   /* FIXME: handle strokes */
-  if (cairo_in_fill (shape->fill_cr, x, y))
+  if (cairo_in_fill (shape->fill_cr, x, y)) {
+    g_print ("HIT %d\n", object->id);
     return SWFDEC_MOUSE_HIT;
-  else 
+  } else {
     return SWFDEC_MOUSE_MISSED;
+  }
 }
 
 static void swfdec_shapevec_free (SwfdecShapeVec * shapevec);
@@ -535,7 +538,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (bits);
 
-  shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
+  shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
   SWFDEC_OBJECT (shape)->id = id;
   s->objects = g_list_append (s->objects, shape);
 
@@ -562,7 +565,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
   int id;
 
   id = swfdec_bits_get_u16 (bits);
-  shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
+  shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
   SWFDEC_OBJECT (shape)->id = id;
   s->objects = g_list_append (s->objects, shape);
 
@@ -787,7 +790,7 @@ tag_define_morph_shape (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (bits);
 
-  shape = swfdec_object_new (SWFDEC_TYPE_SHAPE);
+  shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
   SWFDEC_OBJECT (shape)->id = id;
   //s->objects = g_list_append (s->objects, shape);
 

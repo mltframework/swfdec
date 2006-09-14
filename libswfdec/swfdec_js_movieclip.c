@@ -50,6 +50,61 @@ mc_getBytesTotal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   return JS_TRUE;
 }
 
+static JSBool
+mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  int32 frame;
+  SwfdecDecoder *dec;
+  SwfdecSpriteSegment *seg;
+
+  dec = JS_GetContextPrivate (cx);
+  seg = JS_GetPrivate(cx, obj);
+  g_assert (seg);
+  
+  if (!JS_ValueToInt32 (cx, argv[0], &frame))
+    return JS_FALSE;
+  /* FIXME: how to handle overflow? */
+  if (frame > dec->n_frames)
+    frame = dec->n_frames - 1;
+
+  dec->next_frame = frame;
+  seg->stopped = FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  int32 frame;
+  SwfdecDecoder *dec;
+  SwfdecSpriteSegment *seg;
+
+  dec = JS_GetContextPrivate (cx);
+  seg = JS_GetPrivate(cx, obj);
+  g_assert (seg);
+  
+  if (!JS_ValueToInt32 (cx, argv[0], &frame))
+    return JS_FALSE;
+  /* FIXME: how to handle overflow? */
+  if (frame > dec->n_frames)
+    frame = dec->n_frames - 1;
+
+  dec->next_frame = frame;
+  seg->stopped = TRUE;
+  return JS_TRUE;
+}
+
+static JSFunctionSpec movieclip_methods[] = {
+  //{"attachMovie", mc_attachMovie, 4, 0},
+  {"getBytesLoaded", mc_getBytesLoaded, 0, 0},
+  {"getBytesTotal", mc_getBytesTotal, 0, 0},
+  {"gotoAndPlay", mc_gotoAndPlay, 1, 0 },
+  {"gotoAndStop", mc_gotoAndStop, 1, 0 },
+  {"play", mc_play, 0, 0},
+  {"stop", mc_stop, 0, 0},
+  {NULL}
+};
+
 #if 0
 static JSBool
 mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -195,20 +250,11 @@ static JSPropertySpec movieclip_props[] = {
 };
 
 static JSClass movieclip_class = {
-    "MovieClip", JSCLASS_NEW_RESOLVE,
+    "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   JS_FinalizeStub
-};
-
-static JSFunctionSpec movieclip_methods[] = {
-  {"play", mc_play, 0, 0},
-  {"stop", mc_stop, 0, 0},
-  {"getBytesLoaded", mc_getBytesLoaded, 0, 0},
-  {"getBytesTotal", mc_getBytesTotal, 0, 0},
-  //{"attachMovie", mc_attachMovie, 4, 0},
-  {NULL}
 };
 
 #if 0
@@ -306,12 +352,12 @@ swfdec_js_add_movieclip (SwfdecDecoder *s)
   root = JS_NewObject (s->jscx, &movieclip_class, NULL, NULL);
   JS_AddRoot (s->jscx, root);
   JS_SetPrivate (s->jscx, root, s->main_sprite_seg);
+  val = OBJECT_TO_JSVAL(root);
   if (!JS_SetProperty(s->jscx, global, "_root", &val)) {
     SWFDEC_ERROR ("failed to set root object");
     return;
   }
 
-  val = OBJECT_TO_JSVAL(root);
 }
 
 #if 0

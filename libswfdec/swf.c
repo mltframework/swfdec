@@ -53,7 +53,7 @@ swfdec_decoder_new (void)
 
   s->input_queue = swfdec_buffer_queue_new ();
 
-  s->main_sprite = swfdec_object_new (SWFDEC_TYPE_SPRITE);
+  s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->objects = g_list_append (s->objects, s->main_sprite);
   s->main_sprite_seg = swfdec_spriteseg_new ();
@@ -599,7 +599,6 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
   return swfdec_audio_render (s, 44100/s->rate);
 }
 
-#include <signal.h>
 /**
  * swfdec_decoder_iterate:
  * @dec: the #SwfdecDecoder to iterate
@@ -649,14 +648,10 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
       dec->next_frame = dec->current_frame;
     }
   }
-  if (dec->current_frame == 23) {
-    jsval rval;
-    char *s = "_root.stop ();";
-    JSObject *global = JS_GetGlobalObject (dec->jscx);
-    JSScript *script = JS_CompileScript (dec->jscx, global, s, strlen (s), "bla", 1);
-    G_BREAKPOINT ();
-    JS_ExecuteScript (dec->jscx, global, script, &rval);
-  }
+#if 0
+  if (dec->current_frame == 23)
+    swfdec_js_run (dec, "_root.gotoAndPlay (58);");
+#endif
 }
 
 /**
@@ -706,9 +701,6 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
 
   if (inval == NULL)
     inval = &invalidate_dontcare;
-  dec->mouse.x = x;
-  dec->mouse.y = y;
-  dec->mouse.button = button;
 
   g_assert (dec->execute_list == NULL);
   swfdec_matrix_transform_point_inverse (&dec->main_sprite_seg->transform, &x, &y);

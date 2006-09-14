@@ -111,7 +111,7 @@ tag_func_define_sound (SwfdecDecoder * s)
   type = swfdec_bits_getbits (b, 1);
   n_samples = swfdec_bits_get_u32 (b);
 
-  sound = swfdec_object_new (SWFDEC_TYPE_SOUND);
+  sound = swfdec_object_new (s, SWFDEC_TYPE_SOUND);
   SWFDEC_OBJECT (sound)->id = id;
   s->objects = g_list_append (s->objects, sound);
 
@@ -168,7 +168,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
     latency = swfdec_bits_get_u16 (b);
   }
 
-  sound = swfdec_object_new (SWFDEC_TYPE_SOUND);
+  sound = swfdec_object_new (s, SWFDEC_TYPE_SOUND);
   SWFDEC_OBJECT (sound)->id = 0;
   s->objects = g_list_append (s->objects, sound);
 

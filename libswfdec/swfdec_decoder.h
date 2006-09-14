@@ -24,18 +24,6 @@ enum
   SWF_STATE_EOF,
 };
 
-struct _SwfdecColorTransform
-{
-  double mult[4];
-  double add[4];
-};
-
-struct _SwfdecMouseInfo {
-  double x;
-  double y;
-  int button;
-};
-
 typedef int SwfdecTagFunc (SwfdecDecoder *);
 
 struct _SwfdecDecoder
@@ -110,9 +98,6 @@ struct _SwfdecDecoder
 
   SwfdecActionContext *context;
   JSContext *jscx;
-
-  SwfdecMouseInfo mouse;
-  SwfdecObject *mouse_grab;
 
   char *url;
 

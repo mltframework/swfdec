@@ -6,6 +6,12 @@
 
 typedef unsigned int swf_color;
 
+struct _SwfdecColorTransform
+{
+  double mult[4];
+  double add[4];
+};
+
 typedef struct swfdec_gradient_struct SwfdecGradient;
 typedef struct swfdec_gradient_entry_struct SwfdecGradientEntry;
 

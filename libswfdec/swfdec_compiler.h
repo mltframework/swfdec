@@ -7,6 +7,7 @@
 
 G_BEGIN_DECLS
 
+void		swfdec_disassemble	(SwfdecDecoder *s, JSScript *script);
 JSScript *	swfdec_compile		(SwfdecDecoder *s);
 
 G_END_DECLS

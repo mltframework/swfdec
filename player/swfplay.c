@@ -131,7 +131,8 @@ view_swf (SwfdecDecoder *dec)
   g_signal_connect_after (win, "leave-notify-event", G_CALLBACK (leave_notify), dec);
   g_signal_connect_after (win, "button-press-event", G_CALLBACK (press_notify), dec);
   g_signal_connect_after (win, "button-release-event", G_CALLBACK (release_notify), dec);
-  gtk_widget_add_events (win, GDK_LEAVE_NOTIFY_MASK | GDK_POINTER_MOTION_MASK
+  gtk_widget_add_events (win, GDK_LEAVE_NOTIFY_MASK
+      | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK
       | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
   
   swfdec_decoder_get_image_size (dec, &width, &height);

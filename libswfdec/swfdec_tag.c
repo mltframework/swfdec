@@ -293,7 +293,7 @@ tag_func_do_init_action (SwfdecDecoder * s)
   SwfdecBuffer *buffer;
   SwfdecObject *obj;
   unsigned char *endptr;
-  int retcode = SWF_ERROR;
+  //int retcode = SWF_ERROR;
 
   endptr = bits->ptr + bits->buffer->length;
 
@@ -316,7 +316,8 @@ tag_func_do_init_action (SwfdecDecoder * s)
   }
   swfdec_buffer_unref (buffer);
 
-  return retcode;
+  //return retcode;
+  return SWF_OK;
 }
 
 

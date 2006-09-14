@@ -87,6 +87,7 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer)
 {
   int ret;
 
+  s->loaded += buffer->length;
   if (s->compressed) {
     int offset = s->z->total_out;
 
@@ -105,6 +106,7 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer)
   } else {
     swfdec_buffer_queue_push (s->input_queue, buffer);
   }
+  /* FIXME: run events for bytes loaded */
 
   return SWF_OK;
 }
@@ -597,6 +599,7 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
   return swfdec_audio_render (s, 44100/s->rate);
 }
 
+#include <signal.h>
 /**
  * swfdec_decoder_iterate:
  * @dec: the #SwfdecDecoder to iterate
@@ -615,6 +618,10 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
 
   g_return_if_fail (dec != NULL);
 
+  if (dec->main_sprite_seg->stopped) {
+    SWFDEC_DEBUG ("not iterating, we're stopped");
+    return;
+  }
   dec->last_frame = dec->current_frame;
   dec->current_frame = dec->next_frame;
   SWFDEC_DEBUG ("iterate, frame_index = %d", dec->current_frame);
@@ -641,6 +648,14 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
     } else {
       dec->next_frame = dec->current_frame;
     }
+  }
+  if (dec->current_frame == 23) {
+    jsval rval;
+    char *s = "_root.stop ();";
+    JSObject *global = JS_GetGlobalObject (dec->jscx);
+    JSScript *script = JS_CompileScript (dec->jscx, global, s, strlen (s), "bla", 1);
+    G_BREAKPOINT ();
+    JS_ExecuteScript (dec->jscx, global, script, &rval);
   }
 }
 

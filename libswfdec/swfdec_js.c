@@ -1,13 +1,12 @@
 
-#ifndef __SWFDEC_JS_H__
-#define __SWFDEC_JS_H__
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <js/jsapi.h>
 #include "swfdec_types.h"
 #include "swfdec_decoder.h"
 #include "swfdec_debug.h"
-
-G_BEGIN_DECLS
+#include "swfdec_js.h"
 
 static JSRuntime *swfdec_js_runtime;
 
@@ -51,10 +50,12 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
     return;
   }
 
+  JS_SetContextPrivate(s->jscx, s);
   glob = JS_NewObject (s->jscx, &global_class, NULL, NULL);
   if (!JS_InitStandardClasses (s->jscx, glob)) {
     SWFDEC_ERROR ("initializing JS standard classes failed");
   }
+  swfdec_js_add_movieclip (s);
 }
 
 /**
@@ -105,7 +106,3 @@ swfdec_decoder_execute_scripts (SwfdecDecoder *s)
   s->execute_list = NULL;
 }
 
-
-G_END_DECLS
-
-#endif

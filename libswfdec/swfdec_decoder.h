@@ -42,6 +42,7 @@ struct _SwfdecDecoder
 {
   int version;
   int length;
+  int loaded;
   int width, height;
   int parse_width, parse_height;
   double rate;

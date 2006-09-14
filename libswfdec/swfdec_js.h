@@ -11,6 +11,8 @@ void		swfdec_js_init			(guint		runtime_size);
 void		swfdec_js_init_decoder		(SwfdecDecoder *s);
 void		swfdec_js_finish_decoder	(SwfdecDecoder *s);
 
+void		swfdec_js_add_movieclip		(SwfdecDecoder *s);
+
 G_END_DECLS
 
 #endif

@@ -82,11 +82,13 @@ swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval
   if (s->last_frame >= 0) {
     /* invalidate areas for removed elements */
     frame = &sprite->frames[s->last_frame];
-    for (g = frame->segments; g; g = g_list_previous (g)) {
+    for (g = frame->segments; g; g = g_list_next (g)) {
       SwfdecSpriteSegment *child_seg = g->data;
       SwfdecObject *child_object;
       SwfdecRect child_inval;
       
+      if (child_seg->stopped)
+	continue;
       if (child_seg->first_index > s->current_frame ||
 	  s->current_frame >= child_seg->last_index)
 	continue;
@@ -108,6 +110,8 @@ swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval
     SwfdecRect child_inval;
 
     child_seg = (SwfdecSpriteSegment *) g->data;
+    if (child_seg->stopped)
+      continue;
     child_object = swfdec_object_get (s, child_seg->id);
     swfdec_rect_init_empty (&child_inval);
 

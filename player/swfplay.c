@@ -3,6 +3,8 @@
 #include <swfdec.h>
 #include <swfdec_buffer.h>
 
+#define SCALE 0.5
+
 static void
 queue_draw (GtkWidget *widget)
 {
@@ -83,7 +85,9 @@ draw_current_image (GtkWidget *win, GdkEventExpose *event, SwfdecDecoder *dec)
   cairo_t *cr;
 
   cr = gdk_cairo_create (win->window);
-  swfdec_rect_init (&rect, event->area.x, event->area.y, event->area.width, event->area.height);
+  cairo_scale (cr, SCALE, SCALE);
+  swfdec_rect_init (&rect, event->area.x, event->area.y, 
+      event->area.width / SCALE, event->area.height / SCALE);
 #if 0
   {
     cairo_t *crs;
@@ -132,7 +136,7 @@ view_swf (SwfdecDecoder *dec)
       | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
   
   swfdec_decoder_get_image_size (dec, &width, &height);
-  gtk_window_set_default_size (GTK_WINDOW (win), width, height);
+  gtk_window_set_default_size (GTK_WINDOW (win), width * SCALE, height * SCALE);
   gtk_widget_show_all (win);
   swfdec_decoder_get_rate (dec, &rate);
   g_timeout_add (1000 / rate, next_image, win);

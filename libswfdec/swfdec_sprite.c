@@ -201,7 +201,7 @@ swfdec_sprite_add_action (SwfdecSprite *sprite, guint frame_nr, SwfdecSpriteActi
   SwfdecSpriteFrame *frame;
 
   g_return_if_fail (SWFDEC_IS_SPRITE (sprite));
-  g_return_if_fail (frame_nr < sprite->n_frames);
+  g_return_if_fail (frame_nr < (guint) sprite->n_frames);
   g_return_if_fail (action != NULL);
 
   frame = &sprite->frames[frame_nr];

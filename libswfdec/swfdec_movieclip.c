@@ -129,7 +129,7 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
   swfdec_rect_init_empty (&inval);
   for (i = 0; i < frame->actions->len; i++) {
     action = &g_array_index (frame->actions, SwfdecSpriteAction, i);
-    g_print ("performing action %d\n", action->type);
+    SWFDEC_LOG ("performing action %d\n", action->type);
     switch (action->type) {
       case SWFDEC_SPRITE_ACTION_REMOVE_OBJECT:
 	tmp = swfdec_display_list_remove (&movie->list, action->uint.value[0]);
@@ -164,7 +164,6 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	  if (cairo_matrix_invert (&cur->inverse_transform)) {
 	    g_assert_not_reached ();
 	  }
-	  g_print ("transform: %g %g\n", cur->transform.xx, cur->transform.yy);
 	}
 	break;
       case SWFDEC_SPRITE_ACTION_BG_COLOR:
@@ -389,7 +388,7 @@ swfdec_movie_clip_new (SwfdecMovieClip *parent, unsigned int id)
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE_CLIP (parent), NULL);
 
-  g_print ("new movie for %d\n", id);
+  SWFDEC_DEBUG ("new movie for item %d\n", id);
   ret = swfdec_object_new (SWFDEC_OBJECT (parent)->decoder, SWFDEC_TYPE_MOVIE_CLIP);
   ret->parent = parent;
   ret->child = swfdec_object_get (SWFDEC_OBJECT (parent)->decoder, id);

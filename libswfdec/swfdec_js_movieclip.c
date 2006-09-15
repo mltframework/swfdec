@@ -65,7 +65,7 @@ mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     return JS_FALSE;
   /* FIXME: how to handle overflow? */
   n_frames = swfdec_movie_clip_get_n_frames (movie);
-  frame = CLAMP (frame, 0, n_frames - 1);
+  frame = CLAMP (frame, 0, (int) n_frames - 1);
 
   movie->next_frame = frame;
   movie->stopped = FALSE;
@@ -88,7 +88,7 @@ mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     return JS_FALSE;
   /* FIXME: how to handle overflow? */
   n_frames = swfdec_movie_clip_get_n_frames (movie);
-  frame = CLAMP (frame, 0, n_frames - 1);
+  frame = CLAMP (frame, 0, (int) n_frames - 1);
 
   movie->next_frame = frame;
   movie->stopped = TRUE;

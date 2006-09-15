@@ -39,11 +39,15 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
   SwfdecText *text = SWFDEC_TEXT (obj);
   SwfdecObject *fontobj;
   SwfdecColorTransform force_color;
-  SwfdecRect rect;
+  SwfdecRect rect, inval_moved;
 
   //cairo_transform (cr, &text->transform);
-  g_print ("rendering text %d\n", obj->id);
   /* scale by bounds */
+  cairo_translate (cr, obj->extents.x0, obj->extents.y0);
+  inval_moved.x0 = inval->x0 - obj->extents.x0;
+  inval_moved.y0 = inval->y0 - obj->extents.y0;
+  inval_moved.x1 = inval->x1 - obj->extents.x0;
+  inval_moved.y1 = inval->y1 - obj->extents.y0;
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -61,22 +65,14 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
       continue;
     }
 
-    g_print ("%d %d %d\n", glyph->x, glyph->y, glyph->height);
-    cairo_matrix_init_scale (&pos, glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR, glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR);
-    cairo_matrix_translate (&pos,
-	glyph->x * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR, glyph->y * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR);
-    //pos.xx = glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR;
-    //pos.yy = glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR;
+    cairo_matrix_init_translate (&pos,
+	glyph->x, glyph->y);
+    cairo_matrix_scale (&pos, 
+	glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR, 
+	glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR);
     cairo_save (cr);
-    {
-      double x = glyph->x, y = glyph->y;
-      cairo_user_to_device_distance (cr, &x, &y);
-      g_print ("--> %g %g\n", x, y);
-    }
-    cairo_scale (cr, glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR, glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR);
-    cairo_translate (cr, glyph->x, glyph->y);
-    //cairo_transform (cr, &pos);
-    swfdec_rect_transform_inverse (&rect, inval, &pos);
+    cairo_transform (cr, &pos);
+    swfdec_rect_transform_inverse (&rect, &inval_moved, &pos);
     color = swfdec_color_apply_transform (glyph->color, trans);
     swfdec_color_transform_init_color (&force_color, color);
     swfdec_object_render (SWFDEC_OBJECT (shape), cr, 

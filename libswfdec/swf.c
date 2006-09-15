@@ -525,7 +525,7 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->b.idx = 0;
   s->b.end = buffer->data + buffer->length;
 
-  swfdec_bits_get_rect (&s->b, &rect);
+  swfdec_bits_get_rect (&s->b, &rect, SWF_SCALE_FACTOR);
   width = rect.x1;
   height = rect.y1;
   s->parse_width = width;

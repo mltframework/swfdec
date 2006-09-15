@@ -146,13 +146,6 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
 
-  {
-    double x = 0, y = 0, x1 = 1024, y1 = 1024;
-
-    cairo_user_to_device (cr, &x, &y);
-    cairo_user_to_device (cr, &x1, &y1);
-    g_print ("font shape extents: %g %g  %g %g\n", x, y, x1, y1);
-  }
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
   for (i = 0; i < shape->fills->len; i++) {
@@ -552,7 +545,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents, SWF_SCALE_FACTOR);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -579,7 +572,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents, SWF_SCALE_FACTOR);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -804,9 +797,9 @@ tag_define_morph_shape (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &start_rect);
+  swfdec_bits_get_rect (bits, &start_rect, SWF_SCALE_FACTOR);
   swfdec_bits_syncbits (bits);
-  swfdec_bits_get_rect (bits, &end_rect);
+  swfdec_bits_get_rect (bits, &end_rect, SWF_SCALE_FACTOR);
 
   swfdec_bits_syncbits (bits);
   offset = swfdec_bits_get_u32 (bits);

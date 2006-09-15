@@ -411,7 +411,7 @@ gst_swfdec_loop (GstSwfdec * swfdec)
 }
 
 GstBuffer *
-gst_swfdec_render_image (GstSwfdec *swfdec, SwfdecRect *area)
+gst_swfdec_render_image (GstSwfdec *swfdec)
 {
   cairo_surface_t *surface;
   cairo_t *cr;
@@ -444,15 +444,13 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     gboolean ret;
     GstFlowReturn res;
     const char *url;
-    SwfdecRect inval, inval2;
 
     GST_DEBUG_OBJECT (swfdec, "render:SWF_EOF");
     swfdec_decoder_handle_mouse (swfdec->decoder, swfdec->x, swfdec->y,
-        swfdec->button, &inval);
+        swfdec->button);
 
-    swfdec_decoder_iterate (swfdec->decoder, &inval2);
+    swfdec_decoder_iterate (swfdec->decoder);
     swfdec->total_frames++;
-    swfdec_rect_union (&inval, &inval, &inval2);
 
     if (!ret) {
       gst_task_stop (swfdec->task);
@@ -488,7 +486,7 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     } else {
       swfdec->skip_index = swfdec->skip_frames - 1;
 
-      videobuf = gst_swfdec_render_image (swfdec, &inval);
+      videobuf = gst_swfdec_render_image (swfdec);
       GST_BUFFER_TIMESTAMP (videobuf) = swfdec->timestamp;
 
       gst_pad_push (swfdec->videopad, videobuf);

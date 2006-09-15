@@ -138,14 +138,21 @@ swfdec_path_append (cairo_path_t *path, const cairo_path_t *append)
 /*** SHAPE ***/
 
 static void
-swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr, 
-    const SwfdecColorTransform *trans, SwfdecObject *obj, SwfdecRect *inval)
+swfdec_shape_render (SwfdecObject *obj, cairo_t *cr, 
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (obj);
   unsigned int i;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
 
+  {
+    double x = 0, y = 0, x1 = 1024, y1 = 1024;
+
+    cairo_user_to_device (cr, &x, &y);
+    cairo_user_to_device (cr, &x1, &y1);
+    g_print ("font shape extents: %g %g  %g %g\n", x, y, x1, y1);
+  }
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
   for (i = 0; i < shape->fills->len; i++) {
@@ -225,7 +232,7 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
 	    g_assert_not_reached ();
 	  }
 
-          image = (SwfdecImage *)swfdec_object_get (s, shapevec->fill_id);
+          image = (SwfdecImage *)swfdec_object_get (obj->decoder, shapevec->fill_id);
           if (image && SWFDEC_IS_IMAGE (image)) {
 	    cairo_surface_t *src_surface;
 	    cairo_pattern_t *pattern;
@@ -291,8 +298,8 @@ swfdec_shape_render (SwfdecDecoder *s, cairo_t *cr,
 }
 
 static SwfdecMouseResult 
-swfdec_shape_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
-      double x, double y, int button, SwfdecRect *inval)
+swfdec_shape_handle_mouse (SwfdecObject *object,
+      double x, double y, int button)
 {
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
@@ -382,6 +389,7 @@ swfdec_shape_dispose (SwfdecShape * shape)
   }
   g_ptr_array_free (shape->lines, TRUE);
 
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (shape));
 }
 
 static void

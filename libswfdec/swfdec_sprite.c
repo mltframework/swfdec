@@ -49,6 +49,7 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
     g_free(sprite->frames);
   }
 
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (sprite));
 }
 
 void
@@ -73,71 +74,7 @@ swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script)
   }
 }
 
-static void 
-swfdec_sprite_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval)
-{
-  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
-  SwfdecSpriteFrame *frame;
-  GList *g;
-  
-  /* FIXME: don't include clipped objects */
-  /* FIXME: this code breaks if objects suddenly show up - how do we handle this case? */
-
-  swfdec_rect_init_empty (inval);
-  if (s->last_frame >= 0) {
-    /* invalidate areas for removed elements */
-    frame = &sprite->frames[s->last_frame];
-    for (g = frame->segments; g; g = g_list_next (g)) {
-      SwfdecSpriteSegment *child_seg = g->data;
-      SwfdecObject *child_object;
-      SwfdecRect child_inval;
-      
-      if (child_seg->stopped)
-	continue;
-      if (child_seg->first_index > s->current_frame ||
-	  s->current_frame >= child_seg->last_index)
-	continue;
-      
-      child_object = swfdec_object_get (s, child_seg->id);
-      if (child_object == NULL) {
-	SWFDEC_WARNING ("could not find object (id = %d)", child_seg->id);
-	continue;
-      }
-      swfdec_rect_transform (&child_inval, &child_object->extents, &child_seg->transform);
-      swfdec_rect_union (inval, inval, &child_inval);
-    }
-  }
-
-  frame = &sprite->frames[s->current_frame];
-  for (g = frame->segments; g; g = g_list_next (g)) {
-    SwfdecObject *child_object;
-    SwfdecSpriteSegment *child_seg;
-    SwfdecRect child_inval;
-
-    child_seg = (SwfdecSpriteSegment *) g->data;
-    if (child_seg->stopped)
-      continue;
-    child_object = swfdec_object_get (s, child_seg->id);
-    swfdec_rect_init_empty (&child_inval);
-
-    if (child_object == NULL) {
-      SWFDEC_WARNING ("could not find object (id = %d)", child_seg->id);
-      continue;
-    }
-    swfdec_object_iterate (s, child_object, &child_inval);
-
-    if (child_seg->first_index > s->last_frame ||
-	s->last_frame >= child_seg->last_index) {
-      /* wasn't visible last frame */
-      child_inval = object->extents;
-    }
-    swfdec_rect_transform (&child_inval, &child_inval, &child_seg->transform);
-  }
-
-  if (frame->action)
-    swfdec_decoder_queue_script (s, (JSScript *) frame->action);
-}
-
+#if 0
 static SwfdecMouseResult 
 swfdec_sprite_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
       double x, double y, int button, SwfdecRect *inval)
@@ -244,100 +181,9 @@ swfdec_sprite_render (SwfdecDecoder * s, cairo_t *cr,
     }
   }
 }
+#endif
 
-SwfdecSpriteSegment *
-swfdec_sprite_get_seg (SwfdecSprite * sprite, int depth, int frame_index)
-{
-  SwfdecSpriteSegment *seg;
-  GList *g;
-  SwfdecSpriteFrame *frame;
-
-  frame = &sprite->frames[frame_index];
-  for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
-    seg = (SwfdecSpriteSegment *) g->data;
-    if (seg->depth == depth)
-      return seg;
-  }
-
-  return NULL;
-}
-
-void
-swfdec_sprite_frame_add_seg (SwfdecSpriteFrame * frame, SwfdecSpriteSegment * segnew)
-{
-  SwfdecSpriteSegment *seg;
-  GList *g;
-
-  for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
-    seg = (SwfdecSpriteSegment *) g->data;
-    if (seg->depth < segnew->depth) {
-      frame->segments = g_list_insert_before (frame->segments, g, segnew);
-      return;
-    } else if (seg->depth == segnew->depth) {
-      /* all code should call swfdec_sprite_frame_remove_seg before */
-      g_assert_not_reached ();
-      return;
-    }
-  }
-  frame->segments = g_list_append (frame->segments, segnew);
-}
-
-void
-swfdec_sprite_frame_remove_seg (SwfdecDecoder *s, SwfdecSpriteFrame * frame, int depth)
-{
-  SwfdecSpriteSegment *seg;
-  GList *g;
-
-  for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
-    seg = (SwfdecSpriteSegment *) g->data;
-    if (seg->depth == depth) {
-      seg->last_index = s->parse_sprite->parse_frame;
-      frame->segments = g_list_delete_link (frame->segments, g);
-      return;
-    }
-  }
-}
-
-SwfdecSpriteSegment *
-swfdec_spriteseg_new (void)
-{
-  SwfdecSpriteSegment *seg;
-
-  seg = g_new0 (SwfdecSpriteSegment, 1);
-  cairo_matrix_init_identity (&seg->transform);
-  swfdec_color_transform_init_identity (&seg->color_transform);
-  seg->last_index = G_MAXINT;
-
-  return seg;
-}
-
-SwfdecSpriteSegment *
-swfdec_spriteseg_dup (SwfdecSpriteSegment * seg)
-{
-  SwfdecSpriteSegment *newseg;
-
-  newseg = g_new (SwfdecSpriteSegment, 1);
-  memcpy (newseg, seg, sizeof (*seg));
-  if (seg->name)
-    newseg->name = g_strdup(seg->name);
-
-  return newseg;
-}
-
-void
-swfdec_spriteseg_free (SwfdecSpriteSegment * seg)
-{
-  int i;
-
-  for (i = 0; i < CLIPEVENT_MAX; i++) {
-    if (seg->clipevent[i])
-      swfdec_buffer_unref(seg->clipevent[i]);
-  }
-  if (seg->name)
-    g_free (seg->name);
-  g_free (seg);
-}
-
+#if 0
 static int
 swfdec_get_clipeventflags (SwfdecDecoder * s, SwfdecBits * bits)
 {
@@ -346,6 +192,36 @@ swfdec_get_clipeventflags (SwfdecDecoder * s, SwfdecBits * bits)
   } else {
     return swfdec_bits_get_u32 (bits);
   }
+}
+#endif
+
+static void
+swfdec_sprite_add_action (SwfdecSprite *sprite, guint frame_nr, SwfdecSpriteAction *action)
+{
+  SwfdecSpriteFrame *frame;
+
+  g_return_if_fail (SWFDEC_IS_SPRITE (sprite));
+  g_return_if_fail (frame_nr < sprite->n_frames);
+  g_return_if_fail (action != NULL);
+
+  frame = &sprite->frames[frame_nr];
+
+  if (frame->actions == NULL)
+    frame->actions = g_array_new (FALSE, FALSE, sizeof (SwfdecSpriteAction));
+
+  g_array_append_vals (frame->actions, action, 1);
+}
+
+int
+tag_func_set_background_color (SwfdecDecoder * s)
+{
+  SwfdecSpriteAction action;
+
+  action.type = SWFDEC_SPRITE_ACTION_BG_COLOR;
+  swfdec_color_transform_init_color (&action.color.transform, swfdec_bits_get_color (&s->b));
+  swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
+
+  return SWF_OK;
 }
 
 int
@@ -361,8 +237,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   int has_character;
   int move;
   int depth;
-  SwfdecSpriteSegment *layer;
-  SwfdecSpriteSegment *oldlayer;
+  SwfdecSpriteAction action;
 
   has_clip_actions = swfdec_bits_getbit (bits);
   has_clip_depth = swfdec_bits_getbit (bits);
@@ -374,7 +249,6 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   move = swfdec_bits_getbit (bits);
   depth = swfdec_bits_get_u16 (bits);
 
-  /* reserved is somehow related to sprites */
   SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
   SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
   SWFDEC_LOG ("  has_name = %d", has_name);
@@ -383,63 +257,50 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
 
-  oldlayer = swfdec_sprite_get_seg (s->parse_sprite, depth,
-      s->parse_sprite->parse_frame);
-  swfdec_sprite_frame_remove_seg (s, &s->parse_sprite->frames[
-      s->parse_sprite->parse_frame], depth);
-
-  layer = swfdec_spriteseg_new ();
-
-  layer->depth = depth;
-  layer->first_index = s->parse_sprite->parse_frame;
-
-  swfdec_sprite_frame_add_seg (
-      &s->parse_sprite->frames[s->parse_sprite->parse_frame], layer);
-
   if (has_character) {
-    layer->id = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("  id = %d", layer->id);
-  } else if (oldlayer) {
-    layer->id = oldlayer->id;
+    action.type = SWFDEC_SPRITE_ACTION_PLACE_OBJECT;
+    action.uint.value[0] = swfdec_bits_get_u16 (bits);
+    SWFDEC_LOG ("  id = %d", action.uint.value[0]);
+  } else {
+    action.type = SWFDEC_SPRITE_ACTION_GET_OBJECT;
+    if (!move)
+      SWFDEC_ERROR ("neither character nor move flag are set in PlaceObject2");
   }
-
-  SWFDEC_INFO ("%splacing object layer=%d id=%d",
-      (has_character) ? "" : "[re-]", depth, layer->id);
+  action.uint.value[1] = depth;
+  swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
 
   if (has_matrix) {
-    swfdec_bits_get_matrix (bits, &layer->transform);
-  } else if (oldlayer) {
-    layer->transform = oldlayer->transform;
-  } else {
-    cairo_matrix_init_identity (&layer->transform);
+    action.type = SWFDEC_SPRITE_ACTION_TRANSFORM;
+    swfdec_bits_get_matrix (bits, &action.matrix.matrix);
+    swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
   }
   if (has_color_transform) {
-    swfdec_bits_get_color_transform (bits, &layer->color_transform);
-  } else if (oldlayer) {
-    layer->color_transform = oldlayer->color_transform;
-  } else {
-    swfdec_color_transform_init_identity (&layer->color_transform);
+    action.type = SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM;
+    swfdec_bits_get_color_transform (bits, &action.color.transform);
+    swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
   }
   swfdec_bits_syncbits (bits);
   if (has_ratio) {
-    layer->ratio = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("  ratio = %d", layer->ratio);
-  } else {
-    if (oldlayer)
-      layer->ratio = oldlayer->ratio;
+    action.type = SWFDEC_SPRITE_ACTION_RATIO;
+    action.uint.value[0] = swfdec_bits_get_u16 (bits);
+    swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
+    SWFDEC_LOG ("  ratio = %d", action.uint.value[0]);
   }
   if (has_name) {
-    layer->name = swfdec_bits_get_string (bits);
+    action.type = SWFDEC_SPRITE_ACTION_NAME;
+    action.string.string = swfdec_bits_get_string (bits);
+    swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
   }
   if (has_clip_depth) {
-    layer->clip_depth = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("clip_depth = %04x", layer->clip_depth);
-  } else {
-    if (oldlayer) {
-      layer->clip_depth = oldlayer->clip_depth;
-    }
+    action.type = SWFDEC_SPRITE_ACTION_CLIP_DEPTH;
+    action.uint.value[0] = swfdec_bits_get_u16 (bits);
+    swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
+    SWFDEC_LOG ("clip_depth = %04x", action.uint.value[0]);
   }
   if (has_clip_actions) {
+    /* FIXME */
+    g_assert_not_reached ();
+#if 0
     int reserved, clip_event_flags, event_flags, record_size;
     int i;
 
@@ -467,9 +328,8 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       }
       bits->ptr += record_size;
     }
+#endif
   }
-
-  //action_register_sprite_seg (s, layer);
 
   return SWF_OK;
 }
@@ -477,13 +337,13 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 int
 swfdec_spriteseg_remove_object (SwfdecDecoder * s)
 {
-  int depth;
-  int id;
+  SwfdecSpriteAction action;
 
-  id = swfdec_bits_get_u16 (&s->b);
-  depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_frame_remove_seg (s, 
-      &s->parse_sprite->frames[s->parse_sprite->parse_frame], depth);
+  swfdec_bits_get_u16 (&s->b);
+  action.type = SWFDEC_SPRITE_ACTION_REMOVE_OBJECT;
+  action.uint.value[0] = swfdec_bits_get_u16 (&s->b);
+  SWFDEC_LOG ("  depth = %d", action.uint.value[0]);
+  swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
 
   return SWF_OK;
 }
@@ -491,11 +351,12 @@ swfdec_spriteseg_remove_object (SwfdecDecoder * s)
 int
 swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s)
 {
-  int depth;
+  SwfdecSpriteAction action;
 
-  depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_frame_remove_seg (s, 
-      &s->parse_sprite->frames[s->parse_sprite->parse_frame], depth);
+  action.type = SWFDEC_SPRITE_ACTION_REMOVE_OBJECT;
+  action.uint.value[0] = swfdec_bits_get_u16 (&s->b);
+  SWFDEC_LOG ("  depth = %d", action.uint.value[0]);
+  swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
 
   return SWF_OK;
 }
@@ -518,11 +379,6 @@ swfdec_exports_lookup (SwfdecDecoder * s, char *name)
 static void
 swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 {
-  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
-
-  object_class->iterate = swfdec_sprite_iterate;
-  object_class->render = swfdec_sprite_render;
-  object_class->handle_mouse = swfdec_sprite_handle_mouse;
 }
 
 void

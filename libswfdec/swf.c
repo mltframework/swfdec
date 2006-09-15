@@ -10,6 +10,7 @@
 
 #include "swfdec_internal.h"
 #include "swfdec_js.h"
+#include "swfdec_movieclip.h"
 
 int swf_parse_header1 (SwfdecDecoder * s);
 int swf_inflate_init (SwfdecDecoder * s);
@@ -55,9 +56,8 @@ swfdec_decoder_new (void)
 
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
-  s->objects = g_list_append (s->objects, s->main_sprite);
-  s->main_sprite_seg = swfdec_spriteseg_new ();
-  s->main_sprite_seg->id = SWFDEC_OBJECT(s->main_sprite)->id;
+  s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
+  s->root->child = SWFDEC_OBJECT (s->main_sprite);
 
   s->flatness = 0.5;
 
@@ -212,11 +212,8 @@ swfdec_decoder_parse (SwfdecDecoder * s)
               tag, swfdec_decoder_get_tag_name (tag));
         } else {
           s->parse_sprite = s->main_sprite;
-          s->parse_sprite_seg = s->main_sprite_seg;
           ret = func (s);
           s->parse_sprite = NULL;
-          s->parse_sprite_seg = NULL;
-          //if(ret != SWF_OK)break;
 
           swfdec_bits_syncbits (&s->b);
           if (s->b.ptr < endptr) {
@@ -260,18 +257,20 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 int
 swfdec_decoder_free (SwfdecDecoder * s)
 {
-  swfdec_js_finish_decoder (s);
+  g_object_unref (s->root);
 
   g_list_foreach (s->objects, (GFunc) swfdec_object_unref, NULL);
   g_list_free (s->objects);
-  /* s->main_sprite is already freed now */
 
   if (s->buffer)
     g_free (s->buffer);
 
   swfdec_buffer_queue_free (s->input_queue);
 
-  swfdec_spriteseg_free (s->main_sprite_seg);
+  g_object_unref (s->main_sprite);
+
+  /* make sure all SwfdecObject's are gone before calling this */
+  swfdec_js_finish_decoder (s);
 
   if (s->z) {
     inflateEnd (s->z);
@@ -537,6 +536,8 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y0 = 0;
   s->irect.x1 = s->width;
   s->irect.y1 = s->height;
+  s->root->width = s->width;
+  s->root->height = s->height;
   swfdec_bits_syncbits (&s->b);
   s->rate = swfdec_bits_get_u16 (&s->b) / 256.0;
   SWFDEC_LOG ("rate = %g", s->rate);
@@ -557,12 +558,12 @@ swf_parse_header2 (SwfdecDecoder * s)
 SwfdecBuffer *
 swfdec_decoder_get_audio (SwfdecDecoder * s)
 {
-  g_return_val_if_fail (s->current_frame < s->n_frames, NULL);
+  g_return_val_if_fail (s->root->current_frame < s->n_frames, NULL);
 
   if (s->stream_sound_obj) {
     SwfdecBuffer *chunk;
 
-    chunk = s->main_sprite->frames[s->current_frame].sound_chunk;
+    chunk = s->main_sprite->frames[s->root->current_frame].sound_chunk;
     if (chunk) {
       SwfdecSound *sound;
       int n;
@@ -580,12 +581,12 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
     }
   }
 
-  if (s->main_sprite->frames[s->current_frame].sound_play) {
+  if (s->main_sprite->frames[s->root->current_frame].sound_play) {
     SwfdecSound *sound;
     SwfdecSoundChunk *chunk =
-      s->main_sprite->frames[s->current_frame].sound_play;
+      s->main_sprite->frames[s->root->current_frame].sound_play;
 
-    SWFDEC_DEBUG("chunk %p frame_index %d", chunk, s->current_frame);
+    SWFDEC_DEBUG("chunk %p frame_index %d", chunk, s->root->current_frame);
     SWFDEC_DEBUG("play sound object=%d start=%d stop=%d stopflag=%d no_restart=%d loop_count=%d",
         chunk->object, chunk->start_sample, chunk->stop_sample,
         chunk->stop, chunk->no_restart, chunk->loop_count);
@@ -602,7 +603,6 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
 /**
  * swfdec_decoder_iterate:
  * @dec: the #SwfdecDecoder to iterate
- * @invalidated: if not NULL, will be set to the area that changed
  *
  * Advances #dec to the next frame. You should make sure to call this function
  * as often per second as swfdec_decoder_get_rate() indicates.
@@ -611,43 +611,15 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
  * updated image.
  **/
 void
-swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
+swfdec_decoder_iterate (SwfdecDecoder *dec)
 {
-  SwfdecRect invalidate_dontcare;
-
   g_return_if_fail (dec != NULL);
 
-  if (dec->main_sprite_seg->stopped) {
-    SWFDEC_DEBUG ("not iterating, we're stopped");
-    return;
-  }
-  dec->last_frame = dec->current_frame;
-  dec->current_frame = dec->next_frame;
-  SWFDEC_DEBUG ("iterate, frame_index = %d", dec->current_frame);
-  dec->next_frame = -1;
-  if (invalidated == NULL)
-    invalidated = &invalidate_dontcare;
-
   g_assert (dec->execute_list == NULL);
-  swfdec_object_iterate (dec, SWFDEC_OBJECT (dec->main_sprite), invalidated);
-  swfdec_rect_transform (invalidated, invalidated, &dec->main_sprite_seg->transform);
+  swfdec_movie_clip_iterate (dec->root);
 
   swfdec_decoder_execute_scripts (dec);
 
-  if (dec->next_frame == -1) {
-    if (!dec->main_sprite_seg->stopped) {
-      dec->next_frame = dec->current_frame + 1;
-      if (dec->next_frame >= dec->n_frames) {
-        if (0 /*s->repeat*/) {
-          dec->next_frame = 0;
-        } else {
-          dec->next_frame = dec->n_frames - 1;
-        }
-      }
-    } else {
-      dec->next_frame = dec->current_frame;
-    }
-  }
 #if 0
   if (dec->current_frame == 23)
     swfdec_js_run (dec, "_root.gotoAndPlay (58);");
@@ -665,15 +637,17 @@ swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated)
 void
 swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
 {
+  static const SwfdecColorTransform trans = { { 1.0, 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0, 0.0 } };
+
   g_return_if_fail (dec != NULL);
   g_return_if_fail (cr != NULL);
+
   if (area == NULL)
     area = &dec->irect;
-  SWFDEC_LOG ("%p: starting rendering of frame %d, area %g %g  %g %g", dec, dec->current_frame,
+  SWFDEC_LOG ("%p: starting rendering, area %g %g  %g %g", dec, 
       area->x0, area->y0, area->x1, area->y1);
   if (!swfdec_rect_is_empty (area))
-    swfdec_object_render (dec, SWFDEC_OBJECT (dec->main_sprite), cr, 
-	&dec->main_sprite_seg->transform, &dec->main_sprite_seg->color_transform, area);
+    swfdec_object_render (SWFDEC_OBJECT (dec->root), cr, &trans, area);
   SWFDEC_LOG ("%p: finished rendering", dec);
 }
 
@@ -683,7 +657,6 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
  * @x: x coordinate of mouse
  * @y: y coordinate of mouse
  * @button: 1 for pressed, 0 for not pressed
- * @inval: area that was invalidated during the mouse update or NULL
  *
  * Updates the current mouse status. If the mouse has left the area of @dec,
  * you should pass values outside the movie size for @x and @y.
@@ -692,19 +665,12 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
  **/
 void
 swfdec_decoder_handle_mouse (SwfdecDecoder *dec, 
-    double x, double y, int button, SwfdecRect *inval)
+    double x, double y, int button)
 {
-  SwfdecRect invalidate_dontcare;
-
   g_return_if_fail (dec != NULL);
   g_return_if_fail (button == 0 || button == 1);
 
-  if (inval == NULL)
-    inval = &invalidate_dontcare;
-
   g_assert (dec->execute_list == NULL);
-  swfdec_matrix_transform_point_inverse (&dec->main_sprite_seg->transform, &x, &y);
-  swfdec_object_handle_mouse (dec, SWFDEC_OBJECT (dec->main_sprite), x, y, button, TRUE, inval);
-  swfdec_rect_transform (inval, inval, &dec->main_sprite_seg->transform);
+  swfdec_object_handle_mouse (SWFDEC_OBJECT (dec->root), x, y, button, TRUE);
   swfdec_decoder_execute_scripts (dec);
 }

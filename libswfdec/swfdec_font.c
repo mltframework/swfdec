@@ -35,6 +35,8 @@ swfdec_font_dispose (SwfdecFont * font)
     swfdec_object_unref (SWFDEC_OBJECT (shape));
   }
   g_ptr_array_free (font->glyphs, TRUE);
+
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (font));
 }
 
 SwfdecShape *

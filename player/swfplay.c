@@ -4,25 +4,25 @@
 #include <swfdec_buffer.h>
 
 static void
-queue_draw (GtkWidget *widget, SwfdecRect *inval)
+queue_draw (GtkWidget *widget)
 {
   //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
-  gtk_widget_queue_draw_area (widget, floor (inval->x0), floor (inval->y0),
-      ceil (inval->x1) - floor (inval->x0), ceil (inval->y1) - floor (inval->y0));
+  gtk_widget_queue_draw (widget);
+  //_area (widget, floor (inval->x0), floor (inval->y0),
+  //    ceil (inval->x1) - floor (inval->x0), ceil (inval->y1) - floor (inval->y0));
 }
 
 static gboolean
 motion_notify (GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
   int x, y;
-  SwfdecRect inval;
   SwfdecDecoder *dec = data;
 
   gtk_widget_get_pointer (widget, &x, &y);
 
   swfdec_decoder_handle_mouse (dec, event->x, event->y,
-      g_object_get_data (G_OBJECT (widget), "swfmousebutton") ? 1 : 0, &inval);
-  queue_draw (widget, &inval);
+      g_object_get_data (G_OBJECT (widget), "swfmousebutton") ? 1 : 0);
+  queue_draw (widget);
   
   return FALSE;
 }
@@ -30,40 +30,37 @@ motion_notify (GtkWidget *widget, GdkEventMotion *event, gpointer data)
 static gboolean
 leave_notify (GtkWidget *widget, GdkEventCrossing *event, gpointer data)
 {
-  SwfdecRect inval;
   SwfdecDecoder *dec = data;
 
-  swfdec_decoder_handle_mouse (dec, event->x, event->y, 0, &inval);
+  swfdec_decoder_handle_mouse (dec, event->x, event->y, 0);
   g_object_set_data (G_OBJECT (widget), "swfmousebutton", GINT_TO_POINTER (0));
-  queue_draw (widget, &inval);
+  queue_draw (widget);
   return FALSE;
 }
 
 static gboolean
 press_notify (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-  SwfdecRect inval;
   SwfdecDecoder *dec = data;
 
   if (event->button == 1) {
-    swfdec_decoder_handle_mouse (dec, event->x, event->y, 1, &inval);
+    swfdec_decoder_handle_mouse (dec, event->x, event->y, 1);
     g_object_set_data (G_OBJECT (widget), "swfmousebutton", GINT_TO_POINTER (1));
   }
-  queue_draw (widget, &inval);
+  queue_draw (widget);
   return FALSE;
 }
 
 static gboolean
 release_notify (GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
-  SwfdecRect inval;
   SwfdecDecoder *dec = data;
 
   if (event->button == 1) {
-    swfdec_decoder_handle_mouse (dec, event->x, event->y, 0, &inval);
+    swfdec_decoder_handle_mouse (dec, event->x, event->y, 0);
     g_object_set_data (G_OBJECT (widget), "swfmousebutton", GINT_TO_POINTER (0));
   }
-  queue_draw (widget, &inval);
+  queue_draw (widget);
   return FALSE;
 }
 
@@ -71,11 +68,10 @@ static gboolean
 next_image (gpointer data)
 {
   GtkWidget *win = data;
-  SwfdecRect inval;
   SwfdecDecoder *dec = g_object_get_data (G_OBJECT (win), "swfdec");
 
-  swfdec_decoder_iterate (dec, &inval);
-  queue_draw (win, &inval);
+  swfdec_decoder_iterate (dec);
+  queue_draw (win);
   
   return TRUE;
 }

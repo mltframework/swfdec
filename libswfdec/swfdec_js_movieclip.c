@@ -5,15 +5,16 @@
 #include <js/jsapi.h>
 #include "swfdec_internal.h"
 #include "swfdec_js.h"
+#include "swfdec_movieclip.h"
 
 static JSBool
 mc_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  SwfdecSpriteSegment *seg;
+  SwfdecMovieClip *movie;
 
-  seg = JS_GetPrivate(cx, obj);
-  g_assert (seg);
-  seg->stopped = FALSE;
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
+  movie->stopped = FALSE;
 
   return JS_TRUE;
 }
@@ -21,11 +22,11 @@ mc_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 mc_stop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  SwfdecSpriteSegment *seg;
+  SwfdecMovieClip *movie;
 
-  seg = JS_GetPrivate(cx, obj);
-  g_assert (seg);
-  seg->stopped = TRUE;
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
+  movie->stopped = TRUE;
 
   return JS_TRUE;
 }
@@ -54,21 +55,20 @@ static JSBool
 mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   int32 frame;
-  SwfdecDecoder *dec;
-  SwfdecSpriteSegment *seg;
+  guint n_frames;
+  SwfdecMovieClip *movie;
 
-  dec = JS_GetContextPrivate (cx);
-  seg = JS_GetPrivate(cx, obj);
-  g_assert (seg);
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
   
   if (!JS_ValueToInt32 (cx, argv[0], &frame))
     return JS_FALSE;
   /* FIXME: how to handle overflow? */
-  if (frame > dec->n_frames)
-    frame = dec->n_frames - 1;
+  n_frames = swfdec_movie_clip_get_n_frames (movie);
+  frame = CLAMP (frame, 0, n_frames - 1);
 
-  dec->next_frame = frame;
-  seg->stopped = FALSE;
+  movie->next_frame = frame;
+  movie->stopped = FALSE;
   return JS_TRUE;
 }
 
@@ -76,21 +76,22 @@ static JSBool
 mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   int32 frame;
+  guint n_frames;
   SwfdecDecoder *dec;
-  SwfdecSpriteSegment *seg;
+  SwfdecMovieClip *movie;
 
   dec = JS_GetContextPrivate (cx);
-  seg = JS_GetPrivate(cx, obj);
-  g_assert (seg);
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
   
   if (!JS_ValueToInt32 (cx, argv[0], &frame))
     return JS_FALSE;
   /* FIXME: how to handle overflow? */
-  if (frame > dec->n_frames)
-    frame = dec->n_frames - 1;
+  n_frames = swfdec_movie_clip_get_n_frames (movie);
+  frame = CLAMP (frame, 0, n_frames - 1);
 
-  dec->next_frame = frame;
-  seg->stopped = TRUE;
+  movie->next_frame = frame;
+  movie->stopped = TRUE;
   return JS_TRUE;
 }
 
@@ -110,7 +111,7 @@ static JSBool
 mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval *rval)
 {
-  SwfdecSpriteSegment *parent_seg, *child_seg;
+  SwfdecMovieClip *parent_movie, *child_movie;
   SwfdecSprite *parent_sprite, *attach_sprite;
   JSString *idName, *newName;
   int depth;
@@ -135,30 +136,30 @@ mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  parent_seg = JS_GetPrivate (cx, obj);
-  if (!parent_seg) {
-    SWFDEC_WARNING("couldn't get segment");
+  parent_movie = JS_GetPrivate (cx, obj);
+  if (!parent_movie) {
+    SWFDEC_WARNING("couldn't get moviement");
     *rval = JSVAL_VOID;
     return JS_TRUE;
   }
-  if (parent_seg->id == 0)
+  if (parent_movie->id == 0)
     parent_sprite = context->s->main_sprite;
   else
     parent_sprite = SWFDEC_SPRITE(swfdec_object_get (context->s,
-        parent_seg->id));
+        parent_movie->id));
 
-  swfdec_sprite_frame_remove_seg (context->s, &parent_sprite->frames[parent_seg->first_index],
+  swfdec_sprite_frame_remove_movie (context->s, &parent_sprite->frames[parent_movie->first_index],
       depth);
 
-  /* FIXME we need a separate list of added segments */
-  child_seg = swfdec_spriteseg_new ();
-  child_seg->depth = depth;
-  cairo_matrix_init_identity (&child_seg->transform);
-  swfdec_color_transform_init_identity (&child_seg->color_transform);
+  /* FIXME we need a separate list of added moviements */
+  child_movie = swfdec_spritemovie_new ();
+  child_movie->depth = depth;
+  cairo_matrix_init_identity (&child_movie->transform);
+  swfdec_color_transform_init_identity (&child_movie->color_transform);
 
-  swfdec_sprite_frame_add_seg (&parent_sprite->frames[parent_seg->first_index],
-      child_seg);
-  child_mc = movieclip_new (context, child_seg);
+  swfdec_sprite_frame_add_movie (&parent_sprite->frames[parent_movie->first_index],
+      child_movie);
+  child_mc = movieclip_new (context, child_movie);
   *rval = OBJECT_TO_JSVAL(child_mc);
 
   JS_SetProperty (cx, obj, JS_GetStringBytes(newName), rval);
@@ -170,68 +171,62 @@ mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  SwfdecSpriteSegment *seg;
+  SwfdecMovieClip *movie;
 
-  seg = JS_GetPrivate (cx, obj);
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
 
-  *vp = JSVAL_VOID;
-  if (seg) {
-    JS_NewNumberValue (cx, seg->transform.x0, vp);
-  } else {
-    SWFDEC_WARNING("couldn't get segment");
-  }
+  *vp = INT_TO_JSVAL (movie->x);
+
   return JS_TRUE;
 }
 
 static JSBool
 mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  SwfdecSpriteSegment *seg;
-  double num;
+  SwfdecMovieClip *movie;
+  int32 i;
 
-  seg = JS_GetPrivate (cx, obj);
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
 
-  *vp = JSVAL_VOID;
-  if (seg) {
-    JS_ValueToNumber(cx, *vp, &num);
-    seg->transform.x0 = num;
-  } else {
-    SWFDEC_WARNING("couldn't get segment");
-  }
+  if (!JS_ValueToInt32 (cx, id, &i))
+    return JS_FALSE;
+  movie->x = i;
+  swfdec_movie_clip_update_visuals (movie);
+  *vp = INT_TO_JSVAL (movie->x);
+
   return JS_TRUE;
 }
 
 static JSBool
 mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  SwfdecSpriteSegment *seg;
+  SwfdecMovieClip *movie;
 
-  seg = JS_GetPrivate (cx, obj);
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
 
-  *vp = JSVAL_VOID;
-  if (seg) {
-    JS_NewNumberValue (cx, seg->transform.y0, vp);
-  } else {
-    SWFDEC_WARNING("couldn't get segment");
-  }
+  *vp = INT_TO_JSVAL (movie->x);
+
   return JS_TRUE;
 }
 
 static JSBool
 mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  SwfdecSpriteSegment *seg;
-  double num;
+  SwfdecMovieClip *movie;
+  int32 i;
 
-  seg = JS_GetPrivate (cx, obj);
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
 
-  *vp = JSVAL_VOID;
-  if (seg) {
-    JS_ValueToNumber(cx, *vp, &num);
-    seg->transform.y0 = num;
-  } else {
-    SWFDEC_WARNING("couldn't get segment");
-  }
+  if (!JS_ValueToInt32 (cx, id, &i))
+    return JS_FALSE;
+  movie->y = i;
+  swfdec_movie_clip_update_visuals (movie);
+  *vp = INT_TO_JSVAL (movie->y);
+
   return JS_TRUE;
 }
 
@@ -260,15 +255,15 @@ static JSClass movieclip_class = {
 #if 0
 JSObject *
 movieclip_find (SwfdecActionContext *context,
-    SwfdecSpriteSegment *seg)
+    SwfdecMovieClip *movie)
 {
   GList *g;
   struct mc_list_entry *listentry;
 
-  for (g = g_list_first (context->seglist); g; g = g_list_next (g)) {
+  for (g = g_list_first (context->movielist); g; g = g_list_next (g)) {
     listentry = (struct mc_list_entry *)g->data;
 
-    if (listentry->seg == seg)
+    if (listentry->movie == movie)
       return listentry->mc;
   }
 
@@ -350,8 +345,7 @@ swfdec_js_add_movieclip (SwfdecDecoder *s)
       NULL, NULL);
 
   root = JS_NewObject (s->jscx, &movieclip_class, NULL, NULL);
-  JS_AddRoot (s->jscx, root);
-  JS_SetPrivate (s->jscx, root, s->main_sprite_seg);
+  JS_SetPrivate (s->jscx, root, s->root);
   val = OBJECT_TO_JSVAL(root);
   if (!JS_SetProperty(s->jscx, global, "_root", &val)) {
     SWFDEC_ERROR ("failed to set root object");
@@ -362,14 +356,14 @@ swfdec_js_add_movieclip (SwfdecDecoder *s)
 
 #if 0
 void
-action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
+action_register_sprite_movie (SwfdecDecoder * s, SwfdecMovieClip *movie)
 {
   SwfdecActionContext *context;
   JSObject *mc;
   JSBool ok;
   jsval val;
 
-  SWFDEC_DEBUG ("Placing MovieClip %s", seg->name ? seg->name : "(no name)");
+  SWFDEC_DEBUG ("Placing MovieClip %s", movie->name ? movie->name : "(no name)");
 
   if (s->context == NULL)
     swfdec_init_context (s);
@@ -378,16 +372,16 @@ action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
   JS_GC(context->jscx);
 #endif
 
-  mc = movieclip_new (context, seg);
+  mc = movieclip_new (context, movie);
   val = OBJECT_TO_JSVAL(mc);
 
-  if (seg->name) {
+  if (movie->name) {
     JSObject *parentclip;
     char *parentname;
 
-    parentclip = movieclip_find (context, s->parse_sprite_seg);
+    parentclip = movieclip_find (context, s->parse_sprite_movie);
     parentname = name_object (context, parentclip);
-    SWFDEC_INFO("%s is a child of %s", seg->name, parentname);
+    SWFDEC_INFO("%s is a child of %s", movie->name, parentname);
     g_free (parentname);
 
     /* FIXME: This helps sbemail out a bit, but I'm guessing it's wrong.  There
@@ -395,10 +389,10 @@ action_register_sprite_seg (SwfdecDecoder * s, SwfdecSpriteSegment *seg)
      * while parsing _root, but is then accessed as a member of another movie
      * clip which is also a child of _root.
      */
-    ok = JS_SetProperty (context->jscx, context->global, seg->name, &val);
-    ok &= JS_SetProperty (context->jscx, parentclip, seg->name, &val);
+    ok = JS_SetProperty (context->jscx, context->global, movie->name, &val);
+    ok &= JS_SetProperty (context->jscx, parentclip, movie->name, &val);
     if (!ok)
-      SWFDEC_WARNING("Failed to register %s", seg->name);
+      SWFDEC_WARNING("Failed to register %s", movie->name);
   }
 }
 #endif

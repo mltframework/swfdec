@@ -75,9 +75,8 @@ struct _SwfdecDecoder
   SwfdecRect irect;
 
   SwfdecSprite *main_sprite;
-  SwfdecSpriteSegment *main_sprite_seg;
+  SwfdecMovieClip *root;
   SwfdecSprite *parse_sprite;
-  SwfdecSpriteSegment *parse_sprite_seg;
 
   double flatness;
   int disable_render;
@@ -105,9 +104,6 @@ struct _SwfdecDecoder
   int audio_stream_index;
 
   GList *execute_list;
-  int last_frame;
-  int current_frame;
-  int next_frame;
 
   SwfdecCache *cache;
 };

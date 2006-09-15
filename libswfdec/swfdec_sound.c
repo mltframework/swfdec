@@ -46,6 +46,8 @@ swfdec_sound_dispose (SwfdecSound * sound)
     swfdec_sound_mp3_cleanup (sound);
   }
   /* FIXME free uncompressed sound */
+
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (sound));
 }
 
 

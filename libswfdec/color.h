@@ -41,6 +41,7 @@ struct swfdec_gradient_struct
 
 void swfdec_color_set_source (cairo_t *cr, swf_color color);
 void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
+void swfdec_color_transform_init_color (SwfdecColorTransform *trans, swf_color color);
 void swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first);
 unsigned int swfdec_color_apply_transform (unsigned int in,

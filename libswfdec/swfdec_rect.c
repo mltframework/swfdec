@@ -111,13 +111,20 @@ swfdec_rect_contains (const SwfdecRect *rect, double x, double y)
 void
 swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
 {
+  SwfdecRect tmp;
+
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
   g_return_if_fail (matrix != NULL);
 
-  *dest = *src;
-  cairo_matrix_transform_point (matrix, &dest->x0, &dest->y0);
-  cairo_matrix_transform_point (matrix, &dest->x1, &dest->y1);
+  tmp = *src;
+  cairo_matrix_transform_point (matrix, &tmp.x0, &tmp.y0);
+  cairo_matrix_transform_point (matrix, &tmp.x1, &tmp.y1);
+
+  dest->x0 = MIN (tmp.x0, tmp.x1);
+  dest->y0 = MIN (tmp.y0, tmp.y1);
+  dest->x1 = MAX (tmp.x0, tmp.x1);
+  dest->y1 = MAX (tmp.y0, tmp.y1);
 }
 
 void

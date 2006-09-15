@@ -38,14 +38,10 @@ struct _SwfdecObjectClass
 {
   GObjectClass object_class;
 
-  void (*render) (SwfdecDecoder * decoder, 
-      cairo_t *cr, const SwfdecColorTransform *trans,
-      SwfdecObject * object, SwfdecRect *inval);
-  void (*iterate) (SwfdecDecoder *decoder, SwfdecObject *object, SwfdecRect *inval);
-  SwfdecMouseResult (*handle_mouse) (SwfdecDecoder *decoder, SwfdecObject *object,
-      double x, double y, int button, SwfdecRect *inval);
-
-  void (*dump) (SwfdecObject * object);
+  void (*render) (SwfdecObject *object, cairo_t *cr, const SwfdecColorTransform *trans,
+      const SwfdecRect *inval);
+  SwfdecMouseResult (*handle_mouse) (SwfdecObject *object,
+      double x, double y, int button);
 };
 
 GType swfdec_object_get_type (void);
@@ -53,15 +49,12 @@ gpointer swfdec_object_new (SwfdecDecoder *dec, GType type);
 void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
-void swfdec_object_iterate (SwfdecDecoder *s, SwfdecObject *object, SwfdecRect *inval);
-SwfdecMouseResult swfdec_object_handle_mouse (SwfdecDecoder *decoder, SwfdecObject *object,
-    double x, double y, int button, gboolean use_extents, SwfdecRect *inval);
-void swfdec_object_render (SwfdecDecoder *s, SwfdecObject *object, 
-    cairo_t *cr, const cairo_matrix_t *matrix, 
+SwfdecMouseResult swfdec_object_handle_mouse (SwfdecObject *object,
+    double x, double y, int button, gboolean use_extents);
+void swfdec_object_render (SwfdecObject *object, cairo_t *cr, 
     const SwfdecColorTransform *color, const SwfdecRect *inval);
+void swfdec_object_invalidate (SwfdecObject *object, const SwfdecRect *area);
 
-
-#ifndef GLIB_COMPAT
 
 #define SWFDEC_OBJECT_BOILERPLATE(type, type_as_function) \
 static void type_as_function ## _base_init (gpointer g_class); \
@@ -103,33 +96,6 @@ GType type_as_function ## _get_type (void) \
   return _type; \
 }
 
-#else
-
-#define SWFDEC_OBJECT_BOILERPLATE(type, type_as_function) \
-static void type_as_function ## _base_init (gpointer g_class); \
-static void type_as_function ## _class_init (type ## Class *g_class); \
-static void type_as_function ## _init (type *object); \
-static void type_as_function ## _dispose (type *object); \
- \
-GType type_as_function ## _get_type (void) \
-{ \
-  static type ## Class klass; \
-  static int inited = FALSE; \
-  GObjectClass *gclass = (GObjectClass *)&klass; \
-  \
-  if (!inited) { \
-    gclass->size = sizeof(type); \
-    gclass->name = #type ; \
-    gclass->dispose = (void *)type_as_function ## _dispose; \
-    gclass->base_init = type_as_function ## _base_init; \
-    gclass->class_init = (void *)type_as_function ## _class_init; \
-    gclass->init = (void *)type_as_function ## _init; \
-    type_as_function ## _base_init (&klass); \
-    type_as_function ## _class_init (&klass); \
-  } \
-  return (unsigned long) &klass; \
-}
-#endif
 
 G_END_DECLS
 #endif

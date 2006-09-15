@@ -1,7 +1,11 @@
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "swfdec_internal.h"
 #include <swfdec_button.h>
 #include <string.h>
+#include <js/jsapi.h>
+
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecButton, swfdec_button)
 
@@ -24,23 +28,20 @@ static void
 swfdec_button_dispose (SwfdecButton * button)
 {
   unsigned int i;
-  SwfdecButtonRecord *record;
   SwfdecButtonAction *action;
 
-  for (i = 0; i < button->records->len; i++) {
-    record = &g_array_index (button->records, SwfdecButtonRecord, i);
-    swfdec_spriteseg_free (record->segment);
-  }
   for (i = 0; i < button->actions->len; i++) {
     action = &g_array_index (button->actions, SwfdecButtonAction, i);
-    swfdec_buffer_unref (action->buffer);
+    JS_DestroyScript (SWFDEC_OBJECT (button)->decoder->jscx, action->script);
   }
   g_array_free (button->records, TRUE);
   g_array_free (button->actions, TRUE);
+
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (button));
 }
 
 static gboolean
-swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, double x, double y, int mouse_button)
+swfdec_button_has_mouse (SwfdecButton *button, double x, double y, int mouse_button)
 {
   guint i;
   SwfdecButtonRecord *record;
@@ -48,21 +49,20 @@ swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, double x, doub
   for (i = 0; i < button->records->len; i++) {
     SwfdecObject *obj;
     double tmpx, tmpy;
-    SwfdecRect rect;
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & SWFDEC_BUTTON_HIT) {
-      obj = swfdec_object_get (s, record->segment->id);
+      obj = swfdec_object_get (SWFDEC_OBJECT (button)->decoder, record->id);
       if (!obj) {
-        SWFDEC_WARNING ("couldn't get object with id %d", record->segment->id);
+        SWFDEC_WARNING ("couldn't get object with id %d", record->id);
 	continue;
       }
 
       tmpx = x;
       tmpy = y;
-      swfdec_matrix_transform_point_inverse (&record->segment->transform, &tmpx, &tmpy);
+      swfdec_matrix_transform_point_inverse (&record->transform, &tmpx, &tmpy);
 
-      if (swfdec_object_handle_mouse (s, obj, tmpx, tmpy, mouse_button, TRUE, &rect))
+      if (swfdec_object_handle_mouse (obj, tmpx, tmpy, mouse_button, TRUE))
 	return TRUE;
     }
   }
@@ -70,7 +70,7 @@ swfdec_button_has_mouse (SwfdecDecoder * s, SwfdecButton *button, double x, doub
 }
 
 static void
-swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondition condition)
+swfdec_button_execute (SwfdecButton *button, SwfdecButtonCondition condition)
 {
   unsigned int i;
   SwfdecButtonAction *action;
@@ -89,18 +89,18 @@ swfdec_button_execute (SwfdecDecoder *s, SwfdecButton *button, SwfdecButtonCondi
 
     SWFDEC_LOG ("button condition %04x", action->condition);
     if (action->condition & condition) {
-      swfdec_decoder_queue_script (s, (JSScript *) action->buffer);
+      swfdec_decoder_queue_script (SWFDEC_OBJECT (button)->decoder, action->script);
     }
   }
 }
 
 
 static void 
-swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, double y, int mouse_button)
+swfdec_button_change_state (SwfdecButton *button, double x, double y, int mouse_button)
 {
   gboolean has_mouse;
 
-  has_mouse = swfdec_button_has_mouse (s, button, x, y, mouse_button);
+  has_mouse = swfdec_button_has_mouse (button, x, y, mouse_button);
   switch (button->state) {
     case SWFDEC_BUTTON_UP:
       if (!has_mouse)
@@ -108,24 +108,24 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, do
       if (mouse_button) {
 	button->state = SWFDEC_BUTTON_DOWN;
 	if (button->menubutton) {
-	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
+	  swfdec_button_execute (button, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
 	} else {
 	  /* simulate entering then clicking */
-	  swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
-	  swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
+	  swfdec_button_execute (button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
+	  swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
 	}
       } else {
 	button->state = SWFDEC_BUTTON_OVER;
-	swfdec_button_execute (s, button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
+	swfdec_button_execute (button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
       }
       break;
     case SWFDEC_BUTTON_OVER:
       if (!has_mouse) {
 	button->state = SWFDEC_BUTTON_UP;
-	swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
+	swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
       } else if (button->has_mouse) {
 	button->state = SWFDEC_BUTTON_DOWN;
-	swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
+	swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
       }
       break;
     case SWFDEC_BUTTON_DOWN:
@@ -134,25 +134,25 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, do
 	if (!has_mouse) {
 	  button->state = SWFDEC_BUTTON_UP;
 	  if (button->menubutton || button->has_mouse) {
-	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
-	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
+	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
+	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
 	  } else {
-	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OUT_DOWN_TO_IDLE);
+	    swfdec_button_execute (button, SWFDEC_BUTTON_OUT_DOWN_TO_IDLE);
 	  }
 	} else {
 	  button->state = SWFDEC_BUTTON_OVER;
-	  swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
+	  swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
 	}
       } else {
 	if (has_mouse) {
 	  if (!button->has_mouse && !button->menubutton)
-	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN);
+	    swfdec_button_execute (button, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN);
 	} else if (button->has_mouse) {
 	  if (button->menubutton) {
 	    button->state = SWFDEC_BUTTON_UP;
-	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE);
+	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE);
 	  } else {
-	    swfdec_button_execute (s, button, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN);
+	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN);
 	  }
 	}
       }
@@ -165,14 +165,15 @@ swfdec_button_change_state (SwfdecDecoder *s, SwfdecButton *button, double x, do
 }
 
 static SwfdecMouseResult
-swfdec_button_handle_mouse (SwfdecDecoder *s, SwfdecObject *object, 
-  double x, double y, int mouse_button, SwfdecRect *inval)
+swfdec_button_handle_mouse (SwfdecObject *object, double x, double y, int mouse_button)
 {
+  SwfdecRect inval;
   SwfdecButton *button = SWFDEC_BUTTON (object);
   SwfdecButtonState old_state = button->state;
 
   g_print ("mouse at %g %g\n", x, y);
-  swfdec_button_change_state (s, button, x, y, mouse_button);
+  swfdec_button_change_state (button, x, y, mouse_button);
+  swfdec_rect_init_empty (&inval);
   if (old_state != button->state) {
     guint i;
     g_print ("button state changed from %d to %d\n", old_state, button->state);
@@ -184,17 +185,18 @@ swfdec_button_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
       record = &g_array_index (button->records, SwfdecButtonRecord, i);
       if ((record->states & old_state && (record->states & button->state) == 0) ||
 	  ((record->states & old_state) == 0 && record->states & button->state)) {
-	obj = swfdec_object_get (s, record->segment->id);
+	obj = swfdec_object_get (object->decoder, record->id);
 	if (!obj) {
-	  SWFDEC_WARNING ("couldn't get object with id %d", record->segment->id);
+	  SWFDEC_WARNING ("couldn't get object with id %d", record->id);
 	  continue;
 	}
 
-	swfdec_rect_transform (&rect, &obj->extents, &record->segment->transform);
-	swfdec_rect_union (inval, &rect, inval);
+	swfdec_rect_transform (&rect, &obj->extents, &record->transform);
+	swfdec_rect_union (&inval, &rect, &inval);
       }
     }
   }
+  swfdec_object_invalidate (object, &inval);
 
   if (button->state == SWFDEC_BUTTON_DOWN)
     return SWFDEC_MOUSE_GRABBED;
@@ -205,9 +207,8 @@ swfdec_button_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
 }
 
 static void
-swfdec_button_render (SwfdecDecoder * s, 
-      cairo_t *cr, const SwfdecColorTransform *trans,
-      SwfdecObject * object, SwfdecRect *inval)
+swfdec_button_render (SwfdecObject *object, cairo_t *cr, 
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecButton *button = SWFDEC_BUTTON (object);
   SwfdecButtonRecord *record;
@@ -218,15 +219,17 @@ swfdec_button_render (SwfdecDecoder * s,
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & button->state) {
-      obj = swfdec_object_get (s, record->segment->id);
+      obj = swfdec_object_get (object->decoder, record->id);
       if (obj) {
 	SwfdecColorTransform color_trans;
-	swfdec_color_transform_chain (&color_trans, &record->segment->color_transform,
+	SwfdecRect rect;
+	swfdec_color_transform_chain (&color_trans, &record->color_transform,
 	    trans);
-	swfdec_object_render (s, obj, cr, &record->segment->transform,
-	    &color_trans, inval);
+	cairo_transform (cr, &record->transform);
+	swfdec_rect_transform_inverse (&rect, inval, &record->transform);
+	swfdec_object_render (obj, cr, &color_trans, &rect);
       } else {
-	SWFDEC_WARNING ("couldn't find object id %d", record->segment->id);
+	SWFDEC_WARNING ("couldn't find object id %d", record->id);
       }
     }
   }

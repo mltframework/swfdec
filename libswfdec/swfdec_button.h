@@ -3,6 +3,7 @@
 #define _SWFDEC_BUTTON_H_
 
 #include <swfdec_object.h>
+#include <js/jspubtd.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecButton SwfdecButton;
@@ -39,15 +40,17 @@ typedef enum {
 
 struct _SwfdecButtonRecord
 {
-  SwfdecButtonState states;
-  SwfdecSpriteSegment *segment;
+  SwfdecButtonState	states;
+  unsigned int		id;
+  cairo_matrix_t	transform;
+  SwfdecColorTransform	color_transform;
 };
 
 struct _SwfdecButtonAction
 {
   SwfdecButtonCondition condition;
-  unsigned int key;
-  SwfdecBuffer *buffer;
+  unsigned int		key;
+  JSScript *script;
 };
 
 struct _SwfdecButton

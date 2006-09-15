@@ -8,8 +8,8 @@ js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
 	swfdec_rect.c swfdec_image.c \
-	render.c swfdec_shape.c swf.c swfdec_object.c swfdec_text.c \
-	swfdec_sprite.c swfdec_button.c \
+	swfdec_shape.c swf.c swfdec_object.c swfdec_text.c \
+	swfdec_sprite.c swfdec_button.c swfdec_movieclip.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
 	swfdec_buffer.c swfdec_audio.c swfdec_tag.c \
 	swfdec_cache.c swfdec_internal.h swfdec_decoder_internal.h \
@@ -31,7 +31,7 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec.h \
 	color.h swfdec_buffer.h swfdec_debug.h \
 	swfdec_button.h swfdec_compiler.h swfdec_decoder.h swfdec_image.h \
-	swfdec_object.h swfdec_font.h \
+	swfdec_object.h swfdec_font.h swfdec_movieclip.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_types.h tags.h \
 	swfdec_bits.h swfdec_rect.h \

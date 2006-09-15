@@ -60,6 +60,27 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
 }
 
 /**
+ * swfdec_color_transform_init_color:
+ * @trans: a #SwfdecColorTransform
+ * @color: a #SwfdecColor to transform to
+ *
+ * Initializes this color transform so it results in exactly @color no matter 
+ * the input.
+ **/
+void
+swfdec_color_transform_init_color (SwfdecColorTransform *trans, swf_color color)
+{
+  trans->mult[0] = 0.0;
+  trans->mult[1] = 0.0;
+  trans->mult[2] = 0.0;
+  trans->mult[3] = 0.0;
+  trans->add[0] = SWF_COLOR_R (color);
+  trans->add[1] = SWF_COLOR_G (color);
+  trans->add[2] = SWF_COLOR_B (color);
+  trans->add[3] = SWF_COLOR_A (color);
+}
+
+/**
  * swfdec_color_transform_chain:
  * @dest: #SwfdecColorTransform to take the result
  * @last: a #SwfdecColorTransform

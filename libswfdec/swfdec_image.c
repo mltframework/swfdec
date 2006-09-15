@@ -52,6 +52,8 @@ swfdec_image_dispose (SwfdecImage * image)
     swfdec_buffer_unref (image->raw_data);
     image->raw_data = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (image));
 }
 
 

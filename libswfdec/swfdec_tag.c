@@ -98,7 +98,6 @@ define_text (SwfdecDecoder * s, int rgba)
       int i;
 
       n_glyphs = swfdec_bits_getbits (bits, 7);
-      glyph.x = 0;
       for (i = 0; i < n_glyphs; i++) {
         glyph.glyph = swfdec_bits_getbits (bits, n_glyph_bits);
 
@@ -263,17 +262,6 @@ tag_func_define_sprite (SwfdecDecoder * s)
 }
 
 int
-tag_func_set_background_color (SwfdecDecoder * s)
-{
-  s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color = 
-    swfdec_bits_get_color (&s->b);
-  SWFDEC_LOG ("bg color %08X", s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color);
-
-  return SWF_OK;
-}
-
-
-int
 tag_func_do_action (SwfdecDecoder * s)
 {
   JSScript *script;
@@ -307,6 +295,7 @@ tag_func_do_init_action (SwfdecDecoder * s)
   bits->ptr += len;
 
   if (SWFDEC_IS_SPRITE(obj)) {
+    g_assert_not_reached ();
 #if 0
     SwfdecSprite *save_parse_sprite = s->parse_sprite;
     s->parse_sprite = SWFDEC_SPRITE(obj);
@@ -378,10 +367,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    record.segment = swfdec_spriteseg_new ();
-    record.segment->id = character;
-    record.segment->transform = trans;
-    record.segment->color_transform = color_trans;
+    record.id = character;
+    record.transform = trans;
+    record.color_transform = color_trans;
 
     g_array_append_val (button->records, record);
   }
@@ -404,17 +392,10 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 
     SWFDEC_LOG ("  offset = %d", offset);
 
-    {
-      SwfdecBits tmp = s->b;
-      swfdec_compile (s);
-      s->b = tmp;
-    }
-    action.buffer = swfdec_buffer_new_subbuffer (bits->buffer,
-        bits->ptr - bits->buffer->data, len);
+    action.script = swfdec_compile (s);
 
-    bits->ptr += len;
-
-    g_array_append_val (button->actions, action);
+    if (action.script)
+      g_array_append_val (button->actions, action);
   }
   SWFDEC_DEBUG ("number of actions %d", button->actions->len);
 
@@ -430,6 +411,7 @@ tag_func_define_button (SwfdecDecoder * s)
   SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
+  SwfdecButtonAction action = { 0 };
 
   endptr = bits->ptr + bits->buffer->length;
 
@@ -468,35 +450,19 @@ tag_func_define_button (SwfdecDecoder * s)
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    record.segment = swfdec_spriteseg_new ();
-    record.segment->id = character;
-    record.segment->transform = trans;
-    record.segment->color_transform = color_trans;
+    record.id = character;
+    record.transform = trans;
+    record.color_transform = color_trans;
 
     g_array_append_val (button->records, record);
   }
   swfdec_bits_get_u8 (bits);
 
-  {
-    SwfdecButtonAction action = { 0 };
-    int len;
-
-    {
-      SwfdecBits tmp = s->b;
-      swfdec_compile (s);
-      s->b = tmp;
-    }
-    action.condition = SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN;
-
-    len = bits->end - bits->ptr;
-
-    action.buffer = swfdec_buffer_new_subbuffer (bits->buffer,
-        bits->ptr - bits->buffer->data, len);
-
-    bits->ptr += len;
-
+  action.condition = SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN;
+  action.script = swfdec_compile (s);
+  
+  if (action.script)
     g_array_append_val (button->actions, action);
-  }
   SWFDEC_DEBUG ("number of actions %d", button->actions->len);
 
   return SWF_OK;
@@ -786,15 +752,7 @@ tag_show_frame (SwfdecDecoder * s)
   SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
       s->parse_sprite->object.id);
 
-  s->frame_number++;
   s->parse_sprite->parse_frame++;
-  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
-    s->parse_sprite->frames[s->parse_sprite->parse_frame].segments =
-      g_list_copy (
-          s->parse_sprite->frames[s->parse_sprite->parse_frame - 1].segments);
-    s->parse_sprite->frames[s->parse_sprite->parse_frame].bg_color = 
-      s->parse_sprite->frames[s->parse_sprite->parse_frame - 1].bg_color;
-  }
 
   return SWF_OK;
 }

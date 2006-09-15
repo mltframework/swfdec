@@ -69,6 +69,9 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
 void
 swfdec_js_finish_decoder (SwfdecDecoder *s)
 {
+  JSObject *global = JS_GetGlobalObject (s->jscx);
+
+  JS_RemoveRoot (s->jscx, global);
   if (s->jscx) {
     JS_DestroyContext(s->jscx);
     s->jscx = NULL;

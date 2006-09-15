@@ -40,10 +40,10 @@ char *swfdec_decoder_get_url (SwfdecDecoder * s);
 
 void swfdec_decoder_eof (SwfdecDecoder * s);
 
-void swfdec_decoder_iterate (SwfdecDecoder *dec, SwfdecRect *invalidated);
+void swfdec_decoder_iterate (SwfdecDecoder *dec);
 void swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area);
 void swfdec_decoder_handle_mouse (SwfdecDecoder *dec, 
-    double x, double y, int button, SwfdecRect *inval);
+    double x, double y, int button);
 
 G_END_DECLS
 #endif

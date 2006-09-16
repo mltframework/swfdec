@@ -230,18 +230,60 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_TRUE;
 }
 
-/* MovieClip AS standard class */
+static JSBool
+mc_currentframe (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovieClip *movie;
 
-enum {
-	MC_X = -1,
-	MC_Y = -2,
-};
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  *vp = INT_TO_JSVAL (movie->current_frame);
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_framesloaded (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovieClip *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (SWFDEC_IS_SPRITE (movie->child)) {
+    SwfdecSprite *sprite = SWFDEC_SPRITE (movie->child);
+    *vp = INT_TO_JSVAL (sprite->parse_frame);
+  } else {
+    *vp = INT_TO_JSVAL (swfdec_movie_clip_get_n_frames (movie));
+  }
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_totalframes (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovieClip *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  *vp = INT_TO_JSVAL (swfdec_movie_clip_get_n_frames (movie));
+
+  return JS_TRUE;
+}
+
+/* MovieClip AS standard class */
 
 #define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
 static JSPropertySpec movieclip_props[] = {
-	{"_x",	MC_X,	MC_PROP_ATTRS, mc_x_get, mc_x_set},
-	{"_y",	MC_Y,	MC_PROP_ATTRS, mc_y_get, mc_y_set},
-        {NULL}
+  {"_x",	    -1,	MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set},
+  {"_y",	    -2,	MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set},
+  {"_currentframe", -3,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL},
+  {"_framesloaded", -4,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL},
+  {"_totalframes",  -5,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,  NULL},
+  {NULL}
 };
 
 static JSClass movieclip_class = {

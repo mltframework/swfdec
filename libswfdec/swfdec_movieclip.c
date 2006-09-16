@@ -239,7 +239,7 @@ swfdec_movie_clip_handle_mouse (SwfdecObject *object,
       double x, double y, int button)
 {
   GList *g;
-  int clip_depth;
+  int clip_depth = 0;
   SwfdecMovieClip *child;
   SwfdecMovieClip *movie = SWFDEC_MOVIE_CLIP (object);
   SwfdecMouseResult ret = SWFDEC_MOUSE_MISSED;

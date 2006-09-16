@@ -6,6 +6,7 @@
 #include <js/jsapi.h>
 #include "swfdec_types.h"
 #include "swfdec_decoder.h"
+#include "swfdec_movieclip.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_compiler.h"
@@ -132,7 +133,9 @@ swfdec_js_execute_script (SwfdecDecoder *s, JSScript *script)
   g_return_val_if_fail (s != NULL, FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
 
-  //swfdec_disassemble (s, script);
+  g_print ("executing script %p in frame %u\n", script,
+      s->root->current_frame);
+  swfdec_disassemble (s, script);
   global = JS_GetGlobalObject (s->jscx);
   ret = JS_ExecuteScript (s->jscx, global, script, &rval);
   if (ret && rval != JSVAL_VOID) {

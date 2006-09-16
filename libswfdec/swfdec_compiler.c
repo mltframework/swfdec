@@ -348,7 +348,7 @@ swfdec_compile (SwfdecDecoder *s)
       len = 0;
     }
     current = swfdec_action_find (action);
-    g_print ("  %s\n", current->name);
+    SWFDEC_DEBUG ("compiling action %s", current->name);
     if (state.error == NULL && current && current->compile) {
       current->compile (&state, action, len);
       compile_state_push_offset (&state);
@@ -364,8 +364,7 @@ swfdec_compile (SwfdecDecoder *s)
     }
   }
   ret = compile_state_finish (&state);
-  g_print ("\n");
-#if 1
+#if 0
   if (ret)
     swfdec_disassemble (s, ret);
 #endif

@@ -74,116 +74,6 @@ swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script)
   }
 }
 
-#if 0
-static SwfdecMouseResult 
-swfdec_sprite_handle_mouse (SwfdecDecoder *s, SwfdecObject *object,
-      double x, double y, int button, SwfdecRect *inval)
-{
-  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
-  SwfdecSpriteFrame *frame;
-  GList *g;
-  SwfdecMouseResult ret;
-  double tmpx, tmpy;
-  SwfdecObject *child_object;
-  SwfdecSpriteSegment *child_seg;
-  int clip_depth = 0;
-  SwfdecRect rect;
-
-  frame = &sprite->frames[s->current_frame];
-  g = frame->segments;
-  if (sprite->mouse_grab) {
-    child_seg = sprite->mouse_grab;
-    sprite->mouse_grab = NULL;
-    goto grab_exists;
-  }
-  while (g) {
-    child_seg = g->data;
-    g = g->next;
-grab_exists:
-    if (child_seg->clip_depth) {
-      SWFDEC_INFO ("clip_depth=%d", child_seg->clip_depth);
-      clip_depth = child_seg->clip_depth;
-    }
-
-    if (clip_depth && child_seg->depth <= clip_depth) {
-      SWFDEC_INFO ("clipping depth=%d", child_seg->clip_depth);
-      continue;
-    }
-
-    child_object = swfdec_object_get (s, child_seg->id);
-    if (child_object == NULL)
-      continue;
-    tmpx = x;
-    tmpy = y;
-    swfdec_matrix_transform_point_inverse (&child_seg->transform, &tmpx, &tmpy);
-    /* ignore extents for grab object */
-    ret = swfdec_object_handle_mouse (s, child_object, tmpx, tmpy, button, 
-	g == frame->segments, &rect);
-    swfdec_rect_union (inval, inval, &rect);
-    switch (ret) {
-      case SWFDEC_MOUSE_GRABBED:
-	sprite->mouse_grab = child_seg;
-	/* fall through */
-      case SWFDEC_MOUSE_HIT:
-	return ret;
-      case SWFDEC_MOUSE_MISSED:
-	break;
-    }
-  }
-  return ret;
-}
-
-static void
-swfdec_sprite_render (SwfdecDecoder * s, cairo_t *cr,
-    const SwfdecColorTransform *trans, SwfdecObject * object, 
-    SwfdecRect *inval)
-{
-  SwfdecSprite *sprite = SWFDEC_SPRITE (object);
-  SwfdecSpriteFrame *frame;
-  GList *g;
-  int clip_depth = 0;
-
-  frame = &sprite->frames[s->current_frame];
-  
-  /* FIXME: we don't cairo_paint because there's no clipping yet */
-  swfdec_color_set_source (cr, frame->bg_color);
-  cairo_rectangle (cr, inval->x0, inval->y0, inval->x1 - inval->x0, inval->y1 - inval->y0);
-  cairo_fill (cr);
-
-  for (g = g_list_last (frame->segments); g; g = g_list_previous (g)) {
-    SwfdecObject *child_object;
-    SwfdecSpriteSegment *child_seg;
-
-    child_seg = (SwfdecSpriteSegment *) g->data;
-
-    /* FIXME need to clip layers instead */
-    if (child_seg->clip_depth) {
-      SWFDEC_INFO ("clip_depth=%d", child_seg->clip_depth);
-      clip_depth = child_seg->clip_depth;
-    }
-
-    if (clip_depth && child_seg->depth <= clip_depth) {
-      SWFDEC_INFO ("clipping depth=%d", child_seg->clip_depth);
-      continue;
-    }
-
-    child_object = swfdec_object_get (s, child_seg->id);
-    if (child_object) {
-      SwfdecColorTransform color_trans;
-      swfdec_color_transform_chain (&color_trans, &child_seg->color_transform,
-	  trans);
-      SWFDEC_LOG ("rendering %s %p with depth %d", G_OBJECT_TYPE_NAME (child_object),
-	  child_object, child_seg->depth);
-      swfdec_object_render (s, child_object, cr, &child_seg->transform,
-	  &color_trans, inval);
-    } else {
-      SWFDEC_WARNING ("could not find object (id = %d)", child_seg->id);
-    }
-  }
-}
-#endif
-
-#if 0
 static int
 swfdec_get_clipeventflags (SwfdecDecoder * s, SwfdecBits * bits)
 {
@@ -193,7 +83,6 @@ swfdec_get_clipeventflags (SwfdecDecoder * s, SwfdecBits * bits)
     return swfdec_bits_get_u32 (bits);
   }
 }
-#endif
 
 static void
 swfdec_sprite_add_action (SwfdecSprite *sprite, guint frame_nr, SwfdecSpriteAction *action)
@@ -298,11 +187,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     SWFDEC_LOG ("clip_depth = %04x", action.uint.value[0]);
   }
   if (has_clip_actions) {
-    /* FIXME */
-    g_assert_not_reached ();
-#if 0
     int reserved, clip_event_flags, event_flags, record_size;
-    int i;
 
     reserved = swfdec_bits_get_u16 (bits);
     clip_event_flags = swfdec_get_clipeventflags (s, bits);
@@ -316,19 +201,11 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
       SWFDEC_INFO ("clip event with flags 0x%x, %d record length (v%d)",
 	  event_flags, record_size, s->version);
 
-      for (i = 0; i < CLIPEVENT_MAX; i++) {
-        if (!(event_flags & (1 << i)))
-          continue;
-        layer->clipevent[i] = swfdec_buffer_new_subbuffer (bits->buffer,
-            bits->ptr - bits->buffer->data, record_size);
-	event_flags &= ~(1 << i);
-      }
       if (event_flags != 0) {
         SWFDEC_WARNING ("  clip actions other than onLoad/enterFrame unimplemented");
       }
       bits->ptr += record_size;
     }
-#endif
   }
 
   return SWF_OK;

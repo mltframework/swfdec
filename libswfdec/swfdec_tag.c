@@ -295,7 +295,7 @@ tag_func_do_init_action (SwfdecDecoder * s)
   bits->ptr += len;
 
   if (SWFDEC_IS_SPRITE(obj)) {
-    g_assert_not_reached ();
+    SWFDEC_WARNING ("init actions not implemented yet");
 #if 0
     SwfdecSprite *save_parse_sprite = s->parse_sprite;
     s->parse_sprite = SWFDEC_SPRITE(obj);

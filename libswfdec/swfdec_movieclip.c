@@ -205,8 +205,15 @@ swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
   if (movie->stopped || !movie->visible)
     return;
 
-  SWFDEC_LOG ("iterate, frame_index = %d", movie->next_frame);
+  /* don't do anything if the requested frame isn't loaded yet */
+  if (SWFDEC_IS_SPRITE (movie->child) && 
+      movie->next_frame >= SWFDEC_SPRITE (movie->child)->parse_frame) {
+    SWFDEC_DEBUG ("not iterating, frame %u isn't loaded (loading %u)",
+      movie->next_frame, SWFDEC_SPRITE (movie->child)->parse_frame);
+    return;
+  }
 
+  SWFDEC_LOG ("iterate, frame_index = %d", movie->next_frame);
   movie->current_frame = movie->next_frame;
   movie->next_frame = -1;
   if (SWFDEC_IS_SPRITE (movie->child)) {

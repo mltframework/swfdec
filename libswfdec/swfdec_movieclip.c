@@ -124,79 +124,81 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
   SwfdecRect inval;
   SwfdecSpriteFrame *frame = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
 
-  if (frame->actions == NULL)
-    return;
-  swfdec_rect_init_empty (&inval);
-  for (i = 0; i < frame->actions->len; i++) {
-    action = &g_array_index (frame->actions, SwfdecSpriteAction, i);
-    SWFDEC_LOG ("performing action %d\n", action->type);
-    switch (action->type) {
-      case SWFDEC_SPRITE_ACTION_REMOVE_OBJECT:
-	tmp = swfdec_display_list_remove (&movie->list, action->uint.value[0]);
-	if (tmp) {
-	  swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
-	  g_object_unref (tmp);
-	  if (tmp == movie->mouse_grab)
-	    movie->mouse_grab = NULL;
-	}
-	break;
-      case SWFDEC_SPRITE_ACTION_PLACE_OBJECT:
-	if (cur) {
-	  swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-	}
-	cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
-	tmp = swfdec_display_list_add (&movie->list, action->uint.value[1], cur);
-	if (tmp) {
-	  swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
-	  g_object_unref (tmp);
-	}
-	break;
-      case SWFDEC_SPRITE_ACTION_GET_OBJECT:
-	if (cur) {
-	  swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-	}
-	cur = swfdec_display_list_get (&movie->list, action->uint.value[1]);
-	break;
-      case SWFDEC_SPRITE_ACTION_TRANSFORM:
-	if (cur) {
-	  cur->inverse_transform = cur->transform = action->matrix.matrix;
-	  /* FIXME: calculate x, y, rotation, xscale, yscale */
-	  if (cairo_matrix_invert (&cur->inverse_transform)) {
-	    g_assert_not_reached ();
+  if (frame->actions != NULL) {
+    swfdec_rect_init_empty (&inval);
+    for (i = 0; i < frame->actions->len; i++) {
+      action = &g_array_index (frame->actions, SwfdecSpriteAction, i);
+      SWFDEC_LOG ("performing action %d\n", action->type);
+      switch (action->type) {
+	case SWFDEC_SPRITE_ACTION_REMOVE_OBJECT:
+	  tmp = swfdec_display_list_remove (&movie->list, action->uint.value[0]);
+	  if (tmp) {
+	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
+	    g_object_unref (tmp);
+	    if (tmp == movie->mouse_grab)
+	      movie->mouse_grab = NULL;
 	  }
-	}
-	break;
-      case SWFDEC_SPRITE_ACTION_BG_COLOR:
-	movie->bg_color = swfdec_color_apply_transform (0, &action->color.transform);
-	swfdec_object_invalidate (SWFDEC_OBJECT (movie), &SWFDEC_OBJECT (movie)->extents);
-	break;
-      case SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM:
-	if (cur) {
-	  cur->color_transform = action->color.transform;
-	}
-	break;
-      case SWFDEC_SPRITE_ACTION_RATIO:
-	if (cur) {
-	  cur->ratio = action->uint.value[0];
-	}
-	break;
-      case SWFDEC_SPRITE_ACTION_NAME:
-	g_free (cur->name);
-	cur->name = g_strdup (action->string.string);
-	break;
-      case SWFDEC_SPRITE_ACTION_CLIP_DEPTH:
-	cur->clip_depth = action->uint.value[0];
-	break;
-      default:
-	g_assert_not_reached ();
-	break;
+	  break;
+	case SWFDEC_SPRITE_ACTION_PLACE_OBJECT:
+	  if (cur) {
+	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+	  }
+	  cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
+	  tmp = swfdec_display_list_add (&movie->list, action->uint.value[1], cur);
+	  if (tmp) {
+	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
+	    g_object_unref (tmp);
+	  }
+	  break;
+	case SWFDEC_SPRITE_ACTION_GET_OBJECT:
+	  if (cur) {
+	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+	  }
+	  cur = swfdec_display_list_get (&movie->list, action->uint.value[1]);
+	  break;
+	case SWFDEC_SPRITE_ACTION_TRANSFORM:
+	  if (cur) {
+	    cur->inverse_transform = cur->transform = action->matrix.matrix;
+	    /* FIXME: calculate x, y, rotation, xscale, yscale */
+	    if (cairo_matrix_invert (&cur->inverse_transform)) {
+	      g_assert_not_reached ();
+	    }
+	  }
+	  break;
+	case SWFDEC_SPRITE_ACTION_BG_COLOR:
+	  movie->bg_color = swfdec_color_apply_transform (0, &action->color.transform);
+	  swfdec_object_invalidate (SWFDEC_OBJECT (movie), &SWFDEC_OBJECT (movie)->extents);
+	  break;
+	case SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM:
+	  if (cur) {
+	    cur->color_transform = action->color.transform;
+	  }
+	  break;
+	case SWFDEC_SPRITE_ACTION_RATIO:
+	  if (cur) {
+	    cur->ratio = action->uint.value[0];
+	  }
+	  break;
+	case SWFDEC_SPRITE_ACTION_NAME:
+	  g_free (cur->name);
+	  cur->name = g_strdup (action->string.string);
+	  break;
+	case SWFDEC_SPRITE_ACTION_CLIP_DEPTH:
+	  cur->clip_depth = action->uint.value[0];
+	  break;
+	default:
+	  g_assert_not_reached ();
+	  break;
+      }
     }
+    if (cur) {
+      swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+    }
+    if (!swfdec_rect_is_empty (&inval))
+      swfdec_object_invalidate (SWFDEC_OBJECT (movie), &inval);
   }
-  if (cur) {
-    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-  }
-  if (!swfdec_rect_is_empty (&inval))
-    swfdec_object_invalidate (SWFDEC_OBJECT (movie), &inval);
+  if (frame->action)
+    swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, frame->action);
 }
 
 void 

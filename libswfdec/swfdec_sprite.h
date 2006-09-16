@@ -70,7 +70,7 @@ struct _SwfdecSpriteFrame
   SwfdecSoundChunk *sound_play;
 
   swf_color bg_color;
-  GArray *actions;
+  GArray *actions;			/* actions to perform */
 };
 
 struct _SwfdecSprite

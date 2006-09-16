@@ -621,8 +621,8 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
   swfdec_decoder_execute_scripts (dec);
 
 #if 0
-  if (dec->current_frame == 23)
-    swfdec_js_run (dec, "_root.gotoAndPlay (58);");
+  if (dec->root->current_frame == 23)
+    swfdec_js_run (dec, "if (_root._framesloaded >= 50) { _root.gotoAndPlay (10) };");
 #endif
 }
 

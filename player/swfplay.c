@@ -28,7 +28,7 @@ buffer_free (SwfdecBuffer *buffer, void *priv)
 int main (int argc, char *argv[])
 {
   gsize length;
-  int ret;
+  int ret = 100;
   double scale;
   SwfdecDecoder *s;
   char *contents;

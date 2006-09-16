@@ -14,7 +14,7 @@ view_swf (SwfdecDecoder *dec, double scale)
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   gtk_container_add (GTK_CONTAINER (window), widget);
   gtk_widget_show_all (window);
-  g_signal_connect (window, "destroy-event", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   gtk_main ();
 }

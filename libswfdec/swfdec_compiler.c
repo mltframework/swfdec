@@ -348,7 +348,7 @@ swfdec_compile (SwfdecDecoder *s)
       len = 0;
     }
     current = swfdec_action_find (action);
-    SWFDEC_DEBUG ("compiling action %s", current->name);
+    SWFDEC_DEBUG ("compiling action %d %s", action, current ? current->name : "unknown");
     if (state.error == NULL && current && current->compile) {
       current->compile (&state, action, len);
       compile_state_push_offset (&state);

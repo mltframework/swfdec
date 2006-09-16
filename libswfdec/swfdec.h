@@ -23,7 +23,7 @@ int swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data,
     int length);
 int swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer);
 int swfdec_decoder_parse (SwfdecDecoder * s);
-int swfdec_decoder_free (SwfdecDecoder * s);
+void swfdec_decoder_free (SwfdecDecoder * s);
 
 int swfdec_decoder_get_n_frames (SwfdecDecoder * s, int *n_frames);
 int swfdec_decoder_get_rate (SwfdecDecoder * s, double *rate);

@@ -254,9 +254,11 @@ swfdec_decoder_parse (SwfdecDecoder * s)
   return ret;
 }
 
-int
+void
 swfdec_decoder_free (SwfdecDecoder * s)
 {
+  g_return_if_fail (s != NULL);
+
   g_object_unref (s->root);
 
   g_list_foreach (s->objects, (GFunc) swfdec_object_unref, NULL);
@@ -288,8 +290,6 @@ swfdec_decoder_free (SwfdecDecoder * s)
   swfdec_cache_free (s->cache);
 
   g_free (s);
-
-  return SWF_OK;
 }
 
 int

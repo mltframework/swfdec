@@ -104,7 +104,14 @@ swfdec_widget_dispose (GObject *object)
 {
   SwfdecWidget * widget = SWFDEC_WIDGET (object);
 
-  swfdec_decoder_free (widget->dec);
+  if (widget->timeout) {
+    g_source_remove (widget->timeout);
+    widget->timeout = 0;
+  }
+  if (widget->dec) {
+    swfdec_decoder_free (widget->dec);
+    widget->dec = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_widget_parent_class)->dispose (object);
 }
@@ -171,8 +178,10 @@ swfdec_widget_unmap (GtkWidget *gtkwidget)
 {
   SwfdecWidget * widget = SWFDEC_WIDGET (gtkwidget);
 
-  g_source_remove (widget->timeout);
-  widget->timeout = 0;
+  if (widget->timeout) {
+    g_source_remove (widget->timeout);
+    widget->timeout = 0;
+  }
 
   GTK_WIDGET_CLASS (swfdec_widget_parent_class)->unmap (gtkwidget);
 }

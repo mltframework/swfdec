@@ -26,6 +26,8 @@ enum
 
 typedef int SwfdecTagFunc (SwfdecDecoder *);
 
+#define SWFDEC_IS_DECODER(s) ((s) != NULL)
+
 struct _SwfdecDecoder
 {
   int version;

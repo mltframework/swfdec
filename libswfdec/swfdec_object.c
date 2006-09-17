@@ -5,7 +5,6 @@
 #include <string.h>
 
 
-#ifndef GLIB_COMPAT
 static void swfdec_object_base_init (gpointer g_class);
 static void swfdec_object_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_object_init (GTypeInstance * instance, gpointer g_class);
@@ -72,7 +71,6 @@ swfdec_object_dispose (GObject * object)
   
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
-#endif
 
 gpointer
 swfdec_object_new (SwfdecDecoder *dec, GType type)
@@ -144,35 +142,39 @@ swfdec_object_render (SwfdecObject *object, cairo_t *cr,
 }
 
 /**
- * swfdec_object_handle_mouse:
+ * swfdec_object_mouse_in:
  * @object: the object that should handle the mouse
  * @x: x position of mouse
  * @y: y position of mouse
  * @button: 1 if the mouse button was pressed, 0 otherwise
- * @use_extents: if TRUE the mouse will automatically miss when the coordinates 
- *               are outside the extents of @object
  *
  * Handles a mouse button update. This function can also be used for collision 
  * detection.
  *
- * Returns: a #SwfdecMouseResult
+ * Returns: TRUE if the mouse is inside this object, FALSE otherwise 
  **/
-SwfdecMouseResult 
-swfdec_object_handle_mouse (SwfdecObject *object, double x, double y, 
-    int button, gboolean use_extents)
+gboolean
+swfdec_object_mouse_in (SwfdecObject *object, double x, double y, 
+    int button)
 {
   SwfdecObjectClass *klass;
 
-  g_return_val_if_fail (SWFDEC_IS_OBJECT (object), SWFDEC_MOUSE_MISSED);
-  g_return_val_if_fail (button == 0 || button == 1, SWFDEC_MOUSE_MISSED);
+  g_return_val_if_fail (SWFDEC_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (button == 0 || button == 1, FALSE);
 
+  SWFDEC_LOG ("%s %d mouse check at %g %g", G_OBJECT_TYPE_NAME (object), object->id,
+      x, y);
   klass = SWFDEC_OBJECT_GET_CLASS (object);
-  if (klass->handle_mouse == NULL)
-    return SWFDEC_MOUSE_MISSED;
-  if (!use_extents && !swfdec_rect_contains (&object->extents, x, y))
-    return SWFDEC_MOUSE_MISSED;
+  if (klass->mouse_in == NULL)
+    return FALSE;
+  if (!swfdec_rect_contains (&object->extents, x, y))
+    return FALSE;
 
-  return klass->handle_mouse (object, x, y, button);
+  if (klass->mouse_in (object, x, y, button)) {
+    SWFDEC_DEBUG ("%s %d has the mouse!", G_OBJECT_TYPE_NAME (object), object->id);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 void 

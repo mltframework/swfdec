@@ -290,8 +290,8 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   }
 }
 
-static SwfdecMouseResult 
-swfdec_shape_handle_mouse (SwfdecObject *object,
+static gboolean
+swfdec_shape_mouse_in (SwfdecObject *object,
       double x, double y, int button)
 {
   SwfdecShapeVec *shapevec;
@@ -315,17 +315,12 @@ swfdec_shape_handle_mouse (SwfdecObject *object,
 	  cairo_append_path (shape->fill_cr, &shapevec->path);
 	if (shapevec2->path.num_data)
 	  cairo_append_path (shape->fill_cr, &shapevec2->path);
-	cairo_fill (shape->fill_cr);
+	cairo_close_path (shape->fill_cr);
       }
     }
   }
   /* FIXME: handle strokes */
-  if (cairo_in_fill (shape->fill_cr, x, y)) {
-    g_print ("HIT %d\n", object->id);
-    return SWFDEC_MOUSE_HIT;
-  } else {
-    return SWFDEC_MOUSE_MISSED;
-  }
+  return cairo_in_fill (shape->fill_cr, x, y);
 }
 
 static void swfdec_shapevec_free (SwfdecShapeVec * shapevec);
@@ -344,7 +339,7 @@ swfdec_shape_class_init (SwfdecShapeClass * g_class)
   SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
   
   object_class->render = swfdec_shape_render;
-  object_class->handle_mouse = swfdec_shape_handle_mouse;
+  object_class->mouse_in = swfdec_shape_mouse_in;
 }
 
 static void

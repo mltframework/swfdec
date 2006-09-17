@@ -28,20 +28,18 @@ struct _SwfdecObject
   SwfdecRect		extents;	/* for visible objects only: bounding box that enclose this object */
 };
 
-typedef enum {
-  SWFDEC_MOUSE_MISSED,
-  SWFDEC_MOUSE_HIT,
-  SWFDEC_MOUSE_GRABBED
-} SwfdecMouseResult;
-
 struct _SwfdecObjectClass
 {
-  GObjectClass object_class;
+  GObjectClass		object_class;
 
-  void (*render) (SwfdecObject *object, cairo_t *cr, const SwfdecColorTransform *trans,
-      const SwfdecRect *inval);
-  SwfdecMouseResult (*handle_mouse) (SwfdecObject *object,
-      double x, double y, int button);
+  void			(* render)	(SwfdecObject *			object, 
+                                         cairo_t *			cr,
+					 const SwfdecColorTransform *	trans,
+					 const SwfdecRect *		inval);
+  gboolean		(* mouse_in)	(SwfdecObject *			object,
+					 double				x,
+					 double				y,
+					 int				button);
 };
 
 GType swfdec_object_get_type (void);
@@ -49,8 +47,8 @@ gpointer swfdec_object_new (SwfdecDecoder *dec, GType type);
 void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
-SwfdecMouseResult swfdec_object_handle_mouse (SwfdecObject *object,
-    double x, double y, int button, gboolean use_extents);
+gboolean swfdec_object_mouse_in (SwfdecObject *object,
+    double x, double y, int button);
 void swfdec_object_render (SwfdecObject *object, cairo_t *cr, 
     const SwfdecColorTransform *color, const SwfdecRect *inval);
 void swfdec_object_invalidate (SwfdecObject *object, const SwfdecRect *area);

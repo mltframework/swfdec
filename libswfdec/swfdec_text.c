@@ -3,12 +3,11 @@
 #include "swfdec_internal.h"
 #include <swfdec_font.h>
 
-static SwfdecMouseResult 
-swfdec_text_handle_mouse (SwfdecObject *object,
+static gboolean
+swfdec_text_mouse_in (SwfdecObject *object,
       double x, double y, int button)
 {
   unsigned int i;
-  SwfdecMouseResult ret;
   SwfdecObject *fontobj;
   SwfdecText *text = SWFDEC_TEXT (object);
 
@@ -30,12 +29,10 @@ swfdec_text_handle_mouse (SwfdecObject *object,
     tmpy = y - glyph->y;
     tmpx *= SWF_SCALE_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
     tmpy *= SWF_SCALE_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
-    ret = swfdec_object_handle_mouse (SWFDEC_OBJECT (shape),
-	tmpx, tmpy, button, TRUE);
-    if (ret != SWFDEC_MOUSE_MISSED)
-      return ret;
+    if (swfdec_object_mouse_in (SWFDEC_OBJECT (shape), tmpx, tmpy, button))
+      return TRUE;
   }
-  return SWFDEC_MOUSE_MISSED;
+  return FALSE;
 }
 
 static void
@@ -101,7 +98,7 @@ swfdec_text_class_init (SwfdecTextClass * g_class)
   SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
 
   object_class->render = swfdec_text_render;
-  object_class->handle_mouse = swfdec_text_handle_mouse;
+  object_class->mouse_in = swfdec_text_mouse_in;
 }
 
 static void

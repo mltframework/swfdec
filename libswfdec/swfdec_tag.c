@@ -376,28 +376,19 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   swfdec_bits_get_u8 (bits);
 
   while (offset != 0) {
-    SwfdecButtonAction action = { 0 };
-    int len;
+    guint condition, key;
 
     offset = swfdec_bits_get_u16 (bits);
-    action.condition = swfdec_bits_get_u16 (bits);
-    action.key = action.condition >> 9;
-    action.condition &= 0x1FF;
-
-    if (offset) {
-      len = offset - 4;
-    } else {
-      len = bits->end - bits->ptr;
-    }
+    condition = swfdec_bits_get_u16 (bits);
+    key = condition >> 9;
+    condition &= 0x1FF;
 
     SWFDEC_LOG ("  offset = %d", offset);
 
-    action.script = swfdec_compile (s);
-
-    if (action.script)
-      g_array_append_val (button->actions, action);
+    if (button->events == NULL)
+      button->events = swfdec_event_list_new (s);
+    swfdec_event_list_parse (button->events, condition, key);
   }
-  SWFDEC_DEBUG ("number of actions %d", button->actions->len);
 
   return SWF_OK;
 }
@@ -411,7 +402,6 @@ tag_func_define_button (SwfdecDecoder * s)
   SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
-  SwfdecButtonAction action = { 0 };
 
   endptr = bits->ptr + bits->buffer->length;
 
@@ -458,12 +448,8 @@ tag_func_define_button (SwfdecDecoder * s)
   }
   swfdec_bits_get_u8 (bits);
 
-  action.condition = SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN;
-  action.script = swfdec_compile (s);
-  
-  if (action.script)
-    g_array_append_val (button->actions, action);
-  SWFDEC_DEBUG ("number of actions %d", button->actions->len);
+  button->events = swfdec_event_list_new (s);
+  swfdec_event_list_parse (button->events, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
 
   return SWF_OK;
 }

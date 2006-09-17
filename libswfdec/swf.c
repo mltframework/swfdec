@@ -671,6 +671,7 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   g_return_if_fail (button == 0 || button == 1);
 
   g_assert (dec->execute_list == NULL);
-  swfdec_object_handle_mouse (SWFDEC_OBJECT (dec->root), x, y, button, TRUE);
+  SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
+  swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
   swfdec_decoder_execute_scripts (dec);
 }

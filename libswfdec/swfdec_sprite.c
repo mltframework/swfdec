@@ -196,7 +196,8 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     clip_event_flags = swfdec_get_clipeventflags (s, bits);
 
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
-      record_end = bits->ptr + swfdec_bits_get_u32 (bits);
+      guint tmp = swfdec_bits_get_u32 (bits);
+      record_end = bits->ptr + tmp;
 
       if (event_flags & SWFDEC_EVENT_KEY_PRESS)
 	key_code = swfdec_bits_get_u8 (bits);

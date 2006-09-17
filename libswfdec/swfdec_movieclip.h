@@ -5,6 +5,7 @@
 #include <swfdec_types.h>
 #include <swfdec_object.h>
 #include <color.h>
+#include <swfdec_button.h>
 
 G_BEGIN_DECLS
 
@@ -53,17 +54,25 @@ struct _SwfdecMovieClip
   gboolean		stopped;		/* if we currently iterate */
   gboolean		visible;		/* whether we currently can be seen or iterate */
 
+  /* mouse handling */
+  SwfdecMovieClip *	mouse_grab;		/* the child movie that has grabbed the mouse or self */
+  double		mouse_x;		/* x position of mouse */
+  double		mouse_y;		/* y position of mouse */
+  gboolean		mouse_in;		/* if the mouse is inside this widget */
+  int			mouse_button;		/* 1 if button is pressed, 0 otherwise */
+
+  /* color information */
   swf_color		bg_color;		/* the background color for this movie (only used in root movie) */
-  SwfdecColorTransform	color_transform;
-  SwfdecMovieClip *	mouse_grab;		/* the child movie that has grabbed the mouse */
+  SwfdecColorTransform	color_transform;	/* color transform used in this movie */
 
   /* leftover unimplemented variables from the Actionscript spec */
   int alpha;
   //droptarget
   char *target;
   char *url;
-  int xmouse;
-  int ymouse;
+
+  /* for buton handling (FIXME: want a subclass?) */
+  SwfdecButtonState	button_state;		/* state of the displayed button (UP/OVER/DOWN) */
 };
 
 struct _SwfdecMovieClipClass
@@ -79,6 +88,10 @@ unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
 
 void		swfdec_movie_clip_update_visuals	(SwfdecMovieClip *	movie);
 void		swfdec_movie_clip_iterate		(SwfdecMovieClip *	movie);
+gboolean      	swfdec_movie_clip_handle_mouse		(SwfdecMovieClip *	movie,
+							 double			x,
+							 double			y,
+							 int			button);
 
 
 G_END_DECLS

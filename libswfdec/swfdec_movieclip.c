@@ -105,6 +105,8 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
   swfdec_color_transform_init_identity (&movie->color_transform);
 
   movie->visible = TRUE;
+
+  movie->button_state = SWFDEC_BUTTON_UP;
 }
 
 static void
@@ -237,17 +239,47 @@ swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
   }
 }
 
-static SwfdecMouseResult 
-swfdec_movie_clip_handle_mouse (SwfdecObject *object,
+static gboolean
+swfdec_movie_clip_grab_mouse (SwfdecMovieClip *movie, SwfdecMovieClip *grab)
+{
+  if (movie->mouse_grab)
+    return FALSE;
+
+  if (movie->parent && !swfdec_movie_clip_grab_mouse (movie->parent, movie))
+    return FALSE;
+
+  movie->mouse_grab = grab;
+  return TRUE;
+}
+
+static void
+swfdec_movie_clip_ungrab_mouse (SwfdecMovieClip *movie)
+{
+  g_assert (movie->mouse_grab != NULL);
+
+  if (movie->parent)
+    swfdec_movie_clip_ungrab_mouse (movie->parent);
+  movie->mouse_grab = NULL;
+}
+
+gboolean
+swfdec_movie_clip_handle_mouse (SwfdecMovieClip *movie,
       double x, double y, int button)
 {
   GList *g;
   int clip_depth = 0;
   SwfdecMovieClip *child;
-  SwfdecMovieClip *movie = SWFDEC_MOVIE_CLIP (object);
-  SwfdecMouseResult ret = SWFDEC_MOUSE_MISSED;
+  gboolean was_in = movie->mouse_in;
+  guint old_button = movie->mouse_button;
+
+  g_assert (button == 0 || button == 1);
 
   cairo_matrix_transform_point (&movie->inverse_transform, &x, &y);
+  movie->mouse_in = FALSE;
+  movie->mouse_x = x;
+  movie->mouse_y = y;
+  SWFDEC_LOG ("moviclip %p mouse: %g %g\n", movie, x, y);
+  movie->mouse_button = button;
   g = movie->list.list;
   if (movie->mouse_grab) {
     child = movie->mouse_grab;
@@ -259,32 +291,30 @@ swfdec_movie_clip_handle_mouse (SwfdecObject *object,
     g = g->next;
 grab_exists:
     if (child->clip_depth) {
-      SWFDEC_INFO ("clip_depth=%d", child->clip_depth);
+      SWFDEC_LOG ("clip_depth=%d", child->clip_depth);
       clip_depth = child->clip_depth;
     }
 
     if (clip_depth && child->depth <= clip_depth) {
-      SWFDEC_INFO ("clipping depth=%d", child->clip_depth);
+      SWFDEC_DEBUG ("clipping depth=%d", child->clip_depth);
       continue;
     }
 
-    /* ignore extents for grab object */
-    ret = swfdec_object_handle_mouse (SWFDEC_OBJECT (child), x, y, button, 
-	g == movie->list.list);
-    switch (ret) {
-      case SWFDEC_MOUSE_GRABBED:
-	movie->mouse_grab = child;
-	/* fall through */
-      case SWFDEC_MOUSE_HIT:
-	return ret;
-      case SWFDEC_MOUSE_MISSED:
-	break;
+    if (swfdec_movie_clip_handle_mouse (child, x, y, button))
+      movie->mouse_in = TRUE;
+  }
+  if (movie->child) {
+    if (swfdec_object_mouse_in (movie->child, x, y, button))
+      movie->mouse_in = TRUE;
+    if (SWFDEC_IS_BUTTON (movie->child)) {
+      SwfdecButtonState state = swfdec_button_change_state (movie, was_in, old_button);
+      if (state != movie->button_state) {
+	SWFDEC_INFO ("%p changed button state from %u to %u", movie, movie->button_state, state);
+	movie->button_state = state;
+      }
     }
   }
-  if (movie->child)
-    ret = swfdec_object_handle_mouse (movie->child, x, y, button, 
-	g == movie->list.list);
-  return ret;
+  return movie->mouse_in;
 }
 
 static void
@@ -324,8 +354,21 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
     swfdec_object_render (SWFDEC_OBJECT (child), cr, &trans, &rect);
   }
-  if (movie->child)
-    swfdec_object_render (SWFDEC_OBJECT (movie->child), cr, &trans, &rect);
+  if (movie->child) {
+    if (SWFDEC_IS_BUTTON (movie->child)) {
+      swfdec_button_render (SWFDEC_BUTTON (movie->child), movie->button_state,
+	  cr, &trans, &rect);
+    } else {
+      swfdec_object_render (movie->child, cr, &trans, &rect);
+    }
+  }
+}
+
+static gboolean
+must_not_happen (SwfdecObject *object, double x, double y, int button)
+{
+  g_assert_not_reached ();
+  return FALSE;
 }
 
 static void
@@ -334,7 +377,7 @@ swfdec_movie_clip_class_init (SwfdecMovieClipClass * g_class)
   SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
 
   object_class->render = swfdec_movie_clip_render;
-  object_class->handle_mouse = swfdec_movie_clip_handle_mouse;
+  object_class->mouse_in = must_not_happen;
 }
 
 /**

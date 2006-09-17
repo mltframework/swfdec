@@ -3,13 +3,12 @@
 #define _SWFDEC_BUTTON_H_
 
 #include <swfdec_object.h>
-#include <js/jspubtd.h>
+#include <swfdec_event.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecButtonClass SwfdecButtonClass;
 typedef struct _SwfdecButtonRecord SwfdecButtonRecord;
-typedef struct _SwfdecButtonAction SwfdecButtonAction;
 
 #define SWFDEC_TYPE_BUTTON                    (swfdec_button_get_type())
 #define SWFDEC_IS_BUTTON(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_BUTTON))
@@ -46,23 +45,14 @@ struct _SwfdecButtonRecord
   SwfdecColorTransform	color_transform;
 };
 
-struct _SwfdecButtonAction
-{
-  SwfdecButtonCondition condition;
-  unsigned int		key;
-  JSScript *script;
-};
-
 struct _SwfdecButton
 {
   SwfdecObject object;
 
   gboolean menubutton;
-  SwfdecButtonState state;
-  gboolean has_mouse;
 
   GArray *records;
-  GArray *actions;
+  SwfdecEventList *events;
 };
 
 struct _SwfdecButtonClass
@@ -72,6 +62,11 @@ struct _SwfdecButtonClass
 };
 
 GType swfdec_button_get_type (void);
+
+void swfdec_button_render (SwfdecButton *button, SwfdecButtonState state, cairo_t *cr, 
+    const SwfdecColorTransform *trans, const SwfdecRect *inval);
+SwfdecButtonState swfdec_button_change_state (SwfdecMovieClip *movie, gboolean was_in, 
+  int old_button);
 
 G_END_DECLS
 #endif

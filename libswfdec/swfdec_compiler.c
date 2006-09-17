@@ -381,12 +381,117 @@ SwfdecActionSpec actions[] = {
   { 0x07, "Stop", compile_simple_call },
   { 0x08, "ToggleQuality", NULL },
   { 0x09, "StopSounds", NULL },
+  /* version 4 */
+  { 0x0a, "Add", NULL },
+  { 0x0b, "Subtract", NULL },
+  { 0x0c, "Multiply", NULL },
+  { 0x0d, "Divide", NULL },
+  { 0x0e, "Equals", NULL },
+  { 0x0f, "Less", NULL },
+  { 0x10, "And", NULL },
+  { 0x11, "Or", NULL },
+  { 0x12, "Not", NULL },
+  { 0x13, "StringEquals", NULL },
+  { 0x14, "StringLength", NULL },
+  { 0x15, "StringExtract", NULL },
+  { 0x17, "Pop", NULL },
+  { 0x18, "ToInteger", NULL },
+  { 0x1c, "GetVariable", NULL },
+  { 0x1d, "SetVariable", NULL },
+  { 0x20, "SetTarget2", NULL },
+  { 0x21, "StringAdd", NULL },
+  { 0x22, "GetProperty", NULL },
+  { 0x23, "SetProperty", NULL },
+  { 0x24, "CloneSprite", NULL },
+  { 0x25, "RemoveSprite", NULL },
+  { 0x26, "Trace", NULL },
+  { 0x27, "StartDrag", NULL },
+  { 0x28, "EndDrag", NULL },
+  { 0x29, "StringLess", NULL },
+  /* version 7 */
+  { 0x2a, "Throw", NULL },
+  { 0x2b, "Cast", NULL },
+  { 0x2c, "Implements", NULL },
+  /* version 4 */
+  { 0x30, "RandomNumber", NULL },
+  { 0x31, "MBStringLength", NULL },
+  { 0x32, "CharToAscii", NULL },
+  { 0x33, "AsciiToChar", NULL },
+  { 0x34, "GetTime", NULL },
+  { 0x35, "MBStringExtract", NULL },
+  { 0x36, "MBCharToAscii", NULL },
+  { 0x37, "MVAsciiToChar", NULL },
+  /* version 5 */
+  { 0x3a, "Delete", NULL },
+  { 0x3b, "Delete2", NULL },
+  { 0x3c, "DefineLocal", NULL },
+  { 0x3d, "CallFunction", NULL },
+  { 0x3e, "Return", NULL },
+  { 0x3f, "Modulo", NULL },
+  { 0x40, "NewObject", NULL },
+  { 0x41, "DefineLocal2", NULL },
+  { 0x42, "InitArray", NULL },
+  { 0x43, "InitObject", NULL },
+  { 0x44, "Typeof", NULL },
+  { 0x45, "TargetPath", NULL },
+  { 0x46, "Enumerate", NULL },
+  { 0x47, "Add2", NULL },
+  { 0x48, "Less2", NULL },
+  { 0x49, "Equals2", NULL },
+  { 0x4a, "ToNumber", NULL },
+  { 0x4b, "ToString", NULL },
+  { 0x4c, "PushDuplicate", NULL },
+  { 0x4d, "Swap", NULL },
+  { 0x4e, "GetMember", NULL },
+  { 0x4f, "SetMember", NULL },
+  { 0x50, "Increment", NULL },
+  { 0x51, "Decrement", NULL },
+  { 0x52, "CallMethod", NULL },
+  { 0x53, "NewMethod", NULL },
+  /* version 6 */
+  { 0x54, "InstanceOf", NULL },
+  { 0x55, "Enumerate2", NULL },
+  /* version 5 */
+  { 0x60, "BitAnd", NULL },
+  { 0x61, "BitOr", NULL },
+  { 0x62, "BitXor", NULL },
+  { 0x63, "BitLShift", NULL },
+  { 0x64, "BitRShift", NULL },
+  { 0x65, "BitURShift", NULL },
+  /* version 6 */
+  { 0x66, "StrictEquals", NULL },
+  { 0x67, "Greater", NULL },
+  { 0x68, "StringGreater", NULL },
+  /* version 7 */
+  { 0x69, "Extends", NULL },
+
   /* version 3 */
   { 0x81, "GoToFrame", compile_goto_frame },
   { 0x83, "GetURL", NULL },
+  /* version 5 */
+  { 0x87, "StoreRegister", NULL },
+  { 0x88, "ConstantPool", NULL },
+  /* version 3 */
   { 0x8a, "WaitForFrame", compile_wait_for_frame },
   { 0x8b, "SetTarget", NULL },
   { 0x8c, "GoToLabel", NULL },
+  /* version 4 */
+  { 0x8d, "WaitForFrame2", NULL },
+  /* version 7 */
+  { 0x8e, "DefineFunction2", NULL },
+  { 0x8f, "Try", NULL },
+  /* version 5 */
+  { 0x94, "With", NULL },
+  /* version 4 */
+  { 0x96, "Push", NULL },
+  { 0x99, "Jump", NULL },
+  { 0x9a, "GetURL2", NULL },
+  /* version 5 */
+  { 0x9b, "DefineFunction", NULL },
+  /* version 4 */
+  { 0x9d, "If", NULL },
+  { 0x9e, "Call", NULL },
+  { 0x9f, "GotoFrame2", NULL }
 };
 
 int

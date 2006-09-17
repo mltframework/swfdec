@@ -26,7 +26,8 @@ swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 
   gtk_widget_get_pointer (gtkwidget, &x, &y);
 
-  swfdec_decoder_handle_mouse (widget->dec, event->x, event->y, widget->button);
+  swfdec_decoder_handle_mouse (widget->dec, 
+      event->x / widget->scale, event->y / widget->scale, widget->button);
   queue_draw (widget);
   
   return FALSE;
@@ -38,7 +39,8 @@ swfdec_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
 
   widget->button = 0;
-  swfdec_decoder_handle_mouse (widget->dec, event->x, event->y, 0);
+  swfdec_decoder_handle_mouse (widget->dec, 
+      event->x / widget->scale, event->y / widget->scale, 0);
   queue_draw (widget);
   return FALSE;
 }
@@ -50,7 +52,8 @@ swfdec_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     widget->button = 1;
-    swfdec_decoder_handle_mouse (widget->dec, event->x, event->y, 1);
+    swfdec_decoder_handle_mouse (widget->dec, 
+	event->x / widget->scale, event->y / widget->scale, 1);
   }
   queue_draw (widget);
   return FALSE;
@@ -63,7 +66,8 @@ swfdec_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     widget->button = 0;
-    swfdec_decoder_handle_mouse (widget->dec, event->x, event->y, 0);
+    swfdec_decoder_handle_mouse (widget->dec, 
+	event->x / widget->scale, event->y / widget->scale, 0);
   }
   queue_draw (widget);
   return FALSE;

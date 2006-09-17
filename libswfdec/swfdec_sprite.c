@@ -32,8 +32,12 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
       if (sprite->frames[i].sound_chunk) {
         swfdec_buffer_unref (sprite->frames[i].sound_chunk);
       }
-      if (sprite->frames[i].action) {
-	JS_DestroyScript (SWFDEC_OBJECT (sprite)->decoder->jscx, sprite->frames[i].action);
+      if (sprite->frames[i].do_actions) {
+	GSList *walk;
+	for (walk = sprite->frames[i].do_actions; walk; walk = walk->next) {
+	  JS_DestroyScript (SWFDEC_OBJECT (sprite)->decoder->jscx, walk->data);
+	}
+	g_slist_free (sprite->frames[i].do_actions);
       }
       if (sprite->frames[i].sound_play) {
         g_free (sprite->frames[i].sound_play);
@@ -67,11 +71,8 @@ swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script)
 {
   g_assert (sprite->frames != NULL);
 
-  if (sprite->frames[frame].action) {
-    SWFDEC_ERROR ("frame %d already contains a script!", frame);
-  } else {
-    sprite->frames[frame].action = script;
-  }
+  /* append to keep the order */
+  sprite->frames[frame].do_actions = g_slist_append (sprite->frames[frame].do_actions, script);
 }
 
 static int
@@ -187,24 +188,32 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     SWFDEC_LOG ("clip_depth = %04x", action.uint.value[0]);
   }
   if (has_clip_actions) {
-    int reserved, clip_event_flags, event_flags, record_size;
+    int reserved, clip_event_flags, event_flags, key_code;
+    guint8 * record_end;
+    SwfdecEventList *list = NULL;
 
     reserved = swfdec_bits_get_u16 (bits);
     clip_event_flags = swfdec_get_clipeventflags (s, bits);
 
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
-      record_size = swfdec_bits_get_u32 (bits);
+      record_end = bits->ptr + swfdec_bits_get_u32 (bits);
 
-      /* This appears to be a copy'n'paste-o in the spec. */
-      /*key_code = swfdec_bits_get_u8 (bits);*/
+      if (event_flags & SWFDEC_EVENT_KEY_PRESS)
+	key_code = swfdec_bits_get_u8 (bits);
+      else
+	key_code = 0;
 
-      SWFDEC_INFO ("clip event with flags 0x%x, %d record length (v%d)",
-	  event_flags, record_size, s->version);
+      SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
 
-      if (event_flags != 0) {
-        SWFDEC_WARNING ("  clip actions other than onLoad/enterFrame unimplemented");
+      if (list == NULL)
+	list = swfdec_event_list_new (s);
+      swfdec_event_list_parse (list, event_flags, key_code);
+      if (bits->ptr != record_end) {
+	SWFDEC_ERROR ("record size and actual parsed action differ by %d bytes",
+	    (int) (record_end - bits->ptr));
+	/* FIXME: who should we trust with parsing here? */
+	bits->ptr = record_end;
       }
-      bits->ptr += record_size;
     }
   }
 

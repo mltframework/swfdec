@@ -5,6 +5,7 @@
 #include <swfdec_types.h>
 #include <swfdec_object.h>
 #include <color.h>
+#include <swfdec_event.h>
 
 G_BEGIN_DECLS
 
@@ -20,10 +21,8 @@ typedef enum {
   SWFDEC_SPRITE_ACTION_BG_COLOR
 } SwfdecSpriteActionType;
 
-//typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
 typedef struct _SwfdecExport SwfdecExport;
-
 typedef union _SwfdecSpriteAction SwfdecSpriteAction;
 
 union _SwfdecSpriteAction {
@@ -45,17 +44,11 @@ union _SwfdecSpriteAction {
     char *			string;
   }				string;
 };
-//typedef struct _SwfdecSpriteSegment SwfdecSpriteSegment;
-
-#define CLIPEVENT_LOAD			0
-#define CLIPEVENT_ENTERFRAME		1
-#define CLIPEVENT_MAX			2
 
 struct _SwfdecExport {
   char *name;
   int id;
 };
-
 
 #define SWFDEC_TYPE_SPRITE                    (swfdec_sprite_get_type())
 #define SWFDEC_IS_SPRITE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SPRITE))
@@ -66,11 +59,12 @@ struct _SwfdecExport {
 struct _SwfdecSpriteFrame
 {
   SwfdecBuffer *sound_chunk;
-  JSScript *action;
   SwfdecSoundChunk *sound_play;
 
   swf_color bg_color;
   GArray *actions;			/* actions to perform */
+  SwfdecEventList *events;		/* events to perform */
+  GSList *do_actions;			/* actions queued via DoAction */
 };
 
 struct _SwfdecSprite
@@ -95,8 +89,8 @@ void swfdec_sprite_decoder_free (SwfdecObject * object);
 int tag_func_define_sprite (SwfdecDecoder * s);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, SwfdecBuffer * chunk,
     int frame);
-void swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
+void swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script);
 
 int tag_func_set_background_color (SwfdecDecoder * s);
 int swfdec_spriteseg_place_object_2 (SwfdecDecoder * s);

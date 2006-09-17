@@ -197,8 +197,11 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
     if (!swfdec_rect_is_empty (&inval))
       swfdec_object_invalidate (SWFDEC_OBJECT (movie), &inval);
   }
-  if (frame->action)
-    swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, frame->action);
+  if (frame->do_actions) {
+    GSList *walk;
+    for (walk = frame->do_actions; walk; walk = walk->next)
+      swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, walk->data);
+  }
 }
 
 void 

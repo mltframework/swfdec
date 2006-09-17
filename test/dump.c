@@ -13,6 +13,8 @@
 #include <swfdec_text.h>
 #include <swfdec_font.h>
 
+static gboolean verbose = FALSE;
+
 void
 dump_sprite(SwfdecSprite *s)
 {
@@ -100,7 +102,8 @@ dump_shape(SwfdecShape *shape)
 
     g_print("    %d: ", i);
     print_fill_info (shapevec);
-    dump_path (&shapevec->path);
+    if (verbose)
+      dump_path (&shapevec->path);
   }
   g_print("  fills:\n");
   for(i=0;i<shape->fills->len;i++){
@@ -108,9 +111,11 @@ dump_shape(SwfdecShape *shape)
 
     g_print("    %d: ", i);
     print_fill_info (shapevec);
-    dump_path (&shapevec->path);
+    if (verbose)
+      dump_path (&shapevec->path);
     shapevec = g_ptr_array_index (shape->fills2, i);
-    dump_path (&shapevec->path);
+    if (verbose)
+      dump_path (&shapevec->path);
   }
 }
 
@@ -169,6 +174,7 @@ main (int argc, char *argv[])
 
   ret = g_file_get_contents (fn, &contents, &length, NULL);
   if (!ret) {
+    g_print ("dump: file \"%s\" not found\n", fn);
     exit(1);
   }
 

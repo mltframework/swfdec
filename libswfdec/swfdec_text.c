@@ -12,10 +12,13 @@ swfdec_text_handle_mouse (SwfdecObject *object,
   SwfdecObject *fontobj;
   SwfdecText *text = SWFDEC_TEXT (object);
 
-  swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
+  //swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
+  x -= object->extents.x0;
+  y -= object->extents.y0;
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
+    double tmpx, tmpy;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
     fontobj = swfdec_object_get (object->decoder, glyph->font);
@@ -23,8 +26,12 @@ swfdec_text_handle_mouse (SwfdecObject *object,
       continue;
 
     shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
+    tmpx = x - glyph->x;
+    tmpy = y - glyph->y;
+    tmpx *= SWF_SCALW_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
+    tmpy *= SWF_SCALW_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
     ret = swfdec_object_handle_mouse (SWFDEC_OBJECT (shape),
-	x - glyph->x, y - glyph->y * SWF_SCALE_FACTOR, button, TRUE);
+	tmpx, tmpy, button, TRUE);
     if (ret != SWFDEC_MOUSE_MISSED)
       return ret;
   }

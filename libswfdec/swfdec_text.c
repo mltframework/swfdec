@@ -28,8 +28,8 @@ swfdec_text_handle_mouse (SwfdecObject *object,
     shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
-    tmpx *= SWF_SCALW_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
-    tmpy *= SWF_SCALW_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
+    tmpx *= SWF_SCALE_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
+    tmpy *= SWF_SCALE_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
     ret = swfdec_object_handle_mouse (SWFDEC_OBJECT (shape),
 	tmpx, tmpy, button, TRUE);
     if (ret != SWFDEC_MOUSE_MISSED)

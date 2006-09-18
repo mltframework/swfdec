@@ -9,6 +9,15 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecFont SwfdecFont;
 typedef struct _SwfdecFontClass SwfdecFontClass;
 
+typedef enum {
+  SWFDEC_LANGUAGE_NONE		= 0,
+  SWFDEC_LANGUAGE_LATIN		= 1,
+  SWFDEC_LANGUAGE_JAPANESE	= 2,
+  SWFDEC_LANGUAGE_KOREAN	= 3,
+  SWFDEC_LANGUAGE_CHINESE	= 4,
+  SWFDEC_LANGUAGE_CHINESE_TRADITIONAL = 5
+} SwfdecLanguage;
+
 #define SWFDEC_TYPE_FONT                    (swfdec_font_get_type())
 #define SWFDEC_IS_FONT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_FONT))
 #define SWFDEC_IS_FONT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_FONT))
@@ -17,14 +26,15 @@ typedef struct _SwfdecFontClass SwfdecFontClass;
 
 struct _SwfdecFont
 {
-  SwfdecObject object;
+  SwfdecObject		object;
 
-  GPtrArray *glyphs;
+  SwfdecLanguage	language;
+  GPtrArray *		glyphs;
 };
 
 struct _SwfdecFontClass
 {
-  SwfdecObjectClass object_class;
+  SwfdecObjectClass	object_class;
 
 };
 

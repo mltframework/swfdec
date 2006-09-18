@@ -628,7 +628,6 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
         shapevec->grad = swfdec_bits_get_gradient (bits);
       }
       swfdec_bits_syncbits (bits);
-      cairo_matrix_scale (&shapevec->fill_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
     } else if (fill_style_type >= 0x40 && fill_style_type <= 0x43) {
       shapevec->fill_type = fill_style_type;
       shapevec->fill_id = swfdec_bits_get_u16 (bits);

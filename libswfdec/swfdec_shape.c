@@ -148,6 +148,8 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+  cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+  cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
   for (i = 0; i < shape->fills->len; i++) {
     swf_color color;
 
@@ -387,130 +389,6 @@ swfdec_shapevec_free (SwfdecShapeVec * shapevec)
   swfdec_path_reset (&shapevec->path);
   g_free (shapevec);
 }
-
-#if 0
-static int
-get_shape_rec (SwfdecBits * bits, int n_fill_bits, int n_line_bits)
-{
-  int type;
-  int state_new_styles;
-  int state_line_styles;
-  int state_fill_styles1;
-  int state_fill_styles0;
-  int state_moveto;
-  int movebits = 0;
-  int movex;
-  int movey;
-  int fill0style;
-  int fill1style;
-  int linestyle = 0;
-
-  type = swfdec_bits_peekbits (bits, 6);
-  if (type == 0) {
-    swfdec_bits_getbits (bits, 6);
-    return 0;
-  }
-
-  type = swfdec_bits_getbits (bits, 1);
-  SWFDEC_DEBUG ("   type = %d\n", type);
-
-  if (type == 0) {
-    state_new_styles = swfdec_bits_getbits (bits, 1);
-    state_line_styles = swfdec_bits_getbits (bits, 1);
-    state_fill_styles1 = swfdec_bits_getbits (bits, 1);
-    state_fill_styles0 = swfdec_bits_getbits (bits, 1);
-    state_moveto = swfdec_bits_getbits (bits, 1);
-
-    SWFDEC_DEBUG ("   state_new_styles = %d\n", state_new_styles);
-    SWFDEC_DEBUG ("   state_line_styles = %d\n", state_line_styles);
-    SWFDEC_DEBUG ("   state_fill_styles1 = %d\n", state_fill_styles1);
-    SWFDEC_DEBUG ("   state_fill_styles0 = %d\n", state_fill_styles0);
-    SWFDEC_DEBUG ("   state_moveto = %d\n", state_moveto);
-
-    if (state_moveto) {
-      movebits = swfdec_bits_getbits (bits, 5);
-      SWFDEC_DEBUG ("   movebits = %d\n", movebits);
-      movex = swfdec_bits_getsbits (bits, movebits);
-      movey = swfdec_bits_getsbits (bits, movebits);
-      SWFDEC_DEBUG ("   movex = %d\n", movex);
-      SWFDEC_DEBUG ("   movey = %d\n", movey);
-    }
-    if (state_fill_styles0) {
-      fill0style = swfdec_bits_getbits (bits, n_fill_bits);
-      SWFDEC_DEBUG ("   fill0style = %d\n", fill0style);
-    }
-    if (state_fill_styles1) {
-      fill1style = swfdec_bits_getbits (bits, n_fill_bits);
-      SWFDEC_DEBUG ("   fill1style = %d\n", fill1style);
-    }
-    if (state_line_styles) {
-      linestyle = swfdec_bits_getbits (bits, n_line_bits);
-      SWFDEC_DEBUG ("   linestyle = %d\n", linestyle);
-    }
-    if (state_new_styles) {
-      SWFDEC_DEBUG ("***** new styles not implemented\n");
-    }
-
-
-  } else {
-    /* edge record */
-    int n_bits;
-    int edge_flag;
-
-    edge_flag = swfdec_bits_getbits (bits, 1);
-    SWFDEC_DEBUG ("   edge_flag = %d\n", edge_flag);
-
-    if (edge_flag == 0) {
-      int control_delta_x;
-      int control_delta_y;
-      int anchor_delta_x;
-      int anchor_delta_y;
-
-      n_bits = swfdec_bits_getbits (bits, 4) + 2;
-      control_delta_x = swfdec_bits_getsbits (bits, n_bits);
-      control_delta_y = swfdec_bits_getsbits (bits, n_bits);
-      anchor_delta_x = swfdec_bits_getsbits (bits, n_bits);
-      anchor_delta_y = swfdec_bits_getsbits (bits, n_bits);
-
-      SWFDEC_DEBUG ("   n_bits = %d\n", n_bits);
-      SWFDEC_DEBUG ("   control_delta = %d,%d\n", control_delta_x,
-          control_delta_y);
-      SWFDEC_DEBUG ("   anchor_delta = %d,%d\n", anchor_delta_x,
-          anchor_delta_y);
-    } else {
-      int general_line_flag;
-      int delta_x;
-      int delta_y;
-      int vert_line_flag = 0;
-
-      n_bits = swfdec_bits_getbits (bits, 4) + 2;
-      general_line_flag = swfdec_bits_getbit (bits);
-      if (general_line_flag == 1) {
-        delta_x = swfdec_bits_getsbits (bits, n_bits);
-        delta_y = swfdec_bits_getsbits (bits, n_bits);
-      } else {
-        vert_line_flag = swfdec_bits_getbit (bits);
-        if (vert_line_flag == 0) {
-          delta_x = swfdec_bits_getsbits (bits, n_bits);
-          delta_y = 0;
-        } else {
-          delta_x = 0;
-          delta_y = swfdec_bits_getsbits (bits, n_bits);
-        }
-      }
-      SWFDEC_DEBUG ("   general_line_flag = %d\n", general_line_flag);
-      if (general_line_flag == 0) {
-        SWFDEC_DEBUG ("   vert_line_flag = %d\n", vert_line_flag);
-      }
-      SWFDEC_DEBUG ("   n_bits = %d\n", n_bits);
-      SWFDEC_DEBUG ("   delta_x = %d\n", delta_x);
-      SWFDEC_DEBUG ("   delta_y = %d\n", delta_y);
-    }
-  }
-
-  return 1;
-}
-#endif
 
 SwfdecShapeVec *
 swf_shape_vec_new (void)

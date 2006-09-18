@@ -164,8 +164,11 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
     action.type = SWFDEC_SPRITE_ACTION_TRANSFORM;
     cairo_matrix_init_identity (&action.matrix.matrix);
     swfdec_bits_get_matrix (bits, &action.matrix.matrix);
+    /* FIXME: don't scale here */
     action.matrix.matrix.xx *= SWF_SCALE_FACTOR;
     action.matrix.matrix.yy *= SWF_SCALE_FACTOR;
+    action.matrix.matrix.xy *= SWF_SCALE_FACTOR;
+    action.matrix.matrix.yx *= SWF_SCALE_FACTOR;
     action.matrix.matrix.x0 *= SWF_SCALE_FACTOR;
     action.matrix.matrix.y0 *= SWF_SCALE_FACTOR;
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);

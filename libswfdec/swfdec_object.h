@@ -32,6 +32,7 @@ struct _SwfdecObjectClass
 {
   GObjectClass		object_class;
 
+  /* optional vfuncs */
   void			(* render)	(SwfdecObject *			object, 
                                          cairo_t *			cr,
 					 const SwfdecColorTransform *	trans,
@@ -40,6 +41,10 @@ struct _SwfdecObjectClass
 					 double				x,
 					 double				y,
 					 int				button);
+
+  /* signals */
+  void			(* invalidate)	(SwfdecObject *			object,
+					 const SwfdecRect *		rect);
 };
 
 GType swfdec_object_get_type (void);

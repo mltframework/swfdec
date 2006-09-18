@@ -86,6 +86,11 @@ GType		swfdec_movie_clip_get_type		(void);
 SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent,
 							 unsigned int		id);
 unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
+void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
+							 SwfdecObject *		child);
+void		swfdec_movie_clip_set_size		(SwfdecMovieClip *	clip,
+							 guint			width,
+							 guint			height);
 
 void		swfdec_movie_clip_update_visuals	(SwfdecMovieClip *	movie);
 void		swfdec_movie_clip_iterate		(SwfdecMovieClip *	movie);

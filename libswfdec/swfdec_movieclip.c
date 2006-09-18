@@ -109,10 +109,43 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
   movie->button_state = SWFDEC_BUTTON_UP;
 }
 
+/* NB: modifies rect */
+static void
+swfdec_movie_clip_invalidate (SwfdecMovieClip *movie, SwfdecRect *rect)
+{
+  swfdec_rect_transform (rect, rect, &movie->transform);
+  while (movie->parent) {
+    movie = movie->parent;
+    swfdec_rect_transform (rect, rect, &movie->transform);
+  }
+  swfdec_object_invalidate (SWFDEC_OBJECT (movie), rect);
+}
+
+static void
+swfdec_movie_clip_invalidate_cb (SwfdecObject *child, const SwfdecRect *rect, SwfdecMovieClip *movie)
+{
+  SwfdecRect inval;
+
+  inval = *rect;
+  swfdec_movie_clip_invalidate (movie, &inval);
+}
+
+static void
+swfdec_movieclip_update_extents (SwfdecMovieClip *movie)
+{
+  /* FIXME: handle real movieclips */
+  if (movie->child && !SWFDEC_IS_SPRITE (movie)) {
+    swfdec_rect_transform (&SWFDEC_OBJECT (movie)->extents, 
+	&movie->child->extents, &movie->transform);
+  }
+}
+
 static void
 swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 {
   swfdec_display_list_reset (&movie->list);
+
+  swfdec_movie_clip_set_child (movie, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (movie));
 }
@@ -143,6 +176,7 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	  break;
 	case SWFDEC_SPRITE_ACTION_PLACE_OBJECT:
 	  if (cur) {
+	    swfdec_movieclip_update_extents (cur);
 	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
 	  }
 	  cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
@@ -154,9 +188,13 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	  break;
 	case SWFDEC_SPRITE_ACTION_GET_OBJECT:
 	  if (cur) {
+	    swfdec_movieclip_update_extents (cur);
 	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
 	  }
 	  cur = swfdec_display_list_get (&movie->list, action->uint.value[1]);
+	  if (cur) {
+	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+	  }
 	  break;
 	case SWFDEC_SPRITE_ACTION_TRANSFORM:
 	  if (cur) {
@@ -169,7 +207,7 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	  break;
 	case SWFDEC_SPRITE_ACTION_BG_COLOR:
 	  movie->bg_color = swfdec_color_apply_transform (0, &action->color.transform);
-	  swfdec_object_invalidate (SWFDEC_OBJECT (movie), &SWFDEC_OBJECT (movie)->extents);
+	  swfdec_movie_clip_invalidate (movie, &SWFDEC_OBJECT (movie)->extents);
 	  break;
 	case SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM:
 	  if (cur) {
@@ -204,10 +242,11 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
       }
     }
     if (cur) {
+      swfdec_movieclip_update_extents (cur);
       swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
     }
     if (!swfdec_rect_is_empty (&inval))
-      swfdec_object_invalidate (SWFDEC_OBJECT (movie), &inval);
+      swfdec_movie_clip_invalidate (movie, &inval);
   }
   if (frame->do_actions) {
     GSList *walk;
@@ -344,8 +383,14 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
     cairo_paint (cr);
   }
 
+  SWFDEC_LOG ("%stransforming clip: %g %g  %g %g   %g %g", movie->parent ? "  " : "",
+      movie->transform.xx, movie->transform.yy,
+      movie->transform.xy, movie->transform.yx,
+      movie->transform.x0, movie->transform.y0);
   cairo_transform (cr, &movie->transform);
   swfdec_rect_transform (&rect, inval, &movie->inverse_transform);
+  SWFDEC_LOG ("%sinvalid area is now: %g %g  %g %g",  movie->parent ? "  " : "",
+      rect.x0, rect.y0, rect.x1, rect.y1);
   swfdec_color_transform_chain (&trans, &movie->color_transform, color_transform);
 
   for (g = movie->list.list; g; g = g_list_next (g)) {
@@ -416,7 +461,8 @@ swfdec_movie_clip_update_visuals (SwfdecMovieClip *movie_clip)
   if (cairo_matrix_invert (&movie_clip->inverse_transform)) {
     g_assert_not_reached ();
   }
-  swfdec_object_invalidate (object, &object->extents);
+  rect = object->extents;
+  swfdec_movie_clip_invalidate (movie_clip, &rect);
   rect.x1 = movie_clip->width;
   rect.y1 = movie_clip->height;
   swfdec_rect_transform (&rect, &rect, matrix);
@@ -424,7 +470,8 @@ swfdec_movie_clip_update_visuals (SwfdecMovieClip *movie_clip)
   object->extents.y0 = MIN (rect.y0, rect.y1);
   object->extents.x1 = MAX (rect.x0, rect.x1);
   object->extents.y1 = MAX (rect.y0, rect.y1);
-  swfdec_object_invalidate (object, &object->extents);
+  rect = object->extents;
+  swfdec_movie_clip_invalidate (movie_clip, &rect);
 }
 
 unsigned int
@@ -456,10 +503,43 @@ swfdec_movie_clip_new (SwfdecMovieClip *parent, unsigned int id)
   SWFDEC_DEBUG ("new movie for item %d\n", id);
   ret = swfdec_object_new (SWFDEC_OBJECT (parent)->decoder, SWFDEC_TYPE_MOVIE_CLIP);
   ret->parent = parent;
-  ret->child = swfdec_object_get (SWFDEC_OBJECT (parent)->decoder, id);
+  swfdec_movie_clip_set_child (ret, swfdec_object_get (SWFDEC_OBJECT (parent)->decoder, id));
   ret->width = parent->width;
   ret->height = parent->height;
 
   return ret;
 }
 
+void
+swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
+  g_return_if_fail (child == NULL || SWFDEC_IS_OBJECT (child));
+
+  if (movie->child) {
+    if (g_signal_handlers_disconnect_by_func (movie->child, 
+	swfdec_movie_clip_invalidate_cb, movie) != 1) {
+      g_assert_not_reached ();
+    }
+  }
+  movie->child = child;
+  if (child) {
+    g_signal_connect (child, "invalidate", 
+	G_CALLBACK (swfdec_movie_clip_invalidate_cb), movie);
+  }
+}
+
+/* NB: width and height are in twips */
+void
+swfdec_movie_clip_set_size (SwfdecMovieClip *clip, guint width, guint height)
+{
+  SwfdecRect rect = { 0, 0, width, height };
+
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (clip));
+
+  swfdec_object_invalidate (SWFDEC_OBJECT (clip), NULL);
+  clip->width = width;
+  clip->height = height;
+  swfdec_rect_transform (&SWFDEC_OBJECT (clip)->extents, &rect, &clip->inverse_transform);
+  swfdec_object_invalidate (SWFDEC_OBJECT (clip), NULL);
+}

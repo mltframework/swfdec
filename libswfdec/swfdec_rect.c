@@ -85,12 +85,44 @@ swfdec_rect_union (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b
 }
 
 void
+swfdec_rect_subtract (SwfdecRect *dest, const SwfdecRect *a, const SwfdecRect *b)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (a != NULL);
+  g_return_if_fail (b != NULL);
+
+  /* FIXME: improve this */
+  if (swfdec_rect_is_empty (a)) {
+    swfdec_rect_init_empty (dest);
+  } else if (swfdec_rect_is_empty (b)) {
+    *dest = *a;
+  } else if (b->x0 <= a->x0 && b->x1 >= a->x1 &&
+             b->y0 <= a->y0 && b->y1 >= a->y1) {
+    swfdec_rect_init_empty (dest);
+  } else {
+    *dest = *a;
+  }
+}
+
+void
 swfdec_rect_copy (SwfdecRect * dest, const SwfdecRect * a)
 {
   g_return_if_fail (dest != NULL);
   g_return_if_fail (a != NULL);
 
   *dest = *a;
+}
+
+void 
+swfdec_rect_scale (SwfdecRect *dest, const SwfdecRect *src, double factor)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
+
+  dest->x0 = src->x0 * factor;
+  dest->x1 = src->x1 * factor;
+  dest->y0 = src->y0 * factor;
+  dest->y1 = src->y1 * factor;
 }
 
 gboolean

@@ -38,13 +38,11 @@ struct _SwfdecDecoder
   double rate;
   int n_frames;
   guint8 *buffer;
-  int frame_number;
 
   void *sound_buffer;
   int sound_len;
   int sound_offset;
 
-  int no_render;
   int compressed;
 
   /* End of legacy elements */
@@ -53,10 +51,6 @@ struct _SwfdecDecoder
   SwfdecBuffer *uncompressed_buffer;
 
   SwfdecBufferQueue *input_queue;
-
-  void (*callback) (void *, int, int, void *, int);
-  void (*compose_callback) (void *, int, int, void *, int);
-  void (*fillrect) (unsigned char *, int, unsigned int, SwfdecRect *);
 
   /* where we are in the top-level state engine */
   int state;
@@ -75,6 +69,7 @@ struct _SwfdecDecoder
 
   /* rendering state */
   SwfdecRect irect;
+  SwfdecRect invalid;	    /* in pixels */
 
   SwfdecSprite *main_sprite;
   SwfdecMovieClip *root;
@@ -97,7 +92,6 @@ struct _SwfdecDecoder
   GList *kept_list;
   int kept_layers;
 
-  SwfdecActionContext *context;
   JSContext *jscx;
 
   char *url;

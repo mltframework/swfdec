@@ -12,10 +12,15 @@ G_DEFINE_TYPE (SwfdecWidget, swfdec_widget, GTK_TYPE_WIDGET)
 static void
 queue_draw (SwfdecWidget *widget)
 {
+  SwfdecRect rect;
+
+  swfdec_decoder_get_invalid (widget->dec, &rect);
+  if (swfdec_rect_is_empty (&rect))
+    return;
   //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
-  gtk_widget_queue_draw (GTK_WIDGET (widget));
-  //_area (widget, floor (inval->x0), floor (inval->y0),
-  //    ceil (inval->x1) - floor (inval->x0), ceil (inval->y1) - floor (inval->y0));
+  gtk_widget_queue_draw_area (GTK_WIDGET (widget), floor (rect.x0), floor (rect.y0),
+      ceil (rect.x1) - floor (rect.x0), ceil (rect.y1) - floor (rect.y0));
+  swfdec_decoder_clear_invalid (widget->dec);
 }
 
 static gboolean

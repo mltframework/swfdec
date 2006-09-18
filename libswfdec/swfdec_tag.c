@@ -68,7 +68,6 @@ define_text (SwfdecDecoder * s, int rgba)
   int n_advance_bits;
   SwfdecText *text = NULL;
   SwfdecTextGlyph glyph = { 0 };
-  SwfdecRect rect;
 
   id = swfdec_bits_get_u16 (bits);
   text = swfdec_object_new (s, SWFDEC_TYPE_TEXT);
@@ -77,10 +76,8 @@ define_text (SwfdecDecoder * s, int rgba)
 
   glyph.color = 0xffffffff;
 
-  swfdec_bits_get_rect (bits, &rect, 1.0); //SWFDEC_OBJECT (text)->extents, 1.0);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (text)->extents);
   swfdec_bits_get_matrix (bits, &text->transform);
-  //text->transform.x0 /= SWF_SCALE_FACTOR;
-  //text->transform.y0 /= SWF_SCALE_FACTOR;
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
   n_advance_bits = swfdec_bits_get_u8 (bits);
@@ -615,7 +612,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     //font_advance_table = swfdec_bits_get_s16(bits);
     bits->ptr += 2 * n_glyphs;
     for (i = 0; i < n_glyphs; i++) {
-      swfdec_bits_get_rect (bits, &rect, SWF_SCALE_FACTOR);
+      swfdec_bits_get_rect (bits, &rect);
     }
     kerning_count = swfdec_bits_get_u16 (bits);
     if (0) {

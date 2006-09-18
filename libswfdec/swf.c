@@ -43,6 +43,13 @@ swfdec_init (void)
   swfdec_js_init (0);
 }
 
+static void
+swfdec_decoder_invalidate_cb (SwfdecMovieClip *root, const SwfdecRect *rect, SwfdecDecoder *s)
+{
+  SWFDEC_DEBUG ("toplevel invalidation: %g %g  %g %g\n", rect->x0, rect->y0, rect->x1, rect->y1);
+  swfdec_rect_union (&s->invalid, &s->invalid, rect);
+}
+
 SwfdecDecoder *
 swfdec_decoder_new (void)
 {
@@ -57,7 +64,10 @@ swfdec_decoder_new (void)
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
-  s->root->child = SWFDEC_OBJECT (s->main_sprite);
+  cairo_matrix_scale (&s->root->transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
+  cairo_matrix_scale (&s->root->inverse_transform, 1 / SWF_SCALE_FACTOR, 1 / SWF_SCALE_FACTOR);
+  swfdec_movie_clip_set_child (s->root, SWFDEC_OBJECT (s->main_sprite));
+  g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
   s->flatness = 0.5;
 
@@ -510,7 +520,6 @@ swf_inflate_init (SwfdecDecoder * s)
 int
 swf_parse_header2 (SwfdecDecoder * s)
 {
-  SwfdecRect rect;
   double width, height;
   int n;
   SwfdecBuffer *buffer;
@@ -525,9 +534,12 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->b.idx = 0;
   s->b.end = buffer->data + buffer->length;
 
-  swfdec_bits_get_rect (&s->b, &rect, SWF_SCALE_FACTOR);
-  width = rect.x1;
-  height = rect.y1;
+  swfdec_bits_get_rect (&s->b, &s->invalid);
+  if (s->invalid.x0 != 0.0 || s->invalid.y0 != 0.0)
+    SWFDEC_ERROR ("SWF window doesn't start at 0 0 but at %g %g\n", s->invalid.x0, s->invalid.y0);
+  swfdec_rect_scale (&s->invalid, &s->invalid, SWF_SCALE_FACTOR);
+  width = s->invalid.x1;
+  height = s->invalid.y1;
   s->parse_width = width;
   s->parse_height = height;
   s->width = floor (width);
@@ -536,8 +548,7 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y0 = 0;
   s->irect.x1 = s->width;
   s->irect.y1 = s->height;
-  s->root->width = s->width;
-  s->root->height = s->height;
+  swfdec_movie_clip_set_size (s->root, s->width * 20, s->height * 20);
   swfdec_bits_syncbits (&s->b);
   s->rate = swfdec_bits_get_u16 (&s->b) / 256.0;
   SWFDEC_LOG ("rate = %g", s->rate);
@@ -644,11 +655,13 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
 
   if (area == NULL)
     area = &dec->irect;
+  if (swfdec_rect_is_empty (area))
+    return;
   SWFDEC_LOG ("%p: starting rendering, area %g %g  %g %g", dec, 
       area->x0, area->y0, area->x1, area->y1);
-  if (!swfdec_rect_is_empty (area))
-    swfdec_object_render (SWFDEC_OBJECT (dec->root), cr, &trans, area);
+  swfdec_object_render (SWFDEC_OBJECT (dec->root), cr, &trans, area);
   SWFDEC_LOG ("%p: finished rendering", dec);
+  swfdec_rect_subtract (&dec->invalid, &dec->invalid, area);
 }
 
 /**
@@ -674,4 +687,36 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
   swfdec_decoder_execute_scripts (dec);
+}
+
+/**
+ * swfdec_decoder_get_invalid:
+ * @s: a #SwfdecDecoder
+ * @rect: pointer to a rectangle to be filled with the invalid area
+ *
+ * The decoder accumulates the parts that need a redraw. This function gets
+ * the rectangle that encloses these parts. Use swfdec_clear_invalid() to clear
+ * the accumulated parts.
+ **/
+void
+swfdec_decoder_get_invalid (SwfdecDecoder *s, SwfdecRect *rect)
+{
+  g_return_if_fail (SWFDEC_IS_DECODER (s));
+  g_return_if_fail (rect != NULL);
+
+  *rect = s->invalid;
+}
+
+/**
+ * swfdec_decoder_clear_invalid:
+ * @s: a #SwfdecDecoder
+ *
+ * Clears the list of areas that need a redraw.
+ **/
+void
+swfdec_decoder_clear_invalid (SwfdecDecoder *s)
+{
+  g_return_if_fail (SWFDEC_IS_DECODER (s));
+
+  swfdec_rect_init_empty (&s->invalid);
 }

@@ -70,8 +70,6 @@ define_text (SwfdecDecoder * s, int rgba)
   SwfdecTextGlyph glyph = { 0 };
   SwfdecRect rect;
 
-  if (swfdec_bits_needbits(bits,2)) return SWF_ERROR;
-
   id = swfdec_bits_get_u16 (bits);
   text = swfdec_object_new (s, SWFDEC_TYPE_TEXT);
   SWFDEC_OBJECT (text)->id = id;

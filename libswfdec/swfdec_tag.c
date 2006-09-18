@@ -68,6 +68,7 @@ define_text (SwfdecDecoder * s, int rgba)
   int n_advance_bits;
   SwfdecText *text = NULL;
   SwfdecTextGlyph glyph = { 0 };
+  SwfdecRect rect;
 
   if (swfdec_bits_needbits(bits,2)) return SWF_ERROR;
 
@@ -78,13 +79,14 @@ define_text (SwfdecDecoder * s, int rgba)
 
   glyph.color = 0xffffffff;
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (text)->extents, 1.0);
+  swfdec_bits_get_rect (bits, &rect, 1.0); //SWFDEC_OBJECT (text)->extents, 1.0);
   swfdec_bits_get_matrix (bits, &text->transform);
+  //text->transform.x0 /= SWF_SCALE_FACTOR;
+  //text->transform.y0 /= SWF_SCALE_FACTOR;
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
   n_advance_bits = swfdec_bits_get_u8 (bits);
 
-  //printf("  id = %d\n", id);
   //printf("  n_glyph_bits = %d\n", n_glyph_bits);
   //printf("  n_advance_bits = %d\n", n_advance_bits);
 
@@ -130,16 +132,13 @@ define_text (SwfdecDecoder * s, int rgba)
         //printf("  color = %08x\n",glyph.color);
       }
       if (has_x_offset) {
-        glyph.x = swfdec_bits_get_u16 (bits);
-        //printf("  x = %d\n",x);
+        glyph.x = swfdec_bits_get_s16 (bits);
       }
       if (has_y_offset) {
-        glyph.y = swfdec_bits_get_u16 (bits);
-        //printf("  y = %d\n",y);
+        glyph.y = swfdec_bits_get_s16 (bits);
       }
       if (has_font) {
         glyph.height = swfdec_bits_get_u16 (bits);
-        //printf("  height = %d\n",height);
       }
     }
     swfdec_bits_syncbits (bits);
@@ -362,7 +361,10 @@ tag_func_define_button_2 (SwfdecDecoder * s)
 	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
 	character, layer);
 
+    cairo_matrix_init_identity (&trans);
     swfdec_bits_get_matrix (bits, &trans);
+    SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
+	trans.xx, trans.yy, trans.xy, trans.yx, trans.x0, trans.y0);
     swfdec_bits_syncbits (bits);
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
@@ -435,6 +437,7 @@ tag_func_define_button (SwfdecDecoder * s)
 	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
 	character, layer);
 
+    cairo_matrix_init_identity (&trans);
     swfdec_bits_get_matrix (bits, &trans);
     swfdec_bits_syncbits (bits);
     swfdec_bits_get_color_transform (bits, &color_trans);
@@ -453,93 +456,6 @@ tag_func_define_button (SwfdecDecoder * s)
 
   return SWF_OK;
 }
-
-
-int
-tag_func_place_object_2 (SwfdecDecoder * s)
-{
-  SwfdecBits *bits = &s->b;
-  int reserved;
-  int has_unknown;
-  int has_name;
-  int has_ratio;
-  int has_color_transform;
-  int has_matrix;
-  int has_character;
-  int move;
-  int depth;
-  int character_id;
-  int ratio;
-
-  reserved = swfdec_bits_getbit (bits);
-  has_unknown = swfdec_bits_getbit (bits);
-  has_name = swfdec_bits_getbit (bits);
-  has_ratio = swfdec_bits_getbit (bits);
-  has_color_transform = swfdec_bits_getbit (bits);
-  has_matrix = swfdec_bits_getbit (bits);
-  has_character = swfdec_bits_getbit (bits);
-  move = swfdec_bits_getbit (bits);
-  depth = swfdec_bits_get_u16 (bits);
-
-  SWFDEC_DEBUG ("  reserved = %d\n", reserved);
-  SWFDEC_DEBUG ("  depth = %d\n", depth);
-
-  if (has_character) {
-    character_id = swfdec_bits_get_u16 (bits);
-    SWFDEC_DEBUG ("  id = %d\n", character_id);
-  }
-  if (has_matrix) {
-    cairo_matrix_t trans;
-
-    swfdec_bits_get_matrix (bits, &trans);
-  }
-  if (has_color_transform) {
-    SwfdecColorTransform ct;
-
-    swfdec_bits_get_color_transform (bits, &ct);
-    swfdec_bits_syncbits (bits);
-  }
-  if (has_ratio) {
-    ratio = swfdec_bits_get_u16 (bits);
-    SWFDEC_DEBUG ("  ratio = %d\n", ratio);
-  }
-  if (has_name) {
-    g_free (swfdec_bits_get_string (bits));
-  }
-
-  return SWF_OK;
-}
-
-int
-tag_func_remove_object (SwfdecDecoder * s)
-{
-  int id;
-  int depth;
-
-  id = swfdec_bits_get_u16 (&s->b);
-  depth = swfdec_bits_get_u16 (&s->b);
-
-  SWFDEC_DEBUG ("  id = %d\n", id);
-  SWFDEC_DEBUG ("  depth = %d\n", depth);
-
-  return SWF_OK;
-}
-
-int
-tag_func_remove_object_2 (SwfdecDecoder * s)
-{
-  int depth;
-
-  depth = swfdec_bits_get_u16 (&s->b);
-
-  SWFDEC_DEBUG ("  depth = %d\n", depth);
-
-  return SWF_OK;
-}
-
-
-
-
 
 int
 tag_func_define_font (SwfdecDecoder * s)

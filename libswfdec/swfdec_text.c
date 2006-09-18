@@ -11,9 +11,7 @@ swfdec_text_mouse_in (SwfdecObject *object,
   SwfdecObject *fontobj;
   SwfdecText *text = SWFDEC_TEXT (object);
 
-  //swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
-  x -= object->extents.x0;
-  y -= object->extents.y0;
+  swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -27,8 +25,8 @@ swfdec_text_mouse_in (SwfdecObject *object,
     shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
-    tmpx *= SWF_SCALE_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
-    tmpy *= SWF_SCALE_FACTOR / SWF_TEXT_SCALE_FACTOR / glyph->height;
+    tmpx /= SWF_TEXT_SCALE_FACTOR * glyph->height;
+    tmpy /= SWF_TEXT_SCALE_FACTOR * glyph->height;
     if (swfdec_object_mouse_in (SWFDEC_OBJECT (shape), tmpx, tmpy, button))
       return TRUE;
   }
@@ -45,13 +43,16 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
   SwfdecColorTransform force_color;
   SwfdecRect rect, inval_moved;
 
-  //cairo_transform (cr, &text->transform);
+  cairo_transform (cr, &text->transform);
   /* scale by bounds */
+#if 0
   cairo_translate (cr, obj->extents.x0, obj->extents.y0);
   inval_moved.x0 = inval->x0 - obj->extents.x0;
   inval_moved.y0 = inval->y0 - obj->extents.y0;
   inval_moved.x1 = inval->x1 - obj->extents.x0;
   inval_moved.y1 = inval->y1 - obj->extents.y0;
+#endif
+  swfdec_rect_transform_inverse (&inval_moved, inval, &text->transform);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -72,8 +73,8 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
     cairo_matrix_init_translate (&pos,
 	glyph->x, glyph->y);
     cairo_matrix_scale (&pos, 
-	glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR, 
-	glyph->height * SWF_TEXT_SCALE_FACTOR / SWF_SCALE_FACTOR);
+	glyph->height * SWF_TEXT_SCALE_FACTOR, 
+	glyph->height * SWF_TEXT_SCALE_FACTOR);
     cairo_save (cr);
     cairo_transform (cr, &pos);
     swfdec_rect_transform_inverse (&rect, &inval_moved, &pos);

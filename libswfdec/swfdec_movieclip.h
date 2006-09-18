@@ -29,6 +29,7 @@ struct _SwfdecMovieClip
 
   SwfdecObject *	child;			/* object that we display (may be NULL) */
   SwfdecDisplayList	list;			/* our contained objects */
+  SwfdecEventList *	events;			/* list of events that this sprite should trigger */
 
   /* parenting information */
   SwfdecMovieClip *	parent;			/* the object that contains us */

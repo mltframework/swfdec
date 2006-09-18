@@ -230,7 +230,6 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
   int translate_x;
   int translate_y;
 
-  cairo_matrix_init_identity (matrix);
   swfdec_bits_syncbits (bits);
 
   has_scale = swfdec_bits_getbit (bits);
@@ -239,8 +238,10 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     int scale_x = swfdec_bits_getsbits (bits, n_scale_bits);
     int scale_y = swfdec_bits_getsbits (bits, n_scale_bits);
 
-    matrix->xx = scale_x * SWF_TRANS_SCALE_FACTOR * SWF_SCALE_FACTOR;
-    matrix->yy = scale_y * SWF_TRANS_SCALE_FACTOR * SWF_SCALE_FACTOR;
+    matrix->xx = scale_x * SWF_TRANS_SCALE_FACTOR;
+    matrix->yy = scale_y * SWF_TRANS_SCALE_FACTOR;
+  } else {
+    SWFDEC_LOG ("no scalefactors given");
   }
   has_rotate = swfdec_bits_getbit (bits);
   if (has_rotate) {
@@ -248,15 +249,15 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     int rotate_skew0 = swfdec_bits_getsbits (bits, n_rotate_bits);
     int rotate_skew1 = swfdec_bits_getsbits (bits, n_rotate_bits);
 
-    matrix->xy = rotate_skew0 * SWF_TRANS_SCALE_FACTOR * SWF_SCALE_FACTOR;
-    matrix->yx = rotate_skew1 * SWF_TRANS_SCALE_FACTOR * SWF_SCALE_FACTOR;
+    matrix->xy = rotate_skew0 * SWF_TRANS_SCALE_FACTOR;
+    matrix->yx = rotate_skew1 * SWF_TRANS_SCALE_FACTOR;
   }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
   translate_x = swfdec_bits_getsbits (bits, n_translate_bits);
   translate_y = swfdec_bits_getsbits (bits, n_translate_bits);
 
-  matrix->x0 = translate_x * SWF_SCALE_FACTOR;
-  matrix->y0 = translate_y * SWF_SCALE_FACTOR;
+  matrix->x0 = translate_x;
+  matrix->y0 = translate_y;
 }
 
 char *
@@ -277,8 +278,6 @@ swfdec_bits_get_color (SwfdecBits * bits)
   r = swfdec_bits_get_u8 (bits);
   g = swfdec_bits_get_u8 (bits);
   b = swfdec_bits_get_u8 (bits);
-
-  //g_print ("   color = %d,%d,%d\n",r,g,b);
 
   return SWF_COLOR_COMBINE (r, g, b, 0xff);
 }
@@ -356,45 +355,6 @@ swfdec_bits_get_morph_gradient (SwfdecBits * bits)
   }
   return grad;
 }
-
-void
-swfdec_bits_get_fill_style (SwfdecBits * bits)
-{
-  int fill_style_type;
-  int id;
-
-  fill_style_type = swfdec_bits_get_u8 (bits);
-  //printf("   fill_style_type = 0x%02x\n", fill_style_type);
-  if (fill_style_type == 0x00) {
-    swfdec_bits_get_color (bits);
-  }
-  if (fill_style_type == 0x10 || fill_style_type == 0x12) {
-    cairo_matrix_t trans;
-
-    swfdec_bits_get_matrix (bits, &trans);
-    swfdec_bits_get_gradient (bits);
-  }
-  if (fill_style_type == 0x40 || fill_style_type == 0x41) {
-    id = swfdec_bits_get_u16 (bits);
-  }
-  if (fill_style_type == 0x40 || fill_style_type == 0x41) {
-    cairo_matrix_t trans;
-
-    swfdec_bits_get_matrix (bits, &trans);
-  }
-
-}
-
-void
-swfdec_bits_get_line_style (SwfdecBits * bits)
-{
-  int width;
-
-  width = swfdec_bits_get_u16 (bits);
-  //printf("   width = %d\n", width);
-  swfdec_bits_get_color (bits);
-}
-
 
 void
 swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect, double scale)

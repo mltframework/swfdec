@@ -130,7 +130,7 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
     swfdec_rect_init_empty (&inval);
     for (i = 0; i < frame->actions->len; i++) {
       action = &g_array_index (frame->actions, SwfdecSpriteAction, i);
-      SWFDEC_LOG ("performing action %d\n", action->type);
+      SWFDEC_LOG ("performing action %d", action->type);
       switch (action->type) {
 	case SWFDEC_SPRITE_ACTION_REMOVE_OBJECT:
 	  tmp = swfdec_display_list_remove (&movie->list, action->uint.value[0]);
@@ -174,6 +174,9 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	case SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM:
 	  if (cur) {
 	    cur->color_transform = action->color.transform;
+	    SWFDEC_LOG ("color transform for %s %d changed\n", 
+		cur->child ? G_OBJECT_TYPE_NAME (cur->child) : " movieclip", 
+		cur->child ? cur->child->id : -1);
 	  }
 	  break;
 	case SWFDEC_SPRITE_ACTION_RATIO:
@@ -182,11 +185,18 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	  }
 	  break;
 	case SWFDEC_SPRITE_ACTION_NAME:
-	  g_free (cur->name);
-	  cur->name = g_strdup (action->string.string);
+	  if (cur) {
+	    g_free (cur->name);
+	    cur->name = g_strdup (action->string.string);
+	  }
 	  break;
 	case SWFDEC_SPRITE_ACTION_CLIP_DEPTH:
-	  cur->clip_depth = action->uint.value[0];
+	  if (cur)
+	    cur->clip_depth = action->uint.value[0];
+	  break;
+	case SWFDEC_SPRITE_ACTION_EVENTS:
+	  if (cur)
+	    cur->events = action->pointer.pointer;
 	  break;
 	default:
 	  g_assert_not_reached ();

@@ -18,7 +18,8 @@ typedef enum {
   SWFDEC_SPRITE_ACTION_RATIO,
   SWFDEC_SPRITE_ACTION_NAME,
   SWFDEC_SPRITE_ACTION_CLIP_DEPTH,
-  SWFDEC_SPRITE_ACTION_BG_COLOR
+  SWFDEC_SPRITE_ACTION_BG_COLOR,
+  SWFDEC_SPRITE_ACTION_EVENTS
 } SwfdecSpriteActionType;
 
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
@@ -43,6 +44,10 @@ union _SwfdecSpriteAction {
     SwfdecSpriteActionType	type;
     char *			string;
   }				string;
+  struct {
+    SwfdecSpriteActionType	type;
+    gpointer			pointer;
+  }				pointer;
 };
 
 struct _SwfdecExport {

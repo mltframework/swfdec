@@ -540,7 +540,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents, SWF_SCALE_FACTOR);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents, 1.0);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -567,7 +567,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents, SWF_SCALE_FACTOR);
+  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents, 1.0);
 
   shape->fills = g_ptr_array_new ();
   shape->fills2 = g_ptr_array_new ();
@@ -661,7 +661,7 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->lines, shapevec);
 
-    shapevec->width = swfdec_bits_get_u16 (bits) * SWF_SCALE_FACTOR;
+    shapevec->width = swfdec_bits_get_u16 (bits);
     if (shape->rgba) {
       shapevec->color = swfdec_bits_get_rgba (bits);
     } else {
@@ -792,9 +792,9 @@ tag_define_morph_shape (SwfdecDecoder * s)
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &start_rect, SWF_SCALE_FACTOR);
+  swfdec_bits_get_rect (bits, &start_rect, 1.0);
   swfdec_bits_syncbits (bits);
-  swfdec_bits_get_rect (bits, &end_rect, SWF_SCALE_FACTOR);
+  swfdec_bits_get_rect (bits, &end_rect, 1.0);
 
   swfdec_bits_syncbits (bits);
   offset = swfdec_bits_get_u32 (bits);
@@ -882,11 +882,11 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
       if (state_line_styles >= 0)
 	linestyle = swfdec_shape_get_linestyle (shape, state_line_styles);
       if (fill0style)
-	swfdec_path_move_to (&fill0style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	swfdec_path_move_to (&fill0style->path, x, y);
       if (fill1style)
-	swfdec_path_move_to (&fill1style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	swfdec_path_move_to (&fill1style->path, x, y);
       if (linestyle)
-	swfdec_path_move_to (&linestyle->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	swfdec_path_move_to (&linestyle->path, x, y);
     } else {
       /* edge record */
       int n_bits;
@@ -910,16 +910,16 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
         SWFDEC_LOG ("   anchor %d,%d", x, y);
 	if (fill0style)
 	  swfdec_path_curve_to (&fill0style->path, 
-	      control_x * SWF_SCALE_FACTOR, control_y * SWF_SCALE_FACTOR, 
-	      x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	      control_x, control_y, 
+	      x, y);
 	if (fill1style)
 	  swfdec_path_curve_to (&fill1style->path,
-	      control_x * SWF_SCALE_FACTOR, control_y * SWF_SCALE_FACTOR, 
-	      x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	      control_x, control_y, 
+	      x, y);
 	if (linestyle)
 	  swfdec_path_curve_to (&linestyle->path,
-	      control_x * SWF_SCALE_FACTOR, control_y * SWF_SCALE_FACTOR, 
-	      x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	      control_x, control_y, 
+	      x, y);
       } else {
         int general_line_flag;
         int vert_line_flag = 0;
@@ -939,11 +939,11 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
         }
         SWFDEC_LOG ("   line to %d,%d", x, y);
 	if (fill0style)
-	  swfdec_path_line_to (&fill0style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	  swfdec_path_line_to (&fill0style->path, x, y);
 	if (fill1style)
-	  swfdec_path_line_to (&fill1style->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	  swfdec_path_line_to (&fill1style->path, x, y);
 	if (linestyle)
-	  swfdec_path_line_to (&linestyle->path, x * SWF_SCALE_FACTOR, y * SWF_SCALE_FACTOR);
+	  swfdec_path_line_to (&linestyle->path, x, y);
       }
     }
   }

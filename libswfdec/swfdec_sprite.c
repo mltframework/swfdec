@@ -146,6 +146,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  has_color_transform = %d", has_color_transform);
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
+  SWFDEC_LOG ("  depth = %d", depth);
 
   if (has_character) {
     action.type = SWFDEC_SPRITE_ACTION_PLACE_OBJECT;
@@ -161,8 +162,17 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 
   if (has_matrix) {
     action.type = SWFDEC_SPRITE_ACTION_TRANSFORM;
+    cairo_matrix_init_identity (&action.matrix.matrix);
     swfdec_bits_get_matrix (bits, &action.matrix.matrix);
+    action.matrix.matrix.xx *= SWF_SCALE_FACTOR;
+    action.matrix.matrix.yy *= SWF_SCALE_FACTOR;
+    action.matrix.matrix.x0 *= SWF_SCALE_FACTOR;
+    action.matrix.matrix.y0 *= SWF_SCALE_FACTOR;
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
+    SWFDEC_LOG ("  matrix: %g %g  %g %g   %g %g", 
+	action.matrix.matrix.xx, action.matrix.matrix.yy,
+	action.matrix.matrix.xy, action.matrix.matrix.yx,
+	action.matrix.matrix.x0, action.matrix.matrix.y0);
   }
   if (has_color_transform) {
     action.type = SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM;
@@ -215,6 +225,13 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 	/* FIXME: who should we trust with parsing here? */
 	bits->ptr = record_end;
       }
+    }
+    if (list != NULL) {
+      action.type = SWFDEC_SPRITE_ACTION_EVENTS;
+      action.pointer.pointer = list;
+      swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, &action);
+    } else {
+      SWFDEC_WARNING ("no events added but there are supposed to be some");
     }
   }
 

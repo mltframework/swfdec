@@ -83,7 +83,6 @@ int tag_func_define_sprite (SwfdecDecoder * s);
 
 unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
     SwfdecColorTransform * color_transform);
-void dump_shape(SwfdecShape *shape);
 
 G_END_DECLS
 #endif

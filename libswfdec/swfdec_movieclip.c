@@ -174,16 +174,24 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	      movie->mouse_grab = NULL;
 	  }
 	  break;
+	case SWFDEC_SPRITE_ACTION_REPLACE_OBJECT:
 	case SWFDEC_SPRITE_ACTION_PLACE_OBJECT:
 	  if (cur) {
 	    swfdec_movieclip_update_extents (cur);
 	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
 	  }
-	  cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
-	  tmp = swfdec_display_list_add (&movie->list, action->uint.value[1], cur);
-	  if (tmp) {
-	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
-	    g_object_unref (tmp);
+	  if (action->type == SWFDEC_SPRITE_ACTION_REPLACE_OBJECT &&
+	      (cur = swfdec_display_list_get (&movie->list, action->uint.value[1]))) {
+	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+	    swfdec_movie_clip_set_child (cur, 
+		swfdec_object_get (SWFDEC_OBJECT (movie)->decoder, action->uint.value[0]));
+	  } else {
+	    cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
+	    tmp = swfdec_display_list_add (&movie->list, action->uint.value[1], cur);
+	    if (tmp) {
+	      swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
+	      g_object_unref (tmp);
+	    }
 	  }
 	  break;
 	case SWFDEC_SPRITE_ACTION_GET_OBJECT:

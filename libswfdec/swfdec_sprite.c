@@ -149,7 +149,11 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  depth = %d", depth);
 
   if (has_character) {
-    action.type = SWFDEC_SPRITE_ACTION_PLACE_OBJECT;
+    if (move) {
+      action.type = SWFDEC_SPRITE_ACTION_REPLACE_OBJECT;
+    } else {
+      action.type = SWFDEC_SPRITE_ACTION_PLACE_OBJECT;
+    }
     action.uint.value[0] = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG ("  id = %d", action.uint.value[0]);
   } else {

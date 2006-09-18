@@ -21,9 +21,12 @@ struct _SwfdecWidget
   GtkWidget		widget;
 
   SwfdecDecoder *	dec;		/* the video we play */
+
   double		scale;		/* the scale factor of the video */
+  gboolean		use_image;	/* TRUE to draw to an image first before rendering to Gtk */
+
   int			button;		/* status of mouse button in displayed movie */
-  guint			timeout;      	/* id of timeout fucntion */
+  guint			timeout;      	/* id of timeout function */
 };
 
 struct _SwfdecWidgetClass
@@ -31,13 +34,16 @@ struct _SwfdecWidgetClass
   GtkWidgetClass	widget_class;
 };
 
-GType		swfdec_widget_get_type	(void);
+GType		swfdec_widget_get_type		(void);
 
-GtkWidget *	swfdec_widget_new	(SwfdecDecoder *dec);
+GtkWidget *	swfdec_widget_new		(SwfdecDecoder *dec);
 
-void		swfdec_widget_set_scale	(SwfdecWidget *	widget,
-					 double		scale);
-double		swfdec_widget_get_scale (SwfdecWidget *	widget);
+void		swfdec_widget_set_scale		(SwfdecWidget *	widget,
+						 double		scale);
+double		swfdec_widget_get_scale		(SwfdecWidget *	widget);
+void		swfdec_widget_set_use_image	(SwfdecWidget *	widget,
+						 gboolean	use_image);
+gboolean	swfdec_widget_get_use_image	(SwfdecWidget *	widget);
 
 G_END_DECLS
 #endif

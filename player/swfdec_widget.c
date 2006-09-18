@@ -95,13 +95,27 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
   SwfdecRect rect;
   cairo_t *cr;
+  cairo_surface_t *surface = NULL;
 
-  cr = gdk_cairo_create (gtkwidget->window);
+  if (!widget->use_image) {
+    cr = gdk_cairo_create (gtkwidget->window);
+  } else {
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 
+      event->area.width, event->area.height);
+    cr = cairo_create (surface);
+    cairo_translate (cr, -event->area.x, -event->area.y);
+    cairo_surface_destroy (surface);
+  }
   cairo_scale (cr, widget->scale, widget->scale);
   swfdec_rect_init (&rect, event->area.x / widget->scale, event->area.y / widget->scale, 
       event->area.width / widget->scale, event->area.height / widget->scale);
-
   swfdec_decoder_render (widget->dec, cr, &rect);
+  if (widget->use_image) {
+    cairo_t *crw = gdk_cairo_create (gtkwidget->window);
+    cairo_set_source_surface (crw, surface, event->area.x, event->area.y);
+    cairo_paint (crw);
+    cairo_destroy (crw);
+  }
 
   cairo_destroy (cr);
 
@@ -234,7 +248,7 @@ swfdec_widget_new (SwfdecDecoder *dec)
 }
 
 void
-swfdec_widget_set_scale	(SwfdecWidget *	widget, double scale)
+swfdec_widget_set_scale	(SwfdecWidget *widget, double scale)
 {
   g_return_if_fail (SWFDEC_IS_WIDGET (widget));
   g_return_if_fail (scale > 0.0);
@@ -244,10 +258,26 @@ swfdec_widget_set_scale	(SwfdecWidget *	widget, double scale)
 }
 
 double
-swfdec_widget_get_scale (SwfdecWidget *	widget)
+swfdec_widget_get_scale (SwfdecWidget *widget)
 {
   g_return_val_if_fail (SWFDEC_IS_WIDGET (widget), 1.0);
 
   return widget->scale;
 }
 
+void
+swfdec_widget_set_use_image (SwfdecWidget *widget, gboolean use_image)
+{
+  g_return_if_fail (SWFDEC_IS_WIDGET (widget));
+
+  widget->use_image = use_image;
+  gtk_widget_queue_draw (GTK_WIDGET (widget));
+}
+
+gboolean
+swfdec_widget_get_use_image (SwfdecWidget *widget)
+{
+  g_return_val_if_fail (SWFDEC_IS_WIDGET (widget), 1.0);
+
+  return widget->use_image;
+}

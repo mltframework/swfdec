@@ -5,13 +5,14 @@
 #include <swfdec_widget.h>
 
 static void
-view_swf (SwfdecDecoder *dec, double scale)
+view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
 {
   GtkWidget *window, *widget;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   widget = swfdec_widget_new (dec);
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
+  swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_container_add (GTK_CONTAINER (window), widget);
   gtk_widget_show_all (window);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
@@ -34,9 +35,11 @@ int main (int argc, char *argv[])
   char *contents;
   SwfdecBuffer *buffer;
   GError *error = NULL;
+  gboolean use_image = FALSE;
 
   GOptionEntry options[] = {
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
+    { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -86,7 +89,7 @@ int main (int argc, char *argv[])
     }
   }
 
-  view_swf (s, scale);
+  view_swf (s, scale, use_image);
 
   s = NULL;
   return 0;

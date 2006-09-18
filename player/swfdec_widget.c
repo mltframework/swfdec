@@ -17,6 +17,7 @@ queue_draw (SwfdecWidget *widget)
   swfdec_decoder_get_invalid (widget->dec, &rect);
   if (swfdec_rect_is_empty (&rect))
     return;
+  swfdec_rect_scale (&rect, &rect, widget->scale);
   //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
   gtk_widget_queue_draw_area (GTK_WIDGET (widget), floor (rect.x0), floor (rect.y0),
       ceil (rect.x1) - floor (rect.x0), ceil (rect.y1) - floor (rect.y0));

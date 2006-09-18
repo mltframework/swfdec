@@ -238,8 +238,8 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     int rotate_skew0 = swfdec_bits_getsbits (bits, n_rotate_bits);
     int rotate_skew1 = swfdec_bits_getsbits (bits, n_rotate_bits);
 
-    matrix->xy = rotate_skew0 * SWF_TRANS_SCALE_FACTOR;
-    matrix->yx = rotate_skew1 * SWF_TRANS_SCALE_FACTOR;
+    matrix->xy = rotate_skew1 * SWF_TRANS_SCALE_FACTOR;
+    matrix->yx = rotate_skew0 * SWF_TRANS_SCALE_FACTOR;
   }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
   translate_x = swfdec_bits_getsbits (bits, n_translate_bits);

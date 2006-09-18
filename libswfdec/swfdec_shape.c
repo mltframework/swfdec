@@ -169,14 +169,24 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 	    g_assert_not_reached ();
 	  }
 
+#if 0
+	  /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
           pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
-          cairo_pattern_set_matrix(pattern, &mat);
+          cairo_pattern_set_matrix(pattern, &shapevec->fill_transform);
+#else
+	  {
+	    cairo_matrix_t mat = shapevec->fill_transform;
+	    pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
+	    cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
+	    cairo_pattern_set_matrix (pattern, &mat);
+	  }
+#endif
           for (j=0;j<grad->n_gradients;j++){
             color = swfdec_color_apply_transform (grad->array[j].color,
                 trans);
 
             cairo_pattern_add_color_stop_rgba (pattern,
-                grad->array[j].ratio/256.0,
+                grad->array[j].ratio/255.0,
                 SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
                 SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
           }
@@ -188,23 +198,17 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
         {
           SwfdecGradient *grad = shapevec->grad;
           int j;
-          cairo_matrix_t mat;
 	  cairo_pattern_t *pattern;
-
-          mat = shapevec->fill_transform;
-          if (cairo_matrix_invert (&mat)) {
-	    g_assert_not_reached ();
-	  }
 
           pattern = cairo_pattern_create_radial (0,0,0,
              0, 0, 16384);
-          cairo_pattern_set_matrix(pattern, &mat);
+          cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
           for (j=0;j<grad->n_gradients;j++){
             color = swfdec_color_apply_transform (grad->array[j].color,
 		trans);
 
             cairo_pattern_add_color_stop_rgba (pattern,
-                grad->array[j].ratio/256.0,
+                grad->array[j].ratio/255.0,
                 SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
                 SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
           }
@@ -218,12 +222,6 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
       case 0x43:
         {
           SwfdecImage *image;
-          cairo_matrix_t mat;
-
-          mat = shapevec->fill_transform;
-          if (cairo_matrix_invert (&mat)) {
-	    g_assert_not_reached ();
-	  }
 
           image = (SwfdecImage *)swfdec_object_get (obj->decoder, shapevec->fill_id);
           if (image && SWFDEC_IS_IMAGE (image)) {
@@ -236,7 +234,7 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
                 image->rowstride);
             pattern = cairo_pattern_create_for_surface (src_surface);
 	    cairo_surface_destroy (src_surface);
-            cairo_pattern_set_matrix(pattern, &mat);
+	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
             if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
               cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
             } else {
@@ -605,6 +603,7 @@ swf_shape_vec_new (void)
 
   shapevec = g_new0 (SwfdecShapeVec, 1);
   swfdec_path_init (&shapevec->path);
+  cairo_matrix_init_identity (&shapevec->fill_transform);
 
   return shapevec;
 }
@@ -728,6 +727,10 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
     } else {
       SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
       shapevec->fill_type = 0;
+    }
+    if (cairo_matrix_invert (&shapevec->fill_transform)) {
+      SWFDEC_ERROR ("fill transform matrix not invertible, resetting");
+      cairo_matrix_init_identity (&shapevec->fill_transform);
     }
   }
 

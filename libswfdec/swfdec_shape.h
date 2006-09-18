@@ -33,7 +33,7 @@ struct _SwfdecShapeVec
 
   int fill_type;
   int fill_id;
-  cairo_matrix_t fill_transform;
+  cairo_matrix_t fill_transform;	/* inverse matrix - so it's user-to-pattern */
 
   SwfdecGradient *grad;
 };

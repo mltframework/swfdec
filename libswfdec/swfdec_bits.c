@@ -252,9 +252,21 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
 char *
 swfdec_bits_get_string (SwfdecBits * bits)
 {
-  char *s = g_strdup ((char *)bits->ptr);
+  char *s;
+  const char *end;
+  unsigned int len;
 
-  bits->ptr += strlen ((char *)bits->ptr) + 1;
+  swfdec_bits_syncbits (bits);
+  end = memchr (bits->ptr, 0, bits->end - bits->ptr);
+  if (end == NULL) {
+    SWFDEC_ERROR ("could not parse string");
+    return NULL;
+  }
+  
+  len = end - (const char *) bits->ptr;
+  s = g_strndup ((char *)bits->ptr, len);
+
+  bits->ptr += len + 1;
 
   return s;
 }

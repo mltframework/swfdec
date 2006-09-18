@@ -10,37 +10,31 @@
 
 
 static int
-swfdec_bits_valid (SwfdecBits *b)
+swfdec_bits_left (SwfdecBits *b)
 {
-  if (b->ptr == NULL || b->ptr > b->end) return 0;
-  return 1;
+  if (b->ptr == NULL)
+    return 0;
+  return (b->end - b->ptr) * 8 - b->idx;
 }
 
-#define SWFDEC_BITS_CHECK(b) do { \
-  if (!swfdec_bits_valid(b)) { \
+#define SWFDEC_BITS_CHECK(b,n) G_STMT_START { \
+  if (swfdec_bits_left(b) < (n)) { \
     SWFDEC_ERROR("reading past end of buffer"); \
     g_assert_not_reached(); \
     return 0; \
   } \
-}while(0)
-
-int
-swfdec_bits_needbits (SwfdecBits * b, int n_bytes)
-{
-  if (b->ptr == NULL)
-    return 1;
-  if (b->ptr + n_bytes > b->end)
-    return 1;
-
-  return 0;
-}
+}G_STMT_END
+#define SWFDEC_BYTES_CHECK(b,n) G_STMT_START { \
+  swfdec_bits_syncbits (b); \
+  SWFDEC_BITS_CHECK (b, 8 * n); \
+} G_STMT_END
 
 int
 swfdec_bits_getbit (SwfdecBits * b)
 {
   int r;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BITS_CHECK (b, 1);
 
   r = ((*b->ptr) >> (7 - b->idx)) & 1;
 
@@ -59,13 +53,23 @@ swfdec_bits_getbits (SwfdecBits * b, int n)
   unsigned long r = 0;
   int i;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BITS_CHECK (b, n);
 
-  for (i = 0; i < n; i++) {
-    r <<= 1;
-    r |= swfdec_bits_getbit (b);
+  while (n > 0) {
+    i = MIN (n, 8 - b->idx);
+    r <<= i;
+    r |= ((*b->ptr) >> (8 - i - b->idx)) & ((1 << i) - 1);
+    n -= i;
+    if (i == 8) {
+      b->ptr++;
+    } else {
+      b->idx += i;
+      if (b->idx >= 8) {
+	b->ptr++;
+	b->idx = 0;
+      }
+    }
   }
-
   return r;
 }
 
@@ -81,25 +85,20 @@ int
 swfdec_bits_getsbits (SwfdecBits * b, int n)
 {
   unsigned long r = 0;
-  int i;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BITS_CHECK (b, n);
 
   if (n == 0)
     return 0;
   r = -swfdec_bits_getbit (b);
-  for (i = 1; i < n; i++) {
-    r <<= 1;
-    r |= swfdec_bits_getbit (b);
-  }
-
+  r = (r << (n - 1)) | swfdec_bits_getbits (b, n - 1);
   return r;
 }
 
 unsigned int
 swfdec_bits_peek_u8 (SwfdecBits * b)
 {
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BYTES_CHECK (b, 1);
 
   return *b->ptr;
 }
@@ -107,7 +106,7 @@ swfdec_bits_peek_u8 (SwfdecBits * b)
 unsigned int
 swfdec_bits_get_u8 (SwfdecBits * b)
 {
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BYTES_CHECK (b, 1);
 
   return *b->ptr++;
 }
@@ -117,7 +116,7 @@ swfdec_bits_get_u16 (SwfdecBits * b)
 {
   unsigned int r;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BYTES_CHECK (b, 2);
 
   r = b->ptr[0] | (b->ptr[1] << 8);
   b->ptr += 2;
@@ -130,7 +129,7 @@ swfdec_bits_get_s16 (SwfdecBits * b)
 {
   short r;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BYTES_CHECK (b, 2);
 
   r = b->ptr[0] | (b->ptr[1] << 8);
   b->ptr += 2;
@@ -143,7 +142,7 @@ swfdec_bits_get_be_u16 (SwfdecBits * b)
 {
   unsigned int r;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BYTES_CHECK (b, 2);
 
   r = (b->ptr[0] << 8) | b->ptr[1];
   b->ptr += 2;
@@ -156,7 +155,7 @@ swfdec_bits_get_u32 (SwfdecBits * b)
 {
   unsigned int r;
 
-  SWFDEC_BITS_CHECK(b);
+  SWFDEC_BYTES_CHECK (b, 4);
 
   r = b->ptr[0] | (b->ptr[1] << 8) | (b->ptr[2] << 16) | (b->ptr[3] << 24);
   b->ptr += 4;
@@ -167,21 +166,11 @@ swfdec_bits_get_u32 (SwfdecBits * b)
 void
 swfdec_bits_syncbits (SwfdecBits * b)
 {
-#if 0
-  if (!swfdec_bits_valid(b)) {
-    SWFDEC_ERROR("reading past end of buffer");
-    return;
-  }
-#endif
-
   if (b->idx) {
     b->ptr++;
     b->idx = 0;
   }
-
 }
-
-
 
 void
 swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)

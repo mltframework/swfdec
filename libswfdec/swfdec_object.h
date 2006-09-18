@@ -52,6 +52,8 @@ gpointer swfdec_object_new (SwfdecDecoder *dec, GType type);
 void swfdec_object_unref (SwfdecObject * object);
 
 SwfdecObject *swfdec_object_get (SwfdecDecoder * s, int id);
+gpointer swfdec_object_create (SwfdecDecoder * s, int id, GType type);
+
 gboolean swfdec_object_mouse_in (SwfdecObject *object,
     double x, double y, int button);
 void swfdec_object_render (SwfdecObject *object, cairo_t *cr, 

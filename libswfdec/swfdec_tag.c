@@ -25,16 +25,6 @@ tag_func_protect (SwfdecDecoder * s)
 }
 
 int
-tag_func_ignore (SwfdecDecoder * s)
-{
-  if (s->b.buffer) {
-    s->b.ptr += s->b.buffer->length;
-  }
-
-  return SWF_OK;
-}
-
-int
 tag_func_dumpbits (SwfdecDecoder * s)
 {
   SwfdecBits *b = &s->b;
@@ -70,9 +60,9 @@ define_text (SwfdecDecoder * s, int rgba)
   SwfdecTextGlyph glyph = { 0 };
 
   id = swfdec_bits_get_u16 (bits);
-  text = swfdec_object_new (s, SWFDEC_TYPE_TEXT);
-  SWFDEC_OBJECT (text)->id = id;
-  s->objects = g_list_append (s->objects, text);
+  text = swfdec_object_create (s, id, SWFDEC_TYPE_TEXT);
+  if (!text)
+    return SWF_OK;
 
   glyph.color = 0xffffffff;
 
@@ -170,9 +160,9 @@ tag_func_define_sprite (SwfdecDecoder * s)
   save_bits = s->b;
 
   id = swfdec_bits_get_u16 (bits);
-  sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
-  SWFDEC_OBJECT (sprite)->id = id;
-  s->objects = g_list_append (s->objects, sprite);
+  sprite = swfdec_object_create (s, id, SWFDEC_TYPE_SPRITE);
+  if (!sprite)
+    return SWF_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -319,9 +309,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
-  button = swfdec_object_new (s, SWFDEC_TYPE_BUTTON);
-  SWFDEC_OBJECT (button)->id = id;
-  s->objects = g_list_append (s->objects, button);
+  button = swfdec_object_create (s, id, SWFDEC_TYPE_BUTTON);
+  if (!button)
+    return SWF_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -403,9 +393,9 @@ tag_func_define_button (SwfdecDecoder * s)
   endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
-  button = swfdec_object_new (s, SWFDEC_TYPE_BUTTON);
-  SWFDEC_OBJECT (button)->id = id;
-  s->objects = g_list_append (s->objects, button);
+  button = swfdec_object_create (s, id, SWFDEC_TYPE_BUTTON);
+  if (!button)
+    return SWF_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -464,9 +454,9 @@ tag_func_define_font (SwfdecDecoder * s)
   SwfdecFont *font;
 
   id = swfdec_bits_get_u16 (&s->b);
-  font = swfdec_object_new (s, SWFDEC_TYPE_FONT);
-  SWFDEC_OBJECT (font)->id = id;
-  s->objects = g_list_append (s->objects, font);
+  font = swfdec_object_create (s, id, SWFDEC_TYPE_FONT);
+  if (!font)
+    return SWF_OK;
 
   offset = swfdec_bits_get_u16 (&s->b);
   n_glyphs = offset / 2;
@@ -546,9 +536,9 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   int i;
 
   id = swfdec_bits_get_u16 (bits);
-  font = swfdec_object_new (s, SWFDEC_TYPE_FONT);
-  SWFDEC_OBJECT (font)->id = id;
-  s->objects = g_list_append (s->objects, font);
+  font = swfdec_object_create (s, id, SWFDEC_TYPE_FONT);
+  if (!font)
+    return SWF_OK;
 
   has_layout = swfdec_bits_getbit (bits);
   shift_jis = swfdec_bits_getbit (bits);
@@ -678,7 +668,7 @@ static struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
   [ST_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
   [ST_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
-  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_ignore, 0},
+  [ST_DEFINEFONTINFO] = {"DefineFontInfo", NULL, 0},
   [ST_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
   [ST_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
   [ST_DEFINEBUTTONSOUND] =
@@ -719,7 +709,7 @@ static struct tag_func_struct tag_funcs[] = {
   [ST_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
   [ST_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
   [ST_VIDEOFRAME] = {"VideoFrame", NULL, 0},
-  [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", NULL, 0},
+  [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info_2, 0},
   [ST_MX4] = {"MX4", NULL, 0},
   [ST_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
   [ST_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},

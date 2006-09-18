@@ -103,20 +103,61 @@ swfdec_object_unref (SwfdecObject * object)
   g_object_unref (G_OBJECT (object));
 }
 
+
 SwfdecObject *
 swfdec_object_get (SwfdecDecoder * s, int id)
 {
   SwfdecObject *object;
   GList *g;
 
-  for (g = g_list_first (s->objects); g; g = g_list_next (g)) {
+  for (g = s->characters; g; g = g_list_next (g)) {
     object = SWFDEC_OBJECT (g->data);
     if (object->id == id)
       return object;
   }
-  SWFDEC_WARNING ("object not found (id==%d)", id);
 
   return NULL;
+}
+
+/**
+ * swfdec_object_create:
+ * @s: a #SwfdecDecoder
+ * @id: id of the object
+ * @type: the required type for the object
+ *
+ * Gets the object of the requested @type and with the given @id from @s.
+ * If there is already a different object with the given id, return NULL.
+ * If the object doesn't exist yet, create it.
+ *
+ * Returns: The requested object or NULL on failure;
+ **/
+gpointer
+swfdec_object_create (SwfdecDecoder * s, int id, GType type)
+{
+  SwfdecObject *result;
+
+  g_return_val_if_fail (SWFDEC_IS_DECODER (s), NULL);
+  g_return_val_if_fail (id >= 0, NULL);
+  g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_OBJECT), NULL);
+
+  SWFDEC_INFO ("  id = %d\n", id);
+  result = swfdec_object_get (s, id);
+  if (result) {
+    /* FIXME: use g_type_is_a? */
+    if (G_OBJECT_TYPE (result) == type) {
+      SWFDEC_INFO ("  id = %d\n", id);
+      return result;
+    } else {
+      SWFDEC_WARNING ("requested object type %s for id %d doesn't match real type %s",
+	  G_OBJECT_TYPE_NAME (result), id, g_type_name (type));
+      return NULL;
+    }
+  }
+  result = swfdec_object_new (s, type);
+  result->id = id;
+  s->characters = g_list_prepend (s->characters, result);
+
+  return result;
 }
 
 void

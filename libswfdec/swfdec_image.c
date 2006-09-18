@@ -138,9 +138,9 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = swfdec_object_new (s, SWFDEC_TYPE_IMAGE);
-  SWFDEC_OBJECT (image)->id = id;
-  s->objects = g_list_append (s->objects, image);
+  image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
+  if (!image)
+    return SWF_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG;
   image->handle = swfdec_handle_new (swfdec_image_jpeg_load,
@@ -194,9 +194,9 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = swfdec_object_new (s, SWFDEC_TYPE_IMAGE);
-  SWFDEC_OBJECT (image)->id = id;
-  s->objects = g_list_append (s->objects, image);
+  image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
+  if (!image)
+    return SWF_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG2;
   image->handle = swfdec_handle_new (swfdec_image_jpeg2_load,
@@ -246,9 +246,9 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = swfdec_object_new (s, SWFDEC_TYPE_IMAGE);
-  SWFDEC_OBJECT (image)->id = id;
-  s->objects = g_list_append (s->objects, image);
+  image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
+  if (!image)
+    return SWF_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG3;
   image->handle = swfdec_handle_new (swfdec_image_jpeg3_load,
@@ -467,9 +467,9 @@ tag_func_define_bits_lossless (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = swfdec_object_new (s, SWFDEC_TYPE_IMAGE);
-  SWFDEC_OBJECT (image)->id = id;
-  s->objects = g_list_append (s->objects, image);
+  image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
+  if (!image)
+    return SWF_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_LOSSLESS;
   image->handle = swfdec_handle_new (swfdec_image_lossless_load,
@@ -490,9 +490,9 @@ tag_func_define_bits_lossless_2 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
 
-  image = swfdec_object_new (s, SWFDEC_TYPE_IMAGE);
-  SWFDEC_OBJECT (image)->id = id;
-  s->objects = g_list_append (s->objects, image);
+  image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
+  if (!image)
+    return SWF_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_LOSSLESS2;
   image->handle = swfdec_handle_new (swfdec_image_lossless_load,

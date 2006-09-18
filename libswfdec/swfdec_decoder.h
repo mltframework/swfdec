@@ -62,7 +62,7 @@ struct _SwfdecDecoder
   SwfdecBits b;
 
   /* defined objects */
-  GList *objects;
+  GList *characters;			/* list of all objects with an id (called characters) */
   GList *exports;
 
   SwfdecSound *stream_sound_obj;
@@ -120,6 +120,5 @@ const char *swfdec_decoder_get_tag_name (int tag);
 int swfdec_decoder_get_tag_flag (int tag);
 void swfdec_decoder_queue_script (SwfdecDecoder *s, JSScript *script);
 void swfdec_decoder_execute_scripts (SwfdecDecoder *s);
-
 
 #endif

@@ -271,8 +271,8 @@ swfdec_decoder_free (SwfdecDecoder * s)
 
   g_object_unref (s->root);
 
-  g_list_foreach (s->objects, (GFunc) swfdec_object_unref, NULL);
-  g_list_free (s->objects);
+  g_list_foreach (s->characters, (GFunc) swfdec_object_unref, NULL);
+  g_list_free (s->characters);
 
   if (s->buffer)
     g_free (s->buffer);

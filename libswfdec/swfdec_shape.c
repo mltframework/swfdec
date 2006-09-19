@@ -145,7 +145,8 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   unsigned int i;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
-      swf_color color;
+  swf_color color;
+  gboolean use_mask;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
@@ -153,10 +154,12 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
   for (i = 0; i < MAX (shape->fills->len, shape->lines->len); i++) {
     if (i < shape->fills->len) {
+      cairo_save (cr);
       shapevec = g_ptr_array_index (shape->fills, i);
       shapevec2 = g_ptr_array_index (shape->fills2, i);
 
       color = swfdec_color_apply_transform (shapevec->color, trans);
+      use_mask = FALSE;
 
       switch (shapevec->fill_type) {
 	case 0x10:
@@ -224,13 +227,15 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 	case 0x43:
 	  {
 	    SwfdecImage *image;
-
+	    
 	    image = (SwfdecImage *)swfdec_object_get (obj->decoder, shapevec->fill_id);
 	    if (image && SWFDEC_IS_IMAGE (image)) {
 	      cairo_surface_t *src_surface;
 	      cairo_pattern_t *pattern;
 	      unsigned char *image_data = swfdec_handle_get_data(image->handle);
 
+	      if (SWF_COLOR_A (color) < 255)
+		use_mask = TRUE;
 	      src_surface = cairo_image_surface_create_for_data (image_data,
 		  CAIRO_FORMAT_ARGB32, image->width, image->height,
 		  image->rowstride);
@@ -269,8 +274,14 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 	  cairo_append_path (cr, &shapevec->path);
 	if (shapevec2->path.num_data)
 	  cairo_append_path (cr, &shapevec2->path);
-	cairo_fill (cr);
+	if (use_mask) {
+	  cairo_clip (cr);
+	  cairo_paint_with_alpha (cr, SWF_COLOR_A (color) / 255.);
+	} else {
+	  cairo_fill (cr);
+	}
       }
+      cairo_restore (cr);
     }
 
     if (i < shape->lines->len) {

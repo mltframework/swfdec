@@ -9,11 +9,13 @@
 #include <swfdec_bits.h>
 
 
-static int
+static unsigned int 
 swfdec_bits_left (SwfdecBits *b)
 {
   if (b->ptr == NULL)
     return 0;
+  g_assert (b->end >= b->ptr);
+  g_assert (b->end > b->ptr || b->idx == 0);
   return (b->end - b->ptr) * 8 - b->idx;
 }
 
@@ -48,10 +50,10 @@ swfdec_bits_getbit (SwfdecBits * b)
 }
 
 unsigned int
-swfdec_bits_getbits (SwfdecBits * b, int n)
+swfdec_bits_getbits (SwfdecBits * b, unsigned int n)
 {
   unsigned long r = 0;
-  int i;
+  unsigned int i;
 
   SWFDEC_BITS_CHECK (b, n);
 
@@ -74,7 +76,7 @@ swfdec_bits_getbits (SwfdecBits * b, int n)
 }
 
 unsigned int
-swfdec_bits_peekbits (SwfdecBits * b, int n)
+swfdec_bits_peekbits (SwfdecBits * b, unsigned int n)
 {
   SwfdecBits tmp = *b;
 
@@ -82,7 +84,7 @@ swfdec_bits_peekbits (SwfdecBits * b, int n)
 }
 
 int
-swfdec_bits_getsbits (SwfdecBits * b, int n)
+swfdec_bits_getsbits (SwfdecBits * b, unsigned int n)
 {
   unsigned long r = 0;
 
@@ -269,6 +271,18 @@ swfdec_bits_get_string (SwfdecBits * bits)
   bits->ptr += len + 1;
 
   return s;
+}
+
+char *
+swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len)
+{
+  char *ret;
+
+  SWFDEC_BYTES_CHECK (bits, len);
+
+  ret = g_strndup ((char *) bits->ptr, len);
+  bits->ptr += len;
+  return ret;
 }
 
 unsigned int

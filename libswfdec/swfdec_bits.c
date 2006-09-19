@@ -223,6 +223,7 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
 
   swfdec_bits_syncbits (bits);
 
+  cairo_matrix_init_identity (matrix);
   has_scale = swfdec_bits_getbit (bits);
   if (has_scale) {
     int n_scale_bits = swfdec_bits_getbits (bits, 5);

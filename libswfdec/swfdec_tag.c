@@ -465,11 +465,11 @@ tag_func_define_font (SwfdecDecoder * s)
     offset = swfdec_bits_get_u16 (&s->b);
   }
 
-  font->glyphs = g_ptr_array_sized_new (n_glyphs);
-
+  g_array_set_size (font->glyphs, n_glyphs);
   for (i = 0; i < n_glyphs; i++) {
+    SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
     shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
-    g_ptr_array_add (font->glyphs, shape);
+    entry->shape = shape;
 
     shape->fills = g_ptr_array_sized_new (1);
     shapevec = swf_shape_vec_new ();
@@ -565,11 +565,12 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     code_table_offset = swfdec_bits_get_u16 (bits);
   }
 
-  font->glyphs = g_ptr_array_sized_new (n_glyphs);
+  g_array_set_size (font->glyphs, n_glyphs);
 
   for (i = 0; i < n_glyphs; i++) {
+    SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
     shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
-    g_ptr_array_add (font->glyphs, shape);
+    entry->shape = shape;
 
     shape->fills = g_ptr_array_sized_new (1);
     shapevec = swf_shape_vec_new ();

@@ -21,20 +21,17 @@ swfdec_font_class_init (SwfdecFontClass * g_class)
 static void
 swfdec_font_init (SwfdecFont * font)
 {
-
+  font->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecFontEntry));
 }
 
 static void
 swfdec_font_dispose (SwfdecFont * font)
 {
-  SwfdecShape *shape;
-  unsigned int i;
+  guint i;
 
   for (i = 0; i < font->glyphs->len; i++) {
-    shape = g_ptr_array_index (font->glyphs, i);
-    swfdec_object_unref (SWFDEC_OBJECT (shape));
+    swfdec_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
   }
-  g_ptr_array_free (font->glyphs, TRUE);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (font));
 }
@@ -45,7 +42,72 @@ swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
   g_return_val_if_fail (glyph < font->glyphs->len, NULL);
 
-  return g_ptr_array_index (font->glyphs, glyph);
+  return g_array_index (font->glyphs, SwfdecFontEntry, glyph).shape;
 }
 
+char *
+convert_from_language (const char *s, SwfdecLanguage language)
+{
+  char *ret;
+  const char *langcode;
+
+  switch (language) {
+    case SWFDEC_LANGUAGE_LATIN:
+      langcode = "LATIN1";
+      break;
+      /* FIXME! */
+    case SWFDEC_LANGUAGE_JAPANESE:
+    case SWFDEC_LANGUAGE_KOREAN:
+    case SWFDEC_LANGUAGE_CHINESE:
+    case SWFDEC_LANGUAGE_CHINESE_TRADITIONAL:
+    case SWFDEC_LANGUAGE_NONE:
+    default:
+      SWFDEC_ERROR ("can't convert given text from language %u", language);
+      return NULL;
+  }
+  SWFDEC_LOG ("converting text from %s", langcode);
+  ret = g_convert (s, -1, "UTF-8", langcode, NULL, NULL, NULL);
+  if (ret == NULL)
+    SWFDEC_ERROR ("given text is not in language %s", langcode);
+  return ret;
+}
+
+int
+tag_func_define_font_info_2 (SwfdecDecoder *s)
+{
+  SwfdecFont *font;
+  unsigned int id, len, i;
+  int reserved;
+  char *name;
+  SwfdecLanguage language;
+
+  id = swfdec_bits_get_u16 (&s->b);
+  font = swfdec_object_get (s, id);
+  if (!SWFDEC_IS_FONT (font))
+    return SWF_OK;
+  len = swfdec_bits_get_u8 (&s->b);
+  /* this string is locale specific */
+  name = swfdec_bits_get_string_length (&s->b, len);
+  reserved = swfdec_bits_getbits (&s->b, 2);
+  font->small = swfdec_bits_getbit (&s->b);
+  reserved = swfdec_bits_getbits (&s->b, 2);
+  if (reserved != 0)
+    SWFDEC_WARNING ("ANSI and JIS flags are supposed to be 0 in DefineFont2");
+  font->italic = swfdec_bits_getbit (&s->b);
+  font->bold = swfdec_bits_getbit (&s->b);
+  reserved = swfdec_bits_getbit (&s->b);
+  if (!reserved)
+    SWFDEC_WARNING ("DefineFont2 claims no wide codes, ignoring");
+  language = swfdec_bits_get_u8 (&s->b);
+  font->name = convert_from_language (name, language);
+  g_free (name);
+  if (font->name) {
+    /* FIXME: get a pango layout here */
+  }
+  for (i = 0; i < font->glyphs->len; i++) {
+    g_array_index (font->glyphs, SwfdecFontEntry, i).value = swfdec_bits_get_u16 (&s->b);
+  }
+
+  return SWF_OK;
+}
 

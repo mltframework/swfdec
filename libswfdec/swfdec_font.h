@@ -7,6 +7,7 @@
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecFont SwfdecFont;
+typedef struct _SwfdecFontEntry SwfdecFontEntry;
 typedef struct _SwfdecFontClass SwfdecFontClass;
 
 typedef enum {
@@ -24,24 +25,32 @@ typedef enum {
 #define SWFDEC_FONT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_FONT, SwfdecFont))
 #define SWFDEC_FONT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_FONT, SwfdecFontClass))
 
+struct _SwfdecFontEntry {
+  SwfdecShape *		shape;		/* shape to use as fallback */
+  gunichar		value;		/* UCS2 value of glyph */
+};
+
 struct _SwfdecFont
 {
   SwfdecObject		object;
 
-  SwfdecLanguage	language;
-  GPtrArray *		glyphs;
+  char *		name;		/* name of the font (FIXME: what name?) */
+  gboolean		bold;		/* font is bold */
+  gboolean		italic;		/* font is italic */
+  gboolean		small;		/* font is rendered at small sizes */
+  GArray *		glyphs;		/* key: glyph index, value: UCS2 character */
 };
 
 struct _SwfdecFontClass
 {
   SwfdecObjectClass	object_class;
-
 };
 
 GType swfdec_font_get_type (void);
 
 SwfdecShape *swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph);
 
+int tag_func_define_font_info_2 (SwfdecDecoder *s);
 
 G_END_DECLS
 #endif

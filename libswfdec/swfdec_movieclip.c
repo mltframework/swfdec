@@ -12,77 +12,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-/*** DISPLAY LIST ***/
-
-static void
-swfdec_display_list_init (SwfdecDisplayList *list)
-{
-  list->list = NULL;
-}
-
-static void
-swfdec_display_list_reset (SwfdecDisplayList *list)
-{
-  g_list_foreach (list->list, (GFunc) g_object_unref, NULL);
-  g_list_free (list->list);
-  list->list = NULL;
-}
-
-static SwfdecMovieClip *
-swfdec_display_list_add (SwfdecDisplayList *list, int depth, SwfdecMovieClip *movie)
-{
-  GList *walk;
-
-  movie->depth = depth;
-  for (walk = list->list; walk; walk = walk->next) {
-    SwfdecMovieClip *cur = walk->data;
-    if (cur->depth < depth)
-      continue;
-    if (cur->depth > depth) {
-      list->list = g_list_insert_before (list->list, walk, movie);
-      return NULL;
-    }
-    /* if (cur->depth == depth) */
-    walk->data = movie;
-    return cur;
-  }
-  list->list = g_list_append (list->list, movie);
-  return NULL;
-}
-
-static SwfdecMovieClip *
-swfdec_display_list_get (SwfdecDisplayList *list, int depth)
-{
-  GList *walk;
-
-  for (walk = list->list; walk; walk = walk->next) {
-    SwfdecMovieClip *cur = walk->data;
-    if (cur->depth > depth)
-      return NULL;
-    if (cur->depth == depth)
-      return cur;
-  }
-  return NULL;
-}
-
-static SwfdecMovieClip *
-swfdec_display_list_remove (SwfdecDisplayList *list, int depth)
-{
-  GList *walk;
-
-  for (walk = list->list; walk; walk = walk->next) {
-    SwfdecMovieClip *cur = walk->data;
-    if (cur->depth > depth)
-      return NULL;
-    if (cur->depth == depth) {
-      list->list = g_list_delete_link (list->list, walk);
-      return cur;
-    }
-  }
-  return NULL;
-
-}
-
 /*** MOVIE CLIP ***/
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecMovieClip, swfdec_movie_clip)
@@ -95,8 +24,6 @@ static void swfdec_movie_clip_base_init (gpointer g_class)
 static void
 swfdec_movie_clip_init (SwfdecMovieClip * movie)
 {
-  swfdec_display_list_init (&movie->list);
-
   movie->xscale = 100;
   movie->yscale = 100;
   cairo_matrix_init_identity (&movie->transform);
@@ -107,6 +34,7 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
   movie->visible = TRUE;
 
   movie->button_state = SWFDEC_BUTTON_UP;
+  movie->current_frame = -1;
 }
 
 /* NB: modifies rect */
@@ -131,7 +59,7 @@ swfdec_movie_clip_invalidate_cb (SwfdecObject *child, const SwfdecRect *rect, Sw
 }
 
 static void
-swfdec_movieclip_update_extents (SwfdecMovieClip *movie)
+swfdec_movie_clip_update_extents (SwfdecMovieClip *movie)
 {
   /* FIXME: handle real movieclips */
   if (movie->child && !SWFDEC_IS_SPRITE (movie)) {
@@ -143,7 +71,8 @@ swfdec_movieclip_update_extents (SwfdecMovieClip *movie)
 static void
 swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 {
-  swfdec_display_list_reset (&movie->list);
+  g_list_foreach (movie->list, (GFunc) swfdec_object_unref, NULL);
+  g_list_free (movie->list);
 
   swfdec_movie_clip_set_child (movie, NULL);
 
@@ -151,123 +80,92 @@ swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 }
 
 static void
-swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
+swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie, guint last_frame)
 {
-  SwfdecSpriteAction *action;
-  guint i;
-  SwfdecMovieClip *cur = NULL, *tmp;
+  SwfdecMovieClip *cur;
   SwfdecRect inval;
   SwfdecSpriteFrame *frame = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
+  GList *walk, *walk2; /* I suck at variable naming */
 
-  if (frame->actions != NULL) {
+  if (frame->bg_color != SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color)
+    inval = SWFDEC_OBJECT (movie)->extents;
+  else
     swfdec_rect_init_empty (&inval);
-    for (i = 0; i < frame->actions->len; i++) {
-      action = &g_array_index (frame->actions, SwfdecSpriteAction, i);
-      SWFDEC_LOG ("performing action %d", action->type);
-      switch (action->type) {
-	case SWFDEC_SPRITE_ACTION_REMOVE_OBJECT:
-	  tmp = swfdec_display_list_remove (&movie->list, action->uint.value[0]);
-	  if (tmp) {
-	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
-	    g_object_unref (tmp);
-	    if (tmp == movie->mouse_grab)
-	      movie->mouse_grab = NULL;
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_REPLACE_OBJECT:
-	case SWFDEC_SPRITE_ACTION_PLACE_OBJECT:
-	  if (cur) {
-	    swfdec_movieclip_update_extents (cur);
-	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-	  }
-	  if (action->type == SWFDEC_SPRITE_ACTION_REPLACE_OBJECT &&
-	      (cur = swfdec_display_list_get (&movie->list, action->uint.value[1]))) {
-	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-	    swfdec_movie_clip_set_child (cur, 
-		swfdec_object_get (SWFDEC_OBJECT (movie)->decoder, action->uint.value[0]));
-	  } else {
-	    if (action->type == SWFDEC_SPRITE_ACTION_REPLACE_OBJECT)
-	      SWFDEC_ERROR ("supposed to replace %d, but there's nothing to replace", action->uint.value[0]);
-	    cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
-	    tmp = swfdec_display_list_add (&movie->list, action->uint.value[1], cur);
-	    if (tmp) {
-	      swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (tmp)->extents);
-	      g_object_unref (tmp);
-	    }
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_GET_OBJECT:
-	  if (cur) {
-	    swfdec_movieclip_update_extents (cur);
-	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-	  }
-	  cur = swfdec_display_list_get (&movie->list, action->uint.value[1]);
-	  if (cur) {
-	    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_TRANSFORM:
-	  if (cur) {
-	    cur->inverse_transform = cur->transform = action->matrix.matrix;
-	    /* FIXME: calculate x, y, rotation, xscale, yscale */
-	    if (cairo_matrix_invert (&cur->inverse_transform)) {
-	      g_assert_not_reached ();
-	    }
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_BG_COLOR:
-	  movie->bg_color = swfdec_color_apply_transform (0, &action->color.transform);
-	  swfdec_movie_clip_invalidate (movie, &SWFDEC_OBJECT (movie)->extents);
-	  break;
-	case SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM:
-	  if (cur) {
-	    cur->color_transform = action->color.transform;
-	    SWFDEC_LOG ("color transform for %s %d changed\n", 
-		cur->child ? G_OBJECT_TYPE_NAME (cur->child) : " movieclip", 
-		cur->child ? cur->child->id : -1);
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_RATIO:
-	  if (cur) {
-	    cur->ratio = action->uint.value[0];
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_NAME:
-	  if (cur) {
-	    g_free (cur->name);
-	    cur->name = g_strdup (action->string.string);
-	  }
-	  break;
-	case SWFDEC_SPRITE_ACTION_CLIP_DEPTH:
-	  if (cur)
-	    cur->clip_depth = action->uint.value[0];
-	  break;
-	case SWFDEC_SPRITE_ACTION_EVENTS:
-	  if (cur)
-	    cur->events = action->pointer.pointer;
-	  break;
-	default:
-	  g_assert_not_reached ();
-	  break;
-      }
-    }
-    if (cur) {
-      swfdec_movieclip_update_extents (cur);
+  walk2 = movie->list;
+  for (walk = frame->contents; walk; walk = g_list_next (walk)) {
+    SwfdecSpriteContent *contents = walk->data;
+    gboolean new = FALSE;
+
+    /* first, find or create the correct clip */
+    while (walk2) {
+      cur = walk2->data;
+      if (cur->depth > contents->depth)
+	break;
+      walk2 = walk2->next;
+      if (cur->depth == contents->depth)
+	goto found;
+      /* if cur->depth < contents->depth */
+      movie->list = g_list_remove (movie->list, cur);
       swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+      swfdec_object_unref (cur);
     }
-    if (!swfdec_rect_is_empty (&inval))
-      swfdec_movie_clip_invalidate (movie, &inval);
+    new = TRUE;
+    cur = swfdec_movie_clip_new (movie);
+    cur->depth = contents->depth;
+    movie->list = g_list_insert_before (movie->list, walk2, cur);
+found:
+    /* check if we need to change anything */
+    if (contents->first_frame <= last_frame &&
+	last_frame < contents->last_frame) {
+      continue;
+    }
+    /* invalidate the current element unless it's new */
+    if (!new)
+      swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+
+    /* copy all the relevant stuff */
+    if (cur->child != contents->object)
+      swfdec_movie_clip_set_child (cur, contents->object);
+    cur->clip_depth = contents->clip_depth;
+    cur->ratio = contents->ratio;
+    cur->inverse_transform = cur->transform = contents->transform;
+    if (cairo_matrix_invert (&cur->inverse_transform)) {
+      g_assert_not_reached ();
+    }
+    cur->color_transform = contents->color_transform;
+    cur->name = contents->name;
+    cur->events = contents->events;
+
+    /* do all the necessary setup stuff */
+    swfdec_movie_clip_update_extents (cur);
+    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+  }
+    
+  while (walk2) {
+    cur = walk2->data;
+    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+    swfdec_object_unref (cur);
+    walk2 = walk2->next;
+    movie->list = g_list_remove (movie->list, cur);
   }
   if (frame->do_actions) {
     GSList *walk;
     for (walk = frame->do_actions; walk; walk = walk->next)
       swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, walk->data);
   }
+  if (!swfdec_rect_is_empty (&inval)) {
+    swfdec_movie_clip_invalidate (movie, &inval);
+  }
+  /* if we did everything right, we should now have as many children as the frame says */
+  g_assert (g_list_length (movie->list) == g_list_length (frame->contents));
 }
 
 void 
 swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
 {
+  GList *walk;
+  unsigned int last_frame;
+
   if (movie->stopped || !movie->visible)
     return;
 
@@ -280,10 +178,14 @@ swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
   }
 
   SWFDEC_LOG ("iterate, frame_index = %d", movie->next_frame);
+  last_frame = movie->current_frame;
   movie->current_frame = movie->next_frame;
   movie->next_frame = -1;
   if (SWFDEC_IS_SPRITE (movie->child)) {
-    swfdec_movie_clip_perform_actions (movie);
+    swfdec_movie_clip_perform_actions (movie, last_frame);
+    for (walk = movie->list; walk; walk = walk->next) {
+      swfdec_movie_clip_iterate (walk->data);
+    }
     if (movie->next_frame == -1) {
       int n_frames = SWFDEC_SPRITE (movie->child)->n_frames;
       movie->next_frame = movie->current_frame + 1;
@@ -339,7 +241,7 @@ swfdec_movie_clip_handle_mouse (SwfdecMovieClip *movie,
   movie->mouse_y = y;
   SWFDEC_LOG ("moviclip %p mouse: %g %g\n", movie, x, y);
   movie->mouse_button = button;
-  g = movie->list.list;
+  g = movie->list;
   if (movie->mouse_grab) {
     child = movie->mouse_grab;
     movie->mouse_grab = NULL;
@@ -403,7 +305,7 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
       rect.x0, rect.y0, rect.x1, rect.y1);
   swfdec_color_transform_chain (&trans, &movie->color_transform, color_transform);
 
-  for (g = movie->list.list; g; g = g_list_next (g)) {
+  for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovieClip *child = g->data;
 
     if (child->clip_depth) {
@@ -497,23 +399,21 @@ swfdec_movie_clip_get_n_frames (SwfdecMovieClip *movie)
 /**
  * swfdec_movie_clip_new:
  * @parent: the parent movie that contains this movie
- * @id: the id of the object contained in this movie
  *
  * Creates a new #SwfdecMovieClip as a child of @parent.
  *
  * Returns: a new #SwfdecMovieClip
  **/
 SwfdecMovieClip *
-swfdec_movie_clip_new (SwfdecMovieClip *parent, unsigned int id)
+swfdec_movie_clip_new (SwfdecMovieClip *parent)
 {
   SwfdecMovieClip *ret;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE_CLIP (parent), NULL);
 
-  SWFDEC_DEBUG ("new movie for item %d\n", id);
+  SWFDEC_DEBUG ("new movie for parent %p", parent);
   ret = swfdec_object_new (SWFDEC_OBJECT (parent)->decoder, SWFDEC_TYPE_MOVIE_CLIP);
   ret->parent = parent;
-  swfdec_movie_clip_set_child (ret, swfdec_object_get (SWFDEC_OBJECT (parent)->decoder, id));
   ret->width = parent->width;
   ret->height = parent->height;
 
@@ -537,6 +437,8 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
     g_signal_connect (child, "invalidate", 
 	G_CALLBACK (swfdec_movie_clip_invalidate_cb), movie);
   }
+  movie->current_frame = -1;
+  movie->next_frame = 0;
 }
 
 /* NB: width and height are in twips */

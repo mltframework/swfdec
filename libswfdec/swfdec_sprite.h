@@ -9,46 +9,22 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-  SWFDEC_SPRITE_ACTION_REMOVE_OBJECT,
-  SWFDEC_SPRITE_ACTION_PLACE_OBJECT,
-  SWFDEC_SPRITE_ACTION_REPLACE_OBJECT,
-  SWFDEC_SPRITE_ACTION_GET_OBJECT,
-  SWFDEC_SPRITE_ACTION_TRANSFORM,
-  SWFDEC_SPRITE_ACTION_COLOR_TRANSFORM,
-  SWFDEC_SPRITE_ACTION_RATIO,
-  SWFDEC_SPRITE_ACTION_NAME,
-  SWFDEC_SPRITE_ACTION_CLIP_DEPTH,
-  SWFDEC_SPRITE_ACTION_BG_COLOR,
-  SWFDEC_SPRITE_ACTION_EVENTS
-} SwfdecSpriteActionType;
-
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
 typedef struct _SwfdecExport SwfdecExport;
-typedef union _SwfdecSpriteAction SwfdecSpriteAction;
+typedef struct _SwfdecSpriteContent SwfdecSpriteContent;
 
-union _SwfdecSpriteAction {
-  SwfdecSpriteActionType  	type;
-  struct {
-    SwfdecSpriteActionType	type;
-    unsigned int		value[2];
-  }				uint;
-  struct {
-    SwfdecSpriteActionType	type;
-    cairo_matrix_t		matrix;
-  }				matrix;
-  struct {
-    SwfdecSpriteActionType	type;
-    SwfdecColorTransform	transform;
-  }				color;
-  struct {
-    SwfdecSpriteActionType	type;
-    char *			string;
-  }				string;
-  struct {
-    SwfdecSpriteActionType	type;
-    gpointer			pointer;
-  }				pointer;
+struct _SwfdecSpriteContent {
+  SwfdecObject *	object;		/* object to display */
+  int			depth;		/* at which depth to display */
+  int			clip_depth;	/* clip depth of object */
+  unsigned int		ratio;
+  cairo_matrix_t	transform;
+  SwfdecColorTransform	color_transform;
+  char *		name;
+  SwfdecEventList *	events;
+
+  unsigned int		first_frame;	/* first frame this object is displayed in */
+  unsigned int		last_frame;	/* first frame this object is not displayed in anymore */
 };
 
 struct _SwfdecExport {
@@ -68,8 +44,7 @@ struct _SwfdecSpriteFrame
   SwfdecSoundChunk *sound_play;
 
   swf_color bg_color;
-  GArray *actions;			/* actions to perform */
-  SwfdecEventList *events;		/* events to perform */
+  GList *contents;			/* SwfdecSpriteContent ordered by depth */
   GSList *do_actions;			/* actions queued via DoAction */
 };
 

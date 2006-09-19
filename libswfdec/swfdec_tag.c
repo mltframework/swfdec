@@ -641,6 +641,12 @@ tag_show_frame (SwfdecDecoder * s)
       s->parse_sprite->object.id);
 
   s->parse_sprite->parse_frame++;
+  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
+    SwfdecSpriteFrame *old = &s->parse_sprite->frames[s->parse_sprite->parse_frame - 1];
+    SwfdecSpriteFrame *new = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
+    new->contents = g_list_copy (old->contents);
+    new->bg_color = old->bg_color;
+  }
 
   return SWF_OK;
 }

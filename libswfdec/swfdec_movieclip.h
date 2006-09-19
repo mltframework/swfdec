@@ -13,10 +13,6 @@ typedef struct _SwfdecDisplayList SwfdecDisplayList;
 //typedef struct _SwfdecMovieClip SwfdecMovieClip;
 typedef struct _SwfdecMovieClipClass SwfdecMovieClipClass;
 
-struct _SwfdecDisplayList {
-  GList *list;
-};
-
 #define SWFDEC_TYPE_MOVIE_CLIP                    (swfdec_movie_clip_get_type())
 #define SWFDEC_IS_MOVIE_CLIP(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_MOVIE_CLIP))
 #define SWFDEC_IS_MOVIE_CLIP_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_MOVIE_CLIP))
@@ -28,7 +24,7 @@ struct _SwfdecMovieClip
   SwfdecObject		object;
 
   SwfdecObject *	child;			/* object that we display (may be NULL) */
-  SwfdecDisplayList	list;			/* our contained objects */
+  GList *		list;			/* our contained movie clips (order by depth) */
   SwfdecEventList *	events;			/* list of events that this sprite should trigger */
 
   /* parenting information */
@@ -83,8 +79,7 @@ struct _SwfdecMovieClipClass
 
 GType		swfdec_movie_clip_get_type		(void);
 
-SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent,
-							 unsigned int		id);
+SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent);
 unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
 void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
 							 SwfdecObject *		child);

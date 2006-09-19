@@ -16,6 +16,7 @@ struct _SwfdecEvent {
 
 struct _SwfdecEventList {
   SwfdecDecoder *	dec;
+  guint			refcount;
   GArray *		events;
 };
 
@@ -29,7 +30,19 @@ swfdec_event_list_new (SwfdecDecoder *dec)
 
   list = g_new0 (SwfdecEventList, 1);
   list->dec = dec;
+  list->refcount = 1;
   list->events = g_array_new (FALSE, FALSE, sizeof (SwfdecEvent));
+
+  return list;
+}
+
+/* FIXME: this is a bit nasty because of modifying */
+SwfdecEventList *
+swfdec_event_list_copy (SwfdecEventList *list)
+{
+  g_return_val_if_fail (list != NULL, NULL);
+
+  list->refcount++;
 
   return list;
 }
@@ -40,6 +53,10 @@ swfdec_event_list_free (SwfdecEventList *list)
   unsigned int i;
 
   g_return_if_fail (list != NULL);
+
+  list->refcount--;
+  if (list->refcount > 0)
+    return;
 
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
@@ -56,6 +73,7 @@ swfdec_event_list_parse (SwfdecEventList *list, unsigned int conditions,
   SwfdecEvent event;
 
   g_return_if_fail (list != NULL);
+  g_return_if_fail (list->refcount == 1);
 
   event.conditions = conditions;
   event.key = key;

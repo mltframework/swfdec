@@ -31,6 +31,7 @@ typedef enum {
 } SwfdecEventType;
 
 SwfdecEventList *	swfdec_event_list_new		(SwfdecDecoder *      dec);
+SwfdecEventList *	swfdec_event_list_copy		(SwfdecEventList *    list);
 void			swfdec_event_list_free		(SwfdecEventList *    list);
 
 void			swfdec_event_list_parse		(SwfdecEventList *    list,

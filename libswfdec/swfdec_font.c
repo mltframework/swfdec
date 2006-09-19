@@ -92,7 +92,7 @@ tag_func_define_font_info_2 (SwfdecDecoder *s)
   font->small = swfdec_bits_getbit (&s->b);
   reserved = swfdec_bits_getbits (&s->b, 2);
   if (reserved != 0)
-    SWFDEC_WARNING ("ANSI and JIS flags are supposed to be 0 in DefineFont2");
+    SWFDEC_INFO ("ANSI and JIS flags are supposed to be 0 in DefineFont2");
   font->italic = swfdec_bits_getbit (&s->b);
   font->bold = swfdec_bits_getbit (&s->b);
   reserved = swfdec_bits_getbit (&s->b);

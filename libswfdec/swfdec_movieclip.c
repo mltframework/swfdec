@@ -186,6 +186,8 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie)
 	    swfdec_movie_clip_set_child (cur, 
 		swfdec_object_get (SWFDEC_OBJECT (movie)->decoder, action->uint.value[0]));
 	  } else {
+	    if (action->type == SWFDEC_SPRITE_ACTION_REPLACE_OBJECT)
+	      SWFDEC_ERROR ("supposed to replace %d, but there's nothing to replace", action->uint.value[0]);
 	    cur = swfdec_movie_clip_new (movie, action->uint.value[0]);
 	    tmp = swfdec_display_list_add (&movie->list, action->uint.value[1], cur);
 	    if (tmp) {

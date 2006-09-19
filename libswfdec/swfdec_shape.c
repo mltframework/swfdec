@@ -102,8 +102,8 @@ swfdec_path_line_to (cairo_path_t *path, double x, double y)
 }
 
 static void
-swfdec_path_curve_to (cairo_path_t *path, double end_x, double end_y, 
-    double control_x, double control_y)
+swfdec_path_curve_to (cairo_path_t *path, double control_x, double control_y, 
+    double end_x, double end_y)
 {
   cairo_path_data_t *cur;
   double start_x, start_y;

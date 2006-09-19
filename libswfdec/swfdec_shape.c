@@ -145,147 +145,145 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   unsigned int i;
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
+      swf_color color;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
   cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
   cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
-  for (i = 0; i < shape->fills->len; i++) {
-    swf_color color;
+  for (i = 0; i < MAX (shape->fills->len, shape->lines->len); i++) {
+    if (i < shape->fills->len) {
+      shapevec = g_ptr_array_index (shape->fills, i);
+      shapevec2 = g_ptr_array_index (shape->fills2, i);
 
-    shapevec = g_ptr_array_index (shape->fills, i);
-    shapevec2 = g_ptr_array_index (shape->fills2, i);
+      color = swfdec_color_apply_transform (shapevec->color, trans);
 
-    color = swfdec_color_apply_transform (shapevec->color, trans);
+      switch (shapevec->fill_type) {
+	case 0x10:
+	  {
+	    SwfdecGradient *grad = shapevec->grad;
+	    int j;
+	    cairo_pattern_t *pattern;
+	    cairo_matrix_t mat;
 
-    switch (shapevec->fill_type) {
-      case 0x10:
-        {
-          SwfdecGradient *grad = shapevec->grad;
-          int j;
-	  cairo_pattern_t *pattern;
-          cairo_matrix_t mat;
-
-          mat = shapevec->fill_transform;
-          if (cairo_matrix_invert (&mat)) {
-	    g_assert_not_reached ();
-	  }
+	    mat = shapevec->fill_transform;
+	    if (cairo_matrix_invert (&mat)) {
+	      g_assert_not_reached ();
+	    }
 
 #if 0
-	  /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
-          pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
-          cairo_pattern_set_matrix(pattern, &shapevec->fill_transform);
+	    /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
+	    pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
+	    cairo_pattern_set_matrix(pattern, &shapevec->fill_transform);
 #else
-	  {
-	    cairo_matrix_t mat = shapevec->fill_transform;
-	    pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
-	    cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
-	    cairo_pattern_set_matrix (pattern, &mat);
-	  }
+	    {
+	      cairo_matrix_t mat = shapevec->fill_transform;
+	      pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
+	      cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
+	      cairo_pattern_set_matrix (pattern, &mat);
+	    }
 #endif
-          for (j=0;j<grad->n_gradients;j++){
-            color = swfdec_color_apply_transform (grad->array[j].color,
-                trans);
+	    for (j=0;j<grad->n_gradients;j++){
+	      color = swfdec_color_apply_transform (grad->array[j].color,
+		  trans);
 
-            cairo_pattern_add_color_stop_rgba (pattern,
-                grad->array[j].ratio/255.0,
-                SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
-                SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
-          }
-          cairo_set_source (cr, pattern);
-	  cairo_pattern_destroy (pattern);
-        }
-        break;
-      case 0x12:
-        {
-          SwfdecGradient *grad = shapevec->grad;
-          int j;
-	  cairo_pattern_t *pattern;
-
-          pattern = cairo_pattern_create_radial (0,0,0,
-             0, 0, 16384);
-          cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
-          for (j=0;j<grad->n_gradients;j++){
-            color = swfdec_color_apply_transform (grad->array[j].color,
-		trans);
-
-            cairo_pattern_add_color_stop_rgba (pattern,
-                grad->array[j].ratio/255.0,
-                SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
-                SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
-          }
-          cairo_set_source (cr, pattern);
-	  cairo_pattern_destroy (pattern);
-        }
-        break;
-      case 0x40:
-      case 0x41:
-      case 0x42:
-      case 0x43:
-        {
-          SwfdecImage *image;
-
-          image = (SwfdecImage *)swfdec_object_get (obj->decoder, shapevec->fill_id);
-          if (image && SWFDEC_IS_IMAGE (image)) {
-	    cairo_surface_t *src_surface;
-	    cairo_pattern_t *pattern;
-            unsigned char *image_data = swfdec_handle_get_data(image->handle);
-
-            src_surface = cairo_image_surface_create_for_data (image_data,
-                CAIRO_FORMAT_ARGB32, image->width, image->height,
-                image->rowstride);
-            pattern = cairo_pattern_create_for_surface (src_surface);
-	    cairo_surface_destroy (src_surface);
-	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
-            if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
-              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-            } else {
-              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_NONE);
-            }
-            if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x41) {
-              cairo_pattern_set_filter (pattern, CAIRO_FILTER_BILINEAR);
-            } else {
-              cairo_pattern_set_filter (pattern, CAIRO_FILTER_NEAREST);
-            }
-            cairo_set_source (cr, pattern);
+	      cairo_pattern_add_color_stop_rgba (pattern,
+		  grad->array[j].ratio/255.0,
+		  SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
+		  SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
+	    }
+	    cairo_set_source (cr, pattern);
 	    cairo_pattern_destroy (pattern);
-          } else {
-            swfdec_color_set_source (cr, color);
-          }
-        }
-        break;
-      case 0x00:
-        swfdec_color_set_source (cr, color);
-        break;
-      default:
-        SWFDEC_ERROR("unhandled fill type 0x%02x", shapevec->fill_type);
-        cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
-        break;
+	  }
+	  break;
+	case 0x12:
+	  {
+	    SwfdecGradient *grad = shapevec->grad;
+	    int j;
+	    cairo_pattern_t *pattern;
+
+	    pattern = cairo_pattern_create_radial (0,0,0,
+	       0, 0, 16384);
+	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
+	    for (j=0;j<grad->n_gradients;j++){
+	      color = swfdec_color_apply_transform (grad->array[j].color,
+		  trans);
+
+	      cairo_pattern_add_color_stop_rgba (pattern,
+		  grad->array[j].ratio/255.0,
+		  SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
+		  SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
+	    }
+	    cairo_set_source (cr, pattern);
+	    cairo_pattern_destroy (pattern);
+	  }
+	  break;
+	case 0x40:
+	case 0x41:
+	case 0x42:
+	case 0x43:
+	  {
+	    SwfdecImage *image;
+
+	    image = (SwfdecImage *)swfdec_object_get (obj->decoder, shapevec->fill_id);
+	    if (image && SWFDEC_IS_IMAGE (image)) {
+	      cairo_surface_t *src_surface;
+	      cairo_pattern_t *pattern;
+	      unsigned char *image_data = swfdec_handle_get_data(image->handle);
+
+	      src_surface = cairo_image_surface_create_for_data (image_data,
+		  CAIRO_FORMAT_ARGB32, image->width, image->height,
+		  image->rowstride);
+	      pattern = cairo_pattern_create_for_surface (src_surface);
+	      cairo_surface_destroy (src_surface);
+	      cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
+	      if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
+		cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+	      } else {
+		cairo_pattern_set_extend (pattern, CAIRO_EXTEND_NONE);
+	      }
+	      if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x41) {
+		cairo_pattern_set_filter (pattern, CAIRO_FILTER_BILINEAR);
+	      } else {
+		cairo_pattern_set_filter (pattern, CAIRO_FILTER_NEAREST);
+	      }
+	      cairo_set_source (cr, pattern);
+	      cairo_pattern_destroy (pattern);
+	    } else {
+	      swfdec_color_set_source (cr, color);
+	    }
+	  }
+	  break;
+	case 0x00:
+	  swfdec_color_set_source (cr, color);
+	  break;
+	default:
+	  SWFDEC_ERROR("unhandled fill type 0x%02x", shapevec->fill_type);
+	  cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
+	  break;
+      }
+      
+      if (shapevec->path.num_data || shapevec2->path.num_data) {
+	cairo_new_path (cr);
+	if (shapevec->path.num_data)
+	  cairo_append_path (cr, &shapevec->path);
+	if (shapevec2->path.num_data)
+	  cairo_append_path (cr, &shapevec2->path);
+	cairo_fill (cr);
+      }
     }
-    
-    if (shapevec->path.num_data || shapevec2->path.num_data) {
-      cairo_new_path (cr);
-      if (shapevec->path.num_data)
+
+    if (i < shape->lines->len) {
+      shapevec = g_ptr_array_index (shape->lines, i);
+      color = swfdec_color_apply_transform (shapevec->color, trans);
+      swfdec_color_set_source (cr, color);
+
+      cairo_set_line_width (cr, shapevec->width);
+      if (shapevec->path.num_data) {
+	cairo_new_path (cr);
 	cairo_append_path (cr, &shapevec->path);
-      if (shapevec2->path.num_data)
-	cairo_append_path (cr, &shapevec2->path);
-      cairo_fill (cr);
-    }
-  }
-
-  for (i = 0; i < shape->lines->len; i++) {
-    swf_color color;
-
-    shapevec = g_ptr_array_index (shape->lines, i);
-
-    color = swfdec_color_apply_transform (shapevec->color, trans);
-    swfdec_color_set_source (cr, color);
-
-    cairo_set_line_width (cr, shapevec->width);
-    if (shapevec->path.num_data) {
-      cairo_new_path (cr);
-      cairo_append_path (cr, &shapevec->path);
-      cairo_stroke (cr);
+	cairo_stroke (cr);
+      }
     }
   }
 }

@@ -18,18 +18,6 @@ static gboolean verbose = FALSE;
 void
 dump_sprite(SwfdecSprite *s)
 {
-#if 0
-  GList *layer;
-  SwfdecSpriteSegment *seg;
-
-  printf("  n_frames=%d\n", s->n_frames);
-  for(layer = g_list_first(s->layers); layer; layer = g_list_next(layer)) {
-    seg = layer->data;
-    printf("  id %d depth %d [%d,%d] %d\n",
-        seg->id,seg->depth,seg->first_frame,seg->last_frame,
-        seg->clip_depth);
-  }
-#endif
 }
 
 static void
@@ -122,6 +110,27 @@ dump_shape(SwfdecShape *shape)
 static void
 dump_text (SwfdecText *text)
 {
+  guint i;
+  gunichar2 uni[text->glyphs->len];
+  char *s;
+
+  for (i = 0; i < text->glyphs->len; i++) {
+    SwfdecTextGlyph *glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
+    SwfdecFont *font = swfdec_object_get (SWFDEC_OBJECT (text)->decoder, glyph->font);
+    if (font == NULL)
+      goto fallback;
+    uni[i] = g_array_index (font->glyphs, SwfdecFontEntry, glyph->glyph).value;
+    if (uni[i] == 0)
+      goto fallback;
+  }
+  s = g_utf16_to_utf8 (uni, text->glyphs->len, NULL, NULL, NULL);
+  if (s == NULL)
+    goto fallback;
+  g_print ("  text: %s\n", s);
+  g_free (s);
+  return;
+
+fallback:
   g_print ("  %u characters\n", text->glyphs->len);
 }
 
@@ -138,7 +147,7 @@ dump_objects(SwfdecDecoder *s)
   SwfdecObject *object;
   GType type;
 
-  for (g=g_list_first(s->objects);g;g = g_list_next(g)) {
+  for (g = g_list_last (s->characters); g; g = g->prev) {
     object = g->data;
     type = G_TYPE_FROM_INSTANCE (object);
     printf("%d: %s\n", object->id, g_type_name (type));

@@ -12,15 +12,15 @@ struct _SwfdecBits
 {
   SwfdecBuffer *buffer;
   unsigned char *ptr;
-  int idx;
+  unsigned int idx;
   unsigned char *end;
 };
 
 int swfdec_bits_needbits (SwfdecBits * b, int n_bytes);
 int swfdec_bits_getbit (SwfdecBits * b);
-unsigned int swfdec_bits_getbits (SwfdecBits * b, int n);
-unsigned int swfdec_bits_peekbits (SwfdecBits * b, int n);
-int swfdec_bits_getsbits (SwfdecBits * b, int n);
+unsigned int swfdec_bits_getbits (SwfdecBits * b, unsigned int n);
+unsigned int swfdec_bits_peekbits (SwfdecBits * b, unsigned int n);
+int swfdec_bits_getsbits (SwfdecBits * b, unsigned int n);
 unsigned int swfdec_bits_peek_u8 (SwfdecBits * b);
 unsigned int swfdec_bits_get_u8 (SwfdecBits * b);
 unsigned int swfdec_bits_get_u16 (SwfdecBits * b);
@@ -33,6 +33,7 @@ void swfdec_bits_get_color_transform (SwfdecBits * bits,
     SwfdecColorTransform * ct);
 void swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix);
 char *swfdec_bits_get_string (SwfdecBits * bits);
+char *swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len);
 unsigned int swfdec_bits_get_color (SwfdecBits * bits);
 unsigned int swfdec_bits_get_rgba (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_gradient (SwfdecBits * bits);

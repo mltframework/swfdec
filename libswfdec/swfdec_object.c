@@ -139,12 +139,11 @@ swfdec_object_create (SwfdecDecoder * s, int id, GType type)
   g_return_val_if_fail (id >= 0, NULL);
   g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_OBJECT), NULL);
 
-  SWFDEC_INFO ("  id = %d\n", id);
+  SWFDEC_INFO ("  id = %d", id);
   result = swfdec_object_get (s, id);
   if (result) {
     /* FIXME: use g_type_is_a? */
     if (G_OBJECT_TYPE (result) == type) {
-      SWFDEC_INFO ("  id = %d\n", id);
       return result;
     } else {
       SWFDEC_WARNING ("requested object type %s for id %d doesn't match real type %s",
@@ -239,6 +238,6 @@ swfdec_object_invalidate (SwfdecObject *object, const SwfdecRect *area)
 
   if (swfdec_rect_is_empty (&inval))
     return;
-  SWFDEC_LOG ("invalidating %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
+  SWFDEC_LOG ("invalidating %g %g  %g %g", inval.x0, inval.y0, inval.x1, inval.y1);
   g_signal_emit (object, signals[INVALIDATE], 0, &inval);
 }

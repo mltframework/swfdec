@@ -46,7 +46,7 @@ swfdec_init (void)
 static void
 swfdec_decoder_invalidate_cb (SwfdecMovieClip *root, const SwfdecRect *rect, SwfdecDecoder *s)
 {
-  SWFDEC_DEBUG ("toplevel invalidation: %g %g  %g %g\n", rect->x0, rect->y0, rect->x1, rect->y1);
+  SWFDEC_DEBUG ("toplevel invalidation: %g %g  %g %g", rect->x0, rect->y0, rect->x1, rect->y1);
   swfdec_rect_union (&s->invalid, &s->invalid, rect);
 }
 

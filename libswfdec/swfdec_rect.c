@@ -140,23 +140,35 @@ swfdec_rect_contains (const SwfdecRect *rect, double x, double y)
     y <= rect->y1;
 }
 
+/**
+ * swfdec_rect_transform:
+ * @dest: destination rectangle
+ * @src: source rectangle
+ * @matrix: matrix to apply to source
+ *
+ * Computes a rectangle that completely encloses the area that results from 
+ * applying @matrix to @src.
+ **/
 void
 swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
 {
-  SwfdecRect tmp;
+  SwfdecRect tmp, tmp2;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
   g_return_if_fail (matrix != NULL);
 
   tmp = *src;
+  tmp2 = *src;
   cairo_matrix_transform_point (matrix, &tmp.x0, &tmp.y0);
   cairo_matrix_transform_point (matrix, &tmp.x1, &tmp.y1);
+  cairo_matrix_transform_point (matrix, &tmp2.x0, &tmp2.y1);
+  cairo_matrix_transform_point (matrix, &tmp2.x1, &tmp2.y0);
 
-  dest->x0 = MIN (tmp.x0, tmp.x1);
-  dest->y0 = MIN (tmp.y0, tmp.y1);
-  dest->x1 = MAX (tmp.x0, tmp.x1);
-  dest->y1 = MAX (tmp.y0, tmp.y1);
+  dest->x0 = MIN (MIN (tmp.x0, tmp.x1), MIN (tmp2.x0, tmp2.x1));
+  dest->y0 = MIN (MIN (tmp.y0, tmp.y1), MIN (tmp2.y0, tmp2.y1));
+  dest->x1 = MAX (MAX (tmp.x0, tmp.x1), MAX (tmp2.x0, tmp2.x1));
+  dest->y1 = MAX (MAX (tmp.y0, tmp.y1), MAX (tmp2.y0, tmp2.y1));
 }
 
 void

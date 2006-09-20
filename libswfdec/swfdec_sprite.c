@@ -22,10 +22,19 @@ swfdec_sprite_init (SwfdecSprite * sprite)
 }
 
 static void
+swfdec_sprite_content_free (SwfdecSpriteContent *content)
+{
+  g_free (content->name);
+  if (content->events)
+    swfdec_event_list_free (content->events);
+  g_free (content);
+}
+
+static void
 swfdec_sprite_dispose (SwfdecSprite * sprite)
 {
-  //GList *g;
-  int i;
+  GList *walk;
+  unsigned int i;
 
   if (sprite->frames) {
     for (i = 0; i < sprite->n_frames; i++) {
@@ -33,23 +42,22 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
         swfdec_buffer_unref (sprite->frames[i].sound_chunk);
       }
       if (sprite->frames[i].do_actions) {
+	JSContext *cx = SWFDEC_OBJECT (sprite)->decoder->jscx;
 	GSList *walk;
 	for (walk = sprite->frames[i].do_actions; walk; walk = walk->next) {
-	  JS_DestroyScript (SWFDEC_OBJECT (sprite)->decoder->jscx, walk->data);
+	  JS_DestroyScript (cx, walk->data);
 	}
 	g_slist_free (sprite->frames[i].do_actions);
       }
       if (sprite->frames[i].sound_play) {
         g_free (sprite->frames[i].sound_play);
       }
+      for (walk = sprite->frames[i].contents; walk; walk = walk->next) {
+	SwfdecSpriteContent *content = walk->data;
+	if (content->first_frame == i)
+	  swfdec_sprite_content_free (content);
+      }
     }
-#if 0
-    for (g = g_list_first (frame->segments); g; g = g_list_next (g)) {
-      SwfdecSpriteSegment *seg = (SwfdecSpriteSegment *) g->data;
-
-      swfdec_spriteseg_free (seg);
-    }
-#endif
     g_free(sprite->frames);
   }
 

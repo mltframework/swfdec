@@ -76,6 +76,7 @@ swfdec_decoder_new (void)
   s->cache = swfdec_cache_new();
 
   swfdec_js_init_decoder (s);
+  swfdec_js_add_movieclip (s->root);
 
   return s;
 }
@@ -271,18 +272,18 @@ swfdec_decoder_free (SwfdecDecoder * s)
 
   g_object_unref (s->root);
 
+  /* this must happen while the JS Context is still alive */
   g_list_foreach (s->characters, (GFunc) swfdec_object_unref, NULL);
   g_list_free (s->characters);
+  g_object_unref (s->main_sprite);
+
+  /* make sure all SwfdecObject's are gone before calling this */
+  swfdec_js_finish_decoder (s);
 
   if (s->buffer)
     g_free (s->buffer);
 
   swfdec_buffer_queue_free (s->input_queue);
-
-  g_object_unref (s->main_sprite);
-
-  /* make sure all SwfdecObject's are gone before calling this */
-  swfdec_js_finish_decoder (s);
 
   if (s->z) {
     inflateEnd (s->z);
@@ -626,7 +627,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
 {
   g_return_if_fail (dec != NULL);
 
-  g_assert (dec->execute_list == NULL);
+  g_assert (swfdec_js_script_queue_is_empty (dec));
   swfdec_movie_clip_iterate (dec->root);
 
   swfdec_decoder_execute_scripts (dec);
@@ -683,7 +684,7 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   g_return_if_fail (dec != NULL);
   g_return_if_fail (button == 0 || button == 1);
 
-  g_assert (dec->execute_list == NULL);
+  g_assert (swfdec_js_script_queue_is_empty (dec));
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
   swfdec_decoder_execute_scripts (dec);

@@ -36,7 +36,7 @@ struct _SwfdecDecoder
   int width, height;
   int parse_width, parse_height;
   double rate;
-  int n_frames;
+  unsigned int n_frames;
   guint8 *buffer;
 
   void *sound_buffer;
@@ -88,18 +88,15 @@ struct _SwfdecDecoder
 
   void *backend_private;
 
-  guint8 *kept_buffer;
-  GList *kept_list;
-  int kept_layers;
-
-  JSContext *jscx;
+  JSContext *jscx;			/* The JavaScript context or NULL after errors */
+  JSObject *jsmovie;			/* The MovieClip class */
 
   char *url;
 
   GList *audio_streams;
   int audio_stream_index;
 
-  GList *execute_list;
+  GArray *execute_list;
 
   SwfdecCache *cache;
 };
@@ -118,7 +115,7 @@ void swfdec_decoder_eof (SwfdecDecoder * s);
 SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
 const char *swfdec_decoder_get_tag_name (int tag);
 int swfdec_decoder_get_tag_flag (int tag);
-void swfdec_decoder_queue_script (SwfdecDecoder *s, JSScript *script);
+void swfdec_decoder_queue_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *script);
 void swfdec_decoder_execute_scripts (SwfdecDecoder *s);
 
 #endif

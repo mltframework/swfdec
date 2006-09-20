@@ -38,6 +38,7 @@ void			swfdec_event_list_parse		(SwfdecEventList *    list,
 							 unsigned int	      conditions,
 							 guint8		      key);
 void			swfdec_event_list_execute	(SwfdecEventList *    list,
+							 SwfdecMovieClip *    movie,
 							 unsigned int	      condition,
 							 guint8		      key);
 

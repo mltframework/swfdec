@@ -23,6 +23,7 @@ struct _SwfdecMovieClip
 {
   SwfdecObject		object;
 
+  JSObject *		jsobj;			/* our object in javascript */
   SwfdecObject *	child;			/* object that we display (may be NULL) */
   GList *		list;			/* our contained movie clips (order by depth) */
   SwfdecEventList *	events;			/* list of events that this sprite should trigger */
@@ -30,8 +31,8 @@ struct _SwfdecMovieClip
   /* parenting information */
   SwfdecMovieClip *	parent;			/* the object that contains us */
   char *		name;			/* the name that this clip is referenced in slash-notation */
-  int			depth;			/* depth in parent's display list */
-  int			clip_depth;	      	/* clipping depth (determines visibility) */
+  unsigned int	      	depth;			/* depth in parent's display list */
+  unsigned int	     	clip_depth;	      	/* clipping depth (determines visibility) */
 
   /* positioning - the values are applied in this order */
   int			xscale;			/* x scaling in percent */
@@ -46,8 +47,8 @@ struct _SwfdecMovieClip
 
   /* frame information */
   int			ratio;			/* for morph shapes (FIXME: is this the same as current frame?) */
-  int			current_frame;		/* the frame that is currently displayed */
-  int			next_frame;		/* the frame that will be displayed next */
+  unsigned int		current_frame;		/* the frame that is currently displayed */
+  unsigned int	      	next_frame;		/* the frame that will be displayed next */
   gboolean		stopped;		/* if we currently iterate */
   gboolean		visible;		/* whether we currently can be seen or iterate */
 

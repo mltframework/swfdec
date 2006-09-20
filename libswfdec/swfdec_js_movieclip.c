@@ -286,12 +286,28 @@ static JSPropertySpec movieclip_props[] = {
   {NULL}
 };
 
+static void
+movie_clip_finalize (JSContext *cx, JSObject *obj)
+{
+  SwfdecMovieClip *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  /* since we also finalize the class, not everyone has a private object */
+  if (movie) {
+    g_assert (movie->jsobj != NULL);
+
+    SWFDEC_LOG ("destroying JSObject %p for movie %p\n", obj, movie);
+    movie->jsobj = NULL;
+    g_object_unref (movie);
+  }
+}
+
 static JSClass movieclip_class = {
     "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   JS_FinalizeStub
+    JS_ConvertStub,   movie_clip_finalize,
 };
 
 #if 0
@@ -370,30 +386,56 @@ swfdec_native_ASSetPropFlags (SwfdecActionContext *context, int num_args,
 #endif
 
 /**
+ * swfdec_js_add_movieclip_class:
+ * @dec: a @SwfdecDecoder
+ *
+ * Adds the movieclip class to the JS Context of @dec.
+ **/
+void
+swfdec_js_add_movieclip_class (SwfdecDecoder *dec)
+{
+  JSObject *global = JS_GetGlobalObject (dec->jscx);
+
+  g_assert (dec->jsmovie == NULL);
+  dec->jsmovie = JS_InitClass (dec->jscx, global, NULL,
+      &movieclip_class, NULL, 0, movieclip_props, movieclip_methods,
+      NULL, NULL);
+}
+
+/**
  * swfdec_js_add_movieclip:
- * @s: a #SwfdecDecoder
+ * @s: a #SwfdecMovieClip
  *
  * Adds the movieclip class and the _root object to the default context.
  **/
 void
-swfdec_js_add_movieclip (SwfdecDecoder *s)
+swfdec_js_add_movieclip (SwfdecMovieClip *movie)
 {
-  JSObject *MovieClip, *root, *global;
-  jsval val;
+  JSObject *global;
+  JSContext *cx;
 
-  global = JS_GetGlobalObject (s->jscx);
-  MovieClip = JS_InitClass (s->jscx, global, NULL,
-      &movieclip_class, NULL, 0, movieclip_props, movieclip_methods,
-      NULL, NULL);
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
+  g_return_if_fail (movie->jsobj == NULL);
 
-  root = JS_NewObject (s->jscx, &movieclip_class, NULL, NULL);
-  JS_SetPrivate (s->jscx, root, s->root);
-  val = OBJECT_TO_JSVAL(root);
-  if (!JS_SetProperty(s->jscx, global, "_root", &val)) {
-    SWFDEC_ERROR ("failed to set root object");
+  cx = SWFDEC_OBJECT (movie)->decoder->jscx;
+  global = JS_GetGlobalObject (cx);
+
+  movie->jsobj = JS_NewObject (cx, &movieclip_class, NULL, NULL);
+  if (movie->jsobj == NULL) {
+    SWFDEC_ERROR ("failed to create JS object for movie %p", movie);
     return;
   }
-
+  SWFDEC_LOG ("created JSObject %p for movie %p\n", movie->jsobj, movie);
+  g_object_ref (movie);
+  JS_SetPrivate (cx, movie->jsobj, movie);
+  /* special case */
+  if (movie == SWFDEC_OBJECT (movie)->decoder->root) {
+    jsval val = OBJECT_TO_JSVAL (movie->jsobj);
+    if (!JS_SetProperty(cx, global, "_root", &val)) {
+      SWFDEC_ERROR ("failed to set root object");
+      return;
+    }
+  }
 }
 
 #if 0

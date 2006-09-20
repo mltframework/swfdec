@@ -65,7 +65,8 @@ swfdec_button_mouse_in (SwfdecObject *object, double x, double y, int mouse_butt
 }
 
 static void
-swfdec_button_execute (SwfdecButton *button, SwfdecButtonCondition condition)
+swfdec_button_execute (SwfdecButton *button, SwfdecMovieClip *movie,
+    SwfdecButtonCondition condition)
 {
   if (button->menubutton) {
     g_assert ((condition & (SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN \
@@ -76,7 +77,7 @@ swfdec_button_execute (SwfdecButton *button, SwfdecButtonCondition condition)
                          | SWFDEC_BUTTON_OVER_DOWN_TO_IDLE)) == 0);
   }
   if (button->events)
-    swfdec_event_list_execute (button->events, condition, 0);
+    swfdec_event_list_execute (button->events, movie->parent, condition, 0);
 }
 
 SwfdecButtonState
@@ -92,24 +93,24 @@ swfdec_button_change_state (SwfdecMovieClip *movie, gboolean was_in, int old_but
       if (movie->mouse_button) {
 	state = SWFDEC_BUTTON_DOWN;
 	if (button->menubutton) {
-	  swfdec_button_execute (button, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
+	  swfdec_button_execute (button, movie, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
 	} else {
 	  /* simulate entering then clicking */
-	  swfdec_button_execute (button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
-	  swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
+	  swfdec_button_execute (button, movie, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
+	  swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
 	}
       } else {
 	state = SWFDEC_BUTTON_OVER;
-	swfdec_button_execute (button, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
+	swfdec_button_execute (button, movie, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
       }
       break;
     case SWFDEC_BUTTON_OVER:
       if (!movie->mouse_in) {
 	state = SWFDEC_BUTTON_UP;
-	swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
+	swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
       } else if (movie->mouse_button) {
 	state = SWFDEC_BUTTON_DOWN;
-	swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
+	swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
       }
       break;
     case SWFDEC_BUTTON_DOWN:
@@ -118,25 +119,25 @@ swfdec_button_change_state (SwfdecMovieClip *movie, gboolean was_in, int old_but
 	if (!movie->mouse_in) {
 	  state = SWFDEC_BUTTON_UP;
 	  if (button->menubutton || was_in) {
-	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
-	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
+	    swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
+	    swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
 	  } else {
-	    swfdec_button_execute (button, SWFDEC_BUTTON_OUT_DOWN_TO_IDLE);
+	    swfdec_button_execute (button, movie, SWFDEC_BUTTON_OUT_DOWN_TO_IDLE);
 	  }
 	} else {
 	  state = SWFDEC_BUTTON_OVER;
-	  swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
+	  swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
 	}
       } else {
 	if (movie->mouse_in) {
 	  if (!was_in && !button->menubutton)
-	    swfdec_button_execute (button, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN);
+	    swfdec_button_execute (button, movie, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN);
 	} else if (was_in) {
 	  if (button->menubutton) {
 	    state = SWFDEC_BUTTON_UP;
-	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE);
+	    swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE);
 	  } else {
-	    swfdec_button_execute (button, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN);
+	    swfdec_button_execute (button, movie, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN);
 	  }
 	}
       }

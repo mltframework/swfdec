@@ -7,6 +7,7 @@
 
 #include "swfdec_movieclip.h"
 #include "swfdec_internal.h"
+#include "swfdec_js.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -75,6 +76,7 @@ swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
   g_list_free (movie->list);
 
   swfdec_movie_clip_set_child (movie, NULL);
+  g_assert (movie->jsobj == NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (movie));
 }
@@ -151,7 +153,7 @@ found:
   if (frame->do_actions) {
     GSList *walk;
     for (walk = frame->do_actions; walk; walk = walk->next)
-      swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, walk->data);
+      swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, movie, walk->data);
   }
   if (!swfdec_rect_is_empty (&inval)) {
     swfdec_movie_clip_invalidate (movie, &inval);
@@ -186,8 +188,8 @@ swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
     for (walk = movie->list; walk; walk = walk->next) {
       swfdec_movie_clip_iterate (walk->data);
     }
-    if (movie->next_frame == -1) {
-      int n_frames = SWFDEC_SPRITE (movie->child)->n_frames;
+    if (movie->next_frame == (guint) -1) {
+      unsigned int n_frames = SWFDEC_SPRITE (movie->child)->n_frames;
       movie->next_frame = movie->current_frame + 1;
       if (movie->next_frame >= n_frames) {
         if (0 /*s->repeat*/) {
@@ -228,7 +230,7 @@ swfdec_movie_clip_handle_mouse (SwfdecMovieClip *movie,
       double x, double y, int button)
 {
   GList *g;
-  int clip_depth = 0;
+  unsigned int clip_depth = 0;
   SwfdecMovieClip *child;
   gboolean was_in = movie->mouse_in;
   guint old_button = movie->mouse_button;
@@ -284,7 +286,7 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
 {
   SwfdecMovieClip *movie = SWFDEC_MOVIE_CLIP (object);
   GList *g;
-  int clip_depth = 0;
+  unsigned int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
 
@@ -431,9 +433,11 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
 	swfdec_movie_clip_invalidate_cb, movie) != 1) {
       g_assert_not_reached ();
     }
+    g_object_unref (movie->child);
   }
   movie->child = child;
   if (child) {
+    g_object_ref (child);
     g_signal_connect (child, "invalidate", 
 	G_CALLBACK (swfdec_movie_clip_invalidate_cb), movie);
   }

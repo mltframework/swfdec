@@ -197,6 +197,8 @@ atomize_string (CompileState *state, const char *name)
 static void
 push_root (CompileState *state)
 {
+  ONELINER (state, JSOP_THIS);
+#if 0
   jsatomid id;
   guint8 command[3];
 
@@ -205,6 +207,7 @@ push_root (CompileState *state)
   command[1] = id >> 8;
   command[2] = id;
   compile_state_add_code (state, command, 3);
+#endif
 }
 
 static void

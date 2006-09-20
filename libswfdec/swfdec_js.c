@@ -13,6 +13,11 @@
 
 static JSRuntime *swfdec_js_runtime;
 
+typedef struct {
+  SwfdecMovieClip *	movie;
+  JSScript *		script;
+} SwfdecScriptEntry;
+
 /**
  * swfdec_js_init:
  * @runtime_size: desired runtime size of the JavaScript runtime or 0 for default
@@ -28,6 +33,12 @@ swfdec_js_init (guint runtime_size)
 
   swfdec_js_runtime = JS_NewRuntime (runtime_size);
   SWFDEC_INFO ("initialized JS runtime with %u bytes", runtime_size);
+}
+
+static void
+swfdec_js_error_report (JSContext *cx, const char *message, JSErrorReport *report)
+{
+  g_print ("JS Error: %s\n", message);
 }
 
 static JSClass global_class = {
@@ -47,18 +58,20 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
 {
   JSObject *glob;
 
+  s->execute_list = g_array_new (FALSE, FALSE, sizeof (SwfdecScriptEntry));
   s->jscx = JS_NewContext (swfdec_js_runtime, 8192);
   if (s->jscx == NULL) {
     SWFDEC_ERROR ("did not get a JS context, trying to live without");
     return;
   }
 
+  JS_SetErrorReporter (s->jscx, swfdec_js_error_report);
   JS_SetContextPrivate(s->jscx, s);
   glob = JS_NewObject (s->jscx, &global_class, NULL, NULL);
   if (!JS_InitStandardClasses (s->jscx, glob)) {
     SWFDEC_ERROR ("initializing JS standard classes failed");
   }
-  swfdec_js_add_movieclip (s);
+  swfdec_js_add_movieclip_class (s);
 }
 
 /**
@@ -70,27 +83,46 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
 void
 swfdec_js_finish_decoder (SwfdecDecoder *s)
 {
-  JSObject *global = JS_GetGlobalObject (s->jscx);
+  //JSObject *global = JS_GetGlobalObject (s->jscx);
 
-  JS_RemoveRoot (s->jscx, global);
   if (s->jscx) {
+    //JS_RemoveRoot (s->jscx, &global);
     JS_DestroyContext(s->jscx);
     s->jscx = NULL;
   }
+  g_assert (swfdec_js_script_queue_is_empty (s));
+  g_array_free (s->execute_list, TRUE);
+}
+
+/**
+ * swfdec_js_script_queue_is_empty:
+ * @s: a #SwfdecDecoder
+ *
+ * Debugging function to check that there's nothing left to execute
+ *
+ * Returns: TRUE if there are no queued up scripts
+ **/
+gboolean
+swfdec_js_script_queue_is_empty (SwfdecDecoder *s)
+{
+  return s->execute_list->len == 0;
 }
 
 /**
  * swfdec_decoder_queue_script:
  * @s: a #SwfdecDecoder
+ * @movie: #SwfdecMovieClip to call the function with
  * @script: script to queue for execution
  *
  * Queues a script for execution at the next execution point.
  **/
 void
-swfdec_decoder_queue_script (SwfdecDecoder *s, JSScript *script)
+swfdec_decoder_queue_script (SwfdecDecoder *s, SwfdecMovieClip *movie,
+    JSScript *script)
 {
-  SWFDEC_DEBUG ("adding script %p to list", script);
-  s->execute_list = g_list_prepend (s->execute_list, script);
+  SwfdecScriptEntry entry = { movie, script };
+  SWFDEC_DEBUG ("adding script %p:%p to list", movie, script);
+  g_array_append_val (s->execute_list, entry);
 }
 
 /**
@@ -102,42 +134,47 @@ swfdec_decoder_queue_script (SwfdecDecoder *s, JSScript *script)
 void
 swfdec_decoder_execute_scripts (SwfdecDecoder *s)
 {
-  GList *walk;
+  guint i;
 
-  s->execute_list = g_list_reverse (s->execute_list);
-  for (walk = s->execute_list; walk; walk = walk->next) {
-    swfdec_js_execute_script (s, walk->data);
+  for (i = 0; i < s->execute_list->len; i++) {
+    SwfdecScriptEntry *entry = &g_array_index (s->execute_list, SwfdecScriptEntry, i);
+
+    swfdec_js_execute_script (s, entry->movie, entry->script);
   }
-  g_list_free (s->execute_list);
-  s->execute_list = NULL;
+  g_array_set_size (s->execute_list, 0);
 }
 
 /**
  * swfdec_js_execute_script:
  * @s: ia @SwfdecDecoder
+ * @movie: a #SwfdecMovieClip to pass as argument to the script
  * @script: a @JSScript to execute
  *
- * Executes the given @script in the given @decoder. This function is supposed
+ * Executes the given @script for the given @movie. This function is supposed
  * to be the single entry point for running JavaScript code inswide swfdec, so
  * if you want to execute code, please use this function.
  *
  * Returns: TRUE if the script was successfully executed
  **/
 gboolean
-swfdec_js_execute_script (SwfdecDecoder *s, JSScript *script)
+swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *script)
 {
   jsval rval;
   JSBool ret;
-  JSObject *global;
 
   g_return_val_if_fail (s != NULL, FALSE);
+  g_return_val_if_fail (SWFDEC_IS_MOVIE_CLIP (movie), FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
 
-  g_print ("executing script %p in frame %u\n", script,
-      s->root->current_frame);
+  g_print ("executing script %p:%p in frame %u\n", movie, script,
+      movie->current_frame);
   swfdec_disassemble (s, script);
-  global = JS_GetGlobalObject (s->jscx);
-  ret = JS_ExecuteScript (s->jscx, global, script, &rval);
+  if (movie->jsobj == NULL) {
+    swfdec_js_add_movieclip (movie);
+    if (movie->jsobj == NULL)
+      return FALSE;
+  }
+  ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, &rval);
   if (ret && rval != JSVAL_VOID) {
     JSString * str = JS_ValueToString (s->jscx, rval);
     if (str)
@@ -168,7 +205,9 @@ swfdec_js_run (SwfdecDecoder *dec, const char *s)
 
   global = JS_GetGlobalObject (dec->jscx);
   script = JS_CompileScript (dec->jscx, global, s, strlen (s), "injected-code", 1);
-  ret = swfdec_js_execute_script (dec, script);
+  if (script == NULL)
+    return FALSE;
+  ret = swfdec_js_execute_script (dec, dec->root, script);
   JS_DestroyScript (dec->jscx, script);
   return ret;
 }

@@ -83,8 +83,8 @@ swfdec_event_list_parse (SwfdecEventList *list, unsigned int conditions,
 }
 
 void
-swfdec_event_list_execute (SwfdecEventList *list, unsigned int conditions,
-    guint8 key)
+swfdec_event_list_execute (SwfdecEventList *list, SwfdecMovieClip *movie, 
+    unsigned int conditions, guint8 key)
 {
   unsigned int i;
 
@@ -94,7 +94,7 @@ swfdec_event_list_execute (SwfdecEventList *list, unsigned int conditions,
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & conditions) &&
 	event->key == key)
-      swfdec_decoder_queue_script (list->dec, event->script);
+      swfdec_decoder_queue_script (list->dec, movie, event->script);
   }
 }
 

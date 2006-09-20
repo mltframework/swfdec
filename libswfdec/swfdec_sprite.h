@@ -15,8 +15,8 @@ typedef struct _SwfdecSpriteContent SwfdecSpriteContent;
 
 struct _SwfdecSpriteContent {
   SwfdecObject *	object;		/* object to display */
-  int			depth;		/* at which depth to display */
-  int			clip_depth;	/* clip depth of object */
+  unsigned int	      	depth;		/* at which depth to display */
+  unsigned int		clip_depth;	/* clip depth of object */
   unsigned int		ratio;
   cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
@@ -45,15 +45,15 @@ struct _SwfdecSpriteFrame
 
   swf_color bg_color;
   GList *contents;			/* SwfdecSpriteContent ordered by depth */
-  GSList *do_actions;			/* actions queued via DoAction */
+  GSList *do_actions;			/* JSScripts queued via DoAction */
 };
 
 struct _SwfdecSprite
 {
   SwfdecObject object;
 
-  int n_frames;
-  int parse_frame;
+  unsigned int n_frames;
+  unsigned int parse_frame;
 
   SwfdecSpriteFrame *frames;
 };

@@ -40,9 +40,13 @@ struct _SwfdecExport {
 
 struct _SwfdecSpriteFrame
 {
+  char *name;				/* name of the frame for "GotoFrameLabel" */
+
+  /* sound */
   SwfdecBuffer *sound_chunk;
   SwfdecSoundChunk *sound_play;
 
+  /* visuals */
   swf_color bg_color;
   GList *contents;			/* SwfdecSpriteContent ordered by depth */
   GSList *do_actions;			/* JSScripts queued via DoAction */

@@ -299,6 +299,7 @@ swfdec_decoder_free (SwfdecDecoder * s)
   }
 
   swfdec_cache_free (s->cache);
+  g_free (s->password);
 
   g_free (s);
 }

@@ -21,6 +21,17 @@ tag_func_end (SwfdecDecoder * s)
 int
 tag_func_protect (SwfdecDecoder * s)
 {
+  if (s->protection) {
+    SWFDEC_INFO ("This file is really protected.");
+    g_free (s->password);
+    s->password = NULL;
+  }
+  s->protection = TRUE;
+  if (swfdec_bits_left (&s->b)) {
+    /* FIXME: What's this for? */
+    swfdec_bits_get_u16 (&s->b);
+    s->password = swfdec_bits_get_string (&s->b);
+  }
   return SWF_OK;
 }
 
@@ -41,7 +52,14 @@ tag_func_dumpbits (SwfdecDecoder * s)
 int
 tag_func_frame_label (SwfdecDecoder * s)
 {
-  g_free (swfdec_bits_get_string (&s->b));
+  SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
+  
+  if (frame->name) {
+    SWFDEC_WARNING ("frame %d already has a name (%s)", s->parse_sprite->parse_frame, frame->name);
+    g_free (frame->name);
+  }
+  frame->name = swfdec_bits_get_string (&s->b);
+  SWFDEC_LOG ("frame %d named %s", s->parse_sprite->parse_frame, frame->name);
 
   return SWF_OK;
 }

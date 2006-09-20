@@ -9,7 +9,7 @@
 #include <swfdec_bits.h>
 
 
-static unsigned int 
+unsigned int 
 swfdec_bits_left (SwfdecBits *b)
 {
   if (b->ptr == NULL)

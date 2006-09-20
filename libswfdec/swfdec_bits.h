@@ -16,7 +16,7 @@ struct _SwfdecBits
   unsigned char *end;
 };
 
-int swfdec_bits_needbits (SwfdecBits * b, int n_bytes);
+unsigned int swfdec_bits_left (SwfdecBits *b);
 int swfdec_bits_getbit (SwfdecBits * b);
 unsigned int swfdec_bits_getbits (SwfdecBits * b, unsigned int n);
 unsigned int swfdec_bits_peekbits (SwfdecBits * b, unsigned int n);

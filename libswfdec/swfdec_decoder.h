@@ -75,6 +75,9 @@ struct _SwfdecDecoder
   SwfdecMovieClip *root;
   SwfdecSprite *parse_sprite;
 
+  gboolean protection;			/* TRUE is this file is protected (may not be edited) */
+  char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
+
   double flatness;
   int disable_render;
 

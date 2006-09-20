@@ -38,6 +38,7 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
 
   if (sprite->frames) {
     for (i = 0; i < sprite->n_frames; i++) {
+      g_free (sprite->frames[i].name);
       if (sprite->frames[i].sound_chunk) {
         swfdec_buffer_unref (sprite->frames[i].sound_chunk);
       }

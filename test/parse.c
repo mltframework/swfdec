@@ -61,8 +61,8 @@ int main (int argc, char *argv[])
     }
   }
 
-  swfdec_decoder_free(s);
-  s=NULL;
+  g_object_unref (s);
+  s = NULL;
 
   return 0;
 }

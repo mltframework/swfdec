@@ -202,6 +202,8 @@ main (int argc, char *argv[])
 
   printf("main sprite:\n");
   dump_sprite(s->main_sprite);
+  g_object_unref (s);
+  s = NULL;
 
   return 0;
 }

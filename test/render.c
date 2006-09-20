@@ -79,7 +79,7 @@ int main (int argc, char *argv[])
     swfdec_buffer_unref (buffer);
   }
 
-  swfdec_decoder_free(s);
+  g_object_unref (s);
   s=NULL;
 
   return 0;

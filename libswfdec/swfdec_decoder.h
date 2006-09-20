@@ -26,10 +26,10 @@ enum
 
 typedef int SwfdecTagFunc (SwfdecDecoder *);
 
-#define SWFDEC_IS_DECODER(s) ((s) != NULL)
-
 struct _SwfdecDecoder
 {
+  GObject object;
+
   int version;
   int length;
   int loaded;
@@ -102,6 +102,10 @@ struct _SwfdecDecoder
   GArray *execute_list;
 
   SwfdecCache *cache;
+};
+
+struct _SwfdecDecoderClass {
+  GObjectClass object_class;
 };
 
 SwfdecDecoder *swf_init (void);

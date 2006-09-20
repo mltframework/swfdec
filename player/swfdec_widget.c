@@ -9,21 +9,6 @@
 G_DEFINE_TYPE (SwfdecWidget, swfdec_widget, GTK_TYPE_WIDGET)
 
 
-static void
-queue_draw (SwfdecWidget *widget)
-{
-  SwfdecRect rect;
-
-  swfdec_decoder_get_invalid (widget->dec, &rect);
-  if (swfdec_rect_is_empty (&rect))
-    return;
-  swfdec_rect_scale (&rect, &rect, widget->scale);
-  //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
-  gtk_widget_queue_draw_area (GTK_WIDGET (widget), floor (rect.x0), floor (rect.y0),
-      ceil (rect.x1) - floor (rect.x0), ceil (rect.y1) - floor (rect.y0));
-  swfdec_decoder_clear_invalid (widget->dec);
-}
-
 static gboolean
 swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 {
@@ -34,7 +19,6 @@ swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 
   swfdec_decoder_handle_mouse (widget->dec, 
       event->x / widget->scale, event->y / widget->scale, widget->button);
-  queue_draw (widget);
   
   return FALSE;
 }
@@ -47,7 +31,6 @@ swfdec_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
   widget->button = 0;
   swfdec_decoder_handle_mouse (widget->dec, 
       event->x / widget->scale, event->y / widget->scale, 0);
-  queue_draw (widget);
   return FALSE;
 }
 
@@ -61,7 +44,6 @@ swfdec_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
     swfdec_decoder_handle_mouse (widget->dec, 
 	event->x / widget->scale, event->y / widget->scale, 1);
   }
-  queue_draw (widget);
   return FALSE;
 }
 
@@ -75,19 +57,7 @@ swfdec_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
     swfdec_decoder_handle_mouse (widget->dec, 
 	event->x / widget->scale, event->y / widget->scale, 0);
   }
-  queue_draw (widget);
   return FALSE;
-}
-
-static gboolean
-swfdec_widget_iterate (gpointer data)
-{
-  SwfdecWidget *widget = data;
-
-  swfdec_decoder_iterate (widget->dec);
-  queue_draw (widget);
-  
-  return TRUE;
 }
 
 static gboolean
@@ -128,14 +98,7 @@ swfdec_widget_dispose (GObject *object)
 {
   SwfdecWidget * widget = SWFDEC_WIDGET (object);
 
-  if (widget->timeout) {
-    g_source_remove (widget->timeout);
-    widget->timeout = 0;
-  }
-  if (widget->dec) {
-    swfdec_decoder_free (widget->dec);
-    widget->dec = NULL;
-  }
+  swfdec_widget_set_decoder (widget, NULL);
 
   G_OBJECT_CLASS (swfdec_widget_parent_class)->dispose (object);
 }
@@ -186,31 +149,6 @@ swfdec_widget_realize (GtkWidget *widget)
 }
 
 static void
-swfdec_widget_map (GtkWidget *gtkwidget)
-{
-  double rate;
-  SwfdecWidget * widget = SWFDEC_WIDGET (gtkwidget);
-
-  GTK_WIDGET_CLASS (swfdec_widget_parent_class)->map (gtkwidget);
-
-  swfdec_decoder_get_rate (widget->dec, &rate);
-  widget->timeout = g_timeout_add (1000 / rate, swfdec_widget_iterate, widget);
-}
-
-static void
-swfdec_widget_unmap (GtkWidget *gtkwidget)
-{
-  SwfdecWidget * widget = SWFDEC_WIDGET (gtkwidget);
-
-  if (widget->timeout) {
-    g_source_remove (widget->timeout);
-    widget->timeout = 0;
-  }
-
-  GTK_WIDGET_CLASS (swfdec_widget_parent_class)->unmap (gtkwidget);
-}
-
-static void
 swfdec_widget_class_init (SwfdecWidgetClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -219,8 +157,6 @@ swfdec_widget_class_init (SwfdecWidgetClass * g_class)
   object_class->dispose = swfdec_widget_dispose;
 
   widget_class->realize = swfdec_widget_realize;
-  widget_class->map = swfdec_widget_map;
-  widget_class->unmap = swfdec_widget_unmap;
   widget_class->size_request = swfdec_widget_size_request;
   widget_class->expose_event = swfdec_widget_expose;
   widget_class->button_press_event = swfdec_widget_button_press;
@@ -235,15 +171,48 @@ swfdec_widget_init (SwfdecWidget * widget)
   widget->scale = 1.0;
 }
 
+static void
+swfdec_widget_notify_cb (SwfdecDecoder *dec, GParamSpec *pspec, SwfdecWidget *widget)
+{
+  SwfdecRect rect;
+
+  swfdec_decoder_get_invalid (widget->dec, &rect);
+  if (swfdec_rect_is_empty (&rect))
+    return;
+  swfdec_rect_scale (&rect, &rect, widget->scale);
+  //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
+  gtk_widget_queue_draw_area (GTK_WIDGET (widget), floor (rect.x0), floor (rect.y0),
+      ceil (rect.x1) - floor (rect.x0), ceil (rect.y1) - floor (rect.y0));
+  swfdec_decoder_clear_invalid (widget->dec);
+}
+
+void
+swfdec_widget_set_decoder (SwfdecWidget *widget, SwfdecDecoder *dec)
+{
+  g_return_if_fail (SWFDEC_IS_WIDGET (widget));
+  g_return_if_fail (dec == NULL || SWFDEC_IS_DECODER (dec));
+  
+  if (widget->dec) {
+    g_signal_handlers_disconnect_by_func (widget->dec, swfdec_widget_notify_cb, widget);
+    g_object_unref (widget->dec);
+  }
+  widget->dec = dec;
+  if (dec) {
+    g_signal_connect (dec, "notify::invalid", G_CALLBACK (swfdec_widget_notify_cb), widget);
+    g_object_ref (dec);
+  }
+  gtk_widget_queue_resize (GTK_WIDGET (widget));
+}
+
 GtkWidget *
 swfdec_widget_new (SwfdecDecoder *dec)
 {
   SwfdecWidget *widget;
   
-  g_return_val_if_fail (dec != NULL, NULL);
+  g_return_val_if_fail (dec == NULL || SWFDEC_IS_DECODER (dec), NULL);
 
   widget = g_object_new (SWFDEC_TYPE_WIDGET, 0);
-  widget->dec = dec;
+  swfdec_widget_set_decoder (widget, dec);
 
   return GTK_WIDGET (widget);
 }

@@ -26,7 +26,6 @@ struct _SwfdecWidget
   gboolean		use_image;	/* TRUE to draw to an image first before rendering to Gtk */
 
   int			button;		/* status of mouse button in displayed movie */
-  guint			timeout;      	/* id of timeout function */
 };
 
 struct _SwfdecWidgetClass
@@ -44,6 +43,8 @@ double		swfdec_widget_get_scale		(SwfdecWidget *	widget);
 void		swfdec_widget_set_use_image	(SwfdecWidget *	widget,
 						 gboolean	use_image);
 gboolean	swfdec_widget_get_use_image	(SwfdecWidget *	widget);
+void		swfdec_widget_set_decoder	(SwfdecWidget *	widget,
+						 SwfdecDecoder *dec);
 
 G_END_DECLS
 #endif

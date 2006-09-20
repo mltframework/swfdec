@@ -587,7 +587,7 @@ gst_swfdec_dispose (GObject * object)
 
   g_object_unref (swfdec->adapter);
 
-  swfdec_decoder_free (swfdec->decoder);
+  g_object_unref (swfdec->decoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

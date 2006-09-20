@@ -8,14 +8,27 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "swfdec_internal.h"
+#include "swfdec.h"
+#include "swfdec_audio.h"
+#include "swfdec_bits.h"
+#include "swfdec_cache.h"
+#include "swfdec_debug.h"
+#include "swfdec_decoder.h"
 #include "swfdec_js.h"
 #include "swfdec_movieclip.h"
+#include "swfdec_sound.h"
+#include "swfdec_sprite.h"
+
+enum {
+  PROP_0,
+  PROP_INVALID
+};
 
 int swf_parse_header1 (SwfdecDecoder * s);
 int swf_inflate_init (SwfdecDecoder * s);
 int swf_parse_header2 (SwfdecDecoder * s);
 
+G_DEFINE_TYPE (SwfdecDecoder, swfdec_decoder, G_TYPE_OBJECT)
 
 void
 swfdec_init (void)
@@ -46,8 +59,11 @@ swfdec_init (void)
 static void
 swfdec_decoder_invalidate_cb (SwfdecMovieClip *root, const SwfdecRect *rect, SwfdecDecoder *s)
 {
+  gboolean was_empty = swfdec_rect_is_empty (&s->invalid);
   SWFDEC_DEBUG ("toplevel invalidation: %g %g  %g %g", rect->x0, rect->y0, rect->x1, rect->y1);
   swfdec_rect_union (&s->invalid, &s->invalid, rect);
+  if (was_empty)
+    g_object_notify (G_OBJECT (s), "invalid");
 }
 
 SwfdecDecoder *
@@ -57,8 +73,96 @@ swfdec_decoder_new (void)
 
   swfdec_init ();
 
-  s = g_new0 (SwfdecDecoder, 1);
+  s = g_object_new (SWFDEC_TYPE_DECODER, NULL);
 
+  return s;
+}
+
+static void
+swfdec_decoder_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecDecoder *dec = SWFDEC_DECODER (object);
+  
+  switch (param_id) {
+    case PROP_INVALID:
+      g_value_set_boolean (value, swfdec_rect_is_empty (&dec->invalid));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_decoder_set_property (GObject *object, guint param_id, const GValue *value,
+    GParamSpec *pspec)
+{
+  //SwfdecDecoder *dec = SWFDEC_DECODER (object);
+
+  switch (param_id) {
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_decoder_dispose (GObject *object)
+{
+  SwfdecDecoder * s = SWFDEC_DECODER (object);
+
+  g_object_unref (s->root);
+
+  /* this must happen while the JS Context is still alive */
+  g_list_foreach (s->characters, (GFunc) swfdec_object_unref, NULL);
+  g_list_free (s->characters);
+  g_object_unref (s->main_sprite);
+
+  /* make sure all SwfdecObject's are gone before calling this */
+  swfdec_js_finish_decoder (s);
+
+  if (s->buffer)
+    g_free (s->buffer);
+
+  swfdec_buffer_queue_free (s->input_queue);
+
+  if (s->z) {
+    inflateEnd (s->z);
+    g_free (s->z);
+  }
+
+  if (s->jpegtables) {
+    swfdec_buffer_unref (s->jpegtables);
+  }
+
+  if (s->tmp_scanline) {
+    g_free (s->tmp_scanline);
+  }
+
+  swfdec_cache_free (s->cache);
+  g_free (s->password);
+
+  G_OBJECT_CLASS (swfdec_decoder_parent_class)->dispose (object);
+}
+
+static void
+swfdec_decoder_class_init (SwfdecDecoderClass *class)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (class);
+
+  object_class->get_property = swfdec_decoder_get_property;
+  object_class->set_property = swfdec_decoder_set_property;
+  object_class->dispose = swfdec_decoder_dispose;
+
+  g_object_class_install_property (object_class, PROP_INVALID,
+      g_param_spec_boolean ("invalid", "invalid", "decoder contains invalid areas",
+	  TRUE, G_PARAM_READABLE));
+}
+
+static void
+swfdec_decoder_init (SwfdecDecoder *s)
+{
   s->input_queue = swfdec_buffer_queue_new ();
 
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
@@ -77,8 +181,6 @@ swfdec_decoder_new (void)
 
   swfdec_js_init_decoder (s);
   swfdec_js_add_movieclip (s->root);
-
-  return s;
 }
 
 int
@@ -263,45 +365,6 @@ swfdec_decoder_parse (SwfdecDecoder * s)
   }
 
   return ret;
-}
-
-void
-swfdec_decoder_free (SwfdecDecoder * s)
-{
-  g_return_if_fail (s != NULL);
-
-  g_object_unref (s->root);
-
-  /* this must happen while the JS Context is still alive */
-  g_list_foreach (s->characters, (GFunc) swfdec_object_unref, NULL);
-  g_list_free (s->characters);
-  g_object_unref (s->main_sprite);
-
-  /* make sure all SwfdecObject's are gone before calling this */
-  swfdec_js_finish_decoder (s);
-
-  if (s->buffer)
-    g_free (s->buffer);
-
-  swfdec_buffer_queue_free (s->input_queue);
-
-  if (s->z) {
-    inflateEnd (s->z);
-    g_free (s->z);
-  }
-
-  if (s->jpegtables) {
-    swfdec_buffer_unref (s->jpegtables);
-  }
-
-  if (s->tmp_scanline) {
-    g_free (s->tmp_scanline);
-  }
-
-  swfdec_cache_free (s->cache);
-  g_free (s->password);
-
-  g_free (s);
 }
 
 int
@@ -629,9 +692,10 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
   g_return_if_fail (dec != NULL);
 
   g_assert (swfdec_js_script_queue_is_empty (dec));
+  g_object_freeze_notify (G_OBJECT (dec));
   swfdec_movie_clip_iterate (dec->root);
-
   swfdec_decoder_execute_scripts (dec);
+  g_object_thaw_notify (G_OBJECT (dec));
 
 #if 0
   if (dec->root->current_frame == 23)
@@ -651,6 +715,7 @@ void
 swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
 {
   static const SwfdecColorTransform trans = { { 1.0, 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0, 0.0 } };
+  gboolean was_empty;
 
   g_return_if_fail (dec != NULL);
   g_return_if_fail (cr != NULL);
@@ -659,11 +724,14 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
     area = &dec->irect;
   if (swfdec_rect_is_empty (area))
     return;
+  was_empty = swfdec_rect_is_empty (&dec->invalid);
   SWFDEC_LOG ("%p: starting rendering, area %g %g  %g %g", dec, 
       area->x0, area->y0, area->x1, area->y1);
   swfdec_object_render (SWFDEC_OBJECT (dec->root), cr, &trans, area);
   SWFDEC_LOG ("%p: finished rendering", dec);
   swfdec_rect_subtract (&dec->invalid, &dec->invalid, area);
+  if (!was_empty)
+    g_object_notify (G_OBJECT (dec), "invalid");
 }
 
 /**
@@ -687,8 +755,10 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
 
   g_assert (swfdec_js_script_queue_is_empty (dec));
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
+  g_object_freeze_notify (G_OBJECT (dec));
   swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
   swfdec_decoder_execute_scripts (dec);
+  g_object_thaw_notify (G_OBJECT (dec));
 }
 
 /**
@@ -718,7 +788,11 @@ swfdec_decoder_get_invalid (SwfdecDecoder *s, SwfdecRect *rect)
 void
 swfdec_decoder_clear_invalid (SwfdecDecoder *s)
 {
+  gboolean was_empty;
   g_return_if_fail (SWFDEC_IS_DECODER (s));
 
+  was_empty = swfdec_rect_is_empty (&s->invalid);
   swfdec_rect_init_empty (&s->invalid);
+  if (!was_empty)
+    g_object_notify (G_OBJECT (s), "invalid");
 }

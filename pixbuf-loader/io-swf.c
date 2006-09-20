@@ -75,7 +75,7 @@ swf_context_new_full (GdkPixbufModuleSizeFunc size_func,
 static void
 swf_context_free (SwfContext * context)
 {
-	swfdec_decoder_free (context->decoder);
+	g_object_unref (context->decoder);
 	g_object_unref (G_OBJECT (context->animation));
 	g_free (context);
 }

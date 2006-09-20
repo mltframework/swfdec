@@ -4,20 +4,34 @@
 #include <swfdec_buffer.h>
 #include <swfdec_widget.h>
 
+static gboolean
+iterate (gpointer dec)
+{
+  swfdec_decoder_iterate (dec);
+
+  return TRUE;
+}
+
 static void
 view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
 {
   GtkWidget *window, *widget;
+  guint timeout;
+  double rate;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   widget = swfdec_widget_new (dec);
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_container_add (GTK_CONTAINER (window), widget);
-  gtk_widget_show_all (window);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  gtk_widget_show_all (window);
+
+  swfdec_decoder_get_rate (dec, &rate);
+  timeout = g_timeout_add (1000 / rate, iterate, dec);
 
   gtk_main ();
+  g_source_remove (timeout);
 }
 
 static void

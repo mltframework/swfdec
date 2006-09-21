@@ -441,7 +441,6 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     SwfdecBuffer *audio_buffer;
     GstBuffer *videobuf;
     GstBuffer *audiobuf;
-    gboolean ret;
     GstFlowReturn res;
     const char *url;
 
@@ -452,7 +451,7 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     swfdec_decoder_iterate (swfdec->decoder);
     swfdec->total_frames++;
 
-    if (!ret) {
+    if (FALSE) {
       gst_task_stop (swfdec->task);
       res = gst_pad_push_event (swfdec->videopad, gst_event_new_eos ());
       res = gst_pad_push_event (swfdec->audiopad, gst_event_new_eos ());

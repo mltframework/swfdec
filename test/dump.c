@@ -174,6 +174,22 @@ main (int argc, char *argv[])
   int ret;
   char *fn = "it.swf";
   SwfdecDecoder *s;
+  GError *error = NULL;
+  GOptionEntry options[] = {
+    { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "bew verbose", NULL },
+    { NULL }
+  };
+  GOptionContext *ctx;
+
+  ctx = g_option_context_new ("");
+  g_option_context_add_main_entries (ctx, options, "options");
+  g_option_context_parse (ctx, &argc, &argv, &error);
+  g_option_context_free (ctx);
+  if (error) {
+    g_printerr ("Error parsing command line arguments: %s\n", error->message);
+    g_error_free (error);
+    return 1;
+  }
 
   swfdec_init();
 
@@ -184,17 +200,17 @@ main (int argc, char *argv[])
   ret = g_file_get_contents (fn, &contents, &length, NULL);
   if (!ret) {
     g_print ("dump: file \"%s\" not found\n", fn);
-    exit(1);
+    return 1;
   }
 
   s = swfdec_decoder_new();
 
   ret = swfdec_decoder_add_data(s, (unsigned char *)contents,length);
-  printf("%d\n", ret);
+  //printf("%d\n", ret);
 
   while (ret != SWF_EOF) {
     ret = swfdec_decoder_parse(s);
-    printf("parse returned %d\n", ret);
+    //printf("parse returned %d\n", ret);
   }
 
   printf("objects:\n");

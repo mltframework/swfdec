@@ -36,6 +36,8 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
 
   movie->button_state = SWFDEC_BUTTON_UP;
   movie->current_frame = -1;
+
+  movie->sound_queue = g_queue_new ();
 }
 
 /* NB: modifies rect */
@@ -72,11 +74,14 @@ swfdec_movie_clip_update_extents (SwfdecMovieClip *movie)
 static void
 swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 {
+  g_assert (movie->jsobj == NULL);
+
   g_list_foreach (movie->list, (GFunc) swfdec_object_unref, NULL);
   g_list_free (movie->list);
 
   swfdec_movie_clip_set_child (movie, NULL);
-  g_assert (movie->jsobj == NULL);
+
+  g_queue_free (movie->sound_queue);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (movie));
 }
@@ -88,8 +93,9 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie, guint last_frame)
   SwfdecRect inval;
   SwfdecSpriteFrame *frame = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
   GList *walk, *walk2; /* I suck at variable naming */
+  GSList *swalk;
 
-  if (frame->bg_color != SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color)
+  if (last_frame == (guint) -1 || frame->bg_color != SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color)
     inval = SWFDEC_OBJECT (movie)->extents;
   else
     swfdec_rect_init_empty (&inval);
@@ -150,16 +156,75 @@ found:
     walk2 = walk2->next;
     movie->list = g_list_remove (movie->list, cur);
   }
+  for (swalk = frame->sound; swalk; swalk = swalk->next) {
+    swfdec_audio_event_init (SWFDEC_OBJECT (movie)->decoder, walk->data);
+  }
   if (frame->do_actions) {
-    GSList *walk;
-    for (walk = frame->do_actions; walk; walk = walk->next)
-      swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, movie, walk->data);
+    for (swalk = frame->do_actions; swalk; swalk = swalk->next)
+      swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, movie, swalk->data);
   }
   if (!swfdec_rect_is_empty (&inval)) {
     swfdec_movie_clip_invalidate (movie, &inval);
   }
   /* if we did everything right, we should now have as many children as the frame says */
   g_assert (g_list_length (movie->list) == g_list_length (frame->contents));
+}
+
+static unsigned int
+swfdec_movie_clip_get_next_frame (SwfdecMovieClip *movie, unsigned int current_frame)
+{
+  unsigned int next_frame, n_frames;
+
+  g_assert (SWFDEC_IS_SPRITE (movie->child));
+
+  n_frames = SWFDEC_SPRITE (movie->child)->n_frames;
+  next_frame = current_frame + 1;
+  if (next_frame >= n_frames) {
+    if (0 /*s->repeat*/) {
+      next_frame = 0;
+    } else {
+      next_frame = n_frames - 1;
+    }
+  }
+  return next_frame;
+}
+
+static void
+swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame)
+{
+  SwfdecBuffer *cur;
+  SwfdecSpriteFrame *last = last_frame == (guint) -1 ? NULL : &SWFDEC_SPRITE (movie->child)->frames[last_frame];
+  SwfdecSpriteFrame *current = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
+  unsigned int n_bytes;
+
+  if (last == NULL || last->sound_head != current->sound_head) {
+    /* empty queue */
+    while ((cur = g_queue_pop_head (movie->sound_queue)))
+      swfdec_buffer_unref (cur);
+    if (movie->sound_decoder)
+      swfdec_sound_finish_decoder (last->sound_head, movie->sound_decoder);
+    if (current->sound_head)
+      movie->sound_decoder = swfdec_sound_init_decoder (current->sound_head);
+    else
+      movie->sound_decoder = NULL;
+  } else if (swfdec_movie_clip_get_next_frame (movie, last_frame) != movie->current_frame) {
+    /* empty queue */
+    while ((cur = g_queue_pop_head (movie->sound_queue)))
+      swfdec_buffer_unref (cur);
+  } 
+  /* flush unneeded bytes */
+  n_bytes = SWFDEC_OBJECT (movie)->decoder->samples_this_frame * 4;
+  while (n_bytes > 0 && (cur = g_queue_pop_head (movie->sound_queue))) {
+    if (n_bytes < cur->length) {
+      SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (cur, n_bytes, cur->length - n_bytes);
+      g_assert (sub->length % 4 == 0);
+      g_queue_push_head (movie->sound_queue, sub);
+      swfdec_buffer_unref (cur);
+      break;
+    }
+    n_bytes -= cur->length;
+    swfdec_buffer_unref (cur);
+  }
 }
 
 void 
@@ -188,17 +253,9 @@ swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
     for (walk = movie->list; walk; walk = walk->next) {
       swfdec_movie_clip_iterate (walk->data);
     }
-    if (movie->next_frame == (guint) -1) {
-      unsigned int n_frames = SWFDEC_SPRITE (movie->child)->n_frames;
-      movie->next_frame = movie->current_frame + 1;
-      if (movie->next_frame >= n_frames) {
-        if (0 /*s->repeat*/) {
-          movie->next_frame = 0;
-        } else {
-          movie->next_frame = n_frames - 1;
-        }
-      }
-    }
+    if (movie->next_frame == (unsigned int) -1)
+      movie->next_frame = swfdec_movie_clip_get_next_frame (movie, movie->current_frame);
+    swfdec_movie_clip_iterate_audio (movie, last_frame);
   }
 }
 
@@ -429,6 +486,16 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
   g_return_if_fail (child == NULL || SWFDEC_IS_OBJECT (child));
 
   if (movie->child) {
+    if (SWFDEC_IS_SPRITE (movie->child) && movie->sound_decoder) {
+      SwfdecBuffer *cur;
+      SwfdecSpriteFrame *frame;
+      frame = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
+      swfdec_sound_finish_decoder (frame->sound_head, movie->sound_decoder);
+      movie->sound_decoder = NULL;
+      /* empty sound queue */
+      while ((cur = g_queue_pop_head (movie->sound_queue)))
+	swfdec_buffer_unref (cur);
+    }
     if (g_signal_handlers_disconnect_by_func (movie->child, 
 	swfdec_movie_clip_invalidate_cb, movie) != 1) {
       g_assert_not_reached ();
@@ -458,4 +525,73 @@ swfdec_movie_clip_set_size (SwfdecMovieClip *clip, guint width, guint height)
   clip->height = height;
   swfdec_rect_transform (&SWFDEC_OBJECT (clip)->extents, &rect, &clip->inverse_transform);
   swfdec_object_invalidate (SWFDEC_OBJECT (clip), NULL);
+}
+
+static gboolean
+swfdec_movie_clip_push_audio (SwfdecMovieClip *movie)
+{
+  SwfdecSpriteFrame *frame;
+  SwfdecBuffer *buf;
+
+  if (g_queue_is_empty (movie->sound_queue)) {
+    movie->sound_frame = movie->current_frame;
+  }
+
+  do {
+    frame = &SWFDEC_SPRITE (movie->child)->frames[movie->sound_frame];
+    if (frame->sound_block == NULL)
+      return FALSE;
+    SWFDEC_LOG ("decoding frame %u in frame %u now\n", movie->sound_frame, movie->current_frame);
+    buf = swfdec_sound_decode_buffer (frame->sound_head, movie->sound_decoder, frame->sound_block);
+    movie->sound_frame = swfdec_movie_clip_get_next_frame (movie, movie->sound_frame);
+  } while (buf == NULL);
+  g_assert (buf->length % 4 == 0);
+  if (g_queue_is_empty (movie->sound_queue)) {
+    if (frame->sound_skip < 0) {
+      SWFDEC_ERROR ("help, i can't skip negative frames!");
+    } else if ((guint) frame->sound_skip * 4 >= buf->length) {
+      SWFDEC_INFO ("skipping whole frame?!");
+      swfdec_buffer_unref (buf);
+      return FALSE;
+    } if (frame->sound_skip > 0) {
+      SwfdecBuffer *tmp = swfdec_buffer_new_subbuffer (buf, frame->sound_skip * 4, 
+	  buf->length - frame->sound_skip * 4);
+      swfdec_buffer_unref (buf);
+      buf = tmp;
+    }
+  }
+  g_queue_push_tail (movie->sound_queue, buf);
+  return TRUE;
+}
+
+void
+swfdec_movie_clip_render_audio (SwfdecMovieClip *movie, gint16 *dest,
+    guint n_samples)
+{
+  static const guint16 volume[2] = { G_MAXUINT16, G_MAXUINT16 };
+  GList *g;
+  unsigned int rendered;
+
+  for (g = movie->list; g; g = g_list_next (g)) {
+    swfdec_movie_clip_render_audio (g->data, dest, n_samples);
+  }
+
+  if (!SWFDEC_IS_SPRITE (movie->child))
+    return;
+
+  for (g = g_queue_peek_head_link (movie->sound_queue); g && n_samples > 0; g = g->next) {
+    SwfdecBuffer *buffer = g->data;
+    rendered = MIN (n_samples, buffer->length / 4);
+    swfdec_sound_add (dest, (gint16 *) buffer->data, rendered, volume);
+    n_samples -= rendered;
+    dest += rendered * 2;
+  }
+  while (n_samples > 0 && swfdec_movie_clip_push_audio (movie)) {
+    SwfdecBuffer *buffer = g_queue_peek_tail (movie->sound_queue);
+    g_assert (buffer);
+    rendered = MIN (n_samples, buffer->length / 4);
+    swfdec_sound_add (dest, (gint16 *) buffer->data, rendered, volume);
+    n_samples -= rendered;
+    dest += rendered * 2;
+  }
 }

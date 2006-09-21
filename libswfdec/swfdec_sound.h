@@ -18,6 +18,7 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 //typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundClass SwfdecSoundClass;
+typedef struct _SwfdecSoundEnvelope SwfdecSoundEnvelope;
 
 #define SWFDEC_TYPE_SOUND                    (swfdec_sound_get_type())
 #define SWFDEC_IS_SOUND(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SOUND))
@@ -25,39 +26,44 @@ typedef struct _SwfdecSoundClass SwfdecSoundClass;
 #define SWFDEC_SOUND(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SOUND, SwfdecSound))
 #define SWFDEC_SOUND_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SOUND, SwfdecSoundClass))
 
+typedef enum {
+  SWFDEC_SOUND_FORMAT_UNDEFINED = 0,
+  SWFDEC_SOUND_FORMAT_ADPCM = 1,
+  SWFDEC_SOUND_FORMAT_MP3 = 2,
+  SWFDEC_SOUND_FORMAT_UNCOMPRESSED = 3,
+  SWFDEC_SOUND_FORMAT_NELLYMOSER = 6
+} SwfdecSoundFormat;
+
+struct _SwfdecSoundEnvelope {
+  unsigned int		offset;			/* offset in frames */
+  guint16		volume[2];		/* volume to use */
+};
+
 struct _SwfdecSoundChunk
 {
-  int object;
-  int start_sample;
-  int stop_sample;
-  int loop_count;
-  int stop;
-  int no_restart;
+  SwfdecSound *		sound;			/* sound to play */
+
+  int			stop;	      		/* stop the sample being played */
+  int			no_restart;	      	/* don't restart if already playing */
+
+  unsigned int		start_sample; 		/* sample at which to start playing */
+  unsigned int		stop_sample;	      	/* first sample to not play anymore */
+  unsigned int		loop_count;		/* amount of times this sample should be played back */
+  unsigned int		n_envelopes;		/* amount of points in the envelope */
+  SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
 };
 
 struct _SwfdecSound
 {
-  SwfdecObject object;
+  SwfdecObject		object;
 
-  int format;
+  SwfdecSoundFormat	format;			/* format of the sound */
+  gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
+  unsigned int		channels;		/* 1 or 2 */
+  unsigned int		rate_multiplier;	/* rate = 44100 / rate_multiplier */
+  unsigned int		n_samples;		/* total number of samples */
 
-  SwfdecBuffer *orig_buffer;
-
-  void *decoder_private;
-#ifdef HAVE_MAD
-  struct mad_stream stream;
-  struct mad_frame frame;
-  struct mad_synth synth;
-#endif
-  unsigned char tmpbuf[2048];
-  int tmpbuflen;
-
-  int n_samples;
-
-  //void *sound_buf;
-  //int sound_len;
-
-  GList *decoded_buffers;
+  SwfdecBuffer *	decoded;		/* decoded data in 44.1kHz stereo host-endian, or NULL for stream objects */
 };
 
 struct _SwfdecSoundClass
@@ -73,13 +79,28 @@ int tag_func_sound_stream_block (SwfdecDecoder * s);
 int tag_func_sound_stream_head (SwfdecDecoder * s);
 int tag_func_start_sound (SwfdecDecoder * s);
 int tag_func_define_button_sound (SwfdecDecoder * s);
-void swfdec_sound_render (SwfdecDecoder * s);
 
-#if 0
-void swfdec_sound_chunk_free (SwfdecSoundChunk * chunk);
-#endif
+gpointer		swfdec_sound_init_decoder	(SwfdecSound *	sound);
+void			swfdec_sound_finish_decoder	(SwfdecSound *	sound,
+							 gpointer	data);
+SwfdecBuffer *		swfdec_sound_decode_buffer	(SwfdecSound *	sound,
+							 gpointer	data,
+							 SwfdecBuffer *	buffer);
 
-int swfdec_sound_mp3_decode_stream (SwfdecDecoder * s, SwfdecSound * sound);
+void			swfdec_sound_render		(SwfdecSound *	sound, 
+							 gint16 *	dest, 
+							 unsigned int	offset,
+		  					 unsigned int	len,
+							 const guint16	volume[2]);
+void			swfdec_sound_add		(gint16 *	dest,
+							 const gint16 *	src,
+							 unsigned int	n_samples,
+							 const guint16	volume[2]);
+
+SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecDecoder *s,
+							 int		id);
+void			swfdec_sound_chunk_free		(SwfdecSoundChunk *chunk);
+
 
 G_END_DECLS
 #endif

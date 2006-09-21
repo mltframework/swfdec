@@ -35,7 +35,7 @@ struct _SwfdecDecoder
   int loaded;
   int width, height;
   int parse_width, parse_height;
-  double rate;
+  unsigned int rate;			/* divide by 256 to get iterations per second */
   unsigned int n_frames;
   guint8 *buffer;
 
@@ -65,8 +65,6 @@ struct _SwfdecDecoder
   GList *characters;			/* list of all objects with an id (called characters) */
   GList *exports;
 
-  SwfdecSound *stream_sound_obj;
-
   /* rendering state */
   SwfdecRect irect;
   SwfdecRect invalid;	    /* in pixels */
@@ -78,7 +76,6 @@ struct _SwfdecDecoder
   gboolean protection;			/* TRUE is this file is protected (may not be edited) */
   char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
 
-  double flatness;
   int disable_render;
 
   unsigned char *tmp_scanline;
@@ -89,19 +86,18 @@ struct _SwfdecDecoder
 
   int stats_n_points;
 
-  void *backend_private;
+  char *url;
 
+  /* javascript */
+  GArray *execute_list;			/* list of SwfdecScriptEntry to execute */
   JSContext *jscx;			/* The JavaScript context or NULL after errors */
   JSObject *jsmovie;			/* The MovieClip class */
 
-  char *url;
-
-  GList *audio_streams;
-  int audio_stream_index;
-
-  GArray *execute_list;
-
-  SwfdecCache *cache;
+  /* audio */
+  GArray *audio_events;			/* SwfdecAudioEvent array of running streams */
+  guint samples_this_frame;		/* amount of samples to be played this frame */
+  guint samples_overhead;		/* 44100*256th of sample missing each frame due to weird rate */
+  guint samples_overhead_left;		/* 44100*256th of sample we spit out too much so far */
 };
 
 struct _SwfdecDecoderClass {

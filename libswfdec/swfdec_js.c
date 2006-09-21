@@ -38,7 +38,7 @@ swfdec_js_init (guint runtime_size)
 static void
 swfdec_js_error_report (JSContext *cx, const char *message, JSErrorReport *report)
 {
-  g_print ("JS Error: %s\n", message);
+  SWFDEC_ERROR ("JS Error: %s\n", message);
 }
 
 static JSClass global_class = {
@@ -166,9 +166,11 @@ swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *sc
   g_return_val_if_fail (SWFDEC_IS_MOVIE_CLIP (movie), FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
 
+#if 0
   g_print ("executing script %p:%p in frame %u\n", movie, script,
       movie->current_frame);
   swfdec_disassemble (s, script);
+#endif
   if (movie->jsobj == NULL) {
     swfdec_js_add_movieclip (movie);
     if (movie->jsobj == NULL)

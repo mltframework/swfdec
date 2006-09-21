@@ -7,11 +7,7 @@
 #include <glib.h>
 #include <string.h>
 #include <swfdec_debug.h>
-#if 0
 #include <liboil/liboil.h>
-#else
-#define oil_copy_u8 memcpy
-#endif
 
 static void swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *);
 static void swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv);
@@ -52,9 +48,13 @@ swfdec_buffer_new_with_data (void *data, int size)
 }
 
 SwfdecBuffer *
-swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, int offset, int length)
+swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset, unsigned int length)
 {
-  SwfdecBuffer *subbuffer = swfdec_buffer_new ();
+  SwfdecBuffer *subbuffer;
+  
+  g_return_val_if_fail (offset + length <= buffer->length, NULL);
+
+  subbuffer = swfdec_buffer_new ();
 
   if (buffer->parent) {
     swfdec_buffer_ref (buffer->parent);
@@ -120,14 +120,17 @@ swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue)
 }
 
 void
+swfdec_buffer_queue_clear (SwfdecBufferQueue *queue)
+{
+  g_list_foreach (queue->buffers, (GFunc) swfdec_buffer_unref, NULL);
+  g_list_free (queue->buffers);
+  memset (queue, 0, sizeof (SwfdecBufferQueue));
+}
+
+void
 swfdec_buffer_queue_free (SwfdecBufferQueue * queue)
 {
-  GList *g;
-
-  for (g = g_list_first (queue->buffers); g; g = g_list_next (g)) {
-    swfdec_buffer_unref ((SwfdecBuffer *) g->data);
-  }
-  g_list_free (queue->buffers);
+  swfdec_buffer_queue_clear (queue);
   g_free (queue);
 }
 
@@ -139,7 +142,7 @@ swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
 }
 
 SwfdecBuffer *
-swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, int length)
+swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
@@ -165,7 +168,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, int length)
     g->data = subbuffer;
     swfdec_buffer_unref (buffer);
   } else {
-    int offset = 0;
+    unsigned int offset = 0;
 
     newbuffer = swfdec_buffer_new_and_alloc (length);
 
@@ -174,7 +177,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, int length)
       buffer = g->data;
 
       if (buffer->length > length - offset) {
-        int n = length - offset;
+        unsigned int n = length - offset;
 
         oil_copy_u8 (newbuffer->data + offset, buffer->data, n);
         subbuffer = swfdec_buffer_new_subbuffer (buffer, n, buffer->length - n);
@@ -197,12 +200,12 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, int length)
 }
 
 SwfdecBuffer *
-swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, int length)
+swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
   SwfdecBuffer *buffer;
-  int offset = 0;
+  unsigned int offset = 0;
 
   g_return_val_if_fail (length > 0, NULL);
 

@@ -63,6 +63,11 @@ struct _SwfdecMovieClip
   swf_color		bg_color;		/* the background color for this movie (only used in root movie) */
   SwfdecColorTransform	color_transform;	/* color transform used in this movie */
 
+  /* audio stream handling */
+  gpointer		sound_decoder;	      	/* pointer acquired via swfdec_sound_init_decoder */
+  unsigned int		sound_frame;		/* up to which frame the queue contains data (starting with this frame) */
+  GQueue*		sound_queue;		/* buffer queue with our data */
+
   /* leftover unimplemented variables from the Actionscript spec */
   int alpha;
   //droptarget
@@ -95,6 +100,9 @@ gboolean      	swfdec_movie_clip_handle_mouse		(SwfdecMovieClip *	movie,
 							 double			y,
 							 int			button);
 
+void		swfdec_movie_clip_render_audio		(SwfdecMovieClip *	movie,
+							 gint16 *		dest,
+							 guint			n_samples);
 
 G_END_DECLS
 #endif

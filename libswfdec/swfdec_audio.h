@@ -8,34 +8,22 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecAudioStream SwfdecAudioStream;
+typedef struct _SwfdecAudioEvent SwfdecAudioEvent;
 
-struct _SwfdecAudioStream {
-  int id;
-
-  SwfdecBufferQueue *queue;
-  double volume;
-  gboolean streaming;
-
-  int n_loops;
-  SwfdecSound *sound;
-
-  gboolean reap_me;
+struct _SwfdecAudioEvent {
+  SwfdecSound *		sound;	      	/* sound we're playing */
+  /* for events */
+  SwfdecSoundChunk *	chunk;		/* chunk we're playing back */
+  unsigned int		offset;		/* current offset */
+  unsigned int		loop;		/* current loop we're in */
 };
 
 
-int swfdec_audio_add_sound (SwfdecDecoder *decoder, SwfdecSound *sound,
-    int n_loops);
-void swfdec_audio_remove_stream (SwfdecDecoder *decoder, int id);
-int swfdec_audio_add_stream (SwfdecDecoder *decoder);
-void swfdec_audio_remove_all_streams (SwfdecDecoder *decoder);
-void swfdec_audio_stream_push_buffer (SwfdecDecoder *decoder, int id,
-    SwfdecBuffer *buffer);
-void swfdec_audio_stop_sounds (SwfdecDecoder *decoder);
+void		swfdec_audio_iterate_start    	(SwfdecDecoder *	dec);
+void		swfdec_audio_iterate_finish	(SwfdecDecoder *	dec);
 
-void swfdec_audio_set_volume (SwfdecDecoder *decoder, int id, double volume);
-
-SwfdecBuffer * swfdec_audio_render (SwfdecDecoder *decoder, int n_samples);
+void		swfdec_audio_event_init		(SwfdecDecoder *	dec, 
+						 SwfdecSoundChunk *	chunk);
 
 
 G_END_DECLS

@@ -43,8 +43,10 @@ struct _SwfdecSpriteFrame
   char *name;				/* name of the frame for "GotoFrameLabel" */
 
   /* sound */
-  SwfdecBuffer *sound_chunk;
-  SwfdecSoundChunk *sound_play;
+  SwfdecSound *sound_head;		/* sound head for this frame */
+  int sound_skip;			/* samples to skip - maybe even backwards */
+  SwfdecBuffer *sound_block;		/* sound chunk to play here or NULL for none */
+  GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
 
   /* visuals */
   swf_color bg_color;
@@ -72,8 +74,8 @@ GType swfdec_sprite_get_type (void);
 
 void swfdec_sprite_decoder_free (SwfdecObject * object);
 int tag_func_define_sprite (SwfdecDecoder * s);
-void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, SwfdecBuffer * chunk,
-    int frame);
+void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, int frame,
+    SwfdecBuffer * chunk, int skip);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
 void swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script);
 

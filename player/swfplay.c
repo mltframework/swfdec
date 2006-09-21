@@ -3,12 +3,19 @@
 #include <swfdec.h>
 #include <swfdec_buffer.h>
 #include <swfdec_widget.h>
+#include <swfdec_playback.h>
+
+static gpointer playback;
 
 static gboolean
 iterate (gpointer dec)
 {
   swfdec_decoder_iterate (dec);
-
+  if (playback != NULL) {
+    SwfdecBuffer *buffer = swfdec_decoder_render_audio_to_buffer (dec);
+    swfdec_playback_write (playback, buffer);
+    swfdec_buffer_unref (buffer);
+  }
   return TRUE;
 }
 
@@ -16,8 +23,6 @@ static void
 view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
 {
   GtkWidget *window, *widget;
-  guint timeout;
-  double rate;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   widget = swfdec_widget_new (dec);
@@ -26,12 +31,23 @@ view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
   gtk_container_add (GTK_CONTAINER (window), widget);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);
+}
 
-  swfdec_decoder_get_rate (dec, &rate);
-  timeout = g_timeout_add (1000 / rate, iterate, dec);
+static void
+play_swf (SwfdecDecoder *dec)
+{
+  if (playback == NULL) {
+    guint timeout;
+    double rate;
 
-  gtk_main ();
-  g_source_remove (timeout);
+    swfdec_decoder_get_rate (dec, &rate);
+    timeout = g_timeout_add (1000 / rate, iterate, dec);
+
+    gtk_main ();
+    g_source_remove (timeout);
+  } else {
+    gtk_main ();
+  }
 }
 
 static void
@@ -49,11 +65,12 @@ int main (int argc, char *argv[])
   char *contents;
   SwfdecBuffer *buffer;
   GError *error = NULL;
-  gboolean use_image = FALSE;
+  gboolean use_image = FALSE, no_sound = FALSE;
 
   GOptionEntry options[] = {
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
+    { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -104,6 +121,16 @@ int main (int argc, char *argv[])
   }
 
   view_swf (s, scale, use_image);
+
+  if (no_sound) {
+    playback = NULL;
+  } else {
+    playback = swfdec_playback_open (iterate, s);
+  }
+  play_swf (s);
+
+  if (playback)
+    swfdec_playback_close (playback);
 
   s = NULL;
   return 0;

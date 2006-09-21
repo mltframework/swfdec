@@ -7,11 +7,11 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <liboil/liboil.h>
 
 #include "swfdec.h"
 #include "swfdec_audio.h"
 #include "swfdec_bits.h"
-#include "swfdec_cache.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_js.h"
@@ -42,6 +42,7 @@ swfdec_init (void)
   _inited = TRUE;
 
   g_type_init ();
+  oil_init ();
 
   s = g_getenv ("SWFDEC_DEBUG");
   if (s && s[0]) {
@@ -112,6 +113,7 @@ swfdec_decoder_dispose (GObject *object)
 {
   SwfdecDecoder * s = SWFDEC_DECODER (object);
 
+  g_array_free (s->audio_events, TRUE);
   g_object_unref (s->root);
 
   /* this must happen while the JS Context is still alive */
@@ -140,7 +142,6 @@ swfdec_decoder_dispose (GObject *object)
     g_free (s->tmp_scanline);
   }
 
-  swfdec_cache_free (s->cache);
   g_free (s->password);
 
   G_OBJECT_CLASS (swfdec_decoder_parent_class)->dispose (object);
@@ -173,12 +174,7 @@ swfdec_decoder_init (SwfdecDecoder *s)
   swfdec_movie_clip_set_child (s->root, SWFDEC_OBJECT (s->main_sprite));
   g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
-  s->flatness = 0.5;
-
-  swfdec_audio_add_stream(s);
-
-  s->cache = swfdec_cache_new();
-
+  s->audio_events = g_array_new (FALSE, FALSE, sizeof (SwfdecAudioEvent));
   swfdec_js_init_decoder (s);
   swfdec_js_add_movieclip (s->root);
 }
@@ -387,7 +383,7 @@ swfdec_decoder_get_rate (SwfdecDecoder * s, double *rate)
   }
 
   if (rate)
-    *rate = s->rate;
+    *rate = s->rate / 256.0;
   return SWF_OK;
 }
 
@@ -615,8 +611,9 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y1 = s->height;
   swfdec_movie_clip_set_size (s->root, s->width * 20, s->height * 20);
   swfdec_bits_syncbits (&s->b);
-  s->rate = swfdec_bits_get_u16 (&s->b) / 256.0;
-  SWFDEC_LOG ("rate = %g", s->rate);
+  s->rate = swfdec_bits_get_u16 (&s->b);
+  s->samples_overhead = 44100 * 256 % s->rate;
+  SWFDEC_LOG ("rate = %g", s->rate / 256.0);
   s->n_frames = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG ("n_frames = %d", s->n_frames);
 
@@ -636,6 +633,7 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
 {
   g_return_val_if_fail (s->root->current_frame < s->n_frames, NULL);
 
+#if 0
   if (s->stream_sound_obj) {
     SwfdecBuffer *chunk;
 
@@ -674,6 +672,8 @@ swfdec_decoder_get_audio (SwfdecDecoder * s)
   }
 
   return swfdec_audio_render (s, 44100/s->rate);
+#endif
+  return NULL;
 }
 
 /**
@@ -693,8 +693,11 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
 
   g_assert (swfdec_js_script_queue_is_empty (dec));
   g_object_freeze_notify (G_OBJECT (dec));
+  /* iterate audio before video so we don't iterate audio clips that get added this frame */
+  swfdec_audio_iterate_start (dec);
   swfdec_movie_clip_iterate (dec->root);
   swfdec_decoder_execute_scripts (dec);
+  swfdec_audio_iterate_finish (dec);
   g_object_thaw_notify (G_OBJECT (dec));
 
 #if 0

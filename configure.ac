@@ -16,6 +16,7 @@ SWFDEC_MAJORMINOR=0.3
 AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
+AC_SUBST(ACLOCAL_AMFLAGS, "-I m4")
 
 dnl decide on error flags
 dnl if we support them, we set them unconditionally
@@ -72,6 +73,14 @@ if test "$HAVE_GTK" = "no"; then
   AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
 fi
 AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
+
+PKG_CHECK_MODULES(ALSA, alsa >= 1.0, HAVE_ALSA=yes, HAVE_ALSA=no)
+AC_SUBST(ALSA_LIBS)
+AC_SUBST(ALSA_CFLAGS)
+if test "$HAVE_ALSA" = "no"; then
+  AC_MSG_WARN([cannot find alsa, player will be disabled])
+fi
+AM_CONDITIONAL(WITH_ALSA,[test "$HAVE_ALSA" != "no"])
 
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.1.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)

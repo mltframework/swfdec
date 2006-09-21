@@ -39,8 +39,10 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
   if (sprite->frames) {
     for (i = 0; i < sprite->n_frames; i++) {
       g_free (sprite->frames[i].name);
-      if (sprite->frames[i].sound_chunk) {
-        swfdec_buffer_unref (sprite->frames[i].sound_chunk);
+      if (sprite->frames[i].sound_head)
+	g_object_unref (sprite->frames[i].sound_head);
+      if (sprite->frames[i].sound_block) {
+        swfdec_buffer_unref (sprite->frames[i].sound_block);
       }
       if (sprite->frames[i].do_actions) {
 	JSContext *cx = SWFDEC_OBJECT (sprite)->decoder->jscx;
@@ -50,9 +52,8 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
 	}
 	g_slist_free (sprite->frames[i].do_actions);
       }
-      if (sprite->frames[i].sound_play) {
-        g_free (sprite->frames[i].sound_play);
-      }
+      g_slist_foreach (sprite->frames[i].sound, (GFunc) swfdec_sound_chunk_free, NULL);
+      g_slist_free (sprite->frames[i].sound);
       for (walk = sprite->frames[i].contents; walk; walk = walk->next) {
 	SwfdecSpriteContent *content = walk->data;
 	if (content->first_frame == i)
@@ -66,12 +67,17 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
 }
 
 void
-swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite,
-    SwfdecBuffer * chunk, int frame)
+swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, int frame,
+    SwfdecBuffer * chunk, int skip)
 {
   g_assert (sprite->frames != NULL);
 
-  sprite->frames[frame].sound_chunk = chunk;
+  if (sprite->frames[frame].sound_block) {
+    SWFDEC_ERROR ("attempting to add 2 sound blocks to one frame");
+    return;
+  }
+  sprite->frames[frame].sound_skip = skip;
+  sprite->frames[frame].sound_block = chunk;
   swfdec_buffer_ref (chunk);
 }
 

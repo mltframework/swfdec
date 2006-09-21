@@ -671,6 +671,18 @@ tag_show_frame (SwfdecDecoder * s)
   return SWF_OK;
 }
 
+static int
+tag_func_define_font_info_1 (SwfdecDecoder *s)
+{
+  return tag_func_define_font_info (s, 1);
+}
+
+static int
+tag_func_define_font_info_2 (SwfdecDecoder *s)
+{
+  return tag_func_define_font_info (s, 2);
+}
+
 /* may appear inside DefineSprite */
 #define SPRITE 1
 struct tag_func_struct
@@ -695,7 +707,7 @@ static struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
   [ST_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
   [ST_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
-  [ST_DEFINEFONTINFO] = {"DefineFontInfo", NULL, 0},
+  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info_1, 0},
   [ST_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
   [ST_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
   [ST_DEFINEBUTTONSOUND] =

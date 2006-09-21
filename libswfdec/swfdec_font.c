@@ -55,12 +55,13 @@ convert_from_language (const char *s, SwfdecLanguage language)
     case SWFDEC_LANGUAGE_LATIN:
       langcode = "LATIN1";
       break;
-      /* FIXME! */
     case SWFDEC_LANGUAGE_JAPANESE:
+      langcode = "SHIFT_JIS";
+      break;
+      /* FIXME! */
     case SWFDEC_LANGUAGE_KOREAN:
     case SWFDEC_LANGUAGE_CHINESE:
     case SWFDEC_LANGUAGE_CHINESE_TRADITIONAL:
-    case SWFDEC_LANGUAGE_NONE:
     default:
       SWFDEC_ERROR ("can't convert given text from language %u", language);
       return NULL;
@@ -73,13 +74,16 @@ convert_from_language (const char *s, SwfdecLanguage language)
 }
 
 int
-tag_func_define_font_info_2 (SwfdecDecoder *s)
+tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
 {
   SwfdecFont *font;
   unsigned int id, len, i;
-  int reserved;
+  int reserved, wide, ansi, jis;
   char *name;
-  SwfdecLanguage language;
+  /* we just assume Latin1 (FIXME: option to change this?) */
+  SwfdecLanguage language = SWFDEC_LANGUAGE_LATIN;
+
+  g_assert (version == 1 || version == 2);
 
   id = swfdec_bits_get_u16 (&s->b);
   font = swfdec_object_get (s, id);
@@ -90,22 +94,28 @@ tag_func_define_font_info_2 (SwfdecDecoder *s)
   name = swfdec_bits_get_string_length (&s->b, len);
   reserved = swfdec_bits_getbits (&s->b, 2);
   font->small = swfdec_bits_getbit (&s->b);
-  reserved = swfdec_bits_getbits (&s->b, 2);
-  if (reserved != 0)
-    SWFDEC_INFO ("ANSI and JIS flags are supposed to be 0 in DefineFont2");
+  jis = swfdec_bits_getbit (&s->b);
+  ansi = swfdec_bits_getbit (&s->b);
+  if (jis != 0 || ansi != 0) {
+    g_print ("ansi = %d, jis = %d\n", ansi, jis);
+    if (version == 2)
+      SWFDEC_INFO ("ANSI and JIS flags are supposed to be 0 in DefineFontInfo");
+    if (jis)
+      language = SWFDEC_LANGUAGE_JAPANESE;
+  }
   font->italic = swfdec_bits_getbit (&s->b);
   font->bold = swfdec_bits_getbit (&s->b);
-  reserved = swfdec_bits_getbit (&s->b);
-  if (!reserved)
-    SWFDEC_WARNING ("DefineFont2 claims no wide codes, ignoring");
-  language = swfdec_bits_get_u8 (&s->b);
+  wide = swfdec_bits_getbit (&s->b);
+  if (version > 1)
+    language = swfdec_bits_get_u8 (&s->b);
   font->name = convert_from_language (name, language);
   g_free (name);
   if (font->name) {
     /* FIXME: get a pango layout here */
   }
   for (i = 0; i < font->glyphs->len; i++) {
-    g_array_index (font->glyphs, SwfdecFontEntry, i).value = swfdec_bits_get_u16 (&s->b);
+    g_array_index (font->glyphs, SwfdecFontEntry, i).value = 
+      wide ? swfdec_bits_get_u16 (&s->b) : swfdec_bits_get_u8 (&s->b);
   }
 
   return SWF_OK;

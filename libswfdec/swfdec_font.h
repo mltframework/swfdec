@@ -50,7 +50,7 @@ GType swfdec_font_get_type (void);
 
 SwfdecShape *swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph);
 
-int tag_func_define_font_info_2 (SwfdecDecoder *s);
+int tag_func_define_font_info (SwfdecDecoder *s, unsigned int version);
 
 G_END_DECLS
 #endif

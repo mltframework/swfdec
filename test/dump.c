@@ -137,7 +137,21 @@ fallback:
 static void
 dump_font (SwfdecFont *font)
 {
+  unsigned int i;
   g_print ("  %u characters\n", font->glyphs->len);
+  if (verbose) {
+    for (i = 0; i < font->glyphs->len; i++) {
+      gunichar2 c = g_array_index (font->glyphs, SwfdecFontEntry, i).value;
+      char *s;
+      if (c == 0 || (s = g_utf16_to_utf8 (&c, 1, NULL, NULL, NULL)) == NULL) {
+	g_print (" ");
+      } else {
+	g_print ("%s ", s);
+	g_free (s);
+      }
+    }
+    g_print ("\n");
+  }
 }
 
 static void 
@@ -208,9 +222,13 @@ main (int argc, char *argv[])
   ret = swfdec_decoder_add_data(s, (unsigned char *)contents,length);
   //printf("%d\n", ret);
 
-  while (ret != SWF_EOF) {
-    ret = swfdec_decoder_parse(s);
+  while (ret == SWF_OK || ret == SWF_CHANGE) {
+    ret = swfdec_decoder_parse (s);
     //printf("parse returned %d\n", ret);
+  }
+  if (ret != SWF_EOF) {
+    g_printerr ("Failed to parse file. Parser returned %d\n", ret);
+    return 1;
   }
 
   printf("objects:\n");

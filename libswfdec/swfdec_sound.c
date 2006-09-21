@@ -688,7 +688,7 @@ swfdec_sound_decode_buffer (SwfdecSound *sound, gpointer data, SwfdecBuffer *buf
       ret = swfdec_buffer_new_and_alloc (buffer->length);
       g_assert (sound->width == TRUE); /* FIXME: handle 8bit unsigned */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-      oil_swab_u16 (sound->decoded->data, buffer->data, buffer->length / 2);
+      oil_swab_u16 ((guint16 *) ret->data, (guint16 *) buffer->data, buffer->length / 2);
 #else
       memcpy (ret->data, buffer->data, buffer->length);
 #endif

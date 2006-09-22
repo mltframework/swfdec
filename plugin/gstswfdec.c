@@ -491,7 +491,7 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
       gst_pad_push (swfdec->videopad, videobuf);
     }
 
-    audio_buffer = swfdec_decoder_get_audio (swfdec->decoder);
+    audio_buffer = swfdec_decoder_render_audio_to_buffer (swfdec->decoder);
 
     if (audio_buffer) {
 

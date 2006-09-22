@@ -165,6 +165,34 @@ swfdec_bits_get_u32 (SwfdecBits * b)
   return r;
 }
 
+float
+swfdec_bits_get_float (SwfdecBits * b)
+{
+  guint32 conv;
+
+  SWFDEC_BYTES_CHECK (b, 4);
+
+  conv = *((guint32 *) b->ptr);
+  b->ptr += 4;
+
+  conv = GUINT32_FROM_LE (conv);
+  return *((float *) (void *) &conv);
+}
+
+double
+swfdec_bits_get_double (SwfdecBits * b)
+{
+  guint64 conv;
+
+  SWFDEC_BYTES_CHECK (b, 8);
+
+  conv = *((guint64 *) b->ptr);
+  b->ptr += 8;
+
+  conv = GUINT64_FROM_LE (conv);
+  return *((double *) (void *) &conv);
+}
+
 void
 swfdec_bits_syncbits (SwfdecBits * b)
 {

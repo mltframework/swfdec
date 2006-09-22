@@ -42,6 +42,7 @@ SwfdecGradient *swfdec_bits_get_gradient (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_gradient_rgba (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_morph_gradient (SwfdecBits * bits);
 void swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect);
+SwfdecBuffer *swfdec_bits_get_buffer (SwfdecBits *bits, int len);
 
 
 #endif

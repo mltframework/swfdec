@@ -157,7 +157,7 @@ found:
     movie->list = g_list_remove (movie->list, cur);
   }
   for (swalk = frame->sound; swalk; swalk = swalk->next) {
-    swfdec_audio_event_init (SWFDEC_OBJECT (movie)->decoder, walk->data);
+    swfdec_audio_event_init (SWFDEC_OBJECT (movie)->decoder, swalk->data);
   }
   if (frame->do_actions) {
     for (swalk = frame->do_actions; swalk; swalk = swalk->next)

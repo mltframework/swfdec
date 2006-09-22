@@ -77,9 +77,11 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
     return SWF_OK;
   }
 
-  chunk = swfdec_buffer_new_subbuffer (s->b.buffer, s->b.ptr - s->b.buffer->data, s->b.end - s->b.ptr);
-  s->b.ptr += chunk->length;
-
+  chunk = swfdec_bits_get_buffer (&s->b, -1);
+  if (chunk == NULL) {
+    SWFDEC_ERROR ("empty sound chunk");
+    return SWF_OK;
+  }
   SWFDEC_LOG ("got a buffer with %u samples, %d skip and %u bytes mp3 data", n_samples, skip,
       chunk->length);
   /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */
@@ -128,19 +130,13 @@ tag_func_define_sound (SwfdecDecoder * s)
       /* fall through */
     case 3:
       sound->format = SWFDEC_SOUND_FORMAT_UNCOMPRESSED;
-      orig_buffer = swfdec_buffer_new_subbuffer (s->b.buffer, 7,
-	  s->b.buffer->length - 7);
-      s->b.ptr += s->b.buffer->length - 7;
+      orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 2:
       sound->format = SWFDEC_SOUND_FORMAT_MP3;
       /* FIXME: skip these samples */
       skip = swfdec_bits_get_u16 (b);
-      orig_buffer = swfdec_buffer_new_subbuffer (s->b.buffer, 9,
-          s->b.buffer->length - 9);
-
-      swfdec_buffer_unref (orig_buffer);
-      s->b.ptr += s->b.buffer->length - 9;
+      orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
       sound->format = SWFDEC_SOUND_FORMAT_ADPCM;

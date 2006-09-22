@@ -97,7 +97,7 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
   jis = swfdec_bits_getbit (&s->b);
   ansi = swfdec_bits_getbit (&s->b);
   if (jis != 0 || ansi != 0) {
-    g_print ("ansi = %d, jis = %d\n", ansi, jis);
+    SWFDEC_LOG ("ansi = %d, jis = %d", ansi, jis);
     if (version == 2)
       SWFDEC_INFO ("ANSI and JIS flags are supposed to be 0 in DefineFontInfo");
     if (jis)

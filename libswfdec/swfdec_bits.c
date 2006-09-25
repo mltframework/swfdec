@@ -168,29 +168,37 @@ swfdec_bits_get_u32 (SwfdecBits * b)
 float
 swfdec_bits_get_float (SwfdecBits * b)
 {
-  guint32 conv;
+  union {
+    gint32 i;
+    float f;
+  } conv;
 
   SWFDEC_BYTES_CHECK (b, 4);
 
-  conv = *((guint32 *) b->ptr);
+  conv.i = *((gint32 *) b->ptr);
   b->ptr += 4;
 
-  conv = GUINT32_FROM_LE (conv);
-  return *((float *) (void *) &conv);
+  conv.i = GINT32_FROM_LE (conv.i);
+
+  return conv.f;
 }
 
 double
 swfdec_bits_get_double (SwfdecBits * b)
 {
-  guint64 conv;
+  union {
+    gint64 i;
+    double d;
+  } conv;
 
   SWFDEC_BYTES_CHECK (b, 8);
 
-  conv = *((guint64 *) b->ptr);
+  conv.i = *((gint64 *) b->ptr);
   b->ptr += 8;
 
-  conv = GUINT64_FROM_LE (conv);
-  return *((double *) (void *) &conv);
+  conv.i = GINT64_FROM_LE (conv.i);
+
+  return conv.d;
 }
 
 void
@@ -283,6 +291,14 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
 char *
 swfdec_bits_get_string (SwfdecBits * bits)
 {
+  const char *s = swfdec_bits_skip_string (bits);
+
+  return g_strdup (s);
+}
+
+const char *
+swfdec_bits_skip_string (SwfdecBits *bits)
+{
   char *s;
   const char *end;
   unsigned int len;
@@ -295,7 +311,7 @@ swfdec_bits_get_string (SwfdecBits * bits)
   }
   
   len = end - (const char *) bits->ptr;
-  s = g_strndup ((char *)bits->ptr, len);
+  s = (char *) bits->ptr;
 
   bits->ptr += len + 1;
 

@@ -70,6 +70,34 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset, unsigne
   return subbuffer;
 }
 
+static void
+swfdec_buffer_free_mapped (SwfdecBuffer * buffer, void *priv)
+{
+  g_mapped_file_free (priv);
+}
+
+SwfdecBuffer *
+swfdec_buffer_new_from_file (char *filename, GError **error)
+{
+  GMappedFile *file;
+  SwfdecBuffer *buffer;
+
+  g_return_val_if_fail (filename != NULL, NULL);
+
+  file = g_mapped_file_new (filename, FALSE, error);
+  if (file == NULL) {
+    return NULL;
+  }
+
+  buffer = swfdec_buffer_new ();
+  buffer->data = (unsigned char *) g_mapped_file_get_contents (file), 
+  buffer->length = g_mapped_file_get_length (file);
+  buffer->free = swfdec_buffer_free_mapped;
+  buffer->priv = file;
+
+  return buffer;
+}
+
 SwfdecBuffer *
 swfdec_buffer_ref (SwfdecBuffer * buffer)
 {

@@ -1,3 +1,5 @@
+SUBDIRS = actionscript
+
 noinst_PROGRAMS = test-pixbuf dump parse
 
 test_pixbuf_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(CAIRO_CFLAGS)

@@ -4,6 +4,10 @@
 #endif
 #include <string.h>
 #include <js/jsapi.h>
+#include <js/jscntxt.h> /* for setting tracefp when debugging */
+#include <js/jsdbgapi.h> /* for debugging */
+#include <js/jsopcode.h> /* for debugging */
+#include <js/jsscript.h> /* for debugging */
 #include "swfdec_types.h"
 #include "swfdec_decoder.h"
 #include "swfdec_movieclip.h"
@@ -39,6 +43,8 @@ static void
 swfdec_js_error_report (JSContext *cx, const char *message, JSErrorReport *report)
 {
   SWFDEC_ERROR ("JS Error: %s\n", message);
+  /* FIXME: #ifdef this when not debugging the compiler */
+  g_assert_not_reached ();
 }
 
 static JSClass global_class = {
@@ -46,6 +52,15 @@ static JSClass global_class = {
   JS_PropertyStub,JS_PropertyStub,JS_PropertyStub,JS_PropertyStub,
   JS_EnumerateStub,JS_ResolveStub,JS_ConvertStub,JS_FinalizeStub
 };
+
+static JSTrapStatus G_GNUC_UNUSED
+swfdec_js_debug_one (JSContext *cx, JSScript *script, jsbytecode *pc, 
+    jsval *rval, void *closure)
+{
+  js_Disassemble1 (cx, script, pc, pc - script->code,
+      JS_TRUE, stderr);
+  return JSTRAP_CONTINUE;
+}
 
 /**
  * swfdec_js_init_decoder:
@@ -65,12 +80,22 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
     return;
   }
 
+#if 0
+  /* the new opcodes mess up this */
+  s->jscx->tracefp = stderr;
+#else
+#if 0
+  JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
+#endif
+#endif
   JS_SetErrorReporter (s->jscx, swfdec_js_error_report);
   JS_SetContextPrivate(s->jscx, s);
   glob = JS_NewObject (s->jscx, &global_class, NULL, NULL);
   if (!JS_InitStandardClasses (s->jscx, glob)) {
     SWFDEC_ERROR ("initializing JS standard classes failed");
   }
+  swfdec_js_add_globals (s, glob);
+  swfdec_js_add_mouse (s, glob);
   swfdec_js_add_movieclip_class (s);
 }
 
@@ -136,10 +161,11 @@ swfdec_decoder_execute_scripts (SwfdecDecoder *s)
 {
   guint i;
 
+  SWFDEC_DEBUG ("executing %u scripts", s->execute_list->len);
   for (i = 0; i < s->execute_list->len; i++) {
     SwfdecScriptEntry *entry = &g_array_index (s->execute_list, SwfdecScriptEntry, i);
 
-    swfdec_js_execute_script (s, entry->movie, entry->script);
+    swfdec_js_execute_script (s, entry->movie, entry->script, NULL);
   }
   g_array_set_size (s->execute_list, 0);
 }
@@ -149,6 +175,7 @@ swfdec_decoder_execute_scripts (SwfdecDecoder *s)
  * @s: ia @SwfdecDecoder
  * @movie: a #SwfdecMovieClip to pass as argument to the script
  * @script: a @JSScript to execute
+ * @rval: optional location for the script's return value
  *
  * Executes the given @script for the given @movie. This function is supposed
  * to be the single entry point for running JavaScript code inswide swfdec, so
@@ -157,9 +184,10 @@ swfdec_decoder_execute_scripts (SwfdecDecoder *s)
  * Returns: TRUE if the script was successfully executed
  **/
 gboolean
-swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *script)
+swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, 
+    JSScript *script, jsval *rval)
 {
-  jsval rval;
+  jsval returnval = JSVAL_VOID;
   JSBool ret;
 
   g_return_val_if_fail (s != NULL, FALSE);
@@ -171,14 +199,16 @@ swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *sc
       movie->current_frame);
   swfdec_disassemble (s, script);
 #endif
+  if (rval == NULL)
+    rval = &returnval;
   if (movie->jsobj == NULL) {
     swfdec_js_add_movieclip (movie);
     if (movie->jsobj == NULL)
       return FALSE;
   }
-  ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, &rval);
-  if (ret && rval != JSVAL_VOID) {
-    JSString * str = JS_ValueToString (s->jscx, rval);
+  ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, rval);
+  if (ret && returnval != JSVAL_VOID) {
+    JSString * str = JS_ValueToString (s->jscx, returnval);
     if (str)
       g_print ("%s\n", JS_GetStringBytes (str));
   }
@@ -189,6 +219,7 @@ swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *sc
  * swfdec_js_run:
  * @dec: a #SwfdecDecoder
  * @s: JavaScript commands to execute
+ * @rval: optional location to store a return value
  *
  * This is a debugging function for injecting script code into the @decoder.
  * Use it at your own risk.
@@ -196,7 +227,7 @@ swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *sc
  * Returns: TRUE if the script was evaluated successfully. 
  **/
 gboolean
-swfdec_js_run (SwfdecDecoder *dec, const char *s)
+swfdec_js_run (SwfdecDecoder *dec, const char *s, jsval *rval)
 {
   gboolean ret;
   JSScript *script;
@@ -209,7 +240,7 @@ swfdec_js_run (SwfdecDecoder *dec, const char *s)
   script = JS_CompileScript (dec->jscx, global, s, strlen (s), "injected-code", 1);
   if (script == NULL)
     return FALSE;
-  ret = swfdec_js_execute_script (dec, dec->root, script);
+  ret = swfdec_js_execute_script (dec, dec->root, script, rval);
   JS_DestroyScript (dec->jscx, script);
   return ret;
 }

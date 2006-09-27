@@ -188,6 +188,7 @@ main (int argc, char *argv[])
   int ret;
   char *fn = "it.swf";
   SwfdecDecoder *s;
+  SwfdecBuffer *buffer;
   GError *error = NULL;
   GOptionEntry options[] = {
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "bew verbose", NULL },
@@ -211,15 +212,15 @@ main (int argc, char *argv[])
 	fn = argv[1];
   }
 
-  ret = g_file_get_contents (fn, &contents, &length, NULL);
-  if (!ret) {
+  buffer = swfdec_buffer_new_from_file (fn, NULL);
+  if (!buffer) {
     g_print ("dump: file \"%s\" not found\n", fn);
     return 1;
   }
 
   s = swfdec_decoder_new();
 
-  ret = swfdec_decoder_add_data(s, (unsigned char *)contents,length);
+  ret = swfdec_decoder_add_buffer (s, buffer);
   //printf("%d\n", ret);
 
   while (ret == SWF_OK || ret == SWF_CHANGE) {
@@ -231,10 +232,12 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  printf("objects:\n");
+  g_print ("file:\n");
+  g_print ("  version: %d\n", s->version);
+  g_print ("objects:\n");
   dump_objects(s);
 
-  printf("main sprite:\n");
+  g_print ("main sprite:\n");
   dump_sprite(s->main_sprite);
   g_object_unref (s);
   s = NULL;

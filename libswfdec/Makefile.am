@@ -13,8 +13,9 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
 	swfdec_buffer.c swfdec_audio.c swfdec_tag.c \
 	swfdec_cache.c swfdec_internal.h swfdec_decoder_internal.h \
-	swfdec_js.c swfdec_compiler.c \
-	swfdec_js_movieclip.c
+	swfdec_js.c swfdec_js_global.c swfdec_js_mouse.c \
+	swfdec_js_movieclip.c \
+	swfdec_compiler.c 
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) \
@@ -36,5 +37,5 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec.h \
 	swfdec_text.h swfdec_types.h tags.h \
 	swfdec_bits.h swfdec_rect.h \
 	swfdec_cache.h swfdec_audio.h \
-	swfdec_js.h 
+	swfdec_js.h
 

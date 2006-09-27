@@ -3,51 +3,33 @@
 #include <swfdec.h>
 #include <swfdec_buffer.h>
 #include <swfdec_widget.h>
-#include <swfdec_playback.h>
 
-static gpointer playback;
-
-static gboolean
+static void
 iterate (gpointer dec)
 {
   swfdec_decoder_iterate (dec);
-  if (playback != NULL) {
-    SwfdecBuffer *buffer = swfdec_decoder_render_audio_to_buffer (dec);
-    swfdec_playback_write (playback, buffer);
-    swfdec_buffer_unref (buffer);
-  }
-  return TRUE;
 }
 
 static void
 view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
 {
-  GtkWidget *window, *widget;
+  GtkWidget *window, *widget, *vbox;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  vbox = gtk_vbox_new (FALSE, 3);
   widget = swfdec_widget_new (dec);
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
-  gtk_container_add (GTK_CONTAINER (window), widget);
+  gtk_box_pack_start (GTK_BOX (vbox), widget, TRUE, TRUE, 0);
+  widget = gtk_button_new_with_mnemonic ("_Iterate");
+  g_signal_connect_swapped (widget, "clicked", G_CALLBACK (iterate), dec);
+  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+
+  gtk_container_add (GTK_CONTAINER (window), vbox);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);
-}
 
-static void
-play_swf (SwfdecDecoder *dec)
-{
-  if (playback == NULL) {
-    guint timeout;
-    double rate;
-
-    swfdec_decoder_get_rate (dec, &rate);
-    timeout = g_timeout_add (1000 / rate, iterate, dec);
-
-    gtk_main ();
-    g_source_remove (timeout);
-  } else {
-    gtk_main ();
-  }
+  gtk_main ();
 }
 
 int 
@@ -58,12 +40,11 @@ main (int argc, char *argv[])
   SwfdecDecoder *s;
   SwfdecBuffer *buffer;
   GError *error = NULL;
-  gboolean use_image = FALSE, no_sound = FALSE;
+  gboolean use_image = FALSE;
 
   GOptionEntry options[] = {
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
-    { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -112,16 +93,6 @@ main (int argc, char *argv[])
   }
 
   view_swf (s, scale, use_image);
-
-  if (no_sound) {
-    playback = NULL;
-  } else {
-    playback = swfdec_playback_open (iterate, s);
-  }
-  play_swf (s);
-
-  if (playback)
-    swfdec_playback_close (playback);
 
   s = NULL;
   return 0;

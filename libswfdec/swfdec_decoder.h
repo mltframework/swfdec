@@ -13,7 +13,7 @@
 
 #define SWF_COLOR_SCALE_FACTOR		(1/256.0)
 #define SWF_TRANS_SCALE_FACTOR		(1/63356.0)
-#define SWF_SCALE_FACTOR		(1/20.0)
+#define SWF_SCALE_FACTOR		(20.0)
 #define SWF_TEXT_SCALE_FACTOR		(1/1024.0)
 
 enum
@@ -76,7 +76,8 @@ struct _SwfdecDecoder
   gboolean protection;			/* TRUE is this file is protected (may not be edited) */
   char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
 
-  int disable_render;
+  /* mouse */
+  gboolean mouse_visible;		/* show the mouse (actionscriptable) */
 
   unsigned char *tmp_scanline;
 

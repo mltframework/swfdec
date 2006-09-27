@@ -259,6 +259,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   s->b.ptr += s->b.buffer->length;
   /* this assumes that no recursive DefineSprite happens and the spec says it doesn't */
   s->parse_sprite = s->main_sprite;
+  SWFDEC_LOG ("done parsing this sprite");
 
   return SWF_OK;
 }
@@ -372,11 +373,19 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    record.id = character;
+    record.object = swfdec_object_get (s, character);
     record.transform = trans;
     record.color_transform = color_trans;
 
-    g_array_append_val (button->records, record);
+    if (record.object) {
+      SwfdecRect rect;
+      swfdec_rect_transform (&rect, &record.object->extents, &record.transform);
+      g_array_append_val (button->records, record);
+      swfdec_rect_union (&SWFDEC_OBJECT (button)->extents,
+	  &SWFDEC_OBJECT (button)->extents, &rect);
+    } else {
+      SWFDEC_ERROR ("no object with character %d\n", character);
+    }
   }
   swfdec_bits_get_u8 (bits);
 
@@ -446,11 +455,19 @@ tag_func_define_button (SwfdecDecoder * s)
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    record.id = character;
+    record.object = swfdec_object_get (s, character);
     record.transform = trans;
     record.color_transform = color_trans;
 
-    g_array_append_val (button->records, record);
+    if (record.object) {
+      SwfdecRect rect;
+      swfdec_rect_transform (&rect, &record.object->extents, &record.transform);
+      g_array_append_val (button->records, record);
+      swfdec_rect_union (&SWFDEC_OBJECT (button)->extents,
+	  &SWFDEC_OBJECT (button)->extents, &rect);
+    } else {
+      SWFDEC_ERROR ("no object with character %d\n", character);
+    }
   }
   swfdec_bits_get_u8 (bits);
 

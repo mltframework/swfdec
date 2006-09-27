@@ -915,8 +915,8 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->lines, shapevec);
 
-    shapevec->width = swfdec_bits_get_u16 (bits) * SWF_SCALE_FACTOR;
-    end_width = swfdec_bits_get_u16 (bits) * SWF_SCALE_FACTOR;
+    shapevec->width = swfdec_bits_get_u16 (bits) / SWF_SCALE_FACTOR;
+    end_width = swfdec_bits_get_u16 (bits) / SWF_SCALE_FACTOR;
     shapevec->color = swfdec_bits_get_rgba (bits);
     end_color = swfdec_bits_get_rgba (bits);
     SWFDEC_LOG ("%d: %g->%g %08x->%08x", i,

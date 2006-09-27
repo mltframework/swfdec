@@ -40,7 +40,7 @@ typedef enum {
 struct _SwfdecButtonRecord
 {
   SwfdecButtonState	states;
-  unsigned int		id;
+  SwfdecObject *	object;
   cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
 };

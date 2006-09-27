@@ -1381,7 +1381,7 @@ js_Interpret(JSContext *cx, jsval *result)
     void *mark;
     jsbytecode *pc, *pc2, *endpc;
     JSOp op, op2;
-    const JSCodeSpec *cs;
+    const JSCodeSpec *cs = NULL;
     JSAtom *atom;
     uintN argc, slot, attrs;
     jsval *vp, lval, rval, ltmp, rtmp;
@@ -1397,7 +1397,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSFunction *fun;
     JSType type;
 #ifdef DEBUG
-    FILE *tracefp;
+    FILE *tracefp = NULL;
 #endif
 #if JS_HAS_EXPORT_IMPORT
     JSIdArray *ida;
@@ -1565,6 +1565,12 @@ js_Interpret(JSContext *cx, jsval *result)
             sp -= 2;
             break;
 
+	  case JSOP_FLASHSWAP:
+	    id = pc[1] << 8 | pc[2];
+	    ltmp = sp[-1];
+	    sp[-1] = sp[-id];
+	    sp[-id] = ltmp;
+	    break;
           case JSOP_SWAP:
             /*
              * N.B. JSOP_SWAP doesn't swap the corresponding generating pcs
@@ -2864,10 +2870,25 @@ js_Interpret(JSContext *cx, jsval *result)
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
+	  case JSOP_FLASHCALL:
+	    /* rewrite the stack */
+	    FETCH_INT(cx, -3, j);
+	    argc = j;
+            vp = sp - (argc + 3);
+	    sp[-3] = sp[-1];
+	    sp--;
+	    for (i = 0; i < (j / 2 + 1); i++) {
+	      ltmp = sp[-i-1];
+	      sp[-i-1] = vp[i];
+	      vp[i] = ltmp;
+	    }
+	    /* treat it like a CALL */
+	    goto do_call;
           case JSOP_CALL:
           case JSOP_EVAL:
-            argc = GET_ARGC(pc);
-            vp = sp - (argc + 2);
+	    argc = GET_ARGC(pc);
+	    vp = sp - (argc + 2);
+do_call:
             lval = *vp;
             SAVE_SP(fp);
 
@@ -3029,10 +3050,19 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 #endif
 
+	  case JSOP_FLASHNAME:
+	    POP_ELEMENT_ID (id);
+	    if (atom && strcmp ("this", js_GetStringBytes (ATOM_TO_STRING(atom))) == 0) {
+	      PUSH_OPND(OBJECT_TO_JSVAL(fp->thisp));
+	      obj = NULL;
+	      break;
+	    }
+	    goto do_name;
+
           case JSOP_NAME:
             atom = GET_ATOM(cx, script, pc);
             id   = (jsid)atom;
-
+do_name:
             SAVE_SP(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
             if (!ok)

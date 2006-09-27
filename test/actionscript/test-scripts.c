@@ -16,11 +16,38 @@ check_funcall (SwfdecDecoder *s)
   return TRUE;
 }
 
+static gboolean 
+check_add_variables (SwfdecDecoder *s)
+{
+  jsval rval;
+  int32 i;
+
+  if (!swfdec_js_run (s, "_root.hit", &rval) ||
+      !JS_ValueToInt32 (s->jscx, rval, &i) ||
+      i != 5)
+    return FALSE;
+  if (!swfdec_js_run (s, "_root.numx", &rval) ||
+      !JS_ValueToInt32 (s->jscx, rval, &i) ||
+      i != 12)
+    return FALSE;
+  if (!swfdec_js_run (s, "_root.numy", &rval) ||
+      !JS_ValueToInt32 (s->jscx, rval, &i) ||
+      i != 6)
+    return FALSE;
+  if (!swfdec_js_run (s, "_root.score", &rval) ||
+      !JS_ValueToInt32 (s->jscx, rval, &i) ||
+      i != 0)
+    return FALSE;
+
+  return TRUE;
+}
+
 struct {
   char *name;
   gboolean (* check) (SwfdecDecoder *);
 } tests[] = {
-  { "funcall", check_funcall }
+  { "funcall", check_funcall },
+  { "add-variables", check_add_variables }
 };
 
 gboolean
@@ -53,7 +80,7 @@ run_test (guint id)
   script = swfdec_compile (s);
   s->parse_sprite = NULL;
   if (script) {
-    swfdec_js_execute_script (s, s->root, script);
+    swfdec_js_execute_script (s, s->root, script, NULL);
     JS_DestroyScript (s->jscx, script);
     if (tests[id].check) {
       ret = tests[id].check (s);

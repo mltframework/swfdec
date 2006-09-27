@@ -240,6 +240,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   if (has_name) {
     g_free (content->name);
     content->name = swfdec_bits_get_string (bits);
+    SWFDEC_LOG ("  name = %s", content->name);
   }
   if (has_clip_depth) {
     content->clip_depth = swfdec_bits_get_u16 (bits);
@@ -266,7 +267,9 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 	key_code = 0;
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
-
+      if (event_flags & ~(SWFDEC_EVENT_LOAD | SWFDEC_EVENT_ENTER)) {
+	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags);
+      }
       if (content->events == NULL)
 	content->events = swfdec_event_list_new (s);
       swfdec_event_list_parse (content->events, event_flags, key_code);

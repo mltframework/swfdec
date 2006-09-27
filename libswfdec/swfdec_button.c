@@ -20,6 +20,9 @@ static void
 swfdec_button_init (SwfdecButton * button)
 {
   button->records = g_array_new (FALSE, TRUE, sizeof (SwfdecButtonRecord));
+
+  /* we init this empty here so adding records fills this up */
+  swfdec_rect_init_empty (&SWFDEC_OBJECT (button)->extents);
 }
 
 static void
@@ -47,12 +50,7 @@ swfdec_button_mouse_in (SwfdecObject *object, double x, double y, int mouse_butt
 
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & SWFDEC_BUTTON_HIT) {
-      obj = swfdec_object_get (SWFDEC_OBJECT (button)->decoder, record->id);
-      if (!obj) {
-        SWFDEC_WARNING ("couldn't get object with id %d", record->id);
-	continue;
-      }
-
+      obj = record->object;
       tmpx = x;
       tmpy = y;
       swfdec_matrix_transform_point_inverse (&record->transform, &tmpx, &tmpy);
@@ -203,22 +201,17 @@ swfdec_button_render (SwfdecButton *button, SwfdecButtonState state, cairo_t *cr
   g_return_if_fail (SWFDEC_IS_BUTTON (button));
 
   for (i = 0; i < button->records->len; i++) {
-    SwfdecObject *obj;
-
     record = &g_array_index (button->records, SwfdecButtonRecord, i);
     if (record->states & state) {
-      obj = swfdec_object_get (SWFDEC_OBJECT (button)->decoder, record->id);
-      if (obj) {
-	SwfdecColorTransform color_trans;
-	SwfdecRect rect;
-	swfdec_color_transform_chain (&color_trans, &record->color_transform,
-	    trans);
-	cairo_transform (cr, &record->transform);
-	swfdec_rect_transform_inverse (&rect, inval, &record->transform);
-	swfdec_object_render (obj, cr, &color_trans, &rect);
-      } else {
-	SWFDEC_WARNING ("couldn't find object id %d", record->id);
-      }
+      SwfdecColorTransform color_trans;
+      SwfdecRect rect;
+      swfdec_color_transform_chain (&color_trans, &record->color_transform,
+	  trans);
+      cairo_save (cr);
+      cairo_transform (cr, &record->transform);
+      swfdec_rect_transform_inverse (&rect, inval, &record->transform);
+      swfdec_object_render (record->object, cr, &color_trans, &rect);
+      cairo_restore (cr);
     }
   }
 }

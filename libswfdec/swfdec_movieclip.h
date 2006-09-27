@@ -35,20 +35,20 @@ struct _SwfdecMovieClip
   unsigned int	     	clip_depth;	      	/* clipping depth (determines visibility) */
 
   /* positioning - the values are applied in this order */
-  int			xscale;			/* x scaling in percent */
-  int			yscale;			/* y scaling in percent */
-  int			x;			/* x offset in pixels */
-  int			y;	      		/* y offset in pixels */
+  SwfdecRect		original_extents;	/* the extents from all the children */
+  cairo_matrix_t	original_transform;	/* the transform as set by PlaceObject */
+  double      		x;			/* x offset in twips */
+  double		y;	      		/* y offset in twips */
+  double      		xscale;			/* x scaling factor */
+  double      		yscale;			/* y scaling factor */
   int			rotation;     		/* rotation in degrees */
-  cairo_matrix_t	transform;		/* the transformation matrix computed from above */
+  cairo_matrix_t	transform;		/* transformation matrix computed from above */
   cairo_matrix_t	inverse_transform;	/* the inverse of the transformation matrix */
-  int			width;			/* width of movie clip in pixels */
-  int			height;		      	/* height of movie clip in pixels */
 
   /* frame information */
   int			ratio;			/* for morph shapes (FIXME: is this the same as current frame?) */
-  unsigned int		current_frame;		/* the frame that is currently displayed */
-  unsigned int	      	next_frame;		/* the frame that will be displayed next */
+  unsigned int		current_frame;		/* frame that is currently displayed (NB: indexed from 0) */
+  unsigned int	      	next_frame;		/* frame that will be displayed next, the current frame to JS */
   gboolean		stopped;		/* if we currently iterate */
   gboolean		visible;		/* whether we currently can be seen or iterate */
 
@@ -87,14 +87,14 @@ GType		swfdec_movie_clip_get_type		(void);
 
 SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent);
 unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
+unsigned int	swfdec_movie_clip_get_next_frame	(SwfdecMovieClip *	movie,
+							 unsigned int		current_frame);
 void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
 							 SwfdecObject *		child);
-void		swfdec_movie_clip_set_size		(SwfdecMovieClip *	clip,
-							 guint			width,
-							 guint			height);
 
-void		swfdec_movie_clip_update_visuals	(SwfdecMovieClip *	movie);
-void		swfdec_movie_clip_iterate		(SwfdecMovieClip *	movie);
+void		swfdec_movie_clip_update_matrix		(SwfdecMovieClip *	movie,
+							 gboolean		invalidate);
+void		swfdec_movie_clips_iterate		(SwfdecDecoder *	dec);
 gboolean      	swfdec_movie_clip_handle_mouse		(SwfdecMovieClip *	movie,
 							 double			x,
 							 double			y,

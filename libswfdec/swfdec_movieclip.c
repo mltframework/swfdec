@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <math.h>
 
 #include <js/jsapi.h>
 
@@ -25,8 +26,8 @@ static void swfdec_movie_clip_base_init (gpointer g_class)
 static void
 swfdec_movie_clip_init (SwfdecMovieClip * movie)
 {
-  movie->xscale = 100;
-  movie->yscale = 100;
+  movie->xscale = 1.0;
+  movie->yscale = 1.0;
   cairo_matrix_init_identity (&movie->transform);
   cairo_matrix_init_identity (&movie->inverse_transform);
 
@@ -38,6 +39,14 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
   movie->current_frame = -1;
 
   movie->sound_queue = g_queue_new ();
+}
+
+static void
+swfdec_movie_clip_execute (SwfdecMovieClip *movie, unsigned int condition)
+{
+  if (movie->events == NULL)
+    return;
+  swfdec_event_list_execute (movie->events, movie, condition, 0);
 }
 
 /* NB: modifies rect */
@@ -64,10 +73,65 @@ swfdec_movie_clip_invalidate_cb (SwfdecObject *child, const SwfdecRect *rect, Sw
 static void
 swfdec_movie_clip_update_extents (SwfdecMovieClip *movie)
 {
-  /* FIXME: handle real movieclips */
-  if (movie->child && !SWFDEC_IS_SPRITE (movie)) {
-    swfdec_rect_transform (&SWFDEC_OBJECT (movie)->extents, 
-	&movie->child->extents, &movie->transform);
+  SwfdecRect *rect = &movie->original_extents;
+  SwfdecRect *extents = &SWFDEC_OBJECT (movie)->extents;
+
+  /* treat root movie special */
+  if (movie->parent == NULL)
+    return;
+
+  if (movie->child == NULL) {
+    swfdec_rect_init_empty (rect);
+  } else if (SWFDEC_IS_SPRITE (movie->child)) {
+    /* NB: this assumes that the children's extents are up-to-date */
+    GList *walk;
+    swfdec_rect_init_empty (rect);
+    for (walk = movie->list; walk; walk = walk->next) {
+      swfdec_rect_union (rect, rect, &SWFDEC_OBJECT (walk->data)->extents);
+    }
+  } else {
+    *rect = movie->child->extents;
+  }
+  *extents = *rect;
+  swfdec_rect_transform (rect, rect, &movie->original_transform);
+  swfdec_rect_transform (extents, extents, &movie->transform);
+}
+
+/**
+ * swfdec_movie_clip_update_matrix:
+ * @movie: a #SwfdecMovieClip
+ * @invalidate: TRUE to invalidate the area occupied by this movieclip
+ *
+ * Updates the transformation matrices that are used within this movieclip.
+ **/
+void
+swfdec_movie_clip_update_matrix (SwfdecMovieClip *movie, gboolean invalidate)
+{
+  SwfdecRect rect;
+  cairo_matrix_t mat;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
+
+  if (invalidate)
+    rect = SWFDEC_OBJECT (movie)->extents;
+
+  cairo_matrix_init_translate (&mat, movie->x, movie->y);
+  cairo_matrix_scale (&mat, movie->xscale, movie->yscale);
+  cairo_matrix_rotate (&mat, movie->rotation * M_PI / 180);
+  cairo_matrix_multiply (&mat, &mat, &movie->original_transform);
+  movie->transform = mat;
+  movie->inverse_transform = mat;
+  if (cairo_matrix_invert (&movie->inverse_transform)) {
+    g_assert_not_reached ();
+  }
+  swfdec_movie_clip_update_extents (movie);
+  if (invalidate) {
+    swfdec_rect_union (&rect, &rect, &SWFDEC_OBJECT (movie)->extents);
+    if (movie->parent) {
+      swfdec_movie_clip_invalidate (movie->parent, &rect);
+    } else {
+      swfdec_object_invalidate (SWFDEC_OBJECT (movie), &rect);
+    }
   }
 }
 
@@ -87,18 +151,26 @@ swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 }
 
 static void
-swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie, guint last_frame)
+swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie, guint last_frame, SwfdecRect *after)
 {
   SwfdecMovieClip *cur;
-  SwfdecRect inval;
+  SwfdecRect before;
   SwfdecSpriteFrame *frame = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
   GList *walk, *walk2; /* I suck at variable naming */
   GSList *swalk;
 
+  /* note about the invalidation handling:
+   * We have to handle 2 invalidations: stuff that is removed (before) and stuff that 
+   * is added. (after) Since the extents have to be updated before we can invalidate the 
+   * added regions (or some regions may be missed) we have to do this invalidation very
+   * late, especially because children may change their extents, too.
+   */
+  if (last_frame == movie->current_frame)
+    return;
   if (last_frame == (guint) -1 || frame->bg_color != SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color)
-    inval = SWFDEC_OBJECT (movie)->extents;
+    before = SWFDEC_OBJECT (movie)->extents;
   else
-    swfdec_rect_init_empty (&inval);
+    swfdec_rect_init_empty (&before);
   walk2 = movie->list;
   for (walk = frame->contents; walk; walk = g_list_next (walk)) {
     SwfdecSpriteContent *contents = walk->data;
@@ -114,7 +186,9 @@ swfdec_movie_clip_perform_actions (SwfdecMovieClip *movie, guint last_frame)
 	goto found;
       /* if cur->depth < contents->depth */
       movie->list = g_list_remove (movie->list, cur);
-      swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+      swfdec_rect_union (&before, &before, &SWFDEC_OBJECT (cur)->extents);
+      if (cur->name && cur->jsobj)
+	swfdec_js_movie_clip_remove_property (cur);
       swfdec_object_unref (cur);
     }
     new = TRUE;
@@ -125,33 +199,38 @@ found:
     /* check if we need to change anything */
     if (contents->first_frame <= last_frame &&
 	last_frame < contents->last_frame) {
+      g_assert (!new);
       continue;
     }
     /* invalidate the current element unless it's new */
     if (!new)
-      swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+      swfdec_rect_union (&before, &before, &SWFDEC_OBJECT (cur)->extents);
 
     /* copy all the relevant stuff */
     if (cur->child != contents->object)
       swfdec_movie_clip_set_child (cur, contents->object);
     cur->clip_depth = contents->clip_depth;
     cur->ratio = contents->ratio;
-    cur->inverse_transform = cur->transform = contents->transform;
-    if (cairo_matrix_invert (&cur->inverse_transform)) {
-      g_assert_not_reached ();
-    }
-    cur->color_transform = contents->color_transform;
+    cur->original_transform = contents->transform;
+    if (cur->name && cur->jsobj)
+      swfdec_js_movie_clip_remove_property (cur);
     cur->name = contents->name;
     cur->events = contents->events;
+    if (cur->name && movie->jsobj)
+      swfdec_js_movie_clip_add_property (cur);
+    if (new)
+      swfdec_movie_clip_execute (cur, SWFDEC_EVENT_LOAD);
 
     /* do all the necessary setup stuff */
-    swfdec_movie_clip_update_extents (cur);
-    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+    swfdec_movie_clip_update_matrix (cur, FALSE);
+    swfdec_rect_union (after, after, &SWFDEC_OBJECT (cur)->extents);
   }
     
   while (walk2) {
     cur = walk2->data;
-    swfdec_rect_union (&inval, &inval, &SWFDEC_OBJECT (cur)->extents);
+    swfdec_rect_union (&before, &before, &SWFDEC_OBJECT (cur)->extents);
+    if (cur->name && cur->jsobj)
+      swfdec_js_movie_clip_remove_property (cur);
     swfdec_object_unref (cur);
     walk2 = walk2->next;
     movie->list = g_list_remove (movie->list, cur);
@@ -159,25 +238,28 @@ found:
   for (swalk = frame->sound; swalk; swalk = swalk->next) {
     swfdec_audio_event_init (SWFDEC_OBJECT (movie)->decoder, swalk->data);
   }
+  if (!swfdec_rect_is_empty (&before)) {
+    swfdec_movie_clip_invalidate (movie, &before);
+  }
+  /* FIXME: where are these really executed? */
   if (frame->do_actions) {
+    GSList *swalk;
     for (swalk = frame->do_actions; swalk; swalk = swalk->next)
       swfdec_decoder_queue_script (SWFDEC_OBJECT (movie)->decoder, movie, swalk->data);
-  }
-  if (!swfdec_rect_is_empty (&inval)) {
-    swfdec_movie_clip_invalidate (movie, &inval);
   }
   /* if we did everything right, we should now have as many children as the frame says */
   g_assert (g_list_length (movie->list) == g_list_length (frame->contents));
 }
 
-static unsigned int
+unsigned int
 swfdec_movie_clip_get_next_frame (SwfdecMovieClip *movie, unsigned int current_frame)
 {
   unsigned int next_frame, n_frames;
 
   g_assert (SWFDEC_IS_SPRITE (movie->child));
 
-  n_frames = SWFDEC_SPRITE (movie->child)->n_frames;
+  n_frames = MIN (SWFDEC_SPRITE (movie->child)->n_frames, 
+		  SWFDEC_SPRITE (movie->child)->parse_frame);
   next_frame = current_frame + 1;
   if (next_frame >= n_frames) {
     if (0 /*s->repeat*/) {
@@ -193,10 +275,14 @@ static void
 swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame)
 {
   SwfdecBuffer *cur;
-  SwfdecSpriteFrame *last = last_frame == (guint) -1 ? NULL : &SWFDEC_SPRITE (movie->child)->frames[last_frame];
-  SwfdecSpriteFrame *current = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
+  SwfdecSpriteFrame *last;
+  SwfdecSpriteFrame *current;
   unsigned int n_bytes;
 
+  g_assert (SWFDEC_IS_SPRITE (movie->child));
+
+  last = last_frame == (guint) -1 ? NULL : &SWFDEC_SPRITE (movie->child)->frames[last_frame];
+  current = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
   if (last == NULL || last->sound_head != current->sound_head) {
     /* empty queue */
     while ((cur = g_queue_pop_head (movie->sound_queue)))
@@ -227,36 +313,55 @@ swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame
   }
 }
 
-void 
-swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
+static void
+swfdec_movie_clip_iterate_queue_enter_frame (SwfdecMovieClip *movie)
+{
+  GList *walk;
+
+  if (!movie->stopped && SWFDEC_IS_SPRITE (movie->child)) {
+    movie->next_frame = swfdec_movie_clip_get_next_frame (movie, movie->next_frame);
+  }
+  swfdec_movie_clip_execute (movie, SWFDEC_EVENT_ENTER);
+  for (walk = movie->list; walk; walk = walk->next) {
+    swfdec_movie_clip_iterate_queue_enter_frame (walk->data);
+  }
+}
+
+static void
+swfdec_movie_clip_iterate_update (SwfdecMovieClip *movie)
 {
   GList *walk;
   unsigned int last_frame;
+  SwfdecRect after;
 
-  if (movie->stopped || !movie->visible)
-    return;
-
-  /* don't do anything if the requested frame isn't loaded yet */
-  if (SWFDEC_IS_SPRITE (movie->child) && 
-      movie->next_frame >= SWFDEC_SPRITE (movie->child)->parse_frame) {
-    SWFDEC_DEBUG ("not iterating, frame %u isn't loaded (loading %u)",
-      movie->next_frame, SWFDEC_SPRITE (movie->child)->parse_frame);
-    return;
-  }
-
+  swfdec_rect_init_empty (&after);
   SWFDEC_LOG ("iterate, frame_index = %d", movie->next_frame);
-  last_frame = movie->current_frame;
-  movie->current_frame = movie->next_frame;
-  movie->next_frame = -1;
   if (SWFDEC_IS_SPRITE (movie->child)) {
-    swfdec_movie_clip_perform_actions (movie, last_frame);
-    for (walk = movie->list; walk; walk = walk->next) {
-      swfdec_movie_clip_iterate (walk->data);
-    }
-    if (movie->next_frame == (unsigned int) -1)
-      movie->next_frame = swfdec_movie_clip_get_next_frame (movie, movie->current_frame);
+    last_frame = movie->current_frame;
+    movie->current_frame = movie->next_frame;
+    swfdec_movie_clip_perform_actions (movie, last_frame, &after);
     swfdec_movie_clip_iterate_audio (movie, last_frame);
   }
+  for (walk = movie->list; walk; walk = walk->next) {
+    swfdec_movie_clip_iterate_update (walk->data);
+  }
+  swfdec_movie_clip_update_extents (movie);
+  if (!swfdec_rect_is_empty (&after))
+    swfdec_movie_clip_invalidate (movie, &after);
+}
+
+void 
+swfdec_movie_clips_iterate (SwfdecDecoder *dec)
+{
+  /* first, queue all enterFrame events and execute them. */
+  g_assert (swfdec_js_script_queue_is_empty (dec));
+  swfdec_movie_clip_iterate_queue_enter_frame (dec->root);
+  swfdec_decoder_execute_scripts (dec);
+
+  /* second, update the visual state of all movies and execute load/unload events */
+  g_assert (swfdec_js_script_queue_is_empty (dec));
+  swfdec_movie_clip_iterate_update (dec->root);
+  swfdec_decoder_execute_scripts (dec);
 }
 
 static gboolean
@@ -388,6 +493,19 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
       swfdec_object_render (movie->child, cr, &trans, &rect);
     }
   }
+#if 0
+  {
+    double x = 1.0, y = 0.0;
+    cairo_transform (cr, &movie->inverse_transform);
+    cairo_user_to_device_distance (cr, &x, &y);
+    cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
+    cairo_set_line_width (cr, 1 / sqrt (x * x + y * y));
+    cairo_rectangle (cr, object->extents.x0 + 10, object->extents.y0 + 10,
+	object->extents.x1 - object->extents.x0 - 20,
+	object->extents.y1 - object->extents.y0 - 20);
+    cairo_stroke (cr);
+  }
+#endif
 }
 
 static gboolean
@@ -404,45 +522,6 @@ swfdec_movie_clip_class_init (SwfdecMovieClipClass * g_class)
 
   object_class->render = swfdec_movie_clip_render;
   object_class->mouse_in = must_not_happen;
-}
-
-/**
- * swfdec_movie_clip_update_visuals:
- * @movie_clip: a #SwfdecMovieClip
- *
- * Updates all the internal data associated with the visual representation
- * of the @movie_clip. This includes the cache and the area queued for updates.
- **/
-void
-swfdec_movie_clip_update_visuals (SwfdecMovieClip *movie_clip)
-{
-  cairo_matrix_t *matrix;
-  SwfdecObject *object;
-  SwfdecRect rect = { 0, 0, 0, 0 };
-
-  g_return_if_fail (SWFDEC_IS_SPRITE (movie_clip));
-
-  object = SWFDEC_OBJECT (movie_clip);
-  matrix = &movie_clip->transform;
-  cairo_matrix_init_identity (matrix);
-  cairo_matrix_scale (matrix, movie_clip->xscale / 100., movie_clip->yscale / 100.);
-  cairo_matrix_translate (matrix, movie_clip->x, movie_clip->y);
-  cairo_matrix_rotate (matrix, M_PI * movie_clip->rotation / 180);
-  movie_clip->inverse_transform = movie_clip->transform;
-  if (cairo_matrix_invert (&movie_clip->inverse_transform)) {
-    g_assert_not_reached ();
-  }
-  rect = object->extents;
-  swfdec_movie_clip_invalidate (movie_clip, &rect);
-  rect.x1 = movie_clip->width;
-  rect.y1 = movie_clip->height;
-  swfdec_rect_transform (&rect, &rect, matrix);
-  object->extents.x0 = MIN (rect.x0, rect.x1);
-  object->extents.y0 = MIN (rect.y0, rect.y1);
-  object->extents.x1 = MAX (rect.x0, rect.x1);
-  object->extents.y1 = MAX (rect.y0, rect.y1);
-  rect = object->extents;
-  swfdec_movie_clip_invalidate (movie_clip, &rect);
 }
 
 unsigned int
@@ -473,8 +552,6 @@ swfdec_movie_clip_new (SwfdecMovieClip *parent)
   SWFDEC_DEBUG ("new movie for parent %p", parent);
   ret = swfdec_object_new (SWFDEC_OBJECT (parent)->decoder, SWFDEC_TYPE_MOVIE_CLIP);
   ret->parent = parent;
-  ret->width = parent->width;
-  ret->height = parent->height;
 
   return ret;
 }
@@ -500,31 +577,17 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
 	swfdec_movie_clip_invalidate_cb, movie) != 1) {
       g_assert_not_reached ();
     }
-    g_object_unref (movie->child);
+    swfdec_object_unref (movie->child);
   }
   movie->child = child;
   if (child) {
     g_object_ref (child);
     g_signal_connect (child, "invalidate", 
 	G_CALLBACK (swfdec_movie_clip_invalidate_cb), movie);
+    swfdec_movie_clip_update_extents (movie);
   }
   movie->current_frame = -1;
   movie->next_frame = 0;
-}
-
-/* NB: width and height are in twips */
-void
-swfdec_movie_clip_set_size (SwfdecMovieClip *clip, guint width, guint height)
-{
-  SwfdecRect rect = { 0, 0, width, height };
-
-  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (clip));
-
-  swfdec_object_invalidate (SWFDEC_OBJECT (clip), NULL);
-  clip->width = width;
-  clip->height = height;
-  swfdec_rect_transform (&SWFDEC_OBJECT (clip)->extents, &rect, &clip->inverse_transform);
-  swfdec_object_invalidate (SWFDEC_OBJECT (clip), NULL);
 }
 
 static gboolean

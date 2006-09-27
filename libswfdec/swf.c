@@ -21,7 +21,8 @@
 
 enum {
   PROP_0,
-  PROP_INVALID
+  PROP_INVALID,
+  PROP_MOUSE_VISIBLE
 };
 
 int swf_parse_header1 (SwfdecDecoder * s);
@@ -88,6 +89,9 @@ swfdec_decoder_get_property (GObject *object, guint param_id, GValue *value,
   switch (param_id) {
     case PROP_INVALID:
       g_value_set_boolean (value, swfdec_rect_is_empty (&dec->invalid));
+      break;
+    case PROP_MOUSE_VISIBLE:
+      g_value_set_boolean (value, dec->mouse_visible);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -159,6 +163,9 @@ swfdec_decoder_class_init (SwfdecDecoderClass *class)
   g_object_class_install_property (object_class, PROP_INVALID,
       g_param_spec_boolean ("invalid", "invalid", "decoder contains invalid areas",
 	  TRUE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_MOUSE_VISIBLE,
+      g_param_spec_boolean ("mouse-visible", "mouse visible", "wether to show the mouse pointer",
+	  TRUE, G_PARAM_READABLE));
 }
 
 static void
@@ -169,8 +176,8 @@ swfdec_decoder_init (SwfdecDecoder *s)
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
-  cairo_matrix_scale (&s->root->transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
-  cairo_matrix_scale (&s->root->inverse_transform, 1 / SWF_SCALE_FACTOR, 1 / SWF_SCALE_FACTOR);
+  cairo_matrix_scale (&s->root->transform, 1 / SWF_SCALE_FACTOR, 1 / SWF_SCALE_FACTOR);
+  cairo_matrix_scale (&s->root->inverse_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
   swfdec_movie_clip_set_child (s->root, SWFDEC_OBJECT (s->main_sprite));
   g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
@@ -572,7 +579,8 @@ swf_parse_header2 (SwfdecDecoder * s)
   swfdec_bits_get_rect (&s->b, &s->invalid);
   if (s->invalid.x0 != 0.0 || s->invalid.y0 != 0.0)
     SWFDEC_ERROR ("SWF window doesn't start at 0 0 but at %g %g\n", s->invalid.x0, s->invalid.y0);
-  swfdec_rect_scale (&s->invalid, &s->invalid, SWF_SCALE_FACTOR);
+  swfdec_rect_scale (&s->invalid, &s->invalid, 1 / SWF_SCALE_FACTOR);
+  SWFDEC_OBJECT (s->root)->extents = s->invalid;
   width = s->invalid.x1;
   height = s->invalid.y1;
   s->parse_width = width;
@@ -583,7 +591,6 @@ swf_parse_header2 (SwfdecDecoder * s)
   s->irect.y0 = 0;
   s->irect.x1 = s->width;
   s->irect.y1 = s->height;
-  swfdec_movie_clip_set_size (s->root, s->width * 20, s->height * 20);
   swfdec_bits_syncbits (&s->b);
   s->rate = swfdec_bits_get_u16 (&s->b);
   s->samples_overhead = 44100 * 256 % s->rate;
@@ -608,28 +615,25 @@ swf_parse_header2 (SwfdecDecoder * s)
  *
  * Advances #dec to the next frame. You should make sure to call this function
  * as often per second as swfdec_decoder_get_rate() indicates.
- * After calling this function @invalidated will be set to the area that 
- * changed. This value can be passed to swfdec_player_render() to get an 
- * updated image.
  **/
 void
 swfdec_decoder_iterate (SwfdecDecoder *dec)
 {
   g_return_if_fail (dec != NULL);
 
+#if 0
+  if (dec->root->current_frame == (guint) -1)
+    swfdec_js_run (dec, "if (bar) foo (1, 2); else foo (1, 2, 3, 4, 5, 6)", NULL);
+#endif
+
   g_assert (swfdec_js_script_queue_is_empty (dec));
   g_object_freeze_notify (G_OBJECT (dec));
   /* iterate audio before video so we don't iterate audio clips that get added this frame */
   swfdec_audio_iterate_start (dec);
-  swfdec_movie_clip_iterate (dec->root);
+  swfdec_movie_clips_iterate (dec);
   swfdec_decoder_execute_scripts (dec);
   swfdec_audio_iterate_finish (dec);
   g_object_thaw_notify (G_OBJECT (dec));
-
-#if 0
-  if (dec->root->current_frame == 2)
-    swfdec_js_run (dec, "var foo = 7; with (this) { foo = 3; target = this.foobar; _parent = target + foo; }");
-#endif
 }
 
 /**

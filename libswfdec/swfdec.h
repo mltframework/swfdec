@@ -36,7 +36,6 @@ int swfdec_decoder_set_debug_level (SwfdecDecoder * s, int level);
 void swfdec_decoder_get_invalid (SwfdecDecoder *s, SwfdecRect *rect);
 void swfdec_decoder_clear_invalid (SwfdecDecoder *s);
 void *swfdec_decoder_get_sound_chunk (SwfdecDecoder * s, int *length);
-SwfdecBuffer *swfdec_decoder_get_audio (SwfdecDecoder * s);
 char *swfdec_decoder_get_url (SwfdecDecoder * s);
 
 void swfdec_decoder_eof (SwfdecDecoder * s);

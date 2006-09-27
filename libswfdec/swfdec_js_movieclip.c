@@ -7,6 +7,30 @@
 #include "swfdec_js.h"
 #include "swfdec_movieclip.h"
 
+static void
+movie_clip_finalize (JSContext *cx, JSObject *obj)
+{
+  SwfdecMovieClip *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  /* since we also finalize the class, not everyone has a private object */
+  if (movie) {
+    g_assert (movie->jsobj != NULL);
+
+    SWFDEC_LOG ("destroying JSObject %p for movie %p", obj, movie);
+    movie->jsobj = NULL;
+    g_object_unref (movie);
+  }
+}
+
+static JSClass movieclip_class = {
+    "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   movie_clip_finalize,
+};
+
 static JSBool
 mc_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -65,7 +89,7 @@ mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     return JS_FALSE;
   /* FIXME: how to handle overflow? */
   n_frames = swfdec_movie_clip_get_n_frames (movie);
-  frame = CLAMP (frame, 0, (int) n_frames - 1);
+  frame = CLAMP (frame, 1, (int) n_frames) - 1;
 
   movie->next_frame = frame;
   movie->stopped = FALSE;
@@ -88,12 +112,56 @@ mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     return JS_FALSE;
   /* FIXME: how to handle overflow? */
   n_frames = swfdec_movie_clip_get_n_frames (movie);
-  frame = CLAMP (frame, 0, (int) n_frames - 1);
+  frame = CLAMP (frame, 1, (int) n_frames) - 1;
 
   movie->next_frame = frame;
   movie->stopped = TRUE;
   return JS_TRUE;
 }
+
+static JSBool
+mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovieClip *movie;
+
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
+  
+  if (argc == 1) {
+    SwfdecMovieClip *other;
+    if (!JSVAL_IS_OBJECT (argv[0]) ||
+	JS_GetClass (JSVAL_TO_OBJECT (argv[0])) != &movieclip_class) {
+      g_assert_not_reached ();
+      return JS_FALSE;
+    }
+    other = SWFDEC_MOVIE_CLIP (JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0])));
+    /* FIXME */
+    g_assert (movie->parent == other->parent);
+#if 0
+    g_print ("%g %g  %g %g --- %g %g  %g %g\n", 
+	SWFDEC_OBJECT (movie)->extents.x0, SWFDEC_OBJECT (movie)->extents.y0,
+	SWFDEC_OBJECT (movie)->extents.x1, SWFDEC_OBJECT (movie)->extents.y1,
+	SWFDEC_OBJECT (other)->extents.x0, SWFDEC_OBJECT (other)->extents.y0,
+	SWFDEC_OBJECT (other)->extents.x1, SWFDEC_OBJECT (other)->extents.y1);
+#endif
+    if (swfdec_rect_intersect (NULL, &SWFDEC_OBJECT (movie)->extents,
+	  &SWFDEC_OBJECT (other)->extents)) {
+      //g_print ("%s hit %s\n", movie->name ? movie->name : "?", other->name ? other->name : "?");
+      *rval = BOOLEAN_TO_JSVAL (JS_TRUE);
+    } else {
+      *rval = BOOLEAN_TO_JSVAL (JS_FALSE);
+    }
+  } else if (argc == 3) {
+    g_assert_not_reached ();
+  } else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+static JSBool mc_GetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+static JSBool mc_SetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
@@ -103,6 +171,9 @@ static JSFunctionSpec movieclip_methods[] = {
   {"gotoAndStop", mc_gotoAndStop, 1, 0 },
   {"play", mc_play, 0, 0},
   {"stop", mc_stop, 0, 0},
+  {"hitTest", mc_hitTest, 1, 0},
+  {"GetProperty", mc_GetProperty, 1, 0},
+  {"SetProperty", mc_SetProperty, 1, 0},
   {NULL}
 };
 
@@ -172,29 +243,28 @@ static JSBool
 mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovieClip *movie;
+  double d;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  *vp = INT_TO_JSVAL (movie->x);
-
-  return JS_TRUE;
+  d = (movie->x + movie->original_extents.x0) / SWF_SCALE_FACTOR;
+  return JS_NewNumberValue (cx, d, vp);
 }
 
 static JSBool
 mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovieClip *movie;
-  int32 i;
+  double d;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  if (!JS_ValueToInt32 (cx, id, &i))
+  if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
-  movie->x = i;
-  swfdec_movie_clip_update_visuals (movie);
-  *vp = INT_TO_JSVAL (movie->x);
+  movie->x = d * SWF_SCALE_FACTOR - movie->original_extents.x0;
+  swfdec_movie_clip_update_matrix (movie, TRUE);
 
   return JS_TRUE;
 }
@@ -203,29 +273,28 @@ static JSBool
 mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovieClip *movie;
+  double d;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  *vp = INT_TO_JSVAL (movie->x);
-
-  return JS_TRUE;
+  d = (movie->y + movie->original_extents.y0) / SWF_SCALE_FACTOR;
+  return JS_NewNumberValue (cx, d, vp);
 }
 
 static JSBool
 mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovieClip *movie;
-  int32 i;
+  double d;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  if (!JS_ValueToInt32 (cx, id, &i))
+  if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
-  movie->y = i;
-  swfdec_movie_clip_update_visuals (movie);
-  *vp = INT_TO_JSVAL (movie->y);
+  movie->y = d * SWF_SCALE_FACTOR - movie->original_extents.y0;
+  swfdec_movie_clip_update_matrix (movie, TRUE);
 
   return JS_TRUE;
 }
@@ -238,7 +307,7 @@ mc_currentframe (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  *vp = INT_TO_JSVAL (movie->current_frame);
+  *vp = INT_TO_JSVAL (movie->next_frame + 1);
 
   return JS_TRUE;
 }
@@ -274,41 +343,118 @@ mc_totalframes (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_TRUE;
 }
 
-/* MovieClip AS standard class */
-
-#define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
-static JSPropertySpec movieclip_props[] = {
-  {"_x",	    -1,	MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set},
-  {"_y",	    -2,	MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set},
-  {"_currentframe", -3,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL},
-  {"_framesloaded", -4,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL},
-  {"_totalframes",  -5,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,  NULL},
-  {NULL}
-};
-
-static void
-movie_clip_finalize (JSContext *cx, JSObject *obj)
+static JSBool
+mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovieClip *movie;
 
   movie = JS_GetPrivate (cx, obj);
-  /* since we also finalize the class, not everyone has a private object */
-  if (movie) {
-    g_assert (movie->jsobj != NULL);
+  g_assert (movie);
 
-    SWFDEC_LOG ("destroying JSObject %p for movie %p\n", obj, movie);
-    movie->jsobj = NULL;
-    g_object_unref (movie);
-  }
+  /* FIXME: what do we do if we're the root movie? */
+  if (movie->parent)
+    movie = movie->parent;
+
+  if (movie->jsobj == NULL)
+    swfdec_js_add_movieclip (movie);
+  if (movie->jsobj == NULL)
+    return JS_FALSE;
+
+  *vp = OBJECT_TO_JSVAL (movie->jsobj);
+
+  return JS_TRUE;
 }
 
-static JSClass movieclip_class = {
-    "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   movie_clip_finalize,
+/* MovieClip AS standard class */
+
+enum {
+  PROP_X,
+  PROP_Y,
+  PROP_XSCALE,
+  PROP_YSCALE,
+  PROP_CURRENTFRAME,
+  PROP_TOTALFRAMES,
+  PROP_ALPHA,
+  PROP_VISIBLE,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_ROTATION,
+  PROP_FRAMESLOADED,
+  PROP_NAME,
+  PROP_DROPTARGET,
+  PROP_URL,
+  PROP_HIGHQUALITY,
+  PROP_FOCUSRECT,
+  PROP_SOUNDBUFTIME,
+  PROP_QUALITY,
+  PROP_XMOUSE,
+  PROP_YMOUSE
 };
+
+static JSBool
+not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  g_assert_not_reached ();
+}
+
+#define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
+static JSPropertySpec movieclip_props[] = {
+  {"_x",	    PROP_X,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
+  {"_y",	    PROP_Y,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
+  {"_xscale",	    PROP_XSCALE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_yscale",	    PROP_YSCALE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_currentframe", PROP_CURRENTFRAME,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
+  {"_totalframes",  PROP_TOTALFRAMES,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
+  {"_alpha",	    PROP_ALPHA,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_visble",	    PROP_VISIBLE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_width",	    PROP_WIDTH,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_height",	    PROP_HEIGHT,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_rotation",	    PROP_ROTATION,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_framesloaded", PROP_FRAMESLOADED,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL },
+  {"_name",	    PROP_NAME,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_droptarget",   PROP_DROPTARGET,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_url",	    PROP_URL,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_highquality",  PROP_HIGHQUALITY,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_focusrect",    PROP_FOCUSRECT,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_soundbuftime", PROP_SOUNDBUFTIME,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_xmouse",	    PROP_XMOUSE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_ymouse",	    PROP_YMOUSE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_parent",	    -1,			MC_PROP_ATTRS | JSPROP_READONLY,  mc_parent,	    NULL},
+  {NULL}
+};
+
+static JSBool
+mc_GetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  uint32 id;
+
+  if (!JS_ValueToECMAUint32 (cx, argv[0], &id))
+    return JS_FALSE;
+
+  if (id > PROP_YMOUSE)
+    return JS_FALSE;
+
+  return movieclip_props[id].getter (cx, obj, JSVAL_VOID /* FIXME */, rval);
+}
+
+static JSBool
+mc_SetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  uint32 id;
+
+  if (!JS_ValueToECMAUint32 (cx, argv[0], &id))
+    return JS_FALSE;
+
+  if (id > PROP_YMOUSE)
+    return JS_FALSE;
+
+  if (movieclip_props[id].setter == NULL)
+    return JS_FALSE;
+  *rval = argv[1];
+  return movieclip_props[id].setter (cx, obj, JSVAL_VOID /* FIXME */, rval);
+
+  return JS_TRUE;
+}
 
 #if 0
 JSObject *
@@ -402,20 +548,48 @@ swfdec_js_add_movieclip_class (SwfdecDecoder *dec)
       NULL, NULL);
 }
 
+void
+swfdec_js_movie_clip_add_property (SwfdecMovieClip *movie)
+{
+  jsval val;
+
+  g_assert (movie->parent);
+  g_assert (movie->parent->jsobj);
+  if (movie->jsobj == NULL) {
+    if (!swfdec_js_add_movieclip (movie))
+      return;
+  }
+  val = OBJECT_TO_JSVAL (movie->jsobj);
+  JS_SetProperty (SWFDEC_OBJECT (movie)->decoder->jscx, movie->parent->jsobj,
+      movie->name, &val);
+}
+
+void
+swfdec_js_movie_clip_remove_property (SwfdecMovieClip *movie)
+{
+  g_assert (movie->parent);
+  g_assert (movie->parent->jsobj);
+  g_assert (movie->jsobj);
+
+  JS_DeleteProperty (SWFDEC_OBJECT (movie)->decoder->jscx, movie->parent->jsobj,
+      movie->name);
+}
+
 /**
  * swfdec_js_add_movieclip:
- * @s: a #SwfdecMovieClip
+ * @movie: a #SwfdecMovieClip
  *
- * Adds the movieclip class and the _root object to the default context.
+ * Ensures that a JSObject for the given @movie exists.
  **/
-void
+gboolean
 swfdec_js_add_movieclip (SwfdecMovieClip *movie)
 {
   JSObject *global;
   JSContext *cx;
+  GList *walk;
 
-  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
-  g_return_if_fail (movie->jsobj == NULL);
+  g_return_val_if_fail (SWFDEC_IS_MOVIE_CLIP (movie), FALSE);
+  g_return_val_if_fail (movie->jsobj == NULL, FALSE);
 
   cx = SWFDEC_OBJECT (movie)->decoder->jscx;
   global = JS_GetGlobalObject (cx);
@@ -423,19 +597,26 @@ swfdec_js_add_movieclip (SwfdecMovieClip *movie)
   movie->jsobj = JS_NewObject (cx, &movieclip_class, NULL, NULL);
   if (movie->jsobj == NULL) {
     SWFDEC_ERROR ("failed to create JS object for movie %p", movie);
-    return;
+    return FALSE;
   }
-  SWFDEC_LOG ("created JSObject %p for movie %p\n", movie->jsobj, movie);
+  SWFDEC_LOG ("created JSObject %p for movie %p", movie->jsobj, movie);
   g_object_ref (movie);
   JS_SetPrivate (cx, movie->jsobj, movie);
+  /* add all children */
+  for (walk = movie->list; walk; walk = walk->next) {
+    SwfdecMovieClip *child = walk->data;
+    if (child->name)
+      swfdec_js_movie_clip_add_property (child);
+  }
   /* special case */
   if (movie == SWFDEC_OBJECT (movie)->decoder->root) {
     jsval val = OBJECT_TO_JSVAL (movie->jsobj);
     if (!JS_SetProperty(cx, global, "_root", &val)) {
       SWFDEC_ERROR ("failed to set root object");
-      return;
+      return FALSE;
     }
   }
+  return TRUE;
 }
 
 #if 0

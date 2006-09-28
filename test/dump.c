@@ -18,6 +18,33 @@ static gboolean verbose = FALSE;
 void
 dump_sprite(SwfdecSprite *s)
 {
+  guint i;
+  GList *walk;
+
+  g_print ("  %u frames\n", s->n_frames);
+
+  if (verbose) {
+    for (i = 0; i < s->n_frames; i++) {
+      SwfdecSpriteFrame * frame = &s->frames[i];
+      for (walk = frame->contents; walk; walk = walk->next) {
+	SwfdecSpriteContent *content = walk->data;
+	if (content->first_frame != i)
+	  continue;
+	if (content->object) {
+	  if (content->name) {
+	    g_print (" %5u -%5u %s %d as %s\n", content->first_frame, 
+		content->last_frame, G_OBJECT_TYPE_NAME (content->object), 
+		content->object->id, content->name);
+	  } else {
+	    g_print (" %5u -%5u %s %d\n", content->first_frame, content->last_frame,
+		G_OBJECT_TYPE_NAME (content->object), content->object->id);
+	  }
+	} else {
+	  g_print (" %5u -%5u ---\n", content->first_frame, content->last_frame);
+	}
+      }
+    }
+  }
 }
 
 static void
@@ -183,8 +210,6 @@ dump_objects(SwfdecDecoder *s)
 int
 main (int argc, char *argv[])
 {
-  char *contents;
-  gsize length;
   int ret;
   char *fn = "it.swf";
   SwfdecDecoder *s;

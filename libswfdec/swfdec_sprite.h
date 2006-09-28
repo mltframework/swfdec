@@ -14,7 +14,7 @@ typedef struct _SwfdecExport SwfdecExport;
 typedef struct _SwfdecSpriteContent SwfdecSpriteContent;
 
 struct _SwfdecSpriteContent {
-  SwfdecObject *	object;		/* object to display */
+  SwfdecObject *	object;		/* object to display or NULL (FIXME: wanna allow NULL here?) */
   unsigned int	      	depth;		/* at which depth to display */
   unsigned int		clip_depth;	/* clip depth of object */
   unsigned int		ratio;

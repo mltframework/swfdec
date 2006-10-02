@@ -109,8 +109,8 @@ swfdec_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
   SwfdecWidget * widget = SWFDEC_WIDGET (gtkwidget);
 
   if (widget->dec == NULL ||
-      swfdec_decoder_get_image_size (widget->dec, 
-	  &req->width, &req->height) != SWF_OK) {
+      !swfdec_decoder_get_image_size (widget->dec, 
+	  &req->width, &req->height)) {
     req->width = req->height = 0;
   } 
   req->width = ceil (req->width * widget->scale);

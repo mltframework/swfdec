@@ -40,11 +40,13 @@ play_swf (SwfdecDecoder *dec)
     guint timeout;
     double rate;
 
-    swfdec_decoder_get_rate (dec, &rate);
-    timeout = g_timeout_add (1000 / rate, iterate, dec);
+    rate = swfdec_decoder_get_rate (dec);
+    if (rate > 0) {
+      timeout = g_timeout_add (1000 / rate, iterate, dec);
 
-    gtk_main ();
-    g_source_remove (timeout);
+      gtk_main ();
+      g_source_remove (timeout);
+    }
   } else {
     gtk_main ();
   }
@@ -97,17 +99,14 @@ main (int argc, char *argv[])
   s = swfdec_decoder_new();
   ret = swfdec_decoder_add_buffer(s, buffer);
 
-  while (ret != SWF_EOF) {
-    ret = swfdec_decoder_parse(s);
-    if (ret == SWF_NEEDBITS) {
-      swfdec_decoder_eof(s);
+  while (ret != SWFDEC_EOF) {
+    ret = swfdec_decoder_parse (s);
+    if (ret == SWFDEC_NEEDBITS) {
+      swfdec_decoder_eof (s);
     }
-    if (ret == SWF_ERROR) {
-      g_print("error while parsing\n");
+    if (ret == SWFDEC_ERROR) {
+      g_print ("error while parsing\n");
       return 1;
-    }
-    if (ret == SWF_IMAGE) {
-      break;
     }
   }
 

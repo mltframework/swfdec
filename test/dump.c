@@ -18,32 +18,36 @@ static gboolean verbose = FALSE;
 void
 dump_sprite(SwfdecSprite *s)
 {
-  guint i;
-  GList *walk;
-
   g_print ("  %u frames\n", s->n_frames);
 
   if (verbose) {
+    guint i;
+    GList *walk, *done = NULL;
+
     for (i = 0; i < s->n_frames; i++) {
       SwfdecSpriteFrame * frame = &s->frames[i];
       for (walk = frame->contents; walk; walk = walk->next) {
 	SwfdecSpriteContent *content = walk->data;
-	if (content->first_frame != i)
+	if (content->sequence != content)
 	  continue;
+	if (g_list_find (done, content))
+	  continue;
+	done = g_list_prepend (done, content);
 	if (content->object) {
 	  if (content->name) {
-	    g_print (" %5u -%5u %s %d as %s\n", content->first_frame, 
-		content->last_frame, G_OBJECT_TYPE_NAME (content->object), 
+	    g_print (" %5u %s %d as %s\n", i, 
+		G_OBJECT_TYPE_NAME (content->object), 
 		content->object->id, content->name);
 	  } else {
-	    g_print (" %5u -%5u %s %d\n", content->first_frame, content->last_frame,
+	    g_print (" %5u %s %d\n", i,
 		G_OBJECT_TYPE_NAME (content->object), content->object->id);
 	  }
 	} else {
-	  g_print (" %5u -%5u ---\n", content->first_frame, content->last_frame);
+	  g_print (" %5u ---\n", i);
 	}
       }
     }
+    g_list_free (done);
   }
 }
 
@@ -248,13 +252,15 @@ main (int argc, char *argv[])
   ret = swfdec_decoder_add_buffer (s, buffer);
   //printf("%d\n", ret);
 
-  while (ret == SWF_OK || ret == SWF_CHANGE) {
+  while (ret != SWFDEC_EOF) {
     ret = swfdec_decoder_parse (s);
-    //printf("parse returned %d\n", ret);
-  }
-  if (ret != SWF_EOF) {
-    g_printerr ("Failed to parse file. Parser returned %d\n", ret);
-    return 1;
+    if (ret == SWFDEC_NEEDBITS) {
+      swfdec_decoder_eof(s);
+    }
+    if (ret == SWFDEC_ERROR) {
+      g_printerr ("Failed to parse file. Parser returned %d\n", ret);
+      return 1;
+    }
   }
 
   g_print ("file:\n");

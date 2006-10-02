@@ -28,7 +28,7 @@
 #include <gdk-pixbuf/gdk-pixbuf-io.h>
 #include <swfdec_buffer.h>
 
-#define SWF_BUFFER_SIZE (1024 * 8)
+#define SWFDEC_BUFFER_SIZE (1024 * 8)
 
 typedef struct {
 	SwfdecDecoder             * decoder;
@@ -85,11 +85,11 @@ swf_gerror_build (int swf_err, GError ** error)
 {
 	const char * message = NULL;
 
-	if (swf_err == SWF_OK)
+	if (swf_err == SWFDEC_OK)
 		return;
 	
 	switch (swf_err) {
-	case SWF_ERROR: 
+	case SWFDEC_ERROR: 
 	default: 
 		message = "Unknown Error";     
 		break;
@@ -112,14 +112,11 @@ swf_animation_change (SwfContext * context)
 	int width   = 0, height = 0;
 	double rate = 0.;
 
-	if (SWF_OK != swfdec_decoder_get_n_frames (context->decoder, &nframes))
+	if (!swfdec_decoder_get_image_size (context->decoder, &width, &height))
 		return;
 
-	if (SWF_OK != swfdec_decoder_get_image_size (context->decoder, &width, &height))
-		return;
-
-	if (SWF_OK != swfdec_decoder_get_rate (context->decoder, &rate))
-		return;
+	rate = swfdec_decoder_get_rate (context->decoder);
+	nframes = swfdec_decoder_get_n_frames (context->decoder);
 
 	context->animation->n_frames   = nframes;
 	context->animation->width      = width;
@@ -142,8 +139,7 @@ swf_animation_image (SwfContext * context)
 	guchar * pixels = NULL;
 	GdkPixbufFrame * frame;
 
-	if (swfdec_decoder_get_image (context->decoder, &pixels) != SWF_OK && pixels != NULL)
-		return;
+	g_assert_not_reached ();
 
 	nframe = g_list_length (context->animation->frames) + 1;	
 
@@ -173,23 +169,21 @@ swf_animation_image (SwfContext * context)
 static int
 swf_flush (SwfContext * context)
 {
-	int result = SWF_OK;
+	int result = SWFDEC_OK;
 
-	/* only load and render a single frame if required, return SWF image to note that
+	/* only load and render a single frame if required, return SWFDEC_OK to note that
 	 * an image has been loaded */
 	if (context->single_frame && g_list_length (context->animation->frames) == 1)
-		return SWF_IMAGE;
+		return SWFDEC_OK;
 
 	result = swfdec_decoder_parse (context->decoder);
 
-	if (result == SWF_CHANGE)
+	if (result == SWFDEC_CHANGE)
 		swf_animation_change (context);
-	else if (result == SWF_IMAGE)
+	else 
 		swf_animation_image (context);
-	else
-		return SWF_IMAGE;
 	
-	return SWF_OK;
+	return SWFDEC_OK;
 }
 
 static int
@@ -200,10 +194,10 @@ swf_add_bits (SwfContext * context, const guint8 * buf, gsize nread)
 	/* only load and render a single frame if required, return SWF image to note that
 	 * an image has been loaded */
 	if (context->single_frame && g_list_length (context->animation->frames) == 1)
-		return SWF_OK;	
+		return SWFDEC_OK;	
 
 	result = swfdec_decoder_add_data (context->decoder, buf, nread);
-	if (result == SWF_OK)
+	if (result == SWFDEC_OK)
 		swf_flush (context);
 
 	return result;
@@ -218,8 +212,8 @@ gdk_pixbuf__swf_image_load (FILE *file, GError **error)
 	SwfContext * context = NULL;
 	GdkPixbuf * pixbuf = NULL;
 	gsize nread = 0;
-	guint8 buf [SWF_BUFFER_SIZE];
-	int result = SWF_OK;
+	guint8 buf [SWFDEC_BUFFER_SIZE];
+	int result = SWFDEC_OK;
 
 	if (error)
 		*error = NULL;
@@ -229,11 +223,11 @@ gdk_pixbuf__swf_image_load (FILE *file, GError **error)
 	context = swf_context_new ();
 	context->single_frame = TRUE;
 
-	while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWF_ERROR)
+	while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWFDEC_ERROR)
 		result = swf_add_bits (context, buf, nread);
 
-	if (result != SWF_ERROR) {
-		while (SWF_OK == swf_flush (context))
+	if (result != SWFDEC_ERROR) {
+		while (SWFDEC_OK == swf_flush (context))
 			;
 
 		pixbuf = gdk_pixbuf_animation_get_static_image (GDK_PIXBUF_ANIMATION (context->animation));
@@ -255,8 +249,8 @@ gdk_pixbuf__swf_image_load_animation (FILE *file,
 	SwfContext * context = NULL;
 	GdkPixbufAnimation *animation = NULL;
 	gsize nread = 0;
-	guint8 buf [SWF_BUFFER_SIZE];
-	int result = SWF_OK;
+	guint8 buf [SWFDEC_BUFFER_SIZE];
+	int result = SWFDEC_OK;
 
 	if (error)
 		*error = NULL;
@@ -265,11 +259,11 @@ gdk_pixbuf__swf_image_load_animation (FILE *file,
 
 	context = swf_context_new ();
 
-	while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWF_ERROR) 
+	while ((nread = fread (buf, sizeof (guint8), sizeof (buf), file)) != 0 && result != SWFDEC_ERROR) 
 		result = swf_add_bits (context, buf, nread);
 
-	if (result == SWF_OK) {
-		while (SWF_OK == swf_flush (context))
+	if (result == SWFDEC_OK) {
+		while (SWFDEC_OK == swf_flush (context))
 			;
 
 		animation = GDK_PIXBUF_ANIMATION (context->animation);
@@ -305,16 +299,16 @@ gdk_pixbuf__swf_image_load_increment (gpointer data,
 									  const guchar *buf, guint size,
 									  GError **error)
 {
-	int result = SWF_OK;
+	int result = SWFDEC_OK;
 	SwfContext *context = (SwfContext *)data;
 
 	if (error)
 		*error = NULL;
 	result = swf_add_bits (context, buf, size);
-	if (result == SWF_ERROR)
+	if (result == SWFDEC_ERROR)
 		swf_gerror_build (result, error);
 
-	return (result != SWF_ERROR);
+	return (result != SWFDEC_ERROR);
 }
 
 static gboolean
@@ -325,7 +319,7 @@ gdk_pixbuf__swf_image_stop_load (gpointer data, GError **error)
 	if (error)
 		*error = NULL;
 
-	while (SWF_OK == swf_flush (context))
+	while (SWFDEC_OK == swf_flush (context))
 		;
 
 	swf_context_free (context);

@@ -78,17 +78,14 @@ main (int argc, char *argv[])
   s = swfdec_decoder_new();
   ret = swfdec_decoder_add_buffer(s, buffer);
 
-  while (ret != SWF_EOF) {
+  while (ret != SWFDEC_EOF) {
     ret = swfdec_decoder_parse(s);
-    if (ret == SWF_NEEDBITS) {
+    if (ret == SWFDEC_NEEDBITS) {
       swfdec_decoder_eof(s);
     }
-    if (ret == SWF_ERROR) {
+    if (ret == SWFDEC_ERROR) {
       g_print("error while parsing\n");
       return 1;
-    }
-    if (ret == SWF_IMAGE) {
-      break;
     }
   }
 

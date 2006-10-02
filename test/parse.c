@@ -11,23 +11,12 @@
 #include <ucontext.h>
 #include <sys/mman.h>
 
-#if 0
-void * smash_checker (void * (func) (void *), void *priv);
-void *go(void *priv);
-#endif
-
-static void buffer_free (SwfdecBuffer *buffer, void *priv)
+int
+main (int argc, char *argv[])
 {
-  g_free (buffer->data);
-}
-
-int main (int argc, char *argv[])
-{
-  gsize length;
   int ret;
   char *fn = "it.swf";
   SwfdecDecoder *s;
-  char *contents;
   SwfdecBuffer *buffer;
 
   swfdec_init ();
@@ -36,28 +25,22 @@ int main (int argc, char *argv[])
 	fn = argv[1];
   }
 
-  ret = g_file_get_contents (fn, &contents, &length, NULL);
-  if (!ret) {
-    exit(1);
-  }
-
   s = swfdec_decoder_new();
 
-  buffer = swfdec_buffer_new_with_data (contents, length);
-  buffer->free = buffer_free;
+  buffer = swfdec_buffer_new_from_file (fn, NULL);
+  if (buffer == NULL) {
+    return -1;
+  }
   ret = swfdec_decoder_add_buffer(s, buffer);
 
-  while (ret != SWF_EOF) {
+  while (ret != SWFDEC_EOF) {
     ret = swfdec_decoder_parse(s);
-    if (ret == SWF_NEEDBITS) {
+    if (ret == SWFDEC_NEEDBITS) {
       swfdec_decoder_eof(s);
     }
-    if (ret == SWF_ERROR) {
+    if (ret == SWFDEC_ERROR) {
       g_print("error while parsing\n");
-      exit(1);
-    }
-    if (ret == SWF_IMAGE) {
-      break;
+      return 1;
     }
   }
 

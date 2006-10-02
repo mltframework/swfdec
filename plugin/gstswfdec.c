@@ -322,11 +322,11 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
   g_static_rec_mutex_lock (&swfdec->mutex);
   GST_DEBUG_OBJECT (swfdec, "about to call swfdec_decoder_parse");
   ret = swfdec_decoder_parse (swfdec->decoder);
-  if (ret == SWF_NEEDBITS) {
+  if (ret == SWFDEC_NEEDBITS) {
     guint buf_size;
     GstBuffer *prev_buffer;
 
-    GST_DEBUG_OBJECT (swfdec, "SWF_NEEDBITS, feeding data to swfdec-decoder");
+    GST_DEBUG_OBJECT (swfdec, "SWFDEC_NEEDBITS, feeding data to swfdec-decoder");
     buf_size = gst_adapter_available (swfdec->adapter);
     if (buf_size) {
       prev_buffer = gst_buffer_new_and_alloc (buf_size);
@@ -341,19 +341,19 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     swfdec_decoder_add_buffer (swfdec->decoder,
         gst_swfdec_buffer_to_swf (buffer));
 
-  } else if (ret == SWF_CHANGE) {
+  } else if (ret == SWFDEC_CHANGE) {
 
     GstCaps *caps;
     double rate;
 
     GstTagList *taglist;
 
-    GST_DEBUG_OBJECT (swfdec, "SWF_CHANGE");
+    GST_DEBUG_OBJECT (swfdec, "SWFDEC_CHANGE");
     gst_adapter_push (swfdec->adapter, buffer);
 
     swfdec_decoder_get_image_size (swfdec->decoder,
         &swfdec->width, &swfdec->height);
-    swfdec_decoder_get_rate (swfdec->decoder, &rate);
+    rate = swfdec_decoder_get_rate (swfdec->decoder);
     swfdec->interval = GST_SECOND / rate;
 
     swfdec->frame_rate_n = (int) (rate * 256.0);
@@ -392,8 +392,8 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
         GST_TAG_ENCODER_VERSION, swfdec_decoder_get_version (swfdec->decoder),
         NULL);
     gst_element_found_tags (GST_ELEMENT (swfdec), taglist);
-  } else if (ret == SWF_EOF) {
-    GST_DEBUG_OBJECT (swfdec, "SWF_EOF");
+  } else if (ret == SWFDEC_EOF) {
+    GST_DEBUG_OBJECT (swfdec, "SWFDEC_EOF");
     gst_swfdec_render (swfdec, ret);
     gst_task_start (swfdec->task);
   }
@@ -437,14 +437,14 @@ gst_swfdec_render_image (GstSwfdec *swfdec)
 static void
 gst_swfdec_render (GstSwfdec * swfdec, int ret)
 {
-  if (ret == SWF_EOF) {
+  if (ret == SWFDEC_EOF) {
     SwfdecBuffer *audio_buffer;
     GstBuffer *videobuf;
     GstBuffer *audiobuf;
     GstFlowReturn res;
     const char *url;
 
-    GST_DEBUG_OBJECT (swfdec, "render:SWF_EOF");
+    GST_DEBUG_OBJECT (swfdec, "render:SWFDEC_EOF");
     swfdec_decoder_handle_mouse (swfdec->decoder, swfdec->x, swfdec->y,
         swfdec->button);
 
@@ -643,9 +643,10 @@ gst_swfdec_src_query (GstPad * pad, GstQuery * query)
           int n_frames;
           int ret;
 
+	  /* FIXME: This is totally wrong, because we can seek etc */
           res = FALSE;
-          ret = swfdec_decoder_get_n_frames (swfdec->decoder, &n_frames);
-          if (ret == SWF_OK) {
+          n_frames = swfdec_decoder_get_n_frames (swfdec->decoder);
+          if (ret == SWFDEC_OK) {
             value = n_frames * swfdec->interval;
             gst_query_set_duration (query, GST_FORMAT_TIME, value);
             res = TRUE;

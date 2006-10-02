@@ -50,7 +50,7 @@ struct {
   { "add-variables", check_add_variables }
 };
 
-gboolean
+static gboolean
 run_test (guint id)
 {
   SwfdecDecoder *s;

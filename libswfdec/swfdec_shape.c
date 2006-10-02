@@ -422,7 +422,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   shape = swfdec_object_create (s, id, SWFDEC_TYPE_SHAPE);
   if (!shape)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   SWFDEC_INFO ("id=%d", id);
 
@@ -436,7 +436,7 @@ tag_define_shape (SwfdecDecoder * s)
 
   swf_shape_get_recs (s, bits, shape, FALSE);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -449,7 +449,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   shape = swfdec_object_create (s, id, SWFDEC_TYPE_SHAPE);
   if (!shape)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
 
@@ -463,7 +463,7 @@ tag_define_shape_3 (SwfdecDecoder * s)
 
   swf_shape_get_recs (s, bits, shape, FALSE);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 void
@@ -701,7 +701,7 @@ tag_define_morph_shape (SwfdecDecoder * s)
     swf_shape_get_recs (s, bits, shape, TRUE);
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 void

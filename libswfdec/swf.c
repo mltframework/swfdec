@@ -25,9 +25,15 @@ enum {
   PROP_MOUSE_VISIBLE
 };
 
-int swf_parse_header1 (SwfdecDecoder * s);
-int swf_inflate_init (SwfdecDecoder * s);
-int swf_parse_header2 (SwfdecDecoder * s);
+enum {
+  TRACE,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
+
+static int swf_parse_header1 (SwfdecDecoder * s);
+static int swf_parse_header2 (SwfdecDecoder * s);
 
 G_DEFINE_TYPE (SwfdecDecoder, swfdec_decoder, G_TYPE_OBJECT)
 
@@ -118,6 +124,7 @@ swfdec_decoder_dispose (GObject *object)
   SwfdecDecoder * s = SWFDEC_DECODER (object);
 
   g_array_free (s->audio_events, TRUE);
+  swfdec_sprite_content_free (s->root->content);
   g_object_unref (s->root);
 
   /* this must happen while the JS Context is still alive */
@@ -166,6 +173,10 @@ swfdec_decoder_class_init (SwfdecDecoderClass *class)
   g_object_class_install_property (object_class, PROP_MOUSE_VISIBLE,
       g_param_spec_boolean ("mouse-visible", "mouse visible", "wether to show the mouse pointer",
 	  TRUE, G_PARAM_READABLE));
+
+  signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
+      G_TYPE_NONE, 1, G_TYPE_STRING);
 }
 
 static void
@@ -176,9 +187,9 @@ swfdec_decoder_init (SwfdecDecoder *s)
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
+  s->root->content = swfdec_sprite_content_new (0);
   cairo_matrix_scale (&s->root->transform, 1 / SWF_SCALE_FACTOR, 1 / SWF_SCALE_FACTOR);
   cairo_matrix_scale (&s->root->inverse_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
-  swfdec_movie_clip_set_child (s->root, SWFDEC_OBJECT (s->main_sprite));
   g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
   s->audio_events = g_array_new (FALSE, FALSE, sizeof (SwfdecAudioEvent));
@@ -211,7 +222,7 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer)
     s->z->avail_in = buffer->length;
     ret = inflate (s->z, Z_SYNC_FLUSH);
     if (ret < 0) {
-      return SWF_ERROR;
+      return SWFDEC_ERROR;
     }
 
     swfdec_buffer_unref (buffer);
@@ -222,9 +233,8 @@ swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer)
   } else {
     swfdec_buffer_queue_push (s->input_queue, buffer);
   }
-  /* FIXME: run events for bytes loaded */
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 void
@@ -238,11 +248,11 @@ swfdec_decoder_eof (SwfdecDecoder * s)
 int
 swfdec_decoder_parse (SwfdecDecoder * s)
 {
-  int ret = SWF_OK;
+  int ret = SWFDEC_OK;
   unsigned char *endptr;
   SwfdecBuffer *buffer;
 
-  while (ret == SWF_OK) {
+  while (ret >= SWFDEC_OK) {
     s->b = s->parse;
 
     switch (s->state) {
@@ -263,7 +273,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
         /* we're parsing tags */
         buffer = swfdec_buffer_queue_peek (s->input_queue, 2);
         if (buffer == NULL) {
-          return SWF_NEEDBITS;
+          return SWFDEC_NEEDBITS;
         }
 
         s->b.buffer = buffer;
@@ -280,7 +290,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
           swfdec_buffer_unref (buffer);
           buffer = swfdec_buffer_queue_peek (s->input_queue, 6);
           if (buffer == NULL) {
-            return SWF_NEEDBITS;
+            return SWFDEC_NEEDBITS;
           }
           s->b.buffer = buffer;
           s->b.ptr = buffer->data;
@@ -301,7 +311,7 @@ swfdec_decoder_parse (SwfdecDecoder * s)
 
         if (swfdec_buffer_queue_get_depth (s->input_queue) < tag_len +
             header_length) {
-          return SWF_NEEDBITS;
+          return SWFDEC_NEEDBITS;
         }
 
         buffer = swfdec_buffer_queue_pull (s->input_queue, header_length);
@@ -347,6 +357,8 @@ swfdec_decoder_parse (SwfdecDecoder * s)
                 swfdec_buffer_queue_get_offset (s->input_queue), tag,
                 swfdec_decoder_get_tag_name (tag), tag_len);
           }
+	  if (ret == SWFDEC_IMAGE && s->root->child == NULL)
+	    swfdec_movie_clip_set_child (s->root, SWFDEC_OBJECT (s->main_sprite));
         }
 
         if (tag == 0) {
@@ -361,84 +373,92 @@ swfdec_decoder_parse (SwfdecDecoder * s)
       }
         break;
       case SWF_STATE_EOF:
-        ret = SWF_EOF;
-
-        break;
+	return SWFDEC_EOF;
     }
   }
 
   return ret;
 }
 
-int
-swfdec_decoder_get_n_frames (SwfdecDecoder * s, int *n_frames)
+/**
+ * swfdec_decoder_get_n_frames:
+ * @s: a #SwfdecDecoder
+ *
+ * Queries the number of frames in this movie
+ *
+ * Returns: The number of frames in this movie or 0 if it isn't known yet.
+ **/
+unsigned int
+swfdec_decoder_get_n_frames (SwfdecDecoder * s)
 {
-  if (s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2) {
-    return SWF_ERROR;
-  }
+  g_return_val_if_fail (SWFDEC_IS_DECODER (s), 0);
 
-  if (n_frames)
-    *n_frames = s->n_frames;
-  return SWF_OK;
+  if (s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2)
+    return 0;
+
+  return s->n_frames;
 }
 
-int
-swfdec_decoder_get_rate (SwfdecDecoder * s, double *rate)
+/**
+ * swfdec_decoder_get_rate:
+ * @s: a #SwfdecDecoder
+ *
+ * Queries the framerate of this movie. This number specifies the number
+ * of frames that are supposed to pass per second. This number is a 
+ * multiple of 1/256.
+ *
+ * Returns: The framerate of this movie or 0 if it isn't known yet.
+ **/
+double
+swfdec_decoder_get_rate (SwfdecDecoder * s)
 {
-  if (s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2) {
-    return SWF_ERROR;
-  }
+  g_return_val_if_fail (SWFDEC_IS_DECODER (s), 0.0);
 
-  if (rate)
-    *rate = s->rate / 256.0;
-  return SWF_OK;
+  if (s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2)
+    return 0.0;
+
+  return s->rate / 256.0;
 }
 
+/**
+ * swfdec_decoder_get_version:
+ * @s: a #SwfdecDecoder
+ *
+ * Queries the version of the playing movie.
+ *
+ * Returns: The version this movie was encoded with or 0 if it isn't known yet.
+ **/
 int
 swfdec_decoder_get_version (SwfdecDecoder *s)
 {
+  g_return_val_if_fail (SWFDEC_IS_DECODER (s), 0.0);
+
   return s->version;
 }
 
-int
-swfdec_decoder_get_image (SwfdecDecoder * s, unsigned char **image)
-{
-  if (s->buffer == NULL) {
-    return SWF_ERROR;
-  }
-
-  if (image)
-    *image = s->buffer;
-  s->buffer = NULL;
-
-  return SWF_OK;
-}
-
-int
-swfdec_decoder_peek_image (SwfdecDecoder * s, unsigned char **image)
-{
-  if (s->buffer == NULL) {
-    return SWF_ERROR;
-  }
-
-  if (image)
-    *image = s->buffer;
-
-  return SWF_OK;
-}
-
-int
+/**
+ * swfdec_decoder_get_image_size:
+ * @s: a #SwfdecDecoder
+ * @width: integer to store the width in or NULL
+ * @height: integer to store the height in or NULL
+ *
+ * If the size of the movie is already known, fills in @width and @height with
+ * the size and returns TRUE. Otherwise it just returns FALSE.
+ *
+ * Returns: TRUE if the size was known, FALSE otherwise
+ **/
+gboolean
 swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height)
 {
   if (s->state == SWF_STATE_INIT1 || s->state == SWF_STATE_INIT2) {
-    return SWF_ERROR;
+    return FALSE;
   }
 
   if (width)
     *width = s->width;
   if (height)
     *height = s->height;
-  return SWF_OK;
+  return TRUE;
 }
 
 char *
@@ -477,49 +497,7 @@ dumpbits (SwfdecBits * b)
 }
 #endif
 
-int
-swf_parse_header1 (SwfdecDecoder * s)
-{
-  int sig1, sig2, sig3;
-  SwfdecBuffer *buffer;
-
-  buffer = swfdec_buffer_queue_pull (s->input_queue, 8);
-  if (buffer == NULL) {
-    return SWF_NEEDBITS;
-  }
-
-  s->b.buffer = buffer;
-  s->b.ptr = buffer->data;
-  s->b.idx = 0;
-  s->b.end = buffer->data + buffer->length;
-
-  sig1 = swfdec_bits_get_u8 (&s->b);
-  sig2 = swfdec_bits_get_u8 (&s->b);
-  sig3 = swfdec_bits_get_u8 (&s->b);
-
-  s->version = swfdec_bits_get_u8 (&s->b);
-  s->length = swfdec_bits_get_u32 (&s->b);
-
-  swfdec_buffer_unref (buffer);
-
-  if ((sig1 != 'F' && sig1 != 'C') || sig2 != 'W' || sig3 != 'S') {
-    return SWF_ERROR;
-  }
-
-  s->compressed = (sig1 == 'C');
-  if (s->compressed) {
-    SWFDEC_DEBUG ("compressed");
-    swf_inflate_init (s);
-  } else {
-    SWFDEC_DEBUG ("not compressed");
-  }
-
-  s->state = SWF_STATE_INIT2;
-
-  return SWF_OK;
-}
-
-int
+static void
 swf_inflate_init (SwfdecDecoder * s)
 {
   SwfdecBuffer *buffer;
@@ -555,11 +533,51 @@ swf_inflate_init (SwfdecDecoder * s)
   buffer = swfdec_buffer_new_subbuffer (s->uncompressed_buffer, offset,
       z->total_out - offset);
   swfdec_buffer_queue_push (s->input_queue, buffer);
-
-  return SWF_OK;
 }
 
-int
+static int
+swf_parse_header1 (SwfdecDecoder * s)
+{
+  int sig1, sig2, sig3;
+  SwfdecBuffer *buffer;
+
+  buffer = swfdec_buffer_queue_pull (s->input_queue, 8);
+  if (buffer == NULL) {
+    return SWFDEC_NEEDBITS;
+  }
+
+  s->b.buffer = buffer;
+  s->b.ptr = buffer->data;
+  s->b.idx = 0;
+  s->b.end = buffer->data + buffer->length;
+
+  sig1 = swfdec_bits_get_u8 (&s->b);
+  sig2 = swfdec_bits_get_u8 (&s->b);
+  sig3 = swfdec_bits_get_u8 (&s->b);
+
+  s->version = swfdec_bits_get_u8 (&s->b);
+  s->length = swfdec_bits_get_u32 (&s->b);
+
+  swfdec_buffer_unref (buffer);
+
+  if ((sig1 != 'F' && sig1 != 'C') || sig2 != 'W' || sig3 != 'S') {
+    return SWFDEC_ERROR;
+  }
+
+  s->compressed = (sig1 == 'C');
+  if (s->compressed) {
+    SWFDEC_DEBUG ("compressed");
+    swf_inflate_init (s);
+  } else {
+    SWFDEC_DEBUG ("not compressed");
+  }
+
+  s->state = SWF_STATE_INIT2;
+
+  return SWFDEC_OK;
+}
+
+static int
 swf_parse_header2 (SwfdecDecoder * s)
 {
   double width, height;
@@ -568,7 +586,7 @@ swf_parse_header2 (SwfdecDecoder * s)
 
   buffer = swfdec_buffer_queue_peek (s->input_queue, 32);
   if (buffer == NULL) {
-    return SWF_NEEDBITS;
+    return SWFDEC_NEEDBITS;
   }
 
   s->b.buffer = buffer;
@@ -606,7 +624,7 @@ swf_parse_header2 (SwfdecDecoder * s)
   swfdec_sprite_set_n_frames (s->main_sprite, s->n_frames);
 
   s->state = SWF_STATE_PARSETAG;
-  return SWF_CHANGE;
+  return SWFDEC_CHANGE;
 }
 
 /**
@@ -623,7 +641,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
 
 #if 0
   if (dec->root->current_frame == (guint) -1)
-    swfdec_js_run (dec, "if (bar) foo (1, 2); else foo (1, 2, 3, 4, 5, 6)", NULL);
+    swfdec_js_run (dec, "foo = __swfdec_target;", NULL);
 #endif
 
   g_assert (swfdec_js_script_queue_is_empty (dec));
@@ -634,6 +652,17 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
   swfdec_decoder_execute_scripts (dec);
   swfdec_audio_iterate_finish (dec);
   g_object_thaw_notify (G_OBJECT (dec));
+#if 0
+  {
+  jsval rval;
+  int32 hit;
+
+  if (!swfdec_js_run (dec, "_root.hit", &rval) ||
+      (JSVAL_IS_INT (rval) && !JS_ValueToInt32 (dec->jscx, rval, &hit)))
+    g_assert_not_reached ();
+  g_printerr ("hit = %d\n", hit);
+  }
+#endif
 }
 
 /**

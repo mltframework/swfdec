@@ -15,7 +15,7 @@
 int
 tag_func_end (SwfdecDecoder * s)
 {
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -32,7 +32,7 @@ tag_func_protect (SwfdecDecoder * s)
     swfdec_bits_get_u16 (&s->b);
     s->password = swfdec_bits_get_string (&s->b);
   }
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -46,7 +46,7 @@ tag_func_dumpbits (SwfdecDecoder * s)
       swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
       swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b));
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -61,7 +61,7 @@ tag_func_frame_label (SwfdecDecoder * s)
   frame->name = swfdec_bits_get_string (&s->b);
   SWFDEC_LOG ("frame %d named %s", s->parse_sprite->parse_frame, frame->name);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 
@@ -80,7 +80,7 @@ define_text (SwfdecDecoder * s, int rgba)
   id = swfdec_bits_get_u16 (bits);
   text = swfdec_object_create (s, id, SWFDEC_TYPE_TEXT);
   if (!text)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   glyph.color = 0xffffffff;
 
@@ -148,7 +148,7 @@ define_text (SwfdecDecoder * s, int rgba)
   }
   swfdec_bits_get_u8 (bits);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -180,7 +180,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   sprite = swfdec_object_create (s, id, SWFDEC_TYPE_SPRITE);
   if (!sprite)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -261,7 +261,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
   s->parse_sprite = s->main_sprite;
   SWFDEC_LOG ("done parsing this sprite");
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -273,7 +273,7 @@ tag_func_do_action (SwfdecDecoder * s)
   if (script)
     swfdec_sprite_add_script (s->parse_sprite, s->parse_sprite->parse_frame, script);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -309,7 +309,7 @@ tag_func_do_init_action (SwfdecDecoder * s)
   swfdec_buffer_unref (buffer);
 
   //return retcode;
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 
@@ -330,7 +330,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   button = swfdec_object_create (s, id, SWFDEC_TYPE_BUTTON);
   if (!button)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -404,7 +404,7 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     swfdec_event_list_parse (button->events, condition, key);
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -422,7 +422,7 @@ tag_func_define_button (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   button = swfdec_object_create (s, id, SWFDEC_TYPE_BUTTON);
   if (!button)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -474,7 +474,7 @@ tag_func_define_button (SwfdecDecoder * s)
   button->events = swfdec_event_list_new (s);
   swfdec_event_list_parse (button->events, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -491,7 +491,7 @@ tag_func_define_font (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (&s->b);
   font = swfdec_object_create (s, id, SWFDEC_TYPE_FONT);
   if (!font)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   offset = swfdec_bits_get_u16 (&s->b);
   n_glyphs = offset / 2;
@@ -526,7 +526,7 @@ tag_func_define_font (SwfdecDecoder * s)
     swf_shape_get_recs (s, &s->b, shape, FALSE);
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 static void
@@ -573,7 +573,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   id = swfdec_bits_get_u16 (bits);
   font = swfdec_object_create (s, id, SWFDEC_TYPE_FONT);
   if (!font)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   has_layout = swfdec_bits_getbit (bits);
   shift_jis = swfdec_bits_getbit (bits);
@@ -648,7 +648,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     }
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -666,26 +666,7 @@ tag_func_export_assets (SwfdecDecoder * s)
     s->exports = g_list_append (s->exports, exp);
   }
 
-  return SWF_OK;
-}
-
-int
-tag_show_frame (SwfdecDecoder * s)
-{
-  SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
-      s->parse_sprite->object.id);
-
-  s->parse_sprite->parse_frame++;
-  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
-    SwfdecSpriteFrame *old = &s->parse_sprite->frames[s->parse_sprite->parse_frame - 1];
-    SwfdecSpriteFrame *new = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-    new->contents = g_list_copy (old->contents);
-    new->bg_color = old->bg_color;
-    if (old->sound_head)
-      new->sound_head = g_object_ref (old->sound_head);
-  }
-
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 static int

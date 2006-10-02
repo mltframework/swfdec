@@ -5,16 +5,22 @@
 #include <swfdec_types.h>
 #include <swfdec_rect.h>
 
-G_BEGIN_DECLS enum
-{
-  SWF_OK = 0,
-  SWF_NEEDBITS,
-  SWF_WAIT,
-  SWF_ERROR,
-  SWF_EOF,
-  SWF_IMAGE,
-  SWF_CHANGE,
-};
+G_BEGIN_DECLS 
+
+typedef enum {
+  /* An error occured during parsing */
+  SWFDEC_ERROR = 0,
+  /* processing continued as expected */
+  SWFDEC_OK,
+  /* more data needs to be made available for processing */
+  SWFDEC_NEEDBITS,
+  /* at least one new image is available for display */
+  SWFDEC_IMAGE,
+  /* header parsing is complete, framerate, image size etc are known */
+  SWFDEC_CHANGE,
+  /* parsing is finished */
+  SWFDEC_EOF
+} SwfdecStatus;
 
 void swfdec_init (void);
 
@@ -24,12 +30,10 @@ int swfdec_decoder_add_data (SwfdecDecoder * s, const unsigned char *data,
 int swfdec_decoder_add_buffer (SwfdecDecoder * s, SwfdecBuffer * buffer);
 int swfdec_decoder_parse (SwfdecDecoder * s);
 
-int swfdec_decoder_get_n_frames (SwfdecDecoder * s, int *n_frames);
-int swfdec_decoder_get_rate (SwfdecDecoder * s, double *rate);
-int swfdec_decoder_get_image (SwfdecDecoder * s, unsigned char **image);
-int swfdec_decoder_peek_image (SwfdecDecoder * s, unsigned char **image);
-int swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height);
+unsigned int swfdec_decoder_get_n_frames (SwfdecDecoder * s);
+double swfdec_decoder_get_rate (SwfdecDecoder * s);
 int swfdec_decoder_get_version (SwfdecDecoder *s);
+gboolean swfdec_decoder_get_image_size (SwfdecDecoder * s, int *width, int *height);
 
 int swfdec_decoder_set_debug_level (SwfdecDecoder * s, int level);
 

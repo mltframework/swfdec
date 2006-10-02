@@ -77,7 +77,7 @@ swfdec_buffer_free_mapped (SwfdecBuffer * buffer, void *priv)
 }
 
 SwfdecBuffer *
-swfdec_buffer_new_from_file (char *filename, GError **error)
+swfdec_buffer_new_from_file (const char *filename, GError **error)
 {
   GMappedFile *file;
   SwfdecBuffer *buffer;

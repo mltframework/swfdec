@@ -88,7 +88,7 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
   id = swfdec_bits_get_u16 (&s->b);
   font = swfdec_object_get (s, id);
   if (!SWFDEC_IS_FONT (font))
-    return SWF_OK;
+    return SWFDEC_OK;
   len = swfdec_bits_get_u8 (&s->b);
   /* this string is locale specific */
   name = swfdec_bits_get_string_length (&s->b, len);
@@ -118,6 +118,6 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
       wide ? swfdec_bits_get_u16 (&s->b) : swfdec_bits_get_u8 (&s->b);
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 

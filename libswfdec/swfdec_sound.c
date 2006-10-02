@@ -62,7 +62,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
 
   if (!sound) {
     SWFDEC_WARNING ("no streaming sound block");
-    return SWF_OK;
+    return SWFDEC_OK;
   }
 
   n_samples = swfdec_bits_get_u16 (&s->b);
@@ -74,13 +74,13 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   if (s->b.ptr == s->b.end) {
     SWFDEC_DEBUG ("empty sound block n_samples=%d skip=%d", n_samples,
         skip);
-    return SWF_OK;
+    return SWFDEC_OK;
   }
 
   chunk = swfdec_bits_get_buffer (&s->b, -1);
   if (chunk == NULL) {
     SWFDEC_ERROR ("empty sound chunk");
-    return SWF_OK;
+    return SWFDEC_OK;
   }
   SWFDEC_LOG ("got a buffer with %u samples, %d skip and %u bytes mp3 data", n_samples, skip,
       chunk->length);
@@ -89,7 +89,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
 
   swfdec_sprite_add_sound_chunk (s->parse_sprite, s->parse_sprite->parse_frame, chunk, skip);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -115,7 +115,7 @@ tag_func_define_sound (SwfdecDecoder * s)
 
   sound = swfdec_object_create (s, id, SWFDEC_TYPE_SOUND);
   if (!sound)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   sound->n_samples = n_samples;
   sound->width = size;
@@ -177,7 +177,7 @@ tag_func_define_sound (SwfdecDecoder * s)
     g_object_unref (sound);
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -238,7 +238,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
       sound->format = SWFDEC_SOUND_FORMAT_UNDEFINED;
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 void
@@ -344,7 +344,7 @@ tag_func_start_sound (SwfdecDecoder * s)
   if (chunk)
     frame->sound = g_slist_prepend (frame->sound, chunk);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -367,7 +367,7 @@ tag_func_define_button_sound (SwfdecDecoder * s)
     }
   }
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 static int index_adjust[16] = {

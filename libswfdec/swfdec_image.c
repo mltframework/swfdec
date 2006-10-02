@@ -123,7 +123,7 @@ swfdec_image_jpegtables (SwfdecDecoder * s)
   s->jpegtables = swfdec_buffer_ref (bits->buffer);
   bits->ptr += bits->buffer->length;
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -140,7 +140,7 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
   if (!image)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG;
   image->handle = swfdec_handle_new (swfdec_image_jpeg_load,
@@ -154,7 +154,7 @@ tag_func_define_bits_jpeg (SwfdecDecoder * s)
 
   bits->ptr += bits->buffer->length - 2;
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 static void
@@ -196,7 +196,7 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 
   image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
   if (!image)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG2;
   image->handle = swfdec_handle_new (swfdec_image_jpeg2_load,
@@ -205,7 +205,7 @@ tag_func_define_bits_jpeg_2 (SwfdecDecoder * s)
 
   bits->ptr += bits->buffer->length - 2;
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 static void
@@ -248,7 +248,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
   if (!image)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG3;
   image->handle = swfdec_handle_new (swfdec_image_jpeg3_load,
@@ -257,7 +257,7 @@ tag_func_define_bits_jpeg_3 (SwfdecDecoder * s)
 
   bits->ptr += bits->buffer->length - 2;
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 static void
@@ -469,7 +469,7 @@ tag_func_define_bits_lossless (SwfdecDecoder * s)
 
   image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
   if (!image)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_LOSSLESS;
   image->handle = swfdec_handle_new (swfdec_image_lossless_load,
@@ -477,7 +477,7 @@ tag_func_define_bits_lossless (SwfdecDecoder * s)
   image->raw_data = swfdec_buffer_ref (bits->buffer);
 
   bits->ptr += bits->buffer->length - 2;
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 int
@@ -492,7 +492,7 @@ tag_func_define_bits_lossless_2 (SwfdecDecoder * s)
 
   image = swfdec_object_create (s, id, SWFDEC_TYPE_IMAGE);
   if (!image)
-    return SWF_OK;
+    return SWFDEC_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_LOSSLESS2;
   image->handle = swfdec_handle_new (swfdec_image_lossless_load,
@@ -501,7 +501,7 @@ tag_func_define_bits_lossless_2 (SwfdecDecoder * s)
 
   bits->ptr += bits->buffer->length - 2;
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 
 
@@ -513,7 +513,7 @@ swfdec_image_render (SwfdecDecoder * s, SwfdecLayer * layer, SwfdecObject * obj)
 
   //art_irect_intersect(&rect, &s->drawrect, &pobj->rect);
 
-  return SWF_OK;
+  return SWFDEC_OK;
 }
 #endif
 

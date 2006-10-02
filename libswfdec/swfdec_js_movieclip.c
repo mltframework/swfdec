@@ -160,20 +160,108 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-static JSBool mc_GetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-static JSBool mc_SetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+static SwfdecMovieClip *
+get_target (SwfdecMovieClip *movie, const char *target)
+{
+  char *tmp;
+  guint len;
+  GList *walk;
+
+  g_print ("get_target: %s\n", target);
+  if (target[0] == '\0')
+    return movie;
+
+  if (g_str_has_prefix (target, "../")) {
+    if (movie->parent == NULL)
+      return NULL;
+    return get_target (movie->parent, target + 3);
+  }
+  tmp = strchr (target, '/');
+  if (tmp)
+    len = tmp - target;
+  else
+    len = strlen (target);
+
+  for (walk = movie->list; walk; walk = walk->next) {
+    SwfdecMovieClip *cur = walk->data;
+    if (cur->name && g_ascii_strncasecmp (cur->name, target, len) == 0)
+      return get_target (cur, target + len + 1);
+  }
+  return NULL;
+}
+
+extern  JSPropertySpec movieclip_props[];
+
+static JSBool
+swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  uint32 id;
+  SwfdecMovieClip *movie;
+
+  if (JSVAL_IS_OBJECT (argv[0])) {
+    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
+  } else if (JSVAL_IS_STRING (argv[0])) {
+    char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
+    movie = JS_GetPrivate(cx, obj);
+    movie = get_target (movie, str);
+    if (movie == NULL)
+      return JS_FALSE;
+  } else {
+    return JS_FALSE;
+  }
+  if (!JS_ValueToECMAUint32 (cx, argv[1], &id))
+    return JS_FALSE;
+
+  if (id > 19)
+    return JS_FALSE;
+
+  if (movie->jsobj == NULL &&
+      !swfdec_js_add_movieclip (movie))
+    return JS_FALSE;
+  return movieclip_props[id].getter (cx, movie->jsobj, JSVAL_VOID /* FIXME */, rval);
+}
+
+static JSBool
+swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  uint32 id;
+  SwfdecMovieClip *movie;
+
+  if (JSVAL_IS_OBJECT (argv[0])) {
+    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
+  } else if (JSVAL_IS_STRING (argv[0])) {
+    char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
+    movie = JS_GetPrivate(cx, obj);
+    movie = get_target (movie, str);
+    if (movie == NULL)
+      return JS_FALSE;
+  } else {
+    return JS_FALSE;
+  }
+  if (!JS_ValueToECMAUint32 (cx, argv[1], &id))
+    return JS_FALSE;
+
+  if (id > 19)
+    return JS_FALSE;
+
+  if (movie->jsobj == NULL &&
+      !swfdec_js_add_movieclip (movie))
+    return JS_FALSE;
+  *rval = argv[2];
+  return movieclip_props[id].setter (cx, movie->jsobj, JSVAL_VOID /* FIXME */, rval);
+}
 
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
   {"getBytesLoaded", mc_getBytesLoaded, 0, 0},
   {"getBytesTotal", mc_getBytesTotal, 0, 0},
+  { "getProperty",    	swfdec_js_getProperty,	2, 0, 0 },
   {"gotoAndPlay", mc_gotoAndPlay, 1, 0 },
   {"gotoAndStop", mc_gotoAndStop, 1, 0 },
   {"play", mc_play, 0, 0},
   {"stop", mc_stop, 0, 0},
   {"hitTest", mc_hitTest, 1, 0},
-  {"GetProperty", mc_GetProperty, 1, 0},
-  {"SetProperty", mc_SetProperty, 1, 0},
+  { "setProperty",    	swfdec_js_setProperty,	3, 0, 0 },
   {NULL}
 };
 
@@ -398,7 +486,7 @@ not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 #define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
-static JSPropertySpec movieclip_props[] = {
+JSPropertySpec movieclip_props[] = {
   {"_x",	    PROP_X,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
   {"_y",	    PROP_Y,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
   {"_xscale",	    PROP_XSCALE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
@@ -422,39 +510,6 @@ static JSPropertySpec movieclip_props[] = {
   {"_parent",	    -1,			MC_PROP_ATTRS | JSPROP_READONLY,  mc_parent,	    NULL},
   {NULL}
 };
-
-static JSBool
-mc_GetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  uint32 id;
-
-  if (!JS_ValueToECMAUint32 (cx, argv[0], &id))
-    return JS_FALSE;
-
-  if (id > PROP_YMOUSE)
-    return JS_FALSE;
-
-  return movieclip_props[id].getter (cx, obj, JSVAL_VOID /* FIXME */, rval);
-}
-
-static JSBool
-mc_SetProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  uint32 id;
-
-  if (!JS_ValueToECMAUint32 (cx, argv[0], &id))
-    return JS_FALSE;
-
-  if (id > PROP_YMOUSE)
-    return JS_FALSE;
-
-  if (movieclip_props[id].setter == NULL)
-    return JS_FALSE;
-  *rval = argv[1];
-  return movieclip_props[id].setter (cx, obj, JSVAL_VOID /* FIXME */, rval);
-
-  return JS_TRUE;
-}
 
 #if 0
 JSObject *

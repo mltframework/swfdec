@@ -306,9 +306,7 @@ compile_state_add_action_jump (CompileState *state, int n_actions, gboolean exte
 static void
 push_target (CompileState *state)
 {
-  guint8 command[3] = { JSOP_BINDNAME, 0, 0 };
-  compile_state_add_code (state, command, 3);
-  command[0] = JSOP_NAME;
+  guint8 command[3] = { JSOP_NAME, 0, 0 };
   compile_state_add_code (state, command, 3);
 }
 
@@ -367,6 +365,17 @@ call_void_function (CompileState *state, const char *name)
   push_prop (state, name);
   PUSH_OBJ (state);
   call (state, 0);
+  POP (state);
+}
+
+static void
+compile_trace (CompileState *state, guint action, guint len)
+{
+  push_uint16 (state, 1);
+  bind_name (state, "trace");
+  push_prop (state, "trace");
+  PUSH_OBJ (state);
+  FLASHCALL (state);
   POP (state);
 }
 
@@ -502,10 +511,13 @@ compile_push (CompileState *state, guint action, guint len)
 static void
 compile_goto_frame (CompileState *state, guint action, guint len)
 {
+  unsigned int i;
   push_target (state);
   push_prop (state, "gotoAndStop");
   PUSH_OBJ (state);
-  read_and_push_uint16 (state);
+  i = swfdec_bits_get_u16 (&state->s->b);
+  g_print ("gotoandstop: %u\n", i + 1);
+  push_uint16 (state, i + 1);
   call (state, 1);
   POP (state);
 }
@@ -684,9 +696,9 @@ static void
 compile_get_property (CompileState *state, guint action, guint len)
 {
   SWAP (state);
-  push_uint16 (state, 1);
-  SWAP (state);
-  push_prop (state, "GetProperty");
+  push_uint16 (state, 2);
+  push_target (state);
+  push_prop (state, "getProperty");
   PUSH_OBJ (state);
   FLASHCALL (state);
 }
@@ -695,9 +707,9 @@ static void
 compile_set_property (CompileState *state, guint action, guint len)
 {
   flash_swap (state, 3);
-  push_uint16 (state, 2);
-  SWAP (state);
-  push_prop (state, "SetProperty");
+  push_uint16 (state, 3);
+  bind_name (state, "setProperty");
+  push_prop (state, "setProperty");
   PUSH_OBJ (state);
   FLASHCALL (state);
   POP (state);
@@ -870,7 +882,7 @@ SwfdecActionSpec actions[] = {
   { 0x23, "SetProperty", compile_set_property },
   { 0x24, "CloneSprite", NULL },
   { 0x25, "RemoveSprite", NULL },
-  { 0x26, "Trace", NULL },
+  { 0x26, "Trace", compile_trace },
   { 0x27, "StartDrag", compile_start_drag },
   { 0x28, "EndDrag", NULL },
   { 0x29, "StringLess", NULL },

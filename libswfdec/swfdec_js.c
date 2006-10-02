@@ -83,10 +83,9 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
 #if 0
   /* the new opcodes mess up this */
   s->jscx->tracefp = stderr;
-#else
+#endif
 #if 0
   JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
-#endif
 #endif
   JS_SetErrorReporter (s->jscx, swfdec_js_error_report);
   JS_SetContextPrivate(s->jscx, s);

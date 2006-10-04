@@ -41,8 +41,15 @@ dump_sprite (SwfdecSprite *s)
 	      SwfdecSpriteContent *content = action->data;
 	      g_assert (content == content->sequence);
 	      g_assert (content->start == i);
-	      g_print ("   %4u -%4u %3u %s %u\n", i, content->end,
-		  content->depth, G_OBJECT_TYPE_NAME (content->object), content->object->id);
+	      g_print ("   %4u -%4u %3u", i, content->end, content->depth);
+	      if (content->object) {
+		g_print (" %s %u", G_OBJECT_TYPE_NAME (content->object), content->object->id);
+	      } else {
+		g_print (" ---");
+	      }
+	      if (content->name)
+		g_print (" as %s", content->name);
+	      g_print ("\n");
 	    }
 	    break;
 	  default:

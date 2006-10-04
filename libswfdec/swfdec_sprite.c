@@ -246,6 +246,10 @@ swfdec_sprite_contents_create (SwfdecSprite *sprite, unsigned int frame_id,
 	content->name = g_strdup (copy->name);
       if (content->events)
 	content->events = swfdec_event_list_copy (copy->events);
+      if (new) {
+	content->start = frame_id;
+	content->end = sprite->n_frames;
+      }
       swfdec_sprite_add_action (sprite, frame_id, 
 	  new ? SWFDEC_SPRITE_ACTION_ADD : SWFDEC_SPRITE_ACTION_UPDATE, content);
       return content;

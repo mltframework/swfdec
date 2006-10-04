@@ -27,7 +27,7 @@ enum
   swfdec_debug_log ((level), __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 
 void swfdec_debug_log (int level, const char *file, const char *function,
-    int line, const char *format, ...);
+    int line, const char *format, ...) G_GNUC_PRINTF (5, 6);
 void swfdec_debug_set_level (int level);
 int swfdec_debug_get_level (void);
 void art_warn (const char *fmt, ...);

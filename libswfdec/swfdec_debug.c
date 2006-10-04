@@ -18,7 +18,6 @@ void
 swfdec_debug_log (int level, const char *file, const char *function,
     int line, const char *format, ...)
 {
-#ifndef GLIB_COMPAT
   va_list varargs;
   char *s;
 
@@ -29,23 +28,9 @@ swfdec_debug_log (int level, const char *file, const char *function,
   s = g_strdup_vprintf (format, varargs);
   va_end (varargs);
 
-  fprintf (stderr, "SWFDEC: %s: %s(%d): %s: %s\n",
+  g_printerr ("SWFDEC: %s: %s(%d): %s: %s\n",
       swfdec_debug_level_names[level], file, line, function, s);
   g_free (s);
-#else
-  va_list varargs;
-  char s[1000];
-
-  if (level > swfdec_debug_level)
-    return;
-
-  va_start (varargs, format);
-  vsnprintf (s, 999, format, varargs);
-  va_end (varargs);
-
-  fprintf (stderr, "SWFDEC: %s: %s(%d): %s: %s\n",
-      swfdec_debug_level_names[level], file, line, function, s);
-#endif
 }
 
 void

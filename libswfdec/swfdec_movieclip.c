@@ -390,7 +390,7 @@ swfdec_movie_clip_goto_frame (SwfdecMovieClip *movie, unsigned int goto_frame)
 static void
 swfdec_movie_clip_update_current_frame (SwfdecMovieClip *movie)
 {
-  unsigned int last_frame, next_frame;
+  unsigned int next_frame;
 
   if (!SWFDEC_IS_SPRITE (movie->child))
     return;
@@ -398,18 +398,11 @@ swfdec_movie_clip_update_current_frame (SwfdecMovieClip *movie)
     movie->next_frame = swfdec_movie_clip_get_next_frame (movie, movie->next_frame);
   }
   next_frame = movie->next_frame;
-  last_frame = movie->current_frame;
   swfdec_movie_clip_execute (movie, SWFDEC_EVENT_ENTER);
   swfdec_movie_clip_goto_frame (movie, next_frame);
   while (movie->current_frame != movie->next_frame) {
     swfdec_movie_clip_goto_frame (movie, movie->next_frame);
   }
-  if (last_frame == (guint) -1 || 
-      SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color != 
-      SWFDEC_SPRITE (movie->child)->frames[movie->current_frame].bg_color) {
-    swfdec_object_invalidate (SWFDEC_OBJECT (movie), NULL);
-  }
-  swfdec_movie_clip_iterate_audio (movie, last_frame);
 }
 
 static gboolean
@@ -449,12 +442,22 @@ swfdec_movie_clip_should_iterate (SwfdecMovieClip *movie)
 void 
 swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
 {
+  unsigned int last_frame;
+
   g_assert (SWFDEC_IS_MOVIE_CLIP (movie));
+  g_assert (SWFDEC_IS_SPRITE (movie->child));
 
-  if (!swfdec_movie_clip_should_iterate (movie))
-    return;
+  last_frame = movie->current_frame;
 
-  swfdec_movie_clip_update_current_frame (movie);
+  if (swfdec_movie_clip_should_iterate (movie))
+    swfdec_movie_clip_update_current_frame (movie);
+  swfdec_movie_clip_iterate_audio (movie, last_frame);
+
+  if (last_frame == (guint) -1 || 
+      SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color != 
+      SWFDEC_SPRITE (movie->child)->frames[movie->current_frame].bg_color) {
+    swfdec_object_invalidate (SWFDEC_OBJECT (movie), NULL);
+  }
 }
 
 static gboolean
@@ -700,6 +703,7 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
       movie->stopped = FALSE;
       s->movies = g_list_prepend (s->movies, movie);
       swfdec_movie_clip_goto_frame (movie, 0);
+      swfdec_movie_clip_iterate_audio (movie, -1);
     }
     swfdec_movie_clip_update_extents (movie);
   }

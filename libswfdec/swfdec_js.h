@@ -27,6 +27,10 @@ gboolean	swfdec_js_add_movieclip		(SwfdecMovieClip *	movie);
 void		swfdec_js_movie_clip_add_property (SwfdecMovieClip *	movie);
 void		swfdec_js_movie_clip_remove_property (SwfdecMovieClip *	movie);
 
+/* debugging */
+const char *	swfdec_js_to_string		(SwfdecDecoder *	dec,
+						 jsval			val);
+
 G_END_DECLS
 
 #endif

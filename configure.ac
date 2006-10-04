@@ -209,6 +209,7 @@ libswfdec/js/Makefile
 libswfdec/mpeg/Makefile
 test/Makefile
 test/actionscript/Makefile
+test/trace/Makefile
 player/Makefile
 plugin/Makefile
 pixbuf-loader/Makefile

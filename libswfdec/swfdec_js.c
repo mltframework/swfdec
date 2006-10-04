@@ -73,7 +73,6 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
 {
   JSObject *glob;
 
-  s->execute_list = g_array_new (FALSE, FALSE, sizeof (SwfdecScriptEntry));
   s->jscx = JS_NewContext (swfdec_js_runtime, 8192);
   if (s->jscx == NULL) {
     SWFDEC_ERROR ("did not get a JS context, trying to live without");
@@ -114,59 +113,6 @@ swfdec_js_finish_decoder (SwfdecDecoder *s)
     JS_DestroyContext(s->jscx);
     s->jscx = NULL;
   }
-  g_assert (swfdec_js_script_queue_is_empty (s));
-  g_array_free (s->execute_list, TRUE);
-}
-
-/**
- * swfdec_js_script_queue_is_empty:
- * @s: a #SwfdecDecoder
- *
- * Debugging function to check that there's nothing left to execute
- *
- * Returns: TRUE if there are no queued up scripts
- **/
-gboolean
-swfdec_js_script_queue_is_empty (SwfdecDecoder *s)
-{
-  return s->execute_list->len == 0;
-}
-
-/**
- * swfdec_decoder_queue_script:
- * @s: a #SwfdecDecoder
- * @movie: #SwfdecMovieClip to call the function with
- * @script: script to queue for execution
- *
- * Queues a script for execution at the next execution point.
- **/
-void
-swfdec_decoder_queue_script (SwfdecDecoder *s, SwfdecMovieClip *movie,
-    JSScript *script)
-{
-  SwfdecScriptEntry entry = { movie, script };
-  SWFDEC_DEBUG ("adding script %p:%p to list", movie, script);
-  g_array_append_val (s->execute_list, entry);
-}
-
-/**
- * swfdec_decoder_execute_scripts:
- * @s: a #SwfdecDecoder
- *
- * Executes all queued up scripts in the order they were queued.
- **/
-void
-swfdec_decoder_execute_scripts (SwfdecDecoder *s)
-{
-  guint i;
-
-  SWFDEC_DEBUG ("executing %u scripts", s->execute_list->len);
-  for (i = 0; i < s->execute_list->len; i++) {
-    SwfdecScriptEntry *entry = &g_array_index (s->execute_list, SwfdecScriptEntry, i);
-
-    swfdec_js_execute_script (s, entry->movie, entry->script, NULL);
-  }
-  g_array_set_size (s->execute_list, 0);
 }
 
 /**

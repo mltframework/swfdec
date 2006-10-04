@@ -30,7 +30,7 @@ swfdec_font_dispose (SwfdecFont * font)
   guint i;
 
   for (i = 0; i < font->glyphs->len; i++) {
-    swfdec_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+    g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (font));

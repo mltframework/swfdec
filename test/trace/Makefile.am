@@ -18,3 +18,4 @@ EXTRA_DIST = \
 	order.swf \
 	order.swf.trace
 
+CLEANFILES = tmp

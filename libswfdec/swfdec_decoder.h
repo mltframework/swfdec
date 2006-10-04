@@ -37,7 +37,6 @@ struct _SwfdecDecoder
   int parse_width, parse_height;
   unsigned int rate;			/* divide by 256 to get iterations per second */
   unsigned int n_frames;
-  guint8 *buffer;
 
   void *sound_buffer;
   int sound_len;
@@ -52,14 +51,9 @@ struct _SwfdecDecoder
 
   SwfdecBufferQueue *input_queue;
 
-  /* where we are in the top-level state engine */
-  int state;
-
-  /* where we are in global parsing */
-  SwfdecBits parse;
-
-  /* temporary state while parsing */
-  SwfdecBits b;
+  int state;				/* where we are in the top-level state engine */
+  SwfdecBits parse;			/* where we are in global parsing */
+  SwfdecBits b;				/* temporary state while parsing */
 
   /* defined objects */
   GList *characters;			/* list of all objects with an id (called characters) */
@@ -73,24 +67,21 @@ struct _SwfdecDecoder
   SwfdecMovieClip *root;
   SwfdecSprite *parse_sprite;
 
-  gboolean protection;			/* TRUE is this file is protected (may not be edited) */
+  gboolean protection;			/* TRUE is this file is protected and may not be edited */
   char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
+
+
+  SwfdecBuffer *jpegtables;
+
+  char *url;
+
+  /* global state */
+  GList *movies;			/* list of all running movie clips */
 
   /* mouse */
   gboolean mouse_visible;		/* show the mouse (actionscriptable) */
 
-  unsigned char *tmp_scanline;
-
-  SwfdecBuffer *jpegtables;
-
-  int pixels_rendered;
-
-  int stats_n_points;
-
-  char *url;
-
   /* javascript */
-  GArray *execute_list;			/* list of SwfdecScriptEntry to execute */
   JSContext *jscx;			/* The JavaScript context or NULL after errors */
   JSObject *jsmovie;			/* The MovieClip class */
 
@@ -119,7 +110,5 @@ void swfdec_decoder_eof (SwfdecDecoder * s);
 SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
 const char *swfdec_decoder_get_tag_name (int tag);
 int swfdec_decoder_get_tag_flag (int tag);
-void swfdec_decoder_queue_script (SwfdecDecoder *s, SwfdecMovieClip *movie, JSScript *script);
-void swfdec_decoder_execute_scripts (SwfdecDecoder *s);
 
 #endif

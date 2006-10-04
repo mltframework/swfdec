@@ -95,14 +95,6 @@ swfdec_object_new (SwfdecDecoder *dec, GType type)
   return object;
 }
 
-void
-swfdec_object_unref (gpointer object)
-{
-  SWFDEC_LOG ("ref: unreffing %p", object);
-
-  g_object_unref (object);
-}
-
 gpointer
 swfdec_object_get (SwfdecDecoder * s, int id)
 {

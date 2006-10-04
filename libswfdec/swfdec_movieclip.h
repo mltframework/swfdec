@@ -26,17 +26,13 @@ struct _SwfdecMovieClip
   JSObject *		jsobj;			/* our object in javascript */
   SwfdecObject *	child;			/* object that we display (may be NULL) */
   GList *		list;			/* our contained movie clips (order by depth) */
-  SwfdecEventList *	events;			/* list of events that this sprite should trigger */
+  const SwfdecSpriteContent *	content;      	/* the content we are displaying */
 
   /* parenting information */
   SwfdecMovieClip *	parent;			/* the object that contains us */
-  char *		name;			/* the name that this clip is referenced in slash-notation */
-  unsigned int	      	depth;			/* depth in parent's display list */
-  unsigned int	     	clip_depth;	      	/* clipping depth (determines visibility) */
 
   /* positioning - the values are applied in this order */
   SwfdecRect		original_extents;	/* the extents from all the children */
-  cairo_matrix_t	original_transform;	/* the transform as set by PlaceObject */
   double      		x;			/* x offset in twips */
   double		y;	      		/* y offset in twips */
   double      		xscale;			/* x scaling factor */
@@ -46,7 +42,6 @@ struct _SwfdecMovieClip
   cairo_matrix_t	inverse_transform;	/* the inverse of the transformation matrix */
 
   /* frame information */
-  int			ratio;			/* for morph shapes (FIXME: is this the same as current frame?) */
   unsigned int		current_frame;		/* frame that is currently displayed (NB: indexed from 0) */
   unsigned int	      	next_frame;		/* frame that will be displayed next, the current frame to JS */
   gboolean		stopped;		/* if we currently iterate */
@@ -60,8 +55,7 @@ struct _SwfdecMovieClip
   int			mouse_button;		/* 1 if button is pressed, 0 otherwise */
 
   /* color information */
-  swf_color		bg_color;		/* the background color for this movie (only used in root movie) */
-  SwfdecColorTransform	color_transform;	/* color transform used in this movie */
+  swf_color		bg_color;		/* background color of main sprite */
 
   /* audio stream handling */
   gpointer		sound_decoder;	      	/* pointer acquired via swfdec_sound_init_decoder */
@@ -85,16 +79,19 @@ struct _SwfdecMovieClipClass
 
 GType		swfdec_movie_clip_get_type		(void);
 
-SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent);
+SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent,
+							 SwfdecSpriteContent *	content);
 unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
 unsigned int	swfdec_movie_clip_get_next_frame	(SwfdecMovieClip *	movie,
 							 unsigned int		current_frame);
 void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
 							 SwfdecObject *		child);
+void		swfdec_movie_clip_set_content		(SwfdecMovieClip *	movie,
+							 const SwfdecSpriteContent *content);
 
 void		swfdec_movie_clip_update_matrix		(SwfdecMovieClip *	movie,
 							 gboolean		invalidate);
-void		swfdec_movie_clips_iterate		(SwfdecDecoder *	dec);
+void		swfdec_movie_clip_iterate		(SwfdecMovieClip *	movie);
 gboolean      	swfdec_movie_clip_handle_mouse		(SwfdecMovieClip *	movie,
 							 double			x,
 							 double			y,

@@ -271,7 +271,8 @@ tag_func_do_action (SwfdecDecoder * s)
   
   script = swfdec_compile (s);
   if (script)
-    swfdec_sprite_add_script (s->parse_sprite, s->parse_sprite->parse_frame, script);
+    swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
+	SWFDEC_SPRITE_ACTION_SCRIPT, script);
 
   return SWFDEC_OK;
 }

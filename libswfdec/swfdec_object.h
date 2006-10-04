@@ -48,7 +48,6 @@ struct _SwfdecObjectClass
 
 GType swfdec_object_get_type (void);
 gpointer swfdec_object_new (SwfdecDecoder *dec, GType type);
-void swfdec_object_unref (gpointer object);
 
 gpointer swfdec_object_get (SwfdecDecoder * s, int id);
 gpointer swfdec_object_create (SwfdecDecoder * s, int id, GType type);

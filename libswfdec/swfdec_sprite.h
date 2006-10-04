@@ -10,8 +10,8 @@
 G_BEGIN_DECLS
 
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
+typedef struct _SwfdecSpriteAction SwfdecSpriteAction;
 typedef struct _SwfdecExport SwfdecExport;
-typedef struct _SwfdecSpriteContent SwfdecSpriteContent;
 
 struct _SwfdecSpriteContent {
   SwfdecObject *	object;		/* object to display or NULL (FIXME: wanna allow NULL here?) */
@@ -23,8 +23,22 @@ struct _SwfdecSpriteContent {
   char *		name;
   SwfdecEventList *	events;
 
-  unsigned int		first_frame;	/* first frame this object is displayed in */
-  unsigned int		last_frame;	/* first frame this object is not displayed in anymore */
+  SwfdecSpriteContent *	sequence;	/* first element in sequence this content belongs to */
+  /* NB: the next two elements are only filled for the sequence leader */
+  guint			start;		/* first frame that contains this sequence */
+  guint			end;		/* first frame that does not contain this sequence anymore */
+};
+
+typedef enum {
+  SWFDEC_SPRITE_ACTION_SCRIPT,		/* contains an action only */
+  SWFDEC_SPRITE_ACTION_ADD,		/* contains a SwfdecSpriteContent */
+  SWFDEC_SPRITE_ACTION_REMOVE,		/* contains a depth */
+  SWFDEC_SPRITE_ACTION_UPDATE		/* contains a SwfdecSpriteContent */
+} SwfdecSpriteActionType;
+
+struct _SwfdecSpriteAction {
+  SwfdecSpriteActionType	type;
+  gpointer			data;
 };
 
 struct _SwfdecExport {
@@ -50,8 +64,7 @@ struct _SwfdecSpriteFrame
 
   /* visuals */
   swf_color bg_color;
-  GList *contents;			/* SwfdecSpriteContent ordered by depth */
-  GSList *do_actions;			/* JSScripts queued via DoAction */
+  GArray *actions;			/* SwfdecSpriteAction in execution order */
 };
 
 struct _SwfdecSprite
@@ -77,8 +90,13 @@ int tag_func_define_sprite (SwfdecDecoder * s);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, int frame,
     SwfdecBuffer * chunk, int skip);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
-void swfdec_sprite_add_script (SwfdecSprite * sprite, int frame, JSScript *script);
+void swfdec_sprite_add_action (SwfdecSprite * sprite, unsigned int frame, 
+    SwfdecSpriteActionType type, gpointer data);
 
+SwfdecSpriteContent *swfdec_sprite_content_new (unsigned int depth);
+void swfdec_sprite_content_free (SwfdecSpriteContent *content);
+
+int tag_show_frame (SwfdecDecoder * s);
 int tag_func_set_background_color (SwfdecDecoder * s);
 int swfdec_spriteseg_place_object_2 (SwfdecDecoder * s);
 int swfdec_spriteseg_remove_object (SwfdecDecoder * s);

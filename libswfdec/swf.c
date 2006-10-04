@@ -121,22 +121,23 @@ swfdec_decoder_set_property (GObject *object, guint param_id, const GValue *valu
 static void
 swfdec_decoder_dispose (GObject *object)
 {
+  SwfdecSpriteContent *content;
   SwfdecDecoder * s = SWFDEC_DECODER (object);
 
   g_array_free (s->audio_events, TRUE);
-  swfdec_sprite_content_free (s->root->content);
+  content = (SwfdecSpriteContent *) s->root->content;
   g_object_unref (s->root);
 
   /* this must happen while the JS Context is still alive */
-  g_list_foreach (s->characters, (GFunc) swfdec_object_unref, NULL);
+  g_list_foreach (s->characters, (GFunc) g_object_unref, NULL);
   g_list_free (s->characters);
   g_object_unref (s->main_sprite);
 
   /* make sure all SwfdecObject's are gone before calling this */
   swfdec_js_finish_decoder (s);
+  swfdec_sprite_content_free (content);
 
-  if (s->buffer)
-    g_free (s->buffer);
+  g_assert (s->movies == NULL);
 
   swfdec_buffer_queue_free (s->input_queue);
 
@@ -147,10 +148,6 @@ swfdec_decoder_dispose (GObject *object)
 
   if (s->jpegtables) {
     swfdec_buffer_unref (s->jpegtables);
-  }
-
-  if (s->tmp_scanline) {
-    g_free (s->tmp_scanline);
   }
 
   g_free (s->password);
@@ -187,9 +184,6 @@ swfdec_decoder_init (SwfdecDecoder *s)
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
-  s->root->content = swfdec_sprite_content_new (0);
-  cairo_matrix_scale (&s->root->transform, 1 / SWF_SCALE_FACTOR, 1 / SWF_SCALE_FACTOR);
-  cairo_matrix_scale (&s->root->inverse_transform, SWF_SCALE_FACTOR, SWF_SCALE_FACTOR);
   g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
   s->audio_events = g_array_new (FALSE, FALSE, sizeof (SwfdecAudioEvent));
@@ -357,14 +351,16 @@ swfdec_decoder_parse (SwfdecDecoder * s)
                 swfdec_buffer_queue_get_offset (s->input_queue), tag,
                 swfdec_decoder_get_tag_name (tag), tag_len);
           }
-	  if (ret == SWFDEC_IMAGE && s->root->child == NULL)
-	    swfdec_movie_clip_set_child (s->root, SWFDEC_OBJECT (s->main_sprite));
+	  if (ret == SWFDEC_IMAGE && s->root->child == NULL) {
+	    SwfdecSpriteContent *content = swfdec_sprite_content_new (0);
+	    cairo_matrix_scale (&content->transform, 1 / SWF_SCALE_FACTOR, 1 / SWF_SCALE_FACTOR);
+	    content->object = SWFDEC_OBJECT (s->main_sprite);
+	    swfdec_movie_clip_set_content (s->root, content);
+	  }
         }
 
         if (tag == 0) {
           s->state = SWF_STATE_EOF;
-
-          SWFDEC_INFO ("decoded points %d", s->stats_n_points);
         }
 
         if (buffer)
@@ -637,6 +633,8 @@ swf_parse_header2 (SwfdecDecoder * s)
 void
 swfdec_decoder_iterate (SwfdecDecoder *dec)
 {
+  GList *walk;
+
   g_return_if_fail (dec != NULL);
 
 #if 0
@@ -644,13 +642,21 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
     swfdec_js_run (dec, "foo = __swfdec_target;", NULL);
 #endif
 
-  g_assert (swfdec_js_script_queue_is_empty (dec));
   g_object_freeze_notify (G_OBJECT (dec));
+  SWFDEC_INFO ("=== START ITERATION ===");
   /* iterate audio before video so we don't iterate audio clips that get added this frame */
   swfdec_audio_iterate_start (dec);
-  swfdec_movie_clips_iterate (dec);
-  swfdec_decoder_execute_scripts (dec);
+  /* The handling of this list is rather tricky. This code assumes that no 
+   * movies get removed that haven't been iterated yet. This should not be a 
+   * problem without using Javascript, because the only way to remove movies
+   * is when a sprite removes a child. But all children are in front of their
+   * parent in this list, since they got added later.
+   */
+  for (walk = dec->movies; walk; walk = walk->next) {
+    swfdec_movie_clip_iterate (walk->data);
+  }
   swfdec_audio_iterate_finish (dec);
+  SWFDEC_INFO ("=== STOP ITERATION ===");
   g_object_thaw_notify (G_OBJECT (dec));
 #if 0
   {
@@ -715,11 +721,9 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   g_return_if_fail (dec != NULL);
   g_return_if_fail (button == 0 || button == 1);
 
-  g_assert (swfdec_js_script_queue_is_empty (dec));
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   g_object_freeze_notify (G_OBJECT (dec));
   swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
-  swfdec_decoder_execute_scripts (dec);
   g_object_thaw_notify (G_OBJECT (dec));
 }
 

@@ -167,7 +167,7 @@ get_target (SwfdecMovieClip *movie, const char *target)
   guint len;
   GList *walk;
 
-  g_print ("get_target: %s\n", target);
+  //g_print ("get_target: %s\n", target);
   if (target[0] == '\0')
     return movie;
 
@@ -184,7 +184,7 @@ get_target (SwfdecMovieClip *movie, const char *target)
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovieClip *cur = walk->data;
-    if (cur->name && g_ascii_strncasecmp (cur->name, target, len) == 0)
+    if (cur->content->name && g_ascii_strncasecmp (cur->content->name, target, len) == 0)
       return get_target (cur, target + len + 1);
   }
   return NULL;
@@ -616,7 +616,7 @@ swfdec_js_movie_clip_add_property (SwfdecMovieClip *movie)
   }
   val = OBJECT_TO_JSVAL (movie->jsobj);
   JS_SetProperty (SWFDEC_OBJECT (movie)->decoder->jscx, movie->parent->jsobj,
-      movie->name, &val);
+      movie->content->name, &val);
 }
 
 void
@@ -627,7 +627,7 @@ swfdec_js_movie_clip_remove_property (SwfdecMovieClip *movie)
   g_assert (movie->jsobj);
 
   JS_DeleteProperty (SWFDEC_OBJECT (movie)->decoder->jscx, movie->parent->jsobj,
-      movie->name);
+      movie->content->name);
 }
 
 /**
@@ -660,7 +660,7 @@ swfdec_js_add_movieclip (SwfdecMovieClip *movie)
   /* add all children */
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovieClip *child = walk->data;
-    if (child->name)
+    if (child->content->name)
       swfdec_js_movie_clip_add_property (child);
   }
   /* special case */

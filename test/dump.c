@@ -15,39 +15,41 @@
 
 static gboolean verbose = FALSE;
 
-void
-dump_sprite(SwfdecSprite *s)
+static void
+dump_sprite (SwfdecSprite *s)
 {
-  g_print ("  %u frames\n", s->n_frames);
-
-  if (verbose) {
-    guint i;
-    GList *walk, *done = NULL;
+  if (!verbose) {
+    g_print ("  %u frames\n", s->n_frames);
+  } else {
+    guint i, j;
 
     for (i = 0; i < s->n_frames; i++) {
       SwfdecSpriteFrame * frame = &s->frames[i];
-      for (walk = frame->contents; walk; walk = walk->next) {
-	SwfdecSpriteContent *content = walk->data;
-	if (content->sequence != content)
-	  continue;
-	if (g_list_find (done, content))
-	  continue;
-	done = g_list_prepend (done, content);
-	if (content->object) {
-	  if (content->name) {
-	    g_print (" %5u %s %d as %s\n", i, 
-		G_OBJECT_TYPE_NAME (content->object), 
-		content->object->id, content->name);
-	  } else {
-	    g_print (" %5u %s %d\n", i,
-		G_OBJECT_TYPE_NAME (content->object), content->object->id);
-	  }
-	} else {
-	  g_print (" %5u ---\n", i);
+      if (frame->actions == NULL)
+	continue;
+      for (j = 0; j < frame->actions->len; j++) {
+	SwfdecSpriteAction *action = 
+	  &g_array_index (frame->actions, SwfdecSpriteAction, j);
+	switch (action->type) {
+	  case SWFDEC_SPRITE_ACTION_SCRIPT:
+	    g_print ("   %4u script\n", i);
+	  case SWFDEC_SPRITE_ACTION_UPDATE:
+	  case SWFDEC_SPRITE_ACTION_REMOVE:
+	    break;
+	  case SWFDEC_SPRITE_ACTION_ADD:
+	    {
+	      SwfdecSpriteContent *content = action->data;
+	      g_assert (content == content->sequence);
+	      g_assert (content->start == i);
+	      g_print ("   %4u -%4u %3u %s %u\n", i, content->end,
+		  content->depth, G_OBJECT_TYPE_NAME (content->object), content->object->id);
+	    }
+	    break;
+	  default:
+	    g_assert_not_reached ();
 	}
       }
     }
-    g_list_free (done);
   }
 }
 
@@ -196,8 +198,8 @@ dump_objects(SwfdecDecoder *s)
     object = g->data;
     type = G_TYPE_FROM_INSTANCE (object);
     printf("%d: %s\n", object->id, g_type_name (type));
-    if (SWFDEC_IS_SPRITE(object)){
-      dump_sprite(SWFDEC_SPRITE(object));
+    if (SWFDEC_IS_SPRITE (object)){
+      dump_sprite (SWFDEC_SPRITE (object));
     }
     if (SWFDEC_IS_SHAPE(object)){
       dump_shape(SWFDEC_SHAPE(object));

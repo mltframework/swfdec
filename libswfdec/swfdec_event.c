@@ -5,6 +5,7 @@
 #include "swfdec_event.h"
 #include "swfdec_decoder.h"
 #include "swfdec_compiler.h"
+#include "swfdec_js.h"
 
 typedef struct _SwfdecEvent SwfdecEvent;
 
@@ -94,7 +95,7 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecMovieClip *movie,
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & conditions) &&
 	event->key == key)
-      swfdec_decoder_queue_script (list->dec, movie, event->script);
+      swfdec_js_execute_script (list->dec, movie, event->script, NULL);
   }
 }
 

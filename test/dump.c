@@ -149,10 +149,7 @@ dump_text (SwfdecText *text)
 
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
-    SwfdecFont *font = swfdec_object_get (SWFDEC_OBJECT (text)->decoder, glyph->font);
-    if (font == NULL)
-      goto fallback;
-    uni[i] = g_array_index (font->glyphs, SwfdecFontEntry, glyph->glyph).value;
+    uni[i] = g_array_index (glyph->font->glyphs, SwfdecFontEntry, glyph->glyph).value;
     if (uni[i] == 0)
       goto fallback;
   }
@@ -171,6 +168,8 @@ static void
 dump_font (SwfdecFont *font)
 {
   unsigned int i;
+  if (font->name)
+    g_print ("  %s\n", font->name);
   g_print ("  %u characters\n", font->glyphs->len);
   if (verbose) {
     for (i = 0; i < font->glyphs->len; i++) {

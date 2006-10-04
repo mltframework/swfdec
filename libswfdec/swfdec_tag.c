@@ -10,7 +10,7 @@
 
 #include "swfdec_internal.h"
 #include "swfdec_compiler.h"
-
+#include "swfdec_edittext.h"
 
 int
 tag_func_end (SwfdecDecoder * s)
@@ -103,10 +103,13 @@ define_text (SwfdecDecoder * s, int rgba)
       int i;
 
       n_glyphs = swfdec_bits_getbits (bits, 7);
+      if (glyph.font == NULL)
+	SWFDEC_ERROR ("no font for %d glyphs", n_glyphs);
       for (i = 0; i < n_glyphs; i++) {
         glyph.glyph = swfdec_bits_getbits (bits, n_glyph_bits);
 
-        g_array_append_val (text->glyphs, glyph);
+	if (glyph.font != NULL)
+	  g_array_append_val (text->glyphs, glyph);
         glyph.x += swfdec_bits_getbits (bits, n_advance_bits);
       }
     } else {
@@ -123,7 +126,7 @@ define_text (SwfdecDecoder * s, int rgba)
       has_y_offset = swfdec_bits_getbit (bits);
       has_x_offset = swfdec_bits_getbit (bits);
       if (has_font) {
-        glyph.font = swfdec_bits_get_u16 (bits);
+        glyph.font = swfdec_object_get (s, swfdec_bits_get_u16 (bits));
         //printf("  font = %d\n",font);
       }
       if (has_color) {
@@ -727,7 +730,7 @@ static struct tag_func_struct tag_funcs[] = {
   [ST_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
   [ST_DEFINEBITSLOSSLESS2] =
       {"DefineBitsLossless2", tag_func_define_bits_lossless_2, 0},
-  [ST_DEFINEEDITTEXT] = {"DefineEditText", NULL, 0},
+  [ST_DEFINEEDITTEXT] = {"DefineEditText", tag_func_define_edit_text, 0},
   [ST_DEFINEMOVIE] = {"DefineMovie", NULL, 0},
   [ST_DEFINESPRITE] = {"DefineSprite", tag_func_define_sprite, 0},
   [ST_NAMECHARACTER] = {"NameCharacter", NULL, 0},

@@ -32,6 +32,9 @@ swfdec_font_dispose (SwfdecFont * font)
   for (i = 0; i < font->glyphs->len; i++) {
     g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
   }
+  if (font->desc)
+    pango_font_description_free (font->desc);
+  g_free (font->name);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (font));
 }
@@ -110,8 +113,15 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
     language = swfdec_bits_get_u8 (&s->b);
   font->name = convert_from_language (name, language);
   g_free (name);
+  g_print ("Parsing FontInfo for font %d\n", id);
   if (font->name) {
-    /* FIXME: get a pango layout here */
+    g_print ("Creating font description for font %d\n", id);
+    font->desc = pango_font_description_new ();
+    pango_font_description_set_family_static (font->desc, font->name);
+    if (font->bold)
+      pango_font_description_set_weight (font->desc, PANGO_WEIGHT_BOLD);
+    if (font->italic)
+      pango_font_description_set_style (font->desc, PANGO_STYLE_ITALIC);
   }
   for (i = 0; i < font->glyphs->len; i++) {
     g_array_index (font->glyphs, SwfdecFontEntry, i).value = 

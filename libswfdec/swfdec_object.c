@@ -134,8 +134,9 @@ swfdec_object_create (SwfdecDecoder * s, int id, GType type)
   SWFDEC_INFO ("  id = %d", id);
   result = swfdec_object_get (s, id);
   if (result) {
-    /* FIXME: use g_type_is_a? */
     if (G_OBJECT_TYPE (result) == type) {
+      /* FIXME: is this right? */
+      SWFDEC_WARNING ("object with id %d already exists, reusing", id);
       return result;
     } else {
       SWFDEC_WARNING ("requested object type %s for id %d doesn't match real type %s",

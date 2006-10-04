@@ -1,14 +1,16 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <swfdec_text.h>
+#include "swfdec_text.h"
 #include "swfdec_internal.h"
-#include <swfdec_font.h>
+#include "swfdec_font.h"
 
 static gboolean
 swfdec_text_mouse_in (SwfdecObject *object,
       double x, double y, int button)
 {
   unsigned int i;
-  SwfdecObject *fontobj;
   SwfdecText *text = SWFDEC_TEXT (object);
 
   swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
@@ -18,11 +20,7 @@ swfdec_text_mouse_in (SwfdecObject *object,
     double tmpx, tmpy;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
-    fontobj = swfdec_object_get (object->decoder, glyph->font);
-    if (fontobj == NULL)
-      continue;
-
-    shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
+    shape = swfdec_font_get_glyph (glyph->font, glyph->glyph);
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
     tmpx /= SWF_TEXT_SCALE_FACTOR * glyph->height;
@@ -39,7 +37,6 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
 {
   unsigned int i, color;
   SwfdecText *text = SWFDEC_TEXT (obj);
-  SwfdecObject *fontobj;
   SwfdecColorTransform force_color;
   SwfdecRect rect, inval_moved;
 
@@ -60,11 +57,7 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
 
-    fontobj = swfdec_object_get (obj->decoder, glyph->font);
-    if (fontobj == NULL)
-      continue;
-
-    shape = swfdec_font_get_glyph (SWFDEC_FONT (fontobj), glyph->glyph);
+    shape = swfdec_font_get_glyph (glyph->font, glyph->glyph);
     if (shape == NULL) {
       SWFDEC_ERROR ("failed getting glyph %d\n", glyph->glyph);
       continue;

@@ -2,6 +2,7 @@
 #ifndef _SWFDEC_FONT_H_
 #define _SWFDEC_FONT_H_
 
+#include <pango/pangocairo.h>
 #include <swfdec_types.h>
 #include <swfdec_object.h>
 
@@ -35,6 +36,7 @@ struct _SwfdecFont
   SwfdecObject		object;
 
   char *		name;		/* name of the font (FIXME: what name?) */
+  PangoFontDescription *desc;
   gboolean		bold;		/* font is bold */
   gboolean		italic;		/* font is italic */
   gboolean		small;		/* font is rendered at small sizes */

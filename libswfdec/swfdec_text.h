@@ -4,6 +4,7 @@
 
 #include "swfdec_types.h"
 #include <swfdec_object.h>
+#include <color.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecText SwfdecText;
@@ -20,11 +21,12 @@ typedef struct _SwfdecTextChunk SwfdecTextChunk;
 
 struct _SwfdecTextGlyph
 {
-  int x, y;
-  int glyph;
-  int font;
-  int height;
-  unsigned int color;
+  int		x;
+  int		y;
+  int		glyph;
+  SwfdecFont *	font;
+  int		height;
+  swf_color	color;
 };
 
 struct _SwfdecText
@@ -47,8 +49,6 @@ int tag_func_define_font (SwfdecDecoder * s);
 int tag_func_define_font_2 (SwfdecDecoder * s);
 int tag_func_define_text (SwfdecDecoder * s);
 int tag_func_define_text_2 (SwfdecDecoder * s);
-
-void swfdec_font_free (SwfdecObject * object);
 
 G_END_DECLS
 #endif

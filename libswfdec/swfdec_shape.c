@@ -177,7 +177,7 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 #if 0
 	    /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
 	    pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
-	    cairo_pattern_set_matrix(pattern, &shapevec->fill_transform);
+	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
 #else
 	    {
 	      cairo_matrix_t mat = shapevec->fill_transform;
@@ -205,9 +205,20 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 	    int j;
 	    cairo_pattern_t *pattern;
 
+#if 0
+	    /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
 	    pattern = cairo_pattern_create_radial (0,0,0,
 	       0, 0, 16384);
 	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
+#else
+	    {
+	      cairo_matrix_t mat = shapevec->fill_transform;
+	      pattern = cairo_pattern_create_radial (0,0,0,
+		 0, 0, 16384 / 256.0);
+	      cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
+	      cairo_pattern_set_matrix (pattern, &mat);
+	    }
+#endif
 	    for (j=0;j<grad->n_gradients;j++){
 	      color = swfdec_color_apply_transform (grad->array[j].color,
 		  trans);

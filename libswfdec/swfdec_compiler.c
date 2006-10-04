@@ -516,7 +516,6 @@ compile_goto_frame (CompileState *state, guint action, guint len)
   push_prop (state, "gotoAndStop");
   PUSH_OBJ (state);
   i = swfdec_bits_get_u16 (&state->s->b);
-  g_print ("gotoandstop: %u\n", i + 1);
   push_uint16 (state, i + 1);
   call (state, 1);
   POP (state);

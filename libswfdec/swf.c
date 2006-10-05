@@ -135,9 +135,12 @@ swfdec_decoder_dispose (GObject *object)
 
   /* make sure all SwfdecObject's are gone before calling this */
   swfdec_js_finish_decoder (s);
-  swfdec_sprite_content_free (content);
+  if (content)
+    swfdec_sprite_content_free (content);
 
   g_assert (s->movies == NULL);
+  g_assert (g_queue_is_empty (s->gotos));
+  g_queue_free (s->gotos);
 
   swfdec_buffer_queue_free (s->input_queue);
 
@@ -187,6 +190,7 @@ swfdec_decoder_init (SwfdecDecoder *s)
   g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
   s->audio_events = g_array_new (FALSE, FALSE, sizeof (SwfdecAudioEvent));
+  s->gotos = g_queue_new ();
   swfdec_js_init_decoder (s);
   swfdec_js_add_movieclip (s->root);
 }
@@ -653,22 +657,15 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
    * parent in this list, since they got added later.
    */
   for (walk = dec->movies; walk; walk = walk->next) {
-    swfdec_movie_clip_iterate (walk->data);
+    swfdec_movie_clip_queue_iterate (walk->data);
+  }
+  while (swfdec_decoder_do_goto (dec));
+  for (walk = dec->movies; walk; walk = walk->next) {
+    swfdec_movie_clip_iterate_audio (walk->data);
   }
   swfdec_audio_iterate_finish (dec);
   SWFDEC_INFO ("=== STOP ITERATION ===");
   g_object_thaw_notify (G_OBJECT (dec));
-#if 0
-  {
-  jsval rval;
-  int32 hit;
-
-  if (!swfdec_js_run (dec, "_root.hit", &rval) ||
-      (JSVAL_IS_INT (rval) && !JS_ValueToInt32 (dec->jscx, rval, &hit)))
-    g_assert_not_reached ();
-  g_printerr ("hit = %d\n", hit);
-  }
-#endif
 }
 
 /**
@@ -724,6 +721,7 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   g_object_freeze_notify (G_OBJECT (dec));
   swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
+  while (swfdec_decoder_do_goto (dec));
   g_object_thaw_notify (G_OBJECT (dec));
 }
 

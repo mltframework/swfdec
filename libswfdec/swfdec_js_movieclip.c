@@ -91,7 +91,7 @@ mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   n_frames = swfdec_movie_clip_get_n_frames (movie);
   frame = CLAMP (frame, 1, (int) n_frames) - 1;
 
-  movie->next_frame = frame;
+  swfdec_movie_clip_goto (movie, frame, FALSE);
   movie->stopped = FALSE;
   return JS_TRUE;
 }
@@ -114,7 +114,7 @@ mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   n_frames = swfdec_movie_clip_get_n_frames (movie);
   frame = CLAMP (frame, 1, (int) n_frames) - 1;
 
-  movie->next_frame = frame;
+  swfdec_movie_clip_goto (movie, frame, FALSE);
   movie->stopped = TRUE;
   return JS_TRUE;
 }
@@ -146,7 +146,8 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
     if (swfdec_rect_intersect (NULL, &SWFDEC_OBJECT (movie)->extents,
 	  &SWFDEC_OBJECT (other)->extents)) {
-      //g_print ("%s hit %s\n", movie->name ? movie->name : "?", other->name ? other->name : "?");
+      g_print ("%s hit %s\n", movie->content->name ? movie->content->name : "?", 
+	  other->content->name ? other->content->name : "?");
       *rval = BOOLEAN_TO_JSVAL (JS_TRUE);
     } else {
       *rval = BOOLEAN_TO_JSVAL (JS_FALSE);
@@ -351,6 +352,10 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
+  if (!finite (d)) {
+    SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
+    return JS_TRUE;
+  }
   movie->x = d * SWF_SCALE_FACTOR - movie->original_extents.x0;
   swfdec_movie_clip_update_matrix (movie, TRUE);
 
@@ -381,6 +386,10 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
+  if (!finite (d)) {
+    SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
+    return JS_TRUE;
+  }
   movie->y = d * SWF_SCALE_FACTOR - movie->original_extents.y0;
   swfdec_movie_clip_update_matrix (movie, TRUE);
 
@@ -623,8 +632,10 @@ void
 swfdec_js_movie_clip_remove_property (SwfdecMovieClip *movie)
 {
   g_assert (movie->parent);
-  g_assert (movie->parent->jsobj);
   g_assert (movie->jsobj);
+
+  if (movie->parent->jsobj == NULL)
+    return;
 
   JS_DeleteProperty (SWFDEC_OBJECT (movie)->decoder->jscx, movie->parent->jsobj,
       movie->content->name);

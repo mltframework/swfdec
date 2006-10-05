@@ -77,6 +77,7 @@ struct _SwfdecDecoder
 
   /* global state */
   GList *movies;			/* list of all running movie clips */
+  GQueue *gotos;			/* gotoAndFoo + iterations */
 
   /* mouse */
   gboolean mouse_visible;		/* show the mouse (actionscriptable) */
@@ -104,8 +105,6 @@ int swf_parse (SwfdecDecoder * s);
 int swf_parse_header (SwfdecDecoder * s);
 int swf_parse_tag (SwfdecDecoder * s);
 int tag_func_ignore (SwfdecDecoder * s);
-
-void swfdec_decoder_eof (SwfdecDecoder * s);
 
 SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
 const char *swfdec_decoder_get_tag_name (int tag);

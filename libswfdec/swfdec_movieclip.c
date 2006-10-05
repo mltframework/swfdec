@@ -14,6 +14,69 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+/*** GOTO HANDLING ***/
+
+typedef struct {
+  SwfdecMovieClip *	movie;		/* movie that is supposed to jump */
+  guint			frame;		/* frame to jump to */
+  gboolean		do_enter_frame;	/* TRUE to execute enterFrame event */
+} GotoEntry;
+
+static GotoEntry *
+goto_entry_new (SwfdecMovieClip *movie, guint frame, gboolean do_enter_frame)
+{
+  GotoEntry *entry = g_new (GotoEntry, 1);
+
+  entry->movie = movie;
+  entry->frame = frame;
+  entry->do_enter_frame = do_enter_frame;
+  return entry;
+}
+
+static void
+goto_entry_free (GotoEntry *entry)
+{
+  g_free (entry);
+}
+
+static int
+compare_goto (gconstpointer a, gconstpointer b)
+{
+  g_assert (SWFDEC_IS_MOVIE_CLIP (b));
+
+  return ((const GotoEntry *) a)->movie == (SwfdecMovieClip *) b ? 0 : 1;
+}
+
+static void
+swfdec_movie_clip_remove_gotos (SwfdecMovieClip *movie)
+{
+  SwfdecDecoder *dec;
+  GList *item;
+
+  dec = SWFDEC_OBJECT (movie)->decoder;
+  while ((item = g_queue_find_custom (dec->gotos, movie, compare_goto))) {
+    goto_entry_free (item->data);
+    g_queue_delete_link (dec->gotos, item);
+  }
+}
+
+void
+swfdec_movie_clip_goto (SwfdecMovieClip *movie, guint frame, gboolean do_enter_frame)
+{
+  SwfdecDecoder *dec;
+  GotoEntry *entry;
+
+  g_assert (SWFDEC_IS_MOVIE_CLIP (movie));
+  g_assert (SWFDEC_IS_SPRITE (movie->child));
+  g_assert (frame < SWFDEC_SPRITE (movie->child)->n_frames);
+
+  dec = SWFDEC_OBJECT (movie)->decoder;
+  entry = goto_entry_new (movie, frame, do_enter_frame);
+  SWFDEC_LOG ("queueing goto %u for %p %d", frame, movie, movie->child->id);
+  g_queue_push_tail (dec->gotos, entry);
+  movie->next_frame = frame;
+}
+
 /*** MOVIE CLIP ***/
 
 static const SwfdecSpriteContent default_content = {
@@ -154,6 +217,7 @@ swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 {
   g_assert (movie->jsobj == NULL);
 
+  swfdec_movie_clip_remove_gotos (movie);
   g_list_foreach (movie->list, get_rid_of_children, NULL);
   g_list_free (movie->list);
   movie->list = NULL;
@@ -303,8 +367,8 @@ swfdec_movie_clip_get_next_frame (SwfdecMovieClip *movie, unsigned int current_f
   return next_frame;
 }
 
-static void
-swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame)
+void
+swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie)
 {
   SwfdecBuffer *cur;
   SwfdecSpriteFrame *last;
@@ -313,8 +377,10 @@ swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame
 
   g_assert (SWFDEC_IS_SPRITE (movie->child));
 
-  SWFDEC_LOG ("iterating audio (frame %u, last %u)", movie->current_frame, last_frame);
-  last = last_frame == (guint) -1 ? NULL : &SWFDEC_SPRITE (movie->child)->frames[last_frame];
+  SWFDEC_LOG ("iterating audio (frame %u, last %u)", movie->current_frame, 
+      movie->sound_current_frame);
+  last = movie->sound_current_frame == (guint) -1 ? NULL : 
+    &SWFDEC_SPRITE (movie->child)->frames[movie->sound_current_frame];
   current = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
   if (last == NULL || last->sound_head != current->sound_head) {
     /* empty queue */
@@ -331,7 +397,7 @@ swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame
     } else {
       movie->sound_decoder = NULL;
     }
-  } else if (swfdec_movie_clip_get_next_frame (movie, last_frame) != movie->current_frame) {
+  } else if (swfdec_movie_clip_get_next_frame (movie, movie->sound_current_frame) != movie->current_frame) {
     /* empty queue */
     while ((cur = g_queue_pop_head (movie->sound_queue)))
       swfdec_buffer_unref (cur);
@@ -349,13 +415,18 @@ swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie, unsigned int last_frame
     n_bytes -= cur->length;
     swfdec_buffer_unref (cur);
   }
+  movie->sound_current_frame = movie->current_frame;
 }
 
 static void
-swfdec_movie_clip_goto_frame (SwfdecMovieClip *movie, unsigned int goto_frame)
+swfdec_movie_clip_goto_frame (SwfdecMovieClip *movie, unsigned int goto_frame, 
+    gboolean do_enter_frame)
 {
   GList *old, *walk;
   guint i, j, start;
+
+  if (do_enter_frame)
+    swfdec_movie_clip_execute (movie, SWFDEC_EVENT_ENTER);
 
   if (goto_frame == movie->current_frame)
     return;
@@ -367,6 +438,11 @@ swfdec_movie_clip_goto_frame (SwfdecMovieClip *movie, unsigned int goto_frame)
   } else {
     start = movie->current_frame + 1;
     old = NULL;
+  }
+  if (movie->current_frame == (guint) -1 || 
+      SWFDEC_SPRITE (movie->child)->frames[goto_frame].bg_color != 
+      SWFDEC_SPRITE (movie->child)->frames[movie->current_frame].bg_color) {
+    swfdec_object_invalidate (SWFDEC_OBJECT (movie), NULL);
   }
   movie->current_frame = goto_frame;
   SWFDEC_DEBUG ("iterating from %u to %u", start, movie->current_frame);
@@ -387,22 +463,18 @@ swfdec_movie_clip_goto_frame (SwfdecMovieClip *movie, unsigned int goto_frame)
   g_list_free (old);
 }
 
-static void
-swfdec_movie_clip_update_current_frame (SwfdecMovieClip *movie)
+gboolean
+swfdec_decoder_do_goto (SwfdecDecoder *dec)
 {
-  unsigned int next_frame;
+  GotoEntry *entry;
 
-  if (!SWFDEC_IS_SPRITE (movie->child))
-    return;
-  if (!movie->stopped) {
-    movie->next_frame = swfdec_movie_clip_get_next_frame (movie, movie->next_frame);
-  }
-  next_frame = movie->next_frame;
-  swfdec_movie_clip_execute (movie, SWFDEC_EVENT_ENTER);
-  swfdec_movie_clip_goto_frame (movie, next_frame);
-  while (movie->current_frame != movie->next_frame) {
-    swfdec_movie_clip_goto_frame (movie, movie->next_frame);
-  }
+  entry = g_queue_pop_head (dec->gotos);
+  if (entry == NULL)
+    return FALSE;
+
+  swfdec_movie_clip_goto_frame (entry->movie, entry->frame, entry->do_enter_frame);
+  goto_entry_free (entry);
+  return TRUE;
 }
 
 static gboolean
@@ -429,35 +501,26 @@ swfdec_movie_clip_should_iterate (SwfdecMovieClip *movie)
   if (parent_frame < movie->content->sequence->start ||
       parent_frame >= movie->content->sequence->end)
     return FALSE;
+
   /* check if parent will get removed */
   return swfdec_movie_clip_should_iterate (parent);
 }
 
-/* Iterating is a sensitive thing because a lot of scripts are excuted during 
- * iteration, in particular the DoInitAction, DoAction, enterFrame, load and 
- * unload scripts.
- * If you change anything here, please make sure that these orders are still 
- * correct. And run the testsuite. :)
- */
-void 
-swfdec_movie_clip_iterate (SwfdecMovieClip *movie)
+void
+swfdec_movie_clip_queue_iterate (SwfdecMovieClip *movie)
 {
-  unsigned int last_frame;
+  unsigned int goto_frame;
 
-  g_assert (SWFDEC_IS_MOVIE_CLIP (movie));
-  g_assert (SWFDEC_IS_SPRITE (movie->child));
-
-  last_frame = movie->current_frame;
-
-  if (swfdec_movie_clip_should_iterate (movie))
-    swfdec_movie_clip_update_current_frame (movie);
-  swfdec_movie_clip_iterate_audio (movie, last_frame);
-
-  if (last_frame == (guint) -1 || 
-      SWFDEC_SPRITE (movie->child)->frames[last_frame].bg_color != 
-      SWFDEC_SPRITE (movie->child)->frames[movie->current_frame].bg_color) {
-    swfdec_object_invalidate (SWFDEC_OBJECT (movie), NULL);
+  if (!SWFDEC_IS_SPRITE (movie->child))
+    return;
+  if (!swfdec_movie_clip_should_iterate (movie))
+    return;
+  if (movie->stopped) {
+    goto_frame = movie->next_frame;
+  } else {
+    goto_frame = swfdec_movie_clip_get_next_frame (movie, movie->next_frame);
   }
+  swfdec_movie_clip_goto (movie, goto_frame, TRUE);
 }
 
 static gboolean
@@ -694,6 +757,7 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
   movie->child = child;
   movie->current_frame = -1;
   movie->next_frame = 0;
+  movie->sound_current_frame = -1;
   movie->stopped = TRUE;
   if (child) {
     g_object_ref (child);
@@ -702,8 +766,8 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
     if (SWFDEC_IS_SPRITE (child)) {
       movie->stopped = FALSE;
       s->movies = g_list_prepend (s->movies, movie);
-      swfdec_movie_clip_goto_frame (movie, 0);
-      swfdec_movie_clip_iterate_audio (movie, -1);
+      swfdec_movie_clip_goto_frame (movie, 0, FALSE);
+      swfdec_movie_clip_iterate_audio (movie);
     }
     swfdec_movie_clip_update_extents (movie);
   }
@@ -777,3 +841,4 @@ swfdec_movie_clip_render_audio (SwfdecMovieClip *movie, gint16 *dest,
     dest += rendered * 2;
   }
 }
+

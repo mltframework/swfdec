@@ -58,6 +58,7 @@ struct _SwfdecMovieClip
   swf_color		bg_color;		/* background color of main sprite */
 
   /* audio stream handling */
+  unsigned int		sound_current_frame;	/* last frame we updated for */
   gpointer		sound_decoder;	      	/* pointer acquired via swfdec_sound_init_decoder */
   unsigned int		sound_frame;		/* up to which frame the queue contains data (starting with this frame) */
   GQueue*		sound_queue;		/* buffer queue with our data */
@@ -91,7 +92,12 @@ void		swfdec_movie_clip_set_content		(SwfdecMovieClip *	movie,
 
 void		swfdec_movie_clip_update_matrix		(SwfdecMovieClip *	movie,
 							 gboolean		invalidate);
-void		swfdec_movie_clip_iterate		(SwfdecMovieClip *	movie);
+void		swfdec_movie_clip_queue_iterate		(SwfdecMovieClip *	movie);
+void		swfdec_movie_clip_iterate_audio		(SwfdecMovieClip *	movie);
+void		swfdec_movie_clip_goto			(SwfdecMovieClip *	movie,
+							 guint			frame,
+							 gboolean		do_enter_frame);
+gboolean	swfdec_decoder_do_goto			(SwfdecDecoder *	dec);
 gboolean      	swfdec_movie_clip_handle_mouse		(SwfdecMovieClip *	movie,
 							 double			x,
 							 double			y,

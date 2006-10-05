@@ -8,7 +8,7 @@ js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
 	swfdec_rect.c swfdec_image.c swfdec_event.c \
-	swfdec_shape.c swf.c swfdec_object.c swfdec_text.c swfdec_edittext.c \
+	swfdec_shape.c swf.c swfdec_object.c swfdec_text.c swfdec_edittext.c swfdec_html_parser.c \
 	swfdec_sprite.c swfdec_button.c swfdec_movieclip.c \
 	swfdec_sound.c swfdec_font.c swfdec_debug.c swfdec_bits.c \
 	swfdec_buffer.c swfdec_audio.c swfdec_tag.c \

@@ -8,6 +8,8 @@
 #include <pango/pango.h>
 
 G_BEGIN_DECLS
+
+typedef struct _SwfdecParagraph SwfdecParagraph; /* see swfdec_html_parser.c */
 typedef struct _SwfdecEditText SwfdecEditText;
 typedef struct _SwfdecEditTextClass SwfdecEditTextClass;
 
@@ -23,8 +25,10 @@ struct _SwfdecEditText
 
   /* text info */
   char *		text;		/* actual displayed text or NULL if none */
-  gboolean		password;	/* if text is a passowrd and should be displayed as '*' */
+  gboolean		password;	/* if text is a password and should be displayed as '*' */
   unsigned int		max_length;	/* maximum number of characters */
+  gboolean		html;		/* text is pseudo-html */
+  SwfdecParagraph *	paragraph;	/* text after it's parsed into its contents */
 
   /* layout info */
   SwfdecFont *	  	font;		/* font or NULL for default */
@@ -54,9 +58,21 @@ struct _SwfdecEditTextClass
   SwfdecObjectClass	object_class;
 };
 
-GType		swfdec_edit_text_get_type	(void);
+GType			swfdec_edit_text_get_type	(void);
 
-int		tag_func_define_edit_text	(SwfdecDecoder * s);
+int			tag_func_define_edit_text	(SwfdecDecoder *	s);
+
+/* implemented in swfdec_html_parser.c */
+SwfdecParagraph *	swfdec_paragraph_html_parse   	(SwfdecEditText *	text, 
+							 const char *		str);
+SwfdecParagraph *	swfdec_paragraph_text_parse	(SwfdecEditText *       text,
+							 const char *		str);
+void			swfdec_paragraph_free		(SwfdecParagraph *	paragraphs);
+void			swfdec_paragraph_render		(SwfdecEditText *	text,
+							 cairo_t *		cr,
+							 SwfdecParagraph *	paragraph);
+
+
 
 G_END_DECLS
 #endif

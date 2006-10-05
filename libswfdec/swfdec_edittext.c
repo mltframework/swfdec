@@ -18,48 +18,16 @@ static void
 swfdec_edit_text_render (SwfdecObject *obj, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
-  PangoFontDescription *desc;
-  PangoLayout *layout;
   SwfdecEditText *text = SWFDEC_EDIT_TEXT (obj);
-  unsigned int width;
 
-  if (text->text == NULL)
+  if (text->paragraph == NULL)
     return;
-  layout = pango_cairo_create_layout (cr);
   if (text->font == NULL) {
     SWFDEC_ERROR ("no font to render with");
     return;
   }
-  if (text->font->desc == NULL) {
-    desc = pango_font_description_new ();
-    pango_font_description_set_family (desc, "Sans");
-    SWFDEC_ERROR ("font %d has no cairo font description", SWFDEC_OBJECT (text->font)->id);
-  } else {
-    desc = pango_font_description_copy (text->font->desc);
-  }
-  pango_font_description_set_absolute_size (desc, text->height * PANGO_SCALE);
-  pango_layout_set_font_description (layout, desc);
-  pango_font_description_free (desc);
-  pango_layout_set_text (layout, text->text, -1);
-  width = obj->extents.x1 - obj->extents.x0 - text->left_margin - text->right_margin;
-  pango_layout_set_width (layout, width);
-  cairo_move_to (cr, obj->extents.x0 + text->left_margin, obj->extents.y0);
-  cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
-  {
-    double x, y;
-    cairo_get_current_point (cr, &x, &y);
-    cairo_user_to_device (cr, &x, &y);
-    g_print ("rendering \"%s\" to %g %g\n", text->text, x, y);
-  }
-  pango_cairo_show_layout (cr, layout);
-  {
-    double x, y;
-    cairo_get_current_point (cr, &x, &y);
-    cairo_user_to_device (cr, &x, &y);
-    g_print ("done rendering \"%s\" to %g %g\n", text->text, x, y);
-  }
 
-  g_object_unref (layout);
+  swfdec_paragraph_render (text, cr, text->paragraph);
 }
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecEditText, swfdec_edit_text)
@@ -85,9 +53,28 @@ swfdec_edit_text_init (SwfdecEditText * text)
 }
 
 static void
-swfdec_edit_text_dispose (SwfdecEditText * edit_text)
+swfdec_edit_text_dispose (SwfdecEditText *text)
 {
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (edit_text));
+  g_free (text->text);
+  if (text->paragraph)
+    swfdec_paragraph_free (text->paragraph);
+  
+  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (text));
+}
+
+static void
+swfdec_edit_text_set_text (SwfdecEditText *text, const char *str)
+{
+  g_assert (str != NULL);
+
+  if (text->paragraph)
+    swfdec_paragraph_free (text->paragraph);
+  g_free (text->text);
+  text->text = g_strdup (str);
+  if (text->html)
+    text->paragraph = swfdec_paragraph_html_parse (text, str);
+  else
+    text->paragraph = swfdec_paragraph_text_parse (text, str);
 }
 
 int
@@ -121,8 +108,7 @@ tag_func_define_edit_text (SwfdecDecoder * s)
   text->selectable = !swfdec_bits_getbit (b);
   text->border = swfdec_bits_getbit (b);
   reserved = swfdec_bits_getbit (b);
-  if (swfdec_bits_getbit (b))
-    SWFDEC_WARNING ("FIXME: html text parsing not supported");
+  text->html = swfdec_bits_getbit (b);
   use_outlines = swfdec_bits_getbit (b); /* FIXME: what's this? */
   if (has_font) {
     SwfdecObject *object;
@@ -174,7 +160,7 @@ tag_func_define_edit_text (SwfdecDecoder * s)
   }
   text->variable = swfdec_bits_get_string (b);
   if (has_text)
-    text->text = swfdec_bits_get_string (b);
+    swfdec_edit_text_set_text (text, swfdec_bits_skip_string (b));
 
   return SWFDEC_OK;
 }

@@ -113,9 +113,8 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
     language = swfdec_bits_get_u8 (&s->b);
   font->name = convert_from_language (name, language);
   g_free (name);
-  g_print ("Parsing FontInfo for font %d\n", id);
   if (font->name) {
-    g_print ("Creating font description for font %d\n", id);
+    SWFDEC_LOG ("Creating font description for font %d", id);
     font->desc = pango_font_description_new ();
     pango_font_description_set_family_static (font->desc, font->name);
     if (font->bold)

@@ -1,8 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include "swfdec_internal.h"
-
-#include <swfdec_object.h>
 #include <string.h>
+#include "swfdec_object.h"
+#include "swfdec_debug.h"
+#include "swfdec_decoder.h"
 
 
 static void swfdec_object_base_init (gpointer g_class);

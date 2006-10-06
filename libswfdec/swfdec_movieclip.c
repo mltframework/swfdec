@@ -106,6 +106,7 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
   movie->button_state = SWFDEC_BUTTON_UP;
 
   movie->sound_queue = g_queue_new ();
+  swfdec_rect_init_empty (&SWFDEC_OBJECT (movie)->extents);
 }
 
 static void
@@ -117,25 +118,44 @@ swfdec_movie_clip_execute (SwfdecMovieClip *movie, unsigned int condition)
 }
 
 static void
-swfdec_movie_clip_invalidate (SwfdecMovieClip *movie, const SwfdecRect *rect)
+swfdec_movie_clip_invalidate (SwfdecMovieClip *movie)
 {
-  SwfdecRect tmp;
-  SWFDEC_LOG ("invalidating %g %g  %g %g", rect->x0, rect->y0, rect->x1, rect->y1);
-  swfdec_rect_transform (&tmp, rect, &movie->transform);
+  gboolean was_empty;
+  SwfdecDecoder *s;
+  SwfdecRect rect = SWFDEC_OBJECT (movie)->extents;
+
+  SWFDEC_LOG ("invalidating %g %g  %g %g", rect.x0, rect.y0, rect.x1, rect.y1);
   while (movie->parent) {
     movie = movie->parent;
-    swfdec_rect_transform (&tmp, &tmp, &movie->transform);
+    if (movie->cache_state > SWFDEC_MOVIE_CLIP_INVALID_EXTENTS)
+      return;
+    swfdec_rect_transform (&rect, &rect, &movie->transform);
   }
-  swfdec_object_invalidate (SWFDEC_OBJECT (movie), &tmp);
+  s = SWFDEC_OBJECT (movie)->decoder;
+  was_empty = swfdec_rect_is_empty (&s->invalid);
+  SWFDEC_DEBUG ("toplevel invalidation: %g %g  %g %g", rect.x0, rect.y0, rect.x1, rect.y1);
+  swfdec_rect_union (&s->invalid, &s->invalid, &rect);
+  if (was_empty)
+    g_object_notify (G_OBJECT (s), "invalid");
 }
 
-static void
-swfdec_movie_clip_invalidate_cb (SwfdecObject *child, const SwfdecRect *rect, SwfdecMovieClip *movie)
+/**
+ * swfdec_movie_clip_queue_update:
+ * @movie: a #SwfdecMovieClip
+ * @state: how much needs to be updated
+ *
+ * Queues an update of all cached values inside @movie.
+ **/
+void
+swfdec_movie_clip_queue_update (SwfdecMovieClip *movie, SwfdecMovieClipState state)
 {
-  SwfdecRect inval;
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
 
-  inval = *rect;
-  swfdec_movie_clip_invalidate (movie, &inval);
+  while (movie && movie->cache_state < state) {
+    movie->cache_state = state;
+    movie = movie->parent;
+    state = SWFDEC_MOVIE_CLIP_INVALID_CHILDREN;
+  }
 }
 
 static void
@@ -160,28 +180,20 @@ swfdec_movie_clip_update_extents (SwfdecMovieClip *movie)
   } else {
     *rect = movie->child->extents;
   }
-  *extents = *rect;
+  swfdec_rect_transform (extents, rect, &movie->transform);
   swfdec_rect_transform (rect, rect, &movie->content->transform);
-  swfdec_rect_transform (extents, extents, &movie->transform);
+  if (movie->parent && movie->parent->cache_state < SWFDEC_MOVIE_CLIP_INVALID_EXTENTS) {
+    SwfdecRect tmp;
+    swfdec_rect_transform (&tmp, extents, &movie->parent->transform);
+    if (!swfdec_rect_inside (&SWFDEC_OBJECT (movie->parent)->extents, &tmp))
+      swfdec_movie_clip_queue_update (movie->parent, SWFDEC_MOVIE_CLIP_INVALID_EXTENTS);
+  }
 }
 
-/**
- * swfdec_movie_clip_update_matrix:
- * @movie: a #SwfdecMovieClip
- * @invalidate: TRUE to invalidate the area occupied by this movieclip
- *
- * Updates the transformation matrices that are used within this movieclip.
- **/
-void
-swfdec_movie_clip_update_matrix (SwfdecMovieClip *movie, gboolean invalidate)
+static void
+swfdec_movie_clip_update_matrix (SwfdecMovieClip *movie)
 {
-  SwfdecRect rect;
   cairo_matrix_t mat;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
-
-  if (invalidate)
-    rect = SWFDEC_OBJECT (movie)->extents;
 
   cairo_matrix_init_translate (&mat, movie->x, movie->y);
   cairo_matrix_scale (&mat, movie->xscale, movie->yscale);
@@ -193,13 +205,57 @@ swfdec_movie_clip_update_matrix (SwfdecMovieClip *movie, gboolean invalidate)
     g_assert_not_reached ();
   }
   swfdec_movie_clip_update_extents (movie);
-  if (invalidate) {
-    swfdec_rect_union (&rect, &rect, &SWFDEC_OBJECT (movie)->extents);
-    if (movie->parent) {
-      swfdec_movie_clip_invalidate (movie->parent, &rect);
-    } else {
-      swfdec_object_invalidate (SWFDEC_OBJECT (movie), &rect);
-    }
+}
+
+static void
+swfdec_movie_clip_do_update (SwfdecMovieClip *movie)
+{
+  GList *walk;
+
+  for (walk = movie->list; walk; walk = walk->next) {
+    SwfdecMovieClip *child = walk->data;
+
+    if (child->cache_state != SWFDEC_MOVIE_CLIP_UP_TO_DATE)
+      swfdec_movie_clip_do_update (child);
+  }
+
+  switch (movie->cache_state) {
+    case SWFDEC_MOVIE_CLIP_INVALID_CHILDREN:
+      break;
+    case SWFDEC_MOVIE_CLIP_INVALID_EXTENTS:
+      swfdec_movie_clip_update_extents (movie);
+      break;
+    case SWFDEC_MOVIE_CLIP_INVALID_MATRIX:
+      swfdec_movie_clip_update_matrix (movie);
+      break;
+    case SWFDEC_MOVIE_CLIP_UP_TO_DATE:
+    default:
+      g_assert_not_reached ();
+  }
+  if (movie->cache_state > SWFDEC_MOVIE_CLIP_INVALID_EXTENTS)
+    swfdec_movie_clip_invalidate (movie);
+  movie->cache_state = SWFDEC_MOVIE_CLIP_UP_TO_DATE;
+}
+
+/**
+ * swfdec_movie_clip_update:
+ * @movie: a #SwfdecMovieClip
+ *
+ * Brings the cached values of @movie up-to-date if they are not. This includes
+ * transformation matrices, extents among others.
+ **/
+void
+swfdec_movie_clip_update (SwfdecMovieClip *movie)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (movie));
+
+  if (movie->cache_state == SWFDEC_MOVIE_CLIP_UP_TO_DATE)
+    return;
+
+  if (movie->parent && movie->parent->cache_state != SWFDEC_MOVIE_CLIP_UP_TO_DATE) {
+    swfdec_movie_clip_update (movie->parent);
+  } else {
+    swfdec_movie_clip_do_update (movie);
   }
 }
 
@@ -255,8 +311,6 @@ swfdec_movie_clip_set_content (SwfdecMovieClip *movie, const SwfdecSpriteContent
     content = &default_content;
 
   if (movie->content) {
-    if (movie->parent)
-      swfdec_movie_clip_invalidate (movie->parent, &SWFDEC_OBJECT (movie)->extents);
     if (movie->content->name && movie->jsobj)
       swfdec_js_movie_clip_remove_property (movie);
   }
@@ -266,10 +320,8 @@ swfdec_movie_clip_set_content (SwfdecMovieClip *movie, const SwfdecSpriteContent
   if (content->name && movie->parent && movie->parent->jsobj)
     swfdec_js_movie_clip_add_property (movie);
 
-  /* do all the necessary setup stuff */
-  swfdec_movie_clip_update_matrix (movie, FALSE);
-  if (movie->parent)
-    swfdec_movie_clip_invalidate (movie->parent, &SWFDEC_OBJECT (movie)->extents);
+  swfdec_movie_clip_invalidate (movie);
+  swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_MATRIX);
 }
 
 static void
@@ -283,6 +335,7 @@ swfdec_movie_clip_remove (SwfdecMovieClip *movie)
   swfdec_movie_clip_execute (movie, SWFDEC_EVENT_UNLOAD);
   swfdec_movie_clip_set_content (movie, NULL);
   movie->parent->list = g_list_remove (movie->parent->list, movie);
+  swfdec_movie_clip_invalidate (movie);
   movie->parent = NULL;
   g_object_unref (movie);
 }
@@ -442,7 +495,7 @@ swfdec_movie_clip_goto_frame (SwfdecMovieClip *movie, unsigned int goto_frame,
   if (movie->current_frame == (guint) -1 || 
       SWFDEC_SPRITE (movie->child)->frames[goto_frame].bg_color != 
       SWFDEC_SPRITE (movie->child)->frames[movie->current_frame].bg_color) {
-    swfdec_object_invalidate (SWFDEC_OBJECT (movie), NULL);
+    swfdec_movie_clip_invalidate (movie);
   }
   movie->current_frame = goto_frame;
   SWFDEC_DEBUG ("iterating from %u to %u", start, movie->current_frame);
@@ -768,10 +821,6 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
 	swfdec_buffer_unref (cur);
       s->movies = g_list_remove (s->movies, movie);
     }
-    if (g_signal_handlers_disconnect_by_func (movie->child, 
-	swfdec_movie_clip_invalidate_cb, movie) != 1) {
-      g_assert_not_reached ();
-    }
     g_object_unref (movie->child);
   }
   movie->child = child;
@@ -781,16 +830,15 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
   movie->stopped = TRUE;
   if (child) {
     g_object_ref (child);
-    g_signal_connect (child, "invalidate", 
-	G_CALLBACK (swfdec_movie_clip_invalidate_cb), movie);
     if (SWFDEC_IS_SPRITE (child)) {
       movie->stopped = FALSE;
       s->movies = g_list_prepend (s->movies, movie);
       swfdec_movie_clip_goto_frame (movie, 0, FALSE);
       swfdec_movie_clip_iterate_audio (movie);
     }
-    swfdec_movie_clip_update_extents (movie);
   }
+  swfdec_movie_clip_invalidate (movie);
+  swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_EXTENTS);
 }
 
 static gboolean

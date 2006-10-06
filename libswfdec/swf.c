@@ -64,16 +64,6 @@ swfdec_init (void)
   swfdec_js_init (0);
 }
 
-static void
-swfdec_decoder_invalidate_cb (SwfdecMovieClip *root, const SwfdecRect *rect, SwfdecDecoder *s)
-{
-  gboolean was_empty = swfdec_rect_is_empty (&s->invalid);
-  SWFDEC_DEBUG ("toplevel invalidation: %g %g  %g %g", rect->x0, rect->y0, rect->x1, rect->y1);
-  swfdec_rect_union (&s->invalid, &s->invalid, rect);
-  if (was_empty)
-    g_object_notify (G_OBJECT (s), "invalid");
-}
-
 SwfdecDecoder *
 swfdec_decoder_new (void)
 {
@@ -187,7 +177,6 @@ swfdec_decoder_init (SwfdecDecoder *s)
   s->main_sprite = swfdec_object_new (s, SWFDEC_TYPE_SPRITE);
   s->main_sprite->object.id = 0;
   s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
-  g_signal_connect (s->root, "invalidate", G_CALLBACK (swfdec_decoder_invalidate_cb), s);
 
   s->audio_events = g_array_new (FALSE, FALSE, sizeof (SwfdecAudioEvent));
   s->gotos = g_queue_new ();
@@ -662,6 +651,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
   while (swfdec_decoder_do_goto (dec));
   for (walk = dec->movies; walk; walk = walk->next) {
     swfdec_movie_clip_iterate_audio (walk->data);
+    swfdec_movie_clip_update (walk->data);
   }
   swfdec_audio_iterate_finish (dec);
   SWFDEC_INFO ("=== STOP ITERATION ===");
@@ -715,6 +705,8 @@ void
 swfdec_decoder_handle_mouse (SwfdecDecoder *dec, 
     double x, double y, int button)
 {
+  GList *walk;
+
   g_return_if_fail (dec != NULL);
   g_return_if_fail (button == 0 || button == 1);
 
@@ -722,6 +714,9 @@ swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
   g_object_freeze_notify (G_OBJECT (dec));
   swfdec_movie_clip_handle_mouse (dec->root, x, y, button);
   while (swfdec_decoder_do_goto (dec));
+  for (walk = dec->movies; walk; walk = walk->next) {
+    swfdec_movie_clip_update (walk->data);
+  }
   g_object_thaw_notify (G_OBJECT (dec));
 }
 

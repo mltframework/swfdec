@@ -19,6 +19,14 @@ typedef struct _SwfdecMovieClipClass SwfdecMovieClipClass;
 #define SWFDEC_MOVIE_CLIP(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_MOVIE_CLIP, SwfdecMovieClip))
 #define SWFDEC_MOVIE_CLIP_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_MOVIE_CLIP, SwfdecMovieClipClass))
 
+typedef enum {
+  SWFDEC_MOVIE_CLIP_UP_TO_DATE = 0,
+  SWFDEC_MOVIE_CLIP_INVALID_CHILDREN,
+  SWFDEC_MOVIE_CLIP_INVALID_EXTENTS,
+  SWFDEC_MOVIE_CLIP_INVALID_AREA,
+  SWFDEC_MOVIE_CLIP_INVALID_MATRIX,
+} SwfdecMovieClipState;
+
 struct _SwfdecMovieClip
 {
   SwfdecObject		object;
@@ -27,6 +35,7 @@ struct _SwfdecMovieClip
   SwfdecObject *	child;			/* object that we display (may be NULL) */
   GList *		list;			/* our contained movie clips (order by depth) */
   const SwfdecSpriteContent *	content;      	/* the content we are displaying */
+  SwfdecMovieClipState	cache_state;		/* wether we are up to date */
 
   /* parenting information */
   SwfdecMovieClip *	parent;			/* the object that contains us */
@@ -90,8 +99,9 @@ void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
 void		swfdec_movie_clip_set_content		(SwfdecMovieClip *	movie,
 							 const SwfdecSpriteContent *content);
 
-void		swfdec_movie_clip_update_matrix		(SwfdecMovieClip *	movie,
-							 gboolean		invalidate);
+void		swfdec_movie_clip_queue_update		(SwfdecMovieClip *	movie,
+							 SwfdecMovieClipState	state);
+void		swfdec_movie_clip_update		(SwfdecMovieClip *	movie);
 void		swfdec_movie_clip_queue_iterate		(SwfdecMovieClip *	movie);
 void		swfdec_movie_clip_iterate_audio		(SwfdecMovieClip *	movie);
 void		swfdec_movie_clip_goto			(SwfdecMovieClip *	movie,

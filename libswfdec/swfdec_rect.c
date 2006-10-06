@@ -171,6 +171,29 @@ swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matr
   dest->y1 = MAX (MAX (tmp.y0, tmp.y1), MAX (tmp2.y0, tmp2.y1));
 }
 
+/**
+ * swfdec_rect_inside:
+ * @outer: the supposed outer rectangle
+ * @inner: the supposed inner rectangle
+ *
+ * Checks if @outer completely includes the rectangle specified by @inner.
+ * If both rectangles are empty, TRUE is returned.
+ *
+ * Returns: TRUE if @outer includes @inner, FALSE otherwise
+ **/
+gboolean
+swfdec_rect_inside (const SwfdecRect *outer, const SwfdecRect *inner)
+{
+  /* empty includes empty */
+  if (swfdec_rect_is_empty (inner))
+    return TRUE;
+  /* if outer is empty, below will return FALSE */
+  return outer->x0 <= inner->x0 &&
+	 outer->y0 <= inner->y0 &&
+	 outer->x1 >= inner->y1 &&
+	 outer->y1 >= inner->y1;
+}
+
 void
 swfdec_rect_transform_inverse (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
 {

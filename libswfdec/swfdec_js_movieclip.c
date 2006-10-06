@@ -135,6 +135,8 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       return JS_FALSE;
     }
     other = SWFDEC_MOVIE_CLIP (JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0])));
+    swfdec_movie_clip_update (movie);
+    swfdec_movie_clip_update (other);
     /* FIXME */
     g_assert (movie->parent == other->parent);
 #if 0
@@ -337,6 +339,7 @@ mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
+  swfdec_movie_clip_update (movie);
   d = (movie->x + movie->original_extents.x0) / SWF_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
@@ -357,7 +360,7 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   movie->x = d * SWF_SCALE_FACTOR - movie->original_extents.x0;
-  swfdec_movie_clip_update_matrix (movie, TRUE);
+  swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_MATRIX);
 
   return JS_TRUE;
 }
@@ -371,6 +374,7 @@ mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
+  swfdec_movie_clip_update (movie);
   d = (movie->y + movie->original_extents.y0) / SWF_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
@@ -391,7 +395,7 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   movie->y = d * SWF_SCALE_FACTOR - movie->original_extents.y0;
-  swfdec_movie_clip_update_matrix (movie, TRUE);
+  swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_MATRIX);
 
   return JS_TRUE;
 }

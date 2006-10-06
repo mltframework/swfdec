@@ -41,10 +41,6 @@ struct _SwfdecObjectClass
 					 double				x,
 					 double				y,
 					 int				button);
-
-  /* signals */
-  void			(* invalidate)	(SwfdecObject *			object,
-					 const SwfdecRect *		rect);
 };
 
 GType swfdec_object_get_type (void);
@@ -57,7 +53,6 @@ gboolean swfdec_object_mouse_in (SwfdecObject *object,
     double x, double y, int button);
 void swfdec_object_render (SwfdecObject *object, cairo_t *cr, 
     const SwfdecColorTransform *color, const SwfdecRect *inval, gboolean fill);
-void swfdec_object_invalidate (SwfdecObject *object, const SwfdecRect *area);
 
 
 #define SWFDEC_OBJECT_BOILERPLATE(type, type_as_function) \

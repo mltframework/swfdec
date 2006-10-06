@@ -13,15 +13,9 @@ static void swfdec_object_class_init (gpointer g_class, gpointer user_data);
 static void swfdec_object_init (GTypeInstance * instance, gpointer g_class);
 static void swfdec_object_dispose (GObject * object);
 
-enum {
-  INVALIDATE,
-  LAST_SIGNAL
-};
-
 static GType _swfdec_object_type;
 
 static GObjectClass *parent_class = NULL;
-static guint signals[LAST_SIGNAL];
 
 GType
 swfdec_object_get_type (void)
@@ -60,10 +54,6 @@ swfdec_object_class_init (gpointer g_class, gpointer class_data)
   gobject_class->dispose = swfdec_object_dispose;
 
   parent_class = g_type_class_peek_parent (gobject_class);
-
-  signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (g_class),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecObjectClass, invalidate), NULL, NULL,
-      g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 }
 
 static void
@@ -234,19 +224,3 @@ swfdec_object_mouse_in (SwfdecObject *object, double x, double y,
   return FALSE;
 }
 
-void 
-swfdec_object_invalidate (SwfdecObject *object, const SwfdecRect *area)
-{
-  SwfdecRect inval;
-
-  g_return_if_fail (SWFDEC_IS_OBJECT (object));
-  if (area == NULL)
-    inval = object->extents;
-  else
-    swfdec_rect_intersect (&inval, area, &object->extents);
-
-  if (swfdec_rect_is_empty (&inval))
-    return;
-  SWFDEC_LOG ("invalidating %g %g  %g %g", inval.x0, inval.y0, inval.x1, inval.y1);
-  g_signal_emit (object, signals[INVALIDATE], 0, &inval);
-}

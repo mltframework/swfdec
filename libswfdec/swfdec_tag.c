@@ -510,13 +510,8 @@ tag_func_define_font (SwfdecDecoder * s)
     shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
     entry->shape = shape;
 
-    shape->fills = g_ptr_array_sized_new (1);
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->fills, shapevec);
-    shape->fills2 = g_ptr_array_sized_new (1);
-    shapevec = swf_shape_vec_new ();
-    g_ptr_array_add (shape->fills2, shapevec);
-    shape->lines = g_ptr_array_sized_new (1);
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->lines, shapevec);
 
@@ -611,13 +606,8 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
     entry->shape = shape;
 
-    shape->fills = g_ptr_array_sized_new (1);
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->fills, shapevec);
-    shape->fills2 = g_ptr_array_sized_new (1);
-    shapevec = swf_shape_vec_new ();
-    g_ptr_array_add (shape->fills2, shapevec);
-    shape->lines = g_ptr_array_sized_new (1);
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->lines, shapevec);
 

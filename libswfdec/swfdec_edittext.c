@@ -159,6 +159,11 @@ tag_func_define_edit_text (SwfdecDecoder * s)
     text->spacing = swfdec_bits_get_s16 (b);
   }
   text->variable = swfdec_bits_get_string (b);
+  /* FIXME: needs a smarter verification of proper variable names */
+  if (text->variable && text->variable[0] == '\0') {
+    g_free (text->variable);
+    text->variable = NULL;
+  }
   if (has_text)
     swfdec_edit_text_set_text (text, swfdec_bits_skip_string (b));
 

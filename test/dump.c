@@ -99,10 +99,13 @@ dump_path (cairo_path_t *path)
 static void
 print_fill_info (SwfdecShapeVec *shapevec)
 {
-  if (shapevec->pattern == NULL)
+  if (shapevec->pattern == NULL) {
     g_print ("not filled\n");
-  else
-    g_print ("%s\n", G_OBJECT_TYPE_NAME (shapevec->pattern));
+  } else {
+    char *str = swfdec_pattern_to_string (shapevec->pattern);
+    g_print ("%s\n", str);
+    g_free (str);
+  }
 }
 
 static void

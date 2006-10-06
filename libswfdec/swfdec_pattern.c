@@ -357,3 +357,24 @@ swfdec_pattern_new_color (swf_color color)
 
   return pattern;
 }
+
+char *
+swfdec_pattern_to_string (SwfdecPattern *pattern)
+{
+  g_return_val_if_fail (SWFDEC_IS_PATTERN (pattern), NULL);
+
+  if (SWFDEC_IS_IMAGE_PATTERN (pattern)) {
+    SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pattern);
+    return g_strdup_printf ("image %u (%s, %s)", SWFDEC_OBJECT (image->image)->id,
+	image->extend == CAIRO_EXTEND_REPEAT ? "repeat" : "no repeat",
+	image->filter == CAIRO_FILTER_BILINEAR ? "bilinear" : "nearest");
+  } else if (SWFDEC_IS_COLOR_PATTERN (pattern)) {
+    return g_strdup_printf ("color #%08X", SWFDEC_COLOR_PATTERN (pattern)->color);
+  } else if (SWFDEC_IS_GRADIENT_PATTERN (pattern)) {
+    SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pattern);
+    return g_strdup_printf ("%s gradient (%u colors)", gradient->radial ? "radial" : "linear",
+	gradient->gradient->n_gradients);
+  } else {
+    return g_strdup_printf ("%s", G_OBJECT_TYPE_NAME (pattern));
+  }
+}

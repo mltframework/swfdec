@@ -48,5 +48,8 @@ void		swfdec_pattern_fill		(SwfdecPattern *		pattern,
 						 const SwfdecColorTransform *	trans,
 						 unsigned int			ratio);
 
+/* debug */
+char *		swfdec_pattern_to_string	(SwfdecPattern *		pattern);
+
 G_END_DECLS
 #endif

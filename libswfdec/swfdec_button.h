@@ -64,7 +64,7 @@ struct _SwfdecButtonClass
 GType swfdec_button_get_type (void);
 
 void swfdec_button_render (SwfdecButton *button, SwfdecButtonState state, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval);
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill);
 SwfdecButtonState swfdec_button_change_state (SwfdecMovieClip *movie, gboolean was_in, 
   int old_button);
 

@@ -33,7 +33,7 @@ swfdec_text_mouse_in (SwfdecObject *object,
 
 static void
 swfdec_text_render (SwfdecObject *obj, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   unsigned int i, color;
   SwfdecText *text = SWFDEC_TEXT (obj);
@@ -74,7 +74,7 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
     color = swfdec_color_apply_transform (glyph->color, trans);
     swfdec_color_transform_init_color (&force_color, color);
     swfdec_object_render (SWFDEC_OBJECT (shape), cr, 
-	&force_color, &rect);
+	&force_color, &rect, fill);
     cairo_restore (cr);
   }
 }

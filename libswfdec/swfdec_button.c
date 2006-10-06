@@ -193,7 +193,7 @@ swfdec_button_handle_mouse (SwfdecObject *object, double x, double y, int mouse_
 
 void
 swfdec_button_render (SwfdecButton *button, SwfdecButtonState state, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecButtonRecord *record;
   unsigned int i;
@@ -210,7 +210,7 @@ swfdec_button_render (SwfdecButton *button, SwfdecButtonState state, cairo_t *cr
       cairo_save (cr);
       cairo_transform (cr, &record->transform);
       swfdec_rect_transform_inverse (&rect, inval, &record->transform);
-      swfdec_object_render (record->object, cr, &color_trans, &rect);
+      swfdec_object_render (record->object, cr, &color_trans, &rect, fill);
       cairo_restore (cr);
     }
   }

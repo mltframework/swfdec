@@ -42,6 +42,10 @@ dump_sprite (SwfdecSprite *s)
 	      g_assert (content == content->sequence);
 	      g_assert (content->start == i);
 	      g_print ("   %4u -%4u %3u", i, content->end, content->depth);
+	      if (content->clip_depth)
+		g_print ("%4u", content->clip_depth);
+	      else
+		g_print ("    ");
 	      if (content->object) {
 		g_print (" %s %u", G_OBJECT_TYPE_NAME (content->object), content->object->id);
 	      } else {
@@ -95,27 +99,10 @@ dump_path (cairo_path_t *path)
 static void
 print_fill_info (SwfdecShapeVec *shapevec)
 {
-  switch (shapevec->fill_type) {
-    case 0x10:
-      g_print ("linear gradient\n");
-      break;
-    case 0x12:
-      g_print ("radial gradient\n");
-      break;
-    case 0x40:
-    case 0x41:
-    case 0x42:
-    case 0x43:
-      g_print ("%s%simage (id %d)\n", shapevec->fill_type % 2 ? "" : "repeating ", 
-	  shapevec->fill_type < 0x42 ? "bilinear " : "", shapevec->fill_id);
-      break;
-    case 0x00:
-      g_print ("solid color 0x%08X\n", shapevec->color);
-      break;
-    default:
-      g_print ("unknown fill type %d\n", shapevec->fill_type);
-      break;
-  }
+  if (shapevec->pattern == NULL)
+    g_print ("not filled\n");
+  else
+    g_print ("%s\n", G_OBJECT_TYPE_NAME (shapevec->pattern));
 }
 
 static void
@@ -203,7 +190,11 @@ dump_objects(SwfdecDecoder *s)
   for (g = g_list_last (s->characters); g; g = g->prev) {
     object = g->data;
     type = G_TYPE_FROM_INSTANCE (object);
-    printf("%d: %s\n", object->id, g_type_name (type));
+    g_print ("%d: %s\n", object->id, g_type_name (type));
+    if (verbose) {
+      g_print ("  extents: %g %g  %g %g\n", object->extents.x0, object->extents.y0,
+	  object->extents.x1, object->extents.y1);
+    }
     if (SWFDEC_IS_SPRITE (object)){
       dump_sprite (SWFDEC_SPRITE (object));
     }

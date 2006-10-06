@@ -690,10 +690,10 @@ swfdec_decoder_render (SwfdecDecoder *dec, cairo_t *cr, SwfdecRect *area)
   if (swfdec_rect_is_empty (area))
     return;
   was_empty = swfdec_rect_is_empty (&dec->invalid);
-  SWFDEC_LOG ("%p: starting rendering, area %g %g  %g %g", dec, 
+  SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", dec, 
       area->x0, area->y0, area->x1, area->y1);
-  swfdec_object_render (SWFDEC_OBJECT (dec->root), cr, &trans, area);
-  SWFDEC_LOG ("%p: finished rendering", dec);
+  swfdec_object_render (SWFDEC_OBJECT (dec->root), cr, &trans, area, TRUE);
+  SWFDEC_INFO ("=== %p: END RENDER ===", dec);
   swfdec_rect_subtract (&dec->invalid, &dec->invalid, area);
   if (!was_empty)
     g_object_notify (G_OBJECT (dec), "invalid");

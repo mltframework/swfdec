@@ -16,7 +16,7 @@ swfdec_edit_text_mouse_in (SwfdecObject *object,
 
 static void
 swfdec_edit_text_render (SwfdecObject *obj, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecEditText *text = SWFDEC_EDIT_TEXT (obj);
 
@@ -27,7 +27,7 @@ swfdec_edit_text_render (SwfdecObject *obj, cairo_t *cr,
     return;
   }
 
-  swfdec_paragraph_render (text, cr, text->paragraph);
+  swfdec_paragraph_render (text, cr, text->paragraph, fill);
 }
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecEditText, swfdec_edit_text)

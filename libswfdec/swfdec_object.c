@@ -154,9 +154,21 @@ swfdec_object_create (SwfdecDecoder * s, int id, GType type)
   return result;
 }
 
+/**
+ * swfdec_object_render:
+ * @object: the #SwfdecObject to render
+ * @cr: the cairo context to render to
+ * @color: a color transformation to apply
+ * @inval: the reegion that was invalidated
+ * @fill: TRUE if the area should be painted, FALSE to just append the path to @cr.
+ *        This will only be set to FALSE for clipping.
+ *
+ * Renders @object. Depending on the @fill parameter this will just append the 
+ * path to @cr or draw the contents.
+ **/
 void
 swfdec_object_render (SwfdecObject *object, cairo_t *cr, 
-    const SwfdecColorTransform *color, const SwfdecRect *inval)
+    const SwfdecColorTransform *color, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecObjectClass *klass;
 
@@ -176,10 +188,11 @@ swfdec_object_render (SwfdecObject *object, cairo_t *cr,
 
   if (swfdec_rect_intersect (NULL, &object->extents, inval)) {
     SWFDEC_LOG ("really rendering %s %p (id %d)", G_OBJECT_TYPE_NAME (object), object, object->id);
-    klass->render (object, cr, color, inval);
+    klass->render (object, cr, color, inval, fill);
   } else {
-    SWFDEC_LOG ("not rendering %s %p (id %d), not in invalid area %g %g  %g %g",
+    SWFDEC_LOG ("not rendering %s %p (id %d), extents %g %g  %g %g are not in invalid area %g %g  %g %g",
 	G_OBJECT_TYPE_NAME (object), object, object->id,
+	object->extents.x0, object->extents.y0, object->extents.x1, object->extents.y1,
 	inval->x0, inval->y0, inval->x1, inval->y1);
   }
   cairo_restore (cr);

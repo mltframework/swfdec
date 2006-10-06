@@ -139,7 +139,7 @@ swfdec_path_append (cairo_path_t *path, const cairo_path_t *append)
 
 static void
 swfdec_shape_render (SwfdecObject *obj, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (obj);
   unsigned int i;
@@ -153,7 +153,6 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
   for (i = 0; i < MAX (shape->fills->len, shape->lines->len); i++) {
     if (i < shape->fills->len) {
-      cairo_save (cr);
       shapevec = g_ptr_array_index (shape->fills, i);
       shapevec2 = g_ptr_array_index (shape->fills2, i);
 
@@ -161,25 +160,24 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 	continue;
 
       if (shapevec->path.num_data || shapevec2->path.num_data) {
-	cairo_new_path (cr);
 	if (shapevec->path.num_data)
 	  cairo_append_path (cr, &shapevec->path);
 	if (shapevec2->path.num_data)
 	  cairo_append_path (cr, &shapevec2->path);
 
-	swfdec_pattern_fill (shapevec->pattern, cr, trans, 0);
+	if (fill)
+	  swfdec_pattern_fill (shapevec->pattern, cr, trans, 0);
       }
-      cairo_restore (cr);
     }
 
-    if (i < shape->lines->len) {
+    /* FIXME: implement stroke clipping */
+    if (i < shape->lines->len && fill) {
       shapevec = g_ptr_array_index (shape->lines, i);
       color = swfdec_color_apply_transform (shapevec->color, trans);
       swfdec_color_set_source (cr, color);
 
       cairo_set_line_width (cr, shapevec->width);
       if (shapevec->path.num_data) {
-	cairo_new_path (cr);
 	cairo_append_path (cr, &shapevec->path);
 	cairo_stroke (cr);
       }
@@ -504,6 +502,7 @@ swfdec_gradient_to_palette (SwfdecGradient * grad,
   return p;
 }
 
+#if 0
 void swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
 
@@ -549,7 +548,7 @@ tag_define_morph_shape (SwfdecDecoder * s)
 
   return SWFDEC_OK;
 }
-
+#endif
 void
 swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
     SwfdecShape * shape, gboolean morphshape)
@@ -602,9 +601,11 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
       }
       if (state_new_styles) {
         SWFDEC_LOG ("   * new styles");
+#if 0
 	if (morphshape)
 	  swf_morphshape_add_styles (s, shape, bits);
 	else
+#endif
 	  swf_shape_add_styles (s, shape, bits);
       }
       /* FIXME: reset or ignore when not set? Currently we ignore */

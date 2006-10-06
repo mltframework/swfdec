@@ -35,7 +35,8 @@ struct _SwfdecObjectClass
   void			(* render)	(SwfdecObject *			object, 
                                          cairo_t *			cr,
 					 const SwfdecColorTransform *	trans,
-					 const SwfdecRect *		inval);
+					 const SwfdecRect *		inval,
+					 gboolean			fill);
   gboolean		(* mouse_in)	(SwfdecObject *			object,
 					 double				x,
 					 double				y,
@@ -55,7 +56,7 @@ gpointer swfdec_object_create (SwfdecDecoder * s, int id, GType type);
 gboolean swfdec_object_mouse_in (SwfdecObject *object,
     double x, double y, int button);
 void swfdec_object_render (SwfdecObject *object, cairo_t *cr, 
-    const SwfdecColorTransform *color, const SwfdecRect *inval);
+    const SwfdecColorTransform *color, const SwfdecRect *inval, gboolean fill);
 void swfdec_object_invalidate (SwfdecObject *object, const SwfdecRect *area);
 
 

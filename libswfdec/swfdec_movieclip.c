@@ -562,7 +562,7 @@ swfdec_movie_clip_handle_mouse (SwfdecMovieClip *movie,
   movie->mouse_in = FALSE;
   movie->mouse_x = x;
   movie->mouse_y = y;
-  SWFDEC_LOG ("moviclip %p mouse: %g %g\n", movie, x, y);
+  SWFDEC_LOG ("moviclip %p mouse: %g %g", movie, x, y);
   movie->mouse_button = button;
   g = movie->list;
   if (movie->mouse_grab) {
@@ -603,7 +603,7 @@ grab_exists:
 
 static void
 swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
-    const SwfdecColorTransform *color_transform, const SwfdecRect *inval)
+    const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecMovieClip *movie = SWFDEC_MOVIE_CLIP (object);
   GList *g;
@@ -612,7 +612,7 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
   SwfdecRect rect;
 
   /* FIXME: do proper clipping */
-  if (movie->parent == NULL) {
+  if (movie->parent == NULL && fill) {
     /* only the root has a background */
     swfdec_color_set_source (cr, movie->bg_color);
     cairo_paint (cr);
@@ -626,31 +626,51 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
   swfdec_rect_transform (&rect, inval, &movie->inverse_transform);
   SWFDEC_LOG ("%sinvalid area is now: %g %g  %g %g",  movie->parent ? "  " : "",
       rect.x0, rect.y0, rect.x1, rect.y1);
-  if (movie->content)
-    swfdec_color_transform_chain (&trans, &movie->content->color_transform, color_transform);
+  swfdec_color_transform_chain (&trans, &movie->content->color_transform, color_transform);
 
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovieClip *child = g->data;
 
     if (child->content->clip_depth) {
-      SWFDEC_INFO ("clip_depth=%d", child->content->clip_depth);
-      clip_depth = child->content->clip_depth;
+      if (clip_depth) {
+	/* FIXME: is clipping additive? */
+	SWFDEC_INFO ("unsetting clip depth %d for new clip depth", clip_depth);
+	cairo_restore (cr);
+	clip_depth = 0;
+      }
+      if (fill == FALSE) {
+	SWFDEC_WARNING ("clipping inside clipping not implemented");
+      } else {
+	SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->content->clip_depth,
+	    child, child->content->depth);
+	clip_depth = child->content->clip_depth;
+	cairo_save (cr);
+	swfdec_object_render (SWFDEC_OBJECT (child), cr, &trans, &rect, FALSE);
+	cairo_clip (cr);
+	continue;
+      }
     }
 
-    if (clip_depth && child->content->depth <= clip_depth) {
-      SWFDEC_INFO ("clipping depth=%d", child->content->clip_depth);
-      continue;
+    if (clip_depth && child->content->depth > clip_depth) {
+      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->content->depth);
+      clip_depth = 0;
+      cairo_restore (cr);
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->content->depth);
-    swfdec_object_render (SWFDEC_OBJECT (child), cr, &trans, &rect);
+    swfdec_object_render (SWFDEC_OBJECT (child), cr, &trans, &rect, fill);
+  }
+  if (clip_depth) {
+    SWFDEC_INFO ("unsetting clip depth %d after rendering", clip_depth);
+    clip_depth = 0;
+    cairo_restore (cr);
   }
   if (movie->child) {
     if (SWFDEC_IS_BUTTON (movie->child)) {
       swfdec_button_render (SWFDEC_BUTTON (movie->child), movie->button_state,
-	  cr, &trans, &rect);
+	  cr, &trans, &rect, fill);
     } else {
-      swfdec_object_render (movie->child, cr, &trans, &rect);
+      swfdec_object_render (movie->child, cr, &trans, &rect, fill);
     }
   }
 #if 0

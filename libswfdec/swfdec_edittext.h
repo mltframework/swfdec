@@ -70,7 +70,8 @@ SwfdecParagraph *	swfdec_paragraph_text_parse	(SwfdecEditText *       text,
 void			swfdec_paragraph_free		(SwfdecParagraph *	paragraphs);
 void			swfdec_paragraph_render		(SwfdecEditText *	text,
 							 cairo_t *		cr,
-							 SwfdecParagraph *	paragraph);
+							 SwfdecParagraph *	paragraph,
+							 gboolean		fill);
 
 
 

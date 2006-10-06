@@ -11,6 +11,7 @@
 #include "swfdec_internal.h"
 #include "swfdec_compiler.h"
 #include "swfdec_edittext.h"
+#include "swfdec_pattern.h"
 
 int
 tag_func_end (SwfdecDecoder * s)
@@ -511,7 +512,10 @@ tag_func_define_font (SwfdecDecoder * s)
     entry->shape = shape;
 
     shapevec = swf_shape_vec_new ();
+    shapevec->pattern = swfdec_pattern_new_color (0xFFFFFFFF);
     g_ptr_array_add (shape->fills, shapevec);
+    shapevec = swf_shape_vec_new ();
+    g_ptr_array_add (shape->fills2, shapevec);
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->lines, shapevec);
 

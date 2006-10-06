@@ -146,7 +146,6 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
   SwfdecShapeVec *shapevec;
   SwfdecShapeVec *shapevec2;
   swf_color color;
-  gboolean use_mask;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
@@ -158,139 +157,17 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
       shapevec = g_ptr_array_index (shape->fills, i);
       shapevec2 = g_ptr_array_index (shape->fills2, i);
 
-      color = swfdec_color_apply_transform (shapevec->color, trans);
-      use_mask = FALSE;
+      if (shapevec->pattern == NULL)
+	continue;
 
-      switch (shapevec->fill_type) {
-	case 0x10:
-	  {
-	    SwfdecGradient *grad = shapevec->grad;
-	    int j;
-	    cairo_pattern_t *pattern;
-	    cairo_matrix_t mat;
-
-	    mat = shapevec->fill_transform;
-	    if (cairo_matrix_invert (&mat)) {
-	      g_assert_not_reached ();
-	    }
-
-#if 0
-	    /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
-	    pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
-	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
-#else
-	    {
-	      cairo_matrix_t mat = shapevec->fill_transform;
-	      pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
-	      cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
-	      cairo_pattern_set_matrix (pattern, &mat);
-	    }
-#endif
-	    for (j=0;j<grad->n_gradients;j++){
-	      color = swfdec_color_apply_transform (grad->array[j].color,
-		  trans);
-
-	      cairo_pattern_add_color_stop_rgba (pattern,
-		  grad->array[j].ratio/255.0,
-		  SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
-		  SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
-	    }
-	    cairo_set_source (cr, pattern);
-	    cairo_pattern_destroy (pattern);
-	  }
-	  break;
-	case 0x12:
-	  {
-	    SwfdecGradient *grad = shapevec->grad;
-	    int j;
-	    cairo_pattern_t *pattern;
-
-#if 0
-	    /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
-	    pattern = cairo_pattern_create_radial (0,0,0,
-	       0, 0, 16384);
-	    cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
-#else
-	    {
-	      cairo_matrix_t mat = shapevec->fill_transform;
-	      pattern = cairo_pattern_create_radial (0,0,0,
-		 0, 0, 16384 / 256.0);
-	      cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
-	      cairo_pattern_set_matrix (pattern, &mat);
-	    }
-#endif
-	    for (j=0;j<grad->n_gradients;j++){
-	      color = swfdec_color_apply_transform (grad->array[j].color,
-		  trans);
-
-	      cairo_pattern_add_color_stop_rgba (pattern,
-		  grad->array[j].ratio/255.0,
-		  SWF_COLOR_R(color)/255.0, SWF_COLOR_G(color)/255.0,
-		  SWF_COLOR_B(color)/255.0, SWF_COLOR_A(color)/255.0);
-	    }
-	    cairo_set_source (cr, pattern);
-	    cairo_pattern_destroy (pattern);
-	  }
-	  break;
-	case 0x40:
-	case 0x41:
-	case 0x42:
-	case 0x43:
-	  {
-	    SwfdecImage *image;
-	    
-	    image = (SwfdecImage *)swfdec_object_get (obj->decoder, shapevec->fill_id);
-	    if (image && SWFDEC_IS_IMAGE (image)) {
-	      cairo_surface_t *src_surface;
-	      cairo_pattern_t *pattern;
-	      unsigned char *image_data = swfdec_handle_get_data(image->handle);
-
-	      if (SWF_COLOR_A (color) < 255)
-		use_mask = TRUE;
-	      src_surface = cairo_image_surface_create_for_data (image_data,
-		  CAIRO_FORMAT_ARGB32, image->width, image->height,
-		  image->rowstride);
-	      pattern = cairo_pattern_create_for_surface (src_surface);
-	      cairo_surface_destroy (src_surface);
-	      cairo_pattern_set_matrix (pattern, &shapevec->fill_transform);
-	      if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x42) {
-		cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-	      } else {
-		cairo_pattern_set_extend (pattern, CAIRO_EXTEND_NONE);
-	      }
-	      if (shapevec->fill_type == 0x40 || shapevec->fill_type == 0x41) {
-		cairo_pattern_set_filter (pattern, CAIRO_FILTER_BILINEAR);
-	      } else {
-		cairo_pattern_set_filter (pattern, CAIRO_FILTER_NEAREST);
-	      }
-	      cairo_set_source (cr, pattern);
-	      cairo_pattern_destroy (pattern);
-	    } else {
-	      swfdec_color_set_source (cr, color);
-	    }
-	  }
-	  break;
-	case 0x00:
-	  swfdec_color_set_source (cr, color);
-	  break;
-	default:
-	  SWFDEC_ERROR("unhandled fill type 0x%02x", shapevec->fill_type);
-	  cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
-	  break;
-      }
-      
       if (shapevec->path.num_data || shapevec2->path.num_data) {
 	cairo_new_path (cr);
 	if (shapevec->path.num_data)
 	  cairo_append_path (cr, &shapevec->path);
 	if (shapevec2->path.num_data)
 	  cairo_append_path (cr, &shapevec2->path);
-	if (use_mask) {
-	  cairo_clip (cr);
-	  cairo_paint_with_alpha (cr, SWF_COLOR_A (color) / 255.);
-	} else {
-	  cairo_fill (cr);
-	}
+
+	swfdec_pattern_fill (shapevec->pattern, cr, trans, 0);
       }
       cairo_restore (cr);
     }
@@ -403,8 +280,9 @@ swfdec_shape_dispose (SwfdecShape * shape)
 static void
 swfdec_shapevec_free (SwfdecShapeVec * shapevec)
 {
-  if (shapevec->grad) {
-    g_free (shapevec->grad);
+  if (shapevec->pattern) {
+    g_object_unref (shapevec->pattern);
+    shapevec->pattern = NULL;
   }
   swfdec_path_reset (&shapevec->path);
   g_free (shapevec);
@@ -417,7 +295,6 @@ swf_shape_vec_new (void)
 
   shapevec = g_new0 (SwfdecShapeVec, 1);
   swfdec_path_init (&shapevec->path);
-  cairo_matrix_init_identity (&shapevec->fill_transform);
 
   return shapevec;
 }
@@ -492,7 +369,6 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
   }
   SWFDEC_LOG ("   n_fill_styles %d", n_fill_styles);
   for (i = 0; i < n_fill_styles; i++) {
-    int fill_style_type;
     SwfdecShapeVec *shapevec;
 
     SWFDEC_LOG ("   fill style %d:", i);
@@ -502,48 +378,7 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
     shapevec = swf_shape_vec_new ();
     g_ptr_array_add (shape->fills, shapevec);
 
-    shapevec->color = SWF_COLOR_COMBINE (0, 255, 0, 255);
-
-    fill_style_type = swfdec_bits_get_u8 (bits);
-    SWFDEC_LOG ("    type 0x%02x", fill_style_type);
-    if (fill_style_type == 0x00) {
-      shapevec->fill_type = fill_style_type;
-      if (shape->rgba) {
-        shapevec->color = swfdec_bits_get_rgba (bits);
-      } else {
-        shapevec->color = swfdec_bits_get_color (bits);
-      }
-      SWFDEC_LOG ("    color %08x", shapevec->color);
-    } else if (fill_style_type == 0x10 || fill_style_type == 0x12) {
-      shapevec->fill_type = fill_style_type;
-      swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
-      if (shape->rgba) {
-        shapevec->grad = swfdec_bits_get_gradient_rgba (bits);
-      } else {
-        shapevec->grad = swfdec_bits_get_gradient (bits);
-      }
-      swfdec_bits_syncbits (bits);
-    } else if (fill_style_type >= 0x40 && fill_style_type <= 0x43) {
-      shapevec->fill_type = fill_style_type;
-      shapevec->fill_id = swfdec_bits_get_u16 (bits);
-      SWFDEC_LOG ("   background fill id = %d (type 0x%02x)",
-          shapevec->fill_id, fill_style_type);
-
-      if (shapevec->fill_id == 65535) {
-        shapevec->fill_id = 0;
-        shapevec->color = SWF_COLOR_COMBINE (0, 255, 255, 255);
-      }
-
-      swfdec_bits_get_matrix (bits, &shapevec->fill_transform);
-      swfdec_bits_syncbits (bits);
-    } else {
-      SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
-      shapevec->fill_type = 0;
-    }
-    if (cairo_matrix_invert (&shapevec->fill_transform)) {
-      SWFDEC_ERROR ("fill transform matrix not invertible, resetting");
-      cairo_matrix_init_identity (&shapevec->fill_transform);
-    }
+    shapevec->pattern = swfdec_pattern_parse (s, shape->rgba);
   }
 
   swfdec_bits_syncbits (bits);
@@ -850,6 +685,7 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
   swfdec_bits_syncbits (bits);
 }
 
+#if 0
 void
 swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits)
@@ -936,4 +772,4 @@ swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
 
   swfdec_bits_syncbits (bits);
 }
-
+#endif

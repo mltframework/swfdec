@@ -6,6 +6,7 @@
 #include <swfdec_object.h>
 #include <color.h>
 #include <swfdec_bits.h>
+#include <swfdec_pattern.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecShape SwfdecShape;
@@ -31,11 +32,7 @@ struct _SwfdecShapeVec
 
   cairo_path_t path;
 
-  int fill_type;
-  int fill_id;
-  cairo_matrix_t fill_transform;	/* inverse matrix - so it's user-to-pattern */
-
-  SwfdecGradient *grad;
+  SwfdecPattern *pattern;
 };
 
 struct _SwfdecShape

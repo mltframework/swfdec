@@ -23,7 +23,7 @@ struct swfdec_gradient_entry_struct
 
 struct swfdec_gradient_struct
 {
-  int n_gradients;
+  unsigned int n_gradients;
   SwfdecGradientEntry array[1];
 };
 

@@ -26,7 +26,58 @@ swfdec_pattern_init (SwfdecPattern *pattern)
   cairo_matrix_init_identity (&pattern->transform);
 }
 
-/*** COLOR PATTERN ***/
+/*** STROKE PATTERN ***/
+
+typedef struct _SwfdecStrokePattern SwfdecStrokePattern;
+typedef struct _SwfdecStrokePatternClass SwfdecStrokePatternClass;
+
+#define SWFDEC_TYPE_STROKE_PATTERN                    (swfdec_stroke_pattern_get_type())
+#define SWFDEC_IS_STROKE_PATTERN(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_STROKE_PATTERN))
+#define SWFDEC_IS_STROKE_PATTERN_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_STROKE_PATTERN))
+#define SWFDEC_STROKE_PATTERN(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_STROKE_PATTERN, SwfdecStrokePattern))
+#define SWFDEC_STROKE_PATTERN_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_STROKE_PATTERN, SwfdecStrokePatternClass))
+#define SWFDEC_STROKE_PATTERN_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_STROKE_PATTERN, SwfdecStrokePatternClass))
+
+struct _SwfdecStrokePattern
+{
+  SwfdecPattern		pattern;
+
+  guint			width;		/* width of line */
+  swf_color		color;		/* color to paint with */
+};
+
+struct _SwfdecStrokePatternClass
+{
+  SwfdecPatternClass	pattern_class;
+};
+
+G_DEFINE_TYPE (SwfdecStrokePattern, swfdec_stroke_pattern, SWFDEC_TYPE_PATTERN);
+
+static void
+swfdec_stroke_pattern_fill (SwfdecPattern *pattern, cairo_t *cr,
+    const SwfdecColorTransform *trans, unsigned int ratio)
+{
+  swf_color color;
+  SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
+
+  color = swfdec_color_apply_transform (stroke->color, trans);
+  swfdec_color_set_source (cr, color);
+  cairo_set_line_width (cr, stroke->width);
+  cairo_stroke (cr);
+}
+
+static void
+swfdec_stroke_pattern_class_init (SwfdecStrokePatternClass *klass)
+{
+  SWFDEC_PATTERN_CLASS (klass)->fill = swfdec_stroke_pattern_fill;
+}
+
+static void
+swfdec_stroke_pattern_init (SwfdecStrokePattern *pattern)
+{
+}
+
+/*** STROKE PATTERN ***/
 
 typedef struct _SwfdecColorPattern SwfdecColorPattern;
 typedef struct _SwfdecColorPatternClass SwfdecColorPatternClass;
@@ -374,7 +425,21 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
     SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     return g_strdup_printf ("%s gradient (%u colors)", gradient->radial ? "radial" : "linear",
 	gradient->gradient->n_gradients);
+  } else if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
+    SwfdecStrokePattern *line = SWFDEC_STROKE_PATTERN (pattern);
+    return g_strdup_printf ("line (width %u, color #%08X)", line->width, line->color);
   } else {
     return g_strdup_printf ("%s", G_OBJECT_TYPE_NAME (pattern));
   }
+}
+
+SwfdecPattern *
+swfdec_pattern_new_stroke (guint width, swf_color color)
+{
+  SwfdecPattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
+
+  SWFDEC_STROKE_PATTERN (pattern)->width = width;
+  SWFDEC_STROKE_PATTERN (pattern)->color = color;
+
+  return pattern;
 }

@@ -40,6 +40,8 @@ struct _SwfdecPatternClass
 GType		swfdec_pattern_get_type		(void);
 
 SwfdecPattern *	swfdec_pattern_new_color	(swf_color			color);
+SwfdecPattern *	swfdec_pattern_new_stroke	(guint				width,
+						 swf_color			color);
 SwfdecPattern *	swfdec_pattern_parse		(SwfdecDecoder *		dec,
 						 gboolean			rgba);
 

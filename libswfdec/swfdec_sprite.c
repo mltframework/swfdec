@@ -86,7 +86,6 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, int frame,
   }
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;
-  swfdec_buffer_ref (chunk);
 }
 
 /* find the last action in this depth if it exists */

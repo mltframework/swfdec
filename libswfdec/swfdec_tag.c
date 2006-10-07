@@ -489,7 +489,6 @@ tag_func_define_font (SwfdecDecoder * s)
   int i;
   int n_glyphs;
   int offset;
-  SwfdecShapeVec *shapevec;
   SwfdecShape *shape;
   SwfdecFont *font;
 
@@ -511,13 +510,8 @@ tag_func_define_font (SwfdecDecoder * s)
     shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
     entry->shape = shape;
 
-    shapevec = swf_shape_vec_new ();
-    shapevec->pattern = swfdec_pattern_new_color (0xFFFFFFFF);
-    g_ptr_array_add (shape->fills, shapevec);
-    shapevec = swf_shape_vec_new ();
-    g_ptr_array_add (shape->fills2, shapevec);
-    shapevec = swf_shape_vec_new ();
-    g_ptr_array_add (shape->lines, shapevec);
+    g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
+    g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
 
     //swf_shape_add_styles(s,shape,&s->b);
     swfdec_bits_syncbits (&s->b);
@@ -550,7 +544,6 @@ tag_func_define_font_2 (SwfdecDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int id;
-  SwfdecShapeVec *shapevec;
   SwfdecShape *shape;
   SwfdecFont *font;
   SwfdecRect rect;
@@ -610,10 +603,8 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
     entry->shape = shape;
 
-    shapevec = swf_shape_vec_new ();
-    g_ptr_array_add (shape->fills, shapevec);
-    shapevec = swf_shape_vec_new ();
-    g_ptr_array_add (shape->lines, shapevec);
+    g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
+    g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
 
     //swf_shape_add_styles(s,shape,&s->b);
     swfdec_bits_syncbits (&s->b);

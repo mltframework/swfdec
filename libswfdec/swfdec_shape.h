@@ -25,23 +25,18 @@ typedef struct _SwfdecShapePoint SwfdecShapePoint;
 
 struct _SwfdecShapeVec
 {
-  int type;
-  int index;
-  unsigned int color;
-  double width;
-
-  cairo_path_t path;
-
-  SwfdecPattern *pattern;
+  SwfdecPattern *pattern;		/* pattern to display */
+  cairo_path_t path;			/* accumulated path */
+  guint last_index;			/* index of last segment that was added */
 };
 
 struct _SwfdecShape
 {
   SwfdecObject object;
 
+  GArray *vecs;
   GPtrArray *lines;
   GPtrArray *fills;
-  GPtrArray *fills2;
 
   /* used while defining */
   unsigned int fills_offset;
@@ -66,7 +61,6 @@ void swfdec_shape_free (SwfdecObject * object);
 void _swfdec_shape_free (SwfdecShape * shape);
 int tag_func_define_shape (SwfdecDecoder * s);
 int tag_define_morph_shape (SwfdecDecoder * s);
-SwfdecShapeVec *swf_shape_vec_new (void);
 int tag_define_shape (SwfdecDecoder * s);
 int tag_define_shape_3 (SwfdecDecoder * s);
 void swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
@@ -78,8 +72,6 @@ int tag_func_define_button_2 (SwfdecDecoder * s);
 int tag_func_define_button (SwfdecDecoder * s);
 int tag_func_define_sprite (SwfdecDecoder * s);
 
-unsigned char *swfdec_gradient_to_palette (SwfdecGradient * grad,
-    SwfdecColorTransform * color_transform);
 
 G_END_DECLS
 #endif

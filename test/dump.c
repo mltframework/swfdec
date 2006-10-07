@@ -8,6 +8,7 @@
 #include <glib-object.h>
 #include <swfdec.h>
 #include <swfdec_decoder.h>
+#include <swfdec_edittext.h>
 #include <swfdec_sprite.h>
 #include <swfdec_shape.h>
 #include <swfdec_text.h>
@@ -75,11 +76,14 @@ dump_path (cairo_path_t *path)
     name = NULL;
     switch (data[i].header.type) {
       case CAIRO_PATH_CURVE_TO:
-	i += 2;
-	name = "curve";
+	g_print ("      curve %g %g (%g %g . %g %g)\n",
+	    data[i + 3].point.x, data[i + 3].point.y,
+	    data[i + 1].point.x, data[i + 1].point.y,
+	    data[i + 2].point.x, data[i + 2].point.y);
+	i += 3;
+	break;
       case CAIRO_PATH_LINE_TO:
-	if (!name)
-	  name = "line ";
+	name = "line ";
       case CAIRO_PATH_MOVE_TO:
 	if (!name)
 	  name = "move ";
@@ -97,43 +101,37 @@ dump_path (cairo_path_t *path)
 }
 
 static void
-print_fill_info (SwfdecShapeVec *shapevec)
-{
-  if (shapevec->pattern == NULL) {
-    g_print ("not filled\n");
-  } else {
-    char *str = swfdec_pattern_to_string (shapevec->pattern);
-    g_print ("%s\n", str);
-    g_free (str);
-  }
-}
-
-static void
-dump_shape(SwfdecShape *shape)
+dump_shape (SwfdecShape *shape)
 {
   SwfdecShapeVec *shapevec;
   unsigned int i;
 
-  g_print("  lines:\n");
-  for(i=0;i<shape->lines->len;i++){
-    shapevec = g_ptr_array_index (shape->lines, i);
+  for (i = 0; i < shape->vecs->len; i++) {
+    shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
 
-    g_print("    %d: ", i);
-    print_fill_info (shapevec);
-    if (verbose)
+    g_print("    %u: ", shapevec->last_index);
+    if (shapevec->pattern == NULL) {
+      g_print ("not filled\n");
+    } else {
+      char *str = swfdec_pattern_to_string (shapevec->pattern);
+      g_print ("%s\n", str);
+      g_free (str);
+    }
+    if (verbose) {
       dump_path (&shapevec->path);
+    }
   }
-  g_print("  fills:\n");
-  for(i=0;i<shape->fills->len;i++){
-    shapevec = g_ptr_array_index (shape->fills, i);
+}
 
-    g_print("    %d: ", i);
-    print_fill_info (shapevec);
-    if (verbose)
-      dump_path (&shapevec->path);
-    shapevec = g_ptr_array_index (shape->fills2, i);
-    if (verbose)
-      dump_path (&shapevec->path);
+static void
+dump_edit_text (SwfdecEditText *text)
+{
+  g_print ("  %s\n", text->text ? text->text : "");
+  if (verbose) {
+    if (text->variable)
+      g_print ("  variable %s\n", text->variable);
+    else
+      g_print ("  no variable\n");
   }
 }
 
@@ -175,6 +173,8 @@ dump_font (SwfdecFont *font)
       if (c == 0 || (s = g_utf16_to_utf8 (&c, 1, NULL, NULL, NULL)) == NULL) {
 	g_print (" ");
       } else {
+	if (g_str_equal (s, "D"))
+	  dump_shape (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
 	g_print ("%s ", s);
 	g_free (s);
       }
@@ -206,6 +206,9 @@ dump_objects(SwfdecDecoder *s)
     }
     if (SWFDEC_IS_TEXT (object)){
       dump_text (SWFDEC_TEXT (object));
+    }
+    if (SWFDEC_IS_EDIT_TEXT (object)){
+      dump_edit_text (SWFDEC_EDIT_TEXT (object));
     }
     if (SWFDEC_IS_FONT (object)){
       dump_font (SWFDEC_FONT (object));

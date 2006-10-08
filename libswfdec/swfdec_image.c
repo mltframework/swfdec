@@ -10,7 +10,6 @@
 
 static void merge_alpha (SwfdecImage * image, unsigned char *image_data,
     unsigned char *alpha);
-static void merge_opaque (SwfdecImage * image, unsigned char *image_data);
 static void swfdec_image_colormap_decode (SwfdecImage * image,
     unsigned char *dest,
     unsigned char *src, unsigned char *colormap, int colormap_len);
@@ -175,8 +174,6 @@ swfdec_image_jpeg_load (SwfdecHandle *handle)
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
 
-  merge_opaque (image, image_data);
-
   swfdec_handle_set_data (handle, image_data);
   swfdec_handle_add_size (handle, image->rowstride * image->height);
 
@@ -223,8 +220,6 @@ swfdec_image_jpeg2_load (SwfdecHandle *handle)
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
-
-  merge_opaque (image, image_data);
 
   swfdec_handle_set_data (handle, image_data);
   swfdec_handle_add_size (handle, image->width * image->height * 4);
@@ -312,23 +307,13 @@ merge_alpha (SwfdecImage * image, unsigned char *image_data,
   for (y = 0; y < image->height; y++) {
     p = image_data + y * image->rowstride;
     for (x = 0; x < image->width; x++) {
-      p[3] = *alpha++;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      p[3] = *alpha;
+#else
+      p[0] = *alpha;
+#endif
       p += 4;
-    }
-  }
-}
-
-static void
-merge_opaque (SwfdecImage * image, unsigned char *image_data)
-{
-  int x, y;
-  unsigned char *p;
-
-  for (y = 0; y < image->height; y++) {
-    p = image_data + y * image->rowstride;
-    for (x = 0; x < image->width; x++) {
-      p[3] = 255;
-      p += 4;
+      alpha++;
     }
   }
 }

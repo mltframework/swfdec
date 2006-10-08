@@ -141,10 +141,17 @@ convert (JpegRGBDecoder * rgbdec)
   vp = rgbdec->component[2].image;
   for (y = 0; y < rgbdec->height; y++) {
     for (x = 0; x < rgbdec->width; x++) {
+#if G_LITTLE_ENDIAN == G_BYTE_ORDER
       rgbp[0] = YUV_TO_B (yp[x], up[x], vp[x]);
       rgbp[1] = YUV_TO_G (yp[x], up[x], vp[x]);
       rgbp[2] = YUV_TO_R (yp[x], up[x], vp[x]);
-      rgbp[3] = 0;
+      rgbp[3] = 0xFF;
+#else
+      rgbp[3] = YUV_TO_B (yp[x], up[x], vp[x]);
+      rgbp[2] = YUV_TO_G (yp[x], up[x], vp[x]);
+      rgbp[1] = YUV_TO_R (yp[x], up[x], vp[x]);
+      rgbp[0] = 0xFF;
+#endif
       rgbp += 4;
     }
     yp += rgbdec->component[0].rowstride;

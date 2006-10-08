@@ -363,7 +363,8 @@ tag_func_define_button_sound (SwfdecDecoder * s)
     if (state) {
       chunk = swfdec_sound_parse_chunk (s, id);
       SWFDEC_ERROR ("button sounds not implemented");
-      swfdec_sound_chunk_free (chunk);
+      if (chunk)
+	swfdec_sound_chunk_free (chunk);
     }
   }
 

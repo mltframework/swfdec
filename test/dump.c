@@ -7,6 +7,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <swfdec.h>
+#include <swfdec_button.h>
 #include <swfdec_decoder.h>
 #include <swfdec_edittext.h>
 #include <swfdec_sprite.h>
@@ -183,8 +184,27 @@ dump_font (SwfdecFont *font)
   }
 }
 
+static void
+dump_button (SwfdecButton *button)
+{
+  guint i;
+
+  if (verbose) {
+    for (i = 0; i < button->records->len; i++) {
+      SwfdecButtonRecord *record = &g_array_index (button->records, SwfdecButtonRecord, i);
+
+      g_print ("  %s %s %s %s  %s %d\n", 
+	  record->states & SWFDEC_BUTTON_UP ? "U" : " ",
+	  record->states & SWFDEC_BUTTON_OVER ? "O" : " ",
+	  record->states & SWFDEC_BUTTON_DOWN ? "D" : " ",
+	  record->states & SWFDEC_BUTTON_HIT ? "H" : " ",
+	  G_OBJECT_TYPE_NAME (record->object), record->object->id);
+    }
+  }
+}
+
 static void 
-dump_objects(SwfdecDecoder *s)
+dump_objects (SwfdecDecoder *s)
 {
   GList *g;
   SwfdecObject *object;
@@ -212,6 +232,9 @@ dump_objects(SwfdecDecoder *s)
     }
     if (SWFDEC_IS_FONT (object)){
       dump_font (SWFDEC_FONT (object));
+    }
+    if (SWFDEC_IS_BUTTON (object)){
+      dump_button (SWFDEC_BUTTON (object));
     }
   }
 }

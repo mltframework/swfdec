@@ -244,6 +244,8 @@ swfdec_gradient_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
     else
       pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
     cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
+    mat.x0 /= 256.0;
+    mat.y0 /= 256.0;
     cairo_pattern_set_matrix (pattern, &mat);
   }
 #endif

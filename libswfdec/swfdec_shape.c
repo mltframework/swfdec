@@ -206,8 +206,13 @@ swfdec_shape_mouse_in (SwfdecObject *object,
     guint i;
     shape->fill_cr = cairo_create (surface);
     cairo_set_fill_rule (shape->fill_cr, CAIRO_FILL_RULE_EVEN_ODD);
+    /* FIXME: theoretically, we require a cairo_t for every path we wanna check.
+     * Currently different paths can cancel each other out due to the fill rule */
     for (i = 0; i < shape->vecs->len; i++) {
       shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
+      /* filter out lines */
+      if (shapevec->last_index %2 == 1)
+	break;
       if (shapevec->path.num_data)
 	cairo_append_path (shape->fill_cr, &shapevec->path);
     }

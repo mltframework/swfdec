@@ -55,8 +55,10 @@ swfdec_button_mouse_in (SwfdecObject *object, double x, double y, int mouse_butt
       tmpy = y;
       swfdec_matrix_transform_point_inverse (&record->transform, &tmpx, &tmpy);
 
+      SWFDEC_LOG ("Checking button at %g %g (transformed from %g %g)", tmpx, tmpy, x, y);
       if (swfdec_object_mouse_in (obj, tmpx, tmpy, mouse_button))
 	return TRUE;
+      SWFDEC_LOG ("  missed");
     }
   }
   return FALSE;

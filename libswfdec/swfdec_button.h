@@ -3,6 +3,7 @@
 #define _SWFDEC_BUTTON_H_
 
 #include <swfdec_object.h>
+#include <color.h>
 #include <swfdec_event.h>
 
 G_BEGIN_DECLS

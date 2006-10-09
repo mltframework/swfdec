@@ -175,8 +175,10 @@ swfdec_image_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
   cairo_set_source (cr, pattern);
   cairo_pattern_destroy (pattern);
   if (SWF_COLOR_A (color) < 255) {
+    cairo_save (cr);
     cairo_clip (cr);
     cairo_paint_with_alpha (cr, SWF_COLOR_A (color) / 255.);
+    cairo_restore (cr);
   } else {
     cairo_fill (cr);
   }
@@ -418,7 +420,9 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
 
   if (SWFDEC_IS_IMAGE_PATTERN (pattern)) {
     SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pattern);
-    return g_strdup_printf ("image %u (%s, %s)", SWFDEC_OBJECT (image->image)->id,
+    swfdec_handle_get_data(image->image->handle);
+    return g_strdup_printf ("%ux%u image %u (%s, %s)", image->image->width,
+	image->image->height, SWFDEC_OBJECT (image->image)->id,
 	image->extend == CAIRO_EXTEND_REPEAT ? "repeat" : "no repeat",
 	image->filter == CAIRO_FILTER_BILINEAR ? "bilinear" : "nearest");
   } else if (SWFDEC_IS_COLOR_PATTERN (pattern)) {

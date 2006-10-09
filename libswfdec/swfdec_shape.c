@@ -187,7 +187,8 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
       continue;
 
     cairo_append_path (cr, &vec->path);
-    swfdec_pattern_fill (vec->pattern, cr, trans, 0);
+    if (fill)
+      swfdec_pattern_fill (vec->pattern, cr, trans, 0);
   }
 }
 

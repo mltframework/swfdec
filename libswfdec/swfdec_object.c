@@ -185,6 +185,9 @@ swfdec_object_render (SwfdecObject *object, cairo_t *cr,
 	object->extents.x0, object->extents.y0, object->extents.x1, object->extents.y1,
 	inval->x0, inval->y0, inval->x1, inval->y1);
   }
+  if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
+    g_warning ("%s", cairo_status_to_string (cairo_status (cr)));
+  }
   cairo_restore (cr);
 }
 

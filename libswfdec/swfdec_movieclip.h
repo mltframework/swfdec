@@ -6,6 +6,7 @@
 #include <swfdec_object.h>
 #include <color.h>
 #include <swfdec_button.h>
+#include <swfdec_edittext.h>
 
 G_BEGIN_DECLS
 
@@ -80,6 +81,11 @@ struct _SwfdecMovieClip
 
   /* for buton handling (FIXME: want a subclass?) */
   SwfdecButtonState	button_state;		/* state of the displayed button (UP/OVER/DOWN) */
+
+  /* for EditText handling */
+  GHashTable *		text_variables;		/* all the text variables (by name) */
+  char *		text;			/* current text for this textfield */
+  SwfdecParagraph *	text_paragraph;		/* how that current text is rendered */
 };
 
 struct _SwfdecMovieClipClass
@@ -91,6 +97,7 @@ GType		swfdec_movie_clip_get_type		(void);
 
 SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent,
 							 SwfdecSpriteContent *	content);
+void		swfdec_movie_clip_remove_root		(SwfdecMovieClip *	root);
 unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
 unsigned int	swfdec_movie_clip_get_next_frame	(SwfdecMovieClip *	movie,
 							 unsigned int		current_frame);
@@ -98,6 +105,8 @@ void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
 							 SwfdecObject *		child);
 void		swfdec_movie_clip_set_content		(SwfdecMovieClip *	movie,
 							 const SwfdecSpriteContent *content);
+void		swfdec_movie_clip_set_text		(SwfdecMovieClip *	clip,
+							 const char *		text);
 
 void		swfdec_movie_clip_queue_update		(SwfdecMovieClip *	movie,
 							 SwfdecMovieClipState	state);

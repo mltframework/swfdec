@@ -288,7 +288,7 @@ swfdec_paragraph_html_parse (SwfdecEditText *text, const char *str)
     guint i;
     GList *walk;
 
-    dump (&data);
+    //dump (&data);
     data.attributes_completed = g_list_reverse (data.attributes_completed);
     for (i = 0; i < data.out->len; i++) {
       SwfdecParagraph *para = &g_array_index (data.out, SwfdecParagraph, i);
@@ -355,22 +355,29 @@ swfdec_paragraph_free (SwfdecParagraph *paragraphs)
 }
 
 void
-swfdec_paragraph_render (SwfdecEditText *text, cairo_t *cr, 
-    SwfdecParagraph *paragraph, gboolean fill)
+swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr, const SwfdecParagraph *paragraph,
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   guint i;
   PangoFontDescription *desc;
   PangoLayout *layout;
   unsigned int width;
+  swf_color color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
   g_return_if_fail (cr != NULL);
   g_return_if_fail (paragraph != NULL);
+  g_return_if_fail (trans != NULL);
+  g_return_if_fail (inval != NULL);
 
+  if (text->font == NULL) {
+    SWFDEC_ERROR ("no font to render with");
+    return;
+  }
   if (text->font->desc == NULL) {
     desc = pango_font_description_new ();
     pango_font_description_set_family (desc, "Sans");
-    SWFDEC_ERROR ("font %d has no cairo font description", SWFDEC_OBJECT (text->font)->id);
+    SWFDEC_INFO ("font %d has no cairo font description", SWFDEC_OBJECT (text->font)->id);
   } else {
     desc = pango_font_description_copy (text->font->desc);
   }
@@ -381,7 +388,8 @@ swfdec_paragraph_render (SwfdecEditText *text, cairo_t *cr,
   width = SWFDEC_OBJECT (text)->extents.x1 - SWFDEC_OBJECT (text)->extents.x0 - text->left_margin - text->right_margin;
   cairo_move_to (cr, SWFDEC_OBJECT (text)->extents.x0 + text->left_margin, SWFDEC_OBJECT (text)->extents.y0);
   pango_layout_set_width (layout, width * PANGO_SCALE);
-  swfdec_color_set_source (cr, text->color);
+  color = swfdec_color_apply_transform (text->color, trans);
+  swfdec_color_set_source (cr, color);
 
   for (i = 0; paragraph[i].text != NULL; i++) {
     pango_layout_set_text (layout, paragraph[i].text, -1);

@@ -116,7 +116,7 @@ swfdec_decoder_dispose (GObject *object)
 
   g_array_free (s->audio_events, TRUE);
   content = (SwfdecSpriteContent *) s->root->content;
-  g_object_unref (s->root);
+  swfdec_movie_clip_remove_root (s->root);
 
   /* this must happen while the JS Context is still alive */
   g_list_foreach (s->characters, (GFunc) g_object_unref, NULL);

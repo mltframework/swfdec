@@ -23,10 +23,35 @@ movie_clip_finalize (JSContext *cx, JSObject *obj)
   }
 }
 
+static JSBool
+movie_clip_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovieClip *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+  if (movie->text_variables) {
+    GList *list, *walk;
+    const char *name = swfdec_js_to_string (cx, id);
+    const char *val = swfdec_js_to_string (cx, *vp);
+
+    if (name == NULL || val == NULL)
+      return JS_FALSE;
+
+    SWFDEC_LOG ("setting property %s\n", name);
+    list = g_hash_table_lookup (movie->text_variables, name);
+    for (walk = list; walk; walk = walk->next) {
+      swfdec_movie_clip_set_text (walk->data, val);
+    }
+  }
+
+  return JS_TRUE;
+}
+
 static JSClass movieclip_class = {
     "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  movie_clip_set,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   movie_clip_finalize,
 };
@@ -148,8 +173,6 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
     if (swfdec_rect_intersect (NULL, &SWFDEC_OBJECT (movie)->extents,
 	  &SWFDEC_OBJECT (other)->extents)) {
-      g_print ("%s hit %s\n", movie->content->name ? movie->content->name : "?", 
-	  other->content->name ? other->content->name : "?");
       *rval = BOOLEAN_TO_JSVAL (JS_TRUE);
     } else {
       *rval = BOOLEAN_TO_JSVAL (JS_FALSE);
@@ -498,29 +521,30 @@ not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert_not_reached ();
 }
 
+/* NB: order needs to be kept for GetProperty/SetProperty actions */
 #define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
 JSPropertySpec movieclip_props[] = {
-  {"_x",	    PROP_X,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
-  {"_y",	    PROP_Y,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
-  {"_xscale",	    PROP_XSCALE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_yscale",	    PROP_YSCALE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_currentframe", PROP_CURRENTFRAME,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
-  {"_totalframes",  PROP_TOTALFRAMES,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
-  {"_alpha",	    PROP_ALPHA,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_visble",	    PROP_VISIBLE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_width",	    PROP_WIDTH,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_height",	    PROP_HEIGHT,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_rotation",	    PROP_ROTATION,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_framesloaded", PROP_FRAMESLOADED,	MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL },
-  {"_name",	    PROP_NAME,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_droptarget",   PROP_DROPTARGET,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_url",	    PROP_URL,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_highquality",  PROP_HIGHQUALITY,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_focusrect",    PROP_FOCUSRECT,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_soundbuftime", PROP_SOUNDBUFTIME,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_xmouse",	    PROP_XMOUSE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_ymouse",	    PROP_YMOUSE,	MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_parent",	    -1,			MC_PROP_ATTRS | JSPROP_READONLY,  mc_parent,	    NULL},
+  {"_x",	    -1,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
+  {"_y",	    -1,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
+  {"_xscale",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_yscale",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_currentframe", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
+  {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
+  {"_alpha",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_visble",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_width",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_height",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_rotation",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_framesloaded", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL },
+  {"_name",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_droptarget",   -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_url",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_highquality",  -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_focusrect",    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_soundbuftime", -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_xmouse",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_ymouse",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_parent",	    -1,	      	MC_PROP_ATTRS | JSPROP_READONLY,  mc_parent,	    NULL},
   {NULL}
 };
 

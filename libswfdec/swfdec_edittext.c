@@ -3,31 +3,20 @@
 #endif
 
 #include <pango/pangocairo.h>
+#include <string.h>
+#include <js/jsapi.h>
+#include "swfdec.h"
+#include "swfdec_debug.h"
+#include "swfdec_decoder.h"
 #include "swfdec_edittext.h"
-#include "swfdec_internal.h"
 #include "swfdec_font.h"
+#include "swfdec_movieclip.h"
 
 static gboolean
 swfdec_edit_text_mouse_in (SwfdecObject *object,
       double x, double y, int button)
 {
   return swfdec_rect_contains (&object->extents, x, y);
-}
-
-static void
-swfdec_edit_text_render (SwfdecObject *obj, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
-{
-  SwfdecEditText *text = SWFDEC_EDIT_TEXT (obj);
-
-  if (text->paragraph == NULL)
-    return;
-  if (text->font == NULL) {
-    SWFDEC_ERROR ("no font to render with");
-    return;
-  }
-
-  swfdec_paragraph_render (text, cr, text->paragraph, fill);
 }
 
 SWFDEC_OBJECT_BOILERPLATE (SwfdecEditText, swfdec_edit_text)
@@ -42,7 +31,6 @@ swfdec_edit_text_class_init (SwfdecEditTextClass * g_class)
 {
   SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
 
-  object_class->render = swfdec_edit_text_render;
   object_class->mouse_in = swfdec_edit_text_mouse_in;
 }
 
@@ -56,27 +44,39 @@ static void
 swfdec_edit_text_dispose (SwfdecEditText *text)
 {
   g_free (text->text);
-  if (text->paragraph)
-    swfdec_paragraph_free (text->paragraph);
+  if (text->path) {
+    g_free (text->path);
+  } else if (text->variable) {
+    g_free (text->variable);
+  }
+  text->path = NULL;
+  text->variable = NULL;
   
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (text));
 }
 
 static void
-swfdec_edit_text_set_text (SwfdecEditText *text, const char *str)
+swfdec_edit_text_parse_variable (SwfdecEditText *text)
 {
-  g_assert (str != NULL);
+  char *s;
 
-  if (text->paragraph)
-    swfdec_paragraph_free (text->paragraph);
-  g_free (text->text);
-  text->text = g_strdup (str);
-  if (text->html)
-    text->paragraph = swfdec_paragraph_html_parse (text, str);
-  else
-    text->paragraph = swfdec_paragraph_text_parse (text, str);
+  if (text->variable && text->variable[0] == '\0') {
+    g_free (text->variable);
+    text->variable = NULL;
+    return;
+  }
+  /* FIXME: check the variable for valid identifiers */
+  s = strrchr (text->variable, '/');
+  if (s == NULL)
+    s = strrchr (text->variable, '.');
+  if (s) {
+    text->path = text->variable;
+    text->variable = s + 1;
+    *s = 0;
+  }
+  SWFDEC_LOG ("parsed variable name into path \"%s\" and variable \"%s\"",
+      text->path ? text->path : "", text->variable);
 }
-
 int
 tag_func_define_edit_text (SwfdecDecoder * s)
 {
@@ -159,13 +159,9 @@ tag_func_define_edit_text (SwfdecDecoder * s)
     text->spacing = swfdec_bits_get_s16 (b);
   }
   text->variable = swfdec_bits_get_string (b);
-  /* FIXME: needs a smarter verification of proper variable names */
-  if (text->variable && text->variable[0] == '\0') {
-    g_free (text->variable);
-    text->variable = NULL;
-  }
+  swfdec_edit_text_parse_variable (text);
   if (has_text)
-    swfdec_edit_text_set_text (text, swfdec_bits_skip_string (b));
+    text->text = swfdec_bits_get_string (b);
 
   return SWFDEC_OK;
 }

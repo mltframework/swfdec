@@ -9,6 +9,7 @@
 #include "swfdec_movieclip.h"
 #include "swfdec_internal.h"
 #include "swfdec_js.h"
+#include "swfdec_edittext.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -95,6 +96,8 @@ static void swfdec_movie_clip_base_init (gpointer g_class)
 static void
 swfdec_movie_clip_init (SwfdecMovieClip * movie)
 {
+  movie->content = &default_content;
+
   movie->xscale = 1.0;
   movie->yscale = 1.0;
   cairo_matrix_init_identity (&movie->transform);
@@ -260,29 +263,24 @@ swfdec_movie_clip_update (SwfdecMovieClip *movie)
 }
 
 static void
-get_rid_of_children (gpointer moviep, gpointer unused)
-{
-  SwfdecMovieClip *movie = moviep;
-
-  movie->parent = NULL;
-  g_object_unref (movie);
-}
-
-static void
 swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
 {
   g_assert (movie->jsobj == NULL);
 
   swfdec_movie_clip_remove_gotos (movie);
-  g_list_foreach (movie->list, get_rid_of_children, NULL);
-  g_list_free (movie->list);
-  movie->list = NULL;
-
-  if (movie->content != &default_content)
-    swfdec_movie_clip_set_content (movie, NULL);
+  g_assert (movie->list == NULL);
+  g_assert (movie->content == &default_content);
   g_assert (movie->child == NULL);
 
   g_queue_free (movie->sound_queue);
+  if (movie->text_variables) {
+    g_assert (g_hash_table_size (movie->text_variables) == 0);
+    g_hash_table_destroy (movie->text_variables);
+    movie->text_variables = NULL;
+  }
+
+  g_assert (movie->text == NULL);
+  g_assert (movie->text_paragraph == NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (movie));
 }
@@ -338,6 +336,19 @@ swfdec_movie_clip_remove (SwfdecMovieClip *movie)
   swfdec_movie_clip_invalidate (movie);
   movie->parent = NULL;
   g_object_unref (movie);
+}
+
+void
+swfdec_movie_clip_remove_root (SwfdecMovieClip *root)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE_CLIP (root));
+  g_return_if_fail (root->parent == NULL);
+
+  while (root->list) {
+    swfdec_movie_clip_remove (root->list->data);
+  }
+  swfdec_movie_clip_set_content (root, NULL);
+  g_object_unref (root);
 }
 
 static gboolean
@@ -655,6 +666,22 @@ grab_exists:
 }
 
 static void
+swfdec_movie_clip_render_child (SwfdecMovieClip *movie, cairo_t *cr, 
+    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+{
+  if (SWFDEC_IS_BUTTON (movie->child)) {
+    swfdec_button_render (SWFDEC_BUTTON (movie->child), movie->button_state,
+	cr, trans, inval, fill);
+  } else if (SWFDEC_IS_EDIT_TEXT (movie->child)) {
+    if (movie->text_paragraph)
+      swfdec_edit_text_render (SWFDEC_EDIT_TEXT (movie->child), cr,
+	  movie->text_paragraph, trans, inval, fill);
+  } else {
+    swfdec_object_render (movie->child, cr, trans, inval, fill);
+  }
+}
+
+static void
 swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
     const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
 {
@@ -718,14 +745,8 @@ swfdec_movie_clip_render (SwfdecObject *object, cairo_t *cr,
     clip_depth = 0;
     cairo_restore (cr);
   }
-  if (movie->child) {
-    if (SWFDEC_IS_BUTTON (movie->child)) {
-      swfdec_button_render (SWFDEC_BUTTON (movie->child), movie->button_state,
-	  cr, &trans, &rect, fill);
-    } else {
-      swfdec_object_render (movie->child, cr, &trans, &rect, fill);
-    }
-  }
+  if (movie->child) 
+    swfdec_movie_clip_render_child (movie, cr, &trans, &rect, fill);
 #if 0
   {
     double x = 1.0, y = 0.0;
@@ -796,6 +817,145 @@ swfdec_movie_clip_new (SwfdecMovieClip *parent, SwfdecSpriteContent *content)
   return ret;
 }
 
+static SwfdecMovieClip *
+swfdec_movie_clip_get_by_slash_path (SwfdecMovieClip *movie, const char *path)
+{
+  char *s;
+  guint len;
+  GList *walk;
+
+  if (*path == '/') {
+    path++;
+    movie = SWFDEC_OBJECT (movie)->decoder->root;
+  }
+  do {
+    s = strchr (path, '/');
+    if (s)
+      len = s - path;
+    else
+      len = strlen (path);
+    if (len == 2 && path[0] == '.' && path[1] == '.') {
+      movie = movie->parent;
+      if (movie == NULL)
+	return NULL;
+    } else { 
+      for (walk = movie->list; walk; walk = walk->next) {
+	SwfdecMovieClip *child = walk->data;
+	if (child->content->name == NULL)
+	  continue;
+	if (strncmp (child->content->name, path, len) != 0)
+	  continue;
+	movie = child;
+	goto out;
+      }
+      return NULL;
+    }
+out:
+    if (s)
+      path = s + 1;
+  } while (s);
+  return movie;
+}
+
+static SwfdecMovieClip *
+swfdec_movie_clip_get_by_path (SwfdecMovieClip *movie, const char *path)
+{
+  GList *walk;
+  char *s;
+  guint len;
+
+  if (strchr (path, '/'))
+    return swfdec_movie_clip_get_by_slash_path (movie, path);
+
+  if (strcmp (path, "_root") == 0) {
+    movie = SWFDEC_OBJECT (movie)->decoder->root;
+    if (path[5] == '\0')
+      return movie;
+    path += 6;
+  }
+  do {
+    s = strchr (path, '.');
+    if (s)
+      len = s - path;
+    else
+      len = strlen (path);
+    if (len == 6 && 
+	strcmp (path, "parent") == 0) {
+      movie = movie->parent;
+      if (movie == NULL)
+	return NULL;
+    } else { 
+      for (walk = movie->list; walk; walk = walk->next) {
+	SwfdecMovieClip *child = walk->data;
+	if (child->content->name == NULL)
+	  continue;
+	if (strncmp (child->content->name, path, len) != 0)
+	  continue;
+	movie = child;
+	goto out;
+      }
+      return NULL;
+    }
+out:
+    if (s)
+      path = s + 1;
+  } while (s);
+  return movie;
+}
+
+static void
+swfdec_movie_clip_attach_variable (SwfdecMovieClip *parent, const char *variable,
+    SwfdecMovieClip *movie)
+{
+  GList *list, *org;
+  SWFDEC_LOG ("attaching %p's variable \"%s\" from movie %p", movie, variable,
+      parent);
+  if (parent->text_variables == NULL) 
+    parent->text_variables = g_hash_table_new_full (g_str_hash, g_str_equal, 
+	NULL, (GDestroyNotify) g_list_free);
+  org = list = g_hash_table_lookup (parent->text_variables, variable);
+  list = g_list_prepend (list, movie);
+  if (list != org) {
+    g_hash_table_steal (parent->text_variables, variable);
+    g_hash_table_insert (parent->text_variables, (gpointer) variable, list);
+  }
+  if (parent->jsobj) {
+    jsval val;
+    SwfdecDecoder *dec = SWFDEC_OBJECT (parent)->decoder;
+    if (JS_LookupProperty (dec->jscx, parent->jsobj,
+	  variable, &val)) {
+      if (val == JSVAL_VOID) {
+	JSString *string = JS_NewStringCopyZ (dec->jscx, movie->text ? movie->text : "");
+	if (string) {
+	  val = STRING_TO_JSVAL (string);
+	  JS_SetProperty (dec->jscx, parent->jsobj, variable, &val);
+	}
+      } else {
+	const char *bytes = swfdec_js_to_string (dec->jscx, val);
+	if (bytes)
+	  swfdec_movie_clip_set_text (movie, bytes);
+      }
+    }
+  }
+}
+
+static void
+swfdec_movie_clip_detach_variable (SwfdecMovieClip *parent, const char *variable,
+    SwfdecMovieClip *movie)
+{
+  GList *list, *org;
+
+  SWFDEC_LOG ("detaching %p's variable \"%s\" from movie %p", movie, variable, parent);
+  g_assert (parent->text_variables);
+  org = list = g_hash_table_lookup (parent->text_variables, variable);
+  g_assert (list);
+  list = g_list_remove (list, movie);
+  if (list != org) {
+    g_hash_table_steal (parent->text_variables, variable);
+    g_hash_table_insert (parent->text_variables, (gpointer) variable, list);
+  }
+}
+
 void
 swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
 {
@@ -821,20 +981,54 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
 	swfdec_buffer_unref (cur);
       s->movies = g_list_remove (s->movies, movie);
     }
+    if (SWFDEC_IS_EDIT_TEXT (movie->child)) { 
+      SwfdecEditText *text = SWFDEC_EDIT_TEXT (movie->child);
+
+      /* FIXME: movie->parent == NULL only happens when every movie gets destroyed, or??? */
+      if (text->variable) {
+	SwfdecMovieClip *parent;
+	if (text->path)
+	  parent = swfdec_movie_clip_get_by_path (movie->parent, text->path);
+	else
+	  parent = movie->parent;
+	if (parent != NULL)
+	  swfdec_movie_clip_detach_variable (parent, text->variable, movie);
+      }
+      g_free (movie->text);
+      movie->text = NULL;
+      if (movie->text_paragraph) {
+	swfdec_paragraph_free (movie->text_paragraph);
+	movie->text_paragraph = NULL;
+      }
+    }
     g_object_unref (movie->child);
   }
   movie->child = child;
   movie->current_frame = -1;
   movie->next_frame = 0;
   movie->sound_current_frame = -1;
-  movie->stopped = TRUE;
+  movie->stopped = FALSE;
   if (child) {
     g_object_ref (child);
     if (SWFDEC_IS_SPRITE (child)) {
-      movie->stopped = FALSE;
       s->movies = g_list_prepend (s->movies, movie);
       swfdec_movie_clip_goto_frame (movie, 0, FALSE);
       swfdec_movie_clip_iterate_audio (movie);
+    }
+    if (SWFDEC_IS_EDIT_TEXT (child)) {
+      SwfdecEditText *text = SWFDEC_EDIT_TEXT (child);
+      
+      if (text->text)
+	swfdec_movie_clip_set_text (movie, text->text);
+      if (text->variable != NULL) {
+	SwfdecMovieClip *parent;
+	if (text->path)
+	  parent = swfdec_movie_clip_get_by_path (movie->parent, text->path);
+	else
+	  parent = movie->parent;
+	if (parent != NULL)
+	  swfdec_movie_clip_attach_variable (parent, text->variable, movie);
+      }
     }
   }
   swfdec_movie_clip_invalidate (movie);
@@ -910,3 +1104,25 @@ swfdec_movie_clip_render_audio (SwfdecMovieClip *movie, gint16 *dest,
   }
 }
 
+void
+swfdec_movie_clip_set_text (SwfdecMovieClip *movie, const char *text)
+{
+  SwfdecEditText *edittext;
+
+  g_assert (SWFDEC_IS_EDIT_TEXT (movie->child));
+  g_assert (text != NULL);
+
+  edittext = SWFDEC_EDIT_TEXT (movie->child);
+  SWFDEC_LOG ("setting %s's text to \"%s\"", 
+      edittext->variable ? edittext->variable : "???", text);
+
+  if (movie->text_paragraph)
+    swfdec_paragraph_free (movie->text_paragraph);
+  g_free (movie->text);
+  movie->text = g_strdup (text);
+  if (edittext->html)
+    movie->text_paragraph = swfdec_paragraph_html_parse (edittext, text);
+  else
+    movie->text_paragraph = swfdec_paragraph_text_parse (edittext, text);
+  swfdec_movie_clip_invalidate (movie);
+}

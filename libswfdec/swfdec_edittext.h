@@ -24,11 +24,10 @@ struct _SwfdecEditText
   SwfdecObject		object;
 
   /* text info */
-  char *		text;		/* actual displayed text or NULL if none */
+  char *		text;		/* initial displayed text or NULL if none */
   gboolean		password;	/* if text is a password and should be displayed as '*' */
   unsigned int		max_length;	/* maximum number of characters */
   gboolean		html;		/* text is pseudo-html */
-  SwfdecParagraph *	paragraph;	/* text after it's parsed into its contents */
 
   /* layout info */
   SwfdecFont *	  	font;		/* font or NULL for default */
@@ -48,6 +47,7 @@ struct _SwfdecEditText
   gboolean		autosize;	/* FIXME: implement */
 
   /* variable info */
+  char *		path;		/* path to object for variable or NULL for current */
   char *		variable;	/* name of the variable */
   gboolean		readonly;
 
@@ -68,11 +68,12 @@ SwfdecParagraph *	swfdec_paragraph_html_parse   	(SwfdecEditText *	text,
 SwfdecParagraph *	swfdec_paragraph_text_parse	(SwfdecEditText *       text,
 							 const char *		str);
 void			swfdec_paragraph_free		(SwfdecParagraph *	paragraphs);
-void			swfdec_paragraph_render		(SwfdecEditText *	text,
+void			swfdec_edit_text_render		(SwfdecEditText *	text,
 							 cairo_t *		cr,
-							 SwfdecParagraph *	paragraph,
+							 const SwfdecParagraph *	paragraph,
+							 const SwfdecColorTransform *	trans,
+							 const SwfdecRect *	rect,
 							 gboolean		fill);
-
 
 
 G_END_DECLS

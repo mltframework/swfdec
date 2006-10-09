@@ -609,6 +609,7 @@ swf_parse_header2 (SwfdecDecoder * s)
   swfdec_buffer_unref (buffer);
 
   buffer = swfdec_buffer_queue_pull (s->input_queue, n);
+  swfdec_buffer_unref (buffer);
 
   swfdec_sprite_set_n_frames (s->main_sprite, s->n_frames);
 

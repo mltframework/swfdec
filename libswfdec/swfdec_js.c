@@ -192,7 +192,7 @@ swfdec_js_run (SwfdecDecoder *dec, const char *s, jsval *rval)
 
 /**
  * swfdec_value_to_string:
- * @dec: a #SwfdecDecoder
+ * @dec: a #JSContext
  * @val: a #jsval
  *
  * Converts the given jsval to its string representation.
@@ -200,17 +200,16 @@ swfdec_js_run (SwfdecDecoder *dec, const char *s, jsval *rval)
  * Returns: the string representation of @val.
  **/
 const char *
-swfdec_js_to_string (SwfdecDecoder *dec, jsval val)
+swfdec_js_to_string (JSContext *cx, jsval val)
 {
   JSString *string;
   char *ret;
 
-  g_return_val_if_fail (SWFDEC_IS_DECODER (dec), NULL);
-  g_return_val_if_fail (dec->jscx != NULL, NULL);
+  g_return_val_if_fail (cx != NULL, NULL);
 
-  string = JS_ValueToString (dec->jscx, val);
+  string = JS_ValueToString (cx, val);
   if (string == NULL || (ret = JS_GetStringBytes (string)) == NULL)
-    return "[error]";
+    return NULL;
 
   return ret;
 }

@@ -304,6 +304,10 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
 
   if (has_matrix) {
     swfdec_bits_get_matrix (bits, &content->transform);
+    SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %g %g }", 
+	content->transform.xx, content->transform.yx,
+	content->transform.xy, content->transform.yy,
+	content->transform.x0, content->transform.y0);
   }
   if (has_color_transform) {
     swfdec_bits_get_color_transform (bits, &content->color_transform);
@@ -320,7 +324,7 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   }
   if (has_clip_depth) {
     content->clip_depth = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("clip_depth = %04x", content->clip_depth);
+    SWFDEC_LOG ("  clip_depth = %u", content->clip_depth);
   }
   if (has_clip_actions) {
     int reserved, clip_event_flags, event_flags, key_code;

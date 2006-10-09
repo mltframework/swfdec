@@ -110,13 +110,18 @@ dump_shape (SwfdecShape *shape)
   for (i = 0; i < shape->vecs->len; i++) {
     shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
 
-    g_print("    %u: ", shapevec->last_index);
+    g_print("   %3u: ", shapevec->last_index);
     if (shapevec->pattern == NULL) {
       g_print ("not filled\n");
     } else {
       char *str = swfdec_pattern_to_string (shapevec->pattern);
       g_print ("%s\n", str);
       g_free (str);
+      if (verbose)
+      g_print ("        %g %g  %g %g  %g %g\n", 
+	  shapevec->pattern->transform.xx, shapevec->pattern->transform.xy,
+	  shapevec->pattern->transform.yx, shapevec->pattern->transform.yy,
+	  shapevec->pattern->transform.x0, shapevec->pattern->transform.y0);
     }
     if (verbose) {
       dump_path (&shapevec->path);

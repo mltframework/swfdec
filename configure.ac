@@ -110,6 +110,13 @@ AC_SUBST(MAD_LIBS)
 if test "x$HAVE_MAD" = xyes; then
   AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
 fi
+AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
+dnl FIXME: version?
+PKG_CHECK_MODULES(FFMPEG, libavcodec, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+if test "x$HAVE_FFMPEG" = xyes; then
+  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
+fi
+AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 
 PKG_CHECK_MODULES(MOZILLA, mozilla-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
 if test "$HAVE_MOZILLA" = no ; then

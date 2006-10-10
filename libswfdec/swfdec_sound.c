@@ -66,7 +66,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   }
 
   n_samples = swfdec_bits_get_u16 (&s->b);
-  if (sound->format == SWFDEC_SOUND_FORMAT_MP3) {
+  if (sound->format == SWFDEC_AUDIO_FORMAT_MP3) {
     skip = swfdec_bits_get_s16 (&s->b);
   } else {
     skip = 0;
@@ -129,38 +129,35 @@ tag_func_define_sound (SwfdecDecoder * s)
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
       /* fall through */
     case 3:
-      sound->format = SWFDEC_SOUND_FORMAT_UNCOMPRESSED;
+      sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
       orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 2:
-      sound->format = SWFDEC_SOUND_FORMAT_MP3;
+      sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       /* FIXME: skip these samples */
       skip = swfdec_bits_get_u16 (b);
       orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
-      sound->format = SWFDEC_SOUND_FORMAT_ADPCM;
-      //g_print("  size = %d (%d bit)\n", size, size ? 16 : 8);
-      //g_print("  type = %d (%d channels)\n", type, type + 1);
-      //g_print("  n_samples = %d\n", n_samples);
-      //adpcm_decode (s, sound);
+      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
       SWFDEC_WARNING ("adpcm decoding doesn't work");
       break;
     case 6:
-      sound->format = SWFDEC_SOUND_FORMAT_NELLYMOSER;
-      SWFDEC_WARNING ("Nellymosere compression not implemented");
+      sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
+      SWFDEC_WARNING ("Nellymoser compression not implemented");
       break;
     default:
       SWFDEC_WARNING ("unknown format %d", format);
-      sound->format = SWFDEC_SOUND_FORMAT_UNDEFINED;
+      sound->format = format;
   }
+  sound->codec = swfdec_codec_get_audio (sound->format);
   if (orig_buffer) {
     SwfdecBuffer *tmp;
     gpointer data = swfdec_sound_init_decoder (sound);
     tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
     swfdec_sound_finish_decoder (sound, data);
     swfdec_buffer_unref (orig_buffer);
-    /* only assign here, the decoding code checks this */
+    /* only assign here, the decoding code checks this variable */
     sound->decoded = tmp;
   }
   if (sound->decoded) {
@@ -218,25 +215,26 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
       /* fall through */
     case 3:
-      sound->format = SWFDEC_SOUND_FORMAT_UNCOMPRESSED;
+      sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
       break;
     case 2:
-      sound->format = SWFDEC_SOUND_FORMAT_MP3;
+      sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
     case 1:
-      sound->format = SWFDEC_SOUND_FORMAT_ADPCM;
+      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
       SWFDEC_WARNING ("adpcm decoding doesn't work");
       break;
     case 6:
-      sound->format = SWFDEC_SOUND_FORMAT_NELLYMOSER;
+      sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
       SWFDEC_WARNING ("Nellymosere compression not implemented");
       break;
     default:
       SWFDEC_WARNING ("unknown format %d", format);
-      sound->format = SWFDEC_SOUND_FORMAT_UNDEFINED;
+      sound->format = format;
   }
+  sound->codec = swfdec_codec_get_audio (sound->format);
 
   return SWFDEC_OK;
 }
@@ -450,210 +448,15 @@ adpcm_decode (SwfdecDecoder * s, SwfdecSound * sound)
   }
 }
 
-#ifdef HAVE_MAD
-typedef struct {
-  struct mad_stream	stream;
-  struct mad_frame	frame;
-  struct mad_synth	synth;
-  guint8		data[MAD_BUFFER_MDLEN * 3];
-  guint			data_len;
-} MadData;
-
-static gpointer
-swfdec_sound_mp3_init (SwfdecSound * sound)
-{
-  MadData *data = g_new (MadData, 1);
-
-  mad_stream_init (&data->stream);
-  mad_frame_init (&data->frame);
-  mad_synth_init (&data->synth);
-  data->data_len = 0;
-
-  return data;
-}
-
-static void
-swfdec_sound_mp3_cleanup (SwfdecSound *sound, gpointer datap)
-{
-  MadData *data = datap;
-
-  mad_synth_finish (&data->synth);
-  mad_frame_finish (&data->frame);
-  mad_stream_finish (&data->stream);
-
-  g_free (data);
-}
-
-static SwfdecBuffer *
-convert_synth_to_buffer (SwfdecSound *sound, MadData *mdata)
-{
-  SwfdecBuffer *buffer;
-  int n_samples;
-  short *data;
-  int i;
-  short c0,c1;
-#define MAD_F_TO_S16(x) (CLAMP (x, -MAD_F_ONE, MAD_F_ONE) >> (MAD_F_FRACBITS - 14))
-
-  n_samples = mdata->synth.pcm.length;
-  if (n_samples == 0) {
-    return NULL;
-  }
-
-  switch (mdata->synth.pcm.samplerate) {
-    case 11025:
-      n_samples *= 4;
-      break;
-    case 22050:
-      n_samples *= 2;
-      break;
-    case 44100:
-      break;
-    default:
-      SWFDEC_ERROR ("sample rate not handled (%d)",
-          mdata->synth.pcm.samplerate);
-      return NULL;
-  }
-
-  buffer = swfdec_buffer_new_and_alloc (n_samples * 2 * 2);
-  data = (gint16 *) buffer->data;
-
-  if (mdata->synth.pcm.samplerate == 11025) {
-    if (mdata->synth.pcm.channels == 2) {
-      for (i = 0; i < mdata->synth.pcm.length; i++) {
-        c0 = MAD_F_TO_S16 (mdata->synth.pcm.samples[0][i]);
-        c1 = MAD_F_TO_S16 (mdata->synth.pcm.samples[1][i]);
-        *data++ = c0;
-        *data++ = c1;
-        *data++ = c0;
-        *data++ = c1;
-        *data++ = c0;
-        *data++ = c1;
-        *data++ = c0;
-        *data++ = c1;
-      }
-    } else {
-      for (i = 0; i < mdata->synth.pcm.length; i++) {
-        c0 = MAD_F_TO_S16( mdata->synth.pcm.samples[0][i]);
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-      }
-    }
-  } else if (mdata->synth.pcm.samplerate == 22050) {
-    if (mdata->synth.pcm.channels == 2) {
-      for (i = 0; i < mdata->synth.pcm.length; i++) {
-        c0 = MAD_F_TO_S16 (mdata->synth.pcm.samples[0][i]);
-        c1 = MAD_F_TO_S16 (mdata->synth.pcm.samples[1][i]);
-        *data++ = c0;
-        *data++ = c1;
-        *data++ = c0;
-        *data++ = c1;
-      }
-    } else {
-      for (i = 0; i < mdata->synth.pcm.length; i++) {
-        c0 = MAD_F_TO_S16 (mdata->synth.pcm.samples[0][i]);
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-        *data++ = c0;
-      }
-    }
-  } else if (mdata->synth.pcm.samplerate == 44100) {
-    if (mdata->synth.pcm.channels == 2) {
-      for (i = 0; i < mdata->synth.pcm.length; i++) {
-        c0 = MAD_F_TO_S16 (mdata->synth.pcm.samples[0][i]);
-        c1 = MAD_F_TO_S16 (mdata->synth.pcm.samples[1][i]);
-        *data++ = c0;
-        *data++ = c1;
-      }
-    } else {
-      for (i = 0; i < mdata->synth.pcm.length; i++) {
-        c0 = MAD_F_TO_S16 (mdata->synth.pcm.samples[0][i]);
-        *data++ = c0;
-        *data++ = c0;
-      }
-    }
-  } else {
-    SWFDEC_ERROR ("sample rate not handled (%d)",
-        mdata->synth.pcm.samplerate);
-  }
-  return buffer;
-}
-
-SwfdecBuffer *
-swfdec_sound_mp3_decode (SwfdecSound * sound, gpointer datap, SwfdecBuffer *buffer)
-{
-  MadData *data = datap;
-  SwfdecBuffer *out;
-  SwfdecBufferQueue *queue;
-  unsigned int amount = 0, size;
-
-  queue = swfdec_buffer_queue_new ();
-
-  //write (1, buffer->data, buffer->length);
-  //g_print ("buffer %p gave us %u bytes\n", buffer, buffer->length);
-  while (amount < buffer->length) {
-    size = MIN (buffer->length - amount, MAD_BUFFER_MDLEN * 3 - data->data_len);
-    memcpy (&data->data[data->data_len], buffer->data + amount, size);
-    //write (1, buffer->data + amount, size);
-    amount += size;
-    data->data_len += size;
-    mad_stream_buffer (&data->stream, data->data, data->data_len);
-    while (1) {
-      if (mad_frame_decode (&data->frame, &data->stream)) {
-	if (data->stream.error == MAD_ERROR_BUFLEN)
-	  break;
-	if (MAD_RECOVERABLE (data->stream.error)) {
-	  SWFDEC_LOG ("recoverable error 0x%04x", data->stream.error);
-	  continue;
-	}
-	SWFDEC_ERROR ("stream error 0x%04x", data->stream.error);
-	break;
-      }
-
-      mad_synth_frame (&data->synth, &data->frame);
-      out = convert_synth_to_buffer (sound, data);
-      if (out) {
-	swfdec_buffer_queue_push (queue, out);
-      }
-    }
-    if (data->stream.next_frame == NULL) {
-      data->data_len = 0;
-    } else {
-      data->data_len = data->stream.bufend - data->stream.next_frame;
-      memmove (data->data, data->stream.next_frame, data->data_len);
-    }
-  }
-  //g_print ("%u bytes left\n", data->data_len);
-
-  g_assert (sound->decoded == NULL);
-  size = swfdec_buffer_queue_get_depth (queue);
-  if (size > 0)
-    out = swfdec_buffer_queue_pull (queue, size);
-  else
-    out = NULL;
-  swfdec_buffer_queue_free (queue);
-
-  return out;
-}
-#endif
-
 gpointer 
 swfdec_sound_init_decoder (SwfdecSound * sound)
 {
   g_assert (sound->decoded == NULL);
 
-#ifdef HAVE_MAD
-  if (sound->format == SWFDEC_SOUND_FORMAT_MP3)
-    return swfdec_sound_mp3_init (sound);
-#endif
-  
-  return NULL;
+  if (sound->codec)
+    return swfdec_codec_init (sound->codec, sound->width, sound->channels, sound->rate_multiplier);
+  else
+    return NULL;
 }
 
 void
@@ -661,45 +464,19 @@ swfdec_sound_finish_decoder (SwfdecSound * sound, gpointer data)
 {
   g_assert (sound->decoded == NULL);
 
-#ifdef HAVE_MAD
-  if (sound->format == SWFDEC_SOUND_FORMAT_MP3)
-    return swfdec_sound_mp3_cleanup (sound, data);
-#endif
+  if (sound->codec)
+    swfdec_codec_finish (sound->codec, data);
 }
 
-/* NB: this function can return NULL even in case of success because of internal buffering */
 SwfdecBuffer *
 swfdec_sound_decode_buffer (SwfdecSound *sound, gpointer data, SwfdecBuffer *buffer)
 {
-  SwfdecBuffer *ret;
-
   g_assert (sound->decoded == NULL);
 
-  switch (sound->format) {
-    case SWFDEC_SOUND_FORMAT_MP3:
-#ifdef HAVE_MAD
-      ret = swfdec_sound_mp3_decode (sound, data, buffer);
-#endif
-      break;
-    case SWFDEC_SOUND_FORMAT_UNCOMPRESSED:
-      ret = swfdec_buffer_new_and_alloc (buffer->length);
-      g_assert (sound->width == TRUE); /* FIXME: handle 8bit unsigned */
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-      oil_swab_u16 ((guint16 *) ret->data, (guint16 *) buffer->data, buffer->length / 2);
-#else
-      memcpy (ret->data, buffer->data, buffer->length);
-#endif
-      break;
-    /* these should never happen */
-    case SWFDEC_SOUND_FORMAT_ADPCM:
-    case SWFDEC_SOUND_FORMAT_NELLYMOSER:
-    case SWFDEC_SOUND_FORMAT_UNDEFINED:
-    default:
-      g_assert_not_reached ();
-      return NULL;
-  }
-
-  return ret;
+  if (sound->codec)
+    return swfdec_codec_decode (sound->codec, data, buffer);
+  else
+    return NULL;
 }
 
 void

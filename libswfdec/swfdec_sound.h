@@ -3,15 +3,8 @@
 #define _SWFDEC_SOUND_H_
 
 #include <swfdec_object.h>
-#include "swfdec_types.h"
-
-/* FIXME */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-#ifdef HAVE_MAD
-#include <mad.h>
-#endif
+#include <swfdec_types.h>
+#include <swfdec_codec.h>
 
 G_BEGIN_DECLS
 
@@ -25,14 +18,6 @@ typedef struct _SwfdecSoundEnvelope SwfdecSoundEnvelope;
 #define SWFDEC_IS_SOUND_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SOUND))
 #define SWFDEC_SOUND(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SOUND, SwfdecSound))
 #define SWFDEC_SOUND_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SOUND, SwfdecSoundClass))
-
-typedef enum {
-  SWFDEC_SOUND_FORMAT_UNDEFINED = 0,
-  SWFDEC_SOUND_FORMAT_ADPCM = 1,
-  SWFDEC_SOUND_FORMAT_MP3 = 2,
-  SWFDEC_SOUND_FORMAT_UNCOMPRESSED = 3,
-  SWFDEC_SOUND_FORMAT_NELLYMOSER = 6
-} SwfdecSoundFormat;
 
 struct _SwfdecSoundEnvelope {
   unsigned int		offset;			/* offset in frames */
@@ -57,7 +42,8 @@ struct _SwfdecSound
 {
   SwfdecObject		object;
 
-  SwfdecSoundFormat	format;			/* format of the sound */
+  SwfdecAudioFormat	format;			/* format in use */
+  const SwfdecCodec *	codec;			/* codec for this sound */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   unsigned int		channels;		/* 1 or 2 */
   unsigned int		rate_multiplier;	/* rate = 44100 / rate_multiplier */

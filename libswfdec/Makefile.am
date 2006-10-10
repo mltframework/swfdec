@@ -2,11 +2,21 @@ SUBDIRS = jpeg js
 
 DIST_SUBDIRS = jpeg js mpeg
 
+CODECS =
+
+if HAVE_MAD
+CODECS += swfdec_codec_mad.c
+endif
+if HAVE_FFMPEG
+CODECS += swfdec_codec_ffmpeg.c
+endif
+
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
+	swfdec_codec.c $(CODECS) \
 	swfdec_rect.c swfdec_image.c swfdec_event.c swfdec_pattern.c \
 	swfdec_shape.c swf.c swfdec_object.c swfdec_text.c swfdec_edittext.c swfdec_html_parser.c \
 	swfdec_sprite.c swfdec_button.c swfdec_movieclip.c \
@@ -19,10 +29,10 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
-	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS)
+	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS) $(FFMPEG_CFLAGS)
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-export-symbols-regex '^(swfdec_.*)' \
-	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(MAD_LIBS) \
+	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(MAD_LIBS) $(FFMPEG_LIBS) \
 	$(LIBOIL_LIBS)
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la

@@ -111,7 +111,7 @@ define_text (SwfdecDecoder * s, int rgba)
 
 	if (glyph.font != NULL)
 	  g_array_append_val (text->glyphs, glyph);
-        glyph.x += swfdec_bits_getbits (bits, n_advance_bits);
+        glyph.x += swfdec_bits_getsbits (bits, n_advance_bits);
       }
     } else {
       /* state change */

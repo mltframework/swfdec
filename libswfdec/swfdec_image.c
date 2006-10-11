@@ -1,11 +1,17 @@
 
-#include <swfdec_image.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <zlib.h>
 #include <string.h>
 
-#include "swfdec_internal.h"
 #include "jpeg_rgb_decoder.h"
+#include "swfdec.h"
+#include "swfdec_image.h"
+#include "swfdec_cache.h"
+#include "swfdec_debug.h"
 
 
 static void merge_alpha (SwfdecImage * image, unsigned char *image_data,

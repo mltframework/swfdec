@@ -217,6 +217,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
 
         queue->buffers = g_list_delete_link (queue->buffers, g);
         offset += buffer->length;
+	swfdec_buffer_unref (buffer);
       }
     }
   }

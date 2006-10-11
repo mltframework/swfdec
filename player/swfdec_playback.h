@@ -7,7 +7,8 @@
 G_BEGIN_DECLS
 
 gpointer	swfdec_playback_open	(GSourceFunc	callback,
-					 gpointer	data);
+					 gpointer	data,
+					 guint *	buffer_size);
 
 void		swfdec_playback_write	(gpointer	sound,
 					 SwfdecBuffer *	buffer);

@@ -113,6 +113,8 @@ fi
 AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
 dnl FIXME: version?
 PKG_CHECK_MODULES(FFMPEG, libavcodec, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+AC_SUBST(FFMPEG_CFLAGS)
+AC_SUBST(FFMPEG_LIBS)
 if test "x$HAVE_FFMPEG" = xyes; then
   AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
 fi

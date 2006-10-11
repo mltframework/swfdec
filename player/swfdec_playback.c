@@ -8,8 +8,6 @@
 
 G_BEGIN_DECLS
 
-#define LATENCY_MSECS 100
-
 typedef struct {
   snd_pcm_t *		pcm;
   GList *		channels;
@@ -89,11 +87,11 @@ handle_sound (GIOChannel *source, GIOCondition cond, gpointer data)
 }
 
 gpointer
-swfdec_playback_open (GSourceFunc func, gpointer data)
+swfdec_playback_open (GSourceFunc func, gpointer data, guint *buffer_size)
 {
   snd_pcm_t *ret;
   snd_pcm_hw_params_t *hw_params;
-  unsigned int rate, count, buffer_time = LATENCY_MSECS * 1000; /* effective latency latency */
+  unsigned int rate, count;
   Sound *sound;
 
   ALSA_ERROR (snd_pcm_open (&ret, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
@@ -104,13 +102,6 @@ swfdec_playback_open (GSourceFunc func, gpointer data)
     g_printerr ("No sound format available\n");
     return NULL;
   }
-#if 0
-  {
-    snd_output_t *log;
-    snd_output_stdio_attach (&log, stderr, 0);
-    snd_pcm_hw_params_dump (hw_params, log);
-  }
-#endif
   if (snd_pcm_hw_params_set_access (ret, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
     g_printerr ("Failed setting access\n");
     goto fail;
@@ -128,13 +119,26 @@ swfdec_playback_open (GSourceFunc func, gpointer data)
     g_printerr ("Failed setting rate\n");
     goto fail;
   }
-  if (snd_pcm_hw_params_set_buffer_time_near (ret, hw_params, &buffer_time, 0) < 0) {
-    g_printerr ("Failed setting buffer time\n");
-    goto fail;
-  }
   if (snd_pcm_hw_params (ret, hw_params) < 0) {
     g_printerr ("Could not set hardware parameters\n");
+    goto fail;
   }
+  if (buffer_size) {
+    snd_pcm_uframes_t ret;
+    if (snd_pcm_hw_params_get_buffer_size (hw_params, &ret) < 0) {
+      g_printerr ("Could not query buffer size\n");
+      *buffer_size = 0;
+    } else {
+      *buffer_size = ret;
+    }
+  }
+#if 0
+  {
+    snd_output_t *log;
+    snd_output_stdio_attach (&log, stderr, 0);
+    snd_pcm_hw_params_dump (hw_params, log);
+  }
+#endif
 
   if (snd_pcm_prepare (ret) < 0) {
     g_printerr ("no prepare\n");

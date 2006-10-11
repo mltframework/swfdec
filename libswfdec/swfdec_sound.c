@@ -2,11 +2,6 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <config.h>
-#include <liboil/liboil.h>
-#ifdef HAVE_MAD
-#include <mad.h>
-#endif
 
 #include "swfdec.h"
 #include "swfdec_sound.h"
@@ -87,7 +82,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */
   //write (1, (void *) chunk->data, chunk->length);
 
-  swfdec_sprite_add_sound_chunk (s->parse_sprite, s->parse_sprite->parse_frame, chunk, skip);
+  swfdec_sprite_add_sound_chunk (s->parse_sprite, s->parse_sprite->parse_frame, chunk, skip, n_samples);
 
   return SWFDEC_OK;
 }
@@ -120,7 +115,7 @@ tag_func_define_sound (SwfdecDecoder * s)
   sound->n_samples = n_samples;
   sound->width = size;
   sound->channels = type ? 2 : 1;
-  sound->rate_multiplier = (1 << rate);
+  sound->rate_multiplier = (1 << (3 - rate));
 
   switch (format) {
     case 0:
@@ -206,7 +201,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
 
   sound->width = size;
   sound->channels = type ? 2 : 1;
-  sound->rate_multiplier = (1 << rate);
+  sound->rate_multiplier = (1 << (3 - rate));
 
   switch (format) {
     case 0:
@@ -479,8 +474,8 @@ swfdec_sound_decode_buffer (SwfdecSound *sound, gpointer data, SwfdecBuffer *buf
     return NULL;
 }
 
-void
-swfdec_sound_add (gint16 *dest, const gint16 *src, unsigned int n_samples, const guint16 volume[2])
+static void
+swfdec_sound_add_with_volume (gint16 *dest, const gint16 *src, unsigned int n_samples, const guint16 volume[2])
 {
   unsigned int i;
   int tmp;
@@ -497,13 +492,29 @@ swfdec_sound_add (gint16 *dest, const gint16 *src, unsigned int n_samples, const
   }
 }
 
+void
+swfdec_sound_add (gint16 *dest, const gint16 *src, unsigned int n_samples)
+{
+  unsigned int i;
+  int tmp;
+
+  for (i = 0; i < n_samples; i++) {
+    tmp = *src++ + *dest;
+    tmp = CLAMP (tmp, G_MININT16, G_MAXINT16);
+    *dest++ = tmp;
+    tmp = *src++ + *dest;
+    tmp = CLAMP (tmp, G_MININT16, G_MAXINT16);
+    *dest++ = tmp;
+  }
+}
+
 /**
  * swfdec_sound_render:
  * @sound: a #SwfdecSound
  * @dest: target to add to
  * @offset: offset in samples into the data
  * @n_samples: amount of samples to render
- * @volume: volume for left and right channel
+ * @volume: volume for left and right channel or NULL for no volume change
  *
  * Renders the given sound onto the existing data in @dest.
  **/
@@ -522,5 +533,8 @@ swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
     return;
   }
   src = (gint16*) (sound->decoded->data + offset * 4);
-  swfdec_sound_add (dest, src, n_samples, volume);
+  if (volume)
+    swfdec_sound_add_with_volume (dest, src, n_samples, volume);
+  else
+    swfdec_sound_add (dest, src, n_samples);
 }

@@ -9,6 +9,7 @@
 #include "swfdec_movieclip.h"
 #include "swfdec_internal.h"
 #include "swfdec_js.h"
+#include "swfdec_audio.h"
 #include "swfdec_edittext.h"
 
 #ifndef M_PI
@@ -108,7 +109,6 @@ swfdec_movie_clip_init (SwfdecMovieClip * movie)
 
   movie->button_state = SWFDEC_BUTTON_UP;
 
-  movie->sound_queue = g_queue_new ();
   swfdec_rect_init_empty (&SWFDEC_OBJECT (movie)->extents);
 }
 
@@ -272,7 +272,6 @@ swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
   g_assert (movie->content == &default_content);
   g_assert (movie->child == NULL);
 
-  g_queue_free (movie->sound_queue);
   if (movie->text_variables) {
     g_assert (g_hash_table_size (movie->text_variables) == 0);
     g_hash_table_destroy (movie->text_variables);
@@ -416,70 +415,75 @@ swfdec_movie_clip_perform_one_action (SwfdecMovieClip *movie, SwfdecSpriteAction
   }
 }
 
-unsigned int
-swfdec_movie_clip_get_next_frame (SwfdecMovieClip *movie, unsigned int current_frame)
+#if 0
+static SoundEntry *
+swfdec_movie_clip_sync (SwfdecMovieClip *movie)
 {
-  unsigned int next_frame, n_frames;
+  SoundEntry *entry;
+  SwfdecSpriteFrame *frame = &SWFDEC_SPRITE (movie->child)->frames[movie->sound_current_frame];
+  guint latency = movie->sound_queue_length < SWFDEC_OBJECT (movie)->decoder->samples_latency;
+  guint skip = frame->skip;
 
-  g_assert (SWFDEC_IS_SPRITE (movie->child));
-
-  n_frames = MIN (SWFDEC_SPRITE (movie->child)->n_frames, 
-		  SWFDEC_SPRITE (movie->child)->parse_frame);
-  next_frame = current_frame + 1;
-  if (next_frame >= n_frames)
-    next_frame = 0;
-  return next_frame;
+  while (latency > 0) {
+    guint n_samples = frame->n_samples;
+    if (n_samples == 0)
+      n_samples = SWFDEC_OBJECT (movie)->decoder->samples_this_frame;
+    if (n_samples > skip + latency) {
+      skip += latency;
+      latency = 0;
+      break;
+    }
+    latency -= n_samples - skip;
+    movie->sound_current_frame = swfdec_movie_clip_get_next_frame (movie, movie->sound_current_frame);
+    frame = &SWFDEC_SPRITE (movie->child)->frames[movie->sound_current_frame];
+    skip = 0;
+  }
+  entry = sound_entry_new_for_frame (SWFDEC_SPRITE (movie->child), movie->sound_current_frame);
+    entry->skip = skip;
+    return entry;
+  } else {
+    return 
+  }
 }
+#endif
 
 void
 swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie)
 {
-  SwfdecBuffer *cur;
   SwfdecSpriteFrame *last;
   SwfdecSpriteFrame *current;
-  unsigned int n_bytes;
 
   g_assert (SWFDEC_IS_SPRITE (movie->child));
 
-  SWFDEC_LOG ("iterating audio (frame %u, last %u)", movie->current_frame, 
-      movie->sound_current_frame);
-  last = movie->sound_current_frame == (guint) -1 ? NULL : 
-    &SWFDEC_SPRITE (movie->child)->frames[movie->sound_current_frame];
   current = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
-  if (last == NULL || last->sound_head != current->sound_head) {
-    /* empty queue */
-    while ((cur = g_queue_pop_head (movie->sound_queue)))
-      swfdec_buffer_unref (cur);
-    if (movie->sound_decoder) {
-      g_assert (last);
-      SWFDEC_LOG ("finishing sound decoder in frame %u", movie->current_frame);
-      swfdec_sound_finish_decoder (last->sound_head, movie->sound_decoder);
+  if (current->sound_head == NULL) {
+    if (movie->sound_stream) {
+      swfdec_audio_stream_stop (SWFDEC_OBJECT (movie)->decoder, movie->sound_stream);
+      movie->sound_stream = 0;
     }
-    if (current->sound_head) {
-      movie->sound_decoder = swfdec_sound_init_decoder (current->sound_head);
-      SWFDEC_LOG ("initialized sound decoder in frame %u", movie->current_frame);
-    } else {
-      movie->sound_decoder = NULL;
-    }
-  } else if (swfdec_movie_clip_get_next_frame (movie, movie->sound_current_frame) != movie->current_frame) {
-    /* empty queue */
-    while ((cur = g_queue_pop_head (movie->sound_queue)))
-      swfdec_buffer_unref (cur);
-  } 
-  /* flush unneeded bytes */
-  n_bytes = SWFDEC_OBJECT (movie)->decoder->samples_this_frame * 4;
-  while (n_bytes > 0 && (cur = g_queue_pop_head (movie->sound_queue))) {
-    if (n_bytes < cur->length) {
-      SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (cur, n_bytes, cur->length - n_bytes);
-      g_assert (sub->length % 4 == 0);
-      g_queue_push_head (movie->sound_queue, sub);
-      swfdec_buffer_unref (cur);
-      break;
-    }
-    n_bytes -= cur->length;
-    swfdec_buffer_unref (cur);
+    return;
   }
-  movie->sound_current_frame = movie->current_frame;
+  SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
+  if (swfdec_sprite_get_next_frame (SWFDEC_SPRITE (movie->child), movie->sound_frame) != movie->current_frame)
+    goto new_decoder;
+  if (movie->sound_frame == -1)
+    goto new_decoder;
+  if (current->sound_head && movie->sound_stream == 0)
+    goto new_decoder;
+  last = &SWFDEC_SPRITE (movie->child)->frames[movie->sound_frame];
+  if (last->sound_head != current->sound_head)
+    goto new_decoder;
+  movie->sound_frame = movie->current_frame;
+  return;
+
+new_decoder:
+  if (movie->sound_stream) {
+    swfdec_audio_stream_stop (SWFDEC_OBJECT (movie)->decoder, movie->sound_stream);
+    movie->sound_stream = 0;
+  }
+
+  movie->sound_stream = swfdec_audio_stream_new (SWFDEC_SPRITE (movie->child), movie->current_frame);
+  movie->sound_frame = movie->current_frame;
 }
 
 static void
@@ -559,7 +563,7 @@ swfdec_movie_clip_should_iterate (SwfdecMovieClip *movie)
   if (parent->stopped) {
     parent_frame = parent->next_frame;
   } else {
-    parent_frame = swfdec_movie_clip_get_next_frame (parent, parent->next_frame);
+    parent_frame = swfdec_sprite_get_next_frame (SWFDEC_SPRITE (parent->child), parent->next_frame);
   }
   /* check if we'll get removed until parent's next frame */
   if (parent_frame < movie->content->sequence->start ||
@@ -582,7 +586,7 @@ swfdec_movie_clip_queue_iterate (SwfdecMovieClip *movie)
   if (movie->stopped) {
     goto_frame = movie->next_frame;
   } else {
-    goto_frame = swfdec_movie_clip_get_next_frame (movie, movie->next_frame);
+    goto_frame = swfdec_sprite_get_next_frame (SWFDEC_SPRITE (movie->child), movie->next_frame);
   }
   swfdec_movie_clip_goto (movie, goto_frame, TRUE);
 }
@@ -969,16 +973,7 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
   s = SWFDEC_OBJECT (movie)->decoder;
   if (movie->child) {
     if (SWFDEC_IS_SPRITE (movie->child)) {
-      SwfdecBuffer *cur;
-      SwfdecSpriteFrame *frame;
       g_assert (movie->list == NULL);
-      frame = &SWFDEC_SPRITE (movie->child)->frames[movie->current_frame];
-      if (movie->sound_decoder)
-	swfdec_sound_finish_decoder (frame->sound_head, movie->sound_decoder);
-      movie->sound_decoder = NULL;
-      /* empty sound queue */
-      while ((cur = g_queue_pop_head (movie->sound_queue)))
-	swfdec_buffer_unref (cur);
       s->movies = g_list_remove (s->movies, movie);
     }
     if (SWFDEC_IS_EDIT_TEXT (movie->child)) { 
@@ -1006,7 +1001,7 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
   movie->child = child;
   movie->current_frame = -1;
   movie->next_frame = 0;
-  movie->sound_current_frame = -1;
+  movie->sound_frame = -1;
   movie->stopped = FALSE;
   if (child) {
     g_object_ref (child);
@@ -1033,75 +1028,6 @@ swfdec_movie_clip_set_child (SwfdecMovieClip *movie, SwfdecObject *child)
   }
   swfdec_movie_clip_invalidate (movie);
   swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_EXTENTS);
-}
-
-static gboolean
-swfdec_movie_clip_push_audio (SwfdecMovieClip *movie)
-{
-  SwfdecSpriteFrame *frame;
-  SwfdecBuffer *buf;
-
-  if (g_queue_is_empty (movie->sound_queue)) {
-    movie->sound_frame = movie->current_frame;
-  }
-
-  do {
-    frame = &SWFDEC_SPRITE (movie->child)->frames[movie->sound_frame];
-    if (frame->sound_block == NULL)
-      return FALSE;
-    SWFDEC_LOG ("decoding frame %u in frame %u now\n", movie->sound_frame, movie->current_frame);
-    buf = swfdec_sound_decode_buffer (frame->sound_head, movie->sound_decoder, frame->sound_block);
-    movie->sound_frame = swfdec_movie_clip_get_next_frame (movie, movie->sound_frame);
-  } while (buf == NULL);
-  g_assert (buf->length % 4 == 0);
-  if (g_queue_is_empty (movie->sound_queue)) {
-    if (frame->sound_skip < 0) {
-      SWFDEC_ERROR ("help, i can't skip negative frames!");
-    } else if ((guint) frame->sound_skip * 4 >= buf->length) {
-      SWFDEC_INFO ("skipping whole frame?!");
-      swfdec_buffer_unref (buf);
-      return FALSE;
-    } if (frame->sound_skip > 0) {
-      SwfdecBuffer *tmp = swfdec_buffer_new_subbuffer (buf, frame->sound_skip * 4, 
-	  buf->length - frame->sound_skip * 4);
-      swfdec_buffer_unref (buf);
-      buf = tmp;
-    }
-  }
-  g_queue_push_tail (movie->sound_queue, buf);
-  return TRUE;
-}
-
-void
-swfdec_movie_clip_render_audio (SwfdecMovieClip *movie, gint16 *dest,
-    guint n_samples)
-{
-  static const guint16 volume[2] = { G_MAXUINT16, G_MAXUINT16 };
-  GList *g;
-  unsigned int rendered;
-
-  for (g = movie->list; g; g = g_list_next (g)) {
-    swfdec_movie_clip_render_audio (g->data, dest, n_samples);
-  }
-
-  if (!SWFDEC_IS_SPRITE (movie->child))
-    return;
-
-  for (g = g_queue_peek_head_link (movie->sound_queue); g && n_samples > 0; g = g->next) {
-    SwfdecBuffer *buffer = g->data;
-    rendered = MIN (n_samples, buffer->length / 4);
-    swfdec_sound_add (dest, (gint16 *) buffer->data, rendered, volume);
-    n_samples -= rendered;
-    dest += rendered * 2;
-  }
-  while (n_samples > 0 && swfdec_movie_clip_push_audio (movie)) {
-    SwfdecBuffer *buffer = g_queue_peek_tail (movie->sound_queue);
-    g_assert (buffer);
-    rendered = MIN (n_samples, buffer->length / 4);
-    swfdec_sound_add (dest, (gint16 *) buffer->data, rendered, volume);
-    n_samples -= rendered;
-    dest += rendered * 2;
-  }
 }
 
 void

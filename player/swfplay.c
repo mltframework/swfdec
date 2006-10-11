@@ -59,6 +59,7 @@ main (int argc, char *argv[])
   double scale;
   SwfdecDecoder *s;
   SwfdecBuffer *buffer;
+  guint buffer_size = 0;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
 
@@ -115,7 +116,19 @@ main (int argc, char *argv[])
   if (no_sound) {
     playback = NULL;
   } else {
-    playback = swfdec_playback_open (iterate, s);
+    playback = swfdec_playback_open (iterate, s, &buffer_size);
+  }
+  if (buffer_size) {
+    SwfdecBuffer *buffer;
+
+    swfdec_decoder_set_latency (s, buffer_size);
+    buffer = swfdec_buffer_new ();
+    buffer->length = buffer_size * 4;
+    buffer->data = g_malloc0 (buffer->length);
+    swfdec_decoder_render_audio (s, (gint16 *) buffer->data,
+	0, buffer_size);
+    swfdec_playback_write (playback, buffer);
+    swfdec_buffer_unref (buffer);
   }
   play_swf (s);
 

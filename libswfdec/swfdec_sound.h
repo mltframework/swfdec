@@ -80,8 +80,7 @@ void			swfdec_sound_render		(SwfdecSound *	sound,
 							 const guint16	volume[2]);
 void			swfdec_sound_add		(gint16 *	dest,
 							 const gint16 *	src,
-							 unsigned int	n_samples,
-							 const guint16	volume[2]);
+							 unsigned int	n_samples);
 
 SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecDecoder *s,
 							 int		id);

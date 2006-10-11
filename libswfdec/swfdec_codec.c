@@ -33,13 +33,15 @@ swfdec_codec_get_audio (SwfdecAudioFormat format)
       return NULL;
 #endif
     case SWFDEC_AUDIO_FORMAT_MP3:
-#ifdef HAVE_MAD
-      return &swfdec_codec_mad;
-#elif defined(HAVE_FFMPEG)
+#ifdef HAVE_FFMPEG
       return &swfdec_codec_ffmpeg_mp3;
+#else
+#ifdef HAVE_MAD
+      //return &swfdec_codec_mad;
 #else
       SWFDEC_ERROR ("mp3 sound requires ffmpeg or mad");
       return NULL;
+#endif
 #endif
     case SWFDEC_AUDIO_FORMAT_NELLYMOSER:
       SWFDEC_ERROR ("Nellymoser sound is not implemented yet");

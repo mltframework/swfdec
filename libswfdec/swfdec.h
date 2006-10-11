@@ -50,7 +50,9 @@ void swfdec_decoder_handle_mouse (SwfdecDecoder *dec,
     double x, double y, int button);
 
 guint swfdec_decoder_get_audio_samples (SwfdecDecoder *dec);
-void swfdec_decoder_render_audio (SwfdecDecoder *dec, gint16* dest, guint dest_size);
+guint swfdec_decoder_get_latency (SwfdecDecoder *dec);
+void swfdec_decoder_set_latency (SwfdecDecoder *dec, guint samples);
+void swfdec_decoder_render_audio (SwfdecDecoder *dec, gint16* dest, guint start_offset, guint dest_size);
 SwfdecBuffer *swfdec_decoder_render_audio_to_buffer (SwfdecDecoder *dec);
 
 G_END_DECLS

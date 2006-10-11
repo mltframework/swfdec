@@ -68,10 +68,8 @@ struct _SwfdecMovieClip
   swf_color		bg_color;		/* background color of main sprite */
 
   /* audio stream handling */
-  unsigned int		sound_current_frame;	/* last frame we updated for */
-  gpointer		sound_decoder;	      	/* pointer acquired via swfdec_sound_init_decoder */
-  unsigned int		sound_frame;		/* up to which frame the queue contains data (starting with this frame) */
-  GQueue*		sound_queue;		/* buffer queue with our data */
+  unsigned int		sound_frame;		/* last frame we updated for */
+  guint			sound_stream;		/* stream that currently plays */
 
   /* leftover unimplemented variables from the Actionscript spec */
   int alpha;
@@ -99,8 +97,6 @@ SwfdecMovieClip *swfdec_movie_clip_new			(SwfdecMovieClip *	parent,
 							 SwfdecSpriteContent *	content);
 void		swfdec_movie_clip_remove_root		(SwfdecMovieClip *	root);
 unsigned int	swfdec_movie_clip_get_n_frames		(SwfdecMovieClip *      movie);
-unsigned int	swfdec_movie_clip_get_next_frame	(SwfdecMovieClip *	movie,
-							 unsigned int		current_frame);
 void		swfdec_movie_clip_set_child		(SwfdecMovieClip *	movie,
 							 SwfdecObject *		child);
 void		swfdec_movie_clip_set_content		(SwfdecMovieClip *	movie,
@@ -122,9 +118,6 @@ gboolean      	swfdec_movie_clip_handle_mouse		(SwfdecMovieClip *	movie,
 							 double			y,
 							 int			button);
 
-void		swfdec_movie_clip_render_audio		(SwfdecMovieClip *	movie,
-							 gint16 *		dest,
-							 guint			n_samples);
 
 G_END_DECLS
 #endif

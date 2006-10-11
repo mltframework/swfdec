@@ -87,10 +87,11 @@ struct _SwfdecDecoder
   JSObject *jsmovie;			/* The MovieClip class */
 
   /* audio */
-  GArray *audio_events;			/* SwfdecAudioEvent array of running streams */
+  GArray *audio;			/* SwfdecAudioEvent array of running streams */
   guint samples_this_frame;		/* amount of samples to be played this frame */
   guint samples_overhead;		/* 44100*256th of sample missing each frame due to weird rate */
   guint samples_overhead_left;		/* 44100*256th of sample we spit out too much so far */
+  guint samples_latency;		/* latency in samples */
 };
 
 struct _SwfdecDecoderClass {

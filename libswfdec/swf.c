@@ -112,10 +112,13 @@ static void
 swfdec_decoder_dispose (GObject *object)
 {
   SwfdecSpriteContent *content;
+  guint i;
   SwfdecDecoder * s = SWFDEC_DECODER (object);
 
-  g_array_free (s->audio_events, TRUE);
   content = (SwfdecSpriteContent *) s->root->content;
+  for (i = 0; i < s->audio->len; i++) {
+    swfdec_audio_finish (&g_array_index (s->audio, SwfdecAudio, i));
+  }
   swfdec_movie_clip_remove_root (s->root);
 
   /* this must happen while the JS Context is still alive */
@@ -132,6 +135,7 @@ swfdec_decoder_dispose (GObject *object)
   g_assert (g_queue_is_empty (s->gotos));
   g_queue_free (s->gotos);
 
+  g_array_free (s->audio, TRUE);
   swfdec_buffer_queue_free (s->input_queue);
 
   if (s->z) {
@@ -178,7 +182,7 @@ swfdec_decoder_init (SwfdecDecoder *s)
   s->main_sprite->object.id = 0;
   s->root = swfdec_object_new (s, SWFDEC_TYPE_MOVIE_CLIP);
 
-  s->audio_events = g_array_new (FALSE, FALSE, sizeof (SwfdecAudioEvent));
+  s->audio = g_array_new (FALSE, FALSE, sizeof (SwfdecAudio));
   s->gotos = g_queue_new ();
   swfdec_js_init_decoder (s);
   swfdec_js_add_movieclip (s->root);
@@ -639,7 +643,7 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
   g_object_freeze_notify (G_OBJECT (dec));
   SWFDEC_INFO ("=== START ITERATION ===");
   /* iterate audio before video so we don't iterate audio clips that get added this frame */
-  swfdec_audio_iterate_start (dec);
+  swfdec_audio_iterate (dec);
   /* The handling of this list is rather tricky. This code assumes that no 
    * movies get removed that haven't been iterated yet. This should not be a 
    * problem without using Javascript, because the only way to remove movies
@@ -654,7 +658,6 @@ swfdec_decoder_iterate (SwfdecDecoder *dec)
     swfdec_movie_clip_iterate_audio (walk->data);
     swfdec_movie_clip_update (walk->data);
   }
-  swfdec_audio_iterate_finish (dec);
   SWFDEC_INFO ("=== STOP ITERATION ===");
   g_object_thaw_notify (G_OBJECT (dec));
 }

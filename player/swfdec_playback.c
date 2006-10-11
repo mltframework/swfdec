@@ -15,6 +15,7 @@ typedef struct {
   GSourceFunc		func;
   gpointer		func_data;
   GList *		buffers;
+  guint			timeout;
 } Sound;
 
 #define ALSA_TRY(func,msg) G_STMT_START{ \
@@ -79,24 +80,33 @@ retry:
 }
 
 static gboolean
+check_timeout (gpointer data)
+{
+  do_the_write_thing (data);
+
+  return TRUE;
+}
+
+static gboolean
 handle_sound (GIOChannel *source, GIOCondition cond, gpointer data)
 {
   Sound *sound = data;
 
-  //g_print ("condition %u\n", (guint) cond);
+  //g_printerr ("condition %u\n", (guint) cond);
   do_the_write_thing (sound);
   return TRUE;
 }
 
 gpointer
-swfdec_playback_open (GSourceFunc func, gpointer data, guint *buffer_size)
+swfdec_playback_open (GSourceFunc func, gpointer data, guint usecs_per_frame, guint *buffer_size)
 {
   snd_pcm_t *ret;
   snd_pcm_hw_params_t *hw_params;
   unsigned int rate, count;
   Sound *sound;
 
-  ALSA_ERROR (snd_pcm_open (&ret, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
+  /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
+  ALSA_ERROR (snd_pcm_open (&ret, /*"default"*/"plughw:0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
       "Failed to open sound device", NULL);
 
   snd_pcm_hw_params_alloca (&hw_params);
@@ -125,6 +135,13 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint *buffer_size)
     g_printerr ("Could not set hardware parameters\n");
     goto fail;
   }
+#if 0
+  {
+    snd_output_t *log;
+    snd_output_stdio_attach (&log, stderr, 0);
+    snd_pcm_hw_params_dump (hw_params, log);
+  }
+#endif
   if (buffer_size) {
     snd_pcm_uframes_t ret;
     if (snd_pcm_hw_params_get_buffer_size (hw_params, &ret) < 0) {
@@ -134,13 +151,6 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint *buffer_size)
       *buffer_size = ret;
     }
   }
-#if 0
-  {
-    snd_output_t *log;
-    snd_output_stdio_attach (&log, stderr, 0);
-    snd_pcm_hw_params_dump (hw_params, log);
-  }
-#endif
 
   if (snd_pcm_prepare (ret) < 0) {
     g_printerr ("no prepare\n");
@@ -165,10 +175,13 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint *buffer_size)
     }
     sound->sources[i] = 0;
   }
+  sound->timeout = g_timeout_add (usecs_per_frame / 2000, check_timeout, sound);
   return sound;
 
 fail:
   snd_pcm_close (ret);
+  if (buffer_size)
+    *buffer_size = 0;
   return NULL;
 }
 
@@ -191,6 +204,7 @@ swfdec_playback_close (gpointer data)
   Sound *sound = data;
 
   ALSA_TRY (snd_pcm_close (sound->pcm), "failed closing");
+  g_source_remove (sound->timeout);
   if (sound->sources) {
     for (i = 0; sound->sources[i]; i++)
       g_source_remove (sound->sources[i]);

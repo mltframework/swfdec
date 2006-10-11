@@ -36,17 +36,17 @@ view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
 static void
 play_swf (SwfdecDecoder *dec)
 {
+  double rate;
+
+  rate = swfdec_decoder_get_rate (dec);
+  if (rate == 0)
+    return;
+
   if (playback == NULL) {
-    guint timeout;
-    double rate;
+    guint timeout = g_timeout_add (1000 / rate, iterate, dec);
 
-    rate = swfdec_decoder_get_rate (dec);
-    if (rate > 0) {
-      timeout = g_timeout_add (1000 / rate, iterate, dec);
-
-      gtk_main ();
-      g_source_remove (timeout);
-    }
+    gtk_main ();
+    g_source_remove (timeout);
   } else {
     gtk_main ();
   }
@@ -116,7 +116,13 @@ main (int argc, char *argv[])
   if (no_sound) {
     playback = NULL;
   } else {
-    playback = swfdec_playback_open (iterate, s, &buffer_size);
+    double rate;
+
+    rate = swfdec_decoder_get_rate (s);
+    if (rate != 0)
+      playback = swfdec_playback_open (iterate, s, G_USEC_PER_SEC / rate, &buffer_size);
+    else
+      playback = NULL;
   }
   if (buffer_size) {
     SwfdecBuffer *buffer;

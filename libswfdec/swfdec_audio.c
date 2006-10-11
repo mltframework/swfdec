@@ -219,9 +219,16 @@ swfdec_audio_stream_render (SwfdecAudioStream *stream, gint16* dest, guint start
       if (stream->disabled)
 	return;
       entry->decoded = swfdec_sound_decode_buffer (stream->sound, stream->decoder, entry->frame->sound_block);
-      /* FIXME: error handling here */
-      g_assert (entry->decoded);
-      g_assert (entry->decoded->length == 4 * entry->n_samples);
+      if (entry->decoded == NULL) {
+	stream->disabled = TRUE;
+	return;
+      }
+      if (entry->decoded->length != 4 * entry->n_samples) {
+	SWFDEC_ERROR ("failed to decode sound correctly. Got %u samples instead of expected %u",
+	    entry->decoded->length / 4, entry->n_samples);
+	stream->disabled = TRUE;
+	return;
+      }
     }
     samples = entry->n_samples - entry->skip;
     if (samples > start) {

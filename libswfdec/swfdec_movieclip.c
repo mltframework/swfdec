@@ -350,6 +350,10 @@ swfdec_movie_clip_remove_root (SwfdecMovieClip *root)
   while (root->list) {
     swfdec_movie_clip_remove (root->list->data);
   }
+  if (root->sound_stream) {
+    swfdec_audio_stream_stop (SWFDEC_OBJECT (root)->decoder, root->sound_stream);
+    root->sound_stream = 0;
+  }
   swfdec_movie_clip_set_content (root, NULL);
   g_object_unref (root);
 }

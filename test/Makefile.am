@@ -1,4 +1,4 @@
-SUBDIRS = actionscript trace
+SUBDIRS = actionscript trace various
 
 noinst_PROGRAMS = test-pixbuf dump parse
 

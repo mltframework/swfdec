@@ -16,7 +16,7 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = color.c \
-	swfdec_codec.c $(CODECS) \
+	swfdec_ringbuffer.c swfdec_codec.c $(CODECS) \
 	swfdec_rect.c swfdec_image.c swfdec_event.c swfdec_pattern.c \
 	swfdec_shape.c swf.c swfdec_object.c swfdec_text.c swfdec_edittext.c swfdec_html_parser.c \
 	swfdec_sprite.c swfdec_button.c swfdec_movieclip.c \
@@ -46,6 +46,6 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec.h \
 	swfdec_shape.h swfdec_sound.h swfdec_sprite.h \
 	swfdec_text.h swfdec_edittext.h swfdec_types.h tags.h \
 	swfdec_bits.h swfdec_rect.h swfdec_pattern.h \
-	swfdec_cache.h swfdec_audio.h \
+	swfdec_cache.h swfdec_audio.h swfdec_codec.h swfdec_ringbuffer.h \
 	swfdec_js.h
 

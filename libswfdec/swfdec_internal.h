@@ -4,7 +4,6 @@
 
 #include "color.h"
 #include "swfdec.h"
-#include "swfdec_audio.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_button.h"

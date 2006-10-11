@@ -134,6 +134,8 @@ swfdec_audio_stream_new (SwfdecSprite *sprite, guint start_frame)
   SwfdecDecoder *dec = SWFDEC_OBJECT (sprite)->decoder;
   SwfdecAudioStream *stream = (SwfdecAudioStream *) swfdec_decoder_audio_new (dec);
 
+  SWFDEC_DEBUG ("new audio stream for sprite %d, starting at %u", 
+      SWFDEC_OBJECT (sprite)->id, start_frame);
   stream->type = SWFDEC_AUDIO_STREAM;
   stream->sprite = sprite;
   stream->playback_samples = 0;
@@ -209,6 +211,7 @@ swfdec_audio_stream_render (SwfdecAudioStream *stream, gint16* dest, guint start
 	return;
       entry->decoded = swfdec_sound_decode_buffer (stream->sound, stream->decoder, entry->frame->sound_block);
       if (entry->decoded == NULL) {
+	SWFDEC_WARNING ("disabling stream because decoding failed");
 	stream->disabled = TRUE;
 	return;
       }
@@ -339,7 +342,7 @@ swfdec_audio_finish (SwfdecAudio *audio)
     case SWFDEC_AUDIO_EVENT:
       break;
     case SWFDEC_AUDIO_STREAM:
-      while (!swfdec_ring_buffer_get_n_elements (audio->stream.playback_queue))
+      while (swfdec_ring_buffer_get_n_elements (audio->stream.playback_queue) > 0)
 	swfdec_audio_stream_pop (&audio->stream);
       swfdec_sound_finish_decoder (audio->stream.sound, audio->stream.decoder);
       swfdec_ring_buffer_free (audio->stream.playback_queue);

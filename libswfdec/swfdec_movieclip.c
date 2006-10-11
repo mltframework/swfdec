@@ -271,6 +271,7 @@ swfdec_movie_clip_dispose (SwfdecMovieClip * movie)
   g_assert (movie->list == NULL);
   g_assert (movie->content == &default_content);
   g_assert (movie->child == NULL);
+  g_assert (movie->sound_stream == 0);
 
   if (movie->text_variables) {
     g_assert (g_hash_table_size (movie->text_variables) == 0);
@@ -328,7 +329,10 @@ swfdec_movie_clip_remove (SwfdecMovieClip *movie)
   while (movie->list) {
     swfdec_movie_clip_remove (movie->list->data);
   }
-  /* FIXME: order? */
+  if (movie->sound_stream) {
+    swfdec_audio_stream_stop (SWFDEC_OBJECT (movie)->decoder, movie->sound_stream);
+    movie->sound_stream = 0;
+  }
   swfdec_movie_clip_execute (movie, SWFDEC_EVENT_UNLOAD);
   swfdec_movie_clip_set_content (movie, NULL);
   movie->parent->list = g_list_remove (movie->parent->list, movie);

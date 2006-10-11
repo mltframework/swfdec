@@ -22,7 +22,8 @@ struct _SwfdecWidget
 
   SwfdecDecoder *	dec;		/* the video we play */
 
-  double		scale;		/* the scale factor of the video */
+  double		real_scale;	/* the real scale factor used */
+  double		set_scale;    	/* the set scale factor of the video */
   gboolean		use_image;	/* TRUE to draw to an image first before rendering to Gtk */
 
   int			button;		/* status of mouse button in displayed movie */

@@ -55,7 +55,7 @@ play_swf (SwfdecDecoder *dec)
 int 
 main (int argc, char *argv[])
 {
-  int ret = 100;
+  int ret = 0;
   double scale;
   SwfdecDecoder *s;
   SwfdecBuffer *buffer;

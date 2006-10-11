@@ -18,7 +18,7 @@ swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
   gtk_widget_get_pointer (gtkwidget, &x, &y);
 
   swfdec_decoder_handle_mouse (widget->dec, 
-      event->x / widget->scale, event->y / widget->scale, widget->button);
+      event->x / widget->real_scale, event->y / widget->real_scale, widget->button);
   
   return FALSE;
 }
@@ -30,7 +30,7 @@ swfdec_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
 
   widget->button = 0;
   swfdec_decoder_handle_mouse (widget->dec, 
-      event->x / widget->scale, event->y / widget->scale, 0);
+      event->x / widget->real_scale, event->y / widget->real_scale, 0);
   return FALSE;
 }
 
@@ -42,7 +42,7 @@ swfdec_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
   if (event->button == 1) {
     widget->button = 1;
     swfdec_decoder_handle_mouse (widget->dec, 
-	event->x / widget->scale, event->y / widget->scale, 1);
+	event->x / widget->real_scale, event->y / widget->real_scale, 1);
   }
   return FALSE;
 }
@@ -55,7 +55,7 @@ swfdec_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
   if (event->button == 1) {
     widget->button = 0;
     swfdec_decoder_handle_mouse (widget->dec, 
-	event->x / widget->scale, event->y / widget->scale, 0);
+	event->x / widget->real_scale, event->y / widget->real_scale, 0);
   }
   return FALSE;
 }
@@ -68,6 +68,9 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   cairo_t *cr;
   cairo_surface_t *surface = NULL;
 
+  if (event->window != gtkwidget->window)
+    return FALSE;
+
   if (!widget->use_image) {
     cr = gdk_cairo_create (gtkwidget->window);
   } else {
@@ -77,9 +80,9 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
     cairo_translate (cr, -event->area.x, -event->area.y);
     cairo_surface_destroy (surface);
   }
-  cairo_scale (cr, widget->scale, widget->scale);
-  swfdec_rect_init (&rect, event->area.x / widget->scale, event->area.y / widget->scale, 
-      event->area.width / widget->scale, event->area.height / widget->scale);
+  cairo_scale (cr, widget->real_scale, widget->real_scale);
+  swfdec_rect_init (&rect, event->area.x / widget->real_scale, event->area.y / widget->real_scale, 
+      event->area.width / widget->real_scale, event->area.height / widget->real_scale);
   swfdec_decoder_render (widget->dec, cr, &rect);
   if (widget->use_image) {
     cairo_t *crw = gdk_cairo_create (gtkwidget->window);
@@ -96,7 +99,7 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 static void
 swfdec_widget_dispose (GObject *object)
 {
-  SwfdecWidget * widget = SWFDEC_WIDGET (object);
+  SwfdecWidget *widget = SWFDEC_WIDGET (object);
 
   swfdec_widget_set_decoder (widget, NULL);
 
@@ -104,8 +107,41 @@ swfdec_widget_dispose (GObject *object)
 }
 
 static void
+swfdec_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation)
+{
+  double scale;
+  guint w, h;
+  SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
+
+  gtkwidget->allocation = *allocation;
+
+  if (widget->set_scale) {
+    scale = widget->set_scale;
+  } else if (widget->dec == NULL || !swfdec_decoder_get_image_size (widget->dec, &w, &h)) {
+    scale = 1.0;
+  } else {
+    scale = MIN ((double) allocation->width / w, (double) allocation->height / h);
+  }
+  w = ceil (w * scale);
+  h = ceil (h * scale);
+  if (w > allocation->width)
+    w = allocation->width;
+  if (h > allocation->height)
+    h = allocation->height;
+
+  if (GTK_WIDGET_REALIZED (gtkwidget)) {
+    gdk_window_move_resize (gtkwidget->window, 
+	allocation->x + (allocation->width - w) / 2,
+	allocation->y + (allocation->height - h) / 2,
+	w, h);
+  }
+  widget->real_scale = scale;
+}
+
+static void
 swfdec_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
 {
+  double scale;
   SwfdecWidget * widget = SWFDEC_WIDGET (gtkwidget);
 
   if (widget->dec == NULL ||
@@ -113,8 +149,12 @@ swfdec_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
 	  &req->width, &req->height)) {
     req->width = req->height = 0;
   } 
-  req->width = ceil (req->width * widget->scale);
-  req->height = ceil (req->height * widget->scale);
+  if (widget->set_scale != 0.0)
+    scale = widget->set_scale;
+  else
+    scale = 1.0;
+  req->width = ceil (req->width * scale);
+  req->height = ceil (req->height * scale);
 }
 
 static void
@@ -158,6 +198,7 @@ swfdec_widget_class_init (SwfdecWidgetClass * g_class)
 
   widget_class->realize = swfdec_widget_realize;
   widget_class->size_request = swfdec_widget_size_request;
+  widget_class->size_allocate = swfdec_widget_size_allocate;
   widget_class->expose_event = swfdec_widget_expose;
   widget_class->button_press_event = swfdec_widget_button_press;
   widget_class->button_release_event = swfdec_widget_button_release;
@@ -168,21 +209,27 @@ swfdec_widget_class_init (SwfdecWidgetClass * g_class)
 static void
 swfdec_widget_init (SwfdecWidget * widget)
 {
-  widget->scale = 1.0;
+  widget->real_scale = 1.0;
 }
 
 static void
 swfdec_widget_notify_cb (SwfdecDecoder *dec, GParamSpec *pspec, SwfdecWidget *widget)
 {
+  GdkRectangle gdkrect;
   SwfdecRect rect;
 
+  if (!GTK_WIDGET_REALIZED (widget))
+    return;
   swfdec_decoder_get_invalid (widget->dec, &rect);
   if (swfdec_rect_is_empty (&rect))
     return;
-  swfdec_rect_scale (&rect, &rect, widget->scale);
+  swfdec_rect_scale (&rect, &rect, widget->real_scale);
+  gdkrect.x = floor (rect.x0);
+  gdkrect.y = floor (rect.y0);
+  gdkrect.width = ceil (rect.x1) - gdkrect.x;
+  gdkrect.height = ceil (rect.y1) - gdkrect.y;
   //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
-  gtk_widget_queue_draw_area (GTK_WIDGET (widget), floor (rect.x0), floor (rect.y0),
-      ceil (rect.x1) - floor (rect.x0), ceil (rect.y1) - floor (rect.y0));
+  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &gdkrect, FALSE);
   swfdec_decoder_clear_invalid (widget->dec);
 }
 
@@ -254,9 +301,9 @@ void
 swfdec_widget_set_scale	(SwfdecWidget *widget, double scale)
 {
   g_return_if_fail (SWFDEC_IS_WIDGET (widget));
-  g_return_if_fail (scale > 0.0);
+  g_return_if_fail (scale >= 0.0);
 
-  widget->scale = scale;
+  widget->set_scale = scale;
   gtk_widget_queue_resize (GTK_WIDGET (widget));
 }
 
@@ -265,7 +312,7 @@ swfdec_widget_get_scale (SwfdecWidget *widget)
 {
   g_return_val_if_fail (SWFDEC_IS_WIDGET (widget), 1.0);
 
-  return widget->scale;
+  return widget->set_scale;
 }
 
 void

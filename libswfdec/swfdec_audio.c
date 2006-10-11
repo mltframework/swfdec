@@ -36,45 +36,36 @@ typedef struct {
 } StreamEntry;
 
 static StreamEntry *
-stream_entry_new_for_frame (SwfdecSprite *sprite, guint frame_id)
+stream_entry_new_for_frame (SwfdecAudioStream *stream, guint frame_id)
 {
-  SwfdecSpriteFrame *frame = &sprite->frames[frame_id];
+  SwfdecSpriteFrame *frame = &stream->sprite->frames[frame_id];
   StreamEntry *entry;
 
   /* FIXME: someone figure out how "no new sound in some frames" is handled */
-  entry = g_slice_new (StreamEntry);
+  entry = swfdec_ring_buffer_push (stream->playback_queue);
+  if (entry == NULL) {
+    swfdec_ring_buffer_set_size (stream->playback_queue,
+	swfdec_ring_buffer_get_size (stream->playback_queue) + 8);
+    entry = swfdec_ring_buffer_push (stream->playback_queue);
+    g_assert (entry);
+  }
   if (frame->sound_samples == 0) {
     entry->frame = NULL;
-    entry->n_samples = 44100 * 256 / SWFDEC_OBJECT (sprite)->decoder->rate;
+    entry->n_samples = 44100 * 256 / SWFDEC_OBJECT (stream->sprite)->decoder->rate;
   } else {
     entry->frame = frame;
     entry->n_samples = frame->sound_samples;
   }
   entry->skip = 0;
   entry->decoded = NULL;
+  stream->playback_samples += entry->n_samples;
 
   return entry;
 }
 
 static void
-stream_entry_free (StreamEntry *entry)
-{
-  if (entry->decoded)
-    swfdec_buffer_unref (entry->decoded);
-  g_slice_free (StreamEntry, entry);
-}
-
-static void
-swfdec_audio_stream_push_entry (SwfdecAudioStream *stream, StreamEntry *entry)
-{
-  stream->playback_samples += entry->n_samples - entry->skip;
-  g_queue_push_tail (stream->playback_queue, entry);
-}
-
-static void
 swfdec_audio_stream_ensure_size (SwfdecAudioStream *stream, guint n_samples)
 {
-  StreamEntry *entry;
   guint last_frame, last_samples;
   SwfdecSpriteFrame *frame;
 
@@ -90,9 +81,7 @@ swfdec_audio_stream_ensure_size (SwfdecAudioStream *stream, guint n_samples)
       SWFDEC_WARNING ("sound head change!");
       return;
     }
-    entry = stream_entry_new_for_frame (stream->sprite, stream->current_frame);
-    if (entry)
-      swfdec_audio_stream_push_entry (stream, entry);
+    stream_entry_new_for_frame (stream, stream->current_frame);
     if (stream->sprite->parse_frame < stream->sprite->n_frames)
       SWFDEC_WARNING ("FIXME: sound for partially loaded frames not really implemented (lalala)");
     stream->current_frame = swfdec_sprite_get_next_frame (stream->sprite, stream->current_frame);
@@ -110,10 +99,11 @@ swfdec_audio_stream_ensure_size (SwfdecAudioStream *stream, guint n_samples)
 static void
 swfdec_audio_stream_pop (SwfdecAudioStream *stream)
 {
-  StreamEntry *entry = g_queue_pop_head (stream->playback_queue);
+  StreamEntry *entry = swfdec_ring_buffer_pop (stream->playback_queue);
 
   g_assert (entry);
-  stream_entry_free (entry);
+  if (entry->decoded)
+    swfdec_buffer_unref (entry->decoded);
 }
 
 static void
@@ -125,7 +115,7 @@ swfdec_audio_stream_flush (SwfdecAudioStream *stream, guint n_samples)
   SWFDEC_LOG ("flushing %u of %u samples\n", n_samples, stream->playback_samples);
   stream->playback_samples -= n_samples;
   while (n_samples) {
-    StreamEntry *entry = g_queue_peek_head (stream->playback_queue);
+    StreamEntry *entry = swfdec_ring_buffer_peek_nth (stream->playback_queue, 0);
     if (n_samples >= entry->n_samples - entry->skip) {
       n_samples -= entry->n_samples - entry->skip;
       swfdec_audio_stream_pop (stream);
@@ -147,17 +137,16 @@ swfdec_audio_stream_new (SwfdecSprite *sprite, guint start_frame)
   stream->type = SWFDEC_AUDIO_STREAM;
   stream->sprite = sprite;
   stream->playback_samples = 0;
-  stream->playback_queue = g_queue_new ();
+  stream->playback_queue = swfdec_ring_buffer_new_for_type (StreamEntry, 16);
   stream->skip = dec->samples_latency;
   frame = &sprite->frames[start_frame];
   g_assert (frame->sound_head);
   stream->sound = frame->sound_head;
   stream->disabled = FALSE;
-  entry = stream_entry_new_for_frame (stream->sprite, start_frame);
-  if (entry) {
-    entry->skip = frame->sound_skip;
-    swfdec_audio_stream_push_entry (stream, entry);
-  }
+  entry = stream_entry_new_for_frame (stream, start_frame);
+  entry->skip = frame->sound_skip;
+  g_assert (stream->playback_samples >= entry->skip);
+  stream->playback_samples -= entry->skip;
   stream->current_frame = swfdec_sprite_get_next_frame (stream->sprite, start_frame);
   swfdec_audio_stream_ensure_size (stream, stream->skip + dec->samples_this_frame);
   stream->decoder = swfdec_sound_init_decoder (stream->sound);
@@ -200,7 +189,7 @@ swfdec_audio_stream_iterate (SwfdecAudioStream *stream, guint remove, guint avai
 static void
 swfdec_audio_stream_render (SwfdecAudioStream *stream, gint16* dest, guint start, guint n_samples)
 {
-  GList *walk;
+  guint i;
   guint samples;
 
   if (stream->skip > start) {
@@ -213,8 +202,8 @@ swfdec_audio_stream_render (SwfdecAudioStream *stream, gint16* dest, guint start
   } else {
     start -= stream->skip;
   }
-  for (walk = g_queue_peek_head_link (stream->playback_queue); walk && n_samples; walk = walk->next) {
-    StreamEntry *entry = walk->data;
+  for (i = 0; i < swfdec_ring_buffer_get_n_elements (stream->playback_queue) && n_samples; i++) {
+    StreamEntry *entry = swfdec_ring_buffer_peek_nth (stream->playback_queue, i);
     if (entry->decoded == NULL && entry->frame != NULL) {
       if (stream->disabled)
 	return;
@@ -350,9 +339,10 @@ swfdec_audio_finish (SwfdecAudio *audio)
     case SWFDEC_AUDIO_EVENT:
       break;
     case SWFDEC_AUDIO_STREAM:
-      while (!g_queue_is_empty (audio->stream.playback_queue))
+      while (!swfdec_ring_buffer_get_n_elements (audio->stream.playback_queue))
 	swfdec_audio_stream_pop (&audio->stream);
       swfdec_sound_finish_decoder (audio->stream.sound, audio->stream.decoder);
+      swfdec_ring_buffer_free (audio->stream.playback_queue);
       break;
     default: 
       g_assert_not_reached ();

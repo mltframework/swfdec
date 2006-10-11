@@ -4,7 +4,8 @@
 
 #include "config.h"
 
-#include "swfdec_types.h"
+#include <libswfdec/swfdec_types.h>
+#include <libswfdec/swfdec_ringbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -35,7 +36,7 @@ struct _SwfdecAudioStream {
   gboolean		disabled;	/* set to TRUE when we can't queue more data */
   SwfdecSprite *	sprite;		/* sprite we're playing back */
   unsigned int		playback_samples; /* number of samples in queue */
-  GQueue *		playback_queue;	/* all the samples we've decoded so far */
+  SwfdecRingBuffer *	playback_queue;	/* all the samples we've decoded so far */
   unsigned int		current_frame;	/* last decoded frame */
 };
 

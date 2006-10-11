@@ -5,8 +5,9 @@
 
 #include <string.h>
 
-#include "swfdec_internal.h"
-#include <swfdec_bits.h>
+#include "swfdec_bits.h"
+#include "swfdec_debug.h"
+#include "swfdec_decoder.h"
 
 
 unsigned int 

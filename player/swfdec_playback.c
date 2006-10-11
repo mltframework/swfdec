@@ -14,7 +14,7 @@ typedef struct {
   guint *		sources;
   GSourceFunc		func;
   gpointer		func_data;
-  SwfdecBuffer *	buffer;
+  GList *		buffers;
 } Sound;
 
 #define ALSA_TRY(func,msg) G_STMT_START{ \
@@ -36,33 +36,35 @@ do_the_write_thing (Sound *sound)
 {
   snd_pcm_state_t state;
   int err;
+  SwfdecBuffer *buffer;
 
 retry:
-  if (sound->buffer == NULL) {
+  if (sound->buffers == NULL) {
     if (!sound->func (sound->func_data))
       return;
-    if (sound->buffer == NULL) {
+    if (sound->buffers == NULL) {
       g_printerr ("callback didn't fill buffer!\n");
       return;
     }
   }
-  err = snd_pcm_writei (sound->pcm, sound->buffer->data, sound->buffer->length / 4);
+  buffer = sound->buffers->data;
+  err = snd_pcm_writei (sound->pcm, buffer->data, buffer->length / 4);
   //g_print ("write returned %d\n", err);
   state = snd_pcm_state (sound->pcm);
   if (state == SND_PCM_STATE_SUSPENDED || state == SND_PCM_STATE_PREPARED) {
     ALSA_ERROR (snd_pcm_start (sound->pcm), "error starting",);
   }
-  if (err >= (int) (sound->buffer->length / 4)) {
-    swfdec_buffer_unref (sound->buffer);
-    sound->buffer = NULL;
+  if (err >= (int) (buffer->length / 4)) {
+    swfdec_buffer_unref (buffer);
+    sound->buffers = g_list_remove (sound->buffers, buffer);
     goto retry;
   }
   if (err > 0) {
     SwfdecBuffer *buf;
     err *= 4;
-    buf = swfdec_buffer_new_subbuffer (sound->buffer, err, sound->buffer->length - err);
-    swfdec_buffer_unref (sound->buffer);
-    sound->buffer = buf;
+    buf = swfdec_buffer_new_subbuffer (buffer, err, buffer->length - err);
+    swfdec_buffer_unref (buffer);
+    sound->buffers->data = buf;
     return;
   }
   if (err == -EAGAIN)
@@ -175,9 +177,8 @@ swfdec_playback_write (gpointer data, SwfdecBuffer *buffer)
 {
   Sound *sound = data;
 
-  g_assert (sound->buffer == NULL);
   swfdec_buffer_ref (buffer);
-  sound->buffer = buffer;
+  sound->buffers = g_list_append (sound->buffers, buffer);
   //g_print ("write of %u bytes\n", buffer->length);
 
   do_the_write_thing (sound);

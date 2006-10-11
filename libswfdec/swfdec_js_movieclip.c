@@ -414,10 +414,44 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
   if (!finite (d)) {
-    SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
+    SWFDEC_WARNING ("trying to move y to a non-finite value, ignoring");
     return JS_TRUE;
   }
   movie->y = d * SWF_SCALE_FACTOR - movie->original_extents.y0;
+  swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_MATRIX);
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_xscale_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovieClip *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  d = movie->xscale;
+  return JS_NewNumberValue (cx, d, vp);
+}
+
+static JSBool
+mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovieClip *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (!JS_ValueToNumber (cx, *vp, &d))
+    return JS_FALSE;
+  if (!finite (d)) {
+    SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
+    return JS_TRUE;
+  }
+  movie->xscale = d;
   swfdec_movie_clip_queue_update (movie, SWFDEC_MOVIE_CLIP_INVALID_MATRIX);
 
   return JS_TRUE;
@@ -526,7 +560,7 @@ not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 JSPropertySpec movieclip_props[] = {
   {"_x",	    -1,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
   {"_y",	    -1,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
-  {"_xscale",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_xscale",	    -1,		MC_PROP_ATTRS,			  mc_xscale_get,    mc_xscale_set },
   {"_yscale",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_currentframe", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
   {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },

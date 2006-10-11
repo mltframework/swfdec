@@ -45,8 +45,8 @@ struct _SwfdecMovieClip
   SwfdecRect		original_extents;	/* the extents from all the children */
   double      		x;			/* x offset in twips */
   double		y;	      		/* y offset in twips */
-  double      		xscale;			/* x scaling factor */
-  double      		yscale;			/* y scaling factor */
+  double      		xscale;			/* x scale factor */
+  double      		yscale;			/* y scale factor */
   int			rotation;     		/* rotation in degrees */
   cairo_matrix_t	transform;		/* transformation matrix computed from above */
   cairo_matrix_t	inverse_transform;	/* the inverse of the transformation matrix */

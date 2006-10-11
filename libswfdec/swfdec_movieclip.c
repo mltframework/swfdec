@@ -196,16 +196,32 @@ swfdec_movie_clip_update_extents (SwfdecMovieClip *movie)
 static void
 swfdec_movie_clip_update_matrix (SwfdecMovieClip *movie)
 {
-  cairo_matrix_t mat;
+  cairo_matrix_t *mat = &movie->transform;
 
-  cairo_matrix_init_translate (&mat, movie->x, movie->y);
-  cairo_matrix_scale (&mat, movie->xscale, movie->yscale);
-  cairo_matrix_rotate (&mat, movie->rotation * M_PI / 180);
-  cairo_matrix_multiply (&mat, &mat, &movie->content->transform);
-  movie->transform = mat;
-  movie->inverse_transform = mat;
+  cairo_matrix_init_translate (mat, movie->x, movie->y);
+  cairo_matrix_scale (mat, movie->xscale, movie->yscale);
+  cairo_matrix_rotate (mat, movie->rotation * M_PI / 180);
+  cairo_matrix_multiply (mat, mat, &movie->content->transform);
+  movie->inverse_transform = *mat;
   if (cairo_matrix_invert (&movie->inverse_transform)) {
-    g_assert_not_reached ();
+    /* the matrix is somehow weird, carefully adjust it */
+    mat = &movie->inverse_transform;
+    *mat = movie->content->transform;
+    if (cairo_matrix_invert (mat)) {
+      g_assert_not_reached ();
+    }
+    cairo_matrix_rotate (mat, -movie->rotation * M_PI / 180);
+    if (movie->xscale == 0) {
+      cairo_matrix_scale (mat, G_MAXDOUBLE, 1);
+    } else {
+      cairo_matrix_scale (mat, 1 / movie->xscale, 1);
+    }
+    if (movie->yscale == 0) {
+      cairo_matrix_scale (mat, 1, G_MAXDOUBLE);
+    } else {
+      cairo_matrix_scale (mat, 1, 1 / movie->yscale);
+    }
+    cairo_matrix_translate (mat, -movie->x, -movie->y);
   }
   swfdec_movie_clip_update_extents (movie);
 }
@@ -474,7 +490,7 @@ swfdec_movie_clip_iterate_audio (SwfdecMovieClip *movie)
   SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
   if (swfdec_sprite_get_next_frame (SWFDEC_SPRITE (movie->child), movie->sound_frame) != movie->current_frame)
     goto new_decoder;
-  if (movie->sound_frame == -1)
+  if (movie->sound_frame == (guint) -1)
     goto new_decoder;
   if (current->sound_head && movie->sound_stream == 0)
     goto new_decoder;

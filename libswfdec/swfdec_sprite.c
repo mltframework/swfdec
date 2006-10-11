@@ -301,8 +301,9 @@ swfdec_spriteseg_place_object_2 (SwfdecDecoder * s)
   SWFDEC_LOG ("  move = %d", move);
   SWFDEC_LOG ("  depth = %d", depth);
 
+  /* new name always means new object */
   content = swfdec_sprite_contents_create (s->parse_sprite, 
-      s->parse_sprite->parse_frame, depth, move, has_character);
+      s->parse_sprite->parse_frame, depth, move, has_character || has_name);
   if (has_character) {
     int id = swfdec_bits_get_u16 (bits);
     content->object = swfdec_object_get (s, id);

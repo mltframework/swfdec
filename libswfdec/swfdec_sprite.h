@@ -60,6 +60,7 @@ struct _SwfdecSpriteFrame
   SwfdecSound *sound_head;		/* sound head for this frame */
   int sound_skip;			/* samples to skip - maybe even backwards */
   SwfdecBuffer *sound_block;		/* sound chunk to play here or NULL for none */
+  unsigned int sound_samples;		/* number of samples in this frame */
   GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
 
   /* visuals */
@@ -87,11 +88,12 @@ GType swfdec_sprite_get_type (void);
 
 void swfdec_sprite_decoder_free (SwfdecObject * object);
 int tag_func_define_sprite (SwfdecDecoder * s);
-void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, int frame,
-    SwfdecBuffer * chunk, int skip);
+void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
+    SwfdecBuffer * chunk, int skip, unsigned int n_samples);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
 void swfdec_sprite_add_action (SwfdecSprite * sprite, unsigned int frame, 
     SwfdecSpriteActionType type, gpointer data);
+unsigned int swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame);
 
 SwfdecSpriteContent *swfdec_sprite_content_new (unsigned int depth);
 void swfdec_sprite_content_free (SwfdecSpriteContent *content);

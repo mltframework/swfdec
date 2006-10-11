@@ -75,17 +75,25 @@ swfdec_sprite_dispose (SwfdecSprite * sprite)
 }
 
 void
-swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, int frame,
-    SwfdecBuffer * chunk, int skip)
+swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
+    SwfdecBuffer * chunk, int skip, guint n_samples)
 {
   g_assert (sprite->frames != NULL);
 
-  if (sprite->frames[frame].sound_block) {
-    SWFDEC_ERROR ("attempting to add 2 sound blocks to one frame");
+  if (sprite->frames[frame].sound_head == NULL) {
+    SWFDEC_ERROR ("attempting to add a sound block without previous sound head");
+    swfdec_buffer_unref (chunk);
     return;
   }
+  if (sprite->frames[frame].sound_block) {
+    SWFDEC_ERROR ("attempting to add 2 sound blocks to one frame");
+    swfdec_buffer_unref (chunk);
+    return;
+  }
+  SWFDEC_LOG ("adding %u samples in %u bytes to frame %u", n_samples, chunk->length, frame);
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;
+  sprite->frames[frame].sound_samples = n_samples * sprite->frames[frame].sound_head->rate_multiplier;
 }
 
 /* find the last action in this depth if it exists */
@@ -421,5 +429,19 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames)
   sprite->n_frames = n_frames;
 
   SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
+}
+
+unsigned int
+swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame)
+{
+  unsigned int next_frame, n_frames;
+
+  g_return_val_if_fail (SWFDEC_IS_SPRITE (sprite), 0);
+
+  n_frames = MIN (sprite->n_frames, sprite->parse_frame);
+  next_frame = current_frame + 1;
+  if (next_frame >= n_frames)
+    next_frame = 0;
+  return next_frame;
 }
 

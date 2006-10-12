@@ -38,10 +38,6 @@ struct _SwfdecDecoder
   unsigned int rate;			/* divide by 256 to get iterations per second */
   unsigned int n_frames;
 
-  void *sound_buffer;
-  int sound_len;
-  int sound_offset;
-
   int compressed;
 
   /* End of legacy elements */
@@ -61,7 +57,7 @@ struct _SwfdecDecoder
 
   /* rendering state */
   SwfdecRect irect;
-  SwfdecRect invalid;	    /* in pixels */
+  SwfdecRect invalid;			/* in pixels */
 
   SwfdecSprite *main_sprite;
   SwfdecMovieClip *root;

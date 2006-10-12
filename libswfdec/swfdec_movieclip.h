@@ -10,7 +10,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecDisplayList SwfdecDisplayList;
 //typedef struct _SwfdecMovieClip SwfdecMovieClip;
 typedef struct _SwfdecMovieClipClass SwfdecMovieClipClass;
 

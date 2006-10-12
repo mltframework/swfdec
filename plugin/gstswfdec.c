@@ -641,16 +641,12 @@ gst_swfdec_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_TIME:
         {
           int n_frames;
-          int ret;
 
 	  /* FIXME: This is totally wrong, because we can seek etc */
-          res = FALSE;
           n_frames = swfdec_decoder_get_n_frames (swfdec->decoder);
-          if (ret == SWFDEC_OK) {
-            value = n_frames * swfdec->interval;
-            gst_query_set_duration (query, GST_FORMAT_TIME, value);
-            res = TRUE;
-          }
+          value = n_frames * swfdec->interval;
+          gst_query_set_duration (query, GST_FORMAT_TIME, value);
+          res = TRUE;
           break;
         }
         default:

@@ -110,7 +110,7 @@ static void
 swfdec_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation)
 {
   double scale;
-  guint w, h;
+  gint w, h;
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
 
   gtkwidget->allocation = *allocation;

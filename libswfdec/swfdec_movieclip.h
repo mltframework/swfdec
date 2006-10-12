@@ -68,7 +68,7 @@ struct _SwfdecMovieClip
   swf_color		bg_color;		/* background color of main sprite */
 
   /* audio stream handling */
-  unsigned int		sound_frame;		/* last frame we updated for */
+  int		        sound_frame;		/* last frame we updated for */
   guint			sound_stream;		/* stream that currently plays */
 
   /* leftover unimplemented variables from the Actionscript spec */

@@ -29,7 +29,7 @@
 static const char *swfdec_debug_level_names[] = {
   "NONE ",
   "ERROR",
-  "WARN "
+  "WARN ",
   "INFO ",
   "DEBUG",
   "LOG  "
@@ -38,7 +38,7 @@ static const char *swfdec_debug_level_names[] = {
 static int swfdec_debug_level = SWFDEC_LEVEL_WARNING;
 
 void
-swfdec_debug_log (int level, const char *file, const char *function,
+swfdec_debug_log (unsigned int level, const char *file, const char *function,
     int line, const char *format, ...)
 {
   va_list varargs;
@@ -57,9 +57,12 @@ swfdec_debug_log (int level, const char *file, const char *function,
 }
 
 void
-swfdec_debug_set_level (int level)
+swfdec_debug_set_level (unsigned int level)
 {
-  swfdec_debug_level = level;
+  if (swfdec_debug_level > G_N_ELEMENTS (swfdec_debug_level_names))
+    swfdec_debug_level = G_N_ELEMENTS (swfdec_debug_level_names);
+  else
+    swfdec_debug_level = level;
 }
 
 int

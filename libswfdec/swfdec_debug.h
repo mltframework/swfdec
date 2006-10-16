@@ -45,9 +45,9 @@ enum {
 #define SWFDEC_DEBUG_LEVEL(level,...) \
   swfdec_debug_log ((level), __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 
-void swfdec_debug_log (int level, const char *file, const char *function,
+void swfdec_debug_log (unsigned int level, const char *file, const char *function,
     int line, const char *format, ...) G_GNUC_PRINTF (5, 6);
-void swfdec_debug_set_level (int level);
+void swfdec_debug_set_level (unsigned int level);
 int swfdec_debug_get_level (void);
 
 #endif

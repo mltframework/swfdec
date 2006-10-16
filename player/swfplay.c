@@ -142,7 +142,6 @@ main (int argc, char *argv[])
   if (buffer_size) {
     SwfdecBuffer *buffer;
 
-    g_print ("using buffering of %u frames (%gs)\n", buffer_size, buffer_size / 44100.);
     swfdec_player_set_latency (player, buffer_size);
     buffer = swfdec_buffer_new ();
     buffer->length = buffer_size * 4;

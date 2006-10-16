@@ -127,10 +127,12 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
   if (!sound)
     return SWFDEC_STATUS_OK;
 
-  sound->n_samples = n_samples;
   sound->width = size;
   sound->channels = type ? 2 : 1;
   sound->rate_multiplier = (1 << (3 - rate));
+  sound->n_samples = n_samples * sound->rate_multiplier;
+  SWFDEC_DEBUG ("%sLE, %uch, %ukHz", size ? "S16" : "U8", sound->channels,
+      44100 / sound->rate_multiplier);
 
   switch (format) {
     case 0:
@@ -146,11 +148,11 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       /* FIXME: skip these samples */
       skip = swfdec_bits_get_u16 (b);
+      skip *= sound->rate_multiplier;
       orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
       sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
-      SWFDEC_WARNING ("adpcm decoding doesn't work");
       break;
     case 6:
       sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
@@ -161,14 +163,30 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       sound->format = format;
   }
   sound->codec = swfdec_codec_get_audio (sound->format);
+  if (sound->codec == NULL) {
+    return SWFDEC_STATUS_OK;
+  }
   if (orig_buffer) {
     SwfdecBuffer *tmp;
     gpointer data = swfdec_sound_init_decoder (sound);
     tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
     swfdec_sound_finish_decoder (sound, data);
     swfdec_buffer_unref (orig_buffer);
+    SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", tmp->length / 4, sound->n_samples, skip);
+    if (skip) {
+      SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip, tmp->length - skip);
+      swfdec_buffer_unref (tmp);
+      tmp = tmp2;
+    }
+    /* sound buffer may be bigger due to mp3 not having sample boundaries */
+    if (tmp->length > sound->n_samples * 4) {
+      SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * 4);
+      swfdec_buffer_unref (tmp);
+      tmp = tmp2;
+    }
     /* only assign here, the decoding code checks this variable */
     sound->decoded = tmp;
+    g_assert (tmp->length >= sound->n_samples * 4);
   }
   if (sound->decoded) {
     if (sound->decoded->length < sound->n_samples * 4) {
@@ -278,7 +296,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
 
   chunk = g_new0 (SwfdecSoundChunk, 1);
   chunk->sound = sound;
-  g_print ("parsing sound chunk for sound %d\n", SWFDEC_CHARACTER (sound)->id);
+  SWFDEC_LOG ("parsing sound chunk for sound %d", SWFDEC_CHARACTER (sound)->id);
 
   swfdec_bits_getbits (b, 2);
   chunk->stop = swfdec_bits_getbits (b, 1);
@@ -346,11 +364,13 @@ tag_func_start_sound (SwfdecSwfDecoder * s)
 
   id = swfdec_bits_get_u16 (b);
 
-  SWFDEC_DEBUG ("start sound");
-
   chunk = swfdec_sound_parse_chunk (s, id);
-  if (chunk)
-    frame->sound = g_slist_prepend (frame->sound, chunk);
+  if (chunk) {
+    /* append to keep order */
+    SWFDEC_DEBUG ("appending StartSound event for sound %u to frame %u\n", id,
+	s->parse_sprite->parse_frame);
+    frame->sound = g_slist_append (frame->sound, chunk);
+  }
 
   return SWFDEC_STATUS_OK;
 }
@@ -377,85 +397,6 @@ tag_func_define_button_sound (SwfdecSwfDecoder * s)
   }
 
   return SWFDEC_STATUS_OK;
-}
-
-static int index_adjust[16] = {
-  -1, -1, -1, -1, 2, 4, 6, 8,
-  -1, -1, -1, -1, 2, 4, 6, 8,
-};
-
-static int step_size[89] = {
-  7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31,
-  34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118,
-  130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371,
-  408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166,
-  1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024,
-  3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845,
-  8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500,
-  20350, 22385, 24623, 27086, 29794, 32767
-};
-
-void
-adpcm_decode (SwfdecSwfDecoder * s, SwfdecSound * sound)
-{
-  SwfdecBits *bits = &s->b;
-  int n_bits;
-  int sample;
-  int index;
-  int x;
-  int i;
-  int diff;
-  int n, n_samples;
-  int j = 0;
-
-#if 0
-  sample = swfdec_bits_get_u8 (bits) << 8;
-  sample |= swfdec_bits_get_u8 (bits);
-  g_print ("sample %d\n", sample);
-#endif
-  n_bits = swfdec_bits_getbits (bits, 2) + 2;
-  //g_print("n_bits = %d\n",n_bits);
-
-  if (n_bits != 4)
-    return;
-
-  n_samples = sound->n_samples;
-  while (n_samples) {
-    n = n_samples;
-    if (n > 4096)
-      n = 4096;
-
-    sample = swfdec_bits_getsbits (bits, 16);
-    //g_print("sample = %d\n",sample);
-    index = swfdec_bits_getbits (bits, 6);
-    //g_print("index = %d\n",index);
-
-
-    for (i = 1; i < n; i++) {
-      x = swfdec_bits_getbits (bits, n_bits);
-
-      diff = (step_size[index] * (x & 0x7)) >> 2;
-      diff += step_size[index] >> 3;
-      if (x & 8)
-        diff = -diff;
-
-      sample += diff;
-
-      if (sample < -32768)
-        sample = -32768;
-      if (sample > 32767)
-        sample = 32767;
-
-      index += index_adjust[x];
-      if (index < 0)
-        index = 0;
-      if (index > 88)
-        index = 88;
-
-      j++;
-    }
-    n_samples -= n;
-  }
 }
 
 gpointer 

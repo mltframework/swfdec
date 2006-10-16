@@ -1,23 +1,11 @@
-#include <stdio.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <glib.h>
-#include <glib-object.h>
-#include <swfdec.h>
-#include <swfdec_buffer.h>
-#include <ucontext.h>
-#include <sys/mman.h>
+#include <libswfdec/swfdec.h>
 
 int
 main (int argc, char *argv[])
 {
-  int ret;
   char *fn = "it.swf";
-  SwfdecDecoder *s;
-  SwfdecBuffer *buffer;
+  SwfdecPlayer *player;
+  GError *error = NULL;
 
   swfdec_init ();
 
@@ -25,27 +13,21 @@ main (int argc, char *argv[])
 	fn = argv[1];
   }
 
-  s = swfdec_decoder_new();
-
-  buffer = swfdec_buffer_new_from_file (fn, NULL);
-  if (buffer == NULL) {
-    return -1;
+  player = swfdec_player_new_from_file (argv[1], &error);
+  if (player == NULL) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
+    g_error_free (error);
+    return 1;
   }
-  ret = swfdec_decoder_add_buffer(s, buffer);
-
-  while (ret != SWFDEC_EOF) {
-    ret = swfdec_decoder_parse(s);
-    if (ret == SWFDEC_NEEDBITS) {
-      swfdec_decoder_eof(s);
-    }
-    if (ret == SWFDEC_ERROR) {
-      g_print("error while parsing\n");
-      return 1;
-    }
+  if (swfdec_player_get_rate (player) == 0) {
+    g_printerr ("Error parsing file \"%s\"\n", argv[1]);
+    g_object_unref (player);
+    player = NULL;
+    return 1;
   }
 
-  g_object_unref (s);
-  s = NULL;
+  g_object_unref (player);
+  player = NULL;
 
   return 0;
 }

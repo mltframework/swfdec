@@ -199,7 +199,6 @@ libswfdec/mpeg/Makefile
 player/Makefile
 plugin/Makefile
 test/Makefile
-test/actionscript/Makefile
 test/trace/Makefile
 test/various/Makefile
 swfdec.pc

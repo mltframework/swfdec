@@ -14,41 +14,27 @@ trace_cb (SwfdecDecoder *dec, const char *message, GString *string)
 static gboolean
 run_test (const char *filename)
 {
-  SwfdecDecoder *s;
+  SwfdecPlayer *player;
   SwfdecBuffer *buffer;
   guint i;
-  int status;
   GError *error = NULL;
   char *str;
   GString *string;
 
   g_print ("Testing %s:\n", filename);
-  buffer = swfdec_buffer_new_from_file (filename, &error);
-  if (buffer == NULL) {
+  player = swfdec_player_new_from_file (filename, &error);
+  if (player == NULL) {
     g_print ("  ERROR: %s\n", error->message);
     return FALSE;
   }
-  s = swfdec_decoder_new ();
   string = g_string_new ("");
-  g_signal_connect (s, "trace", G_CALLBACK (trace_cb), string);
-  status = swfdec_decoder_add_buffer(s, buffer);
-
-  while (status != SWFDEC_EOF) {
-    status = swfdec_decoder_parse(s);
-    if (status == SWFDEC_NEEDBITS) {
-      swfdec_decoder_eof(s);
-    }
-    if (status == SWFDEC_ERROR) {
-      g_print("  ERROR: failed to parse input file\n");
-      return FALSE;
-    }
-  }
+  g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
 
   /* FIXME: Make the number of iterations configurable? */
   for (i = 0; i < 10; i++) {
-    swfdec_decoder_iterate (s);
+    swfdec_player_iterate (player);
   }
-  g_object_unref (s);
+  g_object_unref (player);
 
   str = g_strdup_printf ("%s.trace", filename);
   buffer = swfdec_buffer_new_from_file (str, &error);

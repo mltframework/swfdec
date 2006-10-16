@@ -8,12 +8,16 @@
 #include <glib-object.h>
 #include <swfdec.h>
 #include <swfdec_button.h>
-#include <swfdec_decoder.h>
 #include <swfdec_edittext.h>
+#include <swfdec_font.h>
+#include <swfdec_movie.h>
+#include <swfdec_player_internal.h>
+#include <swfdec_root_movie.h>
 #include <swfdec_sprite.h>
 #include <swfdec_shape.h>
+#include <swfdec_shape.h>
+#include <swfdec_swf_decoder.h>
 #include <swfdec_text.h>
-#include <swfdec_font.h>
 
 static gboolean verbose = FALSE;
 
@@ -40,7 +44,7 @@ dump_sprite (SwfdecSprite *s)
 	    break;
 	  case SWFDEC_SPRITE_ACTION_ADD:
 	    {
-	      SwfdecSpriteContent *content = action->data;
+	      SwfdecContent *content = action->data;
 	      g_assert (content == content->sequence);
 	      g_assert (content->start == i);
 	      g_print ("   %4u -%4u %3u", i, content->end, content->depth);
@@ -48,8 +52,9 @@ dump_sprite (SwfdecSprite *s)
 		g_print ("%4u", content->clip_depth);
 	      else
 		g_print ("    ");
-	      if (content->object) {
-		g_print (" %s %u", G_OBJECT_TYPE_NAME (content->object), content->object->id);
+	      if (content->graphic) {
+		g_print (" %s %u", G_OBJECT_TYPE_NAME (content->graphic), 
+		    SWFDEC_CHARACTER (content->graphic)->id);
 	      } else {
 		g_print (" ---");
 	      }
@@ -203,43 +208,42 @@ dump_button (SwfdecButton *button)
 	  record->states & SWFDEC_BUTTON_OVER ? "O" : " ",
 	  record->states & SWFDEC_BUTTON_DOWN ? "D" : " ",
 	  record->states & SWFDEC_BUTTON_HIT ? "H" : " ",
-	  G_OBJECT_TYPE_NAME (record->object), record->object->id);
+	  G_OBJECT_TYPE_NAME (record->graphic), SWFDEC_CHARACTER (record->graphic)->id);
     }
   }
 }
 
 static void 
-dump_objects (SwfdecDecoder *s)
+dump_objects (SwfdecSwfDecoder *s)
 {
   GList *g;
-  SwfdecObject *object;
-  GType type;
+  SwfdecCharacter *c;
 
   for (g = g_list_last (s->characters); g; g = g->prev) {
-    object = g->data;
-    type = G_TYPE_FROM_INSTANCE (object);
-    g_print ("%d: %s\n", object->id, g_type_name (type));
-    if (verbose) {
-      g_print ("  extents: %g %g  %g %g\n", object->extents.x0, object->extents.y0,
-	  object->extents.x1, object->extents.y1);
+    c = g->data;
+    g_print ("%d: %s\n", c->id, G_OBJECT_TYPE_NAME (c));
+    if (verbose && SWFDEC_IS_GRAPHIC (c)) {
+      SwfdecGraphic *graphic = SWFDEC_GRAPHIC (c);
+      g_print ("  extents: %g %g  %g %g\n", graphic->extents.x0, graphic->extents.y0,
+	  graphic->extents.x1, graphic->extents.y1);
     }
-    if (SWFDEC_IS_SPRITE (object)){
-      dump_sprite (SWFDEC_SPRITE (object));
+    if (SWFDEC_IS_SPRITE (c)) {
+      dump_sprite (SWFDEC_SPRITE (c));
     }
-    if (SWFDEC_IS_SHAPE(object)){
-      dump_shape(SWFDEC_SHAPE(object));
+    if (SWFDEC_IS_SHAPE(c)) {
+      dump_shape(SWFDEC_SHAPE(c));
     }
-    if (SWFDEC_IS_TEXT (object)){
-      dump_text (SWFDEC_TEXT (object));
+    if (SWFDEC_IS_TEXT (c)) {
+      dump_text (SWFDEC_TEXT (c));
     }
-    if (SWFDEC_IS_EDIT_TEXT (object)){
-      dump_edit_text (SWFDEC_EDIT_TEXT (object));
+    if (SWFDEC_IS_EDIT_TEXT (c)) {
+      dump_edit_text (SWFDEC_EDIT_TEXT (c));
     }
-    if (SWFDEC_IS_FONT (object)){
-      dump_font (SWFDEC_FONT (object));
+    if (SWFDEC_IS_FONT (c)) {
+      dump_font (SWFDEC_FONT (c));
     }
-    if (SWFDEC_IS_BUTTON (object)){
-      dump_button (SWFDEC_BUTTON (object));
+    if (SWFDEC_IS_BUTTON (c)) {
+      dump_button (SWFDEC_BUTTON (c));
     }
   }
 }
@@ -247,10 +251,9 @@ dump_objects (SwfdecDecoder *s)
 int
 main (int argc, char *argv[])
 {
-  int ret;
   char *fn = "it.swf";
-  SwfdecDecoder *s;
-  SwfdecBuffer *buffer;
+  SwfdecSwfDecoder *s;
+  SwfdecPlayer *player;
   GError *error = NULL;
   GOptionEntry options[] = {
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "bew verbose", NULL },
@@ -274,26 +277,19 @@ main (int argc, char *argv[])
 	fn = argv[1];
   }
 
-  buffer = swfdec_buffer_new_from_file (fn, NULL);
-  if (!buffer) {
-    g_print ("dump: file \"%s\" not found\n", fn);
+  player = swfdec_player_new_from_file (argv[1], &error);
+  if (player == NULL) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
+    g_error_free (error);
     return 1;
   }
-
-  s = swfdec_decoder_new();
-
-  ret = swfdec_decoder_add_buffer (s, buffer);
-  //printf("%d\n", ret);
-
-  while (ret != SWFDEC_EOF) {
-    ret = swfdec_decoder_parse (s);
-    if (ret == SWFDEC_NEEDBITS) {
-      swfdec_decoder_eof(s);
-    }
-    if (ret == SWFDEC_ERROR) {
-      g_printerr ("Failed to parse file. Parser returned %d\n", ret);
-      return 1;
-    }
+  s = (SwfdecSwfDecoder *) SWFDEC_ROOT_MOVIE (player->roots->data)->decoder;
+  if (swfdec_player_get_rate (player) == 0 || 
+      !SWFDEC_IS_SWF_DECODER (s)) {
+    g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
+    g_object_unref (player);
+    player = NULL;
+    return 1;
   }
 
   g_print ("file:\n");

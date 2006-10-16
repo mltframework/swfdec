@@ -219,7 +219,6 @@ swfdec_player_new (SwfdecLoader *loader)
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
-  swfdec_init ();
   player = g_object_new (SWFDEC_TYPE_PLAYER, NULL);
   swfdec_player_add_level_from_loader (player, 0, loader);
 
@@ -233,6 +232,8 @@ swfdec_player_new (SwfdecLoader *loader)
  *
  * Tries to create a player to play back the given file. If the file does not
  * exist or another error occurs, NULL is returned.
+ * This function is the only function that calls swfdec_init () for you if it 
+ * wasn't called before.
  *
  * Returns: a new player or NULL on error.
  **/
@@ -243,6 +244,7 @@ swfdec_player_new_from_file (const char *filename, GError **error)
 
   g_return_val_if_fail (filename != NULL, NULL);
 
+  swfdec_init ();
   loader = swfdec_loader_new_from_file (filename, error);
   if (loader == NULL)
     return NULL;

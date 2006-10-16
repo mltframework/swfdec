@@ -46,6 +46,8 @@ swfdec_sprite_movie_remove_gotos (SwfdecSpriteMovie *movie)
 
   player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
 
+  if (player->gotos == NULL)
+    return;
   for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->gotos); i++) {
     GotoEntry *entry = swfdec_ring_buffer_peek_nth (player->gotos, i);
     if (entry->movie == movie)

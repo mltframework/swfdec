@@ -24,7 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <swfdec.h>
+#include <libswfdec/swfdec.h>
 
 G_BEGIN_DECLS
 
@@ -51,14 +51,12 @@ struct _GstSwfdec
   GstPad *videopad;
   GstPad *audiopad;
 
-  GstAdapter *adapter;
+  SwfdecLoader *loader;
+  SwfdecPlayer *player;
+
   GstTask *task;
   GStaticRecMutex mutex;
 
-  SwfdecDecoder *decoder;
-  gboolean closed;
-
-  gboolean first;
   gboolean have_format;
 
   gboolean send_discont;

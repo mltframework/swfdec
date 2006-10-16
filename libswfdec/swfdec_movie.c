@@ -371,6 +371,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	G_OBJECT_TYPE_NAME (movie), movie, 
 	movie->extents.x0, movie->extents.y0, movie->extents.x1, movie->extents.y1,
 	inval->x0, inval->y0, inval->x1, inval->y1);
+    return;
   }
 
   cairo_save (cr);

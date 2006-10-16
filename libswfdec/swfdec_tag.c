@@ -217,7 +217,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
 
   SWFDEC_LOG ("  ID: %d", id);
 
-  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (bits), s->rate);
+  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (bits), SWFDEC_DECODER (s)->rate);
 
   parse = *bits;
 

@@ -47,12 +47,6 @@ struct _SwfdecSwfDecoder
   SwfdecDecoder decoder;
 
   int version;
-  int width, height;
-  unsigned int rate;			/* divide by 256 to get iterations per second */
-  unsigned int n_frames;
-
-
-  /* End of legacy elements */
 
   int compressed;
   z_stream *z;
@@ -65,7 +59,6 @@ struct _SwfdecSwfDecoder
 
   /* defined objects */
   GList *characters;			/* list of all objects with an id (called characters) */
-
   SwfdecSprite *main_sprite;
   SwfdecSprite *parse_sprite;
 

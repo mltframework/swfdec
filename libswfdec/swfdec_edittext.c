@@ -5,9 +5,9 @@
 #include <pango/pangocairo.h>
 #include <string.h>
 #include <js/jsapi.h>
-#include "swfdec.h"
-#include "swfdec_debug.h"
 #include "swfdec_edittext.h"
+#include "swfdec_debug.h"
+#include "swfdec_edittext_movie.h"
 #include "swfdec_font.h"
 #include "swfdec_swf_decoder.h"
 
@@ -17,6 +17,19 @@ static gboolean
 swfdec_edit_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 {
   return swfdec_rect_contains (&graphic->extents, x, y);
+}
+
+static SwfdecMovie *
+swfdec_edit_text_create_movie (SwfdecGraphic *graphic)
+{
+  SwfdecEditText *text = SWFDEC_EDIT_TEXT (graphic);
+  SwfdecEditTextMovie *ret = g_object_new (SWFDEC_TYPE_EDIT_TEXT_MOVIE, NULL);
+
+  ret->text = text;
+  if (text->text)
+    swfdec_edit_text_movie_set_text (ret, text->text);
+
+  return SWFDEC_MOVIE (ret);
 }
 
 static void
@@ -43,6 +56,7 @@ swfdec_edit_text_class_init (SwfdecEditTextClass * g_class)
   SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
 
   object_class->dispose = swfdec_edit_text_dispose;
+  graphic_class->create_movie = swfdec_edit_text_create_movie;
   graphic_class->mouse_in = swfdec_edit_text_mouse_in;
 }
 

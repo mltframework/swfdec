@@ -1,7 +1,6 @@
 SUBDIRS= \
 	gimp-loader \
 	libswfdec \
-	pixbuf-loader \
 	player \
 	plugin \
 	test

@@ -131,34 +131,6 @@ if test "x$HAVE_MOZILLA" = "xno"; then
   AC_MSG_WARN([Mozilla not found. Mozilla/Netscape plugin will not be built.])
 fi
 
-dnl GdkPixbuf loader
-
-AC_PATH_PROG(QUERYLOADERS, gdk-pixbuf-query-loaders, true)
-
-AC_ARG_ENABLE(pixbuf-loader,
-    [  --enable-pixbuf-loader  Enable a SWF based GdkPixbuf loader [default=auto]],
-    enable_pixbuf_loader="$enableval", enable_pixbuf_loader=auto)
-
-if test x$enable_pixbuf_loader = xauto ; then
-    if test x$QUERYLOADERS != x ; then 
-        enable_pixbuf_loader=yes
-    else
-        enable_pixbuf_loader=no
-    fi
-fi
-
-if test "x$enable_pixbuf_loader" = "xyes" ; then
-  PKG_CHECK_MODULES(PIXBUF, gdk-pixbuf-2.0 >= 2.1.2)
-  GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
-  AC_SUBST(PIXBUF_LIBS)
-  AC_SUBST(PIXBUF_CFLAGS)
-  AC_SUBST(GTK_VERSION)
-else
-  AC_MSG_WARN([GdkPixbuf >= 2.1.2 not found. Pixbuf loader will not be built])
-fi
-
-AM_CONDITIONAL(ENABLE_PIXBUF_LOADER, test x$enable_pixbuf_loader = xyes)
-
 PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0],
   HAVE_GIMP=yes, HAVE_GIMP=no)
 if test "x$HAVE_GIMP" = xyes ; then
@@ -219,18 +191,17 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
+gimp-loader/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
 libswfdec/mpeg/Makefile
+player/Makefile
+plugin/Makefile
 test/Makefile
 test/actionscript/Makefile
 test/trace/Makefile
 test/various/Makefile
-player/Makefile
-plugin/Makefile
-pixbuf-loader/Makefile
-gimp-loader/Makefile
 swfdec.pc
 swfdec.spec
 )

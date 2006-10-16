@@ -35,7 +35,7 @@ static const char *swfdec_debug_level_names[] = {
   "LOG  "
 };
 
-static int swfdec_debug_level = SWFDEC_LEVEL_WARNING;
+static unsigned int swfdec_debug_level = SWFDEC_LEVEL_WARNING;
 
 void
 swfdec_debug_log (unsigned int level, const char *file, const char *function,

@@ -294,6 +294,8 @@ main (int argc, char *argv[])
 
   g_print ("file:\n");
   g_print ("  version: %d\n", s->version);
+  g_print ("  rate   : %g fps\n",  SWFDEC_DECODER (s)->rate / 256.0);
+  g_print ("  size   : %ux%u pixels\n", SWFDEC_DECODER (s)->width, SWFDEC_DECODER (s)->height);
   g_print ("objects:\n");
   dump_objects(s);
 

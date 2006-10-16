@@ -218,6 +218,8 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint frame, gboolean do_ent
     /* FIXME: limit number of gotos to not get inf loops due to scripts? */
     swfdec_ring_buffer_set_size (player->gotos,
 	swfdec_ring_buffer_get_size (player->gotos) + 16);
+    entry = swfdec_ring_buffer_push (player->gotos);
+    g_assert (entry);
   }
   entry->movie = movie;
   entry->frame = frame;
@@ -291,9 +293,17 @@ swfdec_sprite_movie_iterate_audio (SwfdecSpriteMovie *movie)
 {
   SwfdecSpriteFrame *last;
   SwfdecSpriteFrame *current;
+  GSList *walk;
   SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
 
   current = &movie->sprite->frames[movie->current_frame];
+  
+  /* first start all event sounds */
+  for (walk = current->sound; walk; walk = walk->next) {
+    swfdec_audio_event_init (player, walk->data);
+  }
+
+  /* then do the streaming thing */
   if (current->sound_head == NULL) {
     if (movie->sound_stream) {
       swfdec_audio_stream_stop (player, movie->sound_stream);

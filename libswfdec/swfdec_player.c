@@ -52,9 +52,6 @@ enum {
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, G_TYPE_OBJECT)
 
-void		swfdec_player_add_movie		(SwfdecPlayer *		player,
-						 guint			depth,
-						 const char *		url);
 void
 swfdec_player_remove_movie (SwfdecPlayer *player, SwfdecMovie *movie)
 {
@@ -206,23 +203,42 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
 
 /**
  * swfdec_player_new:
- * @loader: a #SwfdecLoader which will be taken ownership of
  *
- * Creates a new player to play back the data from the given loader.
+ * Creates a new player.
+ * This function calls swfdec_init () for you if it wasn't called before.
  *
  * Returns: The new player
  **/
 SwfdecPlayer *
-swfdec_player_new (SwfdecLoader *loader)
+swfdec_player_new (void)
 {
   SwfdecPlayer *player;
 
-  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-
+  swfdec_init ();
   player = g_object_new (SWFDEC_TYPE_PLAYER, NULL);
-  swfdec_player_add_level_from_loader (player, 0, loader);
 
   return player;
+}
+
+/**
+ * swfdec_player_set_loader:
+ * @player: a #SwfdecPlayer
+ * @loader: the loader to use for this player. Takes ownership of the given loader.
+ *
+ * Sets the loader for the main data. This function only works if no loader has 
+ * been set on @player yet.
+ * <note>If you want to capture events during the setup process, you want to 
+ * connect your signal handlers before calling swfdec_player_set_loader() and
+ * not use conveniencse functions such as swfdec_player_new_from_file().</note>
+ **/
+void
+swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (player->roots == NULL);
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+
+  swfdec_player_add_level_from_loader (player, 0, loader);
 }
 
 /**
@@ -232,8 +248,7 @@ swfdec_player_new (SwfdecLoader *loader)
  *
  * Tries to create a player to play back the given file. If the file does not
  * exist or another error occurs, NULL is returned.
- * This function is the only function that calls swfdec_init () for you if it 
- * wasn't called before.
+ * This function calls swfdec_init () for you if it wasn't called before.
  *
  * Returns: a new player or NULL on error.
  **/
@@ -241,15 +256,17 @@ SwfdecPlayer *
 swfdec_player_new_from_file (const char *filename, GError **error)
 {
   SwfdecLoader *loader;
+  SwfdecPlayer *player;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  swfdec_init ();
   loader = swfdec_loader_new_from_file (filename, error);
   if (loader == NULL)
     return NULL;
+  player = swfdec_player_new ();
+  swfdec_player_set_loader (player, loader);
 
-  return swfdec_player_new (loader);
+  return player;
 }
 
 /**

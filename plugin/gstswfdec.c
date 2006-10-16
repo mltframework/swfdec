@@ -573,8 +573,8 @@ gst_swfdec_init (GstSwfdec * swfdec)
 
   /* initialize the swfdec player */
   swfdec->loader = g_object_new (GST_TYPE_SWFDEC_LOADER, NULL);
-  swfdec->player = swfdec_player_new (swfdec->loader);
-  g_return_if_fail (swfdec->player != NULL);
+  swfdec->player = swfdec_player_new ();
+  swfdec_player_set_loader (swfdec->player, swfdec->loader);
 
   swfdec->frame_rate_n = 0;
   swfdec->frame_rate_d = 1;

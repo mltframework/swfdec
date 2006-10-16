@@ -25,9 +25,6 @@
 G_BEGIN_DECLS
 
 
-SwfdecLoader *		swfdec_loader_new_from_file	(const char * 	filename,
-							 GError **	error);
-
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *	loader,
 							 const char *	url);
 void			swfdec_loader_parse		(SwfdecLoader *	loader);

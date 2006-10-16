@@ -59,11 +59,14 @@ struct _SwfdecLoaderClass
 					 const char *			error);
 };
 
-GType		swfdec_loader_get_type	(void);
+GType		swfdec_loader_get_type		(void);
 
-void		swfdec_loader_push	(SwfdecLoader *			loader,
-					 SwfdecBuffer *			buffer);
-void		swfdec_loader_eof	(SwfdecLoader *			loader);
+SwfdecLoader *	swfdec_loader_new_from_file	(const char * 	filename,
+						 GError **	error);
+
+void		swfdec_loader_push		(SwfdecLoader *			loader,
+						 SwfdecBuffer *			buffer);
+void		swfdec_loader_eof		(SwfdecLoader *			loader);
 					 
 
 G_END_DECLS

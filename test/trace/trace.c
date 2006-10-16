@@ -3,7 +3,6 @@
 #endif
 #include <string.h>
 #include <swfdec.h>
-#include <swfdec_buffer.h>
 
 static void
 trace_cb (SwfdecDecoder *dec, const char *message, GString *string)
@@ -14,6 +13,7 @@ trace_cb (SwfdecDecoder *dec, const char *message, GString *string)
 static gboolean
 run_test (const char *filename)
 {
+  SwfdecLoader *loader;
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
   guint i;
@@ -22,18 +22,21 @@ run_test (const char *filename)
   GString *string;
 
   g_print ("Testing %s:\n", filename);
-  player = swfdec_player_new_from_file (filename, &error);
-  if (player == NULL) {
+  loader = swfdec_loader_new_from_file (filename, &error);
+  if (loader == NULL) {
     g_print ("  ERROR: %s\n", error->message);
     return FALSE;
   }
   string = g_string_new ("");
+  player = swfdec_player_new ();
   g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
+  swfdec_player_set_loader (player, loader);
 
   /* FIXME: Make the number of iterations configurable? */
   for (i = 0; i < 10; i++) {
     swfdec_player_iterate (player);
   }
+  g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);
 
   str = g_strdup_printf ("%s.trace", filename);
@@ -71,6 +74,8 @@ int
 main (int argc, char **argv)
 {
   guint failed_tests = 0;
+
+  swfdec_init ();
 
   if (argc > 1) {
     int i;

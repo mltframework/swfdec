@@ -572,7 +572,8 @@ mc_root (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (movie->jsobj == NULL) {
     /* the root movie only holds this as long as there's no parent */
     movie = movie->list->data;
-    g_assert (movie->jsobj);
+    if (movie->jsobj == NULL)
+      swfdec_js_add_movie (movie);
   }
   if (movie->jsobj == NULL)
     return JS_FALSE;

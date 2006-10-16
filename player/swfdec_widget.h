@@ -20,7 +20,7 @@ struct _SwfdecWidget
 {
   GtkWidget		widget;
 
-  SwfdecDecoder *	dec;		/* the video we play */
+  SwfdecPlayer *	player;		/* the video we play */
 
   double		real_scale;	/* the real scale factor used */
   double		set_scale;    	/* the set scale factor of the video */
@@ -36,7 +36,7 @@ struct _SwfdecWidgetClass
 
 GType		swfdec_widget_get_type		(void);
 
-GtkWidget *	swfdec_widget_new		(SwfdecDecoder *dec);
+GtkWidget *	swfdec_widget_new		(SwfdecPlayer *	player);
 
 void		swfdec_widget_set_scale		(SwfdecWidget *	widget,
 						 double		scale);
@@ -44,8 +44,8 @@ double		swfdec_widget_get_scale		(SwfdecWidget *	widget);
 void		swfdec_widget_set_use_image	(SwfdecWidget *	widget,
 						 gboolean	use_image);
 gboolean	swfdec_widget_get_use_image	(SwfdecWidget *	widget);
-void		swfdec_widget_set_decoder	(SwfdecWidget *	widget,
-						 SwfdecDecoder *dec);
+void		swfdec_widget_set_player	(SwfdecWidget *	widget,
+						 SwfdecPlayer *	player);
 
 G_END_DECLS
 #endif

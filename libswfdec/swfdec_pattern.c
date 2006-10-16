@@ -9,7 +9,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_image.h"
-#include "swfdec_object.h"
 
 /*** PATTERN ***/
 
@@ -292,21 +291,21 @@ swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
 
 /**
  * swfdec_pattern_parse:
- * @dec: a #SwfdecDecoder
+ * @bits: a #SwfdecBits to read from
  * @rgba: TRUE if colors are RGBA, FALSE if they're just RGB
  *
- * Parses the bits pointer at by the decoder into a new #SwfdecPattern
+ * Parses @bits into a new #SwfdecPattern
  *
  * Returns: a new #SwfdecPattern or NULL on error
  **/
 SwfdecPattern *
-swfdec_pattern_parse (SwfdecDecoder *dec, gboolean rgba)
+swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 {
   unsigned int fill_style_type;
   SwfdecBits *bits;
   SwfdecPattern *pattern;
 
-  g_return_val_if_fail (SWFDEC_IS_DECODER (dec), NULL);
+  g_return_val_if_fail (dec != NULL, NULL);
 
   bits = &dec->b;
   fill_style_type = swfdec_bits_get_u8 (bits);
@@ -341,7 +340,7 @@ swfdec_pattern_parse (SwfdecDecoder *dec, gboolean rgba)
     } else {
       pattern = g_object_new (SWFDEC_TYPE_IMAGE_PATTERN, NULL);
       swfdec_bits_get_matrix (bits, &pattern->transform);
-      SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_object_get (dec, fill_id);
+      SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, fill_id);
       if (!SWFDEC_IS_IMAGE (SWFDEC_IMAGE_PATTERN (pattern)->image)) {
 	g_object_unref (pattern);
 	SWFDEC_ERROR ("could not find image with id %u for pattern", fill_id);
@@ -422,7 +421,7 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
     SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pattern);
     swfdec_handle_get_data(image->image->handle);
     return g_strdup_printf ("%ux%u image %u (%s, %s)", image->image->width,
-	image->image->height, SWFDEC_OBJECT (image->image)->id,
+	image->image->height, SWFDEC_CHARACTER (image->image)->id,
 	image->extend == CAIRO_EXTEND_REPEAT ? "repeat" : "no repeat",
 	image->filter == CAIRO_FILTER_BILINEAR ? "bilinear" : "nearest");
   } else if (SWFDEC_IS_COLOR_PATTERN (pattern)) {

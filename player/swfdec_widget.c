@@ -17,7 +17,7 @@ swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 
   gtk_widget_get_pointer (gtkwidget, &x, &y);
 
-  swfdec_decoder_handle_mouse (widget->dec, 
+  swfdec_player_handle_mouse (widget->player, 
       event->x / widget->real_scale, event->y / widget->real_scale, widget->button);
   
   return FALSE;
@@ -29,7 +29,7 @@ swfdec_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
 
   widget->button = 0;
-  swfdec_decoder_handle_mouse (widget->dec, 
+  swfdec_player_handle_mouse (widget->player, 
       event->x / widget->real_scale, event->y / widget->real_scale, 0);
   return FALSE;
 }
@@ -41,7 +41,7 @@ swfdec_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     widget->button = 1;
-    swfdec_decoder_handle_mouse (widget->dec, 
+    swfdec_player_handle_mouse (widget->player, 
 	event->x / widget->real_scale, event->y / widget->real_scale, 1);
   }
   return FALSE;
@@ -54,7 +54,7 @@ swfdec_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     widget->button = 0;
-    swfdec_decoder_handle_mouse (widget->dec, 
+    swfdec_player_handle_mouse (widget->player, 
 	event->x / widget->real_scale, event->y / widget->real_scale, 0);
   }
   return FALSE;
@@ -83,7 +83,7 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   cairo_scale (cr, widget->real_scale, widget->real_scale);
   swfdec_rect_init (&rect, event->area.x / widget->real_scale, event->area.y / widget->real_scale, 
       event->area.width / widget->real_scale, event->area.height / widget->real_scale);
-  swfdec_decoder_render (widget->dec, cr, &rect);
+  swfdec_player_render (widget->player, cr, &rect);
   if (widget->use_image) {
     cairo_t *crw = gdk_cairo_create (gtkwidget->window);
     cairo_set_source_surface (crw, surface, event->area.x, event->area.y);
@@ -101,7 +101,7 @@ swfdec_widget_dispose (GObject *object)
 {
   SwfdecWidget *widget = SWFDEC_WIDGET (object);
 
-  swfdec_widget_set_decoder (widget, NULL);
+  swfdec_widget_set_player (widget, NULL);
 
   G_OBJECT_CLASS (swfdec_widget_parent_class)->dispose (object);
 }
@@ -117,10 +117,14 @@ swfdec_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation)
 
   if (widget->set_scale) {
     scale = widget->set_scale;
-  } else if (widget->dec == NULL || !swfdec_decoder_get_image_size (widget->dec, &w, &h)) {
+  } else if (widget->player == NULL) {
     scale = 1.0;
   } else {
-    scale = MIN ((double) allocation->width / w, (double) allocation->height / h);
+    swfdec_player_get_image_size (widget->player, &w, &h);
+    if (w != 0 && h != 0)
+      scale = MIN ((double) allocation->width / w, (double) allocation->height / h);
+    else
+      scale = 1.0;
   }
   w = ceil (w * scale);
   h = ceil (h * scale);
@@ -144,10 +148,11 @@ swfdec_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
   double scale;
   SwfdecWidget * widget = SWFDEC_WIDGET (gtkwidget);
 
-  if (widget->dec == NULL ||
-      !swfdec_decoder_get_image_size (widget->dec, 
-	  &req->width, &req->height)) {
+  if (widget->player == NULL) {
     req->width = req->height = 0;
+  } else {
+    swfdec_player_get_image_size (widget->player, 
+	  &req->width, &req->height);
   } 
   if (widget->set_scale != 0.0)
     scale = widget->set_scale;
@@ -213,14 +218,14 @@ swfdec_widget_init (SwfdecWidget * widget)
 }
 
 static void
-swfdec_widget_notify_cb (SwfdecDecoder *dec, GParamSpec *pspec, SwfdecWidget *widget)
+swfdec_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecWidget *widget)
 {
   GdkRectangle gdkrect;
   SwfdecRect rect;
 
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  swfdec_decoder_get_invalid (widget->dec, &rect);
+  swfdec_player_get_invalid (widget->player, &rect);
   if (swfdec_rect_is_empty (&rect))
     return;
   swfdec_rect_scale (&rect, &rect, widget->real_scale);
@@ -228,20 +233,20 @@ swfdec_widget_notify_cb (SwfdecDecoder *dec, GParamSpec *pspec, SwfdecWidget *wi
   gdkrect.y = floor (rect.y0);
   gdkrect.width = ceil (rect.x1) - gdkrect.x;
   gdkrect.height = ceil (rect.y1) - gdkrect.y;
-  //g_print ("queing draw of %g %g  %g %g\n", inval.x0, inval.y0, inval.x1, inval.y1);
+  //g_print ("queing draw of %g %g  %g %g\n", rect.x0, rect.y0, rect.x1, rect.y1);
   gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &gdkrect, FALSE);
-  swfdec_decoder_clear_invalid (widget->dec);
+  swfdec_player_clear_invalid (widget->player);
 }
 
 static void
-swfdec_widget_notify_mouse_cb (SwfdecDecoder *dec, GParamSpec *pspec, SwfdecWidget *widget)
+swfdec_widget_notify_mouse_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecWidget *widget)
 {
   GdkWindow *window = GTK_WIDGET (widget)->window;
   gboolean visible;
 
   if (window == NULL)
     return;
-  g_object_get (dec, "mouse-visible", &visible, NULL);
+  g_object_get (player, "mouse-visible", &visible, NULL);
 
   if (visible) {
     gdk_window_set_cursor (window, NULL);
@@ -262,21 +267,22 @@ swfdec_widget_notify_mouse_cb (SwfdecDecoder *dec, GParamSpec *pspec, SwfdecWidg
 }
 
 void
-swfdec_widget_set_decoder (SwfdecWidget *widget, SwfdecDecoder *dec)
+swfdec_widget_set_player (SwfdecWidget *widget, SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_WIDGET (widget));
-  g_return_if_fail (dec == NULL || SWFDEC_IS_DECODER (dec));
+  g_return_if_fail (player == NULL || SWFDEC_IS_PLAYER (player));
   
-  if (widget->dec) {
-    g_signal_handlers_disconnect_by_func (widget->dec, swfdec_widget_notify_cb, widget);
-    g_object_unref (widget->dec);
+  if (widget->player) {
+    g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_notify_cb, widget);
+    g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_notify_mouse_cb, widget);
+    g_object_unref (widget->player);
   }
-  widget->dec = dec;
-  if (dec) {
-    g_signal_connect (dec, "notify::invalid", G_CALLBACK (swfdec_widget_notify_cb), widget);
-    g_signal_connect (dec, "notify::mouse-visible", G_CALLBACK (swfdec_widget_notify_mouse_cb), widget);
-    g_object_ref (dec);
-    swfdec_widget_notify_mouse_cb (dec, NULL, widget);
+  widget->player = player;
+  if (player) {
+    g_signal_connect (player, "notify::invalid", G_CALLBACK (swfdec_widget_notify_cb), widget);
+    g_signal_connect (player, "notify::mouse-visible", G_CALLBACK (swfdec_widget_notify_mouse_cb), widget);
+    g_object_ref (player);
+    swfdec_widget_notify_mouse_cb (player, NULL, widget);
   } else {
     if (GTK_WIDGET (widget)->window)
       gdk_window_set_cursor (GTK_WIDGET (widget)->window, NULL); 
@@ -285,14 +291,14 @@ swfdec_widget_set_decoder (SwfdecWidget *widget, SwfdecDecoder *dec)
 }
 
 GtkWidget *
-swfdec_widget_new (SwfdecDecoder *dec)
+swfdec_widget_new (SwfdecPlayer *player)
 {
   SwfdecWidget *widget;
   
-  g_return_val_if_fail (dec == NULL || SWFDEC_IS_DECODER (dec), NULL);
+  g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
 
   widget = g_object_new (SWFDEC_TYPE_WIDGET, 0);
-  swfdec_widget_set_decoder (widget, dec);
+  swfdec_widget_set_player (widget, player);
 
   return GTK_WIDGET (widget);
 }

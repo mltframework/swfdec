@@ -8,6 +8,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_rect.h"
 
 
 unsigned int 
@@ -223,10 +224,10 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
   has_mult = swfdec_bits_getbit (bits);
   n_bits = swfdec_bits_getbits (bits, 4);
   if (has_mult) {
-    ct->mult[0] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
-    ct->mult[1] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
-    ct->mult[2] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
-    ct->mult[3] = swfdec_bits_getsbits (bits, n_bits) * SWF_COLOR_SCALE_FACTOR;
+    ct->mult[0] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
+    ct->mult[1] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
+    ct->mult[2] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
+    ct->mult[3] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
   } else {
     ct->mult[0] = 1.0;
     ct->mult[1] = 1.0;
@@ -267,8 +268,8 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     int scale_x = swfdec_bits_getsbits (bits, n_scale_bits);
     int scale_y = swfdec_bits_getsbits (bits, n_scale_bits);
 
-    matrix->xx = scale_x * SWF_TRANS_SCALE_FACTOR;
-    matrix->yy = scale_y * SWF_TRANS_SCALE_FACTOR;
+    matrix->xx = scale_x / SWFDEC_FIXED_SCALE_FACTOR;
+    matrix->yy = scale_y / SWFDEC_FIXED_SCALE_FACTOR;
   } else {
     SWFDEC_LOG ("no scalefactors given");
   }
@@ -278,8 +279,8 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     int rotate_skew0 = swfdec_bits_getsbits (bits, n_rotate_bits);
     int rotate_skew1 = swfdec_bits_getsbits (bits, n_rotate_bits);
 
-    matrix->xy = rotate_skew1 * SWF_TRANS_SCALE_FACTOR;
-    matrix->yx = rotate_skew0 * SWF_TRANS_SCALE_FACTOR;
+    matrix->xy = rotate_skew1 / SWFDEC_FIXED_SCALE_FACTOR;
+    matrix->yx = rotate_skew0 / SWFDEC_FIXED_SCALE_FACTOR;
   }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
   translate_x = swfdec_bits_getsbits (bits, n_translate_bits);

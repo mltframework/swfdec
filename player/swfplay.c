@@ -1,18 +1,40 @@
+/* Swfdec
+ * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gtk/gtk.h>
 #include <math.h>
-#include <swfdec.h>
-#include <swfdec_buffer.h>
-#include <swfdec_widget.h>
-#include <swfdec_playback.h>
+#include <libswfdec/swfdec.h>
+
+#include "swfdec_playback.h"
+#include "swfdec_widget.h"
 
 static gpointer playback;
 
 static gboolean
-iterate (gpointer dec)
+iterate (gpointer player)
 {
-  swfdec_decoder_iterate (dec);
+  swfdec_player_iterate (player);
   if (playback != NULL) {
-    SwfdecBuffer *buffer = swfdec_decoder_render_audio_to_buffer (dec);
+    SwfdecBuffer *buffer = swfdec_player_render_audio_to_buffer (player);
     swfdec_playback_write (playback, buffer);
     swfdec_buffer_unref (buffer);
   }
@@ -20,12 +42,12 @@ iterate (gpointer dec)
 }
 
 static void
-view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
+view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
   GtkWidget *window, *widget;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  widget = swfdec_widget_new (dec);
+  widget = swfdec_widget_new (player);
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_container_add (GTK_CONTAINER (window), widget);
@@ -34,16 +56,16 @@ view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
 }
 
 static void
-play_swf (SwfdecDecoder *dec)
+play_swf (SwfdecPlayer *player)
 {
   double rate;
 
-  rate = swfdec_decoder_get_rate (dec);
+  rate = swfdec_player_get_rate (player);
   if (rate == 0)
     return;
 
   if (playback == NULL) {
-    guint timeout = g_timeout_add (1000 / rate, iterate, dec);
+    guint timeout = g_timeout_add (1000 / rate, iterate, player);
 
     gtk_main ();
     g_source_remove (timeout);
@@ -57,8 +79,7 @@ main (int argc, char *argv[])
 {
   int ret = 0;
   double scale;
-  SwfdecDecoder *s;
-  SwfdecBuffer *buffer;
+  SwfdecPlayer *player;
   guint buffer_size = 0;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
@@ -91,57 +112,53 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  buffer = swfdec_buffer_new_from_file (argv[1], &error);
-  if (buffer == NULL) {
+  player = swfdec_player_new_from_file (argv[1], &error);
+  if (player == NULL) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
+    g_error_free (error);
+    return 1;
+  }
+  /* FIXME add smarter "not my file" detection */
+  if (swfdec_player_get_rate (player) == 0) {
+    g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
+    g_object_unref (player);
+    player = NULL;
     return 1;
   }
 
-  s = swfdec_decoder_new();
-  ret = swfdec_decoder_add_buffer(s, buffer);
-
-  while (ret != SWFDEC_EOF) {
-    ret = swfdec_decoder_parse (s);
-    if (ret == SWFDEC_NEEDBITS) {
-      swfdec_decoder_eof (s);
-    }
-    if (ret == SWFDEC_ERROR) {
-      g_print ("error while parsing\n");
-      return 1;
-    }
-  }
-
-  view_swf (s, scale, use_image);
+  view_swf (player, scale, use_image);
 
   if (no_sound) {
     playback = NULL;
   } else {
     double rate;
 
-    rate = swfdec_decoder_get_rate (s);
+    rate = swfdec_player_get_rate (player);
     if (rate != 0)
-      playback = swfdec_playback_open (iterate, s, G_USEC_PER_SEC / rate, &buffer_size);
+      playback = swfdec_playback_open (iterate, player, G_USEC_PER_SEC / rate, &buffer_size);
     else
       playback = NULL;
   }
   if (buffer_size) {
     SwfdecBuffer *buffer;
 
-    swfdec_decoder_set_latency (s, buffer_size);
+    g_print ("using buffering of %u frames (%gs)\n", buffer_size, buffer_size / 44100.);
+    swfdec_player_set_latency (player, buffer_size);
     buffer = swfdec_buffer_new ();
     buffer->length = buffer_size * 4;
     buffer->data = g_malloc0 (buffer->length);
-    swfdec_decoder_render_audio (s, (gint16 *) buffer->data,
+    swfdec_player_render_audio (player, (gint16 *) buffer->data,
 	0, buffer_size);
     swfdec_playback_write (playback, buffer);
     swfdec_buffer_unref (buffer);
   }
-  play_swf (s);
+  play_swf (player);
 
   if (playback)
     swfdec_playback_close (playback);
 
-  s = NULL;
+  g_object_unref (player);
+  player = NULL;
   return 0;
 }
 

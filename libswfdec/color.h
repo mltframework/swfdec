@@ -2,7 +2,7 @@
 #ifndef __SWFDEC_COLOR_H__
 #define __SWFDEC_COLOR_H__
 
-#include "swfdec_types.h"
+#include <libswfdec/swfdec_types.h>
 
 typedef unsigned int swf_color;
 
@@ -46,6 +46,5 @@ void swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first);
 unsigned int swfdec_color_apply_transform (unsigned int in,
     const SwfdecColorTransform * trans);
-int tag_func_set_background_color (SwfdecDecoder * s);
 
 #endif

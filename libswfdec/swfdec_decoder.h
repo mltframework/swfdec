@@ -1,110 +1,90 @@
+/* Swfdec
+ * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
-#ifndef __SWFDEC_DECODER_H__
-#define __SWFDEC_DECODER_H__
+#ifndef _SWFDEC_DECODER_H_
+#define _SWFDEC_DECODER_H_
 
-#include <glib.h>
-#include <zlib.h>
-#include <js/jspubtd.h>
-#include "swfdec_bits.h"
+#include <glib-object.h>
+#include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_player.h>
 
-#include "swfdec_types.h"
-#include "swfdec_rect.h"
+G_BEGIN_DECLS
 
 
-#define SWF_COLOR_SCALE_FACTOR		(1/256.0)
-#define SWF_TRANS_SCALE_FACTOR		(1/65536.0)
-#define SWF_SCALE_FACTOR		(20.0)
-#define SWF_TEXT_SCALE_FACTOR		(1/1024.0)
+typedef enum {
+  /* An error occured during parsing */
+  SWFDEC_STATUS_ERROR = 0,
+  /* processing continued as expected */
+  SWFDEC_STATUS_OK,
+  /* more data needs to be made available for processing */
+  SWFDEC_STATUS_NEEDBITS,
+  /* at least one new image is available for display */
+  SWFDEC_STATUS_IMAGE,
+  /* header parsing is complete, framerate, image size etc are known */
+  SWFDEC_STATUS_CHANGE,
+  /* parsing is finished */
+  SWFDEC_STATUS_EOF
+} SwfdecStatus;
 
-enum
-{
-  SWF_STATE_INIT1 = 0,
-  SWF_STATE_INIT2,
-  SWF_STATE_PARSETAG,
-  SWF_STATE_EOF,
-};
+//typedef struct _SwfdecDecoder SwfdecDecoder;
+typedef struct _SwfdecDecoderClass SwfdecDecoderClass;
 
-typedef int SwfdecTagFunc (SwfdecDecoder *);
+#define SWFDEC_TYPE_DECODER                    (swfdec_decoder_get_type())
+#define SWFDEC_IS_DECODER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_DECODER))
+#define SWFDEC_IS_DECODER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_DECODER))
+#define SWFDEC_DECODER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_DECODER, SwfdecDecoder))
+#define SWFDEC_DECODER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_DECODER, SwfdecDecoderClass))
+#define SWFDEC_DECODER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_DECODER, SwfdecDecoderClass))
 
 struct _SwfdecDecoder
 {
-  GObject object;
+  GObject		object;
 
-  int version;
-  int length;
-  int loaded;
-  int width, height;
-  int parse_width, parse_height;
-  unsigned int rate;			/* divide by 256 to get iterations per second */
-  unsigned int n_frames;
-
-  int compressed;
-
-  /* End of legacy elements */
-
-  z_stream *z;
-  SwfdecBuffer *uncompressed_buffer;
-
-  SwfdecBufferQueue *input_queue;
-
-  int state;				/* where we are in the top-level state engine */
-  SwfdecBits parse;			/* where we are in global parsing */
-  SwfdecBits b;				/* temporary state while parsing */
-
-  /* defined objects */
-  GList *characters;			/* list of all objects with an id (called characters) */
-  GList *exports;
-
-  /* rendering state */
-  SwfdecRect irect;
-  SwfdecRect invalid;			/* in pixels */
-
-  SwfdecSprite *main_sprite;
-  SwfdecMovieClip *root;
-  SwfdecSprite *parse_sprite;
-
-  gboolean protection;			/* TRUE is this file is protected and may not be edited */
-  char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
-
-
-  SwfdecBuffer *jpegtables;
-
-  char *url;
-
-  /* global state */
-  GList *movies;			/* list of all running movie clips */
-  GQueue *gotos;			/* gotoAndFoo + iterations */
-
-  /* mouse */
-  gboolean mouse_visible;		/* show the mouse (actionscriptable) */
-
-  /* javascript */
-  JSContext *jscx;			/* The JavaScript context or NULL after errors */
-  JSObject *jsmovie;			/* The MovieClip class */
-
-  /* audio */
-  GArray *audio;			/* SwfdecAudioEvent array of running streams */
-  guint samples_this_frame;		/* amount of samples to be played this frame */
-  guint samples_overhead;		/* 44100*256th of sample missing each frame due to weird rate */
-  guint samples_overhead_left;		/* 44100*256th of sample we spit out too much so far */
-  guint samples_latency;		/* latency in samples */
+  SwfdecPlayer *	player;		/* FIXME: only needed to get the JS Context, I want it gone */
+  guint			rate;		/* rate of stream */
+  guint			width;		/* width of stream */
+  guint			height;		/* guess */
+  guint			bytes_loaded; 	/* bytes already loaded */
+  guint			bytes_total;	/* total bytes in the file or 0 if not known */
+  guint			frames_loaded;	/* frames already loaded */
+  guint			frames_total;	/* total frames */
+  SwfdecBufferQueue *	queue;		/* the queue containing the data to be parsed */
 };
 
-struct _SwfdecDecoderClass {
-  GObjectClass object_class;
+struct _SwfdecDecoderClass
+{
+  GObjectClass		object_class;
+
+  void			(* create_movie)	(SwfdecDecoder *	decoder,
+						 SwfdecMovie *		parent);
+
+  SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder);
 };
 
-SwfdecDecoder *swf_init (void);
-SwfdecDecoder *swfdec_decoder_new (void);
+GType		swfdec_decoder_get_type		(void);
 
-int swf_addbits (SwfdecDecoder * s, unsigned char *bits, int len);
-int swf_parse (SwfdecDecoder * s);
-int swf_parse_header (SwfdecDecoder * s);
-int swf_parse_tag (SwfdecDecoder * s);
-int tag_func_ignore (SwfdecDecoder * s);
+#define swfdec_decoder_can_detect(queue) (swfdec_buffer_queue_get_depth (queue) >= 3)
+SwfdecDecoder *	swfdec_decoder_new		(SwfdecPlayer *		player,
+						 SwfdecBufferQueue *	queue);
 
-SwfdecTagFunc *swfdec_decoder_get_tag_func (int tag);
-const char *swfdec_decoder_get_tag_name (int tag);
-int swfdec_decoder_get_tag_flag (int tag);
+void		swfdec_decoder_create_movie	(SwfdecDecoder *	decoder,
+						 SwfdecMovie *		parent);
 
+G_END_DECLS
 #endif

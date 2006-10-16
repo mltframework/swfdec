@@ -1,7 +1,29 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
-#include "swfdec_internal.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <string.h>
+#include "swfdec_rect.h"
 
 void 
 swfdec_rect_init_empty (SwfdecRect *rect)
@@ -26,15 +48,6 @@ swfdec_rect_init (SwfdecRect *rect, double x, double y,
   rect->y0 = y;
   rect->x1 = x + width;
   rect->y1 = y + height;
-}
-
-void
-swfdec_rect_init_whole (SwfdecRect *rect)
-{
-  g_return_if_fail (rect != NULL);
-
-  rect->x0 = rect->y0 = -G_MAXDOUBLE;
-  rect->x1 = rect->y1 = G_MAXDOUBLE;
 }
 
 gboolean

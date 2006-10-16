@@ -104,6 +104,7 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint usecs_per_frame, gu
   snd_pcm_hw_params_t *hw_params;
   unsigned int rate, count;
   Sound *sound;
+  snd_pcm_uframes_t uframes;
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
   ALSA_ERROR (snd_pcm_open (&ret, /*"default"*/"plughw:0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
@@ -129,6 +130,11 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint usecs_per_frame, gu
   rate = 44100;
   if (snd_pcm_hw_params_set_rate_near (ret, hw_params, &rate, 0) < 0) {
     g_printerr ("Failed setting rate\n");
+    goto fail;
+  }
+  uframes = 16384;
+  if (snd_pcm_hw_params_set_buffer_size_near (ret, hw_params, &uframes) < 0) {
+    g_printerr ("Failed setting buffer size\n");
     goto fail;
   }
   if (snd_pcm_hw_params (ret, hw_params) < 0) {

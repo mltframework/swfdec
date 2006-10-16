@@ -1,15 +1,39 @@
-#include "swfdec_internal.h"
+/* Swfdec
+ * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "swfdec_js.h"
+#include "swfdec_debug.h"
+#include "swfdec_player_internal.h"
 
 static JSBool
 swfdec_js_mouse_show (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  SwfdecDecoder *s = JS_GetContextPrivate (cx);
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
 
-  g_assert (s);
-  if (!s->mouse_visible) {
-    s->mouse_visible = TRUE;
-    g_object_notify (G_OBJECT (s), "mouse-visible");
+  g_assert (player);
+  if (!player->mouse_visible) {
+    player->mouse_visible = TRUE;
+    g_object_notify (G_OBJECT (player), "mouse-visible");
   }
   return JS_TRUE;
 }
@@ -17,12 +41,12 @@ swfdec_js_mouse_show (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 static JSBool
 swfdec_js_mouse_hide (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  SwfdecDecoder *s = JS_GetContextPrivate (cx);
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
 
-  g_assert (s);
-  if (s->mouse_visible) {
-    s->mouse_visible = FALSE;
-    g_object_notify (G_OBJECT (s), "mouse-visible");
+  g_assert (player);
+  if (player->mouse_visible) {
+    player->mouse_visible = FALSE;
+    g_object_notify (G_OBJECT (player), "mouse-visible");
   }
   return JS_TRUE;
 }
@@ -42,13 +66,13 @@ static JSClass mouse_class = {
 };
 
 void
-swfdec_js_add_mouse (SwfdecDecoder *dec, JSObject *global)
+swfdec_js_add_mouse (SwfdecPlayer *player)
 {
   JSObject *mouse;
   
-  mouse = JS_DefineObject(dec->jscx, global, "Mouse", &mouse_class, NULL, 0);
+  mouse = JS_DefineObject(player->jscx, player->jsobj, "Mouse", &mouse_class, NULL, 0);
   if (!mouse || 
-      !JS_DefineFunctions(dec->jscx, mouse, mouse_methods)) {
+      !JS_DefineFunctions(player->jscx, mouse, mouse_methods)) {
     SWFDEC_ERROR ("failed to initialize Mouse object");
   }
 }

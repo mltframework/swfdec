@@ -170,6 +170,20 @@ swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
 }
 
 SwfdecBuffer *
+swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
+{
+  SwfdecBuffer *buffer;
+
+  g_return_val_if_fail (queue != NULL, NULL);
+  if (queue->buffers == NULL)
+    return NULL;
+
+  buffer = queue->buffers->data;
+
+  return swfdec_buffer_queue_pull (queue, buffer->length);
+}
+
+SwfdecBuffer *
 swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
 {
   GList *g;
@@ -177,6 +191,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
   SwfdecBuffer *buffer;
   SwfdecBuffer *subbuffer;
 
+  g_return_val_if_fail (queue != NULL, NULL);
   g_return_val_if_fail (length > 0, NULL);
 
   if (queue->depth < length) {
@@ -195,6 +210,9 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
         buffer->length - length);
     g->data = subbuffer;
     swfdec_buffer_unref (buffer);
+  } else if (buffer->length == length) {
+    queue->buffers = g_list_remove (queue->buffers, buffer);
+    newbuffer = buffer;
   } else {
     unsigned int offset = 0;
 

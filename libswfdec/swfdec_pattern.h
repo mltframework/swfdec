@@ -5,7 +5,7 @@
 
 #include <glib-object.h>
 #include <cairo.h>
-#include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_swf_decoder.h>
 #include <libswfdec/color.h>
 
 G_BEGIN_DECLS
@@ -42,7 +42,7 @@ GType		swfdec_pattern_get_type		(void);
 SwfdecPattern *	swfdec_pattern_new_color	(swf_color			color);
 SwfdecPattern *	swfdec_pattern_new_stroke	(guint				width,
 						 swf_color			color);
-SwfdecPattern *	swfdec_pattern_parse		(SwfdecDecoder *		dec,
+SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
 						 gboolean			rgba);
 
 void		swfdec_pattern_fill		(SwfdecPattern *		pattern, 

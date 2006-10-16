@@ -1,3 +1,23 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -8,24 +28,28 @@
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
 #include "swfdec_sprite.h"
+#include "swfdec_swf_decoder.h"
 
-gpointer swfdec_sound_init_decoder (SwfdecSound * sound);
+G_DEFINE_TYPE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CHARACTER)
 
-void adpcm_decode (SwfdecDecoder * s, SwfdecSound * sound);
-
-SWFDEC_OBJECT_BOILERPLATE (SwfdecSound, swfdec_sound)
-
-     static void swfdec_sound_base_init (gpointer g_class)
+static void
+swfdec_sound_dispose (GObject *object)
 {
+  SwfdecSound * sound = SWFDEC_SOUND (object);
 
+  if (sound->decoded)
+    swfdec_buffer_unref (sound->decoded);
+
+  G_OBJECT_CLASS (swfdec_sound_parent_class)->dispose (object);
 }
 
 static void
 swfdec_sound_class_init (SwfdecSoundClass * g_class)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
 
+  object_class->dispose = swfdec_sound_dispose;
 }
 
 static void
@@ -34,17 +58,8 @@ swfdec_sound_init (SwfdecSound * sound)
 
 }
 
-static void
-swfdec_sound_dispose (SwfdecSound * sound)
-{
-  if (sound->decoded)
-    swfdec_buffer_unref (sound->decoded);
-
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (sound));
-}
-
 int
-tag_func_sound_stream_block (SwfdecDecoder * s)
+tag_func_sound_stream_block (SwfdecSwfDecoder * s)
 {
   SwfdecSound *sound;
   SwfdecBuffer *chunk;
@@ -57,7 +72,7 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
 
   if (!sound) {
     SWFDEC_WARNING ("no streaming sound block");
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
   }
 
   n_samples = swfdec_bits_get_u16 (&s->b);
@@ -69,13 +84,13 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
   if (s->b.ptr == s->b.end) {
     SWFDEC_DEBUG ("empty sound block n_samples=%d skip=%d", n_samples,
         skip);
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
   }
 
   chunk = swfdec_bits_get_buffer (&s->b, -1);
   if (chunk == NULL) {
     SWFDEC_ERROR ("empty sound chunk");
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
   }
   SWFDEC_LOG ("got a buffer with %u samples, %d skip and %u bytes mp3 data", n_samples, skip,
       chunk->length);
@@ -84,11 +99,11 @@ tag_func_sound_stream_block (SwfdecDecoder * s)
 
   swfdec_sprite_add_sound_chunk (s->parse_sprite, s->parse_sprite->parse_frame, chunk, skip, n_samples);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_define_sound (SwfdecDecoder * s)
+tag_func_define_sound (SwfdecSwfDecoder * s)
 {
   SwfdecBits *b = &s->b;
   int id;
@@ -108,9 +123,9 @@ tag_func_define_sound (SwfdecDecoder * s)
   type = swfdec_bits_getbits (b, 1);
   n_samples = swfdec_bits_get_u32 (b);
 
-  sound = swfdec_object_create (s, id, SWFDEC_TYPE_SOUND);
+  sound = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SOUND);
   if (!sound)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   sound->n_samples = n_samples;
   sound->width = size;
@@ -164,16 +179,16 @@ tag_func_define_sound (SwfdecDecoder * s)
       SWFDEC_LOG ("%d samples decoded", sound->n_samples);
     }
   } else {
-    SWFDEC_ERROR ("defective sound object (id %d)", SWFDEC_OBJECT (sound)->id);
+    SWFDEC_ERROR ("defective sound object (id %d)", SWFDEC_CHARACTER (sound)->id);
     s->characters = g_list_remove (s->characters, sound);
     g_object_unref (sound);
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_sound_stream_head (SwfdecDecoder * s)
+tag_func_sound_stream_head (SwfdecSwfDecoder * s)
 {
   SwfdecBits *b = &s->b;
   int format;
@@ -193,7 +208,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
   type = swfdec_bits_getbits (b, 1);
   n_samples = swfdec_bits_get_u16 (b);
 
-  sound = swfdec_object_new (s, SWFDEC_TYPE_SOUND);
+  sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
 
   if (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head)
     g_object_unref (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
@@ -231,7 +246,7 @@ tag_func_sound_stream_head (SwfdecDecoder * s)
   }
   sound->codec = swfdec_codec_get_audio (sound->format);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 void
@@ -244,7 +259,7 @@ swfdec_sound_chunk_free (SwfdecSoundChunk *chunk)
 }
 
 SwfdecSoundChunk *
-swfdec_sound_parse_chunk (SwfdecDecoder *s, int id)
+swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
 {
   int has_envelope;
   int has_loops;
@@ -255,7 +270,7 @@ swfdec_sound_parse_chunk (SwfdecDecoder *s, int id)
   SwfdecSoundChunk *chunk;
   SwfdecBits *b = &s->b;
 
-  sound = swfdec_object_get (s, id);
+  sound = swfdec_swf_decoder_get_character (s, id);
   if (!SWFDEC_IS_SOUND (sound)) {
     SWFDEC_ERROR ("given id %d does not reference a sound object", id);
     return NULL;
@@ -263,7 +278,7 @@ swfdec_sound_parse_chunk (SwfdecDecoder *s, int id)
 
   chunk = g_new0 (SwfdecSoundChunk, 1);
   chunk->sound = sound;
-  g_print ("parsing sound chunk for sound %d\n", SWFDEC_OBJECT (sound)->id);
+  g_print ("parsing sound chunk for sound %d\n", SWFDEC_CHARACTER (sound)->id);
 
   swfdec_bits_getbits (b, 2);
   chunk->stop = swfdec_bits_getbits (b, 1);
@@ -322,7 +337,7 @@ swfdec_sound_parse_chunk (SwfdecDecoder *s, int id)
 }
 
 int
-tag_func_start_sound (SwfdecDecoder * s)
+tag_func_start_sound (SwfdecSwfDecoder * s)
 {
   SwfdecBits *b = &s->b;
   SwfdecSoundChunk *chunk;
@@ -337,11 +352,11 @@ tag_func_start_sound (SwfdecDecoder * s)
   if (chunk)
     frame->sound = g_slist_prepend (frame->sound, chunk);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_define_button_sound (SwfdecDecoder * s)
+tag_func_define_button_sound (SwfdecSwfDecoder * s)
 {
   int id;
   int i;
@@ -361,7 +376,7 @@ tag_func_define_button_sound (SwfdecDecoder * s)
     }
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 static int index_adjust[16] = {
@@ -381,7 +396,7 @@ static int step_size[89] = {
 };
 
 void
-adpcm_decode (SwfdecDecoder * s, SwfdecSound * sound)
+adpcm_decode (SwfdecSwfDecoder * s, SwfdecSound * sound)
 {
   SwfdecBits *bits = &s->b;
   int n_bits;

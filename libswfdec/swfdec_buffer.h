@@ -2,8 +2,8 @@
 #ifndef __SWFDEC_BUFFER_H__
 #define __SWFDEC_BUFFER_H__
 
-#include <swfdec_types.h>
 #include <glib.h>
+#include <libswfdec/swfdec_types.h>
 
 
 struct _SwfdecBuffer
@@ -43,6 +43,7 @@ int swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_push (SwfdecBufferQueue * queue,
     SwfdecBuffer * buffer);
 SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int len);
+SwfdecBuffer *swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue);
 SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int len);
 
 #endif

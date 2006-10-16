@@ -1,32 +1,39 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <swfdec_font.h>
-#include <swfdec_internal.h>
+#include "swfdec_font.h"
+#include "swfdec_bits.h"
+#include "swfdec_debug.h"
+#include "swfdec_swf_decoder.h"
 
-
-SWFDEC_OBJECT_BOILERPLATE (SwfdecFont, swfdec_font)
-
-
-     static void swfdec_font_base_init (gpointer g_class)
-{
-
-}
+G_DEFINE_TYPE (SwfdecFont, swfdec_font, SWFDEC_TYPE_CHARACTER)
 
 static void
-swfdec_font_class_init (SwfdecFontClass * g_class)
+swfdec_font_dispose (GObject *object)
 {
-
-}
-
-static void
-swfdec_font_init (SwfdecFont * font)
-{
-  font->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecFontEntry));
-}
-
-static void
-swfdec_font_dispose (SwfdecFont * font)
-{
+  SwfdecFont * font = SWFDEC_FONT (object);
   guint i;
 
   for (i = 0; i < font->glyphs->len; i++) {
@@ -36,7 +43,21 @@ swfdec_font_dispose (SwfdecFont * font)
     pango_font_description_free (font->desc);
   g_free (font->name);
 
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (font));
+  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (G_OBJECT (font));
+}
+
+static void
+swfdec_font_class_init (SwfdecFontClass * g_class)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+
+  object_class->dispose = swfdec_font_dispose;
+}
+
+static void
+swfdec_font_init (SwfdecFont * font)
+{
+  font->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecFontEntry));
 }
 
 SwfdecShape *
@@ -48,7 +69,7 @@ swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
   return g_array_index (font->glyphs, SwfdecFontEntry, glyph).shape;
 }
 
-char *
+static char *
 convert_from_language (const char *s, SwfdecLanguage language)
 {
   char *ret;
@@ -77,7 +98,7 @@ convert_from_language (const char *s, SwfdecLanguage language)
 }
 
 int
-tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
+tag_func_define_font_info (SwfdecSwfDecoder *s, unsigned int version)
 {
   SwfdecFont *font;
   unsigned int id, len, i;
@@ -89,9 +110,11 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
   g_assert (version == 1 || version == 2);
 
   id = swfdec_bits_get_u16 (&s->b);
-  font = swfdec_object_get (s, id);
-  if (!SWFDEC_IS_FONT (font))
-    return SWFDEC_OK;
+  font = swfdec_swf_decoder_get_character (s, id);
+  if (!SWFDEC_IS_FONT (font)) {
+    SWFDEC_WARNING ("didn't find a font with id %u", id);
+    return SWFDEC_STATUS_OK;
+  }
   len = swfdec_bits_get_u8 (&s->b);
   /* this string is locale specific */
   name = swfdec_bits_get_string_length (&s->b, len);
@@ -127,6 +150,6 @@ tag_func_define_font_info (SwfdecDecoder *s, unsigned int version)
       wide ? swfdec_bits_get_u16 (&s->b) : swfdec_bits_get_u8 (&s->b);
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 

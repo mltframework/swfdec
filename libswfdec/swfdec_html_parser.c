@@ -377,7 +377,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr, const SwfdecParagrap
   if (text->font->desc == NULL) {
     desc = pango_font_description_new ();
     pango_font_description_set_family (desc, "Sans");
-    SWFDEC_INFO ("font %d has no cairo font description", SWFDEC_OBJECT (text->font)->id);
+    SWFDEC_INFO ("font %d has no cairo font description", SWFDEC_CHARACTER (text->font)->id);
   } else {
     desc = pango_font_description_copy (text->font->desc);
   }
@@ -385,8 +385,8 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr, const SwfdecParagrap
   layout = pango_cairo_create_layout (cr);
   pango_layout_set_font_description (layout, desc);
   pango_font_description_free (desc);
-  width = SWFDEC_OBJECT (text)->extents.x1 - SWFDEC_OBJECT (text)->extents.x0 - text->left_margin - text->right_margin;
-  cairo_move_to (cr, SWFDEC_OBJECT (text)->extents.x0 + text->left_margin, SWFDEC_OBJECT (text)->extents.y0);
+  width = SWFDEC_GRAPHIC (text)->extents.x1 - SWFDEC_GRAPHIC (text)->extents.x0 - text->left_margin - text->right_margin;
+  cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0 + text->left_margin, SWFDEC_GRAPHIC (text)->extents.y0);
   pango_layout_set_width (layout, width * PANGO_SCALE);
   color = swfdec_color_apply_transform (text->color, trans);
   swfdec_color_set_source (cr, color);

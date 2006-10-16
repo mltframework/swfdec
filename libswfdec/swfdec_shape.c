@@ -1,3 +1,24 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -10,6 +31,8 @@
 #include "swfdec_cache.h"
 #include "swfdec_debug.h"
 #include "swfdec_image.h"
+
+G_DEFINE_TYPE (SwfdecShape, swfdec_shape, SWFDEC_TYPE_GRAPHIC)
 
 /*** PATHS ***/
 
@@ -162,10 +185,52 @@ typedef struct {
 /*** SHAPE ***/
 
 static void
-swfdec_shape_render (SwfdecObject *obj, cairo_t *cr, 
+swfdec_shape_vec_finish (SwfdecShapeVec * shapevec)
+{
+  if (shapevec->pattern) {
+    g_object_unref (shapevec->pattern);
+    shapevec->pattern = NULL;
+  }
+  swfdec_path_reset (&shapevec->path);
+}
+
+static void
+swfdec_shape_vec_init (SwfdecShapeVec *vec)
+{
+  swfdec_path_init (&vec->path);
+}
+
+static void
+swfdec_shape_dispose (GObject *object)
+{
+  unsigned int i;
+  SwfdecShape * shape = SWFDEC_SHAPE (object);
+
+  if (shape->fill_cr)
+    cairo_destroy (shape->fill_cr);
+
+  for (i = 0; i < shape->vecs->len; i++) {
+    swfdec_shape_vec_finish (&g_array_index (shape->vecs, SwfdecShapeVec, i));
+  }
+  g_array_free (shape->vecs, TRUE);
+  for (i = 0; i < shape->fills->len; i++) {
+    g_object_unref (g_ptr_array_index (shape->fills, i));
+  }
+  g_ptr_array_free (shape->fills, TRUE);
+
+  for (i = 0; i < shape->lines->len; i++) {
+    g_object_unref (g_ptr_array_index (shape->lines, i));
+  }
+  g_ptr_array_free (shape->lines, TRUE);
+
+  G_OBJECT_CLASS (swfdec_shape_parent_class)->dispose (G_OBJECT (shape));
+}
+
+static void
+swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
-  SwfdecShape *shape = SWFDEC_SHAPE (obj);
+  SwfdecShape *shape = SWFDEC_SHAPE (graphic);
   unsigned int i;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -193,11 +258,10 @@ swfdec_shape_render (SwfdecObject *obj, cairo_t *cr,
 }
 
 static gboolean
-swfdec_shape_mouse_in (SwfdecObject *object,
-      double x, double y, int button)
+swfdec_shape_mouse_in (SwfdecGraphic *graphic, double x, double y)
 {
   SwfdecShapeVec *shapevec;
-  SwfdecShape *shape = SWFDEC_SHAPE (object);
+  SwfdecShape *shape = SWFDEC_SHAPE (graphic);
   static cairo_surface_t *surface = NULL;
 
   if (shape->fill_cr == NULL) {
@@ -222,20 +286,16 @@ swfdec_shape_mouse_in (SwfdecObject *object,
   return cairo_in_fill (shape->fill_cr, x, y);
 }
 
-SWFDEC_OBJECT_BOILERPLATE (SwfdecShape, swfdec_shape)
-
-     static void swfdec_shape_base_init (gpointer g_class)
-{
-
-}
-
 static void
 swfdec_shape_class_init (SwfdecShapeClass * g_class)
 {
-  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
   
-  object_class->render = swfdec_shape_render;
-  object_class->mouse_in = swfdec_shape_mouse_in;
+  object_class->dispose = swfdec_shape_dispose;
+
+  graphic_class->render = swfdec_shape_render;
+  graphic_class->mouse_in = swfdec_shape_mouse_in;
 }
 
 static void
@@ -246,49 +306,8 @@ swfdec_shape_init (SwfdecShape * shape)
   shape->vecs = g_array_new (FALSE, TRUE, sizeof (SwfdecShapeVec));
 }
 
-static void
-swfdec_shape_vec_finish (SwfdecShapeVec * shapevec)
-{
-  if (shapevec->pattern) {
-    g_object_unref (shapevec->pattern);
-    shapevec->pattern = NULL;
-  }
-  swfdec_path_reset (&shapevec->path);
-}
-
-static void
-swfdec_shape_vec_init (SwfdecShapeVec *vec)
-{
-  swfdec_path_init (&vec->path);
-}
-
-static void
-swfdec_shape_dispose (SwfdecShape * shape)
-{
-  unsigned int i;
-
-  if (shape->fill_cr)
-    cairo_destroy (shape->fill_cr);
-
-  for (i = 0; i < shape->vecs->len; i++) {
-    swfdec_shape_vec_finish (&g_array_index (shape->vecs, SwfdecShapeVec, i));
-  }
-  g_array_free (shape->vecs, TRUE);
-  for (i = 0; i < shape->fills->len; i++) {
-    g_object_unref (g_ptr_array_index (shape->fills, i));
-  }
-  g_ptr_array_free (shape->fills, TRUE);
-
-  for (i = 0; i < shape->lines->len; i++) {
-    g_object_unref (g_ptr_array_index (shape->lines, i));
-  }
-  g_ptr_array_free (shape->lines, TRUE);
-
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (shape));
-}
-
 int
-tag_define_shape (SwfdecDecoder * s)
+tag_define_shape (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
@@ -296,34 +315,34 @@ tag_define_shape (SwfdecDecoder * s)
 
   id = swfdec_bits_get_u16 (bits);
 
-  shape = swfdec_object_create (s, id, SWFDEC_TYPE_SHAPE);
+  shape = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SHAPE);
   if (!shape)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   SWFDEC_INFO ("id=%d", id);
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
+  swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
 
   swf_shape_add_styles (s, shape, bits);
 
   swf_shape_get_recs (s, bits, shape, FALSE);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_define_shape_3 (SwfdecDecoder * s)
+tag_define_shape_3 (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
   int id;
 
   id = swfdec_bits_get_u16 (bits);
-  shape = swfdec_object_create (s, id, SWFDEC_TYPE_SHAPE);
+  shape = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SHAPE);
   if (!shape)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (shape)->extents);
+  swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
 
   shape->rgba = 1;
 
@@ -331,11 +350,11 @@ tag_define_shape_3 (SwfdecDecoder * s)
 
   swf_shape_get_recs (s, bits, shape, FALSE);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 void
-swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
+swf_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
 {
   int n_fill_styles;
   int n_line_styles;
@@ -386,17 +405,17 @@ swf_shape_add_styles (SwfdecDecoder * s, SwfdecShape * shape, SwfdecBits * bits)
 }
 
 int
-tag_define_shape_2 (SwfdecDecoder * s)
+tag_define_shape_2 (SwfdecSwfDecoder * s)
 {
   return tag_define_shape (s);
 }
 
 #if 0
-void swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
+void swf_morphshape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
 
 int
-tag_define_morph_shape (SwfdecDecoder * s)
+tag_define_morph_shape (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
@@ -431,7 +450,7 @@ tag_define_morph_shape (SwfdecDecoder * s)
     swf_shape_get_recs (s, bits, shape, TRUE);
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 #endif
 
@@ -617,7 +636,7 @@ swfdec_shape_vec_compare (gconstpointer a, gconstpointer b)
 }
 
 void
-swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
+swf_shape_get_recs (SwfdecSwfDecoder * s, SwfdecBits * bits,
     SwfdecShape * shape, gboolean morphshape)
 {
   guint i;
@@ -781,7 +800,7 @@ swf_shape_get_recs (SwfdecDecoder * s, SwfdecBits * bits,
 
 #if 0
 void
-swf_morphshape_add_styles (SwfdecDecoder * s, SwfdecShape * shape,
+swf_morphshape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits)
 {
   int n_fill_styles;

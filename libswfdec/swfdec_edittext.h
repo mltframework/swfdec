@@ -1,10 +1,28 @@
+/* Swfdec
+ * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef _SWFDEC_EDIT_TEXT_H_
 #define _SWFDEC_EDIT_TEXT_H_
 
-#include "swfdec_types.h"
-#include "color.h"
-#include <swfdec_object.h>
+#include <libswfdec/swfdec_types.h>
+#include <libswfdec/color.h>
+#include <libswfdec/swfdec_graphic.h>
 #include <pango/pango.h>
 
 G_BEGIN_DECLS
@@ -21,7 +39,7 @@ typedef struct _SwfdecEditTextClass SwfdecEditTextClass;
 
 struct _SwfdecEditText
 {
-  SwfdecObject		object;
+  SwfdecGraphic		graphic;
 
   /* text info */
   char *		text;		/* initial displayed text or NULL if none */
@@ -55,12 +73,12 @@ struct _SwfdecEditText
 
 struct _SwfdecEditTextClass
 {
-  SwfdecObjectClass	object_class;
+  SwfdecGraphicClass	graphic_class;
 };
 
 GType			swfdec_edit_text_get_type	(void);
 
-int			tag_func_define_edit_text	(SwfdecDecoder *	s);
+int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s);
 
 /* implemented in swfdec_html_parser.c */
 SwfdecParagraph *	swfdec_paragraph_html_parse   	(SwfdecEditText *	text, 

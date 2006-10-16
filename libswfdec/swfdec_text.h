@@ -1,16 +1,35 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef _SWFDEC_TEXT_H_
 #define _SWFDEC_TEXT_H_
 
-#include "swfdec_types.h"
-#include <swfdec_object.h>
-#include <color.h>
+#include <libswfdec/swfdec_graphic.h>
+#include <libswfdec/color.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecText SwfdecText;
 typedef struct _SwfdecTextClass SwfdecTextClass;
 
-//typedef struct _SwfdecTextGlyph SwfdecTextGlyph;
+typedef struct _SwfdecTextGlyph SwfdecTextGlyph;
 typedef struct _SwfdecTextChunk SwfdecTextChunk;
 
 #define SWFDEC_TYPE_TEXT                    (swfdec_text_get_type())
@@ -19,36 +38,33 @@ typedef struct _SwfdecTextChunk SwfdecTextChunk;
 #define SWFDEC_TEXT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT, SwfdecText))
 #define SWFDEC_TEXT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT, SwfdecTextClass))
 
-struct _SwfdecTextGlyph
-{
-  int		x;
-  int		y;
-  int		glyph;
-  SwfdecFont *	font;
-  int		height;
-  swf_color	color;
+struct _SwfdecTextGlyph {
+  int			x;
+  int			y;
+  int			glyph;
+  SwfdecFont *		font;
+  int			height;
+  swf_color		color;
 };
 
-struct _SwfdecText
-{
-  SwfdecObject object;
+struct _SwfdecText {
+  SwfdecGraphic		graphic;
 
-  GArray *glyphs;
-  cairo_matrix_t transform;
+  GArray *		glyphs;
+  cairo_matrix_t	transform;
 };
 
-struct _SwfdecTextClass
-{
-  SwfdecObjectClass object_class;
-
+struct _SwfdecTextClass {
+  SwfdecGraphicClass	graphic_class;
 };
 
 GType swfdec_text_get_type (void);
 
-int tag_func_define_font (SwfdecDecoder * s);
-int tag_func_define_font_2 (SwfdecDecoder * s);
-int tag_func_define_text (SwfdecDecoder * s);
-int tag_func_define_text_2 (SwfdecDecoder * s);
+int tag_func_define_font (SwfdecSwfDecoder * s);
+int tag_func_define_font_2 (SwfdecSwfDecoder * s);
+int tag_func_define_text (SwfdecSwfDecoder * s);
+int tag_func_define_text_2 (SwfdecSwfDecoder * s);
+
 
 G_END_DECLS
 #endif

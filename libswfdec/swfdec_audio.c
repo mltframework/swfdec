@@ -1,3 +1,23 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -6,24 +26,23 @@
 
 #include "swfdec_audio.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_sound.h"
 #include "swfdec_sprite.h"
-#include "swfdec_movieclip.h"
 
 /*** GENERAL STUFF ***/
 
 static SwfdecAudio *
-swfdec_decoder_audio_new (SwfdecDecoder *dec)
+swfdec_player_audio_new (SwfdecPlayer *player)
 {
   guint i;
-  for (i = 0; i < dec->audio->len; i++) {
-    SwfdecAudio *audio = &g_array_index (dec->audio, SwfdecAudio, i);
+  for (i = 0; i < player->audio->len; i++) {
+    SwfdecAudio *audio = &g_array_index (player->audio, SwfdecAudio, i);
     if (audio->type == SWFDEC_AUDIO_UNUSED)
       return audio;
   }
-  g_array_set_size (dec->audio, dec->audio->len + 1);
-  return &g_array_index (dec->audio, SwfdecAudio, dec->audio->len - 1);
+  g_array_set_size (player->audio, player->audio->len + 1);
+  return &g_array_index (player->audio, SwfdecAudio, player->audio->len - 1);
 }
 
 /*** AUDIO STREAMS ***/
@@ -49,13 +68,12 @@ stream_entry_new_for_frame (SwfdecAudioStream *stream, guint frame_id)
     entry = swfdec_ring_buffer_push (stream->playback_queue);
     g_assert (entry);
   }
-  if (frame->sound_samples == 0) {
+  if (frame->sound_block == NULL) {
     entry->frame = NULL;
-    entry->n_samples = 44100 * 256 / SWFDEC_OBJECT (stream->sprite)->decoder->rate;
   } else {
     entry->frame = frame;
-    entry->n_samples = frame->sound_samples;
   }
+  entry->n_samples = frame->sound_samples;
   entry->skip = 0;
   entry->decoded = NULL;
   stream->playback_samples += entry->n_samples;
@@ -127,20 +145,19 @@ swfdec_audio_stream_flush (SwfdecAudioStream *stream, guint n_samples)
 }
 
 guint
-swfdec_audio_stream_new (SwfdecSprite *sprite, guint start_frame)
+swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start_frame)
 {
   SwfdecSpriteFrame *frame;
   StreamEntry *entry;
-  SwfdecDecoder *dec = SWFDEC_OBJECT (sprite)->decoder;
-  SwfdecAudioStream *stream = (SwfdecAudioStream *) swfdec_decoder_audio_new (dec);
+  SwfdecAudioStream *stream = (SwfdecAudioStream *) swfdec_player_audio_new (player);
 
   SWFDEC_DEBUG ("new audio stream for sprite %d, starting at %u", 
-      SWFDEC_OBJECT (sprite)->id, start_frame);
+      SWFDEC_CHARACTER (sprite)->id, start_frame);
   stream->type = SWFDEC_AUDIO_STREAM;
   stream->sprite = sprite;
   stream->playback_samples = 0;
   stream->playback_queue = swfdec_ring_buffer_new_for_type (StreamEntry, 16);
-  stream->skip = dec->samples_latency;
+  stream->skip = player->samples_latency;
   frame = &sprite->frames[start_frame];
   g_assert (frame->sound_head);
   stream->sound = frame->sound_head;
@@ -150,21 +167,21 @@ swfdec_audio_stream_new (SwfdecSprite *sprite, guint start_frame)
   g_assert (stream->playback_samples >= entry->skip);
   stream->playback_samples -= entry->skip;
   stream->current_frame = swfdec_sprite_get_next_frame (stream->sprite, start_frame);
-  swfdec_audio_stream_ensure_size (stream, stream->skip + dec->samples_this_frame);
+  swfdec_audio_stream_ensure_size (stream, stream->skip + player->samples_this_frame);
   stream->decoder = swfdec_sound_init_decoder (stream->sound);
   swfdec_audio_stream_flush (stream, stream->skip);
-  return (stream - (SwfdecAudioStream *) dec->audio->data) + 1;
+  return (stream - (SwfdecAudioStream *) player->audio->data) + 1;
 }
 
 /* FIXME: name this unref? */
 void
-swfdec_audio_stream_stop (SwfdecDecoder *dec, guint stream_id)
+swfdec_audio_stream_stop (SwfdecPlayer *player, guint stream_id)
 {
   SwfdecAudio *audio;
 
-  g_assert (SWFDEC_IS_DECODER (dec));
-  g_assert (stream_id <= dec->audio->len);
-  audio = &g_array_index (dec->audio, SwfdecAudio, stream_id - 1);
+  g_assert (SWFDEC_IS_PLAYER (player));
+  g_assert (stream_id <= player->audio->len);
+  audio = &g_array_index (player->audio, SwfdecAudio, stream_id - 1);
   g_assert (audio->type == SWFDEC_AUDIO_STREAM);
   swfdec_audio_finish (audio);
 }
@@ -243,29 +260,28 @@ swfdec_audio_stream_render (SwfdecAudioStream *stream, gint16* dest, guint start
 /*** AUDIO EVENTS ***/
 
 static void
-swfdec_audio_event_stop (SwfdecDecoder *dec, SwfdecSound *sound)
+swfdec_audio_event_stop (SwfdecPlayer *player, SwfdecSound *sound)
 {
   guint i;
 
-  for (i = 0; i < dec->audio->len; i++) {
-    SwfdecAudio *audio = &g_array_index (dec->audio, SwfdecAudio, i);
+  for (i = 0; i < player->audio->len; i++) {
+    SwfdecAudio *audio = &g_array_index (player->audio, SwfdecAudio, i);
     if (audio->type != SWFDEC_AUDIO_EVENT)
       continue;
     if (audio->event.sound == sound) {
       swfdec_audio_finish (audio);
-      return;
+      /* FIXME: stop one event or all? Currently we stop all */
     }
   }
-  SWFDEC_WARNING ("sound %d isn't playing, so not removed", SWFDEC_OBJECT (sound)->id);
 }
 
 static gboolean
-swfdec_sound_is_playing (SwfdecDecoder *dec, SwfdecSound *sound)
+swfdec_sound_is_playing (SwfdecPlayer *player, SwfdecSound *sound)
 {
   guint i;
 
-  for (i = 0; i < dec->audio->len; i++) {
-    SwfdecAudio *audio = &g_array_index (dec->audio, SwfdecAudio, i);
+  for (i = 0; i < player->audio->len; i++) {
+    SwfdecAudio *audio = &g_array_index (player->audio, SwfdecAudio, i);
     if (audio->type != SWFDEC_AUDIO_EVENT)
       continue;
     if (audio->event.sound == sound) {
@@ -277,38 +293,38 @@ swfdec_sound_is_playing (SwfdecDecoder *dec, SwfdecSound *sound)
 
 /**
  * swfdec_audio_event_init:
- * @dec: a #SwfdecDecoder
+ * @player: a #SwfdecPlayer
  * @chunk: a sound chunk to start playing back
  *
  * Starts playback of the given sound chunk
  **/
 void
-swfdec_audio_event_init (SwfdecDecoder *dec, SwfdecSoundChunk *chunk)
+swfdec_audio_event_init (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
 {
-  SwfdecAudio *stream;
+  SwfdecAudioEvent *event;
 
-  g_return_if_fail (SWFDEC_IS_DECODER (dec));
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (chunk != NULL);
 
   if (chunk->stop) {
-    swfdec_audio_event_stop (dec, chunk->sound);
+    swfdec_audio_event_stop (player, chunk->sound);
     return;
   }
-  SWFDEC_LOG ("adding sound %d to playing sounds", SWFDEC_OBJECT (chunk->sound)->id);
+  SWFDEC_LOG ("adding sound %d to playing sounds", SWFDEC_CHARACTER (chunk->sound)->id);
   if (chunk->no_restart &&
-      swfdec_sound_is_playing (dec, chunk->sound)) {
+      swfdec_sound_is_playing (player, chunk->sound)) {
     SWFDEC_DEBUG ("sound %d is already playing, so not adding it", 
-	SWFDEC_OBJECT (chunk->sound)->id);
+	SWFDEC_CHARACTER (chunk->sound)->id);
     return;
   }
-  stream = swfdec_decoder_audio_new (dec);
-  stream->type = SWFDEC_AUDIO_EVENT;
-  stream->event.sound = chunk->sound;
-  stream->event.chunk = chunk;
-  stream->event.offset = chunk->start_sample;
-  stream->event.loop = 0;
-  stream->event.skip = dec->samples_latency;
-  SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_OBJECT (chunk->sound)->id,
+  event = (SwfdecAudioEvent *) swfdec_player_audio_new (player);
+  event->type = SWFDEC_AUDIO_EVENT;
+  event->sound = chunk->sound;
+  event->chunk = chunk;
+  event->offset = chunk->start_sample;
+  event->loop = 0;
+  event->skip = player->samples_latency;
+  SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (chunk->sound)->id,
       chunk->start_sample);
 }
 
@@ -318,6 +334,7 @@ swfdec_audio_event_iterate (SwfdecAudioEvent *stream, guint n_samples, guint new
 {
   SwfdecSoundChunk *chunk = stream->chunk;
 
+  /* FIXME: chunk offsets are absolute, not per frame, so this function does crap */
   if (stream->skip >= n_samples) {
     stream->skip -= n_samples;
     return TRUE;
@@ -353,42 +370,48 @@ swfdec_audio_finish (SwfdecAudio *audio)
   audio->type = SWFDEC_AUDIO_UNUSED;
 }
 
-void
-swfdec_audio_iterate (SwfdecDecoder *dec)
+static void
+swfdec_player_do_iterate_audio (SwfdecPlayer *player, guint remove)
 {
   SwfdecAudio *audio;
-  unsigned int i, samples_last_frame;
+  unsigned int i;
   gboolean ret;
 
-  /* iterate all playing sounds */
-  i = 0;
-  samples_last_frame = dec->samples_this_frame;
-  /* get new sample count */
-  dec->samples_this_frame = 44100 * 256 / dec->rate;
-  dec->samples_overhead_left += dec->samples_overhead;
-  dec->samples_overhead_left %= (44100 * 256);
-  if (dec->samples_overhead_left <= dec->samples_overhead_left)
-    dec->samples_this_frame++;
-  while (i < dec->audio->len) {
-    audio = &g_array_index (dec->audio, SwfdecAudio, i);
+  for (i = 0; i < player->audio->len; i++) {
+    audio = &g_array_index (player->audio, SwfdecAudio, i);
     if (audio->type == SWFDEC_AUDIO_UNUSED) {
       ret = FALSE;
     } else if (audio->type == SWFDEC_AUDIO_EVENT) {
-      ret = swfdec_audio_event_iterate (&audio->event, samples_last_frame, dec->samples_this_frame + dec->samples_latency);
+      ret = swfdec_audio_event_iterate (&audio->event, remove, 
+	  player->samples_this_frame + player->samples_latency);
     } else {
-      ret = swfdec_audio_stream_iterate (&audio->stream, samples_last_frame, dec->samples_this_frame + dec->samples_latency);
+      ret = swfdec_audio_stream_iterate (&audio->stream, remove, 
+	  player->samples_this_frame + player->samples_latency);
     }
-    if (ret) {
+    if (ret)
       swfdec_audio_finish (audio);
-    } else {
-      i++;
-    }
   }
 }
 
+void
+swfdec_player_iterate_audio (SwfdecPlayer *player)
+{
+  guint samples_last_frame;
+
+  /* iterate all playing sounds */
+  samples_last_frame = player->samples_this_frame;
+  /* get new sample count */
+  player->samples_this_frame = 44100 * 256 / player->rate;
+  player->samples_overhead_left += player->samples_overhead;
+  player->samples_overhead_left %= (44100 * 256);
+  if (player->samples_overhead_left <= player->samples_overhead_left)
+    player->samples_this_frame++;
+  swfdec_player_do_iterate_audio (player, samples_last_frame);
+}
+
 /**
- * swfdec_decoder_get_audio_samples:
- * @dec: a #SwfdecDecoder
+ * swfdec_player_get_audio_samples:
+ * @dec: a #SwfdecPlayer
  *
  * Gets the amount of audio samples to be played back in the current frame. The
  * amount of samples may differ by one between frames to work around rounding 
@@ -397,27 +420,53 @@ swfdec_audio_iterate (SwfdecDecoder *dec)
  * Returns: amount of samples in the current frame.
  **/
 guint
-swfdec_decoder_get_audio_samples (SwfdecDecoder *dec)
+swfdec_player_get_audio_samples (SwfdecPlayer *player)
 {
-  g_return_val_if_fail (SWFDEC_IS_DECODER (dec), 0);
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
-  return dec->samples_this_frame;
+  return player->samples_this_frame;
 }
 
+/**
+ * swfdec_player_get_latency:
+ * @player: a #SwfdecPlayer
+ *
+ * Queries the latency of the audio stream. See swfdec_decoder_set_latency()
+ * for details.
+ *
+ * Returns: the current latency in samples
+ **/
 guint
-swfdec_decoder_get_latency (SwfdecDecoder *dec)
+swfdec_player_get_latency (SwfdecPlayer *player)
 {
-  g_return_val_if_fail (SWFDEC_IS_DECODER (dec), 0);
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
-  return dec->samples_latency;
+  return player->samples_latency;
 }
 
+/**
+ * swfdec_player_set_latency:
+ * @player: a #SwfdecPlayer
+ * @samples: latency in samples to use. 44100 would be one second.
+ *
+ * Sets the latency in @player to @samples. The latency determines how soon
+ * sound events start playing. This function is intended to be set to the
+ * buffer size of sound cards so that the application can fill the buffer but
+ * still allow all events to be played back. Note that if you set this value
+ * too high, the sound for clicking a button may start playing far too late.
+ * Audio streams are still played back synchronized.
+ **/
 void
-swfdec_decoder_set_latency (SwfdecDecoder *dec, guint samples)
+swfdec_player_set_latency (SwfdecPlayer *player, guint samples)
 {
-  g_return_if_fail (SWFDEC_IS_DECODER (dec));
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  dec->samples_latency = samples;
+  if (player->samples_latency < samples) {
+    player->samples_latency = samples;
+    swfdec_player_do_iterate_audio (player, 0);
+  } else {
+    player->samples_latency = samples;
+  }
 }
 
 static void
@@ -470,8 +519,8 @@ swfdec_audio_event_render (SwfdecAudioEvent *stream, gint16* dest, guint start, 
 }
 
 /**
- * swfdec_decoder_render_audio:
- * @dec: a #SwfdecDecoder
+ * swfdec_player_render_audio:
+ * @player: a #SwfdecPlayer
  * @dest: location to add audio signal to. The audio signal will be in 44100kHz signed
  *        16bit stereo.
  * @start_offset: offset in samples at which to start rendering
@@ -483,19 +532,19 @@ swfdec_audio_event_render (SwfdecAudioEvent *stream, gint16* dest, guint start, 
  * so you probably want to initialize @dest to silence before calling this function.
  **/
 void 
-swfdec_decoder_render_audio (SwfdecDecoder *dec, gint16* dest, 
+swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest, 
     guint start_offset, guint n_samples)
 {
   SwfdecAudio *audio;
   guint i;
 
-  g_return_if_fail (SWFDEC_IS_DECODER (dec));
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (dest != NULL);
   g_return_if_fail (n_samples > 0);
-  g_return_if_fail (start_offset + n_samples <= dec->samples_latency + dec->samples_this_frame);
+  g_return_if_fail (start_offset + n_samples <= player->samples_latency + player->samples_this_frame);
 
-  for (i = 0; i < dec->audio->len; i++) {
-    audio = &g_array_index (dec->audio, SwfdecAudio, i);
+  for (i = 0; i < player->audio->len; i++) {
+    audio = &g_array_index (player->audio, SwfdecAudio, i);
     if (audio->type == SWFDEC_AUDIO_UNUSED)
       continue;
     if (audio->type == SWFDEC_AUDIO_EVENT) {
@@ -507,25 +556,26 @@ swfdec_decoder_render_audio (SwfdecDecoder *dec, gint16* dest,
 }
 
 /**
- * swfdec_decoder_render_audio_to_buffer:
- * @dec: a #SwfdecDecoder
+ * swfdec_player_render_audio_to_buffer:
+ * @player: a #SwfdecPlayer
  *
- * Renders the audio for this frame into a new buffer.
+ * Renders the audio for this frame into a new buffer. This is a simplification
+ * for swfdec_player_render_audio().
  *
  * Returns: a new #SwfdecBuffer fille with the audio for this frame.
  **/
 SwfdecBuffer *
-swfdec_decoder_render_audio_to_buffer (SwfdecDecoder *dec)
+swfdec_player_render_audio_to_buffer (SwfdecPlayer *player)
 {
   SwfdecBuffer *buffer;
 
-  g_return_val_if_fail (SWFDEC_IS_DECODER (dec), NULL);
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   buffer = swfdec_buffer_new ();
-  buffer->length = dec->samples_this_frame * 4;
+  buffer->length = player->samples_this_frame * 4;
   buffer->data = g_malloc0 (buffer->length);
-  swfdec_decoder_render_audio (dec, (gint16 *) buffer->data,
-      dec->samples_latency, dec->samples_this_frame);
+  swfdec_player_render_audio (player, (gint16 *) buffer->data,
+      player->samples_latency, player->samples_this_frame);
 
   return buffer;
 }

@@ -2,8 +2,7 @@
 #ifndef _SWFDEC_CACHE_H_
 #define _SWFDEC_CACHE_H_
 
-#include <swfdec_object.h>
-#include "swfdec_types.h"
+#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

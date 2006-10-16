@@ -1,33 +1,37 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef _SWFDEC_SPRITE_H_
 #define _SWFDEC_SPRITE_H_
 
-#include <swfdec_types.h>
-#include <swfdec_object.h>
-#include <color.h>
-#include <swfdec_event.h>
+#include <libswfdec/color.h>
+#include <libswfdec/swfdec_event.h>
+#include <libswfdec/swfdec_graphic.h>
+#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
 typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
 typedef struct _SwfdecSpriteAction SwfdecSpriteAction;
 typedef struct _SwfdecExport SwfdecExport;
-
-struct _SwfdecSpriteContent {
-  SwfdecObject *	object;		/* object to display or NULL (FIXME: wanna allow NULL here?) */
-  unsigned int	      	depth;		/* at which depth to display */
-  unsigned int		clip_depth;	/* clip depth of object */
-  unsigned int		ratio;
-  cairo_matrix_t	transform;
-  SwfdecColorTransform	color_transform;
-  char *		name;
-  SwfdecEventList *	events;
-
-  SwfdecSpriteContent *	sequence;	/* first element in sequence this content belongs to */
-  /* NB: the next two elements are only filled for the sequence leader */
-  guint			start;		/* first frame that contains this sequence */
-  guint			end;		/* first frame that does not contain this sequence anymore */
-};
 
 typedef enum {
   SWFDEC_SPRITE_ACTION_SCRIPT,		/* contains an action only */
@@ -39,11 +43,6 @@ typedef enum {
 struct _SwfdecSpriteAction {
   SwfdecSpriteActionType	type;
   gpointer			data;
-};
-
-struct _SwfdecExport {
-  char *name;
-  int id;
 };
 
 #define SWFDEC_TYPE_SPRITE                    (swfdec_sprite_get_type())
@@ -70,42 +69,40 @@ struct _SwfdecSpriteFrame
 
 struct _SwfdecSprite
 {
-  SwfdecObject object;
+  SwfdecGraphic		graphic;
 
-  unsigned int n_frames;
-  unsigned int parse_frame;
+  SwfdecPlayer *	player;		/* FIXME: only needed to get the JS Context, I want it gone */
+  SwfdecSpriteFrame *	frames;		/* the n_frames different frames */
+  unsigned int		n_frames;	/* number of frames in this sprite */
 
-  SwfdecSpriteFrame *frames;
+  /* parse state */
+  unsigned int		parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
 };
 
 struct _SwfdecSpriteClass
 {
-  SwfdecObjectClass object_class;
-
+  SwfdecGraphicClass	graphic_class;
 };
 
 GType swfdec_sprite_get_type (void);
 
-void swfdec_sprite_decoder_free (SwfdecObject * object);
-int tag_func_define_sprite (SwfdecDecoder * s);
+int tag_func_define_sprite (SwfdecSwfDecoder * s);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
     SwfdecBuffer * chunk, int skip, unsigned int n_samples);
-void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames);
+void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames, unsigned int rate);
 void swfdec_sprite_add_action (SwfdecSprite * sprite, unsigned int frame, 
     SwfdecSpriteActionType type, gpointer data);
 unsigned int swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame);
 
-SwfdecSpriteContent *swfdec_sprite_content_new (unsigned int depth);
-void swfdec_sprite_content_free (SwfdecSpriteContent *content);
+SwfdecContent *swfdec_content_new (unsigned int depth);
+void swfdec_content_free (SwfdecContent *content);
 
-int tag_show_frame (SwfdecDecoder * s);
-int tag_func_set_background_color (SwfdecDecoder * s);
-int swfdec_spriteseg_place_object_2 (SwfdecDecoder * s);
-int swfdec_spriteseg_remove_object (SwfdecDecoder * s);
-int swfdec_spriteseg_remove_object_2 (SwfdecDecoder * s);
+int tag_show_frame (SwfdecSwfDecoder * s);
+int tag_func_set_background_color (SwfdecSwfDecoder * s);
+int swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s);
+int swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s);
+int swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s);
 
-int tag_func_export_assets (SwfdecDecoder * s);
-SwfdecObject *swfdec_exports_lookup (SwfdecDecoder * s, char *name);
 
 G_END_DECLS
 #endif

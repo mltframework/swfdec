@@ -7,42 +7,23 @@
 #include <js/jsapi.h>
 #include "swfdec.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
 #include "swfdec_edittext.h"
 #include "swfdec_font.h"
-#include "swfdec_movieclip.h"
+#include "swfdec_swf_decoder.h"
+
+G_DEFINE_TYPE (SwfdecEditText, swfdec_edit_text, SWFDEC_TYPE_GRAPHIC)
 
 static gboolean
-swfdec_edit_text_mouse_in (SwfdecObject *object,
-      double x, double y, int button)
+swfdec_edit_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 {
-  return swfdec_rect_contains (&object->extents, x, y);
-}
-
-SWFDEC_OBJECT_BOILERPLATE (SwfdecEditText, swfdec_edit_text)
-
-static void swfdec_edit_text_base_init (gpointer g_class)
-{
-
+  return swfdec_rect_contains (&graphic->extents, x, y);
 }
 
 static void
-swfdec_edit_text_class_init (SwfdecEditTextClass * g_class)
+swfdec_edit_text_dispose (GObject *object)
 {
-  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+  SwfdecEditText *text = SWFDEC_EDIT_TEXT (object);
 
-  object_class->mouse_in = swfdec_edit_text_mouse_in;
-}
-
-static void
-swfdec_edit_text_init (SwfdecEditText * text)
-{
-  text->max_length = G_MAXUINT;
-}
-
-static void
-swfdec_edit_text_dispose (SwfdecEditText *text)
-{
   g_free (text->text);
   if (text->path) {
     g_free (text->path);
@@ -52,7 +33,23 @@ swfdec_edit_text_dispose (SwfdecEditText *text)
   text->path = NULL;
   text->variable = NULL;
   
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (text));
+  G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
+}
+
+static void
+swfdec_edit_text_class_init (SwfdecEditTextClass * g_class)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
+
+  object_class->dispose = swfdec_edit_text_dispose;
+  graphic_class->mouse_in = swfdec_edit_text_mouse_in;
+}
+
+static void
+swfdec_edit_text_init (SwfdecEditText * text)
+{
+  text->max_length = G_MAXUINT;
 }
 
 static void
@@ -126,7 +123,7 @@ swfdec_edit_text_parse_variable (SwfdecEditText *text)
       text->path ? text->path : "", text->variable);
 }
 int
-tag_func_define_edit_text (SwfdecDecoder * s)
+tag_func_define_edit_text (SwfdecSwfDecoder * s)
 {
   SwfdecEditText *text;
   unsigned int id;
@@ -136,11 +133,11 @@ tag_func_define_edit_text (SwfdecDecoder * s)
   
   id = swfdec_bits_get_u16 (b);
   SWFDEC_LOG ("  id = %u", id);
-  text = swfdec_object_create (s, id, SWFDEC_TYPE_EDIT_TEXT);
+  text = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_EDIT_TEXT);
   if (text == NULL)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
-  swfdec_bits_get_rect (b, &SWFDEC_OBJECT (text)->extents);
+  swfdec_bits_get_rect (b, &SWFDEC_GRAPHIC (text)->extents);
   swfdec_bits_syncbits (b);
   has_text = swfdec_bits_getbit (b);
   text->wrap = swfdec_bits_getbit (b);
@@ -159,13 +156,13 @@ tag_func_define_edit_text (SwfdecDecoder * s)
   text->html = swfdec_bits_getbit (b);
   use_outlines = swfdec_bits_getbit (b); /* FIXME: what's this? */
   if (has_font) {
-    SwfdecObject *object;
+    SwfdecCharacter *font;
 
     id = swfdec_bits_get_u16 (b);
-    object = swfdec_object_get (s, id);
-    if (SWFDEC_IS_FONT (object)) {
+    font = swfdec_swf_decoder_get_character (s, id);
+    if (SWFDEC_IS_FONT (font)) {
       SWFDEC_LOG ("  font = %u", id);
-      text->font = SWFDEC_FONT (object);
+      text->font = SWFDEC_FONT (font);
     } else {
       SWFDEC_ERROR ("id %u does not specify a font", id);
     }
@@ -211,5 +208,5 @@ tag_func_define_edit_text (SwfdecDecoder * s)
   if (has_text)
     text->text = swfdec_bits_get_string (b);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }

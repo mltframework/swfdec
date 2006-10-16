@@ -6,6 +6,11 @@
 #include "color.h"
 #include "swfdec_buffer.h"
 
+#define SWFDEC_COLOR_SCALE_FACTOR		(256.0)
+#define SWFDEC_FIXED_SCALE_FACTOR		(65536.0)
+#define SWFDEC_SCALE_FACTOR			(20.0)
+#define SWFDEC_TEXT_SCALE_FACTOR		(1024.0)
+
 typedef struct _SwfdecBits SwfdecBits;
 
 struct _SwfdecBits

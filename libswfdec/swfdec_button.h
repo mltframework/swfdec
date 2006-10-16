@@ -1,8 +1,28 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef _SWFDEC_BUTTON_H_
 #define _SWFDEC_BUTTON_H_
 
-#include <swfdec_object.h>
+#include <swfdec_graphic.h>
 #include <color.h>
 #include <swfdec_event.h>
 
@@ -41,33 +61,28 @@ typedef enum {
 struct _SwfdecButtonRecord
 {
   SwfdecButtonState	states;
-  SwfdecObject *	object;
+  SwfdecGraphic *	graphic;
   cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
 };
 
 struct _SwfdecButton
 {
-  SwfdecObject object;
+  SwfdecGraphic		graphic;
 
-  gboolean menubutton;
+  gboolean		menubutton;	/* treat as menubutton */
 
-  GArray *records;
-  SwfdecEventList *events;
+  GArray *		records;	/* the contained objects */
+  SwfdecEventList *	events;		/* the events triggered by this button */
 };
 
 struct _SwfdecButtonClass
 {
-  SwfdecObjectClass object_class;
-
+  SwfdecGraphicClass	graphic_class;
 };
 
-GType swfdec_button_get_type (void);
+GType		swfdec_button_get_type	(void);
 
-void swfdec_button_render (SwfdecButton *button, SwfdecButtonState state, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill);
-SwfdecButtonState swfdec_button_change_state (SwfdecMovieClip *movie, gboolean was_in, 
-  int old_button);
 
 G_END_DECLS
 #endif

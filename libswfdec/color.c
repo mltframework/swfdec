@@ -1,7 +1,11 @@
 
-#include <math.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include "swfdec_internal.h"
+#include <math.h>
+#include "color.h"
+#include "swfdec_debug.h"
 
 void 
 swfdec_color_set_source (cairo_t *cr, swf_color color)

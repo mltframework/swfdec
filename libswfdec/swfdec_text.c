@@ -1,17 +1,40 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include "swfdec_text.h"
-#include "swfdec_internal.h"
+#include "swfdec_debug.h"
 #include "swfdec_font.h"
+#include "swfdec_swf_decoder.h"
+
+G_DEFINE_TYPE (SwfdecText, swfdec_text, SWFDEC_TYPE_GRAPHIC)
 
 static gboolean
-swfdec_text_mouse_in (SwfdecObject *object,
-      double x, double y, int button)
+swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 {
   unsigned int i;
-  SwfdecText *text = SWFDEC_TEXT (object);
+  SwfdecText *text = SWFDEC_TEXT (graphic);
 
   swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
   for (i = 0; i < text->glyphs->len; i++) {
@@ -23,32 +46,25 @@ swfdec_text_mouse_in (SwfdecObject *object,
     shape = swfdec_font_get_glyph (glyph->font, glyph->glyph);
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
-    tmpx /= SWF_TEXT_SCALE_FACTOR * glyph->height;
-    tmpy /= SWF_TEXT_SCALE_FACTOR * glyph->height;
-    if (swfdec_object_mouse_in (SWFDEC_OBJECT (shape), tmpx, tmpy, button))
+    tmpx *= SWFDEC_TEXT_SCALE_FACTOR / glyph->height;
+    tmpy *= SWFDEC_TEXT_SCALE_FACTOR / glyph->height;
+    if (swfdec_graphic_mouse_in (SWFDEC_GRAPHIC (shape), tmpx, tmpy))
       return TRUE;
   }
   return FALSE;
 }
 
 static void
-swfdec_text_render (SwfdecObject *obj, cairo_t *cr, 
+swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   unsigned int i, color;
-  SwfdecText *text = SWFDEC_TEXT (obj);
+  SwfdecText *text = SWFDEC_TEXT (graphic);
   SwfdecColorTransform force_color;
   SwfdecRect rect, inval_moved;
 
   cairo_transform (cr, &text->transform);
   /* scale by bounds */
-#if 0
-  cairo_translate (cr, obj->extents.x0, obj->extents.y0);
-  inval_moved.x0 = inval->x0 - obj->extents.x0;
-  inval_moved.y0 = inval->y0 - obj->extents.y0;
-  inval_moved.x1 = inval->x1 - obj->extents.x0;
-  inval_moved.y1 = inval->y1 - obj->extents.y0;
-#endif
   swfdec_rect_transform_inverse (&inval_moved, inval, &text->transform);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
@@ -66,33 +82,39 @@ swfdec_text_render (SwfdecObject *obj, cairo_t *cr,
     cairo_matrix_init_translate (&pos,
 	glyph->x, glyph->y);
     cairo_matrix_scale (&pos, 
-	glyph->height * SWF_TEXT_SCALE_FACTOR, 
-	glyph->height * SWF_TEXT_SCALE_FACTOR);
+	glyph->height / SWFDEC_TEXT_SCALE_FACTOR, 
+	glyph->height / SWFDEC_TEXT_SCALE_FACTOR);
     cairo_save (cr);
     cairo_transform (cr, &pos);
     swfdec_rect_transform_inverse (&rect, &inval_moved, &pos);
     color = swfdec_color_apply_transform (glyph->color, trans);
     swfdec_color_transform_init_color (&force_color, color);
-    swfdec_object_render (SWFDEC_OBJECT (shape), cr, 
+    swfdec_graphic_render (SWFDEC_GRAPHIC (shape), cr, 
 	&force_color, &rect, fill);
     cairo_restore (cr);
   }
 }
 
-SWFDEC_OBJECT_BOILERPLATE (SwfdecText, swfdec_text)
-
-     static void swfdec_text_base_init (gpointer g_class)
+static void
+swfdec_text_dispose (GObject *object)
 {
+  SwfdecText * text = SWFDEC_TEXT (object);
 
+  g_array_free (text->glyphs, TRUE);
+
+  G_OBJECT_CLASS (swfdec_text_parent_class)->dispose (object);
 }
 
 static void
 swfdec_text_class_init (SwfdecTextClass * g_class)
 {
-  SwfdecObjectClass *object_class = SWFDEC_OBJECT_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
 
-  object_class->render = swfdec_text_render;
-  object_class->mouse_in = swfdec_text_mouse_in;
+  object_class->dispose = swfdec_text_dispose;
+
+  graphic_class->render = swfdec_text_render;
+  graphic_class->mouse_in = swfdec_text_mouse_in;
 }
 
 static void
@@ -100,13 +122,5 @@ swfdec_text_init (SwfdecText * text)
 {
   text->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecTextGlyph));
   cairo_matrix_init_identity (&text->transform);
-}
-
-static void
-swfdec_text_dispose (SwfdecText * text)
-{
-  g_array_free (text->glyphs, TRUE);
-
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (text));
 }
 

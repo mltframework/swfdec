@@ -7,11 +7,11 @@
 static void
 iterate (gpointer dec)
 {
-  swfdec_decoder_iterate (dec);
+  swfdec_player_iterate (dec);
 }
 
 static void
-view_swf (SwfdecDecoder *dec, double scale, gboolean use_image)
+view_swf (SwfdecPlayer *dec, double scale, gboolean use_image)
 {
   GtkWidget *window, *widget, *vbox;
 
@@ -37,8 +37,7 @@ main (int argc, char *argv[])
 {
   int ret = 100;
   double scale;
-  SwfdecDecoder *s;
-  SwfdecBuffer *buffer;
+  SwfdecPlayer *player;
   GError *error = NULL;
   gboolean use_image = FALSE;
 
@@ -69,29 +68,22 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  buffer = swfdec_buffer_new_from_file (argv[1], &error);
-  if (buffer == NULL) {
+  player = swfdec_player_new_from_file (argv[1], &error);
+  if (player == NULL) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
+    g_error_free (error);
+    return 1;
+  }
+  if (swfdec_player_get_rate (player) == 0) {
+    g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
+    g_object_unref (player);
+    player = NULL;
     return 1;
   }
 
-  s = swfdec_decoder_new();
-  ret = swfdec_decoder_add_buffer(s, buffer);
+  view_swf (player, scale, use_image);
 
-  while (ret != SWFDEC_EOF) {
-    ret = swfdec_decoder_parse(s);
-    if (ret == SWFDEC_NEEDBITS) {
-      swfdec_decoder_eof(s);
-    }
-    if (ret == SWFDEC_ERROR) {
-      g_print("error while parsing\n");
-      return 1;
-    }
-  }
-
-  view_swf (s, scale, use_image);
-
-  s = NULL;
+  player = NULL;
   return 0;
 }
 

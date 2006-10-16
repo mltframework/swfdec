@@ -1,3 +1,23 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -8,19 +28,28 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "swfdec_internal.h"
+#include "swfdec_tag.h"
+#include "swfdec_bits.h"
+#include "swfdec_button.h"
 #include "swfdec_compiler.h"
+#include "swfdec_debug.h"
 #include "swfdec_edittext.h"
+#include "swfdec_font.h"
+#include "swfdec_image.h"
 #include "swfdec_pattern.h"
+#include "swfdec_shape.h"
+#include "swfdec_sound.h"
+#include "swfdec_sprite.h"
+#include "swfdec_text.h"
 
 int
-tag_func_end (SwfdecDecoder * s)
+tag_func_end (SwfdecSwfDecoder * s)
 {
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_protect (SwfdecDecoder * s)
+tag_func_protect (SwfdecSwfDecoder * s)
 {
   if (s->protection) {
     SWFDEC_INFO ("This file is really protected.");
@@ -33,11 +62,11 @@ tag_func_protect (SwfdecDecoder * s)
     swfdec_bits_get_u16 (&s->b);
     s->password = swfdec_bits_get_string (&s->b);
   }
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_dumpbits (SwfdecDecoder * s)
+tag_func_dumpbits (SwfdecSwfDecoder * s)
 {
   SwfdecBits *b = &s->b;
 
@@ -47,11 +76,11 @@ tag_func_dumpbits (SwfdecDecoder * s)
       swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
       swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b));
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_frame_label (SwfdecDecoder * s)
+tag_func_frame_label (SwfdecSwfDecoder * s)
 {
   SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
   
@@ -62,14 +91,14 @@ tag_func_frame_label (SwfdecDecoder * s)
   frame->name = swfdec_bits_get_string (&s->b);
   SWFDEC_LOG ("frame %d named %s", s->parse_sprite->parse_frame, frame->name);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 
 /* text */
 
 static int
-define_text (SwfdecDecoder * s, int rgba)
+define_text (SwfdecSwfDecoder * s, int rgba)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -79,13 +108,13 @@ define_text (SwfdecDecoder * s, int rgba)
   SwfdecTextGlyph glyph = { 0 };
 
   id = swfdec_bits_get_u16 (bits);
-  text = swfdec_object_create (s, id, SWFDEC_TYPE_TEXT);
+  text = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_TEXT);
   if (!text)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   glyph.color = 0xffffffff;
 
-  swfdec_bits_get_rect (bits, &SWFDEC_OBJECT (text)->extents);
+  swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (text)->extents);
   swfdec_bits_get_matrix (bits, &text->transform);
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
@@ -127,7 +156,7 @@ define_text (SwfdecDecoder * s, int rgba)
       has_y_offset = swfdec_bits_getbit (bits);
       has_x_offset = swfdec_bits_getbit (bits);
       if (has_font) {
-        glyph.font = swfdec_object_get (s, swfdec_bits_get_u16 (bits));
+        glyph.font = swfdec_swf_decoder_get_character (s, swfdec_bits_get_u16 (bits));
         //printf("  font = %d\n",font);
       }
       if (has_color) {
@@ -152,17 +181,17 @@ define_text (SwfdecDecoder * s, int rgba)
   }
   swfdec_bits_get_u8 (bits);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_define_text (SwfdecDecoder * s)
+tag_func_define_text (SwfdecSwfDecoder * s)
 {
   return define_text (s, 0);
 }
 
 int
-tag_func_define_text_2 (SwfdecDecoder * s)
+tag_func_define_text_2 (SwfdecSwfDecoder * s)
 {
   return define_text (s, 1);
 }
@@ -170,7 +199,7 @@ tag_func_define_text_2 (SwfdecDecoder * s)
 
 
 int
-tag_func_define_sprite (SwfdecDecoder * s)
+tag_func_define_sprite (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecBits parse;
@@ -182,13 +211,13 @@ tag_func_define_sprite (SwfdecDecoder * s)
   save_bits = s->b;
 
   id = swfdec_bits_get_u16 (bits);
-  sprite = swfdec_object_create (s, id, SWFDEC_TYPE_SPRITE);
+  sprite = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SPRITE);
   if (!sprite)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
-  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (bits));
+  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (bits), s->rate);
 
   parse = *bits;
 
@@ -210,7 +239,7 @@ tag_func_define_sprite (SwfdecDecoder * s)
     }
     SWFDEC_INFO ("sprite parsing at %d, tag %d %s, length %d",
         parse.ptr - parse.buffer->data, tag,
-        swfdec_decoder_get_tag_name (tag), tag_len);
+        swfdec_swf_decoder_get_tag_name (tag), tag_len);
     //SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
 
     if (tag_len > 0) {
@@ -228,13 +257,13 @@ tag_func_define_sprite (SwfdecDecoder * s)
       s->b.end = NULL;
     }
 
-    func = swfdec_decoder_get_tag_func (tag);
+    func = swfdec_swf_decoder_get_tag_func (tag);
     if (func == NULL) {
       SWFDEC_WARNING ("tag function not implemented for %d %s",
-          tag, swfdec_decoder_get_tag_name (tag));
-    } else if ((swfdec_decoder_get_tag_flag (tag) & 1) == 0) {
+          tag, swfdec_swf_decoder_get_tag_name (tag));
+    } else if ((swfdec_swf_decoder_get_tag_flag (tag) & 1) == 0) {
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",
-          tag, swfdec_decoder_get_tag_name (tag));
+          tag, swfdec_swf_decoder_get_tag_name (tag));
     } else {
       endptr = parse.ptr + tag_len;
       ret = func (s);
@@ -265,35 +294,35 @@ tag_func_define_sprite (SwfdecDecoder * s)
   s->parse_sprite = s->main_sprite;
   SWFDEC_LOG ("done parsing this sprite");
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_do_action (SwfdecDecoder * s)
+tag_func_do_action (SwfdecSwfDecoder * s)
 {
   JSScript *script;
   
-  script = swfdec_compile (s);
+  script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b);
   if (script)
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
 	SWFDEC_SPRITE_ACTION_SCRIPT, script);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_do_init_action (SwfdecDecoder * s)
+tag_func_do_init_action (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int len;
   SwfdecBuffer *buffer;
-  SwfdecObject *obj;
+  SwfdecCharacter *character;
   unsigned char *endptr;
   //int retcode = SWF_ERROR;
 
   endptr = bits->ptr + bits->buffer->length;
 
-  obj = swfdec_object_get (s, swfdec_bits_get_u16 (bits));
+  character = swfdec_swf_decoder_get_character (s, swfdec_bits_get_u16 (bits));
 
   len = bits->end - bits->ptr;
 
@@ -302,7 +331,7 @@ tag_func_do_init_action (SwfdecDecoder * s)
 
   bits->ptr += len;
 
-  if (SWFDEC_IS_SPRITE(obj)) {
+  if (SWFDEC_IS_SPRITE (character)) {
     SWFDEC_WARNING ("init actions not implemented yet");
 #if 0
     SwfdecSprite *save_parse_sprite = s->parse_sprite;
@@ -314,12 +343,12 @@ tag_func_do_init_action (SwfdecDecoder * s)
   swfdec_buffer_unref (buffer);
 
   //return retcode;
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 
 int
-tag_func_define_button_2 (SwfdecDecoder * s)
+tag_func_define_button_2 (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -333,9 +362,9 @@ tag_func_define_button_2 (SwfdecDecoder * s)
   endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
-  button = swfdec_object_create (s, id, SWFDEC_TYPE_BUTTON);
+  button = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_BUTTON);
   if (!button)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -378,16 +407,16 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    record.object = swfdec_object_get (s, character);
+    record.graphic = swfdec_swf_decoder_get_character (s, character);
     record.transform = trans;
     record.color_transform = color_trans;
 
-    if (record.object) {
+    if (record.graphic) {
       SwfdecRect rect;
-      swfdec_rect_transform (&rect, &record.object->extents, &record.transform);
+      swfdec_rect_transform (&rect, &record.graphic->extents, &record.transform);
       g_array_append_val (button->records, record);
-      swfdec_rect_union (&SWFDEC_OBJECT (button)->extents,
-	  &SWFDEC_OBJECT (button)->extents, &rect);
+      swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
+	  &SWFDEC_GRAPHIC (button)->extents, &rect);
     } else {
       SWFDEC_ERROR ("no object with character %d\n", character);
     }
@@ -405,15 +434,15 @@ tag_func_define_button_2 (SwfdecDecoder * s)
     SWFDEC_LOG ("  offset = %d", offset);
 
     if (button->events == NULL)
-      button->events = swfdec_event_list_new (s);
-    swfdec_event_list_parse (button->events, condition, key);
+      button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
+    swfdec_event_list_parse (button->events, &s->b, condition, key);
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_define_button (SwfdecDecoder * s)
+tag_func_define_button (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -425,9 +454,9 @@ tag_func_define_button (SwfdecDecoder * s)
   endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
-  button = swfdec_object_create (s, id, SWFDEC_TYPE_BUTTON);
+  button = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_BUTTON);
   if (!button)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
@@ -460,30 +489,30 @@ tag_func_define_button (SwfdecDecoder * s)
     swfdec_bits_get_color_transform (bits, &color_trans);
     swfdec_bits_syncbits (bits);
 
-    record.object = swfdec_object_get (s, character);
+    record.graphic = swfdec_swf_decoder_get_character (s, character);
     record.transform = trans;
     record.color_transform = color_trans;
 
-    if (record.object) {
+    if (record.graphic) {
       SwfdecRect rect;
-      swfdec_rect_transform (&rect, &record.object->extents, &record.transform);
+      swfdec_rect_transform (&rect, &record.graphic->extents, &record.transform);
       g_array_append_val (button->records, record);
-      swfdec_rect_union (&SWFDEC_OBJECT (button)->extents,
-	  &SWFDEC_OBJECT (button)->extents, &rect);
+      swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
+	  &SWFDEC_GRAPHIC (button)->extents, &rect);
     } else {
-      SWFDEC_ERROR ("no object with character %d\n", character);
+      SWFDEC_ERROR ("no graphic with character %d\n", character);
     }
   }
   swfdec_bits_get_u8 (bits);
 
-  button->events = swfdec_event_list_new (s);
-  swfdec_event_list_parse (button->events, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
+  button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
+  swfdec_event_list_parse (button->events, &s->b, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_define_font (SwfdecDecoder * s)
+tag_func_define_font (SwfdecSwfDecoder * s)
 {
   int id;
   int i;
@@ -493,9 +522,9 @@ tag_func_define_font (SwfdecDecoder * s)
   SwfdecFont *font;
 
   id = swfdec_bits_get_u16 (&s->b);
-  font = swfdec_object_create (s, id, SWFDEC_TYPE_FONT);
+  font = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_FONT);
   if (!font)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   offset = swfdec_bits_get_u16 (&s->b);
   n_glyphs = offset / 2;
@@ -507,7 +536,7 @@ tag_func_define_font (SwfdecDecoder * s)
   g_array_set_size (font->glyphs, n_glyphs);
   for (i = 0; i < n_glyphs; i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
-    shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
+    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
     entry->shape = shape;
 
     g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
@@ -523,7 +552,7 @@ tag_func_define_font (SwfdecDecoder * s)
     swf_shape_get_recs (s, &s->b, shape, FALSE);
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
 static void
@@ -540,7 +569,7 @@ get_kerning_record (SwfdecBits * bits, int wide_codes)
 }
 
 int
-tag_func_define_font_2 (SwfdecDecoder * s)
+tag_func_define_font_2 (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -567,9 +596,9 @@ tag_func_define_font_2 (SwfdecDecoder * s)
   int i;
 
   id = swfdec_bits_get_u16 (bits);
-  font = swfdec_object_create (s, id, SWFDEC_TYPE_FONT);
+  font = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_FONT);
   if (!font)
-    return SWFDEC_OK;
+    return SWFDEC_STATUS_OK;
 
   has_layout = swfdec_bits_getbit (bits);
   shift_jis = swfdec_bits_getbit (bits);
@@ -600,7 +629,7 @@ tag_func_define_font_2 (SwfdecDecoder * s)
 
   for (i = 0; i < n_glyphs; i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
-    shape = swfdec_object_new (s, SWFDEC_TYPE_SHAPE);
+    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
     entry->shape = shape;
 
     g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
@@ -637,11 +666,12 @@ tag_func_define_font_2 (SwfdecDecoder * s)
     }
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
 
+#if 0
 int
-tag_func_export_assets (SwfdecDecoder * s)
+tag_func_export_assets (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecExport *exp;
@@ -655,17 +685,18 @@ tag_func_export_assets (SwfdecDecoder * s)
     s->exports = g_list_append (s->exports, exp);
   }
 
-  return SWFDEC_OK;
+  return SWFDEC_STATUS_OK;
 }
+#endif
 
 static int
-tag_func_define_font_info_1 (SwfdecDecoder *s)
+tag_func_define_font_info_1 (SwfdecSwfDecoder *s)
 {
   return tag_func_define_font_info (s, 1);
 }
 
 static int
-tag_func_define_font_info_2 (SwfdecDecoder *s)
+tag_func_define_font_info_2 (SwfdecSwfDecoder *s)
 {
   return tag_func_define_font_info (s, 2);
 }
@@ -675,77 +706,76 @@ tag_func_define_font_info_2 (SwfdecDecoder *s)
 struct tag_func_struct
 {
   char *name;
-  int (*func) (SwfdecDecoder * s);
+  int (*func) (SwfdecSwfDecoder * s);
   int flag;
 };
 static struct tag_func_struct tag_funcs[] = {
-  [ST_END] = {"End", tag_func_end, SPRITE},
-  [ST_SHOWFRAME] = {"ShowFrame", tag_show_frame, SPRITE},
-  [ST_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
-  [ST_FREECHARACTER] = {"FreeCharacter", NULL, 0},
-  [ST_PLACEOBJECT] = {"PlaceObject", NULL, SPRITE},
-  [ST_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, SPRITE},
-//      [ ST_DEFINEBITS         ] = { "DefineBits",     NULL,   0 },
-  [ST_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
-  [ST_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
-  [ST_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
-  [ST_SETBACKGROUNDCOLOR] =
+  [SWFDEC_TAG_END] = {"End", tag_func_end, SPRITE},
+  [SWFDEC_TAG_SHOWFRAME] = {"ShowFrame", tag_show_frame, SPRITE},
+  [SWFDEC_TAG_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
+  [SWFDEC_TAG_FREECHARACTER] = {"FreeCharacter", NULL, 0},
+  [SWFDEC_TAG_PLACEOBJECT] = {"PlaceObject", NULL, SPRITE},
+  [SWFDEC_TAG_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, SPRITE},
+  [SWFDEC_TAG_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
+  [SWFDEC_TAG_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
+  [SWFDEC_TAG_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
+  [SWFDEC_TAG_SETBACKGROUNDCOLOR] =
       {"SetBackgroundColor", tag_func_set_background_color, 0},
-  [ST_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
-  [ST_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
-  [ST_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
-  [ST_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info_1, 0},
-  [ST_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
-  [ST_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
-  [ST_DEFINEBUTTONSOUND] =
+  [SWFDEC_TAG_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
+  [SWFDEC_TAG_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
+  [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
+  [SWFDEC_TAG_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info_1, 0},
+  [SWFDEC_TAG_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
+  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
+  [SWFDEC_TAG_DEFINEBUTTONSOUND] =
       {"DefineButtonSound", tag_func_define_button_sound, 0},
-  [ST_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SPRITE},
-  [ST_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, SPRITE},
-  [ST_DEFINEBITSLOSSLESS] =
+  [SWFDEC_TAG_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SPRITE},
+  [SWFDEC_TAG_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, SPRITE},
+  [SWFDEC_TAG_DEFINEBITSLOSSLESS] =
       {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
-  [ST_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
-  [ST_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
-  [ST_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
-  [ST_PROTECT] = {"Protect", tag_func_protect, 0},
-  [ST_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, SPRITE},
-  [ST_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, SPRITE},
-  [ST_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
-  [ST_DEFINETEXT2] = {"DefineText2", tag_func_define_text_2, 0},
-  [ST_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
-  [ST_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
-  [ST_DEFINEBITSLOSSLESS2] =
+  [SWFDEC_TAG_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
+  [SWFDEC_TAG_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
+  [SWFDEC_TAG_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
+  [SWFDEC_TAG_PROTECT] = {"Protect", tag_func_protect, 0},
+  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, SPRITE},
+  [SWFDEC_TAG_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, SPRITE},
+  [SWFDEC_TAG_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
+  [SWFDEC_TAG_DEFINETEXT2] = {"DefineText2", tag_func_define_text_2, 0},
+  [SWFDEC_TAG_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
+  [SWFDEC_TAG_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
+  [SWFDEC_TAG_DEFINEBITSLOSSLESS2] =
       {"DefineBitsLossless2", tag_func_define_bits_lossless_2, 0},
-  [ST_DEFINEEDITTEXT] = {"DefineEditText", tag_func_define_edit_text, 0},
-  [ST_DEFINEMOVIE] = {"DefineMovie", NULL, 0},
-  [ST_DEFINESPRITE] = {"DefineSprite", tag_func_define_sprite, 0},
-  [ST_NAMECHARACTER] = {"NameCharacter", NULL, 0},
-  [ST_SERIALNUMBER] = {"SerialNumber", NULL, 0},
-  [ST_GENERATORTEXT] = {"GeneratorText", NULL, 0},
-  [ST_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, SPRITE},
-  [ST_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, SPRITE},
-  [ST_DEFINEMORPHSHAPE] =
+  [SWFDEC_TAG_DEFINEEDITTEXT] = {"DefineEditText", tag_func_define_edit_text, 0},
+  [SWFDEC_TAG_DEFINEMOVIE] = {"DefineMovie", NULL, 0},
+  [SWFDEC_TAG_DEFINESPRITE] = {"DefineSprite", tag_func_define_sprite, 0},
+  [SWFDEC_TAG_NAMECHARACTER] = {"NameCharacter", NULL, 0},
+  [SWFDEC_TAG_SERIALNUMBER] = {"SerialNumber", NULL, 0},
+  [SWFDEC_TAG_GENERATORTEXT] = {"GeneratorText", NULL, 0},
+  [SWFDEC_TAG_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, SPRITE},
+  [SWFDEC_TAG_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, SPRITE},
+  [SWFDEC_TAG_DEFINEMORPHSHAPE] =
       {"DefineMorphShape", NULL /* tag_define_morph_shape */ , 0},
-  [ST_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
-  [ST_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
-  [ST_GENERATOR3] = {"Generator3", NULL, 0},
-  [ST_EXTERNALFONT] = {"ExternalFont", NULL, 0},
-  [ST_EXPORTASSETS] = {"ExportAssets", tag_func_export_assets, 0},
-  [ST_IMPORTASSETS] = {"ImportAssets", NULL, 0},
-  [ST_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
-  [ST_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
-  [ST_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
-  [ST_VIDEOFRAME] = {"VideoFrame", NULL, 0},
-  [ST_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info_2, 0},
-  [ST_MX4] = {"MX4", NULL, 0},
-  [ST_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
-  [ST_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
-  [ST_SETTABINDEX] = {"SetTabIndex", NULL, 0},
-//      [ ST_REFLEX             ] = { "Reflex", NULL,   0 },
+  [SWFDEC_TAG_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
+  [SWFDEC_TAG_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
+  [SWFDEC_TAG_GENERATOR3] = {"Generator3", NULL, 0},
+  [SWFDEC_TAG_EXTERNALFONT] = {"ExternalFont", NULL, 0},
+  [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", /* tag_func_export_assets */ NULL, 0},
+  [SWFDEC_TAG_IMPORTASSETS] = {"ImportAssets", NULL, 0},
+  [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
+  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
+  [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
+  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", NULL, 0},
+  [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info_2, 0},
+  [SWFDEC_TAG_MX4] = {"MX4", NULL, 0},
+  [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
+  [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
+  [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
 };
+
 static const int n_tag_funcs = sizeof (tag_funcs) / sizeof (tag_funcs[0]);
 
 const char *
-swfdec_decoder_get_tag_name (int tag)
+swfdec_swf_decoder_get_tag_name (int tag)
 {
   if (tag >= 0 && tag < n_tag_funcs) {
     if (tag_funcs[tag].name) {
@@ -757,7 +787,7 @@ swfdec_decoder_get_tag_name (int tag)
 }
 
 SwfdecTagFunc *
-swfdec_decoder_get_tag_func (int tag)
+swfdec_swf_decoder_get_tag_func (int tag)
 { 
   if (tag >= 0 && tag < n_tag_funcs) {
     if (tag_funcs[tag].func) {
@@ -769,7 +799,7 @@ swfdec_decoder_get_tag_func (int tag)
 }
 
 int
-swfdec_decoder_get_tag_flag (int tag)
+swfdec_swf_decoder_get_tag_flag (int tag)
 {
   if (tag >= 0 && tag < n_tag_funcs) {
     return tag_funcs[tag].flag;

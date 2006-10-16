@@ -2,8 +2,8 @@
 #ifndef _SWFDEC_IMAGE_H_
 #define _SWFDEC_IMAGE_H_
 
+#include <swfdec_character.h>
 #include <swfdec_decoder.h>
-#include <swfdec_object.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecImage SwfdecImage;
@@ -26,7 +26,7 @@ typedef enum {
 
 struct _SwfdecImage
 {
-  SwfdecObject object;
+  SwfdecCharacter character;
   SwfdecHandle *handle;
 
   int width, height;
@@ -40,18 +40,18 @@ struct _SwfdecImage
 
 struct _SwfdecImageClass
 {
-  SwfdecObjectClass object_class;
+  SwfdecCharacterClass character_class;
 
 };
 
 GType swfdec_image_get_type (void);
 
-int swfdec_image_jpegtables (SwfdecDecoder * s);
-int tag_func_define_bits_jpeg (SwfdecDecoder * s);
-int tag_func_define_bits_jpeg_2 (SwfdecDecoder * s);
-int tag_func_define_bits_jpeg_3 (SwfdecDecoder * s);
-int tag_func_define_bits_lossless (SwfdecDecoder * s);
-int tag_func_define_bits_lossless_2 (SwfdecDecoder * s);
+int swfdec_image_jpegtables (SwfdecSwfDecoder * s);
+int tag_func_define_bits_jpeg (SwfdecSwfDecoder * s);
+int tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s);
+int tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s);
+int tag_func_define_bits_lossless (SwfdecSwfDecoder * s);
+int tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s);
 
 G_END_DECLS
 #endif

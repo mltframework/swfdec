@@ -1,10 +1,31 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef _SWFDEC_SOUND_H_
 #define _SWFDEC_SOUND_H_
 
-#include <swfdec_object.h>
-#include <swfdec_types.h>
-#include <swfdec_codec.h>
+#include <libswfdec/swfdec_character.h>
+#include <libswfdec/swfdec_codec.h>
+#include <libswfdec/swfdec_swf_decoder.h>
+#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -40,7 +61,7 @@ struct _SwfdecSoundChunk
 
 struct _SwfdecSound
 {
-  SwfdecObject		object;
+  SwfdecCharacter	character;
 
   SwfdecAudioFormat	format;			/* format in use */
   const SwfdecCodec *	codec;			/* codec for this sound */
@@ -54,17 +75,16 @@ struct _SwfdecSound
 
 struct _SwfdecSoundClass
 {
-  SwfdecObjectClass object_class;
-
+  SwfdecCharacterClass	character_class;
 };
 
 GType swfdec_sound_get_type (void);
 
-int tag_func_define_sound (SwfdecDecoder * s);
-int tag_func_sound_stream_block (SwfdecDecoder * s);
-int tag_func_sound_stream_head (SwfdecDecoder * s);
-int tag_func_start_sound (SwfdecDecoder * s);
-int tag_func_define_button_sound (SwfdecDecoder * s);
+int tag_func_define_sound (SwfdecSwfDecoder * s);
+int tag_func_sound_stream_block (SwfdecSwfDecoder * s);
+int tag_func_sound_stream_head (SwfdecSwfDecoder * s);
+int tag_func_start_sound (SwfdecSwfDecoder * s);
+int tag_func_define_button_sound (SwfdecSwfDecoder * s);
 
 gpointer		swfdec_sound_init_decoder	(SwfdecSound *	sound);
 void			swfdec_sound_finish_decoder	(SwfdecSound *	sound,
@@ -82,7 +102,7 @@ void			swfdec_sound_add		(gint16 *	dest,
 							 const gint16 *	src,
 							 unsigned int	n_samples);
 
-SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecDecoder *s,
+SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *s,
 							 int		id);
 void			swfdec_sound_chunk_free		(SwfdecSoundChunk *chunk);
 

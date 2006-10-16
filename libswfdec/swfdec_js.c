@@ -1,3 +1,21 @@
+/* Swfdec
+ * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -9,18 +27,12 @@
 #include <js/jsopcode.h> /* for debugging */
 #include <js/jsscript.h> /* for debugging */
 #include "swfdec_types.h"
-#include "swfdec_decoder.h"
-#include "swfdec_movieclip.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_compiler.h"
 
 static JSRuntime *swfdec_js_runtime;
-
-typedef struct {
-  SwfdecMovieClip *	movie;
-  JSScript *		script;
-} SwfdecScriptEntry;
 
 /**
  * swfdec_js_init:
@@ -63,18 +75,16 @@ swfdec_js_debug_one (JSContext *cx, JSScript *script, jsbytecode *pc,
 }
 
 /**
- * swfdec_js_init_decoder:
- * @s: a #SwfdecDecoder
+ * swfdec_js_init_player:
+ * @player: a #SwfdecPlayer
  *
- * Initializes @s for Javascript processing.
+ * Initializes @player for Javascript processing.
  **/
 void
-swfdec_js_init_decoder (SwfdecDecoder *s)
+swfdec_js_init_player (SwfdecPlayer *player)
 {
-  JSObject *glob;
-
-  s->jscx = JS_NewContext (swfdec_js_runtime, 8192);
-  if (s->jscx == NULL) {
+  player->jscx = JS_NewContext (swfdec_js_runtime, 8192);
+  if (player->jscx == NULL) {
     SWFDEC_ERROR ("did not get a JS context, trying to live without");
     return;
   }
@@ -86,39 +96,42 @@ swfdec_js_init_decoder (SwfdecDecoder *s)
 #if 0
   JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
 #endif
-  JS_SetErrorReporter (s->jscx, swfdec_js_error_report);
-  JS_SetContextPrivate(s->jscx, s);
-  glob = JS_NewObject (s->jscx, &global_class, NULL, NULL);
-  if (!JS_InitStandardClasses (s->jscx, glob)) {
+  JS_SetErrorReporter (player->jscx, swfdec_js_error_report);
+  JS_SetContextPrivate(player->jscx, player);
+  player->jsobj = JS_NewObject (player->jscx, &global_class, NULL, NULL);
+  if (player->jsobj == NULL) {
+    SWFDEC_ERROR ("creating the global object failed");
+    swfdec_js_finish_player (player);
+    return;
+  }
+  if (!JS_InitStandardClasses (player->jscx, player->jsobj)) {
     SWFDEC_ERROR ("initializing JS standard classes failed");
   }
-  swfdec_js_add_globals (s, glob);
-  swfdec_js_add_mouse (s, glob);
-  swfdec_js_add_movieclip_class (s);
+  swfdec_js_add_globals (player);
+  swfdec_js_add_mouse (player);
+  swfdec_js_add_movieclip_class (player);
 }
 
 /**
- * swfdec_js_finish_decoder:
- * @s: a #SwfdecDecoder
+ * swfdec_js_finish_player:
+ * @player: a #SwfdecPlayer
  *
- * Shuts down the Javascript processing for @s.
+ * Shuts down the Javascript processing for @player.
  **/
 void
-swfdec_js_finish_decoder (SwfdecDecoder *s)
+swfdec_js_finish_player (SwfdecPlayer *player)
 {
-  //JSObject *global = JS_GetGlobalObject (s->jscx);
-
-  if (s->jscx) {
-    //JS_RemoveRoot (s->jscx, &global);
-    JS_DestroyContext(s->jscx);
-    s->jscx = NULL;
+  if (player->jscx) {
+    JS_DestroyContext(player->jscx);
+    player->jsobj = NULL;
+    player->jscx = NULL;
   }
 }
 
 /**
  * swfdec_js_execute_script:
- * @s: ia @SwfdecDecoder
- * @movie: a #SwfdecMovieClip to pass as argument to the script
+ * @s: a @SwfdecPlayer
+ * @movie: a #SwfdecMovie to pass as argument to the script
  * @script: a @JSScript to execute
  * @rval: optional location for the script's return value
  *
@@ -129,14 +142,14 @@ swfdec_js_finish_decoder (SwfdecDecoder *s)
  * Returns: TRUE if the script was successfully executed
  **/
 gboolean
-swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie, 
+swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie, 
     JSScript *script, jsval *rval)
 {
   jsval returnval = JSVAL_VOID;
   JSBool ret;
 
   g_return_val_if_fail (s != NULL, FALSE);
-  g_return_val_if_fail (SWFDEC_IS_MOVIE_CLIP (movie), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
 
 #if 0
@@ -147,7 +160,7 @@ swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie,
   if (rval == NULL)
     rval = &returnval;
   if (movie->jsobj == NULL) {
-    swfdec_js_add_movieclip (movie);
+    swfdec_js_add_movie (movie);
     if (movie->jsobj == NULL)
       return FALSE;
   }
@@ -162,31 +175,30 @@ swfdec_js_execute_script (SwfdecDecoder *s, SwfdecMovieClip *movie,
 
 /**
  * swfdec_js_run:
- * @dec: a #SwfdecDecoder
+ * @player: a #SwfdecPlayer
  * @s: JavaScript commands to execute
  * @rval: optional location to store a return value
  *
- * This is a debugging function for injecting script code into the @decoder.
+ * This is a debugging function for injecting script code into the @player.
  * Use it at your own risk.
  *
  * Returns: TRUE if the script was evaluated successfully. 
  **/
 gboolean
-swfdec_js_run (SwfdecDecoder *dec, const char *s, jsval *rval)
+swfdec_js_run (SwfdecPlayer *player, const char *s, jsval *rval)
 {
   gboolean ret;
   JSScript *script;
-  JSObject *global;
   
-  g_return_val_if_fail (dec != NULL, FALSE);
+  g_return_val_if_fail (player != NULL, FALSE);
   g_return_val_if_fail (s != NULL, FALSE);
 
-  global = JS_GetGlobalObject (dec->jscx);
-  script = JS_CompileScript (dec->jscx, global, s, strlen (s), "injected-code", 1);
+  script = JS_CompileScript (player->jscx, player->jsobj, s, strlen (s), "injected-code", 1);
   if (script == NULL)
     return FALSE;
-  ret = swfdec_js_execute_script (dec, dec->root, script, rval);
-  JS_DestroyScript (dec->jscx, script);
+  ret = swfdec_js_execute_script (player, 
+      SWFDEC_MOVIE (player->movies->data), script, rval);
+  JS_DestroyScript (player->jscx, script);
   return ret;
 }
 

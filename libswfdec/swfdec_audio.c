@@ -337,7 +337,7 @@ swfdec_audio_event_iterate (SwfdecAudioEvent *stream, guint n_samples, guint new
   /* FIXME: chunk offsets are absolute, not per frame, so this function does crap */
   if (stream->skip >= n_samples) {
     stream->skip -= n_samples;
-    return TRUE;
+    return FALSE;
   }
   n_samples -= stream->skip;
   stream->skip = 0;

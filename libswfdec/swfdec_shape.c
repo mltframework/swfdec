@@ -584,9 +584,11 @@ swfdec_shape_accumulate_one_fill (SwfdecShape *shape, SubPath *paths,
     target->pattern = g_ptr_array_index (shape->fills, style - 1);
     g_object_ref (target->pattern);
   }
+  g_slist_free (found);
   return;
 
 fail:
+  g_slist_free (found);
   swfdec_shape_vec_finish (target);
   g_array_set_size (shape->vecs, shape->vecs->len - 1);
 }

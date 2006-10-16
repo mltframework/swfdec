@@ -560,6 +560,28 @@ mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_TRUE;
 }
 
+static JSBool
+mc_root (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  movie = movie->root;
+  if (movie->jsobj == NULL) {
+    /* the root movie only holds this as long as there's no parent */
+    movie = movie->list->data;
+    g_assert (movie->jsobj);
+  }
+  if (movie->jsobj == NULL)
+    return JS_FALSE;
+
+  *vp = OBJECT_TO_JSVAL (movie->jsobj);
+
+  return JS_TRUE;
+}
+
 /* Movie AS standard class */
 
 enum {
@@ -616,6 +638,7 @@ JSPropertySpec movieclip_props[] = {
   {"_xmouse",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_ymouse",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_parent",	    -1,	      	MC_PROP_ATTRS | JSPROP_READONLY,  mc_parent,	    NULL},
+  {"_root",	    -1,	      	MC_PROP_ATTRS | JSPROP_READONLY,  mc_root,	    NULL},
   {NULL}
 };
 
@@ -746,15 +769,14 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
 gboolean
 swfdec_js_add_movie (SwfdecMovie *movie)
 {
-  JSObject *global;
   JSContext *cx;
   GList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (movie->jsobj == NULL, FALSE);
+  g_return_val_if_fail (!SWFDEC_IS_ROOT_MOVIE (movie), FALSE);
 
   cx = SWFDEC_ROOT_MOVIE (movie->root)->player->jscx;
-  global = JS_GetGlobalObject (cx);
 
   movie->jsobj = JS_NewObject (cx, &movieclip_class, NULL, NULL);
   if (movie->jsobj == NULL) {
@@ -770,16 +792,15 @@ swfdec_js_add_movie (SwfdecMovie *movie)
     if (child->content->name)
       swfdec_js_movie_add_property (child);
   }
-#if 0
   /* special case */
-  if (movie == SWFDEC_OBJECT (movie)->decoder->root) {
-    jsval val = OBJECT_TO_JSVAL (movie->jsobj);
-    if (!JS_SetProperty(cx, global, "_root", &val)) {
-      SWFDEC_ERROR ("failed to set root object");
-      return FALSE;
-    }
+  if (SWFDEC_IS_ROOT_MOVIE (movie->parent)) {
+    jsval val; 
+    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->parent)->player;
+    char *name = g_strdup_printf ("_level%u", movie->parent->content->depth);
+    val = OBJECT_TO_JSVAL (movie->jsobj);
+    JS_SetProperty (player->jscx, player->jsobj, name, &val);
+    g_free (name);
   }
-#endif
   return TRUE;
 }
 

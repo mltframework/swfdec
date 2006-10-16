@@ -188,7 +188,6 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   root->loader = loader;
   root->player = player;
   movie->root = movie;
-  swfdec_root_movie_parse (root);
   found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
   if (found) {
     SWFDEC_DEBUG ("remove existing movie _level%u", depth);
@@ -196,7 +195,7 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     player->roots = g_list_delete_link (player->roots, found);
   }
   player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
-  swfdec_movie_execute (movie, SWFDEC_EVENT_LOAD); /* FIXME: check this gets called */
+  swfdec_root_movie_parse (root);
 }
 
 /** PUBLIC API ***/

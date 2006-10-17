@@ -127,6 +127,8 @@ struct _SwfdecMovieClass {
 						 int			button);
   void			(* goto_frame)		(SwfdecMovie *		movie,
 						 guint			frame);
+  void			(* iterate_start)     	(SwfdecMovie *		movie);
+  void			(* iterate_end)		(SwfdecMovie *		movie);
 };
 
 GType		swfdec_movie_get_type		(void);

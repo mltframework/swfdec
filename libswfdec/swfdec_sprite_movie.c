@@ -209,55 +209,61 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
-{
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (mov->root)->player;
-
-  if (parent) {
-    /* set */
-    mov->n_frames = movie->sprite->n_frames;
-    player->movies = g_list_prepend (player->movies, movie);
-    swfdec_sprite_movie_do_goto_frame (movie, 0, FALSE);
-    swfdec_sprite_movie_iterate_audio (movie);
-  } else {
-    /* unset */
-    swfdec_player_remove_all_actions (player, mov);
-    player->movies = g_list_remove (player->movies, movie);
-    if (movie->sound_stream) {
-      swfdec_audio_stream_stop (player, movie->sound_stream);
-      movie->sound_stream = 0;
-    }
-  }
-}
-
-static void
 swfdec_sprite_movie_goto_frame (SwfdecMovie *movie, guint frame)
 {
   swfdec_sprite_movie_goto (SWFDEC_SPRITE_MOVIE (movie), frame, FALSE);
 }
 
-static void
-swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
+static gboolean
+swfdec_sprite_movie_should_iterate (SwfdecSpriteMovie *movie)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecMovie *parent;
+  guint parent_frame;
 
-  object_class->dispose = swfdec_sprite_movie_dispose;
+  /* movies that are scheduled for removal this frame don't do anything */
+  /* FIXME: This function is complicated. It doesn't seem to be as stupid as
+   * Flash normally is. I suppose there's a simpler solution */
 
-  movie_class->set_parent = swfdec_sprite_movie_set_parent;
-  movie_class->goto_frame = swfdec_sprite_movie_goto_frame;
+  parent = mov->parent;
+  /* root movie always gets executed */
+  if (!SWFDEC_IS_SPRITE_MOVIE (parent))
+    return TRUE;
+
+  if (parent->stopped) {
+    parent_frame = parent->frame;
+  } else {
+    parent_frame = swfdec_sprite_get_next_frame (SWFDEC_SPRITE_MOVIE (parent)->sprite, parent->frame);
+  }
+  /* check if we'll get removed until parent's next frame */
+  if (parent_frame < mov->content->sequence->start ||
+      parent_frame >= mov->content->sequence->end)
+    return FALSE;
+
+  /* check if parent will get removed */
+  return swfdec_sprite_movie_should_iterate (SWFDEC_SPRITE_MOVIE (parent));
 }
 
 static void
-swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
+swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 {
-  movie->current_frame = (guint) -1;
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  unsigned int goto_frame;
+
+  if (!swfdec_sprite_movie_should_iterate (movie))
+    return;
+  if (mov->stopped) {
+    goto_frame = mov->frame;
+  } else {
+    goto_frame = swfdec_sprite_get_next_frame (movie->sprite, mov->frame);
+  }
+  swfdec_sprite_movie_goto (movie, goto_frame, TRUE);
 }
 
-void
-swfdec_sprite_movie_iterate_audio (SwfdecSpriteMovie *movie)
+static void
+swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
 {
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecSpriteFrame *last;
   SwfdecSpriteFrame *current;
   GSList *walk;
@@ -302,49 +308,44 @@ new_decoder:
   movie->sound_frame = movie->current_frame;
 }
 
-static gboolean
-swfdec_sprite_movie_should_iterate (SwfdecSpriteMovie *movie)
+static void
+swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
 {
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  SwfdecMovie *parent;
-  guint parent_frame;
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (mov->root)->player;
 
-  /* movies that are scheduled for removal this frame don't do anything */
-  /* FIXME: This function is complicated. It doesn't seem to be as stupid as
-   * Flash normally is. I suppose there's a simpler solution */
-
-  parent = mov->parent;
-  /* root movie always gets executed */
-  if (!SWFDEC_IS_SPRITE_MOVIE (parent))
-    return TRUE;
-
-  if (parent->stopped) {
-    parent_frame = parent->frame;
+  if (parent) {
+    /* set */
+    mov->n_frames = movie->sprite->n_frames;
+    swfdec_sprite_movie_do_goto_frame (movie, 0, FALSE);
+    swfdec_sprite_movie_iterate_audio (mov);
   } else {
-    parent_frame = swfdec_sprite_get_next_frame (SWFDEC_SPRITE_MOVIE (parent)->sprite, parent->frame);
+    /* unset */
+    swfdec_player_remove_all_actions (player, mov);
+    if (movie->sound_stream) {
+      swfdec_audio_stream_stop (player, movie->sound_stream);
+      movie->sound_stream = 0;
+    }
   }
-  /* check if we'll get removed until parent's next frame */
-  if (parent_frame < mov->content->sequence->start ||
-      parent_frame >= mov->content->sequence->end)
-    return FALSE;
-
-  /* check if parent will get removed */
-  return swfdec_sprite_movie_should_iterate (SWFDEC_SPRITE_MOVIE (parent));
 }
 
-void
-swfdec_sprite_movie_queue_iterate (SwfdecSpriteMovie *movie)
+static void
+swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 {
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  unsigned int goto_frame;
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
-  if (!swfdec_sprite_movie_should_iterate (movie))
-    return;
-  if (mov->stopped) {
-    goto_frame = mov->frame;
-  } else {
-    goto_frame = swfdec_sprite_get_next_frame (movie->sprite, mov->frame);
-  }
-  swfdec_sprite_movie_goto (movie, goto_frame, TRUE);
+  object_class->dispose = swfdec_sprite_movie_dispose;
+
+  movie_class->set_parent = swfdec_sprite_movie_set_parent;
+  movie_class->goto_frame = swfdec_sprite_movie_goto_frame;
+  movie_class->iterate_start = swfdec_sprite_movie_iterate;
+  movie_class->iterate_end = swfdec_sprite_movie_iterate_audio;
+}
+
+static void
+swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
+{
+  movie->current_frame = (guint) -1;
 }
 

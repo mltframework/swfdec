@@ -299,6 +299,10 @@ swfdec_movie_remove (SwfdecMovie *movie)
   if (movie->parent) {
     if (klass->set_parent)
       klass->set_parent (movie, NULL);
+    if (klass->iterate_start || klass->iterate_end) {
+      SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+      player->movies = g_list_remove (player->movies, movie);
+    }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
     movie->parent = NULL;
   }
@@ -478,6 +482,10 @@ swfdec_movie_do_set_parent (SwfdecMovie *movie, SwfdecMovie *parent, gboolean en
     klass->set_parent (movie, parent);
   SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
       movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+  if (klass->iterate_start || klass->iterate_end) {
+    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+    player->movies = g_list_prepend (player->movies, movie);
+  }
   if (enqueue) {
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     swfdec_movie_execute (movie, SWFDEC_EVENT_LOAD);

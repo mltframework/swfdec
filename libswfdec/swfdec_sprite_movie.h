@@ -59,12 +59,9 @@ struct _SwfdecSpriteMovieClass
 
 GType		swfdec_sprite_movie_get_type		(void);
 
-void		swfdec_sprite_movie_queue_iterate	(SwfdecSpriteMovie *	movie);
-void		swfdec_sprite_movie_iterate_audio	(SwfdecSpriteMovie *	movie);
 void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			frame,
 							 gboolean		do_enter_frame);
-void		swfdec_sprite_movie_queue_iterate	(SwfdecSpriteMovie *	movie);
 
 
 G_END_DECLS

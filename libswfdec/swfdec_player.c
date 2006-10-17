@@ -494,11 +494,15 @@ swfdec_player_iterate (SwfdecPlayer *player)
    * parent in this list, since they got added later.
    */
   for (walk = player->movies; walk; walk = walk->next) {
-    swfdec_sprite_movie_queue_iterate (walk->data);
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
+    if (klass->iterate_start)
+      klass->iterate_start (walk->data);
   }
   while (swfdec_player_do_action (player));
   for (walk = player->movies; walk; walk = walk->next) {
-    swfdec_sprite_movie_iterate_audio (walk->data);
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
+    if (klass->iterate_end)
+      klass->iterate_end (walk->data);
   }
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_update (walk->data);

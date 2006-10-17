@@ -126,8 +126,8 @@ swfdec_edit_text_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
     return;
   }
 
-  g_print ("setting variable %s to \"%s\"\n", text->text->variable_name,
-      text->str ? text->str : "");
+  SWFDEC_LOG ("setting variable %s (%s) to \"%s\"", text->text->variable_name,
+      text->text->variable, text->str ? text->str : "");
   string = JS_NewStringCopyZ (player->jscx, text->str ? text->str : "");
   if (string == NULL)
     return;

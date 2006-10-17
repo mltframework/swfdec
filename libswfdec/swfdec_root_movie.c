@@ -31,8 +31,27 @@
 G_DEFINE_TYPE (SwfdecRootMovie, swfdec_root_movie, SWFDEC_TYPE_MOVIE)
 
 static void
+swfdec_root_movie_update_extents (SwfdecMovie *movie,
+    SwfdecRect *extents)
+{
+  SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie);
+  SwfdecRect rect = { 0, 0, 0, 0};
+
+  extents->x0 = extents->y0 = 0.0;
+  if (root->decoder) {
+    rect.x1 = root->decoder->width;
+    rect.y1 = root->decoder->height;
+  } else {
+    extents->x1 = extents->y1 = 0.0;
+  }
+}
+
+static void
 swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 {
+  SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (klass);
+
+  movie_class->update_extents = swfdec_root_movie_update_extents;
 }
 
 static void

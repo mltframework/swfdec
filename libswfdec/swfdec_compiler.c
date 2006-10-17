@@ -6,7 +6,9 @@
 #include <string.h>
 
 #include <js/jsapi.h>
+#include <js/jsarena.h>
 #include <js/jsatom.h>
+#include <js/jsemit.h>
 #include <js/jsscript.h>
 #include <js/jsopcode.h>
 
@@ -266,6 +268,8 @@ compile_state_finish (CompileState *state)
   /* FIXME: figure out a correct value here */
   script->depth = 100;
   script->main = script->code + 3;
+  script->trynotes = NULL;
+  SN_MAKE_TERMINATOR (SCRIPT_NOTES (script));
 
 cleanup:
   g_ptr_array_free (state->pool, TRUE);

@@ -471,12 +471,17 @@ swfdec_movie_class_init (SwfdecMovieClass * g_class)
 }
 
 void
-swfdec_movie_do_set_parent (SwfdecMovie *movie, SwfdecMovie *parent, gboolean enqueue)
+swfdec_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
 {
   SwfdecMovieClass *klass;
 
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (movie->parent == NULL);
+  g_return_if_fail (SWFDEC_IS_MOVIE (parent));
+
   movie->parent = parent;
   movie->root = parent->root;
+  parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->set_parent)
     klass->set_parent (movie, parent);
@@ -486,20 +491,7 @@ swfdec_movie_do_set_parent (SwfdecMovie *movie, SwfdecMovie *parent, gboolean en
     SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
     player->movies = g_list_prepend (player->movies, movie);
   }
-  if (enqueue) {
-    parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
-    swfdec_movie_execute (movie, SWFDEC_EVENT_LOAD);
-  }
-}
-
-void
-swfdec_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
-{
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (movie->parent == NULL);
-  g_return_if_fail (SWFDEC_IS_MOVIE (parent));
-
-  swfdec_movie_do_set_parent (movie, parent, TRUE);
+  swfdec_movie_execute (movie, SWFDEC_EVENT_LOAD);
 }
 
 /**
@@ -517,6 +509,7 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
 {
   SwfdecGraphicClass *klass;
   SwfdecMovie *ret;
+  const SwfdecContent *old;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (parent), NULL);
   g_return_val_if_fail (SWFDEC_IS_GRAPHIC (content->graphic), NULL);
@@ -525,10 +518,11 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   klass = SWFDEC_GRAPHIC_GET_CLASS (content->graphic);
   g_return_val_if_fail (klass->create_movie != NULL, NULL);
   ret = klass->create_movie (content->graphic);
-  swfdec_movie_do_set_parent (ret, parent, FALSE);
+  old = ret->content;
+  ret->content = content;
+  swfdec_movie_set_parent (ret, parent);
+  ret->content = old;
   swfdec_movie_set_content (ret, content);
-  parent->list = g_list_insert_sorted (parent->list, ret, swfdec_movie_compare_depths);
-  swfdec_movie_execute (ret, SWFDEC_EVENT_LOAD);
 
   return ret;
 }

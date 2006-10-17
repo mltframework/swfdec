@@ -22,9 +22,9 @@
 #ifndef _SWFDEC_BUTTON_H_
 #define _SWFDEC_BUTTON_H_
 
-#include <swfdec_graphic.h>
-#include <color.h>
-#include <swfdec_event.h>
+#include <libswfdec/swfdec_graphic.h>
+#include <libswfdec/color.h>
+#include <libswfdec/swfdec_event.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecButton SwfdecButton;

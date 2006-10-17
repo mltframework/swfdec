@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <swfdec.h>
+#include <libswfdec/swfdec.h>
 
 static void
 trace_cb (SwfdecDecoder *dec, const char *message, GString *string)

@@ -1,8 +1,7 @@
 #include <gtk/gtk.h>
 #include <math.h>
-#include <swfdec.h>
-#include <swfdec_buffer.h>
-#include <swfdec_widget.h>
+#include <libswfdec/swfdec.h>
+#include "swfdec_widget.h"
 
 static void
 iterate (gpointer dec)

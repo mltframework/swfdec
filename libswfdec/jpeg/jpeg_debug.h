@@ -2,7 +2,7 @@
 #ifndef _JPEG_DEBUG_H_
 #define _JPEG_DEBUG_H_
 
-#include <swfdec_debug.h>
+#include <libswfdec/swfdec_debug.h>
 
 //#define JPEG_DEBUG_ON
 

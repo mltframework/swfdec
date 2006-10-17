@@ -3,7 +3,7 @@
 #define _SWFDEC_WIDGET_H_
 
 #include <gtk/gtk.h>
-#include <swfdec.h>
+#include <libswfdec/swfdec.h>
 
 G_BEGIN_DECLS
 

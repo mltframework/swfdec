@@ -6,18 +6,18 @@
 #include <sys/stat.h>
 #include <glib.h>
 #include <glib-object.h>
-#include <swfdec.h>
-#include <swfdec_button.h>
-#include <swfdec_edittext.h>
-#include <swfdec_font.h>
-#include <swfdec_movie.h>
-#include <swfdec_player_internal.h>
-#include <swfdec_root_movie.h>
-#include <swfdec_sprite.h>
-#include <swfdec_shape.h>
-#include <swfdec_shape.h>
-#include <swfdec_swf_decoder.h>
-#include <swfdec_text.h>
+#include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_button.h>
+#include <libswfdec/swfdec_edittext.h>
+#include <libswfdec/swfdec_font.h>
+#include <libswfdec/swfdec_movie.h>
+#include <libswfdec/swfdec_player_internal.h>
+#include <libswfdec/swfdec_root_movie.h>
+#include <libswfdec/swfdec_sprite.h>
+#include <libswfdec/swfdec_shape.h>
+#include <libswfdec/swfdec_shape.h>
+#include <libswfdec/swfdec_swf_decoder.h>
+#include <libswfdec/swfdec_text.h>
 
 static gboolean verbose = FALSE;
 

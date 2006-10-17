@@ -24,7 +24,7 @@
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
-#include <js/jsapi.h>
+#include <libswfdec/js/jspubtd.h>
 
 G_BEGIN_DECLS
 

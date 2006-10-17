@@ -3,8 +3,8 @@
 #endif
 
 #include <alsa/asoundlib.h>
-#include "swfdec_sound.h"
-#include "swfdec_buffer.h"
+#include "libswfdec/swfdec_sound.h"
+#include "libswfdec/swfdec_buffer.h"
 
 G_BEGIN_DECLS
 

@@ -105,6 +105,7 @@ noinst_HEADERS = \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
+	swfdec_swf_decoder.h \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_types.h

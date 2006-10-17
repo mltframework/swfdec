@@ -25,7 +25,7 @@
 #include <libswfdec/color.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_player.h>
-#include <js/jspubtd.h>
+#include <libswfdec/js/jspubtd.h>
 
 G_BEGIN_DECLS
 

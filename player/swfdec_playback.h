@@ -2,7 +2,7 @@
 #ifndef _SWFDEC_PLAYBACK_H_
 #define _SWFDEC_PLAYBACK_H_
 
-#include <swfdec.h>
+#include <libswfdec/swfdec.h>
 
 G_BEGIN_DECLS
 

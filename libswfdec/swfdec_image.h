@@ -2,8 +2,8 @@
 #ifndef _SWFDEC_IMAGE_H_
 #define _SWFDEC_IMAGE_H_
 
-#include <swfdec_character.h>
-#include <swfdec_decoder.h>
+#include <libswfdec/swfdec_character.h>
+#include <libswfdec/swfdec_decoder.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecImage SwfdecImage;

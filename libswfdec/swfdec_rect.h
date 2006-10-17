@@ -2,7 +2,7 @@
 #ifndef __SWFDEC_RECT_H__
 #define __SWFDEC_RECT_H__
 
-#include <swfdec_types.h>
+#include <libswfdec/swfdec_types.h>
 
 struct _SwfdecRect
 {

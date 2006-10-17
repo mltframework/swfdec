@@ -3,7 +3,7 @@
 #define _SWFDEC_CODEC_H_
 
 #include <glib.h>
-#include <swfdec_buffer.h>
+#include <libswfdec/swfdec_buffer.h>
 
 typedef struct _SwfdecCodec SwfdecCodec;
 

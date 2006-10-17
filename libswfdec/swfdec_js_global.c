@@ -29,16 +29,11 @@ static JSBool
 swfdec_js_trace (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
-  char *bytes;
-  JSString *string;
+  const char *bytes;
 
-  string = JS_ValueToString(cx, argv[0]);
-  if (string == NULL)
-    return JS_FALSE;
-
-  bytes = JS_GetStringBytes (string);
+  bytes = swfdec_js_to_string (cx, argv[0]);
   if (bytes == NULL)
-    return JS_FALSE;
+    return JS_TRUE;
 
   /* FIXME: accumulate and emit after JS handling? */
   g_signal_emit_by_name (player, "trace", bytes);

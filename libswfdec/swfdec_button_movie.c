@@ -52,6 +52,7 @@ swfdec_button_movie_render (SwfdecMovie *movie, cairo_t *cr,
       SwfdecRect rect;
       swfdec_color_transform_chain (&color_trans, &record->color_transform,
 	  trans);
+      SWFDEC_LOG ("rendering graphic %u", SWFDEC_CHARACTER (record->graphic)->id);
       cairo_save (cr);
       cairo_transform (cr, &record->transform);
       swfdec_rect_transform_inverse (&rect, inval, &record->transform);

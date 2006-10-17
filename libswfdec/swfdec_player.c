@@ -33,6 +33,70 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite_movie.h"
 
+/*** Actions ***/
+
+typedef struct {
+  SwfdecMovie *		movie;
+  SwfdecActionFunc	func;
+  gpointer		data;
+} SwfdecPlayerAction;
+
+void
+swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie,
+    SwfdecActionFunc action_func, gpointer action_data)
+{
+  SwfdecPlayerAction *action;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (action_func != NULL);
+
+  action = swfdec_ring_buffer_push (player->actions);
+  if (action == NULL) {
+    /* FIXME: limit number of actions to not get inf loops due to scripts? */
+    swfdec_ring_buffer_set_size (player->actions,
+	swfdec_ring_buffer_get_size (player->actions) + 16);
+    action = swfdec_ring_buffer_push (player->actions);
+    g_assert (action);
+  }
+  action->movie = movie;
+  action->func = action_func;
+  action->data = action_data;
+}
+
+void
+swfdec_player_remove_all_actions (SwfdecPlayer *player, SwfdecMovie *movie)
+{
+  SwfdecPlayerAction *action;
+  guint i;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->actions); i++) {
+    action = swfdec_ring_buffer_peek_nth (player->actions, i);
+
+    if (action->movie == movie)
+      action->movie = NULL;
+  }
+}
+
+static gboolean
+swfdec_player_do_action (SwfdecPlayer *player)
+{
+  SwfdecPlayerAction *action;
+
+  do {
+    action = swfdec_ring_buffer_pop (player->actions);
+    if (action == NULL)
+      return FALSE;
+  } while (action->movie == NULL); /* skip removed actions */
+
+  action->func (action->movie, action->data);
+
+  return TRUE;
+}
+
 /*** SwfdecPlayer ***/
 
 enum {
@@ -112,10 +176,8 @@ swfdec_player_dispose (GObject *object)
 
   swfdec_js_finish_player (player);
 
-  if (player->gotos) {
-    g_assert (swfdec_ring_buffer_pop (player->gotos) == NULL);
-    swfdec_ring_buffer_free (player->gotos);
-  }
+  g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
+  swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
 
   for (i = 0; i < player->audio->len; i++) {
@@ -159,6 +221,7 @@ swfdec_player_init (SwfdecPlayer *player)
   swfdec_js_init_player (player);
 
   player->audio = g_array_new (FALSE, FALSE, sizeof (SwfdecAudio));
+  player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
 }
 
 void
@@ -360,7 +423,7 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
     if (swfdec_movie_handle_mouse (walk->data, x, y, button))
       break;
   }
-  while (swfdec_player_do_goto (player));
+  while (swfdec_player_do_action (player));
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_update (walk->data);
   }
@@ -433,7 +496,7 @@ swfdec_player_iterate (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_sprite_movie_queue_iterate (walk->data);
   }
-  while (swfdec_player_do_goto (player));
+  while (swfdec_player_do_action (player));
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_sprite_movie_iterate_audio (walk->data);
   }

@@ -32,29 +32,6 @@
 
 /*** GOTO HANDLING ***/
 
-typedef struct {
-  SwfdecSpriteMovie *	movie;		/* movie that is supposed to jump or NULL if removed */
-  guint			frame;		/* frame to jump to */
-  gboolean		do_enter_frame;	/* TRUE to execute enterFrame event */
-} GotoEntry;
-
-static void
-swfdec_sprite_movie_remove_gotos (SwfdecSpriteMovie *movie)
-{
-  SwfdecPlayer *player;
-  guint i;
-
-  player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
-
-  if (player->gotos == NULL)
-    return;
-  for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->gotos); i++) {
-    GotoEntry *entry = swfdec_ring_buffer_peek_nth (player->gotos, i);
-    if (entry->movie == movie)
-      entry->movie = NULL;
-  }
-}
-
 static SwfdecMovie *
 swfdec_movie_find (GList *movie_list, guint depth)
 {
@@ -179,30 +156,25 @@ swfdec_sprite_movie_do_goto_frame (SwfdecSpriteMovie *movie, unsigned int goto_f
   g_list_free (old);
 }
 
-gboolean
-swfdec_player_do_goto (SwfdecPlayer *player)
+static void
+swfdec_sprite_movie_goto_func (SwfdecMovie *mov, gpointer data)
 {
-  GotoEntry *entry;
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  gint i = GPOINTER_TO_INT (data);
 
-  g_assert (SWFDEC_IS_PLAYER (player));
-
-  if (player->gotos == NULL)
-    return FALSE;
-  do {
-    entry = swfdec_ring_buffer_pop (player->gotos);
-    if (entry == NULL)
-      return FALSE;
-  } while (entry->movie == NULL);
-
-  swfdec_sprite_movie_do_goto_frame (entry->movie, entry->frame, entry->do_enter_frame);
-  return TRUE;
+  /* decode frame info */
+  if (i < 0) {
+    swfdec_sprite_movie_do_goto_frame (movie, -i - 1, TRUE);
+  } else {
+    swfdec_sprite_movie_do_goto_frame (movie, i, FALSE);
+  }
 }
 
 void
 swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint frame, gboolean do_enter_frame)
 {
   SwfdecPlayer *player;
-  GotoEntry *entry;
+  int data;
 
   g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
   g_assert (frame < SWFDEC_MOVIE (movie)->n_frames);
@@ -210,20 +182,15 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint frame, gboolean do_ent
   player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
   SWFDEC_LOG ("queueing goto %u for %p %d", frame, movie, SWFDEC_CHARACTER (movie->sprite)->id);
   
-  if (player->gotos == NULL)
-    player->gotos = swfdec_ring_buffer_new (sizeof (GotoEntry), 16);
+  g_assert (frame <= G_MAXINT);
 
-  entry = swfdec_ring_buffer_push (player->gotos);
-  if (entry == NULL) {
-    /* FIXME: limit number of gotos to not get inf loops due to scripts? */
-    swfdec_ring_buffer_set_size (player->gotos,
-	swfdec_ring_buffer_get_size (player->gotos) + 16);
-    entry = swfdec_ring_buffer_push (player->gotos);
-    g_assert (entry);
-  }
-  entry->movie = movie;
-  entry->frame = frame;
-  entry->do_enter_frame = do_enter_frame;
+  /* encode frame info into an int */
+  data = frame;
+  if (do_enter_frame)
+    data = -data - 1;
+
+  swfdec_player_add_action (player, SWFDEC_MOVIE (movie), 
+      swfdec_sprite_movie_goto_func, GINT_TO_POINTER (data));
   SWFDEC_MOVIE (movie)->frame = frame;
 }
 
@@ -255,7 +222,7 @@ swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
     swfdec_sprite_movie_iterate_audio (movie);
   } else {
     /* unset */
-    swfdec_sprite_movie_remove_gotos (movie);
+    swfdec_player_remove_all_actions (player, mov);
     player->movies = g_list_remove (player->movies, movie);
     if (movie->sound_stream) {
       swfdec_audio_stream_stop (player, movie->sound_stream);

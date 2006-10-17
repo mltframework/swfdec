@@ -28,6 +28,7 @@
 
 G_BEGIN_DECLS
 
+typedef void (* SwfdecActionFunc) (SwfdecMovie *movie, gpointer data);
 
 struct _SwfdecPlayer
 {
@@ -58,7 +59,7 @@ struct _SwfdecPlayer
 
   /* iterating */
   GList *		movies;			/* list of all moveis that want to be iterated */
-  SwfdecRingBuffer *	gotos;			/* all gotos we've queued up so far */
+  SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */
 };
 
 struct _SwfdecPlayerClass
@@ -74,7 +75,12 @@ void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
 
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
-gboolean	swfdec_player_do_goto		(SwfdecPlayer *		player);
+void		swfdec_player_add_action	(SwfdecPlayer *		player,
+						 SwfdecMovie *		movie,
+						 SwfdecActionFunc   	action_func,
+						 gpointer		action_data);
+void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
+						 SwfdecMovie *		movie);
 					 
 
 G_END_DECLS

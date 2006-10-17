@@ -1,5 +1,4 @@
 SUBDIRS= \
-	gimp-loader \
 	libswfdec \
 	player \
 	plugin \

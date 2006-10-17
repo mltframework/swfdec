@@ -131,33 +131,6 @@ if test "x$HAVE_MOZILLA" = "xno"; then
   AC_MSG_WARN([Mozilla not found. Mozilla/Netscape plugin will not be built.])
 fi
 
-PKG_CHECK_MODULES(LIBGIMP,[gimp-2.0 gimpui-2.0 gtk+-2.0 >= 2.0.0],
-  HAVE_GIMP=yes, HAVE_GIMP=no)
-if test "x$HAVE_GIMP" = xyes ; then
-  gimp_prefix=$(pkg-config --variable=prefix gimp-2.0)
-  if test "x$gimp_prefix" = "x$prefix" ; then
-    gimplibdir=`pkg-config --define-variable=prefix='${prefix}' --variable=gimplibdir gimp-2.0`
-  else
-    HAVE_GIMP=no
-    AC_MSG_WARN([gimp plugin disabled because gimp prefix is not the same as installation prefix])
-  fi
-fi
-AM_CONDITIONAL(HAVE_GIMP,[test $HAVE_GIMP = yes])
-AC_SUBST(gimplibdir)
-
-AC_SUBST(LIBGIMP_CFLAGS)
-AC_SUBST(LIBGIMP_LIBS)
-
-dnl Check for X11 extensions
-AC_PATH_XTRA
-if test "-DX_DISPLAY_MISSING" = "$X_CFLAGS"; then
-  AC_MSG_NOTICE([cannot find X11, the build system needs fixage])
-fi
-AC_SUBST(X_CFLAGS)
-AC_SUBST(X_PRE_LIBS)
-AC_SUBST(X_EXTRA_LIBS)
-AC_SUBST(X_LIBS)
-
 AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
 AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
 AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
@@ -191,7 +164,6 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
-gimp-loader/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile

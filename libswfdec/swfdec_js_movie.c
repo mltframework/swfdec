@@ -50,37 +50,10 @@ movie_finalize (JSContext *cx, JSObject *obj)
   }
 }
 
-static JSBool
-movie_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-  SwfdecMovie *movie;
-
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
-#if 0
-  if (movie->text_variables) {
-    GList *list, *walk;
-    const char *name = swfdec_js_to_string (cx, id);
-    const char *val = swfdec_js_to_string (cx, *vp);
-
-    if (name == NULL || val == NULL)
-      return JS_FALSE;
-
-    SWFDEC_LOG ("setting property %s\n", name);
-    list = g_hash_table_lookup (movie->text_variables, name);
-    for (walk = list; walk; walk = walk->next) {
-      swfdec_movie_set_text (walk->data, val);
-    }
-  }
-#endif
-
-  return JS_TRUE;
-}
-
 static JSClass movieclip_class = {
     "Movie", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
-    JS_PropertyStub,  movie_set,
+    JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   movie_finalize,
 };
@@ -464,7 +437,7 @@ mc_xscale_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  d = movie->xscale;
+  d = movie->xscale * 100;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -483,7 +456,7 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return JS_TRUE;
   }
-  movie->xscale = d;
+  movie->xscale = d / 100;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;

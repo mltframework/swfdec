@@ -9,6 +9,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_edittext_movie.h"
 #include "swfdec_font.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
 
 G_DEFINE_TYPE (SwfdecEditText, swfdec_edit_text, SWFDEC_TYPE_GRAPHIC)
@@ -38,13 +39,10 @@ swfdec_edit_text_dispose (GObject *object)
   SwfdecEditText *text = SWFDEC_EDIT_TEXT (object);
 
   g_free (text->text);
-  if (text->path) {
-    g_free (text->path);
-  } else if (text->variable) {
-    g_free (text->variable);
-  }
-  text->path = NULL;
+  g_free (text->variable);
   text->variable = NULL;
+  JS_DestroyScript (text->player->jscx, text->query);
+  JS_DestroyScript (text->player->jscx, text->set_query);
   
   G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
 }
@@ -100,6 +98,8 @@ swfdec_edit_text_slash_to_dot (SwfdecEditText *text)
     if (*cur != '\0')
       goto fail;
   }
+  SWFDEC_DEBUG ("parsed slash-notated string \"%s\" into dot notation \"%s\"",
+      text->variable, str->str);
   g_free (text->variable);
   text->variable = g_string_free (str, FALSE);
 
@@ -127,14 +127,23 @@ swfdec_edit_text_parse_variable (SwfdecEditText *text)
     swfdec_edit_text_slash_to_dot (text);
   if (!text->variable)
     return;
+  text->query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
+      text->variable, strlen (text->variable), 
+      "query-variable", SWFDEC_CHARACTER (text)->id);
   s = strrchr (text->variable, '.');
   if (s) {
-    text->path = text->variable;
-    text->variable = s + 1;
-    *s = 0;
+    guint len = s - text->variable;
+    g_print ("compiling script \"%*s\" (%u chars) \n", len, text->variable, len);
+    text->set_query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
+	text->variable, len, 
+	"set-variable", SWFDEC_CHARACTER (text)->id);
+    text->variable_name = s + 1;
+  } else {
+    text->set_query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
+	"this", 4,
+	"set-variable", SWFDEC_CHARACTER (text)->id);
+    text->variable_name = text->variable;
   }
-  SWFDEC_LOG ("parsed variable name into path \"%s\" and variable \"%s\"",
-      text->path ? text->path : "", text->variable);
 }
 int
 tag_func_define_edit_text (SwfdecSwfDecoder * s)

@@ -20,10 +20,12 @@
 #ifndef _SWFDEC_EDIT_TEXT_H_
 #define _SWFDEC_EDIT_TEXT_H_
 
+#include <pango/pango.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/color.h>
 #include <libswfdec/swfdec_graphic.h>
-#include <pango/pango.h>
+#include <libswfdec/swfdec_player.h>
+#include <js/jspubtd.h>
 
 G_BEGIN_DECLS
 
@@ -65,10 +67,12 @@ struct _SwfdecEditText
   gboolean		autosize;	/* FIXME: implement */
 
   /* variable info */
-  char *		path;		/* path to object for variable or NULL for current */
-  char *		variable;	/* name of the variable */
+  char *		variable;	/* full name of the variable in dot notation */
+  char *		variable_name;	/* name of the variable without dots */
+  SwfdecPlayer *	player;		/* needed to create/destroy the scripts */
+  JSScript *		set_query;    	/* script to execute to get the variable's parent */
+  JSScript *		query;		/* script to execute for querying the variable's value */
   gboolean		readonly;
-
 };
 
 struct _SwfdecEditTextClass

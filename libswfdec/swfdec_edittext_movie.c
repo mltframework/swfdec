@@ -23,6 +23,9 @@
 
 #include "swfdec_edittext_movie.h"
 #include "swfdec_debug.h"
+#include "swfdec_js.h"
+#include "swfdec_player_internal.h"
+#include "swfdec_root_movie.h"
 
 G_DEFINE_TYPE (SwfdecEditTextMovie, swfdec_edit_text_movie, SWFDEC_TYPE_MOVIE)
 
@@ -62,6 +65,77 @@ swfdec_edit_text_movie_dispose (GObject *object)
 }
 
 static void
+swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
+{
+  SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
+  SwfdecPlayer *player;
+  jsval val;
+  const char *s;
+
+  if (text->text->query == NULL)
+    return;
+
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  if (!swfdec_js_execute_script	(player,
+	movie->parent, text->text->query, &val))
+    return;
+  if (JSVAL_IS_VOID (val))
+    return;
+
+  s = swfdec_js_to_string (player->jscx, val);
+  if (!s && !text->str)
+    return;
+  if (s && text->str && g_str_equal (s, text->str))
+    return;
+
+  swfdec_edit_text_movie_set_text (text, s);
+}
+
+static void
+swfdec_edit_text_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
+{
+  SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
+  SwfdecPlayer *player;
+  JSObject *object;
+  JSString *string;
+  jsval val;
+
+  if (parent == NULL)
+    return;
+  if (text->text->set_query == NULL)
+    return;
+
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  if (!swfdec_js_execute_script	(player,
+	movie->parent, text->text->set_query, &val))
+    return;
+
+  if (!JSVAL_IS_OBJECT (val))
+    return;
+  object = JSVAL_TO_OBJECT (val);
+  if (!JS_GetProperty (player->jscx, object, text->text->variable_name, &val))
+    return;
+  if (!JSVAL_IS_VOID (val)) {
+    const char *s = swfdec_js_to_string (player->jscx, val);
+    if (!s && !text->str)
+      return;
+    if (s && text->str && g_str_equal (s, text->str))
+      return;
+
+    swfdec_edit_text_movie_set_text (text, s);
+    return;
+  }
+
+  g_print ("setting variable %s to \"%s\"\n", text->text->variable_name,
+      text->str ? text->str : "");
+  string = JS_NewStringCopyZ (player->jscx, text->str ? text->str : "");
+  if (string == NULL)
+    return;
+  val = STRING_TO_JSVAL (string);
+  JS_SetProperty (player->jscx, object, text->text->variable_name, &val);
+}
+
+static void
 swfdec_edit_text_movie_class_init (SwfdecEditTextMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -69,8 +143,10 @@ swfdec_edit_text_movie_class_init (SwfdecEditTextMovieClass * g_class)
 
   object_class->dispose = swfdec_edit_text_movie_dispose;
 
+  movie_class->set_parent = swfdec_edit_text_movie_set_parent;
   movie_class->update_extents = swfdec_edit_text_movie_update_extents;
   movie_class->render = swfdec_edit_text_movie_render;
+  movie_class->iterate_start = swfdec_edit_text_movie_iterate;
 }
 
 static void

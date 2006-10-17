@@ -121,7 +121,10 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->update_extents)
     klass->update_extents (movie, rect);
-  g_assert (!swfdec_rect_is_empty (rect));
+  if (swfdec_rect_is_empty (rect)) {
+    *extents = *rect;
+    return;
+  }
   swfdec_rect_transform (extents, rect, &movie->transform);
   swfdec_rect_transform (rect, rect, &movie->content->transform);
   if (movie->parent && movie->parent->cache_state < SWFDEC_MOVIE_INVALID_EXTENTS) {
@@ -486,14 +489,18 @@ swfdec_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
   movie->root = parent->root;
   parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->set_parent)
-    klass->set_parent (movie, parent);
-  SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
-      movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+  /* NB: adding to the movies list happens before setting the parent.
+   * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
+   * new movies to be created (and added to this list)
+   */
   if (klass->iterate_start || klass->iterate_end) {
     SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
     player->movies = g_list_prepend (player->movies, movie);
   }
+  if (klass->set_parent)
+    klass->set_parent (movie, parent);
+  SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
+      movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
   swfdec_movie_execute (movie, SWFDEC_EVENT_LOAD);
 }
 

@@ -74,6 +74,12 @@ play_swf (SwfdecPlayer *player)
   }
 }
 
+static void
+print_trace (SwfdecPlayer *player, const char *message, gpointer unused)
+{
+  g_print ("%s\n", message);
+}
+
 int 
 main (int argc, char *argv[])
 {
@@ -83,11 +89,13 @@ main (int argc, char *argv[])
   guint buffer_size = 0;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
+  gboolean trace = FALSE;
 
   GOptionEntry options[] = {
-    { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
+    { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
+    { "trace", 't', 0, G_OPTION_ARG_NONE, &trace, "print trace output to stdout", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -112,7 +120,21 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  player = swfdec_player_new_from_file (argv[1], &error);
+  if (trace) {
+    SwfdecLoader *loader;
+    
+    player = swfdec_player_new ();
+    loader = swfdec_loader_new_from_file (argv[1], &error);
+    if (loader == NULL) {
+      g_object_unref (player);
+      player = NULL;
+    } else {
+      g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
+      swfdec_player_set_loader (player, loader);
+    }
+  } else {
+    player = swfdec_player_new_from_file (argv[1], &error);
+  }
   if (player == NULL) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
     g_error_free (error);

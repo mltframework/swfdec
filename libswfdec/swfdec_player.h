@@ -25,6 +25,12 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  SWFDEC_MOUSE_CURSOR_NORMAL,
+  SWFDEC_MOUSE_CURSOR_NONE,
+  SWFDEC_MOUSE_CURSOR_TEXT,
+  SWFDEC_MOUSE_CURSOR_CLICK
+} SwfdecMouseCursor;
 
 typedef struct _SwfdecPlayer SwfdecPlayer;
 typedef struct _SwfdecPlayerClass SwfdecPlayerClass;
@@ -50,9 +56,6 @@ double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);
-void		swfdec_player_get_invalid	(SwfdecPlayer *	player,
-						 SwfdecRect *	rect);
-void		swfdec_player_clear_invalid	(SwfdecPlayer *	player);
 					 
 void		swfdec_player_iterate		(SwfdecPlayer *	player);
 void		swfdec_player_render		(SwfdecPlayer *	player,

@@ -218,24 +218,20 @@ swfdec_widget_init (SwfdecWidget * widget)
 }
 
 static void
-swfdec_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecWidget *widget)
+swfdec_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRect *invalid, SwfdecWidget *widget)
 {
   GdkRectangle gdkrect;
   SwfdecRect rect;
 
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  swfdec_player_get_invalid (widget->player, &rect);
-  if (swfdec_rect_is_empty (&rect))
-    return;
-  swfdec_rect_scale (&rect, &rect, widget->real_scale);
+  swfdec_rect_scale (&rect, invalid, widget->real_scale);
   gdkrect.x = floor (rect.x0);
   gdkrect.y = floor (rect.y0);
   gdkrect.width = ceil (rect.x1) - gdkrect.x;
   gdkrect.height = ceil (rect.y1) - gdkrect.y;
   //g_print ("queing draw of %g %g  %g %g\n", rect.x0, rect.y0, rect.x1, rect.y1);
   gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &gdkrect, FALSE);
-  swfdec_player_clear_invalid (widget->player);
 }
 
 static void
@@ -273,13 +269,13 @@ swfdec_widget_set_player (SwfdecWidget *widget, SwfdecPlayer *player)
   g_return_if_fail (player == NULL || SWFDEC_IS_PLAYER (player));
   
   if (widget->player) {
-    g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_notify_cb, widget);
+    g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_invalidate_cb, widget);
     g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_notify_mouse_cb, widget);
     g_object_unref (widget->player);
   }
   widget->player = player;
   if (player) {
-    g_signal_connect (player, "notify::invalid", G_CALLBACK (swfdec_widget_notify_cb), widget);
+    g_signal_connect (player, "invalidate", G_CALLBACK (swfdec_widget_invalidate_cb), widget);
     g_signal_connect (player, "notify::mouse-visible", G_CALLBACK (swfdec_widget_notify_mouse_cb), widget);
     g_object_ref (player);
     swfdec_widget_notify_mouse_cb (player, NULL, widget);

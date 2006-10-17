@@ -101,6 +101,7 @@ swfdec_player_do_action (SwfdecPlayer *player)
 
 enum {
   TRACE,
+  INVALIDATE,
   LAST_SIGNAL
 };
 
@@ -109,7 +110,6 @@ static guint signals[LAST_SIGNAL];
 enum {
   PROP_0,
   PROP_INITIALIZED,
-  PROP_INVALID,
   PROP_LATENCY,
   PROP_MOUSE_VISIBLE
 };
@@ -131,11 +131,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   
   switch (param_id) {
     case PROP_INITIALIZED:
-      /* FIXME: what about rate? FLV has no rate... */
       g_value_set_boolean (value, player->width > 0 && player->height > 0);
-    case PROP_INVALID:
-      g_value_set_boolean (value, swfdec_rect_is_empty (&player->invalid));
-      break;
     case PROP_LATENCY:
       g_value_set_uint (value, player->samples_latency);
       break;
@@ -197,12 +193,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   object_class->set_property = swfdec_player_set_property;
   object_class->dispose = swfdec_player_dispose;
 
-  g_object_class_install_property (object_class, PROP_INVALID,
+  g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "the player has initialized its basic values",
 	  FALSE, G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_INVALID,
-      g_param_spec_boolean ("invalid", "invalid", "player contains invalid areas",
-	  TRUE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "latency", "audio latency in samples",
 	  0, 44100 * 10, 0, G_PARAM_READWRITE));
@@ -213,6 +206,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
       G_TYPE_NONE, 1, G_TYPE_STRING);
+  signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 1, G_TYPE_POINTER);
 }
 
 static void
@@ -224,18 +220,28 @@ swfdec_player_init (SwfdecPlayer *player)
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
 }
 
+static void
+swfdec_player_emit_invalidate (SwfdecPlayer *player)
+{
+  if (swfdec_rect_is_empty (&player->invalid))
+    return;
+
+  g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
+  swfdec_rect_init_empty (&player->invalid);
+}
+
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
-  gboolean was_empty;
-
-  if (swfdec_rect_is_empty (rect))
+  if (swfdec_rect_is_empty (rect)) {
+    g_assert_not_reached ();
     return;
+  }
 
-  was_empty = swfdec_rect_is_empty (&player->invalid);
   swfdec_rect_union (&player->invalid, &player->invalid, rect);
-  if (was_empty)
-    g_object_notify (G_OBJECT (player), "invalid");
+  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %g %g  %g %g",
+      rect->x0, rect->y0, rect->x1, rect->y1,
+      player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
 }
 
 static void
@@ -296,11 +302,18 @@ swfdec_player_new (void)
 void
 swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
 {
+  GList *walk;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
+  g_object_freeze_notify (G_OBJECT (player));
   swfdec_player_add_level_from_loader (player, 0, loader);
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  g_object_thaw_notify (G_OBJECT (player));
 }
 
 /**
@@ -329,41 +342,6 @@ swfdec_player_new_from_file (const char *filename, GError **error)
   swfdec_player_set_loader (player, loader);
 
   return player;
-}
-
-/**
- * swfdec_player_get_invalid:
- * @player: a #SwfdecPlayer
- * @rect: pointer to a rectangle to be filled with the invalid area
- *
- * The player accumulates the parts that need a redraw. This function gets
- * the rectangle that encloses these parts. Use swfdec_clear_invalid() to clear
- * it.
- **/
-void
-swfdec_player_get_invalid (SwfdecPlayer *player, SwfdecRect *rect)
-{
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (rect != NULL);
-
-  *rect = player->invalid;
-}
-
-/**
- * swfdec_player_clear_invalid:
- * @player: a #SwfdecPlayer
- *
- * Clears the list of areas that need a redraw.
- **/
-void
-swfdec_player_clear_invalid (SwfdecPlayer *player)
-{
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  if (!swfdec_rect_is_empty (&player->invalid)) {
-    swfdec_rect_init_empty (&player->invalid);
-    g_object_notify (G_OBJECT (player), "invalid");
-  }
 }
 
 /**
@@ -428,6 +406,7 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
     swfdec_movie_update (walk->data);
   }
   g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_invalidate (player);
 }
 
 /**
@@ -442,7 +421,6 @@ void
 swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
 {
   static const SwfdecColorTransform trans = { { 1.0, 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0, 0.0 } };
-  gboolean was_empty;
   GList *walk;
   SwfdecRect full = { 0, 0, player->width, player->height };
 
@@ -453,16 +431,23 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
     area = &full;
   if (swfdec_rect_is_empty (area))
     return;
-  was_empty = swfdec_rect_is_empty (&player->invalid);
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
       area->x0, area->y0, area->x1, area->y1);
+  /* FIXME: find a nicer way to render the background */
+  if (player->roots && SWFDEC_MOVIE (player->roots->data)->list &&
+      SWFDEC_IS_SPRITE_MOVIE (SWFDEC_MOVIE (player->roots->data)->list->data)) {
+    swfdec_sprite_movie_paint_background (
+	SWFDEC_SPRITE_MOVIE (SWFDEC_MOVIE (player->roots->data)->list->data), cr);
+  } else {
+    SWFDEC_WARNING ("couldn't paint the background, using white");
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+    cairo_paint (cr);
+  }
+
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_render (walk->data, cr, &trans, area, TRUE);
   }
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
-  swfdec_rect_subtract (&player->invalid, &player->invalid, area);
-  if (!was_empty && swfdec_rect_is_empty (&player->invalid))
-    g_object_notify (G_OBJECT (player), "invalid");
 }
 
 /**
@@ -509,6 +494,7 @@ swfdec_player_iterate (SwfdecPlayer *player)
   }
   SWFDEC_INFO ("=== STOP ITERATION ===");
   g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_invalidate (player);
 }
 
 /**

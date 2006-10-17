@@ -62,6 +62,8 @@ GType		swfdec_sprite_movie_get_type		(void);
 void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			frame,
 							 gboolean		do_enter_frame);
+void		swfdec_sprite_movie_paint_background	(SwfdecSpriteMovie *    movie,
+							 cairo_t *		cr);
 
 
 G_END_DECLS

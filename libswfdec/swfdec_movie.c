@@ -76,6 +76,8 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
   SwfdecRect rect = movie->extents;
 
   SWFDEC_LOG ("invalidating %g %g  %g %g", rect.x0, rect.y0, rect.x1, rect.y1);
+  if (swfdec_rect_is_empty (&rect))
+    return;
   while (movie->parent) {
     movie = movie->parent;
     if (movie->cache_state > SWFDEC_MOVIE_INVALID_EXTENTS)
@@ -119,6 +121,7 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->update_extents)
     klass->update_extents (movie, rect);
+  g_assert (!swfdec_rect_is_empty (rect));
   swfdec_rect_transform (extents, rect, &movie->transform);
   swfdec_rect_transform (rect, rect, &movie->content->transform);
   if (movie->parent && movie->parent->cache_state < SWFDEC_MOVIE_INVALID_EXTENTS) {

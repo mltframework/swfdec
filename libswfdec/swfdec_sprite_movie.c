@@ -349,3 +349,11 @@ swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
   movie->current_frame = (guint) -1;
 }
 
+void
+swfdec_sprite_movie_paint_background (SwfdecSpriteMovie *movie, cairo_t *cr)
+{
+  SwfdecSpriteFrame *frame = &movie->sprite->frames[movie->current_frame];
+
+  swfdec_color_set_source (cr, frame->bg_color);
+  cairo_paint (cr);
+}

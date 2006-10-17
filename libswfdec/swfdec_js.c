@@ -56,7 +56,7 @@ swfdec_js_error_report (JSContext *cx, const char *message, JSErrorReport *repor
 {
   SWFDEC_ERROR ("JS Error: %s\n", message);
   /* FIXME: #ifdef this when not debugging the compiler */
-  g_assert_not_reached ();
+  //g_assert_not_reached ();
 }
 
 static JSClass global_class = {

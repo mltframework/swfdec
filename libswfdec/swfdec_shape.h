@@ -73,15 +73,13 @@ struct _SwfdecShapeClass
 
 GType swfdec_shape_get_type (void);
 
-int tag_func_define_shape (SwfdecSwfDecoder * s);
-int tag_define_morph_shape (SwfdecSwfDecoder * s);
 int tag_define_shape (SwfdecSwfDecoder * s);
+int tag_define_shape_2 (SwfdecSwfDecoder * s);
 int tag_define_shape_3 (SwfdecSwfDecoder * s);
 void swf_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     SwfdecBits * bits);
 void swf_shape_get_recs (SwfdecSwfDecoder * s, SwfdecBits * bits,
     SwfdecShape * shape, gboolean morphshape);
-int tag_define_shape_2 (SwfdecSwfDecoder * s);
 
 
 G_END_DECLS

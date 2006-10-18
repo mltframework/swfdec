@@ -28,9 +28,7 @@
 
 #include "swfdec_shape.h"
 #include "swfdec.h"
-#include "swfdec_cache.h"
 #include "swfdec_debug.h"
-#include "swfdec_image.h"
 
 G_DEFINE_TYPE (SwfdecShape, swfdec_shape, SWFDEC_TYPE_GRAPHIC)
 

@@ -48,6 +48,7 @@ SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
 SwfdecPattern *	swfdec_pattern_parse_stroke   	(SwfdecSwfDecoder *		dec,
 						 gboolean			rgba);
 SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
+SwfdecPattern *	swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *		dec);
 
 void		swfdec_pattern_fill		(SwfdecPattern *		pattern, 
 						 cairo_t *			cr,

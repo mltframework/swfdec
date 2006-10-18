@@ -67,8 +67,10 @@ struct _SwfdecStrokePattern
 {
   SwfdecPattern		pattern;
 
-  guint			width;		/* width of line */
-  swf_color		color;		/* color to paint with */
+  guint			start_width;		/* width of line */
+  swf_color		start_color;		/* color to paint with */
+  guint			end_width;		/* width of line */
+  swf_color		end_color;		/* color to paint with */
 };
 
 struct _SwfdecStrokePatternClass
@@ -85,9 +87,16 @@ swfdec_stroke_pattern_fill (SwfdecPattern *pattern, cairo_t *cr,
   swf_color color;
   SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
 
-  color = swfdec_color_apply_transform (stroke->color, trans);
+  color = swfdec_color_apply_morph (stroke->start_color, stroke->end_color, ratio);
+  color = swfdec_color_apply_transform (color, trans);
   swfdec_color_set_source (cr, color);
-  cairo_set_line_width (cr, stroke->width);
+  if (ratio == 0) {
+    cairo_set_line_width (cr, stroke->start_width);
+  } else if (ratio == 65535) {
+    cairo_set_line_width (cr, stroke->end_width);
+  } else {
+    cairo_set_line_width (cr, (stroke->start_width * (65535 - ratio) + stroke->end_width * ratio) / 65535);
+  }
   cairo_stroke (cr);
 }
 
@@ -448,7 +457,7 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
   if (fill_style_type == 0x00) {
     pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
     SWFDEC_COLOR_PATTERN (pattern)->start_color = swfdec_bits_get_rgba (bits);
-    SWFDEC_COLOR_PATTERN (pattern)->end_color = swfdec_bits_get_color (bits);
+    SWFDEC_COLOR_PATTERN (pattern)->end_color = swfdec_bits_get_rgba (bits);
     SWFDEC_LOG ("    color %08x => %08x", SWFDEC_COLOR_PATTERN (pattern)->start_color,
 	SWFDEC_COLOR_PATTERN (pattern)->end_color);
   } else if (fill_style_type == 0x10 || fill_style_type == 0x12) {
@@ -575,7 +584,7 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
 	gradient->gradient->n_gradients);
   } else if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
     SwfdecStrokePattern *line = SWFDEC_STROKE_PATTERN (pattern);
-    return g_strdup_printf ("line (width %u, color #%08X)", line->width, line->color);
+    return g_strdup_printf ("line (width %u, color #%08X)", line->start_width, line->start_color);
   } else {
     return g_strdup_printf ("%s", G_OBJECT_TYPE_NAME (pattern));
   }
@@ -587,13 +596,31 @@ swfdec_pattern_parse_stroke (SwfdecSwfDecoder *dec, gboolean rgba)
   SwfdecBits *bits = &dec->b;
   SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
 
-  pattern->width = swfdec_bits_get_u16 (bits);
+  pattern->start_width = swfdec_bits_get_u16 (bits);
+  pattern->end_width = pattern->start_width;
   if (rgba) {
-    pattern->color = swfdec_bits_get_rgba (bits);
+    pattern->start_color = swfdec_bits_get_rgba (bits);
   } else {
-    pattern->color = swfdec_bits_get_color (bits);
+    pattern->start_color = swfdec_bits_get_color (bits);
   }
-  SWFDEC_LOG ("new stroke pattern: %u %08x", pattern->width, pattern->color);
+  pattern->end_color = pattern->start_color;
+  SWFDEC_LOG ("new stroke pattern: %u %08x", pattern->start_width, pattern->start_color);
+
+  return SWFDEC_PATTERN (pattern);
+}
+
+SwfdecPattern *
+swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *dec)
+{
+  SwfdecBits *bits = &dec->b;
+  SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
+
+  pattern->start_width = swfdec_bits_get_u16 (bits);
+  pattern->end_width = swfdec_bits_get_u16 (bits);
+  pattern->start_color = swfdec_bits_get_rgba (bits);
+  pattern->end_color = swfdec_bits_get_rgba (bits);
+  SWFDEC_LOG ("new stroke pattern: %u %08X => %u %08X", pattern->start_width, pattern->start_color,
+      pattern->end_width, pattern->end_color);
 
   return SWFDEC_PATTERN (pattern);
 }
@@ -603,8 +630,10 @@ swfdec_pattern_new_stroke (guint width, swf_color color)
 {
   SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
 
-  pattern->width = width;
-  pattern->color = color;
+  pattern->start_width = width;
+  pattern->end_width = width;
+  pattern->start_color = color;
+  pattern->end_color = color;
 
   return SWFDEC_PATTERN (pattern);
 }

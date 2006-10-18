@@ -1,5 +1,5 @@
 
-plugindir = $(libdir)/mozilla/plugins/
+plugindir = $(libdir)/$(MOZILLA_DIR)/plugins/
 
 if HAVE_MOZILLA
 plugin_LTLIBRARIES = libswfdecmozilla.la

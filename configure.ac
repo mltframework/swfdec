@@ -121,11 +121,14 @@ fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 
 PKG_CHECK_MODULES(MOZILLA, mozilla-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
+MOZILLA_DIR=mozilla
 if test "$HAVE_MOZILLA" = no ; then
   PKG_CHECK_MODULES(MOZILLA, firefox-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
+  MOZILLA_DIR=mozilla-firefox
 fi
 AC_SUBST(MOZILLA_CFLAGS)
 AC_SUBST(MOZILLA_LIBS)
+AC_SUBST(MOZILLA_DIR)
 AM_CONDITIONAL(HAVE_MOZILLA, [test $HAVE_MOZILLA = yes])
 if test "x$HAVE_MOZILLA" = "xno"; then
   AC_MSG_WARN([Mozilla not found. Mozilla/Netscape plugin will not be built.])

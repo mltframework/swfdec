@@ -75,7 +75,7 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 static void
 swfdec_cairo_path_merge (cairo_path_t *dest, const cairo_path_t *start, const cairo_path_t *end, double ratio)
 {
-  guint i;
+  int i;
   cairo_path_data_t *ddata, *sdata, *edata;
   double inv = 1.0 - ratio;
 

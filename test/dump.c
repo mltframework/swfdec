@@ -124,9 +124,9 @@ dump_shape (SwfdecShape *shape)
       g_free (str);
       if (verbose)
       g_print ("        %g %g  %g %g  %g %g\n", 
-	  shapevec->pattern->transform.xx, shapevec->pattern->transform.xy,
-	  shapevec->pattern->transform.yx, shapevec->pattern->transform.yy,
-	  shapevec->pattern->transform.x0, shapevec->pattern->transform.y0);
+	  shapevec->pattern->start_transform.xx, shapevec->pattern->start_transform.xy,
+	  shapevec->pattern->start_transform.yx, shapevec->pattern->start_transform.yy,
+	  shapevec->pattern->start_transform.x0, shapevec->pattern->start_transform.y0);
     }
     if (verbose) {
       dump_path (&shapevec->path);

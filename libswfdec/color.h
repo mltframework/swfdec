@@ -39,6 +39,7 @@ struct swfdec_gradient_struct
 #define RGB565_B(color) (((color)&0x001f)<<3)
 
 
+swf_color swfdec_color_apply_morph (swf_color start, swf_color end, unsigned int ratio);
 void swfdec_color_set_source (cairo_t *cr, swf_color color);
 void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
 void swfdec_color_transform_init_color (SwfdecColorTransform *trans, swf_color color);

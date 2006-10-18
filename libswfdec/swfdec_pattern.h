@@ -24,7 +24,8 @@ struct _SwfdecPattern
 {
   GObject		object;
 
-  cairo_matrix_t	transform;	/* user-to-pattern transform */
+  cairo_matrix_t	start_transform;	/* user-to-pattern transform */
+  cairo_matrix_t	end_transform;		/* user-to-pattern transform */
 };
 
 struct _SwfdecPatternClass
@@ -44,6 +45,7 @@ SwfdecPattern *	swfdec_pattern_new_stroke	(guint				width,
 						 swf_color			color);
 SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
 						 gboolean			rgba);
+SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
 
 void		swfdec_pattern_fill		(SwfdecPattern *		pattern, 
 						 cairo_t *			cr,

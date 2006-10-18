@@ -7,6 +7,27 @@
 #include "color.h"
 #include "swfdec_debug.h"
 
+swf_color 
+swfdec_color_apply_morph (swf_color start, swf_color end, unsigned int ratio)
+{
+  unsigned int r, g, b, a;
+  unsigned int start_ratio, end_ratio;
+
+  g_assert (ratio < 65536);
+  if (ratio == 0)
+    return start;
+  if (ratio == 65535)
+    return end;
+  start_ratio = 65535 - ratio;
+  end_ratio = ratio;
+  r = (SWF_COLOR_R (start) * start_ratio + SWF_COLOR_R (end) * end_ratio) / 65535;
+  g = (SWF_COLOR_G (start) * start_ratio + SWF_COLOR_G (end) * end_ratio) / 65535;
+  b = (SWF_COLOR_B (start) * start_ratio + SWF_COLOR_B (end) * end_ratio) / 65535;
+  a = (SWF_COLOR_A (start) * start_ratio + SWF_COLOR_A (end) * end_ratio) / 65535;
+
+  return SWF_COLOR_COMBINE (r, g, b, a);
+}
+
 void 
 swfdec_color_set_source (cairo_t *cr, swf_color color)
 {

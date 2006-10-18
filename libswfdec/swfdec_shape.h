@@ -40,10 +40,6 @@ typedef struct _SwfdecShapeClass SwfdecShapeClass;
 #define SWFDEC_SHAPE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SHAPE, SwfdecShape))
 #define SWFDEC_SHAPE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SHAPE, SwfdecShapeClass))
 
-#define SWFDEC_SHAPE_POINT_SPECIAL (-0x8000)
-#define SWFDEC_SHAPE_POINT_MOVETO 0
-#define SWFDEC_SHAPE_POINT_LINETO 1
-
 struct _SwfdecShapeVec
 {
   SwfdecPattern *pattern;		/* pattern to display */

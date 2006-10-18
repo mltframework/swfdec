@@ -448,7 +448,6 @@ tag_func_define_button (SwfdecSwfDecoder * s)
   SwfdecBits *bits = &s->b;
   int id;
   cairo_matrix_t trans;
-  SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
 
@@ -484,15 +483,11 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
 	character, layer);
 
-    cairo_matrix_init_identity (&trans);
     swfdec_bits_get_matrix (bits, &trans);
-    swfdec_bits_syncbits (bits);
-    swfdec_bits_get_color_transform (bits, &color_trans);
-    swfdec_bits_syncbits (bits);
 
     record.graphic = swfdec_swf_decoder_get_character (s, character);
     record.transform = trans;
-    record.color_transform = color_trans;
+    swfdec_color_transform_init_identity (&record.color_transform);
 
     if (record.graphic) {
       SwfdecRect rect;
@@ -501,7 +496,7 @@ tag_func_define_button (SwfdecSwfDecoder * s)
       swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
 	  &SWFDEC_GRAPHIC (button)->extents, &rect);
     } else {
-      SWFDEC_ERROR ("no graphic with character %d\n", character);
+      SWFDEC_ERROR ("no graphic with character %d", character);
     }
   }
   swfdec_bits_get_u8 (bits);

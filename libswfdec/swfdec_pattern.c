@@ -582,12 +582,30 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
 }
 
 SwfdecPattern *
+swfdec_pattern_parse_stroke (SwfdecSwfDecoder *dec, gboolean rgba)
+{
+  SwfdecBits *bits = &dec->b;
+  SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
+
+  pattern->width = swfdec_bits_get_u16 (bits);
+  if (rgba) {
+    pattern->color = swfdec_bits_get_rgba (bits);
+  } else {
+    pattern->color = swfdec_bits_get_color (bits);
+  }
+  SWFDEC_LOG ("new stroke pattern: %u %08x", pattern->width, pattern->color);
+
+  return SWFDEC_PATTERN (pattern);
+}
+
+SwfdecPattern *
 swfdec_pattern_new_stroke (guint width, swf_color color)
 {
-  SwfdecPattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
+  SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
 
-  SWFDEC_STROKE_PATTERN (pattern)->width = width;
-  SWFDEC_STROKE_PATTERN (pattern)->color = color;
+  pattern->width = width;
+  pattern->color = color;
 
-  return pattern;
+  return SWFDEC_PATTERN (pattern);
 }
+

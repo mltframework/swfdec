@@ -45,6 +45,8 @@ SwfdecPattern *	swfdec_pattern_new_stroke	(guint				width,
 						 swf_color			color);
 SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
 						 gboolean			rgba);
+SwfdecPattern *	swfdec_pattern_parse_stroke   	(SwfdecSwfDecoder *		dec,
+						 gboolean			rgba);
 SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
 
 void		swfdec_pattern_fill		(SwfdecPattern *		pattern, 

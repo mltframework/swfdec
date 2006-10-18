@@ -176,6 +176,20 @@ swfdec_content_update_lifetime (SwfdecSprite *sprite, unsigned int frame_id,
   content->sequence->end = frame_id;
 }
 
+/* NB: does not free the action data */
+static void
+swfdec_sprite_remove_last_action (SwfdecSprite * sprite, unsigned int frame_id)
+{
+  SwfdecSpriteFrame *frame;
+  
+  g_assert (frame_id < sprite->n_frames);
+  frame = &sprite->frames[frame_id];
+
+  g_assert (frame->actions != NULL);
+  g_assert (frame->actions->len > 0);
+  g_array_set_size (frame->actions, frame->actions->len - 1);
+}
+
 void
 swfdec_sprite_add_action (SwfdecSprite * sprite, unsigned int frame_id, 
     SwfdecSpriteActionType type, gpointer data)
@@ -325,11 +339,19 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     content->graphic = swfdec_swf_decoder_get_character (s, id);
     if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
       swfdec_content_free (content);
+      swfdec_sprite_remove_last_action (s->parse_sprite,
+	        s->parse_sprite->parse_frame);
       SWFDEC_ERROR ("id %u does not specify a graphic", id);
       return SWFDEC_STATUS_OK;
     }
     content->sequence = content;
     SWFDEC_LOG ("  id = %d", id);
+  } else if (content->graphic == NULL) {
+    SWFDEC_ERROR ("no character specified and copying didn't give one");
+    swfdec_content_free (content);
+    swfdec_sprite_remove_last_action (s->parse_sprite,
+	      s->parse_sprite->parse_frame);
+    return SWFDEC_STATUS_OK;
   }
 
   if (has_matrix) {

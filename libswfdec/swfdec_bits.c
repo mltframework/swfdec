@@ -412,7 +412,10 @@ swfdec_bits_get_morph_gradient (SwfdecBits * bits)
 void
 swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
 {
-  int nbits = swfdec_bits_getbits (bits, 5);
+  int nbits;
+  
+  swfdec_bits_syncbits (bits);
+  nbits = swfdec_bits_getbits (bits, 5);
 
   rect->x0 = swfdec_bits_getsbits (bits, nbits);
   rect->x1 = swfdec_bits_getsbits (bits, nbits);

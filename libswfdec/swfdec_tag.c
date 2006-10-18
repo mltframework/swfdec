@@ -542,14 +542,13 @@ tag_func_define_font (SwfdecSwfDecoder * s)
     g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
     g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
 
-    //swf_shape_add_styles(s,shape,&s->b);
     swfdec_bits_syncbits (&s->b);
     shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swf_shape_get_recs (s, &s->b, shape, FALSE);
+    swfdec_shape_get_recs (s, shape);
   }
 
   return SWFDEC_STATUS_OK;
@@ -635,14 +634,13 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
     g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
 
-    //swf_shape_add_styles(s,shape,&s->b);
     swfdec_bits_syncbits (&s->b);
     shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swf_shape_get_recs (s, &s->b, shape, FALSE);
+    swfdec_shape_get_recs (s, shape);
   }
   if (wide_codes) {
     bits->ptr += 2 * n_glyphs;

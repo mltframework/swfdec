@@ -478,6 +478,8 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames,
   guint i;
 
   g_return_if_fail (SWFDEC_IS_SPRITE (sprite));
+  if (n_frames == 0)
+    n_frames = 1;
 
   sprite->frames = g_new0 (SwfdecSpriteFrame, n_frames);
   sprite->n_frames = n_frames;
@@ -485,6 +487,8 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames,
   for (i = 0; i < n_frames; i++) {
     sprite->frames[i].sound_samples = 44100 * 256 / rate;
   }
+  /* default bg is white */
+  sprite->frames[0].bg_color = SWF_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
   SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
 }

@@ -36,6 +36,7 @@
 #include "swfdec_edittext.h"
 #include "swfdec_font.h"
 #include "swfdec_image.h"
+#include "swfdec_morphshape.h"
 #include "swfdec_pattern.h"
 #include "swfdec_shape.h"
 #include "swfdec_sound.h"
@@ -752,7 +753,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, SPRITE},
   [SWFDEC_TAG_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, SPRITE},
   [SWFDEC_TAG_DEFINEMORPHSHAPE] =
-      {"DefineMorphShape", NULL /* tag_define_morph_shape */ , 0},
+      {"DefineMorphShape", tag_define_morph_shape, 0},
   [SWFDEC_TAG_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
   [SWFDEC_TAG_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
   [SWFDEC_TAG_GENERATOR3] = {"Generator3", NULL, 0},

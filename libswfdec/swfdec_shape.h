@@ -58,9 +58,9 @@ struct _SwfdecShape
   /* used while defining */
   unsigned int fills_offset;
   unsigned int lines_offset;
-  int n_fill_bits;
-  int n_line_bits;
-  int rgba;
+  unsigned int n_fill_bits;
+  unsigned int n_line_bits;
+  gboolean rgba;
 
   /* cache */
   cairo_t *fill_cr;

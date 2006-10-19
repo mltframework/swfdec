@@ -44,6 +44,7 @@ struct _SwfdecShapeVec
 {
   SwfdecPattern *pattern;		/* pattern to display */
   cairo_path_t path;			/* accumulated path */
+  SwfdecRect extents;			/* extents of path */
   guint last_index;			/* index of last segment that was added */
 };
 

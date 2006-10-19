@@ -244,6 +244,8 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
       continue;
     if (vec->path.num_data == 0)
       continue;
+    if (!swfdec_rect_intersect (NULL, &vec->extents, inval))
+      continue;
     
     /* hack to not append paths for lines */
     if (!fill && vec->last_index % 2 != 0) 
@@ -785,6 +787,10 @@ swfdec_shape_initialize_from_sub_paths (SwfdecShape *shape, GArray *path_array)
   g_array_free (path_array, TRUE);
 
   g_array_sort (shape->vecs, swfdec_shape_vec_compare);
+  for (i = 0; i < shape->vecs->len; i++) {
+    SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
+    swfdec_pattern_get_path_extents (vec->pattern, &vec->path, &vec->extents);
+  }
 }
 
 void

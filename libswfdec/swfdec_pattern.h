@@ -54,6 +54,9 @@ void		swfdec_pattern_fill		(SwfdecPattern *		pattern,
 						 cairo_t *			cr,
 						 const SwfdecColorTransform *	trans,
 						 unsigned int			ratio);
+void		swfdec_pattern_get_path_extents (SwfdecPattern *		pattern,
+						 cairo_path_t *			path,
+						 SwfdecRect *			extents);
 
 /* debug */
 char *		swfdec_pattern_to_string	(SwfdecPattern *		pattern);

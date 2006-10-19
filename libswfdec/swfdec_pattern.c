@@ -638,3 +638,85 @@ swfdec_pattern_new_stroke (guint width, swf_color color)
   return SWFDEC_PATTERN (pattern);
 }
 
+static void
+swfdec_path_get_extents (const cairo_path_t *path, SwfdecRect *extents, double line_width)
+{
+  cairo_path_data_t *data = path->data;
+  int i;
+  double x = 0, y = 0;
+  gboolean need_current = TRUE;
+  gboolean start = TRUE;
+#define ADD_POINT(rect, x, y) G_STMT_START{ \
+  if (rect->x0 > x + line_width) \
+    rect->x0 = x + line_width; \
+  if (rect->x1 < x - line_width) \
+    rect->x1 = x - line_width; \
+  if (rect->y0 > y + line_width) \
+    rect->y0 = y + line_width; \
+  if (rect->y1 < y - line_width) \
+    rect->y1 = y - line_width; \
+}G_STMT_END
+  g_assert (line_width >= 0.0);
+  for (i = 0; i < path->num_data; i++) {
+    switch (data[i].header.type) {
+      case CAIRO_PATH_CURVE_TO:
+	if (need_current) {
+	  if (start) {
+	    start = FALSE;
+	    extents->x0 = x - line_width;
+	    extents->x1 = x + line_width;
+	    extents->y0 = y - line_width;
+	    extents->y1 = y + line_width;
+	  } else {
+	    ADD_POINT (extents, x, y);
+	  }
+	  need_current = FALSE;
+	}
+	ADD_POINT (extents, data[i+1].point.x, data[i+1].point.y);
+	ADD_POINT (extents, data[i+2].point.x, data[i+2].point.y);
+	ADD_POINT (extents, data[i+3].point.x, data[i+3].point.y);
+	i += 3;
+	break;
+      case CAIRO_PATH_LINE_TO:
+	if (need_current) {
+	  if (start) {
+	    start = FALSE;
+	    extents->x0 = x - line_width;
+	    extents->x1 = x + line_width;
+	    extents->y0 = y - line_width;
+	    extents->y1 = y + line_width;
+	  } else {
+	    ADD_POINT (extents, x, y);
+	  }
+	  need_current = FALSE;
+	}
+	ADD_POINT (extents, data[i+1].point.x, data[i+1].point.y);
+	i++;
+	break;
+      case CAIRO_PATH_CLOSE_PATH:
+	x = 0;
+	y = 0;
+	break;
+      case CAIRO_PATH_MOVE_TO:
+	x = data[i+1].point.x;
+	y = data[i+1].point.y;
+	i++;
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+  }
+#undef ADD_POINT
+}
+
+void
+swfdec_pattern_get_path_extents (SwfdecPattern *pattern, cairo_path_t *path, SwfdecRect *extents)
+{
+  if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
+    SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
+    swfdec_path_get_extents (path, extents, MAX (stroke->start_width, stroke->end_width));
+  } else {
+    swfdec_path_get_extents (path, extents, 0.0);
+  }
+}
+

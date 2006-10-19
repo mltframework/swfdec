@@ -162,6 +162,9 @@ swfdec_sprite_movie_goto_func (SwfdecMovie *mov, gpointer data)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   gint i = GPOINTER_TO_INT (data);
 
+  if (mov->will_be_removed)
+    return;
+
   /* decode frame info */
   if (i < 0) {
     swfdec_sprite_movie_do_goto_frame (movie, -i - 1, TRUE);
@@ -170,11 +173,24 @@ swfdec_sprite_movie_goto_func (SwfdecMovie *mov, gpointer data)
   }
 }
 
+static void
+swfdec_movie_tell_about_removal (SwfdecMovie *movie)
+{
+  GList *walk;
+  if (movie->will_be_removed)
+    return;
+  movie->will_be_removed = TRUE;
+  for (walk = movie->list; walk; walk = walk->next) {
+    swfdec_movie_tell_about_removal (walk->data);
+  }
+}
+
 void
 swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint frame, gboolean do_enter_frame)
 {
   SwfdecPlayer *player;
   int data;
+  GList *walk;
 
   g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
   g_assert (frame < SWFDEC_MOVIE (movie)->n_frames);
@@ -191,6 +207,14 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint frame, gboolean do_ent
 
   swfdec_player_add_action (player, SWFDEC_MOVIE (movie), 
       swfdec_sprite_movie_goto_func, GINT_TO_POINTER (data));
+
+  /* tell all relevant movies that they won't survive this */
+  for (walk = SWFDEC_MOVIE (movie)->list; walk; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    if (frame < cur->content->sequence->start || 
+	frame >= cur->content->sequence->end)
+      swfdec_movie_tell_about_removal (cur);
+  }
   SWFDEC_MOVIE (movie)->frame = frame;
 }
 
@@ -214,44 +238,12 @@ swfdec_sprite_movie_goto_frame (SwfdecMovie *movie, guint frame)
   swfdec_sprite_movie_goto (SWFDEC_SPRITE_MOVIE (movie), frame, FALSE);
 }
 
-static gboolean
-swfdec_sprite_movie_should_iterate (SwfdecSpriteMovie *movie)
-{
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  SwfdecMovie *parent;
-  guint parent_frame;
-
-  /* movies that are scheduled for removal this frame don't do anything */
-  /* FIXME: This function is complicated. It doesn't seem to be as stupid as
-   * Flash normally is. I suppose there's a simpler solution */
-
-  parent = mov->parent;
-  /* root movie always gets executed */
-  if (!SWFDEC_IS_SPRITE_MOVIE (parent))
-    return TRUE;
-
-  if (parent->stopped) {
-    parent_frame = parent->frame;
-  } else {
-    parent_frame = swfdec_sprite_get_next_frame (SWFDEC_SPRITE_MOVIE (parent)->sprite, parent->frame);
-  }
-  /* check if we'll get removed until parent's next frame */
-  if (parent_frame < mov->content->sequence->start ||
-      parent_frame >= mov->content->sequence->end)
-    return FALSE;
-
-  /* check if parent will get removed */
-  return swfdec_sprite_movie_should_iterate (SWFDEC_SPRITE_MOVIE (parent));
-}
-
 static void
 swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   unsigned int goto_frame;
 
-  if (!swfdec_sprite_movie_should_iterate (movie))
-    return;
   if (mov->stopped) {
     goto_frame = mov->frame;
   } else {

@@ -91,6 +91,7 @@ struct _SwfdecMovie {
   guint			n_frames;		/* amount of frames */
   gboolean		stopped;		/* if we currently iterate */
   gboolean		visible;		/* whether we currently can be seen or iterate */
+  gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
   /* mouse handling */
   SwfdecMovie *		mouse_grab;		/* child movie or self when mouse is grabbed */

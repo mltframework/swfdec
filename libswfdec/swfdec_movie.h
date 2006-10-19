@@ -69,7 +69,7 @@ struct _SwfdecMovie {
   JSObject *		jsobj;			/* our object in javascript */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   const SwfdecContent *	content;           	/* the content we are displaying */
-  SwfdecMovieState	cache_state;		/* wether we are up to date */
+  SwfdecMovieState	cache_state;		/* whether we are up to date */
 
   /* parenting information */
   SwfdecMovie *		root;			/* root movie for this movie */

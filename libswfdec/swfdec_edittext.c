@@ -133,7 +133,7 @@ swfdec_edit_text_parse_variable (SwfdecEditText *text)
   s = strrchr (text->variable, '.');
   if (s) {
     guint len = s - text->variable;
-    g_print ("compiling script \"%*s\" (%u chars) \n", len, text->variable, len);
+    SWFDEC_LOG ("compiling script \"%*s\" (%u chars)", len, text->variable, len);
     text->set_query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
 	text->variable, len, 
 	"set-variable", SWFDEC_CHARACTER (text)->id);

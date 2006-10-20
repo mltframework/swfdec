@@ -122,9 +122,32 @@ jpeg_rgb_decoder_get_image (JpegRGBDecoder * rgbdec,
 
 
 /* from the JFIF spec */
-#define YUV_TO_R(y,u,v) CLAMP((y) + 1.402*((v)-128),0,255)
-#define YUV_TO_G(y,u,v) CLAMP((y) - 0.34414*((u)-128) - 0.71414*((v)-128),0,255)
-#define YUV_TO_B(y,u,v) CLAMP((y) + 1.772*((u)-128),0,255)
+#if 0
+#define CONVERT(r, g, b, y, u, v) G_STMT_START{ \
+  (r) = CLAMP((y) + 1.402*((v)-128),0,255); \
+  (g) = CLAMP((y) - 0.34414*((u)-128) - 0.71414*((v)-128),0,255); \
+  (b) = CLAMP((y) + 1.772*((u)-128),0,255); \
+}G_STMT_END
+#else
+#define SCALEBITS 10
+#define ONE_HALF  (1 << (SCALEBITS - 1))
+#define FIX(x)	  ((int) ((x) * (1<<SCALEBITS) + 0.5))
+#define CONVERT(r, g, b, y, u, v) G_STMT_START{ \
+    int cb = (u) - 128;\
+    int cr = (v) - 128;\
+    int cy = (y) << SCALEBITS;\
+    int r_add = cy + FIX(1.40200) * cr + ONE_HALF;\
+    int g_add = cy - FIX(0.34414) * cb - FIX(0.71414) * cr + ONE_HALF;\
+    int b_add = cy + FIX(1.77200) * cb + ONE_HALF;\
+    r_add = CLAMP (r_add, 0, 255 << SCALEBITS);\
+    g_add = CLAMP (g_add, 0, 255 << SCALEBITS);\
+    b_add = CLAMP (b_add, 0, 255 << SCALEBITS);\
+    r = r_add >> SCALEBITS; \
+    g = g_add >> SCALEBITS; \
+    b = b_add >> SCALEBITS; \
+}G_STMT_END
+
+#endif
 
 static void
 convert (JpegRGBDecoder * rgbdec)
@@ -142,15 +165,11 @@ convert (JpegRGBDecoder * rgbdec)
   for (y = 0; y < rgbdec->height; y++) {
     for (x = 0; x < rgbdec->width; x++) {
 #if G_LITTLE_ENDIAN == G_BYTE_ORDER
-      rgbp[0] = YUV_TO_B (yp[x], up[x], vp[x]);
-      rgbp[1] = YUV_TO_G (yp[x], up[x], vp[x]);
-      rgbp[2] = YUV_TO_R (yp[x], up[x], vp[x]);
+      CONVERT (rgbp[2], rgbp[1], rgbp[0], yp[x], up[x], vp[x]);
       rgbp[3] = 0xFF;
 #else
-      rgbp[3] = YUV_TO_B (yp[x], up[x], vp[x]);
-      rgbp[2] = YUV_TO_G (yp[x], up[x], vp[x]);
-      rgbp[1] = YUV_TO_R (yp[x], up[x], vp[x]);
       rgbp[0] = 0xFF;
+      CONVERT (rgbp[1], rgbp[2], rgbp[3], yp[x], up[x], vp[x]);
 #endif
       rgbp += 4;
     }

@@ -15,10 +15,10 @@ swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
   int x, y;
 
-  gtk_widget_get_pointer (gtkwidget, &x, &y);
+  gdk_window_get_pointer (gtkwidget->window, &x, &y, NULL);
 
   swfdec_player_handle_mouse (widget->player, 
-      event->x / widget->real_scale, event->y / widget->real_scale, widget->button);
+      x / widget->real_scale, y / widget->real_scale, widget->button);
   
   return FALSE;
 }

@@ -433,7 +433,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
     return;
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
       area->x0, area->y0, area->x1, area->y1);
-  cairo_rectangle (cr, 0, 0, player->width, player->height);
+  cairo_rectangle (cr, area->x0, area->y0, area->x1 - area->x0, area->y1 - area->y0);
   cairo_clip (cr);
   /* FIXME: find a nicer way to render the background */
   if (player->roots && SWFDEC_MOVIE (player->roots->data)->list &&

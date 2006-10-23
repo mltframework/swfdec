@@ -41,7 +41,8 @@ struct _SwfdecButtonMovie {
 
   SwfdecButton *	button;		/* button we render */
   SwfdecButtonState	state;		/* current state we're in */
-  int			old_button;	/* FIXME: make smarter so I don't need this */
+  gboolean		mouse_in;	/* TRUE if mouse was inside last we checked */
+  int			mouse_button;	/* last mouse button */
 };
 
 struct _SwfdecButtonMovieClass {

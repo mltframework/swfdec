@@ -93,13 +93,6 @@ struct _SwfdecMovie {
   gboolean		visible;		/* whether we currently can be seen or iterate */
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
-  /* mouse handling */
-  SwfdecMovie *		mouse_grab;		/* child movie or self when mouse is grabbed */
-  double		mouse_x;		/* x position of mouse */
-  double		mouse_y;		/* y position of mouse */
-  gboolean		mouse_in;		/* if the mouse is inside this widget */
-  int			mouse_button;		/* 1 if button is pressed, 0 otherwise */
-
   /* leftover unimplemented variables from the Actionscript spec */
   int alpha;
   //droptarget
@@ -110,7 +103,7 @@ struct _SwfdecMovie {
 struct _SwfdecMovieClass {
   GObjectClass		object_class;
 
-  /* vfuncs */
+  /* general vfuncs */
   void			(* set_parent)		(SwfdecMovie *		movie,
 						 SwfdecMovie *		parent);
   void			(* content_changed)	(SwfdecMovie *		movie,
@@ -122,10 +115,18 @@ struct _SwfdecMovieClass {
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval,
 						 gboolean		fill);
-  gboolean		(* handle_mouse)      	(SwfdecMovie *		movie,
+
+  /* mouse handling */
+  gboolean		(* mouse_in)		(SwfdecMovie *		movie,
+						 double			x,
+						 double			y);
+  void			(* mouse_change)      	(SwfdecMovie *		movie,
 						 double			x,
 						 double			y,
+						 gboolean		mouse_in,
 						 int			button);
+
+  /* iterating */
   void			(* goto_frame)		(SwfdecMovie *		movie,
 						 guint			frame);
   void			(* iterate_start)     	(SwfdecMovie *		movie);
@@ -136,8 +137,8 @@ GType		swfdec_movie_get_type		(void);
 
 SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
-void		swfdec_movie_set_parent		(SwfdecMovie *		movie,
-						 SwfdecMovie *		parent);
+SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
+						 guint			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_set_content	(SwfdecMovie *		movie,
 						 const SwfdecContent *	content);
@@ -145,10 +146,14 @@ void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,
 						 SwfdecMovieState	state);
 void		swfdec_movie_update		(SwfdecMovie *		movie);
-gboolean      	swfdec_movie_handle_mouse	(SwfdecMovie *		movie,
+void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
+						 double *		x,
+						 double *		y);
+void		swfdec_movie_send_mouse_change	(SwfdecMovie *		movie,
+						 gboolean		release);
+SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,
 						 double			x,
-						 double			y,
-						 int			button);
+						 double			y);
 void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,

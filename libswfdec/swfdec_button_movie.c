@@ -34,36 +34,24 @@ swfdec_button_movie_update_extents (SwfdecMovie *movie,
       &SWFDEC_GRAPHIC (SWFDEC_BUTTON_MOVIE (movie)->button)->extents);
 }
 
-static void
-swfdec_button_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
-{
-  SwfdecButtonState state = SWFDEC_BUTTON_MOVIE (movie)->state;
-  SwfdecButton *button = SWFDEC_BUTTON_MOVIE (movie)->button;
-  SwfdecButtonRecord *record;
-  unsigned int i;
-
-  g_return_if_fail (SWFDEC_IS_BUTTON (button));
-
-  for (i = 0; i < button->records->len; i++) {
-    record = &g_array_index (button->records, SwfdecButtonRecord, i);
-    if (record->states & state) {
-      SwfdecColorTransform color_trans;
-      SwfdecRect rect;
-      swfdec_color_transform_chain (&color_trans, &record->color_transform,
-	  trans);
-      SWFDEC_LOG ("rendering graphic %u", SWFDEC_CHARACTER (record->graphic)->id);
-      cairo_save (cr);
-      cairo_transform (cr, &record->transform);
-      swfdec_rect_transform_inverse (&rect, inval, &record->transform);
-      swfdec_graphic_render (record->graphic, cr, &color_trans, &rect, fill);
-      cairo_restore (cr);
-    }
-  }
-}
+/* first index is 1 for menubutton, second index is previous state,
+ * last index is current state
+ * LSB in index is mouse OUT = 0, IN = 1
+ * MSB in index is button UP = 0, DOWN = 1
+ */
+static const SwfdecButtonCondition event_table[2][4][4] = {
+  { { -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_UP, -1 },
+    { SWFDEC_BUTTON_OUT_DOWN_TO_IDLE, -1, -1, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN },
+    { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
+    { -1, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } },
+  { { -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_UP, -1 },
+    { 0, -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN },
+    { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
+    { -1, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } }
+};
 
 static void
-swfdec_button_execute (SwfdecButtonMovie *movie,
+swfdec_button_movie_execute (SwfdecButtonMovie *movie,
     SwfdecButtonCondition condition)
 {
   if (movie->button->menubutton) {
@@ -78,113 +66,137 @@ swfdec_button_execute (SwfdecButtonMovie *movie,
     swfdec_event_list_execute (movie->button->events, SWFDEC_MOVIE (movie)->parent, condition, 0);
 }
 
-SwfdecButtonState
-swfdec_button_change_state (SwfdecMovie *movie, gboolean was_in, int old_button)
+#define CONTENT_IN_FRAME(content, frame) \
+  ((content)->sequence->start <= frame && \
+   (content)->sequence->end > frame)
+static void
+swfdec_button_movie_change_state (SwfdecButtonMovie *movie, SwfdecButtonState state)
 {
-  SwfdecButtonMovie *bmovie = SWFDEC_BUTTON_MOVIE (movie);
-  SwfdecButton *button = bmovie->button;
-  SwfdecButtonState state = bmovie->state;
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  GList *walk;
 
-  switch (bmovie->state) {
-    case SWFDEC_BUTTON_UP:
-      if (!movie->mouse_in)
-	break;
-      if (movie->mouse_button) {
-	state = SWFDEC_BUTTON_DOWN;
-	if (button->menubutton) {
-	  swfdec_button_execute (bmovie, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN);
-	} else {
-	  /* simulate entering then clicking */
-	  swfdec_button_execute (bmovie, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
-	  swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
-	}
-      } else {
-	state = SWFDEC_BUTTON_OVER;
-	swfdec_button_execute (bmovie, SWFDEC_BUTTON_IDLE_TO_OVER_UP);
-      }
-      break;
-    case SWFDEC_BUTTON_OVER:
-      if (!movie->mouse_in) {
-	state = SWFDEC_BUTTON_UP;
-	swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
-      } else if (movie->mouse_button) {
-	state = SWFDEC_BUTTON_DOWN;
-	swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN);
-      }
-      break;
-    case SWFDEC_BUTTON_DOWN:
-      /* this is quite different for push and menu buttons */
-      if (!movie->mouse_button) {
-	if (!movie->mouse_in) {
-	  state = SWFDEC_BUTTON_UP;
-	  if (button->menubutton || was_in) {
-	    swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
-	    swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_UP_TO_IDLE);
-	  } else {
-	    swfdec_button_execute (bmovie, SWFDEC_BUTTON_OUT_DOWN_TO_IDLE);
-	  }
-	} else {
-	  state = SWFDEC_BUTTON_OVER;
-	  swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP);
-	}
-      } else {
-	if (movie->mouse_in) {
-	  if (!was_in && !button->menubutton)
-	    swfdec_button_execute (bmovie, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN);
-	} else if (was_in) {
-	  if (button->menubutton) {
-	    state = SWFDEC_BUTTON_UP;
-	    swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE);
-	  } else {
-	    swfdec_button_execute (bmovie, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN);
-	  }
-	}
-      }
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
+  g_assert (movie->state != state);
+  SWFDEC_LOG ("changing state on button movie %p from %d to %d", movie,
+      movie->state, state);
+  /* do this in 2 loops - otherwise going down DOWN=>UP would
+   * remove children that are only in these 2 states (due to how
+   * adding them is handled)
+   */
+  for (walk = movie->button->records; walk; walk = walk->next) {
+    SwfdecContent *content = walk->data;
+    if (CONTENT_IN_FRAME (content, (guint) movie->state) &&
+	!CONTENT_IN_FRAME (content, (guint) state)) {
+      SwfdecMovie *child = swfdec_movie_find (mov, content->depth);
+      if (child)
+	swfdec_movie_remove (child);
+    }
   }
-  return state;
+  for (walk = movie->button->records; walk; walk = walk->next) {
+    SwfdecContent *content = walk->data;
+    if (!CONTENT_IN_FRAME (content, (guint) movie->state) &&
+	CONTENT_IN_FRAME (content, (guint) state)) {
+      SwfdecMovie *child = swfdec_movie_find (mov, content->depth);
+      if (child) {
+	g_assert_not_reached ();
+      }
+      swfdec_movie_new (mov, content);
+    }
+  }
+  movie->state = state;
+}
+
+static void
+swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
+{
+  SwfdecButtonCondition event;
+
+  if (movie->mouse_in == mouse_in &&
+      movie->mouse_button == button)
+    return;
+  SWFDEC_LOG ("changing mouse state %s: %s %s (%u) => %s %s (%u)\n", 
+      movie->button->menubutton ? "MENU" : "BUTTON",
+      movie->mouse_in ? "IN" : "OUT", movie->mouse_button ? "DOWN" : "UP",
+      (movie->mouse_in ? 2 : 0) + movie->mouse_button,
+      mouse_in ? "IN" : "OUT", button ? "DOWN" : "UP",
+      (mouse_in ? 2 : 0) + button);
+  event = event_table[movie->button->menubutton ? 1 : 0]
+		     [(movie->mouse_in ? 2 : 0) + movie->mouse_button]
+		     [(mouse_in ? 2 : 0) + button];
+
+  g_assert (event != (guint) -1);
+  if (event != 0) {
+    SWFDEC_LOG ("emitting event for condition %u", event);
+    swfdec_button_movie_execute (movie, event);
+  }
+  movie->mouse_in = mouse_in;
+  movie->mouse_button = button;
+}
+
+static void
+swfdec_button_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
+{
+  SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
+
+  if (parent) {
+    swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
+  } else {
+    swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_INIT);
+  }
 }
 
 static gboolean
-swfdec_button_mouse_in (SwfdecButton *button, double x, double y)
+swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
-  guint i;
-  SwfdecButtonRecord *record;
+  GList *walk;
+  double tmpx, tmpy;
+  SwfdecButton *button = SWFDEC_BUTTON_MOVIE (movie)->button;
+  SwfdecContent *content;
 
-  for (i = 0; i < button->records->len; i++) {
-    double tmpx, tmpy;
+  for (walk = button->records; walk; walk = walk->next) {
+    content = walk->data;
+    if (content->end <= SWFDEC_BUTTON_HIT)
+      continue;
+    tmpx = x;
+    tmpy = y;
+    swfdec_matrix_transform_point_inverse (&content->transform, &tmpx, &tmpy);
 
-    record = &g_array_index (button->records, SwfdecButtonRecord, i);
-    if (record->states & SWFDEC_BUTTON_HIT) {
-      tmpx = x;
-      tmpy = y;
-      swfdec_matrix_transform_point_inverse (&record->transform, &tmpx, &tmpy);
-
-      SWFDEC_LOG ("Checking button at %g %g (transformed from %g %g)", tmpx, tmpy, x, y);
-      if (swfdec_graphic_mouse_in (record->graphic, tmpx, tmpy))
-	return TRUE;
-      SWFDEC_LOG ("  missed");
-    }
+    SWFDEC_LOG ("Checking button contents at %g %g (transformed from %g %g)", tmpx, tmpy, x, y);
+    if (swfdec_graphic_mouse_in (content->graphic, tmpx, tmpy))
+      return TRUE;
+    SWFDEC_LOG ("  missed");
   }
   return FALSE;
 }
 
-static gboolean
-swfdec_button_movie_handle_mouse (SwfdecMovie *movie, double x, double y,
-    int mouse_button)
+static SwfdecButtonState
+swfdec_button_movie_get_state (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
 {
-  SwfdecButtonMovie *bmovie = SWFDEC_BUTTON_MOVIE (movie);
-  SwfdecButton *button = bmovie->button;
-  gboolean was_in = movie->mouse_in;
+  if (button) {
+    if (mouse_in)
+      return SWFDEC_BUTTON_DOWN;
+    else if (movie->button->menubutton)
+      return SWFDEC_BUTTON_UP;
+    else
+      return SWFDEC_BUTTON_OVER;
+  } else {
+    if (mouse_in)
+      return SWFDEC_BUTTON_OVER;
+    else
+      return SWFDEC_BUTTON_UP;
+  }
+}
 
-  movie->mouse_in = swfdec_button_mouse_in (button, x, y);
-  bmovie->state = swfdec_button_change_state (movie, 
-      was_in, bmovie->old_button);
-  bmovie->old_button = mouse_button;
-  return movie->mouse_in;
+static void
+swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y, 
+    gboolean mouse_in, int button)
+{
+  SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
+  SwfdecButtonState new_state = swfdec_button_movie_get_state (movie, mouse_in, button);
+
+  if (new_state != movie->state) {
+    swfdec_button_movie_change_state (movie, new_state);
+  }
+  swfdec_button_movie_change_mouse (movie, mouse_in, button);
 }
 
 static void
@@ -192,14 +204,15 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 {
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
+  movie_class->set_parent = swfdec_button_movie_set_parent;
   movie_class->update_extents = swfdec_button_movie_update_extents;
-  movie_class->render = swfdec_button_movie_render;
-  movie_class->handle_mouse = swfdec_button_movie_handle_mouse;
+  movie_class->mouse_in = swfdec_button_movie_mouse_in;
+  movie_class->mouse_change = swfdec_button_movie_mouse_change;
 }
 
 static void
 swfdec_button_movie_init (SwfdecButtonMovie *movie)
 {
-  movie->state = SWFDEC_BUTTON_UP;
+  movie->state = SWFDEC_BUTTON_INIT;
 }
 

@@ -37,6 +37,7 @@
 #include "swfdec_font.h"
 #include "swfdec_image.h"
 #include "swfdec_morphshape.h"
+#include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
 #include "swfdec_shape.h"
 #include "swfdec_sound.h"
@@ -347,6 +348,43 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
+static void
+swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent *content)
+{
+  guint i;
+  SwfdecContent *cur = NULL;
+
+  for (i = 0; i < 4; i++) {
+    if (!cur && (states & 1)) {
+      cur = content;
+      if (content->end != G_MAXUINT) {
+	/* need a copy here */
+	cur = swfdec_content_new (content->depth);
+	*cur = *content;
+	cur->sequence = cur;
+      }
+      cur->start = i;
+      button->records = g_list_append (button->records, content);
+    }
+    if (cur && !(states & 1)) {
+      cur->end = i;
+      cur = NULL;
+    }
+    states >>= 1;
+  }
+  if (cur) {
+    SwfdecRect rect;
+    cur->end = 4;
+    swfdec_rect_transform (&rect, &content->graphic->extents, &cur->transform);
+    swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
+	&SWFDEC_GRAPHIC (button)->extents, &rect);
+  }
+  if (content->end == G_MAXUINT) {
+    SWFDEC_ERROR ("button record for graphic %u is not used in any state, discarding", 
+	SWFDEC_CHARACTER (content->graphic)->id);
+    swfdec_content_free (content);
+  }
+}
 
 int
 tag_func_define_button_2 (SwfdecSwfDecoder * s)
@@ -355,8 +393,6 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
   int id;
   int flags;
   int offset;
-  cairo_matrix_t trans;
-  SwfdecColorTransform color_trans;
   SwfdecButton *button;
   unsigned char *endptr;
 
@@ -379,47 +415,39 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    int character;
-    int layer;
-    SwfdecButtonRecord record = { 0 };
+    unsigned int character;
+    unsigned int depth;
+    unsigned int states;
+    SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);
     reserved = swfdec_bits_getbits (bits, 4);
-    record.states = swfdec_bits_getbits (bits, 4);
+    states = swfdec_bits_getbits (bits, 4);
     character = swfdec_bits_get_u16 (bits);
-    layer = swfdec_bits_get_u16 (bits);
+    depth = swfdec_bits_get_u16 (bits);
 
     SWFDEC_LOG ("  reserved = %d", reserved);
-    if (reserved) {
-      SWFDEC_WARNING ("reserved is supposed to be 0");
-    }
-    SWFDEC_LOG ("states: %s%s%s%scharacter=%d layer=%d",
-        record.states & SWFDEC_BUTTON_HIT ? "HIT " : "", 
-	record.states & SWFDEC_BUTTON_DOWN ? "DOWN " : "", 
-        record.states & SWFDEC_BUTTON_OVER ? "OVER " : "",
-	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
-	character, layer);
+    SWFDEC_LOG ("states: %s%s%s%scharacter=%u layer=%u",
+        states & (1 << SWFDEC_BUTTON_HIT) ? "HIT " : "", 
+	states & (1 << SWFDEC_BUTTON_DOWN) ? "DOWN " : "", 
+        states & (1 << SWFDEC_BUTTON_OVER) ? "OVER " : "",
+	states & (1 << SWFDEC_BUTTON_UP) ? "UP " : "", 
+	character, depth);
+    content = swfdec_content_new (depth);
 
-    cairo_matrix_init_identity (&trans);
-    swfdec_bits_get_matrix (bits, &trans);
+    swfdec_bits_get_matrix (bits, &content->transform);
     SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
-	trans.xx, trans.yy, trans.xy, trans.yx, trans.x0, trans.y0);
-    swfdec_bits_syncbits (bits);
-    swfdec_bits_get_color_transform (bits, &color_trans);
-    swfdec_bits_syncbits (bits);
+	content->transform.xx, content->transform.yy, 
+	content->transform.xy, content->transform.yx,
+	content->transform.x0, content->transform.y0);
+    swfdec_bits_get_color_transform (bits, &content->color_transform);
 
-    record.graphic = swfdec_swf_decoder_get_character (s, character);
-    record.transform = trans;
-    record.color_transform = color_trans;
-
-    if (record.graphic) {
-      SwfdecRect rect;
-      swfdec_rect_transform (&rect, &record.graphic->extents, &record.transform);
-      g_array_append_val (button->records, record);
-      swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
-	  &SWFDEC_GRAPHIC (button)->extents, &rect);
+    content->graphic = swfdec_swf_decoder_get_character (s, character);
+    if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
+      SWFDEC_ERROR ("id %u does not reference a graphic, ignoring", character);
+      swfdec_content_free (content);
     } else {
-      SWFDEC_ERROR ("no object with character %d\n", character);
+      swfdec_button_append_content (button, states, content);
     }
   }
   swfdec_bits_get_u8 (bits);
@@ -436,6 +464,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 
     if (button->events == NULL)
       button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
+    SWFDEC_LOG ("new event for condition %u (key %u)", condition, key);
     swfdec_event_list_parse (button->events, &s->b, condition, key);
   }
 
@@ -447,7 +476,6 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
   int id;
-  cairo_matrix_t trans;
   SwfdecButton *button;
   unsigned char *endptr;
 
@@ -462,41 +490,38 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    int character;
-    int layer;
-    SwfdecButtonRecord record = { 0 };
+    unsigned int character;
+    unsigned int depth;
+    unsigned int states;
+    SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);
     reserved = swfdec_bits_getbits (bits, 4);
-    record.states = swfdec_bits_getbits (bits, 4);
+    states = swfdec_bits_getbits (bits, 4);
     character = swfdec_bits_get_u16 (bits);
-    layer = swfdec_bits_get_u16 (bits);
+    depth = swfdec_bits_get_u16 (bits);
 
     SWFDEC_LOG ("  reserved = %d", reserved);
-    if (reserved) {
-      SWFDEC_WARNING ("reserved is supposed to be 0");
-    }
-    SWFDEC_LOG ("states: %s%s%s%scharacter=%d layer=%d",
-        record.states & SWFDEC_BUTTON_HIT ? "HIT " : "", 
-	record.states & SWFDEC_BUTTON_DOWN ? "DOWN " : "", 
-        record.states & SWFDEC_BUTTON_OVER ? "OVER " : "",
-	record.states & SWFDEC_BUTTON_UP ? "UP " : "", 
-	character, layer);
+    SWFDEC_LOG ("states: %s%s%s%scharacter=%u layer=%u",
+        states & (1 << SWFDEC_BUTTON_HIT) ? "HIT " : "", 
+	states & (1 << SWFDEC_BUTTON_DOWN) ? "DOWN " : "", 
+        states & (1 << SWFDEC_BUTTON_OVER) ? "OVER " : "",
+	states & (1 << SWFDEC_BUTTON_UP) ? "UP " : "", 
+	character, depth);
+    content = swfdec_content_new (depth);
 
-    swfdec_bits_get_matrix (bits, &trans);
+    swfdec_bits_get_matrix (bits, &content->transform);
+    SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
+	content->transform.xx, content->transform.yy, 
+	content->transform.xy, content->transform.yx,
+	content->transform.x0, content->transform.y0);
 
-    record.graphic = swfdec_swf_decoder_get_character (s, character);
-    record.transform = trans;
-    swfdec_color_transform_init_identity (&record.color_transform);
-
-    if (record.graphic) {
-      SwfdecRect rect;
-      swfdec_rect_transform (&rect, &record.graphic->extents, &record.transform);
-      g_array_append_val (button->records, record);
-      swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
-	  &SWFDEC_GRAPHIC (button)->extents, &rect);
+    content->graphic = swfdec_swf_decoder_get_character (s, character);
+    if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
+      SWFDEC_ERROR ("id %u does not reference a graphic, ignoring", character);
+      swfdec_content_free (content);
     } else {
-      SWFDEC_ERROR ("no graphic with character %d", character);
+      swfdec_button_append_content (button, states, content);
     }
   }
   swfdec_bits_get_u8 (bits);

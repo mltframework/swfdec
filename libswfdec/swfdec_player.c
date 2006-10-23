@@ -391,16 +391,37 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   GList *walk;
+  SwfdecMovie *mouse_grab;
+  gboolean button_changed, mouse_moved;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (button == 0 || button == 1);
 
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   g_object_freeze_notify (G_OBJECT (player));
-  for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
-    if (swfdec_movie_handle_mouse (walk->data, x, y, button))
-      break;
+  mouse_moved = player->mouse_x != x || player->mouse_y != y;
+  player->mouse_x = x;
+  player->mouse_y = y;
+  button_changed = (player->mouse_button != button);
+  player->mouse_button = button;
+  if ((mouse_moved || button_changed) && !button) {
+    /* if the mouse button is pressed the grab widget stays the same (I think) */
+    for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
+      mouse_grab = swfdec_movie_get_movie_at (walk->data, x, y);
+      if (mouse_grab)
+	break;
+    }
+  } else {
+    mouse_grab = player->mouse_grab;
   }
+  SWFDEC_DEBUG ("%s %p has mouse at %g %g\n", 
+      mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
+      mouse_grab, x, y);
+  if (player->mouse_grab && mouse_grab != player->mouse_grab)
+    swfdec_movie_send_mouse_change (player->mouse_grab, TRUE);
+  player->mouse_grab = mouse_grab;
+  if (mouse_grab)
+    swfdec_movie_send_mouse_change (mouse_grab, FALSE);
   while (swfdec_player_do_action (player));
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_update (walk->data);

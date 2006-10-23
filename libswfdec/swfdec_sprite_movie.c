@@ -30,10 +30,8 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 
-/*** GOTO HANDLING ***/
-
 static SwfdecMovie *
-swfdec_movie_find (GList *movie_list, guint depth)
+swfdec_sprite_movie_find (GList *movie_list, guint depth)
 {
   GList *walk;
 
@@ -52,7 +50,7 @@ swfdec_movie_find (GList *movie_list, guint depth)
 static gboolean
 swfdec_sprite_movie_remove_child (SwfdecMovie *movie, guint depth)
 {
-  SwfdecMovie *child = swfdec_movie_find (movie->list, depth);
+  SwfdecMovie *child = swfdec_movie_find (movie, depth);
 
   if (child == NULL)
     return FALSE;
@@ -81,7 +79,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       SWFDEC_LOG ("ADD action: depth %u", content->depth);
       if (swfdec_sprite_movie_remove_child (mov, content->depth))
 	SWFDEC_DEBUG ("removed a child before adding new one");
-      child = swfdec_movie_find (*movie_list, content->depth);
+      child = swfdec_sprite_movie_find (*movie_list, content->depth);
       if (child == NULL || child->content->sequence != content->sequence) {
 	child = swfdec_movie_new (mov, content);
       } else {
@@ -93,7 +91,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
     case SWFDEC_SPRITE_ACTION_UPDATE:
       content = action->data;
       SWFDEC_LOG ("UPDATE action: depth %u", content->depth);
-      child = swfdec_movie_find (mov->list, content->depth);
+      child = swfdec_movie_find (mov, content->depth);
       if (child != NULL) {
 	swfdec_movie_set_content (child, content);
       } else {

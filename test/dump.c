@@ -197,18 +197,21 @@ dump_font (SwfdecFont *font)
 static void
 dump_button (SwfdecButton *button)
 {
-  guint i;
+  GList *walk;
 
+#define SWFDEC_CONTENT_IN_STATE(content, state) \
+  ((content)->sequence->start <= state && \
+   (content)->sequence->end > state)
   if (verbose) {
-    for (i = 0; i < button->records->len; i++) {
-      SwfdecButtonRecord *record = &g_array_index (button->records, SwfdecButtonRecord, i);
+    for (walk = button->records; walk; walk = walk->next) {
+      SwfdecContent *content = walk->data;
 
       g_print ("  %s %s %s %s  %s %d\n", 
-	  record->states & SWFDEC_BUTTON_UP ? "U" : " ",
-	  record->states & SWFDEC_BUTTON_OVER ? "O" : " ",
-	  record->states & SWFDEC_BUTTON_DOWN ? "D" : " ",
-	  record->states & SWFDEC_BUTTON_HIT ? "H" : " ",
-	  G_OBJECT_TYPE_NAME (record->graphic), SWFDEC_CHARACTER (record->graphic)->id);
+	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_UP) ? "U" : " ",
+	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_OVER) ? "O" : " ",
+	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_DOWN) ? "D" : " ",
+	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_HIT) ? "H" : " ",
+	  G_OBJECT_TYPE_NAME (content->graphic), SWFDEC_CHARACTER (content->graphic)->id);
     }
   }
 }

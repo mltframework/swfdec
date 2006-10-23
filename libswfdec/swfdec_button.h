@@ -29,7 +29,6 @@
 G_BEGIN_DECLS
 //typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecButtonClass SwfdecButtonClass;
-typedef struct _SwfdecButtonRecord SwfdecButtonRecord;
 
 #define SWFDEC_TYPE_BUTTON                    (swfdec_button_get_type())
 #define SWFDEC_IS_BUTTON(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_BUTTON))
@@ -39,10 +38,11 @@ typedef struct _SwfdecButtonRecord SwfdecButtonRecord;
 
 /* these values have to be kept in line with record parsing */
 typedef enum {
-  SWFDEC_BUTTON_UP = (1 << 0),
-  SWFDEC_BUTTON_OVER = (1 << 1),
-  SWFDEC_BUTTON_DOWN = (1 << 2),
-  SWFDEC_BUTTON_HIT = (1 << 3)
+  SWFDEC_BUTTON_INIT = -1,
+  SWFDEC_BUTTON_UP = 0,
+  SWFDEC_BUTTON_OVER = 1,
+  SWFDEC_BUTTON_DOWN = 2,
+  SWFDEC_BUTTON_HIT = 3
 } SwfdecButtonState;
 
 /* these values have to be kept in line with condition parsing */
@@ -58,21 +58,12 @@ typedef enum {
   SWFDEC_BUTTON_OVER_DOWN_TO_IDLE = (1 << 8)
 } SwfdecButtonCondition;
 
-struct _SwfdecButtonRecord
-{
-  SwfdecButtonState	states;
-  SwfdecGraphic *	graphic;
-  cairo_matrix_t	transform;
-  SwfdecColorTransform	color_transform;
-};
-
-struct _SwfdecButton
-{
-  SwfdecGraphic		graphic;
+struct _SwfdecButton {
+  SwfdecGraphic		graphic;	/* graphic->extents is used for HIT area extents only */
 
   gboolean		menubutton;	/* treat as menubutton */
 
-  GArray *		records;	/* the contained objects */
+  GList *		records;	/* the contained objects */
   SwfdecEventList *	events;		/* the events triggered by this button */
 };
 

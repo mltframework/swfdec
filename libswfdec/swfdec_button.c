@@ -26,6 +26,7 @@
 #include <js/jsapi.h>
 #include "swfdec_button.h"
 #include "swfdec_button_movie.h"
+#include "swfdec_sprite.h"
 
 
 G_DEFINE_TYPE (SwfdecButton, swfdec_button, SWFDEC_TYPE_GRAPHIC)
@@ -33,7 +34,6 @@ G_DEFINE_TYPE (SwfdecButton, swfdec_button, SWFDEC_TYPE_GRAPHIC)
 static void
 swfdec_button_init (SwfdecButton * button)
 {
-  button->records = g_array_new (FALSE, TRUE, sizeof (SwfdecButtonRecord));
 }
 
 static void
@@ -41,7 +41,8 @@ swfdec_button_dispose (GObject *object)
 {
   SwfdecButton *button = SWFDEC_BUTTON (object);
 
-  g_array_free (button->records, TRUE);
+  g_list_foreach (button->records, (GFunc) swfdec_content_free, NULL);
+  g_list_free (button->records);
   if (button->events != NULL) {
     swfdec_event_list_free (button->events);
     button->events = NULL;

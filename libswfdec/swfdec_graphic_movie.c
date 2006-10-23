@@ -43,8 +43,7 @@ swfdec_graphic_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 static gboolean
-swfdec_graphic_movie_handle_mouse (SwfdecMovie *movie, double x, double y,
-    int button)
+swfdec_graphic_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
   SwfdecGraphic *graphic = SWFDEC_GRAPHIC_MOVIE (movie)->graphic;
 
@@ -71,7 +70,7 @@ swfdec_graphic_movie_class_init (SwfdecGraphicMovieClass * g_class)
 
   movie_class->update_extents = swfdec_graphic_movie_update_extents;
   movie_class->render = swfdec_graphic_movie_render;
-  movie_class->handle_mouse = swfdec_graphic_movie_handle_mouse;
+  movie_class->mouse_in = swfdec_graphic_movie_mouse_in;
 }
 
 static void

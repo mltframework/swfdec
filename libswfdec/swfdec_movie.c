@@ -487,6 +487,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       if (fill == FALSE) {
 	SWFDEC_WARNING ("clipping inside clipping not implemented");
       } else {
+	/* FIXME FIXME FIXME: overlapping objects in the clip movie cause problems
+	 * due to them being accumulated with CAIRO_FILL_RULE_EVEN_ODD
+	 */
 	SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->content->clip_depth,
 	    child, child->content->depth);
 	clip_depth = child->content->clip_depth;

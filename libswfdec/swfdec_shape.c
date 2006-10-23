@@ -189,6 +189,11 @@ swfdec_shape_vec_finish (SwfdecShapeVec * shapevec)
     g_object_unref (shapevec->pattern);
     shapevec->pattern = NULL;
   }
+  if (shapevec->fill_cr) {
+    cairo_destroy (shapevec->fill_cr);
+    shapevec->fill_cr = NULL;
+  }
+
   swfdec_path_reset (&shapevec->path);
 }
 
@@ -203,9 +208,6 @@ swfdec_shape_dispose (GObject *object)
 {
   unsigned int i;
   SwfdecShape * shape = SWFDEC_SHAPE (object);
-
-  if (shape->fill_cr)
-    cairo_destroy (shape->fill_cr);
 
   for (i = 0; i < shape->vecs->len; i++) {
     swfdec_shape_vec_finish (&g_array_index (shape->vecs, SwfdecShapeVec, i));
@@ -239,11 +241,8 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
   for (i = 0; i < shape->vecs->len; i++) {
     SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
 
-    /* FIXME: catch these two earlier */
-    if (vec->pattern == NULL)
-      continue;
-    if (vec->path.num_data == 0)
-      continue;
+    g_assert (vec->path.num_data);
+    g_assert (vec->pattern);
     if (!swfdec_rect_intersect (NULL, &vec->extents, inval))
       continue;
     
@@ -263,27 +262,28 @@ swfdec_shape_mouse_in (SwfdecGraphic *graphic, double x, double y)
   SwfdecShapeVec *shapevec;
   SwfdecShape *shape = SWFDEC_SHAPE (graphic);
   static cairo_surface_t *surface = NULL;
+  guint i;
 
-  if (shape->fill_cr == NULL) {
-    /* FIXME: do less memory intensive fill checking plz */
-    if (surface == NULL)
-      surface = cairo_image_surface_create (CAIRO_FORMAT_A8, 1000, 1000);
-    guint i;
-    shape->fill_cr = cairo_create (surface);
-    cairo_set_fill_rule (shape->fill_cr, CAIRO_FILL_RULE_EVEN_ODD);
-    /* FIXME: theoretically, we require a cairo_t for every path we wanna check.
-     * Currently different paths can cancel each other out due to the fill rule */
-    for (i = 0; i < shape->vecs->len; i++) {
-      shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
-      /* filter out lines */
-      if (shapevec->last_index %2 == 1)
-	break;
-      if (shapevec->path.num_data)
-	cairo_append_path (shape->fill_cr, &shapevec->path);
+  for (i = 0; i < shape->vecs->len; i++) {
+    shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
+  
+    g_assert (shapevec->path.num_data);
+    g_assert (shapevec->pattern);
+    /* FIXME: handle strokes */
+    if (shapevec->last_index & 1)
+      continue;
+    if (shapevec->fill_cr == NULL) {
+      /* FIXME: do less memory intensive fill checking plz */
+      if (surface == NULL)
+	surface = cairo_image_surface_create (CAIRO_FORMAT_A8, 1, 1);
+      shapevec->fill_cr = cairo_create (surface);
+      cairo_set_fill_rule (shapevec->fill_cr, CAIRO_FILL_RULE_EVEN_ODD);
+      cairo_append_path (shapevec->fill_cr, &shapevec->path);
     }
+    if (cairo_in_fill (shapevec->fill_cr, x, y))
+      return TRUE;
   }
-  /* FIXME: handle strokes */
-  return cairo_in_fill (shape->fill_cr, x, y);
+  return FALSE;
 }
 
 static void

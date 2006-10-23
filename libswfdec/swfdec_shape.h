@@ -46,6 +46,8 @@ struct _SwfdecShapeVec
   cairo_path_t path;			/* accumulated path */
   SwfdecRect extents;			/* extents of path */
   guint last_index;			/* index of last segment that was added */
+  /* cache */
+  cairo_t *fill_cr;			/* use for mouse hit tests */
 };
 
 struct _SwfdecShape
@@ -62,9 +64,6 @@ struct _SwfdecShape
   unsigned int n_fill_bits;
   unsigned int n_line_bits;
   gboolean rgba;
-
-  /* cache */
-  cairo_t *fill_cr;
 };
 
 struct _SwfdecShapeClass

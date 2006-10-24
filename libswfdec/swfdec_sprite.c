@@ -507,3 +507,21 @@ swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame)
   return next_frame;
 }
 
+int
+swfdec_sprite_get_frame (SwfdecSprite *sprite, const char *label)
+{
+  guint i;
+
+  g_return_val_if_fail (SWFDEC_IS_SPRITE (sprite), -1);
+  g_return_val_if_fail (label != NULL, -1);
+
+  for (i = 0; i < SWFDEC_SPRITE (sprite)->n_frames; i++) {
+    SwfdecSpriteFrame *frame = &sprite->frames[i];
+    if (frame->label == NULL)
+      continue;
+    if (g_str_equal (frame->label, label))
+      return i;
+  }
+  return -1;
+}
+

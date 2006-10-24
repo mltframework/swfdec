@@ -93,6 +93,8 @@ void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames, un
 void swfdec_sprite_add_action (SwfdecSprite * sprite, unsigned int frame, 
     SwfdecSpriteActionType type, gpointer data);
 unsigned int swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame);
+int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
+				      		 const char *		label);
 
 SwfdecContent *swfdec_content_new (unsigned int depth);
 void swfdec_content_free (SwfdecContent *content);

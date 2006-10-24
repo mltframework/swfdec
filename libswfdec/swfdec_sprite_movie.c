@@ -348,21 +348,3 @@ swfdec_sprite_movie_paint_background (SwfdecSpriteMovie *movie, cairo_t *cr)
   cairo_paint (cr);
 }
 
-int
-swfdec_sprite_movie_get_frame (SwfdecSpriteMovie *movie, const char *label)
-{
-  guint i;
-
-  g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), -1);
-  g_return_val_if_fail (label != NULL, -1);
-
-  for (i = 0; i < SWFDEC_SPRITE (movie)->n_frames; i++) {
-    SwfdecSpriteFrame *frame = &movie->sprite->frames[i];
-    if (frame->label == NULL)
-      continue;
-    if (g_str_equal (frame->label, label))
-      return i;
-  }
-  return -1;
-}
-

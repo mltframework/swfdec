@@ -21,9 +21,33 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "swfdec_js.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+
+static JSBool
+swfdec_js_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  if (JSVAL_IS_STRING (argv[0])) {
+    const char *bytes = swfdec_js_to_string (cx, argv[0]);
+    char *slash = NULL;
+    JSBool ret;
+    if (strchr (bytes, '/')) {
+      slash = swfdec_js_slash_to_dot (bytes);
+      bytes = slash;
+    }
+    /* FIXME: better filename/lineno information */
+    ret = JS_EvaluateScript (cx, obj, bytes, strlen (bytes), NULL, 0, rval);
+    if (bytes == slash)
+      g_free (slash);
+    if (!ret)
+      return FALSE;
+  } else {
+    *rval = argv[0];
+  }
+  return JS_TRUE;
+}
 
 static JSBool
 swfdec_js_trace (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -60,6 +84,7 @@ swfdec_js_startDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 }
 
 static JSFunctionSpec global_methods[] = {
+  { "eval",		swfdec_js_eval,		1, 0, 0 },
   { "random",		swfdec_js_random,	1, 0, 0 },
   { "startDrag",     	swfdec_js_startDrag,	1, 0, 0 },
   { "trace",     	swfdec_js_trace,	1, 0, 0 },

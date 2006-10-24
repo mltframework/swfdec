@@ -564,7 +564,7 @@ compile_if (CompileState *state, guint action, guint len)
 static void
 compile_set_target (CompileState *state, guint action, guint len)
 {
-  push_target (state);
+  THIS (state);
   push_prop (state, "eval");
   PUSH_OBJ (state);
   read_and_push_string (state);

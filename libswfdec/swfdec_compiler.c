@@ -516,6 +516,17 @@ compile_push (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_goto_label (CompileState *state, guint action, guint len)
+{
+  push_target (state);
+  push_prop (state, "gotoAndStop");
+  PUSH_OBJ (state);
+  read_and_push_string (state);
+  call (state, 1);
+  POP (state);
+}
+
+static void
 compile_goto_frame (CompileState *state, guint action, guint len)
 {
   unsigned int i;
@@ -553,9 +564,11 @@ compile_if (CompileState *state, guint action, guint len)
 static void
 compile_set_target (CompileState *state, guint action, guint len)
 {
+  push_target (state);
+  push_prop (state, "eval");
+  PUSH_OBJ (state);
   read_and_push_string (state);
-  //compile_path_to_object (state);
-  //POP (state);
+  call (state, 1);
   compile_state_set_target (state);
 }
 
@@ -968,7 +981,7 @@ SwfdecActionSpec actions[] = {
   /* version 3 */
   { 0x8a, "WaitForFrame", compile_wait_for_frame },
   { 0x8b, "SetTarget", compile_set_target },
-  { 0x8c, "GoToLabel", NULL },
+  { 0x8c, "GotoLabel", compile_goto_label },
   /* version 4 */
   { 0x8d, "WaitForFrame2", NULL },
   /* version 7 */

@@ -33,6 +33,7 @@
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
+#include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 
 static void
@@ -118,7 +119,7 @@ mc_do_goto (JSContext *cx, SwfdecMovie *movie, jsval target)
 
   if (JSVAL_IS_STRING (target)) {
     const char *label = swfdec_js_to_string (cx, target);
-    frame = swfdec_sprite_movie_get_frame (SWFDEC_SPRITE_MOVIE (movie), label);
+    frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, label);
     /* FIXME: nonexisting frames? */
     if (frame == -1)
       return JS_FALSE;
@@ -294,16 +295,16 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
-  {"getBytesLoaded", mc_getBytesLoaded, 0, 0},
-  {"getBytesTotal", mc_getBytesTotal, 0, 0},
+  { "getBytesLoaded",	mc_getBytesLoaded, 0, 0 },
+  { "getBytesTotal",	mc_getBytesTotal, 0, 0 },
   { "getProperty",    	swfdec_js_getProperty,	2, 0, 0 },
-  {"gotoAndPlay", mc_gotoAndPlay, 1, 0 },
-  {"gotoAndStop", mc_gotoAndStop, 1, 0 },
-  {"play", mc_play, 0, 0},
-  {"stop", mc_stop, 0, 0},
-  {"hitTest", mc_hitTest, 1, 0},
+  { "gotoAndPlay",	mc_gotoAndPlay, 1, 0 },
+  { "gotoAndStop",	mc_gotoAndStop, 1, 0 },
+  { "play",		mc_play, 0, 0 },
+  { "stop",		mc_stop, 0, 0 },
+  { "hitTest",		mc_hitTest, 1, 0},
   { "setProperty",    	swfdec_js_setProperty,	3, 0, 0 },
-  {NULL}
+  { NULL }
 };
 
 #if 0

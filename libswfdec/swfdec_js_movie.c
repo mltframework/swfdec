@@ -33,6 +33,7 @@
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
+#include "swfdec_sprite_movie.h"
 
 static void
 movie_finalize (JSContext *cx, JSObject *obj)
@@ -111,20 +112,36 @@ mc_getBytesTotal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 }
 
 static JSBool
-mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+mc_do_goto (JSContext *cx, SwfdecMovie *movie, jsval target)
 {
   int32 frame;
+
+  if (JSVAL_IS_STRING (target)) {
+    const char *label = swfdec_js_to_string (cx, target);
+    frame = swfdec_sprite_movie_get_frame (SWFDEC_SPRITE_MOVIE (movie), label);
+    /* FIXME: nonexisting frames? */
+    if (frame == -1)
+      return JS_FALSE;
+  } else if (!JS_ValueToInt32 (cx, target, &frame)) {
+    return JS_FALSE;
+  }
+  /* FIXME: how to handle overflow? */
+  frame = CLAMP (frame, 1, (int) movie->n_frames) - 1;
+
+  swfdec_movie_goto (movie, frame);
+  return JS_TRUE;
+}
+
+static JSBool
+mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
   SwfdecMovie *movie;
 
   movie = JS_GetPrivate(cx, obj);
   g_assert (movie);
   
-  if (!JS_ValueToInt32 (cx, argv[0], &frame))
+  if (!mc_do_goto (cx, movie, argv[0]))
     return JS_FALSE;
-  /* FIXME: how to handle overflow? */
-  frame = CLAMP (frame, 1, (int) movie->n_frames) - 1;
-
-  swfdec_movie_goto (movie, frame);
   movie->stopped = FALSE;
   return JS_TRUE;
 }
@@ -132,20 +149,13 @@ mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 static JSBool
 mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  int32 frame;
-  SwfdecDecoder *dec;
   SwfdecMovie *movie;
 
-  dec = JS_GetContextPrivate (cx);
   movie = JS_GetPrivate(cx, obj);
   g_assert (movie);
   
-  if (!JS_ValueToInt32 (cx, argv[0], &frame))
+  if (!mc_do_goto (cx, movie, argv[0]))
     return JS_FALSE;
-  /* FIXME: how to handle overflow? */
-  frame = CLAMP (frame, 1, (int) movie->n_frames) - 1;
-
-  swfdec_movie_goto (movie, frame);
   movie->stopped = TRUE;
   return JS_TRUE;
 }

@@ -89,13 +89,11 @@ swfdec_js_init_player (SwfdecPlayer *player)
     return;
   }
 
-#if 0
-  /* the new opcodes mess up this */
-  s->jscx->tracefp = stderr;
-#endif
-#if 0
-  JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
-#endif
+  /* the new Flash opcodes mess up this, so this will most likely crash */
+  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "full"))
+    player->jscx->tracefp = stderr;
+  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "trace"))
+    JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
   JS_SetErrorReporter (player->jscx, swfdec_js_error_report);
   JS_SetContextPrivate(player->jscx, player);
   player->jsobj = JS_NewObject (player->jscx, &global_class, NULL, NULL);

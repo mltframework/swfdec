@@ -45,6 +45,8 @@ gboolean	swfdec_js_add_movie		(SwfdecMovie *		movie);
 void		swfdec_js_movie_add_property	(SwfdecMovie *		movie);
 void		swfdec_js_movie_remove_property	(SwfdecMovie *		movie);
 
+char *		swfdec_js_slash_to_dot		(const char *		slash_str);
+
 /* support functions */
 const char *	swfdec_js_to_string		(JSContext *		cx,
 						 jsval			val);

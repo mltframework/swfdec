@@ -9,6 +9,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_edittext_movie.h"
 #include "swfdec_font.h"
+#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
 
@@ -65,53 +66,6 @@ swfdec_edit_text_init (SwfdecEditText * text)
 }
 
 static void
-swfdec_edit_text_slash_to_dot (SwfdecEditText *text)
-{
-  char *cur = text->variable;
-  GString *str = g_string_new ("");
-
-  if (*cur == '/') {
-    g_string_append (str, "_root");
-  } else {
-    cur--;
-  }
-  while (cur && *cur == '/') {
-    cur++;
-    if (str->len > 0)
-      g_string_append_c (str, '.');
-    if (cur[0] == '.' && cur[1] == '.') {
-      g_string_append (str, "_parent");
-      cur += 2;
-    } else {
-      char *slash = strchr (cur, '/');
-      if (slash) {
-	g_string_append_len (str, cur, slash - cur);
-	cur = slash;
-      } else {
-	g_string_append (str, cur);
-	cur = NULL;
-      }
-    }
-    /* cur should now point to the slash */
-  }
-  if (cur) {
-    if (*cur != '\0')
-      goto fail;
-  }
-  SWFDEC_DEBUG ("parsed slash-notated string \"%s\" into dot notation \"%s\"",
-      text->variable, str->str);
-  g_free (text->variable);
-  text->variable = g_string_free (str, FALSE);
-
-fail:
-  SWFDEC_ERROR ("failed to parse slash-notated string \"%s\" into dot notation",
-      text->variable);
-  g_string_free (str, TRUE);
-  g_free (text->variable);
-  text->variable = NULL;
-}
-
-static void
 swfdec_edit_text_parse_variable (SwfdecEditText *text)
 {
   char *s;
@@ -123,8 +77,11 @@ swfdec_edit_text_parse_variable (SwfdecEditText *text)
   }
   /* FIXME: check the variable for valid identifiers */
   s = strrchr (text->variable, '/');
-  if (s != NULL)
-    swfdec_edit_text_slash_to_dot (text);
+  if (s != NULL) {
+    char *ret = swfdec_js_slash_to_dot (text->variable);
+    g_free (text->variable);
+    text->variable = ret;
+  }
   if (!text->variable)
     return;
   text->query = JS_CompileScript (text->player->jscx, text->player->jsobj, 

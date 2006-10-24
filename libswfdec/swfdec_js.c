@@ -225,3 +225,57 @@ swfdec_js_to_string (JSContext *cx, jsval val)
 
   return ret;
 }
+
+/**
+ * swfdec_js_slash_to_dot:
+ * @slash_str: a string ion slash notation
+ *
+ * Converts a string in slash notation to a string in dot notation.
+ *
+ * Returns: The string converted to dot notation or NULL on failure.
+ **/
+char *
+swfdec_js_slash_to_dot (const char *slash_str)
+{
+  const char *cur = slash_str;
+  GString *str = g_string_new ("");
+
+  if (*cur == '/') {
+    g_string_append (str, "_root");
+  } else {
+    goto start;
+  }
+  while (cur && *cur == '/') {
+    cur++;
+start:
+    if (str->len > 0)
+      g_string_append_c (str, '.');
+    if (cur[0] == '.' && cur[1] == '.') {
+      g_string_append (str, "_parent");
+      cur += 2;
+    } else {
+      char *slash = strchr (cur, '/');
+      if (slash) {
+	g_string_append_len (str, cur, slash - cur);
+	cur = slash;
+      } else {
+	g_string_append (str, cur);
+	cur = NULL;
+      }
+    }
+    /* cur should now point to the slash */
+  }
+  if (cur) {
+    if (*cur != '\0')
+      goto fail;
+  }
+  SWFDEC_DEBUG ("parsed slash-notated string \"%s\" into dot notation \"%s\"",
+      slash_str, str->str);
+  return g_string_free (str, FALSE);
+
+fail:
+  SWFDEC_WARNING ("failed to parse slash-notated string \"%s\" into dot notation", slash_str);
+  g_string_free (str, TRUE);
+  return NULL;
+}
+

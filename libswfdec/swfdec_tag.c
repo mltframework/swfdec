@@ -86,12 +86,12 @@ tag_func_frame_label (SwfdecSwfDecoder * s)
 {
   SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
   
-  if (frame->name) {
-    SWFDEC_WARNING ("frame %d already has a name (%s)", s->parse_sprite->parse_frame, frame->name);
-    g_free (frame->name);
+  if (frame->label) {
+    SWFDEC_WARNING ("frame %d already has a label (%s)", s->parse_sprite->parse_frame, frame->label);
+    g_free (frame->label);
   }
-  frame->name = swfdec_bits_get_string (&s->b);
-  SWFDEC_LOG ("frame %d named %s", s->parse_sprite->parse_frame, frame->name);
+  frame->label = swfdec_bits_get_string (&s->b);
+  SWFDEC_LOG ("frame %d named %s", s->parse_sprite->parse_frame, frame->label);
 
   return SWFDEC_STATUS_OK;
 }

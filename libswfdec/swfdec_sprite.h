@@ -53,7 +53,7 @@ struct _SwfdecSpriteAction {
 
 struct _SwfdecSpriteFrame
 {
-  char *name;				/* name of the frame for "GotoFrameLabel" */
+  char *label;				/* name of the frame for "GotoLabel" */
 
   /* sound */
   SwfdecSound *sound_head;		/* sound head for this frame */

@@ -64,6 +64,8 @@ void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 gboolean		do_enter_frame);
 void		swfdec_sprite_movie_paint_background	(SwfdecSpriteMovie *    movie,
 							 cairo_t *		cr);
+int		swfdec_sprite_movie_get_frame		(SwfdecSpriteMovie *	movie,
+							 const char *		label);
 
 
 G_END_DECLS

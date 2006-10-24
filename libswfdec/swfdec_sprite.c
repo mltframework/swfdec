@@ -53,7 +53,7 @@ swfdec_sprite_dispose (GObject *object)
 
   if (sprite->frames) {
     for (i = 0; i < sprite->n_frames; i++) {
-      g_free (sprite->frames[i].name);
+      g_free (sprite->frames[i].label);
       if (sprite->frames[i].sound_head)
 	g_object_unref (sprite->frames[i].sound_head);
       if (sprite->frames[i].sound_block) {

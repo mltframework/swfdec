@@ -376,6 +376,39 @@ swfdec_init (void)
   swfdec_js_init (0);
 }
 
+static void
+swfdec_player_do_mouse_move (SwfdecPlayer *player)
+{
+  GList *walk;
+  SwfdecMovie *mouse_grab;
+
+  if (player->mouse_button) {
+    mouse_grab = player->mouse_grab;
+  } else {
+    /* if the mouse button is pressed the grab widget stays the same (I think) */
+    for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
+      mouse_grab = swfdec_movie_get_movie_at (walk->data, player->mouse_x, player->mouse_y);
+      if (mouse_grab)
+	break;
+    }
+  }
+  SWFDEC_DEBUG ("%s %p has mouse at %g %g\n", 
+      mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
+      mouse_grab, player->mouse_x, player->mouse_y);
+  if (player->mouse_grab && mouse_grab != player->mouse_grab)
+    swfdec_movie_send_mouse_change (player->mouse_grab, TRUE);
+  player->mouse_grab = mouse_grab;
+  if (mouse_grab)
+    swfdec_movie_send_mouse_change (mouse_grab, FALSE);
+}
+
+static void
+swfdec_player_do_mouse_button (SwfdecPlayer *player)
+{
+  if (player->mouse_grab)
+    swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
+}
+
 /**
  * swfdec_player_handle_mouse:
  * @dec: a #SwfdecPlayer
@@ -391,37 +424,21 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   GList *walk;
-  SwfdecMovie *mouse_grab;
-  gboolean button_changed, mouse_moved;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (button == 0 || button == 1);
 
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   g_object_freeze_notify (G_OBJECT (player));
-  mouse_moved = player->mouse_x != x || player->mouse_y != y;
-  player->mouse_x = x;
-  player->mouse_y = y;
-  button_changed = (player->mouse_button != button);
-  player->mouse_button = button;
-  if ((mouse_moved || button_changed) && !button) {
-    /* if the mouse button is pressed the grab widget stays the same (I think) */
-    for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
-      mouse_grab = swfdec_movie_get_movie_at (walk->data, x, y);
-      if (mouse_grab)
-	break;
-    }
-  } else {
-    mouse_grab = player->mouse_grab;
+  if (player->mouse_x != x || player->mouse_y != y) {
+    player->mouse_x = x;
+    player->mouse_y = y;
+    swfdec_player_do_mouse_move (player);
   }
-  SWFDEC_DEBUG ("%s %p has mouse at %g %g\n", 
-      mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
-      mouse_grab, x, y);
-  if (player->mouse_grab && mouse_grab != player->mouse_grab)
-    swfdec_movie_send_mouse_change (player->mouse_grab, TRUE);
-  player->mouse_grab = mouse_grab;
-  if (mouse_grab)
-    swfdec_movie_send_mouse_change (mouse_grab, FALSE);
+  if (player->mouse_button != button) {
+    player->mouse_button = button;
+    swfdec_player_do_mouse_button (player);
+  }
   while (swfdec_player_do_action (player));
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_update (walk->data);
@@ -507,15 +524,24 @@ swfdec_player_iterate (SwfdecPlayer *player)
       klass->iterate_start (walk->data);
   }
   while (swfdec_player_do_action (player));
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  SWFDEC_INFO ("=== STOP ITERATION ===");
+  /* update the state of the mouse when stuff below it moved */
+  if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
+    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration");
+    swfdec_player_do_mouse_move (player);
+    while (swfdec_player_do_action (player));
+    for (walk = player->roots; walk; walk = walk->next) {
+      swfdec_movie_update (walk->data);
+    }
+  }
   for (walk = player->movies; walk; walk = walk->next) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
     if (klass->iterate_end)
       klass->iterate_end (walk->data);
   }
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
-  SWFDEC_INFO ("=== STOP ITERATION ===");
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_invalidate (player);
 }

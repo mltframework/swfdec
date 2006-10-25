@@ -123,6 +123,7 @@ mc_do_goto (JSContext *cx, SwfdecMovie *movie, jsval target)
     /* FIXME: nonexisting frames? */
     if (frame == -1)
       return JS_FALSE;
+    frame++;
   } else if (!JS_ValueToInt32 (cx, target, &frame)) {
     return JS_FALSE;
   }

@@ -388,10 +388,10 @@ swfdec_movie_send_mouse_change (SwfdecMovie *movie, gboolean release)
 SwfdecMovie *
 swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 {
-  GList *walk;
-  unsigned int clip_depth = 0;
-  SwfdecMovieClass *klass;
+  GList *walk, *clip_walk;
+  unsigned int clip_depth;
   SwfdecMovie *ret;
+  SwfdecMovieClass *klass;
 
   SWFDEC_LOG ("%s %p getting mouse at: %g %g", G_OBJECT_TYPE_NAME (movie), movie, x, y);
   if (!swfdec_rect_contains (&movie->extents, x, y)) {
@@ -409,23 +409,30 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
     else
       return NULL;
   }
-  for (walk = g_list_last (movie->list); walk; walk = walk->prev) {
+  for (walk = clip_walk = g_list_last (movie->list); walk; walk = walk->prev) {
     SwfdecMovie *child = walk->data;
-    if (child->content->clip_depth) {
-      SWFDEC_ERROR ("too lazy to implement clip depth handling for mouse movements");
-      continue;
-#if 0
-      double tmpx = x, tmpy = y;
-      cairo_matrix_transform_point (&child->inverse_transform, &tmpx, &tmpy);
-      if (swfdec_movie_mouse_in (child_movie, tmpx, tmpy)) {
-	SWFDEC_LOG ("clip_depth=%d", child->content->clip_depth);
-	clip_depth = child->content->clip_depth;
+    if (walk == clip_walk) {
+      clip_depth = 0;
+      for (clip_walk = clip_walk->prev; clip_walk; clip_walk = clip_walk->prev) {
+	SwfdecMovie *clip = walk->data;
+	if (clip->content->clip_depth) {
+	  double tmpx = x, tmpy = y;
+	  cairo_matrix_transform_point (&clip->inverse_transform, &tmpx, &tmpy);
+	  if (!swfdec_movie_mouse_in (clip, tmpx, tmpy)) {
+	    SWFDEC_LOG ("skipping depth %u to %u due to clipping", clip->content->depth, clip->content->clip_depth);
+	    clip_depth = child->content->clip_depth;
+	  }
+	  break;
+	}
       }
-#endif
     }
-
-    if (clip_depth && child->content->depth <= clip_depth) {
-      SWFDEC_DEBUG ("clipping depth=%d", child->content->clip_depth);
+    if (child->content->clip_depth) {
+      SWFDEC_LOG ("resetting clip depth");
+      clip_depth = 0;
+      continue;
+    }
+    if (child->content->depth <= clip_depth && clip_depth) {
+      SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %u)", child->content->depth, clip_depth);
       continue;
     }
 

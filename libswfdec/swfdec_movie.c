@@ -329,8 +329,9 @@ swfdec_movie_remove (SwfdecMovie *movie)
       player->movies = g_list_remove (player->movies, movie);
     }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
-    movie->parent = NULL;
   }
+  if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab == movie)
+    SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab = NULL;
   g_object_unref (movie);
 }
 

@@ -40,7 +40,7 @@ static gpointer
 swfdec_codec_uncompressed_init (gboolean width, guint channels, guint rate_multiplier)
 {
   guint ret = rate_multiplier;
-  if (channels == 2)
+  if (channels == 1)
     ret *= 2;
   if (!width)
     ret |= 0x100;

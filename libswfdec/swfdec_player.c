@@ -267,6 +267,74 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   swfdec_root_movie_parse (root);
 }
 
+static void
+swfdec_player_update_drag_movie (SwfdecPlayer *player)
+{
+  double mouse_x, mouse_y;
+  double x, y;
+  SwfdecMovie *movie;
+
+  if (player->mouse_drag == NULL)
+    return;
+
+  movie = player->mouse_drag;
+  g_assert (movie->cache_state == SWFDEC_MOVIE_UP_TO_DATE);
+  mouse_x = player->mouse_x;
+  mouse_y = player->mouse_y;
+  swfdec_movie_global_to_local (movie->parent, &mouse_x, &mouse_y);
+  mouse_x = CLAMP (mouse_x, player->mouse_drag_rect.x0, player->mouse_drag_rect.x1);
+  mouse_y = CLAMP (mouse_y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
+  SWFDEC_LOG ("mouse is at %g %g, orighinally (%g %g)", mouse_x, mouse_y, player->mouse_x, player->mouse_y);
+  if (player->mouse_drag_center) {
+    x = (movie->extents.x1 + movie->extents.x0) / 2;
+    y = (movie->extents.y1 + movie->extents.y0) / 2;
+  } else {
+    x = movie->transform.x0;
+    y = movie->transform.y0;
+  }
+  SWFDEC_LOG ("center is at %g %g, mouse is at %g %g", x, y, mouse_x, mouse_y);
+  if (mouse_x != x || mouse_y != y) {
+    movie->x += mouse_x - x;
+    movie->y += mouse_y - y;
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  }
+}
+
+/**
+ * swfdec_player_set_drag_movie:
+ * @player: a #SwfdecPlayer
+ * @drag: the movie to be dragged by the mouse or NULL to unset
+ * @center: TRUE if the center of @drag should be at the mouse pointer, FALSE if (0,0)
+ *          of @drag should be at the mouse pointer.
+ * @rect: NULL or the rectangle that clips the mouse position. The coordinates 
+ *        are in the coordinate system of the parent of @drag.
+ *
+ * Sets or unsets the movie that is dragged by the mouse.
+ **/
+void
+swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean center,
+    SwfdecRect *rect)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (drag == NULL || SWFDEC_IS_MOVIE (drag));
+
+  /* FIXME: need to do anything with old drag? */
+  player->mouse_drag = drag;
+  player->mouse_drag_center = center;
+  if (rect) {
+    player->mouse_drag_rect = *rect;
+  } else {
+    player->mouse_drag_rect.x0 = -G_MAXDOUBLE;
+    player->mouse_drag_rect.y0 = -G_MAXDOUBLE;
+    player->mouse_drag_rect.x1 = G_MAXDOUBLE;
+    player->mouse_drag_rect.y1 = G_MAXDOUBLE;
+  }
+  SWFDEC_DEBUG ("starting drag in %g %g  %g %g", 
+      player->mouse_drag_rect.x0, player->mouse_drag_rect.y0,
+      player->mouse_drag_rect.x1, player->mouse_drag_rect.y1);
+  /* FIXME: need a way to make sure we get updated */
+}
+
 /** PUBLIC API ***/
 
 /**
@@ -382,6 +450,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   GList *walk;
   SwfdecMovie *mouse_grab;
 
+  swfdec_player_update_drag_movie (player);
   if (player->mouse_button) {
     mouse_grab = player->mouse_grab;
   } else {
@@ -505,7 +574,7 @@ swfdec_player_iterate (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
 #if 0
-  swfdec_js_run (dec, "foo = __swfdec_target;", NULL);
+  swfdec_js_run (player, "foo = bar.boo();", NULL);
 #endif
 
   g_object_freeze_notify (G_OBJECT (player));
@@ -530,12 +599,13 @@ swfdec_player_iterate (SwfdecPlayer *player)
   SWFDEC_INFO ("=== STOP ITERATION ===");
   /* update the state of the mouse when stuff below it moved */
   if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
-    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration");
+    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
     swfdec_player_do_mouse_move (player);
     while (swfdec_player_do_action (player));
     for (walk = player->roots; walk; walk = walk->next) {
       swfdec_movie_update (walk->data);
     }
+    SWFDEC_INFO ("=== DONE UPDATING mouse post-iteration ===");
   }
   for (walk = player->movies; walk; walk = walk->next) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);

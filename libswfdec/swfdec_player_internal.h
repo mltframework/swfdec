@@ -54,6 +54,8 @@ struct _SwfdecPlayer
   int			mouse_button; 		/* 0 for not pressed, 1 for pressed */
   SwfdecMovie *		mouse_grab;		/* movie that currently has the mouse */
   SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */
+  gboolean		mouse_drag_center;	/* TRUE to use center of movie at mouse, FALSE for movie's (0,0) */
+  SwfdecRect		mouse_drag_rect;	/* clipping rectangle for movements */
 
   /* audio */
   GArray *		audio;		 	/* SwfdecAudioEvent array of running streams */
@@ -86,6 +88,10 @@ void		swfdec_player_add_action	(SwfdecPlayer *		player,
 						 gpointer		action_data);
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
 						 SwfdecMovie *		movie);
+void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
+						 SwfdecMovie *		drag,
+						 gboolean		center,
+						 SwfdecRect *		rect);
 					 
 
 G_END_DECLS

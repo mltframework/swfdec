@@ -17,7 +17,6 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifdef HAVE_CONFIG_H
 #ifndef _SWFDEC_CODEC_H_
 #define _SWFDEC_CODEC_H_
 

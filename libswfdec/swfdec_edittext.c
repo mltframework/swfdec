@@ -42,8 +42,14 @@ swfdec_edit_text_dispose (GObject *object)
   g_free (text->text);
   g_free (text->variable);
   text->variable = NULL;
-  JS_DestroyScript (text->player->jscx, text->query);
-  JS_DestroyScript (text->player->jscx, text->set_query);
+  if (text->query) {
+    JS_DestroyScript (text->player->jscx, text->query);
+    text->query = NULL;
+  }
+  if (text->set_query) {
+    JS_DestroyScript (text->player->jscx, text->set_query);
+    text->query = NULL;
+  }
   
   G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
 }

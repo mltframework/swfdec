@@ -26,6 +26,7 @@
 #include <js/jsapi.h>
 #include "swfdec_button.h"
 #include "swfdec_button_movie.h"
+#include "swfdec_sound.h"
 #include "swfdec_sprite.h"
 
 
@@ -39,6 +40,7 @@ swfdec_button_init (SwfdecButton * button)
 static void
 swfdec_button_dispose (GObject *object)
 {
+  guint i;
   SwfdecButton *button = SWFDEC_BUTTON (object);
 
   g_list_foreach (button->records, (GFunc) swfdec_content_free, NULL);
@@ -46,6 +48,12 @@ swfdec_button_dispose (GObject *object)
   if (button->events != NULL) {
     swfdec_event_list_free (button->events);
     button->events = NULL;
+  }
+  for (i = 0; i < 4; i++) {
+    if (button->sounds[i]) {
+      swfdec_sound_chunk_free (button->sounds[i]);
+      button->sounds[i] = NULL;
+    }
   }
 
   G_OBJECT_CLASS (swfdec_button_parent_class)->dispose (G_OBJECT (button));

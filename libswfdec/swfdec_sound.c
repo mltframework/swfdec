@@ -27,6 +27,7 @@
 #include "swfdec_sound.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
+#include "swfdec_button.h"
 #include "swfdec_debug.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
@@ -383,21 +384,27 @@ tag_func_start_sound (SwfdecSwfDecoder * s)
 int
 tag_func_define_button_sound (SwfdecSwfDecoder * s)
 {
-  int id;
-  int i;
-  int state;
-  SwfdecSoundChunk *chunk;
+  unsigned int i;
+  unsigned int id;
+  SwfdecButton *button;
 
   id = swfdec_bits_get_u16 (&s->b);
-  //g_print("  id = %d\n",id);
+  button = (SwfdecButton *) swfdec_swf_decoder_get_character (s, id);
+  if (!SWFDEC_IS_BUTTON (button)) {
+    SWFDEC_ERROR ("id %u is not a button", id);
+    return SWFDEC_STATUS_OK;
+  }
+  SWFDEC_LOG ("loading sound events for button %u", id);
   for (i = 0; i < 4; i++) {
-    state = swfdec_bits_get_u16 (&s->b);
-    //g_print("   state = %d\n",state);
-    if (state) {
-      chunk = swfdec_sound_parse_chunk (s, id);
-      SWFDEC_ERROR ("button sounds not implemented");
-      if (chunk)
-	swfdec_sound_chunk_free (chunk);
+    id = swfdec_bits_get_u16 (&s->b);
+    if (id) {
+      SWFDEC_LOG ("loading sound %u for button event %u", id, i);
+      if (button->sounds[i]) {
+	SWFDEC_ERROR ("need to delete previous sound for button %u's event %u", 
+	    SWFDEC_CHARACTER (button)->id, i);
+	swfdec_sound_chunk_free (button->sounds[i]);
+      }
+      button->sounds[i] = swfdec_sound_parse_chunk (s, id);
     }
   }
 

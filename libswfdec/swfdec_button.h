@@ -65,6 +65,7 @@ struct _SwfdecButton {
 
   GList *		records;	/* the contained objects */
   SwfdecEventList *	events;		/* the events triggered by this button */
+  SwfdecSoundChunk *	sounds[4];    	/* sounds emitted from this button */
 };
 
 struct _SwfdecButtonClass

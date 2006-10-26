@@ -282,6 +282,13 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     matrix->xy = rotate_skew1 / SWFDEC_FIXED_SCALE_FACTOR;
     matrix->yx = rotate_skew0 / SWFDEC_FIXED_SCALE_FACTOR;
   }
+  {
+    cairo_matrix_t tmp = *matrix;
+    if (cairo_matrix_invert (&tmp)) {
+      SWFDEC_WARNING ("matrix not invertible, resetting\n");
+      cairo_matrix_init_identity (matrix);
+    }
+  }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
   translate_x = swfdec_bits_getsbits (bits, n_translate_bits);
   translate_y = swfdec_bits_getsbits (bits, n_translate_bits);

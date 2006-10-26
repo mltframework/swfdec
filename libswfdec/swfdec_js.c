@@ -150,11 +150,11 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
 
-#if 0
-  g_print ("executing script %p:%p in frame %u\n", movie, script,
-      movie->current_frame);
-  swfdec_disassemble (s, script);
-#endif
+
+  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "disassemble")) {
+    g_print ("executing script %p:%p\n", movie, script);
+    swfdec_disassemble (s, script);
+  }
   if (rval == NULL)
     rval = &returnval;
   if (movie->jsobj == NULL) {

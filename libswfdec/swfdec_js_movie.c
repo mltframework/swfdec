@@ -36,6 +36,8 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 
+JSBool swfdec_js_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
 static void
 movie_finalize (JSContext *cx, JSObject *obj)
 {
@@ -294,17 +296,63 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   return movieclip_props[id].setter (cx, movie->jsobj, JSVAL_VOID /* FIXME */, rval);
 }
 
+static JSBool
+swfdec_js_startDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+  JSBool center = JS_FALSE;
+  SwfdecRect rect;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+  if (argc > 0) {
+    if (!JS_ValueToBoolean (cx, argv[0], &center))
+      return JS_FALSE;
+  }
+  if (argc >= 5) {
+    if (!JS_ValueToNumber (cx, argv[1], &rect.x0) || 
+        !JS_ValueToNumber (cx, argv[2], &rect.y0) || 
+        !JS_ValueToNumber (cx, argv[3], &rect.x1) || 
+        !JS_ValueToNumber (cx, argv[4], &rect.y1))
+      return JS_FALSE;
+    swfdec_rect_scale (&rect, &rect, SWFDEC_SCALE_FACTOR);
+    swfdec_player_set_drag_movie (SWFDEC_ROOT_MOVIE (movie->root)->player, movie,
+	center, &rect);
+  } else {
+    swfdec_player_set_drag_movie (SWFDEC_ROOT_MOVIE (movie->root)->player, movie,
+	center, NULL);
+  }
+  
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_js_stopDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+  SwfdecPlayer *player;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  swfdec_player_set_drag_movie (player, NULL, FALSE, NULL);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
-  { "getBytesLoaded",	mc_getBytesLoaded, 0, 0 },
-  { "getBytesTotal",	mc_getBytesTotal, 0, 0 },
+  { "eval",		swfdec_js_eval,		1, 0, 0 },
+  { "getBytesLoaded",	mc_getBytesLoaded,	0, 0, 0 },
+  { "getBytesTotal",	mc_getBytesTotal,	0, 0, 0 },
   { "getProperty",    	swfdec_js_getProperty,	2, 0, 0 },
-  { "gotoAndPlay",	mc_gotoAndPlay, 1, 0 },
-  { "gotoAndStop",	mc_gotoAndStop, 1, 0 },
-  { "play",		mc_play, 0, 0 },
-  { "stop",		mc_stop, 0, 0 },
-  { "hitTest",		mc_hitTest, 1, 0},
+  { "gotoAndPlay",	mc_gotoAndPlay,		1, 0, 0 },
+  { "gotoAndStop",	mc_gotoAndStop,		1, 0, 0 },
+  { "play",		mc_play,		0, 0, 0 },
+  { "stop",		mc_stop,		0, 0, 0 },
+  { "hitTest",		mc_hitTest,		1, 0, 0 },
   { "setProperty",    	swfdec_js_setProperty,	3, 0, 0 },
+  { "startDrag",    	swfdec_js_startDrag,	0, 0, 0 },
+  { "stopDrag",    	swfdec_js_stopDrag,	0, 0, 0 },
   { NULL }
 };
 

@@ -332,6 +332,8 @@ swfdec_movie_remove (SwfdecMovie *movie)
   }
   if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab == movie)
     SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab = NULL;
+  if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag == movie)
+    SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag = NULL;
   g_object_unref (movie);
 }
 
@@ -349,20 +351,34 @@ swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 }
 
 void
+swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
+{
+  do {
+    cairo_matrix_transform_point (&movie->transform, x, y);
+  } while ((movie = movie->parent));
+}
+
+void
+swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
+{
+  if (movie->parent)
+    swfdec_movie_global_to_local (movie->parent, x, y);
+  cairo_matrix_transform_point (&movie->inverse_transform, x, y);
+}
+
+void
 swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
 {
+  SwfdecPlayer *player;
+
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-    SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie);
-    *x = root->player->mouse_x;
-    *y = root->player->mouse_y;
-  } else {
-    swfdec_movie_get_mouse (movie->parent, x, y);
-  }
-  cairo_matrix_transform_point (&movie->inverse_transform, x, y);
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  *x = player->mouse_x;
+  *y = player->mouse_y;
+  swfdec_movie_global_to_local (movie, x, y);
 }
 
 void

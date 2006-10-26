@@ -146,6 +146,12 @@ void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,
 						 SwfdecMovieState	state);
 void		swfdec_movie_update		(SwfdecMovie *		movie);
+void		swfdec_movie_local_to_global	(SwfdecMovie *		movie,
+						 double *		x,
+						 double *		y);
+void		swfdec_movie_global_to_local	(SwfdecMovie *		movie,
+						 double *		x,
+						 double *		y);
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);

@@ -330,6 +330,7 @@ push_prop (CompileState *state, const char *name)
   compile_state_add_code (state, command, 3);
 }
 
+#if 0
 static void
 push_prop_without_target (CompileState *state, const char *name)
 {
@@ -344,6 +345,7 @@ push_prop_without_target (CompileState *state, const char *name)
   command[0] = JSOP_GETPROP;
   compile_state_add_code (state, command, 3);
 }
+#endif
 
 static void
 push_uint16 (CompileState *state, unsigned int i)
@@ -684,15 +686,29 @@ flash_swap (CompileState *state, guint n)
 static void
 compile_start_drag (CompileState *state, guint action, guint len)
 {
-  guint8 command[3] = { JSOP_IFEQ, 0, 9 };
+  guint8 command[3] = { JSOP_IFEQ, 0, 27 };
+  /* FIXME: target relative to this or target? */
+  push_uint16 (state, 1);
+  push_target (state);
+  push_prop (state, "eval");
+  PUSH_OBJ (state);
+  FLASHCALL (state);
   flash_swap (state, 3);
   compile_state_add_code (state, command, 3);
-  push_uint16 (state, 6);
+  flash_swap (state, 3);
+  flash_swap (state, 6);
+  flash_swap (state, 3);
+  flash_swap (state, 4);
+  flash_swap (state, 5);
+  flash_swap (state, 4);
+  push_uint16 (state, 5);
   command[0] = JSOP_GOTO;
   command[2] = 6;
   compile_state_add_code (state, command, 3);
-  push_uint16 (state, 2);
-  push_prop_without_target (state, "startDrag");
+  push_uint16 (state, 1);
+  SWAP (state);
+  flash_swap (state, 3);
+  push_prop (state, "startDrag");
   PUSH_OBJ (state);
   FLASHCALL (state);
 }

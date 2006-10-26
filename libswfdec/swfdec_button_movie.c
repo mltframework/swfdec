@@ -36,8 +36,8 @@ swfdec_button_movie_update_extents (SwfdecMovie *movie,
 
 /* first index is 1 for menubutton, second index is previous state,
  * last index is current state
- * LSB in index is mouse OUT = 0, IN = 1
- * MSB in index is button UP = 0, DOWN = 1
+ * MSB in index is mouse OUT = 0, IN = 1
+ * LSB in index is button UP = 0, DOWN = 1
  */
 static const SwfdecButtonCondition event_table[2][4][4] = {
   { { -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_UP, -1 },

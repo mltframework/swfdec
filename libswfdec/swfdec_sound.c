@@ -189,7 +189,11 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       }
       /* only assign here, the decoding code checks this variable */
       sound->decoded = tmp;
-      g_assert (tmp->length >= sound->n_samples * 4);
+      if (tmp->length < sound->n_samples * 4) {
+	SWFDEC_ERROR ("%u samples in %u bytes should be available, but only %u bytes are",
+	    sound->n_samples, sound->n_samples * 4, tmp->length);
+	g_assert_not_reached ();
+      }
     } else {
       SWFDEC_ERROR ("failed decoding given data in format %u", format);
     }

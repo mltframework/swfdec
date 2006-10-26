@@ -773,6 +773,9 @@ compile_simple_call (CompileState *state, guint action, guint len)
     case 0x07:
       name = "stop";
       break;
+    case 0x28:
+      name = "stopDrag";
+      break;
     default:
       g_assert_not_reached ();
       return;
@@ -929,7 +932,7 @@ SwfdecActionSpec actions[] = {
   { 0x25, "RemoveSprite", NULL },
   { 0x26, "Trace", compile_trace },
   { 0x27, "StartDrag", compile_start_drag },
-  { 0x28, "EndDrag", NULL },
+  { 0x28, "EndDrag", compile_simple_call },
   { 0x29, "StringLess", NULL },
   /* version 7 */
   { 0x2a, "Throw", NULL },

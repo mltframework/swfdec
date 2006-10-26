@@ -166,9 +166,8 @@ swfdec_player_dispose (GObject *object)
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
   guint i;
 
-  while (player->movies) {
-    swfdec_player_remove_movie (player, player->movies->data);
-  }
+  g_list_foreach (player->roots, (GFunc) swfdec_movie_remove, NULL);
+  g_list_free (player->roots);
 
   swfdec_js_finish_player (player);
 
@@ -333,6 +332,12 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
       player->mouse_drag_rect.x0, player->mouse_drag_rect.y0,
       player->mouse_drag_rect.x1, player->mouse_drag_rect.y1);
   /* FIXME: need a way to make sure we get updated */
+}
+
+void
+swfdec_player_load (SwfdecPlayer *player, const char *url, const char *target)
+{
+  g_assert_not_reached ();
 }
 
 /** PUBLIC API ***/

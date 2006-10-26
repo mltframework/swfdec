@@ -339,12 +339,41 @@ swfdec_js_stopDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  const char *url;
+  const char *target;
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+  url = swfdec_js_to_string (cx, argv[0]);
+  if (!url)
+    return FALSE;
+  if (argc > 1) {
+    target = swfdec_js_to_string (cx, argv[1]);
+    if (!target)
+      return JS_FALSE;
+  } else {
+    /* FIXME: figure out default target */
+    g_assert_not_reached ();
+  }
+  if (argc > 2) {
+    /* variables not implemented yet */
+    g_assert_not_reached ();
+  }
+  swfdec_player_load (SWFDEC_ROOT_MOVIE (movie->root)->player, url, target);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
   { "eval",		swfdec_js_eval,		1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,	0, 0, 0 },
   { "getBytesTotal",	mc_getBytesTotal,	0, 0, 0 },
   { "getProperty",    	swfdec_js_getProperty,	2, 0, 0 },
+  { "getURL",    	swfdec_js_getURL,	2, 0, 0 },
   { "gotoAndPlay",	mc_gotoAndPlay,		1, 0, 0 },
   { "gotoAndStop",	mc_gotoAndStop,		1, 0, 0 },
   { "play",		mc_play,		0, 0, 0 },

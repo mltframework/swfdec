@@ -35,21 +35,37 @@ swfdec_root_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
   SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie);
-  SwfdecRect rect = { 0, 0, 0, 0};
 
   extents->x0 = extents->y0 = 0.0;
   if (root->decoder) {
-    rect.x1 = root->decoder->width;
-    rect.y1 = root->decoder->height;
+    extents->x1 = root->decoder->width;
+    extents->y1 = root->decoder->height;
   } else {
     extents->x1 = extents->y1 = 0.0;
   }
 }
 
 static void
+swfdec_root_movie_dispose (GObject *object)
+{
+  SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (object);
+
+  g_object_unref (root->loader);
+  if (root->decoder) {
+    g_object_unref (root->decoder);
+    root->decoder = NULL;
+  }
+
+  G_OBJECT_CLASS (swfdec_root_movie_parent_class)->dispose (object);
+}
+
+static void
 swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (klass);
+
+  object_class->dispose = swfdec_root_movie_dispose;
 
   movie_class->update_extents = swfdec_root_movie_update_extents;
 }

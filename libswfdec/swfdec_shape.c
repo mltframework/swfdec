@@ -581,7 +581,7 @@ swfdec_shape_accumulate_fills (SwfdecShape *shape, SubPath *paths, guint paths_l
 static void
 swfdec_shape_accumulate_lines (SwfdecShape *shape, SubPath *paths, guint paths_len)
 {
-  SwfdecShapeVec target;
+  SwfdecShapeVec target = { 0, };
   guint i;
 
   for (i = 0; i < paths_len; i++) {

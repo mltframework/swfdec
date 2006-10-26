@@ -153,6 +153,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       break;
     case 1:
       sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
+      orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 6:
       sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
@@ -172,21 +173,25 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
     tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
     swfdec_sound_finish_decoder (sound, data);
     swfdec_buffer_unref (orig_buffer);
-    SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", tmp->length / 4, sound->n_samples, skip);
-    if (skip) {
-      SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip, tmp->length - skip);
-      swfdec_buffer_unref (tmp);
-      tmp = tmp2;
+    if (tmp) {
+      SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", tmp->length / 4, sound->n_samples, skip);
+      if (skip) {
+	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip, tmp->length - skip);
+	swfdec_buffer_unref (tmp);
+	tmp = tmp2;
+      }
+      /* sound buffer may be bigger due to mp3 not having sample boundaries */
+      if (tmp->length > sound->n_samples * 4) {
+	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * 4);
+	swfdec_buffer_unref (tmp);
+	tmp = tmp2;
+      }
+      /* only assign here, the decoding code checks this variable */
+      sound->decoded = tmp;
+      g_assert (tmp->length >= sound->n_samples * 4);
+    } else {
+      SWFDEC_ERROR ("failed decoding given data in format %u", format);
     }
-    /* sound buffer may be bigger due to mp3 not having sample boundaries */
-    if (tmp->length > sound->n_samples * 4) {
-      SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * 4);
-      swfdec_buffer_unref (tmp);
-      tmp = tmp2;
-    }
-    /* only assign here, the decoding code checks this variable */
-    sound->decoded = tmp;
-    g_assert (tmp->length >= sound->n_samples * 4);
   }
   if (sound->decoded) {
     if (sound->decoded->length < sound->n_samples * 4) {

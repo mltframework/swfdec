@@ -28,6 +28,8 @@ swfdec_codec_ffmpeg_init (enum CodecID id, gboolean width, guint channels, guint
   ctx = avcodec_alloc_context ();
   if (avcodec_open (ctx, codec) < 0)
     goto fail;
+  ctx->sample_rate = 44100 / rate;
+  ctx->channels = channels;
 
   return ctx;
 fail:

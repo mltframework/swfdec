@@ -950,6 +950,7 @@ obj_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#if 0
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1090,6 +1091,7 @@ out:
 #endif
     return ok;
 }
+#endif
 
 JS_STATIC_DLL_CALLBACK(const void *)
 resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr)
@@ -1497,7 +1499,9 @@ static JSFunctionSpec object_methods[] = {
     {js_toString_str,             js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
     {js_toLocaleString_str,       js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
     {js_valueOf_str,              obj_valueOf,        0,0,0},
+#if 0
     {js_eval_str,                 obj_eval,           1,0,0},
+#endif
 #if JS_HAS_OBJ_WATCHPOINT
     {js_watch_str,                obj_watch,          2,0,0},
     {js_unwatch_str,              obj_unwatch,        1,0,0},

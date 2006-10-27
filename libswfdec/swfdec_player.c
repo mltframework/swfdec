@@ -453,7 +453,7 @@ static void
 swfdec_player_do_mouse_move (SwfdecPlayer *player)
 {
   GList *walk;
-  SwfdecMovie *mouse_grab;
+  SwfdecMovie *mouse_grab = NULL;
 
   swfdec_player_update_drag_movie (player);
   if (player->mouse_button) {

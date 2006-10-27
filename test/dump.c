@@ -1,3 +1,27 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -15,11 +39,42 @@
 #include <libswfdec/swfdec_root_movie.h>
 #include <libswfdec/swfdec_sprite.h>
 #include <libswfdec/swfdec_shape.h>
-#include <libswfdec/swfdec_shape.h>
+#include <libswfdec/swfdec_sound.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 #include <libswfdec/swfdec_text.h>
 
 static gboolean verbose = FALSE;
+
+static const char *
+get_audio_format_name (SwfdecAudioFormat format)
+{
+  switch (format) {
+    case SWFDEC_AUDIO_FORMAT_ADPCM:
+      return "ADPCM";
+    case SWFDEC_AUDIO_FORMAT_MP3:
+      return "MP3";
+    case SWFDEC_AUDIO_FORMAT_UNCOMPRESSED:
+      return "uncompressed";
+    case SWFDEC_AUDIO_FORMAT_NELLYMOSER:
+      return "Nellymoser";
+    default:
+      return "Unknown";
+  }
+}
+
+static void
+dump_sound (SwfdecSound *sound)
+{
+  g_print ("  codec: %s\n", get_audio_format_name (sound->format));
+  if (verbose) {
+    g_print ("  format: %uHz, %s, %ubit\n", 
+	44100 / sound->rate_multiplier, 
+	sound->channels == 1 ? "mono" : "stereo",
+	sound->width ? 16 : 8);
+    g_print ("  samples: %u (%gs)\n", sound->n_samples, 
+	sound->rate_multiplier * sound->n_samples / 44100.0);
+  }
+}
 
 static void
 dump_sprite (SwfdecSprite *s)
@@ -247,6 +302,9 @@ dump_objects (SwfdecSwfDecoder *s)
     }
     if (SWFDEC_IS_BUTTON (c)) {
       dump_button (SWFDEC_BUTTON (c));
+    }
+    if (SWFDEC_IS_SOUND (c)) {
+      dump_sound (SWFDEC_SOUND (c));
     }
   }
 }

@@ -95,6 +95,7 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
     SwfdecBuffer * chunk, int skip, guint n_samples)
 {
   g_assert (sprite->frames != NULL);
+  g_assert (chunk != NULL || n_samples == 0);
 
   if (sprite->frames[frame].sound_head == NULL) {
     SWFDEC_ERROR ("attempting to add a sound block without previous sound head");
@@ -106,7 +107,8 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
     swfdec_buffer_unref (chunk);
     return;
   }
-  SWFDEC_LOG ("adding %u samples in %u bytes to frame %u", n_samples, chunk->length, frame);
+  SWFDEC_LOG ("adding %u samples in %u bytes to frame %u", n_samples, 
+      chunk ? chunk->length : 0, frame);
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;
   sprite->frames[frame].sound_samples = n_samples * sprite->frames[frame].sound_head->rate_multiplier;

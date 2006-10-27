@@ -82,21 +82,21 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s)
   } else {
     skip = 0;
   }
-  if (s->b.ptr == s->b.end) {
+  if (swfdec_bits_left (&s->b) == 0) {
     SWFDEC_DEBUG ("empty sound block n_samples=%d skip=%d", n_samples,
         skip);
-    return SWFDEC_STATUS_OK;
+    chunk = NULL;
+  } else {
+    chunk = swfdec_bits_get_buffer (&s->b, -1);
+    if (chunk == NULL) {
+      SWFDEC_ERROR ("empty sound chunk");
+      return SWFDEC_STATUS_OK;
+    }
+    SWFDEC_LOG ("got a buffer with %u samples, %d skip and %u bytes mp3 data", n_samples, skip,
+	chunk->length);
+    /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */
+    //write (1, (void *) chunk->data, chunk->length);
   }
-
-  chunk = swfdec_bits_get_buffer (&s->b, -1);
-  if (chunk == NULL) {
-    SWFDEC_ERROR ("empty sound chunk");
-    return SWFDEC_STATUS_OK;
-  }
-  SWFDEC_LOG ("got a buffer with %u samples, %d skip and %u bytes mp3 data", n_samples, skip,
-      chunk->length);
-  /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */
-  //write (1, (void *) chunk->data, chunk->length);
 
   swfdec_sprite_add_sound_chunk (s->parse_sprite, s->parse_sprite->parse_frame, chunk, skip, n_samples);
 

@@ -31,7 +31,7 @@
 static void
 usage (const char *app)
 {
-  g_print ("usage: %s SWFFILE ID OUTFILE", app);
+  g_print ("usage: %s SWFFILE ID OUTFILE\n\n", app);
 }
 
 int

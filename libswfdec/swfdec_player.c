@@ -584,8 +584,6 @@ swfdec_player_iterate (SwfdecPlayer *player)
 
   g_object_freeze_notify (G_OBJECT (player));
   SWFDEC_INFO ("=== START ITERATION ===");
-  /* iterate audio before video so we don't iterate audio clips that get added this frame */
-  swfdec_player_iterate_audio (player);
   /* The handling of this list is rather tricky. This code assumes that no 
    * movies get removed that haven't been iterated yet. This should not be a 
    * problem without using Javascript, because the only way to remove movies
@@ -617,6 +615,9 @@ swfdec_player_iterate (SwfdecPlayer *player)
     if (klass->iterate_end)
       klass->iterate_end (walk->data);
   }
+  /* iterate audio after video so audio clips that get added during mouse
+   * events have the same behaviour than those added while iterating */
+  swfdec_player_iterate_audio (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_invalidate (player);
 }

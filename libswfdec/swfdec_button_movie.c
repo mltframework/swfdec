@@ -22,7 +22,9 @@
 #endif
 
 #include "swfdec_button_movie.h"
+#include "swfdec_audio.h"
 #include "swfdec_debug.h"
+#include "swfdec_root_movie.h"
 
 G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_MOVIE)
 
@@ -48,6 +50,16 @@ static const SwfdecButtonCondition event_table[2][4][4] = {
     { 0, -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN },
     { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
     { -1, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } }
+};
+static const int sound_table[2][4][4] = {
+  { { -1, -1,  1, -1 },
+    {  0, -1, -1, -1 },
+    {  0, -1, -1,  2 },
+    { -1, -1,  3, -1 } },
+  { { -1, -1,  1, -1 },
+    { -1, -1, -1,  1 },
+    {  0, -1, -1,  2 },
+    { -1,  0,  3, -1 } }
 };
 
 static void
@@ -109,6 +121,7 @@ static void
 swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
 {
   SwfdecButtonCondition event;
+  int sound;
 
   if (movie->mouse_in == mouse_in &&
       movie->mouse_button == button)
@@ -127,6 +140,15 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
   if (event != 0) {
     SWFDEC_LOG ("emitting event for condition %u", event);
     swfdec_button_movie_execute (movie, event);
+  }
+  sound = sound_table[movie->button->menubutton ? 1 : 0]
+		     [(movie->mouse_in ? 2 : 0) + movie->mouse_button]
+		     [(mouse_in ? 2 : 0) + button];
+  if (sound >= 0 && movie->button->sounds[sound]) {
+    SWFDEC_LOG ("playing button sound %d", sound);
+    swfdec_audio_event_init (
+	SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player,
+	movie->button->sounds[sound]);
   }
   movie->mouse_in = mouse_in;
   movie->mouse_button = button;

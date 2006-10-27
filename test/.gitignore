@@ -10,4 +10,4 @@ Makefile.in
 
 dump
 parse
-test-pixbuf
+swfdec-extract

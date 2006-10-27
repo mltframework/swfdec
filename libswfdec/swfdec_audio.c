@@ -323,7 +323,7 @@ swfdec_audio_event_init (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
   event->chunk = chunk;
   event->offset = chunk->start_sample;
   event->loop = 0;
-  event->skip = player->samples_latency;
+  event->skip = player->samples_latency + player->samples_this_frame;
   SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (chunk->sound)->id,
       chunk->start_sample);
 }
@@ -404,7 +404,7 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
   player->samples_this_frame = 44100 * 256 / player->rate;
   player->samples_overhead_left += player->samples_overhead;
   player->samples_overhead_left %= (44100 * 256);
-  if (player->samples_overhead_left <= player->samples_overhead_left)
+  if (player->samples_overhead_left < player->samples_overhead_left)
     player->samples_this_frame++;
   swfdec_player_do_iterate_audio (player, samples_last_frame);
 }

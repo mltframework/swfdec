@@ -52,7 +52,7 @@ struct _SwfdecAudioStream {
   SwfdecSprite *	sprite;		/* sprite we're playing back */
   SwfdecSound *		sound;	      	/* sound we're playing */
   gpointer		decoder;	/* decoder used for this frame */
-  unsigned int		skip;		/* samples to skip */
+  unsigned int	      	skip;		/* samples to skip at start of stream */
   gboolean		disabled;	/* set to TRUE when we can't queue more data */
   unsigned int		playback_samples; /* number of samples in queue */
   SwfdecRingBuffer *	playback_queue;	/* all the samples we've decoded so far */
@@ -68,6 +68,8 @@ union _SwfdecAudio {
 void			swfdec_audio_finish		(SwfdecAudio *		audio);
 void			swfdec_player_iterate_audio   	(SwfdecPlayer *		player);
 
+/* FIXME: new streams and events only start playing when iterating due to the current
+ * design of the soudn engine */
 void			swfdec_audio_event_init		(SwfdecPlayer *		player, 
 							 SwfdecSoundChunk *	chunk);
 

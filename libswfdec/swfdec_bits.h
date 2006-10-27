@@ -21,6 +21,7 @@ struct _SwfdecBits
   unsigned char *end;
 };
 
+void swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer);
 unsigned int swfdec_bits_left (SwfdecBits *b);
 int swfdec_bits_getbit (SwfdecBits * b);
 unsigned int swfdec_bits_getbits (SwfdecBits * b, unsigned int n);

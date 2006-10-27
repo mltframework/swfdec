@@ -11,6 +11,18 @@
 #include "swfdec_rect.h"
 
 
+void 
+swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer)
+{
+  g_return_if_fail (bits != NULL);
+  g_return_if_fail (buffer != NULL);
+
+  bits->buffer = buffer;
+  bits->ptr = buffer->data;
+  bits->idx = 0;
+  bits->end = buffer->data + buffer->length;
+}
+
 unsigned int 
 swfdec_bits_left (SwfdecBits *b)
 {

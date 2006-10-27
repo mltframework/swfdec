@@ -190,23 +190,17 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       /* only assign here, the decoding code checks this variable */
       sound->decoded = tmp;
       if (tmp->length < sound->n_samples * 4) {
-	SWFDEC_ERROR ("%u samples in %u bytes should be available, but only %u bytes are",
+	/* we handle this case in swfdec_sound_render */
+	/* FIXME: this message is important when writing new codecs, so I made it a warning.
+	 * It's probably not worth more than INFO for the usual case though */
+	SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
 	    sound->n_samples, sound->n_samples * 4, tmp->length);
-	g_assert_not_reached ();
       }
     } else {
       SWFDEC_ERROR ("failed decoding given data in format %u", format);
     }
   }
-  if (sound->decoded) {
-    if (sound->decoded->length < sound->n_samples * 4) {
-      SWFDEC_WARNING ("%d sound samples should be available, but only %d are",
-	  sound->n_samples, sound->decoded->length / 4);
-      sound->n_samples = sound->decoded->length / 4;
-    } else {
-      SWFDEC_LOG ("%d samples decoded", sound->n_samples);
-    }
-  } else {
+  if (sound->decoded == NULL) {
     SWFDEC_ERROR ("defective sound object (id %d)", SWFDEC_CHARACTER (sound)->id);
     s->characters = g_list_remove (s->characters, sound);
     g_object_unref (sound);
@@ -500,11 +494,11 @@ swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
   g_return_if_fail (sound->decoded != NULL);
   g_return_if_fail (offset + n_samples <= sound->n_samples);
 
-  if (sound->decoded == NULL) {
-    SWFDEC_ERROR ("can't do on-the-fly decoding yet :(");
+  /* NB: number of samples can be smaller than n_samples, we pad with 0s then */
+  if (offset * 4 >= sound->decoded->length)
     return;
-  }
   src = (gint16*) (sound->decoded->data + offset * 4);
+  n_samples = MIN (n_samples, sound->decoded->length / 4 - offset);
   if (volume)
     swfdec_sound_add_with_volume (dest, src, n_samples, volume);
   else

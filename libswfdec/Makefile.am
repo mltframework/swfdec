@@ -25,6 +25,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_cache.c \
 	swfdec_character.c \
 	swfdec_codec.c \
+	swfdec_codec_adpcm.c \
 	$(CODECS) \
 	swfdec_compiler.c \
 	swfdec_debug.c \

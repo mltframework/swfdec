@@ -26,6 +26,7 @@
 
 /*** DECODER LIST ***/
 
+extern const SwfdecCodec swfdec_codec_adpcm;
 #ifdef HAVE_MAD
 extern const SwfdecCodec swfdec_codec_mad;
 #endif
@@ -120,6 +121,7 @@ swfdec_codec_get_audio (SwfdecAudioFormat format)
     case SWFDEC_AUDIO_FORMAT_UNCOMPRESSED:
       return &swfdec_codec_uncompressed;
     case SWFDEC_AUDIO_FORMAT_ADPCM:
+      return &swfdec_codec_adpcm;
 #ifdef HAVE_FFMPEG
       return &swfdec_codec_ffmpeg_adpcm;
 #else

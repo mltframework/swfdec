@@ -67,8 +67,8 @@ void		swfdec_player_handle_mouse	(SwfdecPlayer *	player,
 						 int		button);
 /* audio - see swfdec_audio.c */
 guint		swfdec_player_get_audio_samples	(SwfdecPlayer *	player);
-guint		swfdec_player_get_latency	(SwfdecPlayer *	player);
-void		swfdec_player_set_latency	(SwfdecPlayer *	player,
+guint		swfdec_player_get_audio_advance	(SwfdecPlayer *	player);
+void		swfdec_player_set_audio_advance	(SwfdecPlayer *	player,
 						 guint		samples);
 void		swfdec_player_render_audio	(SwfdecPlayer *	player,
 						 gint16 *	dest, 

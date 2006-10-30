@@ -19,67 +19,51 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __SWFDEC_AUDIO_H__
-#define __SWFDEC_AUDIO_H__
+#ifndef _SWFDEC_AUDIO_H_
+#define _SWFDEC_AUDIO_H_
 
-#include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_ringbuffer.h>
 
 G_BEGIN_DECLS
 
-typedef union _SwfdecAudio SwfdecAudio;
-typedef struct _SwfdecAudioEvent SwfdecAudioEvent;
-typedef struct _SwfdecAudioStream SwfdecAudioStream;
+typedef struct _SwfdecAudio SwfdecAudio;
+typedef struct _SwfdecAudioClass SwfdecAudioClass;
 
-typedef enum {
-  SWFDEC_AUDIO_UNUSED,
-  SWFDEC_AUDIO_EVENT,
-  SWFDEC_AUDIO_STREAM
-} SwfdecAudioType;
+#define SWFDEC_TYPE_AUDIO                    (swfdec_audio_get_type())
+#define SWFDEC_IS_AUDIO(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AUDIO))
+#define SWFDEC_IS_AUDIO_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AUDIO))
+#define SWFDEC_AUDIO(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AUDIO, SwfdecAudio))
+#define SWFDEC_AUDIO_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AUDIO, SwfdecAudioClass))
+#define SWFDEC_AUDIO_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AUDIO, SwfdecAudioClass))
 
-struct _SwfdecAudioEvent {
-  SwfdecAudioType	type;
-  SwfdecSound *		sound;	      	/* sound we're playing */
-  unsigned int		skip;		/* samples to skip */
-  SwfdecSoundChunk *	chunk;		/* chunk we're playing back */
-  unsigned int		offset;		/* current offset */
-  unsigned int		loop;		/* current loop we're in */
+struct _SwfdecAudio
+{
+  GObject		object;
+
+  SwfdecPlayer *	player;		/* the player that plays us */
+  guint			start_offset;	/* offset from player in number of samples */
 };
 
-struct _SwfdecAudioStream {
-  SwfdecAudioType	type;
-  SwfdecSprite *	sprite;		/* sprite we're playing back */
-  SwfdecSound *		sound;	      	/* sound we're playing */
-  gpointer		decoder;	/* decoder used for this frame */
-  unsigned int	      	skip;		/* samples to skip at start of stream */
-  gboolean		disabled;	/* set to TRUE when we can't queue more data */
-  unsigned int		playback_samples; /* number of samples in queue */
-  SwfdecRingBuffer *	playback_queue;	/* all the samples we've decoded so far */
-  unsigned int		current_frame;	/* last decoded frame */
+struct _SwfdecAudioClass
+{
+  GObjectClass		object_class;
+
+  gboolean		(* iterate)		(SwfdecAudio *	audio,
+						 guint		n_samples);
+  void			(* render)		(SwfdecAudio *	audio,
+						 gint16 *	dest,
+						 guint		start, 
+						 guint		n_samples);
 };
 
-union _SwfdecAudio {
-  SwfdecAudioType	type;
-  SwfdecAudioEvent	event;
-  SwfdecAudioStream	stream;
-};
+GType		swfdec_audio_get_type		(void);
 
-void			swfdec_audio_finish		(SwfdecAudio *		audio);
-void			swfdec_player_iterate_audio   	(SwfdecPlayer *		player);
+SwfdecAudio *	swfdec_audio_new		(SwfdecPlayer *	player,
+						 GType		type);
+void		swfdec_audio_remove		(SwfdecAudio *	audio);
 
-/* FIXME: new streams and events only start playing when iterating due to the current
- * design of the soudn engine */
-void			swfdec_audio_event_init		(SwfdecPlayer *		player, 
-							 SwfdecSoundChunk *	chunk);
-
-guint			swfdec_audio_stream_new		(SwfdecPlayer *		player,
-							 SwfdecSprite *		sprite,
-							 guint			start_frame);
-void			swfdec_audio_stream_stop      	(SwfdecPlayer *		player,
-							 guint			stream_id);
-
+void		swfdec_player_iterate_audio   	(SwfdecPlayer *	player);
 
 G_END_DECLS
-
 #endif

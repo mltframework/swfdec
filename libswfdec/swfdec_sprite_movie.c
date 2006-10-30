@@ -22,7 +22,8 @@
 #endif
 
 #include "swfdec_sprite_movie.h"
-#include "swfdec_audio.h"
+#include "swfdec_audio_event.h"
+#include "swfdec_audio_stream.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_player_internal.h"
@@ -225,7 +226,7 @@ swfdec_sprite_movie_dispose (GObject *object)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (object);
 
-  g_assert (movie->sound_stream == 0);
+  g_assert (movie->sound_stream == NULL);
 
   G_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->dispose (object);
 }
@@ -263,14 +264,14 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
   
   /* first start all event sounds */
   for (walk = current->sound; walk; walk = walk->next) {
-    swfdec_audio_event_init (player, walk->data);
+    swfdec_audio_event_new (player, walk->data);
   }
 
   /* then do the streaming thing */
   if (current->sound_head == NULL) {
     if (movie->sound_stream) {
-      swfdec_audio_stream_stop (player, movie->sound_stream);
-      movie->sound_stream = 0;
+      swfdec_audio_remove (movie->sound_stream);
+      movie->sound_stream = NULL;
     }
     return;
   }
@@ -279,7 +280,7 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
     goto new_decoder;
   if (movie->sound_frame == (guint) -1)
     goto new_decoder;
-  if (current->sound_head && movie->sound_stream == 0)
+  if (current->sound_head && movie->sound_stream == NULL)
     goto new_decoder;
   last = &movie->sprite->frames[movie->sound_frame];
   if (last->sound_head != current->sound_head)
@@ -288,10 +289,8 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
   return;
 
 new_decoder:
-  if (movie->sound_stream) {
-    swfdec_audio_stream_stop (player, movie->sound_stream);
-    movie->sound_stream = 0;
-  }
+  if (movie->sound_stream)
+    swfdec_audio_remove (movie->sound_stream);
 
   movie->sound_stream = swfdec_audio_stream_new (player, 
       movie->sprite, movie->current_frame);
@@ -313,8 +312,8 @@ swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
     /* unset */
     swfdec_player_remove_all_actions (player, mov);
     if (movie->sound_stream) {
-      swfdec_audio_stream_stop (player, movie->sound_stream);
-      movie->sound_stream = 0;
+      swfdec_audio_remove (movie->sound_stream);
+      movie->sound_stream = NULL;
     }
   }
 }

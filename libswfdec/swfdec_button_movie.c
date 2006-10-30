@@ -22,7 +22,7 @@
 #endif
 
 #include "swfdec_button_movie.h"
-#include "swfdec_audio.h"
+#include "swfdec_audio_event.h"
 #include "swfdec_debug.h"
 #include "swfdec_root_movie.h"
 
@@ -146,7 +146,7 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
 		     [(mouse_in ? 2 : 0) + button];
   if (sound >= 0 && movie->button->sounds[sound]) {
     SWFDEC_LOG ("playing button sound %d", sound);
-    swfdec_audio_event_init (
+    swfdec_audio_event_new (
 	SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player,
 	movie->button->sounds[sound]);
   }

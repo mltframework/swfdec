@@ -18,6 +18,8 @@ js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	color.c \
 	swfdec_audio.c \
+	swfdec_audio_event.c \
+	swfdec_audio_stream.c \
 	swfdec_bits.c \
 	swfdec_buffer.c \
 	swfdec_button.c \
@@ -80,6 +82,8 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 noinst_HEADERS = \
 	color.h \
 	swfdec_audio.h \
+	swfdec_audio_event.h \
+	swfdec_audio_stream.h \
 	swfdec_bits.h \
 	swfdec_button.h \
 	swfdec_button_movie.h \

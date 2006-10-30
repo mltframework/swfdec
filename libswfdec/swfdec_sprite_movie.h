@@ -21,6 +21,7 @@
 #define _SWFDEC_SPRITE_MOVIE_H_
 
 #include <libswfdec/swfdec_movie.h>
+#include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
@@ -49,7 +50,7 @@ struct _SwfdecSpriteMovie
 
   /* audio stream handling */
   unsigned int		sound_frame;		/* current sound frame */
-  guint			sound_stream;		/* stream that currently plays */
+  SwfdecAudio *		sound_stream;		/* stream that currently plays */
 };
 
 struct _SwfdecSpriteMovieClass

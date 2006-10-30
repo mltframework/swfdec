@@ -353,6 +353,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
     }
     chunk->envelope[i].volume[0] = swfdec_bits_get_u16 (b);
     chunk->envelope[i].volume[1] = swfdec_bits_get_u16 (b);
+    /* FIXME: check that mono sound gets averaged and then do this here? */
   }
 
   return chunk;

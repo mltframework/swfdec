@@ -102,6 +102,7 @@ swfdec_player_do_action (SwfdecPlayer *player)
 enum {
   TRACE,
   INVALIDATE,
+  AUDIO_CHANGED,
   LAST_SIGNAL
 };
 
@@ -164,7 +165,6 @@ static void
 swfdec_player_dispose (GObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
-  guint i;
 
   g_list_foreach (player->roots, (GFunc) swfdec_movie_remove, NULL);
   g_list_free (player->roots);
@@ -175,10 +175,9 @@ swfdec_player_dispose (GObject *object)
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
 
-  for (i = 0; i < player->audio->len; i++) {
-    swfdec_audio_finish (&g_array_index (player->audio, SwfdecAudio, i));
+  while (player->audio) {
+    swfdec_audio_remove (player->audio->data);
   }
-  g_array_free (player->audio, TRUE);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
@@ -208,6 +207,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
+  signals[AUDIO_CHANGED] = g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 static void
@@ -215,18 +217,20 @@ swfdec_player_init (SwfdecPlayer *player)
 {
   swfdec_js_init_player (player);
 
-  player->audio = g_array_new (FALSE, FALSE, sizeof (SwfdecAudio));
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
 }
 
 static void
-swfdec_player_emit_invalidate (SwfdecPlayer *player)
+swfdec_player_emit_signals (SwfdecPlayer *player)
 {
-  if (swfdec_rect_is_empty (&player->invalid))
-    return;
-
-  g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
-  swfdec_rect_init_empty (&player->invalid);
+  if (!swfdec_rect_is_empty (&player->invalid)) {
+    g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
+    swfdec_rect_init_empty (&player->invalid);
+  }
+  if (player->audio_changed) {
+    g_signal_emit (player, signals[AUDIO_CHANGED], 0, g_list_length (player->audio));
+    player->audio_changed = FALSE;
+  }
 }
 
 void
@@ -518,7 +522,7 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
     swfdec_movie_update (walk->data);
   }
   g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_invalidate (player);
+  swfdec_player_emit_signals (player);
 }
 
 /**
@@ -584,6 +588,9 @@ swfdec_player_iterate (SwfdecPlayer *player)
 
   g_object_freeze_notify (G_OBJECT (player));
   SWFDEC_INFO ("=== START ITERATION ===");
+  /* set latency so that sounds start after iteration */
+  if (player->samples_latency < player->samples_this_frame)
+    player->samples_latency = player->samples_this_frame;
   /* The handling of this list is rather tricky. This code assumes that no 
    * movies get removed that haven't been iterated yet. This should not be a 
    * problem without using Javascript, because the only way to remove movies
@@ -619,7 +626,7 @@ swfdec_player_iterate (SwfdecPlayer *player)
    * events have the same behaviour than those added while iterating */
   swfdec_player_iterate_audio (player);
   g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_invalidate (player);
+  swfdec_player_emit_signals (player);
 }
 
 /**

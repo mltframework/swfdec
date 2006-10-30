@@ -94,7 +94,7 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
     } else {
       /* wanna speed this up by not allocating buffers? */
       buffer = swfdec_buffer_new_and_alloc (frame->sound_samples * 4);
-      memset (buffer, 0, buffer->length);
+      memset (buffer->data, 0, buffer->length);
     }
     g_queue_push_tail (stream->playback_queue, buffer);
     return buffer;
@@ -117,8 +117,8 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest, guint start, guint
   walk = g_queue_peek_head_link (stream->playback_queue);
   while (n_samples) {
     if (walk) {
-      walk = walk->next;
       buffer = walk->data;
+      walk = walk->next;
     } else {
       if (stream->done)
 	break;
@@ -127,16 +127,19 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest, guint start, guint
 	break;
     }
     if (start) {
-      if (buffer->length >= 4 * start) {
+      if (buffer->length <= 4 * start) {
 	start -= buffer->length / 4;
 	continue;
       }
       src = (gint16 *) buffer->data + 2 * start;
       samples = buffer->length / 4 - start;
+      SWFDEC_LOG ("rendering %u samples out of %u samples, skipping %u",
+	  samples, buffer->length / 4, start);
       start = 0;
     } else {
       src = (gint16 *) buffer->data;
       samples = buffer->length / 4;
+      SWFDEC_LOG ("rendering %u samples", samples);
     }
     samples = MIN (samples , n_samples);
     swfdec_sound_add (dest, src, samples);

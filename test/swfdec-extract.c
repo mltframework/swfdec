@@ -49,30 +49,11 @@ encode_wav (SwfdecBuffer *buffer)
   guint i;
 
   data = wav->data;
-  memmove (data, "RIFF", 4);
-  data += 4;
-  *(gint32 *) data = GUINT32_TO_LE (buffer->length + 36);
-  data += 4;
-  memmove (data, "WAVEfmt ", 8);
-  data += 8;
-  *(gint32 *) data = GUINT32_TO_LE (16);
-  data += 4;
-  *data++ = 1;
-  *data++ = 0;
-  *data++ = 2;
-  *data++ = 0;
-  *(gint32 *) data = GUINT32_TO_LE (44100);
-  data += 4;
-  *(gint32 *) data = GUINT32_TO_LE (44100 * 4);
-  data += 4;
-  *data++ = 4;
-  *data++ = 0;
-  *data++ = 16;
-  *data++ = 0;
-  memmove (data, "data", 4);
-  data += 4;
-  *(gint32 *) data = GUINT32_TO_LE (buffer->length);
-  data += 4;
+  memmove (data, "RIFF----WAVEfmt \020\0\0\0"
+		 "\001\0\002\0D\254\0\0\020\261\002\0\004\0\020\0data", 40);
+  *(gint32 *) &data[4] = GUINT32_TO_LE (buffer->length + 36);
+  *(gint32 *) &data[40] = GUINT32_TO_LE (buffer->length);
+  data += 44;
   for (i = 0; i < buffer->length; i += 2) {
     *(gint16 *) (data + i) = GINT16_TO_LE (*(gint16* )(buffer->data + i));
   }

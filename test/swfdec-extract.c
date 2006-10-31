@@ -41,21 +41,63 @@
 #include <libswfdec/swfdec_sprite.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 
+static SwfdecBuffer *
+encode_wav (SwfdecBuffer *buffer)
+{
+  SwfdecBuffer *wav = swfdec_buffer_new_and_alloc (buffer->length + 44);
+  unsigned char *data;
+  guint i;
+
+  data = wav->data;
+  memmove (data, "RIFF", 4);
+  data += 4;
+  *(gint32 *) data = GUINT32_TO_LE (buffer->length + 36);
+  data += 4;
+  memmove (data, "WAVEfmt ", 8);
+  data += 8;
+  *(gint32 *) data = GUINT32_TO_LE (16);
+  data += 4;
+  *data++ = 1;
+  *data++ = 0;
+  *data++ = 2;
+  *data++ = 0;
+  *(gint32 *) data = GUINT32_TO_LE (44100);
+  data += 4;
+  *(gint32 *) data = GUINT32_TO_LE (44100 * 4);
+  data += 4;
+  *data++ = 4;
+  *data++ = 0;
+  *data++ = 16;
+  *data++ = 0;
+  memmove (data, "data", 4);
+  data += 4;
+  *(gint32 *) data = GUINT32_TO_LE (buffer->length);
+  data += 4;
+  for (i = 0; i < buffer->length; i += 2) {
+    *(gint16 *) (data + i) = GINT16_TO_LE (*(gint16* )(buffer->data + i));
+  }
+  return wav;
+}
+
 static gboolean
 export_sound (SwfdecSound *sound, const char *filename)
 {
   GError *error = NULL;
+  SwfdecBuffer *wav;
 
   if (sound->decoded == NULL) {
-    g_printerr ("sound is not decoded");
+    g_printerr ("not a sound event. Streams are not supported yet.");
     return FALSE;
   }
-  if (!g_file_set_contents (filename, (char *) sound->decoded->data, 
-	sound->decoded->length, &error)) {
+  wav = encode_wav (sound->decoded);
+  if (!g_file_set_contents (filename, (char *) wav->data, 
+	wav->length, &error)) {
     g_printerr ("Couldn't save sound to file \"%s\": %s\n", filename, error->message);
+    swfdec_buffer_unref (wav);
     g_error_free (error);
     return FALSE;
   }
+  swfdec_buffer_unref (wav);
   return TRUE;
 }
 

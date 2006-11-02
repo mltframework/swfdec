@@ -195,7 +195,7 @@ swfdec_playback_open (SwfdecPlayer *player)
   GTimeVal tv;
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
-  ALSA_ERROR (snd_pcm_open (&ret, FALSE ? "default" : "plughw:0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
+  ALSA_ERROR (snd_pcm_open (&ret, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
       "Failed to open sound device", NULL);
 
   snd_pcm_hw_params_alloca (&hw_params);

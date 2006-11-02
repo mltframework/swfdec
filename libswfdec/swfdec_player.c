@@ -103,6 +103,7 @@ enum {
   TRACE,
   INVALIDATE,
   AUDIO_CHANGED,
+  ITERATE,
   LAST_SIGNAL
 };
 
@@ -183,94 +184,6 @@ swfdec_player_dispose (GObject *object)
 }
 
 static void
-swfdec_player_class_init (SwfdecPlayerClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  object_class->get_property = swfdec_player_get_property;
-  object_class->set_property = swfdec_player_set_property;
-  object_class->dispose = swfdec_player_dispose;
-
-  g_object_class_install_property (object_class, PROP_INITIALIZED,
-      g_param_spec_boolean ("initialized", "initialized", "the player has initialized its basic values",
-	  FALSE, G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_LATENCY,
-      g_param_spec_uint ("latency", "latency", "audio latency in samples",
-	  0, 44100 * 10, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_MOUSE_VISIBLE,
-      g_param_spec_boolean ("mouse-visible", "mouse visible", "whether to show the mouse pointer",
-	  TRUE, G_PARAM_READABLE));
-
-  signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
-      G_TYPE_NONE, 1, G_TYPE_STRING);
-  signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-      G_TYPE_NONE, 1, G_TYPE_POINTER);
-  signals[AUDIO_CHANGED] = g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT,
-      G_TYPE_NONE, 1, G_TYPE_UINT);
-}
-
-static void
-swfdec_player_init (SwfdecPlayer *player)
-{
-  swfdec_js_init_player (player);
-
-  player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
-}
-
-static void
-swfdec_player_emit_signals (SwfdecPlayer *player)
-{
-  if (!swfdec_rect_is_empty (&player->invalid)) {
-    g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
-    swfdec_rect_init_empty (&player->invalid);
-  }
-  if (player->audio_changed) {
-    g_signal_emit (player, signals[AUDIO_CHANGED], 0, g_list_length (player->audio));
-    player->audio_changed = FALSE;
-  }
-}
-
-void
-swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
-{
-  if (swfdec_rect_is_empty (rect)) {
-    g_assert_not_reached ();
-    return;
-  }
-
-  swfdec_rect_union (&player->invalid, &player->invalid, rect);
-  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %g %g  %g %g",
-      rect->x0, rect->y0, rect->x1, rect->y1,
-      player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
-}
-
-static void
-swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
-    SwfdecLoader *loader)
-{
-  SwfdecMovie *movie;
-  SwfdecRootMovie *root;
-  GList *found;
-
-  movie = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
-  root = SWFDEC_ROOT_MOVIE (movie);
-  root->loader = loader;
-  root->player = player;
-  movie->root = movie;
-  found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
-  if (found) {
-    SWFDEC_DEBUG ("remove existing movie _level%u", depth);
-    swfdec_movie_remove (found->data);
-    player->roots = g_list_delete_link (player->roots, found);
-  }
-  player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
-  swfdec_root_movie_parse (root);
-}
-
-static void
 swfdec_player_update_drag_movie (SwfdecPlayer *player)
 {
   double mouse_x, mouse_y;
@@ -336,6 +249,182 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
       player->mouse_drag_rect.x0, player->mouse_drag_rect.y0,
       player->mouse_drag_rect.x1, player->mouse_drag_rect.y1);
   /* FIXME: need a way to make sure we get updated */
+}
+
+static void
+swfdec_player_do_mouse_move (SwfdecPlayer *player)
+{
+  GList *walk;
+  SwfdecMovie *mouse_grab = NULL;
+
+  swfdec_player_update_drag_movie (player);
+  if (player->mouse_button) {
+    mouse_grab = player->mouse_grab;
+  } else {
+    /* if the mouse button is pressed the grab widget stays the same (I think) */
+    for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
+      mouse_grab = swfdec_movie_get_movie_at (walk->data, player->mouse_x, player->mouse_y);
+      if (mouse_grab)
+	break;
+    }
+  }
+  SWFDEC_DEBUG ("%s %p has mouse at %g %g\n", 
+      mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
+      mouse_grab, player->mouse_x, player->mouse_y);
+  if (player->mouse_grab && mouse_grab != player->mouse_grab)
+    swfdec_movie_send_mouse_change (player->mouse_grab, TRUE);
+  player->mouse_grab = mouse_grab;
+  if (mouse_grab)
+    swfdec_movie_send_mouse_change (mouse_grab, FALSE);
+}
+
+static void
+swfdec_player_do_mouse_button (SwfdecPlayer *player)
+{
+  if (player->mouse_grab)
+    swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
+}
+
+static void
+swfdec_player_emit_signals (SwfdecPlayer *player)
+{
+  if (!swfdec_rect_is_empty (&player->invalid)) {
+    g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
+    swfdec_rect_init_empty (&player->invalid);
+  }
+  if (player->audio_changed) {
+    g_signal_emit (player, signals[AUDIO_CHANGED], 0, g_list_length (player->audio));
+    player->audio_changed = FALSE;
+  }
+}
+
+static void
+swfdec_player_do_iterate (SwfdecPlayer *player)
+{
+  GList *walk;
+
+  g_object_freeze_notify (G_OBJECT (player));
+  SWFDEC_INFO ("=== START ITERATION ===");
+  /* set latency so that sounds start after iteration */
+  if (player->samples_latency < player->samples_this_frame)
+    player->samples_latency = player->samples_this_frame;
+  /* The handling of this list is rather tricky. This code assumes that no 
+   * movies get removed that haven't been iterated yet. This should not be a 
+   * problem without using Javascript, because the only way to remove movies
+   * is when a sprite removes a child. But all children are in front of their
+   * parent in this list, since they got added later.
+   */
+  for (walk = player->movies; walk; walk = walk->next) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
+    if (klass->iterate_start)
+      klass->iterate_start (walk->data);
+  }
+  while (swfdec_player_do_action (player));
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  SWFDEC_INFO ("=== STOP ITERATION ===");
+  /* update the state of the mouse when stuff below it moved */
+  if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
+    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
+    swfdec_player_do_mouse_move (player);
+    while (swfdec_player_do_action (player));
+    for (walk = player->roots; walk; walk = walk->next) {
+      swfdec_movie_update (walk->data);
+    }
+    SWFDEC_INFO ("=== DONE UPDATING mouse post-iteration ===");
+  }
+  for (walk = player->movies; walk; walk = walk->next) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
+    if (klass->iterate_end)
+      klass->iterate_end (walk->data);
+  }
+  /* iterate audio after video so audio clips that get added during mouse
+   * events have the same behaviour than those added while iterating */
+  swfdec_player_iterate_audio (player);
+  g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_signals (player);
+}
+
+static void
+swfdec_player_class_init (SwfdecPlayerClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->get_property = swfdec_player_get_property;
+  object_class->set_property = swfdec_player_set_property;
+  object_class->dispose = swfdec_player_dispose;
+
+  g_object_class_install_property (object_class, PROP_INITIALIZED,
+      g_param_spec_boolean ("initialized", "initialized", "the player has initialized its basic values",
+	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_LATENCY,
+      g_param_spec_uint ("latency", "latency", "audio latency in samples",
+	  0, 44100 * 10, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_MOUSE_VISIBLE,
+      g_param_spec_boolean ("mouse-visible", "mouse visible", "whether to show the mouse pointer",
+	  TRUE, G_PARAM_READABLE));
+
+  signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
+      G_TYPE_NONE, 1, G_TYPE_STRING);
+  signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 1, G_TYPE_POINTER);
+  signals[AUDIO_CHANGED] = g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
+  signals[ITERATE] = g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, iterate), 
+      NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
+
+  klass->iterate = swfdec_player_do_iterate;
+}
+
+static void
+swfdec_player_init (SwfdecPlayer *player)
+{
+  swfdec_js_init_player (player);
+
+  player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
+}
+
+void
+swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
+{
+  if (swfdec_rect_is_empty (rect)) {
+    g_assert_not_reached ();
+    return;
+  }
+
+  swfdec_rect_union (&player->invalid, &player->invalid, rect);
+  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %g %g  %g %g",
+      rect->x0, rect->y0, rect->x1, rect->y1,
+      player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
+}
+
+static void
+swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
+    SwfdecLoader *loader)
+{
+  SwfdecMovie *movie;
+  SwfdecRootMovie *root;
+  GList *found;
+
+  movie = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
+  root = SWFDEC_ROOT_MOVIE (movie);
+  root->loader = loader;
+  root->player = player;
+  movie->root = movie;
+  found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
+  if (found) {
+    SWFDEC_DEBUG ("remove existing movie _level%u", depth);
+    swfdec_movie_remove (found->data);
+    player->roots = g_list_delete_link (player->roots, found);
+  }
+  player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
+  swfdec_root_movie_parse (root);
 }
 
 void
@@ -453,40 +542,6 @@ swfdec_init (void)
   swfdec_js_init (0);
 }
 
-static void
-swfdec_player_do_mouse_move (SwfdecPlayer *player)
-{
-  GList *walk;
-  SwfdecMovie *mouse_grab = NULL;
-
-  swfdec_player_update_drag_movie (player);
-  if (player->mouse_button) {
-    mouse_grab = player->mouse_grab;
-  } else {
-    /* if the mouse button is pressed the grab widget stays the same (I think) */
-    for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
-      mouse_grab = swfdec_movie_get_movie_at (walk->data, player->mouse_x, player->mouse_y);
-      if (mouse_grab)
-	break;
-    }
-  }
-  SWFDEC_DEBUG ("%s %p has mouse at %g %g\n", 
-      mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
-      mouse_grab, player->mouse_x, player->mouse_y);
-  if (player->mouse_grab && mouse_grab != player->mouse_grab)
-    swfdec_movie_send_mouse_change (player->mouse_grab, TRUE);
-  player->mouse_grab = mouse_grab;
-  if (mouse_grab)
-    swfdec_movie_send_mouse_change (mouse_grab, FALSE);
-}
-
-static void
-swfdec_player_do_mouse_button (SwfdecPlayer *player)
-{
-  if (player->mouse_grab)
-    swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
-}
-
 /**
  * swfdec_player_handle_mouse:
  * @dec: a #SwfdecPlayer
@@ -578,55 +633,13 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
 void
 swfdec_player_iterate (SwfdecPlayer *player)
 {
-  GList *walk;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
 #if 0
   swfdec_js_run (player, "foo = bar.boo();", NULL);
 #endif
 
-  g_object_freeze_notify (G_OBJECT (player));
-  SWFDEC_INFO ("=== START ITERATION ===");
-  /* set latency so that sounds start after iteration */
-  if (player->samples_latency < player->samples_this_frame)
-    player->samples_latency = player->samples_this_frame;
-  /* The handling of this list is rather tricky. This code assumes that no 
-   * movies get removed that haven't been iterated yet. This should not be a 
-   * problem without using Javascript, because the only way to remove movies
-   * is when a sprite removes a child. But all children are in front of their
-   * parent in this list, since they got added later.
-   */
-  for (walk = player->movies; walk; walk = walk->next) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
-    if (klass->iterate_start)
-      klass->iterate_start (walk->data);
-  }
-  while (swfdec_player_do_action (player));
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
-  SWFDEC_INFO ("=== STOP ITERATION ===");
-  /* update the state of the mouse when stuff below it moved */
-  if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
-    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
-    swfdec_player_do_mouse_move (player);
-    while (swfdec_player_do_action (player));
-    for (walk = player->roots; walk; walk = walk->next) {
-      swfdec_movie_update (walk->data);
-    }
-    SWFDEC_INFO ("=== DONE UPDATING mouse post-iteration ===");
-  }
-  for (walk = player->movies; walk; walk = walk->next) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
-    if (klass->iterate_end)
-      klass->iterate_end (walk->data);
-  }
-  /* iterate audio after video so audio clips that get added during mouse
-   * events have the same behaviour than those added while iterating */
-  swfdec_player_iterate_audio (player);
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_signals (player);
+  g_signal_emit (player, signals[ITERATE], 0);
 }
 
 /**

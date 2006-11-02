@@ -165,10 +165,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       sound->format = format;
   }
   sound->codec = swfdec_codec_get_audio (sound->format);
-  if (sound->codec == NULL) {
-    return SWFDEC_STATUS_OK;
-  }
-  if (orig_buffer) {
+  if (sound->codec && orig_buffer) {
     SwfdecBuffer *tmp, *tmp2;
     gpointer data = swfdec_sound_init_decoder (sound);
     tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
@@ -185,7 +182,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
     if (tmp) {
       SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", tmp->length / 4, sound->n_samples, skip);
       if (skip) {
-	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip, tmp->length - skip);
+	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip * 4, tmp->length - skip * 4);
 	swfdec_buffer_unref (tmp);
 	tmp = tmp2;
       }

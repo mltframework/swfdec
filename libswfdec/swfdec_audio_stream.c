@@ -204,6 +204,8 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->playback_skip = frame->sound_skip;
   stream->current_frame = start_frame;
   stream->decoder = swfdec_sound_init_decoder (stream->sound);
+  if (player && player->samples_latency)
+    swfdec_audio_stream_iterate (SWFDEC_AUDIO (stream), player->samples_latency);
   return SWFDEC_AUDIO (stream);
 }
 

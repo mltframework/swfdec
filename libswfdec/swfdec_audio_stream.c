@@ -48,25 +48,6 @@ swfdec_audio_stream_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_audio_stream_parent_class)->dispose (object);
 }
 
-/* return TRUE if done */
-static gboolean
-swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
-{
-  SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
-  SwfdecBuffer *buffer;
-
-  stream->playback_skip += remove;
-  buffer = g_queue_peek_head (stream->playback_queue);
-  while (buffer && stream->playback_skip >= buffer->length / 4) {
-    buffer = g_queue_pop_head (stream->playback_queue);
-    stream->playback_skip -= buffer->length / 4;
-    swfdec_buffer_unref (buffer);
-    buffer = g_queue_peek_head (stream->playback_queue);
-  }
-  
-  return stream->done && g_queue_is_empty (stream->playback_queue);
-}
-
 static SwfdecBuffer *
 swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
 {
@@ -113,7 +94,9 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest, guint start, guint
   gint16 *src;
   SwfdecBuffer *buffer;
 
+  g_assert (start < G_MAXINT);
   start += stream->playback_skip;
+  SWFDEC_LOG ("stream %p rendering offset %u, samples %u\n", stream, start, n_samples);
   walk = g_queue_peek_head_link (stream->playback_queue);
   while (n_samples) {
     if (walk) {
@@ -144,6 +127,45 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest, guint start, guint
     samples = MIN (samples , n_samples);
     swfdec_sound_add (dest, src, samples);
     n_samples -= samples;
+    dest += 2 * samples;
+  }
+}
+
+static guint
+swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
+{
+  SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
+  SwfdecBuffer *buffer;
+
+#if 0
+  {
+    SwfdecBuffer *buffer = swfdec_buffer_new_and_alloc (44100 * 4 * 20);
+    memset (buffer->data, 0, buffer->length);
+    swfdec_audio_stream_render (SWFDEC_AUDIO (stream), (gint16 *) buffer->data, 0, buffer->length / 4);
+    g_file_set_contents ("data.raw", (char *) buffer->data, buffer->length, NULL);
+    swfdec_buffer_unref (buffer);
+  }
+#endif
+  stream->playback_skip += remove;
+  buffer = g_queue_peek_head (stream->playback_queue);
+  while (buffer && stream->playback_skip >= buffer->length / 4) {
+    buffer = g_queue_pop_head (stream->playback_queue);
+    SWFDEC_LOG ("removing buffer with %u samples", buffer->length / 4);
+    stream->playback_skip -= buffer->length / 4;
+    swfdec_buffer_unref (buffer);
+    buffer = g_queue_peek_head (stream->playback_queue);
+  }
+  
+  if (!stream->done) {
+    return G_MAXUINT;
+  } else {
+    GList *walk;
+    guint ret = 0;
+    
+    for (walk = g_queue_peek_head_link (stream->playback_queue); walk; walk = walk->next) {
+      ret += ((SwfdecBuffer *) walk->data)->length;
+    }
+    return ret / 4;
   }
 }
 

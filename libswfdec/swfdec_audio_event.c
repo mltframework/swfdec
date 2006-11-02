@@ -31,8 +31,7 @@
 
 G_DEFINE_TYPE (SwfdecAudioEvent, swfdec_audio_event, SWFDEC_TYPE_AUDIO)
 
-/* return TRUE if done */
-static gboolean
+static guint
 swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
@@ -40,8 +39,8 @@ swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
 
   event->offset += remove;
   if (event->offset >= chunk->stop_sample)
-    return TRUE;
-  return FALSE;
+    event->offset = chunk->stop_sample;
+  return chunk->stop_sample - event->offset;
 }
 
 static void
@@ -51,6 +50,9 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start, guint 
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
 
+  if (offset >= event->chunk->stop_sample)
+    return;
+  n_samples = MIN (n_samples, event->chunk->stop_sample - offset);
   swfdec_sound_render (event->sound, dest, offset, n_samples, volume);
 }
 
@@ -128,7 +130,7 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
 	SWFDEC_CHARACTER (chunk->sound)->id);
     return SWFDEC_AUDIO (event);
   }
-  event = (SwfdecAudioEvent *) swfdec_audio_new (player, SWFDEC_TYPE_AUDIO);
+  event = (SwfdecAudioEvent *) swfdec_audio_new (player, SWFDEC_TYPE_AUDIO_EVENT);
   event->sound = chunk->sound;
   event->chunk = chunk;
   event->offset = chunk->start_sample;

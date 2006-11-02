@@ -49,7 +49,7 @@ struct _SwfdecAudioClass
 {
   GObjectClass		object_class;
 
-  gboolean		(* iterate)		(SwfdecAudio *	audio,
+  guint			(* iterate)		(SwfdecAudio *	audio,
 						 guint		n_samples);
   void			(* render)		(SwfdecAudio *	audio,
 						 gint16 *	dest,
@@ -62,6 +62,9 @@ GType		swfdec_audio_get_type		(void);
 SwfdecAudio *	swfdec_audio_new		(SwfdecPlayer *	player,
 						 GType		type);
 void		swfdec_audio_remove		(SwfdecAudio *	audio);
+
+guint		swfdec_audio_iterate		(SwfdecAudio *	audio,
+						 guint		n_samples);
 
 void		swfdec_player_iterate_audio   	(SwfdecPlayer *	player);
 

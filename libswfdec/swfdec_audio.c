@@ -56,10 +56,10 @@ swfdec_audio_init (SwfdecAudio *audio)
 
 /**
  * swfdec_audio_new:
- * @player: a #SwfdecPlayer
+ * @player: a #SwfdecPlayer to attach to or NULL for none
  * @type: type of audio to create
  *
- * Creates a new audio object and registers it for playbakc in @type.
+ * Creates a new audio object and registers it for playback in @type.
  * The start offset of the audio stream will be equivalent to the point
  * set via swfdec_player_set_audio_advance().
  *
@@ -70,14 +70,17 @@ swfdec_audio_new (SwfdecPlayer *player, GType type)
 {
   SwfdecAudio *ret;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_AUDIO), NULL);
 
   ret = g_object_new (type, NULL);
   ret->player = player;
-  player->audio = g_list_append (player->audio, ret);
-  player->audio_changed = TRUE;
-  ret->start_offset = player->samples_latency;
+  if (player) {
+    player->audio = g_list_append (player->audio, ret);
+    player->audio_changed = TRUE;
+    ret->start_offset = player->samples_latency;
+    g_print ("adding %s %p\n", G_OBJECT_TYPE_NAME (ret), ret);
+  }
 
   return ret;
 }
@@ -89,6 +92,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
   g_return_if_fail (audio->player != NULL);
 
   if (audio->player != NULL) {
+    g_print ("removing %s %p\n", G_OBJECT_TYPE_NAME (audio), audio);
     audio->player->audio = g_list_remove (audio->player->audio, audio);
     audio->player->audio_changed = TRUE;
     audio->player = NULL;
@@ -96,39 +100,59 @@ swfdec_audio_remove (SwfdecAudio *audio)
   g_object_unref (audio);
 }
 
-static void
-swfdec_player_do_iterate_audio (SwfdecPlayer *player, guint remove)
+/**
+ * swfdec_audio_iterate:
+ * @audio: the #SwfdecAudio to iterate
+ * @n_samples: number of samples to remove
+ *
+ * Iterates the @audio. Iterating means discarding the first @n_samples
+ * samples of the audio stream.
+ *
+ * Returns: maximum number of remaining frames. If G_MAXUINT is returned,
+ *          then the number of frames isn't known yet.
+ **/
+guint
+swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
 {
-  GList *walk;
   SwfdecAudioClass *klass;
-  SwfdecAudio *audio;
 
-  walk = player->audio;
-  while (walk) {
-    audio = walk->data;
-    walk = walk->next;
-    klass = SWFDEC_AUDIO_GET_CLASS (audio);
-    if (klass->iterate (audio, remove))
-      swfdec_audio_remove (audio);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO (audio), 0);
+  g_return_val_if_fail (n_samples > 0, 0);
+
+  if (audio->start_offset) {
+    guint amount = MIN (audio->start_offset, n_samples);
+    audio->start_offset -= amount;
+    n_samples -= amount;
+    if (n_samples == 0)
+      return G_MAXUINT;
   }
+  klass = SWFDEC_AUDIO_GET_CLASS (audio);
+  g_assert (klass->iterate);
+  return klass->iterate (audio, n_samples);
 }
 
 void
 swfdec_player_iterate_audio (SwfdecPlayer *player)
 {
-  guint samples_last_frame;
+  GList *walk;
+  SwfdecAudio *audio;
 
   g_assert (player->samples_latency >= player->samples_this_frame);
   player->samples_latency -= player->samples_this_frame;
   /* iterate all playing sounds */
-  samples_last_frame = player->samples_this_frame;
+  walk = player->audio;
+  while (walk) {
+    audio = walk->data;
+    walk = walk->next;
+    if (swfdec_audio_iterate (audio, player->samples_this_frame) == 0)
+      swfdec_audio_remove (audio);
+  }
   /* get new sample count */
   player->samples_this_frame = 44100 * 256 / player->rate;
   player->samples_overhead_left += player->samples_overhead;
   player->samples_overhead_left %= (44100 * 256);
   if (player->samples_overhead_left < player->samples_overhead_left)
     player->samples_this_frame++;
-  swfdec_player_do_iterate_audio (player, samples_last_frame);
 }
 
 /**
@@ -217,6 +241,7 @@ swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest,
   g_return_if_fail (dest != NULL);
   g_return_if_fail (n_samples > 0);
 
+  SWFDEC_LOG ("rendering offset %u, samples %u", start_offset, n_samples);
   for (walk = player->audio; walk; walk = walk->next) {
     audio = walk->data;
     klass = SWFDEC_AUDIO_GET_CLASS (audio);
@@ -226,7 +251,8 @@ swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest,
       if (audio->start_offset >= start_offset)
 	klass->render (audio, dest + (audio->start_offset - start_offset) * 2, 0, 
 	    n_samples + start_offset - audio->start_offset);
-      klass->render (audio, dest, start_offset - audio->start_offset, n_samples);
+      else
+	klass->render (audio, dest, start_offset - audio->start_offset, n_samples);
     } else {
       klass->render (audio, dest, start_offset, n_samples);
     }

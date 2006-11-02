@@ -130,6 +130,8 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
 	  movie->player->width = movie->decoder->width;
 	  movie->player->height = movie->decoder->height;
 	  movie->player->samples_overhead = 44100 * 256 % movie->player->rate;
+	  movie->player->samples_this_frame = 44100 * 256 / movie->player->rate;
+	  movie->player->samples_overhead_left = movie->player->samples_overhead;
 	  g_object_notify (G_OBJECT (movie->player), "initialized");
 	}
 	break;

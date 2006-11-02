@@ -295,6 +295,7 @@ new_decoder:
 
   movie->sound_stream = swfdec_audio_stream_new (player, 
       movie->sprite, movie->current_frame);
+  g_object_ref (movie->sound_stream);
   movie->sound_frame = movie->current_frame;
 }
 

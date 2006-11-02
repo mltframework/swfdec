@@ -89,7 +89,6 @@ void
 swfdec_audio_remove (SwfdecAudio *audio)
 {
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
-  g_return_if_fail (audio->player != NULL);
 
   if (audio->player != NULL) {
     g_print ("removing %s %p\n", G_OBJECT_TYPE_NAME (audio), audio);

@@ -30,18 +30,6 @@ swfdec_codec_mad_init (gboolean width, guint channels, guint rate)
   return data;
 }
 
-static void
-swfdec_codec_mad_finish (gpointer datap)
-{
-  MadData *data = datap;
-
-  mad_synth_finish (&data->synth);
-  mad_frame_finish (&data->frame);
-  mad_stream_finish (&data->stream);
-
-  g_free (data);
-}
-
 static SwfdecBuffer *
 convert_synth_to_buffer (MadData *mdata)
 {
@@ -197,6 +185,26 @@ swfdec_codec_mad_decode (gpointer datap, SwfdecBuffer *buffer)
   swfdec_buffer_queue_free (queue);
 
   return out;
+}
+
+static SwfdecBuffer *
+swfdec_codec_mad_finish (gpointer datap)
+{
+  MadData *data = datap;
+  SwfdecBuffer *empty, *result;
+
+  empty = swfdec_buffer_new ();
+  empty->data = g_malloc0 (MAD_BUFFER_GUARD * 3);
+  empty->length = MAD_BUFFER_GUARD * 3;
+  result = swfdec_codec_mad_decode (data, empty);
+  swfdec_buffer_unref (empty);
+
+  mad_synth_finish (&data->synth);
+  mad_frame_finish (&data->frame);
+  mad_stream_finish (&data->stream);
+  g_free (data);
+
+  return result;
 }
 
 const SwfdecCodec swfdec_codec_mad = {

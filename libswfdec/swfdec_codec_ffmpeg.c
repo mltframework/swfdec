@@ -160,11 +160,13 @@ swfdec_codec_ffmpeg_decode (gpointer ctx, SwfdecBuffer *buffer)
   return outbuf;
 }
 
-static void
+static SwfdecBuffer *
 swfdec_codec_ffmpeg_finish (gpointer ctx)
 {
   avcodec_close (ctx);
   av_free (ctx);
+
+  return NULL;
 }
 
 

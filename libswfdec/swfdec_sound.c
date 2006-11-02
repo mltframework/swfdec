@@ -169,10 +169,18 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
   }
   if (orig_buffer) {
-    SwfdecBuffer *tmp;
+    SwfdecBuffer *tmp, *tmp2;
     gpointer data = swfdec_sound_init_decoder (sound);
     tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
-    swfdec_sound_finish_decoder (sound, data);
+    tmp2 = swfdec_sound_finish_decoder (sound, data);
+    if (tmp2) {
+      /* and all this code just because mad sucks... */
+      SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
+      swfdec_buffer_queue_push (queue, tmp);
+      swfdec_buffer_queue_push (queue, tmp2);
+      tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
+      swfdec_buffer_queue_free (queue);
+    }
     swfdec_buffer_unref (orig_buffer);
     if (tmp) {
       SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", tmp->length / 4, sound->n_samples, skip);
@@ -421,13 +429,14 @@ swfdec_sound_init_decoder (SwfdecSound * sound)
     return NULL;
 }
 
-void
+SwfdecBuffer *
 swfdec_sound_finish_decoder (SwfdecSound * sound, gpointer data)
 {
   g_assert (sound->decoded == NULL);
 
   if (sound->codec)
-    swfdec_codec_finish (sound->codec, data);
+    return swfdec_codec_finish (sound->codec, data);
+  return NULL;
 }
 
 SwfdecBuffer *

@@ -43,7 +43,7 @@ struct _SwfdecCodec {
 					 guint		rate_multiplier);
   SwfdecBuffer *	(* decode)	(gpointer	codec_data,
 					 SwfdecBuffer *	buffer);
-  void			(* finish)	(gpointer	codec_data);
+  SwfdecBuffer *	(* finish)	(gpointer	codec_data);
 };
 
 const SwfdecCodec *   	swfdec_codec_get_audio		(SwfdecAudioFormat	format);

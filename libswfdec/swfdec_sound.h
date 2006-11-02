@@ -87,7 +87,7 @@ int tag_func_start_sound (SwfdecSwfDecoder * s);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s);
 
 gpointer		swfdec_sound_init_decoder	(SwfdecSound *	sound);
-void			swfdec_sound_finish_decoder	(SwfdecSound *	sound,
+SwfdecBuffer *		swfdec_sound_finish_decoder	(SwfdecSound *	sound,
 							 gpointer	data);
 SwfdecBuffer *		swfdec_sound_decode_buffer	(SwfdecSound *	sound,
 							 gpointer	data,

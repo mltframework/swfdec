@@ -162,9 +162,10 @@ swfdec_codec_adpcm_decode (gpointer data, SwfdecBuffer *buffer)
   return buffer;
 }
 
-static void
+static SwfdecBuffer *
 swfdec_codec_adpcm_finish (gpointer data)
 {
+  return NULL;
 }
 
 const SwfdecCodec swfdec_codec_adpcm = {

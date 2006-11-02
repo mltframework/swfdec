@@ -39,8 +39,9 @@ swfdec_audio_stream_dispose (GObject *object)
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (object);
 
   if (stream->decoder != NULL) {
-    swfdec_sound_finish_decoder (stream->sound, stream->decoder);
+    SwfdecBuffer *buffer = swfdec_sound_finish_decoder (stream->sound, stream->decoder);
     stream->decoder = NULL;
+    swfdec_buffer_unref (buffer);
   }
   g_queue_foreach (stream->playback_queue, (GFunc) swfdec_buffer_unref, NULL);
   g_queue_free (stream->playback_queue);
@@ -80,9 +81,11 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
     g_queue_push_tail (stream->playback_queue, buffer);
     return buffer;
   }
-  swfdec_sound_finish_decoder (stream->sound, stream->decoder);
+  buffer = swfdec_sound_finish_decoder (stream->sound, stream->decoder);
   stream->decoder = NULL;
-  return NULL;
+  if (buffer)
+    g_queue_push_tail (stream->playback_queue, buffer);
+  return buffer;
 }
 
 static void

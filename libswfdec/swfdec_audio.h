@@ -65,6 +65,10 @@ void		swfdec_audio_remove		(SwfdecAudio *	audio);
 
 guint		swfdec_audio_iterate		(SwfdecAudio *	audio,
 						 guint		n_samples);
+void		swfdec_audio_render		(SwfdecAudio *	audio,
+						 gint16 *	dest,
+						 guint		start_offset,
+						 guint		n_samples);
 
 void		swfdec_player_iterate_audio   	(SwfdecPlayer *	player);
 

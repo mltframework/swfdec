@@ -131,6 +131,42 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
   return klass->iterate (audio, n_samples);
 }
 
+/**
+ * swfdec_audio_render:
+ * @audio: a #SwfdecAudio
+ * @dest: memory area to render to
+ * @start_offset: offset in samples at which to start rendering. The offset is 
+ *		  calculated relative to the last iteration, so the value set 
+ *		  by swfdec_player_set_audio_advance() is ignored.
+ * @n_samples: amount of samples to render.
+ *
+ * Renders the samples from @audio into the area pointed to by @dest. The data 
+ * is added to @dest, so you probably want to initialize @dest to silence before 
+ * calling this function.
+ **/
+void
+swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, guint start_offset, guint n_samples)
+{
+  SwfdecAudioClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (n_samples > 0);
+
+  klass = SWFDEC_AUDIO_GET_CLASS (audio);
+  if (audio->start_offset) {
+    if (audio->start_offset >= start_offset + n_samples)
+      return;
+    if (audio->start_offset >= start_offset)
+      klass->render (audio, dest + (audio->start_offset - start_offset) * 2, 0, 
+	  n_samples + start_offset - audio->start_offset);
+    else
+      klass->render (audio, dest, start_offset - audio->start_offset, n_samples);
+  } else {
+    klass->render (audio, dest, start_offset, n_samples);
+  }
+}
+
 void
 swfdec_player_iterate_audio (SwfdecPlayer *player)
 {
@@ -234,7 +270,6 @@ swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest,
     guint start_offset, guint n_samples)
 {
   GList *walk;
-  SwfdecAudioClass *klass;
   SwfdecAudio *audio;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
@@ -244,18 +279,7 @@ swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest,
   SWFDEC_LOG ("rendering offset %u, samples %u", start_offset, n_samples);
   for (walk = player->audio; walk; walk = walk->next) {
     audio = walk->data;
-    klass = SWFDEC_AUDIO_GET_CLASS (audio);
-    if (audio->start_offset) {
-      if (audio->start_offset >= start_offset + n_samples)
-	continue;
-      if (audio->start_offset >= start_offset)
-	klass->render (audio, dest + (audio->start_offset - start_offset) * 2, 0, 
-	    n_samples + start_offset - audio->start_offset);
-      else
-	klass->render (audio, dest, start_offset - audio->start_offset, n_samples);
-    } else {
-      klass->render (audio, dest, start_offset, n_samples);
-    }
+    swfdec_audio_render (audio, dest, start_offset, n_samples);
   }
 }
 

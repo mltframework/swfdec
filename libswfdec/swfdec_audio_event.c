@@ -86,6 +86,9 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
 {
   GList *walk;
 
+  if (player == NULL)
+    return NULL;
+
   for (walk = player->audio; walk; walk = walk->next) {
     SwfdecAudio *audio = walk->data;
     if (!SWFDEC_IS_AUDIO_EVENT (audio))
@@ -99,10 +102,11 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
 
 /**
  * swfdec_audio_event_new:
- * @player: a #SwfdecPlayer
+ * @player: a #SwfdecPlayer or NULL
  * @chunk: a sound chunk to start playing back
  *
- * Starts playback of the given sound chunk
+ * Starts playback of the given sound chunk (or, wehn @player is NULL, creates
+ * an element for playing back the given sound).
  *
  * Returns: the sound effect or NULL if no new sound was created. You don't
  *          own a reference to it.
@@ -112,7 +116,7 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
 {
   SwfdecAudioEvent *event;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (chunk != NULL, NULL);
 
   if (chunk->stop) {

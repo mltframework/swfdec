@@ -41,7 +41,8 @@ swfdec_audio_stream_dispose (GObject *object)
   if (stream->decoder != NULL) {
     SwfdecBuffer *buffer = swfdec_sound_finish_decoder (stream->sound, stream->decoder);
     stream->decoder = NULL;
-    swfdec_buffer_unref (buffer);
+    if (buffer)
+      swfdec_buffer_unref (buffer);
   }
   g_queue_foreach (stream->playback_queue, (GFunc) swfdec_buffer_unref, NULL);
   g_queue_free (stream->playback_queue);

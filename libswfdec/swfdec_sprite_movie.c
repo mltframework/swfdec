@@ -268,7 +268,8 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
   }
 
   /* then do the streaming thing */
-  if (current->sound_head == NULL) {
+  if (current->sound_head == NULL ||
+      SWFDEC_MOVIE (movie)->stopped) {
     if (movie->sound_stream) {
       swfdec_audio_remove (movie->sound_stream);
       movie->sound_stream = NULL;

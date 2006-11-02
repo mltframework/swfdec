@@ -33,6 +33,7 @@
 #endif
 #include <libswfdec/swfdec.h>
 #include <libswfdec/color.h>
+#include <libswfdec/swfdec_audio_stream.h>
 #include <libswfdec/swfdec_button.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_player_internal.h>
@@ -67,10 +68,68 @@ export_sound (SwfdecSound *sound, const char *filename)
   SwfdecBuffer *wav;
 
   if (sound->decoded == NULL) {
-    g_printerr ("not a sound event. Streams are not supported yet.");
+    g_printerr ("not a sound event. For streams use the sprite.");
     return FALSE;
   }
   wav = encode_wav (sound->decoded);
+  if (!g_file_set_contents (filename, (char *) wav->data, 
+	wav->length, &error)) {
+    g_printerr ("Couldn't save sound to file \"%s\": %s\n", filename, error->message);
+    swfdec_buffer_unref (wav);
+    g_error_free (error);
+    return FALSE;
+  }
+  swfdec_buffer_unref (wav);
+  return TRUE;
+}
+
+static gboolean
+export_sprite_sound (SwfdecSprite *sprite, const char *filename)
+{
+  GError *error = NULL;
+  guint i, depth;
+  SwfdecAudio *audio;
+  SwfdecBufferQueue *queue;
+  SwfdecBuffer *buffer, *wav;
+
+  for (i = 0; i < sprite->n_frames; i++) {
+    if (sprite->frames[i].sound_head)
+      break;
+  }
+  if (i >= sprite->n_frames) {
+    g_printerr ("No sound in sprite %u", SWFDEC_CHARACTER (sprite)->id);
+    return FALSE;
+  }
+  audio = swfdec_audio_stream_new (NULL, sprite, i);
+  i = 4096;
+  queue = swfdec_buffer_queue_new ();
+  while (i > 0) {
+    buffer = swfdec_buffer_new ();
+    buffer->data = g_malloc0 (i * 4);
+    buffer->length = i * 4;
+#if 0
+    if (i > 1234) {
+      swfdec_audio_render (audio, (gint16 *) buffer->data, 0, 1234);
+      swfdec_audio_render (audio, (gint16 *) buffer->data + 2468, 1234, i - 1234);
+    } else
+#endif
+    {
+      swfdec_audio_render (audio, (gint16 *) buffer->data, 0, i);
+    }
+    i = swfdec_audio_iterate (audio, i);
+    i = MIN (i, 4096);
+    swfdec_buffer_queue_push (queue, buffer);
+  }
+  depth = swfdec_buffer_queue_get_depth (queue);
+  if (depth == 0) {
+    swfdec_buffer_queue_free (queue);
+    g_printerr ("Sprite contains no sound\n");
+    return FALSE;
+  }
+  buffer = swfdec_buffer_queue_pull (queue, depth);
+  swfdec_buffer_queue_free (queue);
+  wav = encode_wav (buffer);
+  swfdec_buffer_unref (buffer);
   if (!g_file_set_contents (filename, (char *) wav->data, 
 	wav->length, &error)) {
     g_printerr ("Couldn't save sound to file \"%s\": %s\n", filename, error->message);
@@ -161,7 +220,7 @@ main (int argc, char *argv[])
   int ret = 0;
   SwfdecPlayer *player;
   GError *error = NULL;
-  guint id;
+  glong id;
 
   swfdec_init ();
 
@@ -182,18 +241,26 @@ main (int argc, char *argv[])
     player = NULL;
     return 1;
   }
-  id = strtoul (argv[2], NULL, 0);
-  character = swfdec_swf_decoder_get_character (
-      SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (player->roots->data)->decoder),
-      id);
-  if (SWFDEC_IS_SOUND (character)) {
+  id = strtol (argv[2], NULL, 0);
+  if (id >= 0) {
+    character = swfdec_swf_decoder_get_character (
+	SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (player->roots->data)->decoder),
+	id);
+  } else {
+    character = SWFDEC_CHARACTER (SWFDEC_SWF_DECODER (
+	  SWFDEC_ROOT_MOVIE (player->roots->data)->decoder)->main_sprite);
+  }
+  if (SWFDEC_IS_SPRITE (character)) {
+    if (!export_sprite_sound (SWFDEC_SPRITE (character), argv[3]))
+      ret = 1;
+  } else if (SWFDEC_IS_SOUND (character)) {
     if (!export_sound (SWFDEC_SOUND (character), argv[3]))
       ret = 1;
   } else if (SWFDEC_IS_GRAPHIC (character)) {
     if (!export_graphic (SWFDEC_GRAPHIC (character), argv[3]))
       ret = 1;
   } else {
-    g_printerr ("id %u does not specify an exportable object", id);
+    g_printerr ("id %ld does not specify an exportable object", id);
     ret = 1;
   }
 

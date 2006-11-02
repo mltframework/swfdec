@@ -75,6 +75,10 @@ struct _SwfdecPlayerClass
   GObjectClass		object_class;
 
   void			(* iterate)		(SwfdecPlayer *		player);
+  void			(* handle_mouse)	(SwfdecPlayer *		player,
+						 double			x,
+						 double			y,
+						 int			button);
 };
 
 void		swfdec_player_add_movie		(SwfdecPlayer *		player,

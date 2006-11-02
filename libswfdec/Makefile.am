@@ -102,6 +102,7 @@ noinst_HEADERS = \
 	swfdec_image.h \
 	swfdec_js.h \
 	swfdec_loader_internal.h \
+	swfdec_marshal.c \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \

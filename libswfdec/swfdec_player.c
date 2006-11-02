@@ -33,6 +33,8 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite_movie.h"
 
+#include "swfdec_marshal.c"
+
 /*** Actions ***/
 
 typedef struct {
@@ -104,6 +106,7 @@ enum {
   INVALIDATE,
   AUDIO_CHANGED,
   ITERATE,
+  HANDLE_MOUSE,
   LAST_SIGNAL
 };
 
@@ -299,6 +302,31 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 }
 
 static void
+swfdec_player_do_handle_mouse (SwfdecPlayer *player, 
+    double x, double y, int button)
+{
+  GList *walk;
+
+  SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
+  g_object_freeze_notify (G_OBJECT (player));
+  if (player->mouse_x != x || player->mouse_y != y) {
+    player->mouse_x = x;
+    player->mouse_y = y;
+    swfdec_player_do_mouse_move (player);
+  }
+  if (player->mouse_button != button) {
+    player->mouse_button = button;
+    swfdec_player_do_mouse_button (player);
+  }
+  while (swfdec_player_do_action (player));
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_signals (player);
+}
+
+static void
 swfdec_player_do_iterate (SwfdecPlayer *player)
 {
   GList *walk;
@@ -378,8 +406,13 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, iterate), 
       NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0);
+  signals[HANDLE_MOUSE] = g_signal_new ("handle-mouse", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, handle_mouse), 
+      NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_INT,
+      G_TYPE_NONE, 3, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_INT);
 
   klass->iterate = swfdec_player_do_iterate;
+  klass->handle_mouse = swfdec_player_do_handle_mouse;
 }
 
 static void
@@ -556,28 +589,10 @@ void
 swfdec_player_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
-  GList *walk;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (button == 0 || button == 1);
 
-  SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
-  g_object_freeze_notify (G_OBJECT (player));
-  if (player->mouse_x != x || player->mouse_y != y) {
-    player->mouse_x = x;
-    player->mouse_y = y;
-    swfdec_player_do_mouse_move (player);
-  }
-  if (player->mouse_button != button) {
-    player->mouse_button = button;
-    swfdec_player_do_mouse_button (player);
-  }
-  while (swfdec_player_do_action (player));
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_signals (player);
+  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, button);
 }
 
 /**

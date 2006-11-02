@@ -79,7 +79,7 @@ swfdec_audio_new (SwfdecPlayer *player, GType type)
     player->audio = g_list_append (player->audio, ret);
     player->audio_changed = TRUE;
     ret->start_offset = player->samples_latency;
-    g_print ("adding %s %p\n", G_OBJECT_TYPE_NAME (ret), ret);
+    SWFDEC_INFO ("adding %s %p", G_OBJECT_TYPE_NAME (ret), ret);
   }
 
   return ret;
@@ -91,7 +91,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
 
   if (audio->player != NULL) {
-    g_print ("removing %s %p\n", G_OBJECT_TYPE_NAME (audio), audio);
+    SWFDEC_INFO ("removing %s %p", G_OBJECT_TYPE_NAME (audio), audio);
     audio->player->audio = g_list_remove (audio->player->audio, audio);
     audio->player->audio_changed = TRUE;
     audio->player = NULL;

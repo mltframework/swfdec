@@ -3,20 +3,20 @@
 #endif
 
 #include <alsa/asoundlib.h>
-#include "libswfdec/swfdec_sound.h"
-#include "libswfdec/swfdec_buffer.h"
+#include "swfdec_source.h"
 
 G_BEGIN_DECLS
 
 typedef struct {
   snd_pcm_t *		pcm;
-  GList *		channels;
-  guint *		sources;
-  GSourceFunc		func;
-  gpointer		func_data;
-  GList *		buffers;
-  guint			timeout;
+  SwfdecPlayer *	player;
+  guint *		sources;	/* sources for writing data */
+  guint			n_sources;	/* number of sources */
+  guint			offset;		/* offset in samples inside swfdec player */
+  SwfdecTime		time;		/* time manager */
 } Sound;
+
+#define DEFAULT_DELAY_SAMPLES 441 /* 1/100th of a second */
 
 #define ALSA_TRY(func,msg) G_STMT_START{ \
   int err = func; \
@@ -32,82 +32,170 @@ typedef struct {
   } \
 }G_STMT_END
 
-static void
-do_the_write_thing (Sound *sound)
-{
-  snd_pcm_state_t state;
-  int err;
-  SwfdecBuffer *buffer;
+typedef snd_pcm_uframes_t (* WriteFunc) (Sound *sound, 
+    const snd_pcm_channel_area_t *dst, 
+    snd_pcm_uframes_t offset, 
+    snd_pcm_uframes_t avail);
 
-retry:
-  if (sound->buffers == NULL) {
-    if (!sound->func (sound->func_data))
-      return;
-    if (sound->buffers == NULL) {
-      g_printerr ("callback didn't fill buffer!\n");
-      return;
-    }
-  }
-  buffer = sound->buffers->data;
-  err = snd_pcm_writei (sound->pcm, buffer->data, buffer->length / 4);
-  //g_print ("write returned %d\n", err);
-  state = snd_pcm_state (sound->pcm);
-  if (state == SND_PCM_STATE_SUSPENDED || state == SND_PCM_STATE_PREPARED) {
-    ALSA_ERROR (snd_pcm_start (sound->pcm), "error starting",);
-  }
-  if (err >= (int) (buffer->length / 4)) {
-    swfdec_buffer_unref (buffer);
-    sound->buffers = g_list_remove (sound->buffers, buffer);
-    goto retry;
-  }
-  if (err > 0) {
-    SwfdecBuffer *buf;
-    err *= 4;
-    buf = swfdec_buffer_new_subbuffer (buffer, err, buffer->length - err);
-    swfdec_buffer_unref (buffer);
-    sound->buffers->data = buf;
-    return;
-  }
-  if (err == -EAGAIN)
-    return;
-  if (err == -EPIPE) {
-    if (state == SND_PCM_STATE_XRUN) {
-      ALSA_ERROR (snd_pcm_prepare (sound->pcm), "no prepare",);
-      goto retry;
-    }
-  }
-  g_printerr ("Failed writing sound: %s\n", snd_strerror (err));
+static snd_pcm_uframes_t
+write_player (Sound *sound, const snd_pcm_channel_area_t *dst, 
+    snd_pcm_uframes_t offset, snd_pcm_uframes_t avail)
+{
+  /* FIXME: do a long path if this doesn't hold */
+  g_assert (dst[1].first - dst[0].first == 16);
+  g_assert (dst[0].addr == dst[1].addr);
+  g_assert (dst[0].step == dst[1].step);
+  g_assert (dst[0].step == 32);
+
+  memset (dst[0].addr + offset * dst[0].step / 8, 0, avail * 4);
+  swfdec_player_render_audio (sound->player, dst[0].addr + offset * dst[0].step / 8, 
+      sound->offset, avail);
+  return avail;
 }
 
 static gboolean
-check_timeout (gpointer data)
+try_write (Sound *sound)
 {
-  do_the_write_thing (data);
+  snd_pcm_sframes_t avail_result;
+  snd_pcm_uframes_t offset, avail;
+  const snd_pcm_channel_area_t *dst;
 
+  while (TRUE) {
+    avail_result = snd_pcm_avail_update (sound->pcm);
+    //g_print ("avail = %d\n", (int) avail_result);
+    if (avail_result < 0) {
+      g_printerr ("snd_pcm_avail_update failed\n");
+      return FALSE;
+    }
+    if (avail_result == 0)
+      return TRUE;
+    avail = avail_result;
+    ALSA_ERROR (snd_pcm_mmap_begin (sound->pcm, &dst, &offset, &avail),
+	"snd_pcm_mmap_begin failed", FALSE);
+    //g_print ("  avail = %u\n", (guint) avail);
+
+    avail = write_player (sound, dst, offset, avail);
+    if (snd_pcm_mmap_commit (sound->pcm, offset, avail) < 0) {
+      g_printerr ("snd_pcm_mmap_commit failed\n");
+      return FALSE;
+    }
+    sound->offset += avail;
+    //g_print ("offset: %u (+%u)\n", sound->offset, (guint) avail);
+  }
   return TRUE;
+}
+
+static void
+iterate_before (SwfdecPlayer *player, gpointer data)
+{
+  Sound *sound = data;
+  guint remove;
+
+  swfdec_player_set_audio_advance (sound->player, sound->offset);
+  remove = swfdec_player_get_audio_samples (sound->player);
+  if (remove > sound->offset) {
+    sound->offset = 0;
+    //g_print ("underflow (%d frames missing)\n", (int) snd_pcm_avail_update (sound->pcm));
+  } else {
+    sound->offset -= remove;
+  }
+  swfdec_time_tick (&sound->time);
+  //g_print ("offset is now %u (-%u)\n", sound->offset, remove);
+}
+
+static void
+swfdec_playback_remove_handlers (Sound *sound)
+{
+  unsigned int i;
+
+  for (i = 0; i < sound->n_sources; i++) {
+    if (sound->sources[i]) {
+      g_source_remove (sound->sources[i]);
+      sound->sources[i] = 0;
+    }
+  }
 }
 
 static gboolean
 handle_sound (GIOChannel *source, GIOCondition cond, gpointer data)
 {
   Sound *sound = data;
+  snd_pcm_state_t state;
 
-  //g_printerr ("condition %u\n", (guint) cond);
-  do_the_write_thing (sound);
+  state = snd_pcm_state (sound->pcm);
+  if (state != SND_PCM_STATE_RUNNING)
+    swfdec_playback_remove_handlers (sound);
+  else
+    try_write (sound);
   return TRUE;
 }
 
+static void
+swfdec_playback_install_handlers (Sound *sound)
+{
+  if (sound->n_sources > 0) {
+    struct pollfd polls[sound->n_sources];
+    unsigned int i, count;
+    if (sound->n_sources > 1)
+      g_printerr ("attention: more than one fd!\n");
+    count = snd_pcm_poll_descriptors (sound->pcm, polls, sound->n_sources);
+    for (i = 0; i < count; i++) {
+      if (sound->sources[i] != 0)
+	continue;
+      GIOChannel *channel = g_io_channel_unix_new (polls[i].fd);
+      sound->sources[i] = g_io_add_watch_full (channel, G_PRIORITY_HIGH,
+	  polls[i].events, handle_sound, sound, NULL);
+      g_io_channel_unref (channel);
+    }
+  }
+}
+
+static void
+iterate_after (SwfdecPlayer *player, gpointer data)
+{
+  Sound *sound = data;
+  GTimeVal now;
+  glong delay;
+
+  g_get_current_time (&now);
+  delay = swfdec_time_get_difference (&sound->time, &now);
+
+  /* FIXME: invent a better way to detect when to recover */
+  /* this checks if the next frame follows without delay */
+  //g_print ("delay: %ld - length: %g\n", delay, 1000 / swfdec_player_get_rate (sound->player));
+  if (delay < 1000 / swfdec_player_get_rate (sound->player)) {
+    snd_pcm_state_t state = snd_pcm_state (sound->pcm);
+    switch (state) {
+      case SND_PCM_STATE_XRUN:
+	ALSA_ERROR (snd_pcm_prepare (sound->pcm), "no prepare",);
+	//g_print ("XRUN!\n");
+	/* fall through */
+      case SND_PCM_STATE_SUSPENDED:
+      case SND_PCM_STATE_PREPARED:
+	sound->offset = delay <= 0 ? 0 : delay * 44100 / 1000;
+	if (try_write (sound)) {
+	  ALSA_ERROR (snd_pcm_start (sound->pcm), "error starting",);
+	  swfdec_playback_install_handlers (sound);
+	}
+	break;
+      default:
+	break;
+    }
+  }
+}
+
 gpointer
-swfdec_playback_open (GSourceFunc func, gpointer data, guint usecs_per_frame, guint *buffer_size)
+swfdec_playback_open (SwfdecPlayer *player)
 {
   snd_pcm_t *ret;
   snd_pcm_hw_params_t *hw_params;
-  unsigned int rate, count;
+  unsigned int rate;
   Sound *sound;
   snd_pcm_uframes_t uframes;
+  GTimeVal tv;
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
-  ALSA_ERROR (snd_pcm_open (&ret, /*"default"*/"plughw:0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
+  ALSA_ERROR (snd_pcm_open (&ret, FALSE ? "default" : "plughw:0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
       "Failed to open sound device", NULL);
 
   snd_pcm_hw_params_alloca (&hw_params);
@@ -115,7 +203,7 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint usecs_per_frame, gu
     g_printerr ("No sound format available\n");
     return NULL;
   }
-  if (snd_pcm_hw_params_set_access (ret, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
+  if (snd_pcm_hw_params_set_access (ret, hw_params, SND_PCM_ACCESS_MMAP_INTERLEAVED) < 0) {
     g_printerr ("Failed setting access\n");
     goto fail;
   }
@@ -148,72 +236,44 @@ swfdec_playback_open (GSourceFunc func, gpointer data, guint usecs_per_frame, gu
     snd_pcm_hw_params_dump (hw_params, log);
   }
 #endif
-  if (buffer_size) {
-    snd_pcm_uframes_t ret;
-    if (snd_pcm_hw_params_get_buffer_size (hw_params, &ret) < 0) {
-      g_printerr ("Could not query buffer size\n");
-      *buffer_size = 0;
-    } else {
-      *buffer_size = ret;
-    }
-  }
+  sound = g_new0 (Sound, 1);
+  sound->pcm = ret;
+  sound->player = g_object_ref (player);
+  sound->n_sources = snd_pcm_poll_descriptors_count (ret);
+  if (sound->n_sources > 0)
+    sound->sources = g_new0 (guint, sound->n_sources);
+  g_get_current_time (&tv);
+  swfdec_time_init (&sound->time, &tv, swfdec_player_get_rate (player));
+  g_signal_connect (player, "iterate", G_CALLBACK (iterate_before), sound);
+  g_signal_connect_after (player, "iterate", G_CALLBACK (iterate_after), sound);
 
   if (snd_pcm_prepare (ret) < 0) {
     g_printerr ("no prepare\n");
   }
 
-  sound = g_new0 (Sound, 1);
-  sound->pcm = ret;
-  sound->func = func;
-  sound->func_data = data;
-  count = snd_pcm_poll_descriptors_count (ret);
-  if (count > 0) {
-    struct pollfd polls[count];
-    unsigned int i;
-    if (count > 1)
-      g_printerr ("more than one fd!\n");
-    count = snd_pcm_poll_descriptors (ret, polls, count);
-    sound->sources = g_new (guint, count + 1);
-    for (i = 0; i < count; i++) {
-      GIOChannel *channel = g_io_channel_unix_new (polls[i].fd);
-      sound->sources[i] = g_io_add_watch (channel, polls[i].events, handle_sound, sound);
-      g_io_channel_unref (channel);
-    }
-    sound->sources[i] = 0;
-  }
-  sound->timeout = g_timeout_add (usecs_per_frame / 2000, check_timeout, sound);
   return sound;
 
 fail:
   snd_pcm_close (ret);
-  if (buffer_size)
-    *buffer_size = 0;
   return NULL;
-}
-
-void
-swfdec_playback_write (gpointer data, SwfdecBuffer *buffer)
-{
-  Sound *sound = data;
-
-  swfdec_buffer_ref (buffer);
-  sound->buffers = g_list_append (sound->buffers, buffer);
-  //g_print ("write of %u bytes\n", buffer->length);
-
-  do_the_write_thing (sound);
 }
 
 void
 swfdec_playback_close (gpointer data)
 {
-  guint i;
   Sound *sound = data;
 
   ALSA_TRY (snd_pcm_close (sound->pcm), "failed closing");
-  g_source_remove (sound->timeout);
+  if (g_signal_handlers_disconnect_by_func (sound->player, 
+	G_CALLBACK (iterate_before), sound) != 1) {
+    g_assert_not_reached ();
+  }
+  if (g_signal_handlers_disconnect_by_func (sound->player, 
+	G_CALLBACK (iterate_after), sound) != 1) {
+    g_assert_not_reached ();
+  }
   if (sound->sources) {
-    for (i = 0; sound->sources[i]; i++)
-      g_source_remove (sound->sources[i]);
+    swfdec_playback_remove_handlers (sound);
     g_free (sound->sources);
   }
   g_free (sound);

@@ -25,21 +25,10 @@
 #include <libswfdec/swfdec.h>
 
 #include "swfdec_playback.h"
+#include "swfdec_source.h"
 #include "swfdec_widget.h"
 
 static gpointer playback;
-
-static gboolean
-iterate (gpointer player)
-{
-  swfdec_player_iterate (player);
-  if (playback != NULL) {
-    SwfdecBuffer *buffer = swfdec_player_render_audio_to_buffer (player);
-    swfdec_playback_write (playback, buffer);
-    swfdec_buffer_unref (buffer);
-  }
-  return TRUE;
-}
 
 static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
@@ -58,20 +47,13 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 static void
 play_swf (SwfdecPlayer *player)
 {
-  double rate;
+  guint id;
 
-  rate = swfdec_player_get_rate (player);
-  if (rate == 0)
-    return;
+  id = swfdec_iterate_add (player);
 
-  if (playback == NULL) {
-    guint timeout = g_timeout_add (1000 / rate, iterate, player);
+  gtk_main ();
 
-    gtk_main ();
-    g_source_remove (timeout);
-  } else {
-    gtk_main ();
-  }
+  g_source_remove (id);
 }
 
 static void
@@ -86,7 +68,6 @@ main (int argc, char *argv[])
   int ret = 0;
   double scale;
   SwfdecPlayer *player;
-  guint buffer_size = 0;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
   gboolean trace = FALSE;
@@ -153,25 +134,7 @@ main (int argc, char *argv[])
   if (no_sound) {
     playback = NULL;
   } else {
-    double rate;
-
-    rate = swfdec_player_get_rate (player);
-    if (rate != 0)
-      playback = swfdec_playback_open (iterate, player, G_USEC_PER_SEC / rate, &buffer_size);
-    else
-      playback = NULL;
-  }
-  if (buffer_size) {
-    SwfdecBuffer *buffer;
-
-    swfdec_player_set_latency (player, buffer_size);
-    buffer = swfdec_buffer_new ();
-    buffer->length = buffer_size * 4;
-    buffer->data = g_malloc0 (buffer->length);
-    swfdec_player_render_audio (player, (gint16 *) buffer->data,
-	0, buffer_size);
-    swfdec_playback_write (playback, buffer);
-    swfdec_buffer_unref (buffer);
+    playback = swfdec_playback_open (player);
   }
   play_swf (player);
 

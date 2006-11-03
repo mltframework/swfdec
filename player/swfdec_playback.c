@@ -7,6 +7,20 @@
 
 G_BEGIN_DECLS
 
+/* Why ALSA sucks for beginners:
+ * - snd_pcm_delay is not sample-exact, but period-exact most of the time.
+ *   Yay for getting told the time every 512 samples when a human notices
+ *   a delay of 100 samples (oooops)
+ * - lots of functions are simply not implemented. So the super-smart idea
+ *   of using snd_pcm_rewind to avoid XRUNS and still get low latency has
+ *   some issues when dmix just returns -EIO all of the time. That wouldn't
+ *   be so bad if there was actually a way to query if it's supported.
+ * - But to make up for all this, you have 10 hardware parameters, 10 
+ *   software parameters and 10 configuration parameters. All of this is
+ *   naturally supported on 10 driver APIs depending on kernel. So if your
+ *   sound card seems to do weird stuff, that is not my fault.
+ * Welcome to Linux sound in the 21st century.
+ */
 typedef struct {
   snd_pcm_t *		pcm;
   SwfdecPlayer *	player;
@@ -100,7 +114,8 @@ swfdec_playback_set_advance (Sound *sound)
   if (snd_pcm_delay (sound->pcm, &delay) != 0) {
     delay = 0;
   }
-  delay -= MIN (delay, TICKS_PER_ITERATION);
+  //g_print ("using delay %u (offset %u)\n", (guint) delay, sound->offset);
+  delay -= MIN (delay, (snd_pcm_sframes_t) (2 * sound->period_size));
   delay = ROUND_PERIOD_SIZE_DOWN (sound, delay);
   offset = sound->offset - MIN (sound->offset, (guint) delay);
   //g_print ("using delay %u (offset %u)\n", (guint) delay, offset);
@@ -190,9 +205,8 @@ iterate_after (SwfdecPlayer *player, gpointer data)
   delay = swfdec_time_get_difference (&sound->time, &now);
 
   /* FIXME: invent a better way to detect when to recover */
-  /* this checks if the next frame follows without delay */
   //g_print ("delay: %ld - length: %g\n", delay, 1000 / swfdec_player_get_rate (sound->player));
-  if (delay < 1000 / swfdec_player_get_rate (sound->player)) {
+  if (delay < 0) {
     snd_pcm_state_t state = snd_pcm_state (sound->pcm);
     switch (state) {
       case SND_PCM_STATE_XRUN:
@@ -201,7 +215,9 @@ iterate_after (SwfdecPlayer *player, gpointer data)
 	/* fall through */
       case SND_PCM_STATE_SUSPENDED:
       case SND_PCM_STATE_PREPARED:
-	sound->offset = delay <= 0 ? 0 : delay * 44100 / 1000;
+	sound->offset = swfdec_player_get_audio_samples (sound->player);
+	sound->offset += delay * 44100 / 1000;
+	//g_print ("offset: %u (delay: %ld)\n", sound->offset, delay);
 	if (try_write (sound)) {
 	  ALSA_ERROR (snd_pcm_start (sound->pcm), "error starting",);
 	  swfdec_playback_install_handlers (sound);

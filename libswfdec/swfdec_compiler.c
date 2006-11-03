@@ -423,9 +423,8 @@ push_string (CompileState *state, const char *s)
 static void
 read_and_push_string (CompileState *state)
 {
-  char *s = swfdec_bits_get_string (state->bits);
+  const char *s = swfdec_bits_skip_string (state->bits);
   push_string (state, s);
-  g_free (s);
 }
 
 static void

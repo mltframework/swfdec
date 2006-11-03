@@ -277,7 +277,7 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
     return;
   }
   SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
-  if (swfdec_sprite_get_next_frame (movie->sprite, movie->sound_frame) != movie->current_frame)
+  if (movie->sound_frame + 1 != movie->current_frame)
     goto new_decoder;
   if (movie->sound_frame == (guint) -1)
     goto new_decoder;

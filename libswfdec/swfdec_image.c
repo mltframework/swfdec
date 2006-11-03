@@ -429,11 +429,18 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
         c = p[0] | (p[1] << 8);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
         idata[0] = (c << 3) | ((c >> 2) & 0x7);
         idata[1] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
         idata[2] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
         idata[3] = 0xff;
-        p++;
+#else
+        idata[3] = (c << 3) | ((c >> 2) & 0x7);
+        idata[2] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
+        idata[1] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
+        idata[0] = 0xff;
+#endif
+        p += 2;
         idata += 4;
       }
     }

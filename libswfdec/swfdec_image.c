@@ -372,27 +372,43 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
     image_data = g_malloc (4 * image->width * image->height);
     image->rowstride = image->width * 4;
 
-    if (have_alpha) {
-      color_table = ptr;
-      indexed_data = ptr + color_table_size * 4;
-      swfdec_image_colormap_decode (image, image_data, indexed_data,
-          color_table, color_table_size);
-    } else {
-      color_table = g_malloc (color_table_size * 4);
+    color_table = g_malloc (color_table_size * 4);
 
+    if (have_alpha) {
       for (i = 0; i < color_table_size; i++) {
-        color_table[i * 4 + 0] = ptr[i * 3 + 0];
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        color_table[i * 4 + 0] = ptr[i * 4 + 2];
+        color_table[i * 4 + 1] = ptr[i * 4 + 1];
+        color_table[i * 4 + 2] = ptr[i * 4 + 0];
+        color_table[i * 4 + 3] = ptr[i * 4 + 3];
+#else
+        color_table[i * 4 + 0] = ptr[i * 4 + 3];
+        color_table[i * 4 + 1] = ptr[i * 4 + 0];
+        color_table[i * 4 + 2] = ptr[i * 4 + 1];
+        color_table[i * 4 + 3] = ptr[i * 4 + 2];
+#endif
+      }
+      indexed_data = ptr + color_table_size * 4;
+    } else {
+      for (i = 0; i < color_table_size; i++) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        color_table[i * 4 + 0] = ptr[i * 3 + 2];
         color_table[i * 4 + 1] = ptr[i * 3 + 1];
-        color_table[i * 4 + 2] = ptr[i * 3 + 2];
+        color_table[i * 4 + 2] = ptr[i * 3 + 0];
         color_table[i * 4 + 3] = 255;
+#else
+        color_table[i * 4 + 0] = 255;
+        color_table[i * 4 + 1] = ptr[i * 3 + 0];
+        color_table[i * 4 + 2] = ptr[i * 3 + 1];
+        color_table[i * 4 + 3] = ptr[i * 3 + 2];
+#endif
       }
       indexed_data = ptr + color_table_size * 3;
-      swfdec_image_colormap_decode (image, image_data, indexed_data,
-          color_table, color_table_size);
-
-      g_free (color_table);
     }
+    swfdec_image_colormap_decode (image, image_data, indexed_data,
+	color_table, color_table_size);
 
+    g_free (color_table);
     g_free (ptr);
   }
   if (format == 4) {
@@ -430,13 +446,15 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
     image->rowstride = image->width * 4;
 
     if (!have_alpha) {
-      /* image is stored in 0RGB format.  We use RGBA. */
+      /* image is stored in 0RGB format.  We use ARGB/BGRA. */
       for (j = 0; j < image->height; j++) {
         for (i = 0; i < image->width; i++) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
           ptr[0] = ptr[3];
           ptr[1] = ptr[2];
           ptr[2] = ptr[1];
           ptr[3] = 255;
+#endif
           ptr += 4;
         }
       }
@@ -511,17 +529,14 @@ swfdec_image_colormap_decode (SwfdecImage * image,
     for (i = 0; i < image->width; i++) {
       c = src[i];
       if (c >= colormap_len) {
-        SWFDEC_DEBUG ("colormap index out of range (%d>=%d) (%d,%d)",
+        SWFDEC_ERROR ("colormap index out of range (%d>=%d) (%d,%d)",
             c, colormap_len, i, j);
-        dest[0] = 255;
+        dest[0] = 0;
         dest[1] = 0;
         dest[2] = 0;
-        dest[3] = 255;
+        dest[3] = 0;
       } else {
-        dest[0] = colormap[c * 4 + 2];
-        dest[1] = colormap[c * 4 + 1];
-        dest[2] = colormap[c * 4 + 0];
-        dest[3] = colormap[c * 4 + 3];
+	memmove (dest, &colormap[c*4], 4);
       }
       dest += 4;
     }

@@ -85,7 +85,7 @@ swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits,
     multiplier *= 2;
   out = (gint16 *) ret->data;
   /* output initial value */
-  SWFDEC_LOG ("decoding %u samples\n", len + 1);
+  SWFDEC_LOG ("decoding %u samples", len + 1);
   for (ch = 0; ch < channels; ch++)
     for (j = 0; j < multiplier; j++)
       *out++ = pred[ch];
@@ -145,7 +145,7 @@ swfdec_codec_adpcm_decode (gpointer data, SwfdecBuffer *buffer)
   multiplier &= 0xFFFF;
   swfdec_bits_init (&bits, buffer);
   n_bits = swfdec_bits_getbits (&bits, 2) + 2;
-  SWFDEC_DEBUG ("starting decoding: %u channels, %uHz, %u bits\n", channels,
+  SWFDEC_DEBUG ("starting decoding: %u channels, %uHz, %u bits", channels,
       44100 / multiplier, n_bits);
   /* 22 is minimum required header size */
   while (swfdec_bits_left (&bits) >= 22) {

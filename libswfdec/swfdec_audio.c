@@ -171,7 +171,9 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
 {
   GList *walk;
   SwfdecAudio *audio;
+  gboolean audio_changed;
 
+  audio_changed = player->audio_changed;
   g_assert (player->samples_latency >= player->samples_this_frame);
   player->samples_latency -= player->samples_this_frame;
   /* iterate all playing sounds */
@@ -188,6 +190,7 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
   player->samples_overhead_left %= (44100 * 256);
   if (player->samples_overhead_left < player->samples_overhead_left)
     player->samples_this_frame++;
+  player->audio_changed = audio_changed;
 }
 
 /**

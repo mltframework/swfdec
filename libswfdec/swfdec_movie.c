@@ -33,10 +33,6 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 /*** MOVIE ***/
 
 static const SwfdecContent default_content = {
@@ -142,7 +138,7 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
 
   cairo_matrix_init_translate (mat, movie->x, movie->y);
   cairo_matrix_scale (mat, movie->xscale, movie->yscale);
-  cairo_matrix_rotate (mat, movie->rotation * M_PI / 180);
+  cairo_matrix_rotate (mat, movie->rotation * G_PI / 180);
   cairo_matrix_multiply (mat, mat, &movie->content->transform);
   movie->inverse_transform = *mat;
   if (cairo_matrix_invert (&movie->inverse_transform)) {
@@ -152,7 +148,7 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
     if (cairo_matrix_invert (mat)) {
       g_assert_not_reached ();
     }
-    cairo_matrix_rotate (mat, -movie->rotation * M_PI / 180);
+    cairo_matrix_rotate (mat, -movie->rotation * G_PI / 180);
     if (movie->xscale == 0) {
       cairo_matrix_scale (mat, G_MAXDOUBLE, 1);
     } else {

@@ -272,7 +272,7 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
       SWFDEC_MOVIE (movie)->stopped) {
     if (movie->sound_stream) {
       swfdec_audio_remove (movie->sound_stream);
-      movie->sound_stream = NULL;
+      g_assert (movie->sound_stream == NULL);
     }
     return;
   }
@@ -293,9 +293,10 @@ new_decoder:
   if (movie->sound_stream)
     swfdec_audio_remove (movie->sound_stream);
 
+  g_assert (movie->sound_stream == NULL);
   movie->sound_stream = swfdec_audio_stream_new (player, 
       movie->sprite, movie->current_frame);
-  g_object_ref (movie->sound_stream);
+  g_object_add_weak_pointer (G_OBJECT (movie->sound_stream), (gpointer *) &movie->sound_stream);
   movie->sound_frame = movie->current_frame;
 }
 
@@ -315,7 +316,7 @@ swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
     swfdec_player_remove_all_actions (player, mov);
     if (movie->sound_stream) {
       swfdec_audio_remove (movie->sound_stream);
-      movie->sound_stream = NULL;
+      g_assert (movie->sound_stream == NULL);
     }
   }
 }

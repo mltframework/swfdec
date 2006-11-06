@@ -762,10 +762,27 @@ compile_set_property (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_simple_bind_call (CompileState *state, guint action, guint len)
+{
+  char *name;
+  switch (action) {
+    case 0x09:
+      name = "stopAllSounds";
+      break;
+    default:
+      g_assert_not_reached ();
+      return;
+  }
+  bind_name (state, name);
+  call_void_function (state, name);
+}
+
+static void
 compile_simple_call (CompileState *state, guint action, guint len)
 {
   char *name;
 
+  /* FIXME: shouldn't some functions here PUSH_OBJ instead of push_target? */
   push_target (state);
   switch (action) {
     case 0x06:
@@ -773,6 +790,9 @@ compile_simple_call (CompileState *state, guint action, guint len)
       break;
     case 0x07:
       name = "stop";
+      break;
+    case 0x09:
+      name = "stopAllSounds";
       break;
     case 0x28:
       name = "stopDrag";
@@ -907,7 +927,7 @@ SwfdecActionSpec actions[] = {
   { 0x06, "Play", compile_simple_call },
   { 0x07, "Stop", compile_simple_call },
   { 0x08, "ToggleQuality", NULL },
-  { 0x09, "StopSounds", NULL },
+  { 0x09, "StopSounds", compile_simple_bind_call },
   /* version 4 */
   { 0x0a, "Add", compile_oneliner },
   { 0x0b, "Subtract", compile_oneliner },

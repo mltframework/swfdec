@@ -99,6 +99,7 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,
 						 gboolean		center,
 						 SwfdecRect *		rect);
+void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 void		swfdec_player_load		(SwfdecPlayer *		player,
 						 const char *		url,
 						 const char *		target);

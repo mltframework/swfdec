@@ -83,9 +83,19 @@ swfdec_js_random (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_NewNumberValue(cx, result, rval);
 }
 
+static JSBool
+swfdec_js_stopAllSounds (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+
+  swfdec_player_stop_all_sounds (player);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec global_methods[] = {
   { "eval",		swfdec_js_eval,		1, 0, 0 },
   { "random",		swfdec_js_random,	1, 0, 0 },
+  { "stopAllSounds",	swfdec_js_stopAllSounds,0, 0, 0 },
   { "trace",     	swfdec_js_trace,	1, 0, 0 },
   { NULL, NULL, 0, 0, 0 }
 };

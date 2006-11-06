@@ -170,6 +170,8 @@ swfdec_player_dispose (GObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
+  swfdec_player_stop_all_sounds (player);
+
   g_list_foreach (player->roots, (GFunc) swfdec_movie_remove, NULL);
   g_list_free (player->roots);
 
@@ -178,10 +180,7 @@ swfdec_player_dispose (GObject *object)
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
-
-  while (player->audio) {
-    swfdec_audio_remove (player->audio->data);
-  }
+  g_assert (player->audio == NULL);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
@@ -424,6 +423,16 @@ swfdec_player_init (SwfdecPlayer *player)
 }
 
 void
+swfdec_player_stop_all_sounds (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  while (player->audio) {
+    swfdec_audio_remove (player->audio->data);
+  }
+}
+
+void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
   if (swfdec_rect_is_empty (rect)) {
@@ -463,7 +472,7 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
 void
 swfdec_player_load (SwfdecPlayer *player, const char *url, const char *target)
 {
-  g_assert_not_reached ();
+  g_print ("should load \"%s\" into %s\n", url, target);
 }
 
 /** PUBLIC API ***/

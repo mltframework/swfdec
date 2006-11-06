@@ -59,7 +59,6 @@ struct _SwfdecPlayer
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
-  gboolean		audio_changed;		/* set when audio changed since last signal */
   guint			samples_this_frame;   	/* amount of samples to be played this frame */
   guint			samples_overhead;     	/* 44100*256th of sample missing each frame due to weird rate */
   guint			samples_overhead_left;	/* 44100*256th of sample we spit out too much so far */

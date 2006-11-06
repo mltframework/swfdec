@@ -104,9 +104,10 @@ swfdec_player_do_action (SwfdecPlayer *player)
 enum {
   TRACE,
   INVALIDATE,
-  AUDIO_CHANGED,
   ITERATE,
   HANDLE_MOUSE,
+  AUDIO_ADDED,
+  AUDIO_REMOVED,
   LAST_SIGNAL
 };
 
@@ -294,10 +295,6 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
     swfdec_rect_init_empty (&player->invalid);
   }
-  if (player->audio_changed) {
-    g_signal_emit (player, signals[AUDIO_CHANGED], 0, g_list_length (player->audio));
-    player->audio_changed = FALSE;
-  }
 }
 
 static void
@@ -398,9 +395,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
-  signals[AUDIO_CHANGED] = g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT,
-      G_TYPE_NONE, 1, G_TYPE_UINT);
   signals[ITERATE] = g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, iterate), 
       NULL, NULL, g_cclosure_marshal_VOID__VOID,
@@ -409,6 +403,12 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, handle_mouse), 
       NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_INT,
       G_TYPE_NONE, 3, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_INT);
+  signals[AUDIO_ADDED] = g_signal_new ("audio-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, SWFDEC_TYPE_AUDIO);
+  signals[AUDIO_REMOVED] = g_signal_new ("audio-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, SWFDEC_TYPE_AUDIO);
 
   klass->iterate = swfdec_player_do_iterate;
   klass->handle_mouse = swfdec_player_do_handle_mouse;
@@ -702,5 +702,14 @@ swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
     *width = player->width;
   if (height)
     *height = player->height;
+}
+
+/* FIXME: I don't like this function */
+const GList *
+swfdec_player_get_audio (SwfdecPlayer *	player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->audio;
 }
 

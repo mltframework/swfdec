@@ -76,6 +76,7 @@ void		swfdec_player_render_audio	(SwfdecPlayer *	player,
 						 guint		n_samples);
 SwfdecBuffer *	swfdec_player_render_audio_to_buffer 
 						(SwfdecPlayer *	player);
+const GList *	swfdec_player_get_audio		(SwfdecPlayer *	player);
 
 G_END_DECLS
 #endif

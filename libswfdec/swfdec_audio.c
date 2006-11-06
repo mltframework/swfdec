@@ -77,7 +77,6 @@ swfdec_audio_new (SwfdecPlayer *player, GType type)
   ret->player = player;
   if (player) {
     player->audio = g_list_append (player->audio, ret);
-    player->audio_changed = TRUE;
     ret->start_offset = player->samples_latency;
     SWFDEC_INFO ("adding %s %p", G_OBJECT_TYPE_NAME (ret), ret);
   }
@@ -93,7 +92,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
   if (audio->player != NULL) {
     SWFDEC_INFO ("removing %s %p", G_OBJECT_TYPE_NAME (audio), audio);
     audio->player->audio = g_list_remove (audio->player->audio, audio);
-    audio->player->audio_changed = TRUE;
+    g_signal_emit_by_name (audio->player, "audio-removed", audio);
     audio->player = NULL;
   }
   g_object_unref (audio);
@@ -171,9 +170,7 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
 {
   GList *walk;
   SwfdecAudio *audio;
-  gboolean audio_changed;
 
-  audio_changed = player->audio_changed;
   g_assert (player->samples_latency >= player->samples_this_frame);
   player->samples_latency -= player->samples_this_frame;
   /* iterate all playing sounds */
@@ -190,7 +187,6 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
   player->samples_overhead_left %= (44100 * 256);
   if (player->samples_overhead_left < player->samples_overhead_left)
     player->samples_this_frame++;
-  player->audio_changed = audio_changed;
 }
 
 /**

@@ -140,6 +140,8 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
   event->offset = chunk->start_sample;
   SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (chunk->sound)->id,
       chunk->start_sample);
+  if (player)
+    g_signal_emit_by_name (player, "audio-added", event);
   return SWFDEC_AUDIO (event);
 }
 

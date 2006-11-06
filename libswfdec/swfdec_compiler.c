@@ -601,11 +601,13 @@ compile_constant_pool (CompileState *state, guint action, guint len)
 static void
 compile_get_url (CompileState *state, guint action, guint len)
 {
-  const char *url = swfdec_bits_skip_string (state->bits);
-  const char *target = swfdec_bits_skip_string (state->bits);
-
-  g_print ("target: %s - url: %s\n", url, target);
-  compile_state_error (state, "GetURL is not implemented yet");
+  push_target (state);
+  push_prop (state, "getURL");
+  PUSH_OBJ (state);
+  read_and_push_string (state);
+  read_and_push_string (state);
+  call (state, 2);
+  POP (state);
 }
 
 static void

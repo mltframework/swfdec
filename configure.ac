@@ -174,6 +174,7 @@ libswfdec/mpeg/Makefile
 player/Makefile
 plugin/Makefile
 test/Makefile
+test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
 swfdec.pc

@@ -31,6 +31,17 @@
 static gpointer playback;
 
 static void
+set_title (GtkWindow *window, const char *filename)
+{
+  char *name = g_filename_display_basename (filename);
+  char *title = g_strdup_printf ("%s : Swfplay", name);
+
+  g_free (name);
+  gtk_window_set_title (window, title);
+  g_free (title);
+}
+
+static GtkWidget *
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
   GtkWidget *window, *widget;
@@ -42,6 +53,8 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_container_add (GTK_CONTAINER (window), widget);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);
+
+  return window;
 }
 
 static void
@@ -71,6 +84,7 @@ main (int argc, char *argv[])
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
   gboolean trace = FALSE;
+  GtkWidget *window;
 
   GOptionEntry options[] = {
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
@@ -129,7 +143,8 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  view_swf (player, scale, use_image);
+  window = view_swf (player, scale, use_image);
+  set_title (GTK_WINDOW (window), argv[1]);
 
   if (no_sound) {
     playback = NULL;

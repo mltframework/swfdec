@@ -158,8 +158,11 @@ swfdec_iterate_source_handle_mouse (SwfdecPlayer *player, double x, double y,
   delay = swfdec_time_get_difference (&source->time, &now);
 
   delay = samples + delay * 44100 / 1000;
-  delay = CLAMP (delay, 0, samples);
-  swfdec_player_set_audio_advance (player, delay);
+  if (delay < 0)
+    samples = 0;
+  else
+    samples = MIN ((guint) delay, samples);
+  swfdec_player_set_audio_advance (player, samples);
 }
 
 GSource *

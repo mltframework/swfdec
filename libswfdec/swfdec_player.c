@@ -25,7 +25,7 @@
 #include <liboil/liboil.h>
 
 #include "swfdec_player_internal.h"
-#include "swfdec_audio.h"
+#include "swfdec_audio_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_loader_internal.h"

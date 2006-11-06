@@ -22,7 +22,7 @@
 #ifndef _SWFDEC_AUDIO_STREAM_H_
 #define _SWFDEC_AUDIO_STREAM_H_
 
-#include <libswfdec/swfdec_audio.h>
+#include <libswfdec/swfdec_audio_internal.h>
 
 G_BEGIN_DECLS
 

@@ -30,7 +30,6 @@
 #include <liboil/liboil.h>
 
 #include "swfdec.h"
-#include "swfdec_audio.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"

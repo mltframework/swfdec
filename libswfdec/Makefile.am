@@ -75,13 +75,14 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec.h \
+	swfdec_audio.h \
 	swfdec_buffer.h \
 	swfdec_loader.h \
 	swfdec_player.h
 
 noinst_HEADERS = \
 	color.h \
-	swfdec_audio.h \
+	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_stream.h \
 	swfdec_bits.h \

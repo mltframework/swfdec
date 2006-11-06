@@ -19,29 +19,42 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_AUDIO_H_
-#define _SWFDEC_AUDIO_H_
+#ifndef _SWFDEC_AUDIO_INTERNAL_H_
+#define _SWFDEC_AUDIO_INTERNAL_H_
 
-#include <glib-object.h>
+#include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_audio.h>
+#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecAudio SwfdecAudio;
-typedef struct _SwfdecAudioClass SwfdecAudioClass;
 
-#define SWFDEC_TYPE_AUDIO                    (swfdec_audio_get_type())
-#define SWFDEC_IS_AUDIO(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AUDIO))
-#define SWFDEC_IS_AUDIO_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AUDIO))
-#define SWFDEC_AUDIO(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AUDIO, SwfdecAudio))
-#define SWFDEC_AUDIO_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AUDIO, SwfdecAudioClass))
-#define SWFDEC_AUDIO_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AUDIO, SwfdecAudioClass))
+struct _SwfdecAudio {
+  GObject		object;
 
-GType		swfdec_audio_get_type		(void);
+  SwfdecPlayer *	player;		/* the player that plays us */
+  guint			start_offset;	/* offset from player in number of samples */
+};
 
-void		swfdec_audio_render		(SwfdecAudio *	audio,
-						 gint16 *	dest,
-						 guint		start_offset,
+struct _SwfdecAudioClass {
+  GObjectClass		object_class;
+
+  guint			(* iterate)		(SwfdecAudio *	audio,
 						 guint		n_samples);
+  void			(* render)		(SwfdecAudio *	audio,
+						 gint16 *	dest,
+						 guint		start, 
+						 guint		n_samples);
+};
+
+SwfdecAudio *	swfdec_audio_new		(SwfdecPlayer *	player,
+						 GType		type);
+void		swfdec_audio_remove		(SwfdecAudio *	audio);
+
+guint		swfdec_audio_iterate		(SwfdecAudio *	audio,
+						 guint		n_samples);
+
+void		swfdec_player_iterate_audio   	(SwfdecPlayer *	player);
 
 G_END_DECLS
 #endif

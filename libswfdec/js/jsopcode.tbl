@@ -334,5 +334,4 @@ OPDEF(JSOP_RETRVAL,       153,"retrval",  NULL,       1,  0,  0,  0,  JOF_BYTE)
 
 /* Custom Flash opcodes */
 OPDEF(JSOP_FLASHCALL,     154,"flashcall",NULL,       1,  -1, 1, 11,  JOF_BYTE)
-OPDEF(JSOP_FLASHNAME,     155,"flashname",NULL,       1,  1,  1, 12,  JOF_BYTE)
-OPDEF(JSOP_FLASHSWAP,     156,"flashswap",NULL,       3,  1,  1, 0,   JOF_UINT16)
+OPDEF(JSOP_FLASHSWAP,     155,"flashswap",NULL,       3,  1,  1, 0,   JOF_UINT16)

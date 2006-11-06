@@ -388,25 +388,14 @@ compile_trace (CompileState *state, guint action, guint len)
   POP (state);
 }
 
-#if 0
-/* FIXME: This function is supposed to do:
- * 1) pop a SWF target string
- * 2) push the referenced object
- * 3) push the referenced property string
- */
-static void
-compile_path_to_object (CompileState *state)
-{
-  push_target (state);
-  ONELINER (state, JSOP_SWAP);
-}
-#endif
-
 static void
 compile_get_variable (CompileState *state, guint action, guint len)
 {
-  //compile_path_to_object (state);
-  ONELINER (state, JSOP_FLASHNAME);
+  push_uint16 (state, 1);
+  push_target (state);
+  push_prop (state, "eval");
+  push_target (state);
+  FLASHCALL (state);
 }
 
 static void
@@ -576,8 +565,6 @@ compile_set_target (CompileState *state, guint action, guint len)
 static void
 compile_set_target_2 (CompileState *state, guint action, guint len)
 {
-  //compile_path_to_object (state);
-  //POP (state);
   compile_state_set_target (state);
 }
 

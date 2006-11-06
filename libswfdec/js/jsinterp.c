@@ -3050,19 +3050,9 @@ do_call:
             break;
 #endif
 
-	  case JSOP_FLASHNAME:
-	    POP_ELEMENT_ID (id);
-	    if (atom && strcmp ("this", js_GetStringBytes (ATOM_TO_STRING(atom))) == 0) {
-	      PUSH_OPND(OBJECT_TO_JSVAL(fp->thisp));
-	      obj = NULL;
-	      break;
-	    }
-	    goto do_name;
-
           case JSOP_NAME:
             atom = GET_ATOM(cx, script, pc);
             id   = (jsid)atom;
-do_name:
             SAVE_SP(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
             if (!ok)

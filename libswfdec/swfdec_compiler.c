@@ -399,6 +399,15 @@ compile_get_variable (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_set_variable (CompileState *state, guint action, guint len)
+{
+  /* FIXME: handle paths */
+  PUSH_OBJ (state);
+  ONELINER (state, JSOP_SETELEM);
+  POP (state);
+}
+
+static void
 push_string (CompileState *state, const char *s)
 {
   guint8 command[3] = { JSOP_STRING, };
@@ -544,6 +553,13 @@ compile_wait_for_frame (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_jump (CompileState *state, guint action, guint len)
+{
+  int amount = swfdec_bits_get_s16 (state->bits);
+  DO_JUMP (state, JSOP_GOTO, amount + 5);
+}
+
+static void
 compile_if (CompileState *state, guint action, guint len)
 {
   int amount = swfdec_bits_get_s16 (state->bits);
@@ -618,14 +634,17 @@ compile_oneliner (CompileState *state, guint action, guint len)
 {
   JSOp op;
   switch (action) {
-    case 0x0a:
+    case 0x0A:
       op = JSOP_ADD;
       break;
-    case 0x0b:
+    case 0x0B:
       op = JSOP_SUB;
       break;
-    case 0x0c:
+    case 0x0C:
       op = JSOP_MUL;
+      break;
+    case 0x0D:
+      op = JSOP_DIV;
       break;
     case 0x12:
       op = JSOP_NOT;
@@ -635,6 +654,9 @@ compile_oneliner (CompileState *state, guint action, guint len)
       break;
     case 0x47:
       op = JSOP_ADD;
+      break;
+    case 0x48:
+      op = JSOP_LT;
       break;
     case 0x49:
       op = JSOP_NEW_EQ;
@@ -746,6 +768,15 @@ compile_set_property (CompileState *state, guint action, guint len)
   PUSH_OBJ (state);
   FLASHCALL (state);
   POP (state);
+}
+
+static void
+compile_string_add (CompileState *state, guint action, guint len)
+{
+  /* be sure to have strings */
+  push_string (state, "");
+  ONELINER (state, JSOP_ADD);
+  ONELINER (state, JSOP_ADD);
 }
 
 static void
@@ -919,7 +950,7 @@ SwfdecActionSpec actions[] = {
   { 0x0a, "Add", compile_oneliner },
   { 0x0b, "Subtract", compile_oneliner },
   { 0x0c, "Multiply", compile_oneliner },
-  { 0x0d, "Divide", NULL },
+  { 0x0d, "Divide", compile_oneliner },
   { 0x0e, "Equals", NULL },
   { 0x0f, "Less", NULL },
   { 0x10, "And", NULL },
@@ -931,9 +962,9 @@ SwfdecActionSpec actions[] = {
   { 0x17, "Pop", compile_oneliner },
   { 0x18, "ToInteger", NULL },
   { 0x1c, "GetVariable", compile_get_variable },
-  { 0x1d, "SetVariable", NULL },
+  { 0x1d, "SetVariable", compile_set_variable },
   { 0x20, "SetTarget2", compile_set_target_2 },
-  { 0x21, "StringAdd", NULL },
+  { 0x21, "StringAdd", compile_string_add },
   { 0x22, "GetProperty", compile_get_property },
   { 0x23, "SetProperty", compile_set_property },
   { 0x24, "CloneSprite", NULL },
@@ -970,7 +1001,7 @@ SwfdecActionSpec actions[] = {
   { 0x45, "TargetPath", NULL },
   { 0x46, "Enumerate", NULL },
   { 0x47, "Add2", compile_oneliner },
-  { 0x48, "Less2", NULL },
+  { 0x48, "Less2", compile_oneliner },
   { 0x49, "Equals2", compile_oneliner },
   { 0x4a, "ToNumber", NULL },
   { 0x4b, "ToString", NULL },
@@ -1018,7 +1049,7 @@ SwfdecActionSpec actions[] = {
   { 0x94, "With", NULL },
   /* version 4 */
   { 0x96, "Push", compile_push },
-  { 0x99, "Jump", NULL },
+  { 0x99, "Jump", compile_jump },
   { 0x9a, "GetURL2", NULL },
   /* version 5 */
   { 0x9b, "DefineFunction", NULL },

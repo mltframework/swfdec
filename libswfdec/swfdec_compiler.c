@@ -389,6 +389,14 @@ compile_trace (CompileState *state, guint action, guint len)
 }
 
 static void
+flash_swap (CompileState *state, guint n)
+{
+  guint8 command[3] = { JSOP_FLASHSWAP, n >> 8, n };
+  g_assert (n > 1);
+  compile_state_add_code (state, command, 3);
+}
+
+static void
 compile_get_variable (CompileState *state, guint action, guint len)
 {
   push_uint16 (state, 1);
@@ -402,7 +410,9 @@ static void
 compile_set_variable (CompileState *state, guint action, guint len)
 {
   /* FIXME: handle paths */
-  PUSH_OBJ (state);
+  push_target (state);
+  flash_swap (state, 3);
+  SWAP (state);
   ONELINER (state, JSOP_SETELEM);
   POP (state);
 }
@@ -683,14 +693,6 @@ compile_call_method (CompileState *state, guint action, guint len)
   ONELINER (state, JSOP_GETELEM);
   ONELINER (state, JSOP_PUSHOBJ);
   ONELINER (state, JSOP_FLASHCALL);
-}
-
-static void
-flash_swap (CompileState *state, guint n)
-{
-  guint8 command[3] = { JSOP_FLASHSWAP, n >> 8, n };
-  g_assert (n > 1);
-  compile_state_add_code (state, command, 3);
 }
 
 static void

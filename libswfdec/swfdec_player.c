@@ -138,6 +138,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   switch (param_id) {
     case PROP_INITIALIZED:
       g_value_set_boolean (value, player->width > 0 && player->height > 0);
+      break;
     case PROP_LATENCY:
       g_value_set_uint (value, player->samples_latency);
       break;
@@ -660,7 +661,9 @@ swfdec_player_iterate (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
 #if 0
-  swfdec_js_run (player, "foo = bar.boo();", NULL);
+  while (TRUE)
+    swfdec_js_run (player, "\"/A/B:foo\".indexOf (\":\")", NULL);
+  //swfdec_js_run (player, "s=\"/A/B:foo\"; t=s.indexOf (\":\"); if (t) t=s.substring(0,s.indexOf (\":\")); else t=s;", NULL);
 #endif
 
   g_signal_emit (player, signals[ITERATE], 0);

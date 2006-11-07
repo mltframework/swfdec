@@ -421,6 +421,8 @@ swfdec_player_init (SwfdecPlayer *player)
   swfdec_js_init_player (player);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
+
+  player->mouse_visible = TRUE;
 }
 
 void

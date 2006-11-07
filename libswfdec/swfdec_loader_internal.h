@@ -27,7 +27,6 @@ G_BEGIN_DECLS
 
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *	loader,
 							 const char *	url);
-void			swfdec_loader_parse		(SwfdecLoader *	loader);
 					 
 
 G_END_DECLS

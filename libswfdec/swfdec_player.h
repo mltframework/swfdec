@@ -52,6 +52,7 @@ SwfdecPlayer *	swfdec_player_new_from_file	(const char *	filename,
 void		swfdec_player_set_loader	(SwfdecPlayer *	player,
 						 SwfdecLoader *	loader);
 
+gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
 double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,

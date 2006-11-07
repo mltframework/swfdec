@@ -24,6 +24,7 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_buffer.h"
 #include "swfdec_debug.h"
+#include "swfdec_root_movie.h"
 
 /*** SwfdecLoader ***/
 
@@ -197,7 +198,7 @@ swfdec_loader_push (SwfdecLoader *loader, SwfdecBuffer *buffer)
 
   swfdec_buffer_queue_push (loader->queue, buffer);
   if (loader->target)
-    swfdec_loader_parse (loader);
+    swfdec_root_movie_parse (loader->target);
 }
 
 /**
@@ -214,7 +215,7 @@ swfdec_loader_eof (SwfdecLoader *loader)
 
   loader->eof = TRUE;
   if (loader->target)
-    swfdec_loader_parse (loader);
+    swfdec_root_movie_parse (loader->target);
 }
 
 SwfdecLoader *
@@ -230,8 +231,3 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url)
   return klass->load (loader, url);
 }
 
-void
-swfdec_loader_parse (SwfdecLoader *loader)
-{
-  g_assert_not_reached ();
-}

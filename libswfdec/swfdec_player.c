@@ -137,7 +137,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   
   switch (param_id) {
     case PROP_INITIALIZED:
-      g_value_set_boolean (value, player->width > 0 && player->height > 0);
+      g_value_set_boolean (value, swfdec_player_is_initialized (player));
       break;
     case PROP_LATENCY:
       g_value_set_uint (value, player->samples_latency);
@@ -458,6 +458,7 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   movie = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   root = SWFDEC_ROOT_MOVIE (movie);
   root->loader = loader;
+  root->loader->target = root;
   root->player = player;
   movie->root = movie;
   found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
@@ -623,6 +624,10 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
 
+  /* FIXME: fail when !initialized? */
+  if (!swfdec_player_is_initialized (player))
+    return;
+
   if (area == NULL)
     area = &full;
   if (swfdec_rect_is_empty (area))
@@ -667,6 +672,26 @@ swfdec_player_iterate (SwfdecPlayer *player)
 #endif
 
   g_signal_emit (player, signals[ITERATE], 0);
+}
+
+/**
+ * swfdec_player_is_initialized:
+ * @player: a #SwfdecPlayer
+ *
+ * Determines if the @player is initalized yet. An initialized player is able
+ * to provide basic values like width, height or rate. A player may not be 
+ * initialized if the loader it was started with does not reference a Flash
+ * resources or it did not provide enough data yet. If a player is initialized,
+ * it will never be uninitialized again.
+ *
+ * Returns: TRUE if the basic values are known.
+ **/
+gboolean
+swfdec_player_is_initialized (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+
+  return player->width > 0 && player->height > 0;
 }
 
 /**

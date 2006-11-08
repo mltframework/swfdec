@@ -26,6 +26,8 @@ EXTRA_DIST = \
 	load-5.swf \
 	load-5.swf.trace \
 	order.swf \
-	order.swf.trace
+	order.swf.trace \
+	setvariable.swf \
+	setvariable.swf.trace
 
 CLEANFILES = tmp

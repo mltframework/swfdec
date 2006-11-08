@@ -92,6 +92,7 @@ typedef struct _SwfdecIterateSource SwfdecIterateSource;
 struct _SwfdecIterateSource {
   GSource		source;
   SwfdecPlayer *	player;
+  gulong		notify;		/* set for iterate notifications */
   SwfdecTime		time;		/* time manager */
 };
 
@@ -136,6 +137,9 @@ swfdec_iterate_finalize (GSource *source_)
 {
   SwfdecIterateSource *source = (SwfdecIterateSource *) source_;
 
+  if (source->notify) {
+    g_signal_handler_disconnect (source->player, source->notify);
+  }
   g_object_unref (source->player);
 }
 
@@ -165,6 +169,19 @@ swfdec_iterate_source_handle_mouse (SwfdecPlayer *player, double x, double y,
   swfdec_player_set_audio_advance (player, samples);
 }
 
+static void
+swfdec_iterate_source_notify_cb (SwfdecPlayer *player, GParamSpec *pspec,
+    SwfdecIterateSource *source)
+{
+  GTimeVal now;
+  double rate = swfdec_player_get_rate (player);
+  g_assert (rate > 0);
+  g_get_current_time (&now);
+  swfdec_time_init (&source->time, &now, rate);
+  g_signal_handler_disconnect (player, source->notify);
+  source->notify = 0;
+}
+
 GSource *
 swfdec_iterate_source_new (SwfdecPlayer *player)
 {
@@ -180,10 +197,13 @@ swfdec_iterate_source_new (SwfdecPlayer *player)
   g_signal_connect (player, "handle-mouse", 
       G_CALLBACK (swfdec_iterate_source_handle_mouse), source);
   rate = swfdec_player_get_rate (player);
-  /* FIXME: allow adding players that don't know their rate yet */
-  g_assert (rate > 0);
-  g_get_current_time (&now);
-  swfdec_time_init (&source->time, &now, rate);
+  if (rate > 0) {
+    g_get_current_time (&now);
+    swfdec_time_init (&source->time, &now, rate);
+  } else {
+    source->notify = g_signal_connect (player, "notify::initialized",
+	G_CALLBACK (swfdec_iterate_source_notify_cb), source);
+  }
   
   return (GSource *) source;
 }

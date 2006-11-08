@@ -46,6 +46,7 @@ typedef struct {
   SwfdecTime		time;		/* time manager */
   GList *		streams;	/* all Stream objects */
   GList *		waiting;	/* Stream objects waiting to get started */
+  gulong		notify_cb;	/* callback id for notify::initialized */
 } Sound;
 
 typedef struct {
@@ -338,12 +339,21 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, Sound *sound)
   g_assert_not_reached ();
 }
 
+static void
+swfdec_playback_initialized (SwfdecPlayer *player, GParamSpec *pspec, Sound *sound)
+{
+  GTimeVal tv;
+  g_get_current_time (&tv);
+  swfdec_time_init (&sound->time, &tv, swfdec_player_get_rate (player));
+  g_signal_handler_disconnect (sound->player, sound->notify_cb);
+  sound->notify_cb = 0;
+}
+
 gpointer
 swfdec_playback_open (SwfdecPlayer *player)
 {
   Sound *sound;
   const GList *walk;
-  GTimeVal tv;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
@@ -357,8 +367,14 @@ swfdec_playback_open (SwfdecPlayer *player)
   for (walk = swfdec_player_get_audio (player); walk; walk = walk->next) {
     swfdec_stream_open (sound, walk->data);
   }
-  g_get_current_time (&tv);
-  swfdec_time_init (&sound->time, &tv, swfdec_player_get_rate (player));
+  if (swfdec_player_is_initialized (player)) {
+    GTimeVal tv;
+    g_get_current_time (&tv);
+    swfdec_time_init (&sound->time, &tv, swfdec_player_get_rate (player));
+  } else {
+    sound->notify_cb = g_signal_connect (player, "notify::initialized",
+	G_CALLBACK (swfdec_playback_initialized), sound);
+  }
   return sound;
 }
 
@@ -376,6 +392,9 @@ swfdec_playback_close (gpointer data)
 
   while (sound->streams)
     swfdec_stream_close (sound->streams->data);
+  if (sound->notify_cb) {
+    g_signal_handler_disconnect (sound->player, sound->notify_cb);
+  }
   REMOVE_HANDLER (sound->player, iterate_before, sound);
   REMOVE_HANDLER (sound->player, do_after, sound);
   REMOVE_HANDLER (sound->player, handle_mouse_after, sound);

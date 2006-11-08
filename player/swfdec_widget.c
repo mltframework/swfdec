@@ -182,6 +182,34 @@ swfdec_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
 }
 
 static void
+swfdec_widget_update_cursor (SwfdecWidget *widget)
+{
+  GdkWindow *window = GTK_WIDGET (widget)->window;
+  gboolean visible;
+
+  if (window == NULL)
+    return;
+  g_object_get (widget->player, "mouse-visible", &visible, NULL);
+
+  if (visible) {
+    gdk_window_set_cursor (window, NULL);
+  } else {
+    GdkBitmap *bitmap;
+    GdkCursor *cursor;
+    GdkColor color = { 0, 0, 0, 0 };
+    char data = 0;
+
+    bitmap = gdk_bitmap_create_from_data (window, &data, 1, 1);
+    if (bitmap == NULL)
+      return;
+    cursor = gdk_cursor_new_from_pixmap (bitmap, bitmap, &color, &color, 0, 0);
+    gdk_window_set_cursor (window, cursor);
+    gdk_cursor_unref (cursor);
+    g_object_unref (bitmap);
+  }
+}
+
+static void
 swfdec_widget_realize (GtkWidget *widget)
 {
   GdkWindowAttr attributes;
@@ -210,6 +238,10 @@ swfdec_widget_realize (GtkWidget *widget)
   gdk_window_set_user_data (widget->window, widget);
 
   widget->style = gtk_style_attach (widget->style, widget->window);
+
+  if (SWFDEC_WIDGET (widget)->player) {
+    swfdec_widget_update_cursor (SWFDEC_WIDGET (widget));
+  }
 }
 
 static void
@@ -254,30 +286,12 @@ swfdec_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRect *invalid, Sw
 }
 
 static void
-swfdec_widget_notify_mouse_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecWidget *widget)
+swfdec_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecWidget *widget)
 {
-  GdkWindow *window = GTK_WIDGET (widget)->window;
-  gboolean visible;
-
-  if (window == NULL)
-    return;
-  g_object_get (player, "mouse-visible", &visible, NULL);
-
-  if (visible) {
-    gdk_window_set_cursor (window, NULL);
-  } else {
-    GdkBitmap *bitmap;
-    GdkCursor *cursor;
-    GdkColor color = { 0, 0, 0, 0 };
-    char data = 0;
-
-    bitmap = gdk_bitmap_create_from_data (window, &data, 1, 1);
-    if (bitmap == NULL)
-      return;
-    cursor = gdk_cursor_new_from_pixmap (bitmap, bitmap, &color, &color, 0, 0);
-    gdk_window_set_cursor (window, cursor);
-    gdk_cursor_unref (cursor);
-    g_object_unref (bitmap);
+  if (g_str_equal (pspec->name, "mouse-visible")) {
+    swfdec_widget_update_cursor (widget);
+  } else if (g_str_equal (pspec->name, "initialized")) {
+    gtk_widget_queue_resize (GTK_WIDGET (widget));
   }
 }
 
@@ -289,15 +303,15 @@ swfdec_widget_set_player (SwfdecWidget *widget, SwfdecPlayer *player)
   
   if (widget->player) {
     g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_invalidate_cb, widget);
-    g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_notify_mouse_cb, widget);
+    g_signal_handlers_disconnect_by_func (widget->player, swfdec_widget_notify_cb, widget);
     g_object_unref (widget->player);
   }
   widget->player = player;
   if (player) {
     g_signal_connect (player, "invalidate", G_CALLBACK (swfdec_widget_invalidate_cb), widget);
-    g_signal_connect (player, "notify::mouse-visible", G_CALLBACK (swfdec_widget_notify_mouse_cb), widget);
+    g_signal_connect (player, "notify", G_CALLBACK (swfdec_widget_notify_cb), widget);
     g_object_ref (player);
-    swfdec_widget_notify_mouse_cb (player, NULL, widget);
+    swfdec_widget_update_cursor (widget);
   } else {
     if (GTK_WIDGET (widget)->window)
       gdk_window_set_cursor (GTK_WIDGET (widget)->window, NULL); 

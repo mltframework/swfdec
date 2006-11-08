@@ -25,6 +25,7 @@
 #include <libswfdec/swfdec.h>
 
 #include "swfdec_playback.h"
+#include "swfdec_slow_loader.h"
 #include "swfdec_source.h"
 #include "swfdec_widget.h"
 
@@ -79,7 +80,9 @@ int
 main (int argc, char *argv[])
 {
   int ret = 0;
+  int delay = 0;
   double scale;
+  SwfdecLoader *loader;
   SwfdecPlayer *player;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
@@ -87,6 +90,7 @@ main (int argc, char *argv[])
   GtkWidget *window;
 
   GOptionEntry options[] = {
+    { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
@@ -115,28 +119,22 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  if (trace) {
-    SwfdecLoader *loader;
-    
-    player = swfdec_player_new ();
-    loader = swfdec_loader_new_from_file (argv[1], &error);
-    if (loader == NULL) {
-      g_object_unref (player);
-      player = NULL;
-    } else {
-      g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
-      swfdec_player_set_loader (player, loader);
-    }
-  } else {
-    player = swfdec_player_new_from_file (argv[1], &error);
-  }
-  if (player == NULL) {
+  loader = swfdec_loader_new_from_file (argv[1], &error);
+  if (loader == NULL) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
     g_error_free (error);
     return 1;
   }
+  player = swfdec_player_new ();
+  if (trace)
+    g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
+  
+  if (delay) 
+    loader = swfdec_slow_loader_new (loader, delay);
+
+  swfdec_player_set_loader (player, loader);
   /* FIXME add smarter "not my file" detection */
-  if (swfdec_player_get_rate (player) == 0) {
+  if (swfdec_player_get_rate (player) == 0 && delay == 0) {
     g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
     g_object_unref (player);
     player = NULL;

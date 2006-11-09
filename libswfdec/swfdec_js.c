@@ -31,6 +31,8 @@
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_compiler.h"
+#include "swfdec_root_movie.h"
+#include "swfdec_swf_decoder.h"
 
 static JSRuntime *swfdec_js_runtime;
 
@@ -145,11 +147,11 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
 {
   jsval returnval = JSVAL_VOID;
   JSBool ret;
+  int old_version;
 
   g_return_val_if_fail (s != NULL, FALSE);
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
-
 
   if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "disassemble")) {
     g_print ("executing script %p:%p\n", movie, script);
@@ -162,7 +164,17 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
     if (movie->jsobj == NULL)
       return FALSE;
   }
+  /* setup execution state */
+  old_version = s->jsx_version;
+  if (SWFDEC_IS_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder))
+    s->jsx_version = SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version;
+  else
+    s->jsx_version = 8;
+
   ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, rval);
+  
+  /* restore execution state */
+  s->jsx_version = old_version;
   if (ret && returnval != JSVAL_VOID) {
     JSString * str = JS_ValueToString (s->jscx, returnval);
     if (str)

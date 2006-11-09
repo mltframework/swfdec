@@ -247,6 +247,8 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
       g_return_if_fail (movie->content->name == NULL);
     }
   }
+  if (content && content->name)
+    g_print ("setting name \"%s\"\n", content->name);
   old_content = movie->content;
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->content_changed)

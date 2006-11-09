@@ -87,8 +87,8 @@ swfdec_event_list_free (SwfdecEventList *list)
 }
 
 void
-swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, unsigned int conditions,
-    guint8 key)
+swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
+    unsigned int conditions, guint8 key)
 {
   SwfdecEvent event;
 
@@ -97,7 +97,7 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, unsigned int c
 
   event.conditions = conditions;
   event.key = key;
-  event.script = swfdec_compile (list->player, bits);
+  event.script = swfdec_compile (list->player, bits, version);
   if (event.script) 
     g_array_append_val (list->events, event);
 }

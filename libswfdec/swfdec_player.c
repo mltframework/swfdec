@@ -669,7 +669,7 @@ swfdec_player_iterate (SwfdecPlayer *player)
 
 #if 0
   while (TRUE)
-    swfdec_js_run (player, "\"/A/B:foo\".indexOf (\":\")", NULL);
+    swfdec_js_run (player, "\"/A/B:foo\".toLowerCase ()", NULL);
   //swfdec_js_run (player, "s=\"/A/B:foo\"; t=s.indexOf (\":\"); if (t) t=s.substring(0,s.indexOf (\":\")); else t=s;", NULL);
 #endif
 

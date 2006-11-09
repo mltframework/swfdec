@@ -11,7 +11,8 @@ G_BEGIN_DECLS
 void		swfdec_disassemble	(SwfdecPlayer *	player,
 					 JSScript *	script);
 JSScript *	swfdec_compile		(SwfdecPlayer *	player,
-					 SwfdecBits *	bits);
+					 SwfdecBits *	bits,
+					 int		version);
 
 G_END_DECLS
 

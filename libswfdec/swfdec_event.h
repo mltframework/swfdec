@@ -54,6 +54,7 @@ void			swfdec_event_list_free		(SwfdecEventList *    list);
 
 void			swfdec_event_list_parse		(SwfdecEventList *    list,
 							 SwfdecBits *	      bits,
+							 int		      version,
 							 unsigned int	      conditions,
 							 guint8		      key);
 void			swfdec_event_list_execute	(SwfdecEventList *    list,

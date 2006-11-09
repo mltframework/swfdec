@@ -43,6 +43,8 @@ struct _SwfdecPlayer
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */
   JSObject *		jsobj;			/* the global object */
+  /* FIXME: handle execution state better */
+  int			jsx_version;		/* the AS version of the currently executing script */
 
   /* rendering */
   SwfdecRect		invalid;      		/* area that needs a rredraw */

@@ -205,8 +205,9 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
+/* FIXME: replace with eval */
 static SwfdecMovie *
-get_target (SwfdecMovie *movie, const char *target)
+get_target (SwfdecMovie *movie, const char *target, int version)
 {
   char *tmp;
   guint len;
@@ -219,7 +220,7 @@ get_target (SwfdecMovie *movie, const char *target)
   if (g_str_has_prefix (target, "../")) {
     if (movie->parent == NULL)
       return NULL;
-    return get_target (movie->parent, target + 3);
+    return get_target (movie->parent, target + 3, version);
   }
   tmp = strchr (target, '/');
   if (tmp)
@@ -229,8 +230,13 @@ get_target (SwfdecMovie *movie, const char *target)
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (cur->content->name && g_ascii_strncasecmp (cur->content->name, target, len) == 0)
-      return get_target (cur, target + len + 1);
+    if (cur->content->name) {
+      if (version >= 7 && strncmp (cur->content->name, target, len) == 0) {
+	return get_target (cur, target + len + 1, version);
+      } else if (g_ascii_strncasecmp (cur->content->name, target, len) == 0) {
+	return get_target (cur, target + len + 1, version);
+      }
+    }
   }
   return NULL;
 }
@@ -246,9 +252,10 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if (JSVAL_IS_OBJECT (argv[0])) {
     movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
   } else if (JSVAL_IS_STRING (argv[0])) {
+    SwfdecPlayer *player = JS_GetContextPrivate (cx);
     char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
     movie = JS_GetPrivate(cx, obj);
-    movie = get_target (movie, str);
+    movie = get_target (movie, str, player->jsx_version);
     if (movie == NULL)
       return JS_FALSE;
   } else {
@@ -275,11 +282,14 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if (JSVAL_IS_OBJECT (argv[0])) {
     movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
   } else if (JSVAL_IS_STRING (argv[0])) {
+    SwfdecPlayer *player = JS_GetContextPrivate (cx);
     char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
     movie = JS_GetPrivate(cx, obj);
-    movie = get_target (movie, str);
-    if (movie == NULL)
+    movie = get_target (movie, str, player->jsx_version);
+    if (movie == NULL) {
+      g_print ("no target\n");
       return JS_FALSE;
+    }
   } else {
     return JS_FALSE;
   }
@@ -539,12 +549,14 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
+  g_print ("setting xscale\n");
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
   if (!finite (d)) {
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  g_print ("setting xscale to %g\n", d);
   movie->xscale = d / 100;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 

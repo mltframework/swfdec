@@ -406,7 +406,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
       }
       if (content->events == NULL)
 	content->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-      swfdec_event_list_parse (content->events, &s->b, event_flags, key_code);
+      swfdec_event_list_parse (content->events, &s->b, s->version, event_flags, key_code);
       if (bits->ptr != record_end) {
 	SWFDEC_ERROR ("record size and actual parsed action differ by %d bytes",
 	    (int) (record_end - bits->ptr));

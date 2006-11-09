@@ -304,7 +304,7 @@ tag_func_do_action (SwfdecSwfDecoder * s)
 {
   JSScript *script;
   
-  script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b);
+  script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b, s->version);
   if (script)
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
 	SWFDEC_SPRITE_ACTION_SCRIPT, script);
@@ -465,7 +465,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
     if (button->events == NULL)
       button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
     SWFDEC_LOG ("new event for condition %u (key %u)", condition, key);
-    swfdec_event_list_parse (button->events, &s->b, condition, key);
+    swfdec_event_list_parse (button->events, &s->b, s->version, condition, key);
   }
 
   return SWFDEC_STATUS_OK;
@@ -527,7 +527,7 @@ tag_func_define_button (SwfdecSwfDecoder * s)
   swfdec_bits_get_u8 (bits);
 
   button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-  swfdec_event_list_parse (button->events, &s->b, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
+  swfdec_event_list_parse (button->events, &s->b, s->version, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
 
   return SWFDEC_STATUS_OK;
 }

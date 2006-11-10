@@ -231,10 +231,12 @@ get_target (SwfdecMovie *movie, const char *target, int version)
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
     if (cur->content->name) {
-      if (version >= 7 && strncmp (cur->content->name, target, len) == 0) {
-	return get_target (cur, target + len + 1, version);
-      } else if (g_ascii_strncasecmp (cur->content->name, target, len) == 0) {
-	return get_target (cur, target + len + 1, version);
+      if ((version >= 7 && strncmp (cur->content->name, target, len) == 0) || 
+	  (version < 7 && g_ascii_strncasecmp (cur->content->name, target, len) == 0)) {
+	if (target[len] == '\0')
+	  return cur;
+	else 
+	  return get_target (cur, target + len + 1, version);
       }
     }
   }
@@ -256,8 +258,10 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
     movie = JS_GetPrivate(cx, obj);
     movie = get_target (movie, str, player->jsx_version);
-    if (movie == NULL)
+    if (movie == NULL) {
+      SWFDEC_INFO ("no target name \"%s\"", str);
       return JS_FALSE;
+    }
   } else {
     return JS_FALSE;
   }
@@ -287,7 +291,7 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     movie = JS_GetPrivate(cx, obj);
     movie = get_target (movie, str, player->jsx_version);
     if (movie == NULL) {
-      g_print ("no target\n");
+      SWFDEC_INFO ("no target name \"%s\"", str);
       return JS_FALSE;
     }
   } else {
@@ -549,14 +553,12 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  g_print ("setting xscale\n");
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
   if (!finite (d)) {
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return JS_TRUE;
   }
-  g_print ("setting xscale to %g\n", d);
   movie->xscale = d / 100;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 

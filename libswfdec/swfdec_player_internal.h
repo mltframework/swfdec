@@ -104,7 +104,7 @@ void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 void		swfdec_player_load		(SwfdecPlayer *		player,
 						 const char *		url,
 						 const char *		target);
-					 
+
 
 G_END_DECLS
 #endif

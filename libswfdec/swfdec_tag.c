@@ -789,6 +789,8 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
+  [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", NULL, 0},
+  [SWFDEC_TAG_DEFINESHAPE4] = {"DefineShape4", NULL, 0},
   [SWFDEC_TAG_DEFINEMORPHSHAPE2] = {"DefineMorphShape2", NULL, 0},
 };
 

@@ -720,6 +720,24 @@ tag_func_define_font_info_2 (SwfdecSwfDecoder *s)
   return tag_func_define_font_info (s, 2);
 }
 
+static int
+tag_func_file_attributes (SwfdecSwfDecoder *s)
+{
+  int has_metadata, use_network;
+
+  if (swfdec_bits_getbits (&s->b, 3))
+    SWFDEC_INFO ("reserved bits (1) aren't 0");
+  has_metadata = swfdec_bits_getbit (&s->b);
+  if (swfdec_bits_getbits (&s->b, 3))
+    SWFDEC_INFO ("reserved bits (2) aren't 0");
+  use_network = swfdec_bits_getbit (&s->b);
+  /* FIXME: do something useful with this data */
+  if (swfdec_bits_getbits (&s->b, 24))
+    SWFDEC_INFO ("reserved bits (3) aren't 0");
+
+  return SWFDEC_STATUS_OK;
+}
+
 /* may appear inside DefineSprite */
 #define SPRITE 1
 struct tag_func_struct
@@ -789,7 +807,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
-  [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", NULL, 0},
+  [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, 0},
   [SWFDEC_TAG_DEFINESHAPE4] = {"DefineShape4", NULL, 0},
   [SWFDEC_TAG_DEFINEMORPHSHAPE2] = {"DefineMorphShape2", NULL, 0},
 };

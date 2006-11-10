@@ -222,8 +222,8 @@ swfdec_movie_update (SwfdecMovie *movie)
  * @movie: a #SwfdecMovie
  * @content: #SwfdecContent to set for this movie or NULL to unset
  *
- * Sets new contents for @movie. Note that name and displayed object must be
- * identical to the previous contents.
+ * Sets new contents for @movie. Note that name and graphic of @content must 
+ * be identical to the current content of @movie.
  **/
 void
 swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
@@ -247,8 +247,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
       g_return_if_fail (movie->content->name == NULL);
     }
   }
-  if (content && content->name)
-    g_print ("setting name \"%s\"\n", content->name);
   old_content = movie->content;
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->content_changed)
@@ -259,24 +257,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
 
   swfdec_movie_invalidate (movie);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
-}
-
-/**
- * swfdec_movie_execute:
- * @movie: a #SwfdecMovie
- * @condition: the event that should happen
- *
- * Executes all scripts associated with the given event.
- **/
-void
-swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
-{
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (condition != 0);
-
-  if (movie->content->events == NULL)
-    return;
-  swfdec_event_list_execute (movie->content->events, movie, condition, 0);
 }
 
 SwfdecMovie *
@@ -298,28 +278,39 @@ swfdec_movie_find (SwfdecMovie *movie, guint depth)
   return NULL;
 }
 
-/**
- * swfdec_movie_remove:
- * @movie: #SwfdecMovie to remove
- *
- * Removes this movie from its parent. After this it will no longer be present.
- **/
-void
-swfdec_movie_remove (SwfdecMovie *movie)
+typedef void (* SwfdecMovieRemoveFunc) (SwfdecMovie *, gpointer);
+
+static void
+swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
 {
-  SwfdecMovieClass *klass;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-
   /* remove all children */
   while (movie->list) {
-    swfdec_movie_remove (movie->list->data);
+    (*(SwfdecMovieRemoveFunc) child_remove) (movie->list->data, child_remove);
   }
-  swfdec_movie_execute (movie, SWFDEC_EVENT_UNLOAD);
-  swfdec_movie_set_content (movie, NULL);
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab == movie)
+    SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab = NULL;
+  if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag == movie)
+    SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
+  if (movie->parent)
+    movie->parent->list = g_list_remove (movie->parent->list, movie);
+}
+
+/**
+ * swfdec_movie_destroy:
+ * @movie: #SwfdecMovie to destroy
+ *
+ * Removes this movie from its parent. After this it will no longer be present,
+ * neither visually nor via ActionScript. This function will not cause an 
+ * unload event. Compare with swfdec_movie_destroy ().
+ **/
+void
+swfdec_movie_destroy (SwfdecMovie *movie)
+{
+  swfdec_movie_do_remove (movie, swfdec_movie_destroy);
+  swfdec_movie_set_content (movie, NULL);
   if (movie->parent) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
     if (klass->set_parent)
       klass->set_parent (movie, NULL);
     if (klass->iterate_start || klass->iterate_end) {
@@ -328,11 +319,65 @@ swfdec_movie_remove (SwfdecMovie *movie)
     }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   }
-  if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab == movie)
-    SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab = NULL;
-  if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag == movie)
-    SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag = NULL;
   g_object_unref (movie);
+}
+
+/**
+ * swfdec_movie_remove:
+ * @movie: #SwfdecMovie to remove
+ *
+ * Removes this movie from its parent. In contrast to swfdec_movie_destroy (),
+ * it will definitely cause a removal from the display list, but depending on
+ * movie, it might still be possible to reference it from Actionscript.
+ **/
+void
+swfdec_movie_remove (SwfdecMovie *movie)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  swfdec_movie_do_remove (movie, swfdec_movie_remove);
+  if (!swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD))
+    swfdec_movie_destroy (movie);
+}
+
+static void
+swfdec_movie_execute_script (SwfdecMovie *movie, gpointer data)
+{
+  guint condition = GPOINTER_TO_UINT (data);
+
+  g_assert (movie->content->events);
+  swfdec_event_list_execute (movie->content->events, movie, condition, 0);
+  /* FIXME: handle this case smarter */
+  if (condition == SWFDEC_EVENT_UNLOAD)
+    swfdec_movie_destroy (movie);
+}
+
+/**
+ * swfdec_movie_queue_script:
+ * @movie: a #SwfdecMovie
+ * @condition: the event that should happen
+ *
+ * Queues execution of all scripts associated with the given event.
+ *
+ * Returns: TRUE if there were any such events
+ **/
+gboolean
+swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
+{
+  SwfdecPlayer *player;
+  
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
+  g_return_val_if_fail (condition != 0, FALSE);
+
+  if (movie->content->events == NULL)
+    return FALSE;
+  if (!swfdec_event_list_has_conditions (movie->content->events, condition, 0))
+    return FALSE;
+
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  swfdec_player_add_action (player, movie, swfdec_movie_execute_script, 
+      GUINT_TO_POINTER (condition));
+  return TRUE;
 }
 
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
@@ -604,7 +649,7 @@ swfdec_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
     klass->set_parent (movie, parent);
   SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
       movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
-  swfdec_movie_execute (movie, SWFDEC_EVENT_LOAD);
+  swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
 }
 
 /**

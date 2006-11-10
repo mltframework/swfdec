@@ -139,6 +139,7 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 guint			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
+void		swfdec_movie_destroy		(SwfdecMovie *		movie);
 void		swfdec_movie_set_content	(SwfdecMovie *		movie,
 						 const SwfdecContent *	content);
 void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
@@ -166,8 +167,8 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 gboolean		fill);
 void		swfdec_movie_goto		(SwfdecMovie *		movie,
 						 guint			frame);
-void		swfdec_movie_execute		(SwfdecMovie *		movie,
-						 SwfdecEventType	condition);
+gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
+  						 SwfdecEventType	condition);
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);
 

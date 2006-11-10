@@ -61,6 +61,13 @@ swfdec_sprite_movie_remove_child (SwfdecMovie *movie, guint depth)
 }
 
 static void
+swfdec_sprite_movie_run_script (SwfdecMovie *movie, gpointer data)
+{
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  swfdec_js_execute_script (player, movie, data, NULL);
+}
+
+static void
 swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAction *action,
     gboolean skip_scripts, GList **movie_list)
 {
@@ -73,7 +80,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
     case SWFDEC_SPRITE_ACTION_SCRIPT:
       SWFDEC_LOG ("SCRIPT action");
       if (!skip_scripts)
-	swfdec_js_execute_script (player, mov, action->data, NULL);
+	swfdec_player_add_action (player, mov, swfdec_sprite_movie_run_script, action->data);
       break;
     case SWFDEC_SPRITE_ACTION_ADD:
       content = action->data;
@@ -118,7 +125,7 @@ swfdec_sprite_movie_do_goto_frame (SwfdecSpriteMovie *movie, unsigned int goto_f
   guint i, j, start;
 
   if (do_enter_frame)
-    swfdec_movie_execute (mov, SWFDEC_EVENT_ENTER);
+    swfdec_movie_queue_script (mov, SWFDEC_EVENT_ENTER);
 
   if (goto_frame == movie->current_frame)
     return;

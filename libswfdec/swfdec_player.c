@@ -174,7 +174,7 @@ swfdec_player_dispose (GObject *object)
 
   swfdec_player_stop_all_sounds (player);
 
-  g_list_foreach (player->roots, (GFunc) swfdec_movie_remove, NULL);
+  g_list_foreach (player->roots, (GFunc) swfdec_movie_destroy, NULL);
   g_list_free (player->roots);
 
   swfdec_js_finish_player (player);

@@ -24,6 +24,7 @@
 #include "swfdec_button_movie.h"
 #include "swfdec_audio_event.h"
 #include "swfdec_debug.h"
+#include "swfdec_event.h"
 #include "swfdec_root_movie.h"
 
 G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_MOVIE)

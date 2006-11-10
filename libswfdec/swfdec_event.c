@@ -118,3 +118,20 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecMovie *movie,
   }
 }
 
+gboolean
+swfdec_event_list_has_conditions (SwfdecEventList *list, 
+    unsigned int conditions, guint8 key)
+{
+  unsigned int i;
+
+  g_return_val_if_fail (list != NULL, FALSE);
+
+  for (i = 0; i < list->events->len; i++) {
+    SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
+    if ((event->conditions & conditions) &&
+	event->key == key)
+      return TRUE;
+  }
+  return FALSE;
+}
+

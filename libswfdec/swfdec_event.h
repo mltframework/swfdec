@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
+enum _SwfdecEventType {
   SWFDEC_EVENT_LOAD		= (1 << 0),
   SWFDEC_EVENT_ENTER		= (1 << 1),
   SWFDEC_EVENT_UNLOAD		= (1 << 2),
@@ -46,7 +46,7 @@ typedef enum {
   SWFDEC_EVENT_DRAG_OUT		= (1 << 16),
   SWFDEC_EVENT_KEY_PRESS	= (1 << 17),
   SWFDEC_EVENT_CONSTRUCT	= (1 << 18)
-} SwfdecEventType;
+};
 
 SwfdecEventList *	swfdec_event_list_new		(SwfdecPlayer *	      player);
 SwfdecEventList *	swfdec_event_list_copy		(SwfdecEventList *    list);
@@ -61,6 +61,10 @@ void			swfdec_event_list_execute	(SwfdecEventList *    list,
 							 SwfdecMovie *	      movie,
 							 unsigned int	      condition,
 							 guint8		      key);
+gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,
+							 unsigned int	      conditions,
+							 guint8		      key);
+							 
 
 G_END_DECLS
 

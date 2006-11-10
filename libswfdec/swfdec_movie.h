@@ -22,7 +22,6 @@
 
 #include <glib-object.h>
 #include <libswfdec/color.h>
-#include <libswfdec/swfdec_event.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/js/jspubtd.h>

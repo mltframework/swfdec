@@ -24,7 +24,6 @@
 
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/color.h>
-#include <libswfdec/swfdec_event.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecButton SwfdecButton;

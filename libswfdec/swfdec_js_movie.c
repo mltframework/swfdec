@@ -207,7 +207,7 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 /* FIXME: replace with eval */
 static SwfdecMovie *
-get_target (SwfdecMovie *movie, const char *target, int version)
+get_target (SwfdecMovie *movie, const char *target, JSBool case_sensitive)
 {
   char *tmp;
   guint len;
@@ -220,7 +220,7 @@ get_target (SwfdecMovie *movie, const char *target, int version)
   if (g_str_has_prefix (target, "../")) {
     if (movie->parent == NULL)
       return NULL;
-    return get_target (movie->parent, target + 3, version);
+    return get_target (movie->parent, target + 3, case_sensitive);
   }
   tmp = strchr (target, '/');
   if (tmp)
@@ -231,12 +231,12 @@ get_target (SwfdecMovie *movie, const char *target, int version)
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
     if (cur->content->name) {
-      if ((version >= 7 && strncmp (cur->content->name, target, len) == 0) || 
-	  (version < 7 && g_ascii_strncasecmp (cur->content->name, target, len) == 0)) {
+      if ((case_sensitive && strncmp (cur->content->name, target, len) == 0) || 
+	  (!case_sensitive && g_ascii_strncasecmp (cur->content->name, target, len) == 0)) {
 	if (target[len] == '\0')
 	  return cur;
 	else 
-	  return get_target (cur, target + len + 1, version);
+	  return get_target (cur, target + len + 1, case_sensitive);
       }
     }
   }
@@ -254,10 +254,8 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if (JSVAL_IS_OBJECT (argv[0])) {
     movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
   } else if (JSVAL_IS_STRING (argv[0])) {
-    SwfdecPlayer *player = JS_GetContextPrivate (cx);
     char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
-    movie = JS_GetPrivate(cx, obj);
-    movie = get_target (movie, str, player->jsx_version);
+    movie = get_target (movie, str, JS_GetContextCaseSensitive (cx));
     if (movie == NULL) {
       SWFDEC_INFO ("no target name \"%s\"", str);
       return JS_FALSE;
@@ -286,10 +284,9 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if (JSVAL_IS_OBJECT (argv[0])) {
     movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
   } else if (JSVAL_IS_STRING (argv[0])) {
-    SwfdecPlayer *player = JS_GetContextPrivate (cx);
     char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
     movie = JS_GetPrivate(cx, obj);
-    movie = get_target (movie, str, player->jsx_version);
+    movie = get_target (movie, str, JS_GetContextCaseSensitive (cx));
     if (movie == NULL) {
       SWFDEC_INFO ("no target name \"%s\"", str);
       return JS_FALSE;

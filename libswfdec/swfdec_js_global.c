@@ -26,20 +26,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 
-char *
-swfdec_js_collate (JSContext *cx, char *s)
-{
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
-  guint i;
-
-  if (player->jsx_version >= 7)
-    return s;
-  for (i = 0; s[i]; i++) {
-    s[i] = g_ascii_tolower (s[i]);
-  }
-  return s;
-}
-
 JSBool
 swfdec_js_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -56,8 +42,6 @@ swfdec_js_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 	slash = swfdec_js_slash_to_dot (bytes);
 	bytes = slash;
       }
-      /* FIXME: hope this doesn't cause problems, otherwise we need to make a copy */
-      swfdec_js_collate (cx, (char *) bytes);
       /* FIXME: better filename/lineno information */
       ret = JS_EvaluateScript (cx, obj, bytes, strlen (bytes), NULL, 0, rval);
       if (bytes == slash)

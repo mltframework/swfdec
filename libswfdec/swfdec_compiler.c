@@ -381,22 +381,6 @@ flash_swap (CompileState *state, guint n)
 }
 
 static void
-compile_collate (CompileState *state, guint stack)
-{
-  if (state->version >= 7)
-    return;
-
-  if (stack > 1)
-    flash_swap (state, stack);
-  push_prop (state, "toLowerCase");
-  PUSH_OBJ (state);
-  call (state, 0);
-  
-  if (stack > 1)
-    flash_swap (state, stack);
-}
-
-static void
 call_void_function (CompileState *state, const char *name)
 {
   push_prop (state, name);
@@ -432,7 +416,6 @@ compile_set_variable (CompileState *state, guint action, guint len)
   /* FIXME: handle paths */
   push_target (state);
   flash_swap (state, 3);
-  compile_collate (state, 1);
   SWAP (state);
   ONELINER (state, JSOP_SETELEM);
   POP (state);

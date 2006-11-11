@@ -146,8 +146,7 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
     JSScript *script, jsval *rval)
 {
   jsval returnval = JSVAL_VOID;
-  JSBool ret;
-  int old_version;
+  JSBool ret, old_case;
 
   g_return_val_if_fail (s != NULL, FALSE);
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
@@ -165,16 +164,18 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
       return FALSE;
   }
   /* setup execution state */
-  old_version = s->jsx_version;
+  old_case = JS_GetContextCaseSensitive (s->jscx);
   if (SWFDEC_IS_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder))
-    s->jsx_version = SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version;
+    ret = SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version >= 7 ? 
+      JS_TRUE : JS_FALSE;
   else
-    s->jsx_version = 8;
+    ret = TRUE;
+  JS_SetContextCaseSensitive (s->jscx, ret);
 
   ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, rval);
   
   /* restore execution state */
-  s->jsx_version = old_version;
+  JS_SetContextCaseSensitive (s->jscx, old_case);
   if (ret && returnval != JSVAL_VOID) {
     JSString * str = JS_ValueToString (s->jscx, returnval);
     if (str)

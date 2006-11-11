@@ -255,6 +255,7 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
   } else if (JSVAL_IS_STRING (argv[0])) {
     char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
+    movie = JS_GetPrivate(cx, obj);
     movie = get_target (movie, str, JS_GetContextCaseSensitive (cx));
     if (movie == NULL) {
       SWFDEC_INFO ("no target name \"%s\"", str);

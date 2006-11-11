@@ -1775,7 +1775,9 @@ js_Interpret(JSContext *cx, jsval *result)
             atom = NULL;                                                      \
         } else {                                                              \
             SAVE_SP(fp);                                                      \
-            atom = js_ValueToStringAtom(cx, (jsval)id);                       \
+	    if (cx->caseSensitive)					      \
+              atom = js_ValueToStringAtom(cx, (jsval)id);                     \
+              atom = js_ValueToStringAtom(cx, (jsval)id);                     \
             if (!atom) {                                                      \
                 ok = JS_FALSE;                                                \
                 goto out;                                                     \

@@ -115,6 +115,9 @@ JS_HashTableDestroy(JSHashTable *ht);
 /* Low level access methods */
 extern JS_PUBLIC_API(JSHashEntry **)
 JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key);
+extern JS_PUBLIC_API(JSHashEntry **)
+JS_HashTableRawLookupWithCompare(JSHashTable *ht, JSHashNumber keyHash, const void *key,
+    JSHashComparator key_compare);
 
 extern JS_PUBLIC_API(JSHashEntry *)
 JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep, JSHashNumber keyHash,

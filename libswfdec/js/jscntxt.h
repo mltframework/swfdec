@@ -316,6 +316,7 @@ struct JSContext {
     JSVersion           version;
     jsbytecode          jsop_eq;
     jsbytecode          jsop_ne;
+    JSBool		caseSensitive;
 
     /* Data shared by threads in an address space. */
     JSRuntime           *runtime;

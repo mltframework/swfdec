@@ -948,6 +948,18 @@ JS_SetContextPrivate(JSContext *cx, void *data)
     cx->data = data;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_GetContextCaseSensitive (JSContext *cx)
+{
+    return cx->caseSensitive;
+}
+
+JS_PUBLIC_API(void)
+JS_SetContextCaseSensitive (JSContext *cx, JSBool caseSensitive)
+{
+    cx->caseSensitive = caseSensitive;
+}
+
 JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx)
 {

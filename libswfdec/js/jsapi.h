@@ -403,6 +403,12 @@ JS_GetContextPrivate(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext *cx, void *data);
 
+extern JS_PUBLIC_API(JSBool)
+JS_GetContextCaseSensitive (JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+JS_SetContextCaseSensitive (JSContext *cx, JSBool caseSensitive);
+
 extern JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx);
 

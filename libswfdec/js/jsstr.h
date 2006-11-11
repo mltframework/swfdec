@@ -367,6 +367,8 @@ js_HashString(JSString *str);
  */
 extern intN
 js_CompareStrings(JSString *str1, JSString *str2);
+extern intN
+js_CompareStringsNoCase(JSString *str1, JSString *str2);
 
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.

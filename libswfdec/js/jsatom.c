@@ -187,6 +187,17 @@ js_compare_atom_keys(const void *k1, const void *k2)
     return v1 == v2;
 }
 
+intN
+js_compare_atom_keys_no_case(const void *k1, const void *k2)
+{
+    jsval v1, v2;
+
+    v1 = (jsval)k1, v2 = (jsval)k2;
+    if (JSVAL_IS_STRING(v1) && JSVAL_IS_STRING(v2))
+        return !js_CompareStringsNoCase(JSVAL_TO_STRING(v1), JSVAL_TO_STRING(v2));
+    return js_compare_atom_keys (k1, k2);
+}
+
 JS_STATIC_DLL_CALLBACK(int)
 js_compare_stub(const void *v1, const void *v2)
 {
@@ -595,8 +606,9 @@ out:
     return atom;
 }
 
-JSAtom *
-js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
+JS_STATIC_DLL_CALLBACK(JSAtom*)
+js_AtomizeStringWithCompare(JSContext *cx, JSString *str, uintN flags, 
+    JSHashComparator compare)
 {
     JSHashNumber keyHash;
     jsval key;
@@ -610,7 +622,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     state = &cx->runtime->atomState;
     JS_LOCK(&state->lock, cx);
     table = state->table;
-    hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
+    hep = JS_HashTableRawLookupWithCompare(table, keyHash, (void *)key, compare);
     if ((he = *hep) == NULL) {
 #ifdef JS_THREADSAFE
         uint32 gen = state->tablegen;
@@ -656,6 +668,15 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
+}
+
+JSAtom *
+js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
+{
+  if (cx->caseSensitive)
+    return js_AtomizeStringWithCompare (cx, str, flags, js_compare_atom_keys);
+  else
+    return js_AtomizeStringWithCompare (cx, str, flags, js_compare_atom_keys_no_case);
 }
 
 JS_FRIEND_API(JSAtom *)

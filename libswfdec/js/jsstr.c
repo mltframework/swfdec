@@ -2692,6 +2692,7 @@ js_ValueToSource(JSContext *cx, jsval v)
     return js_ValueToString(cx, v);
 }
 
+/* NB: must be case insensitive */
 JSHashNumber
 js_HashString(JSString *str)
 {
@@ -2701,7 +2702,7 @@ js_HashString(JSString *str)
 
     h = 0;
     for (s = JSSTRING_CHARS(str), n = JSSTRING_LENGTH(str); n; s++, n--)
-        h = (h >> (JS_HASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = (h >> (JS_HASH_BITS - 4)) ^ (h << 4) ^ (*s | ('a' - 'A'));
     return h;
 }
 
@@ -2717,6 +2718,28 @@ js_CompareStrings(JSString *str1, JSString *str2)
     n = JS_MIN(l1, l2);
     for (i = 0; i < n; i++) {
         cmp = s1[i] - s2[i];
+        if (cmp != 0)
+            return cmp;
+    }
+    return (intN)(l1 - l2);
+}
+
+intN
+js_CompareStringsNoCase(JSString *str1, JSString *str2)
+{
+    size_t l1, l2, n, i;
+    const jschar *s1, *s2;
+    intN cmp;
+
+    l1 = JSSTRING_LENGTH(str1), l2 = JSSTRING_LENGTH(str2);
+    s1 = JSSTRING_CHARS(str1),  s2 = JSSTRING_CHARS(str2);
+    n = JS_MIN(l1, l2);
+    for (i = 0; i < n; i++) {
+        cmp = s1[i] - s2[i];
+	if (s1[i] >= 'A' && s1[i] <= 'Z')
+	  cmp += 'a' - 'A';
+	if (s2[i] >= 'A' && s2[i] <= 'Z')
+	  cmp -= 'a' - 'A';
         if (cmp != 0)
             return cmp;
     }

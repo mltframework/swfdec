@@ -109,6 +109,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->version = JSVERSION_DEFAULT;
     cx->jsop_eq = JSOP_EQ;
     cx->jsop_ne = JSOP_NE;
+    cx->caseSensitive = JS_TRUE;
     JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
     JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 

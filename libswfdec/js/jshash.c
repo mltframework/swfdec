@@ -172,6 +172,13 @@ JS_HashTableDestroy(JSHashTable *ht)
 JS_PUBLIC_API(JSHashEntry **)
 JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
 {
+  return JS_HashTableRawLookupWithCompare (ht, keyHash, key, ht->keyCompare);
+}
+
+JS_PUBLIC_API(JSHashEntry **)
+JS_HashTableRawLookupWithCompare(JSHashTable *ht, JSHashNumber keyHash, const void *key,
+    JSHashComparator key_compare)
+{
     JSHashEntry *he, **hep, **hep0;
     JSHashNumber h;
 
@@ -182,7 +189,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
     h >>= ht->shift;
     hep = hep0 = &ht->buckets[h];
     while ((he = *hep) != NULL) {
-        if (he->keyHash == keyHash && (*ht->keyCompare)(key, he->key)) {
+        if (he->keyHash == keyHash && (*key_compare)(key, he->key)) {
             /* Move to front of chain if not already there */
             if (hep != hep0) {
                 *hep = he->next;

@@ -521,6 +521,12 @@ compile_push (CompileState *state, guint action, guint len)
 	break;
       case 4: /* register */
       case 5: /* boolean */
+	type = swfdec_bits_get_u8 (bits);
+	if (type)
+	  ONELINER (state, JSOP_TRUE);
+	else
+	  ONELINER (state, JSOP_FALSE);
+	break;
       default:
 	compile_state_error (state, "Push: type %u not implemented", type);
 	swfdec_bits_getbits (bits, 8 * (end - bits->ptr));

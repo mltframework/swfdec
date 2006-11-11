@@ -273,7 +273,7 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   if (movie->jsobj == NULL &&
       !swfdec_js_add_movie (movie))
     return JS_FALSE;
-  return movieclip_props[id].getter (cx, movie->jsobj, JSVAL_VOID /* FIXME */, rval);
+  return movieclip_props[id].getter (cx, movie->jsobj, INT_TO_JSVAL (id) /* FIXME */, rval);
 }
 
 static JSBool
@@ -305,7 +305,7 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       !swfdec_js_add_movie (movie))
     return JS_FALSE;
   *rval = argv[2];
-  return movieclip_props[id].setter (cx, movie->jsobj, JSVAL_VOID /* FIXME */, rval);
+  return movieclip_props[id].setter (cx, movie->jsobj, INT_TO_JSVAL (id) /* FIXME */, rval);
 }
 
 static JSBool
@@ -686,7 +686,9 @@ enum {
 static JSBool
 not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  g_assert_not_reached ();
+  const char *str = swfdec_js_to_string (cx, id);
+  SWFDEC_ERROR ("reading and writing property %s is not implemented", str);
+  return JS_TRUE;
 }
 
 /* NB: order needs to be kept for GetProperty/SetProperty actions */

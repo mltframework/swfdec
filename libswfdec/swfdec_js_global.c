@@ -78,7 +78,10 @@ swfdec_js_random (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   if (!JS_ValueToECMAInt32 (cx, argv[0], &max))
     return JS_FALSE;
   
-  result = g_random_int_range (0, max);
+  if (max <= 0)
+    result = 0;
+  else
+    result = g_random_int_range (0, max);
 
   return JS_NewNumberValue(cx, result, rval);
 }

@@ -81,6 +81,7 @@ swfdec_slow_loader_tick (gpointer data)
   if (amount > 0) {
     total = swfdec_buffer_queue_get_offset (slow->loader->queue);
     total += amount;
+    total *= slow->tick_time;
     total += slow->duration - 1; /* rounding */
     amount = MIN (amount, total / slow->duration);
     buffer = swfdec_buffer_queue_pull (slow->loader->queue, amount);
@@ -113,9 +114,10 @@ swfdec_slow_loader_new (SwfdecLoader *loader, guint duration)
   g_return_val_if_fail (duration > 0, NULL);
 
   ret = g_object_new (SWFDEC_TYPE_SLOW_LOADER, NULL);
-  ret->duration = duration;
+  ret->tick_time = 100;
+  ret->duration = duration * 1000;
   ret->loader = loader;
-  ret->timeout_id = g_timeout_add (1000, swfdec_slow_loader_tick, ret);
+  ret->timeout_id = g_timeout_add (ret->tick_time, swfdec_slow_loader_tick, ret);
 
   return SWFDEC_LOADER (ret);
 }

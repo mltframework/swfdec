@@ -40,7 +40,8 @@ struct _SwfdecSlowLoader
   SwfdecLoader		parent;
 
   SwfdecLoader *	loader;		/* what we load */
-  guint			duration;	/* total duration for loading */
+  guint			tick_time;	/* how many msecs each tick takes */
+  guint			duration;	/* total duration in msecs for loading */
   guint			timeout_id;	/* id from g_timeout_add */
 };
 

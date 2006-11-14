@@ -860,8 +860,11 @@ swfdec_js_movie_add_property (SwfdecMovie *movie)
     jsobj = movie->parent->jsobj;
     if (jsobj == NULL)
       return;
+    SWFDEC_LOG ("setting %s as property for %s", movie->name, 
+	movie->parent->name);
   } else {
     jsobj = SWFDEC_ROOT_MOVIE (movie->root)->player->jsobj;
+    SWFDEC_LOG ("setting %s as property for _global", movie->name);
   }
   JS_SetProperty (SWFDEC_ROOT_MOVIE (movie->root)->player->jscx, 
       jsobj, movie->name, &val);
@@ -883,6 +886,7 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
     jsobj = SWFDEC_ROOT_MOVIE (movie->root)->player->jsobj;
   }
 
+  SWFDEC_LOG ("removing %s as property", movie->name);
   JS_DeleteProperty (SWFDEC_ROOT_MOVIE (movie->root)->player->jscx, 
       jsobj, movie->name);
 }
@@ -915,7 +919,7 @@ swfdec_js_add_movie (SwfdecMovie *movie)
   /* add all children */
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *child = walk->data;
-    if (child->content->name)
+    if (child->has_name)
       swfdec_js_movie_add_property (child);
   }
   return TRUE;

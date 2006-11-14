@@ -641,12 +641,14 @@ swfdec_movie_set_name (SwfdecMovie *movie)
   if (movie->content->name) {
     movie->name = g_strdup (movie->content->name);
     swfdec_js_movie_add_property (movie);
+    movie->has_name = TRUE;
   } else {
     /* FIXME: figure out if it's relative to root or player or something else
      * entirely 
      */
     SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie->root);
     movie->name = g_strdup_printf ("instance%u", ++root->unnamed_count);
+    movie->has_name = FALSE;
   }
   SWFDEC_LOG ("created movie %s", movie->name);
 }

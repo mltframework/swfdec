@@ -67,6 +67,7 @@ struct _SwfdecMovie {
   GObject		object;
 
   char *		name;			/* name used in to_string */
+  gboolean		has_name;		/* TRUE if name wasn't given automagically */
   JSObject *		jsobj;			/* our object in javascript */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   const SwfdecContent *	content;           	/* the content we are displaying */

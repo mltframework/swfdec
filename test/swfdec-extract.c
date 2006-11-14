@@ -32,7 +32,6 @@
 #  include <cairo-pdf.h>
 #endif
 #include <libswfdec/swfdec.h>
-#include <libswfdec/color.h>
 #include <libswfdec/swfdec_audio_stream.h>
 #include <libswfdec/swfdec_button.h>
 #include <libswfdec/swfdec_graphic.h>

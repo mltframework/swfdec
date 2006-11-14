@@ -1,10 +1,30 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		      2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef __SWFDEC_BITS_H__
 #define __SWFDEC_BITS_H__
 
 #include <cairo.h>
-#include "color.h"
-#include "swfdec_buffer.h"
+#include <libswfdec/swfdec_color.h>
+#include <libswfdec/swfdec_buffer.h>
 
 #define SWFDEC_COLOR_SCALE_FACTOR		(256.0)
 #define SWFDEC_FIXED_SCALE_FACTOR		(65536.0)

@@ -497,6 +497,28 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   return root;
 }
 
+void
+swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
+{
+  GList *walk;
+
+  for (walk = player->roots; walk; walk = walk->next) {
+    SwfdecMovie *movie = walk->data;
+
+    if (movie->content->depth < depth)
+      continue;
+
+    if (movie->content->depth == depth) {
+      SWFDEC_DEBUG ("remove existing movie _level%u", depth);
+      swfdec_movie_remove (movie);
+      player->roots = g_list_delete_link (player->roots, walk);
+      return;
+    }
+    break;
+  }
+  SWFDEC_LOG ("no movie to remove at level %u", depth);
+}
+
 /** PUBLIC API ***/
 
 /**

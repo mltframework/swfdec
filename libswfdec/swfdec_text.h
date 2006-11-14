@@ -23,7 +23,7 @@
 #define _SWFDEC_TEXT_H_
 
 #include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/color.h>
+#include <libswfdec/swfdec_color.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecText SwfdecText;
@@ -44,7 +44,7 @@ struct _SwfdecTextGlyph {
   int			glyph;
   SwfdecFont *		font;
   int			height;
-  swf_color		color;
+  SwfdecColor		color;
 };
 
 struct _SwfdecText {

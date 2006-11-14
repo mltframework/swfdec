@@ -23,7 +23,7 @@
 #define _SWFDEC_SHAPE_H_
 
 #include <libswfdec/swfdec_types.h>
-#include <libswfdec/color.h>
+#include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_bits.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_pattern.h>

@@ -22,7 +22,7 @@
 #ifndef _SWFDEC_SPRITE_H_
 #define _SWFDEC_SPRITE_H_
 
-#include <libswfdec/color.h>
+#include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_event.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_types.h>
@@ -63,7 +63,7 @@ struct _SwfdecSpriteFrame
   GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
 
   /* visuals */
-  swf_color bg_color;
+  SwfdecColor bg_color;
   GArray *actions;			/* SwfdecSpriteAction in execution order */
 };
 

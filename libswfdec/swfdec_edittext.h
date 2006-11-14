@@ -22,7 +22,7 @@
 
 #include <pango/pango.h>
 #include <libswfdec/swfdec_types.h>
-#include <libswfdec/color.h>
+#include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/js/jspubtd.h>
@@ -58,7 +58,7 @@ struct _SwfdecEditText
   unsigned int		indent;		/* first line indentation */
   int			spacing;	/* spacing between lines */
   /* visual info */
-  swf_color		color;		/* text color */
+  SwfdecColor		color;		/* text color */
   gboolean		selectable;
   gboolean		border;		/* draw a border around the text field */
   unsigned int		height;

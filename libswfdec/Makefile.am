@@ -16,7 +16,6 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
-	color.c \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
 	swfdec_audio_stream.c \
@@ -29,6 +28,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec.c \
 	swfdec_codec_adpcm.c \
 	$(CODECS) \
+	swfdec_color.c \
 	swfdec_compiler.c \
 	swfdec_debug.c \
 	swfdec_decoder.c \
@@ -81,7 +81,6 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec_player.h
 
 noinst_HEADERS = \
-	color.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_stream.h \
@@ -91,6 +90,7 @@ noinst_HEADERS = \
 	swfdec_cache.h \
 	swfdec_character.h \
 	swfdec_codec.h \
+	swfdec_color.h \
 	swfdec_compiler.h \
 	swfdec_debug.h \
 	swfdec_decoder.h \

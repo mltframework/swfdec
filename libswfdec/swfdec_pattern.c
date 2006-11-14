@@ -3,9 +3,9 @@
 #endif
 
 #include "swfdec_pattern.h"
-#include "color.h"
 #include "swfdec_bits.h"
 #include "swfdec_cache.h"
+#include "swfdec_color.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_image.h"
@@ -68,9 +68,9 @@ struct _SwfdecStrokePattern
   SwfdecPattern		pattern;
 
   guint			start_width;		/* width of line */
-  swf_color		start_color;		/* color to paint with */
+  SwfdecColor		start_color;		/* color to paint with */
   guint			end_width;		/* width of line */
-  swf_color		end_color;		/* color to paint with */
+  SwfdecColor		end_color;		/* color to paint with */
 };
 
 struct _SwfdecStrokePatternClass
@@ -84,7 +84,7 @@ static void
 swfdec_stroke_pattern_fill (SwfdecPattern *pattern, cairo_t *cr,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
-  swf_color color;
+  SwfdecColor color;
   SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
 
   color = swfdec_color_apply_morph (stroke->start_color, stroke->end_color, ratio);
@@ -127,8 +127,8 @@ struct _SwfdecColorPattern
 {
   SwfdecPattern		pattern;
 
-  swf_color		start_color;		/* color to paint with at the beginning */
-  swf_color		end_color;		/* color to paint with in the end */
+  SwfdecColor		start_color;		/* color to paint with at the beginning */
+  SwfdecColor		end_color;		/* color to paint with in the end */
 };
 
 struct _SwfdecColorPatternClass
@@ -143,7 +143,7 @@ swfdec_color_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   SwfdecColorPattern *pattern = SWFDEC_COLOR_PATTERN (pat);
-  swf_color color;
+  SwfdecColor color;
 
   color = swfdec_color_apply_morph (pattern->start_color, pattern->end_color, ratio);
   color = swfdec_color_apply_transform (color, trans);
@@ -197,7 +197,7 @@ swfdec_image_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
   cairo_surface_t *src_surface;
   cairo_pattern_t *pattern;
-  swf_color color;
+  SwfdecColor color;
   cairo_matrix_t mat;
   unsigned char *image_data = swfdec_handle_get_data(image->image->handle);
   
@@ -268,7 +268,7 @@ swfdec_gradient_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
 {
   unsigned int i;
   cairo_pattern_t *pattern;
-  swf_color color;
+  SwfdecColor color;
   double offset;
   SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pat);
 
@@ -550,7 +550,7 @@ swfdec_pattern_fill (SwfdecPattern *pattern, cairo_t *cr,
  * Returns: a new @SwfdecPattern to paint with
  */
 SwfdecPattern *	
-swfdec_pattern_new_color (swf_color color)
+swfdec_pattern_new_color (SwfdecColor color)
 {
   SwfdecPattern *pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
 
@@ -626,7 +626,7 @@ swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *dec)
 }
 
 SwfdecPattern *
-swfdec_pattern_new_stroke (guint width, swf_color color)
+swfdec_pattern_new_stroke (guint width, SwfdecColor color)
 {
   SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
 

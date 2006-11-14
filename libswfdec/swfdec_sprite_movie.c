@@ -218,13 +218,11 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_run_enter_frame (SwfdecMovie *movie, gpointer unused)
+swfdec_sprite_movie_queue_enter_frame (SwfdecMovie *movie, gpointer unused)
 {
   if (movie->will_be_removed)
     return;
-  if (movie->content->events)
-    swfdec_event_list_execute (movie->content->events, movie,
-	SWFDEC_EVENT_ENTER, 0);
+  swfdec_movie_queue_script (movie, SWFDEC_EVENT_ENTER);
 }
 
 static void
@@ -239,7 +237,7 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
     goto_frame = swfdec_sprite_get_next_frame (movie->sprite, mov->frame);
   }
   swfdec_player_add_action (SWFDEC_ROOT_MOVIE (mov->root)->player, 
-      mov, swfdec_sprite_movie_run_enter_frame, NULL);
+      mov, swfdec_sprite_movie_queue_enter_frame, NULL);
   swfdec_sprite_movie_goto (mov, goto_frame);
 }
 

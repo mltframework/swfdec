@@ -172,5 +172,6 @@ swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *movie, const char *str)
   } else {
     movie->paragraph = NULL;
   }
+  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 

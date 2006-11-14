@@ -815,6 +815,12 @@ compile_simple_call (CompileState *state, guint action, guint len)
   /* FIXME: shouldn't some functions here PUSH_OBJ instead of push_target? */
   push_target (state);
   switch (action) {
+    case 0x04:
+      name = "nextFrame";
+      break;
+    case 0x05:
+      name = "prevFrame";
+      break;
     case 0x06:
       name = "play";
       break;
@@ -953,8 +959,8 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
 /* must be sorted! */
 SwfdecActionSpec actions[] = {
   /* version 3 */
-  { 0x04, "NextFrame", NULL },
-  { 0x05, "PreviousFrame", NULL },
+  { 0x04, "NextFrame", compile_simple_call },
+  { 0x05, "PreviousFrame", compile_simple_call },
   { 0x06, "Play", compile_simple_call },
   { 0x07, "Stop", compile_simple_call },
   { 0x08, "ToggleQuality", NULL },

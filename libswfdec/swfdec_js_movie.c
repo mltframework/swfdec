@@ -167,6 +167,41 @@ mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 }
 
 static JSBool
+swfdec_js_nextFrame (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+  jsval frame;
+
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
+  
+  frame = INT_TO_JSVAL (movie->frame + 2); /* 1-indexed */
+  if (!mc_do_goto (cx, movie, frame))
+    return JS_FALSE;
+  movie->stopped = TRUE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_js_prevFrame (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+  jsval frame;
+
+  movie = JS_GetPrivate(cx, obj);
+  g_assert (movie);
+  
+  if (movie->frame == 0)
+    frame = INT_TO_JSVAL (movie->n_frames);
+  else
+    frame = INT_TO_JSVAL (movie->frame); /* 1-indexed */
+  if (!mc_do_goto (cx, movie, frame))
+    return JS_FALSE;
+  movie->stopped = TRUE;
+  return JS_TRUE;
+}
+
+static JSBool
 mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
@@ -424,7 +459,9 @@ static JSFunctionSpec movieclip_methods[] = {
   { "getURL",    	swfdec_js_getURL,		2, 0, 0 },
   { "gotoAndPlay",	mc_gotoAndPlay,			1, 0, 0 },
   { "gotoAndStop",	mc_gotoAndStop,			1, 0, 0 },
+  { "nextFrame",	swfdec_js_nextFrame,	      	0, 0, 0 },
   { "play",		mc_play,			0, 0, 0 },
+  { "prevFrame",	swfdec_js_prevFrame,	      	0, 0, 0 },
   { "stop",		mc_stop,			0, 0, 0 },
   { "hitTest",		mc_hitTest,			1, 0, 0 },
   { "setProperty",    	swfdec_js_setProperty,		3, 0, 0 },

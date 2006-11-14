@@ -559,6 +559,28 @@ compile_goto_frame (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_goto_frame2 (CompileState *state, guint action, guint len)
+{
+  int bias, play;
+  if (swfdec_bits_getbits (state->bits, 6)) {
+    SWFDEC_WARNING ("reserved bits in GotoFrame2 aren't 0");
+  }
+  bias = swfdec_bits_getbit (state->bits);
+  play = swfdec_bits_getbit (state->bits);
+  if (bias) {
+    SWFDEC_ERROR ("scene bias not implemented");
+  }
+  push_uint16 (state, 1);
+  push_target (state);
+  if (play)
+    push_prop (state, "gotoAndPlay");
+  else
+    push_prop (state, "gotoAndStop");
+  PUSH_OBJ (state);
+  FLASHCALL (state);
+}
+
+static void
 compile_wait_for_frame (CompileState *state, guint action, guint len)
 {
   guint8 command[3] = { JSOP_IFEQ, 0, 0 };
@@ -698,6 +720,16 @@ compile_oneliner (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_call_function (CompileState *state, guint action, guint len)
+{
+  push_target (state);
+  SWAP (state);
+  ONELINER (state, JSOP_GETELEM);
+  ONELINER (state, JSOP_PUSHOBJ);
+  ONELINER (state, JSOP_FLASHCALL);
+}
+
+static void
 compile_call_method (CompileState *state, guint action, guint len)
 {
   ONELINER (state, JSOP_GETELEM);
@@ -789,6 +821,14 @@ compile_string_add (CompileState *state, guint action, guint len)
   push_string (state, "");
   ONELINER (state, JSOP_ADD);
   ONELINER (state, JSOP_ADD);
+}
+
+static void
+compile_to_integer (CompileState *state, guint action, guint len)
+{
+  /* There's no opcode so we use a bitwise operation that forces a conversion */
+  ONELINER (state, JSOP_ZERO);
+  ONELINER (state, JSOP_BITOR);
 }
 
 static void
@@ -979,7 +1019,7 @@ SwfdecActionSpec actions[] = {
   { 0x14, "StringLength", NULL },
   { 0x15, "StringExtract", NULL },
   { 0x17, "Pop", compile_oneliner },
-  { 0x18, "ToInteger", NULL },
+  { 0x18, "ToInteger", compile_to_integer },
   { 0x1c, "GetVariable", compile_get_variable },
   { 0x1d, "SetVariable", compile_set_variable },
   { 0x20, "SetTarget2", compile_set_target_2 },
@@ -1009,7 +1049,7 @@ SwfdecActionSpec actions[] = {
   { 0x3a, "Delete", NULL },
   { 0x3b, "Delete2", NULL },
   { 0x3c, "DefineLocal", NULL },
-  { 0x3d, "CallFunction", NULL },
+  { 0x3d, "CallFunction", compile_call_function },
   { 0x3e, "Return", NULL },
   { 0x3f, "Modulo", NULL },
   { 0x40, "NewObject", NULL },
@@ -1050,7 +1090,7 @@ SwfdecActionSpec actions[] = {
   { 0x69, "Extends", NULL },
 
   /* version 3 */
-  { 0x81, "GoToFrame", compile_goto_frame },
+  { 0x81, "GotoFrame", compile_goto_frame },
   { 0x83, "GetURL", compile_get_url },
   /* version 5 */
   { 0x87, "StoreRegister", NULL },
@@ -1075,7 +1115,7 @@ SwfdecActionSpec actions[] = {
   /* version 4 */
   { 0x9d, "If", compile_if },
   { 0x9e, "Call", NULL },
-  { 0x9f, "GotoFrame2", NULL }
+  { 0x9f, "GotoFrame2", compile_goto_frame2 }
 };
 
 int

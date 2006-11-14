@@ -51,6 +51,8 @@ movie_finalize (JSContext *cx, JSObject *obj)
     SWFDEC_LOG ("destroying JSObject %p for movie %p", obj, movie);
     movie->jsobj = NULL;
     g_object_unref (movie);
+  } else {
+    SWFDEC_LOG ("destroying JSObject %p", obj);
   }
 }
 
@@ -379,21 +381,56 @@ swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
+static GString *
+get_name (SwfdecMovie *movie)
+{
+  GString *s;
+
+  if (movie->parent) {
+    s = get_name (movie->parent);
+    g_string_append_c (s, '.');
+    g_string_append (s, movie->name);
+  } else {
+    s = g_string_new (movie->name);
+  }
+  return s;
+}
+
+static JSBool
+swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  GString *s;
+  JSString *string;
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  s = get_name (movie);
+  string = JS_NewStringCopyZ (cx, s->str);
+  g_string_free (s, TRUE);
+  if (string == NULL)
+    return JS_FALSE;
+  *rval = STRING_TO_JSVAL (string);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
-  { "eval",		swfdec_js_eval,		1, 0, 0 },
-  { "getBytesLoaded",	mc_getBytesLoaded,	0, 0, 0 },
-  { "getBytesTotal",	mc_getBytesTotal,	0, 0, 0 },
-  { "getProperty",    	swfdec_js_getProperty,	2, 0, 0 },
-  { "getURL",    	swfdec_js_getURL,	2, 0, 0 },
-  { "gotoAndPlay",	mc_gotoAndPlay,		1, 0, 0 },
-  { "gotoAndStop",	mc_gotoAndStop,		1, 0, 0 },
-  { "play",		mc_play,		0, 0, 0 },
-  { "stop",		mc_stop,		0, 0, 0 },
-  { "hitTest",		mc_hitTest,		1, 0, 0 },
-  { "setProperty",    	swfdec_js_setProperty,	3, 0, 0 },
-  { "startDrag",    	swfdec_js_startDrag,	0, 0, 0 },
-  { "stopDrag",    	swfdec_js_stopDrag,	0, 0, 0 },
+  { "eval",		swfdec_js_eval,			1, 0, 0 },
+  { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },
+  { "getBytesTotal",	mc_getBytesTotal,		0, 0, 0 },
+  { "getProperty",    	swfdec_js_getProperty,		2, 0, 0 },
+  { "getURL",    	swfdec_js_getURL,		2, 0, 0 },
+  { "gotoAndPlay",	mc_gotoAndPlay,			1, 0, 0 },
+  { "gotoAndStop",	mc_gotoAndStop,			1, 0, 0 },
+  { "play",		mc_play,			0, 0, 0 },
+  { "stop",		mc_stop,			0, 0, 0 },
+  { "hitTest",		mc_hitTest,			1, 0, 0 },
+  { "setProperty",    	swfdec_js_setProperty,		3, 0, 0 },
+  { "startDrag",    	swfdec_js_startDrag,		0, 0, 0 },
+  { "stopDrag",    	swfdec_js_stopDrag,		0, 0, 0 },
+  { "toString",	  	swfdec_js_movie_to_string,	0, 0, 0 },
   { NULL }
 };
 
@@ -812,29 +849,42 @@ void
 swfdec_js_movie_add_property (SwfdecMovie *movie)
 {
   jsval val;
+  JSObject *jsobj;
 
-  g_assert (movie->parent);
-  g_assert (movie->parent->jsobj);
   if (movie->jsobj == NULL) {
     if (!swfdec_js_add_movie (movie))
       return;
   }
   val = OBJECT_TO_JSVAL (movie->jsobj);
+  if (movie->parent) {
+    jsobj = movie->parent->jsobj;
+    if (jsobj == NULL)
+      return;
+  } else {
+    jsobj = SWFDEC_ROOT_MOVIE (movie->root)->player->jsobj;
+  }
   JS_SetProperty (SWFDEC_ROOT_MOVIE (movie->root)->player->jscx, 
-      movie->parent->jsobj, movie->content->name, &val);
+      jsobj, movie->name, &val);
 }
 
 void
 swfdec_js_movie_remove_property (SwfdecMovie *movie)
 {
-  g_assert (movie->parent);
-  g_assert (movie->jsobj);
+  JSObject *jsobj;
 
-  if (movie->parent->jsobj == NULL)
+  if (movie->jsobj == NULL)
     return;
 
+  if (movie->parent) {
+    jsobj = movie->parent->jsobj;
+    if (jsobj == NULL)
+      return;
+  } else {
+    jsobj = SWFDEC_ROOT_MOVIE (movie->root)->player->jsobj;
+  }
+
   JS_DeleteProperty (SWFDEC_ROOT_MOVIE (movie->root)->player->jscx, 
-      movie->parent->jsobj, movie->content->name);
+      jsobj, movie->name);
 }
 
 /**
@@ -851,7 +901,6 @@ swfdec_js_add_movie (SwfdecMovie *movie)
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (movie->jsobj == NULL, FALSE);
-  g_return_val_if_fail (!SWFDEC_IS_ROOT_MOVIE (movie), FALSE);
 
   cx = SWFDEC_ROOT_MOVIE (movie->root)->player->jscx;
 
@@ -868,15 +917,6 @@ swfdec_js_add_movie (SwfdecMovie *movie)
     SwfdecMovie *child = walk->data;
     if (child->content->name)
       swfdec_js_movie_add_property (child);
-  }
-  /* special case */
-  if (SWFDEC_IS_ROOT_MOVIE (movie->parent)) {
-    jsval val; 
-    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->parent)->player;
-    char *name = g_strdup_printf ("_level%u", movie->parent->content->depth);
-    val = OBJECT_TO_JSVAL (movie->jsobj);
-    JS_SetProperty (player->jscx, player->jsobj, name, &val);
-    g_free (name);
   }
   return TRUE;
 }

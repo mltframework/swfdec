@@ -32,6 +32,7 @@
 #include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
+#include "swfdec_sprite.h"
 
 /*** MOVIE ***/
 
@@ -235,8 +236,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
 
   if (content == NULL) {
     content = &default_content;
-    if (movie->content->name && movie->jsobj)
-      swfdec_js_movie_remove_property (movie);
   } else if (movie->content != &default_content) {
     g_return_if_fail (movie->content->depth == content->depth);
     g_return_if_fail (movie->content->graphic == content->graphic);
@@ -252,8 +251,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   if (klass->content_changed)
     klass->content_changed (movie, content);
   movie->content = content;
-  if (old_content == &default_content && content->name && movie->parent && movie->parent->jsobj)
-    swfdec_js_movie_add_property (movie);
 
   swfdec_movie_invalidate (movie);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
@@ -307,18 +304,20 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
 void
 swfdec_movie_destroy (SwfdecMovie *movie)
 {
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+
+  SWFDEC_LOG ("destroying movie %s", movie->name);
   swfdec_movie_do_remove (movie, swfdec_movie_destroy);
   swfdec_movie_set_content (movie, NULL);
   if (movie->parent) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
     if (klass->set_parent)
       klass->set_parent (movie, NULL);
-    if (klass->iterate_start || klass->iterate_end) {
-      SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-      player->movies = g_list_remove (player->movies, movie);
-    }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   }
+  if (movie->jsobj)
+    swfdec_js_movie_remove_property (movie);
+  player->movies = g_list_remove (player->movies, movie);
   g_object_unref (movie);
 }
 
@@ -335,12 +334,12 @@ swfdec_movie_remove (SwfdecMovie *movie)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
   swfdec_movie_do_remove (movie, swfdec_movie_remove);
   if (!swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD))
     swfdec_movie_destroy (movie);
 }
 
-#include "swfdec_sprite_movie.h"
 static void
 swfdec_movie_execute_script (SwfdecMovie *movie, gpointer data)
 {
@@ -348,9 +347,6 @@ swfdec_movie_execute_script (SwfdecMovie *movie, gpointer data)
 
   g_assert (movie->content->events);
   swfdec_event_list_execute (movie->content->events, movie, condition, 0);
-  /* FIXME: handle this case smarter */
-  if (condition == SWFDEC_EVENT_UNLOAD)
-    swfdec_movie_destroy (movie);
 }
 
 /**
@@ -614,43 +610,83 @@ swfdec_movie_dispose (GObject *object)
   g_assert (movie->list == NULL);
   g_assert (movie->content == &default_content);
 
+  SWFDEC_LOG ("disposing movie %s", movie->name);
+  g_free (movie->name);
+  if (movie->parent)
+    g_object_unref (movie->parent);
+
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
 
-static void
-swfdec_movie_class_init (SwfdecMovieClass * g_class)
+static gboolean
+swfdec_movie_iterate_end (SwfdecMovie *movie)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-
-  object_class->dispose = swfdec_movie_dispose;
+  return movie->parent == NULL || 
+	 g_list_find (movie->parent->list, movie) != NULL;
 }
 
 static void
-swfdec_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
+swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
+
+  object_class->dispose = swfdec_movie_dispose;
+
+  movie_class->iterate_end = swfdec_movie_iterate_end;
+}
+
+static void
+swfdec_movie_set_name (SwfdecMovie *movie)
+{
+  if (movie->content->name) {
+    movie->name = g_strdup (movie->content->name);
+    swfdec_js_movie_add_property (movie);
+  } else {
+    /* FIXME: figure out if it's relative to root or player or something else
+     * entirely 
+     */
+    SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie->root);
+    movie->name = g_strdup_printf ("instance%u", ++root->unnamed_count);
+  }
+  SWFDEC_LOG ("created movie %s", movie->name);
+}
+
+static void
+swfdec_movie_set_parent (SwfdecMovie *movie)
+{
+  SwfdecMovie *parent = movie->parent;
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
   SwfdecMovieClass *klass;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (movie->parent == NULL);
-  g_return_if_fail (SWFDEC_IS_MOVIE (parent));
 
-  movie->parent = parent;
-  movie->root = parent->root;
-  parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
+  if (parent) {
+    parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
+    SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
+	movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+  }
+  swfdec_movie_set_name (movie);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   /* NB: adding to the movies list happens before setting the parent.
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
    * new movies to be created (and added to this list)
    */
-  if (klass->iterate_start || klass->iterate_end) {
-    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-    player->movies = g_list_prepend (player->movies, movie);
-  }
+  player->movies = g_list_prepend (player->movies, movie);
   if (klass->set_parent)
     klass->set_parent (movie, parent);
-  SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
-      movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+}
+
+static void
+swfdec_movie_initialize (SwfdecMovie *movie, const SwfdecContent *content)
+{
+  const SwfdecContent *old;
+
+  old = movie->content;
+  movie->content = content;
+  swfdec_movie_set_parent (movie);
+  movie->content = old;
+  swfdec_movie_set_content (movie, content);
 }
 
 /**
@@ -668,7 +704,6 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
 {
   SwfdecGraphicClass *klass;
   SwfdecMovie *ret;
-  const SwfdecContent *old;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (parent), NULL);
   g_return_val_if_fail (SWFDEC_IS_GRAPHIC (content->graphic), NULL);
@@ -677,11 +712,28 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   klass = SWFDEC_GRAPHIC_GET_CLASS (content->graphic);
   g_return_val_if_fail (klass->create_movie != NULL, NULL);
   ret = klass->create_movie (content->graphic);
-  old = ret->content;
-  ret->content = content;
-  swfdec_movie_set_parent (ret, parent);
-  ret->content = old;
-  swfdec_movie_set_content (ret, content);
+  ret->parent = parent;
+  g_object_ref (parent);
+  ret->root = parent->root;
+  swfdec_movie_initialize (ret, content);
+  return ret;
+}
+
+SwfdecMovie *
+swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
+{
+  SwfdecMovie *ret;
+  SwfdecContent *content;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  content = swfdec_content_new (depth);
+  content->name = g_strdup_printf ("_level%u", depth);
+  ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
+  g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
+  SWFDEC_ROOT_MOVIE (ret)->player = player;
+  ret->root = ret;
+  swfdec_movie_initialize (ret, content);
 
   return ret;
 }

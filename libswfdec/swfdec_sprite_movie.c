@@ -243,8 +243,8 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
   swfdec_sprite_movie_goto (mov, goto_frame);
 }
 
-static void
-swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
+static gboolean
+swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecSpriteFrame *last;
@@ -253,6 +253,8 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
   SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
 
   current = &movie->sprite->frames[movie->current_frame];
+  if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov))
+    return FALSE;
   
   /* first start all event sounds */
   for (walk = current->sound; walk; walk = walk->next) {
@@ -266,7 +268,7 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
       swfdec_audio_remove (movie->sound_stream);
       g_assert (movie->sound_stream == NULL);
     }
-    return;
+    return TRUE;
   }
   SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
   if (movie->sound_frame + 1 != movie->current_frame)
@@ -279,7 +281,7 @@ swfdec_sprite_movie_iterate_audio (SwfdecMovie *mov)
   if (last->sound_head != current->sound_head)
     goto new_decoder;
   movie->sound_frame = movie->current_frame;
-  return;
+  return TRUE;
 
 new_decoder:
   if (movie->sound_stream)
@@ -290,6 +292,7 @@ new_decoder:
       movie->sprite, movie->current_frame);
   g_object_add_weak_pointer (G_OBJECT (movie->sound_stream), (gpointer *) &movie->sound_stream);
   movie->sound_frame = movie->current_frame;
+  return TRUE;
 }
 
 static void
@@ -302,7 +305,9 @@ swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
     /* set */
     mov->n_frames = movie->sprite->n_frames;
     swfdec_sprite_movie_do_goto_frame (mov, GUINT_TO_POINTER (0));
-    swfdec_sprite_movie_iterate_audio (mov);
+    if (!swfdec_sprite_movie_iterate_end (mov)) {
+      g_assert_not_reached ();
+    }
   } else {
     /* unset */
     swfdec_player_remove_all_actions (player, mov);
@@ -324,7 +329,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
   movie_class->set_parent = swfdec_sprite_movie_set_parent;
   movie_class->goto_frame = swfdec_sprite_movie_goto;
   movie_class->iterate_start = swfdec_sprite_movie_iterate;
-  movie_class->iterate_end = swfdec_sprite_movie_iterate_audio;
+  movie_class->iterate_end = swfdec_sprite_movie_iterate_end;
 }
 
 static void

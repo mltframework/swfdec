@@ -347,10 +347,15 @@ swfdec_player_do_iterate (SwfdecPlayer *player)
     swfdec_player_perform_actions (player);
     SWFDEC_INFO ("=== DONE UPDATING mouse post-iteration ===");
   }
-  for (walk = player->movies; walk; walk = walk->next) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
-    if (klass->iterate_end)
-      klass->iterate_end (walk->data);
+  /* this loop allows removal of walk->data */
+  walk = player->movies;
+  while (walk) {
+    SwfdecMovie *cur = walk->data;
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (cur);
+    walk = walk->next;
+    g_assert (klass->iterate_end);
+    if (!klass->iterate_end (cur))
+      swfdec_movie_destroy (cur);
   }
   /* iterate audio after video so audio clips that get added during mouse
    * events have the same behaviour than those added while iterating */
@@ -477,12 +482,11 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   SwfdecRootMovie *root;
   GList *found;
 
-  movie = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
+  movie = swfdec_movie_new_for_player (player, depth);
   root = SWFDEC_ROOT_MOVIE (movie);
   root->loader = loader;
   root->loader->target = root;
   root->player = player;
-  movie->root = movie;
   found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
   if (found) {
     SWFDEC_DEBUG ("remove existing movie _level%u", depth);

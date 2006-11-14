@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <libswfdec/color.h>
+#include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/js/jspubtd.h>
@@ -65,6 +66,7 @@ typedef enum {
 struct _SwfdecMovie {
   GObject		object;
 
+  char *		name;			/* name used in to_string */
   JSObject *		jsobj;			/* our object in javascript */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   const SwfdecContent *	content;           	/* the content we are displaying */
@@ -129,13 +131,15 @@ struct _SwfdecMovieClass {
   void			(* goto_frame)		(SwfdecMovie *		movie,
 						 guint			frame);
   void			(* iterate_start)     	(SwfdecMovie *		movie);
-  void			(* iterate_end)		(SwfdecMovie *		movie);
+  gboolean		(* iterate_end)		(SwfdecMovie *		movie);
 };
 
 GType		swfdec_movie_get_type		(void);
 
 SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
+SwfdecMovie *	swfdec_movie_new_for_player	(SwfdecPlayer *		player,
+						 guint			depth);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 guint			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);

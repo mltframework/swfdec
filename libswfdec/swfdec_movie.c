@@ -304,15 +304,15 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
 void
 swfdec_movie_destroy (SwfdecMovie *movie)
 {
+  SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
   SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
 
   SWFDEC_LOG ("destroying movie %s", movie->name);
   swfdec_movie_do_remove (movie, swfdec_movie_destroy);
   swfdec_movie_set_content (movie, NULL);
+  if (klass->finish_movie)
+    klass->finish_movie (movie);
   if (movie->parent) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
-    if (klass->set_parent)
-      klass->set_parent (movie, NULL);
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   }
   if (movie->jsobj)
@@ -674,8 +674,8 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
    * new movies to be created (and added to this list)
    */
   player->movies = g_list_prepend (player->movies, movie);
-  if (klass->set_parent)
-    klass->set_parent (movie, parent);
+  if (klass->init_movie)
+    klass->init_movie (movie);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
 }
 
@@ -730,6 +730,7 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   content = swfdec_content_new (depth);
+  cairo_matrix_scale (&content->transform, 1 / SWFDEC_SCALE_FACTOR, 1 / SWFDEC_SCALE_FACTOR);
   content->name = g_strdup_printf ("_level%u", depth);
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);

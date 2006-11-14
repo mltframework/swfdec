@@ -156,15 +156,11 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
 }
 
 static void
-swfdec_button_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
+swfdec_button_movie_init_movie (SwfdecMovie *mov)
 {
   SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
 
-  if (parent) {
-    swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
-  } else {
-    swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_INIT);
-  }
+  swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
 }
 
 static gboolean
@@ -227,7 +223,7 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 {
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
-  movie_class->set_parent = swfdec_button_movie_set_parent;
+  movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
   movie_class->mouse_in = swfdec_button_movie_mouse_in;
   movie_class->mouse_change = swfdec_button_movie_mouse_change;

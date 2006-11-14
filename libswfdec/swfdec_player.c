@@ -656,10 +656,9 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
   cairo_rectangle (cr, area->x0, area->y0, area->x1 - area->x0, area->y1 - area->y0);
   cairo_clip (cr);
   /* FIXME: find a nicer way to render the background */
-  if (player->roots && SWFDEC_MOVIE (player->roots->data)->list &&
-      SWFDEC_IS_SPRITE_MOVIE (SWFDEC_MOVIE (player->roots->data)->list->data)) {
+  if (player->roots && SWFDEC_IS_SPRITE_MOVIE (player->roots->data)) {
     swfdec_sprite_movie_paint_background (
-	SWFDEC_SPRITE_MOVIE (SWFDEC_MOVIE (player->roots->data)->list->data), cr);
+	SWFDEC_SPRITE_MOVIE (player->roots->data), cr);
   } else {
     SWFDEC_WARNING ("couldn't paint the background, using white");
     cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);

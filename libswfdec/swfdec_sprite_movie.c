@@ -296,25 +296,27 @@ new_decoder:
 }
 
 static void
-swfdec_sprite_movie_set_parent (SwfdecMovie *mov, SwfdecMovie *parent)
+swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
+{
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  mov->n_frames = movie->sprite->n_frames;
+  swfdec_sprite_movie_do_goto_frame (mov, GUINT_TO_POINTER (0));
+  if (!swfdec_sprite_movie_iterate_end (mov)) {
+    g_assert_not_reached ();
+  }
+}
+
+static void
+swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (mov->root)->player;
 
-  if (parent) {
-    /* set */
-    mov->n_frames = movie->sprite->n_frames;
-    swfdec_sprite_movie_do_goto_frame (mov, GUINT_TO_POINTER (0));
-    if (!swfdec_sprite_movie_iterate_end (mov)) {
-      g_assert_not_reached ();
-    }
-  } else {
-    /* unset */
-    swfdec_player_remove_all_actions (player, mov);
-    if (movie->sound_stream) {
-      swfdec_audio_remove (movie->sound_stream);
-      g_assert (movie->sound_stream == NULL);
-    }
+  swfdec_player_remove_all_actions (player, mov);
+  if (movie->sound_stream) {
+    swfdec_audio_remove (movie->sound_stream);
+    g_assert (movie->sound_stream == NULL);
   }
 }
 
@@ -326,7 +328,8 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   object_class->dispose = swfdec_sprite_movie_dispose;
 
-  movie_class->set_parent = swfdec_sprite_movie_set_parent;
+  movie_class->init_movie = swfdec_sprite_movie_init_movie;
+  movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
   movie_class->goto_frame = swfdec_sprite_movie_goto;
   movie_class->iterate_start = swfdec_sprite_movie_iterate;
   movie_class->iterate_end = swfdec_sprite_movie_iterate_end;

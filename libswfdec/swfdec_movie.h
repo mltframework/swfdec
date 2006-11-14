@@ -106,8 +106,8 @@ struct _SwfdecMovieClass {
   GObjectClass		object_class;
 
   /* general vfuncs */
-  void			(* set_parent)		(SwfdecMovie *		movie,
-						 SwfdecMovie *		parent);
+  void			(* init_movie)		(SwfdecMovie *		movie);
+  void			(* finish_movie)	(SwfdecMovie *		movie);
   void			(* content_changed)	(SwfdecMovie *		movie,
 						 const SwfdecContent *	content);
   void			(* update_extents)	(SwfdecMovie *		movie,

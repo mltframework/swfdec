@@ -26,9 +26,10 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_swf_decoder.h"
 
 
-G_DEFINE_TYPE (SwfdecRootMovie, swfdec_root_movie, SWFDEC_TYPE_MOVIE)
+G_DEFINE_TYPE (SwfdecRootMovie, swfdec_root_movie, SWFDEC_TYPE_SPRITE_MOVIE)
 
 static void
 swfdec_root_movie_update_extents (SwfdecMovie *movie,
@@ -38,8 +39,8 @@ swfdec_root_movie_update_extents (SwfdecMovie *movie,
 
   extents->x0 = extents->y0 = 0.0;
   if (root->decoder) {
-    extents->x1 = root->decoder->width;
-    extents->y1 = root->decoder->height;
+    extents->x1 = root->decoder->width * SWFDEC_SCALE_FACTOR;
+    extents->y1 = root->decoder->height * SWFDEC_SCALE_FACTOR;
   } else {
     extents->x1 = extents->y1 = 0.0;
   }
@@ -68,6 +69,7 @@ swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
   object_class->dispose = swfdec_root_movie_dispose;
 
   movie_class->update_extents = swfdec_root_movie_update_extents;
+  movie_class->init_movie = NULL;
 }
 
 static void
@@ -76,14 +78,12 @@ swfdec_root_movie_init (SwfdecRootMovie *decoder)
 }
 
 static void
-swfdec_root_movie_set_child (SwfdecRootMovie *movie)
+swfdec_root_movie_do_init (SwfdecRootMovie *movie)
 {
-  g_assert (SWFDEC_MOVIE (movie)->list == NULL);
-  g_assert (movie->decoder != NULL);
+  SWFDEC_SPRITE_MOVIE (movie)->sprite = SWFDEC_SWF_DECODER (movie->decoder)->main_sprite;
 
-  swfdec_decoder_create_movie (movie->decoder, SWFDEC_MOVIE (movie));
-
-  g_assert (SWFDEC_MOVIE (movie)->list != NULL);
+  SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->init_movie (SWFDEC_MOVIE (movie));
+  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 
 void
@@ -118,9 +118,9 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
       case SWFDEC_STATUS_NEEDBITS:
 	goto out;
       case SWFDEC_STATUS_IMAGE:
-	/* root movies only have one child */
-	if (SWFDEC_MOVIE (movie)->list == NULL)
-	  swfdec_root_movie_set_child (movie);
+	/* first image available - now we can initialize, if we haven't */
+	if (SWFDEC_SPRITE_MOVIE (movie)->sprite == NULL)
+	  swfdec_root_movie_do_init (movie);
 	break;
       /* header parsing is complete, framerate, image size etc are known */
       case SWFDEC_STATUS_CHANGE:

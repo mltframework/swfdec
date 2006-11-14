@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_ROOT_MOVIE_H_
 #define _SWFDEC_ROOT_MOVIE_H_
 
-#include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec_sprite_movie.h>
 
 G_BEGIN_DECLS
 
@@ -36,7 +36,7 @@ typedef struct _SwfdecRootMovieClass SwfdecRootMovieClass;
 
 struct _SwfdecRootMovie
 {
-  SwfdecMovie		movie;
+  SwfdecSpriteMovie	sprite_movie;
 
   gboolean		error;		/* we're in error */
   SwfdecPlayer *	player;		/* player we're played in */
@@ -47,7 +47,7 @@ struct _SwfdecRootMovie
 
 struct _SwfdecRootMovieClass
 {
-  SwfdecMovieClass	movie_class;
+  SwfdecSpriteMovieClass sprite_movie_class;
 };
 
 GType		swfdec_root_movie_get_type	(void);

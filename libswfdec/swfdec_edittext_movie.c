@@ -92,7 +92,7 @@ swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
 }
 
 static void
-swfdec_edit_text_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
+swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
 {
   SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
   SwfdecPlayer *player;
@@ -100,8 +100,6 @@ swfdec_edit_text_movie_set_parent (SwfdecMovie *movie, SwfdecMovie *parent)
   JSString *string;
   jsval val;
 
-  if (parent == NULL)
-    return;
   if (text->text->set_query == NULL)
     return;
 
@@ -143,7 +141,7 @@ swfdec_edit_text_movie_class_init (SwfdecEditTextMovieClass * g_class)
 
   object_class->dispose = swfdec_edit_text_movie_dispose;
 
-  movie_class->set_parent = swfdec_edit_text_movie_set_parent;
+  movie_class->init_movie = swfdec_edit_text_movie_init_movie;
   movie_class->update_extents = swfdec_edit_text_movie_update_extents;
   movie_class->render = swfdec_edit_text_movie_render;
   movie_class->iterate_start = swfdec_edit_text_movie_iterate;

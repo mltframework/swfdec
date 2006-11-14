@@ -78,7 +78,10 @@ swfdec_root_movie_iterate_end (SwfdecMovie *movie)
   if (SWFDEC_SPRITE_MOVIE (movie)->sprite == NULL)
     return TRUE;
 
-  return SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->iterate_end (movie);
+  if (!SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->iterate_end (movie))
+    return FALSE;
+
+  return g_list_find (SWFDEC_ROOT_MOVIE (movie)->player->roots, movie) != NULL;
 }
 
 static void
@@ -194,12 +197,16 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
     errno = 0;
     depth = strtoul (nr, &end, 10);
     if (errno == 0 && *end == '\0') {
-      SwfdecLoader *loader = swfdec_loader_load (root->loader, url);
-      if (loader) {
-	SwfdecRootMovie *added = swfdec_player_add_level_from_loader (root->player, depth, loader);
-	swfdec_player_add_action (root->player, SWFDEC_MOVIE (added), swfdec_root_movie_do_parse, NULL);
+      if (url[0] == '\0') {
+	swfdec_player_remove_level (root->player, depth);
       } else {
-	SWFDEC_WARNING ("didn't get a loader for url \"%s\" at depth %u", url, depth);
+	SwfdecLoader *loader = swfdec_loader_load (root->loader, url);
+	if (loader) {
+	  SwfdecRootMovie *added = swfdec_player_add_level_from_loader (root->player, depth, loader);
+	  swfdec_player_add_action (root->player, SWFDEC_MOVIE (added), swfdec_root_movie_do_parse, NULL);
+	} else {
+	  SWFDEC_WARNING ("didn't get a loader for url \"%s\" at depth %u", url, depth);
+	}
       }
     } else {
       SWFDEC_ERROR ("%s does not specify a valid level", target);

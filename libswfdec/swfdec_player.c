@@ -302,10 +302,8 @@ static void
 swfdec_player_do_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
-  GList *walk;
-
+  swfdec_player_lock (player);
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
-  g_object_freeze_notify (G_OBJECT (player));
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
     player->mouse_y = y;
@@ -315,12 +313,8 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
     player->mouse_button = button;
     swfdec_player_do_mouse_button (player);
   }
-  while (swfdec_player_do_action (player));
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_signals (player);
+  swfdec_player_perform_actions (player);
+  swfdec_player_unlock (player);
 }
 
 static void
@@ -328,7 +322,7 @@ swfdec_player_do_iterate (SwfdecPlayer *player)
 {
   GList *walk;
 
-  g_object_freeze_notify (G_OBJECT (player));
+  swfdec_player_lock (player);
   SWFDEC_INFO ("=== START ITERATION ===");
   /* set latency so that sounds start after iteration */
   if (player->samples_latency < player->samples_this_frame)
@@ -344,19 +338,13 @@ swfdec_player_do_iterate (SwfdecPlayer *player)
     if (klass->iterate_start)
       klass->iterate_start (walk->data);
   }
-  while (swfdec_player_do_action (player));
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
+  swfdec_player_perform_actions (player);
   SWFDEC_INFO ("=== STOP ITERATION ===");
   /* update the state of the mouse when stuff below it moved */
   if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
     SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
     swfdec_player_do_mouse_move (player);
-    while (swfdec_player_do_action (player));
-    for (walk = player->roots; walk; walk = walk->next) {
-      swfdec_movie_update (walk->data);
-    }
+    swfdec_player_perform_actions (player);
     SWFDEC_INFO ("=== DONE UPDATING mouse post-iteration ===");
   }
   for (walk = player->movies; walk; walk = walk->next) {
@@ -367,6 +355,38 @@ swfdec_player_do_iterate (SwfdecPlayer *player)
   /* iterate audio after video so audio clips that get added during mouse
    * events have the same behaviour than those added while iterating */
   swfdec_player_iterate_audio (player);
+  swfdec_player_unlock (player);
+}
+
+void
+swfdec_player_perform_actions (SwfdecPlayer *player)
+{
+  GList *walk;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  while (swfdec_player_do_action (player));
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+}
+
+void
+swfdec_player_lock (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
+  g_assert (swfdec_rect_is_empty (&player->invalid));
+
+  g_object_freeze_notify (G_OBJECT (player));
+}
+
+void
+swfdec_player_unlock (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
+
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
 }
@@ -514,18 +534,11 @@ swfdec_player_new (void)
 void
 swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
 {
-  GList *walk;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  g_object_freeze_notify (G_OBJECT (player));
   swfdec_player_add_level_from_loader (player, 0, loader);
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
-  g_object_thaw_notify (G_OBJECT (player));
 }
 
 /**

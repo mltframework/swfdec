@@ -340,6 +340,7 @@ swfdec_movie_remove (SwfdecMovie *movie)
     swfdec_movie_destroy (movie);
 }
 
+#include "swfdec_sprite_movie.h"
 static void
 swfdec_movie_execute_script (SwfdecMovie *movie, gpointer data)
 {

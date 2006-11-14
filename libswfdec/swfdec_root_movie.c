@@ -92,6 +92,7 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
   SwfdecDecoderClass *klass;
 
   g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (movie));
+
   if (movie->error)
     return;
   if (movie->decoder == NULL) {
@@ -105,16 +106,17 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
   }
   klass = SWFDEC_DECODER_GET_CLASS (movie->decoder);
   g_return_if_fail (klass->parse);
+  swfdec_player_lock (movie->player);
   while (TRUE) {
     SwfdecStatus status = klass->parse (movie->decoder);
     switch (status) {
       case SWFDEC_STATUS_ERROR:
 	movie->error = TRUE;
-	return;
+	goto out;
       case SWFDEC_STATUS_OK:
 	break;
       case SWFDEC_STATUS_NEEDBITS:
-	return;
+	goto out;
       case SWFDEC_STATUS_IMAGE:
 	/* root movies only have one child */
 	if (SWFDEC_MOVIE (movie)->list == NULL)
@@ -136,11 +138,14 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
 	}
 	break;
       case SWFDEC_STATUS_EOF:
-	return;
+	goto out;
       default:
 	g_assert_not_reached ();
-	return;
+	goto out;
     }
   }
+out:
+  swfdec_player_perform_actions (movie->player);
+  swfdec_player_unlock (movie->player);
 }
 

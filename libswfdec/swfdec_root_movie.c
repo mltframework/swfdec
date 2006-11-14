@@ -61,6 +61,24 @@ swfdec_root_movie_dispose (GObject *object)
 }
 
 static void
+swfdec_root_movie_iterate_start (SwfdecMovie *movie)
+{
+  if (SWFDEC_SPRITE_MOVIE (movie)->sprite == NULL)
+    return;
+
+  SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->iterate_start (movie);
+}
+
+static gboolean
+swfdec_root_movie_iterate_end (SwfdecMovie *movie)
+{
+  if (SWFDEC_SPRITE_MOVIE (movie)->sprite == NULL)
+    return TRUE;
+
+  return SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->iterate_end (movie);
+}
+
+static void
 swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -70,6 +88,8 @@ swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 
   movie_class->update_extents = swfdec_root_movie_update_extents;
   movie_class->init_movie = NULL;
+  movie_class->iterate_start = swfdec_root_movie_iterate_start;
+  movie_class->iterate_end = swfdec_root_movie_iterate_end;
 }
 
 static void

@@ -60,7 +60,7 @@ struct _SwfdecSpriteMovieClass
 
 GType		swfdec_sprite_movie_get_type		(void);
 
-void		swfdec_sprite_movie_paint_background	(SwfdecSpriteMovie *    movie,
+gboolean	swfdec_sprite_movie_paint_background	(SwfdecSpriteMovie *    movie,
 							 cairo_t *		cr);
 
 

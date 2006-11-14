@@ -53,6 +53,9 @@ struct _SwfdecRootMovieClass
 GType		swfdec_root_movie_get_type	(void);
 
 void		swfdec_root_movie_parse		(SwfdecRootMovie *	movie);
+void		swfdec_root_movie_load		(SwfdecRootMovie *	movie,
+						 const char *		url,
+						 const char *		target);
 
 
 G_END_DECLS

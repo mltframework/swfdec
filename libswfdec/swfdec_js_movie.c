@@ -412,7 +412,7 @@ swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     /* variables not implemented yet */
     g_assert_not_reached ();
   }
-  swfdec_player_load (SWFDEC_ROOT_MOVIE (movie->root)->player, url, target);
+  swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
   return JS_TRUE;
 }
 

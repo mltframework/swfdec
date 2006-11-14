@@ -124,6 +124,8 @@ swfdec_file_loader_load (SwfdecLoader *loader, const char *url)
   ret = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
   ret->url = real_path;
   SWFDEC_FILE_LOADER (ret)->dir = g_strdup (SWFDEC_FILE_LOADER (loader)->dir);
+  swfdec_loader_push (ret, buffer);
+  swfdec_loader_eof (ret);
 
   return ret;
 }

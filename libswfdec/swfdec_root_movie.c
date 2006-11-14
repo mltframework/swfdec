@@ -21,10 +21,13 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include "swfdec_root_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
 
@@ -106,12 +109,11 @@ swfdec_root_movie_do_init (SwfdecRootMovie *movie)
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 
-void
-swfdec_root_movie_parse (SwfdecRootMovie *movie)
+static void
+swfdec_root_movie_do_parse (SwfdecMovie *mov, gpointer unused)
 {
+  SwfdecRootMovie *movie = SWFDEC_ROOT_MOVIE (mov);
   SwfdecDecoderClass *klass;
-
-  g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (movie));
 
   if (movie->error)
     return;
@@ -126,17 +128,16 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
   }
   klass = SWFDEC_DECODER_GET_CLASS (movie->decoder);
   g_return_if_fail (klass->parse);
-  swfdec_player_lock (movie->player);
   while (TRUE) {
     SwfdecStatus status = klass->parse (movie->decoder);
     switch (status) {
       case SWFDEC_STATUS_ERROR:
 	movie->error = TRUE;
-	goto out;
+	return;
       case SWFDEC_STATUS_OK:
 	break;
       case SWFDEC_STATUS_NEEDBITS:
-	goto out;
+	return;
       case SWFDEC_STATUS_IMAGE:
 	/* first image available - now we can initialize, if we haven't */
 	if (SWFDEC_SPRITE_MOVIE (movie)->sprite == NULL)
@@ -158,14 +159,54 @@ swfdec_root_movie_parse (SwfdecRootMovie *movie)
 	}
 	break;
       case SWFDEC_STATUS_EOF:
-	goto out;
+	return;
       default:
 	g_assert_not_reached ();
-	goto out;
+	return;
     }
   }
-out:
+}
+
+void
+swfdec_root_movie_parse (SwfdecRootMovie *movie)
+{
+  g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (movie));
+
+  swfdec_player_lock (movie->player);
+  swfdec_root_movie_do_parse (SWFDEC_MOVIE (movie), NULL);
   swfdec_player_perform_actions (movie->player);
   swfdec_player_unlock (movie->player);
+}
+
+void
+swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *target)
+{
+  g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (root));
+  g_return_if_fail (url != NULL);
+  g_return_if_fail (target != NULL);
+
+  /* yay for the multiple uses of GetURL - one of the crappier Flash things */
+  if (g_str_has_prefix (target, "_level")) {
+    const char *nr = target + strlen ("_level");
+    char *end;
+    unsigned int depth;
+
+    errno = 0;
+    depth = strtoul (nr, &end, 10);
+    if (errno == 0 && *end == '\0') {
+      SwfdecLoader *loader = swfdec_loader_load (root->loader, url);
+      if (loader) {
+	SwfdecRootMovie *added = swfdec_player_add_level_from_loader (root->player, depth, loader);
+	swfdec_player_add_action (root->player, SWFDEC_MOVIE (added), swfdec_root_movie_do_parse, NULL);
+      } else {
+	SWFDEC_WARNING ("didn't get a loader for url \"%s\" at depth %u", url, depth);
+      }
+    } else {
+      SWFDEC_ERROR ("%s does not specify a valid level", target);
+    }
+    /* FIXME: what do we do here? Is returning correct?*/
+    return;
+  }
+  g_print ("should load \"%s\" into %s\n", url, target);
 }
 

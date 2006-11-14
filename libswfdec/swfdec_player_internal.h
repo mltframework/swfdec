@@ -103,9 +103,10 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 gboolean		center,
 						 SwfdecRect *		rect);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
-void		swfdec_player_load		(SwfdecPlayer *		player,
-						 const char *		url,
-						 const char *		target);
+SwfdecRootMovie *	swfdec_player_add_level_from_loader 
+						(SwfdecPlayer *		player,
+						 guint			depth,
+						 SwfdecLoader *		loader);
 
 
 G_END_DECLS

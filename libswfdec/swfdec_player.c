@@ -474,7 +474,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
       player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
 }
 
-static void
+SwfdecRootMovie *
 swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     SwfdecLoader *loader)
 {
@@ -494,13 +494,7 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     player->roots = g_list_delete_link (player->roots, found);
   }
   player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
-  swfdec_root_movie_parse (root);
-}
-
-void
-swfdec_player_load (SwfdecPlayer *player, const char *url, const char *target)
-{
-  g_print ("should load \"%s\" into %s\n", url, target);
+  return root;
 }
 
 /** PUBLIC API ***/
@@ -538,11 +532,14 @@ swfdec_player_new (void)
 void
 swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
 {
+  SwfdecRootMovie *movie;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  swfdec_player_add_level_from_loader (player, 0, loader);
+  movie = swfdec_player_add_level_from_loader (player, 0, loader);
+  swfdec_root_movie_parse (movie);
 }
 
 /**

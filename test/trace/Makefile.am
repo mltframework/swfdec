@@ -32,6 +32,8 @@ EXTRA_DIST = \
 	order.swf \
 	order.swf.trace \
 	setvariable.swf \
-	setvariable.swf.trace
+	setvariable.swf.trace \
+	undefined1.swf \
+	undefined1.swf.trace
 
 CLEANFILES = tmp

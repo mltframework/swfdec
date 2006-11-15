@@ -243,44 +243,6 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-/* FIXME: replace with eval */
-static SwfdecMovie *
-get_target (SwfdecMovie *movie, const char *target, JSBool case_sensitive)
-{
-  char *tmp;
-  guint len;
-  GList *walk;
-
-  //g_print ("get_target: %s\n", target);
-  if (target[0] == '\0')
-    return movie;
-
-  if (g_str_has_prefix (target, "../")) {
-    if (movie->parent == NULL)
-      return NULL;
-    return get_target (movie->parent, target + 3, case_sensitive);
-  }
-  tmp = strchr (target, '/');
-  if (tmp)
-    len = tmp - target;
-  else
-    len = strlen (target);
-
-  for (walk = movie->list; walk; walk = walk->next) {
-    SwfdecMovie *cur = walk->data;
-    if (cur->content->name) {
-      if ((case_sensitive && strncmp (cur->content->name, target, len) == 0) || 
-	  (!case_sensitive && g_ascii_strncasecmp (cur->content->name, target, len) == 0)) {
-	if (target[len] == '\0')
-	  return cur;
-	else 
-	  return get_target (cur, target + len + 1, case_sensitive);
-      }
-    }
-  }
-  return NULL;
-}
-
 extern  JSPropertySpec movieclip_props[];
 
 static JSBool
@@ -288,19 +250,15 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   uint32 id;
   SwfdecMovie *movie;
+  jsval tmp;
 
-  if (JSVAL_IS_OBJECT (argv[0])) {
-    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
-  } else if (JSVAL_IS_STRING (argv[0])) {
-    char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
-    movie = JS_GetPrivate(cx, obj);
-    movie = get_target (movie, str, JS_GetContextCaseSensitive (cx));
-    if (movie == NULL) {
-      SWFDEC_INFO ("no target name \"%s\"", str);
-      return JS_FALSE;
-    }
+  swfdec_js_eval (cx, obj, 1, argv, &tmp);
+  if (JSVAL_IS_OBJECT (tmp)) {
+    /* FIXME: make sure it's a movieclip */
+    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (tmp));
   } else {
-    return JS_FALSE;
+    SWFDEC_WARNING ("specified target does not reference a movie clip");
+    return JS_TRUE;
   }
   if (!JS_ValueToECMAUint32 (cx, argv[1], &id))
     return JS_FALSE;
@@ -319,19 +277,15 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   uint32 id;
   SwfdecMovie *movie;
+  jsval tmp;
 
-  if (JSVAL_IS_OBJECT (argv[0])) {
-    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0]));
-  } else if (JSVAL_IS_STRING (argv[0])) {
-    char *str = JS_GetStringBytes (JSVAL_TO_STRING (argv[0]));
-    movie = JS_GetPrivate(cx, obj);
-    movie = get_target (movie, str, JS_GetContextCaseSensitive (cx));
-    if (movie == NULL) {
-      SWFDEC_INFO ("no target name \"%s\"", str);
-      return JS_FALSE;
-    }
+  swfdec_js_eval (cx, obj, 1, argv, &tmp);
+  if (JSVAL_IS_OBJECT (tmp)) {
+    /* FIXME: make sure it's a movieclip */
+    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (tmp));
   } else {
-    return JS_FALSE;
+    SWFDEC_WARNING ("specified target does not reference a movie clip");
+    return JS_TRUE;
   }
   if (!JS_ValueToECMAUint32 (cx, argv[1], &id))
     return JS_FALSE;

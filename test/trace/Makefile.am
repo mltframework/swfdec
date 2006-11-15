@@ -25,6 +25,8 @@ EXTRA_DIST = \
 	goto3.swf.trace \
 	goto4.swf \
 	goto4.swf.trace \
+	lifetime1.swf \
+	lifetime1.swf.trace \
 	load-4.swf \
 	load-4.swf.trace \
 	load-5.swf \

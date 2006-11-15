@@ -57,11 +57,12 @@ movie_finalize (JSContext *cx, JSObject *obj)
 }
 
 static JSClass movieclip_class = {
-    "Movie", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
+    "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
     JS_ConvertStub,   movie_finalize,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -868,6 +869,13 @@ swfdec_native_ASSetPropFlags (SwfdecActionContext *context, int num_args,
 }
 #endif
 
+static JSBool
+swfdec_js_movieclip_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SWFDEC_ERROR ("This should not exist, but currently has to for instanceof to work");
+  return JS_FALSE;
+}
+
 /**
  * swfdec_js_add_movieclip_class:
  * @player: a @SwfdecPlayer
@@ -878,7 +886,7 @@ void
 swfdec_js_add_movieclip_class (SwfdecPlayer *player)
 {
   JS_InitClass (player->jscx, player->jsobj, NULL,
-      &movieclip_class, NULL, 0, movieclip_props, movieclip_methods,
+      &movieclip_class, swfdec_js_movieclip_new, 0, movieclip_props, movieclip_methods,
       NULL, NULL);
 }
 

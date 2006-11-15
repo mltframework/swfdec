@@ -55,6 +55,7 @@ typedef struct {
   char *		error;		/* error encountered while compiling */
   GArray *		offsets;	/* offsets of actions */
   GArray *		jumps;		/* accumulated jumps */
+  GArray *		trynotes;	/* try/catch blocks */
   GPtrArray *		pool;		/* ConstantPool data */
 } CompileState;
 
@@ -133,6 +134,17 @@ atomize_int32 (CompileState *state, int i)
   guint8 command = opcode; \
   compile_state_add_code (state, &command, 1); \
 } G_STMT_END
+#define THREELINER(state, opcode, id1, id2) G_STMT_START { \
+  guint8 command[3] = { opcode, id1, id2 }; \
+  compile_state_add_code (state, command, 3); \
+} G_STMT_END
+#define THREELINER_INT(state, opcode, _int) THREELINER (state, opcode, _int >> 8, _int)
+#define THREELINER_ATOM(state, opcode, str) G_STMT_START { \
+  jsatomid id; \
+  id = atomize_string (state, str); \
+  THREELINER_INT (state, opcode, id); \
+} G_STMT_END
+
 #define PUSH_OBJ(state) ONELINER (state, JSOP_PUSHOBJ)
 #define POP(state) ONELINER (state, JSOP_POP)
 #define GE(state) ONELINER (state, JSOP_GE)
@@ -180,7 +192,9 @@ compile_state_add_target (CompileState *state)
 {
   guint8 command[3] = { JSOP_DEFVAR, 0, 0 };
   /* add the TARGET variable */
-  g_assert (atomize_string (state, TARGET_NAME) == 0);
+  if (atomize_string (state, TARGET_NAME) != 0) {
+    g_assert_not_reached ();
+  }
   compile_state_add_code (state, command, 3);
   THIS (state);
   compile_state_set_target (state);
@@ -197,6 +211,7 @@ compile_state_init (JSContext *cx, SwfdecBits *bits, int version, CompileState *
   state->error = NULL;
   state->offsets = g_array_new (FALSE, FALSE, sizeof (Offset));
   state->jumps = g_array_new (FALSE, FALSE, sizeof (Jump));
+  state->trynotes = g_array_new (TRUE, FALSE, sizeof (JSTryNote));
   state->pool = g_ptr_array_new ();
 
   compile_state_add_target (state);
@@ -245,6 +260,7 @@ finished:
   }
 }
 
+#define OFFSET_MAIN 3
 static JSScript *
 compile_state_finish (CompileState *state)
 {
@@ -264,21 +280,36 @@ compile_state_finish (CompileState *state)
     goto cleanup;
   }
 
-  script = js_NewScript (cx, state->bytecode->len, 1, 1);
+  script = js_NewScript (cx, state->bytecode->len, 1, state->trynotes->len + 1);
   memcpy (script->code, state->bytecode->data, state->bytecode->len);
+  memcpy (script->trynotes, state->trynotes->data, (state->trynotes->len + 1) * sizeof (JSTryNote));
   js_InitAtomMap (cx, &script->atomMap, &state->atoms);
   /* FIXME: figure out a correct value here */
   script->depth = 100;
-  script->main = script->code + 3;
-  script->trynotes = NULL;
+  script->main = script->code + OFFSET_MAIN;
   SN_MAKE_TERMINATOR (SCRIPT_NOTES (script));
 
 cleanup:
   g_ptr_array_free (state->pool, TRUE);
   g_array_free (state->offsets, TRUE);
   g_array_free (state->jumps, TRUE);
+  g_array_free (state->trynotes, TRUE);
   g_byte_array_free (state->bytecode, TRUE);
   return script;
+}
+
+static void
+add_try_catch_block (CompileState *state, guint n_bytes, guint pc_offset)
+{
+  JSTryNote tn;
+  
+  g_assert (state->bytecode->len >= OFFSET_MAIN);
+  tn.start = state->bytecode->len - OFFSET_MAIN;
+  tn.length = n_bytes;
+  tn.catchStart = state->bytecode->len + pc_offset - OFFSET_MAIN;
+  SWFDEC_LOG ("adding try/catch at %u (len %u) to offset %u", 
+      tn.start, tn.length, tn.catchStart);
+  g_array_append_val (state->trynotes, tn);
 }
 
 /* NB: n_bytes is relative to the start of this action */
@@ -315,21 +346,19 @@ compile_state_add_action_jump (CompileState *state, int n_actions, gboolean exte
 static void
 push_target (CompileState *state)
 {
-  guint8 command[3] = { JSOP_NAME, 0, 0 };
-  compile_state_add_code (state, command, 3);
+  THREELINER (state, JSOP_NAME, 0, 0);
 }
 
 static void
 push_prop (CompileState *state, const char *name)
 {
-  jsatomid id;
-  guint8 command[3];
+  THREELINER_ATOM (state, JSOP_GETPROP, name);
+}
 
-  id = atomize_string (state, name);
-  command[0] = JSOP_GETPROP;
-  command[1] = id >> 8;
-  command[2] = id;
-  compile_state_add_code (state, command, 3);
+static void
+name (CompileState *state, const char *name)
+{
+  THREELINER_ATOM (state, JSOP_NAME, name);
 }
 
 #if 0
@@ -352,10 +381,9 @@ push_prop_without_target (CompileState *state, const char *name)
 static void
 push_uint16 (CompileState *state, unsigned int i)
 {
-  guint8 command[3] = { JSOP_UINT16, i >> 8, i };
   g_assert (i <= G_MAXUINT16);
   SWFDEC_LOG ("pushing %u", i);
-  compile_state_add_code (state, command, 3);
+  THREELINER_INT (state, JSOP_UINT16, i);
 }
 
 static void
@@ -368,16 +396,13 @@ read_and_push_uint16 (CompileState *state)
 static void
 call (CompileState *state, guint n_arguments)
 {
-  guint8 command[3] = { JSOP_CALL, n_arguments >> 8, n_arguments };
-  compile_state_add_code (state, command, 3);
+  THREELINER_INT (state, JSOP_CALL, n_arguments);
 }
 
 static void
 flash_swap (CompileState *state, guint n)
 {
-  guint8 command[3] = { JSOP_FLASHSWAP, n >> 8, n };
-  g_assert (n > 1);
-  compile_state_add_code (state, command, 3);
+  THREELINER_INT (state, JSOP_FLASHSWAP, n);
 }
 
 static void
@@ -388,6 +413,11 @@ call_void_function (CompileState *state, const char *name)
   call (state, 0);
   POP (state);
 }
+
+#define DEBUG_TRACE(state) G_STMT_START { \
+  ONELINER (state, JSOP_DUP); \
+  compile_trace (state, 0, 0); \
+}G_STMT_END
 
 static void
 compile_trace (CompileState *state, guint action, guint len)
@@ -424,12 +454,8 @@ compile_set_variable (CompileState *state, guint action, guint len)
 static void
 push_string (CompileState *state, const char *s)
 {
-  guint8 command[3] = { JSOP_STRING, };
-  jsatomid id = atomize_string (state, s);
   SWFDEC_LOG ("pushing string: %s", s);
-  command[1] = id >> 8;
-  command[2] = id;
-  compile_state_add_code (state, command, 3);
+  THREELINER_ATOM (state, JSOP_STRING, s);
 }
 
 static void
@@ -442,40 +468,31 @@ read_and_push_string (CompileState *state)
 static void
 read_and_push_float (CompileState *state)
 {
-  guint8 command[3] = { JSOP_NUMBER, };
   double d = swfdec_bits_get_float (state->bits);
   jsatomid id = atomize_double (state, d);
   
   SWFDEC_LOG ("pushing float: %g", d);
-  command[1] = id >> 8;
-  command[2] = id;
-  compile_state_add_code (state, command, 3);
+  THREELINER_INT (state, JSOP_NUMBER, id);
 }
 
 static void
 read_and_push_double (CompileState *state)
 {
-  guint8 command[3] = { JSOP_NUMBER, };
   double d = swfdec_bits_get_double (state->bits);
   jsatomid id = atomize_double (state, d);
 
   SWFDEC_LOG ("pushing double: %g", d);
-  command[1] = id >> 8;
-  command[2] = id;
-  compile_state_add_code (state, command, 3);
+  THREELINER_INT (state, JSOP_NUMBER, id);
 }
 
 static void
 read_and_push_int32 (CompileState *state)
 {
-  guint8 command[3] = { JSOP_NUMBER, };
   /* FIXME: spec says U32, do they mean this? */
   gint32 i = swfdec_bits_get_u32 (state->bits);
   jsatomid id = atomize_int32 (state, i);
   SWFDEC_LOG ("pushing int: %d", i);
-  command[1] = id >> 8;
-  command[2] = id;
-  compile_state_add_code (state, command, 3);
+  THREELINER_INT (state, JSOP_NUMBER, id);
 }
 
 static void
@@ -591,7 +608,7 @@ compile_wait_for_frame (CompileState *state, guint action, guint len)
   GE (state);
   compile_state_add_action_jump (state, 
       swfdec_bits_get_u8 (state->bits), FALSE);
-  compile_state_add_code (state, command, 3); \
+  compile_state_add_code (state, command, 3);
 }
 
 static void
@@ -732,9 +749,23 @@ compile_call_function (CompileState *state, guint action, guint len)
 static void
 compile_call_method (CompileState *state, guint action, guint len)
 {
+  add_try_catch_block (state, 1, 6);
   ONELINER (state, JSOP_GETELEM);
   ONELINER (state, JSOP_PUSHOBJ);
+  add_try_catch_block (state, 1, 4);
   ONELINER (state, JSOP_FLASHCALL);
+  THREELINER_INT (state, JSOP_GOTO, 17);
+  /* exeception handling goes here: clean up the stack */
+  POP (state);
+  POP (state);
+  ONELINER (state, JSOP_DUP);
+  THREELINER_INT (state, JSOP_IFEQ, 10);
+  SWAP (state);
+  POP (state);
+  ONELINER (state, JSOP_ONE);
+  ONELINER (state, JSOP_SUB);
+  THREELINER_INT (state, JSOP_GOTO, -8);
+  ONELINER (state, JSOP_VOID);
 }
 
 static void
@@ -829,6 +860,20 @@ compile_to_integer (CompileState *state, guint action, guint len)
   /* There's no opcode so we use a bitwise operation that forces a conversion */
   ONELINER (state, JSOP_ZERO);
   ONELINER (state, JSOP_BITOR);
+}
+
+static void
+compile_target_path (CompileState *state, guint action, guint len)
+{
+  ONELINER (state, JSOP_DUP);
+  name (state, "MovieClip");
+  ONELINER (state, JSOP_INSTANCEOF);
+  THREELINER_INT (state, JSOP_IFEQ, 13);
+  push_prop (state, "toString");
+  PUSH_OBJ (state);
+  call (state, 0);
+  THREELINER_INT (state, JSOP_GOTO, 4);
+  ONELINER (state, JSOP_VOID);
 }
 
 static void
@@ -1057,7 +1102,7 @@ SwfdecActionSpec actions[] = {
   { 0x42, "InitArray", NULL },
   { 0x43, "InitObject", NULL },
   { 0x44, "Typeof", NULL },
-  { 0x45, "TargetPath", NULL },
+  { 0x45, "TargetPath", compile_target_path },
   { 0x46, "Enumerate", NULL },
   { 0x47, "Add2", compile_oneliner },
   { 0x48, "Less2", compile_oneliner },

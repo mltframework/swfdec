@@ -37,10 +37,13 @@ gboolean	swfdec_js_run			(SwfdecPlayer *		player,
 						 const char *		s,
 						 jsval *		rval);
 
-void		swfdec_js_add_movieclip_class	(SwfdecPlayer *		player);
+void		swfdec_js_add_color		(SwfdecPlayer *		player);
 void		swfdec_js_add_globals		(SwfdecPlayer *		player);
 void		swfdec_js_add_mouse		(SwfdecPlayer *		player);
+void		swfdec_js_add_movieclip_class	(SwfdecPlayer *		player);
 
+SwfdecMovie *	swfdec_js_val_to_movie		(JSContext *		cx,
+						 jsval			val);
 gboolean	swfdec_js_add_movie		(SwfdecMovie *		movie);
 void		swfdec_js_movie_add_property	(SwfdecMovie *		movie);
 void		swfdec_js_movie_remove_property	(SwfdecMovie *		movie);

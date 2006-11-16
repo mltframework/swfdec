@@ -253,10 +253,8 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   jsval tmp;
 
   swfdec_js_eval (cx, obj, 1, argv, &tmp);
-  if (JSVAL_IS_OBJECT (tmp)) {
-    /* FIXME: make sure it's a movieclip */
-    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (tmp));
-  } else {
+  movie = swfdec_js_val_to_movie (cx, tmp);
+  if (movie == NULL) {
     SWFDEC_WARNING ("specified target does not reference a movie clip");
     return JS_TRUE;
   }
@@ -280,10 +278,8 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   jsval tmp;
 
   swfdec_js_eval (cx, obj, 1, argv, &tmp);
-  if (JSVAL_IS_OBJECT (tmp)) {
-    /* FIXME: make sure it's a movieclip */
-    movie = JS_GetPrivate(cx, JSVAL_TO_OBJECT (tmp));
-  } else {
+  movie = swfdec_js_val_to_movie (cx, tmp);
+  if (movie == NULL) {
     SWFDEC_WARNING ("specified target does not reference a movie clip");
     return JS_TRUE;
   }
@@ -922,6 +918,30 @@ swfdec_js_add_movie (SwfdecMovie *movie)
       swfdec_js_movie_add_property (child);
   }
   return TRUE;
+}
+
+/**
+ * swfdec_js_val_to_movie:
+ * @cx: the relevant #JSContext
+ * @val: value hat might reference a #SwfdecMovie
+ *
+ * Extracts the #SwfdecMovie referenced by @val and returns it. This function
+ * performs all the necessary error checking to ensure that @val really
+ * references a movie.
+ *
+ * Returns: the movie referenced or NULL if no movie was referenced.
+ **/
+SwfdecMovie *
+swfdec_js_val_to_movie (JSContext *cx, jsval val)
+{
+  JSObject *object;
+
+  if (!JSVAL_IS_OBJECT (val))
+    return NULL;
+  object = JSVAL_TO_OBJECT (val);
+  if (JS_GetClass (object) != &movieclip_class)
+    return NULL;
+  return JS_GetPrivate (cx, object);
 }
 
 #if 0

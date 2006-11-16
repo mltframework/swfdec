@@ -1,5 +1,7 @@
 noinst_LTLIBRARIES = libjs.la
 
+nodist_libjs_la_SOURCES = jsautocfg.h
+
 libjs_la_SOURCES = \
 	js.msg \
 	jsapi.c \
@@ -87,7 +89,7 @@ jscpucfg_SOURCES = \
 	jscpucfg.c  \
 	jscpucfg.h
 
-libjs_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GLIB_CFLAGS) -I. \
+libjs_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GLIB_CFLAGS) -I. $(builddir) \
 	-DXP_UNIX -DDEBUG -fno-strict-aliasing
 libjs_la_LDFLAGS = -lm
 

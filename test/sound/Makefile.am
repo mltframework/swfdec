@@ -12,8 +12,8 @@ sound_SOURCES = sound.c
 sound_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS)
 sound_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
-EXTRA_DIST = \
-	stopsounds.swf
-	stopsounds.wav
+#EXTRA_DIST = \
+#	stopsounds.swf
+#	stopsounds.wav
 
 CLEANFILES = tmp

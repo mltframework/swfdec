@@ -216,6 +216,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   if (mouse_x != x || mouse_y != y) {
     movie->x += mouse_x - x;
     movie->y += mouse_y - y;
+    swfdec_movie_invalidate (movie);
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 }

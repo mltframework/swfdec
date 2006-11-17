@@ -68,10 +68,10 @@ swfdec_color_apply_transform (unsigned int in, const SwfdecColorTransform * tran
 
   SWFDEC_LOG ("in rgba %d,%d,%d,%d", r, g, b, a);
 
-  r = rint ((r * trans->mult[0] + trans->add[0]));
-  g = rint ((g * trans->mult[1] + trans->add[1]));
-  b = rint ((b * trans->mult[2] + trans->add[2]));
-  a = rint ((a * trans->mult[3] + trans->add[3]));
+  r = (r * trans->ra >> 8) + trans->rb;
+  g = (g * trans->ga >> 8) + trans->gb;
+  b = (b * trans->ba >> 8) + trans->bb;
+  a = (a * trans->aa >> 8) + trans->ab;
 
   r = CLAMP (r, 0, 255);
   g = CLAMP (g, 0, 255);
@@ -94,14 +94,14 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
 {
   g_return_if_fail (trans != NULL);
   
-  trans->mult[0] = 1.0;
-  trans->mult[1] = 1.0;
-  trans->mult[2] = 1.0;
-  trans->mult[3] = 1.0;
-  trans->add[0] = 0.0;
-  trans->add[1] = 0.0;
-  trans->add[2] = 0.0;
-  trans->add[3] = 0.0;
+  trans->ra = 256;
+  trans->ga = 256;
+  trans->ba = 256;
+  trans->aa = 256;
+  trans->rb = 0;
+  trans->gb = 0;
+  trans->bb = 0;
+  trans->ab = 0;
 }
 
 /**
@@ -115,14 +115,14 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
 void
 swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color)
 {
-  trans->mult[0] = 0.0;
-  trans->mult[1] = 0.0;
-  trans->mult[2] = 0.0;
-  trans->mult[3] = 0.0;
-  trans->add[0] = SWF_COLOR_R (color);
-  trans->add[1] = SWF_COLOR_G (color);
-  trans->add[2] = SWF_COLOR_B (color);
-  trans->add[3] = SWF_COLOR_A (color);
+  trans->ra = 0;
+  trans->rb = SWF_COLOR_R (color);
+  trans->ga = 0;
+  trans->gb = SWF_COLOR_G (color);
+  trans->ba = 0;
+  trans->bb = SWF_COLOR_B (color);
+  trans->aa = 0;
+  trans->ab = SWF_COLOR_A (color);
 }
 
 /**
@@ -138,15 +138,18 @@ void
 swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first)
 {
-  unsigned int i;
-
   g_return_if_fail (dest != NULL);
   g_return_if_fail (last != NULL);
   g_return_if_fail (first != NULL);
   
-  for (i = 0; i < 4; i++) {
-    dest->add[i] = last->mult[i] * first->add[i] + last->add[i];
-    dest->mult[i] = last->mult[i] * first->mult[i];
-  }
+  /* FIXME: CLAMP here? */
+  dest->ra = last->ra * first->ra >> 8;
+  dest->rb = (last->ra * first->rb >> 8) + last->rb;
+  dest->ga = last->ga * first->ga >> 8;
+  dest->gb = (last->ga * first->gb >> 8) + last->gb;
+  dest->ba = last->ba * first->ba >> 8;
+  dest->bb = (last->ba * first->bb >> 8) + last->bb;
+  dest->aa = last->aa * first->aa >> 8;
+  dest->ab = (last->aa * first->ab >> 8) + last->ab;
 }
 

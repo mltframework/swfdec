@@ -256,30 +256,27 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
   has_mult = swfdec_bits_getbit (bits);
   n_bits = swfdec_bits_getbits (bits, 4);
   if (has_mult) {
-    ct->mult[0] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
-    ct->mult[1] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
-    ct->mult[2] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
-    ct->mult[3] = swfdec_bits_getsbits (bits, n_bits) / SWFDEC_COLOR_SCALE_FACTOR;
+    ct->ra = swfdec_bits_getsbits (bits, n_bits);
+    ct->ga = swfdec_bits_getsbits (bits, n_bits);
+    ct->ba = swfdec_bits_getsbits (bits, n_bits);
+    ct->aa = swfdec_bits_getsbits (bits, n_bits);
   } else {
-    ct->mult[0] = 1.0;
-    ct->mult[1] = 1.0;
-    ct->mult[2] = 1.0;
-    ct->mult[3] = 1.0;
+    ct->ra = 256;
+    ct->ga = 256;
+    ct->ba = 256;
+    ct->aa = 256;
   }
   if (has_add) {
-    ct->add[0] = swfdec_bits_getsbits (bits, n_bits);
-    ct->add[1] = swfdec_bits_getsbits (bits, n_bits);
-    ct->add[2] = swfdec_bits_getsbits (bits, n_bits);
-    ct->add[3] = swfdec_bits_getsbits (bits, n_bits);
+    ct->rb = swfdec_bits_getsbits (bits, n_bits);
+    ct->gb = swfdec_bits_getsbits (bits, n_bits);
+    ct->bb = swfdec_bits_getsbits (bits, n_bits);
+    ct->ab = swfdec_bits_getsbits (bits, n_bits);
   } else {
-    ct->add[0] = 0;
-    ct->add[1] = 0;
-    ct->add[2] = 0;
-    ct->add[3] = 0;
+    ct->rb = 0;
+    ct->gb = 0;
+    ct->bb = 0;
+    ct->ab = 0;
   }
-
-  //printf("mult %g,%g,%g,%g\n",mult[0],mult[1],mult[2],mult[3]);
-  //printf("add %g,%g,%g,%g\n",add[0],add[1],add[2],add[3]);
 }
 
 void

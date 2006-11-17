@@ -38,7 +38,7 @@
 
 static const SwfdecContent default_content = {
   NULL, -1, 0, 0, { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },
-  { { 1.0, 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0, 0.0 } },
+  { 256, 0, 256, 0, 256, 0, 256, 0 },
   NULL, NULL, NULL
 };
 
@@ -53,6 +53,7 @@ swfdec_movie_init (SwfdecMovie * movie)
   movie->yscale = 1.0;
   cairo_matrix_init_identity (&movie->transform);
   cairo_matrix_init_identity (&movie->inverse_transform);
+  swfdec_color_transform_init_identity (&movie->color_transform);
 
   movie->visible = TRUE;
   movie->n_frames = 1;
@@ -537,6 +538,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SWFDEC_LOG ("%sinvalid area is now: %g %g  %g %g",  movie->parent ? "  " : "",
       rect.x0, rect.y0, rect.x1, rect.y1);
   swfdec_color_transform_chain (&trans, &movie->content->color_transform, color_transform);
+  swfdec_color_transform_chain (&trans, &movie->color_transform, &trans);
 
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovie *child = g->data;

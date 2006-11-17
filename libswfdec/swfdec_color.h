@@ -28,8 +28,8 @@ typedef unsigned int SwfdecColor;
 
 struct _SwfdecColorTransform
 {
-  double mult[4];
-  double add[4];
+  /* naming here is taken from ActionScript, where ?a is the multiplier and ?b the offset */
+  int ra, rb, ga, gb, ba, bb, aa, ab;
 };
 
 typedef struct swfdec_gradient_struct SwfdecGradient;
@@ -52,12 +52,6 @@ struct swfdec_gradient_struct
 #define SWF_COLOR_G(x)		(((x)>>16)&0xff)
 #define SWF_COLOR_B(x)		(((x)>>8)&0xff)
 #define SWF_COLOR_A(x)		((x)&0xff)
-
-#define RGB565_COMBINE(r,g,b) (((r)&0xf8)<<8)|(((g)&0xfc)<<3)|(((b)&0xf8)>>3)
-#define RGB565_R(color) (((color)&0xf800)>>8)
-#define RGB565_G(color) (((color)&0x07e0)>>3)
-#define RGB565_B(color) (((color)&0x001f)<<3)
-
 
 SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio);
 void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);

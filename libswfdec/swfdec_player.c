@@ -655,7 +655,7 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
 void
 swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
 {
-  static const SwfdecColorTransform trans = { { 1.0, 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0, 0.0 } };
+  static const SwfdecColorTransform trans = { 256, 0, 256, 0, 256, 0, 256, 0 };
   GList *walk;
   SwfdecRect full = { 0, 0, player->width, player->height };
 
@@ -703,7 +703,7 @@ swfdec_player_iterate (SwfdecPlayer *player)
 
 #if 0
   while (TRUE)
-    swfdec_js_run (player, "\"/A/B:foo\".toLowerCase ()", NULL);
+    swfdec_js_run (player, "i = new Object(); i.foo = 7", NULL);
   //swfdec_js_run (player, "s=\"/A/B:foo\"; t=s.indexOf (\":\"); if (t) t=s.substring(0,s.indexOf (\":\")); else t=s;", NULL);
 #endif
 

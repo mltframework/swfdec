@@ -26,7 +26,6 @@
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_buffer.h>
 
-#define SWFDEC_COLOR_SCALE_FACTOR		(256.0)
 #define SWFDEC_FIXED_SCALE_FACTOR		(65536.0)
 #define SWFDEC_SCALE_FACTOR			(20.0)
 #define SWFDEC_TEXT_SCALE_FACTOR		(1024.0)

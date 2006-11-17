@@ -13,6 +13,16 @@ EXTRA_DIST = \
 	case1-7.swf.trace \
 	children.swf \
 	children.swf.trace \
+	color-getters.swf \
+	color-getters.swf.trace \
+	color-setRGB.swf \
+	color-setRGB.swf.trace \
+	color-setTransform-alpha.swf \
+	color-setTransform-alpha.swf.trace \
+	color-setTransform-empty.swf \
+	color-setTransform-empty.swf.trace \
+	color-setTransform-full.swf \
+	color-setTransform-full.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	currentframe.swf \

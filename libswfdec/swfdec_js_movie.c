@@ -57,7 +57,7 @@ movie_finalize (JSContext *cx, JSObject *obj)
 }
 
 static JSClass movieclip_class = {
-    "MovieClip", JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
+    "MovieClip", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,

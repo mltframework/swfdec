@@ -87,6 +87,7 @@ struct _SwfdecMovie {
   int			rotation;     		/* rotation in degrees */
   cairo_matrix_t	transform;		/* transformation matrix computed from above */
   cairo_matrix_t	inverse_transform;	/* the inverse of the transformation matrix */
+  SwfdecColorTransform	color_transform;	/* scripted color transformation */
 
   /* iteration state */
   guint			frame;			/* current frame */

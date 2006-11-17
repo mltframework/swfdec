@@ -41,6 +41,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_html_parser.c \
 	swfdec_image.c \
 	swfdec_js.c \
+	swfdec_js_color.c \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \

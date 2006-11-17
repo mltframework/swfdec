@@ -638,6 +638,39 @@ mc_totalframes (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+mc_alpha_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  d = movie->color_transform.aa * 100.0 / 256.0;
+  return JS_NewNumberValue (cx, d, vp);
+}
+
+static JSBool
+mc_alpha_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+  int alpha;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (!JS_ValueToNumber (cx, *vp, &d))
+    return JS_TRUE;
+  alpha = d * 256.0 / 100.0;
+  if (alpha != movie->color_transform.aa) {
+    movie->color_transform.aa = alpha;
+    swfdec_movie_invalidate (movie);
+  }
+  return JS_TRUE;
+}
+
+static JSBool
 mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
@@ -725,7 +758,7 @@ JSPropertySpec movieclip_props[] = {
   {"_yscale",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_currentframe", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
   {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
-  {"_alpha",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_alpha",	    -1,		MC_PROP_ATTRS,			  mc_alpha_get,	    mc_alpha_set },
   {"_visble",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_width",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_height",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },

@@ -97,7 +97,6 @@ struct _SwfdecMovie {
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
   /* leftover unimplemented variables from the Actionscript spec */
-  int alpha;
   //droptarget
   char *target;
   char *url;

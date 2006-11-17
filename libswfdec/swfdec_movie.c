@@ -90,13 +90,16 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
  * @movie: a #SwfdecMovie
  * @state: how much needs to be updated
  *
- * Queues an update of all cached values inside @movie.
+ * Queues an update of all cached values inside @movie and invalidates it.
  **/
 void
 swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieState state)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  if (movie->cache_state < SWFDEC_MOVIE_INVALID_EXTENTS &&
+      state >= SWFDEC_MOVIE_INVALID_EXTENTS)
+    swfdec_movie_invalidate (movie);
   while (movie && movie->cache_state < state) {
     movie->cache_state = state;
     movie = movie->parent;
@@ -253,7 +256,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
     klass->content_changed (movie, content);
   movie->content = content;
 
-  swfdec_movie_invalidate (movie);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 }
 

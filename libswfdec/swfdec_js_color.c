@@ -133,12 +133,26 @@ swfdec_js_color_set_transform (JSContext *cx, JSObject *obj, uintN argc, jsval *
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_js_color_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  JSString *string;
+
+  string = JS_InternString (cx, "[object Object]");
+  if (string == NULL)
+    return JS_FALSE;
+
+  *rval = STRING_TO_JSVAL (string);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec color_methods[] = {
-    {"getRGB",		swfdec_js_color_get_rgb,	1, 0, 0 },
-    {"getTransform",  	swfdec_js_color_get_transform,	1, 0, 0 },
-    {"setRGB",		swfdec_js_color_set_rgb,	1, 0, 0 },
-    {"setTransform",  	swfdec_js_color_set_transform,	1, 0, 0 },
-    {0,0,0,0,0}
+  { "getRGB",		swfdec_js_color_get_rgb,	1, 0, 0 },
+  { "getTransform",  	swfdec_js_color_get_transform,	1, 0, 0 },
+  { "setRGB",		swfdec_js_color_set_rgb,	1, 0, 0 },
+  { "setTransform",  	swfdec_js_color_set_transform,	1, 0, 0 },
+  { "toString",	  	swfdec_js_color_to_string,	0, 0, 0 },
+  {0,0,0,0,0}
 };
 
 static void

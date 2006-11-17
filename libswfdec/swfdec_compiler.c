@@ -150,7 +150,9 @@ atomize_int32 (CompileState *state, int i)
 #define GE(state) ONELINER (state, JSOP_GE)
 #define THIS(state) ONELINER (state, JSOP_THIS)
 #define SWAP(state) ONELINER (state, JSOP_SWAP)
+#define DUP(state) ONELINER (state, JSOP_DUP)
 #define FLASHCALL(state) ONELINER (state, JSOP_FLASHCALL)
+#define FLASHSWAP(state, n) THREELINER_INT (state, JSOP_FLASHSWAP, n)
 
 #define DO_JUMP(state, opcode, offset) G_STMT_START {\
   guint8 command[3] = { opcode, 0, 0 }; \
@@ -171,9 +173,7 @@ compile_state_add_code (CompileState *state, const guint8 *code, guint len)
 static void
 bind_name (CompileState *state, const char *name)
 {
-  jsatomid id = atomize_string (state, name);
-  guint8 command[3] = { JSOP_BINDNAME, id >> 8, id };
-  compile_state_add_code (state, command, 3);
+  THREELINER_ATOM (state, JSOP_BINDNAME, name);
 }
 
 #define TARGET_NAME "__swfdec_target"
@@ -400,12 +400,6 @@ call (CompileState *state, guint n_arguments)
 }
 
 static void
-flash_swap (CompileState *state, guint n)
-{
-  THREELINER_INT (state, JSOP_FLASHSWAP, n);
-}
-
-static void
 call_void_function (CompileState *state, const char *name)
 {
   push_prop (state, name);
@@ -445,7 +439,7 @@ compile_set_variable (CompileState *state, guint action, guint len)
 {
   /* FIXME: handle paths */
   push_target (state);
-  flash_swap (state, 3);
+  FLASHSWAP (state, 3);
   SWAP (state);
   ONELINER (state, JSOP_SETELEM);
   POP (state);
@@ -778,21 +772,21 @@ compile_start_drag (CompileState *state, guint action, guint len)
   push_prop (state, "eval");
   PUSH_OBJ (state);
   FLASHCALL (state);
-  flash_swap (state, 3);
+  FLASHSWAP (state, 3);
   compile_state_add_code (state, command, 3);
-  flash_swap (state, 3);
-  flash_swap (state, 6);
-  flash_swap (state, 3);
-  flash_swap (state, 4);
-  flash_swap (state, 5);
-  flash_swap (state, 4);
+  FLASHSWAP (state, 3);
+  FLASHSWAP (state, 6);
+  FLASHSWAP (state, 3);
+  FLASHSWAP (state, 4);
+  FLASHSWAP (state, 5);
+  FLASHSWAP (state, 4);
   push_uint16 (state, 5);
   command[0] = JSOP_GOTO;
   command[2] = 6;
   compile_state_add_code (state, command, 3);
   push_uint16 (state, 1);
   SWAP (state);
-  flash_swap (state, 3);
+  FLASHSWAP (state, 3);
   push_prop (state, "startDrag");
   PUSH_OBJ (state);
   FLASHCALL (state);
@@ -836,7 +830,7 @@ compile_get_property (CompileState *state, guint action, guint len)
 static void
 compile_set_property (CompileState *state, guint action, guint len)
 {
-  flash_swap (state, 3);
+  FLASHSWAP (state, 3);
   push_uint16 (state, 3);
   bind_name (state, "setProperty");
   push_prop (state, "setProperty");
@@ -874,6 +868,43 @@ compile_target_path (CompileState *state, guint action, guint len)
   call (state, 0);
   THREELINER_INT (state, JSOP_GOTO, 4);
   ONELINER (state, JSOP_VOID);
+}
+
+static void
+compile_new_object (CompileState *state, guint action, guint len)
+{
+  /* use eval to get at the constructor - spidermonkey doesn't like
+   * new with strings */
+  push_uint16 (state, 1);
+  bind_name (state, "eval");
+  push_prop (state, "eval");
+  PUSH_OBJ (state);
+  FLASHCALL (state);
+  /* use call instead of new here - if this doesn't work, a FLASHNEW opcode is needed */
+  PUSH_OBJ (state);
+  FLASHCALL (state);
+}
+
+static void
+compile_init_object (CompileState *state, guint action, guint len)
+{
+  name (state, "Object");
+  PUSH_OBJ (state);
+  THREELINER_INT (state, JSOP_NEW, 0);
+  DUP (state);
+  FLASHSWAP (state, 3);
+  DUP (state);
+  THREELINER_INT (state, JSOP_IFEQ, 17);
+  ONELINER (state, JSOP_ONE);
+  ONELINER (state, JSOP_SUB);
+  FLASHSWAP (state, 5);
+  SWAP (state);
+  FLASHSWAP (state, 4);
+  ONELINER (state, JSOP_SETELEM);
+  POP (state);
+  THREELINER_INT (state, JSOP_GOTO, -19);
+  POP (state);
+  POP (state);
 }
 
 static void
@@ -1097,10 +1128,10 @@ SwfdecActionSpec actions[] = {
   { 0x3d, "CallFunction", compile_call_function },
   { 0x3e, "Return", NULL },
   { 0x3f, "Modulo", NULL },
-  { 0x40, "NewObject", NULL },
+  { 0x40, "NewObject", compile_new_object },
   { 0x41, "DefineLocal2", NULL },
   { 0x42, "InitArray", NULL },
-  { 0x43, "InitObject", NULL },
+  { 0x43, "InitObject", compile_init_object },
   { 0x44, "Typeof", NULL },
   { 0x45, "TargetPath", compile_target_path },
   { 0x46, "Enumerate", NULL },

@@ -2123,7 +2123,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     S = NULL;
     mlo = mhi = NULL;
     
-    if (!(int) d) {
+    if (d == 0) {
       no_digits:
         *decpt = 1;
         if (bufsize < 2) {

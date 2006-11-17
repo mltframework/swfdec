@@ -301,10 +301,26 @@ cleanup:
 static void
 add_try_catch_block (CompileState *state, guint n_bytes, guint pc_offset)
 {
+  ptrdiff_t last = 0;
+  ptrdiff_t cur_offset;
   JSTryNote tn;
   
   g_assert (state->bytecode->len >= OFFSET_MAIN);
-  tn.start = state->bytecode->len - OFFSET_MAIN;
+  cur_offset = state->bytecode->len - OFFSET_MAIN;
+  if (state->trynotes->len > 0) {
+    JSTryNote *tmp = &g_array_index (state->trynotes, JSTryNote, state->trynotes->len - 1);
+    last = tmp->start + tmp->length;
+    /* FIXME: allow nesting of try/catch blocks */
+    g_assert (last <= cur_offset);
+  }
+  if (last < cur_offset) {
+    /* add "no catching here" note */
+    tn.start = last;
+    tn.length = cur_offset - last;
+    tn.catchStart = 0;
+    g_array_append_val (state->trynotes, tn);
+  }
+  tn.start = cur_offset;
   tn.length = n_bytes;
   tn.catchStart = state->bytecode->len + pc_offset - OFFSET_MAIN;
   SWFDEC_LOG ("adding try/catch at %u (len %u) to offset %u", 
@@ -746,10 +762,13 @@ compile_call_method (CompileState *state, guint action, guint len)
   add_try_catch_block (state, 1, 6);
   ONELINER (state, JSOP_GETELEM);
   ONELINER (state, JSOP_PUSHOBJ);
-  add_try_catch_block (state, 1, 4);
+#if 0
+  /* FIXME: can't add try/catch here, because FLASHCALL removes argument count from the stack (oops) */
+  add_try_catch_block (state, 1, 5);
+#endif
   ONELINER (state, JSOP_FLASHCALL);
   THREELINER_INT (state, JSOP_GOTO, 17);
-  /* exeception handling goes here: clean up the stack */
+  /* exception handling goes here: clean up the stack */
   POP (state);
   POP (state);
   ONELINER (state, JSOP_DUP);

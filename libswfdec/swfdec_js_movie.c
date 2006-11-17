@@ -589,6 +589,40 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+mc_yscale_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  d = movie->yscale * 100;
+  return JS_NewNumberValue (cx, d, vp);
+}
+
+static JSBool
+mc_yscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (!JS_ValueToNumber (cx, *vp, &d))
+    return JS_FALSE;
+  if (!finite (d)) {
+    SWFDEC_WARNING ("trying to set yscale to a non-finite value, ignoring");
+    return JS_TRUE;
+  }
+  movie->yscale = d / 100;
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+
+  return JS_TRUE;
+}
+
+static JSBool
 mc_currentframe (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
@@ -755,7 +789,7 @@ JSPropertySpec movieclip_props[] = {
   {"_x",	    -1,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
   {"_y",	    -1,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
   {"_xscale",	    -1,		MC_PROP_ATTRS,			  mc_xscale_get,    mc_xscale_set },
-  {"_yscale",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_yscale",	    -1,		MC_PROP_ATTRS,			  mc_yscale_get,    mc_yscale_set },
   {"_currentframe", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
   {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
   {"_alpha",	    -1,		MC_PROP_ATTRS,			  mc_alpha_get,	    mc_alpha_set },

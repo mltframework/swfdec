@@ -50,8 +50,8 @@ swfdec_slow_loader_load (SwfdecLoader *loader, const char *url)
 
   new = swfdec_loader_load (slow->loader, url); 
   if (new == NULL)
-    return new;
-  return swfdec_slow_loader_new (new, slow->duration);
+    return NULL;
+  return swfdec_slow_loader_new (new, slow->duration / 1000);
 }
 
 static void
@@ -85,7 +85,7 @@ swfdec_slow_loader_tick (gpointer data)
     total += slow->duration - 1; /* rounding */
     amount = MIN (amount, total / slow->duration);
     buffer = swfdec_buffer_queue_pull (slow->loader->queue, amount);
-#if 0
+#if 1
     g_print ("pushing %u bytes (%u/%u total)\n",
 	amount, swfdec_buffer_queue_get_offset (slow->loader->queue),
 	swfdec_buffer_queue_get_offset (slow->loader->queue) + 

@@ -42,14 +42,8 @@ swfdec_edit_text_dispose (GObject *object)
   g_free (text->text);
   g_free (text->variable);
   text->variable = NULL;
-  if (text->query) {
-    JS_DestroyScript (text->player->jscx, text->query);
-    text->query = NULL;
-  }
-  if (text->set_query) {
-    JS_DestroyScript (text->player->jscx, text->set_query);
-    text->query = NULL;
-  }
+  g_free (text->variable_prefix);
+  text->variable_prefix = NULL;
   
   G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
 }
@@ -89,24 +83,16 @@ swfdec_edit_text_parse_variable (SwfdecEditText *text)
   }
   if (!text->variable)
     return;
-  text->query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
-      text->variable, strlen (text->variable), 
-      "query-variable", SWFDEC_CHARACTER (text)->id);
   s = strrchr (text->variable, '.');
   if (s) {
     guint len = s - text->variable;
-    SWFDEC_LOG ("compiling script \"%*s\" (%u chars)", len, text->variable, len);
-    text->set_query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
-	text->variable, len, 
-	"set-variable", SWFDEC_CHARACTER (text)->id);
+    text->variable_prefix = g_strndup (text->variable, len);
     text->variable_name = s + 1;
   } else {
-    text->set_query = JS_CompileScript (text->player->jscx, text->player->jsobj, 
-	"this", 4,
-	"set-variable", SWFDEC_CHARACTER (text)->id);
     text->variable_name = text->variable;
   }
 }
+
 int
 tag_func_define_edit_text (SwfdecSwfDecoder * s)
 {

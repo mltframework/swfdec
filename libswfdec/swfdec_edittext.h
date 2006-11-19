@@ -25,7 +25,6 @@
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_player.h>
-#include <libswfdec/js/jspubtd.h>
 
 G_BEGIN_DECLS
 
@@ -68,10 +67,8 @@ struct _SwfdecEditText
 
   /* variable info */
   char *		variable;	/* full name of the variable in dot notation */
+  char *		variable_prefix;/* prefix of the variable (or NULL) */
   char *		variable_name;	/* name of the variable without dots */
-  SwfdecPlayer *	player;		/* needed to create/destroy the scripts */
-  JSScript *		set_query;    	/* script to execute to get the variable's parent */
-  JSScript *		query;		/* script to execute for querying the variable's value */
   gboolean		readonly;
 };
 

@@ -455,8 +455,6 @@ swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, int id, GType type)
   if (SWFDEC_IS_SPRITE (result)) {
     g_assert (SWFDEC_DECODER (s)->player);
     SWFDEC_SPRITE (result)->player = SWFDEC_DECODER (s)->player;
-  } else if (SWFDEC_IS_EDIT_TEXT (result)) {
-    SWFDEC_EDIT_TEXT (result)->player = SWFDEC_DECODER (s)->player;
   }
 
   return result;

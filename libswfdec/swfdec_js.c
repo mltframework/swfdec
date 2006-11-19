@@ -129,6 +129,29 @@ swfdec_js_finish_player (SwfdecPlayer *player)
   }
 }
 
+JSBool
+swfdec_js_push_state (SwfdecMovie *movie)
+{
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  JSBool old_case, new_case;
+  
+  old_case = JS_GetContextCaseSensitive (player->jscx);
+  if (SWFDEC_IS_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder))
+    new_case = SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version >= 7 ? 
+      JS_TRUE : JS_FALSE;
+  else
+    new_case = JS_TRUE;
+  JS_SetContextCaseSensitive (player->jscx, new_case);
+  return old_case;
+}
+
+void
+swfdec_js_pop_state (SwfdecMovie *movie, JSBool state)
+{
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  JS_SetContextCaseSensitive (player->jscx, state);
+}
+
 /**
  * swfdec_js_execute_script:
  * @s: a @SwfdecPlayer
@@ -147,7 +170,7 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
     JSScript *script, jsval *rval)
 {
   jsval returnval = JSVAL_VOID;
-  JSBool ret, old_case;
+  JSBool ret, old_state;
 
   g_return_val_if_fail (s != NULL, FALSE);
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
@@ -165,18 +188,11 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
       return FALSE;
   }
   /* setup execution state */
-  old_case = JS_GetContextCaseSensitive (s->jscx);
-  if (SWFDEC_IS_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder))
-    ret = SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version >= 7 ? 
-      JS_TRUE : JS_FALSE;
-  else
-    ret = TRUE;
-  JS_SetContextCaseSensitive (s->jscx, ret);
-
+  old_state = swfdec_js_push_state (movie);
   ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, rval);
   
   /* restore execution state */
-  JS_SetContextCaseSensitive (s->jscx, old_case);
+  swfdec_js_pop_state (movie, old_state);
   if (ret && returnval != JSVAL_VOID) {
     JSString * str = JS_ValueToString (s->jscx, returnval);
     if (str)
@@ -291,3 +307,89 @@ fail:
   return NULL;
 }
 
+static JSBool
+swfdec_js_eval_get_property (JSContext *cx, JSObject *obj, 
+    const char *name, gboolean initial, jsval *ret)
+{
+  JSAtom *atom;
+  JSObject *pobj;
+  JSProperty *prop;
+
+  if (!JS_GetProperty (cx, obj, name, ret))
+    return JS_FALSE;
+  if (!JSVAL_IS_VOID (*ret))
+    return JS_TRUE;
+  if (!initial)
+    return JS_FALSE;
+    
+  atom = js_Atomize(cx, name, strlen(name), 0);
+  if (!atom)
+    return JS_FALSE;
+  if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+    return JS_FALSE;
+  if (!prop)
+    return JS_FALSE;
+  if (pobj)
+    obj = pobj;
+  return OBJ_GET_PROPERTY (cx, obj, (jsid) prop->id, ret);
+}
+
+/**
+ * swfdec_js_eval:
+ * @cx: a #JSContext
+ * @obj: #JSObject to use as a source for evaluating
+ * @str: The string to evaluate
+ *
+ * This function works like the Actionscript eval function used on @obj.
+ * It handles both slash-style and dot-style notation.
+ *
+ * Returns: the value or JSVAL_VOID if no value was found.
+ **/
+jsval
+swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str)
+{
+  jsval cur;
+  char *work = NULL;
+  gboolean initial = TRUE;
+
+  g_return_val_if_fail (cx != NULL, JSVAL_VOID);
+  g_return_val_if_fail (obj != NULL, JSVAL_VOID);
+  g_return_val_if_fail (str != NULL, JSVAL_VOID);
+
+  SWFDEC_LOG ("eval called with \"%s\" on %p", str, obj);
+  if (strchr (str, '/')) {
+    work = swfdec_js_slash_to_dot (str);
+    str = work;
+  }
+  cur = OBJECT_TO_JSVAL (obj);
+  if (g_str_has_prefix (str, "this")) {
+    str += 4;
+    if (*str == '.')
+      str++;
+  }
+  while (str != NULL && *str != '\0') {
+    char *dot = strchr (str, '.');
+    if (!JSVAL_IS_OBJECT (cur))
+      goto out;
+    obj = JSVAL_TO_OBJECT (cur);
+    if (dot) {
+      char *name = g_strndup (str, dot - str);
+      if (!swfdec_js_eval_get_property (cx, obj, name, initial, &cur))
+	goto out;
+      g_free (name);
+      str = dot + 1;
+    } else {
+      if (!swfdec_js_eval_get_property (cx, obj, str, initial, &cur))
+	goto out;
+      str = NULL;
+    }
+    initial = FALSE;
+  }
+
+  g_free (work);
+  return cur;
+out:
+  SWFDEC_DEBUG ("error during eval\n");
+  g_free (work);
+  return JSVAL_VOID;
+}

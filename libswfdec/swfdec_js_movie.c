@@ -36,7 +36,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 
-JSBool swfdec_js_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+JSBool swfdec_js_global_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 static void
 movie_finalize (JSContext *cx, JSObject *obj)
@@ -252,7 +252,7 @@ swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   SwfdecMovie *movie;
   jsval tmp;
 
-  swfdec_js_eval (cx, obj, 1, argv, &tmp);
+  swfdec_js_global_eval (cx, obj, 1, argv, &tmp);
   movie = swfdec_js_val_to_movie (cx, tmp);
   if (movie == NULL) {
     SWFDEC_WARNING ("specified target does not reference a movie clip");
@@ -277,7 +277,7 @@ swfdec_js_setProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   SwfdecMovie *movie;
   jsval tmp;
 
-  swfdec_js_eval (cx, obj, 1, argv, &tmp);
+  swfdec_js_global_eval (cx, obj, 1, argv, &tmp);
   movie = swfdec_js_val_to_movie (cx, tmp);
   if (movie == NULL) {
     SWFDEC_WARNING ("specified target does not reference a movie clip");
@@ -403,7 +403,7 @@ swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
-  { "eval",		swfdec_js_eval,			1, 0, 0 },
+  { "eval",		swfdec_js_global_eval,	      	1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },
   { "getBytesTotal",	mc_getBytesTotal,		0, 0, 0 },
   { "getProperty",    	swfdec_js_getProperty,		2, 0, 0 },
@@ -910,14 +910,17 @@ swfdec_js_add_movieclip_class (SwfdecPlayer *player)
 void
 swfdec_js_movie_add_property (SwfdecMovie *movie)
 {
+  JSBool state;
   jsval val;
   JSObject *jsobj;
+  JSContext *cx;
 
   if (movie->jsobj == NULL) {
     if (!swfdec_js_add_movie (movie))
       return;
   }
   val = OBJECT_TO_JSVAL (movie->jsobj);
+  cx = SWFDEC_ROOT_MOVIE (movie->root)->player->jscx;
   if (movie->parent) {
     jsobj = movie->parent->jsobj;
     if (jsobj == NULL)
@@ -928,18 +931,22 @@ swfdec_js_movie_add_property (SwfdecMovie *movie)
     jsobj = SWFDEC_ROOT_MOVIE (movie->root)->player->jsobj;
     SWFDEC_LOG ("setting %s as property for _global", movie->name);
   }
-  JS_SetProperty (SWFDEC_ROOT_MOVIE (movie->root)->player->jscx, 
-      jsobj, movie->name, &val);
+  state = swfdec_js_push_state (movie);
+  JS_SetProperty (cx, jsobj, movie->name, &val);
+  swfdec_js_pop_state (movie, state);
 }
 
 void
 swfdec_js_movie_remove_property (SwfdecMovie *movie)
 {
+  JSBool state;
   JSObject *jsobj;
+  JSContext *cx;
 
   if (movie->jsobj == NULL)
     return;
 
+  cx = SWFDEC_ROOT_MOVIE (movie->root)->player->jscx;
   if (movie->parent) {
     jsobj = movie->parent->jsobj;
     if (jsobj == NULL)
@@ -949,8 +956,9 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   }
 
   SWFDEC_LOG ("removing %s as property", movie->name);
-  JS_DeleteProperty (SWFDEC_ROOT_MOVIE (movie->root)->player->jscx, 
-      jsobj, movie->name);
+  state = swfdec_js_push_state (movie);
+  JS_DeleteProperty (cx, jsobj, movie->name);
+  swfdec_js_pop_state (movie, state);
 }
 
 /**

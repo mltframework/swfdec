@@ -36,6 +36,10 @@ gboolean	swfdec_js_execute_script	(SwfdecPlayer *		player,
 gboolean	swfdec_js_run			(SwfdecPlayer *		player,
 						 const char *		s,
 						 jsval *		rval);
+/* FIXME: someone figure out if case sensitivity is global or per-movie */
+JSBool		swfdec_js_push_state		(SwfdecMovie *		movie);
+void		swfdec_js_pop_state		(SwfdecMovie *		movie,
+						 JSBool			state);
 
 void		swfdec_js_add_color		(SwfdecPlayer *		player);
 void		swfdec_js_add_globals		(SwfdecPlayer *		player);
@@ -49,6 +53,9 @@ void		swfdec_js_movie_add_property	(SwfdecMovie *		movie);
 void		swfdec_js_movie_remove_property	(SwfdecMovie *		movie);
 
 char *		swfdec_js_slash_to_dot		(const char *		slash_str);
+jsval		swfdec_js_eval			(JSContext *		cx,
+						 JSObject *		obj,
+						 const char *		str);
 
 /* support functions */
 const char *	swfdec_js_to_string		(JSContext *		cx,

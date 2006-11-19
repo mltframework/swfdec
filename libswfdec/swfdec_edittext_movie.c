@@ -72,13 +72,16 @@ swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
   jsval val;
   const char *s;
 
-  if (text->text->query == NULL)
+  if (text->text->variable == NULL)
     return;
 
   player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  if (!swfdec_js_execute_script	(player,
-	movie->parent, text->text->query, &val))
-    return;
+  if (movie->parent->jsobj == NULL) {
+    swfdec_js_add_movie (movie->parent);
+    if (movie->parent->jsobj == NULL)
+      return;
+  }
+  val = swfdec_js_eval (player->jscx, movie->parent->jsobj, text->text->variable);
   if (JSVAL_IS_VOID (val))
     return;
 
@@ -100,17 +103,22 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   JSString *string;
   jsval val;
 
-  if (text->text->set_query == NULL)
+  if (text->text->variable == NULL)
     return;
 
   player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  if (!swfdec_js_execute_script	(player,
-	movie->parent, text->text->set_query, &val))
-    return;
-
-  if (!JSVAL_IS_OBJECT (val))
-    return;
-  object = JSVAL_TO_OBJECT (val);
+  if (movie->parent->jsobj == NULL) {
+    swfdec_js_add_movie (movie->parent);
+    if (movie->parent->jsobj == NULL)
+      return;
+  }
+  object = movie->parent->jsobj;
+  if (text->text->variable_prefix) {
+    val = swfdec_js_eval (player->jscx, object, text->text->variable_prefix);
+    if (!JSVAL_IS_OBJECT (val))
+      return;
+    object = JSVAL_TO_OBJECT (val);
+  }
   if (!JS_GetProperty (player->jscx, object, text->text->variable_name, &val))
     return;
   if (!JSVAL_IS_VOID (val)) {

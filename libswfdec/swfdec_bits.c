@@ -217,22 +217,48 @@ swfdec_bits_get_float (SwfdecBits * b)
   return conv.f;
 }
 
-double
-swfdec_bits_get_double (SwfdecBits * b)
+/* fixup mad byte ordering of doubles in flash files.
+ * If little endian x86 byte order is 0 1 2 3 4 5 6 7 and PPC32 byte order is
+ * 7 6 5 4 3 2 1 0, then Flash uses 4 5 6 7 0 1 2 3.
+ * If your architecture has a different byte ordering for storing doubles,
+ * this conversion function will fail. To find out your byte ordering, you can
+ * use this command line:
+ * python -c "import struct; print struct.unpack('8c', struct.pack('d', 7.949928895127363e-275))"
+ */
+static double 
+swfdec_bits_double_to_host (double in)
 {
   union {
-    gint64 i;
+    guint32 i[2];
     double d;
   } conv;
 
+  conv.d = in;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  {
+    int tmp = conv.i[0];
+    conv.i[0] = conv.i[1];
+    conv.i[1] = tmp;
+  }
+#else
+  conv.i[0] = GUINT32_FROM_LE (conv.i[0]);
+  conv.i[1] = GUINT32_FROM_LE (conv.i[1]);
+#endif
+  return conv.d;
+}
+
+double
+swfdec_bits_get_double (SwfdecBits * b)
+{
+  double d;
+
   SWFDEC_BYTES_CHECK (b, 8);
 
-  conv.i = *((gint64 *) b->ptr);
+  d = *((double *) b->ptr);
   b->ptr += 8;
+  d = swfdec_bits_double_to_host (d);
 
-  conv.i = GINT64_FROM_LE (conv.i);
-
-  return conv.d;
+  return d;
 }
 
 void

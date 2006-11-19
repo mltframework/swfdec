@@ -33,9 +33,9 @@ swfdec_js_color_get_rgb (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   SwfdecMovie *movie = JS_GetPrivate (cx, obj);
 
   g_assert (movie);
-  result = ((int) movie->color_transform.rb << 16) +
-	   (((int) movie->color_transform.gb << 8) & 0xFF00) + 
-	   ((int) movie->color_transform.bb & 0xFF);
+  result = (movie->color_transform.rb << 16) |
+	   ((movie->color_transform.gb % 256) << 8) | 
+	   (movie->color_transform.bb % 256);
   *rval = INT_TO_JSVAL (result);
   return JS_TRUE;
 }

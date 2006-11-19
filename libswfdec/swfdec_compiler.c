@@ -522,6 +522,13 @@ compile_push (CompileState *state, guint action, guint len)
       case 1: /* float */
 	read_and_push_float (state);
 	break;
+      case 5: /* boolean */
+	type = swfdec_bits_get_u8 (bits);
+	if (type)
+	  ONELINER (state, JSOP_TRUE);
+	else
+	  ONELINER (state, JSOP_FALSE);
+	break;
       case 6: /* double */
 	read_and_push_double (state);
 	break;
@@ -547,13 +554,6 @@ compile_push (CompileState *state, guint action, guint len)
 	push_string (state, (char *) g_ptr_array_index (state->pool, type));
 	break;
       case 4: /* register */
-      case 5: /* boolean */
-	type = swfdec_bits_get_u8 (bits);
-	if (type)
-	  ONELINER (state, JSOP_TRUE);
-	else
-	  ONELINER (state, JSOP_FALSE);
-	break;
       default:
 	compile_state_error (state, "Push: type %u not implemented", type);
 	swfdec_bits_getbits (bits, 8 * (end - bits->ptr));

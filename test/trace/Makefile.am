@@ -21,8 +21,12 @@ EXTRA_DIST = \
 	color-setTransform-alpha.swf.trace \
 	color-setTransform-empty.swf \
 	color-setTransform-empty.swf.trace \
+	color-setTransform-negative.swf \
+	color-setTransform-negative.swf.trace \
 	color-setTransform-full.swf \
 	color-setTransform-full.swf.trace \
+	color1.swf \
+	color1.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	currentframe.swf \

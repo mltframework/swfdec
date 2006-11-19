@@ -27,6 +27,8 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	double.swf \
+	double.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \

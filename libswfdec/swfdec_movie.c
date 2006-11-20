@@ -642,16 +642,21 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 static void
 swfdec_movie_set_name (SwfdecMovie *movie)
 {
+  /* FIXME: implement this function in a smarter way, not if (IS_FOO_MOVIE (x)) */
+  g_assert (movie->name == NULL);
   if (movie->content->name) {
     movie->name = g_strdup (movie->content->name);
     swfdec_js_movie_add_property (movie);
     movie->has_name = TRUE;
-  } else {
+  } else if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     /* FIXME: figure out if it's relative to root or player or something else
      * entirely 
      */
     SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie->root);
     movie->name = g_strdup_printf ("instance%u", ++root->unnamed_count);
+    movie->has_name = FALSE;
+  } else {
+    movie->name = g_strdup (G_OBJECT_TYPE_NAME (movie));
     movie->has_name = FALSE;
   }
   SWFDEC_LOG ("created movie %s", movie->name);

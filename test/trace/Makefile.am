@@ -49,6 +49,8 @@ EXTRA_DIST = \
 	load-4.swf.trace \
 	load-5.swf \
 	load-5.swf.trace \
+	names.swf \
+	names.swf.trace \
 	order.swf \
 	order.swf.trace \
 	setvariable.swf \

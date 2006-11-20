@@ -32,8 +32,9 @@ struct _SwfdecPatternClass
 {
   GObjectClass		object_class;
 
-  void			(* fill)		(SwfdecPattern *		pattern, 
+  void			(* paint)		(SwfdecPattern *		pattern, 
 					         cairo_t *			cr,
+						 const cairo_path_t *		path,
 						 const SwfdecColorTransform *	trans,
 						 unsigned int			ratio);
 };
@@ -50,12 +51,13 @@ SwfdecPattern *	swfdec_pattern_parse_stroke   	(SwfdecSwfDecoder *		dec,
 SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
 SwfdecPattern *	swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *		dec);
 
-void		swfdec_pattern_fill		(SwfdecPattern *		pattern, 
+void		swfdec_pattern_paint		(SwfdecPattern *		pattern, 
 						 cairo_t *			cr,
+						 const cairo_path_t *		path,
 						 const SwfdecColorTransform *	trans,
 						 unsigned int			ratio);
 void		swfdec_pattern_get_path_extents (SwfdecPattern *		pattern,
-						 cairo_path_t *			path,
+						 const cairo_path_t *		path,
 						 SwfdecRect *			extents);
 
 /* debug */

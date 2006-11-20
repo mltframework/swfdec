@@ -250,9 +250,10 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
     if (!fill && vec->last_index % 2 != 0) 
       continue;
 
-    cairo_append_path (cr, &vec->path);
     if (fill)
-      swfdec_pattern_fill (vec->pattern, cr, trans, 0);
+      swfdec_pattern_paint (vec->pattern, cr, &vec->path, trans, 0);
+    else
+      cairo_append_path (cr, &vec->path);
   }
 }
 
@@ -790,6 +791,7 @@ swfdec_shape_initialize_from_sub_paths (SwfdecShape *shape, GArray *path_array)
   for (i = 0; i < shape->vecs->len; i++) {
     SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
     swfdec_pattern_get_path_extents (vec->pattern, &vec->path, &vec->extents);
+    swfdec_rect_union (&SWFDEC_GRAPHIC (shape)->extents, &SWFDEC_GRAPHIC (shape)->extents, &vec->extents);
   }
 }
 

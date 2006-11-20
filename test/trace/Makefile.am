@@ -41,6 +41,8 @@ EXTRA_DIST = \
 	goto3.swf.trace \
 	goto4.swf \
 	goto4.swf.trace \
+	goto5.swf \
+	goto5.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
 	load-4.swf \
@@ -52,6 +54,8 @@ EXTRA_DIST = \
 	setvariable.swf \
 	setvariable.swf.trace \
 	undefined1.swf \
-	undefined1.swf.trace
+	undefined1.swf.trace \
+	xscale.swf \
+	xscale.swf.trace
 
 CLEANFILES = tmp

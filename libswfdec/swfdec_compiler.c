@@ -1033,7 +1033,9 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
   const SwfdecActionSpec *current;
   CompileState state;
   JSScript *ret;
+#ifndef SWFDEC_DISABLE_DEBUG
   unsigned char *start = bits->ptr;
+#endif
 #ifndef G_DISABLE_ASSERT
   unsigned char *target;
 #endif

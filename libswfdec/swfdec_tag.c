@@ -68,20 +68,6 @@ tag_func_protect (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_dumpbits (SwfdecSwfDecoder * s)
-{
-  SwfdecBits *b = &s->b;
-
-  SWFDEC_DEBUG ("%02x %02x %02x %02x %02x %02x %02x %02x",
-      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
-      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
-      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b),
-      swfdec_bits_get_u8 (b), swfdec_bits_get_u8 (b));
-
-  return SWFDEC_STATUS_OK;
-}
-
-int
 tag_func_frame_label (SwfdecSwfDecoder * s)
 {
   SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];

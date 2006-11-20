@@ -814,7 +814,9 @@ enum {
 static JSBool
 not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+#ifndef SWFDEC_DISABLE_DEBUG
   const char *str = swfdec_js_to_string (cx, id);
+#endif
   SWFDEC_ERROR ("reading and writing property %s is not implemented", str);
   return JS_TRUE;
 }

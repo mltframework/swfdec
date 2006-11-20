@@ -179,14 +179,14 @@ swfdec_movie_tell_about_removal (SwfdecMovie *movie)
 static void
 swfdec_sprite_movie_goto (SwfdecMovie *mov, guint frame)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecPlayer *player;
   GList *walk;
 
   g_assert (frame < mov->n_frames);
 
   player = SWFDEC_ROOT_MOVIE (mov->root)->player;
-  SWFDEC_LOG ("queueing goto %u for %p %d", frame, mov, SWFDEC_CHARACTER (movie->sprite)->id);
+  SWFDEC_LOG ("queueing goto %u for %p %d", frame, mov, 
+      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (movie)->sprite)->id);
   
   g_assert (frame <= G_MAXINT);
 

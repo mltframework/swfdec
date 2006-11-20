@@ -1,6 +1,6 @@
 SUBDIRS = jpeg js
 
-DIST_SUBDIRS = jpeg js mpeg
+DIST_SUBDIRS = jpeg js 
 
 CODECS =
 

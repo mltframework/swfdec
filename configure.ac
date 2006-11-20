@@ -170,7 +170,6 @@ Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
-libswfdec/mpeg/Makefile
 player/Makefile
 plugin/Makefile
 test/Makefile

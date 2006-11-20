@@ -659,6 +659,42 @@ mc_framesloaded (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+mc_name_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  JSString *string;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (movie->_name)
+    string = JS_NewStringCopyZ (cx, movie->_name);
+  else
+    string = JS_NewStringCopyZ (cx, "");
+  if (string == NULL)
+    return JS_FALSE;
+  *vp = STRING_TO_JSVAL (string);
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_name_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  const char *str;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  g_free (movie->_name);
+  str = swfdec_js_to_string (cx, *vp);
+  movie->_name = g_strdup (str);
+
+  return JS_TRUE;
+}
+
+static JSBool
 mc_totalframes (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
@@ -797,8 +833,9 @@ JSPropertySpec movieclip_props[] = {
   {"_width",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_height",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_rotation",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_target",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_framesloaded", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL },
-  {"_name",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_name",	    -1,		MC_PROP_ATTRS,			  mc_name_get,	    mc_name_set },
   {"_droptarget",   -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_url",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_highquality",  -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },

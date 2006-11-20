@@ -616,6 +616,7 @@ swfdec_movie_dispose (GObject *object)
 
   SWFDEC_LOG ("disposing movie %s", movie->name);
   g_free (movie->name);
+  g_free (movie->_name);
   if (movie->parent)
     g_object_unref (movie->parent);
 

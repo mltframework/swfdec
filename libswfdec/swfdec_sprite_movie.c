@@ -186,7 +186,7 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint frame)
 
   player = SWFDEC_ROOT_MOVIE (mov->root)->player;
   SWFDEC_LOG ("queueing goto %u for %p %d", frame, mov, 
-      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (movie)->sprite)->id);
+      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (mov)->sprite)->id);
   
   g_assert (frame <= G_MAXINT);
 

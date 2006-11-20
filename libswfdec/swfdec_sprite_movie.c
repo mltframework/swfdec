@@ -288,7 +288,7 @@ new_decoder:
   g_assert (movie->sound_stream == NULL);
   movie->sound_stream = swfdec_audio_stream_new (player, 
       movie->sprite, movie->current_frame);
-  g_object_add_weak_pointer (G_OBJECT (movie->sound_stream), (gpointer *) &movie->sound_stream);
+  g_object_add_weak_pointer (G_OBJECT (movie->sound_stream), (gpointer *) (void *) &movie->sound_stream);
   movie->sound_frame = movie->current_frame;
   return TRUE;
 }

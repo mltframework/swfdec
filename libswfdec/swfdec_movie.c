@@ -449,7 +449,7 @@ SwfdecMovie *
 swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 {
   GList *walk, *clip_walk;
-  unsigned int clip_depth;
+  unsigned int clip_depth = 0;
   SwfdecMovie *ret;
   SwfdecMovieClass *klass;
 

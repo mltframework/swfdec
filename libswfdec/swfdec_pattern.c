@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <math.h>
+
 #include "swfdec_pattern.h"
 #include "swfdec_bits.h"
 #include "swfdec_cache.h"
@@ -53,6 +55,8 @@ swfdec_pattern_init (SwfdecPattern *pattern)
 
 /*** STROKE PATTERN ***/
 
+#define MAX_ALIGN 10
+
 typedef struct _SwfdecStrokePattern SwfdecStrokePattern;
 typedef struct _SwfdecStrokePatternClass SwfdecStrokePatternClass;
 
@@ -81,29 +85,92 @@ struct _SwfdecStrokePatternClass
 G_DEFINE_TYPE (SwfdecStrokePattern, swfdec_stroke_pattern, SWFDEC_TYPE_PATTERN);
 
 static void
-swfdec_stroke_pattern_fill (SwfdecPattern *pattern, cairo_t *cr,
+swfdec_pattern_append_path_snapped (cairo_t *cr, const cairo_path_t *path)
+{
+  cairo_path_data_t *data;
+  double x, y;
+  int i;
+
+  data = path->data;
+  for (i = 0; i < path->num_data; i++) {
+    switch (data[i].header.type) {
+      case CAIRO_PATH_MOVE_TO:
+	i++;
+	x = data[i].point.x;
+	y = data[i].point.y;
+	cairo_user_to_device (cr, &x, &y);
+	x = rint (x - 0.5) + 0.5;
+	y = rint (y - 0.5) + 0.5;
+	cairo_device_to_user (cr, &x, &y);
+	/* FIXME: currently we need to clamp this due to extents */
+	x = CLAMP (x, data[i].point.x - MAX_ALIGN, data[i].point.x + MAX_ALIGN);
+	y = CLAMP (y, data[i].point.y - MAX_ALIGN, data[i].point.y + MAX_ALIGN);
+	cairo_move_to (cr, x, y);
+	break;
+      case CAIRO_PATH_LINE_TO:
+	i++;
+	x = data[i].point.x;
+	y = data[i].point.y;
+	cairo_user_to_device (cr, &x, &y);
+	x = rint (x - 0.5) + 0.5;
+	y = rint (y - 0.5) + 0.5;
+	cairo_device_to_user (cr, &x, &y);
+	/* FIXME: currently we need to clamp this due to extents */
+	x = CLAMP (x, data[i].point.x - MAX_ALIGN, data[i].point.x + MAX_ALIGN);
+	y = CLAMP (y, data[i].point.y - MAX_ALIGN, data[i].point.y + MAX_ALIGN);
+	cairo_line_to (cr, x, y);
+	break;
+      case CAIRO_PATH_CURVE_TO:
+	x = data[i+3].point.x;
+	y = data[i+3].point.y;
+	cairo_user_to_device (cr, &x, &y);
+	x = rint (x - 0.5) + 0.5;
+	y = rint (y - 0.5) + 0.5;
+	cairo_device_to_user (cr, &x, &y);
+	/* FIXME: currently we need to clamp this due to extents */
+	x = CLAMP (x, data[i+3].point.x - MAX_ALIGN, data[i+3].point.x + MAX_ALIGN);
+	y = CLAMP (y, data[i+3].point.y - MAX_ALIGN, data[i+3].point.y + MAX_ALIGN);
+	cairo_curve_to (cr, data[i+1].point.x, data[i+1].point.y, 
+	    data[i+2].point.x, data[i+2].point.y, x, y);
+	i += 3;
+	break;
+      case CAIRO_PATH_CLOSE_PATH:
+	/* doesn't exist in our code */
+      default:
+	g_assert_not_reached ();
+    }
+  }
+}
+
+static void
+swfdec_stroke_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *path,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   SwfdecColor color;
+  double width;
   SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
 
+  swfdec_pattern_append_path_snapped (cr, path);
   color = swfdec_color_apply_morph (stroke->start_color, stroke->end_color, ratio);
   color = swfdec_color_apply_transform (color, trans);
   swfdec_color_set_source (cr, color);
   if (ratio == 0) {
-    cairo_set_line_width (cr, stroke->start_width);
+    width = stroke->start_width;
   } else if (ratio == 65535) {
-    cairo_set_line_width (cr, stroke->end_width);
+    width = stroke->end_width;
   } else {
-    cairo_set_line_width (cr, (stroke->start_width * (65535 - ratio) + stroke->end_width * ratio) / 65535);
+    width = (stroke->start_width * (65535 - ratio) + stroke->end_width * ratio) / 65535;
   }
+  if (width < SWFDEC_SCALE_FACTOR)
+    width = SWFDEC_SCALE_FACTOR;
+  cairo_set_line_width (cr, width);
   cairo_stroke (cr);
 }
 
 static void
 swfdec_stroke_pattern_class_init (SwfdecStrokePatternClass *klass)
 {
-  SWFDEC_PATTERN_CLASS (klass)->fill = swfdec_stroke_pattern_fill;
+  SWFDEC_PATTERN_CLASS (klass)->paint = swfdec_stroke_pattern_paint;
 }
 
 static void
@@ -139,12 +206,13 @@ struct _SwfdecColorPatternClass
 G_DEFINE_TYPE (SwfdecColorPattern, swfdec_color_pattern, SWFDEC_TYPE_PATTERN);
 
 static void
-swfdec_color_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
+swfdec_color_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t *path,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   SwfdecColorPattern *pattern = SWFDEC_COLOR_PATTERN (pat);
   SwfdecColor color;
 
+  cairo_append_path (cr, (cairo_path_t *) path);
   color = swfdec_color_apply_morph (pattern->start_color, pattern->end_color, ratio);
   color = swfdec_color_apply_transform (color, trans);
   swfdec_color_set_source (cr, color);
@@ -154,7 +222,7 @@ swfdec_color_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
 static void
 swfdec_color_pattern_class_init (SwfdecColorPatternClass *klass)
 {
-  SWFDEC_PATTERN_CLASS (klass)->fill = swfdec_color_pattern_fill;
+  SWFDEC_PATTERN_CLASS (klass)->paint = swfdec_color_pattern_paint;
 }
 
 static void
@@ -191,7 +259,7 @@ struct _SwfdecImagePatternClass
 G_DEFINE_TYPE (SwfdecImagePattern, swfdec_image_pattern, SWFDEC_TYPE_PATTERN);
 
 static void
-swfdec_image_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
+swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t *path,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
@@ -201,6 +269,7 @@ swfdec_image_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
   cairo_matrix_t mat;
   unsigned char *image_data = swfdec_handle_get_data(image->image->handle);
   
+  cairo_append_path (cr, (cairo_path_t *) path);
   color = swfdec_color_apply_transform (0xFFFFFFFF, trans);
   src_surface = cairo_image_surface_create_for_data (image_data,
       CAIRO_FORMAT_ARGB32, image->image->width, image->image->height,
@@ -226,7 +295,7 @@ swfdec_image_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
 static void
 swfdec_image_pattern_class_init (SwfdecImagePatternClass *klass)
 {
-  SWFDEC_PATTERN_CLASS (klass)->fill = swfdec_image_pattern_fill;
+  SWFDEC_PATTERN_CLASS (klass)->paint = swfdec_image_pattern_paint;
 }
 
 static void
@@ -263,7 +332,7 @@ struct _SwfdecGradientPatternClass
 G_DEFINE_TYPE (SwfdecGradientPattern, swfdec_gradient_pattern, SWFDEC_TYPE_PATTERN);
 
 static void
-swfdec_gradient_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
+swfdec_gradient_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t *path,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   unsigned int i;
@@ -272,6 +341,7 @@ swfdec_gradient_pattern_fill (SwfdecPattern *pat, cairo_t *cr,
   double offset;
   SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pat);
 
+  cairo_append_path (cr, (cairo_path_t *) path);
 #if 0
   /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
   if (gradient->radial)
@@ -336,7 +406,7 @@ swfdec_gradient_pattern_class_init (SwfdecGradientPatternClass *klass)
 {
   G_OBJECT_CLASS (klass)->dispose = swfdec_gradient_pattern_dispose;
 
-  SWFDEC_PATTERN_CLASS (klass)->fill = swfdec_gradient_pattern_fill;
+  SWFDEC_PATTERN_CLASS (klass)->paint = swfdec_gradient_pattern_paint;
 }
 
 static void
@@ -358,17 +428,17 @@ swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
 SwfdecPattern *
 swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 {
-  unsigned int fill_style_type;
+  unsigned int paint_style_type;
   SwfdecBits *bits;
   SwfdecPattern *pattern;
 
   g_return_val_if_fail (dec != NULL, NULL);
 
   bits = &dec->b;
-  fill_style_type = swfdec_bits_get_u8 (bits);
-  SWFDEC_LOG ("    type 0x%02x", fill_style_type);
+  paint_style_type = swfdec_bits_get_u8 (bits);
+  SWFDEC_LOG ("    type 0x%02x", paint_style_type);
 
-  if (fill_style_type == 0x00) {
+  if (paint_style_type == 0x00) {
     pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
     if (rgba) {
       SWFDEC_COLOR_PATTERN (pattern)->start_color = swfdec_bits_get_rgba (bits);
@@ -377,7 +447,7 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
     }
     SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
     SWFDEC_LOG ("    color %08x", SWFDEC_COLOR_PATTERN (pattern)->start_color);
-  } else if (fill_style_type == 0x10 || fill_style_type == 0x12) {
+  } else if (paint_style_type == 0x10 || paint_style_type == 0x12) {
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
     swfdec_bits_get_matrix (bits, &pattern->start_transform);
     pattern->end_transform = pattern->start_transform;
@@ -386,13 +456,13 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
     } else {
       SWFDEC_GRADIENT_PATTERN (pattern)->gradient = swfdec_bits_get_gradient (bits);
     }
-    SWFDEC_GRADIENT_PATTERN (pattern)->radial = (fill_style_type == 0x12);
-  } else if (fill_style_type >= 0x40 && fill_style_type <= 0x43) {
-    guint fill_id = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("   background fill id = %d (type 0x%02x)",
-	fill_id, fill_style_type);
-    if (fill_id == 65535) {
-      /* FIXME: someone explain this magic fill id here */
+    SWFDEC_GRADIENT_PATTERN (pattern)->radial = (paint_style_type == 0x12);
+  } else if (paint_style_type >= 0x40 && paint_style_type <= 0x43) {
+    guint paint_id = swfdec_bits_get_u16 (bits);
+    SWFDEC_LOG ("   background paint id = %d (type 0x%02x)",
+	paint_id, paint_style_type);
+    if (paint_id == 65535) {
+      /* FIXME: someone explain this magic paint id here */
       pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
       SWFDEC_COLOR_PATTERN (pattern)->start_color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
@@ -402,29 +472,29 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
       pattern = g_object_new (SWFDEC_TYPE_IMAGE_PATTERN, NULL);
       swfdec_bits_get_matrix (bits, &pattern->start_transform);
       pattern->end_transform = pattern->start_transform;
-      SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, fill_id);
+      SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, paint_id);
       if (!SWFDEC_IS_IMAGE (SWFDEC_IMAGE_PATTERN (pattern)->image)) {
 	g_object_unref (pattern);
-	SWFDEC_ERROR ("could not find image with id %u for pattern", fill_id);
+	SWFDEC_ERROR ("could not find image with id %u for pattern", paint_id);
 	return NULL;
       }
-      if (fill_style_type == 0x40 || fill_style_type == 0x42) {
+      if (paint_style_type == 0x40 || paint_style_type == 0x42) {
 	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_REPEAT;
       } else {
 	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_NONE;
       }
-      if (fill_style_type == 0x40 || fill_style_type == 0x41) {
+      if (paint_style_type == 0x40 || paint_style_type == 0x41) {
 	SWFDEC_IMAGE_PATTERN (pattern)->filter = CAIRO_FILTER_BILINEAR;
       } else {
 	SWFDEC_IMAGE_PATTERN (pattern)->filter = CAIRO_FILTER_NEAREST;
       }
     }
   } else {
-    SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
+    SWFDEC_ERROR ("unknown paint style type 0x%02x", paint_style_type);
     return NULL;
   }
   if (cairo_matrix_invert (&pattern->start_transform)) {
-    SWFDEC_ERROR ("fill transform matrix not invertible, resetting");
+    SWFDEC_ERROR ("paint transform matrix not invertible, resetting");
     cairo_matrix_init_identity (&pattern->start_transform);
     cairo_matrix_init_identity (&pattern->end_transform);
   }
@@ -444,35 +514,35 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 SwfdecPattern *
 swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
 {
-  unsigned int fill_style_type;
+  unsigned int paint_style_type;
   SwfdecBits *bits;
   SwfdecPattern *pattern;
 
   g_return_val_if_fail (dec != NULL, NULL);
 
   bits = &dec->b;
-  fill_style_type = swfdec_bits_get_u8 (bits);
-  SWFDEC_LOG ("    type 0x%02x", fill_style_type);
+  paint_style_type = swfdec_bits_get_u8 (bits);
+  SWFDEC_LOG ("    type 0x%02x", paint_style_type);
 
-  if (fill_style_type == 0x00) {
+  if (paint_style_type == 0x00) {
     pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
     SWFDEC_COLOR_PATTERN (pattern)->start_color = swfdec_bits_get_rgba (bits);
     SWFDEC_COLOR_PATTERN (pattern)->end_color = swfdec_bits_get_rgba (bits);
     SWFDEC_LOG ("    color %08x => %08x", SWFDEC_COLOR_PATTERN (pattern)->start_color,
 	SWFDEC_COLOR_PATTERN (pattern)->end_color);
-  } else if (fill_style_type == 0x10 || fill_style_type == 0x12) {
+  } else if (paint_style_type == 0x10 || paint_style_type == 0x12) {
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
     swfdec_bits_get_matrix (bits, &pattern->start_transform);
     swfdec_bits_get_matrix (bits, &pattern->end_transform);
     SWFDEC_GRADIENT_PATTERN (pattern)->gradient = swfdec_bits_get_morph_gradient (bits);
-    SWFDEC_GRADIENT_PATTERN (pattern)->radial = (fill_style_type == 0x12);
+    SWFDEC_GRADIENT_PATTERN (pattern)->radial = (paint_style_type == 0x12);
     SWFDEC_GRADIENT_PATTERN (pattern)->morph = TRUE;
-  } else if (fill_style_type >= 0x40 && fill_style_type <= 0x43) {
-    guint fill_id = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("   background fill id = %d (type 0x%02x)",
-	fill_id, fill_style_type);
-    if (fill_id == 65535) {
-      /* FIXME: someone explain this magic fill id here */
+  } else if (paint_style_type >= 0x40 && paint_style_type <= 0x43) {
+    guint paint_id = swfdec_bits_get_u16 (bits);
+    SWFDEC_LOG ("   background paint id = %d (type 0x%02x)",
+	paint_id, paint_style_type);
+    if (paint_id == 65535) {
+      /* FIXME: someone explain this magic paint id here */
       pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
       SWFDEC_COLOR_PATTERN (pattern)->start_color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
@@ -482,33 +552,33 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
       pattern = g_object_new (SWFDEC_TYPE_IMAGE_PATTERN, NULL);
       swfdec_bits_get_matrix (bits, &pattern->start_transform);
       swfdec_bits_get_matrix (bits, &pattern->end_transform);
-      SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, fill_id);
+      SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, paint_id);
       if (!SWFDEC_IS_IMAGE (SWFDEC_IMAGE_PATTERN (pattern)->image)) {
 	g_object_unref (pattern);
-	SWFDEC_ERROR ("could not find image with id %u for pattern", fill_id);
+	SWFDEC_ERROR ("could not find image with id %u for pattern", paint_id);
 	return NULL;
       }
-      if (fill_style_type == 0x40 || fill_style_type == 0x42) {
+      if (paint_style_type == 0x40 || paint_style_type == 0x42) {
 	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_REPEAT;
       } else {
 	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_NONE;
       }
-      if (fill_style_type == 0x40 || fill_style_type == 0x41) {
+      if (paint_style_type == 0x40 || paint_style_type == 0x41) {
 	SWFDEC_IMAGE_PATTERN (pattern)->filter = CAIRO_FILTER_BILINEAR;
       } else {
 	SWFDEC_IMAGE_PATTERN (pattern)->filter = CAIRO_FILTER_NEAREST;
       }
     }
   } else {
-    SWFDEC_ERROR ("unknown fill style type 0x%02x", fill_style_type);
+    SWFDEC_ERROR ("unknown paint style type 0x%02x", paint_style_type);
     return NULL;
   }
   if (cairo_matrix_invert (&pattern->start_transform)) {
-    SWFDEC_ERROR ("fill start transform matrix not invertible, resetting");
+    SWFDEC_ERROR ("paint start transform matrix not invertible, resetting");
     cairo_matrix_init_identity (&pattern->start_transform);
   }
   if (cairo_matrix_invert (&pattern->end_transform)) {
-    SWFDEC_ERROR ("fill end transform matrix not invertible, resetting");
+    SWFDEC_ERROR ("paint end transform matrix not invertible, resetting");
     cairo_matrix_init_identity (&pattern->end_transform);
   }
   swfdec_bits_syncbits (bits);
@@ -516,29 +586,31 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
 }
 
 /**
- * swfdec_pattern_fill:
+ * swfdec_pattern_paint:
  * @pattern: a #SwfdecPattern
- * @cr: the context to fill
- * @trans: color transformation to apply before filling
+ * @cr: the context to paint
+ * @path: the path to paint
+ * @trans: color transformation to apply before painting
  * @ratio: For morphshapes, the ratio to apply. Other objects should set this to 0.
  *
  * Fills the current path of @cr with the given @pattern.
  **/
 void
-swfdec_pattern_fill (SwfdecPattern *pattern, cairo_t *cr,
+swfdec_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *path,
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   SwfdecPatternClass *klass;
 
   g_return_if_fail (SWFDEC_IS_PATTERN (pattern));
   g_return_if_fail (cr != NULL);
+  g_return_if_fail (path != NULL);
   g_return_if_fail (trans != NULL);
   g_return_if_fail (ratio < 65536);
 
   klass = SWFDEC_PATTERN_GET_CLASS (pattern);
-  g_return_if_fail (klass->fill);
+  g_return_if_fail (klass->paint);
 
-  klass->fill (pattern, cr, trans, ratio);
+  klass->paint (pattern, cr, path, trans, ratio);
 }
 
 /**
@@ -710,11 +782,18 @@ swfdec_path_get_extents (const cairo_path_t *path, SwfdecRect *extents, double l
 }
 
 void
-swfdec_pattern_get_path_extents (SwfdecPattern *pattern, cairo_path_t *path, SwfdecRect *extents)
+swfdec_pattern_get_path_extents (SwfdecPattern *pattern, const cairo_path_t *path, SwfdecRect *extents)
 {
   if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
     SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
-    swfdec_path_get_extents (path, extents, MAX (stroke->start_width, stroke->end_width));
+    double line_width = MAX (stroke->start_width, stroke->end_width);
+    line_width = MAX (line_width, SWFDEC_SCALE_FACTOR);
+    swfdec_path_get_extents (path, extents, line_width / 2);
+    /* add offsets for pixel-alignment here */
+    extents->x0 -= MAX_ALIGN;
+    extents->y0 -= MAX_ALIGN;
+    extents->x1 += MAX_ALIGN;
+    extents->y1 += MAX_ALIGN;
   } else {
     swfdec_path_get_extents (path, extents, 0.0);
   }

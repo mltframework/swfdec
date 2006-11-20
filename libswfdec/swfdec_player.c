@@ -340,13 +340,6 @@ swfdec_player_do_iterate (SwfdecPlayer *player)
   }
   swfdec_player_perform_actions (player);
   SWFDEC_INFO ("=== STOP ITERATION ===");
-  /* update the state of the mouse when stuff below it moved */
-  if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
-    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
-    swfdec_player_do_mouse_move (player);
-    swfdec_player_perform_actions (player);
-    SWFDEC_INFO ("=== DONE UPDATING mouse post-iteration ===");
-  }
   /* this loop allows removal of walk->data */
   walk = player->movies;
   while (walk) {
@@ -367,13 +360,25 @@ void
 swfdec_player_perform_actions (SwfdecPlayer *player)
 {
   GList *walk;
+  SwfdecRect old_inval;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  while (swfdec_player_do_action (player));
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
+  swfdec_rect_init_empty (&old_inval);
+  do {
+    while (swfdec_player_do_action (player));
+    for (walk = player->roots; walk; walk = walk->next) {
+      swfdec_movie_update (walk->data);
+    }
+    /* update the state of the mouse when stuff below it moved */
+    if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
+      SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
+      swfdec_player_do_mouse_move (player);
+    }
+    swfdec_rect_union (&old_inval, &old_inval, &player->invalid);
+    swfdec_rect_init_empty (&player->invalid);
+  } while (swfdec_ring_buffer_get_n_elements (player->actions) > 0);
+  player->invalid = old_inval;
 }
 
 void

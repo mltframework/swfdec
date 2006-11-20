@@ -254,24 +254,25 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s)
     case 3:
       sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
       break;
+    case 1:
+      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
+      break;
     case 2:
       sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
-    case 1:
-      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
-      SWFDEC_WARNING ("adpcm decoding doesn't work");
-      break;
     case 6:
       sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
-      SWFDEC_WARNING ("Nellymosere compression not implemented");
       break;
     default:
       SWFDEC_WARNING ("unknown format %d", format);
       sound->format = format;
   }
   sound->codec = swfdec_codec_get_audio (sound->format);
+  if (sound->codec == NULL) {
+    SWFDEC_WARNING ("No codec found for format %u", sound->format);
+  }
 
   return SWFDEC_STATUS_OK;
 }

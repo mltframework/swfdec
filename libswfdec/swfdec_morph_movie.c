@@ -66,9 +66,10 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
     if (!fill && vec->last_index % 2 != 0) 
       continue;
 
-    cairo_append_path (cr, path);
     if (fill)
-      swfdec_pattern_fill (vec->pattern, cr, trans, movie->content->ratio);
+      swfdec_pattern_paint (vec->pattern, cr, path, trans, movie->content->ratio);
+    else
+      cairo_append_path (cr, &vec->path);
   }
 }
 

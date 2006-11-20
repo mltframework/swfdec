@@ -181,7 +181,7 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
   cairo_surface_t *surface;
   cairo_t *cr;
   guint width, height;
-  const SwfdecColorTransform trans = { { 1, 1, 1, 1 }, { 0, 0, 0, 0 } };
+  const SwfdecColorTransform trans = { 256, 0, 256, 0, 256, 0, 256, 0 };
 
   if (SWFDEC_IS_SPRITE (graphic)) {
     g_printerr ("Sprites can not be exported");

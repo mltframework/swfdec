@@ -315,7 +315,6 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
 
   swfdec_bits_syncbits (bits);
 
-  cairo_matrix_init_identity (matrix);
   has_scale = swfdec_bits_getbit (bits);
   if (has_scale) {
     int n_scale_bits = swfdec_bits_getbits (bits, 5);
@@ -327,6 +326,8 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     matrix->yy = scale_y / SWFDEC_FIXED_SCALE_FACTOR;
   } else {
     SWFDEC_LOG ("no scalefactors given");
+    matrix->xx = 1.0;
+    matrix->yy = 1.0;
   }
   has_rotate = swfdec_bits_getbit (bits);
   if (has_rotate) {
@@ -339,6 +340,8 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
     matrix->yx = rotate_skew0 / SWFDEC_FIXED_SCALE_FACTOR;
   } else {
     SWFDEC_LOG ("no rotation");
+    matrix->xy = 0.0;
+    matrix->yx = 0.0;
   }
   {
     cairo_matrix_t tmp = *matrix;

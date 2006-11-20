@@ -868,6 +868,19 @@ compile_string_add (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_equals (CompileState *state, guint action, guint len)
+{
+  /* ensure we compare numbers */
+  ONELINER (state, JSOP_POS);
+  ONELINER (state, JSOP_EQ);
+  if (state->version <= 4) {
+    /* FLash 4 wants 1 or 0 on the stack instead of TRUE or FALSE */
+    ONELINER (state, JSOP_ZERO);
+    ONELINER (state, JSOP_BITOR);
+  }
+}
+
+static void
 compile_to_integer (CompileState *state, guint action, guint len)
 {
   /* There's no opcode so we use a bitwise operation that forces a conversion */
@@ -1105,7 +1118,7 @@ SwfdecActionSpec actions[] = {
   { 0x0b, "Subtract", compile_oneliner },
   { 0x0c, "Multiply", compile_oneliner },
   { 0x0d, "Divide", compile_oneliner },
-  { 0x0e, "Equals", NULL },
+  { 0x0e, "Equals", compile_equals },
   { 0x0f, "Less", NULL },
   { 0x10, "And", NULL },
   { 0x11, "Or", NULL },

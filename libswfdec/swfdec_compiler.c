@@ -251,7 +251,7 @@ finished:
     } else {
       gint16 *data = (gint16 *) bytecode;
       if (offset > G_MAXINT32 || offset < G_MININT32) {
-	compile_state_error (state, "jump from %u to %u is too big\n",
+	compile_state_error (state, "jump from %u to %u is too big",
 	  jump->bytecode, MIN (state->offsets->len - 1, jump->offset));
 	return;
       }
@@ -274,7 +274,7 @@ compile_state_finish (CompileState *state)
     JSAtomMap clear;
     js_InitAtomMap (cx, &clear, &state->atoms);
     js_FreeAtomMap (cx, &clear);
-    SWFDEC_ERROR ("%s\n", state->error);
+    SWFDEC_ERROR ("%s", state->error);
     g_free (state->error);
     //g_assert_not_reached ();
     goto cleanup;

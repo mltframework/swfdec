@@ -251,12 +251,17 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
 
   current = &movie->sprite->frames[movie->current_frame];
-  if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov))
+  if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
+    g_assert (movie->sound_stream == NULL);
     return FALSE;
+  }
   
   /* first start all event sounds */
-  for (walk = current->sound; walk; walk = walk->next) {
-    swfdec_audio_event_new (player, walk->data);
+  /* FIXME: is this correct? */
+  if (movie->sound_frame != movie->current_frame) {
+    for (walk = current->sound; walk; walk = walk->next) {
+      swfdec_audio_event_new (player, walk->data);
+    }
   }
 
   /* then do the streaming thing */
@@ -266,10 +271,10 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
       swfdec_audio_remove (movie->sound_stream);
       g_assert (movie->sound_stream == NULL);
     }
-    return TRUE;
+    goto exit;
   }
   if (movie->sound_stream == NULL && current->sound_block == NULL)
-    return TRUE;
+    goto exit;
   SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
   if (movie->sound_frame + 1 != movie->current_frame)
     goto new_decoder;
@@ -280,6 +285,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   last = &movie->sprite->frames[movie->sound_frame];
   if (last->sound_head != current->sound_head)
     goto new_decoder;
+exit:
   movie->sound_frame = movie->current_frame;
   return TRUE;
 
@@ -339,6 +345,7 @@ static void
 swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
   movie->current_frame = (guint) -1;
+  movie->sound_frame = (guint) -1;
 }
 
 gboolean

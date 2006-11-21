@@ -24,11 +24,23 @@ swfdec_buffer_new (void)
 }
 
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc (int size)
+swfdec_buffer_new_and_alloc (unsigned int size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
   buffer->data = g_malloc (size);
+  buffer->length = size;
+  buffer->free = swfdec_buffer_free_mem;
+
+  return buffer;
+}
+
+SwfdecBuffer *
+swfdec_buffer_new_and_alloc0 (unsigned int size)
+{
+  SwfdecBuffer *buffer = swfdec_buffer_new ();
+
+  buffer->data = g_malloc0 (size);
   buffer->length = size;
   buffer->free = swfdec_buffer_free_mem;
 

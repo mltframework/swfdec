@@ -5,22 +5,37 @@
 #include <libswfdec/swfdec.h>
 
 static gboolean
-audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original)
+audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
 {
   guint i;
   gint16 *comp_data, *org_data;
   
-  if (compare->length != original->length) {
-    g_print ("  ERROR: lengths don't match (is %u, should be %u)\n", 
-	compare->length, original->length);
+  /* must hold since we are rendering it */
+  g_assert (compare->length % 4 == 0);
+  if (original->length % 4 != 0) {
+    g_print ("  ERROR: %s: filesize not multiple of 4\n", filename);
     return FALSE;
+  }
+  if (compare->length != original->length) {
+    /* we allow to cut 0 bytes off the comparison files - at least as long as we render additional 0s */
+    for (i = compare->length; i < original->length; i++) {
+      if (compare->data[i] != 0)
+	break;
+    }
+    if (i < original->length) {
+      g_print ("  ERROR: %s: sample count doesn't match (is %u, should be %u)\n", 
+	  filename, compare->length / 4, original->length / 4);
+      return FALSE;
+    }
   }
   comp_data = (gint16 *) compare->data;
   org_data = (gint16 *) original->data;
   for (i = 0; i < compare->length / 2; i++) {
     if (comp_data[i] != org_data[i]) {
-      g_print ("  ERROR: data mismatch at sample offset %u (is 0x%04X, should be 0x%04X)\n",
-	  i, (gint) comp_data[i], (gint) org_data[i]);
+      g_print ("  ERROR: %s: data mismatch at sample %u (is %04X %04X, should be %04X %04X)\n",
+	  filename, i / 2, 
+	  (gint) comp_data[i & !1], (gint) comp_data[i | 1],
+	  (gint) org_data[i & !1], (gint) org_data[i | 1]);
       return FALSE;
     }
   }
@@ -72,7 +87,7 @@ finish_stream (TestStream *stream)
   swfdec_buffer_queue_free (stream->queue);
   file = swfdec_buffer_new_from_file (stream->name, &error);
   if (file) {
-    ret = audio_diff (buffer, file);
+    ret = audio_diff (buffer, file, stream->name);
     swfdec_buffer_unref (file);
   } else {
     g_print ("  ERROR: %s\n", error->message);
@@ -88,7 +103,7 @@ finish_stream (TestStream *stream)
 static void
 audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, TestData *data)
 {
-  TestStream *stream;
+  TestStream *stream = NULL;
   GList *walk;
 
   for (walk = data->streams; walk; walk = walk->next) {
@@ -103,6 +118,21 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, TestData *data)
   }
 }
 
+static void
+render_all_streams (TestData *data, SwfdecPlayer *player)
+{
+  GList *walk;
+  guint samples;
+  
+  samples = swfdec_player_get_audio_samples (player);
+  for (walk = data->streams; walk; walk = walk->next) {
+    TestStream *stream = walk->data;
+    SwfdecBuffer *buffer = swfdec_buffer_new_and_alloc0 (samples * 4);
+    swfdec_audio_render (stream->audio, (gint16 *) buffer->data, 0, samples);
+    swfdec_buffer_queue_push (stream->queue, buffer);
+  }
+}
+
 static gboolean
 run_test (const char *filename)
 {
@@ -114,7 +144,7 @@ run_test (const char *filename)
   const char *name;
   GDir *dir;
   GList *walk;
-  TestData data = { filename, NULL, 0, 0, TRUE };
+  TestData data = { filename, NULL, NULL, 0, 0, TRUE };
 
   g_print ("Testing %s:\n", filename);
   dirname = g_path_get_dirname (filename);
@@ -143,10 +173,12 @@ run_test (const char *filename)
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), &data);
   swfdec_player_set_loader (player, loader);
 
+  render_all_streams (&data, player);
   for (i = 0; i < 10; i++) {
     data.current_frame++;
     data.current_frame_audio = 0;
     swfdec_player_iterate (player);
+    render_all_streams (&data, player);
   }
   g_object_unref (player);
   for (walk = data.streams; walk; walk = walk->next) {

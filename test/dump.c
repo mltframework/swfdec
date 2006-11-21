@@ -83,11 +83,27 @@ dump_sprite (SwfdecSprite *s)
     g_print ("  %u frames\n", s->n_frames);
   } else {
     guint i, j;
+    SwfdecSound *sound = NULL;
 
     for (i = 0; i < s->n_frames; i++) {
-      SwfdecSpriteFrame * frame = &s->frames[i];
+      SwfdecSpriteFrame *frame = &s->frames[i];
       if (frame->actions == NULL)
 	continue;
+      if (frame->sound_head != sound &&
+	  frame->sound_block != NULL) {
+	sound = frame->sound_head;
+	for (j = i; j < s->n_frames; j++) {
+	  SwfdecSpriteFrame *cur = &s->frames[i];
+	  if (cur->sound_head != sound)
+	    break;
+	}
+	if (sound)
+	  g_print ("   %4u -%4u  sound: %s %uHz, %s, %ubit\n", i, j, 
+	      get_audio_format_name (sound->format),
+	      44100 / sound->rate_multiplier, 
+	      sound->channels == 1 ? "mono" : "stereo",
+	      sound->width ? 16 : 8);
+      }
       for (j = 0; j < frame->actions->len; j++) {
 	SwfdecSpriteAction *action = 
 	  &g_array_index (frame->actions, SwfdecSpriteAction, j);

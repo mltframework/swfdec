@@ -268,6 +268,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
     }
     return TRUE;
   }
+  if (movie->sound_stream == NULL && current->sound_block == NULL)
+    return TRUE;
   SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
   if (movie->sound_frame + 1 != movie->current_frame)
     goto new_decoder;

@@ -1,3 +1,22 @@
+/* Swfdec
+ * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -13,7 +32,8 @@ audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
   /* must hold since we are rendering it */
   g_assert (compare->length % 4 == 0);
   if (original->length % 4 != 0) {
-    g_print ("  ERROR: %s: filesize not multiple of 4\n", filename);
+    g_print ("  ERROR: %s: filesize (%u bytes) not multiple of 4\n", filename,
+	original->length);
     return FALSE;
   }
   if (compare->length != original->length) {
@@ -25,21 +45,37 @@ audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
     if (i < original->length) {
       g_print ("  ERROR: %s: sample count doesn't match (is %u, should be %u)\n", 
 	  filename, compare->length / 4, original->length / 4);
-      return FALSE;
+      goto dump;
     }
   }
   comp_data = (gint16 *) compare->data;
   org_data = (gint16 *) original->data;
   for (i = 0; i < compare->length / 2; i++) {
-    if (comp_data[i] != org_data[i]) {
-      g_print ("  ERROR: %s: data mismatch at sample %u (is %04X %04X, should be %04X %04X)\n",
+    /* original data is little endian */
+    if (comp_data[i] != GINT16_FROM_LE (org_data[i])) {
+      g_print ("  ERROR: %s: data mismatch at sample %u (is %04hX %04hX, should be %04hX %04hX)\n",
 	  filename, i / 2, 
-	  (gint) comp_data[i & !1], (gint) comp_data[i | 1],
-	  (gint) org_data[i & !1], (gint) org_data[i | 1]);
-      return FALSE;
+	  comp_data[i & !1], comp_data[i | 1],
+	  GINT16_FROM_LE (org_data[i & !1]), GINT16_FROM_LE (org_data[i | 1]));
+      goto dump;
     }
   }
   return TRUE;
+dump:
+  if (g_getenv ("SWFDEC_TEST_DUMP")) {
+    GError *error = NULL;
+    char *dump = g_strdup_printf ("%s.dump", filename);
+    /* convert to LE */
+    comp_data = (gint16 *) compare->data;
+    for (i = 0; i < compare->length / 2; i++) {
+      comp_data[i] = GINT16_TO_LE (comp_data[i]);
+    }
+    if (!g_file_set_contents (dump, (char *) compare->data, compare->length, &error)) {
+      g_print ("  ERROR: failed to dump contents: %s\n", error->message);
+      g_error_free (error);
+    }
+  }
+  return FALSE;
 }
 
 typedef struct {

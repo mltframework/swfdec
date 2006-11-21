@@ -297,9 +297,7 @@ swfdec_player_render_audio_to_buffer (SwfdecPlayer *player)
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
-  buffer = swfdec_buffer_new ();
-  buffer->length = player->samples_this_frame * 4;
-  buffer->data = g_malloc0 (buffer->length);
+  buffer = swfdec_buffer_new_and_alloc0 (player->samples_this_frame * 4);
   swfdec_player_render_audio (player, (gint16 *) buffer->data,
       player->samples_latency, player->samples_this_frame);
 

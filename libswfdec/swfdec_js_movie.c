@@ -35,6 +35,7 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_swf_decoder.h"
 
 JSBool swfdec_js_global_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
@@ -775,6 +776,84 @@ mc_alpha_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  swfdec_movie_update (movie);
+  d = (movie->extents.x1 - movie->extents.x0) / SWFDEC_SCALE_FACTOR;
+  return JS_NewNumberValue (cx, d, vp);
+}
+
+static JSBool
+mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  /* property was readonly in Flash 4 and before */
+  if (SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version < 5)
+    return JS_TRUE;
+  if (!JS_ValueToNumber (cx, *vp, &d))
+    return JS_FALSE;
+  if (!finite (d)) {
+    SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
+    return JS_TRUE;
+  }
+  swfdec_movie_update (movie);
+  movie->xscale = d * SWFDEC_SCALE_FACTOR / (movie->original_extents.x1 - movie->original_extents.x0);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+
+  return JS_TRUE;
+}
+
+static JSBool
+mc_height_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  swfdec_movie_update (movie);
+  d = (movie->extents.y1 - movie->extents.y0) / SWFDEC_SCALE_FACTOR;
+  return JS_NewNumberValue (cx, d, vp);
+}
+
+static JSBool
+mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  /* property was readonly in Flash 4 and before */
+  if (SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version < 5)
+    return JS_TRUE;
+  if (!JS_ValueToNumber (cx, *vp, &d))
+    return JS_FALSE;
+  if (!finite (d)) {
+    SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
+    return JS_TRUE;
+  }
+  swfdec_movie_update (movie);
+  movie->yscale = d * SWFDEC_SCALE_FACTOR / (movie->original_extents.y1 - movie->original_extents.y0);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+
+  return JS_TRUE;
+}
+
+static JSBool
 mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
@@ -866,8 +945,8 @@ JSPropertySpec movieclip_props[] = {
   {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
   {"_alpha",	    -1,		MC_PROP_ATTRS,			  mc_alpha_get,	    mc_alpha_set },
   {"_visble",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_width",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  {"_height",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_width",	    -1,		MC_PROP_ATTRS,			  mc_width_get,	    mc_width_set },
+  {"_height",	    -1,		MC_PROP_ATTRS,			  mc_height_get,    mc_height_set },
   {"_rotation",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_target",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_framesloaded", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL },

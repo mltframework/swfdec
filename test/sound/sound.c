@@ -30,8 +30,8 @@ audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
   gint16 *comp_data, *org_data;
   
   /* must hold since we are rendering it */
-  g_assert (compare->length % 4 == 0);
-  if (original->length % 4 != 0) {
+  g_assert (compare->length % 2 == 0);
+  if (original->length % 2 != 0) {
     g_print ("  ERROR: %s: filesize (%u bytes) not multiple of 4\n", filename,
 	original->length);
     return FALSE;
@@ -50,13 +50,11 @@ audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
   }
   comp_data = (gint16 *) compare->data;
   org_data = (gint16 *) original->data;
-  for (i = 0; i < compare->length / 2; i++) {
+  for (i = 0; i < original->length / 2; i++) {
     /* original data is little endian */
     if (comp_data[i] != GINT16_FROM_LE (org_data[i])) {
-      g_print ("  ERROR: %s: data mismatch at sample %u (is %04hX %04hX, should be %04hX %04hX)\n",
-	  filename, i / 2, 
-	  comp_data[i & !1], comp_data[i | 1],
-	  GINT16_FROM_LE (org_data[i & !1]), GINT16_FROM_LE (org_data[i | 1]));
+      g_print ("  ERROR: %s: data mismatch at sample %u (is %04hX, should be %04hX)\n",
+	  filename, i, comp_data[i], GINT16_FROM_LE (org_data[i]));
       goto dump;
     }
   }

@@ -113,7 +113,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
     case SWFDEC_SPRITE_ACTION_REMOVE:
       SWFDEC_LOG ("REMOVE action: depth %u", GPOINTER_TO_UINT (action->data));
       if (!swfdec_sprite_movie_remove_child (mov, GPOINTER_TO_UINT (action->data)))
-	SWFDEC_WARNING ("could not remove, no child at depth %u", GPOINTER_TO_UINT (action->data));
+	SWFDEC_INFO ("could not remove, no child at depth %u", GPOINTER_TO_UINT (action->data));
       break;
     default:
       g_assert_not_reached ();

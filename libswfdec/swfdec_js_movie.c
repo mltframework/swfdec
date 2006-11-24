@@ -348,6 +348,7 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   guint depth;
 
   movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
 
   if (JSVAL_IS_OBJECT (argv[0])) {
     other = swfdec_js_val_to_movie (cx, argv[0]);
@@ -370,6 +371,18 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   swfdec_movie_invalidate (movie);
   movie->depth = depth;
   movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_js_movie_removeMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  swfdec_movie_remove (movie);
   return JS_TRUE;
 }
 
@@ -444,13 +457,14 @@ static JSFunctionSpec movieclip_methods[] = {
   { "getURL",    	swfdec_js_getURL,		2, 0, 0 },
   { "gotoAndPlay",	mc_gotoAndPlay,			1, 0, 0 },
   { "gotoAndStop",	mc_gotoAndStop,			1, 0, 0 },
+  { "hitTest",		mc_hitTest,			1, 0, 0 },
   { "nextFrame",	swfdec_js_nextFrame,	      	0, 0, 0 },
   { "play",		mc_play,			0, 0, 0 },
   { "prevFrame",	swfdec_js_prevFrame,	      	0, 0, 0 },
-  { "stop",		mc_stop,			0, 0, 0 },
-  { "hitTest",		mc_hitTest,			1, 0, 0 },
+  { "removeMovieClip",	swfdec_js_movie_removeMovieClip,0, 0, 0 },
   { "setProperty",    	swfdec_js_setProperty,		3, 0, 0 },
   { "startDrag",    	swfdec_js_startDrag,		0, 0, 0 },
+  { "stop",		mc_stop,			0, 0, 0 },
   { "stopDrag",    	swfdec_js_stopDrag,		0, 0, 0 },
   { "swapDepths",    	swfdec_js_movie_swapDepths,   	1, 0, 0 },
   { "toString",	  	swfdec_js_movie_to_string,	0, 0, 0 },

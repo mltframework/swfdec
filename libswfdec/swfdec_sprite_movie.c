@@ -104,10 +104,10 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       if (child != NULL && child->content->sequence == content->sequence) {
 	swfdec_movie_set_content (child, content);
       } else if (child) {
-	SWFDEC_WARNING ("supposed to update depth %u, but child is in different sequence", 
+	SWFDEC_INFO ("supposed to update depth %u, but child is in different sequence", 
 	    content->depth);
       } else {
-	SWFDEC_WARNING ("supposed to update depth %u, but no child", content->depth);
+	SWFDEC_INFO ("supposed to update depth %u, but no child", content->depth);
       }
       break;
     case SWFDEC_SPRITE_ACTION_REMOVE:

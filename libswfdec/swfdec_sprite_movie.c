@@ -39,9 +39,9 @@ swfdec_sprite_movie_find (GList *movie_list, guint depth)
   for (walk = movie_list; walk; walk = walk->next) {
     SwfdecMovie *movie = walk->data;
 
-    if (movie->content->depth < depth)
+    if (movie->depth < depth)
       continue;
-    if (movie->content->depth == depth)
+    if (movie->depth == depth)
       return movie;
     break;
   }
@@ -101,8 +101,11 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       content = action->data;
       SWFDEC_LOG ("UPDATE action: depth %u", content->depth);
       child = swfdec_movie_find (mov, content->depth);
-      if (child != NULL) {
+      if (child != NULL && child->content->sequence == content->sequence) {
 	swfdec_movie_set_content (child, content);
+      } else if (child) {
+	SWFDEC_WARNING ("supposed to update depth %u, but child is in different sequence", 
+	    content->depth);
       } else {
 	SWFDEC_WARNING ("supposed to update depth %u, but no child", content->depth);
       }

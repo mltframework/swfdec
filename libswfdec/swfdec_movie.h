@@ -71,6 +71,7 @@ struct _SwfdecMovie {
   char *		_name;			/* name for use by _name property */
   JSObject *		jsobj;			/* our object in javascript */
   GList *		list;			/* our contained movie clips (ordered by depth) */
+  guint			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   const SwfdecContent *	content;           	/* the content we are displaying */
   SwfdecMovieState	cache_state;		/* whether we are up to date */
 

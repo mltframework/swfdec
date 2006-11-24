@@ -510,10 +510,10 @@ swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
   for (walk = player->roots; walk; walk = walk->next) {
     SwfdecMovie *movie = walk->data;
 
-    if (movie->content->depth < depth)
+    if (movie->depth < depth)
       continue;
 
-    if (movie->content->depth == depth) {
+    if (movie->depth == depth) {
       SWFDEC_DEBUG ("remove existing movie _level%u", depth);
       swfdec_movie_remove (movie);
       player->roots = g_list_delete_link (player->roots, walk);

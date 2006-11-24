@@ -241,7 +241,7 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   if (content == NULL) {
     content = &default_content;
   } else if (movie->content != &default_content) {
-    g_return_if_fail (movie->content->depth == content->depth);
+    g_return_if_fail (movie->depth == content->depth);
     g_return_if_fail (movie->content->graphic == content->graphic);
     if (content->name) {
       g_return_if_fail (movie->content->name != NULL);
@@ -254,6 +254,7 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->content_changed)
     klass->content_changed (movie, content);
+  movie->depth = movie->content->depth;
   movie->content = content;
 
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
@@ -269,9 +270,9 @@ swfdec_movie_find (SwfdecMovie *movie, guint depth)
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *movie = walk->data;
 
-    if (movie->content->depth < depth)
+    if (movie->depth < depth)
       continue;
-    if (movie->content->depth == depth)
+    if (movie->depth == depth)
       return movie;
     break;
   }
@@ -491,8 +492,8 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
       clip_depth = 0;
       continue;
     }
-    if (child->content->depth <= clip_depth && clip_depth) {
-      SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %u)", child->content->depth, clip_depth);
+    if (child->depth <= clip_depth && clip_depth) {
+      SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %u)", child->depth, clip_depth);
       continue;
     }
 
@@ -559,7 +560,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	 * due to them being accumulated with CAIRO_FILL_RULE_EVEN_ODD
 	 */
 	SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->content->clip_depth,
-	    child, child->content->depth);
+	    child, child->depth);
 	clip_depth = child->content->clip_depth;
 	cairo_save (cr);
 	swfdec_movie_render (child, cr, &trans, &rect, FALSE);
@@ -568,13 +569,13 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       }
     }
 
-    if (clip_depth && child->content->depth > clip_depth) {
-      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->content->depth);
+    if (clip_depth && child->depth > clip_depth) {
+      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
       clip_depth = 0;
       cairo_restore (cr);
     }
 
-    SWFDEC_LOG ("rendering %p with depth %d", child, child->content->depth);
+    SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
     swfdec_movie_render (child, cr, &trans, &rect, fill);
   }
   if (clip_depth) {
@@ -675,7 +676,7 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
   if (parent) {
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
-	movie->content->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
   }
   swfdec_movie_set_name (movie);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
@@ -767,6 +768,6 @@ swfdec_movie_goto (SwfdecMovie *movie, guint frame)
 int
 swfdec_movie_compare_depths (gconstpointer a, gconstpointer b)
 {
-  return (int) (SWFDEC_MOVIE (a)->content->depth - SWFDEC_MOVIE (b)->content->depth);
+  return (int) (SWFDEC_MOVIE (a)->depth - SWFDEC_MOVIE (b)->depth);
 }
 

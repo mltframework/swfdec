@@ -66,11 +66,11 @@ struct _SwfdecSound
   SwfdecAudioFormat	format;			/* format in use */
   const SwfdecCodec *	codec;			/* codec for this sound */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
-  unsigned int		channels;		/* 1 or 2 */
-  unsigned int		rate_multiplier;	/* rate = 44100 / rate_multiplier */
+  SwfdecAudioOut	original_format;      	/* channel/rate information */
   unsigned int		n_samples;		/* total number of samples */
 
-  SwfdecBuffer *	decoded;		/* decoded data in 44.1kHz stereo host-endian, or NULL for stream objects */
+  SwfdecAudioOut	decoded_format;		/* format of decoded data */
+  SwfdecBuffer *	decoded;		/* decoded data */
 };
 
 struct _SwfdecSoundClass
@@ -86,25 +86,31 @@ int tag_func_sound_stream_head (SwfdecSwfDecoder * s);
 int tag_func_start_sound (SwfdecSwfDecoder * s);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s);
 
-gpointer		swfdec_sound_init_decoder	(SwfdecSound *	sound);
-SwfdecBuffer *		swfdec_sound_finish_decoder	(SwfdecSound *	sound,
-							 gpointer	data);
-SwfdecBuffer *		swfdec_sound_decode_buffer	(SwfdecSound *	sound,
-							 gpointer	data,
-							 SwfdecBuffer *	buffer);
+gpointer		swfdec_sound_init_decoder	(SwfdecSound *		sound);
+SwfdecBuffer *		swfdec_sound_finish_decoder	(SwfdecSound *		sound,
+							 gpointer		data);
+SwfdecBuffer *		swfdec_sound_decode_buffer	(SwfdecSound *		sound,
+							 gpointer		data,
+							 SwfdecBuffer *		buffer);
+SwfdecAudioFormat	swfdec_sound_get_decoder_format	(SwfdecSound *		sound,
+							 gpointer		data);
 
-void			swfdec_sound_render		(SwfdecSound *	sound, 
-							 gint16 *	dest, 
-							 unsigned int	offset,
-		  					 unsigned int	len,
-							 const guint16	volume[2]);
-void			swfdec_sound_add		(gint16 *	dest,
-							 const gint16 *	src,
-							 unsigned int	n_samples);
+void			swfdec_sound_render		(SwfdecSound *		sound, 
+							 gint16 *		dest, 
+							 unsigned int		offset,
+		  					 unsigned int		len);
+void			swfdec_sound_buffer_render	(gint16 *		dest, 
+							 const SwfdecBuffer *	source, 
+							 SwfdecAudioOut		format,
+							 const SwfdecBuffer *	previous, 
+							 unsigned int		offset,
+							 unsigned int		n_samples);
+guint			swfdec_sound_buffer_get_n_samples (const SwfdecBuffer * buffer, 
+                                                         SwfdecAudioOut		format);
 
-SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *s,
-							 int		id);
-void			swfdec_sound_chunk_free		(SwfdecSoundChunk *chunk);
+SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *	s,
+							 int			id);
+void			swfdec_sound_chunk_free		(SwfdecSoundChunk *	chunk);
 
 
 G_END_DECLS

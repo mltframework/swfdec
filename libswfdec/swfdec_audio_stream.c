@@ -58,14 +58,12 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
 
   g_assert (!stream->done);
   while (!stream->done) {
+    if (stream->current_frame >= stream->sprite->n_frames)
+      break;
     frame = &stream->sprite->frames[stream->current_frame];
     stream->current_frame++;
-    if (stream->current_frame >= stream->sprite->n_frames)
-      stream->done = TRUE;
-    if (frame->sound_head != stream->sound) {
-      stream->done = TRUE;
-      return NULL;
-    }
+    if (frame->sound_head != stream->sound) 
+      break;
     if (frame->sound_samples == 0)
       continue;
     /* FIXME: with this method and mad not giving out full samples, we end up 
@@ -84,24 +82,26 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
   }
   buffer = swfdec_sound_finish_decoder (stream->sound, stream->decoder);
   stream->decoder = NULL;
+  stream->done = TRUE;
   if (buffer)
     g_queue_push_tail (stream->playback_queue, buffer);
   return buffer;
 }
 
 static void
-swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest, guint start, guint n_samples)
+swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
+    guint start, guint n_samples)
 {
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   GList *walk;
   guint samples;
-  gint16 *src;
-  SwfdecBuffer *buffer;
+  SwfdecBuffer *buffer, *previous;
 
   g_assert (start < G_MAXINT);
   start += stream->playback_skip;
-  SWFDEC_LOG ("stream %p rendering offset %u, samples %u\n", stream, start, n_samples);
+  SWFDEC_LOG ("stream %p rendering offset %u, samples %u", stream, start, n_samples);
   walk = g_queue_peek_head_link (stream->playback_queue);
+  previous = NULL;
   while (n_samples) {
     if (walk) {
       buffer = walk->data;
@@ -113,25 +113,24 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest, guint start, guint
       if (!buffer)
 	break;
     }
+    samples = swfdec_sound_buffer_get_n_samples (buffer, stream->format);
     if (start) {
-      if (buffer->length <= 4 * start) {
-	start -= buffer->length / 4;
+      if (samples <= start) {
+	start -= samples;
 	continue;
       }
-      src = (gint16 *) buffer->data + 2 * start;
-      samples = buffer->length / 4 - start;
-      SWFDEC_LOG ("rendering %u samples out of %u samples, skipping %u",
-	  samples, buffer->length / 4, start);
-      start = 0;
+      samples -= start;
+      SWFDEC_LOG ("rendering %u samples, skipping %u",
+	  samples, start);
     } else {
-      src = (gint16 *) buffer->data;
-      samples = buffer->length / 4;
       SWFDEC_LOG ("rendering %u samples", samples);
     }
-    samples = MIN (samples , n_samples);
-    swfdec_sound_add (dest, src, samples);
+    samples = MIN (samples, n_samples);
+    swfdec_sound_buffer_render (dest, buffer, stream->format, previous, start, samples);
+    start = 0;
     n_samples -= samples;
     dest += 2 * samples;
+    previous = buffer;
   }
 }
 
@@ -141,21 +140,15 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   SwfdecBuffer *buffer;
 
-#if 0
-  {
-    SwfdecBuffer *buffer = swfdec_buffer_new_and_alloc (44100 * 4 * 20);
-    memset (buffer->data, 0, buffer->length);
-    swfdec_audio_stream_render (SWFDEC_AUDIO (stream), (gint16 *) buffer->data, 0, buffer->length / 4);
-    g_file_set_contents ("data.raw", (char *) buffer->data, buffer->length, NULL);
-    swfdec_buffer_unref (buffer);
-  }
-#endif
   stream->playback_skip += remove;
   buffer = g_queue_peek_head (stream->playback_queue);
-  while (buffer && stream->playback_skip >= buffer->length / 4) {
+  while (buffer && stream->playback_skip >= 
+	 swfdec_sound_buffer_get_n_samples (buffer, stream->format) 
+	 + SWFDEC_AUDIO_OUT_GRANULARITY (stream->format)) {
     buffer = g_queue_pop_head (stream->playback_queue);
-    SWFDEC_LOG ("removing buffer with %u samples", buffer->length / 4);
-    stream->playback_skip -= buffer->length / 4;
+    SWFDEC_LOG ("removing buffer with %u samples", 
+	swfdec_sound_buffer_get_n_samples (buffer, stream->format));
+    stream->playback_skip -= swfdec_sound_buffer_get_n_samples (buffer, stream->format);
     swfdec_buffer_unref (buffer);
     buffer = g_queue_peek_head (stream->playback_queue);
   }
@@ -167,9 +160,9 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
     guint ret = 0;
     
     for (walk = g_queue_peek_head_link (stream->playback_queue); walk; walk = walk->next) {
-      ret += ((SwfdecBuffer *) walk->data)->length;
+      ret += swfdec_sound_buffer_get_n_samples (walk->data, stream->format);
     }
-    return ret / 4;
+    return ret - stream->playback_skip;
   }
 }
 
@@ -208,6 +201,8 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->playback_skip = frame->sound_skip;
   stream->current_frame = start_frame;
   stream->decoder = swfdec_sound_init_decoder (stream->sound);
+  if (stream->decoder)
+    stream->format = swfdec_sound_get_decoder_format (stream->sound, stream->decoder);
   if (player) {
     if (player->samples_latency)
       swfdec_audio_stream_iterate (SWFDEC_AUDIO (stream), player->samples_latency);

@@ -23,7 +23,7 @@
 #endif
 #include <string.h>
 
-#include "swfdec.h"
+#include "swfdec_audio_internal.h"
 #include "swfdec_sound.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
@@ -129,11 +129,12 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   sound->width = size;
-  sound->channels = type ? 2 : 1;
-  sound->rate_multiplier = (1 << (3 - rate));
-  sound->n_samples = n_samples * sound->rate_multiplier;
-  SWFDEC_DEBUG ("%sLE, %uch, %ukHz", size ? "S16" : "U8", sound->channels,
-      44100 / sound->rate_multiplier);
+  rate = 1 << (3 - rate);
+  sound->original_format = SWFDEC_AUDIO_OUT_GET (type ? 2 : 1, 44100 / rate);
+  sound->n_samples = n_samples;
+  SWFDEC_DEBUG ("%u samples, %sLE, %uch, %ukHz", n_samples,
+      size ? "S16" : "U8", SWFDEC_AUDIO_OUT_N_CHANNELS (sound->original_format),
+      SWFDEC_AUDIO_OUT_RATE (sound->original_format));
 
   switch (format) {
     case 0:
@@ -149,7 +150,6 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       /* FIXME: skip these samples */
       skip = swfdec_bits_get_u16 (b);
-      skip *= sound->rate_multiplier;
       orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
@@ -168,6 +168,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
   if (sound->codec && orig_buffer) {
     SwfdecBuffer *tmp, *tmp2;
     gpointer data = swfdec_sound_init_decoder (sound);
+    sound->decoded_format = swfdec_sound_get_decoder_format (sound, data);
     tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
     tmp2 = swfdec_sound_finish_decoder (sound, data);
     if (tmp2) {
@@ -180,31 +181,36 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
     }
     swfdec_buffer_unref (orig_buffer);
     if (tmp) {
-      SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", tmp->length / 4, sound->n_samples, skip);
+      guint sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
+      SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
+	  tmp->length / sample_bytes, 
+	  sound->n_samples, skip);
       if (skip) {
-	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip * 4, tmp->length - skip * 4);
+	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip * sample_bytes, 
+	    tmp->length - skip * sample_bytes);
 	swfdec_buffer_unref (tmp);
 	tmp = tmp2;
       }
       /* sound buffer may be bigger due to mp3 not having sample boundaries */
-      if (tmp->length > sound->n_samples * 4) {
-	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * 4);
+      if (tmp->length > sound->n_samples * sample_bytes) {
+	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * sample_bytes);
 	swfdec_buffer_unref (tmp);
 	tmp = tmp2;
       }
       /* only assign here, the decoding code checks this variable */
       sound->decoded = tmp;
-      if (tmp->length < sound->n_samples * 4) {
+      if (tmp->length < sound->n_samples * sample_bytes) {
 	/* we handle this case in swfdec_sound_render */
 	/* FIXME: this message is important when writing new codecs, so I made it a warning.
 	 * It's probably not worth more than INFO for the usual case though */
 	SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	    sound->n_samples, sound->n_samples * 4, tmp->length);
+	    sound->n_samples, sound->n_samples * sample_bytes, tmp->length);
       }
     } else {
       SWFDEC_ERROR ("failed decoding given data in format %u", format);
     }
   }
+  sound->n_samples *= rate;
   if (sound->decoded == NULL) {
     SWFDEC_ERROR ("defective sound object (id %d)", SWFDEC_CHARACTER (sound)->id);
     s->characters = g_list_remove (s->characters, sound);
@@ -242,8 +248,7 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s)
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
   sound->width = size;
-  sound->channels = type ? 2 : 1;
-  sound->rate_multiplier = (1 << (3 - rate));
+  sound->original_format = SWFDEC_AUDIO_OUT_GET (type ? 2 : 1, 44100 / (1 << (3 - rate)));
 
   switch (format) {
     case 0:
@@ -323,9 +328,8 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
   if (has_out_point) {
     chunk->stop_sample = swfdec_bits_get_u32 (b);
     if (chunk->stop_sample > sound->n_samples) {
-      SWFDEC_WARNING ("more samples specified (%u) than available (%u)", 
+      SWFDEC_INFO ("more samples specified (%u) than available (%u)", 
 	  chunk->stop_sample, sound->n_samples);
-      chunk->stop_sample = sound->n_samples;
     }
   } else {
     chunk->stop_sample = sound->n_samples;
@@ -429,7 +433,7 @@ swfdec_sound_init_decoder (SwfdecSound * sound)
   g_assert (sound->decoded == NULL);
 
   if (sound->codec)
-    return swfdec_codec_init (sound->codec, sound->width, sound->channels, sound->rate_multiplier);
+    return swfdec_codec_init (sound->codec, sound->width, sound->original_format);
   else
     return NULL;
 }
@@ -455,37 +459,152 @@ swfdec_sound_decode_buffer (SwfdecSound *sound, gpointer data, SwfdecBuffer *buf
     return NULL;
 }
 
-static void
-swfdec_sound_add_with_volume (gint16 *dest, const gint16 *src, unsigned int n_samples, const guint16 volume[2])
+SwfdecAudioFormat
+swfdec_sound_get_decoder_format	(SwfdecSound *sound, gpointer data)
 {
-  unsigned int i;
-  int tmp;
+  g_assert (sound->decoded == NULL);
 
-  for (i = 0; i < n_samples; i++) {
-    tmp = (volume[0] * *src++) >> 16;
-    tmp += *dest;
-    tmp = CLAMP (tmp, G_MININT16, G_MAXINT16);
-    *dest++ = tmp;
-    tmp = (volume[1] * *src++) >> 16;
-    tmp += *dest;
-    tmp = CLAMP (tmp, G_MININT16, G_MAXINT16);
-    *dest++ = tmp;
-  }
+  if (sound->codec)
+    return swfdec_codec_get_format (sound->codec, data);
+  else
+    return sound->original_format;
 }
 
-void
-swfdec_sound_add (gint16 *dest, const gint16 *src, unsigned int n_samples)
+/**
+ * swfdec_sound_buffer_get_n_samples:
+ * @buffer: data to examine
+ * @format: format the data in @buffer is in
+ *
+ * Determines the number of samples inside @buffer that would be available if
+ * it were to be rendered using the default Flash format, 44100Hz.
+ *
+ * Returns: Number of samples contained in @buffer when rendered
+ **/
+guint
+swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut format)
 {
-  unsigned int i;
-  int tmp;
+  g_return_val_if_fail (buffer != NULL, 0);
+  g_return_val_if_fail (buffer->length % (2 * SWFDEC_AUDIO_OUT_N_CHANNELS (format)) == 0, 0);
 
-  for (i = 0; i < n_samples; i++) {
-    tmp = *src++ + *dest;
-    tmp = CLAMP (tmp, G_MININT16, G_MAXINT16);
-    *dest++ = tmp;
-    tmp = *src++ + *dest;
-    tmp = CLAMP (tmp, G_MININT16, G_MAXINT16);
-    *dest++ = tmp;
+  return buffer->length / (2 * SWFDEC_AUDIO_OUT_N_CHANNELS (format)) *
+    SWFDEC_AUDIO_OUT_GRANULARITY (format);
+}
+
+/**
+ * swfdec_sound_render_buffer:
+ * @dest: target buffer to render to
+ * @source: source data to render
+ * @format: format of data in @source and @previous
+ * @previous: previous buffer or NULL for none. This is necessary for
+ *            upsampling at buffer boundaries
+ * @offset: offset in 44100Hz samples into @source
+ * @n_samples: number of samples to render into @dest. If more data would be
+ *	       rendered than is available in @source, 0 samples are used instead.
+ *
+ * Adds data from @source into @dest using the same upsampling algorithm as
+ * Flash player.
+ **/
+/* NB: if you improve the upsampling algorithm, tests might start to break */
+void
+swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
+    SwfdecAudioOut format, const SwfdecBuffer *previous, 
+    unsigned int offset, unsigned int n_samples)
+{
+  guint i, j;
+  guint channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
+  guint rate = SWFDEC_AUDIO_OUT_GRANULARITY (format);
+  gint16 *src, *end;
+
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (source != NULL);
+  g_return_if_fail (swfdec_sound_buffer_get_n_samples (source, format) > 0);
+  g_return_if_fail (format != 0);
+  g_return_if_fail (previous == NULL || swfdec_sound_buffer_get_n_samples (previous, format) > 0);
+
+  src = (gint16 *) source->data;
+  end = (gint16 *) (source->data + source->length);
+  src += channels * (offset / rate);
+  offset %= rate;
+  if (offset) {
+    /* NB: dest will be pointing to uninitialized memory now */
+    dest -= offset * 2;
+    n_samples += offset;
+    offset = rate - offset;
+  }
+  /* this is almost the same as the channels == 1 case, so check for bugfixes in both branches */
+  if (channels == 1) {
+    int values[rate + 1];
+    if (src >= end)
+      n_samples = 0;
+    else if (src != (gint16 *) source->data)
+      values[0] = src[-1];
+    else if (previous)
+      values[0] = ((gint16 *) previous->data)[previous->length / 2 - 1];
+    else
+      values[0] = *src;
+    while (n_samples > 0) {
+      if (src > end)
+	break;
+      else if (src == end)
+	values[rate] = 0;
+      else
+	values[rate] = *src;
+      src++;
+      for (i = rate / 2; i >= 1; i /= 2) {
+	for (j = i; j < rate; j += 2 * i) {
+	  values[j] = (values[j + i] + values[j - i]) / 2;
+	}
+      }
+      for (i = offset; i < MIN (rate, n_samples); i++) {
+	dest[2 * i] += values[i + 1];
+	dest[2 * i + 1] += values[i + 1];
+      }
+      dest += 2 * rate;
+      values[0] = values[rate];
+      offset = 0;
+      n_samples -= MIN (n_samples, rate);
+    }
+  } else {
+    int values[2][rate + 1];
+    if (src >= end) {
+      n_samples = 0;
+    } else if (src != (gint16 *) source->data) {
+      values[0][0] = src[-2];
+      values[1][0] = src[-1];
+    } else if (previous) {
+      values[0][0] = ((gint16 *) previous->data)[previous->length / 2 - 2];
+      values[1][0] = ((gint16 *) previous->data)[previous->length / 2 - 1];
+    } else {
+      values[0][0] = src[0];
+      values[1][0] = src[1];
+    }
+    while (n_samples > 0) {
+      if (src > end) {
+	break;
+      } else if (src == end) {
+	values[0][rate] = 0;
+	values[1][rate] = 0;
+      } else {
+	values[0][rate] = src[0];
+	values[1][rate] = src[1];
+      }
+      src += 2;
+      for (i = rate / 2; i >= 1; i /= 2) {
+	for (j = i; j < rate; j += 2 * i) {
+	  values[0][j] = (values[0][j + i] + values[0][j - i]) / 2;
+	  values[1][j] = (values[1][j + i] + values[1][j - i]) / 2;
+	}
+      }
+      for (i = offset; i < MIN (rate, n_samples); i++) {
+	dest[2 * i] += values[0][i + 1];
+	dest[2 * i + 1] += values[1][i + 1];
+      }
+      dest += 2 * rate;
+      values[0][0] = values[0][rate];
+      values[1][0] = values[1][rate];
+      offset = 0;
+      n_samples -= MIN (n_samples, rate);
+    }
   }
 }
 
@@ -495,27 +614,16 @@ swfdec_sound_add (gint16 *dest, const gint16 *src, unsigned int n_samples)
  * @dest: target to add to
  * @offset: offset in samples into the data
  * @n_samples: amount of samples to render
- * @volume: volume for left and right channel or NULL for no volume change
  *
  * Renders the given sound onto the existing data in @dest.
  **/
 void
-swfdec_sound_render (SwfdecSound *sound, gint16 *dest, 
-    unsigned int offset, unsigned int n_samples, const guint16 volume[2])
+swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
+    unsigned int offset, unsigned int n_samples)
 {
-  gint16 *src;
-
   g_return_if_fail (SWFDEC_IS_SOUND (sound));
   g_return_if_fail (sound->decoded != NULL);
-  g_return_if_fail (offset + n_samples <= sound->n_samples);
 
-  /* NB: number of samples can be smaller than n_samples, we pad with 0s then */
-  if (offset * 4 >= sound->decoded->length)
-    return;
-  src = (gint16*) (sound->decoded->data + offset * 4);
-  n_samples = MIN (n_samples, sound->decoded->length / 4 - offset);
-  if (volume)
-    swfdec_sound_add_with_volume (dest, src, n_samples, volume);
-  else
-    swfdec_sound_add (dest, src, n_samples);
+  swfdec_sound_buffer_render (dest, sound->decoded, sound->decoded_format, 
+      NULL, offset, n_samples);
 }

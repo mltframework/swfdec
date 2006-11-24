@@ -28,7 +28,7 @@
 #include "swfdec_debug.h"
 
 static gpointer
-swfdec_codec_ffmpeg_init (enum CodecID id, gboolean width, guint channels, guint rate)
+swfdec_codec_ffmpeg_init (enum CodecID id, gboolean width, SwfdecAudioOut format)
 {
   AVCodec *codec;
   AVCodecContext *ctx;
@@ -47,8 +47,8 @@ swfdec_codec_ffmpeg_init (enum CodecID id, gboolean width, guint channels, guint
   ctx = avcodec_alloc_context ();
   if (avcodec_open (ctx, codec) < 0)
     goto fail;
-  ctx->sample_rate = 44100 / rate;
-  ctx->channels = channels;
+  ctx->sample_rate = SWFDEC_AUDIO_OUT_RATE (format);
+  ctx->channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
 
   return ctx;
 fail:
@@ -59,15 +59,22 @@ fail:
 }
 
 static gpointer
-swfdec_codec_ffmpeg_mp3_init (gboolean width, guint channels, guint rate)
+swfdec_codec_ffmpeg_mp3_init (gboolean width, SwfdecAudioOut format)
 {
-  return swfdec_codec_ffmpeg_init (CODEC_ID_MP3, width, channels, rate);
+  return swfdec_codec_ffmpeg_init (CODEC_ID_MP3, width, format);
 }
 
 static gpointer
-swfdec_codec_ffmpeg_adpcm_init (gboolean width, guint channels, guint rate)
+swfdec_codec_ffmpeg_adpcm_init (gboolean width, SwfdecAudioOut format)
 {
-  return swfdec_codec_ffmpeg_init (CODEC_ID_ADPCM_SWF, width, channels, rate);
+  return swfdec_codec_ffmpeg_init (CODEC_ID_ADPCM_SWF, width, format);
+}
+
+static SwfdecAudioOut
+swfdec_codec_ffmpeg_get_format (gpointer data)
+{
+  /* FIXME: improve this */
+  return SWFDEC_AUDIO_OUT_STEREO_44100;
 }
 
 static SwfdecBuffer *
@@ -172,12 +179,14 @@ swfdec_codec_ffmpeg_finish (gpointer ctx)
 
 const SwfdecCodec swfdec_codec_ffmpeg_mp3 = {
   swfdec_codec_ffmpeg_mp3_init,
+  swfdec_codec_ffmpeg_get_format,
   swfdec_codec_ffmpeg_decode,
   swfdec_codec_ffmpeg_finish
 };
 
 const SwfdecCodec swfdec_codec_ffmpeg_adpcm = {
   swfdec_codec_ffmpeg_adpcm_init,
+  swfdec_codec_ffmpeg_get_format,
   swfdec_codec_ffmpeg_decode,
   swfdec_codec_ffmpeg_finish
 };

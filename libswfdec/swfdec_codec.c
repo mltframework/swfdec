@@ -38,13 +38,11 @@ extern const SwfdecCodec swfdec_codec_ffmpeg_mp3;
 /*** UNCOMPRESSED SOUND ***/
 
 static gpointer
-swfdec_codec_uncompressed_init (gboolean width, guint channels, guint rate_multiplier)
+swfdec_codec_uncompressed_init (gboolean width, SwfdecAudioOut format)
 {
-  guint ret = rate_multiplier;
-  if (channels == 1)
-    ret *= 2;
+  guint ret = format;
   if (!width)
-    ret |= 0x100;
+    ret |= 0x10000;
   return GUINT_TO_POINTER (ret);
 }
 
@@ -85,6 +83,13 @@ swfdec_codec_uncompressed_decode_16bit (SwfdecBuffer *buffer, guint multiply)
   return ret;
 }
 
+static SwfdecAudioOut
+swfdec_codec_uncompressed_get_format (gpointer codec_data)
+{
+  guint format = GPOINTER_TO_UINT (codec_data);
+  return format && 0xFFFF;
+}
+
 static SwfdecBuffer *
 swfdec_codec_uncompressed_decode (gpointer codec_data, SwfdecBuffer *buffer)
 {
@@ -107,6 +112,7 @@ swfdec_codec_uncompressed_finish (gpointer codec_data)
 
 static const SwfdecCodec swfdec_codec_uncompressed = {
   swfdec_codec_uncompressed_init,
+  swfdec_codec_uncompressed_get_format,
   swfdec_codec_uncompressed_decode,
   swfdec_codec_uncompressed_finish,
 };

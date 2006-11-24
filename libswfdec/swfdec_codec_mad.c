@@ -18,7 +18,7 @@ typedef struct {
 } MadData;
 
 static gpointer
-swfdec_codec_mad_init (gboolean width, guint channels, guint rate)
+swfdec_codec_mad_init (gboolean width, SwfdecAudioOut format)
 {
   MadData *data = g_new (MadData, 1);
 
@@ -28,6 +28,13 @@ swfdec_codec_mad_init (gboolean width, guint channels, guint rate)
   data->data_len = 0;
 
   return data;
+}
+
+static SwfdecAudioOut
+swfdec_codec_mad_get_format (gpointer data)
+{
+  /* FIXME: improve this */
+  return SWFDEC_AUDIO_OUT_STEREO_44100;
 }
 
 static SwfdecBuffer *
@@ -209,6 +216,7 @@ swfdec_codec_mad_finish (gpointer datap)
 
 const SwfdecCodec swfdec_codec_mad = {
   swfdec_codec_mad_init,
+  swfdec_codec_mad_get_format,
   swfdec_codec_mad_decode,
   swfdec_codec_mad_finish
 };

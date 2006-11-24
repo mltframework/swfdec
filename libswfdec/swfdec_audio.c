@@ -139,11 +139,12 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
  * @n_samples: amount of samples to render.
  *
  * Renders the samples from @audio into the area pointed to by @dest. The data 
- * is added to @dest, so you probably want to initialize @dest to silence before 
- * calling this function.
+ * is added to @dest, so you probably want to initialize @dest to silence 
+ * before calling this function.
  **/
 void
-swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, guint start_offset, guint n_samples)
+swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, 
+    guint start_offset, guint n_samples)
 {
   SwfdecAudioClass *klass;
 
@@ -156,8 +157,8 @@ swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, guint start_offset, guint
     if (audio->start_offset >= start_offset + n_samples)
       return;
     if (audio->start_offset >= start_offset)
-      klass->render (audio, dest + (audio->start_offset - start_offset) * 2, 0, 
-	  n_samples + start_offset - audio->start_offset);
+      klass->render (audio, dest + (audio->start_offset - start_offset) * 2,
+	  0, n_samples + start_offset - audio->start_offset);
     else
       klass->render (audio, dest, start_offset - audio->start_offset, n_samples);
   } else {
@@ -170,22 +171,24 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
 {
   GList *walk;
   SwfdecAudio *audio;
+  guint n_samples;
 
   g_assert (player->samples_latency >= player->samples_this_frame);
   player->samples_latency -= player->samples_this_frame;
   /* iterate all playing sounds */
   walk = player->audio;
+  n_samples = player->samples_this_frame;
   while (walk) {
     audio = walk->data;
     walk = walk->next;
-    if (swfdec_audio_iterate (audio, player->samples_this_frame) == 0)
+    if (swfdec_audio_iterate (audio, n_samples) == 0)
       swfdec_audio_remove (audio);
   }
   /* get new sample count */
   player->samples_this_frame = 44100 * 256 / player->rate;
   player->samples_overhead_left += player->samples_overhead;
-  player->samples_overhead_left %= (44100 * 256);
-  if (player->samples_overhead_left < player->samples_overhead_left)
+  player->samples_overhead_left %= 44100 * 256;
+  if (player->samples_overhead_left < player->samples_overhead)
     player->samples_this_frame++;
 }
 

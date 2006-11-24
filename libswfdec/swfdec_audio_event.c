@@ -44,16 +44,16 @@ swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
 }
 
 static void
-swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start, guint n_samples)
+swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest,
+    guint start, guint n_samples)
 {
-  const guint16 *volume = NULL;
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
 
   if (offset >= event->chunk->stop_sample)
     return;
-  n_samples = MIN (n_samples, event->chunk->stop_sample - offset);
-  swfdec_sound_render (event->sound, dest, offset, n_samples, volume);
+  //n_samples = MIN (n_samples, event->chunk->stop_sample - offset);
+  swfdec_sound_render (event->sound, dest, offset, n_samples);
 }
 
 static void

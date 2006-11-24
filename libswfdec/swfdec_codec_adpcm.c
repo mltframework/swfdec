@@ -45,15 +45,19 @@ static const int stepSizeTable[89] = {
 };
     
 static gpointer
-swfdec_codec_adpcm_init (gboolean width, guint channels, guint rate_multiplier)
+swfdec_codec_adpcm_init (gboolean width, SwfdecAudioOut format)
 {
-  guint ret = rate_multiplier | (channels << 16);
-  return GUINT_TO_POINTER (ret);
+  return GUINT_TO_POINTER ((guint) format);
+}
+
+static SwfdecAudioOut
+swfdec_codec_adpcm_get_format (gpointer data)
+{
+  return GPOINTER_TO_UINT (data);
 }
 
 static SwfdecBuffer *
-swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, 
-    guint multiplier, guint channels)
+swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint channels)
 {
   SwfdecBuffer *ret;
   guint len;
@@ -80,15 +84,12 @@ swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits,
   }
   len = swfdec_bits_left (bits) / channels / n_bits;
   len = MIN (len, 4095);
-  ret = swfdec_buffer_new_and_alloc ((len + 1) * sizeof (gint16) * 2 * multiplier);
-  if (channels == 1)
-    multiplier *= 2;
+  ret = swfdec_buffer_new_and_alloc ((len + 1) * sizeof (gint16) * channels);
   out = (gint16 *) ret->data;
   /* output initial value */
   SWFDEC_LOG ("decoding %u samples", len + 1);
   for (ch = 0; ch < channels; ch++)
-    for (j = 0; j < multiplier; j++)
-      *out++ = pred[ch];
+    *out++ = pred[ch];
   sign_mask = 1 << (n_bits - 1);
   for (i = 0; i < len; i++) {
     for (ch = 0; ch < channels; ch++) {
@@ -126,8 +127,7 @@ swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits,
       step[ch] = stepSizeTable[index[ch]];
 
       /* Step 7 - Output value */
-      for (j = 0; j < multiplier; j++)
-	*out++ = pred[ch];
+      *out++ = pred[ch];
     }
   }
   return ret;
@@ -136,28 +136,27 @@ swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits,
 static SwfdecBuffer *
 swfdec_codec_adpcm_decode (gpointer data, SwfdecBuffer *buffer)
 {
-  guint multiplier = GPOINTER_TO_UINT (data);
+  SwfdecAudioOut format = GPOINTER_TO_UINT (data);
   guint channels, n_bits;
   SwfdecBits bits;
   SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
 
-  channels = multiplier >> 16;
-  multiplier &= 0xFFFF;
+  channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
   swfdec_bits_init (&bits, buffer);
   n_bits = swfdec_bits_getbits (&bits, 2) + 2;
-  SWFDEC_DEBUG ("starting decoding: %u channels, %uHz, %u bits", channels,
-      44100 / multiplier, n_bits);
+  SWFDEC_DEBUG ("starting decoding: %u channels, %u bits", channels, n_bits);
   /* 22 is minimum required header size */
   while (swfdec_bits_left (&bits) >= 22) {
-    buffer = swfdec_codec_adpcm_decode_chunk (&bits, n_bits, multiplier, channels);
+    buffer = swfdec_codec_adpcm_decode_chunk (&bits, n_bits, channels);
     if (buffer)
       swfdec_buffer_queue_push (queue, buffer);
   }
-  if (swfdec_buffer_queue_get_depth (queue))
+  if (swfdec_buffer_queue_get_depth (queue)) {
     buffer = swfdec_buffer_queue_pull (queue,
 	swfdec_buffer_queue_get_depth (queue));
-  else
+  } else {
     buffer = NULL;
+  }
   swfdec_buffer_queue_free (queue);
   return buffer;
 }
@@ -170,6 +169,7 @@ swfdec_codec_adpcm_finish (gpointer data)
 
 const SwfdecCodec swfdec_codec_adpcm = {
   swfdec_codec_adpcm_init,
+  swfdec_codec_adpcm_get_format,
   swfdec_codec_adpcm_decode,
   swfdec_codec_adpcm_finish
 };

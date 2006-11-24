@@ -111,7 +111,8 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
       chunk ? chunk->length : 0, frame);
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;
-  sprite->frames[frame].sound_samples = n_samples * sprite->frames[frame].sound_head->rate_multiplier;
+  sprite->frames[frame].sound_samples = n_samples *
+    SWFDEC_AUDIO_OUT_GRANULARITY (sprite->frames[frame].sound_head->original_format);
 }
 
 /* find the last action in this depth if it exists */

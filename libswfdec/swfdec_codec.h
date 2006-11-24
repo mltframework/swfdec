@@ -21,6 +21,7 @@
 #define _SWFDEC_CODEC_H_
 
 #include <glib.h>
+#include <libswfdec/swfdec_audio_internal.h>
 #include <libswfdec/swfdec_buffer.h>
 
 typedef struct _SwfdecCodec SwfdecCodec;
@@ -39,8 +40,8 @@ typedef enum {
 
 struct _SwfdecCodec {
   gpointer		(* init)	(gboolean	width,
-					 guint		channels,
-					 guint		rate_multiplier);
+					 SwfdecAudioOut	format);
+  SwfdecAudioOut	(* get_format)	(gpointer       codec_data);
   SwfdecBuffer *	(* decode)	(gpointer	codec_data,
 					 SwfdecBuffer *	buffer);
   SwfdecBuffer *	(* finish)	(gpointer	codec_data);
@@ -49,7 +50,8 @@ struct _SwfdecCodec {
 const SwfdecCodec *   	swfdec_codec_get_audio		(SwfdecAudioFormat	format);
 const SwfdecCodec *  	swfdec_codec_get_video		(SwfdecVideoFormat	format);
 
-#define swfdec_codec_init(codec,width,channels,rate) (codec)->init (width, channels, rate)
+#define swfdec_codec_init(codec,width,format) (codec)->init (width, format)
+#define swfdec_codec_get_format(codec, codec_data) (codec)->get_format (codec_data)
 #define swfdec_codec_decode(codec, codec_data, buffer) (codec)->decode (codec_data, buffer)
 #define swfdec_codec_finish(codec, codec_data) (codec)->finish (codec_data)
 

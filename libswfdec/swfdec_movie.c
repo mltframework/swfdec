@@ -129,10 +129,8 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   swfdec_rect_transform (extents, rect, &movie->transform);
   swfdec_rect_transform (rect, rect, &movie->content->transform);
   if (movie->parent && movie->parent->cache_state < SWFDEC_MOVIE_INVALID_EXTENTS) {
-    SwfdecRect tmp;
-    swfdec_rect_transform (&tmp, extents, &movie->parent->transform);
-    if (!swfdec_rect_inside (&SWFDEC_MOVIE (movie->parent)->extents, &tmp))
-      swfdec_movie_queue_update (movie->parent, SWFDEC_MOVIE_INVALID_EXTENTS);
+    /* no need to invalidate here */
+    movie->parent->cache_state = SWFDEC_MOVIE_INVALID_EXTENTS;
   }
 }
 

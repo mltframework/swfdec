@@ -55,6 +55,7 @@ swfdec_decoder_dispose (GObject *object)
   g_list_foreach (s->characters, (GFunc) g_object_unref, NULL);
   g_list_free (s->characters);
   g_object_unref (s->main_sprite);
+  g_hash_table_destroy (s->exports);
 
   if (s->z) {
     inflateEnd (s->z);
@@ -405,6 +406,19 @@ swfdec_swf_decoder_init (SwfdecSwfDecoder *s)
   s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
 
   s->input_queue = swfdec_buffer_queue_new ();
+  s->exports = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+}
+
+gpointer
+swfdec_swf_decoder_get_export (SwfdecSwfDecoder * s, const char *name)
+{
+  gpointer result;
+
+  g_return_val_if_fail (SWFDEC_IS_SWF_DECODER (s), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  result = g_hash_table_lookup (s->exports, name);
+  return result;
 }
 
 gpointer
@@ -412,6 +426,8 @@ swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, int id)
 {
   SwfdecCharacter *character;
   GList *g;
+
+  g_return_val_if_fail (SWFDEC_IS_SWF_DECODER (s), NULL);
 
   for (g = s->characters; g; g = g_list_next (g)) {
     character = SWFDEC_CHARACTER (g->data);

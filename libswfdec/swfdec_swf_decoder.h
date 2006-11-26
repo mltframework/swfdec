@@ -65,14 +65,10 @@ struct _SwfdecSwfDecoder
   gboolean protection;			/* TRUE is this file is protected and may not be edited */
   char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
 
-
   SwfdecBuffer *jpegtables;
-
   char *url;
 
-  /* global state */
-  GList *movies;			/* list of all running movie clips */
-  GQueue *gotos;			/* gotoAndFoo + iterations */
+  GHashTable *	exports;		/* string->character mapping of exported characters */
 };
 
 struct _SwfdecSwfDecoderClass {
@@ -86,15 +82,8 @@ gpointer	swfdec_swf_decoder_get_character	(SwfdecSwfDecoder *	s,
 gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
 							 int			id,
 							 GType			type);
-
-SwfdecSwfDecoder *swf_init (void);
-SwfdecSwfDecoder *swfdec_swf_decoder_new (void);
-
-int swf_addbits (SwfdecSwfDecoder * s, unsigned char *bits, int len);
-int swf_parse (SwfdecSwfDecoder * s);
-int swf_parse_header (SwfdecSwfDecoder * s);
-int swf_parse_tag (SwfdecSwfDecoder * s);
-int tag_func_ignore (SwfdecSwfDecoder * s);
+gpointer	swfdec_swf_decoder_get_export		(SwfdecSwfDecoder *	s,
+							 const char *		name);
 
 SwfdecTagFunc *swfdec_swf_decoder_get_tag_func (int tag);
 const char *swfdec_swf_decoder_get_tag_name (int tag);

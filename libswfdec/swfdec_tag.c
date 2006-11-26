@@ -674,25 +674,33 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
-#if 0
-int
+static int
 tag_func_export_assets (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  SwfdecExport *exp;
-  int count, i;
+  unsigned int count, i;
 
   count = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("exporting %u assets", count);
   for (i = 0; i < count; i++) {
-    exp = g_malloc (sizeof(SwfdecExport));
-    exp->id = swfdec_bits_get_u16 (bits);
-    exp->name = swfdec_bits_get_string (bits);
-    s->exports = g_list_append (s->exports, exp);
+    guint id;
+    SwfdecCharacter *object;
+    char *name;
+    id = swfdec_bits_get_u16 (bits);
+    object = swfdec_swf_decoder_get_character (s, id);
+    name = swfdec_bits_get_string (bits);
+    if (object == NULL) {
+      SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
+      g_free (name);
+    } else {
+      SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
+      g_object_ref (object);
+      g_hash_table_insert (s->exports, name, object);
+    }
   }
 
   return SWFDEC_STATUS_OK;
 }
-#endif
 
 static int
 tag_func_define_font_info_1 (SwfdecSwfDecoder *s)
@@ -782,7 +790,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
   [SWFDEC_TAG_GENERATOR3] = {"Generator3", NULL, 0},
   [SWFDEC_TAG_EXTERNALFONT] = {"ExternalFont", NULL, 0},
-  [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", /* tag_func_export_assets */ NULL, 0},
+  [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", tag_func_export_assets, 0},
   [SWFDEC_TAG_IMPORTASSETS] = {"ImportAssets", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
   [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},

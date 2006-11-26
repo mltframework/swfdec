@@ -56,7 +56,7 @@ swfdec_js_init (guint runtime_size)
 static void
 swfdec_js_error_report (JSContext *cx, const char *message, JSErrorReport *report)
 {
-  SWFDEC_ERROR ("JS Error: %s\n", message);
+  SWFDEC_ERROR ("JS Error: %s", message);
   /* FIXME: #ifdef this when not debugging the compiler */
   //g_assert_not_reached ();
 }
@@ -193,6 +193,9 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
   
   /* restore execution state */
   swfdec_js_pop_state (movie, old_state);
+  if (!ret) {
+    SWFDEC_WARNING ("executing script %p for movie %s failed", script, movie->name);
+  }
   if (ret && returnval != JSVAL_VOID) {
     JSString * str = JS_ValueToString (s->jscx, returnval);
     if (str)

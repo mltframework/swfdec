@@ -35,21 +35,6 @@
 G_DEFINE_TYPE (SwfdecRootMovie, swfdec_root_movie, SWFDEC_TYPE_SPRITE_MOVIE)
 
 static void
-swfdec_root_movie_update_extents (SwfdecMovie *movie,
-    SwfdecRect *extents)
-{
-  SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie);
-
-  extents->x0 = extents->y0 = 0.0;
-  if (root->decoder) {
-    extents->x1 = root->decoder->width * SWFDEC_SCALE_FACTOR;
-    extents->y1 = root->decoder->height * SWFDEC_SCALE_FACTOR;
-  } else {
-    extents->x1 = extents->y1 = 0.0;
-  }
-}
-
-static void
 swfdec_root_movie_dispose (GObject *object)
 {
   SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (object);
@@ -92,7 +77,6 @@ swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 
   object_class->dispose = swfdec_root_movie_dispose;
 
-  movie_class->update_extents = swfdec_root_movie_update_extents;
   movie_class->init_movie = NULL;
   movie_class->iterate_start = swfdec_root_movie_iterate_start;
   movie_class->iterate_end = swfdec_root_movie_iterate_end;

@@ -252,7 +252,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->content_changed)
     klass->content_changed (movie, content);
-  movie->depth = movie->content->depth;
   movie->content = content;
 
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
@@ -695,6 +694,7 @@ swfdec_movie_initialize (SwfdecMovie *movie, const SwfdecContent *content)
 
   old = movie->content;
   movie->content = content;
+  movie->depth = content->depth;
   swfdec_movie_set_parent (movie);
   movie->content = old;
   swfdec_movie_set_content (movie, content);

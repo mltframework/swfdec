@@ -43,6 +43,12 @@ EXTRA_DIST = \
 	goto4.swf.trace \
 	goto5.swf \
 	goto5.swf.trace \
+	height1.swf \
+	height1.swf.trace \
+	height2.swf \
+	height2.swf.trace \
+	height3.swf \
+	height3.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
 	load-4.swf \

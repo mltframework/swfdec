@@ -213,10 +213,10 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   
   if (argc == 1) {
     SwfdecMovie *other;
-    if (!JSVAL_IS_OBJECT (argv[0]) ||
-	JS_GetClass (JSVAL_TO_OBJECT (argv[0])) != &movieclip_class) {
+    other = swfdec_js_val_to_movie (cx, argv[0]);
+    if (other == NULL) {
       g_assert_not_reached ();
-      return JS_FALSE;
+      return JS_TRUE;
     }
     other = SWFDEC_MOVIE (JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0])));
     swfdec_movie_update (movie);
@@ -799,7 +799,10 @@ mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = (movie->extents.x1 - movie->extents.x0) / SWFDEC_SCALE_FACTOR;
+  d = (movie->extents.x1 - movie->extents.x0);
+  /* FIXME: implement this nicer - needs refactoring of where scaling is applied */
+  if (!SWFDEC_IS_ROOT_MOVIE (movie))
+    d /= SWFDEC_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -807,7 +810,7 @@ static JSBool
 mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
-  double d;
+  double d, org;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
@@ -821,8 +824,16 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  if (!SWFDEC_IS_ROOT_MOVIE (movie))
+    d *= SWFDEC_SCALE_FACTOR;
   swfdec_movie_update (movie);
-  movie->xscale = d * SWFDEC_SCALE_FACTOR / (movie->original_extents.x1 - movie->original_extents.x0);
+  org = movie->extents.x1 - movie->extents.x0;
+  if (org != 0) {
+    movie->xscale = d / org;
+  } else {
+    movie->xscale = 0.0;
+    movie->yscale = 0.0;
+  }
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;
@@ -838,7 +849,10 @@ mc_height_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = (movie->extents.y1 - movie->extents.y0) / SWFDEC_SCALE_FACTOR;
+  d = (movie->extents.y1 - movie->extents.y0);
+  /* FIXME: implement this nicer - needs refactoring of where scaling is applied */
+  if (!SWFDEC_IS_ROOT_MOVIE (movie))
+    d /= SWFDEC_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -846,7 +860,7 @@ static JSBool
 mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
-  double d;
+  double d, org;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
@@ -860,8 +874,16 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  if (!SWFDEC_IS_ROOT_MOVIE (movie))
+    d *= SWFDEC_SCALE_FACTOR;
   swfdec_movie_update (movie);
-  movie->yscale = d * SWFDEC_SCALE_FACTOR / (movie->original_extents.y1 - movie->original_extents.y0);
+  org = movie->extents.y1 - movie->extents.y0;
+  if (org != 0) {
+    movie->yscale = d / org;
+  } else {
+    movie->xscale = 0.0;
+    movie->yscale = 0.0;
+  }
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;

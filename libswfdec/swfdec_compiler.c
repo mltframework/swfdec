@@ -699,6 +699,15 @@ compile_oneliner_pop (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_get_member (CompileState *state, guint action, guint len)
+{
+  add_try_catch_block (state, 1, 4);
+  ONELINER (state, JSOP_GETELEM);
+  THREELINER_INT (state, JSOP_GOTO, 4);
+  POP (state);
+}
+
+static void
 compile_oneliner (CompileState *state, guint action, guint len)
 {
   JSOp op;
@@ -732,9 +741,6 @@ compile_oneliner (CompileState *state, guint action, guint len)
       break;
     case 0x4c:
       op = JSOP_DUP;
-      break;
-    case 0x4e:
-      op = JSOP_GETELEM;
       break;
     case 0x67:
       op = JSOP_GT;
@@ -1176,7 +1182,7 @@ SwfdecActionSpec actions[] = {
   { 0x4b, "ToString", NULL },
   { 0x4c, "PushDuplicate", compile_oneliner },
   { 0x4d, "Swap", NULL },
-  { 0x4e, "GetMember", compile_oneliner },
+  { 0x4e, "GetMember", compile_get_member },
   { 0x4f, "SetMember", compile_oneliner_pop }, /* apparently the result is ignored */
   { 0x50, "Increment", compile_increment },
   { 0x51, "Decrement", compile_decrement },

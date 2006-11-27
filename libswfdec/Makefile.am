@@ -45,6 +45,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
+	swfdec_js_sound.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
 	swfdec_movie.c \

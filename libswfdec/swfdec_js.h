@@ -45,6 +45,7 @@ void		swfdec_js_add_color		(SwfdecPlayer *		player);
 void		swfdec_js_add_globals		(SwfdecPlayer *		player);
 void		swfdec_js_add_mouse		(SwfdecPlayer *		player);
 void		swfdec_js_add_movieclip_class	(SwfdecPlayer *		player);
+void		swfdec_js_add_sound		(SwfdecPlayer *		player);
 
 SwfdecMovie *	swfdec_js_val_to_movie		(JSContext *		cx,
 						 jsval			val);

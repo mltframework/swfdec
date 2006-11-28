@@ -128,7 +128,7 @@ mc_do_goto (JSContext *cx, SwfdecMovie *movie, jsval target)
     frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, label);
     /* FIXME: nonexisting frames? */
     if (frame == -1)
-      return JS_FALSE;
+      return JS_TRUE;
     frame++;
   } else if (!JS_ValueToInt32 (cx, target, &frame)) {
     return JS_FALSE;

@@ -703,14 +703,34 @@ compile_get_member (CompileState *state, guint action, guint len)
 {
   add_try_catch_block (state, 1, 4);
   ONELINER (state, JSOP_GETELEM);
-  THREELINER_INT (state, JSOP_GOTO, 4);
+  THREELINER_INT (state, JSOP_GOTO, 5);
   POP (state);
+  ONELINER (state, JSOP_VOID);
 }
 
 static void
-compile_oneliner (CompileState *state, guint action, guint len)
+compile_binary_op (CompileState *state, guint action, guint len)
 {
   JSOp op;
+
+  /* lots of code to ensure that non-numeric arguments equal 0.
+   * JS does a lot more */
+  SWAP (state);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_VOID);
+  ONELINER (state, JSOP_NE);
+  THREELINER_INT (state, JSOP_IFEQ, 5);
+  POP (state);
+  ONELINER (state, JSOP_ZERO);
+  SWAP (state);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_VOID);
+  ONELINER (state, JSOP_NE);
+  THREELINER_INT (state, JSOP_IFEQ, 5);
+  POP (state);
+  ONELINER (state, JSOP_ZERO);
   switch (action) {
     case 0x0A:
       op = JSOP_ADD;
@@ -724,6 +744,18 @@ compile_oneliner (CompileState *state, guint action, guint len)
     case 0x0D:
       op = JSOP_DIV;
       break;
+    default:
+      g_assert_not_reached ();
+      op = JSOP_NOP;
+  }
+  ONELINER (state, op);
+}
+
+static void
+compile_oneliner (CompileState *state, guint action, guint len)
+{
+  JSOp op;
+  switch (action) {
     case 0x12:
       op = JSOP_NOT;
       break;
@@ -1122,10 +1154,10 @@ SwfdecActionSpec actions[] = {
   { 0x08, "ToggleQuality", NULL },
   { 0x09, "StopSounds", compile_simple_bind_call },
   /* version 4 */
-  { 0x0a, "Add", compile_oneliner },
-  { 0x0b, "Subtract", compile_oneliner },
-  { 0x0c, "Multiply", compile_oneliner },
-  { 0x0d, "Divide", compile_oneliner },
+  { 0x0a, "Add", compile_binary_op },
+  { 0x0b, "Subtract", compile_binary_op },
+  { 0x0c, "Multiply", compile_binary_op },
+  { 0x0d, "Divide", compile_binary_op },
   { 0x0e, "Equals", compile_equals },
   { 0x0f, "Less", NULL },
   { 0x10, "And", NULL },

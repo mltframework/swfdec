@@ -23,6 +23,7 @@
 #include <js/jsapi.h>
 #include "swfdec_event.h"
 #include "swfdec_compiler.h"
+#include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 
@@ -113,8 +114,10 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecMovie *movie,
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & conditions) &&
-	event->key == key)
+	event->key == key) {
+      SWFDEC_LOG ("executing script for event %u on movie %s", conditions, movie->name);
       swfdec_js_execute_script (list->player, movie, event->script, NULL);
+    }
   }
 }
 

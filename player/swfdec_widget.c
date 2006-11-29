@@ -134,12 +134,12 @@ swfdec_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation)
 
   gtkwidget->allocation = *allocation;
 
-  if (widget->set_scale) {
+  swfdec_player_get_image_size (widget->player, &w, &h);
+  if (widget->set_scale > 0.0) {
     scale = widget->set_scale;
   } else if (widget->player == NULL) {
     scale = 1.0;
   } else {
-    swfdec_player_get_image_size (widget->player, &w, &h);
     if (w != 0 && h != 0)
       scale = MIN ((double) allocation->width / w, (double) allocation->height / h);
     else

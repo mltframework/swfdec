@@ -73,7 +73,7 @@ view_swf (SwfdecPlayer *dec, double scale, gboolean use_image)
 int 
 main (int argc, char *argv[])
 {
-  int ret = 100;
+  int ret = 0;
   double scale;
   SwfdecPlayer *player;
   GError *error = NULL;

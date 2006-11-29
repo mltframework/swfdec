@@ -138,7 +138,7 @@ atomize_int32 (CompileState *state, int i)
   guint8 command[3] = { opcode, id1, id2 }; \
   compile_state_add_code (state, command, 3); \
 } G_STMT_END
-#define THREELINER_INT(state, opcode, _int) THREELINER (state, opcode, _int >> 8, _int)
+#define THREELINER_INT(state, opcode, _int) THREELINER (state, opcode, (_int) >> 8, (_int))
 #define THREELINER_ATOM(state, opcode, str) G_STMT_START { \
   jsatomid id; \
   id = atomize_string (state, str); \
@@ -424,6 +424,7 @@ call_void_function (CompileState *state, const char *name)
   POP (state);
 }
 
+/* 13 bytes */
 #define DEBUG_TRACE(state) G_STMT_START { \
   ONELINER (state, JSOP_DUP); \
   compile_trace (state, 0, 0); \
@@ -713,24 +714,26 @@ compile_binary_op (CompileState *state, guint action, guint len)
 {
   JSOp op;
 
-  /* lots of code to ensure that non-numeric arguments equal 0.
-   * JS does a lot more */
-  SWAP (state);
-  ONELINER (state, JSOP_DUP);
-  ONELINER (state, JSOP_DUP);
-  ONELINER (state, JSOP_VOID);
-  ONELINER (state, JSOP_NE);
-  THREELINER_INT (state, JSOP_IFEQ, 5);
-  POP (state);
-  ONELINER (state, JSOP_ZERO);
-  SWAP (state);
-  ONELINER (state, JSOP_DUP);
-  ONELINER (state, JSOP_DUP);
-  ONELINER (state, JSOP_VOID);
-  ONELINER (state, JSOP_NE);
-  THREELINER_INT (state, JSOP_IFEQ, 5);
-  POP (state);
-  ONELINER (state, JSOP_ZERO);
+  if (state->version < 7) {
+    /* lots of code to ensure that non-numeric arguments equal 0.
+     * JS does a lot more */
+    SWAP (state);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_VOID);
+    ONELINER (state, JSOP_EQ);
+    THREELINER_INT (state, JSOP_IFEQ, 5);
+    POP (state);
+    ONELINER (state, JSOP_ZERO);
+    SWAP (state);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_VOID);
+    ONELINER (state, JSOP_EQ);
+    THREELINER_INT (state, JSOP_IFEQ, 5);
+    POP (state);
+    ONELINER (state, JSOP_ZERO);
+  }
   switch (action) {
     case 0x0A:
       op = JSOP_ADD;
@@ -742,6 +745,16 @@ compile_binary_op (CompileState *state, guint action, guint len)
       op = JSOP_MUL;
       break;
     case 0x0D:
+      if (state->version >= 7) {
+	/* division by undefined isn't NaN, but +-Infinity */
+	ONELINER (state, JSOP_DUP);
+	ONELINER (state, JSOP_DUP);
+	ONELINER (state, JSOP_VOID);
+	ONELINER (state, JSOP_EQ);
+	THREELINER_INT (state, JSOP_IFEQ, 5);
+	POP (state);
+	ONELINER (state, JSOP_ZERO);
+      }
       op = JSOP_DIV;
       break;
     default:
@@ -749,6 +762,40 @@ compile_binary_op (CompileState *state, guint action, guint len)
       op = JSOP_NOP;
   }
   ONELINER (state, op);
+}
+
+static void
+compile_add2 (CompileState *state, guint action, guint len)
+{
+  if (state->version >= 7) {
+    ONELINER (state, JSOP_ADD);
+    return;
+  }
+  /* pop void arguments and ignore them - special case void + void = 0 */
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_VOID);
+  ONELINER (state, JSOP_EQ);
+  THREELINER_INT (state, JSOP_IFEQ, 16);
+  POP (state);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_VOID);
+  ONELINER (state, JSOP_EQ);
+  THREELINER_INT (state, JSOP_IFEQ, 5);
+  POP (state);
+  ONELINER (state, JSOP_ZERO);
+  THREELINER_INT (state, JSOP_GOTO, 17);
+  SWAP (state);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_DUP);
+  ONELINER (state, JSOP_VOID);
+  ONELINER (state, JSOP_EQ);
+  THREELINER_INT (state, JSOP_IFEQ, 7);
+  POP (state);
+  THREELINER_INT (state, JSOP_GOTO, 5);
+  SWAP (state);
+  ONELINER (state, JSOP_ADD);
 }
 
 static void
@@ -1207,7 +1254,7 @@ SwfdecActionSpec actions[] = {
   { 0x44, "Typeof", NULL },
   { 0x45, "TargetPath", compile_target_path },
   { 0x46, "Enumerate", NULL },
-  { 0x47, "Add2", compile_oneliner },
+  { 0x47, "Add2", compile_add2 },
   { 0x48, "Less2", compile_oneliner },
   { 0x49, "Equals2", compile_oneliner },
   { 0x4a, "ToNumber", NULL },

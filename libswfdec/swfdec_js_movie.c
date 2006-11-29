@@ -375,6 +375,57 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 }
 
 static JSBool
+swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie, *ret;
+  const char *name;
+  unsigned int depth;
+  SwfdecContent *content;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (argc > 2) {
+    const char *str;
+    jsval val;
+    str = swfdec_js_to_string (cx, argv[0]);
+    if (!str)
+      return JS_TRUE;
+    val = swfdec_js_eval (cx, obj, str);
+    movie = swfdec_js_val_to_movie (cx, val);
+    if (!movie)
+      return JS_TRUE;
+    argv++;
+    argc--;
+  }
+  name = swfdec_js_to_string (cx, argv[0]);
+  if (name == NULL)
+    return JS_FALSE;
+  if (!JS_ValueToECMAUint32 (cx, argv[1], &depth))
+    return JS_FALSE;
+  g_assert (movie->parent);
+  ret = swfdec_movie_find (movie->parent, depth);
+  if (ret)
+    swfdec_movie_remove (ret);
+  content = swfdec_content_new (depth);
+  *content = *movie->content;
+  if (content->events)
+    content->events = swfdec_event_list_copy (content->events);
+  content->depth = depth;
+  content->name = g_strdup (name);
+  content->sequence = content;
+  content->start = 0;
+  content->end = G_MAXUINT;
+  ret = swfdec_movie_new (movie->parent, content);
+  g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
+  /* must be set by now, the movie has a name */
+  if (ret->jsobj == NULL)
+    return JS_FALSE;
+  *rval = OBJECT_TO_JSVAL (ret->jsobj);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_js_movie_removeMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
@@ -450,6 +501,7 @@ swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
 static JSFunctionSpec movieclip_methods[] = {
   //{"attachMovie", mc_attachMovie, 4, 0},
+  { "duplicateMovieClip", swfdec_js_movie_duplicateMovieClip, 2, 0, 0 },
   { "eval",		swfdec_js_global_eval,	      	1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },
   { "getBytesTotal",	mc_getBytesTotal,		0, 0, 0 },

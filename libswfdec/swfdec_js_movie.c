@@ -416,6 +416,7 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   content->sequence = content;
   content->start = 0;
   content->end = G_MAXUINT;
+  content->scripted = TRUE;
   ret = swfdec_movie_new (movie->parent, content);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   /* must be set by now, the movie has a name */
@@ -433,7 +434,8 @@ swfdec_js_movie_removeMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  swfdec_movie_remove (movie);
+  if (movie->content->scripted)
+    swfdec_movie_remove (movie);
   return JS_TRUE;
 }
 
@@ -942,6 +944,45 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+mc_rotation_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  return JS_NewNumberValue (cx, movie->rotation, vp);
+}
+
+static JSBool
+mc_rotation_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  double d;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  /* FIXME: Flash 4 handles this differently */
+  if (!JS_ValueToNumber (cx, *vp, &d))
+    return JS_FALSE;
+  d = fmod (d, 360.0);
+  if (d > 180.0)
+    d -= 360.0;
+  if (d < -180.0)
+    d += 360.0;
+  if (SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version < 5) {
+    if (!finite (d))
+      return JS_TRUE;
+    SWFDEC_ERROR ("FIXME: implement correct rounding errors here");
+  }
+  movie->rotation = d;
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+
+  return JS_TRUE;
+}
+
+static JSBool
 mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
@@ -1035,7 +1076,7 @@ JSPropertySpec movieclip_props[] = {
   {"_visble",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_width",	    -1,		MC_PROP_ATTRS,			  mc_width_get,	    mc_width_set },
   {"_height",	    -1,		MC_PROP_ATTRS,			  mc_height_get,    mc_height_set },
-  {"_rotation",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_rotation",	    -1,		MC_PROP_ATTRS,			  mc_rotation_get,  mc_rotation_set },
   {"_target",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_framesloaded", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_framesloaded,  NULL },
   {"_name",	    -1,		MC_PROP_ATTRS,			  mc_name_get,	    mc_name_set },

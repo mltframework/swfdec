@@ -1073,7 +1073,7 @@ JSPropertySpec movieclip_props[] = {
   {"_currentframe", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
   {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
   {"_alpha",	    -1,		MC_PROP_ATTRS,			  mc_alpha_get,	    mc_alpha_set },
-  {"_visble",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_visible",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_width",	    -1,		MC_PROP_ATTRS,			  mc_width_get,	    mc_width_set },
   {"_height",	    -1,		MC_PROP_ATTRS,			  mc_height_get,    mc_height_set },
   {"_rotation",	    -1,		MC_PROP_ATTRS,			  mc_rotation_get,  mc_rotation_set },

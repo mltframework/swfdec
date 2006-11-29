@@ -61,6 +61,8 @@ EXTRA_DIST = \
 	names.swf.trace \
 	order.swf \
 	order.swf.trace \
+	rotation-5.swf \
+	rotation-5.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	undefined1.swf \

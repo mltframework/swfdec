@@ -2,6 +2,38 @@
 #include <math.h>
 #include <libswfdec/swfdec.h>
 #include "swfdec_widget.h"
+#ifdef CAIRO_HAS_SVG_SURFACE
+#include <cairo-svg.h>
+
+static void
+save_to_svg (GtkWidget *button, SwfdecPlayer *player)
+{
+  GtkWidget *dialog = gtk_file_chooser_dialog_new ("Save current frame as",
+      GTK_WINDOW (gtk_widget_get_toplevel (button)), GTK_FILE_CHOOSER_ACTION_SAVE, 
+      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+    int w, h;
+    cairo_t *cr;
+    cairo_surface_t *surface;
+
+    swfdec_player_get_image_size (player, &w, &h);
+    if (w == 0 || h == 0) {
+      return;
+    }
+    surface = cairo_svg_surface_create (
+	gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog)),
+	w, h);
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+    swfdec_player_render (player, cr, NULL);
+    cairo_show_page (cr);
+    cairo_destroy (cr);
+  }
+  gtk_widget_destroy (dialog);
+}
+#endif /* CAIRO_HAS_SVG_SURFACE */
 
 static void
 iterate (gpointer dec)
@@ -20,9 +52,16 @@ view_swf (SwfdecPlayer *dec, double scale, gboolean use_image)
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_box_pack_start (GTK_BOX (vbox), widget, TRUE, TRUE, 0);
+
   widget = gtk_button_new_with_mnemonic ("_Iterate");
   g_signal_connect_swapped (widget, "clicked", G_CALLBACK (iterate), dec);
   gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+
+#ifdef CAIRO_HAS_SVG_SURFACE
+  widget = gtk_button_new_with_mnemonic ("_Save current frame");
+  g_signal_connect (widget, "clicked", G_CALLBACK (save_to_svg), dec);
+  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+#endif
 
   gtk_container_add (GTK_CONTAINER (window), vbox);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);

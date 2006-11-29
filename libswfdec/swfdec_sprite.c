@@ -402,8 +402,11 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 	key_code = 0;
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
-      if (event_flags & ~(SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER)) {
-	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags);
+#define SWFDEC_IMPLEMENTED_EVENTS \
+  (SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER | \
+   SWFDEC_EVENT_MOUSE_DOWN | SWFDEC_EVENT_MOUSE_MOVE | SWFDEC_EVENT_MOUSE_UP)
+      if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
+	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);
       }
       if (content->events == NULL)
 	content->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);

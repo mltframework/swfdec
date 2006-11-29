@@ -27,6 +27,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_debug.h"
+#include "swfdec_event.h"
 #include "swfdec_js.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_movie.h"
@@ -262,6 +263,9 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   SwfdecMovie *mouse_grab = NULL;
 
   swfdec_player_update_drag_movie (player);
+  for (walk = player->movies; walk; walk = walk->next) {
+    swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
+  }
   if (player->mouse_button) {
     mouse_grab = player->mouse_grab;
   } else {
@@ -285,6 +289,17 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
 static void
 swfdec_player_do_mouse_button (SwfdecPlayer *player)
 {
+  GList *walk;
+  guint event;
+
+  if (player->mouse_button) {
+    event = SWFDEC_EVENT_MOUSE_DOWN;
+  } else {
+    event = SWFDEC_EVENT_MOUSE_UP;
+  }
+  for (walk = player->movies; walk; walk = walk->next) {
+    swfdec_movie_queue_script (walk->data, event);
+  }
   if (player->mouse_grab)
     swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
 }

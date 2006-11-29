@@ -65,6 +65,10 @@ EXTRA_DIST = \
 	setvariable.swf.trace \
 	undefined1.swf \
 	undefined1.swf.trace \
+	undefined2-6.swf \
+	undefined2-6.swf.trace \
+	undefined2-7.swf \
+	undefined2-7.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

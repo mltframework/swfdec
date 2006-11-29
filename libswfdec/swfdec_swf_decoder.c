@@ -73,19 +73,6 @@ swfdec_decoder_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_swf_decoder_parent_class)->dispose (object);
 }
 
-static void
-swfdec_swf_decoder_create_movie (SwfdecDecoder *dec, SwfdecMovie *parent)
-{
-  SwfdecMovie *movie;
-  SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (dec);
-  SwfdecContent *content = swfdec_content_new (0);
-
-  cairo_matrix_scale (&content->transform, 1 / SWFDEC_SCALE_FACTOR, 1 / SWFDEC_SCALE_FACTOR);
-  content->graphic = SWFDEC_GRAPHIC (s->main_sprite);
-  movie = swfdec_movie_new (parent, content);
-  g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) swfdec_content_free, content);
-}
-
 static void *
 zalloc (void *opaque, unsigned int items, unsigned int size)
 {
@@ -396,7 +383,6 @@ swfdec_swf_decoder_class_init (SwfdecSwfDecoderClass *class)
 
   object_class->dispose = swfdec_decoder_dispose;
 
-  decoder_class->create_movie = swfdec_swf_decoder_create_movie;
   decoder_class->parse = swfdec_swf_decoder_parse;
 }
 

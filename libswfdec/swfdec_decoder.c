@@ -71,15 +71,3 @@ swfdec_decoder_new (SwfdecPlayer *player, SwfdecBufferQueue *queue)
   return retval;
 }
 
-void
-swfdec_decoder_create_movie (SwfdecDecoder *decoder, SwfdecMovie *parent)
-{
-  SwfdecDecoderClass *klass;
-
-  g_return_if_fail (SWFDEC_IS_DECODER (decoder));
-  g_return_if_fail (SWFDEC_IS_MOVIE (parent));
-
-  klass = SWFDEC_DECODER_GET_CLASS (decoder);
-  g_return_if_fail (klass->create_movie);
-  klass->create_movie (decoder, parent);
-}

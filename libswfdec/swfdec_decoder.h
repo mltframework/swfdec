@@ -71,9 +71,6 @@ struct _SwfdecDecoderClass
 {
   GObjectClass		object_class;
 
-  void			(* create_movie)	(SwfdecDecoder *	decoder,
-						 SwfdecMovie *		parent);
-
   SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder);
 };
 
@@ -82,9 +79,6 @@ GType		swfdec_decoder_get_type		(void);
 #define swfdec_decoder_can_detect(queue) (swfdec_buffer_queue_get_depth (queue) >= 3)
 SwfdecDecoder *	swfdec_decoder_new		(SwfdecPlayer *		player,
 						 SwfdecBufferQueue *	queue);
-
-void		swfdec_decoder_create_movie	(SwfdecDecoder *	decoder,
-						 SwfdecMovie *		parent);
 
 G_END_DECLS
 #endif

@@ -718,6 +718,7 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (parent), NULL);
   g_return_val_if_fail (SWFDEC_IS_GRAPHIC (content->graphic), NULL);
+  g_return_val_if_fail (swfdec_movie_find (parent, content->depth) == NULL, NULL);
 
   SWFDEC_DEBUG ("new movie for parent %p", parent);
   klass = SWFDEC_GRAPHIC_GET_CLASS (content->graphic);

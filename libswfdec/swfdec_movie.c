@@ -518,10 +518,15 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   g_return_if_fail (inval != NULL);
   
   if (!swfdec_rect_intersect (NULL, &movie->extents, inval)) {
-    SWFDEC_LOG ("not rendering %s %p, extents %g %g  %g %g are not in invalid area %g %g  %g %g",
-	G_OBJECT_TYPE_NAME (movie), movie, 
+    SWFDEC_LOG ("not rendering %s %s, extents %g %g  %g %g are not in invalid area %g %g  %g %g",
+	G_OBJECT_TYPE_NAME (movie), movie->name, 
 	movie->extents.x0, movie->extents.y0, movie->extents.x1, movie->extents.y1,
 	inval->x0, inval->y0, inval->x1, inval->y1);
+    return;
+  }
+  if (!movie->visible) {
+    SWFDEC_LOG ("not rendering %s %p, movie is invisible",
+	G_OBJECT_TYPE_NAME (movie), movie->name);
     return;
   }
 

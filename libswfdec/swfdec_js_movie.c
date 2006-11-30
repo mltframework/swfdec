@@ -844,6 +844,37 @@ mc_alpha_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+mc_visible_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  *vp = BOOLEAN_TO_JSVAL (movie->visible ? JS_TRUE : JS_FALSE);
+  return JS_TRUE;
+}
+
+static JSBool
+mc_visible_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecMovie *movie;
+  JSBool b;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  if (!JS_ValueToBoolean (cx, *vp, &b))
+    return JS_TRUE;
+  /* is there an xor in C? :o */
+  if ((b && !movie->visible) || (!b && movie->visible)) {
+    movie->visible = !movie->visible;
+    swfdec_movie_invalidate (movie);
+  }
+  return JS_TRUE;
+}
+
+static JSBool
 mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
@@ -1073,7 +1104,7 @@ JSPropertySpec movieclip_props[] = {
   {"_currentframe", -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_currentframe,  NULL },
   {"_totalframes",  -1,		MC_PROP_ATTRS | JSPROP_READONLY,  mc_totalframes,   NULL },
   {"_alpha",	    -1,		MC_PROP_ATTRS,			  mc_alpha_get,	    mc_alpha_set },
-  {"_visible",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_visible",	    -1,		MC_PROP_ATTRS,			  mc_visible_get,   mc_visible_set },
   {"_width",	    -1,		MC_PROP_ATTRS,			  mc_width_get,	    mc_width_set },
   {"_height",	    -1,		MC_PROP_ATTRS,			  mc_height_get,    mc_height_set },
   {"_rotation",	    -1,		MC_PROP_ATTRS,			  mc_rotation_get,  mc_rotation_set },

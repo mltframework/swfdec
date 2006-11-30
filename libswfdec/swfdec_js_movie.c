@@ -244,7 +244,7 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-extern  JSPropertySpec movieclip_props[];
+static JSPropertySpec movieclip_props[];
 
 static JSBool
 swfdec_js_getProperty (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -374,6 +374,9 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   return JS_TRUE;
 }
 
+static void
+swfdec_js_copy_props (JSContext *cx, JSObject *target, JSObject *src, JSObject *init);
+
 static JSBool
 swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -385,6 +388,8 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
+#if 0
+  /* FIXME: is this still valid? */
   if (argc > 2) {
     const char *str;
     jsval val;
@@ -398,6 +403,7 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
     argv++;
     argc--;
   }
+#endif
   name = swfdec_js_to_string (cx, argv[0]);
   if (name == NULL)
     return JS_FALSE;
@@ -422,6 +428,8 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   /* must be set by now, the movie has a name */
   if (ret->jsobj == NULL)
     return JS_FALSE;
+  swfdec_js_copy_props (cx, ret->jsobj, movie->jsobj, NULL);
+  SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, ret->name, ret->depth);
   *rval = OBJECT_TO_JSVAL (ret->jsobj);
   return JS_TRUE;
 }
@@ -1096,7 +1104,7 @@ not_reached (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /* NB: order needs to be kept for GetProperty/SetProperty actions */
 #define MC_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
-JSPropertySpec movieclip_props[] = {
+static JSPropertySpec movieclip_props[] = {
   {"_x",	    -1,		MC_PROP_ATTRS,			  mc_x_get,	    mc_x_set },
   {"_y",	    -1,		MC_PROP_ATTRS,			  mc_y_get,	    mc_y_set },
   {"_xscale",	    -1,		MC_PROP_ATTRS,			  mc_xscale_get,    mc_xscale_set },
@@ -1122,6 +1130,29 @@ JSPropertySpec movieclip_props[] = {
   {"_root",	    -1,	      	MC_PROP_ATTRS | JSPROP_READONLY,  mc_root,	    NULL},
   {NULL}
 };
+
+static void
+swfdec_js_copy_props (JSContext *cx, JSObject *target, JSObject *src, JSObject *init)
+{
+  guint i;
+  jsval val;
+
+  for (i = 0; movieclip_props[i].name; i++) {
+    if (movieclip_props[i].flags & JSPROP_READONLY)
+      continue;
+    /* FIXME: remove this when all properties are implemented */
+    if (movieclip_props[i].getter == not_reached)
+      continue;
+    /* FIXME: figure out when to copy from initobject and when to copy from source */
+    if (init == NULL || 
+	!JS_GetProperty (cx, init, movieclip_props[i].name, &val) ||
+	val == JSVAL_VOID) {
+      if (!JS_GetProperty (cx, src, movieclip_props[i].name, &val))
+	continue;
+    }
+    JS_SetProperty (cx, target, movieclip_props[i].name, &val);
+  }
+}
 
 #if 0
 JSObject *

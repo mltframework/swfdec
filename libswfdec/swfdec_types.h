@@ -13,6 +13,7 @@ typedef struct _SwfdecCache SwfdecCache;
 typedef struct _SwfdecCharacter SwfdecCharacter;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
 typedef struct _SwfdecContent SwfdecContent;
+typedef struct _SwfdecDebugger SwfdecDebugger;
 typedef struct _SwfdecDecoder SwfdecDecoder;
 typedef struct _SwfdecEventList SwfdecEventList;
 typedef enum _SwfdecEventType SwfdecEventType;

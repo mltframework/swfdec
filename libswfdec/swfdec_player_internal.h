@@ -43,6 +43,7 @@ struct _SwfdecPlayer
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */
   JSObject *		jsobj;			/* the global object */
+  SwfdecDebugger *	debugger;		/* the debugger or NULL */
 
   /* rendering */
   SwfdecRect		invalid;      		/* area that needs a rredraw */

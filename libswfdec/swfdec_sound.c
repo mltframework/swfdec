@@ -389,7 +389,7 @@ tag_func_start_sound (SwfdecSwfDecoder * s)
   chunk = swfdec_sound_parse_chunk (s, id);
   if (chunk) {
     /* append to keep order */
-    SWFDEC_DEBUG ("appending StartSound event for sound %u to frame %u\n", id,
+    SWFDEC_DEBUG ("appending StartSound event for sound %u to frame %u", id,
 	s->parse_sprite->parse_frame);
     frame->sound = g_slist_append (frame->sound, chunk);
   }

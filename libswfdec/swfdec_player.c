@@ -276,7 +276,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
 	break;
     }
   }
-  SWFDEC_DEBUG ("%s %p has mouse at %g %g\n", 
+  SWFDEC_DEBUG ("%s %p has mouse at %g %g", 
       mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
       mouse_grab, player->mouse_x, player->mouse_y);
   if (player->mouse_grab && mouse_grab != player->mouse_grab)

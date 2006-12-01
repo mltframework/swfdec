@@ -81,7 +81,7 @@ swfdec_event_list_free (SwfdecEventList *list)
 
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
-    JS_DestroyScript (list->player->jscx, event->script);
+    swfdec_compiler_destroy_script (list->player, event->script);
   }
   g_array_free (list->events, TRUE);
   g_free (list);

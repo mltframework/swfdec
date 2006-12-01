@@ -8,11 +8,13 @@
 
 G_BEGIN_DECLS
 
-void		swfdec_disassemble	(SwfdecPlayer *	player,
-					 JSScript *	script);
-JSScript *	swfdec_compile		(SwfdecPlayer *	player,
-					 SwfdecBits *	bits,
-					 int		version);
+void		swfdec_disassemble		(SwfdecPlayer *		player,
+						 JSScript *		script);
+JSScript *	swfdec_compile			(SwfdecPlayer *		player,
+						 SwfdecBits *		bits,
+						 int			version);
+void		swfdec_compiler_destroy_script	(SwfdecPlayer *		player,
+						 JSScript *		script);
 
 G_END_DECLS
 

@@ -24,9 +24,8 @@
 #endif
 #include <string.h>
 
-#include <js/jsapi.h>
-
 #include "swfdec_sprite.h"
+#include "swfdec_compiler.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
@@ -60,14 +59,13 @@ swfdec_sprite_dispose (GObject *object)
         swfdec_buffer_unref (sprite->frames[i].sound_block);
       }
       if (sprite->frames[i].actions) {
-	JSContext *cx = sprite->player->jscx;
 	guint j;
 	for (j = 0; j < sprite->frames[i].actions->len; j++) {
 	  SwfdecSpriteAction *action = 
 	    &g_array_index (sprite->frames[i].actions, SwfdecSpriteAction, j);
 	  switch (action->type) {
 	    case SWFDEC_SPRITE_ACTION_SCRIPT:
-	      JS_DestroyScript (cx, action->data);
+	      swfdec_compiler_destroy_script (sprite->player, action->data);
 	      break;
 	    case SWFDEC_SPRITE_ACTION_ADD:
 	    case SWFDEC_SPRITE_ACTION_UPDATE:

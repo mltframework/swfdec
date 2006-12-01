@@ -1191,6 +1191,23 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
   return ret;
 }
 
+/**
+ * swfdec_compiler_destroy_script:
+ * @player: a #SwfdecPlayer
+ * @script: a JSScript created via swfdec_compile()
+ *
+ * Destroys a script that was previously created via swfdec_compile () for @player.
+ * All scripts created via swfdec_compile must be removed with this function.
+ **/
+void
+swfdec_compiler_destroy_script (SwfdecPlayer *player, JSScript *script)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (script != NULL);
+
+  JS_DestroyScript (player->jscx, script);
+}
+
 /* must be sorted! */
 SwfdecActionSpec actions[] = {
   /* version 3 */

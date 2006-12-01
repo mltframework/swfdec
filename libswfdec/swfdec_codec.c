@@ -37,70 +37,55 @@ extern const SwfdecCodec swfdec_codec_ffmpeg_mp3;
 
 /*** UNCOMPRESSED SOUND ***/
 
+#define U8_FLAG (0x10000)
 static gpointer
 swfdec_codec_uncompressed_init (gboolean width, SwfdecAudioOut format)
 {
   guint ret = format;
   if (!width)
-    ret |= 0x10000;
+    ret |= U8_FLAG;
   return GUINT_TO_POINTER (ret);
 }
 
 static SwfdecBuffer *
-swfdec_codec_uncompressed_decode_8bit (SwfdecBuffer *buffer, guint multiply)
+swfdec_codec_uncompressed_decode_8bit (SwfdecBuffer *buffer)
 {
-  SwfdecBuffer *ret = swfdec_buffer_new_and_alloc (buffer->length * multiply * 2);
+  SwfdecBuffer *ret = swfdec_buffer_new_and_alloc (buffer->length * 2);
   gint16 *out = (gint16 *) ret->data;
   guint8 *in = buffer->data;
   guint count = buffer->length;
-  guint i, j;
+  guint i;
 
   for (i = 0; i < count; i++) {
-    gint16 tmp = ((gint16) *in << 8) ^ (-1);
-    for (j = 0; j < multiply; j++) {
-      *out++ = tmp;
-    }
+    *out = ((gint16) *in << 8) ^ (-1);
+    out++;
     in++;
   }
   return ret;
 }
 
 static SwfdecBuffer *
-swfdec_codec_uncompressed_decode_16bit (SwfdecBuffer *buffer, guint multiply)
+swfdec_codec_uncompressed_decode_16bit (SwfdecBuffer *buffer)
 {
-  SwfdecBuffer *ret = swfdec_buffer_new_and_alloc (buffer->length * multiply);
-  gint16 *out = (gint16 *) ret->data;
-  gint16 *in = (gint16 *) buffer->data;
-  guint count = buffer->length / 2;
-  guint i, j;
-
-  for (i = 0; i < count; i++) {
-    for (j = 0; j < multiply; j++) {
-      *out++ = GINT16_FROM_LE (*in);
-    }
-    in++;
-  }
-  return ret;
+  swfdec_buffer_ref (buffer);
+  return buffer;
 }
 
 static SwfdecAudioOut
 swfdec_codec_uncompressed_get_format (gpointer codec_data)
 {
   guint format = GPOINTER_TO_UINT (codec_data);
-  return format && 0xFFFF;
+  return format & ~U8_FLAG;
 }
 
 static SwfdecBuffer *
 swfdec_codec_uncompressed_decode (gpointer codec_data, SwfdecBuffer *buffer)
 {
   guint data = GPOINTER_TO_UINT (codec_data);
-  if (data == 1) {
-    swfdec_buffer_ref (buffer);
-    return buffer;
-  } else if (data & 0x100) {
-    return swfdec_codec_uncompressed_decode_8bit (buffer, data & 0xFF);
+  if (data & U8_FLAG) {
+    return swfdec_codec_uncompressed_decode_8bit (buffer);
   } else {
-    return swfdec_codec_uncompressed_decode_16bit (buffer, data);
+    return swfdec_codec_uncompressed_decode_16bit (buffer);
   }
 }
 

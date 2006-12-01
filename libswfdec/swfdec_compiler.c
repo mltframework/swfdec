@@ -57,7 +57,68 @@ typedef struct {
   GArray *		jumps;		/* accumulated jumps */
   GArray *		trynotes;	/* try/catch blocks */
   GPtrArray *		pool;		/* ConstantPool data */
+  GArray *		commands;	/* debug informations */
+  guint			command_last;	/* offset to last command */
 } CompileState;
+
+/*** DEBUGGING STUFF ***/
+
+typedef struct _SwfdecDebuggerCommand SwfdecDebuggerCommand;
+struct _SwfdecDebuggerCommand {
+  gpointer		code;		/* pointer to start bytecode in JScript */
+  char *		description;	/* string describing the action */
+};
+
+/* NB: this must be called _before_ adding bytecode */
+static void
+compile_state_debug_add (CompileState *state, const char *format, ...) G_GNUC_PRINTF (2, 3);
+static void
+compile_state_debug_add (CompileState *state, const char *format, ...)
+{
+  va_list args;
+  SwfdecDebuggerCommand command;
+
+  command.code = NULL + state->bytecode->len;
+  va_start (args, format);
+  command.description = g_strdup_vprintf (format, args);
+  SWFDEC_LOG ("%s", command.description);
+  va_end (args);
+  state->command_last = G_MAXUINT;
+  g_array_append_val (state->commands, command);
+}
+
+static void
+compile_state_debug_add_default (CompileState *state, guint action, const char *name)
+{
+  SwfdecDebuggerCommand command;
+
+  if (state->command_last == G_MAXUINT)
+    return;
+  if (action & 0x80) {
+    SWFDEC_WARNING ("FIXME: action %s does not provide debugger statements", name);
+  }
+  command.code = GUINT_TO_POINTER (state->command_last);
+  command.description = g_strdup (name);
+  state->command_last = G_MAXUINT;
+  g_array_append_val (state->commands, command);
+  SWFDEC_LOG ("%s", command.description);
+}
+
+static void
+compile_state_debug_finish (CompileState *state, JSScript *script)
+{
+  SwfdecDebuggerCommand *command;
+  guint i;
+
+  for (i = 0; i < state->commands->len; i++) {
+    command = &g_array_index (state->commands, SwfdecDebuggerCommand, i);
+    command->code = script->code + GPOINTER_TO_UINT (command->code);
+    //g_print ("%s\n", command->description);
+  }
+  //g_print ("\n");
+}
+
+/*** GENERAL FUNCTIONS ***/
 
 static void
 compile_state_error (CompileState *state, char *format, ...) G_GNUC_PRINTF (2, 3);
@@ -213,6 +274,8 @@ compile_state_init (JSContext *cx, SwfdecBits *bits, int version, CompileState *
   state->jumps = g_array_new (FALSE, FALSE, sizeof (Jump));
   state->trynotes = g_array_new (TRUE, FALSE, sizeof (JSTryNote));
   state->pool = g_ptr_array_new ();
+  state->commands = g_array_new (FALSE, FALSE, sizeof (SwfdecDebuggerCommand));
+  state->command_last = G_MAXUINT;
 
   compile_state_add_target (state);
   compile_state_push_offset (state, 0);
@@ -276,7 +339,6 @@ compile_state_finish (CompileState *state)
     js_FreeAtomMap (cx, &clear);
     SWFDEC_ERROR ("%s", state->error);
     g_free (state->error);
-    //g_assert_not_reached ();
     goto cleanup;
   }
 
@@ -288,6 +350,7 @@ compile_state_finish (CompileState *state)
   script->depth = 100;
   script->main = script->code + OFFSET_MAIN;
   SN_MAKE_TERMINATOR (SCRIPT_NOTES (script));
+  compile_state_debug_finish (state, script);
 
 cleanup:
   g_ptr_array_free (state->pool, TRUE);
@@ -403,13 +466,6 @@ push_uint16 (CompileState *state, unsigned int i)
 }
 
 static void
-read_and_push_uint16 (CompileState *state)
-{
-  guint i = swfdec_bits_get_u16 (state->bits);
-  push_uint16 (state, i);
-}
-
-static void
 call (CompileState *state, guint n_arguments)
 {
   THREELINER_INT (state, JSOP_CALL, n_arguments);
@@ -470,26 +526,8 @@ push_string (CompileState *state, const char *s)
 }
 
 static void
-read_and_push_string (CompileState *state)
+push_double (CompileState *state, double d)
 {
-  const char *s = swfdec_bits_skip_string (state->bits);
-  push_string (state, s);
-}
-
-static void
-read_and_push_float (CompileState *state)
-{
-  double d = swfdec_bits_get_float (state->bits);
-  jsatomid id = atomize_double (state, d);
-  
-  SWFDEC_LOG ("pushing float: %g", d);
-  THREELINER_INT (state, JSOP_NUMBER, id);
-}
-
-static void
-read_and_push_double (CompileState *state)
-{
-  double d = swfdec_bits_get_double (state->bits);
   jsatomid id = atomize_double (state, d);
 
   SWFDEC_LOG ("pushing double: %g", d);
@@ -497,10 +535,8 @@ read_and_push_double (CompileState *state)
 }
 
 static void
-read_and_push_int32 (CompileState *state)
+push_int32 (CompileState *state, gint32 i)
 {
-  /* FIXME: spec says U32, do they mean this? */
-  gint32 i = swfdec_bits_get_u32 (state->bits);
   jsatomid id = atomize_int32 (state, i);
   SWFDEC_LOG ("pushing int: %d", i);
   THREELINER_INT (state, JSOP_NUMBER, id);
@@ -512,29 +548,44 @@ compile_push (CompileState *state, guint action, guint len)
   SwfdecBits *bits = state->bits;
   guint type;
   unsigned char *end = bits->ptr + len;
+  double d;
+  int i;
+  const char *s;
 
   while (bits->ptr < end) {
     type = swfdec_bits_get_u8 (bits);
     SWFDEC_LOG ("push type %u", type);
     switch (type) {
       case 0: /* string */
-	read_and_push_string (state);
+	s = swfdec_bits_skip_string (state->bits);
+	compile_state_debug_add (state, "Push \"%s\"", s);
+	push_string (state, s);
 	break;
       case 1: /* float */
-	read_and_push_float (state);
+	d = swfdec_bits_get_float (state->bits);
+	compile_state_debug_add (state, "Push %g", d);
+	push_double (state, d);
 	break;
       case 5: /* boolean */
 	type = swfdec_bits_get_u8 (bits);
-	if (type)
+	if (type) {
+	  compile_state_debug_add (state, "Push TRUE");
 	  ONELINER (state, JSOP_TRUE);
-	else
+	} else { 
+	  compile_state_debug_add (state, "Push FALSE");
 	  ONELINER (state, JSOP_FALSE);
+	}
 	break;
       case 6: /* double */
-	read_and_push_double (state);
+	d = swfdec_bits_get_double (state->bits);
+	compile_state_debug_add (state, "Push %g", d);
+	push_double (state, d);
 	break;
       case 7: /* 32bit int */
-	read_and_push_int32 (state);
+	/* FIXME: spec says U32, do they mean this? */
+	i = swfdec_bits_get_u32 (state->bits);
+	compile_state_debug_add (state, "Push %d", i);
+	push_int32 (state, i);
 	break;
       case 8: /* 8bit ConstantPool address */
 	type = swfdec_bits_get_u8 (bits);
@@ -543,7 +594,9 @@ compile_push (CompileState *state, guint action, guint len)
 	      type, state->pool->len);
 	  return;
 	}
-	push_string (state, (char *) g_ptr_array_index (state->pool, type));
+	s = (const char *) g_ptr_array_index (state->pool, type);
+	compile_state_debug_add (state, "Push \"%s\"", s);
+	push_string (state, s);
 	break;
       case 9: /* 16bit ConstantPool address */
 	type = swfdec_bits_get_u16 (bits);
@@ -552,7 +605,9 @@ compile_push (CompileState *state, guint action, guint len)
 	      type, state->pool->len);
 	  return;
 	}
-	push_string (state, (char *) g_ptr_array_index (state->pool, type));
+	s = (const char *) g_ptr_array_index (state->pool, type);
+	compile_state_debug_add (state, "Push \"%s\"", s);
+	push_string (state, s);
 	break;
       case 4: /* register */
       default:
@@ -565,10 +620,14 @@ compile_push (CompileState *state, guint action, guint len)
 static void
 compile_goto_label (CompileState *state, guint action, guint len)
 {
+  const char *s;
+
+  s = swfdec_bits_skip_string (state->bits);
+  compile_state_debug_add (state, "GotoLabel \"%s\"s", s);
   push_target (state);
   push_prop (state, "gotoAndStop");
   PUSH_OBJ (state);
-  read_and_push_string (state);
+  push_string (state, s);
   call (state, 1);
   POP (state);
 }
@@ -577,10 +636,12 @@ static void
 compile_goto_frame (CompileState *state, guint action, guint len)
 {
   unsigned int i;
+
+  i = swfdec_bits_get_u16 (state->bits);
+  compile_state_debug_add (state, "GotoFrame %u", i);
   push_target (state);
   push_prop (state, "gotoAndStop");
   PUSH_OBJ (state);
-  i = swfdec_bits_get_u16 (state->bits);
   push_uint16 (state, i + 1);
   call (state, 1);
   POP (state);
@@ -611,14 +672,17 @@ compile_goto_frame2 (CompileState *state, guint action, guint len)
 static void
 compile_wait_for_frame (CompileState *state, guint action, guint len)
 {
+  guint frame, jump;
   guint8 command[3] = { JSOP_IFEQ, 0, 0 };
 
+  frame = swfdec_bits_get_u16 (state->bits);
+  jump = swfdec_bits_get_u8 (state->bits);
+  compile_state_debug_add (state, "WaitForFrame %u %u", frame, jump);
   push_target (state);
   push_prop (state, "_framesloaded");
-  read_and_push_uint16 (state);
+  push_uint16 (state, frame);
   GE (state);
-  compile_state_add_action_jump (state, 
-      swfdec_bits_get_u8 (state->bits), FALSE);
+  compile_state_add_action_jump (state, jump, FALSE);
   compile_state_add_code (state, command, 3);
 }
 
@@ -626,6 +690,7 @@ static void
 compile_jump (CompileState *state, guint action, guint len)
 {
   int amount = swfdec_bits_get_s16 (state->bits);
+  compile_state_debug_add (state, "Goto %d", amount);
   DO_JUMP (state, JSOP_GOTO, amount + 5);
 }
 
@@ -634,16 +699,21 @@ compile_if (CompileState *state, guint action, guint len)
 {
   int amount = swfdec_bits_get_s16 (state->bits);
   /* FIXME: Flash 4 does this differently */
+  
+  compile_state_debug_add (state, "If %d", amount);
   IFNE (state, amount + 5);
 }
 
 static void
 compile_set_target (CompileState *state, guint action, guint len)
 {
+  const char *s = swfdec_bits_skip_string (state->bits);
+
+  compile_state_debug_add (state, "SetTarget \"%s\"", s);
   THIS (state);
   push_prop (state, "eval");
   PUSH_OBJ (state);
-  read_and_push_string (state);
+  push_string (state, s);
   call (state, 1);
   compile_state_set_target (state);
 }
@@ -660,6 +730,8 @@ compile_constant_pool (CompileState *state, guint action, guint len)
   unsigned int i;
   SwfdecBits *bits = state->bits;
 
+  /* no debug info please */
+  state->command_last = G_MAXUINT;
   g_ptr_array_set_size (state->pool, swfdec_bits_get_u16 (bits));
   for (i = 0; i < state->pool->len; i++) {
     g_ptr_array_index (state->pool, i) = (gpointer) swfdec_bits_skip_string (bits);
@@ -674,11 +746,16 @@ compile_constant_pool (CompileState *state, guint action, guint len)
 static void
 compile_get_url (CompileState *state, guint action, guint len)
 {
+  const char *target, *url;
+
+  url = swfdec_bits_skip_string (state->bits);
+  target = swfdec_bits_skip_string (state->bits);
+  compile_state_debug_add (state, "GetURL \"%s\" \"%s\" ", url, target);
   push_target (state);
   push_prop (state, "getURL");
   PUSH_OBJ (state);
-  read_and_push_string (state);
-  read_and_push_string (state);
+  push_string (state, url);
+  push_string (state, target);
   call (state, 2);
   POP (state);
 }
@@ -709,7 +786,7 @@ compile_get_member (CompileState *state, guint action, guint len)
   ONELINER (state, JSOP_VOID);
 }
 
-static void
+  static void
 compile_binary_op (CompileState *state, guint action, guint len)
 {
   JSOp op;
@@ -1154,7 +1231,9 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
 	  bits->ptr - start);
 #endif
     if (state.error == NULL && current && current->compile) {
+      state.command_last = state.bytecode->len;
       current->compile (&state, action, len);
+      compile_state_debug_add_default (&state, action, current->name);
       compile_state_push_offset (&state, len ? 3 + len : 1);
 #ifndef G_DISABLE_ASSERT
       if (target != bits->ptr) {

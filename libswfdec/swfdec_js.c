@@ -71,8 +71,9 @@ static JSTrapStatus G_GNUC_UNUSED
 swfdec_js_debug_one (JSContext *cx, JSScript *script, jsbytecode *pc, 
     jsval *rval, void *closure)
 {
-  js_Disassemble1 (cx, script, pc, pc - script->code,
-      JS_TRUE, stderr);
+  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "trace"))
+    js_Disassemble1 (cx, script, pc, pc - script->code,
+	JS_TRUE, stderr);
   return JSTRAP_CONTINUE;
 }
 
@@ -94,8 +95,7 @@ swfdec_js_init_player (SwfdecPlayer *player)
   /* the new Flash opcodes mess up this, so this will most likely crash */
   if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "full"))
     player->jscx->tracefp = stderr;
-  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "trace"))
-    JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
+  JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
   JS_SetErrorReporter (player->jscx, swfdec_js_error_report);
   JS_SetContextPrivate(player->jscx, player);
   player->jsobj = JS_NewObject (player->jscx, &global_class, NULL, NULL);

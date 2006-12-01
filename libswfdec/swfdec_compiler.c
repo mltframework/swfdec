@@ -81,6 +81,7 @@ compile_state_debug_add (CompileState *state, const char *format, ...)
   command.code = NULL + state->bytecode->len;
   va_start (args, format);
   command.description = g_strdup_vprintf (format, args);
+  SWFDEC_LOG ("%s", command.description);
   va_end (args);
   state->command_last = G_MAXUINT;
   g_array_append_val (state->commands, command);
@@ -100,6 +101,7 @@ compile_state_debug_add_default (CompileState *state, guint action, const char *
   command.description = g_strdup (name);
   state->command_last = G_MAXUINT;
   g_array_append_val (state->commands, command);
+  SWFDEC_LOG ("%s", command.description);
 }
 
 static void

@@ -87,6 +87,50 @@ swfdec_event_list_free (SwfdecEventList *list)
   g_free (list);
 }
 
+static const char *
+swfdec_event_list_condition_name (unsigned int conditions)
+{
+  if (conditions & SWFDEC_EVENT_LOAD)
+    return "Load";
+  if (conditions & SWFDEC_EVENT_ENTER)
+    return "Enter";
+  if (conditions & SWFDEC_EVENT_UNLOAD)
+    return "Unload";
+  if (conditions & SWFDEC_EVENT_MOUSE_MOVE)
+    return "Mouse Move";
+  if (conditions & SWFDEC_EVENT_MOUSE_DOWN)
+    return "Mouse Down";
+  if (conditions & SWFDEC_EVENT_MOUSE_UP)
+    return "Mouse Up";
+  if (conditions & SWFDEC_EVENT_KEY_UP)
+    return "Key Up";
+  if (conditions & SWFDEC_EVENT_KEY_DOWN)
+    return "Key Down";
+  if (conditions & SWFDEC_EVENT_DATA)
+    return "Data";
+  if (conditions & SWFDEC_EVENT_INITIALIZE)
+    return "Initialize";
+  if (conditions & SWFDEC_EVENT_PRESS)
+    return "Press";
+  if (conditions & SWFDEC_EVENT_RELEASE)
+    return "Release";
+  if (conditions & SWFDEC_EVENT_RELEASE_OUTSIDE)
+    return "Release Outside";
+  if (conditions & SWFDEC_EVENT_ROLL_OVER)
+    return "Roll Over";
+  if (conditions & SWFDEC_EVENT_ROLL_OUT)
+    return "Roll Out";
+  if (conditions & SWFDEC_EVENT_DRAG_OVER)
+    return "Drag Over";
+  if (conditions & SWFDEC_EVENT_DRAG_OUT)
+    return "Drag Out";
+  if (conditions & SWFDEC_EVENT_KEY_PRESS)
+    return "Key Press";
+  if (conditions & SWFDEC_EVENT_CONSTRUCT)
+    return "Construct";
+  return "No Event";
+}
+
 void
 swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
     unsigned int conditions, guint8 key)
@@ -98,7 +142,8 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
 
   event.conditions = conditions;
   event.key = key;
-  event.script = swfdec_compile (list->player, bits, version);
+  event.script = swfdec_compile (list->player, bits, version, 
+      swfdec_event_list_condition_name (conditions));
   if (event.script) 
     g_array_append_val (list->events, event);
 }

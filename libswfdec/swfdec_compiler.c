@@ -100,7 +100,7 @@ compile_state_debug_add_default (CompileState *state, guint action, const char *
 }
 
 static void
-compile_state_debug_finish (CompileState *state, SwfdecPlayer *player, JSScript *script)
+compile_state_debug_finish (CompileState *state, SwfdecPlayer *player, JSScript *script, const char *name)
 {
   SwfdecDebuggerCommand *command;
   guint i;
@@ -110,7 +110,7 @@ compile_state_debug_finish (CompileState *state, SwfdecPlayer *player, JSScript 
       command = &g_array_index (state->commands, SwfdecDebuggerCommand, i);
       command->code = script->code + GPOINTER_TO_UINT (command->code);
     }
-    swfdec_debugger_add_script (player->debugger, script, "Unnamed script",
+    swfdec_debugger_add_script (player->debugger, script, name,
 	(SwfdecDebuggerCommand *) state->commands->data, state->commands->len);
     g_array_free (state->commands, FALSE);
   } else {
@@ -325,7 +325,7 @@ finished:
 
 #define OFFSET_MAIN 3
 static JSScript *
-compile_state_finish (CompileState *state, SwfdecPlayer *player)
+compile_state_finish (CompileState *state, SwfdecPlayer *player, const char *name)
 {
   JSContext *cx = state->cx;
   JSScript *script = NULL;
@@ -350,7 +350,7 @@ compile_state_finish (CompileState *state, SwfdecPlayer *player)
   script->depth = 100;
   script->main = script->code + OFFSET_MAIN;
   SN_MAKE_TERMINATOR (SCRIPT_NOTES (script));
-  compile_state_debug_finish (state, player, script);
+  compile_state_debug_finish (state, player, script, name);
 
 cleanup:
   g_ptr_array_free (state->pool, TRUE);
@@ -1182,6 +1182,7 @@ swfdec_disassemble (SwfdecPlayer *player, JSScript *script)
  * @player: a #SwfdecPlayer
  * @bits: the data to read
  * @version: ActionScript version to compile for
+ * @name: name describing the script or NULL
  *
  * parses the data pointed to by @bits and compiles the ActionScript commands 
  * encountered into a script for later execution.
@@ -1189,7 +1190,7 @@ swfdec_disassemble (SwfdecPlayer *player, JSScript *script)
  * Returns: A new JSScript or NULL on failure
  **/
 JSScript *
-swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
+swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version, const char *name)
 {
   unsigned int action, len;
   const SwfdecActionSpec *current;
@@ -1209,6 +1210,8 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (bits != NULL, NULL);
 
+  if (name == NULL)
+    name = "Unnamed script";
   compile_state_init (player->jscx, bits, version, &state);
   SWFDEC_INFO ("Creating new script in frame");
   while ((action = swfdec_bits_get_u8 (bits))) {
@@ -1253,7 +1256,7 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
       }
     }
   }
-  ret = compile_state_finish (&state, player);
+  ret = compile_state_finish (&state, player, name);
 #if 0
   if (ret)
     swfdec_disassemble (s, ret);

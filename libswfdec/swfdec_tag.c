@@ -289,8 +289,12 @@ int
 tag_func_do_action (SwfdecSwfDecoder * s)
 {
   JSScript *script;
-  
-  script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b, s->version);
+  char *name;
+
+  name = g_strdup_printf ("Sprite %u frame %u", SWFDEC_CHARACTER (s->parse_sprite)->id,
+      s->parse_sprite->parse_frame);
+  script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b, s->version, name);
+  g_free (name);
   if (script)
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
 	SWFDEC_SPRITE_ACTION_SCRIPT, script);

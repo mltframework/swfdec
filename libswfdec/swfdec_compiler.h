@@ -12,7 +12,8 @@ void		swfdec_disassemble		(SwfdecPlayer *		player,
 						 JSScript *		script);
 JSScript *	swfdec_compile			(SwfdecPlayer *		player,
 						 SwfdecBits *		bits,
-						 int			version);
+						 int			version,
+						 const char *		name);
 void		swfdec_compiler_destroy_script	(SwfdecPlayer *		player,
 						 JSScript *		script);
 

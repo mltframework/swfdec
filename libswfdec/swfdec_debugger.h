@@ -30,6 +30,7 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecDebugger SwfdecDebugger;
 typedef struct _SwfdecDebuggerClass SwfdecDebuggerClass;
 typedef struct _SwfdecDebuggerScript SwfdecDebuggerScript;
+typedef struct _SwfdecDebuggerCommand SwfdecDebuggerCommand;
 
 #define SWFDEC_TYPE_DEBUGGER                    (swfdec_debugger_get_type())
 #define SWFDEC_IS_DEBUGGER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_DEBUGGER))
@@ -38,9 +39,16 @@ typedef struct _SwfdecDebuggerScript SwfdecDebuggerScript;
 #define SWFDEC_DEBUGGER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_DEBUGGER, SwfdecDebuggerClass))
 #define SWFDEC_DEBUGGER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_DEBUGGER, SwfdecDebuggerClass))
 
+struct _SwfdecDebuggerCommand {
+  gpointer		code;		/* pointer to start bytecode in JScript */
+  char *		description;	/* string describing the action */
+};
+
 struct _SwfdecDebuggerScript {
-  JSScript *		script;
-  GArray *		commands;
+  JSScript *		script;		/* the script */
+  char *		name;		/* descriptive name of script */
+  SwfdecDebuggerCommand *commands;	/* commands executed in the script (NULL-terminated) */
+  guint			n_commands;	/* number of commands */
 };
 
 struct _SwfdecDebugger {
@@ -54,7 +62,19 @@ struct _SwfdecDebuggerClass {
 };
 
 GType			swfdec_debugger_get_type        (void);
-SwfdecDebugger *	swfdec_debugger_get		(SwfdecPlayer *	player);
+SwfdecDebugger *	swfdec_debugger_get		(SwfdecPlayer *		player);
+SwfdecPlayer *		swfdec_player_new_with_debugger	(void);
+
+void			swfdec_debugger_add_script	(SwfdecDebugger *	debugger,
+							 JSScript *		script,
+							 const char *		name,
+							 SwfdecDebuggerCommand *commands,
+							 guint			n_commands);
+void			swfdec_debugger_remove_script	(SwfdecDebugger *	debugger,
+							 JSScript *		script);
+void			swfdec_debugger_foreach_script	(SwfdecDebugger *	debugger,
+							 GFunc			func,
+							 gpointer		data);
 
 
 G_END_DECLS

@@ -15,6 +15,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_compiler.h"
 #include "swfdec_debug.h"
+#include "swfdec_debugger.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 
@@ -63,12 +64,6 @@ typedef struct {
 
 /*** DEBUGGING STUFF ***/
 
-typedef struct _SwfdecDebuggerCommand SwfdecDebuggerCommand;
-struct _SwfdecDebuggerCommand {
-  gpointer		code;		/* pointer to start bytecode in JScript */
-  char *		description;	/* string describing the action */
-};
-
 /* NB: this must be called _before_ adding bytecode */
 static void
 compile_state_debug_add (CompileState *state, const char *format, ...) G_GNUC_PRINTF (2, 3);
@@ -105,17 +100,22 @@ compile_state_debug_add_default (CompileState *state, guint action, const char *
 }
 
 static void
-compile_state_debug_finish (CompileState *state, JSScript *script)
+compile_state_debug_finish (CompileState *state, SwfdecPlayer *player, JSScript *script)
 {
   SwfdecDebuggerCommand *command;
   guint i;
 
-  for (i = 0; i < state->commands->len; i++) {
-    command = &g_array_index (state->commands, SwfdecDebuggerCommand, i);
-    command->code = script->code + GPOINTER_TO_UINT (command->code);
-    //g_print ("%s\n", command->description);
+  if (player->debugger) {
+    for (i = 0; i < state->commands->len; i++) {
+      command = &g_array_index (state->commands, SwfdecDebuggerCommand, i);
+      command->code = script->code + GPOINTER_TO_UINT (command->code);
+    }
+    swfdec_debugger_add_script (player->debugger, script, "Unnamed script",
+	(SwfdecDebuggerCommand *) state->commands->data, state->commands->len);
+    g_array_free (state->commands, FALSE);
+  } else {
+    g_array_free (state->commands, TRUE);
   }
-  //g_print ("\n");
 }
 
 /*** GENERAL FUNCTIONS ***/
@@ -274,7 +274,7 @@ compile_state_init (JSContext *cx, SwfdecBits *bits, int version, CompileState *
   state->jumps = g_array_new (FALSE, FALSE, sizeof (Jump));
   state->trynotes = g_array_new (TRUE, FALSE, sizeof (JSTryNote));
   state->pool = g_ptr_array_new ();
-  state->commands = g_array_new (FALSE, FALSE, sizeof (SwfdecDebuggerCommand));
+  state->commands = g_array_new (TRUE, FALSE, sizeof (SwfdecDebuggerCommand));
   state->command_last = G_MAXUINT;
 
   compile_state_add_target (state);
@@ -325,7 +325,7 @@ finished:
 
 #define OFFSET_MAIN 3
 static JSScript *
-compile_state_finish (CompileState *state)
+compile_state_finish (CompileState *state, SwfdecPlayer *player)
 {
   JSContext *cx = state->cx;
   JSScript *script = NULL;
@@ -350,7 +350,7 @@ compile_state_finish (CompileState *state)
   script->depth = 100;
   script->main = script->code + OFFSET_MAIN;
   SN_MAKE_TERMINATOR (SCRIPT_NOTES (script));
-  compile_state_debug_finish (state, script);
+  compile_state_debug_finish (state, player, script);
 
 cleanup:
   g_ptr_array_free (state->pool, TRUE);
@@ -1253,7 +1253,7 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version)
       }
     }
   }
-  ret = compile_state_finish (&state);
+  ret = compile_state_finish (&state, player);
 #if 0
   if (ret)
     swfdec_disassemble (s, ret);
@@ -1284,6 +1284,8 @@ swfdec_compiler_destroy_script (SwfdecPlayer *player, JSScript *script)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (script != NULL);
 
+  if (player->debugger)
+    swfdec_debugger_remove_script (player->debugger, script);
   JS_DestroyScript (player->jscx, script);
 }
 

@@ -46,7 +46,7 @@ iterate (gpointer dec)
 static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
-  GtkWidget *window, *widget, *hpaned, *vbox;
+  GtkWidget *window, *widget, *hpaned, *vbox, *scroll;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   
@@ -57,8 +57,12 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   vbox = gtk_vbox_new (FALSE, 3);
   gtk_paned_add1 (GTK_PANED (hpaned), vbox);
 
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
+      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
   widget = swfdec_debug_scripts_new (player);
-  gtk_box_pack_start (GTK_BOX (vbox), widget, TRUE, TRUE, 0);
+  gtk_container_add (GTK_CONTAINER (scroll), widget);
 
   /* right side */
   vbox = gtk_vbox_new (FALSE, 3);

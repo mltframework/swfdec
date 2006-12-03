@@ -9,9 +9,13 @@ swfplay_SOURCES = \
 	swfdec_widget.c \
 	swfplay.c 
 
-swfdebug_SOURCES = swfdebug.c swfdec_widget.c
+swfdebug_SOURCES = \
+	swfdebug.c \
+	swfdec_debug_scripts.c \
+	swfdec_widget.c
 
 noinst_HEADERS = \
+	swfdec_debug_scripts.h \
 	swfdec_playback.h \
 	swfdec_source.h \
 	swfdec_slow_loader.h \
@@ -19,7 +23,7 @@ noinst_HEADERS = \
 
 swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS)
 swfplay_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
-swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS)
+swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
 swfdebug_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
 endif
 endif

@@ -2,7 +2,9 @@
 #include <math.h>
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_debugger.h>
+#include "swfdec_debug_script.h"
 #include "swfdec_debug_scripts.h"
+#include "swfdec_player_manager.h"
 #include "swfdec_widget.h"
 #ifdef CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
@@ -38,16 +40,50 @@ save_to_svg (GtkWidget *button, SwfdecPlayer *player)
 #endif /* CAIRO_HAS_SVG_SURFACE */
 
 static void
-iterate (gpointer dec)
+step_clicked_cb (gpointer managerp)
 {
-  swfdec_player_iterate (dec);
+  SwfdecPlayerManager *manager = managerp;
+
+  swfdec_player_manager_set_playing (manager, FALSE);
+  swfdec_player_iterate (manager->player);
+}
+
+static void
+select_scripts (GtkTreeSelection *select, SwfdecDebugScript *script)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+
+  if (gtk_tree_selection_get_selected (select, &model, &iter)) {
+    SwfdecDebuggerScript *dscript;
+    gtk_tree_model_get (model, &iter, 0, &dscript, -1);
+    swfdec_debug_script_set_script (script, dscript);
+  } else {
+    swfdec_debug_script_set_script (script, NULL);
+  }
+}
+
+static void
+toggle_play_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, GtkToggleButton *button)
+{
+  gtk_toggle_button_set_active (button,
+      swfdec_player_manager_get_playing (manager));
+}
+
+static void
+play_toggled_cb (GtkToggleButton *button, SwfdecPlayerManager *manager)
+{
+  swfdec_player_manager_set_playing (manager,
+      gtk_toggle_button_get_active (button));
 }
 
 static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
-  GtkWidget *window, *widget, *hpaned, *vbox, *scroll;
+  SwfdecPlayerManager *manager;
+  GtkWidget *window, *widget, *hpaned, *vbox, *scroll, *scripts;
 
+  manager = swfdec_player_manager_new (player);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   
   hpaned = gtk_hpaned_new ();
@@ -61,8 +97,17 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
-  widget = swfdec_debug_scripts_new (player);
-  gtk_container_add (GTK_CONTAINER (scroll), widget);
+  scripts = swfdec_debug_scripts_new (player);
+  gtk_container_add (GTK_CONTAINER (scroll), scripts);
+
+  widget = gtk_toggle_button_new_with_mnemonic ("_Play");
+  g_signal_connect (widget, "toggled", G_CALLBACK (play_toggled_cb), manager);
+  g_signal_connect (manager, "notify::playing", G_CALLBACK (toggle_play_cb), widget);
+  gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+  
+  widget = gtk_button_new_from_stock ("_Step");
+  g_signal_connect_swapped (widget, "clicked", G_CALLBACK (step_clicked_cb), manager);
+  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
 
   /* right side */
   vbox = gtk_vbox_new (FALSE, 3);
@@ -73,9 +118,14 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_box_pack_start (GTK_BOX (vbox), widget, TRUE, TRUE, 0);
 
-  widget = gtk_button_new_with_mnemonic ("_Iterate");
-  g_signal_connect_swapped (widget, "clicked", G_CALLBACK (iterate), player);
-  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
+      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
+  widget = swfdec_debug_script_new (player);
+  gtk_container_add (GTK_CONTAINER (scroll), widget);
+  g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (scripts)),
+      "changed", G_CALLBACK (select_scripts), widget);
 
 #ifdef CAIRO_HAS_SVG_SURFACE
   widget = gtk_button_new_with_mnemonic ("_Save current frame");
@@ -87,6 +137,8 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_widget_show_all (window);
 
   gtk_main ();
+
+  g_object_unref (manager);
 }
 
 int 

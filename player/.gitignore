@@ -7,6 +7,9 @@ CVS
 Makefile
 Makefile.in
 *.o
+*.lo
+*.loT
 
+libswfdecui.la
 swfdebug
 swfplay

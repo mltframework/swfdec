@@ -110,6 +110,13 @@ message_display_cb (SwfdecPlayerManager *manager, guint type, const char *messag
 }
 
 static void
+destroyed_cb (GtkWindow *window, SwfdecPlayerManager *manager)
+{
+  g_object_unref (manager);
+  gtk_main_quit ();
+}
+
+static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
   SwfdecPlayerManager *manager;
@@ -185,12 +192,10 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
   gtk_widget_grab_focus (widget);
 
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect (window, "destroy", G_CALLBACK (destroyed_cb), manager);
   gtk_widget_show_all (window);
 
   gtk_main ();
-
-  g_object_unref (manager);
 }
 
 int 

@@ -41,6 +41,7 @@ struct _SwfdecPlayerManager
   SwfdecPlayer *	player;		/* the video we play */
   GSource *		source;		/* the source that is ticking */
   double		speed;		/* speed of playback */
+  GMainLoop *		interrupt_loop;	/* loop we run during an interruption */
 };
 
 struct _SwfdecPlayerManagerClass
@@ -59,7 +60,9 @@ double		swfdec_player_manager_get_speed		(SwfdecPlayerManager *  manager);
 void		swfdec_player_manager_set_playing	(SwfdecPlayerManager *	manager,
 							 gboolean		playing);
 gboolean	swfdec_player_manager_get_playing	(SwfdecPlayerManager *  manager);
+void		swfdec_player_manager_continue		(SwfdecPlayerManager *	manager);
 void		swfdec_player_manager_iterate		(SwfdecPlayerManager *	manager);
+gboolean	swfdec_player_manager_get_interrupted	(SwfdecPlayerManager *  manager);
 
 void		swfdec_player_manager_execute		(SwfdecPlayerManager *	manager,
 							 const char *		command);

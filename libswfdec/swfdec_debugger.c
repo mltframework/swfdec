@@ -58,6 +58,7 @@ swfdec_debugger_script_free (SwfdecDebuggerScript *script)
 enum {
   SCRIPT_ADDED,
   SCRIPT_REMOVED,
+  BREAKPOINT,
   BREAKPOINT_ADDED,
   BREAKPOINT_REMOVED,
   LAST_SIGNAL
@@ -92,6 +93,9 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[SCRIPT_REMOVED] = g_signal_new ("script-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
+  signals[BREAKPOINT] = g_signal_new ("breakpoint", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
   signals[BREAKPOINT_ADDED] = g_signal_new ("breakpoint-added", 
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
       g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
@@ -175,6 +179,9 @@ static JSTrapStatus
 swfdec_debugger_handle_breakpoint (JSContext *cx, JSScript *script, jsbytecode *pc,
     jsval *rval, void *closure)
 {
+  SwfdecDebugger *debugger = JS_GetContextPrivate (cx);
+
+  g_signal_emit (debugger, signals[BREAKPOINT], 0, GPOINTER_TO_UINT (closure));
   return JSTRAP_CONTINUE;
 }
 

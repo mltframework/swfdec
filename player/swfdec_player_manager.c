@@ -31,7 +31,8 @@
 enum {
   PROP_0,
   PROP_PLAYING,
-  PROP_SPEED
+  PROP_SPEED,
+  PROP_INTERRUPTED
 };
 
 enum {
@@ -54,6 +55,9 @@ swfdec_player_manager_get_property (GObject *object, guint param_id, GValue *val
       break;
     case PROP_SPEED:
       g_value_set_double (value, swfdec_player_manager_get_speed (manager));
+      break;
+    case PROP_INTERRUPTED:
+      g_value_set_boolean (value, swfdec_player_manager_get_interrupted (manager));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -103,9 +107,12 @@ swfdec_player_manager_class_init (SwfdecPlayerManagerClass * g_class)
   g_object_class_install_property (object_class, PROP_SPEED,
       g_param_spec_double ("speed", "speed", "playback speed of movie",
 	  G_MINDOUBLE, 16.0, 1.0, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_SPEED,
+  g_object_class_install_property (object_class, PROP_PLAYING,
       g_param_spec_boolean ("playing", "playing", "if the movie is played back",
 	  FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_INTERRUPTED,
+      g_param_spec_boolean ("interrupted", "interrupted", "TRUE if we're handling a breakpoint",
+	  FALSE, G_PARAM_READABLE));
 
   signals[MESSAGE] = g_signal_new ("message", G_TYPE_FROM_CLASS (g_class),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT_POINTER, /* FIXME */
@@ -118,6 +125,8 @@ swfdec_player_manager_init (SwfdecPlayerManager *manager)
   manager->speed = 1.0;
 }
 
+static void breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager);
+
 static void
 swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *player)
 {
@@ -125,11 +134,13 @@ swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *pl
     return;
 
   if (manager->player) {
+    g_signal_handlers_disconnect_by_func (manager->player, breakpoint_hit_cb, manager);
     g_object_unref (manager->player);
   }
   manager->player = player;
   if (player) {
     g_object_ref (player);
+    g_signal_connect (player, "breakpoint", G_CALLBACK (breakpoint_hit_cb), manager);
   }
 }
 
@@ -172,11 +183,24 @@ swfdec_player_manager_get_speed (SwfdecPlayerManager *manager)
   return manager->speed;
 }
 
+gboolean
+swfdec_player_manager_get_interrupted (SwfdecPlayerManager *manager)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager), FALSE);
+
+  return manager->interrupt_loop != NULL;
+}
+
 void
 swfdec_player_manager_set_playing (SwfdecPlayerManager *manager, gboolean playing)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
 
+  if (swfdec_player_manager_get_interrupted (manager)) {
+    if (playing)
+      swfdec_player_manager_continue (manager);
+    return;
+  }
   if ((manager->source != NULL) == playing)
     return;
   if (playing) {
@@ -203,8 +227,20 @@ swfdec_player_manager_get_playing (SwfdecPlayerManager *manager)
 void
 swfdec_player_manager_iterate (SwfdecPlayerManager *manager)
 {
+  g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
+  g_return_if_fail (!swfdec_player_manager_get_interrupted (manager));
+
   swfdec_player_manager_set_playing (manager, FALSE);
   swfdec_player_iterate (manager->player);
+}
+
+void
+swfdec_player_manager_continue (SwfdecPlayerManager *manager)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
+  g_return_if_fail (swfdec_player_manager_get_interrupted (manager));
+
+  g_main_loop_quit (manager->interrupt_loop);
 }
 
 /*** command handling ***/
@@ -235,6 +271,22 @@ swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
   swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_OUTPUT, __VA_ARGS__)
 #define swfdec_player_manager_error(manager, ...) \
   swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_ERROR, __VA_ARGS__)
+
+static void
+breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager)
+{
+  gboolean was_playing = swfdec_player_manager_get_playing (manager);
+
+  swfdec_player_manager_set_playing (manager, FALSE);
+  manager->interrupt_loop = g_main_loop_new (NULL, FALSE);
+  g_object_notify (G_OBJECT (manager), "interrupted");
+  swfdec_player_manager_output (manager, "Breakpoint %u", id);
+  g_main_loop_run (manager->interrupt_loop);
+  g_main_loop_unref (manager->interrupt_loop);
+  manager->interrupt_loop = NULL;
+  g_object_notify (G_OBJECT (manager), "interrupted");
+  swfdec_player_manager_set_playing (manager, was_playing);
+}
 
 static void
 command_print (SwfdecPlayerManager *manager, const char *arg)
@@ -269,6 +321,15 @@ static void
 command_iterate (SwfdecPlayerManager *manager, const char *arg)
 {
   swfdec_player_manager_iterate (manager);
+}
+
+static void
+command_continue (SwfdecPlayerManager *manager, const char *arg)
+{
+  if (swfdec_player_manager_get_interrupted (manager))
+    swfdec_player_manager_continue (manager);
+  else
+    swfdec_player_manager_error (manager, "Not interrupted, cannot continue");
 }
 
 static void
@@ -309,13 +370,14 @@ struct {
   void		(* func)	(SwfdecPlayerManager *manager, const char *arg);
   const char *	description;
 } commands[] = {
-  { "help",	command_help,	"print all available commands and a quick description" },
-  { "print",	command_print,	"evaluate the argument as a JavaScript script" },
-  { "play",	command_play,	"play the movie" },
-  { "stop",	command_stop,	"stop the movie" },
-  { "iterate",	command_iterate,"iterate the movie once" },
-  { "breakpoints", command_breakpoints, "show all breakpoints" },
-  { "delete",	command_delete,	"delete a breakpoint" },
+  { "help",	command_help,		"print all available commands and a quick description" },
+  { "print",	command_print,	  	"evaluate the argument as a JavaScript script" },
+  { "play",	command_play,		"play the movie" },
+  { "stop",	command_stop,	 	"stop the movie" },
+  { "iterate",	command_iterate,	"iterate the movie once" },
+  { "breakpoints", command_breakpoints,	"show all breakpoints" },
+  { "delete",	command_delete,		"delete a breakpoint" },
+  { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
 };
 
 static void

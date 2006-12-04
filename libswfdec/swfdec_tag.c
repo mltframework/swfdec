@@ -802,6 +802,13 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
   [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, 0},
+  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", NULL, 0},
+  [SWFDEC_TAG_IMPORTASSETS2] = {"ImportAssets2", NULL, 0},
+  [SWFDEC_TAG_DEFINEFONTALIGNZONES] = {"DefineFontAlignZones", NULL, 0},
+  [SWFDEC_TAG_CSMTEXTSETTINGS] = {"CSMTextSettings", NULL, 0},
+  [SWFDEC_TAG_DEFINEFONT3] = {"DefineFont3", NULL, 0},
+  [SWFDEC_TAG_METADATA] = {"Metadata", NULL, 0},
+  [SWFDEC_TAG_DEFINESCALINGGRID] = {"DefineScalingGrid", NULL, 0},
   [SWFDEC_TAG_DEFINESHAPE4] = {"DefineShape4", NULL, 0},
   [SWFDEC_TAG_DEFINEMORPHSHAPE2] = {"DefineMorphShape2", NULL, 0},
 };

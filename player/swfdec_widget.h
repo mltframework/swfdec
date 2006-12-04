@@ -43,6 +43,7 @@ struct _SwfdecWidget
   double		real_scale;	/* the real scale factor used */
   double		set_scale;    	/* the set scale factor of the video */
   gboolean		use_image;	/* TRUE to draw to an image first before rendering to Gtk */
+  gboolean		interactive;	/* if this widget propagates keyboard and mouse events */
 
   int			button;		/* status of mouse button in displayed movie */
 };
@@ -62,6 +63,9 @@ double		swfdec_widget_get_scale		(SwfdecWidget *	widget);
 void		swfdec_widget_set_use_image	(SwfdecWidget *	widget,
 						 gboolean	use_image);
 gboolean	swfdec_widget_get_use_image	(SwfdecWidget *	widget);
+void		swfdec_widget_set_interactive	(SwfdecWidget * widget,
+						 gboolean	interactive);
+gboolean	swfdec_widget_get_interactive	(SwfdecWidget * widget);
 void		swfdec_widget_set_player	(SwfdecWidget *	widget,
 						 SwfdecPlayer *	player);
 

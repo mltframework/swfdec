@@ -36,8 +36,9 @@ swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 
   gdk_window_get_pointer (gtkwidget->window, &x, &y, NULL);
 
-  swfdec_player_handle_mouse (widget->player, 
-      x / widget->real_scale, y / widget->real_scale, widget->button);
+  if (widget->interactive)
+    swfdec_player_handle_mouse (widget->player, 
+	x / widget->real_scale, y / widget->real_scale, widget->button);
   
   return FALSE;
 }
@@ -47,9 +48,11 @@ swfdec_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
 {
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
 
-  widget->button = 0;
-  swfdec_player_handle_mouse (widget->player, 
-      event->x / widget->real_scale, event->y / widget->real_scale, 0);
+  if (widget->interactive) {
+    widget->button = 0;
+    swfdec_player_handle_mouse (widget->player, 
+	event->x / widget->real_scale, event->y / widget->real_scale, 0);
+  }
   return FALSE;
 }
 
@@ -60,8 +63,9 @@ swfdec_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     widget->button = 1;
-    swfdec_player_handle_mouse (widget->player, 
-	event->x / widget->real_scale, event->y / widget->real_scale, 1);
+    if (widget->interactive)
+      swfdec_player_handle_mouse (widget->player, 
+	  event->x / widget->real_scale, event->y / widget->real_scale, 1);
   }
   return FALSE;
 }
@@ -73,8 +77,9 @@ swfdec_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     widget->button = 0;
-    swfdec_player_handle_mouse (widget->player, 
-	event->x / widget->real_scale, event->y / widget->real_scale, 0);
+    if (widget->interactive)
+      swfdec_player_handle_mouse (widget->player, 
+	  event->x / widget->real_scale, event->y / widget->real_scale, 0);
   }
   return FALSE;
 }
@@ -266,6 +271,7 @@ static void
 swfdec_widget_init (SwfdecWidget * widget)
 {
   widget->real_scale = 1.0;
+  widget->interactive = TRUE;
 }
 
 static void
@@ -366,3 +372,20 @@ swfdec_widget_get_use_image (SwfdecWidget *widget)
 
   return widget->use_image;
 }
+
+void
+swfdec_widget_set_interactive (SwfdecWidget *widget, gboolean interactive)
+{
+  g_return_if_fail (SWFDEC_IS_WIDGET (widget));
+
+  widget->interactive = interactive;
+}
+
+gboolean
+swfdec_widget_get_interactive (SwfdecWidget *widget)
+{
+  g_return_val_if_fail (SWFDEC_IS_WIDGET (widget), FALSE);
+
+  return widget->interactive;
+}
+

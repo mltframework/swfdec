@@ -59,6 +59,7 @@ double		swfdec_player_manager_get_speed		(SwfdecPlayerManager *  manager);
 void		swfdec_player_manager_set_playing	(SwfdecPlayerManager *	manager,
 							 gboolean		playing);
 gboolean	swfdec_player_manager_get_playing	(SwfdecPlayerManager *  manager);
+void		swfdec_player_manager_iterate		(SwfdecPlayerManager *	manager);
 
 void		swfdec_player_manager_execute		(SwfdecPlayerManager *	manager,
 							 const char *		command);

@@ -40,12 +40,9 @@ save_to_svg (GtkWidget *button, SwfdecPlayer *player)
 #endif /* CAIRO_HAS_SVG_SURFACE */
 
 static void
-step_clicked_cb (gpointer managerp)
+step_clicked_cb (gpointer manager)
 {
-  SwfdecPlayerManager *manager = managerp;
-
-  swfdec_player_manager_set_playing (manager, FALSE);
-  swfdec_player_iterate (manager->player);
+  swfdec_player_manager_iterate (manager);
 }
 
 static void

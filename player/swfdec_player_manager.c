@@ -199,6 +199,13 @@ swfdec_player_manager_get_playing (SwfdecPlayerManager *manager)
   return manager->source != NULL;
 }
 
+void
+swfdec_player_manager_iterate (SwfdecPlayerManager *manager)
+{
+  swfdec_player_manager_set_playing (manager, FALSE);
+  swfdec_player_iterate (manager->player);
+}
+
 /*** command handling ***/
 
 typedef enum {
@@ -245,13 +252,47 @@ command_print (SwfdecPlayerManager *manager, const char *arg)
   }
 }
 
+static void
+command_play (SwfdecPlayerManager *manager, const char *arg)
+{
+  swfdec_player_manager_set_playing (manager, TRUE);
+}
+
+static void
+command_stop (SwfdecPlayerManager *manager, const char *arg)
+{
+  swfdec_player_manager_set_playing (manager, FALSE);
+}
+
+static void
+command_iterate (SwfdecPlayerManager *manager, const char *arg)
+{
+  swfdec_player_manager_iterate (manager);
+}
+
+static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
 struct {
   const char *	name;
   void		(* func)	(SwfdecPlayerManager *manager, const char *arg);
+  const char *	description;
 } commands[] = {
-  { "print",	command_print }
+  { "help",	command_help,	"print all available commands and a quick description" },
+  { "print",	command_print,	"evaluate the argument as a JavaScript script" },
+  { "play",	command_play,	"play the movie" },
+  { "stop",	command_stop,	"stop the movie" },
+  { "iterate",	command_iterate,"iterate the movie once" },
 };
+
+static void
+command_help (SwfdecPlayerManager *manager, const char *arg)
+{
+  guint i;
+  swfdec_player_manager_output (manager, "The following commands are available:");
+  for (i = 0; i < G_N_ELEMENTS (commands); i++) {
+    swfdec_player_manager_output (manager, "%s: %s", commands[i].name, commands[i].description);
+  }
+}
 
 void
 swfdec_player_manager_execute (SwfdecPlayerManager *manager, const char *command)

@@ -78,6 +78,35 @@ play_toggled_cb (GtkToggleButton *button, SwfdecPlayerManager *manager)
 }
 
 static void
+entry_activate_cb (GtkEntry *entry, SwfdecPlayerManager *manager)
+{
+  const char *text = gtk_entry_get_text (entry);
+
+  if (text[0] == '\0')
+    return;
+
+  swfdec_player_manager_execute (manager, text);
+  gtk_entry_set_text (entry, "");
+}
+
+static void
+message_display_cb (SwfdecPlayerManager *manager, guint type, const char *message, GtkTextView *view)
+{
+  GtkTextBuffer *buffer = gtk_text_view_get_buffer (view);
+  GtkTextIter iter;
+  const char *tag_name = "output";
+
+  if (type == 0)
+    tag_name = "input";
+  else if (type == 2)
+    tag_name = "error";
+
+  gtk_text_buffer_get_end_iter (buffer, &iter);
+  gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, message, -1, tag_name, NULL);
+  gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, "\n", 1, tag_name, NULL);
+}
+
+static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
   SwfdecPlayerManager *manager;
@@ -103,11 +132,17 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   widget = gtk_toggle_button_new_with_mnemonic ("_Play");
   g_signal_connect (widget, "toggled", G_CALLBACK (play_toggled_cb), manager);
   g_signal_connect (manager, "notify::playing", G_CALLBACK (toggle_play_cb), widget);
-  gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
   
   widget = gtk_button_new_from_stock ("_Step");
   g_signal_connect_swapped (widget, "clicked", G_CALLBACK (step_clicked_cb), manager);
   gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+
+#ifdef CAIRO_HAS_SVG_SURFACE
+  widget = gtk_button_new_with_mnemonic ("_Save frame");
+  g_signal_connect (widget, "clicked", G_CALLBACK (save_to_svg), player);
+  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+#endif
 
   /* right side */
   vbox = gtk_vbox_new (FALSE, 3);
@@ -116,7 +151,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   widget = swfdec_widget_new (player);
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
-  gtk_box_pack_start (GTK_BOX (vbox), widget, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
@@ -127,11 +162,25 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (scripts)),
       "changed", G_CALLBACK (select_scripts), widget);
 
-#ifdef CAIRO_HAS_SVG_SURFACE
-  widget = gtk_button_new_with_mnemonic ("_Save current frame");
-  g_signal_connect (widget, "clicked", G_CALLBACK (save_to_svg), player);
-  gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
-#endif
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
+      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
+  widget = gtk_text_view_new ();
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (widget), FALSE);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget)),
+      "error", "foreground", "red", "left-margin", 15, NULL);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget)),
+      "input", "foreground", "dark grey", NULL);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget)),
+      "output", "left-margin", 15, NULL);
+  g_signal_connect (manager, "message", G_CALLBACK (message_display_cb), widget);
+  gtk_container_add (GTK_CONTAINER (scroll), widget);
+
+  widget = gtk_entry_new ();
+  g_signal_connect (widget, "activate", G_CALLBACK (entry_activate_cb), manager);
+  gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+  gtk_widget_grab_focus (widget);
 
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);

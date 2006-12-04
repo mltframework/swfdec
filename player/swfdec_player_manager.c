@@ -21,6 +21,9 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+#include <libswfdec/swfdec_js.h>
+#include <libswfdec/swfdec_player_internal.h>
 #include "swfdec_player_manager.h"
 #include "swfdec_source.h"
 
@@ -30,7 +33,13 @@ enum {
   PROP_SPEED
 };
 
+enum {
+  MESSAGE,
+  LAST_SIGNAL
+};
+
 G_DEFINE_TYPE (SwfdecPlayerManager, swfdec_player_manager, G_TYPE_OBJECT)
+guint signals[LAST_SIGNAL];
 
 static void
 swfdec_player_manager_get_property (GObject *object, guint param_id, GValue *value, 
@@ -96,6 +105,10 @@ swfdec_player_manager_class_init (SwfdecPlayerManagerClass * g_class)
   g_object_class_install_property (object_class, PROP_SPEED,
       g_param_spec_boolean ("playing", "playing", "if the movie is played back",
 	  FALSE, G_PARAM_READWRITE));
+
+  signals[MESSAGE] = g_signal_new ("message", G_TYPE_FROM_CLASS (g_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT_POINTER, /* FIXME */
+      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_STRING);
 }
 
 static void
@@ -184,5 +197,81 @@ swfdec_player_manager_get_playing (SwfdecPlayerManager *manager)
   g_return_val_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager), FALSE);
 
   return manager->source != NULL;
+}
+
+/*** command handling ***/
+
+typedef enum {
+  SWFDEC_MESSAGE_INPUT,
+  SWFDEC_MESSAGE_OUTPUT,
+  SWFDEC_MESSAGE_ERROR
+} SwfdecMessageType;
+
+static void
+swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
+    SwfdecMessageType type, char *format, ...) G_GNUC_PRINTF (3, 4);
+static void
+swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
+    SwfdecMessageType type, char *format, ...)
+{
+  va_list args;
+  char *msg;
+
+  va_start (args, format);
+  msg = g_strdup_vprintf (format, args);
+  va_end (args);
+  g_signal_emit (manager, signals[MESSAGE], 0, (guint) type, msg);
+  g_free (msg);
+}
+#define swfdec_player_manager_output(manager, ...) \
+  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_OUTPUT, __VA_ARGS__)
+#define swfdec_player_manager_error(manager, ...) \
+  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_ERROR, __VA_ARGS__)
+
+static void
+command_print (SwfdecPlayerManager *manager, const char *arg)
+{
+  jsval rval;
+
+  if (swfdec_js_run (manager->player, arg, &rval)) {
+    const char *s;
+    s = swfdec_js_to_string (manager->player->jscx, rval);
+    if (s)
+      swfdec_player_manager_output (manager, "%s", s);
+    else
+      swfdec_player_manager_error (manager, "Invalid return value");
+  } else {
+    swfdec_player_manager_error (manager, "Invalid command");
+  }
+}
+
+/* NB: the first word in the command string is used, partial matches are ok */
+struct {
+  const char *	name;
+  void		(* func)	(SwfdecPlayerManager *manager, const char *arg);
+} commands[] = {
+  { "print",	command_print }
+};
+
+void
+swfdec_player_manager_execute (SwfdecPlayerManager *manager, const char *command)
+{
+  guint i;
+  const char *space;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
+  g_return_if_fail (command != NULL);
+
+  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_INPUT, "%s", command);
+  space = strchr (command, ' ');
+  if (space == NULL)
+    space = command + strlen (command);
+  for (i = 0; i < G_N_ELEMENTS(commands); i++) {
+    if (g_ascii_strncasecmp (commands[i].name, command, space - command) == 0) {
+      commands[i].func (manager, *space == '\0' ? NULL : space + 1);
+      return;
+    }
+  }
+  swfdec_player_manager_error (manager, "No such command '%*s'", space - command, command);
 }
 

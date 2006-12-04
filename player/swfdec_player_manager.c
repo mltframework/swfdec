@@ -21,9 +21,10 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <string.h>
+#include <libswfdec/swfdec_debugger.h>
 #include <libswfdec/swfdec_js.h>
-#include <libswfdec/swfdec_player_internal.h>
 #include "swfdec_player_manager.h"
 #include "swfdec_source.h"
 
@@ -270,6 +271,37 @@ command_iterate (SwfdecPlayerManager *manager, const char *arg)
   swfdec_player_manager_iterate (manager);
 }
 
+static void
+command_breakpoints (SwfdecPlayerManager *manager, const char *arg)
+{
+  guint i, n, line;
+  SwfdecDebugger *debugger;
+  SwfdecDebuggerScript *script;
+
+  debugger = SWFDEC_DEBUGGER (manager->player);
+  n = swfdec_debugger_get_n_breakpoints (debugger);
+  for (i = 1; i <= n; i++) {
+    if (swfdec_debugger_get_breakpoint (debugger, i, &script, &line)) {
+      swfdec_player_manager_output (manager, "%u: %s line %u: %s",
+	  i, script->name, line, script->commands[line].description);
+    }
+  }
+}
+
+static void
+command_delete (SwfdecPlayerManager *manager, const char *arg)
+{
+  char *end;
+  guint id;
+
+  id = strtoul (arg, &end, 10);
+  if (id == 0 || *end != '\0') {
+    swfdec_player_manager_error (manager, "no breakpoint '%s'", arg);
+    return;
+  }
+  swfdec_debugger_unset_breakpoint (SWFDEC_DEBUGGER (manager->player), id);
+}
+
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
 struct {
@@ -282,6 +314,8 @@ struct {
   { "play",	command_play,	"play the movie" },
   { "stop",	command_stop,	"stop the movie" },
   { "iterate",	command_iterate,"iterate the movie once" },
+  { "breakpoints", command_breakpoints, "show all breakpoints" },
+  { "delete",	command_delete,	"delete a breakpoint" },
 };
 
 static void

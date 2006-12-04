@@ -91,6 +91,7 @@ message_display_cb (SwfdecPlayerManager *manager, guint type, const char *messag
 {
   GtkTextBuffer *buffer = gtk_text_view_get_buffer (view);
   GtkTextIter iter;
+  GtkTextMark *mark;
   const char *tag_name = "output";
 
   if (type == 0)
@@ -99,8 +100,13 @@ message_display_cb (SwfdecPlayerManager *manager, guint type, const char *messag
     tag_name = "error";
 
   gtk_text_buffer_get_end_iter (buffer, &iter);
+  mark = gtk_text_buffer_get_mark (buffer, "end");
+  if (mark == NULL)
+    mark = gtk_text_buffer_create_mark (buffer, "end", &iter, FALSE);
+  if (gtk_text_buffer_get_char_count (buffer) > 0)
+    gtk_text_buffer_insert (buffer, &iter, "\n", 1);
   gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, message, -1, tag_name, NULL);
-  gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, "\n", 1, tag_name, NULL);
+  gtk_text_view_scroll_to_mark (view, mark, 0.0, TRUE, 0.0, 0.0);
 }
 
 static void
@@ -123,7 +129,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
-  scripts = swfdec_debug_scripts_new (player);
+  scripts = swfdec_debug_scripts_new (SWFDEC_DEBUGGER (player));
   gtk_container_add (GTK_CONTAINER (scroll), scripts);
 
   widget = gtk_toggle_button_new_with_mnemonic ("_Play");
@@ -154,7 +160,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
-  widget = swfdec_debug_script_new (player);
+  widget = swfdec_debug_script_new (SWFDEC_DEBUGGER (player));
   gtk_container_add (GTK_CONTAINER (scroll), widget);
   g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (scripts)),
       "changed", G_CALLBACK (select_scripts), widget);
@@ -230,7 +236,7 @@ main (int argc, char *argv[])
     g_error_free (error);
     return 1;
   }
-  player = swfdec_player_new_with_debugger ();
+  player = swfdec_debugger_new ();
   swfdec_player_set_loader (player, loader);
   if (swfdec_player_get_rate (player) == 0) {
     g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);

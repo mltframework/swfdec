@@ -49,7 +49,7 @@ struct _SwfdecDebugScriptClass
 
 GType		swfdec_debug_script_get_type		(void);
 
-GtkWidget *	swfdec_debug_script_new			(SwfdecPlayer *		player);
+GtkWidget *	swfdec_debug_script_new			(SwfdecDebugger *	debugger);
 
 void		swfdec_debug_script_set_script		(SwfdecDebugScript *	script,
 							 SwfdecDebuggerScript *	dscript);

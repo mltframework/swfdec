@@ -27,16 +27,71 @@ G_DEFINE_TYPE (SwfdecDebugScript, swfdec_debug_script, GTK_TYPE_TREE_VIEW)
 
 enum {
   COLUMN_COMMAND,
+  COLUMN_LINE,
   COLUMN_BREAKPOINT,
   COLUMN_DESC,
   N_COLUMNS
 };
 
 static void
+breakpoint_added_cb (SwfdecDebugger *debugger, guint id, SwfdecDebugScript *debug)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  SwfdecDebuggerScript *script;
+  guint line;
+
+  if (!swfdec_debugger_get_breakpoint (debugger, id, &script, &line))
+    return;
+  if (script != debug->script)
+    return;
+
+  model = gtk_tree_view_get_model (GTK_TREE_VIEW (debug));
+  if (!gtk_tree_model_get_iter_first (model, &iter))
+    return;
+  while (line--)
+    if (!gtk_tree_model_iter_next (model, &iter))
+      return;
+
+  gtk_list_store_set (GTK_LIST_STORE (model), &iter, COLUMN_BREAKPOINT, id, -1);
+}
+
+static void
+breakpoint_removed_cb (SwfdecDebugger *debugger, guint id, SwfdecDebugScript *debug)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  SwfdecDebuggerScript *script;
+  guint line;
+
+  if (!swfdec_debugger_get_breakpoint (debugger, id, &script, &line))
+    return;
+  if (script != debug->script)
+    return;
+
+  model = gtk_tree_view_get_model (GTK_TREE_VIEW (debug));
+  if (!gtk_tree_model_get_iter_first (model, &iter))
+    return;
+  while (line--)
+    if (!gtk_tree_model_iter_next (model, &iter))
+      return;
+
+  gtk_list_store_set (GTK_LIST_STORE (model), &iter, COLUMN_BREAKPOINT, 0, -1);
+}
+
+static void
 swfdec_debug_script_set_debugger (SwfdecDebugScript *debug, SwfdecDebugger *debugger)
 {
+  if (debug->debugger) {
+    g_signal_handlers_disconnect_by_func (debug->debugger, breakpoint_removed_cb, debug);
+    g_signal_handlers_disconnect_by_func (debug->debugger, breakpoint_added_cb, debug);
+  }
   debug->debugger = debugger;
   swfdec_debug_script_set_script (debug, NULL);
+  if (debugger) {
+    g_signal_connect (debugger, "breakpoint-added", G_CALLBACK (breakpoint_added_cb), debug);
+    g_signal_connect (debugger, "breakpoint-removed", G_CALLBACK (breakpoint_removed_cb), debug);
+  };
 }
 
 static void
@@ -63,10 +118,43 @@ swfdec_debug_script_init (SwfdecDebugScript * debug)
 }
 
 static void
+breakpoint_row_toggled_cb (GtkCellRendererToggle *cell, gchar *path, 
+    SwfdecDebugScript *debug)
+{
+  GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (debug));
+  GtkTreeIter iter;
+  guint br, line;
+
+  if (!gtk_tree_model_get_iter_from_string (model, &iter, path))
+    return;
+  gtk_tree_model_get (model, &iter, COLUMN_BREAKPOINT, &br, COLUMN_LINE, &line, -1);
+  if (br) {
+    swfdec_debugger_unset_breakpoint (debug->debugger, br);
+  } else {
+    swfdec_debugger_set_breakpoint (debug->debugger, debug->script, line);
+  }
+}
+
+static void
 swfdec_debug_script_add_columns (GtkTreeView *treeview)
 {
   GtkTreeViewColumn *column;
   GtkCellRenderer *renderer;
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Line", renderer,
+    "text", COLUMN_LINE, NULL);
+  gtk_tree_view_column_set_sort_column_id (column, COLUMN_LINE);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_append_column (treeview, column);
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Br", renderer,
+    "active", COLUMN_BREAKPOINT, NULL);
+  g_signal_connect (renderer, "toggled", G_CALLBACK (breakpoint_row_toggled_cb), treeview);
+  gtk_tree_view_column_set_sort_column_id (column, COLUMN_LINE);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_append_column (treeview, column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes ("Command", renderer,
@@ -77,15 +165,15 @@ swfdec_debug_script_add_columns (GtkTreeView *treeview)
 }
 
 GtkWidget *
-swfdec_debug_script_new (SwfdecPlayer *player)
+swfdec_debug_script_new (SwfdecDebugger *debugger)
 {
   SwfdecDebugScript *debug;
   
-  g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
 
   debug = g_object_new (SWFDEC_TYPE_DEBUG_SCRIPT, 0);
   swfdec_debug_script_add_columns (GTK_TREE_VIEW (debug));
-  swfdec_debug_script_set_debugger (debug, swfdec_debugger_get (player));
+  swfdec_debug_script_set_debugger (debug, debugger);
 
   return GTK_WIDGET (debug);
 }
@@ -95,15 +183,15 @@ swfdec_debug_script_set_model (SwfdecDebugScript *debug)
 {
   guint i;
   GtkListStore *store = gtk_list_store_new (N_COLUMNS, G_TYPE_POINTER, 
-      G_TYPE_BOOLEAN, G_TYPE_STRING);
+      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING);
 
   for (i = 0; i < debug->script->n_commands; i++) {
     SwfdecDebuggerCommand *command = &debug->script->commands[i];
     GtkTreeIter iter;
 
     gtk_list_store_append (store, &iter);
-    gtk_list_store_set (store, &iter, COLUMN_COMMAND, command,
-	COLUMN_BREAKPOINT, FALSE, COLUMN_DESC, command->description, -1);
+    gtk_list_store_set (store, &iter, COLUMN_COMMAND, command, COLUMN_LINE, i,
+	COLUMN_BREAKPOINT, command->breakpoint, COLUMN_DESC, command->description, -1);
   }
 
   gtk_tree_view_set_model (GTK_TREE_VIEW (debug), GTK_TREE_MODEL (store));

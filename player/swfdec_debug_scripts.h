@@ -48,7 +48,7 @@ struct _SwfdecDebugScriptsClass
 
 GType		swfdec_debug_scripts_get_type		(void);
 
-GtkWidget *	swfdec_debug_scripts_new		(SwfdecPlayer *	player);
+GtkWidget *	swfdec_debug_scripts_new		(SwfdecDebugger *	debugger);
 
 
 G_END_DECLS

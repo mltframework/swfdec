@@ -71,9 +71,10 @@ static void
 compile_state_debug_add (CompileState *state, const char *format, ...)
 {
   va_list args;
-  SwfdecDebuggerCommand command;
+  SwfdecDebuggerCommand command = { NULL, };
 
   command.code = NULL + state->bytecode->len;
+  command.breakpoint = 0;
   va_start (args, format);
   command.description = g_strdup_vprintf (format, args);
   SWFDEC_LOG ("%s", command.description);
@@ -85,7 +86,7 @@ compile_state_debug_add (CompileState *state, const char *format, ...)
 static void
 compile_state_debug_add_default (CompileState *state, guint action, const char *name)
 {
-  SwfdecDebuggerCommand command;
+  SwfdecDebuggerCommand command = { NULL, };
 
   if (state->command_last == G_MAXUINT)
     return;
@@ -105,12 +106,12 @@ compile_state_debug_finish (CompileState *state, SwfdecPlayer *player, JSScript 
   SwfdecDebuggerCommand *command;
   guint i;
 
-  if (player->debugger) {
+  if (SWFDEC_IS_DEBUGGER (player)) {
     for (i = 0; i < state->commands->len; i++) {
       command = &g_array_index (state->commands, SwfdecDebuggerCommand, i);
       command->code = script->code + GPOINTER_TO_UINT (command->code);
     }
-    swfdec_debugger_add_script (player->debugger, script, name,
+    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script, name,
 	(SwfdecDebuggerCommand *) state->commands->data, state->commands->len);
     g_array_free (state->commands, FALSE);
   } else {
@@ -1287,8 +1288,8 @@ swfdec_compiler_destroy_script (SwfdecPlayer *player, JSScript *script)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (script != NULL);
 
-  if (player->debugger)
-    swfdec_debugger_remove_script (player->debugger, script);
+  if (SWFDEC_IS_DEBUGGER (player))
+    swfdec_debugger_remove_script (SWFDEC_DEBUGGER (player), script);
   JS_DestroyScript (player->jscx, script);
 }
 

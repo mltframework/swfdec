@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_player_internal.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/js/jsapi.h>
 
@@ -41,6 +42,7 @@ typedef struct _SwfdecDebuggerCommand SwfdecDebuggerCommand;
 
 struct _SwfdecDebuggerCommand {
   gpointer		code;		/* pointer to start bytecode in JScript */
+  guint			breakpoint;	/* id of breakpoint pointing here */
   char *		description;	/* string describing the action */
 };
 
@@ -52,18 +54,31 @@ struct _SwfdecDebuggerScript {
 };
 
 struct _SwfdecDebugger {
-  GObject		object;
+  SwfdecPlayer		player;
 
   GHashTable *		scripts;	/* JSScript => SwfdecDebuggerScript mapping */
+  GArray *		breakpoints;	/* all breakpoints */
 };
 
 struct _SwfdecDebuggerClass {
-  GObjectClass		object_class;
+  SwfdecPlayerClass   	player_class;
 };
 
 GType			swfdec_debugger_get_type        (void);
-SwfdecDebugger *	swfdec_debugger_get		(SwfdecPlayer *		player);
-SwfdecPlayer *		swfdec_player_new_with_debugger	(void);
+SwfdecPlayer *		swfdec_debugger_new		(void);
+
+guint			swfdec_debugger_set_breakpoint	(SwfdecDebugger *	debugger,
+							 SwfdecDebuggerScript *	script,
+							 guint			line);
+void			swfdec_debugger_unset_breakpoint
+							(SwfdecDebugger *	debugger,
+							 guint			id);
+gboolean		swfdec_debugger_get_breakpoint	(SwfdecDebugger *	debugger,
+							 guint			id,
+							 SwfdecDebuggerScript **script,
+							 guint *      		line);
+guint			swfdec_debugger_get_n_breakpoints
+							(SwfdecDebugger *	debugger);
 
 void			swfdec_debugger_add_script	(SwfdecDebugger *	debugger,
 							 JSScript *		script,

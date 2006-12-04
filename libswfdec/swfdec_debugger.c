@@ -26,6 +26,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
+#include "js/jsdbgapi.h"
 
 /*** SwfdecDebuggerScript ***/
 
@@ -57,10 +58,12 @@ swfdec_debugger_script_free (SwfdecDebuggerScript *script)
 enum {
   SCRIPT_ADDED,
   SCRIPT_REMOVED,
+  BREAKPOINT_ADDED,
+  BREAKPOINT_REMOVED,
   LAST_SIGNAL
 };
 
-G_DEFINE_TYPE (SwfdecDebugger, swfdec_debugger, G_TYPE_OBJECT)
+G_DEFINE_TYPE (SwfdecDebugger, swfdec_debugger, SWFDEC_TYPE_PLAYER)
 guint signals [LAST_SIGNAL] = { 0, };
 
 static void
@@ -70,6 +73,8 @@ swfdec_debugger_dispose (GObject *object)
 
   g_assert (g_hash_table_size (debugger->scripts) == 0);
   g_hash_table_destroy (debugger->scripts);
+  if (debugger->breakpoints)
+    g_array_free (debugger->breakpoints, TRUE);
 
   G_OBJECT_CLASS (swfdec_debugger_parent_class)->dispose (object);
 }
@@ -87,6 +92,12 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[SCRIPT_REMOVED] = g_signal_new ("script-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
+  signals[BREAKPOINT_ADDED] = g_signal_new ("breakpoint-added", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+  signals[BREAKPOINT_REMOVED] = g_signal_new ("breakpoint-removed", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 static void
@@ -96,44 +107,20 @@ swfdec_debugger_init (SwfdecDebugger *debugger)
       NULL, (GDestroyNotify) swfdec_debugger_script_free);
 }
 
-static void
-swfdec_player_attach_debugger (SwfdecPlayer *player)
-{
-  SwfdecDebugger *debugger;
-  
-  g_assert (player->roots == NULL);
-  g_assert (player->debugger == NULL);
-
-  debugger = g_object_new (SWFDEC_TYPE_DEBUGGER, NULL);
-  SWFDEC_INFO ("attaching debugger %p to player %p", debugger, player);
-  player->debugger = debugger;
-  g_object_weak_ref (G_OBJECT (player), (GWeakNotify) g_object_unref, debugger);
-}
-
 /**
- * swfdec_debugger_get:
- * @player: a #SwfdecPlayer
+ * swfdec_debugger_new:
  *
- * Gets the debugger associated with @player. A debugger will only be 
- * associated with @player, if it was created via 
- * swfdec_player_new_with_debugger().
+ * Creates a #SwfdecPlayer that can be debugged.
  *
- * Returns: the debugger associated with @player or NULL if none
+ * Returns: a new #SwfdecDebugger
  **/
-SwfdecDebugger *
-swfdec_debugger_get (SwfdecPlayer *player)
-{
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-
-  return player->debugger;
-}
-
 SwfdecPlayer *
-swfdec_player_new_with_debugger (void)
+swfdec_debugger_new (void)
 {
-  SwfdecPlayer *player = swfdec_player_new ();
+  SwfdecPlayer *player;
 
-  swfdec_player_attach_debugger (player);
+  swfdec_init ();
+  player = g_object_new (SWFDEC_TYPE_DEBUGGER, NULL);
   return player;
 }
 
@@ -176,3 +163,115 @@ swfdec_debugger_foreach_script (SwfdecDebugger *debugger, GFunc func, gpointer d
   ForeachData fdata = { func, data };
   g_hash_table_foreach (debugger->scripts, do_foreach, &fdata);
 }
+
+/*** BREAKPOINTS ***/
+
+typedef struct {
+  SwfdecDebuggerScript *	script;
+  guint				line;
+} Breakpoint;
+
+static JSTrapStatus
+swfdec_debugger_handle_breakpoint (JSContext *cx, JSScript *script, jsbytecode *pc,
+    jsval *rval, void *closure)
+{
+  return JSTRAP_CONTINUE;
+}
+
+guint
+swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger, 
+    SwfdecDebuggerScript *script, guint line)
+{
+  guint i;
+  Breakpoint *br = NULL;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), 0);
+  g_return_val_if_fail (script != NULL, 0);
+  g_return_val_if_fail (line < script->n_commands, 0);
+
+  if (debugger->breakpoints == NULL)
+    debugger->breakpoints = g_array_new (FALSE, FALSE, sizeof (Breakpoint));
+  if (script->commands[line].breakpoint != 0)
+    return script->commands[line].breakpoint;
+
+  for (i = 0; i < debugger->breakpoints->len; i++) {
+    br = &g_array_index (debugger->breakpoints, Breakpoint, i);
+    if (br->script == NULL)
+      break;
+    br = NULL;
+  }
+  if (!JS_SetTrap (SWFDEC_PLAYER (debugger)->jscx, script->script,
+	  script->commands[line].code, swfdec_debugger_handle_breakpoint, 
+	  GUINT_TO_POINTER (i)))
+    return 0;
+
+  if (br == NULL) {
+    g_array_set_size (debugger->breakpoints, debugger->breakpoints->len + 1);
+    br = &g_array_index (debugger->breakpoints, Breakpoint, 
+	debugger->breakpoints->len - 1);
+  }
+  br->script = script;
+  br->line = line;
+  script->commands[line].breakpoint = i + 1;
+  g_signal_emit (debugger, signals[BREAKPOINT_ADDED], 0, i + 1);
+  return i + 1;
+}
+
+void
+swfdec_debugger_unset_breakpoint (SwfdecDebugger *debugger, guint id)
+{
+  Breakpoint *br;
+
+  g_return_if_fail (SWFDEC_IS_DEBUGGER (debugger));
+  g_return_if_fail (id > 0);
+
+  if (debugger->breakpoints == NULL)
+    return;
+  if (id > debugger->breakpoints->len)
+    return;
+  br = &g_array_index (debugger->breakpoints, Breakpoint, id - 1);
+  if (br->script == NULL)
+    return;
+
+  JS_ClearTrap (SWFDEC_PLAYER (debugger)->jscx, br->script->script,
+      br->script->commands[br->line].code, NULL, NULL);
+  g_signal_emit (debugger, signals[BREAKPOINT_REMOVED], 0, id);
+  br->script->commands[br->line].breakpoint = 0;
+  br->script = NULL;
+}
+
+gboolean
+swfdec_debugger_get_breakpoint (SwfdecDebugger *debugger, guint id, 
+    SwfdecDebuggerScript **script, guint *line)
+{
+  Breakpoint *br;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
+  g_return_val_if_fail (id > 0, FALSE);
+
+  if (debugger->breakpoints == NULL)
+    return FALSE;
+  if (id > debugger->breakpoints->len)
+    return FALSE;
+  br = &g_array_index (debugger->breakpoints, Breakpoint, id - 1);
+  if (br->script == NULL)
+    return FALSE;
+
+  if (script)
+    *script = br->script;
+  if (line)
+    *line = br->line;
+  return TRUE;
+}
+
+guint
+swfdec_debugger_get_n_breakpoints (SwfdecDebugger *debugger)
+{
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), 0);
+
+  if (debugger->breakpoints == NULL)
+    return 0;
+
+  return debugger->breakpoints->len;
+}
+

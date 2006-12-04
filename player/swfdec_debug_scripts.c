@@ -134,15 +134,15 @@ swfdec_debug_scripts_add_columns (GtkTreeView *treeview)
 }
 
 GtkWidget *
-swfdec_debug_scripts_new (SwfdecPlayer *player)
+swfdec_debug_scripts_new (SwfdecDebugger *debugger)
 {
   SwfdecDebugScripts *debug;
   
-  g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
 
   debug = g_object_new (SWFDEC_TYPE_DEBUG_SCRIPTS, 0);
   swfdec_debug_scripts_add_columns (GTK_TREE_VIEW (debug));
-  swfdec_debug_scripts_set_debugger (debug, swfdec_debugger_get (player));
+  swfdec_debug_scripts_set_debugger (debug, debugger);
 
   return GTK_WIDGET (debug);
 }

@@ -138,6 +138,14 @@ swfdec_debugger_add_script (SwfdecDebugger *debugger, JSScript *jscript, const c
   g_signal_emit (debugger, signals[SCRIPT_ADDED], 0, dscript);
 }
 
+SwfdecDebuggerScript *
+swfdec_debugger_get_script (SwfdecDebugger *debugger, JSScript *script)
+{
+  SwfdecDebuggerScript *dscript = g_hash_table_lookup (debugger->scripts, script);
+
+  return dscript;
+}
+
 void
 swfdec_debugger_remove_script (SwfdecDebugger *debugger, JSScript *script)
 {

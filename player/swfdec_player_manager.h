@@ -41,6 +41,7 @@ struct _SwfdecPlayerManager
   SwfdecPlayer *	player;		/* the video we play */
   GSource *		source;		/* the source that is ticking */
   double		speed;		/* speed of playback */
+  gboolean		playing;	/* if we should be playing */
   GMainLoop *		interrupt_loop;	/* loop we run during an interruption */
 };
 

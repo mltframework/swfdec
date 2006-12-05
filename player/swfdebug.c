@@ -40,7 +40,7 @@ save_to_svg (GtkWidget *button, SwfdecPlayer *player)
 #endif /* CAIRO_HAS_SVG_SURFACE */
 
 static void
-step_clicked_cb (gpointer manager)
+step_clicked_cb (GtkButton *button, SwfdecPlayerManager *manager)
 {
   swfdec_player_manager_iterate (manager);
 }
@@ -110,10 +110,37 @@ message_display_cb (SwfdecPlayerManager *manager, guint type, const char *messag
 }
 
 static void
+interrupt_widget_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecWidget *widget)
+{
+  swfdec_widget_set_interactive (widget,
+      !swfdec_player_manager_get_interrupted (manager));
+}
+
+static void
 destroyed_cb (GtkWindow *window, SwfdecPlayerManager *manager)
 {
+  if (swfdec_player_manager_get_interrupted (manager))
+    swfdec_player_manager_continue (manager);
   g_object_unref (manager);
   gtk_main_quit ();
+}
+
+static void
+disconnect_all (gpointer from, GObject *object)
+{
+  g_signal_handlers_disconnect_matched (from, G_SIGNAL_MATCH_DATA,
+      0, 0, NULL, NULL, object);
+  g_object_weak_unref (G_OBJECT (from), disconnect_all, object);
+}
+
+static void
+signal_auto_connect (gpointer object, const char *signal, GCallback closure, gpointer data)
+{
+  g_assert (G_IS_OBJECT (data));
+
+  g_signal_connect (object, signal, closure, data);
+  g_object_weak_ref (G_OBJECT (object), disconnect_all, data);
+  g_object_weak_ref (G_OBJECT (data), disconnect_all, object);
 }
 
 static void
@@ -140,12 +167,12 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_container_add (GTK_CONTAINER (scroll), scripts);
 
   widget = gtk_toggle_button_new_with_mnemonic ("_Play");
-  g_signal_connect (widget, "toggled", G_CALLBACK (play_toggled_cb), manager);
-  g_signal_connect (manager, "notify::playing", G_CALLBACK (toggle_play_cb), widget);
+  signal_auto_connect (widget, "toggled", G_CALLBACK (play_toggled_cb), manager);
+  signal_auto_connect (manager, "notify::playing", G_CALLBACK (toggle_play_cb), widget);
   gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
   
   widget = gtk_button_new_from_stock ("_Step");
-  g_signal_connect_swapped (widget, "clicked", G_CALLBACK (step_clicked_cb), manager);
+  signal_auto_connect (widget, "clicked", G_CALLBACK (step_clicked_cb), manager);
   gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
 
 #ifdef CAIRO_HAS_SVG_SURFACE
@@ -162,6 +189,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
+  signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (interrupt_widget_cb), widget);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 

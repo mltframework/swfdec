@@ -191,28 +191,31 @@ swfdec_player_manager_get_interrupted (SwfdecPlayerManager *manager)
   return manager->interrupt_loop != NULL;
 }
 
+static void
+swfdec_player_manager_update_playing (SwfdecPlayerManager *manager)
+{
+  gboolean should_have_source = manager->playing && 
+    !swfdec_player_manager_get_interrupted (manager);
+
+  if (should_have_source && manager->source == NULL) {
+    manager->source = swfdec_iterate_source_new (manager->player);
+    g_source_attach (manager->source, NULL);
+  } else if (!should_have_source && manager->source != NULL) {
+    g_source_destroy (manager->source);
+    g_source_unref (manager->source);
+    manager->source = NULL;
+  }
+}
+
 void
 swfdec_player_manager_set_playing (SwfdecPlayerManager *manager, gboolean playing)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
 
-  if (swfdec_player_manager_get_interrupted (manager)) {
-    if (playing)
-      swfdec_player_manager_continue (manager);
+  if (manager->playing == playing)
     return;
-  }
-  if ((manager->source != NULL) == playing)
-    return;
-  if (playing) {
-    g_assert (manager->source == NULL);
-    manager->source = swfdec_iterate_source_new (manager->player);
-    g_source_attach (manager->source, NULL);
-  } else {
-    g_assert (manager->source != NULL);
-    g_source_destroy (manager->source);
-    g_source_unref (manager->source);
-    manager->source = NULL;
-  }
+  manager->playing = playing;
+  swfdec_player_manager_update_playing (manager);
   g_object_notify (G_OBJECT (manager), "playing");
 }
 
@@ -221,7 +224,7 @@ swfdec_player_manager_get_playing (SwfdecPlayerManager *manager)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager), FALSE);
 
-  return manager->source != NULL;
+  return manager->playing;
 }
 
 void
@@ -275,17 +278,17 @@ swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
 static void
 breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager)
 {
-  gboolean was_playing = swfdec_player_manager_get_playing (manager);
-
-  swfdec_player_manager_set_playing (manager, FALSE);
+  g_object_ref (manager);
   manager->interrupt_loop = g_main_loop_new (NULL, FALSE);
+  swfdec_player_manager_update_playing (manager);
   g_object_notify (G_OBJECT (manager), "interrupted");
   swfdec_player_manager_output (manager, "Breakpoint %u", id);
   g_main_loop_run (manager->interrupt_loop);
   g_main_loop_unref (manager->interrupt_loop);
   manager->interrupt_loop = NULL;
   g_object_notify (G_OBJECT (manager), "interrupted");
-  swfdec_player_manager_set_playing (manager, was_playing);
+  swfdec_player_manager_update_playing (manager);
+  g_object_unref (manager);
 }
 
 static void

@@ -84,7 +84,7 @@ entry_activate_cb (GtkEntry *entry, SwfdecPlayerManager *manager)
     return;
 
   swfdec_player_manager_execute (manager, text);
-  gtk_entry_set_text (entry, "");
+  gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
 }
 
 static void

@@ -76,8 +76,10 @@ swfdec_debug_stack_set_manager (SwfdecDebugStack *debug, SwfdecPlayerManager *ma
   if (manager) {
     g_object_ref (debug->manager);
     g_signal_connect (manager, "notify::interrupted", G_CALLBACK (update_stack_cb), debug);
-  };
-  update_stack_cb (manager, NULL, debug);
+    update_stack_cb (manager, NULL, debug);
+  } else {
+    gtk_tree_view_set_model (GTK_TREE_VIEW (debug), NULL);
+  }
 }
 
 static void

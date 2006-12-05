@@ -382,6 +382,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   if (has_clip_actions) {
     int reserved, clip_event_flags, event_flags, key_code;
     guint8 * record_end;
+    char *script_name;
 
     if (content->events) {
       swfdec_event_list_free (content->events);
@@ -390,6 +391,10 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     reserved = swfdec_bits_get_u16 (bits);
     clip_event_flags = swfdec_get_clipeventflags (s, bits);
 
+    if (content->name)
+      script_name = g_strdup (content->name);
+    else
+      script_name = g_strdup_printf ("Sprite%u", SWFDEC_CHARACTER (content->graphic)->id);
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
       guint tmp = swfdec_bits_get_u32 (bits);
       record_end = bits->ptr + tmp;
@@ -408,7 +413,8 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
       }
       if (content->events == NULL)
 	content->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-      swfdec_event_list_parse (content->events, &s->b, s->version, event_flags, key_code);
+      swfdec_event_list_parse (content->events, &s->b, s->version, 
+	  event_flags, key_code, script_name);
       if (bits->ptr != record_end) {
 	SWFDEC_ERROR ("record size and actual parsed action differ by %d bytes",
 	    (int) (record_end - bits->ptr));
@@ -416,6 +422,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 	bits->ptr = record_end;
       }
     }
+    g_free (script_name);
   }
 
   return SWFDEC_STATUS_OK;

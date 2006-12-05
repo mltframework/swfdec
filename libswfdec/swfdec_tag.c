@@ -291,7 +291,7 @@ tag_func_do_action (SwfdecSwfDecoder * s)
   JSScript *script;
   char *name;
 
-  name = g_strdup_printf ("Sprite %u frame %u", SWFDEC_CHARACTER (s->parse_sprite)->id,
+  name = g_strdup_printf ("Sprite%u.Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
   script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b, s->version, name);
   g_free (name);
@@ -385,6 +385,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
   int offset;
   SwfdecButton *button;
   unsigned char *endptr;
+  char *script_name;
 
   endptr = bits->ptr + bits->buffer->length;
 
@@ -442,6 +443,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
   }
   swfdec_bits_get_u8 (bits);
 
+  script_name = g_strdup_printf ("Button%u", SWFDEC_CHARACTER (button)->id);
   while (offset != 0) {
     guint condition, key;
 
@@ -455,8 +457,10 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
     if (button->events == NULL)
       button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
     SWFDEC_LOG ("new event for condition %u (key %u)", condition, key);
-    swfdec_event_list_parse (button->events, &s->b, s->version, condition, key);
+    swfdec_event_list_parse (button->events, &s->b, s->version, condition, key,
+	script_name);
   }
+  g_free (script_name);
 
   return SWFDEC_STATUS_OK;
 }
@@ -468,6 +472,7 @@ tag_func_define_button (SwfdecSwfDecoder * s)
   int id;
   SwfdecButton *button;
   unsigned char *endptr;
+  char *script_name;
 
   endptr = bits->ptr + bits->buffer->length;
 
@@ -516,8 +521,11 @@ tag_func_define_button (SwfdecSwfDecoder * s)
   }
   swfdec_bits_get_u8 (bits);
 
+  script_name = g_strdup_printf ("Button%u", SWFDEC_CHARACTER (button)->id);
   button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-  swfdec_event_list_parse (button->events, &s->b, s->version, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0);
+  swfdec_event_list_parse (button->events, &s->b, s->version, 
+      SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0, script_name);
+  g_free (script_name);
 
   return SWFDEC_STATUS_OK;
 }

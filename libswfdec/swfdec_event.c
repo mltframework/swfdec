@@ -97,15 +97,15 @@ swfdec_event_list_condition_name (unsigned int conditions)
   if (conditions & SWFDEC_EVENT_UNLOAD)
     return "Unload";
   if (conditions & SWFDEC_EVENT_MOUSE_MOVE)
-    return "Mouse Move";
+    return "MouseMove";
   if (conditions & SWFDEC_EVENT_MOUSE_DOWN)
-    return "Mouse Down";
+    return "MouseDown";
   if (conditions & SWFDEC_EVENT_MOUSE_UP)
-    return "Mouse Up";
+    return "MouseUp";
   if (conditions & SWFDEC_EVENT_KEY_UP)
-    return "Key Up";
+    return "KeyUp";
   if (conditions & SWFDEC_EVENT_KEY_DOWN)
-    return "Key Down";
+    return "KeyDown";
   if (conditions & SWFDEC_EVENT_DATA)
     return "Data";
   if (conditions & SWFDEC_EVENT_INITIALIZE)
@@ -115,17 +115,17 @@ swfdec_event_list_condition_name (unsigned int conditions)
   if (conditions & SWFDEC_EVENT_RELEASE)
     return "Release";
   if (conditions & SWFDEC_EVENT_RELEASE_OUTSIDE)
-    return "Release Outside";
+    return "ReleaseOutside";
   if (conditions & SWFDEC_EVENT_ROLL_OVER)
-    return "Roll Over";
+    return "RollOver";
   if (conditions & SWFDEC_EVENT_ROLL_OUT)
-    return "Roll Out";
+    return "RollOut";
   if (conditions & SWFDEC_EVENT_DRAG_OVER)
-    return "Drag Over";
+    return "DragOver";
   if (conditions & SWFDEC_EVENT_DRAG_OUT)
-    return "Drag Out";
+    return "DragOut";
   if (conditions & SWFDEC_EVENT_KEY_PRESS)
-    return "Key Press";
+    return "KeyPress";
   if (conditions & SWFDEC_EVENT_CONSTRUCT)
     return "Construct";
   return "No Event";
@@ -133,17 +133,21 @@ swfdec_event_list_condition_name (unsigned int conditions)
 
 void
 swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
-    unsigned int conditions, guint8 key)
+    unsigned int conditions, guint8 key, const char *description)
 {
   SwfdecEvent event;
+  char *name;
 
   g_return_if_fail (list != NULL);
   g_return_if_fail (list->refcount == 1);
+  g_return_if_fail (description != NULL);
 
   event.conditions = conditions;
   event.key = key;
-  event.script = swfdec_compile (list->player, bits, version, 
-      swfdec_event_list_condition_name (conditions));
+  name = g_strconcat (description, ".", 
+      swfdec_event_list_condition_name (conditions), NULL);
+  event.script = swfdec_compile (list->player, bits, version, name);
+  g_free (name);
   if (event.script) 
     g_array_append_val (list->events, event);
 }

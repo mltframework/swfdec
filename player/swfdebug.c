@@ -47,6 +47,12 @@ step_clicked_cb (GtkButton *button, SwfdecPlayerManager *manager)
 }
 
 static void
+step_disable_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, GtkWidget *widget)
+{
+  gtk_widget_set_sensitive (widget, !swfdec_player_manager_get_interrupted (manager));
+}
+
+static void
 select_scripts (GtkTreeSelection *select, SwfdecDebugScript *script)
 {
   GtkTreeModel *model;
@@ -194,6 +200,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   
   widget = gtk_button_new_from_stock ("_Step");
   signal_auto_connect (widget, "clicked", G_CALLBACK (step_clicked_cb), manager);
+  signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (step_disable_cb), widget);
   gtk_box_pack_end (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
 
 #ifdef CAIRO_HAS_SVG_SURFACE

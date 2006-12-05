@@ -42,7 +42,10 @@ struct _SwfdecPlayerManager
   GSource *		source;		/* the source that is ticking */
   double		speed;		/* speed of playback */
   gboolean		playing;	/* if we should be playing */
+  SwfdecDebuggerScript *interrupt_script;	/* script that caused the interrupt */
+  guint			interrupt_line;	/* line in script that caused the interrupt */
   GMainLoop *		interrupt_loop;	/* loop we run during an interruption */
+  guint			next_id;	/* id of breakpoint for "next" command */
 };
 
 struct _SwfdecPlayerManagerClass
@@ -61,9 +64,15 @@ double		swfdec_player_manager_get_speed		(SwfdecPlayerManager *  manager);
 void		swfdec_player_manager_set_playing	(SwfdecPlayerManager *	manager,
 							 gboolean		playing);
 gboolean	swfdec_player_manager_get_playing	(SwfdecPlayerManager *  manager);
-void		swfdec_player_manager_continue		(SwfdecPlayerManager *	manager);
-void		swfdec_player_manager_iterate		(SwfdecPlayerManager *	manager);
 gboolean	swfdec_player_manager_get_interrupted	(SwfdecPlayerManager *  manager);
+
+void		swfdec_player_manager_iterate		(SwfdecPlayerManager *	manager);
+
+void		swfdec_player_manager_continue		(SwfdecPlayerManager *	manager);
+gboolean	swfdec_player_manager_next		(SwfdecPlayerManager *	manager);
+void		swfdec_player_manager_get_interrupt	(SwfdecPlayerManager *	manager,
+							 SwfdecDebuggerScript **script,
+							 guint *		line);
 
 void		swfdec_player_manager_execute		(SwfdecPlayerManager *	manager,
 							 const char *		command);

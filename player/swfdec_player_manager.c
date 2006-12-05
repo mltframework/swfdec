@@ -193,6 +193,19 @@ swfdec_player_manager_get_interrupted (SwfdecPlayerManager *manager)
   return manager->interrupt_loop != NULL;
 }
 
+void
+swfdec_player_manager_get_interrupt (SwfdecPlayerManager *manager,
+    SwfdecDebuggerScript **script, guint *line)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
+  g_return_if_fail (swfdec_player_manager_get_interrupted (manager));
+
+  if (script)
+    *script = manager->interrupt_script;
+  if (line)
+    *line = manager->interrupt_line;
+}
+
 static void
 swfdec_player_manager_update_playing (SwfdecPlayerManager *manager)
 {
@@ -239,6 +252,23 @@ swfdec_player_manager_iterate (SwfdecPlayerManager *manager)
   swfdec_player_iterate (manager->player);
 }
 
+gboolean
+swfdec_player_manager_next (SwfdecPlayerManager *manager)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager), FALSE);
+  g_return_val_if_fail (swfdec_player_manager_get_interrupted (manager), FALSE);
+
+  /* FIXME: this probably has a lot of problems */
+  if (manager->interrupt_line + 1 >= manager->interrupt_script->n_commands)
+    return FALSE;
+  g_assert (manager->next_id == 0);
+  manager->next_id = swfdec_debugger_set_breakpoint (
+      SWFDEC_DEBUGGER (manager->player), manager->interrupt_script,
+      manager->interrupt_line + 1);
+  swfdec_player_manager_continue (manager);
+  return TRUE;
+}
+
 void
 swfdec_player_manager_continue (SwfdecPlayerManager *manager)
 {
@@ -283,6 +313,14 @@ breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *mana
   g_object_ref (manager);
   manager->interrupt_loop = g_main_loop_new (NULL, FALSE);
   swfdec_player_manager_update_playing (manager);
+  if (!swfdec_debugger_get_breakpoint (debugger, id,
+	&manager->interrupt_script, &manager->interrupt_line)) {
+    g_assert_not_reached ();
+  }
+  if (manager->next_id != 0) {
+    swfdec_debugger_unset_breakpoint (debugger, manager->next_id);
+    manager->next_id = 0;
+  }
   g_object_notify (G_OBJECT (manager), "interrupted");
   swfdec_player_manager_output (manager, "Breakpoint %u", id);
   g_main_loop_run (manager->interrupt_loop);
@@ -335,6 +373,15 @@ command_continue (SwfdecPlayerManager *manager, const char *arg)
     swfdec_player_manager_continue (manager);
   else
     swfdec_player_manager_error (manager, "Not interrupted, cannot continue");
+}
+
+static void
+command_next (SwfdecPlayerManager *manager, const char *arg)
+{
+  if (!swfdec_player_manager_get_interrupted (manager))
+    swfdec_player_manager_error (manager, "Not interrupted, cannot continue");
+  else if (!swfdec_player_manager_next (manager))
+    swfdec_player_manager_error (manager, "Next command can't be used here. (Already at end of script?)");
 }
 
 static void
@@ -402,6 +449,7 @@ struct {
   { "breakpoints", command_breakpoints,	"show all breakpoints" },
   { "delete",	command_delete,		"delete a breakpoint" },
   { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
+  { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
   { "stack",	command_stack,		"print the first arguments on the stack" },
 };
 

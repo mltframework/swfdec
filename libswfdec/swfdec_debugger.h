@@ -85,6 +85,8 @@ void			swfdec_debugger_add_script	(SwfdecDebugger *	debugger,
 							 const char *		name,
 							 SwfdecDebuggerCommand *commands,
 							 guint			n_commands);
+SwfdecDebuggerScript *	swfdec_debugger_get_script	(SwfdecDebugger *       debugger,
+							 JSScript *		script);
 void			swfdec_debugger_remove_script	(SwfdecDebugger *	debugger,
 							 JSScript *		script);
 void			swfdec_debugger_foreach_script	(SwfdecDebugger *	debugger,

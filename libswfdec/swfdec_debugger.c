@@ -209,7 +209,7 @@ swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger,
   }
   if (!JS_SetTrap (SWFDEC_PLAYER (debugger)->jscx, script->script,
 	  script->commands[line].code, swfdec_debugger_handle_breakpoint, 
-	  GUINT_TO_POINTER (i)))
+	  GUINT_TO_POINTER (i + 1)))
     return 0;
 
   if (br == NULL) {

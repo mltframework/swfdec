@@ -117,6 +117,26 @@ interrupt_widget_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecWidg
 }
 
 static void
+select_script_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecDebugScript *debug)
+{
+  GtkTreePath *path;
+  SwfdecDebuggerScript *script;
+  guint line;
+
+  if (!swfdec_player_manager_get_interrupted (manager))
+    return;
+
+  swfdec_player_manager_get_interrupt (manager, &script, &line);
+  swfdec_debug_script_set_script (debug, script);
+
+  path = gtk_tree_path_new_from_indices (line, -1);
+  gtk_tree_selection_select_path (gtk_tree_view_get_selection (GTK_TREE_VIEW (debug)),
+      path);
+  gtk_tree_view_scroll_to_cell (GTK_TREE_VIEW (debug), path, NULL, TRUE, 0.5, 0.0);
+  gtk_tree_path_free (path);
+}
+
+static void
 destroyed_cb (GtkWindow *window, SwfdecPlayerManager *manager)
 {
   if (swfdec_player_manager_get_interrupted (manager))
@@ -199,6 +219,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_container_add (GTK_CONTAINER (scroll), widget);
   g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (scripts)),
       "changed", G_CALLBACK (select_scripts), widget);
+  signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (select_script_cb), widget);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 

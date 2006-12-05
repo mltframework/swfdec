@@ -34,7 +34,7 @@ swfplay_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
 swfplay_LDADD = libswfdecui.la
 swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
 swfdebug_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
-swfdebug_LDADD = libswfdecui.la
+swfdebug_LDADD = libswfdecui.la $(top_builddir)/libswfdec/js/libjs.la
 endif
 endif
 

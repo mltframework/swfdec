@@ -25,6 +25,8 @@
 #include <string.h>
 #include <libswfdec/swfdec_debugger.h>
 #include <libswfdec/swfdec_js.h>
+#include <libswfdec/js/jsdbgapi.h>
+#include <libswfdec/js/jsinterp.h>
 #include "swfdec_player_manager.h"
 #include "swfdec_source.h"
 
@@ -366,6 +368,25 @@ command_delete (SwfdecPlayerManager *manager, const char *arg)
   swfdec_debugger_unset_breakpoint (SWFDEC_DEBUGGER (manager->player), id);
 }
 
+static void
+command_stack (SwfdecPlayerManager *manager, const char *arg)
+{
+  JSStackFrame *frame = NULL;
+  guint i, min, max;
+
+  if (!swfdec_player_manager_get_interrupted (manager)) {
+    swfdec_player_manager_error (manager, "Not interrupted");
+    return;
+  }
+  JS_FrameIterator (manager->player->jscx, &frame);
+  min = 1;
+  max = frame->sp - frame->spbase;
+  for (i = min; i <= max; i++) {
+    const char *s = swfdec_js_to_string (manager->player->jscx, frame->sp[-i]);
+    swfdec_player_manager_output (manager, "%2u: %s", i, s);
+  }
+}
+
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
 struct {
@@ -381,6 +402,7 @@ struct {
   { "breakpoints", command_breakpoints,	"show all breakpoints" },
   { "delete",	command_delete,		"delete a breakpoint" },
   { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
+  { "stack",	command_stack,		"print the first arguments on the stack" },
 };
 
 static void

@@ -16,11 +16,13 @@ swfdebug_SOURCES = \
 	swfdebug.c \
 	swfdec_debug_script.c \
 	swfdec_debug_scripts.c \
+	swfdec_debug_stack.c \
 	swfdec_player_manager.c
 
 noinst_HEADERS = \
 	swfdec_debug_script.h \
 	swfdec_debug_scripts.h \
+	swfdec_debug_stack.h \
 	swfdec_playback.h \
 	swfdec_player_manager.h \
 	swfdec_source.h \

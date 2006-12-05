@@ -4,6 +4,7 @@
 #include <libswfdec/swfdec_debugger.h>
 #include "swfdec_debug_script.h"
 #include "swfdec_debug_scripts.h"
+#include "swfdec_debug_stack.h"
 #include "swfdec_player_manager.h"
 #include "swfdec_widget.h"
 #ifdef CAIRO_HAS_SVG_SURFACE
@@ -167,7 +168,7 @@ static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
   SwfdecPlayerManager *manager;
-  GtkWidget *window, *widget, *hpaned, *vbox, *scroll, *scripts;
+  GtkWidget *window, *widget, *hpaned, *vbox, *hbox, *scroll, *scripts;
 
   manager = swfdec_player_manager_new (player);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -211,15 +212,25 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
   signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (interrupt_widget_cb), widget);
 
+  hbox = gtk_hbox_new (FALSE, 3);
+  gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, TRUE, 0);
+
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox), scroll, TRUE, TRUE, 0);
   widget = swfdec_debug_script_new (SWFDEC_DEBUGGER (player));
   gtk_container_add (GTK_CONTAINER (scroll), widget);
   g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (scripts)),
       "changed", G_CALLBACK (select_scripts), widget);
   signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (select_script_cb), widget);
+
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
+      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start (GTK_BOX (hbox), scroll, TRUE, TRUE, 0);
+  widget = swfdec_debug_stack_new (manager);
+  gtk_container_add (GTK_CONTAINER (scroll), widget);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 

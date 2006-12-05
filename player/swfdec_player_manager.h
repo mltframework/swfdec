@@ -22,6 +22,7 @@
 
 #include <gtk/gtk.h>
 #include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_debugger.h>
 
 G_BEGIN_DECLS
 

@@ -57,6 +57,8 @@ EXTRA_DIST = \
 	load-5.swf.trace \
 	name.swf \
 	name.swf.trace \
+	name2.swf \
+	name2.swf.trace \
 	names.swf \
 	names.swf.trace \
 	order.swf \

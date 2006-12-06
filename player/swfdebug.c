@@ -124,6 +124,32 @@ interrupt_widget_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecWidg
 }
 
 static void
+select_scripts_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecDebugScripts *debug)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  SwfdecDebuggerScript *script;
+
+  if (!swfdec_player_manager_get_interrupted (manager))
+    return;
+
+  swfdec_player_manager_get_interrupt (manager, &script, NULL);
+  model = gtk_tree_view_get_model (GTK_TREE_VIEW (debug));
+  gtk_tree_model_get_iter_first (model, &iter);
+  do {
+    SwfdecDebuggerScript *cur;
+    gtk_tree_model_get (model, &iter, 0, &cur, -1);
+    if (cur == script) {
+      gtk_tree_selection_select_iter (
+	  gtk_tree_view_get_selection (GTK_TREE_VIEW (debug)),
+	  &iter);
+      return;
+    }
+  } while (gtk_tree_model_iter_next (model, &iter));
+  g_assert_not_reached ();
+}
+
+static void
 select_script_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecDebugScript *debug)
 {
   GtkTreePath *path;
@@ -139,7 +165,7 @@ select_script_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecDebugSc
   path = gtk_tree_path_new_from_indices (line, -1);
   gtk_tree_selection_select_path (gtk_tree_view_get_selection (GTK_TREE_VIEW (debug)),
       path);
-  gtk_tree_view_scroll_to_cell (GTK_TREE_VIEW (debug), path, NULL, TRUE, 0.5, 0.0);
+  gtk_tree_view_scroll_to_cell (GTK_TREE_VIEW (debug), path, NULL, TRUE, 0.0, 0.5);
   gtk_tree_path_free (path);
 }
 
@@ -192,6 +218,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
   scripts = swfdec_debug_scripts_new (SWFDEC_DEBUGGER (player));
   gtk_container_add (GTK_CONTAINER (scroll), scripts);
+  signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (select_scripts_cb), scripts);
 
   widget = gtk_toggle_button_new_with_mnemonic ("_Play");
   signal_auto_connect (widget, "toggled", G_CALLBACK (play_toggled_cb), manager);

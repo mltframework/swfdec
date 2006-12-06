@@ -375,7 +375,16 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 }
 
 static void
-swfdec_js_copy_props (JSContext *cx, JSObject *target, JSObject *src, JSObject *init);
+swfdec_js_copy_props (SwfdecMovie *target, SwfdecMovie *src)
+{
+  target->x = src->x;
+  target->y = src->y;
+  target->xscale = src->xscale;
+  target->yscale = src->yscale;
+  target->rotation = src->rotation;
+  target->color_transform = src->color_transform;
+  swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
+}
 
 static JSBool
 swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -428,7 +437,7 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   /* must be set by now, the movie has a name */
   if (ret->jsobj == NULL)
     return JS_FALSE;
-  swfdec_js_copy_props (cx, ret->jsobj, movie->jsobj, NULL);
+  swfdec_js_copy_props (ret, movie);
   SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, ret->name, ret->depth);
   *rval = OBJECT_TO_JSVAL (ret->jsobj);
   return JS_TRUE;
@@ -1139,33 +1148,6 @@ static JSPropertySpec movieclip_props[] = {
   {"_root",	    -1,	      	MC_PROP_ATTRS | JSPROP_READONLY,  mc_root,	    NULL},
   {NULL}
 };
-
-static void
-swfdec_js_copy_props (JSContext *cx, JSObject *target, JSObject *src, JSObject *init)
-{
-  guint i;
-  jsval val;
-
-  for (i = 0; movieclip_props[i].name; i++) {
-    if (movieclip_props[i].flags & JSPROP_READONLY)
-      continue;
-    /* FIXME: remove this when all properties are implemented */
-    if (movieclip_props[i].getter == not_reached)
-      continue;
-    /* don't copy name property */
-    if (i == 13)
-      continue;
-    /* FIXME: figure out when to copy from initobject and when to copy from source */
-    SWFDEC_LOG ("copying poperty %u %s now", i, movieclip_props[i].name);
-    if (init == NULL || 
-	!JS_GetProperty (cx, init, movieclip_props[i].name, &val) ||
-	val == JSVAL_VOID) {
-      if (!JS_GetProperty (cx, src, movieclip_props[i].name, &val))
-	continue;
-    }
-    JS_SetProperty (cx, target, movieclip_props[i].name, &val);
-  }
-}
 
 #if 0
 JSObject *

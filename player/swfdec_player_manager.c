@@ -348,6 +348,44 @@ swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
 #define swfdec_player_manager_error(manager, ...) \
   swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_ERROR, __VA_ARGS__)
 
+const char *
+parse_skip (const char *input)
+{
+  if (g_ascii_isspace (*input))
+    input++;
+  return input;
+}
+
+const char *
+parse_string (const char *input, char **output)
+{
+  const char *start = input;
+
+  g_assert (output);
+
+  while (*input && !g_ascii_isspace (*input))
+    input++;
+  if (input == start)
+    return NULL;
+  *output = g_strndup (start, input - start);
+  return parse_skip (input);
+}
+
+const char *
+parse_uint (const char *input, guint *output)
+{
+  char *end;
+  guint result;
+
+  g_assert (output);
+
+  result = strtoul (input, &end, 10);
+  if (input == end || (*end != '\0' && !g_ascii_isspace (*end)))
+    return NULL;
+  *output = result;
+  return parse_skip (end);
+}
+
 static void
 breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager)
 {
@@ -404,12 +442,56 @@ command_continue (SwfdecPlayerManager *manager, const char *arg)
 }
 
 static void
+set_breakpoint (gpointer script, gpointer debugger)
+{
+  swfdec_debugger_set_breakpoint (debugger, script, 0);
+}
+
+static void
 command_next (SwfdecPlayerManager *manager, const char *arg)
 {
   if (!swfdec_player_manager_get_interrupted (manager))
     swfdec_player_manager_error (manager, "Not interrupted, cannot continue");
   else if (!swfdec_player_manager_next (manager))
     swfdec_player_manager_error (manager, "Next command can't be used here. (Already at end of script?)");
+}
+
+static void
+command_break (SwfdecPlayerManager *manager, const char *arg)
+{
+  char *str;
+  const char *next;
+  guint line;
+
+  next = parse_uint (arg, &line);
+  if (next) {
+    if (swfdec_player_manager_get_interrupted (manager)) {
+      if (line < manager->interrupt_script->n_commands) {
+	guint id = swfdec_debugger_set_breakpoint (SWFDEC_DEBUGGER (manager->player),
+	    manager->interrupt_script, line);
+	swfdec_player_manager_output (manager, "%u: %s line %u: %s",
+	    id, manager->interrupt_script->name, line, 
+	    manager->interrupt_script->commands[line].description);
+      } else {
+	swfdec_player_manager_error (manager, 
+	    "Can't set breakpoint at line %u, script only has %u lines",
+	    line, manager->interrupt_script->n_commands);
+      }
+    } else {
+      swfdec_player_manager_error (manager, "Not interrupted");
+    }
+    return;
+  }
+  next = parse_string (arg, &str);
+  if (next) {
+    if (strcasecmp (str, "start") == 0) {
+      swfdec_debugger_foreach_script (SWFDEC_DEBUGGER (manager->player), 
+	  set_breakpoint, manager->player);
+      swfdec_player_manager_output (manager, "set breakpoint at start of every script");
+    } else {
+      swfdec_player_manager_error (manager, "FIXME: implement");
+    }
+  }
 }
 
 static void
@@ -432,15 +514,20 @@ command_breakpoints (SwfdecPlayerManager *manager, const char *arg)
 static void
 command_delete (SwfdecPlayerManager *manager, const char *arg)
 {
-  char *end;
   guint id;
 
-  id = strtoul (arg, &end, 10);
-  if (id == 0 || *end != '\0') {
+  if (arg == NULL) {
+    guint i, n;
+    SwfdecDebugger *debugger = SWFDEC_DEBUGGER (manager->player);
+    n = swfdec_debugger_get_n_breakpoints (debugger);
+    for (i = 1; i <= n; i++) {
+      swfdec_debugger_unset_breakpoint (debugger, i);
+    }
+  } else if (parse_uint (arg, &id)) {
+    swfdec_debugger_unset_breakpoint (SWFDEC_DEBUGGER (manager->player), id);
+  } else {
     swfdec_player_manager_error (manager, "no breakpoint '%s'", arg);
-    return;
   }
-  swfdec_debugger_unset_breakpoint (SWFDEC_DEBUGGER (manager->player), id);
 }
 
 static void
@@ -474,11 +561,12 @@ struct {
   { "play",	command_play,		"play the movie" },
   { "stop",	command_stop,	 	"stop the movie" },
   { "iterate",	command_iterate,	"iterate the movie once" },
+  { "break",	command_break,	  	"add breakpoint at [start]" },
   { "breakpoints", command_breakpoints,	"show all breakpoints" },
   { "delete",	command_delete,		"delete a breakpoint" },
   { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
   { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
-  { "stack",	command_stack,		"print the first arguments on the stack" },
+  { "stack",	command_stack,		"print the arguments on the stack" },
 };
 
 static void
@@ -495,21 +583,25 @@ void
 swfdec_player_manager_execute (SwfdecPlayerManager *manager, const char *command)
 {
   guint i;
-  const char *space;
+  const char *args;
+  char *run;
 
   g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
   g_return_if_fail (command != NULL);
 
+  parse_skip (command);
   swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_INPUT, "%s", command);
-  space = strchr (command, ' ');
-  if (space == NULL)
-    space = command + strlen (command);
+  args = parse_string (command, &run);
+  if (args == NULL)
+    return;
   for (i = 0; i < G_N_ELEMENTS(commands); i++) {
-    if (g_ascii_strncasecmp (commands[i].name, command, space - command) == 0) {
-      commands[i].func (manager, *space == '\0' ? NULL : space + 1);
+    if (g_ascii_strncasecmp (commands[i].name, run, strlen (run)) == 0) {
+      commands[i].func (manager, *args == '\0' ? NULL : args);
+      g_free (run);
       return;
     }
   }
-  swfdec_player_manager_error (manager, "No such command '%*s'", space - command, command);
+  swfdec_player_manager_error (manager, "No such command '%s'", run);
+  g_free (run);
 }
 

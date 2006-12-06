@@ -272,6 +272,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
   widget = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (widget), FALSE);
+  gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (widget), GTK_WRAP_WORD_CHAR);
   gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget)),
       "error", "foreground", "red", "left-margin", 15, NULL);
   gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget)),

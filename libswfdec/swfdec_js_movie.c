@@ -485,7 +485,9 @@ get_name (SwfdecMovie *movie)
     g_string_append_c (s, '.');
     g_string_append (s, movie->name);
   } else {
-    s = g_string_new (movie->name);
+    /* the name can be changed */
+    s = g_string_new ("_level");
+    g_string_append_printf (s, "%u", movie->depth);
   }
   return s;
 }
@@ -778,8 +780,8 @@ mc_name_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  if (movie->_name)
-    string = JS_NewStringCopyZ (cx, movie->_name);
+  if (movie->has_name)
+    string = JS_NewStringCopyZ (cx, movie->name);
   else
     string = JS_NewStringCopyZ (cx, "");
   if (string == NULL)
@@ -798,9 +800,16 @@ mc_name_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  g_free (movie->_name);
   str = swfdec_js_to_string (cx, *vp);
-  movie->_name = g_strdup (str);
+  if (str == NULL)
+    return JS_FALSE;
+  if (!SWFDEC_IS_ROOT_MOVIE (movie))
+    swfdec_js_movie_remove_property (movie);
+  g_free (movie->name);
+  movie->name = g_strdup (str);
+  movie->has_name = TRUE;
+  if (!SWFDEC_IS_ROOT_MOVIE (movie))
+    swfdec_js_movie_add_property (movie);
 
   return JS_TRUE;
 }

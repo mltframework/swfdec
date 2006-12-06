@@ -617,7 +617,6 @@ swfdec_movie_dispose (GObject *object)
 
   SWFDEC_LOG ("disposing movie %s", movie->name);
   g_free (movie->name);
-  g_free (movie->_name);
   if (movie->parent)
     g_object_unref (movie->parent);
 
@@ -750,6 +749,7 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   SWFDEC_ROOT_MOVIE (ret)->player = player;
   ret->root = ret;
   swfdec_movie_initialize (ret, content);
+  ret->has_name = FALSE;
 
   return ret;
 }

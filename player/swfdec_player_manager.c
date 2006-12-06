@@ -549,6 +549,36 @@ command_stack (SwfdecPlayerManager *manager, const char *arg)
   }
 }
 
+typedef struct {
+  SwfdecPlayerManager *manager;
+  const char *	       string;
+} FindData;
+
+static void
+do_find (gpointer scriptp, gpointer datap)
+{
+  SwfdecDebuggerScript *script = scriptp;
+  FindData *data = datap;
+  guint i;
+
+  for (i = 0; i < script->n_commands; i++) {
+    if (strstr (script->commands[i].description, data->string)) {
+      swfdec_player_manager_output (data->manager, "%s %u: %s",
+	  script->name, i, script->commands[i].description);
+    }
+  }
+}
+
+static void
+command_find (SwfdecPlayerManager *manager, const char *arg)
+{
+  FindData data = { manager, arg };
+  if (arg == NULL) {
+    swfdec_player_manager_error (manager, "What should be found?");
+  }
+  swfdec_debugger_foreach_script (SWFDEC_DEBUGGER (manager->player), do_find, &data);
+}
+
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
 struct {
@@ -567,6 +597,7 @@ struct {
   { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
   { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
   { "stack",	command_stack,		"print the arguments on the stack" },
+  { "find",	command_find,		"find the given argument verbatim in all scripts" },
 };
 
 static void

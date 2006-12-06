@@ -1152,7 +1152,11 @@ swfdec_js_copy_props (JSContext *cx, JSObject *target, JSObject *src, JSObject *
     /* FIXME: remove this when all properties are implemented */
     if (movieclip_props[i].getter == not_reached)
       continue;
+    /* don't copy name property */
+    if (i == 13)
+      continue;
     /* FIXME: figure out when to copy from initobject and when to copy from source */
+    SWFDEC_LOG ("copying poperty %u %s now", i, movieclip_props[i].name);
     if (init == NULL || 
 	!JS_GetProperty (cx, init, movieclip_props[i].name, &val) ||
 	val == JSVAL_VOID) {

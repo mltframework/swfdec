@@ -393,7 +393,7 @@ swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str)
   g_free (work);
   return cur;
 out:
-  SWFDEC_DEBUG ("error during eval\n");
+  SWFDEC_DEBUG ("error: returning void for %s", str);
   g_free (work);
   return JSVAL_VOID;
 }

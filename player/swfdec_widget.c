@@ -24,9 +24,12 @@
 #include <math.h>
 #include "swfdec_widget.h"
 
+enum {
+  PROP_0,
+  PROP_PLAYER
+};
 
 G_DEFINE_TYPE (SwfdecWidget, swfdec_widget, GTK_TYPE_WIDGET)
-
 
 static gboolean
 swfdec_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
@@ -118,6 +121,38 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   cairo_destroy (cr);
 
   return FALSE;
+}
+
+static void
+swfdec_widget_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecWidget *widget = SWFDEC_WIDGET (object);
+  
+  switch (param_id) {
+    case PROP_PLAYER:
+      g_value_set_object (value, widget->player);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_widget_set_property (GObject *object, guint param_id, const GValue *value,
+    GParamSpec *pspec)
+{
+  SwfdecWidget *widget = SWFDEC_WIDGET (object);
+  
+  switch (param_id) {
+    case PROP_PLAYER:
+      swfdec_widget_set_player (widget, g_value_get_object (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -256,6 +291,12 @@ swfdec_widget_class_init (SwfdecWidgetClass * g_class)
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (g_class);
 
   object_class->dispose = swfdec_widget_dispose;
+  object_class->get_property = swfdec_widget_get_property;
+  object_class->set_property = swfdec_widget_set_property;
+
+  g_object_class_install_property (object_class, PROP_PLAYER,
+      g_param_spec_object ("player", "player", "player that is displayed",
+	  SWFDEC_TYPE_PLAYER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   widget_class->realize = swfdec_widget_realize;
   widget_class->size_request = swfdec_widget_size_request;
@@ -332,8 +373,7 @@ swfdec_widget_new (SwfdecPlayer *player)
   
   g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
 
-  widget = g_object_new (SWFDEC_TYPE_WIDGET, 0);
-  swfdec_widget_set_player (widget, player);
+  widget = g_object_new (SWFDEC_TYPE_WIDGET, "player", player, NULL);
 
   return GTK_WIDGET (widget);
 }

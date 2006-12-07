@@ -27,6 +27,14 @@ EXTRA_DIST = \
 	color-setTransform-full.swf.trace \
 	color1.swf \
 	color1.swf.trace \
+	comparisons-4.swf \
+	comparisons-4.swf.trace \
+	comparisons-5.swf \
+	comparisons-5.swf.trace \
+	comparisons-6.swf \
+	comparisons-6.swf.trace \
+	comparisons-7.swf \
+	comparisons-7.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	currentframe.swf \

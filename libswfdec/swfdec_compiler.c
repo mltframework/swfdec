@@ -77,7 +77,7 @@ compile_state_debug_add (CompileState *state, const char *format, ...)
   command.breakpoint = 0;
   va_start (args, format);
   command.description = g_strdup_vprintf (format, args);
-  SWFDEC_LOG ("%s", command.description);
+  SWFDEC_DEBUG ("%s", command.description);
   va_end (args);
   state->command_last = G_MAXUINT;
   g_array_append_val (state->commands, command);
@@ -97,7 +97,7 @@ compile_state_debug_add_default (CompileState *state, guint action, const char *
   command.description = g_strdup (name);
   state->command_last = G_MAXUINT;
   g_array_append_val (state->commands, command);
-  SWFDEC_LOG ("%s", command.description);
+  SWFDEC_DEBUG ("%s", command.description);
 }
 
 static void
@@ -787,30 +787,43 @@ compile_get_member (CompileState *state, guint action, guint len)
   ONELINER (state, JSOP_VOID);
 }
 
-  static void
+/* Flash < 7 does conversions to numbers way different than JS or Flash 7+
+ * This function is supposed to do that conversion */
+static void
+ensure_number_flash6 (CompileState *state)
+{
+  if (state->version < 7) {
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_VOID);
+    ONELINER (state, JSOP_EQ);
+    THREELINER_INT (state, JSOP_IFEQ, 5);
+    POP (state);
+    ONELINER (state, JSOP_ZERO);
+  }
+}
+
+/* Flash < 5 does not know numbers. Therefore we convert booleans to 1 or 0 */
+static void
+boolean_to_number_flash4 (CompileState *state)
+{
+  if (state->version < 5) {
+    ONELINER (state, JSOP_ZERO);
+    ONELINER (state, JSOP_ADD);
+  }
+}
+
+static void
 compile_binary_op (CompileState *state, guint action, guint len)
 {
   JSOp op;
 
   if (state->version < 7) {
-    /* lots of code to ensure that non-numeric arguments equal 0.
-     * JS does a lot more */
+    /* lots of code to ensure that non-numeric arguments equal 0. */
     SWAP (state);
-    ONELINER (state, JSOP_DUP);
-    ONELINER (state, JSOP_DUP);
-    ONELINER (state, JSOP_VOID);
-    ONELINER (state, JSOP_EQ);
-    THREELINER_INT (state, JSOP_IFEQ, 5);
-    POP (state);
-    ONELINER (state, JSOP_ZERO);
+    ensure_number_flash6 (state);
     SWAP (state);
-    ONELINER (state, JSOP_DUP);
-    ONELINER (state, JSOP_DUP);
-    ONELINER (state, JSOP_VOID);
-    ONELINER (state, JSOP_EQ);
-    THREELINER_INT (state, JSOP_IFEQ, 5);
-    POP (state);
-    ONELINER (state, JSOP_ZERO);
+    ensure_number_flash6 (state);
   }
   switch (action) {
     case 0x0A:
@@ -877,9 +890,73 @@ compile_add2 (CompileState *state, guint action, guint len)
 }
 
 static void
+compile_less (CompileState *state, guint action, guint len)
+{
+  if (state->version < 7) {
+    /* lots of code to ensure that non-numeric arguments equal 0. */
+    SWAP (state);
+    ensure_number_flash6 (state);
+    SWAP (state);
+    ensure_number_flash6 (state);
+  }
+  ONELINER (state, JSOP_LT);
+
+  boolean_to_number_flash4 (state);
+}
+
+static void
+compile_comparison (CompileState *state, guint action, guint len)
+{
+  JSOp op;
+
+  if (state->version < 7) {
+    /* lots of code to ensure that non-numeric arguments equal 0. */
+    SWAP (state);
+    ensure_number_flash6 (state);
+    SWAP (state);
+    ensure_number_flash6 (state);
+  } else if (state->version == 7) {
+    /* Flash 7 returns undefined when one of the inputs is undefined */
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_VOID);
+    ONELINER (state, JSOP_EQ);
+    THREELINER_INT (state, JSOP_IFEQ, 8);
+    POP (state);
+    ONELINER (state, JSOP_VOID);
+    THREELINER_INT (state, JSOP_GOTO, 18);
+    SWAP (state);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_DUP);
+    ONELINER (state, JSOP_VOID);
+    ONELINER (state, JSOP_EQ);
+    THREELINER_INT (state, JSOP_IFEQ, 8);
+    POP (state);
+    ONELINER (state, JSOP_VOID);
+    THREELINER_INT (state, JSOP_GOTO, 5);
+    SWAP (state);
+  }
+  /* FIXME: what about Flash > 7? */
+
+  switch (action) {
+    case 0x48:
+      op = JSOP_LT;
+      break;
+    case 0x67:
+      op = JSOP_GT;
+      break;
+    default:
+      g_assert_not_reached ();
+      op = JSOP_NOP;
+  }
+  ONELINER (state, op);
+}
+
+static void
 compile_oneliner (CompileState *state, guint action, guint len)
 {
   JSOp op;
+
   switch (action) {
     case 0x12:
       op = JSOP_NOT;
@@ -889,9 +966,6 @@ compile_oneliner (CompileState *state, guint action, guint len)
       break;
     case 0x47:
       op = JSOP_ADD;
-      break;
-    case 0x48:
-      op = JSOP_LT;
       break;
     case 0x49:
       op = JSOP_NEW_EQ;
@@ -1225,7 +1299,7 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version, const char 
     target = bits->ptr + len;
 #endif
     current = swfdec_action_find (action);
-    SWFDEC_DEBUG ("compiling action %d %s (len %d, total %d)", action, 
+    SWFDEC_LOG ("compiling action %d %s (len %d, total %d)", action, 
 	current ? current->name : "unknown", len > 0 ? 3 + len : 1,
 	bits->ptr - start);
 #if 0
@@ -1308,7 +1382,7 @@ SwfdecActionSpec actions[] = {
   { 0x0c, "Multiply", compile_binary_op },
   { 0x0d, "Divide", compile_binary_op },
   { 0x0e, "Equals", compile_equals },
-  { 0x0f, "Less", NULL },
+  { 0x0f, "Less", compile_less },
   { 0x10, "And", NULL },
   { 0x11, "Or", NULL },
   { 0x12, "Not", compile_oneliner },
@@ -1357,7 +1431,7 @@ SwfdecActionSpec actions[] = {
   { 0x45, "TargetPath", compile_target_path },
   { 0x46, "Enumerate", NULL },
   { 0x47, "Add2", compile_add2 },
-  { 0x48, "Less2", compile_oneliner },
+  { 0x48, "Less2", compile_comparison },
   { 0x49, "Equals2", compile_oneliner },
   { 0x4a, "ToNumber", NULL },
   { 0x4b, "ToString", NULL },
@@ -1381,7 +1455,7 @@ SwfdecActionSpec actions[] = {
   { 0x65, "BitURShift", NULL },
   /* version 6 */
   { 0x66, "StrictEquals", NULL },
-  { 0x67, "Greater", compile_oneliner },
+  { 0x67, "Greater", compile_comparison },
   { 0x68, "StringGreater", NULL },
   /* version 7 */
   { 0x69, "Extends", NULL },

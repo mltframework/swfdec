@@ -5,8 +5,8 @@
 #include "swfdec_debug_script.h"
 #include "swfdec_debug_scripts.h"
 #include "swfdec_debug_stack.h"
+#include "swfdec_debug_widget.h"
 #include "swfdec_player_manager.h"
-#include "swfdec_widget.h"
 #ifdef CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
 
@@ -240,7 +240,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   vbox = gtk_vbox_new (FALSE, 3);
   gtk_paned_add2 (GTK_PANED (hpaned), vbox);
 
-  widget = swfdec_widget_new (player);
+  widget = swfdec_debug_widget_new (player);
   swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
   swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);

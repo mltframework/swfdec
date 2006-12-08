@@ -92,6 +92,7 @@ typedef struct _SwfdecIterateSource SwfdecIterateSource;
 struct _SwfdecIterateSource {
   GSource		source;
   SwfdecPlayer *	player;
+  double		speed;		/* playback speed */
   gulong		notify;		/* set for iterate notifications */
   SwfdecTime		time;		/* time manager */
 };
@@ -177,28 +178,32 @@ swfdec_iterate_source_notify_cb (SwfdecPlayer *player, GParamSpec *pspec,
   double rate = swfdec_player_get_rate (player);
   g_assert (rate > 0);
   g_get_current_time (&now);
+  rate *= source->speed;
   swfdec_time_init (&source->time, &now, rate);
   g_signal_handler_disconnect (player, source->notify);
   source->notify = 0;
 }
 
 GSource *
-swfdec_iterate_source_new (SwfdecPlayer *player)
+swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
 {
   SwfdecIterateSource *source;
   GTimeVal now;
   double rate;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (speed > 0.0, NULL);
 
   source = (SwfdecIterateSource *) g_source_new (&swfdec_iterate_funcs, 
       sizeof (SwfdecIterateSource));
   source->player = g_object_ref (player);
+  source->speed = speed;
   g_signal_connect (player, "handle-mouse", 
       G_CALLBACK (swfdec_iterate_source_handle_mouse), source);
   rate = swfdec_player_get_rate (player);
   if (rate > 0) {
     g_get_current_time (&now);
+    rate *= speed;
     swfdec_time_init (&source->time, &now, rate);
   } else {
     source->notify = g_signal_connect (player, "notify::initialized",
@@ -216,7 +221,7 @@ swfdec_iterate_add (SwfdecPlayer *player)
   
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
-  source = swfdec_iterate_source_new (player);
+  source = swfdec_iterate_source_new (player, 1.0);
 
   id = g_source_attach (source, NULL);
   g_source_unref (source);

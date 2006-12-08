@@ -213,7 +213,7 @@ swfdec_player_manager_update_playing (SwfdecPlayerManager *manager)
     !swfdec_player_manager_get_interrupted (manager);
 
   if (should_have_source && manager->source == NULL) {
-    manager->source = swfdec_iterate_source_new (manager->player);
+    manager->source = swfdec_iterate_source_new (manager->player, manager->speed);
     g_source_attach (manager->source, NULL);
   } else if (!should_have_source && manager->source != NULL) {
     g_source_destroy (manager->source);

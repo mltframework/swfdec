@@ -59,15 +59,17 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 }
 
 static void
-play_swf (SwfdecPlayer *player)
+play_swf (SwfdecPlayer *player, double speed)
 {
-  guint id;
+  GSource *source;
 
-  id = swfdec_iterate_add (player);
+  source = swfdec_iterate_source_new (player, speed);
+  g_source_attach (source, NULL);
 
   gtk_main ();
 
-  g_source_remove (id);
+  g_source_destroy (source);
+  g_source_unref (source);
 }
 
 static void
@@ -81,6 +83,7 @@ main (int argc, char *argv[])
 {
   int ret = 0;
   int delay = 0;
+  int speed = 100;
   double scale;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
@@ -94,6 +97,7 @@ main (int argc, char *argv[])
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
+    { "speed", 0, 0, G_OPTION_ARG_INT, &speed, "replay speed (will deactivate sound)", "PERCENT" },
     { "trace", 't', 0, G_OPTION_ARG_NONE, &trace, "print trace output to stdout", NULL },
     { NULL }
   };
@@ -144,12 +148,12 @@ main (int argc, char *argv[])
   window = view_swf (player, scale, use_image);
   set_title (GTK_WINDOW (window), argv[1]);
 
-  if (no_sound) {
+  if (no_sound || speed != 100) {
     playback = NULL;
   } else {
     playback = swfdec_playback_open (player);
   }
-  play_swf (player);
+  play_swf (player, speed / 100.);
 
   if (playback)
     swfdec_playback_close (playback);

@@ -41,7 +41,8 @@ void		swfdec_time_tick		(SwfdecTime *		time);
 glong		swfdec_time_get_difference	(SwfdecTime *		time,
 						 GTimeVal *		tv);
 
-GSource *	swfdec_iterate_source_new	(SwfdecPlayer *		player);
+GSource *	swfdec_iterate_source_new	(SwfdecPlayer *		player,
+						 double			speed);
 guint		swfdec_iterate_add		(SwfdecPlayer *		player);
 
 G_END_DECLS

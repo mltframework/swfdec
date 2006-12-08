@@ -289,8 +289,12 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 
   g_signal_connect (window, "destroy", G_CALLBACK (destroyed_cb), manager);
   gtk_widget_show_all (window);
+}
 
-  gtk_main ();
+static void
+do_break_cb (SwfdecDebugger *debugger, SwfdecDebuggerScript *script, gpointer unused)
+{
+  swfdec_debugger_set_breakpoint (debugger, script, 0);
 }
 
 int 
@@ -298,6 +302,7 @@ main (int argc, char *argv[])
 {
   int ret = 0;
   double scale;
+  gboolean do_break = FALSE;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   GError *error = NULL;
@@ -306,6 +311,7 @@ main (int argc, char *argv[])
   GOptionEntry options[] = {
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
+    { "break", 'b', 0, G_OPTION_ARG_NONE, &do_break, "break at the beginning of every script", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -337,6 +343,9 @@ main (int argc, char *argv[])
     return 1;
   }
   player = swfdec_debugger_new ();
+  if (do_break)
+    g_signal_connect (player, "script-added", G_CALLBACK (do_break_cb), NULL);
+  view_swf (player, scale, use_image);
   swfdec_player_set_loader (player, loader);
   if (swfdec_player_get_rate (player) == 0) {
     g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
@@ -345,7 +354,7 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  view_swf (player, scale, use_image);
+  gtk_main ();
 
   player = NULL;
   return 0;

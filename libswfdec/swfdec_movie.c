@@ -256,7 +256,7 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
 }
 
 SwfdecMovie *
-swfdec_movie_find (SwfdecMovie *movie, guint depth)
+swfdec_movie_find (SwfdecMovie *movie, int depth)
 {
   GList *walk;
 
@@ -445,7 +445,7 @@ SwfdecMovie *
 swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 {
   GList *walk, *clip_walk;
-  unsigned int clip_depth = 0;
+  int clip_depth = 0;
   SwfdecMovie *ret;
   SwfdecMovieClass *klass;
 
@@ -475,7 +475,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 	  double tmpx = x, tmpy = y;
 	  cairo_matrix_transform_point (&clip->inverse_transform, &tmpx, &tmpy);
 	  if (!swfdec_movie_mouse_in (clip, tmpx, tmpy)) {
-	    SWFDEC_LOG ("skipping depth %u to %u due to clipping", clip->content->depth, clip->content->clip_depth);
+	    SWFDEC_LOG ("skipping depth %d to %d due to clipping", clip->content->depth, clip->content->clip_depth);
 	    clip_depth = child->content->clip_depth;
 	  }
 	  break;
@@ -488,7 +488,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
       continue;
     }
     if (child->depth <= clip_depth && clip_depth) {
-      SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %u)", child->depth, clip_depth);
+      SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %d)", child->depth, clip_depth);
       continue;
     }
 
@@ -505,7 +505,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   SwfdecMovieClass *klass;
   GList *g;
-  unsigned int clip_depth = 0;
+  int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
 
@@ -674,7 +674,7 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
 
   if (parent) {
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
-    SWFDEC_DEBUG ("inserting %s %p (depth %u) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
+    SWFDEC_DEBUG ("inserting %s %p (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
   }
   swfdec_movie_set_name (movie);
@@ -741,7 +741,7 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
-  content = swfdec_content_new (depth);
+  content = swfdec_content_new ((int) depth - 16384);
   cairo_matrix_scale (&content->transform, 1 / SWFDEC_SCALE_FACTOR, 1 / SWFDEC_SCALE_FACTOR);
   content->name = g_strdup_printf ("_level%u", depth);
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
@@ -770,6 +770,32 @@ swfdec_movie_goto (SwfdecMovie *movie, guint frame)
 int
 swfdec_movie_compare_depths (gconstpointer a, gconstpointer b)
 {
-  return (int) (SWFDEC_MOVIE (a)->depth - SWFDEC_MOVIE (b)->depth);
+  if (SWFDEC_MOVIE (a)->depth < SWFDEC_MOVIE (b)->depth)
+    return -1;
+  if (SWFDEC_MOVIE (a)->depth > SWFDEC_MOVIE (b)->depth)
+    return 1;
+  return 0;
 }
 
+/**
+ * swfdec_depth_classify:
+ * @depth: the depth to classify
+ *
+ * Classifies a depth. This classification is mostly used when deciding if
+ * certain operations are valid in ActionScript.
+ *
+ * Returns: the classification of the depth.
+ **/
+SwfdecDepthClass
+swfdec_depth_classify (int depth)
+{
+  if (depth < -16384)
+    return SWFDEC_DEPTH_CLASS_EMPTY;
+  if (depth < 0)
+    return SWFDEC_DEPTH_CLASS_TIMELINE;
+  if (depth < 1048576)
+    return SWFDEC_DEPTH_CLASS_DYNAMIC;
+  if (depth < 2130690046)
+    return SWFDEC_DEPTH_CLASS_RESERVED;
+  return SWFDEC_DEPTH_CLASS_EMPTY;
+}

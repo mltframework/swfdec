@@ -118,9 +118,9 @@ dump_sprite (SwfdecSprite *s)
 	      SwfdecContent *content = action->data;
 	      g_assert (content == content->sequence);
 	      g_assert (content->start == i);
-	      g_print ("   %4u -%4u %3u", i, content->end, content->depth);
+	      g_print ("   %4u -%4u %3d", i, content->end, content->depth + 16384);
 	      if (content->clip_depth)
-		g_print ("%4u", content->clip_depth);
+		g_print ("%4d", content->clip_depth + 16384);
 	      else
 		g_print ("    ");
 	      if (content->graphic) {

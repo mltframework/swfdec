@@ -32,10 +32,18 @@ G_BEGIN_DECLS
 
 typedef struct _SwfdecMovieClass SwfdecMovieClass;
 
+/* descriptions taken from  http://www.kirupa.com/developer/actionscript/depths2.htm */
+typedef enum {
+  SWFDEC_DEPTH_CLASS_EMPTY,
+  SWFDEC_DEPTH_CLASS_TIMELINE,
+  SWFDEC_DEPTH_CLASS_DYNAMIC,
+  SWFDEC_DEPTH_CLASS_RESERVED
+} SwfdecDepthClass;
+
 struct _SwfdecContent {
   SwfdecGraphic *	graphic;	/* object to display or NULL */
-  unsigned int	      	depth;		/* at which depth to display */
-  unsigned int		clip_depth;	/* clip depth of object */
+  int	         	depth;		/* at which depth to display */
+  int			clip_depth;	/* clip depth of object */
   unsigned int		ratio;
   cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
@@ -73,7 +81,7 @@ struct _SwfdecMovie {
   gboolean		has_name;		/* TRUE if name wasn't given automagically */
   JSObject *		jsobj;			/* our object in javascript */
   GList *		list;			/* our contained movie clips (ordered by depth) */
-  guint			depth;			/* depth of movie (equals content->depth unless explicitly set) */
+  int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   const SwfdecContent *	content;           	/* the content we are displaying */
   SwfdecMovieState	cache_state;		/* whether we are up to date */
 
@@ -146,7 +154,7 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 SwfdecMovie *	swfdec_movie_new_for_player	(SwfdecPlayer *		player,
 						 guint			depth);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
-						 guint			depth);
+						 int			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_destroy		(SwfdecMovie *		movie);
 void		swfdec_movie_set_content	(SwfdecMovie *		movie,
@@ -180,6 +188,8 @@ gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);
+SwfdecDepthClass
+		swfdec_depth_classify		(int			depth);
 
 G_END_DECLS
 #endif

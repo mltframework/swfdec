@@ -117,8 +117,7 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
 /* NB: we look in the current frame, too - so call this before adding actions
  * that might modify the frame you're looking for */
 static SwfdecContent *
-swfdec_content_find (SwfdecSprite *sprite, unsigned int frame_id,
-    unsigned int depth)
+swfdec_content_find (SwfdecSprite *sprite, unsigned int frame_id, int depth)
 {
   guint i, j;
   SwfdecContent *content;
@@ -140,7 +139,7 @@ swfdec_content_find (SwfdecSprite *sprite, unsigned int frame_id,
 	    return content;
 	  break;
 	case SWFDEC_SPRITE_ACTION_REMOVE:
-	  if (GPOINTER_TO_UINT (action->data) == depth)
+	  if (GPOINTER_TO_INT (action->data) == depth)
 	    return NULL;
 	  break;
 	default:
@@ -156,7 +155,7 @@ swfdec_content_update_lifetime (SwfdecSprite *sprite, unsigned int frame_id,
     SwfdecSpriteActionType type, gpointer data)
 {
   SwfdecContent *content;
-  guint depth;
+  int depth;
   switch (type) {
     case SWFDEC_SPRITE_ACTION_SCRIPT:
     case SWFDEC_SPRITE_ACTION_UPDATE:
@@ -165,7 +164,7 @@ swfdec_content_update_lifetime (SwfdecSprite *sprite, unsigned int frame_id,
       depth = ((SwfdecContent *) data)->depth;
       break;
     case SWFDEC_SPRITE_ACTION_REMOVE:
-      depth = GPOINTER_TO_UINT (data);
+      depth = GPOINTER_TO_INT (data);
       break;
     default:
       g_assert_not_reached ();
@@ -251,7 +250,7 @@ tag_func_set_background_color (SwfdecSwfDecoder * s)
 }
 
 SwfdecContent *
-swfdec_content_new (unsigned int depth)
+swfdec_content_new (int depth)
 {
   SwfdecContent *content = g_new0 (SwfdecContent, 1);
 
@@ -265,7 +264,7 @@ swfdec_content_new (unsigned int depth)
 
 static SwfdecContent *
 swfdec_contents_create (SwfdecSprite *sprite, unsigned int frame_id, 
-    unsigned int depth, gboolean copy, gboolean new)
+    int depth, gboolean copy, gboolean new)
 {
   SwfdecContent *content = swfdec_content_new (depth);
 
@@ -330,7 +329,8 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
   SWFDEC_LOG ("  move = %d", move);
-  SWFDEC_LOG ("  depth = %d", depth);
+  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
+  depth -= 16384;
 
   /* new name always means new object */
   content = swfdec_contents_create (s->parse_sprite, 
@@ -377,7 +377,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   }
   if (has_clip_depth) {
     content->clip_depth = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("  clip_depth = %u", content->clip_depth);
+    SWFDEC_LOG ("  clip_depth = %d (=> %d)", content->clip_depth, content->clip_depth - 16384);
   }
   if (has_clip_actions) {
     int reserved, clip_event_flags, event_flags, key_code;
@@ -431,13 +431,14 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 int
 swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s)
 {
-  unsigned int depth;
+  int depth;
 
   swfdec_bits_get_u16 (&s->b);
   depth = swfdec_bits_get_u16 (&s->b);
+  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
+  depth -= 16384;
   swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
-      SWFDEC_SPRITE_ACTION_REMOVE, GUINT_TO_POINTER (depth));
-  SWFDEC_LOG ("  depth = %u", depth);
+      SWFDEC_SPRITE_ACTION_REMOVE, GINT_TO_POINTER (depth));
 
   return SWFDEC_STATUS_OK;
 }
@@ -448,9 +449,10 @@ swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s)
   unsigned int depth;
 
   depth = swfdec_bits_get_u16 (&s->b);
-  swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
-      SWFDEC_SPRITE_ACTION_REMOVE, GUINT_TO_POINTER (depth));
   SWFDEC_LOG ("  depth = %u", depth);
+  depth -= 16384;
+  swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 
+      SWFDEC_SPRITE_ACTION_REMOVE, GINT_TO_POINTER (depth));
 
   return SWFDEC_STATUS_OK;
 }

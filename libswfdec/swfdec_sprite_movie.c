@@ -32,7 +32,7 @@
 #include "swfdec_sprite.h"
 
 static SwfdecMovie *
-swfdec_sprite_movie_find (GList *movie_list, guint depth)
+swfdec_sprite_movie_find (GList *movie_list, int depth)
 {
   GList *walk;
 
@@ -49,7 +49,7 @@ swfdec_sprite_movie_find (GList *movie_list, guint depth)
 }
 
 static gboolean
-swfdec_sprite_movie_remove_child (SwfdecMovie *movie, guint depth)
+swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
 {
   SwfdecMovie *child = swfdec_movie_find (movie, depth);
 
@@ -85,7 +85,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       break;
     case SWFDEC_SPRITE_ACTION_ADD:
       content = action->data;
-      SWFDEC_LOG ("ADD action: depth %u", content->depth);
+      SWFDEC_LOG ("ADD action: depth %d", content->depth);
       if (swfdec_sprite_movie_remove_child (mov, content->depth))
 	SWFDEC_DEBUG ("removed a child before adding new one");
       child = swfdec_sprite_movie_find (*movie_list, content->depth);
@@ -99,21 +99,21 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       break;
     case SWFDEC_SPRITE_ACTION_UPDATE:
       content = action->data;
-      SWFDEC_LOG ("UPDATE action: depth %u", content->depth);
+      SWFDEC_LOG ("UPDATE action: depth %d", content->depth);
       child = swfdec_movie_find (mov, content->depth);
       if (child != NULL && child->content->sequence == content->sequence) {
 	swfdec_movie_set_content (child, content);
       } else if (child) {
-	SWFDEC_INFO ("supposed to update depth %u, but child is in different sequence", 
+	SWFDEC_INFO ("supposed to update depth %d, but child is in different sequence", 
 	    content->depth);
       } else {
-	SWFDEC_INFO ("supposed to update depth %u, but no child", content->depth);
+	SWFDEC_INFO ("supposed to update depth %d, but no child", content->depth);
       }
       break;
     case SWFDEC_SPRITE_ACTION_REMOVE:
-      SWFDEC_LOG ("REMOVE action: depth %u", GPOINTER_TO_UINT (action->data));
-      if (!swfdec_sprite_movie_remove_child (mov, GPOINTER_TO_UINT (action->data)))
-	SWFDEC_INFO ("could not remove, no child at depth %u", GPOINTER_TO_UINT (action->data));
+      SWFDEC_LOG ("REMOVE action: depth %d", GPOINTER_TO_INT (action->data));
+      if (!swfdec_sprite_movie_remove_child (mov, GPOINTER_TO_INT (action->data)))
+	SWFDEC_INFO ("could not remove, no child at depth %d", GPOINTER_TO_INT (action->data));
       break;
     default:
       g_assert_not_reached ();

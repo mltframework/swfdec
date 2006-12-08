@@ -96,7 +96,7 @@ unsigned int swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int cu
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 				      		 const char *		label);
 
-SwfdecContent *swfdec_content_new (unsigned int depth);
+SwfdecContent *swfdec_content_new (int depth);
 void swfdec_content_free (SwfdecContent *content);
 
 int tag_show_frame (SwfdecSwfDecoder * s);

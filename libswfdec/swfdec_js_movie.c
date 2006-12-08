@@ -345,7 +345,7 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 {
   SwfdecMovie *movie;
   SwfdecMovie *other;
-  guint depth;
+  int depth;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
@@ -360,7 +360,7 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     depth = other->depth;
     other->depth = movie->depth;
   } else {
-    if (!JS_ValueToECMAUint32 (cx, argv[0], &depth))
+    if (!JS_ValueToECMAInt32 (cx, argv[0], &depth))
       return JS_FALSE;
     other = swfdec_movie_find (movie->parent, depth);
     if (other) {
@@ -391,7 +391,7 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
 {
   SwfdecMovie *movie, *ret;
   const char *name;
-  unsigned int depth;
+  int depth;
   SwfdecContent *content;
 
   movie = JS_GetPrivate (cx, obj);
@@ -416,8 +416,10 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   name = swfdec_js_to_string (cx, argv[0]);
   if (name == NULL)
     return JS_FALSE;
-  if (!JS_ValueToECMAUint32 (cx, argv[1], &depth))
+  if (!JS_ValueToECMAInt32 (cx, argv[1], &depth))
     return JS_FALSE;
+  if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
+    return JS_TRUE;
   g_assert (movie->parent);
   ret = swfdec_movie_find (movie->parent, depth);
   if (ret)
@@ -427,6 +429,7 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   if (content->events)
     content->events = swfdec_event_list_copy (content->events);
   content->depth = depth;
+  content->clip_depth = 0; /* FIXME: check this */
   content->name = g_strdup (name);
   content->sequence = content;
   content->start = 0;

@@ -434,7 +434,6 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   content->sequence = content;
   content->start = 0;
   content->end = G_MAXUINT;
-  content->scripted = TRUE;
   ret = swfdec_movie_new (movie->parent, content);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   /* must be set by now, the movie has a name */
@@ -454,7 +453,7 @@ swfdec_js_movie_removeMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  if (movie->content->scripted)
+  if (swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC)
     swfdec_movie_remove (movie);
   return JS_TRUE;
 }

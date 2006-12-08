@@ -49,7 +49,6 @@ struct _SwfdecContent {
   SwfdecColorTransform	color_transform;
   char *		name;
   SwfdecEventList *	events;
-  gboolean		scripted;	/* TRUE if this content was created by a script */
 
   SwfdecContent *	sequence;	/* first element in sequence this content belongs to */
   /* NB: the next two elements are only filled for the sequence leader */
@@ -57,7 +56,7 @@ struct _SwfdecContent {
   guint			end;		/* first frame that does not contain this sequence anymore */
 };
 #define SWFDEC_CONTENT_DEFAULT { NULL, -1, 0, 0, { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 }, \
-  { 256, 0, 256, 0, 256, 0, 256, 0 }, NULL, NULL, FALSE, NULL, 0, G_MAXUINT }
+  { 256, 0, 256, 0, 256, 0, 256, 0 }, NULL, NULL, NULL, 0, G_MAXUINT }
 
 #define SWFDEC_TYPE_MOVIE                    (swfdec_movie_get_type())
 #define SWFDEC_IS_MOVIE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_MOVIE))

@@ -104,10 +104,10 @@ swfdec_js_init_player (SwfdecPlayer *player)
     swfdec_js_finish_player (player);
     return;
   }
+  swfdec_js_add_globals (player);
   if (!JS_InitStandardClasses (player->jscx, player->jsobj)) {
     SWFDEC_ERROR ("initializing JS standard classes failed");
   }
-  swfdec_js_add_globals (player);
   swfdec_js_add_mouse (player);
   swfdec_js_add_movieclip_class (player);
   swfdec_js_add_color (player);

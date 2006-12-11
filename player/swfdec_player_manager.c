@@ -86,13 +86,32 @@ swfdec_player_manager_set_property (GObject *object, guint param_id, const GValu
   }
 }
 
+static void breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager);
+
+static void
+swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *player)
+{
+  if (manager->player == player)
+    return;
+
+  if (manager->player) {
+    g_signal_handlers_disconnect_by_func (manager->player, breakpoint_hit_cb, manager);
+    g_object_unref (manager->player);
+  }
+  manager->player = player;
+  if (player) {
+    g_object_ref (player);
+    g_signal_connect (player, "breakpoint", G_CALLBACK (breakpoint_hit_cb), manager);
+  }
+}
+
 static void
 swfdec_player_manager_dispose (GObject *object)
 {
   SwfdecPlayerManager *manager = SWFDEC_PLAYER_MANAGER (object);
 
   swfdec_player_manager_set_playing (manager, FALSE);
-  g_object_unref (manager->player);
+  swfdec_player_manager_set_player (manager, FALSE);
 
   G_OBJECT_CLASS (swfdec_player_manager_parent_class)->dispose (object);
 }
@@ -125,25 +144,6 @@ static void
 swfdec_player_manager_init (SwfdecPlayerManager *manager)
 {
   manager->speed = 1.0;
-}
-
-static void breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager);
-
-static void
-swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *player)
-{
-  if (manager->player == player)
-    return;
-
-  if (manager->player) {
-    g_signal_handlers_disconnect_by_func (manager->player, breakpoint_hit_cb, manager);
-    g_object_unref (manager->player);
-  }
-  manager->player = player;
-  if (player) {
-    g_object_ref (player);
-    g_signal_connect (player, "breakpoint", G_CALLBACK (breakpoint_hit_cb), manager);
-  }
 }
 
 SwfdecPlayerManager *

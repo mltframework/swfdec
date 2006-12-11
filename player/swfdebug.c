@@ -279,11 +279,11 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
       "input", "foreground", "dark grey", NULL);
   gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (widget)),
       "output", "left-margin", 15, NULL);
-  g_signal_connect (manager, "message", G_CALLBACK (message_display_cb), widget);
+  signal_auto_connect (manager, "message", G_CALLBACK (message_display_cb), widget);
   gtk_container_add (GTK_CONTAINER (scroll), widget);
 
   widget = gtk_entry_new ();
-  g_signal_connect (widget, "activate", G_CALLBACK (entry_activate_cb), manager);
+  signal_auto_connect (widget, "activate", G_CALLBACK (entry_activate_cb), manager);
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
   gtk_widget_grab_focus (widget);
 

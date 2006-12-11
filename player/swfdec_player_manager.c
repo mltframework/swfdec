@@ -255,6 +255,7 @@ swfdec_player_manager_iterate (SwfdecPlayerManager *manager)
 static void
 swfdec_player_manager_do_interrupt (SwfdecPlayerManager *manager)
 {
+  swfdec_debugger_set_stepping (SWFDEC_DEBUGGER (manager->player), FALSE);
   g_object_ref (manager);
   manager->interrupt_loop = g_main_loop_new (NULL, FALSE);
   swfdec_player_manager_update_playing (manager);
@@ -267,47 +268,14 @@ swfdec_player_manager_do_interrupt (SwfdecPlayerManager *manager)
   g_object_unref (manager);
 }
 
-static JSTrapStatus
-swfdec_player_manager_interrupt_cb (JSContext *cx, JSScript *script, 
-    jsbytecode *pc, jsval *rval, void *managerp)
-{
-  SwfdecDebuggerScript *dscript;
-  guint line;
-  SwfdecPlayerManager *manager = managerp;
-
-  dscript = swfdec_debugger_get_script (SWFDEC_DEBUGGER (manager->player),
-      script);
-  if (dscript == NULL)
-    return JSTRAP_CONTINUE;
-  if (dscript == manager->interrupt_script) {
-    for (line = 0; line < dscript->n_commands; line++) {
-      if (pc < (jsbytecode *) dscript->commands[line].code)
-	break;
-    }
-    if (line > 0)
-      line--;
-    if (line == manager->interrupt_line)
-      return JSTRAP_CONTINUE;
-  }
-  JS_ClearInterrupt (JS_GetRuntime (cx), NULL, NULL);
-  manager->interrupt_script = dscript;
-  manager->interrupt_line = line;
-  swfdec_player_manager_do_interrupt (manager);
-  return JSTRAP_CONTINUE;
-}
-
-gboolean
+void
 swfdec_player_manager_next (SwfdecPlayerManager *manager)
 {
-  g_return_val_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager), FALSE);
-  g_return_val_if_fail (swfdec_player_manager_get_interrupted (manager), FALSE);
+  g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
+  g_return_if_fail (swfdec_player_manager_get_interrupted (manager));
 
-  /* FIXME: this probably has a lot of problems */
-  if (manager->interrupt_line + 1 >= manager->interrupt_script->n_commands)
-    return FALSE;
-  JS_SetInterrupt (JS_GetRuntime (manager->player->jscx), swfdec_player_manager_interrupt_cb, manager);
+  swfdec_debugger_set_stepping (SWFDEC_DEBUGGER (manager->player), TRUE);
   swfdec_player_manager_continue (manager);
-  return TRUE;
 }
 
 void
@@ -389,11 +357,18 @@ parse_uint (const char *input, guint *output)
 static void
 breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager)
 {
-  if (!swfdec_debugger_get_breakpoint (debugger, id,
-	&manager->interrupt_script, &manager->interrupt_line)) {
-    g_assert_not_reached ();
+  if (id == 0) {
+    if (!swfdec_debugger_get_current (debugger,
+	  &manager->interrupt_script, &manager->interrupt_line)) {
+      g_assert_not_reached ();
+    }
+  } else {
+    if (!swfdec_debugger_get_breakpoint (debugger, id,
+	  &manager->interrupt_script, &manager->interrupt_line)) {
+      g_assert_not_reached ();
+    }
+    swfdec_player_manager_output (manager, "Breakpoint %u", id);
   }
-  swfdec_player_manager_output (manager, "Breakpoint %u", id);
   swfdec_player_manager_do_interrupt (manager);
 }
 
@@ -452,8 +427,8 @@ command_next (SwfdecPlayerManager *manager, const char *arg)
 {
   if (!swfdec_player_manager_get_interrupted (manager))
     swfdec_player_manager_error (manager, "Not interrupted, cannot continue");
-  else if (!swfdec_player_manager_next (manager))
-    swfdec_player_manager_error (manager, "Next command can't be used here. (Already at end of script?)");
+  else 
+    swfdec_player_manager_next (manager);
 }
 
 static void

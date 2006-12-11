@@ -498,7 +498,7 @@ get_name (SwfdecMovie *movie)
   } else {
     /* the name can be changed */
     s = g_string_new ("_level");
-    g_string_append_printf (s, "%u", movie->depth);
+    g_string_append_printf (s, "%u", movie->depth + 16384);
   }
   return s;
 }

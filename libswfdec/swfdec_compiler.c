@@ -1046,6 +1046,7 @@ compile_start_drag (CompileState *state, guint action, guint len)
   push_prop (state, "startDrag");
   PUSH_OBJ (state);
   FLASHCALL (state);
+  POP (state);
 }
 
 static void

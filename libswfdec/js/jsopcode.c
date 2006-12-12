@@ -2416,6 +2416,9 @@ js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
     if (!script) {
         js_printf(jp, native_code_str);
         return JS_TRUE;
+    } else if (fun->flags & JSFUN_NODECOMPILE) {
+        js_printf(jp, "\t[decompilation disabled]\n");
+        return JS_TRUE;
     }
     scope = fun->object ? OBJ_SCOPE(fun->object) : NULL;
     save = jp->scope;
@@ -2503,7 +2506,9 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     js_printf(jp, ") {\n");
     indent = jp->indent;
     jp->indent += 4;
-    if (fun->script && fun->object) {
+    if (fun->flags & JSFUN_NODECOMPILE) {
+        js_printf(jp, "\t[decompilation disabled]\n");
+    } else if (fun->script && fun->object) {
         oldscope = jp->scope;
         jp->scope = scope;
         ok = js_DecompileScript(jp, fun->script);

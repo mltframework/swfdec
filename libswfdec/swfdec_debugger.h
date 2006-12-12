@@ -58,6 +58,7 @@ struct _SwfdecDebugger {
 
   GHashTable *		scripts;	/* JSScript => SwfdecDebuggerScript mapping */
   GArray *		breakpoints;	/* all breakpoints */
+  gboolean		stepping;	/* TRUE if we're currently stepping through the code */
 };
 
 struct _SwfdecDebuggerClass {
@@ -67,6 +68,9 @@ struct _SwfdecDebuggerClass {
 GType			swfdec_debugger_get_type        (void);
 SwfdecPlayer *		swfdec_debugger_new		(void);
 
+gboolean		swfdec_debugger_get_current	(SwfdecDebugger *	debugger,
+							 SwfdecDebuggerScript **dscript,
+							 guint *		line);
 guint			swfdec_debugger_set_breakpoint	(SwfdecDebugger *	debugger,
 							 SwfdecDebuggerScript *	script,
 							 guint			line);
@@ -79,6 +83,9 @@ gboolean		swfdec_debugger_get_breakpoint	(SwfdecDebugger *	debugger,
 							 guint *      		line);
 guint			swfdec_debugger_get_n_breakpoints
 							(SwfdecDebugger *	debugger);
+void			swfdec_debugger_set_stepping	(SwfdecDebugger *	debugger,
+							 gboolean		stepping);
+gboolean		swfdec_debugger_get_stepping	(SwfdecDebugger *	debugger);
 
 void			swfdec_debugger_add_script	(SwfdecDebugger *	debugger,
 							 JSScript *		script,

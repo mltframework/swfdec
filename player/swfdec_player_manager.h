@@ -70,7 +70,7 @@ gboolean	swfdec_player_manager_get_interrupted	(SwfdecPlayerManager *  manager);
 void		swfdec_player_manager_iterate		(SwfdecPlayerManager *	manager);
 
 void		swfdec_player_manager_continue		(SwfdecPlayerManager *	manager);
-gboolean	swfdec_player_manager_next		(SwfdecPlayerManager *	manager);
+void		swfdec_player_manager_next		(SwfdecPlayerManager *	manager);
 void		swfdec_player_manager_get_interrupt	(SwfdecPlayerManager *	manager,
 							 SwfdecDebuggerScript **script,
 							 guint *		line);

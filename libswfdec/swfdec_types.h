@@ -5,6 +5,18 @@
 #include <glib-object.h>
 #include <cairo.h>
 
+#define SWFDEC_TWIPS_SCALE_FACTOR	      	20
+typedef int SwfdecTwips;
+#define SWFDEC_TWIPS_TO_DOUBLE(t) ((t) * (1.0 / SWFDEC_TWIPS_SCALE_FACTOR))
+#define SWFDEC_DOUBLE_TO_TWIPS(d) ((SwfdecTwips)((d) * SWFDEC_TWIPS_SCALE_FACTOR))
+
+#define SWFDEC_FIXED_SCALE_FACTOR		65536
+typedef int SwfdecFixed;
+#define SWFDEC_FIXED_TO_DOUBLE(f) ((f) * (1.0 / SWFDEC_FIXED_SCALE_FACTOR))
+#define SWFDEC_DOUBLE_TO_FIXED(d) ((SwfdecFixed)((d) * SWFDEC_FIXED_SCALE_FACTOR))
+#define SWFDEC_FIXED_TO_INT(f) ((f) / SWFDEC_FIXED_SCALE_FACTOR)
+#define SWFDEC_INT_TO_FIXED(i) ((i) * SWFDEC_FIXED_SCALE_FACTOR)
+
 typedef struct _SwfdecActionContext SwfdecActionContext;
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
@@ -32,5 +44,6 @@ typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteFrame SwfdecSpriteFrame;
 typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecText SwfdecText;
+typedef struct _SwfdecTransform SwfdecTransform;
 
 #endif

@@ -316,7 +316,7 @@ swfdec_js_startDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
         !JS_ValueToNumber (cx, argv[3], &rect.x1) || 
         !JS_ValueToNumber (cx, argv[4], &rect.y1))
       return JS_FALSE;
-    swfdec_rect_scale (&rect, &rect, SWFDEC_SCALE_FACTOR);
+    swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
     swfdec_player_set_drag_movie (SWFDEC_ROOT_MOVIE (movie->root)->player, movie,
 	center, &rect);
   } else {
@@ -498,7 +498,7 @@ get_name (SwfdecMovie *movie)
   } else {
     /* the name can be changed */
     s = g_string_new ("_level");
-    g_string_append_printf (s, "%u", movie->depth);
+    g_string_append_printf (s, "%u", movie->depth + 16384);
   }
   return s;
 }
@@ -618,7 +618,7 @@ mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = (movie->x + movie->original_extents.x0) / SWFDEC_SCALE_FACTOR;
+  d = (movie->x + movie->original_extents.x0) / SWFDEC_TWIPS_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -637,7 +637,7 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
     return JS_TRUE;
   }
-  movie->x = d * SWFDEC_SCALE_FACTOR - movie->original_extents.x0;
+  movie->x = d * SWFDEC_TWIPS_SCALE_FACTOR - movie->original_extents.x0;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;
@@ -653,7 +653,7 @@ mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = (movie->y + movie->original_extents.y0) / SWFDEC_SCALE_FACTOR;
+  d = (movie->y + movie->original_extents.y0) / SWFDEC_TWIPS_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -672,7 +672,7 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to move y to a non-finite value, ignoring");
     return JS_TRUE;
   }
-  movie->y = d * SWFDEC_SCALE_FACTOR - movie->original_extents.y0;
+  movie->y = d * SWFDEC_TWIPS_SCALE_FACTOR - movie->original_extents.y0;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;
@@ -915,7 +915,7 @@ mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   d = (movie->extents.x1 - movie->extents.x0);
   /* FIXME: implement this nicer - needs refactoring of where scaling is applied */
   if (!SWFDEC_IS_ROOT_MOVIE (movie))
-    d /= SWFDEC_SCALE_FACTOR;
+    d /= SWFDEC_TWIPS_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -938,7 +938,7 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   if (!SWFDEC_IS_ROOT_MOVIE (movie))
-    d *= SWFDEC_SCALE_FACTOR;
+    d *= SWFDEC_TWIPS_SCALE_FACTOR;
   swfdec_movie_update (movie);
   org = movie->extents.x1 - movie->extents.x0;
   if (org != 0) {
@@ -965,7 +965,7 @@ mc_height_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   d = (movie->extents.y1 - movie->extents.y0);
   /* FIXME: implement this nicer - needs refactoring of where scaling is applied */
   if (!SWFDEC_IS_ROOT_MOVIE (movie))
-    d /= SWFDEC_SCALE_FACTOR;
+    d /= SWFDEC_TWIPS_SCALE_FACTOR;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -988,7 +988,7 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   if (!SWFDEC_IS_ROOT_MOVIE (movie))
-    d *= SWFDEC_SCALE_FACTOR;
+    d *= SWFDEC_TWIPS_SCALE_FACTOR;
   swfdec_movie_update (movie);
   org = movie->extents.y1 - movie->extents.y0;
   if (org != 0) {

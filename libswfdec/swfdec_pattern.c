@@ -161,8 +161,8 @@ swfdec_stroke_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_pa
   } else {
     width = (stroke->start_width * (65535 - ratio) + stroke->end_width * ratio) / 65535;
   }
-  if (width < SWFDEC_SCALE_FACTOR)
-    width = SWFDEC_SCALE_FACTOR;
+  if (width < SWFDEC_TWIPS_SCALE_FACTOR)
+    width = SWFDEC_TWIPS_SCALE_FACTOR;
   cairo_set_line_width (cr, width);
   cairo_stroke (cr);
 }
@@ -787,7 +787,7 @@ swfdec_pattern_get_path_extents (SwfdecPattern *pattern, const cairo_path_t *pat
   if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
     SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
     double line_width = MAX (stroke->start_width, stroke->end_width);
-    line_width = MAX (line_width, SWFDEC_SCALE_FACTOR);
+    line_width = MAX (line_width, SWFDEC_TWIPS_SCALE_FACTOR);
     swfdec_path_get_extents (path, extents, line_width / 2);
     /* add offsets for pixel-alignment here */
     extents->x0 -= MAX_ALIGN;

@@ -26,8 +26,6 @@
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_buffer.h>
 
-#define SWFDEC_FIXED_SCALE_FACTOR		(65536.0)
-#define SWFDEC_SCALE_FACTOR			(20.0)
 #define SWFDEC_TEXT_SCALE_FACTOR		(1024.0)
 
 typedef struct _SwfdecBits SwfdecBits;
@@ -58,6 +56,7 @@ void swfdec_bits_syncbits (SwfdecBits * b);
 
 void swfdec_bits_get_color_transform (SwfdecBits * bits,
     SwfdecColorTransform * ct);
+void swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans);
 void swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix);
 const char *swfdec_bits_skip_string (SwfdecBits * bits);
 char *swfdec_bits_get_string (SwfdecBits * bits);

@@ -307,68 +307,48 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
 void
 swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
 {
+  SwfdecTransform trans;
+
+  swfdec_bits_get_transform (bits, &trans);
+  swfdec_transform_to_matrix (matrix, &trans);
+}
+
+void
+swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans)
+{
   int has_scale;
   int has_rotate;
   int n_translate_bits;
-  int translate_x;
-  int translate_y;
 
   swfdec_bits_syncbits (bits);
 
   has_scale = swfdec_bits_getbit (bits);
   if (has_scale) {
     int n_scale_bits = swfdec_bits_getbits (bits, 5);
-    int scale_x = swfdec_bits_getsbits (bits, n_scale_bits);
-    int scale_y = swfdec_bits_getsbits (bits, n_scale_bits);
+    trans->xx = swfdec_bits_getsbits (bits, n_scale_bits);
+    trans->yy = swfdec_bits_getsbits (bits, n_scale_bits);
 
-    SWFDEC_LOG ("scalefactors: x = %d, y = %d", scale_x, scale_y);
-    matrix->xx = scale_x / SWFDEC_FIXED_SCALE_FACTOR;
-    matrix->yy = scale_y / SWFDEC_FIXED_SCALE_FACTOR;
+    SWFDEC_LOG ("scalefactors: x = %d, y = %d", trans->xx, trans->yy);
   } else {
     SWFDEC_LOG ("no scalefactors given");
-    matrix->xx = 1.0;
-    matrix->yy = 1.0;
+    trans->xx = SWFDEC_INT_TO_FIXED (1);
+    trans->yy = SWFDEC_INT_TO_FIXED (1);
   }
   has_rotate = swfdec_bits_getbit (bits);
   if (has_rotate) {
     int n_rotate_bits = swfdec_bits_getbits (bits, 5);
-    int rotate_skew0 = swfdec_bits_getsbits (bits, n_rotate_bits);
-    int rotate_skew1 = swfdec_bits_getsbits (bits, n_rotate_bits);
+    trans->xy = swfdec_bits_getsbits (bits, n_rotate_bits);
+    trans->yx = swfdec_bits_getsbits (bits, n_rotate_bits);
 
-    SWFDEC_LOG ("skew: xy = %d, yx = %d", rotate_skew1, rotate_skew0);
-    matrix->xy = rotate_skew1 / SWFDEC_FIXED_SCALE_FACTOR;
-    matrix->yx = rotate_skew0 / SWFDEC_FIXED_SCALE_FACTOR;
+    SWFDEC_LOG ("skew: xy = %d, yx = %d", trans->xy, trans->yx);
   } else {
     SWFDEC_LOG ("no rotation");
-    matrix->xy = 0.0;
-    matrix->yx = 0.0;
-  }
-  {
-    cairo_matrix_t tmp = *matrix;
-    while (cairo_matrix_invert (&tmp)) {
-      SWFDEC_WARNING ("matrix not invertible, adding epsilon to smallest member");
-      /* add epsilon at point closest to zero */
-#define EPSILON (1.0 / SWFDEC_FIXED_SCALE_FACTOR)
-      if (ABS (matrix->xx) <= ABS (matrix->xy) && 
-	  ABS (matrix->xx) <= ABS (matrix->yx) &&
-	  ABS (matrix->xx) <= ABS (matrix->yy))
-	matrix->xx += (matrix->xx >= 0) ? EPSILON : -EPSILON;
-      else if (ABS (matrix->yy) <= ABS (matrix->xy) &&
-	       ABS (matrix->yy) <= ABS (matrix->yx))
-	matrix->yy += (matrix->yy >= 0) ? EPSILON : -EPSILON;
-      else if (ABS (matrix->xy) <= ABS (matrix->yx))
-	matrix->xy += (matrix->xy >= 0) ? EPSILON : -EPSILON;
-      else
-	matrix->yx += (matrix->yx >= 0) ? EPSILON : -EPSILON;
-      tmp = *matrix;
-    }
+    trans->xy = 0;
+    trans->yx = 0;
   }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
-  translate_x = swfdec_bits_getsbits (bits, n_translate_bits);
-  translate_y = swfdec_bits_getsbits (bits, n_translate_bits);
-
-  matrix->x0 = translate_x;
-  matrix->y0 = translate_y;
+  trans->x0 = swfdec_bits_getsbits (bits, n_translate_bits);
+  trans->y0 = swfdec_bits_getsbits (bits, n_translate_bits);
 }
 
 char *

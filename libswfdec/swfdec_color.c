@@ -153,3 +153,47 @@ swfdec_color_transform_chain (SwfdecColorTransform *dest,
   dest->ab = (last->aa * first->ab >> 8) + last->ab;
 }
 
+static void
+swfdec_cairo_matrix_ensure_invertible (cairo_matrix_t *matrix)
+{
+  cairo_matrix_t tmp = *matrix;
+  while (cairo_matrix_invert (&tmp)) {
+    SWFDEC_WARNING ("matrix not invertible, adding epsilon to smallest member");
+    /* add epsilon at point closest to zero */
+#define EPSILON (1.0 / SWFDEC_FIXED_SCALE_FACTOR)
+    if (ABS (matrix->xx) <= ABS (matrix->xy) && 
+	ABS (matrix->xx) <= ABS (matrix->yx) &&
+	ABS (matrix->xx) <= ABS (matrix->yy))
+      matrix->xx += (matrix->xx >= 0) ? EPSILON : -EPSILON;
+    else if (ABS (matrix->yy) <= ABS (matrix->xy) &&
+	     ABS (matrix->yy) <= ABS (matrix->yx))
+      matrix->yy += (matrix->yy >= 0) ? EPSILON : -EPSILON;
+    else if (ABS (matrix->xy) <= ABS (matrix->yx))
+      matrix->xy += (matrix->xy >= 0) ? EPSILON : -EPSILON;
+    else
+      matrix->yx += (matrix->yx >= 0) ? EPSILON : -EPSILON;
+    tmp = *matrix;
+  }
+}
+
+/**
+ * swfdec_transform_to_matrix:
+ * @matrix: a cairo matrix
+ * @trans: a #SwfdecTransform
+ *
+ * Applies the swfdec transform to a cairo matrix.
+ **/
+void
+swfdec_transform_to_matrix (cairo_matrix_t *matrix, const SwfdecTransform *trans)
+{
+  g_return_if_fail (matrix != NULL);
+  g_return_if_fail (trans != NULL);
+
+  matrix->xx = SWFDEC_FIXED_TO_DOUBLE (trans->xx);
+  matrix->xy = SWFDEC_FIXED_TO_DOUBLE (trans->xy);
+  matrix->yx = SWFDEC_FIXED_TO_DOUBLE (trans->yx);
+  matrix->yy = SWFDEC_FIXED_TO_DOUBLE (trans->yy);
+  matrix->x0 = trans->x0;
+  matrix->y0 = trans->y0;
+  swfdec_cairo_matrix_ensure_invertible (matrix);
+}

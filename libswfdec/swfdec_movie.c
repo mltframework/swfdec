@@ -742,7 +742,8 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   content = swfdec_content_new ((int) depth - 16384);
-  cairo_matrix_scale (&content->transform, 1 / SWFDEC_SCALE_FACTOR, 1 / SWFDEC_SCALE_FACTOR);
+  cairo_matrix_scale (&content->transform, 
+      1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
   content->name = g_strdup_printf ("_level%u", depth);
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);

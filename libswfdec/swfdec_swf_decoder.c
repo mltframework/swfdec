@@ -215,8 +215,8 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
   swfdec_bits_get_rect (&s->b, &rect);
   if (rect.x0 != 0.0 || rect.y0 != 0.0)
     SWFDEC_ERROR ("SWF window doesn't start at 0 0 but at %g %g\n", rect.x0, rect.y0);
-  dec->width = ceil (rect.x1 / SWFDEC_SCALE_FACTOR);
-  dec->height = ceil (rect.y1 / SWFDEC_SCALE_FACTOR);
+  dec->width = ceil (rect.x1 / SWFDEC_TWIPS_SCALE_FACTOR);
+  dec->height = ceil (rect.y1 / SWFDEC_TWIPS_SCALE_FACTOR);
   swfdec_bits_syncbits (&s->b);
   dec->rate = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG ("rate = %g", dec->rate / 256.0);

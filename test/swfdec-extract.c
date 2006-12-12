@@ -191,15 +191,15 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
     g_printerr ("Buttons can not be exported");
     return FALSE;
   }
-  width = ceil (graphic->extents.x1 / SWFDEC_SCALE_FACTOR) 
-    - floor (graphic->extents.x0 / SWFDEC_SCALE_FACTOR);
-  height = ceil (graphic->extents.y1 / SWFDEC_SCALE_FACTOR) 
-    - floor (graphic->extents.y0 / SWFDEC_SCALE_FACTOR);
+  width = ceil (graphic->extents.x1 / SWFDEC_TWIPS_SCALE_FACTOR) 
+    - floor (graphic->extents.x0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  height = ceil (graphic->extents.y1 / SWFDEC_TWIPS_SCALE_FACTOR) 
+    - floor (graphic->extents.y0 / SWFDEC_TWIPS_SCALE_FACTOR);
   surface = surface_create_for_filename (filename, width, height);
   cr = cairo_create (surface);
-  cairo_translate (cr, - floor (graphic->extents.x0 / SWFDEC_SCALE_FACTOR),
-    - floor (graphic->extents.y0 / SWFDEC_SCALE_FACTOR));
-  cairo_scale (cr, 1 / SWFDEC_SCALE_FACTOR, 1 / SWFDEC_SCALE_FACTOR);
+  cairo_translate (cr, - floor (graphic->extents.x0 / SWFDEC_TWIPS_SCALE_FACTOR),
+    - floor (graphic->extents.y0 / SWFDEC_TWIPS_SCALE_FACTOR));
+  cairo_scale (cr, 1 / SWFDEC_TWIPS_SCALE_FACTOR, 1 / SWFDEC_TWIPS_SCALE_FACTOR);
   swfdec_graphic_render (graphic, cr, &trans, &graphic->extents, TRUE);
   cairo_show_page (cr);
   cairo_destroy (cr);

@@ -633,6 +633,8 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  SWFDEC_LOG ("setting x of %s from %d to %d", movie->name, movie->transform.x0,
+      SWFDEC_DOUBLE_TO_TWIPS (d) - (int) floor (movie->original_extents.x0));
   movie->transform.x0 = SWFDEC_DOUBLE_TO_TWIPS (d) - floor (movie->original_extents.x0);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 

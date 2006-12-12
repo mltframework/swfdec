@@ -208,6 +208,9 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  if (movie->content == content)
+    return;
+
   if (content == NULL) {
     content = &default_content;
   } else if (movie->content != &default_content) {
@@ -220,6 +223,8 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
       g_return_if_fail (movie->content->name == NULL);
     }
   }
+  SWFDEC_LOG ("setting content of movie %s from %p to %p", 
+      movie->name, movie->content, content);
   old_content = movie->content;
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->content_changed)

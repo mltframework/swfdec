@@ -337,8 +337,8 @@ swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans)
   has_rotate = swfdec_bits_getbit (bits);
   if (has_rotate) {
     int n_rotate_bits = swfdec_bits_getbits (bits, 5);
-    trans->xy = swfdec_bits_getsbits (bits, n_rotate_bits);
     trans->yx = swfdec_bits_getsbits (bits, n_rotate_bits);
+    trans->xy = swfdec_bits_getsbits (bits, n_rotate_bits);
 
     SWFDEC_LOG ("skew: xy = %d, yx = %d", trans->xy, trans->yx);
   } else {

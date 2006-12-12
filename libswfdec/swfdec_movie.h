@@ -45,7 +45,7 @@ struct _SwfdecContent {
   int	         	depth;		/* at which depth to display */
   int			clip_depth;	/* clip depth of object */
   unsigned int		ratio;
-  cairo_matrix_t	transform;
+  SwfdecTransform	transform;
   SwfdecColorTransform	color_transform;
   char *		name;
   SwfdecEventList *	events;
@@ -89,15 +89,11 @@ struct _SwfdecMovie {
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root */
 
   /* positioning - the values are applied in this order */
-  SwfdecRect		extents;		/* the extents occupied after variables are applied */
-  SwfdecRect		original_extents;	/* the extents from all the children */
-  double      		x;			/* x offset in twips */
-  double		y;	      		/* y offset in twips */
-  double      		xscale;			/* x scale factor */
-  double      		yscale;			/* y scale factor */
-  double		rotation;     		/* rotation in degrees [-180,180] or NaN */
-  cairo_matrix_t	transform;		/* transformation matrix computed from above */
-  cairo_matrix_t	inverse_transform;	/* the inverse of the transformation matrix */
+  SwfdecRect		extents;		/* the extents occupied after transform is applied */
+  SwfdecRect		original_extents;	/* the extents from all children - unmodified */
+  SwfdecTransform	transform;		/* transformation to apply */
+  cairo_matrix_t	matrix;			/* cairo matrix computed from above */
+  cairo_matrix_t	inverse_matrix	;	/* the inverse of the cairo matrix */
   SwfdecColorTransform	color_transform;	/* scripted color transformation */
 
   /* iteration state */
@@ -109,8 +105,8 @@ struct _SwfdecMovie {
 
   /* leftover unimplemented variables from the Actionscript spec */
   //droptarget
-  char *target;
-  char *url;
+  //char *target;
+  //char *url;
 };
 
 struct _SwfdecMovieClass {

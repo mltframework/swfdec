@@ -210,13 +210,13 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
     x = (movie->extents.x1 + movie->extents.x0) / 2;
     y = (movie->extents.y1 + movie->extents.y0) / 2;
   } else {
-    x = movie->transform.x0;
-    y = movie->transform.y0;
+    x = 0;
+    y = 0;
   }
   SWFDEC_LOG ("center is at %g %g, mouse is at %g %g", x, y, mouse_x, mouse_y);
   if (mouse_x != x || mouse_y != y) {
-    movie->x += mouse_x - x;
-    movie->y += mouse_y - y;
+    movie->transform.x0 += mouse_x - x;
+    movie->transform.y0 += mouse_y - y;
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 }
@@ -318,6 +318,8 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   swfdec_player_lock (player);
+  x *= SWFDEC_TWIPS_SCALE_FACTOR;
+  y *= SWFDEC_TWIPS_SCALE_FACTOR;
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
@@ -483,14 +485,17 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
+  SwfdecRect tmp;
+
   if (swfdec_rect_is_empty (rect)) {
     g_assert_not_reached ();
     return;
   }
 
-  swfdec_rect_union (&player->invalid, &player->invalid, rect);
+  swfdec_rect_scale (&tmp, rect, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  swfdec_rect_union (&player->invalid, &player->invalid, &tmp);
   SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %g %g  %g %g",
-      rect->x0, rect->y0, rect->x1, rect->y1,
+      tmp.x0, tmp.y0, tmp.x1, tmp.y1,
       player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
 }
 
@@ -680,7 +685,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
 {
   static const SwfdecColorTransform trans = { 256, 0, 256, 0, 256, 0, 256, 0 };
   GList *walk;
-  SwfdecRect full = { 0, 0, player->width, player->height };
+  SwfdecRect real;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
@@ -689,13 +694,21 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
   if (!swfdec_player_is_initialized (player))
     return;
 
-  if (area == NULL)
-    area = &full;
-  if (swfdec_rect_is_empty (area))
-    return;
+  if (area == NULL) {
+    real.x0 = 0.0;
+    real.y0 = 0.0;
+    real.x1 = SWFDEC_DOUBLE_TO_TWIPS (player->width);
+    real.y1 = SWFDEC_DOUBLE_TO_TWIPS (player->height);
+  } else {
+    if (swfdec_rect_is_empty (area))
+      return;
+    swfdec_rect_scale (&real, area, SWFDEC_TWIPS_SCALE_FACTOR);
+  }
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
-      area->x0, area->y0, area->x1, area->y1);
-  cairo_rectangle (cr, area->x0, area->y0, area->x1 - area->x0, area->y1 - area->y0);
+      real.x0, real.y0, real.x1, real.y1);
+  cairo_save (cr);
+  cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  cairo_rectangle (cr, real.x0, real.y0, real.x1 - real.x0, real.y1 - real.y0);
   cairo_clip (cr);
   /* FIXME: find a nicer way to render the background */
   if (player->roots == NULL ||
@@ -707,9 +720,10 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
   }
 
   for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_render (walk->data, cr, &trans, area, TRUE);
+    swfdec_movie_render (walk->data, cr, &trans, &real, TRUE);
   }
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
+  cairo_restore (cr);
 }
 
 /**

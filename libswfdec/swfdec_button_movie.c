@@ -172,12 +172,14 @@ swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
   SwfdecContent *content;
 
   for (walk = button->records; walk; walk = walk->next) {
+    cairo_matrix_t matrix;
     content = walk->data;
     if (content->end <= SWFDEC_BUTTON_HIT)
       continue;
     tmpx = x;
     tmpy = y;
-    swfdec_matrix_transform_point_inverse (&content->transform, &tmpx, &tmpy);
+    swfdec_transform_to_matrix (&matrix, &content->transform);
+    swfdec_matrix_transform_point_inverse (&matrix, &tmpx, &tmpy);
 
     SWFDEC_LOG ("Checking button contents at %g %g (transformed from %g %g)", tmpx, tmpy, x, y);
     if (swfdec_graphic_mouse_in (content->graphic, tmpx, tmpy))

@@ -49,8 +49,8 @@ struct _SwfdecPlayer
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
-  double      		mouse_x;
-  double		mouse_y;
+  double      		mouse_x;		/* in twips */
+  double		mouse_y;		/* in twips */
   int			mouse_button; 		/* 0 for not pressed, 1 for pressed */
   SwfdecMovie *		mouse_grab;		/* movie that currently has the mouse */
   SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */

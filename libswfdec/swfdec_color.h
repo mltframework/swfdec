@@ -71,6 +71,7 @@ void swfdec_color_transform_chain (SwfdecColorTransform *dest,
 unsigned int swfdec_color_apply_transform (unsigned int in,
     const SwfdecColorTransform * trans);
 
+void swfdec_transform_init_identity (SwfdecTransform *trans);
 void swfdec_transform_to_matrix (cairo_matrix_t *matrix, const SwfdecTransform *trans);
 
 #endif

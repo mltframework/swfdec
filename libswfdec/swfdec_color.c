@@ -176,6 +176,17 @@ swfdec_cairo_matrix_ensure_invertible (cairo_matrix_t *matrix)
   }
 }
 
+void
+swfdec_transform_init_identity (SwfdecTransform *trans)
+{
+  trans->xx = SWFDEC_INT_TO_FIXED (1);
+  trans->yy = SWFDEC_INT_TO_FIXED (1);
+  trans->xy = 0;
+  trans->yx = 0;
+  trans->x0 = 0;
+  trans->y0 = 0;
+}
+
 /**
  * swfdec_transform_to_matrix:
  * @matrix: a cairo matrix

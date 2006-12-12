@@ -45,10 +45,9 @@ swfdec_movie_init (SwfdecMovie * movie)
 {
   movie->content = &default_content;
 
-  movie->xscale = 1.0;
-  movie->yscale = 1.0;
-  cairo_matrix_init_identity (&movie->transform);
-  cairo_matrix_init_identity (&movie->inverse_transform);
+  swfdec_transform_init_identity (&movie->transform);
+  cairo_matrix_init_identity (&movie->matrix);
+  cairo_matrix_init_identity (&movie->inverse_matrix);
   swfdec_color_transform_init_identity (&movie->color_transform);
 
   movie->visible = TRUE;
@@ -76,7 +75,7 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
     movie = movie->parent;
     if (movie->cache_state > SWFDEC_MOVIE_INVALID_EXTENTS)
       return;
-    swfdec_rect_transform (&rect, &rect, &movie->transform);
+    swfdec_rect_transform (&rect, &rect, &movie->matrix);
   }
   swfdec_player_invalidate (SWFDEC_ROOT_MOVIE (movie)->player, &rect);
 }
@@ -122,8 +121,7 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
     *extents = *rect;
     return;
   }
-  swfdec_rect_transform (extents, rect, &movie->transform);
-  swfdec_rect_transform (rect, rect, &movie->content->transform);
+  swfdec_rect_transform (extents, rect, &movie->matrix);
   if (movie->parent && movie->parent->cache_state < SWFDEC_MOVIE_INVALID_EXTENTS) {
     /* no need to invalidate here */
     movie->parent->cache_state = SWFDEC_MOVIE_INVALID_EXTENTS;
@@ -133,34 +131,10 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
 static void
 swfdec_movie_update_matrix (SwfdecMovie *movie)
 {
-  cairo_matrix_t *mat = &movie->transform;
-
-  cairo_matrix_init_translate (mat, movie->x, movie->y);
-  cairo_matrix_scale (mat, movie->xscale, movie->yscale);
-  if (finite (movie->rotation))
-    cairo_matrix_rotate (mat, movie->rotation * G_PI / 180);
-  cairo_matrix_multiply (mat, mat, &movie->content->transform);
-  movie->inverse_transform = *mat;
-  if (cairo_matrix_invert (&movie->inverse_transform)) {
-    /* the matrix is somehow weird, carefully adjust it */
-    mat = &movie->inverse_transform;
-    *mat = movie->content->transform;
-    if (cairo_matrix_invert (mat)) {
-      g_assert_not_reached ();
-    }
-    if (finite (movie->rotation))
-      cairo_matrix_rotate (mat, -movie->rotation * G_PI / 180);
-    if (movie->xscale == 0) {
-      cairo_matrix_scale (mat, G_MAXDOUBLE, 1);
-    } else {
-      cairo_matrix_scale (mat, 1 / movie->xscale, 1);
-    }
-    if (movie->yscale == 0) {
-      cairo_matrix_scale (mat, 1, G_MAXDOUBLE);
-    } else {
-      cairo_matrix_scale (mat, 1, 1 / movie->yscale);
-    }
-    cairo_matrix_translate (mat, -movie->x, -movie->y);
+  swfdec_transform_to_matrix (&movie->matrix, &movie->transform);
+  movie->inverse_matrix = movie->matrix;
+  if (cairo_matrix_invert (&movie->inverse_matrix)) {
+    g_assert_not_reached ();
   }
   swfdec_movie_update_extents (movie);
 }
@@ -251,6 +225,7 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   if (klass->content_changed)
     klass->content_changed (movie, content);
   movie->content = content;
+  movie->transform = content->transform;
 
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 }
@@ -393,7 +368,7 @@ void
 swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 {
   do {
-    cairo_matrix_transform_point (&movie->transform, x, y);
+    cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
 }
 
@@ -402,7 +377,7 @@ swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
   if (movie->parent)
     swfdec_movie_global_to_local (movie->parent, x, y);
-  cairo_matrix_transform_point (&movie->inverse_transform, x, y);
+  cairo_matrix_transform_point (&movie->inverse_matrix, x, y);
 }
 
 void
@@ -453,7 +428,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
   if (!swfdec_rect_contains (&movie->extents, x, y)) {
     return NULL;
   }
-  cairo_matrix_transform_point (&movie->inverse_transform, &x, &y);
+  cairo_matrix_transform_point (&movie->inverse_matrix, &x, &y);
 
   /* first check if the movie can handle mouse events, and if it can,
    * ignore its children.
@@ -473,7 +448,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 	SwfdecMovie *clip = walk->data;
 	if (clip->content->clip_depth) {
 	  double tmpx = x, tmpy = y;
-	  cairo_matrix_transform_point (&clip->inverse_transform, &tmpx, &tmpy);
+	  cairo_matrix_transform_point (&clip->inverse_matrix, &tmpx, &tmpy);
 	  if (!swfdec_movie_mouse_in (clip, tmpx, tmpy)) {
 	    SWFDEC_LOG ("skipping depth %d to %d due to clipping", clip->content->depth, clip->content->clip_depth);
 	    clip_depth = child->content->clip_depth;
@@ -533,11 +508,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   cairo_save (cr);
 
   SWFDEC_LOG ("transforming movie, transform: %g %g  %g %g   %g %g",
-      movie->transform.xx, movie->transform.yy,
-      movie->transform.xy, movie->transform.yx,
-      movie->transform.x0, movie->transform.y0);
-  cairo_transform (cr, &movie->transform);
-  swfdec_rect_transform (&rect, inval, &movie->inverse_transform);
+      movie->matrix.xx, movie->matrix.yy,
+      movie->matrix.xy, movie->matrix.yx,
+      movie->matrix.x0, movie->matrix.y0);
+  cairo_transform (cr, &movie->matrix);
+  swfdec_rect_transform (&rect, inval, &movie->inverse_matrix);
   SWFDEC_LOG ("%sinvalid area is now: %g %g  %g %g",  movie->parent ? "  " : "",
       rect.x0, rect.y0, rect.x1, rect.y1);
   swfdec_color_transform_chain (&trans, &movie->content->color_transform, color_transform);
@@ -742,8 +717,6 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   content = swfdec_content_new ((int) depth - 16384);
-  cairo_matrix_scale (&content->transform, 
-      1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
   content->name = g_strdup_printf ("_level%u", depth);
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);

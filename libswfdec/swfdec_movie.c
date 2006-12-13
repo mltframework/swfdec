@@ -230,9 +230,10 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   if (klass->content_changed)
     klass->content_changed (movie, content);
   movie->content = content;
-  movie->transform = content->transform;
-
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  if (!movie->modified) {
+    movie->transform = content->transform;
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  }
 }
 
 SwfdecMovie *

@@ -91,6 +91,7 @@ struct _SwfdecMovie {
   /* positioning - the values are applied in this order */
   SwfdecRect		extents;		/* the extents occupied after transform is applied */
   SwfdecRect		original_extents;	/* the extents from all children - unmodified */
+  gboolean		modified;		/* TRUE if the transform has been modified by scripts */
   SwfdecTransform	transform;		/* transformation to apply */
   cairo_matrix_t	matrix;			/* cairo matrix computed from above */
   cairo_matrix_t	inverse_matrix	;	/* the inverse of the cairo matrix */

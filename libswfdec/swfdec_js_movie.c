@@ -635,6 +635,7 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   SWFDEC_LOG ("setting x of %s from %d to %d", movie->name, movie->transform.x0,
       SWFDEC_DOUBLE_TO_TWIPS (d) - (int) floor (movie->original_extents.x0));
+  movie->modified = TRUE;
   movie->transform.x0 = SWFDEC_DOUBLE_TO_TWIPS (d) - floor (movie->original_extents.x0);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
@@ -670,6 +671,7 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to move y to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  movie->modified = TRUE;
   movie->transform.y0 = SWFDEC_DOUBLE_TO_TWIPS (d) - floor (movie->original_extents.y0);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
@@ -704,6 +706,7 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  movie->modified = TRUE;
   movie->transform.xx = SWFDEC_DOUBLE_TO_FIXED (d / 100);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
@@ -738,6 +741,7 @@ mc_yscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to set yscale to a non-finite value, ignoring");
     return JS_TRUE;
   }
+  movie->modified = TRUE;
   movie->transform.yy = SWFDEC_DOUBLE_TO_FIXED (d / 100);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
@@ -934,6 +938,7 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   swfdec_movie_update (movie);
+  movie->modified = TRUE;
   org = SWFDEC_TWIPS_TO_DOUBLE (movie->original_extents.x1 - movie->original_extents.x0);
   if (org != 0) {
     movie->transform.xx = SWFDEC_DOUBLE_TO_FIXED (d / org);
@@ -980,6 +985,7 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   swfdec_movie_update (movie);
+  movie->modified = TRUE;
   org = SWFDEC_TWIPS_TO_DOUBLE (movie->original_extents.y1 - movie->original_extents.y0);
   if (org != 0) {
     movie->transform.yy = SWFDEC_DOUBLE_TO_FIXED (d / org);
@@ -1025,6 +1031,7 @@ mc_rotation_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_TRUE;
     SWFDEC_ERROR ("FIXME: implement correct rounding errors here");
   }
+  movie->modified = TRUE;
   //movie->rotation = d;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 

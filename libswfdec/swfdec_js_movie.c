@@ -519,7 +519,6 @@ swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 }
 
 static JSFunctionSpec movieclip_methods[] = {
-  //{"attachMovie", mc_attachMovie, 4, 0},
   { "duplicateMovieClip", swfdec_js_movie_duplicateMovieClip, 2, 0, 0 },
   { "eval",		swfdec_js_global_eval,	      	1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },
@@ -541,68 +540,6 @@ static JSFunctionSpec movieclip_methods[] = {
   { "toString",	  	swfdec_js_movie_to_string,	0, 0, 0 },
   { NULL }
 };
-
-#if 0
-static JSBool
-mc_attachMovie(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-    jsval *rval)
-{
-  SwfdecMovie *parent_movie, *child_movie;
-  SwfdecSprite *parent_sprite, *attach_sprite;
-  JSString *idName, *newName;
-  int depth;
-  JSObject *initObject, *child_mc;
-  SwfdecActionContext *context;
-
-  context = JS_GetContextPrivate (cx);
-
-  idName = JS_ValueToString (cx, argv[0]);
-  newName = JS_ValueToString (cx, argv[1]);
-  JS_ValueToInt32 (cx, argv[2], &depth);
-  JS_ValueToObject (cx, argv[3], &initObject);
-
-  SWFDEC_DEBUG("placing sprite %s as %s at depth %d",
-      JS_GetStringBytes (idName), JS_GetStringBytes (newName), depth);
-
-  attach_sprite = SWFDEC_SPRITE(swfdec_exports_lookup (context->s,
-    JS_GetStringBytes(idName)));
-  if (!attach_sprite) {
-    SWFDEC_WARNING("Couldn't find sprite %s", JS_GetStringBytes (idName));
-    *rval = JSVAL_VOID;
-    return JS_TRUE;
-  }
-
-  parent_movie = JS_GetPrivate (cx, obj);
-  if (!parent_movie) {
-    SWFDEC_WARNING("couldn't get moviement");
-    *rval = JSVAL_VOID;
-    return JS_TRUE;
-  }
-  if (parent_movie->id == 0)
-    parent_sprite = context->s->main_sprite;
-  else
-    parent_sprite = SWFDEC_SPRITE(swfdec_object_get (context->s,
-        parent_movie->id));
-
-  swfdec_sprite_frame_remove_movie (context->s, &parent_sprite->frames[parent_movie->first_index],
-      depth);
-
-  /* FIXME we need a separate list of added moviements */
-  child_movie = swfdec_spritemovie_new ();
-  child_movie->depth = depth;
-  cairo_matrix_init_identity (&child_movie->transform);
-  swfdec_color_transform_init_identity (&child_movie->color_transform);
-
-  swfdec_sprite_frame_add_movie (&parent_sprite->frames[parent_movie->first_index],
-      child_movie);
-  child_mc = movieclip_new (context, child_movie);
-  *rval = OBJECT_TO_JSVAL(child_mc);
-
-  JS_SetProperty (cx, obj, JS_GetStringBytes(newName), rval);
-
-  return JS_TRUE;
-}
-#endif
 
 static JSBool
 mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)

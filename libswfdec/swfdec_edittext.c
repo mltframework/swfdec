@@ -109,6 +109,9 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   swfdec_bits_get_rect (b, &SWFDEC_GRAPHIC (text)->extents);
+  SWFDEC_LOG ("  extents: %d %d  %d %d", 
+      SWFDEC_GRAPHIC (text)->extents.x0, SWFDEC_GRAPHIC (text)->extents.y0,
+      SWFDEC_GRAPHIC (text)->extents.x1, SWFDEC_GRAPHIC (text)->extents.y1);
   swfdec_bits_syncbits (b);
   has_text = swfdec_bits_getbit (b);
   text->wrap = swfdec_bits_getbit (b);
@@ -138,7 +141,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s)
       SWFDEC_ERROR ("id %u does not specify a font", id);
     }
     text->height = swfdec_bits_get_u16 (b);
-    SWFDEC_LOG ("  color = %u", text->height);
+    SWFDEC_LOG ("  height = %u", text->height);
   }
   if (has_color) {
     text->color = swfdec_bits_get_rgba (b);

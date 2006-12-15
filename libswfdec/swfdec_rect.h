@@ -13,21 +13,15 @@ struct _SwfdecRect
 };
 
 void swfdec_rect_init_empty (SwfdecRect *rect);
-void swfdec_rect_init (SwfdecRect *rect, double x, double y, double width, double height);
 
 gboolean swfdec_rect_intersect (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b);
 void swfdec_rect_union (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b);
 void swfdec_rect_subtract (SwfdecRect *dest, const SwfdecRect *a, const SwfdecRect *b);
-void swfdec_rect_copy (SwfdecRect * dest, const SwfdecRect * a);
 void swfdec_rect_scale (SwfdecRect *dest, const SwfdecRect *src, double factor);
 gboolean swfdec_rect_is_empty (const SwfdecRect * a);
 /* FIXME: rename to _contains_point and _contains instead of _inside? */
 gboolean swfdec_rect_contains (const SwfdecRect *rect, double x, double y);
 gboolean swfdec_rect_inside (const SwfdecRect *outer, const SwfdecRect *inner);
 void swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix);
-void swfdec_rect_transform_inverse (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix);
-
-/* FIXME: where to put this? */
-void swfdec_matrix_transform_point_inverse (cairo_matrix_t *matrix, double *x, double *y);
 
 #endif

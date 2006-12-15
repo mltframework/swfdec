@@ -36,20 +36,6 @@ swfdec_rect_init_empty (SwfdecRect *rect)
   rect->y1 = 0;
 }
 
-void 
-swfdec_rect_init (SwfdecRect *rect, double x, double y, 
-    double width, double height)
-{
-  g_return_if_fail (rect != NULL);
-  g_return_if_fail (width >= 0);
-  g_return_if_fail (height >= 0);
-
-  rect->x0 = x;
-  rect->y0 = y;
-  rect->x1 = x + width;
-  rect->y1 = y + height;
-}
-
 gboolean
 swfdec_rect_intersect (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b)
 {
@@ -115,15 +101,6 @@ swfdec_rect_subtract (SwfdecRect *dest, const SwfdecRect *a, const SwfdecRect *b
   } else {
     *dest = *a;
   }
-}
-
-void
-swfdec_rect_copy (SwfdecRect * dest, const SwfdecRect * a)
-{
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (a != NULL);
-
-  *dest = *a;
 }
 
 void 
@@ -207,24 +184,3 @@ swfdec_rect_inside (const SwfdecRect *outer, const SwfdecRect *inner)
 	 outer->y1 >= inner->y1;
 }
 
-void
-swfdec_rect_transform_inverse (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix)
-{
-  cairo_matrix_t tmp = *matrix;
-  if (cairo_matrix_invert (&tmp)) {
-    /* FIXME: do we need to handle this sanely? */
-    g_assert_not_reached ();
-  }
-  swfdec_rect_transform (dest, src, &tmp);
-}
-
-void 
-swfdec_matrix_transform_point_inverse (cairo_matrix_t *matrix, double *x, double *y)
-{
-  cairo_matrix_t tmp = *matrix;
-  if (cairo_matrix_invert (&tmp)) {
-    /* FIXME: do we need to handle this sanely? */
-    g_assert_not_reached ();
-  }
-  cairo_matrix_transform_point (&tmp, x, y);
-}

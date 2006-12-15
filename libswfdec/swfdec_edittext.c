@@ -109,7 +109,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   swfdec_bits_get_rect (b, &SWFDEC_GRAPHIC (text)->extents);
-  SWFDEC_LOG ("  extents: %d %d  %d %d", 
+  SWFDEC_LOG ("  extents: %g %g  %g %g", 
       SWFDEC_GRAPHIC (text)->extents.x0, SWFDEC_GRAPHIC (text)->extents.y0,
       SWFDEC_GRAPHIC (text)->extents.x1, SWFDEC_GRAPHIC (text)->extents.y1);
   swfdec_bits_syncbits (b);

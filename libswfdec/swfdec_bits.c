@@ -305,12 +305,13 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
 }
 
 void
-swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix)
+swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
+    cairo_matrix_t *inverse)
 {
   SwfdecTransform trans;
 
   swfdec_bits_get_transform (bits, &trans);
-  swfdec_transform_to_matrix (matrix, &trans);
+  swfdec_transform_to_matrix (matrix, inverse, &trans);
 }
 
 void

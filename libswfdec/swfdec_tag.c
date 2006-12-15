@@ -103,7 +103,7 @@ define_text (SwfdecSwfDecoder * s, int rgba)
   glyph.color = 0xffffffff;
 
   swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (text)->extents);
-  swfdec_bits_get_matrix (bits, &text->transform);
+  swfdec_bits_get_matrix (bits, &text->transform, &text->transform_inverse);
   swfdec_bits_syncbits (bits);
   n_glyph_bits = swfdec_bits_get_u8 (bits);
   n_advance_bits = swfdec_bits_get_u8 (bits);
@@ -366,7 +366,7 @@ swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent 
     SwfdecRect rect;
     cairo_matrix_t matrix;
     cur->end = 4;
-    swfdec_transform_to_matrix (&matrix, &cur->transform);
+    swfdec_transform_to_matrix (&matrix, NULL, &cur->transform);
     swfdec_rect_transform (&rect, &content->graphic->extents, &matrix);
     swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
 	&SWFDEC_GRAPHIC (button)->extents, &rect);

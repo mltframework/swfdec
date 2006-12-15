@@ -131,11 +131,8 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
 static void
 swfdec_movie_update_matrix (SwfdecMovie *movie)
 {
-  swfdec_transform_to_matrix (&movie->matrix, &movie->transform);
-  movie->inverse_matrix = movie->matrix;
-  if (cairo_matrix_invert (&movie->inverse_matrix)) {
-    g_assert_not_reached ();
-  }
+  swfdec_transform_to_matrix (&movie->matrix, &movie->inverse_matrix, 
+      &movie->transform);
   swfdec_movie_update_extents (movie);
 }
 

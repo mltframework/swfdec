@@ -36,7 +36,7 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
   unsigned int i;
   SwfdecText *text = SWFDEC_TEXT (graphic);
 
-  swfdec_matrix_transform_point_inverse (&text->transform, &x, &y);
+  cairo_matrix_transform_point (&text->transform_inverse, &x, &y);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -65,7 +65,7 @@ swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr,
 
   cairo_transform (cr, &text->transform);
   /* scale by bounds */
-  swfdec_rect_transform_inverse (&inval_moved, inval, &text->transform);
+  swfdec_rect_transform (&inval_moved, inval, &text->transform_inverse);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecShape *shape;
@@ -86,11 +86,15 @@ swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr,
 	glyph->height / SWFDEC_TEXT_SCALE_FACTOR);
     cairo_save (cr);
     cairo_transform (cr, &pos);
-    swfdec_rect_transform_inverse (&rect, &inval_moved, &pos);
-    color = swfdec_color_apply_transform (glyph->color, trans);
-    swfdec_color_transform_init_color (&force_color, color);
-    swfdec_graphic_render (SWFDEC_GRAPHIC (shape), cr, 
-	&force_color, &rect, fill);
+    if (!cairo_matrix_invert (&pos)) {
+      swfdec_rect_transform (&rect, &inval_moved, &pos);
+      color = swfdec_color_apply_transform (glyph->color, trans);
+      swfdec_color_transform_init_color (&force_color, color);
+      swfdec_graphic_render (SWFDEC_GRAPHIC (shape), cr, 
+	  &force_color, &rect, fill);
+    } else {
+      SWFDEC_ERROR ("non-invertible matrix!");
+    }
     cairo_restore (cr);
   }
 }

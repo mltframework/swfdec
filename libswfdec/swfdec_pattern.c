@@ -449,7 +449,7 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
     SWFDEC_LOG ("    color %08x", SWFDEC_COLOR_PATTERN (pattern)->start_color);
   } else if (paint_style_type == 0x10 || paint_style_type == 0x12) {
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
-    swfdec_bits_get_matrix (bits, &pattern->start_transform);
+    swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
     pattern->end_transform = pattern->start_transform;
     if (rgba) {
       SWFDEC_GRADIENT_PATTERN (pattern)->gradient = swfdec_bits_get_gradient_rgba (bits);
@@ -466,11 +466,11 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
       pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
       SWFDEC_COLOR_PATTERN (pattern)->start_color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
-      swfdec_bits_get_matrix (bits, &pattern->start_transform);
+      swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
       pattern->end_transform = pattern->start_transform;
     } else {
       pattern = g_object_new (SWFDEC_TYPE_IMAGE_PATTERN, NULL);
-      swfdec_bits_get_matrix (bits, &pattern->start_transform);
+      swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
       pattern->end_transform = pattern->start_transform;
       SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, paint_id);
       if (!SWFDEC_IS_IMAGE (SWFDEC_IMAGE_PATTERN (pattern)->image)) {
@@ -532,8 +532,8 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
 	SWFDEC_COLOR_PATTERN (pattern)->end_color);
   } else if (paint_style_type == 0x10 || paint_style_type == 0x12) {
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
-    swfdec_bits_get_matrix (bits, &pattern->start_transform);
-    swfdec_bits_get_matrix (bits, &pattern->end_transform);
+    swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
+    swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);
     SWFDEC_GRADIENT_PATTERN (pattern)->gradient = swfdec_bits_get_morph_gradient (bits);
     SWFDEC_GRADIENT_PATTERN (pattern)->radial = (paint_style_type == 0x12);
     SWFDEC_GRADIENT_PATTERN (pattern)->morph = TRUE;
@@ -546,12 +546,12 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
       pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
       SWFDEC_COLOR_PATTERN (pattern)->start_color = SWF_COLOR_COMBINE (0, 255, 255, 255);
       SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
-      swfdec_bits_get_matrix (bits, &pattern->start_transform);
-      swfdec_bits_get_matrix (bits, &pattern->end_transform);
+      swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
+      swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);
     } else {
       pattern = g_object_new (SWFDEC_TYPE_IMAGE_PATTERN, NULL);
-      swfdec_bits_get_matrix (bits, &pattern->start_transform);
-      swfdec_bits_get_matrix (bits, &pattern->end_transform);
+      swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
+      swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);
       SWFDEC_IMAGE_PATTERN (pattern)->image = swfdec_swf_decoder_get_character (dec, paint_id);
       if (!SWFDEC_IS_IMAGE (SWFDEC_IMAGE_PATTERN (pattern)->image)) {
 	g_object_unref (pattern);

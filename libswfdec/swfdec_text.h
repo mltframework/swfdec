@@ -52,6 +52,7 @@ struct _SwfdecText {
 
   GArray *		glyphs;
   cairo_matrix_t	transform;
+  cairo_matrix_t	transform_inverse;
 };
 
 struct _SwfdecTextClass {

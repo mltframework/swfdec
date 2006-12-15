@@ -445,7 +445,7 @@ gst_swfdec_render_image (GstSwfdec *swfdec)
   cr = cairo_create (surface);
   cairo_surface_destroy (surface);
 
-  swfdec_player_render (swfdec->player, cr, NULL);
+  swfdec_player_render (swfdec->player, cr, 0.0, 0.0, 0.0, 0.0);
 
   cairo_destroy (cr);
   return buffer;

@@ -32,7 +32,7 @@ save_to_svg (GtkWidget *button, SwfdecPlayer *player)
 	w, h);
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
-    swfdec_player_render (player, cr, NULL);
+    swfdec_player_render (player, cr, 0.0, 0.0, 0.0, 0.0);
     cairo_show_page (cr);
     cairo_destroy (cr);
   }

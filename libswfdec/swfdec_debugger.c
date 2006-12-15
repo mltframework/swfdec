@@ -196,7 +196,12 @@ swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
   }
   g_object_thaw_notify (G_OBJECT (debugger));
   if (!swfdec_rect_is_empty (&player->invalid)) {
-    g_signal_emit_by_name (player, "invalidate", &player->invalid);
+    double x, y, width, height;
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
+    g_signal_emit_by_name (player, "invalidate", x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }
 

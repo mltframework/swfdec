@@ -61,7 +61,10 @@ void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 void		swfdec_player_iterate		(SwfdecPlayer *	player);
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,
-						 SwfdecRect *	area);
+						 double		x,
+						 double		y,
+						 double		width,
+						 double		height);
 void		swfdec_player_handle_mouse	(SwfdecPlayer *	player, 
 						 double		x,
 						 double		y,

@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <stdlib.h>
 #include <liboil/liboil.h>
 
@@ -30,11 +31,10 @@
 #include "swfdec_event.h"
 #include "swfdec_js.h"
 #include "swfdec_loader_internal.h"
+#include "swfdec_marshal.h"
 #include "swfdec_movie.h"
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite_movie.h"
-
-#include "swfdec_marshal.c"
 
 /*** Actions ***/
 
@@ -214,7 +214,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
     y = 0;
   }
   SWFDEC_LOG ("center is at %g %g, mouse is at %g %g", x, y, mouse_x, mouse_y);
-  if (mouse_x != x || mouse_y != y) {
+  if (mouse_x - x != movie->transform.x0 || mouse_y -y != movie->transform.y0) {
     movie->transform.x0 += mouse_x - x;
     movie->transform.y0 += mouse_y - y;
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
@@ -254,18 +254,18 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
       player->mouse_drag_rect.x0, player->mouse_drag_rect.y0,
       player->mouse_drag_rect.x1, player->mouse_drag_rect.y1);
   /* FIXME: need a way to make sure we get updated */
+  if (drag) {
+    swfdec_movie_update (drag);
+    swfdec_player_update_drag_movie (player);
+  }
 }
 
 static void
-swfdec_player_do_mouse_move (SwfdecPlayer *player)
+swfdec_player_update_mouse_position (SwfdecPlayer *player)
 {
   GList *walk;
   SwfdecMovie *mouse_grab = NULL;
 
-  swfdec_player_update_drag_movie (player);
-  for (walk = player->movies; walk; walk = walk->next) {
-    swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
-  }
   if (player->mouse_button) {
     mouse_grab = player->mouse_grab;
   } else {
@@ -284,6 +284,18 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   player->mouse_grab = mouse_grab;
   if (mouse_grab)
     swfdec_movie_send_mouse_change (mouse_grab, FALSE);
+}
+
+static void
+swfdec_player_do_mouse_move (SwfdecPlayer *player)
+{
+  GList *walk;
+
+  swfdec_player_update_drag_movie (player);
+  for (walk = player->movies; walk; walk = walk->next) {
+    swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
+  }
+  swfdec_player_update_mouse_position (player);
 }
 
 static void
@@ -308,7 +320,12 @@ static void
 swfdec_player_emit_signals (SwfdecPlayer *player)
 {
   if (!swfdec_rect_is_empty (&player->invalid)) {
-    g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid);
+    double x, y, width, height;
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
+    g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }
 }
@@ -390,7 +407,10 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
     /* update the state of the mouse when stuff below it moved */
     if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
       SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
-      swfdec_player_do_mouse_move (player);
+      swfdec_player_update_mouse_position (player);
+      for (walk = player->roots; walk; walk = walk->next) {
+	swfdec_movie_update (walk->data);
+      }
     }
     swfdec_rect_union (&old_inval, &old_inval, &player->invalid);
     swfdec_rect_init_empty (&player->invalid);
@@ -441,8 +461,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
       G_TYPE_NONE, 1, G_TYPE_STRING);
   signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-      G_TYPE_NONE, 1, G_TYPE_POINTER);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_DOUBLE_DOUBLE,
+      G_TYPE_NONE, 4, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
   signals[ITERATE] = g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, iterate), 
       NULL, NULL, g_cclosure_marshal_VOID__VOID,
@@ -485,17 +505,14 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
-  SwfdecRect tmp;
-
   if (swfdec_rect_is_empty (rect)) {
     g_assert_not_reached ();
     return;
   }
 
-  swfdec_rect_scale (&tmp, rect, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
-  swfdec_rect_union (&player->invalid, &player->invalid, &tmp);
+  swfdec_rect_union (&player->invalid, &player->invalid, rect);
   SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %g %g  %g %g",
-      tmp.x0, tmp.y0, tmp.x1, tmp.y1,
+      rect->x0, rect->y0, rect->x1, rect->y1,
       player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
 }
 
@@ -676,12 +693,16 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
  * swfdec_player_render:
  * @dec: a #SwfdecPlayer
  * @cr: #cairo_t to render to
- * @area: #SwfdecRect describing the area to render or NULL for whole area
+ * @x: x coordinate of top left position to render
+ * @y: y coordinate of top left position to render
+ * @width: width of area to render or 0 for full width
+ * @height: height of area to render or 0 for full height
  *
- * Renders the given @area of the current frame to @cr.
+ * Renders the given area of the current frame to @cr.
  **/
 void
-swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
+swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, 
+    double x, double y, double width, double height)
 {
   static const SwfdecColorTransform trans = { 256, 0, 256, 0, 256, 0, 256, 0 };
   GList *walk;
@@ -689,27 +710,27 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *area)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
+  g_return_if_fail (width >= 0.0);
+  g_return_if_fail (height >= 0.0);
 
   /* FIXME: fail when !initialized? */
   if (!swfdec_player_is_initialized (player))
     return;
 
-  if (area == NULL) {
-    real.x0 = 0.0;
-    real.y0 = 0.0;
-    real.x1 = SWFDEC_DOUBLE_TO_TWIPS (player->width);
-    real.y1 = SWFDEC_DOUBLE_TO_TWIPS (player->height);
-  } else {
-    if (swfdec_rect_is_empty (area))
-      return;
-    swfdec_rect_scale (&real, area, SWFDEC_TWIPS_SCALE_FACTOR);
-  }
+  if (width == 0.0)
+    width = player->width;
+  if (height == 0.0)
+    height = player->height;
+  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR);
+  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR);
+  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR);
+  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR);
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
       real.x0, real.y0, real.x1, real.y1);
   cairo_save (cr);
-  cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
-  cairo_rectangle (cr, real.x0, real.y0, real.x1 - real.x0, real.y1 - real.y0);
+  cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
+  cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
   /* FIXME: find a nicer way to render the background */
   if (player->roots == NULL ||
       !SWFDEC_IS_SPRITE_MOVIE (player->roots->data) ||

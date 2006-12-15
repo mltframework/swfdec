@@ -91,7 +91,6 @@ static gboolean
 swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 {
   SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
-  SwfdecRect rect;
   cairo_t *cr;
   cairo_surface_t *surface = NULL;
 
@@ -108,9 +107,9 @@ swfdec_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
     cairo_surface_destroy (surface);
   }
   cairo_scale (cr, widget->real_scale, widget->real_scale);
-  swfdec_rect_init (&rect, event->area.x / widget->real_scale, event->area.y / widget->real_scale, 
+  swfdec_player_render (widget->player, cr,
+      event->area.x / widget->real_scale, event->area.y / widget->real_scale, 
       event->area.width / widget->real_scale, event->area.height / widget->real_scale);
-  swfdec_player_render (widget->player, cr, &rect);
   if (widget->use_image) {
     cairo_t *crw = gdk_cairo_create (gtkwidget->window);
     cairo_set_source_surface (crw, surface, event->area.x, event->area.y);
@@ -316,20 +315,18 @@ swfdec_widget_init (SwfdecWidget * widget)
 }
 
 static void
-swfdec_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRect *invalid, SwfdecWidget *widget)
+swfdec_widget_invalidate_cb (SwfdecPlayer *player, double x, double y, 
+    double width, double height, SwfdecWidget *widget)
 {
-  GdkRectangle gdkrect;
-  SwfdecRect rect;
+  GdkRectangle rect;
 
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  swfdec_rect_scale (&rect, invalid, widget->real_scale);
-  gdkrect.x = floor (rect.x0);
-  gdkrect.y = floor (rect.y0);
-  gdkrect.width = ceil (rect.x1) - gdkrect.x;
-  gdkrect.height = ceil (rect.y1) - gdkrect.y;
-  //g_print ("queing draw of %g %g  %g %g\n", rect.x0, rect.y0, rect.x1, rect.y1);
-  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &gdkrect, FALSE);
+  rect.x = floor (x * widget->real_scale);
+  rect.y = floor (y * widget->real_scale);
+  rect.width = ceil ((x + width) * widget->real_scale) - rect.x;
+  rect.height = ceil ((y + height) * widget->real_scale) - rect.y;
+  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &rect, FALSE);
 }
 
 static void

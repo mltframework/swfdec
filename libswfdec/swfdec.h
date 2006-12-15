@@ -26,6 +26,5 @@
 #include <libswfdec/swfdec_buffer.h>
 #include <libswfdec/swfdec_loader.h>
 #include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_rect.h>
 
 #endif

@@ -11,4 +11,5 @@ Makefile.in
 *.lo
 *.loT
 
-swfdec-mozilla-player
+swfdec_marshal.c
+swfdec_marshal.h

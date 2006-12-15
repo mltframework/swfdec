@@ -47,6 +47,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
 	swfdec_js_sound.c \
+	swfdec_marshal.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
 	swfdec_movie.c \
@@ -107,7 +108,7 @@ noinst_HEADERS = \
 	swfdec_image.h \
 	swfdec_js.h \
 	swfdec_loader_internal.h \
-	swfdec_marshal.c \
+	swfdec_marshal.h \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
@@ -124,4 +125,25 @@ noinst_HEADERS = \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_types.h
+
+EXTRA_DIST = swfdec_marshal.list
+
+BUILT_SOURCES = \
+	swfdec_marshal.c \
+	swfdec_marshal.h
+
+CLEANFILES = \
+	swfdec_marshal.c \
+	swfdec_marshal.h
+
+swfdec_marshal.h: swfdec_marshal.list
+	$(GLIB_GENMARSHAL) --prefix=swfdec_marshal $(srcdir)/swfdec_marshal.list --header >> xgen-smh \
+	&& (cmp -s xgen-smh swfdec_marshal.h || cp xgen-smh swfdec_marshal.h) \
+	&& rm -f xgen-smh
+
+swfdec_marshal.c: swfdec_marshal.list swfdec_marshal.h
+	(echo "#include \"swfdec_marshal.h\""; \
+	 $(GLIB_GENMARSHAL) --prefix=swfdec_marshal $(srcdir)/swfdec_marshal.list --body;) >> xgen-smc \
+	&& cp xgen-smc swfdec_marshal.c \
+	&& rm -f xgen-smc 
 

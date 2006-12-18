@@ -188,8 +188,13 @@ swfdec_matrix_get_xscale (const cairo_matrix_t *matrix)
 {
   double alpha;
 
-  alpha = atan2 (matrix->yx, matrix->xx);
-  return matrix->xx / cos (alpha) * 100;
+  if (matrix->xx) {
+    alpha = atan2 (matrix->yx, matrix->xx);
+    alpha = cos (alpha);
+    return matrix->xx / alpha * 100;
+  } else {
+    return matrix->yx * 100;
+  }
 }
 
 double
@@ -197,8 +202,13 @@ swfdec_matrix_get_yscale (const cairo_matrix_t *matrix)
 {
   double alpha;
 
-  alpha = atan2 (matrix->xy, matrix->yy);
-  return matrix->yy / cos (alpha) * 100;
+  if (matrix->yy) {
+    alpha = atan2 (matrix->xy, matrix->yy);
+    alpha = cos (alpha);
+    return matrix->yy / alpha * 100;
+  } else {
+    return matrix->xy * 100;
+  }
 }
 
 double

@@ -610,8 +610,8 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   movie->modified = TRUE;
   d = SWFDEC_DOUBLE_TO_TWIPS (d);
-  if (d != movie->matrix.x0) {
-    movie->matrix.x0 = d;
+  if (d != movie->matrix.y0) {
+    movie->matrix.y0 = d;
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 

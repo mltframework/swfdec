@@ -320,7 +320,8 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
     matrix->xx = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_scale_bits));
     matrix->yy = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_scale_bits));
 
-    SWFDEC_LOG ("scalefactors: x = %g, y = %g", matrix->xx, matrix->yy);
+    SWFDEC_LOG ("scalefactors: x = %d/65536, y = %d/65536", 
+	SWFDEC_DOUBLE_TO_FIXED (matrix->xx), SWFDEC_DOUBLE_TO_FIXED (matrix->yy));
   } else {
     SWFDEC_LOG ("no scalefactors given");
     matrix->xx = 1.0;
@@ -332,7 +333,9 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
     matrix->yx = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_rotate_bits));
     matrix->xy = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_rotate_bits));
 
-    SWFDEC_LOG ("skew: xy = %g, yx = %g", matrix->xy, matrix->yx);
+    SWFDEC_LOG ("skew: xy = %d/65536, yx = %d/65536", 
+	SWFDEC_DOUBLE_TO_FIXED (matrix->xy), 
+	SWFDEC_DOUBLE_TO_FIXED (matrix->yx));
   } else {
     SWFDEC_LOG ("no rotation");
     matrix->xy = 0;

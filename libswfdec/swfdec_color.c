@@ -153,11 +153,13 @@ swfdec_color_transform_chain (SwfdecColorTransform *dest,
   dest->ab = (last->aa * first->ab >> 8) + last->ab;
 }
 
-static void
-swfdec_cairo_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse)
+void
+swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse)
 {
   cairo_matrix_t tmp;
   
+  g_return_if_fail (matrix != NULL);
+
   if (inverse == NULL)
     inverse = &tmp;
   
@@ -181,37 +183,27 @@ swfdec_cairo_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *i
   }
 }
 
-void
-swfdec_transform_init_identity (SwfdecTransform *trans)
+double
+swfdec_matrix_get_xscale (const cairo_matrix_t *matrix)
 {
-  trans->xx = SWFDEC_INT_TO_FIXED (1);
-  trans->yy = SWFDEC_INT_TO_FIXED (1);
-  trans->xy = 0;
-  trans->yx = 0;
-  trans->x0 = 0;
-  trans->y0 = 0;
+  double alpha;
+
+  alpha = atan2 (matrix->yx, matrix->xx);
+  return matrix->xx / cos (alpha) * 100;
 }
 
-/**
- * swfdec_transform_to_matrix:
- * @matrix: pointer to a cairo matrix
- * @inverse: pointer to a cairo matrix to hold the reverse of @matrix or NULL
- * @trans: a #SwfdecTransform
- *
- * Applies the swfdec transform to a cairo matrix.
- **/
-void
-swfdec_transform_to_matrix (cairo_matrix_t *matrix, cairo_matrix_t *inverse,
-    const SwfdecTransform *trans)
+double
+swfdec_matrix_get_yscale (const cairo_matrix_t *matrix)
 {
-  g_return_if_fail (matrix != NULL);
-  g_return_if_fail (trans != NULL);
+  double alpha;
 
-  matrix->xx = SWFDEC_FIXED_TO_DOUBLE (trans->xx);
-  matrix->xy = SWFDEC_FIXED_TO_DOUBLE (trans->xy);
-  matrix->yx = SWFDEC_FIXED_TO_DOUBLE (trans->yx);
-  matrix->yy = SWFDEC_FIXED_TO_DOUBLE (trans->yy);
-  matrix->x0 = trans->x0;
-  matrix->y0 = trans->y0;
-  swfdec_cairo_matrix_ensure_invertible (matrix, inverse);
+  alpha = atan2 (matrix->xy, matrix->yy);
+  return matrix->yy / cos (alpha) * 100;
 }
+
+double
+swfdec_matrix_get_rotation (const cairo_matrix_t *matrix)
+{
+  return atan2 (matrix->yx, matrix->xx) * 180 / G_PI;
+}
+

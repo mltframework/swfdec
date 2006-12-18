@@ -364,10 +364,8 @@ swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent 
   }
   if (cur) {
     SwfdecRect rect;
-    cairo_matrix_t matrix;
     cur->end = 4;
-    swfdec_transform_to_matrix (&matrix, NULL, &cur->transform);
-    swfdec_rect_transform (&rect, &content->graphic->extents, &matrix);
+    swfdec_rect_transform (&rect, &content->graphic->extents, &cur->transform);
     swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
 	&SWFDEC_GRAPHIC (button)->extents, &rect);
   }
@@ -428,12 +426,10 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 	character, depth);
     content = swfdec_content_new (depth);
 
-    swfdec_bits_get_transform (bits, &content->transform);
-    SWFDEC_LOG ("matrix: %g %g  %g %g   %d %d",
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.xx), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.yy), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.xy), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.yx),
+    swfdec_bits_get_matrix (bits, &content->transform, NULL);
+    SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
+	content->transform.xx, content->transform.yy, 
+	content->transform.xy, content->transform.yx,
 	content->transform.x0, content->transform.y0);
     swfdec_bits_get_color_transform (bits, &content->color_transform);
 
@@ -509,12 +505,10 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 	character, depth);
     content = swfdec_content_new (depth);
 
-    swfdec_bits_get_transform (bits, &content->transform);
-    SWFDEC_LOG ("matrix: %g %g  %g %g   %d %d",
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.xx), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.yy), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.xy), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.yx),
+    swfdec_bits_get_matrix (bits, &content->transform, NULL);
+    SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
+	content->transform.xx, content->transform.yy, 
+	content->transform.xy, content->transform.yx,
 	content->transform.x0, content->transform.y0);
 
     content->graphic = swfdec_swf_decoder_get_character (s, character);

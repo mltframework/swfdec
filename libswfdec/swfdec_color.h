@@ -26,16 +26,6 @@
 
 typedef unsigned int SwfdecColor;
 
-/* NB: transforms may not be invertible like cairo_matrix_t */
-struct _SwfdecTransform {
-  SwfdecFixed	xx;			/* scale in x direction */
-  SwfdecFixed	yy;			/* scale in y direction */
-  SwfdecFixed	xy;			/* skew from y to x */
-  SwfdecFixed	yx;			/* skew from x to y */
-  SwfdecTwips	x0;			/* offset in x direction */
-  SwfdecTwips	y0;			/* offset in y direction */
-};
-
 struct _SwfdecColorTransform {
   /* naming here is taken from ActionScript, where ?a is the multiplier and ?b the offset */
   int ra, rb, ga, gb, ba, bb, aa, ab;
@@ -71,8 +61,9 @@ void swfdec_color_transform_chain (SwfdecColorTransform *dest,
 unsigned int swfdec_color_apply_transform (unsigned int in,
     const SwfdecColorTransform * trans);
 
-void swfdec_transform_init_identity (SwfdecTransform *trans);
-void swfdec_transform_to_matrix (cairo_matrix_t *matrix, cairo_matrix_t *inverse,
-    const SwfdecTransform *trans);
+void swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse);
+double swfdec_matrix_get_xscale (const cairo_matrix_t *matrix);
+double swfdec_matrix_get_yscale (const cairo_matrix_t *matrix);
+double swfdec_matrix_get_rotation (const cairo_matrix_t *matrix);
 
 #endif

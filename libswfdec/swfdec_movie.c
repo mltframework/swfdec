@@ -45,7 +45,6 @@ swfdec_movie_init (SwfdecMovie * movie)
 {
   movie->content = &default_content;
 
-  swfdec_transform_init_identity (&movie->transform);
   cairo_matrix_init_identity (&movie->matrix);
   cairo_matrix_init_identity (&movie->inverse_matrix);
   swfdec_color_transform_init_identity (&movie->color_transform);
@@ -131,8 +130,20 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
 static void
 swfdec_movie_update_matrix (SwfdecMovie *movie)
 {
-  swfdec_transform_to_matrix (&movie->matrix, &movie->inverse_matrix, 
-      &movie->transform);
+  double d, e;
+
+  movie->matrix.xx = movie->content->transform.xx;
+  movie->matrix.xy = movie->content->transform.xy;
+  movie->matrix.yx = movie->content->transform.yx;
+  movie->matrix.yy = movie->content->transform.yy;
+  swfdec_matrix_ensure_invertible (&movie->matrix, &movie->inverse_matrix);
+
+  d = movie->xscale / swfdec_matrix_get_xscale (&movie->content->transform);
+  e = movie->yscale / swfdec_matrix_get_yscale (&movie->content->transform);
+  cairo_matrix_scale (&movie->matrix, d, e);
+  d = movie->rotation - swfdec_matrix_get_rotation (&movie->content->transform);
+  cairo_matrix_rotate (&movie->matrix, d);
+
   swfdec_movie_update_extents (movie);
 }
 
@@ -228,7 +239,10 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
     klass->content_changed (movie, content);
   movie->content = content;
   if (!movie->modified) {
-    movie->transform = content->transform;
+    movie->matrix = content->transform;
+    movie->xscale = swfdec_matrix_get_xscale (&movie->matrix);
+    movie->yscale = swfdec_matrix_get_yscale (&movie->matrix);
+    movie->rotation = swfdec_matrix_get_rotation (&movie->matrix);
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 }
@@ -380,6 +394,8 @@ swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
   if (movie->parent)
     swfdec_movie_global_to_local (movie->parent, x, y);
+  if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
+    swfdec_movie_update (movie);
   cairo_matrix_transform_point (&movie->inverse_matrix, x, y);
 }
 

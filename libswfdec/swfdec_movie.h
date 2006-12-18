@@ -45,7 +45,7 @@ struct _SwfdecContent {
   int	         	depth;		/* at which depth to display */
   int			clip_depth;	/* clip depth of object */
   unsigned int		ratio;
-  SwfdecTransform	transform;
+  cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
   char *		name;
   SwfdecEventList *	events;
@@ -92,9 +92,11 @@ struct _SwfdecMovie {
   SwfdecRect		extents;		/* the extents occupied after transform is applied */
   SwfdecRect		original_extents;	/* the extents from all children - unmodified */
   gboolean		modified;		/* TRUE if the transform has been modified by scripts */
-  SwfdecTransform	transform;		/* transformation to apply */
-  cairo_matrix_t	matrix;			/* cairo matrix computed from above */
-  cairo_matrix_t	inverse_matrix	;	/* the inverse of the cairo matrix */
+  double		xscale;			/* x scale in percent */
+  double		yscale;			/* y scale in percent */
+  double		rotation;		/* rotation in degrees [-180, 180] */
+  cairo_matrix_t	matrix;			/* cairo matrix computed from above and content->transform */
+  cairo_matrix_t	inverse_matrix;		/* the inverse of the cairo matrix */
   SwfdecColorTransform	color_transform;	/* scripted color transformation */
 
   /* iteration state */

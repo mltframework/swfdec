@@ -254,7 +254,7 @@ swfdec_content_new (int depth)
 {
   SwfdecContent *content = g_new0 (SwfdecContent, 1);
 
-  swfdec_transform_init_identity (&content->transform);
+  cairo_matrix_init_identity (&content->transform);
   swfdec_color_transform_init_identity (&content->color_transform);
   content->depth = depth;
   content->sequence = content;
@@ -356,12 +356,10 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   }
 
   if (has_matrix) {
-    swfdec_bits_get_transform (bits, &content->transform);
-    SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %d %d }", 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.xx), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.yx),
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.xy), 
-	SWFDEC_FIXED_TO_DOUBLE (content->transform.yy),
+    swfdec_bits_get_matrix (bits, &content->transform, NULL);
+    SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %g %g }", 
+	content->transform.xx, content->transform.yx,
+	content->transform.xy, content->transform.yy,
 	content->transform.x0, content->transform.y0);
   }
   if (has_color_transform) {

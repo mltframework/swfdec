@@ -214,9 +214,9 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
     y = 0;
   }
   SWFDEC_LOG ("center is at %g %g, mouse is at %g %g", x, y, mouse_x, mouse_y);
-  if (mouse_x - x != movie->transform.x0 || mouse_y -y != movie->transform.y0) {
-    movie->transform.x0 += mouse_x - x;
-    movie->transform.y0 += mouse_y - y;
+  if (mouse_x - x != movie->matrix.x0 || mouse_y -y != movie->matrix.y0) {
+    movie->matrix.x0 += mouse_x - x;
+    movie->matrix.y0 += mouse_y - y;
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 }

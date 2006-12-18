@@ -44,6 +44,5 @@ typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteFrame SwfdecSpriteFrame;
 typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecText SwfdecText;
-typedef struct _SwfdecTransform SwfdecTransform;
 
 #endif

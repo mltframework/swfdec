@@ -377,7 +377,7 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 static void
 swfdec_js_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 {
-  target->transform = src->transform;
+  target->matrix = src->matrix;
   target->color_transform = src->color_transform;
   swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
 }
@@ -550,8 +550,7 @@ mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE (movie->transform.x0 + floor (movie->original_extents.x0));
+  d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0);
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -570,11 +569,12 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
     return JS_TRUE;
   }
-  SWFDEC_LOG ("setting x of %s from %d to %d", movie->name, movie->transform.x0,
-      SWFDEC_DOUBLE_TO_TWIPS (d) - (int) floor (movie->original_extents.x0));
   movie->modified = TRUE;
-  movie->transform.x0 = SWFDEC_DOUBLE_TO_TWIPS (d) - floor (movie->original_extents.x0);
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  d = SWFDEC_DOUBLE_TO_TWIPS (d);
+  if (d != movie->matrix.x0) {
+    movie->matrix.x0 = d;
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  }
 
   return JS_TRUE;
 }
@@ -589,7 +589,7 @@ mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE (movie->transform.y0 + floor (movie->original_extents.y0));
+  d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0);
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -609,8 +609,11 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   movie->modified = TRUE;
-  movie->transform.y0 = SWFDEC_DOUBLE_TO_TWIPS (d) - floor (movie->original_extents.y0);
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  d = SWFDEC_DOUBLE_TO_TWIPS (d);
+  if (d != movie->matrix.x0) {
+    movie->matrix.x0 = d;
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+  }
 
   return JS_TRUE;
 }
@@ -624,7 +627,7 @@ mc_xscale_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  d = SWFDEC_FIXED_TO_DOUBLE (movie->transform.xx * 100);
+  d = movie->xscale;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -644,7 +647,7 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   movie->modified = TRUE;
-  movie->transform.xx = SWFDEC_DOUBLE_TO_FIXED (d / 100);
+  movie->xscale = d;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;
@@ -659,7 +662,7 @@ mc_yscale_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  d = SWFDEC_FIXED_TO_DOUBLE (movie->transform.yy * 100);
+  d = movie->yscale;
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -679,7 +682,7 @@ mc_yscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
   movie->modified = TRUE;
-  movie->transform.yy = SWFDEC_DOUBLE_TO_FIXED (d / 100);
+  movie->yscale = d;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;
@@ -851,8 +854,7 @@ mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE (movie->original_extents.x1 - movie->original_extents.x0) *
-    SWFDEC_FIXED_TO_DOUBLE (movie->transform.xx);
+  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.x1 - movie->extents.x0));
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -860,7 +862,7 @@ static JSBool
 mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
-  double d, org;
+  double d, cur;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
@@ -876,12 +878,12 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  org = SWFDEC_TWIPS_TO_DOUBLE (movie->original_extents.x1 - movie->original_extents.x0);
-  if (org != 0) {
-    movie->transform.xx = SWFDEC_DOUBLE_TO_FIXED (d / org);
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.x1 - movie->extents.x0));
+  if (cur != 0) {
+    movie->xscale *= d / cur;
   } else {
-    movie->transform.xx = 0;
-    movie->transform.yy = 0;
+    movie->xscale = 0;
+    movie->yscale = 0;
   }
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
@@ -898,8 +900,7 @@ mc_height_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE (movie->original_extents.y1 - movie->original_extents.y0) *
-    SWFDEC_FIXED_TO_DOUBLE (movie->transform.yy);
+  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.y1 - movie->extents.y0));
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -907,7 +908,7 @@ static JSBool
 mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
-  double d, org;
+  double d, cur;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
@@ -923,12 +924,12 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  org = SWFDEC_TWIPS_TO_DOUBLE (movie->original_extents.y1 - movie->original_extents.y0);
-  if (org != 0) {
-    movie->transform.yy = SWFDEC_DOUBLE_TO_FIXED (d / org);
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.y1 - movie->extents.y0));
+  if (cur != 0) {
+    movie->yscale *= d / cur;
   } else {
-    movie->transform.xx = 0;
-    movie->transform.yy = 0;
+    movie->xscale = 0;
+    movie->yscale = 0;
   }
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
@@ -943,7 +944,7 @@ mc_rotation_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  return JS_NewNumberValue (cx, 0 /*movie->rotation*/, vp);
+  return JS_NewNumberValue (cx, movie->rotation, vp);
 }
 
 static JSBool
@@ -969,7 +970,7 @@ mc_rotation_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     SWFDEC_ERROR ("FIXME: implement correct rounding errors here");
   }
   movie->modified = TRUE;
-  //movie->rotation = d;
+  movie->rotation = d;
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
 
   return JS_TRUE;

@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include "swfdec_rect.h"
 
 void 
@@ -34,6 +35,30 @@ swfdec_rect_init_empty (SwfdecRect *rect)
   rect->y0 = 0;
   rect->x1 = 0;
   rect->y1 = 0;
+}
+
+/**
+ * swfdec_rect_round:
+ * @dest: pointer to rect that will take the result
+ * @src: #SwfdecRect that should be rounded
+ *
+ * Puts the smallest rectangle in @dest that includes @src but only
+ * contains integer numbers
+ **/
+void
+swfdec_rect_round (SwfdecRect *dest, SwfdecRect *src)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
+
+  if (swfdec_rect_is_empty (src)) {
+    swfdec_rect_init_empty (dest);
+    return;
+  }
+  dest->x0 = floor (src->x0);
+  dest->y0 = floor (src->y0);
+  dest->x1 = ceil (src->x1);
+  dest->y1 = ceil (src->y1);
 }
 
 gboolean

@@ -15,6 +15,7 @@ struct _SwfdecRect
 void swfdec_rect_init_empty (SwfdecRect *rect);
 
 gboolean swfdec_rect_intersect (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b);
+void swfdec_rect_round (SwfdecRect *dest, SwfdecRect *src);
 void swfdec_rect_union (SwfdecRect * dest, const SwfdecRect * a, const SwfdecRect * b);
 void swfdec_rect_subtract (SwfdecRect *dest, const SwfdecRect *a, const SwfdecRect *b);
 void swfdec_rect_scale (SwfdecRect *dest, const SwfdecRect *src, double factor);

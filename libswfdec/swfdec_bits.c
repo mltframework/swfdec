@@ -308,15 +308,6 @@ void
 swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
     cairo_matrix_t *inverse)
 {
-  SwfdecTransform trans;
-
-  swfdec_bits_get_transform (bits, &trans);
-  swfdec_transform_to_matrix (matrix, inverse, &trans);
-}
-
-void
-swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans)
-{
   int has_scale;
   int has_rotate;
   int n_translate_bits;
@@ -326,30 +317,32 @@ swfdec_bits_get_transform (SwfdecBits * bits, SwfdecTransform *trans)
   has_scale = swfdec_bits_getbit (bits);
   if (has_scale) {
     int n_scale_bits = swfdec_bits_getbits (bits, 5);
-    trans->xx = swfdec_bits_getsbits (bits, n_scale_bits);
-    trans->yy = swfdec_bits_getsbits (bits, n_scale_bits);
+    matrix->xx = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_scale_bits));
+    matrix->yy = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_scale_bits));
 
-    SWFDEC_LOG ("scalefactors: x = %d, y = %d", trans->xx, trans->yy);
+    SWFDEC_LOG ("scalefactors: x = %g, y = %g", matrix->xx, matrix->yy);
   } else {
     SWFDEC_LOG ("no scalefactors given");
-    trans->xx = SWFDEC_INT_TO_FIXED (1);
-    trans->yy = SWFDEC_INT_TO_FIXED (1);
+    matrix->xx = 1.0;
+    matrix->yy = 1.0;
   }
   has_rotate = swfdec_bits_getbit (bits);
   if (has_rotate) {
     int n_rotate_bits = swfdec_bits_getbits (bits, 5);
-    trans->yx = swfdec_bits_getsbits (bits, n_rotate_bits);
-    trans->xy = swfdec_bits_getsbits (bits, n_rotate_bits);
+    matrix->yx = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_rotate_bits));
+    matrix->xy = SWFDEC_FIXED_TO_DOUBLE (swfdec_bits_getsbits (bits, n_rotate_bits));
 
-    SWFDEC_LOG ("skew: xy = %d, yx = %d", trans->xy, trans->yx);
+    SWFDEC_LOG ("skew: xy = %g, yx = %g", matrix->xy, matrix->yx);
   } else {
     SWFDEC_LOG ("no rotation");
-    trans->xy = 0;
-    trans->yx = 0;
+    matrix->xy = 0;
+    matrix->yx = 0;
   }
   n_translate_bits = swfdec_bits_getbits (bits, 5);
-  trans->x0 = swfdec_bits_getsbits (bits, n_translate_bits);
-  trans->y0 = swfdec_bits_getsbits (bits, n_translate_bits);
+  matrix->x0 = swfdec_bits_getsbits (bits, n_translate_bits);
+  matrix->y0 = swfdec_bits_getsbits (bits, n_translate_bits);
+
+  swfdec_matrix_ensure_invertible (matrix, inverse);
 }
 
 char *

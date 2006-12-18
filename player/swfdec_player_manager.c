@@ -554,6 +554,48 @@ command_find (SwfdecPlayerManager *manager, const char *arg)
   swfdec_debugger_foreach_script (SWFDEC_DEBUGGER (manager->player), do_find, &data);
 }
 
+static void
+command_enumerate (SwfdecPlayerManager *manager, const char *arg)
+{
+  jsval rval;
+  JSObject *obj;
+  JSIdArray *array;
+  const char *s, *t;
+  int i;
+
+  if (!swfdec_js_run (manager->player, arg, &rval)) {
+    swfdec_player_manager_error (manager, "Invalid command");
+    return;
+  }
+  if (!JSVAL_IS_OBJECT (rval)) {
+    swfdec_player_manager_error (manager, "Given expression is not an object");
+    return;
+  }
+  obj = JSVAL_TO_OBJECT (rval);
+  array = JS_Enumerate (manager->player->jscx, obj);
+  if (array == NULL) {
+    swfdec_player_manager_error (manager, "Error enumerating");
+    return;
+  }
+  s = swfdec_js_to_string (manager->player->jscx, rval);
+  if (s == NULL) {
+    swfdec_player_manager_error (manager, "Cannot convert object to string");
+  }
+  swfdec_player_manager_output (manager, "properties for %s:", s);
+  for (i = 0; i < array->length; i++) {
+    if (!JS_IdToValue (manager->player->jscx, array->vector[i], &rval))
+      continue;
+    s = swfdec_js_to_string (manager->player->jscx, rval);
+    if (s == NULL)
+      continue;
+    if (!JS_GetProperty (manager->player->jscx, obj, s, &rval) ||
+	!(t = swfdec_js_to_string (manager->player->jscx, rval)))
+      t = "<error querying value>";
+    swfdec_player_manager_output (manager, "  %s: %s", s, t);
+  }
+  JS_DestroyIdArray (manager->player->jscx, array);
+}
+
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
 struct {
@@ -573,6 +615,7 @@ struct {
   { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
   { "stack",	command_stack,		"print the arguments on the stack" },
   { "find",	command_find,		"find the given argument verbatim in all scripts" },
+  { "enumerate",command_enumerate,    	"enumerate all properties of the given object" },
 };
 
 static void

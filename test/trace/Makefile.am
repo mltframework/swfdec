@@ -77,6 +77,9 @@ EXTRA_DIST = \
 	setvariable.swf.trace \
 	transform.swf \
 	transform.swf.trace \
+	transform2.swf \
+	transform2.swf.trace \
+	transform2.swf.trace.org \
 	undefined1.swf \
 	undefined1.swf.trace \
 	undefined2-6.swf \

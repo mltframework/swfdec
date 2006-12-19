@@ -566,7 +566,7 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
   if (!finite (d)) {
-    SWFDEC_WARNING ("trying to move x to a non-finite value, ignoring");
+    SWFDEC_WARNING ("trying to move %s._x to a non-finite value, ignoring", movie->name);
     return JS_TRUE;
   }
   movie->modified = TRUE;
@@ -605,7 +605,7 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
   if (!finite (d)) {
-    SWFDEC_WARNING ("trying to move y to a non-finite value, ignoring");
+    SWFDEC_WARNING ("trying to move %s._y to a non-finite value, ignoring", movie->name);
     return JS_TRUE;
   }
   movie->modified = TRUE;

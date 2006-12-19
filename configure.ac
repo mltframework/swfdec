@@ -136,10 +136,6 @@ if test "x$HAVE_MOZILLA" = "xno"; then
   AC_MSG_WARN([Mozilla not found. Mozilla/Netscape plugin will not be built.])
 fi
 
-AM_CONDITIONAL(HAVE_GNOME,          test "x$HAVE_GNOME" = "xyes")
-AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
-AM_CONDITIONAL(HAVE_GTK_DOC,        $HAVE_GTK_DOC)
-
 PKG_CHECK_MODULES(GST, gstreamer-0.10 > 0.10.0 gstreamer-plugins-base-0.10,
   HAVE_GST=yes, HAVE_GST=no)
 AC_SUBST(GST_CFLAGS)

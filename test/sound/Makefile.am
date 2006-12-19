@@ -17,6 +17,7 @@ sound_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS)
 sound_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
+	README \
 	adpcm-2.swf \
 	adpcm-2.swf.0.0.raw \
 	adpcm-2-2.swf \

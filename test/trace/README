@@ -1,0 +1,39 @@
+This directory contains tests using the tracing functionality of Actionscript.
+
+How does it work?
+
+  ./trace [FILE1 [FILE2 [...]]]
+The program trace in this directory takes all files on the command line or all
+files in the current directory and runs them. Running consists of instancing a
+SwfdecPlayer and iterating $FILE 10 times. Everytime the trace function is 
+invoked by that player, its output is appended to a buffer. After this the 
+captured output is compared to the file $FILE.trace. If the output matches, the
+test succeeded for the given file, otherwise it failed. In this case a diff is
+produced and dumped to stdout. The captured trace output is written to a file 
+named "tmp". The return value is 0 if all tests passed, or failure if at least
+one test failed.
+
+
+How do I run my new test?
+
+Create a file to test, say "test.swf", and put the expected output in the
+corresponding trace file, in this case "test.swf.trace". After that, just call
+the trace application with your file, like this:
+  ./trace test.swf
+You may need to build the trace application if you haven't run make check 
+before, just run make trace.
+
+
+How do I create a trace file?
+
+The suggested method is to use a Flash authoring environment (like Flash Studio
+or Flash MX), enable debugging and just copy the output this produces. 
+Unfortunately this requires access to these tools, since they are expensive.
+
+
+How do I add a test to the testsuite?
+
+Just put the file and its trace file into this directory and add both to 
+EXTRA_DIST in Makefile.am. It should appear in the output when running 
+make check. (Note that the order of files tested during make check is pretty 
+much random.)

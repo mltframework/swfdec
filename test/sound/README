@@ -1,0 +1,50 @@
+This directory contains tests thting the sound output of Swfdec
+
+What tests belong here?
+
+If you want to make sure the audio produced by Swfdec is correct, this is the 
+place to start.
+
+
+How does it work?
+
+  ./sound [FILE1 [FILE2 [...]]]
+The program sound in this directory takes all files on the command line or all
+files in the current directory and runs them. Running consists of instancing a
+SwfdecPlayer and iterating $FILE 10 times. Everytime an audio stream is 
+instanced by that player, its output is appended to a buffer until the audio 
+stream is removed or the 10 iterations have been done. After this the 
+captured output is compared to files $FILE-$FRAME-$NO.raw for every stream. 
+$FRAME is the frame the audio was added (0 for initializing, 1-10 for the 10
+iterations), $NO just counts up from 0 for every frame, so that multiple 
+streams can be added. If the data matches for all given streams, the test is
+successful, otherwise it failed. The return value is 0 if all tests passed, 
+or failure if at least one test failed.
+If the environment variable SWFDEC_TEST_DUMP is set, for every failed test a
+file $FILE-$FRAME-$NO.raw.dump will be created that contains the captured 
+output.
+
+
+How do I run my new test?
+
+Create a file to test, say "test.swf", and put the expected output streams in 
+the corresponding raw files. After that, just call the sound application with 
+your file, like this:
+  ./sound test.swf
+You may need to build the sound application if you haven't run make check 
+before, just run make sound.
+
+
+How do I create expected raw output?
+
+The most common method is to patch esound to dump raw audio streams to files.
+After that he will run a standalone Flash player in Wine using esound as audio
+output. Ask for the patches on the mailing list if you want to use this method.
+
+
+How do I add a test to the testsuite?
+
+Just put the file and its raw audio files into this directory and add them all
+to EXTRA_DIST in Makefile.am. It should appear in the output when running 
+make check. (Note that the order of files tested during make check is pretty 
+much random.)

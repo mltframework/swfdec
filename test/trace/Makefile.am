@@ -7,6 +7,7 @@ trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS)
 trace_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
+	README \
 	case1-6.swf \
 	case1-6.swf.trace \
 	case1-7.swf \

@@ -1,50 +1,54 @@
 
-Swfdec is a decoder/renderer for Macromedia Flash animations.  The
-decoding and rendering engine is provided in a library that can
-be used by other applications.  A Mozilla plugin is provided that
-uses the library for playing SWF files in a 
+Swfdec is a decoder/renderer for Macromedia Flash animations. The decoding and 
+rendering engine is provided in a library that can be used by other 
+applications.  
 
-Swfdec also contains a GdkPixbuf loader module for SWF files, which
-means that GTK+ themes can use SWF files as images.  I have no clue
-why someone would want to do this, but it's possible.
+Swfdec contains some applications for testing and debugging the library. These 
+are availabole in the player/ and test/ directory. They are not installed. The
+applications in the player/ directory require GTK and ALSO to build, while the
+library does not. So if you are packaging Swfdec, you probably do not want to 
+make it depend on GTK or ALSA.
 
 
-Maintainer:
+Locations:
 
-   David Schleef <ds@schleef.org>
+   The Swfdec homepage is at http://swfdec.freedesktop.org
+   A bugtracker can be found at https://bugzilla.freedesktop.org
+   A mailing list is available at swfdec@lists.freedesktop.org
+     For information about subscribing or unsubscribing from this list see 
+     http://lists.freedesktop.org/mailman/listinfo/swfdec
 
-Notes:
 
- - If you install into /usr/local, your browser may have difficulty
-   finding the plugin.  This can be solved for mozilla-based
-   browsers by adding /usr/local/lib/mozilla/plugins to the
-   MOZ_PLUGIN_PATH environment variable.
- 
- - Sound output is handled by SDL, so the target device can be
-   chosen by setting the SDL_AUDIODRIVER environment variable.
+Maintainers:
+
+   see the file MAINTAINERS
 
 
 Limitations:
 
- - A few object types are not handled at all.  They don't appear very
-   often, however.
+ - A few rare object types are not handled at all. They are ignored.
 
- - SWF files that use Flash versions 5 and 6 are generally heavily
-   dependent on ActionScript2 features, which are rather buggy at
-   the moment.  The default action is to stop playing if known-buggy
-   codepaths are used.  This is a runtime switch, but it's likely
-   that only developers would want to change this behavior.
+ - SWF files that use Flash generally heavily depend on ActionScript features.
+   Support for ActionScript is currently incomplete. Unsupported scripts are
+   skipped.
+
+ - If any known unsupported behaviour is encountered, Swfdec will print a 
+   notice to stderr and try to interpret the file nonetheless. If you 
+   encounter a file with only some unsupported things, it may be a good idea
+   to open a feature request bug and provide the file. The developers are
+   always interested in files that motivate them to do little steps.
 
 
 Dependencies:
 
-  cairo (>= 1.0.0)
-  GStreamer (>= 0.10.0)
-  GTK+ (>= 2.0)
-  zlib (>= 1.1.4)
-  MAD (>= 0.15.1b)
-  Mozilla (>= 1.0.0)
+  cairo (>= 1.0.0 - >= 1.4.0 recommended)
   liboil (>= 0.3.6)
+  zlib (>= 1.1.4)
 
+  MAD (>= 0.15.1b - optional, required for MP3 audio format support)
+  FFMpeg (>= 0.4.8 - optional, required for various audio and video formats)
+
+  GTK+ (>= 2.0 - optional)
+  ALSA (>= 1.0 - optional)
 
 

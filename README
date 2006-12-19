@@ -3,11 +3,21 @@ Swfdec is a decoder/renderer for Macromedia Flash animations. The decoding and
 rendering engine is provided in a library that can be used by other 
 applications.  
 
+The library is still in heavy development. The intended audience are developers
+or people using it for pretested Flash animations (think embedded here). If you
+use it on unknown content, expect it to have issues and don't be surprised if 
+it crashes. If you encounter such a crash however, make sure to file a bug 
+immediately.
+
 Swfdec contains some applications for testing and debugging the library. These 
 are availabole in the player/ and test/ directory. They are not installed. The
 applications in the player/ directory require GTK and ALSO to build, while the
 library does not. So if you are packaging Swfdec, you probably do not want to 
 make it depend on GTK or ALSA.
+
+The test/ directory contains subdirectories that run automated tests with the 
+provided SWF files in the directory. See the README files in those directories
+for details on how to run or add these tests.
 
 
 Locations:
@@ -43,10 +53,11 @@ Dependencies:
 
   cairo (>= 1.0.0 - >= 1.4.0 recommended)
   liboil (>= 0.3.6)
+  Pangocairo (aka Pango with cairo support)
   zlib (>= 1.1.4)
 
-  MAD (>= 0.15.1b - optional, required for MP3 audio format support)
   FFMpeg (>= 0.4.8 - optional, required for various audio and video formats)
+  MAD (>= 0.15.1b - optional, required for MP3 audio format support)
 
   GTK+ (>= 2.0 - optional)
   ALSA (>= 1.0 - optional)

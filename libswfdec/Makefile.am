@@ -75,7 +75,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la
 
-libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@
+libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
 
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec.h \

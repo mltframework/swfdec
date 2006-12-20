@@ -4,8 +4,8 @@ libdir=@libdir@
 includedir=@includedir@/swfdec-@SWFDEC_MAJORMINOR@
 
 Name: swfdec
-Description: Decodes SWF (Flash) files
+Description: Decodes and Plays Flash files
 Version: @VERSION@
-Requires: @GLIB_REQUIRES@ liboil-0.3 cairo
+Requires: glib-2.0 >= @GLIB_REQUIRES@ gobject-2.0 >= @GLIB_REQUIRES@ liboil-0.3 cairo pangocairo
 Libs: -L${libdir} -lswfdec-@SWFDEC_MAJORMINOR@
 Cflags: -I${includedir}

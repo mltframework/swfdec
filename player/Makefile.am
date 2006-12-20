@@ -31,12 +31,6 @@ noinst_HEADERS = \
 	swfdec_slow_loader.h \
 	swfdec_widget.h 
 
-EXTRA_DIST = swfdec_marshal.list
-
-CLEANFILES = \
-	swfdec_marshal.c \
-	swfdec_marshal.h
-
 libswfdecui_la_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS)
 libswfdecui_la_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
 swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS)

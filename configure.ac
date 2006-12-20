@@ -57,8 +57,8 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-GLIB_REQUIRES=glib-2.0
-PKG_CHECK_MODULES(GLIB, glib-2.0 gobject-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
+GLIB_REQUIRES=2.0
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRES gobject-2.0 >= GLIB_REQUIRES, HAVE_GLIB=yes, HAVE_GLIB=no)
 if test "$HAVE_GLIB" = "no"; then
   AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
 fi

@@ -27,6 +27,8 @@ Locations:
    A mailing list is available at swfdec@lists.freedesktop.org
      For information about subscribing or unsubscribing from this list see 
      http://lists.freedesktop.org/mailman/listinfo/swfdec
+   The development source code is kept in git. The following command gets it:
+     git clone git://anongit.freedesktop.org/git/swfdec
 
 
 Maintainers:

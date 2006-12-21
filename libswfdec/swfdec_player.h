@@ -21,6 +21,7 @@
 #define _SWFDEC_PLAYER_H_
 
 #include <glib-object.h>
+#include <cairo.h>
 #include <libswfdec/swfdec_loader.h>
 
 G_BEGIN_DECLS

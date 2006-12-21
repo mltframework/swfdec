@@ -3,8 +3,9 @@
 #define __SWFDEC_BUFFER_H__
 
 #include <glib.h>
-#include <libswfdec/swfdec_types.h>
 
+typedef struct _SwfdecBuffer SwfdecBuffer;
+typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 
 struct _SwfdecBuffer
 {

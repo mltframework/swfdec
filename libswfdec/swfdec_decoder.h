@@ -23,6 +23,7 @@
 #include <glib-object.h>
 #include <libswfdec/swfdec_buffer.h>
 #include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

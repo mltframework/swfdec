@@ -18,8 +18,6 @@ typedef int SwfdecFixed;
 #define SWFDEC_INT_TO_FIXED(i) ((i) * SWFDEC_FIXED_SCALE_FACTOR)
 
 typedef struct _SwfdecActionContext SwfdecActionContext;
-typedef struct _SwfdecBuffer SwfdecBuffer;
-typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecCache SwfdecCache;
 typedef struct _SwfdecCharacter SwfdecCharacter;

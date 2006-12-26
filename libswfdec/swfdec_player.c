@@ -321,10 +321,17 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 {
   if (!swfdec_rect_is_empty (&player->invalid)) {
     double x, y, width, height;
+    /* FIXME: currently we clamp the rectangle to the visible area, it might
+     * be useful to allow out-of-bounds drawing. In that case this needs to be
+     * changed */
     x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    x = MAX (x, 0.0);
     y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    y = MAX (y, 0.0);
     width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
+    width = MIN (width, player->width - x);
     height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
+    height = MIN (height, player->height - y);
     g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }

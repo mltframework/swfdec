@@ -657,6 +657,7 @@ compile_goto_frame2 (CompileState *state, guint action, guint len)
   }
   bias = swfdec_bits_getbit (state->bits);
   play = swfdec_bits_getbit (state->bits);
+  compile_state_debug_add (state, "GotoFrame2 %s", play ? "Play" : "Stop");
   if (bias) {
     SWFDEC_ERROR ("scene bias not implemented");
   }

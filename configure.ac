@@ -128,7 +128,7 @@ SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $
 AC_SUBST(SWF_LIBS)
 AC_SUBST(SWF_CFLAGS)
 
-GTK_DOC_CHECK([1.0])
+GTK_DOC_CHECK([1.6])
 
 if test "x${prefix}" = "xNONE"; then
   PACKAGE_PREFIX=${ac_default_prefix}

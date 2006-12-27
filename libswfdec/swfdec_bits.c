@@ -378,6 +378,29 @@ swfdec_bits_skip_string (SwfdecBits *bits)
   return s;
 }
 
+/**
+ * swfdec_bits_skip_bytes:
+ * @bits: a #SwfdecBits
+ * @n_bytes: number of bytes to skip
+ *
+ * Skips up to @n_bytes bytes in @bits. If not enough bytes are available,
+ * only the available amount is skipped and a warning is printed.
+ *
+ * Returns: the number of bytes actually skipped
+ **/
+guint
+swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
+{
+  swfdec_bits_syncbits (bits);
+  if ((guint) (bits->end - bits->ptr) < n_bytes) {
+    SWFDEC_WARNING ("supposed to skip %u bytes, but only %u available",
+	n_bytes, bits->end - bits->ptr);
+    n_bytes = bits->end - bits->ptr;
+  }
+  bits->ptr += n_bytes;
+  return n_bytes;
+}
+
 char *
 swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len)
 {

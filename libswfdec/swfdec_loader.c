@@ -26,6 +26,25 @@
 #include "swfdec_debug.h"
 #include "swfdec_root_movie.h"
 
+/*** gtk-doc ***/
+
+/**
+ * SECTION:SwfdecLoader
+ * @title: SwfdecLoader
+ * @short_description: object used for input
+ *
+ * SwfdecLoader is the base class used for input. Since developers normally 
+ * need to adapt input to the needs of their application, this class is 
+ * provided to be adapted to their needs.
+ *
+ * Since Flash files can load new resources while operating, a #SwfdecLoader
+ * can be instructed to load another resource. It's the loader's responsibility
+ * to make sure the player is allowed to access the resource and provide its
+ * data.
+ *
+ * For convenience, a #SwfdecLoader for file access is provided by Swfdec.
+ */
+
 /*** SwfdecLoader ***/
 
 G_DEFINE_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)

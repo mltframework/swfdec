@@ -398,6 +398,11 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
       guint tmp = swfdec_bits_get_u32 (bits);
       record_end = bits->ptr + tmp;
+      if (record_end > bits->end) {
+	SWFDEC_ERROR ("end of record claimed to be %u bytes after available data",
+	    record_end - bits->end);
+	record_end = bits->end;
+      }
 
       if (event_flags & SWFDEC_EVENT_KEY_PRESS)
 	key_code = swfdec_bits_get_u8 (bits);
@@ -420,6 +425,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 	    (int) (record_end - bits->ptr));
 	/* FIXME: who should we trust with parsing here? */
 	bits->ptr = record_end;
+	bits->idx = 0;
       }
     }
     g_free (script_name);

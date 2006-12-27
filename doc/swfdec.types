@@ -1,0 +1,6 @@
+#include <libswfdec/swfdec.h>
+
+swfdec_player_get_type
+swfdec_audio_get_type
+swfdec_loader_get_type
+

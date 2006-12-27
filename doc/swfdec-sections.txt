@@ -1,5 +1,6 @@
 <SECTION>
-<FILE>swfdec_audio</FILE>
+<FILE>SwfdecAudio</FILE>
+<TITLE>SwfdecAudio</TITLE>
 SwfdecAudio
 swfdec_audio_render
 <SUBSECTION Standard>
@@ -13,7 +14,7 @@ SWFDEC_AUDIO_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>swfdec_loader</FILE>
+<FILE>SwfdecLoader</FILE>
 <TITLE>SwfdecLoader</TITLE>
 SwfdecLoader
 swfdec_loader_new_from_file
@@ -30,7 +31,7 @@ SWFDEC_LOADER_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>swfdec_player</FILE>
+<FILE>SwfdecPlayer</FILE>
 <TITLE>SwfdecPlayer</TITLE>
 SwfdecMouseCursor
 SwfdecPlayer
@@ -61,7 +62,8 @@ SWFDEC_PLAYER_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>swfdec_buffer</FILE>
+<FILE>SwfdecBuffer</FILE>
+<TITLE>SwfdecBuffer</TITLE>
 SwfdecBuffer
 SwfdecBufferQueue
 swfdec_buffer_new

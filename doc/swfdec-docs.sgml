@@ -8,9 +8,9 @@
 
   <chapter>
     <title>Public API</title>
-    <xi:include href="xml/swfdec_player.xml"/>
-    <xi:include href="xml/swfdec_audio.xml"/>
-    <xi:include href="xml/swfdec_buffer.xml"/>
-    <xi:include href="xml/swfdec_loader.xml"/>
+    <xi:include href="xml/SwfdecPlayer.xml"/>
+    <xi:include href="xml/SwfdecAudio.xml"/>
+    <xi:include href="xml/SwfdecBuffer.xml"/>
+    <xi:include href="xml/SwfdecLoader.xml"/>
   </chapter>
 </book>

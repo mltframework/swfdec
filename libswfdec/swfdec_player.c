@@ -337,7 +337,7 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   }
 }
 
-static void
+static gboolean
 swfdec_player_do_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
@@ -356,6 +356,9 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
   }
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
+
+  /* FIXME: allow events to pass through */
+  return TRUE;
 }
 
 static void
@@ -445,6 +448,15 @@ swfdec_player_unlock (SwfdecPlayer *player)
   swfdec_player_emit_signals (player);
 }
 
+static gboolean
+swfdec_accumulate_or (GSignalInvocationHint *ihint, GValue *return_accu, 
+    const GValue *handler_return, gpointer data)
+{
+  if (g_value_get_boolean (handler_return))
+    g_value_set_boolean (return_accu, TRUE);
+  return TRUE;
+}
+
 static void
 swfdec_player_class_init (SwfdecPlayerClass *klass)
 {
@@ -464,23 +476,79 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       g_param_spec_boolean ("mouse-visible", "mouse visible", "whether to show the mouse pointer",
 	  TRUE, G_PARAM_READABLE));
 
+  /**
+   * SwfdecPlayer::trace:
+   * @player: the #SwfdecPlayer affected
+   * @text: the debugging string
+   *
+   * Emits a debugging string while running. The effect of calling any swfdec 
+   * functions on the emitting @player is undefined.
+   */
   signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
       G_TYPE_NONE, 1, G_TYPE_STRING);
+  /**
+   * SwfdecPlayer::invalidate:
+   * @player: the #SwfdecPlayer affected
+   * @x: x coordinate of invalid region
+   * @y: y coordinate of invalid region
+   * @width: width of invalid region
+   * @height: height of invalid region
+   *
+   * This signal is emitted whenever graphical elements inside the player have 
+   * changed. The coordinates describe the smallest rectangle that includes all
+   * changes.
+   */
   signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_DOUBLE_DOUBLE,
       G_TYPE_NONE, 4, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+  /**
+   * SwfdecPlayer::iterate:
+   * @player: the #SwfdecPlayer affected
+   *
+   * Emitted whenever the player iterates.
+   */
   signals[ITERATE] = g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, iterate), 
       NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0);
+  /**
+   * SwfdecPlayer::handle-mouse:
+   * @player: the #SwfdecPlayer affected
+   * @x: new x coordinate of the mouse
+   * @y: new y coordinate of the mouse
+   * @button: 1 if the button is pressed, 0 if not
+   *
+   * this signal is emitted whenever @player should respond to a mouse event. If
+   * any of the handlers returns TRUE, swfdec_player_handle_mouse() will return 
+   * TRUE. Note that unlike many event handlers in gtk, returning TRUE will not 
+   * stop further event handlers from being invoked. Use g_signal_stop_emission()
+   * in that case.
+   *
+   * Returns: TRUE if this handler handles the event. 
+   **/
   signals[HANDLE_MOUSE] = g_signal_new ("handle-mouse", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, handle_mouse), 
-      NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_INT,
-      G_TYPE_NONE, 3, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_INT);
+      swfdec_accumulate_or, NULL, swfdec_marshal_BOOLEAN__DOUBLE_DOUBLE_INT,
+      G_TYPE_BOOLEAN, 3, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_INT);
+  /**
+   * SwfdecPlayer::audio-added:
+   * @player: the #SwfdecPlayer affected
+   * @audio: the audio stream that was added
+   *
+   * Emitted whenever a new audio stream was added to @player.
+   */
   signals[AUDIO_ADDED] = g_signal_new ("audio-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, SWFDEC_TYPE_AUDIO);
+  /**
+   * SwfdecPlayer::audio-removed:
+   * @player: the #SwfdecPlayer affected
+   * @audio: the audio stream that was removed
+   *
+   * Emitted whenever an audio stream was removed from @player. The stream will 
+   * have been added with the SwfdecPlayer::audio-added signal previously. 
+   */
   signals[AUDIO_REMOVED] = g_signal_new ("audio-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, SWFDEC_TYPE_AUDIO);
@@ -685,15 +753,22 @@ swfdec_init (void)
  *
  * Updates the current mouse status. If the mouse has left the area of @player,
  * you should pass values outside the movie size for @x and @y.
+ *
+ * Returns: TRUE if the mouse event was handled. A mouse event may not be 
+ *          handled if the user clicked on a translucent area for example.
  **/
-void
+gboolean
 swfdec_player_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (button == 0 || button == 1);
+  gboolean ret;
 
-  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, button);
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (button == 0 || button == 1, FALSE);
+
+  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, button, &ret);
+
+  return ret;
 }
 
 /**

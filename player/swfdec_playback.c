@@ -312,10 +312,12 @@ do_after (SwfdecPlayer *player, Sound *sound)
     swfdec_stream_start (sound->waiting->data, delay);
 }
 
-static void
+static gboolean
 handle_mouse_after (SwfdecPlayer *player, double x, double y, int button, Sound *sound)
 {
   do_after (player, sound);
+
+  return FALSE;
 }
 
 static void

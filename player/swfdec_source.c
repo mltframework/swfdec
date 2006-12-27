@@ -151,7 +151,7 @@ GSourceFuncs swfdec_iterate_funcs = {
   swfdec_iterate_finalize
 };
 
-static void
+static gboolean
 swfdec_iterate_source_handle_mouse (SwfdecPlayer *player, double x, double y, 
     int button, SwfdecIterateSource *source)
 {
@@ -168,6 +168,8 @@ swfdec_iterate_source_handle_mouse (SwfdecPlayer *player, double x, double y,
   else
     samples = MIN ((guint) delay, samples);
   swfdec_player_set_audio_advance (player, samples);
+
+  return FALSE;
 }
 
 static void

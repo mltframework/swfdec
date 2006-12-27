@@ -66,7 +66,7 @@ void		swfdec_player_render		(SwfdecPlayer *	player,
 						 double		y,
 						 double		width,
 						 double		height);
-void		swfdec_player_handle_mouse	(SwfdecPlayer *	player, 
+gboolean	swfdec_player_handle_mouse	(SwfdecPlayer *	player, 
 						 double		x,
 						 double		y,
 						 int		button);

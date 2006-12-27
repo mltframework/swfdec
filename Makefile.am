@@ -1,7 +1,6 @@
 SUBDIRS= \
 	libswfdec \
 	player \
-	plugin \
 	test
 
 ACLOCAL_FLAGS = -I m4

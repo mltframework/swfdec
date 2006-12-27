@@ -1,1 +1,0 @@
-cp .libs/libmozswfdec.so ~/.mozilla/plugins/ ; chmod 644 ~/.mozilla/plugins/*

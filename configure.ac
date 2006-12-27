@@ -122,26 +122,6 @@ if test "x$HAVE_FFMPEG" = xyes; then
 fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 
-PKG_CHECK_MODULES(MOZILLA, mozilla-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
-MOZILLA_DIR=mozilla
-if test "$HAVE_MOZILLA" = no ; then
-  PKG_CHECK_MODULES(MOZILLA, firefox-plugin, HAVE_MOZILLA=yes, HAVE_MOZILLA=no)
-  MOZILLA_DIR=mozilla-firefox
-fi
-AC_SUBST(MOZILLA_CFLAGS)
-AC_SUBST(MOZILLA_LIBS)
-AC_SUBST(MOZILLA_DIR)
-AM_CONDITIONAL(HAVE_MOZILLA, [test $HAVE_MOZILLA = yes])
-if test "x$HAVE_MOZILLA" = "xno"; then
-  AC_MSG_WARN([Mozilla not found. Mozilla/Netscape plugin will not be built.])
-fi
-
-PKG_CHECK_MODULES(GST, gstreamer-0.10 > 0.10.0 gstreamer-plugins-base-0.10,
-  HAVE_GST=yes, HAVE_GST=no)
-AC_SUBST(GST_CFLAGS)
-AC_SUBST(GST_LIBS)
-AM_CONDITIONAL(HAVE_GST, [test $HAVE_GST = yes])
-
 AC_SUBST(GLOBAL_CFLAGS)
 
 SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir) $GLIB_CFLAGS"
@@ -169,7 +149,6 @@ libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
 player/Makefile
-plugin/Makefile
 test/Makefile
 test/sound/Makefile
 test/trace/Makefile

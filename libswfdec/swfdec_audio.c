@@ -28,6 +28,32 @@
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 
+/**
+ * SECTION:SwfdecAudio
+ * @title: SwfdecAudio
+ * @see_also: SwfdecPlayer
+ * @short_description: object used for audio output
+ *
+ * SwfdecAudio is the way audio output is provided by a #SwfdecPlayer. See
+ * its documentation on how to access #SwfdecAudio objects.
+ *
+ * An audio object gives access to one audio stream played inside a player.
+ * You are responsible for outputting this data, swfdec does not try to do this
+ * for you.
+ *
+ * Audio data is always provided in 16bit host-endian stereo. If the data was
+ * encoded into a different format originally, Swfdec will already have decoded 
+ * it. The data is always referenced relative to the player. Sample 0 
+ * references the first sample to be played at the current position. If the 
+ * player gets iterated, sample 0 changes. There is no way to access samples
+ * belonging to a previous state.
+ */
+
+/**
+ * SwfdecAudio
+ *
+ * This object is used for audio output. It is an abstract class.
+ */
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecAudio, swfdec_audio, G_TYPE_OBJECT)
 

@@ -214,7 +214,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
     unsigned char *endptr;
     int x;
     int tag;
-    int tag_len;
+    guint tag_len;
     SwfdecBuffer *buffer;
     SwfdecTagFunc *func;
 
@@ -230,7 +230,11 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
         swfdec_swf_decoder_get_tag_name (tag), tag_len);
     //SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
 
-    if (tag_len > 0) {
+    if (tag_len * 8 > swfdec_bits_left (&parse)) {
+      SWFDEC_ERROR ("tag claims to be %u bytes long, but only %u bytes remaining",
+	  tag_len, swfdec_bits_left (&parse) / 8);
+      break;
+    } else if (tag_len > 0) {
       buffer = swfdec_buffer_new_subbuffer (parse.buffer,
           parse.ptr - parse.buffer->data, tag_len);
       s->b.buffer = buffer;
@@ -265,9 +269,9 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
           SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
         }
       }
-
-      parse.ptr = endptr;
     }
+    if (swfdec_bits_skip_bytes (&parse, tag_len) != tag_len)
+      break;
 
     if (buffer)
       swfdec_buffer_unref (buffer);

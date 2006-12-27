@@ -1,0 +1,46 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecEditTextMovie
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_EDIT_TEXT_MOVIE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecEditTextMovie ##### -->
+<para>
+
+</para>
+
+@movie: 
+@text: 
+@str: 
+@paragraph: 
+
+<!-- ##### FUNCTION swfdec_edit_text_movie_set_text ##### -->
+<para>
+
+</para>
+
+@movie: 
+@str: 
+
+

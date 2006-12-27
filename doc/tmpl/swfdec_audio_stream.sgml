@@ -1,0 +1,53 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecAudioStream
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_AUDIO_STREAM_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecAudioStream ##### -->
+<para>
+
+</para>
+
+@audio: 
+@sprite: 
+@sound: 
+@decoder: 
+@format: 
+@playback_skip: 
+@playback_queue: 
+@current_frame: 
+@done: 
+
+<!-- ##### FUNCTION swfdec_audio_stream_new ##### -->
+<para>
+
+</para>
+
+@player: 
+@sprite: 
+@start_frame: 
+@Returns: 
+
+

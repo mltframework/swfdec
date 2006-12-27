@@ -1,0 +1,108 @@
+<!-- ##### SECTION Title ##### -->
+swfdec_debug
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_ERROR ##### -->
+<para>
+
+</para>
+
+@...:
+
+@...: 
+
+
+<!-- ##### MACRO SWFDEC_WARNING ##### -->
+<para>
+
+</para>
+
+@...:
+
+@...: 
+
+
+<!-- ##### MACRO SWFDEC_INFO ##### -->
+<para>
+
+</para>
+
+@...:
+
+@...: 
+
+
+<!-- ##### MACRO SWFDEC_DEBUG ##### -->
+<para>
+
+</para>
+
+@...:
+
+@...: 
+
+
+<!-- ##### MACRO SWFDEC_LOG ##### -->
+<para>
+
+</para>
+
+@...:
+
+@...: 
+
+
+<!-- ##### MACRO SWFDEC_DEBUG_LEVEL ##### -->
+<para>
+
+</para>
+
+@level: 
+@...:
+@...: 
+
+
+<!-- ##### FUNCTION swfdec_debug_log ##### -->
+<para>
+
+</para>
+
+@level: 
+@file: 
+@function: 
+@line: 
+@format: 
+@Varargs: 
+
+
+<!-- ##### FUNCTION swfdec_debug_set_level ##### -->
+<para>
+
+</para>
+
+@level: 
+
+
+<!-- ##### FUNCTION swfdec_debug_get_level ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

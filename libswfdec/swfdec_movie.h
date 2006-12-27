@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_rect.h>
+#include <libswfdec/swfdec_event.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/js/jspubtd.h>
 
@@ -107,9 +108,11 @@ struct _SwfdecMovie {
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
   /* leftover unimplemented variables from the Actionscript spec */
-  //droptarget
-  //char *target;
-  //char *url;
+#if 0
+  int droptarget;
+  char *target;
+  char *url;
+#endif
 };
 
 struct _SwfdecMovieClass {

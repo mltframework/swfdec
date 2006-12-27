@@ -142,6 +142,9 @@ AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 AM_CONDITIONAL(HAVE_GST, [test $HAVE_GST = yes])
 
+GTK_DOC_CHECK([1.0])
+
+
 AC_SUBST(GLOBAL_CFLAGS)
 
 SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir) $GLIB_CFLAGS"
@@ -165,6 +168,7 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
+doc/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile

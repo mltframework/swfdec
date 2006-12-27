@@ -1,0 +1,45 @@
+<!-- ##### SECTION Title ##### -->
+swfdec_marshal
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION swfdec_marshal_VOID__DOUBLE_DOUBLE_DOUBLE_DOUBLE ##### -->
+<para>
+
+</para>
+
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
+
+
+<!-- ##### FUNCTION swfdec_marshal_VOID__DOUBLE_DOUBLE_INT ##### -->
+<para>
+
+</para>
+
+@closure: 
+@return_value: 
+@n_param_values: 
+@param_values: 
+@invocation_hint: 
+@marshal_data: 
+
+

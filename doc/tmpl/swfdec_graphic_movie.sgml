@@ -1,0 +1,35 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecGraphicMovie
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_GRAPHIC_MOVIE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecGraphicMovie ##### -->
+<para>
+
+</para>
+
+@movie: 
+@graphic: 
+

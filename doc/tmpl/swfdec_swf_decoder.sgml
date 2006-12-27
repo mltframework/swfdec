@@ -1,0 +1,108 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecSwfDecoder
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_SWF_DECODER_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecSwfDecoder ##### -->
+<para>
+
+</para>
+
+@decoder: 
+@version: 
+@compressed: 
+@z: 
+@uncompressed_buffer: 
+@input_queue: 
+@state: 
+@parse: 
+@b: 
+@characters: 
+@main_sprite: 
+@parse_sprite: 
+@protection: 
+@password: 
+@jpegtables: 
+@url: 
+@exports: 
+
+<!-- ##### FUNCTION swfdec_swf_decoder_get_character ##### -->
+<para>
+
+</para>
+
+@s: 
+@id: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_swf_decoder_create_character ##### -->
+<para>
+
+</para>
+
+@s: 
+@id: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_swf_decoder_get_export ##### -->
+<para>
+
+</para>
+
+@s: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_swf_decoder_get_tag_func ##### -->
+<para>
+
+</para>
+
+@tag: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_swf_decoder_get_tag_name ##### -->
+<para>
+
+</para>
+
+@tag: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_swf_decoder_get_tag_flag ##### -->
+<para>
+
+</para>
+
+@tag: 
+@Returns: 
+
+

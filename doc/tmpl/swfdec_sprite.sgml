@@ -1,0 +1,200 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecSprite
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT SwfdecSpriteAction ##### -->
+<para>
+
+</para>
+
+@type: 
+@data: 
+
+<!-- ##### STRUCT SwfdecExport ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM SwfdecSpriteActionType ##### -->
+<para>
+
+</para>
+
+@SWFDEC_SPRITE_ACTION_SCRIPT: 
+@SWFDEC_SPRITE_ACTION_ADD: 
+@SWFDEC_SPRITE_ACTION_REMOVE: 
+@SWFDEC_SPRITE_ACTION_UPDATE: 
+
+<!-- ##### MACRO SWFDEC_SPRITE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecSpriteFrame ##### -->
+<para>
+
+</para>
+
+@label: 
+@sound_head: 
+@sound_skip: 
+@sound_block: 
+@sound_samples: 
+@sound: 
+@bg_color: 
+@actions: 
+
+<!-- ##### STRUCT SwfdecSprite ##### -->
+<para>
+
+</para>
+
+@graphic: 
+@player: 
+@frames: 
+@n_frames: 
+@parse_frame: 
+
+<!-- ##### FUNCTION tag_func_define_sprite ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_sprite_add_sound_chunk ##### -->
+<para>
+
+</para>
+
+@sprite: 
+@frame: 
+@chunk: 
+@skip: 
+@n_samples: 
+
+
+<!-- ##### FUNCTION swfdec_sprite_set_n_frames ##### -->
+<para>
+
+</para>
+
+@sprite: 
+@n_frames: 
+@rate: 
+
+
+<!-- ##### FUNCTION swfdec_sprite_add_action ##### -->
+<para>
+
+</para>
+
+@sprite: 
+@frame: 
+@type: 
+@data: 
+
+
+<!-- ##### FUNCTION swfdec_sprite_get_next_frame ##### -->
+<para>
+
+</para>
+
+@sprite: 
+@current_frame: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_sprite_get_frame ##### -->
+<para>
+
+</para>
+
+@sprite: 
+@label: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_content_new ##### -->
+<para>
+
+</para>
+
+@depth: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_content_free ##### -->
+<para>
+
+</para>
+
+@content: 
+
+
+<!-- ##### FUNCTION tag_show_frame ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION tag_func_set_background_color ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_spriteseg_place_object_2 ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_spriteseg_remove_object ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_spriteseg_remove_object_2 ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+

@@ -366,7 +366,7 @@ JS_XDRBytes(JSXDRState *xdr, char *bytes, uint32 len)
     return JS_TRUE;
 }
 
-/**
+/*
  * Convert between a C string and the XDR representation:
  * leading 32-bit count, then counted vector of chars,
  * then possibly \0 padding to multiple of 4.

@@ -260,7 +260,7 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
                          StatementName(cg));
 }
 
-/**
+/*
   Span-dependent instructions in JS bytecode consist of the jump (JOF_JUMP)
   and switch (JOF_LOOKUPSWITCH, JOF_TABLESWITCH) format opcodes, subdivided
   into unconditional (gotos and gosubs), and conditional jumps or branches

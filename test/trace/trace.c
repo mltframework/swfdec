@@ -5,7 +5,7 @@
 #include <libswfdec/swfdec.h>
 
 static void
-trace_cb (SwfdecDecoder *dec, const char *message, GString *string)
+trace_cb (SwfdecPlayer *player, const char *message, GString *string)
 {
   g_string_append_printf (string, "%s\n", message);
 }

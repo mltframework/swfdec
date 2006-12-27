@@ -36,6 +36,38 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite_movie.h"
 
+/*** gtk-doc ***/
+
+/**
+ * SECTION:SwfdecPlayer
+ * @title: SwfdecPlayer
+ * @short_description: main playback object
+ *
+ * A #SwfdecPlayer is the main object used for playing back Flash files through
+ * Swfdec.
+ *
+ * A player interacts with the outside world in a multitude of ways. The most 
+ * important ones are described below.
+ *
+ * Input is handled via the 
+ * <link linkend="swfdec-SwfdecLoader">SwfdecLoader</link> class. A 
+ * #SwfdecLoader is set on a new player using swfdec_player_set_loader().
+ *
+ * When the loader has provided enough data, you can start playing the file.
+ * This is done in steps by calling swfdec_player_iterate() - preferrably as 
+ * often as swfdec_player_get_rate() indicates. Or you can provide user input
+ * to the player by calling for example swfdec_player_handle_mouse()
+ *
+ * You can use swfdec_player_render() to draw the current state of the player.
+ * After that, connect to the SwfdecPlayer::invalidate signal to be notified of
+ * changes.
+ *
+ * Audio output is handled via the 
+ * <link linkend="swfdec-SwfdecAudio">SwfdecAudio</link> class. One 
+ * #SwfdecAudio object is created for every output using the 
+ * SwfdecPlayer::audio-added signal.
+ */
+
 /*** Actions ***/
 
 typedef struct {

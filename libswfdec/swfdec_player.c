@@ -746,7 +746,7 @@ swfdec_init (void)
 
 /**
  * swfdec_player_handle_mouse:
- * @dec: a #SwfdecPlayer
+ * @player: a #SwfdecPlayer
  * @x: x coordinate of mouse
  * @y: y coordinate of mouse
  * @button: 1 for pressed, 0 for not pressed
@@ -773,7 +773,7 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
 
 /**
  * swfdec_player_render:
- * @dec: a #SwfdecPlayer
+ * @player: a #SwfdecPlayer
  * @cr: #cairo_t to render to
  * @x: x coordinate of top left position to render
  * @y: y coordinate of top left position to render

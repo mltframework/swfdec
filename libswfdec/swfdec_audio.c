@@ -194,7 +194,7 @@ swfdec_player_iterate_audio (SwfdecPlayer *player)
 
 /**
  * swfdec_player_get_audio_samples:
- * @dec: a #SwfdecPlayer
+ * @player: a #SwfdecPlayer
  *
  * Gets the amount of audio samples to be played back in the current frame. The
  * amount of samples may differ by one between frames to work around rounding 

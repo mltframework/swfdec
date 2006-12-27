@@ -8,53 +8,9 @@
 
   <chapter>
     <title>Public API</title>
-  </chapter>
-  <chapter>
-    <title>Private API</title>
-    <xi:include href="xml/swfdec_audio.xml"/>
-    <xi:include href="xml/swfdec_audio_event.xml"/>
-    <xi:include href="xml/swfdec_audio_internal.xml"/>
-    <xi:include href="xml/swfdec_audio_stream.xml"/>
-    <xi:include href="xml/swfdec_button.xml"/>
-    <xi:include href="xml/swfdec_button_movie.xml"/>
-    <xi:include href="xml/swfdec_character.xml"/>
-    <xi:include href="xml/swfdec_decoder.xml"/>
-    <xi:include href="xml/swfdec_edittext.xml"/>
-    <xi:include href="xml/swfdec_edittext_movie.xml"/>
-    <xi:include href="xml/swfdec_font.xml"/>
-    <xi:include href="xml/swfdec_graphic.xml"/>
-    <xi:include href="xml/swfdec_graphic_movie.xml"/>
-    <xi:include href="xml/swfdec_image.xml"/>
-    <xi:include href="xml/swfdec_loader.xml"/>
-    <xi:include href="xml/swfdec_morph_movie.xml"/>
-    <xi:include href="xml/swfdec_morphshape.xml"/>
-    <xi:include href="xml/swfdec_movie.xml"/>
-    <xi:include href="xml/swfdec_pattern.xml"/>
     <xi:include href="xml/swfdec_player.xml"/>
-    <xi:include href="xml/swfdec_root_movie.xml"/>
-    <xi:include href="xml/swfdec_shape.xml"/>
-    <xi:include href="xml/swfdec_sound.xml"/>
-    <xi:include href="xml/swfdec_sprite.xml"/>
-    <xi:include href="xml/swfdec_sprite_movie.xml"/>
-    <xi:include href="xml/swfdec_swf_decoder.xml"/>
-    <xi:include href="xml/swfdec_text.xml"/>
-    <xi:include href="xml/swfdec_debugger.xml"/>
-    <xi:include href="xml/swfdec_bits.xml"/>
+    <xi:include href="xml/swfdec_audio.xml"/>
     <xi:include href="xml/swfdec_buffer.xml"/>
-    <xi:include href="xml/swfdec_actions.xml"/>
-    <xi:include href="xml/swfdec_cache.xml"/>
-    <xi:include href="xml/swfdec_color.xml"/>
-    <xi:include href="xml/swfdec_codec.xml"/>
-    <xi:include href="xml/swfdec_compiler.xml"/>
-    <xi:include href="xml/swfdec_debug.xml"/>
-    <xi:include href="xml/swfdec_event.xml"/>
-    <xi:include href="xml/swfdec_js.xml"/>
-    <xi:include href="xml/swfdec_loader_internal.xml"/>
-    <xi:include href="xml/swfdec_player_internal.xml"/>
-    <xi:include href="xml/swfdec_rect.xml"/>
-    <xi:include href="xml/swfdec_ringbuffer.xml"/>
-    <xi:include href="xml/swfdec_tag.xml"/>
-    <xi:include href="xml/swfdec_types.xml"/>
-    <xi:include href="xml/swfdec_marshal.xml"/>
+    <xi:include href="xml/swfdec_loader.xml"/>
   </chapter>
 </book>

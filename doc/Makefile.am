@@ -48,16 +48,48 @@ CFILE_GLOB=$(top_srcdir)/libswfdec/*.c
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
 IGNORE_HFILES= \
-	jsapi.h jsarena.h jsarray.h jsatom.h jsautocfg.h jsbit.h \
-	jsbool.h jsclist.h jscntxt.h jscompat.h jsconfig.h jscpucfg.h \
-	jsdate.h jsdbgapi.h jsdhash.h jsdtoa.h jsemit.h jsexn.h jsfile.h \
-	jsfun.h jsgc.h jshash.h jsinterp.h jslibmath.h jslock.h jslong.h \
-	jsmath.h jsnum.h jsobj.h jsopcode.h jsosdep.h jsotypes.h jsparse.h \
-	jsprf.h jsprvtd.h jspubtd.h jsregexp.h jsscan.h jsscope.h \
-	jsscript.h jsstddef.h jsstr.h jstypes.h jsutil.h jsxdrapi.h \
-	prmjtime.h \
-	bits.h huffman.h jpeg.h jpeg_debug.h jpeg_internal.h \
-	jpeg_rgb_decoder.h jpeg_rgb_internal.h
+	js \
+	jpeg \
+	swfdec_audio_internal.h \
+	swfdec_audio_event.h \
+	swfdec_audio_stream.h \
+	swfdec_bits.h \
+	swfdec_button.h \
+	swfdec_button_movie.h \
+	swfdec_cache.h \
+	swfdec_character.h \
+	swfdec_codec.h \
+	swfdec_color.h \
+	swfdec_compiler.h \
+	swfdec_debug.h \
+	swfdec_debugger.h \
+	swfdec_decoder.h \
+	swfdec_edittext.h \
+	swfdec_edittext_movie.h \
+	swfdec_event.h \
+	swfdec_font.h \
+	swfdec_graphic.h \
+	swfdec_graphic_movie.h \
+	swfdec_image.h \
+	swfdec_js.h \
+	swfdec_loader_internal.h \
+	swfdec_marshal.h \
+	swfdec_morph_movie.h \
+	swfdec_morphshape.h \
+	swfdec_movie.h \
+	swfdec_pattern.h \
+	swfdec_player_internal.h \
+	swfdec_rect.h \
+	swfdec_ringbuffer.h \
+	swfdec_root_movie.h \
+	swfdec_shape.h \
+	swfdec_sound.h \
+	swfdec_sprite.h \
+	swfdec_sprite_movie.h \
+	swfdec_swf_decoder.h \
+	swfdec_tag.h \
+	swfdec_text.h \
+	swfdec_types.h
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png

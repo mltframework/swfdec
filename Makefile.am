@@ -1,6 +1,7 @@
 SUBDIRS= \
 	libswfdec \
 	player \
+	doc \
 	test
 
 ACLOCAL_FLAGS = -I m4
@@ -12,6 +13,7 @@ EXTRA_DIST=depcomp \
 	RELEASE \
 	ChangeLog \
 	autogen.sh \
+	gtk-doc.make \
 	swfdec.spec \
 	TODO \
 	m4/as-compiler-flag.m4 \

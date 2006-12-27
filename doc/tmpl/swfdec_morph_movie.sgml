@@ -1,0 +1,36 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecMorphMovie
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_MORPH_MOVIE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecMorphMovie ##### -->
+<para>
+
+</para>
+
+@movie: 
+@morph: 
+@paths: 
+

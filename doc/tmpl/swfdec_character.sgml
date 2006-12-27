@@ -1,0 +1,69 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecCharacter
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_CHARACTER_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecCharacter ##### -->
+<para>
+
+</para>
+
+@object: 
+@id: 
+
+<!-- ##### FUNCTION swfdec_character_new ##### -->
+<para>
+
+</para>
+
+@dec: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_character_mouse_in ##### -->
+<para>
+
+</para>
+
+@character: 
+@x: 
+@y: 
+@button: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_character_render ##### -->
+<para>
+
+</para>
+
+@character: 
+@cr: 
+@color: 
+@inval: 
+@fill: 
+
+

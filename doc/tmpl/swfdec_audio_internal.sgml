@@ -1,0 +1,111 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecAudio
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_AUDIO_OUT_GET ##### -->
+<para>
+
+</para>
+
+@channels: 
+@rate: 
+
+
+<!-- ##### MACRO SWFDEC_AUDIO_OUT_N_CHANNELS ##### -->
+<para>
+
+</para>
+
+@out: 
+
+
+<!-- ##### MACRO SWFDEC_AUDIO_OUT_GRANULARITY ##### -->
+<para>
+
+</para>
+
+@out: 
+
+
+<!-- ##### MACRO SWFDEC_AUDIO_OUT_RATE ##### -->
+<para>
+
+</para>
+
+@out: 
+
+
+<!-- ##### ENUM SwfdecAudioOut ##### -->
+<para>
+
+</para>
+
+@SWFDEC_AUDIO_OUT_MONO_44100: 
+@SWFDEC_AUDIO_OUT_MONO_22050: 
+@SWFDEC_AUDIO_OUT_MONO_11025: 
+@SWFDEC_AUDIO_OUT_MONO_5512: 
+@SWFDEC_AUDIO_OUT_STEREO_44100: 
+@SWFDEC_AUDIO_OUT_STEREO_22050: 
+@SWFDEC_AUDIO_OUT_STEREO_11025: 
+@SWFDEC_AUDIO_OUT_STEREO_5512: 
+
+<!-- ##### STRUCT SwfdecAudio ##### -->
+<para>
+
+</para>
+
+@object: 
+@player: 
+@start_offset: 
+
+<!-- ##### FUNCTION swfdec_audio_new ##### -->
+<para>
+
+</para>
+
+@player: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_audio_remove ##### -->
+<para>
+
+</para>
+
+@audio: 
+
+
+<!-- ##### FUNCTION swfdec_audio_iterate ##### -->
+<para>
+
+</para>
+
+@audio: 
+@n_samples: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_player_iterate_audio ##### -->
+<para>
+
+</para>
+
+@player: 
+
+

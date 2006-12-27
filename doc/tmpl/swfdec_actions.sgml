@@ -1,0 +1,224 @@
+<!-- ##### SECTION Title ##### -->
+swfdec_actions
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT SwfdecActionContext ##### -->
+<para>
+
+</para>
+
+@s: 
+@bits: 
+@error: 
+@registers: 
+@action: 
+@pc: 
+@skip: 
+@call_stack: 
+@call_depth: 
+@stack: 
+@stack_top: 
+@tag_argv: 
+@tag_argc: 
+@constantpool: 
+@jsrt: 
+@jscx: 
+@global: 
+@root: 
+@seglist: 
+
+<!-- ##### MACRO SWFDEC_ACTIONS_DEBUG_GC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO FUNCTION_TEMPORARIES ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION swfdec_init_context ##### -->
+<para>
+
+</para>
+
+@s: 
+
+
+<!-- ##### FUNCTION swfdec_action_script_execute ##### -->
+<para>
+
+</para>
+
+@s: 
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION tag_func_do_init_action ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION tag_func_do_action ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION action_register_sprite_seg ##### -->
+<para>
+
+</para>
+
+@s: 
+@seg: 
+
+
+<!-- ##### FUNCTION constant_pool_ref ##### -->
+<para>
+
+</para>
+
+@pool: 
+
+
+<!-- ##### FUNCTION constant_pool_unref ##### -->
+<para>
+
+</para>
+
+@pool: 
+
+
+<!-- ##### FUNCTION stack_pop ##### -->
+<para>
+
+</para>
+
+@context: 
+@Returns: 
+
+
+<!-- ##### FUNCTION stack_push ##### -->
+<para>
+
+</para>
+
+@context: 
+@value: 
+
+
+<!-- ##### FUNCTION stack_show ##### -->
+<para>
+
+</para>
+
+@context: 
+
+
+<!-- ##### FUNCTION stack_show_value ##### -->
+<para>
+
+</para>
+
+@context: 
+@val: 
+
+
+<!-- ##### FUNCTION action_script_call ##### -->
+<para>
+
+</para>
+
+@cx: 
+@obj: 
+@argc: 
+@argv: 
+@rval: 
+@Returns: 
+
+
+<!-- ##### FUNCTION pc_is_valid ##### -->
+<para>
+
+</para>
+
+@context: 
+@pc: 
+@Returns: 
+
+
+<!-- ##### FUNCTION jsval_as_object ##### -->
+<para>
+
+</para>
+
+@context: 
+@val: 
+@Returns: 
+
+
+<!-- ##### FUNCTION name_object ##### -->
+<para>
+
+</para>
+
+@context: 
+@obj: 
+@Returns: 
+
+
+<!-- ##### FUNCTION get_action ##### -->
+<para>
+
+</para>
+
+@action: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_init_context_builtins ##### -->
+<para>
+
+</para>
+
+@context: 
+
+
+<!-- ##### FUNCTION movieclip_find ##### -->
+<para>
+
+</para>
+
+@context: 
+@seg: 
+@Returns: 
+
+

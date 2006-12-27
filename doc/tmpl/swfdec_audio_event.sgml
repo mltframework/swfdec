@@ -1,0 +1,47 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecAudioEvent
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO SWFDEC_AUDIO_EVENT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecAudioEvent ##### -->
+<para>
+
+</para>
+
+@audio: 
+@sound: 
+@chunk: 
+@offset: 
+
+<!-- ##### FUNCTION swfdec_audio_event_new ##### -->
+<para>
+
+</para>
+
+@player: 
+@chunk: 
+@Returns: 
+
+

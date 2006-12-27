@@ -1,0 +1,194 @@
+<!-- ##### SECTION Title ##### -->
+swfdec_buffer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT SwfdecBuffer ##### -->
+<para>
+
+</para>
+
+@data: 
+@length: 
+@ref_count: 
+@parent: 
+@free: 
+@priv: 
+
+<!-- ##### STRUCT SwfdecBufferQueue ##### -->
+<para>
+
+</para>
+
+@buffers: 
+@depth: 
+@offset: 
+
+<!-- ##### FUNCTION swfdec_buffer_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_new_and_alloc ##### -->
+<para>
+
+</para>
+
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_new_and_alloc0 ##### -->
+<para>
+
+</para>
+
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_new_with_data ##### -->
+<para>
+
+</para>
+
+@data: 
+@size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_new_subbuffer ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@offset: 
+@length: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_new_from_file ##### -->
+<para>
+
+</para>
+
+@filename: 
+@error: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_ref ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_unref ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_clear ##### -->
+<para>
+
+</para>
+
+@queue: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_free ##### -->
+<para>
+
+</para>
+
+@queue: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_get_depth ##### -->
+<para>
+
+</para>
+
+@queue: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_get_offset ##### -->
+<para>
+
+</para>
+
+@queue: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_push ##### -->
+<para>
+
+</para>
+
+@queue: 
+@buffer: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_pull ##### -->
+<para>
+
+</para>
+
+@queue: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_pull_buffer ##### -->
+<para>
+
+</para>
+
+@queue: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_buffer_queue_peek ##### -->
+<para>
+
+</para>
+
+@queue: 
+@len: 
+@Returns: 
+
+

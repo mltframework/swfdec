@@ -1,0 +1,113 @@
+<!-- ##### SECTION Title ##### -->
+swfdec_ringbuffer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT SwfdecRingBuffer ##### -->
+<para>
+
+</para>
+
+@data: 
+@element_size: 
+@size: 
+@head: 
+@tail: 
+@n_elements: 
+
+<!-- ##### FUNCTION swfdec_ring_buffer_new ##### -->
+<para>
+
+</para>
+
+@element_size: 
+@size: 
+@Returns: 
+
+
+<!-- ##### MACRO swfdec_ring_buffer_new_for_type ##### -->
+<para>
+
+</para>
+
+@element_type: 
+@size: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_free ##### -->
+<para>
+
+</para>
+
+@buffer: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_get_size ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_set_size ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@new_size: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_get_n_elements ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_push ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_pop ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_ring_buffer_peek_nth ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@id: 
+@Returns: 
+
+

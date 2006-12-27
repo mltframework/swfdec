@@ -1,0 +1,112 @@
+<!-- ##### SECTION Title ##### -->
+SwfdecEditText
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT SwfdecParagraph ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO SWFDEC_EDIT_TEXT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### STRUCT SwfdecEditText ##### -->
+<para>
+
+</para>
+
+@graphic: 
+@text: 
+@password: 
+@max_length: 
+@html: 
+@font: 
+@wrap: 
+@multiline: 
+@align: 
+@justify: 
+@indent: 
+@spacing: 
+@color: 
+@selectable: 
+@border: 
+@height: 
+@left_margin: 
+@right_margin: 
+@autosize: 
+@variable: 
+@variable_prefix: 
+@variable_name: 
+@readonly: 
+
+<!-- ##### FUNCTION tag_func_define_edit_text ##### -->
+<para>
+
+</para>
+
+@s: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_paragraph_html_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@str: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_paragraph_text_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@str: 
+@Returns: 
+
+
+<!-- ##### FUNCTION swfdec_paragraph_free ##### -->
+<para>
+
+</para>
+
+@paragraphs: 
+
+
+<!-- ##### FUNCTION swfdec_edit_text_render ##### -->
+<para>
+
+</para>
+
+@text: 
+@cr: 
+@paragraph: 
+@trans: 
+@rect: 
+@fill: 
+
+

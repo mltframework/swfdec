@@ -68,6 +68,24 @@
  * SwfdecPlayer::audio-added signal.
  */
 
+/**
+ * SwfdecPlayer:
+ *
+ * This is the base object used for playing Flash files.
+ */
+
+/**
+ * SwfdecMouseCursor:
+ * @SWFDEC_MOUSE_CURSOR_NORMAL: a normal mouse cursor
+ * @SWFDEC_MOUSE_CURSOR_NONE: no mouse image
+ * @SWFDEC_MOUSE_CURSOR_TEXT: a mouse cursor suitable for text editing
+ * @SWFDEC_MOUSE_CURSOR_CLICK: a mouse cursor for clicking a hyperlink or a 
+ *                             button
+ *
+ * This enumeration describes the possible types for the SwfdecPlayer::mouse-cursor
+ * property.
+ */
+
 /*** Actions ***/
 
 typedef struct {
@@ -499,7 +517,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   object_class->dispose = swfdec_player_dispose;
 
   g_object_class_install_property (object_class, PROP_INITIALIZED,
-      g_param_spec_boolean ("initialized", "initialized", "the player has initialized its basic values",
+      g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
 	  FALSE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "latency", "audio latency in samples",
@@ -940,6 +958,14 @@ swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
     *height = player->height;
 }
 
+/**
+ * swfdec_player_get_audio:
+ * @player: a #SwfdecPlayer
+ *
+ * Returns a list of all currently active audio streams in @player.
+ *
+ * Returns: A #GList of #SwfdecAudio. You must not modify or free this list.
+ **/
 /* FIXME: I don't like this function */
 const GList *
 swfdec_player_get_audio (SwfdecPlayer *	player)

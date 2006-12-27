@@ -103,8 +103,6 @@ AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
   AC_MSG_ERROR([cannot find cairo, which is required for build])
-else
-  AC_DEFINE(HAVE_CAIRO, 1, [Define if swfdec uses cairo for rendering])
 fi
 
 AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
@@ -113,6 +111,7 @@ if test "x$HAVE_MAD" = xyes; then
   AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
 fi
 AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
+
 dnl FIXME: version?
 PKG_CHECK_MODULES(FFMPEG, libavcodec, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
 AC_SUBST(FFMPEG_CFLAGS)

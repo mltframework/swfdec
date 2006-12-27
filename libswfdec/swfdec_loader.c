@@ -45,9 +45,16 @@
  * For convenience, a #SwfdecLoader for file access is provided by Swfdec.
  */
 
+/**
+ * SwfdecLoader:
+ *
+ * This is the base class used for providing input. It is abstract, use a 
+ * subclass to provide your input.
+ */
+
 /*** SwfdecLoader ***/
 
-G_DEFINE_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
 
 static void
 swfdec_loader_dispose (GObject *object)

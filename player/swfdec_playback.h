@@ -24,7 +24,8 @@
 
 G_BEGIN_DECLS
 
-gpointer	swfdec_playback_open	(SwfdecPlayer *	player);
+gpointer	swfdec_playback_open	(SwfdecPlayer *	player,
+					 GMainContext *	context);
 
 void		swfdec_playback_close	(gpointer	sound);
 

@@ -151,7 +151,7 @@ main (int argc, char *argv[])
   if (no_sound || speed != 100) {
     playback = NULL;
   } else {
-    playback = swfdec_playback_open (player);
+    playback = swfdec_playback_open (player, g_main_context_default ());
   }
   play_swf (player, speed / 100.);
 

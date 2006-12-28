@@ -47,13 +47,14 @@ typedef struct {
   GList *		streams;	/* all Stream objects */
   GList *		waiting;	/* Stream objects waiting to get started */
   gulong		notify_cb;	/* callback id for notify::initialized */
+  GMainContext *	context;	/* context we work in */
 } Sound;
 
 typedef struct {
   Sound *		sound;		/* reference to sound object */
   SwfdecAudio *		audio;		/* the audio we play back */
   snd_pcm_t *		pcm;		/* the pcm we play back to */
-  guint *		sources;	/* sources for writing data */
+  GSource **		sources;	/* sources for writing data */
   guint			n_sources;	/* number of sources */
   guint			offset;		/* offset into sound */
 } Stream;
@@ -126,8 +127,9 @@ swfdec_stream_remove_handlers (Stream *stream)
 
   for (i = 0; i < stream->n_sources; i++) {
     if (stream->sources[i]) {
-      g_source_remove (stream->sources[i]);
-      stream->sources[i] = 0;
+      g_source_destroy (stream->sources[i]);
+      g_source_unref (stream->sources[i]);
+      stream->sources[i] = NULL;
     }
   }
   if (g_list_find (stream->sound->waiting, stream) == NULL)
@@ -158,12 +160,14 @@ swfdec_stream_install_handlers (Stream *stream)
       g_printerr ("attention: more than one fd!\n");
     count = snd_pcm_poll_descriptors (stream->pcm, polls, stream->n_sources);
     for (i = 0; i < count; i++) {
-      if (stream->sources[i] != 0)
+      if (stream->sources[i] != NULL)
 	continue;
       GIOChannel *channel = g_io_channel_unix_new (polls[i].fd);
-      stream->sources[i] = g_io_add_watch_full (channel, G_PRIORITY_HIGH,
-	  polls[i].events, handle_stream, stream, NULL);
+      stream->sources[i] = g_io_create_watch (channel, polls[i].events);
+      g_source_set_priority (stream->sources[i], G_PRIORITY_HIGH);
+      g_source_set_callback (stream->sources[i], (GSourceFunc) handle_stream, stream, NULL);
       g_io_channel_unref (channel);
+      g_source_attach (stream->sources[i], stream->sound->context);
     }
   }
   stream->sound->waiting = g_list_remove (stream->sound->waiting, stream);
@@ -249,7 +253,7 @@ swfdec_stream_open (Sound *sound, SwfdecAudio *audio)
   stream->pcm = ret;
   stream->n_sources = snd_pcm_poll_descriptors_count (ret);
   if (stream->n_sources > 0)
-    stream->sources = g_new0 (guint, stream->n_sources);
+    stream->sources = g_new0 (GSource *, stream->n_sources);
   sound->streams = g_list_prepend (sound->streams, stream);
   sound->waiting = g_list_prepend (sound->waiting, stream);
   return;
@@ -352,12 +356,13 @@ swfdec_playback_initialized (SwfdecPlayer *player, GParamSpec *pspec, Sound *sou
 }
 
 gpointer
-swfdec_playback_open (SwfdecPlayer *player)
+swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 {
   Sound *sound;
   const GList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (context != NULL, NULL);
 
   sound = g_new0 (Sound, 1);
   sound->player = g_object_ref (player);
@@ -377,6 +382,8 @@ swfdec_playback_open (SwfdecPlayer *player)
     sound->notify_cb = g_signal_connect (player, "notify::initialized",
 	G_CALLBACK (swfdec_playback_initialized), sound);
   }
+  g_main_context_ref (context);
+  sound->context = context;
   return sound;
 }
 
@@ -403,6 +410,7 @@ swfdec_playback_close (gpointer data)
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);
   g_object_unref (sound->player);
+  g_main_context_unref (sound->context);
   g_free (sound);
 }
 

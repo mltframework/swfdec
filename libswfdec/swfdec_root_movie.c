@@ -197,7 +197,11 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
     }
     /* FIXME: what do we do here? Is returning correct?*/
     return;
+  } else if (g_str_has_prefix (target, "FSCommand:")) {
+    const char *command = url + strlen ("FSCommand:");
+    SWFDEC_WARNING ("unhandled fscommand: %s %s", command, target);
+    return;
   }
-  g_print ("should load \"%s\" into %s\n", url, target);
+  swfdec_player_launch (root->player, url, target);
 }
 

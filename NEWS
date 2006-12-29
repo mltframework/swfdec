@@ -1,4 +1,25 @@
 
+ 0.4.0 ("festivally plump")
+
+This is the result of 3 months of refactoring, testing stuff and 
+generally playing around with swfdec. I'll try to list the big 
+changes:
+- rip out support for outdated libart
+- rip out included glib
+- rework the object system to have a lot more objects
+- split objects into "live" (SwfdecMovie, SwfdfecAudio), "static"
+  (SwfdecCharacter) and Javascript (JSObjects)
+- compile Flash Actionscript codes into SpiderMonkey bytecode
+- add testsuite
+- reverse engineer script execution order
+- reverse engineer seeking in sprite movies
+- implement lots of other Actionscript functions
+- documentation for public API
+- removal of all plugins (the Mozilla plugin exists as a seperate 
+  package now)
+- new small test application (not installed)
+- slightly bigger script debugging application (not installed)
+
  0.3.6 ("5.11d")
 
 This is less of a release and more of a "toss a bunch of code into

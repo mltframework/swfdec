@@ -10,12 +10,10 @@ EXTRA_DIST=depcomp \
 	AUTHORS \
 	COPYING \
 	README \
-	RELEASE \
 	ChangeLog \
 	autogen.sh \
 	gtk-doc.make \
 	swfdec.spec \
-	TODO \
 	m4/as-compiler-flag.m4 \
 	m4/ax_create_stdint_h.m4
 
@@ -26,4 +24,7 @@ CLEANFILES = swfdec-$(SWFDEC_MAJORMINOR).pc
 
 swfdec-@SWFDEC_MAJORMINOR@.pc: swfdec.pc
 	cp swfdec.pc swfdec-@SWFDEC_MAJORMINOR@.pc
+
+# build documentation when doing distcheck
+DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc
 

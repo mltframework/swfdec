@@ -159,6 +159,7 @@ enum {
   HANDLE_MOUSE,
   AUDIO_ADDED,
   AUDIO_REMOVED,
+  LAUNCH,
   LAST_SIGNAL
 };
 
@@ -602,6 +603,21 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   signals[AUDIO_REMOVED] = g_signal_new ("audio-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, SWFDEC_TYPE_AUDIO);
+  /**
+   * SwfdecPlayer::launch:
+   * @player: the #SwfdecPlayer affected
+   * @url: URL to open
+   * @target: target to load the URL into
+   *
+   * Emitted whenever the @player encounters an URL that should be loaded into 
+   * a target the Flash player does not recognize. In most cases this happens 
+   * when the user clicks a link in an embedded Flash movie that should open a
+   * new web page.
+   * The effect of calling any swfdec functions on the emitting @player is undefined.
+   */
+  signals[LAUNCH] = g_signal_new ("launch", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING,
+      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 
   klass->iterate = swfdec_player_do_iterate;
   klass->handle_mouse = swfdec_player_do_handle_mouse;
@@ -687,6 +703,16 @@ swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
     break;
   }
   SWFDEC_LOG ("no movie to remove at level %u", depth);
+}
+
+void
+swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (url != NULL);
+  g_return_if_fail (target != NULL);
+
+  g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 
 /** PUBLIC API ***/

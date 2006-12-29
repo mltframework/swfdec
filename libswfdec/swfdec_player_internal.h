@@ -109,6 +109,9 @@ SwfdecRootMovie *	swfdec_player_add_level_from_loader
 						 SwfdecLoader *		loader);
 void		swfdec_player_remove_level	(SwfdecPlayer *		player,
 						 guint			depth);
+void		swfdec_player_launch		(SwfdecPlayer *         player,
+						 const char *		url,
+						 const char *		target);
 
 
 G_END_DECLS

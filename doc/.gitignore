@@ -1,6 +1,7 @@
 html
 tmpl
 xml
+.libs
 
 html-build.stamp
 html.stamp

@@ -27,7 +27,9 @@
 
 #include "swfdec_player_internal.h"
 #include "swfdec_audio_internal.h"
+#include "swfdec_button_movie.h" /* for mouse cursor */
 #include "swfdec_debug.h"
+#include "swfdec_enums.h"
 #include "swfdec_event.h"
 #include "swfdec_js.h"
 #include "swfdec_loader_internal.h"
@@ -169,7 +171,7 @@ enum {
   PROP_0,
   PROP_INITIALIZED,
   PROP_LATENCY,
-  PROP_MOUSE_VISIBLE
+  PROP_MOUSE_CURSOR
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, G_TYPE_OBJECT)
@@ -194,8 +196,8 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_LATENCY:
       g_value_set_uint (value, player->samples_latency);
       break;
-    case PROP_MOUSE_VISIBLE:
-      g_value_set_boolean (value, player->mouse_visible);
+    case PROP_MOUSE_CURSOR:
+      g_value_set_enum (value, player->mouse_cursor);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -237,6 +239,28 @@ swfdec_player_dispose (GObject *object)
   g_assert (player->audio == NULL);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
+}
+
+static void
+swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
+{
+  SwfdecMouseCursor new = SWFDEC_MOUSE_CURSOR_NORMAL;
+
+  if (!player->mouse_visible) {
+    new = SWFDEC_MOUSE_CURSOR_NONE;
+  } else if (player->mouse_grab != NULL) {
+    /* FIXME: this needs to be more sophisticated, since SwfdecEditText may
+     * want to have different mouse cursors depending on location (it supports
+     * links in theory)
+     */
+    if (SWFDEC_IS_BUTTON_MOVIE (player->mouse_grab))
+      new = SWFDEC_MOUSE_CURSOR_CLICK;
+  }
+
+  if (new != player->mouse_cursor) {
+    player->mouse_cursor = new;
+    g_object_notify (G_OBJECT (player), "mouse-cursor");
+  }
 }
 
 static void
@@ -495,6 +519,7 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
+  swfdec_player_update_mouse_cursor (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
 }
@@ -523,9 +548,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "latency", "audio latency in samples",
 	  0, 44100 * 10, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_MOUSE_VISIBLE,
-      g_param_spec_boolean ("mouse-visible", "mouse visible", "whether to show the mouse pointer",
-	  TRUE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_MOUSE_CURSOR,
+      g_param_spec_enum ("mouse-cursor", "mouse cursor", "how the mouse pointer should be presented",
+	  SWFDEC_TYPE_MOUSE_CURSOR, SWFDEC_MOUSE_CURSOR_NONE, G_PARAM_READABLE));
 
   /**
    * SwfdecPlayer::trace:
@@ -631,6 +656,7 @@ swfdec_player_init (SwfdecPlayer *player)
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
 
   player->mouse_visible = TRUE;
+  player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
 }
 
 void

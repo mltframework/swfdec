@@ -49,6 +49,7 @@ struct _SwfdecPlayer
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
+  SwfdecMouseCursor	mouse_cursor;		/* cursor that should be shown if visible */
   double      		mouse_x;		/* in twips */
   double		mouse_y;		/* in twips */
   int			mouse_button; 		/* 0 for not pressed, 1 for pressed */

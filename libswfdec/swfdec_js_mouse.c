@@ -31,10 +31,7 @@ swfdec_js_mouse_show (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
 
   g_assert (player);
-  if (!player->mouse_visible) {
-    player->mouse_visible = TRUE;
-    g_object_notify (G_OBJECT (player), "mouse-visible");
-  }
+  player->mouse_visible = TRUE;
   return JS_TRUE;
 }
 
@@ -44,10 +41,7 @@ swfdec_js_mouse_hide (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
 
   g_assert (player);
-  if (player->mouse_visible) {
-    player->mouse_visible = FALSE;
-    g_object_notify (G_OBJECT (player), "mouse-visible");
-  }
+  player->mouse_visible = FALSE;
   return JS_TRUE;
 }
 

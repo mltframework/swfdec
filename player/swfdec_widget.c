@@ -224,27 +224,49 @@ static void
 swfdec_widget_update_cursor (SwfdecWidget *widget)
 {
   GdkWindow *window = GTK_WIDGET (widget)->window;
-  gboolean visible;
+  GdkDisplay *display = gtk_widget_get_display (GTK_WIDGET (widget));
+  SwfdecMouseCursor swfcursor;
+  GdkCursor *cursor;
 
   if (window == NULL)
     return;
-  g_object_get (widget->player, "mouse-visible", &visible, NULL);
+  g_object_get (widget->player, "mouse-cursor", &swfcursor, NULL);
 
-  if (visible) {
-    gdk_window_set_cursor (window, NULL);
-  } else {
-    GdkBitmap *bitmap;
-    GdkCursor *cursor;
-    GdkColor color = { 0, 0, 0, 0 };
-    char data = 0;
+  switch (swfcursor) {
+    case SWFDEC_MOUSE_CURSOR_NONE:
+      {
+	GdkBitmap *bitmap;
+	GdkColor color = { 0, 0, 0, 0 };
+	char data = 0;
 
-    bitmap = gdk_bitmap_create_from_data (window, &data, 1, 1);
-    if (bitmap == NULL)
-      return;
-    cursor = gdk_cursor_new_from_pixmap (bitmap, bitmap, &color, &color, 0, 0);
-    gdk_window_set_cursor (window, cursor);
-    gdk_cursor_unref (cursor);
-    g_object_unref (bitmap);
+	bitmap = gdk_bitmap_create_from_data (window, &data, 1, 1);
+	if (bitmap == NULL)
+	  return;
+	cursor = gdk_cursor_new_from_pixmap (bitmap, bitmap, &color, &color, 0, 0);
+	gdk_window_set_cursor (window, cursor);
+	gdk_cursor_unref (cursor);
+	g_object_unref (bitmap);
+	break;
+      }
+    case SWFDEC_MOUSE_CURSOR_TEXT:
+      cursor = gdk_cursor_new_for_display (display, GDK_XTERM);
+      gdk_window_set_cursor (window, cursor);
+      gdk_cursor_unref (cursor);
+      break;
+    case SWFDEC_MOUSE_CURSOR_CLICK:
+      cursor = gdk_cursor_new_for_display (display, GDK_HAND2);
+      gdk_window_set_cursor (window, cursor);
+      gdk_cursor_unref (cursor);
+      break;
+    case SWFDEC_MOUSE_CURSOR_NORMAL:
+      cursor = gdk_cursor_new_for_display (display, GDK_LEFT_PTR);
+      gdk_window_set_cursor (window, cursor);
+      gdk_cursor_unref (cursor);
+      break;
+    default:
+      g_warning ("invalid cursor %d", (int) swfcursor);
+      gdk_window_set_cursor (window, NULL);
+      break;
   }
 }
 
@@ -332,7 +354,7 @@ swfdec_widget_invalidate_cb (SwfdecPlayer *player, double x, double y,
 static void
 swfdec_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecWidget *widget)
 {
-  if (g_str_equal (pspec->name, "mouse-visible")) {
+  if (g_str_equal (pspec->name, "mouse-cursor")) {
     swfdec_widget_update_cursor (widget);
   } else if (g_str_equal (pspec->name, "initialized")) {
     gtk_widget_queue_resize (GTK_WIDGET (widget));

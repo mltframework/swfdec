@@ -35,6 +35,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_decoder.c \
 	swfdec_edittext.c \
 	swfdec_edittext_movie.c \
+	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_font.c \
 	swfdec_graphic.c \
@@ -74,16 +75,16 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(MAD_LIBS) $(FFMPEG_LIBS) \
 	$(LIBOIL_LIBS)
 
-libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la
-
-libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
-
-libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
+public_headers = \
 	swfdec.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \
 	swfdec_loader.h \
 	swfdec_player.h
+
+libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la
+libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
+libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
 	swfdec_audio_internal.h \
@@ -130,21 +131,46 @@ noinst_HEADERS = \
 EXTRA_DIST = swfdec_marshal.list
 
 BUILT_SOURCES = \
+	swfdec_enums.c \
+	swfdec_enums.h \
 	swfdec_marshal.c \
 	swfdec_marshal.h
 
 CLEANFILES = \
+	swfdec_enums.c \
+	swfdec_enums.h \
 	swfdec_marshal.c \
 	swfdec_marshal.h
 
-swfdec_marshal.h: swfdec_marshal.list
+swfdec_marshal.h: swfdec_marshal.list Makefile
 	$(GLIB_GENMARSHAL) --prefix=swfdec_marshal $(srcdir)/swfdec_marshal.list --header >> xgen-smh \
 	&& (cmp -s xgen-smh swfdec_marshal.h || cp xgen-smh swfdec_marshal.h) \
 	&& rm -f xgen-smh
 
-swfdec_marshal.c: swfdec_marshal.list swfdec_marshal.h
+swfdec_marshal.c: swfdec_marshal.list swfdec_marshal.h Makefile
 	(echo "#include \"swfdec_marshal.h\""; \
 	 $(GLIB_GENMARSHAL) --prefix=swfdec_marshal $(srcdir)/swfdec_marshal.list --body;) >> xgen-smc \
 	&& cp xgen-smc swfdec_marshal.c \
 	&& rm -f xgen-smc 
+
+swfdec_enums.h: $(public_headers) Makefile
+	( cd $(srcdir) && $(GLIB_MKENUMS) \
+			--fhead "#ifndef __SWFDEC_ENUMS_H__\n#define __SWFDEC_ENUMS_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
+			--fprod "/* enumerations from \"@filename@\" */\n" \
+			--vhead "GType @enum_name@_get_type (void) G_GNUC_CONST;\n#define SWFDEC_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n" \
+			--ftail "G_END_DECLS\n\n#endif /* __SWFDEC_ENUMS_H__ */" \
+		$(public_headers) ) >> xgen-seh \
+	&& (cmp -s xgen-seh swfdec_enums.h || cp xgen-seh swfdec_enums.h ) \
+	&& rm -f xgen-seh
+
+swfdec_enums.c: $(public_headers) Makefile
+	( cd $(srcdir) && $(GLIB_MKENUMS) \
+			--fhead "#include \"swfdec.h\"\n" \
+			--fprod "\n/* enumerations from \"@filename@\" */" \
+			--vhead "GType\n@enum_name@_get_type (void)\n{\n  static GType etype = 0;\n  if (etype == 0) {\n    static const G@Type@Value values[] = {" \
+			--vprod "      { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
+			--vtail "      { 0, NULL, NULL }\n    };\n    etype = g_@type@_register_static (g_intern_static_string (\"@EnumName@\"), values);\n  }\n  return etype;\n}\n" \
+		$(public_headers) ) > xgen-sec \
+	&& cp xgen-sec swfdec_enums.c  \
+	&& rm -f xgen-sec
 

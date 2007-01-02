@@ -65,8 +65,11 @@ fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_REQUIRES)
+dnl FIXME: detect these executables correctly
 GLIB_GENMARSHAL=glib-genmarshal
 AC_SUBST(GLIB_GENMARSHAL)
+GLIB_MKENUMS=glib-mkenums
+AC_SUBST(GLIB_MKENUMS)
 
 PKG_CHECK_MODULES(PANGO, pangocairo, HAVE_PANGO=yes, HAVE_PANGO=no)
 if test "$HAVE_PANGO" = "no"; then

@@ -206,10 +206,10 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
   g_return_val_if_fail (queue != NULL, NULL);
   g_return_val_if_fail (length > 0, NULL);
 
-  if (queue->depth < length) {
+  if (queue->depth < length) 
     return NULL;
-  }
 
+  /* FIXME: This function should share code with swfdec_buffer_queue_peek */
   SWFDEC_LOG ("pulling %d, %d available", length, queue->depth);
 
   g = g_list_first (queue->buffers);
@@ -258,6 +258,17 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
   return newbuffer;
 }
 
+/**
+ * swfdec_buffer_queue_peek:
+ * @queue: a #SwfdecBufferQueue to read from
+ * @length: amount of bytes to peek
+ *
+ * Creates a new buffer with the first @length bytes from @queue, but unlike 
+ * swfdec_buffer_queue_pull(), does not remove them from @queue.
+ *
+ * Returns: NULL if the requested amount of data wasn't available or a new 
+ *          readonly #SwfdecBuffer. Use swfdec_buffer_unref() after use.
+ **/
 SwfdecBuffer *
 swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
 {
@@ -268,9 +279,8 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
 
   g_return_val_if_fail (length > 0, NULL);
 
-  if (queue->depth < length) {
+  if (queue->depth < length)
     return NULL;
-  }
 
   SWFDEC_LOG ("peeking %d, %d available", length, queue->depth);
 

@@ -173,19 +173,6 @@ swfdec_bits_get_s16 (SwfdecBits * b)
 }
 
 unsigned int
-swfdec_bits_get_be_u16 (SwfdecBits * b)
-{
-  unsigned int r;
-
-  SWFDEC_BYTES_CHECK (b, 2);
-
-  r = (b->ptr[0] << 8) | b->ptr[1];
-  b->ptr += 2;
-
-  return r;
-}
-
-unsigned int
 swfdec_bits_get_u32 (SwfdecBits * b)
 {
   unsigned int r;
@@ -193,6 +180,32 @@ swfdec_bits_get_u32 (SwfdecBits * b)
   SWFDEC_BYTES_CHECK (b, 4);
 
   r = b->ptr[0] | (b->ptr[1] << 8) | (b->ptr[2] << 16) | (b->ptr[3] << 24);
+  b->ptr += 4;
+
+  return r;
+}
+
+unsigned int
+swfdec_bits_get_bu24 (SwfdecBits *b)
+{
+  unsigned int r;
+
+  SWFDEC_BYTES_CHECK (b, 3);
+
+  r = (b->ptr[0] >> 16) | (b->ptr[1] << 8) | b->ptr[2];
+  b->ptr += 3;
+
+  return r;
+}
+
+unsigned int 
+swfdec_bits_get_bu32 (SwfdecBits *b)
+{
+  unsigned int r;
+
+  SWFDEC_BYTES_CHECK (b, 4);
+
+  r = (b->ptr[0] >> 24) | (b->ptr[1] >> 16) | (b->ptr[2] << 8) | b->ptr[3];
   b->ptr += 4;
 
   return r;

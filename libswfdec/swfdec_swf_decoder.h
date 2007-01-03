@@ -30,6 +30,7 @@
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_rect.h>
 
+G_BEGIN_DECLS
 
 //typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecSwfDecoderClass SwfdecSwfDecoderClass;
@@ -88,5 +89,7 @@ gpointer	swfdec_swf_decoder_get_export		(SwfdecSwfDecoder *	s,
 SwfdecTagFunc *swfdec_swf_decoder_get_tag_func (int tag);
 const char *swfdec_swf_decoder_get_tag_name (int tag);
 int swfdec_swf_decoder_get_tag_flag (int tag);
+
+G_END_DECLS
 
 #endif

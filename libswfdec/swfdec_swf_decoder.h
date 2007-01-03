@@ -75,7 +75,7 @@ struct _SwfdecSwfDecoderClass {
   SwfdecDecoderClass decoder_class;
 };
 
-GType		swfdec_swf_decoder_get_type		();
+GType		swfdec_swf_decoder_get_type		(void);
 
 gpointer	swfdec_swf_decoder_get_character	(SwfdecSwfDecoder *	s, 
 							 int			id);

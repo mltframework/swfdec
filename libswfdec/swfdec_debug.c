@@ -63,8 +63,8 @@ swfdec_debug_log (unsigned int level, const char *file, const char *function,
 void
 swfdec_debug_set_level (unsigned int level)
 {
-  if (swfdec_debug_level > G_N_ELEMENTS (swfdec_debug_level_names))
-    swfdec_debug_level = G_N_ELEMENTS (swfdec_debug_level_names);
+  if (swfdec_debug_level >= G_N_ELEMENTS (swfdec_debug_level_names))
+    swfdec_debug_level = G_N_ELEMENTS (swfdec_debug_level_names) - 1;
   else
     swfdec_debug_level = level;
 }

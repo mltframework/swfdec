@@ -525,7 +525,8 @@ swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
  * Gets the contents of the next @len bytes of @bits and buts them in a new
  * subbuffer.
  *
- * Returns: the new #SwfdecBuffer
+ * Returns: the new #SwfdecBuffer or NULL if the requested amount of data 
+ *          isn't available
  **/
 SwfdecBuffer *
 swfdec_bits_get_buffer (SwfdecBits *bits, int len)
@@ -539,7 +540,9 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
   } else {
     swfdec_bits_syncbits (bits);
     len = bits->end - bits->ptr;
-    g_assert (len > 0);
+    g_assert (len >= 0);
+    if (len == 0)
+      return NULL;
   }
   buffer = swfdec_buffer_new_subbuffer (bits->buffer, bits->ptr - bits->buffer->data, len);
   bits->ptr += len;

@@ -38,7 +38,7 @@ typedef enum {
   /* at least one new image is available for display */
   SWFDEC_STATUS_IMAGE,
   /* header parsing is complete, framerate, image size etc are known */
-  SWFDEC_STATUS_CHANGE,
+  SWFDEC_STATUS_INIT,
   /* parsing is finished */
   SWFDEC_STATUS_EOF
 } SwfdecStatus;

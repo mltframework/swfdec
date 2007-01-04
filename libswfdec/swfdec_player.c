@@ -783,7 +783,7 @@ swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   movie = swfdec_player_add_level_from_loader (player, 0, loader);
-  swfdec_root_movie_parse (movie);
+  swfdec_loader_parse (loader);
 }
 
 /**

@@ -22,68 +22,11 @@
 #endif
 #include "swfdec_source.h"
 
-/*** SwfdecTime ***/
-
-static void
-swfdec_time_compute_next (SwfdecTime *time)
+static glong
+my_time_val_difference (const GTimeVal *compare, const GTimeVal *now)
 {
-  /* must be 64bit to avoid overflow */
-  glong add = (gint64) time->iterated * 256 * G_USEC_PER_SEC / time->rate;
-
-  time->next = time->start;
-  g_time_val_add (&time->next, add);
-  if (time->iterated == time->rate) {
-    time->start = time->next;
-    time->iterated = 0;
-  }
-}
-
-void
-swfdec_time_init (SwfdecTime *time, GTimeVal *now, double rate)
-{
-  g_return_if_fail (time != NULL);
-  g_return_if_fail (now != NULL);
-  g_return_if_fail (rate > 0);
-
-  time->start = *now;
-  time->iterated = 1;
-  time->rate = rate * 256;
-  swfdec_time_compute_next (time);
-}
-
-/**
- * swfdec_time_tick:
- * @time: a @SwfdecTime
- *
- * Advances @time by one tick.
- **/
-void
-swfdec_time_tick (SwfdecTime *time)
-{
-  g_return_if_fail (time != NULL);
-
-  time->iterated++;
-  swfdec_time_compute_next (time);
-}
-
-/**
- * swfdec_time_get_difference:
- * @time: #SwfdecTime to compare to
- * @tv: a timeval to check
- *
- * Compares the given @time to @tv. If the result is positive, @time happens
- * before @tv, if it's negative, it happens after.
- *
- * Returns: The difference in milliseconds between @time and @tv
- **/
-glong
-swfdec_time_get_difference (SwfdecTime *time, GTimeVal *tv)
-{
-  g_return_val_if_fail (time != NULL, 0);
-  g_return_val_if_fail (tv != NULL, 0);
-
-  return (tv->tv_sec - time->next.tv_sec) * 1000 + 
-    (tv->tv_usec - time->next.tv_usec) / 1000;
+  return (compare->tv_sec - now->tv_sec) * 1000 + 
+    (compare->tv_usec - now->tv_usec) / 1000;
 }
 
 /*** SwfdecIterateSource ***/
@@ -94,23 +37,41 @@ struct _SwfdecIterateSource {
   SwfdecPlayer *	player;
   double		speed;		/* playback speed */
   gulong		notify;		/* set for iterate notifications */
-  SwfdecTime		time;		/* time manager */
+  GTimeVal		last;		/* last time */
 };
 
-static gboolean
-swfdec_iterate_prepare (GSource *source_, gint *timeout)
+static glong
+swfdec_iterate_get_msecs_to_next_event (GSource *source_)
 {
   SwfdecIterateSource *source = (SwfdecIterateSource *) source_;
   GTimeVal now;
   glong diff;
 
+  diff = swfdec_player_get_next_event (source->player);
+  if (diff == 0)
+    return G_MAXLONG;
+  diff *= source->speed;
   g_source_get_current_time (source_, &now);
-  diff = swfdec_time_get_difference (&source->time, &now);
-  if (diff >= 0) {
+  /* should really add to source->last instead of sutracting from now */
+  g_time_val_add (&now, -diff * 1000);
+  diff = my_time_val_difference (&source->last, &now);
+
+  return diff;
+}
+
+static gboolean
+swfdec_iterate_prepare (GSource *source, gint *timeout)
+{
+  glong diff = swfdec_iterate_get_msecs_to_next_event (source);
+
+  if (diff == G_MAXLONG) {
+    *timeout = -1;
+    return FALSE;
+  } else if (diff <= 0) {
     *timeout = 0;
     return TRUE;
   } else {
-    *timeout = -diff;
+    *timeout = diff;
     return FALSE;
   }
 }
@@ -118,18 +79,21 @@ swfdec_iterate_prepare (GSource *source_, gint *timeout)
 static gboolean
 swfdec_iterate_check (GSource *source)
 {
-  gint timeout;
+  glong diff = swfdec_iterate_get_msecs_to_next_event (source);
 
-  return swfdec_iterate_prepare (source, &timeout);
+  return diff < 0;
 }
 
 static gboolean
 swfdec_iterate_dispatch (GSource *source_, GSourceFunc callback, gpointer user_data)
 {
   SwfdecIterateSource *source = (SwfdecIterateSource *) source_;
+  glong diff = swfdec_iterate_get_msecs_to_next_event (source_);
 
-  swfdec_player_iterate (source->player);
-  swfdec_time_tick (&source->time);
+  if (diff > 0)
+    return TRUE;
+  diff = swfdec_player_get_next_event (source->player) - diff;
+  swfdec_player_advance (source->player, diff);
   return TRUE;
 }
 
@@ -151,47 +115,17 @@ GSourceFuncs swfdec_iterate_funcs = {
   swfdec_iterate_finalize
 };
 
-static gboolean
-swfdec_iterate_source_handle_mouse (SwfdecPlayer *player, double x, double y, 
-    int button, SwfdecIterateSource *source)
-{
-  guint samples = swfdec_player_get_audio_samples (player);
-  glong delay;
-  GTimeVal now;
-
-  g_get_current_time (&now);
-  delay = swfdec_time_get_difference (&source->time, &now);
-
-  delay = samples + delay * 44100 / 1000;
-  if (delay < 0)
-    samples = 0;
-  else
-    samples = MIN ((guint) delay, samples);
-  swfdec_player_set_audio_advance (player, samples);
-
-  return FALSE;
-}
-
 static void
-swfdec_iterate_source_notify_cb (SwfdecPlayer *player, GParamSpec *pspec,
-    SwfdecIterateSource *source)
+swfdec_iterate_source_advance_cb (SwfdecPlayer *player, guint msecs, 
+    guint audio_frames, SwfdecIterateSource *source)
 {
-  GTimeVal now;
-  double rate = swfdec_player_get_rate (player);
-  g_assert (rate > 0);
-  g_get_current_time (&now);
-  rate *= source->speed;
-  swfdec_time_init (&source->time, &now, rate);
-  g_signal_handler_disconnect (player, source->notify);
-  source->notify = 0;
+  g_time_val_add (&source->last, msecs * 1000 * source->speed);
 }
 
 GSource *
 swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
 {
   SwfdecIterateSource *source;
-  GTimeVal now;
-  double rate;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (speed > 0.0, NULL);
@@ -200,17 +134,9 @@ swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
       sizeof (SwfdecIterateSource));
   source->player = g_object_ref (player);
   source->speed = speed;
-  g_signal_connect (player, "handle-mouse", 
-      G_CALLBACK (swfdec_iterate_source_handle_mouse), source);
-  rate = swfdec_player_get_rate (player);
-  if (rate > 0) {
-    g_get_current_time (&now);
-    rate *= speed;
-    swfdec_time_init (&source->time, &now, rate);
-  } else {
-    source->notify = g_signal_connect (player, "notify::initialized",
-	G_CALLBACK (swfdec_iterate_source_notify_cb), source);
-  }
+  source->notify = g_signal_connect (player, "advance",
+      G_CALLBACK (swfdec_iterate_source_advance_cb), source);
+  g_get_current_time (&source->last);
   
   return (GSource *) source;
 }

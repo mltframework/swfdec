@@ -38,7 +38,7 @@ typedef enum {
   /* at least one new image is available for display */
   SWFDEC_STATUS_IMAGE,
   /* header parsing is complete, framerate, image size etc are known */
-  SWFDEC_STATUS_CHANGE,
+  SWFDEC_STATUS_INIT,
   /* parsing is finished */
   SWFDEC_STATUS_EOF
 } SwfdecStatus;
@@ -58,7 +58,7 @@ struct _SwfdecDecoder
   GObject		object;
 
   SwfdecPlayer *	player;		/* FIXME: only needed to get the JS Context, I want it gone */
-  guint			rate;		/* rate of stream */
+  guint			rate;		/* rate per second in 256th */
   guint			width;		/* width of stream */
   guint			height;		/* guess */
   guint			bytes_loaded; 	/* bytes already loaded */

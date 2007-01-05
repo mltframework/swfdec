@@ -43,7 +43,8 @@ struct _SwfdecLoader
   char *		url;		/* the URL for this loader */
   /*< private >*/
   gboolean		eof;		/* if we're in EOF already */
-  gpointer		target;		/* the movie clip that gets notified about load events */
+  gboolean		error;		/* if there's an error (from parsing the loader) */
+  gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
   SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
 };
 

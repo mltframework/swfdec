@@ -5,6 +5,12 @@
 #include <glib-object.h>
 #include <cairo.h>
 
+/* audio is 44100Hz, framerate is multiple of 256Hz, FLV timestamps are 1000Hz
+ * This is a multiple of all these numbers, so we can be always accurate
+ */
+#define SWFDEC_TICKS_PER_SECOND G_GUINT64_CONSTANT (44100 * 256 * 10)
+typedef guint64 SwfdecTick;
+
 #define SWFDEC_TWIPS_SCALE_FACTOR	      	20
 typedef int SwfdecTwips;
 #define SWFDEC_TWIPS_TO_DOUBLE(t) ((t) * (1.0 / SWFDEC_TWIPS_SCALE_FACTOR))

@@ -56,9 +56,9 @@
  * #SwfdecLoader is set on a new player using swfdec_player_set_loader().
  *
  * When the loader has provided enough data, you can start playing the file.
- * This is done in steps by calling swfdec_player_iterate() - preferrably as 
- * often as swfdec_player_get_rate() indicates. Or you can provide user input
- * to the player by calling for example swfdec_player_handle_mouse()
+ * This is done in steps by calling swfdec_player_advance() - preferrably as 
+ * often as swfdec_player_get_next_event() indicates. Or you can provide user input
+ * to the player by calling for example swfdec_player_handle_mouse().
  *
  * You can use swfdec_player_render() to draw the current state of the player.
  * After that, connect to the SwfdecPlayer::invalidate signal to be notified of
@@ -87,6 +87,96 @@
  * This enumeration describes the possible types for the SwfdecPlayer::mouse-cursor
  * property.
  */
+
+/*** Timeouts ***/
+
+static SwfdecTick
+swfdec_player_get_next_event_time (SwfdecPlayer *player)
+{
+  if (player->timeouts) {
+    return ((SwfdecTimeout *) player->timeouts->data)->timestamp - player->time;
+  } else {
+    return 0;
+  }
+}
+
+static int
+swfdec_timeout_compare (gconstpointer a, gconstpointer b)
+{
+  const SwfdecTimeout *ta = a;
+  const SwfdecTimeout *tb = b;
+
+  /* FIXME: not overflow-safe */
+  if (ta->timestamp < tb->timestamp)
+    return -1;
+  if (ta->timestamp > tb->timestamp)
+    return 1;
+  return 0;
+}
+
+/**
+ * swfdec_player_add_timeout:
+ * @player: a #SwfdecPlayer
+ * @timeout: timeout to add
+ *
+ * Adds a timeout to @player. The timeout will be removed automatically when 
+ * triggered, so you need to use swfdec_player_add_timeout() to add it again. 
+ * The #SwfdecTimeout struct and callback does not use a data callback pointer. 
+ * It's suggested that you use the struct as part of your own bigger struct 
+ * and get it back like this:
+ * <programlisting>
+ * typedef struct {
+ *   // ...
+ *   SwfdecTimeout timeout;
+ * } MyStruct;
+ *
+ * static void
+ * my_struct_timeout_callback (SwfdecTimeout *timeout)
+ * {
+ *   MyStruct *mystruct = (MyStruct *) ((void *) timeout - G_STRUCT_OFFSET (MyStruct, timeout));
+ *
+ *   // do stuff
+ * }
+ * </programlisting>
+ **/
+void
+swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
+{
+  SwfdecTick next_tick;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (timeout != NULL);
+  g_return_if_fail (timeout->timestamp > player->time);
+  g_return_if_fail (timeout->callback != NULL);
+
+  next_tick = swfdec_player_get_next_event_time (player);
+  player->timeouts = g_list_insert_sorted (player->timeouts, timeout, swfdec_timeout_compare);
+  if (next_tick != swfdec_player_get_next_event_time (player))
+    g_object_notify (G_OBJECT (player), "next-event");
+}
+
+/**
+ * swfdec_player_remove_timeout:
+ * @player: a #SwfdecPlayer
+ * @timeout: a timeout that should be removed
+ *
+ * Removes the @timeout from the list of scheduled timeouts. THe tiemout must 
+ * have been added with swfdec_player_add_timeout() before.
+ **/
+void
+swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
+{
+  SwfdecTick next_tick;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (timeout != NULL);
+  g_return_if_fail (timeout->timestamp > player->time);
+  g_return_if_fail (timeout->callback != NULL);
+
+  player->timeouts = g_list_remove (player->timeouts, timeout);
+  if (next_tick != swfdec_player_get_next_event_time (player))
+    g_object_notify (G_OBJECT (player), "next-event");
+}
 
 /*** Actions ***/
 
@@ -157,7 +247,7 @@ swfdec_player_do_action (SwfdecPlayer *player)
 enum {
   TRACE,
   INVALIDATE,
-  ITERATE,
+  ADVANCE,
   HANDLE_MOUSE,
   AUDIO_ADDED,
   AUDIO_REMOVED,
@@ -170,8 +260,8 @@ static guint signals[LAST_SIGNAL];
 enum {
   PROP_0,
   PROP_INITIALIZED,
-  PROP_LATENCY,
-  PROP_MOUSE_CURSOR
+  PROP_MOUSE_CURSOR,
+  PROP_NEXT_EVENT
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, G_TYPE_OBJECT)
@@ -193,11 +283,11 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
       break;
-    case PROP_LATENCY:
-      g_value_set_uint (value, player->samples_latency);
-      break;
     case PROP_MOUSE_CURSOR:
       g_value_set_enum (value, player->mouse_cursor);
+      break;
+    case PROP_NEXT_EVENT:
+      g_value_set_uint (value, swfdec_player_get_next_event (player));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -209,12 +299,9 @@ static void
 swfdec_player_set_property (GObject *object, guint param_id, const GValue *value,
     GParamSpec *pspec)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (object);
+  //SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   switch (param_id) {
-    case PROP_LATENCY:
-      player->samples_latency = g_value_get_uint (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -237,6 +324,10 @@ swfdec_player_dispose (GObject *object)
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
   g_assert (player->audio == NULL);
+  if (player->rate) {
+    swfdec_player_remove_timeout (player, &player->iterate_timeout);
+  }
+  g_assert (player->timeouts == NULL);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
@@ -394,6 +485,9 @@ swfdec_player_do_mouse_button (SwfdecPlayer *player)
 static void
 swfdec_player_emit_signals (SwfdecPlayer *player)
 {
+  GList *walk;
+
+  /* emit invalidate signal */
   if (!swfdec_rect_is_empty (&player->invalid)) {
     double x, y, width, height;
     /* FIXME: currently we clamp the rectangle to the visible area, it might
@@ -409,6 +503,16 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     height = MIN (height, player->height - y);
     g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
+  }
+
+  /* emit audio-added for all added audio streams */
+  for (walk = player->audio; walk; walk = walk->next) {
+    SwfdecAudio *audio = walk->data;
+
+    if (audio->added)
+      continue;
+    g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
+    audio->added = TRUE;
   }
 }
 
@@ -437,15 +541,12 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
 }
 
 static void
-swfdec_player_do_iterate (SwfdecPlayer *player)
+swfdec_player_iterate (SwfdecTimeout *timeout)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER ((void *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
-  swfdec_player_lock (player);
   SWFDEC_INFO ("=== START ITERATION ===");
-  /* set latency so that sounds start after iteration */
-  if (player->samples_latency < player->samples_this_frame)
-    player->samples_latency = player->samples_this_frame;
   /* The handling of this list is rather tricky. This code assumes that no 
    * movies get removed that haven't been iterated yet. This should not be a 
    * problem without using Javascript, because the only way to remove movies
@@ -469,9 +570,54 @@ swfdec_player_do_iterate (SwfdecPlayer *player)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
-  /* iterate audio after video so audio clips that get added during mouse
-   * events have the same behaviour than those added while iterating */
-  swfdec_player_iterate_audio (player);
+  /* add timeout again */
+  /* FIXME: rounding issues? */
+  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
+  swfdec_player_add_timeout (player, &player->iterate_timeout);
+}
+
+static void
+swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples)
+{
+  GList *walk;
+  SwfdecAudio *audio;
+  SwfdecTimeout *timeout;
+  SwfdecTick target_time;
+  guint frames_now;
+  
+  swfdec_player_lock (player);
+  target_time = player->time + msecs * (SWFDEC_TICKS_PER_SECOND / 1000);
+  SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)\n", msecs, audio_samples);
+
+  player->audio_skip = audio_samples;
+  /* iterate all playing sounds */
+  walk = player->audio;
+  while (walk) {
+    audio = walk->data;
+    walk = walk->next;
+    if (swfdec_audio_iterate (audio, audio_samples) == 0)
+      swfdec_audio_remove (audio);
+  }
+
+  for (timeout = player->timeouts ? player->timeouts->data : NULL;
+       timeout && timeout->timestamp <= target_time; ) {
+    player->timeouts = g_list_remove (player->timeouts, timeout);
+    frames_now = timeout->timestamp / (SWFDEC_TICKS_PER_SECOND / 44100) - 
+      player->time / (SWFDEC_TICKS_PER_SECOND / 44100);
+    player->time = timeout->timestamp;
+    player->audio_skip -= frames_now;
+    SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT", target time is %"G_GUINT64_FORMAT,
+	timeout, timeout->timestamp, target_time);
+    timeout->callback (timeout);
+  }
+  if (target_time > player->time) {
+    frames_now = target_time / (SWFDEC_TICKS_PER_SECOND / 44100) - 
+      player->time / (SWFDEC_TICKS_PER_SECOND / 44100);
+    player->time = target_time;
+    player->audio_skip -= frames_now;
+  }
+  g_assert (player->audio_skip == 0);
+  
   swfdec_player_unlock (player);
 }
 
@@ -545,12 +691,12 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
 	  FALSE, G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_LATENCY,
-      g_param_spec_uint ("latency", "latency", "audio latency in samples",
-	  0, 44100 * 10, 0, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_MOUSE_CURSOR,
       g_param_spec_enum ("mouse-cursor", "mouse cursor", "how the mouse pointer should be presented",
 	  SWFDEC_TYPE_MOUSE_CURSOR, SWFDEC_MOUSE_CURSOR_NONE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_NEXT_EVENT,
+      g_param_spec_uint ("next-event", "next event", "how many milliseconds until the next event or 0 when no event pending",
+	  0, G_MAXUINT, 0, G_PARAM_READABLE));
 
   /**
    * SwfdecPlayer::trace:
@@ -579,15 +725,17 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_DOUBLE_DOUBLE,
       G_TYPE_NONE, 4, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
   /**
-   * SwfdecPlayer::iterate:
+   * SwfdecPlayer::advance:
    * @player: the #SwfdecPlayer affected
+   * @msecs: the amount of milliseconds the player will advance
+   * @audio_samples: number of frames the audio is advanced (in 44100Hz steps)
    *
-   * Emitted whenever the player iterates.
+   * Emitted whenever the player advances.
    */
-  signals[ITERATE] = g_signal_new ("iterate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, iterate), 
-      NULL, NULL, g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE, 0);
+  signals[ADVANCE] = g_signal_new ("advance", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, advance), 
+      NULL, NULL, swfdec_marshal_VOID__UINT_UINT,
+      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
   /**
    * SwfdecPlayer::handle-mouse:
    * @player: the #SwfdecPlayer affected
@@ -644,7 +792,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 
-  klass->iterate = swfdec_player_do_iterate;
+  klass->advance = swfdec_player_do_advance;
   klass->handle_mouse = swfdec_player_do_handle_mouse;
 }
 
@@ -657,6 +805,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
+  player->iterate_timeout.callback = swfdec_player_iterate;
 }
 
 void
@@ -741,6 +890,38 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 
+/**
+ * swfdec_player_initialize:
+ * @player: a #SwfdecPlayer
+ * @rate: framerate in 256th or 0 for undefined
+ * @width: width of movie
+ * @height: height of movie
+ *
+ * Initializes the player to the given @width, @height and @rate. If the player
+ * is already initialized, this function does nothing.
+ **/
+void
+swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (width > 0);
+  g_return_if_fail (height > 0);
+
+  if (swfdec_player_is_initialized (player))
+    return;
+  
+  player->rate = rate;
+  player->width = width;
+  player->height = height;
+  if (rate) {
+    player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / rate;
+    swfdec_player_add_timeout (player, &player->iterate_timeout);
+    SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")\n",
+	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
+  }
+  g_object_notify (G_OBJECT (player), "initialized");
+}
+
 /** PUBLIC API ***/
 
 /**
@@ -783,7 +964,7 @@ swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   movie = swfdec_player_add_level_from_loader (player, 0, loader);
-  swfdec_root_movie_parse (movie);
+  swfdec_loader_parse (loader);
 }
 
 /**
@@ -854,7 +1035,9 @@ swfdec_init (void)
  * @button: 1 for pressed, 0 for not pressed
  *
  * Updates the current mouse status. If the mouse has left the area of @player,
- * you should pass values outside the movie size for @x and @y.
+ * you should pass values outside the movie size for @x and @y. You will 
+ * probably want to call swfdec_player_advance() before to update the player to
+ * the correct time when calling this function.
  *
  * Returns: TRUE if the mouse event was handled. A mouse event may not be 
  *          handled if the user clicked on a translucent area for example.
@@ -932,16 +1115,19 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
 }
 
 /**
- * swfdec_player_iterate:
- * @player: the #SwfdecPlayer to iterate
+ * swfdec_player_advance:
+ * @player: the #SwfdecPlayer to advance
+ * @msecs: number of milliseconds to advance
  *
- * Advances #player to the next frame. You should make sure to call this function
- * as often per second as swfdec_player_get_rate() indicates.
+ * Advances @player by @msecs. You should make sure to call this function as
+ * often as the SwfdecPlayer::next-event property indicates.
  **/
 void
-swfdec_player_iterate (SwfdecPlayer *player)
+swfdec_player_advance (SwfdecPlayer *player, guint msecs)
 {
+  guint frames;
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (msecs > 0);
 
 #if 0
   while (TRUE)
@@ -949,7 +1135,9 @@ swfdec_player_iterate (SwfdecPlayer *player)
   //swfdec_js_run (player, "s=\"/A/B:foo\"; t=s.indexOf (\":\"); if (t) t=s.substring(0,s.indexOf (\":\")); else t=s;", NULL);
 #endif
 
-  g_signal_emit (player, signals[ITERATE], 0);
+  frames = (player->time + msecs * (SWFDEC_TICKS_PER_SECOND / 1000)) / (SWFDEC_TICKS_PER_SECOND / 44100)
+    - player->time / (SWFDEC_TICKS_PER_SECOND / 44100);
+  g_signal_emit (player, signals[ADVANCE], 0, msecs, frames);
 }
 
 /**
@@ -973,14 +1161,42 @@ swfdec_player_is_initialized (SwfdecPlayer *player)
 }
 
 /**
+ * swfdec_player_get_next_event:
+ * @player: ia #SwfdecPlayer
+ *
+ * Queries how long to the next event. This is the next time when you should 
+ * call swfdec_player_advance() to forward to.
+ *
+ * Returns: number of milliseconds until next event or 0 if no outstanding event
+ **/
+guint
+swfdec_player_get_next_event (SwfdecPlayer *player)
+{
+  SwfdecTick time;
+  guint ret;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
+
+  time = swfdec_player_get_next_event_time (player);
+  ret = time / (SWFDEC_TICKS_PER_SECOND / 1000);
+  if (time % (SWFDEC_TICKS_PER_SECOND / 1000))
+    ret++;
+
+  return ret;
+}
+
+/**
  * swfdec_player_get_rate:
  * @player: a #SwfdecPlayer
  *
  * Queries the framerate of this movie. This number specifies the number
  * of frames that are supposed to pass per second. It is a 
- * multiple of 1/256.
+ * multiple of 1/256. It is possible that the movie has no framerate if it does
+ * not display a Flash movie but an FLV video for example. This does not mean
+ * it will not change however.
  *
- * Returns: The framerate of this movie or 0 if it isn't known yet.
+ * Returns: The framerate of this movie or 0 if it isn't known yet or the
+ *          movie doesn't have a framerate.
  **/
 double
 swfdec_player_get_rate (SwfdecPlayer *player)

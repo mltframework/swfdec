@@ -232,7 +232,7 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
   swfdec_sprite_set_n_frames (s->main_sprite, dec->frames_total, dec->rate);
 
   s->state = SWFDEC_STATE_PARSETAG;
-  return SWFDEC_STATUS_CHANGE;
+  return SWFDEC_STATUS_INIT;
 }
 
 static SwfdecStatus

@@ -21,12 +21,17 @@
 #define _SWFDEC_LOADER_INTERNAL_H_
 
 #include "swfdec_loader.h"
+#include "swfdec_loadertarget.h"
 
 G_BEGIN_DECLS
 
 
-SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *	loader,
-							 const char *	url);
+SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
+							 const char *		url);
+void			swfdec_loader_parse		(SwfdecLoader *		loader);
+void			swfdec_loader_parse_internal	(SwfdecLoader *		loader);
+void			swfdec_loader_set_target	(SwfdecLoader *		loader,
+							 SwfdecLoaderTarget *	target);
 					 
 
 G_END_DECLS

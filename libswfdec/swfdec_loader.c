@@ -24,7 +24,8 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_buffer.h"
 #include "swfdec_debug.h"
-#include "swfdec_root_movie.h"
+#include "swfdec_loadertarget.h"
+#include "swfdec_player_internal.h"
 
 /*** gtk-doc ***/
 
@@ -172,6 +173,31 @@ swfdec_file_loader_init (SwfdecFileLoader *loader)
 {
 }
 
+/*** INTERNAL API ***/
+
+SwfdecLoader *
+swfdec_loader_load (SwfdecLoader *loader, const char *url)
+{
+  SwfdecLoaderClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
+
+  klass = SWFDEC_LOADER_GET_CLASS (loader);
+  g_return_val_if_fail (klass->load != NULL, NULL);
+  return klass->load (loader, url);
+}
+
+void
+swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
+{
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (loader->target == NULL || target == NULL);
+  g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
+
+  loader->target = target;
+}
+
 /** PUBLIC API ***/
 
 /**
@@ -209,6 +235,89 @@ swfdec_loader_new_from_file (const char *filename, GError ** error)
   return loader;
 }
 
+static void
+swfdec_loader_error (SwfdecLoader *loader, gboolean notify)
+{
+  loader->error = TRUE;
+  SWFDEC_INFO ("error in loader %p (%s)", loader, loader->url);
+  if (loader->target && notify)
+    swfdec_loader_target_error (loader->target);
+}
+
+void
+swfdec_loader_parse_internal (SwfdecLoader *loader)
+{
+  SwfdecDecoder *dec;
+  SwfdecDecoderClass *klass;
+
+  dec = swfdec_loader_target_get_decoder (loader->target);
+  if (dec == NULL) {
+    SwfdecPlayer *player;
+    if (!swfdec_decoder_can_detect (loader->queue))
+      return;
+    player = swfdec_loader_target_get_player (loader->target);
+    dec = swfdec_decoder_new (player, loader->queue);
+    if (dec == NULL) {
+      swfdec_loader_error (loader, TRUE);
+      return;
+    }
+    if (!swfdec_loader_target_set_decoder (loader->target, dec)) {
+      swfdec_loader_error (loader, FALSE);
+      return;
+    }
+  }
+  klass = SWFDEC_DECODER_GET_CLASS (dec);
+  g_return_if_fail (klass->parse);
+  while (TRUE) {
+    SwfdecStatus status = klass->parse (dec);
+    switch (status) {
+      case SWFDEC_STATUS_ERROR:
+	swfdec_loader_error (loader, TRUE);
+	return;
+      case SWFDEC_STATUS_OK:
+	break;
+      case SWFDEC_STATUS_NEEDBITS:
+	return;
+      case SWFDEC_STATUS_IMAGE:
+	if (!swfdec_loader_target_image (loader->target)) {
+	  swfdec_loader_error (loader, TRUE);
+	  return;
+	}
+	break;
+      case SWFDEC_STATUS_INIT:
+	g_assert (dec->rate > 0.0);
+	g_assert (dec->width > 0);
+	g_assert (dec->height > 0);
+	if (!swfdec_loader_target_init (loader->target)) {
+	  swfdec_loader_error (loader, TRUE);
+	  return;
+	}
+	break;
+      case SWFDEC_STATUS_EOF:
+	return;
+      default:
+	g_assert_not_reached ();
+	return;
+    }
+  }
+}
+
+void
+swfdec_loader_parse (SwfdecLoader *loader)
+{
+  SwfdecPlayer *player;
+
+  if (loader->target == NULL ||
+      loader->error)
+    return;
+
+  player = swfdec_loader_target_get_player (loader->target);
+  swfdec_player_lock (player);
+  swfdec_loader_parse_internal (loader);
+  swfdec_player_perform_actions (player);
+  swfdec_player_unlock (player);
+}
+
 /**
  * swfdec_loader_push:
  * @loader: a #SwfdecLoader
@@ -225,8 +334,7 @@ swfdec_loader_push (SwfdecLoader *loader, SwfdecBuffer *buffer)
   g_return_if_fail (buffer != NULL);
 
   swfdec_buffer_queue_push (loader->queue, buffer);
-  if (loader->target)
-    swfdec_root_movie_parse (loader->target);
+  swfdec_loader_parse (loader);
 }
 
 /**
@@ -242,20 +350,6 @@ swfdec_loader_eof (SwfdecLoader *loader)
   g_return_if_fail (loader->eof == FALSE);
 
   loader->eof = TRUE;
-  if (loader->target)
-    swfdec_root_movie_parse (loader->target);
-}
-
-SwfdecLoader *
-swfdec_loader_load (SwfdecLoader *loader, const char *url)
-{
-  SwfdecLoaderClass *klass;
-
-  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  klass = SWFDEC_LOADER_GET_CLASS (loader);
-  g_return_val_if_fail (klass->load != NULL, NULL);
-  return klass->load (loader, url);
+  swfdec_loader_parse (loader);
 }
 

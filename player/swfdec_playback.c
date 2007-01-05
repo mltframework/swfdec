@@ -43,10 +43,7 @@
 
 typedef struct {
   SwfdecPlayer *	player;
-  SwfdecTime		time;		/* time manager */
   GList *		streams;	/* all Stream objects */
-  GList *		waiting;	/* Stream objects waiting to get started */
-  gulong		notify_cb;	/* callback id for notify::initialized */
   GMainContext *	context;	/* context we work in */
 } Sound;
 
@@ -132,8 +129,6 @@ swfdec_stream_remove_handlers (Stream *stream)
       stream->sources[i] = NULL;
     }
   }
-  if (g_list_find (stream->sound->waiting, stream) == NULL)
-    stream->sound->waiting = g_list_prepend (stream->sound->waiting, stream);
 }
 
 static gboolean
@@ -170,11 +165,10 @@ swfdec_stream_install_handlers (Stream *stream)
       g_source_attach (stream->sources[i], stream->sound->context);
     }
   }
-  stream->sound->waiting = g_list_remove (stream->sound->waiting, stream);
 }
 
 static void
-swfdec_stream_start (Stream *stream, guint delay_samples)
+swfdec_stream_start (Stream *stream)
 {
   snd_pcm_state_t state = snd_pcm_state (stream->pcm);
   switch (state) {
@@ -184,7 +178,7 @@ swfdec_stream_start (Stream *stream, guint delay_samples)
       /* fall through */
     case SND_PCM_STATE_SUSPENDED:
     case SND_PCM_STATE_PREPARED:
-      stream->offset = delay_samples;
+      stream->offset = 0;
       //g_print ("offset: %u (delay: %ld)\n", sound->offset, delay);
       if (try_write (stream)) {
 	ALSA_ERROR (snd_pcm_start (stream->pcm), "error starting",);
@@ -255,7 +249,7 @@ swfdec_stream_open (Sound *sound, SwfdecAudio *audio)
   if (stream->n_sources > 0)
     stream->sources = g_new0 (GSource *, stream->n_sources);
   sound->streams = g_list_prepend (sound->streams, stream);
-  sound->waiting = g_list_prepend (sound->waiting, stream);
+  swfdec_stream_start (stream);
   return;
 
 fail:
@@ -269,7 +263,6 @@ swfdec_stream_close (Stream *stream)
   swfdec_stream_remove_handlers (stream);
   g_free (stream->sources);
   stream->sound->streams = g_list_remove (stream->sound->streams, stream);
-  stream->sound->waiting = g_list_remove (stream->sound->waiting, stream);
   g_object_unref (stream->audio);
   g_free (stream);
 }
@@ -277,51 +270,19 @@ swfdec_stream_close (Stream *stream)
 /*** SOUND ***/
 
 static void
-iterate_before (SwfdecPlayer *player, gpointer data)
+advance_before (SwfdecPlayer *player, guint msecs, guint audio_samples, gpointer data)
 {
   Sound *sound = data;
-  guint remove;
   GList *walk;
 
-  remove = swfdec_player_get_audio_samples (sound->player);
   for (walk = sound->streams; walk; walk = walk->next) {
     Stream *stream = walk->data;
-    if (remove > stream->offset) {
+    if (audio_samples >= stream->offset) {
       stream->offset = 0;
     } else {
-      stream->offset -= remove;
+      stream->offset -= audio_samples;
     }
   }
-  swfdec_time_tick (&sound->time);
-}
-
-static void
-do_after (SwfdecPlayer *player, Sound *sound)
-{
-  GTimeVal now;
-  glong delay;
-
-  if (sound->waiting == NULL)
-    return;
-  g_get_current_time (&now);
-  delay = swfdec_time_get_difference (&sound->time, &now);
-  if (delay > 0) {
-    return;
-  }
-
-  delay = swfdec_player_get_audio_samples (sound->player)
-      + delay * 44100 / 1000;
-  delay = MAX (delay, 0);
-  while (sound->waiting)
-    swfdec_stream_start (sound->waiting->data, delay);
-}
-
-static gboolean
-handle_mouse_after (SwfdecPlayer *player, double x, double y, int button, Sound *sound)
-{
-  do_after (player, sound);
-
-  return FALSE;
 }
 
 static void
@@ -345,16 +306,6 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, Sound *sound)
   g_assert_not_reached ();
 }
 
-static void
-swfdec_playback_initialized (SwfdecPlayer *player, GParamSpec *pspec, Sound *sound)
-{
-  GTimeVal tv;
-  g_get_current_time (&tv);
-  swfdec_time_init (&sound->time, &tv, swfdec_player_get_rate (player));
-  g_signal_handler_disconnect (sound->player, sound->notify_cb);
-  sound->notify_cb = 0;
-}
-
 gpointer
 swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 {
@@ -366,21 +317,11 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 
   sound = g_new0 (Sound, 1);
   sound->player = g_object_ref (player);
-  g_signal_connect (player, "iterate", G_CALLBACK (iterate_before), sound);
-  g_signal_connect_after (player, "iterate", G_CALLBACK (do_after), sound);
-  g_signal_connect_after (player, "handle-mouse", G_CALLBACK (handle_mouse_after), sound);
+  g_signal_connect (player, "advance", G_CALLBACK (advance_before), sound);
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), sound);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), sound);
   for (walk = swfdec_player_get_audio (player); walk; walk = walk->next) {
     swfdec_stream_open (sound, walk->data);
-  }
-  if (swfdec_player_is_initialized (player)) {
-    GTimeVal tv;
-    g_get_current_time (&tv);
-    swfdec_time_init (&sound->time, &tv, swfdec_player_get_rate (player));
-  } else {
-    sound->notify_cb = g_signal_connect (player, "notify::initialized",
-	G_CALLBACK (swfdec_playback_initialized), sound);
   }
   g_main_context_ref (context);
   sound->context = context;
@@ -401,12 +342,7 @@ swfdec_playback_close (gpointer data)
 
   while (sound->streams)
     swfdec_stream_close (sound->streams->data);
-  if (sound->notify_cb) {
-    g_signal_handler_disconnect (sound->player, sound->notify_cb);
-  }
-  REMOVE_HANDLER (sound->player, iterate_before, sound);
-  REMOVE_HANDLER (sound->player, do_after, sound);
-  REMOVE_HANDLER (sound->player, handle_mouse_after, sound);
+  REMOVE_HANDLER (sound->player, advance_before, sound);
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);
   g_object_unref (sound->player);

@@ -30,6 +30,12 @@ G_BEGIN_DECLS
 
 typedef void (* SwfdecActionFunc) (SwfdecMovie *movie, gpointer data);
 
+typedef struct _SwfdecTimeout SwfdecTimeout;
+struct _SwfdecTimeout {
+  SwfdecTick		timestamp;		/* timestamp at which this thing is supposed to trigger */
+  void			(* callback)		(SwfdecTimeout *advance);
+};
+
 struct _SwfdecPlayer
 {
   GObject		object;
@@ -60,11 +66,13 @@ struct _SwfdecPlayer
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
-  guint			samples_this_frame;   	/* amount of samples to be played this frame */
-  guint			samples_overhead;     	/* 44100*256th of sample missing each frame due to weird rate */
-  guint			samples_overhead_left;	/* 44100*256th of sample we spit out too much so far */
-  guint			samples_latency;	/* latency in samples */
+  guint			audio_skip;		/* number of frames to auto-skip when adding new audio */
 
+  /* events and advancing */
+  SwfdecTick		time;			/* current time */
+  GList *		timeouts;	      	/* list of events, sorted by timestamp */
+  guint			tick;			/* next tick */
+  SwfdecTimeout		iterate_timeout;      	/* callback for iterating */
   /* iterating */
   GList *		movies;			/* list of all moveis that want to be iterated */
   SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */
@@ -74,13 +82,19 @@ struct _SwfdecPlayerClass
 {
   GObjectClass		object_class;
 
-  void			(* iterate)		(SwfdecPlayer *		player);
-  gboolean		  (* handle_mouse)	(SwfdecPlayer *		player,
+  void			(* advance)		(SwfdecPlayer *		player,
+						 guint			msecs,
+						 guint			audio_samples);
+  gboolean		(* handle_mouse)	(SwfdecPlayer *		player,
 						 double			x,
 						 double			y,
 						 int			button);
 };
 
+void		swfdec_player_initialize	(SwfdecPlayer *		player,
+						 guint			rate,
+						 guint			width,
+						 guint			height);
 void		swfdec_player_add_movie		(SwfdecPlayer *		player,
 						 guint			depth,
 						 const char *		url);
@@ -93,6 +107,10 @@ void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
+void		swfdec_player_add_timeout	(SwfdecPlayer *		player,
+						 SwfdecTimeout *	timeout);
+void		swfdec_player_remove_timeout	(SwfdecPlayer *		player,
+						 SwfdecTimeout *	timeout);
 void		swfdec_player_add_action	(SwfdecPlayer *		player,
 						 SwfdecMovie *		movie,
 						 SwfdecActionFunc   	action_func,

@@ -54,33 +54,29 @@ void		swfdec_player_set_loader	(SwfdecPlayer *	player,
 						 SwfdecLoader *	loader);
 
 gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
+guint		swfdec_player_get_next_event  	(SwfdecPlayer *	player);
 double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);
 					 
-void		swfdec_player_iterate		(SwfdecPlayer *	player);
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,
 						 double		x,
 						 double		y,
 						 double		width,
 						 double		height);
+void		swfdec_player_advance		(SwfdecPlayer *	player,
+						 guint		msecs);
 gboolean	swfdec_player_handle_mouse	(SwfdecPlayer *	player, 
 						 double		x,
 						 double		y,
 						 int		button);
 /* audio - see swfdec_audio.c */
-guint		swfdec_player_get_audio_samples	(SwfdecPlayer *	player);
-guint		swfdec_player_get_audio_advance	(SwfdecPlayer *	player);
-void		swfdec_player_set_audio_advance	(SwfdecPlayer *	player,
-						 guint		samples);
 void		swfdec_player_render_audio	(SwfdecPlayer *	player,
 						 gint16 *	dest, 
 						 guint		start_offset,
 						 guint		n_samples);
-SwfdecBuffer *	swfdec_player_render_audio_to_buffer 
-						(SwfdecPlayer *	player);
 const GList *	swfdec_player_get_audio		(SwfdecPlayer *	player);
 
 G_END_DECLS

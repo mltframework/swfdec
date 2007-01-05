@@ -50,7 +50,7 @@ struct _SwfdecAudio {
   GObject		object;
 
   SwfdecPlayer *	player;		/* the player that plays us */
-  guint			start_offset;	/* offset from player in number of samples */
+  gboolean		added;		/* set to TRUE after the added signal has been emitted */
 };
 
 struct _SwfdecAudioClass {
@@ -64,14 +64,13 @@ struct _SwfdecAudioClass {
 						 guint		n_samples);
 };
 
-SwfdecAudio *	swfdec_audio_new		(SwfdecPlayer *	player,
-						 GType		type);
+void		swfdec_audio_add		(SwfdecAudio *	audio,
+						 SwfdecPlayer *	player);
 void		swfdec_audio_remove		(SwfdecAudio *	audio);
 
 guint		swfdec_audio_iterate		(SwfdecAudio *	audio,
 						 guint		n_samples);
 
-void		swfdec_player_iterate_audio   	(SwfdecPlayer *	player);
 
 G_END_DECLS
 #endif

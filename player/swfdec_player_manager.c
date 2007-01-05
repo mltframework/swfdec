@@ -242,14 +242,20 @@ swfdec_player_manager_get_playing (SwfdecPlayerManager *manager)
   return manager->playing;
 }
 
-void
+guint
 swfdec_player_manager_iterate (SwfdecPlayerManager *manager)
 {
-  g_return_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager));
-  g_return_if_fail (!swfdec_player_manager_get_interrupted (manager));
+  guint msecs;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER_MANAGER (manager), 0);
+  g_return_val_if_fail (!swfdec_player_manager_get_interrupted (manager), 0);
 
   swfdec_player_manager_set_playing (manager, FALSE);
-  swfdec_player_iterate (manager->player);
+  msecs = swfdec_player_get_next_event (manager->player);
+  if (msecs)
+    swfdec_player_advance (manager->player, msecs);
+
+  return msecs;
 }
 
 static void
@@ -404,7 +410,14 @@ command_stop (SwfdecPlayerManager *manager, const char *arg)
 static void
 command_iterate (SwfdecPlayerManager *manager, const char *arg)
 {
-  swfdec_player_manager_iterate (manager);
+  guint msecs = swfdec_player_manager_iterate (manager);
+
+  if (msecs == 0) {
+    swfdec_player_manager_error (manager, "Cannot iterate this player");
+  } else {
+    swfdec_player_manager_error (manager, "advanced player %u.%03us",
+	msecs / 1000, msecs % 1000);
+  }
 }
 
 static void

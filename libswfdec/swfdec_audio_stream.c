@@ -190,7 +190,7 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   SwfdecAudioStream *stream;
   SwfdecSpriteFrame *frame;
   
-  stream = (SwfdecAudioStream *) swfdec_audio_new (player, SWFDEC_TYPE_AUDIO_STREAM);
+  stream = g_object_new (SWFDEC_TYPE_AUDIO_STREAM, NULL);
 
   SWFDEC_DEBUG ("new audio stream for sprite %d, starting at %u", 
       SWFDEC_CHARACTER (sprite)->id, start_frame);
@@ -203,11 +203,8 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->decoder = swfdec_sound_init_decoder (stream->sound);
   if (stream->decoder)
     stream->format = swfdec_sound_get_decoder_format (stream->sound, stream->decoder);
-  if (player) {
-    if (player->samples_latency)
-      swfdec_audio_stream_iterate (SWFDEC_AUDIO (stream), player->samples_latency);
-    g_signal_emit_by_name (player, "audio-added", stream);
-  }
+  swfdec_audio_add (SWFDEC_AUDIO (stream), player);
+
   return SWFDEC_AUDIO (stream);
 }
 

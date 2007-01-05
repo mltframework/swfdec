@@ -64,15 +64,8 @@ swfdec_root_movie_loader_target_do_init (SwfdecLoaderTarget *target)
 {
   SwfdecRootMovie *movie = SWFDEC_ROOT_MOVIE (target);
 
-  if (movie->player->rate == 0) {
-    movie->player->rate = movie->decoder->rate;
-    movie->player->width = movie->decoder->width;
-    movie->player->height = movie->decoder->height;
-    movie->player->samples_overhead = 44100 * 256 % movie->player->rate;
-    movie->player->samples_this_frame = 44100 * 256 / movie->player->rate;
-    movie->player->samples_overhead_left = movie->player->samples_overhead;
-    g_object_notify (G_OBJECT (movie->player), "initialized");
-  }
+  swfdec_player_initialize (movie->player, movie->decoder->rate, 
+      movie->decoder->width, movie->decoder->height);
   return TRUE;
 }
 

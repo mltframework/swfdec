@@ -34,7 +34,9 @@ run_test (const char *filename)
 
   /* FIXME: Make the number of iterations configurable? */
   for (i = 0; i < 10; i++) {
-    swfdec_player_iterate (player);
+    /* FIXME: will not do 10 iterations if there's other stuff loaded */
+    guint advance = swfdec_player_get_next_event (player);
+    swfdec_player_advance (player, advance);
   }
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);

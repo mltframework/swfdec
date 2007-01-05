@@ -134,14 +134,14 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
 	SWFDEC_CHARACTER (chunk->sound)->id);
     return SWFDEC_AUDIO (event);
   }
-  event = (SwfdecAudioEvent *) swfdec_audio_new (player, SWFDEC_TYPE_AUDIO_EVENT);
+  event = g_object_new (SWFDEC_TYPE_AUDIO_EVENT, NULL);
   event->sound = chunk->sound;
   event->chunk = chunk;
   event->offset = chunk->start_sample;
   SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (chunk->sound)->id,
       chunk->start_sample);
-  if (player)
-    g_signal_emit_by_name (player, "audio-added", event);
+  swfdec_audio_add (SWFDEC_AUDIO (event), player);
+
   return SWFDEC_AUDIO (event);
 }
 

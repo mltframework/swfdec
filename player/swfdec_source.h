@@ -24,23 +24,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecTime SwfdecTime;
-
-struct _SwfdecTime {
-  GTimeVal		start;		/* time at which we started */
-  GTimeVal		next;		/* next iteration */
-  guint			iterated;	/* number of iterations to get next */
-  guint			rate;		/* frames in 256 seconds */
-};
-
-
-void		swfdec_time_init		(SwfdecTime *		time,
-						 GTimeVal *		now,
-						 double			rate);
-void		swfdec_time_tick		(SwfdecTime *		time);
-glong		swfdec_time_get_difference	(SwfdecTime *		time,
-						 GTimeVal *		tv);
-
 GSource *	swfdec_iterate_source_new	(SwfdecPlayer *		player,
 						 double			speed);
 guint		swfdec_iterate_add		(SwfdecPlayer *		player);

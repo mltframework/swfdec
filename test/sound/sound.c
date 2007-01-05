@@ -153,16 +153,14 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, TestData *data)
 }
 
 static void
-render_all_streams (TestData *data, SwfdecPlayer *player)
+render_all_streams (SwfdecPlayer *player, guint msecs, guint n_samples, TestData *data)
 {
   GList *walk;
-  guint samples;
   
-  samples = swfdec_player_get_audio_samples (player);
   for (walk = data->streams; walk; walk = walk->next) {
     TestStream *stream = walk->data;
-    SwfdecBuffer *buffer = swfdec_buffer_new_and_alloc0 (samples * 4);
-    swfdec_audio_render (stream->audio, (gint16 *) buffer->data, 0, samples);
+    SwfdecBuffer *buffer = swfdec_buffer_new_and_alloc0 (n_samples * 4);
+    swfdec_audio_render (stream->audio, (gint16 *) buffer->data, 0, n_samples);
     swfdec_buffer_queue_push (stream->queue, buffer);
   }
 }
@@ -172,7 +170,7 @@ run_test (const char *filename)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player = NULL;
-  guint i;
+  guint i, msecs;
   GError *error = NULL;
   char *dirname;
   const char *name;
@@ -205,14 +203,14 @@ run_test (const char *filename)
   player = swfdec_player_new ();
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), &data);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), &data);
+  g_signal_connect (player, "advance", G_CALLBACK (render_all_streams), &data);
   swfdec_player_set_loader (player, loader);
 
-  render_all_streams (&data, player);
   for (i = 0; i < 10; i++) {
     data.current_frame++;
     data.current_frame_audio = 0;
-    swfdec_player_iterate (player);
-    render_all_streams (&data, player);
+    msecs = swfdec_player_get_next_event (player);
+    swfdec_player_advance (player, msecs);
   }
   g_object_unref (player);
   for (walk = data.streams; walk; walk = walk->next) {

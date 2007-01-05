@@ -131,6 +131,7 @@ swfdec_stream_remove_handlers (Stream *stream)
   }
 }
 
+static void swfdec_stream_start (Stream *stream);
 static gboolean
 handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 {
@@ -138,10 +139,11 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
   snd_pcm_state_t state;
 
   state = snd_pcm_state (stream->pcm);
-  if (state != SND_PCM_STATE_RUNNING)
-    swfdec_stream_remove_handlers (stream);
-  else
+  if (state != SND_PCM_STATE_RUNNING) {
+    swfdec_stream_start (stream);
+  } else {
     try_write (stream);
+  }
   return TRUE;
 }
 

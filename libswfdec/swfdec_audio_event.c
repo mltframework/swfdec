@@ -105,7 +105,7 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
  * @player: a #SwfdecPlayer or NULL
  * @chunk: a sound chunk to start playing back
  *
- * Starts playback of the given sound chunk (or, wehn @player is NULL, creates
+ * Starts playback of the given sound chunk (or, when @player is NULL, creates
  * an element for playing back the given sound).
  *
  * Returns: the sound effect or NULL if no new sound was created. You don't

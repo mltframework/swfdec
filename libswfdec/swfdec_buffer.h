@@ -44,8 +44,8 @@ int swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue);
 int swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_push (SwfdecBufferQueue * queue,
     SwfdecBuffer * buffer);
-SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int len);
+SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length);
 SwfdecBuffer *swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue);
-SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int len);
+SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length);
 
 #endif

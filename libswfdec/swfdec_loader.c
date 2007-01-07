@@ -285,7 +285,6 @@ swfdec_loader_parse_internal (SwfdecLoader *loader)
 	}
 	break;
       case SWFDEC_STATUS_INIT:
-	g_assert (dec->rate > 0.0);
 	g_assert (dec->width > 0);
 	g_assert (dec->height > 0);
 	if (!swfdec_loader_target_init (loader->target)) {

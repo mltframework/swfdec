@@ -347,8 +347,8 @@ main (int argc, char *argv[])
     g_signal_connect (player, "script-added", G_CALLBACK (do_break_cb), NULL);
   view_swf (player, scale, use_image);
   swfdec_player_set_loader (player, loader);
-  if (swfdec_player_get_rate (player) == 0) {
-    g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
+  if (!swfdec_player_is_initialized (player)) {
+    g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
     g_object_unref (player);
     player = NULL;
     return 1;

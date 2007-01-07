@@ -138,8 +138,8 @@ main (int argc, char *argv[])
 
   swfdec_player_set_loader (player, loader);
   /* FIXME add smarter "not my file" detection */
-  if (swfdec_player_get_rate (player) == 0 && delay == 0) {
-    g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
+  if (!swfdec_player_is_initialized (player) && delay == 0) {
+    g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
     g_object_unref (player);
     player = NULL;
     return 1;

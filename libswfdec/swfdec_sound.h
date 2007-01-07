@@ -64,7 +64,7 @@ struct _SwfdecSound
   SwfdecCharacter	character;
 
   SwfdecAudioFormat	format;			/* format in use */
-  const SwfdecCodec *	codec;			/* codec for this sound */
+  const SwfdecAudioCodec *codec;		/* codec for this sound */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
   unsigned int		n_samples;		/* total number of samples */

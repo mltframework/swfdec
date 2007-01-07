@@ -167,7 +167,7 @@ swfdec_codec_adpcm_finish (gpointer data)
   return NULL;
 }
 
-const SwfdecCodec swfdec_codec_adpcm = {
+const SwfdecAudioCodec swfdec_codec_adpcm = {
   swfdec_codec_adpcm_init,
   swfdec_codec_adpcm_get_format,
   swfdec_codec_adpcm_decode,

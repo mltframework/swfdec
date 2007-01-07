@@ -177,14 +177,14 @@ swfdec_codec_ffmpeg_finish (gpointer ctx)
 }
 
 
-const SwfdecCodec swfdec_codec_ffmpeg_mp3 = {
+const SwfdecAudioCodec swfdec_codec_ffmpeg_mp3 = {
   swfdec_codec_ffmpeg_mp3_init,
   swfdec_codec_ffmpeg_get_format,
   swfdec_codec_ffmpeg_decode,
   swfdec_codec_ffmpeg_finish
 };
 
-const SwfdecCodec swfdec_codec_ffmpeg_adpcm = {
+const SwfdecAudioCodec swfdec_codec_ffmpeg_adpcm = {
   swfdec_codec_ffmpeg_adpcm_init,
   swfdec_codec_ffmpeg_get_format,
   swfdec_codec_ffmpeg_decode,

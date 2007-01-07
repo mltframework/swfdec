@@ -214,7 +214,7 @@ swfdec_codec_mad_finish (gpointer datap)
   return result;
 }
 
-const SwfdecCodec swfdec_codec_mad = {
+const SwfdecAudioCodec swfdec_codec_mad = {
   swfdec_codec_mad_init,
   swfdec_codec_mad_get_format,
   swfdec_codec_mad_decode,

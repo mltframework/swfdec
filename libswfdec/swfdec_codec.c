@@ -26,13 +26,13 @@
 
 /*** DECODER LIST ***/
 
-extern const SwfdecCodec swfdec_codec_adpcm;
+extern const SwfdecAudioCodec swfdec_codec_adpcm;
 #ifdef HAVE_MAD
-extern const SwfdecCodec swfdec_codec_mad;
+extern const SwfdecAudioCodec swfdec_codec_mad;
 #endif
 #ifdef HAVE_FFMPEG
-extern const SwfdecCodec swfdec_codec_ffmpeg_adpcm;
-extern const SwfdecCodec swfdec_codec_ffmpeg_mp3;
+extern const SwfdecAudioCodec swfdec_codec_ffmpeg_adpcm;
+extern const SwfdecAudioCodec swfdec_codec_ffmpeg_mp3;
 #endif
 
 /*** UNCOMPRESSED SOUND ***/
@@ -95,7 +95,7 @@ swfdec_codec_uncompressed_finish (gpointer codec_data)
   return NULL;
 }
 
-static const SwfdecCodec swfdec_codec_uncompressed = {
+static const SwfdecAudioCodec swfdec_codec_uncompressed = {
   swfdec_codec_uncompressed_init,
   swfdec_codec_uncompressed_get_format,
   swfdec_codec_uncompressed_decode,
@@ -104,7 +104,7 @@ static const SwfdecCodec swfdec_codec_uncompressed = {
 
 /*** PUBLIC API ***/
 
-const SwfdecCodec *
+const SwfdecAudioCodec *
 swfdec_codec_get_audio (SwfdecAudioFormat format)
 {
   switch (format) {
@@ -139,7 +139,7 @@ swfdec_codec_get_audio (SwfdecAudioFormat format)
   }
 }
 
-const SwfdecCodec *
+const SwfdecVideoCodec *
 swfdec_codec_get_video (unsigned int format)
 {
   SWFDEC_ERROR ("video not implemented yet");

@@ -37,11 +37,11 @@ typedef struct _SwfdecSwfDecoderClass SwfdecSwfDecoderClass;
 typedef int SwfdecTagFunc (SwfdecSwfDecoder *);
 
 #define SWFDEC_TYPE_SWF_DECODER                    (swfdec_swf_decoder_get_type())
-#define SWFDEC_IS_SWF_DECODER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_DECODER))
-#define SWFDEC_IS_SWF_DECODER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_DECODER))
-#define SWFDEC_SWF_DECODER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_DECODER, SwfdecSwfDecoder))
-#define SWFDEC_SWF_DECODER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_DECODER, SwfdecSwfDecoderClass))
-#define SWFDEC_SWF_DECODER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_DECODER, SwfdecSwfDecoderClass))
+#define SWFDEC_IS_SWF_DECODER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SWF_DECODER))
+#define SWFDEC_IS_SWF_DECODER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SWF_DECODER))
+#define SWFDEC_SWF_DECODER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SWF_DECODER, SwfdecSwfDecoder))
+#define SWFDEC_SWF_DECODER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SWF_DECODER, SwfdecSwfDecoderClass))
+#define SWFDEC_SWF_DECODER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_SWF_DECODER, SwfdecSwfDecoderClass))
 
 struct _SwfdecSwfDecoder
 {

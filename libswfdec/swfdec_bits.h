@@ -49,6 +49,7 @@ unsigned int swfdec_bits_get_u8 (SwfdecBits * b);
 unsigned int swfdec_bits_get_u16 (SwfdecBits * b);
 int swfdec_bits_get_s16 (SwfdecBits * b);
 unsigned int swfdec_bits_get_u32 (SwfdecBits * b);
+unsigned int swfdec_bits_get_bu16 (SwfdecBits *b);
 unsigned int swfdec_bits_get_bu24 (SwfdecBits *b);
 unsigned int swfdec_bits_get_bu32 (SwfdecBits *b);
 float swfdec_bits_get_float (SwfdecBits * b);

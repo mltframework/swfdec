@@ -587,7 +587,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   
   swfdec_player_lock (player);
   target_time = player->time + msecs * (SWFDEC_TICKS_PER_SECOND / 1000);
-  SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)\n", msecs, audio_samples);
+  SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)", msecs, audio_samples);
 
   player->audio_skip = audio_samples;
   /* iterate all playing sounds */
@@ -910,13 +910,14 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   if (swfdec_player_is_initialized (player))
     return;
   
+  SWFDEC_ERROR ("initializing player to size %ux%u", width, height);
   player->rate = rate;
   player->width = width;
   player->height = height;
   if (rate) {
     player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / rate;
     swfdec_player_add_timeout (player, &player->iterate_timeout);
-    SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")\n",
+    SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
   }
   g_object_notify (G_OBJECT (player), "initialized");

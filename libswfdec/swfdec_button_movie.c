@@ -127,7 +127,7 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
   if (movie->mouse_in == mouse_in &&
       movie->mouse_button == button)
     return;
-  SWFDEC_LOG ("changing mouse state %s: %s %s (%u) => %s %s (%u)\n", 
+  SWFDEC_LOG ("changing mouse state %s: %s %s (%u) => %s %s (%u)", 
       movie->button->menubutton ? "MENU" : "BUTTON",
       movie->mouse_in ? "IN" : "OUT", movie->mouse_button ? "DOWN" : "UP",
       (movie->mouse_in ? 2 : 0) + movie->mouse_button,

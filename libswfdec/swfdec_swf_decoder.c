@@ -57,10 +57,10 @@ swfdec_decoder_dispose (GObject *object)
   g_object_unref (s->main_sprite);
   g_hash_table_destroy (s->exports);
 
-  if (s->z) {
-    inflateEnd (s->z);
-    g_free (s->z);
+  if (s->uncompressed_buffer) {
+    inflateEnd (&s->z);
     swfdec_buffer_unref (s->uncompressed_buffer);
+    s->uncompressed_buffer = NULL;
   }
   swfdec_buffer_queue_free (s->input_queue);
 
@@ -108,20 +108,20 @@ swfdec_swf_decoder_deflate_all (SwfdecSwfDecoder * s)
   
   while ((buffer = swfdec_buffer_queue_pull_buffer (SWFDEC_DECODER (s)->queue))) {
     if (s->compressed) {
-      int offset = s->z->total_out;
+      int offset = s->z.total_out;
 
-      s->z->next_in = buffer->data;
-      s->z->avail_in = buffer->length;
-      ret = inflate (s->z, Z_SYNC_FLUSH);
-      if (ret < 0) {
-	SWFDEC_ERROR ("error uncompressing data");
+      s->z.next_in = buffer->data;
+      s->z.avail_in = buffer->length;
+      ret = inflate (&s->z, Z_SYNC_FLUSH);
+      if (ret < Z_OK) {
+	SWFDEC_ERROR ("error uncompressing data: %s", s->z.msg);
 	return FALSE;
       }
 
       swfdec_buffer_unref (buffer);
 
       buffer = swfdec_buffer_new_subbuffer (s->uncompressed_buffer, offset,
-	  s->z->total_out - offset);
+	  s->z.total_out - offset);
     } 
     dec->bytes_loaded += buffer->length;
     swfdec_buffer_queue_push (s->input_queue, buffer);
@@ -137,8 +137,7 @@ swf_inflate_init (SwfdecSwfDecoder * s)
   z_stream *z;
   int ret;
 
-  z = g_new0 (z_stream, 1);
-  s->z = z;
+  z = &s->z;
   z->zalloc = zalloc;
   z->zfree = zfree;
   ret = inflateInit (z);

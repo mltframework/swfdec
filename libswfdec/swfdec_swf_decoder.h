@@ -50,7 +50,7 @@ struct _SwfdecSwfDecoder
   int version;
 
   int compressed;
-  z_stream *z;
+  z_stream z;
   SwfdecBuffer *uncompressed_buffer;
   SwfdecBufferQueue *input_queue;
 

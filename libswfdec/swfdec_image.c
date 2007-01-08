@@ -418,7 +418,7 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
     unsigned char *idata;
 
     if (have_alpha) {
-      SWFDEC_ERROR ("illegal");
+      SWFDEC_INFO("16bit images aren't allowed to have alpha, ignoring");
     }
 
     image_data = g_malloc (4 * image->width * image->height);
@@ -428,7 +428,7 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
     /* 15 bit packed */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
-        c = p[0] | (p[1] << 8);
+        c = p[1] | (p[0] << 8);
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
         idata[0] = (c << 3) | ((c >> 2) & 0x7);
         idata[1] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);

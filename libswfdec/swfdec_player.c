@@ -173,6 +173,7 @@ swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
   g_return_if_fail (timeout->timestamp > player->time);
   g_return_if_fail (timeout->callback != NULL);
 
+  next_tick = swfdec_player_get_next_event_time (player);
   player->timeouts = g_list_remove (player->timeouts, timeout);
   if (next_tick != swfdec_player_get_next_event_time (player))
     g_object_notify (G_OBJECT (player), "next-event");

@@ -29,13 +29,11 @@
 #include <stdlib.h>
 #include <liboil/liboil.h>
 
+#include "swfdec_swf_decoder.h"
 #include "swfdec.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
-#include "swfdec_edittext.h"
 #include "swfdec_js.h"
-#include "swfdec_sound.h"
 #include "swfdec_sprite.h"
 
 enum {

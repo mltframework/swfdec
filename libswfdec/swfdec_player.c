@@ -28,6 +28,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_button_movie.h" /* for mouse cursor */
+#include "swfdec_cache.h"
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
@@ -329,6 +330,7 @@ swfdec_player_dispose (GObject *object)
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
   g_assert (player->timeouts == NULL);
+  swfdec_cache_unref (player->cache);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
@@ -698,6 +700,10 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_NEXT_EVENT,
       g_param_spec_uint ("next-event", "next event", "how many milliseconds until the next event or 0 when no event pending",
 	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_NEXT_EVENT,
+      g_param_spec_uint ("cache-size", "cache size", "maximum cache size in bytes",
+	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READABLE));
+
 
   /**
    * SwfdecPlayer::trace:
@@ -803,6 +809,7 @@ swfdec_player_init (SwfdecPlayer *player)
   swfdec_js_init_player (player);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
+  player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
 
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;

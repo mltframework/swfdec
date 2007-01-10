@@ -45,6 +45,7 @@ struct _SwfdecPlayer
   unsigned int		width;			/* width of movie */
   unsigned int		height;			/* height of movie */
   GList *		roots;			/* all the root movies */
+  SwfdecCache *		cache;			/* player cache */
 
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */

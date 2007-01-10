@@ -1,3 +1,23 @@
+/* Swfdec
+ * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
+ *		 2005-2006 Eric Anholt <eric@anholt.net>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -19,21 +39,26 @@ static void merge_alpha (SwfdecImage * image, unsigned char *image_data,
 static void swfdec_image_colormap_decode (SwfdecImage * image,
     unsigned char *dest,
     unsigned char *src, unsigned char *colormap, int colormap_len);
-static void swfdec_image_jpeg_load (SwfdecHandle *handle);
-static void swfdec_image_jpeg2_load (SwfdecHandle *handle);
-static void swfdec_image_jpeg3_load (SwfdecHandle *handle);
 
 G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CHARACTER)
+
+static void
+swfdec_image_unload (gpointer data)
+{
+  SwfdecImage *image = SWFDEC_IMAGE (data - G_STRUCT_OFFSET (SwfdecImage, handle));
+
+  if (image->surface) {
+    cairo_surface_destroy (image->surface);
+    image->surface = NULL;
+  }
+}
 
 static void
 swfdec_image_dispose (GObject *object)
 {
   SwfdecImage * image = SWFDEC_IMAGE (object);
 
-  if (image->handle) {
-    swfdec_handle_free (image->handle);
-    image->handle = NULL;
-  }
+  swfdec_image_unload (&image->handle);
   if (image->jpegtables) {
     swfdec_buffer_unref (image->jpegtables);
     image->jpegtables = NULL;
@@ -57,7 +82,7 @@ swfdec_image_class_init (SwfdecImageClass * g_class)
 static void
 swfdec_image_init (SwfdecImage * image)
 {
-
+  image->handle.unload = swfdec_image_unload;
 }
 
 
@@ -133,7 +158,6 @@ swfdec_image_jpegtables (SwfdecSwfDecoder * s)
 int
 tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
 {
-
   SwfdecBits *bits = &s->b;
   int id;
   SwfdecImage *image;
@@ -147,8 +171,6 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG;
-  image->handle = swfdec_handle_new (swfdec_image_jpeg_load,
-      (SwfdecHandleFreeFunc)g_free, image);
   if (!s->jpegtables) {
     SWFDEC_ERROR("No global JPEG tables available");
   } else {
@@ -162,9 +184,22 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
 }
 
 static void
-swfdec_image_jpeg_load (SwfdecHandle *handle)
+swfdec_image_create_surface (SwfdecImage *image, guint8 *data)
 {
-  SwfdecImage *image = swfdec_handle_get_private (handle);
+  cairo_user_data_key_t key;
+
+  g_assert (image->surface == NULL);
+
+  image->surface = cairo_image_surface_create_for_data (data,
+      CAIRO_FORMAT_ARGB32, image->width, image->height,
+      image->rowstride);
+  cairo_surface_set_user_data (image->surface, &key, data,
+      g_free);
+}
+
+static void
+swfdec_image_jpeg_load (SwfdecImage *image)
+{
   JpegRGBDecoder *dec;
   unsigned char *image_data;
 
@@ -175,12 +210,14 @@ swfdec_image_jpeg_load (SwfdecHandle *handle)
   jpeg_rgb_decoder_addbits (dec, image->raw_data->data + 2,
       image->raw_data->length - 2);
   jpeg_rgb_decoder_parse (dec);
+  jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
+  image->handle.size = 4 * image->width * image->height;
+  if (image->cache)
+    swfdec_cache_add_handle (image->cache, &image->handle);
   jpeg_rgb_decoder_get_image (dec, &image_data,
-      &image->rowstride, &image->width, &image->height);
+      &image->rowstride, NULL, NULL);
   jpeg_rgb_decoder_free (dec);
-
-  swfdec_handle_set_data (handle, image_data);
-  swfdec_handle_add_size (handle, image->rowstride * image->height);
+  swfdec_image_create_surface (image, image_data);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -201,8 +238,6 @@ tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG2;
-  image->handle = swfdec_handle_new (swfdec_image_jpeg2_load,
-      (SwfdecHandleFreeFunc)g_free, image);
   image->raw_data = swfdec_buffer_ref (bits->buffer);
 
   bits->ptr += bits->buffer->length - 2;
@@ -211,9 +246,8 @@ tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s)
 }
 
 static void
-swfdec_image_jpeg2_load (SwfdecHandle *handle)
+swfdec_image_jpeg2_load (SwfdecImage *image)
 {
-  SwfdecImage *image = swfdec_handle_get_private (handle);
   JpegRGBDecoder *dec;
   unsigned char *image_data;
 
@@ -222,12 +256,14 @@ swfdec_image_jpeg2_load (SwfdecHandle *handle)
   jpeg_rgb_decoder_addbits (dec, image->raw_data->data + 2,
       image->raw_data->length - 2);
   jpeg_rgb_decoder_parse (dec);
+  jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
+  image->handle.size = 4 * image->width * image->height;
+  if (image->cache)
+    swfdec_cache_add_handle (image->cache, &image->handle);
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
-
-  swfdec_handle_set_data (handle, image_data);
-  swfdec_handle_add_size (handle, image->width * image->height * 4);
+  swfdec_image_create_surface (image, image_data);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -251,8 +287,6 @@ tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG3;
-  image->handle = swfdec_handle_new (swfdec_image_jpeg3_load,
-      (SwfdecHandleFreeFunc)g_free, image);
   image->raw_data = swfdec_buffer_ref (bits->buffer);
 
   bits->ptr += bits->buffer->length - 2;
@@ -261,9 +295,8 @@ tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s)
 }
 
 static void
-swfdec_image_jpeg3_load (SwfdecHandle *handle)
+swfdec_image_jpeg3_load (SwfdecImage *image)
 {
-  SwfdecImage *image = swfdec_handle_get_private (handle);
   JpegRGBDecoder *dec;
   unsigned char *image_data;
   unsigned char *alpha_data;
@@ -284,6 +317,10 @@ swfdec_image_jpeg3_load (SwfdecHandle *handle)
 
   jpeg_rgb_decoder_addbits (dec, bits.ptr, jpeg_length);
   jpeg_rgb_decoder_parse (dec);
+  jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
+  image->handle.size = 4 * image->width * image->height;
+  if (image->cache)
+    swfdec_cache_add_handle (image->cache, &image->handle);
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
@@ -295,8 +332,7 @@ swfdec_image_jpeg3_load (SwfdecHandle *handle)
   merge_alpha (image, image_data, alpha_data);
   g_free (alpha_data);
 
-  swfdec_handle_set_data (handle, image_data);
-  swfdec_handle_add_size (handle, image->width * image->height * 4);
+  swfdec_image_create_surface (image, image_data);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -324,9 +360,8 @@ merge_alpha (SwfdecImage * image, unsigned char *image_data,
 }
 
 static void
-swfdec_image_lossless_load (SwfdecHandle *handle)
+swfdec_image_lossless_load (SwfdecImage *image)
 {
-  SwfdecImage *image = swfdec_handle_get_private (handle);
   int format;
   int color_table_size;
   unsigned char *ptr;
@@ -350,6 +385,9 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
   SWFDEC_LOG ("  width = %d", image->width);
   image->height = swfdec_bits_get_u16 (&bits);
   SWFDEC_LOG ("  height = %d", image->height);
+  image->handle.size = 4 * image->width * image->height;
+  if (image->cache)
+    swfdec_cache_add_handle (image->cache, &image->handle);
   if (format == 3) {
     color_table_size = swfdec_bits_get_u8 (&bits) + 1;
   } else {
@@ -468,8 +506,7 @@ swfdec_image_lossless_load (SwfdecHandle *handle)
     }
   }
 
-  swfdec_handle_set_data (handle, image_data);
-  swfdec_handle_add_size (handle, image->width * image->height * 4);
+  swfdec_image_create_surface (image, image_data);
 }
 
 int
@@ -487,8 +524,6 @@ tag_func_define_bits_lossless (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_LOSSLESS;
-  image->handle = swfdec_handle_new (swfdec_image_lossless_load,
-      (SwfdecHandleFreeFunc)g_free, image);
   image->raw_data = swfdec_buffer_ref (bits->buffer);
 
   bits->ptr += bits->buffer->length - 2;
@@ -510,8 +545,6 @@ tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_LOSSLESS2;
-  image->handle = swfdec_handle_new (swfdec_image_lossless_load,
-      (SwfdecHandleFreeFunc)g_free, image);
   image->raw_data = swfdec_buffer_ref (bits->buffer);
 
   bits->ptr += bits->buffer->length - 2;
@@ -550,3 +583,61 @@ swfdec_image_colormap_decode (SwfdecImage * image,
     src += rowstride;
   }
 }
+
+cairo_surface_t *
+swfdec_image_get_surface (SwfdecImage *image)
+{
+  g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
+
+  if (image->surface) {
+    if (image->cache)
+      swfdec_cache_add_handle (image->cache, &image->handle);
+    return image->surface;
+  }
+
+  switch (image->type) {
+    case SWFDEC_IMAGE_TYPE_JPEG:
+      swfdec_image_jpeg_load (image);
+      break;
+    case SWFDEC_IMAGE_TYPE_JPEG2:
+      swfdec_image_jpeg2_load (image);
+      break;
+    case SWFDEC_IMAGE_TYPE_JPEG3:
+      swfdec_image_jpeg3_load (image);
+      break;
+    case SWFDEC_IMAGE_TYPE_LOSSLESS:
+      swfdec_image_lossless_load (image);
+      break;
+    case SWFDEC_IMAGE_TYPE_LOSSLESS2:
+      swfdec_image_lossless_load (image);
+      break;
+    case SWFDEC_IMAGE_TYPE_UNKNOWN:
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  g_assert (image->handle.size);
+  g_assert (image->surface);
+  return image->surface;
+}
+
+void
+swfdec_image_set_cache (SwfdecImage *image, SwfdecCache *cache)
+{
+  g_return_if_fail (SWFDEC_IS_IMAGE (image));
+  g_return_if_fail (cache != NULL);
+
+  if (image->cache) {
+    if (image->surface)
+      swfdec_cache_remove_handle (image->cache, &image->handle);
+    swfdec_cache_unref (image->cache);
+  }
+  image->cache = cache;
+  if (cache) {
+    swfdec_cache_ref (cache);
+    if (image->surface)
+      swfdec_cache_add_handle (image->cache, &image->handle);
+  }
+}
+

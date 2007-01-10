@@ -6,7 +6,6 @@
 
 #include "swfdec_pattern.h"
 #include "swfdec_bits.h"
-#include "swfdec_cache.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -263,19 +262,15 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
     const SwfdecColorTransform *trans, unsigned int ratio)
 {
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
-  cairo_surface_t *src_surface;
   cairo_pattern_t *pattern;
   SwfdecColor color;
   cairo_matrix_t mat;
-  unsigned char *image_data = swfdec_handle_get_data(image->image->handle);
+  cairo_surface_t *surface;
   
+  surface = swfdec_image_get_surface (image->image);
   cairo_append_path (cr, (cairo_path_t *) path);
   color = swfdec_color_apply_transform (0xFFFFFFFF, trans);
-  src_surface = cairo_image_surface_create_for_data (image_data,
-      CAIRO_FORMAT_ARGB32, image->image->width, image->image->height,
-      image->image->rowstride);
-  pattern = cairo_pattern_create_for_surface (src_surface);
-  cairo_surface_destroy (src_surface);
+  pattern = cairo_pattern_create_for_surface (surface);
   swfdec_matrix_morph (&mat, &pat->start_transform, &pat->end_transform, ratio);
   cairo_pattern_set_matrix (pattern, &mat);
   cairo_pattern_set_extend (pattern, image->extend);
@@ -639,7 +634,8 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
 
   if (SWFDEC_IS_IMAGE_PATTERN (pattern)) {
     SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pattern);
-    swfdec_handle_get_data(image->image->handle);
+    if (image->image->width == 0)
+      swfdec_image_get_surface (image->image);
     return g_strdup_printf ("%ux%u image %u (%s, %s)", image->image->width,
 	image->image->height, SWFDEC_CHARACTER (image->image)->id,
 	image->extend == CAIRO_EXTEND_REPEAT ? "repeat" : "no repeat",

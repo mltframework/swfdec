@@ -61,6 +61,13 @@ jpeg_rgb_decoder_parse (JpegRGBDecoder * dec)
 }
 
 int
+jpeg_rgb_decoder_get_image_size (JpegRGBDecoder * rgbdec,
+    int *width, int *height)
+{
+  return jpeg_decoder_get_image_size (rgbdec->dec, width, height);
+}
+
+int
 jpeg_rgb_decoder_get_image (JpegRGBDecoder * rgbdec,
     unsigned char **image, int *rowstride, int *width, int *height)
 {

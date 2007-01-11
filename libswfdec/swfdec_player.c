@@ -263,6 +263,7 @@ static guint signals[LAST_SIGNAL];
 
 enum {
   PROP_0,
+  PROP_CACHE_SIZE,
   PROP_INITIALIZED,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT
@@ -284,6 +285,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
   
   switch (param_id) {
+    case PROP_CACHE_SIZE:
+      g_value_set_uint (value, player->cache->max_size);
+      break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
       break;
@@ -303,9 +307,12 @@ static void
 swfdec_player_set_property (GObject *object, guint param_id, const GValue *value,
     GParamSpec *pspec)
 {
-  //SwfdecPlayer *player = SWFDEC_PLAYER (object);
+  SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   switch (param_id) {
+    case PROP_CACHE_SIZE:
+      player->cache->max_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -702,7 +709,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_NEXT_EVENT,
       g_param_spec_uint ("next-event", "next event", "how many milliseconds until the next event or 0 when no event pending",
 	  0, G_MAXUINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_NEXT_EVENT,
+  g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_uint ("cache-size", "cache size", "maximum cache size in bytes",
 	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READABLE));
 

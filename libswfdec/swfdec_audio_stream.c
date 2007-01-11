@@ -26,7 +26,6 @@
 #include <string.h>
 #include "swfdec_audio_stream.h"
 #include "swfdec_debug.h"
-#include "swfdec_player_internal.h"
 #include "swfdec_sound.h"
 #include "swfdec_sprite.h"
 

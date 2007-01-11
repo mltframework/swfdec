@@ -35,7 +35,7 @@ typedef struct _SwfdecIterateSource SwfdecIterateSource;
 struct _SwfdecIterateSource {
   GSource		source;
   SwfdecPlayer *	player;
-  double		speed;		/* playback speed */
+  double		speed;		/* inverse playback speed (so 0.5 means double speed) */
   gulong		notify;		/* set for iterate notifications */
   GTimeVal		last;		/* last time */
 };
@@ -133,7 +133,7 @@ swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
   source = (SwfdecIterateSource *) g_source_new (&swfdec_iterate_funcs, 
       sizeof (SwfdecIterateSource));
   source->player = g_object_ref (player);
-  source->speed = speed;
+  source->speed = 1.0 / speed;
   source->notify = g_signal_connect (player, "advance",
       G_CALLBACK (swfdec_iterate_source_advance_cb), source);
   g_get_current_time (&source->last);

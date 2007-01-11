@@ -165,15 +165,15 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
       for (y = 0; y < MIN (bh, h - j); y++) {
 	for (x = 0; x < MIN (bw, w - i); x++) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	  out[x * 4 + y * stride + 3] = *in++;
-	  out[x * 4 + y * stride + 2] = *in++;
-	  out[x * 4 + y * stride + 1] = *in++;
-	  out[x * 4 + y * stride] = 0xFF;
-#else
 	  out[x * 4 + y * stride] = *in++;
 	  out[x * 4 + y * stride + 1] = *in++;
 	  out[x * 4 + y * stride + 2] = *in++;
 	  out[x * 4 + y * stride + 3] = 0xFF;
+#else
+	  out[x * 4 + y * stride + 3] = *in++;
+	  out[x * 4 + y * stride + 2] = *in++;
+	  out[x * 4 + y * stride + 1] = *in++;
+	  out[x * 4 + y * stride] = 0xFF;
 #endif
 	}
       }

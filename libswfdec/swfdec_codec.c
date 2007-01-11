@@ -27,13 +27,19 @@
 /*** DECODER LIST ***/
 
 extern const SwfdecAudioCodec swfdec_codec_adpcm;
+
 #ifdef HAVE_MAD
 extern const SwfdecAudioCodec swfdec_codec_mad;
 #endif
+
 #ifdef HAVE_FFMPEG
 extern const SwfdecAudioCodec swfdec_codec_ffmpeg_adpcm;
 extern const SwfdecAudioCodec swfdec_codec_ffmpeg_mp3;
+extern const SwfdecVideoCodec swfdec_codec_ffmpeg_h263;
+extern const SwfdecVideoCodec swfdec_codec_ffmpeg_screen;
 #endif
+
+extern const SwfdecVideoCodec swfdec_codec_screen;
 
 /*** UNCOMPRESSED SOUND ***/
 
@@ -140,9 +146,26 @@ swfdec_codec_get_audio (SwfdecAudioFormat format)
 }
 
 const SwfdecVideoCodec *
-swfdec_codec_get_video (unsigned int format)
+swfdec_codec_get_video (SwfdecVideoFormat format)
 {
-  SWFDEC_ERROR ("video not implemented yet");
-  return NULL;
+  switch (format) {
+    case SWFDEC_VIDEO_FORMAT_SCREEN:
+      return &swfdec_codec_screen;
+#ifdef HAVE_FFMPEG
+      return &swfdec_codec_ffmpeg_screen;
+#endif
+      SWFDEC_ERROR ("Screen video requires ffmpeg");
+      return NULL;
+    case SWFDEC_VIDEO_FORMAT_H263:
+#ifdef HAVE_FFMPEG
+      return &swfdec_codec_ffmpeg_h263;
+#else
+      SWFDEC_ERROR ("H263 video requires ffmpeg");
+      return NULL;
+#endif
+    default:
+      SWFDEC_ERROR ("video codec %u not implemented yet", (guint) format);
+      return NULL;
+  }
 }
 

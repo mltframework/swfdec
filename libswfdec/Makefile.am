@@ -28,6 +28,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec.c \
 	swfdec_codec_adpcm.c \
 	$(CODECS) \
+	swfdec_codec_screen.c \
 	swfdec_color.c \
 	swfdec_compiler.c \
 	swfdec_debug.c \

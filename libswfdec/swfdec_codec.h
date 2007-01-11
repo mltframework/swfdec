@@ -49,6 +49,7 @@ struct _SwfdecAudioCodec {
   gpointer		(* init)	(gboolean	width,
 					 SwfdecAudioOut	format);
   SwfdecAudioOut	(* get_format)	(gpointer       codec_data);
+  /* FIXME: add SwfdecRect *invalid for invalidated region - might make sense for screen? */
   SwfdecBuffer *	(* decode)	(gpointer	codec_data,
 					 SwfdecBuffer *	buffer);
   SwfdecBuffer *	(* finish)	(gpointer	codec_data);

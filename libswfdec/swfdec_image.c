@@ -186,7 +186,7 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
 static void
 swfdec_image_create_surface (SwfdecImage *image, guint8 *data)
 {
-  cairo_user_data_key_t key;
+  static const cairo_user_data_key_t key;
 
   g_assert (image->surface == NULL);
 

@@ -127,7 +127,7 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
     screen->buffer = ret;
   }
   stride = w * 4;
-  g_print ("size: %u x %u - block size %u x %u\n", w, h, bw, bh);
+  SWFDEC_LOG ("size: %u x %u - block size %u x %u\n", w, h, bw, bh);
   for (j = 0; j < h; j += bh) {
     for (i = 0; i < w; i += bw) {
       int result;
@@ -135,7 +135,6 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
       guint8 *in, *out;
       /* decode the block into block_buffer */
       size = swfdec_bits_get_bu16 (&bits);
-      g_print ("block size is %u\n", size);
       if (size == 0)
 	continue;
       if (inflateReset(&screen->z) != Z_OK) {
@@ -150,7 +149,6 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
       screen->z.next_out = screen->block_buffer->data;
       screen->z.avail_out = screen->block_buffer->length;
       result = inflate (&screen->z, Z_FINISH);
-      g_print ("inflate returned %d\n", result);
       if (result == Z_DATA_ERROR) {
 	inflateSync (&screen->z);
 	result = inflate (&screen->z, Z_FINISH);
@@ -160,20 +158,20 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
 	continue;
       }
       /* convert format and write out data */
-      out = ret->data + stride * j + i * 4;
+      out = ret->data + stride * (h - j - 1) + i * 4;
       in = screen->block_buffer->data;
       for (y = 0; y < MIN (bh, h - j); y++) {
 	for (x = 0; x < MIN (bw, w - i); x++) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	  out[x * 4 + y * stride] = *in++;
-	  out[x * 4 + y * stride + 1] = *in++;
-	  out[x * 4 + y * stride + 2] = *in++;
-	  out[x * 4 + y * stride + 3] = 0xFF;
+	  out[x * 4 - y * stride] = *in++;
+	  out[x * 4 - y * stride + 1] = *in++;
+	  out[x * 4 - y * stride + 2] = *in++;
+	  out[x * 4 - y * stride + 3] = 0xFF;
 #else
-	  out[x * 4 + y * stride + 3] = *in++;
-	  out[x * 4 + y * stride + 2] = *in++;
-	  out[x * 4 + y * stride + 1] = *in++;
-	  out[x * 4 + y * stride] = 0xFF;
+	  out[x * 4 - y * stride + 3] = *in++;
+	  out[x * 4 - y * stride + 2] = *in++;
+	  out[x * 4 - y * stride + 1] = *in++;
+	  out[x * 4 - y * stride] = 0xFF;
 #endif
 	}
       }

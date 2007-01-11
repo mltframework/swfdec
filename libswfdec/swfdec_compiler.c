@@ -567,6 +567,15 @@ compile_push (CompileState *state, guint action, guint len)
 	compile_state_debug_add (state, "Push %g", d);
 	push_double (state, d);
 	break;
+      case 2: /* null */
+	compile_state_debug_add (state, "Push null");
+	ONELINER (state, JSOP_NULL);
+	break;
+      case 3: /* undefined */
+	compile_state_debug_add (state, "Push undefined");
+	ONELINER (state, JSOP_NULL);
+	ONELINER (state, JSOP_VOID);
+	break;
       case 5: /* boolean */
 	type = swfdec_bits_get_u8 (bits);
 	if (type) {

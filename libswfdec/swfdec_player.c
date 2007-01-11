@@ -612,7 +612,8 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   }
 
   for (timeout = player->timeouts ? player->timeouts->data : NULL;
-       timeout && timeout->timestamp <= target_time; ) {
+       timeout && timeout->timestamp <= target_time; 
+       timeout = player->timeouts ? player->timeouts->data : NULL) {
     player->timeouts = g_list_remove (player->timeouts, timeout);
     frames_now = timeout->timestamp / (SWFDEC_TICKS_PER_SECOND / 44100) - 
       player->time / (SWFDEC_TICKS_PER_SECOND / 44100);

@@ -598,7 +598,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   guint frames_now;
   
   swfdec_player_lock (player);
-  target_time = player->time + msecs * (SWFDEC_TICKS_PER_SECOND / 1000);
+  target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)", msecs, audio_samples);
 
   player->audio_skip = audio_samples;
@@ -615,8 +615,8 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
        timeout && timeout->timestamp <= target_time; 
        timeout = player->timeouts ? player->timeouts->data : NULL) {
     player->timeouts = g_list_remove (player->timeouts, timeout);
-    frames_now = timeout->timestamp / (SWFDEC_TICKS_PER_SECOND / 44100) - 
-      player->time / (SWFDEC_TICKS_PER_SECOND / 44100);
+    frames_now = SWFDEC_TICKS_TO_SAMPLES (timeout->timestamp) -
+      SWFDEC_TICKS_TO_SAMPLES (player->time);
     player->time = timeout->timestamp;
     player->audio_skip -= frames_now;
     SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT", target time is %"G_GUINT64_FORMAT,
@@ -624,8 +624,8 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
     timeout->callback (timeout);
   }
   if (target_time > player->time) {
-    frames_now = target_time / (SWFDEC_TICKS_PER_SECOND / 44100) - 
-      player->time / (SWFDEC_TICKS_PER_SECOND / 44100);
+    frames_now = SWFDEC_TICKS_TO_SAMPLES (target_time) -
+      SWFDEC_TICKS_TO_SAMPLES (player->time);
     player->time = target_time;
     player->audio_skip -= frames_now;
   }
@@ -1154,8 +1154,8 @@ swfdec_player_advance (SwfdecPlayer *player, guint msecs)
   //swfdec_js_run (player, "s=\"/A/B:foo\"; t=s.indexOf (\":\"); if (t) t=s.substring(0,s.indexOf (\":\")); else t=s;", NULL);
 #endif
 
-  frames = (player->time + msecs * (SWFDEC_TICKS_PER_SECOND / 1000)) / (SWFDEC_TICKS_PER_SECOND / 44100)
-    - player->time / (SWFDEC_TICKS_PER_SECOND / 44100);
+  frames = SWFDEC_TICKS_TO_SAMPLES (player->time + SWFDEC_MSECS_TO_TICKS (msecs))
+    - SWFDEC_TICKS_TO_SAMPLES (player->time);
   g_signal_emit (player, signals[ADVANCE], 0, msecs, frames);
 }
 
@@ -1197,7 +1197,7 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
   time = swfdec_player_get_next_event_time (player);
-  ret = time / (SWFDEC_TICKS_PER_SECOND / 1000);
+  ret = SWFDEC_TICKS_TO_MSECS (time);
   if (time % (SWFDEC_TICKS_PER_SECOND / 1000))
     ret++;
 

@@ -10,6 +10,10 @@
  */
 #define SWFDEC_TICKS_PER_SECOND G_GUINT64_CONSTANT (44100 * 256 * 10)
 typedef guint64 SwfdecTick;
+#define SWFDEC_MSECS_TO_TICKS(msecs) ((SwfdecTick) (msecs) * (SWFDEC_TICKS_PER_SECOND / 1000))
+#define SWFDEC_TICKS_TO_MSECS(ticks) ((ticks) / (SWFDEC_TICKS_PER_SECOND / 1000))
+#define SWFDEC_SAMPLES_TO_TICKS(msecs) ((SwfdecTick) (msecs) * (SWFDEC_TICKS_PER_SECOND / 44100))
+#define SWFDEC_TICKS_TO_SAMPLES(ticks) ((ticks) / (SWFDEC_TICKS_PER_SECOND / 44100))
 
 #define SWFDEC_TWIPS_SCALE_FACTOR	      	20
 typedef int SwfdecTwips;

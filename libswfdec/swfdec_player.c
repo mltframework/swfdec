@@ -150,6 +150,7 @@ swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
   g_return_if_fail (timeout->timestamp > player->time);
   g_return_if_fail (timeout->callback != NULL);
 
+  SWFDEC_LOG ("adding timeout %p", timeout);
   next_tick = swfdec_player_get_next_event_time (player);
   player->timeouts = g_list_insert_sorted (player->timeouts, timeout, swfdec_timeout_compare);
   if (next_tick != swfdec_player_get_next_event_time (player))
@@ -174,6 +175,7 @@ swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
   g_return_if_fail (timeout->timestamp > player->time);
   g_return_if_fail (timeout->callback != NULL);
 
+  SWFDEC_LOG ("removing timeout %p", timeout);
   next_tick = swfdec_player_get_next_event_time (player);
   player->timeouts = g_list_remove (player->timeouts, timeout);
   if (next_tick != swfdec_player_get_next_event_time (player))
@@ -918,7 +920,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   if (swfdec_player_is_initialized (player))
     return;
   
-  SWFDEC_ERROR ("initializing player to size %ux%u", width, height);
+  SWFDEC_INFO ("initializing player to size %ux%u", width, height);
   player->rate = rate;
   player->width = width;
   player->height = height;

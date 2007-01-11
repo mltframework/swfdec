@@ -25,6 +25,7 @@ typedef int SwfdecFixed;
 
 typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecCache SwfdecCache;
+typedef struct _SwfdecCacheHandle SwfdecCacheHandle;
 typedef struct _SwfdecCharacter SwfdecCharacter;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
 typedef struct _SwfdecContent SwfdecContent;
@@ -33,7 +34,6 @@ typedef struct _SwfdecDecoder SwfdecDecoder;
 typedef struct _SwfdecEventList SwfdecEventList;
 typedef struct _SwfdecFont SwfdecFont;
 typedef struct _SwfdecGraphic SwfdecGraphic;
-typedef struct _SwfdecHandle SwfdecHandle;
 typedef struct _SwfdecImage SwfdecImage;
 typedef struct _SwfdecMovie SwfdecMovie;
 typedef struct _SwfdecShape SwfdecShape;

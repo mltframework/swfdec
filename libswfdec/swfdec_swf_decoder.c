@@ -29,13 +29,13 @@
 #include <stdlib.h>
 #include <liboil/liboil.h>
 
+#include "swfdec_swf_decoder.h"
 #include "swfdec.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
-#include "swfdec_edittext.h"
+#include "swfdec_image.h"
 #include "swfdec_js.h"
-#include "swfdec_sound.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 
 enum {
@@ -456,6 +456,10 @@ swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, int id, GType type)
   if (SWFDEC_IS_SPRITE (result)) {
     g_assert (SWFDEC_DECODER (s)->player);
     SWFDEC_SPRITE (result)->player = SWFDEC_DECODER (s)->player;
+  }
+  /* FIXME: generalize this for cache-using classes */
+  if (SWFDEC_IS_IMAGE (result)) {
+    swfdec_image_set_cache (SWFDEC_IMAGE (result), SWFDEC_DECODER (s)->player->cache);
   }
 
   return result;

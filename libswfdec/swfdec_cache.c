@@ -2,150 +2,115 @@
 #include <swfdec_cache.h>
 
 SwfdecCache *
-swfdec_cache_new (void)
+swfdec_cache_new (unsigned int max_size)
 {
-  return g_new0(SwfdecCache, 1);
+  SwfdecCache *cache;
+  
+  g_return_val_if_fail (max_size > 0, NULL);
+
+  cache = g_new0 (SwfdecCache, 1);
+  cache->queue = g_queue_new ();
+  cache->max_size = max_size;
+
+  return cache;
 }
 
 void
-swfdec_cache_free (SwfdecCache *cache)
+swfdec_cache_ref (SwfdecCache *cache)
 {
-  GList *g;
+  g_return_if_fail (cache != NULL);
 
-  for(g=cache->handles; g; g=g->next) {
-    swfdec_handle_free(g->data);
-  }
+  cache->refcount++;
+}
+
+void
+swfdec_cache_unref (SwfdecCache *cache)
+{
+  g_return_if_fail (cache != NULL);
+  g_return_if_fail (cache->refcount > 0);
+
+  cache->refcount--;
+  if (cache->refcount > 0)
+    return;
+
+  g_queue_free (cache->queue);
   g_free (cache);
 }
 
-int
+unsigned int
 swfdec_cache_get_usage (SwfdecCache *cache)
 {
-  int size = 0;
-  GList *g;
+  g_return_val_if_fail (cache != NULL, 0);
 
-  for(g=cache->handles; g; g=g->next) {
-    SwfdecHandle *handle = g->data;
-    size += handle->size;
+  return cache->usage;
+}
+
+void
+swfdec_cache_shrink (SwfdecCache *cache, unsigned int max_usage)
+{
+  g_return_if_fail (cache != NULL);
+
+  while (cache->usage > max_usage) {
+    SwfdecCacheHandle *handle = g_queue_pop_tail (cache->queue);
+    g_assert (handle);
+    handle->unload (handle);
+    cache->usage -= handle->size;
   }
-
-  return size;
 }
 
+/**
+ * swfdec_cache_add_handle:
+ * @cache: a #SwfdecCache
+ * @handle: a handle to add
+ *
+ * Adds @handle to @cache. If not enough space is available in the cache,
+ * the cache will unload existing handles first. If handle is already part
+ * of cache, its usage information will be updated. This will make it less
+ * likely that it gets unloaded.
+ **/
 void
-swfdec_cache_unload_all (SwfdecCache *cache)
+swfdec_cache_add_handle (SwfdecCache *cache, const SwfdecCacheHandle *handle)
 {
-  GList *g;
+  GList *list;
 
-  for(g=cache->handles; g; g=g->next) {
-    swfdec_handle_unload(g->data);
-  }
-  g_free (cache);
-}
-
-void
-swfdec_cache_add_handle (SwfdecCache *cache, SwfdecHandle *handle)
-{
-  cache->handles = g_list_prepend (cache->handles, handle);
-}
-
-void
-swfdec_cache_remove_handle (SwfdecCache *cache, SwfdecHandle *handle)
-{
-  cache->handles = g_list_remove (cache->handles, handle);
-
-}
-
-
-
-void *
-swfdec_handle_get_data (SwfdecHandle *handle)
-{
-  g_return_val_if_fail (handle != NULL, NULL);
-
-  if (!handle->data) {
-    handle->load (handle);
-    if (handle->data == NULL) {
-      g_warning ("handle load function did not load anything");
-    }
-  }
-
-  return handle->data;
-}
-
-int
-swfdec_handle_get_size (SwfdecHandle *handle)
-{
-  g_return_val_if_fail (handle != NULL, 0);
-  return handle->size;
-}
-
-void *
-swfdec_handle_get_private (SwfdecHandle *handle)
-{
-  g_return_val_if_fail (handle != NULL, NULL);
-  return handle->priv;
-}
-
-gboolean
-swfdec_handle_is_loaded (SwfdecHandle *handle)
-{
-  g_return_val_if_fail (handle != NULL, FALSE);
-  return (handle->data != NULL);
-}
-
-
-SwfdecHandle *
-swfdec_handle_new (SwfdecHandleLoadFunc load_func,
-    SwfdecHandleFreeFunc free_func, void *priv)
-{
-  SwfdecHandle *handle;
-
-  g_return_val_if_fail (free_func != NULL, NULL);
-  g_return_val_if_fail (load_func != NULL, NULL);
-
-  handle = g_new0 (SwfdecHandle, 1);
-
-  handle->load = load_func;
-  handle->free = free_func;
-  handle->priv = priv;
-
-  return handle;
-}
-
-void
-swfdec_handle_free (SwfdecHandle *handle)
-{
+  g_return_if_fail (cache != NULL);
   g_return_if_fail (handle != NULL);
-  if (handle->data) {
-    handle->free (handle->data);
-  }
-  g_free(handle);
-}
+  g_return_if_fail (handle->size > 0);
+  g_return_if_fail (handle->unload != NULL);
 
-void
-swfdec_handle_unload (SwfdecHandle *handle)
-{
-  g_return_if_fail (handle != NULL);
-  if (handle->data) {
-    handle->free (handle);
-    handle->data = NULL;
-    handle->size = 0;
+  list = g_queue_find (cache->queue, handle);
+  if (list) {
+    /* bring to front of queue */
+    g_queue_unlink (cache->queue, list);
+    g_queue_push_head_link (cache->queue, list);
+  } else {
+    swfdec_cache_shrink (cache, cache->max_size - handle->size);
+    g_queue_push_head (cache->queue, (gpointer) handle);
+    cache->usage += handle->size;
   }
 }
 
+/**
+ * swfdec_cache_remove_handle:
+ * @cache: a #SwfdecCache
+ * @handle: the handle to remove
+ *
+ * Removes the given @handle from the @cache, if it was part of it. If the 
+ * handle wasn't part of the cache, nothing happens.
+ **/
 void
-swfdec_handle_add_size (SwfdecHandle *handle, int size)
+swfdec_cache_remove_handle (SwfdecCache *cache, const SwfdecCacheHandle *handle)
 {
+  GList *list;
+
+  g_return_if_fail (cache != NULL);
   g_return_if_fail (handle != NULL);
-  handle->size += size;
+  g_return_if_fail (handle->size > 0);
+  g_return_if_fail (handle->unload != NULL);
+
+  list = g_queue_find (cache->queue, handle);
+  if (list) {
+    g_queue_delete_link (cache->queue, list);
+    cache->usage -= handle->size;
+  }
 }
-
-
-void
-swfdec_handle_set_data (SwfdecHandle *handle, void *data)
-{
-  g_return_if_fail (handle != NULL);
-  handle->data = data;
-}
-

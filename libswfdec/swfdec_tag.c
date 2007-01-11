@@ -358,7 +358,7 @@ swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent 
 	cur->sequence = cur;
       }
       cur->start = i;
-      button->records = g_list_append (button->records, content);
+      button->records = g_list_append (button->records, cur);
     }
     if (cur && !(states & 1)) {
       cur->end = i;

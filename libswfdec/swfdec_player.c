@@ -861,7 +861,7 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   movie = swfdec_movie_new_for_player (player, depth);
   root = SWFDEC_ROOT_MOVIE (movie);
   root->loader = loader;
-  root->loader->target = root;
+  swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
   root->player = player;
   found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
   if (found) {

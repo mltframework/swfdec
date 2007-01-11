@@ -9,6 +9,7 @@ swfdec_cache_new (unsigned int max_size)
   g_return_val_if_fail (max_size > 0, NULL);
 
   cache = g_new0 (SwfdecCache, 1);
+  cache->refcount = 1;
   cache->queue = g_queue_new ();
   cache->max_size = max_size;
 

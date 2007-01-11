@@ -192,8 +192,7 @@ void
 swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
 {
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->target == NULL || target == NULL);
-  g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
+  g_return_if_fail (target == NULL || SWFDEC_IS_LOADER_TARGET (target));
 
   loader->target = target;
 }

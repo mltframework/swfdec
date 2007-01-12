@@ -60,6 +60,13 @@ SwfdecBuffer *	swfdec_flv_decoder_get_video  		(SwfdecFlvDecoder *	flv,
 							 SwfdecVideoFormat *	format,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);
+SwfdecBuffer *	swfdec_flv_decoder_get_audio		(SwfdecFlvDecoder *	flv,
+							 guint			timestamp,
+							 SwfdecAudioFormat *	codec_format,
+							 gboolean *		width,
+							 SwfdecAudioOut *	format,
+							 guint *		real_timestamp,
+							 guint *		next_timestamp);
 
 G_END_DECLS
 

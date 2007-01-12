@@ -270,10 +270,10 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
 
   tag.timestamp = timestamp;
   tag.format = swfdec_bits_getbits (bits, 4);
-  rate = 1 << swfdec_bits_getbits (bits, 2);
+  rate = 44100 / (1 << (3 - swfdec_bits_getbits (bits, 2)));
   tag.width = swfdec_bits_getbit (bits);
   stereo = swfdec_bits_getbit (bits);
-  tag.original_format = SWFDEC_AUDIO_OUT_GET (stereo ? 2 : 1, 44100 / rate);
+  tag.original_format = SWFDEC_AUDIO_OUT_GET (stereo ? 2 : 1, rate);
   tag.buffer = swfdec_bits_get_buffer (bits, -1);
   SWFDEC_LOG ("  format: %u", (guint) tag.format);
   SWFDEC_LOG ("  rate: %d", rate);
@@ -410,6 +410,36 @@ swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
     *real_timestamp = tag->timestamp;
   if (format)
     *format = tag->format;
+  return tag->buffer;
+}
+
+SwfdecBuffer *
+swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
+    SwfdecAudioFormat *codec_format, gboolean *width, SwfdecAudioOut *format,
+    guint *real_timestamp, guint *next_timestamp)
+{
+  guint id;
+  SwfdecFlvAudioTag *tag;
+
+  g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), NULL);
+  g_return_val_if_fail (flv->audio != NULL, NULL);
+
+  id = swfdec_flv_decoder_find_audio (flv, timestamp);
+  if (next_timestamp) {
+    if (id + 1 >= flv->audio->len)
+      *next_timestamp = 0;
+    else
+      *next_timestamp = g_array_index (flv->audio, SwfdecFlvAudioTag, id + 1).timestamp;
+  }
+  tag = &g_array_index (flv->audio, SwfdecFlvAudioTag, id);
+  if (real_timestamp)
+    *real_timestamp = tag->timestamp;
+  if (codec_format)
+    *codec_format = tag->format;
+  if (width)
+    *width = tag->width;
+  if (format)
+    *format = tag->original_format;
   return tag->buffer;
 }
 

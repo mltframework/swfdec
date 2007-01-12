@@ -25,6 +25,7 @@
 #include "swfdec_decoder.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_flv_decoder.h"
 #include "swfdec_swf_decoder.h"
 
 
@@ -59,6 +60,10 @@ swfdec_decoder_new (SwfdecPlayer *player, SwfdecBufferQueue *queue)
       data[1] == 'W' &&
       data[2] == 'S') {
     retval = g_object_new (SWFDEC_TYPE_SWF_DECODER, NULL);
+  } else if (data[0] == 'F' &&
+      data[1] == 'L' &&
+      data[2] == 'V') {
+    retval = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
   } else {
     retval = NULL;
   }

@@ -38,6 +38,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_edittext_movie.c \
 	swfdec_enums.c \
 	swfdec_event.c \
+	swfdec_flv_decoder.c \
 	swfdec_font.c \
 	swfdec_graphic.c \
 	swfdec_graphic_movie.c \
@@ -55,6 +56,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
 	swfdec_movie.c \
+	swfdec_net_stream.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_rect.c \
@@ -66,7 +68,9 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_sprite_movie.c \
 	swfdec_swf_decoder.c \
 	swfdec_tag.c \
-	swfdec_text.c
+	swfdec_text.c \
+	swfdec_video.c \
+	swfdec_video_movie.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
@@ -106,6 +110,7 @@ noinst_HEADERS = \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \
 	swfdec_event.h \
+	swfdec_flv_decoder.h \
 	swfdec_font.h \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
@@ -117,6 +122,7 @@ noinst_HEADERS = \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_net_stream.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
@@ -129,7 +135,9 @@ noinst_HEADERS = \
 	swfdec_swf_decoder.h \
 	swfdec_tag.h \
 	swfdec_text.h \
-	swfdec_types.h
+	swfdec_types.h \
+	swfdec_video.h \
+	swfdec_video_movie.h
 
 EXTRA_DIST = swfdec_marshal.list
 

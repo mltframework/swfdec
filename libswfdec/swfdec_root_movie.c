@@ -27,6 +27,7 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_flv_decoder.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
@@ -66,6 +67,10 @@ swfdec_root_movie_loader_target_do_init (SwfdecLoaderTarget *target)
 
   swfdec_player_initialize (movie->player, movie->decoder->rate, 
       movie->decoder->width, movie->decoder->height);
+  if (SWFDEC_IS_FLV_DECODER (movie->decoder)) {
+    swfdec_flv_decoder_add_movie (SWFDEC_FLV_DECODER (movie->decoder), 
+	SWFDEC_MOVIE (movie));
+  }
   return TRUE;
 }
 
@@ -82,6 +87,8 @@ swfdec_root_movie_loader_target_image (SwfdecLoaderTarget *target)
 
     SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->init_movie (SWFDEC_MOVIE (movie));
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+  } else if (SWFDEC_IS_FLV_DECODER (movie->decoder)) {
+    /* nothing to do, please move along */
   } else {
     g_assert_not_reached ();
     return FALSE;

@@ -43,6 +43,7 @@
 #include "swfdec_sound.h"
 #include "swfdec_sprite.h"
 #include "swfdec_text.h"
+#include "swfdec_video.h"
 
 int
 tag_func_end (SwfdecSwfDecoder * s)
@@ -810,8 +811,8 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_IMPORTASSETS] = {"ImportAssets", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
   [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
-  [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", NULL, 0},
-  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", NULL, 0},
+  [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", tag_func_define_video, 0},
+  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, 0},
   [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info_2, 0},
   [SWFDEC_TAG_MX4] = {"MX4", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},

@@ -56,6 +56,9 @@ struct _SwfdecNetStream
   cairo_surface_t *	surface;	/* current image */
   SwfdecTimeout		timeout;	/* timeout to advance to */
   SwfdecVideoMovieInput	input;		/* used when attaching to a video movie */
+
+  /* audio */
+  SwfdecAudio *		audio;		/* audio stream or NULL when not playing */
 };
 
 struct _SwfdecNetStreamClass

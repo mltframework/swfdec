@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_net_stream.h"
+#include "swfdec_audio_flv.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
@@ -100,7 +101,20 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
     stream->timeout.callback = swfdec_net_stream_timeout;
     stream->timeout.timestamp = stream->player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     swfdec_player_add_timeout (stream->player, &stream->timeout);
+    if (stream->flvdecoder->audio) {
+      SWFDEC_LOG ("starting audio");
+      stream->audio = swfdec_audio_flv_new (stream->player, 
+	  stream->flvdecoder, stream->current_time);
+    } else {
+      SWFDEC_LOG ("no audio");
+    }
   } else if (!should_play && stream->timeout.callback != NULL) {
+    if (stream->audio) {
+      SWFDEC_LOG ("stopping audio");
+      swfdec_audio_remove (stream->audio);
+      g_object_unref (stream->audio);
+      stream->audio = NULL;
+    }
     swfdec_player_remove_timeout (stream->player, &stream->timeout);
     stream->timeout.callback = NULL;
     SWFDEC_DEBUG ("stopping playback");

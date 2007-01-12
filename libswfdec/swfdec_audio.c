@@ -98,6 +98,7 @@ swfdec_audio_add (SwfdecAudio *audio, SwfdecPlayer *player)
     return;
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
+  g_object_ref (audio);
   audio->player = player;
   player->audio = g_list_append (player->audio, audio);
   SWFDEC_INFO ("adding %s %p", G_OBJECT_TYPE_NAME (audio), audio);
@@ -121,8 +122,8 @@ swfdec_audio_remove (SwfdecAudio *audio)
       audio->added = FALSE;
     }
     audio->player = NULL;
+    g_object_unref (audio);
   }
-  g_object_unref (audio);
 }
 
 /**

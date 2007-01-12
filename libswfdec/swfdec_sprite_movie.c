@@ -263,7 +263,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   /* FIXME: is this correct? */
   if (movie->sound_frame != movie->current_frame) {
     for (walk = current->sound; walk; walk = walk->next) {
-      swfdec_audio_event_new (player, walk->data);
+      SwfdecAudio *audio = swfdec_audio_event_new (player, walk->data);
+      g_object_unref (audio);
     }
   }
 
@@ -272,7 +273,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
       SWFDEC_MOVIE (movie)->stopped) {
     if (movie->sound_stream) {
       swfdec_audio_remove (movie->sound_stream);
-      g_assert (movie->sound_stream == NULL);
+      g_object_unref (movie->sound_stream);
+      movie->sound_stream = NULL;
     }
     goto exit;
   }
@@ -293,13 +295,13 @@ exit:
   return TRUE;
 
 new_decoder:
-  if (movie->sound_stream)
+  if (movie->sound_stream) {
     swfdec_audio_remove (movie->sound_stream);
+    g_object_unref (movie->sound_stream);
+  }
 
-  g_assert (movie->sound_stream == NULL);
   movie->sound_stream = swfdec_audio_stream_new (player, 
       movie->sprite, movie->current_frame);
-  g_object_add_weak_pointer (G_OBJECT (movie->sound_stream), (gpointer *) (void *) &movie->sound_stream);
   movie->sound_frame = movie->current_frame;
   return TRUE;
 }
@@ -325,7 +327,8 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
   swfdec_player_remove_all_actions (player, mov);
   if (movie->sound_stream) {
     swfdec_audio_remove (movie->sound_stream);
-    g_assert (movie->sound_stream == NULL);
+    g_object_unref (movie->sound_stream);
+    movie->sound_stream = NULL;
   }
 }
 

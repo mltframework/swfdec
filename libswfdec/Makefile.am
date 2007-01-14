@@ -78,6 +78,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS) $(FFMPEG_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Swfdec\"
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
+	-version-info $(SWFDEC_LIBVERSION) \
 	-export-symbols-regex '^(swfdec_.*)' \
 	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(MAD_LIBS) $(FFMPEG_LIBS) \
 	$(LIBOIL_LIBS)

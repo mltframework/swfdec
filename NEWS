@@ -1,4 +1,20 @@
 
+ 0.4.1 ("Dragostea din tei")
+
+This release introduces video features. Quite a bit of internal 
+restructuring was necessary to achieve this. The API has been changed 
+from 0.4.0. Changes:
+- swfdec_player_iterate has been replaced by swfdec_player_advance
+- some functions (like swfdec_player_set_audio_advance) have been 
+  completely removed. The same effect can be achieved by using 
+  swfdec_player_advance.
+- Add support for video playback. This does not include scripting 
+  video.
+- Add native FLV support to swfdec.
+- Fix the caching layer. So SWF files with lots of images no longer 
+  crash swfdec.
+- Lots of bugfixes.
+
  0.4.0 ("festivally plump")
 
 This is the result of 3 months of refactoring, testing stuff and 

@@ -22,7 +22,8 @@
 #include "config.h"
 #endif
 
-#include <swfdec_cache.h>
+#include "swfdec_cache.h"
+#include "swfdec_debug.h"
 
 SwfdecCache *
 swfdec_cache_new (unsigned int max_size)
@@ -77,8 +78,10 @@ swfdec_cache_shrink (SwfdecCache *cache, unsigned int max_usage)
   while (cache->usage > max_usage) {
     SwfdecCacheHandle *handle = g_queue_pop_tail (cache->queue);
     g_assert (handle);
-    handle->unload (handle);
     cache->usage -= handle->size;
+    SWFDEC_LOG ("%p removing %p (%u => %u)", cache, handle, 
+	cache->usage + handle->size, cache->usage);
+    handle->unload (handle);
   }
 }
 
@@ -111,6 +114,8 @@ swfdec_cache_add_handle (SwfdecCache *cache, const SwfdecCacheHandle *handle)
     swfdec_cache_shrink (cache, cache->max_size - handle->size);
     g_queue_push_head (cache->queue, (gpointer) handle);
     cache->usage += handle->size;
+    SWFDEC_LOG ("%p adding %p (%u => %u)", cache, handle, 
+	cache->usage - handle->size, cache->usage);
   }
 }
 
@@ -136,5 +141,7 @@ swfdec_cache_remove_handle (SwfdecCache *cache, const SwfdecCacheHandle *handle)
   if (list) {
     g_queue_delete_link (cache->queue, list);
     cache->usage -= handle->size;
+    SWFDEC_LOG ("%p removing %p (%u => %u)", cache, handle, 
+	cache->usage + handle->size, cache->usage);
   }
 }

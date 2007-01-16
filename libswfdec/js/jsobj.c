@@ -1692,7 +1692,7 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
 };
 
 static JSObjectOps *
-with_getObjectOps(JSContext *cx, JSClass *clasp)
+with_getObjectOps(JSContext *cx, const JSClass *clasp)
 {
     return &js_WithObjectOps;
 }
@@ -1782,7 +1782,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 
 void
 js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,
-                 JSClass *clasp)
+                 const JSClass *clasp)
 {
     map->nrefs = nrefs;
     map->ops = ops;
@@ -1792,7 +1792,7 @@ js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,
 
 JSObjectMap *
 js_NewObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-                JSClass *clasp, JSObject *obj)
+                const JSClass *clasp, JSObject *obj)
 {
     return (JSObjectMap *) js_NewScope(cx, nrefs, ops, clasp, obj);
 }
@@ -1830,7 +1830,7 @@ GetClassPrototype(JSContext *cx, JSObject *scope, const char *name,
                   JSObject **protop);
 
 JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+js_NewObject(JSContext *cx, const JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     JSObject *obj, *ctor;
     JSObjectOps *ops;

@@ -336,7 +336,7 @@ extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
 
 extern JSScope *
-js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
+js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, const JSClass *clasp,
             JSObject *obj);
 
 extern void

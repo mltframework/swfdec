@@ -2098,7 +2098,7 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+JS_NewObject(JSContext *cx, const JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     CHECK_REQUEST(cx);
     if (!clasp)

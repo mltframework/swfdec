@@ -277,11 +277,11 @@ extern const char js_lookupSetter_str[];
 
 extern void
 js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,
-		 JSClass *clasp);
+		 const JSClass *clasp);
 
 extern JSObjectMap *
 js_NewObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
-		JSClass *clasp, JSObject *obj);
+		const JSClass *clasp, JSObject *obj);
 
 extern void
 js_DestroyObjectMap(JSContext *cx, JSObjectMap *map);
@@ -293,7 +293,7 @@ extern JSObjectMap *
 js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj);
 
 extern JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+js_NewObject(JSContext *cx, const JSClass *clasp, JSObject *proto, JSObject *parent);
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,

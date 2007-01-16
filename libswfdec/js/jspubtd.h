@@ -271,7 +271,7 @@ typedef void
  * code and data used by the native (js_ObjectOps, see jsobj.c) ops.
  */
 typedef JSObjectOps *
-(* JS_DLL_CALLBACK JSGetObjectOps)(JSContext *cx, JSClass *clasp);
+(* JS_DLL_CALLBACK JSGetObjectOps)(JSContext *cx, const JSClass *clasp);
 
 /*
  * JSClass.checkAccess type: check whether obj[id] may be accessed per mode,
@@ -343,7 +343,7 @@ typedef uint32
  */
 typedef JSObjectMap *
 (* JS_DLL_CALLBACK JSNewObjectMapOp)(JSContext *cx, jsrefcount nrefs,
-                                     JSObjectOps *ops, JSClass *clasp,
+                                     JSObjectOps *ops, const JSClass *clasp,
                                      JSObject *obj);
 
 /*

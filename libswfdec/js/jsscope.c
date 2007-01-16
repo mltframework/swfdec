@@ -132,7 +132,7 @@ CreateScopeTable(JSScope *scope)
 }
 
 JSScope *
-js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
+js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, const JSClass *clasp,
             JSObject *obj)
 {
     JSScope *scope;

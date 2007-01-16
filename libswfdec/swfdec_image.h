@@ -23,8 +23,7 @@
 #define _SWFDEC_IMAGE_H_
 
 #include <cairo.h>
-#include <libswfdec/swfdec_cache.h>
-#include <libswfdec/swfdec_character.h>
+#include <libswfdec/swfdec_cached.h>
 #include <libswfdec/swfdec_decoder.h>
 
 G_BEGIN_DECLS
@@ -46,34 +45,27 @@ typedef enum {
   SWFDEC_IMAGE_TYPE_LOSSLESS2,
 } SwfdecImageType;
 
-struct _SwfdecImage
-{
-  SwfdecCharacter	character;
+struct _SwfdecImage {
+  SwfdecCached		cached;
 
   cairo_surface_t *	surface;	/* surface that is on-demand loaded */
-  SwfdecCache *		cache;		/* cache to use for image */
-  SwfdecCacheHandle	handle;		/* handle to unload surface */
+  int			width;
+  int			height;
+  int			rowstride;
 
-  int width, height;
-  int rowstride;
-
-  SwfdecBuffer *jpegtables;
-  SwfdecBuffer *raw_data;
-
-  SwfdecImageType type;
+  SwfdecImageType	type;
+  SwfdecBuffer *	jpegtables;
+  SwfdecBuffer *	raw_data;
 };
 
-struct _SwfdecImageClass
-{
-  SwfdecCharacterClass	character_class;
+struct _SwfdecImageClass {
+  SwfdecCachedClass	cached_class;
 
 };
 
 GType			swfdec_image_get_type		(void);
 
 cairo_surface_t *	swfdec_image_get_surface	(SwfdecImage *	image);
-void			swfdec_image_set_cache		(SwfdecImage *	image,
-							 SwfdecCache *	cache);
 
 int swfdec_image_jpegtables (SwfdecSwfDecoder * s);
 int tag_func_define_bits_jpeg (SwfdecSwfDecoder * s);

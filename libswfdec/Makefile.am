@@ -25,6 +25,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_button.c \
 	swfdec_button_movie.c \
 	swfdec_cache.c \
+	swfdec_cached.c \
 	swfdec_character.c \
 	swfdec_codec.c \
 	swfdec_codec_adpcm.c \
@@ -104,6 +105,7 @@ noinst_HEADERS = \
 	swfdec_button.h \
 	swfdec_button_movie.h \
 	swfdec_cache.h \
+	swfdec_cached.h \
 	swfdec_character.h \
 	swfdec_codec.h \
 	swfdec_color.h \

@@ -40,12 +40,12 @@ static void swfdec_image_colormap_decode (SwfdecImage * image,
     unsigned char *dest,
     unsigned char *src, unsigned char *colormap, int colormap_len);
 
-G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CHARACTER)
+G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CACHED)
 
 static void
-swfdec_image_unload (gpointer data)
+swfdec_image_unload (SwfdecCached *cached)
 {
-  SwfdecImage *image = SWFDEC_IMAGE (data - G_STRUCT_OFFSET (SwfdecImage, handle));
+  SwfdecImage *image = SWFDEC_IMAGE (cached);
 
   if (image->surface) {
     cairo_surface_destroy (image->surface);
@@ -58,7 +58,6 @@ swfdec_image_dispose (GObject *object)
 {
   SwfdecImage * image = SWFDEC_IMAGE (object);
 
-  swfdec_image_unload (&image->handle);
   if (image->jpegtables) {
     swfdec_buffer_unref (image->jpegtables);
     image->jpegtables = NULL;
@@ -75,14 +74,16 @@ static void
 swfdec_image_class_init (SwfdecImageClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecCachedClass *cached_class = SWFDEC_CACHED_CLASS (g_class);
 
   object_class->dispose = swfdec_image_dispose;
+
+  cached_class->unload = swfdec_image_unload;
 }
 
 static void
 swfdec_image_init (SwfdecImage * image)
 {
-  image->handle.unload = swfdec_image_unload;
 }
 
 
@@ -211,9 +212,11 @@ swfdec_image_jpeg_load (SwfdecImage *image)
       image->raw_data->length - 2);
   jpeg_rgb_decoder_parse (dec);
   jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
-  image->handle.size = 4 * image->width * image->height;
-  if (image->cache)
-    swfdec_cache_add_handle (image->cache, &image->handle);
+  if (image->width == 0 || image->height == 0) {
+    jpeg_rgb_decoder_free (dec);
+    return;
+  }
+  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, NULL, NULL);
   jpeg_rgb_decoder_free (dec);
@@ -257,9 +260,11 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
       image->raw_data->length - 2);
   jpeg_rgb_decoder_parse (dec);
   jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
-  image->handle.size = 4 * image->width * image->height;
-  if (image->cache)
-    swfdec_cache_add_handle (image->cache, &image->handle);
+  if (image->width == 0 || image->height == 0) {
+    jpeg_rgb_decoder_free (dec);
+    return;
+  }
+  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
@@ -318,9 +323,11 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   jpeg_rgb_decoder_addbits (dec, bits.ptr, jpeg_length);
   jpeg_rgb_decoder_parse (dec);
   jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
-  image->handle.size = 4 * image->width * image->height;
-  if (image->cache)
-    swfdec_cache_add_handle (image->cache, &image->handle);
+  if (image->width == 0 || image->height == 0) {
+    jpeg_rgb_decoder_free (dec);
+    return;
+  }
+  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
@@ -385,9 +392,6 @@ swfdec_image_lossless_load (SwfdecImage *image)
   SWFDEC_LOG ("  width = %d", image->width);
   image->height = swfdec_bits_get_u16 (&bits);
   SWFDEC_LOG ("  height = %d", image->height);
-  image->handle.size = 4 * image->width * image->height;
-  if (image->cache)
-    swfdec_cache_add_handle (image->cache, &image->handle);
   if (format == 3) {
     color_table_size = swfdec_bits_get_u8 (&bits) + 1;
   } else {
@@ -399,6 +403,9 @@ swfdec_image_lossless_load (SwfdecImage *image)
   SWFDEC_LOG ("height = %d", image->height);
   SWFDEC_LOG ("color_table_size = %d", color_table_size);
 
+  if (image->width == 0 || image->height == 0)
+    return;
+  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
   ptr = lossless (bits.ptr, endptr - bits.ptr, &len);
   bits.ptr = endptr;
 
@@ -590,8 +597,7 @@ swfdec_image_get_surface (SwfdecImage *image)
   g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
 
   if (image->surface) {
-    if (image->cache)
-      swfdec_cache_add_handle (image->cache, &image->handle);
+    swfdec_cached_reload (SWFDEC_CACHED (image));
     return image->surface;
   }
 
@@ -617,27 +623,6 @@ swfdec_image_get_surface (SwfdecImage *image)
       break;
   }
 
-  g_assert (image->handle.size);
-  g_assert (image->surface);
   return image->surface;
-}
-
-void
-swfdec_image_set_cache (SwfdecImage *image, SwfdecCache *cache)
-{
-  g_return_if_fail (SWFDEC_IS_IMAGE (image));
-  g_return_if_fail (cache != NULL);
-
-  if (image->cache) {
-    if (image->surface)
-      swfdec_cache_remove_handle (image->cache, &image->handle);
-    swfdec_cache_unref (image->cache);
-  }
-  image->cache = cache;
-  if (cache) {
-    swfdec_cache_ref (cache);
-    if (image->surface)
-      swfdec_cache_add_handle (image->cache, &image->handle);
-  }
 }
 

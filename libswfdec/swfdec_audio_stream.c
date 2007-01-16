@@ -38,7 +38,7 @@ swfdec_audio_stream_dispose (GObject *object)
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (object);
 
   if (stream->decoder != NULL) {
-    SwfdecBuffer *buffer = swfdec_sound_finish_decoder (stream->sound, stream->decoder);
+    SwfdecBuffer *buffer = swfdec_audio_codec_finish (stream->codec, stream->decoder);
     stream->decoder = NULL;
     if (buffer)
       swfdec_buffer_unref (buffer);
@@ -68,7 +68,7 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
     /* FIXME: with this method and mad not giving out full samples, we end up 
      * putting silence too early */
     if (frame->sound_block) {
-      buffer = swfdec_sound_decode_buffer (stream->sound, stream->decoder, frame->sound_block);
+      buffer = swfdec_audio_codec_decode (stream->codec, stream->decoder, frame->sound_block);
       if (buffer == NULL)
 	continue;
     } else {
@@ -79,7 +79,7 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
     g_queue_push_tail (stream->playback_queue, buffer);
     return buffer;
   }
-  buffer = swfdec_sound_finish_decoder (stream->sound, stream->decoder);
+  buffer = swfdec_audio_codec_finish (stream->codec, stream->decoder);
   stream->decoder = NULL;
   stream->done = TRUE;
   if (buffer)
@@ -199,9 +199,12 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->sound = frame->sound_head;
   stream->playback_skip = frame->sound_skip;
   stream->current_frame = start_frame;
-  stream->decoder = swfdec_sound_init_decoder (stream->sound);
+  stream->codec = swfdec_codec_get_audio (stream->sound->format);
+  if (stream->codec)
+    stream->decoder = swfdec_audio_codec_init (stream->codec, 
+	stream->sound->width, stream->sound->original_format);
   if (stream->decoder)
-    stream->format = swfdec_sound_get_decoder_format (stream->sound, stream->decoder);
+    stream->format = swfdec_audio_codec_get_format (stream->codec, stream->decoder);
   swfdec_audio_add (SWFDEC_AUDIO (stream), player);
 
   return SWFDEC_AUDIO (stream);

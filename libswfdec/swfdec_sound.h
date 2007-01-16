@@ -64,7 +64,6 @@ struct _SwfdecSound
   SwfdecCached		cached;
 
   SwfdecAudioFormat	format;			/* format in use */
-  const SwfdecAudioCodec *codec;		/* codec for this sound */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
   unsigned int		n_samples;		/* total number of samples */
@@ -87,15 +86,6 @@ int tag_func_sound_stream_block (SwfdecSwfDecoder * s);
 int tag_func_sound_stream_head (SwfdecSwfDecoder * s);
 int tag_func_start_sound (SwfdecSwfDecoder * s);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s);
-
-gpointer		swfdec_sound_init_decoder	(SwfdecSound *		sound);
-SwfdecBuffer *		swfdec_sound_finish_decoder	(SwfdecSound *		sound,
-							 gpointer		data);
-SwfdecBuffer *		swfdec_sound_decode_buffer	(SwfdecSound *		sound,
-							 gpointer		data,
-							 SwfdecBuffer *		buffer);
-SwfdecAudioFormat	swfdec_sound_get_decoder_format	(SwfdecSound *		sound,
-							 gpointer		data);
 
 void			swfdec_sound_render		(SwfdecSound *		sound, 
 							 gint16 *		dest, 

@@ -179,6 +179,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
 SwfdecBuffer *
 swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
 {
+  const SwfdecAudioCodec *codec;
   gpointer decoder;
   SwfdecBuffer *tmp, *tmp2;
   guint sample_bytes;
@@ -193,19 +194,19 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
   }
   if (sound->encoded == NULL)
     return NULL;
-  sound->codec = swfdec_codec_get_audio (sound->format);
-  if (sound->codec == NULL)
+  codec = swfdec_codec_get_audio (sound->format);
+  if (codec == NULL)
     return NULL;
 
-  decoder = swfdec_sound_init_decoder (sound);
+  decoder = swfdec_audio_codec_init (codec, sound->width, sound->original_format);
   if (decoder == NULL)
     return NULL;
-  sound->decoded_format = swfdec_sound_get_decoder_format (sound, decoder);
+  sound->decoded_format = swfdec_audio_codec_get_format (codec, decoder);
   sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
   /* FIXME: The size is only a guess */
   swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
-  tmp = swfdec_sound_decode_buffer (sound, decoder, sound->encoded);
-  tmp2 = swfdec_sound_finish_decoder (sound, decoder);
+  tmp = swfdec_audio_codec_decode (codec, decoder, sound->encoded);
+  tmp2 = swfdec_audio_codec_finish (codec, decoder);
   if (tmp == NULL) {
     if (tmp2) {
       tmp = tmp2;
@@ -306,10 +307,6 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s)
     default:
       SWFDEC_WARNING ("unknown format %d", format);
       sound->format = format;
-  }
-  sound->codec = swfdec_codec_get_audio (sound->format);
-  if (sound->codec == NULL) {
-    SWFDEC_WARNING ("No codec found for format %u", sound->format);
   }
 
   return SWFDEC_STATUS_OK;
@@ -458,49 +455,6 @@ tag_func_define_button_sound (SwfdecSwfDecoder * s)
   }
 
   return SWFDEC_STATUS_OK;
-}
-
-gpointer 
-swfdec_sound_init_decoder (SwfdecSound * sound)
-{
-  g_assert (sound->decoded == NULL);
-
-  if (sound->codec)
-    return swfdec_audio_codec_init (sound->codec, sound->width, sound->original_format);
-  else
-    return NULL;
-}
-
-SwfdecBuffer *
-swfdec_sound_finish_decoder (SwfdecSound * sound, gpointer data)
-{
-  g_assert (sound->decoded == NULL);
-
-  if (sound->codec)
-    return swfdec_audio_codec_finish (sound->codec, data);
-  return NULL;
-}
-
-SwfdecBuffer *
-swfdec_sound_decode_buffer (SwfdecSound *sound, gpointer data, SwfdecBuffer *buffer)
-{
-  g_assert (sound->decoded == NULL);
-
-  if (sound->codec)
-    return swfdec_audio_codec_decode (sound->codec, data, buffer);
-  else
-    return NULL;
-}
-
-SwfdecAudioFormat
-swfdec_sound_get_decoder_format	(SwfdecSound *sound, gpointer data)
-{
-  g_assert (sound->decoded == NULL);
-
-  if (sound->codec)
-    return swfdec_audio_codec_get_format (sound->codec, data);
-  else
-    return sound->original_format;
 }
 
 /**

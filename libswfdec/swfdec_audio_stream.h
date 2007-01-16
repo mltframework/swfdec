@@ -23,6 +23,7 @@
 #define _SWFDEC_AUDIO_STREAM_H_
 
 #include <libswfdec/swfdec_audio_internal.h>
+#include <libswfdec/swfdec_codec.h>
 
 G_BEGIN_DECLS
 
@@ -42,6 +43,7 @@ struct _SwfdecAudioStream
 
   SwfdecSprite *	sprite;		/* sprite we're playing back */
   SwfdecSound *		sound;	      	/* sound we're playing */
+  const SwfdecAudioCodec *codec;	/* codec used by this stream */
   gpointer		decoder;	/* decoder used for this frame */
   SwfdecAudioOut	format;		/* format used by decoder */
   unsigned int		playback_skip;	/* number of samples to skip at the beginning of queue */

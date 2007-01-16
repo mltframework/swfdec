@@ -58,7 +58,7 @@ struct JSFunction {
     uint8        flags;         /* bound method and other flags, see jsapi.h */
     uint8        spare;         /* reserved for future use */
     JSAtom       *atom;         /* name for diagnostics and decompiling */
-    JSClass      *clasp;        /* if non-null, constructor for this class */
+    const JSClass *clasp;       /* if non-null, constructor for this class */
     void	*priv;
 };
 

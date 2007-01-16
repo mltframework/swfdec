@@ -877,7 +877,7 @@ struct JSFunctionSpec {
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-             JSClass *clasp, JSNative constructor, uintN nargs,
+             const JSClass *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
@@ -894,7 +894,7 @@ JS_GetClass(JSObject *obj);
 #endif
 
 extern JS_PUBLIC_API(JSBool)
-JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv);
+JS_InstanceOf(JSContext *cx, JSObject *obj, const JSClass *clasp, jsval *argv);
 
 extern JS_PUBLIC_API(void *)
 JS_GetPrivate(JSContext *cx, JSObject *obj);

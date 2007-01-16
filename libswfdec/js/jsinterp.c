@@ -1393,7 +1393,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSString *str, *str2;
     jsint i, j;
     jsdouble d, d2;
-    JSClass *clasp, *funclasp;
+    const JSClass *clasp, *funclasp;
     JSFunction *fun;
     JSType type;
 #ifdef DEBUG

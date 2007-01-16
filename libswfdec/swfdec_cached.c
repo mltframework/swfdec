@@ -92,7 +92,7 @@ swfdec_cached_load (SwfdecCached *cached, guint size)
 }
 
 void
-swfdec_cached_reload (SwfdecCached *cached)
+swfdec_cached_use (SwfdecCached *cached)
 {
   g_return_if_fail (SWFDEC_IS_CACHED (cached));
   g_return_if_fail (cached->handle.unload != NULL);

@@ -597,7 +597,7 @@ swfdec_image_get_surface (SwfdecImage *image)
   g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
 
   if (image->surface) {
-    swfdec_cached_reload (SWFDEC_CACHED (image));
+    swfdec_cached_use (SWFDEC_CACHED (image));
     return image->surface;
   }
 

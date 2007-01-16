@@ -55,7 +55,7 @@ GType			swfdec_cached_get_type		(void);
 
 void			swfdec_cached_load		(SwfdecCached *	cached,
 							 guint		size);
-void			swfdec_cached_reload		(SwfdecCached *	cached);
+void			swfdec_cached_use		(SwfdecCached *	cached);
 void			swfdec_cached_unload		(SwfdecCached *	cached);
 void			swfdec_cached_set_cache		(SwfdecCached *	cached,
 							 SwfdecCache *	cache);

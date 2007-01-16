@@ -23,6 +23,7 @@
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_flv_decoder.h>
 #include <libswfdec/swfdec_player_internal.h>
+#include <libswfdec/swfdec_scriptable.h>
 #include <libswfdec/swfdec_video_movie.h>
 
 G_BEGIN_DECLS
@@ -39,7 +40,7 @@ typedef struct _SwfdecNetStreamClass SwfdecNetStreamClass;
 
 struct _SwfdecNetStream
 {
-  GObject		object;
+  SwfdecScriptable	scriptable;
 
   SwfdecPlayer *	player;		/* the player we play in */
   SwfdecLoader *	loader;		/* input connection */
@@ -63,7 +64,7 @@ struct _SwfdecNetStream
 
 struct _SwfdecNetStreamClass
 {
-  GObjectClass		object_class;
+  SwfdecScriptableClass	scriptable_class;
 };
 
 GType			swfdec_net_stream_get_type	(void);

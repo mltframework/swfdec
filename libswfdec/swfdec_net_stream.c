@@ -200,7 +200,7 @@ swfdec_net_stream_input_finalize (SwfdecVideoMovieInput *input)
 
 /*** SWFDEC_NET_STREAM ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, G_TYPE_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_SCRIPTABLE,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_net_stream_loader_target_init))
 
 static void

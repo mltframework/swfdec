@@ -180,7 +180,7 @@ swfdec_js_color_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   SwfdecMovie *movie;
   JSObject *new;
 
-  movie = swfdec_js_val_to_movie (cx, argv[0]);
+  movie = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_MOVIE);
   if (movie == NULL) {
     SWFDEC_INFO ("attempted to construct a color without a movie");
     return JS_TRUE;

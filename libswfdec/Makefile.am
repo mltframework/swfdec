@@ -63,6 +63,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_rect.c \
 	swfdec_ringbuffer.c \
 	swfdec_root_movie.c \
+	swfdec_scriptable.c \
 	swfdec_shape.c \
 	swfdec_sound.c \
 	swfdec_sprite.c \
@@ -131,6 +132,7 @@ noinst_HEADERS = \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
+	swfdec_scriptable.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \

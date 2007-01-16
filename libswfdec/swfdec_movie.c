@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,7 @@
 
 static const SwfdecContent default_content = SWFDEC_CONTENT_DEFAULT;
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_SCRIPTABLE)
 
 static void
 swfdec_movie_init (SwfdecMovie * movie)
@@ -308,7 +308,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   if (movie->parent) {
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   }
-  if (movie->jsobj)
+  if (SWFDEC_SCRIPTABLE (movie)->jsobj)
     swfdec_js_movie_remove_property (movie);
   player->movies = g_list_remove (player->movies, movie);
   g_object_unref (movie);
@@ -607,7 +607,6 @@ swfdec_movie_dispose (GObject *object)
 {
   SwfdecMovie * movie = SWFDEC_MOVIE (object);
 
-  g_assert (movie->jsobj == NULL);
   g_assert (movie->list == NULL);
   g_assert (movie->content == &default_content);
 
@@ -626,12 +625,36 @@ swfdec_movie_iterate_end (SwfdecMovie *movie)
 	 g_list_find (movie->parent->list, movie) != NULL;
 }
 
+static JSObject *
+swfdec_movie_create_js_object (SwfdecScriptable *script)
+{
+  GList *walk;
+  JSObject *ret;
+
+  ret = SWFDEC_SCRIPTABLE_CLASS (swfdec_movie_parent_class)->create_js_object (script);
+  if (ret == NULL)
+    return NULL;
+  script->jsobj = ret;
+  /* add all children */
+  for (walk = SWFDEC_MOVIE (script)->list; walk; walk = walk->next) {
+    SwfdecMovie *child = walk->data;
+    if (child->has_name)
+      swfdec_js_movie_add_property (child);
+  }
+  return ret;
+}
+
+extern const JSClass movieclip_class;
 static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
+  SwfdecScriptableClass *script_class = SWFDEC_SCRIPTABLE_CLASS (movie_class);
 
   object_class->dispose = swfdec_movie_dispose;
+
+  script_class->jsclass = &movieclip_class;
+  script_class->create_js_object = swfdec_movie_create_js_object;
 
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }
@@ -723,6 +746,7 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   g_return_val_if_fail (klass->create_movie != NULL, NULL);
   ret = klass->create_movie (content->graphic);
   ret->parent = parent;
+  SWFDEC_SCRIPTABLE (ret)->jscx = SWFDEC_SCRIPTABLE (parent)->jscx;
   g_object_ref (parent);
   ret->root = parent->root;
   swfdec_movie_initialize (ret, content);
@@ -742,6 +766,7 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   SWFDEC_ROOT_MOVIE (ret)->player = player;
+  SWFDEC_SCRIPTABLE (ret)->jscx = player->jscx;
   ret->root = ret;
   swfdec_movie_initialize (ret, content);
   ret->has_name = FALSE;

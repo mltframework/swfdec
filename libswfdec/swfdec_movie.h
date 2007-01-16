@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,8 +25,8 @@
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_event.h>
+#include <libswfdec/swfdec_scriptable.h>
 #include <libswfdec/swfdec_types.h>
-#include <libswfdec/js/jspubtd.h>
 
 G_BEGIN_DECLS
 
@@ -75,11 +75,10 @@ typedef enum {
 } SwfdecMovieState;
 
 struct _SwfdecMovie {
-  GObject		object;
+  SwfdecScriptable	scriptable;
 
   char *		name;			/* name used in to_string */
   gboolean		has_name;		/* TRUE if name wasn't given automagically */
-  JSObject *		jsobj;			/* our object in javascript */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   const SwfdecContent *	content;           	/* the content we are displaying */
@@ -116,7 +115,7 @@ struct _SwfdecMovie {
 };
 
 struct _SwfdecMovieClass {
-  GObjectClass		object_class;
+  SwfdecScriptableClass	scriptable_class;
 
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);

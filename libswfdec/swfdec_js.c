@@ -130,29 +130,6 @@ swfdec_js_finish_player (SwfdecPlayer *player)
   }
 }
 
-JSBool
-swfdec_js_push_state (SwfdecMovie *movie)
-{
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  JSBool old_case, new_case;
-  
-  old_case = JS_GetContextCaseSensitive (player->jscx);
-  if (SWFDEC_IS_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder))
-    new_case = SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version >= 7 ? 
-      JS_TRUE : JS_FALSE;
-  else
-    new_case = JS_TRUE;
-  JS_SetContextCaseSensitive (player->jscx, new_case);
-  return old_case;
-}
-
-void
-swfdec_js_pop_state (SwfdecMovie *movie, JSBool state)
-{
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  JS_SetContextCaseSensitive (player->jscx, state);
-}
-
 /**
  * swfdec_js_execute_script:
  * @s: a @SwfdecPlayer
@@ -171,7 +148,8 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
     JSScript *script, jsval *rval)
 {
   jsval returnval = JSVAL_VOID;
-  JSBool ret, old_state;
+  JSObject *jsobj;
+  JSBool ret;
 
   g_return_val_if_fail (s != NULL, FALSE);
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
@@ -183,20 +161,13 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
   }
   if (rval == NULL)
     rval = &returnval;
-  if (movie->jsobj == NULL) {
-    swfdec_js_add_movie (movie);
-    if (movie->jsobj == NULL)
-      return FALSE;
-  }
-  /* setup execution state */
-  old_state = swfdec_js_push_state (movie);
-  ret = JS_ExecuteScript (s->jscx, movie->jsobj, script, rval);
-  
-  /* restore execution state */
-  swfdec_js_pop_state (movie, old_state);
+  if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))
+    return FALSE;
+  ret = JS_ExecuteScript (s->jscx, jsobj, script, rval);
   if (!ret) {
     SWFDEC_WARNING ("executing script %p for movie %s failed", script, movie->name);
   }
+
   if (ret && returnval != JSVAL_VOID) {
     JSString * str = JS_ValueToString (s->jscx, returnval);
     if (str)

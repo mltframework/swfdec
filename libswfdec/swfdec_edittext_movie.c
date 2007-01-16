@@ -68,24 +68,23 @@ static void
 swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
 {
   SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
-  SwfdecPlayer *player;
+  SwfdecScriptable *parent;
+  JSObject *jsobj;
   jsval val;
   const char *s;
 
   if (text->text->variable == NULL)
     return;
 
-  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  if (movie->parent->jsobj == NULL) {
-    swfdec_js_add_movie (movie->parent);
-    if (movie->parent->jsobj == NULL)
-      return;
-  }
-  val = swfdec_js_eval (player->jscx, movie->parent->jsobj, text->text->variable);
+  parent = SWFDEC_SCRIPTABLE (movie->parent);
+  jsobj = swfdec_scriptable_get_object (parent);
+  if (jsobj == NULL)
+    return;
+  val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable);
   if (JSVAL_IS_VOID (val))
     return;
 
-  s = swfdec_js_to_string (player->jscx, val);
+  s = swfdec_js_to_string (parent->jscx, val);
   if (!s && !text->str)
     return;
   if (s && text->str && g_str_equal (s, text->str))
@@ -98,31 +97,28 @@ static void
 swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
 {
   SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
-  SwfdecPlayer *player;
-  JSObject *object;
+  SwfdecScriptable *parent;
+  JSObject *jsobj;
   JSString *string;
   jsval val;
 
   if (text->text->variable == NULL)
     return;
 
-  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  if (movie->parent->jsobj == NULL) {
-    swfdec_js_add_movie (movie->parent);
-    if (movie->parent->jsobj == NULL)
-      return;
-  }
-  object = movie->parent->jsobj;
+  parent = SWFDEC_SCRIPTABLE (movie->parent);
+  jsobj = swfdec_scriptable_get_object (parent);
+  if (jsobj == NULL)
+    return;
   if (text->text->variable_prefix) {
-    val = swfdec_js_eval (player->jscx, object, text->text->variable_prefix);
+    val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable_prefix);
     if (!JSVAL_IS_OBJECT (val))
       return;
-    object = JSVAL_TO_OBJECT (val);
+    jsobj = JSVAL_TO_OBJECT (val);
   }
-  if (!JS_GetProperty (player->jscx, object, text->text->variable_name, &val))
+  if (!JS_GetProperty (parent->jscx, jsobj, text->text->variable_name, &val))
     return;
   if (!JSVAL_IS_VOID (val)) {
-    const char *s = swfdec_js_to_string (player->jscx, val);
+    const char *s = swfdec_js_to_string (parent->jscx, val);
     if (!s && !text->str)
       return;
     if (s && text->str && g_str_equal (s, text->str))
@@ -134,11 +130,11 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
 
   SWFDEC_LOG ("setting variable %s (%s) to \"%s\"", text->text->variable_name,
       text->text->variable, text->str ? text->str : "");
-  string = JS_NewStringCopyZ (player->jscx, text->str ? text->str : "");
+  string = JS_NewStringCopyZ (parent->jscx, text->str ? text->str : "");
   if (string == NULL)
     return;
   val = STRING_TO_JSVAL (string);
-  JS_SetProperty (player->jscx, object, text->text->variable_name, &val);
+  JS_SetProperty (parent->jscx, jsobj, text->text->variable_name, &val);
 }
 
 static void

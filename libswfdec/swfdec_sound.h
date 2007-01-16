@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
 #ifndef _SWFDEC_SOUND_H_
 #define _SWFDEC_SOUND_H_
 
-#include <libswfdec/swfdec_character.h>
+#include <libswfdec/swfdec_cached.h>
 #include <libswfdec/swfdec_codec.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 #include <libswfdec/swfdec_types.h>
@@ -61,13 +61,15 @@ struct _SwfdecSoundChunk
 
 struct _SwfdecSound
 {
-  SwfdecCharacter	character;
+  SwfdecCached		cached;
 
   SwfdecAudioFormat	format;			/* format in use */
   const SwfdecAudioCodec *codec;		/* codec for this sound */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
   unsigned int		n_samples;		/* total number of samples */
+  unsigned int		skip;			/* samples to skip at start */
+  SwfdecBuffer *	encoded;		/* encoded data */
 
   SwfdecAudioOut	decoded_format;		/* format of decoded data */
   SwfdecBuffer *	decoded;		/* decoded data */
@@ -75,7 +77,7 @@ struct _SwfdecSound
 
 struct _SwfdecSoundClass
 {
-  SwfdecCharacterClass	character_class;
+  SwfdecCachedClass	cached_class;
 };
 
 GType swfdec_sound_get_type (void);

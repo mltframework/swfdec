@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,15 +32,26 @@
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
 
-G_DEFINE_TYPE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CHARACTER)
+G_DEFINE_TYPE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CACHED)
+
+static void
+swfdec_sound_unload (SwfdecCached *cached)
+{
+  SwfdecSound * sound = SWFDEC_SOUND (cached);
+
+  if (sound->decoded) {
+    swfdec_buffer_unref (sound->decoded);
+    sound->decoded = NULL;
+  }
+}
 
 static void
 swfdec_sound_dispose (GObject *object)
 {
   SwfdecSound * sound = SWFDEC_SOUND (object);
 
-  if (sound->decoded)
-    swfdec_buffer_unref (sound->decoded);
+  if (sound->encoded)
+    swfdec_buffer_unref (sound->encoded);
 
   G_OBJECT_CLASS (swfdec_sound_parent_class)->dispose (object);
 }
@@ -49,8 +60,11 @@ static void
 swfdec_sound_class_init (SwfdecSoundClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecCachedClass *cached_class = SWFDEC_CACHED_CLASS (g_class);
 
   object_class->dispose = swfdec_sound_dispose;
+
+  cached_class->unload = swfdec_sound_unload;
 }
 
 static void
@@ -66,8 +80,6 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s)
   SwfdecBuffer *chunk;
   int n_samples;
   int skip;
-
-  /* for MPEG, data starts after 4 byte header */
 
   sound = SWFDEC_SOUND (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
 
@@ -114,8 +126,6 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
   int type;
   int n_samples;
   SwfdecSound *sound;
-  unsigned int skip = 0;
-  SwfdecBuffer *orig_buffer = NULL;
 
   id = swfdec_bits_get_u16 (b);
   format = swfdec_bits_getbits (b, 4);
@@ -144,33 +154,68 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       /* fall through */
     case 3:
       sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
-      orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
+      sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 2:
       sound->format = SWFDEC_AUDIO_FORMAT_MP3;
-      /* FIXME: skip these samples */
-      skip = swfdec_bits_get_u16 (b);
-      orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
+      sound->skip = swfdec_bits_get_u16 (b);
+      sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
-      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
-      orig_buffer = swfdec_bits_get_buffer (&s->b, -1);
-      break;
+    case 5:
     case 6:
-      sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
-      SWFDEC_WARNING ("Nellymoser compression not implemented");
+      sound->format = format;
+      sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     default:
       SWFDEC_WARNING ("unknown format %d", format);
       sound->format = format;
   }
+  sound->n_samples *= rate;
+
+  return SWFDEC_STATUS_OK;
+}
+
+SwfdecBuffer *
+swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
+{
+  gpointer decoder;
+  SwfdecBuffer *tmp, *tmp2;
+  guint sample_bytes;
+
+  g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
+  g_return_val_if_fail (format != NULL, NULL);
+
+  if (sound->decoded) {
+    swfdec_cached_use (SWFDEC_CACHED (sound));
+    *format = sound->decoded_format;
+    return sound->decoded;
+  }
+  if (sound->encoded == NULL)
+    return NULL;
   sound->codec = swfdec_codec_get_audio (sound->format);
-  if (sound->codec && orig_buffer) {
-    SwfdecBuffer *tmp, *tmp2;
-    gpointer data = swfdec_sound_init_decoder (sound);
-    sound->decoded_format = swfdec_sound_get_decoder_format (sound, data);
-    tmp = swfdec_sound_decode_buffer (sound, data, orig_buffer);
-    tmp2 = swfdec_sound_finish_decoder (sound, data);
+  if (sound->codec == NULL)
+    return NULL;
+
+  decoder = swfdec_sound_init_decoder (sound);
+  if (decoder == NULL)
+    return NULL;
+  sound->decoded_format = swfdec_sound_get_decoder_format (sound, decoder);
+  sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
+  /* FIXME: The size is only a guess */
+  swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
+  tmp = swfdec_sound_decode_buffer (sound, decoder, sound->encoded);
+  tmp2 = swfdec_sound_finish_decoder (sound, decoder);
+  if (tmp == NULL) {
+    if (tmp2) {
+      tmp = tmp2;
+    } else {
+      SWFDEC_ERROR ("got no data when decoding sound %u", 
+	  SWFDEC_CHARACTER (sound)->id);
+      swfdec_cached_unload (SWFDEC_CACHED (sound));
+      return NULL;
+    }
+  } else {
     if (tmp2) {
       /* and all this code just because mad sucks... */
       SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
@@ -179,45 +224,33 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
       tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
       swfdec_buffer_queue_free (queue);
     }
-    swfdec_buffer_unref (orig_buffer);
-    if (tmp) {
-      guint sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
-      SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
-	  tmp->length / sample_bytes, 
-	  sound->n_samples, skip);
-      if (skip) {
-	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, skip * sample_bytes, 
-	    tmp->length - skip * sample_bytes);
-	swfdec_buffer_unref (tmp);
-	tmp = tmp2;
-      }
-      /* sound buffer may be bigger due to mp3 not having sample boundaries */
-      if (tmp->length > sound->n_samples * sample_bytes) {
-	SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * sample_bytes);
-	swfdec_buffer_unref (tmp);
-	tmp = tmp2;
-      }
-      /* only assign here, the decoding code checks this variable */
-      sound->decoded = tmp;
-      if (tmp->length < sound->n_samples * sample_bytes) {
-	/* we handle this case in swfdec_sound_render */
-	/* FIXME: this message is important when writing new codecs, so I made it a warning.
-	 * It's probably not worth more than INFO for the usual case though */
-	SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	    sound->n_samples, sound->n_samples * sample_bytes, tmp->length);
-      }
-    } else {
-      SWFDEC_ERROR ("failed decoding given data in format %u", format);
-    }
   }
-  sound->n_samples *= rate;
-  if (sound->decoded == NULL) {
-    SWFDEC_ERROR ("defective sound object (id %d)", SWFDEC_CHARACTER (sound)->id);
-    s->characters = g_list_remove (s->characters, sound);
-    g_object_unref (sound);
+  SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
+      tmp->length / sample_bytes, sound->n_samples, sound->skip);
+  if (sound->skip) {
+    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, sound->skip * sample_bytes, 
+	tmp->length - sound->skip * sample_bytes);
+    swfdec_buffer_unref (tmp);
+    tmp = tmp2;
   }
+  /* sound buffer may be bigger due to mp3 not having sample boundaries */
+  if (tmp->length > sound->n_samples * sample_bytes) {
+    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * sample_bytes);
+    swfdec_buffer_unref (tmp);
+    tmp = tmp2;
+  }
+  if (tmp->length < sound->n_samples * sample_bytes) {
+    /* we handle this case in swfdec_sound_render */
+    /* FIXME: this message is important when writing new codecs, so I made it a warning.
+     * It's probably not worth more than INFO for the usual case though */
+    SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
+	sound->n_samples, sound->n_samples * sample_bytes, tmp->length);
+  }
+  /* only assign here, the decoding code checks this variable */
+  sound->decoded = tmp;
 
-  return SWFDEC_STATUS_OK;
+  *format = sound->decoded_format;
+  return sound->decoded;
 }
 
 int
@@ -621,9 +654,14 @@ void
 swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
     unsigned int offset, unsigned int n_samples)
 {
+  SwfdecBuffer *buffer;
+  SwfdecAudioOut format;
   g_return_if_fail (SWFDEC_IS_SOUND (sound));
-  g_return_if_fail (sound->decoded != NULL);
+  /* FIXME: I need a return_if_fail for !created_by_define_sound */
 
-  swfdec_sound_buffer_render (dest, sound->decoded, sound->decoded_format, 
+  buffer = swfdec_sound_get_decoded (sound, &format);
+  if (buffer == NULL)
+    return;
+  swfdec_sound_buffer_render (dest, buffer, format, 
       NULL, offset, n_samples);
 }

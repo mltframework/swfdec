@@ -52,6 +52,7 @@ struct JSFunction {
     JSObject     *object;       /* back-pointer to GC'ed object header */
     JSNative     native;        /* native method pointer or null */
     JSScript     *script;       /* interpreted bytecode descriptor or null */
+    void	 *swf;		/* Actionscript or null */
     uint16       nargs;         /* minimum number of actual arguments */
     uint16       extra;         /* number of arg slots for local GC roots */
     uint16       nvars;         /* number of local variables */

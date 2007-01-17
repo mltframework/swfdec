@@ -1246,23 +1246,6 @@ typedef struct {
 
 static const SwfdecActionSpec * swfdec_action_find (guint action);
 
-void
-swfdec_disassemble (SwfdecPlayer *player, JSScript *script)
-{
-  guint i;
-
-  for (i = 0; i < script->length; i ++) {
-    g_print ("%02X ", script->code[i]);
-    if (i % 16 == 15)
-      g_print ("\n");
-    else if (i % 4 == 3)
-      g_print (" ");
-  }
-  if (i % 16 != 15)
-    g_print ("\n");
-  js_Disassemble (player->jscx, script, JS_TRUE, stdout);
-}
-
 /**
  * swfdec_compile:
  * @player: a #SwfdecPlayer

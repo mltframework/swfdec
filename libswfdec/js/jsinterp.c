@@ -626,6 +626,9 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
     return JS_TRUE;
 }
 
+extern JSBool
+swfdec_script_interpret(void *script, JSContext *cx, jsval *rval);
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -646,6 +649,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
     JSNative native;
     JSFunction *fun;
     JSScript *script;
+    void *swf;
     uintN minargs, nvars;
     intN nslots, nalloc, surplus;
     JSInterpreterHook hook;
@@ -815,6 +819,7 @@ have_fun:
         fun = (JSFunction *) JS_GetPrivate(cx, funobj);
         native = fun->native;
         script = fun->script;
+	swf = fun->swf;
         minargs = fun->nargs + fun->extra;
         nvars = fun->nvars;
 
@@ -956,6 +961,9 @@ have_fun:
 #endif
         }
         ok = js_Interpret(cx, &v);
+    } else if (swf) {
+        frame.scopeChain = funobj; /* FIXME */
+        ok = swfdec_script_interpret(swf, cx, &v);
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
         frame.scopeChain = NULL;

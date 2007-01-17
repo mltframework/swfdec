@@ -59,7 +59,7 @@ void			swfdec_event_list_parse		(SwfdecEventList *    list,
 							 guint8		      key,
 							 const char *	      description);
 void			swfdec_event_list_execute	(SwfdecEventList *    list,
-							 SwfdecMovie *	      movie,
+							 SwfdecScriptable *	scriptable,
 							 unsigned int	      condition,
 							 guint8		      key);
 gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,

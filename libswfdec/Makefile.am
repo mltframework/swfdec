@@ -15,6 +15,7 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
+# swfdec_debugger.c 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
@@ -32,9 +33,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	$(CODECS) \
 	swfdec_codec_screen.c \
 	swfdec_color.c \
-	swfdec_compiler.c \
 	swfdec_debug.c \
-	swfdec_debugger.c \
 	swfdec_decoder.c \
 	swfdec_edittext.c \
 	swfdec_edittext_movie.c \
@@ -64,6 +63,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_rect.c \
 	swfdec_ringbuffer.c \
 	swfdec_root_movie.c \
+	swfdec_script.c \
 	swfdec_scriptable.c \
 	swfdec_shape.c \
 	swfdec_sound.c \
@@ -109,7 +109,6 @@ noinst_HEADERS = \
 	swfdec_character.h \
 	swfdec_codec.h \
 	swfdec_color.h \
-	swfdec_compiler.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
@@ -134,6 +133,7 @@ noinst_HEADERS = \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
+	swfdec_script.h \
 	swfdec_scriptable.h \
 	swfdec_shape.h \
 	swfdec_sound.h \

@@ -339,7 +339,7 @@ swfdec_movie_execute_script (SwfdecMovie *movie, gpointer data)
   guint condition = GPOINTER_TO_UINT (data);
 
   g_assert (movie->content->events);
-  swfdec_event_list_execute (movie->content->events, movie, condition, 0);
+  swfdec_event_list_execute (movie->content->events, SWFDEC_SCRIPTABLE (movie), condition, 0);
 }
 
 /**

@@ -30,7 +30,6 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
-#include "swfdec_compiler.h"
 #include "swfdec_root_movie.h"
 #include "swfdec_swf_decoder.h"
 
@@ -128,6 +127,23 @@ swfdec_js_finish_player (SwfdecPlayer *player)
     player->jsobj = NULL;
     player->jscx = NULL;
   }
+}
+
+static void
+swfdec_disassemble (SwfdecPlayer *player, JSScript *script)
+{
+  guint i;
+
+  for (i = 0; i < script->length; i ++) {
+    g_print ("%02X ", script->code[i]);
+    if (i % 16 == 15)
+      g_print ("\n");
+    else if (i % 4 == 3)
+      g_print (" ");
+  }
+  if (i % 16 != 15)
+    g_print ("\n");
+  js_Disassemble (player->jscx, script, JS_TRUE, stdout);
 }
 
 /**

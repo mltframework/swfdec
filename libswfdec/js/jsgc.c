@@ -1214,20 +1214,23 @@ restart:
                     GC_MARK(cx, fp->argsobj, "arguments object", NULL);
                 if (fp->varobj)
                     GC_MARK(cx, fp->varobj, "variables object", NULL);
-                if (fp->script) {
+                if (fp->script)
                     js_MarkScript(cx, fp->script, NULL);
-                    if (fp->spbase) {
-                        /*
-                         * Don't mark what has not been pushed yet, or what
-                         * has been popped already.
-                         */
-                        depth = fp->script->depth;
-                        nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
-                                  < depth * sizeof(jsval))
-                                 ? (uintN)(fp->sp - fp->spbase)
-                                 : depth;
-                        GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
-                    }
+		if (fp->spbase) {
+		    /*
+		     * Don't mark what has not been pushed yet, or what
+		     * has been popped already.
+		     */
+		    if (fp->script) {
+		      depth = fp->script->depth;
+		      nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
+				< depth * sizeof(jsval))
+			       ? (uintN)(fp->sp - fp->spbase)
+			       : depth;
+		    } else {
+		      nslots = JS_UPTRDIFF(fp->sp, fp->spbase);
+		    }
+                    GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
                 }
                 GC_MARK(cx, fp->thisp, "this", NULL);
                 if (fp->argv) {

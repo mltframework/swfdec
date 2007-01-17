@@ -22,17 +22,17 @@
 #endif
 #include <js/jsapi.h>
 #include "swfdec_event.h"
-#include "swfdec_compiler.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_script.h"
 
 typedef struct _SwfdecEvent SwfdecEvent;
 
 struct _SwfdecEvent {
   unsigned int	conditions;
   guint8	key;
-  JSScript *	script;
+  SwfdecScript *script;
 };
 
 struct _SwfdecEventList {
@@ -81,7 +81,7 @@ swfdec_event_list_free (SwfdecEventList *list)
 
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
-    swfdec_compiler_destroy_script (list->player, event->script);
+    swfdec_script_unref (event->script);
   }
   g_array_free (list->events, TRUE);
   g_free (list);
@@ -146,14 +146,14 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
   event.key = key;
   name = g_strconcat (description, ".", 
       swfdec_event_list_condition_name (conditions), NULL);
-  event.script = swfdec_compile (list->player, bits, version, name);
+  event.script = swfdec_script_new (bits, name, version);
   g_free (name);
   if (event.script) 
     g_array_append_val (list->events, event);
 }
 
 void
-swfdec_event_list_execute (SwfdecEventList *list, SwfdecMovie *movie, 
+swfdec_event_list_execute (SwfdecEventList *list, SwfdecScriptable *scriptable, 
     unsigned int conditions, guint8 key)
 {
   unsigned int i;
@@ -164,8 +164,8 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecMovie *movie,
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & conditions) &&
 	event->key == key) {
-      SWFDEC_LOG ("executing script for event %u on movie %s", conditions, movie->name);
-      swfdec_js_execute_script (list->player, movie, event->script, NULL);
+      SWFDEC_LOG ("executing script for event %u on scriptable %p", conditions, scriptable);
+      swfdec_script_execute (event->script, scriptable);
     }
   }
 }

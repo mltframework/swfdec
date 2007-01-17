@@ -25,10 +25,10 @@
 #include <string.h>
 
 #include "swfdec_sprite.h"
-#include "swfdec_compiler.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_script.h"
 #include "swfdec_sound.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
@@ -65,7 +65,7 @@ swfdec_sprite_dispose (GObject *object)
 	    &g_array_index (sprite->frames[i].actions, SwfdecSpriteAction, j);
 	  switch (action->type) {
 	    case SWFDEC_SPRITE_ACTION_SCRIPT:
-	      swfdec_compiler_destroy_script (sprite->player, action->data);
+	      swfdec_script_unref (action->data);
 	      break;
 	    case SWFDEC_SPRITE_ACTION_ADD:
 	    case SWFDEC_SPRITE_ACTION_UPDATE:

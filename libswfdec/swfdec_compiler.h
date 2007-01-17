@@ -6,10 +6,9 @@
 #include <libswfdec/swfdec_bits.h>
 #include <libswfdec/swfdec_player.h>
 
+#error "swfdec_compiler.h is out of the game now!"
 G_BEGIN_DECLS
 
-void		swfdec_disassemble		(SwfdecPlayer *		player,
-						 JSScript *		script);
 JSScript *	swfdec_compile			(SwfdecPlayer *		player,
 						 SwfdecBits *		bits,
 						 int			version,

@@ -76,7 +76,8 @@ swfdec_button_movie_execute (SwfdecButtonMovie *movie,
                          | SWFDEC_BUTTON_OVER_DOWN_TO_IDLE)) == 0);
   }
   if (movie->button->events)
-    swfdec_event_list_execute (movie->button->events, SWFDEC_MOVIE (movie)->parent, condition, 0);
+    swfdec_event_list_execute (movie->button->events, 
+	SWFDEC_SCRIPTABLE (SWFDEC_MOVIE (movie)->parent), condition, 0);
 }
 
 #define CONTENT_IN_FRAME(content, frame) \

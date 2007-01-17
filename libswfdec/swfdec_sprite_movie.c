@@ -29,6 +29,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_ringbuffer.h"
 #include "swfdec_root_movie.h"
+#include "swfdec_script.h"
 #include "swfdec_sprite.h"
 
 static SwfdecMovie *
@@ -63,8 +64,7 @@ swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
 static void
 swfdec_sprite_movie_run_script (SwfdecMovie *movie, gpointer data)
 {
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  swfdec_js_execute_script (player, movie, data, NULL);
+  swfdec_script_execute (data, SWFDEC_SCRIPTABLE (movie));
 }
 
 static void

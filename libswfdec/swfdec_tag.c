@@ -31,7 +31,6 @@
 #include "swfdec_tag.h"
 #include "swfdec_bits.h"
 #include "swfdec_button.h"
-#include "swfdec_compiler.h"
 #include "swfdec_debug.h"
 #include "swfdec_edittext.h"
 #include "swfdec_font.h"
@@ -39,6 +38,7 @@
 #include "swfdec_morphshape.h"
 #include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
+#include "swfdec_script.h"
 #include "swfdec_shape.h"
 #include "swfdec_sound.h"
 #include "swfdec_sprite.h"
@@ -293,12 +293,12 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
 int
 tag_func_do_action (SwfdecSwfDecoder * s)
 {
-  JSScript *script;
+  SwfdecScript *script;
   char *name;
 
   name = g_strdup_printf ("Sprite%u.Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
-  script = swfdec_compile (SWFDEC_DECODER (s)->player, &s->b, s->version, name);
+  script = swfdec_script_new (&s->b, name, s->version);
   g_free (name);
   if (script)
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 

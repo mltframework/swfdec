@@ -693,8 +693,7 @@ mc_framesloaded (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   /* only root movies can be partially loaded */
-  if (SWFDEC_IS_ROOT_MOVIE (movie) || 
-      SWFDEC_IS_ROOT_MOVIE (movie->parent)) {
+  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
     SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
     loaded = dec->frames_loaded;
     g_assert (loaded <= movie->n_frames);

@@ -832,6 +832,7 @@ have_fun:
     frame.varobj = NULL;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
+    frame.swf = swf;
     frame.fun = fun;
     frame.argc = argc;
     frame.argv = sp - argc;

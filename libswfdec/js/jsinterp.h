@@ -54,7 +54,8 @@ struct JSStackFrame {
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
     JSObject        *varobj;        /* variables object, where vars go */
-    JSScript        *script;        /* script being interpreted */
+    JSScript        *script;        /* script being interpreted or NULL */
+    void	    *swf;	    /* SwfdecScript being executed if script is NULL */
     JSFunction      *fun;           /* function being called or null */
     JSObject        *thisp;         /* "this" pointer if in method */
     uintN           argc;           /* actual argument count */

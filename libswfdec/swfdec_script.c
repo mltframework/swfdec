@@ -29,7 +29,9 @@
 
 /*** SUPPORT FUNCTIONS ***/
 
+#include "swfdec_decoder.h"
 #include "swfdec_movie.h"
+#include "swfdec_root_movie.h"
 
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
@@ -45,8 +47,90 @@ swfdec_action_stop (JSContext *cx, guint action, const guint8 *data, guint len)
   SwfdecMovie *movie = swfdec_action_get_target (cx);
   if (movie)
     movie->stopped = TRUE;
+  else
+    SWFDEC_ERROR ("no movie to stop");
   return JS_TRUE;
 }
+
+static JSBool
+swfdec_action_play (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_action_get_target (cx);
+  if (movie)
+    movie->stopped = FALSE;
+  else
+    SWFDEC_ERROR ("no movie to play");
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_goto_frame (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_action_get_target (cx);
+  guint frame;
+
+  if (len != 2) {
+    SWFDEC_ERROR ("GotoFrame action length invalid (is %u, should be 2", len);
+    return JS_FALSE;
+  }
+  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  if (movie) {
+    swfdec_movie_goto (movie, frame);
+    movie->stopped = TRUE;
+  } else {
+    SWFDEC_ERROR ("no movie to goto on");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_wait_for_frame (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_action_get_target (cx);
+  guint frame, jump, loaded;
+
+  if (len != 3) {
+    SWFDEC_ERROR ("WaitForFrame action length invalid (is %u, should be 3", len);
+    return JS_TRUE;
+  }
+  if (movie == NULL) {
+    SWFDEC_ERROR ("no movie for WaitForFrame");
+    return JS_TRUE;
+  }
+
+  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  jump = data[2];
+  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
+    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
+    loaded = dec->frames_loaded;
+    g_assert (loaded <= movie->n_frames);
+  } else {
+    loaded = movie->n_frames;
+  }
+  if (loaded < frame) {
+    SwfdecScript *script = cx->fp->swf;
+    guint8 *pc = cx->fp->pc;
+    guint8 *endpc = script->buffer->data + script->buffer->length;
+
+    /* jump instructions */
+    g_assert (script);
+    do {
+      if (pc >= endpc)
+	break;
+      if (*pc & 0x80) {
+	if (pc + 2 >= endpc)
+	  break;
+	pc += 3 + GUINT16_FROM_LE (*((guint16 *) (pc + 1)));
+      } else {
+	pc++;
+      }
+    } while (jump-- > 0);
+    cx->fp->pc = pc;
+  }
+  return JS_TRUE;
+}
+
+/*** PRINT FUNCTIONS ***/
 
 static char *
 swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
@@ -93,7 +177,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 3 */
   [0x04] = { "NextFrame", NULL },
   [0x05] = { "PreviousFrame", NULL },
-  [0x06] = { "Play", NULL },
+  [0x06] = { "Play", NULL, 0, 0, { swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play } },
   [0x07] = { "Stop", NULL, 0, 0, { swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop } },
   [0x08] = { "ToggleQuality", NULL },
   [0x09] = { "StopSounds", NULL },
@@ -182,13 +266,13 @@ static const SwfdecActionSpec actions[256] = {
   [0x69] = { "Extends", NULL },
 
   /* version 3 */
-  [0x81] = { "GotoFrame", swfdec_action_print_goto_frame },
+  [0x81] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
   [0x83] = { "GetURL", NULL },
   /* version 5 */
   [0x87] = { "StoreRegister", NULL },
   [0x88] = { "ConstantPool", NULL },
   /* version 3 */
-  [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame },
+  [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
   [0x8b] = { "SetTarget", NULL },
   [0x8c] = { "GotoLabel", NULL },
   /* version 4 */
@@ -262,12 +346,14 @@ static gboolean
 validate_action (guint action, const guint8 *data, guint len, gpointer script)
 {
   /* we might want to do stuff here for certain actions */
+#if 0
   {
     char *foo = swfdec_script_print_action (action, data, len);
     if (foo == NULL)
       return FALSE;
     g_print ("%s\n", foo);
   }
+#endif
   return TRUE;
 }
 
@@ -362,6 +448,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   /* set up the script */
   startpc = pc = script->buffer->data;
   endpc = startpc + script->buffer->length;
+  fp->pc = pc;
   /* set up stack */
   startsp = js_AllocStack (cx, STACKSIZE, &mark);
   if (!startsp) {
@@ -426,7 +513,11 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     ok = spec->exec[version] (cx, action, data, len);
     if (!ok)
       goto out;
-    pc = nextpc;
+    if (fp->pc == pc) {
+      fp->pc = pc = nextpc;
+    } else {
+      pc = fp->pc;
+    }
   }
 
 out:
@@ -482,6 +573,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.script = NULL;
   frame.varobj = obj;
   frame.fun = NULL;
+  frame.swf = script;
   frame.thisp = obj;
   frame.argc = frame.nvars = 0;
   frame.argv = frame.vars = NULL;

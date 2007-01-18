@@ -29,6 +29,7 @@
 
 #include <string.h>
 #include "swfdec_decoder.h"
+#include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_root_movie.h"
 
@@ -305,6 +306,18 @@ swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint l
   return swfdec_bits_left (&bits) ? JS_TRUE : JS_FALSE;
 }
 
+static JSBool
+swfdec_action_get_variable (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *s;
+
+  s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
+  if (s == NULL)
+    return JS_FALSE;
+  cx->fp->sp[-1] = swfdec_js_eval (cx, cx->fp->scopeChain, s);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -352,6 +365,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	break;
       case 7: /* 32bit int */
 	g_string_append_printf (string, "%u", swfdec_bits_get_u32 (&bits));
+	break;
       case 8: /* 8bit ConstantPool address */
 	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u8 (&bits));
 	break;
@@ -450,7 +464,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x15] = { "StringExtract", NULL },
   [0x17] = { "Pop", NULL },
   [0x18] = { "ToInteger", NULL },
-  [0x1c] = { "GetVariable", NULL },
+  [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [0x1d] = { "SetVariable", NULL },
   [0x20] = { "SetTarget2", NULL },
   [0x21] = { "StringAdd", NULL },
@@ -604,8 +618,9 @@ validate_action (guint action, const guint8 *data, guint len, gpointer scriptp)
 
   /* ensure there's a function to execute this opcode, otherwise fail */
   if (actions[action].exec[version] == NULL) {
-    SWFDEC_ERROR ("no opcode for %u %s", action, 
-	actions[action].name ? actions[action].name : "Unknown");
+    SWFDEC_ERROR ("no function for %u %s in v%u", action, 
+	actions[action].name ? actions[action].name : "Unknown",
+	script->version);
     return FALSE;
   }
   /* we might want to do stuff here for certain actions */

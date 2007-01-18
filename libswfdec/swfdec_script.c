@@ -27,16 +27,84 @@
 #include "js/jscntxt.h"
 #include "js/jsinterp.h"
 
-/*** SUPPORT FUNCTIONS ***/
-
+#include <string.h>
 #include "swfdec_decoder.h"
 #include "swfdec_movie.h"
 #include "swfdec_root_movie.h"
+
+/*** CONSTANT POOLS ***/
+
+typedef GPtrArray SwfdecConstantPool;
+
+static SwfdecConstantPool *
+swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
+{
+  guint8 *next;
+  guint i, n;
+  GPtrArray *pool;
+
+  if (len < 2) {
+    SWFDEC_ERROR ("constant pool too small");
+    return NULL;
+  }
+  n = GUINT16_FROM_LE (*((guint16*) data));
+  data += 2;
+  len -= 2;
+  pool = g_ptr_array_sized_new (n);
+  g_ptr_array_set_size (pool, n);
+  for (i = 0; i < n; i++) {
+    next = memchr (data, 0, len);
+    if (next == NULL) {
+      SWFDEC_ERROR ("not enough strings available");
+      g_ptr_array_free (pool, TRUE);
+      return NULL;
+    }
+    next++;
+    g_ptr_array_index (pool, i) = (gpointer) data;
+    len -= next - data;
+    data = next;
+  }
+  if (len != 0) {
+    SWFDEC_WARNING ("constant pool didn't consume whole buffer (%u bytes leftover)", len);
+  }
+  return pool;
+}
+
+static guint
+swfdec_constant_pool_size (SwfdecConstantPool *pool)
+{
+  return pool->len;
+}
+
+static const char *
+swfdec_constant_pool_get (SwfdecConstantPool *pool, guint i)
+{
+  g_assert (i < pool->len);
+  return g_ptr_array_index (pool, i);
+}
+
+static void
+swfdec_constant_pool_free (SwfdecConstantPool *pool)
+{
+  g_ptr_array_free (pool, TRUE);
+}
+
+/*** SUPPORT FUNCTIONS ***/
 
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
 {
   return swfdec_scriptable_from_jsval (cx, OBJECT_TO_JSVAL (cx->fp->scopeChain), SWFDEC_TYPE_MOVIE);
+}
+
+static JSBool
+swfdec_action_push_string (JSContext *cx, const char *s)
+{
+  JSString *string = JS_NewStringCopyZ (cx, s);
+  if (string == NULL)
+    return JS_FALSE;
+  *cx->fp->sp++ = STRING_TO_JSVAL (string);
+  return JS_TRUE;
 }
 
 /*** ALL THE ACTION IS HERE ***/
@@ -130,7 +198,192 @@ swfdec_action_wait_for_frame (JSContext *cx, guint action, const guint8 *data, g
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_constant_pool (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecConstantPool *pool;
+
+  pool = swfdec_constant_pool_new_from_action (data, len);
+  if (pool == NULL)
+    return JS_FALSE;
+  if (cx->fp->constant_pool)
+    swfdec_constant_pool_free (cx->fp->constant_pool);
+  cx->fp->constant_pool = pool;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint len)
+{
+  /* FIXME: supply API for this */
+  SwfdecBits bits;
+
+  swfdec_bits_init_data (&bits, data, len);
+  while (swfdec_bits_left (&bits) && stackspace-- > 0) {
+    guint type = swfdec_bits_get_u8 (&bits);
+    SWFDEC_LOG ("push type %u", type);
+    switch (type) {
+      case 0: /* string */
+	{
+	  const char *s = swfdec_bits_skip_string (&bits);
+	  if (!swfdec_action_push_string (cx, s))
+	    return JS_FALSE;
+	  break;
+	}
+      case 1: /* float */
+	{
+	  double d = swfdec_bits_get_float (&bits);
+	  if (!JS_NewDoubleValue (cx, d, cx->fp->sp))
+	    return JS_FALSE;
+	  cx->fp->sp++;
+	  break;
+	}
+      case 2: /* null */
+	*cx->fp->sp++ = JSVAL_NULL;
+	break;
+      case 3: /* undefined */
+	*cx->fp->sp++ = JSVAL_VOID;
+	break;
+      case 5: /* boolean */
+	*cx->fp->sp++ = swfdec_bits_get_u8 (&bits) ? JSVAL_TRUE : JSVAL_FALSE;
+	break;
+      case 6: /* double */
+	{
+	  double d = swfdec_bits_get_float (&bits);
+	  if (!JS_NewDoubleValue (cx, d, cx->fp->sp))
+	    return JS_FALSE;
+	  cx->fp->sp++;
+	  break;
+	}
+      case 7: /* 32bit int */
+	{
+	  /* FIXME: spec says U32, do they mean this? */
+	  guint i = swfdec_bits_get_u32 (&bits);
+	  *cx->fp->sp++ = INT_TO_JSVAL (i);
+	  break;
+	}
+      case 8: /* 8bit ConstantPool address */
+	{
+	  guint i = swfdec_bits_get_u8 (&bits);
+	  SwfdecConstantPool *pool = cx->fp->constant_pool;
+	  if (pool == NULL) {
+	    SWFDEC_ERROR ("no constant pool to push from");
+	    return JS_FALSE;
+	  }
+	  if (i >= swfdec_constant_pool_size (pool)) {
+	    SWFDEC_ERROR ("constant pool index %u too high - only %u elements",
+		i, swfdec_constant_pool_size (pool));
+	    return JS_FALSE;
+	  }
+	  if (!swfdec_action_push_string (cx, swfdec_constant_pool_get (pool, i)))
+	    return JS_FALSE;
+	  break;
+	}
+      case 9: /* 16bit ConstantPool address */
+	{
+	  guint i = swfdec_bits_get_u16 (&bits);
+	  SwfdecConstantPool *pool = cx->fp->constant_pool;
+	  if (pool == NULL) {
+	    SWFDEC_ERROR ("no constant pool to push from");
+	    return JS_FALSE;
+	  }
+	  if (i >= swfdec_constant_pool_size (pool)) {
+	    SWFDEC_ERROR ("constant pool index %u too high - only %u elements",
+		i, swfdec_constant_pool_size (pool));
+	    return JS_FALSE;
+	  }
+	  if (!swfdec_action_push_string (cx, swfdec_constant_pool_get (pool, i)))
+	    return JS_FALSE;
+	  break;
+	}
+      case 4: /* register */
+      default:
+	SWFDEC_ERROR ("Push: type %u not implemented", type);
+	return JS_FALSE;
+    }
+  }
+  return swfdec_bits_left (&bits) ? JS_TRUE : JS_FALSE;
+}
+
 /*** PRINT FUNCTIONS ***/
+
+static char *
+swfdec_action_print_push (guint action, const guint8 *data, guint len)
+{
+  gboolean first = TRUE;
+  SwfdecBits bits;
+  GString *string = g_string_new ("Push");
+
+  swfdec_bits_init_data (&bits, data, len);
+  while (swfdec_bits_left (&bits)) {
+    guint type = swfdec_bits_get_u8 (&bits);
+    if (first)
+      g_string_append (string, " ");
+    else
+      g_string_append (string, ", ");
+    first = FALSE;
+    switch (type) {
+      case 0: /* string */
+	{
+	  const char *s = swfdec_bits_skip_string (&bits);
+	  if (!s) {
+	    g_string_free (string, TRUE);
+	    return NULL;
+	  }
+	  g_string_append_c (string, '"');
+	  g_string_append (string, s);
+	  g_string_append_c (string, '"');
+	  break;
+	}
+      case 1: /* float */
+	g_string_append_printf (string, "%g", swfdec_bits_get_float (&bits));
+	break;
+      case 2: /* null */
+	g_string_append (string, "null");
+	break;
+      case 3: /* undefined */
+	g_string_append (string, "void");
+	break;
+      case 5: /* boolean */
+	g_string_append (string, swfdec_bits_get_u8 (&bits) ? "True" : "False");
+	break;
+      case 6: /* double */
+	g_string_append_printf (string, "%g", swfdec_bits_get_double (&bits));
+	break;
+      case 7: /* 32bit int */
+	g_string_append_printf (string, "%u", swfdec_bits_get_u32 (&bits));
+      case 8: /* 8bit ConstantPool address */
+	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u8 (&bits));
+	break;
+      case 9: /* 16bit ConstantPool address */
+	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u16 (&bits));
+	break;
+      case 4: /* register */
+      default:
+	SWFDEC_ERROR ("Push: type %u not implemented", type);
+	return JS_FALSE;
+    }
+  }
+  return g_string_free (string, FALSE);
+}
+
+static char *
+swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
+{
+  guint i;
+  GString *string;
+  SwfdecConstantPool *pool;
+
+  pool = swfdec_constant_pool_new_from_action (data, len);
+  if (pool == NULL)
+    return JS_FALSE;
+  string = g_string_new ("ConstantPool");
+  for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
+    g_string_append (string, i ? ", " : " ");
+    g_string_append (string, swfdec_constant_pool_get (pool, i));
+  }
+  return g_string_free (string, FALSE);
+}
 
 static char *
 swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
@@ -162,13 +415,14 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
 /* defines minimum and maximum versions for which we have seperate scripts */
 #define MINSCRIPTVERSION 3
 #define MAXSCRIPTVERSION 7
+#define EXTRACT_VERSION(v) MAX ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
 
 typedef JSBool (* SwfdecActionExec) (JSContext *cx, guint action, const guint8 *data, guint len);
 typedef struct {
   const char *		name;		/* name identifying the action */
   char *		(* print)	(guint action, const guint8 *data, guint len);
   int			remove;		/* values removed from stack or -1 for dynamic */
-  guint			add;		/* values added to the stack */
+  int			add;		/* values added to the stack or -1 for dynamic */
   SwfdecActionExec	exec[MAXSCRIPTVERSION - MINSCRIPTVERSION + 1];
 					/* array is for version 3, 4, 5, 6, 7+ */
 } SwfdecActionSpec;
@@ -270,7 +524,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x83] = { "GetURL", NULL },
   /* version 5 */
   [0x87] = { "StoreRegister", NULL },
-  [0x88] = { "ConstantPool", NULL },
+  [0x88] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
   /* version 3 */
   [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
   [0x8b] = { "SetTarget", NULL },
@@ -283,7 +537,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 5 */
   [0x94] = { "With", NULL },
   /* version 4 */
-  [0x96] = { "Push", NULL },
+  [0x96] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
   [0x99] = { "Jump", NULL },
   [0x9a] = { "GetURL2", NULL },
   /* version 5 */
@@ -320,7 +574,7 @@ static gboolean
 swfdec_script_foreach (SwfdecBits *bits, SwfdecScriptForeachFunc func, gpointer user_data)
 {
   guint action, len;
-  guint8 *data;
+  const guint8 *data;
 
   while ((action = swfdec_bits_get_u8 (bits))) {
     if (action & 0x80) {
@@ -343,10 +597,19 @@ swfdec_script_foreach (SwfdecBits *bits, SwfdecScriptForeachFunc func, gpointer 
 /*** PUBLIC API ***/
 
 static gboolean
-validate_action (guint action, const guint8 *data, guint len, gpointer script)
+validate_action (guint action, const guint8 *data, guint len, gpointer scriptp)
 {
+  SwfdecScript *script = scriptp;
+  int version = EXTRACT_VERSION (script->version);
+
+  /* ensure there's a function to execute this opcode, otherwise fail */
+  if (actions[action].exec[version] == NULL) {
+    SWFDEC_ERROR ("no opcode for %u %s", action, 
+	actions[action].name ? actions[action].name : "Unknown");
+    return FALSE;
+  }
   /* we might want to do stuff here for certain actions */
-#if 0
+#if 1
   {
     char *foo = swfdec_script_print_action (action, data, len);
     if (foo == NULL)
@@ -361,7 +624,7 @@ SwfdecScript *
 swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
 {
   SwfdecScript *script;
-  guchar *start;
+  const guchar *start;
   
   g_return_val_if_fail (bits != NULL, NULL);
   if (version < MINSCRIPTVERSION) {
@@ -442,7 +705,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   
   /* set up general stuff */
   swfdec_script_ref (script);
-  version = MAX (script->version - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION);
+  version = EXTRACT_VERSION (script->version);
   *rval = JSVAL_VOID;
   fp = cx->fp;
   /* set up the script */
@@ -506,9 +769,13 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 	  spec->name, spec->remove, fp->sp - fp->spbase);
       goto internal_error;
     }
-    if (fp->sp + spec->add - MAX (spec->remove, 0) > endsp) {
-      SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow");
-      goto internal_error;
+    if (spec->add < 0) {
+      action = endsp - fp->sp;
+    } else {
+      if (fp->sp + spec->add - MAX (spec->remove, 0) > endsp) {
+	SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow");
+	goto internal_error;
+      }
     }
     ok = spec->exec[version] (cx, action, data, len);
     if (!ok)
@@ -574,6 +841,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.varobj = obj;
   frame.fun = NULL;
   frame.swf = script;
+  frame.constant_pool = NULL;
   frame.thisp = obj;
   frame.argc = frame.nvars = 0;
   frame.argv = frame.vars = NULL;
@@ -603,6 +871,10 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
    * GC activations nested within this js_Interpret.
    */
   ok = swfdec_script_interpret (script, cx, &frame.rval);
+
+  /* FIXME: where to clean this up? */
+  if (frame.constant_pool)
+    swfdec_constant_pool_free (frame.constant_pool);
 
   cx->fp = oldfp;
   if (oldfp) {

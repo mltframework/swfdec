@@ -837,6 +837,16 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
 }
 
 void
+swfdec_player_trace (SwfdecPlayer *player, const char *text)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (text != NULL);
+  
+  /* FIXME: accumulate and emit after JS handling? */
+  g_signal_emit (player, signals[TRACE], 0, text);
+}
+
+void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
   if (swfdec_rect_is_empty (rect)) {

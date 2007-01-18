@@ -50,8 +50,7 @@ swfdec_js_trace (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   if (bytes == NULL)
     return JS_TRUE;
 
-  /* FIXME: accumulate and emit after JS handling? */
-  g_signal_emit_by_name (player, "trace", bytes);
+  swfdec_player_trace (player, bytes);
   return JS_TRUE;
 }
 

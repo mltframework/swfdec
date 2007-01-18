@@ -31,6 +31,7 @@
 #include "swfdec_decoder.h"
 #include "swfdec_js.h"
 #include "swfdec_movie.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
 
 /*** CONSTANT POOLS ***/
@@ -318,6 +319,20 @@ swfdec_action_get_variable (JSContext *cx, guint action, const guint8 *data, gui
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_trace (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+  const char *bytes;
+
+  bytes = swfdec_js_to_string (cx, cx->fp->sp[-1]);
+  if (bytes == NULL)
+    return JS_TRUE;
+
+  swfdec_player_trace (player, bytes);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -472,7 +487,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x23] = { "SetProperty", NULL },
   [0x24] = { "CloneSprite", NULL },
   [0x25] = { "RemoveSprite", NULL },
-  [0x26] = { "Trace", NULL },
+  [0x26] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
   [0x27] = { "StartDrag", NULL },
   [0x28] = { "EndDrag", NULL },
   [0x29] = { "StringLess", NULL },

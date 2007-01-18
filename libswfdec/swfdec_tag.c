@@ -212,7 +212,6 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
 
   s->parse_sprite = sprite;
   while (1) {
-    unsigned char *endptr;
     int x;
     int tag;
     guint tag_len;
@@ -258,7 +257,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",
           tag, swfdec_swf_decoder_get_tag_name (tag));
     } else {
-      endptr = parse.ptr + tag_len;
+      const unsigned char *endptr = parse.ptr + tag_len;
       ret = func (s);
 
       swfdec_bits_syncbits (bits);
@@ -311,22 +310,11 @@ int
 tag_func_do_init_action (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  int len;
   SwfdecBuffer *buffer;
   SwfdecCharacter *character;
-  unsigned char *endptr;
-  //int retcode = SWF_ERROR;
-
-  endptr = bits->ptr + bits->buffer->length;
 
   character = swfdec_swf_decoder_get_character (s, swfdec_bits_get_u16 (bits));
-
-  len = bits->end - bits->ptr;
-
-  buffer = swfdec_buffer_new_subbuffer (bits->buffer,
-    bits->ptr - bits->buffer->data, len);
-
-  bits->ptr += len;
+  buffer = swfdec_bits_get_buffer (bits, -1);
 
   if (SWFDEC_IS_SPRITE (character)) {
     SWFDEC_WARNING ("init actions not implemented yet");
@@ -339,7 +327,6 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
   }
   swfdec_buffer_unref (buffer);
 
-  //return retcode;
   return SWFDEC_STATUS_OK;
 }
 
@@ -389,10 +376,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
   int flags;
   int offset;
   SwfdecButton *button;
-  unsigned char *endptr;
   char *script_name;
-
-  endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
   button = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_BUTTON);
@@ -476,10 +460,7 @@ tag_func_define_button (SwfdecSwfDecoder * s)
   SwfdecBits *bits = &s->b;
   int id;
   SwfdecButton *button;
-  unsigned char *endptr;
   char *script_name;
-
-  endptr = bits->ptr + bits->buffer->length;
 
   id = swfdec_bits_get_u16 (bits);
   button = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_BUTTON);

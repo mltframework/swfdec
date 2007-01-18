@@ -140,7 +140,7 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
       if (inflateReset(&screen->z) != Z_OK) {
 	SWFDEC_ERROR ("error resetting zlib decoder: %s", screen->z.msg);
       }
-      screen->z.next_in = bits.ptr;
+      screen->z.next_in = (void *) bits.ptr;
       if (swfdec_bits_skip_bytes (&bits, size) != size) {
 	SWFDEC_ERROR ("not enough bytes available");
 	return NULL;

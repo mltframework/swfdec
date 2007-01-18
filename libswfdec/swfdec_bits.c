@@ -43,6 +43,27 @@ swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer)
   bits->end = buffer->data + buffer->length;
 }
 
+/**
+ * swfdec_bits_init_data:
+ * @bits: the #SwfdecBits to initialize
+ * @data: data to initialize with
+ * @len: length of the data
+ *
+ * Initializes @bits for use with the given @data. All operations on @bits will
+ * return copies of the data, so after use, you can free the supplied data.
+ **/
+void
+swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len)
+{
+  g_return_if_fail (bits != NULL);
+  g_return_if_fail (data != NULL);
+
+  bits->buffer = NULL;
+  bits->ptr = data;
+  bits->idx = 0;
+  bits->end = bits->ptr + len;
+}
+
 unsigned int 
 swfdec_bits_left (SwfdecBits *b)
 {
@@ -557,7 +578,12 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
     if (len == 0)
       return NULL;
   }
-  buffer = swfdec_buffer_new_subbuffer (bits->buffer, bits->ptr - bits->buffer->data, len);
+  if (bits->buffer) {
+    buffer = swfdec_buffer_new_subbuffer (bits->buffer, bits->ptr - bits->buffer->data, len);
+  } else {
+    buffer = swfdec_buffer_new_and_alloc (len);
+    memcpy (buffer->data, bits->ptr, len);
+  }
   bits->ptr += len;
   return buffer;
 }

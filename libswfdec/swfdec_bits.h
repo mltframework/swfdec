@@ -32,13 +32,14 @@ typedef struct _SwfdecBits SwfdecBits;
 
 struct _SwfdecBits
 {
-  SwfdecBuffer *buffer;
-  unsigned char *ptr;
-  unsigned int idx;
-  unsigned char *end;
+  SwfdecBuffer *	buffer;		/* buffer data is taken from or NULL */
+  const unsigned char *	ptr;		/* current location to read from */
+  unsigned int		idx;		/* bits already read from ptr */
+  const unsigned char *	end;		/* pointer after last byte */
 };
 
 void swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer);
+void swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len);
 unsigned int swfdec_bits_left (SwfdecBits *b);
 int swfdec_bits_getbit (SwfdecBits * b);
 unsigned int swfdec_bits_getbits (SwfdecBits * b, unsigned int n);

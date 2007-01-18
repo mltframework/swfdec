@@ -239,7 +239,7 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 {
   SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (dec);
   int ret = SWFDEC_STATUS_OK;
-  unsigned char *endptr;
+  const unsigned char *endptr;
   SwfdecBuffer *buffer;
 
   s->b = s->parse;

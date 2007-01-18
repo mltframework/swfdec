@@ -56,6 +56,7 @@ struct JSStackFrame {
     JSObject        *varobj;        /* variables object, where vars go */
     JSScript        *script;        /* script being interpreted or NULL */
     void	    *swf;	    /* SwfdecScript being executed if script is NULL */
+    void	    *constant_pool; /* constant pool used by SwfdecScript */
     JSFunction      *fun;           /* function being called or null */
     JSObject        *thisp;         /* "this" pointer if in method */
     uintN           argc;           /* actual argument count */

@@ -304,7 +304,7 @@ swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint l
 	return JS_FALSE;
     }
   }
-  return swfdec_bits_left (&bits) ? JS_TRUE : JS_FALSE;
+  return swfdec_bits_left (&bits) ? JS_FALSE : JS_TRUE;
 }
 
 static JSBool
@@ -326,10 +326,87 @@ swfdec_action_trace (JSContext *cx, guint action, const guint8 *data, guint len)
   const char *bytes;
 
   bytes = swfdec_js_to_string (cx, cx->fp->sp[-1]);
+  cx->fp->sp--;
   if (bytes == NULL)
     return JS_TRUE;
 
   swfdec_player_trace (player, bytes);
+  return JS_TRUE;
+}
+
+/**
+ * swfdec_action_invoke:
+ * @cx: the #JSContext
+ * @n_args: number of arguments
+ *
+ * This function is similar to js_Invoke, however it uses a reversed stack
+ * order. sp[-1] has to be the function to call, sp[-2] will be the object the 
+ * function is called on, sp[-3] is the first argument, followed by the rest of
+ * the arguments. The function reorders the stack on success and pushes the 
+ * return value on top.
+ *
+ * Returns: JS_TRUE on success, JS_FALSE on failure.
+ **/
+static JSBool
+swfdec_action_call (JSContext *cx, guint n_args, guint flags)
+{
+  int i, j;
+  jsval tmp;
+
+  j = -1;
+  i = - (n_args + 2);
+  while (i < j) {
+    tmp = cx->fp->sp[j];
+    cx->fp->sp[j] = cx->fp->sp[i];
+    cx->fp->sp[i] = tmp;
+    j--;
+    i++;
+  }
+  return js_Invoke (cx, n_args, flags);
+}
+
+static JSBool
+swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  const char *s;
+  guint32 n_args;
+  JSObject *obj;
+  jsval fun;
+  
+  s = swfdec_js_to_string (cx, fp->sp[-1]);
+  if (s == NULL)
+    return JS_FALSE;
+  if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
+    return JS_FALSE;
+  if (n_args + 3 > (guint) (fp->sp - fp->spbase))
+    return JS_FALSE;
+  
+  if (!JSVAL_IS_OBJECT (fp->sp[-2]))
+    goto fail;
+  obj = JSVAL_TO_OBJECT (fp->sp[-2]);
+  if (s[0] == '\0') {
+    fun = OBJECT_TO_JSVAL (obj);
+  } else {
+    if (!JS_GetProperty (cx, obj, s, &fun))
+      return JS_FALSE;
+  }
+  fp->sp--;
+  fp->sp[-1] = fun;
+  fp->sp[-2] = OBJECT_TO_JSVAL (obj);
+  swfdec_action_call (cx, n_args, 0);
+  return JS_TRUE;
+
+fail:
+  fp->sp -= 2 + n_args;
+  fp->sp[-1] = JSVAL_VOID;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_pop (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  cx->fp->sp--;
   return JS_TRUE;
 }
 
@@ -477,7 +554,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x13] = { "StringEquals", NULL },
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },
-  [0x17] = { "Pop", NULL },
+  [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
   [0x18] = { "ToInteger", NULL },
   [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [0x1d] = { "SetVariable", NULL },
@@ -529,7 +606,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x4f] = { "SetMember", NULL }, /* apparently the result is ignored */
   [0x50] = { "Increment", NULL },
   [0x51] = { "Decrement", NULL },
-  [0x52] = { "CallMethod", NULL },
+  [0x52] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
   [0x53] = { "NewMethod", NULL },
   /* version 6 */
   [0x54] = { "InstanceOf", NULL },
@@ -726,7 +803,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   guint8 *startpc, *pc, *endpc, *nextpc;
   JSBool ok = JS_TRUE;
   void *mark;
-  jsval *startsp, *endsp;
+  jsval *startsp, *endsp, *checksp;
   int stack_check;
   guint action, len;
   guint8 *data;
@@ -800,6 +877,8 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
       goto internal_error;
     }
     if (spec->add < 0) {
+      /* HACK FIXME: if added args are -1, we pass the number of free space on the stack 
+       * instead of the action */
       action = endsp - fp->sp;
     } else {
       if (fp->sp + spec->add - MAX (spec->remove, 0) > endsp) {
@@ -807,9 +886,18 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 	goto internal_error;
       }
     }
+    checksp = (spec->add >= 0 && spec->remove >= 0) ? fp->sp + spec->add - spec->remove : NULL;
     ok = spec->exec[version] (cx, action, data, len);
-    if (!ok)
+    if (!ok) {
+      SWFDEC_WARNING ("action %s failed", spec->name);
       goto out;
+    }
+    if (checksp != NULL && checksp != fp->sp) {
+      /* check stack was handled like expected */
+      g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %d",
+	  spec->name, spec->add - spec->remove, spec->add, spec->remove,
+	  fp->sp - checksp + spec->add - spec->remove);
+    }
     if (fp->pc == pc) {
       fp->pc = pc = nextpc;
     } else {

@@ -251,7 +251,7 @@ swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint l
 	break;
       case 6: /* double */
 	{
-	  double d = swfdec_bits_get_float (&bits);
+	  double d = swfdec_bits_get_double (&bits);
 	  if (!JS_NewDoubleValue (cx, d, cx->fp->sp))
 	    return JS_FALSE;
 	  cx->fp->sp++;

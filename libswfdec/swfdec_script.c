@@ -563,6 +563,23 @@ swfdec_action_get_member (JSContext *cx, guint action, const guint8 *data, guint
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_set_member (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *s;
+
+  s = swfdec_js_to_string (cx, cx->fp->sp[-2]);
+  if (s == NULL)
+    return JS_FALSE;
+
+  if (JSVAL_IS_OBJECT (cx->fp->sp[-3])) {
+    if (!JS_SetProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[-3]), s, &cx->fp->sp[-1]))
+      return JS_FALSE;
+  }
+  cx->fp->sp -= 3;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -756,7 +773,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x4c] = { "PushDuplicate", NULL },
   [0x4d] = { "Swap", NULL },
   [0x4e] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
-  [0x4f] = { "SetMember", NULL }, /* apparently the result is ignored */
+  [0x4f] = { "SetMember", NULL, 3, 0, { NULL, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member } },
   [0x50] = { "Increment", NULL },
   [0x51] = { "Decrement", NULL },
   [0x52] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },

@@ -427,7 +427,7 @@ swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
       return JS_FALSE;
     *val = swfdec_js_eval (cx, obj, bytes);
   } else {
-    SWFDEC_ERROR ("huh?");
+    *val = OBJECT_TO_JSVAL (obj);
   }
   return JS_TRUE;
 }
@@ -475,7 +475,7 @@ swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, gui
   JSObject *jsobj;
   guint32 id;
 
-  val = cx->fp->sp[-2];
+  val = cx->fp->sp[-3];
   if (!swfdec_eval_jsval (cx, cx->fp->scopeChain, &val))
     return JS_FALSE;
   movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
@@ -483,7 +483,7 @@ swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, gui
     SWFDEC_WARNING ("specified target does not reference a movie clip");
     goto out;
   }
-  if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-1], &id))
+  if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-2], &id))
     return JS_FALSE;
 
   if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18))
@@ -492,7 +492,7 @@ swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, gui
   if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))
     return JS_FALSE;
 
-  if (!JS_SetProperty (cx, jsobj, properties[id], &cx->fp->sp[-3]))
+  if (!JS_SetProperty (cx, jsobj, properties[id], &cx->fp->sp[-1]))
     return JS_FALSE;
 
 out:

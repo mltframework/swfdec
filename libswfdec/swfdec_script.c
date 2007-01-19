@@ -520,11 +520,11 @@ swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len
     JSString *str, *str2;
     if (cond) {
       str = JSVAL_TO_STRING (lval);
-      if ((str2 = js_ValueToString (cx, rval)) != NULL)
+      if ((str2 = js_ValueToString (cx, rval)) == NULL)
 	return JS_FALSE;
     } else {
       str2 = JSVAL_TO_STRING (rval);
-      if ((str = js_ValueToString (cx, lval)) != NULL)
+      if ((str = js_ValueToString (cx, lval)) == NULL)
 	return JS_FALSE;
     }
     str = js_ConcatStrings (cx, str, str2);

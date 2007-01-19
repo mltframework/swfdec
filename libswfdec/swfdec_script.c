@@ -500,6 +500,69 @@ out:
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval rval, lval;
+  gboolean cond;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  if (!JSVAL_IS_PRIMITIVE (rval)) {
+    if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT (rval), 0 , &rval))
+      return JS_FALSE;
+  }
+  if (!JSVAL_IS_PRIMITIVE (lval)) {
+    if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT (lval), 0 , &lval))
+      return JS_FALSE;
+  }
+  if ((cond = JSVAL_IS_STRING (lval)) || JSVAL_IS_STRING (rval)) {
+    JSString *str, *str2;
+    if (cond) {
+      str = JSVAL_TO_STRING (lval);
+      if ((str2 = js_ValueToString (cx, rval)) != NULL)
+	return JS_FALSE;
+    } else {
+      str2 = JSVAL_TO_STRING (rval);
+      if ((str = js_ValueToString (cx, lval)) != NULL)
+	return JS_FALSE;
+    }
+    str = js_ConcatStrings (cx, str, str2);
+    if (!str)
+      return JS_FALSE;
+    cx->fp->sp--;
+    cx->fp->sp[-1] = STRING_TO_JSVAL (str);
+  } else {
+    double d, d2;
+    if (!JS_ValueToNumber(cx, lval, &d) ||
+        !JS_ValueToNumber(cx, rval, &d2))
+	return JS_FALSE;
+    d += d2;
+    cx->fp->sp--;
+    return JS_NewDoubleValue(cx, d, &cx->fp->sp[-1]);
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_get_member (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *s;
+
+  s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
+  if (s == NULL)
+    return JS_FALSE;
+
+  if (JSVAL_IS_OBJECT (cx->fp->sp[-2])) {
+    if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[-2]), s, &cx->fp->sp[-2]))
+      return JS_FALSE;
+  } else {
+    cx->fp->sp[-2] = JSVAL_VOID;
+  }
+  cx->fp->sp--;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -685,14 +748,14 @@ static const SwfdecActionSpec actions[256] = {
   [0x44] = { "Typeof", NULL },
   [0x45] = { "TargetPath", NULL },
   [0x46] = { "Enumerate", NULL },
-  [0x47] = { "Add2", NULL },
+  [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_add2_7 } },
   [0x48] = { "Less2", NULL },
   [0x49] = { "Equals2", NULL },
   [0x4a] = { "ToNumber", NULL },
   [0x4b] = { "ToString", NULL },
   [0x4c] = { "PushDuplicate", NULL },
   [0x4d] = { "Swap", NULL },
-  [0x4e] = { "GetMember", NULL },
+  [0x4e] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
   [0x4f] = { "SetMember", NULL }, /* apparently the result is ignored */
   [0x50] = { "Increment", NULL },
   [0x51] = { "Decrement", NULL },

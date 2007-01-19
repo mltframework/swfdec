@@ -410,6 +410,96 @@ swfdec_action_pop (JSContext *cx, guint action, const guint8 *data, guint len)
   return JS_TRUE;
 }
 
+static const char *properties[22] = {
+  "_x", "_y", "_xscale", "_yscale", "_currentframe",
+  "_totalframes", "_alpha", "_visible", "_width", "_height",
+  "_rotation", "_target", "_framesloaded", "_name", "_droptarget",
+  "_url", "_highquality", "_focusrect", "_soundbuftime", "_quality",
+  "_xmouse", "_ymouse"
+};
+
+static JSBool
+swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
+{
+  if (JSVAL_IS_STRING (*val)) {
+    const char *bytes = swfdec_js_to_string (cx, *val);
+    if (bytes == NULL)
+      return JS_FALSE;
+    *val = swfdec_js_eval (cx, obj, bytes);
+  } else {
+    SWFDEC_ERROR ("huh?");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_get_property (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval val;
+  SwfdecMovie *movie;
+  JSObject *jsobj;
+  guint32 id;
+
+  val = cx->fp->sp[-2];
+  if (!swfdec_eval_jsval (cx, cx->fp->scopeChain, &val))
+    return JS_FALSE;
+  movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
+  val = JSVAL_VOID;
+  if (movie == NULL) {
+    SWFDEC_WARNING ("specified target does not reference a movie clip");
+    goto out;
+  }
+  if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-1], &id))
+    return JS_FALSE;
+
+  if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18))
+    goto out;
+
+  if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))
+    return JS_FALSE;
+
+  if (!JS_GetProperty (cx, jsobj, properties[id], &val))
+    return JS_FALSE;
+
+out:
+  cx->fp->sp -= 1;
+  cx->fp->sp[-1] = val;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval val;
+  SwfdecMovie *movie;
+  JSObject *jsobj;
+  guint32 id;
+
+  val = cx->fp->sp[-2];
+  if (!swfdec_eval_jsval (cx, cx->fp->scopeChain, &val))
+    return JS_FALSE;
+  movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("specified target does not reference a movie clip");
+    goto out;
+  }
+  if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-1], &id))
+    return JS_FALSE;
+
+  if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18))
+    goto out;
+
+  if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))
+    return JS_FALSE;
+
+  if (!JS_SetProperty (cx, jsobj, properties[id], &cx->fp->sp[-3]))
+    return JS_FALSE;
+
+out:
+  cx->fp->sp -= 3;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -560,8 +650,8 @@ static const SwfdecActionSpec actions[256] = {
   [0x1d] = { "SetVariable", NULL },
   [0x20] = { "SetTarget2", NULL },
   [0x21] = { "StringAdd", NULL },
-  [0x22] = { "GetProperty", NULL },
-  [0x23] = { "SetProperty", NULL },
+  [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
+  [0x23] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
   [0x24] = { "CloneSprite", NULL },
   [0x25] = { "RemoveSprite", NULL },
   [0x26] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },

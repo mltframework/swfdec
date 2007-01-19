@@ -1056,6 +1056,7 @@ static JSPropertySpec movieclip_props[] = {
   {"_highquality",  -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_focusrect",    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_soundbuftime", -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
+  {"_quality",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_xmouse",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_ymouse",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
   {"_parent",	    -1,	      	MC_PROP_ATTRS | JSPROP_READONLY,  mc_parent,	    NULL},

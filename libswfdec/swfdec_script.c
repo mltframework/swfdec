@@ -315,7 +315,26 @@ swfdec_action_get_variable (JSContext *cx, guint action, const guint8 *data, gui
   s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
-  cx->fp->sp[-1] = swfdec_js_eval (cx, cx->fp->scopeChain, s);
+  cx->fp->sp[-1] = swfdec_js_eval (cx, cx->fp->scopeChain, s, 
+      ((SwfdecScript *) cx->fp->swf)->version < 7);
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_set_variable (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *s;
+
+  s = swfdec_js_to_string (cx, cx->fp->sp[-2]);
+  if (s == NULL)
+    return JS_FALSE;
+
+  if (strpbrk (s, "./:")) {
+    SWFDEC_WARNING ("FIXME: implement paths");
+  }
+  if (!JS_SetProperty (cx, cx->fp->scopeChain, s, &cx->fp->sp[-1]))
+    return JS_FALSE;
+  cx->fp->sp -= 2;
   return JS_TRUE;
 }
 
@@ -425,7 +444,8 @@ swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
     const char *bytes = swfdec_js_to_string (cx, *val);
     if (bytes == NULL)
       return JS_FALSE;
-    *val = swfdec_js_eval (cx, obj, bytes);
+    *val = swfdec_js_eval (cx, obj, bytes,
+	((SwfdecScript *) cx->fp->swf)->version < 7);
   } else {
     *val = OBJECT_TO_JSVAL (obj);
   }
@@ -500,6 +520,57 @@ out:
   return JS_TRUE;
 }
 
+static double
+swfdec_action_to_number (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val);
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    return *JSVAL_TO_DOUBLE (val);
+  } else {
+    return 0;
+  }
+}
+
+static JSBool
+swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval lval, rval;
+  double l, r;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  l = swfdec_action_to_number (cx, lval);
+  r = swfdec_action_to_number (cx, rval);
+  switch (action) {
+    case 0x0a:
+      l = l + r;
+      break;
+    case 0x0b:
+      l = l - r;
+      break;
+    case 0x0c:
+      l = l * r;
+      break;
+    case 0x0d:
+      if (r == 0 && ((SwfdecScript *) cx->fp->swf)->version < 5) {
+	JSString *str = JS_InternString (cx, "#ERROR#");
+	if (str == NULL)
+	  return JS_FALSE;
+	cx->fp->sp--;
+	cx->fp->sp[-1] = STRING_TO_JSVAL (str);
+	return JS_TRUE;
+      }
+      l = l / r;
+      break;
+    default:
+      g_assert_not_reached ();
+      return r;
+  }
+  cx->fp->sp--;
+  return JS_NewNumberValue (cx, l, &cx->fp->sp[-1]);
+}
+
 static JSBool
 swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -539,7 +610,7 @@ swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len
 	return JS_FALSE;
     d += d2;
     cx->fp->sp--;
-    return JS_NewDoubleValue(cx, d, &cx->fp->sp[-1]);
+    return JS_NewNumberValue(cx, d, &cx->fp->sp[-1]);
   }
   return JS_TRUE;
 }
@@ -712,10 +783,10 @@ static const SwfdecActionSpec actions[256] = {
   [0x08] = { "ToggleQuality", NULL },
   [0x09] = { "StopSounds", NULL },
   /* version 4 */
-  [0x0a] = { "Add", NULL },
-  [0x0b] = { "Subtract", NULL },
-  [0x0c] = { "Multiply", NULL },
-  [0x0d] = { "Divide", NULL },
+  [0x0a] = { "Add", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [0x0b] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [0x0c] = { "Multiply", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [0x0d] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0e] = { "Equals", NULL },
   [0x0f] = { "Less", NULL },
   [0x10] = { "And", NULL },
@@ -727,7 +798,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
   [0x18] = { "ToInteger", NULL },
   [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
-  [0x1d] = { "SetVariable", NULL },
+  [0x1d] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
   [0x20] = { "SetTarget2", NULL },
   [0x21] = { "StringAdd", NULL },
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },

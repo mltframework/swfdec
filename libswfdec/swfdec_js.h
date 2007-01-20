@@ -49,7 +49,8 @@ void		swfdec_js_movie_remove_property	(SwfdecMovie *		movie);
 char *		swfdec_js_slash_to_dot		(const char *		slash_str);
 jsval		swfdec_js_eval			(JSContext *		cx,
 						 JSObject *		obj,
-						 const char *		str);
+						 const char *		str,
+						 gboolean		ignore_case);
 
 /* support functions */
 const char *	swfdec_js_to_string		(JSContext *		cx,

@@ -300,29 +300,26 @@ fail:
 
 static JSBool
 swfdec_js_eval_get_property (JSContext *cx, JSObject *obj, 
-    const char *name, gboolean initial, jsval *ret)
+    const char *name, gboolean initial, gboolean ignore_case, jsval *ret)
 {
   JSAtom *atom;
   JSObject *pobj;
   JSProperty *prop;
 
-  if (!JS_GetProperty (cx, obj, name, ret))
-    return JS_FALSE;
-  if (!JSVAL_IS_VOID (*ret))
-    return JS_TRUE;
-  if (!initial)
-    return JS_FALSE;
-    
-  atom = js_Atomize(cx, name, strlen(name), 0);
+  atom = js_Atomize (cx, name, strlen(name), ignore_case ? ATOM_NOCASE : 0);
   if (!atom)
     return JS_FALSE;
-  if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
-    return JS_FALSE;
-  if (!prop)
-    return JS_FALSE;
-  if (pobj)
-    obj = pobj;
-  return OBJ_GET_PROPERTY (cx, obj, (jsid) prop->id, ret);
+  if (initial) {
+    return OBJ_GET_PROPERTY (cx, obj, (jsid) atom, ret);
+  } else {
+    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+      return JS_FALSE;
+    if (!prop)
+      return JS_FALSE;
+    if (pobj)
+      obj = pobj;
+    return OBJ_GET_PROPERTY (cx, obj, (jsid) prop->id, ret);
+  }
 }
 
 /**
@@ -330,6 +327,7 @@ swfdec_js_eval_get_property (JSContext *cx, JSObject *obj,
  * @cx: a #JSContext
  * @obj: #JSObject to use as a source for evaluating
  * @str: The string to evaluate
+ * @ignore_case: TRUE for case insensitive evaluation
  *
  * This function works like the Actionscript eval function used on @obj.
  * It handles both slash-style and dot-style notation.
@@ -337,7 +335,8 @@ swfdec_js_eval_get_property (JSContext *cx, JSObject *obj,
  * Returns: the value or JSVAL_VOID if no value was found.
  **/
 jsval
-swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str)
+swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str, 
+    gboolean ignore_case)
 {
   jsval cur;
   char *work = NULL;
@@ -365,12 +364,12 @@ swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str)
     obj = JSVAL_TO_OBJECT (cur);
     if (dot) {
       char *name = g_strndup (str, dot - str);
-      if (!swfdec_js_eval_get_property (cx, obj, name, initial, &cur))
+      if (!swfdec_js_eval_get_property (cx, obj, name, initial, ignore_case, &cur))
 	goto out;
       g_free (name);
       str = dot + 1;
     } else {
-      if (!swfdec_js_eval_get_property (cx, obj, str, initial, &cur))
+      if (!swfdec_js_eval_get_property (cx, obj, str, initial, ignore_case, &cur))
 	goto out;
       str = NULL;
     }
@@ -384,3 +383,5 @@ out:
   g_free (work);
   return JSVAL_VOID;
 }
+
+

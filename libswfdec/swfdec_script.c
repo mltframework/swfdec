@@ -540,8 +540,15 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
 
   rval = cx->fp->sp[-1];
   lval = cx->fp->sp[-2];
-  l = swfdec_action_to_number (cx, lval);
-  r = swfdec_action_to_number (cx, rval);
+  if (((SwfdecScript *) cx->fp->swf)->version < 7) {
+    l = swfdec_action_to_number (cx, lval);
+    r = swfdec_action_to_number (cx, rval);
+  } else {
+    if (!JS_ValueToNumber(cx, lval, &l) ||
+        !JS_ValueToNumber(cx, rval, &r))
+      return JS_FALSE;
+  }
+  cx->fp->sp--;
   switch (action) {
     case 0x0a:
       l = l + r;
@@ -557,8 +564,14 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
 	JSString *str = JS_InternString (cx, "#ERROR#");
 	if (str == NULL)
 	  return JS_FALSE;
-	cx->fp->sp--;
 	cx->fp->sp[-1] = STRING_TO_JSVAL (str);
+	return JS_TRUE;
+      }
+      if (((SwfdecScript *) cx->fp->swf)->version >= 7 &&
+	  JSVAL_IS_VOID (rval)) {
+	cx->fp->sp[-1] = DOUBLE_TO_JSVAL (r < 0 ? 
+	    cx->runtime->jsNegativeInfinity :
+	    cx->runtime->jsPositiveInfinity);
 	return JS_TRUE;
       }
       l = l / r;
@@ -567,7 +580,6 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
       g_assert_not_reached ();
       return r;
   }
-  cx->fp->sp--;
   return JS_NewNumberValue (cx, l, &cx->fp->sp[-1]);
 }
 

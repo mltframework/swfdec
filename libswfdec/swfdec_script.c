@@ -651,6 +651,47 @@ swfdec_action_set_member (JSContext *cx, guint action, const guint8 *data, guint
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_new_comparison_6 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval lval, rval;
+  double d, d2;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  cx->fp->sp--;
+  d = swfdec_action_to_number (cx, lval);
+  d2 = swfdec_action_to_number (cx, rval);
+  if (action == 0x48)
+    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (d < d2);
+  else 
+    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (d > d2);
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_new_comparison_7 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval lval, rval;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  cx->fp->sp--;
+  if (JSVAL_IS_VOID (rval) || JSVAL_IS_VOID (lval)) {
+    cx->fp->sp[-1] = JSVAL_VOID;
+  } else if (JSVAL_IS_STRING(lval) && JSVAL_IS_STRING(rval)) {
+    int comp = JS_CompareStrings (JSVAL_TO_STRING (lval), JSVAL_TO_STRING (rval));
+    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (action == 0x48 ? comp < 0 : comp > 0);
+  } else {
+    double d, d2;
+    if (!JS_ValueToNumber(cx, lval, &d) ||
+        !JS_ValueToNumber(cx, rval, &d2))
+	return JS_FALSE;
+    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (action == 0x48 ? d < d2 : d > d2);
+  }
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -762,7 +803,7 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
 /* defines minimum and maximum versions for which we have seperate scripts */
 #define MINSCRIPTVERSION 3
 #define MAXSCRIPTVERSION 7
-#define EXTRACT_VERSION(v) MAX ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
+#define EXTRACT_VERSION(v) MIN ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
 
 typedef JSBool (* SwfdecActionExec) (JSContext *cx, guint action, const guint8 *data, guint len);
 typedef struct {
@@ -837,7 +878,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x45] = { "TargetPath", NULL },
   [0x46] = { "Enumerate", NULL },
   [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_add2_7 } },
-  [0x48] = { "Less2", NULL },
+  [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 }  },
   [0x49] = { "Equals2", NULL },
   [0x4a] = { "ToNumber", NULL },
   [0x4b] = { "ToString", NULL },
@@ -861,7 +902,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x65] = { "BitURShift", NULL },
   /* version 6 */
   [0x66] = { "StrictEquals", NULL },
-  [0x67] = { "Greater", NULL },
+  [0x67] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x68] = { "StringGreater", NULL },
   /* version 7 */
   [0x69] = { "Extends", NULL },

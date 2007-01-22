@@ -206,10 +206,7 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_NEEDBITS;
   }
 
-  s->b.buffer = buffer;
-  s->b.ptr = buffer->data;
-  s->b.idx = 0;
-  s->b.end = buffer->data + buffer->length;
+  swfdec_bits_init (&s->b, buffer);
 
   swfdec_bits_get_rect (&s->b, &rect);
   if (rect.x0 != 0.0 || rect.y0 != 0.0)
@@ -239,7 +236,6 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 {
   SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (dec);
   int ret = SWFDEC_STATUS_OK;
-  const unsigned char *endptr;
   SwfdecBuffer *buffer;
 
   s->b = s->parse;
@@ -271,12 +267,7 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       if (buffer == NULL) {
 	return SWFDEC_STATUS_NEEDBITS;
       }
-
-      s->b.buffer = buffer;
-      s->b.ptr = buffer->data;
-      s->b.idx = 0;
-      s->b.end = buffer->data + buffer->length;
-
+      swfdec_bits_init (&s->b, buffer);
 
       x = swfdec_bits_get_u16 (&s->b);
       tag = (x >> 6) & 0x3ff;
@@ -288,10 +279,7 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	if (buffer == NULL) {
 	  return SWFDEC_STATUS_NEEDBITS;
 	}
-	s->b.buffer = buffer;
-	s->b.ptr = buffer->data;
-	s->b.idx = 0;
-	s->b.end = buffer->data + buffer->length;
+	swfdec_bits_init (&s->b, buffer);
 
 	swfdec_bits_get_u16 (&s->b);
 	tag_len = swfdec_bits_get_u32 (&s->b);
@@ -313,21 +301,11 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       buffer = swfdec_buffer_queue_pull (s->input_queue, header_length);
       swfdec_buffer_unref (buffer);
 
-      if (tag_len > 0) {
+      if (tag_len > 0)
 	buffer = swfdec_buffer_queue_pull (s->input_queue, tag_len);
-	s->b.buffer = buffer;
-	s->b.ptr = buffer->data;
-	s->b.idx = 0;
-	s->b.end = buffer->data + buffer->length;
-	endptr = s->b.ptr + tag_len;
-      } else {
+      else
 	buffer = NULL;
-	s->b.buffer = NULL;
-	s->b.ptr = NULL;
-	s->b.idx = 0;
-	s->b.end = NULL;
-	endptr = NULL;
-      }
+      swfdec_bits_init (&s->b, buffer);
       func = swfdec_swf_decoder_get_tag_func (tag);
       if (func == NULL) {
 	SWFDEC_WARNING ("tag function not implemented for %d %s",
@@ -338,18 +316,10 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	s->parse_sprite = NULL;
 
 	swfdec_bits_syncbits (&s->b);
-	if (s->b.ptr < endptr) {
+	if (swfdec_bits_left (&s->b)) {
 	  SWFDEC_WARNING
 	      ("early finish (%d bytes) at %d, tag %d %s, length %d",
-	      endptr - s->b.ptr,
-	      swfdec_buffer_queue_get_offset (s->input_queue), tag,
-	      swfdec_swf_decoder_get_tag_name (tag), tag_len);
-	  //dumpbits (&s->b);
-	}
-	if (s->b.ptr > endptr) {
-	  SWFDEC_WARNING
-	      ("parse_overrun (%d bytes) at %d, tag %d %s, length %d",
-	      s->b.ptr - endptr,
+	      swfdec_bits_left (&s->b) / 8,
 	      swfdec_buffer_queue_get_offset (s->input_queue), tag,
 	      swfdec_swf_decoder_get_tag_name (tag), tag_len);
 	}

@@ -31,16 +31,27 @@
 #include "swfdec_rect.h"
 
 
+/**
+ * swfdec_bits_init:
+ * @bits: a #SwfdecBits
+ * @buffer: buffer to use for data or NULL
+ *
+ * initializes @bits for use with the data in @buffer. The buffer will not be
+ * referenced, so you are responsible for keeping it around while @bits is used.
+ **/
 void 
 swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer)
 {
   g_return_if_fail (bits != NULL);
-  g_return_if_fail (buffer != NULL);
 
-  bits->buffer = buffer;
-  bits->ptr = buffer->data;
-  bits->idx = 0;
-  bits->end = buffer->data + buffer->length;
+  if (buffer) {
+    bits->buffer = buffer;
+    bits->ptr = buffer->data;
+    bits->idx = 0;
+    bits->end = buffer->data + buffer->length;
+  } else {
+    memset (bits, 0, sizeof (SwfdecBits));
+  }
 }
 
 /**
@@ -567,7 +578,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
 {
   SwfdecBuffer *buffer;
 
-  g_return_val_if_fail (len > 0 || len == -1, NULL);
+  g_return_val_if_fail (len >= -1, NULL);
 
   if (len > 0) {
     SWFDEC_BYTES_CHECK (bits, (unsigned int) len);
@@ -575,9 +586,9 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
     swfdec_bits_syncbits (bits);
     len = bits->end - bits->ptr;
     g_assert (len >= 0);
-    if (len == 0)
-      return NULL;
   }
+  if (len == 0)
+    return NULL;
   if (bits->buffer) {
     buffer = swfdec_buffer_new_subbuffer (bits->buffer, bits->ptr - bits->buffer->data, len);
   } else {

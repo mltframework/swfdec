@@ -47,7 +47,8 @@ struct _SwfeditTagClass {
 
 GType		swfedit_tag_get_type	(void);
 
-SwfeditTag *	swfedit_tag_new		(guint		tag,
+SwfeditTag *	swfedit_tag_new		(SwfeditToken *	parent,
+					 guint		tag,
 					 SwfdecBuffer *	buffer);
 
 

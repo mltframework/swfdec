@@ -49,12 +49,15 @@ swfedit_tag_init (SwfeditTag *tag)
 }
 
 SwfeditTag *
-swfedit_tag_new (guint tag, SwfdecBuffer *buffer)
+swfedit_tag_new (SwfeditToken *parent, guint tag, SwfdecBuffer *buffer)
 {
   SwfeditTag *item;
 
+  g_return_val_if_fail (SWFEDIT_IS_TOKEN (parent), NULL);
+
   item = g_object_new (SWFEDIT_TYPE_TAG, NULL);
   item->tag = tag;
+  SWFEDIT_TOKEN (item)->parent = parent;
   swfedit_token_add (SWFEDIT_TOKEN (item), "contents", SWFEDIT_TOKEN_BINARY, buffer);
   return item;
 }

@@ -28,7 +28,7 @@ static gboolean
 open_window (char *filename)
 {
   SwfeditFile *file;
-  GtkWidget *window, *treeview;
+  GtkWidget *window, *scroll, *treeview;
   GError *error = NULL;
   GtkTreeViewColumn *column;
   GtkCellRenderer *renderer;
@@ -42,8 +42,11 @@ open_window (char *filename)
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_container_add (GTK_CONTAINER (window), scroll);
+
   treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (file));
-  gtk_container_add (GTK_CONTAINER (window), treeview);
+  gtk_container_add (GTK_CONTAINER (scroll), treeview);
   gtk_widget_show_all (window);
 
   renderer = gtk_cell_renderer_text_new ();

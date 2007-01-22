@@ -80,7 +80,7 @@ swfedit_binary_write (gconstpointer value)
   for (i = 0; i < buffer->length; i++) {
     if (i && i % 4 == 0)
       g_string_append_c (string, ' ');
-    g_string_append_printf (string, "%2X", buffer->data[i]);
+    g_string_append_printf (string, "%02X", buffer->data[i]);
   }
   return g_string_free (string, FALSE);
 }
@@ -147,9 +147,15 @@ typedef struct {
 
 /*** GTK_TREE_MODEL ***/
 
+#if 0
+#  define REPORT g_print ("%s\n", G_STRFUNC)
+#else
+#  define REPORT 
+#endif
 static GtkTreeModelFlags 
 swfedit_token_get_flags (GtkTreeModel *tree_model)
 {
+  REPORT;
   return 0;
 }
 
@@ -158,12 +164,14 @@ swfedit_token_get_n_columns (GtkTreeModel *tree_model)
 {
   SwfeditToken *token = SWFEDIT_TOKEN (tree_model);
 
+  REPORT;
   return token->tokens->len;
 }
 
 static GType
 swfedit_token_get_column_type (GtkTreeModel *tree_model, gint index_)
 {
+  REPORT;
   switch (index_) {
     case SWFEDIT_COLUMN_NAME:
       return G_TYPE_STRING;
@@ -185,6 +193,7 @@ swfedit_token_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath
   guint i = gtk_tree_path_get_indices (path)[0];
   Entry *entry;
   
+  REPORT;
   if (i > token->tokens->len)
     return FALSE;
   entry = &g_array_index (token->tokens, Entry, i);
@@ -199,7 +208,7 @@ swfedit_token_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath
     new = gtk_tree_path_new ();
     indices = gtk_tree_path_get_indices (path);
     for (j = 1; j < gtk_tree_path_get_depth (path); j++) {
-      gtk_tree_path_append_index (path, indices[j]);
+      gtk_tree_path_append_index (new, indices[j]);
     }
     ret = swfedit_token_get_iter (GTK_TREE_MODEL (entry->value), iter, new);
     gtk_tree_path_free (new);
@@ -218,6 +227,7 @@ swfedit_token_get_path (GtkTreeModel *tree_model, GtkTreeIter *iter)
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
   GtkTreePath *path = gtk_tree_path_new_from_indices (GPOINTER_TO_INT (iter->user_data2), -1);
 
+  REPORT;
   while (token->parent) {
     guint i;
     SwfeditToken *parent = token->parent;
@@ -241,6 +251,7 @@ swfedit_token_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
   Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (iter->user_data2));
 
+  REPORT;
   switch (column) {
     case SWFEDIT_COLUMN_NAME:
       g_value_init (value, G_TYPE_STRING);
@@ -266,6 +277,7 @@ swfedit_token_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
 
+  REPORT;
   if ((guint) GPOINTER_TO_INT (iter->user_data2) + 1 >= token->tokens->len)
     return FALSE;
 
@@ -276,14 +288,21 @@ swfedit_token_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
 static gboolean
 swfedit_token_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent)
 {
-  SwfeditToken *token = SWFEDIT_TOKEN (parent->user_data);
-  Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (parent->user_data2));
+  SwfeditToken *token;
+  Entry *entry;
 
-  if (entry->type != SWFEDIT_TOKEN_OBJECT)
-    return FALSE;
-
+  REPORT;
+  if (parent) {
+    token = SWFEDIT_TOKEN (parent->user_data);
+    entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (parent->user_data2));
+    if (entry->type != SWFEDIT_TOKEN_OBJECT)
+      return FALSE;
+    token = entry->value;
+  } else {
+    token = SWFEDIT_TOKEN (tree_model);
+  }
   iter->stamp = 0; /* FIXME */
-  iter->user_data = entry->value;
+  iter->user_data = token;
   iter->user_data2 = GINT_TO_POINTER (0);
   return TRUE;
 }
@@ -294,6 +313,7 @@ swfedit_token_iter_has_child (GtkTreeModel *tree_model, GtkTreeIter *iter)
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
   Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (iter->user_data2));
 
+  REPORT;
   return entry->type == SWFEDIT_TOKEN_OBJECT;
 }
 
@@ -303,6 +323,7 @@ swfedit_token_iter_n_children (GtkTreeModel *tree_model, GtkTreeIter *iter)
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
   Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (iter->user_data2));
 
+  REPORT;
   if (entry->type != SWFEDIT_TOKEN_OBJECT)
     return FALSE;
 
@@ -317,6 +338,7 @@ swfedit_token_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
   SwfeditToken *token;
   Entry *entry;
 
+  REPORT;
   if (parent) {
     token = SWFEDIT_TOKEN (parent->user_data);
     entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (parent->user_data2));
@@ -341,6 +363,7 @@ swfedit_token_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeI
   SwfeditToken *token = SWFEDIT_TOKEN (child->user_data);
   SwfeditToken *parent = token->parent;
 
+  REPORT;
   if (parent == NULL)
     return FALSE;
 
@@ -352,7 +375,7 @@ swfedit_token_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeI
       break;
   }
   iter->stamp = 0; /* FIXME */
-  iter->user_data = token;
+  iter->user_data = parent;
   iter->user_data2 = GINT_TO_POINTER (i);
   return TRUE;
 }

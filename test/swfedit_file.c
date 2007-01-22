@@ -155,6 +155,8 @@ swfedit_file_parse (SwfeditFile *file, SwfdecBits *bits, GError **error)
     char *name;
     if (tag_len == 0x3f)
       tag_len = swfdec_bits_get_u32 (bits);
+    if (tag == 0)
+      break;
     if (tag_len > 0)
       buffer = swfdec_bits_get_buffer (bits, tag_len);
     else
@@ -164,7 +166,7 @@ swfedit_file_parse (SwfeditFile *file, SwfdecBits *bits, GError **error)
 	  "Invalid contents in file");
       return FALSE;
     }
-    item = swfedit_tag_new (tag, buffer);
+    item = swfedit_tag_new (SWFEDIT_TOKEN (file), tag, buffer);
     name = g_strdup_printf ("Tag %u", tag);
     swfedit_token_add (SWFEDIT_TOKEN (file), name, SWFEDIT_TOKEN_OBJECT, item);
     g_free (name);

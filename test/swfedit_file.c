@@ -26,6 +26,7 @@
 #include "libswfdec/swfdec_bits.h"
 #include "libswfdec/swfdec_buffer.h"
 #include "libswfdec/swfdec_debug.h"
+#include "libswfdec/swfdec_swf_decoder.h"
 #include "swfedit_file.h"
 #include "swfedit_tag.h"
 
@@ -152,7 +153,7 @@ swfedit_file_parse (SwfeditFile *file, SwfdecBits *bits, GError **error)
     guint tag_len = x & 0x3f;
     SwfdecBuffer *buffer;
     SwfeditTag *item;
-    char *name;
+
     if (tag_len == 0x3f)
       tag_len = swfdec_bits_get_u32 (bits);
     if (tag == 0)
@@ -167,9 +168,9 @@ swfedit_file_parse (SwfeditFile *file, SwfdecBits *bits, GError **error)
       return FALSE;
     }
     item = swfedit_tag_new (SWFEDIT_TOKEN (file), tag, buffer);
-    name = g_strdup_printf ("Tag %u", tag);
-    swfedit_token_add (SWFEDIT_TOKEN (file), name, SWFEDIT_TOKEN_OBJECT, item);
-    g_free (name);
+    swfedit_token_add (SWFEDIT_TOKEN (file), 
+	swfdec_swf_decoder_get_tag_name (tag), 
+	SWFEDIT_TOKEN_OBJECT, item);
   }
   swfdec_buffer_unref (next);
   return TRUE;

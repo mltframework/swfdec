@@ -527,6 +527,8 @@ swfdec_action_to_number (JSContext *cx, jsval val)
     return JSVAL_TO_INT (val);
   } else if (JSVAL_IS_DOUBLE (val)) {
     return *JSVAL_TO_DOUBLE (val);
+  } else if (JSVAL_IS_BOOLEAN (val)) {
+    return JSVAL_TO_BOOLEAN (val);
   } else {
     return 0;
   }
@@ -704,7 +706,74 @@ swfdec_action_new_comparison_7 (JSContext *cx, guint action, const guint8 *data,
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_not_4 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double d;
+
+  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  cx->fp->sp[-1] = INT_TO_JSVAL (d == 0 ? 1 : 0);
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_not_5 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double d;
+
+  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  cx->fp->sp[-1] = d == 0 ? JSVAL_TRUE : JSVAL_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_jump (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  if (len != 2) {
+    SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
+    return JS_FALSE;
+  }
+  cx->fp->pc += 4 + GINT16_FROM_LE (*((gint16*) data)); 
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_if (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double d;
+
+  if (len != 2) {
+    SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
+    return JS_FALSE;
+  }
+  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  cx->fp->sp--;
+  if (d != 0)
+    cx->fp->pc += 4 + GINT16_FROM_LE (*((gint16*) data)); 
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
+
+static char *
+swfdec_action_print_if (guint action, const guint8 *data, guint len)
+{
+  if (len != 2) {
+    SWFDEC_ERROR ("If action length invalid (is %u, should be 2", len);
+    return NULL;
+  }
+  return g_strdup_printf ("If %d", GINT16_FROM_LE (*((gint16*) data)));
+}
+
+static char *
+swfdec_action_print_jump (guint action, const guint8 *data, guint len)
+{
+  if (len != 2) {
+    SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
+    return NULL;
+  }
+  return g_strdup_printf ("Jump %d", GINT16_FROM_LE (*((gint16*) data)));
+}
 
 static char *
 swfdec_action_print_push (guint action, const guint8 *data, guint len)
@@ -844,7 +913,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x0f] = { "Less", NULL },
   [0x10] = { "And", NULL },
   [0x11] = { "Or", NULL },
-  [0x12] = { "Not", NULL },
+  [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
   [0x13] = { "StringEquals", NULL },
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },
@@ -938,12 +1007,12 @@ static const SwfdecActionSpec actions[256] = {
   [0x94] = { "With", NULL },
   /* version 4 */
   [0x96] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
-  [0x99] = { "Jump", NULL },
+  [0x99] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
   [0x9a] = { "GetURL2", NULL },
   /* version 5 */
   [0x9b] = { "DefineFunction", NULL },
   /* version 4 */
-  [0x9d] = { "If", NULL },
+  [0x9d] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
   [0x9e] = { "Call", NULL },
   [0x9f] = { "GotoFrame2", NULL }
 };

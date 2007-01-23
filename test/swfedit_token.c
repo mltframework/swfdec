@@ -45,13 +45,13 @@ swfedit_binary_read (const char *s, gpointer* result)
     else
       break;
     s++;
-    byte *= 255;
+    byte *= 16;
     if (s[0] >= '0' && s[0] <= '9')
-      byte = s[0] - '0';
+      byte += s[0] - '0';
     else if (s[0] >= 'a' && s[0] <= 'f')
-      byte = s[0] + 10 - 'a';
+      byte += s[0] + 10 - 'a';
     else if (s[0] >= 'A' && s[0] <= 'F')
-      byte = s[0] + 10 - 'A';
+      byte += s[0] + 10 - 'A';
     else
       break;
     s++;

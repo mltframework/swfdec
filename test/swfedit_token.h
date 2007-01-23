@@ -40,6 +40,8 @@ typedef enum {
   SWFEDIT_COLUMN_VALUE
 } SwfeditColumn;
 
+typedef struct _SwfeditTokenEntry SwfeditTokenEntry;
+
 typedef struct _SwfeditToken SwfeditToken;
 typedef struct _SwfeditTokenClass SwfeditTokenClass;
 
@@ -50,12 +52,18 @@ typedef struct _SwfeditTokenClass SwfeditTokenClass;
 #define SWFEDIT_TOKEN_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFEDIT_TYPE_TOKEN, SwfeditTokenClass))
 #define SWFEDIT_TOKEN_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFEDIT_TYPE_TOKEN, SwfeditTokenClass))
 
+struct _SwfeditTokenEntry {
+  char *		name;
+  SwfeditTokenType	type;
+  gpointer		value;
+};
+
 struct _SwfeditToken {
   GObject		object;
 
   SwfeditToken *	parent;		/* parent of this token or NULL */
   gchar *		name;		/* name of token */
-  GArray *		tokens;		/* list of tokens */
+  GArray *		tokens;		/* of SwfeditTokenEntry */
 };
 
 struct _SwfeditTokenClass {

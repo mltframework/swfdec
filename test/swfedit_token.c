@@ -137,14 +137,6 @@ struct {
   { swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
 };
 
-/*** STRUCTS ***/
-
-typedef struct {
-  char *		name;
-  SwfeditTokenType	type;
-  gpointer		value;
-} Entry;
-
 /*** GTK_TREE_MODEL ***/
 
 #if 0
@@ -191,12 +183,12 @@ swfedit_token_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath
 {
   SwfeditToken *token = SWFEDIT_TOKEN (tree_model);
   guint i = gtk_tree_path_get_indices (path)[0];
-  Entry *entry;
+  SwfeditTokenEntry *entry;
   
   REPORT;
   if (i > token->tokens->len)
     return FALSE;
-  entry = &g_array_index (token->tokens, Entry, i);
+  entry = &g_array_index (token->tokens, SwfeditTokenEntry, i);
   if (gtk_tree_path_get_depth (path) > 1) {
     GtkTreePath *new;
     int j;
@@ -232,7 +224,7 @@ swfedit_token_get_path (GtkTreeModel *tree_model, GtkTreeIter *iter)
     guint i;
     SwfeditToken *parent = token->parent;
     for (i = 0; i < parent->tokens->len; i++) {
-      Entry *entry = &g_array_index (parent->tokens, Entry, i);
+      SwfeditTokenEntry *entry = &g_array_index (parent->tokens, SwfeditTokenEntry, i);
       if (entry->type != SWFEDIT_TOKEN_OBJECT)
 	continue;
       if (entry->value == token)
@@ -249,7 +241,7 @@ swfedit_token_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
     gint column, GValue *value)
 {
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
-  Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (iter->user_data2));
+  SwfeditTokenEntry *entry = &g_array_index (token->tokens, SwfeditTokenEntry, GPOINTER_TO_INT (iter->user_data2));
 
   REPORT;
   switch (column) {
@@ -289,12 +281,12 @@ static gboolean
 swfedit_token_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent)
 {
   SwfeditToken *token;
-  Entry *entry;
+  SwfeditTokenEntry *entry;
 
   REPORT;
   if (parent) {
     token = SWFEDIT_TOKEN (parent->user_data);
-    entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (parent->user_data2));
+    entry = &g_array_index (token->tokens, SwfeditTokenEntry, GPOINTER_TO_INT (parent->user_data2));
     if (entry->type != SWFEDIT_TOKEN_OBJECT)
       return FALSE;
     token = entry->value;
@@ -311,7 +303,7 @@ static gboolean
 swfedit_token_iter_has_child (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
-  Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (iter->user_data2));
+  SwfeditTokenEntry *entry = &g_array_index (token->tokens, SwfeditTokenEntry, GPOINTER_TO_INT (iter->user_data2));
 
   REPORT;
   return entry->type == SWFEDIT_TOKEN_OBJECT;
@@ -321,7 +313,7 @@ static gint
 swfedit_token_iter_n_children (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
-  Entry *entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (iter->user_data2));
+  SwfeditTokenEntry *entry = &g_array_index (token->tokens, SwfeditTokenEntry, GPOINTER_TO_INT (iter->user_data2));
 
   REPORT;
   if (entry->type != SWFEDIT_TOKEN_OBJECT)
@@ -336,12 +328,12 @@ swfedit_token_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
     GtkTreeIter *parent, gint n)
 {
   SwfeditToken *token;
-  Entry *entry;
+  SwfeditTokenEntry *entry;
 
   REPORT;
   if (parent) {
     token = SWFEDIT_TOKEN (parent->user_data);
-    entry = &g_array_index (token->tokens, Entry, GPOINTER_TO_INT (parent->user_data2));
+    entry = &g_array_index (token->tokens, SwfeditTokenEntry, GPOINTER_TO_INT (parent->user_data2));
 
     if (entry->type != SWFEDIT_TOKEN_OBJECT)
       return FALSE;
@@ -370,7 +362,7 @@ swfedit_token_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeI
     return FALSE;
 
   for (i = 0; i < parent->tokens->len; i++) {
-    Entry *entry = &g_array_index (parent->tokens, Entry, i);
+    SwfeditTokenEntry *entry = &g_array_index (parent->tokens, SwfeditTokenEntry, i);
     if (entry->type != SWFEDIT_TOKEN_OBJECT)
       continue;
     if (entry->value == token)
@@ -411,7 +403,7 @@ swfedit_token_dispose (GObject *object)
   guint i;
 
   for (i = 0; i < token->tokens->len; i++) {
-    Entry *entry = &g_array_index (token->tokens, Entry, i);
+    SwfeditTokenEntry *entry = &g_array_index (token->tokens, SwfeditTokenEntry, i);
     g_free (entry->name);
     if (converters[entry->type].free)
       converters[entry->type].free (entry->value);
@@ -432,7 +424,7 @@ swfedit_token_class_init (SwfeditTokenClass *class)
 static void
 swfedit_token_init (SwfeditToken *token)
 {
-  token->tokens = g_array_new (FALSE, FALSE, sizeof (Entry));
+  token->tokens = g_array_new (FALSE, FALSE, sizeof (SwfeditTokenEntry));
 }
 
 SwfeditToken *
@@ -447,7 +439,7 @@ swfedit_token_new (void)
 void
 swfedit_token_add (SwfeditToken *token, const char *name, SwfeditTokenType type, gpointer value)
 {
-  Entry entry = { NULL, type, value };
+  SwfeditTokenEntry entry = { NULL, type, value };
 
   g_return_if_fail (SWFEDIT_IS_TOKEN (token));
   g_return_if_fail (name != NULL);
@@ -461,7 +453,7 @@ void
 swfedit_token_set (SwfeditToken *token, GtkTreeIter *iter, const char *value)
 {
   GtkTreeModel *model;
-  Entry *entry;
+  SwfeditTokenEntry *entry;
   guint i;
   gpointer new;
   GtkTreePath *path;
@@ -473,7 +465,7 @@ swfedit_token_set (SwfeditToken *token, GtkTreeIter *iter, const char *value)
   model = GTK_TREE_MODEL (token);
   token = iter->user_data;
   i = GPOINTER_TO_UINT (iter->user_data2);
-  entry = &g_array_index (token->tokens, Entry, i);
+  entry = &g_array_index (token->tokens, SwfeditTokenEntry, i);
   if (converters[entry->type].from_string == NULL)
     return;
   if (!converters[entry->type].from_string (value, &new))

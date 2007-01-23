@@ -24,6 +24,19 @@
 #include <gtk/gtk.h>
 #include "swfedit_file.h"
 
+static void
+cell_renderer_edited (GtkCellRenderer *renderer, char *path,
+    char *new_text, SwfeditFile *file)
+{
+  GtkTreeIter iter;
+
+  if (!gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (file),
+	&iter, path)) {
+    g_assert_not_reached ();
+  }
+  swfedit_token_set (SWFEDIT_TOKEN (file), &iter, new_text);
+}
+
 static gboolean
 open_window (char *filename)
 {
@@ -57,6 +70,7 @@ open_window (char *filename)
 
   renderer = gtk_cell_renderer_text_new ();
   g_object_set (G_OBJECT (renderer), "editable", TRUE, NULL);
+  g_signal_connect (renderer, "edited", G_CALLBACK (cell_renderer_edited), file);
   column = gtk_tree_view_column_new_with_attributes ("Value", renderer,
     "text", SWFEDIT_COLUMN_VALUE, "visible", SWFEDIT_COLUMN_VALUE_VISIBLE, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);

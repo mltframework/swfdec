@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * License along with this library; if not, to_string to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
  * Boston, MA  02110-1301  USA
  */
@@ -29,7 +29,7 @@
 /*** CONVERTERS ***/
 
 static gboolean
-swfedit_binary_read (const char *s, gpointer* result)
+swfedit_binary_from_string (const char *s, gpointer* result)
 {
   GByteArray *array = g_byte_array_new ();
   guint8 byte;
@@ -71,7 +71,7 @@ swfedit_binary_read (const char *s, gpointer* result)
 }
 
 static char *
-swfedit_binary_write (gconstpointer value)
+swfedit_binary_to_string (gconstpointer value)
 {
   guint i;
   const SwfdecBuffer *buffer = value;
@@ -86,7 +86,7 @@ swfedit_binary_write (gconstpointer value)
 }
 
 static gboolean
-swfedit_read_unsigned (const char *s, gulong max, gpointer* result)
+swfedit_from_string_unsigned (const char *s, gulong max, gpointer* result)
 {
   char *end;
   gulong u;
@@ -102,39 +102,39 @@ swfedit_read_unsigned (const char *s, gulong max, gpointer* result)
 }
 
 static gboolean
-swfedit_uint8_read (const char *s, gpointer* result)
+swfedit_uint8_from_string (const char *s, gpointer* result)
 {
-  return swfedit_read_unsigned (s, G_MAXUINT8, result);
+  return swfedit_from_string_unsigned (s, G_MAXUINT8, result);
 }
 
 static gboolean
-swfedit_uint16_read (const char *s, gpointer* result)
+swfedit_uint16_from_string (const char *s, gpointer* result)
 {
-  return swfedit_read_unsigned (s, G_MAXUINT16, result);
+  return swfedit_from_string_unsigned (s, G_MAXUINT16, result);
 }
 
 static gboolean
-swfedit_uint32_read (const char *s, gpointer* result)
+swfedit_uint32_from_string (const char *s, gpointer* result)
 {
-  return swfedit_read_unsigned (s, G_MAXUINT32, result);
+  return swfedit_from_string_unsigned (s, G_MAXUINT32, result);
 }
 
 static char *
-swfedit_write_unsigned (gconstpointer value)
+swfedit_to_string_unsigned (gconstpointer value)
 {
   return g_strdup_printf ("%u", GPOINTER_TO_UINT (value));
 }
 
 struct {
-  gboolean	(* read)	(const char *s, gpointer *);
-  char *	(* write)	(gconstpointer value);
+  gboolean	(* from_string)	(const char *s, gpointer *);
+  char *	(* to_string)	(gconstpointer value);
   void	  	(* free)	(gpointer value);
 } converters[SWFEDIT_N_TOKENS] = {
   { NULL, NULL, g_object_unref },
-  { swfedit_binary_read, swfedit_binary_write, (GDestroyNotify) swfdec_buffer_unref },
-  { swfedit_uint8_read, swfedit_write_unsigned, NULL },
-  { swfedit_uint16_read, swfedit_write_unsigned, NULL },
-  { swfedit_uint32_read, swfedit_write_unsigned, NULL },
+  { swfedit_binary_from_string, swfedit_binary_to_string, (GDestroyNotify) swfdec_buffer_unref },
+  { swfedit_uint8_from_string, swfedit_to_string_unsigned, NULL },
+  { swfedit_uint16_from_string, swfedit_to_string_unsigned, NULL },
+  { swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
 };
 
 /*** STRUCTS ***/
@@ -259,12 +259,12 @@ swfedit_token_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
       return;
     case SWFEDIT_COLUMN_VALUE_VISIBLE:
       g_value_init (value, G_TYPE_BOOLEAN);
-      g_value_set_boolean (value, converters[entry->type].write != NULL);
+      g_value_set_boolean (value, converters[entry->type].to_string != NULL);
       return;
     case SWFEDIT_COLUMN_VALUE:
       g_value_init (value, G_TYPE_STRING);
-      if (converters[entry->type].write)
-	g_value_take_string (value, converters[entry->type].write (entry->value));
+      if (converters[entry->type].to_string)
+	g_value_take_string (value, converters[entry->type].to_string (entry->value));
       return;
     default:
       break;
@@ -474,9 +474,9 @@ swfedit_token_set (SwfeditToken *token, GtkTreeIter *iter, const char *value)
   token = iter->user_data;
   i = GPOINTER_TO_UINT (iter->user_data2);
   entry = &g_array_index (token->tokens, Entry, i);
-  if (converters[entry->type].read == NULL)
+  if (converters[entry->type].from_string == NULL)
     return;
-  if (!converters[entry->type].read (value, &new))
+  if (!converters[entry->type].from_string (value, &new))
     return;
   if (converters[entry->type].free != NULL)
     converters[entry->type].free (entry->value);

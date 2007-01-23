@@ -37,8 +37,6 @@ swfedit_file_dispose (GObject *object)
 {
   SwfeditFile *file = SWFEDIT_FILE (object);
 
-  g_list_foreach (file->tags, (GFunc) g_object_unref, NULL);
-  g_list_free (file->tags);
   g_free (file->filename);
 
   G_OBJECT_CLASS (swfedit_file_parent_class)->dispose (object);
@@ -210,3 +208,30 @@ swfedit_file_new (const char *filename, GError **error)
   swfdec_buffer_unref (buffer);
   return file;
 }
+
+static SwfdecBuffer *
+swfedit_file_write (SwfeditFile *file)
+{
+  return NULL;
+}
+
+gboolean
+swfedit_file_save (SwfeditFile *file, GError **error)
+{
+  SwfdecBuffer *buffer;
+  gboolean ret;
+
+  g_return_val_if_fail (SWFEDIT_IS_FILE (file), FALSE);
+
+  buffer = swfedit_file_write (file);
+  if (buffer == NULL) {
+    g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
+	"Failed to render file");
+    return FALSE;
+  }
+  ret = g_file_set_contents (file->filename, (char *) buffer->data,
+      buffer->length, error);
+  swfdec_buffer_unref (buffer);
+  return ret;
+}
+

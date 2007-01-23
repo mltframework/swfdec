@@ -39,9 +39,6 @@ struct _SwfeditFile {
   SwfeditToken		token;
 
   char *		filename;	/* name this file is saved to */
-
-  /* defined objects */
-  GList *		tags;		/* ordered list of all tags in the file */
 };
 
 struct _SwfeditFileClass {
@@ -51,6 +48,9 @@ struct _SwfeditFileClass {
 GType		swfedit_file_get_type		(void);
 
 SwfeditFile *	swfedit_file_new		(const char *	filename,
+						 GError **	error);
+
+gboolean	swfedit_file_save		(SwfeditFile *	file,
 						 GError **	error);
 
 

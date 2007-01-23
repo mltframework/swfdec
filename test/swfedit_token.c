@@ -347,9 +347,11 @@ swfedit_token_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
       return FALSE;
 
     token = entry->value;
-    if ((guint) n >= token->tokens->len)
-      return FALSE;
+  } else {
+    token = SWFEDIT_TOKEN (tree_model);
   }
+  if ((guint) n >= token->tokens->len)
+    return FALSE;
   iter->stamp = 0; /* FIXME */
   iter->user_data = token;
   iter->user_data2 = GINT_TO_POINTER (n);

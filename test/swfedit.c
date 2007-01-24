@@ -27,12 +27,26 @@
 static void
 save (GtkButton *button, SwfeditFile *file)
 {
+  GtkWidget *dialog;
   GError *error = NULL;
 
-  if (!swfedit_file_save (file, &error)) {
-    g_printerr ("Error saving fils: %s\n", error->message);
-    g_error_free (error);
+  dialog = gtk_file_chooser_dialog_new ("Save file...",
+      GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (button))),
+      GTK_FILE_CHOOSER_ACTION_SAVE,
+      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+      GTK_STOCK_SAVE, GTK_RESPONSE_OK, 
+      NULL);
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), file->filename);
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK) {
+    g_free (file->filename);
+    file->filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+    if (!swfedit_file_save (file, &error)) {
+      g_printerr ("Error saving file: %s\n", error->message);
+      g_error_free (error);
+    }
   }
+  gtk_widget_destroy (dialog);
 }
 
 static void

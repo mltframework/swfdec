@@ -19,12 +19,14 @@ swfedit_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GTK_CFLAGS) -DXP_UNIX -I$(top_
 swfedit_LDFLAGS = $(SWF_LIBS) $(GTK_LIBS)
 
 swfedit_SOURCES = \
+	swfdec_out.c \
 	swfedit.c \
 	swfedit_file.c \
 	swfedit_tag.c \
 	swfedit_token.c
 
 noinst_HEADERS = \
+	swfdec_out.h \
 	swfedit_file.h \
 	swfedit_tag.h \
 	swfedit_token.h

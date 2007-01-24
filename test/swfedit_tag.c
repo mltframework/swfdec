@@ -23,7 +23,134 @@
 
 #include <stdlib.h>
 #include <gtk/gtk.h>
+
+#include <libswfdec/swfdec_bits.h>
 #include "swfedit_tag.h"
+#include "swfdec_out.h"
+
+/*** LOAD/SAVE ***/
+
+static void
+swfedit_binary_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_buffer (out, data);
+}
+
+static gpointer
+swfedit_binary_read (SwfdecBits *bits)
+{
+  SwfdecBuffer *buffer = swfdec_bits_get_buffer (bits, -1);
+  if (buffer == NULL)
+    buffer = swfdec_buffer_new ();
+  return buffer;
+}
+
+static void
+swfedit_u8_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_u8 (out, GPOINTER_TO_UINT (data));
+}
+
+static gpointer
+swfedit_u8_read (SwfdecBits *bits)
+{
+  return GUINT_TO_POINTER (swfdec_bits_get_u8 (bits));
+}
+
+static void
+swfedit_u16_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_u16 (out, GPOINTER_TO_UINT (data));
+}
+
+static gpointer
+swfedit_u16_read (SwfdecBits *bits)
+{
+  return GUINT_TO_POINTER (swfdec_bits_get_u16 (bits));
+}
+
+static void
+swfedit_u32_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_u32 (out, GPOINTER_TO_UINT (data));
+}
+
+static gpointer
+swfedit_u32_read (SwfdecBits *bits)
+{
+  return GUINT_TO_POINTER (swfdec_bits_get_u32 (bits));
+}
+
+static void
+swfedit_rect_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_rect (out, data);
+}
+
+static gpointer
+swfedit_rect_read (SwfdecBits *bits)
+{
+  SwfdecRect *rect = g_new (SwfdecRect, 1);
+  swfdec_bits_get_rect (bits, rect);
+  return rect;
+}
+
+struct {
+  void		(* write)	(gpointer data, SwfdecOut *out);
+  gpointer	(* read)	(SwfdecBits *bits);
+} operations[SWFEDIT_N_TOKENS] = {
+  { NULL, NULL },
+  { swfedit_binary_write, swfedit_binary_read },
+  { swfedit_u8_write, swfedit_u8_read },
+  { swfedit_u16_write, swfedit_u16_read },
+  { swfedit_u32_write, swfedit_u32_read },
+  { swfedit_rect_write, swfedit_rect_read },
+};
+
+void
+swfedit_tag_write_token (SwfeditToken *token, SwfdecOut *out, guint i)
+{
+  SwfeditTokenEntry *entry;
+  
+  g_return_if_fail (SWFEDIT_IS_TOKEN (token));
+  g_return_if_fail (i < token->tokens->len);
+
+  entry = &g_array_index (token->tokens, 
+      SwfeditTokenEntry, i);
+  g_assert (operations[entry->type].write != NULL);
+  operations[entry->type].write (entry->value, out);
+}
+
+SwfdecBuffer *
+swfedit_tag_write (SwfeditTag *tag)
+{
+  guint i;
+  SwfdecOut *out;
+
+  g_return_val_if_fail (SWFEDIT_IS_TAG (tag), NULL);
+
+  out = swfdec_out_open ();
+  for (i = 0; i < SWFEDIT_TOKEN (tag)->tokens->len; i++) {
+    swfedit_tag_write_token (SWFEDIT_TOKEN (tag), out, i);
+  }
+  return swfdec_out_close (out);
+}
+
+void
+swfedit_tag_read_token (SwfeditToken *token, SwfdecBits *bits,
+    const char *name, SwfeditTokenType type)
+{
+  gpointer data;
+
+  g_return_if_fail (SWFEDIT_IS_TOKEN (token));
+  g_return_if_fail (name != NULL);
+  
+  g_assert (operations[type].read != NULL);
+  data = operations[type].read (bits);
+  swfedit_token_add (token, name, type, data);
+}
+
+/*** SWFEDIT_TAG ***/
 
 G_DEFINE_TYPE (SwfeditTag, swfedit_tag, SWFEDIT_TYPE_TOKEN)
 

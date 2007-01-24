@@ -125,6 +125,21 @@ swfedit_to_string_unsigned (gconstpointer value)
   return g_strdup_printf ("%u", GPOINTER_TO_UINT (value));
 }
 
+static gboolean
+swfedit_rect_from_string (const char *s, gpointer* result)
+{
+  return FALSE;
+}
+
+static char *
+swfedit_rect_to_string (gconstpointer value)
+{
+  const SwfdecRect *rect = value;
+
+  return g_strdup_printf ("%d, %d, %d, %d", (int) rect->x0, (int) rect->y0,
+      (int) rect->x1, (int) rect->y1);
+}
+
 struct {
   gboolean	(* from_string)	(const char *s, gpointer *);
   char *	(* to_string)	(gconstpointer value);
@@ -135,6 +150,7 @@ struct {
   { swfedit_uint8_from_string, swfedit_to_string_unsigned, NULL },
   { swfedit_uint16_from_string, swfedit_to_string_unsigned, NULL },
   { swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
+  { swfedit_rect_from_string, swfedit_rect_to_string, g_free },
 };
 
 /*** GTK_TREE_MODEL ***/

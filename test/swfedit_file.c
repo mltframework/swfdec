@@ -27,6 +27,7 @@
 #include "libswfdec/swfdec_buffer.h"
 #include "libswfdec/swfdec_debug.h"
 #include "libswfdec/swfdec_swf_decoder.h"
+#include "swfdec_out.h"
 #include "swfedit_file.h"
 #include "swfedit_tag.h"
 
@@ -103,7 +104,7 @@ swf_parse_header1 (SwfeditFile *file, SwfdecBits *bits, GError **error)
 
   swfedit_token_add (SWFEDIT_TOKEN (file), "version", SWFEDIT_TOKEN_UINT8, 
       GUINT_TO_POINTER (swfdec_bits_get_u8 (bits)));
-  bytes_total = swfdec_bits_get_u32 (bits);
+  bytes_total = swfdec_bits_get_u32 (bits) - 8;
 
   if (sig1 == 'C') {
     /* compressed */
@@ -113,7 +114,7 @@ swf_parse_header1 (SwfeditFile *file, SwfdecBits *bits, GError **error)
 	  "Unable to uncompress file");
     return ret;
   } else {
-    SwfdecBuffer *ret = swfdec_bits_get_buffer (bits, -1);
+    SwfdecBuffer *ret = swfdec_bits_get_buffer (bits, bytes_total);
     if (ret == NULL)
       g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
 	  "File too small");
@@ -124,14 +125,9 @@ swf_parse_header1 (SwfeditFile *file, SwfdecBits *bits, GError **error)
 static void
 swf_parse_header2 (SwfeditFile *file, SwfdecBits *bits)
 {
-  SwfdecRect rect;
-
-  swfdec_bits_get_rect (bits, &rect);
-  swfdec_bits_syncbits (bits);
-  swfedit_token_add (SWFEDIT_TOKEN (file), "rate", SWFEDIT_TOKEN_UINT16, 
-      GUINT_TO_POINTER (swfdec_bits_get_u16 (bits)));
-  swfedit_token_add (SWFEDIT_TOKEN (file), "frames", SWFEDIT_TOKEN_UINT16, 
-      GUINT_TO_POINTER (swfdec_bits_get_u16 (bits)));
+  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "rect", SWFEDIT_TOKEN_RECT);
+  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "rate", SWFEDIT_TOKEN_UINT16);
+  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "frames", SWFEDIT_TOKEN_UINT16);
 }
 
 static gboolean
@@ -193,13 +189,21 @@ swfedit_file_new (const char *filename, GError **error)
   SwfeditFile *file;
   SwfdecBuffer *buffer;
   SwfdecBits bits;
+  char *absolute;
 
+  if (g_path_is_absolute (filename)) {
+    absolute = g_strdup (filename);
+  } else {
+    char *dir = g_get_current_dir ();
+    absolute = g_build_filename (dir, filename, NULL);
+    g_free (dir);
+  }
   buffer = swfdec_buffer_new_from_file (filename, error);
   if (buffer == NULL)
     return NULL;
   swfdec_bits_init (&bits, buffer);
   file = g_object_new (SWFEDIT_TYPE_FILE, NULL);
-  file->filename = g_strdup (filename);
+  file->filename = absolute;
   if (!swfedit_file_parse (file, &bits, error)) {
     swfdec_buffer_unref (buffer);
     g_object_unref (file);
@@ -212,7 +216,53 @@ swfedit_file_new (const char *filename, GError **error)
 static SwfdecBuffer *
 swfedit_file_write (SwfeditFile *file)
 {
-  return NULL;
+  guint i;
+  SwfeditToken *token = SWFEDIT_TOKEN (file);
+  SwfdecBufferQueue *queue;
+  SwfdecBuffer *buffer;
+  SwfdecOut *out;
+
+  queue = swfdec_buffer_queue_new ();
+  /* write second part of header */
+  out = swfdec_out_open ();
+  swfedit_tag_write_token (token, out, 1);
+  swfedit_tag_write_token (token, out, 2);
+  swfedit_tag_write_token (token, out, 3);
+  swfdec_buffer_queue_push (queue, swfdec_out_close (out));
+
+  for (i = 4; i < token->tokens->len; i++) {
+    SwfeditTokenEntry *entry = &g_array_index (token->tokens, SwfeditTokenEntry, i);
+    g_assert (entry->type == SWFEDIT_TOKEN_OBJECT);
+
+    buffer = swfedit_tag_write (entry->value);
+    out = swfdec_out_open ();
+    swfdec_out_put_u16 (out, SWFEDIT_TAG (entry->value)->tag << 6 | 
+	MIN (buffer->length, 0x3f));
+    if (buffer->length >= 0x3f) {
+      swfdec_out_put_u32 (out, buffer->length);
+    }
+    swfdec_buffer_queue_push (queue, swfdec_out_close (out));
+    swfdec_buffer_queue_push (queue, buffer);
+  }
+  /* write closing tag */
+  buffer = swfdec_buffer_new_and_alloc0 (2);
+  swfdec_buffer_queue_push (queue, buffer);
+
+  /* FIXME: implement compression */
+  out = swfdec_out_open ();
+  swfdec_out_put_u8 (out, 'F');
+  swfdec_out_put_u8 (out, 'W');
+  swfdec_out_put_u8 (out, 'S');
+  swfedit_tag_write_token (token, out, 0);
+  g_print ("length: %u", swfdec_buffer_queue_get_depth (queue));
+  swfdec_out_put_u32 (out, swfdec_buffer_queue_get_depth (queue) + 8);
+  swfdec_out_prepare_bytes (out, swfdec_buffer_queue_get_depth (queue));
+  while ((buffer = swfdec_buffer_queue_pull_buffer (queue))) {
+    swfdec_out_put_buffer (out, buffer);
+    swfdec_buffer_unref (buffer);
+  }
+  swfdec_buffer_queue_free (queue);
+  return swfdec_out_close (out);
 }
 
 gboolean

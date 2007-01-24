@@ -21,6 +21,7 @@
 #define __SWFEDIT_TAG_H__
 
 #include <libswfdec/swfdec_buffer.h>
+#include "swfdec_out.h"
 #include "swfedit_token.h"
 
 G_BEGIN_DECLS
@@ -47,10 +48,18 @@ struct _SwfeditTagClass {
 
 GType		swfedit_tag_get_type	(void);
 
-SwfeditTag *	swfedit_tag_new		(SwfeditToken *	parent,
-					 guint		tag,
-					 SwfdecBuffer *	buffer);
+SwfeditTag *	swfedit_tag_new		(SwfeditToken *		parent,
+					 guint			tag,
+					 SwfdecBuffer *		buffer);
 
+SwfdecBuffer *	swfedit_tag_write	(SwfeditTag *		tag);
+void		swfedit_tag_write_token	(SwfeditToken *		token,
+					 SwfdecOut *		out,
+					 guint			i);
+void		swfedit_tag_read_token	(SwfeditToken *		token, 
+					 SwfdecBits *		bits,
+					 const char *		name,
+					 SwfeditTokenType	type);
 
 G_END_DECLS
 

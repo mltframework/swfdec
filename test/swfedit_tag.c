@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 
 #include <libswfdec/swfdec_bits.h>
+#include <libswfdec/swfdec_tag.h>
 #include "swfedit_tag.h"
 #include "swfdec_out.h"
 
@@ -150,6 +151,29 @@ swfedit_tag_read_token (SwfeditToken *token, SwfdecBits *bits,
   swfedit_token_add (token, name, type, data);
 }
 
+/*** TAGS ***/
+
+typedef struct {
+  const char *	  	name;			/* name to use for this field */
+  SwfeditTokenType     	type;			/* type of this field */
+  guint			n_items;		/* field to look at for item count */
+  guint			hint;			/* hint to pass to field when creating */
+} SwfeditTagDefinition;
+
+static const SwfeditTagDefinition ShowFrame[] = { { NULL, 0, 0, 0 } };
+
+static const SwfeditTagDefinition *tags[] = {
+  [SWFDEC_TAG_SHOWFRAME] = ShowFrame,
+};
+
+static const SwfeditTagDefinition *
+swfedit_tag_get_definition (guint tag)
+{
+  if (tag >= G_N_ELEMENTS (tags))
+    return NULL;
+  return tags[tag];
+}
+
 /*** SWFEDIT_TAG ***/
 
 G_DEFINE_TYPE (SwfeditTag, swfedit_tag, SWFEDIT_TYPE_TOKEN)
@@ -179,13 +203,23 @@ SwfeditTag *
 swfedit_tag_new (SwfeditToken *parent, guint tag, SwfdecBuffer *buffer)
 {
   SwfeditTag *item;
+  const SwfeditTagDefinition *def;
 
   g_return_val_if_fail (SWFEDIT_IS_TOKEN (parent), NULL);
 
   item = g_object_new (SWFEDIT_TYPE_TAG, NULL);
   item->tag = tag;
   SWFEDIT_TOKEN (item)->parent = parent;
-  swfedit_token_add (SWFEDIT_TOKEN (item), "contents", SWFEDIT_TOKEN_BINARY, buffer);
+  def = swfedit_tag_get_definition (tag);
+  if (def) {
+    SwfdecBits bits;
+    swfdec_bits_init (&bits, buffer);
+    for (;def->name != NULL; def++) {
+      swfedit_tag_read_token (SWFEDIT_TOKEN (item), &bits, def->name, def->type);
+    }
+  } else {
+    swfedit_token_add (SWFEDIT_TOKEN (item), "contents", SWFEDIT_TOKEN_BINARY, buffer);
+  }
   return item;
 }
 

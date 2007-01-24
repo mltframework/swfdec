@@ -168,7 +168,6 @@ swfdec_out_put_bits (SwfdecOut *out, guint bits, guint n_bits)
       *out->ptr = 0;
     value &= (1 << bits_now) - 1;
     value <<= 8 - out->idx - bits_now;
-    g_print ("putting %02X in the next %u bits\n", value, bits_now);
     *out->ptr |= value;
     out->idx += bits_now;
     g_assert (out->idx <= 8);

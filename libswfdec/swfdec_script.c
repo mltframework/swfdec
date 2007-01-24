@@ -773,7 +773,60 @@ swfdec_action_increment (JSContext *cx, guint action, const guint8 *data, guint 
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
 
+static JSBool
+swfdec_action_get_url (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie;
+  SwfdecBits bits;
+  const char *url, *target;
+
+  swfdec_bits_init_data (&bits, data, len);
+  url = swfdec_bits_skip_string (&bits);
+  target = swfdec_bits_skip_string (&bits);
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("leftover bytes in GetURL action");
+  }
+  movie = swfdec_action_get_target (cx);
+  if (movie)
+    swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
+  else
+    SWFDEC_WARNING ("no movie to load");
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_string_add (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSString *lval, *rval;
+
+  rval = JS_ValueToString (cx, cx->fp->sp[-1]);
+  lval = JS_ValueToString (cx, cx->fp->sp[-2]);
+  if (lval == NULL || rval == NULL)
+    return FALSE;
+  lval = JS_ConcatStrings (cx, lval, rval);
+  if (lval == NULL)
+    return FALSE;
+  cx->fp->sp--;
+  cx->fp->sp[-1] = STRING_TO_JSVAL (lval);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
+
+static char *
+swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
+{
+  SwfdecBits bits;
+  const char *url, *target;
+
+  swfdec_bits_init_data (&bits, data, len);
+  url = swfdec_bits_skip_string (&bits);
+  target = swfdec_bits_skip_string (&bits);
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("leftover bytes in GetURL action");
+  }
+  return g_strdup_printf ("GetURL %s %s", url, target);
+}
 
 static char *
 swfdec_action_print_if (guint action, const guint8 *data, guint len)
@@ -942,7 +995,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [0x1d] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
   [0x20] = { "SetTarget2", NULL },
-  [0x21] = { "StringAdd", NULL },
+  [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [0x23] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
   [0x24] = { "CloneSprite", NULL },
@@ -1010,7 +1063,7 @@ static const SwfdecActionSpec actions[256] = {
 
   /* version 3 */
   [0x81] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
-  [0x83] = { "GetURL", NULL },
+  [0x83] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
   /* version 5 */
   [0x87] = { "StoreRegister", NULL },
   [0x88] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },

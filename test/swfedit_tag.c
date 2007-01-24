@@ -96,6 +96,30 @@ swfedit_rect_read (SwfdecBits *bits)
   return rect;
 }
 
+static void
+swfedit_rgb_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_rgb (out, GPOINTER_TO_UINT (data));
+}
+
+static gpointer
+swfedit_rgb_read (SwfdecBits *bits)
+{
+  return GUINT_TO_POINTER (swfdec_bits_get_color (bits));
+}
+
+static void
+swfedit_rgba_write (gpointer data, SwfdecOut *out)
+{
+  swfdec_out_put_rgba (out, GPOINTER_TO_UINT (data));
+}
+
+static gpointer
+swfedit_rgba_read (SwfdecBits *bits)
+{
+  return GUINT_TO_POINTER (swfdec_bits_get_rgba (bits));
+}
+
 struct {
   void		(* write)	(gpointer data, SwfdecOut *out);
   gpointer	(* read)	(SwfdecBits *bits);
@@ -106,6 +130,8 @@ struct {
   { swfedit_u16_write, swfedit_u16_read },
   { swfedit_u32_write, swfedit_u32_read },
   { swfedit_rect_write, swfedit_rect_read },
+  { swfedit_rgb_write, swfedit_rgb_read },
+  { swfedit_rgba_write, swfedit_rgba_read },
 };
 
 void
@@ -156,14 +182,16 @@ swfedit_tag_read_token (SwfeditToken *token, SwfdecBits *bits,
 typedef struct {
   const char *	  	name;			/* name to use for this field */
   SwfeditTokenType     	type;			/* type of this field */
-  guint			n_items;		/* field to look at for item count */
+  guint			n_items;		/* field to look at for item count (or 0 to use 1 item) */
   guint			hint;			/* hint to pass to field when creating */
 } SwfeditTagDefinition;
 
 static const SwfeditTagDefinition ShowFrame[] = { { NULL, 0, 0, 0 } };
+static const SwfeditTagDefinition SetBackgroundColor[] = { { "color", SWFEDIT_TOKEN_RGB, 0, 0 }, { NULL, 0, 0, 0 } };
 
 static const SwfeditTagDefinition *tags[] = {
   [SWFDEC_TAG_SHOWFRAME] = ShowFrame,
+  [SWFDEC_TAG_SETBACKGROUNDCOLOR] = SetBackgroundColor,
 };
 
 static const SwfeditTagDefinition *

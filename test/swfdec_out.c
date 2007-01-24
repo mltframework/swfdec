@@ -213,6 +213,7 @@ swfdec_out_put_rect (SwfdecOut *out, SwfdecRect *rect)
   guint req, tmp;
 
   g_return_if_fail (out != NULL);
+  g_return_if_fail (rect != NULL);
 
   x0 = rect->x0;
   y0 = rect->y0;
@@ -233,3 +234,25 @@ swfdec_out_put_rect (SwfdecOut *out, SwfdecRect *rect)
   swfdec_out_put_sbits (out, y1, req);
   swfdec_out_syncbits (out);
 }
+
+void
+swfdec_out_put_rgb (SwfdecOut *out, SwfdecColor color)
+{
+  g_return_if_fail (out != NULL);
+
+  swfdec_out_put_u8 (out, SWF_COLOR_R (color));
+  swfdec_out_put_u8 (out, SWF_COLOR_G (color));
+  swfdec_out_put_u8 (out, SWF_COLOR_B (color));
+}
+
+void
+swfdec_out_put_rgba (SwfdecOut *out, SwfdecColor color)
+{
+  g_return_if_fail (out != NULL);
+
+  swfdec_out_put_u8 (out, SWF_COLOR_R (color));
+  swfdec_out_put_u8 (out, SWF_COLOR_G (color));
+  swfdec_out_put_u8 (out, SWF_COLOR_B (color));
+  swfdec_out_put_u8 (out, SWF_COLOR_A (color));
+}
+

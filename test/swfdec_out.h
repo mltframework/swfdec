@@ -21,6 +21,7 @@
 #define __SWFDEC_OUT_H__
 
 #include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_rect.h>
 
 G_BEGIN_DECLS
@@ -64,6 +65,10 @@ void		swfdec_out_put_u16		(SwfdecOut *	out,
 void		swfdec_out_put_u32		(SwfdecOut *	out,
 						 guint		i);
 
+void		swfdec_out_put_rgb		(SwfdecOut *	out,
+						 SwfdecColor	color);
+void		swfdec_out_put_rgba		(SwfdecOut *	out,
+						 SwfdecColor	color);
 void		swfdec_out_put_rect		(SwfdecOut *	out,
 						 SwfdecRect *	rect);
 

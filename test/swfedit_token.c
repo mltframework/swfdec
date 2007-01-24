@@ -22,42 +22,57 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_color.h>
 #include "swfedit_token.h"
 
 /*** CONVERTERS ***/
 
 static gboolean
+swfedit_parse_hex (const char *s, guint *result)
+{
+  guint byte;
+
+  if (s[0] >= '0' && s[0] <= '9')
+    byte = s[0] - '0';
+  else if (s[0] >= 'a' && s[0] <= 'f')
+    byte = s[0] + 10 - 'a';
+  else if (s[0] >= 'A' && s[0] <= 'F')
+    byte = s[0] + 10 - 'A';
+  else
+    return FALSE;
+  s++;
+  byte *= 16;
+  if (s[0] >= '0' && s[0] <= '9')
+    byte += s[0] - '0';
+  else if (s[0] >= 'a' && s[0] <= 'f')
+    byte += s[0] + 10 - 'a';
+  else if (s[0] >= 'A' && s[0] <= 'F')
+    byte += s[0] + 10 - 'A';
+  else
+    return FALSE;
+  *result = byte;
+  return TRUE;
+}
+
+static gboolean
 swfedit_binary_from_string (const char *s, gpointer* result)
 {
   GByteArray *array = g_byte_array_new ();
-  guint8 byte;
+  guint byte;
+  guint8 add;
 
   while (g_ascii_isspace (*s)) s++;
   do {
-    if (s[0] >= '0' && s[0] <= '9')
-      byte = s[0] - '0';
-    else if (s[0] >= 'a' && s[0] <= 'f')
-      byte = s[0] + 10 - 'a';
-    else if (s[0] >= 'A' && s[0] <= 'F')
-      byte = s[0] + 10 - 'A';
-    else
+    if (!swfedit_parse_hex (s, &byte))
       break;
-    s++;
-    byte *= 16;
-    if (s[0] >= '0' && s[0] <= '9')
-      byte += s[0] - '0';
-    else if (s[0] >= 'a' && s[0] <= 'f')
-      byte += s[0] + 10 - 'a';
-    else if (s[0] >= 'A' && s[0] <= 'F')
-      byte += s[0] + 10 - 'A';
-    else
-      break;
-    s++;
-    g_byte_array_append (array, &byte, 1);
+    s += 2;
+    add = byte;
+    g_byte_array_append (array, &add, 1);
     while (g_ascii_isspace (*s)) s++;
-  } while (TRUE);
+  } while (*s != '\0');
   if (*s == '\0') {
     SwfdecBuffer *buffer = swfdec_buffer_new ();
     buffer->length = array->len;
@@ -97,7 +112,6 @@ swfedit_from_string_unsigned (const char *s, gulong max, gpointer* result)
     return FALSE;
   if (u > max)
     return FALSE;
-  *result = GUINT_TO_POINTER ((guint) u);
   return TRUE;
 }
 
@@ -140,6 +154,63 @@ swfedit_rect_to_string (gconstpointer value)
       (int) rect->x1, (int) rect->y1);
 }
 
+static gboolean
+swfedit_rgb_from_string (const char *s, gpointer* result)
+{
+  guint r, g, b;
+  if (strlen (s) != 6)
+    return FALSE;
+  if (!swfedit_parse_hex (s, &r))
+    return FALSE;
+  s += 2;
+  if (!swfedit_parse_hex (s, &g))
+    return FALSE;
+  s += 2;
+  if (!swfedit_parse_hex (s, &b))
+    return FALSE;
+  *result = GUINT_TO_POINTER (SWF_COLOR_COMBINE (r, g, b, 0xFF));
+  return TRUE;
+}
+
+static char *
+swfedit_rgb_to_string (gconstpointer value)
+{
+  guint c = GPOINTER_TO_UINT (value);
+
+  return g_strdup_printf ("%02X%02X%02X", SWF_COLOR_R (c),
+      SWF_COLOR_G (c), SWF_COLOR_B (c));
+}
+
+static gboolean
+swfedit_rgba_from_string (const char *s, gpointer* result)
+{
+  guint r, g, b, a;
+  if (strlen (s) != 8)
+    return FALSE;
+  if (!swfedit_parse_hex (s, &a))
+    return FALSE;
+  s += 2;
+  if (!swfedit_parse_hex (s, &r))
+    return FALSE;
+  s += 2;
+  if (!swfedit_parse_hex (s, &g))
+    return FALSE;
+  s += 2;
+  if (!swfedit_parse_hex (s, &b))
+    return FALSE;
+  *result = GUINT_TO_POINTER (SWF_COLOR_COMBINE (r, g, b, a));
+  return TRUE;
+}
+
+static char *
+swfedit_rgba_to_string (gconstpointer value)
+{
+  guint c = GPOINTER_TO_UINT (value);
+
+  return g_strdup_printf ("%02X%02X%02X%02X", SWF_COLOR_R (c),
+      SWF_COLOR_G (c), SWF_COLOR_B (c), SWF_COLOR_A (c));
+}
+
 struct {
   gboolean	(* from_string)	(const char *s, gpointer *);
   char *	(* to_string)	(gconstpointer value);
@@ -151,6 +222,8 @@ struct {
   { swfedit_uint16_from_string, swfedit_to_string_unsigned, NULL },
   { swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
   { swfedit_rect_from_string, swfedit_rect_to_string, g_free },
+  { swfedit_rgb_from_string, swfedit_rgb_to_string, NULL },
+  { swfedit_rgba_from_string, swfedit_rgba_to_string, NULL },
 };
 
 /*** GTK_TREE_MODEL ***/

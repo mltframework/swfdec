@@ -322,29 +322,37 @@ swfdec_js_eval_get_property (JSContext *cx, JSObject *obj,
   }
 }
 
-/**
- * swfdec_js_eval:
- * @cx: a #JSContext
- * @obj: #JSObject to use as a source for evaluating
- * @str: The string to evaluate
- * @ignore_case: TRUE for case insensitive evaluation
- *
- * This function works like the Actionscript eval function used on @obj.
- * It handles both slash-style and dot-style notation.
- *
- * Returns: the value or JSVAL_VOID if no value was found.
- **/
-jsval
-swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str, 
-    gboolean ignore_case)
+static JSBool
+swfdec_js_eval_set_property (JSContext *cx, JSObject *obj, 
+    const char *name, gboolean initial, gboolean ignore_case, jsval *ret)
+{
+  JSAtom *atom;
+  JSObject *pobj;
+  JSProperty *prop;
+
+  atom = js_Atomize (cx, name, strlen(name), ignore_case ? ATOM_NOCASE : 0);
+  if (!atom)
+    return JS_FALSE;
+  if (initial) {
+    return OBJ_SET_PROPERTY (cx, obj, (jsid) atom, ret);
+  } else {
+    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+      return JS_FALSE;
+    if (!prop)
+      return JS_FALSE;
+    if (pobj)
+      obj = pobj;
+    return OBJ_SET_PROPERTY (cx, obj, (jsid) prop->id, ret);
+  }
+}
+
+static gboolean
+swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
+        gboolean ignore_case, jsval *val, gboolean set)
 {
   jsval cur;
   char *work = NULL;
   gboolean initial = TRUE;
-
-  g_return_val_if_fail (cx != NULL, JSVAL_VOID);
-  g_return_val_if_fail (obj != NULL, JSVAL_VOID);
-  g_return_val_if_fail (str != NULL, JSVAL_VOID);
 
   SWFDEC_LOG ("eval called with \"%s\" on %p", str, obj);
   if (strchr (str, '/')) {
@@ -369,19 +377,57 @@ swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str,
       g_free (name);
       str = dot + 1;
     } else {
-      if (!swfdec_js_eval_get_property (cx, obj, str, initial, ignore_case, &cur))
-	goto out;
+      if (set) {
+	if (!swfdec_js_eval_set_property (cx, obj, str, initial, ignore_case, val))
+	  goto out;
+      } else {
+	if (!swfdec_js_eval_get_property (cx, obj, str, initial, ignore_case, &cur))
+	  goto out;
+      }
       str = NULL;
     }
     initial = FALSE;
   }
 
   g_free (work);
-  return cur;
+  *val = cur;
+  return TRUE;
 out:
   SWFDEC_DEBUG ("error: returning void for %s", str);
   g_free (work);
-  return JSVAL_VOID;
+  return FALSE;
 }
 
+/**
+ * swfdec_js_eval:
+ * @cx: a #JSContext
+ * @obj: #JSObject to use as a source for evaluating
+ * @str: The string to evaluate
+ * @ignore_case: TRUE for case insensitive evaluation
+ *
+ * This function works like the Actionscript eval function used on @obj.
+ * It handles both slash-style and dot-style notation.
+ *
+ * Returns: the value or JSVAL_VOID if no value was found.
+ **/
+jsval
+swfdec_js_eval (JSContext *cx, JSObject *obj, const char *str, 
+    gboolean ignore_case)
+{
+  jsval ret;
 
+  g_return_val_if_fail (cx != NULL, JSVAL_VOID);
+  g_return_val_if_fail (obj != NULL, JSVAL_VOID);
+  g_return_val_if_fail (str != NULL, JSVAL_VOID);
+
+  if (!swfdec_js_eval_internal (cx, obj, str, ignore_case, &ret, FALSE))
+    ret = JSVAL_VOID;
+  return ret;
+}
+
+void
+swfdec_js_eval_set (JSContext *cx, JSObject *obj, const char *str,
+    jsval val, gboolean ignore_case)
+{
+  swfdec_js_eval_internal (cx, obj, str, ignore_case, &val, TRUE);
+}

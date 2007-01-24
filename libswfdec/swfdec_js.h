@@ -51,6 +51,11 @@ jsval		swfdec_js_eval			(JSContext *		cx,
 						 JSObject *		obj,
 						 const char *		str,
 						 gboolean		ignore_case);
+void		swfdec_js_eval_set    		(JSContext *		cx,
+						 JSObject *		obj,
+						 const char *		str,
+						 jsval			val,
+						 gboolean		ignore_case);
 
 /* support functions */
 const char *	swfdec_js_to_string		(JSContext *		cx,

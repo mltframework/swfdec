@@ -471,10 +471,10 @@ swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len)
   return ret;
 }
 
-unsigned int
+SwfdecColor
 swfdec_bits_get_color (SwfdecBits * bits)
 {
-  int r, g, b;
+  unsigned int r, g, b;
 
   r = swfdec_bits_get_u8 (bits);
   g = swfdec_bits_get_u8 (bits);
@@ -483,10 +483,10 @@ swfdec_bits_get_color (SwfdecBits * bits)
   return SWF_COLOR_COMBINE (r, g, b, 0xff);
 }
 
-unsigned int
+SwfdecColor
 swfdec_bits_get_rgba (SwfdecBits * bits)
 {
-  int r, g, b, a;
+  unsigned int r, g, b, a;
 
   r = swfdec_bits_get_u8 (bits);
   g = swfdec_bits_get_u8 (bits);

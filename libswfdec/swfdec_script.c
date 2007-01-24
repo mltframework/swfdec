@@ -329,11 +329,8 @@ swfdec_action_set_variable (JSContext *cx, guint action, const guint8 *data, gui
   if (s == NULL)
     return JS_FALSE;
 
-  if (strpbrk (s, "./:")) {
-    SWFDEC_WARNING ("FIXME: implement paths");
-  }
-  if (!JS_SetProperty (cx, cx->fp->scopeChain, s, &cx->fp->sp[-1]))
-    return JS_FALSE;
+  swfdec_js_eval_set (cx, cx->fp->scopeChain, s, cx->fp->sp[-1], 
+      ((SwfdecScript *) cx->fp->swf)->version < 7);
   cx->fp->sp -= 2;
   return JS_TRUE;
 }

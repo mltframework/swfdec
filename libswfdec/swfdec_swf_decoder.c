@@ -143,7 +143,7 @@ swf_inflate_init (SwfdecSwfDecoder * s)
   ret = inflateInit (z);
   SWFDEC_DEBUG ("inflateInit returned %d", ret);
 
-  s->uncompressed_buffer = swfdec_buffer_new_and_alloc (dec->bytes_total);
+  s->uncompressed_buffer = swfdec_buffer_new_and_alloc (dec->bytes_total - 8);
   z->next_out = s->uncompressed_buffer->data;
   z->avail_out = s->uncompressed_buffer->length;
   z->opaque = NULL;

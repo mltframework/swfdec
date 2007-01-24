@@ -177,6 +177,13 @@ swfdec_buffer_queue_free (SwfdecBufferQueue * queue)
 void
 swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
 {
+  g_return_if_fail (queue != NULL);
+  g_return_if_fail (buffer != NULL);
+
+  if (buffer->length == 0) {
+    swfdec_buffer_unref (buffer);
+    return;
+  }
   queue->buffers = g_list_append (queue->buffers, buffer);
   queue->depth += buffer->length;
 }

@@ -112,6 +112,7 @@ swfedit_from_string_unsigned (const char *s, gulong max, gpointer* result)
     return FALSE;
   if (u > max)
     return FALSE;
+  *result = GUINT_TO_POINTER (u);
   return TRUE;
 }
 

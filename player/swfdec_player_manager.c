@@ -137,7 +137,7 @@ swfdec_player_manager_class_init (SwfdecPlayerManagerClass * g_class)
 
   signals[MESSAGE] = g_signal_new ("message", G_TYPE_FROM_CLASS (g_class),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT_POINTER, /* FIXME */
-      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_STRING);
+      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_POINTER);
 }
 
 static void
@@ -458,7 +458,7 @@ command_break (SwfdecPlayerManager *manager, const char *arg)
 	guint id = swfdec_debugger_set_breakpoint (SWFDEC_DEBUGGER (manager->player),
 	    manager->interrupt_script, line);
 	swfdec_player_manager_output (manager, "%u: %s line %u: %s",
-	    id, manager->interrupt_script->name, line, 
+	    id, manager->interrupt_script->script->name, line, 
 	    manager->interrupt_script->commands[line].description);
       } else {
 	swfdec_player_manager_error (manager, 
@@ -494,7 +494,7 @@ command_breakpoints (SwfdecPlayerManager *manager, const char *arg)
   for (i = 1; i <= n; i++) {
     if (swfdec_debugger_get_breakpoint (debugger, i, &script, &line)) {
       swfdec_player_manager_output (manager, "%u: %s line %u: %s",
-	  i, script->name, line, script->commands[line].description);
+	  i, script->script->name, line, script->commands[line].description);
     }
   }
 }
@@ -552,7 +552,7 @@ do_find (gpointer scriptp, gpointer datap)
   for (i = 0; i < script->n_commands; i++) {
     if (strstr (script->commands[i].description, data->string)) {
       swfdec_player_manager_output (data->manager, "%s %u: %s",
-	  script->name, i, script->commands[i].description);
+	  script->script->name, i, script->commands[i].description);
     }
   }
 }

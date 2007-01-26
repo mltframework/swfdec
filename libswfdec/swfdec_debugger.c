@@ -28,20 +28,36 @@
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "js/jsdbgapi.h"
+#include "js/jsinterp.h" /* for frame->swf */
 
 /*** SwfdecDebuggerScript ***/
 
-static SwfdecDebuggerScript *
-swfdec_debugger_script_new (JSScript *script, const char *name, 
-    SwfdecDebuggerCommand *commands, guint n_commands)
+static gboolean
+swfdec_debugger_add_command (gconstpointer bytecode, guint action, 
+    const guint8 *data, guint len, gpointer arrayp)
 {
+  SwfdecDebuggerCommand command;
+
+  command.code = bytecode;
+  command.breakpoint = 0;
+  command.description = swfdec_script_print_action (action, data, len);
+  g_array_append_val (arrayp, command);
+  return TRUE;
+}
+
+static SwfdecDebuggerScript *
+swfdec_debugger_script_new (SwfdecScript *script)
+{
+  GArray *array;
   SwfdecDebuggerScript *ret;
 
   ret = g_new0 (SwfdecDebuggerScript, 1);
   ret->script = script;
-  ret->name = g_strdup (name);
-  ret->commands = commands;
-  ret->n_commands = n_commands;
+  swfdec_script_ref (script);
+  array = g_array_new (TRUE, FALSE, sizeof (SwfdecDebuggerCommand));
+  swfdec_script_foreach (script, swfdec_debugger_add_command, array);
+  ret->n_commands = array->len;
+  ret->commands = (SwfdecDebuggerCommand *) g_array_free (array, FALSE);
 
   return ret;
 }
@@ -49,7 +65,13 @@ swfdec_debugger_script_new (JSScript *script, const char *name,
 static void
 swfdec_debugger_script_free (SwfdecDebuggerScript *script)
 {
+  guint i;
+
   g_assert (script);
+  swfdec_script_unref (script->script);
+  for (i = 0; i < script->n_commands; i++) {
+    g_free (script->commands[i].description);
+  }
   g_free (script->commands);
   g_free (script);
 }
@@ -131,17 +153,16 @@ swfdec_debugger_new (void)
 }
 
 void
-swfdec_debugger_add_script (SwfdecDebugger *debugger, JSScript *jscript, const char *name,
-    SwfdecDebuggerCommand *commands, guint n_commands)
+swfdec_debugger_add_script (SwfdecDebugger *debugger, SwfdecScript *script)
 {
-  SwfdecDebuggerScript *dscript = swfdec_debugger_script_new (jscript, name, commands, n_commands);
+  SwfdecDebuggerScript *dscript = swfdec_debugger_script_new (script);
 
-  g_hash_table_insert (debugger->scripts, jscript, dscript);
+  g_hash_table_insert (debugger->scripts, script, dscript);
   g_signal_emit (debugger, signals[SCRIPT_ADDED], 0, dscript);
 }
 
 SwfdecDebuggerScript *
-swfdec_debugger_get_script (SwfdecDebugger *debugger, JSScript *script)
+swfdec_debugger_get_script (SwfdecDebugger *debugger, SwfdecScript *script)
 {
   SwfdecDebuggerScript *dscript = g_hash_table_lookup (debugger->scripts, script);
 
@@ -149,7 +170,7 @@ swfdec_debugger_get_script (SwfdecDebugger *debugger, JSScript *script)
 }
 
 void
-swfdec_debugger_remove_script (SwfdecDebugger *debugger, JSScript *script)
+swfdec_debugger_remove_script (SwfdecDebugger *debugger, SwfdecScript *script)
 {
   SwfdecDebuggerScript *dscript = g_hash_table_lookup (debugger->scripts, script);
 
@@ -211,13 +232,41 @@ swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
 }
 
 static JSTrapStatus
-swfdec_debugger_handle_breakpoint (JSContext *cx, JSScript *script, jsbytecode *pc,
-    jsval *rval, void *closure)
+swfdec_debugger_interrupt_cb (JSContext *cx, JSScript *script,
+        jsbytecode *pc, jsval *rval, void *debugger)
 {
-  SwfdecDebugger *debugger = JS_GetContextPrivate (cx);
-
-  swfdec_debugger_do_breakpoint (debugger, GPOINTER_TO_UINT (closure));
+  SwfdecDebuggerScript *dscript;
+  guint line;
+  if (!swfdec_debugger_get_current (debugger, &dscript, &line))
+    return JSTRAP_CONTINUE; 
+  if (dscript->commands[line].breakpoint) {
+    swfdec_debugger_do_breakpoint (debugger, dscript->commands[line].breakpoint);
+  } else if (SWFDEC_DEBUGGER (debugger)->stepping) {
+    swfdec_debugger_do_breakpoint (debugger, 0);
+  }
   return JSTRAP_CONTINUE;
+}
+
+static void
+swfdec_debugger_update_interrupting (SwfdecDebugger *debugger)
+{
+  guint i;
+  gboolean should_interrupt = debugger->stepping;
+
+  for (i = 1; i < debugger->breakpoints->len && !should_interrupt; i++) {
+    Breakpoint *br = &g_array_index (debugger->breakpoints, Breakpoint, i);
+
+    if (br->script) {
+      should_interrupt = TRUE;
+      break;
+    }
+  }
+  if (should_interrupt) {
+    JS_SetInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), 
+	swfdec_debugger_interrupt_cb, debugger);
+  } else {
+    JS_ClearInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), NULL, NULL);
+  }
 }
 
 guint
@@ -242,10 +291,6 @@ swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger,
       break;
     br = NULL;
   }
-  if (!JS_SetTrap (SWFDEC_PLAYER (debugger)->jscx, script->script,
-	  script->commands[line].code, swfdec_debugger_handle_breakpoint, 
-	  GUINT_TO_POINTER (i + 1)))
-    return 0;
 
   if (br == NULL) {
     g_array_set_size (debugger->breakpoints, debugger->breakpoints->len + 1);
@@ -255,6 +300,7 @@ swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger,
   br->script = script;
   br->line = line;
   script->commands[line].breakpoint = i + 1;
+  swfdec_debugger_update_interrupting (debugger);
   g_signal_emit (debugger, signals[BREAKPOINT_ADDED], 0, i + 1);
   return i + 1;
 }
@@ -275,16 +321,15 @@ swfdec_debugger_unset_breakpoint (SwfdecDebugger *debugger, guint id)
   if (br->script == NULL)
     return;
 
-  JS_ClearTrap (SWFDEC_PLAYER (debugger)->jscx, br->script->script,
-      br->script->commands[br->line].code, NULL, NULL);
   g_signal_emit (debugger, signals[BREAKPOINT_REMOVED], 0, id);
   br->script->commands[br->line].breakpoint = 0;
   br->script = NULL;
+  swfdec_debugger_update_interrupting (debugger);
 }
 
 static gboolean
-swfdec_debugger_get_from_js (SwfdecDebugger *debugger, JSScript *script, jsbytecode *pc,
-    SwfdecDebuggerScript **script_out, guint *line_out)
+swfdec_debugger_get_from_js (SwfdecDebugger *debugger, SwfdecScript *script, 
+    jsbytecode *pc, SwfdecDebuggerScript **script_out, guint *line_out)
 {
   guint line;
   SwfdecDebuggerScript *dscript = swfdec_debugger_get_script (debugger, script);
@@ -292,7 +337,7 @@ swfdec_debugger_get_from_js (SwfdecDebugger *debugger, JSScript *script, jsbytec
   if (dscript == NULL)
     return FALSE;
   for (line = 0; line < dscript->n_commands; line++) {
-    if (pc == (jsbytecode *) dscript->commands[line].code) {
+    if (pc == dscript->commands[line].code) {
       if (script_out)
 	*script_out = dscript;
       if (line_out)
@@ -311,16 +356,16 @@ swfdec_debugger_get_current (SwfdecDebugger *debugger,
 {
   JSStackFrame *frame = NULL;
   JSContext *cx;
-  JSScript *script;
   jsbytecode *pc;
 
   cx = SWFDEC_PLAYER (debugger)->jscx;
   JS_FrameIterator (cx, &frame);
   if (frame == NULL)
     return FALSE;
-  script = JS_GetFrameScript (cx, frame);
+  if (frame->swf == NULL)
+    return FALSE;
   pc = JS_GetFramePC (cx, frame);
-  return swfdec_debugger_get_from_js (debugger, script, pc, dscript, line);
+  return swfdec_debugger_get_from_js (debugger, frame->swf, pc, dscript, line);
 }
 
 gboolean
@@ -358,15 +403,6 @@ swfdec_debugger_get_n_breakpoints (SwfdecDebugger *debugger)
   return debugger->breakpoints->len;
 }
 
-static JSTrapStatus
-swfdec_debugger_interrupt_cb (JSContext *cx, JSScript *script,
-        jsbytecode *pc, jsval *rval, void *debugger)
-{
-  if (swfdec_debugger_get_current (debugger, NULL, NULL))
-    swfdec_debugger_do_breakpoint (debugger, 0);
-  return JSTRAP_CONTINUE;
-}
-
 void
 swfdec_debugger_set_stepping (SwfdecDebugger *debugger, gboolean stepping)
 {
@@ -375,12 +411,6 @@ swfdec_debugger_set_stepping (SwfdecDebugger *debugger, gboolean stepping)
   if (debugger->stepping == stepping)
     return;
   debugger->stepping = stepping;
-  if (stepping) {
-    JS_SetInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), 
-	swfdec_debugger_interrupt_cb, debugger);
-  } else {
-    JS_ClearInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), NULL, NULL);
-  }
 }
 
 gboolean

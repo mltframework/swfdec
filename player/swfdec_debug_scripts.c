@@ -40,7 +40,7 @@ add_row (gpointer scriptp, gpointer storep)
 
   gtk_list_store_append (store, &iter);
   gtk_list_store_set (store, &iter, COLUMN_SCRIPT, script, 
-      COLUMN_NAME, script->name, -1);
+      COLUMN_NAME, script->script->name, -1);
 }
 
 static void

@@ -23,8 +23,8 @@
 #include <glib-object.h>
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_player_internal.h>
+#include <libswfdec/swfdec_script.h>
 #include <libswfdec/swfdec_types.h>
-#include <libswfdec/js/jsapi.h>
 
 G_BEGIN_DECLS
 
@@ -41,14 +41,13 @@ typedef struct _SwfdecDebuggerCommand SwfdecDebuggerCommand;
 #define SWFDEC_DEBUGGER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_DEBUGGER, SwfdecDebuggerClass))
 
 struct _SwfdecDebuggerCommand {
-  gpointer		code;		/* pointer to start bytecode in JScript */
+  gconstpointer		code;		/* pointer to start bytecode in SwfdecScript */
   guint			breakpoint;	/* id of breakpoint pointing here */
   char *		description;	/* string describing the action */
 };
 
 struct _SwfdecDebuggerScript {
-  JSScript *		script;		/* the script */
-  char *		name;		/* descriptive name of script */
+  SwfdecScript *      	script;		/* the script */
   SwfdecDebuggerCommand *commands;	/* commands executed in the script (NULL-terminated) */
   guint			n_commands;	/* number of commands */
 };
@@ -88,14 +87,11 @@ void			swfdec_debugger_set_stepping	(SwfdecDebugger *	debugger,
 gboolean		swfdec_debugger_get_stepping	(SwfdecDebugger *	debugger);
 
 void			swfdec_debugger_add_script	(SwfdecDebugger *	debugger,
-							 JSScript *		script,
-							 const char *		name,
-							 SwfdecDebuggerCommand *commands,
-							 guint			n_commands);
+							 SwfdecScript *		script);
 SwfdecDebuggerScript *	swfdec_debugger_get_script	(SwfdecDebugger *       debugger,
-							 JSScript *		script);
+							 SwfdecScript *		script);
 void			swfdec_debugger_remove_script	(SwfdecDebugger *	debugger,
-							 JSScript *		script);
+							 SwfdecScript *		script);
 void			swfdec_debugger_foreach_script	(SwfdecDebugger *	debugger,
 							 GFunc			func,
 							 gpointer		data);

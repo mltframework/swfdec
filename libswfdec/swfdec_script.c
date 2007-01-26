@@ -23,6 +23,7 @@
 
 #include "swfdec_script.h"
 #include "swfdec_debug.h"
+#include "swfdec_debugger.h"
 #include "swfdec_scriptable.h"
 #include "js/jscntxt.h"
 #include "js/jsinterp.h"
@@ -1105,13 +1106,14 @@ swfdec_script_print_action (guint action, const guint8 *data, guint len)
   }
 }
 
-typedef gboolean (* SwfdecScriptForeachFunc) (guint action, const guint8 *data, guint len, gpointer user_data);
 static gboolean
-swfdec_script_foreach (SwfdecBits *bits, SwfdecScriptForeachFunc func, gpointer user_data)
+swfdec_script_foreach_internal (SwfdecBits *bits, SwfdecScriptForeachFunc func, gpointer user_data)
 {
   guint action, len;
   const guint8 *data;
+  gconstpointer bytecode;
 
+  bytecode = bits->ptr;
   while ((action = swfdec_bits_get_u8 (bits))) {
     if (action & 0x80) {
       len = swfdec_bits_get_u16 (bits);
@@ -1124,16 +1126,29 @@ swfdec_script_foreach (SwfdecBits *bits, SwfdecScriptForeachFunc func, gpointer 
       SWFDEC_ERROR ("script too short");
       return FALSE;
     }
-    if (!func (action, data, len, user_data))
+    if (!func (bytecode, action, data, len, user_data))
       return FALSE;
+    bytecode = bits->ptr;
   }
   return TRUE;
 }
 
 /*** PUBLIC API ***/
 
+gboolean
+swfdec_script_foreach (SwfdecScript *script, SwfdecScriptForeachFunc func, gpointer user_data)
+{
+  SwfdecBits bits;
+
+  g_return_val_if_fail (script != NULL, FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
+
+  swfdec_bits_init (&bits, script->buffer);
+  return swfdec_script_foreach_internal (&bits, func, user_data);
+}
+
 static gboolean
-validate_action (guint action, const guint8 *data, guint len, gpointer scriptp)
+validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint len, gpointer scriptp)
 {
   SwfdecScript *script = scriptp;
   int version = EXTRACT_VERSION (script->version);
@@ -1158,12 +1173,30 @@ validate_action (guint action, const guint8 *data, guint len, gpointer scriptp)
 }
 
 SwfdecScript *
+swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits, 
+    const char *name, unsigned int version)
+{
+  SwfdecScript *script;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (bits != NULL, NULL);
+
+  script = swfdec_script_new (bits, name, version);
+  if (SWFDEC_IS_DEBUGGER (player) && script) {
+    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script);
+    script->debugger = player;
+  }
+  return script;
+}
+
+SwfdecScript *
 swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
 {
   SwfdecScript *script;
   const guchar *start;
   
   g_return_val_if_fail (bits != NULL, NULL);
+
   if (version < MINSCRIPTVERSION) {
     SWFDEC_ERROR ("swfdec version %u doesn't support scripts", version);
     return NULL;
@@ -1176,7 +1209,7 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
   script->name = g_strdup (name ? name : "Unnamed script");
   script->version = version;
 
-  if (!swfdec_script_foreach (bits, validate_action, script)) {
+  if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
     /* assign a random buffer here so we have something to unref */
     script->buffer = bits->buffer;
     swfdec_buffer_ref (script->buffer);
@@ -1203,6 +1236,11 @@ swfdec_script_unref (SwfdecScript *script)
   g_return_if_fail (script->refcount > 0);
 
   script->refcount--;
+  if (script->refcount == 1 && script->debugger) {
+    script->debugger = NULL;
+    swfdec_debugger_remove_script (script->debugger, script);
+    return;
+  }
   if (script->refcount > 0)
     return;
 
@@ -1266,13 +1304,37 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     goto out;
   }
 
-  /* only valid return value */
   while (TRUE) {
     /* check pc */
     if (pc < startpc || pc >= endpc) {
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p] anymore", pc, startpc, endpc);
       goto internal_error;
     }
+
+    /* run interrupt handler */
+    if (cx->runtime->interruptHandler) {
+      jsval tmp;
+      switch (cx->runtime->interruptHandler (cx, NULL, pc, &tmp,
+	      cx->runtime->interruptHandlerData)) {
+	case JSTRAP_ERROR:
+	  ok = JS_FALSE;
+          goto out;
+        case JSTRAP_CONTINUE:
+          break;
+        case JSTRAP_RETURN:
+          fp->rval = tmp;
+          goto out;
+        case JSTRAP_THROW:
+          cx->throwing = JS_TRUE;
+          cx->exception = tmp;
+          ok = JS_FALSE;
+          goto out;
+        default:
+	  g_assert_not_reached ();
+	  break;
+      }
+    }
+
     /* decode next action */
     action = *pc;
     spec = actions + action;
@@ -1433,3 +1495,4 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 
   return ok ? frame.rval : JSVAL_VOID;
 }
+

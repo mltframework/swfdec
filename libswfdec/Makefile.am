@@ -15,7 +15,6 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
-# swfdec_debugger.c 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
@@ -34,6 +33,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_screen.c \
 	swfdec_color.c \
 	swfdec_debug.c \
+	swfdec_debugger.c \
 	swfdec_decoder.c \
 	swfdec_edittext.c \
 	swfdec_edittext_movie.c \

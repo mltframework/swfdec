@@ -29,15 +29,23 @@ G_BEGIN_DECLS
 
 //typedef struct _SwfdecScript SwfdecScript;
 
+typedef gboolean (* SwfdecScriptForeachFunc) (gconstpointer bytecode, guint action, 
+    const guint8 *data, guint len, gpointer user_data);
+
 /* FIXME: May want to typedef to SwfdecBuffer directly */
 struct _SwfdecScript {
   SwfdecBuffer *	buffer;			/* buffer holding the script */
   unsigned int	  	refcount;		/* reference count */
   char *		name;			/* name identifying this script */
   unsigned int		version;		/* version of the script */
+  gpointer		debugger;		/* debugger owning us or NULL */
 };
 
 SwfdecScript *	swfdec_script_new		(SwfdecBits *		bits,
+						 const char *		name,
+						 unsigned int	      	version);
+SwfdecScript *	swfdec_script_new_for_player  	(SwfdecPlayer *		player,
+						 SwfdecBits *		bits,
 						 const char *		name,
 						 unsigned int	      	version);
 void		swfdec_script_ref		(SwfdecScript *		script);
@@ -49,9 +57,13 @@ JSBool		swfdec_script_interpret		(SwfdecScript *		script,
 jsval		swfdec_script_execute		(SwfdecScript *		script,
 						 SwfdecScriptable *	scriptable);
 
+gboolean	swfdec_script_foreach		(SwfdecScript *		script,
+						 SwfdecScriptForeachFunc func,
+						 gpointer		user_data);
 char *		swfdec_script_print_action	(guint			action,
 						 const guint8 *		data,
 						 guint			len);
+
 G_END_DECLS
 
 #endif

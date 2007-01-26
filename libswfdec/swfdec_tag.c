@@ -297,7 +297,7 @@ tag_func_do_action (SwfdecSwfDecoder * s)
 
   name = g_strdup_printf ("Sprite%u.Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
-  script = swfdec_script_new (&s->b, name, s->version);
+  script = swfdec_script_new_for_player (SWFDEC_DECODER (s)->player, &s->b, name, s->version);
   g_free (name);
   if (script)
     swfdec_sprite_add_action (s->parse_sprite, s->parse_sprite->parse_frame, 

@@ -351,13 +351,14 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
     work = swfdec_js_slash_to_dot (str);
     str = work;
   }
-  if (g_str_has_prefix (str, "this")) {
+  if (obj == NULL && g_str_has_prefix (str, "this")) {
     str += 4;
     if (*str == '.')
       str++;
     if (cx->fp == NULL)
       goto out;
     obj = cx->fp->thisp;
+    cur = OBJECT_TO_JSVAL (obj);
   }
   while (str != NULL && *str != '\0') {
     char *dot = strchr (str, '.');

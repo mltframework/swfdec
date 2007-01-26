@@ -214,7 +214,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
   scripts = swfdec_debug_scripts_new (SWFDEC_DEBUGGER (player));
   gtk_container_add (GTK_CONTAINER (scroll), scripts);
@@ -251,7 +251,7 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (hbox), scroll, TRUE, TRUE, 0);
   widget = swfdec_debug_script_new (SWFDEC_DEBUGGER (player));
   gtk_container_add (GTK_CONTAINER (scroll), widget);

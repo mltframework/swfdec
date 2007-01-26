@@ -318,8 +318,6 @@ swfdec_js_eval_get_property (JSContext *cx, JSObject *obj,
       return JS_FALSE;
     if (!prop)
       return JS_FALSE;
-    if (pobj)
-      obj = pobj;
     return OBJ_GET_PROPERTY (cx, obj, (jsid) prop->id, ret);
   }
 }
@@ -345,7 +343,7 @@ static gboolean
 swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
         jsval *val, gboolean set)
 {
-  jsval cur;
+  jsval cur = JSVAL_NULL;
   char *work = NULL;
 
   SWFDEC_LOG ("eval called with \"%s\" on %p", str, obj);
@@ -361,12 +359,10 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
       goto out;
     obj = cx->fp->thisp;
   }
-  cur = OBJECT_TO_JSVAL (obj);
   while (str != NULL && *str != '\0') {
     char *dot = strchr (str, '.');
     if (!JSVAL_IS_OBJECT (cur))
       goto out;
-    obj = JSVAL_TO_OBJECT (cur);
     if (dot) {
       if (!swfdec_js_eval_get_property (cx, obj, str, dot - str, &cur))
 	goto out;
@@ -381,6 +377,7 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
       }
       str = NULL;
     }
+    obj = JSVAL_TO_OBJECT (cur);
   }
   if (obj == NULL) {
     if (cx->fp == NULL)

@@ -267,7 +267,8 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
   cairo_matrix_t mat;
   cairo_surface_t *surface;
   
-  surface = swfdec_image_get_surface (image->image);
+  surface = swfdec_image_get_surface_for_target (image->image, 
+      cairo_get_target (cr));
   cairo_append_path (cr, (cairo_path_t *) path);
   color = swfdec_color_apply_transform (0xFFFFFFFF, trans);
   pattern = cairo_pattern_create_for_surface (surface);

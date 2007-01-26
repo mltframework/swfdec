@@ -300,13 +300,13 @@ fail:
 
 static JSBool
 swfdec_js_eval_get_property (JSContext *cx, JSObject *obj, 
-    const char *name, jsval *ret)
+    const char *name, guint name_len, jsval *ret)
 {
   JSAtom *atom;
   JSObject *pobj;
   JSProperty *prop;
 
-  atom = js_Atomize (cx, name, strlen(name), 0);
+  atom = js_Atomize (cx, name, name_len, 0);
   if (!atom)
     return JS_FALSE;
   if (obj) {
@@ -326,11 +326,11 @@ swfdec_js_eval_get_property (JSContext *cx, JSObject *obj,
 
 static JSBool
 swfdec_js_eval_set_property (JSContext *cx, JSObject *obj, 
-    const char *name, jsval *ret)
+    const char *name, guint name_len, jsval *ret)
 {
   JSAtom *atom;
 
-  atom = js_Atomize (cx, name, strlen(name), 0);
+  atom = js_Atomize (cx, name, name_len, 0);
   if (!atom)
     return JS_FALSE;
   if (obj == NULL) {
@@ -368,17 +368,15 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
       goto out;
     obj = JSVAL_TO_OBJECT (cur);
     if (dot) {
-      char *name = g_strndup (str, dot - str);
-      if (!swfdec_js_eval_get_property (cx, obj, name, &cur))
+      if (!swfdec_js_eval_get_property (cx, obj, str, dot - str, &cur))
 	goto out;
-      g_free (name);
       str = dot + 1;
     } else {
       if (set) {
-	if (!swfdec_js_eval_set_property (cx, obj, str, val))
+	if (!swfdec_js_eval_set_property (cx, obj, str, strlen (str), val))
 	  goto out;
       } else {
-	if (!swfdec_js_eval_get_property (cx, obj, str, &cur))
+	if (!swfdec_js_eval_get_property (cx, obj, str, strlen (str), &cur))
 	  goto out;
       }
       str = NULL;

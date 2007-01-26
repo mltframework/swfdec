@@ -315,8 +315,7 @@ swfdec_action_get_variable (JSContext *cx, guint action, const guint8 *data, gui
   s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
-  cx->fp->sp[-1] = swfdec_js_eval (cx, cx->fp->scopeChain, s, 
-      ((SwfdecScript *) cx->fp->swf)->version < 7);
+  cx->fp->sp[-1] = swfdec_js_eval (cx, cx->fp->scopeChain, s);
   return JS_TRUE;
 }
 
@@ -329,8 +328,7 @@ swfdec_action_set_variable (JSContext *cx, guint action, const guint8 *data, gui
   if (s == NULL)
     return JS_FALSE;
 
-  swfdec_js_eval_set (cx, cx->fp->scopeChain, s, cx->fp->sp[-1], 
-      ((SwfdecScript *) cx->fp->swf)->version < 7);
+  swfdec_js_eval_set (cx, cx->fp->scopeChain, s, cx->fp->sp[-1]);
   cx->fp->sp -= 2;
   return JS_TRUE;
 }
@@ -441,8 +439,7 @@ swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
     const char *bytes = swfdec_js_to_string (cx, *val);
     if (bytes == NULL)
       return JS_FALSE;
-    *val = swfdec_js_eval (cx, obj, bytes,
-	((SwfdecScript *) cx->fp->swf)->version < 7);
+    *val = swfdec_js_eval (cx, obj, bytes);
   } else {
     *val = OBJECT_TO_JSVAL (obj);
   }
@@ -458,7 +455,7 @@ swfdec_action_get_property (JSContext *cx, guint action, const guint8 *data, gui
   guint32 id;
 
   val = cx->fp->sp[-2];
-  if (!swfdec_eval_jsval (cx, cx->fp->scopeChain, &val))
+  if (!swfdec_eval_jsval (cx, NULL, &val))
     return JS_FALSE;
   movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
   val = JSVAL_VOID;
@@ -493,7 +490,7 @@ swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, gui
   guint32 id;
 
   val = cx->fp->sp[-3];
-  if (!swfdec_eval_jsval (cx, cx->fp->scopeChain, &val))
+  if (!swfdec_eval_jsval (cx, NULL, &val))
     return JS_FALSE;
   movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
   if (movie == NULL) {

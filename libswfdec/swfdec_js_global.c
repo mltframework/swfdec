@@ -33,7 +33,7 @@ swfdec_js_global_eval (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     const char *bytes = swfdec_js_to_string (cx, argv[0]);
     if (bytes == NULL)
       return JS_FALSE;
-    *rval = swfdec_js_eval (cx, obj, bytes, FALSE);
+    *rval = swfdec_js_eval (cx, obj, bytes);
   } else {
     *rval = argv[0];
   }

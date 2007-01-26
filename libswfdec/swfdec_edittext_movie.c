@@ -80,7 +80,7 @@ swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
   jsobj = swfdec_scriptable_get_object (parent);
   if (jsobj == NULL)
     return;
-  val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable, FALSE);
+  val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable);
   if (JSVAL_IS_VOID (val))
     return;
 
@@ -110,7 +110,7 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   if (jsobj == NULL)
     return;
   if (text->text->variable_prefix) {
-    val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable_prefix, FALSE);
+    val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable_prefix);
     if (!JSVAL_IS_OBJECT (val))
       return;
     jsobj = JSVAL_TO_OBJECT (val);

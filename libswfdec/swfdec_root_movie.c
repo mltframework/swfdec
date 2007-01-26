@@ -32,6 +32,7 @@
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
+#include "js/jsapi.h"
 
 
 static void swfdec_root_movie_loader_target_init (SwfdecLoaderTargetInterface *iface);
@@ -67,6 +68,13 @@ swfdec_root_movie_loader_target_do_init (SwfdecLoaderTarget *target)
 
   swfdec_player_initialize (movie->player, movie->decoder->rate, 
       movie->decoder->width, movie->decoder->height);
+  if (SWFDEC_IS_SWF_DECODER (movie->decoder) &&
+      movie->player->roots->next == 0) { 
+    /* if we're the only child */
+    /* FIXME: check case sensitivity wrt embedding movies of different version */
+    JS_SetContextCaseSensitive (movie->player->jscx,
+	SWFDEC_SWF_DECODER (movie->decoder)->version > 6);
+  }
   if (SWFDEC_IS_FLV_DECODER (movie->decoder)) {
     swfdec_flv_decoder_add_movie (SWFDEC_FLV_DECODER (movie->decoder), 
 	SWFDEC_MOVIE (movie));

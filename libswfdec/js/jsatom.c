@@ -673,10 +673,10 @@ out:
 JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 {
-  if (flags & ATOM_NOCASE)
-    return js_AtomizeStringWithCompare (cx, str, flags, js_compare_atom_keys_no_case);
-  else
+  if (cx->caseSensitive)
     return js_AtomizeStringWithCompare (cx, str, flags, js_compare_atom_keys);
+  else
+    return js_AtomizeStringWithCompare (cx, str, flags, js_compare_atom_keys_no_case);
 }
 
 JS_FRIEND_API(JSAtom *)

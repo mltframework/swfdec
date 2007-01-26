@@ -384,6 +384,12 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
       str = NULL;
     }
   }
+  if (obj == NULL) {
+    if (cx->fp == NULL)
+      goto out;
+    g_assert (cx->fp->scopeChain);
+    cur = OBJECT_TO_JSVAL (cx->fp->scopeChain);
+  }
 
   g_free (work);
   *val = cur;

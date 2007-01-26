@@ -316,7 +316,7 @@ swfdec_action_get_variable (JSContext *cx, guint action, const guint8 *data, gui
   s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
-  cx->fp->sp[-1] = swfdec_js_eval (cx, cx->fp->scopeChain, s);
+  cx->fp->sp[-1] = swfdec_js_eval (cx, NULL, s);
   return JS_TRUE;
 }
 
@@ -329,7 +329,7 @@ swfdec_action_set_variable (JSContext *cx, guint action, const guint8 *data, gui
   if (s == NULL)
     return JS_FALSE;
 
-  swfdec_js_eval_set (cx, cx->fp->scopeChain, s, cx->fp->sp[-1]);
+  swfdec_js_eval_set (cx, NULL, s, cx->fp->sp[-1]);
   cx->fp->sp -= 2;
   return JS_TRUE;
 }

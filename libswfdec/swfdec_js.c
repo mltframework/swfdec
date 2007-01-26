@@ -329,25 +329,16 @@ swfdec_js_eval_set_property (JSContext *cx, JSObject *obj,
     const char *name, jsval *ret)
 {
   JSAtom *atom;
-  JSObject *pobj;
-  JSProperty *prop;
 
   atom = js_Atomize (cx, name, strlen(name), 0);
   if (!atom)
     return JS_FALSE;
-  if (obj) {
-    return OBJ_SET_PROPERTY (cx, obj, (jsid) atom, ret);
-  } else {
+  if (obj == NULL) {
     if (cx->fp == NULL || cx->fp->scopeChain == NULL)
       return JS_FALSE;
-    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
-      return JS_FALSE;
-    if (!prop)
-      return JS_FALSE;
-    if (pobj)
-      obj = pobj;
-    return OBJ_SET_PROPERTY (cx, obj, (jsid) prop->id, ret);
+    obj = cx->fp->scopeChain;
   }
+  return OBJ_SET_PROPERTY (cx, obj, (jsid) atom, ret);
 }
 
 static gboolean

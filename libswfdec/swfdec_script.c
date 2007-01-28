@@ -1227,7 +1227,7 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
     return FALSE;
   }
   /* we might want to do stuff here for certain actions */
-#if 1
+#if 0
   {
     char *foo = swfdec_script_print_action (action, data, len);
     if (foo == NULL)

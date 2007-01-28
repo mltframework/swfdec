@@ -376,7 +376,7 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
 	if (!swfdec_js_eval_get_property (cx, obj, str, strlen (str), &cur))
 	  goto out;
       }
-      str = NULL;
+      goto finish;
     }
     obj = JSVAL_TO_OBJECT (cur);
   }
@@ -387,6 +387,7 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
     cur = OBJECT_TO_JSVAL (cx->fp->scopeChain);
   }
 
+finish:
   g_free (work);
   *val = cur;
   return TRUE;

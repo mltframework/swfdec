@@ -117,7 +117,7 @@ lossless (const guint8 *zptr, int zlen, int len)
   z.avail_out = len;
 
   ret = inflateInit (&z);
-  ret = inflate (&z, Z_SYNC_FLUSH);
+  ret = inflate (&z, Z_FINISH);
   if (ret != Z_STREAM_END) {
     SWFDEC_WARNING ("lossless: ret == %d", ret);
   }
@@ -348,9 +348,8 @@ static void
 swfdec_image_lossless_load (SwfdecImage *image)
 {
   int format;
-  int color_table_size;
+  guint color_table_size;
   unsigned char *ptr;
-  unsigned char *endptr;
   SwfdecBits bits;
   unsigned char *image_data = NULL;
   int have_alpha = (image->type == SWFDEC_IMAGE_TYPE_LOSSLESS2);
@@ -377,66 +376,70 @@ swfdec_image_lossless_load (SwfdecImage *image)
   if (image->width == 0 || image->height == 0)
     return;
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  ptr = lossless (bits.ptr, endptr - bits.ptr, image->width * image->height);
-  bits.ptr = endptr;
 
   if (format == 3) {
-    unsigned char *color_table;
     unsigned char *indexed_data;
-    int i;
+    guint i;
+    unsigned int rowstride = (image->width + 3) & ~3;
 
     image_data = g_malloc (4 * image->width * image->height);
     image->rowstride = image->width * 4;
 
-    color_table = g_malloc (color_table_size * 4);
-
     if (have_alpha) {
+      ptr = lossless (bits.ptr, bits.end - bits.ptr, 
+	  color_table_size * 4 + rowstride * image->height);
       for (i = 0; i < color_table_size; i++) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-        color_table[i * 4 + 0] = ptr[i * 4 + 2];
-        color_table[i * 4 + 1] = ptr[i * 4 + 1];
-        color_table[i * 4 + 2] = ptr[i * 4 + 0];
-        color_table[i * 4 + 3] = ptr[i * 4 + 3];
+	guint8 tmp = ptr[i * 4 + 0];
+        ptr[i * 4 + 0] = ptr[i * 4 + 2];
+        ptr[i * 4 + 2] = tmp;
 #else
-        color_table[i * 4 + 0] = ptr[i * 4 + 3];
-        color_table[i * 4 + 1] = ptr[i * 4 + 0];
-        color_table[i * 4 + 2] = ptr[i * 4 + 1];
-        color_table[i * 4 + 3] = ptr[i * 4 + 2];
+        guint8 tmp = ptr[i * 4 + 3];
+        ptr[i * 4 + 3] = ptr[i * 4 + 2];
+        ptr[i * 4 + 2] = ptr[i * 4 + 1];
+        ptr[i * 4 + 1] = ptr[i * 4 + 0];
+        ptr[i * 4 + 0] = tmp;
 #endif
       }
       indexed_data = ptr + color_table_size * 4;
     } else {
-      for (i = 0; i < color_table_size; i++) {
+      ptr = lossless (bits.ptr, bits.end - bits.ptr, 
+	  color_table_size * 3 + rowstride * image->height);
+      for (i = color_table_size - 1; i < color_table_size; i--) {
+	guint8 color[3];
+	color[0] = ptr[i * 3 + 0];
+	color[1] = ptr[i * 3 + 1];
+	color[2] = ptr[i * 3 + 2];
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-        color_table[i * 4 + 0] = ptr[i * 3 + 2];
-        color_table[i * 4 + 1] = ptr[i * 3 + 1];
-        color_table[i * 4 + 2] = ptr[i * 3 + 0];
-        color_table[i * 4 + 3] = 255;
+        ptr[i * 4 + 0] = color[2];
+        ptr[i * 4 + 1] = color[1];
+	ptr[i * 4 + 2] = color[0];
+        ptr[i * 4 + 3] = 255;
 #else
-        color_table[i * 4 + 0] = 255;
-        color_table[i * 4 + 1] = ptr[i * 3 + 0];
-        color_table[i * 4 + 2] = ptr[i * 3 + 1];
-        color_table[i * 4 + 3] = ptr[i * 3 + 2];
+        ptr[i * 4 + 0] = 255;
+        ptr[i * 4 + 1] = color[0];
+        ptr[i * 4 + 2] = color[1];
+        ptr[i * 4 + 3] = color[2];
 #endif
       }
       indexed_data = ptr + color_table_size * 3;
     }
     swfdec_image_colormap_decode (image, image_data, indexed_data,
-	color_table, color_table_size);
+	ptr, color_table_size);
 
-    g_free (color_table);
     g_free (ptr);
   }
   if (format == 4) {
-    unsigned char *p = ptr;
     int i, j;
     unsigned int c;
     unsigned char *idata;
 
     if (have_alpha) {
       SWFDEC_INFO("16bit images aren't allowed to have alpha, ignoring");
+      have_alpha = FALSE;
     }
 
+    ptr = lossless (bits.ptr, bits.end - bits.ptr, 2 * image->width * image->height);
     image_data = g_malloc (4 * image->width * image->height);
     idata = image_data;
     image->rowstride = image->width * 4;
@@ -444,7 +447,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
     /* 15 bit packed */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
-        c = p[1] | (p[0] << 8);
+        c = ptr[1] | (ptr[0] << 8);
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
         idata[0] = (c << 3) | ((c >> 2) & 0x7);
         idata[1] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
@@ -456,32 +459,32 @@ swfdec_image_lossless_load (SwfdecImage *image)
         idata[1] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
         idata[0] = 0xff;
 #endif
-        p += 2;
+        ptr += 2;
         idata += 4;
       }
     }
     g_free (ptr);
   }
   if (format == 5) {
-    int i, j;
 
-    image_data = ptr;
+    image_data = lossless (bits.ptr, bits.end - bits.ptr, 4 * image->width * image->height);
     image->rowstride = image->width * 4;
 
-    if (!have_alpha) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    {
+      int i, j;
       /* image is stored in 0RGB format.  We use ARGB/BGRA. */
       for (j = 0; j < image->height; j++) {
         for (i = 0; i < image->width; i++) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
           ptr[0] = ptr[3];
           ptr[1] = ptr[2];
           ptr[2] = ptr[1];
           ptr[3] = 255;
-#endif
           ptr += 4;
         }
       }
     }
+#endif
   }
 
   swfdec_image_create_surface (image, image_data);

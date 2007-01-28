@@ -849,6 +849,30 @@ swfdec_action_string_add (JSContext *cx, guint action, const guint8 *data, guint
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_push_duplicate (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  cx->fp->sp++;
+  cx->fp->sp[-1] = cx->fp->sp[-2];
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_random_number (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  gint32 max, result;
+
+  if (!JS_ValueToECMAInt32 (cx, cx->fp->sp[-1], &max))
+    return JS_FALSE;
+  
+  if (max <= 0)
+    result = 0;
+  else
+    result = g_random_int_range (0, max);
+
+  return JS_NewNumberValue(cx, result, &cx->fp->sp[-1]);
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1047,7 +1071,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x2b] = { "Cast", NULL },
   [0x2c] = { "Implements", NULL },
   /* version 4 */
-  [0x30] = { "RandomNumber", NULL },
+  [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
   [0x31] = { "MBStringLength", NULL },
   [0x32] = { "CharToAscii", NULL },
   [0x33] = { "AsciiToChar", NULL },
@@ -1074,7 +1098,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x49] = { "Equals2", NULL },
   [0x4a] = { "ToNumber", NULL },
   [0x4b] = { "ToString", NULL },
-  [0x4c] = { "PushDuplicate", NULL },
+  [0x4c] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
   [0x4d] = { "Swap", NULL },
   [0x4e] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
   [0x4f] = { "SetMember", NULL, 3, 0, { NULL, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member } },

@@ -29,6 +29,7 @@
 #include "js/jsinterp.h"
 
 #include <string.h>
+#include <math.h>
 #include "swfdec_decoder.h"
 #include "swfdec_js.h"
 #include "swfdec_movie.h"
@@ -523,6 +524,11 @@ swfdec_action_to_number (JSContext *cx, jsval val)
     return *JSVAL_TO_DOUBLE (val);
   } else if (JSVAL_IS_BOOLEAN (val)) {
     return JSVAL_TO_BOOLEAN (val);
+  } else if (JSVAL_IS_STRING (val)) {
+    double d;
+    if (!JS_ValueToNumber (cx, val, &d))
+      return 0;
+    return isnan (d) ? 0 : d;
   } else {
     return 0;
   }
@@ -872,6 +878,27 @@ swfdec_action_random_number (JSContext *cx, guint action, const guint8 *data, gu
   return JS_NewNumberValue(cx, result, &cx->fp->sp[-1]);
 }
 
+static JSBool
+swfdec_action_less (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval rval, lval;
+  double l, r;
+  JSBool cond;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  l = swfdec_action_to_number (cx, lval);
+  r = swfdec_action_to_number (cx, rval);
+  cond = l < r;
+  cx->fp->sp--;
+  if (((SwfdecScript *) cx->fp->swf)->version < 5) {
+    cx->fp->sp[-1] = INT_TO_JSVAL (cond ? 1 : 0);
+  } else {
+    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (cond);
+  }
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1044,7 +1071,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x0c] = { "Multiply", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0d] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0e] = { "Equals", NULL },
-  [0x0f] = { "Less", NULL },
+  [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_less, swfdec_action_less, swfdec_action_less, swfdec_action_less } },
   [0x10] = { "And", NULL },
   [0x11] = { "Or", NULL },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },

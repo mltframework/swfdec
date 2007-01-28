@@ -260,8 +260,7 @@ swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint l
 	}
       case 7: /* 32bit int */
 	{
-	  /* FIXME: spec says U32, do they mean this? */
-	  guint i = swfdec_bits_get_u32 (&bits);
+	  int i = swfdec_bits_get_u32 (&bits);
 	  *cx->fp->sp++ = INT_TO_JSVAL (i);
 	  break;
 	}
@@ -954,7 +953,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	g_string_append_printf (string, "%g", swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	g_string_append_printf (string, "%u", swfdec_bits_get_u32 (&bits));
+	g_string_append_printf (string, "%d", swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
 	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u8 (&bits));

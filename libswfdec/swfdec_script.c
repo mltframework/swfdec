@@ -949,6 +949,59 @@ swfdec_action_equals2 (JSContext *cx, guint action, const guint8 *data, guint le
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_do_set_target (JSContext *cx, JSObject *target)
+{
+  JSObject *with;
+  
+  /* FIXME: this whole function stops working the moment it's used together 
+   * with With */
+  if (target == cx->fp->scopeChain)
+    return JS_TRUE;
+  if (target == cx->fp->thisp) {
+    /* FIXME: will probably break once SetTarget is called inside DefineFunctions */
+    cx->fp->scopeChain = cx->fp->thisp;
+    return JS_TRUE;
+  }
+  with = js_NewObject(cx, &js_WithClass, target, cx->fp->scopeChain);
+  if (!with)
+    return JS_FALSE;
+  cx->fp->scopeChain = with;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_set_target (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval target;
+
+  if (!memchr (data, 0, len)) {
+    SWFDEC_ERROR ("SetTarget action does not specify a string");
+    return JS_FALSE;
+  }
+  /* evaluate relative to this to not get trapped by previous SetTarget calls */
+  target = swfdec_js_eval (cx, cx->fp->thisp, (const char *) data);
+  if (!JSVAL_IS_OBJECT (target)) {
+    SWFDEC_WARNING ("target is not an object");
+    return JS_TRUE;
+  }
+  return swfdec_action_do_set_target (cx, JSVAL_TO_OBJECT (target));
+}
+
+static JSBool
+swfdec_action_set_target2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval val;
+  
+  val = cx->fp->sp[-1];
+  cx->fp->sp--;
+  if (!JSVAL_IS_OBJECT (val)) {
+    SWFDEC_WARNING ("target is not an object");
+    return JS_TRUE;
+  }
+  return swfdec_action_do_set_target (cx, JSVAL_TO_OBJECT (val));
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1132,7 +1185,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x18] = { "ToInteger", NULL },
   [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [0x1d] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
-  [0x20] = { "SetTarget2", NULL },
+  [0x20] = { "SetTarget22", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [0x23] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
@@ -1207,7 +1260,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x88] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
   /* version 3 */
   [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
-  [0x8b] = { "SetTarget", NULL },
+  [0x8b] = { "SetTarget", NULL, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
   [0x8c] = { "GotoLabel", NULL },
   /* version 4 */
   [0x8d] = { "WaitForFrame2", NULL },

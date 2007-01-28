@@ -776,7 +776,7 @@ swfdec_action_jump (JSContext *cx, guint action, const guint8 *data, guint len)
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return JS_FALSE;
   }
-  cx->fp->pc += 4 + GINT16_FROM_LE (*((gint16*) data)); 
+  cx->fp->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
   return JS_TRUE;
 }
 
@@ -792,7 +792,7 @@ swfdec_action_if (JSContext *cx, guint action, const guint8 *data, guint len)
   d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
   cx->fp->sp--;
   if (d != 0)
-    cx->fp->pc += 4 + GINT16_FROM_LE (*((gint16*) data)); 
+    cx->fp->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
   return JS_TRUE;
 }
 
@@ -896,6 +896,56 @@ swfdec_action_less (JSContext *cx, guint action, const guint8 *data, guint len)
   } else {
     cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (cond);
   }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_equals2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval rval, lval;
+  int ltag, rtag;
+  JSBool cond;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  ltag = JSVAL_TAG(lval);
+  rtag = JSVAL_TAG(rval);
+  if (ltag == rtag) {
+    if (ltag == JSVAL_STRING) {
+      cond = js_CompareStrings (JSVAL_TO_STRING (lval), JSVAL_TO_STRING (rval)) == 0;
+    } else if (ltag == JSVAL_DOUBLE) {
+      cond = *JSVAL_TO_DOUBLE(lval) == *JSVAL_TO_DOUBLE(rval);
+    } else {
+      cond = lval == rval;
+    }
+  } else {
+    if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {
+      cond = (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval));
+    } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {
+      cond = JS_FALSE;
+    } else {
+      if (ltag == JSVAL_OBJECT) {
+	if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT(lval), 0, &lval))
+	  return JS_FALSE;
+	ltag = JSVAL_TAG(lval);
+      } else if (rtag == JSVAL_OBJECT) {
+	if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT(rval), 0, &rval))
+	  return JS_FALSE;
+	rtag = JSVAL_TAG(rval);
+      }
+      if (ltag == JSVAL_STRING && rtag == JSVAL_STRING) {
+	cond = js_CompareStrings (JSVAL_TO_STRING (lval), JSVAL_TO_STRING (rval)) == 0;
+      } else {
+	double d, d2;
+	if (!JS_ValueToNumber (cx, lval, &d) ||
+	    !JS_ValueToNumber (cx, rval, &d2))
+	  return JS_FALSE;
+	cond = d == d2;
+      }
+    }
+  }
+  cx->fp->sp--;
+  cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (cond);
   return JS_TRUE;
 }
 
@@ -1121,7 +1171,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x46] = { "Enumerate", NULL },
   [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 }  },
-  [0x49] = { "Equals2", NULL },
+  [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [0x4a] = { "ToNumber", NULL },
   [0x4b] = { "ToString", NULL },
   [0x4c] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },

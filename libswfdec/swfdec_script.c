@@ -580,6 +580,49 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
   return JS_NewNumberValue (cx, l, &cx->fp->sp[-1]);
 }
 
+static JSString *
+swfdec_action_to_string_5 (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_VOID (val) || JSVAL_IS_NULL (val))
+    return cx->runtime->emptyString;
+  return js_ValueToString (cx, val);
+}
+
+static JSBool
+swfdec_action_add2_5 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval rval, lval;
+  gboolean cond;
+
+  rval = cx->fp->sp[-1];
+  lval = cx->fp->sp[-2];
+  if ((cond = JSVAL_IS_STRING (lval)) || JSVAL_IS_STRING (rval)) {
+    JSString *str, *str2;
+    if (cond) {
+      str = JSVAL_TO_STRING (lval);
+      if ((str2 = swfdec_action_to_string_5 (cx, rval)) == NULL)
+	return JS_FALSE;
+    } else {
+      str2 = JSVAL_TO_STRING (rval);
+      if ((str = swfdec_action_to_string_5 (cx, lval)) == NULL)
+	return JS_FALSE;
+    }
+    str = js_ConcatStrings (cx, str, str2);
+    if (!str)
+      return JS_FALSE;
+    cx->fp->sp--;
+    cx->fp->sp[-1] = STRING_TO_JSVAL (str);
+  } else {
+    double d, d2;
+    d = swfdec_action_to_number (cx, lval);
+    d2 = swfdec_action_to_number (cx, rval);
+    d += d2;
+    cx->fp->sp--;
+    return JS_NewNumberValue(cx, d, &cx->fp->sp[-1]);
+  }
+  return JS_TRUE;
+}
+
 static JSBool
 swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1026,7 +1069,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x44] = { "Typeof", NULL },
   [0x45] = { "TargetPath", NULL },
   [0x46] = { "Enumerate", NULL },
-  [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_add2_7 } },
+  [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 }  },
   [0x49] = { "Equals2", NULL },
   [0x4a] = { "ToNumber", NULL },

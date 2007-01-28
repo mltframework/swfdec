@@ -144,6 +144,8 @@ swfdec_scriptable_from_jsval (JSContext *cx, jsval val, GType type)
 
   if (!JSVAL_IS_OBJECT (val))
     return NULL;
+  if (JSVAL_IS_NULL (val))
+    return NULL;
   object = JSVAL_TO_OBJECT (val);
   klass = g_type_class_peek (type);
   if (klass == NULL)

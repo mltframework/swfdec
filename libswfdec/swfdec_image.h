@@ -65,7 +65,10 @@ struct _SwfdecImageClass {
 
 GType			swfdec_image_get_type		(void);
 
-cairo_surface_t *	swfdec_image_get_surface	(SwfdecImage *	image);
+cairo_surface_t *	swfdec_image_get_surface	(SwfdecImage *		image);
+cairo_surface_t *	swfdec_image_get_surface_for_target 
+							(SwfdecImage *		image,
+							 cairo_surface_t *	target);
 
 int swfdec_image_jpegtables (SwfdecSwfDecoder * s);
 int tag_func_define_bits_jpeg (SwfdecSwfDecoder * s);

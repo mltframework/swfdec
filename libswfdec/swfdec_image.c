@@ -169,15 +169,15 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
 }
 
 static void
-swfdec_image_create_surface (SwfdecImage *image, guint8 *data)
+swfdec_image_create_surface (SwfdecImage *image, guint8 *data, gboolean has_alpha)
 {
   static const cairo_user_data_key_t key;
 
   g_assert (image->surface == NULL);
 
   image->surface = cairo_image_surface_create_for_data (data,
-      CAIRO_FORMAT_ARGB32, image->width, image->height,
-      image->rowstride);
+      has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
+      image->width, image->height, image->rowstride);
   cairo_surface_set_user_data (image->surface, &key, data,
       g_free);
 }
@@ -204,7 +204,7 @@ swfdec_image_jpeg_load (SwfdecImage *image)
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, NULL, NULL);
   jpeg_rgb_decoder_free (dec);
-  swfdec_image_create_surface (image, image_data);
+  swfdec_image_create_surface (image, image_data, FALSE);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -252,7 +252,7 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
   jpeg_rgb_decoder_get_image (dec, &image_data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
-  swfdec_image_create_surface (image, image_data);
+  swfdec_image_create_surface (image, image_data, FALSE);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -317,7 +317,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   merge_alpha (image, image_data, alpha_data);
   g_free (alpha_data);
 
-  swfdec_image_create_surface (image, image_data);
+  swfdec_image_create_surface (image, image_data, TRUE);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -487,7 +487,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
 #endif
   }
 
-  swfdec_image_create_surface (image, image_data);
+  swfdec_image_create_surface (image, image_data, have_alpha);
 }
 
 int
@@ -597,3 +597,33 @@ swfdec_image_get_surface (SwfdecImage *image)
   return image->surface;
 }
 
+cairo_surface_t *
+swfdec_image_get_surface_for_target (SwfdecImage *image, cairo_surface_t *target)
+{
+  cairo_surface_t *current, *similar;
+  cairo_t *copy;
+  cairo_content_t content;
+
+  current = swfdec_image_get_surface (image);
+  if (cairo_surface_get_type (current) == cairo_surface_get_type (target))
+    return current;
+
+  /* FIXME: we might want to create multiple surfaces here if there's multiple
+   * live rendering sources. Right now, this is the quick fix, that transforms
+   * the cache to the most recent used type */
+  if (cairo_surface_get_type (current) == CAIRO_SURFACE_TYPE_IMAGE &&
+      cairo_image_surface_get_format (current) == CAIRO_FORMAT_RGB24)
+    content = CAIRO_CONTENT_COLOR;
+  else
+    content = CAIRO_CONTENT_COLOR_ALPHA;
+  similar = cairo_surface_create_similar (target,
+      content,
+      image->width, image->height);
+  copy = cairo_create (similar);
+  cairo_set_source_surface (copy, current, 0, 0);
+  cairo_paint (copy);
+  cairo_destroy (copy);
+  cairo_surface_destroy (current);
+  image->surface = similar;
+  return similar;
+}

@@ -1105,6 +1105,35 @@ fail:
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  JSObject *object;
+  guint i, n_args;
+
+  if (!JS_ValueToECMAUint32 (cx, fp->sp[-1], &n_args))
+    return JS_FALSE;
+  if ((guint) (fp->sp - fp->spbase) < 2 * n_args + 1) {
+    SWFDEC_ERROR ("not enough stack space");
+    return JS_FALSE;
+  }
+
+  object = JS_NewObject (cx, &js_ObjectClass, NULL, NULL);
+  if (object == NULL)
+    return JS_FALSE;
+  for (i = 0; i < n_args; i++) {
+    const char *s = swfdec_js_to_string (cx, fp->sp[-3 - 2 * i]);
+    if (s == NULL)
+      return JS_FALSE;
+    if (!JS_SetProperty (cx, object, s, &fp->sp[-2 - 2 * i]))
+      return JS_FALSE;
+  }
+  fp->sp -= 2 * n_args;
+  fp->sp[-1] = OBJECT_TO_JSVAL (object);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1321,7 +1350,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [0x41] = { "DefineLocal2", NULL },
   [0x42] = { "InitArray", NULL },
-  [0x43] = { "InitObject", NULL },
+  [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
   [0x44] = { "Typeof", NULL },
   [0x45] = { "TargetPath", NULL },
   [0x46] = { "Enumerate", NULL },

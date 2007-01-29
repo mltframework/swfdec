@@ -61,12 +61,7 @@ static JSClass sound_class = {
 static JSBool
 swfdec_js_sound_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  JSObject *new;
-
-  new = JS_NewObject (cx, &sound_class, NULL, NULL);
-  if (new == NULL)
-    return JS_TRUE;
-  *rval = OBJECT_TO_JSVAL (new);
+  *rval = OBJECT_TO_JSVAL (obj);
   return JS_TRUE;
 }
 

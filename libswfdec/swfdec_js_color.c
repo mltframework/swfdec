@@ -178,20 +178,16 @@ static JSBool
 swfdec_js_color_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
-  JSObject *new;
 
   movie = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_MOVIE);
   if (movie == NULL) {
     SWFDEC_INFO ("attempted to construct a color without a movie");
     return JS_TRUE;
   }
-  new = JS_NewObject (cx, &color_class, NULL, NULL);
-  if (new == NULL)
-    return JS_TRUE;
-  if (!JS_SetPrivate (cx, new, movie))
+  if (!JS_SetPrivate (cx, obj, movie))
     return JS_TRUE;
   g_object_ref (movie);
-  *rval = OBJECT_TO_JSVAL (new);
+  *rval = OBJECT_TO_JSVAL (obj);
   return JS_TRUE;
 }
 

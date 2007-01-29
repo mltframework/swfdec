@@ -35,6 +35,7 @@
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
+#include "js/jsfun.h"
 
 /*** CONSTANT POOLS ***/
 
@@ -1063,6 +1064,47 @@ swfdec_action_stop_sounds (JSContext *cx, guint action, const guint8 *data, guin
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  jsval constructor;
+  JSObject *object;
+  const JSClass *clasp;
+  guint n_args;
+
+  constructor = fp->sp[-1];
+  if (!swfdec_eval_jsval (cx, NULL, &constructor))
+    return JS_FALSE;
+  if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
+    return JS_FALSE;
+  if ((guint) (fp->sp - fp->spbase) < n_args + 2) {
+    SWFDEC_ERROR ("not enough stack space");
+    return JS_FALSE;
+  }
+  fp->sp[-1] = constructor;
+
+  if (!JSVAL_IS_OBJECT (constructor))
+    goto fail;
+  object = JSVAL_TO_OBJECT (constructor);
+  if (JS_GetClass (object) != &js_FunctionClass)
+    goto fail;
+  clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
+  object = JS_NewObject (cx, clasp, NULL, NULL);
+  if (object == NULL)
+    return JS_FALSE;
+  fp->sp[-2] = OBJECT_TO_JSVAL (object);
+  if (!swfdec_action_call (cx, n_args, JSINVOKE_CONSTRUCT))
+    return JS_FALSE;
+  fp->sp[-1] = OBJECT_TO_JSVAL (object);
+  return JS_TRUE;
+
+fail:
+  fp->sp -= n_args + 1;
+  fp->sp[-1] = JSVAL_VOID;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1276,7 +1318,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x3d] = { "CallFunction", NULL },
   [0x3e] = { "Return", NULL },
   [0x3f] = { "Modulo", NULL },
-  [0x40] = { "NewObject", NULL },
+  [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [0x41] = { "DefineLocal2", NULL },
   [0x42] = { "InitArray", NULL },
   [0x43] = { "InitObject", NULL },

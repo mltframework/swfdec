@@ -98,7 +98,9 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
 {
-  return swfdec_scriptable_from_jsval (cx, OBJECT_TO_JSVAL (cx->fp->scopeChain), SWFDEC_TYPE_MOVIE);
+  JSObject *object = cx->fp->scopeChain;
+  object = OBJ_THIS_OBJECT (cx, object);
+  return swfdec_scriptable_from_jsval (cx, OBJECT_TO_JSVAL (object), SWFDEC_TYPE_MOVIE);
 }
 
 static JSBool
@@ -442,6 +444,8 @@ swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
       return JS_FALSE;
     *val = swfdec_js_eval (cx, obj, bytes);
   } else {
+    if (obj == NULL)
+      obj = OBJ_THIS_OBJECT (cx, cx->fp->scopeChain);
     *val = OBJECT_TO_JSVAL (obj);
   }
   return JS_TRUE;

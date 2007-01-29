@@ -384,7 +384,7 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
     if (cx->fp == NULL)
       goto out;
     g_assert (cx->fp->scopeChain);
-    cur = OBJECT_TO_JSVAL (cx->fp->scopeChain);
+    cur = OBJECT_TO_JSVAL (OBJ_THIS_OBJECT (cx, cx->fp->scopeChain));
   }
 
 finish:

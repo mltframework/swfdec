@@ -1054,6 +1054,15 @@ swfdec_action_end_drag (JSContext *cx, guint action, const guint8 *data, guint l
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_stop_sounds (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+
+  swfdec_player_stop_all_sounds (player);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1219,7 +1228,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x06] = { "Play", NULL, 0, 0, { swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play } },
   [0x07] = { "Stop", NULL, 0, 0, { swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop } },
   [0x08] = { "ToggleQuality", NULL },
-  [0x09] = { "StopSounds", NULL },
+  [0x09] = { "StopSounds", NULL, 0, 0, { swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds } },
   /* version 4 */
   [0x0a] = { "Add", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0b] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },

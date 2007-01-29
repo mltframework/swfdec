@@ -359,23 +359,26 @@ swfdec_action_trace (JSContext *cx, guint action, const guint8 *data, guint len)
  * This function is similar to js_Invoke, however it uses a reversed stack
  * order. sp[-1] has to be the function to call, sp[-2] will be the object the 
  * function is called on, sp[-3] is the first argument, followed by the rest of
- * the arguments. The function reorders the stack on success and pushes the 
- * return value on top.
+ * the arguments. The function removes all of these argumends from the stack 
+ * and pushes the return value on top.
  *
  * Returns: JS_TRUE on success, JS_FALSE on failure.
  **/
 static JSBool
 swfdec_action_call (JSContext *cx, guint n_args, guint flags)
 {
+  JSStackFrame *fp = cx->fp;
   int i, j;
   jsval tmp;
+
+  g_assert ((guint) (fp->sp - fp->spbase) >= n_args + 2);
 
   j = -1;
   i = - (n_args + 2);
   while (i < j) {
-    tmp = cx->fp->sp[j];
-    cx->fp->sp[j] = cx->fp->sp[i];
-    cx->fp->sp[i] = tmp;
+    tmp = fp->sp[j];
+    fp->sp[j] = fp->sp[i];
+    fp->sp[i] = tmp;
     j--;
     i++;
   }
@@ -1006,6 +1009,51 @@ swfdec_action_set_target2 (JSContext *cx, guint action, const guint8 *data, guin
   return swfdec_action_do_set_target (cx, JSVAL_TO_OBJECT (val));
 }
 
+static JSBool
+swfdec_action_start_drag (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  guint stack_size = fp->sp - fp->spbase;
+  guint n_args = 1;
+
+  if (stack_size < 3)
+    return JS_FALSE;
+  if (!swfdec_eval_jsval (cx, NULL, &fp->sp[-1]))
+    return JS_FALSE;
+  if (swfdec_action_to_number (cx, fp->sp[-3])) {
+    jsval tmp;
+    if (stack_size < 7)
+      return JS_FALSE;
+    n_args = 5;
+    /* yay for order */
+    tmp = fp->sp[-4];
+    fp->sp[-4] = fp->sp[-7];
+    fp->sp[-7] = tmp;
+    tmp = fp->sp[-6];
+    fp->sp[-6] = fp->sp[-5];
+    fp->sp[-5] = tmp;
+  }
+  if (!JSVAL_IS_OBJECT (fp->sp[-1])) {
+    fp->sp -= n_args + 2;
+    return JS_TRUE;
+  }
+  fp->sp[-3] = fp->sp[-2];
+  fp->sp[-2] = fp->sp[-1];
+  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (fp->sp[-2]), "startDrag", &fp->sp[-1]))
+    return JS_FALSE;
+  swfdec_action_call (cx, n_args, 0);
+  fp->sp--;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_end_drag (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+  swfdec_player_set_drag_movie (player, NULL, FALSE, NULL);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1196,8 +1244,8 @@ static const SwfdecActionSpec actions[256] = {
   [0x24] = { "CloneSprite", NULL },
   [0x25] = { "RemoveSprite", NULL },
   [0x26] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
-  [0x27] = { "StartDrag", NULL },
-  [0x28] = { "EndDrag", NULL },
+  [0x27] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
+  [0x28] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
   [0x29] = { "StringLess", NULL },
   /* version 7 */
   [0x2a] = { "Throw", NULL },

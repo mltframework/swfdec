@@ -46,7 +46,7 @@ enum {
 #define SWFDEC_DEBUG_LEVEL(level,...) (void) 0
 #else
 #define SWFDEC_DEBUG_LEVEL(level,...) \
-  swfdec_debug_log ((level), __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+  swfdec_debug_log ((level), __FILE__, G_GNUC_FUNCTION, __LINE__, __VA_ARGS__)
 #endif
 
 void swfdec_debug_log (unsigned int level, const char *file, const char *function,

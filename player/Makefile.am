@@ -1,5 +1,13 @@
 if WITH_GTK
-if WITH_ALSA
+
+# this workaround is needed or autotools don't generate the .deps/*.Plo files correctly
+swfdec_playback.c: swfdec_playback_$(AUDIO_TYPE).c Makefile
+	cmp -s $(srcdir)/swfdec_playback_$(AUDIO_TYPE).c swfdec_playback.c \
+	|| cp $(srcdir)/swfdec_playback_$(AUDIO_TYPE).c swfdec_playback.c
+
+BUILT_SOURCES = swfdec_playback.c
+CLEANFILES = swfdec_playback.c
+
 noinst_LTLIBRARIES = libswfdecui.la
 noinst_PROGRAMS = swfplay swfdebug
 
@@ -31,15 +39,17 @@ noinst_HEADERS = \
 	swfdec_slow_loader.h \
 	swfdec_widget.h 
 
-libswfdecui_la_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS)
-libswfdecui_la_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
-swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS)
-swfplay_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
+libswfdecui_la_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(AUDIO_CFLAGS)
+libswfdecui_la_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(AUDIO_LIBS)
+swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS)
+swfplay_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS)
 swfplay_LDADD = libswfdecui.la
-swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(ALSA_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
-swfdebug_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(ALSA_LIBS)
+swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+swfdebug_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS)
 swfdebug_LDADD = libswfdecui.la $(top_builddir)/libswfdec/js/libjs.la
 endif
-endif
 
-EXTRA_DIST = swfdebug.c swfplay.c swfdec_widget.c swfdec_widget.h swfdec_playback.c swfdec_playback.h
+EXTRA_DIST = \
+	swfdec_playback_alsa.c \
+	swfdec_playback_none.c
+

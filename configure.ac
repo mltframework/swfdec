@@ -86,13 +86,40 @@ if test "$HAVE_GTK" = "no"; then
 fi
 AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
 
-PKG_CHECK_MODULES(ALSA, alsa >= 1.0, HAVE_ALSA=yes, HAVE_ALSA=no)
-AC_SUBST(ALSA_LIBS)
-AC_SUBST(ALSA_CFLAGS)
-if test "$HAVE_ALSA" = "no"; then
-  AC_MSG_WARN([cannot find alsa, player will be disabled])
+dnl
+dnl audio backend
+dnl
+AC_ARG_WITH(audio,
+            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
+                            [audio backend to use])],,
+	    [with_audio=auto])
+
+AUDIO_TYPE=
+if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
+  PKG_CHECK_MODULES(ALSA, alsa >= 1.0, AUDIO_TYPE=alsa)
+  if test "$AUDIO_TYPE" = "alsa"; then
+    with_audio=alsa
+  else
+    AC_MSG_WARN([no alsa audio support])
+  fi
+  AUDIO_CFLAGS=$ALSA_CFLAGS
+  AUDIO_LIBS=$ALSA_LIBS
 fi
-AM_CONDITIONAL(WITH_ALSA,[test "$HAVE_ALSA" != "no"])
+
+if test "$with_audio" = "auto" -o "$with_audio" = "none"; then
+  AUDIO_CFLAGS=
+  AUDIO_LIBS=
+  AUDIO_TYPE=none
+fi
+
+if test "x$AUDIO_TYPE" = "x"; then
+  AC_MSG_ERROR([desired audio support could not be used])
+else
+  AC_MSG_NOTICE([audio backend: $AUDIO_TYPE])
+fi
+AC_SUBST(AUDIO_LIBS)
+AC_SUBST(AUDIO_CFLAGS)
+AC_SUBST(AUDIO_TYPE)
 
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.1.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)

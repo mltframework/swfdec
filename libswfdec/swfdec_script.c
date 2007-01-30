@@ -36,6 +36,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
 #include "js/jsfun.h"
+#include "js/jsscope.h"
 
 /*** CONSTANT POOLS ***/
 
@@ -1134,7 +1135,127 @@ swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guin
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *function_name;
+  guint i, n_args, size;
+  SwfdecBits bits;
+  JSFunction *fun;
+  SwfdecScript *script;
+
+  swfdec_bits_init_data (&bits, data, len);
+  function_name = swfdec_bits_get_string (&bits);
+  if (function_name == NULL) {
+    SWFDEC_ERROR ("could not parse function name");
+    return JS_FALSE;
+  }
+  n_args = swfdec_bits_get_u16 (&bits);
+  if (*function_name == '\0') {
+    /* anonymous function */
+    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA, NULL, NULL);
+  } else {
+    /* named function */
+    fun = JS_NewFunction (cx, NULL, n_args, 0, NULL, function_name);
+  }
+  if (fun == NULL)
+    return JS_FALSE;
+  for (i = 0; i < n_args; i++) {
+    JSAtom *atom;
+    const char *arg_name = swfdec_bits_get_string (&bits);
+    if (arg_name == NULL || *arg_name == '\0') {
+      SWFDEC_ERROR ("empty argument name not allowed");
+      return JS_FALSE;
+    }
+    /* FIXME: check duplicate arguments */
+    atom = js_Atomize (cx, arg_name, strlen (arg_name), 0);
+    if (atom == NULL)
+      return JS_FALSE;
+    if (!js_AddNativeProperty (cx, fun->object, (jsid) atom,
+	js_GetArgument, js_SetArgument, SPROP_INVALID_SLOT,
+	JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED,
+	SPROP_HAS_SHORTID, i)) {
+      return JS_FALSE;
+    }
+  }
+  size = swfdec_bits_get_u16 (&bits);
+  /* check the script can be created */
+  script = cx->fp->swf;
+  if (script->buffer->data + script->buffer->length < cx->fp->pc + 3 + len + size) {
+    SWFDEC_ERROR ("size of function is too big");
+    return FALSE;
+  } else {
+    /* create the script */
+    SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (script->buffer, 
+	cx->fp->pc + 3 + len - script->buffer->data, size);
+    swfdec_bits_init (&bits, buffer);
+    script = swfdec_script_new_for_player (JS_GetContextPrivate (cx),
+	&bits, *function_name ? function_name : "<lambda>", 
+	((SwfdecScript *) cx->fp->swf)->version);
+    swfdec_buffer_unref (buffer);
+  }
+  if (script == NULL) {
+    SWFDEC_ERROR ("failed to create script");
+    return JS_FALSE;
+  }
+  fun->swf = script;
+  /* attach the function */
+  if (*function_name == '\0') {
+    if (action == 0) {
+      SWFDEC_ERROR ("not enough stack space available");
+      return JS_FALSE;
+    }
+    *cx->fp->sp++ = OBJECT_TO_JSVAL (fun->object);
+  } else {
+    SWFDEC_ERROR ("FIXME: implement");
+  }
+
+  /* update current context */
+  cx->fp->pc += 3 + len + size;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
+
+static char *
+swfdec_action_print_define_function (guint action, const guint8 *data, guint len)
+{
+  SwfdecBits bits;
+  GString *string;
+  const char *function_name;
+  guint i, n_args, size;
+
+  string = g_string_new ("DefineFunction ");
+  swfdec_bits_init_data (&bits, data, len);
+  function_name = swfdec_bits_get_string (&bits);
+  if (function_name == NULL) {
+    SWFDEC_ERROR ("could not parse function name");
+    g_string_free (string, TRUE);
+    return NULL;
+  }
+  if (*function_name) {
+    g_string_append (string, function_name);
+    g_string_append_c (string, ' ');
+  }
+  n_args = swfdec_bits_get_u16 (&bits);
+  g_string_append_c (string, '(');
+ 
+  for (i = 0; i < n_args; i++) {
+    const char *arg_name = swfdec_bits_get_string (&bits);
+    if (arg_name == NULL || *arg_name == '\0') {
+      SWFDEC_ERROR ("empty argument name not allowed");
+      g_string_free (string, TRUE);
+      return NULL;
+    }
+    if (i)
+      g_string_append (string, ", ");
+    g_string_append (string, arg_name);
+  }
+  g_string_append_c (string, ')');
+  size = swfdec_bits_get_u16 (&bits);
+  g_string_append_printf (string, " %u", size);
+  return g_string_free (string, FALSE);
+}
 
 static char *
 swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
@@ -1406,7 +1527,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x99] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
   [0x9a] = { "GetURL2", NULL },
   /* version 5 */
-  [0x9b] = { "DefineFunction", NULL },
+  [0x9b] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
   /* version 4 */
   [0x9d] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
   [0x9e] = { "Call", NULL },
@@ -1442,7 +1563,7 @@ swfdec_script_foreach_internal (SwfdecBits *bits, SwfdecScriptForeachFunc func, 
   gconstpointer bytecode;
 
   bytecode = bits->ptr;
-  while ((action = swfdec_bits_get_u8 (bits))) {
+  while (swfdec_bits_left (bits) && (action = swfdec_bits_get_u8 (bits))) {
     if (action & 0x80) {
       len = swfdec_bits_get_u16 (bits);
       data = bits->ptr;
@@ -1634,8 +1755,10 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 
   while (TRUE) {
     /* check pc */
+    if (pc == endpc) /* needed for scripts created via DefineFunction */
+      break;
     if (pc < startpc || pc >= endpc) {
-      SWFDEC_ERROR ("pc %p not in valid range [%p, %p] anymore", pc, startpc, endpc);
+      SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto internal_error;
     }
 

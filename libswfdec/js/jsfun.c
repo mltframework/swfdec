@@ -1042,6 +1042,7 @@ fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     }
 }
 
+extern void swfdec_script_unref (void *script);
 static void
 fun_finalize(JSContext *cx, JSObject *obj)
 {
@@ -1058,6 +1059,8 @@ fun_finalize(JSContext *cx, JSObject *obj)
         return;
     if (fun->script)
         js_DestroyScript(cx, fun->script);
+    if (fun->swf)
+	swfdec_script_unref (fun->swf);
     JS_free(cx, fun);
 }
 
@@ -1928,6 +1931,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     fun->object = NULL;
     fun->native = native;
     fun->script = NULL;
+    fun->swf = NULL;
     fun->nargs = nargs;
     fun->extra = 0;
     fun->nvars = 0;

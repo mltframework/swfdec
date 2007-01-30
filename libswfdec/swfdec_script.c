@@ -403,7 +403,7 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   if (n_args + 3 > (guint) (fp->sp - fp->spbase))
     return JS_FALSE;
   
-  if (!JSVAL_IS_OBJECT (fp->sp[-2]))
+  if (!JSVAL_IS_OBJECT (fp->sp[-2]) || JSVAL_IS_NULL (fp->sp[-2]))
     goto fail;
   obj = JSVAL_TO_OBJECT (fp->sp[-2]);
   if (s[0] == '\0') {
@@ -689,7 +689,7 @@ swfdec_action_get_member (JSContext *cx, guint action, const guint8 *data, guint
   if (s == NULL)
     return JS_FALSE;
 
-  if (JSVAL_IS_OBJECT (cx->fp->sp[-2])) {
+  if (JSVAL_IS_OBJECT (cx->fp->sp[-2]) && !JSVAL_IS_NULL (cx->fp->sp[-2])) {
     if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[-2]), s, &cx->fp->sp[-2]))
       return JS_FALSE;
   } else {
@@ -708,7 +708,7 @@ swfdec_action_set_member (JSContext *cx, guint action, const guint8 *data, guint
   if (s == NULL)
     return JS_FALSE;
 
-  if (JSVAL_IS_OBJECT (cx->fp->sp[-3])) {
+  if (JSVAL_IS_OBJECT (cx->fp->sp[-3]) && !JSVAL_IS_NULL (cx->fp->sp[-3])) {
     if (!JS_SetProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[-3]), s, &cx->fp->sp[-1]))
       return JS_FALSE;
   }
@@ -989,7 +989,7 @@ swfdec_action_set_target (JSContext *cx, guint action, const guint8 *data, guint
   }
   /* evaluate relative to this to not get trapped by previous SetTarget calls */
   target = swfdec_js_eval (cx, cx->fp->thisp, (const char *) data);
-  if (!JSVAL_IS_OBJECT (target)) {
+  if (!JSVAL_IS_OBJECT (target) || JSVAL_IS_NULL (target)) {
     SWFDEC_WARNING ("target is not an object");
     return JS_TRUE;
   }
@@ -1003,7 +1003,7 @@ swfdec_action_set_target2 (JSContext *cx, guint action, const guint8 *data, guin
   
   val = cx->fp->sp[-1];
   cx->fp->sp--;
-  if (!JSVAL_IS_OBJECT (val)) {
+  if (!JSVAL_IS_OBJECT (val) || JSVAL_IS_NULL (val)) {
     SWFDEC_WARNING ("target is not an object");
     return JS_TRUE;
   }
@@ -1034,7 +1034,7 @@ swfdec_action_start_drag (JSContext *cx, guint action, const guint8 *data, guint
     fp->sp[-6] = fp->sp[-5];
     fp->sp[-5] = tmp;
   }
-  if (!JSVAL_IS_OBJECT (fp->sp[-1])) {
+  if (!JSVAL_IS_OBJECT (fp->sp[-1]) || JSVAL_IS_NULL (fp->sp[-1])) {
     fp->sp -= n_args + 2;
     return JS_TRUE;
   }
@@ -1084,7 +1084,7 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
   }
   fp->sp[-1] = constructor;
 
-  if (!JSVAL_IS_OBJECT (constructor))
+  if (!JSVAL_IS_OBJECT (constructor) || JSVAL_IS_NULL (constructor))
     goto fail;
   object = JSVAL_TO_OBJECT (constructor);
   if (JS_GetClass (object) != &js_FunctionClass)

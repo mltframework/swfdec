@@ -32,7 +32,8 @@ swfdec_js_color_get_rgb (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   int result;
   SwfdecMovie *movie = JS_GetPrivate (cx, obj);
 
-  g_assert (movie);
+  if (!movie)
+    return JS_TRUE;
   result = (movie->color_transform.rb << 16) |
 	   ((movie->color_transform.gb % 256) << 8) | 
 	   (movie->color_transform.bb % 256);
@@ -55,7 +56,8 @@ swfdec_js_color_get_transform (JSContext *cx, JSObject *obj, uintN argc, jsval *
   JSObject *ret;
   SwfdecMovie *movie = JS_GetPrivate (cx, obj);
 
-  g_assert (movie);
+  if (!movie)
+    return JS_TRUE;
   ret = JS_NewObject (cx, NULL, NULL, NULL);
   if (ret == NULL)
     return JS_TRUE;
@@ -78,7 +80,8 @@ swfdec_js_color_set_rgb (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   unsigned int color;
   SwfdecMovie *movie = JS_GetPrivate (cx, obj);
 
-  g_assert (movie);
+  if (!movie)
+    return JS_TRUE;
   if (!JS_ValueToECMAUint32 (cx, argv[0], &color))
     return JS_TRUE;
 
@@ -117,8 +120,9 @@ swfdec_js_color_set_transform (JSContext *cx, JSObject *obj, uintN argc, jsval *
   JSObject *parse;
   SwfdecMovie *movie = JS_GetPrivate (cx, obj);
 
-  g_assert (movie);
-  if (!JSVAL_IS_OBJECT (argv[0]))
+  if (!movie)
+    return JS_TRUE;
+  if (!movie)
     return JS_TRUE;
   parse = JSVAL_TO_OBJECT (argv[0]);
   parse_property (cx, parse, "ra", &movie->color_transform.ra, TRUE);
@@ -161,7 +165,6 @@ swfdec_js_color_finalize (JSContext *cx, JSObject *obj)
   SwfdecMovie *movie;
 
   movie = JS_GetPrivate (cx, obj);
-  /* since we also finalize the class, not everyone has a private object */
   if (movie) {
     g_object_unref (movie);
   }
@@ -179,14 +182,16 @@ swfdec_js_color_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 {
   SwfdecMovie *movie;
 
-  movie = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_MOVIE);
-  if (movie == NULL) {
-    SWFDEC_INFO ("attempted to construct a color without a movie");
-    return JS_TRUE;
+  if (argc > 0) {
+    movie = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_MOVIE);
+  } else {
+    movie = NULL;
   }
-  if (!JS_SetPrivate (cx, obj, movie))
-    return JS_TRUE;
-  g_object_ref (movie);
+  if (movie != NULL) {
+    if (!JS_SetPrivate (cx, obj, movie))
+      return JS_FALSE;
+    g_object_ref (movie);
+  }
   *rval = OBJECT_TO_JSVAL (obj);
   return JS_TRUE;
 }
@@ -195,7 +200,7 @@ void
 swfdec_js_add_color (SwfdecPlayer *player)
 {
   JS_InitClass (player->jscx, player->jsobj, NULL,
-      &color_class, swfdec_js_color_new, 1, NULL, color_methods,
+      &color_class, swfdec_js_color_new, 0, NULL, color_methods,
       NULL, NULL);
 }
 

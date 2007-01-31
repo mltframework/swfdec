@@ -963,7 +963,10 @@ have_fun:
         }
         ok = js_Interpret(cx, &v);
     } else if (swf) {
-        frame.scopeChain = funobj; /* FIXME */
+	if (!js_GetCallObject(cx, &frame, parent)) {
+	    ok = JS_FALSE;
+	    goto out;
+	}
         ok = swfdec_script_interpret(swf, cx, &v);
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */

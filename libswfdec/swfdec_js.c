@@ -343,7 +343,7 @@ static gboolean
 swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
         jsval *val, gboolean set)
 {
-  jsval cur = JSVAL_NULL;
+  jsval cur;
   char *work = NULL;
 
   SWFDEC_LOG ("eval called with \"%s\" on %p", str, obj);
@@ -358,8 +358,8 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
     if (cx->fp == NULL)
       goto out;
     obj = cx->fp->thisp;
-    cur = OBJECT_TO_JSVAL (obj);
   }
+  cur = OBJECT_TO_JSVAL (obj);
   while (str != NULL && *str != '\0') {
     char *dot = strchr (str, '.');
     if (!JSVAL_IS_OBJECT (cur))

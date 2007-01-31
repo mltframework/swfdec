@@ -16,6 +16,8 @@ EXTRA_DIST = \
 	children.swf.trace \
 	color-getters.swf \
 	color-getters.swf.trace \
+	color-new.swf \
+	color-new.swf.trace \
 	color-setRGB.swf \
 	color-setRGB.swf.trace \
 	color-setTransform-alpha.swf \

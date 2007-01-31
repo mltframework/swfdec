@@ -1418,7 +1418,12 @@ js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
 static JSBool
 fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return js_fun_toString(cx, obj, 0, argc, argv, rval);
+    JSString *string = JS_InternString (cx, "[type Function]");
+
+    if (string == NULL)
+	return JS_FALSE;
+    *rval = STRING_TO_JSVAL (string);
+    return JS_TRUE;
 }
 
 #if JS_HAS_TOSOURCE

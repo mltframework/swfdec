@@ -177,6 +177,7 @@ void		swfdec_movie_send_mouse_change	(SwfdecMovie *		movie,
 SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,
 						 double			x,
 						 double			y);
+char *		swfdec_movie_get_path		(SwfdecMovie *		movie);
 void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,

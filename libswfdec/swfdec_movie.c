@@ -787,6 +787,30 @@ swfdec_movie_goto (SwfdecMovie *movie, guint frame)
     klass->goto_frame (movie, frame);
 }
 
+char *
+swfdec_movie_get_path (SwfdecMovie *movie)
+{
+  GString *s;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+  
+  s = g_string_new ("");
+  do {
+    if (movie->parent) {
+      g_string_prepend (s, movie->name);
+      g_string_prepend_c (s, '.');
+    } else {
+      char *ret = g_strdup_printf ("_level%u%s",
+	movie->depth + 16384, s->str);
+      g_string_free (s, TRUE);
+      return ret;
+    }
+    movie = movie->parent;
+  } while (TRUE);
+  g_assert_not_reached ();
+  return NULL;
+}
+
 int
 swfdec_movie_compare_depths (gconstpointer a, gconstpointer b)
 {

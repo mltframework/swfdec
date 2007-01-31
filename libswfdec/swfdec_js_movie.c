@@ -464,36 +464,19 @@ swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
-static GString *
-get_name (SwfdecMovie *movie)
-{
-  GString *s;
-
-  if (movie->parent) {
-    s = get_name (movie->parent);
-    g_string_append_c (s, '.');
-    g_string_append (s, movie->name);
-  } else {
-    /* the name can be changed */
-    s = g_string_new ("_level");
-    g_string_append_printf (s, "%u", movie->depth + 16384);
-  }
-  return s;
-}
-
 static JSBool
 swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  GString *s;
+  char *s;
   JSString *string;
   SwfdecMovie *movie;
 
   movie = JS_GetPrivate (cx, obj);
   g_assert (movie);
 
-  s = get_name (movie);
-  string = JS_NewStringCopyZ (cx, s->str);
-  g_string_free (s, TRUE);
+  s = swfdec_movie_get_path (movie);
+  string = JS_NewStringCopyZ (cx, s);
+  g_free (s);
   if (string == NULL)
     return JS_FALSE;
   *rval = STRING_TO_JSVAL (string);

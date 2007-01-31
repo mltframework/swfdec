@@ -42,6 +42,10 @@ EXTRA_DIST = \
 	currentframe.swf.trace \
 	double.swf \
 	double.swf.trace \
+	function1.swf \
+	function1.swf.trace \
+	function2.swf \
+	function2.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \

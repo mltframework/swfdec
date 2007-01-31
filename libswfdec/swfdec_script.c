@@ -1019,7 +1019,7 @@ swfdec_action_random_number (JSContext *cx, guint action, const guint8 *data, gu
 }
 
 static JSBool
-swfdec_action_less (JSContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_old_compare (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   jsval rval, lval;
   double l, r;
@@ -1029,7 +1029,17 @@ swfdec_action_less (JSContext *cx, guint action, const guint8 *data, guint len)
   lval = cx->fp->sp[-2];
   l = swfdec_action_to_number (cx, lval);
   r = swfdec_action_to_number (cx, rval);
-  cond = l < r;
+  switch (action) {
+    case 0x0e:
+      cond = l == r;
+      break;
+    case 0x0f:
+      cond = l < r;
+      break;
+    default: 
+      g_assert_not_reached ();
+      return JS_FALSE;
+  }
   cx->fp->sp--;
   if (((SwfdecScript *) cx->fp->swf)->version < 5) {
     cx->fp->sp[-1] = INT_TO_JSVAL (cond ? 1 : 0);
@@ -1655,8 +1665,8 @@ static const SwfdecActionSpec actions[256] = {
   [0x0b] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0c] = { "Multiply", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0d] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [0x0e] = { "Equals", NULL },
-  [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_less, swfdec_action_less, swfdec_action_less, swfdec_action_less } },
+  [0x0e] = { "Equals", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
+  [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
   [0x10] = { "And", NULL },
   [0x11] = { "Or", NULL },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
@@ -1705,7 +1715,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
   [0x46] = { "Enumerate", NULL },
   [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },
-  [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 }  },
+  [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [0x4a] = { "ToNumber", NULL },
   [0x4b] = { "ToString", NULL },

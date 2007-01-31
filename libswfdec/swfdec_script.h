@@ -39,6 +39,8 @@ struct _SwfdecScript {
   char *		name;			/* name identifying this script */
   unsigned int		version;		/* version of the script */
   gpointer		debugger;		/* debugger owning us or NULL */
+  /* needed by functions */
+  SwfdecBuffer *	constant_pool;		/* constant pool action */
 };
 
 SwfdecScript *	swfdec_script_new		(SwfdecBits *		bits,

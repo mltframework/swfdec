@@ -97,6 +97,26 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
   g_ptr_array_free (pool, TRUE);
 }
 
+/* FIXME: this is a bit hacky */
+static SwfdecBuffer *
+swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
+{
+  guint8 *start;
+  SwfdecBuffer *buffer;
+  guint len;
+
+  if (pool->len == 0)
+    return NULL;
+  start = (guint8 *) g_ptr_array_index (pool, 0) - 5;
+  buffer = script->buffer;
+  g_assert (start >= buffer->data);
+  g_assert (start + 3 < buffer->data + buffer->length);
+  g_assert (*start == 0x88);
+  len = 3 + (start[1] | start[2] << 8);
+  g_assert (start + len < buffer->data + buffer->length);
+  return swfdec_buffer_new_subbuffer (buffer, start - buffer->data, len);
+}
+
 /*** SUPPORT FUNCTIONS ***/
 
 static SwfdecMovie *
@@ -1334,6 +1354,10 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
 	&bits, *function_name ? function_name : "<lambda>", 
 	((SwfdecScript *) cx->fp->swf)->version);
     swfdec_buffer_unref (buffer);
+    if (cx->fp->constant_pool) {
+      script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
+	  cx->fp->constant_pool);
+    }
   }
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
@@ -1638,6 +1662,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
   return g_string_free (string, FALSE);
 }
 
+/* NB: constant pool actions are special in that they are called at init time */
 static char *
 swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
 {
@@ -2010,6 +2035,8 @@ swfdec_script_unref (SwfdecScript *script)
     return;
 
   swfdec_buffer_unref (script->buffer);
+  if (script->constant_pool)
+    swfdec_buffer_unref (script->constant_pool);
   g_free (script->name);
   g_free (script);
 }
@@ -2067,6 +2094,16 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
     ok = JS_FALSE;
     goto out;
+  }
+  /* initialize the constant pool */
+  if (script->constant_pool) {
+    spec = actions + 0x88;
+    ok = spec->exec[version] (cx, 0x88, script->constant_pool->data + 3,
+	script->constant_pool->length - 3);
+    if (!ok) {
+      SWFDEC_WARNING ("Constant pool initialization failed");
+      goto out;
+    }
   }
 
   while (TRUE) {

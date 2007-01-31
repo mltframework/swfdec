@@ -35,6 +35,8 @@
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
+#include "swfdec_sprite.h"
+#include "swfdec_sprite_movie.h"
 #include "js/jsfun.h"
 #include "js/jsscope.h"
 
@@ -115,6 +117,25 @@ swfdec_action_push_string (JSContext *cx, const char *s)
   return JS_TRUE;
 }
 
+static double
+swfdec_action_to_number (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val);
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    return *JSVAL_TO_DOUBLE (val);
+  } else if (JSVAL_IS_BOOLEAN (val)) {
+    return JSVAL_TO_BOOLEAN (val);
+  } else if (JSVAL_IS_STRING (val)) {
+    double d;
+    if (!JS_ValueToNumber (cx, val, &d))
+      return 0;
+    return isnan (d) ? 0 : d;
+  } else {
+    return 0;
+  }
+}
+
 /*** ALL THE ACTION IS HERE ***/
 
 static JSBool
@@ -140,6 +161,38 @@ swfdec_action_play (JSContext *cx, guint action, const guint8 *data, guint len)
 }
 
 static JSBool
+swfdec_action_next_frame (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_action_get_target (cx);
+  if (movie) {
+    if (movie->frame + 1 < movie->n_frames) {
+      swfdec_movie_goto (movie, movie->frame + 1);
+    } else {
+      SWFDEC_INFO ("can't execute nextFrame, already at last frame");
+    }
+  } else {
+    SWFDEC_ERROR ("no movie to nextFrame on");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_previous_frame (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_action_get_target (cx);
+  if (movie) {
+    if (movie->frame > 0) {
+      swfdec_movie_goto (movie, movie->frame - 1);
+    } else {
+      SWFDEC_INFO ("can't execute previousFrame, already at first frame");
+    }
+  } else {
+    SWFDEC_ERROR ("no movie to previousFrame on");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_goto_frame (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecMovie *movie = swfdec_action_get_target (cx);
@@ -155,6 +208,76 @@ swfdec_action_goto_frame (JSContext *cx, guint action, const guint8 *data, guint
     movie->stopped = TRUE;
   } else {
     SWFDEC_ERROR ("no movie to goto on");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_goto_label (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_action_get_target (cx);
+
+  if (!memchr (data, 0, len)) {
+    SWFDEC_ERROR ("GotoLabel action does not specify a string");
+    return JS_FALSE;
+  }
+
+  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    int frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, (const char *) data);
+    if (frame == -1)
+      return JS_TRUE;
+    swfdec_movie_goto (movie, frame);
+    movie->stopped = TRUE;
+  } else {
+    SWFDEC_ERROR ("no movie to goto on");
+  }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_goto_frame2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecBits bits;
+  guint bias;
+  gboolean play;
+  jsval val;
+  int frame;
+  SwfdecMovie *movie;
+
+  swfdec_bits_init_data (&bits, data, len);
+  if (swfdec_bits_getbits (&bits, 6)) {
+    SWFDEC_WARNING ("reserved bits in GotoFrame2 aren't 0");
+  }
+  bias = swfdec_bits_getbit (&bits);
+  play = swfdec_bits_getbit (&bits);
+  if (bias) {
+    bias = swfdec_bits_get_u16 (&bits);
+  }
+  val = cx->fp->sp[-1];
+  cx->fp->sp--;
+  if (JSVAL_IS_STRING (val)) {
+    const char *name = swfdec_js_to_string (cx, val);
+    if (name == NULL)
+      return JS_FALSE;
+    if (strchr (name, ':')) {
+      SWFDEC_ERROR ("FIXME: handle targets");
+    }
+    frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
+    if (frame == -1)
+      return JS_TRUE;
+  } else {
+    /* FIXME: how do we treat undefined etc? */
+    frame = swfdec_action_to_number (cx, val);
+  }
+  frame += bias;
+  /* now set it */
+  movie = swfdec_action_get_target (cx);
+  if (movie) {
+    frame = CLAMP (frame, 0, (int) movie->n_frames - 1);
+    swfdec_movie_goto (movie, frame);
+    movie->stopped = !play;
+  } else {
+    SWFDEC_ERROR ("no movie to GotoFrame2 on");
   }
   return JS_TRUE;
 }
@@ -549,25 +672,6 @@ swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, gui
 out:
   cx->fp->sp -= 3;
   return JS_TRUE;
-}
-
-static double
-swfdec_action_to_number (JSContext *cx, jsval val)
-{
-  if (JSVAL_IS_INT (val)) {
-    return JSVAL_TO_INT (val);
-  } else if (JSVAL_IS_DOUBLE (val)) {
-    return *JSVAL_TO_DOUBLE (val);
-  } else if (JSVAL_IS_BOOLEAN (val)) {
-    return JSVAL_TO_BOOLEAN (val);
-  } else if (JSVAL_IS_STRING (val)) {
-    double d;
-    if (!JS_ValueToNumber (cx, val, &d))
-      return 0;
-    return isnan (d) ? 0 : d;
-  } else {
-    return 0;
-  }
 }
 
 static JSBool
@@ -1274,6 +1378,32 @@ swfdec_action_shift (JSContext *cx, guint action, const guint8 *data, guint len)
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
 
+static JSBool
+swfdec_action_to_integer (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+
+  return JS_NewNumberValue (cx, (int) d, &cx->fp->sp[-1]);
+}
+
+static JSBool
+swfdec_action_target_path (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie = swfdec_scriptable_from_jsval (cx, cx->fp->sp[-1], SWFDEC_TYPE_MOVIE);
+
+  if (movie == NULL) {
+    cx->fp->sp[-1] = JSVAL_VOID;
+  } else {
+    char *s = swfdec_movie_get_path (movie);
+    JSString *string = JS_NewStringCopyZ (cx, s);
+    g_free (s);
+    if (string == NULL)
+      return JS_FALSE;
+    cx->fp->sp[-1] = STRING_TO_JSVAL (string);
+  }
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1431,6 +1561,26 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
 }
 
 static char *
+swfdec_action_print_goto_frame2 (guint action, const guint8 *data, guint len)
+{
+  gboolean play, bias;
+  SwfdecBits bits;
+
+  swfdec_bits_init_data (&bits, data, len);
+  if (swfdec_bits_getbits (&bits, 6)) {
+    SWFDEC_WARNING ("reserved bits in GotoFrame2 aren't 0");
+  }
+  bias = swfdec_bits_getbit (&bits);
+  play = swfdec_bits_getbit (&bits);
+  if (bias) {
+    return g_strdup_printf ("GotoFrame2 %s +%u", play ? "play" : "stop",
+	swfdec_bits_get_u16 (&bits));
+  } else {
+    return g_strdup_printf ("GotoFrame2 %s", play ? "play" : "stop");
+  }
+}
+
+static char *
 swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
 {
   guint frame;
@@ -1440,6 +1590,17 @@ swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
 
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   return g_strdup_printf ("GotoFrame %u", frame);
+}
+
+static char *
+swfdec_action_print_goto_label (guint action, const guint8 *data, guint len)
+{
+  if (!memchr (data, 0, len)) {
+    SWFDEC_ERROR ("GotoLabel action does not specify a string");
+    return NULL;
+  }
+
+  return g_strdup_printf ("GotoLabel %s", data);
 }
 
 static char *
@@ -1474,8 +1635,8 @@ typedef struct {
 
 static const SwfdecActionSpec actions[256] = {
   /* version 3 */
-  [0x04] = { "NextFrame", NULL },
-  [0x05] = { "PreviousFrame", NULL },
+  [0x04] = { "NextFrame", NULL, 0, 0, { swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame } },
+  [0x05] = { "PreviousFrame", NULL, 0, 0, { swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame } },
   [0x06] = { "Play", NULL, 0, 0, { swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play } },
   [0x07] = { "Stop", NULL, 0, 0, { swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop } },
   [0x08] = { "ToggleQuality", NULL },
@@ -1494,10 +1655,10 @@ static const SwfdecActionSpec actions[256] = {
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },
   [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
-  [0x18] = { "ToInteger", NULL },
+  [0x18] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
   [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [0x1d] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
-  [0x20] = { "SetTarget22", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
+  [0x20] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [0x23] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
@@ -1532,7 +1693,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x42] = { "InitArray", NULL },
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
   [0x44] = { "Typeof", NULL },
-  [0x45] = { "TargetPath", NULL },
+  [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
   [0x46] = { "Enumerate", NULL },
   [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 }  },
@@ -1573,7 +1734,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 3 */
   [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
   [0x8b] = { "SetTarget", NULL, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
-  [0x8c] = { "GotoLabel", NULL },
+  [0x8c] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, { swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label } },
   /* version 4 */
   [0x8d] = { "WaitForFrame2", NULL },
   /* version 7 */
@@ -1590,7 +1751,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 4 */
   [0x9d] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
   [0x9e] = { "Call", NULL },
-  [0x9f] = { "GotoFrame2", NULL }
+  [0x9f] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }
 };
 
 char *

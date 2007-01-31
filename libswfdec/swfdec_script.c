@@ -387,6 +387,33 @@ swfdec_action_call (JSContext *cx, guint n_args, guint flags)
   return js_Invoke (cx, n_args, flags);
 }
 
+/* FIXME: lots of overlap with swfdec_action_call_method */
+static JSBool
+swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  const char *s;
+  guint32 n_args;
+  JSObject *obj;
+  jsval fun;
+  
+  s = swfdec_js_to_string (cx, fp->sp[-1]);
+  if (s == NULL)
+    return JS_FALSE;
+  if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
+    return JS_FALSE;
+  if (n_args + 2 > (guint) (fp->sp - fp->spbase))
+    return JS_FALSE;
+  
+  obj = OBJ_THIS_OBJECT (cx, cx->fp->scopeChain);
+  if (!JS_GetProperty (cx, obj, s, &fun))
+    return JS_FALSE;
+  fp->sp[-1] = fun;
+  fp->sp[-2] = OBJECT_TO_JSVAL (obj);
+  swfdec_action_call (cx, n_args, 0);
+  return JS_TRUE;
+}
+
 static JSBool
 swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1207,12 +1234,44 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
     }
     *cx->fp->sp++ = OBJECT_TO_JSVAL (fun->object);
   } else {
-    SWFDEC_ERROR ("FIXME: implement");
+    jsval val = OBJECT_TO_JSVAL (fun->object);
+    if (!JS_SetProperty (cx, OBJ_THIS_OBJECT (cx, cx->fp->scopeChain), function_name, &val))
+      return JS_FALSE;
   }
 
   /* update current context */
   cx->fp->pc += 3 + len + size;
   return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_shift (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  guint32 amount, value;
+  double d;
+
+  if (!JS_ValueToECMAUint32 (cx, cx->fp->sp[-1], &amount) ||
+      !JS_ValueToECMAUint32 (cx, cx->fp->sp[-2], &value))
+    return JS_FALSE;
+
+  amount &= 31;
+  switch (action) {
+    case 0x63:
+      d = value << amount;
+      break;
+    case 0x64:
+      d = ((gint) value) >> amount;
+      break;
+    case 0x65:
+      d = ((guint) value) >> amount;
+      break;
+    default:
+      g_assert_not_reached ();
+      return JS_FALSE;
+  }
+
+  cx->fp->sp--;
+  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
 
 /*** PRINT FUNCTIONS ***/
@@ -1464,8 +1523,8 @@ static const SwfdecActionSpec actions[256] = {
   /* version 5 */
   [0x3a] = { "Delete", NULL },
   [0x3b] = { "Delete2", NULL },
-  [0x3c] = { "DefineLocal", NULL },
-  [0x3d] = { "CallFunction", NULL },
+  [0x3c] = { "DefineLocal", NULL }, //, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
+  [0x3d] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [0x3e] = { "Return", NULL },
   [0x3f] = { "Modulo", NULL },
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
@@ -1495,9 +1554,9 @@ static const SwfdecActionSpec actions[256] = {
   [0x60] = { "BitAnd", NULL },
   [0x61] = { "BitOr", NULL },
   [0x62] = { "BitXor", NULL },
-  [0x63] = { "BitLShift", NULL },
-  [0x64] = { "BitRShift", NULL },
-  [0x65] = { "BitURShift", NULL },
+  [0x63] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
+  [0x64] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
+  [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   /* version 6 */
   [0x66] = { "StrictEquals", NULL },
   [0x67] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },

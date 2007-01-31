@@ -1359,6 +1359,35 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
 }
 
 static JSBool
+swfdec_action_bitwise (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  guint32 a, b;
+  double d;
+
+  if (!JS_ValueToECMAUint32 (cx, cx->fp->sp[-1], &a) ||
+      !JS_ValueToECMAUint32 (cx, cx->fp->sp[-2], &b))
+    return JS_FALSE;
+
+  switch (action) {
+    case 0x60:
+      d = (int) (a & b);
+      break;
+    case 0x61:
+      d = (int) (a | b);
+      break;
+    case 0x62:
+      d = (int) (a ^ b);
+      break;
+    default:
+      g_assert_not_reached ();
+      return JS_FALSE;
+  }
+
+  cx->fp->sp--;
+  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+}
+
+static JSBool
 swfdec_action_shift (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   guint32 amount, value;
@@ -1411,6 +1440,54 @@ swfdec_action_target_path (JSContext *cx, guint action, const guint8 *data, guin
       return JS_FALSE;
     cx->fp->sp[-1] = STRING_TO_JSVAL (string);
   }
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_define_local (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *name;
+
+  if (cx->fp->callobj == NULL) {
+    SWFDEC_ERROR ("FIXME: no local scope");
+    return JS_FALSE;
+  }
+  name = swfdec_js_to_string (cx, cx->fp->sp[-2]);
+  if (name == NULL)
+    return JS_FALSE;
+  if (!JS_SetProperty (cx, cx->fp->callobj, name, &cx->fp->sp[-1]))
+    return JS_FALSE;
+  cx->fp->sp -= 2;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_define_local2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *name;
+  jsval val = JSVAL_VOID;
+
+  if (cx->fp->callobj == NULL) {
+    SWFDEC_ERROR ("FIXME: no local scope");
+    return JS_FALSE;
+  }
+  name = swfdec_js_to_string (cx, cx->fp->sp[-1]);
+  if (name == NULL)
+    return JS_FALSE;
+  if (!JS_SetProperty (cx, cx->fp->callobj, name, &val))
+    return JS_FALSE;
+  cx->fp->sp--;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_return (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecScript *script = cx->fp->swf;
+
+  cx->fp->rval = cx->fp->sp[-1];
+  cx->fp->pc = script->buffer->data + script->buffer->length;
+  cx->fp->sp--;
   return JS_TRUE;
 }
 
@@ -1703,12 +1780,12 @@ static const SwfdecActionSpec actions[256] = {
   /* version 5 */
   [0x3a] = { "Delete", NULL },
   [0x3b] = { "Delete2", NULL },
-  [0x3c] = { "DefineLocal", NULL }, //, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
+  [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [0x3d] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
-  [0x3e] = { "Return", NULL },
+  [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
   [0x3f] = { "Modulo", NULL },
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
-  [0x41] = { "DefineLocal2", NULL },
+  [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [0x42] = { "InitArray", NULL },
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
   [0x44] = { "Typeof", NULL },
@@ -1731,9 +1808,9 @@ static const SwfdecActionSpec actions[256] = {
   [0x54] = { "InstanceOf", NULL },
   [0x55] = { "Enumerate2", NULL },
   /* version 5 */
-  [0x60] = { "BitAnd", NULL },
-  [0x61] = { "BitOr", NULL },
-  [0x62] = { "BitXor", NULL },
+  [0x60] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
+  [0x61] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
+  [0x62] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [0x63] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   [0x64] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
@@ -1994,8 +2071,11 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 
   while (TRUE) {
     /* check pc */
-    if (pc == endpc) /* needed for scripts created via DefineFunction */
+    if (pc == endpc) {
+      /* scripts created via DefineFunction or the Return action use this way out */
+      *rval = fp->rval;
       break;
+    }
     if (pc < startpc || pc >= endpc) {
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto internal_error;

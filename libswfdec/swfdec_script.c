@@ -1407,6 +1407,15 @@ swfdec_action_target_path (JSContext *cx, guint action, const guint8 *data, guin
 /*** PRINT FUNCTIONS ***/
 
 static char *
+swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
+{
+  if (!memchr (data, 0, len)) {
+    SWFDEC_ERROR ("SetTarget action does not specify a string");
+    return JS_FALSE;
+  }
+  return g_strconcat ("SetTarget ", data, NULL);
+}
+static char *
 swfdec_action_print_define_function (guint action, const guint8 *data, guint len)
 {
   SwfdecBits bits;
@@ -1733,7 +1742,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x88] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
   /* version 3 */
   [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
-  [0x8b] = { "SetTarget", NULL, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
+  [0x8b] = { "SetTarget", swfdec_action_print_set_target, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
   [0x8c] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, { swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label } },
   /* version 4 */
   [0x8d] = { "WaitForFrame2", NULL },

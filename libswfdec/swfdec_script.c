@@ -267,6 +267,27 @@ swfdec_action_goto_label (JSContext *cx, guint action, const guint8 *data, guint
   return JS_TRUE;
 }
 
+static int
+swfdec_value_to_frame (JSContext *cx, SwfdecMovie *movie, jsval val)
+{
+  int frame;
+
+  if (JSVAL_IS_STRING (val)) {
+    const char *name = swfdec_js_to_string (cx, val);
+    if (name == NULL ||
+        !SWFDEC_IS_SPRITE_MOVIE (movie))
+      return -1;
+    if (strchr (name, ':')) {
+      SWFDEC_ERROR ("FIXME: handle targets");
+    }
+    frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
+  } else {
+    /* FIXME: how do we treat undefined etc? */
+    frame = swfdec_action_to_number (cx, val);
+  }
+  return frame;
+}
+
 static JSBool
 swfdec_action_goto_frame2 (JSContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -274,7 +295,6 @@ swfdec_action_goto_frame2 (JSContext *cx, guint action, const guint8 *data, guin
   guint bias;
   gboolean play;
   jsval val;
-  int frame;
   SwfdecMovie *movie;
 
   swfdec_bits_init_data (&bits, data, len);
@@ -288,29 +308,75 @@ swfdec_action_goto_frame2 (JSContext *cx, guint action, const guint8 *data, guin
   }
   val = cx->fp->sp[-1];
   cx->fp->sp--;
-  if (JSVAL_IS_STRING (val)) {
-    const char *name = swfdec_js_to_string (cx, val);
-    if (name == NULL)
-      return JS_FALSE;
-    if (strchr (name, ':')) {
-      SWFDEC_ERROR ("FIXME: handle targets");
-    }
-    frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
-    if (frame == -1)
-      return JS_TRUE;
-  } else {
-    /* FIXME: how do we treat undefined etc? */
-    frame = swfdec_action_to_number (cx, val);
-  }
-  frame += bias;
-  /* now set it */
   movie = swfdec_action_get_target (cx);
+  /* now set it */
   if (movie) {
+    int frame = swfdec_value_to_frame (cx, movie, val);
+    if (frame < 0)
+      return JS_TRUE;
+    frame += bias;
     frame = CLAMP (frame, 0, (int) movie->n_frames - 1);
     swfdec_movie_goto (movie, frame);
     movie->stopped = !play;
   } else {
     SWFDEC_ERROR ("no movie to GotoFrame2 on");
+  }
+  return JS_TRUE;
+}
+
+static void
+swfdec_script_skip_actions (JSContext *cx, guint jump)
+{
+  SwfdecScript *script = cx->fp->swf;
+  guint8 *pc = cx->fp->pc;
+  guint8 *endpc = script->buffer->data + script->buffer->length;
+
+  /* jump instructions */
+  g_assert (script);
+  do {
+    if (pc >= endpc)
+      break;
+    if (*pc & 0x80) {
+      if (pc + 2 >= endpc)
+	break;
+      pc += 3 + GUINT16_FROM_LE (*((guint16 *) (pc + 1)));
+    } else {
+      pc++;
+    }
+  } while (jump-- > 0);
+    cx->fp->pc = pc;
+}
+
+static JSBool
+swfdec_action_wait_for_frame2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval val;
+  SwfdecMovie *movie;
+
+  if (len != 1) {
+    SWFDEC_ERROR ("WaitForFrame2 needs a 1-byte data");
+    return JS_FALSE;
+  }
+  val = cx->fp->sp[-1];
+  cx->fp->sp--;
+  movie = swfdec_action_get_target (cx);
+  if (movie) {
+    int frame = swfdec_value_to_frame (cx, movie, val);
+    guint jump = data[2];
+    guint loaded;
+    if (frame < 0)
+      return JS_TRUE;
+    if (SWFDEC_IS_ROOT_MOVIE (movie)) {
+      SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
+      loaded = dec->frames_loaded;
+      g_assert (loaded <= movie->n_frames);
+    } else {
+      loaded = movie->n_frames;
+    }
+    if (loaded < (guint) frame)
+      swfdec_script_skip_actions (cx, jump);
+  } else {
+    SWFDEC_ERROR ("no movie to WaitForFrame2 on");
   }
   return JS_TRUE;
 }
@@ -333,32 +399,14 @@ swfdec_action_wait_for_frame (JSContext *cx, guint action, const guint8 *data, g
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   jump = data[2];
   if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
+    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
     loaded = dec->frames_loaded;
     g_assert (loaded <= movie->n_frames);
   } else {
     loaded = movie->n_frames;
   }
-  if (loaded < frame) {
-    SwfdecScript *script = cx->fp->swf;
-    guint8 *pc = cx->fp->pc;
-    guint8 *endpc = script->buffer->data + script->buffer->length;
-
-    /* jump instructions */
-    g_assert (script);
-    do {
-      if (pc >= endpc)
-	break;
-      if (*pc & 0x80) {
-	if (pc + 2 >= endpc)
-	  break;
-	pc += 3 + GUINT16_FROM_LE (*((guint16 *) (pc + 1)));
-      } else {
-	pc++;
-      }
-    } while (jump-- > 0);
-    cx->fp->pc = pc;
-  }
+  if (loaded < frame)
+    swfdec_script_skip_actions (cx, jump);
   return JS_TRUE;
 }
 
@@ -1693,6 +1741,16 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
 }
 
 static char *
+swfdec_action_print_wait_for_frame2 (guint action, const guint8 *data, guint len)
+{
+  if (len != 1) {
+    SWFDEC_ERROR ("WaitForFrame2 needs a 1-byte data");
+    return NULL;
+  }
+  return g_strdup_printf ("WaitForFrame2 %u", (guint) *data);
+}
+
+static char *
 swfdec_action_print_goto_frame2 (guint action, const guint8 *data, guint len)
 {
   gboolean play, bias;
@@ -1868,7 +1926,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x8b] = { "SetTarget", swfdec_action_print_set_target, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
   [0x8c] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, { swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label } },
   /* version 4 */
-  [0x8d] = { "WaitForFrame2", NULL },
+  [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
   /* version 7 */
   [0x8e] = { "DefineFunction2", NULL },
   [0x8f] = { "Try", NULL },

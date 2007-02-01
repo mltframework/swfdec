@@ -574,9 +574,8 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   if (n_args + 3 > (guint) (fp->sp - fp->spbase))
     return JS_FALSE;
   
-  if (!JSVAL_IS_OBJECT (fp->sp[-2]) || JSVAL_IS_NULL (fp->sp[-2]))
-    goto fail;
-  obj = JSVAL_TO_OBJECT (fp->sp[-2]);
+  if (!JS_ValueToObject (cx, fp->sp[-2], &obj))
+    return JS_FALSE;
   if (s[0] == '\0') {
     fun = OBJECT_TO_JSVAL (obj);
   } else {
@@ -587,11 +586,6 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   fp->sp[-1] = fun;
   fp->sp[-2] = OBJECT_TO_JSVAL (obj);
   swfdec_action_call (cx, n_args, 0);
-  return JS_TRUE;
-
-fail:
-  fp->sp -= 2 + n_args;
-  fp->sp[-1] = JSVAL_VOID;
   return JS_TRUE;
 }
 

@@ -156,6 +156,17 @@ swfdec_action_to_number (JSContext *cx, jsval val)
   }
 }
 
+static JSBool
+swfdec_value_to_number_7 (JSContext *cx, jsval val, double *d)
+{
+  if (JSVAL_IS_NULL (val)) {
+    *d = *cx->runtime->jsNaN;
+    return JS_TRUE;
+  } else {
+    return JS_ValueToNumber (cx, val, d);
+  }
+}
+
 /*** ALL THE ACTION IS HERE ***/
 
 static JSBool
@@ -700,8 +711,8 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
     l = swfdec_action_to_number (cx, lval);
     r = swfdec_action_to_number (cx, rval);
   } else {
-    if (!JS_ValueToNumber(cx, lval, &l) ||
-        !JS_ValueToNumber(cx, rval, &r))
+    if (!swfdec_value_to_number_7 (cx, lval, &l) ||
+        !swfdec_value_to_number_7 (cx, rval, &r))
       return JS_FALSE;
   }
   cx->fp->sp--;
@@ -722,9 +733,8 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
 	  return JS_FALSE;
 	cx->fp->sp[-1] = STRING_TO_JSVAL (str);
 	return JS_TRUE;
-      }
-      if (((SwfdecScript *) cx->fp->swf)->version >= 7 &&
-	  JSVAL_IS_VOID (rval)) {
+      } else if (((SwfdecScript *) cx->fp->swf)->version >= 7 &&
+	  (r == 0 || isnan (r))) {
 	cx->fp->sp[-1] = DOUBLE_TO_JSVAL (r < 0 ? 
 	    cx->runtime->jsNegativeInfinity :
 	    cx->runtime->jsPositiveInfinity);
@@ -790,14 +800,6 @@ swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len
 
   rval = cx->fp->sp[-1];
   lval = cx->fp->sp[-2];
-  if (!JSVAL_IS_PRIMITIVE (rval)) {
-    if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT (rval), 0 , &rval))
-      return JS_FALSE;
-  }
-  if (!JSVAL_IS_PRIMITIVE (lval)) {
-    if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT (lval), 0 , &lval))
-      return JS_FALSE;
-  }
   if ((cond = JSVAL_IS_STRING (lval)) || JSVAL_IS_STRING (rval)) {
     JSString *str, *str2;
     if (cond) {
@@ -816,8 +818,8 @@ swfdec_action_add2_7 (JSContext *cx, guint action, const guint8 *data, guint len
     cx->fp->sp[-1] = STRING_TO_JSVAL (str);
   } else {
     double d, d2;
-    if (!JS_ValueToNumber(cx, lval, &d) ||
-        !JS_ValueToNumber(cx, rval, &d2))
+    if (!swfdec_value_to_number_7 (cx, lval, &d) ||
+        !swfdec_value_to_number_7 (cx, rval, &d2))
 	return JS_FALSE;
     d += d2;
     cx->fp->sp--;

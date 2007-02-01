@@ -151,6 +151,8 @@ swfdec_action_to_number (JSContext *cx, jsval val)
     if (!JS_ValueToNumber (cx, val, &d))
       return 0;
     return isnan (d) ? 0 : d;
+  } else if (JSVAL_IS_OBJECT(val) && (((SwfdecScript *) cx->fp->swf)->version >= 6)) {
+    return JSVAL_IS_NULL (val) ? 0 : *cx->runtime->jsNaN;
   } else {
     return 0;
   }
@@ -727,6 +729,8 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
       l = l * r;
       break;
     case 0x0d:
+      if (isnan (r))
+	r = 0;
       if (r == 0 && ((SwfdecScript *) cx->fp->swf)->version < 5) {
 	JSString *str = JS_InternString (cx, "#ERROR#");
 	if (str == NULL)
@@ -734,7 +738,7 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
 	cx->fp->sp[-1] = STRING_TO_JSVAL (str);
 	return JS_TRUE;
       } else if (((SwfdecScript *) cx->fp->swf)->version >= 7 &&
-	  (r == 0 || isnan (r))) {
+	  r == 0) {
 	cx->fp->sp[-1] = DOUBLE_TO_JSVAL (r < 0 ? 
 	    cx->runtime->jsNegativeInfinity :
 	    cx->runtime->jsPositiveInfinity);

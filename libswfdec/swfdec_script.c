@@ -161,7 +161,7 @@ swfdec_action_to_number (JSContext *cx, jsval val)
 static JSBool
 swfdec_value_to_number_7 (JSContext *cx, jsval val, double *d)
 {
-  if (JSVAL_IS_NULL (val)) {
+  if (JSVAL_IS_OBJECT (val)) {
     *d = *cx->runtime->jsNaN;
     return JS_TRUE;
   } else {
@@ -550,8 +550,10 @@ swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, gu
   JSStackFrame *fp = cx->fp;
   const char *s;
   guint32 n_args;
-  JSObject *obj;
+  JSObject *obj, *pobj;
+  JSProperty *prop;
   jsval fun;
+  JSAtom *atom;
   
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
@@ -561,7 +563,9 @@ swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, gu
   if (n_args + 2 > (guint) (fp->sp - fp->spbase))
     return JS_FALSE;
   
-  obj = OBJ_THIS_OBJECT (cx, cx->fp->scopeChain);
+  if (!(atom = js_Atomize (cx, s, strlen (s), 0)) ||
+      !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+    return JS_FALSE;
   if (!JS_GetProperty (cx, obj, s, &fun))
     return JS_FALSE;
   fp->sp[-1] = fun;
@@ -589,6 +593,8 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &obj))
     return JS_FALSE;
+  if (obj == NULL)
+    goto fail;
   if (s[0] == '\0') {
     fun = OBJECT_TO_JSVAL (obj);
   } else {
@@ -599,6 +605,11 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   fp->sp[-1] = fun;
   fp->sp[-2] = OBJECT_TO_JSVAL (obj);
   swfdec_action_call (cx, n_args, 0);
+  return JS_TRUE;
+
+fail:
+  fp->sp -= 2 + n_args;
+  fp->sp[-1] = JSVAL_VOID;
   return JS_TRUE;
 }
 

@@ -76,6 +76,8 @@ EXTRA_DIST = \
 	name2.swf.trace \
 	names.swf \
 	names.swf.trace \
+	number.swf \
+	number.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \

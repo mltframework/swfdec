@@ -30,9 +30,29 @@ G_DEFINE_TYPE (SwfdecDebugStack, swfdec_debug_stack, GTK_TYPE_TREE_VIEW)
 
 enum {
   COLUMN_LINE,
+  COLUMN_TYPE,
   COLUMN_CONTENT,
   N_COLUMNS
 };
+
+static const char *
+swfdec_get_jsval_type (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_VOID (val))
+    return "undefined";
+  if (JSVAL_IS_NULL (val))
+    return "null";
+  if (JSVAL_IS_INT (val))
+    return "Integer";
+  if (JSVAL_IS_DOUBLE (val))
+    return "Double";
+  if (JSVAL_IS_BOOLEAN (val))
+    return "Boolean";
+  if (JSVAL_IS_STRING (val))
+    return "String";
+  g_assert (JSVAL_IS_OBJECT (val));
+  return "Object";
+}
 
 static void
 swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
@@ -40,7 +60,7 @@ swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
   JSStackFrame *frame = NULL;
   guint i, min, max;
   GtkListStore *store = gtk_list_store_new (N_COLUMNS, G_TYPE_UINT, 
-      G_TYPE_STRING);
+      G_TYPE_STRING, G_TYPE_STRING);
   GtkTreeIter iter;
 
   JS_FrameIterator (debug->manager->player->jscx, &frame);
@@ -49,7 +69,9 @@ swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
   for (i = min; i <= max; i++) {
     const char *s = swfdec_js_to_string (debug->manager->player->jscx, frame->sp[-i]);
     gtk_list_store_append (store, &iter);
-    gtk_list_store_set (store, &iter, COLUMN_LINE, i, COLUMN_CONTENT, s, -1);
+    gtk_list_store_set (store, &iter, COLUMN_LINE, i, 
+      COLUMN_TYPE, swfdec_get_jsval_type (debug->manager->player->jscx, frame->sp[-i]),
+      COLUMN_CONTENT, s, -1);
   }
 
   gtk_tree_view_set_model (GTK_TREE_VIEW (debug), GTK_TREE_MODEL (store));
@@ -115,6 +137,13 @@ swfdec_debug_stack_add_columns (GtkTreeView *treeview)
   column = gtk_tree_view_column_new_with_attributes ("Depth", renderer,
     "text", COLUMN_LINE, NULL);
   gtk_tree_view_column_set_sort_column_id (column, COLUMN_LINE);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_append_column (treeview, column);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Type", renderer,
+    "text", COLUMN_TYPE, NULL);
+  gtk_tree_view_column_set_sort_column_id (column, COLUMN_TYPE);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_append_column (treeview, column);
 

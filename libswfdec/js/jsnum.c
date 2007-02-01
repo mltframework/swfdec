@@ -249,6 +249,15 @@ IntToString(jsint i, char *buf, size_t bufSize)
 static JSBool
 num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+  JSString *string;
+
+  string = JS_InternString (cx, "[type Object]");
+  if (string == NULL)
+    return JS_FALSE;
+
+  *rval = STRING_TO_JSVAL (string);
+  return JS_TRUE;
+#if 0
     jsval v;
     jsdouble d;
     jsint base;
@@ -286,6 +295,7 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
+#endif
 }
 
 static JSBool

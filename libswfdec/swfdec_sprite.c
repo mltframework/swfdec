@@ -376,8 +376,8 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     SWFDEC_LOG ("  name = %s", content->name);
   }
   if (has_clip_depth) {
-    content->clip_depth = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("  clip_depth = %d (=> %d)", content->clip_depth, content->clip_depth - 16384);
+    content->clip_depth = swfdec_bits_get_u16 (bits) - 16384;
+    SWFDEC_LOG ("  clip_depth = %d (=> %d)", content->clip_depth + 16384, content->clip_depth);
   }
   if (has_clip_actions) {
     int reserved, clip_event_flags, event_flags, key_code;

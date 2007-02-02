@@ -559,6 +559,10 @@ compile_push (CompileState *state, guint action, guint len)
     switch (type) {
       case 0: /* string */
 	s = swfdec_bits_skip_string (state->bits);
+	if (s) {
+	  compile_state_error (state, "Push: Could not get string");
+	  return;
+	}
 	compile_state_debug_add (state, "Push \"%s\"", s);
 	push_string (state, s);
 	break;
@@ -1300,7 +1304,7 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version, const char 
     name = "Unnamed script";
   compile_state_init (player->jscx, bits, version, &state);
   SWFDEC_INFO ("Creating new script in frame");
-  while ((action = swfdec_bits_get_u8 (bits))) {
+  while (swfdec_bits_left (bits) && (action = swfdec_bits_get_u8 (bits))) {
     if (action & 0x80) {
       len = swfdec_bits_get_u16 (bits);
     } else {

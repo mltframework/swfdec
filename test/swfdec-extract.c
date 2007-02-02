@@ -259,7 +259,7 @@ main (int argc, char *argv[])
     if (!export_graphic (SWFDEC_GRAPHIC (character), argv[3]))
       ret = 1;
   } else {
-    g_printerr ("id %ld does not specify an exportable object", id);
+    g_printerr ("id %ld does not specify an exportable object\n", id);
     ret = 1;
   }
 

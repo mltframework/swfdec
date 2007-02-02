@@ -87,7 +87,9 @@ swfdec_bits_left (SwfdecBits *b)
 
 #define SWFDEC_BITS_CHECK(b,n) G_STMT_START { \
   if (swfdec_bits_left(b) < (n)) { \
-    SWFDEC_ERROR("reading past end of buffer"); \
+    SWFDEC_ERROR ("reading past end of buffer"); \
+    b->ptr = b->end; \
+    b->idx = 0; \
     return 0; \
   } \
 }G_STMT_END

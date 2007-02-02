@@ -395,10 +395,13 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     else
       script_name = g_strdup_printf ("Sprite%u", SWFDEC_CHARACTER (content->graphic)->id);
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
-      guint tmp = swfdec_bits_get_u32 (bits);
-      SwfdecBits save = *bits;
-      swfdec_bits_skip_bytes (&save, tmp);
+      guint length = swfdec_bits_get_u32 (bits);
+      SwfdecBits action_bits;
+      SwfdecBuffer *buffer = swfdec_bits_get_buffer (bits, length);
 
+      if (buffer == NULL)
+	break;
+      swfdec_bits_init (&action_bits, buffer);
       if (event_flags & SWFDEC_EVENT_KEY_PRESS)
 	key_code = swfdec_bits_get_u8 (bits);
       else
@@ -413,14 +416,13 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
       }
       if (content->events == NULL)
 	content->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-      swfdec_event_list_parse (content->events, &s->b, s->version, 
+      swfdec_event_list_parse (content->events, &action_bits, s->version, 
 	  event_flags, key_code, script_name);
-      if (bits->ptr != save.ptr) {
-	SWFDEC_ERROR ("record size and actual parsed action differ by %d bytes",
-	    (int) (save.ptr - bits->ptr));
+      if (swfdec_bits_left (&action_bits)) {
+	SWFDEC_ERROR ("not all action data was parsed: %u bytes left",
+	    swfdec_bits_left (&action_bits));
       }
-      /* FIXME: who should we trust with parsing here? */
-      *bits = save;
+      swfdec_buffer_unref (buffer);
     }
     g_free (script_name);
   }

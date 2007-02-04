@@ -559,7 +559,7 @@ compile_push (CompileState *state, guint action, guint len)
     switch (type) {
       case 0: /* string */
 	s = swfdec_bits_skip_string (state->bits);
-	if (s) {
+	if (s == NULL) {
 	  compile_state_error (state, "Push: Could not get string");
 	  return;
 	}

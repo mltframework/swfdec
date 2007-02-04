@@ -240,9 +240,9 @@ swfdec_out_put_rgb (SwfdecOut *out, SwfdecColor color)
 {
   g_return_if_fail (out != NULL);
 
-  swfdec_out_put_u8 (out, SWF_COLOR_R (color));
-  swfdec_out_put_u8 (out, SWF_COLOR_G (color));
-  swfdec_out_put_u8 (out, SWF_COLOR_B (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_R (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_G (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_B (color));
 }
 
 void
@@ -250,9 +250,9 @@ swfdec_out_put_rgba (SwfdecOut *out, SwfdecColor color)
 {
   g_return_if_fail (out != NULL);
 
-  swfdec_out_put_u8 (out, SWF_COLOR_R (color));
-  swfdec_out_put_u8 (out, SWF_COLOR_G (color));
-  swfdec_out_put_u8 (out, SWF_COLOR_B (color));
-  swfdec_out_put_u8 (out, SWF_COLOR_A (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_R (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_G (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_B (color));
+  swfdec_out_put_u8 (out, SWFDEC_COLOR_A (color));
 }
 

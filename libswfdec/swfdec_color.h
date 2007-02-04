@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,8 @@
 
 #include <libswfdec/swfdec_types.h>
 
+/* Pixel value in the same colorspace as cairo - endian-dependant ARGB.
+ * The alpha pixel must be present */
 typedef unsigned int SwfdecColor;
 
 struct _SwfdecColorTransform {
@@ -46,16 +48,31 @@ struct swfdec_gradient_struct
   SwfdecGradientEntry array[1];
 };
 
-#define SWF_COLOR_COMBINE(r,g,b,a)	(((r)<<24) | ((g)<<16) | ((b)<<8) | (a))
-#define SWF_COLOR_R(x)		(((x)>>24)&0xff)
-#define SWF_COLOR_G(x)		(((x)>>16)&0xff)
-#define SWF_COLOR_B(x)		(((x)>>8)&0xff)
-#define SWF_COLOR_A(x)		((x)&0xff)
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define SWFDEC_COLOR_INDEX_ALPHA (3)
+#define SWFDEC_COLOR_INDEX_RED (2)
+#define SWFDEC_COLOR_INDEX_GREEN (1)
+#define SWFDEC_COLOR_INDEX_BLUE (0)
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
+#define SWFDEC_COLOR_INDEX_ALPHA (0)
+#define SWFDEC_COLOR_INDEX_RED (1)
+#define SWFDEC_COLOR_INDEX_GREEN (2)
+#define SWFDEC_COLOR_INDEX_BLUE (3)
+#else
+#error "Unknown byte order"
+#endif
+
+#define SWFDEC_COLOR_COMBINE(r,g,b,a)	(((a)<<24) | ((r)<<16) | ((g)<<8) | (b))
+#define SWFDEC_COLOR_A(x)		(((x)>>24)&0xff)
+#define SWFDEC_COLOR_R(x)		(((x)>>16)&0xff)
+#define SWFDEC_COLOR_G(x)		(((x)>>8)&0xff)
+#define SWFDEC_COLOR_B(x)		((x)&0xff)
 
 SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio);
 void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);
 void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
 void swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color);
+gboolean swfdec_color_transform_is_identity (const SwfdecColorTransform * trans);
 void swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first);
 unsigned int swfdec_color_apply_transform (unsigned int in,

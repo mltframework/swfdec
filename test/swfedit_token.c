@@ -169,7 +169,7 @@ swfedit_rgb_from_string (const char *s, gpointer* result)
   s += 2;
   if (!swfedit_parse_hex (s, &b))
     return FALSE;
-  *result = GUINT_TO_POINTER (SWF_COLOR_COMBINE (r, g, b, 0xFF));
+  *result = GUINT_TO_POINTER (SWFDEC_COLOR_COMBINE (r, g, b, 0xFF));
   return TRUE;
 }
 
@@ -178,8 +178,8 @@ swfedit_rgb_to_string (gconstpointer value)
 {
   guint c = GPOINTER_TO_UINT (value);
 
-  return g_strdup_printf ("%02X%02X%02X", SWF_COLOR_R (c),
-      SWF_COLOR_G (c), SWF_COLOR_B (c));
+  return g_strdup_printf ("%02X%02X%02X", SWFDEC_COLOR_R (c),
+      SWFDEC_COLOR_G (c), SWFDEC_COLOR_B (c));
 }
 
 static gboolean
@@ -199,7 +199,7 @@ swfedit_rgba_from_string (const char *s, gpointer* result)
   s += 2;
   if (!swfedit_parse_hex (s, &b))
     return FALSE;
-  *result = GUINT_TO_POINTER (SWF_COLOR_COMBINE (r, g, b, a));
+  *result = GUINT_TO_POINTER (SWFDEC_COLOR_COMBINE (r, g, b, a));
   return TRUE;
 }
 
@@ -208,8 +208,8 @@ swfedit_rgba_to_string (gconstpointer value)
 {
   guint c = GPOINTER_TO_UINT (value);
 
-  return g_strdup_printf ("%02X%02X%02X%02X", SWF_COLOR_R (c),
-      SWF_COLOR_G (c), SWF_COLOR_B (c), SWF_COLOR_A (c));
+  return g_strdup_printf ("%02X%02X%02X%02X", SWFDEC_COLOR_R (c),
+      SWFDEC_COLOR_G (c), SWFDEC_COLOR_B (c), SWFDEC_COLOR_A (c));
 }
 
 struct {

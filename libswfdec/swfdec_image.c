@@ -50,7 +50,10 @@ swfdec_image_unload (SwfdecCached *cached)
   if (image->surface) {
     cairo_surface_destroy (image->surface);
     image->surface = NULL;
+  } else if (image->data) {
+    g_free (image->data);
   }
+  image->data = NULL;
 }
 
 static void
@@ -168,33 +171,10 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
-static gboolean
-swfdec_image_has_alpha (SwfdecImage *image)
-{
-  return image->type == SWFDEC_IMAGE_TYPE_LOSSLESS2 ||
-      image->type == SWFDEC_IMAGE_TYPE_JPEG3;
-}
-
-static void
-swfdec_image_create_surface (SwfdecImage *image, guint8 *data)
-{
-  static const cairo_user_data_key_t key;
-  gboolean has_alpha = swfdec_image_has_alpha (image);
-
-  g_assert (image->surface == NULL);
-
-  image->surface = cairo_image_surface_create_for_data (data,
-      has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
-      image->width, image->height, image->rowstride);
-  cairo_surface_set_user_data (image->surface, &key, data,
-      g_free);
-}
-
 static void
 swfdec_image_jpeg_load (SwfdecImage *image)
 {
   JpegRGBDecoder *dec;
-  unsigned char *image_data;
 
   dec = jpeg_rgb_decoder_new ();
 
@@ -209,10 +189,9 @@ swfdec_image_jpeg_load (SwfdecImage *image)
     return;
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  jpeg_rgb_decoder_get_image (dec, &image_data,
+  jpeg_rgb_decoder_get_image (dec, &image->data,
       &image->rowstride, NULL, NULL);
   jpeg_rgb_decoder_free (dec);
-  swfdec_image_create_surface (image, image_data);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -244,7 +223,6 @@ static void
 swfdec_image_jpeg2_load (SwfdecImage *image)
 {
   JpegRGBDecoder *dec;
-  unsigned char *image_data;
 
   dec = jpeg_rgb_decoder_new ();
 
@@ -257,10 +235,9 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
     return;
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  jpeg_rgb_decoder_get_image (dec, &image_data,
+  jpeg_rgb_decoder_get_image (dec, &image->data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
-  swfdec_image_create_surface (image, image_data);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -290,7 +267,6 @@ static void
 swfdec_image_jpeg3_load (SwfdecImage *image)
 {
   JpegRGBDecoder *dec;
-  unsigned char *image_data;
   unsigned char *alpha_data;
   SwfdecBits bits;
   SwfdecBuffer *buffer;
@@ -314,7 +290,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
     return;
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  jpeg_rgb_decoder_get_image (dec, &image_data,
+  jpeg_rgb_decoder_get_image (dec, &image->data,
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
 
@@ -322,10 +298,8 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   alpha_data = lossless (buffer->data, buffer->length, image->width * image->height);
   swfdec_buffer_unref (buffer);
 
-  merge_alpha (image, image_data, alpha_data);
+  merge_alpha (image, image->data, alpha_data);
   g_free (alpha_data);
-
-  swfdec_image_create_surface (image, image_data);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -341,11 +315,7 @@ merge_alpha (SwfdecImage * image, unsigned char *image_data,
   for (y = 0; y < image->height; y++) {
     p = image_data + y * image->rowstride;
     for (x = 0; x < image->width; x++) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      p[3] = *alpha;
-#else
-      p[0] = *alpha;
-#endif
+      p[SWFDEC_COLOR_INDEX_ALPHA] = *alpha;
       p += 4;
       alpha++;
     }
@@ -359,7 +329,6 @@ swfdec_image_lossless_load (SwfdecImage *image)
   guint color_table_size;
   unsigned char *ptr;
   SwfdecBits bits;
-  unsigned char *image_data = NULL;
   int have_alpha = (image->type == SWFDEC_IMAGE_TYPE_LOSSLESS2);
 
   swfdec_bits_init (&bits, image->raw_data);
@@ -390,7 +359,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
     guint i;
     unsigned int rowstride = (image->width + 3) & ~3;
 
-    image_data = g_malloc (4 * image->width * image->height);
+    image->data = g_malloc (4 * image->width * image->height);
     image->rowstride = image->width * 4;
 
     if (have_alpha) {
@@ -432,41 +401,34 @@ swfdec_image_lossless_load (SwfdecImage *image)
       }
       indexed_data = ptr + color_table_size * 3;
     }
-    swfdec_image_colormap_decode (image, image_data, indexed_data,
+    swfdec_image_colormap_decode (image, image->data, indexed_data,
 	ptr, color_table_size);
 
     g_free (ptr);
-  }
-  if (format == 4) {
+  } else if (format == 4) {
     int i, j;
     unsigned int c;
     unsigned char *idata;
+    guint8 *p;
 
     if (have_alpha) {
       SWFDEC_INFO("16bit images aren't allowed to have alpha, ignoring");
       have_alpha = FALSE;
     }
 
-    ptr = lossless (bits.ptr, bits.end - bits.ptr, 2 * image->width * image->height);
-    image_data = g_malloc (4 * image->width * image->height);
-    idata = image_data;
+    p = ptr = lossless (bits.ptr, bits.end - bits.ptr, 2 * image->width * image->height);
+    image->data = g_malloc (4 * image->width * image->height);
+    idata = image->data;
     image->rowstride = image->width * 4;
 
     /* 15 bit packed */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
-        c = ptr[1] | (ptr[0] << 8);
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-        idata[0] = (c << 3) | ((c >> 2) & 0x7);
-        idata[1] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
-        idata[2] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
-        idata[3] = 0xff;
-#else
-        idata[3] = (c << 3) | ((c >> 2) & 0x7);
-        idata[2] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
-        idata[1] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
-        idata[0] = 0xff;
-#endif
+        c = p[1] | (p[0] << 8);
+        idata[SWFDEC_COLOR_INDEX_BLUE] = (c << 3) | ((c >> 2) & 0x7);
+        idata[SWFDEC_COLOR_INDEX_GREEN] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
+        idata[SWFDEC_COLOR_INDEX_RED] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
+        idata[SWFDEC_COLOR_INDEX_ALPHA] = 0xff;
         ptr += 2;
         idata += 4;
       }
@@ -474,28 +436,16 @@ swfdec_image_lossless_load (SwfdecImage *image)
     g_free (ptr);
   }
   if (format == 5) {
-
-    image_data = lossless (bits.ptr, bits.end - bits.ptr, 4 * image->width * image->height);
-    image->rowstride = image->width * 4;
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    {
-      int i, j;
-      /* image is stored in 0RGB format.  We use ARGB/BGRA. */
-      for (j = 0; j < image->height; j++) {
-        for (i = 0; i < image->width; i++) {
-          ptr[0] = ptr[3];
-          ptr[1] = ptr[2];
-          ptr[2] = ptr[1];
-          ptr[3] = 255;
-          ptr += 4;
-        }
+    int i, j;
+    ptr = image->data = lossless (bits.ptr, bits.end - bits.ptr, 4 * image->width * image->height);
+    /* image is stored in 0RGB format.  We use ARGB/BGRA. */
+    for (j = 0; j < image->height; j++) {
+      for (i = 0; i < image->width; i++) {
+	*((guint32 *) ptr) = GUINT32_FROM_BE (*((guint32 *) ptr));
+	ptr += 4;
       }
     }
-#endif
   }
-
-  swfdec_image_create_surface (image, image_data);
 }
 
 int
@@ -570,64 +520,135 @@ swfdec_image_colormap_decode (SwfdecImage * image,
   }
 }
 
-cairo_surface_t *
-swfdec_image_get_surface (SwfdecImage *image)
+static gboolean
+swfdec_image_ensure_loaded (SwfdecImage *image)
 {
-  g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
-
-  if (image->surface) {
+  if (image->data == NULL) {
+    switch (image->type) {
+      case SWFDEC_IMAGE_TYPE_JPEG:
+	swfdec_image_jpeg_load (image);
+	break;
+      case SWFDEC_IMAGE_TYPE_JPEG2:
+	swfdec_image_jpeg2_load (image);
+	break;
+      case SWFDEC_IMAGE_TYPE_JPEG3:
+	swfdec_image_jpeg3_load (image);
+	break;
+      case SWFDEC_IMAGE_TYPE_LOSSLESS:
+	swfdec_image_lossless_load (image);
+	break;
+      case SWFDEC_IMAGE_TYPE_LOSSLESS2:
+	swfdec_image_lossless_load (image);
+	break;
+      case SWFDEC_IMAGE_TYPE_UNKNOWN:
+      default:
+	g_assert_not_reached ();
+	break;
+    }
+    if (image->data == NULL) {
+      SWFDEC_WARNING ("failed to load image data");
+      return FALSE;
+    }
+  } else {
     swfdec_cached_use (SWFDEC_CACHED (image));
-    return image->surface;
   }
+  return TRUE;
+}
 
-  switch (image->type) {
-    case SWFDEC_IMAGE_TYPE_JPEG:
-      swfdec_image_jpeg_load (image);
-      break;
-    case SWFDEC_IMAGE_TYPE_JPEG2:
-      swfdec_image_jpeg2_load (image);
-      break;
-    case SWFDEC_IMAGE_TYPE_JPEG3:
-      swfdec_image_jpeg3_load (image);
-      break;
-    case SWFDEC_IMAGE_TYPE_LOSSLESS:
-      swfdec_image_lossless_load (image);
-      break;
-    case SWFDEC_IMAGE_TYPE_LOSSLESS2:
-      swfdec_image_lossless_load (image);
-      break;
-    case SWFDEC_IMAGE_TYPE_UNKNOWN:
-    default:
-      g_assert_not_reached ();
-      break;
+static void
+swfdec_image_premultiply (guint8 *data, guint n)
+{
+  guint i;
+
+  for (i = 0; i < n; i++, data += 4) {
+    if (data[SWFDEC_COLOR_INDEX_ALPHA] == 0xFF)
+      continue;
+    if (data[SWFDEC_COLOR_INDEX_ALPHA] == 0) {
+      data[SWFDEC_COLOR_INDEX_RED] = data[SWFDEC_COLOR_INDEX_GREEN] = data[SWFDEC_COLOR_INDEX_BLUE] = 0;
+    } else {
+      data[SWFDEC_COLOR_INDEX_RED] = (guint) data[SWFDEC_COLOR_INDEX_RED] * data[SWFDEC_COLOR_INDEX_ALPHA] / 255;
+      data[SWFDEC_COLOR_INDEX_GREEN] = (guint) data[SWFDEC_COLOR_INDEX_GREEN] * data[SWFDEC_COLOR_INDEX_ALPHA] / 255;
+      data[SWFDEC_COLOR_INDEX_BLUE] = (guint) data[SWFDEC_COLOR_INDEX_BLUE] * data[SWFDEC_COLOR_INDEX_ALPHA] / 255;
+    }
   }
+}
 
-  return image->surface;
+static gboolean
+swfdec_image_has_alpha (SwfdecImage *image)
+{
+  return image->type == SWFDEC_IMAGE_TYPE_LOSSLESS2 ||
+      image->type == SWFDEC_IMAGE_TYPE_JPEG3;
 }
 
 cairo_surface_t *
-swfdec_image_get_surface_for_target (SwfdecImage *image, cairo_surface_t *target)
+swfdec_image_create_surface (SwfdecImage *image)
 {
-  cairo_surface_t *current, *similar;
-  cairo_t *copy;
-  cairo_content_t content;
+  static const cairo_user_data_key_t key;
 
-  current = swfdec_image_get_surface (image);
-  if (cairo_surface_get_type (current) == cairo_surface_get_type (target))
-    return current;
+  g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
 
-  /* FIXME: we might want to create multiple surfaces here if there's multiple
-   * live rendering sources. Right now, this is the quick fix, that transforms
-   * the cache to the most recent used type */
-  content = swfdec_image_has_alpha (image) ? CAIRO_CONTENT_COLOR_ALPHA : CAIRO_CONTENT_COLOR;
-  similar = cairo_surface_create_similar (target,
-      content,
-      image->width, image->height);
-  copy = cairo_create (similar);
-  cairo_set_source_surface (copy, current, 0, 0);
-  cairo_paint (copy);
-  cairo_destroy (copy);
-  cairo_surface_destroy (current);
-  image->surface = similar;
-  return similar;
+  if (!swfdec_image_ensure_loaded (image))
+    return NULL;
+  if (image->surface) {
+    cairo_surface_reference (image->surface);
+    return image->surface;
+  }
+
+  if (swfdec_image_has_alpha (image)) {
+    cairo_surface_t *surface;
+    guint8 *data;
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 
+	image->width, image->height);
+    /* FIXME: only works if rowstride == image->width * 4 */
+    data = cairo_image_surface_get_data (surface);
+    memcpy (data, image->data, image->width * image->height * 4);
+    swfdec_image_premultiply (data, image->width * image->height);
+    return surface;
+  } else {
+    image->surface = cairo_image_surface_create_for_data (image->data,
+	CAIRO_FORMAT_RGB24, image->width, image->height, image->rowstride);
+    cairo_surface_set_user_data (image->surface, &key, image->data, g_free);
+    cairo_surface_reference (image->surface);
+    return image->surface;
+  }
+}
+
+cairo_surface_t *
+swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTransform *trans)
+{
+  static const cairo_user_data_key_t key;
+  cairo_surface_t *surface;
+  guint8 *tdata;
+  const guint8 *sdata;
+  guint i, n;
+  gboolean has_alpha = FALSE;
+
+  g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
+  g_return_val_if_fail (trans != NULL, NULL);
+
+  /* obvious optimization */
+  if (swfdec_color_transform_is_identity (trans))
+    return swfdec_image_create_surface (image);
+
+  if (!swfdec_image_ensure_loaded (image))
+    return NULL;
+
+  tdata = g_try_malloc (image->width * image->height * 4);
+  if (!tdata) {
+    SWFDEC_ERROR ("failed to allocate memory for transformed image");
+    return NULL;
+  }
+  sdata = image->data;
+  n = image->width * image->height;
+  for (i = 0; i < n; i++) {
+    ((guint32 *) tdata)[i] = swfdec_color_apply_transform (((guint32 *) sdata)[i], trans);
+    has_alpha |= tdata[4 * i + SWFDEC_COLOR_INDEX_ALPHA] != 0xFF;
+  }
+  if (has_alpha)
+    swfdec_image_premultiply (tdata, n);
+  surface = cairo_image_surface_create_for_data (tdata,
+      has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
+      image->width, image->height, image->width * 4);
+  cairo_surface_set_user_data (surface, &key, tdata, g_free);
+  return surface;
 }

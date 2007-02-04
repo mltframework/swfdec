@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,6 +34,7 @@
 #include <libswfdec/swfdec_button.h>
 #include <libswfdec/swfdec_edittext.h>
 #include <libswfdec/swfdec_font.h>
+#include <libswfdec/swfdec_image.h>
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_player_internal.h>
 #include <libswfdec/swfdec_root_movie.h>
@@ -287,6 +288,34 @@ dump_button (SwfdecButton *button)
   }
 }
 
+const char *
+get_image_type_name (SwfdecImageType type)
+{
+  switch (type) {
+    case SWFDEC_IMAGE_TYPE_JPEG:
+      return "JPEG with global table";
+    case SWFDEC_IMAGE_TYPE_JPEG2:
+      return "JPEG";
+    case SWFDEC_IMAGE_TYPE_JPEG3:
+      return "JPEG with alpha";
+    case SWFDEC_IMAGE_TYPE_LOSSLESS:
+      return "lossless";
+    case SWFDEC_IMAGE_TYPE_LOSSLESS2:
+      return "lossless with alpha";
+    default:
+      g_assert_not_reached ();
+      return "Unknown";
+  }
+}
+
+static void
+dump_image (SwfdecImage *image)
+{
+  cairo_surface_destroy (swfdec_image_create_surface (image));
+  g_print ("  %s %u x %u\n", get_image_type_name (image->type),
+      image->width, image->height);
+}
+
 static void 
 dump_objects (SwfdecSwfDecoder *s)
 {
@@ -300,6 +329,9 @@ dump_objects (SwfdecSwfDecoder *s)
       SwfdecGraphic *graphic = SWFDEC_GRAPHIC (c);
       g_print ("  extents: %g %g  %g %g\n", graphic->extents.x0, graphic->extents.y0,
 	  graphic->extents.x1, graphic->extents.y1);
+    }
+    if (SWFDEC_IS_IMAGE (c)) {
+      dump_image (SWFDEC_IMAGE (c));
     }
     if (SWFDEC_IS_SPRITE (c)) {
       dump_sprite (SWFDEC_SPRITE (c));

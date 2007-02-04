@@ -148,7 +148,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s)
     SWFDEC_LOG ("  color = %u", text->color);
   } else {
     SWFDEC_WARNING ("FIXME: figure out default color");
-    text->color = SWF_COLOR_COMBINE (255, 255, 255, 255);
+    text->color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
   }
   if (has_max_length) {
     text->max_length = swfdec_bits_get_u16 (b);

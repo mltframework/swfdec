@@ -263,14 +263,11 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
 {
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
   cairo_pattern_t *pattern;
-  SwfdecColor color;
   cairo_matrix_t mat;
   cairo_surface_t *surface;
   
-  surface = swfdec_image_get_surface_for_target (image->image, 
-      cairo_get_target (cr));
+  surface = swfdec_image_get_surface_transformed (image->image, trans);
   cairo_append_path (cr, (cairo_path_t *) path);
-  color = swfdec_color_apply_transform (0xFFFFFFFF, trans);
   pattern = cairo_pattern_create_for_surface (surface);
   swfdec_matrix_morph (&mat, &pat->start_transform, &pat->end_transform, ratio);
   cairo_pattern_set_matrix (pattern, &mat);
@@ -278,14 +275,7 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
   cairo_pattern_set_filter (pattern, image->filter);
   cairo_set_source (cr, pattern);
   cairo_pattern_destroy (pattern);
-  if (SWFDEC_COLOR_A (color) < 255) {
-    cairo_save (cr);
-    cairo_clip (cr);
-    cairo_paint_with_alpha (cr, SWFDEC_COLOR_A (color) / 255.);
-    cairo_restore (cr);
-  } else {
-    cairo_fill (cr);
-  }
+  cairo_fill (cr);
 }
 
 static void

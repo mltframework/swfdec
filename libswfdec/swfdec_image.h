@@ -48,10 +48,11 @@ typedef enum {
 struct _SwfdecImage {
   SwfdecCached		cached;
 
-  cairo_surface_t *	surface;	/* surface that is on-demand loaded */
+  guint8 *		data;		/* image data in CAIRO_FORMAT_ARGB32 but NOT premultiplied */	
   int			width;
   int			height;
   int			rowstride;
+  cairo_surface_t *	surface;	/* surface that owns the data pointer or NULL (doesn't always work) */
 
   SwfdecImageType	type;
   SwfdecBuffer *	jpegtables;
@@ -66,9 +67,9 @@ struct _SwfdecImageClass {
 GType			swfdec_image_get_type		(void);
 
 cairo_surface_t *	swfdec_image_get_surface	(SwfdecImage *		image);
-cairo_surface_t *	swfdec_image_get_surface_for_target 
+cairo_surface_t *	swfdec_image_get_surface_transformed 
 							(SwfdecImage *		image,
-							 cairo_surface_t *	target);
+							 const SwfdecColorTransform *trans);
 
 int swfdec_image_jpegtables (SwfdecSwfDecoder * s);
 int tag_func_define_bits_jpeg (SwfdecSwfDecoder * s);

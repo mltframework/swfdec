@@ -35,6 +35,7 @@
 #include <libswfdec/swfdec_audio_stream.h>
 #include <libswfdec/swfdec_button.h>
 #include <libswfdec/swfdec_graphic.h>
+#include <libswfdec/swfdec_image.h>
 #include <libswfdec/swfdec_player_internal.h>
 #include <libswfdec/swfdec_root_movie.h>
 #include <libswfdec/swfdec_sound.h>
@@ -206,6 +207,16 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
   return surface_destroy_for_type (surface, filename);
 }
 
+static gboolean
+export_image (SwfdecImage *image, const char *filename)
+{
+  cairo_surface_t *surface = swfdec_image_create_surface (image);
+
+  if (surface == NULL)
+    return FALSE;
+  return surface_destroy_for_type (surface, filename);
+}
+
 static void
 usage (const char *app)
 {
@@ -257,6 +268,9 @@ main (int argc, char *argv[])
       ret = 1;
   } else if (SWFDEC_IS_GRAPHIC (character)) {
     if (!export_graphic (SWFDEC_GRAPHIC (character), argv[3]))
+      ret = 1;
+  } else if (SWFDEC_IS_IMAGE (character)) {
+    if (!export_image (SWFDEC_IMAGE (character), argv[3]))
       ret = 1;
   } else {
     g_printerr ("id %ld does not specify an exportable object", id);

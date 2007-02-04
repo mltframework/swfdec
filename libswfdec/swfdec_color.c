@@ -40,20 +40,20 @@ swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio
     return end;
   start_ratio = 65535 - ratio;
   end_ratio = ratio;
-  r = (SWF_COLOR_R (start) * start_ratio + SWF_COLOR_R (end) * end_ratio) / 65535;
-  g = (SWF_COLOR_G (start) * start_ratio + SWF_COLOR_G (end) * end_ratio) / 65535;
-  b = (SWF_COLOR_B (start) * start_ratio + SWF_COLOR_B (end) * end_ratio) / 65535;
-  a = (SWF_COLOR_A (start) * start_ratio + SWF_COLOR_A (end) * end_ratio) / 65535;
+  r = (SWFDEC_COLOR_R (start) * start_ratio + SWFDEC_COLOR_R (end) * end_ratio) / 65535;
+  g = (SWFDEC_COLOR_G (start) * start_ratio + SWFDEC_COLOR_G (end) * end_ratio) / 65535;
+  b = (SWFDEC_COLOR_B (start) * start_ratio + SWFDEC_COLOR_B (end) * end_ratio) / 65535;
+  a = (SWFDEC_COLOR_A (start) * start_ratio + SWFDEC_COLOR_A (end) * end_ratio) / 65535;
 
-  return SWF_COLOR_COMBINE (r, g, b, a);
+  return SWFDEC_COLOR_COMBINE (r, g, b, a);
 }
 
 void 
 swfdec_color_set_source (cairo_t *cr, SwfdecColor color)
 {
   cairo_set_source_rgba (cr, 
-      SWF_COLOR_R (color) / 255.0, SWF_COLOR_G (color) / 255.0,
-      SWF_COLOR_B (color) / 255.0, SWF_COLOR_A (color) / 255.0);
+      SWFDEC_COLOR_R (color) / 255.0, SWFDEC_COLOR_G (color) / 255.0,
+      SWFDEC_COLOR_B (color) / 255.0, SWFDEC_COLOR_A (color) / 255.0);
 }
 
 unsigned int
@@ -61,10 +61,10 @@ swfdec_color_apply_transform (unsigned int in, const SwfdecColorTransform * tran
 {
   int r, g, b, a;
 
-  r = SWF_COLOR_R (in);
-  g = SWF_COLOR_G (in);
-  b = SWF_COLOR_B (in);
-  a = SWF_COLOR_A (in);
+  r = SWFDEC_COLOR_R (in);
+  g = SWFDEC_COLOR_G (in);
+  b = SWFDEC_COLOR_B (in);
+  a = SWFDEC_COLOR_A (in);
 
   SWFDEC_LOG ("in rgba %d,%d,%d,%d", r, g, b, a);
 
@@ -80,7 +80,7 @@ swfdec_color_apply_transform (unsigned int in, const SwfdecColorTransform * tran
 
   SWFDEC_LOG ("out rgba %d,%d,%d,%d", r, g, b, a);
 
-  return SWF_COLOR_COMBINE (r, g, b, a);
+  return SWFDEC_COLOR_COMBINE (r, g, b, a);
 }
 
 /**
@@ -116,13 +116,13 @@ void
 swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color)
 {
   trans->ra = 0;
-  trans->rb = SWF_COLOR_R (color);
+  trans->rb = SWFDEC_COLOR_R (color);
   trans->ga = 0;
-  trans->gb = SWF_COLOR_G (color);
+  trans->gb = SWFDEC_COLOR_G (color);
   trans->ba = 0;
-  trans->bb = SWF_COLOR_B (color);
+  trans->bb = SWFDEC_COLOR_B (color);
   trans->aa = 0;
-  trans->ab = SWF_COLOR_A (color);
+  trans->ab = SWFDEC_COLOR_A (color);
 }
 
 /**

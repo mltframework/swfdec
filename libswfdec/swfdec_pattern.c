@@ -278,10 +278,10 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
   cairo_pattern_set_filter (pattern, image->filter);
   cairo_set_source (cr, pattern);
   cairo_pattern_destroy (pattern);
-  if (SWF_COLOR_A (color) < 255) {
+  if (SWFDEC_COLOR_A (color) < 255) {
     cairo_save (cr);
     cairo_clip (cr);
-    cairo_paint_with_alpha (cr, SWF_COLOR_A (color) / 255.);
+    cairo_paint_with_alpha (cr, SWFDEC_COLOR_A (color) / 255.);
     cairo_restore (cr);
   } else {
     cairo_fill (cr);
@@ -368,8 +368,8 @@ swfdec_gradient_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path
 	      gradient->gradient->array[i + 1].ratio * ratio;
       offset /= 65535 * 255;
       cairo_pattern_add_color_stop_rgba (pattern, offset,
-	  SWF_COLOR_R(color) / 255.0, SWF_COLOR_G(color) / 255.0,
-	  SWF_COLOR_B(color) / 255.0, SWF_COLOR_A(color) / 255.0);
+	  SWFDEC_COLOR_R(color) / 255.0, SWFDEC_COLOR_G(color) / 255.0,
+	  SWFDEC_COLOR_B(color) / 255.0, SWFDEC_COLOR_A(color) / 255.0);
     }
   } else {
     for (i = 0; i < gradient->gradient->n_gradients; i++){
@@ -377,8 +377,8 @@ swfdec_gradient_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path
 	  trans);
       offset = gradient->gradient->array[i].ratio / 255.0;
       cairo_pattern_add_color_stop_rgba (pattern, offset,
-	  SWF_COLOR_R(color) / 255.0, SWF_COLOR_G(color) / 255.0,
-	  SWF_COLOR_B(color) / 255.0, SWF_COLOR_A(color) / 255.0);
+	  SWFDEC_COLOR_R(color) / 255.0, SWFDEC_COLOR_G(color) / 255.0,
+	  SWFDEC_COLOR_B(color) / 255.0, SWFDEC_COLOR_A(color) / 255.0);
     }
   }
   cairo_set_source (cr, pattern);
@@ -460,7 +460,7 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
     if (paint_id == 65535) {
       /* FIXME: someone explain this magic paint id here */
       pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
-      SWFDEC_COLOR_PATTERN (pattern)->start_color = SWF_COLOR_COMBINE (0, 255, 255, 255);
+      SWFDEC_COLOR_PATTERN (pattern)->start_color = SWFDEC_COLOR_COMBINE (0, 255, 255, 255);
       SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
       swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
       pattern->end_transform = pattern->start_transform;
@@ -540,7 +540,7 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
     if (paint_id == 65535) {
       /* FIXME: someone explain this magic paint id here */
       pattern = g_object_new (SWFDEC_TYPE_COLOR_PATTERN, NULL);
-      SWFDEC_COLOR_PATTERN (pattern)->start_color = SWF_COLOR_COMBINE (0, 255, 255, 255);
+      SWFDEC_COLOR_PATTERN (pattern)->start_color = SWFDEC_COLOR_COMBINE (0, 255, 255, 255);
       SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
       swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
       swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);

@@ -46,11 +46,11 @@ struct swfdec_gradient_struct
   SwfdecGradientEntry array[1];
 };
 
-#define SWF_COLOR_COMBINE(r,g,b,a)	(((r)<<24) | ((g)<<16) | ((b)<<8) | (a))
-#define SWF_COLOR_R(x)		(((x)>>24)&0xff)
-#define SWF_COLOR_G(x)		(((x)>>16)&0xff)
-#define SWF_COLOR_B(x)		(((x)>>8)&0xff)
-#define SWF_COLOR_A(x)		((x)&0xff)
+#define SWFDEC_COLOR_COMBINE(r,g,b,a)	(((r)<<24) | ((g)<<16) | ((b)<<8) | (a))
+#define SWFDEC_COLOR_R(x)		(((x)>>24)&0xff)
+#define SWFDEC_COLOR_G(x)		(((x)>>16)&0xff)
+#define SWFDEC_COLOR_B(x)		(((x)>>8)&0xff)
+#define SWFDEC_COLOR_A(x)		((x)&0xff)
 
 SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio);
 void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);

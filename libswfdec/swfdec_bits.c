@@ -450,7 +450,7 @@ swfdec_bits_get_color (SwfdecBits * bits)
   g = swfdec_bits_get_u8 (bits);
   b = swfdec_bits_get_u8 (bits);
 
-  return SWF_COLOR_COMBINE (r, g, b, 0xff);
+  return SWFDEC_COLOR_COMBINE (r, g, b, 0xff);
 }
 
 unsigned int
@@ -463,7 +463,7 @@ swfdec_bits_get_rgba (SwfdecBits * bits)
   b = swfdec_bits_get_u8 (bits);
   a = swfdec_bits_get_u8 (bits);
 
-  return SWF_COLOR_COMBINE (r, g, b, a);
+  return SWFDEC_COLOR_COMBINE (r, g, b, a);
 }
 
 SwfdecGradient *

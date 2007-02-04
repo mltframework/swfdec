@@ -72,6 +72,7 @@ SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsign
 void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);
 void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
 void swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color);
+gboolean swfdec_color_transform_is_identity (const SwfdecColorTransform * trans);
 void swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first);
 unsigned int swfdec_color_apply_transform (unsigned int in,

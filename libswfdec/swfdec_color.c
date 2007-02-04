@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -123,6 +123,13 @@ swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor colo
   trans->bb = SWFDEC_COLOR_B (color);
   trans->aa = 0;
   trans->ab = SWFDEC_COLOR_A (color);
+}
+
+gboolean
+swfdec_color_transform_is_identity (const SwfdecColorTransform * trans)
+{
+  return trans->ra == 256 && trans->ga == 256 && trans->ba == 256 && trans->aa == 256 &&
+      trans->rb == 0 && trans->gb == 0 && trans->bb == 0 && trans->ab == 0;
 }
 
 /**

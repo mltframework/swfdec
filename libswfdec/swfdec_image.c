@@ -647,7 +647,7 @@ swfdec_image_create_surface (SwfdecImage *image)
 }
 
 cairo_surface_t *
-swfdec_image_get_surface_transformed (SwfdecImage *image, const SwfdecColorTransform *trans)
+swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTransform *trans)
 {
   static const cairo_user_data_key_t key;
   cairo_surface_t *surface;
@@ -658,6 +658,10 @@ swfdec_image_get_surface_transformed (SwfdecImage *image, const SwfdecColorTrans
 
   g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
   g_return_val_if_fail (trans != NULL, NULL);
+
+  /* obvious optimization */
+  if (swfdec_color_transform_is_identity (trans))
+    return swfdec_image_create_surface (image);
 
   if (!swfdec_image_ensure_loaded (image))
     return NULL;

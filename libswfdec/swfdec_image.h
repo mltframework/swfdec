@@ -66,8 +66,8 @@ struct _SwfdecImageClass {
 
 GType			swfdec_image_get_type		(void);
 
-cairo_surface_t *	swfdec_image_get_surface	(SwfdecImage *		image);
-cairo_surface_t *	swfdec_image_get_surface_transformed 
+cairo_surface_t *	swfdec_image_create_surface	(SwfdecImage *		image);
+cairo_surface_t *	swfdec_image_create_surface_transformed 
 							(SwfdecImage *		image,
 							 const SwfdecColorTransform *trans);
 

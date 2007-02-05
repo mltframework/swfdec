@@ -184,7 +184,6 @@ run_test (const char *filename)
   dir = g_dir_open (dirname, 0, &error);
   if (!dir) {
     g_print ("  ERROR: %s\n", error->message);
-    g_object_unref (player);
     return FALSE;
   }
   while ((name = g_dir_read_name (dir))) {

@@ -72,6 +72,7 @@ dump:
       g_print ("  ERROR: failed to dump contents: %s\n", error->message);
       g_error_free (error);
     }
+    g_free (dump);
   }
   return FALSE;
 }

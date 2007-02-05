@@ -1,4 +1,4 @@
-SUBDIRS = sound trace various
+SUBDIRS = image sound trace various
 
 noinst_PROGRAMS = swfdec-extract dump parse
 

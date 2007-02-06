@@ -82,8 +82,8 @@ swfdec_color_apply_transform_premultiplied (SwfdecColor in,
   return SWFDEC_COLOR_COMBINE (r, g, b, a);
 }
 
-unsigned int
-swfdec_color_apply_transform (unsigned int in, const SwfdecColorTransform * trans)
+SwfdecColor
+swfdec_color_apply_transform (SwfdecColor in, const SwfdecColorTransform * trans)
 {
   int r, g, b, a;
 

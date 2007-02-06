@@ -75,7 +75,7 @@ void swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor
 gboolean swfdec_color_transform_is_identity (const SwfdecColorTransform * trans);
 void swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first);
-unsigned int swfdec_color_apply_transform (unsigned int in,
+SwfdecColor swfdec_color_apply_transform (SwfdecColor in,
     const SwfdecColorTransform * trans);
 SwfdecColor swfdec_color_apply_transform_premultiplied (SwfdecColor in, 
     const SwfdecColorTransform * trans);

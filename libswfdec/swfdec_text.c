@@ -58,7 +58,8 @@ static void
 swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
-  unsigned int i, color;
+  unsigned int i;
+  SwfdecColor color;
   SwfdecText *text = SWFDEC_TEXT (graphic);
   SwfdecColorTransform force_color;
   SwfdecRect rect, inval_moved;

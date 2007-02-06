@@ -657,7 +657,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTr
   for (i = 0; i < n; i++) {
     ((guint32 *) tdata)[i] = swfdec_color_apply_transform_premultiplied (((guint32 *) sdata)[i], trans);
     /* optimization: check for alpha channel to speed up compositing */
-    has_alpha != tdata[4 * i + SWFDEC_COLOR_INDEX_ALPHA] != 0xFF;
+    has_alpha = tdata[4 * i + SWFDEC_COLOR_INDEX_ALPHA] != 0xFF;
   }
   surface = cairo_image_surface_create_for_data (tdata,
       has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 

@@ -264,7 +264,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   if (movie->sound_frame != movie->current_frame) {
     for (walk = current->sound; walk; walk = walk->next) {
       SwfdecAudio *audio = swfdec_audio_event_new (player, walk->data);
-      g_object_unref (audio);
+      if (audio)
+	g_object_unref (audio);
     }
   }
 

@@ -5,3 +5,10 @@ image_SOURCES = image.c
 image_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS)
 image_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
+EXTRA_DIST = \
+	color-transform-add80.swf \
+	color-transform-add80.swf.png \
+	color-transform-add80-alpha.swf \
+	color-transform-add80-alpha.swf.png \
+	image-lossless-alpha.swf \
+	image-lossless-alpha.swf.png

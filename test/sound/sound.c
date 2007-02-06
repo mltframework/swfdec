@@ -72,6 +72,7 @@ dump:
       g_print ("  ERROR: failed to dump contents: %s\n", error->message);
       g_error_free (error);
     }
+    g_free (dump);
   }
   return FALSE;
 }
@@ -183,7 +184,6 @@ run_test (const char *filename)
   dir = g_dir_open (dirname, 0, &error);
   if (!dir) {
     g_print ("  ERROR: %s\n", error->message);
-    g_object_unref (player);
     return FALSE;
   }
   while ((name = g_dir_read_name (dir))) {
@@ -245,7 +245,7 @@ error:
 int
 main (int argc, char **argv)
 {
-  guint failed_tests = 0;
+  GList *failed_tests = NULL;
 
   swfdec_init ();
 
@@ -253,7 +253,7 @@ main (int argc, char **argv)
     int i;
     for (i = 1; i < argc; i++) {
       if (!run_test (argv[i]))
-	failed_tests++;
+	failed_tests = g_list_prepend (failed_tests, g_strdup (argv[i]));;
     }
   } else {
     GDir *dir;
@@ -263,16 +263,24 @@ main (int argc, char **argv)
       if (!g_str_has_suffix (file, ".swf"))
 	continue;
       if (!run_test (file))
-	failed_tests++;
+	failed_tests = g_list_prepend (failed_tests, g_strdup (file));
     }
     g_dir_close (dir);
   }
 
   if (failed_tests) {
-    g_print ("\nFAILURES: %u\n", failed_tests);
+    GList *walk;
+    failed_tests = g_list_sort (failed_tests, (GCompareFunc) strcmp);
+    g_print ("\nFAILURES: %u\n", g_list_length (failed_tests));
+    for (walk = failed_tests; walk; walk = walk->next) {
+      g_print ("          %s\n", (char *) walk->data);
+      g_free (walk->data);
+    }
+    g_list_free (failed_tests);
+    return 1;
   } else {
     g_print ("\nEVERYTHING OK\n");
+    return 0;
   }
-  return failed_tests;
 }
 

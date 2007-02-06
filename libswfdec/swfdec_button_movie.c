@@ -152,7 +152,8 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
     audio = swfdec_audio_event_new (
 	SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player,
 	movie->button->sounds[sound]);
-    g_object_unref (audio);
+    if (audio)
+      g_object_unref (audio);
   }
   movie->mouse_in = mouse_in;
   movie->mouse_button = button;

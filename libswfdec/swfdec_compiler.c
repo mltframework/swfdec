@@ -559,7 +559,7 @@ compile_push (CompileState *state, guint action, guint len)
     switch (type) {
       case 0: /* string */
 	s = swfdec_bits_skip_string (state->bits);
-	if (s) {
+	if (s == NULL) {
 	  compile_state_error (state, "Push: Could not get string");
 	  return;
 	}
@@ -1292,6 +1292,9 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version, const char 
       len = swfdec_bits_get_u16 (bits);
     } else {
       len = 0;
+    }
+    if (swfdec_bits_left (bits) < len * 8) {
+      compile_state_error (&state, "Not enough data available to parse next action");
     }
 #ifndef G_DISABLE_ASSERT
     target = bits->ptr + len;

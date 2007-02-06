@@ -555,24 +555,6 @@ swfdec_image_ensure_loaded (SwfdecImage *image)
   return TRUE;
 }
 
-static void
-swfdec_image_premultiply (guint8 *data, guint n)
-{
-  guint i;
-
-  for (i = 0; i < n; i++, data += 4) {
-    if (data[SWFDEC_COLOR_INDEX_ALPHA] == 0xFF)
-      continue;
-    if (data[SWFDEC_COLOR_INDEX_ALPHA] == 0) {
-      data[SWFDEC_COLOR_INDEX_RED] = data[SWFDEC_COLOR_INDEX_GREEN] = data[SWFDEC_COLOR_INDEX_BLUE] = 0;
-    } else {
-      data[SWFDEC_COLOR_INDEX_RED] = (guint) data[SWFDEC_COLOR_INDEX_RED] * data[SWFDEC_COLOR_INDEX_ALPHA] / 255;
-      data[SWFDEC_COLOR_INDEX_GREEN] = (guint) data[SWFDEC_COLOR_INDEX_GREEN] * data[SWFDEC_COLOR_INDEX_ALPHA] / 255;
-      data[SWFDEC_COLOR_INDEX_BLUE] = (guint) data[SWFDEC_COLOR_INDEX_BLUE] * data[SWFDEC_COLOR_INDEX_ALPHA] / 255;
-    }
-  }
-}
-
 static gboolean
 swfdec_image_has_alpha (SwfdecImage *image)
 {
@@ -602,7 +584,6 @@ swfdec_image_create_surface (SwfdecImage *image)
     /* FIXME: only works if rowstride == image->width * 4 */
     data = cairo_image_surface_get_data (surface);
     memcpy (data, image->data, image->width * image->height * 4);
-    swfdec_image_premultiply (data, image->width * image->height);
     return surface;
   } else {
     image->surface = cairo_image_surface_create_for_data (image->data,
@@ -641,11 +622,10 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTr
   sdata = image->data;
   n = image->width * image->height;
   for (i = 0; i < n; i++) {
-    ((guint32 *) tdata)[i] = swfdec_color_apply_transform (((guint32 *) sdata)[i], trans);
-    has_alpha |= tdata[4 * i + SWFDEC_COLOR_INDEX_ALPHA] != 0xFF;
+    ((guint32 *) tdata)[i] = swfdec_color_apply_transform_premultiplied (((guint32 *) sdata)[i], trans);
+    /* optimization: check for alpha channel to speed up compositing */
+    has_alpha = tdata[4 * i + SWFDEC_COLOR_INDEX_ALPHA] != 0xFF;
   }
-  if (has_alpha)
-    swfdec_image_premultiply (tdata, n);
   surface = cairo_image_surface_create_for_data (tdata,
       has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
       image->width, image->height, image->width * 4);

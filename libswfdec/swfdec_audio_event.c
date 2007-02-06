@@ -132,6 +132,7 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
       (event = (SwfdecAudioEvent *) swfdec_audio_event_get (player, chunk->sound))) {
     SWFDEC_DEBUG ("sound %d is already playing, reusing it", 
 	SWFDEC_CHARACTER (chunk->sound)->id);
+    g_object_ref (event);
     return SWFDEC_AUDIO (event);
   }
   event = g_object_new (SWFDEC_TYPE_AUDIO_EVENT, NULL);

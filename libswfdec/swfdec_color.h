@@ -77,6 +77,8 @@ void swfdec_color_transform_chain (SwfdecColorTransform *dest,
     const SwfdecColorTransform *last, const SwfdecColorTransform *first);
 unsigned int swfdec_color_apply_transform (unsigned int in,
     const SwfdecColorTransform * trans);
+SwfdecColor swfdec_color_apply_transform_premultiplied (SwfdecColor in, 
+    const SwfdecColorTransform * trans);
 
 void swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse);
 double swfdec_matrix_get_xscale (const cairo_matrix_t *matrix);

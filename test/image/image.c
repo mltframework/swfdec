@@ -23,10 +23,67 @@
 #include <string.h>
 #include <libswfdec/swfdec.h>
 
+/* Compare two buffers, returning the number of pixels that are
+ * different and the maximum difference of any single color channel in
+ * result_ret.
+ *
+ * This function should be rewritten to compare all formats supported by
+ * cairo_format_t instead of taking a mask as a parameter.
+ */
+static gboolean
+buffer_diff_core (unsigned char *buf_a,
+		  unsigned char *buf_b,
+		  unsigned char *buf_diff,
+		  int		width,
+		  int		height,
+		  int		stride)
+{
+    int x, y;
+    gboolean result = TRUE;
+    guint32 *row_a, *row_b, *row;
+
+    for (y = 0; y < height; y++) {
+	row_a = (guint32 *) (buf_a + y * stride);
+	row_b = (guint32 *) (buf_b + y * stride);
+	row = (guint32 *) (buf_diff + y * stride);
+	for (x = 0; x < width; x++) {
+	    /* check if the pixels are the same */
+	    if (row_a[x] != row_b[x]) {
+		int channel;
+		static const unsigned int threshold = 3;
+		guint32 diff_pixel = 0;
+
+		/* calculate a difference value for all 4 channels */
+		for (channel = 0; channel < 4; channel++) {
+		    int value_a = (row_a[x] >> (channel*8)) & 0xff;
+		    int value_b = (row_b[x] >> (channel*8)) & 0xff;
+		    unsigned int diff;
+		    diff = ABS (value_a - value_b);
+		    if (diff <= threshold)
+		      continue;
+		    diff *= 4;  /* emphasize */
+		    diff += 128; /* make sure it's visible */
+		    if (diff > 255)
+		        diff = 255;
+		    diff_pixel |= diff << (channel*8);
+		}
+
+		row[x] = diff_pixel;
+		if (diff_pixel)
+		  result = FALSE;
+	    } else {
+		row[x] = 0;
+	    }
+	    row[x] |= 0xff000000; /* Set ALPHA to 100% (opaque) */
+	}
+    }
+    return result;
+}
+
 static gboolean
 image_diff (cairo_surface_t *surface, const char *filename)
 {
-  cairo_surface_t *image;
+  cairo_surface_t *image, *diff = NULL;
   int w, h;
   char *real;
 
@@ -49,28 +106,45 @@ image_diff (cairo_surface_t *surface, const char *filename)
 	w, h);
     goto dump;
   }
+  diff = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
   g_assert (cairo_image_surface_get_stride (surface) == 4 * w);
   g_assert (cairo_image_surface_get_stride (image) == 4 * w);
-  if (memcmp (cairo_image_surface_get_data (surface), 
-	cairo_image_surface_get_data (image), 4 * w * h) != 0) {
+  g_assert (cairo_image_surface_get_stride (diff) == 4 * w);
+  if (!buffer_diff_core (cairo_image_surface_get_data (surface), 
+	cairo_image_surface_get_data (image), 
+	cairo_image_surface_get_data (diff), 
+	w, h, 4 * w) != 0) {
     g_print ("  ERROR: images differ\n");
     goto dump;
   }
 
   cairo_surface_destroy (image);
+  cairo_surface_destroy (diff);
   return TRUE;
 
 dump:
   cairo_surface_destroy (image);
   if (g_getenv ("SWFDEC_TEST_DUMP")) {
     cairo_status_t status;
-    char *dump = g_strdup_printf ("%s.dump.png", filename);
+    char *dump;
+    
+    dump = g_strdup_printf ("%s.dump.png", filename);
     status = cairo_surface_write_to_png (surface, dump);
     if (status) {
       g_print ("  ERROR: failed to dump image to %s: %s\n", dump,
 	  cairo_status_to_string (status));
     }
     g_free (dump);
+    if (diff) {
+      dump = g_strdup_printf ("%s.diff.png", filename);
+      status = cairo_surface_write_to_png (diff, dump);
+      if (status) {
+	g_print ("  ERROR: failed to dump diff image to %s: %s\n", dump,
+	    cairo_status_to_string (status));
+      }
+      g_free (dump);
+      cairo_surface_destroy (diff);
+    }
   }
   return FALSE;
 }
@@ -128,7 +202,7 @@ error:
 int
 main (int argc, char **argv)
 {
-  guint failed_tests = 0;
+  GList *failed_tests = NULL;
 
   swfdec_init ();
 
@@ -146,16 +220,24 @@ main (int argc, char **argv)
       if (!g_str_has_suffix (file, ".swf"))
 	continue;
       if (!run_test (file))
-	failed_tests++;
+	failed_tests = g_list_prepend (failed_tests, g_strdup (file));
     }
     g_dir_close (dir);
   }
 
   if (failed_tests) {
-    g_print ("\nFAILURES: %u\n", failed_tests);
+    GList *walk;
+    failed_tests = g_list_sort (failed_tests, (GCompareFunc) strcmp);
+    g_print ("\nFAILURES: %u\n", g_list_length (failed_tests));
+    for (walk = failed_tests; walk; walk = walk->next) {
+      g_print ("          %s\n", (char *) walk->data);
+      g_free (walk->data);
+    }
+    g_list_free (failed_tests);
+    return 1;
   } else {
     g_print ("\nEVERYTHING OK\n");
+    return 0;
   }
-  return failed_tests;
 }
 

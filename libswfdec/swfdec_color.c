@@ -56,6 +56,32 @@ swfdec_color_set_source (cairo_t *cr, SwfdecColor color)
       SWFDEC_COLOR_B (color) / 255.0, SWFDEC_COLOR_A (color) / 255.0);
 }
 
+SwfdecColor
+swfdec_color_apply_transform_premultiplied (SwfdecColor in, 
+    const SwfdecColorTransform * trans)
+{
+  int r, g, b, a, aold;
+
+  aold = SWFDEC_COLOR_A (in);
+  if (aold == 0)
+    return 0;
+
+  a = (aold * trans->aa >> 8) + trans->ab;
+  a = CLAMP (a, 0, 255);
+
+  r = SWFDEC_COLOR_R (in);
+  g = SWFDEC_COLOR_G (in);
+  b = SWFDEC_COLOR_B (in);
+  r = (r * trans->ra * a / aold >> 8) + trans->rb * a / 255;
+  r = CLAMP (r, 0, a);
+  g = (g * trans->ga * a / aold >> 8) + trans->gb * a / 255;
+  g = CLAMP (g, 0, a);
+  b = (b * trans->ba * a / aold >> 8) + trans->bb * a / 255;
+  b = CLAMP (b, 0, a);
+
+  return SWFDEC_COLOR_COMBINE (r, g, b, a);
+}
+
 unsigned int
 swfdec_color_apply_transform (unsigned int in, const SwfdecColorTransform * trans)
 {

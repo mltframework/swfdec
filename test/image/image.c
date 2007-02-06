@@ -210,7 +210,7 @@ main (int argc, char **argv)
     int i;
     for (i = 1; i < argc; i++) {
       if (!run_test (argv[i]))
-	failed_tests++;
+	failed_tests = g_list_prepend (failed_tests, g_strdup (argv[i]));
     }
   } else {
     GDir *dir;

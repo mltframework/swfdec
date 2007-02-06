@@ -1310,6 +1310,9 @@ swfdec_compile (SwfdecPlayer *player, SwfdecBits *bits, int version, const char 
     } else {
       len = 0;
     }
+    if (swfdec_bits_left (bits) < len * 8) {
+      compile_state_error (&state, "Not enough data available to parse next action");
+    }
 #ifndef G_DISABLE_ASSERT
     target = bits->ptr + len;
 #endif

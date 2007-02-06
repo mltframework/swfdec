@@ -66,7 +66,7 @@ struct _SwfdecSound
   SwfdecAudioFormat	format;			/* format in use */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
-  unsigned int		n_samples;		/* total number of samples */
+  unsigned int		n_samples;		/* total number of samples when decoded to 44100kHz */
   unsigned int		skip;			/* samples to skip at start */
   SwfdecBuffer *	encoded;		/* encoded data */
 

@@ -235,17 +235,22 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
     tmp = tmp2;
   }
   /* sound buffer may be bigger due to mp3 not having sample boundaries */
-  if (tmp->length > sound->n_samples * sample_bytes) {
-    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * sample_bytes);
+  if (tmp->length * SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format) 
+      > sound->n_samples * sample_bytes) {
+    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, 
+	sound->n_samples * sample_bytes / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format));
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
   }
-  if (tmp->length < sound->n_samples * sample_bytes) {
+  if (tmp->length * SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format) 
+      < sound->n_samples * sample_bytes) {
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
      * It's probably not worth more than INFO for the usual case though */
     SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	sound->n_samples, sound->n_samples * sample_bytes, tmp->length);
+	sound->n_samples / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format), 
+	sound->n_samples * sample_bytes / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format), 
+	tmp->length);
   }
   /* only assign here, the decoding code checks this variable */
   sound->decoded = tmp;

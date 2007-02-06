@@ -8,4 +8,5 @@ Makefile
 Makefile.in
 *.o
 
+tmp
 trace

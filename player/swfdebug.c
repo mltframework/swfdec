@@ -16,7 +16,7 @@ save_to_svg (GtkWidget *button, SwfdecPlayer *player)
   GtkWidget *dialog = gtk_file_chooser_dialog_new ("Save current frame as",
       GTK_WINDOW (gtk_widget_get_toplevel (button)), GTK_FILE_CHOOSER_ACTION_SAVE, 
       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
+      GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT, NULL);
 
   if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
     int w, h;

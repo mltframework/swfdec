@@ -664,7 +664,7 @@ swfdec_pattern_parse_stroke (SwfdecSwfDecoder *dec, gboolean rgba)
     pattern->start_color = swfdec_bits_get_color (bits);
   }
   pattern->end_color = pattern->start_color;
-  SWFDEC_LOG ("new stroke pattern: %u %08x", pattern->start_width, pattern->start_color);
+  SWFDEC_LOG ("new stroke pattern: width %u color %08x", pattern->start_width, pattern->start_color);
 
   return SWFDEC_PATTERN (pattern);
 }
@@ -679,8 +679,9 @@ swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *dec)
   pattern->end_width = swfdec_bits_get_u16 (bits);
   pattern->start_color = swfdec_bits_get_rgba (bits);
   pattern->end_color = swfdec_bits_get_rgba (bits);
-  SWFDEC_LOG ("new stroke pattern: %u %08X => %u %08X", pattern->start_width, pattern->start_color,
-      pattern->end_width, pattern->end_color);
+  SWFDEC_LOG ("new stroke pattern: width %u => %u color %08X => %08X", 
+      pattern->start_width, pattern->end_width,
+      pattern->start_color, pattern->end_color);
 
   return SWFDEC_PATTERN (pattern);
 }

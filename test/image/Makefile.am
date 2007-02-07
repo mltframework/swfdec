@@ -11,5 +11,7 @@ EXTRA_DIST = \
 	color-transform-add80.swf.png \
 	color-transform-add80-alpha.swf \
 	color-transform-add80-alpha.swf.png \
+	image-jpeg-alpha.swf \
+	image-jpeg-alpha.swf.png \
 	image-lossless-alpha.swf \
 	image-lossless-alpha.swf.png

@@ -40,7 +40,7 @@ struct _SwfdecLoader
 {
   GObject		object;
 
-  char *		url;		/* the URL for this loader */
+  char *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   /*< private >*/
   gboolean		eof;		/* if we're in EOF already */
   gboolean		error;		/* if there's an error (from parsing the loader) */
@@ -65,9 +65,10 @@ GType		swfdec_loader_get_type		(void);
 SwfdecLoader *	swfdec_loader_new_from_file	(const char * 	filename,
 						 GError **	error);
 
-void		swfdec_loader_push		(SwfdecLoader *			loader,
-						 SwfdecBuffer *			buffer);
-void		swfdec_loader_eof		(SwfdecLoader *			loader);
+void		swfdec_loader_push		(SwfdecLoader *		loader,
+						 SwfdecBuffer *		buffer);
+void		swfdec_loader_eof		(SwfdecLoader *		loader);
+char *  	swfdec_loader_get_filename	(SwfdecLoader *		loader);
 					 
 
 G_END_DECLS

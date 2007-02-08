@@ -365,19 +365,28 @@ swfdec_loader_eof (SwfdecLoader *loader)
 char *
 swfdec_loader_get_filename (SwfdecLoader *loader)
 {
-  char *start, *ret;
+  char *start, *end, *ret;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
   /* every loader must set this */
   g_return_val_if_fail (loader->url != NULL, NULL);
 
-  start = strrchr (loader->url, '/');
-  if (start == NULL) {
-    start = loader->url;
+  end = strchr (loader->url, '?');
+  if (end) {
+    char *next = NULL;
+    do {
+      start = next ? next + 1 : loader->url;
+      next = strchr (start, '/');
+    } while (next != NULL && next < end);
   } else {
-    start++;
+    start = strrchr (loader->url, '/');
+    if (start == NULL) {
+      start = loader->url;
+    } else {
+      start++;
+    }
   }
-  ret = g_filename_from_utf8 (start, -1, NULL, NULL, NULL);
+  ret = g_filename_from_utf8 (start, end ? end - start : -1, NULL, NULL, NULL);
   if (ret == NULL)
     ret = g_strdup ("unknown.swf");
 

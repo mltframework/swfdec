@@ -109,7 +109,12 @@ swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
     return NULL;
   start = (guint8 *) g_ptr_array_index (pool, 0) - 5;
   buffer = script->buffer;
-  g_assert (start >= buffer->data);
+  if (start < buffer->data) {
+    /* DefineFunction inside DefineFunction */
+    g_assert (buffer->parent != NULL);
+    buffer = buffer->parent;
+    g_assert (start >= buffer->data);
+  }
   g_assert (start + 3 < buffer->data + buffer->length);
   g_assert (*start == 0x88);
   len = 3 + (start[1] | start[2] << 8);

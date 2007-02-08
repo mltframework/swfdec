@@ -7,6 +7,7 @@ it far easier and a lot more stable to run scripts. Other changes:
 - Implement color transformations on images.
 - Support some more ActionScript codes.
 - Added swfdec_loader_get_filename() function to exported API.
+- Allow compiling tests and tools without ALSA support
 - Lots of bugfixes.
 - Lots of new tests and debugging tools.
 

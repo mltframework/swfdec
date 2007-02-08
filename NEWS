@@ -1,4 +1,15 @@
 
+ 0.4.2 ("Two completely different numbers")
+
+The main change for this release is changing script execution from 
+compiling to SpiderMonkey bytecode to executiong it manually. This made
+it far easier and a lot more stable to run scripts. Other changes:
+- Implement color transformations on images.
+- Support some more ActionScript codes.
+- Added swfdec_loader_get_filename() function to exported API.
+- Lots of bugfixes.
+- Lots of new tests and debugging tools.
+
  0.4.1 ("Dragostea din tei")
 
 This release introduces video features. Quite a bit of internal 

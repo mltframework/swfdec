@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -72,6 +72,8 @@ SwfdecGradient *swfdec_bits_get_gradient_rgba (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_morph_gradient (SwfdecBits * bits);
 void swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect);
 SwfdecBuffer *swfdec_bits_get_buffer (SwfdecBits *bits, int len);
+SwfdecBuffer *swfdec_bits_decompress (SwfdecBits *bits, int compressed, 
+    int decompressed);
 
 
 #endif

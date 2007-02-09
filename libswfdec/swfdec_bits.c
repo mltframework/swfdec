@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <zlib.h>
 
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
@@ -599,4 +600,109 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
   }
   bits->ptr += len;
   return buffer;
+}
+
+static void *
+swfdec_bits_zalloc (void *opaque, unsigned int items, unsigned int size)
+{
+  return g_malloc (items * size);
+}
+
+static void
+swfdec_bits_zfree (void *opaque, void *addr)
+{
+  g_free (addr);
+}
+
+/**
+ * swfdec_bits_decompress:
+ * @bits: a #SwfdecBits
+ * @compressed: number of bytes to decompress or -1 for the rest
+ * @decompressed: number of bytes to expect in the decompressed result or -1
+ *                if unknown
+ *
+ * Decompresses the next @compressed bytes of data in @bits using the zlib
+ * decompression algorithm and returns the result in a buffer. If @decompressed
+ * was set and not enough data is available, the return buffer will be filled 
+ * up with 0 bytes.
+ *
+ * Returns: a new #SwfdecBuffer containing the decompressed data or NULL on
+ *          failure. If @decompressed &gt; 0, the buffer's length will be @decompressed.
+ **/
+SwfdecBuffer *
+swfdec_bits_decompress (SwfdecBits *bits, int compressed, int decompressed)
+{
+  z_stream z = { 0, };
+  SwfdecBuffer *buffer;
+  int result;
+
+  g_return_val_if_fail (bits != NULL, NULL);
+  g_return_val_if_fail (compressed >= -1, NULL);
+  g_return_val_if_fail (decompressed > 0 || decompressed == -1, NULL);
+
+  /* prepare the bits structure */
+  if (compressed > 0) {
+    SWFDEC_BYTES_CHECK (bits, (unsigned int) compressed);
+  } else {
+    swfdec_bits_syncbits (bits);
+    compressed = bits->end - bits->ptr;
+    g_assert (compressed >= 0);
+  }
+  if (compressed == 0)
+    return NULL;
+
+  z.zalloc = swfdec_bits_zalloc;
+  z.zfree = swfdec_bits_zfree;
+  z.opaque = NULL;
+  z.next_in = (Bytef *) bits->ptr;
+  z.avail_in = compressed;
+  result = inflateInit (&z);
+  if (result != Z_OK) {
+    SWFDEC_ERROR ("Error initialising zlib: %d %s", result, z.msg ? z.msg : "");
+    goto fail;
+  }
+  buffer = swfdec_buffer_new_and_alloc (decompressed > 0 ? decompressed : compressed * 2);
+  z.next_out = buffer->data;
+  z.avail_out = buffer->length;
+  while (TRUE) {
+    result = inflate (&z, decompressed > 0 ? Z_FINISH : 0);
+    switch (result) {
+      case Z_STREAM_END:
+	goto out;
+      case Z_OK:
+	if (decompressed < 0) {
+	  buffer->data = g_realloc (buffer->data, buffer->length + compressed);
+	  buffer->length += compressed;
+	  z.next_out = buffer->data + z.total_out;
+	  z.avail_out = buffer->length - z.total_out;
+	  goto out;
+	}
+	/* else fall through */
+      default:
+	SWFDEC_ERROR ("error decompressing data: inflate returned %d %s",
+	    result, z.msg ? z.msg : "");
+	swfdec_buffer_unref (buffer);
+	goto fail;
+    }
+  }
+out:
+  if (decompressed < 0) {
+    buffer->length = z.total_out;
+  } else {
+    if (buffer->length < z.total_out) {
+      SWFDEC_WARNING ("Not enough data decompressed: %lu instead of %u expected",
+	  z.total_out, buffer->length);
+      memset (buffer->data + z.total_out, 0, buffer->length - z.total_out);
+    }
+  }
+  result = inflateEnd (&z);
+  if (result != Z_OK) {
+    SWFDEC_ERROR ("error in inflateEnd: %d %s", result, z.msg ? z.msg : "");
+  }
+  bits->ptr += compressed;
+  return buffer;
+
+fail:
+  bits->ptr += compressed;
+  return NULL;
 }

@@ -35,35 +35,13 @@ struct _SwfdecCodecScreen {
   guint			width;		/* width of last image */
   guint			height;		/* height of last image */
   SwfdecBuffer *	buffer;		/* buffer containing last decoded image */
-  z_stream		z;		/* stream for decoding */
-  SwfdecBuffer *	block_buffer;	/* buffer used for block decoding */
 };
-
-static void *
-zalloc (void *opaque, unsigned int items, unsigned int size)
-{
-  return g_malloc (items * size);
-}
-
-static void
-zfree (void *opaque, void *addr)
-{
-  g_free (addr);
-}
 
 static gpointer
 swfdec_codec_screen_init (void)
 {
   SwfdecCodecScreen *screen = g_new0 (SwfdecCodecScreen, 1);
 
-  screen->z.zalloc = zalloc;
-  screen->z.zfree = zfree;
-  screen->z.opaque = NULL;
-  if (inflateInit (&screen->z) != Z_OK) {
-    SWFDEC_ERROR ("Error initialising zlib: %s", screen->z.msg);
-    g_free (screen);
-    return NULL;
-  }
   return screen;
 }
 
@@ -107,11 +85,6 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
     /* FIXME: this is was ffmpeg does, should we be more forgiving? */
     return NULL;
   }
-  if (screen->block_buffer == NULL || screen->block_buffer->length < bw * bh * 3) {
-    if (screen->block_buffer != NULL)
-      swfdec_buffer_unref (screen->block_buffer);
-    screen->block_buffer = swfdec_buffer_new_and_alloc (bw * bh * 3);
-  }
   if (screen->buffer && screen->buffer->ref_count == 1) {
     g_assert (screen->buffer->length == w * h * 4);
     swfdec_buffer_ref (screen->buffer);
@@ -130,49 +103,26 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
   SWFDEC_LOG ("size: %u x %u - block size %u x %u\n", w, h, bw, bh);
   for (j = 0; j < h; j += bh) {
     for (i = 0; i < w; i += bw) {
-      int result;
       guint x, y, size;
+      SwfdecBuffer *buffer;
       guint8 *in, *out;
-      /* decode the block into block_buffer */
       size = swfdec_bits_get_bu16 (&bits);
       if (size == 0)
 	continue;
-      if (inflateReset(&screen->z) != Z_OK) {
-	SWFDEC_ERROR ("error resetting zlib decoder: %s", screen->z.msg);
-      }
-      screen->z.next_in = (void *) bits.ptr;
-      if (swfdec_bits_skip_bytes (&bits, size) != size) {
-	SWFDEC_ERROR ("not enough bytes available");
-	return NULL;
-      }
-      screen->z.avail_in = size;
-      screen->z.next_out = screen->block_buffer->data;
-      screen->z.avail_out = screen->block_buffer->length;
-      result = inflate (&screen->z, Z_FINISH);
-      if (result == Z_DATA_ERROR) {
-	inflateSync (&screen->z);
-	result = inflate (&screen->z, Z_FINISH);
-      }
-      if (result < 0) {
-	SWFDEC_WARNING ("error decoding block: %s", screen->z.msg);
+      buffer = swfdec_bits_decompress (&bits, size, bw * bh * 4);
+      if (buffer == NULL) {
+	SWFDEC_WARNING ("error decoding block");
 	continue;
       }
       /* convert format and write out data */
       out = ret->data + stride * (h - j - 1) + i * 4;
-      in = screen->block_buffer->data;
+      in = buffer->data;
       for (y = 0; y < MIN (bh, h - j); y++) {
 	for (x = 0; x < MIN (bw, w - i); x++) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	  out[x * 4 - y * stride] = *in++;
-	  out[x * 4 - y * stride + 1] = *in++;
-	  out[x * 4 - y * stride + 2] = *in++;
-	  out[x * 4 - y * stride + 3] = 0xFF;
-#else
-	  out[x * 4 - y * stride + 3] = *in++;
-	  out[x * 4 - y * stride + 2] = *in++;
-	  out[x * 4 - y * stride + 1] = *in++;
-	  out[x * 4 - y * stride] = 0xFF;
-#endif
+	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_BLUE] = *in++;
+	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_GREEN] = *in++;
+	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_RED] = *in++;
+	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_ALPHA] = 0xFF;
 	}
       }
     }

@@ -89,47 +89,6 @@ swfdec_image_init (SwfdecImage * image)
 {
 }
 
-
-static void *
-zalloc (void *opaque, unsigned int items, unsigned int size)
-{
-  return g_malloc (items * size);
-}
-
-static void
-zfree (void *opaque, void *addr)
-{
-  g_free (addr);
-}
-
-static guint8 *
-lossless (const guint8 *zptr, int zlen, int len)
-{
-  guint8 *data;
-  z_stream z = { NULL, };
-  int ret;
-
-  z.zalloc = zalloc;
-  z.zfree = zfree;
-  z.opaque = NULL;
-
-  data = g_malloc (len);
-  z.next_in = (Bytef *) zptr;
-  z.avail_in = zlen;
-  z.next_out = data;
-  z.avail_out = len;
-
-  ret = inflateInit (&z);
-  ret = inflate (&z, Z_FINISH);
-  if (ret != Z_STREAM_END) {
-    SWFDEC_WARNING ("lossless: ret == %d", ret);
-  }
-  inflateEnd (&z);
-
-  return data;
-}
-
-
 int
 swfdec_image_jpegtables (SwfdecSwfDecoder * s)
 {
@@ -267,7 +226,6 @@ static void
 swfdec_image_jpeg3_load (SwfdecImage *image)
 {
   JpegRGBDecoder *dec;
-  unsigned char *alpha_data;
   SwfdecBits bits;
   SwfdecBuffer *buffer;
   int jpeg_length;
@@ -294,12 +252,13 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
       &image->rowstride, &image->width, &image->height);
   jpeg_rgb_decoder_free (dec);
 
-  buffer = swfdec_bits_get_buffer (&bits, -1);
-  alpha_data = lossless (buffer->data, buffer->length, image->width * image->height);
-  swfdec_buffer_unref (buffer);
-
-  merge_alpha (image, image->data, alpha_data);
-  g_free (alpha_data);
+  buffer = swfdec_bits_decompress (&bits, -1, image->width * image->height);
+  if (buffer) {
+    merge_alpha (image, image->data, buffer->data);
+    swfdec_buffer_unref (buffer);
+  } else {
+    SWFDEC_WARNING ("cannot set alpha channel information, decompression failed");
+  }
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -355,6 +314,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
 
   if (format == 3) {
+    SwfdecBuffer *buffer;
     unsigned char *indexed_data;
     guint i;
     unsigned int rowstride = (image->width + 3) & ~3;
@@ -363,8 +323,13 @@ swfdec_image_lossless_load (SwfdecImage *image)
     image->rowstride = image->width * 4;
 
     if (have_alpha) {
-      ptr = lossless (bits.ptr, bits.end - bits.ptr, 
-	  color_table_size * 4 + rowstride * image->height);
+      buffer = swfdec_bits_decompress (&bits, -1, color_table_size * 4 + rowstride * image->height);
+      if (buffer == NULL) {
+	SWFDEC_ERROR ("failed to decompress data");
+	memset (image->data, 0, 4 * image->width * image->height);
+	return;
+      }
+      ptr = buffer->data;
       for (i = 0; i < color_table_size; i++) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 	guint8 tmp = ptr[i * 4 + 0];
@@ -380,8 +345,13 @@ swfdec_image_lossless_load (SwfdecImage *image)
       }
       indexed_data = ptr + color_table_size * 4;
     } else {
-      ptr = lossless (bits.ptr, bits.end - bits.ptr, 
-	  color_table_size * 3 + rowstride * image->height);
+      buffer = swfdec_bits_decompress (&bits, -1, color_table_size * 3 + rowstride * image->height);
+      if (buffer == NULL) {
+	SWFDEC_ERROR ("failed to decompress data");
+	memset (image->data, 0, 4 * image->width * image->height);
+	return;
+      }
+      ptr = buffer->data;
       for (i = color_table_size - 1; i < color_table_size; i--) {
 	guint8 color[3];
 	color[0] = ptr[i * 3 + 0];
@@ -404,27 +374,33 @@ swfdec_image_lossless_load (SwfdecImage *image)
     swfdec_image_colormap_decode (image, image->data, indexed_data,
 	ptr, color_table_size);
 
-    g_free (ptr);
+    swfdec_buffer_unref (buffer);
   } else if (format == 4) {
     int i, j;
     unsigned int c;
     unsigned char *idata;
-    guint8 *p;
+    SwfdecBuffer *buffer;
 
     if (have_alpha) {
       SWFDEC_INFO("16bit images aren't allowed to have alpha, ignoring");
       have_alpha = FALSE;
     }
 
-    p = ptr = lossless (bits.ptr, bits.end - bits.ptr, 2 * image->width * image->height);
+    buffer = swfdec_bits_decompress (&bits, -1, 2 * ((image->width + 1) & ~1) * image->height);
     image->data = g_malloc (4 * image->width * image->height);
     idata = image->data;
     image->rowstride = image->width * 4;
+    if (buffer == NULL) {
+      SWFDEC_ERROR ("failed to decompress data");
+      memset (image->data, 0, 4 * image->width * image->height);
+      return;
+    }
+    ptr = buffer->data;
 
     /* 15 bit packed */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
-        c = p[1] | (p[0] << 8);
+        c = ptr[1] | (ptr[0] << 8);
         idata[SWFDEC_COLOR_INDEX_BLUE] = (c << 3) | ((c >> 2) & 0x7);
         idata[SWFDEC_COLOR_INDEX_GREEN] = ((c >> 2) & 0xf8) | ((c >> 7) & 0x7);
         idata[SWFDEC_COLOR_INDEX_RED] = ((c >> 7) & 0xf8) | ((c >> 12) & 0x7);
@@ -432,12 +408,22 @@ swfdec_image_lossless_load (SwfdecImage *image)
         ptr += 2;
         idata += 4;
       }
+      if (image->width & 1)
+	ptr += 2;
     }
-    g_free (ptr);
+    swfdec_buffer_unref (buffer);
   }
   if (format == 5) {
+    SwfdecBuffer *buffer;
     int i, j;
-    ptr = image->data = lossless (bits.ptr, bits.end - bits.ptr, 4 * image->width * image->height);
+    buffer = swfdec_bits_decompress (&bits, -1, 4 * image->width * image->height);
+    image->rowstride = 4 * image->width;
+    if (buffer == NULL) {
+      SWFDEC_ERROR ("failed to decompress data");
+      image->data = g_malloc0 (4 * image->width * image->height);
+      return;
+    }
+    ptr = image->data = buffer->data;
     /* image is stored in 0RGB format.  We use ARGB/BGRA. */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
@@ -445,6 +431,11 @@ swfdec_image_lossless_load (SwfdecImage *image)
 	ptr += 4;
       }
     }
+    /* FIXME: this can fail if the returned buffer does not contain malloc'd 
+     * data at some point in the future */
+    buffer->data = NULL;
+    buffer->length = 0;
+    swfdec_buffer_unref (buffer);
   }
 }
 

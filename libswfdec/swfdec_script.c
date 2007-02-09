@@ -1062,6 +1062,44 @@ swfdec_action_get_url (JSContext *cx, guint action, const guint8 *data, guint le
 }
 
 static JSBool
+swfdec_action_get_url2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *target, *url;
+  guint method;
+  SwfdecMovie *movie;
+
+  if (len != 1) {
+    SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
+    return JS_FALSE;
+  }
+  target = swfdec_js_to_string (cx, cx->fp->sp[-1]);
+  url = swfdec_js_to_string (cx, cx->fp->sp[-2]);
+  if (target == NULL || url == NULL)
+    return JS_FALSE;
+  method = data[0] >> 6;
+  if (method == 3) {
+    SWFDEC_ERROR ("GetURL method 3 invalid");
+    method = 0;
+  }
+  if (method) {
+    SWFDEC_ERROR ("FIXME: implement encoding variables using %s", method == 1 ? "GET" : "POST");
+  }
+  if (data[0] & 2) {
+    SWFDEC_ERROR ("FIXME: implement LoadTarget");
+  }
+  if (data[0] & 1) {
+    SWFDEC_ERROR ("FIXME: implement LoadVariables");
+  }
+  movie = swfdec_action_get_target (cx);
+  if (movie)
+    swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
+  else
+    SWFDEC_WARNING ("no movie to load");
+  cx->fp->sp -= 2;
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_string_add (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   JSString *lval, *rval;
@@ -1940,7 +1978,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 4 */
   [0x96] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
   [0x99] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
-  [0x9a] = { "GetURL2", NULL },
+  [0x9a] = { "GetURL2", NULL, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
   /* version 5 */
   [0x9b] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
   /* version 4 */

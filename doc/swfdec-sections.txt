@@ -20,6 +20,7 @@ SwfdecLoader
 swfdec_loader_new_from_file
 swfdec_loader_push
 swfdec_loader_eof
+swfdec_loader_get_filename
 <SUBSECTION Standard>
 SWFDEC_LOADER
 SWFDEC_IS_LOADER

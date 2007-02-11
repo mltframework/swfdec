@@ -130,14 +130,20 @@ swfdec_video_input_new (SwfdecVideo *video)
 {
   SwfdecVideoInput *input = g_new0 (SwfdecVideoInput, 1);
 
+  if (video->n_frames == 0)
+    return NULL;
+  if (video->codec == NULL)
+    return NULL;
+  if (video->codec)
+    input->decoder = swfdec_video_codec_init (video->codec);
+  if (input->decoder == NULL)
+    return NULL;
   input->input.get_image = swfdec_video_input_get_image;
   input->input.iterate = swfdec_video_input_iterate;
   input->input.finalize = swfdec_video_input_finalize;
   g_object_ref (video);
   input->video = video;
   input->current_frame = (guint) -1;
-  if (video->codec)
-    input->decoder = swfdec_video_codec_init (video->codec);
   return &input->input;
 }
 
@@ -154,7 +160,8 @@ swfdec_video_create_movie (SwfdecGraphic *graphic)
 
   movie->video = SWFDEC_VIDEO (graphic);
   g_object_ref (graphic);
-  swfdec_video_movie_set_input (movie, input);
+  if (input)
+    swfdec_video_movie_set_input (movie, input);
   return SWFDEC_MOVIE (movie);
 }
 
@@ -213,10 +220,12 @@ tag_func_define_video (SwfdecSwfDecoder *s)
   SWFDEC_LOG ("  deblocking: %d", deblocking);
   SWFDEC_LOG ("  smoothing: %d", smoothing);
   SWFDEC_LOG ("  format: %d", (int) video->format);
-  video->codec = swfdec_codec_get_video (video->format);
-  if (video->codec == NULL) {
-    SWFDEC_WARNING ("no codec for format %d", (int) video->format);
-    return SWFDEC_STATUS_OK;
+  if (video->format != SWFDEC_VIDEO_FORMAT_UNDEFINED) {
+    video->codec = swfdec_codec_get_video (video->format);
+    if (video->codec == NULL) {
+      SWFDEC_WARNING ("no codec for format %d", (int) video->format);
+      return SWFDEC_STATUS_OK;
+    }
   }
   return SWFDEC_STATUS_OK;
 }

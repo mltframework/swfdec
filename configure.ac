@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.4.1.1)
+AC_INIT(swfdec,0.4.2.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -29,7 +29,7 @@ if test x$SWFDEC_CVS = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
 fi
 
-SWFDEC_LIBVERSION="1:0:0"
+SWFDEC_LIBVERSION="1:1:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 

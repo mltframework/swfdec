@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 #include <libswfdec/swfdec_buffer.h>
 #include <libswfdec/swfdec_color.h>
+#include <libswfdec/swfdec_script.h>
 #include "swfedit_token.h"
 
 /*** CONVERTERS ***/
@@ -55,6 +56,12 @@ swfedit_parse_hex (const char *s, guint *result)
     return FALSE;
   *result = byte;
   return TRUE;
+}
+
+static gpointer
+swfedit_binary_new (void)
+{
+  return swfdec_buffer_new ();
 }
 
 static gboolean
@@ -101,6 +108,24 @@ swfedit_binary_to_string (gconstpointer value)
 }
 
 static gboolean
+swfedit_bit_from_string (const char *s, gpointer* result)
+{
+  if (s[0] == '1' && s[1] == '\0')
+    *result = GUINT_TO_POINTER (1);
+  else if (s[0] == '0' && s[1] == '\0')
+    *result = GUINT_TO_POINTER (0);
+  else
+    return FALSE;
+  return TRUE;
+}
+
+static char *
+swfedit_bit_to_string (gconstpointer value)
+{
+  return g_strdup (value ? "1" : "0");
+}
+
+static gboolean
 swfedit_from_string_unsigned (const char *s, gulong max, gpointer* result)
 {
   char *end;
@@ -138,6 +163,25 @@ static char *
 swfedit_to_string_unsigned (gconstpointer value)
 {
   return g_strdup_printf ("%u", GPOINTER_TO_UINT (value));
+}
+
+static char *
+swfedit_string_to_string (gconstpointer value)
+{
+  return g_strdup (value);
+}
+
+static gboolean
+swfedit_string_from_string (const char *s, gpointer* result)
+{
+  *result = g_strdup (s);
+  return TRUE;
+}
+
+static gpointer
+swfedit_rect_new (void)
+{
+  return g_new0 (SwfdecRect, 1);
 }
 
 static gboolean
@@ -212,20 +256,128 @@ swfedit_rgba_to_string (gconstpointer value)
       SWFDEC_COLOR_G (c), SWFDEC_COLOR_B (c), SWFDEC_COLOR_A (c));
 }
 
+static gpointer
+swfedit_matrix_new (void)
+{
+  cairo_matrix_t *matrix = g_new (cairo_matrix_t, 1);
+
+  cairo_matrix_init_identity (matrix);
+  return matrix;
+}
+
+static gboolean
+swfedit_matrix_from_string (const char *s, gpointer* result)
+{
+  return FALSE;
+}
+
+static char *
+swfedit_matrix_to_string (gconstpointer value)
+{
+  const cairo_matrix_t *mat = value;
+
+  return g_strdup_printf ("{%g %g,  %g %g} + {%g, %g}", 
+      mat->xx, mat->xy, mat->yx, mat->yy, mat->x0, mat->y0);
+}
+
+static gpointer
+swfedit_ctrans_new (void)
+{
+  SwfdecColorTransform *trans = g_new (SwfdecColorTransform, 1);
+
+  swfdec_color_transform_init_identity (trans);
+  return trans;
+}
+
+static gboolean
+swfedit_ctrans_from_string (const char *s, gpointer* result)
+{
+  return FALSE;
+}
+
+static char *
+swfedit_ctrans_to_string (gconstpointer value)
+{
+  const SwfdecColorTransform *trans = value;
+
+  return g_strdup_printf ("{%d %d} {%d %d} {%d %d} {%d %d}", 
+      trans->ra, trans->rb, trans->ga, trans->gb, 
+      trans->ba, trans->bb, trans->aa, trans->ab);
+}
+
+static gpointer
+swfedit_script_new (void)
+{
+  return NULL;
+}
+
+static gboolean
+swfedit_script_from_string (const char *s, gpointer* result)
+{
+  SwfdecBuffer *buffer;
+  SwfdecBits bits;
+  SwfdecScript *script;
+  
+  if (swfedit_binary_from_string (s, (gpointer *) &buffer))
+    return FALSE;
+
+  swfdec_bits_init (&bits, buffer);
+  script = swfdec_script_new (&bits, "unknown", 6 /* FIXME */);
+  swfdec_buffer_unref (buffer);
+  if (script != NULL) {
+    *result = script;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+static char *
+swfedit_script_to_string (gconstpointer value)
+{
+  return swfedit_binary_to_string (((SwfdecScript *) value)->buffer);
+}
+
+static void
+swfedit_script_free (gpointer script)
+{
+  if (script)
+    swfdec_script_unref (script);
+}
+
 struct {
+  gpointer	(* new)		(void);
   gboolean	(* from_string)	(const char *s, gpointer *);
   char *	(* to_string)	(gconstpointer value);
   void	  	(* free)	(gpointer value);
 } converters[SWFEDIT_N_TOKENS] = {
-  { NULL, NULL, g_object_unref },
-  { swfedit_binary_from_string, swfedit_binary_to_string, (GDestroyNotify) swfdec_buffer_unref },
-  { swfedit_uint8_from_string, swfedit_to_string_unsigned, NULL },
-  { swfedit_uint16_from_string, swfedit_to_string_unsigned, NULL },
-  { swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
-  { swfedit_rect_from_string, swfedit_rect_to_string, g_free },
-  { swfedit_rgb_from_string, swfedit_rgb_to_string, NULL },
-  { swfedit_rgba_from_string, swfedit_rgba_to_string, NULL },
+  { NULL, NULL, NULL, g_object_unref },
+  { swfedit_binary_new, swfedit_binary_from_string, swfedit_binary_to_string, (GDestroyNotify) swfdec_buffer_unref },
+  { NULL, swfedit_bit_from_string, swfedit_bit_to_string, NULL },
+  { NULL, swfedit_uint8_from_string, swfedit_to_string_unsigned, NULL },
+  { NULL, swfedit_uint16_from_string, swfedit_to_string_unsigned, NULL },
+  { NULL, swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
+  { NULL, swfedit_string_from_string, swfedit_string_to_string, g_free },
+  { swfedit_rect_new, swfedit_rect_from_string, swfedit_rect_to_string, g_free },
+  { NULL, swfedit_rgb_from_string, swfedit_rgb_to_string, NULL },
+  { NULL, swfedit_rgba_from_string, swfedit_rgba_to_string, NULL },
+  { swfedit_matrix_new, swfedit_matrix_from_string, swfedit_matrix_to_string, g_free },
+  { swfedit_ctrans_new, swfedit_ctrans_from_string, swfedit_ctrans_to_string, g_free },
+  { swfedit_script_new, swfedit_script_from_string, swfedit_script_to_string, swfedit_script_free },
 };
+
+gpointer
+swfedit_token_new_token (SwfeditTokenType type)
+{
+  gpointer ret;
+
+  g_assert (type < G_N_ELEMENTS (converters));
+
+  if (!converters[type].new)
+    return NULL;
+  ret = converters[type].new ();
+  return ret;
+}
 
 /*** GTK_TREE_MODEL ***/
 
@@ -258,6 +410,8 @@ swfedit_token_get_column_type (GtkTreeModel *tree_model, gint index_)
     case SWFEDIT_COLUMN_NAME:
       return G_TYPE_STRING;
     case SWFEDIT_COLUMN_VALUE_VISIBLE:
+      return G_TYPE_BOOLEAN;
+    case SWFEDIT_COLUMN_VALUE_EDITABLE:
       return G_TYPE_BOOLEAN;
     case SWFEDIT_COLUMN_VALUE:
       return G_TYPE_STRING;
@@ -342,6 +496,10 @@ swfedit_token_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
     case SWFEDIT_COLUMN_VALUE_VISIBLE:
       g_value_init (value, G_TYPE_BOOLEAN);
       g_value_set_boolean (value, converters[entry->type].to_string != NULL);
+      return;
+    case SWFEDIT_COLUMN_VALUE_EDITABLE:
+      g_value_init (value, G_TYPE_BOOLEAN);
+      g_value_set_boolean (value, entry->visible);
       return;
     case SWFEDIT_COLUMN_VALUE:
       g_value_init (value, G_TYPE_STRING);
@@ -529,14 +687,16 @@ swfedit_token_new (void)
 }
 
 void
-swfedit_token_add (SwfeditToken *token, const char *name, SwfeditTokenType type, gpointer value)
+swfedit_token_add (SwfeditToken *token, const char *name, SwfeditTokenType type, 
+    gpointer value)
 {
-  SwfeditTokenEntry entry = { NULL, type, value };
+  SwfeditTokenEntry entry = { NULL, type, value, TRUE };
 
   g_return_if_fail (SWFEDIT_IS_TOKEN (token));
   g_return_if_fail (name != NULL);
   g_return_if_fail (type < SWFEDIT_N_TOKENS);
 
+  g_assert (type != SWFEDIT_TOKEN_OBJECT || value != NULL);
   entry.name = g_strdup (name);
   g_array_append_val (token->tokens, entry);
 }
@@ -544,6 +704,7 @@ swfedit_token_add (SwfeditToken *token, const char *name, SwfeditTokenType type,
 void
 swfedit_token_set (SwfeditToken *token, GtkTreeIter *iter, const char *value)
 {
+  SwfeditTokenClass *klass;
   GtkTreeModel *model;
   SwfeditTokenEntry *entry;
   guint i;
@@ -565,9 +726,38 @@ swfedit_token_set (SwfeditToken *token, GtkTreeIter *iter, const char *value)
   if (converters[entry->type].free != NULL)
     converters[entry->type].free (entry->value);
   entry->value = new;
+  klass = SWFEDIT_TOKEN_GET_CLASS (token);
+  if (klass->changed)
+    klass->changed (token, i);
 
   path = gtk_tree_model_get_path (model, iter);
   gtk_tree_model_row_changed (model, path, iter);
   gtk_tree_path_free (path);
 }
 
+void
+swfedit_token_set_visible (SwfeditToken *token, guint i, gboolean visible)
+{
+  SwfeditTokenEntry *entry;
+  GtkTreeModel *model;
+  GtkTreePath *path;
+  GtkTreeIter iter;
+
+  g_return_if_fail (SWFEDIT_IS_TOKEN (token));
+  g_return_if_fail (i < token->tokens->len);
+
+  entry = &g_array_index (token->tokens, SwfeditTokenEntry, i);
+  if (entry->visible == visible)
+    return;
+
+  entry->visible = visible;
+  iter.stamp = 0; /* FIXME */
+  iter.user_data = token;
+  iter.user_data2 = GINT_TO_POINTER (i);
+  while (token->parent) 
+    token = token->parent;
+  model = GTK_TREE_MODEL (token);
+  path = gtk_tree_model_get_path (model, &iter);
+  gtk_tree_model_row_changed (model, path, &iter);
+  gtk_tree_path_free (path);
+}

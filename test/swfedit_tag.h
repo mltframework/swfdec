@@ -21,6 +21,7 @@
 #define __SWFEDIT_TAG_H__
 
 #include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_bits.h>
 #include "swfdec_out.h"
 #include "swfedit_token.h"
 
@@ -28,6 +29,14 @@ G_BEGIN_DECLS
 
 typedef struct _SwfeditTag SwfeditTag;
 typedef struct _SwfeditTagClass SwfeditTagClass;
+typedef struct _SwfeditTagDefinition SwfeditTagDefinition;
+
+struct _SwfeditTagDefinition {
+  const char *	  	name;			/* name to use for this field */
+  SwfeditTokenType     	type;			/* type of this field */
+  guint			n_items;		/* 1-indexed field to look at for item count (or 0 to use 1 item) */
+  gconstpointer		hint;			/* hint to pass to field when creating */
+};
 
 #define SWFEDIT_TYPE_TAG                    (swfedit_tag_get_type())
 #define SWFEDIT_IS_TAG(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFEDIT_TYPE_TAG))
@@ -52,14 +61,22 @@ SwfeditTag *	swfedit_tag_new		(SwfeditToken *		parent,
 					 guint			tag,
 					 SwfdecBuffer *		buffer);
 
-SwfdecBuffer *	swfedit_tag_write	(SwfeditTag *		tag);
+SwfdecBuffer *	swfedit_tag_write	(SwfeditToken *		token);
 void		swfedit_tag_write_token	(SwfeditToken *		token,
 					 SwfdecOut *		out,
 					 guint			i);
+void		swfedit_tag_add_token	(SwfeditToken *		token,
+					 const char *		name,
+					 SwfeditTokenType	type,
+					 gconstpointer		hint);
 void		swfedit_tag_read_token	(SwfeditToken *		token, 
 					 SwfdecBits *		bits,
 					 const char *		name,
-					 SwfeditTokenType	type);
+					 SwfeditTokenType	type,
+					 gconstpointer		hint);
+void		swfedit_tag_read_tag	(SwfeditToken *		token,
+					 SwfdecBits *		bits, 
+					 const SwfeditTagDefinition *def);
 
 G_END_DECLS
 

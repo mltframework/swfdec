@@ -33,12 +33,13 @@ save (GtkButton *button, SwfeditFile *file)
   dialog = gtk_file_chooser_dialog_new ("Save file...",
       GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (button))),
       GTK_FILE_CHOOSER_ACTION_SAVE,
-      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-      GTK_STOCK_SAVE, GTK_RESPONSE_OK, 
+      GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+      GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT, 
       NULL);
+  gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_ACCEPT);
   gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
   gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), file->filename);
-  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK) {
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
     g_free (file->filename);
     file->filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
     if (!swfedit_file_save (file, &error)) {
@@ -70,6 +71,7 @@ open_window (char *filename)
   GError *error = NULL;
   GtkTreeViewColumn *column;
   GtkCellRenderer *renderer;
+  char *basename;
 
   file = swfedit_file_new (filename, &error);
   if (file == NULL) {
@@ -78,7 +80,11 @@ open_window (char *filename)
     return FALSE;
   }
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), filename);
+  basename = g_path_get_basename (filename);
+  if (basename) {
+    gtk_window_set_title (GTK_WINDOW (window), basename);
+    g_free (basename);
+  }
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   box = gtk_vbox_new (FALSE, 3);
@@ -92,7 +98,7 @@ open_window (char *filename)
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes ("Name", renderer,
-    "text", SWFEDIT_COLUMN_NAME, NULL);
+    "text", SWFEDIT_COLUMN_NAME, "sensitive", SWFEDIT_COLUMN_VALUE_EDITABLE, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 
@@ -100,7 +106,8 @@ open_window (char *filename)
   g_object_set (G_OBJECT (renderer), "editable", TRUE, NULL);
   g_signal_connect (renderer, "edited", G_CALLBACK (cell_renderer_edited), file);
   column = gtk_tree_view_column_new_with_attributes ("Value", renderer,
-    "text", SWFEDIT_COLUMN_VALUE, "visible", SWFEDIT_COLUMN_VALUE_VISIBLE, NULL);
+    "text", SWFEDIT_COLUMN_VALUE, "visible", SWFEDIT_COLUMN_VALUE_VISIBLE, 
+    "sensitive", SWFEDIT_COLUMN_VALUE_EDITABLE, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 

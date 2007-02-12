@@ -67,6 +67,14 @@ swfdec_out_close (SwfdecOut *out)
 }
 
 unsigned int
+swfdec_out_get_bits (SwfdecOut *out)
+{
+  g_return_val_if_fail (out != NULL, 0);
+
+  return (out->ptr - out->data) * 8 + out->idx;
+}
+
+unsigned int
 swfdec_out_left (SwfdecOut *out)
 {
   g_return_val_if_fail (out != NULL, 0);
@@ -186,6 +194,21 @@ swfdec_out_put_sbits (SwfdecOut *out, int bits, guint n_bits)
   swfdec_out_put_bits (out, bits, n_bits);
 }
 
+void
+swfdec_out_put_string (SwfdecOut *out, const char *s)
+{
+  guint len;
+
+  g_return_if_fail (out != NULL);
+  g_return_if_fail (s != NULL);
+
+  len = strlen (s) + 1;
+
+  swfdec_out_prepare_bytes (out, len);
+  memcpy (out->ptr, s, len);
+  out->ptr += len;
+}
+
 static guint
 swfdec_out_bits_required (guint x)
 {
@@ -202,12 +225,12 @@ static guint
 swfdec_out_sbits_required (int x)
 {
   if (x < 0)
-    x = -x;
+    x = !x;
   return swfdec_out_bits_required (x) + 1;
 }
 
 void
-swfdec_out_put_rect (SwfdecOut *out, SwfdecRect *rect)
+swfdec_out_put_rect (SwfdecOut *out, const SwfdecRect *rect)
 {
   int x0, x1, y0, y1;
   guint req, tmp;
@@ -232,6 +255,98 @@ swfdec_out_put_rect (SwfdecOut *out, SwfdecRect *rect)
   swfdec_out_put_sbits (out, x1, req);
   swfdec_out_put_sbits (out, y0, req);
   swfdec_out_put_sbits (out, y1, req);
+  swfdec_out_syncbits (out);
+}
+
+void
+swfdec_out_put_matrix (SwfdecOut *out, const cairo_matrix_t *matrix)
+{
+  int x, y;
+  unsigned int xbits, ybits;
+
+  if (matrix->xx != 1.0 || matrix->yy != 1.0) {
+    swfdec_out_put_bit (out, 1);
+    x = SWFDEC_DOUBLE_TO_FIXED (matrix->xx);
+    y = SWFDEC_DOUBLE_TO_FIXED (matrix->yy);
+    xbits = swfdec_out_sbits_required (x);
+    ybits = swfdec_out_sbits_required (y);
+    xbits = MAX (xbits, ybits);
+    swfdec_out_put_bits (out, xbits, 5);
+    swfdec_out_put_sbits (out, x, xbits);
+    swfdec_out_put_sbits (out, y, xbits);
+  } else {
+    swfdec_out_put_bit (out, 0);
+  }
+  if (matrix->xy != 0.0 || matrix->yx != 0.0) {
+    swfdec_out_put_bit (out, 1);
+    x = SWFDEC_DOUBLE_TO_FIXED (matrix->yx);
+    y = SWFDEC_DOUBLE_TO_FIXED (matrix->xy);
+    xbits = swfdec_out_sbits_required (x);
+    ybits = swfdec_out_sbits_required (y);
+    xbits = MAX (xbits, ybits);
+    swfdec_out_put_bits (out, xbits, 5);
+    swfdec_out_put_sbits (out, x, xbits);
+    swfdec_out_put_sbits (out, y, xbits);
+  } else {
+    swfdec_out_put_bit (out, 0);
+  }
+  x = matrix->x0;
+  y = matrix->y0;
+  xbits = swfdec_out_sbits_required (x);
+  ybits = swfdec_out_sbits_required (y);
+  xbits = MAX (xbits, ybits);
+  swfdec_out_put_bits (out, xbits, 5);
+  swfdec_out_put_sbits (out, x, xbits);
+  swfdec_out_put_sbits (out, y, xbits);
+  swfdec_out_syncbits (out);
+}
+
+void
+swfdec_out_put_color_transform (SwfdecOut *out, const SwfdecColorTransform *trans)
+{
+  gboolean has_add, has_mult;
+  unsigned int n_bits, tmp;
+
+  has_mult = trans->ra != 256 || trans->ga != 256 || trans->ba != 256 || trans->aa != 256;
+  has_add = trans->rb != 0 || trans->gb != 0 || trans->bb != 0 || trans->ab != 0;
+  if (has_mult) {
+    n_bits = swfdec_out_sbits_required (trans->ra);
+    tmp = swfdec_out_sbits_required (trans->ga);
+    n_bits = MAX (tmp, n_bits);
+    tmp = swfdec_out_sbits_required (trans->ba);
+    n_bits = MAX (tmp, n_bits);
+    tmp = swfdec_out_sbits_required (trans->aa);
+    n_bits = MAX (tmp, n_bits);
+  } else {
+    n_bits = 0;
+  }
+  if (has_add) {
+    tmp = swfdec_out_sbits_required (trans->rb);
+    n_bits = MAX (tmp, n_bits);
+    tmp = swfdec_out_sbits_required (trans->gb);
+    n_bits = MAX (tmp, n_bits);
+    tmp = swfdec_out_sbits_required (trans->bb);
+    n_bits = MAX (tmp, n_bits);
+    tmp = swfdec_out_sbits_required (trans->ab);
+    n_bits = MAX (tmp, n_bits);
+  }
+  if (n_bits >= (1 << 4))
+    n_bits = (1 << 4) - 1;
+  swfdec_out_put_bit (out, has_add);
+  swfdec_out_put_bit (out, has_mult);
+  swfdec_out_put_bits (out, n_bits, 4);
+  if (has_mult) {
+    swfdec_out_put_sbits (out, trans->ra, n_bits);
+    swfdec_out_put_sbits (out, trans->ga, n_bits);
+    swfdec_out_put_sbits (out, trans->ba, n_bits);
+    swfdec_out_put_sbits (out, trans->aa, n_bits);
+  }
+  if (has_add) {
+    swfdec_out_put_sbits (out, trans->rb, n_bits);
+    swfdec_out_put_sbits (out, trans->gb, n_bits);
+    swfdec_out_put_sbits (out, trans->bb, n_bits);
+    swfdec_out_put_sbits (out, trans->ab, n_bits);
+  }
   swfdec_out_syncbits (out);
 }
 

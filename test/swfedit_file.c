@@ -125,9 +125,9 @@ swf_parse_header1 (SwfeditFile *file, SwfdecBits *bits, GError **error)
 static void
 swf_parse_header2 (SwfeditFile *file, SwfdecBits *bits)
 {
-  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "rect", SWFEDIT_TOKEN_RECT);
-  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "rate", SWFEDIT_TOKEN_UINT16);
-  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "frames", SWFEDIT_TOKEN_UINT16);
+  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "rect", SWFEDIT_TOKEN_RECT, NULL);
+  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "rate", SWFEDIT_TOKEN_UINT16, NULL);
+  swfedit_tag_read_token (SWFEDIT_TOKEN (file), bits, "frames", SWFEDIT_TOKEN_UINT16, NULL);
 }
 
 static gboolean
@@ -254,7 +254,6 @@ swfedit_file_write (SwfeditFile *file)
   swfdec_out_put_u8 (out, 'W');
   swfdec_out_put_u8 (out, 'S');
   swfedit_tag_write_token (token, out, 0);
-  g_print ("length: %u", swfdec_buffer_queue_get_depth (queue));
   swfdec_out_put_u32 (out, swfdec_buffer_queue_get_depth (queue) + 8);
   swfdec_out_prepare_bytes (out, swfdec_buffer_queue_get_depth (queue));
   while ((buffer = swfdec_buffer_queue_pull_buffer (queue))) {

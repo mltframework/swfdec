@@ -22,11 +22,13 @@ swfedit_SOURCES = \
 	swfdec_out.c \
 	swfedit.c \
 	swfedit_file.c \
+	swfedit_list.c \
 	swfedit_tag.c \
 	swfedit_token.c
 
 noinst_HEADERS = \
 	swfdec_out.h \
 	swfedit_file.h \
+	swfedit_list.h \
 	swfedit_tag.h \
 	swfedit_token.h

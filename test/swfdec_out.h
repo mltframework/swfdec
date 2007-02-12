@@ -40,37 +40,44 @@ struct _SwfdecOut {
 #define SWFDEC_OUT_STEP (32)
 
 SwfdecOut *	swfdec_out_open			(void);
-SwfdecBuffer *	swfdec_out_close		(SwfdecOut *	out);
+SwfdecBuffer *	swfdec_out_close		(SwfdecOut *		out);
 
-unsigned int	swfdec_out_left	  		(SwfdecOut *	out);
-void		swfdec_out_ensure_bits		(SwfdecOut *	out,
-						 unsigned int	bits);
-void		swfdec_out_prepare_bytes	(SwfdecOut *	out,
-						 unsigned int	bytes);
+unsigned int	swfdec_out_get_bits		(SwfdecOut *		out);
+unsigned int	swfdec_out_left	  		(SwfdecOut *		out);
+void		swfdec_out_ensure_bits		(SwfdecOut *		out,
+						 unsigned int		bits);
+void		swfdec_out_prepare_bytes	(SwfdecOut *		out,
+						 unsigned int		bytes);
 
-void		swfdec_out_put_bit		(SwfdecOut *	out,
-						 gboolean	bit);
-void		swfdec_out_put_bits		(SwfdecOut *	out,
-						 guint		bits,
-						 guint		n_bits);
-void		swfdec_out_put_sbits		(SwfdecOut *	out,
-						 int		bits,
-						 guint		n_bits);
-void		swfdec_out_put_buffer		(SwfdecOut *	out,
-						 SwfdecBuffer *	buffer);
-void		swfdec_out_put_u8		(SwfdecOut *	out,
-						 guint		i);
-void		swfdec_out_put_u16		(SwfdecOut *	out,
-						 guint		i);
-void		swfdec_out_put_u32		(SwfdecOut *	out,
-						 guint		i);
+void		swfdec_out_put_bit		(SwfdecOut *		out,
+						 gboolean		bit);
+void		swfdec_out_put_bits		(SwfdecOut *		out,
+						 guint	  		bits,
+						 guint			n_bits);
+void		swfdec_out_put_sbits		(SwfdecOut *		out,
+						 int	  		bits,
+						 guint	  		n_bits);
+void		swfdec_out_put_buffer		(SwfdecOut *		out,
+						 SwfdecBuffer *		buffer);
+void		swfdec_out_put_u8		(SwfdecOut *		out,
+						 guint	  		i);
+void		swfdec_out_put_u16		(SwfdecOut *		out,
+						 guint			i);
+void		swfdec_out_put_u32		(SwfdecOut *		out,
+						 guint			i);
+void		swfdec_out_put_string		(SwfdecOut *		out,
+						 const char *		s);
 
-void		swfdec_out_put_rgb		(SwfdecOut *	out,
-						 SwfdecColor	color);
-void		swfdec_out_put_rgba		(SwfdecOut *	out,
-						 SwfdecColor	color);
-void		swfdec_out_put_rect		(SwfdecOut *	out,
-						 SwfdecRect *	rect);
+void		swfdec_out_put_rgb		(SwfdecOut *		out,
+						 SwfdecColor		color);
+void		swfdec_out_put_rgba		(SwfdecOut *		out,
+						 SwfdecColor		color);
+void		swfdec_out_put_rect		(SwfdecOut *		out,
+						 const SwfdecRect *	rect);
+void		swfdec_out_put_matrix		(SwfdecOut *		out,
+						 const cairo_matrix_t *	matrix);
+void		swfdec_out_put_color_transform	(SwfdecOut *		out,
+						 const SwfdecColorTransform *trans);
 
 
 G_END_DECLS

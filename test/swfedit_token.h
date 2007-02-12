@@ -28,19 +28,25 @@ G_BEGIN_DECLS
 typedef enum {
   SWFEDIT_TOKEN_OBJECT,
   SWFEDIT_TOKEN_BINARY,
+  SWFEDIT_TOKEN_BIT,
   SWFEDIT_TOKEN_UINT8,
   SWFEDIT_TOKEN_UINT16,
   SWFEDIT_TOKEN_UINT32,
+  SWFEDIT_TOKEN_STRING,
   SWFEDIT_TOKEN_RECT,
   SWFEDIT_TOKEN_RGB,
   SWFEDIT_TOKEN_RGBA,
+  SWFEDIT_TOKEN_MATRIX,
+  SWFEDIT_TOKEN_CTRANS,
+  SWFEDIT_TOKEN_SCRIPT,
   SWFEDIT_N_TOKENS
 } SwfeditTokenType;
 
 typedef enum {
   SWFEDIT_COLUMN_NAME,
   SWFEDIT_COLUMN_VALUE_VISIBLE,
-  SWFEDIT_COLUMN_VALUE
+  SWFEDIT_COLUMN_VALUE,
+  SWFEDIT_COLUMN_VALUE_EDITABLE
 } SwfeditColumn;
 
 typedef struct _SwfeditTokenEntry SwfeditTokenEntry;
@@ -59,6 +65,7 @@ struct _SwfeditTokenEntry {
   char *		name;
   SwfeditTokenType	type;
   gpointer		value;
+  gboolean		visible;
 };
 
 struct _SwfeditToken {
@@ -71,9 +78,14 @@ struct _SwfeditToken {
 
 struct _SwfeditTokenClass {
   GObjectClass		object_class;
+
+  void			(* changed)		(SwfeditToken *		token,
+						 guint			id);
 };
 
 GType		swfedit_token_get_type		(void);
+
+gpointer	swfedit_token_new_token		(SwfeditTokenType	type);
 
 SwfeditToken *	swfedit_token_new		(void);
 void		swfedit_token_add		(SwfeditToken *		token,
@@ -83,6 +95,9 @@ void		swfedit_token_add		(SwfeditToken *		token,
 void		swfedit_token_set		(SwfeditToken *		token,
 						 GtkTreeIter *		iter,
 						 const char *		value);
+void		swfedit_token_set_visible	(SwfeditToken *		token,
+						 guint			i,
+						 gboolean		visible);
 
 
 G_END_DECLS

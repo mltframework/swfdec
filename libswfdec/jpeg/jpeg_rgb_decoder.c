@@ -229,7 +229,17 @@ scanlinescale2_u8 (unsigned char *dest, unsigned char *src, int len)
 {
   int i;
 
-  for (i = 0; i < len; i++) {
-    dest[i] = src[i / 2];
+  for (i = 0; i < len - 3; i += 2){
+    dest[i] = src[i/2];
+    dest[i+1] = (src[i/2] + src[i/2+1] + 1)/2;
   }
+  if (len & 1) {
+    dest[i] = src[i/2];
+    dest[i+1] = (src[i/2] + src[i/2+1] + 1)/2;
+    dest[i+2] = src[i/2 + 1];
+  } else {
+    dest[i] = src[i/2];
+    dest[i+1] = src[i/2];
+  }
+
 }

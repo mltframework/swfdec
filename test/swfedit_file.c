@@ -284,3 +284,14 @@ swfedit_file_save (SwfeditFile *file, GError **error)
   return ret;
 }
 
+guint
+swfedit_file_get_version (SwfeditFile *file)
+{
+  SwfeditTokenEntry *entry;
+
+  g_return_val_if_fail (SWFEDIT_FILE (file), 3);
+
+  entry = &g_array_index (SWFEDIT_TOKEN (file)->tokens, SwfeditTokenEntry, 0);
+  return GPOINTER_TO_UINT (entry->value);
+}
+

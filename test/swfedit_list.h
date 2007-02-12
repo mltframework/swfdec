@@ -49,7 +49,8 @@ struct _SwfeditListClass {
 GType		swfedit_list_get_type	(void);
 
 SwfeditList *	swfedit_list_new	(const SwfeditTagDefinition *	def);
-SwfeditList *	swfedit_list_new_read	(SwfdecBits *			bits,
+SwfeditList *	swfedit_list_new_read	(SwfeditToken *			parent,
+					 SwfdecBits *			bits,
 					 const SwfeditTagDefinition *	def);
 
 SwfdecBuffer *	swfedit_list_write	(SwfeditList *			list);

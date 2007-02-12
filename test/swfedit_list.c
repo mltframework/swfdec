@@ -99,7 +99,7 @@ swfedit_list_new (const SwfeditTagDefinition *def)
 }
 
 SwfeditList *
-swfedit_list_new_read (SwfdecBits *bits, const SwfeditTagDefinition *def)
+swfedit_list_new_read (SwfeditToken *parent, SwfdecBits *bits, const SwfeditTagDefinition *def)
 {
   SwfeditList *list;
   SwfeditTokenEntry *entry;
@@ -109,6 +109,7 @@ swfedit_list_new_read (SwfdecBits *bits, const SwfeditTagDefinition *def)
   g_return_val_if_fail (def != NULL, NULL);
 
   list = swfedit_list_new_internal (def);
+  SWFEDIT_TOKEN (list)->parent = parent;
   offset = 0;
   while (TRUE) {
     def = list->def;
@@ -120,7 +121,10 @@ swfedit_list_new_read (SwfdecBits *bits, const SwfeditTagDefinition *def)
 
     def++;
     for (;def->name != NULL; def++) {
-      swfedit_tag_read_tag (SWFEDIT_TOKEN (list), bits, def);
+      SwfeditTagDefinition def2 = *def;
+      if (def2.n_items)
+	def2.n_items += offset;
+      swfedit_tag_read_tag (SWFEDIT_TOKEN (list), bits, &def2);
     }
     offset += list->n_defs;
   }

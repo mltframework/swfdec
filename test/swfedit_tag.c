@@ -30,12 +30,13 @@
 #include <libswfdec/swfdec_tag.h>
 #include "swfedit_tag.h"
 #include "swfdec_out.h"
+#include "swfedit_file.h"
 #include "swfedit_list.h"
 
 /*** LOAD/SAVE ***/
 
 static void
-swfedit_object_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_object_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   SwfdecBuffer *buffer;
 
@@ -46,19 +47,19 @@ swfedit_object_write (gpointer data, SwfdecOut *out, gconstpointer hint)
 }
 
 static gpointer
-swfedit_object_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_object_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
-  return swfedit_list_new_read (bits, hint);
+  return swfedit_list_new_read (token, bits, hint);
 }
 
 static void
-swfedit_binary_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_binary_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_buffer (out, data);
 }
 
 static gpointer
-swfedit_binary_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_binary_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   SwfdecBuffer *buffer = swfdec_bits_get_buffer (bits, -1);
   if (buffer == NULL)
@@ -67,61 +68,61 @@ swfedit_binary_read (SwfdecBits *bits, gconstpointer hint)
 }
 
 static void
-swfedit_bit_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_bit_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_bit (out, data ? TRUE : FALSE);
 }
 
 static gpointer
-swfedit_bit_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_bit_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   return GUINT_TO_POINTER (swfdec_bits_getbit (bits) ? 1 : 0);
 }
 
 static void
-swfedit_u8_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_u8_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_u8 (out, GPOINTER_TO_UINT (data));
 }
 
 static gpointer
-swfedit_u8_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_u8_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   return GUINT_TO_POINTER (swfdec_bits_get_u8 (bits));
 }
 
 static void
-swfedit_u16_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_u16_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_u16 (out, GPOINTER_TO_UINT (data));
 }
 
 static gpointer
-swfedit_u16_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_u16_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   return GUINT_TO_POINTER (swfdec_bits_get_u16 (bits));
 }
 
 static void
-swfedit_u32_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_u32_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_u32 (out, GPOINTER_TO_UINT (data));
 }
 
 static gpointer
-swfedit_u32_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_u32_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   return GUINT_TO_POINTER (swfdec_bits_get_u32 (bits));
 }
 
 static void
-swfedit_rect_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_rect_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_rect (out, data);
 }
 
 static gpointer
-swfedit_rect_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_rect_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   SwfdecRect *rect = g_new (SwfdecRect, 1);
   swfdec_bits_get_rect (bits, rect);
@@ -130,13 +131,13 @@ swfedit_rect_read (SwfdecBits *bits, gconstpointer hint)
 }
 
 static void
-swfedit_string_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_string_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_string (out, data);
 }
 
 static gpointer
-swfedit_string_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_string_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   char *s;
   s = swfdec_bits_get_string (bits);
@@ -146,37 +147,37 @@ swfedit_string_read (SwfdecBits *bits, gconstpointer hint)
 }
 
 static void
-swfedit_rgb_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_rgb_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_rgb (out, GPOINTER_TO_UINT (data));
 }
 
 static gpointer
-swfedit_rgb_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_rgb_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   return GUINT_TO_POINTER (swfdec_bits_get_color (bits));
 }
 
 static void
-swfedit_rgba_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_rgba_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_rgba (out, GPOINTER_TO_UINT (data));
 }
 
 static gpointer
-swfedit_rgba_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_rgba_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   return GUINT_TO_POINTER (swfdec_bits_get_rgba (bits));
 }
 
 static void
-swfedit_matrix_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_matrix_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_matrix (out, data);
 }
 
 static gpointer
-swfedit_matrix_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_matrix_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   cairo_matrix_t *matrix = g_new (cairo_matrix_t, 1);
 
@@ -186,13 +187,13 @@ swfedit_matrix_read (SwfdecBits *bits, gconstpointer hint)
 }
 
 static void
-swfedit_ctrans_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_ctrans_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   swfdec_out_put_color_transform (out, data);
 }
 
 static gpointer
-swfedit_ctrans_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_ctrans_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   SwfdecColorTransform *ctrans = g_new (SwfdecColorTransform, 1);
 
@@ -202,7 +203,7 @@ swfedit_ctrans_read (SwfdecBits *bits, gconstpointer hint)
 }
 
 static void
-swfedit_script_write (gpointer data, SwfdecOut *out, gconstpointer hint)
+swfedit_script_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
 {
   SwfdecScript *script = data;
 
@@ -210,14 +211,42 @@ swfedit_script_write (gpointer data, SwfdecOut *out, gconstpointer hint)
 }
 
 static gpointer
-swfedit_script_read (SwfdecBits *bits, gconstpointer hint)
+swfedit_script_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
-  return swfdec_script_new (bits, "original script", 6 /* FIXME */);
+  while (token->parent)
+    token = token->parent;
+  if (!SWFEDIT_IS_FILE (token))
+    return NULL;
+  return swfdec_script_new (bits, "original script", swfedit_file_get_version (SWFEDIT_FILE (token)));
+}
+
+static void
+swfedit_clipeventflags_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint)
+{
+  while (token->parent)
+    token = token->parent;
+  g_assert (SWFEDIT_IS_FILE (token));
+  if (swfedit_file_get_version (SWFEDIT_FILE (token)) >= 6)
+    swfdec_out_put_u32 (out, GPOINTER_TO_UINT (data));
+  else
+    swfdec_out_put_u16 (out, GPOINTER_TO_UINT (data));
+}
+
+static gpointer
+swfedit_clipeventflags_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
+{
+  while (token->parent)
+    token = token->parent;
+  g_assert (SWFEDIT_IS_FILE (token));
+  if (swfedit_file_get_version (SWFEDIT_FILE (token)) >= 6)
+    return GUINT_TO_POINTER (swfdec_bits_get_u32 (bits));
+  else
+    return GUINT_TO_POINTER (swfdec_bits_get_u16 (bits));
 }
 
 struct {
-  void		(* write)	(gpointer data, SwfdecOut *out, gconstpointer hint);
-  gpointer	(* read)	(SwfdecBits *bits, gconstpointer hint);
+  void		(* write)	(SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpointer hint);
+  gpointer	(* read)	(SwfeditToken *token, SwfdecBits *bits, gconstpointer hint);
 } operations[SWFEDIT_N_TOKENS] = {
   { swfedit_object_write, swfedit_object_read },
   { swfedit_binary_write, swfedit_binary_read },
@@ -232,6 +261,7 @@ struct {
   { swfedit_matrix_write, swfedit_matrix_read },
   { swfedit_ctrans_write, swfedit_ctrans_read },
   { swfedit_script_write, swfedit_script_read },
+  { swfedit_clipeventflags_write, swfedit_clipeventflags_read },
 };
 
 void
@@ -245,7 +275,7 @@ swfedit_tag_write_token (SwfeditToken *token, SwfdecOut *out, guint i)
   entry = &g_array_index (token->tokens, 
       SwfeditTokenEntry, i);
   g_assert (operations[entry->type].write != NULL);
-  operations[entry->type].write (entry->value, out, NULL);
+  operations[entry->type].write (token, entry->value, out, NULL);
 }
 
 SwfdecBuffer *
@@ -276,9 +306,7 @@ swfedit_tag_read_token (SwfeditToken *token, SwfdecBits *bits,
   g_return_if_fail (name != NULL);
   
   g_assert (operations[type].read != NULL);
-  data = operations[type].read (bits, hint);
-  if (type == SWFEDIT_TOKEN_OBJECT)
-    SWFEDIT_TOKEN (data)->parent = token;
+  data = operations[type].read (token, bits, hint);
   swfedit_token_add (token, name, type, data);
 }
 
@@ -287,11 +315,10 @@ swfedit_tag_read_token (SwfeditToken *token, SwfdecBits *bits,
 static const SwfeditTagDefinition ShowFrame[] = { { NULL, 0, 0, NULL } };
 static const SwfeditTagDefinition SetBackgroundColor[] = { { "color", SWFEDIT_TOKEN_RGB, 0, NULL }, { NULL, 0, 0, NULL } };
 static const SwfeditTagDefinition PlaceObject2Action[] = {
-  { "flags", SWFEDIT_TOKEN_UINT32, 0, NULL },
-  { "reserved", SWFEDIT_TOKEN_UINT16, 0, NULL },
+  { "flags", SWFEDIT_TOKEN_CLIPEVENTFLAGS, 0, NULL },
   { "size", SWFEDIT_TOKEN_UINT32, 0, NULL },
   //{ "key code", SWFEDIT_TOKEN_UINT8, 0, NULL }, /* only if flag foo is set */
-  { "script", SWFEDIT_TOKEN_SCRIPT, 3, NULL },
+  { "script", SWFEDIT_TOKEN_SCRIPT, 2, NULL },
   { NULL, 0, 0, NULL }
 };
 static const SwfeditTagDefinition PlaceObject2[] = { 
@@ -310,8 +337,18 @@ static const SwfeditTagDefinition PlaceObject2[] = {
   { "ratio", SWFEDIT_TOKEN_UINT16, 4, NULL }, 
   { "name", SWFEDIT_TOKEN_STRING, 3, NULL }, 
   { "clip depth", SWFEDIT_TOKEN_UINT16, 2, NULL }, 
-  { "all flags", SWFEDIT_TOKEN_UINT32, 1, NULL },
+  { "reserved", SWFEDIT_TOKEN_UINT16, 1, NULL },
+  { "all flags", SWFEDIT_TOKEN_CLIPEVENTFLAGS, 1, NULL },
   { "actions", SWFEDIT_TOKEN_OBJECT, 1, PlaceObject2Action },
+  { NULL, 0, 0, NULL }
+};
+static const SwfeditTagDefinition DoAction[] = {
+  { "action", SWFEDIT_TOKEN_SCRIPT, 0, NULL },
+  { NULL, 0, 0, NULL }
+};
+static const SwfeditTagDefinition DoInitAction[] = {
+  { "character", SWFEDIT_TOKEN_UINT16, 0, NULL },
+  { "action", SWFEDIT_TOKEN_SCRIPT, 0, NULL },
   { NULL, 0, 0, NULL }
 };
 
@@ -319,6 +356,8 @@ static const SwfeditTagDefinition *tags[] = {
   [SWFDEC_TAG_SHOWFRAME] = ShowFrame,
   [SWFDEC_TAG_SETBACKGROUNDCOLOR] = SetBackgroundColor,
   [SWFDEC_TAG_PLACEOBJECT2] = PlaceObject2,
+  [SWFDEC_TAG_DOACTION] = DoAction,
+  [SWFDEC_TAG_DOINITACTION] = DoInitAction,
 };
 
 static const SwfeditTagDefinition *

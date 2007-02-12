@@ -364,6 +364,7 @@ struct {
   { swfedit_matrix_new, swfedit_matrix_from_string, swfedit_matrix_to_string, g_free },
   { swfedit_ctrans_new, swfedit_ctrans_from_string, swfedit_ctrans_to_string, g_free },
   { swfedit_script_new, swfedit_script_from_string, swfedit_script_to_string, swfedit_script_free },
+  { NULL, swfedit_uint32_from_string, swfedit_to_string_unsigned, NULL },
 };
 
 gpointer

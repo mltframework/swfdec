@@ -52,6 +52,7 @@ SwfeditFile *	swfedit_file_new		(const char *	filename,
 
 gboolean	swfedit_file_save		(SwfeditFile *	file,
 						 GError **	error);
+guint		swfedit_file_get_version	(SwfeditFile *	file);
 
 
 G_END_DECLS

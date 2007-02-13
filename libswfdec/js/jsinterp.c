@@ -807,6 +807,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         }
         fun = NULL;
         script = NULL;
+	swf = NULL;
         minargs = nvars = 0;
 
         /* Try a call or construct native object op. */

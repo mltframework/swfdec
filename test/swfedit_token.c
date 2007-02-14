@@ -314,12 +314,13 @@ swfedit_script_new (void)
 static gboolean
 swfedit_script_from_string (const char *s, gpointer* result)
 {
-  SwfdecBuffer *buffer;
+  gpointer buffer;
   SwfdecBits bits;
   SwfdecScript *script;
   
-  if (swfedit_binary_from_string (s, (gpointer *) &buffer))
+  if (!swfedit_binary_from_string (s, &buffer)) {
     return FALSE;
+  }
 
   swfdec_bits_init (&bits, buffer);
   script = swfdec_script_new (&bits, "unknown", 6 /* FIXME */);
@@ -703,7 +704,37 @@ swfedit_token_add (SwfeditToken *token, const char *name, SwfeditTokenType type,
 }
 
 void
-swfedit_token_set (SwfeditToken *token, GtkTreeIter *iter, const char *value)
+swfedit_token_set (SwfeditToken *token, guint i, gpointer value)
+{
+  SwfeditTokenClass *klass;
+  SwfeditTokenEntry *entry;
+  GtkTreePath *path;
+  SwfeditToken *model;
+  GtkTreeIter iter;
+
+  g_return_if_fail (SWFEDIT_IS_TOKEN (token));
+  g_return_if_fail (i < token->tokens->len);
+
+  entry = &g_array_index (token->tokens, SwfeditTokenEntry, i);
+  if (converters[entry->type].free != NULL)
+    converters[entry->type].free (entry->value);
+  entry->value = value;
+  klass = SWFEDIT_TOKEN_GET_CLASS (token);
+  if (klass->changed)
+    klass->changed (token, i);
+
+  model = token;
+  while (model->parent)
+    model = model->parent;
+  iter.user_data = token;
+  iter.user_data2 = GUINT_TO_POINTER (i);
+  path = gtk_tree_model_get_path (GTK_TREE_MODEL (model), &iter);
+  gtk_tree_model_row_changed (GTK_TREE_MODEL (model), path, &iter);
+  gtk_tree_path_free (path);
+}
+
+void
+swfedit_token_set_iter (SwfeditToken *token, GtkTreeIter *iter, const char *value)
 {
   SwfeditTokenClass *klass;
   GtkTreeModel *model;

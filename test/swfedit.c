@@ -60,7 +60,7 @@ cell_renderer_edited (GtkCellRenderer *renderer, char *path,
 	&iter, path)) {
     g_assert_not_reached ();
   }
-  swfedit_token_set (SWFEDIT_TOKEN (file), &iter, new_text);
+  swfedit_token_set_iter (SWFEDIT_TOKEN (file), &iter, new_text);
 }
 
 static gboolean

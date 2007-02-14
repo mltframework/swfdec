@@ -94,6 +94,9 @@ void		swfedit_token_add		(SwfeditToken *		token,
 						 SwfeditTokenType	type,
 						 gpointer		value);
 void		swfedit_token_set		(SwfeditToken *		token,
+						 guint			i,
+						 gpointer		value);
+void		swfedit_token_set_iter		(SwfeditToken *		token,
 						 GtkTreeIter *		iter,
 						 const char *		value);
 void		swfedit_token_set_visible	(SwfeditToken *		token,

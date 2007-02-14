@@ -4,19 +4,25 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <glib.h>
 #include <string.h>
+
+#include <liboil/liboil.h>
+//#include <liboil/liboildebug.h>
+
+#define OIL_DEBUG(...) do { } while (0)
 
 #include "huffman.h"
 #include "jpeg_debug.h"
+
+#define DEBUG printf
 
 /* misc helper function definitions */
 
 static char *sprintbits (char *str, unsigned int bits, int n);
 
-#undef JPEG_LOG
-#define JPEG_LOG(...)
 
+#define TRUE 1
+#define FALSE 0
 
 void
 huffman_table_dump (HuffmanTable * table)
@@ -24,16 +30,16 @@ huffman_table_dump (HuffmanTable * table)
   unsigned int n_bits;
   unsigned int code;
   char str[33];
-  unsigned int i;
+  int i;
   HuffmanEntry *entry;
 
-  JPEG_LOG ("dumping huffman table %p", table);
+  OIL_DEBUG ("dumping huffman table %p", table);
   for (i = 0; i < table->len; i++) {
-    entry = &g_array_index (table, HuffmanEntry, i);
+    entry = table->entries + i;
     n_bits = entry->n_bits;
     code = entry->symbol >> (16 - n_bits);
     sprintbits (str, code, n_bits);
-    JPEG_LOG ("%s --> %d", str, entry->value);
+    OIL_DEBUG ("%s --> %d", str, entry->value);
   }
 }
 
@@ -42,7 +48,8 @@ huffman_table_new (void)
 {
   HuffmanTable *table;
 
-  table = g_array_new (FALSE, TRUE, sizeof (HuffmanEntry));
+  table = malloc (sizeof(HuffmanTable));
+  memset (table, 0, sizeof(HuffmanTable));
 
   return table;
 }
@@ -50,41 +57,41 @@ huffman_table_new (void)
 void
 huffman_table_free (HuffmanTable * table)
 {
-  g_array_free (table, TRUE);
+  free (table);
 }
 
 void
-huffman_table_add (HuffmanTable * table, guint32 code, gint n_bits, gint value)
+huffman_table_add (HuffmanTable * table, uint32_t code, int n_bits, int value)
 {
-  HuffmanEntry entry;
+  HuffmanEntry *entry = table->entries + table->len;
 
-  entry.value = value;
-  entry.symbol = code << (16 - n_bits);
-  entry.mask = 0xffff ^ (0xffff >> n_bits);
-  entry.n_bits = n_bits;
+  entry->value = value;
+  entry->symbol = code << (16 - n_bits);
+  entry->mask = 0xffff ^ (0xffff >> n_bits);
+  entry->n_bits = n_bits;
 
-  g_array_append_val (table, entry);
+  table->len++;
 }
 
 unsigned int
 huffman_table_decode_jpeg (HuffmanTable * tab, bits_t * bits)
 {
   unsigned int code;
-  unsigned int i;
+  int i;
   char str[33];
   HuffmanEntry *entry;
 
   code = peekbits (bits, 16);
   for (i = 0; i < tab->len; i++) {
-    entry = &g_array_index (tab, HuffmanEntry, i);
+    entry = tab->entries + i;
     if ((code & entry->mask) == entry->symbol) {
       code = getbits (bits, entry->n_bits);
       sprintbits (str, code, entry->n_bits);
-      JPEG_LOG ("%s --> %d", str, entry->value);
+      OIL_DEBUG ("%s --> %d", str, entry->value);
       return entry->value;
     }
   }
-  JPEG_ERROR ("huffman sync lost");
+  printf ("huffman sync lost");
 
   return -1;
 }
@@ -95,7 +102,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
 {
   int r, s, x, rs;
   int k;
-  //char str[33] = "NA";
+  char str[33];
 
   memset (block, 0, sizeof (short) * 64);
 
@@ -106,42 +113,42 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
   if ((x >> (s - 1)) == 0) {
     x -= (1 << s) - 1;
   }
-  JPEG_LOG ("s=%d (block[0]=%d)", s, x);
+  OIL_DEBUG ("s=%d (block[0]=%d)", s, x);
   block[0] = x;
 
   for (k = 1; k < 64; k++) {
     rs = huffman_table_decode_jpeg (ac_tab, bits);
     if (rs < 0) {
-      JPEG_ERROR ("huffman error");
+      OIL_DEBUG ("huffman error");
       return -1;
     }
     if (bits->ptr > bits->end) {
-      JPEG_ERROR ("overrun");
+      OIL_DEBUG ("overrun");
       return -1;
     }
     s = rs & 0xf;
     r = rs >> 4;
     if (s == 0) {
       if (r == 15) {
-        JPEG_LOG ("r=%d s=%d (skip 16)", r, s);
+        OIL_DEBUG ("r=%d s=%d (skip 16)", r, s);
         k += 15;
       } else {
-        JPEG_LOG ("r=%d s=%d (eob)", r, s);
+        OIL_DEBUG ("r=%d s=%d (eob)", r, s);
         break;
       }
     } else {
       k += r;
       if (k >= 64) {
-        JPEG_ERROR ("macroblock overrun");
+        printf ("macroblock overrun");
         return -1;
       }
       x = getbits (bits, s);
-      //sprintbits (str, x, s);
+      sprintbits (str, x, s);
       if ((x >> (s - 1)) == 0) {
         x -= (1 << s) - 1;
       }
       block[k] = x;
-      //JPEG_LOG ("r=%d s=%d (%s -> block[%d]=%d)", r, s, str, k, x);
+      OIL_DEBUG ("r=%d s=%d (%s -> block[%d]=%d)", r, s, str, k, x);
     }
   }
   return 0;
@@ -163,7 +170,7 @@ huffman_table_decode (HuffmanTable * dc_tab, HuffmanTable * ac_tab,
 
     q = zz;
     for (i = 0; i < 8; i++) {
-      JPEG_LOG ("%3d %3d %3d %3d %3d %3d %3d %3d",
+      DEBUG ("%3d %3d %3d %3d %3d %3d %3d %3d",
           q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]);
       q += 8;
     }

@@ -249,7 +249,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
   image->data = jpeg_decoder_get_argb_image (dec);
-  image->rowstride = image->width;
+  image->rowstride = image->width * 4;
   jpeg_decoder_free (dec);
 
   buffer = swfdec_bits_decompress (&bits, -1, image->width * image->height);

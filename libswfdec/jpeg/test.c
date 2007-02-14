@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <glib.h>
 
 #include "jpeg.h"
 
@@ -67,7 +66,7 @@ getfile (char *path, int *n_bytes)
     return NULL;
   }
 
-  ptr = g_malloc (st.st_size);
+  ptr = malloc (st.st_size);
   if (!ptr) {
     close (fd);
     return NULL;
@@ -75,7 +74,7 @@ getfile (char *path, int *n_bytes)
 
   ret = read (fd, ptr, st.st_size);
   if (ret != st.st_size) {
-    g_free (ptr);
+    free (ptr);
     close (fd);
     return NULL;
   }
@@ -106,11 +105,4 @@ dump_pgm (unsigned char *ptr, int rowstride, int width, int height)
     printf ("\n");
     ptr += rowstride;
   }
-}
-
-void
-swfdec_debug_log (int level, const char *file, const char *function,
-    int line, const char *format, ...)
-{
-
 }

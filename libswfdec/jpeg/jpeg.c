@@ -4,13 +4,20 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <glib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
+#include <liboil/liboil-stdint.h>
 #include <liboil/liboil.h>
+//#include <liboil/liboildebug.h>
+#include <stdarg.h>
+
+#define OIL_DEBUG(...) do {} while (0)
 
 #include "jpeg_internal.h"
 
+
+#define MAX(a,b) ((a)>(b) ? (a) : (b))
 
 
 #define JPEG_MARKER_STUFFED		0x00
@@ -58,7 +65,7 @@
 
 struct jpeg_marker_struct
 {
-  int tag;
+  unsigned int tag;
   int (*func) (JpegDecoder * dec, bits_t * bits);
   char *name;
   unsigned int flags;
@@ -90,13 +97,13 @@ static struct jpeg_marker_struct jpeg_markers[] = {
   {0xc6, NULL, "differential progressive DCT"},
   {0xc7, NULL, "differential lossless (sequential)"},
   {0xc8, NULL, "reserved"},
-  {0xc9, NULL, "extended sequential DCT"},
-  {0xca, NULL, "progressive DCT"},
-  {0xcb, NULL, "lossless (sequential)"},
+  {0xc9, NULL, "extended sequential DCT (arith)"},
+  {0xca, NULL, "progressive DCT (arith)"},
+  {0xcb, NULL, "lossless (sequential) (arith)"},
   {0xcc, NULL, "define arithmetic coding conditioning(s)"},
-  {0xcd, NULL, "differential sequential DCT"},
-  {0xce, NULL, "differential progressive DCT"},
-  {0xcf, NULL, "differential lossless (sequential)"},
+  {0xcd, NULL, "differential sequential DCT (arith)"},
+  {0xce, NULL, "differential progressive DCT (arith)"},
+  {0xcf, NULL, "differential lossless (sequential) (arith)"},
 
   {0xd0, jpeg_decoder_restart, "restart0", JPEG_ENTROPY_SEGMENT},
   {0xd1, jpeg_decoder_restart, "restart1", JPEG_ENTROPY_SEGMENT},
@@ -191,9 +198,6 @@ static unsigned char std_tables[] = {
 /* misc helper function declarations */
 
 static void dumpbits (bits_t * bits);
-#if 0
-static char *sprintbits (char *str, unsigned int bits, int n);
-#endif
 
 static void huffman_table_load_std_jpeg (JpegDecoder * dec);
 
@@ -219,7 +223,7 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
   int rowstride;
   int max_h_oversample = 0, max_v_oversample = 0;
 
-  JPEG_DEBUG ("start of frame (baseline DCT)");
+  OIL_DEBUG ("start of frame (baseline DCT)");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
@@ -229,8 +233,9 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
   dec->width = get_be_u16 (bits);
   dec->n_components = get_u8 (bits);
 
-  JPEG_DEBUG ("frame_length=%d depth=%d height=%d width=%d n_components=%d",
-      length, dec->depth, dec->height, dec->width, dec->n_components);
+  OIL_DEBUG (
+      "frame_length=%d depth=%d height=%d width=%d n_components=%d", length,
+      dec->depth, dec->height, dec->width, dec->n_components);
 
   for (i = 0; i < dec->n_components; i++) {
     dec->components[i].id = get_u8 (bits);
@@ -238,10 +243,9 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
     dec->components[i].v_oversample = getbits (bits, 4);
     dec->components[i].quant_table = get_u8 (bits);
 
-    JPEG_DEBUG ("[%d] id=%d h_oversample=%d v_oversample=%d quant_table=%d",
-        i,
-        dec->components[i].id,
-        dec->components[i].h_oversample,
+    OIL_DEBUG (
+        "[%d] id=%d h_oversample=%d v_oversample=%d quant_table=%d", i,
+        dec->components[i].id, dec->components[i].h_oversample,
         dec->components[i].v_oversample, dec->components[i].quant_table);
 
     max_h_oversample = MAX (max_h_oversample, dec->components[i].h_oversample);
@@ -263,13 +267,11 @@ jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
         (dec->height_blocks * 8 * max_v_oversample /
         dec->components[i].v_subsample);
     dec->components[i].rowstride = rowstride;
-    dec->components[i].image = g_malloc (image_size);
+    dec->components[i].image = malloc (image_size);
   }
 
-#ifdef JPEG_DEBUG_ON
   if (bits->end != bits->ptr)
-    JPEG_WARNING ("endptr != bits");
-#endif
+    OIL_DEBUG ("endptr != bits");
 
   return length;
 }
@@ -283,7 +285,7 @@ jpeg_decoder_define_quant_table (JpegDecoder * dec, bits_t * bits)
   int i;
   short *q;
 
-  JPEG_DEBUG ("define quantization table");
+  OIL_DEBUG ("define quantization table");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
@@ -303,40 +305,15 @@ jpeg_decoder_define_quant_table (JpegDecoder * dec, bits_t * bits)
       }
     }
 
-    JPEG_LOG ("quant table index %d:", tq);
+    OIL_DEBUG ("quant table index %d:", tq);
     for (i = 0; i < 8; i++) {
-      JPEG_LOG ("%3d %3d %3d %3d %3d %3d %3d %3d",
+      OIL_DEBUG ("%3d %3d %3d %3d %3d %3d %3d %3d",
           q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]);
       q += 8;
     }
   }
 
   return length;
-}
-
-void
-generate_code_table (int *huffsize)
-{
-  int code;
-  int i;
-  int j;
-  int k;
-  //char str[33];
-
-  //int l;
-
-  code = 0;
-  k = 0;
-  for (i = 0; i < 16; i++) {
-    for (j = 0; j < huffsize[i]; j++) {
-      JPEG_LOG ("huffcode[%d] = %s", k,
-          sprintbits (str, code >> (15 - i), i + 1));
-      code++;
-      k++;
-    }
-    code <<= 1;
-  }
-
 }
 
 HuffmanTable *
@@ -375,8 +352,8 @@ huffman_table_new_jpeg (bits_t * bits)
     /* This checks that our symbol is actually less than the
      * number of bits we think it is.  This is only triggered
      * for bad huffsize[] arrays. */
-    if ( symbol >= (unsigned int) (1 << (i + 1))) {
-      JPEG_WARNING ("bad huffsize[] array");
+    if (symbol >= (1U << (i + 1))) {
+      OIL_DEBUG ("bad huffsize[] array");
       return NULL;
     }
 
@@ -396,7 +373,7 @@ jpeg_decoder_define_huffman_table (JpegDecoder * dec, bits_t * bits)
   int th;
   HuffmanTable *hufftab;
 
-  JPEG_DEBUG ("define huffman table");
+  OIL_DEBUG ("define huffman table");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
@@ -405,8 +382,8 @@ jpeg_decoder_define_huffman_table (JpegDecoder * dec, bits_t * bits)
     tc = getbits (bits, 4);
     th = getbits (bits, 4);
 
-    JPEG_DEBUG ("huff table index %d:", th);
-    JPEG_DEBUG ("type %d (%s)", tc, tc ? "ac" : "dc");
+    OIL_DEBUG ("huff table index %d:", th);
+    OIL_DEBUG ("type %d (%s)", tc, tc ? "ac" : "dc");
 
     hufftab = huffman_table_new_jpeg (bits);
     if (tc) {
@@ -440,7 +417,7 @@ dumpbits (bits_t * bits)
     for (j = 0; j < 8; j++) {
       s[j + 24] = (isprint (p[j])) ? p[j] : '.';
     }
-    JPEG_DEBUG ("%s", s);
+    OIL_DEBUG ("%s", s);
     p += 8;
   }
 
@@ -455,7 +432,7 @@ jpeg_decoder_find_component_by_id (JpegDecoder * dec, int id)
     if (dec->components[i].id == id)
       return i;
   }
-  JPEG_DEBUG ("undefined component id %d", id);
+  OIL_DEBUG ("undefined component id %d", id);
   return 0;
 }
 
@@ -472,11 +449,11 @@ jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
   int approx_low;
   int n;
 
-  JPEG_DEBUG ("start of scan");
+  OIL_DEBUG ("start of scan");
 
   length = get_be_u16 (bits);
   bits->end = bits->ptr + length - 2;
-  JPEG_DEBUG ("length=%d", length);
+  OIL_DEBUG ("length=%d", length);
 
   n_components = get_u8 (bits);
   n = 0;
@@ -521,27 +498,25 @@ jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
 
     syncbits (bits);
 
-    JPEG_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
+    OIL_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
         component_id, index, dc_table, ac_table, n);
   }
   dec->scan_list_length = n;
 
   spectral_start = get_u8 (bits);
   spectral_end = get_u8 (bits);
-  JPEG_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
+  OIL_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
   approx_high = getbits (bits, 4);
   approx_low = getbits (bits, 4);
-  JPEG_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
+  OIL_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
   syncbits (bits);
 
   dec->x = 0;
   dec->y = 0;
   dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
 
-#ifdef JPEG_DEBUG_ON
   if (bits->end != bits->ptr)
-    JPEG_DEBUG ("endptr != bits");
-#endif
+    OIL_DEBUG ("endptr != bits");
 
   return length;
 }
@@ -551,10 +526,10 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG ("app0");
+  OIL_DEBUG ("app0");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG ("length=%d", length);
+  OIL_DEBUG ("length=%d", length);
 
   if (memcmp (bits->ptr, "JFIF", 4) == 0 && bits->ptr[4] == 0) {
     int version;
@@ -564,7 +539,7 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
     int x_thumbnail;
     int y_thumbnail;
 
-    JPEG_DEBUG ("JFIF");
+    OIL_DEBUG ("JFIF");
     bits->ptr += 5;
 
     version = get_be_u16 (bits);
@@ -574,17 +549,17 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
     x_thumbnail = get_u8 (bits);
     y_thumbnail = get_u8 (bits);
 
-    JPEG_DEBUG ("version = %04x", version);
-    JPEG_DEBUG ("units = %d", units);
-    JPEG_DEBUG ("x_density = %d", x_density);
-    JPEG_DEBUG ("y_density = %d", y_density);
-    JPEG_DEBUG ("x_thumbnail = %d", x_thumbnail);
-    JPEG_DEBUG ("y_thumbnail = %d", y_thumbnail);
+    OIL_DEBUG ("version = %04x", version);
+    OIL_DEBUG ("units = %d", units);
+    OIL_DEBUG ("x_density = %d", x_density);
+    OIL_DEBUG ("y_density = %d", y_density);
+    OIL_DEBUG ("x_thumbnail = %d", x_thumbnail);
+    OIL_DEBUG ("y_thumbnail = %d", y_thumbnail);
 
   }
 
   if (memcmp (bits->ptr, "JFXX", 4) == 0 && bits->ptr[4] == 0) {
-    JPEG_WARNING ("JFIF extension (not handled)");
+    OIL_DEBUG ("JFIF extension (not handled)");
     bits->ptr += length - 2;
   }
 
@@ -596,12 +571,12 @@ jpeg_decoder_application_misc (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG ("appX");
+  OIL_DEBUG ("appX");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG ("length=%d", length);
+  OIL_DEBUG ("length=%d", length);
 
-  JPEG_INFO ("JPEG application tag X ignored");
+  OIL_DEBUG ("JPEG application tag X ignored");
   dumpbits (bits);
 
   bits->ptr += length - 2;
@@ -614,10 +589,10 @@ jpeg_decoder_comment (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG ("comment");
+  OIL_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG ("length=%d", length);
+  OIL_DEBUG ("length=%d", length);
 
   dumpbits (bits);
 
@@ -631,13 +606,13 @@ jpeg_decoder_restart_interval (JpegDecoder * dec, bits_t * bits)
 {
   int length;
 
-  JPEG_DEBUG ("comment");
+  OIL_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  JPEG_DEBUG ("length=%d", length);
+  OIL_DEBUG ("length=%d", length);
 
   dec->restart_interval = get_be_u16 (bits);
-  JPEG_DEBUG ("restart_interval=%d", dec->restart_interval);
+  OIL_DEBUG ("restart_interval=%d", dec->restart_interval);
 
   return length;
 }
@@ -645,7 +620,7 @@ jpeg_decoder_restart_interval (JpegDecoder * dec, bits_t * bits)
 int
 jpeg_decoder_restart (JpegDecoder * dec, bits_t * bits)
 {
-  JPEG_DEBUG ("restart");
+  OIL_DEBUG ("restart");
 
   return 0;
 }
@@ -673,11 +648,11 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
     }
     len++;
   }
-  JPEG_DEBUG ("entropy length = %d", len);
+  OIL_DEBUG ("entropy length = %d", len);
 
   /* we allocate extra space, since the getbits() code can
    * potentially read past the end of the buffer */
-  newptr = g_malloc (len + 2);
+  newptr = malloc (len + 2);
   for (i = 0; i < len; i++) {
     newptr[j] = bits->ptr[i];
     j++;
@@ -697,9 +672,8 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   x = dec->x;
   y = dec->y;
   n = dec->restart_interval;
-  if (n == 0)
-    n = G_MAXINT;
-  while (go && n-- > 0) {
+  if (n == 0) n = INT_MAX;
+  while (n-- > 0) {
     for (i = 0; i < dec->scan_list_length; i++) {
       int dc_table_index;
       int ac_table_index;
@@ -707,7 +681,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       unsigned char *ptr;
       int component_index;
 
-      JPEG_LOG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+      OIL_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
           x, y,
           dec->scan_list[i].component_index,
           dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -721,7 +695,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
           dec->dc_huff_table[dc_table_index],
           dec->ac_huff_table[ac_table_index], bits2);
       if (ret < 0) {
-        JPEG_LOG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+        OIL_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
             x, y,
             dec->scan_list[i].component_index,
             dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -729,7 +703,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
         break;
       }
 
-      JPEG_LOG ("using quant table %d", quant_index);
+      OIL_DEBUG ("using quant table %d", quant_index);
       oil_mult8x8_s16 (block2, block, dec->quant_table[quant_index],
           sizeof (short) * 8, sizeof(short) * 8, sizeof (short) * 8);
       dec->dc[component_index] += block2[0];
@@ -760,7 +734,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   }
   dec->x = x;
   dec->y = y;
-  g_free (newptr);
+  free (newptr);
 }
 
 
@@ -772,7 +746,8 @@ jpeg_decoder_new (void)
 
   oil_init ();
 
-  dec = g_new0 (JpegDecoder, 1);
+  dec = malloc (sizeof(JpegDecoder));
+  memset (dec, 0, sizeof(JpegDecoder));
 
   huffman_table_load_std_jpeg (dec);
 
@@ -791,13 +766,13 @@ jpeg_decoder_free (JpegDecoder * dec)
 
   for (i = 0; i < JPEG_N_COMPONENTS; i++) {
     if (dec->components[i].image)
-      g_free (dec->components[i].image);
+      free (dec->components[i].image);
   }
 
   if (dec->data)
-    g_free (dec->data);
+    free (dec->data);
 
-  g_free (dec);
+  free (dec);
 }
 
 int
@@ -807,7 +782,7 @@ jpeg_decoder_addbits (JpegDecoder * dec, unsigned char *data, unsigned int len)
 
   offset = dec->bits.ptr - dec->data;
 
-  dec->data = g_realloc (dec->data, dec->data_len + len);
+  dec->data = realloc (dec->data, dec->data_len + len);
   memcpy (dec->data + dec->data_len, data, len);
   dec->data_len += len;
 
@@ -881,7 +856,7 @@ jpeg_decoder_parse (JpegDecoder * dec)
   bits_t *bits = &dec->bits;
   bits_t b2;
   unsigned int x;
-  int tag;
+  unsigned int tag;
   int i;
 
   while (bits->ptr < bits->end) {
@@ -893,13 +868,13 @@ jpeg_decoder_parse (JpegDecoder * dec)
         x = get_u8 (bits);
         n++;
       }
-      JPEG_DEBUG ("lost sync, skipped %d bytes", n);
+      OIL_DEBUG ("lost sync, skipped %d bytes", n);
     }
     while (x == 0xff) {
       x = get_u8 (bits);
     }
     tag = x;
-    JPEG_DEBUG ("tag %02x", tag);
+    OIL_DEBUG ("tag %02x", tag);
 
     b2 = *bits;
 
@@ -908,11 +883,11 @@ jpeg_decoder_parse (JpegDecoder * dec)
         break;
       }
     }
-    JPEG_DEBUG ("tag: %s", jpeg_markers[i].name);
+    OIL_DEBUG ("tag: %s", jpeg_markers[i].name);
     if (jpeg_markers[i].func) {
       jpeg_markers[i].func (dec, &b2);
     } else {
-      JPEG_WARNING ("unhandled or illegal JPEG marker (0x%02x)", tag);
+      OIL_DEBUG ("unhandled or illegal JPEG marker (0x%02x)", tag);
       dumpbits (&b2);
     }
     if (jpeg_markers[i].flags & JPEG_ENTROPY_SEGMENT) {
@@ -926,42 +901,7 @@ jpeg_decoder_parse (JpegDecoder * dec)
 }
 
 
-int jpeg_decoder_verbose_level = -1;
-
-void
-jpeg_debug (int n, const char *format, ...)
-{
-  va_list args;
-
-  if (n > jpeg_decoder_verbose_level)
-    return;
-
-  fflush (stdout);
-  fprintf (stderr, "JPEG_DEBUG: ");
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
-}
-
-
 /* misc helper functins */
-
-#if 0
-static char *
-sprintbits (char *str, unsigned int bits, int n)
-{
-  int i;
-  int bit = 1 << (n - 1);
-
-  for (i = 0; i < n; i++) {
-    str[i] = (bits & bit) ? '1' : '0';
-    bit >>= 1;
-  }
-  str[i] = 0;
-
-  return str;
-}
-#endif
 
 static void
 huffman_table_load_std_jpeg (JpegDecoder * dec)
@@ -977,3 +917,4 @@ huffman_table_load_std_jpeg (JpegDecoder * dec)
   dec->dc_huff_table[1] = huffman_table_new_jpeg (bits);
   dec->ac_huff_table[1] = huffman_table_new_jpeg (bits);
 }
+

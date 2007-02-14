@@ -27,7 +27,7 @@
 #include <zlib.h>
 #include <string.h>
 
-#include "jpeg_rgb_decoder.h"
+#include "jpeg.h"
 #include "swfdec_image.h"
 #include "swfdec_cache.h"
 #include "swfdec_debug.h"
@@ -133,24 +133,24 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
 static void
 swfdec_image_jpeg_load (SwfdecImage *image)
 {
-  JpegRGBDecoder *dec;
+  JpegDecoder *dec;
 
-  dec = jpeg_rgb_decoder_new ();
+  dec = jpeg_decoder_new ();
 
-  jpeg_rgb_decoder_addbits (dec, image->jpegtables->data,
+  jpeg_decoder_addbits (dec, image->jpegtables->data,
       image->jpegtables->length);
-  jpeg_rgb_decoder_addbits (dec, image->raw_data->data + 2,
+  jpeg_decoder_addbits (dec, image->raw_data->data + 2,
       image->raw_data->length - 2);
-  jpeg_rgb_decoder_parse (dec);
-  jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
+  jpeg_decoder_parse (dec);
+  jpeg_decoder_get_image_size (dec, &image->width, &image->height);
   if (image->width == 0 || image->height == 0) {
-    jpeg_rgb_decoder_free (dec);
+    jpeg_decoder_free (dec);
     return;
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  jpeg_rgb_decoder_get_image (dec, &image->data,
-      &image->rowstride, NULL, NULL);
-  jpeg_rgb_decoder_free (dec);
+  image->data = jpeg_decoder_get_argb_image (dec);
+  image->rowstride = image->width * 4;
+  jpeg_decoder_free (dec);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -181,22 +181,22 @@ tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s)
 static void
 swfdec_image_jpeg2_load (SwfdecImage *image)
 {
-  JpegRGBDecoder *dec;
+  JpegDecoder *dec;
 
-  dec = jpeg_rgb_decoder_new ();
+  dec = jpeg_decoder_new ();
 
-  jpeg_rgb_decoder_addbits (dec, image->raw_data->data + 2,
+  jpeg_decoder_addbits (dec, image->raw_data->data + 2,
       image->raw_data->length - 2);
-  jpeg_rgb_decoder_parse (dec);
-  jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
+  jpeg_decoder_parse (dec);
+  jpeg_decoder_get_image_size (dec, &image->width, &image->height);
   if (image->width == 0 || image->height == 0) {
-    jpeg_rgb_decoder_free (dec);
+    jpeg_decoder_free (dec);
     return;
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  jpeg_rgb_decoder_get_image (dec, &image->data,
-      &image->rowstride, &image->width, &image->height);
-  jpeg_rgb_decoder_free (dec);
+  image->data = jpeg_decoder_get_argb_image (dec);
+  image->rowstride = image->width * 4;
+  jpeg_decoder_free (dec);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -225,7 +225,7 @@ tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s)
 static void
 swfdec_image_jpeg3_load (SwfdecImage *image)
 {
-  JpegRGBDecoder *dec;
+  JpegDecoder *dec;
   SwfdecBits bits;
   SwfdecBuffer *buffer;
   int jpeg_length;
@@ -237,20 +237,20 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   if (buffer == NULL)
     return;
 
-  dec = jpeg_rgb_decoder_new ();
+  dec = jpeg_decoder_new ();
 
-  jpeg_rgb_decoder_addbits (dec, buffer->data, buffer->length);
+  jpeg_decoder_addbits (dec, buffer->data, buffer->length);
   swfdec_buffer_unref (buffer);
-  jpeg_rgb_decoder_parse (dec);
-  jpeg_rgb_decoder_get_image_size (dec, &image->width, &image->height);
+  jpeg_decoder_parse (dec);
+  jpeg_decoder_get_image_size (dec, &image->width, &image->height);
   if (image->width == 0 || image->height == 0) {
-    jpeg_rgb_decoder_free (dec);
+    jpeg_decoder_free (dec);
     return;
   }
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  jpeg_rgb_decoder_get_image (dec, &image->data,
-      &image->rowstride, &image->width, &image->height);
-  jpeg_rgb_decoder_free (dec);
+  image->data = jpeg_decoder_get_argb_image (dec);
+  image->rowstride = image->width;
+  jpeg_decoder_free (dec);
 
   buffer = swfdec_bits_decompress (&bits, -1, image->width * image->height);
   if (buffer) {

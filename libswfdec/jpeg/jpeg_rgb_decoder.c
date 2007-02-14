@@ -1,14 +1,42 @@
 
-#include <glib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-#include "jpeg_rgb_internal.h"
+#include "jpeg_internal.h"
 #include "jpeg.h"
 
+#include <liboil/liboil.h>
+#include <liboil/liboildebug.h>
+//#include <liboil/liboilcolorspace.h>
 
-static void convert (JpegRGBDecoder * rgbdec);
+#define oil_argb(a,r,g,b) \
+  ((oil_clamp_255(a)<<24) | \
+   (oil_clamp_255(r)<<16) | \
+   (oil_clamp_255(g)<<8) | \
+   (oil_clamp_255(b)<<0))
+#define oil_clamp_255(x) oil_max(0,oil_min((x),255))
+#define oil_min(x,y) ((x)<(y)?(x):(y))
+#define oil_max(x,y) ((x)>(y)?(x):(y))
 
+#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
+
+static int16_t jfif_matrix[24] = {
+  0,      0,      -8192,   -8192,
+  16384,  0,      0,       0,
+  0,      16384,  16384,   16384,
+  0,      0,      -5638,   29032,
+  0,      22970,  -11700,  0,
+  0, 0, 0, 0
+};
+
+
+unsigned char * get_argb_444 (JpegDecoder *dec);
+unsigned char * get_argb_422 (JpegDecoder *dec);
+unsigned char * get_argb_422v (JpegDecoder *dec);
+unsigned char * get_argb_420 (JpegDecoder *dec);
+
+#if 0
 static void imagescale2h_u8 (unsigned char *dest, int d_rowstride,
     unsigned char *src, int src_rowstride, int width, int height);
 static void imagescale2v_u8 (unsigned char *dest, int d_rowstride,
@@ -17,56 +45,231 @@ static void imagescale2h2v_u8 (unsigned char *dest, int d_rowstride,
     unsigned char *src, int src_rowstride, int width, int height);
 static void scanlinescale2_u8 (unsigned char *dest, unsigned char *src,
     int len);
+#endif
 
 
-JpegRGBDecoder *
-jpeg_rgb_decoder_new (void)
+unsigned char *
+jpeg_decoder_get_argb_image (JpegDecoder *dec)
 {
-  JpegRGBDecoder *rgbdec;
 
-  rgbdec = g_new0 (JpegRGBDecoder, 1);
-
-  rgbdec->dec = jpeg_decoder_new ();
-
-  return rgbdec;
-}
-
-void
-jpeg_rgb_decoder_free (JpegRGBDecoder * rgbdec)
-{
-  int i;
-
-  jpeg_decoder_free (rgbdec->dec);
-
-  for (i = 0; i < 3; i++) {
-    if (rgbdec->component[i].alloc) {
-      g_free (rgbdec->component[i].image);
+  if (dec->n_components == 3) {
+    if (dec->components[0].h_subsample == 1 &&
+        dec->components[0].v_subsample == 1 &&
+        dec->components[1].h_subsample == dec->components[2].h_subsample &&
+        dec->components[1].v_subsample == dec->components[2].v_subsample) {
+      if (dec->components[1].h_subsample == 1 &&
+          dec->components[1].v_subsample == 1) {
+        return get_argb_444 (dec);
+      } else if (dec->components[1].h_subsample == 2 &&
+          dec->components[1].v_subsample == 1) {
+        return get_argb_422 (dec);
+      } else if (dec->components[1].h_subsample == 1 &&
+          dec->components[1].v_subsample == 2) {
+        return get_argb_422v (dec);
+      } else if (dec->components[1].h_subsample == 2 &&
+          dec->components[1].v_subsample == 2) {
+        return get_argb_420 (dec);
+      }
     }
   }
 
-  g_free (rgbdec);
+  return NULL;
 }
 
-int
-jpeg_rgb_decoder_addbits (JpegRGBDecoder * dec, unsigned char *data,
-    unsigned int len)
+static void
+yuv_mux (uint32_t *dest, uint8_t *src_y, uint8_t *src_u, uint8_t *src_v,
+    int n)
 {
-  return jpeg_decoder_addbits (dec->dec, data, len);
+  int i;
+  for (i = 0; i < n; i++) {
+    dest[i] = oil_argb(255, src_y[i], src_u[i], src_v[i]);
+  }
 }
 
-int
-jpeg_rgb_decoder_parse (JpegRGBDecoder * dec)
+static void
+upsample (uint8_t *d, uint8_t *s, int n)
 {
-  return jpeg_decoder_parse (dec->dec);
+  int i;
+
+  d[0] = s[0];
+
+  for (i = 0; i < n-3; i+=2) {
+    d[i + 1] = (3*s[i/2] + s[i/2+1] + 2)>>2;
+    d[i + 2] = (s[i/2] + 3*s[i/2+1] + 2)>>2;
+  }
+
+  if (n&1) {
+    i = n-3;
+    d[n-2] = s[n/2];
+    d[n-1] = s[n/2];
+  } else {
+    d[n-1] = s[n/2-1];
+  }
+
 }
 
-int
-jpeg_rgb_decoder_get_image_size (JpegRGBDecoder * rgbdec,
-    int *width, int *height)
+unsigned char *
+get_argb_444 (JpegDecoder *dec)
 {
-  return jpeg_decoder_get_image_size (rgbdec->dec, width, height);
+  uint32_t *tmp;
+  uint32_t *argb_image;
+  uint8_t *yp, *up, *vp;
+  uint32_t *argbp;
+  int j;
+
+  tmp = malloc (4 * dec->width * dec->height);
+  argb_image = malloc (4 * dec->width * dec->height);
+
+  yp = dec->components[0].image;
+  up = dec->components[1].image;
+  vp = dec->components[2].image;
+  argbp = argb_image;
+  for(j=0;j<dec->height;j++){
+    yuv_mux (tmp, yp, up, vp, dec->width);
+    oil_colorspace_argb(argbp, tmp, jfif_matrix, dec->width);
+    yp += dec->components[0].rowstride;
+    up += dec->components[1].rowstride;
+    vp += dec->components[2].rowstride;
+    argbp += dec->width;
+  }
+  free(tmp);
+  return (unsigned char *)argb_image;
 }
 
+unsigned char *
+get_argb_422 (JpegDecoder *dec)
+{
+  uint32_t *tmp;
+  uint8_t *tmp_u;
+  uint8_t *tmp_v;
+  uint32_t *argb_image;
+  uint8_t *yp, *up, *vp;
+  uint32_t *argbp;
+  int j;
+
+  tmp = malloc (4 * dec->width * dec->height);
+  tmp_u = malloc (dec->width);
+  tmp_v = malloc (dec->width);
+  argb_image = malloc (4 * dec->width * dec->height);
+
+  yp = dec->components[0].image;
+  up = dec->components[1].image;
+  vp = dec->components[2].image;
+  argbp = argb_image;
+  for(j=0;j<dec->height;j++){
+    upsample (tmp_u, up, dec->width);
+    upsample (tmp_v, vp, dec->width);
+    yuv_mux (tmp, yp, tmp_u, tmp_v, dec->width);
+    oil_colorspace_argb(argbp, tmp, jfif_matrix, dec->width);
+    yp += dec->components[0].rowstride;
+    up += dec->components[1].rowstride;
+    vp += dec->components[2].rowstride;
+    argbp += dec->width;
+  }
+  free(tmp);
+  free(tmp_u);
+  free(tmp_v);
+  return (unsigned char *)argb_image;
+}
+
+unsigned char *
+get_argb_422v (JpegDecoder *dec)
+{
+  uint32_t *tmp;
+  uint8_t *tmp_u;
+  uint8_t *tmp_v;
+  uint32_t *argb_image;
+  uint8_t *yp, *up, *vp;
+  uint32_t *argbp;
+  int halfheight;
+  int j;
+
+  tmp = malloc (4 * dec->width * dec->height);
+  tmp_u = malloc (dec->width);
+  tmp_v = malloc (dec->width);
+  argb_image = malloc (4 * dec->width * dec->height);
+
+  yp = dec->components[0].image;
+  up = dec->components[1].image;
+  vp = dec->components[2].image;
+  argbp = argb_image;
+  halfheight = (dec->height+1)>>1;
+  for(j=0;j<dec->height;j++){
+    uint32_t weight = 192 - 128*(j&1);
+
+    oil_merge_linear_u8(tmp_u,
+        up + dec->components[1].rowstride * CLAMP((j-1)/2,0,halfheight-1),
+        up + dec->components[1].rowstride * CLAMP((j+1)/2,0,halfheight-1),
+        &weight, dec->width);
+    oil_merge_linear_u8(tmp_v,
+        vp + dec->components[2].rowstride * CLAMP((j-1)/2,0,halfheight-1),
+        vp + dec->components[2].rowstride * CLAMP((j+1)/2,0,halfheight-1),
+        &weight, dec->width);
+
+    yuv_mux (tmp, yp, tmp_u, tmp_v, dec->width);
+    oil_colorspace_argb(argbp, tmp, jfif_matrix, dec->width);
+    yp += dec->components[0].rowstride;
+    argbp += dec->width;
+  }
+  free(tmp);
+  free(tmp_u);
+  free(tmp_v);
+  return (unsigned char *)argb_image;
+}
+
+unsigned char *
+get_argb_420 (JpegDecoder *dec)
+{
+  uint32_t *tmp;
+  uint8_t *tmp_u;
+  uint8_t *tmp_v;
+  uint8_t *tmp1;
+  uint32_t *argb_image;
+  uint8_t *yp, *up, *vp;
+  uint32_t *argbp;
+  int j;
+  int halfwidth;
+  int halfheight;
+
+  halfwidth = (dec->width + 1)>>1;
+  tmp = malloc (4 * dec->width * dec->height);
+  tmp_u = malloc (dec->width);
+  tmp_v = malloc (dec->width);
+  tmp1 = malloc (halfwidth);
+  argb_image = malloc (4 * dec->width * dec->height);
+
+  yp = dec->components[0].image;
+  up = dec->components[1].image;
+  vp = dec->components[2].image;
+  argbp = argb_image;
+  halfheight = (dec->height+1)>>1;
+  for(j=0;j<dec->height;j++){
+    uint32_t weight = 192 - 128*(j&1);
+
+    oil_merge_linear_u8(tmp1,
+        up + dec->components[1].rowstride * CLAMP((j-1)/2,0,halfheight-1),
+        up + dec->components[1].rowstride * CLAMP((j+1)/2,0,halfheight-1),
+        &weight, halfwidth);
+    upsample (tmp_u, tmp1, dec->width);
+    oil_merge_linear_u8(tmp1,
+        vp + dec->components[2].rowstride * CLAMP((j-1)/2,0,halfheight-1),
+        vp + dec->components[2].rowstride * CLAMP((j+1)/2,0,halfheight-1),
+        &weight, halfwidth);
+    upsample (tmp_v, tmp1, dec->width);
+
+    yuv_mux (tmp, yp, tmp_u, tmp_v, dec->width);
+    oil_colorspace_argb(argbp, tmp, jfif_matrix, dec->width);
+    yp += dec->components[0].rowstride;
+    argbp += dec->width;
+  }
+  free(tmp);
+  free(tmp_u);
+  free(tmp_v);
+  free(tmp1);
+  return (unsigned char *)argb_image;
+}
+
+#if 0
 int
 jpeg_rgb_decoder_get_image (JpegRGBDecoder * rgbdec,
     unsigned char **image, int *rowstride, int *width, int *height)
@@ -84,7 +287,7 @@ jpeg_rgb_decoder_get_image (JpegRGBDecoder * rgbdec,
         rgbdec->component[i].v_subsample > 1) {
       unsigned char *dest;
 
-      dest = g_malloc (rgbdec->width * rgbdec->height);
+      dest = malloc (rgbdec->width * rgbdec->height);
       if (rgbdec->component[i].v_subsample > 1) {
         if (rgbdec->component[i].h_subsample > 1) {
           imagescale2h2v_u8 (dest,
@@ -111,7 +314,7 @@ jpeg_rgb_decoder_get_image (JpegRGBDecoder * rgbdec,
     }
   }
 
-  rgbdec->image = g_malloc (rgbdec->width * rgbdec->height * 4);
+  rgbdec->image = malloc (rgbdec->width * rgbdec->height * 4);
 
   convert (rgbdec);
 
@@ -126,120 +329,6 @@ jpeg_rgb_decoder_get_image (JpegRGBDecoder * rgbdec,
 
   return 0;
 }
-
-
-/* from the JFIF spec */
-#if 0
-#define CONVERT(r, g, b, y, u, v) G_STMT_START{ \
-  (r) = CLAMP((y) + 1.402*((v)-128),0,255); \
-  (g) = CLAMP((y) - 0.34414*((u)-128) - 0.71414*((v)-128),0,255); \
-  (b) = CLAMP((y) + 1.772*((u)-128),0,255); \
-}G_STMT_END
-#else
-#define SCALEBITS 10
-#define ONE_HALF  (1 << (SCALEBITS - 1))
-#define FIX(x)	  ((int) ((x) * (1<<SCALEBITS) + 0.5))
-#define CONVERT(r, g, b, y, u, v) G_STMT_START{ \
-    int cb = (u) - 128;\
-    int cr = (v) - 128;\
-    int cy = (y) << SCALEBITS;\
-    int r_add = cy + FIX(1.40200) * cr + ONE_HALF;\
-    int g_add = cy - FIX(0.34414) * cb - FIX(0.71414) * cr + ONE_HALF;\
-    int b_add = cy + FIX(1.77200) * cb + ONE_HALF;\
-    r_add = CLAMP (r_add, 0, 255 << SCALEBITS);\
-    g_add = CLAMP (g_add, 0, 255 << SCALEBITS);\
-    b_add = CLAMP (b_add, 0, 255 << SCALEBITS);\
-    r = r_add >> SCALEBITS; \
-    g = g_add >> SCALEBITS; \
-    b = b_add >> SCALEBITS; \
-}G_STMT_END
-
 #endif
 
-static void
-convert (JpegRGBDecoder * rgbdec)
-{
-  int x, y;
-  unsigned char *yp;
-  unsigned char *up;
-  unsigned char *vp;
-  unsigned char *rgbp;
 
-  rgbp = rgbdec->image;
-  yp = rgbdec->component[0].image;
-  up = rgbdec->component[1].image;
-  vp = rgbdec->component[2].image;
-  for (y = 0; y < rgbdec->height; y++) {
-    for (x = 0; x < rgbdec->width; x++) {
-#if G_LITTLE_ENDIAN == G_BYTE_ORDER
-      CONVERT (rgbp[2], rgbp[1], rgbp[0], yp[x], up[x], vp[x]);
-      rgbp[3] = 0xFF;
-#else
-      rgbp[0] = 0xFF;
-      CONVERT (rgbp[1], rgbp[2], rgbp[3], yp[x], up[x], vp[x]);
-#endif
-      rgbp += 4;
-    }
-    yp += rgbdec->component[0].rowstride;
-    up += rgbdec->component[1].rowstride;
-    vp += rgbdec->component[2].rowstride;
-  }
-}
-
-
-static void
-imagescale2h_u8 (unsigned char *dest, int d_rowstride,
-    unsigned char *src, int s_rowstride, int width, int height)
-{
-  int i;
-
-  for (i = 0; i < height; i++) {
-    scanlinescale2_u8 (dest + i * d_rowstride, src + i * s_rowstride, width);
-  }
-
-}
-
-static void
-imagescale2v_u8 (unsigned char *dest, int d_rowstride,
-    unsigned char *src, int s_rowstride, int width, int height)
-{
-  int i;
-
-  for (i = 0; i < height; i++) {
-    memcpy (dest + i * d_rowstride, src + (i / 2) * s_rowstride, width);
-  }
-
-}
-
-static void
-imagescale2h2v_u8 (unsigned char *dest, int d_rowstride,
-    unsigned char *src, int s_rowstride, int width, int height)
-{
-  int i;
-
-  for (i = 0; i < height; i++) {
-    scanlinescale2_u8 (dest + i * d_rowstride,
-        src + (i / 2) * s_rowstride, width);
-  }
-
-}
-
-static void
-scanlinescale2_u8 (unsigned char *dest, unsigned char *src, int len)
-{
-  int i;
-
-  for (i = 0; i < len - 3; i += 2){
-    dest[i] = src[i/2];
-    dest[i+1] = (src[i/2] + src[i/2+1] + 1)/2;
-  }
-  if (len & 1) {
-    dest[i] = src[i/2];
-    dest[i+1] = (src[i/2] + src[i/2+1] + 1)/2;
-    dest[i+2] = src[i/2 + 1];
-  } else {
-    dest[i] = src[i/2];
-    dest[i+1] = src[i/2];
-  }
-
-}

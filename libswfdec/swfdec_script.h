@@ -43,6 +43,9 @@ struct _SwfdecScript {
   SwfdecBuffer *	constant_pool;		/* constant pool action */
 };
 
+const char *	swfdec_action_get_name		(guint			action);
+guint		swfdec_action_get_from_name	(const char *		name);
+
 SwfdecScript *	swfdec_script_new		(SwfdecBits *		bits,
 						 const char *		name,
 						 unsigned int	      	version);

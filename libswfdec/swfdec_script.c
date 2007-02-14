@@ -2415,3 +2415,28 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   return ok ? frame.rval : JSVAL_VOID;
 }
 
+/*** UTILITY FUNCTIONS ***/
+
+const char *
+swfdec_action_get_name (guint action)
+{
+  g_return_val_if_fail (action < 256, NULL);
+
+  return actions[action].name;
+}
+
+guint
+swfdec_action_get_from_name (const char *name)
+{
+  guint i;
+
+  g_return_val_if_fail (name != NULL, 0);
+
+  for (i = 0; i < 256; i++) {
+    if (actions[i].name && g_str_equal (name, actions[i].name))
+      return i;
+  }
+  return 0;
+}
+
+

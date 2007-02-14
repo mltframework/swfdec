@@ -112,6 +112,16 @@ swfdec_out_prepare_bytes (SwfdecOut *out, unsigned int bytes)
 }
 
 void
+swfdec_out_put_data (SwfdecOut *out, const guint8 *data, guint length)
+{
+  g_return_if_fail (out != NULL);
+
+  swfdec_out_prepare_bytes (out, length);
+  memcpy (out->ptr, data, length);
+  out->ptr += length;
+}
+
+void
 swfdec_out_put_buffer (SwfdecOut *out, SwfdecBuffer *buffer)
 {
   g_return_if_fail (out != NULL);

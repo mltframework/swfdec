@@ -57,6 +57,9 @@ void		swfdec_out_put_bits		(SwfdecOut *		out,
 void		swfdec_out_put_sbits		(SwfdecOut *		out,
 						 int	  		bits,
 						 guint	  		n_bits);
+void		swfdec_out_put_data		(SwfdecOut *		out,
+						 const guint8 *		data,
+						 guint			length);
 void		swfdec_out_put_buffer		(SwfdecOut *		out,
 						 SwfdecBuffer *		buffer);
 void		swfdec_out_put_u8		(SwfdecOut *		out,

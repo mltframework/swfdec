@@ -214,12 +214,14 @@ swfdec_shape_dispose (GObject *object)
   }
   g_array_free (shape->vecs, TRUE);
   for (i = 0; i < shape->fills->len; i++) {
-    g_object_unref (g_ptr_array_index (shape->fills, i));
+    if (g_ptr_array_index (shape->fills, i))
+      g_object_unref (g_ptr_array_index (shape->fills, i));
   }
   g_ptr_array_free (shape->fills, TRUE);
 
   for (i = 0; i < shape->lines->len; i++) {
-    g_object_unref (g_ptr_array_index (shape->lines, i));
+    if (g_ptr_array_index (shape->lines, i))
+      g_object_unref (g_ptr_array_index (shape->lines, i));
   }
   g_ptr_array_free (shape->lines, TRUE);
 
@@ -555,6 +557,8 @@ swfdec_shape_accumulate_one_fill (SwfdecShape *shape, SubPath *paths,
     goto fail;
   } else {
     target->pattern = g_ptr_array_index (shape->fills, style - 1);
+    if (target->pattern == NULL)
+      goto fail;
     g_object_ref (target->pattern);
   }
   g_slist_free (found);

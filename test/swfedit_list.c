@@ -46,9 +46,25 @@ swfedit_list_changed (SwfeditToken *token, guint i)
       swfedit_token_set_visible (token, j, entry->value != NULL);
     }
   }
+  /* update length */
+  j = list->def[i % list->n_defs].n_items;
+  if (j != 0) {
+    SwfeditTokenEntry *entry = &g_array_index (token->tokens, 
+	SwfeditTokenEntry, j - 1);
+    if (entry->type == SWFEDIT_TOKEN_UINT32) {
+      SwfdecOut *out = swfdec_out_open ();
+      SwfdecBuffer *buffer;
+      swfedit_tag_write_token (token, out, i);
+      buffer = swfdec_out_close (out);
+      if (entry->value != GUINT_TO_POINTER (buffer->length)) {
+	swfedit_token_set (token, i / list->n_defs * list->n_defs + j - 1, 
+	    GUINT_TO_POINTER (buffer->length));
+      }
+      swfdec_buffer_unref (buffer);
+    }
+  }
   /* maybe add items */
   if (i == token->tokens->len - 1) {
-    g_print ("add fett neue items, man!\n");
     for (j = 0; j < list->n_defs; j++) {
       const SwfeditTagDefinition *def = &list->def[(j + 1) % list->n_defs];
       swfedit_tag_add_token (SWFEDIT_TOKEN (list), def->name, def->type, def->hint);

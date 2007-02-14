@@ -396,6 +396,21 @@ swfedit_tag_changed (SwfeditToken *token, guint i)
       swfedit_token_set_visible (token, j, entry->value != NULL);
     }
   }
+  if (def[i].n_items != 0) {
+    SwfeditTokenEntry *entry = &g_array_index (token->tokens, 
+	SwfeditTokenEntry, def[i].n_items - 1);
+    if (entry->type == SWFEDIT_TOKEN_UINT32) {
+      SwfdecOut *out = swfdec_out_open ();
+      SwfdecBuffer *buffer;
+      swfedit_tag_write_token (token, out, def[i].n_items - 1);
+      buffer = swfdec_out_close (out);
+      if (entry->value != GUINT_TO_POINTER (buffer->length)) {
+	swfedit_token_set (token, def[i].n_items - 1, 
+	    GUINT_TO_POINTER (buffer->length));
+      }
+      swfdec_buffer_unref (buffer);
+    }
+  }
 }
 
 static void

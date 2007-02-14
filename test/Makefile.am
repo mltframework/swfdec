@@ -3,7 +3,7 @@ SUBDIRS = image sound trace various
 noinst_LTLIBRARIES = libswfedit.la
 
 if WITH_GTK
-noinst_PROGRAMS = swfdec-extract dump parse swfedit
+noinst_PROGRAMS = swfdec-extract dump parse swfedit swfscript
 else
 noinst_PROGRAMS = swfdec-extract dump parse 
 endif
@@ -23,6 +23,10 @@ libswfedit_la_LDFLAGS = $(SWF_LIBS) $(GTK_LIBS)
 swfedit_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
 swfedit_LDFLAGS = $(SWF_LIBS) $(GTK_LIBS)
 swfedit_LDADD = libswfedit.la
+
+swfscript_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+swfscript_LDFLAGS = $(SWF_LIBS) $(GTK_LIBS)
+swfscript_LDADD = libswfedit.la
 
 libswfedit_la_SOURCES = \
 	swfdec_out.c \

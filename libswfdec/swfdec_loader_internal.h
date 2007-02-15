@@ -32,7 +32,14 @@ void			swfdec_loader_parse		(SwfdecLoader *		loader);
 void			swfdec_loader_parse_internal	(SwfdecLoader *		loader);
 void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 							 SwfdecLoaderTarget *	target);
-					 
+
+gboolean		swfdec_urldecode_one		(const char *		string,
+							 char **		name,
+							 char **		value,
+							 const char **		end);
+void			swfdec_string_append_urlencoded	(GString *		str,
+							 char *			name,
+							 char *			value);
 
 G_END_DECLS
 #endif

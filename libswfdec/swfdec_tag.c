@@ -190,35 +190,30 @@ tag_func_define_text_2 (SwfdecSwfDecoder * s)
 int
 tag_func_define_sprite (SwfdecSwfDecoder * s)
 {
-  SwfdecBits *bits = &s->b;
   SwfdecBits parse;
   int id;
   SwfdecSprite *sprite;
   int ret;
-  SwfdecBits save_bits;
+  guint tag;
 
-  save_bits = s->b;
+  parse = s->b;
 
-  id = swfdec_bits_get_u16 (bits);
+  id = swfdec_bits_get_u16 (&parse);
   sprite = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SPRITE);
   if (!sprite)
     return SWFDEC_STATUS_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
-  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (bits), SWFDEC_DECODER (s)->rate);
-
-  parse = *bits;
+  swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (&parse), SWFDEC_DECODER (s)->rate);
 
   s->parse_sprite = sprite;
-  while (1) {
+  do {
     int x;
-    int tag;
     guint tag_len;
     SwfdecBuffer *buffer;
     SwfdecTagFunc *func;
 
-    //SWFDEC_INFO ("sprite parsing at %d", parse.ptr - parse.buffer->data);
     x = swfdec_bits_get_u16 (&parse);
     tag = (x >> 6) & 0x3ff;
     tag_len = x & 0x3f;
@@ -228,25 +223,17 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
     SWFDEC_INFO ("sprite parsing at %d, tag %d %s, length %d",
         parse.ptr - parse.buffer->data, tag,
         swfdec_swf_decoder_get_tag_name (tag), tag_len);
-    //SWFDEC_DEBUG ("tag %d %s", tag, swfdec_decoder_get_tag_name (tag));
 
-    if (tag_len * 8 > swfdec_bits_left (&parse)) {
-      SWFDEC_ERROR ("tag claims to be %u bytes long, but only %u bytes remaining",
-	  tag_len, swfdec_bits_left (&parse) / 8);
-      break;
-    } else if (tag_len > 0) {
-      buffer = swfdec_buffer_new_subbuffer (parse.buffer,
-          parse.ptr - parse.buffer->data, tag_len);
-      s->b.buffer = buffer;
-      s->b.ptr = buffer->data;
-      s->b.idx = 0;
-      s->b.end = buffer->data + buffer->length;
+    if (tag_len == 0) {
+      swfdec_bits_init_data (&s->b, NULL, 0);
     } else {
-      buffer = NULL;
-      s->b.buffer = NULL;
-      s->b.ptr = NULL;
-      s->b.idx = 0;
-      s->b.end = NULL;
+      buffer = swfdec_bits_get_buffer (&parse, tag_len);
+      if (buffer == NULL) {
+	SWFDEC_ERROR ("tag claims to be %u bytes long, but not enough bytes remaining",
+	    tag_len);
+	break;
+      }
+      swfdec_bits_init (&s->b, buffer);
     }
 
     func = swfdec_swf_decoder_get_tag_func (tag);
@@ -257,32 +244,20 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",
           tag, swfdec_swf_decoder_get_tag_name (tag));
     } else {
-      const unsigned char *endptr = parse.ptr + tag_len;
       ret = func (s);
 
-      swfdec_bits_syncbits (bits);
-      if (tag_len > 0) {
-        if (s->b.ptr < endptr) {
-          SWFDEC_WARNING ("early parse finish (%d bytes)", endptr - s->b.ptr);
-        }
-        if (s->b.ptr > endptr) {
-          SWFDEC_WARNING ("parse overrun (%d bytes)", s->b.ptr - endptr);
-        }
+      if (swfdec_bits_left (&s->b)) {
+        SWFDEC_WARNING ("early parse finish (%d bytes)", 
+	    swfdec_bits_left (&s->b) / 8);
       }
     }
-    if (swfdec_bits_skip_bytes (&parse, tag_len) != tag_len)
-      break;
-
     if (buffer)
       swfdec_buffer_unref (buffer);
 
-    if (tag == 0)
-      break;
-  }
+  } while (tag != 0);
 
-  s->b = save_bits;
-  s->b.ptr += s->b.buffer->length;
-  /* this assumes that no recursive DefineSprite happens and the spec says it doesn't */
+  s->b = parse;
+  /* this assumes that no recursive DefineSprite happens and we check it doesn't */
   s->parse_sprite = s->main_sprite;
   SWFDEC_LOG ("done parsing this sprite");
 
@@ -648,16 +623,16 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     swfdec_shape_get_recs (s, shape);
   }
   if (wide_codes) {
-    bits->ptr += 2 * n_glyphs;
+    swfdec_bits_skip_bytes (bits, 2 * n_glyphs);
   } else {
-    bits->ptr += 1 * n_glyphs;
+    swfdec_bits_skip_bytes (bits, 1 * n_glyphs);
   }
   if (has_layout) {
     font_ascent = swfdec_bits_get_s16 (bits);
     font_descent = swfdec_bits_get_s16 (bits);
     font_leading = swfdec_bits_get_s16 (bits);
     //font_advance_table = swfdec_bits_get_s16(bits);
-    bits->ptr += 2 * n_glyphs;
+    swfdec_bits_skip_bytes (bits, 2 * n_glyphs);
     for (i = 0; i < n_glyphs; i++) {
       swfdec_bits_get_rect (bits, &rect);
     }

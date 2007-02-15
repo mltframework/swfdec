@@ -44,6 +44,10 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
     shape = swfdec_font_get_glyph (glyph->font, glyph->glyph);
+    if (shape == NULL) {
+      SWFDEC_ERROR ("failed getting glyph %d\n", glyph->glyph);
+      continue;
+    }
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
     tmpx *= SWFDEC_TEXT_SCALE_FACTOR / glyph->height;

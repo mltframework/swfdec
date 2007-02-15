@@ -50,8 +50,8 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
     }
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
-    tmpx *= SWFDEC_TEXT_SCALE_FACTOR / glyph->height;
-    tmpy *= SWFDEC_TEXT_SCALE_FACTOR / glyph->height;
+    tmpx = tmpx * glyph->font->scale_factor / glyph->height;
+    tmpy = tmpy * glyph->font->scale_factor / glyph->height;
     if (swfdec_graphic_mouse_in (SWFDEC_GRAPHIC (shape), tmpx, tmpy))
       return TRUE;
   }
@@ -87,8 +87,8 @@ swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr,
     cairo_matrix_init_translate (&pos,
 	glyph->x, glyph->y);
     cairo_matrix_scale (&pos, 
-	glyph->height / SWFDEC_TEXT_SCALE_FACTOR, 
-	glyph->height / SWFDEC_TEXT_SCALE_FACTOR);
+	(double) glyph->height / glyph->font->scale_factor,
+	(double) glyph->height / glyph->font->scale_factor);
     cairo_save (cr);
     cairo_transform (cr, &pos);
     if (!cairo_matrix_invert (&pos)) {

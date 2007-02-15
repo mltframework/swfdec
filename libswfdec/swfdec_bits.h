@@ -26,8 +26,6 @@
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_buffer.h>
 
-#define SWFDEC_TEXT_SCALE_FACTOR		(1024.0)
-
 typedef struct _SwfdecBits SwfdecBits;
 
 struct _SwfdecBits

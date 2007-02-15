@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 typedef struct _SwfdecFontEntry SwfdecFontEntry;
 typedef struct _SwfdecFontClass SwfdecFontClass;
 
+#define SWFDEC_TEXT_SCALE_FACTOR		(1024)
+
 typedef enum {
   SWFDEC_LANGUAGE_NONE		= 0,
   SWFDEC_LANGUAGE_LATIN		= 1,
@@ -60,7 +62,8 @@ struct _SwfdecFont
   gboolean		bold;		/* font is bold */
   gboolean		italic;		/* font is italic */
   gboolean		small;		/* font is rendered at small sizes */
-  GArray *		glyphs;		/* key: glyph index, value: UCS2 character */
+  GArray *		glyphs;		/* SwfdecFontEntry */
+  guint			scale_factor;	/* size of a font in glyph entry */
 };
 
 struct _SwfdecFontClass

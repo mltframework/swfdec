@@ -62,13 +62,14 @@ swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer)
  * @len: length of the data
  *
  * Initializes @bits for use with the given @data. All operations on @bits will
- * return copies of the data, so after use, you can free the supplied data.
+ * return copies of the data, so after use, you can free the supplied data. Using 
+ * %NULL for @data is valid if @len is 0.
  **/
 void
 swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len)
 {
   g_return_if_fail (bits != NULL);
-  g_return_if_fail (data != NULL);
+  g_return_if_fail (data != NULL || len == 0);
 
   bits->buffer = NULL;
   bits->ptr = data;

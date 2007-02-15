@@ -336,7 +336,10 @@ swfedit_script_from_string (const char *s, gpointer* result)
 static char *
 swfedit_script_to_string (gconstpointer value)
 {
-  return swfedit_binary_to_string (((SwfdecScript *) value)->buffer);
+  if (value == NULL)
+    return g_strdup ("");
+  else
+    return swfedit_binary_to_string (((SwfdecScript *) value)->buffer);
 }
 
 static void

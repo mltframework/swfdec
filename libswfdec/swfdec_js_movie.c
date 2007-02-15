@@ -818,7 +818,7 @@ mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.x1 - movie->extents.x0));
+  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.x1 - movie->extents.x0)));
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -842,7 +842,7 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.x1 - movie->extents.x0));
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.x1 - movie->extents.x0)));
   if (cur != 0) {
     movie->xscale *= d / cur;
   } else {
@@ -864,7 +864,7 @@ mc_height_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.y1 - movie->extents.y0));
+  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.y1 - movie->extents.y0)));
   return JS_NewNumberValue (cx, d, vp);
 }
 
@@ -888,7 +888,7 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (movie->extents.y1 - movie->extents.y0));
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.y1 - movie->extents.y0)));
   if (cur != 0) {
     movie->yscale *= d / cur;
   } else {

@@ -68,11 +68,16 @@ struct _SwfdecFontClass
   SwfdecCharacterClass	character_class;
 };
 
-GType swfdec_font_get_type (void);
+GType		swfdec_font_get_type		(void);
 
-SwfdecShape *swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph);
+SwfdecShape *	swfdec_font_get_glyph		(SwfdecFont *		font, 
+						 unsigned int		glyph);
 
-int tag_func_define_font_info (SwfdecSwfDecoder *s, unsigned int version);
+int		tag_func_define_font_info	(SwfdecSwfDecoder *	s,
+						 unsigned int		version);
+int		tag_func_define_font		(SwfdecSwfDecoder *	s);
+int		tag_func_define_font_2		(SwfdecSwfDecoder *	s);
+int		tag_func_define_font_3		(SwfdecSwfDecoder *	s);
 
 G_END_DECLS
 #endif

@@ -61,11 +61,24 @@ swfdec_font_init (SwfdecFont * font)
   font->glyphs = g_array_new (FALSE, TRUE, sizeof (SwfdecFontEntry));
 }
 
+/**
+ * swfdec_font_get_glyph:
+ * @font: a #SwfdecFont
+ * @glyph: id of glyph to render
+ *
+ * Tries to get the shape associated with the given glyph id. It is valid to 
+ * call this function with any glyph id. If no such glyph exists, this function 
+ * returns %NULL.
+ *
+ * Returns: the shape of the requested glyph or %NULL if no such glyph exists.
+ **/
 SwfdecShape *
 swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
 {
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
-  g_return_val_if_fail (glyph < font->glyphs->len, NULL);
+  
+  if (glyph >= font->glyphs->len)
+    return NULL;
 
   return g_array_index (font->glyphs, SwfdecFontEntry, glyph).shape;
 }
@@ -154,44 +167,67 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, unsigned int version)
   return SWFDEC_STATUS_OK;
 }
 
+static void
+swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size)
+{
+  SwfdecBits save_bits = s->b;
+  SwfdecShape *shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
+  entry->shape = shape;
+
+  g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
+  g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
+
+  shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
+  SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
+  shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
+  SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
+
+  swfdec_shape_get_recs (s, shape);
+  swfdec_bits_syncbits (&s->b);
+  if (swfdec_bits_skip_bytes (&save_bits, size) != size) {
+    SWFDEC_ERROR ("invalid offset value, not enough bytes available");
+  }
+  if (swfdec_bits_left (&save_bits) != swfdec_bits_left (&s->b)) {
+    SWFDEC_WARNING ("parsing shape did use %d bytes too much\n",
+	(swfdec_bits_left (&save_bits) - swfdec_bits_left (&s->b)) / 8);
+    /* we trust the offsets here */
+    s->b = save_bits;
+  }
+}
+
 int
 tag_func_define_font (SwfdecSwfDecoder * s)
 {
-  int id;
-  int i;
-  int n_glyphs;
-  int offset;
-  SwfdecShape *shape;
+  unsigned int i, id, n_glyphs, offset, next_offset;
   SwfdecFont *font;
+  SwfdecBits offsets;
 
   id = swfdec_bits_get_u16 (&s->b);
   font = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_FONT);
   if (!font)
     return SWFDEC_STATUS_OK;
 
-  offset = swfdec_bits_get_u16 (&s->b);
-  n_glyphs = offset / 2;
-
-  for (i = 1; i < n_glyphs; i++) {
-    offset = swfdec_bits_get_u16 (&s->b);
+  offsets = s->b;
+  n_glyphs = swfdec_bits_get_u16 (&s->b);
+  if (n_glyphs % 2) {
+    SWFDEC_ERROR ("first offset is odd?!");
+  }
+  n_glyphs /= 2;
+  if (swfdec_bits_skip_bytes (&s->b, n_glyphs * 2 - 2) != n_glyphs * 2 - 2) {
+    SWFDEC_ERROR ("invalid glyph offsets");
+    return SWFDEC_STATUS_OK;
   }
 
   g_array_set_size (font->glyphs, n_glyphs);
+  offset = swfdec_bits_get_u16 (&offsets);
   for (i = 0; i < n_glyphs; i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
-    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
-    entry->shape = shape;
-
-    g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-    g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
-
-    swfdec_bits_syncbits (&s->b);
-    shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
-    shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
-
-    swfdec_shape_get_recs (s, shape);
+    if (i + 1 == n_glyphs)
+      next_offset = offset + swfdec_bits_left (&s->b) / 8;
+    else
+      next_offset = swfdec_bits_get_u16 (&offsets);
+    swfdec_font_parse_shape (s, entry, next_offset - offset);
+    offset = next_offset;
   }
 
   return SWFDEC_STATUS_OK;
@@ -214,7 +250,7 @@ int
 tag_func_define_font_2 (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  int id;
+  unsigned int id;
   SwfdecShape *shape;
   SwfdecFont *font;
   SwfdecRect rect;

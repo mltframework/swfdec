@@ -1418,7 +1418,8 @@ swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guin
 }
 
 static JSBool
-swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_do_define_function (JSContext *cx, guint action,
+    const guint8 *data, guint len, gboolean v2)
 {
   const char *function_name;
   guint i, n_args, size;
@@ -1426,7 +1427,8 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
   JSFunction *fun;
   SwfdecScript *script;
   gboolean has_preloads = FALSE;
-  gboolean v2 = (action == 0x8e);
+  guint flags = 0;
+  guint8 *preloads = NULL;
 
   swfdec_bits_init_data (&bits, data, len);
   function_name = swfdec_bits_get_string (&bits);
@@ -1446,8 +1448,8 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
     return JS_FALSE;
   if (v2) {
     fun->nvars = swfdec_bits_get_u8 (&bits);
-    script->flags = swfdec_bits_get_u16 (&bits);
-    script->preloads = g_new0 (guint8, n_args);
+    flags = swfdec_bits_get_u16 (&bits);
+    preloads = g_new0 (guint8, n_args);
   } else {
     fun->nvars = 4;
   }
@@ -1462,9 +1464,10 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
 	return JS_FALSE;
       }
       if (preload != 0) {
-	script->preloads[i] = preload;
+	preloads[i] = preload;
 	swfdec_bits_skip_string (&bits);
 	has_preloads = TRUE;
+	continue;
       }
     }
     arg_name = swfdec_bits_skip_string (&bits);
@@ -1483,9 +1486,9 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
       return JS_FALSE;
     }
   }
-  if (script->preloads && !has_preloads) {
-    g_free (script->preloads);
-    script->preloads = NULL;
+  if (preloads && !has_preloads) {
+    g_free (preloads);
+    preloads = NULL;
   }
   size = swfdec_bits_get_u16 (&bits);
   /* check the script can be created */
@@ -1509,8 +1512,11 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
   }
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
+    g_free (preloads);
     return JS_FALSE;
   }
+  script->flags = flags;
+  script->preloads = preloads;
   fun->swf = script;
   /* attach the function */
   if (*function_name == '\0') {
@@ -1528,6 +1534,18 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
   /* update current context */
   cx->fp->pc += 3 + len + size;
   return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  return swfdec_action_do_define_function (cx, action, data, len, FALSE);
+}
+
+static JSBool
+swfdec_action_define_function2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  return swfdec_action_do_define_function (cx, action, data, len, TRUE);
 }
 
 static JSBool
@@ -2109,7 +2127,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 4 */
   [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
   /* version 7 */
-  [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, NULL, swfdec_action_define_function } },
+  [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, NULL, swfdec_action_define_function2 } },
   [0x8f] = { "Try", NULL },
   /* version 5 */
   [0x94] = { "With", NULL },
@@ -2517,6 +2535,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   JSStackFrame *oldfp, frame;
   JSObject *obj;
   JSBool ok;
+  void *mark;
 
   g_return_val_if_fail (script != NULL, JSVAL_VOID);
   g_return_val_if_fail (SWFDEC_IS_SCRIPTABLE (scriptable), JSVAL_VOID);
@@ -2534,8 +2553,8 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.swf = script;
   frame.constant_pool = NULL;
   frame.thisp = obj;
-  frame.argc = frame.nvars = 0;
-  frame.argv = frame.vars = NULL;
+  frame.argc = 0;
+  frame.argv = NULL;
   frame.annotation = NULL;
   frame.sharpArray = NULL;
   frame.rval = JSVAL_VOID;
@@ -2548,6 +2567,14 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.flags = 0;
   frame.dormantNext = NULL;
   frame.objAtomMap = NULL;
+
+  /* allocate stack for variables */
+  frame.nvars = 4;
+  frame.vars = js_AllocStack (cx, frame.nvars, &mark);
+  if (frame.vars == NULL) {
+    return JS_FALSE;
+  }
+  frame.vars[0] = frame.vars[1] = frame.vars[2] = frame.vars[3] = JSVAL_VOID;
 
   if (oldfp) {
     g_assert (!oldfp->dormantNext);
@@ -2563,7 +2590,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
    */
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
-  /* FIXME: where to clean this up? */
+  js_FreeStack (cx, mark);
   if (frame.constant_pool)
     swfdec_constant_pool_free (frame.constant_pool);
 

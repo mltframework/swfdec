@@ -28,8 +28,9 @@
 #include "js/jscntxt.h"
 #include "js/jsinterp.h"
 
-#include <string.h>
+#include <errno.h>
 #include <math.h>
+#include <string.h>
 #include "swfdec_decoder.h"
 #include "swfdec_js.h"
 #include "swfdec_movie.h"
@@ -1691,6 +1692,43 @@ swfdec_action_store_register (JSContext *cx, guint action, const guint8 *data, g
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_modulo_5 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double x, y;
+
+  x = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  y = swfdec_action_to_number (cx, cx->fp->sp[-2]);
+  cx->fp->sp--;
+  errno = 0;
+  x = fmod (x, y);
+  if (errno != 0) {
+    cx->fp->sp[-1] = DOUBLE_TO_JSVAL (cx->runtime->jsNaN);
+    return JS_TRUE;
+  } else {
+    return JS_NewNumberValue (cx, x, &cx->fp->sp[-1]);
+  }
+}
+
+static JSBool
+swfdec_action_modulo_7 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double x, y;
+
+  if (!swfdec_value_to_number_7 (cx, cx->fp->sp[-1], &x) ||
+      !swfdec_value_to_number_7 (cx, cx->fp->sp[-2], &y))
+    return JS_FALSE;
+  cx->fp->sp--;
+  errno = 0;
+  x = fmod (x, y);
+  if (errno != 0) {
+    cx->fp->sp[-1] = DOUBLE_TO_JSVAL (cx->runtime->jsNaN);
+    return JS_TRUE;
+  } else {
+    return JS_NewNumberValue (cx, x, &cx->fp->sp[-1]);
+  }
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2020,7 +2058,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [0x3d] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
-  [0x3f] = { "Modulo", NULL },
+  [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [0x42] = { "InitArray", NULL },

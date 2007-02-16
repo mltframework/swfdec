@@ -29,6 +29,18 @@ G_BEGIN_DECLS
 
 //typedef struct _SwfdecScript SwfdecScript;
 
+typedef enum {
+  SWFDEC_SCRIPT_PRELOAD_THIS = (1 << 0),
+  SWFDEC_SCRIPT_SUPPRESS_THIS = (1 << 1),
+  SWFDEC_SCRIPT_PRELOAD_ARGS = (1 << 2),
+  SWFDEC_SCRIPT_SUPPRESS_ARGS = (1 << 3),
+  SWFDEC_SCRIPT_PRELOAD_SUPER = (1 << 4),
+  SWFDEC_SCRIPT_SUPPRESS_SUPER = (1 << 5),
+  SWFDEC_SCRIPT_PRELOAD_ROOT = (1 << 6),
+  SWFDEC_SCRIPT_PRELOAD_PARENT = (1 << 7),
+  SWFDEC_SCRIPT_PRELOAD_GLOBAL = (1 << 8)
+} SwfdecScriptFlag;
+
 typedef gboolean (* SwfdecScriptForeachFunc) (gconstpointer bytecode, guint action, 
     const guint8 *data, guint len, gpointer user_data);
 
@@ -41,6 +53,8 @@ struct _SwfdecScript {
   gpointer		debugger;		/* debugger owning us or NULL */
   /* needed by functions */
   SwfdecBuffer *	constant_pool;		/* constant pool action */
+  guint			flags;			/* SwfdecScriptFlags */
+  guint8 *		preloads;		/* NULL or where to preload variables to */
 };
 
 const char *	swfdec_action_get_name		(guint			action);

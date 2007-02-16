@@ -1406,6 +1406,8 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
   SwfdecBits bits;
   JSFunction *fun;
   SwfdecScript *script;
+  gboolean has_preloads = FALSE;
+  gboolean v2 = (action == 0x8e);
 
   swfdec_bits_init_data (&bits, data, len);
   function_name = swfdec_bits_get_string (&bits);
@@ -1423,9 +1425,30 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
   }
   if (fun == NULL)
     return JS_FALSE;
+  if (v2) {
+    fun->nvars = swfdec_bits_get_u8 (&bits);
+    script->flags = swfdec_bits_get_u16 (&bits);
+    script->preloads = g_new0 (guint8, n_args);
+  } else {
+    fun->nvars = 4;
+  }
   for (i = 0; i < n_args; i++) {
     JSAtom *atom;
-    const char *arg_name = swfdec_bits_get_string (&bits);
+    const char *arg_name;
+    if (v2) {
+      guint preload = swfdec_bits_get_u8 (&bits);
+      if (preload && preload >= fun->nvars) {
+	SWFDEC_ERROR ("argument %u is preloaded into register %u out of %u", 
+	    i, preload, fun->nvars);
+	return JS_FALSE;
+      }
+      if (preload != 0) {
+	script->preloads[i] = preload;
+	swfdec_bits_skip_string (&bits);
+	has_preloads = TRUE;
+      }
+    }
+    arg_name = swfdec_bits_skip_string (&bits);
     if (arg_name == NULL || *arg_name == '\0') {
       SWFDEC_ERROR ("empty argument name not allowed");
       return JS_FALSE;
@@ -1440,6 +1463,10 @@ swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, 
 	SPROP_HAS_SHORTID, i)) {
       return JS_FALSE;
     }
+  }
+  if (script->preloads && !has_preloads) {
+    g_free (script->preloads);
+    script->preloads = NULL;
   }
   size = swfdec_bits_get_u16 (&bits);
   /* check the script can be created */
@@ -1635,8 +1662,9 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
   GString *string;
   const char *function_name;
   guint i, n_args, size;
+  gboolean v2 = (action == 0x8e);
 
-  string = g_string_new ("DefineFunction ");
+  string = g_string_new (v2 ? "DefineFunction2 " : "DefineFunction ");
   swfdec_bits_init_data (&bits, data, len);
   function_name = swfdec_bits_get_string (&bits);
   if (function_name == NULL) {
@@ -1650,17 +1678,30 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
   }
   n_args = swfdec_bits_get_u16 (&bits);
   g_string_append_c (string, '(');
+  if (v2) {
+  /* n_regs = */ swfdec_bits_get_u8 (&bits);
+  /* flags = */ swfdec_bits_get_u16 (&bits);
+  }
  
   for (i = 0; i < n_args; i++) {
-    const char *arg_name = swfdec_bits_get_string (&bits);
-    if (arg_name == NULL || *arg_name == '\0') {
+    guint preload;
+    const char *arg_name;
+    if (v2)
+      preload = swfdec_bits_get_u8 (&bits);
+    else
+      preload = 0;
+    arg_name = swfdec_bits_get_string (&bits);
+    if (preload == 0 && (arg_name == NULL || *arg_name == '\0')) {
       SWFDEC_ERROR ("empty argument name not allowed");
       g_string_free (string, TRUE);
       return NULL;
     }
     if (i)
       g_string_append (string, ", ");
-    g_string_append (string, arg_name);
+    if (preload)
+      g_string_append_printf (string, "PRELOAD %u", preload);
+    else
+      g_string_append (string, arg_name);
   }
   g_string_append_c (string, ')');
   size = swfdec_bits_get_u16 (&bits);
@@ -1971,7 +2012,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 4 */
   [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
   /* version 7 */
-  [0x8e] = { "DefineFunction2", NULL },
+  [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, NULL, swfdec_action_define_function } },
   [0x8f] = { "Try", NULL },
   /* version 5 */
   [0x94] = { "With", NULL },
@@ -2150,6 +2191,7 @@ swfdec_script_unref (SwfdecScript *script)
   if (script->constant_pool)
     swfdec_buffer_unref (script->constant_pool);
   g_free (script->name);
+  g_free (script->preloads);
   g_free (script);
 }
 
@@ -2187,6 +2229,29 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   version = EXTRACT_VERSION (script->version);
   *rval = JSVAL_VOID;
   fp = cx->fp;
+  /* do the preloading */
+  if (script->preloads) {
+    guint i;
+    for (i = 0; i < fp->fun->nargs; i++) {
+      if (script->preloads[i])
+	fp->vars[script->preloads[i]] = fp->argv[i];
+    }
+  }
+  if (script->flags) {
+    guint preload_reg = 0;
+    SwfdecPlayer *player = JS_GetContextPrivate (cx);
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS)
+      fp->vars[preload_reg++] = OBJECT_TO_JSVAL (fp->thisp);
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS)
+  
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER ||
+	script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT ||
+	script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
+      g_assert_not_reached ();
+    }
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL)
+      fp->vars[preload_reg++] = OBJECT_TO_JSVAL (player->jsobj);
+  }
   /* set up the script */
   startpc = pc = script->buffer->data;
   endpc = startpc + script->buffer->length;

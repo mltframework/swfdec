@@ -1644,6 +1644,20 @@ swfdec_action_return (JSContext *cx, guint action, const guint8 *data, guint len
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_delete (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *name;
+  
+  cx->fp->sp -= 2;
+  name = swfdec_js_to_string (cx, cx->fp->sp[1]);
+  if (name == NULL)
+    return JS_FALSE;
+  if (!JSVAL_IS_OBJECT (cx->fp->sp[0]))
+    return JS_TRUE;
+  return JS_DeleteProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[0]), name);
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1956,7 +1970,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x36] = { "MBCharToAscii", NULL },
   [0x37] = { "MVAsciiToChar", NULL },
   /* version 5 */
-  [0x3a] = { "Delete", NULL },
+  [0x3a] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
   [0x3b] = { "Delete2", NULL },
   [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [0x3d] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },

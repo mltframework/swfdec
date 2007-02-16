@@ -1439,10 +1439,10 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
   n_args = swfdec_bits_get_u16 (&bits);
   if (*function_name == '\0') {
     /* anonymous function */
-    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA, NULL, NULL);
+    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA, cx->fp->thisp, NULL);
   } else {
     /* named function */
-    fun = JS_NewFunction (cx, NULL, n_args, 0, NULL, function_name);
+    fun = JS_NewFunction (cx, NULL, n_args, 0, cx->fp->thisp, function_name);
   }
   if (fun == NULL)
     return JS_FALSE;

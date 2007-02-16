@@ -90,6 +90,10 @@ EXTRA_DIST = \
 	order.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
+	scope.swf \
+	scope.swf.trace \
+	scope2.swf \
+	scope2.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	transform.swf \

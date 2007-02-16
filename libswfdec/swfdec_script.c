@@ -124,6 +124,15 @@ swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
 
 /*** SUPPORT FUNCTIONS ***/
 
+static gboolean
+swfdec_action_has_register (JSContext *cx, guint i)
+{
+  if (cx->fp->fun == NULL)
+    return i < 4;
+  else
+    return i < cx->fp->fun->nvars;
+}
+
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
 {
@@ -461,6 +470,16 @@ swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint l
       case 3: /* undefined */
 	*cx->fp->sp++ = JSVAL_VOID;
 	break;
+      case 4: /* register */
+	{
+	  guint regnum = swfdec_bits_get_u8 (&bits);
+	  if (!swfdec_action_has_register (cx, regnum)) {
+	    SWFDEC_ERROR ("cannot Push register %u: not enough registers", regnum);
+	    return JS_FALSE;
+	  }
+	  *cx->fp->sp++ = cx->fp->vars[regnum];
+	  break;
+	}
       case 5: /* boolean */
 	*cx->fp->sp++ = swfdec_bits_get_u8 (&bits) ? JSVAL_TRUE : JSVAL_FALSE;
 	break;
@@ -512,7 +531,6 @@ swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint l
 	    return JS_FALSE;
 	  break;
 	}
-      case 4: /* register */
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
 	return JS_FALSE;
@@ -1658,7 +1676,32 @@ swfdec_action_delete (JSContext *cx, guint action, const guint8 *data, guint len
   return JS_DeleteProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[0]), name);
 }
 
+static JSBool
+swfdec_action_store_register (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  if (len != 1) {
+    SWFDEC_ERROR ("StoreRegister action requires a length of 1, but got %u", len);
+    return JS_FALSE;
+  }
+  if (!swfdec_action_has_register (cx, *data)) {
+    SWFDEC_ERROR ("Cannot store into register %u, not enough registers", (guint) *data);
+    return JS_FALSE;
+  }
+  cx->fp->vars[*data] = cx->fp->sp[-1];
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
+
+static char *
+swfdec_action_print_store_register (guint action, const guint8 *data, guint len)
+{
+  if (len != 1) {
+    SWFDEC_ERROR ("StoreRegister action requires a length of 1, but got %u", len);
+    return NULL;
+  }
+  return g_strdup_printf ("StoreRegister %u", (guint) *data);
+}
 
 static char *
 swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
@@ -1795,6 +1838,9 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
       case 3: /* undefined */
 	g_string_append (string, "void");
 	break;
+      case 4: /* register */
+	g_string_append_printf (string, "Register %u", swfdec_bits_get_u8 (&bits));
+	break;
       case 5: /* boolean */
 	g_string_append (string, swfdec_bits_get_u8 (&bits) ? "True" : "False");
 	break;
@@ -1810,7 +1856,6 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
       case 9: /* 16bit ConstantPool address */
 	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u16 (&bits));
 	break;
-      case 4: /* register */
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
 	return JS_FALSE;
@@ -2017,7 +2062,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x81] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
   [0x83] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
   /* version 5 */
-  [0x87] = { "StoreRegister", NULL },
+  [0x87] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, { NULL, NULL, swfdec_action_store_register, swfdec_action_store_register, swfdec_action_store_register } },
   [0x88] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
   /* version 3 */
   [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },

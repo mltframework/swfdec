@@ -23,6 +23,7 @@
 
 #include "swfdec_scriptable.h"
 #include "swfdec_debug.h"
+#include "swfdec_loader_internal.h"
 #include "js/jsapi.h"
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecScriptable, swfdec_scriptable, G_TYPE_OBJECT)
@@ -154,3 +155,58 @@ swfdec_scriptable_from_jsval (JSContext *cx, jsval val, GType type)
     return NULL;
   return JS_GetPrivate (cx, object);
 }
+
+/**
+ * swfdec_scriptable_set_variables:
+ * @script: a #SwfdecScriptable
+ * @variables: variables to set on @script in application-x-www-form-urlencoded 
+ *             format
+ * 
+ * Verifies @variables to be encoded correctly and sets them as string 
+ * properties on the JSObject of @script.
+ **/
+void
+swfdec_scriptable_set_variables (SwfdecScriptable *script, const char *variables)
+{
+  JSObject *object;
+
+  g_return_if_fail (SWFDEC_IS_SCRIPTABLE (script));
+  g_return_if_fail (variables != NULL);
+
+  object = swfdec_scriptable_get_object (script);
+  while (*variables) {
+    char *name, *value;
+    JSString *string;
+    jsval val;
+
+    if (!swfdec_urldecode_one (variables, &name, &value, &variables)) {
+      SWFDEC_WARNING ("variables invalid at \"%s\"", variables);
+      break;
+    }
+    if (*variables != '&' && *variables != '\0') {
+      SWFDEC_WARNING ("variables not delimited with & at \"%s\"", variables);
+      g_free (name);
+      g_free (value);
+      break;
+    }
+    variables++;
+    string = JS_NewStringCopyZ (script->jscx, value);
+    if (string == NULL) {
+      g_free (name);
+      g_free (value);
+      SWFDEC_ERROR ("could not create string");
+      break;
+    }
+    val = STRING_TO_JSVAL (string);
+    if (!JS_SetProperty (script->jscx, object, name, &val)) {
+      g_free (name);
+      g_free (value);
+      SWFDEC_ERROR ("error setting property \"%s\"", name);
+      break;
+    }
+    SWFDEC_DEBUG ("Set variable \"%s\" to \"%s\"", name, value);
+    g_free (name);
+    g_free (value);
+  }
+}
+

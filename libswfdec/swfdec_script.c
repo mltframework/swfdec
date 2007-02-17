@@ -1823,6 +1823,27 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
 }
 
 static char *
+swfdec_action_print_get_url2 (guint action, const guint8 *data, guint len)
+{
+  guint method;
+
+  if (len != 1) {
+    SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
+    return NULL;
+  }
+  method = data[0] >> 6;
+  if (method == 3) {
+    SWFDEC_ERROR ("GetURL method 3 invalid");
+    method = 0;
+  }
+  if (method) {
+    SWFDEC_ERROR ("FIXME: implement encoding variables using %s", method == 1 ? "GET" : "POST");
+  }
+  return g_strdup_printf ("GetURL2%s%s%s", method == 0 ? "" : (method == 1 ? " GET" : " POST"),
+      data[0] & 2 ? " LoadTarget" : "", data[0] & 1 ? " LoadVariables" : "");
+}
+
+static char *
 swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
 {
   SwfdecBits bits;
@@ -2134,7 +2155,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 4 */
   [0x96] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
   [0x99] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
-  [0x9a] = { "GetURL2", NULL, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
+  [0x9a] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
   /* version 5 */
   [0x9b] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
   /* version 4 */

@@ -205,6 +205,8 @@ swfdec_debug_script_set_script (SwfdecDebugScript *debug, SwfdecDebuggerScript *
 
   if (debug->debugger == NULL)
     return;
+  if (debug->script == dscript)
+    return;
   debug->script = dscript;
   if (dscript) {
     swfdec_debug_script_set_model (debug);

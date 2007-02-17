@@ -870,9 +870,11 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
 
   movie = swfdec_movie_new_for_player (player, depth);
   root = SWFDEC_ROOT_MOVIE (movie);
-  root->loader = loader;
-  swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
   root->player = player;
+  root->loader = loader;
+  if (variables)
+    swfdec_scriptable_set_variables (SWFDEC_SCRIPTABLE (movie), variables);
+  swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
   found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
   if (found) {
     SWFDEC_DEBUG ("remove existing movie _level%u", depth);
@@ -1017,7 +1019,7 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  movie = swfdec_player_add_level_from_loader (player, 0, loader, NULL);
+  movie = swfdec_player_add_level_from_loader (player, 0, loader, variables);
   swfdec_loader_parse (loader);
 }
 

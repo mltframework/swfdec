@@ -33,9 +33,9 @@ Test tests[] = {
   { "a=b", { "a" }, { "b" }, 1 },
   { "a=b&c=d", { "a", "c" }, { "b", "d" }, 2 },
   { "owned=Your+Mom", { "owned" }, { "Your Mom" }, 1 },
-  { "numbers=0123456789&uppercase=ABCDEFGHIJKLMNOPQRSTUVWXYZ&lowercase=abcdefghijklmnopqrstuvwxyz&special+chars=.-_", 
+  { "numbers=0123456789&uppercase=ABCDEFGHIJKLMNOPQRSTUVWXYZ&lowercase=abcdefghijklmnopqrstuvwxyz&special+chars=.-_/", 
     { "numbers", "uppercase", "lowercase", "special chars" }, 
-    { "0123456789", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz", ".-_" }, 4 }
+    { "0123456789", "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz", ".-_/" }, 4 }
 };
 
 #define ERROR(...) G_STMT_START { \

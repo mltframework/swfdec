@@ -401,6 +401,14 @@ swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
   cairo_matrix_transform_point (&movie->inverse_matrix, x, y);
 }
 
+/**
+ * swfdec_movie_get_mouse:
+ * @movie: a #SwfdecMovie
+ * @x: pointer to hold result of X coordinate
+ * @y: pointer to hold result of y coordinate
+ *
+ * Gets the mouse coordinates in the coordinate space of @movie.
+ **/
 void
 swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
 {

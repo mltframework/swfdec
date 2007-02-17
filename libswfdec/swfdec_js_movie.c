@@ -979,14 +979,16 @@ mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   g_assert (movie);
 
   /* FIXME: what do we do if we're the root movie? */
-  if (movie->parent)
+  if (movie->parent) {
     movie = movie->parent;
 
-  jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie));
-  if (jsobj == NULL)
-    return JS_FALSE;
-  
-  *vp = OBJECT_TO_JSVAL (jsobj);
+    jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie));
+    if (jsobj == NULL)
+      return JS_FALSE;
+    
+    *vp = OBJECT_TO_JSVAL (jsobj);
+  }
+  /* else return JSVAL_VOID */
 
   return JS_TRUE;
 }

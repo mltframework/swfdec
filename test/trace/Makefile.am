@@ -88,6 +88,8 @@ EXTRA_DIST = \
 	object-math-7.swf.trace \
 	order.swf \
 	order.swf.trace \
+	parent-root.swf \
+	parent-root.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	scope.swf \

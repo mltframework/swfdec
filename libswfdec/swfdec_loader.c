@@ -393,12 +393,14 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
   return ret;
 }
 
+/* if speed ever gets an issue, use a 256 byte array instead of strchr */
+static const char *urlencode_unescaped="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.";
 static void
 swfdec_urlencode_append_string (GString *str, const char *s)
 {
   g_assert (s != NULL);
   while (*s) {
-    if (g_ascii_isalnum (*s))
+    if (strchr (urlencode_unescaped, *s))
       g_string_append_c (str, *s);
     else if (*s == ' ')
       g_string_append_c (str, '+');
@@ -414,7 +416,7 @@ swfdec_urldecode_one_string (const char *s, const char **out)
   GString *ret = g_string_new ("");
 
   while (*s) {
-    if (g_ascii_isalnum (*s)) {
+    if (strchr (urlencode_unescaped, *s)) {
       g_string_append_c (ret, *s);
     } else if (*s == '+') {
       g_string_append_c (ret, ' ');

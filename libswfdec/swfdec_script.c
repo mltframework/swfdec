@@ -137,8 +137,7 @@ swfdec_action_has_register (JSContext *cx, guint i)
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
 {
-  JSObject *object = cx->fp->scopeChain;
-  object = OBJ_THIS_OBJECT (cx, object);
+  JSObject *object = cx->fp->thisp;
   return swfdec_scriptable_from_jsval (cx, OBJECT_TO_JSVAL (object), SWFDEC_TYPE_MOVIE);
 }
 
@@ -1638,10 +1637,7 @@ swfdec_action_define_local (JSContext *cx, guint action, const guint8 *data, gui
 {
   const char *name;
 
-  if (cx->fp->callobj == NULL) {
-    SWFDEC_ERROR ("FIXME: no local scope");
-    return JS_FALSE;
-  }
+  g_assert (cx->fp->callobj != NULL);
   name = swfdec_js_to_string (cx, cx->fp->sp[-2]);
   if (name == NULL)
     return JS_FALSE;
@@ -1657,10 +1653,7 @@ swfdec_action_define_local2 (JSContext *cx, guint action, const guint8 *data, gu
   const char *name;
   jsval val = JSVAL_VOID;
 
-  if (cx->fp->callobj == NULL) {
-    SWFDEC_ERROR ("FIXME: no local scope");
-    return JS_FALSE;
-  }
+  g_assert (cx->fp->callobj != NULL);
   name = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (name == NULL)
     return JS_FALSE;
@@ -2549,6 +2542,22 @@ internal_error:
   goto no_catch;
 }
 
+static JSFunction *
+swfdec_script_ensure_function (SwfdecScript *script, SwfdecScriptable *scriptable)
+{
+  JSContext *cx = scriptable->jscx;
+  JSObject *parent;
+
+  if (script->fun)
+    return script->fun;
+  parent = swfdec_scriptable_get_object (scriptable);
+  script->fun = JS_NewFunction (cx, NULL, 0, JSFUN_LAMBDA, parent, NULL);
+  script->fun->swf = script;
+  script->fun->nvars = 4;
+  swfdec_script_ref (script);
+  return script->fun;
+}
+
 jsval
 swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 {
@@ -2570,7 +2579,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.callobj = frame.argsobj = NULL;
   frame.script = NULL;
   frame.varobj = obj;
-  frame.fun = NULL;
+  frame.fun = swfdec_script_ensure_function (script, scriptable);
   frame.swf = script;
   frame.constant_pool = NULL;
   frame.thisp = obj;
@@ -2596,13 +2605,15 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
     return JS_FALSE;
   }
   frame.vars[0] = frame.vars[1] = frame.vars[2] = frame.vars[3] = JSVAL_VOID;
+  /* create a call object */
+  if (!js_GetCallObject(cx, &frame, obj))
+    return JS_FALSE;
 
   if (oldfp) {
     g_assert (!oldfp->dormantNext);
     oldfp->dormantNext = cx->dormantFrameChain;
     cx->dormantFrameChain = oldfp;
   }
-
   cx->fp = &frame;
 
   /*

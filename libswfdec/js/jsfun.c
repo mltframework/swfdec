@@ -1042,6 +1042,9 @@ fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     }
 }
 
+struct _SwfdecScript {
+  JSFunction *		fun;
+};
 extern void swfdec_script_unref (void *script);
 static void
 fun_finalize(JSContext *cx, JSObject *obj)
@@ -1059,8 +1062,10 @@ fun_finalize(JSContext *cx, JSObject *obj)
         return;
     if (fun->script)
         js_DestroyScript(cx, fun->script);
-    if (fun->swf)
+    if (fun->swf) {
 	swfdec_script_unref (fun->swf);
+	((struct _SwfdecScript *) fun->swf)->fun = NULL;
+    }
     JS_free(cx, fun);
 }
 

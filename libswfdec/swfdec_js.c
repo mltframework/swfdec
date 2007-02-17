@@ -334,7 +334,7 @@ swfdec_js_eval_set_property (JSContext *cx, JSObject *obj,
   if (obj == NULL) {
     if (cx->fp == NULL || cx->fp->scopeChain == NULL)
       return JS_FALSE;
-    obj = cx->fp->scopeChain;
+    obj = JS_GetParent (cx, cx->fp->scopeChain);
   }
   return OBJ_SET_PROPERTY (cx, obj, (jsid) atom, ret);
 }
@@ -383,8 +383,8 @@ swfdec_js_eval_internal (JSContext *cx, JSObject *obj, const char *str,
   if (obj == NULL) {
     if (cx->fp == NULL)
       goto out;
-    g_assert (cx->fp->scopeChain);
-    cur = OBJECT_TO_JSVAL (OBJ_THIS_OBJECT (cx, cx->fp->scopeChain));
+    g_assert (cx->fp->thisp);
+    cur = OBJECT_TO_JSVAL (cx->fp->thisp);
   }
 
 finish:

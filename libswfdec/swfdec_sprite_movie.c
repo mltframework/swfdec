@@ -142,11 +142,6 @@ swfdec_sprite_movie_do_goto_frame (SwfdecMovie *mov, gpointer data)
     start = movie->current_frame + 1;
     old = NULL;
   }
-  if (movie->current_frame == (guint) -1 || 
-      movie->sprite->frames[goto_frame].bg_color != 
-      movie->sprite->frames[movie->current_frame].bg_color) {
-    swfdec_movie_invalidate (mov);
-  }
   movie->current_frame = goto_frame;
   SWFDEC_DEBUG ("performing goto %u -> %u for character %u", 
       start, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
@@ -353,19 +348,5 @@ swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
   movie->current_frame = (guint) -1;
   movie->sound_frame = (guint) -1;
-}
-
-gboolean
-swfdec_sprite_movie_paint_background (SwfdecSpriteMovie *movie, cairo_t *cr)
-{
-  SwfdecSpriteFrame *frame;
-  
-  if (movie->current_frame >= SWFDEC_MOVIE (movie)->n_frames)
-    return FALSE;
-
-  frame = &movie->sprite->frames[movie->current_frame];
-  swfdec_color_set_source (cr, frame->bg_color);
-  cairo_paint (cr);
-  return TRUE;
 }
 

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -266,7 +266,8 @@ enum {
   PROP_CACHE_SIZE,
   PROP_INITIALIZED,
   PROP_MOUSE_CURSOR,
-  PROP_NEXT_EVENT
+  PROP_NEXT_EVENT,
+  PROP_BACKGROUND_COLOR
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, G_TYPE_OBJECT)
@@ -285,6 +286,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
   
   switch (param_id) {
+    case PROP_BACKGROUND_COLOR:
+      g_value_set_uint (value, swfdec_player_get_background_color (player));
+      break;
     case PROP_CACHE_SIZE:
       g_value_set_uint (value, player->cache->max_size);
       break;
@@ -310,6 +314,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   switch (param_id) {
+    case PROP_BACKGROUND_COLOR:
+      swfdec_player_set_background_color (player, g_value_get_uint (value));
+      break;
     case PROP_CACHE_SIZE:
       player->cache->max_size = g_value_get_uint (value);
       break;
@@ -713,7 +720,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_uint ("cache-size", "cache size", "maximum cache size in bytes",
 	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READABLE));
-
+  g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
+      g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
+	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::trace:
@@ -820,6 +829,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
+  player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -1154,14 +1164,8 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
   cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
-  /* FIXME: find a nicer way to render the background */
-  if (player->roots == NULL ||
-      !SWFDEC_IS_SPRITE_MOVIE (player->roots->data) ||
-      !swfdec_sprite_movie_paint_background (SWFDEC_SPRITE_MOVIE (player->roots->data), cr)) {
-    SWFDEC_INFO ("couldn't paint the background, using white");
-    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
-    cairo_paint (cr);
-  }
+  swfdec_color_set_source (cr, player->bgcolor);
+  cairo_paint (cr);
 
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_render (walk->data, cr, &trans, &real, TRUE);
@@ -1299,3 +1303,42 @@ swfdec_player_get_audio (SwfdecPlayer *	player)
   return player->audio;
 }
 
+/**
+ * swfdec_player_get_background_color:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the current background color. The color will be an ARGB-quad, with the 
+ * MSB being the alpha value.
+ *
+ * Returns: the background color as an ARGB value
+ **/
+unsigned int
+swfdec_player_get_background_color (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF));
+
+  return player->bgcolor;
+}
+
+/**
+ * swfdec_player_set_background_color:
+ * @player: a #SwfdecPlayer
+ * @color: new color to use as background color
+ *
+ * Sets a new background color as an ARGB value. To get transparency, set the 
+ * value to 0. To get a black beackground, use 0xFF000000.
+ **/
+void
+swfdec_player_set_background_color (SwfdecPlayer *player, unsigned int color)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  player->bgcolor_set = TRUE;
+  if (player->bgcolor == color)
+    return;
+  g_object_notify (G_OBJECT (player), "background-color");
+  if (swfdec_player_is_initialized (player)) {
+    g_signal_emit (player, signals[INVALIDATE], 0, 0.0, 0.0, 
+	(double) player->width, (double) player->height);
+  }
+}

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,6 +46,8 @@ struct _SwfdecPlayer
   unsigned int		height;			/* height of movie */
   GList *		roots;			/* all the root movies */
   SwfdecCache *		cache;			/* player cache */
+  gboolean		bgcolor_set;		/* TRUE if the background color has been set */
+  SwfdecColor		bgcolor;		/* background color */
 
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */

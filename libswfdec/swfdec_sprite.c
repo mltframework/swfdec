@@ -229,7 +229,6 @@ tag_show_frame (SwfdecSwfDecoder * s)
   if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
     SwfdecSpriteFrame *old = &s->parse_sprite->frames[s->parse_sprite->parse_frame - 1];
     SwfdecSpriteFrame *new = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-    new->bg_color = old->bg_color;
     if (old->sound_head)
       new->sound_head = g_object_ref (old->sound_head);
   }
@@ -240,11 +239,24 @@ tag_show_frame (SwfdecSwfDecoder * s)
 int
 tag_func_set_background_color (SwfdecSwfDecoder * s)
 {
-  SwfdecSpriteFrame *frame;
+  SwfdecPlayer *player = SWFDEC_DECODER (s)->player;
+  SwfdecColor color = swfdec_bits_get_color (&s->b);
 
-  frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-
-  frame->bg_color = swfdec_bits_get_color (&s->b);
+  if (player->bgcolor_set) {
+    /* only an INFO because it can be set by user, should be error if we check duplication of tag */
+    SWFDEC_INFO ("background color has been set to %X already, setting to %X ignored",
+	player->bgcolor, color);
+  } else {
+    SWFDEC_LOG ("setting background color to %X", color);
+    /* can't use swfdec_player_set_background_color() here, because the player is locked and doesn't emit signals */
+    player->bgcolor = color;
+    player->bgcolor_set = TRUE;
+    player->invalid.x0 = SWFDEC_DOUBLE_TO_TWIPS (0.0);
+    player->invalid.y0 = SWFDEC_DOUBLE_TO_TWIPS (0.0);
+    player->invalid.x1 = SWFDEC_DOUBLE_TO_TWIPS (player->width);
+    player->invalid.y1 = SWFDEC_DOUBLE_TO_TWIPS (player->height);
+    g_object_notify (G_OBJECT (player), "background-color");
+  }
 
   return SWFDEC_STATUS_OK;
 }
@@ -507,8 +519,6 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames,
   for (i = 0; i < n_frames; i++) {
     sprite->frames[i].sound_samples = 44100 * 256 / rate;
   }
-  /* default bg is white */
-  sprite->frames[0].bg_color = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
   SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
 }

@@ -63,7 +63,6 @@ struct _SwfdecSpriteFrame
   GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
 
   /* visuals */
-  SwfdecColor bg_color;
   GArray *actions;			/* SwfdecSpriteAction in execution order */
 };
 

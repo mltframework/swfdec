@@ -24,10 +24,6 @@
 
 #include <libswfdec/swfdec_types.h>
 
-/* Pixel value in the same colorspace as cairo - endian-dependant ARGB.
- * The alpha pixel must be present */
-typedef unsigned int SwfdecColor;
-
 struct _SwfdecColorTransform {
   /* naming here is taken from ActionScript, where ?a is the multiplier and ?b the offset */
   int ra, rb, ga, gb, ba, bb, aa, ab;

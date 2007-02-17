@@ -5,6 +5,10 @@
 #include <glib-object.h>
 #include <cairo.h>
 
+/* Pixel value in the same colorspace as cairo - endian-dependant ARGB.
+ * The alpha pixel must be present */
+typedef unsigned int SwfdecColor;
+
 /* audio is 44100Hz, framerate is multiple of 256Hz, FLV timestamps are 1000Hz
  * This is a multiple of all these numbers, so we can be always accurate
  */

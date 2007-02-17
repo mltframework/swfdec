@@ -307,11 +307,13 @@ main (int argc, char *argv[])
   SwfdecPlayer *player;
   GError *error = NULL;
   gboolean use_image = FALSE;
+  char *variables = NULL;
 
   GOptionEntry options[] = {
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "break", 'b', 0, G_OPTION_ARG_NONE, &do_break, "break at the beginning of every script", NULL },
+    { "variables", 'v', 0, G_OPTION_ARG_STRING, &variables, "variables to pass to player", "VAR=NAME[&VAR=NAME..]" },
     { NULL }
   };
   GOptionContext *ctx;
@@ -346,7 +348,7 @@ main (int argc, char *argv[])
   if (do_break)
     g_signal_connect (player, "script-added", G_CALLBACK (do_break_cb), NULL);
   view_swf (player, scale, use_image);
-  swfdec_player_set_loader (player, loader);
+  swfdec_player_set_loader_with_variables (player, loader, variables);
   if (!swfdec_player_is_initialized (player)) {
     g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
     g_object_unref (player);

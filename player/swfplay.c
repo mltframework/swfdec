@@ -90,6 +90,7 @@ main (int argc, char *argv[])
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
   gboolean trace = FALSE;
+  char *variables = NULL;
   GtkWidget *window;
 
   GOptionEntry options[] = {
@@ -99,6 +100,7 @@ main (int argc, char *argv[])
     { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "speed", 0, 0, G_OPTION_ARG_INT, &speed, "replay speed (will deactivate sound)", "PERCENT" },
     { "trace", 't', 0, G_OPTION_ARG_NONE, &trace, "print trace output to stdout", NULL },
+    { "variables", 'v', 0, G_OPTION_ARG_STRING, &variables, "variables to pass to player", "VAR=NAME[&VAR=NAME..]" },
     { NULL }
   };
   GOptionContext *ctx;
@@ -136,7 +138,7 @@ main (int argc, char *argv[])
   if (delay) 
     loader = swfdec_slow_loader_new (loader, delay);
 
-  swfdec_player_set_loader (player, loader);
+  swfdec_player_set_loader_with_variables (player, loader, variables);
   /* FIXME add smarter "not my file" detection */
   if (!swfdec_player_is_initialized (player) && delay == 0) {
     g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);

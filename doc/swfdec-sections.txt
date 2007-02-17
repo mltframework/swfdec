@@ -40,6 +40,7 @@ swfdec_init
 swfdec_player_new
 swfdec_player_new_from_file
 swfdec_player_set_loader
+swfdec_player_set_loader_with_variables
 swfdec_player_is_initialized
 swfdec_player_get_rate
 swfdec_player_get_image_size

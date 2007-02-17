@@ -195,7 +195,7 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
       } else {
 	SwfdecLoader *loader = swfdec_loader_load (root->loader, url);
 	if (loader) {
-	  SwfdecRootMovie *added = swfdec_player_add_level_from_loader (root->player, depth, loader);
+	  SwfdecRootMovie *added = swfdec_player_add_level_from_loader (root->player, depth, loader, NULL);
 	  swfdec_player_add_action (root->player, SWFDEC_MOVIE (added),
 	      swfdec_root_movie_do_parse, NULL);
 	} else {

@@ -862,7 +862,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 
 SwfdecRootMovie *
 swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
-    SwfdecLoader *loader)
+    SwfdecLoader *loader, const char *variables)
 {
   SwfdecMovie *movie;
   SwfdecRootMovie *root;
@@ -979,12 +979,37 @@ swfdec_player_new (void)
  *
  * Sets the loader for the main data. This function only works if no loader has 
  * been set on @player yet.
+ * For details, see swfdec_player_set_loader_with_variables().
+ **/
+void
+swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (player->roots == NULL);
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+
+  swfdec_player_set_loader_with_variables (player, loader, NULL);
+}
+
+/**
+ * swfdec_player_set_loader_with_variables:
+ * @player: a #SwfdecPlayer
+ * @loader: the loader to use for this player. Takes ownership of the given loader.
+ * @variables: a string that is checked to be in 'application/x-www-form-urlencoded'
+ *             syntax describing the arguments to set on the new player or NULL for
+ *             none.
+ *
+ * Sets the loader for the main data. This function only works if no loader has 
+ * been set on @player yet.
+ * If the @variables are set and validate, they will be set as properties on the 
+ * root movie. 
  * <note>If you want to capture events during the setup process, you want to 
  * connect your signal handlers before calling swfdec_player_set_loader() and
  * not use conveniencse functions such as swfdec_player_new_from_file().</note>
  **/
 void
-swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
+swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
+    const char *variables)
 {
   SwfdecRootMovie *movie;
 
@@ -992,7 +1017,7 @@ swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  movie = swfdec_player_add_level_from_loader (player, 0, loader);
+  movie = swfdec_player_add_level_from_loader (player, 0, loader, NULL);
   swfdec_loader_parse (loader);
 }
 

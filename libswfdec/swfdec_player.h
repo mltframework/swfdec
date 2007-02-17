@@ -52,6 +52,10 @@ SwfdecPlayer *	swfdec_player_new_from_file	(const char *	filename,
 						 GError **	error);
 void		swfdec_player_set_loader	(SwfdecPlayer *	player,
 						 SwfdecLoader *	loader);
+void		swfdec_player_set_loader_with_variables 
+						(SwfdecPlayer *	player,
+						 SwfdecLoader *	loader,
+						 const char *	variables);
 
 gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
 guint		swfdec_player_get_next_event  	(SwfdecPlayer *	player);

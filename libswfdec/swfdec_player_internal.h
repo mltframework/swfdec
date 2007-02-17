@@ -128,7 +128,8 @@ void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 SwfdecRootMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,
 						 guint			depth,
-						 SwfdecLoader *		loader);
+						 SwfdecLoader *		loader,
+						 const char *		variables);
 void		swfdec_player_remove_level	(SwfdecPlayer *		player,
 						 guint			depth);
 void		swfdec_player_launch		(SwfdecPlayer *         player,

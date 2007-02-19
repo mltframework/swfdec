@@ -338,7 +338,7 @@ swfdec_js_eval_set_property (JSContext *cx, JSObject *obj,
   if (obj == NULL) {
     if (cx->fp == NULL || cx->fp->scopeChain == NULL)
       return JS_FALSE;
-    obj = JS_GetParent (cx, cx->fp->scopeChain);
+    obj = cx->fp->thisp;
   }
   return OBJ_SET_PROPERTY (cx, obj, (jsid) atom, ret);
 }

@@ -1643,11 +1643,11 @@ swfdec_action_define_local (JSContext *cx, guint action, const guint8 *data, gui
 {
   const char *name;
 
-  g_assert (cx->fp->callobj != NULL);
+  g_assert (cx->fp->scopeChain != NULL);
   name = swfdec_js_to_string (cx, cx->fp->sp[-2]);
   if (name == NULL)
     return JS_FALSE;
-  if (!JS_SetProperty (cx, cx->fp->callobj, name, &cx->fp->sp[-1]))
+  if (!JS_SetProperty (cx, cx->fp->scopeChain, name, &cx->fp->sp[-1]))
     return JS_FALSE;
   cx->fp->sp -= 2;
   return JS_TRUE;
@@ -1659,11 +1659,11 @@ swfdec_action_define_local2 (JSContext *cx, guint action, const guint8 *data, gu
   const char *name;
   jsval val = JSVAL_VOID;
 
-  g_assert (cx->fp->callobj != NULL);
+  g_assert (cx->fp->scopeChain != NULL);
   name = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (name == NULL)
     return JS_FALSE;
-  if (!JS_SetProperty (cx, cx->fp->callobj, name, &val))
+  if (!JS_SetProperty (cx, cx->fp->scopeChain, name, &val))
     return JS_FALSE;
   cx->fp->sp--;
   return JS_TRUE;
@@ -2593,9 +2593,9 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
     return JSVAL_VOID;
   oldfp = cx->fp;
 
-  frame.callobj = frame.argsobj = NULL;
+  frame.callobj = NULL;
   frame.script = NULL;
-  frame.varobj = NULL;
+  frame.varobj = frame.argsobj = NULL;
   frame.fun = swfdec_script_ensure_function (script, scriptable);
   frame.swf = script;
   frame.constant_pool = NULL;
@@ -2606,7 +2606,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.sharpArray = NULL;
   frame.rval = JSVAL_VOID;
   frame.down = NULL;
-  frame.scopeChain = NULL;
   frame.pc = NULL;
   frame.sp = oldfp ? oldfp->sp : NULL;
   frame.spbase = NULL;
@@ -2614,7 +2613,8 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.flags = 0;
   frame.dormantNext = NULL;
   frame.objAtomMap = NULL;
-
+  /* no local scope here */
+  frame.scopeChain = obj;
   /* allocate stack for variables */
   frame.nvars = 4;
   frame.vars = js_AllocStack (cx, frame.nvars, &mark);
@@ -2622,9 +2622,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
     return JS_FALSE;
   }
   frame.vars[0] = frame.vars[1] = frame.vars[2] = frame.vars[3] = JSVAL_VOID;
-  /* create a call object */
-  if (!js_GetCallObject(cx, &frame, obj))
-    return JS_FALSE;
 
   if (oldfp) {
     g_assert (!oldfp->dormantNext);
@@ -2642,11 +2639,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   js_FreeStack (cx, mark);
   if (frame.constant_pool)
     swfdec_constant_pool_free (frame.constant_pool);
-
-  if (frame.callobj)
-    ok &= js_PutCallObject(cx, &frame);
-  if (frame.argsobj)
-    ok &= js_PutArgsObject(cx, &frame);
 
   cx->fp = oldfp;
   if (oldfp) {

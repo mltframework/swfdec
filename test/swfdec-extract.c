@@ -68,7 +68,7 @@ export_sound (SwfdecSound *sound, const char *filename)
   SwfdecBuffer *wav;
 
   if (sound->decoded == NULL) {
-    g_printerr ("not a sound event. For streams use the sprite.");
+    g_printerr ("not a sound event. For extraction of streams extract the sprite.\n");
     return FALSE;
   }
   wav = encode_wav (sound->decoded);
@@ -97,7 +97,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
       break;
   }
   if (i >= sprite->n_frames) {
-    g_printerr ("No sound in sprite %u", SWFDEC_CHARACTER (sprite)->id);
+    g_printerr ("No sound in sprite %u\n", SWFDEC_CHARACTER (sprite)->id);
     return FALSE;
   }
   audio = swfdec_audio_stream_new (NULL, sprite, i);
@@ -185,11 +185,11 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
   const SwfdecColorTransform trans = { 256, 0, 256, 0, 256, 0, 256, 0 };
 
   if (SWFDEC_IS_SPRITE (graphic)) {
-    g_printerr ("Sprites can not be exported");
+    g_printerr ("Sprites can not be exported\n");
     return FALSE;
   }
   if (SWFDEC_IS_BUTTON (graphic)) {
-    g_printerr ("Buttons can not be exported");
+    g_printerr ("Buttons can not be exported\n");
     return FALSE;
   }
   width = ceil (graphic->extents.x1 / SWFDEC_TWIPS_SCALE_FACTOR) 

@@ -1452,11 +1452,11 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
   if (fun == NULL)
     return JS_FALSE;
   if (v2) {
-    fun->nvars = swfdec_bits_get_u8 (&bits);
+    fun->nvars = swfdec_bits_get_u8 (&bits) + 1;
     flags = swfdec_bits_get_u16 (&bits);
     preloads = g_new0 (guint8, n_args);
   } else {
-    fun->nvars = 4;
+    fun->nvars = 5;
   }
   for (i = 0; i < n_args; i++) {
     JSAtom *atom;
@@ -2376,7 +2376,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     }
   }
   if (script->flags) {
-    guint preload_reg = 0;
+    guint preload_reg = 1;
     SwfdecPlayer *player = JS_GetContextPrivate (cx);
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS)
       fp->vars[preload_reg++] = OBJECT_TO_JSVAL (fp->thisp);

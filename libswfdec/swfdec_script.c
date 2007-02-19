@@ -1442,10 +1442,12 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
   n_args = swfdec_bits_get_u16 (&bits);
   if (*function_name == '\0') {
     /* anonymous function */
-    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA, cx->fp->thisp, NULL);
+    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA | JSFUN_HEAVYWEIGHT,
+	cx->fp->thisp, NULL);
   } else {
     /* named function */
-    fun = JS_NewFunction (cx, NULL, n_args, 0, cx->fp->thisp, function_name);
+    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_HEAVYWEIGHT, 
+	cx->fp->thisp, function_name);
   }
   if (fun == NULL)
     return JS_FALSE;
@@ -2284,6 +2286,9 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
   script->refcount = 1;
   script->name = g_strdup (name ? name : "Unnamed script");
   script->version = version;
+  /* These flags are the default arguments used by scripts read from a file.
+   * DefineFunction and friends override this */
+  script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
   if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
     /* assign a random buffer here so we have something to unref */
@@ -2375,8 +2380,16 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     SwfdecPlayer *player = JS_GetContextPrivate (cx);
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS)
       fp->vars[preload_reg++] = OBJECT_TO_JSVAL (fp->thisp);
-    if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS)
-  
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
+      if (!JS_GetProperty (cx, fp->scopeChain, "arguments", &fp->vars[preload_reg++])) {
+	ok = JS_FALSE;
+	goto out;
+      }
+    }
+    if (script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS) {
+      /* FIXME: keep in sync with jsfun.c */
+      fp->flags |= JS_BIT (JSFRAME_OVERRIDE_SHIFT);
+    }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER ||
 	script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT ||
 	script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
@@ -2582,7 +2595,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 
   frame.callobj = frame.argsobj = NULL;
   frame.script = NULL;
-  frame.varobj = obj;
+  frame.varobj = NULL;
   frame.fun = swfdec_script_ensure_function (script, scriptable);
   frame.swf = script;
   frame.constant_pool = NULL;
@@ -2593,7 +2606,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.sharpArray = NULL;
   frame.rval = JSVAL_VOID;
   frame.down = NULL;
-  frame.scopeChain = obj;
+  frame.scopeChain = NULL;
   frame.pc = NULL;
   frame.sp = oldfp ? oldfp->sp : NULL;
   frame.spbase = NULL;
@@ -2629,6 +2642,11 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   js_FreeStack (cx, mark);
   if (frame.constant_pool)
     swfdec_constant_pool_free (frame.constant_pool);
+
+  if (frame.callobj)
+    ok &= js_PutCallObject(cx, &frame);
+  if (frame.argsobj)
+    ok &= js_PutArgsObject(cx, &frame);
 
   cx->fp = oldfp;
   if (oldfp) {

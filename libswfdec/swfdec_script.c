@@ -1530,7 +1530,7 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
     *cx->fp->sp++ = OBJECT_TO_JSVAL (fun->object);
   } else {
     jsval val = OBJECT_TO_JSVAL (fun->object);
-    if (!JS_SetProperty (cx, OBJ_THIS_OBJECT (cx, cx->fp->scopeChain), function_name, &val))
+    if (!JS_SetProperty (cx, cx->fp->thisp, function_name, &val))
       return JS_FALSE;
   }
 

@@ -113,6 +113,8 @@ swfdec_js_init_player (SwfdecPlayer *player)
   swfdec_js_add_sound (player);
 }
 
+typedef struct _SwfdecJSInterval SwfdecJSInterval;
+extern void swfdec_js_interval_free (SwfdecJSInterval *interval);
 /**
  * swfdec_js_finish_player:
  * @player: a #SwfdecPlayer
@@ -122,6 +124,8 @@ swfdec_js_init_player (SwfdecPlayer *player)
 void
 swfdec_js_finish_player (SwfdecPlayer *player)
 {
+  while (player->intervals)
+    swfdec_js_interval_free (player->intervals->data);
   if (player->jscx) {
     JS_DestroyContext(player->jscx);
     player->jsobj = NULL;

@@ -101,20 +101,6 @@ swfdec_player_get_next_event_time (SwfdecPlayer *player)
   }
 }
 
-static int
-swfdec_timeout_compare (gconstpointer a, gconstpointer b)
-{
-  const SwfdecTimeout *ta = a;
-  const SwfdecTimeout *tb = b;
-
-  /* FIXME: not overflow-safe */
-  if (ta->timestamp < tb->timestamp)
-    return -1;
-  if (ta->timestamp > tb->timestamp)
-    return 1;
-  return 0;
-}
-
 /**
  * swfdec_player_add_timeout:
  * @player: a #SwfdecPlayer
@@ -143,6 +129,7 @@ swfdec_timeout_compare (gconstpointer a, gconstpointer b)
 void
 swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 {
+  GList *walk;
   SwfdecTick next_tick;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
@@ -152,7 +139,13 @@ swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 
   SWFDEC_LOG ("adding timeout %p", timeout);
   next_tick = swfdec_player_get_next_event_time (player);
-  player->timeouts = g_list_insert_sorted (player->timeouts, timeout, swfdec_timeout_compare);
+  /* the order is important, on events with the same time, we make sure the new one is last */
+  for (walk = player->timeouts; walk; walk = walk->next) {
+    SwfdecTimeout *cur = walk->data;
+    if (cur->timestamp > timeout->timestamp)
+      break;
+  }
+  player->timeouts = g_list_insert_before (player->timeouts, walk, timeout);
   if (next_tick != swfdec_player_get_next_event_time (player))
     g_object_notify (G_OBJECT (player), "next-event");
 }
@@ -329,7 +322,6 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
 static void
 swfdec_player_dispose (GObject *object)
 {
-  GList *walk;
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   swfdec_player_stop_all_sounds (player);
@@ -337,28 +329,16 @@ swfdec_player_dispose (GObject *object)
   g_list_foreach (player->roots, (GFunc) swfdec_movie_destroy, NULL);
   g_list_free (player->roots);
 
-  if (player->rate) {
-    swfdec_player_remove_timeout (player, &player->iterate_timeout);
-  }
-  walk = player->timeouts;
-  while (walk) {
-    SwfdecTimeout *timeout = walk->data;
-    walk = walk->next;
-    if (timeout->free) {
-      /* all the others must remove themselves */
-      timeout->free (timeout);
-      swfdec_player_remove_timeout (player, timeout);
-    }
-  }
   swfdec_js_finish_player (player);
 
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
   g_assert (player->audio == NULL);
+  if (player->rate) {
+    swfdec_player_remove_timeout (player, &player->iterate_timeout);
+  }
   g_assert (player->timeouts == NULL);
-  g_list_free (player->timeouts);
-  player->timeouts = NULL;
   swfdec_cache_unref (player->cache);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);

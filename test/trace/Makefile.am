@@ -92,6 +92,8 @@ EXTRA_DIST = \
 	order.swf.trace \
 	parent-root.swf \
 	parent-root.swf.trace \
+	preload.swf \
+	preload.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	scope.swf \

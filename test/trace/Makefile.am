@@ -48,6 +48,8 @@ EXTRA_DIST = \
 	function1.swf.trace \
 	function2.swf \
 	function2.swf.trace \
+	function-undefined.swf \
+	function-undefined.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \

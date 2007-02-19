@@ -100,6 +100,12 @@ EXTRA_DIST = \
 	scope.swf.trace \
 	scope2.swf \
 	scope2.swf.trace \
+	setinterval.swf \
+	setinterval.swf.trace
+	setinterval2.swf \
+	setinterval2.swf.trace \
+	setinterval-clear.swf \
+	setinterval-clear.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	transform.swf \

@@ -337,20 +337,26 @@ swfdec_player_dispose (GObject *object)
   g_list_foreach (player->roots, (GFunc) swfdec_movie_destroy, NULL);
   g_list_free (player->roots);
 
+  if (player->rate) {
+    swfdec_player_remove_timeout (player, &player->iterate_timeout);
+  }
+  walk = player->timeouts;
+  while (walk) {
+    SwfdecTimeout *timeout = walk->data;
+    walk = walk->next;
+    if (timeout->free) {
+      /* all the others must remove themselves */
+      timeout->free (timeout);
+      swfdec_player_remove_timeout (player, timeout);
+    }
+  }
   swfdec_js_finish_player (player);
 
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
   g_assert (player->audio == NULL);
-  if (player->rate) {
-    swfdec_player_remove_timeout (player, &player->iterate_timeout);
-  }
-  for (walk = player->timeouts; walk; walk = walk->next) {
-    SwfdecTimeout *timeout = walk->data;
-    g_assert (timeout->free); /* all the others must have removed themselves above */
-    timeout->free (timeout);
-  }
+  g_assert (player->timeouts == NULL);
   g_list_free (player->timeouts);
   player->timeouts = NULL;
   swfdec_cache_unref (player->cache);

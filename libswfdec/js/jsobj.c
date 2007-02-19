@@ -913,13 +913,21 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     size_t nchars;
     const char *clazz, *prefix;
     JSString *str;
+    JSClass *clasp;
 
 #if JS_HAS_INITIALIZERS
     if (cx->version == JSVERSION_1_2)
         return js_obj_toSource(cx, obj, argc, argv, rval);
 #endif
 
-    clazz = OBJ_GET_CLASS(cx, obj)->name;
+    clasp = OBJ_GET_CLASS(cx, obj);
+    clazz = clasp->name;
+    /* special case in here (woohoo) */
+    if (clasp == &js_ArgumentsClass) {
+      *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+      return JS_TRUE;
+    }
+
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
     chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
     if (!chars)

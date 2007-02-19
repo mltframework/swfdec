@@ -329,6 +329,7 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
 static void
 swfdec_player_dispose (GObject *object)
 {
+  GList *walk;
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   swfdec_player_stop_all_sounds (player);
@@ -345,7 +346,13 @@ swfdec_player_dispose (GObject *object)
   if (player->rate) {
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
-  g_assert (player->timeouts == NULL);
+  for (walk = player->timeouts; walk; walk = walk->next) {
+    SwfdecTimeout *timeout = walk->data;
+    g_assert (timeout->free); /* all the others must have removed themselves above */
+    timeout->free (timeout);
+  }
+  g_list_free (player->timeouts);
+  player->timeouts = NULL;
   swfdec_cache_unref (player->cache);
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);

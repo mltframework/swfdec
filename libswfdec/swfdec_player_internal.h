@@ -34,6 +34,7 @@ typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
   SwfdecTick		timestamp;		/* timestamp at which this thing is supposed to trigger */
   void			(* callback)		(SwfdecTimeout *advance);
+  void			(* free)		(SwfdecTimeout *advance);
 };
 
 struct _SwfdecPlayer

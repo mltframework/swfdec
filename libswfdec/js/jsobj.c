@@ -2469,7 +2469,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                     newresolve = (JSNewResolveOp)resolve;
-                    if (cx->fp && (pc = cx->fp->pc)) {
+                    if (cx->fp && cx->fp->script && (pc = cx->fp->pc)) {
                         cs = &js_CodeSpec[*pc];
                         format = cs->format;
                         if ((format & JOF_MODEMASK) != JOF_NAME)

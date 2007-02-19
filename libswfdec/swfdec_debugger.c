@@ -253,7 +253,7 @@ swfdec_debugger_update_interrupting (SwfdecDebugger *debugger)
   guint i;
   gboolean should_interrupt = debugger->stepping;
 
-  for (i = 1; i < debugger->breakpoints->len && !should_interrupt; i++) {
+  for (i = 0; i < debugger->breakpoints->len && !should_interrupt; i++) {
     Breakpoint *br = &g_array_index (debugger->breakpoints, Breakpoint, i);
 
     if (br->script) {
@@ -280,8 +280,9 @@ swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger,
   g_return_val_if_fail (script != NULL, 0);
   g_return_val_if_fail (line < script->n_commands, 0);
 
-  if (debugger->breakpoints == NULL)
+  if (debugger->breakpoints == NULL) {
     debugger->breakpoints = g_array_new (FALSE, FALSE, sizeof (Breakpoint));
+  }
   if (script->commands[line].breakpoint != 0)
     return script->commands[line].breakpoint;
 

@@ -225,6 +225,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
         swfdec_swf_decoder_get_tag_name (tag), tag_len);
 
     if (tag_len == 0) {
+      buffer = NULL;
       swfdec_bits_init_data (&s->b, NULL, 0);
     } else {
       buffer = swfdec_bits_get_buffer (&parse, tag_len);

@@ -23,7 +23,31 @@
 
 #include "swfdec_js.h"
 #include "swfdec_debug.h"
+#include "swfdec_listener.h"
 #include "swfdec_player_internal.h"
+
+static JSBool
+swfdec_js_mouse_add_listener (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+
+  g_assert (player);
+  if (!JSVAL_IS_OBJECT (argv[0]) || argv[0] == JSVAL_NULL)
+    return JS_TRUE;
+  return swfdec_listener_add (player->mouse_listener, JSVAL_TO_OBJECT (argv[0]));
+}
+
+static JSBool
+swfdec_js_mouse_remove_listener (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+
+  g_assert (player);
+  if (!JSVAL_IS_OBJECT (argv[0]) || argv[0] == JSVAL_NULL)
+    return JS_TRUE;
+  swfdec_listener_remove (player->mouse_listener, JSVAL_TO_OBJECT (argv[0]));
+  return JS_TRUE;
+}
 
 static JSBool
 swfdec_js_mouse_show (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -46,8 +70,10 @@ swfdec_js_mouse_hide (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 
 static JSFunctionSpec mouse_methods[] = {
-    {"show",		swfdec_js_mouse_show,	0, 0, 0 },
-    {"hide",		swfdec_js_mouse_hide,	0, 0, 0 },
+    {"addListener",   	swfdec_js_mouse_add_listener,		1, 0, 0 },
+    {"hide",		swfdec_js_mouse_hide,			0, 0, 0 },
+    {"removeListener",	swfdec_js_mouse_remove_listener,	1, 0, 0 },
+    {"show",		swfdec_js_mouse_show,			0, 0, 0 },
     {0,0,0,0,0}
 };
 

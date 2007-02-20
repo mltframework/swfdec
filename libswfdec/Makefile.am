@@ -51,6 +51,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
 	swfdec_js_sound.c \
+	swfdec_listener.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
 	swfdec_marshal.c \
@@ -121,6 +122,7 @@ noinst_HEADERS = \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
 	swfdec_js.h \
+	swfdec_listener.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \

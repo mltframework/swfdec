@@ -43,6 +43,7 @@ typedef struct _SwfdecEventList SwfdecEventList;
 typedef struct _SwfdecFont SwfdecFont;
 typedef struct _SwfdecGraphic SwfdecGraphic;
 typedef struct _SwfdecImage SwfdecImage;
+typedef struct _SwfdecListener SwfdecListener;
 typedef struct _SwfdecMovie SwfdecMovie;
 typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeVec SwfdecShapeVec;

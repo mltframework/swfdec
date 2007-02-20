@@ -30,6 +30,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
+#include "swfdec_listener.h"
 #include "swfdec_root_movie.h"
 #include "swfdec_swf_decoder.h"
 
@@ -111,6 +112,8 @@ swfdec_js_init_player (SwfdecPlayer *player)
   swfdec_js_add_movieclip_class (player);
   swfdec_js_add_color (player);
   swfdec_js_add_sound (player);
+  player->mouse_listener = swfdec_listener_new (player);
+  player->key_listener = swfdec_listener_new (player);
 }
 
 typedef struct _SwfdecJSInterval SwfdecJSInterval;
@@ -124,6 +127,8 @@ extern void swfdec_js_interval_free (SwfdecJSInterval *interval);
 void
 swfdec_js_finish_player (SwfdecPlayer *player)
 {
+  swfdec_listener_free (player->mouse_listener);
+  swfdec_listener_free (player->key_listener);
   while (player->intervals)
     swfdec_js_interval_free (player->intervals->data);
   if (player->jscx) {

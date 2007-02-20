@@ -53,6 +53,10 @@ struct _SwfdecPlayer
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */
   JSObject *		jsobj;			/* the global object */
+  unsigned int		interval_id;		/* id returned from setInterval call */
+  GList *		intervals;		/* all currently running intervals */
+  SwfdecListener *	mouse_listener;		/* emitting mouse events */
+  SwfdecListener *	key_listener;		/* emitting keyboard events */
 
   /* rendering */
   SwfdecRect		invalid;      		/* area that needs a rredraw */
@@ -80,8 +84,6 @@ struct _SwfdecPlayer
   /* iterating */
   GList *		movies;			/* list of all moveis that want to be iterated */
   SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */
-  unsigned int		interval_id;		/* id returned from setInterval call */
-  GList *		intervals;		/* all currently running intervals */
 };
 
 struct _SwfdecPlayerClass

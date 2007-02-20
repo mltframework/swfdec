@@ -33,6 +33,7 @@
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
 #include "swfdec_js.h"
+#include "swfdec_listener.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
@@ -493,6 +494,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
   }
+  swfdec_listener_execute (player->mouse_listener, "onMouseMove");
   swfdec_player_update_mouse_position (player);
 }
 
@@ -501,15 +503,19 @@ swfdec_player_do_mouse_button (SwfdecPlayer *player)
 {
   GList *walk;
   guint event;
+  const char *event_name;
 
   if (player->mouse_button) {
     event = SWFDEC_EVENT_MOUSE_DOWN;
+    event_name = "onMouseDown";
   } else {
     event = SWFDEC_EVENT_MOUSE_UP;
+    event_name = "onMouseUp";
   }
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, event);
   }
+  swfdec_listener_execute (player->mouse_listener, event_name);
   if (player->mouse_grab)
     swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
 }

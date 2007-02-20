@@ -207,6 +207,7 @@ swfdec_player_add_action (SwfdecPlayer *player, gpointer object,
   g_return_if_fail (action_func != NULL);
 
   action = swfdec_ring_buffer_push (player->actions);
+  SWFDEC_LOG ("adding action %p %p %p", object, action_func, action_data);
   if (action == NULL) {
     /* FIXME: limit number of actions to not get inf loops due to scripts? */
     swfdec_ring_buffer_set_size (player->actions,
@@ -239,8 +240,11 @@ swfdec_player_remove_all_actions (SwfdecPlayer *player, gpointer object)
   for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->actions); i++) {
     action = swfdec_ring_buffer_peek_nth (player->actions, i);
 
-    if (action->object == object)
+    if (action->object == object) {
+      SWFDEC_LOG ("removing action %p %p %p", 
+	  action->object, action->func, action->data);
       action->object = NULL;
+    }
   }
 }
 
@@ -256,6 +260,8 @@ swfdec_player_do_action (SwfdecPlayer *player)
   } while (action->object == NULL); /* skip removed actions */
 
   action->func (action->object, action->data);
+  SWFDEC_LOG ("executing action %p %p %p", 
+      action->object, action->func, action->data);
 
   return TRUE;
 }
@@ -648,6 +654,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
     SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT", target time is %"G_GUINT64_FORMAT,
 	timeout, timeout->timestamp, target_time);
     timeout->callback (timeout);
+    swfdec_player_perform_actions (player);
   }
   if (target_time > player->time) {
     frames_now = SWFDEC_TICKS_TO_SAMPLES (target_time) -
@@ -696,6 +703,7 @@ swfdec_player_lock (SwfdecPlayer *player)
   g_assert (swfdec_rect_is_empty (&player->invalid));
 
   g_object_freeze_notify (G_OBJECT (player));
+  SWFDEC_DEBUG ("LOCKED");
 }
 
 void
@@ -704,6 +712,7 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
+  SWFDEC_DEBUG ("UNLOCK");
   swfdec_player_update_mouse_cursor (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);

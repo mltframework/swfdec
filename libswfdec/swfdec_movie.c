@@ -334,8 +334,9 @@ swfdec_movie_remove (SwfdecMovie *movie)
 }
 
 static void
-swfdec_movie_execute_script (SwfdecMovie *movie, gpointer data)
+swfdec_movie_execute_script (gpointer moviep, gpointer data)
 {
+  SwfdecMovie *movie = moviep;
   guint condition = GPOINTER_TO_UINT (data);
 
   g_assert (movie->content->events);

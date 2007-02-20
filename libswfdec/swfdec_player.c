@@ -178,19 +178,31 @@ swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 /*** Actions ***/
 
 typedef struct {
-  SwfdecMovie *		movie;
+  gpointer		object;
   SwfdecActionFunc	func;
   gpointer		data;
 } SwfdecPlayerAction;
 
+/**
+ * swfdec_player_add_action:
+ * @player: a #SwfdecPlayer
+ * @object: object identifying the action
+ * @action_func: function to execute
+ * @action_data: additional data to pass to @func
+ *
+ * Adds an action to the @player. Actions are used by Flash player to solve
+ * reentrancy issues. Instead of calling back into the Actionscript engine,
+ * an action is queued for later execution. So if you're writing code that
+ * is calling Actionscript code, you want to do this by using actions.
+ **/
 void
-swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie,
+swfdec_player_add_action (SwfdecPlayer *player, gpointer object,
     SwfdecActionFunc action_func, gpointer action_data)
 {
   SwfdecPlayerAction *action;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (object != NULL);
   g_return_if_fail (action_func != NULL);
 
   action = swfdec_ring_buffer_push (player->actions);
@@ -201,25 +213,33 @@ swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie,
     action = swfdec_ring_buffer_push (player->actions);
     g_assert (action);
   }
-  action->movie = movie;
+  action->object = object;
   action->func = action_func;
   action->data = action_data;
 }
 
+/**
+ * swfdec_player_remove_all_actions:
+ * @player: a #SwfdecPlayer
+ * @object: object pointer identifying the actions to be removed
+ *
+ * Removes all actions associated with @object. See swfdec_player_add_action()
+ * for details about actions.
+ **/
 void
-swfdec_player_remove_all_actions (SwfdecPlayer *player, SwfdecMovie *movie)
+swfdec_player_remove_all_actions (SwfdecPlayer *player, gpointer object)
 {
   SwfdecPlayerAction *action;
   guint i;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (object != NULL);
 
   for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->actions); i++) {
     action = swfdec_ring_buffer_peek_nth (player->actions, i);
 
-    if (action->movie == movie)
-      action->movie = NULL;
+    if (action->object == object)
+      action->object = NULL;
   }
 }
 
@@ -232,9 +252,9 @@ swfdec_player_do_action (SwfdecPlayer *player)
     action = swfdec_ring_buffer_pop (player->actions);
     if (action == NULL)
       return FALSE;
-  } while (action->movie == NULL); /* skip removed actions */
+  } while (action->object == NULL); /* skip removed actions */
 
-  action->func (action->movie, action->data);
+  action->func (action->object, action->data);
 
   return TRUE;
 }

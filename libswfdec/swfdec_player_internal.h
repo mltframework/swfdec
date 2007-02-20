@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-typedef void (* SwfdecActionFunc) (SwfdecMovie *movie, gpointer data);
+typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
@@ -118,11 +118,11 @@ void		swfdec_player_add_timeout	(SwfdecPlayer *		player,
 void		swfdec_player_remove_timeout	(SwfdecPlayer *		player,
 						 SwfdecTimeout *	timeout);
 void		swfdec_player_add_action	(SwfdecPlayer *		player,
-						 SwfdecMovie *		movie,
+						 gpointer		object,
 						 SwfdecActionFunc   	action_func,
 						 gpointer		action_data);
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
-						 SwfdecMovie *		movie);
+						 gpointer		object);
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,
 						 gboolean		center,

@@ -62,7 +62,7 @@ swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
 }
 
 static void
-swfdec_sprite_movie_run_script (SwfdecMovie *movie, gpointer data)
+swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
 {
   swfdec_script_execute (data, SWFDEC_SCRIPTABLE (movie));
 }
@@ -121,9 +121,10 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
 }
 
 static void
-swfdec_sprite_movie_do_goto_frame (SwfdecMovie *mov, gpointer data)
+swfdec_sprite_movie_do_goto_frame (gpointer moviep, gpointer data)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (moviep);
+  SwfdecMovie *mov = moviep;
   unsigned int goto_frame = GPOINTER_TO_UINT (data);
   GList *old, *walk;
   guint i, j, start;
@@ -216,8 +217,10 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_queue_enter_frame (SwfdecMovie *movie, gpointer unused)
+swfdec_sprite_movie_queue_enter_frame (gpointer moviep, gpointer unused)
 {
+  SwfdecMovie *movie = moviep;
+
   if (movie->will_be_removed)
     return;
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_ENTER);

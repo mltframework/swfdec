@@ -170,8 +170,17 @@ select_script_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecDebugSc
 }
 
 static void
+force_continue (SwfdecPlayerManager *manager, GParamSpec *pspec, gpointer unused)
+{
+  g_signal_stop_emission_by_name (manager, "notify::interrupted");
+  if (swfdec_player_manager_get_interrupted (manager))
+    swfdec_player_manager_continue (manager);
+}
+
+static void
 destroyed_cb (GtkWindow *window, SwfdecPlayerManager *manager)
 {
+  g_signal_connect (manager, "notify::interrupted", G_CALLBACK (force_continue), NULL);
   if (swfdec_player_manager_get_interrupted (manager))
     swfdec_player_manager_continue (manager);
   g_object_unref (manager);
@@ -297,6 +306,22 @@ do_break_cb (SwfdecDebugger *debugger, SwfdecDebuggerScript *script, gpointer un
   swfdec_debugger_set_breakpoint (debugger, script, 0);
 }
 
+static gboolean
+add_variables (gpointer player)
+{
+  const char *variables = g_object_get_data (player, "variables");
+  SwfdecLoader *loader = g_object_get_data (player, "loader");
+
+  swfdec_player_set_loader_with_variables (player, loader, variables);
+  if (!swfdec_player_is_initialized (player)) {
+    g_printerr ("File \"%s\" is not a file Swfdec can play\n", loader->url);
+    g_object_unref (player);
+    gtk_main_quit ();
+    return FALSE;
+  }
+  return FALSE;
+}
+
 int 
 main (int argc, char *argv[])
 {
@@ -348,13 +373,9 @@ main (int argc, char *argv[])
   if (do_break)
     g_signal_connect (player, "script-added", G_CALLBACK (do_break_cb), NULL);
   view_swf (player, scale, use_image);
-  swfdec_player_set_loader_with_variables (player, loader, variables);
-  if (!swfdec_player_is_initialized (player)) {
-    g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
-    g_object_unref (player);
-    player = NULL;
-    return 1;
-  }
+  g_object_set_data (G_OBJECT (player), "loader", loader);
+  g_object_set_data (G_OBJECT (player), "variables", variables);
+  g_idle_add_full (G_PRIORITY_HIGH, add_variables, player, NULL);
 
   gtk_main ();
 

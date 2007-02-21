@@ -325,6 +325,7 @@ swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
 const char *
 parse_skip (const char *input)
 {
+  g_assert (input);
   if (g_ascii_isspace (*input))
     input++;
   return input;
@@ -336,6 +337,8 @@ parse_string (const char *input, char **output)
   const char *start = input;
 
   g_assert (output);
+  if (input == NULL)
+    return NULL;
 
   while (*input && !g_ascii_isspace (*input))
     input++;
@@ -352,6 +355,8 @@ parse_uint (const char *input, guint *output)
   guint result;
 
   g_assert (output);
+  if (input == NULL)
+    return NULL;
 
   result = strtoul (input, &end, 10);
   if (input == end || (*end != '\0' && !g_ascii_isspace (*end)))

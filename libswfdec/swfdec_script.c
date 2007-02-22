@@ -1391,15 +1391,20 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
   JSObject *object;
   const JSClass *clasp;
   guint n_args;
+  const char *name;
 
   constructor = fp->sp[-1];
-  if (!swfdec_eval_jsval (cx, NULL, &constructor))
+  name = swfdec_eval_jsval (cx, NULL, &constructor);
+  if (name == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
     return JS_FALSE;
   if ((guint) (fp->sp - fp->spbase) < n_args + 2) {
     SWFDEC_ERROR ("not enough stack space");
     return JS_FALSE;
+  }
+  if (constructor == JSVAL_VOID) {
+    SWFDEC_WARNING ("no constructor for %s", name);
   }
   fp->sp[-1] = constructor;
 

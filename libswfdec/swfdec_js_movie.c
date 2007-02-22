@@ -87,7 +87,7 @@ mc_getBytesLoaded (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 }
 
 static JSBool
-mc_getBytesTotal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+mc_getBytesTotal (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
   SwfdecDecoder *dec;
@@ -98,6 +98,23 @@ mc_getBytesTotal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   *rval = INT_TO_JSVAL (dec->bytes_total);
 
   return JS_TRUE;
+}
+
+static JSBool
+mc_getNextHighestDepth (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+  int depth;
+
+  movie = JS_GetPrivate(cx, obj);
+  if (movie->list) {
+    depth = SWFDEC_MOVIE (g_list_last (movie->list)->data)->depth + 1;
+    if (depth < 0)
+      depth = 0;
+  } else {
+    depth = 0;
+  }
+  return JS_NewNumberValue (cx, depth, rval);
 }
 
 static JSBool
@@ -488,6 +505,7 @@ static JSFunctionSpec movieclip_methods[] = {
   { "eval",		swfdec_js_global_eval,	      	1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },
   { "getBytesTotal",	mc_getBytesTotal,		0, 0, 0 },
+  { "getNextHighestDepth", mc_getNextHighestDepth,    	0, 0, 0 },
   { "getProperty",    	swfdec_js_getProperty,		2, 0, 0 },
   { "getURL",    	swfdec_js_getURL,		2, 0, 0 },
   { "gotoAndPlay",	mc_gotoAndPlay,			1, 0, 0 },

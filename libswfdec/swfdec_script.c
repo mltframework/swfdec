@@ -701,6 +701,24 @@ swfdec_action_pop (JSContext *cx, guint action, const guint8 *data, guint len)
   return JS_TRUE;
 }
 
+static const char *
+swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
+{
+  if (JSVAL_IS_STRING (*val)) {
+    const char *bytes = swfdec_js_to_string (cx, *val);
+    if (bytes == NULL)
+      return NULL;
+    *val = swfdec_js_eval (cx, obj, bytes);
+    return bytes;
+  } else {
+    if (obj == NULL) {
+      obj = OBJ_THIS_OBJECT (cx, cx->fp->scopeChain);
+    }
+    *val = OBJECT_TO_JSVAL (obj);
+    return ".";
+  }
+}
+
 static const char *properties[22] = {
   "_x", "_y", "_xscale", "_yscale", "_currentframe",
   "_totalframes", "_alpha", "_visible", "_width", "_height",
@@ -710,49 +728,50 @@ static const char *properties[22] = {
 };
 
 static JSBool
-swfdec_eval_jsval (JSContext *cx, JSObject *obj, jsval *val)
-{
-  if (JSVAL_IS_STRING (*val)) {
-    const char *bytes = swfdec_js_to_string (cx, *val);
-    if (bytes == NULL)
-      return JS_FALSE;
-    *val = swfdec_js_eval (cx, obj, bytes);
-  } else {
-    if (obj == NULL)
-      obj = OBJ_THIS_OBJECT (cx, cx->fp->scopeChain);
-    *val = OBJECT_TO_JSVAL (obj);
-  }
-  return JS_TRUE;
-}
-
-static JSBool
 swfdec_action_get_property (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   jsval val;
   SwfdecMovie *movie;
   JSObject *jsobj;
   guint32 id;
+  const char *bytes;
 
-  val = cx->fp->sp[-2];
-  if (!swfdec_eval_jsval (cx, NULL, &val))
-    return JS_FALSE;
-  movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
-  val = JSVAL_VOID;
-  if (movie == NULL) {
-    SWFDEC_WARNING ("specified target does not reference a movie clip");
-    goto out;
-  }
   if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-1], &id))
     return JS_FALSE;
-
-  if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18))
+  val = cx->fp->sp[-2];
+  bytes = swfdec_eval_jsval (cx, NULL, &val);
+  if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18)) {
+    SWFDEC_WARNING ("trying to SetProperty %u, not allowed", id);
     goto out;
+  }
 
-  if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))
+  if (bytes == NULL)
     return JS_FALSE;
+  if (*bytes == '\0') {
+    JSObject *pobj;
+    JSProperty *prop;
+    JSAtom *atom = js_Atomize (cx, properties[id], strlen (properties[id]), 0);
+    if (atom == NULL)
+      return JS_FALSE;
+    if (!js_FindProperty (cx, (jsid) atom, &jsobj, &pobj, &prop))
+      return JS_FALSE;
+    if (!prop)
+      return JS_FALSE;
+    if (!OBJ_GET_PROPERTY (cx, jsobj, (jsid) prop->id, &val))
+      return JS_FALSE;
+  } else {
+    movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
+    if (movie == NULL) {
+      SWFDEC_WARNING ("specified target does not reference a movie clip");
+      goto out;
+    }
 
-  if (!JS_GetProperty (cx, jsobj, properties[id], &val))
-    return JS_FALSE;
+    jsobj = JSVAL_TO_OBJECT (val);
+    val = JSVAL_VOID;
+
+    if (!JS_GetProperty (cx, jsobj, properties[id], &val))
+      return JS_FALSE;
+  }
 
 out:
   cx->fp->sp -= 1;
@@ -767,23 +786,26 @@ swfdec_action_set_property (JSContext *cx, guint action, const guint8 *data, gui
   SwfdecMovie *movie;
   JSObject *jsobj;
   guint32 id;
+  const char *bytes;
 
   val = cx->fp->sp[-3];
-  if (!swfdec_eval_jsval (cx, NULL, &val))
+  if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-2], &id))
     return JS_FALSE;
+  bytes = swfdec_eval_jsval (cx, NULL, &val);
+  if (!bytes)
+    return JS_FALSE;
+  if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18)) {
+    SWFDEC_WARNING ("trying to SetProperty %u, not allowed", id);
+    goto out;
+  }
+  if (*bytes == '\0' || *bytes == '.')
+    val = OBJECT_TO_JSVAL (cx->fp->varobj);
   movie = swfdec_scriptable_from_jsval (cx, val, SWFDEC_TYPE_MOVIE);
   if (movie == NULL) {
     SWFDEC_WARNING ("specified target does not reference a movie clip");
     goto out;
   }
-  if (!JS_ValueToECMAUint32 (cx,  cx->fp->sp[-2], &id))
-    return JS_FALSE;
-
-  if (id > (((SwfdecScript *) cx->fp->swf)->version > 4 ? 21 : 18))
-    goto out;
-
-  if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))
-    return JS_FALSE;
+  jsobj = JSVAL_TO_OBJECT (val);
 
   if (!JS_SetProperty (cx, jsobj, properties[id], &cx->fp->sp[-1]))
     return JS_FALSE;
@@ -1256,17 +1278,21 @@ swfdec_action_do_set_target (JSContext *cx, JSObject *target)
   
   /* FIXME: this whole function stops working the moment it's used together 
    * with With */
-  if (target == cx->fp->scopeChain)
-    return JS_TRUE;
-  if (target == cx->fp->thisp) {
-    /* FIXME: will probably break once SetTarget is called inside DefineFunctions */
-    cx->fp->scopeChain = cx->fp->thisp;
-    return JS_TRUE;
-  }
   with = js_NewObject(cx, &js_WithClass, target, cx->fp->scopeChain);
   if (!with)
     return JS_FALSE;
   cx->fp->scopeChain = with;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_do_unset_target (JSContext *cx)
+{
+  if (JS_GetClass (cx->fp->scopeChain) != &js_WithClass) {
+    SWFDEC_ERROR ("Cannot unset target: scope chain contains no with object");
+    return JS_TRUE;
+  }
+  cx->fp->scopeChain = JS_GetParent (cx, cx->fp->scopeChain);
   return JS_TRUE;
 }
 
@@ -1279,8 +1305,9 @@ swfdec_action_set_target (JSContext *cx, guint action, const guint8 *data, guint
     SWFDEC_ERROR ("SetTarget action does not specify a string");
     return JS_FALSE;
   }
-  /* evaluate relative to this to not get trapped by previous SetTarget calls */
-  target = swfdec_js_eval (cx, cx->fp->thisp, (const char *) data);
+  if (*data == '\0')
+    return swfdec_action_do_unset_target (cx);
+  target = swfdec_js_eval (cx, NULL, (const char *) data);
   if (!JSVAL_IS_OBJECT (target) || JSVAL_IS_NULL (target)) {
     SWFDEC_WARNING ("target is not an object");
     return JS_TRUE;
@@ -2601,7 +2628,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 
   frame.callobj = NULL;
   frame.script = NULL;
-  frame.varobj = frame.argsobj = NULL;
+  frame.argsobj = NULL;
   frame.fun = swfdec_script_ensure_function (script, scriptable);
   frame.swf = script;
   frame.constant_pool = NULL;
@@ -2621,6 +2648,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.objAtomMap = NULL;
   /* no local scope here */
   frame.scopeChain = obj;
+  frame.varobj = obj;
   /* allocate stack for variables */
   frame.nvars = 4;
   frame.vars = js_AllocStack (cx, frame.nvars, &mark);

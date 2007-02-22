@@ -341,9 +341,16 @@ swfdec_js_eval_set_property (JSContext *cx, JSObject *obj,
   if (!atom)
     return JS_FALSE;
   if (obj == NULL) {
-    if (cx->fp == NULL || cx->fp->scopeChain == NULL)
+    JSObject *pobj;
+    JSProperty *prop;
+    if (cx->fp == NULL || cx->fp->varobj == NULL)
       return JS_FALSE;
-    obj = cx->fp->thisp;
+    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+      return JS_FALSE;
+    if (pobj)
+      obj = pobj;
+    else
+      obj = cx->fp->varobj;
   }
   return OBJ_SET_PROPERTY (cx, obj, (jsid) atom, ret);
 }

@@ -137,7 +137,10 @@ swfdec_action_has_register (JSContext *cx, guint i)
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
 {
-  JSObject *object = cx->fp->thisp;
+  JSObject *object = cx->fp->scopeChain;
+  /* this whole function needs a big FIXME */
+  if (JS_GetClass (object) == &js_WithClass)
+    object = JS_GetPrototype (cx, object);
   return swfdec_scriptable_from_jsval (cx, OBJECT_TO_JSVAL (object), SWFDEC_TYPE_MOVIE);
 }
 

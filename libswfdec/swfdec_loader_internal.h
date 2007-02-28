@@ -31,6 +31,8 @@ SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 void			swfdec_loader_parse		(SwfdecLoader *		loader);
 void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 							 SwfdecLoaderTarget *	target);
+void	  		swfdec_loader_error_locked	(SwfdecLoader *		loader,
+							 const char *		error);
 
 gboolean		swfdec_urldecode_one		(const char *		string,
 							 char **		name,

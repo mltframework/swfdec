@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_loadertarget.h"
+#include "swfdec_loader_internal.h"
 
 static void
 swfdec_loader_target_base_init (gpointer g_class)
@@ -85,11 +86,11 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
     player = swfdec_loader_target_get_player (target);
     dec = swfdec_decoder_new (player, loader->queue);
     if (dec == NULL) {
-      swfdec_loader_error (loader, "Unknown format");
+      swfdec_loader_error_locked (loader, "Unknown format");
       return;
     }
     if (!swfdec_loader_target_set_decoder (target, dec)) {
-      swfdec_loader_error (loader, "Internal error");
+      swfdec_loader_error_locked (loader, "Internal error");
       return;
     }
   }
@@ -99,7 +100,7 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
     SwfdecStatus status = klass->parse (dec);
     switch (status) {
       case SWFDEC_STATUS_ERROR:
-	swfdec_loader_error (loader, "parsing error");
+	swfdec_loader_error_locked (loader, "parsing error");
 	return;
       case SWFDEC_STATUS_OK:
 	break;
@@ -107,7 +108,7 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
 	return;
       case SWFDEC_STATUS_IMAGE:
 	if (!swfdec_loader_target_image (target)) {
-	  swfdec_loader_error (loader, "Internal error");
+	  swfdec_loader_error_locked (loader, "Internal error");
 	  return;
 	}
 	break;
@@ -115,7 +116,7 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
 	g_assert (dec->width > 0);
 	g_assert (dec->height > 0);
 	if (!swfdec_loader_target_init (target)) {
-	  swfdec_loader_error (loader, "Internal error");
+	  swfdec_loader_error_locked (loader, "Internal error");
 	  return;
 	}
 	break;

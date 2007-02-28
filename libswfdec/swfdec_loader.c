@@ -110,6 +110,7 @@ swfdec_loader_dispose (GObject *object)
 
   swfdec_buffer_queue_free (loader->queue);
   g_free (loader->url);
+  g_free (loader->error);
 
   G_OBJECT_CLASS (swfdec_loader_parent_class)->dispose (object);
 }
@@ -281,9 +282,20 @@ swfdec_loader_new_from_file (const char *filename, GError ** error)
   return loader;
 }
 
+/**
+ * swfdec_loader_error:
+ * @loader: a #SwfdecLoader
+ * @error: a string describing the error
+ *
+ * Moves the loader in the error state if it wasn't before. A loader that is in
+ * the error state will not process any more data. Also, internal error 
+ * handling scripts may be executed.
+ **/
 void
 swfdec_loader_error (SwfdecLoader *loader, const char *error)
 {
+  SwfdecPlayer *player;
+
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
   g_return_if_fail (error != NULL);
 
@@ -291,6 +303,20 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
   if (loader->error)
     return;
 
+  player = swfdec_loader_target_get_player (loader->target);
+  swfdec_player_lock (player);
+  swfdec_loader_error_locked (loader, error);
+  swfdec_player_perform_actions (player);
+  swfdec_player_unlock (player);
+}
+
+void
+swfdec_loader_error_locked (SwfdecLoader *loader, const char *error)
+{
+  if (loader->error)
+    return;
+
+  SWFDEC_ERROR ("error in loader %p: %s", loader, error);
   loader->error = g_strdup (error);
   g_object_notify (G_OBJECT (loader), "error");
 }

@@ -367,6 +367,10 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   swfdec_cache_unref (player->cache);
+  if (player->loader) {
+    g_object_unref (player->loader);
+    player->loader = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
@@ -948,6 +952,16 @@ swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
   SWFDEC_LOG ("no movie to remove at level %u", depth);
 }
 
+SwfdecLoader *
+swfdec_player_load (SwfdecPlayer *player, const char *url)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
+
+  g_assert (player->loader);
+  return swfdec_loader_load (player->loader, url);
+}
+
 void
 swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
 {
@@ -1057,6 +1071,8 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
+  player->loader = loader;
+  g_object_ref (loader);
   movie = swfdec_player_add_level_from_loader (player, 0, loader, variables);
   swfdec_loader_parse (loader);
 }

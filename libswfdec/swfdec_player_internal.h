@@ -49,6 +49,7 @@ struct _SwfdecPlayer
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
+  SwfdecLoader *	loader;			/* initial loader */
 
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */
@@ -139,6 +140,8 @@ SwfdecRootMovie *	swfdec_player_add_level_from_loader
 						 const char *		variables);
 void		swfdec_player_remove_level	(SwfdecPlayer *		player,
 						 guint			depth);
+SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *         player,
+						 const char *		url);
 void		swfdec_player_launch		(SwfdecPlayer *         player,
 						 const char *		url,
 						 const char *		target);

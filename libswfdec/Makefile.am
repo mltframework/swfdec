@@ -32,6 +32,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	$(CODECS) \
 	swfdec_codec_screen.c \
 	swfdec_color.c \
+	swfdec_connection.c \
 	swfdec_debug.c \
 	swfdec_debugger.c \
 	swfdec_decoder.c \
@@ -47,6 +48,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_image.c \
 	swfdec_js.c \
 	swfdec_js_color.c \
+	swfdec_js_connection.c \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
@@ -90,6 +92,7 @@ public_headers = \
 	swfdec.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \
+	swfdec_connection.h \
 	swfdec_loader.h \
 	swfdec_player.h
 

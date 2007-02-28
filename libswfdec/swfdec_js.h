@@ -38,6 +38,7 @@ gboolean	swfdec_js_run			(SwfdecPlayer *		player,
 						 jsval *		rval);
 
 void		swfdec_js_add_color		(SwfdecPlayer *		player);
+void		swfdec_js_add_connection	(SwfdecPlayer *		player);
 void		swfdec_js_add_globals		(SwfdecPlayer *		player);
 void		swfdec_js_add_mouse		(SwfdecPlayer *		player);
 void		swfdec_js_add_movieclip_class	(SwfdecPlayer *		player);

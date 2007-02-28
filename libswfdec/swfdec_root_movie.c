@@ -171,7 +171,7 @@ swfdec_root_movie_init (SwfdecRootMovie *decoder)
 void
 swfdec_root_movie_do_parse (gpointer movie, gpointer unused)
 {
-  swfdec_loader_parse_internal (SWFDEC_ROOT_MOVIE (movie)->loader);
+  swfdec_loader_target_parse (SWFDEC_LOADER_TARGET (movie), SWFDEC_ROOT_MOVIE (movie)->loader);
 }
 
 void

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -56,7 +56,52 @@
 
 /*** SwfdecLoader ***/
 
+enum {
+  PROP_0,
+  PROP_ERROR,
+  PROP_EOF
+};
+
 G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
+
+static void
+swfdec_loader_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecLoader *loader = SWFDEC_LOADER (object);
+  
+  switch (param_id) {
+    case PROP_ERROR:
+      g_value_set_string (value, loader->error);
+      break;
+    case PROP_EOF:
+      g_value_set_boolean (value, loader->eof);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_loader_set_property (GObject *object, guint param_id, const GValue *value,
+    GParamSpec *pspec)
+{
+  SwfdecLoader *loader = SWFDEC_LOADER (object);
+
+  switch (param_id) {
+    case PROP_ERROR:
+      swfdec_loader_error (loader, g_value_get_string (value));
+      break;
+    case PROP_EOF:
+      if (g_value_get_boolean (value) && !loader->eof)
+	swfdec_loader_eof (loader);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
 
 static void
 swfdec_loader_dispose (GObject *object)
@@ -70,19 +115,20 @@ swfdec_loader_dispose (GObject *object)
 }
 
 static void
-swfdec_loader_do_error (SwfdecLoader *loader, const char *error)
-{
-  SWFDEC_ERROR ("Error from loader %p: %s", loader, error);
-}
-
-static void
 swfdec_loader_class_init (SwfdecLoaderClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_loader_dispose;
+  object_class->get_property = swfdec_loader_get_property;
+  object_class->set_property = swfdec_loader_set_property;
 
-  klass->error = swfdec_loader_do_error;
+  g_object_class_install_property (object_class, PROP_ERROR,
+      g_param_spec_string ("error", "error", "NULL when no error or string describing error",
+	  NULL, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_EOF,
+      g_param_spec_boolean ("eof", "eof", "TRUE when all data has been handed to the loader",
+	  FALSE, G_PARAM_READABLE));
 }
 
 static void
@@ -235,70 +281,18 @@ swfdec_loader_new_from_file (const char *filename, GError ** error)
   return loader;
 }
 
-static void
-swfdec_loader_error (SwfdecLoader *loader, gboolean notify)
-{
-  loader->error = TRUE;
-  SWFDEC_INFO ("error in loader %p (%s)", loader, loader->url);
-  if (loader->target && notify)
-    swfdec_loader_target_error (loader->target);
-}
-
 void
-swfdec_loader_parse_internal (SwfdecLoader *loader)
+swfdec_loader_error (SwfdecLoader *loader, const char *error)
 {
-  SwfdecDecoder *dec;
-  SwfdecDecoderClass *klass;
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (error != NULL);
 
-  dec = swfdec_loader_target_get_decoder (loader->target);
-  if (dec == NULL) {
-    SwfdecPlayer *player;
-    if (!swfdec_decoder_can_detect (loader->queue))
-      return;
-    player = swfdec_loader_target_get_player (loader->target);
-    dec = swfdec_decoder_new (player, loader->queue);
-    if (dec == NULL) {
-      swfdec_loader_error (loader, TRUE);
-      return;
-    }
-    if (!swfdec_loader_target_set_decoder (loader->target, dec)) {
-      swfdec_loader_error (loader, FALSE);
-      return;
-    }
-  }
-  klass = SWFDEC_DECODER_GET_CLASS (dec);
-  g_return_if_fail (klass->parse);
-  while (TRUE) {
-    SwfdecStatus status = klass->parse (dec);
-    switch (status) {
-      case SWFDEC_STATUS_ERROR:
-	swfdec_loader_error (loader, TRUE);
-	return;
-      case SWFDEC_STATUS_OK:
-	break;
-      case SWFDEC_STATUS_NEEDBITS:
-	return;
-      case SWFDEC_STATUS_IMAGE:
-	if (!swfdec_loader_target_image (loader->target)) {
-	  swfdec_loader_error (loader, TRUE);
-	  return;
-	}
-	break;
-      case SWFDEC_STATUS_INIT:
-	g_assert (dec->width > 0);
-	g_assert (dec->height > 0);
-	if (!swfdec_loader_target_init (loader->target)) {
-	  swfdec_loader_error (loader, TRUE);
-	  return;
-	}
-	break;
-      case SWFDEC_STATUS_EOF:
-	return;
-      default:
-	g_assert_not_reached ();
-	return;
-    }
-  }
+  SWFDEC_ERROR ("error in loader %p: %s", loader, error);
+  if (loader->error)
+    return;
+
+  loader->error = g_strdup (error);
+  g_object_notify (G_OBJECT (loader), "error");
 }
 
 void
@@ -312,7 +306,7 @@ swfdec_loader_parse (SwfdecLoader *loader)
 
   player = swfdec_loader_target_get_player (loader->target);
   swfdec_player_lock (player);
-  swfdec_loader_parse_internal (loader);
+  swfdec_loader_target_parse (loader->target, loader);
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 }
@@ -349,6 +343,7 @@ swfdec_loader_eof (SwfdecLoader *loader)
   g_return_if_fail (loader->eof == FALSE);
 
   loader->eof = TRUE;
+  g_object_notify (G_OBJECT (loader), "eof");
   swfdec_loader_parse (loader);
 }
 

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,7 @@ struct _SwfdecLoader
   char *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   /*< private >*/
   gboolean		eof;		/* if we're in EOF already */
-  gboolean		error;		/* if there's an error (from parsing the loader) */
+  char *		error;		/* if there's an error (from parsing the loader) */
   gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
   SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
 };
@@ -55,9 +55,6 @@ struct _SwfdecLoaderClass
   /* FIXME: better error reporting? */
   SwfdecLoader *      	(* load)	(SwfdecLoader *			loader, 
 					 const char *			url);
-  /* FIXME: make this a GError? */
-  void			(* error)	(SwfdecLoader *			loader,
-					 const char *			error);
 };
 
 GType		swfdec_loader_get_type		(void);
@@ -68,6 +65,8 @@ SwfdecLoader *	swfdec_loader_new_from_file	(const char * 	filename,
 void		swfdec_loader_push		(SwfdecLoader *		loader,
 						 SwfdecBuffer *		buffer);
 void		swfdec_loader_eof		(SwfdecLoader *		loader);
+void		swfdec_loader_error		(SwfdecLoader *		loader,
+						 const char *		error);
 char *  	swfdec_loader_get_filename	(SwfdecLoader *		loader);
 					 
 

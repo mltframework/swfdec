@@ -82,6 +82,8 @@ EXTRA_DIST = \
 	name2.swf.trace \
 	names.swf \
 	names.swf.trace \
+	netconnection.swf \
+	netconnection.swf.trace \
 	number.swf \
 	number.swf.trace \
 	object-math-5.swf \

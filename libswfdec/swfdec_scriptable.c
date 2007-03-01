@@ -124,6 +124,35 @@ swfdec_scriptable_get_object (SwfdecScriptable *scriptable)
 }
 
 /**
+ * swfdec_scriptable_from_object:
+ * @cx: a #JSContext
+ * @object: the JSObject to convert (NULL is a valid value)
+ * @type: type of the object to get.
+ *
+ * Converts the given @object to a #SwfdecScriptable, if it represents one.
+ * The object must be of @type, otherwise %NULL will be returned.
+ *
+ * Returns: the scriptable represented by @object or NULL if it does not 
+ *          reference a @scriptable
+ **/
+gpointer
+swfdec_scriptable_from_object (JSContext *cx, JSObject *object, GType type)
+{
+  SwfdecScriptableClass *klass;
+
+  g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_SCRIPTABLE), NULL);
+
+  if (object == NULL)
+    return NULL;
+  klass = g_type_class_peek (type);
+  if (klass == NULL)
+    return NULL; /* class doesn't exist -> no object of this type exists */
+  if (!JS_InstanceOf (cx, object, klass->jsclass, NULL))
+    return NULL;
+  return JS_GetPrivate (cx, object);
+}
+
+/**
  * swfdec_scriptable_from_jsval:
  * @cx: a #JSContext
  * @val: the jsval to convert
@@ -138,22 +167,14 @@ swfdec_scriptable_get_object (SwfdecScriptable *scriptable)
 gpointer
 swfdec_scriptable_from_jsval (JSContext *cx, jsval val, GType type)
 {
-  SwfdecScriptableClass *klass;
   JSObject *object;
 
   g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_SCRIPTABLE), NULL);
 
   if (!JSVAL_IS_OBJECT (val))
     return NULL;
-  if (JSVAL_IS_NULL (val))
-    return NULL;
   object = JSVAL_TO_OBJECT (val);
-  klass = g_type_class_peek (type);
-  if (klass == NULL)
-    return NULL; /* class doesn't exist -> no object of this type exists */
-  if (!JS_InstanceOf (cx, object, klass->jsclass, NULL))
-    return NULL;
-  return JS_GetPrivate (cx, object);
+  return swfdec_scriptable_from_object (cx, object, type);
 }
 
 /**

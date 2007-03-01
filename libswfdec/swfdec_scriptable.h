@@ -60,6 +60,9 @@ JSObject *		swfdec_scriptable_get_object	(SwfdecScriptable *	scriptable);
 gpointer		swfdec_scriptable_from_jsval	(JSContext *		cx,
 							 jsval			val,
 							 GType			type);
+gpointer		swfdec_scriptable_from_object	(JSContext *		cx,
+							 JSObject *		object,
+							 GType			type);
 
 void			swfdec_scriptable_set_variables	(SwfdecScriptable *	script,
 							 const char *		variables);

@@ -51,7 +51,7 @@ swfdec_get_jsval_type (JSContext *cx, jsval val)
   if (JSVAL_IS_STRING (val))
     return "String";
   g_assert (JSVAL_IS_OBJECT (val));
-  return "Object";
+  return JS_GetClass (JSVAL_TO_OBJECT (val))->name;
 }
 
 static void

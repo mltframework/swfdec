@@ -42,6 +42,7 @@ void		swfdec_js_add_connection	(SwfdecPlayer *		player);
 void		swfdec_js_add_globals		(SwfdecPlayer *		player);
 void		swfdec_js_add_mouse		(SwfdecPlayer *		player);
 void		swfdec_js_add_movieclip_class	(SwfdecPlayer *		player);
+void		swfdec_js_add_net_stream	(SwfdecPlayer *		player);
 void		swfdec_js_add_sound		(SwfdecPlayer *		player);
 void		swfdec_js_add_xml		(SwfdecPlayer *		player);
 

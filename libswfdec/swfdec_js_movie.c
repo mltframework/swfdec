@@ -1124,6 +1124,7 @@ swfdec_js_movie_add_property (SwfdecMovie *movie)
   jsval val;
   JSObject *jsobj;
   JSContext *cx;
+  JSBool found = JS_FALSE;
 
   jsobj = swfdec_scriptable_get_object (script);
   val = OBJECT_TO_JSVAL (jsobj);
@@ -1138,7 +1139,11 @@ swfdec_js_movie_add_property (SwfdecMovie *movie)
     jsobj = SWFDEC_ROOT_MOVIE (movie)->player->jsobj;
     SWFDEC_LOG ("setting %s as property for _global", movie->name);
   }
-  JS_SetProperty (cx, jsobj, movie->name, &val);
+  if (!JS_SetProperty (cx, jsobj, movie->name, &val) ||
+      !JS_SetPropertyAttributes (cx, jsobj, movie->name, JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
+      found != JS_TRUE) {
+    SWFDEC_ERROR ("could not set property %s correctly", movie->name);
+  }
 }
 
 void
@@ -1147,6 +1152,7 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
   JSObject *jsobj;
   JSContext *cx;
+  JSBool found = JS_FALSE;
 
   if (script->jsobj == NULL)
     return;
@@ -1161,6 +1167,10 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   }
 
   SWFDEC_LOG ("removing %s as property", movie->name);
-  JS_DeleteProperty (cx, jsobj, movie->name);
+  if (!JS_SetPropertyAttributes (cx, jsobj, movie->name, JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
+      found != JS_TRUE ||
+      !JS_DeleteProperty (cx, jsobj, movie->name)) {
+    SWFDEC_ERROR ("could not remove property %s correctly", movie->name);
+  }
 }
 

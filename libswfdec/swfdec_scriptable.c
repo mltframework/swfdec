@@ -174,8 +174,6 @@ swfdec_scriptable_set_variables (SwfdecScriptable *script, const char *variables
   g_return_if_fail (variables != NULL);
 
   SWFDEC_DEBUG ("setting variables on %p: %s", script, variables);
-  if (*variables == '\0')
-    return;
   object = swfdec_scriptable_get_object (script);
   while (TRUE) {
     char *name, *value;
@@ -186,15 +184,12 @@ swfdec_scriptable_set_variables (SwfdecScriptable *script, const char *variables
       SWFDEC_WARNING ("variables invalid at \"%s\"", variables);
       break;
     }
-    if (*variables == '\0') {
-      break;
-    } else if (*variables != '&') {
+    if (*variables != '\0' && *variables != '&') {
       SWFDEC_WARNING ("variables not delimited with & at \"%s\"", variables);
       g_free (name);
       g_free (value);
       break;
     }
-    variables++;
     string = JS_NewStringCopyZ (script->jscx, value);
     if (string == NULL) {
       g_free (name);
@@ -212,6 +207,9 @@ swfdec_scriptable_set_variables (SwfdecScriptable *script, const char *variables
     SWFDEC_DEBUG ("Set variable \"%s\" to \"%s\"", name, value);
     g_free (name);
     g_free (value);
+    if (*variables == '\0')
+      break;
+    variables++;
   }
 }
 

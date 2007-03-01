@@ -319,6 +319,7 @@ swfdec_loader_error_locked (SwfdecLoader *loader, const char *error)
   SWFDEC_ERROR ("error in loader %p: %s", loader, error);
   loader->error = g_strdup (error);
   g_object_notify (G_OBJECT (loader), "error");
+  swfdec_loader_target_parse (loader->target, loader);
 }
 
 void

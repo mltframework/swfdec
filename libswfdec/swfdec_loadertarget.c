@@ -78,6 +78,8 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
   SwfdecDecoder *dec;
   SwfdecDecoderClass *klass;
 
+  if (loader->error)
+    return;
   dec = swfdec_loader_target_get_decoder (target);
   if (dec == NULL) {
     SwfdecPlayer *player;

@@ -27,6 +27,23 @@
 #include "swfdec_player_internal.h"
 
 static JSBool
+swfdec_js_net_stream_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecNetStream *stream;
+  const char *url;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+  url = swfdec_js_to_string (cx, argv[0]);
+  if (url == NULL)
+    return JS_FALSE;
+  swfdec_net_stream_set_url (stream, url);
+  swfdec_net_stream_set_playing (stream, TRUE);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_js_net_stream_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   JSString *string;
@@ -40,6 +57,7 @@ swfdec_js_net_stream_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval 
 }
 
 static JSFunctionSpec net_stream_methods[] = {
+  { "play",		swfdec_js_net_stream_play,	1, 0, 0 },
   { "toString",		swfdec_js_net_stream_to_string,	0, 0, 0 },
   {0,0,0,0,0}
 };

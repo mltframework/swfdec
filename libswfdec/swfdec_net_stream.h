@@ -21,6 +21,7 @@
 #define _SWFDEC_NET_STREAM_H_
 
 #include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_connection.h>
 #include <libswfdec/swfdec_flv_decoder.h>
 #include <libswfdec/swfdec_player_internal.h>
 #include <libswfdec/swfdec_scriptable.h>
@@ -43,7 +44,8 @@ struct _SwfdecNetStream
   SwfdecScriptable	scriptable;
 
   SwfdecPlayer *	player;		/* the player we play in */
-  SwfdecLoader *	loader;		/* input connection */
+  SwfdecConnection *	conn;		/* connection used for opening streams */
+  SwfdecLoader *	loader;		/* input stream */
   SwfdecFlvDecoder *	flvdecoder;	/* flv decoder */
   gboolean		playing;	/* TRUE if this stream is playing */
   gboolean		error;		/* in error */
@@ -69,8 +71,11 @@ struct _SwfdecNetStreamClass
 
 GType			swfdec_net_stream_get_type	(void);
 
-SwfdecNetStream *	swfdec_net_stream_new		(SwfdecPlayer *		player);
+SwfdecNetStream *	swfdec_net_stream_new		(SwfdecPlayer *		player,
+							 SwfdecConnection *	conn);
 
+void			swfdec_net_stream_set_url	(SwfdecNetStream *	stream,
+							 const char *		url);
 void			swfdec_net_stream_set_loader	(SwfdecNetStream *	stream,
 							 SwfdecLoader *		loader);
 void			swfdec_net_stream_set_playing	(SwfdecNetStream *	stream,

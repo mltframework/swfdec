@@ -458,6 +458,7 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   SwfdecContent *content = swfdec_content_new (0);
   SwfdecMovie *movie;
   SwfdecVideo *video;
+  SwfdecConnection *conn;
   SwfdecNetStream *stream;
 
   /* set up the video movie */
@@ -469,7 +470,8 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) swfdec_content_free, content);
   g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) g_object_unref, video);
   /* set up the playback stream */
-  stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player);
+  conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
+  stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
   swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
   g_object_ref (SWFDEC_ROOT_MOVIE (parent)->decoder);
   if (!swfdec_loader_target_set_decoder (SWFDEC_LOADER_TARGET (stream), SWFDEC_ROOT_MOVIE (parent)->decoder)) {

@@ -89,18 +89,16 @@ swfdec_connection_onstatus (SwfdecConnection *conn, const char *code,
 }
 
 SwfdecConnection *
-swfdec_connection_new (JSContext *cx, JSObject *obj)
+swfdec_connection_new (JSContext *cx)
 {
   SwfdecConnection *conn;
   SwfdecScriptable *script;
 
   g_return_val_if_fail (cx != NULL, NULL);
-  g_return_val_if_fail (obj != NULL, NULL);
 
   conn = g_object_new (SWFDEC_TYPE_CONNECTION, NULL);
   script = SWFDEC_SCRIPTABLE (conn);
   script->jscx = cx;
-  script->jsobj = obj;
 
   return conn;
 }

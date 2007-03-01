@@ -216,6 +216,8 @@ swfdec_net_stream_dispose (GObject *object)
   if (stream->decoder)
     swfdec_video_codec_finish (stream->codec, stream->decoder);
   swfdec_net_stream_set_loader (stream, NULL);
+  g_object_unref (stream->conn);
+  stream->conn = NULL;
 
   G_OBJECT_CLASS (swfdec_net_stream_parent_class)->dispose (object);
 }
@@ -236,13 +238,32 @@ swfdec_net_stream_init (SwfdecNetStream *stream)
 }
 
 SwfdecNetStream *
-swfdec_net_stream_new (SwfdecPlayer *player)
+swfdec_net_stream_new (SwfdecPlayer *player, SwfdecConnection *conn)
 {
-  SwfdecNetStream *stream = g_object_new (SWFDEC_TYPE_NET_STREAM, NULL);
+  SwfdecNetStream *stream;
+  
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_IS_CONNECTION (conn), NULL);
 
+  stream = g_object_new (SWFDEC_TYPE_NET_STREAM, NULL);
   stream->player = player;
+  stream->conn = conn;
+  g_object_ref (conn);
 
   return stream;
+}
+
+void
+swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
+{
+  SwfdecLoader *loader;
+
+  g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
+  g_return_if_fail (url != NULL);
+
+  /* FIXME: use the connection once connections are implemented */
+  loader = swfdec_player_load (stream->player, url);
+  swfdec_net_stream_set_loader (stream, loader);
 }
 
 void

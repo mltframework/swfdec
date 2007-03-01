@@ -91,9 +91,10 @@ static JSClass connection_class = {
 static JSBool
 swfdec_js_connection_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  SwfdecConnection *conn = swfdec_connection_new (cx, obj);
+  SwfdecConnection *conn = swfdec_connection_new (cx);
 
   JS_SetPrivate (cx, obj, conn);
+  SWFDEC_SCRIPTABLE (conn)->jsobj = obj;
   *rval = OBJECT_TO_JSVAL (obj);
   return JS_TRUE;
 }

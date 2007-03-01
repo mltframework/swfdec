@@ -47,8 +47,7 @@ struct _SwfdecConnectionClass {
 
 GType			swfdec_connection_get_type	(void);
 
-SwfdecConnection *	swfdec_connection_new		(JSContext *		cx,
-							 JSObject *		obj);
+SwfdecConnection *	swfdec_connection_new		(JSContext *		cx);
 
 void			swfdec_connection_connect	(SwfdecConnection *	conn,
 							 const char *		url);

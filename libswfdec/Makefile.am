@@ -53,6 +53,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
 	swfdec_js_sound.c \
+	swfdec_js_xml.c \
 	swfdec_listener.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
@@ -76,7 +77,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_tag.c \
 	swfdec_text.c \
 	swfdec_video.c \
-	swfdec_video_movie.c
+	swfdec_video_movie.c \
+	swfdec_xml.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
@@ -92,7 +94,6 @@ public_headers = \
 	swfdec.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \
-	swfdec_connection.h \
 	swfdec_loader.h \
 	swfdec_player.h
 
@@ -113,6 +114,7 @@ noinst_HEADERS = \
 	swfdec_character.h \
 	swfdec_codec.h \
 	swfdec_color.h \
+	swfdec_connection.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
@@ -149,7 +151,8 @@ noinst_HEADERS = \
 	swfdec_text.h \
 	swfdec_types.h \
 	swfdec_video.h \
-	swfdec_video_movie.h
+	swfdec_video_movie.h \
+	swfdec_xml.h
 
 EXTRA_DIST = swfdec_marshal.list
 

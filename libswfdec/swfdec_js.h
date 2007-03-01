@@ -43,6 +43,7 @@ void		swfdec_js_add_globals		(SwfdecPlayer *		player);
 void		swfdec_js_add_mouse		(SwfdecPlayer *		player);
 void		swfdec_js_add_movieclip_class	(SwfdecPlayer *		player);
 void		swfdec_js_add_sound		(SwfdecPlayer *		player);
+void		swfdec_js_add_xml		(SwfdecPlayer *		player);
 
 void		swfdec_js_movie_add_property	(SwfdecMovie *		movie);
 void		swfdec_js_movie_remove_property	(SwfdecMovie *		movie);

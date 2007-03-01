@@ -73,7 +73,7 @@ swfdec_js_xml_finalize (JSContext *cx, JSObject *obj)
   }
 }
 
-static JSClass xml_class = {
+const JSClass xml_class = {
     "XML", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   swfdec_js_xml_finalize,

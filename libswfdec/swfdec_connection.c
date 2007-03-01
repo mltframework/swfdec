@@ -42,12 +42,16 @@ swfdec_connection_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_connection_parent_class)->dispose (object);
 }
 
+extern const JSClass connection_class;
 static void
 swfdec_connection_class_init (SwfdecConnectionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecScriptableClass *scriptable_class = SWFDEC_SCRIPTABLE_CLASS (klass);
 
   object_class->dispose = swfdec_connection_dispose;
+
+  scriptable_class->jsclass = &connection_class;
 }
 
 static void

@@ -81,7 +81,7 @@ swfdec_js_connection_finalize (JSContext *cx, JSObject *obj)
   }
 }
 
-static JSClass connection_class = {
+const JSClass connection_class = {
     "NetConnection", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   swfdec_js_connection_finalize,

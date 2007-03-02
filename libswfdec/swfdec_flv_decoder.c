@@ -517,6 +517,8 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   }
   swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);
   swfdec_net_stream_set_playing (stream, TRUE);
+  g_object_unref (conn);
+  g_object_unref (stream);
 
   return movie;
 }

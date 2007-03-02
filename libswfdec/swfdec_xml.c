@@ -24,6 +24,7 @@
 #include <string.h>
 #include "swfdec_xml.h"
 #include "swfdec_debug.h"
+#include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 #include "js/jsapi.h"
@@ -186,6 +187,7 @@ swfdec_xml_load (SwfdecXml *xml, const char *url)
   if (xml->loader == NULL) {
     swfdec_xml_ondata (xml);
   } else {
-    swfdec_xml_loader_target_parse (SWFDEC_LOADER_TARGET (xml), xml->loader);
+    swfdec_loader_set_target (xml->loader, SWFDEC_LOADER_TARGET (xml));
+    swfdec_loader_queue_parse (xml->loader);
   }
 }

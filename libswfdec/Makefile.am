@@ -54,6 +54,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_js_movie.c \
 	swfdec_js_net_stream.c \
 	swfdec_js_sound.c \
+	swfdec_js_video.c \
 	swfdec_js_xml.c \
 	swfdec_listener.c \
 	swfdec_loader.c \

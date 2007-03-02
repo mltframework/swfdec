@@ -112,6 +112,7 @@ swfdec_js_init_player (SwfdecPlayer *player)
   swfdec_js_add_movieclip_class (player);
   swfdec_js_add_color (player);
   swfdec_js_add_sound (player);
+  swfdec_js_add_video (player);
   swfdec_js_add_xml (player);
   swfdec_js_add_connection (player);
   swfdec_js_add_net_stream (player);

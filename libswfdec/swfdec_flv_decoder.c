@@ -452,6 +452,17 @@ swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_video_movie.h"
+
+static void
+notify_initialized (SwfdecPlayer *player, GParamSpec *pspec, SwfdecVideoMovie *movie)
+{
+  movie->video->width = player->width;
+  movie->video->height = player->height;
+
+  swfdec_movie_queue_update (SWFDEC_MOVIE (movie), SWFDEC_MOVIE_INVALID_MATRIX);
+  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+}
+
 SwfdecMovie *
 swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
 {
@@ -463,18 +474,19 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
 
   /* set up the video movie */
   video = g_object_new (SWFDEC_TYPE_VIDEO, NULL);
-  video->width = SWFDEC_DECODER (flv)->width;
-  video->height = SWFDEC_DECODER (flv)->height;
+  video->width = G_MAXUINT;
+  video->height = G_MAXUINT;
   content->graphic = SWFDEC_GRAPHIC (video);
   movie = swfdec_movie_new (parent, content);
   g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) swfdec_content_free, content);
   g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) g_object_unref, video);
+  g_signal_connect (SWFDEC_ROOT_MOVIE (parent)->player, "notify::initialized",
+      G_CALLBACK (notify_initialized), movie);
   /* set up the playback stream */
   conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
   stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
   swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
-  g_object_ref (SWFDEC_ROOT_MOVIE (parent)->decoder);
-  if (!swfdec_loader_target_set_decoder (SWFDEC_LOADER_TARGET (stream), SWFDEC_ROOT_MOVIE (parent)->decoder)) {
+  if (!swfdec_loader_target_set_decoder (SWFDEC_LOADER_TARGET (stream), SWFDEC_DECODER (flv))) {
     g_assert_not_reached ();
   }
   swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);

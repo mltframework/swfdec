@@ -57,7 +57,15 @@ static gboolean
 swfdec_root_movie_loader_target_set_decoder (SwfdecLoaderTarget *target,
     SwfdecDecoder *decoder)
 {
-  SWFDEC_ROOT_MOVIE (target)->decoder = decoder;
+  if (SWFDEC_IS_FLV_DECODER (decoder)) {
+    swfdec_flv_decoder_add_movie (SWFDEC_FLV_DECODER (decoder), 
+	SWFDEC_MOVIE (target));
+  } else if (SWFDEC_IS_SWF_DECODER (decoder)) {
+    SWFDEC_ROOT_MOVIE (target)->decoder = decoder;
+  } else {
+    g_object_unref (decoder);
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -66,18 +74,11 @@ swfdec_root_movie_loader_target_do_init (SwfdecLoaderTarget *target)
 {
   SwfdecRootMovie *movie = SWFDEC_ROOT_MOVIE (target);
 
-  swfdec_player_initialize (movie->player, movie->decoder->rate, 
-      movie->decoder->width, movie->decoder->height);
-  if (SWFDEC_IS_SWF_DECODER (movie->decoder) &&
-      movie->player->roots->next == 0) { 
+  if (movie->player->roots->next == 0) { 
     /* if we're the only child */
     /* FIXME: check case sensitivity wrt embedding movies of different version */
     JS_SetContextCaseSensitive (movie->player->jscx,
 	SWFDEC_SWF_DECODER (movie->decoder)->version > 6);
-  }
-  if (SWFDEC_IS_FLV_DECODER (movie->decoder)) {
-    swfdec_flv_decoder_add_movie (SWFDEC_FLV_DECODER (movie->decoder), 
-	SWFDEC_MOVIE (movie));
   }
   return TRUE;
 }

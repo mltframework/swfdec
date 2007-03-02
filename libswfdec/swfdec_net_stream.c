@@ -34,7 +34,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   SwfdecVideoFormat format;
   cairo_surface_t *old;
 
-  SWFDEC_LOG ("goto %ums\n", timestamp);
+  SWFDEC_LOG ("goto %ums", timestamp);
   buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
       FALSE, &format, &stream->current_time, &stream->next_time);
   old = stream->surface;
@@ -104,6 +104,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
   should_play &= stream->next_time > stream->current_time;
   if (should_play && stream->timeout.callback == NULL) {
     SWFDEC_DEBUG ("starting playback");
+    g_print ("starting playback\n");
     stream->timeout.callback = swfdec_net_stream_timeout;
     stream->timeout.timestamp = stream->player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     swfdec_player_add_timeout (stream->player, &stream->timeout);
@@ -115,6 +116,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
       SWFDEC_LOG ("no audio");
     }
   } else if (!should_play && stream->timeout.callback != NULL) {
+    g_print ("stopping playback\n");
     if (stream->audio) {
       SWFDEC_LOG ("stopping audio");
       swfdec_audio_remove (stream->audio);
@@ -285,9 +287,8 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (loader == NULL || SWFDEC_IS_LOADER (loader));
 
-  if (stream->loader) {
+  if (stream->loader)
     g_object_unref (stream->loader);
-  }
   if (stream->flvdecoder) {
     g_object_unref (stream->flvdecoder);
     stream->flvdecoder = NULL;

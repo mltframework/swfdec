@@ -245,6 +245,27 @@ swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
   loader->target = target;
 }
 
+static void
+swfdec_loader_do_parse (gpointer empty, gpointer loaderp)
+{
+  SwfdecLoader *loader = SWFDEC_LOADER (loaderp);
+
+  swfdec_loader_target_parse (loader->target, loader);
+}
+
+void
+swfdec_loader_queue_parse (SwfdecLoader *loader)
+{
+  SwfdecPlayer *player;
+
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (loader->target != NULL);
+
+  player = swfdec_loader_target_get_player (loader->target);
+  /* HACK: using player as action object makes them get auto-removed */
+  swfdec_player_add_action (player, player, swfdec_loader_do_parse, loader);
+}
+
 /** PUBLIC API ***/
 
 /**

@@ -104,7 +104,6 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
   should_play &= stream->next_time > stream->current_time;
   if (should_play && stream->timeout.callback == NULL) {
     SWFDEC_DEBUG ("starting playback");
-    g_print ("starting playback\n");
     stream->timeout.callback = swfdec_net_stream_timeout;
     stream->timeout.timestamp = stream->player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     swfdec_player_add_timeout (stream->player, &stream->timeout);
@@ -116,7 +115,6 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
       SWFDEC_LOG ("no audio");
     }
   } else if (!should_play && stream->timeout.callback != NULL) {
-    g_print ("stopping playback\n");
     if (stream->audio) {
       SWFDEC_LOG ("stopping audio");
       swfdec_audio_remove (stream->audio);
@@ -147,11 +145,14 @@ static gboolean
 swfdec_net_stream_loader_target_set_decoder (SwfdecLoaderTarget *target,
     SwfdecDecoder *decoder)
 {
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
+
   if (!SWFDEC_IS_FLV_DECODER (decoder)) {
     g_object_unref (decoder);
     return FALSE;
   }
-  SWFDEC_NET_STREAM (target)->flvdecoder = SWFDEC_FLV_DECODER (decoder);
+  stream->flvdecoder = SWFDEC_FLV_DECODER (decoder);
+  swfdec_net_stream_update_playing (stream);
   return TRUE;
 }
 
@@ -297,6 +298,7 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   if (loader) {
     g_object_ref (loader);
     swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (stream));
+    swfdec_loader_queue_parse (loader);
   }
   swfdec_net_stream_set_playing (stream, TRUE);
 }

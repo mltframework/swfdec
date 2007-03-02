@@ -23,6 +23,7 @@
 
 #include "swfdec_loadertarget.h"
 #include "swfdec_loader_internal.h"
+#include "swfdec_player_internal.h"
 
 static void
 swfdec_loader_target_base_init (gpointer g_class)
@@ -95,6 +96,7 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
       swfdec_loader_error_locked (loader, "Internal error");
       return;
     }
+    target = loader->target;
   }
   klass = SWFDEC_DECODER_GET_CLASS (dec);
   g_return_if_fail (klass->parse);
@@ -115,11 +117,17 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
 	}
 	break;
       case SWFDEC_STATUS_INIT:
-	g_assert (dec->width > 0);
-	g_assert (dec->height > 0);
-	if (!swfdec_loader_target_init (target)) {
-	  swfdec_loader_error_locked (loader, "Internal error");
-	  return;
+	{
+	  SwfdecPlayer *player;
+	  player = swfdec_loader_target_get_player (target);
+	  g_assert (dec->width > 0);
+	  g_assert (dec->height > 0);
+	  swfdec_player_initialize (player, dec->rate, 
+	      dec->width, dec->height);
+	  if (!swfdec_loader_target_init (target)) {
+	    swfdec_loader_error_locked (loader, "Internal error");
+	    return;
+	  }
 	}
 	break;
       case SWFDEC_STATUS_EOF:

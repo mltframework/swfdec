@@ -437,7 +437,7 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
 }
 
 /* if speed ever gets an issue, use a 256 byte array instead of strchr */
-static const char *urlencode_unescaped="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_./";
+static const char *urlencode_unescaped="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.:/";
 static void
 swfdec_urlencode_append_string (GString *str, const char *s)
 {

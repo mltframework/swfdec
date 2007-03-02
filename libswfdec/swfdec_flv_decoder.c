@@ -392,22 +392,33 @@ SwfdecBuffer *
 swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
     gboolean keyframe, SwfdecVideoFormat *format, guint *real_timestamp, guint *next_timestamp)
 {
-  guint id;
+  guint id, offset;
   SwfdecFlvVideoTag *tag;
 
   g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), NULL);
   g_return_val_if_fail (flv->video != NULL, NULL);
 
+  if (flv->video->len == 0) {
+    if (next_timestamp)
+      *next_timestamp = 0;
+    if (real_timestamp)
+      *real_timestamp = 0;
+    if (format)
+      *format = SWFDEC_VIDEO_FORMAT_UNDEFINED;
+    return NULL;
+  }
+  offset = g_array_index (flv->video, SwfdecFlvVideoTag, 0).timestamp;
+  timestamp += offset;
   id = swfdec_flv_decoder_find_video (flv, timestamp);
   if (next_timestamp) {
     if (id + 1 >= flv->video->len)
       *next_timestamp = 0;
     else
-      *next_timestamp = g_array_index (flv->video, SwfdecFlvVideoTag, id + 1).timestamp;
+      *next_timestamp = g_array_index (flv->video, SwfdecFlvVideoTag, id + 1).timestamp - offset;
   }
   tag = &g_array_index (flv->video, SwfdecFlvVideoTag, id);
   if (real_timestamp)
-    *real_timestamp = tag->timestamp;
+    *real_timestamp = tag->timestamp - offset;
   if (format)
     *format = tag->format;
   return tag->buffer;
@@ -418,22 +429,37 @@ swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
     SwfdecAudioFormat *codec_format, gboolean *width, SwfdecAudioOut *format,
     guint *real_timestamp, guint *next_timestamp)
 {
-  guint id;
+  guint id, offset;
   SwfdecFlvAudioTag *tag;
 
   g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), NULL);
   g_return_val_if_fail (flv->audio != NULL, NULL);
 
+  if (flv->audio->len == 0) {
+    if (next_timestamp)
+      *next_timestamp = 0;
+    if (real_timestamp)
+      *real_timestamp = 0;
+    if (codec_format)
+      *codec_format = SWFDEC_AUDIO_FORMAT_UNDEFINED;
+    if (width)
+      *width = TRUE;
+    if (format)
+      *format = SWFDEC_AUDIO_OUT_STEREO_44100;
+    return NULL;
+  }
+  offset = g_array_index (flv->audio, SwfdecFlvAudioTag, 0).timestamp;
+  timestamp += offset;
   id = swfdec_flv_decoder_find_audio (flv, timestamp);
   if (next_timestamp) {
     if (id + 1 >= flv->audio->len)
       *next_timestamp = 0;
     else
-      *next_timestamp = g_array_index (flv->audio, SwfdecFlvAudioTag, id + 1).timestamp;
+      *next_timestamp = g_array_index (flv->audio, SwfdecFlvAudioTag, id + 1).timestamp - offset;
   }
   tag = &g_array_index (flv->audio, SwfdecFlvAudioTag, id);
   if (real_timestamp)
-    *real_timestamp = tag->timestamp;
+    *real_timestamp = tag->timestamp - offset;
   if (codec_format)
     *codec_format = tag->format;
   if (width)

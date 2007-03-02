@@ -32,10 +32,12 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 {
   SwfdecBuffer *buffer;
   SwfdecVideoFormat format;
+  cairo_surface_t *old;
 
   SWFDEC_LOG ("goto %ums\n", timestamp);
   buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
       FALSE, &format, &stream->current_time, &stream->next_time);
+  old = stream->surface;
   if (stream->surface) {
     cairo_surface_destroy (stream->surface);
     stream->surface = NULL;
@@ -68,8 +70,12 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       }
     }
   }
-  if (stream->input.movie)
-    swfdec_movie_invalidate (SWFDEC_MOVIE (stream->input.movie));
+  if (old != stream->surface) {
+    GList *walk;
+    for (walk = stream->movies; walk; walk = walk->next) {
+      swfdec_video_movie_new_image (walk->data, stream->surface);
+    }
+  }
 }
 
 static void
@@ -182,19 +188,21 @@ swfdec_net_stream_loader_target_init (SwfdecLoaderTargetInterface *iface)
 
 /*** SWFDEC VIDEO MOVIE INPUT ***/
 
-static cairo_surface_t *
-swfdec_net_stream_input_get_image (SwfdecVideoMovieInput *input)
+static void
+swfdec_net_stream_input_connect (SwfdecVideoMovieInput *input, SwfdecVideoMovie *movie)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input));
 
-  return stream->surface;
+  stream->movies = g_list_prepend (stream->movies, movie);
+  g_object_ref (stream);
 }
 
 static void
-swfdec_net_stream_input_finalize (SwfdecVideoMovieInput *input)
+swfdec_net_stream_input_disconnect (SwfdecVideoMovieInput *input, SwfdecVideoMovie *movie)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input));
 
+  stream->movies = g_list_remove (stream->movies, movie);
   g_object_unref (stream);
 }
 
@@ -218,6 +226,7 @@ swfdec_net_stream_dispose (GObject *object)
   swfdec_net_stream_set_loader (stream, NULL);
   g_object_unref (stream->conn);
   stream->conn = NULL;
+  g_assert (stream->movies == NULL);
 
   G_OBJECT_CLASS (swfdec_net_stream_parent_class)->dispose (object);
 }
@@ -237,8 +246,8 @@ swfdec_net_stream_class_init (SwfdecNetStreamClass *klass)
 static void
 swfdec_net_stream_init (SwfdecNetStream *stream)
 {
-  stream->input.get_image = swfdec_net_stream_input_get_image;
-  stream->input.finalize = swfdec_net_stream_input_finalize;
+  stream->input.connect = swfdec_net_stream_input_connect;
+  stream->input.disconnect = swfdec_net_stream_input_disconnect;
 }
 
 SwfdecNetStream *

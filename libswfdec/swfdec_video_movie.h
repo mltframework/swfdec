@@ -39,14 +39,14 @@ typedef struct _SwfdecVideoMovieInput SwfdecVideoMovieInput;
 
 /* FIXME: make an interface? */
 struct _SwfdecVideoMovieInput {
-  /* get surface holding current image or NULL to use black */
-  cairo_surface_t *	(* get_image)	(SwfdecVideoMovieInput *input);
+  /* connect to movie */
+  void			(* connect)	(SwfdecVideoMovieInput *input,
+					 SwfdecVideoMovie *	movie);
+  /* called when input is unset */
+  void			(* disconnect)	(SwfdecVideoMovieInput *input,
+					 SwfdecVideoMovie *	movie);
   /* called when movie is iterating */
   void			(* iterate)	(SwfdecVideoMovieInput *input);
-  /* called when input is unset */
-  void			(* finalize)	(SwfdecVideoMovieInput *input);
-  /* set by movie */
-  SwfdecVideoMovie *	movie;
 };
 
 struct _SwfdecVideoMovie {
@@ -54,6 +54,7 @@ struct _SwfdecVideoMovie {
 
   SwfdecVideo *		video;		/* video we play back */
   SwfdecVideoMovieInput *input;		/* where we take the input from */
+  cairo_surface_t *	image;		/* TRUE if cleared */
 };
 
 struct _SwfdecVideoMovieClass {
@@ -64,6 +65,10 @@ GType		swfdec_video_movie_get_type		(void);
 
 void		swfdec_video_movie_set_input		(SwfdecVideoMovie *	movie,
 							 SwfdecVideoMovieInput *input);
+void		swfdec_video_movie_clear	      	(SwfdecVideoMovie *	movie);
+/* API for SwfdecVideoMovieInput */
+void		swfdec_video_movie_new_image		(SwfdecVideoMovie *	movie,
+							 cairo_surface_t *	surface);
 
 G_END_DECLS
 #endif

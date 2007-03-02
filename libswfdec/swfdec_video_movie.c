@@ -42,21 +42,13 @@ swfdec_video_movie_render (SwfdecMovie *mov, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (mov);
-  cairo_surface_t *surface;
 
-  if (movie->input == NULL)
+  if (movie->image == NULL)
     return;
 
-  surface = movie->input->get_image (movie->input);
   cairo_scale (cr, SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
-  if (surface != NULL) {
-    cairo_set_source_surface (cr, surface, 0.0, 0.0);
-    cairo_paint (cr);
-  } else {
-    cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_rectangle (cr, 0, 0, movie->video->width, movie->video->height);
-    cairo_fill (cr);
-  }
+  cairo_set_source_surface (cr, movie->image, 0.0, 0.0);
+  cairo_paint (cr);
 }
 
 static void
@@ -65,8 +57,8 @@ swfdec_video_movie_unset_input (SwfdecVideoMovie *movie)
   if (movie->input == NULL)
     return;
 
-  if (movie->input->finalize)
-    movie->input->finalize (movie->input);
+  if (movie->input->disconnect)
+    movie->input->disconnect (movie->input, movie);
   movie->input = NULL;
 }
 
@@ -76,6 +68,10 @@ swfdec_video_movie_dispose (GObject *object)
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (object);
 
   swfdec_video_movie_unset_input (movie);
+  if (movie->image) {
+    cairo_surface_destroy (movie->image);
+    movie->image = NULL;
+  }
   g_object_unref (movie->video);
 
   G_OBJECT_CLASS (swfdec_video_movie_parent_class)->dispose (object);
@@ -96,13 +92,17 @@ swfdec_video_movie_iterate_end (SwfdecMovie *mov)
   return TRUE;
 }
 
+extern const JSClass video_class;
 static void
 swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecScriptableClass *scriptable_class = SWFDEC_SCRIPTABLE_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
   object_class->dispose = swfdec_video_movie_dispose;
+
+  scriptable_class->jsclass = &video_class;
 
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;
@@ -119,11 +119,36 @@ swfdec_video_movie_set_input (SwfdecVideoMovie *movie, SwfdecVideoMovieInput *in
 {
   g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
   g_return_if_fail (input != NULL);
-  g_return_if_fail (input->get_image);
 
   swfdec_video_movie_unset_input (movie);
   movie->input = input;
-  input->movie = movie;
+  if (input->connect)
+    input->connect (input, movie);
+}
+
+void
+swfdec_video_movie_clear (SwfdecVideoMovie *movie)
+{
+  g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
+
+  if (movie->image == NULL)
+    return;
+
+  cairo_surface_destroy (movie->image);
+  movie->image = NULL;
+  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+}
+
+void
+swfdec_video_movie_new_image (SwfdecVideoMovie *movie, cairo_surface_t *image)
+{
+  g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
+  g_return_if_fail (image != NULL);
+
+  if (movie->image)
+    cairo_surface_destroy (movie->image);
+  cairo_surface_reference (image);
+  movie->image = image;
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 

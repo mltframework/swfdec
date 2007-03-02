@@ -59,26 +59,20 @@ swfdec_video_find_frame (SwfdecVideo *video, guint frame)
 
 typedef struct {
   SwfdecVideoMovieInput	input;
+  SwfdecVideoMovie *	movie;
   SwfdecVideo *		video;
   gpointer		decoder;
   guint			current_frame;
-  SwfdecBuffer *	current_buffer;
-  cairo_surface_t *	surface;
 } SwfdecVideoInput;
-
-static cairo_surface_t *
-swfdec_video_input_get_image (SwfdecVideoMovieInput *input_)
-{
-  SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
-
-  return input->surface;
-}
 
 static void
 swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
 {
   SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
   SwfdecBuffer *buffer;
+  static const cairo_user_data_key_t key;
+  guint w, h;
+  cairo_surface_t *surface;
 
   input->current_frame = (input->current_frame + 1) % input->video->n_frames;
   if (input->decoder == NULL)
@@ -87,38 +81,35 @@ swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
   if (buffer == NULL)
     return;
 
-  if (input->current_buffer != NULL) {
-    swfdec_buffer_unref (input->current_buffer);
-    cairo_surface_destroy (input->surface);
-  }
-  input->current_buffer = swfdec_video_codec_decode (input->video->codec, 
-      input->decoder, buffer);
-  if (input->current_buffer) {
-    guint w, h;
-    if (swfdec_video_codec_get_size (input->video->codec,
-	  input->decoder, &w, &h)) {
-      input->surface = cairo_image_surface_create_for_data (
-	  input->current_buffer->data, CAIRO_FORMAT_ARGB32,
-	  w, h, w * 4);
-    } else {
-      /* if we get a buffer, the decoder must be able to tell us its size */
+  buffer = swfdec_video_codec_decode (input->video->codec, input->decoder, buffer);
+  if (buffer == NULL)
+    return;
+  if (!swfdec_video_codec_get_size (input->video->codec, input->decoder, &w, &h)) {
       g_assert_not_reached ();
-    }
-  } else {
-    input->surface = NULL;
   }
-  swfdec_movie_invalidate (SWFDEC_MOVIE (input->input.movie));
+  surface = cairo_image_surface_create_for_data (buffer->data, 
+      CAIRO_FORMAT_ARGB32, w, h, w * 4);
+  cairo_surface_set_user_data (surface, &key, 
+      buffer, (cairo_destroy_func_t) swfdec_buffer_unref);
+  swfdec_video_movie_new_image (input->movie, surface);
+  cairo_surface_destroy (surface);
 }
 
 static void
-swfdec_video_input_finalize (SwfdecVideoMovieInput *input_)
+swfdec_video_input_connect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *movie)
 {
   SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
 
-  if (input->current_buffer != NULL) {
-    swfdec_buffer_unref (input->current_buffer);
-    cairo_surface_destroy (input->surface);
-  }
+  g_assert (input->movie == NULL);
+  input->movie = movie;
+}
+
+static void
+swfdec_video_input_disconnect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *movie)
+{
+  SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
+
+  g_assert (input->movie == movie);
   if (input->decoder)
     swfdec_video_codec_finish (input->video->codec, input->decoder);
   g_object_unref (input->video);
@@ -138,9 +129,9 @@ swfdec_video_input_new (SwfdecVideo *video)
     input->decoder = swfdec_video_codec_init (video->codec);
   if (input->decoder == NULL)
     return NULL;
-  input->input.get_image = swfdec_video_input_get_image;
+  input->input.connect = swfdec_video_input_connect;
   input->input.iterate = swfdec_video_input_iterate;
-  input->input.finalize = swfdec_video_input_finalize;
+  input->input.disconnect = swfdec_video_input_disconnect;
   g_object_ref (video);
   input->video = video;
   input->current_frame = (guint) -1;

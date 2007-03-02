@@ -170,12 +170,6 @@ swfdec_root_movie_init (SwfdecRootMovie *decoder)
 }
 
 void
-swfdec_root_movie_do_parse (gpointer movie, gpointer unused)
-{
-  swfdec_loader_target_parse (SWFDEC_LOADER_TARGET (movie), SWFDEC_ROOT_MOVIE (movie)->loader);
-}
-
-void
 swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *target)
 {
   g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (root));
@@ -196,9 +190,8 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
       } else {
 	SwfdecLoader *loader = swfdec_loader_load (root->loader, url);
 	if (loader) {
-	  SwfdecRootMovie *added = swfdec_player_add_level_from_loader (root->player, depth, loader, NULL);
-	  swfdec_player_add_action (root->player, SWFDEC_MOVIE (added),
-	      swfdec_root_movie_do_parse, NULL);
+	  swfdec_player_add_level_from_loader (root->player, depth, loader, NULL);
+	  swfdec_loader_queue_parse (loader);
 	} else {
 	  SWFDEC_WARNING ("didn't get a loader for url \"%s\" at depth %u", url, depth);
 	}

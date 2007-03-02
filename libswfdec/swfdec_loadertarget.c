@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_loadertarget.h"
+#include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 
@@ -147,6 +148,8 @@ swfdec_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
   g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
+  SWFDEC_LOG ("parsing %p%s%s", loader,
+      loader->error ? " ERROR" : "", loader->eof ? " EOF" : "");
   if (loader->error)
     return;
 

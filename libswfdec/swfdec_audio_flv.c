@@ -88,8 +88,10 @@ next:
     flv->next_timestamp = soon;
     if (flv->in == 0) {
       /* init */
-      if (flv->decoder)
+      if (flv->decoder) {
 	swfdec_audio_codec_finish (flv->codec, flv->decoder);
+	flv->decoder = NULL;
+      }
       flv->format = format;
       flv->width = width;
       flv->in = in;

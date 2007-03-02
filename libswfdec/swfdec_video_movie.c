@@ -46,7 +46,9 @@ swfdec_video_movie_render (SwfdecMovie *mov, cairo_t *cr,
   if (movie->image == NULL)
     return;
 
-  cairo_scale (cr, SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
+  cairo_scale (cr, 
+      (mov->original_extents.x1 - mov->original_extents.x0) / movie->image_width,
+      (mov->original_extents.y1 - mov->original_extents.y0) / movie->image_height);
   cairo_set_source_surface (cr, movie->image, 0.0, 0.0);
   cairo_paint (cr);
 }
@@ -140,15 +142,20 @@ swfdec_video_movie_clear (SwfdecVideoMovie *movie)
 }
 
 void
-swfdec_video_movie_new_image (SwfdecVideoMovie *movie, cairo_surface_t *image)
+swfdec_video_movie_new_image (SwfdecVideoMovie *movie, cairo_surface_t *image,
+    guint width, guint height)
 {
   g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
   g_return_if_fail (image != NULL);
+  g_return_if_fail (width > 0);
+  g_return_if_fail (height > 0);
 
   if (movie->image)
     cairo_surface_destroy (movie->image);
   cairo_surface_reference (image);
   movie->image = image;
+  movie->image_width = width;
+  movie->image_height = height;
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 

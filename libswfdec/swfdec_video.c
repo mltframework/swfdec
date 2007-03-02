@@ -91,7 +91,7 @@ swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
       CAIRO_FORMAT_ARGB32, w, h, w * 4);
   cairo_surface_set_user_data (surface, &key, 
       buffer, (cairo_destroy_func_t) swfdec_buffer_unref);
-  swfdec_video_movie_new_image (input->movie, surface);
+  swfdec_video_movie_new_image (input->movie, surface, w, h);
   cairo_surface_destroy (surface);
 }
 

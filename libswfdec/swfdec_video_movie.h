@@ -54,7 +54,9 @@ struct _SwfdecVideoMovie {
 
   SwfdecVideo *		video;		/* video we play back */
   SwfdecVideoMovieInput *input;		/* where we take the input from */
-  cairo_surface_t *	image;		/* TRUE if cleared */
+  cairo_surface_t *	image;		/* current image or NULL */
+  guint			image_width;	/* width of current image */
+  guint			image_height; 	/* height of current image */
 };
 
 struct _SwfdecVideoMovieClass {
@@ -68,7 +70,9 @@ void		swfdec_video_movie_set_input		(SwfdecVideoMovie *	movie,
 void		swfdec_video_movie_clear	      	(SwfdecVideoMovie *	movie);
 /* API for SwfdecVideoMovieInput */
 void		swfdec_video_movie_new_image		(SwfdecVideoMovie *	movie,
-							 cairo_surface_t *	surface);
+							 cairo_surface_t *	surface,
+							 guint			width,
+							 guint			height);
 
 G_END_DECLS
 #endif

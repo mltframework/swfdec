@@ -67,13 +67,13 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 	    CAIRO_FORMAT_ARGB32, w, h, w * 4);
 	cairo_surface_set_user_data (stream->surface, &key, 
 	    decoded, (cairo_destroy_func_t) swfdec_buffer_unref);
+	if (old != stream->surface) {
+	  GList *walk;
+	  for (walk = stream->movies; walk; walk = walk->next) {
+	    swfdec_video_movie_new_image (walk->data, stream->surface, w, h);
+	  }
+	}
       }
-    }
-  }
-  if (old != stream->surface) {
-    GList *walk;
-    for (walk = stream->movies; walk; walk = walk->next) {
-      swfdec_video_movie_new_image (walk->data, stream->surface);
     }
   }
 }

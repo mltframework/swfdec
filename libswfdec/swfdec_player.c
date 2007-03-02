@@ -358,6 +358,7 @@ swfdec_player_dispose (GObject *object)
 
   swfdec_js_finish_player (player);
 
+  swfdec_player_remove_all_actions (player, player); /* HACK to allow non-removable actions */
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);

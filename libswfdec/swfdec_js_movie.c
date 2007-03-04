@@ -1154,7 +1154,8 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   JSContext *cx;
   JSBool found = JS_FALSE;
 
-  if (script->jsobj == NULL)
+  if (!movie->has_name ||
+      script->jsobj == NULL)
     return;
 
   cx = script->jscx;

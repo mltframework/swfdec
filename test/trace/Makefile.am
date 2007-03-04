@@ -8,6 +8,8 @@ trace_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	array.swf \
+	array.swf.trace \
 	case1-6.swf \
 	case1-6.swf.trace \
 	case1-7.swf \

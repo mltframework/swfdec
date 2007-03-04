@@ -240,7 +240,6 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 
   s->b = s->parse;
   g_assert (dec->player);
-  s->main_sprite->player = dec->player;
 
   switch (s->state) {
     case SWFDEC_STATE_INIT1:
@@ -423,10 +422,6 @@ swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, int id, GType type)
   result = g_object_new (type, NULL);
   result->id = id;
   s->characters = g_list_prepend (s->characters, result);
-  if (SWFDEC_IS_SPRITE (result)) {
-    g_assert (SWFDEC_DECODER (s)->player);
-    SWFDEC_SPRITE (result)->player = SWFDEC_DECODER (s)->player;
-  }
   if (SWFDEC_IS_CACHED (result)) {
     swfdec_cached_set_cache (SWFDEC_CACHED (result), SWFDEC_DECODER (s)->player->cache);
   }

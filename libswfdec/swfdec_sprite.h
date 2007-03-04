@@ -70,7 +70,6 @@ struct _SwfdecSprite
 {
   SwfdecGraphic		graphic;
 
-  SwfdecPlayer *	player;		/* FIXME: only needed to get the JS Context, I want it gone */
   SwfdecSpriteFrame *	frames;		/* the n_frames different frames */
   unsigned int		n_frames;	/* number of frames in this sprite */
 

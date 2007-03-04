@@ -1459,6 +1459,36 @@ swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guin
 }
 
 static JSBool
+swfdec_action_init_array (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  JSObject *array;
+  int i, j;
+  guint n_items;
+
+  if (!JS_ValueToECMAUint32 (cx, fp->sp[-1], &n_items))
+    return JS_FALSE;
+  if ((guint) (fp->sp - fp->spbase) < n_items + 1) {
+    SWFDEC_ERROR ("not enough stack space");
+    return JS_FALSE;
+  }
+
+  /* items are the wrong order on the stack */
+  j = - 1 - n_items;
+  for (i = - 2; i > j; i--, j++) {
+    jsval tmp = fp->sp[i];
+    fp->sp[i] = fp->sp[j];
+    fp->sp[j] = tmp;
+  }
+  array = JS_NewArrayObject (cx, n_items, fp->sp - n_items - 1);
+  if (array == NULL)
+    return JS_FALSE;
+  fp->sp -= n_items;
+  fp->sp[-1] = OBJECT_TO_JSVAL (array);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_do_define_function (JSContext *cx, guint action,
     const guint8 *data, guint len, gboolean v2)
 {
@@ -2137,7 +2167,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
-  [0x42] = { "InitArray", NULL },
+  [0x42] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
   [0x44] = { "Typeof", NULL },
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },

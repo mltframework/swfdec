@@ -1814,6 +1814,15 @@ swfdec_action_modulo_7 (JSContext *cx, guint action, const guint8 *data, guint l
   }
 }
 
+static JSBool
+swfdec_action_to_number (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  double d;
+  if (!JS_ValueToNumber (cx, cx->fp->sp[-1], &d))
+    return JS_FALSE;
+  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2175,7 +2184,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
-  [0x4a] = { "ToNumber", NULL },
+  [0x4a] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [0x4b] = { "ToString", NULL },
   [0x4c] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
   [0x4d] = { "Swap", NULL },
@@ -2643,6 +2652,17 @@ swfdec_script_ensure_function (SwfdecScript *script, SwfdecScriptable *scriptabl
   return script->fun;
 }
 
+/**
+ * swfdec_script_execute:
+ * @script: a #SwfdecScript to execute
+ * @scriptable: #SwfdecScriptable to use as this in script scope
+ *
+ * Executes @script in the context of @scriptable. No local scope will be 
+ * added, so no local variables can exist. As per Actionscript, 4 registers
+ * will be created.
+ *
+ * Returns: the return value of @script
+ **/
 jsval
 swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 {

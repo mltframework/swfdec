@@ -32,6 +32,38 @@
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
 
+/*** SWFDEC_SPRITE_INFO ***/
+
+typedef struct _SwfdecSpriteInfo SwfdecSpriteInfo;
+struct _SwfdecSpriteInfo {
+  gboolean	 init_action_has_run;	/* TRUE if init actions have been run */ 
+};
+
+static void
+swfdec_sprite_info_free (gpointer infop)
+{
+  SwfdecSpriteInfo *info = infop;
+
+  g_free (info);
+}
+
+static SwfdecSpriteInfo *
+swfdec_sprite_info_get (SwfdecMovie *movie, SwfdecSprite *sprite)
+{
+  SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie->root);
+  SwfdecSpriteInfo *info;
+
+  info = swfdec_root_movie_get_character_data (root, SWFDEC_CHARACTER (sprite));
+  if (info == NULL) {
+    info = g_new0 (SwfdecSpriteInfo, 1);
+    swfdec_root_movie_set_character_data (root, SWFDEC_CHARACTER (sprite),
+	info, swfdec_sprite_info_free);
+  }
+  return info;
+}
+
+/*** SWFDEC_SPRITE_MOVIE ***/
+
 static SwfdecMovie *
 swfdec_sprite_movie_find (GList *movie_list, int depth)
 {
@@ -311,6 +343,15 @@ swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
 
   mov->n_frames = movie->sprite->n_frames;
+  if (movie->sprite->init_action) {
+    SwfdecSpriteInfo *info = swfdec_sprite_info_get (mov, movie->sprite);
+
+    if (!info->init_action_has_run) {
+      swfdec_script_execute (movie->sprite->init_action, 
+	  SWFDEC_SCRIPTABLE (mov->root));
+      info->init_action_has_run = TRUE;
+    }
+  }
   swfdec_sprite_movie_do_goto_frame (mov, GUINT_TO_POINTER (0));
   if (!swfdec_sprite_movie_iterate_end (mov)) {
     g_assert_not_reached ();

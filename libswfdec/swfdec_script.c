@@ -155,7 +155,7 @@ swfdec_action_push_string (JSContext *cx, const char *s)
 }
 
 static double
-swfdec_action_to_number (JSContext *cx, jsval val)
+swfdec_value_to_number (JSContext *cx, jsval val)
 {
   if (JSVAL_IS_INT (val)) {
     return JSVAL_TO_INT (val);
@@ -300,7 +300,7 @@ swfdec_value_to_frame (JSContext *cx, SwfdecMovie *movie, jsval val)
     frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
   } else {
     /* FIXME: how do we treat undefined etc? */
-    frame = swfdec_action_to_number (cx, val);
+    frame = swfdec_value_to_number (cx, val);
   }
   return frame;
 }
@@ -824,8 +824,8 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
   rval = cx->fp->sp[-1];
   lval = cx->fp->sp[-2];
   if (((SwfdecScript *) cx->fp->swf)->version < 7) {
-    l = swfdec_action_to_number (cx, lval);
-    r = swfdec_action_to_number (cx, rval);
+    l = swfdec_value_to_number (cx, lval);
+    r = swfdec_value_to_number (cx, rval);
   } else {
     if (!swfdec_value_to_number_7 (cx, lval, &l) ||
         !swfdec_value_to_number_7 (cx, rval, &r))
@@ -901,8 +901,8 @@ swfdec_action_add2_5 (JSContext *cx, guint action, const guint8 *data, guint len
     cx->fp->sp[-1] = STRING_TO_JSVAL (str);
   } else {
     double d, d2;
-    d = swfdec_action_to_number (cx, lval);
-    d2 = swfdec_action_to_number (cx, rval);
+    d = swfdec_value_to_number (cx, lval);
+    d2 = swfdec_value_to_number (cx, rval);
     d += d2;
     cx->fp->sp--;
     return JS_NewNumberValue(cx, d, &cx->fp->sp[-1]);
@@ -991,8 +991,8 @@ swfdec_action_new_comparison_6 (JSContext *cx, guint action, const guint8 *data,
   rval = cx->fp->sp[-1];
   lval = cx->fp->sp[-2];
   cx->fp->sp--;
-  d = swfdec_action_to_number (cx, lval);
-  d2 = swfdec_action_to_number (cx, rval);
+  d = swfdec_value_to_number (cx, lval);
+  d2 = swfdec_value_to_number (cx, rval);
   if (action == 0x48)
     cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (d < d2);
   else 
@@ -1028,7 +1028,7 @@ swfdec_action_not_4 (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   double d;
 
-  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   cx->fp->sp[-1] = INT_TO_JSVAL (d == 0 ? 1 : 0);
   return JS_TRUE;
 }
@@ -1038,7 +1038,7 @@ swfdec_action_not_5 (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   double d;
 
-  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   cx->fp->sp[-1] = d == 0 ? JSVAL_TRUE : JSVAL_FALSE;
   return JS_TRUE;
 }
@@ -1063,7 +1063,7 @@ swfdec_action_if (JSContext *cx, guint action, const guint8 *data, guint len)
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return JS_FALSE;
   }
-  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   cx->fp->sp--;
   if (d != 0)
     cx->fp->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
@@ -1075,7 +1075,7 @@ swfdec_action_decrement (JSContext *cx, guint action, const guint8 *data, guint 
 {
   double d;
 
-  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   d--;
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
@@ -1085,7 +1085,7 @@ swfdec_action_increment (JSContext *cx, guint action, const guint8 *data, guint 
 {
   double d;
 
-  d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   d++;
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
@@ -1199,8 +1199,8 @@ swfdec_action_old_compare (JSContext *cx, guint action, const guint8 *data, guin
 
   rval = cx->fp->sp[-1];
   lval = cx->fp->sp[-2];
-  l = swfdec_action_to_number (cx, lval);
-  r = swfdec_action_to_number (cx, rval);
+  l = swfdec_value_to_number (cx, lval);
+  r = swfdec_value_to_number (cx, rval);
   switch (action) {
     case 0x0e:
       cond = l == r;
@@ -1340,7 +1340,7 @@ swfdec_action_start_drag (JSContext *cx, guint action, const guint8 *data, guint
     return JS_FALSE;
   if (!swfdec_eval_jsval (cx, NULL, &fp->sp[-1]))
     return JS_FALSE;
-  if (swfdec_action_to_number (cx, fp->sp[-3])) {
+  if (swfdec_value_to_number (cx, fp->sp[-3])) {
     jsval tmp;
     if (stack_size < 7)
       return JS_FALSE;
@@ -1683,7 +1683,7 @@ swfdec_action_shift (JSContext *cx, guint action, const guint8 *data, guint len)
 static JSBool
 swfdec_action_to_integer (JSContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d = swfdec_action_to_number (cx, cx->fp->sp[-1]);
+  double d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
 
   return JS_NewNumberValue (cx, (int) d, &cx->fp->sp[-1]);
 }
@@ -1782,8 +1782,8 @@ swfdec_action_modulo_5 (JSContext *cx, guint action, const guint8 *data, guint l
 {
   double x, y;
 
-  x = swfdec_action_to_number (cx, cx->fp->sp[-1]);
-  y = swfdec_action_to_number (cx, cx->fp->sp[-2]);
+  x = swfdec_value_to_number (cx, cx->fp->sp[-1]);
+  y = swfdec_value_to_number (cx, cx->fp->sp[-2]);
   cx->fp->sp--;
   errno = 0;
   x = fmod (x, y);

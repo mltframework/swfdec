@@ -43,6 +43,8 @@ struct _SwfdecRootMovie
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */
   guint			unnamed_count;	/* variable used for naming unnamed movies */
+
+  GHashTable *		character_data;	/* custom data per character to be set by the movie using them */
 };
 
 struct _SwfdecRootMovieClass
@@ -50,12 +52,18 @@ struct _SwfdecRootMovieClass
   SwfdecSpriteMovieClass sprite_movie_class;
 };
 
-GType		swfdec_root_movie_get_type	(void);
+GType		swfdec_root_movie_get_type	  	(void);
 
-void		swfdec_root_movie_load		(SwfdecRootMovie *	movie,
-						 const char *		url,
-						 const char *		target);
+void		swfdec_root_movie_load			(SwfdecRootMovie *	movie,
+							 const char *		url,
+							 const char *		target);
 
+void		swfdec_root_movie_set_character_data	(SwfdecRootMovie *	movie,
+							 SwfdecCharacter *	character,
+							 gpointer		data,
+							 GDestroyNotify		destroy);
+gpointer	swfdec_root_movie_get_character_data	(SwfdecRootMovie *	movie,
+							 SwfdecCharacter *	character);
 
 G_END_DECLS
 #endif

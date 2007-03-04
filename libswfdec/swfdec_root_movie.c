@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "swfdec_root_movie.h"
+#include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_flv_decoder.h"
@@ -126,6 +127,10 @@ swfdec_root_movie_dispose (GObject *object)
     g_object_unref (root->decoder);
     root->decoder = NULL;
   }
+  if (root->character_data != NULL) {
+    g_hash_table_destroy (root->character_data);
+    root->character_data = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_root_movie_parent_class)->dispose (object);
 }
@@ -209,3 +214,56 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
   swfdec_player_launch (root->player, url, target);
 }
 
+typedef struct {
+  gpointer		data;
+  GDestroyNotify	free;
+} CharacterData;
+
+static void
+character_data_free (gpointer datap)
+{
+  CharacterData *data = datap;
+
+  if (data->free)
+    data->free (data->data);
+
+  g_free (data);
+}
+
+void
+swfdec_root_movie_set_character_data (SwfdecRootMovie *movie, 
+    SwfdecCharacter *character, gpointer data, GDestroyNotify destroy)
+{
+  CharacterData *cdata;
+
+  g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (movie));
+  g_return_if_fail (SWFDEC_IS_CHARACTER (character));
+  g_return_if_fail (data != NULL);
+
+  cdata = g_new (CharacterData, 1);
+  cdata->data = data;
+  cdata->free = destroy;
+
+  if (movie->character_data == NULL) {
+    movie->character_data = g_hash_table_new_full (g_direct_hash, 
+	g_direct_equal, NULL, character_data_free);
+  }
+  g_hash_table_insert (movie->character_data, character, cdata);
+}
+
+gpointer
+swfdec_root_movie_get_character_data (SwfdecRootMovie *movie,
+    SwfdecCharacter *character)
+{
+  CharacterData *data;
+
+  g_return_val_if_fail (SWFDEC_IS_ROOT_MOVIE (movie), NULL);
+  g_return_val_if_fail (SWFDEC_IS_CHARACTER (character), NULL);
+
+  if (movie->character_data == NULL)
+    return NULL;
+  data = g_hash_table_lookup (movie->character_data, character);
+  if (!data)
+    return NULL;
+  return data->data;
+}

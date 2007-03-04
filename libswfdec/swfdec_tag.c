@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -286,22 +286,21 @@ int
 tag_func_do_init_action (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  SwfdecBuffer *buffer;
-  SwfdecCharacter *character;
+  guint id;
+  SwfdecSprite *sprite;
 
-  character = swfdec_swf_decoder_get_character (s, swfdec_bits_get_u16 (bits));
-  buffer = swfdec_bits_get_buffer (bits, -1);
-
-  if (SWFDEC_IS_SPRITE (character)) {
-    SWFDEC_WARNING ("init actions not implemented yet");
-#if 0
-    SwfdecSprite *save_parse_sprite = s->parse_sprite;
-    s->parse_sprite = SWFDEC_SPRITE(obj);
-    retcode = swfdec_action_script_execute (s, buffer);
-    s->parse_sprite = save_parse_sprite;
-#endif
+  id = swfdec_bits_get_u16 (bits);
+  sprite = swfdec_swf_decoder_get_character (s, id);
+  if (!SWFDEC_IS_SPRITE (sprite)) {
+    SWFDEC_ERROR ("character %u is not a sprite", id);
+    return SWFDEC_STATUS_OK;
   }
-  swfdec_buffer_unref (buffer);
+  if (sprite->init_action != NULL) {
+    SWFDEC_ERROR ("sprite %u already has an init action", id);
+    return SWFDEC_STATUS_OK;
+  }
+  sprite->init_action = swfdec_script_new_for_player (SWFDEC_DECODER (s)->player,
+      bits, "InitAction", s->version);
 
   return SWFDEC_STATUS_OK;
 }

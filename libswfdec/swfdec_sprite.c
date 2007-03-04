@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,10 @@ swfdec_sprite_dispose (GObject *object)
       g_slist_free (sprite->frames[i].sound);
     }
     g_free(sprite->frames);
+  }
+  if (sprite->init_action) {
+    swfdec_script_unref (sprite->init_action);
+    sprite->init_action = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_sprite_parent_class)->dispose (object);

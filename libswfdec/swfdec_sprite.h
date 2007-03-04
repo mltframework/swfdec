@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -72,6 +72,7 @@ struct _SwfdecSprite
 
   SwfdecSpriteFrame *	frames;		/* the n_frames different frames */
   unsigned int		n_frames;	/* number of frames in this sprite */
+  SwfdecScript *	init_action;	/* action to run when initializing this sprite */
 
   /* parse state */
   unsigned int		parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */

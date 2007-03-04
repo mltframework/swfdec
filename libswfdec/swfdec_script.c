@@ -1763,6 +1763,26 @@ swfdec_action_delete (JSContext *cx, guint action, const guint8 *data, guint len
 }
 
 static JSBool
+swfdec_action_delete2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *name;
+  JSObject *obj, *pobj;
+  JSProperty *prop;
+  JSAtom *atom;
+  
+  cx->fp->sp -= 2;
+  name = swfdec_js_to_string (cx, cx->fp->sp[1]);
+  if (name == NULL)
+    return JS_FALSE;
+  if (!(atom = js_Atomize (cx, name, strlen (name), 0)) ||
+      !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+    return JS_FALSE;
+  if (!pobj)
+    return JS_TRUE;
+  return JS_DeleteProperty (cx, pobj, name);
+}
+
+static JSBool
 swfdec_action_store_register (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   if (len != 1) {
@@ -2169,7 +2189,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x37] = { "MVAsciiToChar", NULL },
   /* version 5 */
   [0x3a] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
-  [0x3b] = { "Delete2", NULL },
+  [0x3b] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
   [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [0x3d] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
@@ -2470,7 +2490,10 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER ||
 	script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT ||
 	script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
-      g_assert_not_reached ();
+      SWFDEC_ERROR ("The following preload flags aren't implemented:%s%s%s",
+	  script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER ? " PRELOAD_SUPER" : "",
+	  script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT ? " PRELOAD_ROOT" : "",
+	  script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT ? " PRELOAD_PARENT" : "");
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL)
       fp->vars[preload_reg++] = OBJECT_TO_JSVAL (player->jsobj);

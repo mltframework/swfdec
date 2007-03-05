@@ -1175,3 +1175,11 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   }
 }
 
+gboolean
+swfdec_js_is_movieclip (JSContext *cx, JSObject *object)
+{
+  g_return_val_if_fail (cx != NULL, FALSE);
+  g_return_val_if_fail (object != NULL, FALSE);
+
+  return JS_InstanceOf (cx, object, &movieclip_class, NULL);
+}

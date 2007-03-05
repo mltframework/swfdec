@@ -62,6 +62,8 @@ void		swfdec_js_eval_set    		(JSContext *		cx,
 /* support functions */
 const char *	swfdec_js_to_string		(JSContext *		cx,
 						 jsval			val);
+gboolean	swfdec_js_is_movieclip		(JSContext *		cx,
+						 JSObject *		object);
 
 G_END_DECLS
 

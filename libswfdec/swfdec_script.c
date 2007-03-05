@@ -1430,6 +1430,59 @@ fail:
 }
 
 static JSBool
+swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSStackFrame *fp = cx->fp;
+  const char *s;
+  guint32 n_args;
+  JSObject *object;
+  jsval constructor;
+  const JSClass *clasp;
+  
+  s = swfdec_js_to_string (cx, fp->sp[-1]);
+  if (s == NULL)
+    return JS_FALSE;
+  if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
+    return JS_FALSE;
+  if (n_args + 3 > (guint) (fp->sp - fp->spbase))
+    return JS_FALSE;
+  
+  if (!JS_ValueToObject (cx, fp->sp[-2], &object))
+    return JS_FALSE;
+  if (object == NULL)
+    goto fail;
+  if (s[0] == '\0') {
+    constructor = OBJECT_TO_JSVAL (object);
+  } else {
+    if (!JS_GetProperty (cx, object, s, &constructor))
+      return JS_FALSE;
+    if (!JSVAL_IS_OBJECT (constructor)) {
+      SWFDEC_WARNING ("%s:%s is not a function", JS_GetClass (object)->name, s);
+    }
+  }
+  fp->sp[-1] = OBJECT_TO_JSVAL (constructor);
+  if (!JSVAL_IS_OBJECT (constructor) || JSVAL_IS_NULL (constructor))
+    goto fail;
+  object = JSVAL_TO_OBJECT (constructor);
+  if (JS_GetClass (object) != &js_FunctionClass)
+    goto fail;
+  clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
+  object = JS_NewObject (cx, clasp, NULL, NULL);
+  if (object == NULL)
+    return JS_FALSE;
+  fp->sp[-2] = OBJECT_TO_JSVAL (object);
+  if (!swfdec_action_call (cx, n_args, JSINVOKE_CONSTRUCT))
+    return JS_FALSE;
+  fp->sp[-1] = OBJECT_TO_JSVAL (object);
+  return JS_TRUE;
+
+fail:
+  fp->sp -= 2 + n_args;
+  fp->sp[-1] = JSVAL_VOID;
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   JSStackFrame *fp = cx->fp;
@@ -1835,6 +1888,15 @@ swfdec_action_modulo_7 (JSContext *cx, guint action, const guint8 *data, guint l
 }
 
 static JSBool
+swfdec_action_swap (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval tmp = cx->fp->sp[-2];
+  cx->fp->sp[-2] = cx->fp->sp[-1];
+  cx->fp->sp[-2] = tmp;
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_to_number (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   double d;
@@ -2207,13 +2269,13 @@ static const SwfdecActionSpec actions[256] = {
   [0x4a] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [0x4b] = { "ToString", NULL },
   [0x4c] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
-  [0x4d] = { "Swap", NULL },
+  [0x4d] = { "Swap", NULL, 2, 2, { NULL, NULL, swfdec_action_swap, swfdec_action_swap, swfdec_action_swap } },
   [0x4e] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
   [0x4f] = { "SetMember", NULL, 3, 0, { NULL, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member } },
   [0x50] = { "Increment", NULL, 1, 1, { NULL, NULL, swfdec_action_increment, swfdec_action_increment, swfdec_action_increment } },
   [0x51] = { "Decrement", NULL, 1, 1, { NULL, NULL, swfdec_action_decrement, swfdec_action_decrement, swfdec_action_decrement } },
   [0x52] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
-  [0x53] = { "NewMethod", NULL },
+  [0x53] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
   /* version 6 */
   [0x54] = { "InstanceOf", NULL },
   [0x55] = { "Enumerate2", NULL },

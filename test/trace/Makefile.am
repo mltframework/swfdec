@@ -1,3 +1,10 @@
+if HAVE_MING
+SUBDIRS = ming
+else
+SUBDIRS =
+endif
+DIST_SUBDIRS = ming
+
 check_PROGRAMS = trace
 TESTS = $(check_PROGRAMS)
 
@@ -40,6 +47,8 @@ EXTRA_DIST = \
 	comparisons-6.swf.trace \
 	comparisons-7.swf \
 	comparisons-7.swf.trace \
+	constructor-prototype.swf \
+	constructor-prototype.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	currentframe.swf \
@@ -50,6 +59,8 @@ EXTRA_DIST = \
 	function1.swf.trace \
 	function2.swf \
 	function2.swf.trace \
+	function-prototype-chain.swf \
+	function-prototype-chain.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
 	goto1.swf \

@@ -1387,7 +1387,7 @@ static JSBool
 swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   JSStackFrame *fp = cx->fp;
-  jsval constructor;
+  jsval constructor, proto;
   JSObject *object;
   const JSClass *clasp;
   guint n_args;
@@ -1414,7 +1414,12 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
   if (JS_GetClass (object) != &js_FunctionClass)
     goto fail;
   clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
-  object = JS_NewObject (cx, clasp, NULL, NULL);
+  if (!JS_GetProperty (cx, object, "prototype", &proto))
+    return JS_FALSE;
+  if (!JSVAL_IS_OBJECT (proto)) {
+    SWFDEC_ERROR ("prototype of %s is not an object", name);
+  }
+  object = JS_NewObject (cx, clasp, JSVAL_IS_OBJECT (proto) ? JSVAL_TO_OBJECT (proto) : NULL, NULL);
   if (object == NULL)
     return JS_FALSE;
   fp->sp[-2] = OBJECT_TO_JSVAL (object);
@@ -1436,7 +1441,7 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
   const char *s;
   guint32 n_args;
   JSObject *object;
-  jsval constructor;
+  jsval constructor, proto;
   const JSClass *clasp;
   
   s = swfdec_js_to_string (cx, fp->sp[-1]);
@@ -1467,7 +1472,12 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
   if (JS_GetClass (object) != &js_FunctionClass)
     goto fail;
   clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
-  object = JS_NewObject (cx, clasp, NULL, NULL);
+  if (!JS_GetProperty (cx, object, "prototype", &proto))
+    return JS_FALSE;
+  if (!JSVAL_IS_OBJECT (proto)) {
+    SWFDEC_ERROR ("prototype of %s is not an object", s);
+  }
+  object = JS_NewObject (cx, clasp, JSVAL_IS_OBJECT (proto) ? JSVAL_TO_OBJECT (proto) : NULL, NULL);
   if (object == NULL)
     return JS_FALSE;
   fp->sp[-2] = OBJECT_TO_JSVAL (object);

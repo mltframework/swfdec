@@ -1905,6 +1905,45 @@ swfdec_action_to_number (JSContext *cx, guint action, const guint8 *data, guint 
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
 
+static JSBool
+swfdec_action_type_of (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval val;
+  const char *type;
+  JSString *string;
+
+  val = cx->fp->sp[-1];
+  if (JSVAL_IS_NUMBER (val)) {
+    type = "number";
+  } else if (JSVAL_IS_BOOLEAN (val)) {
+    type = "boolean";
+  } else if (JSVAL_IS_STRING (val)) {
+    type = "string";
+  } else if (JSVAL_IS_VOID (val)) {
+    type = "undefined";
+  } else if (JSVAL_IS_NULL (val)) {
+    type = "null";
+  } else if (JSVAL_IS_OBJECT (val)) {
+    JSObject *obj = JSVAL_TO_OBJECT (val);
+    if (swfdec_js_is_movieclip (cx, obj)) {
+      type = "movieclip";
+    } else if (JS_ObjectIsFunction (cx, obj)) {
+      type = "function";
+    } else {
+      type = "object";
+    }
+  } else {
+    g_assert_not_reached ();
+    return JS_FALSE;
+  }
+  /* can't use InternString here because of case sensitivity issues */
+  string = JS_NewStringCopyZ (cx, type);
+  if (string == NULL)
+    return JS_FALSE;
+  cx->fp->sp[-1] = STRING_TO_JSVAL (string);
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2260,7 +2299,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [0x42] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
-  [0x44] = { "Typeof", NULL },
+  [0x44] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
   [0x46] = { "Enumerate", NULL },
   [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },

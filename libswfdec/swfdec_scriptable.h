@@ -66,6 +66,12 @@ gpointer		swfdec_scriptable_from_object	(JSContext *		cx,
 
 void			swfdec_scriptable_set_variables	(SwfdecScriptable *	script,
 							 const char *		variables);
+gboolean		swfdec_scriptable_can_execute	(SwfdecScriptable *	script,
+							 const char *		name);
+void			swfdec_scriptable_execute	(SwfdecScriptable *	script,
+							 const char *		name,
+							 guint			n_args,
+							 jsval *		args);
 
 
 G_END_DECLS

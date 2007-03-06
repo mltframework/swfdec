@@ -25,6 +25,8 @@
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "js/jsapi.h"
+#include "js/jsfun.h"
+#include "js/jsinterp.h"
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecScriptable, swfdec_scriptable, G_TYPE_OBJECT)
 
@@ -232,5 +234,71 @@ swfdec_scriptable_set_variables (SwfdecScriptable *script, const char *variables
       break;
     variables++;
   }
+}
+
+/**
+ * swfdec_scriptable_execute:
+ * @script: a #SwfdecScriptable
+ * @name: property name that contains the handler
+ * @n_args: number of arguments to pass to handler
+ * @args: @n_args arguments that will be passed to handler
+ *
+ * Executes a callback function (like onMouseMove) on the scriptable if it is
+ * defined.
+ **/
+void
+swfdec_scriptable_execute (SwfdecScriptable *script, const char *name,
+    guint n_args, jsval *args)
+{
+  JSObject *obj;
+  jsval fun;
+
+  g_return_if_fail (SWFDEC_IS_SCRIPTABLE (script));
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (n_args == 0 || args != NULL);
+
+  obj = swfdec_scriptable_get_object (script);
+  if (!obj)
+    return;
+  if (!JS_GetProperty (script->jscx, obj, name, &fun))
+    return;
+  if (!JSVAL_IS_OBJECT (fun) || fun == JSVAL_NULL ||
+      JS_GetClass (JSVAL_TO_OBJECT (fun)) != &js_FunctionClass) {
+    SWFDEC_LOG ("scriptable has no handler for %s event", name);
+    return;
+  }
+  js_InternalCall (script->jscx, obj, fun, n_args, args, &fun);
+}
+
+/**
+ * swfdec_scriptable_can_execute:
+ * @script: a #SwfdecScriptable
+ * @name: name of the function
+ *
+ * Checks if @script contains a function property named @name that can be
+ * executed via swfdec_scriptable_execute().
+ *
+ * Returns: %TRUE if such a function exists, %FALSE otherwise
+ **/
+gboolean
+swfdec_scriptable_can_execute (SwfdecScriptable *script, const char *name)
+{
+  JSObject *obj;
+  jsval fun;
+
+  g_return_val_if_fail (SWFDEC_IS_SCRIPTABLE (script), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  obj = swfdec_scriptable_get_object (script);
+  if (!obj)
+    return FALSE;
+  if (!JS_GetProperty (script->jscx, obj, name, &fun))
+    return FALSE;
+  if (!JSVAL_IS_OBJECT (fun) || fun == JSVAL_NULL ||
+      JS_GetClass (JSVAL_TO_OBJECT (fun)) != &js_FunctionClass) {
+    SWFDEC_LOG ("scriptable has no handler for %s event", name);
+    return FALSE;
+  }
+  return TRUE;
 }
 

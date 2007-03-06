@@ -339,8 +339,14 @@ swfdec_movie_execute_script (gpointer moviep, gpointer data)
   SwfdecMovie *movie = moviep;
   guint condition = GPOINTER_TO_UINT (data);
 
-  g_assert (movie->content->events);
-  swfdec_event_list_execute (movie->content->events, SWFDEC_SCRIPTABLE (movie), condition, 0);
+  if (movie->content->events) {
+    swfdec_event_list_execute (movie->content->events, 
+	SWFDEC_SCRIPTABLE (movie), condition, 0);
+  } else {
+    const char *name = swfdec_event_type_get_name (condition);
+    if (name != NULL)
+      swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (movie), name, 0, NULL);
+  }
 }
 
 /**
@@ -360,10 +366,16 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (condition != 0, FALSE);
 
-  if (movie->content->events == NULL)
-    return FALSE;
-  if (!swfdec_event_list_has_conditions (movie->content->events, condition, 0))
-    return FALSE;
+  if (movie->content->events) {
+    if (!swfdec_event_list_has_conditions (movie->content->events, 
+	  SWFDEC_SCRIPTABLE (movie), condition, 0))
+      return FALSE;
+  } else {
+    const char *name = swfdec_event_type_get_name (condition);
+    if (name == NULL ||
+	!swfdec_scriptable_can_execute (SWFDEC_SCRIPTABLE (movie), name))
+      return FALSE;
+  }
 
   player = SWFDEC_ROOT_MOVIE (movie->root)->player;
   swfdec_player_add_action (player, movie, swfdec_movie_execute_script, 

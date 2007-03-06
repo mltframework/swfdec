@@ -48,6 +48,8 @@ typedef enum _SwfdecEventType {
   SWFDEC_EVENT_CONSTRUCT	= (1 << 18)
 } SwfdecEventType;
 
+const char *		swfdec_event_type_get_name	(SwfdecEventType      type);
+
 SwfdecEventList *	swfdec_event_list_new		(SwfdecPlayer *	      player);
 SwfdecEventList *	swfdec_event_list_copy		(SwfdecEventList *    list);
 void			swfdec_event_list_free		(SwfdecEventList *    list);
@@ -63,6 +65,7 @@ void			swfdec_event_list_execute	(SwfdecEventList *    list,
 							 unsigned int	      condition,
 							 guint8		      key);
 gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,
+							 SwfdecScriptable *	scriptable,
 							 unsigned int	      conditions,
 							 guint8		      key);
 							 

@@ -317,43 +317,39 @@ dump_image (SwfdecImage *image)
 }
 
 static void 
-dump_objects (SwfdecSwfDecoder *s)
+dump_object (gpointer key, gpointer value, gpointer unused)
 {
-  GList *g;
-  SwfdecCharacter *c;
+  SwfdecCharacter *c = value;
 
-  for (g = g_list_last (s->characters); g; g = g->prev) {
-    c = g->data;
-    g_print ("%d: %s\n", c->id, G_OBJECT_TYPE_NAME (c));
-    if (verbose && SWFDEC_IS_GRAPHIC (c)) {
-      SwfdecGraphic *graphic = SWFDEC_GRAPHIC (c);
-      g_print ("  extents: %g %g  %g %g\n", graphic->extents.x0, graphic->extents.y0,
-	  graphic->extents.x1, graphic->extents.y1);
-    }
-    if (SWFDEC_IS_IMAGE (c)) {
-      dump_image (SWFDEC_IMAGE (c));
-    }
-    if (SWFDEC_IS_SPRITE (c)) {
-      dump_sprite (SWFDEC_SPRITE (c));
-    }
-    if (SWFDEC_IS_SHAPE(c)) {
-      dump_shape(SWFDEC_SHAPE(c));
-    }
-    if (SWFDEC_IS_TEXT (c)) {
-      dump_text (SWFDEC_TEXT (c));
-    }
-    if (SWFDEC_IS_EDIT_TEXT (c)) {
-      dump_edit_text (SWFDEC_EDIT_TEXT (c));
-    }
-    if (SWFDEC_IS_FONT (c)) {
-      dump_font (SWFDEC_FONT (c));
-    }
-    if (SWFDEC_IS_BUTTON (c)) {
-      dump_button (SWFDEC_BUTTON (c));
-    }
-    if (SWFDEC_IS_SOUND (c)) {
-      dump_sound (SWFDEC_SOUND (c));
-    }
+  g_print ("%d: %s\n", c->id, G_OBJECT_TYPE_NAME (c));
+  if (verbose && SWFDEC_IS_GRAPHIC (c)) {
+    SwfdecGraphic *graphic = SWFDEC_GRAPHIC (c);
+    g_print ("  extents: %g %g  %g %g\n", graphic->extents.x0, graphic->extents.y0,
+	graphic->extents.x1, graphic->extents.y1);
+  }
+  if (SWFDEC_IS_IMAGE (c)) {
+    dump_image (SWFDEC_IMAGE (c));
+  }
+  if (SWFDEC_IS_SPRITE (c)) {
+    dump_sprite (SWFDEC_SPRITE (c));
+  }
+  if (SWFDEC_IS_SHAPE(c)) {
+    dump_shape(SWFDEC_SHAPE(c));
+  }
+  if (SWFDEC_IS_TEXT (c)) {
+    dump_text (SWFDEC_TEXT (c));
+  }
+  if (SWFDEC_IS_EDIT_TEXT (c)) {
+    dump_edit_text (SWFDEC_EDIT_TEXT (c));
+  }
+  if (SWFDEC_IS_FONT (c)) {
+    dump_font (SWFDEC_FONT (c));
+  }
+  if (SWFDEC_IS_BUTTON (c)) {
+    dump_button (SWFDEC_BUTTON (c));
+  }
+  if (SWFDEC_IS_SOUND (c)) {
+    dump_sound (SWFDEC_SOUND (c));
   }
 }
 
@@ -406,7 +402,7 @@ main (int argc, char *argv[])
   g_print ("  rate   : %g fps\n",  SWFDEC_DECODER (s)->rate / 256.0);
   g_print ("  size   : %ux%u pixels\n", SWFDEC_DECODER (s)->width, SWFDEC_DECODER (s)->height);
   g_print ("objects:\n");
-  dump_objects(s);
+  g_hash_table_foreach (s->characters, dump_object, NULL);
 
   g_print ("main sprite:\n");
   dump_sprite(s->main_sprite);

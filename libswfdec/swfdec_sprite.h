@@ -89,7 +89,7 @@ int tag_func_define_sprite (SwfdecSwfDecoder * s);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
     SwfdecBuffer * chunk, int skip, unsigned int n_samples);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames, unsigned int rate);
-void swfdec_sprite_add_action (SwfdecSprite * sprite, unsigned int frame, 
+void swfdec_sprite_add_action (SwfdecSprite * sprite,
     SwfdecSpriteActionType type, gpointer data);
 unsigned int swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame);
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,

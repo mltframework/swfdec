@@ -121,12 +121,16 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
 /* NB: we look in the current frame, too - so call this before adding actions
  * that might modify the frame you're looking for */
 static SwfdecContent *
-swfdec_content_find (SwfdecSprite *sprite, unsigned int frame_id, int depth)
+swfdec_content_find (SwfdecSprite *sprite, int depth)
 {
   guint i, j;
   SwfdecContent *content;
+  static unsigned long long int count = 0;
 
-  for (i = frame_id; i <= frame_id /* wait for underflow */; i--) {
+  if (++count % 10000 == 0)
+    g_print ("%llu\n", count);
+
+  for (i = sprite->parse_frame; i <= sprite->parse_frame /* wait for underflow */; i--) {
     SwfdecSpriteFrame *frame = &sprite->frames[i];
     if (frame->actions == NULL)
       continue;
@@ -155,7 +159,7 @@ swfdec_content_find (SwfdecSprite *sprite, unsigned int frame_id, int depth)
 }
 
 static void
-swfdec_content_update_lifetime (SwfdecSprite *sprite, unsigned int frame_id,
+swfdec_content_update_lifetime (SwfdecSprite *sprite,
     SwfdecSpriteActionType type, gpointer data)
 {
   SwfdecContent *content;
@@ -174,10 +178,10 @@ swfdec_content_update_lifetime (SwfdecSprite *sprite, unsigned int frame_id,
       g_assert_not_reached ();
       return;
   }
-  content = swfdec_content_find (sprite, frame_id, depth);
+  content = swfdec_content_find (sprite, depth);
   if (content == NULL)
     return;
-  content->sequence->end = frame_id;
+  content->sequence->end = sprite->parse_frame;
 }
 
 /* NB: does not free the action data */
@@ -207,7 +211,7 @@ swfdec_sprite_add_action (SwfdecSprite *sprite, SwfdecSpriteActionType type,
   if (frame->actions == NULL)
     frame->actions = g_array_new (FALSE, FALSE, sizeof (SwfdecSpriteAction));
 
-  swfdec_content_update_lifetime (sprite, sprite->parse_frame, type, data);
+  swfdec_content_update_lifetime (sprite, type, data);
   action.type = type;
   action.data = data;
   g_array_append_val (frame->actions, action);
@@ -289,7 +293,7 @@ swfdec_contents_create (SwfdecSprite *sprite,
   if (copy) {
     SwfdecContent *copy;
 
-    copy = swfdec_content_find (sprite, sprite->parse_frame, depth);
+    copy = swfdec_content_find (sprite, depth);
     if (copy == NULL) {
       SWFDEC_WARNING ("Couldn't copy depth %u in frame %u", depth, sprite->parse_frame);
     } else {

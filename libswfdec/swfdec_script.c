@@ -1902,7 +1902,7 @@ swfdec_action_swap (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   jsval tmp = cx->fp->sp[-2];
   cx->fp->sp[-2] = cx->fp->sp[-1];
-  cx->fp->sp[-2] = tmp;
+  cx->fp->sp[-1] = tmp;
   return JS_TRUE;
 }
 

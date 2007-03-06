@@ -1153,6 +1153,7 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   JSObject *jsobj;
   JSContext *cx;
   JSBool found = JS_FALSE;
+  jsval deleted = JSVAL_FALSE;
 
   if (!movie->has_name ||
       script->jsobj == NULL)
@@ -1168,9 +1169,10 @@ swfdec_js_movie_remove_property (SwfdecMovie *movie)
   }
 
   SWFDEC_LOG ("removing %s as property", movie->name);
-  if (!JS_SetPropertyAttributes (cx, jsobj, movie->name, JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
+  if (!JS_SetPropertyAttributes (cx, jsobj, movie->name, 0, &found) ||
       found != JS_TRUE ||
-      !JS_DeleteProperty (cx, jsobj, movie->name)) {
+      !JS_DeleteProperty2 (cx, jsobj, movie->name, &deleted) ||
+      deleted == JSVAL_FALSE) {
     SWFDEC_ERROR ("could not remove property %s correctly", movie->name);
   }
 }

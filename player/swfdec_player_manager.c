@@ -41,9 +41,40 @@ enum {
   MESSAGE,
   LAST_SIGNAL
 };
+guint signals[LAST_SIGNAL];
+
+/*** command handling ***/
+
+typedef enum {
+  SWFDEC_MESSAGE_INPUT,
+  SWFDEC_MESSAGE_OUTPUT,
+  SWFDEC_MESSAGE_ERROR
+} SwfdecMessageType;
+
+static void
+swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
+    SwfdecMessageType type, char *format, ...) G_GNUC_PRINTF (3, 4);
+static void
+swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
+    SwfdecMessageType type, char *format, ...)
+{
+  va_list args;
+  char *msg;
+
+  va_start (args, format);
+  msg = g_strdup_vprintf (format, args);
+  va_end (args);
+  g_signal_emit (manager, signals[MESSAGE], 0, (guint) type, msg);
+  g_free (msg);
+}
+#define swfdec_player_manager_output(manager, ...) \
+  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_OUTPUT, __VA_ARGS__)
+#define swfdec_player_manager_error(manager, ...) \
+  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_ERROR, __VA_ARGS__)
+
+/*** SWFDEC_PLAYER_MANAGER ***/
 
 G_DEFINE_TYPE (SwfdecPlayerManager, swfdec_player_manager, G_TYPE_OBJECT)
-guint signals[LAST_SIGNAL];
 
 static void
 swfdec_player_manager_get_property (GObject *object, guint param_id, GValue *value, 
@@ -89,6 +120,12 @@ swfdec_player_manager_set_property (GObject *object, guint param_id, const GValu
 static void breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *manager);
 
 static void
+trace_cb (SwfdecPlayer *player, const char *str, SwfdecPlayerManager *manager)
+{
+  swfdec_player_manager_output (manager, "Trace: %s", str);
+}
+
+static void
 swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *player)
 {
   if (manager->player == player)
@@ -102,6 +139,7 @@ swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *pl
   if (player) {
     g_object_ref (player);
     g_signal_connect (player, "breakpoint", G_CALLBACK (breakpoint_hit_cb), manager);
+    g_signal_connect (player, "trace", G_CALLBACK (trace_cb), manager);
   }
 }
 
@@ -293,34 +331,7 @@ swfdec_player_manager_continue (SwfdecPlayerManager *manager)
   g_main_loop_quit (manager->interrupt_loop);
 }
 
-/*** command handling ***/
-
-typedef enum {
-  SWFDEC_MESSAGE_INPUT,
-  SWFDEC_MESSAGE_OUTPUT,
-  SWFDEC_MESSAGE_ERROR
-} SwfdecMessageType;
-
-static void
-swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
-    SwfdecMessageType type, char *format, ...) G_GNUC_PRINTF (3, 4);
-static void
-swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
-    SwfdecMessageType type, char *format, ...)
-{
-  va_list args;
-  char *msg;
-
-  va_start (args, format);
-  msg = g_strdup_vprintf (format, args);
-  va_end (args);
-  g_signal_emit (manager, signals[MESSAGE], 0, (guint) type, msg);
-  g_free (msg);
-}
-#define swfdec_player_manager_output(manager, ...) \
-  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_OUTPUT, __VA_ARGS__)
-#define swfdec_player_manager_error(manager, ...) \
-  swfdec_player_manager_send_message (manager, SWFDEC_MESSAGE_ERROR, __VA_ARGS__)
+/*** commands ***/
 
 const char *
 parse_skip (const char *input)

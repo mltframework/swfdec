@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,7 @@ struct _SwfdecSwfDecoder
   SwfdecBits b;				/* temporary state while parsing */
 
   /* defined objects */
-  GList *characters;			/* list of all objects with an id (called characters) */
+  GHashTable *characters;		/* list of all objects with an id (called characters) */
   SwfdecSprite *main_sprite;
   SwfdecSprite *parse_sprite;
 
@@ -79,9 +79,9 @@ struct _SwfdecSwfDecoderClass {
 GType		swfdec_swf_decoder_get_type		(void);
 
 gpointer	swfdec_swf_decoder_get_character	(SwfdecSwfDecoder *	s, 
-							 int			id);
+							 unsigned int	      	id);
 gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
-							 int			id,
+							 unsigned int	      	id,
 							 GType			type);
 gpointer	swfdec_swf_decoder_get_export		(SwfdecSwfDecoder *	s,
 							 const char *		name);

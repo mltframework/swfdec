@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -52,8 +52,7 @@ swfdec_decoder_dispose (GObject *object)
 {
   SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (object);
 
-  g_list_foreach (s->characters, (GFunc) g_object_unref, NULL);
-  g_list_free (s->characters);
+  g_hash_table_destroy (s->characters);
   g_object_unref (s->main_sprite);
   g_hash_table_destroy (s->exports);
 
@@ -84,20 +83,6 @@ zfree (void *opaque, void *addr)
 {
   g_free (addr);
 }
-
-#if 0
-static void
-dumpbits (SwfdecBits * b)
-{
-  int i;
-
-  printf ("    ");
-  for (i = 0; i < 16; i++) {
-    printf ("%02x ", swfdec_bits_get_u8 (b));
-  }
-  printf ("\n");
-}
-#endif
 
 static gboolean
 swfdec_swf_decoder_deflate_all (SwfdecSwfDecoder * s)
@@ -359,6 +344,8 @@ swfdec_swf_decoder_init (SwfdecSwfDecoder *s)
 {
   s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
 
+  s->characters = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
+      NULL, g_object_unref);
   s->input_queue = swfdec_buffer_queue_new ();
   s->exports = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 }
@@ -376,20 +363,11 @@ swfdec_swf_decoder_get_export (SwfdecSwfDecoder * s, const char *name)
 }
 
 gpointer
-swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, int id)
+swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, unsigned int id)
 {
-  SwfdecCharacter *character;
-  GList *g;
-
   g_return_val_if_fail (SWFDEC_IS_SWF_DECODER (s), NULL);
 
-  for (g = s->characters; g; g = g_list_next (g)) {
-    character = SWFDEC_CHARACTER (g->data);
-    if (character->id == id)
-      return character;
-  }
-
-  return NULL;
+  return g_hash_table_lookup (s->characters, GUINT_TO_POINTER (id));
 }
 
 /**
@@ -405,12 +383,11 @@ swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, int id)
  * Returns: The requested character or NULL on failure;
  **/
 gpointer
-swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, int id, GType type)
+swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, unsigned int id, GType type)
 {
   SwfdecCharacter *result;
 
   g_return_val_if_fail (SWFDEC_IS_DECODER (s), NULL);
-  g_return_val_if_fail (id >= 0, NULL);
   g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_CHARACTER), NULL);
 
   SWFDEC_INFO ("  id = %d", id);
@@ -421,7 +398,7 @@ swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, int id, GType type)
   }
   result = g_object_new (type, NULL);
   result->id = id;
-  s->characters = g_list_prepend (s->characters, result);
+  g_hash_table_insert (s->characters, GUINT_TO_POINTER (id), result);
   if (SWFDEC_IS_CACHED (result)) {
     swfdec_cached_set_cache (SWFDEC_CACHED (result), SWFDEC_DECODER (s)->player->cache);
   }

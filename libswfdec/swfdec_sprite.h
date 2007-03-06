@@ -76,6 +76,7 @@ struct _SwfdecSprite
 
   /* parse state */
   unsigned int		parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
+  GHashTable *		live_content;	/* depth->SwfdecSpriteContent for every content in parse_frame */
 };
 
 struct _SwfdecSpriteClass

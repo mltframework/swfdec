@@ -50,6 +50,10 @@ swfdec_sprite_dispose (GObject *object)
   SwfdecSprite * sprite = SWFDEC_SPRITE (object);
   unsigned int i;
 
+  if (sprite->live_content) {
+    g_hash_table_destroy (sprite->live_content);
+    sprite->live_content = NULL;
+  }
   if (sprite->frames) {
     for (i = 0; i < sprite->n_frames; i++) {
       g_free (sprite->frames[i].label);
@@ -123,39 +127,7 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
 static SwfdecContent *
 swfdec_content_find (SwfdecSprite *sprite, int depth)
 {
-  guint i, j;
-  SwfdecContent *content;
-  static unsigned long long int count = 0;
-
-  if (++count % 10000 == 0)
-    g_print ("%llu\n", count);
-
-  for (i = sprite->parse_frame; i <= sprite->parse_frame /* wait for underflow */; i--) {
-    SwfdecSpriteFrame *frame = &sprite->frames[i];
-    if (frame->actions == NULL)
-      continue;
-    for (j = frame->actions->len - 1; j < frame->actions->len; j--) {
-      SwfdecSpriteAction *action = 
-	&g_array_index (frame->actions, SwfdecSpriteAction, j);
-      switch (action->type) {
-	case SWFDEC_SPRITE_ACTION_SCRIPT:
-	  break;
-	case SWFDEC_SPRITE_ACTION_ADD:
-	case SWFDEC_SPRITE_ACTION_UPDATE:
-	  content = action->data;
-	  if (content->depth == depth)
-	    return content;
-	  break;
-	case SWFDEC_SPRITE_ACTION_REMOVE:
-	  if (GPOINTER_TO_INT (action->data) == depth)
-	    return NULL;
-	  break;
-	default:
-	  g_assert_not_reached ();
-      }
-    }
-  }
-  return NULL;
+  return g_hash_table_lookup (sprite->live_content, GINT_TO_POINTER (depth));
 }
 
 static void
@@ -182,6 +154,30 @@ swfdec_content_update_lifetime (SwfdecSprite *sprite,
   if (content == NULL)
     return;
   content->sequence->end = sprite->parse_frame;
+}
+
+static void
+swfdec_content_update_live (SwfdecSprite *sprite,
+    SwfdecSpriteActionType type, gpointer data)
+{
+  SwfdecContent *content;
+  switch (type) {
+    case SWFDEC_SPRITE_ACTION_SCRIPT:
+      return;
+    case SWFDEC_SPRITE_ACTION_UPDATE:
+    case SWFDEC_SPRITE_ACTION_ADD:
+      content = data;
+      g_hash_table_insert (sprite->live_content, 
+	  GINT_TO_POINTER (content->depth), content);
+      break;
+    case SWFDEC_SPRITE_ACTION_REMOVE:
+      /* data is GINT_TO_POINTER (depth) */
+      g_hash_table_remove (sprite->live_content, data);
+      break;
+    default:
+      g_assert_not_reached ();
+      return;
+  }
 }
 
 /* NB: does not free the action data */
@@ -212,6 +208,7 @@ swfdec_sprite_add_action (SwfdecSprite *sprite, SwfdecSpriteActionType type,
     frame->actions = g_array_new (FALSE, FALSE, sizeof (SwfdecSpriteAction));
 
   swfdec_content_update_lifetime (sprite, type, data);
+  swfdec_content_update_live (sprite, type, data);
   action.type = type;
   action.data = data;
   g_array_append_val (frame->actions, action);
@@ -505,7 +502,7 @@ swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 static void
 swfdec_sprite_init (SwfdecSprite * sprite)
 {
-
+  sprite->live_content = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 void

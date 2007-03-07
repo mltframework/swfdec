@@ -45,6 +45,7 @@ struct _SwfdecRootMovie
   guint			unnamed_count;	/* variable used for naming unnamed movies */
 
   guint			root_actions_performed;	/* root actions been performed in all frames < this*/
+  GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */
 };
 
 struct _SwfdecRootMovieClass
@@ -60,6 +61,9 @@ void		swfdec_root_movie_load			(SwfdecRootMovie *	movie,
 
 void		swfdec_root_movie_perform_root_actions	(SwfdecRootMovie *	root,
 							 guint			frame);
+
+gpointer	swfdec_root_movie_get_export		(SwfdecRootMovie *	root,
+							 const char *		name);
 
 G_END_DECLS
 #endif

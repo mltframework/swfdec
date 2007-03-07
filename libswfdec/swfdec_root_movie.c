@@ -129,6 +129,7 @@ swfdec_root_movie_dispose (GObject *object)
     g_object_unref (root->decoder);
     root->decoder = NULL;
   }
+  g_hash_table_destroy (root->exports);
 
   G_OBJECT_CLASS (swfdec_root_movie_parent_class)->dispose (object);
 }
@@ -168,8 +169,9 @@ swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 }
 
 static void
-swfdec_root_movie_init (SwfdecRootMovie *decoder)
+swfdec_root_movie_init (SwfdecRootMovie *root)
 {
+  root->exports = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 void
@@ -240,9 +242,22 @@ swfdec_root_movie_perform_root_actions (SwfdecRootMovie *root, guint frame)
 	swfdec_script_execute (action->data, SWFDEC_SCRIPTABLE (root));
 	break;
       case SWFDEC_ROOT_ACTION_EXPORT:
+	{
+	  SwfdecRootExportData *data = action->data;
+	  g_hash_table_insert (root->exports, data->name, data->character);
+	}
 	break;
       default:
 	g_assert_not_reached ();
     }
   }
+}
+
+gpointer
+swfdec_root_movie_get_export (SwfdecRootMovie *root, const char *name)
+{
+  g_return_val_if_fail (SWFDEC_IS_ROOT_MOVIE (root), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  return g_hash_table_lookup (root->exports, name);
 }

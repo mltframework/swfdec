@@ -1,3 +1,5 @@
+check_PROGRAMS = trace
+
 TESTS = $(check_PROGRAMS)
 
 trace_SOURCES = trace.c

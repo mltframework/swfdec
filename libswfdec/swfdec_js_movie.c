@@ -382,6 +382,57 @@ swfdec_js_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 }
 
 static JSBool
+swfdec_js_movie_attachMovie (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie, *ret;
+  const char *name, *export;
+  int depth;
+  SwfdecContent *content;
+  SwfdecGraphic *sprite;
+
+  movie = JS_GetPrivate (cx, obj);
+  g_assert (movie);
+
+  export = swfdec_js_to_string (cx, argv[0]);
+  name = swfdec_js_to_string (cx, argv[1]);
+  if (export == NULL || name == NULL)
+    return JS_FALSE;
+  sprite = swfdec_root_movie_get_export (SWFDEC_ROOT_MOVIE (movie->root), export);
+  if (!SWFDEC_IS_SPRITE (sprite)) {
+    if (sprite == NULL) {
+      SWFDEC_WARNING ("no symbol with name %s exported", export);
+    } else {
+      SWFDEC_WARNING ("can only use attachMovie with sprites");
+    }
+    return JS_TRUE;
+  }
+  if (!JS_ValueToECMAInt32 (cx, argv[1], &depth))
+    return JS_FALSE;
+  if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
+    return JS_TRUE;
+  ret = swfdec_movie_find (movie, depth);
+  if (ret)
+    swfdec_movie_remove (ret);
+  content = swfdec_content_new (depth);
+  content->graphic = sprite;
+  content->depth = depth;
+  content->clip_depth = 0; /* FIXME: check this */
+  content->name = g_strdup (name);
+  content->sequence = content;
+  content->start = 0;
+  content->end = G_MAXUINT;
+  ret = swfdec_movie_new (movie, content);
+  g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
+  /* must be set by now, the movie has a name */
+  if (SWFDEC_SCRIPTABLE (ret)->jsobj == NULL)
+    return JS_FALSE;
+  SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
+      ret->name, ret->depth);
+  *rval = OBJECT_TO_JSVAL (SWFDEC_SCRIPTABLE (ret)->jsobj);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie, *ret;
@@ -501,6 +552,7 @@ swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 }
 
 static JSFunctionSpec movieclip_methods[] = {
+  { "attachMovie",	swfdec_js_movie_attachMovie,	3, 0, 0 },
   { "duplicateMovieClip", swfdec_js_movie_duplicateMovieClip, 2, 0, 0 },
   { "eval",		swfdec_js_global_eval,	      	1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },

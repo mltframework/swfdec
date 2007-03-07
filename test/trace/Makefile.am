@@ -1,11 +1,3 @@
-if HAVE_MING
-SUBDIRS = ming
-else
-SUBDIRS =
-endif
-DIST_SUBDIRS = ming
-
-check_PROGRAMS = trace
 TESTS = $(check_PROGRAMS)
 
 trace_SOURCES = trace.c

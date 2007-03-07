@@ -41,7 +41,7 @@ typedef enum {
 } SwfdecSpriteActionType;
 
 struct _SwfdecSpriteAction {
-  SwfdecSpriteActionType	type;
+  guint				type;
   gpointer			data;
 };
 

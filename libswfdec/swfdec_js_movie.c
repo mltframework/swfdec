@@ -395,6 +395,9 @@ swfdec_js_movie_attachMovie (JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   export = swfdec_js_to_string (cx, argv[0]);
   name = swfdec_js_to_string (cx, argv[1]);
+  if (argc > 3) {
+    SWFDEC_ERROR ("attachMovie's initObject isn't implemented");
+  }
   if (export == NULL || name == NULL)
     return JS_FALSE;
   sprite = swfdec_root_movie_get_export (SWFDEC_ROOT_MOVIE (movie->root), export);

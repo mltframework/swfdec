@@ -289,6 +289,7 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
   SwfdecSprite *sprite;
 
   id = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("  id = %u", id);
   sprite = swfdec_swf_decoder_get_character (s, id);
   if (!SWFDEC_IS_SPRITE (sprite)) {
     SWFDEC_ERROR ("character %u is not a sprite", id);

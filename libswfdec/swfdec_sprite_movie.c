@@ -150,10 +150,8 @@ swfdec_sprite_movie_do_goto_frame (gpointer moviep, gpointer data)
       start, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
   for (i = start; i <= movie->current_frame; i++) {
     SwfdecSpriteFrame *frame = &movie->sprite->frames[i];
-    if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-      swfdec_root_movie_perform_root_actions (SWFDEC_ROOT_MOVIE (movie), 
-	  movie->current_frame);
-    }
+    if (SWFDEC_IS_ROOT_MOVIE (movie))
+      swfdec_root_movie_perform_root_actions (SWFDEC_ROOT_MOVIE (movie), i); 
     if (frame->actions == NULL)
       continue;
     for (j = 0; j < frame->actions->len; j++) {

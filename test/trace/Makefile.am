@@ -69,6 +69,8 @@ EXTRA_DIST = \
 	goto4.swf.trace \
 	goto5.swf \
 	goto5.swf.trace \
+	gotoframe.swf \
+	gotoframe.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \

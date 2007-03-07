@@ -38,6 +38,7 @@
 #include "swfdec_morphshape.h"
 #include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
+#include "swfdec_root_sprite.h"
 #include "swfdec_script.h"
 #include "swfdec_shape.h"
 #include "swfdec_sound.h"
@@ -281,30 +282,6 @@ tag_func_do_action (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
-int
-tag_func_do_init_action (SwfdecSwfDecoder * s)
-{
-  SwfdecBits *bits = &s->b;
-  guint id;
-  SwfdecSprite *sprite;
-
-  id = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG ("  id = %u", id);
-  sprite = swfdec_swf_decoder_get_character (s, id);
-  if (!SWFDEC_IS_SPRITE (sprite)) {
-    SWFDEC_ERROR ("character %u is not a sprite", id);
-    return SWFDEC_STATUS_OK;
-  }
-  if (sprite->init_action != NULL) {
-    SWFDEC_ERROR ("sprite %u already has an init action", id);
-    return SWFDEC_STATUS_OK;
-  }
-  sprite->init_action = swfdec_script_new_for_player (SWFDEC_DECODER (s)->player,
-      bits, "InitAction", s->version);
-
-  return SWFDEC_STATUS_OK;
-}
-
 static void
 swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent *content)
 {
@@ -487,34 +464,6 @@ tag_func_define_button (SwfdecSwfDecoder * s)
   swfdec_event_list_parse (button->events, &s->b, s->version, 
       SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN, 0, script_name);
   g_free (script_name);
-
-  return SWFDEC_STATUS_OK;
-}
-
-static int
-tag_func_export_assets (SwfdecSwfDecoder * s)
-{
-  SwfdecBits *bits = &s->b;
-  unsigned int count, i;
-
-  count = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG ("exporting %u assets", count);
-  for (i = 0; i < count; i++) {
-    guint id;
-    SwfdecCharacter *object;
-    char *name;
-    id = swfdec_bits_get_u16 (bits);
-    object = swfdec_swf_decoder_get_character (s, id);
-    name = swfdec_bits_get_string (bits);
-    if (object == NULL) {
-      SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
-      g_free (name);
-    } else {
-      SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
-      g_object_ref (object);
-      g_hash_table_insert (s->exports, name, object);
-    }
-  }
 
   return SWFDEC_STATUS_OK;
 }

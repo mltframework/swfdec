@@ -36,7 +36,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_js.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_sprite.h"
+#include "swfdec_root_sprite.h"
 
 enum {
   SWFDEC_STATE_INIT1 = 0,
@@ -342,7 +342,7 @@ swfdec_swf_decoder_class_init (SwfdecSwfDecoderClass *class)
 static void
 swfdec_swf_decoder_init (SwfdecSwfDecoder *s)
 {
-  s->main_sprite = g_object_new (SWFDEC_TYPE_SPRITE, NULL);
+  s->main_sprite = g_object_new (SWFDEC_TYPE_ROOT_SPRITE, NULL);
 
   s->characters = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
       NULL, g_object_unref);

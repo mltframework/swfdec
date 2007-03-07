@@ -267,3 +267,16 @@ swfdec_root_movie_get_character_data (SwfdecRootMovie *movie,
     return NULL;
   return data->data;
 }
+
+void
+swfdec_root_movie_perform_root_actions (SwfdecRootMovie *root, guint frame)
+{
+  g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (root));
+  g_return_if_fail (frame <= root->root_actions_performed);
+
+  if (frame < root->root_actions_performed)
+    return;
+
+  g_print ("performing root actions for frame %u\n", root->root_actions_performed);
+  root->root_actions_performed++;
+}

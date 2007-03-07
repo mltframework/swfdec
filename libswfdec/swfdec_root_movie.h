@@ -44,6 +44,7 @@ struct _SwfdecRootMovie
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */
   guint			unnamed_count;	/* variable used for naming unnamed movies */
 
+  guint			root_actions_performed;	/* root actions been performed in all frames < this*/
   GHashTable *		character_data;	/* custom data per character to be set by the movie using them */
 };
 
@@ -64,6 +65,9 @@ void		swfdec_root_movie_set_character_data	(SwfdecRootMovie *	movie,
 							 GDestroyNotify		destroy);
 gpointer	swfdec_root_movie_get_character_data	(SwfdecRootMovie *	movie,
 							 SwfdecCharacter *	character);
+
+void		swfdec_root_movie_perform_root_actions	(SwfdecRootMovie *	root,
+							 guint			frame);
 
 G_END_DECLS
 #endif

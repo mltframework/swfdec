@@ -653,8 +653,8 @@ swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, gu
   if (!JS_GetProperty (cx, obj, s, &fun))
     return JS_FALSE;
   if (!JSVAL_IS_OBJECT (fun)) {
-    SWFDEC_WARNING ("%s:%s is not a function",
-	JS_GetClass (obj)->name, s);
+    /* FIXME: figure out what class we operate on */
+    SWFDEC_WARNING ("%s is not a function", s);
   }
   fp->sp[-1] = fun;
   fp->sp[-2] = OBJECT_TO_JSVAL (obj);

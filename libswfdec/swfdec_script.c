@@ -291,16 +291,26 @@ swfdec_value_to_frame (JSContext *cx, SwfdecMovie *movie, jsval val)
 
   if (JSVAL_IS_STRING (val)) {
     const char *name = swfdec_js_to_string (cx, val);
+    char *end;
     if (name == NULL ||
         !SWFDEC_IS_SPRITE_MOVIE (movie))
       return -1;
     if (strchr (name, ':')) {
       SWFDEC_ERROR ("FIXME: handle targets");
     }
-    frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
+    /* treat valid encoded numbers as numbers, otherwise assume it's a frame label */
+    frame = strtol (name, &end, 0);
+    if (*end != '\0')
+      frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
+    else
+      frame--;
+  } else if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val) - 1;
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    return (int) *JSVAL_TO_DOUBLE (val) - 1;
   } else {
     /* FIXME: how do we treat undefined etc? */
-    frame = swfdec_value_to_number (cx, val);
+    frame = -1;
   }
   return frame;
 }

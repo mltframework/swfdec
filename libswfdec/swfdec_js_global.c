@@ -245,8 +245,15 @@ static JSFunctionSpec global_methods[] = {
 void
 swfdec_js_add_globals (SwfdecPlayer *player)
 {
-  if (!JS_DefineFunctions (player->jscx, player->jsobj, global_methods)) {
-    SWFDEC_ERROR ("failed to initialize global methods");
+  JSBool found = JS_FALSE;
+  jsval val = OBJECT_TO_JSVAL (player->jsobj);
+
+  if (!JS_DefineFunctions (player->jscx, player->jsobj, global_methods) ||
+      !JS_SetProperty (player->jscx, player->jsobj, "_global", &val) ||
+      !JS_SetPropertyAttributes (player->jscx, player->jsobj, "_global",
+	  JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
+      found != JS_TRUE) {
+    SWFDEC_ERROR ("failed to initialize global object");
   }
 }
 

@@ -32,6 +32,8 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_root_sprite.h"
+#include "swfdec_script.h"
 #include "swfdec_swf_decoder.h"
 #include "js/jsapi.h"
 
@@ -213,12 +215,34 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
 void
 swfdec_root_movie_perform_root_actions (SwfdecRootMovie *root, guint frame)
 {
+  SwfdecRootSprite *sprite;
+  GArray *array;
+  guint i;
+
   g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (root));
   g_return_if_fail (frame <= root->root_actions_performed);
 
   if (frame < root->root_actions_performed)
     return;
 
-  g_print ("performing root actions for frame %u\n", root->root_actions_performed);
+  sprite = SWFDEC_ROOT_SPRITE (SWFDEC_SPRITE_MOVIE (root)->sprite);
+  SWFDEC_LOG ("performing root actions for frame %u", root->root_actions_performed);
   root->root_actions_performed++;
+  if (!sprite->root_actions)
+    return;
+  array = sprite->root_actions[frame];
+  if (array == NULL)
+    return;
+  for (i = 0; i < array->len; i++) {
+    SwfdecSpriteAction *action = &g_array_index (array, SwfdecSpriteAction, i);
+    switch (action->type) {
+      case SWFDEC_ROOT_ACTION_INIT_SCRIPT:
+	swfdec_script_execute (action->data, SWFDEC_SCRIPTABLE (root));
+	break;
+      case SWFDEC_ROOT_ACTION_EXPORT:
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+  }
 }

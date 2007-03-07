@@ -68,8 +68,6 @@ struct _SwfdecSwfDecoder
 
   SwfdecBuffer *jpegtables;
   char *url;
-
-  GHashTable *	exports;		/* string->character mapping of exported characters */
 };
 
 struct _SwfdecSwfDecoderClass {
@@ -83,8 +81,6 @@ gpointer	swfdec_swf_decoder_get_character	(SwfdecSwfDecoder *	s,
 gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
 							 unsigned int	      	id,
 							 GType			type);
-gpointer	swfdec_swf_decoder_get_export		(SwfdecSwfDecoder *	s,
-							 const char *		name);
 
 SwfdecTagFunc *swfdec_swf_decoder_get_tag_func (int tag);
 const char *swfdec_swf_decoder_get_tag_name (int tag);

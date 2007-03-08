@@ -481,6 +481,8 @@ swfdec_js_construct_object (JSContext *cx, const JSClass *clasp,
   object = JSVAL_TO_OBJECT (constructor);
   if (JS_GetClass (object) != &js_FunctionClass)
     goto fail;
+  if (clasp == NULL)
+    clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
   if (!JS_GetProperty (cx, object, "prototype", &proto))
     return JS_FALSE;
   if (!JSVAL_IS_OBJECT (proto)) {

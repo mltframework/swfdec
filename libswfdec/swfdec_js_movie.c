@@ -48,6 +48,68 @@ const JSClass movieclip_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+static void
+swfdec_js_movie_add_property (SwfdecMovie *movie)
+{
+  SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
+  jsval val;
+  JSObject *jsobj;
+  JSContext *cx;
+  JSBool found = JS_FALSE;
+
+  if (!movie->has_name)
+    return;
+  jsobj = swfdec_scriptable_get_object (script);
+  val = OBJECT_TO_JSVAL (jsobj);
+  cx = script->jscx;
+  if (movie->parent) {
+    jsobj = SWFDEC_SCRIPTABLE (movie->parent)->jsobj;
+    if (jsobj == NULL)
+      return;
+    SWFDEC_LOG ("setting %s as property for %s", movie->name, 
+	movie->parent->name);
+  } else {
+    jsobj = SWFDEC_ROOT_MOVIE (movie)->player->jsobj;
+    SWFDEC_LOG ("setting %s as property for _global", movie->name);
+  }
+  if (!JS_SetProperty (cx, jsobj, movie->name, &val) ||
+      !JS_SetPropertyAttributes (cx, jsobj, movie->name, JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
+      found != JS_TRUE) {
+    SWFDEC_ERROR ("could not set property %s correctly", movie->name);
+  }
+}
+
+static void
+swfdec_js_movie_remove_property (SwfdecMovie *movie)
+{
+  SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
+  JSObject *jsobj;
+  JSContext *cx;
+  JSBool found = JS_FALSE;
+  jsval deleted = JSVAL_FALSE;
+
+  if (!movie->has_name ||
+      script->jsobj == NULL)
+    return;
+
+  cx = script->jscx;
+  if (movie->parent) {
+    jsobj = SWFDEC_SCRIPTABLE (movie->parent)->jsobj;
+    if (jsobj == NULL)
+      return;
+  } else {
+    jsobj = SWFDEC_ROOT_MOVIE (movie)->player->jsobj;
+  }
+
+  SWFDEC_LOG ("removing %s as property", movie->name);
+  if (!JS_SetPropertyAttributes (cx, jsobj, movie->name, 0, &found) ||
+      found != JS_TRUE ||
+      !JS_DeleteProperty2 (cx, jsobj, movie->name, &deleted) ||
+      deleted == JSVAL_FALSE) {
+    SWFDEC_ERROR ("could not remove property %s correctly", movie->name);
+  }
+}
+
 static JSBool
 mc_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1172,64 +1234,56 @@ swfdec_js_add_movieclip_class (SwfdecPlayer *player)
       NULL, NULL);
 }
 
-void
-swfdec_js_movie_add_property (SwfdecMovie *movie)
+jsval
+swfdec_js_movie_lookup_class (SwfdecMovie *movie)
 {
-  SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
-  jsval val;
-  JSObject *jsobj;
-  JSContext *cx;
-  JSBool found = JS_FALSE;
-
-  jsobj = swfdec_scriptable_get_object (script);
-  val = OBJECT_TO_JSVAL (jsobj);
-  cx = script->jscx;
-  if (movie->parent) {
-    jsobj = SWFDEC_SCRIPTABLE (movie->parent)->jsobj;
-    if (jsobj == NULL)
-      return;
-    SWFDEC_LOG ("setting %s as property for %s", movie->name, 
-	movie->parent->name);
-  } else {
-    jsobj = SWFDEC_ROOT_MOVIE (movie)->player->jsobj;
-    SWFDEC_LOG ("setting %s as property for _global", movie->name);
-  }
-  if (!JS_SetProperty (cx, jsobj, movie->name, &val) ||
-      !JS_SetPropertyAttributes (cx, jsobj, movie->name, JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
-      found != JS_TRUE) {
-    SWFDEC_ERROR ("could not set property %s correctly", movie->name);
-  }
+  return JSVAL_NULL;
 }
 
 void
-swfdec_js_movie_remove_property (SwfdecMovie *movie)
+swfdec_js_movie_create_jsobject	(SwfdecMovie *movie)
 {
-  SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
-  JSObject *jsobj;
-  JSContext *cx;
-  JSBool found = JS_FALSE;
-  jsval deleted = JSVAL_FALSE;
+  SwfdecScriptable *script;
+  jsval fun;
 
-  if (!movie->has_name ||
-      script->jsobj == NULL)
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  script = SWFDEC_SCRIPTABLE (movie);
+  g_return_if_fail (script->jscx != NULL);
+  g_return_if_fail (script->jsobj == NULL);
+
+  fun = swfdec_js_movie_lookup_class (movie);
+  if (fun == JSVAL_NULL) {
+    script->jsobj = JS_NewObject (script->jscx, &movieclip_class,
+	NULL, NULL);
+  } else {
+    swfdec_js_construct_object (script->jscx, &movieclip_class, fun, &script->jsobj);
+  }
+  if (!script->jsobj ||
+      !JS_AddRoot (script->jscx, &script->jsobj)) {
+    script->jsobj = NULL;
+    SWFDEC_ERROR ("failed to construct JSObject for %s %p", 
+	G_OBJECT_TYPE_NAME (movie), movie);
+    return;
+  }
+  g_object_ref (script);
+  JS_SetPrivate (script->jscx, script->jsobj, script);
+  swfdec_js_movie_add_property (movie);
+}
+
+void
+swfdec_js_movie_remove_jsobject	(SwfdecMovie *movie)
+{
+  SwfdecScriptable *script;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  script = SWFDEC_SCRIPTABLE (movie);
+  g_return_if_fail (script->jscx != NULL);
+  if (script->jsobj == NULL)
     return;
 
-  cx = script->jscx;
-  if (movie->parent) {
-    jsobj = SWFDEC_SCRIPTABLE (movie->parent)->jsobj;
-    if (jsobj == NULL)
-      return;
-  } else {
-    jsobj = SWFDEC_ROOT_MOVIE (movie)->player->jsobj;
-  }
-
-  SWFDEC_LOG ("removing %s as property", movie->name);
-  if (!JS_SetPropertyAttributes (cx, jsobj, movie->name, 0, &found) ||
-      found != JS_TRUE ||
-      !JS_DeleteProperty2 (cx, jsobj, movie->name, &deleted) ||
-      deleted == JSVAL_FALSE) {
-    SWFDEC_ERROR ("could not remove property %s correctly", movie->name);
-  }
+  swfdec_js_movie_remove_property (movie);
+  JS_RemoveRoot (script->jscx, &script->jsobj);
 }
 
 gboolean

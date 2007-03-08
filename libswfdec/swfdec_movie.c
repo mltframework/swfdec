@@ -308,8 +308,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   if (movie->parent) {
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   }
-  if (SWFDEC_SCRIPTABLE (movie)->jsobj)
-    swfdec_js_movie_remove_property (movie);
+  swfdec_js_movie_remove_jsobject (movie);
   player->movies = g_list_remove (player->movies, movie);
   g_object_unref (movie);
 }
@@ -649,20 +648,8 @@ swfdec_movie_iterate_end (SwfdecMovie *movie)
 static JSObject *
 swfdec_movie_create_js_object (SwfdecScriptable *script)
 {
-  GList *walk;
-  JSObject *ret;
-
-  ret = SWFDEC_SCRIPTABLE_CLASS (swfdec_movie_parent_class)->create_js_object (script);
-  if (ret == NULL)
-    return NULL;
-  script->jsobj = ret;
-  /* add all children */
-  for (walk = SWFDEC_MOVIE (script)->list; walk; walk = walk->next) {
-    SwfdecMovie *child = walk->data;
-    if (child->has_name)
-      swfdec_js_movie_add_property (child);
-  }
-  return ret;
+  /* we create the objects manually and ensure persistence */
+  g_assert_not_reached ();
 }
 
 extern const JSClass movieclip_class;
@@ -687,7 +674,6 @@ swfdec_movie_set_name (SwfdecMovie *movie)
   g_assert (movie->name == NULL);
   if (movie->content->name) {
     movie->name = g_strdup (movie->content->name);
-    swfdec_js_movie_add_property (movie);
     movie->has_name = TRUE;
   } else if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     /* FIXME: figure out if it's relative to root or player or something else
@@ -724,6 +710,8 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
    * new movies to be created (and added to this list)
    */
   player->movies = g_list_prepend (player->movies, movie);
+  /* we have to create the JSObject here to get actions queued before init_movie executes */
+  swfdec_js_movie_create_jsobject (movie);
   if (klass->init_movie)
     klass->init_movie (movie);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);

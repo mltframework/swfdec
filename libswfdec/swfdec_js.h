@@ -47,8 +47,8 @@ void		swfdec_js_add_sound		(SwfdecPlayer *		player);
 void		swfdec_js_add_video		(SwfdecPlayer *		player);
 void		swfdec_js_add_xml		(SwfdecPlayer *		player);
 
-void		swfdec_js_movie_add_property	(SwfdecMovie *		movie);
-void		swfdec_js_movie_remove_property	(SwfdecMovie *		movie);
+void		swfdec_js_movie_create_jsobject	(SwfdecMovie *		movie);
+void		swfdec_js_movie_remove_jsobject	(SwfdecMovie *		movie);
 
 char *		swfdec_js_slash_to_dot		(const char *		slash_str);
 jsval		swfdec_js_eval			(JSContext *		cx,
@@ -59,6 +59,10 @@ void		swfdec_js_eval_set    		(JSContext *		cx,
 						 const char *		str,
 						 jsval			val);
 
+JSBool		swfdec_js_construct_object	(JSContext *		cx,
+						 const JSClass *	clasp,
+						 jsval			constructor,
+						 JSObject **		newp);
 /* support functions */
 const char *	swfdec_js_to_string		(JSContext *		cx,
 						 jsval			val);

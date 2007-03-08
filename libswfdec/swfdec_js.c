@@ -23,6 +23,7 @@
 #include <string.h>
 #include <js/jsapi.h>
 #include <js/jscntxt.h> /* for setting tracefp when debugging */
+#include <libswfdec/js/jsfun.h>
 #include <js/jsdbgapi.h> /* for debugging */
 #include <js/jsopcode.h> /* for debugging */
 #include <js/jsscript.h> /* for debugging */
@@ -449,4 +450,50 @@ swfdec_js_eval_set (JSContext *cx, JSObject *obj, const char *str,
   g_return_if_fail (str != NULL);
 
   swfdec_js_eval_internal (cx, obj, str, &val, TRUE);
+}
+
+/**
+ * swfdec_js_construct_object:
+ * @cx: the #JSContext
+ * @clasp: class to use for constructing the object
+ * @constructor: a jsval possibly referring to a constructor
+ * @newp: pointer to variable that will take the created object or NULL on 
+ *        failure
+ *
+ * Constructs a JSObject for the given @constructor, if it really is a
+ * constructor. 
+ * <note>The object is only constructed, the constructor is not called.
+ * You can easily do this with JS_Invoke() later.</note>
+ *
+ * Returns: %JS_TRUE on success or %JS_FALSE on OOM.
+ **/
+JSBool
+swfdec_js_construct_object (JSContext *cx, const JSClass *clasp, 
+    jsval constructor, JSObject **newp)
+{
+  JSObject *object;
+  jsval proto;
+
+  g_return_val_if_fail (newp != NULL, JS_FALSE);
+
+  if (!JSVAL_IS_OBJECT (constructor) || constructor == JSVAL_VOID)
+    goto fail;
+  object = JSVAL_TO_OBJECT (constructor);
+  if (JS_GetClass (object) != &js_FunctionClass)
+    goto fail;
+  if (!JS_GetProperty (cx, object, "prototype", &proto))
+    return JS_FALSE;
+  if (!JSVAL_IS_OBJECT (proto)) {
+    SWFDEC_ERROR ("prototype is not an object");
+  }
+  object = JS_NewObject (cx, clasp, JSVAL_IS_OBJECT (proto) ? JSVAL_TO_OBJECT (proto) : NULL, NULL);
+  if (object == NULL)
+    return JS_FALSE;
+
+  *newp = object;
+  return JS_TRUE;
+
+fail:
+  *newp = NULL;
+  return JS_FALSE;
 }

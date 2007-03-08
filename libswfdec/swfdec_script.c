@@ -1397,9 +1397,8 @@ static JSBool
 swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   JSStackFrame *fp = cx->fp;
-  jsval constructor, proto;
+  jsval constructor;
   JSObject *object;
-  const JSClass *clasp;
   guint n_args;
   const char *name;
 
@@ -1418,20 +1417,10 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
   }
   fp->sp[-1] = constructor;
 
-  if (!JSVAL_IS_OBJECT (constructor) || JSVAL_IS_NULL (constructor))
-    goto fail;
-  object = JSVAL_TO_OBJECT (constructor);
-  if (JS_GetClass (object) != &js_FunctionClass)
-    goto fail;
-  clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
-  if (!JS_GetProperty (cx, object, "prototype", &proto))
+  if (!swfdec_js_construct_object (cx, NULL, constructor, &object))
     return JS_FALSE;
-  if (!JSVAL_IS_OBJECT (proto)) {
-    SWFDEC_ERROR ("prototype of %s is not an object", name);
-  }
-  object = JS_NewObject (cx, clasp, JSVAL_IS_OBJECT (proto) ? JSVAL_TO_OBJECT (proto) : NULL, NULL);
   if (object == NULL)
-    return JS_FALSE;
+    goto fail;
   fp->sp[-2] = OBJECT_TO_JSVAL (object);
   if (!swfdec_action_call (cx, n_args, JSINVOKE_CONSTRUCT))
     return JS_FALSE;
@@ -1451,8 +1440,7 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
   const char *s;
   guint32 n_args;
   JSObject *object;
-  jsval constructor, proto;
-  const JSClass *clasp;
+  jsval constructor;
   
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
@@ -1476,20 +1464,10 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
     }
   }
   fp->sp[-1] = OBJECT_TO_JSVAL (constructor);
-  if (!JSVAL_IS_OBJECT (constructor) || JSVAL_IS_NULL (constructor))
-    goto fail;
-  object = JSVAL_TO_OBJECT (constructor);
-  if (JS_GetClass (object) != &js_FunctionClass)
-    goto fail;
-  clasp = ((JSFunction *) JS_GetPrivate (cx, object))->clasp;
-  if (!JS_GetProperty (cx, object, "prototype", &proto))
+  if (!swfdec_js_construct_object (cx, NULL, constructor, &object))
     return JS_FALSE;
-  if (!JSVAL_IS_OBJECT (proto)) {
-    SWFDEC_ERROR ("prototype of %s is not an object", s);
-  }
-  object = JS_NewObject (cx, clasp, JSVAL_IS_OBJECT (proto) ? JSVAL_TO_OBJECT (proto) : NULL, NULL);
   if (object == NULL)
-    return JS_FALSE;
+    goto fail;
   fp->sp[-2] = OBJECT_TO_JSVAL (object);
   if (!swfdec_action_call (cx, n_args, JSINVOKE_CONSTRUCT))
     return JS_FALSE;

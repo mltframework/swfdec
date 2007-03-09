@@ -133,6 +133,7 @@ swfdec_player_manager_set_player (SwfdecPlayerManager *manager, SwfdecPlayer *pl
 
   if (manager->player) {
     g_signal_handlers_disconnect_by_func (manager->player, breakpoint_hit_cb, manager);
+    g_signal_handlers_disconnect_by_func (manager->player, trace_cb, manager);
     g_object_unref (manager->player);
   }
   manager->player = player;

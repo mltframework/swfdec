@@ -256,6 +256,7 @@ swfdec_js_object_register_class (JSContext *cx, JSObject *obj, uintN argc,
     return JS_FALSE;
   
   swfdec_player_set_export_class (player, name, argv[1]);
+  *rval = JSVAL_TRUE;
   return JS_TRUE;
 }
 

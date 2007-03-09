@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include <js/jsapi.h>
+#include <js/jsinterp.h> /* for JS_IntetrnalCall */
 #include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_bits.h"
@@ -605,11 +606,13 @@ swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   SwfdecMovie *movie;
 
   movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
-
-  s = swfdec_movie_get_path (movie);
-  string = JS_NewStringCopyZ (cx, s);
-  g_free (s);
+  if (movie) {
+    s = swfdec_movie_get_path (movie);
+    string = JS_NewStringCopyZ (cx, s);
+    g_free (s);
+  } else {
+    string = JS_NewStringCopyZ (cx, "[object Object]");
+  }
   if (string == NULL)
     return JS_FALSE;
   *rval = STRING_TO_JSVAL (string);
@@ -1230,21 +1233,32 @@ void
 swfdec_js_add_movieclip_class (SwfdecPlayer *player)
 {
   JS_InitClass (player->jscx, player->jsobj, NULL,
-      &movieclip_class, swfdec_js_movieclip_new, 0, movieclip_props, movieclip_methods,
+      &movieclip_class, swfdec_js_movieclip_new, 0, NULL, movieclip_methods,
       NULL, NULL);
 }
 
-jsval
-swfdec_js_movie_lookup_class (SwfdecMovie *movie)
+static jsval
+swfdec_js_movie_lookup_class (SwfdecSpriteMovie *movie)
 {
-  return JSVAL_NULL;
+  /* FIXME: write tests on how the lookup movie => name => registered class is performed */
+  SwfdecRootMovie *root;
+  const char *name;
+  
+  /* happens with root movies only */
+  if (movie->sprite == NULL)
+    return JSVAL_NULL;
+  root = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root);
+  name = swfdec_root_movie_get_export_name (root, SWFDEC_CHARACTER (movie->sprite));
+  if (name == NULL)
+    return JSVAL_NULL;
+  return swfdec_player_get_export_class (root->player, name);
 }
 
 void
 swfdec_js_movie_create_jsobject	(SwfdecMovie *movie)
 {
   SwfdecScriptable *script;
-  jsval fun;
+  jsval fun = JSVAL_NULL;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
@@ -1252,12 +1266,12 @@ swfdec_js_movie_create_jsobject	(SwfdecMovie *movie)
   g_return_if_fail (script->jscx != NULL);
   g_return_if_fail (script->jsobj == NULL);
 
-  fun = swfdec_js_movie_lookup_class (movie);
-  if (fun == JSVAL_NULL) {
+  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
+      (fun = swfdec_js_movie_lookup_class (SWFDEC_SPRITE_MOVIE (movie))) != JSVAL_NULL) {
+    swfdec_js_construct_object (script->jscx, &movieclip_class, fun, &script->jsobj);
+  } else {
     script->jsobj = JS_NewObject (script->jscx, &movieclip_class,
 	NULL, NULL);
-  } else {
-    swfdec_js_construct_object (script->jscx, &movieclip_class, fun, &script->jsobj);
   }
   if (!script->jsobj ||
       !JS_AddRoot (script->jscx, &script->jsobj)) {
@@ -1268,7 +1282,18 @@ swfdec_js_movie_create_jsobject	(SwfdecMovie *movie)
   }
   g_object_ref (script);
   JS_SetPrivate (script->jscx, script->jsobj, script);
+  if (!JS_DefineProperties (script->jscx, script->jsobj, movieclip_props)) {
+    SWFDEC_ERROR ("failed to define properties for %s %p", 
+	G_OBJECT_TYPE_NAME (movie), movie);
+    return;
+  }
   swfdec_js_movie_add_property (movie);
+  if (fun != JSVAL_NULL) {
+    SWFDEC_LOG ("Executing constructor for %s %p", G_OBJECT_TYPE_NAME (movie), movie);
+    if (!js_InternalCall (script->jscx, script->jsobj, fun, 0, NULL, &fun)) {
+      SWFDEC_ERROR ("constructor execution failed");
+    }
+  }
 }
 
 void

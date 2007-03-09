@@ -844,6 +844,7 @@ have_fun:
     frame.scopeChain = NULL;    /* set below for real, after cx->fp is set */
     frame.pc = NULL;
     frame.spbase = NULL;
+    frame.spend = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.dormantNext = NULL;
@@ -1138,6 +1139,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.pc = NULL;
     frame.sp = oldfp ? oldfp->sp : NULL;
     frame.spbase = NULL;
+    frame.spend = NULL;
     frame.sharpDepth = 0;
     frame.flags = special;
     frame.dormantNext = NULL;
@@ -1502,6 +1504,7 @@ js_Interpret(JSContext *cx, jsval *result)
     }
     sp = newsp + depth;
     fp->spbase = sp;
+    fp->spend = sp + depth;
     SAVE_SP(fp);
 
     while (pc < endpc) {

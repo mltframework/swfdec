@@ -70,6 +70,7 @@ struct JSStackFrame {
     jsbytecode      *pc;            /* program counter */
     jsval           *sp;            /* stack pointer */
     jsval           *spbase;        /* operand stack base */
+    jsval           *spend;         /* end of available stack space */
     uintN           sharpDepth;     /* array/object initializer depth */
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */

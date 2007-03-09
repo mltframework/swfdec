@@ -283,6 +283,5 @@ swfdec_root_movie_get_export_name (SwfdecRootMovie *root, SwfdecCharacter *chara
   if (!g_hash_table_find (root->exports, find_value, &ret))
     return NULL;
 
-  g_print ("found %s\n", (char *) ret);
   return ret;
 }

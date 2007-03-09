@@ -64,6 +64,8 @@ void		swfdec_root_movie_perform_root_actions	(SwfdecRootMovie *	root,
 
 gpointer	swfdec_root_movie_get_export		(SwfdecRootMovie *	root,
 							 const char *		name);
+const char *	swfdec_root_movie_get_export_name     	(SwfdecRootMovie *	root,
+							 SwfdecCharacter *	character);
 
 G_END_DECLS
 #endif

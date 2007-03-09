@@ -261,3 +261,28 @@ swfdec_root_movie_get_export (SwfdecRootMovie *root, const char *name)
 
   return g_hash_table_lookup (root->exports, name);
 }
+
+/* evil hack, but pointers are pointers */
+gboolean
+find_value (gpointer key, gpointer value, gpointer inout)
+{
+  if (value != *(gpointer *) inout)
+    return FALSE;
+  *(gpointer *) inout = key;
+  return TRUE;
+}
+
+const char *
+swfdec_root_movie_get_export_name (SwfdecRootMovie *root, SwfdecCharacter *character)
+{
+  gpointer ret = character;
+
+  g_return_val_if_fail (SWFDEC_IS_ROOT_MOVIE (root), NULL);
+  g_return_val_if_fail (SWFDEC_IS_CHARACTER (character), NULL);
+
+  if (!g_hash_table_find (root->exports, find_value, &ret))
+    return NULL;
+
+  g_print ("found %s\n", (char *) ret);
+  return ret;
+}

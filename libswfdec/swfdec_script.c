@@ -125,6 +125,42 @@ swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
 
 /*** SUPPORT FUNCTIONS ***/
 
+/**
+ * swfdec_script_ensure_stack:
+ * @cx: #JSContext to check
+ * @n_elements: number of elements the stack should contain
+ *
+ * Ensures that the stack is at least @n_elements values. If not enough stack
+ * space is available, the stack is filled up with JSVAL_VOID.
+ *
+ * Returns: JS_TRUE on success or JS_FALSE on OOM
+ **/
+static inline JSBool
+swfdec_script_ensure_stack (JSContext *cx, guint n_elements)
+{
+  JSStackFrame *fp = cx->fp;
+  guint current = (guint) (fp->sp - fp->spbase);
+
+  if (current >= n_elements)
+    return JS_TRUE;
+
+  if (n_elements > (guint) (fp->spend - fp->spbase)) {
+    SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow (want %u, have %u)",
+	n_elements, (fp->spend - fp->spbase));
+    return JS_FALSE;
+  }
+
+  if (current) {
+    n_elements -= current;
+    memmove (fp->spbase + n_elements, fp->spbase, (fp->sp - fp->spbase) * sizeof (jsval));
+  }
+  while (n_elements)  {
+    n_elements--;
+    fp->spbase[n_elements] = JSVAL_VOID;
+  }
+  return JS_TRUE;
+}
+
 static gboolean
 swfdec_action_has_register (JSContext *cx, guint i)
 {
@@ -452,10 +488,11 @@ swfdec_action_constant_pool (JSContext *cx, guint action, const guint8 *data, gu
 }
 
 static JSBool
-swfdec_action_push (JSContext *cx, guint stackspace, const guint8 *data, guint len)
+swfdec_action_push (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   /* FIXME: supply API for this */
   SwfdecBits bits;
+  guint stackspace = cx->fp->spend - cx->fp->sp;
 
   swfdec_bits_init_data (&bits, data, len);
   while (swfdec_bits_left (&bits) && stackspace-- > 0) {
@@ -644,7 +681,7 @@ swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, gu
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
     return JS_FALSE;
-  if (n_args + 2 > (guint) (fp->sp - fp->spbase))
+  if (!swfdec_script_ensure_stack (cx, n_args + 2))
     return JS_FALSE;
   
   if (!(atom = js_Atomize (cx, s, strlen (s), 0)) ||
@@ -676,7 +713,7 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
     return JS_FALSE;
-  if (n_args + 3 > (guint) (fp->sp - fp->spbase))
+  if (!swfdec_script_ensure_stack (cx, n_args + 3))
     return JS_FALSE;
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &obj))
@@ -1343,16 +1380,15 @@ static JSBool
 swfdec_action_start_drag (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   JSStackFrame *fp = cx->fp;
-  guint stack_size = fp->sp - fp->spbase;
   guint n_args = 1;
 
-  if (stack_size < 3)
+  if (!swfdec_script_ensure_stack (cx, 3))
     return JS_FALSE;
   if (!swfdec_eval_jsval (cx, NULL, &fp->sp[-1]))
     return JS_FALSE;
   if (swfdec_value_to_number (cx, fp->sp[-3])) {
     jsval tmp;
-    if (stack_size < 7)
+    if (!swfdec_script_ensure_stack (cx, 7))
       return JS_FALSE;
     n_args = 5;
     /* yay for order */
@@ -1408,7 +1444,7 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
     return JS_FALSE;
-  if ((guint) (fp->sp - fp->spbase) < n_args + 2) {
+  if (!swfdec_script_ensure_stack (cx, n_args + 2)) {
     SWFDEC_ERROR ("not enough stack space");
     return JS_FALSE;
   }
@@ -1447,7 +1483,7 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
     return JS_FALSE;
-  if (n_args + 3 > (guint) (fp->sp - fp->spbase))
+  if (!swfdec_script_ensure_stack (cx, n_args + 3))
     return JS_FALSE;
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &object))
@@ -1489,10 +1525,8 @@ swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guin
 
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-1], &n_args))
     return JS_FALSE;
-  if ((guint) (fp->sp - fp->spbase) < 2 * n_args + 1) {
-    SWFDEC_ERROR ("not enough stack space");
+  if (!swfdec_script_ensure_stack (cx, 2 * n_args + 1))
     return JS_FALSE;
-  }
 
   object = JS_NewObject (cx, &js_ObjectClass, NULL, NULL);
   if (object == NULL)
@@ -1519,10 +1553,8 @@ swfdec_action_init_array (JSContext *cx, guint action, const guint8 *data, guint
 
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-1], &n_items))
     return JS_FALSE;
-  if ((guint) (fp->sp - fp->spbase) < n_items + 1) {
-    SWFDEC_ERROR ("not enough stack space");
+  if (!swfdec_script_ensure_stack (cx, n_items + 1))
     return JS_FALSE;
-  }
 
   /* items are the wrong order on the stack */
   j = - 1 - n_items;
@@ -1540,8 +1572,8 @@ swfdec_action_init_array (JSContext *cx, guint action, const guint8 *data, guint
 }
 
 static JSBool
-swfdec_action_do_define_function (JSContext *cx, guint action,
-    const guint8 *data, guint len, gboolean v2)
+swfdec_action_define_function (JSContext *cx, guint action,
+    const guint8 *data, guint len)
 {
   const char *function_name;
   guint i, n_args, size;
@@ -1551,6 +1583,7 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
   gboolean has_preloads = FALSE;
   guint flags = 0;
   guint8 *preloads = NULL;
+  gboolean v2 = (action == 0x8e);
 
   swfdec_bits_init_data (&bits, data, len);
   function_name = swfdec_bits_get_string (&bits);
@@ -1644,7 +1677,7 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
   fun->swf = script;
   /* attach the function */
   if (*function_name == '\0') {
-    if (action == 0) {
+    if (cx->fp->sp >= cx->fp->spend) {
       SWFDEC_ERROR ("not enough stack space available");
       return JS_FALSE;
     }
@@ -1658,18 +1691,6 @@ swfdec_action_do_define_function (JSContext *cx, guint action,
   /* update current context */
   cx->fp->pc += 3 + len + size;
   return JS_TRUE;
-}
-
-static JSBool
-swfdec_action_define_function (JSContext *cx, guint action, const guint8 *data, guint len)
-{
-  return swfdec_action_do_define_function (cx, action, data, len, FALSE);
-}
-
-static JSBool
-swfdec_action_define_function2 (JSContext *cx, guint action, const guint8 *data, guint len)
-{
-  return swfdec_action_do_define_function (cx, action, data, len, TRUE);
 }
 
 static JSBool
@@ -2352,7 +2373,7 @@ static const SwfdecActionSpec actions[256] = {
   /* version 4 */
   [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
   /* version 7 */
-  [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, NULL, swfdec_action_define_function2 } },
+  [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
   [0x8f] = { "Try", NULL },
   /* version 5 */
   [0x94] = { "With", NULL },
@@ -2560,7 +2581,10 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   guint8 *startpc, *pc, *endpc, *nextpc;
   JSBool ok = JS_TRUE;
   void *mark;
-  jsval *startsp, *endsp, *checksp;
+  jsval *startsp;
+#ifndef G_DISABLE_ASSERT
+  jsval *checksp;
+#endif
   int stack_check;
   guint action, len;
   guint8 *data;
@@ -2636,8 +2660,8 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
     goto out;
   }
   fp->spbase = startsp;
+  fp->spend = startsp + STACKSIZE;
   fp->sp = startsp;
-  endsp = startsp + STACKSIZE;
   /* Check for too much nesting, or too deep a C stack. */
   if (++cx->interpLevel == MAX_INTERP_LEVEL ||
       !JS_CHECK_STACK_SIZE(cx, stack_check)) {
@@ -2720,33 +2744,32 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 	  spec->name ? spec->name : "Unknown", script->version);
       goto internal_error;
     }
-    if (fp->sp - spec->remove < startsp) {
-      SWFDEC_ERROR ("stack underflow while trying to execute %s - requires %u args, only got %u", 
-	  spec->name, spec->remove, fp->sp - fp->spbase);
+    if (spec->remove > 0 &&
+	!swfdec_script_ensure_stack (cx, spec->remove)) {
+      ok = JS_FALSE;
+      goto out;
+    }
+    if (spec->add > 0 &&
+	fp->sp + spec->add - MAX (spec->remove, 0) > fp->spend) {
+      SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow");
       goto internal_error;
     }
-    if (spec->add < 0) {
-      /* HACK FIXME: if added args are -1, we pass the number of free space on the stack 
-       * instead of the action */
-      action = endsp - fp->sp;
-    } else {
-      if (fp->sp + spec->add - MAX (spec->remove, 0) > endsp) {
-	SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow");
-	goto internal_error;
-      }
-    }
+#ifndef G_DISABLE_ASSERT
     checksp = (spec->add >= 0 && spec->remove >= 0) ? fp->sp + spec->add - spec->remove : NULL;
+#endif
     ok = spec->exec[version] (cx, action, data, len);
     if (!ok) {
       SWFDEC_WARNING ("action %s failed", spec->name);
       goto out;
     }
+#ifndef G_DISABLE_ASSERT
     if (checksp != NULL && checksp != fp->sp) {
       /* check stack was handled like expected */
       g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %d",
 	  spec->name, spec->add - spec->remove, spec->add, spec->remove,
 	  fp->sp - checksp + spec->add - spec->remove);
     }
+#endif
     if (fp->pc == pc) {
       fp->pc = pc = nextpc;
     } else {

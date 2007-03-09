@@ -1942,6 +1942,15 @@ swfdec_action_type_of (JSContext *cx, guint action, const guint8 *data, guint le
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_get_time (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+
+  *cx->fp->sp++ = INT_TO_JSVAL ((int) SWFDEC_TICKS_TO_MSECS (player->time));
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2282,7 +2291,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x31] = { "MBStringLength", NULL },
   [0x32] = { "CharToAscii", NULL },
   [0x33] = { "AsciiToChar", NULL },
-  [0x34] = { "GetTime", NULL },
+  [0x34] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
   [0x35] = { "MBStringExtract", NULL },
   [0x36] = { "MBCharToAscii", NULL },
   [0x37] = { "MVAsciiToChar", NULL },
@@ -2586,13 +2595,32 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
       /* FIXME: keep in sync with jsfun.c */
       fp->flags |= JS_BIT (JSFRAME_OVERRIDE_SHIFT);
     }
-    if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER ||
-	script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT ||
-	script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
-      SWFDEC_ERROR ("The following preload flags aren't implemented:%s%s%s",
-	  script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER ? " PRELOAD_SUPER" : "",
-	  script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT ? " PRELOAD_ROOT" : "",
-	  script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT ? " PRELOAD_PARENT" : "");
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
+      SWFDEC_ERROR ("preloading super isn't implemented");
+    }
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
+      JSAtom *atom;
+      JSObject *obj, *pobj;
+      JSProperty *prop;
+      SWFDEC_LOG ("preloading root into register %u", preload_reg);
+      if (!(atom = js_Atomize (cx, "_root", 5, 0)) ||
+	  !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop) ||
+          !js_GetProperty (cx, obj, (jsid) atom, &fp->vars[preload_reg++])) {
+	ok = JS_FALSE;
+	goto out;
+      }
+    }
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
+      JSAtom *atom;
+      JSObject *obj, *pobj;
+      JSProperty *prop;
+      SWFDEC_LOG ("preloading parent into register %u", preload_reg);
+      if (!(atom = js_Atomize (cx, "_parent", 7, 0)) ||
+	  !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop) ||
+          !js_GetProperty (cx, obj, (jsid) atom, &fp->vars[preload_reg++])) {
+	ok = JS_FALSE;
+	goto out;
+      }
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL)
       fp->vars[preload_reg++] = OBJECT_TO_JSVAL (player->jsobj);

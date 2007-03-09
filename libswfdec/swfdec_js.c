@@ -497,5 +497,5 @@ swfdec_js_construct_object (JSContext *cx, const JSClass *clasp,
 
 fail:
   *newp = NULL;
-  return JS_FALSE;
+  return JS_TRUE;
 }

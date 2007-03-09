@@ -242,6 +242,28 @@ static JSFunctionSpec global_methods[] = {
   { NULL, NULL, 0, 0, 0 }
 };
 
+static JSBool
+swfdec_js_object_register_class (JSContext *cx, JSObject *obj, uintN argc, 
+    jsval *argv, jsval *rval)
+{
+  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+  const char *name;
+  
+  name = swfdec_js_to_string (cx, argv[0]);
+  if (name == NULL)
+    return JS_FALSE;
+  if (!JSVAL_IS_OBJECT(argv[1]))
+    return JS_FALSE;
+  
+  swfdec_player_set_export_class (player, name, argv[1]);
+  return JS_TRUE;
+}
+
+static JSFunctionSpec static_object_methods[] = {
+  { "registerClass",    swfdec_js_object_register_class,	2, 0, 0 },
+  { NULL, NULL, 0, 0, 0 }
+};
+
 void
 swfdec_js_add_globals (SwfdecPlayer *player)
 {
@@ -254,6 +276,13 @@ swfdec_js_add_globals (SwfdecPlayer *player)
 	  JSPROP_READONLY | JSPROP_PERMANENT, &found) ||
       found != JS_TRUE) {
     SWFDEC_ERROR ("failed to initialize global object");
+  }
+  if (!JS_GetProperty (player->jscx, player->jsobj, "Object", &val)) {
+    SWFDEC_ERROR ("failed to get 'Object'");
+  }
+  g_assert (JSVAL_IS_OBJECT (val));
+  if (!JS_DefineFunctions (player->jscx, JSVAL_TO_OBJECT (val), static_object_methods)) {
+    SWFDEC_ERROR ("failed to set static Object methods");
   }
 }
 

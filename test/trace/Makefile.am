@@ -111,6 +111,8 @@ EXTRA_DIST = \
 	parent-root.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	prototypes.swf \
+	prototypes.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	scope.swf \

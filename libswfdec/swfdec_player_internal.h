@@ -56,6 +56,7 @@ struct _SwfdecPlayer
   JSObject *		jsobj;			/* the global object */
   unsigned int		interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
+  GHashTable *		registered_classes;	/* name => jsval* to constructor */
   SwfdecListener *	mouse_listener;		/* emitting mouse events */
   SwfdecListener *	key_listener;		/* emitting keyboard events */
 
@@ -113,6 +114,12 @@ void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
 void		swfdec_player_lock		(SwfdecPlayer *		player);
 void		swfdec_player_unlock		(SwfdecPlayer *		player);
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
+
+jsval		swfdec_player_get_export_class	(SwfdecPlayer *		player,
+						 const char *		name);
+void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
+						 const char *		name,
+						 jsval			val);
 
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);

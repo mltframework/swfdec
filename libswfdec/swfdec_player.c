@@ -346,12 +346,26 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
   }
 }
 
+static gboolean
+free_registered_class (gpointer key, gpointer value, gpointer playerp)
+{
+  SwfdecPlayer *player = playerp;
+
+  g_free (key);
+  JS_RemoveRoot (player->jscx, value);
+  g_free (value);
+  return TRUE;
+}
+
 static void
 swfdec_player_dispose (GObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   swfdec_player_stop_all_sounds (player);
+  /* this must happen before we finish the JS player, we have roots in there */
+  g_hash_table_foreach_steal (player->registered_classes, free_registered_class, player);
+  g_hash_table_destroy (player->registered_classes);
 
   g_list_foreach (player->roots, (GFunc) swfdec_movie_destroy, NULL);
   g_list_free (player->roots);
@@ -859,6 +873,8 @@ static void
 swfdec_player_init (SwfdecPlayer *player)
 {
   swfdec_js_init_player (player);
+  player->registered_classes = g_hash_table_new_full (g_str_hash, g_str_equal, 
+      g_free, NULL);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
@@ -1004,6 +1020,44 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
   }
   g_object_notify (G_OBJECT (player), "initialized");
+}
+
+jsval
+swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
+{
+  jsval *val = g_hash_table_lookup (player->registered_classes, name);
+
+  if (val)
+    return *val;
+  else
+    return JSVAL_NULL;
+}
+
+void
+swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, jsval val)
+{
+  jsval *insert;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (JSVAL_IS_OBJECT (val));
+
+  insert = g_hash_table_lookup (player->registered_classes, name);
+  if (insert) {
+    JS_RemoveRoot (player->jscx, insert);
+    g_free (insert);
+    g_hash_table_remove (player->registered_classes, name);
+  }
+
+  if (val != JSVAL_NULL) {
+    insert = g_new (jsval, 1);
+    *insert = val;
+    if (!JS_AddRoot (player->jscx, insert)) {
+      g_free (insert);
+      return;
+    }
+    g_hash_table_insert (player->registered_classes, g_strdup (name), insert);
+  }
 }
 
 /** PUBLIC API ***/

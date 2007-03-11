@@ -154,6 +154,7 @@ swfdec_script_ensure_stack (JSContext *cx, guint n_elements)
     n_elements -= current;
     memmove (fp->spbase + n_elements, fp->spbase, (fp->sp - fp->spbase) * sizeof (jsval));
   }
+  fp->sp += n_elements;
   while (n_elements)  {
     n_elements--;
     fp->spbase[n_elements] = JSVAL_VOID;

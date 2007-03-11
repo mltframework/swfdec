@@ -14,3 +14,6 @@ swfdec_playback.c
 libswfdecui.la
 swfdebug
 swfplay
+
+*.swf
+*.flv

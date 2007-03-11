@@ -905,7 +905,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 #endif /* JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE */
 
-extern const JSClass movieclip_class;
+extern int swfdec_js_is_movieclip (JSContext *cx, JSObject *obj);
 extern char *swfdec_movie_get_path (void *movieclip);
 extern void g_free (void *p);
 JSBool
@@ -921,7 +921,7 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
 	return JS_TRUE;
     }
-    if (clasp == &movieclip_class) {
+    if (swfdec_js_is_movieclip (cx, obj)) {
 	void *p = JS_GetPrivate (cx, obj);
 	if (p) {
 	    char *path = swfdec_movie_get_path (p);

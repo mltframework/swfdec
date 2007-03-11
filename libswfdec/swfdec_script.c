@@ -650,8 +650,16 @@ swfdec_action_call (JSContext *cx, guint n_args, guint flags)
   JSStackFrame *fp = cx->fp;
   int i, j;
   jsval tmp;
+  guint stacksize;
 
-  g_assert ((guint) (fp->sp - fp->spbase) >= n_args + 2);
+  stacksize = fp->sp - fp->spbase;
+  g_assert (stacksize >= 2);
+  if (n_args + 2 > stacksize) {
+    SWFDEC_WARNING ("broken script. Want %u arguments, only got %u", n_args, stacksize - 2);
+    n_args = stacksize - 2;
+    if (!swfdec_script_ensure_stack (cx, n_args + 2))
+      return JS_FALSE;
+  }
 
   j = -1;
   i = - (n_args + 2);
@@ -677,12 +685,12 @@ swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, gu
   jsval fun;
   JSAtom *atom;
   
+  if (!swfdec_script_ensure_stack (cx, 2))
+    return JS_FALSE;
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 2))
     return JS_FALSE;
   
   if (!(atom = js_Atomize (cx, s, strlen (s), 0)) ||
@@ -709,12 +717,12 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   JSObject *obj;
   jsval fun;
   
+  if (!swfdec_script_ensure_stack (cx, 3))
+    return JS_FALSE;
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 3))
     return JS_FALSE;
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &obj))
@@ -1439,16 +1447,14 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
   guint n_args;
   const char *name;
 
+  if (!swfdec_script_ensure_stack (cx, 2))
+    return JS_FALSE;
   constructor = fp->sp[-1];
   name = swfdec_eval_jsval (cx, NULL, &constructor);
   if (name == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
     return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 2)) {
-    SWFDEC_ERROR ("not enough stack space");
-    return JS_FALSE;
-  }
   if (constructor == JSVAL_VOID) {
     SWFDEC_WARNING ("no constructor for %s", name);
   }
@@ -1479,12 +1485,12 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
   JSObject *object;
   jsval constructor;
   
+  if (!swfdec_script_ensure_stack (cx, 3))
+    return JS_FALSE;
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 3))
     return JS_FALSE;
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &object))

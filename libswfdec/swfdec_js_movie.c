@@ -598,27 +598,6 @@ swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
-static JSBool
-swfdec_js_movie_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  char *s;
-  JSString *string;
-  SwfdecMovie *movie;
-
-  movie = JS_GetPrivate (cx, obj);
-  if (movie) {
-    s = swfdec_movie_get_path (movie);
-    string = JS_NewStringCopyZ (cx, s);
-    g_free (s);
-  } else {
-    string = JS_NewStringCopyZ (cx, "[object Object]");
-  }
-  if (string == NULL)
-    return JS_FALSE;
-  *rval = STRING_TO_JSVAL (string);
-  return JS_TRUE;
-}
-
 static JSFunctionSpec movieclip_methods[] = {
   { "attachMovie",	swfdec_js_movie_attachMovie,	3, 0, 0 },
   { "duplicateMovieClip", swfdec_js_movie_duplicateMovieClip, 2, 0, 0 },
@@ -640,7 +619,6 @@ static JSFunctionSpec movieclip_methods[] = {
   { "stop",		mc_stop,			0, 0, 0 },
   { "stopDrag",    	swfdec_js_stopDrag,		0, 0, 0 },
   { "swapDepths",    	swfdec_js_movie_swapDepths,   	1, 0, 0 },
-  { "toString",	  	swfdec_js_movie_to_string,	0, 0, 0 },
   { NULL }
 };
 

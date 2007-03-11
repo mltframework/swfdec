@@ -42,22 +42,8 @@ swfdec_js_xml_load (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   return JS_TRUE;
 }
 
-static JSBool
-swfdec_js_xml_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  JSString *string;
-
-  string = JS_InternString (cx, "[object Object]");
-  if (string == NULL)
-    return JS_FALSE;
-
-  *rval = STRING_TO_JSVAL (string);
-  return JS_TRUE;
-}
-
 static JSFunctionSpec xml_methods[] = {
   { "load",		swfdec_js_xml_load,		1, 0, 0 },
-  { "toString",		swfdec_js_xml_to_string,	0, 0, 0 },
   {0,0,0,0,0}
 };
 

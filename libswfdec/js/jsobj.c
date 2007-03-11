@@ -905,48 +905,42 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 #endif /* JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE */
 
+extern const JSClass movieclip_class;
+extern char *swfdec_movie_get_path (void *movieclip);
+extern void g_free (void *p);
 JSBool
 js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
-    jschar *chars;
-    size_t nchars;
-    const char *clazz, *prefix;
+    const char *name;
     JSString *str;
     JSClass *clasp;
 
-#if JS_HAS_INITIALIZERS
-    if (cx->version == JSVERSION_1_2)
-        return js_obj_toSource(cx, obj, argc, argv, rval);
-#endif
-
     clasp = OBJ_GET_CLASS(cx, obj);
-    clazz = clasp->name;
-    /* special case in here (woohoo) */
     if (clasp == &js_ArgumentsClass) {
-      *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
-      return JS_TRUE;
+	*rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+	return JS_TRUE;
     }
-
-    nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
-    chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
-    if (!chars)
-        return JS_FALSE;
-
-    prefix = "[object ";
-    nchars = 0;
-    while ((chars[nchars] = (jschar)*prefix) != 0)
-        nchars++, prefix++;
-    while ((chars[nchars] = (jschar)*clazz) != 0)
-        nchars++, clazz++;
-    chars[nchars++] = ']';
-    chars[nchars] = 0;
-
-    str = js_NewString(cx, chars, nchars, 0);
-    if (!str) {
-        JS_free(cx, chars);
-        return JS_FALSE;
+    if (clasp == &movieclip_class) {
+	void *p = JS_GetPrivate (cx, obj);
+	if (p) {
+	    char *path = swfdec_movie_get_path (p);
+	    str = JS_NewStringCopyZ (cx, path);
+	    g_free (path);
+	    if (!str)
+		return JS_FALSE;
+	    *rval = STRING_TO_JSVAL(str);
+	    return JS_TRUE;
+	}
     }
+    if (clasp == &js_FunctionClass) {
+	name = "[type Function]";
+    } else {
+	name = "[object Object]";
+    }
+    str = JS_NewStringCopyZ (cx, name);
+    if (!str) 
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }

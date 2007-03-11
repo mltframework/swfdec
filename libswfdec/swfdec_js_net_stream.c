@@ -43,22 +43,8 @@ swfdec_js_net_stream_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   return JS_TRUE;
 }
 
-static JSBool
-swfdec_js_net_stream_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  JSString *string;
-
-  string = JS_InternString (cx, "[object Object]");
-  if (string == NULL)
-    return JS_FALSE;
-
-  *rval = STRING_TO_JSVAL (string);
-  return JS_TRUE;
-}
-
 static JSFunctionSpec net_stream_methods[] = {
   { "play",		swfdec_js_net_stream_play,	1, 0, 0 },
-  { "toString",		swfdec_js_net_stream_to_string,	0, 0, 0 },
   {0,0,0,0,0}
 };
 

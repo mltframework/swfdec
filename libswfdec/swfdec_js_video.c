@@ -59,23 +59,9 @@ swfdec_js_video_clear (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   return JS_TRUE;
 }
 
-static JSBool
-swfdec_js_video_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  JSString *string;
-
-  string = JS_InternString (cx, "[object Object]");
-  if (string == NULL)
-    return JS_FALSE;
-
-  *rval = STRING_TO_JSVAL (string);
-  return JS_TRUE;
-}
-
 static JSFunctionSpec video_methods[] = {
   { "attachVideo",    	swfdec_js_video_attach_video,	1, 0, 0 },
   { "clear",    	swfdec_js_video_clear,		0, 0, 0 },
-  { "toString",		swfdec_js_video_to_string,	0, 0, 0 },
   {0,0,0,0,0}
 };
 

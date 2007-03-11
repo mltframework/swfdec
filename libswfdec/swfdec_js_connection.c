@@ -50,22 +50,8 @@ swfdec_js_connection_connect (JSContext *cx, JSObject *obj, uintN argc, jsval *a
   return JS_TRUE;
 }
 
-static JSBool
-swfdec_js_connection_to_string (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  JSString *string;
-
-  string = JS_InternString (cx, "[object Object]");
-  if (string == NULL)
-    return JS_FALSE;
-
-  *rval = STRING_TO_JSVAL (string);
-  return JS_TRUE;
-}
-
 static JSFunctionSpec connection_methods[] = {
   { "connect",		swfdec_js_connection_connect,	1, 0, 0 },
-  { "toString",		swfdec_js_connection_to_string,	0, 0, 0 },
   {0,0,0,0,0}
 };
 

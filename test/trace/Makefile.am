@@ -50,8 +50,9 @@ EXTRA_DIST = \
 	currentframe.swf \
 	currentframe.swf.trace \
 	double.swf \
-	double.swf.trace \
 	event-order.swf \
+	empty-stack.swf \
+	empty-stack.swf.trace \
 	event-order.swf.trace \
 	function1.swf \
 	function1.swf.trace \

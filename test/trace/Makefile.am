@@ -11,6 +11,9 @@ EXTRA_DIST = \
 	README \
 	array.swf \
 	array.swf.trace \
+	callfunction-stack.as \
+	callfunction-stack.swf \
+	callfunction-stack.swf.trace \
 	case1-6.swf \
 	case1-6.swf.trace \
 	case1-7.swf \

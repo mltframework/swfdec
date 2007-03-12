@@ -2344,6 +2344,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
     g_string_append (string, i ? ", " : " ");
     g_string_append (string, swfdec_constant_pool_get (pool, i));
+    g_string_append_printf (string, " (%u)", i);
   }
   return g_string_free (string, FALSE);
 }

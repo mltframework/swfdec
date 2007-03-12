@@ -150,6 +150,8 @@ EXTRA_DIST = \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
+	undefined-tostring.swf \
+	undefined-tostring.swf.trace \
 	undefined1.swf \
 	undefined1.swf.trace \
 	undefined2-6.swf \

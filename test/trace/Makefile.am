@@ -9,6 +9,12 @@ trace_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	and-or-5.swf \
+	and-or-5.swf.trace \
+	and-or-6.swf \
+	and-or-6.swf.trace \
+	and-or-7.swf \
+	and-or-7.swf.trace \
 	array.swf \
 	array.swf.trace \
 	callfunction-stack.as \

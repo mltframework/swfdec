@@ -183,8 +183,9 @@ swfdec_file_loader_load (SwfdecLoader *loader, const char *url)
   GError *error = NULL;
 
   if (g_path_is_absolute (url)) {
-    SWFDEC_ERROR ("absolute paths are not allowed");
-    return NULL;
+    SWFDEC_ERROR ("\"%s\" is an absolute path - using relative instead", url);
+    while (*url == G_DIR_SEPARATOR)
+      url++;
   }
 
   /* FIXME: need to rework seperators on windows? */

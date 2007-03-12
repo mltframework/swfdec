@@ -719,9 +719,13 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   
   if (!swfdec_script_ensure_stack (cx, 3))
     return JS_FALSE;
-  s = swfdec_js_to_string (cx, fp->sp[-1]);
-  if (s == NULL)
-    return JS_FALSE;
+  if (fp->sp[-1] == JSVAL_VOID) {
+    s = "";
+  } else {
+    s = swfdec_js_to_string (cx, fp->sp[-1]);
+    if (s == NULL)
+      return JS_FALSE;
+  }
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
     return JS_FALSE;
   
@@ -1979,6 +1983,33 @@ swfdec_action_get_time (JSContext *cx, guint action, const guint8 *data, guint l
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_extends (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval superclass, subclass, proto;
+  JSObject *prototype;
+
+  superclass = cx->fp->sp[-1];
+  subclass = cx->fp->sp[-2];
+  cx->fp->sp -= 2;
+  if (!JSVAL_IS_OBJECT (superclass) || superclass == JSVAL_NULL ||
+      !JSVAL_IS_OBJECT (subclass) || subclass == JSVAL_NULL) {
+    SWFDEC_ERROR ("superclass or subclass aren't objects");
+    return JS_TRUE;
+  }
+  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (superclass), "prototype", &proto) ||
+      !JSVAL_IS_OBJECT (proto))
+    return JS_FALSE;
+  prototype = JS_NewObject (cx, NULL, JSVAL_TO_OBJECT (proto), NULL);
+  if (prototype == NULL)
+    return JS_FALSE;
+  proto = OBJECT_TO_JSVAL (prototype);
+  if (!JS_SetProperty (cx, prototype, "__constructor__", &superclass) ||
+      !JS_SetProperty (cx, JSVAL_TO_OBJECT (subclass), "prototype", &proto))
+    return JS_FALSE;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2365,7 +2396,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x67] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x68] = { "StringGreater", NULL },
   /* version 7 */
-  [0x69] = { "Extends", NULL },
+  [0x69] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
 
   /* version 3 */
   [0x81] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
@@ -2627,7 +2658,12 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
       fp->flags |= JS_BIT (JSFRAME_OVERRIDE_SHIFT);
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-      SWFDEC_ERROR ("preloading super isn't implemented");
+      if (!JS_GetProperty (cx, JS_GetPrototype (cx, fp->thisp), 
+	  fp->flags & JSINVOKE_CONSTRUCT ? "__constructor__" : "__proto__", 
+	  &fp->vars[preload_reg++])) {
+	ok = JS_FALSE;
+	goto out;
+      }
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
       JSAtom *atom;

@@ -57,7 +57,12 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	event-order.swf \
 	event-order.swf.trace \
+	extends-simple.swf \
+	extends-simple.swf.trace \
+	extends-super.swf \
+	extends-super.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \

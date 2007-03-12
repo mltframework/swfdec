@@ -1715,12 +1715,26 @@ swfdec_action_define_function (JSContext *cx, guint action,
     return FALSE;
   } else {
     /* create the script */
+    const char *name = NULL;
     SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (script->buffer, 
 	cx->fp->pc + 3 + len - script->buffer->data, size);
     swfdec_bits_init (&bits, buffer);
+    if (*function_name) {
+      name = function_name;
+    } else if (cx->fp->sp > cx->fp->spbase) {
+      /* This is kind of a hack that uses a feature of the Adobe compiler:
+       * foo = function () {} is compiled as these actions:
+       * Push "foo", DefineFunction, SetVariable/SetMember
+       * With this knowledge we can inspect the topmost stack member, since
+       * it will contain the name this function will soon be assigned to.
+       */
+      if (JSVAL_IS_STRING (cx->fp->sp[-1]))
+	name = JS_GetStringBytes (JSVAL_TO_STRING (cx->fp->sp[-1]));
+    }
+    if (name == NULL)
+      name = "unnamed_function";
     script = swfdec_script_new_for_player (JS_GetContextPrivate (cx),
-	&bits, *function_name ? function_name : "<lambda>", 
-	((SwfdecScript *) cx->fp->swf)->version);
+	&bits, name, ((SwfdecScript *) cx->fp->swf)->version);
     swfdec_buffer_unref (buffer);
     if (cx->fp->constant_pool) {
       script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,

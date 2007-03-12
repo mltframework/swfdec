@@ -147,6 +147,7 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
   SwfdecBits *bits = &s->b;
   guint id;
   SwfdecSprite *sprite;
+  char *name;
 
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %u", id);
@@ -159,8 +160,10 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
     SWFDEC_ERROR ("sprite %u already has an init action", id);
     return SWFDEC_STATUS_OK;
   }
+  name = g_strdup_printf ("InitAction %u", id);
   sprite->init_action = swfdec_script_new_for_player (SWFDEC_DECODER (s)->player,
-      bits, "InitAction", s->version);
+      bits, name, s->version);
+  g_free (name);
   if (sprite->init_action) {
     swfdec_script_ref (sprite->init_action);
     swfdec_root_sprite_add_root_action (SWFDEC_ROOT_SPRITE (s->main_sprite),

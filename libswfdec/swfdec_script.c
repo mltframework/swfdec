@@ -191,6 +191,55 @@ swfdec_action_push_string (JSContext *cx, const char *s)
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_value_to_boolean_5 (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_BOOLEAN (val)) {
+    return JSVAL_TO_BOOLEAN (val);
+  } else if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val) != 0;
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    double d = *JSVAL_TO_DOUBLE (val);
+    return d != 0.0 && !isnan (d);
+  } else if (JSVAL_IS_STRING (val)) {
+    double d;
+    if (!JS_ValueToNumber (cx, val, &d))
+      return 0;
+    return d != 0.0 && !isnan (d);
+  } else if (JSVAL_IS_NULL (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_VOID (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_OBJECT (val)) {
+    return JS_TRUE;
+  }
+  g_assert_not_reached ();
+  return JS_FALSE;
+}
+
+static JSBool
+swfdec_value_to_boolean_7 (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_BOOLEAN (val)) {
+    return JSVAL_TO_BOOLEAN (val);
+  } else if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val) != 0;
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    double d = *JSVAL_TO_DOUBLE (val);
+    return d != 0.0 && !isnan (d);
+  } else if (JSVAL_IS_STRING (val)) {
+    return JS_GetStringLength (JSVAL_TO_STRING (val)) > 0;
+  } else if (JSVAL_IS_NULL (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_VOID (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_OBJECT (val)) {
+    return JS_TRUE;
+  }
+  g_assert_not_reached ();
+  return JS_FALSE;
+}
+
 static double
 swfdec_value_to_number (JSContext *cx, jsval val)
 {
@@ -719,9 +768,13 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   
   if (!swfdec_script_ensure_stack (cx, 3))
     return JS_FALSE;
-  s = swfdec_js_to_string (cx, fp->sp[-1]);
-  if (s == NULL)
-    return JS_FALSE;
+  if (fp->sp[-1] == JSVAL_VOID) {
+    s = "";
+  } else {
+    s = swfdec_js_to_string (cx, fp->sp[-1]);
+    if (s == NULL)
+      return JS_FALSE;
+  }
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
     return JS_FALSE;
   
@@ -926,7 +979,7 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
 static JSString *
 swfdec_action_to_string_5 (JSContext *cx, jsval val)
 {
-  if (JSVAL_IS_VOID (val) || JSVAL_IS_NULL (val))
+  if (JSVAL_IS_VOID (val))
     return cx->runtime->emptyString;
   return js_ValueToString (cx, val);
 }
@@ -1662,12 +1715,26 @@ swfdec_action_define_function (JSContext *cx, guint action,
     return FALSE;
   } else {
     /* create the script */
+    const char *name = NULL;
     SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (script->buffer, 
 	cx->fp->pc + 3 + len - script->buffer->data, size);
     swfdec_bits_init (&bits, buffer);
+    if (*function_name) {
+      name = function_name;
+    } else if (cx->fp->sp > cx->fp->spbase) {
+      /* This is kind of a hack that uses a feature of the Adobe compiler:
+       * foo = function () {} is compiled as these actions:
+       * Push "foo", DefineFunction, SetVariable/SetMember
+       * With this knowledge we can inspect the topmost stack member, since
+       * it will contain the name this function will soon be assigned to.
+       */
+      if (JSVAL_IS_STRING (cx->fp->sp[-1]))
+	name = JS_GetStringBytes (JSVAL_TO_STRING (cx->fp->sp[-1]));
+    }
+    if (name == NULL)
+      name = "unnamed_function";
     script = swfdec_script_new_for_player (JS_GetContextPrivate (cx),
-	&bits, *function_name ? function_name : "<lambda>", 
-	((SwfdecScript *) cx->fp->swf)->version);
+	&bits, name, ((SwfdecScript *) cx->fp->swf)->version);
     swfdec_buffer_unref (buffer);
     if (cx->fp->constant_pool) {
       script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
@@ -1932,6 +1999,17 @@ swfdec_action_to_number (JSContext *cx, guint action, const guint8 *data, guint 
 }
 
 static JSBool
+swfdec_action_to_string (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSString *s;
+  s = JS_ValueToString(cx, cx->fp->sp[-1]);
+  if (!s)
+    return JS_FALSE;
+  cx->fp->sp[-1] = STRING_TO_JSVAL (s);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_type_of (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   jsval val;
@@ -1976,6 +2054,98 @@ swfdec_action_get_time (JSContext *cx, guint action, const guint8 *data, guint l
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
 
   *cx->fp->sp++ = INT_TO_JSVAL ((int) SWFDEC_TICKS_TO_MSECS (player->time));
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_extends (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval superclass, subclass, proto;
+  JSObject *prototype;
+
+  superclass = cx->fp->sp[-1];
+  subclass = cx->fp->sp[-2];
+  cx->fp->sp -= 2;
+  if (!JSVAL_IS_OBJECT (superclass) || superclass == JSVAL_NULL ||
+      !JSVAL_IS_OBJECT (subclass) || subclass == JSVAL_NULL) {
+    SWFDEC_ERROR ("superclass or subclass aren't objects");
+    return JS_TRUE;
+  }
+  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (superclass), "prototype", &proto) ||
+      !JSVAL_IS_OBJECT (proto))
+    return JS_FALSE;
+  prototype = JS_NewObject (cx, NULL, JSVAL_TO_OBJECT (proto), NULL);
+  if (prototype == NULL)
+    return JS_FALSE;
+  proto = OBJECT_TO_JSVAL (prototype);
+  if (!JS_SetProperty (cx, prototype, "__constructor__", &superclass) ||
+      !JS_SetProperty (cx, JSVAL_TO_OBJECT (subclass), "prototype", &proto))
+    return JS_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_enumerate2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSObject *obj;
+  JSIdArray *array;
+  guint i;
+
+  if (!JSVAL_IS_OBJECT (cx->fp->sp[-1]) || cx->fp->sp[-1] == JSVAL_NULL) {
+    SWFDEC_ERROR ("Enumerate2 called without an object");
+    cx->fp->sp[-1] = JSVAL_NULL;
+    return JS_TRUE;
+  }
+  obj = JSVAL_TO_OBJECT (cx->fp->sp[-1]);
+  cx->fp->sp[-1] = JSVAL_NULL;
+  array = JS_Enumerate (cx, obj);
+  if (!array)
+    return JS_FALSE;
+  if ((guint) (cx->fp->spend - cx->fp->sp) < array->length) {
+    SWFDEC_ERROR ("FIXME: not enough stack space, need %u, got %d",
+	array->length, cx->fp->spend - cx->fp->sp);
+    JS_DestroyIdArray (cx, array);
+    return JS_FALSE;
+  }
+  for (i = 0; i < array->length; i++) {
+    if (!JS_IdToValue (cx, array->vector[i], cx->fp->sp++)) {
+      JS_DestroyIdArray (cx, array);
+      return JS_FALSE;
+    }
+  }
+  JS_DestroyIdArray (cx, array);
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_logical_5 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSBool l, r;
+
+  l = swfdec_value_to_boolean_5 (cx, cx->fp->sp[-1]);
+  r = swfdec_value_to_boolean_5 (cx, cx->fp->sp[-2]);
+
+  cx->fp->sp--;
+  if (action == 0x10)
+    cx->fp->sp[-1] = l && r ? JSVAL_TRUE : JSVAL_FALSE;
+  else
+    cx->fp->sp[-1] = l || r ? JSVAL_TRUE : JSVAL_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_logical_7 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSBool l, r;
+
+  l = swfdec_value_to_boolean_7 (cx, cx->fp->sp[-1]);
+  r = swfdec_value_to_boolean_7 (cx, cx->fp->sp[-2]);
+
+  cx->fp->sp--;
+  if (action == 0x10)
+    cx->fp->sp[-1] = l && r ? JSVAL_TRUE : JSVAL_FALSE;
+  else
+    cx->fp->sp[-1] = l || r ? JSVAL_TRUE : JSVAL_FALSE;
   return JS_TRUE;
 }
 
@@ -2188,6 +2358,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
     g_string_append (string, i ? ", " : " ");
     g_string_append (string, swfdec_constant_pool_get (pool, i));
+    g_string_append_printf (string, " (%u)", i);
   }
   return g_string_free (string, FALSE);
 }
@@ -2290,8 +2461,8 @@ static const SwfdecActionSpec actions[256] = {
   [0x0d] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0e] = { "Equals", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
   [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
-  [0x10] = { "And", NULL },
-  [0x11] = { "Or", NULL },
+  [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
+  [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
   [0x13] = { "StringEquals", NULL },
   [0x14] = { "StringLength", NULL },
@@ -2341,7 +2512,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [0x4a] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
-  [0x4b] = { "ToString", NULL },
+  [0x4b] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
   [0x4c] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
   [0x4d] = { "Swap", NULL, 2, 2, { NULL, NULL, swfdec_action_swap, swfdec_action_swap, swfdec_action_swap } },
   [0x4e] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
@@ -2352,7 +2523,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x53] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
   /* version 6 */
   [0x54] = { "InstanceOf", NULL },
-  [0x55] = { "Enumerate2", NULL },
+  [0x55] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
   /* version 5 */
   [0x60] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [0x61] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
@@ -2365,7 +2536,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x67] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x68] = { "StringGreater", NULL },
   /* version 7 */
-  [0x69] = { "Extends", NULL },
+  [0x69] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
 
   /* version 3 */
   [0x81] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
@@ -2627,7 +2798,12 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
       fp->flags |= JS_BIT (JSFRAME_OVERRIDE_SHIFT);
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-      SWFDEC_ERROR ("preloading super isn't implemented");
+      if (!JS_GetProperty (cx, JS_GetPrototype (cx, fp->thisp), 
+	  fp->flags & JSINVOKE_CONSTRUCT ? "__constructor__" : "__proto__", 
+	  &fp->vars[preload_reg++])) {
+	ok = JS_FALSE;
+	goto out;
+      }
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
       JSAtom *atom;

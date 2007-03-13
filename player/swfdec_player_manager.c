@@ -591,7 +591,7 @@ command_enumerate (SwfdecPlayerManager *manager, const char *arg)
   JSObject *obj;
   JSIdArray *array;
   const char *s, *t;
-  int i;
+  guint i;
 
   if (!swfdec_js_run (manager->player, arg, &rval)) {
     swfdec_player_manager_error (manager, "Invalid command");

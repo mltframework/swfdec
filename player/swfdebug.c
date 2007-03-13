@@ -270,14 +270,14 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (hbox), scroll, TRUE, TRUE, 0);
   widget = swfdec_debug_stack_new (manager);
   gtk_container_add (GTK_CONTAINER (scroll), widget);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
   widget = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (widget), FALSE);
@@ -303,7 +303,9 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 static void
 do_break_cb (SwfdecDebugger *debugger, SwfdecDebuggerScript *script, gpointer unused)
 {
-  swfdec_debugger_set_breakpoint (debugger, script, 0);
+  /* no need tobreak on scripts that don't do anything, so no special case needed */
+  if (script->n_commands > 0)
+    swfdec_debugger_set_breakpoint (debugger, script, 0);
 }
 
 static gboolean

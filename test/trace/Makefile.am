@@ -9,6 +9,12 @@ trace_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	and-or-5.swf \
+	and-or-5.swf.trace \
+	and-or-6.swf \
+	and-or-6.swf.trace \
+	and-or-7.swf \
+	and-or-7.swf.trace \
 	array.swf \
 	array.swf.trace \
 	callfunction-stack.as \
@@ -57,7 +63,12 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	event-order.swf \
 	event-order.swf.trace \
+	extends-simple.swf \
+	extends-simple.swf.trace \
+	extends-super.swf \
+	extends-super.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \
@@ -139,6 +150,8 @@ EXTRA_DIST = \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
+	undefined-tostring.swf \
+	undefined-tostring.swf.trace \
 	undefined1.swf \
 	undefined1.swf.trace \
 	undefined2-6.swf \

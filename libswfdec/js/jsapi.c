@@ -2845,7 +2845,8 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
-    jsint i, n;
+    jsuint i;
+    jsint n;
     jsval iter_state, num_properties;
     jsid id;
     JSIdArray *ida;

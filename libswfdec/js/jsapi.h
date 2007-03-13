@@ -813,7 +813,7 @@ struct JSProperty {
 };
 
 struct JSIdArray {
-    jsint length;
+    jsuint length;
     jsid  vector[1];    /* actually, length jsid words */
 };
 

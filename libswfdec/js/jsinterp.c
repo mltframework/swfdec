@@ -1205,7 +1205,7 @@ ImportProperty(JSContext *cx, JSObject *obj, jsid id)
     JSObject *obj2, *target, *funobj, *closure;
     JSString *str;
     uintN attrs;
-    jsint i;
+    jsuint i;
     jsval value;
 
     if (JSVAL_IS_VOID(id)) {

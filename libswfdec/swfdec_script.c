@@ -2843,7 +2843,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   endpc = startpc + script->buffer->length;
   fp->pc = pc;
   /* set up stack */
-  startsp = js_AllocStack (cx, STACKSIZE, &mark);
+  startsp = js_AllocRawStack (cx, STACKSIZE, &mark);
   if (!startsp) {
     ok = JS_FALSE;
     goto out;
@@ -2987,7 +2987,7 @@ no_catch:
   /* Reset sp before freeing stack slots, because our caller may GC soon. */
   fp->sp = fp->spbase;
   fp->spbase = NULL;
-  js_FreeStack(cx, mark);
+  js_FreeRawStack(cx, mark);
   cx->interpLevel--;
   swfdec_script_unref (script);
   return ok;
@@ -3068,7 +3068,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.varobj = obj;
   /* allocate stack for variables */
   frame.nvars = 4;
-  frame.vars = js_AllocStack (cx, frame.nvars, &mark);
+  frame.vars = js_AllocRawStack (cx, frame.nvars, &mark);
   if (frame.vars == NULL) {
     return JS_FALSE;
   }
@@ -3087,7 +3087,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
    */
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
-  js_FreeStack (cx, mark);
+  js_FreeRawStack (cx, mark);
   if (frame.constant_pool)
     swfdec_constant_pool_free (frame.constant_pool);
 

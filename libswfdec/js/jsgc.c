@@ -847,8 +847,9 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
               rt->gcStats.maxdepth = rt->gcStats.depth);
 
 #ifdef GC_MARK_DEBUG
-    if (js_DumpGCHeap)
-        gc_dump_thing(thing, flags, arg, js_DumpGCHeap);
+    if (!js_DumpGCHeap)
+      js_DumpGCHeap = stderr;
+    gc_dump_thing(thing, flags, arg, js_DumpGCHeap);
 #endif
 
     switch (flags & GCF_TYPEMASK) {
@@ -1228,7 +1229,7 @@ restart:
 			       ? (uintN)(fp->sp - fp->spbase)
 			       : depth;
 		    } else {
-		      nslots = JS_UPTRDIFF(fp->sp, fp->spbase);
+		      nslots = (uintN) (fp->sp - fp->spbase);
 		    }
                     GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
                 }

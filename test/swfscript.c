@@ -108,7 +108,7 @@ fixup_jumps_foreach (gconstpointer bytecode, guint action,
       GINT16_TO_LE (jump_offset - offset - 5);
   }
   if (action == 0x8a || action == 0x8d) {
-    Action *cur;
+    Action *cur = NULL; /* silence gcc */
     guint id = action == 0x8a ? 2 : 0;
     guint i, count;
     guint offset = (guint8 *) bytecode - state->script->buffer->data;

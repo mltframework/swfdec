@@ -43,9 +43,7 @@
 
 /*** CONSTANT POOLS ***/
 
-typedef GPtrArray SwfdecConstantPool;
-
-static SwfdecConstantPool *
+SwfdecConstantPool *
 swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
 {
   guint8 *next;
@@ -79,20 +77,20 @@ swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
   return pool;
 }
 
-static guint
+guint
 swfdec_constant_pool_size (SwfdecConstantPool *pool)
 {
   return pool->len;
 }
 
-static const char *
+const char *
 swfdec_constant_pool_get (SwfdecConstantPool *pool, guint i)
 {
   g_assert (i < pool->len);
   return g_ptr_array_index (pool, i);
 }
 
-static void
+void
 swfdec_constant_pool_free (SwfdecConstantPool *pool)
 {
   g_ptr_array_free (pool, TRUE);
@@ -124,6 +122,15 @@ swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
 }
 
 /*** SUPPORT FUNCTIONS ***/
+
+static void
+swfdec_script_add_to_player (SwfdecScript *script, SwfdecPlayer *player)
+{
+  if (SWFDEC_IS_DEBUGGER (player)) {
+    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script);
+    script->debugger = player;
+  }
+}
 
 /**
  * swfdec_script_ensure_stack:
@@ -1733,22 +1740,22 @@ swfdec_action_define_function (JSContext *cx, guint action,
     }
     if (name == NULL)
       name = "unnamed_function";
-    script = swfdec_script_new_for_player (JS_GetContextPrivate (cx),
-	&bits, name, ((SwfdecScript *) cx->fp->swf)->version);
+    script = swfdec_script_new (&bits, name, ((SwfdecScript *) cx->fp->swf)->version);
     swfdec_buffer_unref (buffer);
-    if (cx->fp->constant_pool) {
-      script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
-	  cx->fp->constant_pool);
-    }
   }
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (preloads);
     return JS_FALSE;
   }
+  if (cx->fp->constant_pool) {
+    script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
+	cx->fp->constant_pool);
+  }
   script->flags = flags;
   script->preloads = preloads;
   fun->swf = script;
+  swfdec_script_add_to_player (script, JS_GetContextPrivate (cx));
   /* attach the function */
   if (*function_name == '\0') {
     if (cx->fp->sp >= cx->fp->spend) {
@@ -2170,6 +2177,7 @@ swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
   }
   return g_strconcat ("SetTarget ", data, NULL);
 }
+
 static char *
 swfdec_action_print_define_function (guint action, const guint8 *data, guint len)
 {
@@ -2664,10 +2672,8 @@ swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits,
   g_return_val_if_fail (bits != NULL, NULL);
 
   script = swfdec_script_new (bits, name, version);
-  if (SWFDEC_IS_DEBUGGER (player) && script) {
-    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script);
-    script->debugger = player;
-  }
+  if (script)
+    swfdec_script_add_to_player (script, player);
   return script;
 }
 

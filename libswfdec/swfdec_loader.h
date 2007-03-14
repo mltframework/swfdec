@@ -52,7 +52,7 @@ struct _SwfdecLoaderClass
 {
   GObjectClass		object_class;
 
-  /* FIXME: better error reporting? */
+  /* loads the given URL. Must return a loader, the loader can be in the error state */
   SwfdecLoader *      	(* load)	(SwfdecLoader *			loader, 
 					 const char *			url);
 };

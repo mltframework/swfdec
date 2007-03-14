@@ -1248,7 +1248,8 @@ swfdec_js_movie_create_jsobject	(SwfdecMovie *movie)
       (fun = swfdec_js_movie_lookup_class (SWFDEC_SPRITE_MOVIE (movie))) != JSVAL_NULL) {
     swfdec_js_construct_object (script->jscx, &movieclip_class, fun, &script->jsobj);
   } else {
-    script->jsobj = JS_NewObject (script->jscx, &movieclip_class,
+    SwfdecScriptableClass *klass = SWFDEC_SCRIPTABLE_GET_CLASS (movie);
+    script->jsobj = JS_NewObject (script->jscx, klass->jsclass,
 	NULL, NULL);
   }
   if (!script->jsobj ||

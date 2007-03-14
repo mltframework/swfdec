@@ -206,8 +206,8 @@ swfdec_player_add_action (SwfdecPlayer *player, gpointer object,
   g_return_if_fail (object != NULL);
   g_return_if_fail (action_func != NULL);
 
-  action = swfdec_ring_buffer_push (player->actions);
   SWFDEC_LOG ("adding action %p %p %p", object, action_func, action_data);
+  action = swfdec_ring_buffer_push (player->actions);
   if (action == NULL) {
     /* FIXME: limit number of actions to not get inf loops due to scripts? */
     swfdec_ring_buffer_set_size (player->actions,

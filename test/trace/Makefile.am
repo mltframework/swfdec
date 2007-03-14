@@ -113,6 +113,12 @@ EXTRA_DIST = \
 	names.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
+	netstream-onstatus.c \
+	netstream-onstatus.swf \
+	netstream-onstatus.trace \
+	netstream-onstatus-notfound.as \
+	netstream-onstatus-notfound.swf \
+	netstream-onstatus-notfound.swf.trace \
 	number.swf \
 	number.swf.trace \
 	object-math-5.swf \
@@ -141,6 +147,9 @@ EXTRA_DIST = \
 	setinterval.swf.trace
 	setinterval2.swf \
 	setinterval2.swf.trace \
+	setinterval-arguments.as \
+	setinterval-arguments.swf \
+	setinterval-arguments.swf.trace \
 	setinterval-clear.swf \
 	setinterval-clear.swf.trace \
 	setvariable.swf \
@@ -158,6 +167,7 @@ EXTRA_DIST = \
 	undefined2-6.swf.trace \
 	undefined2-7.swf \
 	undefined2-7.swf.trace \
+	video.flv \
 	xscale.swf \
 	xscale.swf.trace
 

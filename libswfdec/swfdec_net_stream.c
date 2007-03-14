@@ -26,7 +26,38 @@
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
+#include "js/jsapi.h"
 
+static void
+swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const char *level)
+{
+  jsval val;
+  JSString *string;
+  JSObject *object;
+  JSContext *cx;
+
+  cx = stream->player->jscx;
+  object = JS_NewObject (cx, NULL, NULL, NULL);
+  if (!object)
+    return;
+  string = JS_NewStringCopyZ (cx, code);
+  if (!string)
+    return;
+  val = STRING_TO_JSVAL (string);
+  if (!JS_SetProperty (cx, object, "code", &val))
+    return;
+  string = JS_NewStringCopyZ (cx, level);
+  if (!string)
+    return;
+  val = STRING_TO_JSVAL (string);
+  if (!JS_SetProperty (cx, object, "level", &val))
+    return;
+
+  val = OBJECT_TO_JSVAL (object);
+  swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (stream), "onStatus", 1, &val);
+}
+
+static void swfdec_net_stream_update_playing (SwfdecNetStream *stream);
 static void
 swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 {
@@ -76,6 +107,15 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       }
     }
   }
+  if (stream->next_time <= stream->current_time) {
+    if (swfdec_flv_decoder_is_eof (stream->flvdecoder)) {
+      swfdec_net_stream_onstatus (stream, "NetStream.Play.Stop", "status");
+    } else {
+      stream->buffering = TRUE;
+      swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Empty", "status");
+    }
+    swfdec_net_stream_update_playing (stream);
+  }
 }
 
 static void
@@ -84,13 +124,13 @@ swfdec_net_stream_timeout (SwfdecTimeout *timeout)
   SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) timeout - G_STRUCT_OFFSET (SwfdecNetStream, timeout));
 
   SWFDEC_LOG ("timeout fired");
+  stream->timeout.callback = NULL;
   swfdec_net_stream_video_goto (stream, stream->next_time);
   if (stream->next_time > stream->current_time) {
     SWFDEC_LOG ("readding timeout");
     stream->timeout.timestamp += SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
+    stream->timeout.callback = swfdec_net_stream_timeout;
     swfdec_player_add_timeout (stream->player, &stream->timeout);
-  } else {
-    stream->timeout.callback = NULL;
   }
 }
 
@@ -100,8 +140,9 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
   gboolean should_play;
     
   should_play = stream->playing;
+  should_play &= !stream->buffering;
   should_play &= stream->flvdecoder != NULL;
-  should_play &= stream->next_time > stream->current_time;
+  //should_play &= stream->next_time > stream->current_time;
   if (should_play && stream->timeout.callback == NULL) {
     SWFDEC_DEBUG ("starting playback");
     stream->timeout.callback = swfdec_net_stream_timeout;
@@ -135,58 +176,89 @@ swfdec_net_stream_loader_target_get_player (SwfdecLoaderTarget *target)
   return SWFDEC_NET_STREAM (target)->player;
 }
 
-static SwfdecDecoder *
-swfdec_net_stream_loader_target_get_decoder (SwfdecLoaderTarget *target)
-{
-  return SWFDEC_DECODER (SWFDEC_NET_STREAM (target)->flvdecoder);
-}
-
-static gboolean
-swfdec_net_stream_loader_target_set_decoder (SwfdecLoaderTarget *target,
-    SwfdecDecoder *decoder)
+static void
+swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target, 
+    SwfdecLoader *loader)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
-
-  if (!SWFDEC_IS_FLV_DECODER (decoder)) {
-    g_object_unref (decoder);
-    return FALSE;
+  SwfdecDecoderClass *klass;
+  gboolean recheck = FALSE;
+  
+  if (loader->error) {
+    if (stream->flvdecoder == NULL)
+      swfdec_net_stream_onstatus (stream, "NetStream.Play.StreamNotFound", "error");
+    return;
   }
-  stream->flvdecoder = SWFDEC_FLV_DECODER (decoder);
-  swfdec_net_stream_update_playing (stream);
-  return TRUE;
+  if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
+    SWFDEC_WARNING ("nothing to parse?!");
+    return;
+  }
+  if (stream->flvdecoder == NULL) {
+    /* FIXME: add mp3 support */
+    stream->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
+    SWFDEC_DECODER (stream->flvdecoder)->player = stream->player;
+    SWFDEC_DECODER (stream->flvdecoder)->queue = loader->queue;
+    swfdec_net_stream_onstatus (stream, "NetStream.Play.Start", "status");
+  }
+  klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
+  g_return_if_fail (klass->parse);
+
+  while (TRUE) {
+    SwfdecStatus status = klass->parse (SWFDEC_DECODER (stream->flvdecoder));
+    switch (status) {
+      case SWFDEC_STATUS_OK:
+	break;
+      case SWFDEC_STATUS_INIT:
+	/* HACK for native flv playback */
+	swfdec_player_initialize (stream->player, 
+	    SWFDEC_DECODER (stream->flvdecoder)->rate, 
+	    SWFDEC_DECODER (stream->flvdecoder)->width, 
+	    SWFDEC_DECODER (stream->flvdecoder)->height);
+      case SWFDEC_STATUS_IMAGE:
+	recheck = TRUE;
+	break;
+      case SWFDEC_STATUS_ERROR:
+      case SWFDEC_STATUS_NEEDBITS:
+	goto out;
+      case SWFDEC_STATUS_EOF:
+	/* the flv decoder never emits this */
+      default:
+	g_assert_not_reached ();
+	return;
+    }
+  }
+out:
+  if (loader->eof) {
+    swfdec_flv_decoder_eof (stream->flvdecoder);
+    recheck = TRUE;
+    swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Flush", "status");
+    swfdec_net_stream_video_goto (stream, stream->current_time);
+    stream->buffering = FALSE;
+  }
+  if (recheck) {
+    if (stream->buffering) {
+      guint first, last;
+      if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
+	guint current = MAX (first, stream->current_time);
+	if (current + stream->buffer_time <= last) {
+	  swfdec_net_stream_video_goto (stream, current);
+	  stream->buffering = FALSE;
+	  swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Full", "status");
+	}
+      } else {
+	SWFDEC_ERROR ("no video stream, how do we update buffering?");
+      }
+    }
+    swfdec_net_stream_update_playing (stream);
+  }
 }
 
-static gboolean
-swfdec_net_stream_loader_target_image (SwfdecLoaderTarget *target)
-{
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
-  guint current, next;
-  SwfdecBuffer *buffer;
-  SwfdecVideoFormat format;
-
-  if (!stream->playing)
-    return TRUE;
-
-  buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
-      stream->current_time, FALSE, &format, &current, &next);
-  if (format != stream->format ||
-      stream->current_time != current ||
-      stream->next_time != next)
-    swfdec_net_stream_video_goto (stream, current);
-  swfdec_net_stream_update_playing (stream);
-
-  return TRUE;
-}
 
 static void
 swfdec_net_stream_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_net_stream_loader_target_get_player;
-  iface->get_decoder = swfdec_net_stream_loader_target_get_decoder;
-  iface->set_decoder = swfdec_net_stream_loader_target_set_decoder;
-
-  iface->init = swfdec_net_stream_loader_target_image;
-  iface->image = swfdec_net_stream_loader_target_image;
+  iface->parse = swfdec_net_stream_loader_target_parse;
 }
 
 /*** SWFDEC VIDEO MOVIE INPUT ***/
@@ -251,6 +323,8 @@ swfdec_net_stream_init (SwfdecNetStream *stream)
 {
   stream->input.connect = swfdec_net_stream_input_connect;
   stream->input.disconnect = swfdec_net_stream_input_disconnect;
+
+  stream->buffer_time = 100; /* msecs */
 }
 
 SwfdecNetStream *
@@ -264,6 +338,7 @@ swfdec_net_stream_new (SwfdecPlayer *player, SwfdecConnection *conn)
   stream = g_object_new (SWFDEC_TYPE_NET_STREAM, NULL);
   stream->player = player;
   stream->conn = conn;
+  SWFDEC_SCRIPTABLE (stream)->jscx = player->jscx;
   g_object_ref (conn);
 
   return stream;
@@ -295,6 +370,7 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
     stream->flvdecoder = NULL;
   }
   stream->loader = loader;
+  stream->buffering = TRUE;
   if (loader) {
     g_object_ref (loader);
     swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (stream));
@@ -319,5 +395,25 @@ swfdec_net_stream_get_playing (SwfdecNetStream *stream)
   g_return_val_if_fail (SWFDEC_IS_NET_STREAM (stream), FALSE);
 
   return stream->playing;
+}
+
+void
+swfdec_net_stream_set_buffer_time (SwfdecNetStream *stream, double secs)
+{
+  g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
+
+  /* FIXME: is this correct? */
+  if (secs <= 0)
+    return;
+
+  stream->buffer_time = secs * 1000;
+}
+
+double
+swfdec_net_stream_get_buffer_time (SwfdecNetStream *stream)
+{
+  g_return_val_if_fail (SWFDEC_IS_NET_STREAM (stream), 0.1);
+
+  return (double) stream->buffer_time / 1000.0;
 }
 

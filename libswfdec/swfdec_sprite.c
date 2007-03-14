@@ -424,7 +424,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 	break;
       swfdec_bits_init (&action_bits, buffer);
       if (event_flags & SWFDEC_EVENT_KEY_PRESS)
-	key_code = swfdec_bits_get_u8 (bits);
+	key_code = swfdec_bits_get_u8 (&action_bits);
       else
 	key_code = 0;
 

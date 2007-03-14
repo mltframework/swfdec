@@ -191,17 +191,16 @@ swfdec_file_loader_load (SwfdecLoader *loader, const char *url)
   /* FIXME: need to rework seperators on windows? */
   real_path = g_build_filename (SWFDEC_FILE_LOADER (loader)->dir, url, NULL);
   buffer = swfdec_buffer_new_from_file (real_path, &error);
-  if (buffer == NULL) {
-    SWFDEC_ERROR ("Couldn't load \"%s\": %s", real_path, error->message);
-    g_free (real_path);
-    g_error_free (error);
-    return NULL;
-  }
   ret = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
   ret->url = real_path;
   SWFDEC_FILE_LOADER (ret)->dir = g_strdup (SWFDEC_FILE_LOADER (loader)->dir);
-  swfdec_loader_push (ret, buffer);
-  swfdec_loader_eof (ret);
+  if (buffer == NULL) {
+    swfdec_loader_error (ret, error->message);
+    g_error_free (error);
+  } else {
+    swfdec_loader_push (ret, buffer);
+    swfdec_loader_eof (ret);
+  }
 
   return ret;
 }
@@ -227,6 +226,7 @@ swfdec_file_loader_init (SwfdecFileLoader *loader)
 SwfdecLoader *
 swfdec_loader_load (SwfdecLoader *loader, const char *url)
 {
+  SwfdecLoader *ret;
   SwfdecLoaderClass *klass;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
@@ -234,7 +234,9 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url)
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  return klass->load (loader, url);
+  ret = klass->load (loader, url);
+  g_assert (ret != NULL);
+  return ret;
 }
 
 void
@@ -321,15 +323,20 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
   g_return_if_fail (error != NULL);
 
-  SWFDEC_ERROR ("error in loader %p: %s", loader, error);
-  if (loader->error)
+  if (loader->error) {
+    SWFDEC_ERROR ("another error in loader %p: %s", loader, error);
     return;
+  }
 
-  player = swfdec_loader_target_get_player (loader->target);
-  swfdec_player_lock (player);
-  swfdec_loader_error_locked (loader, error);
-  swfdec_player_perform_actions (player);
-  swfdec_player_unlock (player);
+  if (loader->target) {
+    player = swfdec_loader_target_get_player (loader->target);
+    swfdec_player_lock (player);
+    swfdec_loader_error_locked (loader, error);
+    swfdec_player_perform_actions (player);
+    swfdec_player_unlock (player);
+  } else {
+    swfdec_loader_error_locked (loader, error);
+  }
 }
 
 void
@@ -338,10 +345,11 @@ swfdec_loader_error_locked (SwfdecLoader *loader, const char *error)
   if (loader->error)
     return;
 
-  SWFDEC_ERROR ("error in loader %p: %s", loader, error);
+  SWFDEC_WARNING ("error in %s %p: %s", G_OBJECT_TYPE_NAME (loader), loader, error);
   loader->error = g_strdup (error);
   g_object_notify (G_OBJECT (loader), "error");
-  swfdec_loader_target_parse (loader->target, loader);
+  if (loader->target)
+    swfdec_loader_target_parse (loader->target, loader);
 }
 
 void

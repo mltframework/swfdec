@@ -139,7 +139,7 @@ swfdec_js_global_setInterval (JSContext *cx, JSObject *obj, uintN argc, jsval *a
   interval->msecs = msecs;
   interval->vals[0] = fun;
   interval->vals[1] = OBJECT_TO_JSVAL (object);
-  memcpy (&interval->vals[2], &argv[first_arg], n_args);
+  memcpy (&interval->vals[2], &argv[first_arg], n_args * sizeof (jsval));
   for (i = 0; i < n_args + 2; i++) {
     if (!JS_AddRoot (cx, &interval->vals[i])) {
       /* FIXME: is it save roots that weren't added before? */

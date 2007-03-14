@@ -48,7 +48,11 @@ struct _SwfdecNetStream
   SwfdecLoader *	loader;		/* input stream */
   SwfdecFlvDecoder *	flvdecoder;	/* flv decoder */
   gboolean		playing;	/* TRUE if this stream is playing */
+  gboolean		buffering;	/* TRUE if we're waiting for more input data */
   gboolean		error;		/* in error */
+
+  /* properties */
+  guint			buffer_time;	/* buffering time in msecs */
 
   /* video decoding */
   guint			current_time;	/* current playback timestamp */
@@ -82,6 +86,9 @@ void			swfdec_net_stream_set_loader	(SwfdecNetStream *	stream,
 void			swfdec_net_stream_set_playing	(SwfdecNetStream *	stream,
 							 gboolean		playing);
 gboolean		swfdec_net_stream_get_playing	(SwfdecNetStream *	stream);
+void			swfdec_net_stream_set_buffer_time (SwfdecNetStream *	stream,
+							 double			secs);
+double			swfdec_net_stream_get_buffer_time (SwfdecNetStream *	stream);
 
 
 G_END_DECLS

@@ -141,6 +141,9 @@ EXTRA_DIST = \
 	setinterval.swf.trace
 	setinterval2.swf \
 	setinterval2.swf.trace \
+	setinterval-arguments.as \
+	setinterval-arguments.swf \
+	setinterval-arguments.swf.trace \
 	setinterval-clear.swf \
 	setinterval-clear.swf.trace \
 	setvariable.swf \

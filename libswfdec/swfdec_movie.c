@@ -27,6 +27,7 @@
 
 #include "swfdec_movie.h"
 #include "swfdec_debug.h"
+#include "swfdec_debugger.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
 #include "swfdec_js.h"
@@ -283,8 +284,25 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
   if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag == movie)
     SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
-  if (movie->parent)
-    movie->parent->list = g_list_remove (movie->parent->list, movie);
+  if (movie->parent) {
+    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+    if (SWFDEC_IS_DEBUGGER (player) &&
+	g_list_find (movie->parent->list, movie)) {
+      movie->parent->list = g_list_remove (movie->parent->list, movie);
+      g_signal_emit_by_name (player, "movie-removed", movie);
+    } else {
+      movie->parent->list = g_list_remove (movie->parent->list, movie);
+    }
+  } else {
+    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie)->player;
+    if (SWFDEC_IS_DEBUGGER (player) &&
+	g_list_find (player->roots, movie)) {
+      player->roots = g_list_remove (player->roots, movie);
+      g_signal_emit_by_name (player, "movie-removed", movie);
+    } else {
+      player->roots = g_list_remove (player->roots, movie);
+    }
+  }
 }
 
 /**
@@ -306,9 +324,6 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   swfdec_movie_set_content (movie, NULL);
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  if (movie->parent) {
-    movie->parent->list = g_list_remove (movie->parent->list, movie);
-  }
   swfdec_js_movie_remove_jsobject (movie);
   player->movies = g_list_remove (player->movies, movie);
   g_object_unref (movie);
@@ -710,6 +725,8 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %p (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+  } else {
+    player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
   swfdec_movie_set_name (movie);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
@@ -725,6 +742,8 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
     g_queue_push_tail (player->init_queue, movie);
     g_queue_push_tail (player->construct_queue, movie);
   }
+  if (SWFDEC_IS_DEBUGGER (player))
+    g_signal_emit_by_name (player, "movie-added", movie);
   if (klass->init_movie)
     klass->init_movie (movie);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);

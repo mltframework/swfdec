@@ -378,8 +378,8 @@ swfdec_player_dispose (GObject *object)
   g_hash_table_foreach_steal (player->registered_classes, free_registered_class, player);
   g_hash_table_destroy (player->registered_classes);
 
-  g_list_foreach (player->roots, (GFunc) swfdec_movie_destroy, NULL);
-  g_list_free (player->roots);
+  while (player->roots)
+    swfdec_movie_destroy (player->roots->data);
 
   swfdec_js_finish_player (player);
 
@@ -945,8 +945,8 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
 {
   SwfdecMovie *movie;
   SwfdecRootMovie *root;
-  GList *found;
 
+  swfdec_player_remove_level (player, depth);
   movie = swfdec_movie_new_for_player (player, depth);
   root = SWFDEC_ROOT_MOVIE (movie);
   root->player = player;
@@ -954,13 +954,6 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   if (variables)
     swfdec_scriptable_set_variables (SWFDEC_SCRIPTABLE (movie), variables);
   swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
-  found = g_list_find_custom (player->roots, movie, swfdec_movie_compare_depths);
-  if (found) {
-    SWFDEC_DEBUG ("remove existing movie _level%u", depth);
-    swfdec_movie_remove (found->data);
-    player->roots = g_list_delete_link (player->roots, found);
-  }
-  player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   return root;
 }
 
@@ -981,7 +974,6 @@ swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
     if (movie->depth == real_depth) {
       SWFDEC_DEBUG ("remove existing movie _level%u", depth);
       swfdec_movie_remove (movie);
-      player->roots = g_list_delete_link (player->roots, walk);
       return;
     }
     break;

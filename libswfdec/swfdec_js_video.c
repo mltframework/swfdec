@@ -33,7 +33,6 @@ swfdec_js_video_attach_video (JSContext *cx, JSObject *obj, uintN argc, jsval *a
   SwfdecNetStream *stream;
   SwfdecVideoMovie *video;
 
-  g_print ("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
   video = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_VIDEO_MOVIE);
   if (video == NULL)
     return JS_TRUE;

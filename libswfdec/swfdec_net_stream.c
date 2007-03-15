@@ -219,9 +219,8 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	break;
       case SWFDEC_STATUS_ERROR:
       case SWFDEC_STATUS_NEEDBITS:
-	goto out;
       case SWFDEC_STATUS_EOF:
-	/* the flv decoder never emits this */
+	goto out;
       default:
 	g_assert_not_reached ();
 	return;

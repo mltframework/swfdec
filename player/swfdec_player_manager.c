@@ -396,20 +396,18 @@ breakpoint_hit_cb (SwfdecDebugger *debugger, guint id, SwfdecPlayerManager *mana
 }
 
 static void
-command_print (SwfdecPlayerManager *manager, const char *arg)
+command_run (SwfdecPlayerManager *manager, const char *arg)
 {
-  jsval rval;
+  const char *s;
 
-  if (swfdec_js_run (manager->player, arg, &rval)) {
-    const char *s;
-    s = swfdec_js_to_string (manager->player->jscx, rval);
-    if (s)
-      swfdec_player_manager_output (manager, "%s", s);
-    else
-      swfdec_player_manager_error (manager, "Invalid return value");
-  } else {
-    swfdec_player_manager_error (manager, "Invalid command");
+  if (arg == NULL) {
+    swfdec_player_manager_error (manager, "Must give something to run");
   }
+  s = swfdec_debugger_run (SWFDEC_DEBUGGER (manager->player), arg);
+  if (s)
+    swfdec_player_manager_output (manager, "%s", s);
+  else
+    swfdec_player_manager_error (manager, "Error running given command");
 }
 
 static void
@@ -634,7 +632,7 @@ struct {
   const char *	description;
 } commands[] = {
   { "help",	command_help,		"print all available commands and a quick description" },
-  { "print",	command_print,	  	"evaluate the argument as a JavaScript script" },
+  { "run",	command_run,	  	"run the argument as a JavaScript script" },
   { "play",	command_play,		"play the movie" },
   { "stop",	command_stop,	 	"stop the movie" },
   { "iterate",	command_iterate,	"iterate the movie once" },

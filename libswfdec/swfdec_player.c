@@ -252,7 +252,18 @@ static gboolean
 swfdec_player_do_action (SwfdecPlayer *player)
 {
   SwfdecPlayerAction *action;
+  SwfdecMovie *movie;
 
+  movie = g_queue_peek_head (player->init_queue);
+  if (movie) {
+    swfdec_movie_run_init (movie);
+    return TRUE;
+  }
+  movie = g_queue_peek_head (player->construct_queue);
+  if (movie) {
+    swfdec_movie_run_construct (movie);
+    return TRUE;
+  }
   do {
     action = swfdec_ring_buffer_pop (player->actions);
     if (action == NULL)
@@ -381,6 +392,10 @@ swfdec_player_dispose (GObject *object)
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
   g_assert (player->timeouts == NULL);
+  g_assert (g_queue_is_empty (player->init_queue));
+  g_assert (g_queue_is_empty (player->construct_queue));
+  g_queue_free (player->init_queue);
+  g_queue_free (player->construct_queue);
   swfdec_cache_unref (player->cache);
   if (player->loader) {
     g_object_unref (player->loader);
@@ -883,6 +898,8 @@ swfdec_player_init (SwfdecPlayer *player)
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
   player->iterate_timeout.callback = swfdec_player_iterate;
+  player->init_queue = g_queue_new ();
+  player->construct_queue = g_queue_new ();
 }
 
 void

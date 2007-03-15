@@ -332,20 +332,27 @@ swfdec_movie_remove (SwfdecMovie *movie)
     swfdec_movie_destroy (movie);
 }
 
-static void
-swfdec_movie_execute_script (gpointer moviep, gpointer data)
+void
+swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
 {
-  SwfdecMovie *movie = moviep;
-  guint condition = GPOINTER_TO_UINT (data);
+  const char *name;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (condition != 0);
 
   if (movie->content->events) {
     swfdec_event_list_execute (movie->content->events, 
 	SWFDEC_SCRIPTABLE (movie), condition, 0);
-  } else {
-    const char *name = swfdec_event_type_get_name (condition);
-    if (name != NULL)
-      swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (movie), name, 0, NULL);
   }
+  name = swfdec_event_type_get_name (condition);
+  if (name != NULL)
+    swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (movie), name, 0, NULL);
+}
+
+static void
+swfdec_movie_do_execute_script (gpointer movie, gpointer condition)
+{
+  swfdec_movie_execute_script (movie, GPOINTER_TO_UINT (condition));
 }
 
 /**
@@ -377,7 +384,7 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   }
 
   player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  swfdec_player_add_action (player, movie, swfdec_movie_execute_script, 
+  swfdec_player_add_action (player, movie, swfdec_movie_do_execute_script, 
       GUINT_TO_POINTER (condition));
   return TRUE;
 }
@@ -712,6 +719,11 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
   player->movies = g_list_prepend (player->movies, movie);
   /* we have to create the JSObject here to get actions queued before init_movie executes */
   swfdec_js_movie_create_jsobject (movie);
+  /* queue init and construct events for non-root movies */
+  if (movie != movie->root) {
+    g_queue_push_tail (player->init_queue, movie);
+    g_queue_push_tail (player->construct_queue, movie);
+  }
   if (klass->init_movie)
     klass->init_movie (movie);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);

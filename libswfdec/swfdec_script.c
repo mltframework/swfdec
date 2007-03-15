@@ -1662,11 +1662,11 @@ swfdec_action_define_function (JSContext *cx, guint action,
   if (*function_name == '\0') {
     /* anonymous function */
     fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA | JSFUN_HEAVYWEIGHT,
-	cx->fp->thisp, NULL);
+	cx->fp->scopeChain, NULL);
   } else {
     /* named function */
     fun = JS_NewFunction (cx, NULL, n_args, JSFUN_HEAVYWEIGHT, 
-	cx->fp->thisp, function_name);
+	cx->fp->scopeChain, function_name);
   }
   if (fun == NULL)
     return JS_FALSE;

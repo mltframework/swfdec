@@ -86,6 +86,8 @@ struct _SwfdecPlayer
   /* iterating */
   GList *		movies;			/* list of all moveis that want to be iterated */
   SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */
+  GQueue *		init_queue;		/* all movies that require an init event */
+  GQueue *		construct_queue;      	/* all movies that require an construct event */
 };
 
 struct _SwfdecPlayerClass

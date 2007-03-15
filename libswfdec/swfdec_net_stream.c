@@ -36,6 +36,7 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   JSObject *object;
   JSContext *cx;
 
+  SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   cx = stream->player->jscx;
   object = JS_NewObject (cx, NULL, NULL, NULL);
   if (!object)
@@ -219,9 +220,8 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	break;
       case SWFDEC_STATUS_ERROR:
       case SWFDEC_STATUS_NEEDBITS:
-	goto out;
       case SWFDEC_STATUS_EOF:
-	/* the flv decoder never emits this */
+	goto out;
       default:
 	g_assert_not_reached ();
 	return;

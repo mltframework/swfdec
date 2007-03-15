@@ -22,6 +22,7 @@ swfplay_SOURCES = \
 
 swfdebug_SOURCES = \
 	swfdebug.c \
+	swfdec_debug_movies.c \
 	swfdec_debug_script.c \
 	swfdec_debug_scripts.c \
 	swfdec_debug_stack.c \
@@ -29,6 +30,7 @@ swfdebug_SOURCES = \
 	swfdec_debug_widget.c
 
 noinst_HEADERS = \
+	swfdec_debug_movies.h \
 	swfdec_debug_script.h \
 	swfdec_debug_scripts.h \
 	swfdec_debug_stack.h \

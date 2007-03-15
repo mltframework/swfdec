@@ -60,7 +60,7 @@ static const char *event_names[] = {
   "onDragOver",
   "onDragOut",
   NULL,
-  NULL
+  "onConstruct"
 };
 
 const char *
@@ -226,7 +226,6 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecScriptable *scriptable,
     unsigned int condition, guint8 key)
 {
   unsigned int i;
-  const char *name;
 
   g_return_if_fail (list != NULL);
 
@@ -238,9 +237,6 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecScriptable *scriptable,
       swfdec_script_execute (event->script, scriptable);
     }
   }
-  name = swfdec_event_type_get_name (condition);
-  if (name)
-    swfdec_scriptable_execute (scriptable, name, 0, NULL);
 }
 
 gboolean

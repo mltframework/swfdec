@@ -185,12 +185,18 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 gboolean		fill);
 void		swfdec_movie_goto		(SwfdecMovie *		movie,
 						 guint			frame);
+void		swfdec_movie_execute_script	(SwfdecMovie *		movie,
+						 SwfdecEventType	condition);
 gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);
 SwfdecDepthClass
 		swfdec_depth_classify		(int			depth);
+
+/* in swfdec_js_movie.c */
+void		swfdec_movie_run_init		(SwfdecMovie *		movie);
+void		swfdec_movie_run_construct	(SwfdecMovie *		movie);
 
 G_END_DECLS
 #endif

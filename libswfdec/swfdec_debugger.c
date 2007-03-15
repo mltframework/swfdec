@@ -25,6 +25,7 @@
 #include "swfdec_debugger.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "js/jsdbgapi.h"
@@ -190,6 +191,8 @@ enum {
   BREAKPOINT,
   BREAKPOINT_ADDED,
   BREAKPOINT_REMOVED,
+  MOVIE_ADDED,
+  MOVIE_REMOVED,
   LAST_SIGNAL
 };
 
@@ -232,6 +235,12 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[BREAKPOINT_REMOVED] = g_signal_new ("breakpoint-removed", 
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
       g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+  signals[MOVIE_ADDED] = g_signal_new ("movie-added", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+  signals[MOVIE_REMOVED] = g_signal_new ("movie-removed", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 }
 
 static void
@@ -526,5 +535,44 @@ swfdec_debugger_get_stepping (SwfdecDebugger *debugger)
   g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
 
   return debugger->stepping;
+}
+
+const char *
+swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
+{
+  SwfdecPlayer *player;
+  GList *walk;
+  jsval rval;
+  const char *ret;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
+  g_return_val_if_fail (command != NULL, NULL);
+  
+  player = SWFDEC_PLAYER (debugger);
+  g_object_freeze_notify (G_OBJECT (debugger));
+
+
+  if (swfdec_js_run (player, command, &rval)) {
+    ret = swfdec_js_to_string (player->jscx, rval);
+  } else {
+    ret = NULL;
+  }
+
+
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  if (!swfdec_rect_is_empty (&player->invalid)) {
+    double x, y, width, height;
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
+    g_signal_emit_by_name (player, "invalidate", x, y, width, height);
+    swfdec_rect_init_empty (&player->invalid);
+  }
+  g_object_thaw_notify (G_OBJECT (debugger));
+
+  return ret;
 }
 

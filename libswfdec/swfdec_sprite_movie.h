@@ -60,6 +60,8 @@ struct _SwfdecSpriteMovieClass
 
 GType		swfdec_sprite_movie_get_type		(void);
 
+void		swfdec_sprite_movie_prepare		(SwfdecSpriteMovie *	movie);
+
 
 G_END_DECLS
 #endif

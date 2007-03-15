@@ -190,6 +190,8 @@ enum {
   BREAKPOINT,
   BREAKPOINT_ADDED,
   BREAKPOINT_REMOVED,
+  MOVIE_ADDED,
+  MOVIE_REMOVED,
   LAST_SIGNAL
 };
 
@@ -232,6 +234,12 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[BREAKPOINT_REMOVED] = g_signal_new ("breakpoint-removed", 
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
       g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+  signals[MOVIE_ADDED] = g_signal_new ("movie-added", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+  signals[MOVIE_REMOVED] = g_signal_new ("movie-removed", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 }
 
 static void

@@ -36,6 +36,7 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   JSObject *object;
   JSContext *cx;
 
+  SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   cx = stream->player->jscx;
   object = JS_NewObject (cx, NULL, NULL, NULL);
   if (!object)

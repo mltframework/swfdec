@@ -625,11 +625,14 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   GList *walk;
 
   SWFDEC_INFO ("=== START ITERATION ===");
-  /* The handling of this list is rather tricky. This code assumes that no 
-   * movies get removed that haven't been iterated yet. This should not be a 
-   * problem without using Javascript, because the only way to remove movies
-   * is when a sprite removes a child. But all children are in front of their
-   * parent in this list, since they got added later.
+  /* First, we prepare the iteration. We flag all movies for removal that will 
+   * be removed */
+  for (walk = player->movies; walk; walk = walk->next) {
+    if (SWFDEC_IS_SPRITE_MOVIE (walk->data))
+      swfdec_sprite_movie_prepare (walk->data);
+  }
+  /* Step 2: start the iteration. This performs a goto next frame on all 
+   * movies that are not stopped. It also queues onEnterFrame.
    */
   for (walk = player->movies; walk; walk = walk->next) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);

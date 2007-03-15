@@ -123,19 +123,58 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
 }
 
 static void
-swfdec_sprite_movie_do_goto_frame (gpointer moviep, gpointer data)
+swfdec_movie_tell_about_removal (SwfdecMovie *movie)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (moviep);
-  SwfdecMovie *mov = moviep;
-  unsigned int goto_frame = GPOINTER_TO_UINT (data);
+  GList *walk;
+  if (movie->will_be_removed)
+    return;
+  movie->will_be_removed = TRUE;
+  for (walk = movie->list; walk; walk = walk->next) {
+    swfdec_movie_tell_about_removal (walk->data);
+  }
+}
+
+void
+swfdec_sprite_movie_prepare (SwfdecSpriteMovie *movie)
+{
+  GList *walk;
+  guint frame;
+
+  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
+
+  if (SWFDEC_MOVIE (movie)->stopped ||
+      movie->sprite == NULL)
+    return;
+
+  frame = swfdec_sprite_get_next_frame (movie->sprite, SWFDEC_MOVIE (movie)->frame);
+  /* tell all relevant movies that they won't survive this */
+  for (walk = SWFDEC_MOVIE (movie)->list; walk; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    if (frame < cur->content->sequence->start || 
+	frame >= cur->content->sequence->end)
+      swfdec_movie_tell_about_removal (cur);
+  }
+}
+
+static void
+swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
+{
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecPlayer *player;
   GList *old, *walk;
   guint i, j, start;
 
+  g_assert (goto_frame < mov->n_frames);
+
   if (mov->will_be_removed)
     return;
-
   if (goto_frame == movie->current_frame)
     return;
+
+  player = SWFDEC_ROOT_MOVIE (mov->root)->player;
+  SWFDEC_LOG ("doing goto %u for %p %d", goto_frame, mov, 
+      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (mov)->sprite)->id);
+  mov->frame = goto_frame;
 
   if (goto_frame < movie->current_frame) {
     start = 0;
@@ -167,45 +206,6 @@ swfdec_sprite_movie_do_goto_frame (gpointer moviep, gpointer data)
   g_list_free (old);
 }
 
-static void
-swfdec_movie_tell_about_removal (SwfdecMovie *movie)
-{
-  GList *walk;
-  if (movie->will_be_removed)
-    return;
-  movie->will_be_removed = TRUE;
-  for (walk = movie->list; walk; walk = walk->next) {
-    swfdec_movie_tell_about_removal (walk->data);
-  }
-}
-
-static void
-swfdec_sprite_movie_goto (SwfdecMovie *mov, guint frame)
-{
-  SwfdecPlayer *player;
-  GList *walk;
-
-  g_assert (frame < mov->n_frames);
-
-  player = SWFDEC_ROOT_MOVIE (mov->root)->player;
-  SWFDEC_LOG ("queueing goto %u for %p %d", frame, mov, 
-      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (mov)->sprite)->id);
-  
-  g_assert (frame <= G_MAXINT);
-
-  swfdec_player_add_action (player, mov,
-      swfdec_sprite_movie_do_goto_frame, GUINT_TO_POINTER (frame));
-
-  /* tell all relevant movies that they won't survive this */
-  for (walk = mov->list; walk; walk = walk->next) {
-    SwfdecMovie *cur = walk->data;
-    if (frame < cur->content->sequence->start || 
-	frame >= cur->content->sequence->end)
-      swfdec_movie_tell_about_removal (cur);
-  }
-  mov->frame = frame;
-}
-
 /*** MOVIE ***/
 
 G_DEFINE_TYPE (SwfdecSpriteMovie, swfdec_sprite_movie, SWFDEC_TYPE_MOVIE)
@@ -221,29 +221,19 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_queue_enter_frame (gpointer moviep, gpointer unused)
-{
-  SwfdecMovie *movie = moviep;
-
-  if (movie->will_be_removed)
-    return;
-  swfdec_movie_queue_script (movie, SWFDEC_EVENT_ENTER);
-}
-
-static void
 swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   unsigned int goto_frame;
 
-  if (mov->stopped) {
-    goto_frame = mov->frame;
-  } else {
+  if (mov->will_be_removed)
+    return;
+
+  swfdec_movie_queue_script (mov, SWFDEC_EVENT_ENTER);
+  if (!mov->stopped) {
     goto_frame = swfdec_sprite_get_next_frame (movie->sprite, mov->frame);
+    swfdec_sprite_movie_goto (mov, goto_frame);
   }
-  swfdec_player_add_action (SWFDEC_ROOT_MOVIE (mov->root)->player, 
-      mov, swfdec_sprite_movie_queue_enter_frame, NULL);
-  swfdec_sprite_movie_goto (mov, goto_frame);
 }
 
 static gboolean
@@ -315,7 +305,7 @@ swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
 
   mov->n_frames = movie->sprite->n_frames;
-  swfdec_sprite_movie_do_goto_frame (mov, GUINT_TO_POINTER (0));
+  swfdec_sprite_movie_goto (mov, 0);
   if (!swfdec_sprite_movie_iterate_end (mov)) {
     g_assert_not_reached ();
   }

@@ -444,6 +444,15 @@ swfdec_js_copy_props (SwfdecMovie *target, SwfdecMovie *src)
   swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
 }
 
+static void
+swfdec_js_movie_init_from_object (SwfdecMovie *movie, JSObject *obj)
+{
+  SwfdecPlayer *player;
+
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  g_queue_remove (player->init_queue, movie);
+}
+
 static JSBool
 swfdec_js_movie_attachMovie (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -494,6 +503,9 @@ swfdec_js_movie_attachMovie (JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     return JS_FALSE;
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
+  /* run init and construct */
+  swfdec_js_movie_init_from_object (ret, NULL);
+  swfdec_movie_run_construct (ret);
   *rval = OBJECT_TO_JSVAL (SWFDEC_SCRIPTABLE (ret)->jsobj);
   return JS_TRUE;
 }
@@ -1197,8 +1209,7 @@ static JSPropertySpec movieclip_props[] = {
 static JSBool
 swfdec_js_movieclip_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  SWFDEC_ERROR ("This should not exist, but currently has to for instanceof to work");
-  return JS_FALSE;
+  return JS_TRUE;
 }
 
 /**
@@ -1229,6 +1240,7 @@ swfdec_js_movie_lookup_class (SwfdecSpriteMovie *movie)
   name = swfdec_root_movie_get_export_name (root, SWFDEC_CHARACTER (movie->sprite));
   if (name == NULL)
     return JSVAL_NULL;
+  SWFDEC_LOG ("found name %s for movie %s", name, SWFDEC_MOVIE (movie)->name);
   return swfdec_player_get_export_class (root->player, name);
 }
 

@@ -273,6 +273,7 @@ typedef void (* SwfdecMovieRemoveFunc) (SwfdecMovie *, gpointer);
 static void
 swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
 {
+  movie->will_be_removed = TRUE;
   /* remove all children */
   while (movie->list) {
     (*(SwfdecMovieRemoveFunc) child_remove) (movie->list->data, child_remove);

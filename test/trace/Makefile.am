@@ -75,6 +75,13 @@ EXTRA_DIST = \
 	function2.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
+	function-scope.as \
+	function-scope-5.swf \
+	function-scope-5.swf.trace \
+	function-scope-6.swf \
+	function-scope-6.swf.trace \
+	function-scope-7.swf \
+	function-scope-7.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
 	goto1.swf \

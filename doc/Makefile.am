@@ -3,6 +3,10 @@
 # We require automake 1.6 at least.
 AUTOMAKE_OPTIONS = 1.6
 
+# This works around a bug in gtk-doc. See http://bugzilla.gnome.org/show_bug.cgi?id=156643
+tmpl/*.sgml:
+	@true
+
 # This is a blank Makefile.am for using gtk-doc.
 # Copy this to your project's API docs directory and modify the variables to
 # suit your project. See the GTK+ Makefiles in gtk+/docs/reference for examples

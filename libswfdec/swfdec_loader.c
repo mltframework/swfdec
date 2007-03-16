@@ -448,18 +448,17 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
   }
   ret = g_filename_from_utf8 (start, end ? end - start : -1, NULL, NULL, NULL);
   if (ret) {
-    char *dot;
     const char *ext;
     
     ext = swfdec_loader_data_type_get_extension (loader->data_type);
-    if (*ext && (dot = strrchr (ret, '.'))) {
+    if (*ext) {
+      char *dot = strrchr (ret, '.');
       char *real;
-      guint len = strlen (dot);
-      if (len <= 5) {
-	real = g_strdup_printf ("%*s.%s", dot - ret, ret, ext);
-      } else {
-	real = g_strdup_printf ("%s.%s", ret, ext);
-      }
+      guint len = dot ? strlen (dot) : G_MAXUINT;
+      g_print ("ret: %s, dot: %s, ext: %s\n", ret, dot, ext);
+      if (len <= 5)
+	*dot = '\0';
+      real = g_strdup_printf ("%s.%s", ret, ext);
       g_free (ret);
       ret = real;
     }

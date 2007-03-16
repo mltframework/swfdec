@@ -189,6 +189,7 @@ run_test (const char *filename)
   }
   cairo_surface_destroy (surface);
   g_object_unref (player);
+  g_print ("  OK\n");
   return TRUE;
 
 error:

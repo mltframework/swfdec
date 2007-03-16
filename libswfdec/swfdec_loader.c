@@ -54,6 +54,21 @@
  * subclass to provide your input.
  */
 
+/**
+ * SwfdecLoaderDataType:
+ * @SWFDEC_LOADER_DATA_UNKNOWN: Unidentified data or data that cannot be 
+ *                              identified.
+ * @SWFDEC_LOADER_DATA_SWF: Data describing a normal Flash file.
+ * @SWFDEC_LOADER_DATA_FLV: Data describing a Flash video stream.
+ * @SWFDEC_LOADER_DATA_XML: Data in XML format.
+ * @SWFDEC_LOADER_DATA_TEXT: Textual data.
+ *
+ * This type describes the different types of data that can be loaded inside 
+ * Swfdec. Swfdec identifies its data streams and you can use the 
+ * swfdec_loader_get_data_type() to acquire more information about the data
+ * inside a #SwfdecLoader.
+ */
+
 /*** SwfdecLoader ***/
 
 enum {

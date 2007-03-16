@@ -1647,6 +1647,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
   SwfdecBits bits;
   JSFunction *fun;
   SwfdecScript *script;
+  JSObject *scope;
   gboolean has_preloads = FALSE;
   guint flags = 0;
   guint8 *preloads = NULL;
@@ -1659,14 +1660,23 @@ swfdec_action_define_function (JSContext *cx, guint action,
     return JS_FALSE;
   }
   n_args = swfdec_bits_get_u16 (&bits);
+  scope = cx->fp->scopeChain;
+  script = cx->fp->swf;
+  if (script->version == 5) {
+    /* In Flash 5 there's only the root scope as a parent scope */
+    JSObject *parent;
+    /* FIXME: this implementation is hacky (but it works) */
+    while (JS_GetClass (scope) == &js_CallClass && (parent = JS_GetParent (cx, scope)))
+      scope = parent;
+  }
   if (*function_name == '\0') {
     /* anonymous function */
     fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA | JSFUN_HEAVYWEIGHT,
-	cx->fp->scopeChain, NULL);
+	scope, NULL);
   } else {
     /* named function */
     fun = JS_NewFunction (cx, NULL, n_args, JSFUN_HEAVYWEIGHT, 
-	cx->fp->scopeChain, function_name);
+	scope, function_name);
   }
   if (fun == NULL)
     return JS_FALSE;
@@ -1716,7 +1726,6 @@ swfdec_action_define_function (JSContext *cx, guint action,
   }
   size = swfdec_bits_get_u16 (&bits);
   /* check the script can be created */
-  script = cx->fp->swf;
   if (script->buffer->data + script->buffer->length < cx->fp->pc + 3 + len + size) {
     SWFDEC_ERROR ("size of function is too big");
     return FALSE;

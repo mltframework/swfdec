@@ -32,6 +32,8 @@ void			swfdec_loader_parse		(SwfdecLoader *		loader);
 void			swfdec_loader_queue_parse	(SwfdecLoader *		loader);
 void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 							 SwfdecLoaderTarget *	target);
+void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
+							 SwfdecLoaderDataType	type);
 void	  		swfdec_loader_error_locked	(SwfdecLoader *		loader,
 							 const char *		error);
 

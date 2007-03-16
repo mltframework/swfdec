@@ -59,7 +59,8 @@
 enum {
   PROP_0,
   PROP_ERROR,
-  PROP_EOF
+  PROP_EOF,
+  PROP_DATA_TYPE
 };
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
@@ -76,6 +77,9 @@ swfdec_loader_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_EOF:
       g_value_set_boolean (value, loader->eof);
+      break;
+    case PROP_DATA_TYPE:
+      g_value_set_enum (value, loader->data_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -130,12 +134,16 @@ swfdec_loader_class_init (SwfdecLoaderClass *klass)
   g_object_class_install_property (object_class, PROP_EOF,
       g_param_spec_boolean ("eof", "eof", "TRUE when all data has been handed to the loader",
 	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_DATA_TYPE,
+      g_param_spec_enum ("data-type", "data type", "the data's type as identified by Swfdec",
+	  SWFDEC_TYPE_LOADER_DATA_TYPE, SWFDEC_LOADER_DATA_UNKNOWN, G_PARAM_READABLE));
 }
 
 static void
 swfdec_loader_init (SwfdecLoader *loader)
 {
   loader->queue = swfdec_buffer_queue_new ();
+  loader->data_type = SWFDEC_LOADER_DATA_UNKNOWN;
 }
 
 /*** SwfdecFileLoader ***/
@@ -439,11 +447,88 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
     }
   }
   ret = g_filename_from_utf8 (start, end ? end - start : -1, NULL, NULL, NULL);
-  if (ret == NULL)
-    ret = g_strdup ("unknown.swf");
+  if (ret) {
+    char *dot;
+    const char *ext;
+    
+    ext = swfdec_loader_data_type_get_extension (loader->data_type);
+    if (*ext && (dot = strrchr (ret, '.'))) {
+      char *real;
+      guint len = strlen (dot);
+      if (len <= 5) {
+	real = g_strdup_printf ("%*s.%s", dot - ret, ret, ext);
+      } else {
+	real = g_strdup_printf ("%s.%s", ret, ext);
+      }
+      g_free (ret);
+      ret = real;
+    }
+  } else {
+    ret = g_strdup ("unknown file");
+  }
 
   return ret;
 }
+
+/**
+ * swfdec_loader_get_data_type:
+ * @loader: a #SwfdecLoader
+ *
+ * Queries the type of data this loader provides. The type is determined 
+ * automatically by Swfdec.
+ *
+ * Returns: the type this data was identified to be in or 
+ *          #SWFDEC_LOADER_DATA_UNKNOWN if not identified
+ **/
+SwfdecLoaderDataType
+swfdec_loader_get_data_type (SwfdecLoader *loader)
+{
+  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), SWFDEC_LOADER_DATA_UNKNOWN);
+
+  return loader->data_type;
+}
+
+void
+swfdec_loader_set_data_type (SwfdecLoader *loader, SwfdecLoaderDataType	type)
+{
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (loader->data_type == SWFDEC_LOADER_DATA_UNKNOWN);
+  g_return_if_fail (type != SWFDEC_LOADER_DATA_UNKNOWN);
+
+  loader->data_type = type;
+  g_object_notify (G_OBJECT (loader), "data-type");
+}
+
+/**
+ * swfdec_loader_data_type_get_extension:
+ * @type: a #SwfdecLoaderDataType
+ *
+ * Queries the extension to be used for data of the given @type.
+ *
+ * Returns: the typical extension for this data type or the empty string
+ *          if the type has no extension
+ **/
+const char *
+swfdec_loader_data_type_get_extension (SwfdecLoaderDataType type)
+{
+  switch (type) {
+    case SWFDEC_LOADER_DATA_UNKNOWN:
+      return "";
+    case SWFDEC_LOADER_DATA_SWF:
+      return "swf";
+    case SWFDEC_LOADER_DATA_FLV:
+      return "flv";
+    case SWFDEC_LOADER_DATA_XML:
+      return "xml";
+    case SWFDEC_LOADER_DATA_TEXT:
+      return "txt";
+    default:
+      g_warning ("unknown data type %u", type);
+      return "";
+  }
+}
+
+/*** X-WWW-FORM-URLENCODED ***/
 
 /* if speed ever gets an issue, use a 256 byte array instead of strchr */
 static const char *urlencode_unescaped="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.:/";

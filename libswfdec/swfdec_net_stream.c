@@ -200,6 +200,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     SWFDEC_DECODER (stream->flvdecoder)->player = stream->player;
     SWFDEC_DECODER (stream->flvdecoder)->queue = loader->queue;
     swfdec_net_stream_onstatus (stream, "NetStream.Play.Start", "status");
+    swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
   }
   klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
   g_return_if_fail (klass->parse);

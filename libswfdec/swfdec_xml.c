@@ -80,6 +80,7 @@ swfdec_xml_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader
   } else {
     guint size;
     g_assert (loader->eof);
+    swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_TEXT);
     size = swfdec_buffer_queue_get_depth (loader->queue);
     xml->text = g_try_malloc (size + 1);
     if (xml->text) {
@@ -184,10 +185,6 @@ swfdec_xml_load (SwfdecXml *xml, const char *url)
 
   swfdec_xml_reset (xml);
   xml->loader = swfdec_player_load (xml->player, url);
-  if (xml->loader == NULL) {
-    swfdec_xml_ondata (xml);
-  } else {
-    swfdec_loader_set_target (xml->loader, SWFDEC_LOADER_TARGET (xml));
-    swfdec_loader_queue_parse (xml->loader);
-  }
+  swfdec_loader_set_target (xml->loader, SWFDEC_LOADER_TARGET (xml));
+  swfdec_loader_queue_parse (xml->loader);
 }

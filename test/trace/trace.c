@@ -1,6 +1,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <math.h>
 #include <string.h>
 #include <libswfdec/swfdec.h>
 
@@ -16,7 +17,7 @@ run_test (const char *filename)
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
-  guint i;
+  guint time_left;
   GError *error = NULL;
   char *str;
   GString *string;
@@ -31,12 +32,22 @@ run_test (const char *filename)
   player = swfdec_player_new ();
   g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
   swfdec_player_set_loader (player, loader);
+  if (!swfdec_player_is_initialized (player)) {
+    g_print ("  ERROR: player is not initialized\n");
+    g_object_unref (player);
+    return FALSE;
+  }
 
+  time_left = ceil (10000 / swfdec_player_get_rate (player));
   /* FIXME: Make the number of iterations configurable? */
-  for (i = 0; i < 10; i++) {
+  while (TRUE) {
     /* FIXME: will not do 10 iterations if there's other stuff loaded */
     guint advance = swfdec_player_get_next_event (player);
+
+    if (advance > time_left)
+      break;
     swfdec_player_advance (player, advance);
+    time_left -= advance;
   }
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);

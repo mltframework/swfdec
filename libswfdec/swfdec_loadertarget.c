@@ -97,7 +97,11 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
       swfdec_loader_error_locked (loader, "Internal error");
       return;
     }
-    target = loader->target;
+    /* HACK for flv playback */
+    if (target != loader->target) {
+      swfdec_loader_target_parse (loader->target, loader);
+      return;
+    }
   }
   klass = SWFDEC_DECODER_GET_CLASS (dec);
   g_return_if_fail (klass->parse);
@@ -150,8 +154,6 @@ swfdec_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 
   SWFDEC_LOG ("parsing %p%s%s", loader,
       loader->error ? " ERROR" : "", loader->eof ? " EOF" : "");
-  if (loader->error)
-    return;
 
   iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
   if (iface->parse == NULL) {

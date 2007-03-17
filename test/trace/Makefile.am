@@ -9,8 +9,17 @@ trace_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	and-or-5.swf \
+	and-or-5.swf.trace \
+	and-or-6.swf \
+	and-or-6.swf.trace \
+	and-or-7.swf \
+	and-or-7.swf.trace \
 	array.swf \
 	array.swf.trace \
+	callfunction-stack.as \
+	callfunction-stack.swf \
+	callfunction-stack.swf.trace \
 	case1-6.swf \
 	case1-6.swf.trace \
 	case1-7.swf \
@@ -50,15 +59,29 @@ EXTRA_DIST = \
 	currentframe.swf \
 	currentframe.swf.trace \
 	double.swf \
-	double.swf.trace \
+	event-order.swf \
+	empty-stack.as \
+	empty-stack.swf \
+	empty-stack.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
+	extends-simple.swf \
+	extends-simple.swf.trace \
+	extends-super.swf \
+	extends-super.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \
 	function2.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
+	function-scope.as \
+	function-scope-5.swf \
+	function-scope-5.swf.trace \
+	function-scope-6.swf \
+	function-scope-6.swf.trace \
+	function-scope-7.swf \
+	function-scope-7.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
 	goto1.swf \
@@ -97,6 +120,12 @@ EXTRA_DIST = \
 	names.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
+	netstream-onstatus.c \
+	netstream-onstatus.swf \
+	netstream-onstatus.trace \
+	netstream-onstatus-notfound.as \
+	netstream-onstatus-notfound.swf \
+	netstream-onstatus-notfound.swf.trace \
 	number.swf \
 	number.swf.trace \
 	object-math-5.swf \
@@ -113,6 +142,8 @@ EXTRA_DIST = \
 	preload.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
+	registerclass-properties.swf \
+	registerclass-properties.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	scope.swf \
@@ -123,6 +154,9 @@ EXTRA_DIST = \
 	setinterval.swf.trace
 	setinterval2.swf \
 	setinterval2.swf.trace \
+	setinterval-arguments.as \
+	setinterval-arguments.swf \
+	setinterval-arguments.swf.trace \
 	setinterval-clear.swf \
 	setinterval-clear.swf.trace \
 	setvariable.swf \
@@ -132,12 +166,15 @@ EXTRA_DIST = \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
+	undefined-tostring.swf \
+	undefined-tostring.swf.trace \
 	undefined1.swf \
 	undefined1.swf.trace \
 	undefined2-6.swf \
 	undefined2-6.swf.trace \
 	undefined2-7.swf \
 	undefined2-7.swf.trace \
+	video.flv \
 	xscale.swf \
 	xscale.swf.trace
 

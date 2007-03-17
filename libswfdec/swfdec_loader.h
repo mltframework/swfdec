@@ -25,6 +25,13 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  SWFDEC_LOADER_DATA_UNKNOWN,
+  SWFDEC_LOADER_DATA_SWF,
+  SWFDEC_LOADER_DATA_FLV,
+  SWFDEC_LOADER_DATA_XML,
+  SWFDEC_LOADER_DATA_TEXT
+} SwfdecLoaderDataType;
 
 typedef struct _SwfdecLoader SwfdecLoader;
 typedef struct _SwfdecLoaderClass SwfdecLoaderClass;
@@ -46,13 +53,14 @@ struct _SwfdecLoader
   char *		error;		/* if there's an error (from parsing the loader) */
   gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
   SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
+  SwfdecLoaderDataType	data_type;	/* type this stream is in (identified by swfdec) */
 };
 
 struct _SwfdecLoaderClass
 {
   GObjectClass		object_class;
 
-  /* FIXME: better error reporting? */
+  /* loads the given URL. Must return a loader, the loader can be in the error state */
   SwfdecLoader *      	(* load)	(SwfdecLoader *			loader, 
 					 const char *			url);
 };
@@ -68,6 +76,11 @@ void		swfdec_loader_eof		(SwfdecLoader *		loader);
 void		swfdec_loader_error		(SwfdecLoader *		loader,
 						 const char *		error);
 char *  	swfdec_loader_get_filename	(SwfdecLoader *		loader);
+SwfdecLoaderDataType
+		swfdec_loader_get_data_type	(SwfdecLoader *		loader);
+
+const char *	swfdec_loader_data_type_get_extension
+						(SwfdecLoaderDataType	type);
 					 
 
 G_END_DECLS

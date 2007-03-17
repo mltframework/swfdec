@@ -6,7 +6,10 @@ CVS
 
 Makefile
 Makefile.in
+*.lo
 *.o
+
+libswfedit.la
 
 dump
 parse

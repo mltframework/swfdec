@@ -238,6 +238,12 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 extern JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
+extern JS_FRIEND_API(jsval *)
+js_AllocRawStack(JSContext *cx, uintN nslots, void **markp);
+
+extern JS_FRIEND_API(void)
+js_FreeRawStack(JSContext *cx, void *mark);
+
 extern JSBool
 js_GetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 

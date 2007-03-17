@@ -96,6 +96,9 @@ void			swfdec_debugger_foreach_script	(SwfdecDebugger *	debugger,
 							 GFunc			func,
 							 gpointer		data);
 
+const char *	      	swfdec_debugger_run		(SwfdecDebugger *	debugger,
+							 const char *		command);
+
 
 G_END_DECLS
 #endif

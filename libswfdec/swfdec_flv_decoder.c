@@ -424,6 +424,29 @@ swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
   return tag->buffer;
 }
 
+gboolean
+swfdec_flv_decoder_get_video_info (SwfdecFlvDecoder *flv,
+    guint *first_timestamp, guint *last_timestamp)
+{
+  g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), FALSE);
+
+  if (flv->video == NULL)
+    return FALSE;
+
+  if (flv->video->len == 0) {
+    if (first_timestamp)
+      *first_timestamp = 0;
+    if (last_timestamp)
+      *last_timestamp = 0;
+    return TRUE;
+  }
+  if (first_timestamp)
+    *first_timestamp = g_array_index (flv->video, SwfdecFlvVideoTag, 0).timestamp;
+  if (last_timestamp)
+    *last_timestamp = g_array_index (flv->video, SwfdecFlvVideoTag, flv->video->len - 1).timestamp;
+  return TRUE;
+}
+
 SwfdecBuffer *
 swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
     SwfdecAudioFormat *codec_format, gboolean *width, SwfdecAudioOut *format,
@@ -489,6 +512,22 @@ notify_initialized (SwfdecPlayer *player, GParamSpec *pspec, SwfdecVideoMovie *m
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 
+gboolean
+swfdec_flv_decoder_is_eof (SwfdecFlvDecoder *flv)
+{
+  g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), TRUE);
+
+  return flv->state == SWFDEC_STATE_EOF;
+}
+
+void
+swfdec_flv_decoder_eof (SwfdecFlvDecoder *flv)
+{
+  g_return_if_fail (SWFDEC_IS_FLV_DECODER (flv));
+
+  flv->state = SWFDEC_STATE_EOF;
+}
+
 SwfdecMovie *
 swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
 {
@@ -511,10 +550,8 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   /* set up the playback stream */
   conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
   stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
+  stream->flvdecoder = flv;
   swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
-  if (!swfdec_loader_target_set_decoder (SWFDEC_LOADER_TARGET (stream), SWFDEC_DECODER (flv))) {
-    g_assert_not_reached ();
-  }
   swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);
   swfdec_net_stream_set_playing (stream, TRUE);
   g_object_unref (conn);

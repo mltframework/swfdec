@@ -43,9 +43,7 @@
 
 /*** CONSTANT POOLS ***/
 
-typedef GPtrArray SwfdecConstantPool;
-
-static SwfdecConstantPool *
+SwfdecConstantPool *
 swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
 {
   guint8 *next;
@@ -79,20 +77,20 @@ swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
   return pool;
 }
 
-static guint
+guint
 swfdec_constant_pool_size (SwfdecConstantPool *pool)
 {
   return pool->len;
 }
 
-static const char *
+const char *
 swfdec_constant_pool_get (SwfdecConstantPool *pool, guint i)
 {
   g_assert (i < pool->len);
   return g_ptr_array_index (pool, i);
 }
 
-static void
+void
 swfdec_constant_pool_free (SwfdecConstantPool *pool)
 {
   g_ptr_array_free (pool, TRUE);
@@ -125,6 +123,15 @@ swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
 
 /*** SUPPORT FUNCTIONS ***/
 
+static void
+swfdec_script_add_to_player (SwfdecScript *script, SwfdecPlayer *player)
+{
+  if (SWFDEC_IS_DEBUGGER (player)) {
+    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script);
+    script->debugger = player;
+  }
+}
+
 /**
  * swfdec_script_ensure_stack:
  * @cx: #JSContext to check
@@ -154,6 +161,7 @@ swfdec_script_ensure_stack (JSContext *cx, guint n_elements)
     n_elements -= current;
     memmove (fp->spbase + n_elements, fp->spbase, (fp->sp - fp->spbase) * sizeof (jsval));
   }
+  fp->sp += n_elements;
   while (n_elements)  {
     n_elements--;
     fp->spbase[n_elements] = JSVAL_VOID;
@@ -188,6 +196,55 @@ swfdec_action_push_string (JSContext *cx, const char *s)
     return JS_FALSE;
   *cx->fp->sp++ = STRING_TO_JSVAL (string);
   return JS_TRUE;
+}
+
+static JSBool
+swfdec_value_to_boolean_5 (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_BOOLEAN (val)) {
+    return JSVAL_TO_BOOLEAN (val);
+  } else if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val) != 0;
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    double d = *JSVAL_TO_DOUBLE (val);
+    return d != 0.0 && !isnan (d);
+  } else if (JSVAL_IS_STRING (val)) {
+    double d;
+    if (!JS_ValueToNumber (cx, val, &d))
+      return 0;
+    return d != 0.0 && !isnan (d);
+  } else if (JSVAL_IS_NULL (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_VOID (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_OBJECT (val)) {
+    return JS_TRUE;
+  }
+  g_assert_not_reached ();
+  return JS_FALSE;
+}
+
+static JSBool
+swfdec_value_to_boolean_7 (JSContext *cx, jsval val)
+{
+  if (JSVAL_IS_BOOLEAN (val)) {
+    return JSVAL_TO_BOOLEAN (val);
+  } else if (JSVAL_IS_INT (val)) {
+    return JSVAL_TO_INT (val) != 0;
+  } else if (JSVAL_IS_DOUBLE (val)) {
+    double d = *JSVAL_TO_DOUBLE (val);
+    return d != 0.0 && !isnan (d);
+  } else if (JSVAL_IS_STRING (val)) {
+    return JS_GetStringLength (JSVAL_TO_STRING (val)) > 0;
+  } else if (JSVAL_IS_NULL (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_VOID (val)) {
+    return JS_FALSE;
+  } else if (JSVAL_IS_OBJECT (val)) {
+    return JS_TRUE;
+  }
+  g_assert_not_reached ();
+  return JS_FALSE;
 }
 
 static double
@@ -649,8 +706,16 @@ swfdec_action_call (JSContext *cx, guint n_args, guint flags)
   JSStackFrame *fp = cx->fp;
   int i, j;
   jsval tmp;
+  guint stacksize;
 
-  g_assert ((guint) (fp->sp - fp->spbase) >= n_args + 2);
+  stacksize = fp->sp - fp->spbase;
+  g_assert (stacksize >= 2);
+  if (n_args + 2 > stacksize) {
+    SWFDEC_WARNING ("broken script. Want %u arguments, only got %u", n_args, stacksize - 2);
+    n_args = stacksize - 2;
+    if (!swfdec_script_ensure_stack (cx, n_args + 2))
+      return JS_FALSE;
+  }
 
   j = -1;
   i = - (n_args + 2);
@@ -676,12 +741,12 @@ swfdec_action_call_function (JSContext *cx, guint action, const guint8 *data, gu
   jsval fun;
   JSAtom *atom;
   
+  if (!swfdec_script_ensure_stack (cx, 2))
+    return JS_FALSE;
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 2))
     return JS_FALSE;
   
   if (!(atom = js_Atomize (cx, s, strlen (s), 0)) ||
@@ -708,12 +773,16 @@ swfdec_action_call_method (JSContext *cx, guint action, const guint8 *data, guin
   JSObject *obj;
   jsval fun;
   
-  s = swfdec_js_to_string (cx, fp->sp[-1]);
-  if (s == NULL)
+  if (!swfdec_script_ensure_stack (cx, 3))
     return JS_FALSE;
+  if (fp->sp[-1] == JSVAL_VOID) {
+    s = "";
+  } else {
+    s = swfdec_js_to_string (cx, fp->sp[-1]);
+    if (s == NULL)
+      return JS_FALSE;
+  }
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 3))
     return JS_FALSE;
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &obj))
@@ -917,7 +986,7 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
 static JSString *
 swfdec_action_to_string_5 (JSContext *cx, jsval val)
 {
-  if (JSVAL_IS_VOID (val) || JSVAL_IS_NULL (val))
+  if (JSVAL_IS_VOID (val))
     return cx->runtime->emptyString;
   return js_ValueToString (cx, val);
 }
@@ -1438,16 +1507,14 @@ swfdec_action_new_object (JSContext *cx, guint action, const guint8 *data, guint
   guint n_args;
   const char *name;
 
+  if (!swfdec_script_ensure_stack (cx, 2))
+    return JS_FALSE;
   constructor = fp->sp[-1];
   name = swfdec_eval_jsval (cx, NULL, &constructor);
   if (name == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
     return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 2)) {
-    SWFDEC_ERROR ("not enough stack space");
-    return JS_FALSE;
-  }
   if (constructor == JSVAL_VOID) {
     SWFDEC_WARNING ("no constructor for %s", name);
   }
@@ -1478,12 +1545,12 @@ swfdec_action_new_method (JSContext *cx, guint action, const guint8 *data, guint
   JSObject *object;
   jsval constructor;
   
+  if (!swfdec_script_ensure_stack (cx, 3))
+    return JS_FALSE;
   s = swfdec_js_to_string (cx, fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, n_args + 3))
     return JS_FALSE;
   
   if (!JS_ValueToObject (cx, fp->sp[-2], &object))
@@ -1580,6 +1647,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
   SwfdecBits bits;
   JSFunction *fun;
   SwfdecScript *script;
+  JSObject *scope;
   gboolean has_preloads = FALSE;
   guint flags = 0;
   guint8 *preloads = NULL;
@@ -1592,14 +1660,23 @@ swfdec_action_define_function (JSContext *cx, guint action,
     return JS_FALSE;
   }
   n_args = swfdec_bits_get_u16 (&bits);
+  scope = cx->fp->scopeChain;
+  script = cx->fp->swf;
+  if (script->version == 5) {
+    /* In Flash 5 there's only the root scope as a parent scope */
+    JSObject *parent;
+    /* FIXME: this implementation is hacky (but it works) */
+    while (JS_GetClass (scope) == &js_CallClass && (parent = JS_GetParent (cx, scope)))
+      scope = parent;
+  }
   if (*function_name == '\0') {
     /* anonymous function */
     fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA | JSFUN_HEAVYWEIGHT,
-	cx->fp->thisp, NULL);
+	scope, NULL);
   } else {
     /* named function */
     fun = JS_NewFunction (cx, NULL, n_args, JSFUN_HEAVYWEIGHT, 
-	cx->fp->thisp, function_name);
+	scope, function_name);
   }
   if (fun == NULL)
     return JS_FALSE;
@@ -1649,32 +1726,45 @@ swfdec_action_define_function (JSContext *cx, guint action,
   }
   size = swfdec_bits_get_u16 (&bits);
   /* check the script can be created */
-  script = cx->fp->swf;
   if (script->buffer->data + script->buffer->length < cx->fp->pc + 3 + len + size) {
     SWFDEC_ERROR ("size of function is too big");
     return FALSE;
   } else {
     /* create the script */
+    const char *name = NULL;
     SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (script->buffer, 
 	cx->fp->pc + 3 + len - script->buffer->data, size);
     swfdec_bits_init (&bits, buffer);
-    script = swfdec_script_new_for_player (JS_GetContextPrivate (cx),
-	&bits, *function_name ? function_name : "<lambda>", 
-	((SwfdecScript *) cx->fp->swf)->version);
-    swfdec_buffer_unref (buffer);
-    if (cx->fp->constant_pool) {
-      script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
-	  cx->fp->constant_pool);
+    if (*function_name) {
+      name = function_name;
+    } else if (cx->fp->sp > cx->fp->spbase) {
+      /* This is kind of a hack that uses a feature of the Adobe compiler:
+       * foo = function () {} is compiled as these actions:
+       * Push "foo", DefineFunction, SetVariable/SetMember
+       * With this knowledge we can inspect the topmost stack member, since
+       * it will contain the name this function will soon be assigned to.
+       */
+      if (JSVAL_IS_STRING (cx->fp->sp[-1]))
+	name = JS_GetStringBytes (JSVAL_TO_STRING (cx->fp->sp[-1]));
     }
+    if (name == NULL)
+      name = "unnamed_function";
+    script = swfdec_script_new (&bits, name, ((SwfdecScript *) cx->fp->swf)->version);
+    swfdec_buffer_unref (buffer);
   }
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (preloads);
     return JS_FALSE;
   }
+  if (cx->fp->constant_pool) {
+    script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
+	cx->fp->constant_pool);
+  }
   script->flags = flags;
   script->preloads = preloads;
   fun->swf = script;
+  swfdec_script_add_to_player (script, JS_GetContextPrivate (cx));
   /* attach the function */
   if (*function_name == '\0') {
     if (cx->fp->sp >= cx->fp->spend) {
@@ -1684,7 +1774,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
     *cx->fp->sp++ = OBJECT_TO_JSVAL (fun->object);
   } else {
     jsval val = OBJECT_TO_JSVAL (fun->object);
-    if (!JS_SetProperty (cx, cx->fp->thisp, function_name, &val))
+    if (!JS_SetProperty (cx, cx->fp->scopeChain, function_name, &val))
       return JS_FALSE;
   }
 
@@ -1925,6 +2015,17 @@ swfdec_action_to_number (JSContext *cx, guint action, const guint8 *data, guint 
 }
 
 static JSBool
+swfdec_action_to_string (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSString *s;
+  s = JS_ValueToString(cx, cx->fp->sp[-1]);
+  if (!s)
+    return JS_FALSE;
+  cx->fp->sp[-1] = STRING_TO_JSVAL (s);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_type_of (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   jsval val;
@@ -1972,6 +2073,98 @@ swfdec_action_get_time (JSContext *cx, guint action, const guint8 *data, guint l
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_action_extends (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  jsval superclass, subclass, proto;
+  JSObject *prototype;
+
+  superclass = cx->fp->sp[-1];
+  subclass = cx->fp->sp[-2];
+  cx->fp->sp -= 2;
+  if (!JSVAL_IS_OBJECT (superclass) || superclass == JSVAL_NULL ||
+      !JSVAL_IS_OBJECT (subclass) || subclass == JSVAL_NULL) {
+    SWFDEC_ERROR ("superclass or subclass aren't objects");
+    return JS_TRUE;
+  }
+  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (superclass), "prototype", &proto) ||
+      !JSVAL_IS_OBJECT (proto))
+    return JS_FALSE;
+  prototype = JS_NewObject (cx, NULL, JSVAL_TO_OBJECT (proto), NULL);
+  if (prototype == NULL)
+    return JS_FALSE;
+  proto = OBJECT_TO_JSVAL (prototype);
+  if (!JS_SetProperty (cx, prototype, "__constructor__", &superclass) ||
+      !JS_SetProperty (cx, JSVAL_TO_OBJECT (subclass), "prototype", &proto))
+    return JS_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_enumerate2 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSObject *obj;
+  JSIdArray *array;
+  guint i;
+
+  if (!JSVAL_IS_OBJECT (cx->fp->sp[-1]) || cx->fp->sp[-1] == JSVAL_NULL) {
+    SWFDEC_ERROR ("Enumerate2 called without an object");
+    cx->fp->sp[-1] = JSVAL_NULL;
+    return JS_TRUE;
+  }
+  obj = JSVAL_TO_OBJECT (cx->fp->sp[-1]);
+  cx->fp->sp[-1] = JSVAL_NULL;
+  array = JS_Enumerate (cx, obj);
+  if (!array)
+    return JS_FALSE;
+  if ((guint) (cx->fp->spend - cx->fp->sp) < array->length) {
+    SWFDEC_ERROR ("FIXME: not enough stack space, need %u, got %d",
+	array->length, cx->fp->spend - cx->fp->sp);
+    JS_DestroyIdArray (cx, array);
+    return JS_FALSE;
+  }
+  for (i = 0; i < array->length; i++) {
+    if (!JS_IdToValue (cx, array->vector[i], cx->fp->sp++)) {
+      JS_DestroyIdArray (cx, array);
+      return JS_FALSE;
+    }
+  }
+  JS_DestroyIdArray (cx, array);
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_logical_5 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSBool l, r;
+
+  l = swfdec_value_to_boolean_5 (cx, cx->fp->sp[-1]);
+  r = swfdec_value_to_boolean_5 (cx, cx->fp->sp[-2]);
+
+  cx->fp->sp--;
+  if (action == 0x10)
+    cx->fp->sp[-1] = l && r ? JSVAL_TRUE : JSVAL_FALSE;
+  else
+    cx->fp->sp[-1] = l || r ? JSVAL_TRUE : JSVAL_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_logical_7 (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSBool l, r;
+
+  l = swfdec_value_to_boolean_7 (cx, cx->fp->sp[-1]);
+  r = swfdec_value_to_boolean_7 (cx, cx->fp->sp[-2]);
+
+  cx->fp->sp--;
+  if (action == 0x10)
+    cx->fp->sp[-1] = l && r ? JSVAL_TRUE : JSVAL_FALSE;
+  else
+    cx->fp->sp[-1] = l || r ? JSVAL_TRUE : JSVAL_FALSE;
+  return JS_TRUE;
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -1993,6 +2186,7 @@ swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
   }
   return g_strconcat ("SetTarget ", data, NULL);
 }
+
 static char *
 swfdec_action_print_define_function (guint action, const guint8 *data, guint len)
 {
@@ -2181,6 +2375,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
     g_string_append (string, i ? ", " : " ");
     g_string_append (string, swfdec_constant_pool_get (pool, i));
+    g_string_append_printf (string, " (%u)", i);
   }
   return g_string_free (string, FALSE);
 }
@@ -2283,8 +2478,8 @@ static const SwfdecActionSpec actions[256] = {
   [0x0d] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [0x0e] = { "Equals", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
   [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
-  [0x10] = { "And", NULL },
-  [0x11] = { "Or", NULL },
+  [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
+  [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
   [0x13] = { "StringEquals", NULL },
   [0x14] = { "StringLength", NULL },
@@ -2334,7 +2529,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [0x4a] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
-  [0x4b] = { "ToString", NULL },
+  [0x4b] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
   [0x4c] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
   [0x4d] = { "Swap", NULL, 2, 2, { NULL, NULL, swfdec_action_swap, swfdec_action_swap, swfdec_action_swap } },
   [0x4e] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
@@ -2345,7 +2540,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x53] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
   /* version 6 */
   [0x54] = { "InstanceOf", NULL },
-  [0x55] = { "Enumerate2", NULL },
+  [0x55] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
   /* version 5 */
   [0x60] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [0x61] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
@@ -2358,7 +2553,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x67] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x68] = { "StringGreater", NULL },
   /* version 7 */
-  [0x69] = { "Extends", NULL },
+  [0x69] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
 
   /* version 3 */
   [0x81] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
@@ -2486,10 +2681,8 @@ swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits,
   g_return_val_if_fail (bits != NULL, NULL);
 
   script = swfdec_script_new (bits, name, version);
-  if (SWFDEC_IS_DEBUGGER (player) && script) {
-    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script);
-    script->debugger = player;
-  }
+  if (script)
+    swfdec_script_add_to_player (script, player);
   return script;
 }
 
@@ -2620,7 +2813,12 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
       fp->flags |= JS_BIT (JSFRAME_OVERRIDE_SHIFT);
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-      SWFDEC_ERROR ("preloading super isn't implemented");
+      if (!JS_GetProperty (cx, JS_GetPrototype (cx, fp->thisp), 
+	  fp->flags & JSINVOKE_CONSTRUCT ? "__constructor__" : "__proto__", 
+	  &fp->vars[preload_reg++])) {
+	ok = JS_FALSE;
+	goto out;
+      }
     }
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
       JSAtom *atom;
@@ -2654,7 +2852,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
   endpc = startpc + script->buffer->length;
   fp->pc = pc;
   /* set up stack */
-  startsp = js_AllocStack (cx, STACKSIZE, &mark);
+  startsp = js_AllocRawStack (cx, STACKSIZE, &mark);
   if (!startsp) {
     ok = JS_FALSE;
     goto out;
@@ -2798,7 +2996,7 @@ no_catch:
   /* Reset sp before freeing stack slots, because our caller may GC soon. */
   fp->sp = fp->spbase;
   fp->spbase = NULL;
-  js_FreeStack(cx, mark);
+  js_FreeRawStack(cx, mark);
   cx->interpLevel--;
   swfdec_script_unref (script);
   return ok;
@@ -2879,7 +3077,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.varobj = obj;
   /* allocate stack for variables */
   frame.nvars = 4;
-  frame.vars = js_AllocStack (cx, frame.nvars, &mark);
+  frame.vars = js_AllocRawStack (cx, frame.nvars, &mark);
   if (frame.vars == NULL) {
     return JS_FALSE;
   }
@@ -2898,7 +3096,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
    */
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
-  js_FreeStack (cx, mark);
+  js_FreeRawStack (cx, mark);
   if (frame.constant_pool)
     swfdec_constant_pool_free (frame.constant_pool);
 

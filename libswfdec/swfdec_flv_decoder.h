@@ -52,14 +52,18 @@ struct _SwfdecFlvDecoderClass {
 
 GType		swfdec_flv_decoder_get_type		(void);
 
-SwfdecMovie *	swfdec_flv_decoder_add_movie		(SwfdecFlvDecoder *	flv,
-							 SwfdecMovie *		parent);
+gboolean	swfdec_flv_decoder_is_eof		(SwfdecFlvDecoder *	flv);
+void		swfdec_flv_decoder_eof			(SwfdecFlvDecoder *	flv);
+
 SwfdecBuffer *	swfdec_flv_decoder_get_video  		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,
 							 gboolean		keyframe,
 							 SwfdecVideoFormat *	format,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);
+gboolean	swfdec_flv_decoder_get_video_info     	(SwfdecFlvDecoder *	flv,
+							 guint *		first_timestamp,
+							 guint *		last_timestamp);
 SwfdecBuffer *	swfdec_flv_decoder_get_audio		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,
 							 SwfdecAudioFormat *	codec_format,
@@ -68,6 +72,8 @@ SwfdecBuffer *	swfdec_flv_decoder_get_audio		(SwfdecFlvDecoder *	flv,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);
 
+SwfdecMovie *	swfdec_flv_decoder_add_movie		(SwfdecFlvDecoder *	flv,
+							 SwfdecMovie *		parent);
 G_END_DECLS
 
 #endif

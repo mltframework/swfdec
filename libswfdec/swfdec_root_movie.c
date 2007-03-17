@@ -60,10 +60,14 @@ static gboolean
 swfdec_root_movie_loader_target_set_decoder (SwfdecLoaderTarget *target,
     SwfdecDecoder *decoder)
 {
+  SwfdecRootMovie *movie = SWFDEC_ROOT_MOVIE (target);
+
   if (SWFDEC_IS_FLV_DECODER (decoder)) {
+    swfdec_loader_set_data_type (movie->loader, SWFDEC_LOADER_DATA_FLV);
     swfdec_flv_decoder_add_movie (SWFDEC_FLV_DECODER (decoder), 
 	SWFDEC_MOVIE (target));
   } else if (SWFDEC_IS_SWF_DECODER (decoder)) {
+    swfdec_loader_set_data_type (movie->loader, SWFDEC_LOADER_DATA_SWF);
     SWFDEC_ROOT_MOVIE (target)->decoder = decoder;
   } else {
     g_object_unref (decoder);

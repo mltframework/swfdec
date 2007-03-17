@@ -355,6 +355,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     int id = swfdec_bits_get_u16 (bits);
     content->graphic = swfdec_swf_decoder_get_character (s, id);
     if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
+      g_hash_table_remove (s->parse_sprite->live_content, GUINT_TO_POINTER (content->depth));
       swfdec_content_free (content);
       swfdec_sprite_remove_last_action (s->parse_sprite,
 	        s->parse_sprite->parse_frame);
@@ -365,6 +366,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     SWFDEC_LOG ("  id = %d", id);
   } else if (content->graphic == NULL) {
     SWFDEC_ERROR ("no character specified and copying didn't give one");
+    g_hash_table_remove (s->parse_sprite->live_content, GUINT_TO_POINTER (content->depth));
     swfdec_content_free (content);
     swfdec_sprite_remove_last_action (s->parse_sprite,
 	      s->parse_sprite->parse_frame);
@@ -424,7 +426,7 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 	break;
       swfdec_bits_init (&action_bits, buffer);
       if (event_flags & SWFDEC_EVENT_KEY_PRESS)
-	key_code = swfdec_bits_get_u8 (bits);
+	key_code = swfdec_bits_get_u8 (&action_bits);
       else
 	key_code = 0;
 

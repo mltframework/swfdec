@@ -25,6 +25,7 @@
 #include "swfdec_debugger.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "js/jsdbgapi.h"
@@ -32,32 +33,138 @@
 
 /*** SwfdecDebuggerScript ***/
 
+typedef struct {
+  SwfdecConstantPool *	constant_pool;	/* current constant pool */
+  GArray *		commands;	/* SwfdecDebuggerCommands parsed so far */
+} ScriptParser;
+
+static char *
+swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
+{
+  gboolean first = TRUE;
+  SwfdecBits bits;
+  GString *string = g_string_new ("Push");
+
+  swfdec_bits_init_data (&bits, data, len);
+  while (swfdec_bits_left (&bits)) {
+    guint type = swfdec_bits_get_u8 (&bits);
+    if (first)
+      g_string_append (string, " ");
+    else
+      g_string_append (string, ", ");
+    first = FALSE;
+    switch (type) {
+      case 0: /* string */
+	{
+	  const char *s = swfdec_bits_skip_string (&bits);
+	  if (!s) {
+	    g_string_free (string, TRUE);
+	    return NULL;
+	  }
+	  g_string_append_c (string, '"');
+	  g_string_append (string, s);
+	  g_string_append_c (string, '"');
+	  break;
+	}
+      case 1: /* float */
+	g_string_append_printf (string, "%g", swfdec_bits_get_float (&bits));
+	break;
+      case 2: /* null */
+	g_string_append (string, "null");
+	break;
+      case 3: /* undefined */
+	g_string_append (string, "undefined");
+	break;
+      case 4: /* register */
+	g_string_append_printf (string, "Register %u", swfdec_bits_get_u8 (&bits));
+	break;
+      case 5: /* boolean */
+	g_string_append (string, swfdec_bits_get_u8 (&bits) ? "True" : "False");
+	break;
+      case 6: /* double */
+	g_string_append_printf (string, "%g", swfdec_bits_get_double (&bits));
+	break;
+      case 7: /* 32bit int */
+	g_string_append_printf (string, "%d", swfdec_bits_get_u32 (&bits));
+	break;
+      case 8: /* 8bit ConstantPool address */
+      case 9: /* 16bit ConstantPool address */
+	{
+	  guint id;
+	  const char *s;
+
+	  if (!parser->constant_pool) {
+	    SWFDEC_ERROR ("no constant pool");
+	    g_string_free (string, TRUE);
+	    return NULL;
+	  }
+	  id = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
+	  s = swfdec_constant_pool_get (parser->constant_pool, id);
+	  if (!s) {
+	    SWFDEC_ERROR ("constant pool size too small");
+	    g_string_free (string, TRUE);
+	    return NULL;
+	  }
+	  g_string_append_c (string, '"');
+	  g_string_append (string, s);
+	  g_string_append_c (string, '"');
+	}
+	break;
+      default:
+	SWFDEC_ERROR ("Push: type %u not implemented", type);
+	return JS_FALSE;
+    }
+  }
+  return g_string_free (string, FALSE);
+}
+
+/* NB: constant pool actions are special in that they are called at init time */
 static gboolean
 swfdec_debugger_add_command (gconstpointer bytecode, guint action, 
-    const guint8 *data, guint len, gpointer arrayp)
+    const guint8 *data, guint len, gpointer parserp)
 {
+  ScriptParser *parser = parserp;
   SwfdecDebuggerCommand command;
 
   command.code = bytecode;
   command.breakpoint = 0;
-  command.description = swfdec_script_print_action (action, data, len);
-  g_array_append_val (arrayp, command);
+  if (action == 0x96) {
+    /* PUSH */
+    command.description = swfdec_debugger_print_push (parser, data, len);
+  } else {
+    command.description = swfdec_script_print_action (action, data, len);
+  }
+  g_array_append_val (parser->commands, command);
+  if (action == 0x88) {
+    /* constant pool */
+    if (parser->constant_pool)
+      swfdec_constant_pool_free (parser->constant_pool);
+    parser->constant_pool = swfdec_constant_pool_new_from_action (data, len);
+  }
   return TRUE;
 }
 
 static SwfdecDebuggerScript *
 swfdec_debugger_script_new (SwfdecScript *script)
 {
-  GArray *array;
+  ScriptParser parser;
   SwfdecDebuggerScript *ret;
 
   ret = g_new0 (SwfdecDebuggerScript, 1);
   ret->script = script;
   swfdec_script_ref (script);
-  array = g_array_new (TRUE, FALSE, sizeof (SwfdecDebuggerCommand));
-  swfdec_script_foreach (script, swfdec_debugger_add_command, array);
-  ret->n_commands = array->len;
-  ret->commands = (SwfdecDebuggerCommand *) g_array_free (array, FALSE);
+  parser.commands = g_array_new (TRUE, FALSE, sizeof (SwfdecDebuggerCommand));
+  if (script->constant_pool) {
+    parser.constant_pool = swfdec_constant_pool_new_from_action (
+	script->constant_pool->data + 3, script->constant_pool->length - 3);
+  } else {
+    parser.constant_pool = NULL;
+  }
+  swfdec_script_foreach (script, swfdec_debugger_add_command, &parser);
+  ret->n_commands = parser.commands->len;
+  ret->commands = (SwfdecDebuggerCommand *) g_array_free (parser.commands, FALSE);
+  if (parser.constant_pool)
+    swfdec_constant_pool_free (parser.constant_pool);
 
   return ret;
 }
@@ -84,6 +191,8 @@ enum {
   BREAKPOINT,
   BREAKPOINT_ADDED,
   BREAKPOINT_REMOVED,
+  MOVIE_ADDED,
+  MOVIE_REMOVED,
   LAST_SIGNAL
 };
 
@@ -126,6 +235,12 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[BREAKPOINT_REMOVED] = g_signal_new ("breakpoint-removed", 
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
       g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+  signals[MOVIE_ADDED] = g_signal_new ("movie-added", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+  signals[MOVIE_REMOVED] = g_signal_new ("movie-removed", 
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 }
 
 static void
@@ -420,5 +535,44 @@ swfdec_debugger_get_stepping (SwfdecDebugger *debugger)
   g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
 
   return debugger->stepping;
+}
+
+const char *
+swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
+{
+  SwfdecPlayer *player;
+  GList *walk;
+  jsval rval;
+  const char *ret;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
+  g_return_val_if_fail (command != NULL, NULL);
+  
+  player = SWFDEC_PLAYER (debugger);
+  g_object_freeze_notify (G_OBJECT (debugger));
+
+
+  if (swfdec_js_run (player, command, &rval)) {
+    ret = swfdec_js_to_string (player->jscx, rval);
+  } else {
+    ret = NULL;
+  }
+
+
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  if (!swfdec_rect_is_empty (&player->invalid)) {
+    double x, y, width, height;
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
+    g_signal_emit_by_name (player, "invalidate", x, y, width, height);
+    swfdec_rect_init_empty (&player->invalid);
+  }
+  g_object_thaw_notify (G_OBJECT (debugger));
+
+  return ret;
 }
 

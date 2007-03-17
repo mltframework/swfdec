@@ -3,6 +3,10 @@
 # We require automake 1.6 at least.
 AUTOMAKE_OPTIONS = 1.6
 
+# This works around a bug in gtk-doc. See http://bugzilla.gnome.org/show_bug.cgi?id=156643
+tmpl/*.sgml:
+	@true
+
 # This is a blank Makefile.am for using gtk-doc.
 # Copy this to your project's API docs directory and modify the variables to
 # suit your project. See the GTK+ Makefiles in gtk+/docs/reference for examples
@@ -52,36 +56,45 @@ IGNORE_HFILES= \
 	jpeg \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
+	swfdec_audio_flv.h \
 	swfdec_audio_stream.h \
 	swfdec_bits.h \
 	swfdec_button.h \
 	swfdec_button_movie.h \
 	swfdec_cache.h \
+	swfdec_cached.h \
 	swfdec_character.h \
 	swfdec_codec.h \
 	swfdec_color.h \
-	swfdec_compiler.h \
+	swfdec_connection.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \
 	swfdec_event.h \
+	swfdec_flv_decoder.h \
 	swfdec_font.h \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
 	swfdec_js.h \
+	swfdec_listener.h \
 	swfdec_loader_internal.h \
+	swfdec_loadertarget.h \
 	swfdec_marshal.h \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_net_stream.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
+	swfdec_root_sprite.h \
+	swfdec_script.h \
+	swfdec_scriptable.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \
@@ -89,7 +102,10 @@ IGNORE_HFILES= \
 	swfdec_swf_decoder.h \
 	swfdec_tag.h \
 	swfdec_text.h \
-	swfdec_types.h
+	swfdec_types.h \
+	swfdec_video.h \
+	swfdec_video_movie.h \
+	swfdec_xml.h
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png

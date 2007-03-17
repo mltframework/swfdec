@@ -19,6 +19,10 @@ The test/ directory contains subdirectories that run automated tests with the
 provided SWF files in the directory. See the README files in those directories
 for details on how to run or add these tests.
 
+If you want to playing Flash files in your web browser, you need a browser 
+plugin additional to this library. The plugins are shipped in seperate 
+packages, like swfdec-mozilla. You can get them at the same location as swfdec.
+
 
 Locations:
 

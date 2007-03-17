@@ -7,6 +7,7 @@ image_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	bw.jpg \
 	color-transform-add80.swf \
 	color-transform-add80.swf.png \
 	color-transform-add80-alpha.swf \
@@ -14,4 +15,7 @@ EXTRA_DIST = \
 	image-jpeg-alpha.swf \
 	image-jpeg-alpha.swf.png \
 	image-lossless-alpha.swf \
-	image-lossless-alpha.swf.png
+	image-lossless-alpha.swf.png \
+	negative-color-transform.c \
+	negative-color-transform.swf \
+	negative-color-transform.swf.png

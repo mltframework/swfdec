@@ -2,6 +2,7 @@
 #include <math.h>
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_debugger.h>
+#include "swfdec_debug_movies.h"
 #include "swfdec_debug_script.h"
 #include "swfdec_debug_scripts.h"
 #include "swfdec_debug_stack.h"
@@ -205,11 +206,42 @@ signal_auto_connect (gpointer object, const char *signal, GCallback closure, gpo
   g_object_weak_ref (G_OBJECT (data), disconnect_all, object);
 }
 
+static GtkWidget *
+create_movieview (SwfdecPlayer *player)
+{
+  GtkWidget *treeview;
+  GtkTreeViewColumn *column;
+  GtkCellRenderer *renderer;
+  SwfdecDebugMovies *movies;
+
+  movies = swfdec_debug_movies_new (player);
+  treeview = gtk_tree_view_new_with_model (GTK_TREE_MODEL (movies));
+  renderer = gtk_cell_renderer_text_new ();
+
+  column = gtk_tree_view_column_new_with_attributes ("Movie", renderer,
+    "text", SWFDEC_DEBUG_MOVIES_COLUMN_NAME, NULL);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
+
+  column = gtk_tree_view_column_new_with_attributes ("Type", renderer,
+    "text", SWFDEC_DEBUG_MOVIES_COLUMN_TYPE, NULL);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  column = gtk_tree_view_column_new_with_attributes ("V", renderer,
+    "active", SWFDEC_DEBUG_MOVIES_COLUMN_VISIBLE, NULL);
+  gtk_tree_view_column_set_resizable (column, TRUE);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
+
+  return treeview;
+}
+
 static void
 view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 {
   SwfdecPlayerManager *manager;
-  GtkWidget *window, *widget, *hpaned, *vbox, *hbox, *scroll, *scripts;
+  GtkWidget *window, *widget, *vpaned, *hpaned, *vbox, *hbox, *scroll, *scripts;
 
   manager = swfdec_player_manager_new (player);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -218,8 +250,18 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_container_add (GTK_CONTAINER (window), hpaned);
 
   /* left side */
+  vpaned = gtk_vpaned_new ();
+  gtk_paned_add1 (GTK_PANED (hpaned), vpaned);
+
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  gtk_paned_add1 (GTK_PANED (vpaned), scroll);
+  widget = create_movieview (player);
+  gtk_container_add (GTK_CONTAINER (scroll), widget);
+
   vbox = gtk_vbox_new (FALSE, 3);
-  gtk_paned_add1 (GTK_PANED (hpaned), vbox);
+  gtk_paned_add2 (GTK_PANED (vpaned), vbox);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
@@ -270,14 +312,14 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (hbox), scroll, TRUE, TRUE, 0);
   widget = swfdec_debug_stack_new (manager);
   gtk_container_add (GTK_CONTAINER (scroll), widget);
 
   scroll = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   gtk_box_pack_start (GTK_BOX (vbox), scroll, TRUE, TRUE, 0);
   widget = gtk_text_view_new ();
   gtk_text_view_set_editable (GTK_TEXT_VIEW (widget), FALSE);
@@ -303,7 +345,9 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
 static void
 do_break_cb (SwfdecDebugger *debugger, SwfdecDebuggerScript *script, gpointer unused)
 {
-  swfdec_debugger_set_breakpoint (debugger, script, 0);
+  /* no need tobreak on scripts that don't do anything, so no special case needed */
+  if (script->n_commands > 0)
+    swfdec_debugger_set_breakpoint (debugger, script, 0);
 }
 
 static gboolean

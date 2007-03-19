@@ -44,6 +44,28 @@ swfdec_js_net_stream_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 }
 
 static JSBool
+swfdec_js_net_stream_pause (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecNetStream *stream;
+  gboolean playing;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+  if (argc == 0) {
+    playing = !swfdec_net_stream_get_playing (stream);
+  } else {
+    JSBool b;
+    if (!JS_ValueToBoolean (cx, argv[0], &b))
+      return JS_FALSE;
+    playing = !b;
+  }
+  g_print ("%s\n", playing ? "PLAY" : "PAUSE");
+  swfdec_net_stream_set_playing (stream, playing);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_js_net_stream_set_buffer_time (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecNetStream *stream;
@@ -59,6 +81,7 @@ swfdec_js_net_stream_set_buffer_time (JSContext *cx, JSObject *obj, uintN argc, 
 }
 
 static JSFunctionSpec net_stream_methods[] = {
+  { "pause",		swfdec_js_net_stream_pause,		0, 0, 0 },
   { "play",		swfdec_js_net_stream_play,		1, 0, 0 },
   { "setBufferTime",  	swfdec_js_net_stream_set_buffer_time,	1, 0, 0 },
   {0,0,0,0,0}

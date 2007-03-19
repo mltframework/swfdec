@@ -8,6 +8,7 @@
 
   <chapter>
     <title>Public API</title>
+    <xi:include href="xml/Enumerations.xml"/>
     <xi:include href="xml/SwfdecPlayer.xml"/>
     <xi:include href="xml/SwfdecAudio.xml"/>
     <xi:include href="xml/SwfdecBuffer.xml"/>

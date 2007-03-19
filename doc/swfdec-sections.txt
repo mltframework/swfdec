@@ -4,6 +4,7 @@
 SwfdecAudio
 swfdec_audio_render
 <SUBSECTION Standard>
+SwfdecAudioClass
 SWFDEC_AUDIO
 SWFDEC_IS_AUDIO
 SWFDEC_TYPE_AUDIO
@@ -20,8 +21,11 @@ SwfdecLoader
 swfdec_loader_new_from_file
 swfdec_loader_push
 swfdec_loader_eof
+swfdec_loader_error
 swfdec_loader_get_filename
+swfdec_loader_get_data_type
 <SUBSECTION Standard>
+SwfdecLoaderClass
 SWFDEC_LOADER
 SWFDEC_IS_LOADER
 SWFDEC_TYPE_LOADER
@@ -34,7 +38,6 @@ SWFDEC_LOADER_GET_CLASS
 <SECTION>
 <FILE>SwfdecPlayer</FILE>
 <TITLE>SwfdecPlayer</TITLE>
-SwfdecMouseCursor
 SwfdecPlayer
 swfdec_init
 swfdec_player_new
@@ -53,6 +56,7 @@ swfdec_player_handle_mouse
 swfdec_player_render_audio
 swfdec_player_get_audio
 <SUBSECTION Standard>
+SwfdecPlayerClass
 SWFDEC_PLAYER
 SWFDEC_IS_PLAYER
 SWFDEC_TYPE_PLAYER
@@ -86,3 +90,15 @@ swfdec_buffer_queue_pull_buffer
 swfdec_buffer_queue_peek
 </SECTION>
 
+<SECTION>
+<FILE>Enumerations</FILE>
+<TITLE>Enumerations</TITLE>
+SwfdecLoaderDataType
+swfdec_loader_data_type_get_extension
+SwfdecMouseCursor
+<SUBSECTION Standard>
+SWFDEC_TYPE_LOADER_DATA_TYPE
+swfdec_loader_data_type_get_type
+SWFDEC_TYPE_MOUSE_CURSOR
+swfdec_mouse_cursor_get_type
+</SECTION>

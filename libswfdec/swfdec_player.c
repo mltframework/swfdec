@@ -79,6 +79,14 @@
  */
 
 /**
+ * SECTION:Enumerations
+ * @title: Enumerations
+ * @short_description: enumerations used in Swfdec
+ *
+ * This file lists all of the enumerations used in various parts of Swfdec.
+ */
+
+/**
  * SwfdecMouseCursor:
  * @SWFDEC_MOUSE_CURSOR_NORMAL: a normal mouse cursor
  * @SWFDEC_MOUSE_CURSOR_NONE: no mouse image

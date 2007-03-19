@@ -530,6 +530,10 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
       SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %d)", child->depth, clip_depth);
       continue;
     }
+    if (!child->visible) {
+      SWFDEC_LOG ("child %s %s (depth %d) is invisible, ignoring", G_OBJECT_TYPE_NAME (movie), movie->name, movie->depth);
+      continue;
+    }
 
     ret = swfdec_movie_get_movie_at (child, x, y);
     if (ret)

@@ -63,10 +63,40 @@ static const int sound_table[2][4][4] = {
     { -1,  0,  3, -1 } }
 };
 
+const char *
+swfdec_button_condition_get_name (SwfdecButtonCondition condition)
+{
+  /* FIXME: check if these events are based on conditions or if they're independant of button type */
+  switch (condition) {
+    case SWFDEC_BUTTON_IDLE_TO_OVER_UP:
+      return "onRollOver";
+    case SWFDEC_BUTTON_OVER_UP_TO_IDLE:
+      return "onRollOut";
+    case SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN:
+      return "onPress";
+    case SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP:
+      return "onRelease";
+    case SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN:
+      return "onDragOut";
+    case SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN:
+      return "onDragOver";
+    case SWFDEC_BUTTON_OUT_DOWN_TO_IDLE:
+      return "onReleaseOutside";
+    case SWFDEC_BUTTON_IDLE_TO_OVER_DOWN:
+      return "onDragOver";
+    case SWFDEC_BUTTON_OVER_DOWN_TO_IDLE:
+      return "onDragOut";
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
+}
 static void
 swfdec_button_movie_execute (SwfdecButtonMovie *movie,
     SwfdecButtonCondition condition)
 {
+  const char *name;
+
   if (movie->button->menubutton) {
     g_assert ((condition & (SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN \
                          | SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN \
@@ -78,6 +108,8 @@ swfdec_button_movie_execute (SwfdecButtonMovie *movie,
   if (movie->button->events)
     swfdec_event_list_execute (movie->button->events, 
 	SWFDEC_SCRIPTABLE (SWFDEC_MOVIE (movie)->parent), condition, 0);
+  name = swfdec_button_condition_get_name (condition);
+  swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (movie), name, 0, NULL);
 }
 
 #define CONTENT_IN_FRAME(content, frame) \

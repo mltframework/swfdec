@@ -12,10 +12,10 @@ noinst_HEADERS = bits.h huffman.h jpeg.h jpeg_debug.h \
 
 
 jpeg_test_SOURCES = test.c
-jpeg_test_CFLAGS = $(LIBOIL_CFLAGS)
+jpeg_test_CFLAGS = $(GLOBAL_CFLAGS) $(LIBOIL_CFLAGS)
 jpeg_test_LDADD = libjpeg.la $(LIBOIL_LIBS)
 
 jpeg_rgb_test_SOURCES = test_rgb.c
-jpeg_rgb_test_CFLAGS = $(LIBOIL_CFLAGS)
+jpeg_rgb_test_CFLAGS = $(GLOBAL_CFLAGS) $(LIBOIL_CFLAGS)
 jpeg_rgb_test_LDADD = libjpeg.la $(LIBOIL_LIBS)
 

@@ -10,7 +10,7 @@
 /* getfile */
 
 void *getfile (char *path, int *n_bytes);
-static void dump_pgm (unsigned char *ptr, int rowstride, int width, int height);
+static void dump_pgm (const unsigned char *ptr, int rowstride, int width, int height);
 
 
 int
@@ -20,7 +20,7 @@ main (int argc, char *argv[])
   int len;
   JpegDecoder *dec;
   char *fn = "biglebowski.jpg";
-  unsigned char *ptr;
+  const unsigned char *ptr;
   int rowstride;
   int width;
   int height;
@@ -38,6 +38,7 @@ main (int argc, char *argv[])
   jpeg_decoder_get_component_size (dec, 1, &width, &height);
 
   dump_pgm (ptr, rowstride, width, height);
+  jpeg_decoder_free (dec);
 
   return 0;
 }
@@ -87,7 +88,7 @@ getfile (char *path, int *n_bytes)
 }
 
 static void
-dump_pgm (unsigned char *ptr, int rowstride, int width, int height)
+dump_pgm (const unsigned char *ptr, int rowstride, int width, int height)
 {
   int x, y;
 

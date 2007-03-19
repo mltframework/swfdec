@@ -88,7 +88,7 @@ swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
       g_assert_not_reached ();
   }
   surface = cairo_image_surface_create_for_data (buffer->data, 
-      CAIRO_FORMAT_ARGB32, w, h, w * 4);
+      CAIRO_FORMAT_RGB24, w, h, w * 4);
   cairo_surface_set_user_data (surface, &key, 
       buffer, (cairo_destroy_func_t) swfdec_buffer_unref);
   swfdec_video_movie_new_image (input->movie, surface, w, h);

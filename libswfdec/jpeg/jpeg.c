@@ -805,7 +805,7 @@ jpeg_decoder_get_image_size (JpegDecoder * dec, int *width, int *height)
 
 int
 jpeg_decoder_get_component_ptr (JpegDecoder * dec, int id,
-    unsigned char **image, int *rowstride)
+    const unsigned char **image, int *rowstride)
 {
   int i;
 

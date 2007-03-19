@@ -1063,8 +1063,8 @@ fun_finalize(JSContext *cx, JSObject *obj)
     if (fun->script)
         js_DestroyScript(cx, fun->script);
     if (fun->swf) {
-	swfdec_script_unref (fun->swf);
 	((struct _SwfdecScript *) fun->swf)->fun = NULL;
+	swfdec_script_unref (fun->swf);
     }
     JS_free(cx, fun);
 }

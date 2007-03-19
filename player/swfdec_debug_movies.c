@@ -299,7 +299,6 @@ swfdec_debug_movies_added (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDebug
   GtkTreeIter iter;
 
   iter.user_data = movie;
-  g_print ("movie %s added\n", movie->name);
   gtk_tree_model_row_inserted (GTK_TREE_MODEL (movies), path, &iter);
   gtk_tree_path_free (path);
 }
@@ -324,7 +323,6 @@ swfdec_debug_movies_removed (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDeb
     i++;
   }
   gtk_tree_path_append_index (path, i);
-  g_print ("movie %s removed\n", movie->name);
   gtk_tree_model_row_deleted (GTK_TREE_MODEL (movies), path);
   gtk_tree_path_free (path);
 }

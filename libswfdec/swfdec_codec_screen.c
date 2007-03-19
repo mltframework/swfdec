@@ -32,8 +32,8 @@
 typedef struct _SwfdecCodecScreen SwfdecCodecScreen;
 
 struct _SwfdecCodecScreen {
-  guint			width;		/* width of last image */
-  guint			height;		/* height of last image */
+  gulong		width;		/* width of last image */
+  gulong		height;		/* height of last image */
   SwfdecBuffer *	buffer;		/* buffer containing last decoded image */
 };
 
@@ -65,7 +65,7 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
   SwfdecCodecScreen *screen = codec_data;
   SwfdecBuffer *ret;
   SwfdecBits bits;
-  guint i, j, w, h, bw, bh, stride;
+  gulong i, j, w, h, bw, bh, stride;
 
   swfdec_bits_init (&bits, buffer);
   bw = (swfdec_bits_getbits (&bits, 4) + 1) * 16;
@@ -74,13 +74,13 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
   h = swfdec_bits_getbits (&bits, 12);
   if (screen->width == 0 || screen->height == 0) {
     if (w == 0 || h == 0) {
-      SWFDEC_ERROR ("width or height is 0: %ux%u", w, h);
+      SWFDEC_ERROR ("width or height is 0: %lux%lu", w, h);
       return NULL;
     }
     screen->width = w;
     screen->height = h;
   } else if (screen->width != w || screen->height != h) {
-    SWFDEC_ERROR ("width or height differ from original: was %ux%u, is %ux%u",
+    SWFDEC_ERROR ("width or height differ from original: was %lux%lu, is %lux%lu",
 	screen->width, screen->height, w, h);
     /* FIXME: this is was ffmpeg does, should we be more forgiving? */
     return NULL;
@@ -100,7 +100,7 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
     screen->buffer = ret;
   }
   stride = w * 4;
-  SWFDEC_LOG ("size: %u x %u - block size %u x %u\n", w, h, bw, bh);
+  SWFDEC_LOG ("size: %lu x %lu - block size %lu x %lu\n", w, h, bw, bh);
   for (j = 0; j < h; j += bh) {
     for (i = 0; i < w; i += bw) {
       guint x, y, size;

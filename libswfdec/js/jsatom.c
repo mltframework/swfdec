@@ -136,7 +136,7 @@ const char js_ExecutionContext_str[] = "ExecutionContext";
 const char js_current_str[]          = "current";
 #endif
 
-#define HASH_OBJECT(o)  ((JSHashNumber)(o) >> JSVAL_TAGBITS)
+#define HASH_OBJECT(o)  ((JSHashNumber)(JS_PTR_TO_UINT32(o) >> JSVAL_TAGBITS))
 #define HASH_INT(i)     ((JSHashNumber)(i))
 #define HASH_DOUBLE(dp) ((JSHashNumber)(JSDOUBLE_HI32(*dp) ^ JSDOUBLE_LO32(*dp)))
 #define HASH_BOOLEAN(b) ((JSHashNumber)(b))

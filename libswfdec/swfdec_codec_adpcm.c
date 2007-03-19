@@ -76,7 +76,7 @@ swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint channels)
     pred[ch] = swfdec_bits_getsbits (bits, 16);
     index[ch] = swfdec_bits_getbits (bits, 6);
     if (index[ch] >= G_N_ELEMENTS (stepSizeTable)) {
-      SWFDEC_ERROR ("initial index too big: %u, max allowed is %u",
+      SWFDEC_ERROR ("initial index too big: %u, max allowed is %td",
 	  index[ch], G_N_ELEMENTS (stepSizeTable) - 1);
       index[ch] = G_N_ELEMENTS (stepSizeTable) - 1;
     }

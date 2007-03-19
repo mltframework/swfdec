@@ -96,7 +96,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 	    g_assert_not_reached ();
 	}
 	stream->surface = cairo_image_surface_create_for_data (decoded->data, 
-	    CAIRO_FORMAT_ARGB32, w, h, w * 4);
+	    CAIRO_FORMAT_RGB24, w, h, w * 4);
 	cairo_surface_set_user_data (stream->surface, &key, 
 	    decoded, (cairo_destroy_func_t) swfdec_buffer_unref);
 	if (old != stream->surface) {

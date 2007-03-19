@@ -135,10 +135,22 @@ if test "$HAVE_CAIRO" = "no"; then
   AC_MSG_ERROR([cannot find cairo, which is required for build])
 fi
 
-AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
-AC_SUBST(MAD_LIBS)
-if test "x$HAVE_MAD" = xyes; then
-  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
+AC_ARG_ENABLE(mad,
+	AS_HELP_STRING([--enable-mad],
+			[enable mad audio (default=yes)])],
+	enable_mad=$enableval,
+	enable_mad="yes")
+
+if test "$enable_mad" = "yes"; then
+	AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
+	AC_SUBST(MAD_LIBS)
+	if test "x$HAVE_MAD" = xyes; then
+	  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find mad.])
+	fi
+else
+	AC_MSG_WARN([*** mad audio support was not enabled. ***])
 fi
 AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
 
@@ -146,11 +158,23 @@ dnl  I'd put a required version in here if distros can agree on a way
 dnl  to detect ffmpeg. But as it stands even pkg-config versions are weird.
 dnl  So you'll have to update your ffmpeg checkout if compilation fails.
 dnl  Or you submit a patch that detects ffmpeg reliably on the distros.
-PKG_CHECK_MODULES(FFMPEG, libavcodec, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-AC_SUBST(FFMPEG_CFLAGS)
-AC_SUBST(FFMPEG_LIBS)
-if test "x$HAVE_FFMPEG" = xyes; then
-  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
+AC_ARG_ENABLE(ffmpeg,
+	AS_HELP_STRING([--enable-ffmpeg],
+			[enable ffmpeg support (default=yes)])],
+	enable_ffmpeg=$enableval,
+	enable_ffmpeg="yes")
+
+if test "$enable_ffmpeg" = "yes"; then
+	PKG_CHECK_MODULES(FFMPEG, libavcodec, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+	AC_SUBST(FFMPEG_CFLAGS)
+	AC_SUBST(FFMPEG_LIBS)
+	if test "x$HAVE_FFMPEG" = xyes; then
+	  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find ffmpeg.])
+	fi
+else
+	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])
 fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 

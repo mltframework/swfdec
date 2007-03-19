@@ -1030,8 +1030,10 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   SWFDEC_LOG ("%u fill bits, %u line bits in end shape", morph->n_fill_bits, morph->n_line_bits);
 
   swfdec_morph_shape_get_recs (s, morph, &end_bits);
-  if (s->b.ptr != s->b.end)
-    SWFDEC_WARNING ("early finish when parsing start shapes: %d bytes", s->b.end - s->b.ptr);
+  if (swfdec_bits_left (&s->b)) {
+    SWFDEC_WARNING ("early finish when parsing start shapes: %u bytes",
+        swfdec_bits_left (&s->b));
+  }
 
   s->b = end_bits;
 

@@ -152,7 +152,7 @@ swfdec_script_ensure_stack (JSContext *cx, guint n_elements)
     return JS_TRUE;
 
   if (n_elements > (guint) (fp->spend - fp->spbase)) {
-    SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow (want %u, have %u)",
+    SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow (want %u, have %td)",
 	n_elements, (fp->spend - fp->spbase));
     return JS_FALSE;
   }
@@ -1588,7 +1588,8 @@ swfdec_action_init_object (JSContext *cx, guint action, const guint8 *data, guin
 {
   JSStackFrame *fp = cx->fp;
   JSObject *object;
-  guint i, n_args;
+  guint n_args;
+  gulong i;
 
   if (!JS_ValueToECMAUint32 (cx, fp->sp[-1], &n_args))
     return JS_FALSE;
@@ -2118,7 +2119,7 @@ swfdec_action_enumerate2 (JSContext *cx, guint action, const guint8 *data, guint
   if (!array)
     return JS_FALSE;
   if ((guint) (cx->fp->spend - cx->fp->sp) < array->length) {
-    SWFDEC_ERROR ("FIXME: not enough stack space, need %u, got %d",
+    SWFDEC_ERROR ("FIXME: not enough stack space, need %u, got %td",
 	array->length, cx->fp->spend - cx->fp->sp);
     JS_DestroyIdArray (cx, array);
     return JS_FALSE;
@@ -2963,7 +2964,7 @@ swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 #ifndef G_DISABLE_ASSERT
     if (checksp != NULL && checksp != fp->sp) {
       /* check stack was handled like expected */
-      g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %d",
+      g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %td",
 	  spec->name, spec->add - spec->remove, spec->add, spec->remove,
 	  fp->sp - checksp + spec->add - spec->remove);
     }

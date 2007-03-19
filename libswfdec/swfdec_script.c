@@ -1933,7 +1933,7 @@ swfdec_action_delete2 (JSContext *cx, guint action, const guint8 *data, guint le
   JSProperty *prop;
   JSAtom *atom;
   
-  cx->fp->sp -= 2;
+  cx->fp->sp -= 1;
   name = swfdec_js_to_string (cx, cx->fp->sp[1]);
   if (name == NULL)
     return JS_FALSE;

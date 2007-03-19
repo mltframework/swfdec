@@ -1534,7 +1534,7 @@ js_Interpret(JSContext *cx, jsval *result)
                                 JS_GetStringBytes(str));
                     }
                 }
-                fprintf(tracefp, " @ %d\n", sp - fp->spbase);
+                fprintf(tracefp, " @ %td\n", sp - fp->spbase);
             }
         }
 #endif
@@ -4259,7 +4259,7 @@ do_call:
                                 JS_GetStringBytes(str));
                     }
                 }
-                fprintf(tracefp, " @ %d\n", sp - fp->spbase);
+                fprintf(tracefp, " @ %td\n", sp - fp->spbase);
             }
             fprintf(tracefp, "  stack: ");
             for (siter = fp->spbase; siter < sp; siter++) {

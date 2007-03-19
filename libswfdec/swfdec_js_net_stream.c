@@ -60,7 +60,7 @@ swfdec_js_net_stream_pause (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       return JS_FALSE;
     playing = !b;
   }
-  g_print ("%s\n", playing ? "PLAY" : "PAUSE");
+  SWFDEC_LOG ("%s stream %p", playing ? "playing" : "pausing", stream);
   swfdec_net_stream_set_playing (stream, playing);
   return JS_TRUE;
 }

@@ -455,7 +455,7 @@ swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
 {
   swfdec_bits_syncbits (bits);
   if ((guint) (bits->end - bits->ptr) < n_bytes) {
-    SWFDEC_WARNING ("supposed to skip %u bytes, but only %u available",
+    SWFDEC_WARNING ("supposed to skip %u bytes, but only %td available",
 	n_bytes, bits->end - bits->ptr);
     n_bytes = bits->end - bits->ptr;
   }

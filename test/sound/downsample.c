@@ -141,7 +141,7 @@ main (int argc, char **argv)
       copy = tmp;
     }
     if (length % 2 != 0) {
-      g_print ("No more downsampling possible, sample count (%u) is not multiple of 2\n", length);
+      g_print ("No more downsampling possible, sample count (%zu) is not multiple of 2\n", length);
     }
     length = cut_silence (data, length,  2);
   } else {

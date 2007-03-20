@@ -53,6 +53,7 @@ unsigned int swfdec_bits_get_bu24 (SwfdecBits *b);
 unsigned int swfdec_bits_get_bu32 (SwfdecBits *b);
 float swfdec_bits_get_float (SwfdecBits * b);
 double swfdec_bits_get_double (SwfdecBits * b);
+double swfdec_bits_get_bdouble (SwfdecBits * b);
 void swfdec_bits_syncbits (SwfdecBits * b);
 
 void swfdec_bits_get_color_transform (SwfdecBits * bits,

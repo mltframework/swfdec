@@ -518,10 +518,10 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
   src += channels * (offset / rate);
   offset %= rate;
   if (offset) {
+    offset = rate - offset;
     /* NB: dest will be pointing to uninitialized memory now */
     dest -= offset * 2;
     n_samples += offset;
-    offset = rate - offset;
   }
   /* this is almost the same as the channels == 1 case, so check for bugfixes in both branches */
   if (channels == 1) {

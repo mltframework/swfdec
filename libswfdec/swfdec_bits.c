@@ -96,8 +96,16 @@ swfdec_bits_left (SwfdecBits *b)
   } \
 }G_STMT_END
 #define SWFDEC_BYTES_CHECK(b,n) G_STMT_START { \
+  gulong __bytes; \
   swfdec_bits_syncbits (b); \
-  SWFDEC_BITS_CHECK (b, 8 * n); \
+  __bytes = b->end - b->ptr; \
+  if (!(__bytes > n || \
+        (__bytes == n && b->idx == 0))) { \
+    SWFDEC_ERROR ("reading past end of buffer"); \
+    b->ptr = b->end; \
+    b->idx = 0; \
+    return 0; \
+  } \
 } G_STMT_END
 
 int
@@ -434,8 +442,11 @@ swfdec_bits_skip_string (SwfdecBits *bits)
   
   len = end - (const char *) bits->ptr;
   s = (char *) bits->ptr;
-
   bits->ptr += len + 1;
+  if (!g_utf8_validate (s, -1, NULL)) {
+    SWFDEC_ERROR ("parsed string is not valid utf-8");
+    s = NULL;
+  }
 
   return s;
 }
@@ -472,6 +483,11 @@ swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len)
 
   ret = g_strndup ((char *) bits->ptr, len);
   bits->ptr += len;
+  if (!g_utf8_validate (ret, -1, NULL)) {
+    SWFDEC_ERROR ("parsed string is not valid utf-8");
+    g_free (ret);
+    ret = NULL;
+  }
   return ret;
 }
 

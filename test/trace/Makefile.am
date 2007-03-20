@@ -134,6 +134,9 @@ EXTRA_DIST = \
 	object-math-6.swf.trace \
 	object-math-7.swf \
 	object-math-7.swf.trace \
+	onload-childparent.c \
+	onload-childparent.swf \
+	onload-childparent.swf.trace \
 	order.swf \
 	order.swf.trace \
 	parent-root.swf \

@@ -27,7 +27,11 @@ AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter, 
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
+  DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_WARNING"
+else
+  DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_ERROR"
 fi
+AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
 SWFDEC_LIBVERSION="1:2:0"
 AC_SUBST(SWFDEC_LIBVERSION)

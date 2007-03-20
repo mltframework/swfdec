@@ -51,12 +51,8 @@ swfdec_debug_log (unsigned int level, const char *file, const char *function,
   s = g_strdup_vprintf (format, varargs);
   va_end (varargs);
 
-  if (g_getenv ("SWFDEC_DEBUG_ABORT"))
-    g_error ("SWFDEC: %s: %s(%d): %s: %s\n",
-	swfdec_debug_level_names[level], file, line, function, s);
-  else
-    g_printerr ("SWFDEC: %s: %s(%d): %s: %s\n",
-	swfdec_debug_level_names[level], file, line, function, s);
+  g_printerr ("SWFDEC: %s: %s(%d): %s: %s\n",
+      swfdec_debug_level_names[level], file, line, function, s);
   g_free (s);
 }
 

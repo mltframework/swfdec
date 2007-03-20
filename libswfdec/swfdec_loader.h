@@ -79,6 +79,7 @@ void		swfdec_loader_error		(SwfdecLoader *		loader,
 void		swfdec_loader_set_size		(SwfdecLoader *		loader,
 						 gulong			size);
 gulong		swfdec_loader_get_size		(SwfdecLoader *		loader);
+gulong		swfdec_loader_get_loaded	(SwfdecLoader *		loader);
 char *  	swfdec_loader_get_filename	(SwfdecLoader *		loader);
 SwfdecLoaderDataType
 		swfdec_loader_get_data_type	(SwfdecLoader *		loader);

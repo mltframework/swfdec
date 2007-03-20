@@ -76,7 +76,8 @@ enum {
   PROP_ERROR,
   PROP_EOF,
   PROP_DATA_TYPE,
-  PROP_SIZE
+  PROP_SIZE,
+  PROP_LOADED
 };
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
@@ -99,6 +100,9 @@ swfdec_loader_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_SIZE:
       g_value_set_ulong (value, loader->size);
+      break;
+    case PROP_LOADED:
+      g_value_set_ulong (value, swfdec_loader_get_loaded (loader));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -162,6 +166,9 @@ swfdec_loader_class_init (SwfdecLoaderClass *klass)
 	  SWFDEC_TYPE_LOADER_DATA_TYPE, SWFDEC_LOADER_DATA_UNKNOWN, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_SIZE,
       g_param_spec_ulong ("size", "size", "amount of bytes in loader",
+	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SIZE,
+      g_param_spec_ulong ("loaded", "loaded", "bytes already loaded",
 	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
 }
 
@@ -420,6 +427,7 @@ swfdec_loader_push (SwfdecLoader *loader, SwfdecBuffer *buffer)
   g_return_if_fail (buffer != NULL);
 
   swfdec_buffer_queue_push (loader->queue, buffer);
+  g_object_notify (G_OBJECT (loader), "loaded");
   swfdec_loader_parse (loader);
 }
 
@@ -437,8 +445,7 @@ swfdec_loader_eof (SwfdecLoader *loader)
 
   loader->eof = TRUE;
   if (loader->size == 0) {
-    gulong bytes = swfdec_buffer_queue_get_offset (loader->queue) + 
-      swfdec_buffer_queue_get_depth (loader->queue);
+    gulong bytes = swfdec_loader_get_loaded (loader);
     if (bytes)
       swfdec_loader_set_size (loader, bytes);
   }
@@ -565,6 +572,24 @@ swfdec_loader_get_size (SwfdecLoader *loader)
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), 0);
 
   return loader->size;
+}
+
+/**
+ * swfdec_loader_get_loaded:
+ * @loader: a #SwfdecLoader
+ *
+ * Gets the amount of bytes that have already been pushed into @loader and are
+ * available to Swfdec.
+ *
+ * Returns: Amount of bytes in @loader
+ **/
+gulong
+swfdec_loader_get_loaded (SwfdecLoader *loader)
+{
+  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), 0);
+
+  return swfdec_buffer_queue_get_depth (loader->queue) + 
+    swfdec_buffer_queue_get_offset (loader->queue);
 }
 
 /**

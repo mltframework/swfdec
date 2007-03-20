@@ -22,6 +22,8 @@ swfdec_loader_new_from_file
 swfdec_loader_push
 swfdec_loader_eof
 swfdec_loader_error
+swfdec_loader_get_size
+swfdec_loader_set_size
 swfdec_loader_get_filename
 swfdec_loader_get_data_type
 <SUBSECTION Standard>

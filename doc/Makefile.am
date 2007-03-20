@@ -54,6 +54,7 @@ CFILE_GLOB=$(top_srcdir)/libswfdec/*.c
 IGNORE_HFILES= \
 	js \
 	jpeg \
+	swfdec_amf.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \

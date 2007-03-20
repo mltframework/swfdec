@@ -16,6 +16,7 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+	swfdec_amf.c \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
 	swfdec_audio_flv.c \
@@ -105,6 +106,7 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
+	swfdec_amf.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \

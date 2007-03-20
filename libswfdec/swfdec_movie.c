@@ -748,9 +748,9 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
   }
   if (SWFDEC_IS_DEBUGGER (player))
     g_signal_emit_by_name (player, "movie-added", movie);
+  swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
   if (klass->init_movie)
     klass->init_movie (movie);
-  swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
 }
 
 static void

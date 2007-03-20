@@ -36,6 +36,7 @@ enum {
 
 typedef struct _SwfdecFlvVideoTag SwfdecFlvVideoTag;
 typedef struct _SwfdecFlvAudioTag SwfdecFlvAudioTag;
+typedef struct _SwfdecFlvDataTag SwfdecFlvDataTag;
 
 struct _SwfdecFlvVideoTag {
   guint			timestamp;		/* milliseconds */
@@ -50,6 +51,11 @@ struct _SwfdecFlvAudioTag {
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
   SwfdecBuffer *	buffer;			/* buffer for this data */
+};
+
+struct _SwfdecFlvDataTag {
+  guint			timestamp;		/* milliseconds */
+  SwfdecBuffer *	buffer;			/* buffer containing raw AMF data */
 };
 
 G_DEFINE_TYPE (SwfdecFlvDecoder, swfdec_flv_decoder, SWFDEC_TYPE_DECODER)
@@ -76,6 +82,15 @@ swfdec_flv_decoder_dispose (GObject *object)
     g_array_free (flv->video, TRUE);
     flv->video = NULL;
   }
+  if (flv->data) {
+    for (i = 0; i < flv->data->len; i++) {
+      SwfdecFlvDataTag *tag = &g_array_index (flv->data, SwfdecFlvDataTag, i);
+      swfdec_buffer_unref (tag->buffer);
+    }
+    g_array_free (flv->data, TRUE);
+    flv->data = NULL;
+  }
+
 
   G_OBJECT_CLASS (swfdec_flv_decoder_parent_class)->dispose (object);
 }
@@ -197,6 +212,27 @@ swfdec_flv_decoder_find_audio (SwfdecFlvDecoder *flv, guint timestamp)
   return min;
 }
 
+static guint
+swfdec_flv_decoder_find_data (SwfdecFlvDecoder *flv, guint timestamp)
+{
+  guint min, max;
+
+  g_assert (flv->data);
+  
+  min = 0;
+  max = flv->data->len;
+  while (max - min > 1) {
+    guint cur = (max + min) / 2;
+    SwfdecFlvDataTag *tag = &g_array_index (flv->data, SwfdecFlvDataTag, cur);
+    if (tag->timestamp > timestamp) {
+      max = cur;
+    } else {
+      min = cur;
+    }
+  }
+  return min;
+}
+
 static SwfdecStatus
 swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, guint timestamp)
 {
@@ -297,6 +333,36 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   }
 }
 
+static void
+swfdec_flv_decoder_parse_data_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, guint timestamp)
+{
+  SwfdecFlvDataTag tag;
+
+  if (flv->data == NULL) {
+    flv->data = g_array_new (FALSE, FALSE, sizeof (SwfdecFlvDataTag));
+  }
+
+  tag.timestamp = timestamp;
+  tag.buffer = swfdec_bits_get_buffer (bits, -1);
+  if (tag.buffer == NULL) {
+    SWFDEC_WARNING ("no buffer, ignoring");
+    return;
+  }
+  if (flv->data->len == 0) {
+    g_array_append_val (flv->data, tag);
+  } else if (g_array_index (flv->data, SwfdecFlvDataTag, 
+	flv->data->len - 1).timestamp < tag.timestamp) {
+    g_array_append_val (flv->data, tag);
+  } else {
+    guint idx;
+    SWFDEC_WARNING ("timestamps of data buffers not increasing (last was %u, now %u)",
+	g_array_index (flv->data, SwfdecFlvDataTag, flv->data->len - 1).timestamp, 
+	tag.timestamp);
+    idx = swfdec_flv_decoder_find_data (flv, tag.timestamp);
+    g_array_insert_val (flv->data, idx, tag);
+  }
+}
+
 static SwfdecStatus
 swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
 {
@@ -333,6 +399,9 @@ swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
       break;
     case 9:
       ret = swfdec_flv_decoder_parse_video_tag (flv, &bits, timestamp);
+      break;
+    case 18:
+      swfdec_flv_decoder_parse_data_tag (flv, &bits, timestamp);
       break;
     default:
       SWFDEC_WARNING ("unknown tag (type %u)", type);
@@ -492,6 +561,43 @@ swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
   return tag->buffer;
 }
 
+/**
+ * swfdec_flv_decoder_get_data:
+ * @flv: a #SwfdecFlvDecoder
+ * @timestamp: timestamp to look for
+ * @real_timestamp: the timestamp of the returned buffer, if any
+ *
+ * Finds the next data event with a timestamp of at least @timestamp. If one 
+ * exists, it is returned, and its real timestamp put into @real_timestamp. 
+ * Otherwise, %NULL is returned.
+ *
+ * Returns: a #SwfdecBuffer containing the next data or NULL if none
+ **/
+SwfdecBuffer *
+swfdec_flv_decoder_get_data (SwfdecFlvDecoder *flv, guint timestamp, guint *real_timestamp)
+{
+  guint id;
+  SwfdecFlvDataTag *tag;
+
+  g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), NULL);
+  
+  if (flv->data == NULL ||
+      flv->data->len == 0)
+    return NULL;
+
+  id = swfdec_flv_decoder_find_data (flv, timestamp);
+  tag = &g_array_index (flv->data, SwfdecFlvDataTag, id);
+  while (tag->timestamp < timestamp) {
+    id++;
+    if (id >= flv->data->len)
+      return NULL;
+    tag++;
+  }
+  if (real_timestamp)
+    *real_timestamp = tag->timestamp;
+  return tag->buffer;
+}
+
 /*** HACK ***/
 
 /* This is a hack to allow native FLV playback IN SwfdecPlayer */
@@ -550,8 +656,8 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   /* set up the playback stream */
   conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
   stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
-  stream->flvdecoder = flv;
   swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
+  stream->flvdecoder = flv;
   swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);
   swfdec_net_stream_set_playing (stream, TRUE);
   g_object_unref (conn);

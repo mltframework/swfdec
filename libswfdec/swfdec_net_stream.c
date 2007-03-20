@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_net_stream.h"
+#include "swfdec_amf.h"
 #include "swfdec_audio_flv.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
@@ -65,8 +66,12 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   SwfdecBuffer *buffer;
   SwfdecVideoFormat format;
   cairo_surface_t *old;
+  gboolean process_events;
+  guint process_events_from;
 
   SWFDEC_LOG ("goto %ums", timestamp);
+  process_events = timestamp == stream->next_time;
+  process_events_from = MIN (stream->next_time, stream->current_time + 1);
   buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
       FALSE, &format, &stream->current_time, &stream->next_time);
   old = stream->surface;
@@ -116,6 +121,25 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Empty", "status");
     }
     swfdec_net_stream_update_playing (stream);
+  }
+  if (process_events) {
+    while (process_events_from <= stream->current_time) {
+      jsval name, value;
+      SwfdecBits bits;
+      SwfdecBuffer *event = swfdec_flv_decoder_get_data (stream->flvdecoder, process_events_from, &process_events_from);
+      if (!event)
+	break;
+      SWFDEC_LOG ("processing event from timestamp %u", process_events_from);
+      process_events_from++; /* increase so we get the next event next time */
+      swfdec_bits_init (&bits, event);
+      if (swfdec_amf_parse (SWFDEC_SCRIPTABLE (stream)->jscx, &bits, 2, 
+	    SWFDEC_AMF_STRING, &name, SWFDEC_AMF_MIXED_ARRAY, &value) != 2) {
+	SWFDEC_ERROR ("could not parse data tag");
+      } else {
+	swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (stream), 
+	    JS_GetStringBytes (JSVAL_TO_STRING (name)), 1, &value);
+      }
+    }
   }
 }
 

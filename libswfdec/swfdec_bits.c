@@ -330,6 +330,28 @@ swfdec_bits_get_double (SwfdecBits * b)
   return d;
 }
 
+double
+swfdec_bits_get_bdouble (SwfdecBits * b)
+{
+  double d;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  guint64 tmp;
+#endif
+
+  SWFDEC_BYTES_CHECK (b, 8);
+
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  d = *((double *) b->ptr);
+#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
+  tmp = *((guint64 *) b->ptr);
+  tmp = GUINT64_FROM_BE (tmp);
+  d = *((double *) &tmp);
+#endif
+  b->ptr += 8;
+
+  return d;
+}
+
 void
 swfdec_bits_syncbits (SwfdecBits * b)
 {

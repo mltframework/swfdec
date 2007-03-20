@@ -254,11 +254,16 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   }
 out:
   if (loader->eof) {
+    guint first, last;
     swfdec_flv_decoder_eof (stream->flvdecoder);
     recheck = TRUE;
     swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Flush", "status");
     swfdec_net_stream_video_goto (stream, stream->current_time);
     stream->buffering = FALSE;
+    if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last) &&
+	stream->current_time + stream->buffer_time <= last) {
+      swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Full", "status");
+    }
   }
   if (recheck) {
     if (stream->buffering) {

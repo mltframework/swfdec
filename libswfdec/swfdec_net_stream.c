@@ -164,10 +164,10 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
 {
   gboolean should_play;
     
-  should_play = stream->playing;
-  should_play &= !stream->buffering;
-  should_play &= stream->flvdecoder != NULL;
-  //should_play &= stream->next_time > stream->current_time;
+  should_play = stream->playing; /* checks user-set play/pause */
+  should_play &= !stream->buffering; /* checks enough data is available */
+  should_play &= stream->flvdecoder != NULL; /* checks there even is something to play */
+  should_play &= stream->next_time > stream->current_time; /* checks if EOF */
   if (should_play && stream->timeout.callback == NULL) {
     SWFDEC_DEBUG ("starting playback");
     stream->timeout.callback = swfdec_net_stream_timeout;

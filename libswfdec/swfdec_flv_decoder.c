@@ -656,8 +656,8 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   /* set up the playback stream */
   conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
   stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
-  stream->flvdecoder = flv;
   swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
+  stream->flvdecoder = flv;
   swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);
   swfdec_net_stream_set_playing (stream, TRUE);
   g_object_unref (conn);

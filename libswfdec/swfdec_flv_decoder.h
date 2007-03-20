@@ -44,6 +44,7 @@ struct _SwfdecFlvDecoder
   int			state;		/* parsing state we're in */
   GArray *		audio;		/* audio tags */
   GArray *		video;		/* video tags */
+  GArray *		data;		/* data tags (if any) */
 };
 
 struct _SwfdecFlvDecoderClass {
@@ -71,6 +72,9 @@ SwfdecBuffer *	swfdec_flv_decoder_get_audio		(SwfdecFlvDecoder *	flv,
 							 SwfdecAudioOut *	format,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);
+SwfdecBuffer *	swfdec_flv_decoder_get_data		(SwfdecFlvDecoder *	flv,
+							 guint			timestamp,
+							 guint *		real_timestamp);
 
 SwfdecMovie *	swfdec_flv_decoder_add_movie		(SwfdecFlvDecoder *	flv,
 							 SwfdecMovie *		parent);

@@ -336,6 +336,7 @@ swfdec_bits_get_bdouble (SwfdecBits * b)
   double d;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   guint64 tmp;
+  gpointer p;
 #endif
 
   SWFDEC_BYTES_CHECK (b, 8);
@@ -345,7 +346,8 @@ swfdec_bits_get_bdouble (SwfdecBits * b)
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
   tmp = *((guint64 *) b->ptr);
   tmp = GUINT64_FROM_BE (tmp);
-  d = *((double *) &tmp);
+  p = &tmp;
+  d = *((double *) p);
 #endif
   b->ptr += 8;
 

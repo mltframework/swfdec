@@ -151,7 +151,7 @@ if test "$enable_mad" = "yes"; then
 	if test "x$HAVE_MAD" = xyes; then
 	  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find mad.])
+	  AC_MSG_ERROR([Couldn't find mad. You might need to install the libmad0-dev package.])
 	fi
 else
 	AC_MSG_WARN([*** mad audio support was not enabled. ***])
@@ -175,7 +175,7 @@ if test "$enable_ffmpeg" = "yes"; then
 	if test "x$HAVE_FFMPEG" = xyes; then
 	  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find ffmpeg.])
+	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev package.])
 	fi
 else
 	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])

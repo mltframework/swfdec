@@ -137,8 +137,22 @@ swfdec_image_jpeg_load (SwfdecImage *image)
 
   dec = jpeg_decoder_new ();
 
-  jpeg_decoder_addbits (dec, image->jpegtables->data,
-      image->jpegtables->length);
+  if (image->jpegtables) {
+    if (image->jpegtables->data[0] != 0xff || image->jpegtables->data[1] != 0xd8) {
+      SWFDEC_ERROR("not jpeg %02x %02x",
+          image->jpegtables->data[0], image->jpegtables->data[1]);
+      jpeg_decoder_free (dec);
+      return;
+    }
+    jpeg_decoder_addbits (dec, image->jpegtables->data,
+        image->jpegtables->length);
+  }
+  if (image->raw_data->data[2] != 0xff || image->raw_data->data[3] != 0xd8) {
+    SWFDEC_ERROR("not jpeg %02x %02x",
+        image->raw_data->data[2], image->raw_data->data[3]);
+    jpeg_decoder_free (dec);
+    return;
+  }
   jpeg_decoder_addbits (dec, image->raw_data->data + 2,
       image->raw_data->length - 2);
   jpeg_decoder_parse (dec);
@@ -185,6 +199,12 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
 
   dec = jpeg_decoder_new ();
 
+  if (image->raw_data->data[2] != 0xff || image->raw_data->data[3] != 0xd8) {
+    SWFDEC_ERROR("not jpeg %02x %02x",
+        image->raw_data->data[2], image->raw_data->data[3]);
+    jpeg_decoder_free (dec);
+    return;
+  }
   jpeg_decoder_addbits (dec, image->raw_data->data + 2,
       image->raw_data->length - 2);
   jpeg_decoder_parse (dec);
@@ -239,6 +259,12 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
 
   dec = jpeg_decoder_new ();
 
+  if (buffer->data[0] != 0xff || buffer->data[1] != 0xd8) {
+    SWFDEC_ERROR("not jpeg %02x %02x",
+        buffer->data[0], buffer->data[1]);
+    jpeg_decoder_free (dec);
+    return;
+  }
   jpeg_decoder_addbits (dec, buffer->data, buffer->length);
   swfdec_buffer_unref (buffer);
   jpeg_decoder_parse (dec);

@@ -610,12 +610,26 @@ swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_js_getDepth (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecMovie *movie;
+
+  movie = JS_GetPrivate (cx, obj);
+  if (!movie)
+    return JS_TRUE;
+
+  *rval = INT_TO_JSVAL (movie->depth);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec movieclip_methods[] = {
   { "attachMovie",	swfdec_js_movie_attachMovie,	3, 0, 0 },
   { "duplicateMovieClip", swfdec_js_movie_duplicateMovieClip, 2, 0, 0 },
   { "eval",		swfdec_js_global_eval,	      	1, 0, 0 },
   { "getBytesLoaded",	mc_getBytesLoaded,		0, 0, 0 },
   { "getBytesTotal",	mc_getBytesTotal,		0, 0, 0 },
+  { "getDepth",		swfdec_js_getDepth,	      	0, 0, 0 },
   { "getNextHighestDepth", mc_getNextHighestDepth,    	0, 0, 0 },
   { "getProperty",    	swfdec_js_getProperty,		2, 0, 0 },
   { "getURL",    	swfdec_js_getURL,		2, 0, 0 },
@@ -970,9 +984,9 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.x1 - movie->extents.x0)));
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->original_extents.x1 - movie->original_extents.x0)));
   if (cur != 0) {
-    movie->xscale *= d / cur;
+    movie->xscale = 100 * d / cur;
   } else {
     movie->xscale = 0;
     movie->yscale = 0;
@@ -1016,9 +1030,9 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.y1 - movie->extents.y0)));
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->original_extents.y1 - movie->original_extents.y0)));
   if (cur != 0) {
-    movie->yscale *= d / cur;
+    movie->yscale = 100 * d / cur;
   } else {
     movie->xscale = 0;
     movie->yscale = 0;

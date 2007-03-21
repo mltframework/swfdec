@@ -41,6 +41,11 @@
 #include "js/jsfun.h"
 #include "js/jsscope.h"
 
+/* Define this to get SWFDEC_WARN'd about missing properties of objects.
+ * This can be useful to find out about unimplemented native properties,
+ * but usually just causes a lot of spam. */
+//#define SWFDEC_WARN_MISSING_PROPERTIES
+
 /*** CONSTANT POOLS ***/
 
 SwfdecConstantPool *
@@ -655,6 +660,11 @@ swfdec_action_get_variable (JSContext *cx, guint action, const guint8 *data, gui
   if (s == NULL)
     return JS_FALSE;
   cx->fp->sp[-1] = swfdec_js_eval (cx, NULL, s);
+#ifdef SWFDEC_WARN_MISSING_PROPERTIES
+  if (cx->fp->sp[-1] == JSVAL_VOID) {
+    SWFDEC_WARNING ("no variable named %s", s);
+  }
+#endif
   return JS_TRUE;
 }
 
@@ -1066,14 +1076,24 @@ static JSBool
 swfdec_action_get_member (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *s;
+  jsval o;
 
   s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (s == NULL)
     return JS_FALSE;
 
-  if (JSVAL_IS_OBJECT (cx->fp->sp[-2]) && !JSVAL_IS_NULL (cx->fp->sp[-2])) {
-    if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[-2]), s, &cx->fp->sp[-2]))
+  o = cx->fp->sp[-2];
+  if (JSVAL_IS_OBJECT (o) && !JSVAL_IS_NULL (o)) {
+    if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (o), s, &cx->fp->sp[-2]))
       return JS_FALSE;
+#ifdef SWFDEC_WARN_MISSING_PROPERTIES
+    if (cx->fp->sp[-2] == JSVAL_VOID) {
+      const JSClass *clasp = JS_GetClass (JSVAL_TO_OBJECT (o));
+      if (clasp != &js_ObjectClass) {
+	SWFDEC_WARNING ("no variable named %s:%s", clasp->name, s);
+      }
+    }
+#endif
   } else {
     cx->fp->sp[-2] = JSVAL_VOID;
   }
@@ -1775,7 +1795,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
     *cx->fp->sp++ = OBJECT_TO_JSVAL (fun->object);
   } else {
     jsval val = OBJECT_TO_JSVAL (fun->object);
-    if (!JS_SetProperty (cx, cx->fp->scopeChain, function_name, &val))
+    if (!JS_SetProperty (cx, cx->fp->varobj, function_name, &val))
       return JS_FALSE;
   }
 
@@ -1933,7 +1953,7 @@ swfdec_action_delete2 (JSContext *cx, guint action, const guint8 *data, guint le
   JSProperty *prop;
   JSAtom *atom;
   
-  cx->fp->sp -= 2;
+  cx->fp->sp -= 1;
   name = swfdec_js_to_string (cx, cx->fp->sp[1]);
   if (name == NULL)
     return JS_FALSE;

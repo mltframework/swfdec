@@ -27,9 +27,13 @@ AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter, 
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
+  DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_WARNING"
+else
+  DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_ERROR"
 fi
+AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="1:2:0"
+SWFDEC_LIBVERSION="2:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
@@ -147,7 +151,7 @@ if test "$enable_mad" = "yes"; then
 	if test "x$HAVE_MAD" = xyes; then
 	  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find mad.])
+	  AC_MSG_ERROR([Couldn't find mad. You might need to install the libmad0-dev package.])
 	fi
 else
 	AC_MSG_WARN([*** mad audio support was not enabled. ***])
@@ -171,7 +175,7 @@ if test "$enable_ffmpeg" = "yes"; then
 	if test "x$HAVE_FFMPEG" = xyes; then
 	  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find ffmpeg.])
+	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev package.])
 	fi
 else
 	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])

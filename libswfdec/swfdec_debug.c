@@ -35,7 +35,11 @@ static const char *swfdec_debug_level_names[] = {
   "LOG  "
 };
 
-static unsigned int swfdec_debug_level = SWFDEC_LEVEL_WARNING;
+#ifndef SWFDEC_LEVEL_DEFAULT
+#  define SWFDEC_LEVEL_DEFAULT SWFDEC_LEVEL_ERROR
+#endif
+
+static unsigned int swfdec_debug_level = SWFDEC_LEVEL_DEFAULT;
 
 void
 swfdec_debug_log (unsigned int level, const char *file, const char *function,
@@ -51,12 +55,8 @@ swfdec_debug_log (unsigned int level, const char *file, const char *function,
   s = g_strdup_vprintf (format, varargs);
   va_end (varargs);
 
-  if (g_getenv ("SWFDEC_DEBUG_ABORT"))
-    g_error ("SWFDEC: %s: %s(%d): %s: %s\n",
-	swfdec_debug_level_names[level], file, line, function, s);
-  else
-    g_printerr ("SWFDEC: %s: %s(%d): %s: %s\n",
-	swfdec_debug_level_names[level], file, line, function, s);
+  g_printerr ("SWFDEC: %s: %s(%d): %s: %s\n",
+      swfdec_debug_level_names[level], file, line, function, s);
   g_free (s);
 }
 

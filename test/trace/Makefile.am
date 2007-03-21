@@ -134,6 +134,9 @@ EXTRA_DIST = \
 	object-math-6.swf.trace \
 	object-math-7.swf \
 	object-math-7.swf.trace \
+	onload-childparent.c \
+	onload-childparent.swf \
+	onload-childparent.swf.trace \
 	order.swf \
 	order.swf.trace \
 	parent-root.swf \
@@ -142,6 +145,9 @@ EXTRA_DIST = \
 	preload.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
+	registerclass-previous.c \
+	registerclass-previous.swf \
+	registerclass-previous.swf.trace \
 	registerclass-properties.swf \
 	registerclass-properties.swf.trace \
 	rotation-5.swf \

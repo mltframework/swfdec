@@ -84,7 +84,75 @@ static JSFunctionSpec net_stream_methods[] = {
   { "pause",		swfdec_js_net_stream_pause,		0, 0, 0 },
   { "play",		swfdec_js_net_stream_play,		1, 0, 0 },
   { "setBufferTime",  	swfdec_js_net_stream_set_buffer_time,	1, 0, 0 },
-  {0,0,0,0,0}
+  { NULL }
+};
+
+static JSBool
+swfdec_js_net_stream_time (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecNetStream *stream;
+  guint msecs;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+
+  if (stream->flvdecoder == NULL ||
+      !swfdec_flv_decoder_get_video_info (stream->flvdecoder, &msecs, NULL)) {
+    *vp = INT_TO_JSVAL (0);
+    return JS_TRUE;
+  }
+  if (msecs >= stream->current_time)
+    msecs = 0;
+  else
+    msecs = stream->current_time - msecs;
+
+  return JS_NewNumberValue (cx, msecs / 1000., vp);
+}
+
+static JSBool
+swfdec_js_net_stream_bytes_loaded (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecNetStream *stream;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+
+  if (stream->loader == NULL) {
+    *vp = INT_TO_JSVAL (0);
+    return JS_TRUE;
+  }
+
+  return JS_NewNumberValue (cx, swfdec_loader_get_loaded (stream->loader), vp);
+}
+
+static JSBool
+swfdec_js_net_stream_bytes_total (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecNetStream *stream;
+  gulong bytes;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+
+  if (stream->loader == NULL) {
+    *vp = INT_TO_JSVAL (0);
+    return JS_TRUE;
+  }
+  bytes = swfdec_loader_get_size (stream->loader);
+  if (bytes == 0)
+    bytes = swfdec_loader_get_loaded (stream->loader);
+
+  return JS_NewNumberValue (cx, bytes, vp);
+}
+
+static JSPropertySpec net_stream_props[] = {
+  { "bytesLoaded",	-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_bytes_loaded,	NULL },
+  { "bytesTotal",	-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_bytes_total,	NULL },
+  { "time",		-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_time,		NULL },
+  { NULL }
 };
 
 static void
@@ -131,7 +199,7 @@ void
 swfdec_js_add_net_stream (SwfdecPlayer *player)
 {
   JS_InitClass (player->jscx, player->jsobj, NULL,
-      &net_stream_class, swfdec_js_net_stream_new, 0, NULL, net_stream_methods,
+      &net_stream_class, swfdec_js_net_stream_new, 0, net_stream_props, net_stream_methods,
       NULL, NULL);
 }
 

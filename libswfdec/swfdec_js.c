@@ -68,16 +68,6 @@ static JSClass global_class = {
   JS_EnumerateStub,JS_ResolveStub,JS_ConvertStub,JS_FinalizeStub
 };
 
-static JSTrapStatus G_GNUC_UNUSED
-swfdec_js_debug_one (JSContext *cx, JSScript *script, jsbytecode *pc, 
-    jsval *rval, void *closure)
-{
-  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "trace"))
-    js_Disassemble1 (cx, script, pc, pc - script->code,
-	JS_TRUE, stderr);
-  return JSTRAP_CONTINUE;
-}
-
 /**
  * swfdec_js_init_player:
  * @player: a #SwfdecPlayer
@@ -93,10 +83,6 @@ swfdec_js_init_player (SwfdecPlayer *player)
     return;
   }
 
-  /* the new Flash opcodes mess up this, so this will most likely crash */
-  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "full"))
-    player->jscx->tracefp = stderr;
-  JS_SetInterrupt (swfdec_js_runtime, swfdec_js_debug_one, NULL);
   JS_SetErrorReporter (player->jscx, swfdec_js_error_report);
   JS_SetContextPrivate(player->jscx, player);
   player->jsobj = JS_NewObject (player->jscx, &global_class, NULL, NULL);
@@ -143,23 +129,6 @@ swfdec_js_finish_player (SwfdecPlayer *player)
   }
 }
 
-static void
-swfdec_disassemble (SwfdecPlayer *player, JSScript *script)
-{
-  guint i;
-
-  for (i = 0; i < script->length; i ++) {
-    g_print ("%02X ", script->code[i]);
-    if (i % 16 == 15)
-      g_print ("\n");
-    else if (i % 4 == 3)
-      g_print (" ");
-  }
-  if (i % 16 != 15)
-    g_print ("\n");
-  js_Disassemble (player->jscx, script, JS_TRUE, stdout);
-}
-
 /**
  * swfdec_js_execute_script:
  * @s: a @SwfdecPlayer
@@ -185,10 +154,6 @@ swfdec_js_execute_script (SwfdecPlayer *s, SwfdecMovie *movie,
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
   g_return_val_if_fail (script != NULL, FALSE);
 
-  if (g_getenv ("SWFDEC_JS") && g_str_equal (g_getenv ("SWFDEC_JS"), "disassemble")) {
-    g_print ("executing script %p:%p\n", movie, script);
-    swfdec_disassemble (s, script);
-  }
   if (rval == NULL)
     rval = &returnval;
   if (!(jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie))))

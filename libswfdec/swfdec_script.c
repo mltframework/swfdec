@@ -265,8 +265,12 @@ swfdec_value_to_number (JSContext *cx, jsval val)
     double d;
     if (!JS_ValueToNumber (cx, val, &d))
       return 0;
-    return isnan (d) ? 0 : d;
+    return d;
   } else if (JSVAL_IS_OBJECT(val) && (((SwfdecScript *) cx->fp->swf)->version >= 6)) {
+    /* Checking for version 6 is completely wrong, but a lot of the testsuite 
+     * depends on it (oops).
+     * The code calls the valueOf function and returns 0 if no such function exists.
+     */
     return JSVAL_IS_NULL (val) ? 0 : *cx->runtime->jsNaN;
   } else {
     return 0;

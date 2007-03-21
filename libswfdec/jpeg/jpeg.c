@@ -780,6 +780,19 @@ jpeg_decoder_addbits (JpegDecoder * dec, unsigned char *data, unsigned int len)
 {
   unsigned int offset;
 
+#if 0
+  {
+    static int index = 0;
+    FILE *file;
+    char s[100];
+
+    sprintf(s, "image-%d.jpg", index++);
+    file = fopen(s, "w");
+    fwrite (data, len, 1, file);
+    fclose(file);
+  }
+#endif
+
   offset = dec->bits.ptr - dec->data;
 
   dec->data = realloc (dec->data, dec->data_len + len);

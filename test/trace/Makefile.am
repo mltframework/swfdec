@@ -145,6 +145,9 @@ EXTRA_DIST = \
 	preload.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
+	registerclass-previous.c \
+	registerclass-previous.swf \
+	registerclass-previous.swf.trace \
 	registerclass-properties.swf \
 	registerclass-properties.swf.trace \
 	rotation-5.swf \

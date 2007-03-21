@@ -110,8 +110,48 @@ swfdec_js_net_stream_time (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_NewNumberValue (cx, msecs / 1000., vp);
 }
 
+static JSBool
+swfdec_js_net_stream_bytes_loaded (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecNetStream *stream;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+
+  if (stream->loader == NULL) {
+    *vp = INT_TO_JSVAL (0);
+    return JS_TRUE;
+  }
+
+  return JS_NewNumberValue (cx, swfdec_loader_get_loaded (stream->loader), vp);
+}
+
+static JSBool
+swfdec_js_net_stream_bytes_total (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  SwfdecNetStream *stream;
+  gulong bytes;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+
+  if (stream->loader == NULL) {
+    *vp = INT_TO_JSVAL (0);
+    return JS_TRUE;
+  }
+  bytes = swfdec_loader_get_size (stream->loader);
+  if (bytes == 0)
+    bytes = swfdec_loader_get_loaded (stream->loader);
+
+  return JS_NewNumberValue (cx, bytes, vp);
+}
+
 static JSPropertySpec net_stream_props[] = {
-  { "time",	-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_time,	NULL },
+  { "bytesLoaded",	-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_bytes_loaded,	NULL },
+  { "bytesTotal",	-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_bytes_total,	NULL },
+  { "time",		-1,	JSPROP_PERMANENT|JSPROP_READONLY,	swfdec_js_net_stream_time,		NULL },
   { NULL }
 };
 

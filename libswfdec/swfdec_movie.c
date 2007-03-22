@@ -644,7 +644,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 #endif
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
-    g_warning ("%s", cairo_status_to_string (cairo_status (cr)));
+    g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
   }
   cairo_restore (cr);
 }

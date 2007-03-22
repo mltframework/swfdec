@@ -198,7 +198,7 @@ swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse
   
   *inverse = *matrix;
   while (cairo_matrix_invert (inverse)) {
-    SWFDEC_WARNING ("matrix not invertible, adding epsilon to smallest member");
+    SWFDEC_INFO ("matrix not invertible, adding epsilon to smallest member");
     /* add epsilon at point closest to zero */
 #define EPSILON (1.0 / SWFDEC_FIXED_SCALE_FACTOR)
     if (ABS (matrix->xx) <= ABS (matrix->xy) && 

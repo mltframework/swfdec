@@ -58,6 +58,9 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	divide.as \
+	divide-7.swf \
+	divide-7.swf.trace \
 	doaction-after-placeobject.swf.trace \
 	doaction-after-placeobject.swf \
 	doaction-before-placeobject.c \

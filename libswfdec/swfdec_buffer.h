@@ -50,7 +50,7 @@ struct _SwfdecBufferQueue
 SwfdecBuffer *swfdec_buffer_new (void);
 SwfdecBuffer *swfdec_buffer_new_and_alloc (unsigned int size);
 SwfdecBuffer *swfdec_buffer_new_and_alloc0 (unsigned int size);
-SwfdecBuffer *swfdec_buffer_new_with_data (void *data, int size);
+SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, unsigned int size);
 SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset,
     unsigned int length);
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);

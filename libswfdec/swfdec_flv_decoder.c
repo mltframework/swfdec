@@ -479,13 +479,19 @@ swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
   offset = g_array_index (flv->video, SwfdecFlvVideoTag, 0).timestamp;
   timestamp += offset;
   id = swfdec_flv_decoder_find_video (flv, timestamp);
+  tag = &g_array_index (flv->video, SwfdecFlvVideoTag, id);
+  if (keyframe) {
+    while (id > 0 && tag->frame_type != 1) {
+      id--;
+      tag--;
+    }
+  }
   if (next_timestamp) {
     if (id + 1 >= flv->video->len)
       *next_timestamp = 0;
     else
       *next_timestamp = g_array_index (flv->video, SwfdecFlvVideoTag, id + 1).timestamp - offset;
   }
-  tag = &g_array_index (flv->video, SwfdecFlvVideoTag, id);
   if (real_timestamp)
     *real_timestamp = tag->timestamp - offset;
   if (format)

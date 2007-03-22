@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include "swfdec_net_stream.h"
 #include "swfdec_amf.h"
 #include "swfdec_audio_flv.h"
@@ -174,6 +175,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
     stream->timeout.timestamp = stream->player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     swfdec_player_add_timeout (stream->player, &stream->timeout);
     if (stream->flvdecoder->audio) {
+      g_assert (stream->audio == NULL);
       SWFDEC_LOG ("starting audio");
       stream->audio = swfdec_audio_flv_new (stream->player, 
 	  stream->flvdecoder, stream->current_time);
@@ -445,5 +447,42 @@ swfdec_net_stream_get_buffer_time (SwfdecNetStream *stream)
   g_return_val_if_fail (SWFDEC_IS_NET_STREAM (stream), 0.1);
 
   return (double) stream->buffer_time / 1000.0;
+}
+
+void
+swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
+{
+  guint first, last, msecs;
+
+  g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
+
+  if (stream->flvdecoder == NULL)
+    return;
+  if (!finite (secs) || secs < 0) {
+    SWFDEC_ERROR ("seeking to %g doesn't work", secs);
+    return;
+  }
+  if (!swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
+    SWFDEC_ERROR ("FIXME: implement seeking in audio only NetStream");
+    return;
+  }
+  msecs = secs * 1000;
+  msecs += first;
+  if (msecs > last)
+    msecs = last;
+  swfdec_flv_decoder_get_video (stream->flvdecoder, msecs, TRUE, NULL, &msecs, NULL);
+  swfdec_net_stream_video_goto (stream, msecs);
+  /* FIXME: this needs to be implemented correctly, but requires changes to audio handling:
+   * - creating a new audio stream will cause attachAudio scripts to lose information 
+   * - implementing seek on audio stream requires a SwfdecAudio::changed signal so audio
+   *   backends can react correctly.
+   */
+  if (stream->audio) {
+    SWFDEC_WARNING ("FIXME: restarting audio after seek");
+    swfdec_audio_remove (stream->audio);
+    g_object_unref (stream->audio);
+    stream->audio = swfdec_audio_flv_new (stream->player, 
+	stream->flvdecoder, stream->current_time);
+  }
 }
 

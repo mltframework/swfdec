@@ -89,6 +89,8 @@ gboolean		swfdec_net_stream_get_playing	(SwfdecNetStream *	stream);
 void			swfdec_net_stream_set_buffer_time (SwfdecNetStream *	stream,
 							 double			secs);
 double			swfdec_net_stream_get_buffer_time (SwfdecNetStream *	stream);
+void			swfdec_net_stream_seek		(SwfdecNetStream *	stream,
+							 double			secs);
 
 
 G_END_DECLS

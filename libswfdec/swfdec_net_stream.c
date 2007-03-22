@@ -157,6 +157,14 @@ swfdec_net_stream_timeout (SwfdecTimeout *timeout)
     stream->timeout.timestamp += SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     stream->timeout.callback = swfdec_net_stream_timeout;
     swfdec_player_add_timeout (stream->player, &stream->timeout);
+  } else {
+    if (stream->audio) {
+      /* FIXME: just unref and let it take care of removing itself? */
+      SWFDEC_LOG ("stopping audio due to EOS");
+      swfdec_audio_remove (stream->audio);
+      g_object_unref (stream->audio);
+      stream->audio = NULL;
+    }
   }
 }
 

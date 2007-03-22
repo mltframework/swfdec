@@ -267,6 +267,8 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
   cairo_surface_t *surface;
   
   surface = swfdec_image_create_surface_transformed (image->image, trans);
+  if (surface == NULL)
+    return;
   cairo_append_path (cr, (cairo_path_t *) path);
   pattern = cairo_pattern_create_for_surface (surface);
   cairo_surface_destroy (surface);

@@ -130,7 +130,7 @@ EXTRA_DIST = \
 	netconnection.swf.trace \
 	netstream-onstatus.c \
 	netstream-onstatus.swf \
-	netstream-onstatus.trace \
+	netstream-onstatus.swf.trace \
 	netstream-onstatus-notfound.as \
 	netstream-onstatus-notfound.swf \
 	netstream-onstatus-notfound.swf.trace \

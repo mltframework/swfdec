@@ -116,7 +116,11 @@ mc_play (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate(cx, obj);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   g_assert (movie);
   movie->stopped = FALSE;
 
@@ -128,8 +132,11 @@ mc_stop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate(cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   movie->stopped = TRUE;
 
   return JS_TRUE;
@@ -141,7 +148,11 @@ mc_getBytesLoaded (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   SwfdecMovie *movie;
   SwfdecDecoder *dec;
 
-  movie = JS_GetPrivate(cx, obj);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
 
   *rval = INT_TO_JSVAL(MIN (dec->bytes_loaded, dec->bytes_total));
@@ -155,7 +166,11 @@ mc_getBytesTotal (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   SwfdecMovie *movie;
   SwfdecDecoder *dec;
 
-  movie = JS_GetPrivate(cx, obj);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
 
   *rval = INT_TO_JSVAL (dec->bytes_total);
@@ -169,7 +184,11 @@ mc_getNextHighestDepth (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   SwfdecMovie *movie;
   int depth;
 
-  movie = JS_GetPrivate(cx, obj);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   if (movie->list) {
     depth = SWFDEC_MOVIE (g_list_last (movie->list)->data)->depth + 1;
     if (depth < 0)
@@ -207,8 +226,11 @@ mc_gotoAndPlay (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate(cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   
   if (!mc_do_goto (cx, movie, argv[0]))
     return JS_FALSE;
@@ -221,8 +243,11 @@ mc_gotoAndStop (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate(cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   
   if (!mc_do_goto (cx, movie, argv[0]))
     return JS_FALSE;
@@ -236,8 +261,11 @@ swfdec_js_nextFrame (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   SwfdecMovie *movie;
   jsval frame;
 
-  movie = JS_GetPrivate(cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   
   frame = INT_TO_JSVAL (movie->frame + 2); /* 1-indexed */
   if (!mc_do_goto (cx, movie, frame))
@@ -252,8 +280,11 @@ swfdec_js_prevFrame (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   SwfdecMovie *movie;
   jsval frame;
 
-  movie = JS_GetPrivate(cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   
   if (movie->frame == 0)
     frame = INT_TO_JSVAL (movie->n_frames);
@@ -270,8 +301,11 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate(cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
   
   if (argc == 1) {
     SwfdecMovie *other;
@@ -366,8 +400,12 @@ swfdec_js_startDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   JSBool center = JS_FALSE;
   SwfdecRect rect;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
+
   if (argc > 0) {
     if (!JS_ValueToBoolean (cx, argv[0], &center))
       return JS_FALSE;
@@ -395,8 +433,12 @@ swfdec_js_stopDrag (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   SwfdecMovie *movie;
   SwfdecPlayer *player;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
+
   player = SWFDEC_ROOT_MOVIE (movie->root)->player;
   swfdec_player_set_drag_movie (player, NULL, FALSE, NULL);
   return JS_TRUE;
@@ -409,8 +451,11 @@ swfdec_js_movie_swapDepths (JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   SwfdecMovie *other;
   int depth;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_OBJECT (argv[0])) {
     other = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_MOVIE);
@@ -462,8 +507,11 @@ swfdec_js_movie_attachMovie (JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   SwfdecContent *content;
   SwfdecGraphic *sprite;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   export = swfdec_js_to_string (cx, argv[0]);
   name = swfdec_js_to_string (cx, argv[1]);
@@ -518,8 +566,11 @@ swfdec_js_movie_duplicateMovieClip (JSContext *cx, JSObject *obj, uintN argc, js
   int depth;
   SwfdecContent *content;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
 #if 0
   /* FIXME: is this still valid? */
@@ -589,8 +640,12 @@ swfdec_js_getURL (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   const char *target;
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
+
   url = swfdec_js_to_string (cx, argv[0]);
   if (!url)
     return FALSE;
@@ -615,9 +670,11 @@ swfdec_js_getDepth (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  if (!movie)
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
     return JS_TRUE;
+  }
 
   *rval = INT_TO_JSVAL (movie->depth);
   return JS_TRUE;
@@ -654,8 +711,11 @@ mc_x_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0);
   return JS_NewNumberValue (cx, d, vp);
@@ -667,8 +727,11 @@ mc_x_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
@@ -692,8 +755,11 @@ mc_y_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0);
@@ -706,8 +772,11 @@ mc_y_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
@@ -731,8 +800,11 @@ mc_xscale_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   d = movie->xscale;
   return JS_NewNumberValue (cx, d, vp);
@@ -744,8 +816,11 @@ mc_xscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
@@ -779,8 +854,11 @@ mc_yscale_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_FALSE;
@@ -800,8 +878,11 @@ mc_currentframe (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   *vp = INT_TO_JSVAL (movie->frame + 1);
 
@@ -814,8 +895,11 @@ mc_framesloaded (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   guint loaded;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   /* only root movies can be partially loaded */
   if (SWFDEC_IS_ROOT_MOVIE (movie)) {
@@ -836,8 +920,11 @@ mc_name_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   JSString *string;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (movie->has_name)
     string = JS_NewStringCopyZ (cx, movie->name);
@@ -856,8 +943,11 @@ mc_name_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   const char *str;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   str = swfdec_js_to_string (cx, *vp);
   if (str == NULL)
@@ -878,8 +968,11 @@ mc_totalframes (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   *vp = INT_TO_JSVAL (movie->n_frames);
 
@@ -892,8 +985,11 @@ mc_alpha_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   d = movie->color_transform.aa * 100.0 / 256.0;
   return JS_NewNumberValue (cx, d, vp);
@@ -906,8 +1002,11 @@ mc_alpha_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   double d;
   int alpha;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (!JS_ValueToNumber (cx, *vp, &d))
     return JS_TRUE;
@@ -924,8 +1023,11 @@ mc_visible_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   *vp = BOOLEAN_TO_JSVAL (movie->visible ? JS_TRUE : JS_FALSE);
   return JS_TRUE;
@@ -937,8 +1039,11 @@ mc_visible_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   JSBool b;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   if (!JS_ValueToBoolean (cx, *vp, &b))
     return JS_TRUE;
@@ -956,8 +1061,11 @@ mc_width_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.x1 - movie->extents.x0)));
@@ -970,8 +1078,11 @@ mc_width_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d, cur;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   /* property was readonly in Flash 4 and before */
   if (SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version < 5)
@@ -1002,8 +1113,11 @@ mc_height_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.y1 - movie->extents.y0)));
@@ -1016,8 +1130,11 @@ mc_height_set (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   double d, cur;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   /* property was readonly in Flash 4 and before */
   if (SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (movie->root)->decoder)->version < 5)
@@ -1047,8 +1164,11 @@ mc_rotation_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   return JS_NewNumberValue (cx, movie->rotation, vp);
 }
@@ -1088,8 +1208,11 @@ mc_xmouse_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   double x, y;
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   swfdec_movie_get_mouse (movie, &x, &y);
   x = rint (x * SWFDEC_TWIPS_SCALE_FACTOR) / SWFDEC_TWIPS_SCALE_FACTOR;
@@ -1102,8 +1225,11 @@ mc_ymouse_get (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   double x, y;
   SwfdecMovie *movie;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   swfdec_movie_get_mouse (movie, &x, &y);
   y = rint (y * SWFDEC_TWIPS_SCALE_FACTOR) / SWFDEC_TWIPS_SCALE_FACTOR;
@@ -1117,8 +1243,11 @@ mc_parent (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   JSObject *jsobj;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   /* FIXME: what do we do if we're the root movie? */
   if (movie->parent) {
@@ -1141,8 +1270,11 @@ mc_root (JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   SwfdecMovie *movie;
   JSObject *jsobj;
 
-  movie = JS_GetPrivate (cx, obj);
-  g_assert (movie);
+  movie = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_MOVIE);
+  if (movie == NULL) {
+    SWFDEC_WARNING ("not a movie");
+    return JS_TRUE;
+  }
 
   movie = movie->root;
   jsobj = swfdec_scriptable_get_object (SWFDEC_SCRIPTABLE (movie));

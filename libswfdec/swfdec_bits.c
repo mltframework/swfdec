@@ -96,11 +96,9 @@ swfdec_bits_left (SwfdecBits *b)
   } \
 }G_STMT_END
 #define SWFDEC_BYTES_CHECK(b,n) G_STMT_START { \
-  gulong __bytes; \
-  swfdec_bits_syncbits (b); \
-  __bytes = b->end - b->ptr; \
-  if (!(__bytes > n || \
-        (__bytes == n && b->idx == 0))) { \
+  g_assert (b->end >= b->ptr); \
+  g_assert (b->idx == 0); \
+  if ((unsigned long) (b->end - b->ptr) < n) { \
     SWFDEC_ERROR ("reading past end of buffer"); \
     b->ptr = b->end; \
     b->idx = 0; \
@@ -370,7 +368,6 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
   int has_mult;
   int n_bits;
 
-  swfdec_bits_syncbits (bits);
   has_add = swfdec_bits_getbit (bits);
   has_mult = swfdec_bits_getbit (bits);
   n_bits = swfdec_bits_getbits (bits, 4);
@@ -396,6 +393,7 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
     ct->bb = 0;
     ct->ab = 0;
   }
+  swfdec_bits_syncbits (bits);
 }
 
 void
@@ -405,8 +403,6 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
   int has_scale;
   int has_rotate;
   int n_translate_bits;
-
-  swfdec_bits_syncbits (bits);
 
   has_scale = swfdec_bits_getbit (bits);
   if (has_scale) {
@@ -440,6 +436,7 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
   matrix->y0 = swfdec_bits_getsbits (bits, n_translate_bits);
 
   swfdec_matrix_ensure_invertible (matrix, inverse);
+  swfdec_bits_syncbits (bits);
 }
 
 char *
@@ -488,7 +485,7 @@ swfdec_bits_skip_string (SwfdecBits *bits)
 guint
 swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
 {
-  swfdec_bits_syncbits (bits);
+  g_assert (bits->idx == 0);
   if ((guint) (bits->end - bits->ptr) < n_bytes) {
     SWFDEC_WARNING ("supposed to skip %u bytes, but only %td available",
 	n_bytes, bits->end - bits->ptr);
@@ -597,13 +594,13 @@ swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
 {
   int nbits;
   
-  swfdec_bits_syncbits (bits);
   nbits = swfdec_bits_getbits (bits, 5);
-
   rect->x0 = swfdec_bits_getsbits (bits, nbits);
   rect->x1 = swfdec_bits_getsbits (bits, nbits);
   rect->y0 = swfdec_bits_getsbits (bits, nbits);
   rect->y1 = swfdec_bits_getsbits (bits, nbits);
+
+  swfdec_bits_syncbits (bits);
 }
 
 /**
@@ -627,7 +624,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
   if (len > 0) {
     SWFDEC_BYTES_CHECK (bits, (unsigned int) len);
   } else {
-    swfdec_bits_syncbits (bits);
+    g_assert (bits->idx == 0);
     len = bits->end - bits->ptr;
     g_assert (len >= 0);
   }
@@ -685,7 +682,7 @@ swfdec_bits_decompress (SwfdecBits *bits, int compressed, int decompressed)
   if (compressed > 0) {
     SWFDEC_BYTES_CHECK (bits, (unsigned int) compressed);
   } else {
-    swfdec_bits_syncbits (bits);
+    g_assert (bits->idx == 0);
     compressed = bits->end - bits->ptr;
     g_assert (compressed >= 0);
   }

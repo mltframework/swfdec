@@ -420,11 +420,8 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
       guint length = swfdec_bits_get_u32 (bits);
       SwfdecBits action_bits;
-      SwfdecBuffer *buffer = swfdec_bits_get_buffer (bits, length);
 
-      if (buffer == NULL)
-	break;
-      swfdec_bits_init (&action_bits, buffer);
+      swfdec_bits_init_bits (&action_bits, bits, length);
       if (event_flags & SWFDEC_EVENT_KEY_PRESS)
 	key_code = swfdec_bits_get_u8 (&action_bits);
       else
@@ -445,7 +442,6 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 	SWFDEC_ERROR ("not all action data was parsed: %u bytes left",
 	    swfdec_bits_left (&action_bits));
       }
-      swfdec_buffer_unref (buffer);
     }
     g_free (script_name);
   }

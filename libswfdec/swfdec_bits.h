@@ -38,6 +38,7 @@ struct _SwfdecBits
 
 void swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer);
 void swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len);
+void swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, unsigned int bytes);
 unsigned int swfdec_bits_left (SwfdecBits *b);
 int swfdec_bits_getbit (SwfdecBits * b);
 unsigned int swfdec_bits_getbits (SwfdecBits * b, unsigned int n);

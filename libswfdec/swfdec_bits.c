@@ -32,6 +32,25 @@
 #include "swfdec_rect.h"
 
 
+#define SWFDEC_BITS_CHECK(b,n) G_STMT_START { \
+  if (swfdec_bits_left(b) < (n)) { \
+    SWFDEC_ERROR ("reading past end of buffer"); \
+    b->ptr = b->end; \
+    b->idx = 0; \
+    return 0; \
+  } \
+}G_STMT_END
+#define SWFDEC_BYTES_CHECK(b,n) G_STMT_START { \
+  g_assert (b->end >= b->ptr); \
+  g_assert (b->idx == 0); \
+  if ((unsigned long) (b->end - b->ptr) < n) { \
+    SWFDEC_ERROR ("reading past end of buffer"); \
+    b->ptr = b->end; \
+    b->idx = 0; \
+    return 0; \
+  } \
+} G_STMT_END
+
 /**
  * swfdec_bits_init:
  * @bits: a #SwfdecBits
@@ -53,6 +72,32 @@ swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer)
   } else {
     memset (bits, 0, sizeof (SwfdecBits));
   }
+}
+
+/**
+ * swfdec_bits_init_bits:
+ * @bits: a #SwfdecBits
+ * @from: a #SwfdecBits to initialize from
+ * @bytes: number of bytes to move to @bits
+ *
+ * Initializes @bits for use with the next @bytes bytes from @from. If not
+ * enough bytes are available, less bytes will be available in @bits. @from
+ * will skip the bytes now available in @bits. If you want to know if this
+ * function moves enough bytes, you should ensure that enough data is 
+ * available using swfdec_bits_left() before calling this function.
+ **/
+void
+swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, unsigned int bytes)
+{
+  g_return_if_fail (bits != NULL);
+  g_return_if_fail (from != NULL);
+  g_return_if_fail (from->idx == 0);
+
+  bits->buffer = from->buffer;
+  bits->ptr = from->ptr;
+  bits->end = MIN (bits->ptr + bytes, from->end);
+  bits->idx = 0;
+  from->ptr = bits->end;
 }
 
 /**
@@ -86,25 +131,6 @@ swfdec_bits_left (SwfdecBits *b)
   g_assert (b->end > b->ptr || b->idx == 0);
   return (b->end - b->ptr) * 8 - b->idx;
 }
-
-#define SWFDEC_BITS_CHECK(b,n) G_STMT_START { \
-  if (swfdec_bits_left(b) < (n)) { \
-    SWFDEC_ERROR ("reading past end of buffer"); \
-    b->ptr = b->end; \
-    b->idx = 0; \
-    return 0; \
-  } \
-}G_STMT_END
-#define SWFDEC_BYTES_CHECK(b,n) G_STMT_START { \
-  g_assert (b->end >= b->ptr); \
-  g_assert (b->idx == 0); \
-  if ((unsigned long) (b->end - b->ptr) < n) { \
-    SWFDEC_ERROR ("reading past end of buffer"); \
-    b->ptr = b->end; \
-    b->idx = 0; \
-    return 0; \
-  } \
-} G_STMT_END
 
 int
 swfdec_bits_getbit (SwfdecBits * b)

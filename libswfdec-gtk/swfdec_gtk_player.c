@@ -241,6 +241,7 @@ swfdec_gtk_player_set_playing (SwfdecGtkPlayer *player, gboolean playing)
   } else if (!playing && player->source != NULL) {
     g_source_destroy (player->source);
     g_source_unref (player->source);
+    player->source = NULL;
   }
   swfdec_gtk_player_update_audio (player);
   g_object_notify (G_OBJECT (player), "playing");

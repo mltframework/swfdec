@@ -9,9 +9,7 @@ Makefile.in
 *.o
 *.lo
 *.loT
-swfdec_playback.c
 
-libswfdecui.la
 swfdebug
 swfplay
 

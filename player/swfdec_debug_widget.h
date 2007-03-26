@@ -20,8 +20,7 @@
 #ifndef _SWFDEC_DEBUG_WIDGET_H_
 #define _SWFDEC_DEBUG_WIDGET_H_
 
-#include <gtk/gtk.h>
-#include "swfdec_widget.h"
+#include <libswfdec-gtk/swfdec_widget.h>
 
 G_BEGIN_DECLS
 

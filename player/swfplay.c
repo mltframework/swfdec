@@ -24,10 +24,11 @@
 #include <math.h>
 #include <libswfdec/swfdec.h>
 
-#include "swfdec_playback.h"
+#include <libswfdec-gtk/swfdec_playback.h>
+#include <libswfdec-gtk/swfdec_source.h>
+#include <libswfdec-gtk/swfdec_widget.h>
+
 #include "swfdec_slow_loader.h"
-#include "swfdec_source.h"
-#include "swfdec_widget.h"
 
 static gpointer playback;
 

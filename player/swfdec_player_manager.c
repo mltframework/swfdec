@@ -28,7 +28,7 @@
 #include <libswfdec/js/jsdbgapi.h>
 #include <libswfdec/js/jsinterp.h>
 #include "swfdec_player_manager.h"
-#include "swfdec_source.h"
+#include <libswfdec-gtk/swfdec_source.h>
 
 enum {
   PROP_0,

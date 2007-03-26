@@ -122,7 +122,11 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
   if test "$AUDIO_TYPE" = "alsa"; then
     with_audio=alsa
   else
-    AC_MSG_WARN([no alsa audio support])
+    if test "$with_audio" = "alsa"; then
+      AC_MSG_ERROR([no alsa audio support])
+    else
+      AC_MSG_WARN([no alsa audio support])
+    fi
   fi
   AUDIO_CFLAGS=$ALSA_CFLAGS
   AUDIO_LIBS=$ALSA_LIBS
@@ -206,6 +210,11 @@ SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS"
 SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS -lz"
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
+
+SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS"
+SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS"
+AC_SUBST(SWFDEC_GTK_LIBS)
+AC_SUBST(SWFDEC_GTK_CFLAGS)
 
 GTK_DOC_CHECK([1.6])
 

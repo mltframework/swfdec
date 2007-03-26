@@ -82,13 +82,31 @@ fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)
 
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
-if test "$HAVE_GTK" = "no"; then
-  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
+AC_ARG_ENABLE(gtk,
+	AS_HELP_STRING([--enable-gtk],
+			[enable Gtk integration (default=yes)])],
+	enable_gtk=$enableval,
+	enable_gtk="yes")
+
+dnl 
+dnl GTK: We want this for swfdec-gtk
+dnl
+GTK_REQUIRES=2.8.0
+AC_SUBST(GTK_REQUIRES)
+if test "$enable_gtk" = "yes"; then
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRES, HAVE_GTK=yes, HAVE_GTK=no)
+	if test "$HAVE_GTK" = "no"; then
+	  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
+	fi
+	if test "x$HAVE_GTK" = xyes; then
+	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_REQUIRES])
+	fi
+else
+	AC_MSG_WARN([*** Gtk support was not enabled. ***])
 fi
-AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
+AM_CONDITIONAL(WITH_GTK, [test "x$HAVE_GTK" = xyes])
 
 dnl
 dnl audio backend
@@ -211,6 +229,7 @@ doc/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
+libswfdec-gtk/Makefile
 player/Makefile
 test/Makefile
 test/image/Makefile
@@ -218,6 +237,7 @@ test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
 swfdec.pc
+swfdec-gtk.pc
 swfdec.spec
 )
 

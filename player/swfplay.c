@@ -26,7 +26,7 @@
 
 #include <libswfdec-gtk/swfdec_playback.h>
 #include <libswfdec-gtk/swfdec_source.h>
-#include <libswfdec-gtk/swfdec_widget.h>
+#include <libswfdec-gtk/swfdec_gtk_widget.h>
 
 #include "swfdec_slow_loader.h"
 
@@ -49,9 +49,10 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   GtkWidget *window, *widget;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  widget = swfdec_widget_new (player);
-  swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
-  swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
+  widget = swfdec_gtk_widget_new (player);
+  swfdec_gtk_widget_set_scale (SWFDEC_GTK_WIDGET (widget), scale);
+  if (use_image)
+    swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
   gtk_container_add (GTK_CONTAINER (window), widget);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);

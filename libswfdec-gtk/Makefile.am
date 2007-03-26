@@ -13,12 +13,11 @@ lib_LTLIBRARIES = libswfdec-gtk-@SWFDEC_MAJORMINOR@.la
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_playback.c \
 	swfdec_source.c \
-	swfdec_widget.c
+	swfdec_gtk_widget.c
 
 noinst_HEADERS = \
 	swfdec_playback.h \
-	swfdec_source.h \
-	swfdec_widget.h
+	swfdec_source.h
 
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) $(AUDIO_CFLAGS) \
@@ -27,6 +26,9 @@ libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(SWFDEC_LIBVERSION) \
 	-export-symbols-regex '^(swfdec_.*)' \
 	$(GTK_LIBS) $(SWFDEC_LIBS) $(AUDIO_LIBS)
+libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
+libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
+	swfdec_gtk_widget.h
 
 endif
 

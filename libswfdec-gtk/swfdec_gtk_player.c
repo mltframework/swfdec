@@ -152,6 +152,7 @@ static void
 swfdec_gtk_player_init (SwfdecGtkPlayer * player)
 {
   player->speed = 1.0;
+  player->audio_enabled = TRUE;
 }
 
 /*** PUBLIC API ***/

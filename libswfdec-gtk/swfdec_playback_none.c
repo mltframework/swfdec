@@ -25,14 +25,14 @@
 
 /* STUBS ONLY - audio is disabled */
 
-gpointer
+SwfdecPlayback *
 swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 {
   return GINT_TO_POINTER (-1);
 }
 
 void
-swfdec_playback_close (gpointer sound)
+swfdec_playback_close (SwfdecPlayback *sound)
 {
   g_assert (sound == GINT_TO_POINTER (-1));
 }

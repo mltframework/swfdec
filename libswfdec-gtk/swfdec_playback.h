@@ -24,10 +24,12 @@
 
 G_BEGIN_DECLS
 
-gpointer	swfdec_playback_open	(SwfdecPlayer *	player,
-					 GMainContext *	context);
+typedef struct _SwfdecPlayback SwfdecPlayback;
 
-void		swfdec_playback_close	(gpointer	sound);
+SwfdecPlayback *swfdec_playback_open	(SwfdecPlayer *		player,
+					 GMainContext *		context);
+
+void		swfdec_playback_close	(SwfdecPlayback *	sound);
 
 G_END_DECLS
 #endif

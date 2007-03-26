@@ -41,13 +41,13 @@ noinst_HEADERS = \
 	swfdec_slow_loader.h \
 	swfdec_widget.h 
 
-libswfdecui_la_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) $(AUDIO_CFLAGS)
-libswfdecui_la_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS) $(AUDIO_LIBS)
-swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS)
-swfplay_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS)
+libswfdecui_la_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_CFLAGS) $(AUDIO_CFLAGS)
+libswfdecui_la_LDFLAGS = $(GTK_LIBS) $(SWFDEC_LIBS) $(AUDIO_LIBS)
+swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_CFLAGS)
+swfplay_LDFLAGS = $(GTK_LIBS) $(SWFDEC_LIBS)
 swfplay_LDADD = libswfdecui.la
-swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWF_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
-swfdebug_LDFLAGS = $(GTK_LIBS) $(SWF_LIBS)
+swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+swfdebug_LDFLAGS = $(GTK_LIBS) $(SWFDEC_LIBS)
 swfdebug_LDADD = libswfdecui.la $(top_builddir)/libswfdec/js/libjs.la
 endif
 

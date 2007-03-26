@@ -39,12 +39,13 @@ struct _SwfdecGtkWidget
 {
   GtkWidget			widget;
 
+  /*< private >*/
   SwfdecGtkWidgetPrivate *	priv;
 };
 
 struct _SwfdecGtkWidgetClass
 {
-  GtkWidgetClass	widget_class;
+  GtkWidgetClass		widget_class;
 };
 
 GType		swfdec_gtk_widget_get_type		(void);

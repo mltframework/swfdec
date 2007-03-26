@@ -40,10 +40,35 @@ struct _SwfdecGtkWidgetPrivate
 enum {
   PROP_0,
   PROP_PLAYER,
+  PROP_SCALE,
   PROP_INTERACTIVE,
   PROP_RENDERER_SET,
   PROP_RENDERER
 };
+
+/*** gtk-doc ***/
+
+/**
+ * SECTION:SwfdecGtkWidget
+ * @title: SwfdecGtkWidget
+ * @short_description: a #GtkWidget for embedding SWF files
+ *
+ * This is a widget for playing Flash movies rendered with Swfdec in a Gtk 
+ * application. It supports a lot of advanced features, if you want to use
+ * them. If you don't want to use them and just want to embed a movie in 
+ * your application, swfdec_gtk_widget_new() will probably be the only 
+ * function you need.
+ *
+ * @see_also: SwfdecGtkPlayer
+ */
+
+/**
+ * SwfdecGtkWidget:
+ *
+ * The structure for the Swfdec Gtk widget contains no public fields.
+ */
+
+/*** SWFDEC_GTK_WIDGET ***/
 
 G_DEFINE_TYPE (SwfdecGtkWidget, swfdec_gtk_widget, GTK_TYPE_WIDGET)
 
@@ -168,6 +193,9 @@ swfdec_gtk_widget_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_PLAYER:
       g_value_set_object (value, priv->player);
       break;
+    case PROP_SCALE:
+      g_value_set_double (value, priv->set_scale);
+      break;
     case PROP_INTERACTIVE:
       g_value_set_boolean (value, priv->interactive);
       break;
@@ -193,6 +221,9 @@ swfdec_gtk_widget_set_property (GObject *object, guint param_id, const GValue *v
   switch (param_id) {
     case PROP_PLAYER:
       swfdec_gtk_widget_set_player (widget, g_value_get_object (value));
+      break;
+    case PROP_SCALE:
+      swfdec_gtk_widget_set_scale (widget, g_value_get_double (value));
       break;
     case PROP_INTERACTIVE:
       swfdec_gtk_widget_set_interactive (widget, g_value_get_boolean (value));
@@ -291,7 +322,10 @@ swfdec_gtk_widget_update_cursor (SwfdecGtkWidget *widget)
 
   if (window == NULL)
     return;
-  g_object_get (priv->player, "mouse-cursor", &swfcursor, NULL);
+  if (priv->interactive)
+    swfcursor = SWFDEC_MOUSE_CURSOR_NORMAL;
+  else
+    g_object_get (priv->player, "mouse-cursor", &swfcursor, NULL);
 
   switch (swfcursor) {
     case SWFDEC_MOUSE_CURSOR_NONE:
@@ -379,6 +413,9 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   g_object_class_install_property (object_class, PROP_PLAYER,
       g_param_spec_object ("player", "player", "player that is displayed",
 	  SWFDEC_TYPE_PLAYER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_SCALE,
+      g_param_spec_double ("scale", "scale", "scale factor to use or 0.0 for automatic",
+	  0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_INTERACTIVE,
       g_param_spec_boolean ("interactive", "interactive", "if mouse events are processed",
 	  TRUE, G_PARAM_READWRITE));
@@ -440,6 +477,15 @@ swfdec_gtk_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecGtkW
   }
 }
 
+/*** PUBLIC API ***/
+
+/**
+ * swfdec_gtk_widget_set_player:
+ * @widget: a #SwfdecGtkWidget
+ * @player: the #SwfdecPlayer to display or %NULL for none
+ *
+ * Sets the new player to display in @widget.
+ **/
 void
 swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
 {
@@ -467,6 +513,14 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
   g_object_notify (G_OBJECT (widget), "player");
 }
 
+/**
+ * swfdec_gtk_widget_get_player:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Gets the player that is currently played back in this @widget.
+ *
+ * Returns: the #SwfdecPlayer or %NULL if none
+ **/
 SwfdecPlayer *
 swfdec_gtk_widget_get_player (SwfdecGtkWidget *widget)
 {
@@ -475,6 +529,14 @@ swfdec_gtk_widget_get_player (SwfdecGtkWidget *widget)
   return widget->priv->player;
 }
 
+/**
+ * swfdec_gtk_widget_new:
+ * @player: a #SwfdecPlayer or %NULL
+ *
+ * Creates a new #SwfdecGtkWidget to display @player.
+ *
+ * Returns: the new widget that displays @player
+ **/
 GtkWidget *
 swfdec_gtk_widget_new (SwfdecPlayer *player)
 {
@@ -487,6 +549,14 @@ swfdec_gtk_widget_new (SwfdecPlayer *player)
   return GTK_WIDGET (widget);
 }
 
+/**
+ * swfdec_gtk_widget_set_scale:
+ * @widget: a #SwfdecGtkWidget
+ * @scale: scale factor to use or 0 for automatic
+ *
+ * Sets the scale factor to use. If you set @scale to 0, the movie is displayed
+ * as big as the window is.
+ **/
 void
 swfdec_gtk_widget_set_scale (SwfdecGtkWidget *widget, double scale)
 {
@@ -495,8 +565,18 @@ swfdec_gtk_widget_set_scale (SwfdecGtkWidget *widget, double scale)
 
   widget->priv->set_scale = scale;
   gtk_widget_queue_resize (GTK_WIDGET (widget));
+  g_object_notify (G_OBJECT (widget), "scale");
 }
 
+/**
+ * swfdec_gtk_widget_get_scale:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Gets the user-set scale factor for this @widget. If you want the scale 
+ * factor that is currently in effect, use swfdec_gtk_widget_get_current_scale().
+ *
+ * Returns: The current scale factor or 0.0 if automatic.
+ **/
 double
 swfdec_gtk_widget_get_scale (SwfdecGtkWidget *widget)
 {
@@ -505,6 +585,17 @@ swfdec_gtk_widget_get_scale (SwfdecGtkWidget *widget)
   return widget->priv->set_scale;
 }
 
+/**
+ * swfdec_gtk_widget_get_current_scale:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Queries the current scale factor in use. The returned value is undefined 
+ * if the widget has not been allocated a size. This value is only different 
+ * from the value returned by swfdec_gtk_widget_get_scale(), if automatic 
+ * scaling is in effect.
+ *
+ * Returns: The current scale factor.
+ **/
 double
 swfdec_gtk_widget_get_current_scale (SwfdecGtkWidget *widget)
 {
@@ -513,14 +604,34 @@ swfdec_gtk_widget_get_current_scale (SwfdecGtkWidget *widget)
   return widget->priv->real_scale;
 }
 
+/**
+ * swfdec_gtk_widget_set_interactive:
+ * @widget: a #SwfdecGtkWidget
+ * @interactive: %TRUE to make the widget interactive
+ *
+ * Sets the widget to be interactive or not. An interactive widget processes 
+ * mouse and keyboard events, while a non-interactive widget does not care about
+ * user input. Widgets are interactive by default.
+ **/
 void
 swfdec_gtk_widget_set_interactive (SwfdecGtkWidget *widget, gboolean interactive)
 {
   g_return_if_fail (SWFDEC_IS_GTK_WIDGET (widget));
 
   widget->priv->interactive = interactive;
+  swfdec_gtk_widget_update_cursor (widget);
+  g_object_notify (G_OBJECT (widget), "interactive");
 }
 
+/**
+ * swfdec_gtk_widget_get_interactive:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Queries if the @widget is currently interactive. See 
+ * swfdec_gtk_widget_set_interactive() for details.
+ *
+ * Returns: %TRUE if the widget is interactive, %FALSE otherwise.
+ **/
 gboolean
 swfdec_gtk_widget_get_interactive (SwfdecGtkWidget *widget)
 {
@@ -529,6 +640,15 @@ swfdec_gtk_widget_get_interactive (SwfdecGtkWidget *widget)
   return widget->priv->interactive;
 }
 
+/**
+ * swfdec_gtk_widget_set_renderer:
+ * @widget: a #SwfdecGtkWidget
+ * @renderer: a #cairo_surface_type_t for the intermediate renderer
+ *
+ * Tells @widget to use an intermediate surface for rendering. This is
+ * useful for debugging or performance measurements inside swfdec and is 
+ * probably not interesting for anyone else.
+ **/
 void
 swfdec_gtk_widget_set_renderer (SwfdecGtkWidget *widget, cairo_surface_type_t renderer)
 {
@@ -542,6 +662,13 @@ swfdec_gtk_widget_set_renderer (SwfdecGtkWidget *widget, cairo_surface_type_t re
   g_object_notify (G_OBJECT (widget), "renderer");
 }
 
+/**
+ * swfdec_gtk_widget_unset_renderer:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Unsets the use of an intermediate rendering surface. See 
+ * swfdec_gtk_widget_set_renderer() for details.
+ **/
 void
 swfdec_gtk_widget_unset_renderer (SwfdecGtkWidget *widget)
 {
@@ -553,6 +680,16 @@ swfdec_gtk_widget_unset_renderer (SwfdecGtkWidget *widget)
   g_object_notify (G_OBJECT (widget), "renderer-set");
 }
 
+/**
+ * swfdec_gtk_widget_get_renderer:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Gets the intermediate renderer that is or would be in use by @widget. Use
+ * swfdec_gtk_widget_uses_renderer() to check if an intermediate renderer is in
+ * use. See swfdec_gtk_widget_set_renderer() for details.
+ *
+ * Returns: the type of the intermediate renderer
+ **/
 cairo_surface_type_t
 swfdec_gtk_widget_get_renderer (SwfdecGtkWidget *widget)
 {
@@ -561,6 +698,15 @@ swfdec_gtk_widget_get_renderer (SwfdecGtkWidget *widget)
   return widget->priv->renderer;
 }
 
+/**
+ * swfdec_gtk_widget_uses_renderer:
+ * @widget: a #SwfdecGtkWidget
+ *
+ * Queries if an intermediate renderer set via swfdec_gtk_widget_set_renderer()
+ * is currently in use.
+ *
+ * Returns: %TRUE if an intermediate renderer is used.
+ **/
 gboolean
 swfdec_gtk_widget_uses_renderer (SwfdecGtkWidget *widget)
 {

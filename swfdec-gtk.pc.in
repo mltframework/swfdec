@@ -7,5 +7,5 @@ Name: swfdec-gtk
 Description: Support for playing Flash files in Gtk using Swfdec
 Version: @VERSION@
 Requires: swfdec-@SWFDEC_MAJORMINOR@ = @PACKAGE_VERSION@ gtk+-2.0 >= @GTK_REQUIRES@
-Libs: -L${libdir} -lswfdec-@SWFDEC_MAJORMINOR@
+Libs: -L${libdir} -lswfdec-gtk-@SWFDEC_MAJORMINOR@
 Cflags: -I${includedir}

@@ -496,7 +496,6 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
       char *dot = strrchr (ret, '.');
       char *real;
       guint len = dot ? strlen (dot) : G_MAXUINT;
-      g_print ("ret: %s, dot: %s, ext: %s\n", ret, dot, ext);
       if (len <= 5)
 	*dot = '\0';
       real = g_strdup_printf ("%s.%s", ret, ext);

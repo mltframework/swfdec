@@ -60,7 +60,7 @@ double		swfdec_gtk_widget_get_scale		(SwfdecGtkWidget *	widget);
 double		swfdec_gtk_widget_get_current_scale   	(SwfdecGtkWidget *	widget);
 void		swfdec_gtk_widget_set_renderer		(SwfdecGtkWidget *	widget,
 							 cairo_surface_type_t	renderer);
-void		swfdec_gtk_player_unset_renderer	(SwfdecGtkWidget *      widget);
+void		swfdec_gtk_widget_unset_renderer	(SwfdecGtkWidget *      widget);
 cairo_surface_type_t
 		swfdec_gtk_widget_get_renderer		(SwfdecGtkWidget *	widget);
 gboolean	swfdec_gtk_widget_uses_renderer		(SwfdecGtkWidget *	widget);

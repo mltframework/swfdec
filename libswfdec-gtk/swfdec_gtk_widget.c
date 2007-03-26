@@ -543,7 +543,7 @@ swfdec_gtk_widget_set_renderer (SwfdecGtkWidget *widget, cairo_surface_type_t re
 }
 
 void
-swfdec_gtk_player_unset_renderer (SwfdecGtkWidget *widget)
+swfdec_gtk_widget_unset_renderer (SwfdecGtkWidget *widget)
 {
   g_return_if_fail (SWFDEC_IS_GTK_WIDGET (widget));
 

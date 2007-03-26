@@ -109,6 +109,7 @@ IGNORE_HFILES= \
 	swfdec_xml.h
 
 EXTRA_HFILES = \
+	../libswfdec-gtk/swfdec_gtk_player.h \
 	../libswfdec-gtk/swfdec_gtk_widget.h
 
 # Images to copy into HTML directory.

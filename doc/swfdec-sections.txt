@@ -108,6 +108,29 @@ swfdec_mouse_cursor_get_type
 
 
 <SECTION>
+<FILE>SwfdecGtkPlayer</FILE>
+<TITLE>SwfdecGtkPlayer</TITLE>
+SwfdecGtkPlayer
+swfdec_gtk_player_new
+swfdec_gtk_player_new_from_file
+swfdec_gtk_player_get_playing
+swfdec_gtk_player_set_playing
+swfdec_gtk_player_get_speed
+swfdec_gtk_player_set_speed
+swfdec_gtk_player_get_audio
+swfdec_gtk_player_set_audio
+<SUBSECTION Standard>
+SwfdecGtkPlayerClass
+swfdec_gtk_player_get_type
+SWFDEC_GTK_PLAYER
+SWFDEC_GTK_PLAYER_CLASS
+SWFDEC_GTK_PLAYER_GET_CLASS
+SWFDEC_IS_GTK_PLAYER
+SWFDEC_IS_GTK_PLAYER_CLASS
+SWFDEC_TYPE_GTK_PLAYER
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecGtkWidget</FILE>
 <TITLE>SwfdecGtkWidget</TITLE>
 SwfdecGtkWidget

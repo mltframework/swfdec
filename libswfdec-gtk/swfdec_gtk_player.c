@@ -188,7 +188,7 @@ swfdec_gtk_player_new (void)
  * Returns: a new player or %NULL on error.
  **/
 SwfdecPlayer *
-swfdec_player_new_from_file (const char *filename, GError **error)
+swfdec_gtk_player_new_from_file (const char *filename, GError **error)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player;

@@ -43,9 +43,9 @@ SwfdecPlayer *	swfdec_gtk_player_new_from_file	(const char *		filename,
 void		swfdec_gtk_player_set_playing 	(SwfdecGtkPlayer *	player,
 						 gboolean		playing);
 gboolean	swfdec_gtk_player_get_playing 	(SwfdecGtkPlayer *	player);
-void		swfdec_gtk_player_set_audio	(SwfdecGtkPlayer *	player,
+void		swfdec_gtk_player_set_audio_enabled	(SwfdecGtkPlayer *	player,
 						 gboolean		enabled);
-gboolean	swfdec_gtk_player_get_audio 	(SwfdecGtkPlayer *	player);
+gboolean	swfdec_gtk_player_get_audio_enabled 	(SwfdecGtkPlayer *	player);
 void		swfdec_gtk_player_set_speed	(SwfdecGtkPlayer *	player,
 						 double			speed);
 double		swfdec_gtk_player_get_speed 	(SwfdecGtkPlayer *	player);

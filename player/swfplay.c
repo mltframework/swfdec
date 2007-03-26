@@ -132,7 +132,7 @@ main (int argc, char *argv[])
   }
 
   if (no_sound)
-    swfdec_gtk_player_set_audio (SWFDEC_GTK_PLAYER (player), FALSE);
+    swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);
 
   swfdec_gtk_player_set_speed (SWFDEC_GTK_PLAYER (player), speed / 100.);
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);

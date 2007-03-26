@@ -106,7 +106,7 @@ swfdec_gtk_player_set_property (GObject *object, guint param_id, const GValue *v
       swfdec_gtk_player_set_playing (player, g_value_get_boolean (value));
       break;
     case PROP_AUDIO:
-      swfdec_gtk_player_set_audio (player, g_value_get_boolean (value));
+      swfdec_gtk_player_set_audio_enabled (player, g_value_get_boolean (value));
       break;
     case PROP_SPEED:
       swfdec_gtk_player_set_speed (player, g_value_get_double (value));
@@ -263,14 +263,14 @@ swfdec_gtk_player_get_playing (SwfdecGtkPlayer *player)
 }
 
 /**
- * swfdec_gtk_player_set_audio:
+ * swfdec_gtk_player_set_audio_enabled:
  * @player: a #SwfdecGtkPlayer
  * @enabled: %TRUE to enable audio
  *
  * Enables or disables automatic audio playback.
  **/
 void
-swfdec_gtk_player_set_audio (SwfdecGtkPlayer *player, gboolean enabled)
+swfdec_gtk_player_set_audio_enabled (SwfdecGtkPlayer *player, gboolean enabled)
 {
   g_return_if_fail (SWFDEC_IS_GTK_PLAYER (player));
 
@@ -282,7 +282,7 @@ swfdec_gtk_player_set_audio (SwfdecGtkPlayer *player, gboolean enabled)
 }
 
 /**
- * swfdec_gtk_player_get_audio:
+ * swfdec_gtk_player_get_audio_enabled:
  * @player: a #SwfdecGtkPlayer
  *
  * Queries if audio playback for @player is enabled or not.
@@ -290,7 +290,7 @@ swfdec_gtk_player_set_audio (SwfdecGtkPlayer *player, gboolean enabled)
  * Returns: %TRUE if audio playback is enabled
  **/
 gboolean
-swfdec_gtk_player_get_audio (SwfdecGtkPlayer *player)
+swfdec_gtk_player_get_audio_enabled (SwfdecGtkPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_GTK_PLAYER (player), FALSE);
 

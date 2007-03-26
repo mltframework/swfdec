@@ -29,6 +29,7 @@ libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	$(GTK_LIBS) $(SWFDEC_LIBS) $(AUDIO_LIBS)
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
+	swfdec-gtk.h \
 	swfdec_gtk_player.h \
 	swfdec_gtk_widget.h
 

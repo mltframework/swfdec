@@ -82,13 +82,31 @@ fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)
 
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
-if test "$HAVE_GTK" = "no"; then
-  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
+AC_ARG_ENABLE(gtk,
+	AS_HELP_STRING([--enable-gtk],
+			[enable Gtk integration (default=yes)])],
+	enable_gtk=$enableval,
+	enable_gtk="yes")
+
+dnl 
+dnl GTK: We want this for swfdec-gtk
+dnl
+GTK_REQUIRES=2.8.0
+AC_SUBST(GTK_REQUIRES)
+if test "$enable_gtk" = "yes"; then
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRES, HAVE_GTK=yes, HAVE_GTK=no)
+	if test "$HAVE_GTK" = "no"; then
+	  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
+	fi
+	if test "x$HAVE_GTK" = xyes; then
+	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_REQUIRES])
+	fi
+else
+	AC_MSG_WARN([*** Gtk support was not enabled. ***])
 fi
-AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
+AM_CONDITIONAL(WITH_GTK, [test "x$HAVE_GTK" = xyes])
 
 dnl
 dnl audio backend
@@ -104,7 +122,11 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
   if test "$AUDIO_TYPE" = "alsa"; then
     with_audio=alsa
   else
-    AC_MSG_WARN([no alsa audio support])
+    if test "$with_audio" = "alsa"; then
+      AC_MSG_ERROR([no alsa audio support])
+    else
+      AC_MSG_WARN([no alsa audio support])
+    fi
   fi
   AUDIO_CFLAGS=$ALSA_CFLAGS
   AUDIO_LIBS=$ALSA_LIBS
@@ -184,10 +206,15 @@ AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 
 AC_SUBST(GLOBAL_CFLAGS)
 
-SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir) $GLIB_CFLAGS"
-SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $MAD_LIBS $GLIB_LIBS -lz"
-AC_SUBST(SWF_LIBS)
-AC_SUBST(SWF_CFLAGS)
+SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS"
+SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS -lz"
+AC_SUBST(SWFDEC_LIBS)
+AC_SUBST(SWFDEC_CFLAGS)
+
+SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS"
+SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS"
+AC_SUBST(SWFDEC_GTK_LIBS)
+AC_SUBST(SWFDEC_GTK_CFLAGS)
 
 GTK_DOC_CHECK([1.6])
 
@@ -211,6 +238,7 @@ doc/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
+libswfdec-gtk/Makefile
 player/Makefile
 test/Makefile
 test/image/Makefile
@@ -218,6 +246,7 @@ test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
 swfdec.pc
+swfdec-gtk.pc
 swfdec.spec
 )
 

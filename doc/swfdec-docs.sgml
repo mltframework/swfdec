@@ -7,7 +7,12 @@
   </bookinfo>
 
   <chapter>
-    <title>Public API</title>
+    <title>Swfdec Gtk library</title>
+    <xi:include href="xml/SwfdecGtkPlayer.xml"/>
+    <xi:include href="xml/SwfdecGtkWidget.xml"/>
+  </chapter>
+  <chapter>
+    <title>Swfdec library</title>
     <xi:include href="xml/Enumerations.xml"/>
     <xi:include href="xml/SwfdecPlayer.xml"/>
     <xi:include href="xml/SwfdecAudio.xml"/>

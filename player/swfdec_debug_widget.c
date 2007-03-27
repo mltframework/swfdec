@@ -25,7 +25,7 @@
 #include "swfdec_debug_widget.h"
 
 
-G_DEFINE_TYPE (SwfdecDebugWidget, swfdec_debug_widget, SWFDEC_TYPE_WIDGET)
+G_DEFINE_TYPE (SwfdecDebugWidget, swfdec_debug_widget, SWFDEC_TYPE_GTK_WIDGET)
 
 
 static gboolean
@@ -53,28 +53,30 @@ swfdec_debug_widget_invalidate_click_area (SwfdecDebugWidget *widget)
 static gboolean
 swfdec_debug_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 {
-  SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
+  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecDebugWidget *debug = SWFDEC_DEBUG_WIDGET (gtkwidget);
 
   if (event->window != gtkwidget->window)
     return FALSE;
 
-  if (event->button == 1 && widget->interactive) {
+  if (event->button == 1 && swfdec_gtk_widget_get_interactive (widget)) {
+    double scale = swfdec_gtk_widget_get_scale (widget);
+    SwfdecPlayer *player = swfdec_gtk_widget_get_player (widget);
     switch (event->type) {
       case GDK_BUTTON_PRESS:
 	swfdec_debug_widget_invalidate_click_area (debug);
 	debug->x = event->x;
 	debug->y = event->y;
-	swfdec_player_handle_mouse (widget->player, 
-	    debug->x / widget->real_scale, debug->y / widget->real_scale, 
-	    widget->button);
+	swfdec_player_handle_mouse (player, 
+	    debug->x / scale, debug->y / scale, 
+	    debug->button);
 	swfdec_debug_widget_invalidate_click_area (debug);
 	break;
       case GDK_2BUTTON_PRESS:
-	widget->button = 1 - widget->button;
-	swfdec_player_handle_mouse (widget->player, 
-	    debug->x / widget->real_scale, debug->y / widget->real_scale, 
-	    widget->button);
+	debug->button = 1 - debug->button;
+	swfdec_player_handle_mouse (player, 
+	    debug->x / scale, debug->y / scale, 
+	    debug->button);
 	swfdec_debug_widget_invalidate_click_area (debug);
 	break;
       default:
@@ -93,7 +95,6 @@ swfdec_debug_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
 static gboolean
 swfdec_debug_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 {
-  SwfdecWidget *widget = SWFDEC_WIDGET (gtkwidget);
   SwfdecDebugWidget *debug = SWFDEC_DEBUG_WIDGET (gtkwidget);
   cairo_t *cr;
 
@@ -106,7 +107,7 @@ swfdec_debug_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   cr = gdk_cairo_create (gtkwidget->window);
 
   cairo_arc (cr, debug->x, debug->y, RADIUS - 1.5, 0.0, 2 * G_PI);
-  if (widget->button) {
+  if (debug->button) {
     cairo_set_source_rgba (cr, 0.25, 0.25, 0.25, 0.5);
     cairo_fill_preserve (cr);
   }

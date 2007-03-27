@@ -26,6 +26,8 @@ G_BEGIN_DECLS
 
 GSource *	swfdec_iterate_source_new	(SwfdecPlayer *		player,
 						 double			speed);
+void		swfdec_iterate_source_set_speed (GSource *		source,
+						 double			speed);
 guint		swfdec_iterate_add		(SwfdecPlayer *		player);
 
 G_END_DECLS

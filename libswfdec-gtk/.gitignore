@@ -7,11 +7,8 @@ CVS
 Makefile
 Makefile.in
 *.o
+*.la
 *.lo
 *.loT
 
-swfdebug
-swfplay
-
-*.swf
-*.flv
+swfdec_playback.c

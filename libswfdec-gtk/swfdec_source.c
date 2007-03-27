@@ -141,6 +141,15 @@ swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
   return (GSource *) source;
 }
 
+void
+swfdec_iterate_source_set_speed (GSource *source, double speed)
+{
+  /* FIXME: need a return_if_fail if wrong source? */
+  g_return_if_fail (speed > 0.0);
+
+  ((SwfdecIterateSource *) source)->speed = 1.0 / speed;
+}
+
 guint
 swfdec_iterate_add (SwfdecPlayer *player)
 {

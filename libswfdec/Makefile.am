@@ -16,6 +16,9 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+	swfdec_as_context.c \
+	swfdec_as_object.c \
+	swfdec_as_types.c \
 	swfdec_amf.c \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
@@ -90,7 +93,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	-DG_LOG_DOMAIN=\"Swfdec\"
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(SWFDEC_LIBVERSION) \
-	-export-symbols-regex '^(swfdec_.*)' \
+	-export-symbols-regex '^(swf(dec|as)_.*)' \
 	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(MAD_LIBS) $(FFMPEG_LIBS) \
 	$(LIBOIL_LIBS) -lz
 
@@ -106,6 +109,9 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
+	swfdec_as_context.h \
+	swfdec_as_object.h \
+	swfdec_as_types.h \
 	swfdec_amf.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \

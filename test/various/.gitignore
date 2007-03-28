@@ -8,5 +8,6 @@ Makefile
 Makefile.in
 *.o
 
+gc
 ringbuffer
 urlencode

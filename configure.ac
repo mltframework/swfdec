@@ -33,7 +33,7 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="2:0:0"
+SWFDEC_LIBVERSION="3:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
@@ -154,11 +154,12 @@ if test "$HAVE_LIBOIL" = "no"; then
   AC_MSG_ERROR([cannot find liboil-0.3, which is required for build])
 fi
 
-PKG_CHECK_MODULES(CAIRO, cairo >= 1.2.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+CAIRO_REQUIRES=1.2
+PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_REQUIRES, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
-  AC_MSG_ERROR([cannot find cairo, which is required for build])
+  AC_MSG_ERROR([cannot find cairo >= $CAIRO_REQUIRES, which is required for build])
 fi
 
 AC_ARG_ENABLE(mad,

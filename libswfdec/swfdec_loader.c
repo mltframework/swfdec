@@ -139,7 +139,7 @@ swfdec_loader_dispose (GObject *object)
 {
   SwfdecLoader *loader = SWFDEC_LOADER (object);
 
-  swfdec_buffer_queue_free (loader->queue);
+  swfdec_buffer_queue_unref (loader->queue);
   g_free (loader->url);
   g_free (loader->error);
 

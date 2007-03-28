@@ -60,7 +60,7 @@ swfdec_decoder_dispose (GObject *object)
     swfdec_buffer_unref (s->uncompressed_buffer);
     s->uncompressed_buffer = NULL;
   }
-  swfdec_buffer_queue_free (s->input_queue);
+  swfdec_buffer_queue_unref (s->input_queue);
 
   if (s->jpegtables) {
     swfdec_buffer_unref (s->jpegtables);

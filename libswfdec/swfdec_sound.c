@@ -223,7 +223,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
       swfdec_buffer_queue_push (queue, tmp);
       swfdec_buffer_queue_push (queue, tmp2);
       tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
-      swfdec_buffer_queue_free (queue);
+      swfdec_buffer_queue_unref (queue);
     }
   }
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 

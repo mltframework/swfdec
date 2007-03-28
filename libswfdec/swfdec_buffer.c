@@ -54,6 +54,26 @@
 /*** SwfdecBuffer ***/
 
 /**
+ * SWFDEC_TYPE_BUFFER:
+ *
+ * #SwfdecBuffer is a boxed type for the glib type system. This macro
+ * returns its type.
+ **/
+GType
+swfdec_buffer_get_type (void)
+{
+  static GType type_swfdec_buffer = 0;
+
+  if (!type_swfdec_buffer)
+    type_swfdec_buffer = g_boxed_type_register_static
+      ("SwfdecBuffer", 
+       (GBoxedCopyFunc) swfdec_buffer_ref,
+       (GBoxedFreeFunc) swfdec_buffer_unref);
+
+  return type_swfdec_buffer;
+}
+
+/**
  * swfdec_buffer_new:
  *
  * Creates a new #SwfdecBuffer to be filled by the user. Use like this:
@@ -267,12 +287,36 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
   }
 }
 
-/*** SwfdecBuffer ***/
+/*** SwfdecBufferQueue ***/
+
+/**
+ * SWFDEC_TYPE_BUFFER_QUEUE:
+ *
+ * #SwfdecBufferQueue is a boxed type for the glib type system. This macro
+ * returns its type.
+ **/
+GType
+swfdec_buffer_queue_get_type (void)
+{
+  static GType type_swfdec_buffer_queue = 0;
+
+  if (!type_swfdec_buffer_queue)
+    type_swfdec_buffer_queue = g_boxed_type_register_static
+      ("SwfdecBufferQueue", 
+       (GBoxedCopyFunc) swfdec_buffer_queue_ref,
+       (GBoxedFreeFunc) swfdec_buffer_queue_unref);
+
+  return type_swfdec_buffer_queue;
+}
 
 SwfdecBufferQueue *
 swfdec_buffer_queue_new (void)
 {
-  return g_new0 (SwfdecBufferQueue, 1);
+  SwfdecBufferQueue *buffer_queue;
+
+  buffer_queue = g_new0 (SwfdecBufferQueue, 1);
+  buffer_queue->ref_count = 1;
+  return buffer_queue;
 }
 
 int
@@ -293,13 +337,6 @@ swfdec_buffer_queue_clear (SwfdecBufferQueue *queue)
   g_list_foreach (queue->buffers, (GFunc) swfdec_buffer_unref, NULL);
   g_list_free (queue->buffers);
   memset (queue, 0, sizeof (SwfdecBufferQueue));
-}
-
-void
-swfdec_buffer_queue_free (SwfdecBufferQueue * queue)
-{
-  swfdec_buffer_queue_clear (queue);
-  g_free (queue);
 }
 
 void
@@ -443,3 +480,43 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
 
   return newbuffer;
 }
+
+/**
+ * swfdec_buffer_queue_ref:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * increases the reference count of @queue by one.
+ *
+ * Returns: The passed in @queue.
+ **/
+SwfdecBufferQueue *
+swfdec_buffer_queue_ref (SwfdecBufferQueue * queue)
+{
+  g_return_val_if_fail (queue != NULL, NULL);
+  g_return_val_if_fail (queue->ref_count > 0, NULL);
+
+  queue->ref_count++;
+  return queue;
+}
+
+/**
+ * swfdec_buffer_queue_unref:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Decreases the reference count of @queue by one. If no reference 
+ * to this buffer exists anymore, the buffer and the memory 
+ * it manages are freed.
+ **/
+void
+swfdec_buffer_queue_unref (SwfdecBufferQueue * queue)
+{
+  g_return_if_fail (queue != NULL);
+  g_return_if_fail (queue->ref_count > 0);
+
+  queue->ref_count--;
+  if (queue->ref_count == 0) {
+    swfdec_buffer_queue_clear (queue);
+    g_free (queue);
+  }
+}
+

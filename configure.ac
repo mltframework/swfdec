@@ -154,11 +154,12 @@ if test "$HAVE_LIBOIL" = "no"; then
   AC_MSG_ERROR([cannot find liboil-0.3, which is required for build])
 fi
 
-PKG_CHECK_MODULES(CAIRO, cairo >= 1.2.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+CAIRO_REQUIRES=1.2
+PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_REQUIRES, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
-  AC_MSG_ERROR([cannot find cairo, which is required for build])
+  AC_MSG_ERROR([cannot find cairo >= $CAIRO_REQUIRES, which is required for build])
 fi
 
 AC_ARG_ENABLE(mad,

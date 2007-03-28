@@ -57,7 +57,7 @@ swfdec_player_render
 swfdec_player_advance
 swfdec_player_handle_mouse
 swfdec_player_render_audio
-swfdec_player_get_audio_enabled
+swfdec_player_get_audio
 <SUBSECTION Standard>
 SwfdecPlayerClass
 SWFDEC_PLAYER
@@ -73,7 +73,9 @@ SWFDEC_PLAYER_GET_CLASS
 <FILE>SwfdecBuffer</FILE>
 <TITLE>SwfdecBuffer</TITLE>
 SwfdecBuffer
+SWFDEC_TYPE_BUFFER
 SwfdecBufferQueue
+SWFDEC_TYPE_BUFFER_QUEUE
 swfdec_buffer_new
 swfdec_buffer_new_and_alloc
 swfdec_buffer_new_and_alloc0
@@ -84,13 +86,17 @@ swfdec_buffer_ref
 swfdec_buffer_unref
 swfdec_buffer_queue_new
 swfdec_buffer_queue_clear
-swfdec_buffer_queue_free
+swfdec_buffer_queue_ref
+swfdec_buffer_queue_unref
 swfdec_buffer_queue_get_depth
 swfdec_buffer_queue_get_offset
 swfdec_buffer_queue_push
 swfdec_buffer_queue_pull
 swfdec_buffer_queue_pull_buffer
 swfdec_buffer_queue_peek
+<SUBSECTION Standard>
+swfdec_buffer_get_type
+swfdec_buffer_queue_get_type
 </SECTION>
 
 <SECTION>

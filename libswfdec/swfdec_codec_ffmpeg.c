@@ -151,7 +151,7 @@ swfdec_codec_ffmpeg_decode (gpointer ctx, SwfdecBuffer *buffer)
 
     if (len < 0) {
       SWFDEC_ERROR ("Error %d while decoding", len);
-      swfdec_buffer_queue_free (queue);
+      swfdec_buffer_queue_unref (queue);
       swfdec_buffer_unref (outbuf);
       return NULL;
     }
@@ -160,7 +160,7 @@ swfdec_codec_ffmpeg_decode (gpointer ctx, SwfdecBuffer *buffer)
       outbuf->length = out_size;
       convert = swfdec_codec_ffmpeg_convert (ctx, outbuf);
       if (convert == NULL) {
-	swfdec_buffer_queue_free (queue);
+	swfdec_buffer_queue_unref (queue);
 	swfdec_buffer_unref (outbuf);
 	return NULL;
       }
@@ -176,7 +176,7 @@ swfdec_codec_ffmpeg_decode (gpointer ctx, SwfdecBuffer *buffer)
     outbuf = swfdec_buffer_queue_pull (queue, amount);
   else
     outbuf = NULL;
-  swfdec_buffer_queue_free (queue);
+  swfdec_buffer_queue_unref (queue);
 
   return outbuf;
 }

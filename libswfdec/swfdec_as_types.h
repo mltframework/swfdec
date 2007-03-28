@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 
 typedef guint8 SwfdecAsType;
 typedef struct _SwfdecAsContext SwfdecAsContext;
+typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsValue SwfdecAsValue;
 
@@ -48,7 +49,7 @@ struct _SwfdecAsValue {
   } value;
 };
 
-#define SWFDEC_AS_IS_VALUE(val) ((val)->type <= SWFDEC_TYPE_AS_OBJECT)
+#define SWFDEC_IS_AS_VALUE(val) ((val)->type <= SWFDEC_TYPE_AS_OBJECT)
 
 #define SWFDEC_AS_VALUE_IS_UNDEFINED(val) ((val)->type == SWFDEC_TYPE_AS_UNDEFINED)
 #define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_TYPE_AS_UNDEFINED
@@ -87,8 +88,9 @@ struct _SwfdecAsValue {
 
 /* List of static strings that are required all the time */
 extern const char *swfdec_as_strings[];
-#define SWFDEC_AS_EMPTY_STRING (swfdec_as_strings[0] + 1)
-#define SWFDEC_AS_PROTO_STRING (swfdec_as_strings[1] + 1)
+#define SWFDEC_AS_STR_EMPTY (swfdec_as_strings[0] + 1)
+#define SWFDEC_AS_STR_PROTO (swfdec_as_strings[1] + 1)
+#define SWFDEC_AS_STR_THIS (swfdec_as_strings[2] + 1)
 
 
 const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,

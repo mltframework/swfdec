@@ -79,8 +79,10 @@ swfdec_as_object_new (SwfdecAsContext *context)
 {
   SwfdecAsObject *object;
 
-  g_return_val_if_fail (SWFDEC_AS_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsObject)))
+    return NULL;
   object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
   swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
   g_object_unref (object);
@@ -90,12 +92,10 @@ swfdec_as_object_new (SwfdecAsContext *context)
 void
 swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize size)
 {
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
-  g_return_if_fail (SWFDEC_AS_IS_CONTEXT (context));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (object->properties == NULL);
 
-  if (!swfdec_as_context_use_mem (context, size))
-    return;
   object->context = context;
   object->size = size;
   g_hash_table_insert (context->objects, object, object);
@@ -115,7 +115,7 @@ swfdec_as_object_free_property (gpointer key, gpointer value, gpointer data)
 void
 swfdec_as_object_collect (SwfdecAsObject *object)
 {
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (object->properties != NULL);
 
   g_hash_table_foreach (object->properties, swfdec_as_object_free_property, object);
@@ -128,7 +128,7 @@ swfdec_as_object_collect (SwfdecAsObject *object)
 void
 swfdec_as_object_root (SwfdecAsObject *object)
 {
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail ((object->flags & SWFDEC_AS_GC_ROOT) == 0);
 
   object->flags |= SWFDEC_AS_GC_ROOT;
@@ -137,7 +137,7 @@ swfdec_as_object_root (SwfdecAsObject *object)
 void
 swfdec_as_object_unroot (SwfdecAsObject *object)
 {
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail ((object->flags & SWFDEC_AS_GC_ROOT) != 0);
 
   object->flags &= ~SWFDEC_AS_GC_ROOT;
@@ -150,9 +150,9 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   const char *s;
   SwfdecAsObjectVariable *var;
 
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
-  g_return_if_fail (SWFDEC_AS_IS_VALUE (variable));
-  g_return_if_fail (SWFDEC_AS_IS_VALUE (value));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (variable));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   s = swfdec_as_value_to_string (object->context, variable);
   var = g_hash_table_lookup (object->properties, s);
@@ -177,8 +177,8 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
   SwfdecAsObjectVariable *var;
   guint i;
 
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
-  g_return_if_fail (SWFDEC_AS_IS_VALUE (variable));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (variable));
   g_return_if_fail (value != NULL);
 
   s = swfdec_as_value_to_string (object->context, variable);
@@ -206,8 +206,8 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object,
   SwfdecAsObjectVariable *var;
   guint i;
 
-  g_return_if_fail (SWFDEC_AS_IS_OBJECT (object));
-  g_return_if_fail (SWFDEC_AS_IS_VALUE (variable));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (variable));
 
   s = swfdec_as_value_to_string (object->context, variable);
   for (i = 0; i < 256 && object != NULL; i++) {

@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_script.h"
+#include "swfdec_as_context.h"
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"
 #include "swfdec_scriptable.h"
@@ -80,6 +81,20 @@ swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
     SWFDEC_WARNING ("constant pool didn't consume whole buffer (%u bytes leftover)", len);
   }
   return pool;
+}
+
+void
+swfdec_constant_pool_attach_to_context (SwfdecConstantPool *pool, SwfdecAsContext *context)
+{
+  guint i;
+
+  g_return_if_fail (pool != NULL);
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+
+  for (i = 0; i < pool->len; i++) {
+    g_ptr_array_index (pool, i) = (gpointer) swfdec_as_context_get_string (context, 
+	g_ptr_array_index (pool, i));
+  }
 }
 
 guint
@@ -174,14 +189,8 @@ swfdec_script_ensure_stack (JSContext *cx, guint n_elements)
   return JS_TRUE;
 }
 
-static gboolean
-swfdec_action_has_register (JSContext *cx, guint i)
-{
-  if (cx->fp->fun == NULL)
-    return i < 4;
-  else
-    return i < cx->fp->fun->nvars;
-}
+#define swfdec_action_has_register(cx, i) \
+  ((i) < ((SwfdecScript *) (cx)->fp->swf)->n_registers)
 
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
@@ -1707,20 +1716,21 @@ swfdec_action_define_function (JSContext *cx, guint action,
   if (fun == NULL)
     return JS_FALSE;
   if (v2) {
-    fun->nvars = swfdec_bits_get_u8 (&bits) + 1;
+    script->n_registers = swfdec_bits_get_u8 (&bits) + 1;
     flags = swfdec_bits_get_u16 (&bits);
     preloads = g_new0 (guint8, n_args);
   } else {
-    fun->nvars = 5;
+    script->n_registers = 5;
   }
+  fun->nvars = script->n_registers;
   for (i = 0; i < n_args; i++) {
     JSAtom *atom;
     const char *arg_name;
     if (v2) {
       guint preload = swfdec_bits_get_u8 (&bits);
-      if (preload && preload >= fun->nvars) {
+      if (preload && preload >= script->n_registers) {
 	SWFDEC_ERROR ("argument %u is preloaded into register %u out of %u", 
-	    i, preload, fun->nvars);
+	    i, preload, script->n_registers);
 	return JS_FALSE;
       }
       if (preload != 0) {
@@ -2489,7 +2499,7 @@ typedef struct {
 					/* array is for version 3, 4, 5, 6, 7+ */
 } SwfdecActionSpec;
 
-static const SwfdecActionSpec actions[256] = {
+const SwfdecActionSpec actions[256] = {
   /* version 3 */
   [0x04] = { "NextFrame", NULL, 0, 0, { swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame } },
   [0x05] = { "PreviousFrame", NULL, 0, 0, { swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame } },
@@ -2731,6 +2741,8 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
   script->refcount = 1;
   script->name = g_strdup (name ? name : "Unnamed script");
   script->version = version;
+  /* by default, a function has 4 registers */
+  script->n_registers = 5;
   /* These flags are the default arguments used by scripts read from a file.
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
@@ -3102,7 +3114,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   frame.scopeChain = obj;
   frame.varobj = obj;
   /* allocate stack for variables */
-  frame.nvars = 4;
+  frame.nvars = script->n_registers;
   frame.vars = js_AllocRawStack (cx, frame.nvars, &mark);
   if (frame.vars == NULL) {
     return JS_FALSE;

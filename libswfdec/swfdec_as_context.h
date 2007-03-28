@@ -76,6 +76,7 @@ gboolean	swfdec_as_context_use_mem     	(SwfdecAsContext *	context,
 						 gsize			len);
 void		swfdec_as_context_unuse_mem   	(SwfdecAsContext *	context,
 						 gsize			len);
+void		swfdec_as_object_mark		(SwfdecAsObject *	object);
 void		swfdec_as_value_mark		(SwfdecAsValue *	value);
 void		swfdec_as_string_mark		(const char *		string);
 void		swfdec_as_context_gc		(SwfdecAsContext *	context);

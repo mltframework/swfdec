@@ -142,7 +142,7 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   g_print (">> done collecting garbage\n");
 }
 
-static inline void
+void
 swfdec_as_object_mark (SwfdecAsObject *object)
 {
   SwfdecAsObjectClass *klass;

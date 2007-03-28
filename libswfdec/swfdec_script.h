@@ -53,6 +53,7 @@ struct _SwfdecScript {
   unsigned int	  	refcount;		/* reference count */
   char *		name;			/* name identifying this script */
   unsigned int		version;		/* version of the script */
+  unsigned int		n_registers;		/* number of registers */
   gpointer		debugger;		/* debugger owning us or NULL */
   /* needed by functions */
   SwfdecBuffer *	constant_pool;		/* constant pool action */

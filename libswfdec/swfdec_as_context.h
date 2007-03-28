@@ -37,8 +37,8 @@ typedef enum {
 typedef struct _SwfdecAsContextClass SwfdecAsContextClass;
 
 #define SWFDEC_TYPE_AS_CONTEXT                    (swfdec_as_context_get_type())
-#define SWFDEC_AS_IS_CONTEXT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_CONTEXT))
-#define SWFDEC_AS_IS_CONTEXT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_CONTEXT))
+#define SWFDEC_IS_AS_CONTEXT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_CONTEXT))
+#define SWFDEC_IS_AS_CONTEXT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_CONTEXT))
 #define SWFDEC_AS_CONTEXT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_CONTEXT, SwfdecAsContext))
 #define SWFDEC_AS_CONTEXT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_CONTEXT, SwfdecAsContextClass))
 #define SWFDEC_AS_CONTEXT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_CONTEXT, SwfdecAsContextClass))
@@ -55,6 +55,7 @@ struct _SwfdecAsContext {
 
   /* execution state */
   unsigned int	      	version;	/* currently active version */
+  SwfdecAsFrame *	frame;		/* topmost stack frame */
 };
 
 struct _SwfdecAsContextClass {

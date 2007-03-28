@@ -34,8 +34,8 @@ typedef enum {
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 
 #define SWFDEC_TYPE_AS_OBJECT                    (swfdec_as_object_get_type())
-#define SWFDEC_AS_IS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_OBJECT))
-#define SWFDEC_AS_IS_OBJECT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_OBJECT))
+#define SWFDEC_IS_AS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_OBJECT))
+#define SWFDEC_IS_AS_OBJECT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_OBJECT))
 #define SWFDEC_AS_OBJECT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObject))
 #define SWFDEC_AS_OBJECT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
 #define SWFDEC_AS_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
@@ -77,6 +77,17 @@ void		swfdec_as_object_get_variable	(SwfdecAsObject *	object,
 						 SwfdecAsValue *	value);
 void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const SwfdecAsValue *	variable);
+/* shortcuts, you probably don't want to bind them */
+#define swfdec_as_object_set(object, name, value) G_STMT_START { \
+  SwfdecAsValue __variable; \
+  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
+  swfdec_as_object_set_variable ((object), &__variable, (value)); \
+}G_STMT_END
+#define swfdec_as_object_get(object, name, value) G_STMT_START { \
+  SwfdecAsValue __variable; \
+  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
+  swfdec_as_object_get_variable ((object), &__variable, (value)); \
+}G_STMT_END
 
 
 G_END_DECLS

@@ -23,9 +23,11 @@
 
 #include <string.h>
 #include "swfdec_as_context.h"
+#include "swfdec_as_frame.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
+#include "swfdec_script.h"
 
 /*** GTK_DOC ***/
 
@@ -67,7 +69,7 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 gboolean
 swfdec_as_context_use_mem (SwfdecAsContext *context, gsize len)
 {
-  g_return_val_if_fail (SWFDEC_AS_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
   g_return_val_if_fail (len > 0, FALSE);
 
   context->memory += len;
@@ -77,7 +79,7 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize len)
 void
 swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize len)
 {
-  g_return_if_fail (SWFDEC_AS_IS_CONTEXT (context));
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (len > 0);
   g_return_if_fail (context->memory >= len);
 
@@ -166,7 +168,7 @@ swfdec_as_string_mark (const char *string)
 void
 swfdec_as_value_mark (SwfdecAsValue *value)
 {
-  g_return_if_fail (SWFDEC_AS_IS_VALUE (value));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
     swfdec_as_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
@@ -187,7 +189,7 @@ swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
 void
 swfdec_as_context_gc (SwfdecAsContext *context)
 {
-  g_return_if_fail (SWFDEC_AS_IS_CONTEXT (context));
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   SWFDEC_INFO ("invoking the garbage collector");
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
@@ -244,7 +246,7 @@ swfdec_as_context_create_string (SwfdecAsContext *context, const char *string, g
   char *new;
   
   if (!swfdec_as_context_use_mem (context, sizeof (char) * (2 + len)))
-    return SWFDEC_AS_EMPTY_STRING;
+    return SWFDEC_AS_STR_EMPTY;
 
   new = g_slice_alloc (2 + len);
   memcpy (&new[1], string, len);
@@ -261,7 +263,7 @@ swfdec_as_context_get_string (SwfdecAsContext *context, const char *string)
   const char *ret;
   gsize len;
 
-  g_return_val_if_fail (SWFDEC_AS_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (string != NULL, NULL);
 
   ret = g_hash_table_lookup (context->strings, string);
@@ -277,3 +279,111 @@ swfdec_as_context_new (void)
 {
   return g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
 }
+
+/* defines minimum and maximum versions for which we have seperate scripts */
+#define MINSCRIPTVERSION 3
+#define MAXSCRIPTVERSION 7
+#define EXTRACT_VERSION(v) MIN ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
+
+typedef JSBool (* SwfdecActionExec) (JSContext *cx, guint action, const guint8 *data, guint len);
+typedef struct {
+  const char *		name;		/* name identifying the action */
+  char *		(* print)	(guint action, const guint8 *data, guint len);
+  int			remove;		/* values removed from stack or -1 for dynamic */
+  int			add;		/* values added to the stack or -1 for dynamic */
+  SwfdecActionExec	exec[MAXSCRIPTVERSION - MINSCRIPTVERSION + 1];
+					/* array is for version 3, 4, 5, 6, 7+ */
+} SwfdecActionSpec;
+
+extern const SwfdecActionSpec actions[256];
+void
+swfdec_as_context_run (SwfdecAsContext *context)
+{
+  SwfdecAsFrame *frame;
+  SwfdecScript *script;
+  const SwfdecActionSpec *spec;
+  guint8 *startpc, *pc, *endpc, *nextpc;
+  guint action, len;
+  guint8 *data;
+  int version;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+
+  /* setup data */
+  frame = context->frame;
+  if (frame == NULL)
+    return;
+  script = frame->script;
+  version = EXTRACT_VERSION (script->version);
+  startpc = script->buffer->data;
+  endpc = startpc + script->buffer->length;
+
+  while (pc != endpc) {
+    if (pc < startpc || pc >= endpc) {
+      SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
+      goto internal_error;
+    }
+
+    /* decode next action */
+    action = *pc;
+    spec = actions + action;
+    if (action == 0)
+      break;
+    if (action & 0x80) {
+      if (pc + 2 >= endpc) {
+	SWFDEC_ERROR ("action %u length value out of range", action);
+	goto internal_error;
+      }
+      data = pc + 3;
+      len = pc[1] | pc[2] << 8;
+      if (data + len > endpc) {
+	SWFDEC_ERROR ("action %u length %u out of range", action, len);
+	goto internal_error;
+      }
+      nextpc = pc + 3 + len;
+    } else {
+      data = NULL;
+      len = 0;
+      nextpc = pc + 1;
+    }
+    /* check action is valid */
+    if (spec->exec[version] == NULL) {
+      SWFDEC_ERROR ("cannot interpret action %u %s for version %u", action,
+	  spec->name ? spec->name : "Unknown", script->version);
+      goto internal_error;
+    }
+#if 0
+    if (spec->remove > 0) {
+      //!swfdec_script_ensure_stack (cx, spec->remove)) {
+    }
+    if (spec->add > 0 &&
+	TRUE) { //fp->sp + spec->add - MAX (spec->remove, 0) > fp->spend) {
+      SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow");
+      goto internal_error;
+    }
+#ifndef G_DISABLE_ASSERT
+    checksp = (spec->add >= 0 && spec->remove >= 0) ? fp->sp + spec->add - spec->remove : NULL;
+#endif
+#endif
+    spec->exec[version] (NULL, action, data, len);
+#if 0
+#ifndef G_DISABLE_ASSERT
+    if (checksp != NULL && checksp != fp->sp) {
+      /* check stack was handled like expected */
+      g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %td",
+	  spec->name, spec->add - spec->remove, spec->add, spec->remove,
+	  fp->sp - checksp + spec->add - spec->remove);
+    }
+#endif
+    if (fp->pc == pc) {
+      fp->pc = pc = nextpc;
+    } else {
+      pc = fp->pc;
+    }
+#endif
+  }
+
+internal_error:
+  return;
+}
+

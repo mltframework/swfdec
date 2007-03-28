@@ -30,6 +30,7 @@
 const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING (""),
   SWFDEC_AS_CONSTANT_STRING ("__proto__"),
+  SWFDEC_AS_CONSTANT_STRING ("this"),
   /* add more here */
   NULL
 };
@@ -37,8 +38,8 @@ const char *swfdec_as_strings[] = {
 const char *
 swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
-  g_return_val_if_fail (SWFDEC_AS_IS_CONTEXT (context), SWFDEC_AS_EMPTY_STRING);
-  g_return_val_if_fail (SWFDEC_AS_IS_VALUE (value), SWFDEC_AS_EMPTY_STRING);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_EMPTY);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), SWFDEC_AS_STR_EMPTY);
 
   if (SWFDEC_AS_VALUE_IS_STRING (value)) {
     return SWFDEC_AS_VALUE_GET_STRING (value);

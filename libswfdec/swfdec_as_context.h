@@ -74,9 +74,9 @@ void		swfdec_as_context_abort		(SwfdecAsContext *	context,
 						 const char *		reason);
 
 gboolean	swfdec_as_context_use_mem     	(SwfdecAsContext *	context, 
-						 gsize			len);
+						 gsize			bytes);
 void		swfdec_as_context_unuse_mem   	(SwfdecAsContext *	context,
-						 gsize			len);
+						 gsize			bytes);
 void		swfdec_as_object_mark		(SwfdecAsObject *	object);
 void		swfdec_as_value_mark		(SwfdecAsValue *	value);
 void		swfdec_as_string_mark		(const char *		string);

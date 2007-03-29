@@ -67,24 +67,58 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 
 /*** MEMORY MANAGEMENT ***/
 
+/**
+ * swfdec_as_context_use_mem:
+ * @context: a #SwfdecAsContext
+ * @bytes: number of bytes to use
+ *
+ * Registers @bytes additional bytes as in use by the @context. This function
+ * keeps track of the memory that script code consumes. If too many memory is 
+ * in use, this function may decide to abort execution with an out of memory 
+ * error. It may also invoke the garbage collector to free unused memory. Note
+ * that running the garbage collector is a potentially dangerous operation,
+ * since the calling code must ensure that all memory is reachable for the 
+ * garbage collector. Consider the following innocent looking code:
+ * <informalexample><programlisting>SwfdecAsValue *v = swfdec_as_stack_pop (stack);
+ * SwfdecAsObject *object = swfdec_as_object_new (context);
+ * swfdec_as_object_set (object, swfdec_as_context_get_string (context, "something"), v);
+ * </programlisting></informalexample>
+ * This code may cause the value stored in v to be lost, as it is not reachable
+ * when swfdec_as_object_new() invokes the garbage collector. Because of this,
+ * all functions in the Actionscript engine that might invoke the garbage 
+ * collector contain this warning:
+ * <warning>This function may run the garbage collector.</warning>
+ * All memory allocated with this function must be released with 
+ * swfdec_as_context_unuse_mem(), when it is freed.
+ *
+ * Returns: %TRUE if the memory could be allocated. %FALSE on OOM.
+ **/
 gboolean
-swfdec_as_context_use_mem (SwfdecAsContext *context, gsize len)
+swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
-  g_return_val_if_fail (len > 0, FALSE);
+  g_return_val_if_fail (bytes > 0, FALSE);
 
-  context->memory += len;
+  context->memory += bytes;
   return TRUE;
 }
 
+/**
+ * swfdec_as_context_unuse_mem:
+ * @context: a #SwfdecAsContext
+ * @bytes: number of bytes to release
+ *
+ * Releases a number of bytes previously allocated using 
+ * swfdec_as_context_use_mem(). See that function for details.
+ **/
 void
-swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize len)
+swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize bytes)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (len > 0);
-  g_return_if_fail (context->memory >= len);
+  g_return_if_fail (bytes > 0);
+  g_return_if_fail (context->memory >= bytes);
 
-  context->memory -= len;
+  context->memory -= bytes;
 }
 
 /*** GC ***/

@@ -3008,9 +3008,12 @@ internal_error:
  *
  * Returns: the return value of @script
  **/
-jsval
+#endif
+void
 swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 {
+}
+#if 0
   JSContext *cx;
   JSStackFrame *oldfp, frame;
   JSObject *obj;

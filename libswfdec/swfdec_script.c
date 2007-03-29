@@ -2759,12 +2759,14 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
   return script;
 }
 
-void
+SwfdecScript *
 swfdec_script_ref (SwfdecScript *script)
 {
-  g_return_if_fail (script != NULL);
+  g_return_val_if_fail (script != NULL, NULL);
+  g_return_val_if_fail (script->refcount > 0, NULL);
 
   script->refcount++;
+  return script;
 }
 
 void

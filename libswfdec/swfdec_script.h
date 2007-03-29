@@ -79,7 +79,7 @@ SwfdecScript *	swfdec_script_new_for_player  	(SwfdecPlayer *		player,
 						 SwfdecBits *		bits,
 						 const char *		name,
 						 unsigned int	      	version);
-void		swfdec_script_ref		(SwfdecScript *		script);
+SwfdecScript *	swfdec_script_ref		(SwfdecScript *		script);
 void		swfdec_script_unref		(SwfdecScript *		script);
 
 JSBool		swfdec_script_interpret		(SwfdecScript *		script,

@@ -23,6 +23,7 @@
 
 #include "swfdec_as_frame.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsFrame, swfdec_as_frame, SWFDEC_TYPE_AS_OBJECT)
@@ -34,6 +35,7 @@ swfdec_as_frame_dispose (GObject *object)
 
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
   swfdec_script_unref (frame->script);
+  swfdec_as_stack_free (frame->stack);
 
   G_OBJECT_CLASS (swfdec_as_frame_parent_class)->dispose (object);
 }
@@ -50,6 +52,7 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   for (i = 0; i < frame->n_registers; i++) {
     swfdec_as_value_mark (&frame->registers[i]);
   }
+  swfdec_as_stack_mark (frame->stack);
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
 }
 
@@ -74,12 +77,16 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecAsObject *thisp, SwfdecScri
 {
   SwfdecAsValue val;
   SwfdecAsFrame *frame;
+  SwfdecAsStack *stack;
   gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (thisp), NULL);
   g_return_val_if_fail (script != NULL, NULL);
   
+  stack = swfdec_as_stack_new (context, 100); /* FIXME: invent better numbers here */
+  if (!stack)
+    return NULL;
   size = sizeof (SwfdecAsObject) + sizeof (SwfdecAsValue) * script->n_registers;
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
@@ -88,6 +95,9 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecAsObject *thisp, SwfdecScri
   g_object_unref (frame);
   frame->next = context->frame;
   context->frame = frame;
+  frame->script = swfdec_script_ref (script);
+  frame->pc = script->buffer->data;
+  frame->stack = stack;
   frame->scope = thisp;
   frame->var_object = thisp;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * script->n_registers);

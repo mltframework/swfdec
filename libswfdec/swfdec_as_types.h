@@ -37,6 +37,7 @@ typedef guint8 SwfdecAsType;
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsObject SwfdecAsObject;
+typedef struct _SwfdecAsStack SwfdecAsStack;
 typedef struct _SwfdecAsValue SwfdecAsValue;
 
 struct _SwfdecAsValue {

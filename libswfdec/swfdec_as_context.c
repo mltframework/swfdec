@@ -25,6 +25,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_object.h"
+#include "swfdec_as_stack.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
 #include "swfdec_script.h"
@@ -300,20 +301,26 @@ void
 swfdec_as_context_run (SwfdecAsContext *context)
 {
   SwfdecAsFrame *frame;
+  SwfdecAsStack *stack;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
   guint8 *startpc, *pc, *endpc, *nextpc;
+#ifndef G_DISABLE_ASSERT
+  SwfdecAsValue *check;
+#endif
   guint action, len;
   guint8 *data;
   int version;
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
+start:
   /* setup data */
   frame = context->frame;
   if (frame == NULL)
     return;
   script = frame->script;
+  stack = frame->stack;
   version = EXTRACT_VERSION (script->version);
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
@@ -352,35 +359,38 @@ swfdec_as_context_run (SwfdecAsContext *context)
 	  spec->name ? spec->name : "Unknown", script->version);
       goto internal_error;
     }
-#if 0
     if (spec->remove > 0) {
-      //!swfdec_script_ensure_stack (cx, spec->remove)) {
+      swfdec_as_stack_ensure_size (stack, spec->remove);
+      if (spec->add > spec->remove)
+	swfdec_as_stack_ensure_left (stack, spec->add - spec->remove);
+    } else {
+      if (spec->add > 0)
+	swfdec_as_stack_ensure_left (stack, spec->add);
     }
-    if (spec->add > 0 &&
-	TRUE) { //fp->sp + spec->add - MAX (spec->remove, 0) > fp->spend) {
-      SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow");
-      goto internal_error;
-    }
+    if (context->state != SWFDEC_AS_CONTEXT_RUNNING)
+      break;
 #ifndef G_DISABLE_ASSERT
-    checksp = (spec->add >= 0 && spec->remove >= 0) ? fp->sp + spec->add - spec->remove : NULL;
-#endif
+    check = (spec->add >= 0 && spec->remove >= 0) ? stack->cur + spec->add - spec->remove : NULL;
 #endif
     spec->exec[version] (NULL, action, data, len);
-#if 0
+    if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT
-    if (checksp != NULL && checksp != fp->sp) {
-      /* check stack was handled like expected */
-      g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %td",
-	  spec->name, spec->add - spec->remove, spec->add, spec->remove,
-	  fp->sp - checksp + spec->add - spec->remove);
-    }
+      if (check != NULL && check != stack->cur) {
+	g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %td",
+	    spec->name, spec->add - spec->remove, spec->add, spec->remove,
+	    stack->cur - check + spec->add - spec->remove);
+      }
 #endif
-    if (fp->pc == pc) {
-      fp->pc = pc = nextpc;
+      /* adapt the pc if the action did not, otherwise, leave it alone */
+      if (frame->pc == pc) {
+	frame->pc = pc = nextpc;
+      } else {
+	pc = frame->pc;
+      }
     } else {
-      pc = fp->pc;
+      /* someone called/returned from a function, reread variables */
+      goto start;
     }
-#endif
   }
 
 internal_error:

@@ -18,6 +18,7 @@ js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_context.c \
 	swfdec_as_frame.c \
+	swfdec_as_function.c \
 	swfdec_as_object.c \
 	swfdec_as_stack.c \
 	swfdec_as_types.c \
@@ -113,6 +114,7 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 noinst_HEADERS = \
 	swfdec_as_context.h \
 	swfdec_as_frame.h \
+	swfdec_as_function.h \
 	swfdec_as_object.h \
 	swfdec_as_stack.h \
 	swfdec_as_types.h \

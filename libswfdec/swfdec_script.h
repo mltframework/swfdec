@@ -50,9 +50,9 @@ struct _SwfdecScript {
   /* must be first arg */
   JSFunction *		fun;			/* function script belongs to or NULL */
   SwfdecBuffer *	buffer;			/* buffer holding the script */
-  unsigned int	  	refcount;		/* reference count */
+  guint	  	refcount;		/* reference count */
   char *		name;			/* name identifying this script */
-  unsigned int		version;		/* version of the script */
+  guint		version;		/* version of the script */
   gpointer		debugger;		/* debugger owning us or NULL */
   /* needed by functions */
   SwfdecBuffer *	constant_pool;		/* constant pool action */
@@ -73,11 +73,11 @@ void		swfdec_constant_pool_free	(SwfdecConstantPool *	pool);
 
 SwfdecScript *	swfdec_script_new		(SwfdecBits *		bits,
 						 const char *		name,
-						 unsigned int	      	version);
+						 guint	      	version);
 SwfdecScript *	swfdec_script_new_for_player  	(SwfdecPlayer *		player,
 						 SwfdecBits *		bits,
 						 const char *		name,
-						 unsigned int	      	version);
+						 guint	      	version);
 void		swfdec_script_ref		(SwfdecScript *		script);
 void		swfdec_script_unref		(SwfdecScript *		script);
 

@@ -57,16 +57,16 @@ void			swfdec_event_list_free		(SwfdecEventList *    list);
 void			swfdec_event_list_parse		(SwfdecEventList *    list,
 							 SwfdecBits *	      bits,
 							 int		      version,
-							 unsigned int	      conditions,
+							 guint	      conditions,
 							 guint8		      key,
 							 const char *	      description);
 void			swfdec_event_list_execute	(SwfdecEventList *    list,
 							 SwfdecScriptable *	scriptable,
-							 unsigned int	      condition,
+							 guint	      condition,
 							 guint8		      key);
 gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,
 							 SwfdecScriptable *	scriptable,
-							 unsigned int	      conditions,
+							 guint	      conditions,
 							 guint8		      key);
 							 
 

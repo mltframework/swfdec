@@ -45,7 +45,7 @@ struct _SwfdecContent {
   SwfdecGraphic *	graphic;	/* object to display or NULL */
   int	         	depth;		/* at which depth to display */
   int			clip_depth;	/* clip depth of object */
-  unsigned int		ratio;
+  guint		ratio;
   cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
   char *		name;

@@ -361,7 +361,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr, const SwfdecParagrap
   guint i;
   PangoFontDescription *desc;
   PangoLayout *layout;
-  unsigned int width;
+  guint width;
   SwfdecColor color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));

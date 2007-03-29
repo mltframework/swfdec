@@ -33,7 +33,7 @@ G_DEFINE_TYPE (SwfdecText, swfdec_text, SWFDEC_TYPE_GRAPHIC)
 static gboolean
 swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 {
-  unsigned int i;
+  guint i;
   SwfdecText *text = SWFDEC_TEXT (graphic);
 
   cairo_matrix_transform_point (&text->transform_inverse, &x, &y);
@@ -62,7 +62,7 @@ static void
 swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
-  unsigned int i;
+  guint i;
   SwfdecColor color;
   SwfdecText *text = SWFDEC_TEXT (graphic);
   SwfdecColorTransform force_color;

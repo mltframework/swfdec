@@ -224,7 +224,7 @@ static void
 swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  unsigned int goto_frame;
+  guint goto_frame;
 
   if (mov->will_be_removed)
     return;

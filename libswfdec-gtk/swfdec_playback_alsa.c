@@ -120,7 +120,7 @@ try_write (Stream *stream)
 static void
 swfdec_stream_remove_handlers (Stream *stream)
 {
-  unsigned int i;
+  guint i;
 
   for (i = 0; i < stream->n_sources; i++) {
     if (stream->sources[i]) {
@@ -152,7 +152,7 @@ swfdec_stream_install_handlers (Stream *stream)
 {
   if (stream->n_sources > 0) {
     struct pollfd polls[stream->n_sources];
-    unsigned int i, count;
+    guint i, count;
     if (stream->n_sources > 1)
       g_printerr ("attention: more than one fd!\n");
     count = snd_pcm_poll_descriptors (stream->pcm, polls, stream->n_sources);
@@ -198,7 +198,7 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   Stream *stream;
   snd_pcm_t *ret;
   snd_pcm_hw_params_t *hw_params;
-  unsigned int rate;
+  guint rate;
   snd_pcm_uframes_t uframes;
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */

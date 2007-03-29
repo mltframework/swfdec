@@ -26,7 +26,7 @@
 #include "swfdec_debug.h"
 
 SwfdecCache *
-swfdec_cache_new (unsigned int max_size)
+swfdec_cache_new (guint max_size)
 {
   SwfdecCache *cache;
   
@@ -62,7 +62,7 @@ swfdec_cache_unref (SwfdecCache *cache)
   g_free (cache);
 }
 
-unsigned int
+guint
 swfdec_cache_get_usage (SwfdecCache *cache)
 {
   g_return_val_if_fail (cache != NULL, 0);
@@ -71,7 +71,7 @@ swfdec_cache_get_usage (SwfdecCache *cache)
 }
 
 void
-swfdec_cache_shrink (SwfdecCache *cache, unsigned int max_usage)
+swfdec_cache_shrink (SwfdecCache *cache, guint max_usage)
 {
   g_return_if_fail (cache != NULL);
 

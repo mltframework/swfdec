@@ -59,10 +59,10 @@ struct _SwfdecShape
   GPtrArray *fills;
 
   /* used while defining */
-  unsigned int fills_offset;
-  unsigned int lines_offset;
-  unsigned int n_fill_bits;
-  unsigned int n_line_bits;
+  guint fills_offset;
+  guint lines_offset;
+  guint n_fill_bits;
+  guint n_line_bits;
   gboolean rgba;
 };
 

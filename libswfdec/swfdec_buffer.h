@@ -31,7 +31,7 @@ typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 struct _SwfdecBuffer
 {
   unsigned char *data;
-  unsigned int length;
+  guint length;
 
   int ref_count;
 
@@ -47,8 +47,8 @@ GType swfdec_buffer_get_type  (void);
 struct _SwfdecBufferQueue
 {
   GList *buffers;
-  unsigned int depth;
-  unsigned int offset;
+  guint depth;
+  guint offset;
   
   int ref_count;
 };
@@ -57,11 +57,11 @@ struct _SwfdecBufferQueue
 GType swfdec_buffer_queue_get_type  (void);
 
 SwfdecBuffer *swfdec_buffer_new (void);
-SwfdecBuffer *swfdec_buffer_new_and_alloc (unsigned int size);
-SwfdecBuffer *swfdec_buffer_new_and_alloc0 (unsigned int size);
-SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, unsigned int size);
-SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset,
-    unsigned int length);
+SwfdecBuffer *swfdec_buffer_new_and_alloc (guint size);
+SwfdecBuffer *swfdec_buffer_new_and_alloc0 (guint size);
+SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, guint size);
+SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset,
+    guint length);
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);
 SwfdecBuffer *swfdec_buffer_ref (SwfdecBuffer * buffer);
 void swfdec_buffer_unref (SwfdecBuffer * buffer);
@@ -72,9 +72,9 @@ int swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue);
 int swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_push (SwfdecBufferQueue * queue,
     SwfdecBuffer * buffer);
-SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length);
+SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length);
 SwfdecBuffer *swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue);
-SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length);
+SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, guint length);
 SwfdecBufferQueue *swfdec_buffer_queue_ref (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_unref (SwfdecBufferQueue * queue);
 #endif

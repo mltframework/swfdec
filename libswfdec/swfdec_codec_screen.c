@@ -47,7 +47,7 @@ swfdec_codec_screen_init (void)
 
 static gboolean
 swfdec_codec_screen_get_size (gpointer codec_data,
-    unsigned int *width, unsigned int *height)
+    guint *width, guint *height)
 {
   SwfdecCodecScreen *screen = codec_data;
 

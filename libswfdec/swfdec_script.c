@@ -2699,7 +2699,7 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
 
 SwfdecScript *
 swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits, 
-    const char *name, unsigned int version)
+    const char *name, guint version)
 {
   SwfdecScript *script;
 
@@ -2713,7 +2713,7 @@ swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits,
 }
 
 SwfdecScript *
-swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
+swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
   const guchar *start;

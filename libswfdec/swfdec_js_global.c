@@ -36,9 +36,9 @@ typedef struct _SwfdecJSInterval SwfdecJSInterval;
 struct _SwfdecJSInterval {
   SwfdecTimeout		timeout;
   SwfdecPlayer *	player;		/* needed so it can be readded */
-  unsigned int		id;		/* id this interval is identified with */
-  unsigned int		msecs;		/* interval in milliseconds */
-  unsigned int		n_args;		/* number of arguments to call function with */
+  guint		id;		/* id this interval is identified with */
+  guint		msecs;		/* interval in milliseconds */
+  guint		n_args;		/* number of arguments to call function with */
   jsval			vals[0];	/* values: 0 is function, 1 is object, 2-n are arguments */
 };
 
@@ -97,7 +97,7 @@ swfdec_js_global_setInterval (JSContext *cx, JSObject *obj, uintN argc, jsval *a
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
   JSObject *object;
   jsval fun;
-  unsigned int i, n_args, first_arg, msecs;
+  guint i, n_args, first_arg, msecs;
   SwfdecJSInterval *interval;
 
   if (!JSVAL_IS_OBJECT (argv[0])) {

@@ -41,8 +41,8 @@ struct _SwfdecMorphShape {
   GArray *		end_vecs;	/* end vectors */
 
   /* used while parsing */
-  unsigned int		n_fill_bits;
-  unsigned int		n_line_bits;
+  guint		n_fill_bits;
+  guint		n_line_bits;
 };
 
 struct _SwfdecMorphShapeClass {

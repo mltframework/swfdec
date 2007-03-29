@@ -36,7 +36,7 @@ struct _SwfdecPatternClass
 					         cairo_t *			cr,
 						 const cairo_path_t *		path,
 						 const SwfdecColorTransform *	trans,
-						 unsigned int			ratio);
+						 guint			ratio);
 };
 
 GType		swfdec_pattern_get_type		(void);
@@ -55,7 +55,7 @@ void		swfdec_pattern_paint		(SwfdecPattern *		pattern,
 						 cairo_t *			cr,
 						 const cairo_path_t *		path,
 						 const SwfdecColorTransform *	trans,
-						 unsigned int			ratio);
+						 guint			ratio);
 void		swfdec_pattern_get_path_extents (SwfdecPattern *		pattern,
 						 const cairo_path_t *		path,
 						 SwfdecRect *			extents);

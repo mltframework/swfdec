@@ -92,7 +92,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecAsObject *thisp, SwfdecScri
     return NULL;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
-  g_object_unref (frame);
   frame->next = context->frame;
   context->frame = frame;
   frame->script = swfdec_script_ref (script);

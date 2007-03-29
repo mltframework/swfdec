@@ -74,6 +74,16 @@ swfdec_as_object_init (SwfdecAsObject *object)
 {
 }
 
+/**
+ * swfdec_as_object_new:
+ * @context: a #SwfdecAsContext
+ *
+ * Allocates a new Object. This does the same as the Actionscript code 
+ * "new Object()".
+ * <warn>This function may run the garbage collector.</warn>
+ *
+ * Returns: the new object or NULL on out of memory.
+ **/
 SwfdecAsObject *
 swfdec_as_object_new (SwfdecAsContext *context)
 {
@@ -85,10 +95,21 @@ swfdec_as_object_new (SwfdecAsContext *context)
     return NULL;
   object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
   swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
-  g_object_unref (object);
   return object;
 }
 
+/**
+ * swfdec_as_object_add:
+ * @object: #SwfdecAsObject to make garbage-collected
+ * @context: #SwfdecAsContext that should manage the object
+ * @size: size the object currently uses
+ *
+ * Takes over the reference to @object for the garbage collector of @context. 
+ * The object may not already be part of a different context. The given @size 
+ * must have been allocated before with swfdec_as_context_use_mem ().
+ * Note that after swfdec_as_object_add() the garbage collector might hold the
+ * only reference to @object.
+ **/
 void
 swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize size)
 {
@@ -100,7 +121,6 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
   object->size = size;
   g_hash_table_insert (context->objects, object, object);
   object->properties = g_hash_table_new (g_direct_hash, g_direct_equal);
-  g_object_ref (object);
 }
 
 static void

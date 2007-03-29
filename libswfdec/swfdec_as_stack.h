@@ -40,7 +40,7 @@ void		swfdec_as_stack_free		(SwfdecAsStack *	stack);
 
 #define swfdec_as_stack_peek(stack,n) (&(stack)->cur[-(gssize)(n)])
 #define swfdec_as_stack_pop(stack) (--(stack)->cur)
-#define swfdec_as_stack_push(stack,val) (*(stack)->cur++)
+#define swfdec_as_stack_push(stack,val) (*(stack)->cur++ = *(val))
 
 void		swfdec_as_stack_mark		(SwfdecAsStack *	stack);
 void		swfdec_as_stack_ensure_size	(SwfdecAsStack *	stack,

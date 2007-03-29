@@ -73,17 +73,19 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
 }
 
 SwfdecAsFrame *
-swfdec_as_frame_new (SwfdecAsContext *context, SwfdecAsObject *thisp, SwfdecScript *script)
+swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
 {
   SwfdecAsValue val;
+  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
   SwfdecAsStack *stack;
   gsize size;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (thisp), NULL);
+  g_return_val_if_fail (thisp->properties, NULL);
   g_return_val_if_fail (script != NULL, NULL);
   
+  context = thisp->context;
   stack = swfdec_as_stack_new (context, 100); /* FIXME: invent better numbers here */
   if (!stack)
     return NULL;

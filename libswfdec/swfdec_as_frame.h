@@ -55,8 +55,7 @@ struct _SwfdecAsFrameClass {
 
 GType		swfdec_as_frame_get_type	(void);
 
-SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *    	context,
-						 SwfdecAsObject *	thisp,
+SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsObject *	thisp,
 						 SwfdecScript *		script);
 
 

@@ -26,8 +26,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"
 #include "swfdec_scriptable.h"
-#include "js/jscntxt.h"
-#include "js/jsinterp.h"
 
 #include <errno.h>
 #include <math.h>
@@ -39,8 +37,6 @@
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
-#include "js/jsfun.h"
-#include "js/jsscope.h"
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
@@ -116,6 +112,7 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
   g_ptr_array_free (pool, TRUE);
 }
 
+#if 0
 /* FIXME: this is a bit hacky */
 static SwfdecBuffer *
 swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
@@ -140,6 +137,7 @@ swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
   g_assert (start + len < buffer->data + buffer->length);
   return swfdec_buffer_new_subbuffer (buffer, start - buffer->data, len);
 }
+#endif
 
 /*** SUPPORT FUNCTIONS ***/
 
@@ -152,46 +150,10 @@ swfdec_script_add_to_player (SwfdecScript *script, SwfdecPlayer *player)
   }
 }
 
-/**
- * swfdec_script_ensure_stack:
- * @cx: #JSContext to check
- * @n_elements: number of elements the stack should contain
- *
- * Ensures that the stack is at least @n_elements values. If not enough stack
- * space is available, the stack is filled up with JSVAL_VOID.
- *
- * Returns: JS_TRUE on success or JS_FALSE on OOM
- **/
-static inline JSBool
-swfdec_script_ensure_stack (JSContext *cx, guint n_elements)
-{
-  JSStackFrame *fp = cx->fp;
-  guint current = (guint) (fp->sp - fp->spbase);
-
-  if (current >= n_elements)
-    return JS_TRUE;
-
-  if (n_elements > (guint) (fp->spend - fp->spbase)) {
-    SWFDEC_ERROR ("FIXME: implement stack expansion, we got an overflow (want %u, have %td)",
-	n_elements, (fp->spend - fp->spbase));
-    return JS_FALSE;
-  }
-
-  if (current) {
-    n_elements -= current;
-    memmove (fp->spbase + n_elements, fp->spbase, (fp->sp - fp->spbase) * sizeof (jsval));
-  }
-  fp->sp += n_elements;
-  while (n_elements)  {
-    n_elements--;
-    fp->spbase[n_elements] = JSVAL_VOID;
-  }
-  return JS_TRUE;
-}
-
 #define swfdec_action_has_register(cx, i) \
   ((i) < ((SwfdecScript *) (cx)->fp->swf)->n_registers)
 
+#if 0
 static SwfdecMovie *
 swfdec_action_get_target (JSContext *cx)
 {
@@ -2481,6 +2443,7 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
   jump = data[2];
   return g_strdup_printf ("WaitForFrame %u %u", frame, jump);
 }
+#endif
 
 /*** BIG FUNCTION TABLE ***/
 
@@ -2489,7 +2452,7 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
 #define MAXSCRIPTVERSION 7
 #define EXTRACT_VERSION(v) MIN ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
 
-typedef JSBool (* SwfdecActionExec) (JSContext *cx, guint action, const guint8 *data, guint len);
+typedef void (* SwfdecActionExec) (SwfdecAsContext *cx, guint action, const guint8 *data, guint len);
 typedef struct {
   const char *		name;		/* name identifying the action */
   char *		(* print)	(guint action, const guint8 *data, guint len);
@@ -2500,6 +2463,7 @@ typedef struct {
 } SwfdecActionSpec;
 
 const SwfdecActionSpec actions[256] = {
+#if 0
   /* version 3 */
   [0x04] = { "NextFrame", NULL, 0, 0, { swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame } },
   [0x05] = { "PreviousFrame", NULL, 0, 0, { swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame } },
@@ -2618,6 +2582,7 @@ const SwfdecActionSpec actions[256] = {
   [0x9d] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
   [0x9e] = { "Call", NULL },
   [0x9f] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }
+#endif
 };
 
 char *
@@ -2735,7 +2700,6 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
     return NULL;
   }
 
-  swfdec_bits_syncbits (bits);
   start = bits->ptr;
   script = g_new0 (SwfdecScript, 1);
   script->refcount = 1;
@@ -2792,21 +2756,7 @@ swfdec_script_unref (SwfdecScript *script)
   g_free (script);
 }
 
-#ifndef MAX_INTERP_LEVEL
-#if defined(XP_OS2)
-#define MAX_INTERP_LEVEL 250
-#elif defined _MSC_VER && _MSC_VER <= 800
-#define MAX_INTERP_LEVEL 30
-#else
-#define MAX_INTERP_LEVEL 1000
-#endif
-#endif
-
-/* random guess */
-#define STACKSIZE 100
-
-/* FIXME: the implementation of this function needs the usual debugging hooks 
- * found in mozilla */
+#if 0
 JSBool
 swfdec_script_interpret (SwfdecScript *script, JSContext *cx, jsval *rval)
 {
@@ -3047,22 +2997,6 @@ internal_error:
   goto no_catch;
 }
 
-static JSFunction *
-swfdec_script_ensure_function (SwfdecScript *script, SwfdecScriptable *scriptable)
-{
-  JSContext *cx = scriptable->jscx;
-  JSObject *parent;
-
-  if (script->fun)
-    return script->fun;
-  parent = swfdec_scriptable_get_object (scriptable);
-  script->fun = JS_NewFunction (cx, NULL, 0, JSFUN_LAMBDA, parent, NULL);
-  script->fun->swf = script;
-  script->fun->nvars = 4;
-  swfdec_script_ref (script);
-  return script->fun;
-}
-
 /**
  * swfdec_script_execute:
  * @script: a #SwfdecScript to execute
@@ -3149,6 +3083,7 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
 
   return ok ? frame.rval : JSVAL_VOID;
 }
+#endif
 
 /*** UTILITY FUNCTIONS ***/
 

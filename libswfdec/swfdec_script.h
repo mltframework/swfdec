@@ -23,7 +23,6 @@
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_bits.h>
-#include <libswfdec/js/jsapi.h>
 
 G_BEGIN_DECLS
 
@@ -48,7 +47,7 @@ typedef gboolean (* SwfdecScriptForeachFunc) (gconstpointer bytecode, guint acti
 /* FIXME: May want to typedef to SwfdecBuffer directly */
 struct _SwfdecScript {
   /* must be first arg */
-  JSFunction *		fun;			/* function script belongs to or NULL */
+  gpointer		fun;			/* function script belongs to or NULL */
   SwfdecBuffer *	buffer;			/* buffer holding the script */
   unsigned int	  	refcount;		/* reference count */
   char *		name;			/* name identifying this script */
@@ -82,10 +81,12 @@ SwfdecScript *	swfdec_script_new_for_player  	(SwfdecPlayer *		player,
 SwfdecScript *	swfdec_script_ref		(SwfdecScript *		script);
 void		swfdec_script_unref		(SwfdecScript *		script);
 
+#if 0
 JSBool		swfdec_script_interpret		(SwfdecScript *		script,
 						 JSContext *		cx,
 						 jsval *		rval);
-jsval		swfdec_script_execute		(SwfdecScript *		script,
+#endif
+void		swfdec_script_execute		(SwfdecScript *		script,
 						 SwfdecScriptable *	scriptable);
 
 gboolean	swfdec_script_foreach		(SwfdecScript *		script,

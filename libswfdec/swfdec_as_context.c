@@ -320,7 +320,7 @@ swfdec_as_context_new (void)
 #define MAXSCRIPTVERSION 7
 #define EXTRACT_VERSION(v) MIN ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
 
-typedef JSBool (* SwfdecActionExec) (JSContext *cx, guint action, const guint8 *data, guint len);
+typedef void (* SwfdecActionExec) (SwfdecAsContext *cx, guint action, const guint8 *data, guint len);
 typedef struct {
   const char *		name;		/* name identifying the action */
   char *		(* print)	(guint action, const guint8 *data, guint len);

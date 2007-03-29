@@ -343,7 +343,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
     SwfdecBuffer *buffer;
     unsigned char *indexed_data;
     guint i;
-    unsigned int rowstride = (image->width + 3) & ~3;
+    guint rowstride = (image->width + 3) & ~3;
 
     image->data = g_malloc (4 * image->width * image->height);
     image->rowstride = image->width * 4;
@@ -403,7 +403,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
     swfdec_buffer_unref (buffer);
   } else if (format == 4) {
     int i, j;
-    unsigned int c;
+    guint c;
     unsigned char *idata;
     SwfdecBuffer *buffer;
 

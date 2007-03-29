@@ -46,9 +46,9 @@ struct _SwfdecAudioStream
   const SwfdecAudioCodec *codec;	/* codec used by this stream */
   gpointer		decoder;	/* decoder used for this frame */
   SwfdecAudioOut	format;		/* format used by decoder */
-  unsigned int		playback_skip;	/* number of samples to skip at the beginning of queue */
+  guint		playback_skip;	/* number of samples to skip at the beginning of queue */
   GQueue *		playback_queue;	/* all the samples we've decoded so far */
-  unsigned int		current_frame;	/* last decoded frame */
+  guint		current_frame;	/* last decoded frame */
   gboolean		done;		/* TRUE when no new data will be made available */
 };
 

@@ -43,7 +43,7 @@ struct _SwfdecAudioEvent
 
   SwfdecSound *		sound;	      	/* sound we're playing */
   SwfdecSoundChunk *	chunk;		/* chunk we're playing back */
-  unsigned int		offset;		/* current offset */
+  guint		offset;		/* current offset */
 };
 
 struct _SwfdecAudioEventClass

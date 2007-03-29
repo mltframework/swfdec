@@ -144,7 +144,7 @@ swfdec_codec_mad_decode (gpointer datap, SwfdecBuffer *buffer)
   MadData *data = datap;
   SwfdecBuffer *out;
   SwfdecBufferQueue *queue;
-  unsigned int amount = 0, size;
+  guint amount = 0, size;
 
   queue = swfdec_buffer_queue_new ();
 

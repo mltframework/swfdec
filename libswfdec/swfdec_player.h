@@ -63,11 +63,11 @@ double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);
-unsigned int	swfdec_player_get_background_color 
+guint	swfdec_player_get_background_color 
 						(SwfdecPlayer *	player);
 void		swfdec_player_set_background_color 
 						(SwfdecPlayer *	player,
-						 unsigned int	color);
+						 guint	color);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

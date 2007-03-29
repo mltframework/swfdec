@@ -45,7 +45,7 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
   SwfdecShape *shape = SWFDEC_SHAPE (morph->morph);
-  unsigned int i;
+  guint i;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);

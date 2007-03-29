@@ -229,7 +229,7 @@ swfdec_codec_ffmpeg_h263_init (void)
 
 static gboolean
 swfdec_codec_ffmpeg_video_get_size (gpointer codec_data,
-    unsigned int *width, unsigned int *height)
+    guint *width, guint *height)
 {
   SwfdecCodecFFMpegVideo *codec = codec_data;
   AVCodecContext *ctx = codec->ctx;

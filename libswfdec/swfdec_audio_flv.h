@@ -48,8 +48,8 @@ struct _SwfdecAudioFlv
   gpointer		decoder;	/* decoder used for playback */
 
   SwfdecTick		timestamp;	/* current playback timestamp */
-  unsigned int		next_timestamp;	/* next timestamp in FLV file we request from */
-  unsigned int		playback_skip;	/* number of samples to skip at start of queue */
+  guint		next_timestamp;	/* next timestamp in FLV file we request from */
+  guint		playback_skip;	/* number of samples to skip at start of queue */
   GQueue *		playback_queue;	/* all the samples we've decoded so far */
 };
 

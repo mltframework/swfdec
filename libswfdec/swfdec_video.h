@@ -37,9 +37,9 @@ typedef struct _SwfdecVideoClass SwfdecVideoClass;
 struct _SwfdecVideo {
   SwfdecGraphic			graphic;
 
-  unsigned int			width;		/* width in pixels */
-  unsigned int			height;		/* height in pixels */
-  unsigned int			n_frames;	/* length of movie */
+  guint			width;		/* width in pixels */
+  guint			height;		/* height in pixels */
+  guint			n_frames;	/* length of movie */
   GArray *			images;		/* actual images of the movie */
   
   SwfdecVideoFormat		format;		/* format in use */

@@ -1431,7 +1431,7 @@ swfdec_player_get_audio (SwfdecPlayer *	player)
  *
  * Returns: the background color as an ARGB value
  **/
-unsigned int
+guint
 swfdec_player_get_background_color (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF));
@@ -1448,7 +1448,7 @@ swfdec_player_get_background_color (SwfdecPlayer *player)
  * value to 0. To get a black beackground, use 0xFF000000.
  **/
 void
-swfdec_player_set_background_color (SwfdecPlayer *player, unsigned int color)
+swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 

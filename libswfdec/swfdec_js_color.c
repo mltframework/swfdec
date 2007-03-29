@@ -77,7 +77,7 @@ swfdec_js_color_get_transform (JSContext *cx, JSObject *obj, uintN argc, jsval *
 static JSBool
 swfdec_js_color_set_rgb (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  unsigned int color;
+  guint color;
   SwfdecMovie *movie = JS_GetPrivate (cx, obj);
 
   if (!movie)

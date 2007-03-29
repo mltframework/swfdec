@@ -325,10 +325,14 @@ start:
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
 
-  while (pc != endpc) {
+  while (TRUE) {
+    if (pc == endpc) {
+      swfdec_as_context_return (context, NULL);
+      goto start;
+    }
     if (pc < startpc || pc >= endpc) {
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
-      goto internal_error;
+      goto error;
     }
 
     /* decode next action */
@@ -339,13 +343,13 @@ start:
     if (action & 0x80) {
       if (pc + 2 >= endpc) {
 	SWFDEC_ERROR ("action %u length value out of range", action);
-	goto internal_error;
+	goto error;
       }
       data = pc + 3;
       len = pc[1] | pc[2] << 8;
       if (data + len > endpc) {
 	SWFDEC_ERROR ("action %u length %u out of range", action, len);
-	goto internal_error;
+	goto error;
       }
       nextpc = pc + 3 + len;
     } else {
@@ -357,7 +361,7 @@ start:
     if (spec->exec[version] == NULL) {
       SWFDEC_ERROR ("cannot interpret action %u %s for version %u", action,
 	  spec->name ? spec->name : "Unknown", script->version);
-      goto internal_error;
+      goto error;
     }
     if (spec->remove > 0) {
       swfdec_as_stack_ensure_size (stack, spec->remove);
@@ -368,7 +372,7 @@ start:
 	swfdec_as_stack_ensure_left (stack, spec->add);
     }
     if (context->state != SWFDEC_AS_CONTEXT_RUNNING)
-      break;
+      goto error;
 #ifndef G_DISABLE_ASSERT
     check = (spec->add >= 0 && spec->remove >= 0) ? stack->cur + spec->add - spec->remove : NULL;
 #endif
@@ -393,7 +397,23 @@ start:
     }
   }
 
-internal_error:
+error:
   return;
 }
 
+void
+swfdec_as_context_return (SwfdecAsContext *context, SwfdecAsValue *retval)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (context->frame != NULL);
+  g_return_if_fail (retval == NULL || SWFDEC_IS_AS_VALUE (retval));
+
+  context->frame = context->frame->next;
+  swfdec_as_stack_ensure_left (context->frame->stack, 1);
+  if (retval) {
+    swfdec_as_stack_push (context->frame->stack, retval);
+  } else {
+    SwfdecAsValue value = { SWFDEC_TYPE_AS_UNDEFINED, };
+    swfdec_as_stack_push (context->frame->stack, &value);
+  }
+}

@@ -82,6 +82,8 @@ void		swfdec_as_value_mark		(SwfdecAsValue *	value);
 void		swfdec_as_string_mark		(const char *		string);
 void		swfdec_as_context_gc		(SwfdecAsContext *	context);
 
+void		swfdec_as_context_return	(SwfdecAsContext *	context,
+						 SwfdecAsValue *	retval);
 
 G_END_DECLS
 #endif

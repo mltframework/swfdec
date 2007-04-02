@@ -22,6 +22,7 @@
 #endif
 
 #include <libswfdec/swfdec_player_internal.h>
+#include "libswfdec-gtk/swfdec_gtk_loader.h"
 #include "libswfdec-gtk/swfdec_gtk_player.h"
 #include "libswfdec-gtk/swfdec_playback.h"
 #include "libswfdec-gtk/swfdec_source.h"
@@ -190,14 +191,14 @@ swfdec_gtk_player_new (void)
  * Returns: a new player.
  **/
 SwfdecPlayer *
-swfdec_gtk_player_new_from_file (const char *uri)
+swfdec_gtk_player_new_from_uri (const char *uri)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player;
 
   g_return_val_if_fail (uri != NULL, NULL);
 
-  loader = swfdec_loader_new_new_from_file (uri);
+  loader = swfdec_gtk_loader_new (uri);
   player = swfdec_gtk_player_new ();
   swfdec_player_set_loader (player, loader);
 

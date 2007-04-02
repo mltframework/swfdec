@@ -23,6 +23,28 @@
 
 #include "swfdec_gtk_loader.h"
 
+/*** GTK-DOC ***/
+
+/**
+ * SECTION:SwfdecGtkLoader
+ * @title: SwfdecGtkLoader
+ * @short_description: advanced loader able to load network ressources
+ * @see_also: #SwfdecLoader
+ *
+ * #SwfdecGtkLoader is a #SwfdecLoader that is intended as an easy way to be 
+ * access ressources that are not stored in files, such as http. It can 
+ * however be compiled with varying support for different protocols, so don't
+ * rely on support for a particular protocol being available. If you need this,
+ * code your own SwfdecLoader subclass.
+ */
+
+/**
+ * SwfdecGtkLoader:
+ *
+ * This is the object used to represent a loader. Since it may use varying 
+ * backends, it is completely private.
+ */
+
 #ifndef HAVE_GNOMEVFS
 
 #include <libswfdec/swfdec_loader_internal.h>

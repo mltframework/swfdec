@@ -18,14 +18,14 @@ run_test (const char *filename)
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
   guint time_left;
-  GError *error = NULL;
   char *str;
   GString *string;
+  GError *error = NULL;
 
   g_print ("Testing %s:\n", filename);
-  loader = swfdec_loader_new_from_file (filename, &error);
-  if (loader == NULL) {
-    g_print ("  ERROR: %s\n", error->message);
+  loader = swfdec_loader_new_from_file (filename);
+  if (loader->error) {
+    g_print ("  ERROR: %s\n", loader->error);
     return FALSE;
   }
   string = g_string_new ("");
@@ -69,6 +69,7 @@ run_test (const char *filename)
       if (!g_spawn_sync (NULL, command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
 	  NULL, NULL, NULL, &error)) {
 	g_printerr ("  Couldn't spawn diff to compare the results: %s\n", error->message);
+	g_error_free (error);
       }
     }
     g_string_free (string, TRUE);

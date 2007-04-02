@@ -382,10 +382,10 @@ main (int argc, char *argv[])
 	fn = argv[1];
   }
 
-  player = swfdec_player_new_from_file (argv[1], &error);
-  if (player == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
+  player = swfdec_player_new_from_file (argv[1]);
+  if (player->loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->loader->error);
+    g_object_unref (player);
     return 1;
   }
   s = (SwfdecSwfDecoder *) SWFDEC_ROOT_MOVIE (player->roots->data)->decoder;

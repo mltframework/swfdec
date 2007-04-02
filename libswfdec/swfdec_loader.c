@@ -181,28 +181,6 @@ swfdec_loader_init (SwfdecLoader *loader)
 
 /*** SwfdecFileLoader ***/
 
-typedef struct _SwfdecFileLoader SwfdecFileLoader;
-typedef struct _SwfdecFileLoaderClass SwfdecFileLoaderClass;
-
-#define SWFDEC_TYPE_FILE_LOADER                    (swfdec_file_loader_get_type())
-#define SWFDEC_IS_FILE_LOADER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_FILE_LOADER))
-#define SWFDEC_IS_FILE_LOADER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_FILE_LOADER))
-#define SWFDEC_FILE_LOADER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_FILE_LOADER, SwfdecFileLoader))
-#define SWFDEC_FILE_LOADER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_FILE_LOADER, SwfdecFileLoaderClass))
-#define SWFDEC_FILE_LOADER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_FILE_LOADER, SwfdecFileLoaderClass))
-
-struct _SwfdecFileLoader
-{
-  SwfdecLoader		loader;
-
-  char *		dir;		/* base directory for load operations */
-};
-
-struct _SwfdecFileLoaderClass
-{
-  SwfdecLoaderClass   	loader_class;
-};
-
 G_DEFINE_TYPE (SwfdecFileLoader, swfdec_file_loader, SWFDEC_TYPE_LOADER)
 
 static void
@@ -316,23 +294,22 @@ swfdec_loader_queue_parse (SwfdecLoader *loader)
 /**
  * swfdec_loader_new_from_file:
  * @filename: name of the file to load
- * @error: return loacation for an error or NULL
  *
- * Creates a new loader for local files.
+ * Creates a new loader for local files. If an error occurred, the loader will
+ * be in error.
  *
- * Returns: a new loader on success or NULL on failure
+ * Returns: a new loader
  **/
 SwfdecLoader *
-swfdec_loader_new_from_file (const char *filename, GError ** error)
+swfdec_loader_new_from_file (const char *filename)
 {
   SwfdecBuffer *buf;
   SwfdecLoader *loader;
+  GError *error = NULL;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  buf = swfdec_buffer_new_from_file (filename, error);
-  if (buf == NULL)
-    return NULL;
+  buf = swfdec_buffer_new_from_file (filename, &error);
 
   loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
   if (g_path_is_absolute (filename)) {
@@ -343,9 +320,14 @@ swfdec_loader_new_from_file (const char *filename, GError ** error)
     g_free (cur);
   }
   SWFDEC_FILE_LOADER (loader)->dir = g_path_get_dirname (loader->url);
-  swfdec_loader_set_size (loader, buf->length);
-  swfdec_loader_push (loader, buf);
-  swfdec_loader_eof (loader);
+  if (buf == NULL) {
+    swfdec_loader_error (loader, error->message);
+    g_error_free (error);
+  } else {
+    swfdec_loader_set_size (loader, buf->length);
+    swfdec_loader_push (loader, buf);
+    swfdec_loader_eof (loader);
+  }
   return loader;
 }
 

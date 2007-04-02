@@ -229,7 +229,6 @@ main (int argc, char *argv[])
   SwfdecCharacter *character;
   int ret = 0;
   SwfdecPlayer *player;
-  GError *error = NULL;
   glong id;
 
   swfdec_init ();
@@ -239,13 +238,8 @@ main (int argc, char *argv[])
     return 0;
   }
 
-  player = swfdec_player_new_from_file (argv[1], &error);
-  if (player == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
-    return 1;
-  }
-  if (swfdec_player_get_rate (player) == 0) {
+  player = swfdec_player_new_from_file (argv[1]);
+  if (!SWFDEC_IS_ROOT_MOVIE (player->roots->data)) {
     g_printerr ("Error parsing file \"%s\"\n", argv[1]);
     g_object_unref (player);
     player = NULL;

@@ -37,8 +37,7 @@ typedef struct _SwfdecGtkPlayerClass SwfdecGtkPlayerClass;
 GType 		swfdec_gtk_player_get_type    	(void);
 
 SwfdecPlayer *	swfdec_gtk_player_new	      	(void);
-SwfdecPlayer *	swfdec_gtk_player_new_from_file	(const char *		filename,
-			      	      		 GError **		error);
+SwfdecPlayer *	swfdec_gtk_player_new_from_file	(const char *		filename);
 
 void		swfdec_gtk_player_set_playing 	(SwfdecGtkPlayer *	player,
 						 gboolean		playing);

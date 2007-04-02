@@ -1155,25 +1155,23 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
 /**
  * swfdec_player_new_from_file:
  * @filename: name of the file to play
- * @error: return location for error or NULL
  *
- * Tries to create a player to play back the given file. If the file does not
- * exist or another error occurs, NULL is returned.
+ * Creates a player to play back the given file. If the file does not
+ * exist or another error occurs, the player will be in an error state and not
+ * be initialized.
  * This function calls swfdec_init () for you if it wasn't called before.
  *
- * Returns: a new player or NULL on error.
+ * Returns: a new player
  **/
 SwfdecPlayer *
-swfdec_player_new_from_file (const char *filename, GError **error)
+swfdec_player_new_from_file (const char *filename)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  loader = swfdec_loader_new_from_file (filename, error);
-  if (loader == NULL)
-    return NULL;
+  loader = swfdec_loader_new_from_file (filename);
   player = swfdec_player_new ();
   swfdec_player_set_loader (player, loader);
 

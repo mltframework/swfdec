@@ -177,27 +177,27 @@ swfdec_gtk_player_new (void)
 }
 
 /**
- * swfdec_gtk_player_new_from_file:
- * @filename: name of the file to play
- * @error: return location for error or %NULL
+ * swfdec_gtk_player_new_from_uri:
+ * @uri: URI to play
  *
- * Tries to create a player to play back the given file. If the file does not
- * exist or another error occurs, %NULL is returned.
+ * Create a player to play back the given URI. If compiled with gnome-vfs
+ * support, it will use gnome-vfs to resolve the given URI. Note that there
+ * is no way to figure out if the referenced URI really references a file that
+ * Swfdec can play back. If you need this, you should use #SwfdecGtkLoader
+ * directly and use its error property.
  * This function calls swfdec_init () for you if it wasn't called before.
  *
- * Returns: a new player or %NULL on error.
+ * Returns: a new player.
  **/
 SwfdecPlayer *
-swfdec_gtk_player_new_from_file (const char *filename, GError **error)
+swfdec_gtk_player_new_from_file (const char *uri)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player;
 
-  g_return_val_if_fail (filename != NULL, NULL);
+  g_return_val_if_fail (uri != NULL, NULL);
 
-  loader = swfdec_loader_new_from_file (filename, error);
-  if (loader == NULL)
-    return NULL;
+  loader = swfdec_loader_new_new_from_file (uri);
   player = swfdec_gtk_player_new ();
   swfdec_player_set_loader (player, loader);
 

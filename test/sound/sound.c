@@ -119,7 +119,7 @@ finish_stream (TestStream *stream)
   gboolean ret = TRUE;
 
   buffer = swfdec_buffer_queue_pull (stream->queue, swfdec_buffer_queue_get_depth (stream->queue));
-  swfdec_buffer_queue_free (stream->queue);
+  swfdec_buffer_queue_unref (stream->queue);
   file = swfdec_buffer_new_from_file (stream->name, &error);
   if (file) {
     ret = audio_diff (buffer, file, stream->name);

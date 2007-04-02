@@ -337,9 +337,9 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    unsigned int character;
-    unsigned int depth;
-    unsigned int states;
+    guint character;
+    guint depth;
+    guint states;
     SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);
@@ -413,9 +413,9 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    unsigned int character;
-    unsigned int depth;
-    unsigned int states;
+    guint character;
+    guint depth;
+    guint states;
     SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);

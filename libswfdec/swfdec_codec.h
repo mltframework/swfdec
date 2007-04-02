@@ -58,8 +58,8 @@ struct _SwfdecAudioCodec {
 struct _SwfdecVideoCodec {
   gpointer		(* init)	(void);
   gboolean	    	(* get_size)	(gpointer	codec_data,
-					 unsigned int *	width,
-					 unsigned int *	height);
+					 guint *	width,
+					 guint *	height);
   SwfdecBuffer *	(* decode)	(gpointer	codec_data,
 					 SwfdecBuffer *	buffer);
   void			(* finish)	(gpointer	codec_data);

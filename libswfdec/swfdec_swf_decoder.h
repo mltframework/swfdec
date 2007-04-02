@@ -77,9 +77,9 @@ struct _SwfdecSwfDecoderClass {
 GType		swfdec_swf_decoder_get_type		(void);
 
 gpointer	swfdec_swf_decoder_get_character	(SwfdecSwfDecoder *	s, 
-							 unsigned int	      	id);
+							 guint	      	id);
 gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
-							 unsigned int	      	id,
+							 guint	      	id,
 							 GType			type);
 
 SwfdecTagFunc *swfdec_swf_decoder_get_tag_func (int tag);

@@ -97,7 +97,7 @@ int
 tag_func_define_edit_text (SwfdecSwfDecoder * s)
 {
   SwfdecEditText *text;
-  unsigned int id;
+  guint id;
   int reserved, use_outlines;
   gboolean has_font, has_color, has_max_length, has_layout, has_text;
   SwfdecBits *b = &s->b;
@@ -154,7 +154,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s)
     text->max_length = swfdec_bits_get_u16 (b);
   }
   if (has_layout) {
-    unsigned int align = swfdec_bits_get_u8 (b);
+    guint align = swfdec_bits_get_u8 (b);
     switch (align) {
       case 0:
 	text->align = PANGO_ALIGN_LEFT;

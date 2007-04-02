@@ -28,10 +28,10 @@
 #include "swfdec_debug.h"
 
 SwfdecColor 
-swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio)
+swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, guint ratio)
 {
-  unsigned int r, g, b, a;
-  unsigned int start_ratio, end_ratio;
+  guint r, g, b, a;
+  guint start_ratio, end_ratio;
 
   g_assert (ratio < 65536);
   if (ratio == 0)

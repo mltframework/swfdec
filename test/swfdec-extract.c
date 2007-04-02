@@ -122,12 +122,12 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
   }
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
-    swfdec_buffer_queue_free (queue);
+    swfdec_buffer_queue_unref (queue);
     g_printerr ("Sprite contains no sound\n");
     return FALSE;
   }
   buffer = swfdec_buffer_queue_pull (queue, depth);
-  swfdec_buffer_queue_free (queue);
+  swfdec_buffer_queue_unref (queue);
   wav = encode_wav (buffer);
   swfdec_buffer_unref (buffer);
   if (!g_file_set_contents (filename, (char *) wav->data, 

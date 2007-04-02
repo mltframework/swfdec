@@ -113,7 +113,7 @@ int
 tag_func_export_assets (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  unsigned int count, i;
+  guint count, i;
 
   count = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("exporting %u assets", count);

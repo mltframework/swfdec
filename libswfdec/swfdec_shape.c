@@ -206,7 +206,7 @@ swfdec_shape_vec_init (SwfdecShapeVec *vec)
 static void
 swfdec_shape_dispose (GObject *object)
 {
-  unsigned int i;
+  guint i;
   SwfdecShape * shape = SWFDEC_SHAPE (object);
 
   for (i = 0; i < shape->vecs->len; i++) {
@@ -233,7 +233,7 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (graphic);
-  unsigned int i;
+  guint i;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
@@ -878,19 +878,19 @@ swfdec_morph_shape_do_change (SwfdecBits *end_bits, SubPath *other, SwfdecMorphS
       SWFDEC_LOG ("   moveto %d,%d", *x, *y);
     }
     if (state_fill_styles0) {
-      unsigned int check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
+      guint check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
 	SWFDEC_SHAPE (morph)->fills_offset;
       if (check != path->fill0style)
 	SWFDEC_ERROR ("end fill0style %u differs from start fill0style %u", check, path->fill0style);
     }
     if (state_fill_styles1) {
-      unsigned int check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
+      guint check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
 	SWFDEC_SHAPE (morph)->fills_offset;
       if (check != path->fill1style)
 	SWFDEC_ERROR ("end fill1style %u differs from start fill1style %u", check, path->fill1style);
     }
     if (state_line_styles) {
-      unsigned int check = swfdec_bits_getbits (end_bits, morph->n_line_bits) + 
+      guint check = swfdec_bits_getbits (end_bits, morph->n_line_bits) + 
 	SWFDEC_SHAPE (morph)->lines_offset;
       if (check != path->linestyle)
 	SWFDEC_ERROR ("end linestyle %u differs from start linestyle %u", check, path->linestyle);
@@ -1005,7 +1005,7 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   SwfdecBits end_bits;
   SwfdecBits *bits = &s->b;
   SwfdecMorphShape *morph;
-  unsigned int offset;
+  guint offset;
   int id;
   id = swfdec_bits_get_u16 (bits);
 

@@ -157,7 +157,7 @@ swfdec_codec_adpcm_decode (gpointer data, SwfdecBuffer *buffer)
   } else {
     buffer = NULL;
   }
-  swfdec_buffer_queue_free (queue);
+  swfdec_buffer_queue_unref (queue);
   return buffer;
 }
 

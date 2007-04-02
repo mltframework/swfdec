@@ -260,7 +260,7 @@ swfedit_file_write (SwfeditFile *file)
     swfdec_out_put_buffer (out, buffer);
     swfdec_buffer_unref (buffer);
   }
-  swfdec_buffer_queue_free (queue);
+  swfdec_buffer_queue_unref (queue);
   return swfdec_out_close (out);
 }
 

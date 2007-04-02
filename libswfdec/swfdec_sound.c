@@ -223,7 +223,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
       swfdec_buffer_queue_push (queue, tmp);
       swfdec_buffer_queue_push (queue, tmp2);
       tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
-      swfdec_buffer_queue_free (queue);
+      swfdec_buffer_queue_unref (queue);
     }
   }
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
@@ -333,7 +333,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
   int has_loops;
   int has_out_point;
   int has_in_point;
-  unsigned int i, j;
+  guint i, j;
   SwfdecSound *sound;
   SwfdecSoundChunk *chunk;
   SwfdecBits *b = &s->b;
@@ -435,8 +435,8 @@ tag_func_start_sound (SwfdecSwfDecoder * s)
 int
 tag_func_define_button_sound (SwfdecSwfDecoder * s)
 {
-  unsigned int i;
-  unsigned int id;
+  guint i;
+  guint id;
   SwfdecButton *button;
 
   id = swfdec_bits_get_u16 (&s->b);
@@ -500,7 +500,7 @@ swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut fo
 void
 swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
     SwfdecAudioOut format, const SwfdecBuffer *previous, 
-    unsigned int offset, unsigned int n_samples)
+    guint offset, guint n_samples)
 {
   guint i, j;
   guint channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
@@ -611,7 +611,7 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
  **/
 void
 swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
-    unsigned int offset, unsigned int n_samples)
+    guint offset, guint n_samples)
 {
   SwfdecBuffer *buffer;
   SwfdecAudioOut format;

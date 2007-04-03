@@ -1680,7 +1680,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
   gboolean v2 = (action == 0x8e);
 
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_get_string (&bits);
+  function_name = swfdec_bits_skip_string (&bits);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     return JS_FALSE;

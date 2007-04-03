@@ -105,7 +105,10 @@ swfdec_gtk_loader_read_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result,
     gtk->handle = NULL;
     return;
   } else if (result != GNOME_VFS_OK) {
-    swfdec_loader_error (loader, gnome_vfs_result_to_string (result));
+    char *err = g_strdup_printf ("%s: %s", loader->url,
+	gnome_vfs_result_to_string (result));
+    swfdec_loader_error (loader, err);
+    g_free (err);
     swfdec_buffer_unref (gtk->current_buffer);
     gtk->current_buffer = NULL;
     gnome_vfs_async_cancel (gtk->handle);
@@ -141,7 +144,10 @@ swfdec_gtk_loader_open_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result,
   SwfdecLoader *loader = loaderp;
 
   if (result != GNOME_VFS_OK) {
-    swfdec_loader_error (loader, gnome_vfs_result_to_string (result));
+    char *err = g_strdup_printf ("%s: %s", loader->url,
+	gnome_vfs_result_to_string (result));
+    swfdec_loader_error (loader, err);
+    g_free (err);
     gnome_vfs_async_cancel (gtk->handle);
     gtk->handle = NULL;
     return;

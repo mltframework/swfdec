@@ -395,6 +395,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   /* FIXME: use the connection once connections are implemented */
   loader = swfdec_player_load (stream->player, url);
   swfdec_net_stream_set_loader (stream, loader);
+  g_object_unref (loader);
 }
 
 void

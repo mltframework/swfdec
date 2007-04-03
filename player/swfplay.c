@@ -109,10 +109,10 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  loader = swfdec_loader_new_from_file (argv[1], &error);
-  if (loader == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
+  loader = swfdec_gtk_loader_new (argv[1]);
+  if (loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
+    g_object_unref (loader);
     return 1;
   }
   player = swfdec_gtk_player_new ();
@@ -123,13 +123,6 @@ main (int argc, char *argv[])
     loader = swfdec_slow_loader_new (loader, delay);
 
   swfdec_player_set_loader_with_variables (player, loader, variables);
-  /* FIXME add smarter "not my file" detection */
-  if (!swfdec_player_is_initialized (player) && delay == 0) {
-    g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
-    g_object_unref (player);
-    player = NULL;
-    return 1;
-  }
 
   if (no_sound)
     swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);

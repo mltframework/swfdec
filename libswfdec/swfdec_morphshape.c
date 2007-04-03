@@ -52,9 +52,15 @@ swfdec_graphic_create_movie (SwfdecGraphic *graphic)
 static void
 swfdec_morph_shape_dispose (GObject *object)
 {
-  SwfdecMorphShape *shape = SWFDEC_MORPH_SHAPE (object);
+  SwfdecMorphShape *morph = SWFDEC_MORPH_SHAPE (object);
+  guint i;
 
-  g_array_free (shape->end_vecs, TRUE);
+  if (morph->end_vecs != NULL) {
+    for (i = 0; i < morph->end_vecs->len; i++)
+      g_free (g_array_index (morph->end_vecs, SwfdecShapeVec, i).path.data);
+    g_array_free (morph->end_vecs, TRUE);
+    morph->end_vecs = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_morph_shape_parent_class)->dispose (object);
 }

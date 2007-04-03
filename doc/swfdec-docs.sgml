@@ -10,6 +10,7 @@
     <title>Swfdec Gtk library</title>
     <xi:include href="xml/SwfdecGtkPlayer.xml"/>
     <xi:include href="xml/SwfdecGtkWidget.xml"/>
+    <xi:include href="xml/SwfdecGtkLoader.xml"/>
   </chapter>
   <chapter>
     <title>Swfdec library</title>

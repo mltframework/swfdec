@@ -20,6 +20,7 @@
 #ifndef __SWFDEC_GTK_H__
 #define __SWFDEC_GTK_H__
 
+#include <libswfdec-gtk/swfdec_gtk_loader.h>
 #include <libswfdec-gtk/swfdec_gtk_player.h>
 #include <libswfdec-gtk/swfdec_gtk_widget.h>
 

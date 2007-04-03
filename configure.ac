@@ -205,15 +205,34 @@ else
 fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 
+AC_ARG_ENABLE(gnome-vfs,
+	AS_HELP_STRING([--enable-gnome-vfs],
+			[enable gnome-vfs support for swfdec-gtk (default=yes)])],
+	enable_gnomevfs=$enableval,
+	enable_gnomevfs="yes")
+
+if test "$enable_gnomevfs" = "yes"; then
+	PKG_CHECK_MODULES(GNOMEVFS, gnome-vfs-2.0 >= 2.14.0, HAVE_GNOMEVFS=yes, HAVE_GNOMEVFS=no)
+	if test "x$HAVE_GNOMEVFS" = xyes; then
+	  AC_DEFINE(HAVE_GNOMEVFS, 1, [Define if gnome-vfs is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find gnome-vfs-2.0.])
+	fi
+else
+	AC_MSG_WARN([*** gnome-vfs support was not enabled. ***])
+fi
+AM_CONDITIONAL(HAVE_GNOMEVFS, [test "x$HAVE_GNOMEVFS" = xyes])
+
+AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)
 
-SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS"
-SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS -lz"
+SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS $CAIRO_CFLAGS"
+SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 
-SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS"
-SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS"
+SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS $GTK_CFLAGS"
+SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS $GTK_LIBS"
 AC_SUBST(SWFDEC_GTK_LIBS)
 AC_SUBST(SWFDEC_GTK_CFLAGS)
 

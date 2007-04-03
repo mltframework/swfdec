@@ -184,6 +184,7 @@ run_test (const char *filename)
   dir = g_dir_open (dirname, 0, &error);
   if (!dir) {
     g_print ("  ERROR: %s\n", error->message);
+    g_error_free (error);
     return FALSE;
   }
   while ((name = g_dir_read_name (dir))) {
@@ -195,9 +196,10 @@ run_test (const char *filename)
   }
   g_dir_close (dir);
 
-  loader = swfdec_loader_new_from_file (filename, &error);
-  if (loader == NULL) {
-    g_print ("  ERROR: %s\n", error->message);
+  loader = swfdec_loader_new_from_file (filename);
+  if (loader->error) {
+    g_print ("  ERROR: %s\n", loader->error);
+    g_object_unref (loader);
     goto error;
   }
   player = swfdec_player_new ();
@@ -233,8 +235,6 @@ run_test (const char *filename)
   }
 
 error:
-  if (error)
-    g_error_free (error);
   if (player)
     g_object_unref (player);
   g_list_foreach (data.files, (GFunc) g_free, NULL);

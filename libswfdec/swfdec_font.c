@@ -37,14 +37,23 @@ swfdec_font_dispose (GObject *object)
   SwfdecFont * font = SWFDEC_FONT (object);
   guint i;
 
-  for (i = 0; i < font->glyphs->len; i++) {
-    g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+  if (font->glyphs) {
+    for (i = 0; i < font->glyphs->len; i++) {
+      g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+    }
+    g_array_free (font->glyphs, TRUE);
+    font->glyphs = NULL;
   }
-  if (font->desc)
+  if (font->desc) {
     pango_font_description_free (font->desc);
-  g_free (font->name);
+    font->desc = NULL;
+  }
+  if (font->name) {
+    g_free (font->name);
+    font->name = NULL;
+  }
 
-  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (G_OBJECT (font));
+  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (object);
 }
 
 static void

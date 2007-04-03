@@ -1651,7 +1651,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
   gboolean v2 = (action == 0x8e);
 
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_get_string (&bits);
+  function_name = swfdec_bits_skip_string (&bits);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     return JS_FALSE;
@@ -2986,6 +2986,10 @@ no_catch:
   /* Reset sp before freeing stack slots, because our caller may GC soon. */
   fp->sp = fp->spbase;
   fp->spbase = NULL;
+  if (fp->constant_pool) {
+    swfdec_constant_pool_free (fp->constant_pool);
+    fp->constant_pool = NULL;
+  }
   js_FreeRawStack(cx, mark);
   cx->interpLevel--;
   swfdec_script_unref (script);
@@ -3074,8 +3078,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
   js_FreeRawStack (cx, mark);
-  if (frame.constant_pool)
-    swfdec_constant_pool_free (frame.constant_pool);
 
   cx->fp = oldfp;
   if (oldfp) {

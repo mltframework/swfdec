@@ -34,7 +34,7 @@ my_time_val_difference (const GTimeVal *compare, const GTimeVal *now)
 typedef struct _SwfdecIterateSource SwfdecIterateSource;
 struct _SwfdecIterateSource {
   GSource		source;
-  SwfdecPlayer *	player;
+  SwfdecPlayer *	player;		/* player we manage or NULL if player was deleted */
   double		speed;		/* inverse playback speed (so 0.5 means double speed) */
   gulong		notify;		/* set for iterate notifications */
   GTimeVal		last;		/* last time */
@@ -47,6 +47,7 @@ swfdec_iterate_get_msecs_to_next_event (GSource *source_)
   GTimeVal now;
   glong diff;
 
+  g_assert (source->player);
   diff = swfdec_player_get_next_event (source->player);
   if (diff == 0)
     return G_MAXLONG;
@@ -62,7 +63,13 @@ swfdec_iterate_get_msecs_to_next_event (GSource *source_)
 static gboolean
 swfdec_iterate_prepare (GSource *source, gint *timeout)
 {
-  glong diff = swfdec_iterate_get_msecs_to_next_event (source);
+  glong diff;
+  
+  diff = swfdec_iterate_get_msecs_to_next_event (source);
+  if (((SwfdecIterateSource *) source)->player == NULL) {
+    *timeout = 0;
+    return TRUE;
+  }
 
   if (diff == G_MAXLONG) {
     *timeout = -1;
@@ -79,8 +86,11 @@ swfdec_iterate_prepare (GSource *source, gint *timeout)
 static gboolean
 swfdec_iterate_check (GSource *source)
 {
-  glong diff = swfdec_iterate_get_msecs_to_next_event (source);
-
+  glong diff;
+  
+  if (((SwfdecIterateSource *) source)->player == NULL)
+    return 0;
+  diff = swfdec_iterate_get_msecs_to_next_event (source);
   return diff < 0;
 }
 
@@ -88,8 +98,11 @@ static gboolean
 swfdec_iterate_dispatch (GSource *source_, GSourceFunc callback, gpointer user_data)
 {
   SwfdecIterateSource *source = (SwfdecIterateSource *) source_;
-  glong diff = swfdec_iterate_get_msecs_to_next_event (source_);
-
+  glong diff;
+  
+  if (source->player == NULL)
+    return FALSE;
+  diff = swfdec_iterate_get_msecs_to_next_event (source_);
   if (diff > 0)
     return TRUE;
   diff = swfdec_player_get_next_event (source->player) - diff;
@@ -105,7 +118,9 @@ swfdec_iterate_finalize (GSource *source_)
   if (source->notify) {
     g_signal_handler_disconnect (source->player, source->notify);
   }
-  g_object_unref (source->player);
+  if (source->player) {
+    g_object_remove_weak_pointer (G_OBJECT (source->player), (gpointer *) &source->player);
+  }
 }
 
 GSourceFuncs swfdec_iterate_funcs = {
@@ -132,7 +147,8 @@ swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
 
   source = (SwfdecIterateSource *) g_source_new (&swfdec_iterate_funcs, 
       sizeof (SwfdecIterateSource));
-  source->player = g_object_ref (player);
+  source->player = player;
+  g_object_add_weak_pointer (G_OBJECT (source->player), (gpointer *) &source->player);
   source->speed = 1.0 / speed;
   source->notify = g_signal_connect (player, "advance",
       G_CALLBACK (swfdec_iterate_source_advance_cb), source);

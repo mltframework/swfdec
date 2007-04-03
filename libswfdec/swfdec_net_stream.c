@@ -225,7 +225,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     return;
   }
   if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
-    SWFDEC_WARNING ("nothing to parse?!");
+    SWFDEC_INFO ("nothing to do");
     return;
   }
   if (stream->flvdecoder == NULL) {
@@ -395,6 +395,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   /* FIXME: use the connection once connections are implemented */
   loader = swfdec_player_load (stream->player, url);
   swfdec_net_stream_set_loader (stream, loader);
+  g_object_unref (loader);
 }
 
 void

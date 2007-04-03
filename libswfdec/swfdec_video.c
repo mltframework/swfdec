@@ -119,16 +119,19 @@ swfdec_video_input_disconnect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *
 static SwfdecVideoMovieInput *
 swfdec_video_input_new (SwfdecVideo *video)
 {
-  SwfdecVideoInput *input = g_new0 (SwfdecVideoInput, 1);
-
+  SwfdecVideoInput *input;
+  
   if (video->n_frames == 0)
     return NULL;
   if (video->codec == NULL)
     return NULL;
+  input = g_new0 (SwfdecVideoInput, 1);
   if (video->codec)
     input->decoder = swfdec_video_codec_init (video->codec);
-  if (input->decoder == NULL)
+  if (input->decoder == NULL) {
+    g_free (input);
     return NULL;
+  }
   input->input.connect = swfdec_video_input_connect;
   input->input.iterate = swfdec_video_input_iterate;
   input->input.disconnect = swfdec_video_input_disconnect;

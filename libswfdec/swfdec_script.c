@@ -3022,6 +3022,10 @@ no_catch:
   /* Reset sp before freeing stack slots, because our caller may GC soon. */
   fp->sp = fp->spbase;
   fp->spbase = NULL;
+  if (fp->constant_pool) {
+    swfdec_constant_pool_free (fp->constant_pool);
+    fp->constant_pool = NULL;
+  }
   js_FreeRawStack(cx, mark);
   cx->interpLevel--;
   swfdec_script_unref (script);
@@ -3123,8 +3127,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
   js_FreeRawStack (cx, mark);
-  if (frame.constant_pool)
-    swfdec_constant_pool_free (frame.constant_pool);
 
   cx->fp = oldfp;
   if (oldfp) {

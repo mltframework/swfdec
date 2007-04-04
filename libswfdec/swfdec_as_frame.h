@@ -45,6 +45,7 @@ struct _SwfdecAsFrame {
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
   SwfdecConstantPool *	constant_pool;	/* constant pool currently in use */
+  SwfdecBuffer *	constant_pool_buffer;	/* buffer containing the raw data for constant_pool */
   SwfdecAsStack *	stack;		/* variables on the stack */
   guint8 *		pc;		/* program counter on stack */
 };

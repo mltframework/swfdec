@@ -23,6 +23,7 @@
 
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_debug.h"
 
@@ -263,8 +264,8 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
   g_return_if_fail (script != NULL);
 
-  g_assert_not_reached ();
-  swfdec_as_context_run (object->context);
+  if (swfdec_as_frame_new (object, script))
+    swfdec_as_context_run (object->context);
 }
 
 void

@@ -21,7 +21,6 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <config.h>
 #include <avcodec.h>
 
 #include "swfdec_codec.h"

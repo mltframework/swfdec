@@ -111,33 +111,6 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
   g_ptr_array_free (pool, TRUE);
 }
 
-#if 0
-/* FIXME: this is a bit hacky */
-static SwfdecBuffer *
-swfdec_constant_pool_get_area (SwfdecScript *script, SwfdecConstantPool *pool)
-{
-  guint8 *start;
-  SwfdecBuffer *buffer;
-  guint len;
-
-  if (pool->len == 0)
-    return NULL;
-  start = (guint8 *) g_ptr_array_index (pool, 0) - 5;
-  buffer = script->buffer;
-  if (start < buffer->data) {
-    /* DefineFunction inside DefineFunction */
-    g_assert (buffer->parent != NULL);
-    buffer = buffer->parent;
-    g_assert (start >= buffer->data);
-  }
-  g_assert (start + 3 < buffer->data + buffer->length);
-  g_assert (*start == 0x88);
-  len = 3 + (start[1] | start[2] << 8);
-  g_assert (start + len < buffer->data + buffer->length);
-  return swfdec_buffer_new_subbuffer (buffer, start - buffer->data, len);
-}
-#endif
-
 /*** SUPPORT FUNCTIONS ***/
 
 static void

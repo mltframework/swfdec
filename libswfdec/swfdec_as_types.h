@@ -125,6 +125,11 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR_NETSTREAM_PLAY_START (swfdec_as_strings[31] + 1)
 #define SWFDEC_AS_STR_NETSTREAM_PLAY_STOP (swfdec_as_strings[32] + 1)
 #define SWFDEC_AS_STR_NETSTREAM_PLAY_STREAMNOTFOUND (swfdec_as_strings[33] + 1)
+#define SWFDEC_AS_STR_UNDEFINED (swfdec_as_strings[34] + 1)
+#define SWFDEC_AS_STR_NULL (swfdec_as_strings[35] + 1)
+#define SWFDEC_AS_STR_OBJECT_OBJECT (swfdec_as_strings[36] + 1)
+#define SWFDEC_AS_STR_TRUE (swfdec_as_strings[37] + 1)
+#define SWFDEC_AS_STR_FALSE (swfdec_as_strings[38] + 1)
 
 /* all existing actions */
 typedef enum {

@@ -24,6 +24,7 @@
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
+#include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
 #include <errno.h>
@@ -44,7 +45,7 @@
 /*** SUPPORT FUNCTIONS ***/
 
 #define swfdec_action_has_register(cx, i) \
-  ((i) < ((SwfdecScript *) (cx)->fp->swf)->n_registers)
+  ((i) < (cx)->frame->n_registers)
 
 static SwfdecMovie *
 swfdec_action_get_target (SwfdecAsContext *context)
@@ -59,16 +60,6 @@ swfdec_action_get_target (SwfdecAsContext *context)
 }
 
 #if 0
-static void
-swfdec_action_push_string (SwfdecAsContext *cx, const char *s)
-{
-  JSString *string = JS_NewStringCopyZ (cx, s);
-  if (string == NULL)
-    return JS_FALSE;
-  *cx->fp->sp++ = STRING_TO_JSVAL (string);
-  return JS_TRUE;
-}
-
 static void
 swfdec_value_to_boolean_5 (SwfdecAsContext *cx, jsval val)
 {
@@ -407,123 +398,121 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
     swfdec_script_skip_actions (cx, jump);
 }
 
-#if 0
 static void
 swfdec_action_constant_pool (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecConstantPool *pool;
+  SwfdecAsFrame *frame;
 
+  frame = cx->frame;
   pool = swfdec_constant_pool_new_from_action (data, len);
   if (pool == NULL)
-    return JS_FALSE;
-  if (cx->fp->constant_pool)
-    swfdec_constant_pool_free (cx->fp->constant_pool);
-  cx->fp->constant_pool = pool;
-  return JS_TRUE;
+    return;
+  swfdec_constant_pool_attach_to_context (pool, cx);
+  if (frame->constant_pool)
+    swfdec_constant_pool_free (frame->constant_pool);
+  frame->constant_pool = pool;
+  if (frame->constant_pool_buffer)
+    swfdec_buffer_unref (frame->constant_pool_buffer);
+  frame->constant_pool_buffer = swfdec_buffer_new_subbuffer (frame->script->buffer,
+      data - frame->script->buffer->data, len);
 }
 
 static void
 swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  /* FIXME: supply API for this */
+  SwfdecAsStack *stack = cx->frame->stack;
   SwfdecBits bits;
-  guint stackspace = cx->fp->spend - cx->fp->sp;
 
   swfdec_bits_init_data (&bits, data, len);
-  while (swfdec_bits_left (&bits) && stackspace-- > 0) {
+  while (swfdec_bits_left (&bits)) {
     guint type = swfdec_bits_get_u8 (&bits);
     SWFDEC_LOG ("push type %u", type);
+    swfdec_as_stack_ensure_left (stack, 1);
     switch (type) {
       case 0: /* string */
 	{
 	  const char *s = swfdec_bits_skip_string (&bits);
-	  if (!swfdec_action_push_string (cx, s))
-	    return JS_FALSE;
+	  if (s == NULL)
+	    return;
+	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), 
+	      swfdec_as_context_get_string (cx, s));
 	  break;
 	}
       case 1: /* float */
-	{
-	  double d = swfdec_bits_get_float (&bits);
-	  if (!JS_NewDoubleValue (cx, d, cx->fp->sp))
-	    return JS_FALSE;
-	  cx->fp->sp++;
-	  break;
-	}
+	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (stack), 
+	    swfdec_bits_get_float (&bits));
+	break;
       case 2: /* null */
-	*cx->fp->sp++ = JSVAL_NULL;
+	SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_push (stack));
 	break;
       case 3: /* undefined */
-	*cx->fp->sp++ = JSVAL_VOID;
+	SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (stack));
 	break;
       case 4: /* register */
 	{
 	  guint regnum = swfdec_bits_get_u8 (&bits);
 	  if (!swfdec_action_has_register (cx, regnum)) {
 	    SWFDEC_ERROR ("cannot Push register %u: not enough registers", regnum);
-	    return JS_FALSE;
+	    return;
 	  }
-	  *cx->fp->sp++ = cx->fp->vars[regnum];
+	  *swfdec_as_stack_push (stack) = cx->frame->registers[regnum];
 	  break;
 	}
       case 5: /* boolean */
-	*cx->fp->sp++ = swfdec_bits_get_u8 (&bits) ? JSVAL_TRUE : JSVAL_FALSE;
+	SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_push (stack), 
+	    swfdec_bits_get_u8 (&bits) ? TRUE : FALSE);
 	break;
       case 6: /* double */
-	{
-	  double d = swfdec_bits_get_double (&bits);
-	  if (!JS_NewDoubleValue (cx, d, cx->fp->sp))
-	    return JS_FALSE;
-	  cx->fp->sp++;
-	  break;
-	}
+	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (stack), 
+	    swfdec_bits_get_double (&bits));
+	break;
       case 7: /* 32bit int */
-	{
-	  int i = swfdec_bits_get_u32 (&bits);
-	  *cx->fp->sp++ = INT_TO_JSVAL (i);
-	  break;
-	}
+	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (stack), 
+	    swfdec_bits_get_u32 (&bits));
+	break;
       case 8: /* 8bit ConstantPool address */
 	{
 	  guint i = swfdec_bits_get_u8 (&bits);
-	  SwfdecConstantPool *pool = cx->fp->constant_pool;
+	  SwfdecConstantPool *pool = cx->frame->constant_pool;
 	  if (pool == NULL) {
 	    SWFDEC_ERROR ("no constant pool to push from");
-	    return JS_FALSE;
+	    return;
 	  }
 	  if (i >= swfdec_constant_pool_size (pool)) {
 	    SWFDEC_ERROR ("constant pool index %u too high - only %u elements",
 		i, swfdec_constant_pool_size (pool));
-	    return JS_FALSE;
+	    return;
 	  }
-	  if (!swfdec_action_push_string (cx, swfdec_constant_pool_get (pool, i)))
-	    return JS_FALSE;
+	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), 
+	      swfdec_constant_pool_get (pool, i));
 	  break;
 	}
       case 9: /* 16bit ConstantPool address */
 	{
 	  guint i = swfdec_bits_get_u16 (&bits);
-	  SwfdecConstantPool *pool = cx->fp->constant_pool;
+	  SwfdecConstantPool *pool = cx->frame->constant_pool;
 	  if (pool == NULL) {
 	    SWFDEC_ERROR ("no constant pool to push from");
-	    return JS_FALSE;
+	    return;
 	  }
 	  if (i >= swfdec_constant_pool_size (pool)) {
 	    SWFDEC_ERROR ("constant pool index %u too high - only %u elements",
 		i, swfdec_constant_pool_size (pool));
-	    return JS_FALSE;
+	    return;
 	  }
-	  if (!swfdec_action_push_string (cx, swfdec_constant_pool_get (pool, i)))
-	    return JS_FALSE;
+	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), 
+	      swfdec_constant_pool_get (pool, i));
 	  break;
 	}
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return JS_FALSE;
+	return;
     }
   }
-  return swfdec_bits_left (&bits) ? JS_FALSE : JS_TRUE;
 }
 
+#if 0
 static void
 swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2188,6 +2177,7 @@ swfdec_action_print_jump (guint action, const guint8 *data, guint len)
   }
   return g_strdup_printf ("Jump %d", GINT16_FROM_LE (*((gint16*) data)));
 }
+#endif
 
 static char *
 swfdec_action_print_push (guint action, const guint8 *data, guint len)
@@ -2246,7 +2236,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	break;
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return JS_FALSE;
+	return NULL;
     }
   }
   return g_string_free (string, FALSE);
@@ -2262,7 +2252,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
 
   pool = swfdec_constant_pool_new_from_action (data, len);
   if (pool == NULL)
-    return JS_FALSE;
+    return NULL;
   string = g_string_new ("ConstantPool");
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
     g_string_append (string, i ? ", " : " ");
@@ -2272,6 +2262,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   return g_string_free (string, FALSE);
 }
 
+#if 0
 static char *
 swfdec_action_print_wait_for_frame2 (guint action, const guint8 *data, guint len)
 {
@@ -2441,10 +2432,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x83] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
   /* version 5 */
   [0x87] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, { NULL, NULL, swfdec_action_store_register, swfdec_action_store_register, swfdec_action_store_register } },
-  [0x88] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
-  /* version 3 */
 #endif
-  [0x8a] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
+  [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
+  /* version 3 */
+  [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
 #if 0
   [0x8b] = { "SetTarget", swfdec_action_print_set_target, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
 #endif
@@ -2457,8 +2448,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x8f] = { "Try", NULL },
   /* version 5 */
   [0x94] = { "With", NULL },
+#endif
   /* version 4 */
-  [0x96] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
+  [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
+#if 0
   [0x99] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
   [0x9a] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
   /* version 5 */

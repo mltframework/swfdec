@@ -93,6 +93,7 @@ swfdec_as_stack_ensure_left (SwfdecAsStack *stack, guint n_elements)
   if ((guint) (stack->end - stack->cur) < n_elements) {
     /* FIXME FIXME FIXME */
     swfdec_as_context_abort (stack->context, "Out of stack space");
+    stack->cur = stack->end - n_elements;
   }
 }
 

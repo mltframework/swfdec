@@ -21,6 +21,7 @@
 #define _SWFDEC_SCRIPT_H_
 
 #include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_bits.h>
 
@@ -64,39 +65,31 @@ const char *	swfdec_action_get_name		(guint			action);
 guint		swfdec_action_get_from_name	(const char *		name);
 
 SwfdecConstantPool *
-		swfdec_constant_pool_new_from_action (const guint8 *	data,
-						 guint			len);
-void		swfdec_constant_pool_free	(SwfdecConstantPool *	pool);
-guint		swfdec_constant_pool_size	(SwfdecConstantPool *	pool);
-const char *	swfdec_constant_pool_get	(SwfdecConstantPool *	pool,
-						 guint			i);
-SwfdecBuffer *	swfdec_constant_pool_get_area	(SwfdecScript *		script,
-						 SwfdecConstantPool *	pool);
+		swfdec_constant_pool_new_from_action	(const guint8 *	data,
+							 guint			len);
+void		swfdec_constant_pool_free	  	(SwfdecConstantPool *	pool);
+guint		swfdec_constant_pool_size		(SwfdecConstantPool *	pool);
+const char *	swfdec_constant_pool_get		(SwfdecConstantPool *	pool,
+							 guint			i);
+void		swfdec_constant_pool_attach_to_context	(SwfdecConstantPool *	pool,
+							 SwfdecAsContext *	context);
 
-SwfdecScript *	swfdec_script_new		(SwfdecBits *		bits,
-						 const char *		name,
-						 guint			version);
-SwfdecScript *	swfdec_script_new_for_player  	(SwfdecPlayer *		player,
-						 SwfdecBits *		bits,
-						 const char *		name,
-						 guint			version);
-SwfdecScript *	swfdec_script_ref		(SwfdecScript *		script);
-void		swfdec_script_unref		(SwfdecScript *		script);
+SwfdecScript *	swfdec_script_new			(SwfdecBits *		bits,
+							 const char *		name,
+							 guint			version);
+SwfdecScript *	swfdec_script_new_for_player	  	(SwfdecPlayer *		player,
+							 SwfdecBits *		bits,
+							 const char *		name,
+							 guint			version);
+SwfdecScript *	swfdec_script_ref			(SwfdecScript *		script);
+void		swfdec_script_unref			(SwfdecScript *		script);
 
-#if 0
-JSBool		swfdec_script_interpret		(SwfdecScript *		script,
-						 JSContext *		cx,
-						 jsval *		rval);
-#endif
-void		swfdec_script_execute		(SwfdecScript *		script,
-						 SwfdecScriptable *	scriptable);
-
-gboolean	swfdec_script_foreach		(SwfdecScript *		script,
-						 SwfdecScriptForeachFunc func,
-						 gpointer		user_data);
-char *		swfdec_script_print_action	(guint			action,
-						 const guint8 *		data,
-						 guint			len);
+gboolean	swfdec_script_foreach			(SwfdecScript *		script,
+							 SwfdecScriptForeachFunc func,
+							 gpointer		user_data);
+char *		swfdec_script_print_action		(guint			action,
+							 const guint8 *		data,
+							 guint			len);
 
 G_END_DECLS
 

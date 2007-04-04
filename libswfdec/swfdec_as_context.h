@@ -60,6 +60,9 @@ struct _SwfdecAsContext {
 
 struct _SwfdecAsContextClass {
   GObjectClass		object_class;
+
+  /* mark all objects that should not be collected */
+  void			(* mark)		(SwfdecAsContext *	context);
 };
 
 GType		swfdec_as_context_get_type	(void);
@@ -82,8 +85,18 @@ void		swfdec_as_value_mark		(SwfdecAsValue *	value);
 void		swfdec_as_string_mark		(const char *		string);
 void		swfdec_as_context_gc		(SwfdecAsContext *	context);
 
+void		swfdec_as_context_run		(SwfdecAsContext *	context);
 void		swfdec_as_context_return	(SwfdecAsContext *	context,
 						 SwfdecAsValue *	retval);
+
+void		swfdec_as_context_eval		(SwfdecAsContext *	cx,
+						 SwfdecAsObject *	obj,
+						 const char *		str,
+						 SwfdecAsValue *	val);
+void		swfdec_as_context_eval_set	(SwfdecAsContext *	cx,
+						 SwfdecAsObject *	obj,
+						 const char *		str,
+						 const SwfdecAsValue *	val);
 
 G_END_DECLS
 #endif

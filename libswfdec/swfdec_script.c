@@ -25,13 +25,11 @@
 #include "swfdec_as_context.h"
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"
-#include "swfdec_scriptable.h"
 
 #include <errno.h>
 #include <math.h>
 #include <string.h>
 #include "swfdec_decoder.h"
-#include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"

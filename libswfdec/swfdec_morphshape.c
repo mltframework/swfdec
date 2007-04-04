@@ -31,7 +31,7 @@
 G_DEFINE_TYPE (SwfdecMorphShape, swfdec_morph_shape, SWFDEC_TYPE_SHAPE)
 
 static SwfdecMovie *
-swfdec_graphic_create_movie (SwfdecGraphic *graphic)
+swfdec_graphic_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   guint i;
   SwfdecMorphShape *morph = SWFDEC_MORPH_SHAPE (graphic);
@@ -40,10 +40,12 @@ swfdec_graphic_create_movie (SwfdecGraphic *graphic)
   movie->morph = morph;
   g_object_ref (morph);
 
+  *size = sizeof (SwfdecMorphMovie) + sizeof (cairo_path_t) * morph->end_vecs->len;
   movie->paths = g_new0 (cairo_path_t, morph->end_vecs->len);
   for (i = 0; i < morph->end_vecs->len; i++) {
     movie->paths[i].num_data = g_array_index (morph->end_vecs, SwfdecShapeVec, i).path.num_data;
     movie->paths[i].data = g_new (cairo_path_data_t, movie->paths[i].num_data);
+    *size += sizeof (cairo_path_data_t) * movie->paths[i].num_data;
   }
 
   return SWFDEC_MOVIE (movie);

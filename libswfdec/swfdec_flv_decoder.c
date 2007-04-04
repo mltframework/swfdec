@@ -614,6 +614,7 @@ swfdec_flv_decoder_get_data (SwfdecFlvDecoder *flv, guint timestamp, guint *real
 #include "swfdec_sprite.h"
 #include "swfdec_video_movie.h"
 
+#if 0
 static void
 notify_initialized (SwfdecPlayer *player, GParamSpec *pspec, SwfdecVideoMovie *movie)
 {
@@ -623,6 +624,7 @@ notify_initialized (SwfdecPlayer *player, GParamSpec *pspec, SwfdecVideoMovie *m
   swfdec_movie_queue_update (SWFDEC_MOVIE (movie), SWFDEC_MOVIE_INVALID_MATRIX);
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
+#endif
 
 gboolean
 swfdec_flv_decoder_is_eof (SwfdecFlvDecoder *flv)
@@ -643,6 +645,8 @@ swfdec_flv_decoder_eof (SwfdecFlvDecoder *flv)
 SwfdecMovie *
 swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
 {
+  g_assert_not_reached ();
+#if 0
   SwfdecContent *content = swfdec_content_new (0);
   SwfdecMovie *movie;
   SwfdecVideo *video;
@@ -670,5 +674,6 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   g_object_unref (stream);
 
   return movie;
+#endif
 }
 

@@ -23,13 +23,13 @@
 
 #include <string.h>
 #include "swfdec_connection.h"
+#include "swfdec_as_context.h"
+#include "swfdec_as_object.h"
 #include "swfdec_debug.h"
-#include "js/jsapi.h"
-#include "js/jsinterp.h"
 
 /*** SwfdecConnection ***/
 
-G_DEFINE_TYPE (SwfdecConnection, swfdec_connection, SWFDEC_TYPE_SCRIPTABLE)
+G_DEFINE_TYPE (SwfdecConnection, swfdec_connection, SWFDEC_TYPE_AS_OBJECT)
 
 static void
 swfdec_connection_dispose (GObject *object)
@@ -42,16 +42,12 @@ swfdec_connection_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_connection_parent_class)->dispose (object);
 }
 
-extern const JSClass connection_class;
 static void
 swfdec_connection_class_init (SwfdecConnectionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecScriptableClass *scriptable_class = SWFDEC_SCRIPTABLE_CLASS (klass);
 
   object_class->dispose = swfdec_connection_dispose;
-
-  scriptable_class->jsclass = &connection_class;
 }
 
 static void
@@ -63,46 +59,37 @@ static void
 swfdec_connection_onstatus (SwfdecConnection *conn, const char *code,
     const char *level, const char *description)
 {
-  JSContext *cx = SWFDEC_SCRIPTABLE (conn)->jscx;
-  JSObject *obj = SWFDEC_SCRIPTABLE (conn)->jsobj;
-  JSObject *info;
-  jsval val, fun;
-  JSString *string;
+  SwfdecAsValue value;
+  SwfdecAsObject *info;
 
-  if (!JS_GetProperty (cx, obj, "onStatus", &fun))
+  info = swfdec_as_object_new (SWFDEC_AS_OBJECT (conn)->context);
+  if (info == NULL)
     return;
-  if (fun == JSVAL_VOID)
-    return;
-  info = JS_NewObject (cx, NULL, NULL, NULL);
-  if (info == NULL ||
-      (string = JS_NewStringCopyZ (cx, code)) == NULL ||
-      (val = STRING_TO_JSVAL (string)) == 0 ||
-      !JS_SetProperty (cx, info, "code", &val) ||
-      (string = JS_NewStringCopyZ (cx, level)) == NULL ||
-      (val = STRING_TO_JSVAL (string)) == 0 ||
-      !JS_SetProperty (cx, info, "level", &val))
-    return;
+  swfdec_as_object_root (info);
+  SWFDEC_AS_VALUE_SET_STRING (&value, code);
+  swfdec_as_object_set (info, SWFDEC_AS_STR_CODE, &value);
+  SWFDEC_AS_VALUE_SET_STRING (&value, level);
+  swfdec_as_object_set (info, SWFDEC_AS_STR_LEVEL, &value);
   if (description) {
-    if ((string = JS_NewStringCopyZ (cx, level)) == NULL ||
-	(val = STRING_TO_JSVAL (string)) == 0 ||
-	!JS_SetProperty (cx, info, "description", &val))
-      return;
+    SWFDEC_AS_VALUE_SET_STRING (&value, description);
+    swfdec_as_object_set (info, SWFDEC_AS_STR_DESCRIPTION, &value);
   }
-  val = OBJECT_TO_JSVAL (info);
-  js_InternalCall (cx, obj, fun, 1, &val, &fun);
+  SWFDEC_AS_VALUE_SET_OBJECT (&value, info);
+  swfdec_as_object_unroot (info);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (conn), SWFDEC_AS_STR_STATUS, 1, &value);
 }
 
 SwfdecConnection *
-swfdec_connection_new (JSContext *cx)
+swfdec_connection_new (SwfdecAsContext *context)
 {
   SwfdecConnection *conn;
-  SwfdecScriptable *script;
 
-  g_return_val_if_fail (cx != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecConnection)))
+    return NULL;
   conn = g_object_new (SWFDEC_TYPE_CONNECTION, NULL);
-  script = SWFDEC_SCRIPTABLE (conn);
-  script->jscx = cx;
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (conn), context, sizeof (SwfdecConnection));
 
   return conn;
 }
@@ -117,7 +104,7 @@ swfdec_connection_connect (SwfdecConnection *conn, const char *url)
   if (url) {
     SWFDEC_ERROR ("FIXME: using NetConnection with non-null URLs is not implemented");
   }
-  swfdec_connection_onstatus (conn, "NetConnection.Connect.Success",
-      "status", NULL);
+  swfdec_connection_onstatus (conn, SWFDEC_AS_STR_NET_CONNECTION_CONNECT_SUCCESS,
+       SWFDEC_AS_STR_SUCCESS, NULL);
 }
 

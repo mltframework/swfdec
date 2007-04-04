@@ -1,6 +1,4 @@
-SUBDIRS = jpeg js
-
-DIST_SUBDIRS = jpeg js 
+SUBDIRS = jpeg
 
 CODECS =
 
@@ -13,9 +11,20 @@ endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
-js_cflags = -I$(srcdir)/js/ -I./js -DXP_UNIX -DDEBUG
+foofiles = \
+	swfdec_js.c \
+	swfdec_js_color.c \
+	swfdec_js_connection.c \
+	swfdec_js_global.c \
+	swfdec_js_mouse.c \
+	swfdec_js_movie.c \
+	swfdec_js_net_stream.c \
+	swfdec_js_sound.c \
+	swfdec_js_video.c \
+	swfdec_js_xml.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+	swfdec_as_array.c \
 	swfdec_as_context.c \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
@@ -53,16 +62,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_graphic_movie.c \
 	swfdec_html_parser.c \
 	swfdec_image.c \
-	swfdec_js.c \
-	swfdec_js_color.c \
-	swfdec_js_connection.c \
-	swfdec_js_global.c \
-	swfdec_js_mouse.c \
-	swfdec_js_movie.c \
-	swfdec_js_net_stream.c \
-	swfdec_js_sound.c \
-	swfdec_js_video.c \
-	swfdec_js_xml.c \
 	swfdec_listener.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
@@ -78,7 +77,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_root_movie.c \
 	swfdec_root_sprite.c \
 	swfdec_script.c \
-	swfdec_scriptable.c \
 	swfdec_shape.c \
 	swfdec_sound.c \
 	swfdec_sprite.c \
@@ -92,7 +90,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
-	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS) $(FFMPEG_CFLAGS) \
+	-I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS) $(FFMPEG_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Swfdec\"
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(SWFDEC_LIBVERSION) \
@@ -107,11 +105,12 @@ public_headers = \
 	swfdec_loader.h \
 	swfdec_player.h
 
-libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la js/libjs.la
+libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la 
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
+	swfdec_as_array.h \
 	swfdec_as_context.h \
 	swfdec_as_frame.h \
 	swfdec_as_function.h \
@@ -143,7 +142,6 @@ noinst_HEADERS = \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
-	swfdec_js.h \
 	swfdec_listener.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
@@ -159,7 +157,6 @@ noinst_HEADERS = \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
 	swfdec_script.h \
-	swfdec_scriptable.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \

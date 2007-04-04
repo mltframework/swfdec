@@ -32,7 +32,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
-#include "swfdec_js.h"
 #include "swfdec_listener.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
@@ -309,7 +308,7 @@ enum {
   PROP_BACKGROUND_COLOR
 };
 
-G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, G_TYPE_OBJECT)
+G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
 
 void
 swfdec_player_remove_movie (SwfdecPlayer *player, SwfdecMovie *movie)
@@ -365,31 +364,20 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
   }
 }
 
-static gboolean
-free_registered_class (gpointer key, gpointer value, gpointer playerp)
-{
-  SwfdecPlayer *player = playerp;
-
-  g_free (key);
-  JS_RemoveRoot (player->jscx, value);
-  g_free (value);
-  return TRUE;
-}
-
 static void
 swfdec_player_dispose (GObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
 
   swfdec_player_stop_all_sounds (player);
-  /* this must happen before we finish the JS player, we have roots in there */
-  g_hash_table_foreach_steal (player->registered_classes, free_registered_class, player);
   g_hash_table_destroy (player->registered_classes);
 
   while (player->roots)
     swfdec_movie_destroy (player->roots->data);
 
-  swfdec_js_finish_player (player);
+  swfdec_listener_free (player->mouse_listener);
+  swfdec_listener_free (player->key_listener);
+  //swfdec_js_finish_player (player);
 
   swfdec_player_remove_all_actions (player, player); /* HACK to allow non-removable actions */
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
@@ -542,7 +530,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
   }
-  swfdec_listener_execute (player->mouse_listener, "onMouseMove");
+  swfdec_listener_execute (player->mouse_listener, SWFDEC_AS_STR_ON_MOUSE_MOVE);
   swfdec_player_update_mouse_position (player);
 }
 
@@ -555,10 +543,10 @@ swfdec_player_do_mouse_button (SwfdecPlayer *player)
 
   if (player->mouse_button) {
     event = SWFDEC_EVENT_MOUSE_DOWN;
-    event_name = "onMouseDown";
+    event_name = SWFDEC_AS_STR_ON_MOUSE_DOWN;
   } else {
     event = SWFDEC_EVENT_MOUSE_UP;
-    event_name = "onMouseUp";
+    event_name = SWFDEC_AS_STR_ON_MOUSE_UP;
   }
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, event);
@@ -773,9 +761,29 @@ swfdec_accumulate_or (GSignalInvocationHint *ihint, GValue *return_accu,
 }
 
 static void
+swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
+{
+  swfdec_as_string_mark (key);
+  swfdec_as_object_mark (value);
+}
+
+static void
+swfdec_player_mark (SwfdecAsContext *context)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (context);
+
+  g_hash_table_foreach (player->registered_classes, swfdec_player_mark_string_object, NULL);
+  swfdec_listener_mark (player->mouse_listener);
+  swfdec_listener_mark (player->key_listener);
+
+  SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
+}
+
+static void
 swfdec_player_class_init (SwfdecPlayerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsContextClass *context_class = SWFDEC_AS_CONTEXT_CLASS (klass);
 
   object_class->get_property = swfdec_player_get_property;
   object_class->set_property = swfdec_player_set_property;
@@ -891,6 +899,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 
+  context_class->mark = swfdec_player_mark;
+
   klass->advance = swfdec_player_do_advance;
   klass->handle_mouse = swfdec_player_do_handle_mouse;
 }
@@ -898,9 +908,11 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 static void
 swfdec_player_init (SwfdecPlayer *player)
 {
-  swfdec_js_init_player (player);
-  player->registered_classes = g_hash_table_new_full (g_str_hash, g_str_equal, 
-      g_free, NULL);
+  //swfdec_js_init_player (player);
+  player->mouse_listener = swfdec_listener_new (SWFDEC_AS_CONTEXT (player));
+  player->key_listener = swfdec_listener_new (SWFDEC_AS_CONTEXT (player));
+  player->registered_classes = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
+      NULL, NULL);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
@@ -960,7 +972,7 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   root->player = player;
   root->loader = loader;
   if (variables)
-    swfdec_scriptable_set_variables (SWFDEC_SCRIPTABLE (movie), variables);
+    swfdec_movie_set_variables (movie, variables);
   swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
   return root;
 }
@@ -1042,42 +1054,41 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   g_object_notify (G_OBJECT (player), "initialized");
 }
 
-jsval
+/**
+ * swfdec_player_get_export_class:
+ * @player: a #SwfdecPlayer
+ * @name: garbage-collected string naming the export
+ *
+ * Looks up the constructor for characters that are exported using @name.
+ *
+ * Returns: a #SwfdecAsObject naming the constructor or %NULL if none
+ **/
+SwfdecAsObject *
 swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
 {
-  jsval *val = g_hash_table_lookup (player->registered_classes, name);
-
-  if (val)
-    return *val;
-  else
-    return JSVAL_NULL;
+  return g_hash_table_lookup (player->registered_classes, name);
 }
 
+/**
+ * swfdec_player_set_export_class:
+ * @player: a #SwfdecPlayer
+ * @name: garbage-collected string naming the export
+ * @object: object to use as constructor or %NULL for none
+ *
+ * Sets the constructor to be used for instances created using the object 
+ * exported with @name.
+ **/
 void
-swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, jsval val)
+swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAsObject *object)
 {
-  jsval *insert;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (name != NULL);
-  g_return_if_fail (JSVAL_IS_OBJECT (val));
+  g_return_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object));
 
-  insert = g_hash_table_lookup (player->registered_classes, name);
-  if (insert) {
-    JS_RemoveRoot (player->jscx, insert);
-    g_free (insert);
+  if (object)
+    g_hash_table_insert (player->registered_classes, (gpointer) name, object);
+  else
     g_hash_table_remove (player->registered_classes, name);
-  }
-
-  if (val != JSVAL_NULL) {
-    insert = g_new (jsval, 1);
-    *insert = val;
-    if (!JS_AddRoot (player->jscx, insert)) {
-      g_free (insert);
-      return;
-    }
-    g_hash_table_insert (player->registered_classes, g_strdup (name), insert);
-  }
 }
 
 /** PUBLIC API ***/
@@ -1207,7 +1218,6 @@ swfdec_init (void)
       swfdec_debug_set_level (level);
     }
   }
-  swfdec_js_init (0);
 }
 
 /**

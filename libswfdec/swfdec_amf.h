@@ -20,7 +20,7 @@
 #ifndef __SWFDEC_AMF_H__
 #define __SWFDEC_AMF_H__
 
-#include <libswfdec/js/jspubtd.h>
+#include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_bits.h>
 
 typedef enum {
@@ -46,13 +46,13 @@ typedef enum {
   SWFDEC_AMF_N_TYPES
 } SwfdecAmfType;
 
-gboolean	swfdec_amf_parse_one		(JSContext *	cx, 
-						 SwfdecBits *	bits,
-						 SwfdecAmfType	expected_type,
-						 jsval *	rval);
-guint		swfdec_amf_parse		(JSContext *	cx, 
-						 SwfdecBits *	bits,
-						 guint		n_items,
+gboolean	swfdec_amf_parse_one		(SwfdecAsContext *	context, 
+						 SwfdecBits *		bits,
+						 SwfdecAmfType		expected_type,
+						 SwfdecAsValue *	rval);
+guint		swfdec_amf_parse		(SwfdecAsContext *	context, 
+						 SwfdecBits *		bits,
+						 guint			n_items,
 						 ...);
 
 

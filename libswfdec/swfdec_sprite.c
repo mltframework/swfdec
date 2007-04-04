@@ -477,11 +477,12 @@ swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s)
 }
 
 static SwfdecMovie *
-swfdec_sprite_create_movie (SwfdecGraphic *graphic)
+swfdec_sprite_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   SwfdecSpriteMovie *ret = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, NULL);
 
   ret->sprite = SWFDEC_SPRITE (graphic);
+  *size = sizeof (SwfdecSpriteMovie);
 
   return SWFDEC_MOVIE (ret);
 }

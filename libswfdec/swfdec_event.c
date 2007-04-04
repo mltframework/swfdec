@@ -20,10 +20,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <js/jsapi.h>
 #include "swfdec_event.h"
+#include "swfdec_as_object.h"
 #include "swfdec_debug.h"
-#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_script.h"
 
@@ -41,70 +40,57 @@ struct _SwfdecEventList {
   GArray *		events;
 };
 
-static const char *event_names[] = {
-  "onLoad",
-  "onEnterFrame",
-  "onUnload",
-  "onMouseMove",
-  "onMouseDown",
-  "onMouseUp",
-  "onKeyUp",
-  "onKeyDown",
-  "onData",
-  NULL,
-  "onPress",
-  "onRelease",
-  "onReleaseOutside",
-  "onRollOver",
-  "onRollOut",
-  "onDragOver",
-  "onDragOut",
-  NULL,
-  "onConstruct"
-};
-
+/**
+ * swfdec_event_type_get_name:
+ * @type: a #SwfdecEventType
+ *
+ * Gets the name for the event as a refcounted string or %NULL if the
+ * given clip event has no associated event.
+ *
+ * Returns: The name of the event or %NULL if none.
+ **/
 const char *
 swfdec_event_type_get_name (SwfdecEventType type)
 {
   switch (type) {
     case SWFDEC_EVENT_LOAD:
-      return event_names[0];
+      return SWFDEC_AS_STR_ON_LOAD;
     case SWFDEC_EVENT_ENTER:
-      return event_names[1];
+      return SWFDEC_AS_STR_ON_ENTER_FRAME;
     case SWFDEC_EVENT_UNLOAD:
-      return event_names[2];
+      return SWFDEC_AS_STR_ON_UNLOAD;
     case SWFDEC_EVENT_MOUSE_MOVE:
-      return event_names[3];
+      return SWFDEC_AS_STR_ON_MOUSE_MOVE;
     case SWFDEC_EVENT_MOUSE_DOWN:
-      return event_names[4];
+      return SWFDEC_AS_STR_ON_MOUSE_DOWN;
     case SWFDEC_EVENT_MOUSE_UP:
-      return event_names[5];
+      return SWFDEC_AS_STR_ON_MOUSE_UP;
     case SWFDEC_EVENT_KEY_UP:
-      return event_names[6];
+      return SWFDEC_AS_STR_ON_KEY_UP;
     case SWFDEC_EVENT_KEY_DOWN:
-      return event_names[7];
+      return SWFDEC_AS_STR_ON_KEY_DOWN;
     case SWFDEC_EVENT_DATA:
-      return event_names[8];
+      return SWFDEC_AS_STR_ON_DATA;
     case SWFDEC_EVENT_INITIALIZE:
-      return event_names[9];
+      return NULL;
     case SWFDEC_EVENT_PRESS:
-      return event_names[10];
+      return SWFDEC_AS_STR_ON_PRESS;
     case SWFDEC_EVENT_RELEASE:
-      return event_names[11];
+      return SWFDEC_AS_STR_ON_RELEASE;
     case SWFDEC_EVENT_RELEASE_OUTSIDE:
-      return event_names[12];
+      return SWFDEC_AS_STR_ON_RELEASE_OUTSIDE;
     case SWFDEC_EVENT_ROLL_OVER:
-      return event_names[13];
+      return SWFDEC_AS_STR_ON_ROLL_OVER;
     case SWFDEC_EVENT_ROLL_OUT:
-      return event_names[14];
+      return SWFDEC_AS_STR_ON_ROLL_OUT;
     case SWFDEC_EVENT_DRAG_OVER:
-      return event_names[15];
+      return SWFDEC_AS_STR_ON_DRAG_OVER;
     case SWFDEC_EVENT_DRAG_OUT:
-      return event_names[16];
+      return SWFDEC_AS_STR_ON_DRAG_OUT;
     case SWFDEC_EVENT_KEY_PRESS:
-      return event_names[17];
+      return NULL;
     case SWFDEC_EVENT_CONSTRUCT:
-      return event_names[18];
+      return SWFDEC_AS_STR_ON_CONSTRUCT;
     default:
       g_assert_not_reached ();
       return NULL;
@@ -222,32 +208,33 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
 }
 
 void
-swfdec_event_list_execute (SwfdecEventList *list, SwfdecScriptable *scriptable, 
+swfdec_event_list_execute (SwfdecEventList *list, SwfdecAsObject *object, 
     guint condition, guint8 key)
 {
   guint i;
 
   g_return_if_fail (list != NULL);
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
 
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & condition) &&
 	event->key == key) {
-      SWFDEC_LOG ("executing script for event %u on scriptable %p", condition, scriptable);
-      swfdec_script_execute (event->script, scriptable);
+      SWFDEC_LOG ("executing script for event %u on scriptable %p", condition, object);
+      swfdec_as_object_run (object, event->script);
     }
   }
 }
 
 gboolean
-swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecScriptable *scriptable,
+swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecAsObject *object,
     guint condition, guint8 key)
 {
   guint i;
   const char *name;
 
   g_return_val_if_fail (list != NULL, FALSE);
-  g_return_val_if_fail (SWFDEC_IS_SCRIPTABLE (scriptable), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
 
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
@@ -257,7 +244,7 @@ swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecScriptable *scrip
   }
   name = swfdec_event_type_get_name (condition);
   if (name)
-    return swfdec_scriptable_can_execute (scriptable, name);
+    return swfdec_as_object_has_function (object, name);
   return FALSE;
 }
 

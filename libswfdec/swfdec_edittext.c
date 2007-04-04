@@ -1,15 +1,32 @@
+/* Swfdec
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <pango/pangocairo.h>
 #include <string.h>
-#include <js/jsapi.h>
 #include "swfdec_edittext.h"
 #include "swfdec_debug.h"
 #include "swfdec_edittext_movie.h"
 #include "swfdec_font.h"
-#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
 
@@ -22,7 +39,7 @@ swfdec_edit_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 }
 
 static SwfdecMovie *
-swfdec_edit_text_create_movie (SwfdecGraphic *graphic)
+swfdec_edit_text_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   SwfdecEditText *text = SWFDEC_EDIT_TEXT (graphic);
   SwfdecEditTextMovie *ret = g_object_new (SWFDEC_TYPE_EDIT_TEXT_MOVIE, NULL);
@@ -30,6 +47,7 @@ swfdec_edit_text_create_movie (SwfdecGraphic *graphic)
   ret->text = text;
   if (text->text)
     swfdec_edit_text_movie_set_text (ret, text->text);
+  *size = sizeof (SwfdecEditTextMovie);
 
   return SWFDEC_MOVIE (ret);
 }
@@ -40,10 +58,9 @@ swfdec_edit_text_dispose (GObject *object)
   SwfdecEditText *text = SWFDEC_EDIT_TEXT (object);
 
   g_free (text->text);
+  text->text = NULL;
   g_free (text->variable);
   text->variable = NULL;
-  g_free (text->variable_prefix);
-  text->variable_prefix = NULL;
   
   G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
 }
@@ -63,34 +80,6 @@ static void
 swfdec_edit_text_init (SwfdecEditText * text)
 {
   text->max_length = G_MAXUINT;
-}
-
-static void
-swfdec_edit_text_parse_variable (SwfdecEditText *text)
-{
-  char *s;
-
-  if (text->variable && text->variable[0] == '\0') {
-    g_free (text->variable);
-    text->variable = NULL;
-    return;
-  }
-  /* FIXME: check the variable for valid identifiers */
-  if (strchr (text->variable, '/')) {
-    char *ret = swfdec_js_slash_to_dot (text->variable);
-    g_free (text->variable);
-    text->variable = ret;
-  }
-  if (!text->variable)
-    return;
-  s = strrchr (text->variable, '.');
-  if (s) {
-    guint len = s - text->variable;
-    text->variable_prefix = g_strndup (text->variable, len);
-    text->variable_name = s + 1;
-  } else {
-    text->variable_name = text->variable;
-  }
 }
 
 int
@@ -178,7 +167,6 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s)
     text->spacing = swfdec_bits_get_s16 (b);
   }
   text->variable = swfdec_bits_get_string (b);
-  swfdec_edit_text_parse_variable (text);
   if (has_text)
     text->text = swfdec_bits_get_string (b);
 

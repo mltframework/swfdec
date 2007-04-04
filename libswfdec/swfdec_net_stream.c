@@ -28,36 +28,25 @@
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
-#include "js/jsapi.h"
 
+/* NB: code and level must be rooted gc-strings */
 static void
 swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const char *level)
 {
-  jsval val;
-  JSString *string;
-  JSObject *object;
-  JSContext *cx;
+  SwfdecAsValue val;
+  SwfdecAsObject *object;
 
-  SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
-  cx = stream->player->jscx;
-  object = JS_NewObject (cx, NULL, NULL, NULL);
+  object = swfdec_as_object_new (SWFDEC_AS_OBJECT (stream)->context);
   if (!object)
     return;
-  string = JS_NewStringCopyZ (cx, code);
-  if (!string)
-    return;
-  val = STRING_TO_JSVAL (string);
-  if (!JS_SetProperty (cx, object, "code", &val))
-    return;
-  string = JS_NewStringCopyZ (cx, level);
-  if (!string)
-    return;
-  val = STRING_TO_JSVAL (string);
-  if (!JS_SetProperty (cx, object, "level", &val))
-    return;
+  SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
+  SWFDEC_AS_VALUE_SET_STRING (&val, code);
+  swfdec_as_object_set (object, SWFDEC_AS_STR_CODE, &val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, level);
+  swfdec_as_object_set (object, SWFDEC_AS_STR_LEVEL, &val);
 
-  val = OBJECT_TO_JSVAL (object);
-  swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (stream), "onStatus", 1, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_ON_STATUS, 1, &val);
 }
 
 static void swfdec_net_stream_update_playing (SwfdecNetStream *stream);
@@ -116,16 +105,17 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   }
   if (stream->next_time <= stream->current_time) {
     if (swfdec_flv_decoder_is_eof (stream->flvdecoder)) {
-      swfdec_net_stream_onstatus (stream, "NetStream.Play.Stop", "status");
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_PLAY_STOP, SWFDEC_AS_STR_STATUS);
     } else {
       stream->buffering = TRUE;
-      swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Empty", "status");
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_EMPTY, 
+	  SWFDEC_AS_STR_STATUS);
     }
     swfdec_net_stream_update_playing (stream);
   }
   if (process_events) {
     while (process_events_from <= stream->current_time) {
-      jsval name, value;
+      SwfdecAsValue name, value;
       SwfdecBits bits;
       SwfdecBuffer *event = swfdec_flv_decoder_get_data (stream->flvdecoder, process_events_from, &process_events_from);
       if (!event)
@@ -133,12 +123,12 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       SWFDEC_LOG ("processing event from timestamp %u", process_events_from);
       process_events_from++; /* increase so we get the next event next time */
       swfdec_bits_init (&bits, event);
-      if (swfdec_amf_parse (SWFDEC_SCRIPTABLE (stream)->jscx, &bits, 2, 
+      if (swfdec_amf_parse (SWFDEC_AS_OBJECT (stream)->context, &bits, 2, 
 	    SWFDEC_AMF_STRING, &name, SWFDEC_AMF_MIXED_ARRAY, &value) != 2) {
 	SWFDEC_ERROR ("could not parse data tag");
       } else {
-	swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (stream), 
-	    JS_GetStringBytes (JSVAL_TO_STRING (name)), 1, &value);
+	swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), 
+	    SWFDEC_AS_VALUE_GET_STRING (&name), 1, &value);
       }
     }
   }
@@ -221,7 +211,8 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   
   if (loader->error) {
     if (stream->flvdecoder == NULL)
-      swfdec_net_stream_onstatus (stream, "NetStream.Play.StreamNotFound", "error");
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_PLAY_STREAMNOTFOUND,
+	  SWFDEC_AS_STR_ERROR);
     return;
   }
   if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
@@ -233,7 +224,8 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     stream->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
     SWFDEC_DECODER (stream->flvdecoder)->player = stream->player;
     SWFDEC_DECODER (stream->flvdecoder)->queue = loader->queue;
-    swfdec_net_stream_onstatus (stream, "NetStream.Play.Start", "status");
+    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_PLAY_START,
+	SWFDEC_AS_STR_STATUS);
     swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
   }
   klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
@@ -267,12 +259,14 @@ out:
     guint first, last;
     swfdec_flv_decoder_eof (stream->flvdecoder);
     recheck = TRUE;
-    swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Flush", "status");
+    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_FLUSH,
+	SWFDEC_AS_STR_STATUS);
     swfdec_net_stream_video_goto (stream, stream->current_time);
     stream->buffering = FALSE;
     if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last) &&
 	stream->current_time + stream->buffer_time <= last) {
-      swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Full", "status");
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL,
+	  SWFDEC_AS_STR_STATUS);
     }
   }
   if (recheck) {
@@ -283,7 +277,8 @@ out:
 	if (current + stream->buffer_time <= last) {
 	  swfdec_net_stream_video_goto (stream, current);
 	  stream->buffering = FALSE;
-	  swfdec_net_stream_onstatus (stream, "NetStream.Buffer.Full", "status");
+	  swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL,
+	      SWFDEC_AS_STR_STATUS);
 	}
       } else {
 	SWFDEC_ERROR ("no video stream, how do we update buffering?");
@@ -323,7 +318,7 @@ swfdec_net_stream_input_disconnect (SwfdecVideoMovieInput *input, SwfdecVideoMov
 
 /*** SWFDEC_NET_STREAM ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_SCRIPTABLE,
+G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_AS_OBJECT,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_net_stream_loader_target_init))
 
 static void
@@ -346,16 +341,25 @@ swfdec_net_stream_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_net_stream_parent_class)->dispose (object);
 }
 
-extern const JSClass net_stream_class;
+static void
+swfdec_net_stream_mark (SwfdecAsObject *object)
+{
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM (object);
+
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->conn));
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->mark (object);
+}
+
 static void
 swfdec_net_stream_class_init (SwfdecNetStreamClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecScriptableClass *scriptable_class = SWFDEC_SCRIPTABLE_CLASS (klass);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_net_stream_dispose;
 
-  scriptable_class->jsclass = &net_stream_class;
+  asobject_class->mark = swfdec_net_stream_mark;
 }
 
 static void
@@ -370,16 +374,17 @@ swfdec_net_stream_init (SwfdecNetStream *stream)
 SwfdecNetStream *
 swfdec_net_stream_new (SwfdecPlayer *player, SwfdecConnection *conn)
 {
+  SwfdecAsContext *context;
   SwfdecNetStream *stream;
   
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (SWFDEC_IS_CONNECTION (conn), NULL);
 
+  context = SWFDEC_AS_OBJECT (conn)->context;
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecNetStream)))
+    return NULL;
   stream = g_object_new (SWFDEC_TYPE_NET_STREAM, NULL);
-  stream->player = player;
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (stream), context, sizeof (SwfdecNetStream));
   stream->conn = conn;
-  SWFDEC_SCRIPTABLE (stream)->jscx = player->jscx;
-  g_object_ref (conn);
 
   return stream;
 }

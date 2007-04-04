@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,8 @@ struct _SwfdecGraphicClass
   SwfdecCharacterClass	character_class;
 
   /* when creating a movie for this graphic, calls this function */
-  SwfdecMovie *	      	(*create_movie)	(SwfdecGraphic *		graphic);
+  SwfdecMovie *	      	(*create_movie)	(SwfdecGraphic *		graphic,
+					 gsize *      			size);
   /* optional vfuncs */
   void			(* render)	(SwfdecGraphic *	      	graphic, 
                                          cairo_t *			cr,

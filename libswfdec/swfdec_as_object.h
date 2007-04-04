@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec_as_types.h>
+#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -39,6 +40,8 @@ typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 #define SWFDEC_AS_OBJECT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObject))
 #define SWFDEC_AS_OBJECT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
 #define SWFDEC_AS_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
+
+#define SWFDEC_AS_OBJECT_HAS_CONTEXT(obj)	 (SWFDEC_AS_OBJECT (obj)->properties != NULL)
 
 struct _SwfdecAsObject {
   GObject		object;
@@ -89,6 +92,14 @@ void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
   swfdec_as_object_get_variable ((object), &__variable, (value)); \
 }G_STMT_END
 
+void		swfdec_as_object_run		(SwfdecAsObject *       object,
+						 SwfdecScript *		script);
+gboolean	swfdec_as_object_has_function	(SwfdecAsObject *       object,
+						 const char *		name);
+void		swfdec_as_object_call		(SwfdecAsObject *       object,
+						 const char *		name,
+						 guint			argc,
+						 SwfdecAsValue *	argv);
 
 G_END_DECLS
 #endif

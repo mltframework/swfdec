@@ -27,42 +27,27 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
-#include "js/jsapi.h"
-#include "js/jsinterp.h"
 
 /*** SWFDEC_LOADER_TARGET ***/
 
 static SwfdecPlayer *
 swfdec_xml_loader_target_get_player (SwfdecLoaderTarget *target)
 {
-  SwfdecXml *xml = SWFDEC_XML (target);
-
-  return xml->player;
+  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
 }
 
 static void
 swfdec_xml_ondata (SwfdecXml *xml)
 {
-  JSContext *cx = SWFDEC_SCRIPTABLE (xml)->jscx;
-  JSObject *obj = SWFDEC_SCRIPTABLE (xml)->jsobj;
-  jsval val, fun;
-  JSString *string;
+  SwfdecAsValue val;
 
-  if (!JS_GetProperty (cx, obj, "onData", &fun))
-    return;
-  if (fun == JSVAL_VOID)
-    return;
   if (xml->text) {
-    string = JS_NewStringCopyZ (cx, xml->text);
-    if (string == NULL) {
-      SWFDEC_ERROR ("Could not convert text to JS string");
-      return;
-    }
-    val = STRING_TO_JSVAL (string);
+    SWFDEC_AS_VALUE_SET_STRING (&val,
+	swfdec_as_context_get_string (SWFDEC_AS_OBJECT (xml)->context, xml->text));
   } else {
-    val = JSVAL_VOID;
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
-  js_InternalCall (cx, obj, fun, 1, &val, &fun);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (xml), SWFDEC_AS_STR_ON_DATA, 1, &val);
 }
 
 static void
@@ -119,7 +104,7 @@ swfdec_xml_loader_target_init (SwfdecLoaderTargetInterface *iface)
 
 /*** SWFDEC_XML ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_SCRIPTABLE,
+G_DEFINE_TYPE_WITH_CODE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_AS_OBJECT,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_xml_loader_target_init))
 
 static void
@@ -143,16 +128,12 @@ swfdec_xml_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_xml_parent_class)->dispose (object);
 }
 
-extern const JSClass xml_class;
 static void
 swfdec_xml_class_init (SwfdecXmlClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecScriptableClass *scriptable_class = SWFDEC_SCRIPTABLE_CLASS (klass);
 
   object_class->dispose = swfdec_xml_dispose;
-
-  scriptable_class->jsclass = &xml_class;
 }
 
 static void
@@ -160,19 +141,17 @@ swfdec_xml_init (SwfdecXml *xml)
 {
 }
 
-SwfdecXml *
-swfdec_xml_new (SwfdecPlayer *player)
+SwfdecAsObject *
+swfdec_xml_new (SwfdecAsContext *context)
 {
-  SwfdecXml *xml;
-  SwfdecScriptable *script;
+  SwfdecAsObject *xml;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  xml= g_object_new (SWFDEC_TYPE_XML, NULL);
-  xml->player = player;
-
-  script = SWFDEC_SCRIPTABLE (xml);
-  script->jscx = player->jscx;
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecXml)))
+    return NULL;
+  xml = g_object_new (SWFDEC_TYPE_XML, NULL);
+  swfdec_as_object_add (xml, context, sizeof (SwfdecXml));
 
   return xml;
 }
@@ -184,7 +163,7 @@ swfdec_xml_load (SwfdecXml *xml, const char *url)
   g_return_if_fail (url != NULL);
 
   swfdec_xml_reset (xml);
-  xml->loader = swfdec_player_load (xml->player, url);
+  xml->loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (xml)->context), url);
   swfdec_loader_set_target (xml->loader, SWFDEC_LOADER_TARGET (xml));
   swfdec_loader_queue_parse (xml->loader);
 }

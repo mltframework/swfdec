@@ -94,17 +94,13 @@ swfdec_video_movie_iterate_end (SwfdecMovie *mov)
   return TRUE;
 }
 
-extern const JSClass video_class;
 static void
 swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecScriptableClass *scriptable_class = SWFDEC_SCRIPTABLE_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
   object_class->dispose = swfdec_video_movie_dispose;
-
-  scriptable_class->jsclass = &video_class;
 
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;

@@ -34,12 +34,14 @@ G_BEGIN_DECLS
 #define SWFDEC_TYPE_AS_ASOBJECT	(6)
 
 typedef guint8 SwfdecAsType;
+typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsStack SwfdecAsStack;
 typedef struct _SwfdecAsValue SwfdecAsValue;
 
+/* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {
   SwfdecAsType		type;
   union {
@@ -92,6 +94,37 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR_EMPTY (swfdec_as_strings[0] + 1)
 #define SWFDEC_AS_STR_PROTO (swfdec_as_strings[1] + 1)
 #define SWFDEC_AS_STR_THIS (swfdec_as_strings[2] + 1)
+#define SWFDEC_AS_STR_CODE (swfdec_as_strings[3] + 1)
+#define SWFDEC_AS_STR_LEVEL (swfdec_as_strings[4] + 1)
+#define SWFDEC_AS_STR_DESCRIPTION (swfdec_as_strings[5] + 1)
+#define SWFDEC_AS_STR_STATUS (swfdec_as_strings[6] + 1)
+#define SWFDEC_AS_STR_SUCCESS (swfdec_as_strings[7] + 1)
+#define SWFDEC_AS_STR_NET_CONNECTION_CONNECT_SUCCESS (swfdec_as_strings[8] + 1)
+#define SWFDEC_AS_STR_ON_LOAD (swfdec_as_strings[9] + 1)
+#define SWFDEC_AS_STR_ON_ENTER_FRAME (swfdec_as_strings[10] + 1)
+#define SWFDEC_AS_STR_ON_UNLOAD (swfdec_as_strings[11] + 1)
+#define SWFDEC_AS_STR_ON_MOUSE_MOVE (swfdec_as_strings[12] + 1)
+#define SWFDEC_AS_STR_ON_MOUSE_DOWN (swfdec_as_strings[13] + 1)
+#define SWFDEC_AS_STR_ON_MOUSE_UP (swfdec_as_strings[14] + 1)
+#define SWFDEC_AS_STR_ON_KEY_UP (swfdec_as_strings[15] + 1)
+#define SWFDEC_AS_STR_ON_KEY_DOWN (swfdec_as_strings[16] + 1)
+#define SWFDEC_AS_STR_ON_DATA (swfdec_as_strings[17] + 1)
+#define SWFDEC_AS_STR_ON_PRESS (swfdec_as_strings[18] + 1)
+#define SWFDEC_AS_STR_ON_RELEASE (swfdec_as_strings[19] + 1)
+#define SWFDEC_AS_STR_ON_RELEASE_OUTSIDE (swfdec_as_strings[20] + 1)
+#define SWFDEC_AS_STR_ON_ROLL_OVER (swfdec_as_strings[21] + 1)
+#define SWFDEC_AS_STR_ON_ROLL_OUT (swfdec_as_strings[22] + 1)
+#define SWFDEC_AS_STR_ON_DRAG_OVER (swfdec_as_strings[23] + 1)
+#define SWFDEC_AS_STR_ON_DRAG_OUT (swfdec_as_strings[24] + 1)
+#define SWFDEC_AS_STR_ON_CONSTRUCT (swfdec_as_strings[25] + 1)
+#define SWFDEC_AS_STR_ON_STATUS (swfdec_as_strings[26] + 1)
+#define SWFDEC_AS_STR_ERROR (swfdec_as_strings[27] + 1)
+#define SWFDEC_AS_STR_NETSTREAM_BUFFER_EMPTY (swfdec_as_strings[28] + 1)
+#define SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL (swfdec_as_strings[29] + 1)
+#define SWFDEC_AS_STR_NETSTREAM_BUFFER_FLUSH (swfdec_as_strings[30] + 1)
+#define SWFDEC_AS_STR_NETSTREAM_PLAY_START (swfdec_as_strings[31] + 1)
+#define SWFDEC_AS_STR_NETSTREAM_PLAY_STOP (swfdec_as_strings[32] + 1)
+#define SWFDEC_AS_STR_NETSTREAM_PLAY_STREAMNOTFOUND (swfdec_as_strings[33] + 1)
 
 /* all existing actions */
 typedef enum {

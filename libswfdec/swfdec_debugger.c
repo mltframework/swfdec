@@ -25,11 +25,8 @@
 #include "swfdec_debugger.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
-#include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
-#include "js/jsdbgapi.h"
-#include "js/jsinterp.h" /* for frame->swf */
 
 /*** SwfdecDebuggerScript ***/
 
@@ -112,7 +109,7 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 	break;
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return JS_FALSE;
+	return NULL;
     }
   }
   return g_string_free (string, FALSE);
@@ -321,6 +318,7 @@ typedef struct {
   guint				line;
 } Breakpoint;
 
+#if 0
 static void
 swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
 {
@@ -345,22 +343,7 @@ swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
 
   g_object_freeze_notify (G_OBJECT (debugger));
 }
-
-static JSTrapStatus
-swfdec_debugger_interrupt_cb (JSContext *cx, JSScript *script,
-        jsbytecode *pc, jsval *rval, void *debugger)
-{
-  SwfdecDebuggerScript *dscript;
-  guint line;
-  if (!swfdec_debugger_get_current (debugger, &dscript, &line))
-    return JSTRAP_CONTINUE; 
-  if (dscript->commands[line].breakpoint) {
-    swfdec_debugger_do_breakpoint (debugger, dscript->commands[line].breakpoint);
-  } else if (SWFDEC_DEBUGGER (debugger)->stepping) {
-    swfdec_debugger_do_breakpoint (debugger, 0);
-  }
-  return JSTRAP_CONTINUE;
-}
+#endif
 
 static void
 swfdec_debugger_update_interrupting (SwfdecDebugger *debugger)
@@ -377,10 +360,9 @@ swfdec_debugger_update_interrupting (SwfdecDebugger *debugger)
     }
   }
   if (should_interrupt) {
-    JS_SetInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), 
-	swfdec_debugger_interrupt_cb, debugger);
+    g_assert_not_reached ();
   } else {
-    JS_ClearInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), NULL, NULL);
+    g_assert_not_reached ();
   }
 }
 
@@ -444,8 +426,8 @@ swfdec_debugger_unset_breakpoint (SwfdecDebugger *debugger, guint id)
 }
 
 static gboolean
-swfdec_debugger_get_from_js (SwfdecDebugger *debugger, SwfdecScript *script, 
-    jsbytecode *pc, SwfdecDebuggerScript **script_out, guint *line_out)
+swfdec_debugger_get_from_as (SwfdecDebugger *debugger, SwfdecScript *script, 
+    guint8 *pc, SwfdecDebuggerScript **script_out, guint *line_out)
 {
   guint line;
   SwfdecDebuggerScript *dscript = swfdec_debugger_get_script (debugger, script);
@@ -460,7 +442,7 @@ swfdec_debugger_get_from_js (SwfdecDebugger *debugger, SwfdecScript *script,
 	*line_out = line;
       return TRUE;
     }
-    if (pc < (jsbytecode *) dscript->commands[line].code)
+    if (pc < (guint8 *) dscript->commands[line].code)
       return FALSE;
   }
   return FALSE;
@@ -470,18 +452,8 @@ gboolean
 swfdec_debugger_get_current (SwfdecDebugger *debugger,
     SwfdecDebuggerScript **dscript, guint *line)
 {
-  JSStackFrame *frame = NULL;
-  JSContext *cx;
-  jsbytecode *pc;
-
-  cx = SWFDEC_PLAYER (debugger)->jscx;
-  JS_FrameIterator (cx, &frame);
-  if (frame == NULL)
-    return FALSE;
-  if (frame->swf == NULL)
-    return FALSE;
-  pc = JS_GetFramePC (cx, frame);
-  return swfdec_debugger_get_from_js (debugger, frame->swf, pc, dscript, line);
+  /* totally bogus code just to avoid gcc warning */
+  return swfdec_debugger_get_from_as (debugger, NULL, NULL, dscript, line);
 }
 
 gboolean
@@ -542,7 +514,6 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
 {
   SwfdecPlayer *player;
   GList *walk;
-  jsval rval;
   const char *ret;
 
   g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
@@ -552,11 +523,7 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
   g_object_freeze_notify (G_OBJECT (debugger));
 
 
-  if (swfdec_js_run (player, command, &rval)) {
-    ret = swfdec_js_to_string (player->jscx, rval);
-  } else {
-    ret = NULL;
-  }
+  SWFDEC_ERROR ("ooops");
 
 
   for (walk = player->roots; walk; walk = walk->next) {

@@ -23,6 +23,7 @@
 
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_function.h"
 #include "swfdec_debug.h"
 
 
@@ -39,7 +40,7 @@ swfdec_as_object_dispose (GObject *gobject)
 {
   SwfdecAsObject *object = SWFDEC_AS_OBJECT (gobject);
 
-  g_assert (object->properties == NULL);
+  g_assert (!SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
 
   G_OBJECT_CLASS (swfdec_as_object_parent_class)->dispose (gobject);
 }
@@ -80,7 +81,7 @@ swfdec_as_object_init (SwfdecAsObject *object)
  *
  * Allocates a new Object. This does the same as the Actionscript code 
  * "new Object()".
- * <warn>This function may run the garbage collector.</warn>
+ * <warning>This function may run the garbage collector.</warning>
  *
  * Returns: the new object or NULL on out of memory.
  **/
@@ -115,7 +116,7 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
 {
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (object->properties == NULL);
+  g_return_if_fail (!SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
 
   object->context = context;
   object->size = size;
@@ -136,7 +137,7 @@ void
 swfdec_as_object_collect (SwfdecAsObject *object)
 {
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (object->properties != NULL);
+  g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
 
   g_hash_table_foreach (object->properties, swfdec_as_object_free_property, object);
   g_hash_table_destroy (object->properties);
@@ -246,5 +247,45 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object,
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
     return;
   }
+}
+
+/**
+ * swfdec_as_object_run:
+ * @object: a #SwfdecAsObject
+ * @script: script to execute
+ *
+ * Executes the given @script with @object as this pointer.
+ **/
+void
+swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
+{
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
+  g_return_if_fail (script != NULL);
+
+  g_assert_not_reached ();
+  swfdec_as_context_run (object->context);
+}
+
+void
+swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, SwfdecAsValue *argv)
+{
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (argc == 0 || argv != NULL);
+}
+
+gboolean
+swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
+{
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  swfdec_as_object_get (object, name, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return FALSE;
+  return SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&val));
 }
 

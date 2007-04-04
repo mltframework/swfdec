@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "swfdec_root_movie.h"
+#include "swfdec_as_object.h"
 #include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -35,7 +36,6 @@
 #include "swfdec_root_sprite.h"
 #include "swfdec_script.h"
 #include "swfdec_swf_decoder.h"
-#include "js/jsapi.h"
 
 
 static void swfdec_root_movie_loader_target_init (SwfdecLoaderTargetInterface *iface);
@@ -79,14 +79,6 @@ swfdec_root_movie_loader_target_set_decoder (SwfdecLoaderTarget *target,
 static gboolean
 swfdec_root_movie_loader_target_do_init (SwfdecLoaderTarget *target)
 {
-  SwfdecRootMovie *movie = SWFDEC_ROOT_MOVIE (target);
-
-  if (movie->player->roots->next == 0) { 
-    /* if we're the only child */
-    /* FIXME: check case sensitivity wrt embedding movies of different version */
-    JS_SetContextCaseSensitive (movie->player->jscx,
-	SWFDEC_SWF_DECODER (movie->decoder)->version > 6);
-  }
   return TRUE;
 }
 
@@ -243,7 +235,7 @@ swfdec_root_movie_perform_root_actions (SwfdecRootMovie *root, guint frame)
     SwfdecSpriteAction *action = &g_array_index (array, SwfdecSpriteAction, i);
     switch (action->type) {
       case SWFDEC_ROOT_ACTION_INIT_SCRIPT:
-	swfdec_script_execute (action->data, SWFDEC_SCRIPTABLE (root));
+	swfdec_as_object_run (SWFDEC_AS_OBJECT (root), action->data);
 	break;
       case SWFDEC_ROOT_ACTION_EXPORT:
 	{

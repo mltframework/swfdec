@@ -18,6 +18,7 @@
  */
 
 #include <libswfdec/swfdec_bits.h>
+#include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_types.h>
 
@@ -57,16 +58,16 @@ void			swfdec_event_list_free		(SwfdecEventList *    list);
 void			swfdec_event_list_parse		(SwfdecEventList *    list,
 							 SwfdecBits *	      bits,
 							 int		      version,
-							 guint	      conditions,
+							 guint		      conditions,
 							 guint8		      key,
 							 const char *	      description);
 void			swfdec_event_list_execute	(SwfdecEventList *    list,
-							 SwfdecScriptable *	scriptable,
-							 guint	      condition,
+							 SwfdecAsObject *     object,
+							 guint		      condition,
 							 guint8		      key);
 gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,
-							 SwfdecScriptable *	scriptable,
-							 guint	      conditions,
+							 SwfdecAsObject *     object,
+							 guint		      conditions,
 							 guint8		      key);
 							 
 

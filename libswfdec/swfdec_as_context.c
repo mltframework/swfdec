@@ -221,13 +221,23 @@ swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
     swfdec_as_object_mark (object);
 }
 
+static void
+swfdec_as_context_do_mark (SwfdecAsContext *context)
+{
+  g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
+}
+
 void
 swfdec_as_context_gc (SwfdecAsContext *context)
 {
+  SwfdecAsContextClass *klass;
+
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   SWFDEC_INFO ("invoking the garbage collector");
-  g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
+  klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
+  g_assert (klass->mark);
+  klass->mark (context);
   swfdec_as_context_collect (context);
 }
 
@@ -257,6 +267,8 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_as_context_dispose;
+
+  klass->mark = swfdec_as_context_do_mark;
 }
 
 static void
@@ -451,3 +463,177 @@ swfdec_as_context_return (SwfdecAsContext *context, SwfdecAsValue *retval)
     swfdec_as_stack_push (context->frame->stack, &value);
   }
 }
+
+/*** EVAL ***/
+
+char *
+swfdec_as_slash_to_dot (const char *slash_str)
+{
+  const char *cur = slash_str;
+  GString *str = g_string_new ("");
+
+  if (*cur == '/') {
+    g_string_append (str, "_root");
+  } else {
+    goto start;
+  }
+  while (cur && *cur == '/') {
+    cur++;
+start:
+    if (str->len > 0)
+      g_string_append_c (str, '.');
+    if (cur[0] == '.' && cur[1] == '.') {
+      g_string_append (str, "_parent");
+      cur += 2;
+    } else {
+      char *slash = strchr (cur, '/');
+      if (slash) {
+	g_string_append_len (str, cur, slash - cur);
+	cur = slash;
+      } else {
+	g_string_append (str, cur);
+	cur = NULL;
+      }
+    }
+    /* cur should now point to the slash */
+  }
+  if (cur) {
+    if (*cur != '\0')
+      goto fail;
+  }
+  SWFDEC_DEBUG ("parsed slash-notated string \"%s\" into dot notation \"%s\"",
+      slash_str, str->str);
+  return g_string_free (str, FALSE);
+
+fail:
+  SWFDEC_WARNING ("failed to parse slash-notated string \"%s\" into dot notation", slash_str);
+  g_string_free (str, TRUE);
+  return NULL;
+}
+
+static void
+swfdec_as_context_eval_get_property (SwfdecAsContext *cx, 
+    SwfdecAsObject *obj, const char *name, SwfdecAsValue *ret)
+{
+  if (obj) {
+    swfdec_as_object_get (obj, name, ret);
+  } else {
+    g_assert_not_reached ();
+#if 0
+    if (cx->fp == NULL || cx->fp->scopeChain == NULL)
+      return JS_FALSE;
+    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+      return JS_FALSE;
+    if (!prop)
+      return JS_FALSE;
+    return OBJ_GET_PROPERTY (cx, obj, (jsid) prop->id, ret);
+#endif
+  }
+}
+
+static void
+swfdec_as_context_eval_set_property (SwfdecAsContext *cx, 
+    SwfdecAsObject *obj, const char *name, const SwfdecAsValue *ret)
+{
+  if (obj == NULL) {
+    g_assert_not_reached ();
+#if 0
+    JSObject *pobj;
+    JSProperty *prop;
+    if (cx->fp == NULL || cx->fp->varobj == NULL)
+      return JS_FALSE;
+    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
+      return JS_FALSE;
+    if (pobj)
+      obj = pobj;
+    else
+      obj = cx->fp->varobj;
+#endif
+  }
+  return swfdec_as_object_set (obj, name, ret);
+}
+
+static void
+swfdec_as_context_eval_internal (SwfdecAsContext *cx, SwfdecAsObject *obj, const char *str,
+        SwfdecAsValue *val, gboolean set)
+{
+  SwfdecAsValue cur;
+  char **varlist;
+  guint i;
+
+  SWFDEC_LOG ("eval called with \"%s\" on %p", str, obj);
+  if (strchr (str, '/')) {
+    char *work = swfdec_as_slash_to_dot (str);
+    if (!work) {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+      return;
+    }
+    varlist = g_strsplit (work, ".", -1);
+    g_free (work);
+  } else {
+    varlist = g_strsplit (str, ".", -1);
+  }
+  SWFDEC_AS_VALUE_SET_OBJECT (&cur, obj); /* FIXME: can be NULL here */
+  for (i = 0; varlist[i] != NULL; i++) {
+    const char *dot = swfdec_as_context_get_string (cx, varlist[i]);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&cur)) {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&cur);
+      break;
+    }
+    obj = SWFDEC_AS_VALUE_GET_OBJECT (&cur);
+    if (varlist[i+1] != NULL) {
+      swfdec_as_context_eval_get_property (cx, obj, dot, &cur);
+    } else {
+      if (set) {
+	swfdec_as_context_eval_set_property (cx, obj, dot, &cur);
+      } else {
+	swfdec_as_context_eval_get_property (cx, obj, dot, &cur);
+      }
+      goto finish;
+    }
+  }
+  if (obj == NULL && cx->frame) {
+    swfdec_as_object_get (SWFDEC_AS_OBJECT (cx->frame), SWFDEC_AS_STR_THIS, &cur);
+  }
+
+finish:
+  g_strfreev (varlist);
+  *val = cur;
+}
+
+/**
+ * swfdec_as_context_eval:
+ * @context: a #SwfdecAsContext
+ * @obj: #SwfdecAsObject to use as source for evaluating or NULL for the 
+ *       current frame's scope
+ * @str: The string to evaluate
+ * @val: location for the return value
+ *
+ * This function works like the Actionscript eval function used on @obj.
+ * It handles both slash-style and dot-style notation. If an error occured
+ * during evaluation, the return value will be the undefined value.
+ **/
+void
+swfdec_as_context_eval (SwfdecAsContext *cx, SwfdecAsObject *obj, const char *str, 
+    SwfdecAsValue *val)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+  g_return_if_fail (obj == NULL || SWFDEC_IS_AS_OBJECT (obj));
+  g_return_if_fail (str != NULL);
+  g_return_if_fail (val != NULL);
+
+  swfdec_as_context_eval_internal (cx, obj, str, val, FALSE);
+}
+
+void
+swfdec_as_context_eval_set (SwfdecAsContext *cx, SwfdecAsObject *obj, const char *str,
+    const SwfdecAsValue *val)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+  g_return_if_fail (obj == NULL || SWFDEC_IS_AS_OBJECT (obj));
+  g_return_if_fail (str != NULL);
+  g_return_if_fail (val != NULL);
+
+  swfdec_as_context_eval_internal (cx, obj, str, (SwfdecAsValue *) val, TRUE);
+}
+

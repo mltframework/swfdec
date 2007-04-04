@@ -146,7 +146,7 @@ swfdec_video_input_new (SwfdecVideo *video)
 G_DEFINE_TYPE (SwfdecVideo, swfdec_video, SWFDEC_TYPE_GRAPHIC)
 
 static SwfdecMovie *
-swfdec_video_create_movie (SwfdecGraphic *graphic)
+swfdec_video_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   SwfdecVideo *video = SWFDEC_VIDEO (graphic);
   SwfdecVideoMovie *movie = g_object_new (SWFDEC_TYPE_VIDEO_MOVIE, NULL);
@@ -156,6 +156,7 @@ swfdec_video_create_movie (SwfdecGraphic *graphic)
   g_object_ref (graphic);
   if (input)
     swfdec_video_movie_set_input (movie, input);
+  *size = sizeof (SwfdecVideoMovie);
   return SWFDEC_MOVIE (movie);
 }
 

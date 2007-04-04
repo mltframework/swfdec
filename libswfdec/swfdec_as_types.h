@@ -60,22 +60,25 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_IS_BOOLEAN(val) ((val)->type == SWFDEC_TYPE_AS_BOOLEAN)
 #define SWFDEC_AS_VALUE_GET_BOOLEAN(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_BOOLEAN), (val)->value.boolean)
 #define SWFDEC_AS_VALUE_SET_BOOLEAN(val,b) G_STMT_START { \
-  (val)->type = SWFDEC_TYPE_AS_BOOLEAN; \
-  (val)->value.boolean = b; \
+  SwfdecAsValue *__val = (val); \
+  (__val)->type = SWFDEC_TYPE_AS_BOOLEAN; \
+  (__val)->value.boolean = b; \
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_TYPE_AS_NUMBER)
 #define SWFDEC_AS_VALUE_GET_NUMBER(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_NUMBER), (val)->value.number)
 #define SWFDEC_AS_VALUE_SET_NUMBER(val,d) G_STMT_START { \
-  (val)->type = SWFDEC_TYPE_AS_NUMBER; \
-  (val)->value.number = d; \
+  SwfdecAsValue *__val = (val); \
+  (__val)->type = SWFDEC_TYPE_AS_NUMBER; \
+  (__val)->value.number = d; \
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_TYPE_AS_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_STRING), (val)->value.string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
-  (val)->type = SWFDEC_TYPE_AS_STRING; \
-  (val)->value.string = s; \
+  SwfdecAsValue *__val = (val); \
+  (__val)->type = SWFDEC_TYPE_AS_STRING; \
+  (__val)->value.string = s; \
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_NULL(val) ((val)->type == SWFDEC_TYPE_AS_NULL)
@@ -84,8 +87,9 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_IS_OBJECT(val) ((val)->type == SWFDEC_TYPE_AS_ASOBJECT)
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_ASOBJECT), (val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
-  (val)->type = SWFDEC_TYPE_AS_ASOBJECT; \
-  (val)->value.object = o; \
+  SwfdecAsValue *__val = (val); \
+  (__val)->type = SWFDEC_TYPE_AS_ASOBJECT; \
+  (__val)->value.object = o; \
 } G_STMT_END
 
 

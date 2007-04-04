@@ -93,6 +93,7 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
+  SWFDEC_DEBUG ("new frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
   frame->next = context->frame;
   context->frame = frame;
@@ -101,7 +102,8 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   frame->stack = stack;
   frame->scope = thisp;
   frame->var_object = thisp;
-  frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * script->n_registers);
+  frame->n_registers = script->n_registers;
+  frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, thisp);
   swfdec_as_object_set (SWFDEC_AS_OBJECT (frame), SWFDEC_AS_STR_THIS, &val);
   return frame;

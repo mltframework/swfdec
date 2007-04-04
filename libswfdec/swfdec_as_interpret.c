@@ -512,22 +512,18 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   }
 }
 
-#if 0
 static void
 swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *s;
 
-  s = swfdec_js_to_string (cx, cx->fp->sp[-1]);
-  if (s == NULL)
-    return JS_FALSE;
-  cx->fp->sp[-1] = swfdec_js_eval (cx, NULL, s);
+  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  swfdec_as_context_eval (cx, NULL, s, swfdec_as_stack_peek (cx->frame->stack, 1));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
-  if (cx->fp->sp[-1] == JSVAL_VOID) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1))) {
     SWFDEC_WARNING ("no variable named %s", s);
   }
 #endif
-  return JS_TRUE;
 }
 
 static void
@@ -535,15 +531,12 @@ swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
 {
   const char *s;
 
-  s = swfdec_js_to_string (cx, cx->fp->sp[-2]);
-  if (s == NULL)
-    return JS_FALSE;
-
-  swfdec_js_eval_set (cx, NULL, s, cx->fp->sp[-1]);
-  cx->fp->sp -= 2;
-  return JS_TRUE;
+  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  swfdec_as_context_eval_set (cx, NULL, s, swfdec_as_stack_pop (cx->frame->stack));
+  swfdec_as_stack_pop (cx->frame->stack);
 }
 
+#if 0
 static void
 swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2356,8 +2349,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x15] = { "StringExtract", NULL },
   [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
   [0x18] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
-  [0x1c] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
-  [0x1d] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
+#endif
+  [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
+  [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
+#if 0
   [0x20] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },

@@ -126,9 +126,8 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     if (n_args < function->min_args) {
       SwfdecAsStack *stack = context->frame->stack;
       if (n_args == 0) {
-	SwfdecAsValue value = { SWFDEC_TYPE_AS_UNDEFINED, };
 	swfdec_as_stack_ensure_size (stack, 1);
-	swfdec_as_stack_push (stack, &value);
+	SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (stack));
       } else {
 	stack->cur -= (n_args - 1);
 	SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (stack, 1));

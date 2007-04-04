@@ -445,10 +445,9 @@ swfdec_as_context_return (SwfdecAsContext *context, SwfdecAsValue *retval)
   context->frame = context->frame->next;
   swfdec_as_stack_ensure_left (context->frame->stack, 1);
   if (retval) {
-    swfdec_as_stack_push (context->frame->stack, retval);
+    *swfdec_as_stack_push (context->frame->stack) = *retval;
   } else {
-    SwfdecAsValue value = { SWFDEC_TYPE_AS_UNDEFINED, };
-    swfdec_as_stack_push (context->frame->stack, &value);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (context->frame->stack));
   }
 }
 

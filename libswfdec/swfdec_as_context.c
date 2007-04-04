@@ -24,6 +24,7 @@
 #include <string.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
+#include "swfdec_as_interpret.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_types.h"
@@ -327,22 +328,6 @@ swfdec_as_context_new (void)
   return g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
 }
 
-/* defines minimum and maximum versions for which we have seperate scripts */
-#define MINSCRIPTVERSION 3
-#define MAXSCRIPTVERSION 7
-#define EXTRACT_VERSION(v) MIN ((v) - MINSCRIPTVERSION, MAXSCRIPTVERSION - MINSCRIPTVERSION)
-
-typedef void (* SwfdecActionExec) (SwfdecAsContext *cx, guint action, const guint8 *data, guint len);
-typedef struct {
-  const char *		name;		/* name identifying the action */
-  char *		(* print)	(guint action, const guint8 *data, guint len);
-  int			remove;		/* values removed from stack or -1 for dynamic */
-  int			add;		/* values added to the stack or -1 for dynamic */
-  SwfdecActionExec	exec[MAXSCRIPTVERSION - MINSCRIPTVERSION + 1];
-					/* array is for version 3, 4, 5, 6, 7+ */
-} SwfdecActionSpec;
-
-extern const SwfdecActionSpec actions[256];
 void
 swfdec_as_context_run (SwfdecAsContext *context)
 {
@@ -367,9 +352,11 @@ start:
     return;
   script = frame->script;
   stack = frame->stack;
-  version = EXTRACT_VERSION (script->version);
+  version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);
+  context->version = script->version;
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
+  pc = frame->pc;
 
   while (TRUE) {
     if (pc == endpc) {
@@ -383,7 +370,7 @@ start:
 
     /* decode next action */
     action = *pc;
-    spec = actions + action;
+    spec = swfdec_as_actions + action;
     if (action == 0)
       break;
     if (action & 0x80) {
@@ -405,8 +392,9 @@ start:
     }
     /* check action is valid */
     if (spec->exec[version] == NULL) {
-      SWFDEC_ERROR ("cannot interpret action %u %s for version %u", action,
-	  spec->name ? spec->name : "Unknown", script->version);
+      SWFDEC_ERROR ("cannot interpret action %3u 0x%02X %s for version %u", action,
+	  action, spec->name ? spec->name : "Unknown", script->version);
+      /* FIXME: figure out what flash player does here */
       goto error;
     }
     if (spec->remove > 0) {
@@ -422,7 +410,7 @@ start:
 #ifndef G_DISABLE_ASSERT
     check = (spec->add >= 0 && spec->remove >= 0) ? stack->cur + spec->add - spec->remove : NULL;
 #endif
-    spec->exec[version] (NULL, action, data, len);
+    spec->exec[version] (context, action, data, len);
     if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT
       if (check != NULL && check != stack->cur) {

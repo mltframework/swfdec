@@ -66,10 +66,12 @@ guint		swfdec_action_get_from_name	(const char *		name);
 SwfdecConstantPool *
 		swfdec_constant_pool_new_from_action (const guint8 *	data,
 						 guint			len);
+void		swfdec_constant_pool_free	(SwfdecConstantPool *	pool);
 guint		swfdec_constant_pool_size	(SwfdecConstantPool *	pool);
 const char *	swfdec_constant_pool_get	(SwfdecConstantPool *	pool,
 						 guint			i);
-void		swfdec_constant_pool_free	(SwfdecConstantPool *	pool);
+SwfdecBuffer *	swfdec_constant_pool_get_area	(SwfdecScript *		script,
+						 SwfdecConstantPool *	pool);
 
 SwfdecScript *	swfdec_script_new		(SwfdecBits *		bits,
 						 const char *		name,

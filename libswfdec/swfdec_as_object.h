@@ -80,6 +80,9 @@ void		swfdec_as_object_get_variable	(SwfdecAsObject *	object,
 						 SwfdecAsValue *	value);
 void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const SwfdecAsValue *	variable);
+SwfdecAsObject *swfdec_as_object_find_variable	(SwfdecAsObject *	object,
+						 const SwfdecAsValue *	variable);
+
 /* shortcuts, you probably don't want to bind them */
 #define swfdec_as_object_set(object, name, value) G_STMT_START { \
   SwfdecAsValue __variable; \

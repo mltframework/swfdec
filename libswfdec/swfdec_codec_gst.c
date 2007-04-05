@@ -26,11 +26,15 @@
 #include "swfdec_codec.h"
 #include "swfdec_debug.h"
 
+#if 0
 #define swfdec_cond_wait(cond, mutex) G_STMT_START { \
   g_print ("waiting at %s\n", G_STRLOC); \
   g_cond_wait (cond, mutex); \
   g_print ("   done at %s\n", G_STRLOC); \
 }G_STMT_END
+#else
+#define swfdec_cond_wait g_cond_wait
+#endif
 
 typedef struct _SwfdecGstVideo SwfdecGstVideo;
 struct _SwfdecGstVideo {
@@ -194,8 +198,13 @@ swfdec_codec_gst_h263_init (void)
   gst_bin_add (GST_BIN (player->pipeline), csp);
   g_signal_connect (decoder, "pad-added", G_CALLBACK (do_the_link), csp);
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
   sinkcaps = gst_caps_from_string ("video/x-raw-rgb, bpp=32, endianness=4321, depth=24, "
       "red_mask=16711680, green_mask=65280, blue_mask=255");
+#else
+  sinkcaps = gst_caps_from_string ("video/x-raw-rgb, bpp=32, endianness=4321, depth=24, "
+      "red_mask=65280, green_mask=16711680, blue_mask=-16777216");
+#endif
   g_assert (sinkcaps);
   if (!gst_element_link_filtered (fakesrc, decoder, player->srccaps) ||
 #if 0
@@ -241,10 +250,10 @@ swfdec_codec_gst_video_decode (gpointer codec_data, SwfdecBuffer *buffer)
   g_mutex_lock (player->mutex);
   g_assert (player->in == NULL);
   player->in = buffer;
+  g_cond_signal (player->cond);
   while (player->out == NULL) {
     swfdec_cond_wait (player->cond, player->mutex);
   }
-  g_print ("processing buffer\n");
   buffer = player->out;
   player->out = NULL;
   g_mutex_unlock (player->mutex);

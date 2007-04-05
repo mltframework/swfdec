@@ -204,6 +204,26 @@ else
 	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])
 fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
+AC_ARG_ENABLE(gstreamer,
+	AS_HELP_STRING([--enable-gstreamer],
+			[enable GStreamer support (default=no)])],
+	enable_gstreamer=$enableval,
+	enable_gstreamer="no")
+
+if test "$enable_gstreamer" = "yes"; then
+	dnl I used my own version here, it might work with lower versions
+	GST_REQUIRED=0.10.10
+	PKG_CHECK_MODULES(GST, gstreamer-0.10 >= $GST_REQUIRED, HAVE_GST=yes, HAVE_GST=no)
+	if test "x$HAVE_GST" = xyes; then
+	  AC_DEFINE(HAVE_GST, 1, [Define if GStreamer is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED.])
+	fi
+else
+	AC_MSG_WARN([*** GStreamer support was not enabled. ***])
+fi
+AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
+
 
 AC_ARG_ENABLE(gnome-vfs,
 	AS_HELP_STRING([--enable-gnome-vfs],

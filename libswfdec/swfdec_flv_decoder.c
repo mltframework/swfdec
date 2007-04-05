@@ -385,8 +385,9 @@ swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
   swfdec_bits_init (&bits, buffer);
   type = swfdec_bits_get_u8 (&bits);
   /* I think I'm paranoid and complicated. I think I'm paranoid, manipulated */
-  if (size != swfdec_bits_get_bu24 (&bits))
+  if (size != swfdec_bits_get_bu24 (&bits)) {
     g_assert_not_reached ();
+  }
   timestamp = swfdec_bits_get_bu24 (&bits);
   swfdec_bits_get_bu32 (&bits);
   SWFDEC_LOG ("new tag");

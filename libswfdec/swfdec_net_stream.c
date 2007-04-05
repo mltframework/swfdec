@@ -472,7 +472,7 @@ swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
 
   if (stream->flvdecoder == NULL)
     return;
-  if (!finite (secs) || secs < 0) {
+  if (!isfinite (secs) || secs < 0) {
     SWFDEC_ERROR ("seeking to %g doesn't work", secs);
     return;
   }

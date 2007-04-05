@@ -58,7 +58,7 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_TYPE_AS_UNDEFINED
 
 #define SWFDEC_AS_VALUE_IS_BOOLEAN(val) ((val)->type == SWFDEC_TYPE_AS_BOOLEAN)
-#define SWFDEC_AS_VALUE_GET_BOOLEAN(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_BOOLEAN), (val)->value.boolean)
+#define SWFDEC_AS_VALUE_GET_BOOLEAN(val) ((val)->value.boolean)
 #define SWFDEC_AS_VALUE_SET_BOOLEAN(val,b) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   (__val)->type = SWFDEC_TYPE_AS_BOOLEAN; \
@@ -66,7 +66,7 @@ struct _SwfdecAsValue {
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_TYPE_AS_NUMBER)
-#define SWFDEC_AS_VALUE_GET_NUMBER(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_NUMBER), (val)->value.number)
+#define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number)
 #define SWFDEC_AS_VALUE_SET_NUMBER(val,d) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   (__val)->type = SWFDEC_TYPE_AS_NUMBER; \
@@ -74,7 +74,7 @@ struct _SwfdecAsValue {
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_TYPE_AS_STRING)
-#define SWFDEC_AS_VALUE_GET_STRING(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_STRING), (val)->value.string)
+#define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   (__val)->type = SWFDEC_TYPE_AS_STRING; \
@@ -85,7 +85,7 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_TYPE_AS_NULL
 
 #define SWFDEC_AS_VALUE_IS_OBJECT(val) ((val)->type == SWFDEC_TYPE_AS_ASOBJECT)
-#define SWFDEC_AS_VALUE_GET_OBJECT(val) (g_assert ((val)->type == SWFDEC_TYPE_AS_ASOBJECT), (val)->value.object)
+#define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   (__val)->type = SWFDEC_TYPE_AS_ASOBJECT; \
@@ -95,45 +95,69 @@ struct _SwfdecAsValue {
 
 /* List of static strings that are required all the time */
 extern const char *swfdec_as_strings[];
-#define SWFDEC_AS_STR_EMPTY (swfdec_as_strings[0] + 1)
-#define SWFDEC_AS_STR_PROTO (swfdec_as_strings[1] + 1)
-#define SWFDEC_AS_STR_THIS (swfdec_as_strings[2] + 1)
-#define SWFDEC_AS_STR_CODE (swfdec_as_strings[3] + 1)
-#define SWFDEC_AS_STR_LEVEL (swfdec_as_strings[4] + 1)
-#define SWFDEC_AS_STR_DESCRIPTION (swfdec_as_strings[5] + 1)
-#define SWFDEC_AS_STR_STATUS (swfdec_as_strings[6] + 1)
-#define SWFDEC_AS_STR_SUCCESS (swfdec_as_strings[7] + 1)
-#define SWFDEC_AS_STR_NET_CONNECTION_CONNECT_SUCCESS (swfdec_as_strings[8] + 1)
-#define SWFDEC_AS_STR_ON_LOAD (swfdec_as_strings[9] + 1)
-#define SWFDEC_AS_STR_ON_ENTER_FRAME (swfdec_as_strings[10] + 1)
-#define SWFDEC_AS_STR_ON_UNLOAD (swfdec_as_strings[11] + 1)
-#define SWFDEC_AS_STR_ON_MOUSE_MOVE (swfdec_as_strings[12] + 1)
-#define SWFDEC_AS_STR_ON_MOUSE_DOWN (swfdec_as_strings[13] + 1)
-#define SWFDEC_AS_STR_ON_MOUSE_UP (swfdec_as_strings[14] + 1)
-#define SWFDEC_AS_STR_ON_KEY_UP (swfdec_as_strings[15] + 1)
-#define SWFDEC_AS_STR_ON_KEY_DOWN (swfdec_as_strings[16] + 1)
-#define SWFDEC_AS_STR_ON_DATA (swfdec_as_strings[17] + 1)
-#define SWFDEC_AS_STR_ON_PRESS (swfdec_as_strings[18] + 1)
-#define SWFDEC_AS_STR_ON_RELEASE (swfdec_as_strings[19] + 1)
-#define SWFDEC_AS_STR_ON_RELEASE_OUTSIDE (swfdec_as_strings[20] + 1)
-#define SWFDEC_AS_STR_ON_ROLL_OVER (swfdec_as_strings[21] + 1)
-#define SWFDEC_AS_STR_ON_ROLL_OUT (swfdec_as_strings[22] + 1)
-#define SWFDEC_AS_STR_ON_DRAG_OVER (swfdec_as_strings[23] + 1)
-#define SWFDEC_AS_STR_ON_DRAG_OUT (swfdec_as_strings[24] + 1)
-#define SWFDEC_AS_STR_ON_CONSTRUCT (swfdec_as_strings[25] + 1)
-#define SWFDEC_AS_STR_ON_STATUS (swfdec_as_strings[26] + 1)
-#define SWFDEC_AS_STR_ERROR (swfdec_as_strings[27] + 1)
-#define SWFDEC_AS_STR_NETSTREAM_BUFFER_EMPTY (swfdec_as_strings[28] + 1)
-#define SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL (swfdec_as_strings[29] + 1)
-#define SWFDEC_AS_STR_NETSTREAM_BUFFER_FLUSH (swfdec_as_strings[30] + 1)
-#define SWFDEC_AS_STR_NETSTREAM_PLAY_START (swfdec_as_strings[31] + 1)
-#define SWFDEC_AS_STR_NETSTREAM_PLAY_STOP (swfdec_as_strings[32] + 1)
-#define SWFDEC_AS_STR_NETSTREAM_PLAY_STREAMNOTFOUND (swfdec_as_strings[33] + 1)
-#define SWFDEC_AS_STR_UNDEFINED (swfdec_as_strings[34] + 1)
-#define SWFDEC_AS_STR_NULL (swfdec_as_strings[35] + 1)
-#define SWFDEC_AS_STR_OBJECT_OBJECT (swfdec_as_strings[36] + 1)
-#define SWFDEC_AS_STR_TRUE (swfdec_as_strings[37] + 1)
-#define SWFDEC_AS_STR_FALSE (swfdec_as_strings[38] + 1)
+#define SWFDEC_AS_STR_CONSTANT(n) (swfdec_as_strings[(n)] + 1)
+
+#define SWFDEC_AS_STR_EMPTY		SWFDEC_AS_STR_CONSTANT(0)
+#define SWFDEC_AS_STR_PROTO		SWFDEC_AS_STR_CONSTANT(1)
+#define SWFDEC_AS_STR_THIS		SWFDEC_AS_STR_CONSTANT(2)
+#define SWFDEC_AS_STR_CODE		SWFDEC_AS_STR_CONSTANT(3)
+#define SWFDEC_AS_STR_LEVEL		SWFDEC_AS_STR_CONSTANT(4)
+#define SWFDEC_AS_STR_DESCRIPTION	SWFDEC_AS_STR_CONSTANT(5)
+#define SWFDEC_AS_STR_STATUS		SWFDEC_AS_STR_CONSTANT(6)
+#define SWFDEC_AS_STR_SUCCESS		SWFDEC_AS_STR_CONSTANT(7)
+#define SWFDEC_AS_STR_NET_CONNECTION_CONNECT_SUCCESS SWFDEC_AS_STR_CONSTANT(8)
+#define SWFDEC_AS_STR_ON_LOAD		SWFDEC_AS_STR_CONSTANT(9)
+#define SWFDEC_AS_STR_ON_ENTER_FRAME	SWFDEC_AS_STR_CONSTANT(10)
+#define SWFDEC_AS_STR_ON_UNLOAD		SWFDEC_AS_STR_CONSTANT(11)
+#define SWFDEC_AS_STR_ON_MOUSE_MOVE	SWFDEC_AS_STR_CONSTANT(12)
+#define SWFDEC_AS_STR_ON_MOUSE_DOWN	SWFDEC_AS_STR_CONSTANT(13)
+#define SWFDEC_AS_STR_ON_MOUSE_UP	SWFDEC_AS_STR_CONSTANT(14)
+#define SWFDEC_AS_STR_ON_KEY_UP		SWFDEC_AS_STR_CONSTANT(15)
+#define SWFDEC_AS_STR_ON_KEY_DOWN	SWFDEC_AS_STR_CONSTANT(16)
+#define SWFDEC_AS_STR_ON_DATA		SWFDEC_AS_STR_CONSTANT(17)
+#define SWFDEC_AS_STR_ON_PRESS		SWFDEC_AS_STR_CONSTANT(18)
+#define SWFDEC_AS_STR_ON_RELEASE	SWFDEC_AS_STR_CONSTANT(19)
+#define SWFDEC_AS_STR_ON_RELEASE_OUTSIDE SWFDEC_AS_STR_CONSTANT(20)
+#define SWFDEC_AS_STR_ON_ROLL_OVER	SWFDEC_AS_STR_CONSTANT(21)
+#define SWFDEC_AS_STR_ON_ROLL_OUT	SWFDEC_AS_STR_CONSTANT(22)
+#define SWFDEC_AS_STR_ON_DRAG_OVER	SWFDEC_AS_STR_CONSTANT(23)
+#define SWFDEC_AS_STR_ON_DRAG_OUT	SWFDEC_AS_STR_CONSTANT(24)
+#define SWFDEC_AS_STR_ON_CONSTRUCT	SWFDEC_AS_STR_CONSTANT(25)
+#define SWFDEC_AS_STR_ON_STATUS		SWFDEC_AS_STR_CONSTANT(26)
+#define SWFDEC_AS_STR_ERROR		SWFDEC_AS_STR_CONSTANT(27)
+#define SWFDEC_AS_STR_NETSTREAM_BUFFER_EMPTY SWFDEC_AS_STR_CONSTANT(28)
+#define SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL SWFDEC_AS_STR_CONSTANT(29)
+#define SWFDEC_AS_STR_NETSTREAM_BUFFER_FLUSH SWFDEC_AS_STR_CONSTANT(30)
+#define SWFDEC_AS_STR_NETSTREAM_PLAY_START SWFDEC_AS_STR_CONSTANT(31)
+#define SWFDEC_AS_STR_NETSTREAM_PLAY_STOP SWFDEC_AS_STR_CONSTANT(32)
+#define SWFDEC_AS_STR_NETSTREAM_PLAY_STREAMNOTFOUND SWFDEC_AS_STR_CONSTANT(33)
+#define SWFDEC_AS_STR_UNDEFINED		SWFDEC_AS_STR_CONSTANT(34)
+#define SWFDEC_AS_STR_NULL		SWFDEC_AS_STR_CONSTANT(35)
+#define SWFDEC_AS_STR_OBJECT_OBJECT	SWFDEC_AS_STR_CONSTANT(36)
+#define SWFDEC_AS_STR_TRUE		SWFDEC_AS_STR_CONSTANT(37)
+#define SWFDEC_AS_STR_FALSE		SWFDEC_AS_STR_CONSTANT(38)
+#define SWFDEC_AS_STR__X		SWFDEC_AS_STR_CONSTANT(39)
+#define SWFDEC_AS_STR__Y		SWFDEC_AS_STR_CONSTANT(40)
+#define SWFDEC_AS_STR__XSCALE		SWFDEC_AS_STR_CONSTANT(41)
+#define SWFDEC_AS_STR__YSCALE		SWFDEC_AS_STR_CONSTANT(42)
+#define SWFDEC_AS_STR__CURRENTFRAME	SWFDEC_AS_STR_CONSTANT(43)
+#define SWFDEC_AS_STR__TOTALFRAMES	SWFDEC_AS_STR_CONSTANT(44)
+#define SWFDEC_AS_STR__ALPHA		SWFDEC_AS_STR_CONSTANT(45)
+#define SWFDEC_AS_STR__VISIBLE		SWFDEC_AS_STR_CONSTANT(46)
+#define SWFDEC_AS_STR__WIDTH		SWFDEC_AS_STR_CONSTANT(47)
+#define SWFDEC_AS_STR__HEIGHT		SWFDEC_AS_STR_CONSTANT(48)
+#define SWFDEC_AS_STR__ROTATION		SWFDEC_AS_STR_CONSTANT(49)
+#define SWFDEC_AS_STR__TARGET		SWFDEC_AS_STR_CONSTANT(50)
+#define SWFDEC_AS_STR__FRAMESLOADED	SWFDEC_AS_STR_CONSTANT(51)
+#define SWFDEC_AS_STR__NAME		SWFDEC_AS_STR_CONSTANT(52)
+#define SWFDEC_AS_STR__DROPTARGET	SWFDEC_AS_STR_CONSTANT(53)
+#define SWFDEC_AS_STR__URL		SWFDEC_AS_STR_CONSTANT(54)
+#define SWFDEC_AS_STR__HIGHQUALITY	SWFDEC_AS_STR_CONSTANT(55)
+#define SWFDEC_AS_STR__FOCUSRECT	SWFDEC_AS_STR_CONSTANT(56)
+#define SWFDEC_AS_STR__SOUNDBUFTIME	SWFDEC_AS_STR_CONSTANT(57)
+#define SWFDEC_AS_STR__QUALITY		SWFDEC_AS_STR_CONSTANT(58)
+#define SWFDEC_AS_STR__XMOUSE		SWFDEC_AS_STR_CONSTANT(59)
+#define SWFDEC_AS_STR__YMOUSE		SWFDEC_AS_STR_CONSTANT(60)
 
 /* all existing actions */
 typedef enum {
@@ -235,6 +259,10 @@ typedef enum {
 } SwfdecAsAction;
 
 const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,
+						 const SwfdecAsValue *	value);
+double		swfdec_as_value_to_number	(SwfdecAsContext *	context,
+						 const SwfdecAsValue *	value);
+int		swfdec_as_value_to_integer	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 
 

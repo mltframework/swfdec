@@ -37,6 +37,9 @@ SWFDEC_LIBVERSION="3:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
+dnl C99 is only required to get definitions for NAN and INFINITY.
+GLOBAL_CFLAGS="$GLOBAL_CFLAGS -std=c99"
+
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 #ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"

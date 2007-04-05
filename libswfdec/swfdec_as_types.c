@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <math.h>
+
 #include "swfdec_as_types.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
@@ -67,6 +69,28 @@ const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("[object Object]"),
   SWFDEC_AS_CONSTANT_STRING ("true"),
   SWFDEC_AS_CONSTANT_STRING ("false"),
+  SWFDEC_AS_CONSTANT_STRING ("_x"),
+  SWFDEC_AS_CONSTANT_STRING ("_y"),
+  SWFDEC_AS_CONSTANT_STRING ("_xscale"),
+  SWFDEC_AS_CONSTANT_STRING ("_yscale"),
+  SWFDEC_AS_CONSTANT_STRING ("_currentframe"),
+  SWFDEC_AS_CONSTANT_STRING ("_totalframes"),
+  SWFDEC_AS_CONSTANT_STRING ("_alpha"),
+  SWFDEC_AS_CONSTANT_STRING ("_visible"),
+  SWFDEC_AS_CONSTANT_STRING ("_width"),
+  SWFDEC_AS_CONSTANT_STRING ("_height"),
+  SWFDEC_AS_CONSTANT_STRING ("_rotation"), 
+  SWFDEC_AS_CONSTANT_STRING ("_target"),
+  SWFDEC_AS_CONSTANT_STRING ("_framesloaded"),
+  SWFDEC_AS_CONSTANT_STRING ("_name"), 
+  SWFDEC_AS_CONSTANT_STRING ("_droptarget"),
+  SWFDEC_AS_CONSTANT_STRING ("_url"), 
+  SWFDEC_AS_CONSTANT_STRING ("_highquality"), 
+  SWFDEC_AS_CONSTANT_STRING ("_focusrect"), 
+  SWFDEC_AS_CONSTANT_STRING ("_soundbuftime"), 
+  SWFDEC_AS_CONSTANT_STRING ("_quality"),
+  SWFDEC_AS_CONSTANT_STRING ("_xmouse"), 
+  SWFDEC_AS_CONSTANT_STRING ("_ymouse"),
   /* add more here */
   NULL
 };
@@ -107,10 +131,50 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	return ret;
       }
     case SWFDEC_TYPE_AS_ASOBJECT:
-      /* FIXME! */
+      SWFDEC_ERROR ("FIXME");
       return SWFDEC_AS_STR_OBJECT_OBJECT;
     default:
       g_assert_not_reached ();
       return SWFDEC_AS_STR_EMPTY;
   }
 }
+
+double
+swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0.0);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), 0.0);
+
+  switch (value->type) {
+    case SWFDEC_TYPE_AS_UNDEFINED:
+    case SWFDEC_TYPE_AS_NULL:
+      return (context->version >= 7) ? NAN : 0.0;
+    case SWFDEC_TYPE_AS_BOOLEAN:
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? 1 : 0;
+    case SWFDEC_TYPE_AS_NUMBER:
+      return SWFDEC_AS_VALUE_GET_NUMBER (value);
+    case SWFDEC_TYPE_AS_STRING:
+      {
+	char *end;
+	double d = g_ascii_strtod (SWFDEC_AS_VALUE_GET_STRING (value), &end);
+	if (*end == '\0')
+	  return d;
+	else
+	  return NAN;
+      }
+    case SWFDEC_TYPE_AS_ASOBJECT:
+      SWFDEC_ERROR ("FIXME");
+      return NAN;
+    default:
+      g_assert_not_reached ();
+      return NAN;
+  }
+}
+
+int
+swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  /* FIXME */
+  return swfdec_as_value_to_number (context, value);
+}
+

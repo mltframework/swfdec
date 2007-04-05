@@ -48,7 +48,7 @@ struct _SwfdecAsFunction {
 
   /* for script functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */
-  SwfdecAsObject *	scope;		/* scope object coming after this */
+  SwfdecAsObject *	scope;		/* scope this function was defined in or NULL */
 };
 
 struct _SwfdecAsFunctionClass {

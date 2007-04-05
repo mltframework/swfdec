@@ -117,3 +117,27 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   return frame;
 }
 
+SwfdecAsObject *
+swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const SwfdecAsValue *variable)
+{
+  SwfdecAsObject *ret = NULL;
+  guint i;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (variable), NULL);
+
+  for (i = 0; i < 256 && frame != NULL; i++) {
+    ret = swfdec_as_object_find_variable (frame->scope, variable);
+    if (ret)
+      break;
+    if (!SWFDEC_IS_AS_FRAME (frame->scope))
+      break;
+    frame = SWFDEC_AS_FRAME (frame->scope);
+  }
+  if (i == 256) {
+    swfdec_as_context_abort (SWFDEC_AS_OBJECT (frame)->context, "Scope recursion limit exceeded");
+    return NULL;
+  }
+  return ret;
+}
+

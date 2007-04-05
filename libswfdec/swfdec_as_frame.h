@@ -40,7 +40,7 @@ struct _SwfdecAsFrame {
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsObject *	scope;		/* scope object coming after this */
+  SwfdecAsObject *	scope;		/* scope object coming after this or NULL */
   SwfdecAsObject *	var_object;	/* new variables go here */
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
@@ -59,6 +59,8 @@ GType		swfdec_as_frame_get_type	(void);
 SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsObject *	thisp,
 						 SwfdecScript *		script);
 
+SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
+						 const SwfdecAsValue *	variable);
 
 
 G_END_DECLS

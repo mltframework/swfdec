@@ -85,6 +85,9 @@ next:
       /* FIXME: do sync on first frame here */
       SWFDEC_WARNING ("FIXME: didn't get requested timestamp - still loading?");
     }
+    /* FIXME FIXME FIXME: This avoids decoding the last frame forever, however it ensures sync */
+    if (soon == 0)
+      return NULL;
     flv->next_timestamp = soon;
     if (flv->in == 0) {
       /* init */

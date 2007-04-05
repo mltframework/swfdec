@@ -100,7 +100,7 @@ next:
       flv->in = in;
       flv->codec = swfdec_codec_get_audio (flv->format);
       if (flv->codec) {
-	flv->decoder = swfdec_audio_codec_init (flv->codec, flv->width, flv->in);
+	flv->decoder = swfdec_audio_codec_init (flv->codec, flv->format, flv->width, flv->in);
 	flv->out = swfdec_audio_codec_get_format (flv->codec, flv->decoder);
       }
     } else if (format != flv->format ||

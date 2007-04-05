@@ -127,7 +127,7 @@ swfdec_video_input_new (SwfdecVideo *video)
     return NULL;
   input = g_new0 (SwfdecVideoInput, 1);
   if (video->codec)
-    input->decoder = swfdec_video_codec_init (video->codec);
+    input->decoder = swfdec_video_codec_init (video->codec, video->format);
   if (input->decoder == NULL) {
     g_free (input);
     return NULL;

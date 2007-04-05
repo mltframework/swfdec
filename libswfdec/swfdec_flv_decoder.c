@@ -275,7 +275,7 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
 
     if (codec == NULL)
       return SWFDEC_STATUS_OK;
-    decoder = swfdec_video_codec_init (codec);
+    decoder = swfdec_video_codec_init (codec, tag->format);
     if (decoder == NULL)
       return SWFDEC_STATUS_OK;
     ignore = swfdec_video_codec_decode (codec, decoder, tag->buffer);

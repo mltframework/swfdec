@@ -34,19 +34,17 @@ extern const SwfdecAudioCodec swfdec_codec_mad;
 #endif
 
 #ifdef HAVE_FFMPEG
-extern const SwfdecAudioCodec swfdec_codec_ffmpeg_adpcm;
-extern const SwfdecAudioCodec swfdec_codec_ffmpeg_mp3;
-extern const SwfdecVideoCodec swfdec_codec_ffmpeg_h263;
-extern const SwfdecVideoCodec swfdec_codec_ffmpeg_screen;
+extern const SwfdecAudioCodec swfdec_codec_ffmpeg_audio;
+extern const SwfdecVideoCodec swfdec_codec_ffmpeg_video;
 #endif
 
-extern const SwfdecVideoCodec swfdec_codec_gst_h263;
+extern const SwfdecVideoCodec swfdec_codec_gst_video;
 
 /*** UNCOMPRESSED SOUND ***/
 
 #define U8_FLAG (0x10000)
 static gpointer
-swfdec_codec_uncompressed_init (gboolean width, SwfdecAudioOut format)
+swfdec_codec_uncompressed_init (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
 {
   guint ret = format;
   if (!width)
@@ -121,7 +119,7 @@ swfdec_codec_get_audio (SwfdecAudioFormat format)
     case SWFDEC_AUDIO_FORMAT_ADPCM:
       return &swfdec_codec_adpcm;
 #ifdef HAVE_FFMPEG
-      return &swfdec_codec_ffmpeg_adpcm;
+      return &swfdec_codec_ffmpeg_audio;
 #else
       SWFDEC_ERROR ("adpcm sound requires ffmpeg");
       return NULL;
@@ -131,7 +129,7 @@ swfdec_codec_get_audio (SwfdecAudioFormat format)
       return &swfdec_codec_mad;
 #else
 #ifdef HAVE_FFMPEG
-      return &swfdec_codec_ffmpeg_mp3;
+      return &swfdec_codec_ffmpeg_audio;
 #else
       SWFDEC_ERROR ("mp3 sound requires ffmpeg or mad");
       return NULL;
@@ -153,20 +151,27 @@ swfdec_codec_get_video (SwfdecVideoFormat format)
     case SWFDEC_VIDEO_FORMAT_SCREEN:
       return &swfdec_codec_screen;
 #ifdef HAVE_FFMPEG
-      return &swfdec_codec_ffmpeg_screen;
+      return &swfdec_codec_ffmpeg_video;
 #endif
       SWFDEC_ERROR ("Screen video requires ffmpeg");
       return NULL;
     case SWFDEC_VIDEO_FORMAT_H263:
 #ifdef HAVE_GST
-      return &swfdec_codec_gst_h263;
+      return &swfdec_codec_gst_video;
 #else
 #ifdef HAVE_FFMPEG
-      return &swfdec_codec_ffmpeg_h263;
+      return &swfdec_codec_ffmpeg_video;
 #else
       SWFDEC_ERROR ("H263 video requires ffmpeg or GStreamer");
       return NULL;
 #endif
+#endif
+    case SWFDEC_VIDEO_FORMAT_VP6:
+#ifdef HAVE_GST
+      return &swfdec_codec_gst_video;
+#else
+      SWFDEC_ERROR ("VP6 video requires ffmpeg or GStreamer");
+      return NULL;
 #endif
     default:
       SWFDEC_ERROR ("video codec %u not implemented yet", (guint) format);

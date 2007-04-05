@@ -38,7 +38,7 @@ struct _SwfdecCodecScreen {
 };
 
 static gpointer
-swfdec_codec_screen_init (void)
+swfdec_codec_screen_init (SwfdecVideoFormat type)
 {
   SwfdecCodecScreen *screen = g_new0 (SwfdecCodecScreen, 1);
 

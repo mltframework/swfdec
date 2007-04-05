@@ -60,23 +60,24 @@ fail:
 /*** AUDIO ***/
 
 static gpointer
-swfdec_codec_ffmpeg_mp3_init (gboolean width, SwfdecAudioOut format)
+swfdec_codec_ffmpeg_audio_init (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
 {
   AVCodecContext *ctx;
-  
-  ctx = swfdec_codec_ffmpeg_init (CODEC_ID_MP3);
-  ctx->sample_rate = SWFDEC_AUDIO_OUT_RATE (format);
-  ctx->channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
+  enum CodecID id;
 
-  return ctx;
-}
-
-static gpointer
-swfdec_codec_ffmpeg_adpcm_init (gboolean width, SwfdecAudioOut format)
-{
-  AVCodecContext *ctx;
-  
-  ctx = swfdec_codec_ffmpeg_init (CODEC_ID_ADPCM_SWF);
+  switch (type) {
+    case SWFDEC_AUDIO_FORMAT_ADPCM:
+      id = CODEC_ID_ADPCM_SWF;
+      break;
+    case SWFDEC_AUDIO_FORMAT_MP3:
+      id = CODEC_ID_MP3;
+      break;
+    default:
+      g_assert_not_reached ();
+      id = 0;
+      break;
+  }
+  ctx = swfdec_codec_ffmpeg_init (id);
   ctx->sample_rate = SWFDEC_AUDIO_OUT_RATE (format);
   ctx->channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
 
@@ -190,15 +191,8 @@ swfdec_codec_ffmpeg_audio_finish (gpointer ctx)
 }
 
 
-const SwfdecAudioCodec swfdec_codec_ffmpeg_mp3 = {
-  swfdec_codec_ffmpeg_mp3_init,
-  swfdec_codec_ffmpeg_get_format,
-  swfdec_codec_ffmpeg_decode,
-  swfdec_codec_ffmpeg_audio_finish
-};
-
-const SwfdecAudioCodec swfdec_codec_ffmpeg_adpcm = {
-  swfdec_codec_ffmpeg_adpcm_init,
+const SwfdecAudioCodec swfdec_codec_ffmpeg_audio = {
+  swfdec_codec_ffmpeg_audio_init,
   swfdec_codec_ffmpeg_get_format,
   swfdec_codec_ffmpeg_decode,
   swfdec_codec_ffmpeg_audio_finish
@@ -212,10 +206,25 @@ typedef struct {
 } SwfdecCodecFFMpegVideo;
 
 static gpointer
-swfdec_codec_ffmpeg_h263_init (void)
+swfdec_codec_ffmpeg_video_init (SwfdecVideoFormat type)
 {
   SwfdecCodecFFMpegVideo *codec;
-  AVCodecContext *ctx = swfdec_codec_ffmpeg_init (CODEC_ID_FLV1);
+  AVCodecContext *ctx;
+  enum CodecID id;
+
+  switch (type) {
+    case SWFDEC_VIDEO_FORMAT_H263:
+      id = CODEC_ID_FLV1;
+      break;
+    case SWFDEC_VIDEO_FORMAT_SCREEN:
+      id = CODEC_ID_FLASHSV;
+      break;
+    default:
+      g_assert_not_reached ();
+      id = 0;
+      break;
+  }
+  ctx = swfdec_codec_ffmpeg_init (id);
 
   if (ctx == NULL)
     return NULL;
@@ -273,31 +282,9 @@ swfdec_codec_ffmpeg_video_finish (gpointer codec_data)
   av_free (codec->frame);
 }
 
-static gpointer
-swfdec_codec_ffmpeg_screen_init (void)
-{
-  SwfdecCodecFFMpegVideo *codec;
-  AVCodecContext *ctx = swfdec_codec_ffmpeg_init (CODEC_ID_FLASHSV);
 
-  if (ctx == NULL)
-    return NULL;
-  codec = g_new (SwfdecCodecFFMpegVideo, 1);
-  codec->ctx = ctx;
-  codec->frame = avcodec_alloc_frame ();
-
-  return codec;
-}
-
-
-const SwfdecVideoCodec swfdec_codec_ffmpeg_h263 = {
-  swfdec_codec_ffmpeg_h263_init,
-  swfdec_codec_ffmpeg_video_get_size,
-  swfdec_codec_ffmpeg_video_decode,
-  swfdec_codec_ffmpeg_video_finish
-};
-
-const SwfdecVideoCodec swfdec_codec_ffmpeg_screen = {
-  swfdec_codec_ffmpeg_screen_init,
+const SwfdecVideoCodec swfdec_codec_ffmpeg_video = {
+  swfdec_codec_ffmpeg_video_init,
   swfdec_codec_ffmpeg_video_get_size,
   swfdec_codec_ffmpeg_video_decode,
   swfdec_codec_ffmpeg_video_finish

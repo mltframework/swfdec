@@ -89,7 +89,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       stream->format = format;
       stream->codec = swfdec_codec_get_video (format);
       if (stream->codec)
-	stream->decoder = swfdec_video_codec_init (stream->codec);
+	stream->decoder = swfdec_video_codec_init (stream->codec, format);
       else
 	stream->decoder = NULL;
     }

@@ -26,7 +26,7 @@
 #include "swfdec_codec.h"
 #include "swfdec_debug.h"
 
-#if 0
+#if 1
 #define swfdec_cond_wait(cond, mutex) G_STMT_START { \
   g_print ("waiting at %s\n", G_STRLOC); \
   g_cond_wait (cond, mutex); \
@@ -95,6 +95,7 @@ swfdec_codec_gst_fakesrc_handoff (GstElement *fakesrc, GstBuffer *buf,
     g_mutex_unlock (player->mutex);
     return;
   }
+  g_print ("got one\n");
   buf->data = g_memdup (player->in->data, player->in->length);
   buf->size = player->in->length;
   gst_buffer_set_caps (buf, player->srccaps);
@@ -124,6 +125,7 @@ swfdec_codec_gst_fakesink_handoff (GstElement *fakesrc, GstBuffer *buf,
     swfdec_cond_wait (player->cond, player->mutex);
   if (player->pipeline == NULL)
     return;
+  g_print ("put one\n");
   player->out = swfdec_buffer_new ();
   player->out->data = g_memdup (buf->data, buf->size);
   player->out->length = buf->size;
@@ -134,13 +136,14 @@ swfdec_codec_gst_fakesink_handoff (GstElement *fakesrc, GstBuffer *buf,
 static void
 do_the_link (GstElement *src, GstPad *pad, GstElement *sink)
 {
+  g_print ("link!\n");
   if (!gst_element_link (src, sink)) {
     SWFDEC_ERROR ("no delayed link");
   }
 }
 
 static gpointer
-swfdec_codec_gst_h263_init (void)
+swfdec_codec_gst_video_init (SwfdecVideoFormat type)
 {
   SwfdecGstVideo *player;
   GstElement *fakesrc, *fakesink, *decoder, *csp;
@@ -155,7 +158,17 @@ swfdec_codec_gst_h263_init (void)
   g_assert (player->pipeline);
   player->mutex = g_mutex_new ();
   player->cond = g_cond_new ();
-  player->srccaps = gst_caps_from_string ("video/x-flash-video");
+  switch (type) {
+    case SWFDEC_VIDEO_FORMAT_H263:
+      player->srccaps = gst_caps_from_string ("video/x-flash-video");
+      break;
+    case SWFDEC_VIDEO_FORMAT_VP6:
+      player->srccaps = gst_caps_from_string ("video/x-vp6-flash");
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
   g_assert (player->srccaps);
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
   if (fakesrc == NULL) {
@@ -260,8 +273,8 @@ swfdec_codec_gst_video_decode (gpointer codec_data, SwfdecBuffer *buffer)
   return buffer;
 }
 
-const SwfdecVideoCodec swfdec_codec_gst_h263 = {
-  swfdec_codec_gst_h263_init,
+const SwfdecVideoCodec swfdec_codec_gst_video = {
+  swfdec_codec_gst_video_init,
   swfdec_codec_gst_video_get_size,
   swfdec_codec_gst_video_decode,
   swfdec_codec_gst_video_finish

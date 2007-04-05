@@ -18,7 +18,7 @@ typedef struct {
 } MadData;
 
 static gpointer
-swfdec_codec_mad_init (gboolean width, SwfdecAudioOut format)
+swfdec_codec_mad_init (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
 {
   MadData *data = g_new (MadData, 1);
 

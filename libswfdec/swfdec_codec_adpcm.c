@@ -45,7 +45,7 @@ static const int stepSizeTable[89] = {
 };
     
 static gpointer
-swfdec_codec_adpcm_init (gboolean width, SwfdecAudioOut format)
+swfdec_codec_adpcm_init (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
 {
   return GUINT_TO_POINTER ((guint) format);
 }

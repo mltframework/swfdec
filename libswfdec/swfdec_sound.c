@@ -198,7 +198,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
   if (codec == NULL)
     return NULL;
 
-  decoder = swfdec_audio_codec_init (codec, sound->width, sound->original_format);
+  decoder = swfdec_audio_codec_init (codec, sound->format, sound->width, sound->original_format);
   if (decoder == NULL)
     return NULL;
   sound->decoded_format = swfdec_audio_codec_get_format (codec, decoder);

@@ -202,7 +202,7 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->codec = swfdec_codec_get_audio (stream->sound->format);
   if (stream->codec)
     stream->decoder = swfdec_audio_codec_init (stream->codec, 
-	stream->sound->width, stream->sound->original_format);
+	stream->sound->format, stream->sound->width, stream->sound->original_format);
   if (stream->decoder)
     stream->format = swfdec_audio_codec_get_format (stream->codec, stream->decoder);
   swfdec_audio_add (SWFDEC_AUDIO (stream), player);

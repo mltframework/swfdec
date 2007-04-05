@@ -46,34 +46,35 @@ typedef enum {
 } SwfdecVideoFormat;
 
 struct _SwfdecAudioCodec {
-  gpointer		(* init)	(gboolean	width,
-					 SwfdecAudioOut	format);
-  SwfdecAudioOut	(* get_format)	(gpointer       codec_data);
+  gpointer		(* init)	(SwfdecAudioFormat	type,
+					 gboolean		width,
+					 SwfdecAudioOut		format);
+  SwfdecAudioOut	(* get_format)	(gpointer	        codec_data);
   /* FIXME: add SwfdecRect *invalid for invalidated region - might make sense for screen? */
-  SwfdecBuffer *	(* decode)	(gpointer	codec_data,
-					 SwfdecBuffer *	buffer);
-  SwfdecBuffer *	(* finish)	(gpointer	codec_data);
+  SwfdecBuffer *	(* decode)	(gpointer		codec_data,
+					 SwfdecBuffer *		buffer);
+  SwfdecBuffer *	(* finish)	(gpointer		codec_data);
 };
 
 struct _SwfdecVideoCodec {
-  gpointer		(* init)	(void);
-  gboolean	    	(* get_size)	(gpointer	codec_data,
-					 guint *	width,
-					 guint *	height);
-  SwfdecBuffer *	(* decode)	(gpointer	codec_data,
-					 SwfdecBuffer *	buffer);
-  void			(* finish)	(gpointer	codec_data);
+  gpointer		(* init)	(SwfdecVideoFormat	type);
+  gboolean	    	(* get_size)	(gpointer		codec_data,
+					 guint *		width,
+					 guint *		height);
+  SwfdecBuffer *	(* decode)	(gpointer		codec_data,
+					 SwfdecBuffer *		buffer);
+  void			(* finish)	(gpointer		codec_data);
 };
 
 const SwfdecAudioCodec *   	swfdec_codec_get_audio		(SwfdecAudioFormat	format);
 const SwfdecVideoCodec *  	swfdec_codec_get_video		(SwfdecVideoFormat	format);
 
-#define swfdec_audio_codec_init(codec,width,format) (codec)->init (width, format)
+#define swfdec_audio_codec_init(codec,type,width,format) (codec)->init (type, width, format)
 #define swfdec_audio_codec_get_format(codec, codec_data) (codec)->get_format (codec_data)
 #define swfdec_audio_codec_decode(codec, codec_data, buffer) (codec)->decode (codec_data, buffer)
 #define swfdec_audio_codec_finish(codec, codec_data) (codec)->finish (codec_data)
 
-#define swfdec_video_codec_init(codec) (codec)->init ()
+#define swfdec_video_codec_init(codec,type) (codec)->init (type)
 #define swfdec_video_codec_get_size(codec, codec_data, width, height) (codec)->get_size (codec_data, width, height)
 #define swfdec_video_codec_decode(codec, codec_data, buffer) (codec)->decode (codec_data, buffer)
 #define swfdec_video_codec_finish(codec, codec_data) (codec)->finish (codec_data)

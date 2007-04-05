@@ -292,7 +292,7 @@ swfdec_contents_create (SwfdecSprite *sprite,
 
     copy = swfdec_content_find (sprite, depth);
     if (copy == NULL) {
-      SWFDEC_WARNING ("Couldn't copy depth %u in frame %u", depth, sprite->parse_frame);
+      SWFDEC_WARNING ("Couldn't copy depth %d in frame %u", (depth + 16384), sprite->parse_frame);
     } else {
       *content = *copy;
       SWFDEC_LOG ("Copying from content %p", copy);

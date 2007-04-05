@@ -505,16 +505,18 @@ swfdec_as_context_eval_get_property (SwfdecAsContext *cx,
   if (obj) {
     swfdec_as_object_get (obj, name, ret);
   } else {
-    g_assert_not_reached ();
-#if 0
-    if (cx->fp == NULL || cx->fp->scopeChain == NULL)
-      return JS_FALSE;
-    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
-      return JS_FALSE;
-    if (!prop)
-      return JS_FALSE;
-    return OBJ_GET_PROPERTY (cx, obj, (jsid) prop->id, ret);
-#endif
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_STRING (&val, name);
+    if (cx->frame) {
+      obj = swfdec_as_frame_find_variable (cx->frame, &val);
+      if (obj) {
+	swfdec_as_object_get_variable (obj, &val, ret);
+	return;
+      }
+    } else {
+      SWFDEC_ERROR ("no frame in eval?");
+    }
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
 }
 
@@ -523,21 +525,17 @@ swfdec_as_context_eval_set_property (SwfdecAsContext *cx,
     SwfdecAsObject *obj, const char *name, const SwfdecAsValue *ret)
 {
   if (obj == NULL) {
-    g_assert_not_reached ();
-#if 0
-    JSObject *pobj;
-    JSProperty *prop;
-    if (cx->fp == NULL || cx->fp->varobj == NULL)
-      return JS_FALSE;
-    if (!js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
-      return JS_FALSE;
-    if (pobj)
-      obj = pobj;
-    else
-      obj = cx->fp->varobj;
-#endif
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_STRING (&val, name);
+    if (cx->frame == NULL) {
+      SWFDEC_ERROR ("no frame in eval_set?");
+      return;
+    }
+    obj = swfdec_as_frame_find_variable (cx->frame, &val);
+    if (obj == NULL)
+      obj = cx->frame->var_object;
   }
-  return swfdec_as_object_set (obj, name, ret);
+  swfdec_as_object_set (obj, name, ret);
 }
 
 static void

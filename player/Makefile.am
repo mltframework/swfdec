@@ -24,8 +24,8 @@ noinst_HEADERS = \
 	swfdec_player_manager.h \
 	swfdec_slow_loader.h
 
-swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_GTK_CFLAGS)
-swfplay_LDFLAGS = $(GTK_LIBS) $(SWFDEC_GTK_LIBS)
+swfplay_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_GTK_CFLAGS) $(GNOMEVFS_CFLAGS)
+swfplay_LDFLAGS = $(GTK_LIBS) $(SWFDEC_GTK_LIBS) $(GNOMEVFS_LIBS)
 
 swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
 swfdebug_LDFLAGS = $(GTK_LIBS) $(SWFDEC_GTK_LIBS)

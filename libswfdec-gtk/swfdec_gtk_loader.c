@@ -225,8 +225,9 @@ swfdec_gtk_loader_init (SwfdecGtkLoader *gtk_loader)
  *
  * Creates a new loader for the given URI using gnome-vfs (or using the local
  * file backend, if compiled without gnome-vfs support). The uri must be valid
- * UTF-8. If using gnome-vfs, gnome_vfs_make_uri_from_input() will be called on
- * @uri.
+ * UTF-8. If using gnome-vfs, you might want to use 
+ * gnome_vfs_make_uri_from_shell_arg() or gnome_vfs_make_uri_from_input() on
+ * the @uri prior to calling this function.
  *
  * Returns: a new #SwfdecLoader using gnome-vfs.
  **/
@@ -234,14 +235,11 @@ SwfdecLoader *
 swfdec_gtk_loader_new (const char *uri)
 {
   GnomeVFSURI *guri;
-  char *s;
 
   g_return_val_if_fail (uri != NULL, NULL);
 
   gnome_vfs_init ();
-  s = gnome_vfs_make_uri_from_input (uri);
-  guri = gnome_vfs_uri_new (s);
-  g_free (s);
+  guri = gnome_vfs_uri_new (uri);
   return swfdec_gtk_loader_new_from_uri (guri);
 }
 

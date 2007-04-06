@@ -269,23 +269,19 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   }
   if (dec->width == 0 && dec->height == 0) {
     SwfdecFlvVideoTag *tag = &g_array_index (flv->video, SwfdecFlvVideoTag, 0);
-    const SwfdecVideoCodec *codec = swfdec_codec_get_video (tag->format);
-    gpointer decoder;
-    SwfdecBuffer *ignore;
+    SwfdecVideoDecoder *decoder;
+    cairo_surface_t *surface;
 
-    if (codec == NULL)
-      return SWFDEC_STATUS_OK;
-    decoder = swfdec_video_codec_init (codec, tag->format);
+    /* nice hack... */
+    decoder = swfdec_video_decoder_new (tag->format);
     if (decoder == NULL)
       return SWFDEC_STATUS_OK;
-    ignore = swfdec_video_codec_decode (codec, decoder, tag->buffer);
-    if (ignore)
-      swfdec_buffer_unref (ignore);
-    if (!swfdec_video_codec_get_size (codec, decoder, &dec->width, &dec->height)) {
-      swfdec_video_codec_finish (codec, decoder);
+    surface = swfdec_video_decoder_decode (decoder, tag->buffer);
+    if (surface == NULL)
       return SWFDEC_STATUS_OK;
-    }
-    swfdec_video_codec_finish (codec, decoder);
+    dec->width = cairo_image_surface_get_width (surface);
+    dec->height = cairo_image_surface_get_height (surface);
+    swfdec_video_decoder_free (decoder);
     return SWFDEC_STATUS_INIT;
   } else {
     return SWFDEC_STATUS_IMAGE;

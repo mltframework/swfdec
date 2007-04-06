@@ -35,6 +35,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_adpcm.c \
 	$(CODECS) \
 	swfdec_codec_screen.c \
+	swfdec_codec_video.c \
 	swfdec_color.c \
 	swfdec_connection.c \
 	swfdec_debug.c \
@@ -122,6 +123,7 @@ noinst_HEADERS = \
 	swfdec_cached.h \
 	swfdec_character.h \
 	swfdec_codec.h \
+	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_connection.h \
 	swfdec_debug.h \

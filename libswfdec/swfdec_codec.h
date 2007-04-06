@@ -25,7 +25,6 @@
 #include <libswfdec/swfdec_buffer.h>
 
 typedef struct _SwfdecAudioCodec SwfdecAudioCodec;
-typedef struct _SwfdecVideoCodec SwfdecVideoCodec;
 
 typedef enum {
   SWFDEC_AUDIO_FORMAT_UNDEFINED = 0,
@@ -35,15 +34,6 @@ typedef enum {
   SWFDEC_AUDIO_FORMAT_NELLYMOSER_8KHZ = 5,
   SWFDEC_AUDIO_FORMAT_NELLYMOSER = 6
 } SwfdecAudioFormat;
-
-typedef enum {
-  SWFDEC_VIDEO_FORMAT_UNDEFINED = 0,
-  SWFDEC_VIDEO_FORMAT_H263 = 2,
-  SWFDEC_VIDEO_FORMAT_SCREEN = 3,
-  SWFDEC_VIDEO_FORMAT_VP6 = 4,
-  SWFDEC_VIDEO_FORMAT_VP6_ALPHA = 5,
-  SWFDEC_VIDEO_FORMAT_SCREEN2 = 6
-} SwfdecVideoFormat;
 
 struct _SwfdecAudioCodec {
   gpointer		(* init)	(SwfdecAudioFormat	type,
@@ -56,28 +46,12 @@ struct _SwfdecAudioCodec {
   SwfdecBuffer *	(* finish)	(gpointer		codec_data);
 };
 
-struct _SwfdecVideoCodec {
-  gpointer		(* init)	(SwfdecVideoFormat	type);
-  gboolean	    	(* get_size)	(gpointer		codec_data,
-					 guint *		width,
-					 guint *		height);
-  SwfdecBuffer *	(* decode)	(gpointer		codec_data,
-					 SwfdecBuffer *		buffer);
-  void			(* finish)	(gpointer		codec_data);
-};
-
 const SwfdecAudioCodec *   	swfdec_codec_get_audio		(SwfdecAudioFormat	format);
-const SwfdecVideoCodec *  	swfdec_codec_get_video		(SwfdecVideoFormat	format);
 
 #define swfdec_audio_codec_init(codec,type,width,format) (codec)->init (type, width, format)
 #define swfdec_audio_codec_get_format(codec, codec_data) (codec)->get_format (codec_data)
 #define swfdec_audio_codec_decode(codec, codec_data, buffer) (codec)->decode (codec_data, buffer)
 #define swfdec_audio_codec_finish(codec, codec_data) (codec)->finish (codec_data)
-
-#define swfdec_video_codec_init(codec,type) (codec)->init (type)
-#define swfdec_video_codec_get_size(codec, codec_data, width, height) (codec)->get_size (codec_data, width, height)
-#define swfdec_video_codec_decode(codec, codec_data, buffer) (codec)->decode (codec_data, buffer)
-#define swfdec_video_codec_finish(codec, codec_data) (codec)->finish (codec_data)
 
 
 G_END_DECLS

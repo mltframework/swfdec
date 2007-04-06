@@ -21,6 +21,7 @@
 #define __SWFDEC_FLV_DECODER_H__
 
 #include <libswfdec/swfdec_codec.h>
+#include <libswfdec/swfdec_codec_video.h>
 #include <libswfdec/swfdec_decoder.h>
 
 G_BEGIN_DECLS

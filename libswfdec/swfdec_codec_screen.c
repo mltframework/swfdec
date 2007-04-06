@@ -25,44 +25,24 @@
 #include <zlib.h>
 #include <liboil/liboil.h>
 
-#include "swfdec_codec.h"
+#include "swfdec_codec_video.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 
 typedef struct _SwfdecCodecScreen SwfdecCodecScreen;
 
 struct _SwfdecCodecScreen {
+  SwfdecVideoDecoder	decoder;	/* the decoder */
   gulong		width;		/* width of last image */
   gulong		height;		/* height of last image */
   SwfdecBuffer *	buffer;		/* buffer containing last decoded image */
 };
 
-static gpointer
-swfdec_codec_screen_init (SwfdecVideoFormat type)
-{
-  SwfdecCodecScreen *screen = g_new0 (SwfdecCodecScreen, 1);
-
-  return screen;
-}
-
-static gboolean
-swfdec_codec_screen_get_size (gpointer codec_data,
-    guint *width, guint *height)
-{
-  SwfdecCodecScreen *screen = codec_data;
-
-  if (screen->width == 0 || screen->height == 0)
-    return FALSE;
-
-  *width = screen->width;
-  *height = screen->height;
-  return TRUE;
-}
-#include <unistd.h>
 static SwfdecBuffer *
-swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
+swfdec_video_decoder_screen_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
+    guint *width, guint *height, guint *rowstride)
 {
-  SwfdecCodecScreen *screen = codec_data;
+  SwfdecCodecScreen *screen = (SwfdecCodecScreen *) dec;
   SwfdecBuffer *ret;
   SwfdecBits bits;
   gulong i, j, w, h, bw, bh, stride;
@@ -82,7 +62,7 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
   } else if (screen->width != w || screen->height != h) {
     SWFDEC_ERROR ("width or height differ from original: was %lux%lu, is %lux%lu",
 	screen->width, screen->height, w, h);
-    /* FIXME: this is was ffmpeg does, should we be more forgiving? */
+    /* FIXME: this is what ffmpeg does, should we be more forgiving? */
     return NULL;
   }
   if (screen->buffer && screen->buffer->ref_count == 1) {
@@ -127,22 +107,34 @@ swfdec_codec_screen_decode (gpointer codec_data, SwfdecBuffer *buffer)
       }
     }
   }
+  *width = screen->width;
+  *height = screen->height;
+  *rowstride = stride;
   return ret;
 }
 
 static void
-swfdec_codec_screen_finish (gpointer codec_data)
+swfdec_video_decoder_screen_free (SwfdecVideoDecoder *dec)
 {
-  SwfdecCodecScreen *screen = codec_data;
+  SwfdecCodecScreen *screen = (SwfdecCodecScreen *) dec;
 
   if (screen->buffer)
     swfdec_buffer_unref (screen->buffer);
   g_free (screen);
 }
 
-const SwfdecVideoCodec swfdec_codec_screen = {
-  swfdec_codec_screen_init,
-  swfdec_codec_screen_get_size,
-  swfdec_codec_screen_decode,
-  swfdec_codec_screen_finish
-};
+SwfdecVideoDecoder *
+swfdec_video_decoder_screen_new (SwfdecVideoFormat type)
+{
+  SwfdecCodecScreen *screen;
+  
+  if (type != SWFDEC_VIDEO_FORMAT_SCREEN)
+    return NULL;
+  
+  screen = g_new0 (SwfdecCodecScreen, 1);
+  screen->decoder.decode = swfdec_video_decoder_screen_decode;
+  screen->decoder.free = swfdec_video_decoder_screen_free;
+
+  return &screen->decoder;
+}
+

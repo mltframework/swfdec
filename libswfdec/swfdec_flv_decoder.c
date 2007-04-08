@@ -24,7 +24,6 @@
 #include "swfdec_flv_decoder.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_bits.h"
-#include "swfdec_codec.h"
 #include "swfdec_debug.h"
 
 enum {

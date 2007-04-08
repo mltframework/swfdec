@@ -23,13 +23,13 @@
 #include <string.h>
 #include <avcodec.h>
 
-#include "swfdec_codec.h"
+#include "swfdec_codec_audio.h"
 #include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
 
 /*** GENERAL ***/
 
-static gpointer
+static AVCodecContext *
 swfdec_codec_ffmpeg_init (enum CodecID id)
 {
   AVCodec *codec;
@@ -60,37 +60,11 @@ fail:
 
 /*** AUDIO ***/
 
-static gpointer
-swfdec_codec_ffmpeg_audio_init (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
-{
-  AVCodecContext *ctx;
-  enum CodecID id;
-
-  switch (type) {
-    case SWFDEC_AUDIO_FORMAT_ADPCM:
-      id = CODEC_ID_ADPCM_SWF;
-      break;
-    case SWFDEC_AUDIO_FORMAT_MP3:
-      id = CODEC_ID_MP3;
-      break;
-    default:
-      g_assert_not_reached ();
-      id = 0;
-      break;
-  }
-  ctx = swfdec_codec_ffmpeg_init (id);
-  ctx->sample_rate = SWFDEC_AUDIO_OUT_RATE (format);
-  ctx->channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
-
-  return ctx;
-}
-
-static SwfdecAudioOut
-swfdec_codec_ffmpeg_get_format (gpointer data)
-{
-  /* FIXME: improve this */
-  return SWFDEC_AUDIO_OUT_STEREO_44100;
-}
+typedef struct {
+  SwfdecAudioDecoder	decoder;
+  AVCodecContext *	ctx;
+  SwfdecBufferQueue *	queue;
+} SwfdecAudioDecoderFFMpeg;
 
 static SwfdecBuffer *
 swfdec_codec_ffmpeg_convert (AVCodecContext *ctx, SwfdecBuffer *buffer)
@@ -136,68 +110,94 @@ swfdec_codec_ffmpeg_convert (AVCodecContext *ctx, SwfdecBuffer *buffer)
   return ret;
 }
 
-static SwfdecBuffer *
-swfdec_codec_ffmpeg_decode (gpointer ctx, SwfdecBuffer *buffer)
+static void
+swfdec_audio_decoder_ffmpeg_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
 {
+  SwfdecAudioDecoderFFMpeg *ffmpeg = (SwfdecAudioDecoderFFMpeg *) dec;
   int out_size;
   int len;
   guint amount;
   SwfdecBuffer *outbuf = NULL;
-  SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
 
+  if (buffer == NULL)
+    return;
   outbuf = swfdec_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
   for (amount = 0; amount < buffer->length; amount += len) {
     
-    len = avcodec_decode_audio (ctx, (short *) outbuf->data, &out_size, buffer->data + amount, buffer->length - amount);
+    len = avcodec_decode_audio (ffmpeg->ctx, (short *) outbuf->data, &out_size, buffer->data + amount, buffer->length - amount);
 
     if (len < 0) {
       SWFDEC_ERROR ("Error %d while decoding", len);
-      swfdec_buffer_queue_unref (queue);
       swfdec_buffer_unref (outbuf);
-      return NULL;
+      return;
     }
     if (out_size > 0) {
       SwfdecBuffer *convert;
       outbuf->length = out_size;
-      convert = swfdec_codec_ffmpeg_convert (ctx, outbuf);
+      convert = swfdec_codec_ffmpeg_convert (ffmpeg->ctx, outbuf);
       if (convert == NULL) {
-	swfdec_buffer_queue_unref (queue);
 	swfdec_buffer_unref (outbuf);
-	return NULL;
+	return;
       }
-      swfdec_buffer_queue_push (queue, convert);
+      swfdec_buffer_queue_push (ffmpeg->queue, convert);
       outbuf->length = AVCODEC_MAX_AUDIO_FRAME_SIZE;
     }
   }
   swfdec_buffer_unref (outbuf);
-
-  amount = swfdec_buffer_queue_get_depth (queue);
-  //g_print ("got %u bytes\n", amount);
-  if (amount > 0)
-    outbuf = swfdec_buffer_queue_pull (queue, amount);
-  else
-    outbuf = NULL;
-  swfdec_buffer_queue_unref (queue);
-
-  return outbuf;
 }
 
 static SwfdecBuffer *
-swfdec_codec_ffmpeg_audio_finish (gpointer ctx)
+swfdec_audio_decoder_ffmpeg_pull (SwfdecAudioDecoder *dec)
 {
-  avcodec_close (ctx);
-  av_free (ctx);
+  SwfdecAudioDecoderFFMpeg *ffmpeg = (SwfdecAudioDecoderFFMpeg *) dec;
 
-  return NULL;
+  return swfdec_buffer_queue_pull_buffer (ffmpeg->queue);
 }
 
+static void
+swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
+{
+  SwfdecAudioDecoderFFMpeg *ffmpeg = (SwfdecAudioDecoderFFMpeg *) dec;
 
-const SwfdecAudioCodec swfdec_codec_ffmpeg_audio = {
-  swfdec_codec_ffmpeg_audio_init,
-  swfdec_codec_ffmpeg_get_format,
-  swfdec_codec_ffmpeg_decode,
-  swfdec_codec_ffmpeg_audio_finish
-};
+  avcodec_close (ffmpeg->ctx);
+  av_free (ffmpeg->ctx);
+  swfdec_buffer_queue_unref (ffmpeg->queue);
+
+  g_slice_free (SwfdecAudioDecoderFFMpeg, ffmpeg);
+}
+
+SwfdecAudioDecoder *
+swfdec_audio_decoder_ffmpeg_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+{
+  SwfdecAudioDecoderFFMpeg *ffmpeg;
+  AVCodecContext *ctx;
+  enum CodecID id;
+
+  switch (type) {
+    case SWFDEC_AUDIO_FORMAT_ADPCM:
+      id = CODEC_ID_ADPCM_SWF;
+      break;
+    case SWFDEC_AUDIO_FORMAT_MP3:
+      id = CODEC_ID_MP3;
+      break;
+    default:
+      return NULL;
+  }
+  ctx = swfdec_codec_ffmpeg_init (id);
+  if (ctx == NULL)
+    return NULL;
+  ffmpeg = g_slice_new (SwfdecAudioDecoderFFMpeg);
+  ffmpeg->ctx = ctx;
+  ffmpeg->queue = swfdec_buffer_queue_new ();
+  ffmpeg->decoder.out_format = SWFDEC_AUDIO_OUT_STEREO_44100;
+  ffmpeg->decoder.pull = swfdec_audio_decoder_ffmpeg_pull;
+  ffmpeg->decoder.push = swfdec_audio_decoder_ffmpeg_push;
+  ffmpeg->decoder.free = swfdec_audio_decoder_ffmpeg_free;
+  ctx->sample_rate = SWFDEC_AUDIO_OUT_RATE (format);
+  ctx->channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
+
+  return &ffmpeg->decoder;
+}
 
 /*** VIDEO ***/
 

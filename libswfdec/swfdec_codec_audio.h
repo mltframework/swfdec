@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 #include <libswfdec/swfdec_audio_internal.h>
 #include <libswfdec/swfdec_buffer.h>
 
-typedef struct _SwfdecAudioCodec SwfdecAudioCodec;
+typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
 
 typedef enum {
   SWFDEC_AUDIO_FORMAT_UNDEFINED = 0,
@@ -35,23 +35,25 @@ typedef enum {
   SWFDEC_AUDIO_FORMAT_NELLYMOSER = 6
 } SwfdecAudioFormat;
 
-struct _SwfdecAudioCodec {
-  gpointer		(* init)	(SwfdecAudioFormat	type,
-					 gboolean		width,
-					 SwfdecAudioOut		format);
-  SwfdecAudioOut	(* get_format)	(gpointer	        codec_data);
-  /* FIXME: add SwfdecRect *invalid for invalidated region - might make sense for screen? */
-  SwfdecBuffer *	(* decode)	(gpointer		codec_data,
+typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (SwfdecAudioFormat type, gboolean width,
+    SwfdecAudioOut format);
+struct _SwfdecAudioDecoder {
+  SwfdecAudioFormat	format;
+  SwfdecAudioOut	out_format;
+  void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
-  SwfdecBuffer *	(* finish)	(gpointer		codec_data);
+  SwfdecBuffer *	(* pull)	(SwfdecAudioDecoder *	decoder);
+  void		  	(* free)	(SwfdecAudioDecoder *	decoder);
 };
 
-const SwfdecAudioCodec *   	swfdec_codec_get_audio		(SwfdecAudioFormat	format);
-
-#define swfdec_audio_codec_init(codec,type,width,format) (codec)->init (type, width, format)
-#define swfdec_audio_codec_get_format(codec, codec_data) (codec)->get_format (codec_data)
-#define swfdec_audio_codec_decode(codec, codec_data, buffer) (codec)->decode (codec_data, buffer)
-#define swfdec_audio_codec_finish(codec, codec_data) (codec)->finish (codec_data)
+SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioFormat	format,
+							 gboolean		width,
+							 SwfdecAudioOut		data_format);
+void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
+SwfdecAudioOut		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
+void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
+							 SwfdecBuffer *		buffer);
+SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);
 
 
 G_END_DECLS

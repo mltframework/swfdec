@@ -23,7 +23,7 @@
 #define _SWFDEC_SOUND_H_
 
 #include <libswfdec/swfdec_cached.h>
-#include <libswfdec/swfdec_codec.h>
+#include <libswfdec/swfdec_codec_audio.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 #include <libswfdec/swfdec_types.h>
 

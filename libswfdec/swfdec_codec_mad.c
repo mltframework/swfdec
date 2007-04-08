@@ -1,3 +1,22 @@
+/* Swfdec
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -6,36 +25,19 @@
 #include <liboil/liboil.h>
 #include <mad.h>
 
-#include "swfdec_codec.h"
+#include "swfdec_codec_audio.h"
 #include "swfdec_debug.h"
 
 typedef struct {
+  SwfdecAudioDecoder	decoder;
+
   struct mad_stream	stream;
   struct mad_frame	frame;
   struct mad_synth	synth;
   guint8		data[MAD_BUFFER_MDLEN * 3];
   guint			data_len;
+  SwfdecBufferQueue *	queue;
 } MadData;
-
-static gpointer
-swfdec_codec_mad_init (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
-{
-  MadData *data = g_new (MadData, 1);
-
-  mad_stream_init (&data->stream);
-  mad_frame_init (&data->frame);
-  mad_synth_init (&data->synth);
-  data->data_len = 0;
-
-  return data;
-}
-
-static SwfdecAudioOut
-swfdec_codec_mad_get_format (gpointer data)
-{
-  /* FIXME: improve this */
-  return SWFDEC_AUDIO_OUT_STEREO_44100;
-}
 
 static SwfdecBuffer *
 convert_synth_to_buffer (MadData *mdata)
@@ -138,15 +140,18 @@ convert_synth_to_buffer (MadData *mdata)
   return buffer;
 }
 
-static SwfdecBuffer *
-swfdec_codec_mad_decode (gpointer datap, SwfdecBuffer *buffer)
+static void
+swfdec_audio_decoder_mad_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
 {
-  MadData *data = datap;
-  SwfdecBuffer *out;
-  SwfdecBufferQueue *queue;
+  MadData *data = (MadData *) dec;
+  SwfdecBuffer *out, *empty = NULL;
   guint amount = 0, size;
 
-  queue = swfdec_buffer_queue_new ();
+  if (buffer == NULL) {
+    buffer = empty = swfdec_buffer_new ();
+    empty->data = g_malloc0 (MAD_BUFFER_GUARD * 3);
+    empty->length = MAD_BUFFER_GUARD * 3;
+  }
 
   //write (1, buffer->data, buffer->length);
   //g_print ("buffer %p gave us %u bytes\n", buffer, buffer->length);
@@ -171,9 +176,8 @@ swfdec_codec_mad_decode (gpointer datap, SwfdecBuffer *buffer)
 
       mad_synth_frame (&data->synth, &data->frame);
       out = convert_synth_to_buffer (data);
-      if (out) {
-	swfdec_buffer_queue_push (queue, out);
-      }
+      if (out)
+	swfdec_buffer_queue_push (data->queue, out);
     }
     if (data->stream.next_frame == NULL) {
       data->data_len = 0;
@@ -184,40 +188,47 @@ swfdec_codec_mad_decode (gpointer datap, SwfdecBuffer *buffer)
   }
   //g_print ("%u bytes left\n", data->data_len);
 
-  size = swfdec_buffer_queue_get_depth (queue);
-  if (size > 0)
-    out = swfdec_buffer_queue_pull (queue, size);
-  else
-    out = NULL;
-  swfdec_buffer_queue_unref (queue);
-
-  return out;
+  if (empty)
+    swfdec_buffer_unref (empty);
 }
 
-static SwfdecBuffer *
-swfdec_codec_mad_finish (gpointer datap)
+static void
+swfdec_audio_decoder_mad_free (SwfdecAudioDecoder *dec)
 {
-  MadData *data = datap;
-  SwfdecBuffer *empty, *result;
-
-  empty = swfdec_buffer_new ();
-  empty->data = g_malloc0 (MAD_BUFFER_GUARD * 3);
-  empty->length = MAD_BUFFER_GUARD * 3;
-  result = swfdec_codec_mad_decode (data, empty);
-  swfdec_buffer_unref (empty);
+  MadData *data = (MadData *) dec;
 
   mad_synth_finish (&data->synth);
   mad_frame_finish (&data->frame);
   mad_stream_finish (&data->stream);
-  g_free (data);
-
-  return result;
+  swfdec_buffer_queue_unref (data->queue);
+  g_slice_free (MadData, data);
 }
 
-const SwfdecAudioCodec swfdec_codec_mad = {
-  swfdec_codec_mad_init,
-  swfdec_codec_mad_get_format,
-  swfdec_codec_mad_decode,
-  swfdec_codec_mad_finish
-};
+static SwfdecBuffer *
+swfdec_audio_decoder_mad_pull (SwfdecAudioDecoder *dec)
+{
+  return swfdec_buffer_queue_pull_buffer (((MadData *) dec)->queue);
+}
+
+SwfdecAudioDecoder *
+swfdec_audio_decoder_mad_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+{
+  MadData *data;
+  
+  if (type != SWFDEC_AUDIO_FORMAT_MP3)
+    return NULL;
+
+  data = g_slice_new (MadData);
+  data->decoder.out_format = SWFDEC_AUDIO_OUT_STEREO_44100;
+  data->decoder.push = swfdec_audio_decoder_mad_push;
+  data->decoder.pull = swfdec_audio_decoder_mad_pull;
+  data->decoder.free = swfdec_audio_decoder_mad_free;
+  mad_stream_init (&data->stream);
+  mad_frame_init (&data->frame);
+  mad_synth_init (&data->synth);
+  data->data_len = 0;
+  data->queue = swfdec_buffer_queue_new ();
+
+  return &data->decoder;
+}
 

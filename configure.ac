@@ -208,7 +208,7 @@ AC_ARG_ENABLE(gstreamer,
 	AS_HELP_STRING([--enable-gstreamer],
 			[enable GStreamer support (default=no)])],
 	enable_gstreamer=$enableval,
-	enable_gstreamer="no")
+	enable_gstreamer="yes")
 
 if test "$enable_gstreamer" = "yes"; then
 	dnl I used my own version here, it might work with lower versions

@@ -240,6 +240,8 @@ swfdec_js_slash_to_dot (const char *slash_str)
 
   if (*cur == '/') {
     g_string_append (str, "_root");
+    if (cur[1] == ':')
+      cur++;
   } else {
     goto start;
   }

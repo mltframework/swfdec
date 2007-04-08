@@ -360,7 +360,8 @@ swfdec_action_goto_frame (JSContext *cx, guint action, const guint8 *data, guint
   }
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   if (movie) {
-    swfdec_movie_goto (movie, frame);
+    if (frame < movie->n_frames)
+      swfdec_movie_goto (movie, frame);
     movie->stopped = TRUE;
   } else {
     SWFDEC_ERROR ("no movie to goto on");
@@ -1181,6 +1182,20 @@ swfdec_action_not_5 (JSContext *cx, guint action, const guint8 *data, guint len)
 
   d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   cx->fp->sp[-1] = d == 0 ? JSVAL_TRUE : JSVAL_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_string_equals (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSString *lval, *rval;
+
+  if (!(rval = JS_ValueToString (cx, cx->fp->sp[-1])) ||
+      !(lval = JS_ValueToString (cx, cx->fp->sp[-2])))
+    return JS_FALSE;
+
+  cx->fp->sp--;
+  cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (js_CompareStrings (rval, lval) == 0);
   return JS_TRUE;
 }
 
@@ -2507,7 +2522,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
-  [0x13] = { "StringEquals", NULL },
+  [0x13] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_equals, swfdec_action_string_equals, swfdec_action_string_equals, swfdec_action_string_equals } },
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },
   [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },

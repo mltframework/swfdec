@@ -243,7 +243,7 @@ swfdec_js_slash_to_dot (const char *slash_str)
   } else {
     goto start;
   }
-  while (cur && *cur == '/') {
+  while (cur && (*cur == '/' || *cur == ':')) {
     cur++;
 start:
     if (str->len > 0)
@@ -257,8 +257,14 @@ start:
 	g_string_append_len (str, cur, slash - cur);
 	cur = slash;
       } else {
-	g_string_append (str, cur);
-	cur = NULL;
+	slash = strchr (cur, ':');
+	if (slash) {
+	  g_string_append_len (str, cur, slash - cur);
+	  cur = slash;
+	} else {
+	  g_string_append (str, cur);
+	  cur = NULL;
+	}
       }
     }
     /* cur should now point to the slash */

@@ -206,7 +206,7 @@ fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 AC_ARG_ENABLE(gstreamer,
 	AS_HELP_STRING([--enable-gstreamer],
-			[enable GStreamer support (default=no)])],
+			[enable GStreamer support (default=yes)])],
 	enable_gstreamer=$enableval,
 	enable_gstreamer="yes")
 

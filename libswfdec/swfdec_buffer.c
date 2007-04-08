@@ -353,6 +353,16 @@ swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
   queue->depth += buffer->length;
 }
 
+/**
+ * swfdec_buffer_queue_pull_buffer:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Pulls the first buffer out of @queue and returns it. This function is 
+ * equivalent to calling swfdec_buffer_queue_pull() with the size of the
+ * first buffer in it.
+ *
+ * Returns: The first buffer in @queue or %NULL if @queue is empty.
+ **/
 SwfdecBuffer *
 swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
 {

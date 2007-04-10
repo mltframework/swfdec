@@ -25,7 +25,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 DOC_SOURCE_DIR=../libswfdec
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
-SCANGOBJ_OPTIONS=--type-init-func="swfdec_init()" 
+SCANGOBJ_OPTIONS=--type-init-func="swfdec_init(); gtk_init (NULL, NULL);" 
 
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED" 
@@ -33,7 +33,7 @@ SCAN_OPTIONS=
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml
-MKDB_OPTIONS=--sgml-mode --output-format=xml
+MKDB_OPTIONS=--sgml-mode --output-format=xml --source-dir=../libswfdec-gtk
 
 # Extra options to supply to gtkdoc-mktmpl
 # e.g. MKTMPL_OPTIONS=--only-section-tmpl
@@ -46,8 +46,8 @@ FIXXREF_OPTIONS=
 # Used for dependencies. The docs will be rebuilt if any of these change.
 # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
 # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
-HFILE_GLOB=$(top_srcdir)/libswfdec/*.h
-CFILE_GLOB=$(top_srcdir)/libswfdec/*.c
+HFILE_GLOB=$(top_srcdir)/libswfdec/*.h $(top_srcdir)/libswfdec-gtk/*.h
+CFILE_GLOB=$(top_srcdir)/libswfdec/*.c $(top_srcdir)/libswfdec-gtk/*.c
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
@@ -108,6 +108,11 @@ IGNORE_HFILES= \
 	swfdec_video_movie.h \
 	swfdec_xml.h
 
+EXTRA_HFILES = \
+	../libswfdec-gtk/swfdec_gtk_loader.h \
+	../libswfdec-gtk/swfdec_gtk_player.h \
+	../libswfdec-gtk/swfdec_gtk_widget.h
+
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png
 HTML_IMAGES=
@@ -126,8 +131,8 @@ expand_content_files=
 # signals and properties.
 # e.g. INCLUDES=-I$(top_srcdir) -I$(top_builddir) $(GTK_DEBUG_FLAGS)
 # e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
-INCLUDES=$(SWF_CFLAGS) $(CAIRO_CFLAGS)
-GTKDOC_LIBS=$(SWF_LIBS)
+INCLUDES=$(SWFDEC_GTK_CFLAGS) $(CAIRO_CFLAGS)
+GTKDOC_LIBS=$(SWFDEC_GTK_LIBS) 
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make

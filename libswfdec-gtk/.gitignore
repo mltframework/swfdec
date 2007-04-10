@@ -1,0 +1,14 @@
+*~
+CVS
+.cvsignore
+.deps
+.libs
+
+Makefile
+Makefile.in
+*.o
+*.la
+*.lo
+*.loT
+
+swfdec_playback.c

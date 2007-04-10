@@ -4,8 +4,8 @@ TESTS = $(check_PROGRAMS)
 
 trace_SOURCES = trace.c
 
-trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS)
-trace_LDFLAGS = $(SWF_LIBS) $(CAIRO_LIBS)
+trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
+trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
@@ -58,6 +58,14 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	divide.as \
+	divide-7.swf \
+	divide-7.swf.trace \
+	doaction-after-placeobject.swf.trace \
+	doaction-after-placeobject.swf \
+	doaction-before-placeobject.c \
+	doaction-before-placeobject.swf \
+	doaction-before-placeobject.swf.trace \
 	double.swf \
 	event-order.swf \
 	empty-stack.as \
@@ -122,7 +130,7 @@ EXTRA_DIST = \
 	netconnection.swf.trace \
 	netstream-onstatus.c \
 	netstream-onstatus.swf \
-	netstream-onstatus.trace \
+	netstream-onstatus.swf.trace \
 	netstream-onstatus-notfound.as \
 	netstream-onstatus-notfound.swf \
 	netstream-onstatus-notfound.swf.trace \

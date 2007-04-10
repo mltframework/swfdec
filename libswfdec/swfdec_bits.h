@@ -32,25 +32,26 @@ struct _SwfdecBits
 {
   SwfdecBuffer *	buffer;		/* buffer data is taken from or NULL */
   const unsigned char *	ptr;		/* current location to read from */
-  unsigned int		idx;		/* bits already read from ptr */
+  guint		idx;		/* bits already read from ptr */
   const unsigned char *	end;		/* pointer after last byte */
 };
 
 void swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer);
 void swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len);
-unsigned int swfdec_bits_left (SwfdecBits *b);
+void swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, guint bytes);
+guint swfdec_bits_left (SwfdecBits *b);
 int swfdec_bits_getbit (SwfdecBits * b);
-unsigned int swfdec_bits_getbits (SwfdecBits * b, unsigned int n);
-unsigned int swfdec_bits_peekbits (SwfdecBits * b, unsigned int n);
-int swfdec_bits_getsbits (SwfdecBits * b, unsigned int n);
-unsigned int swfdec_bits_peek_u8 (SwfdecBits * b);
-unsigned int swfdec_bits_get_u8 (SwfdecBits * b);
-unsigned int swfdec_bits_get_u16 (SwfdecBits * b);
+guint swfdec_bits_getbits (SwfdecBits * b, guint n);
+guint swfdec_bits_peekbits (SwfdecBits * b, guint n);
+int swfdec_bits_getsbits (SwfdecBits * b, guint n);
+guint swfdec_bits_peek_u8 (SwfdecBits * b);
+guint swfdec_bits_get_u8 (SwfdecBits * b);
+guint swfdec_bits_get_u16 (SwfdecBits * b);
 int swfdec_bits_get_s16 (SwfdecBits * b);
-unsigned int swfdec_bits_get_u32 (SwfdecBits * b);
-unsigned int swfdec_bits_get_bu16 (SwfdecBits *b);
-unsigned int swfdec_bits_get_bu24 (SwfdecBits *b);
-unsigned int swfdec_bits_get_bu32 (SwfdecBits *b);
+guint swfdec_bits_get_u32 (SwfdecBits * b);
+guint swfdec_bits_get_bu16 (SwfdecBits *b);
+guint swfdec_bits_get_bu24 (SwfdecBits *b);
+guint swfdec_bits_get_bu32 (SwfdecBits *b);
 float swfdec_bits_get_float (SwfdecBits * b);
 double swfdec_bits_get_double (SwfdecBits * b);
 double swfdec_bits_get_bdouble (SwfdecBits * b);
@@ -63,7 +64,7 @@ void swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
 const char *swfdec_bits_skip_string (SwfdecBits * bits);
 guint swfdec_bits_skip_bytes (SwfdecBits *bits, guint bytes);
 char *swfdec_bits_get_string (SwfdecBits * bits);
-char *swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len);
+char *swfdec_bits_get_string_length (SwfdecBits * bits, guint len);
 SwfdecColor swfdec_bits_get_color (SwfdecBits * bits);
 SwfdecColor swfdec_bits_get_rgba (SwfdecBits * bits);
 SwfdecGradient *swfdec_bits_get_gradient (SwfdecBits * bits);

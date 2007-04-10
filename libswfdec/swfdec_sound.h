@@ -23,7 +23,7 @@
 #define _SWFDEC_SOUND_H_
 
 #include <libswfdec/swfdec_cached.h>
-#include <libswfdec/swfdec_codec.h>
+#include <libswfdec/swfdec_codec_audio.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 #include <libswfdec/swfdec_types.h>
 
@@ -41,7 +41,7 @@ typedef struct _SwfdecSoundEnvelope SwfdecSoundEnvelope;
 #define SWFDEC_SOUND_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SOUND, SwfdecSoundClass))
 
 struct _SwfdecSoundEnvelope {
-  unsigned int		offset;			/* offset in frames */
+  guint		offset;			/* offset in frames */
   guint16		volume[2];		/* volume to use */
 };
 
@@ -52,10 +52,10 @@ struct _SwfdecSoundChunk
   int			stop;	      		/* stop the sample being played */
   int			no_restart;	      	/* don't restart if already playing */
 
-  unsigned int		start_sample; 		/* sample at which to start playing */
-  unsigned int		stop_sample;	      	/* first sample to not play anymore */
-  unsigned int		loop_count;		/* amount of times this sample should be played back */
-  unsigned int		n_envelopes;		/* amount of points in the envelope */
+  guint		start_sample; 		/* sample at which to start playing */
+  guint		stop_sample;	      	/* first sample to not play anymore */
+  guint		loop_count;		/* amount of times this sample should be played back */
+  guint		n_envelopes;		/* amount of points in the envelope */
   SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
 };
 
@@ -66,8 +66,8 @@ struct _SwfdecSound
   SwfdecAudioFormat	format;			/* format in use */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
-  unsigned int		n_samples;		/* total number of samples when decoded to 44100kHz */
-  unsigned int		skip;			/* samples to skip at start */
+  guint		n_samples;		/* total number of samples when decoded to 44100kHz */
+  guint		skip;			/* samples to skip at start */
   SwfdecBuffer *	encoded;		/* encoded data */
 
   SwfdecAudioOut	decoded_format;		/* format of decoded data */
@@ -89,14 +89,14 @@ int tag_func_define_button_sound (SwfdecSwfDecoder * s);
 
 void			swfdec_sound_render		(SwfdecSound *		sound, 
 							 gint16 *		dest, 
-							 unsigned int		offset,
-		  					 unsigned int		len);
+							 guint		offset,
+		  					 guint		len);
 void			swfdec_sound_buffer_render	(gint16 *		dest, 
 							 const SwfdecBuffer *	source, 
 							 SwfdecAudioOut		format,
 							 const SwfdecBuffer *	previous, 
-							 unsigned int		offset,
-							 unsigned int		n_samples);
+							 guint		offset,
+							 guint		n_samples);
 guint			swfdec_sound_buffer_get_n_samples (const SwfdecBuffer * buffer, 
                                                          SwfdecAudioOut		format);
 

@@ -118,9 +118,9 @@ message_display_cb (SwfdecPlayerManager *manager, guint type, const char *messag
 }
 
 static void
-interrupt_widget_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecWidget *widget)
+interrupt_widget_cb (SwfdecPlayerManager *manager, GParamSpec *pspec, SwfdecGtkWidget *widget)
 {
-  swfdec_widget_set_interactive (widget,
+  swfdec_gtk_widget_set_interactive (widget,
       !swfdec_player_manager_get_interrupted (manager));
 }
 
@@ -292,8 +292,9 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_paned_add2 (GTK_PANED (hpaned), vbox);
 
   widget = swfdec_debug_widget_new (player);
-  swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
-  swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
+  swfdec_gtk_widget_set_scale (SWFDEC_GTK_WIDGET (widget), scale);
+  if (use_image)
+    swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
   signal_auto_connect (manager, "notify::interrupted", G_CALLBACK (interrupt_widget_cb), widget);
 
@@ -407,10 +408,10 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  loader = swfdec_loader_new_from_file (argv[1], &error);
-  if (loader == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
+  loader = swfdec_loader_new_from_file (argv[1]);
+  if (loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
+    g_object_unref (loader);
     return 1;
   }
   player = swfdec_debugger_new ();

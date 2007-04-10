@@ -1,4 +1,17 @@
 
+ 0.4.3 ("Your tube")
+
+This release can play Youtube video. While this alone is enough for a 
+release, this was needed to make it possible:
+- add lots of new features to the script interpreter, in particular 
+  support for inheritance and the Object.registerClass function.
+- rework the streaming and implement the NetStream, NetConnection and
+  XML script objects partially
+- support passing variables to movies
+- improvements to the JPEG decoder
+- improvements to the debugging framework and the debugger
+- support some more Flash 8 tags (in particular DefineFont3)
+
  0.4.2 ("Two completely different numbers")
 
 The main change for this release is changing script execution from 

@@ -70,8 +70,6 @@ swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
 {
   SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
   SwfdecBuffer *buffer;
-  static const cairo_user_data_key_t key;
-  guint w, h;
   cairo_surface_t *surface;
 
   input->current_frame = (input->current_frame + 1) % input->video->n_frames;
@@ -81,17 +79,8 @@ swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
   if (buffer == NULL)
     return;
 
-  buffer = swfdec_video_codec_decode (input->video->codec, input->decoder, buffer);
-  if (buffer == NULL)
-    return;
-  if (!swfdec_video_codec_get_size (input->video->codec, input->decoder, &w, &h)) {
-      g_assert_not_reached ();
-  }
-  surface = cairo_image_surface_create_for_data (buffer->data, 
-      CAIRO_FORMAT_RGB24, w, h, w * 4);
-  cairo_surface_set_user_data (surface, &key, 
-      buffer, (cairo_destroy_func_t) swfdec_buffer_unref);
-  swfdec_video_movie_new_image (input->movie, surface, w, h);
+  surface = swfdec_video_decoder_decode (input->decoder, buffer);
+  swfdec_video_movie_new_image (input->movie, surface);
   cairo_surface_destroy (surface);
 }
 
@@ -111,7 +100,7 @@ swfdec_video_input_disconnect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *
 
   g_assert (input->movie == movie);
   if (input->decoder)
-    swfdec_video_codec_finish (input->video->codec, input->decoder);
+    swfdec_video_decoder_free (input->decoder);
   g_object_unref (input->video);
   g_free (input);
 }
@@ -119,16 +108,16 @@ swfdec_video_input_disconnect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *
 static SwfdecVideoMovieInput *
 swfdec_video_input_new (SwfdecVideo *video)
 {
-  SwfdecVideoInput *input = g_new0 (SwfdecVideoInput, 1);
-
+  SwfdecVideoInput *input;
+  
   if (video->n_frames == 0)
     return NULL;
-  if (video->codec == NULL)
+  input = g_new0 (SwfdecVideoInput, 1);
+  input->decoder = swfdec_video_decoder_new (video->format);
+  if (input->decoder == NULL) {
+    g_free (input);
     return NULL;
-  if (video->codec)
-    input->decoder = swfdec_video_codec_init (video->codec);
-  if (input->decoder == NULL)
-    return NULL;
+  }
   input->input.connect = swfdec_video_input_connect;
   input->input.iterate = swfdec_video_input_iterate;
   input->input.disconnect = swfdec_video_input_disconnect;
@@ -211,13 +200,6 @@ tag_func_define_video (SwfdecSwfDecoder *s)
   SWFDEC_LOG ("  deblocking: %d", deblocking);
   SWFDEC_LOG ("  smoothing: %d", smoothing);
   SWFDEC_LOG ("  format: %d", (int) video->format);
-  if (video->format != SWFDEC_VIDEO_FORMAT_UNDEFINED) {
-    video->codec = swfdec_codec_get_video (video->format);
-    if (video->codec == NULL) {
-      SWFDEC_WARNING ("no codec for format %d", (int) video->format);
-      return SWFDEC_STATUS_OK;
-    }
-  }
   return SWFDEC_STATUS_OK;
 }
 

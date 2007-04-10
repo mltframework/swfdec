@@ -155,16 +155,16 @@ run_test (const char *filename)
   SwfdecLoader *loader;
   SwfdecPlayer *player = NULL;
   guint i, msecs;
-  GError *error = NULL;
   int w, h;
   cairo_surface_t *surface;
   cairo_t *cr;
 
   g_print ("Testing %s:\n", filename);
 
-  loader = swfdec_loader_new_from_file (filename, &error);
-  if (loader == NULL) {
-    g_print ("  ERROR: %s\n", error->message);
+  loader = swfdec_loader_new_from_file (filename);
+  if (loader->error) {
+    g_print ("  ERROR: %s\n", loader->error);
+    g_object_unref (loader);
     goto error;
   }
   player = swfdec_player_new ();
@@ -193,8 +193,6 @@ run_test (const char *filename)
   return TRUE;
 
 error:
-  if (error)
-    g_error_free (error);
   if (player)
     g_object_unref (player);
   return FALSE;

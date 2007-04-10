@@ -24,7 +24,6 @@
 #include "swfdec_flv_decoder.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_bits.h"
-#include "swfdec_codec.h"
 #include "swfdec_debug.h"
 
 enum {
@@ -269,23 +268,19 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   }
   if (dec->width == 0 && dec->height == 0) {
     SwfdecFlvVideoTag *tag = &g_array_index (flv->video, SwfdecFlvVideoTag, 0);
-    const SwfdecVideoCodec *codec = swfdec_codec_get_video (tag->format);
-    gpointer decoder;
-    SwfdecBuffer *ignore;
+    SwfdecVideoDecoder *decoder;
+    cairo_surface_t *surface;
 
-    if (codec == NULL)
-      return SWFDEC_STATUS_OK;
-    decoder = swfdec_video_codec_init (codec);
+    /* nice hack... */
+    decoder = swfdec_video_decoder_new (tag->format);
     if (decoder == NULL)
       return SWFDEC_STATUS_OK;
-    ignore = swfdec_video_codec_decode (codec, decoder, tag->buffer);
-    if (ignore)
-      swfdec_buffer_unref (ignore);
-    if (!swfdec_video_codec_get_size (codec, decoder, &dec->width, &dec->height)) {
-      swfdec_video_codec_finish (codec, decoder);
+    surface = swfdec_video_decoder_decode (decoder, tag->buffer);
+    if (surface == NULL)
       return SWFDEC_STATUS_OK;
-    }
-    swfdec_video_codec_finish (codec, decoder);
+    dec->width = cairo_image_surface_get_width (surface);
+    dec->height = cairo_image_surface_get_height (surface);
+    swfdec_video_decoder_free (decoder);
     return SWFDEC_STATUS_INIT;
   } else {
     return SWFDEC_STATUS_IMAGE;
@@ -479,13 +474,19 @@ swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
   offset = g_array_index (flv->video, SwfdecFlvVideoTag, 0).timestamp;
   timestamp += offset;
   id = swfdec_flv_decoder_find_video (flv, timestamp);
+  tag = &g_array_index (flv->video, SwfdecFlvVideoTag, id);
+  if (keyframe) {
+    while (id > 0 && tag->frame_type != 1) {
+      id--;
+      tag--;
+    }
+  }
   if (next_timestamp) {
     if (id + 1 >= flv->video->len)
       *next_timestamp = 0;
     else
       *next_timestamp = g_array_index (flv->video, SwfdecFlvVideoTag, id + 1).timestamp - offset;
   }
-  tag = &g_array_index (flv->video, SwfdecFlvVideoTag, id);
   if (real_timestamp)
     *real_timestamp = tag->timestamp - offset;
   if (format)

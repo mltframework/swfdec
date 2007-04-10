@@ -4,11 +4,14 @@ DIST_SUBDIRS = jpeg js
 
 CODECS =
 
-if HAVE_MAD
-CODECS += swfdec_codec_mad.c
-endif
 if HAVE_FFMPEG
 CODECS += swfdec_codec_ffmpeg.c
+endif
+if HAVE_GST
+CODECS += swfdec_codec_gst.c
+endif
+if HAVE_MAD
+CODECS += swfdec_codec_mad.c
 endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
@@ -28,10 +31,11 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_cache.c \
 	swfdec_cached.c \
 	swfdec_character.c \
-	swfdec_codec.c \
 	swfdec_codec_adpcm.c \
+	swfdec_codec_audio.c \
 	$(CODECS) \
 	swfdec_codec_screen.c \
+	swfdec_codec_video.c \
 	swfdec_color.c \
 	swfdec_connection.c \
 	swfdec_debug.c \
@@ -85,14 +89,15 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_xml.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
-	$(GLOBAL_CFLAGS) $(SWF_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
-	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS) $(FFMPEG_CFLAGS) \
+	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
+	-I$(srcdir)/jpeg/ $(js_cflags) $(LIBOIL_CFLAGS) \
+	$(GST_CFLAGS) $(FFMPEG_CFLAGS) $(MAD_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Swfdec\"
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(SWFDEC_LIBVERSION) \
 	-export-symbols-regex '^(swfdec_.*)' \
-	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(MAD_LIBS) $(FFMPEG_LIBS) \
-	$(LIBOIL_LIBS)
+	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(LIBOIL_LIBS) -lz \
+	$(MAD_LIBS) $(FFMPEG_LIBS) $(GST_LIBS)
 
 public_headers = \
 	swfdec.h \
@@ -117,7 +122,8 @@ noinst_HEADERS = \
 	swfdec_cache.h \
 	swfdec_cached.h \
 	swfdec_character.h \
-	swfdec_codec.h \
+	swfdec_codec_audio.h \
+	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_connection.h \
 	swfdec_debug.h \

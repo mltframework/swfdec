@@ -20,8 +20,7 @@
 #ifndef _SWFDEC_DEBUG_WIDGET_H_
 #define _SWFDEC_DEBUG_WIDGET_H_
 
-#include <gtk/gtk.h>
-#include "swfdec_widget.h"
+#include <libswfdec-gtk/swfdec_gtk_widget.h>
 
 G_BEGIN_DECLS
 
@@ -36,15 +35,16 @@ typedef struct _SwfdecDebugWidgetClass SwfdecDebugWidgetClass;
 
 struct _SwfdecDebugWidget
 {
-  SwfdecWidget		widget;
+  SwfdecGtkWidget     	widget;
 
   int			x;
   int			y;
+  int			button;
 };
 
 struct _SwfdecDebugWidgetClass
 {
-  SwfdecWidgetClass	debug_widget_class;
+  SwfdecGtkWidgetClass	debug_widget_class;
 };
 
 GType		swfdec_debug_widget_get_type		(void);

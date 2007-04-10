@@ -29,10 +29,19 @@
 G_DEFINE_TYPE (SwfdecSlowLoader, swfdec_slow_loader, SWFDEC_TYPE_LOADER)
 
 static void
+swfdec_slow_loader_notify_cb (SwfdecLoader *child, GParamSpec *pspec, SwfdecLoader *loader)
+{
+  if (g_str_equal (pspec->name, "size")) {
+    swfdec_loader_set_size (loader, swfdec_loader_get_size (child));
+  }
+}
+
+static void
 swfdec_slow_loader_dispose (GObject *object)
 {
   SwfdecSlowLoader *slow = SWFDEC_SLOW_LOADER (object);
 
+  g_signal_handlers_disconnect_by_func (slow->loader, swfdec_slow_loader_notify_cb, slow);
   g_object_unref (slow->loader);
   if (slow->timeout_id) {
     g_source_remove (slow->timeout_id);
@@ -96,7 +105,11 @@ swfdec_slow_loader_tick (gpointer data)
       return TRUE;
   }
 
-  if (slow->loader->eof) {
+  if (slow->loader->error) {
+    swfdec_loader_error (SWFDEC_LOADER (slow), slow->loader->error);
+    slow->timeout_id = 0;
+    return FALSE;
+  } else if (slow->loader->eof) {
     swfdec_loader_eof (SWFDEC_LOADER (slow));
     slow->timeout_id = 0;
     return FALSE;
@@ -109,6 +122,7 @@ SwfdecLoader *
 swfdec_slow_loader_new (SwfdecLoader *loader, guint duration)
 {
   SwfdecSlowLoader *ret;
+  gulong size;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
   g_return_val_if_fail (duration > 0, NULL);
@@ -117,6 +131,10 @@ swfdec_slow_loader_new (SwfdecLoader *loader, guint duration)
   ret->tick_time = 100;
   ret->duration = duration * 1000;
   ret->loader = loader;
+  g_signal_connect (loader, "notify", G_CALLBACK (swfdec_slow_loader_notify_cb), ret);
+  size = swfdec_loader_get_size (loader);
+  if (size)
+    swfdec_loader_set_size (SWFDEC_LOADER (ret), size);
   ret->timeout_id = g_timeout_add (ret->tick_time, swfdec_slow_loader_tick, ret);
 
   return SWFDEC_LOADER (ret);

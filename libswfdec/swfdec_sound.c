@@ -179,9 +179,9 @@ tag_func_define_sound (SwfdecSwfDecoder * s)
 SwfdecBuffer *
 swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
 {
-  const SwfdecAudioCodec *codec;
   gpointer decoder;
-  SwfdecBuffer *tmp, *tmp2;
+  SwfdecBuffer *tmp;
+  SwfdecBufferQueue *queue;
   guint sample_bytes;
 
   g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
@@ -194,38 +194,24 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
   }
   if (sound->encoded == NULL)
     return NULL;
-  codec = swfdec_codec_get_audio (sound->format);
-  if (codec == NULL)
-    return NULL;
 
-  decoder = swfdec_audio_codec_init (codec, sound->width, sound->original_format);
+  decoder = swfdec_audio_decoder_new (sound->format, sound->width, sound->original_format);
   if (decoder == NULL)
     return NULL;
-  sound->decoded_format = swfdec_audio_codec_get_format (codec, decoder);
+  sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
   sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
   /* FIXME: The size is only a guess */
   swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
-  tmp = swfdec_audio_codec_decode (codec, decoder, sound->encoded);
-  tmp2 = swfdec_audio_codec_finish (codec, decoder);
-  if (tmp == NULL) {
-    if (tmp2) {
-      tmp = tmp2;
-    } else {
-      SWFDEC_ERROR ("got no data when decoding sound %u", 
-	  SWFDEC_CHARACTER (sound)->id);
-      swfdec_cached_unload (SWFDEC_CACHED (sound));
-      return NULL;
-    }
-  } else {
-    if (tmp2) {
-      /* and all this code just because mad sucks... */
-      SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
-      swfdec_buffer_queue_push (queue, tmp);
-      swfdec_buffer_queue_push (queue, tmp2);
-      tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
-      swfdec_buffer_queue_free (queue);
-    }
-  }
+
+  swfdec_audio_decoder_push (decoder, sound->encoded);
+  swfdec_audio_decoder_push (decoder, NULL);
+  queue = swfdec_buffer_queue_new ();
+  while ((tmp = swfdec_audio_decoder_pull (decoder)))
+    swfdec_buffer_queue_push (queue, tmp);
+  swfdec_audio_decoder_free (decoder);
+  tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
+  swfdec_buffer_queue_unref (queue);
+
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
       tmp->length / sample_bytes, sound->n_samples, sound->skip);
   if (sound->skip) {
@@ -333,7 +319,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
   int has_loops;
   int has_out_point;
   int has_in_point;
-  unsigned int i, j;
+  guint i, j;
   SwfdecSound *sound;
   SwfdecSoundChunk *chunk;
   SwfdecBits *b = &s->b;
@@ -435,8 +421,8 @@ tag_func_start_sound (SwfdecSwfDecoder * s)
 int
 tag_func_define_button_sound (SwfdecSwfDecoder * s)
 {
-  unsigned int i;
-  unsigned int id;
+  guint i;
+  guint id;
   SwfdecButton *button;
 
   id = swfdec_bits_get_u16 (&s->b);
@@ -500,7 +486,7 @@ swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut fo
 void
 swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
     SwfdecAudioOut format, const SwfdecBuffer *previous, 
-    unsigned int offset, unsigned int n_samples)
+    guint offset, guint n_samples)
 {
   guint i, j;
   guint channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
@@ -611,7 +597,7 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
  **/
 void
 swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
-    unsigned int offset, unsigned int n_samples)
+    guint offset, guint n_samples)
 {
   SwfdecBuffer *buffer;
   SwfdecAudioOut format;

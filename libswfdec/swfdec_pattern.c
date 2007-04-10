@@ -15,9 +15,9 @@
 
 static void
 swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
-    const cairo_matrix_t *end, unsigned int ratio)
+    const cairo_matrix_t *end, guint ratio)
 {
-  unsigned int inv_ratio = 65535 - ratio;
+  guint inv_ratio = 65535 - ratio;
   g_assert (ratio < 65536);
 
   if (ratio == 0) {
@@ -143,7 +143,7 @@ swfdec_pattern_append_path_snapped (cairo_t *cr, const cairo_path_t *path)
 
 static void
 swfdec_stroke_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *path,
-    const SwfdecColorTransform *trans, unsigned int ratio)
+    const SwfdecColorTransform *trans, guint ratio)
 {
   SwfdecColor color;
   double width;
@@ -206,7 +206,7 @@ G_DEFINE_TYPE (SwfdecColorPattern, swfdec_color_pattern, SWFDEC_TYPE_PATTERN);
 
 static void
 swfdec_color_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t *path,
-    const SwfdecColorTransform *trans, unsigned int ratio)
+    const SwfdecColorTransform *trans, guint ratio)
 {
   SwfdecColorPattern *pattern = SWFDEC_COLOR_PATTERN (pat);
   SwfdecColor color;
@@ -259,7 +259,7 @@ G_DEFINE_TYPE (SwfdecImagePattern, swfdec_image_pattern, SWFDEC_TYPE_PATTERN);
 
 static void
 swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t *path,
-    const SwfdecColorTransform *trans, unsigned int ratio)
+    const SwfdecColorTransform *trans, guint ratio)
 {
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
   cairo_pattern_t *pattern;
@@ -267,6 +267,8 @@ swfdec_image_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t 
   cairo_surface_t *surface;
   
   surface = swfdec_image_create_surface_transformed (image->image, trans);
+  if (surface == NULL)
+    return;
   cairo_append_path (cr, (cairo_path_t *) path);
   pattern = cairo_pattern_create_for_surface (surface);
   cairo_surface_destroy (surface);
@@ -320,9 +322,9 @@ G_DEFINE_TYPE (SwfdecGradientPattern, swfdec_gradient_pattern, SWFDEC_TYPE_PATTE
 
 static void
 swfdec_gradient_pattern_paint (SwfdecPattern *pat, cairo_t *cr, const cairo_path_t *path,
-    const SwfdecColorTransform *trans, unsigned int ratio)
+    const SwfdecColorTransform *trans, guint ratio)
 {
-  unsigned int i;
+  guint i;
   cairo_pattern_t *pattern;
   SwfdecColor color;
   double offset;
@@ -415,7 +417,7 @@ swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
 SwfdecPattern *
 swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 {
-  unsigned int paint_style_type;
+  guint paint_style_type;
   SwfdecBits *bits;
   SwfdecPattern *pattern;
 
@@ -501,7 +503,7 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 SwfdecPattern *
 swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
 {
-  unsigned int paint_style_type;
+  guint paint_style_type;
   SwfdecBits *bits;
   SwfdecPattern *pattern;
 
@@ -584,7 +586,7 @@ swfdec_pattern_parse_morph (SwfdecSwfDecoder *dec)
  **/
 void
 swfdec_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *path,
-    const SwfdecColorTransform *trans, unsigned int ratio)
+    const SwfdecColorTransform *trans, guint ratio)
 {
   SwfdecPatternClass *klass;
 

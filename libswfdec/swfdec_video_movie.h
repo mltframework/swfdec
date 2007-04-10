@@ -70,9 +70,7 @@ void		swfdec_video_movie_set_input		(SwfdecVideoMovie *	movie,
 void		swfdec_video_movie_clear	      	(SwfdecVideoMovie *	movie);
 /* API for SwfdecVideoMovieInput */
 void		swfdec_video_movie_new_image		(SwfdecVideoMovie *	movie,
-							 cairo_surface_t *	surface,
-							 guint			width,
-							 guint			height);
+							 cairo_surface_t *	surface);
 
 G_END_DECLS
 #endif

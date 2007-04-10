@@ -265,8 +265,12 @@ swfdec_value_to_number (JSContext *cx, jsval val)
     double d;
     if (!JS_ValueToNumber (cx, val, &d))
       return 0;
-    return isnan (d) ? 0 : d;
+    return d;
   } else if (JSVAL_IS_OBJECT(val) && (((SwfdecScript *) cx->fp->swf)->version >= 6)) {
+    /* Checking for version 6 is completely wrong, but a lot of the testsuite 
+     * depends on it (oops).
+     * The code calls the valueOf function and returns 0 if no such function exists.
+     */
     return JSVAL_IS_NULL (val) ? 0 : *cx->runtime->jsNaN;
   } else {
     return 0;
@@ -277,6 +281,10 @@ static JSBool
 swfdec_value_to_number_7 (JSContext *cx, jsval val, double *d)
 {
   if (JSVAL_IS_OBJECT (val)) {
+    *d = *cx->runtime->jsNaN;
+    return JS_TRUE;
+  } else if (JSVAL_IS_STRING (val) &&
+      JS_GetStringLength (JSVAL_TO_STRING (val)) == 0) {
     *d = *cx->runtime->jsNaN;
     return JS_TRUE;
   } else {
@@ -352,7 +360,8 @@ swfdec_action_goto_frame (JSContext *cx, guint action, const guint8 *data, guint
   }
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   if (movie) {
-    swfdec_movie_goto (movie, frame);
+    if (frame < movie->n_frames)
+      swfdec_movie_goto (movie, frame);
     movie->stopped = TRUE;
   } else {
     SWFDEC_ERROR ("no movie to goto on");
@@ -969,20 +978,17 @@ swfdec_action_binary (JSContext *cx, guint action, const guint8 *data, guint len
       l = l * r;
       break;
     case 0x0d:
-      if (isnan (r))
-	r = 0;
-      if (r == 0 && ((SwfdecScript *) cx->fp->swf)->version < 5) {
-	JSString *str = JS_InternString (cx, "#ERROR#");
-	if (str == NULL)
-	  return JS_FALSE;
-	cx->fp->sp[-1] = STRING_TO_JSVAL (str);
-	return JS_TRUE;
-      } else if (((SwfdecScript *) cx->fp->swf)->version >= 7 &&
-	  r == 0) {
-	cx->fp->sp[-1] = DOUBLE_TO_JSVAL (r < 0 ? 
-	    cx->runtime->jsNegativeInfinity :
-	    cx->runtime->jsPositiveInfinity);
-	return JS_TRUE;
+      if (((SwfdecScript *) cx->fp->swf)->version < 5) {
+	if (r == 0) {
+	  JSString *str = JS_InternString (cx, "#ERROR#");
+	  if (str == NULL)
+	    return JS_FALSE;
+	  cx->fp->sp[-1] = STRING_TO_JSVAL (str);
+	  return JS_TRUE;
+	}
+      } else if (((SwfdecScript *) cx->fp->swf)->version < 7) {
+	if (isnan (r))
+	  r = 0;
       }
       l = l / r;
       break;
@@ -1176,6 +1182,20 @@ swfdec_action_not_5 (JSContext *cx, guint action, const guint8 *data, guint len)
 
   d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
   cx->fp->sp[-1] = d == 0 ? JSVAL_TRUE : JSVAL_FALSE;
+  return JS_TRUE;
+}
+
+static JSBool
+swfdec_action_string_equals (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSString *lval, *rval;
+
+  if (!(rval = JS_ValueToString (cx, cx->fp->sp[-1])) ||
+      !(lval = JS_ValueToString (cx, cx->fp->sp[-2])))
+    return JS_FALSE;
+
+  cx->fp->sp--;
+  cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (js_CompareStrings (rval, lval) == 0);
   return JS_TRUE;
 }
 
@@ -1675,7 +1695,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
   gboolean v2 = (action == 0x8e);
 
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_get_string (&bits);
+  function_name = swfdec_bits_skip_string (&bits);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     return JS_FALSE;
@@ -2502,7 +2522,7 @@ static const SwfdecActionSpec actions[256] = {
   [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
-  [0x13] = { "StringEquals", NULL },
+  [0x13] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_equals, swfdec_action_string_equals, swfdec_action_string_equals, swfdec_action_string_equals } },
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },
   [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
@@ -2694,7 +2714,7 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
 
 SwfdecScript *
 swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits, 
-    const char *name, unsigned int version)
+    const char *name, guint version)
 {
   SwfdecScript *script;
 
@@ -2708,7 +2728,7 @@ swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits,
 }
 
 SwfdecScript *
-swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
+swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
   const guchar *start;
@@ -3017,6 +3037,10 @@ no_catch:
   /* Reset sp before freeing stack slots, because our caller may GC soon. */
   fp->sp = fp->spbase;
   fp->spbase = NULL;
+  if (fp->constant_pool) {
+    swfdec_constant_pool_free (fp->constant_pool);
+    fp->constant_pool = NULL;
+  }
   js_FreeRawStack(cx, mark);
   cx->interpLevel--;
   swfdec_script_unref (script);
@@ -3118,8 +3142,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
   js_FreeRawStack (cx, mark);
-  if (frame.constant_pool)
-    swfdec_constant_pool_free (frame.constant_pool);
 
   cx->fp = oldfp;
   if (oldfp) {

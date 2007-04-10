@@ -212,7 +212,6 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   do {
     int x;
     guint tag_len;
-    SwfdecBuffer *buffer;
     SwfdecTagFunc *func;
 
     x = swfdec_bits_get_u16 (&parse);
@@ -226,16 +225,9 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
         swfdec_swf_decoder_get_tag_name (tag), tag_len);
 
     if (tag_len == 0) {
-      buffer = NULL;
       swfdec_bits_init_data (&s->b, NULL, 0);
     } else {
-      buffer = swfdec_bits_get_buffer (&parse, tag_len);
-      if (buffer == NULL) {
-	SWFDEC_ERROR ("tag claims to be %u bytes long, but not enough bytes remaining",
-	    tag_len);
-	break;
-      }
-      swfdec_bits_init (&s->b, buffer);
+      swfdec_bits_init_bits (&s->b, &parse, tag_len);
     }
 
     func = swfdec_swf_decoder_get_tag_func (tag);
@@ -253,8 +245,6 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
 	    swfdec_bits_left (&s->b) / 8);
       }
     }
-    if (buffer)
-      swfdec_buffer_unref (buffer);
 
   } while (tag != 0);
 
@@ -347,9 +337,9 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    unsigned int character;
-    unsigned int depth;
-    unsigned int states;
+    guint character;
+    guint depth;
+    guint states;
     SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);
@@ -423,9 +413,9 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    unsigned int character;
-    unsigned int depth;
-    unsigned int states;
+    guint character;
+    guint depth;
+    guint states;
     SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);

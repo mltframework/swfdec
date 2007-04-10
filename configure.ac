@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.4.2.1)
+AC_INIT(swfdec,0.4.3.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -33,7 +33,7 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="2:0:0"
+SWFDEC_LIBVERSION="3:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
@@ -83,14 +83,31 @@ fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)
 
-GTK_VER=2.8.0
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
-if test "$HAVE_GTK" = "no"; then
-  AC_MSG_WARN([gtk+-2.0 >= $GTK_VER not found, disabling build of player])
+AC_ARG_ENABLE(gtk,
+	AS_HELP_STRING([--enable-gtk],
+			[enable Gtk integration (default=yes)])],
+	enable_gtk=$enableval,
+	enable_gtk="yes")
+
+dnl 
+dnl GTK: We want this for swfdec-gtk
+dnl
+GTK_REQUIRES=2.8.0
+AC_SUBST(GTK_REQUIRES)
+if test "$enable_gtk" = "yes"; then
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRES, HAVE_GTK=yes, HAVE_GTK=no)
+	if test "$HAVE_GTK" = "no"; then
+	  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
+	fi
+	if test "x$HAVE_GTK" = xyes; then
+	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_REQUIRES])
+	fi
+else
+	AC_MSG_WARN([*** Gtk support was not enabled. ***])
 fi
-AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
+AM_CONDITIONAL(WITH_GTK, [test "x$HAVE_GTK" = xyes])
 
 dnl
 dnl audio backend
@@ -106,7 +123,11 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
   if test "$AUDIO_TYPE" = "alsa"; then
     with_audio=alsa
   else
-    AC_MSG_WARN([no alsa audio support])
+    if test "$with_audio" = "alsa"; then
+      AC_MSG_ERROR([no alsa audio support])
+    else
+      AC_MSG_WARN([no alsa audio support])
+    fi
   fi
   AUDIO_CFLAGS=$ALSA_CFLAGS
   AUDIO_LIBS=$ALSA_LIBS
@@ -185,13 +206,57 @@ else
 	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])
 fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
+AC_ARG_ENABLE(gstreamer,
+	AS_HELP_STRING([--enable-gstreamer],
+			[enable GStreamer support (default=yes)])],
+	enable_gstreamer=$enableval,
+	enable_gstreamer="yes")
+
+if test "$enable_gstreamer" = "yes"; then
+	dnl I used my own version here, it might work with lower versions
+	GST_REQUIRED=0.10.10
+	PKG_CHECK_MODULES(GST, gstreamer-0.10 >= $GST_REQUIRED, HAVE_GST=yes, HAVE_GST=no)
+	if test "x$HAVE_GST" = xyes; then
+	  AC_DEFINE(HAVE_GST, 1, [Define if GStreamer is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED.])
+	fi
+else
+	AC_MSG_WARN([*** GStreamer support was not enabled. ***])
+fi
+AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
+
+
+AC_ARG_ENABLE(gnome-vfs,
+	AS_HELP_STRING([--enable-gnome-vfs],
+			[enable gnome-vfs support for swfdec-gtk (default=yes)])],
+	enable_gnomevfs=$enableval,
+	enable_gnomevfs="yes")
+
+if test "$enable_gnomevfs" = "yes"; then
+	PKG_CHECK_MODULES(GNOMEVFS, gnome-vfs-2.0 >= 2.14.0, HAVE_GNOMEVFS=yes, HAVE_GNOMEVFS=no)
+	if test "x$HAVE_GNOMEVFS" = xyes; then
+	  AC_DEFINE(HAVE_GNOMEVFS, 1, [Define if gnome-vfs is enabled])
+	else
+	  AC_MSG_ERROR([Couldn't find gnome-vfs-2.0.])
+	fi
+else
+	AC_MSG_WARN([*** gnome-vfs support was not enabled. ***])
+fi
+AM_CONDITIONAL(HAVE_GNOMEVFS, [test "x$HAVE_GNOMEVFS" = xyes])
 
 AC_SUBST(GLOBAL_CFLAGS)
+AC_SUBST(GLOBAL_CFLAGS)
 
-SWF_CFLAGS="$SWF_CFLAGS -I\$(top_srcdir) $GLIB_CFLAGS"
-SWF_LIBS="$SWF_LIBS \$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $MAD_LIBS $GLIB_LIBS -lz"
-AC_SUBST(SWF_LIBS)
-AC_SUBST(SWF_CFLAGS)
+SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS $CAIRO_CFLAGS"
+SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
+AC_SUBST(SWFDEC_LIBS)
+AC_SUBST(SWFDEC_CFLAGS)
+
+SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS $GTK_CFLAGS"
+SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS $GTK_LIBS"
+AC_SUBST(SWFDEC_GTK_LIBS)
+AC_SUBST(SWFDEC_GTK_CFLAGS)
 
 GTK_DOC_CHECK([1.6])
 
@@ -215,6 +280,7 @@ doc/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
 libswfdec/js/Makefile
+libswfdec-gtk/Makefile
 player/Makefile
 test/Makefile
 test/image/Makefile
@@ -222,6 +288,7 @@ test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
 swfdec.pc
+swfdec-gtk.pc
 swfdec.spec
 )
 

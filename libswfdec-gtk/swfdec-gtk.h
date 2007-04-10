@@ -17,22 +17,11 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __SWFDEC_GTK_H__
+#define __SWFDEC_GTK_H__
+
+#include <libswfdec-gtk/swfdec_gtk_loader.h>
+#include <libswfdec-gtk/swfdec_gtk_player.h>
+#include <libswfdec-gtk/swfdec_gtk_widget.h>
+
 #endif
-
-#include "swfdec_playback.h"
-
-/* STUBS ONLY - audio is disabled */
-
-gpointer
-swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
-{
-  return GINT_TO_POINTER (-1);
-}
-
-void
-swfdec_playback_close (gpointer sound)
-{
-  g_assert (sound == GINT_TO_POINTER (-1));
-}

@@ -21,9 +21,14 @@
 #include "config.h"
 #endif
 
-#include "swfdec_codec.h"
+#include "swfdec_codec_audio.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
+
+typedef struct {
+  SwfdecAudioDecoder	decoder;
+  SwfdecBufferQueue *	queue;
+} SwfdecAudioDecoderAdpcm;
 
 static const int indexTable[4][16] = {
   { -1, 2 },
@@ -43,21 +48,9 @@ static const int stepSizeTable[89] = {
     5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899,
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
 };
-    
-static gpointer
-swfdec_codec_adpcm_init (gboolean width, SwfdecAudioOut format)
-{
-  return GUINT_TO_POINTER ((guint) format);
-}
-
-static SwfdecAudioOut
-swfdec_codec_adpcm_get_format (gpointer data)
-{
-  return GPOINTER_TO_UINT (data);
-}
 
 static SwfdecBuffer *
-swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint channels)
+swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint channels)
 {
   SwfdecBuffer *ret;
   guint len;
@@ -133,124 +126,59 @@ swfdec_codec_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint channels)
   return ret;
 }
 
-static SwfdecBuffer *
-swfdec_codec_adpcm_decode (gpointer data, SwfdecBuffer *buffer)
+static void
+swfdec_audio_decoder_adpcm_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
 {
-  SwfdecAudioOut format = GPOINTER_TO_UINT (data);
+  SwfdecAudioDecoderAdpcm *adpcm = (SwfdecAudioDecoderAdpcm *) dec;
   guint channels, n_bits;
   SwfdecBits bits;
-  SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
 
-  channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
+  if (buffer == NULL)
+    return;
+
+  channels = SWFDEC_AUDIO_OUT_N_CHANNELS (dec->out_format);
   swfdec_bits_init (&bits, buffer);
   n_bits = swfdec_bits_getbits (&bits, 2) + 2;
   SWFDEC_DEBUG ("starting decoding: %u channels, %u bits", channels, n_bits);
   /* 22 is minimum required header size */
   while (swfdec_bits_left (&bits) >= 22) {
-    buffer = swfdec_codec_adpcm_decode_chunk (&bits, n_bits, channels);
+    buffer = swfdec_audio_decoder_adpcm_decode_chunk (&bits, n_bits, channels);
     if (buffer)
-      swfdec_buffer_queue_push (queue, buffer);
+      swfdec_buffer_queue_push (adpcm->queue, buffer);
   }
-  if (swfdec_buffer_queue_get_depth (queue)) {
-    buffer = swfdec_buffer_queue_pull (queue,
-	swfdec_buffer_queue_get_depth (queue));
-  } else {
-    buffer = NULL;
-  }
-  swfdec_buffer_queue_free (queue);
-  return buffer;
 }
 
 static SwfdecBuffer *
-swfdec_codec_adpcm_finish (gpointer data)
+swfdec_audio_decoder_adpcm_pull (SwfdecAudioDecoder *dec)
 {
-  return NULL;
+  SwfdecAudioDecoderAdpcm *adpcm = (SwfdecAudioDecoderAdpcm *) dec;
+
+  return swfdec_buffer_queue_pull_buffer (adpcm->queue);
 }
 
-const SwfdecAudioCodec swfdec_codec_adpcm = {
-  swfdec_codec_adpcm_init,
-  swfdec_codec_adpcm_get_format,
-  swfdec_codec_adpcm_decode,
-  swfdec_codec_adpcm_finish
-};
-
-#if 0
-void
-adpcm_decoder(indata, outdata, len, state)
-    char indata[];
-    short outdata[];
-    int len;
-    struct adpcm_state *state;
+static void
+swfdec_audio_decoder_adpcm_free (SwfdecAudioDecoder *dec)
 {
-    signed char *inp;		/* Input buffer pointer */
-    short *outp;		/* output buffer pointer */
-    int sign;			/* Current adpcm sign bit */
-    int delta;			/* Current adpcm output value */
-    int step;			/* Stepsize */
-    int valpred;		/* Predicted value */
-    int vpdiff;			/* Current change to valpred */
-    int index;			/* Current step change index */
-    int inputbuffer;		/* place to keep next 4-bit value */
-    int bufferstep;		/* toggle between inputbuffer/input */
+  SwfdecAudioDecoderAdpcm *adpcm = (SwfdecAudioDecoderAdpcm *) dec;
 
-    outp = outdata;
-    inp = (signed char *)indata;
-
-    valpred = state->valprev;
-    index = state->index;
-    step = stepSizeTable[index];
-
-    bufferstep = 0;
-    
-    for ( ; len > 0 ; len-- ) {
-	
-	/* Step 1 - get the delta value */
-	if ( bufferstep ) {
-	    delta = inputbuffer & 0xf;
-	} else {
-	    inputbuffer = *inp++;
-	    delta = (inputbuffer >> 4) & 0xf;
-	}
-	bufferstep = !bufferstep;
-
-	/* Step 2 - Find new index value (for later) */
-	index += indexTable[delta];
-	if ( index < 0 ) index = 0;
-	if ( index > 88 ) index = 88;
-
-	/* Step 3 - Separate sign and magnitude */
-	sign = delta & 8;
-	delta = delta & 7;
-
-	/* Step 4 - Compute difference and new predicted value */
-	/*
-	** Computes 'vpdiff = (delta+0.5)*step/4', but see comment
-	** in adpcm_coder.
-	*/
-	vpdiff = step >> 3;
-	if ( delta & 4 ) vpdiff += step;
-	if ( delta & 2 ) vpdiff += step>>1;
-	if ( delta & 1 ) vpdiff += step>>2;
-
-	if ( sign )
-	  valpred -= vpdiff;
-	else
-	  valpred += vpdiff;
-
-	/* Step 5 - clamp output value */
-	if ( valpred > 32767 )
-	  valpred = 32767;
-	else if ( valpred < -32768 )
-	  valpred = -32768;
-
-	/* Step 6 - Update step value */
-	step = stepSizeTable[index];
-
-	/* Step 7 - Output value */
-	*outp++ = valpred;
-    }
-
-    state->valprev = valpred;
-    state->index = index;
+  swfdec_buffer_queue_unref (adpcm->queue);
+  g_slice_free (SwfdecAudioDecoderAdpcm, adpcm);
 }
-#endif
+
+SwfdecAudioDecoder *
+swfdec_audio_decoder_adpcm_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+{
+  SwfdecAudioDecoderAdpcm *adpcm;
+
+  if (type != SWFDEC_AUDIO_FORMAT_ADPCM)
+    return NULL;
+  adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
+  adpcm->decoder.out_format = format;
+  adpcm->decoder.push = swfdec_audio_decoder_adpcm_push;
+  adpcm->decoder.pull = swfdec_audio_decoder_adpcm_pull;
+  adpcm->decoder.free = swfdec_audio_decoder_adpcm_free;
+  adpcm->queue = swfdec_buffer_queue_new ();
+
+  return &adpcm->decoder;
+}
+

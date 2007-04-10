@@ -28,10 +28,10 @@
 #include "swfdec_debug.h"
 
 SwfdecColor 
-swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio)
+swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, guint ratio)
 {
-  unsigned int r, g, b, a;
-  unsigned int start_ratio, end_ratio;
+  guint r, g, b, a;
+  guint start_ratio, end_ratio;
 
   g_assert (ratio < 65536);
   if (ratio == 0)
@@ -198,7 +198,7 @@ swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse
   
   *inverse = *matrix;
   while (cairo_matrix_invert (inverse)) {
-    SWFDEC_WARNING ("matrix not invertible, adding epsilon to smallest member");
+    SWFDEC_INFO ("matrix not invertible, adding epsilon to smallest member");
     /* add epsilon at point closest to zero */
 #define EPSILON (1.0 / SWFDEC_FIXED_SCALE_FACTOR)
     if (ABS (matrix->xx) <= ABS (matrix->xy) && 

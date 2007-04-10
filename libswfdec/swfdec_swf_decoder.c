@@ -60,7 +60,7 @@ swfdec_decoder_dispose (GObject *object)
     swfdec_buffer_unref (s->uncompressed_buffer);
     s->uncompressed_buffer = NULL;
   }
-  swfdec_buffer_queue_free (s->input_queue);
+  swfdec_buffer_queue_unref (s->input_queue);
 
   if (s->jpegtables) {
     swfdec_buffer_unref (s->jpegtables);
@@ -72,7 +72,7 @@ swfdec_decoder_dispose (GObject *object)
 }
 
 static void *
-zalloc (void *opaque, unsigned int items, unsigned int size)
+zalloc (void *opaque, guint items, guint size)
 {
   return g_malloc (items * size);
 }
@@ -349,7 +349,7 @@ swfdec_swf_decoder_init (SwfdecSwfDecoder *s)
 }
 
 gpointer
-swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, unsigned int id)
+swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, guint id)
 {
   g_return_val_if_fail (SWFDEC_IS_SWF_DECODER (s), NULL);
 
@@ -369,7 +369,7 @@ swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, unsigned int id)
  * Returns: The requested character or NULL on failure;
  **/
 gpointer
-swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, unsigned int id, GType type)
+swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, guint id, GType type)
 {
   SwfdecCharacter *result;
 

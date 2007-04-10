@@ -24,12 +24,12 @@
 #include <math.h>
 #include <libswfdec/swfdec.h>
 
-#include "swfdec_playback.h"
-#include "swfdec_slow_loader.h"
-#include "swfdec_source.h"
-#include "swfdec_widget.h"
+#include <libswfdec-gtk/swfdec-gtk.h>
+#if HAVE_GNOMEVFS
+#include <libgnomevfs/gnome-vfs.h>
+#endif
 
-static gpointer playback;
+#include "swfdec_slow_loader.h"
 
 static void
 set_title (GtkWindow *window, const char *filename)
@@ -48,28 +48,15 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   GtkWidget *window, *widget;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  widget = swfdec_widget_new (player);
-  swfdec_widget_set_scale (SWFDEC_WIDGET (widget), scale);
-  swfdec_widget_set_use_image (SWFDEC_WIDGET (widget), use_image);
+  widget = swfdec_gtk_widget_new (player);
+  swfdec_gtk_widget_set_scale (SWFDEC_GTK_WIDGET (widget), scale);
+  if (use_image)
+    swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
   gtk_container_add (GTK_CONTAINER (window), widget);
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);
 
   return window;
-}
-
-static void
-play_swf (SwfdecPlayer *player, double speed)
-{
-  GSource *source;
-
-  source = swfdec_iterate_source_new (player, speed);
-  g_source_attach (source, NULL);
-
-  gtk_main ();
-
-  g_source_destroy (source);
-  g_source_unref (source);
 }
 
 static void
@@ -92,6 +79,7 @@ main (int argc, char *argv[])
   gboolean trace = FALSE;
   char *variables = NULL;
   GtkWidget *window;
+  char *s;
 
   GOptionEntry options[] = {
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
@@ -125,13 +113,19 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  loader = swfdec_loader_new_from_file (argv[1], &error);
-  if (loader == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
+#if HAVE_GNOMEVFS
+  s = gnome_vfs_make_uri_from_shell_arg (argv[1]);
+  loader = swfdec_gtk_loader_new (s);
+  g_free (s);
+#else
+  loader = swfdec_gtk_loader_new (argv[1]);
+#endif
+  if (loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
+    g_object_unref (loader);
     return 1;
   }
-  player = swfdec_player_new ();
+  player = swfdec_gtk_player_new ();
   if (trace)
     g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
   
@@ -139,26 +133,17 @@ main (int argc, char *argv[])
     loader = swfdec_slow_loader_new (loader, delay);
 
   swfdec_player_set_loader_with_variables (player, loader, variables);
-  /* FIXME add smarter "not my file" detection */
-  if (!swfdec_player_is_initialized (player) && delay == 0) {
-    g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
-    g_object_unref (player);
-    player = NULL;
-    return 1;
-  }
+
+  if (no_sound)
+    swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);
+
+  swfdec_gtk_player_set_speed (SWFDEC_GTK_PLAYER (player), speed / 100.);
+  swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
 
   window = view_swf (player, scale, use_image);
   set_title (GTK_WINDOW (window), argv[1]);
 
-  if (no_sound || speed != 100) {
-    playback = NULL;
-  } else {
-    playback = swfdec_playback_open (player, g_main_context_default ());
-  }
-  play_swf (player, speed / 100.);
-
-  if (playback)
-    swfdec_playback_close (playback);
+  gtk_main ();
 
   g_object_unref (player);
   player = NULL;

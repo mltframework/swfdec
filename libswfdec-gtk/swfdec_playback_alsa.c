@@ -22,7 +22,7 @@
 #endif
 
 #include <alsa/asoundlib.h>
-#include "swfdec_source.h"
+#include "swfdec_playback.h"
 
 /* Why ALSA sucks for beginners:
  * - snd_pcm_delay is not sample-exact, but period-exact most of the time.
@@ -41,14 +41,14 @@
 
 /*** DEFINITIONS ***/
 
-typedef struct {
+struct _SwfdecPlayback {
   SwfdecPlayer *	player;
   GList *		streams;	/* all Stream objects */
   GMainContext *	context;	/* context we work in */
-} Sound;
+};
 
 typedef struct {
-  Sound *		sound;		/* reference to sound object */
+  SwfdecPlayback *     	sound;		/* reference to sound object */
   SwfdecAudio *		audio;		/* the audio we play back */
   snd_pcm_t *		pcm;		/* the pcm we play back to */
   GSource **		sources;	/* sources for writing data */
@@ -120,7 +120,7 @@ try_write (Stream *stream)
 static void
 swfdec_stream_remove_handlers (Stream *stream)
 {
-  unsigned int i;
+  guint i;
 
   for (i = 0; i < stream->n_sources; i++) {
     if (stream->sources[i]) {
@@ -152,7 +152,7 @@ swfdec_stream_install_handlers (Stream *stream)
 {
   if (stream->n_sources > 0) {
     struct pollfd polls[stream->n_sources];
-    unsigned int i, count;
+    guint i, count;
     if (stream->n_sources > 1)
       g_printerr ("attention: more than one fd!\n");
     count = snd_pcm_poll_descriptors (stream->pcm, polls, stream->n_sources);
@@ -193,12 +193,12 @@ swfdec_stream_start (Stream *stream)
 }
 
 static void
-swfdec_stream_open (Sound *sound, SwfdecAudio *audio)
+swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 {
   Stream *stream;
   snd_pcm_t *ret;
   snd_pcm_hw_params_t *hw_params;
-  unsigned int rate;
+  guint rate;
   snd_pcm_uframes_t uframes;
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
@@ -274,7 +274,7 @@ swfdec_stream_close (Stream *stream)
 static void
 advance_before (SwfdecPlayer *player, guint msecs, guint audio_samples, gpointer data)
 {
-  Sound *sound = data;
+  SwfdecPlayback *sound = data;
   GList *walk;
 
   for (walk = sound->streams; walk; walk = walk->next) {
@@ -288,13 +288,13 @@ advance_before (SwfdecPlayer *player, guint msecs, guint audio_samples, gpointer
 }
 
 static void
-audio_added (SwfdecPlayer *player, SwfdecAudio *audio, Sound *sound)
+audio_added (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
 {
   swfdec_stream_open (sound, audio);
 }
 
 static void
-audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, Sound *sound)
+audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
 {
   GList *walk;
 
@@ -308,17 +308,17 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, Sound *sound)
   g_assert_not_reached ();
 }
 
-gpointer
+SwfdecPlayback *
 swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 {
-  Sound *sound;
+  SwfdecPlayback *sound;
   const GList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (context != NULL, NULL);
 
-  sound = g_new0 (Sound, 1);
-  sound->player = g_object_ref (player);
+  sound = g_new0 (SwfdecPlayback, 1);
+  sound->player = player;
   g_signal_connect (player, "advance", G_CALLBACK (advance_before), sound);
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), sound);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), sound);
@@ -331,9 +331,8 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 }
 
 void
-swfdec_playback_close (gpointer data)
+swfdec_playback_close (SwfdecPlayback *sound)
 {
-  Sound *sound = data;
 #define REMOVE_HANDLER_FULL(obj,func,data,count) G_STMT_START {\
   if (g_signal_handlers_disconnect_by_func ((obj), \
 	G_CALLBACK (func), (data)) != (count)) { \
@@ -347,7 +346,6 @@ swfdec_playback_close (gpointer data)
   REMOVE_HANDLER (sound->player, advance_before, sound);
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);
-  g_object_unref (sound->player);
   g_main_context_unref (sound->context);
   g_free (sound);
 }

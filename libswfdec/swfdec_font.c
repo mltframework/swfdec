@@ -37,14 +37,23 @@ swfdec_font_dispose (GObject *object)
   SwfdecFont * font = SWFDEC_FONT (object);
   guint i;
 
-  for (i = 0; i < font->glyphs->len; i++) {
-    g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+  if (font->glyphs) {
+    for (i = 0; i < font->glyphs->len; i++) {
+      g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+    }
+    g_array_free (font->glyphs, TRUE);
+    font->glyphs = NULL;
   }
-  if (font->desc)
+  if (font->desc) {
     pango_font_description_free (font->desc);
-  g_free (font->name);
+    font->desc = NULL;
+  }
+  if (font->name) {
+    g_free (font->name);
+    font->name = NULL;
+  }
 
-  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (G_OBJECT (font));
+  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (object);
 }
 
 static void
@@ -73,7 +82,7 @@ swfdec_font_init (SwfdecFont * font)
  * Returns: the shape of the requested glyph or %NULL if no such glyph exists.
  **/
 SwfdecShape *
-swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
+swfdec_font_get_glyph (SwfdecFont * font, guint glyph)
 {
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
   
@@ -112,10 +121,10 @@ convert_from_language (const char *s, SwfdecLanguage language)
 }
 
 int
-tag_func_define_font_info (SwfdecSwfDecoder *s, unsigned int version)
+tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
 {
   SwfdecFont *font;
-  unsigned int id, len, i;
+  guint id, len, i;
   int reserved, wide, ansi, jis;
   char *name;
   /* we just assume Latin1 (FIXME: option to change this?) */
@@ -198,7 +207,7 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
 int
 tag_func_define_font (SwfdecSwfDecoder * s)
 {
-  unsigned int i, id, n_glyphs, offset, next_offset;
+  guint i, id, n_glyphs, offset, next_offset;
   SwfdecFont *font;
   SwfdecBits offsets;
 
@@ -257,7 +266,7 @@ int
 tag_func_define_font_2 (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  unsigned int id;
+  guint id;
   SwfdecShape *shape;
   SwfdecFont *font;
   SwfdecRect rect;

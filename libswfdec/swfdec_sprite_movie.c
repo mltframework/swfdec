@@ -224,7 +224,7 @@ static void
 swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  unsigned int goto_frame;
+  guint goto_frame;
 
   if (mov->will_be_removed)
     return;
@@ -293,9 +293,11 @@ new_decoder:
     g_object_unref (movie->sound_stream);
   }
 
-  movie->sound_stream = swfdec_audio_stream_new (player, 
-      movie->sprite, movie->current_frame);
-  movie->sound_frame = movie->current_frame;
+  if (current->sound_block) {
+    movie->sound_stream = swfdec_audio_stream_new (player, 
+	movie->sprite, movie->current_frame);
+    movie->sound_frame = movie->current_frame;
+  }
   return TRUE;
 }
 

@@ -80,9 +80,25 @@ swfdec_js_net_stream_set_buffer_time (JSContext *cx, JSObject *obj, uintN argc, 
   return JS_TRUE;
 }
 
+static JSBool
+swfdec_js_net_stream_seek (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  SwfdecNetStream *stream;
+  double d;
+
+  stream = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_NET_STREAM);
+  if (stream == NULL)
+    return JS_TRUE;
+  if (!JS_ValueToNumber (cx, argv[0], &d))
+    return JS_FALSE;
+  swfdec_net_stream_seek (stream, d);
+  return JS_TRUE;
+}
+
 static JSFunctionSpec net_stream_methods[] = {
   { "pause",		swfdec_js_net_stream_pause,		0, 0, 0 },
   { "play",		swfdec_js_net_stream_play,		1, 0, 0 },
+  { "seek",		swfdec_js_net_stream_seek,		1, 0, 0 },
   { "setBufferTime",  	swfdec_js_net_stream_set_buffer_time,	1, 0, 0 },
   { NULL }
 };

@@ -29,10 +29,61 @@
 #include <swfdec_debug.h>
 #include <liboil/liboil.h>
 
-static void swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *);
-static void swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv);
+/*** gtk-doc ***/
 
+/**
+ * SECTION:SwfdecBuffer
+ * @title: SwfdecBuffer
+ * @short_description: memory region handling
+ *
+ * To allow for easy sharing of memory regions, #SwfdecBuffer was created. 
+ * Every buffer refers to a memory region and its size and takes care of 
+ * freeing that region when the buffer is no longer needed. They are 
+ * reference countedto make it easy to refer to the same region from various
+ * independant parts of your code. Buffers also support some advanced 
+ * functionalities like extracting parts of the buffer using 
+ * swfdec_buffer_new_subbuffer() or using mmapped files with 
+ * swfdec_buffer_new_from_file() without the need for a different API.
+ *
+ * A #SwfdecBufferQueue is a queue of continuous buffers that allows reading
+ * its data in chunks of pre-defined sizes. It is used to transform a data 
+ * stream that was provided by buffers of random sizes to buffers of the right
+ * size.
+ */
 
+/*** SwfdecBuffer ***/
+
+/**
+ * SWFDEC_TYPE_BUFFER:
+ *
+ * #SwfdecBuffer is a boxed type for the glib type system. This macro
+ * returns its type.
+ **/
+GType
+swfdec_buffer_get_type (void)
+{
+  static GType type_swfdec_buffer = 0;
+
+  if (!type_swfdec_buffer)
+    type_swfdec_buffer = g_boxed_type_register_static
+      ("SwfdecBuffer", 
+       (GBoxedCopyFunc) swfdec_buffer_ref,
+       (GBoxedFreeFunc) swfdec_buffer_unref);
+
+  return type_swfdec_buffer;
+}
+
+/**
+ * swfdec_buffer_new:
+ *
+ * Creates a new #SwfdecBuffer to be filled by the user. Use like this:
+ * <informalexample><programlisting>SwfdecBuffer *buffer = swfdec_buffer_new ();
+ * buffer->data = mydata;
+ * buffer->length = mydata_length;
+ * buffer->free = mydata_freefunc;</programlisting></informalexample>
+ *
+ * Returns: a new #SwfdecBuffer referencing nothing.
+ **/
 SwfdecBuffer *
 swfdec_buffer_new (void)
 {
@@ -43,8 +94,23 @@ swfdec_buffer_new (void)
   return buffer;
 }
 
+static void
+swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *priv)
+{
+  g_free (buffer->data);
+}
+
+/**
+ * swfdec_buffer_new_and_alloc:
+ * @size: amount of bytes to allocate
+ *
+ * Creates a new buffer and allocates new memory of @size bytes to be used with 
+ * the buffer.
+ *
+ * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
+ **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc (unsigned int size)
+swfdec_buffer_new_and_alloc (guint size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
@@ -55,8 +121,17 @@ swfdec_buffer_new_and_alloc (unsigned int size)
   return buffer;
 }
 
+/**
+ * swfdec_buffer_new_and_alloc0:
+ * @size: amount of bytes to allocate
+ *
+ * Createsa new buffer just like swfdec_buffer_new_and_alloc(), but ensures 
+ * that the returned data gets initialized to be 0.
+ *
+ * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
+ **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc0 (unsigned int size)
+swfdec_buffer_new_and_alloc0 (guint size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
@@ -67,11 +142,24 @@ swfdec_buffer_new_and_alloc0 (unsigned int size)
   return buffer;
 }
 
+/**
+ * swfdec_buffer_new_for_data:
+ * @data: memory region allocated with g_malloc()
+ * @size: size of @data in bytes
+ *
+ * Takes ownership of @data and creates a new buffer managing it.
+ *
+ * Returns: a new #SwfdecBuffer pointing to @data
+ **/
 SwfdecBuffer *
-swfdec_buffer_new_with_data (void *data, int size)
+swfdec_buffer_new_for_data (unsigned char *data, guint size)
 {
-  SwfdecBuffer *buffer = swfdec_buffer_new ();
+  SwfdecBuffer *buffer;
+  
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (size > 0, NULL);
 
+  buffer = swfdec_buffer_new ();
   buffer->data = data;
   buffer->length = size;
   buffer->free = swfdec_buffer_free_mem;
@@ -79,11 +167,29 @@ swfdec_buffer_new_with_data (void *data, int size)
   return buffer;
 }
 
+static void
+swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv)
+{
+  swfdec_buffer_unref (buffer->parent);
+}
+
+/**
+ * swfdec_buffer_new_subbuffer:
+ * @buffer: #SwfdecBuffer managing the region of memory
+ * @offset: starting offset into data
+ * @length: amount of bytes to manage
+ *
+ * Creates a #SwfdecBuffer for managing a partial section of the memory pointed
+ * to by @buffer.
+ *
+ * Returns: a new #SwfdecBuffer managing the indicated region.
+ **/
 SwfdecBuffer *
-swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset, unsigned int length)
+swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset, guint length)
 {
   SwfdecBuffer *subbuffer;
   
+  g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (offset + length <= buffer->length, NULL);
 
   subbuffer = swfdec_buffer_new ();
@@ -95,6 +201,7 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset, unsigne
     swfdec_buffer_ref (buffer);
     subbuffer->parent = buffer;
   }
+  g_assert (subbuffer->parent->parent == NULL);
   subbuffer->data = buffer->data + offset;
   subbuffer->length = length;
   subbuffer->free = swfdec_buffer_free_subbuffer;
@@ -108,6 +215,17 @@ swfdec_buffer_free_mapped (SwfdecBuffer * buffer, void *priv)
   g_mapped_file_free (priv);
 }
 
+/**
+ * swfdec_buffer_new_from_file:
+ * @filename: file to read
+ * @error: return location for a #GError or %NULL
+ *
+ * Tries to create a buffer for the given @filename using a #GMappedFile. If
+ * the creation fails, %NULL is returned and @error is set. The error can be
+ * any of the errors that are valid from g_mapped_file_new().
+ *
+ * Returns: a new #SwfdecBuffer or %NULL on failure
+ **/
 SwfdecBuffer *
 swfdec_buffer_new_from_file (const char *filename, GError **error)
 {
@@ -130,16 +248,37 @@ swfdec_buffer_new_from_file (const char *filename, GError **error)
   return buffer;
 }
 
+/**
+ * swfdec_buffer_ref:
+ * @buffer: a #SwfdecBuffer
+ *
+ * increases the reference count of @buffer by one.
+ *
+ * Returns: The passed in @buffer.
+ **/
 SwfdecBuffer *
 swfdec_buffer_ref (SwfdecBuffer * buffer)
 {
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (buffer->ref_count > 0, NULL);
+
   buffer->ref_count++;
   return buffer;
 }
 
+/**
+ * swfdec_buffer_unref:
+ * @buffer: a #SwfdecBuffer
+ *
+ * Decreases the reference count of @buffer by one. If no reference to this
+ * buffer exists anymore, the buffer and the memory it manages are freed.
+ **/
 void
 swfdec_buffer_unref (SwfdecBuffer * buffer)
 {
+  g_return_if_fail (buffer != NULL);
+  g_return_if_fail (buffer->ref_count > 0);
+
   buffer->ref_count--;
   if (buffer->ref_count == 0) {
     if (buffer->free)
@@ -148,23 +287,36 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
   }
 }
 
-static void
-swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *priv)
-{
-  g_free (buffer->data);
-}
+/*** SwfdecBufferQueue ***/
 
-static void
-swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv)
+/**
+ * SWFDEC_TYPE_BUFFER_QUEUE:
+ *
+ * #SwfdecBufferQueue is a boxed type for the glib type system. This macro
+ * returns its type.
+ **/
+GType
+swfdec_buffer_queue_get_type (void)
 {
-  swfdec_buffer_unref (buffer->parent);
-}
+  static GType type_swfdec_buffer_queue = 0;
 
+  if (!type_swfdec_buffer_queue)
+    type_swfdec_buffer_queue = g_boxed_type_register_static
+      ("SwfdecBufferQueue", 
+       (GBoxedCopyFunc) swfdec_buffer_queue_ref,
+       (GBoxedFreeFunc) swfdec_buffer_queue_unref);
+
+  return type_swfdec_buffer_queue;
+}
 
 SwfdecBufferQueue *
 swfdec_buffer_queue_new (void)
 {
-  return g_new0 (SwfdecBufferQueue, 1);
+  SwfdecBufferQueue *buffer_queue;
+
+  buffer_queue = g_new0 (SwfdecBufferQueue, 1);
+  buffer_queue->ref_count = 1;
+  return buffer_queue;
 }
 
 int
@@ -188,13 +340,6 @@ swfdec_buffer_queue_clear (SwfdecBufferQueue *queue)
 }
 
 void
-swfdec_buffer_queue_free (SwfdecBufferQueue * queue)
-{
-  swfdec_buffer_queue_clear (queue);
-  g_free (queue);
-}
-
-void
 swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
 {
   g_return_if_fail (queue != NULL);
@@ -208,6 +353,16 @@ swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
   queue->depth += buffer->length;
 }
 
+/**
+ * swfdec_buffer_queue_pull_buffer:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Pulls the first buffer out of @queue and returns it. This function is 
+ * equivalent to calling swfdec_buffer_queue_pull() with the size of the
+ * first buffer in it.
+ *
+ * Returns: The first buffer in @queue or %NULL if @queue is empty.
+ **/
 SwfdecBuffer *
 swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
 {
@@ -223,7 +378,7 @@ swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
 }
 
 SwfdecBuffer *
-swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
+swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
@@ -253,7 +408,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
     queue->buffers = g_list_remove (queue->buffers, buffer);
     newbuffer = buffer;
   } else {
-    unsigned int offset = 0;
+    guint offset = 0;
 
     newbuffer = swfdec_buffer_new_and_alloc (length);
 
@@ -262,7 +417,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
       buffer = g->data;
 
       if (buffer->length > length - offset) {
-        unsigned int n = length - offset;
+        guint n = length - offset;
 
         oil_copy_u8 (newbuffer->data + offset, buffer->data, n);
         subbuffer = swfdec_buffer_new_subbuffer (buffer, n, buffer->length - n);
@@ -297,12 +452,12 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
  *          readonly #SwfdecBuffer. Use swfdec_buffer_unref() after use.
  **/
 SwfdecBuffer *
-swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
+swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, guint length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
   SwfdecBuffer *buffer;
-  unsigned int offset = 0;
+  guint offset = 0;
 
   g_return_val_if_fail (length > 0, NULL);
 
@@ -335,3 +490,43 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
 
   return newbuffer;
 }
+
+/**
+ * swfdec_buffer_queue_ref:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * increases the reference count of @queue by one.
+ *
+ * Returns: The passed in @queue.
+ **/
+SwfdecBufferQueue *
+swfdec_buffer_queue_ref (SwfdecBufferQueue * queue)
+{
+  g_return_val_if_fail (queue != NULL, NULL);
+  g_return_val_if_fail (queue->ref_count > 0, NULL);
+
+  queue->ref_count++;
+  return queue;
+}
+
+/**
+ * swfdec_buffer_queue_unref:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Decreases the reference count of @queue by one. If no reference 
+ * to this buffer exists anymore, the buffer and the memory 
+ * it manages are freed.
+ **/
+void
+swfdec_buffer_queue_unref (SwfdecBufferQueue * queue)
+{
+  g_return_if_fail (queue != NULL);
+  g_return_if_fail (queue->ref_count > 0);
+
+  queue->ref_count--;
+  if (queue->ref_count == 0) {
+    swfdec_buffer_queue_clear (queue);
+    g_free (queue);
+  }
+}
+

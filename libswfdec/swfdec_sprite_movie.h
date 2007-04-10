@@ -43,13 +43,13 @@ struct _SwfdecSpriteMovie
   SwfdecSprite *	sprite;			/* displayed sprite */
 
   /* frame information */
-  unsigned int		current_frame;		/* frame that is currently displayed (NB: indexed from 0) */
+  guint		current_frame;		/* frame that is currently displayed (NB: indexed from 0) */
 
   /* color information */
   SwfdecColor		bg_color;		/* background color (only used on main sprite) */
 
   /* audio stream handling */
-  unsigned int		sound_frame;		/* current sound frame */
+  guint		sound_frame;		/* current sound frame */
   SwfdecAudio *		sound_stream;		/* stream that currently plays */
 };
 

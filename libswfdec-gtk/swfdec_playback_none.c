@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,22 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_PLAYBACK_H_
-#define _SWFDEC_PLAYBACK_H_
-
-#include <libswfdec/swfdec.h>
-
-G_BEGIN_DECLS
-
-gpointer	swfdec_playback_open	(SwfdecPlayer *	player,
-					 GMainContext *	context);
-
-void		swfdec_playback_close	(gpointer	sound);
-
-G_END_DECLS
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include "swfdec_playback.h"
+
+/* STUBS ONLY - audio is disabled */
+
+SwfdecPlayback *
+swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
+{
+  return GINT_TO_POINTER (-1);
+}
+
+void
+swfdec_playback_close (SwfdecPlayback *sound)
+{
+  g_assert (sound == GINT_TO_POINTER (-1));
+}

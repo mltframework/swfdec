@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include "swfdec_net_stream.h"
 #include "swfdec_amf.h"
 #include "swfdec_audio_flv.h"
@@ -84,32 +85,17 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   } else {
     if (format != stream->format) {
       if (stream->decoder)
-	swfdec_video_codec_finish (stream->codec, stream->decoder);
+	swfdec_video_decoder_free (stream->decoder);
       stream->format = format;
-      stream->codec = swfdec_codec_get_video (format);
-      if (stream->codec)
-	stream->decoder = swfdec_video_codec_init (stream->codec);
-      else
-	stream->decoder = NULL;
+      stream->decoder = swfdec_video_decoder_new (format);
     }
     if (stream->decoder) {
-      SwfdecBuffer *decoded = swfdec_video_codec_decode (stream->codec, stream->decoder, buffer);
-      if (decoded) {
-	static const cairo_user_data_key_t key;
-	guint w, h;
-	if (!swfdec_video_codec_get_size (stream->codec, stream->decoder, &w, &h)) {
-	    g_assert_not_reached ();
-	}
-	stream->surface = cairo_image_surface_create_for_data (decoded->data, 
-	    CAIRO_FORMAT_RGB24, w, h, w * 4);
-	cairo_surface_set_user_data (stream->surface, &key, 
-	    decoded, (cairo_destroy_func_t) swfdec_buffer_unref);
-	if (old != stream->surface) {
-	  GList *walk;
-	  for (walk = stream->movies; walk; walk = walk->next) {
-	    swfdec_video_movie_new_image (walk->data, stream->surface, w, h);
-	  }
-	}
+      stream->surface = swfdec_video_decoder_decode (stream->decoder, buffer);
+    }
+    if (stream->surface) {
+      GList *walk;
+      for (walk = stream->movies; walk; walk = walk->next) {
+	swfdec_video_movie_new_image (walk->data, stream->surface);
       }
     }
   }
@@ -156,6 +142,14 @@ swfdec_net_stream_timeout (SwfdecTimeout *timeout)
     stream->timeout.timestamp += SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     stream->timeout.callback = swfdec_net_stream_timeout;
     swfdec_player_add_timeout (stream->player, &stream->timeout);
+  } else {
+    if (stream->audio) {
+      /* FIXME: just unref and let it take care of removing itself? */
+      SWFDEC_LOG ("stopping audio due to EOS");
+      swfdec_audio_remove (stream->audio);
+      g_object_unref (stream->audio);
+      stream->audio = NULL;
+    }
   }
 }
 
@@ -174,6 +168,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
     stream->timeout.timestamp = stream->player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     swfdec_player_add_timeout (stream->player, &stream->timeout);
     if (stream->flvdecoder->audio) {
+      g_assert (stream->audio == NULL);
       SWFDEC_LOG ("starting audio");
       stream->audio = swfdec_audio_flv_new (stream->player, 
 	  stream->flvdecoder, stream->current_time);
@@ -215,7 +210,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     return;
   }
   if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
-    SWFDEC_WARNING ("nothing to parse?!");
+    SWFDEC_INFO ("nothing to do");
     return;
   }
   if (stream->flvdecoder == NULL) {
@@ -326,8 +321,10 @@ swfdec_net_stream_dispose (GObject *object)
     cairo_surface_destroy (stream->surface);
     stream->surface = NULL;
   }
-  if (stream->decoder)
-    swfdec_video_codec_finish (stream->codec, stream->decoder);
+  if (stream->decoder) {
+    swfdec_video_decoder_free (stream->decoder);
+    stream->decoder = NULL;
+  }
   swfdec_net_stream_set_loader (stream, NULL);
   g_object_unref (stream->conn);
   stream->conn = NULL;
@@ -385,6 +382,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   /* FIXME: use the connection once connections are implemented */
   loader = swfdec_player_load (stream->player, url);
   swfdec_net_stream_set_loader (stream, loader);
+  g_object_unref (loader);
 }
 
 void
@@ -445,5 +443,42 @@ swfdec_net_stream_get_buffer_time (SwfdecNetStream *stream)
   g_return_val_if_fail (SWFDEC_IS_NET_STREAM (stream), 0.1);
 
   return (double) stream->buffer_time / 1000.0;
+}
+
+void
+swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
+{
+  guint first, last, msecs;
+
+  g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
+
+  if (stream->flvdecoder == NULL)
+    return;
+  if (!finite (secs) || secs < 0) {
+    SWFDEC_ERROR ("seeking to %g doesn't work", secs);
+    return;
+  }
+  if (!swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
+    SWFDEC_ERROR ("FIXME: implement seeking in audio only NetStream");
+    return;
+  }
+  msecs = secs * 1000;
+  msecs += first;
+  if (msecs > last)
+    msecs = last;
+  swfdec_flv_decoder_get_video (stream->flvdecoder, msecs, TRUE, NULL, &msecs, NULL);
+  swfdec_net_stream_video_goto (stream, msecs);
+  /* FIXME: this needs to be implemented correctly, but requires changes to audio handling:
+   * - creating a new audio stream will cause attachAudio scripts to lose information 
+   * - implementing seek on audio stream requires a SwfdecAudio::changed signal so audio
+   *   backends can react correctly.
+   */
+  if (stream->audio) {
+    SWFDEC_WARNING ("FIXME: restarting audio after seek");
+    swfdec_audio_remove (stream->audio);
+    g_object_unref (stream->audio);
+    stream->audio = swfdec_audio_flv_new (stream->player, 
+	stream->flvdecoder, stream->current_time);
+  }
 }
 

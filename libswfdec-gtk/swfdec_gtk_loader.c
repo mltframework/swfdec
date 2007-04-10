@@ -224,7 +224,10 @@ swfdec_gtk_loader_init (SwfdecGtkLoader *gtk_loader)
  * @uri: The location of the file to open
  *
  * Creates a new loader for the given URI using gnome-vfs (or using the local
- * file backend, if compiled without gnome-vfs support).
+ * file backend, if compiled without gnome-vfs support). The uri must be valid
+ * UTF-8. If using gnome-vfs, you might want to use 
+ * gnome_vfs_make_uri_from_shell_arg() or gnome_vfs_make_uri_from_input() on
+ * the @uri prior to calling this function.
  *
  * Returns: a new #SwfdecLoader using gnome-vfs.
  **/

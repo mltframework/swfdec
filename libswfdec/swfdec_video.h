@@ -21,7 +21,7 @@
 #define _SWFDEC_VIDEO_H_
 
 #include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/swfdec_codec.h>
+#include <libswfdec/swfdec_codec_video.h>
 
 G_BEGIN_DECLS
 
@@ -37,13 +37,12 @@ typedef struct _SwfdecVideoClass SwfdecVideoClass;
 struct _SwfdecVideo {
   SwfdecGraphic			graphic;
 
-  guint			width;		/* width in pixels */
-  guint			height;		/* height in pixels */
-  guint			n_frames;	/* length of movie */
+  guint				width;		/* width in pixels */
+  guint				height;		/* height in pixels */
+  guint				n_frames;	/* length of movie */
   GArray *			images;		/* actual images of the movie */
   
   SwfdecVideoFormat		format;		/* format in use */
-  const SwfdecVideoCodec *	codec;		/* codec for this video (can be NULL) */
 };
 
 struct _SwfdecVideoClass {

@@ -119,7 +119,7 @@ swfdec_iterate_finalize (GSource *source_)
     g_signal_handler_disconnect (source->player, source->notify);
   }
   if (source->player) {
-    g_object_remove_weak_pointer (G_OBJECT (source->player), (gpointer *) &source->player);
+    g_object_remove_weak_pointer (G_OBJECT (source->player), (gpointer) &source->player);
   }
 }
 
@@ -148,7 +148,7 @@ swfdec_iterate_source_new (SwfdecPlayer *player, double speed)
   source = (SwfdecIterateSource *) g_source_new (&swfdec_iterate_funcs, 
       sizeof (SwfdecIterateSource));
   source->player = player;
-  g_object_add_weak_pointer (G_OBJECT (source->player), (gpointer *) &source->player);
+  g_object_add_weak_pointer (G_OBJECT (source->player), (gpointer) &source->player);
   source->speed = 1.0 / speed;
   source->notify = g_signal_connect (player, "advance",
       G_CALLBACK (swfdec_iterate_source_advance_cb), source);

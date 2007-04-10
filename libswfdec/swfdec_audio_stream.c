@@ -38,10 +38,8 @@ swfdec_audio_stream_dispose (GObject *object)
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (object);
 
   if (stream->decoder != NULL) {
-    SwfdecBuffer *buffer = swfdec_audio_codec_finish (stream->codec, stream->decoder);
+    swfdec_audio_decoder_free (stream->decoder);
     stream->decoder = NULL;
-    if (buffer)
-      swfdec_buffer_unref (buffer);
   }
   g_queue_foreach (stream->playback_queue, (GFunc) swfdec_buffer_unref, NULL);
   g_queue_free (stream->playback_queue);
@@ -56,34 +54,31 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
   SwfdecBuffer *buffer;
 
   g_assert (!stream->done);
-  while (!stream->done) {
+  while (!(buffer = swfdec_audio_decoder_pull (stream->decoder)) &&
+         !stream->done) {
     if (stream->current_frame >= stream->sprite->n_frames)
-      break;
+      goto end;
     frame = &stream->sprite->frames[stream->current_frame];
     stream->current_frame++;
     if (frame->sound_head != stream->sound) 
-      break;
+      goto end;
     if (frame->sound_samples == 0)
       continue;
-    /* FIXME: with this method and mad not giving out full samples, we end up 
+    /* FIXME: with this method and mad/gst not giving out full samples, we end up 
      * putting silence too early */
     if (frame->sound_block) {
-      buffer = swfdec_audio_codec_decode (stream->codec, stream->decoder, frame->sound_block);
-      if (buffer == NULL)
-	continue;
+      swfdec_audio_decoder_push (stream->decoder, frame->sound_block);
+      continue;
     } else {
-      /* wanna speed this up by not allocating buffers? */
-      buffer = swfdec_buffer_new_and_alloc (frame->sound_samples * 4);
-      memset (buffer->data, 0, buffer->length);
+      SWFDEC_DEBUG ("frame %u has no sound block, inserting %u samples of silence", 
+	  stream->current_frame - 1, frame->sound_samples);
+      buffer = swfdec_buffer_new_and_alloc0 (4 * frame->sound_samples);
+      break;
     }
-    g_queue_push_tail (stream->playback_queue, buffer);
-    return buffer;
+end:
+    swfdec_audio_decoder_push (stream->decoder, NULL);
+    stream->done = TRUE;
   }
-  buffer = swfdec_audio_codec_finish (stream->codec, stream->decoder);
-  stream->decoder = NULL;
-  stream->done = TRUE;
-  if (buffer)
-    g_queue_push_tail (stream->playback_queue, buffer);
   return buffer;
 }
 
@@ -111,8 +106,10 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
       buffer = swfdec_audio_stream_decode_one (stream);
       if (!buffer)
 	break;
+      g_queue_push_tail (stream->playback_queue, buffer);
     }
-    samples = swfdec_sound_buffer_get_n_samples (buffer, stream->format);
+    samples = swfdec_sound_buffer_get_n_samples (buffer, 
+	swfdec_audio_decoder_get_format (stream->decoder));
     if (start) {
       if (samples <= start) {
 	start -= samples;
@@ -125,7 +122,9 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
       SWFDEC_LOG ("rendering %u samples", samples);
     }
     samples = MIN (samples, n_samples);
-    swfdec_sound_buffer_render (dest, buffer, stream->format, previous, start, samples);
+    swfdec_sound_buffer_render (dest, buffer, 
+	swfdec_audio_decoder_get_format (stream->decoder), 
+	previous, start, samples);
     start = 0;
     n_samples -= samples;
     dest += 2 * samples;
@@ -142,12 +141,14 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   stream->playback_skip += remove;
   buffer = g_queue_peek_head (stream->playback_queue);
   while (buffer && stream->playback_skip >= 
-	 swfdec_sound_buffer_get_n_samples (buffer, stream->format) 
-	 + SWFDEC_AUDIO_OUT_GRANULARITY (stream->format)) {
+	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (stream->decoder)) 
+	 + SWFDEC_AUDIO_OUT_GRANULARITY (swfdec_audio_decoder_get_format (stream->decoder))) {
     buffer = g_queue_pop_head (stream->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
-	swfdec_sound_buffer_get_n_samples (buffer, stream->format));
-    stream->playback_skip -= swfdec_sound_buffer_get_n_samples (buffer, stream->format);
+	swfdec_sound_buffer_get_n_samples (buffer, 
+	  swfdec_audio_decoder_get_format (stream->decoder)));
+    stream->playback_skip -= swfdec_sound_buffer_get_n_samples (buffer, 
+	swfdec_audio_decoder_get_format (stream->decoder));
     swfdec_buffer_unref (buffer);
     buffer = g_queue_peek_head (stream->playback_queue);
   }
@@ -157,9 +158,10 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   } else {
     GList *walk;
     guint ret = 0;
+    SwfdecAudioOut format = swfdec_audio_decoder_get_format (stream->decoder);
     
     for (walk = g_queue_peek_head_link (stream->playback_queue); walk; walk = walk->next) {
-      ret += swfdec_sound_buffer_get_n_samples (walk->data, stream->format);
+      ret += swfdec_sound_buffer_get_n_samples (walk->data, format);
     }
     return ret - stream->playback_skip;
   }
@@ -199,12 +201,8 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->sound = frame->sound_head;
   stream->playback_skip = frame->sound_skip;
   stream->current_frame = start_frame;
-  stream->codec = swfdec_codec_get_audio (stream->sound->format);
-  if (stream->codec)
-    stream->decoder = swfdec_audio_codec_init (stream->codec, 
-	stream->sound->width, stream->sound->original_format);
-  if (stream->decoder)
-    stream->format = swfdec_audio_codec_get_format (stream->codec, stream->decoder);
+  stream->decoder = swfdec_audio_decoder_new (stream->sound->format, 
+      stream->sound->width, stream->sound->original_format);
   swfdec_audio_add (SWFDEC_AUDIO (stream), player);
 
   return SWFDEC_AUDIO (stream);

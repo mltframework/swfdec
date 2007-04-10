@@ -22,6 +22,7 @@
 
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_as_object.h>
+#include <libswfdec/swfdec_codec_video.h>
 #include <libswfdec/swfdec_connection.h>
 #include <libswfdec/swfdec_flv_decoder.h>
 #include <libswfdec/swfdec_player_internal.h>
@@ -58,8 +59,7 @@ struct _SwfdecNetStream
   guint			current_time;	/* current playback timestamp */
   guint			next_time;	/* next video image at this timestamp */
   SwfdecVideoFormat	format;		/* current format */
-  const SwfdecVideoCodec *codec;	/* codec used to decode the video */
-  gpointer		decoder;	/* decoder used for decoding */
+  SwfdecVideoDecoder *	decoder;	/* decoder used for decoding */
   cairo_surface_t *	surface;	/* current image */
   SwfdecTimeout		timeout;	/* timeout to advance to */
   SwfdecVideoMovieInput	input;		/* used when attaching to a video movie */

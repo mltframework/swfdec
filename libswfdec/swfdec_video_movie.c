@@ -138,20 +138,17 @@ swfdec_video_movie_clear (SwfdecVideoMovie *movie)
 }
 
 void
-swfdec_video_movie_new_image (SwfdecVideoMovie *movie, cairo_surface_t *image,
-    guint width, guint height)
+swfdec_video_movie_new_image (SwfdecVideoMovie *movie, cairo_surface_t *image)
 {
   g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
   g_return_if_fail (image != NULL);
-  g_return_if_fail (width > 0);
-  g_return_if_fail (height > 0);
 
   if (movie->image)
     cairo_surface_destroy (movie->image);
   cairo_surface_reference (image);
   movie->image = image;
-  movie->image_width = width;
-  movie->image_height = height;
+  movie->image_width = cairo_image_surface_get_width (image);
+  movie->image_height = cairo_image_surface_get_height (image);
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 

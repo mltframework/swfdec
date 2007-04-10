@@ -61,10 +61,11 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-GLIB_REQUIRES=2.0
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRES gobject-2.0 >= $GLIB_REQUIRES, HAVE_GLIB=yes, HAVE_GLIB=no)
+GLIB_VER=2.0
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER,
+		HAVE_GLIB=yes, HAVE_GLIB=no)
 if test "$HAVE_GLIB" = "no"; then
-  AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
+  AC_MSG_ERROR([glib-2.0 >= $GLIB_VER and gobject-2.0 >= $GLIB_VER are required to build swfdec])
 fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
@@ -77,16 +78,17 @@ AC_SUBST(GLIB_MKENUMS)
 
 PKG_CHECK_MODULES(PANGO, pangocairo, HAVE_PANGO=yes, HAVE_PANGO=no)
 if test "$HAVE_PANGO" = "no"; then
-  AC_MSG_ERROR([cannot find pangocairo, which is required for build])
+  AC_MSG_ERROR([pangocairo is required to build swfdec])
 fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)
 
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
+GTK_VER=2.8.0
+PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 if test "$HAVE_GTK" = "no"; then
-  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
+  AC_MSG_WARN([gtk+-2.0 >= $GTK_VER not found, disabling build of player])
 fi
 AM_CONDITIONAL(WITH_GTK,[test "$HAVE_GTK" != "no"])
 
@@ -125,18 +127,20 @@ AC_SUBST(AUDIO_LIBS)
 AC_SUBST(AUDIO_CFLAGS)
 AC_SUBST(AUDIO_TYPE)
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.1.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+LIBOIL_VER=0.3.1
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= $LIBOIL_VER, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)
 AC_SUBST(LIBOIL_CFLAGS)
 if test "$HAVE_LIBOIL" = "no"; then
-  AC_MSG_ERROR([cannot find liboil-0.3, which is required for build])
+  AC_MSG_ERROR([liboil-0.3 >= $LIBOIL_VER is required to build swfdec])
 fi
 
-PKG_CHECK_MODULES(CAIRO, cairo >= 1.2.0, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+CAIRO_VER=1.2.0
+PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VER, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
-  AC_MSG_ERROR([cannot find cairo, which is required for build])
+  AC_MSG_ERROR([cairo >= $CAIRO_VER is required to build swfdec])
 fi
 
 AC_ARG_ENABLE(mad,

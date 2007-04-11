@@ -24,6 +24,7 @@
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
+#include "swfdec_as_function.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
@@ -657,130 +658,84 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   swfdec_player_trace (player, bytes);
   return JS_TRUE;
 }
+#endif
 
-/**
- * swfdec_action_invoke:
- * @cx: the #SwfdecAsContext
- * @n_args: number of arguments
- *
- * This function is similar to js_Invoke, however it uses a reversed stack
- * order. sp[-1] has to be the function to call, sp[-2] will be the object the 
- * function is called on, sp[-3] is the first argument, followed by the rest of
- * the arguments. The function removes all of these argumends from the stack 
- * and pushes the return value on top.
- *
- * Returns: JS_TRUE on success, JS_FALSE on failure.
- **/
+/* stack looks like this: [ function, this, arg1, arg2, ... ] */
 static void
-swfdec_action_call (SwfdecAsContext *cx, guint n_args, guint flags)
+swfdec_action_call (SwfdecAsContext *cx, guint n_args)
 {
-  JSStackFrame *fp = cx->fp;
-  int i, j;
-  jsval tmp;
-  guint stacksize;
+  SwfdecAsFunction *fun;
+  SwfdecAsObject *thisp;
+  SwfdecAsFrame *frame = cx->frame;
 
-  stacksize = fp->sp - fp->spbase;
-  g_assert (stacksize >= 2);
-  if (n_args + 2 > stacksize) {
-    SWFDEC_WARNING ("broken script. Want %u arguments, only got %u", n_args, stacksize - 2);
-    n_args = stacksize - 2;
-    if (!swfdec_script_ensure_stack (cx, n_args + 2))
-      return JS_FALSE;
-  }
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (frame->stack, 1)) ||
+      !SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (frame->stack, 2)))
+    goto error;
+  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (frame->stack, 1));
+  if (!SWFDEC_IS_AS_FUNCTION (fun))
+    goto error;
+  thisp = SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (frame->stack, 2));
+  swfdec_as_stack_pop_n (frame->stack, 2);
+  swfdec_as_function_call (fun, thisp, n_args);
+  return;
 
-  j = -1;
-  i = - (n_args + 2);
-  while (i < j) {
-    tmp = fp->sp[j];
-    fp->sp[j] = fp->sp[i];
-    fp->sp[i] = tmp;
-    j--;
-    i++;
-  }
-  return js_Invoke (cx, n_args, flags);
+error:
+  n_args += 2;
+  n_args = MIN (n_args, swfdec_as_stack_get_size (frame->stack));
+  swfdec_as_stack_pop_n (frame->stack, n_args);
 }
 
-/* FIXME: lots of overlap with swfdec_action_call_method */
 static void
 swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSStackFrame *fp = cx->fp;
-  const char *s;
-  guint32 n_args;
-  JSObject *obj, *pobj;
-  JSProperty *prop;
-  jsval fun;
-  JSAtom *atom;
+  SwfdecAsFrame *frame = cx->frame;
+  SwfdecAsObject *obj;
+  guint n_args;
   
-  if (!swfdec_script_ensure_stack (cx, 2))
-    return JS_FALSE;
-  s = swfdec_js_to_string (cx, fp->sp[-1]);
-  if (s == NULL)
-    return JS_FALSE;
-  if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
-    return JS_FALSE;
-  
-  if (!(atom = js_Atomize (cx, s, strlen (s), 0)) ||
-      !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
-    return JS_FALSE;
-  if (!JS_GetProperty (cx, obj, s, &fun))
-    return JS_FALSE;
-  if (!JSVAL_IS_OBJECT (fun)) {
-    /* FIXME: figure out what class we operate on */
-    SWFDEC_WARNING ("%s is not a function", s);
+  swfdec_as_stack_ensure_size (frame->stack, 2);
+  obj = swfdec_as_frame_find_variable (frame, swfdec_as_stack_peek (frame->stack, 1));
+  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (frame->stack, 2));
+  if (obj) {
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
+    swfdec_as_object_get_variable (obj, swfdec_as_stack_peek (frame->stack, 1), 
+	swfdec_as_stack_peek (frame->stack, 1));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 2));
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 1));
   }
-  fp->sp[-1] = fun;
-  fp->sp[-2] = OBJECT_TO_JSVAL (obj);
-  swfdec_action_call (cx, n_args, 0);
-  return JS_TRUE;
+  swfdec_action_call (cx, n_args);
 }
 
 static void
 swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSStackFrame *fp = cx->fp;
-  const char *s;
-  guint32 n_args;
-  JSObject *obj;
-  jsval fun;
+  SwfdecAsFrame *frame = cx->frame;
+  SwfdecAsValue *val;
+  SwfdecAsObject *obj;
+  guint n_args;
   
-  if (!swfdec_script_ensure_stack (cx, 3))
-    return JS_FALSE;
-  if (fp->sp[-1] == JSVAL_VOID) {
-    s = "";
-  } else {
-    s = swfdec_js_to_string (cx, fp->sp[-1]);
-    if (s == NULL)
-      return JS_FALSE;
+  swfdec_as_stack_ensure_size (frame->stack, 3);
+  obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (frame->stack, 2));
+  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (frame->stack, 3));
+  val = swfdec_as_stack_pop (frame->stack);
+  /* FIXME: this is a hack for constructtors calling super - is this correct? */
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
   }
-  if (!JS_ValueToECMAUint32 (cx, fp->sp[-3], &n_args))
-    return JS_FALSE;
-  
-  if (!JS_ValueToObject (cx, fp->sp[-2], &obj))
-    return JS_FALSE;
-  if (obj == NULL)
-    goto fail;
-  if (s[0] == '\0') {
-    fun = OBJECT_TO_JSVAL (obj);
-  } else {
-    if (!JS_GetProperty (cx, obj, s, &fun))
-      return JS_FALSE;
-    if (!JSVAL_IS_OBJECT (fun)) {
-      SWFDEC_WARNING ("%s:%s is not a function", JS_GetClass (obj)->name, s);
+  if (obj) {
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
+    if (SWFDEC_AS_VALUE_IS_STRING (val) && 
+	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
+      SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 1), obj);
+    } else {
+      swfdec_as_object_get_variable (obj, val, swfdec_as_stack_peek (frame->stack, 1));
     }
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 2));
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 1));
   }
-  fp->sp--;
-  fp->sp[-1] = fun;
-  fp->sp[-2] = OBJECT_TO_JSVAL (obj);
-  swfdec_action_call (cx, n_args, 0);
-  return JS_TRUE;
-
-fail:
-  fp->sp -= 2 + n_args;
-  fp->sp[-1] = JSVAL_VOID;
-  return JS_TRUE;
+  swfdec_action_call (cx, n_args);
 }
-#endif
 
 static void
 swfdec_action_pop (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2331,7 +2286,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x3a] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
   [0x3b] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
   [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
-  [0x3d] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
+#endif
+  [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
+#if 0
   [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
   [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
@@ -2354,7 +2311,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x50] = { "Increment", NULL, 1, 1, { NULL, NULL, swfdec_action_increment, swfdec_action_increment, swfdec_action_increment } },
   [0x51] = { "Decrement", NULL, 1, 1, { NULL, NULL, swfdec_action_decrement, swfdec_action_decrement, swfdec_action_decrement } },
-  [0x52] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
+#endif
+  [SWFDEC_AS_ACTION_CALL_METHOD] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
+#if 0
   [0x53] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
   /* version 6 */
   [0x54] = { "InstanceOf", NULL },

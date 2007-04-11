@@ -647,8 +647,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 {
   const char *s;
 
-  /* FIXME: Trace uses a different string conversion */
-  s = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  s = swfdec_as_value_to_printable (cx, swfdec_as_stack_pop (cx->frame->stack));
   swfdec_as_context_trace (cx, s);
 }
 

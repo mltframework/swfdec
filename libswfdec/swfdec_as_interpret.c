@@ -1705,27 +1705,21 @@ swfdec_action_swap (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   *swfdec_as_stack_peek (cx->frame->stack, 2) = val;
 }
 
-#if 0
 static void
 swfdec_action_to_number (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
-  if (!JS_ValueToNumber (cx, cx->fp->sp[-1], &d))
-    return JS_FALSE;
-  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1),
+      swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1)));
 }
 
 static void
 swfdec_action_to_string (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSString *s;
-  s = JS_ValueToString(cx, cx->fp->sp[-1]);
-  if (!s)
-    return JS_FALSE;
-  cx->fp->sp[-1] = STRING_TO_JSVAL (s);
-  return JS_TRUE;
+  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1),
+      swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1)));
 }
 
+#if 0
 static void
 swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2232,9 +2226,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
-  [0x4a] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
-  [0x4b] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
 #endif
+  [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
+  [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
   [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
   [SWFDEC_AS_ACTION_SWAP] = { "Swap", NULL, 2, 2, { NULL, NULL, swfdec_action_swap, swfdec_action_swap, swfdec_action_swap } },
   [SWFDEC_AS_ACTION_GET_MEMBER] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },

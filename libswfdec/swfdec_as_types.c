@@ -140,6 +140,32 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
   }
 }
 
+/**
+ * swfdec_as_value_to_printable:
+ * @context: a #SwfdecAsContext
+ * @value: value to be converted to a printable string
+ *
+ * Converts @value to a string. This function is used by the trace signal. It 
+ * uses a slightly different conversion then swfdec_as_value_to_string(). Don't
+ * use this function if you can avoid it.
+ *
+ * Returns: a garbage collected string representing @value.
+ **/
+const char *
+swfdec_as_value_to_printable (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_EMPTY);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), SWFDEC_AS_STR_EMPTY);
+
+  switch (value->type) {
+    case SWFDEC_TYPE_AS_UNDEFINED:
+      return SWFDEC_AS_STR_UNDEFINED;
+    default:
+      break;
+  }
+  return swfdec_as_value_to_string (context, value);
+}
+
 double
 swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 {

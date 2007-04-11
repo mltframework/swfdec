@@ -95,7 +95,7 @@ struct _SwfdecAsValue {
 
 /* List of static strings that are required all the time */
 extern const char *swfdec_as_strings[];
-#define SWFDEC_AS_STR_CONSTANT(n) (swfdec_as_strings[(n)] + 1)
+#define SWFDEC_AS_STR_CONSTANT(n) (&swfdec_as_strings[(n)][1])
 
 #define SWFDEC_AS_STR_EMPTY		SWFDEC_AS_STR_CONSTANT(0)
 #define SWFDEC_AS_STR_PROTO		SWFDEC_AS_STR_CONSTANT(1)
@@ -264,6 +264,8 @@ int		swfdec_as_value_to_integer	(SwfdecAsContext *	context,
 double		swfdec_as_value_to_number	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 SwfdecAsObject *swfdec_as_value_to_object	(SwfdecAsContext *	context,
+						 const SwfdecAsValue *	value);
+const char *	swfdec_as_value_to_printable	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);

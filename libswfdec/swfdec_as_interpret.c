@@ -6,7 +6,6 @@
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  * 
- * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
@@ -743,24 +742,13 @@ swfdec_action_pop (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   swfdec_as_stack_pop (cx->frame->stack);
 }
 
-#if 0
 static void
 swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval lval, rval;
   double l, r;
 
-  rval = cx->fp->sp[-1];
-  lval = cx->fp->sp[-2];
-  if (((SwfdecScript *) cx->fp->swf)->version < 7) {
-    l = swfdec_value_to_number (cx, lval);
-    r = swfdec_value_to_number (cx, rval);
-  } else {
-    if (!swfdec_value_to_number_7 (cx, lval, &l) ||
-        !swfdec_value_to_number_7 (cx, rval, &r))
-      return JS_FALSE;
-  }
-  cx->fp->sp--;
+  l = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
+  r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
   switch (action) {
     case 0x0a:
       l = l + r;
@@ -772,15 +760,12 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
       l = l * r;
       break;
     case 0x0d:
-      if (((SwfdecScript *) cx->fp->swf)->version < 5) {
+      if (cx->version < 5) {
 	if (r == 0) {
-	  JSString *str = JS_InternString (cx, "#ERROR#");
-	  if (str == NULL)
-	    return JS_FALSE;
-	  cx->fp->sp[-1] = STRING_TO_JSVAL (str);
-	  return JS_TRUE;
+	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR_HASH_ERROR);
+	  return;
 	}
-      } else if (((SwfdecScript *) cx->fp->swf)->version < 7) {
+      } else if (cx->version < 7) {
 	if (isnan (r))
 	  r = 0;
       }
@@ -788,11 +773,12 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
       break;
     default:
       g_assert_not_reached ();
-      return r;
+      break;
   }
-  return JS_NewNumberValue (cx, l, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), l);
 }
 
+#if 0
 static JSString *
 swfdec_action_to_string_5 (SwfdecAsContext *cx, jsval val)
 {
@@ -912,15 +898,15 @@ swfdec_action_new_comparison_7 (SwfdecAsContext *cx, guint action, const guint8 
   }
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_not_4 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   double d;
 
-  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  cx->fp->sp[-1] = INT_TO_JSVAL (d == 0 ? 1 : 0);
-  return JS_TRUE;
+  d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), d == 0 ? 1 : 0);
 }
 
 static void
@@ -928,11 +914,11 @@ swfdec_action_not_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 {
   double d;
 
-  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  cx->fp->sp[-1] = d == 0 ? JSVAL_TRUE : JSVAL_FALSE;
-  return JS_TRUE;
+  d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d == 0 ? TRUE : FALSE);
 }
 
+#if 0
 static void
 swfdec_action_jump (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2236,16 +2222,20 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x08] = { "ToggleQuality", NULL },
   [0x09] = { "StopSounds", NULL, 0, 0, { swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds } },
+#endif
   /* version 4 */
-  [0x0a] = { "Add", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [0x0b] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [0x0c] = { "Multiply", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [0x0d] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [SWFDEC_AS_ACTION_ADD] = { "Add", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [SWFDEC_AS_ACTION_SUBTRACT] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [SWFDEC_AS_ACTION_MULTIPLY] = { "Multiply", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+  [SWFDEC_AS_ACTION_DIVIDE] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
+#if 0
   [0x0e] = { "Equals", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
   [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
   [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
-  [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
+#endif
+  [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
+#if 0
   [0x13] = { "StringEquals", NULL },
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },

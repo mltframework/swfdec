@@ -158,6 +158,7 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR__QUALITY		SWFDEC_AS_STR_CONSTANT(58)
 #define SWFDEC_AS_STR__XMOUSE		SWFDEC_AS_STR_CONSTANT(59)
 #define SWFDEC_AS_STR__YMOUSE		SWFDEC_AS_STR_CONSTANT(60)
+#define SWFDEC_AS_STR_HASH_ERROR	SWFDEC_AS_STR_CONSTANT(61)
 
 /* all existing actions */
 typedef enum {

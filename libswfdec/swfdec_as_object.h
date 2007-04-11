@@ -29,10 +29,30 @@ G_BEGIN_DECLS
 typedef enum {
   SWFDEC_AS_VARIABLE_PERMANENT = (1 << 0),
   SWFDEC_AS_VARIABLE_DONT_ENUM = (1 << 1),
-  SWFDEC_AS_VARIABLE_READONLY = (1 << 2)
+  SWFDEC_AS_VARIABLE_READONLY = (1 << 2),
+  SWFDEC_AS_VARIABLE_NATIVE = (1 << 3)
 } SwfdecAsVariableFlag;
 
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
+typedef struct _SwfdecAsVariable SwfdecAsVariable;
+typedef void (* SwfdecAsVariableSetter) (SwfdecAsObject *object, const SwfdecAsValue *value);
+typedef void (* SwfdecAsVariableGetter) (SwfdecAsObject *object, SwfdecAsValue *value);
+
+struct _SwfdecAsVariable {
+  guint			flags;		/* SwfdecAsVariableFlag values */
+  union {
+    SwfdecAsValue     	value;		/* value of property */
+    struct {
+      SwfdecAsVariableSetter set;	/* setter for native property */
+      SwfdecAsVariableGetter get;	/* getter for native property */
+    } funcs;
+  }			value;
+};
+#define swfdec_as_variable_mark(var) G_STMT_START{ \
+  SwfdecAsVariable *__var = (SwfdecAsVariable *) (var); \
+  if (!(__var->flags & SWFDEC_AS_VARIABLE_NATIVE)) \
+    swfdec_as_value_mark (&__var->value.value); \
+}G_STMT_END
 
 #define SWFDEC_TYPE_AS_OBJECT                    (swfdec_as_object_get_type())
 #define SWFDEC_IS_AS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_OBJECT))
@@ -48,7 +68,7 @@ struct _SwfdecAsObject {
 
   SwfdecAsContext *	context;	/* context used */
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __prototype__ */
-  GHashTable *		properties;	/* properties hash table or NULL when not in GC */
+  GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   guint8		flags;		/* GC flags */
   gsize			size;		/* size reserved in GC */
 };
@@ -56,7 +76,15 @@ struct _SwfdecAsObject {
 struct _SwfdecAsObjectClass {
   GObjectClass		object_class;
 
+  /* mark everything that should survive during GC */
   void			(* mark)		(SwfdecAsObject *	object);
+  /* get the place that holds a variable or return NULL */
+  SwfdecAsVariable *	(* get)			(SwfdecAsObject *       object,
+						 const SwfdecAsValue *	variable,
+						 gboolean		create);
+  /* delete the variable - it does exists */
+  void			(* delete)		(SwfdecAsObject *       object,
+						 const SwfdecAsValue *	variable);
 };
 
 GType		swfdec_as_object_get_type	(void);

@@ -250,7 +250,7 @@ enum {
 };
 
 G_DEFINE_TYPE (SwfdecAsContext, swfdec_as_context, G_TYPE_OBJECT)
-guint signals[LAST_SIGNAL];
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 swfdec_as_context_dispose (GObject *object)
@@ -332,8 +332,7 @@ swfdec_as_context_get_string (SwfdecAsContext *context, const char *string)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (string != NULL, NULL);
 
-  ret = g_hash_table_lookup (context->strings, string);
-  if (ret != NULL)
+  if (g_hash_table_lookup_extended (context->strings, string, (gpointer) &ret, NULL))
     return ret;
 
   len = strlen (string);

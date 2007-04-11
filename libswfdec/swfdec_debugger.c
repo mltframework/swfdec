@@ -42,7 +42,7 @@ enum {
 };
 
 G_DEFINE_TYPE (SwfdecDebugger, swfdec_debugger, SWFDEC_TYPE_PLAYER)
-guint signals [LAST_SIGNAL] = { 0, };
+static guint signals[LAST_SIGNAL] = { 0, };
 
 /*** SwfdecDebuggerScript ***/
 

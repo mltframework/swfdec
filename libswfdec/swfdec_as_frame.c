@@ -78,6 +78,7 @@ swfdec_as_frame_class_init (SwfdecAsFrameClass *klass)
 static void
 swfdec_as_frame_init (SwfdecAsFrame *frame)
 {
+  frame->function_name = "unnamed";
 }
 
 SwfdecAsFrame *
@@ -97,7 +98,7 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   stack = swfdec_as_stack_new (context, 100); /* FIXME: invent better numbers here */
   if (!stack)
     return NULL;
-  size = sizeof (SwfdecAsObject) + sizeof (SwfdecAsValue) * script->n_registers;
+  size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
@@ -114,6 +115,28 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, thisp);
   swfdec_as_object_set (SWFDEC_AS_OBJECT (frame), SWFDEC_AS_STR_THIS, &val);
+  return frame;
+}
+
+SwfdecAsFrame *
+swfdec_as_frame_new_native (SwfdecAsObject *thisp)
+{
+  SwfdecAsContext *context;
+  SwfdecAsFrame *frame;
+  gsize size;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (thisp), NULL);
+  g_return_val_if_fail (thisp->properties, NULL);
+  
+  context = thisp->context;
+  size = sizeof (SwfdecAsFrame);
+  if (!swfdec_as_context_use_mem (context, size))
+    return NULL;
+  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
+  SWFDEC_DEBUG ("new native frame");
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
+  frame->next = context->frame;
+  context->frame = frame;
   return frame;
 }
 

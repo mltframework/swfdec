@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsFunctionClass SwfdecAsFunctionClass;
 
-typedef void (* SwfdecAsNativeCall) (SwfdecAsContext *context, SwfdecAsObject *thisp, guint argc, SwfdecAsValue *argv);
+typedef void (* SwfdecAsNativeCall) (SwfdecAsContext *context, SwfdecAsObject *thisp, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval);
 
 #define SWFDEC_TYPE_AS_FUNCTION                    (swfdec_as_function_get_type())
 #define SWFDEC_IS_AS_FUNCTION(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_FUNCTION))
@@ -45,6 +45,7 @@ struct _SwfdecAsFunction {
   /* for native functions */
   SwfdecAsNativeCall	native;		/* native call or NULL when script */
   guint			min_args;	/* minimum number of required arguments */
+  char *		name;		/* function name */
 
   /* for script functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */

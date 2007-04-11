@@ -110,6 +110,7 @@ void
 swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args)
 {
   SwfdecAsContext *context;
+  SwfdecAsFrame *frame;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
@@ -123,6 +124,7 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   }
   /* now do different things depending on if we're a native function or not */
   if (function->native) {
+    SwfdecAsValue retval = { 0, };
     if (n_args < function->min_args) {
       SwfdecAsStack *stack = context->frame->stack;
       if (n_args == 0) {
@@ -134,10 +136,12 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
       }
       return;
     }
-    g_assert_not_reached ();
+    frame = swfdec_as_frame_new_native (thisp);
+    g_assert (function->name);
+    frame->function_name = function->name;
+    function->native (context, thisp, n_args, NULL, &retval);
+    swfdec_as_context_return (context, &retval);
   } else {
-    SwfdecAsFrame *frame;
-
     frame = swfdec_as_frame_new (thisp, function->script);
     /* FIXME: do the preloading here */
   }

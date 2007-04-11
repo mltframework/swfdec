@@ -177,7 +177,7 @@ swfdec_as_context_collect (SwfdecAsContext *context)
     swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context);
-  g_print (">> done collecting garbage\n");
+  SWFDEC_INFO (">> done collecting garbage\n");
 }
 
 void

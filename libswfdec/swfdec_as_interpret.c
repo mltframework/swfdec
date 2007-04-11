@@ -1719,46 +1719,50 @@ swfdec_action_to_string (SwfdecAsContext *cx, guint action, const guint8 *data, 
       swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1)));
 }
 
-#if 0
 static void
 swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval val;
+  SwfdecAsValue *val;
   const char *type;
-  JSString *string;
 
-  val = cx->fp->sp[-1];
-  if (JSVAL_IS_NUMBER (val)) {
-    type = "number";
-  } else if (JSVAL_IS_BOOLEAN (val)) {
-    type = "boolean";
-  } else if (JSVAL_IS_STRING (val)) {
-    type = "string";
-  } else if (JSVAL_IS_VOID (val)) {
-    type = "undefined";
-  } else if (JSVAL_IS_NULL (val)) {
-    type = "null";
-  } else if (JSVAL_IS_OBJECT (val)) {
-    JSObject *obj = JSVAL_TO_OBJECT (val);
-    if (swfdec_js_is_movieclip (cx, obj)) {
-      type = "movieclip";
-    } else if (JS_ObjectIsFunction (cx, obj)) {
-      type = "function";
-    } else {
-      type = "object";
-    }
-  } else {
-    g_assert_not_reached ();
-    return JS_FALSE;
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  switch (val->type) {
+    case SWFDEC_TYPE_AS_NUMBER:
+      type = SWFDEC_AS_STR_NUMBER;
+      break;
+    case SWFDEC_TYPE_AS_BOOLEAN:
+      type = SWFDEC_AS_STR_BOOLEAN;
+      break;
+    case SWFDEC_TYPE_AS_STRING:
+      type = SWFDEC_AS_STR_STRING;
+      break;
+    case SWFDEC_TYPE_AS_UNDEFINED:
+      type = SWFDEC_AS_STR_UNDEFINED;
+      break;
+    case SWFDEC_TYPE_AS_NULL:
+      type = SWFDEC_AS_STR_NULL;
+      break;
+    case SWFDEC_TYPE_AS_ASOBJECT:
+      {
+	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+	if (SWFDEC_IS_MOVIE (obj)) {
+	  type = SWFDEC_AS_STR_MOVIECLIP;
+	} else if (SWFDEC_IS_AS_FUNCTION (obj)) {
+	  type = SWFDEC_AS_STR_FUNCTION;
+	} else {
+	  type = SWFDEC_AS_STR_OBJECT;
+	}
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      type = SWFDEC_AS_STR_EMPTY;
+      break;
   }
-  /* can't use InternString here because of case sensitivity issues */
-  string = JS_NewStringCopyZ (cx, type);
-  if (string == NULL)
-    return JS_FALSE;
-  cx->fp->sp[-1] = STRING_TO_JSVAL (string);
-  return JS_TRUE;
+  SWFDEC_AS_VALUE_SET_STRING (val, type);
 }
 
+#if 0
 static void
 swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2218,7 +2222,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [0x42] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
-  [0x44] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
+#endif
+  [SWFDEC_AS_ACTION_TYPE_OF] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
+#if 0
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
   [0x46] = { "Enumerate", NULL },
 #endif

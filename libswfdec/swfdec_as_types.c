@@ -92,6 +92,12 @@ const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("_xmouse"), 
   SWFDEC_AS_CONSTANT_STRING ("_ymouse"),
   SWFDEC_AS_CONSTANT_STRING ("#ERROR#"),
+  SWFDEC_AS_CONSTANT_STRING ("number"),
+  SWFDEC_AS_CONSTANT_STRING ("boolean"),
+  SWFDEC_AS_CONSTANT_STRING ("string"),
+  SWFDEC_AS_CONSTANT_STRING ("movieclip"),
+  SWFDEC_AS_CONSTANT_STRING ("function"),
+  SWFDEC_AS_CONSTANT_STRING ("object"),
   /* add more here */
   NULL
 };

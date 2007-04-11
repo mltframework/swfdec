@@ -41,8 +41,7 @@ typedef struct _SwfdecDebuggerCommand SwfdecDebuggerCommand;
 #define SWFDEC_DEBUGGER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_DEBUGGER, SwfdecDebuggerClass))
 
 struct _SwfdecDebuggerCommand {
-  gconstpointer		code;		/* pointer to start bytecode in SwfdecScript */
-  guint			breakpoint;	/* id of breakpoint pointing here */
+  const guint8 *	code;		/* pointer to start bytecode in SwfdecScript */
   char *		description;	/* string describing the action */
 };
 
@@ -58,6 +57,7 @@ struct _SwfdecDebugger {
   GHashTable *		scripts;	/* JSScript => SwfdecDebuggerScript mapping */
   GArray *		breakpoints;	/* all breakpoints */
   gboolean		stepping;	/* TRUE if we're currently stepping through the code */
+  gboolean		has_breakpoints; /* performance: track if there's breakpoints */
 };
 
 struct _SwfdecDebuggerClass {
@@ -95,6 +95,10 @@ void			swfdec_debugger_remove_script	(SwfdecDebugger *	debugger,
 void			swfdec_debugger_foreach_script	(SwfdecDebugger *	debugger,
 							 GFunc			func,
 							 gpointer		data);
+gboolean		swfdec_debugger_script_has_breakpoint
+							(SwfdecDebugger *       debugger,
+							 SwfdecDebuggerScript *	script,
+							 guint			line);
 
 const char *	      	swfdec_debugger_run		(SwfdecDebugger *	debugger,
 							 const char *		command);

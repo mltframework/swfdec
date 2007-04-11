@@ -227,6 +227,9 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
 SwfdecAsObject *
 swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), NULL);
+
   switch (value->type) {
     case SWFDEC_TYPE_AS_UNDEFINED:
     case SWFDEC_TYPE_AS_NULL:
@@ -241,6 +244,49 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
     default:
       g_assert_not_reached ();
       return NULL;
+  }
+}
+
+/**
+ * swfdec_as_value_to_boolean:
+ * @context: a #SwfdecAsContext
+ * @value: value to convert
+ *
+ * Converts the given value to a boolean according to Flash's rules. Note that
+ * these rules changed significantly for strings between Flash 6 and 7.
+ *
+ * Returns: either %TRUE or %FALSE.
+ **/
+gboolean
+swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), FALSE);
+
+  /* FIXME: what do we do when called in flash 4? */
+  switch (value->type) {
+    case SWFDEC_TYPE_AS_UNDEFINED:
+    case SWFDEC_TYPE_AS_NULL:
+      return FALSE;
+    case SWFDEC_TYPE_AS_BOOLEAN:
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value);
+    case SWFDEC_TYPE_AS_NUMBER:
+      {
+	double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
+	return d != 0.0 && !isnan (d);
+      }
+    case SWFDEC_TYPE_AS_STRING:
+      if (context->version <= 6) {
+	double d = swfdec_as_value_to_number (context, value);
+	return d != 0.0 && !isnan (d);
+      } else {
+	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
+      }
+    case SWFDEC_TYPE_AS_ASOBJECT:
+      return TRUE;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
   }
 }
 

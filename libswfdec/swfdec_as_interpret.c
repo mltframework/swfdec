@@ -771,86 +771,34 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), l);
 }
 
+
+static void
+swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *rval, *lval;
+
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  if (SWFDEC_AS_VALUE_IS_STRING (lval) || SWFDEC_AS_VALUE_IS_STRING (rval)) {
+    const char *l, *r;
+    char *ret;
+    r = swfdec_as_value_to_string (cx, rval);
+    l = swfdec_as_value_to_string (cx, lval);
+    ret = g_strconcat (l, r, NULL);
+    l = swfdec_as_context_get_string (cx, ret);
+    swfdec_as_stack_pop (cx->frame->stack);
+    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), l);
+  } else {
+    double d, d2;
+    d2 = swfdec_as_value_to_number (cx, rval);
+    d = swfdec_as_value_to_number (cx, lval);
+    d += d2;
+    swfdec_as_stack_pop (cx->frame->stack);
+    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), d);
+  }
+}
+
 #if 0
-static JSString *
-swfdec_action_to_string_5 (SwfdecAsContext *cx, jsval val)
-{
-  if (JSVAL_IS_VOID (val))
-    return cx->runtime->emptyString;
-  return js_ValueToString (cx, val);
-}
-
-static void
-swfdec_action_add2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  jsval rval, lval;
-  gboolean cond;
-
-  rval = cx->fp->sp[-1];
-  lval = cx->fp->sp[-2];
-  if ((cond = JSVAL_IS_STRING (lval)) || JSVAL_IS_STRING (rval)) {
-    JSString *str, *str2;
-    if (cond) {
-      str = JSVAL_TO_STRING (lval);
-      if ((str2 = swfdec_action_to_string_5 (cx, rval)) == NULL)
-	return JS_FALSE;
-    } else {
-      str2 = JSVAL_TO_STRING (rval);
-      if ((str = swfdec_action_to_string_5 (cx, lval)) == NULL)
-	return JS_FALSE;
-    }
-    str = js_ConcatStrings (cx, str, str2);
-    if (!str)
-      return JS_FALSE;
-    cx->fp->sp--;
-    cx->fp->sp[-1] = STRING_TO_JSVAL (str);
-  } else {
-    double d, d2;
-    d = swfdec_value_to_number (cx, lval);
-    d2 = swfdec_value_to_number (cx, rval);
-    d += d2;
-    cx->fp->sp--;
-    return JS_NewNumberValue(cx, d, &cx->fp->sp[-1]);
-  }
-  return JS_TRUE;
-}
-
-static void
-swfdec_action_add2_7 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  jsval rval, lval;
-  gboolean cond;
-
-  rval = cx->fp->sp[-1];
-  lval = cx->fp->sp[-2];
-  if ((cond = JSVAL_IS_STRING (lval)) || JSVAL_IS_STRING (rval)) {
-    JSString *str, *str2;
-    if (cond) {
-      str = JSVAL_TO_STRING (lval);
-      if ((str2 = js_ValueToString (cx, rval)) == NULL)
-	return JS_FALSE;
-    } else {
-      str2 = JSVAL_TO_STRING (rval);
-      if ((str = js_ValueToString (cx, lval)) == NULL)
-	return JS_FALSE;
-    }
-    str = js_ConcatStrings (cx, str, str2);
-    if (!str)
-      return JS_FALSE;
-    cx->fp->sp--;
-    cx->fp->sp[-1] = STRING_TO_JSVAL (str);
-  } else {
-    double d, d2;
-    if (!swfdec_value_to_number_7 (cx, lval, &d) ||
-        !swfdec_value_to_number_7 (cx, rval, &d2))
-	return JS_FALSE;
-    d += d2;
-    cx->fp->sp--;
-    return JS_NewNumberValue(cx, d, &cx->fp->sp[-1]);
-  }
-  return JS_TRUE;
-}
-
 static void
 swfdec_action_new_comparison_6 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2280,7 +2228,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x44] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
   [0x46] = { "Enumerate", NULL },
-  [0x47] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2_5, swfdec_action_add2_5, swfdec_action_add2_7 } },
+#endif
+  [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
+#if 0
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [0x4a] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },

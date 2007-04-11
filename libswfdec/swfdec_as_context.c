@@ -342,8 +342,13 @@ swfdec_as_context_run (SwfdecAsContext *context)
   guint action, len;
   guint8 *data;
   int version;
+  SwfdecAsContextClass *klass;
+  void (* step) (SwfdecAsContext *context);
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+
+  klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
+  step = klass->step;
 
 start:
   /* setup data */
@@ -368,6 +373,14 @@ start:
       goto error;
     }
 
+    if (step) {
+      frame->pc = pc;
+      (* step) (context);
+      if (frame != context->frame || 
+	  frame->pc != pc) {
+	goto start;
+      }
+    }
     /* decode next action */
     action = *pc;
     spec = swfdec_as_actions + action;

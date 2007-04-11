@@ -63,6 +63,8 @@ struct _SwfdecAsContextClass {
 
   /* mark all objects that should not be collected */
   void			(* mark)		(SwfdecAsContext *	context);
+  /* call this function before executing a bytecode if non-NULL */
+  void			(* step)		(SwfdecAsContext *	context);
 };
 
 GType		swfdec_as_context_get_type	(void);

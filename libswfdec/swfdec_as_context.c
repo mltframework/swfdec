@@ -244,7 +244,13 @@ swfdec_as_context_gc (SwfdecAsContext *context)
 
 /*** SWFDEC_AS_CONTEXT ***/
 
+enum {
+  TRACE,
+  LAST_SIGNAL
+};
+
 G_DEFINE_TYPE (SwfdecAsContext, swfdec_as_context, G_TYPE_OBJECT)
+guint signals[LAST_SIGNAL];
 
 static void
 swfdec_as_context_dispose (GObject *object)
@@ -268,6 +274,18 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_as_context_dispose;
+
+  /**
+   * SwfdecAsContext::trace:
+   * @context: the #SwfdecAsContext affected
+   * @text: the debugging string
+   *
+   * Emits a debugging string while running. The effect of calling any swfdec 
+   * functions on the emitting @context is undefined.
+   */
+  signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
+      G_TYPE_NONE, 1, G_TYPE_STRING);
 
   klass->mark = swfdec_as_context_do_mark;
 }
@@ -462,6 +480,15 @@ swfdec_as_context_return (SwfdecAsContext *context, SwfdecAsValue *retval)
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (context->frame->stack));
   }
+}
+
+void
+swfdec_as_context_trace (SwfdecAsContext *context, const char *string)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (string != NULL);
+
+  g_signal_emit (context, signals[TRACE], 0, string);
 }
 
 /*** EVAL ***/

@@ -287,7 +287,6 @@ swfdec_player_do_action (SwfdecPlayer *player)
 /*** SwfdecPlayer ***/
 
 enum {
-  TRACE,
   INVALIDATE,
   ADVANCE,
   HANDLE_MOUSE,
@@ -806,17 +805,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));
 
   /**
-   * SwfdecPlayer::trace:
-   * @player: the #SwfdecPlayer affected
-   * @text: the debugging string
-   *
-   * Emits a debugging string while running. The effect of calling any swfdec 
-   * functions on the emitting @player is undefined.
-   */
-  signals[TRACE] = g_signal_new ("trace", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
-      G_TYPE_NONE, 1, G_TYPE_STRING);
-  /**
    * SwfdecPlayer::invalidate:
    * @player: the #SwfdecPlayer affected
    * @x: x coordinate of invalid region
@@ -933,16 +921,6 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
   while (player->audio) {
     swfdec_audio_remove (player->audio->data);
   }
-}
-
-void
-swfdec_player_trace (SwfdecPlayer *player, const char *text)
-{
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (text != NULL);
-  
-  /* FIXME: accumulate and emit after JS handling? */
-  g_signal_emit (player, signals[TRACE], 0, text);
 }
 
 void

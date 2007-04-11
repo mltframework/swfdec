@@ -642,22 +642,15 @@ swfdec_action_set_member (SwfdecAsContext *cx, guint action, const guint8 *data,
   swfdec_as_stack_pop_n (cx->frame->stack, 3);
 }
 
-#if 0
 static void
 swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
-  const char *bytes;
+  const char *s;
 
-  bytes = swfdec_js_to_string (cx, cx->fp->sp[-1]);
-  cx->fp->sp--;
-  if (bytes == NULL)
-    return JS_TRUE;
-
-  swfdec_player_trace (player, bytes);
-  return JS_TRUE;
+  /* FIXME: Trace uses a different string conversion */
+  s = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  swfdec_as_context_trace (cx, s);
 }
-#endif
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
 static void
@@ -2252,10 +2245,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [0x23] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
+  [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },
+  [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL },
+  [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
 #if 0
-  [0x24] = { "CloneSprite", NULL },
-  [0x25] = { "RemoveSprite", NULL },
-  [0x26] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
   [0x27] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
   [0x28] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
   [0x29] = { "StringLess", NULL },

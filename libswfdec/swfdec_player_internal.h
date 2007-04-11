@@ -136,8 +136,6 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,
 						 gboolean		center,
 						 SwfdecRect *		rect);
-void		swfdec_player_trace		(SwfdecPlayer *		player,
-						 const char *		text);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 SwfdecRootMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,

@@ -1831,41 +1831,24 @@ swfdec_action_enumerate2 (SwfdecAsContext *cx, guint action, const guint8 *data,
   JS_DestroyIdArray (cx, array);
   return JS_TRUE;
 }
+#endif
 
 static void
-swfdec_action_logical_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  void l, r;
+  SwfdecAsValue *val;
+  gboolean l, r;
 
-  l = swfdec_value_to_boolean_5 (cx, cx->fp->sp[-1]);
-  r = swfdec_value_to_boolean_5 (cx, cx->fp->sp[-2]);
+  l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_pop (cx->frame->stack));
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  r = swfdec_as_value_to_boolean (cx, val);
 
-  cx->fp->sp--;
-  if (action == 0x10)
-    cx->fp->sp[-1] = l && r ? JSVAL_TRUE : JSVAL_FALSE;
-  else
-    cx->fp->sp[-1] = l || r ? JSVAL_TRUE : JSVAL_FALSE;
-  return JS_TRUE;
-}
-
-static void
-swfdec_action_logical_7 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  void l, r;
-
-  l = swfdec_value_to_boolean_7 (cx, cx->fp->sp[-1]);
-  r = swfdec_value_to_boolean_7 (cx, cx->fp->sp[-2]);
-
-  cx->fp->sp--;
-  if (action == 0x10)
-    cx->fp->sp[-1] = l && r ? JSVAL_TRUE : JSVAL_FALSE;
-  else
-    cx->fp->sp[-1] = l || r ? JSVAL_TRUE : JSVAL_FALSE;
-  return JS_TRUE;
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, (action == 0x10) ? (l && r) : (l || r));
 }
 
 /*** PRINT FUNCTIONS ***/
 
+#if 0
 static char *
 swfdec_action_print_store_register (guint action, const guint8 *data, guint len)
 {
@@ -2168,9 +2151,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x0e] = { "Equals", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
   [0x0f] = { "Less", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
-  [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
-  [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
 #endif
+  [SWFDEC_AS_ACTION_AND] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
+  [SWFDEC_AS_ACTION_OR] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
   [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
 #if 0
   [0x13] = { "StringEquals", NULL },

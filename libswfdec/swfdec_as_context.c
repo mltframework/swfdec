@@ -133,15 +133,15 @@ swfdec_as_context_remove_strings (gpointer key, gpointer value, gpointer data)
   string = (char *) value;
   /* it doesn't matter that rooted strings aren't destroyed, they're constant */
   if (string[0] & SWFDEC_AS_GC_ROOT) {
-    g_print ("rooted: %s\n", (char *) key);
+    SWFDEC_LOG ("rooted: %s", (char *) key);
     return FALSE;
   } else if (string[0] & SWFDEC_AS_GC_MARK) {
-    g_print ("marked: %s\n", (char *) key);
+    SWFDEC_LOG ("marked: %s", (char *) key);
     string[0] &= ~SWFDEC_AS_GC_MARK;
     return FALSE;
   } else {
     gsize len;
-    g_print ("deleted: %s\n", (char *) key);
+    SWFDEC_LOG ("deleted: %s", (char *) key);
     len = (strlen ((char *) key) + 2);
     swfdec_as_context_unuse_mem (context, len);
     g_slice_free1 (len, value);
@@ -158,11 +158,11 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
   /* we only check for mark here, not root, since this works on destroy, too */
   if (object->flags & SWFDEC_AS_GC_MARK) {
     object->flags &= ~SWFDEC_AS_GC_MARK;
-    g_print ("%s: %s %p\n", (object->flags & SWFDEC_AS_GC_ROOT) ? "rooted" : "marked",
+    SWFDEC_LOG ("%s: %s %p", (object->flags & SWFDEC_AS_GC_ROOT) ? "rooted" : "marked",
 	G_OBJECT_TYPE_NAME (object), object);
     return FALSE;
   } else {
-    g_print ("deleted: %s %p\n", G_OBJECT_TYPE_NAME (object), object);
+    SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (object), object);
     swfdec_as_object_collect (object);
     return TRUE;
   }
@@ -171,7 +171,7 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
 static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
-  g_print (">> collecting garbage\n");
+  SWFDEC_INFO (">> collecting garbage\n");
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
   g_hash_table_foreach_remove (context->strings, 
     swfdec_as_context_remove_strings, context);

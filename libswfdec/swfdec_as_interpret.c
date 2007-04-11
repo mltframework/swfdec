@@ -911,16 +911,14 @@ swfdec_action_not_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d == 0 ? TRUE : FALSE);
 }
 
-#if 0
 static void
 swfdec_action_jump (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   if (len != 2) {
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
-    return JS_FALSE;
+    return;
   }
-  cx->fp->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
-  return JS_TRUE;
+  cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
 }
 
 static void
@@ -930,15 +928,14 @@ swfdec_action_if (SwfdecAsContext *cx, guint action, const guint8 *data, guint l
 
   if (len != 2) {
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
-    return JS_FALSE;
+    return;
   }
-  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  cx->fp->sp--;
+  d = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
   if (d != 0)
-    cx->fp->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
-  return JS_TRUE;
+    cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
 }
 
+#if 0
 static void
 swfdec_action_decrement (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2031,6 +2028,7 @@ swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
   }
   return g_strdup_printf ("GetURL %s %s", url, target);
 }
+#endif
 
 static char *
 swfdec_action_print_if (guint action, const guint8 *data, guint len)
@@ -2051,7 +2049,6 @@ swfdec_action_print_jump (guint action, const guint8 *data, guint len)
   }
   return g_strdup_printf ("Jump %d", GINT16_FROM_LE (*((gint16*) data)));
 }
-#endif
 
 static char *
 swfdec_action_print_push (guint action, const guint8 *data, guint len)
@@ -2341,14 +2338,16 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   /* version 4 */
   [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
+  [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
 #if 0
-  [0x99] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
   [0x9a] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
   /* version 5 */
   [0x9b] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
   /* version 4 */
-  [0x9d] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
-  [0x9e] = { "Call", NULL },
+#endif
+  [SWFDEC_AS_ACTION_IF] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
+  [SWFDEC_AS_ACTION_CALL] = { "Call", NULL },
+#if 0
   [0x9f] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }
 #endif
 };

@@ -487,7 +487,7 @@ command_break (SwfdecPlayerManager *manager, const char *arg)
   }
   next = parse_string (arg, &str);
   if (next) {
-    if (strcasecmp (str, "start") == 0) {
+    if (g_ascii_strcasecmp (str, "start") == 0) {
       swfdec_debugger_foreach_script (SWFDEC_DEBUGGER (manager->player), 
 	  set_breakpoint, manager->player);
       swfdec_player_manager_output (manager, "set breakpoint at start of every script");
@@ -533,25 +533,6 @@ command_delete (SwfdecPlayerManager *manager, const char *arg)
   }
 }
 
-static void
-command_stack (SwfdecPlayerManager *manager, const char *arg)
-{
-  JSStackFrame *frame = NULL;
-  guint i, min, max;
-
-  if (!swfdec_player_manager_get_interrupted (manager)) {
-    swfdec_player_manager_error (manager, "Not interrupted");
-    return;
-  }
-  JS_FrameIterator (manager->player->jscx, &frame);
-  min = 1;
-  max = frame->sp - frame->spbase;
-  for (i = min; i <= max; i++) {
-    const char *s = swfdec_js_to_string (manager->player->jscx, frame->sp[-i]);
-    swfdec_player_manager_output (manager, "%2u: %s", i, s);
-  }
-}
-
 typedef struct {
   SwfdecPlayerManager *manager;
   const char *	       string;
@@ -582,6 +563,7 @@ command_find (SwfdecPlayerManager *manager, const char *arg)
   swfdec_debugger_foreach_script (SWFDEC_DEBUGGER (manager->player), do_find, &data);
 }
 
+#if 0
 static void
 command_enumerate (SwfdecPlayerManager *manager, const char *arg)
 {
@@ -623,6 +605,7 @@ command_enumerate (SwfdecPlayerManager *manager, const char *arg)
   }
   JS_DestroyIdArray (manager->player->jscx, array);
 }
+#endif
 
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
@@ -641,9 +624,10 @@ struct {
   { "delete",	command_delete,		"delete a breakpoint" },
   { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
   { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
-  { "stack",	command_stack,		"print the arguments on the stack" },
   { "find",	command_find,		"find the given argument verbatim in all scripts" },
+#if 0
   { "enumerate",command_enumerate,    	"enumerate all properties of the given object" },
+#endif
 };
 
 static void

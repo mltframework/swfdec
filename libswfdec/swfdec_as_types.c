@@ -178,3 +178,36 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
   return swfdec_as_value_to_number (context, value);
 }
 
+/**
+ * swfdec_as_value_to_object:
+ * @context: a #SwfdecAsContext
+ * @value: value to convert
+ *
+ * Converts a given value to its representation as an object. The object 
+ * representation for primitive types is a wrapper object of the corresponding 
+ * class (Number for numbers, String for strings, Boolean for bools). If the 
+ * value does not have an object representing it, such as undefined and null 
+ * values, %NULL is returned.
+ *
+ * Returns: object representing @value or %NULL.
+ **/
+SwfdecAsObject *
+swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  switch (value->type) {
+    case SWFDEC_TYPE_AS_UNDEFINED:
+    case SWFDEC_TYPE_AS_NULL:
+      return NULL;
+    case SWFDEC_TYPE_AS_BOOLEAN:
+    case SWFDEC_TYPE_AS_NUMBER:
+    case SWFDEC_TYPE_AS_STRING:
+      SWFDEC_ERROR ("FIXME: implement conversion to object");
+      return NULL;
+    case SWFDEC_TYPE_AS_ASOBJECT:
+      return SWFDEC_AS_VALUE_GET_OBJECT (value);
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
+}
+

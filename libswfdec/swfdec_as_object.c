@@ -348,6 +348,7 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     return;
   swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
+  swfdec_as_context_run (object->context);
 }
 
 gboolean

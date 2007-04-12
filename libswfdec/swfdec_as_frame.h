@@ -40,6 +40,7 @@ struct _SwfdecAsFrame {
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   char *		function_name;	/* name of function */
+  SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
   /* normal execution */
   SwfdecScript *	script;		/* script being executed */
   SwfdecAsObject *	scope;		/* scope object coming after this: an Object */

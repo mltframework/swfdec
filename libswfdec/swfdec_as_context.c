@@ -387,7 +387,7 @@ start:
 
   while (TRUE) {
     if (pc == endpc) {
-      swfdec_as_context_return (context, NULL);
+      swfdec_as_context_return (context);
       goto start;
     }
     if (pc < startpc || pc >= endpc) {
@@ -471,19 +471,12 @@ error:
 }
 
 void
-swfdec_as_context_return (SwfdecAsContext *context, SwfdecAsValue *retval)
+swfdec_as_context_return (SwfdecAsContext *context)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->frame != NULL);
-  g_return_if_fail (retval == NULL || SWFDEC_IS_AS_VALUE (retval));
 
   context->frame = context->frame->next;
-  swfdec_as_stack_ensure_left (context->frame->stack, 1);
-  if (retval) {
-    *swfdec_as_stack_push (context->frame->stack) = *retval;
-  } else {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (context->frame->stack));
-  }
 }
 
 void

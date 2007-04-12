@@ -66,7 +66,9 @@ SwfdecAsFunction *	swfdec_as_function_new_native	(SwfdecAsContext *	context,
 
 void			swfdec_as_function_call		(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
-							 guint			n_args);
+							 guint			n_args,
+							 SwfdecAsValue *	args,
+							 SwfdecAsValue *	return_value);
 
 
 

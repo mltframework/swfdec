@@ -1633,22 +1633,23 @@ swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     return JS_TRUE;
   return JS_DeleteProperty (cx, pobj, name);
 }
+#endif
 
 static void
 swfdec_action_store_register (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   if (len != 1) {
     SWFDEC_ERROR ("StoreRegister action requires a length of 1, but got %u", len);
-    return JS_FALSE;
+    return;
   }
   if (!swfdec_action_has_register (cx, *data)) {
     SWFDEC_ERROR ("Cannot store into register %u, not enough registers", (guint) *data);
-    return JS_FALSE;
+    return;
   }
-  cx->fp->vars[*data] = cx->fp->sp[-1];
-  return JS_TRUE;
+  cx->frame->registers[*data] = *swfdec_as_stack_peek (cx->frame->stack, 1);
 }
 
+#if 0
 static void
 swfdec_action_modulo_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1839,7 +1840,6 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
 /*** PRINT FUNCTIONS ***/
 
-#if 0
 static char *
 swfdec_action_print_store_register (guint action, const guint8 *data, guint len)
 {
@@ -1849,7 +1849,6 @@ swfdec_action_print_store_register (guint action, const guint8 *data, guint len)
   }
   return g_strdup_printf ("StoreRegister %u", (guint) *data);
 }
-#endif
 
 static char *
 swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
@@ -2244,9 +2243,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
 #if 0
   [0x83] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
+#endif
   /* version 5 */
   [0x87] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, { NULL, NULL, swfdec_action_store_register, swfdec_action_store_register, swfdec_action_store_register } },
-#endif
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
   /* version 3 */
   [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },

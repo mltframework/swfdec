@@ -882,27 +882,25 @@ swfdec_action_if (SwfdecAsContext *cx, guint action, const guint8 *data, guint l
     cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
 }
 
-#if 0
 static void
 swfdec_action_decrement (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
+  SwfdecAsValue *val;
 
-  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  d--;
-  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_as_value_to_number (cx, val) + 1);
 }
 
 static void
 swfdec_action_increment (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
+  SwfdecAsValue *val;
 
-  d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  d++;
-  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_as_value_to_number (cx, val) + 1);
 }
 
+#if 0
 static void
 swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2202,10 +2200,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_SWAP] = { "Swap", NULL, 2, 2, { NULL, NULL, swfdec_action_swap, swfdec_action_swap, swfdec_action_swap } },
   [SWFDEC_AS_ACTION_GET_MEMBER] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
   [SWFDEC_AS_ACTION_SET_MEMBER] = { "SetMember", NULL, 3, 0, { NULL, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member } },
-#if 0
-  [0x50] = { "Increment", NULL, 1, 1, { NULL, NULL, swfdec_action_increment, swfdec_action_increment, swfdec_action_increment } },
-  [0x51] = { "Decrement", NULL, 1, 1, { NULL, NULL, swfdec_action_decrement, swfdec_action_decrement, swfdec_action_decrement } },
-#endif
+  [SWFDEC_AS_ACTION_INCREMENT] = { "Increment", NULL, 1, 1, { NULL, NULL, swfdec_action_increment, swfdec_action_increment, swfdec_action_increment } },
+  [SWFDEC_AS_ACTION_DECREMENT] = { "Decrement", NULL, 1, 1, { NULL, NULL, swfdec_action_decrement, swfdec_action_decrement, swfdec_action_decrement } },
   [SWFDEC_AS_ACTION_CALL_METHOD] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
 #if 0
   [0x53] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },

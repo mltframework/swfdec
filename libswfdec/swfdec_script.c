@@ -129,15 +129,16 @@ swfdec_script_print_action (guint action, const guint8 *data, guint len)
 
   if (action & 0x80) {
     if (spec->print == NULL) {
-      SWFDEC_ERROR ("action %u %s has no print statement",
-	  action, spec->name ? spec->name : "Unknown");
-      return NULL;
+      SWFDEC_ERROR ("action %u 0x%02X %s has no print statement",
+	  action, action, spec->name ? spec->name : "Unknown");
+      return g_strdup_printf ("erroneous action %s",
+	  spec->name ? spec->name : "Unknown");
     }
     return spec->print (action, data, len);
   } else {
     if (spec->name == NULL) {
       SWFDEC_ERROR ("action %u is unknown", action);
-      return NULL;
+      return g_strdup_printf ("unknown Action 0x%02X", action);
     }
     return g_strdup (spec->name);
   }

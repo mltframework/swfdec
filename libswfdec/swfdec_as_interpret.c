@@ -50,13 +50,18 @@
 static SwfdecMovie *
 swfdec_action_get_target (SwfdecAsContext *context)
 {
-  SwfdecAsObject *object = context->frame->scope;
+  SwfdecAsObject *target = context->frame->target;
 
-  if (!SWFDEC_IS_MOVIE (object)) {
+  if (target == NULL) {
+    target = SWFDEC_AS_OBJECT (context->frame);
+    while (SWFDEC_IS_AS_FRAME (target))
+      target = SWFDEC_AS_FRAME (target)->scope;
+  }
+  if (!SWFDEC_IS_MOVIE (target)) {
     SWFDEC_ERROR ("no valid target");
     return NULL;
   }
-  return SWFDEC_MOVIE (object);
+  return SWFDEC_MOVIE (target);
 }
 
 #if 0

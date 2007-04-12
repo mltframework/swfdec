@@ -313,12 +313,41 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
     swfdec_as_context_run (object->context);
 }
 
+/**
+ * swfdec_as_object_call:
+ * @object: a #SwfdecAsObject
+ * @name: garbage-collected string naming the function to call. 
+ * @argc: number of arguments to provide to function
+ * @argv: arguments or %NULL when @argc is 0
+ * @return_value: location to take the return value of the call or %NULL to 
+ *                ignore the return value.
+ *
+ * Calls the function named @name on the given object. This function is 
+ * essentially equal to the folloeing Actionscript code: 
+ * <informalexample><programlisting>
+ * @return_value = @object.@name (@argv[0], ..., @argv[argc-1]);
+ * </programlisting></informalexample>
+ **/
 void
-swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, SwfdecAsValue *argv)
+swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, 
+    SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
+  SwfdecAsValue tmp;
+  SwfdecAsFunction *fun;
+
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (argc == 0 || argv != NULL);
+
+  if (return_value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+  swfdec_as_object_get (object, name, &tmp);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
+    return;
+  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
+  if (!SWFDEC_IS_AS_FUNCTION (fun))
+    return;
+  swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
 }
 
 gboolean

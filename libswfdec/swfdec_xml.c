@@ -47,7 +47,7 @@ swfdec_xml_ondata (SwfdecXml *xml)
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (xml), SWFDEC_AS_STR_ON_DATA, 1, &val);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (xml), SWFDEC_AS_STR_ON_DATA, 1, &val, NULL);
 }
 
 static void

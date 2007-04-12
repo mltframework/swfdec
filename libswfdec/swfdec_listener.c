@@ -135,7 +135,7 @@ swfdec_listener_execute	(SwfdecListener *listener, const char *event_name)
 	listener->entries[i].removed = FALSE;
       }
       listener->entries[i].blocked_by = NULL;
-      swfdec_as_object_call (obj, event, 0, NULL);
+      swfdec_as_object_call (obj, event, 0, NULL, NULL);
     }
   }
 }

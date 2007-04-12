@@ -410,7 +410,7 @@ swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
   }
   name = swfdec_event_type_get_name (condition);
   if (name != NULL)
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
 }
 
 static void

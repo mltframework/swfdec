@@ -98,6 +98,7 @@ const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("movieclip"),
   SWFDEC_AS_CONSTANT_STRING ("function"),
   SWFDEC_AS_CONSTANT_STRING ("object"),
+  SWFDEC_AS_CONSTANT_STRING ("toString"),
   /* add more here */
   NULL
 };
@@ -138,8 +139,15 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	return ret;
       }
     case SWFDEC_TYPE_AS_ASOBJECT:
-      SWFDEC_ERROR ("FIXME");
-      return SWFDEC_AS_STR_OBJECT_OBJECT;
+      {
+	SwfdecAsValue ret;
+	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_TOSTRING,
+	    0, NULL, &ret);
+	if (SWFDEC_AS_VALUE_IS_STRING (&ret))
+	  return SWFDEC_AS_VALUE_GET_STRING (&ret);
+	else
+	  return SWFDEC_AS_STR_OBJECT_OBJECT;
+      }
     default:
       g_assert_not_reached ();
       return SWFDEC_AS_STR_EMPTY;

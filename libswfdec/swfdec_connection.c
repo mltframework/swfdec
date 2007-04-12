@@ -76,7 +76,7 @@ swfdec_connection_onstatus (SwfdecConnection *conn, const char *code,
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&value, info);
   swfdec_as_object_unroot (info);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (conn), SWFDEC_AS_STR_STATUS, 1, &value);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (conn), SWFDEC_AS_STR_STATUS, 1, &value, NULL);
 }
 
 SwfdecConnection *

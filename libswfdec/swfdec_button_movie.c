@@ -109,7 +109,7 @@ swfdec_button_movie_execute (SwfdecButtonMovie *movie,
     swfdec_event_list_execute (movie->button->events, 
 	SWFDEC_AS_OBJECT (SWFDEC_MOVIE (movie)->parent), condition, 0);
   name = swfdec_button_condition_get_name (condition);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
 }
 
 #define CONTENT_IN_FRAME(content, frame) \

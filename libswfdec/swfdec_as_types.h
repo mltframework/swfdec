@@ -165,6 +165,7 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR_MOVIECLIP		SWFDEC_AS_STR_CONSTANT(65)
 #define SWFDEC_AS_STR_FUNCTION		SWFDEC_AS_STR_CONSTANT(66)
 #define SWFDEC_AS_STR_OBJECT		SWFDEC_AS_STR_CONSTANT(67)
+#define SWFDEC_AS_STR_TOSTRING		SWFDEC_AS_STR_CONSTANT(68)
 
 /* all existing actions */
 typedef enum {

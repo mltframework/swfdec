@@ -130,7 +130,8 @@ gboolean	swfdec_as_object_has_function	(SwfdecAsObject *       object,
 void		swfdec_as_object_call		(SwfdecAsObject *       object,
 						 const char *		name,
 						 guint			argc,
-						 SwfdecAsValue *	argv);
+						 SwfdecAsValue *	argv,
+						 SwfdecAsValue *	return_value);
 
 G_END_DECLS
 #endif

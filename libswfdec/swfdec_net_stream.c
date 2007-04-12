@@ -46,7 +46,7 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   swfdec_as_object_set (object, SWFDEC_AS_STR_LEVEL, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_ON_STATUS, 1, &val);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_ON_STATUS, 1, &val, NULL);
 }
 
 static void swfdec_net_stream_update_playing (SwfdecNetStream *stream);
@@ -113,7 +113,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 	SWFDEC_ERROR ("could not parse data tag");
       } else {
 	swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), 
-	    SWFDEC_AS_VALUE_GET_STRING (&name), 1, &value);
+	    SWFDEC_AS_VALUE_GET_STRING (&name), 1, &value, NULL);
       }
     }
   }

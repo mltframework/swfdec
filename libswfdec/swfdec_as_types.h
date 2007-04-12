@@ -25,15 +25,16 @@
 G_BEGIN_DECLS
 
 /* fundamental types */
-#define SWFDEC_TYPE_AS_UNDEFINED (0)
-#define SWFDEC_TYPE_AS_BOOLEAN	(1)
-/* #define SWFDEC_AS_INT	(2)  not defined yet, might be useful as an optimization */
-#define SWFDEC_TYPE_AS_NUMBER	(3)
-#define SWFDEC_TYPE_AS_STRING	(4)
-#define SWFDEC_TYPE_AS_NULL	(5)
-#define SWFDEC_TYPE_AS_ASOBJECT	(6)
+typedef enum {
+  SWFDEC_AS_TYPE_UNDEFINED = 0,
+  SWFDEC_AS_TYPE_BOOLEAN,
+  SWFDEC_AS_TYPE_INT, /* unimplemented, but reserved if someone wants it */
+  SWFDEC_AS_TYPE_NUMBER,
+  SWFDEC_AS_TYPE_STRING,
+  SWFDEC_AS_TYPE_NULL,
+  SWFDEC_AS_TYPE_OBJECT
+} SwfdecAsType;
 
-typedef guint8 SwfdecAsType;
 typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
@@ -56,41 +57,41 @@ struct _SwfdecAsValue {
 
 #define SWFDEC_IS_AS_VALUE(val) ((val)->type <= SWFDEC_TYPE_AS_OBJECT)
 
-#define SWFDEC_AS_VALUE_IS_UNDEFINED(val) ((val)->type == SWFDEC_TYPE_AS_UNDEFINED)
-#define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_TYPE_AS_UNDEFINED
+#define SWFDEC_AS_VALUE_IS_UNDEFINED(val) ((val)->type == SWFDEC_AS_TYPE_UNDEFINED)
+#define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_AS_TYPE_UNDEFINED
 
-#define SWFDEC_AS_VALUE_IS_BOOLEAN(val) ((val)->type == SWFDEC_TYPE_AS_BOOLEAN)
+#define SWFDEC_AS_VALUE_IS_BOOLEAN(val) ((val)->type == SWFDEC_AS_TYPE_BOOLEAN)
 #define SWFDEC_AS_VALUE_GET_BOOLEAN(val) ((val)->value.boolean)
 #define SWFDEC_AS_VALUE_SET_BOOLEAN(val,b) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->type = SWFDEC_TYPE_AS_BOOLEAN; \
+  (__val)->type = SWFDEC_AS_TYPE_BOOLEAN; \
   (__val)->value.boolean = b; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_TYPE_AS_NUMBER)
+#define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_AS_TYPE_NUMBER)
 #define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number)
 #define SWFDEC_AS_VALUE_SET_NUMBER(val,d) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->type = SWFDEC_TYPE_AS_NUMBER; \
+  (__val)->type = SWFDEC_AS_TYPE_NUMBER; \
   (__val)->value.number = d; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_TYPE_AS_STRING)
+#define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->type = SWFDEC_TYPE_AS_STRING; \
+  (__val)->type = SWFDEC_AS_TYPE_STRING; \
   (__val)->value.string = s; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_IS_NULL(val) ((val)->type == SWFDEC_TYPE_AS_NULL)
-#define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_TYPE_AS_NULL
+#define SWFDEC_AS_VALUE_IS_NULL(val) ((val)->type == SWFDEC_AS_TYPE_NULL)
+#define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_AS_TYPE_NULL
 
-#define SWFDEC_AS_VALUE_IS_OBJECT(val) ((val)->type == SWFDEC_TYPE_AS_ASOBJECT)
+#define SWFDEC_AS_VALUE_IS_OBJECT(val) ((val)->type == SWFDEC_AS_TYPE_OBJECT)
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->type = SWFDEC_TYPE_AS_ASOBJECT; \
+  (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
   (__val)->value.object = o; \
 } G_STMT_END
 

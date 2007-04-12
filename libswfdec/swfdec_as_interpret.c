@@ -1062,20 +1062,20 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   rtype = rval->type;
   if (ltype == rtype) {
     switch (ltype) {
-      case SWFDEC_TYPE_AS_UNDEFINED:
-      case SWFDEC_TYPE_AS_NULL:
+      case SWFDEC_AS_TYPE_UNDEFINED:
+      case SWFDEC_AS_TYPE_NULL:
 	cond = TRUE;
 	break;
-      case SWFDEC_TYPE_AS_BOOLEAN:
+      case SWFDEC_AS_TYPE_BOOLEAN:
 	cond = SWFDEC_AS_VALUE_GET_BOOLEAN (lval) == SWFDEC_AS_VALUE_GET_BOOLEAN (rval);
 	break;
-      case SWFDEC_TYPE_AS_NUMBER:
+      case SWFDEC_AS_TYPE_NUMBER:
 	cond = SWFDEC_AS_VALUE_GET_NUMBER (lval) == SWFDEC_AS_VALUE_GET_NUMBER (rval);
 	break;
-      case SWFDEC_TYPE_AS_STRING:
+      case SWFDEC_AS_TYPE_STRING:
 	cond = SWFDEC_AS_VALUE_GET_STRING (lval) == SWFDEC_AS_VALUE_GET_STRING (rval);
 	break;
-      case SWFDEC_TYPE_AS_ASOBJECT:
+      case SWFDEC_AS_TYPE_OBJECT:
 	cond = SWFDEC_AS_VALUE_GET_OBJECT (lval) == SWFDEC_AS_VALUE_GET_OBJECT (rval);
 	break;
       default:
@@ -1084,9 +1084,9 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 	break;
     }
   } else {
-    if (ltype == SWFDEC_TYPE_AS_UNDEFINED || ltype == SWFDEC_TYPE_AS_NULL) {
-      cond = (rtype == SWFDEC_TYPE_AS_UNDEFINED || rtype == SWFDEC_TYPE_AS_NULL);
-    } else if (rtype == SWFDEC_TYPE_AS_UNDEFINED || rtype == SWFDEC_TYPE_AS_NULL) {
+    if (ltype == SWFDEC_AS_TYPE_UNDEFINED || ltype == SWFDEC_AS_TYPE_NULL) {
+      cond = (rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL);
+    } else if (rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL) {
       cond = FALSE;
     } else {
       SWFDEC_WARNING ("FIXME: test equality operations between non-equal types");
@@ -1719,22 +1719,22 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
   val = swfdec_as_stack_peek (cx->frame->stack, 1);
   switch (val->type) {
-    case SWFDEC_TYPE_AS_NUMBER:
+    case SWFDEC_AS_TYPE_NUMBER:
       type = SWFDEC_AS_STR_NUMBER;
       break;
-    case SWFDEC_TYPE_AS_BOOLEAN:
+    case SWFDEC_AS_TYPE_BOOLEAN:
       type = SWFDEC_AS_STR_BOOLEAN;
       break;
-    case SWFDEC_TYPE_AS_STRING:
+    case SWFDEC_AS_TYPE_STRING:
       type = SWFDEC_AS_STR_STRING;
       break;
-    case SWFDEC_TYPE_AS_UNDEFINED:
+    case SWFDEC_AS_TYPE_UNDEFINED:
       type = SWFDEC_AS_STR_UNDEFINED;
       break;
-    case SWFDEC_TYPE_AS_NULL:
+    case SWFDEC_AS_TYPE_NULL:
       type = SWFDEC_AS_STR_NULL;
       break;
-    case SWFDEC_TYPE_AS_ASOBJECT:
+    case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
 	if (SWFDEC_IS_MOVIE (obj)) {

@@ -104,11 +104,12 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
-  SWFDEC_DEBUG ("new frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
   frame->next = context->frame;
   context->frame = frame;
   frame->script = swfdec_script_ref (script);
+  frame->function_name = script->name;
+  SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
   frame->pc = script->buffer->data;
   frame->stack = stack;
   frame->scope = thisp;

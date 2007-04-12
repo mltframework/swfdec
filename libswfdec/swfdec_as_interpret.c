@@ -797,48 +797,45 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   }
 }
 
-#if 0
 static void
 swfdec_action_new_comparison_6 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval lval, rval;
   double d, d2;
 
-  rval = cx->fp->sp[-1];
-  lval = cx->fp->sp[-2];
-  cx->fp->sp--;
-  d = swfdec_value_to_number (cx, lval);
-  d2 = swfdec_value_to_number (cx, rval);
+  d2 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  swfdec_as_stack_pop (cx->frame->stack);
   if (action == 0x48)
-    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (d < d2);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d < d2);
   else 
-    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (d > d2);
-  return JS_TRUE;
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d > d2);
 }
 
 static void
 swfdec_action_new_comparison_7 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval lval, rval;
+  SwfdecAsValue *lval, *rval;
 
-  rval = cx->fp->sp[-1];
-  lval = cx->fp->sp[-2];
-  cx->fp->sp--;
-  if (JSVAL_IS_VOID (rval) || JSVAL_IS_VOID (lval)) {
-    cx->fp->sp[-1] = JSVAL_VOID;
-  } else if (JSVAL_IS_STRING(lval) && JSVAL_IS_STRING(rval)) {
-    int comp = JS_CompareStrings (JSVAL_TO_STRING (lval), JSVAL_TO_STRING (rval));
-    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (action == 0x48 ? comp < 0 : comp > 0);
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (rval) || SWFDEC_AS_VALUE_IS_UNDEFINED (lval)) {
+    swfdec_as_stack_pop (cx->frame->stack);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1));
+  } else if (SWFDEC_AS_VALUE_IS_STRING (rval) || SWFDEC_AS_VALUE_IS_STRING (lval)) {
+    int comp = strcmp (SWFDEC_AS_VALUE_GET_STRING (rval), SWFDEC_AS_VALUE_GET_STRING (lval));
+    swfdec_as_stack_pop (cx->frame->stack);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), action == 0x48 ? comp < 0 : comp > 0);
   } else {
     double d, d2;
-    if (!JS_ValueToNumber(cx, lval, &d) ||
-        !JS_ValueToNumber(cx, rval, &d2))
-	return JS_FALSE;
-    cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (action == 0x48 ? d < d2 : d > d2);
+    d2 = swfdec_as_value_to_number (cx, rval);
+    d = swfdec_as_value_to_number (cx, lval);
+    swfdec_as_stack_pop (cx->frame->stack);
+    if (action == 0x48)
+      SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d < d2);
+    else 
+      SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d > d2);
   }
-  return JS_TRUE;
 }
-#endif
 
 static void
 swfdec_action_not_4 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2191,9 +2188,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x46] = { "Enumerate", NULL },
 #endif
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
-#if 0
-  [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
-#endif
+  [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
@@ -2218,13 +2213,15 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   /* version 6 */
   [0x66] = { "StrictEquals", NULL },
-  [0x67] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
-  [0x68] = { "StringGreater", NULL },
+#endif
+  [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
+  [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */
+#if 0
   [0x69] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
+#endif
 
   /* version 3 */
-#endif
   [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
 #if 0
   [0x83] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },

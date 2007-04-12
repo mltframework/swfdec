@@ -2134,8 +2134,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_PREVIOUS_FRAME] = { "PreviousFrame", NULL, 0, 0, { swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame } },
   [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, { swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play } },
   [SWFDEC_AS_ACTION_STOP] = { "Stop", NULL, 0, 0, { swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop } },
+  [SWFDEC_AS_ACTION_TOGGLE_QUALITY] = { "ToggleQuality", NULL },
 #if 0
-  [0x08] = { "ToggleQuality", NULL },
   [0x09] = { "StopSounds", NULL, 0, 0, { swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds } },
 #endif
   /* version 4 */
@@ -2150,11 +2150,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_AND] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
   [SWFDEC_AS_ACTION_OR] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
   [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
-#if 0
-  [0x13] = { "StringEquals", NULL },
-  [0x14] = { "StringLength", NULL },
-  [0x15] = { "StringExtract", NULL },
-#endif
+  [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL },
+  [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL },
+  [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL },
   [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
 #if 0
   [0x18] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
@@ -2165,31 +2163,33 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
 #endif
-  [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
-  [0x23] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
+  [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
+  [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
   [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },
   [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL },
   [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
 #if 0
   [0x27] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
   [0x28] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
-  [0x29] = { "StringLess", NULL },
-  /* version 7 */
-  [0x2a] = { "Throw", NULL },
-  [0x2b] = { "Cast", NULL },
-  [0x2c] = { "Implements", NULL },
 #endif
+  [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL },
+  /* version 7 */
+  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL },
+  [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL },
+  [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL },
   /* version 4 */
   [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
+  [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },
+  [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL },
+  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL },
 #if 0
-  [0x31] = { "MBStringLength", NULL },
-  [0x32] = { "CharToAscii", NULL },
-  [0x33] = { "AsciiToChar", NULL },
   [0x34] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
-  [0x35] = { "MBStringExtract", NULL },
-  [0x36] = { "MBCharToAscii", NULL },
-  [0x37] = { "MVAsciiToChar", NULL },
+#endif
+  [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL },
+  [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
+  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL },
   /* version 5 */
+#if 0
   [0x3a] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
   [0x3b] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
   [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
@@ -2206,8 +2206,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_TYPE_OF] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
 #if 0
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
-  [0x46] = { "Enumerate", NULL },
 #endif
+  [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL },
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
   [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
@@ -2232,9 +2232,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x63] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   [0x64] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  /* version 6 */
-  [0x66] = { "StrictEquals", NULL },
 #endif
+  /* version 6 */
+  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL },
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */
@@ -2259,10 +2259,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
   /* version 7 */
   [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
-  [0x8f] = { "Try", NULL },
-  /* version 5 */
-  [0x94] = { "With", NULL },
 #endif
+  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL },
+  /* version 5 */
+  [SWFDEC_AS_ACTION_WITH] = { "With", NULL },
   /* version 4 */
   [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
   [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },

@@ -48,7 +48,7 @@ swfdec_as_function_mark (SwfdecAsObject *object)
   SwfdecAsFunction *function = SWFDEC_AS_FUNCTION (object);
 
   if (function->scope)
-    swfdec_as_object_mark (function->scope);
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (function->scope));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_function_parent_class)->mark (object);
 }
@@ -70,17 +70,19 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new (SwfdecAsObject *scope, SwfdecScript *script)
+swfdec_as_function_new (SwfdecAsFrame *scope, SwfdecScript *script)
 {
   SwfdecAsFunction *fun;
+  SwfdecAsContext *context;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (scope), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (scope), NULL);
   g_return_val_if_fail (script != NULL, NULL);
 
-  if (!swfdec_as_context_use_mem (scope->context, sizeof (SwfdecAsFunction)))
+  context = SWFDEC_AS_OBJECT (scope)->context;
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsFunction)))
     return NULL;
   fun = g_object_new (SWFDEC_TYPE_AS_FUNCTION, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), scope->context, sizeof (SwfdecAsFunction));
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsFunction));
   fun->scope = scope;
   fun->script = script;
 
@@ -126,27 +128,17 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     n_args = 0;
   }
   SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+  frame->argc = n_args;
+  frame->argv = args;
+  frame->return_value = return_value;
+  frame->function = function;
   /* now do different things depending on if we're a native function or not */
   if (function->native) {
-    if (n_args < function->min_args) {
-      SwfdecAsStack *stack = context->frame->stack;
-      if (n_args == 0) {
-	swfdec_as_stack_ensure_size (stack, 1);
-	SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (stack));
-      } else {
-	stack->cur -= (n_args - 1);
-	SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (stack, 1));
-      }
-      return;
-    }
     frame = swfdec_as_frame_new_native (thisp);
     g_assert (function->name);
     frame->function_name = function->name;
-    function->native (context, thisp, n_args, args, return_value);
-    swfdec_as_context_return (context);
   } else {
     frame = swfdec_as_frame_new (thisp, function->script);
-    frame->return_value = return_value;
     /* FIXME: do the preloading here */
   }
 }

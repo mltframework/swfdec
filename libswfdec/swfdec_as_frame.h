@@ -39,11 +39,15 @@ struct _SwfdecAsFrame {
   SwfdecAsObject	object;
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
+  SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
+  /* debugging */
   char *		function_name;	/* name of function */
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
+  guint			argc;		/* number of arguments */
+  SwfdecAsValue *	argv;		/* arguments */
   /* normal execution */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsObject *	scope;		/* scope object coming after this: an Object */
+  SwfdecAsObject *	scope;		/* next scope object or this for native functions */
   SwfdecAsObject *	target;		/* target to use instead of last object in scope chain */
   SwfdecAsObject *	var_object;	/* new variables go here */
   SwfdecAsValue *	registers;	/* the registers */

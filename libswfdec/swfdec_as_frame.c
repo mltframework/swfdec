@@ -59,8 +59,14 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   swfdec_as_object_mark (frame->var_object);
   if (frame->target)
     swfdec_as_object_mark (frame->target);
+  if (frame->function)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->function));
   for (i = 0; i < frame->n_registers; i++) {
     swfdec_as_value_mark (&frame->registers[i]);
+  }
+  /* FIXME: do we want this? */
+  for (i = 0; i < frame->argc; i++) {
+    swfdec_as_value_mark (&frame->argv[i]);
   }
   swfdec_as_stack_mark (frame->stack);
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);

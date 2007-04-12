@@ -24,6 +24,7 @@
 #include <string.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
+#include "swfdec_as_function.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
@@ -353,7 +354,7 @@ swfdec_as_context_new (void)
 void
 swfdec_as_context_run (SwfdecAsContext *context)
 {
-  SwfdecAsFrame *frame;
+  SwfdecAsFrame *frame, *last_frame;
   SwfdecAsStack *stack;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
@@ -368,15 +369,26 @@ swfdec_as_context_run (SwfdecAsContext *context)
   void (* step) (SwfdecAsContext *context);
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  if (context->frame == NULL)
+    return;
 
   klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
   step = klass->step;
 
+  last_frame = context->last_frame;
+  context->last_frame = context->frame->next;
 start:
   /* setup data */
   frame = context->frame;
-  if (frame == NULL)
-    return;
+  if (frame == context->last_frame)
+    goto out;
+  if (frame->function && frame->function->native) {
+    if (frame->argc >= frame->function->min_args) {
+      frame->function->native (context, frame->scope, frame->argc, frame->argv, frame->return_value);
+    }
+    swfdec_as_context_return (context);
+    goto start;
+  }
   script = frame->script;
   stack = frame->stack;
   version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);
@@ -472,6 +484,8 @@ start:
   }
 
 error:
+out:
+  context->last_frame = last_frame;
   return;
 }
 

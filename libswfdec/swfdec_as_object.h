@@ -110,6 +110,14 @@ void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const SwfdecAsValue *	variable);
 SwfdecAsObject *swfdec_as_object_find_variable	(SwfdecAsObject *	object,
 						 const SwfdecAsValue *	variable);
+void		swfdec_as_object_set_variable_flags
+						(SwfdecAsObject *       object,
+						 const SwfdecAsValue *	variable,
+						 SwfdecAsVariableFlag	flags);
+void		swfdec_as_object_unset_variable_flags
+						(SwfdecAsObject *       object,
+						 const SwfdecAsValue *	variable,
+						 SwfdecAsVariableFlag	flags);
 
 /* shortcuts, you probably don't want to bind them */
 #define swfdec_as_object_set(object, name, value) G_STMT_START { \
@@ -122,6 +130,21 @@ SwfdecAsObject *swfdec_as_object_find_variable	(SwfdecAsObject *	object,
   SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
   swfdec_as_object_get_variable ((object), &__variable, (value)); \
 }G_STMT_END
+#define swfdec_as_object_set_flags(object, name, flags) G_STMT_START { \
+  SwfdecAsValue __variable; \
+  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
+  swfdec_as_object_set_variable_flags ((object), &__variable, (flags)); \
+}G_STMT_END
+#define swfdec_as_object_unset_flags(object, name, flags) G_STMT_START { \
+  SwfdecAsValue __variable; \
+  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
+  swfdec_as_object_set_variable_flags ((object), &__variable, (flags)); \
+}G_STMT_END
+
+SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
+						 const char *		name,
+						 SwfdecAsNative		native,
+						 guint			min_args);
 
 void		swfdec_as_object_run		(SwfdecAsObject *       object,
 						 SwfdecScript *		script);
@@ -132,6 +155,7 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 						 guint			argc,
 						 SwfdecAsValue *	argv,
 						 SwfdecAsValue *	return_value);
+						 
 
 G_END_DECLS
 #endif

@@ -296,6 +296,87 @@ swfdec_as_object_find_variable (SwfdecAsObject *object,
 }
 
 /**
+ * swfdec_as_object_set_variable_flags:
+ * @object: a #SwfdecAsObject
+ * @variable: the variable to modify
+ * @flags: flags to set
+ *
+ * Sets the given flags for the given variable.
+ **/
+void
+swfdec_as_object_set_variable_flags (SwfdecAsObject *object, 
+    const SwfdecAsValue *variable, SwfdecAsVariableFlag flags)
+{
+  SwfdecAsVariable *var;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) != 0);
+
+  var = swfdec_as_object_lookup (object, variable, FALSE);
+  g_return_if_fail (var != NULL);
+  var->flags |= flags;
+}
+
+/**
+ * swfdec_as_object_unset_variable_flags:
+ * @object: a #SwfdecAsObject
+ * @variable: the variable to modify
+ * @flags: flags to unset
+ *
+ * Unsets the given flags for the given variable.
+ **/
+void
+swfdec_as_object_unset_variable_flags (SwfdecAsObject *object,
+    const SwfdecAsValue *variable, SwfdecAsVariableFlag flags)
+{
+  SwfdecAsVariable *var;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) != 0);
+
+  var = swfdec_as_object_lookup (object, variable, FALSE);
+  g_return_if_fail (var != NULL);
+  var->flags &= ~flags;
+}
+
+/*** SIMPLIFICATIONS ***/
+
+/**
+ * swfdec_as_object_add_function:
+ * @object: a #SwfdecAsObject
+ * @name: name of the function. The string does not have to be 
+ *        garbage-collected.
+ * @native: a native function
+ * @min_args: minimum number of arguments to pass to @native
+ *
+ * Adds @native as a variable named @name to @object. The newly added variable
+ * will not be enumerated.
+ *
+ * Returns: the newly created #SwfdecAsFunction or %NULL on error.
+ **/
+SwfdecAsFunction *
+swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, 
+    SwfdecAsNative native, guint min_args)
+{
+  SwfdecAsFunction *function;
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (native != NULL, NULL);
+
+  function = swfdec_as_function_new_native (object->context, native, min_args);
+  if (function == NULL)
+    return NULL;
+  name = swfdec_as_context_get_string (object->context, name);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
+  /* FIXME: I'd like to make sure no such property exists yet */
+  swfdec_as_object_set (object, name, &val);
+  swfdec_as_object_set_flags (object, name, SWFDEC_AS_VARIABLE_DONT_ENUM);
+  return function;
+}
+
+/**
  * swfdec_as_object_run:
  * @object: a #SwfdecAsObject
  * @script: script to execute

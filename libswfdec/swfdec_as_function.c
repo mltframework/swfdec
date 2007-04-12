@@ -90,7 +90,7 @@ swfdec_as_function_new (SwfdecAsFrame *scope, SwfdecScript *script)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new_native (SwfdecAsContext *context, SwfdecAsNativeCall native,
+swfdec_as_function_new_native (SwfdecAsContext *context, SwfdecAsNative native,
     guint min_args)
 {
   SwfdecAsFunction *fun;

@@ -310,7 +310,7 @@ swfdec_as_object_set_variable_flags (SwfdecAsObject *object,
   SwfdecAsVariable *var;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) != 0);
+  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
 
   var = swfdec_as_object_lookup (object, variable, FALSE);
   g_return_if_fail (var != NULL);
@@ -332,7 +332,7 @@ swfdec_as_object_unset_variable_flags (SwfdecAsObject *object,
   SwfdecAsVariable *var;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) != 0);
+  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
 
   var = swfdec_as_object_lookup (object, variable, FALSE);
   g_return_if_fail (var != NULL);

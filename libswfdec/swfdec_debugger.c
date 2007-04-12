@@ -70,10 +70,8 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
       case 0: /* string */
 	{
 	  const char *s = swfdec_bits_skip_string (&bits);
-	  if (!s) {
-	    g_string_free (string, TRUE);
-	    return NULL;
-	  }
+	  if (!s)
+	    goto error;
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
 	  g_string_append_c (string, '"');
@@ -108,15 +106,13 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 
 	  if (!parser->constant_pool) {
 	    SWFDEC_ERROR ("no constant pool");
-	    g_string_free (string, TRUE);
-	    return NULL;
+	    goto error;
 	  }
 	  id = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
 	  s = swfdec_constant_pool_get (parser->constant_pool, id);
 	  if (!s) {
 	    SWFDEC_ERROR ("constant pool size too small");
-	    g_string_free (string, TRUE);
-	    return NULL;
+	    goto error;
 	  }
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
@@ -125,10 +121,14 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 	break;
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return NULL;
+	goto error;
     }
   }
   return g_string_free (string, FALSE);
+
+error:
+  g_string_free (string, TRUE);
+  return "erroneous action Push";
 }
 
 /* NB: constant pool actions are special in that they are called at init time */
@@ -140,15 +140,14 @@ swfdec_debugger_add_command (gconstpointer bytecode, guint action,
   SwfdecDebuggerCommand command;
 
   command.code = bytecode;
-  if (action == 0x96) {
-    /* PUSH */
+  if (action == SWFDEC_AS_ACTION_PUSH) {
     command.description = swfdec_debugger_print_push (parser, data, len);
   } else {
     command.description = swfdec_script_print_action (action, data, len);
   }
+  g_assert (command.description != NULL);
   g_array_append_val (parser->commands, command);
-  if (action == 0x88) {
-    /* constant pool */
+  if (action == SWFDEC_AS_ACTION_CONSTANT_POOL) {
     if (parser->constant_pool)
       swfdec_constant_pool_free (parser->constant_pool);
     parser->constant_pool = swfdec_constant_pool_new_from_action (data, len);

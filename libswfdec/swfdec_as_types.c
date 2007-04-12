@@ -99,6 +99,7 @@ const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("function"),
   SWFDEC_AS_CONSTANT_STRING ("object"),
   SWFDEC_AS_CONSTANT_STRING ("toString"),
+  SWFDEC_AS_CONSTANT_STRING ("valueOf"),
   /* add more here */
   NULL
 };
@@ -204,8 +205,15 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  return NAN;
       }
     case SWFDEC_TYPE_AS_ASOBJECT:
-      SWFDEC_ERROR ("FIXME");
-      return NAN;
+      {
+	SwfdecAsValue ret;
+	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_VALUEOF,
+	    0, NULL, &ret);
+	if (SWFDEC_AS_VALUE_IS_NUMBER (&ret))
+	  return SWFDEC_AS_VALUE_GET_NUMBER (&ret);
+	else
+	  return NAN;
+      }
     default:
       g_assert_not_reached ();
       return NAN;

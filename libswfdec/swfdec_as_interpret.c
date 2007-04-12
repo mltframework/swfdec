@@ -1590,18 +1590,16 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
   cx->fp->sp--;
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecScript *script = cx->fp->swf;
-
-  cx->fp->rval = cx->fp->sp[-1];
-  cx->fp->pc = script->buffer->data + script->buffer->length;
-  cx->fp->sp--;
-  return JS_TRUE;
+  cx->frame->return_value = swfdec_as_stack_pop (cx->frame->stack);
+  swfdec_as_context_return (cx);
 }
 
+#if 0
 static void
 swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2195,8 +2193,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
 #endif
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
-#if 0
   [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
+#if 0
   [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
   [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },

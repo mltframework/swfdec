@@ -614,19 +614,18 @@ swfdec_as_context_eval_internal (SwfdecAsContext *cx, SwfdecAsObject *obj, const
   } else {
     varlist = g_strsplit (str, ".", -1);
   }
-  SWFDEC_AS_VALUE_SET_OBJECT (&cur, obj); /* FIXME: can be NULL here */
   for (i = 0; varlist[i] != NULL; i++) {
     const char *dot = swfdec_as_context_get_string (cx, varlist[i]);
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&cur)) {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&cur);
-      break;
-    }
-    obj = SWFDEC_AS_VALUE_GET_OBJECT (&cur);
     if (varlist[i+1] != NULL) {
       swfdec_as_context_eval_get_property (cx, obj, dot, &cur);
+      if (!SWFDEC_AS_VALUE_IS_OBJECT (&cur)) {
+	SWFDEC_AS_VALUE_SET_UNDEFINED (&cur);
+	break;
+      }
+      obj = SWFDEC_AS_VALUE_GET_OBJECT (&cur);
     } else {
       if (set) {
-	swfdec_as_context_eval_set_property (cx, obj, dot, &cur);
+	swfdec_as_context_eval_set_property (cx, obj, dot, val);
       } else {
 	swfdec_as_context_eval_get_property (cx, obj, dot, &cur);
       }

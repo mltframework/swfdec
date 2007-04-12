@@ -91,6 +91,7 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
+  g_assert (o != NULL); \
   (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
   (__val)->value.object = o; \
 } G_STMT_END

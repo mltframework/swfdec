@@ -1031,57 +1031,58 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval rval, lval;
-  int ltag, rtag;
-  void cond;
+  SwfdecAsValue *rval, *lval;
+  SwfdecAsType ltype, rtype;
+  gboolean cond;
 
-  rval = cx->fp->sp[-1];
-  lval = cx->fp->sp[-2];
-  ltag = JSVAL_TAG(lval);
-  rtag = JSVAL_TAG(rval);
-  if (ltag == rtag) {
-    if (ltag == JSVAL_STRING) {
-      cond = js_CompareStrings (JSVAL_TO_STRING (lval), JSVAL_TO_STRING (rval)) == 0;
-    } else if (ltag == JSVAL_DOUBLE) {
-      cond = *JSVAL_TO_DOUBLE(lval) == *JSVAL_TO_DOUBLE(rval);
-    } else {
-      cond = lval == rval;
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  ltype = lval->type;
+  rtype = rval->type;
+  if (ltype == rtype) {
+    switch (ltype) {
+      case SWFDEC_TYPE_AS_UNDEFINED:
+      case SWFDEC_TYPE_AS_NULL:
+	cond = TRUE;
+	break;
+      case SWFDEC_TYPE_AS_BOOLEAN:
+	cond = SWFDEC_AS_VALUE_GET_BOOLEAN (lval) == SWFDEC_AS_VALUE_GET_BOOLEAN (rval);
+	break;
+      case SWFDEC_TYPE_AS_NUMBER:
+	cond = SWFDEC_AS_VALUE_GET_NUMBER (lval) == SWFDEC_AS_VALUE_GET_NUMBER (rval);
+	break;
+      case SWFDEC_TYPE_AS_STRING:
+	cond = SWFDEC_AS_VALUE_GET_STRING (lval) == SWFDEC_AS_VALUE_GET_STRING (rval);
+	break;
+      case SWFDEC_TYPE_AS_ASOBJECT:
+	cond = SWFDEC_AS_VALUE_GET_OBJECT (lval) == SWFDEC_AS_VALUE_GET_OBJECT (rval);
+	break;
+      default:
+	g_assert_not_reached ();
+	cond = FALSE;
+	break;
     }
   } else {
-    if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {
-      cond = (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval));
-    } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {
-      cond = JS_FALSE;
+    if (ltype == SWFDEC_TYPE_AS_UNDEFINED || ltype == SWFDEC_TYPE_AS_NULL) {
+      cond = (rtype == SWFDEC_TYPE_AS_UNDEFINED || rtype == SWFDEC_TYPE_AS_NULL);
+    } else if (rtype == SWFDEC_TYPE_AS_UNDEFINED || rtype == SWFDEC_TYPE_AS_NULL) {
+      cond = FALSE;
     } else {
-      if (ltag == JSVAL_OBJECT) {
-	if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT(lval), 0, &lval))
-	  return JS_FALSE;
-	ltag = JSVAL_TAG(lval);
-      } else if (rtag == JSVAL_OBJECT) {
-	if (!OBJ_DEFAULT_VALUE (cx, JSVAL_TO_OBJECT(rval), 0, &rval))
-	  return JS_FALSE;
-	rtag = JSVAL_TAG(rval);
-      }
-      if (ltag == JSVAL_STRING && rtag == JSVAL_STRING) {
-	cond = js_CompareStrings (JSVAL_TO_STRING (lval), JSVAL_TO_STRING (rval)) == 0;
-      } else {
-	double d, d2;
-	if (!JS_ValueToNumber (cx, lval, &d) ||
-	    !JS_ValueToNumber (cx, rval, &d2))
-	  return JS_FALSE;
-	cond = d == d2;
-      }
+      SWFDEC_WARNING ("FIXME: test equality operations between non-equal types");
+      double l, r;
+      r = swfdec_as_value_to_number (cx, rval);
+      l = swfdec_as_value_to_number (cx, lval);
+      cond = r == l;
     }
   }
-  cx->fp->sp--;
-  cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (cond);
-  return JS_TRUE;
+  swfdec_as_stack_pop (cx->frame->stack);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
 }
-#endif
 
 static void
 swfdec_action_set_target (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2192,8 +2193,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
 #if 0
   [0x48] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
-  [0x49] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
 #endif
+  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
   [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
   [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },

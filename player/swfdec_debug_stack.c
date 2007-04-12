@@ -39,17 +39,17 @@ static const char *
 swfdec_get_value_type (SwfdecAsContext *cx, SwfdecAsValue *value)
 {
   switch (value->type) {
-    case SWFDEC_TYPE_AS_UNDEFINED:
+    case SWFDEC_AS_TYPE_UNDEFINED:
       return "undefined";
-    case SWFDEC_TYPE_AS_NULL:
+    case SWFDEC_AS_TYPE_NULL:
       return "null";
-    case SWFDEC_TYPE_AS_NUMBER:
+    case SWFDEC_AS_TYPE_NUMBER:
       return "Number";
-    case SWFDEC_TYPE_AS_BOOLEAN:
+    case SWFDEC_AS_TYPE_BOOLEAN:
       return "Boolean";
-    case SWFDEC_TYPE_AS_STRING:
+    case SWFDEC_AS_TYPE_STRING:
       return "String";
-    case SWFDEC_TYPE_AS_ASOBJECT:
+    case SWFDEC_AS_TYPE_OBJECT:
       /* FIXME: improve */
       return "Object";
     default:

@@ -386,6 +386,7 @@ start:
   pc = frame->pc;
 
   while (TRUE) {
+    g_print ("pc is %p\n", pc);
     if (pc == endpc) {
       swfdec_as_context_return (context);
       goto start;
@@ -395,6 +396,13 @@ start:
       goto error;
     }
 
+    /* decode next action */
+    action = *pc;
+    if (action == 0) {
+      swfdec_as_context_return (context);
+      goto start;
+    }
+    /* invoke debugger if there is one */
     if (step) {
       frame->pc = pc;
       (* step) (context);
@@ -403,11 +411,8 @@ start:
 	goto start;
       }
     }
-    /* decode next action */
-    action = *pc;
+    /* prepare action */
     spec = swfdec_as_actions + action;
-    if (action == 0)
-      break;
     if (action & 0x80) {
       if (pc + 2 >= endpc) {
 	SWFDEC_ERROR ("action %u length value out of range", action);
@@ -445,6 +450,7 @@ start:
 #ifndef G_DISABLE_ASSERT
     check = (spec->add >= 0 && spec->remove >= 0) ? stack->cur + spec->add - spec->remove : NULL;
 #endif
+    /* execute action */
     spec->exec[version] (context, action, data, len);
     if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT

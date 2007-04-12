@@ -67,6 +67,8 @@ void			swfdec_as_function_call		(SwfdecAsFunction *	function,
 							 SwfdecAsValue *	args,
 							 SwfdecAsValue *	return_value);
 
+void			swfdec_as_function_init_context (SwfdecAsContext *	context,
+							 guint			version);
 
 
 G_END_DECLS

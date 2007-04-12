@@ -26,6 +26,7 @@
 G_BEGIN_DECLS
 
 typedef enum {
+  SWFDEC_AS_CONTEXT_NEW,
   SWFDEC_AS_CONTEXT_RUNNING,
   SWFDEC_AS_CONTEXT_INTERRUPTED,
   SWFDEC_AS_CONTEXT_ABORTED
@@ -73,6 +74,8 @@ struct _SwfdecAsContextClass {
 GType		swfdec_as_context_get_type	(void);
 
 SwfdecAsContext *swfdec_as_context_new		(void);
+void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
+						 guint			version);
 
 const char *	swfdec_as_context_get_string	(SwfdecAsContext *	context,
 						 const char *		string);

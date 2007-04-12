@@ -36,6 +36,8 @@
 
 /**
  * SwfdecAsContextState
+ * @SWFDEC_AS_CONTEXT_NEW: the context is not yet initialized, 
+ *                         swfdec_as_context_startup() needs to be called.
  * @SWFDEC_AS_CONTEXT_RUNNING: the context is running normally
  * @SWFDEC_AS_CONTEXT_INTERRUPTED: the context has been interrupted by a 
  *                             debugger
@@ -384,7 +386,7 @@ start:
     goto out;
   if (frame->function && frame->function->native) {
     if (frame->argc >= frame->function->min_args) {
-      frame->function->native (context, frame->scope, frame->argc, frame->argv, frame->return_value);
+      frame->function->native (frame->scope, frame->argc, frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);
     goto start;
@@ -505,6 +507,26 @@ swfdec_as_context_trace (SwfdecAsContext *context, const char *string)
   g_return_if_fail (string != NULL);
 
   g_signal_emit (context, signals[TRACE], 0, string);
+}
+
+/**
+ * swfdec_as_context_startup:
+ * @context: a #SwfdecAsContext
+ * @version: Flash version to use
+ *
+ * Starts up the context. This function must be called before any Actionscript
+ * is called on @context. The version is responsible for deciding which native
+ * functions and properties are available in the context.
+ **/
+void
+swfdec_as_context_startup (SwfdecAsContext *context, guint version)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
+
+  context->version = version;
+  swfdec_as_function_init_context (context, version);
+  context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }
 
 /*** EVAL ***/

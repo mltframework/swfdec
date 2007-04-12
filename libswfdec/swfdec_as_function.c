@@ -139,7 +139,38 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     frame->function_name = function->name;
   } else {
     frame = swfdec_as_frame_new (thisp, function->script);
-    /* FIXME: do the preloading here */
+    SWFDEC_ERROR ("do the preloading here");
   }
 }
 
+/*** AS CODE ***/
+
+static void
+swfdec_as_function_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+
+}
+
+void
+swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
+{
+  SwfdecAsObject *function, *proto;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+
+  function = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
+      SWFDEC_AS_STR_Function, swfdec_as_function_construct, 0));
+  if (!function)
+    return;
+  proto = swfdec_as_object_new (context);
+  if (!proto)
+    return;
+  swfdec_as_object_root (proto);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set (function, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set (function, SWFDEC_AS_STR_prototype, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
+  swfdec_as_object_set (function, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_unroot (proto);
+}

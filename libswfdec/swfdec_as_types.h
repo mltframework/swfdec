@@ -42,7 +42,7 @@ typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsStack SwfdecAsStack;
 typedef struct _SwfdecAsValue SwfdecAsValue;
-typedef void (* SwfdecAsNative) (SwfdecAsContext *context, SwfdecAsObject *thisp, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval);
+typedef void (* SwfdecAsNative) (SwfdecAsObject *thisp, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval);
 
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {
@@ -102,7 +102,7 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR_CONSTANT(n) (&swfdec_as_strings[(n)][1])
 
 #define SWFDEC_AS_STR_EMPTY		SWFDEC_AS_STR_CONSTANT(0)
-#define SWFDEC_AS_STR_PROTO		SWFDEC_AS_STR_CONSTANT(1)
+#define SWFDEC_AS_STR___proto__		SWFDEC_AS_STR_CONSTANT(1)
 #define SWFDEC_AS_STR_THIS		SWFDEC_AS_STR_CONSTANT(2)
 #define SWFDEC_AS_STR_CODE		SWFDEC_AS_STR_CONSTANT(3)
 #define SWFDEC_AS_STR_LEVEL		SWFDEC_AS_STR_CONSTANT(4)
@@ -171,6 +171,9 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR_OBJECT		SWFDEC_AS_STR_CONSTANT(67)
 #define SWFDEC_AS_STR_TOSTRING		SWFDEC_AS_STR_CONSTANT(68)
 #define SWFDEC_AS_STR_VALUEOF		SWFDEC_AS_STR_CONSTANT(69)
+#define SWFDEC_AS_STR_Function		SWFDEC_AS_STR_CONSTANT(70)
+#define SWFDEC_AS_STR_prototype		SWFDEC_AS_STR_CONSTANT(71)
+#define SWFDEC_AS_STR_constructor	SWFDEC_AS_STR_CONSTANT(72)
 
 /* all existing actions */
 typedef enum {

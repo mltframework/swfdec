@@ -127,7 +127,8 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
 	  player = swfdec_loader_target_get_player (target);
 	  g_assert (dec->width > 0);
 	  g_assert (dec->height > 0);
-	  swfdec_player_initialize (player, dec->rate, 
+	  /* FIXME: need correct version here */
+	  swfdec_player_initialize (player, 7, dec->rate, 
 	      dec->width, dec->height);
 	  if (!swfdec_loader_target_init (target)) {
 	    swfdec_loader_error_locked (loader, "Internal error");

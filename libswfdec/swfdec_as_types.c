@@ -100,6 +100,9 @@ const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("object"),
   SWFDEC_AS_CONSTANT_STRING ("toString"),
   SWFDEC_AS_CONSTANT_STRING ("valueOf"),
+  SWFDEC_AS_CONSTANT_STRING ("Function"),
+  SWFDEC_AS_CONSTANT_STRING ("prototype"),
+  SWFDEC_AS_CONSTANT_STRING ("constructor"),
   /* add more here */
   NULL
 };

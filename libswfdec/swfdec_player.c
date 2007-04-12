@@ -1002,15 +1002,17 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
+ * @version: Flash version to use
  * @rate: framerate in 256th or 0 for undefined
  * @width: width of movie
  * @height: height of movie
  *
- * Initializes the player to the given @width, @height and @rate. If the player
- * is already initialized, this function does nothing.
+ * Initializes the player to the given @version, @width, @height and @rate. If 
+ * the player is already initialized, this function does nothing.
  **/
 void
-swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint height)
+swfdec_player_initialize (SwfdecPlayer *player, guint version, 
+    guint rate, guint width, guint height)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (width > 0);
@@ -1019,6 +1021,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   if (swfdec_player_is_initialized (player))
     return;
   
+  swfdec_as_context_startup (SWFDEC_AS_CONTEXT (player), version);
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
   player->rate = rate;
   player->width = width;

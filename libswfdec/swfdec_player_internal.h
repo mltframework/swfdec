@@ -101,6 +101,7 @@ struct _SwfdecPlayerClass
 };
 
 void		swfdec_player_initialize	(SwfdecPlayer *		player,
+						 guint			version,
 						 guint			rate,
 						 guint			width,
 						 guint			height);

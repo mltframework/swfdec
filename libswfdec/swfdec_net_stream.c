@@ -223,7 +223,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	break;
       case SWFDEC_STATUS_INIT:
 	/* HACK for native flv playback */
-	swfdec_player_initialize (stream->player, 
+	swfdec_player_initialize (stream->player, 7,
 	    SWFDEC_DECODER (stream->flvdecoder)->rate, 
 	    SWFDEC_DECODER (stream->flvdecoder)->width, 
 	    SWFDEC_DECODER (stream->flvdecoder)->height);

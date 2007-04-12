@@ -42,7 +42,8 @@ struct _SwfdecAsFrame {
   char *		function_name;	/* name of function */
   /* normal execution */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsObject *	scope;		/* scope object coming after this or NULL */
+  SwfdecAsObject *	scope;		/* scope object coming after this: an Object */
+  SwfdecAsObject *	target;		/* target to use instead of last object in scope chain */
   SwfdecAsObject *	var_object;	/* new variables go here */
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
@@ -65,6 +66,9 @@ SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsObject *	thisp);
 
 SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
 						 const SwfdecAsValue *	variable);
+
+void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
+						 SwfdecAsObject *	target);
 
 
 G_END_DECLS

@@ -1083,65 +1083,43 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (cond);
   return JS_TRUE;
 }
-
-static void
-swfdec_action_do_set_target (SwfdecAsContext *cx, JSObject *target)
-{
-  JSObject *with;
-  
-  /* FIXME: this whole function stops working the moment it's used together 
-   * with With */
-  with = js_NewObject(cx, &js_WithClass, target, cx->fp->scopeChain);
-  if (!with)
-    return JS_FALSE;
-  cx->fp->scopeChain = with;
-  return JS_TRUE;
-}
-
-static void
-swfdec_action_do_unset_target (SwfdecAsContext *cx)
-{
-  if (JS_GetClass (cx->fp->scopeChain) != &js_WithClass) {
-    SWFDEC_ERROR ("Cannot unset target: scope chain contains no with object");
-    return JS_TRUE;
-  }
-  cx->fp->scopeChain = JS_GetParent (cx, cx->fp->scopeChain);
-  return JS_TRUE;
-}
+#endif
 
 static void
 swfdec_action_set_target (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval target;
-
   if (!memchr (data, 0, len)) {
     SWFDEC_ERROR ("SetTarget action does not specify a string");
-    return JS_FALSE;
+    return;
   }
-  if (*data == '\0')
-    return swfdec_action_do_unset_target (cx);
-  target = swfdec_js_eval (cx, NULL, (const char *) data);
-  if (!JSVAL_IS_OBJECT (target) || JSVAL_IS_NULL (target)) {
-    SWFDEC_WARNING ("target is not an object");
-    return JS_TRUE;
+  if (*data == '\0') {
+    swfdec_as_frame_set_target (cx->frame, NULL);
+  } else {
+    SwfdecAsValue target;
+    swfdec_as_context_eval (cx, NULL, (const char *) data, &target);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&target)) {
+      SWFDEC_WARNING ("target is not an object");
+      return;
+    } 
+    /* FIXME: allow non-movieclips as targets? */
+    swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (&target));
   }
-  return swfdec_action_do_set_target (cx, JSVAL_TO_OBJECT (target));
 }
 
 static void
 swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval val;
-  
-  val = cx->fp->sp[-1];
-  cx->fp->sp--;
-  if (!JSVAL_IS_OBJECT (val) || JSVAL_IS_NULL (val)) {
+  SwfdecAsValue *val;
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     SWFDEC_WARNING ("target is not an object");
-    return JS_TRUE;
-  }
-  return swfdec_action_do_set_target (cx, JSVAL_TO_OBJECT (val));
+    return;
+  } 
+  /* FIXME: allow non-movieclips as targets? */
+  swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (val));
 }
 
+#if 0
 static void
 swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1858,17 +1836,19 @@ swfdec_action_print_store_register (guint action, const guint8 *data, guint len)
   }
   return g_strdup_printf ("StoreRegister %u", (guint) *data);
 }
+#endif
 
 static char *
 swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
 {
   if (!memchr (data, 0, len)) {
     SWFDEC_ERROR ("SetTarget action does not specify a string");
-    return JS_FALSE;
+    return NULL;
   }
   return g_strconcat ("SetTarget ", data, NULL);
 }
 
+#if 0
 static char *
 swfdec_action_print_define_function (guint action, const guint8 *data, guint len)
 {
@@ -2166,8 +2146,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
+  [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
 #if 0
-  [0x20] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
 #endif
   [0x22] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
@@ -2257,9 +2237,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
   /* version 3 */
   [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
-#if 0
-  [0x8b] = { "SetTarget", swfdec_action_print_set_target, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
-#endif
+  [SWFDEC_AS_ACTION_SET_TARGET] = { "SetTarget", swfdec_action_print_set_target, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
   [SWFDEC_AS_ACTION_GOTO_LABEL] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, { swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label } },
 #if 0
   /* version 4 */

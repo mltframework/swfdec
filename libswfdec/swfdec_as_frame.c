@@ -57,6 +57,8 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
   swfdec_as_object_mark (frame->scope);
   swfdec_as_object_mark (frame->var_object);
+  if (frame->target)
+    swfdec_as_object_mark (frame->target);
   for (i = 0; i < frame->n_registers; i++) {
     swfdec_as_value_mark (&frame->registers[i]);
   }
@@ -143,24 +145,54 @@ swfdec_as_frame_new_native (SwfdecAsObject *thisp)
 SwfdecAsObject *
 swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const SwfdecAsValue *variable)
 {
-  SwfdecAsObject *ret = NULL;
+  SwfdecAsObject *cur, *ret = NULL;
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (variable), NULL);
 
+  cur = SWFDEC_AS_OBJECT (frame);
   for (i = 0; i < 256 && frame != NULL; i++) {
-    ret = swfdec_as_object_find_variable (frame->scope, variable);
+    if (!SWFDEC_IS_AS_FRAME (cur))
+      break;
+    ret = swfdec_as_object_find_variable (cur, variable);
     if (ret)
-      break;
-    if (!SWFDEC_IS_AS_FRAME (frame->scope))
-      break;
-    frame = SWFDEC_AS_FRAME (frame->scope);
+      return ret;
+    cur = SWFDEC_AS_FRAME (cur)->scope;
   }
+  g_assert (cur);
   if (i == 256) {
     swfdec_as_context_abort (SWFDEC_AS_OBJECT (frame)->context, "Scope recursion limit exceeded");
     return NULL;
   }
+  /* we've walked the scope chain down until the last object now.
+   * The last 2 objects in the scope chain are the current target and the global object */
+  if (frame->target) {
+    ret = swfdec_as_object_find_variable (frame->target, variable);
+  } else {
+    ret = swfdec_as_object_find_variable (cur, variable);
+  }
+  if (ret)
+    return ret;
+  ret = swfdec_as_object_find_variable (cur->context->global, variable);
   return ret;
+}
+
+/**
+ * swfdec_as_frame_set_target:
+ * @frame: a #SwfdecAsFrame
+ * @target: the new object to use as target or %NULL to unset
+ *
+ * Sets the new target to be used in this @frame. The target is a legacy 
+ * Actionscript concept that is similar to "with". If you don't have to,
+ * you shouldn't use this function.
+ **/
+void
+swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
+{
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (target == NULL || SWFDEC_IS_AS_OBJECT (target));
+
+  frame->target = target;
 }
 

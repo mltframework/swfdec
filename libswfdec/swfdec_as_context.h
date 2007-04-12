@@ -47,6 +47,7 @@ struct _SwfdecAsContext {
   GObject		object;
 
   SwfdecAsContextState	state;		/* our current state */
+  SwfdecAsObject *	global;		/* the global object */
 
   /* bookkeeping for GC */
   gsize			memory;		/* memory currently in use */

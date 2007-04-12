@@ -225,6 +225,8 @@ swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
 static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
+  if (context->global)
+    swfdec_as_object_mark (context->global);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 
@@ -302,6 +304,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
     g_hash_table_insert (context->strings, (char *) swfdec_as_strings[i] + 1, 
 	(char *) swfdec_as_strings[i]);
   }
+  context->global = swfdec_as_object_new (context);
 }
 
 /*** STRINGS ***/

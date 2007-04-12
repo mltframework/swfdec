@@ -592,12 +592,12 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
   SwfdecAsObject *obj;
   guint id;
 
-  id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
   if (id > (cx->version > 4 ? 21 : 18)) {
     SWFDEC_WARNING ("trying to SetProperty %u, not allowed", id);
     goto out;
   }
-  val = swfdec_as_stack_peek (cx->frame->stack, 2);
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
   swfdec_as_interpret_eval (cx, NULL, val);
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
     obj = cx->frame->var_object;

@@ -386,7 +386,6 @@ start:
   pc = frame->pc;
 
   while (TRUE) {
-    g_print ("pc is %p\n", pc);
     if (pc == endpc) {
       swfdec_as_context_return (context);
       goto start;

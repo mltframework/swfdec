@@ -48,6 +48,7 @@ struct _SwfdecAsContext {
 
   SwfdecAsContextState	state;		/* our current state */
   SwfdecAsObject *	global;		/* the global object */
+  GRand *		rand;		/* random number generator */
 
   /* bookkeeping for GC */
   gsize			memory;		/* memory currently in use */

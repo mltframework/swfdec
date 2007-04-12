@@ -981,23 +981,22 @@ swfdec_action_push_duplicate (SwfdecAsContext *cx, guint action, const guint8 *d
   *swfdec_as_stack_push (cx->frame->stack) = *swfdec_as_stack_peek (cx->frame->stack, 1);
 }
 
-#if 0
 static void
 swfdec_action_random_number (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  gint32 max, result;
+  gint32 max;
+  SwfdecAsValue *val;
 
-  if (!JS_ValueToECMAInt32 (cx, cx->fp->sp[-1], &max))
-    return JS_FALSE;
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  max = swfdec_as_value_to_integer (cx, val);
   
   if (max <= 0)
-    result = 0;
+    SWFDEC_AS_VALUE_SET_NUMBER (val, 0);
   else
-    result = g_random_int_range (0, max);
-
-  return JS_NewNumberValue(cx, result, &cx->fp->sp[-1]);
+    SWFDEC_AS_VALUE_SET_NUMBER (val, g_rand_int_range (cx->rand, 0, max));
 }
 
+#if 0
 static void
 swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2159,8 +2158,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x2a] = { "Throw", NULL },
   [0x2b] = { "Cast", NULL },
   [0x2c] = { "Implements", NULL },
+#endif
   /* version 4 */
   [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
+#if 0
   [0x31] = { "MBStringLength", NULL },
   [0x32] = { "CharToAscii", NULL },
   [0x33] = { "AsciiToChar", NULL },

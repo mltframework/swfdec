@@ -266,6 +266,7 @@ swfdec_as_context_dispose (GObject *object)
   g_assert (g_hash_table_size (context->objects) == 0);
   g_hash_table_destroy (context->objects);
   g_hash_table_destroy (context->strings);
+  g_rand_free (context->rand);
 
   G_OBJECT_CLASS (swfdec_as_context_parent_class)->dispose (object);
 }
@@ -305,6 +306,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
 	(char *) swfdec_as_strings[i]);
   }
   context->global = swfdec_as_object_new (context);
+  context->rand = g_rand_new ();
 }
 
 /*** STRINGS ***/

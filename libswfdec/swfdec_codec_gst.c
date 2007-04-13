@@ -176,7 +176,7 @@ swfdec_audio_decoder_gst_link (GstElement *src, GstPad *pad, GstElement *sink)
   }
 }
 
-GstBusSyncReply
+static GstBusSyncReply
 swfdec_audio_decoder_gst_handle_bus (GstBus *bus, GstMessage *message, gpointer data)
 {
   SwfdecGstAudio *player = data;

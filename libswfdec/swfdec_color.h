@@ -80,5 +80,8 @@ void swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *in
 double swfdec_matrix_get_xscale (const cairo_matrix_t *matrix);
 double swfdec_matrix_get_yscale (const cairo_matrix_t *matrix);
 double swfdec_matrix_get_rotation (const cairo_matrix_t *matrix);
+void swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
+    const cairo_matrix_t *end, guint ratio);
+
 
 #endif

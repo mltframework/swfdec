@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 #include "swfdec_shape.h"
 #include "swfdec.h"
 #include "swfdec_debug.h"
+#include "swfdec_stroke.h"
 
 G_DEFINE_TYPE (SwfdecShape, swfdec_shape, SWFDEC_TYPE_GRAPHIC)
 
@@ -367,13 +368,13 @@ parse_rgba (SwfdecSwfDecoder * s)
 static SwfdecPattern *
 parse_stroke_rgb (SwfdecSwfDecoder * s)
 {
-  return swfdec_pattern_parse_stroke (s, FALSE);
+  return swfdec_stroke_parse (s, FALSE);
 }
 
 static SwfdecPattern *
 parse_stroke_rgba (SwfdecSwfDecoder * s)
 {
-  return swfdec_pattern_parse_stroke (s, TRUE);
+  return swfdec_stroke_parse (s, TRUE);
 }
 
 int
@@ -936,7 +937,7 @@ swfdec_morph_shape_get_recs (SwfdecSwfDecoder * s, SwfdecMorphShape *morph, Swfd
     switch (start_type) {
       case SWFDEC_SHAPE_TYPE_CHANGE:
 	start_path = swfdec_shape_parse_change (s, shape, start_path_array, start_path, &start_x, &start_y, 
-	    swfdec_pattern_parse_morph, swfdec_pattern_parse_morph_stroke);
+	    swfdec_pattern_parse_morph, swfdec_stroke_parse_morph);
 	end_path = swfdec_morph_shape_do_change (end_bits, start_path, morph, end_path_array, end_path, &end_x, &end_y);
 	break;
       case SWFDEC_SHAPE_TYPE_LINE:
@@ -1023,7 +1024,7 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   bits->end = end_bits.ptr;
 
   swfdec_shape_add_styles (s, SWFDEC_SHAPE (morph),
-      swfdec_pattern_parse_morph, swfdec_pattern_parse_morph_stroke);
+      swfdec_pattern_parse_morph, swfdec_stroke_parse_morph);
 
   morph->n_fill_bits = swfdec_bits_getbits (&end_bits, 4);
   morph->n_line_bits = swfdec_bits_getbits (&end_bits, 4);

@@ -59,14 +59,9 @@ struct _SwfdecPatternClass
 GType		swfdec_pattern_get_type		(void);
 
 SwfdecPattern *	swfdec_pattern_new_color	(SwfdecColor			color);
-SwfdecPattern *	swfdec_pattern_new_stroke	(guint				width,
-						 SwfdecColor			color);
 SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
 						 gboolean			rgba);
-SwfdecPattern *	swfdec_pattern_parse_stroke   	(SwfdecSwfDecoder *		dec,
-						 gboolean			rgba);
 SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
-SwfdecPattern *	swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *		dec);
 
 void		swfdec_pattern_paint		(SwfdecPattern *		pattern, 
 						 cairo_t *			cr,

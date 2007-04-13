@@ -1023,8 +1023,6 @@ void
 swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint height)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (width > 0);
-  g_return_if_fail (height > 0);
 
   if (swfdec_player_is_initialized (player))
     return;
@@ -1033,6 +1031,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   player->rate = rate;
   player->width = width;
   player->height = height;
+  player->initialized = TRUE;
   if (rate) {
     player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / rate;
     swfdec_player_add_timeout (player, &player->iterate_timeout);
@@ -1334,7 +1333,7 @@ swfdec_player_is_initialized (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
 
-  return player->width > 0 && player->height > 0;
+  return player->initialized;
 }
 
 /**

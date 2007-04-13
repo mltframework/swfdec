@@ -32,7 +32,7 @@
 
 #define MAX_ALIGN 10
 
-G_DEFINE_TYPE (SwfdecStroke, swfdec_stroke, SWFDEC_TYPE_PATTERN);
+G_DEFINE_TYPE (SwfdecStroke, swfdec_stroke, G_TYPE_OBJECT);
 
 static void
 swfdec_stroke_append_path_snapped (cairo_t *cr, const cairo_path_t *path)
@@ -92,13 +92,12 @@ swfdec_stroke_append_path_snapped (cairo_t *cr, const cairo_path_t *path)
   }
 }
 
-static void
-swfdec_stroke_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *path,
+void
+swfdec_stroke_paint (SwfdecStroke *stroke, cairo_t *cr, const cairo_path_t *path,
     const SwfdecColorTransform *trans, guint ratio)
 {
   SwfdecColor color;
   double width;
-  SwfdecStroke *stroke = SWFDEC_STROKE (pattern);
 
   swfdec_stroke_append_path_snapped (cr, path);
   color = swfdec_color_apply_morph (stroke->start_color, stroke->end_color, ratio);
@@ -120,7 +119,6 @@ swfdec_stroke_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *pa
 static void
 swfdec_stroke_class_init (SwfdecStrokeClass *klass)
 {
-  SWFDEC_PATTERN_CLASS (klass)->paint = swfdec_stroke_paint;
 }
 
 static void
@@ -130,7 +128,7 @@ swfdec_stroke_init (SwfdecStroke *stroke)
 
 /*** EXPORTED API ***/
 
-SwfdecPattern *
+SwfdecStroke *
 swfdec_stroke_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 {
   SwfdecBits *bits = &dec->b;
@@ -146,10 +144,10 @@ swfdec_stroke_parse (SwfdecSwfDecoder *dec, gboolean rgba)
   stroke->end_color = stroke->start_color;
   SWFDEC_LOG ("new stroke stroke: width %u color %08x", stroke->start_width, stroke->start_color);
 
-  return SWFDEC_PATTERN (stroke);
+  return stroke;
 }
 
-SwfdecPattern *
+SwfdecStroke *
 swfdec_stroke_parse_morph (SwfdecSwfDecoder *dec)
 {
   SwfdecBits *bits = &dec->b;
@@ -163,10 +161,10 @@ swfdec_stroke_parse_morph (SwfdecSwfDecoder *dec)
       stroke->start_width, stroke->end_width,
       stroke->start_color, stroke->end_color);
 
-  return SWFDEC_PATTERN (stroke);
+  return stroke;
 }
 
-SwfdecPattern *
+SwfdecStroke *
 swfdec_stroke_new (guint width, SwfdecColor color)
 {
   SwfdecStroke *stroke = g_object_new (SWFDEC_TYPE_STROKE, NULL);
@@ -176,20 +174,20 @@ swfdec_stroke_new (guint width, SwfdecColor color)
   stroke->start_color = color;
   stroke->end_color = color;
 
-  return SWFDEC_PATTERN (stroke);
+  return stroke;
 }
 
-static SwfdecPattern *
+static SwfdecStroke *
 swfdec_stroke_do_parse_extended (SwfdecBits *bits, gboolean morph,
     SwfdecPattern *fill_styles, guint n_fill_styles)
 {
   SwfdecStroke *stroke = g_object_new (SWFDEC_TYPE_STROKE, NULL);
 
   SWFDEC_ERROR ("FIXME: implement");
-  return SWFDEC_PATTERN (stroke);
+  return stroke;
 }
 
-SwfdecPattern *
+SwfdecStroke *
 swfdec_stroke_parse_extended (SwfdecSwfDecoder *dec, SwfdecPattern *fill_styles,
     guint n_fill_styles)
 {
@@ -199,7 +197,7 @@ swfdec_stroke_parse_extended (SwfdecSwfDecoder *dec, SwfdecPattern *fill_styles,
   return swfdec_stroke_do_parse_extended (&dec->b, FALSE, fill_styles, n_fill_styles);
 }
 
-SwfdecPattern *
+SwfdecStroke *
 swfdec_stroke_parse_morph_extended (SwfdecSwfDecoder *dec, SwfdecPattern *fill_styles,
     guint n_fill_styles)
 {

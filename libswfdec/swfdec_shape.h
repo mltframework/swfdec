@@ -42,7 +42,7 @@ typedef struct _SwfdecShapeClass SwfdecShapeClass;
 
 struct _SwfdecShapeVec
 {
-  SwfdecPattern *pattern;		/* pattern to display */
+  gpointer pattern;			/* pattern or stroke to display */
   cairo_path_t path;			/* accumulated path */
   SwfdecRect extents;			/* extents of path */
   guint last_index;			/* index of last segment that was added */

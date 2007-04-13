@@ -49,11 +49,10 @@ struct _SwfdecPatternClass
 {
   GObjectClass		object_class;
 
-  void			(* paint)		(SwfdecPattern *		pattern, 
-					         cairo_t *			cr,
-						 const cairo_path_t *		path,
+  /* create a cairo pattern for the given values */
+  cairo_pattern_t *	(* get_pattern)		(SwfdecPattern *		pattern,
 						 const SwfdecColorTransform *	trans,
-						 guint			ratio);
+						 guint				ratio);
 };
 
 GType		swfdec_pattern_get_type		(void);
@@ -67,7 +66,10 @@ void		swfdec_pattern_paint		(SwfdecPattern *		pattern,
 						 cairo_t *			cr,
 						 const cairo_path_t *		path,
 						 const SwfdecColorTransform *	trans,
-						 guint			ratio);
+						 guint				ratio);
+cairo_pattern_t *swfdec_pattern_get_pattern	(SwfdecPattern *		pattern, 
+						 const SwfdecColorTransform *	trans,
+						 guint				ratio);
 void		swfdec_pattern_get_path_extents (SwfdecPattern *		pattern,
 						 const cairo_path_t *		path,
 						 SwfdecRect *			extents);

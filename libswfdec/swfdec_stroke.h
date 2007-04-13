@@ -36,7 +36,7 @@ typedef struct _SwfdecStrokeClass SwfdecStrokeClass;
 
 struct _SwfdecStroke
 {
-  SwfdecPattern		pattern;
+  GObject		object;
 
   guint			start_width;		/* width of line */
   SwfdecColor		start_color;		/* color to paint with */
@@ -46,20 +46,27 @@ struct _SwfdecStroke
 
 struct _SwfdecStrokeClass
 {
-  SwfdecPatternClass  	pattern_class;
+  GObjectClass		object_class;
 };
 
 GType		swfdec_stroke_get_type		(void);
 
-SwfdecPattern *	swfdec_stroke_new		(guint			width,
+SwfdecStroke *	swfdec_stroke_new		(guint			width,
 						 SwfdecColor		color);
-SwfdecPattern *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec,
+
+void		swfdec_stroke_paint		(SwfdecStroke *		stroke,
+						 cairo_t *		cr,
+						 const cairo_path_t *	path,
+						 const SwfdecColorTransform *trans,
+						 guint			ratio);
+
+SwfdecStroke *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec,
 						 gboolean		rgba);
-SwfdecPattern *	swfdec_stroke_parse_extended	(SwfdecSwfDecoder *	dec,
+SwfdecStroke *	swfdec_stroke_parse_extended	(SwfdecSwfDecoder *	dec,
 						 SwfdecPattern *	fill_styles,
 						 guint			n_fill_styles);
-SwfdecPattern *	swfdec_stroke_parse_morph    	(SwfdecSwfDecoder *	dec);
-SwfdecPattern *	swfdec_stroke_parse_morph_extended
+SwfdecStroke *	swfdec_stroke_parse_morph    	(SwfdecSwfDecoder *	dec);
+SwfdecStroke *	swfdec_stroke_parse_morph_extended
 						(SwfdecSwfDecoder *	dec,
 						 SwfdecPattern *	fill_styles,
 						 guint			n_fill_styles);

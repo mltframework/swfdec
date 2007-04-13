@@ -253,10 +253,15 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
     if (!fill && vec->last_index % 2 != 0) 
       continue;
 
-    if (fill)
-      swfdec_pattern_paint (vec->pattern, cr, &vec->path, trans, 0);
-    else
+    if (fill) {
+      if (SWFDEC_IS_PATTERN (vec->pattern)) {
+	swfdec_pattern_paint (vec->pattern, cr, &vec->path, trans, 0);
+      } else {
+	swfdec_stroke_paint (vec->pattern, cr, &vec->path, trans, 0);
+      }
+    } else {
       cairo_append_path (cr, &vec->path);
+    }
   }
 }
 
@@ -274,7 +279,7 @@ swfdec_shape_mouse_in (SwfdecGraphic *graphic, double x, double y)
     g_assert (shapevec->path.num_data);
     g_assert (shapevec->pattern);
     /* FIXME: handle strokes */
-    if (shapevec->last_index & 1)
+    if (SWFDEC_IS_STROKE (shapevec->pattern))
       continue;
     if (shapevec->fill_cr == NULL) {
       /* FIXME: do less memory intensive fill checking plz */
@@ -311,9 +316,10 @@ swfdec_shape_init (SwfdecShape * shape)
 }
 
 typedef SwfdecPattern * (* SwfdecPatternFunc) (SwfdecSwfDecoder * s);
+typedef SwfdecStroke * (* SwfdecStrokeFunc) (SwfdecSwfDecoder * s);
 static void
 swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
-    SwfdecPatternFunc parse_fill, SwfdecPatternFunc parse_stroke)
+    SwfdecPatternFunc parse_fill, SwfdecStrokeFunc parse_stroke)
 {
   int n_fill_styles;
   int n_line_styles;
@@ -344,8 +350,7 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
   }
   SWFDEC_LOG ("   n_line_styles %d", n_line_styles);
   for (i = 0; i < n_line_styles; i++) {
-    SwfdecPattern *pattern = parse_stroke (s);
-    g_ptr_array_add (shape->lines, pattern);
+    g_ptr_array_add (shape->lines, parse_stroke (s));
   }
 
   swfdec_bits_syncbits (bits);
@@ -365,13 +370,13 @@ parse_rgba (SwfdecSwfDecoder * s)
   return swfdec_pattern_parse (s, TRUE);
 }
 
-static SwfdecPattern *
+static SwfdecStroke *
 parse_stroke_rgb (SwfdecSwfDecoder * s)
 {
   return swfdec_stroke_parse (s, FALSE);
 }
 
-static SwfdecPattern *
+static SwfdecStroke *
 parse_stroke_rgba (SwfdecSwfDecoder * s)
 {
   return swfdec_stroke_parse (s, TRUE);
@@ -429,6 +434,30 @@ tag_define_shape_2 (SwfdecSwfDecoder * s)
 {
   return tag_define_shape (s);
 }
+
+#if 0
+int
+tag_define_shape_4 (SwfdecSwfDecoder *s)
+{
+  SwfdecBits *bits = &s->b;
+  SwfdecShape *shape;
+  int id;
+
+  id = swfdec_bits_get_u16 (bits);
+  shape = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SHAPE);
+  if (!shape)
+    return SWFDEC_STATUS_OK;
+  shape->rgba = 1;
+
+  swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
+
+  swfdec_shape_add_styles (s, shape, parse_rgba, swfdec_stroke_parse_extended);
+
+  swfdec_shape_get_recs (s, shape);
+
+  return SWFDEC_STATUS_OK;
+}
+#endif
 
 /* The shape creation process is a bit complicated since it requires matching 
  * the Flash model to the cairo model. Note that this code is just random 
@@ -709,7 +738,7 @@ swfdec_shape_parse_line (SwfdecBits *bits, SubPath *path,
 
 SubPath *
 swfdec_shape_parse_change (SwfdecSwfDecoder *s, SwfdecShape *shape, GArray *path_array, SubPath *path,
-    int *x, int *y, SwfdecPatternFunc parse_fill, SwfdecPatternFunc parse_stroke)
+    int *x, int *y, SwfdecPatternFunc parse_fill, SwfdecStrokeFunc parse_stroke)
 {
   int state_new_styles, state_line_styles, state_fill_styles1, state_fill_styles0, state_moveto;
   SwfdecBits *bits = &s->b;

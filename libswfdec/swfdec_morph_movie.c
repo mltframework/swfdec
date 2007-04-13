@@ -50,8 +50,6 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
-  cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-  cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
   for (i = 0; i < shape->vecs->len; i++) {
     SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);

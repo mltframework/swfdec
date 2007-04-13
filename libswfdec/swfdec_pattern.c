@@ -1,3 +1,22 @@
+/* Swfdec
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -10,31 +29,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_image.h"
-
-/*** MORPHING ***/
-
-static void
-swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
-    const cairo_matrix_t *end, guint ratio)
-{
-  guint inv_ratio = 65535 - ratio;
-  g_assert (ratio < 65536);
-
-  if (ratio == 0) {
-    *dest = *start;
-    return;
-  }
-  if (ratio == 65535) {
-    *dest = *end;
-    return;
-  }
-  dest->xx = (start->xx * inv_ratio + end->xx * ratio) / 65535;
-  dest->xy = (start->xy * inv_ratio + end->xy * ratio) / 65535;
-  dest->yy = (start->yy * inv_ratio + end->yy * ratio) / 65535;
-  dest->yx = (start->yx * inv_ratio + end->yx * ratio) / 65535;
-  dest->x0 = (start->x0 * inv_ratio + end->x0 * ratio) / 65535;
-  dest->y0 = (start->y0 * inv_ratio + end->y0 * ratio) / 65535;
-}
+#include "swfdec_stroke.h"
 
 /*** PATTERN ***/
 
@@ -50,131 +45,6 @@ swfdec_pattern_init (SwfdecPattern *pattern)
 {
   cairo_matrix_init_identity (&pattern->start_transform);
   cairo_matrix_init_identity (&pattern->end_transform);
-}
-
-/*** STROKE PATTERN ***/
-
-#define MAX_ALIGN 10
-
-typedef struct _SwfdecStrokePattern SwfdecStrokePattern;
-typedef struct _SwfdecStrokePatternClass SwfdecStrokePatternClass;
-
-#define SWFDEC_TYPE_STROKE_PATTERN                    (swfdec_stroke_pattern_get_type())
-#define SWFDEC_IS_STROKE_PATTERN(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_STROKE_PATTERN))
-#define SWFDEC_IS_STROKE_PATTERN_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_STROKE_PATTERN))
-#define SWFDEC_STROKE_PATTERN(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_STROKE_PATTERN, SwfdecStrokePattern))
-#define SWFDEC_STROKE_PATTERN_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_STROKE_PATTERN, SwfdecStrokePatternClass))
-#define SWFDEC_STROKE_PATTERN_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_STROKE_PATTERN, SwfdecStrokePatternClass))
-
-struct _SwfdecStrokePattern
-{
-  SwfdecPattern		pattern;
-
-  guint			start_width;		/* width of line */
-  SwfdecColor		start_color;		/* color to paint with */
-  guint			end_width;		/* width of line */
-  SwfdecColor		end_color;		/* color to paint with */
-};
-
-struct _SwfdecStrokePatternClass
-{
-  SwfdecPatternClass	pattern_class;
-};
-
-G_DEFINE_TYPE (SwfdecStrokePattern, swfdec_stroke_pattern, SWFDEC_TYPE_PATTERN);
-
-static void
-swfdec_pattern_append_path_snapped (cairo_t *cr, const cairo_path_t *path)
-{
-  cairo_path_data_t *data;
-  double x, y;
-  int i;
-
-  data = path->data;
-  for (i = 0; i < path->num_data; i++) {
-    switch (data[i].header.type) {
-      case CAIRO_PATH_MOVE_TO:
-	i++;
-	x = data[i].point.x;
-	y = data[i].point.y;
-	cairo_user_to_device (cr, &x, &y);
-	x = rint (x - 0.5) + 0.5;
-	y = rint (y - 0.5) + 0.5;
-	cairo_device_to_user (cr, &x, &y);
-	/* FIXME: currently we need to clamp this due to extents */
-	x = CLAMP (x, data[i].point.x - MAX_ALIGN, data[i].point.x + MAX_ALIGN);
-	y = CLAMP (y, data[i].point.y - MAX_ALIGN, data[i].point.y + MAX_ALIGN);
-	cairo_move_to (cr, x, y);
-	break;
-      case CAIRO_PATH_LINE_TO:
-	i++;
-	x = data[i].point.x;
-	y = data[i].point.y;
-	cairo_user_to_device (cr, &x, &y);
-	x = rint (x - 0.5) + 0.5;
-	y = rint (y - 0.5) + 0.5;
-	cairo_device_to_user (cr, &x, &y);
-	/* FIXME: currently we need to clamp this due to extents */
-	x = CLAMP (x, data[i].point.x - MAX_ALIGN, data[i].point.x + MAX_ALIGN);
-	y = CLAMP (y, data[i].point.y - MAX_ALIGN, data[i].point.y + MAX_ALIGN);
-	cairo_line_to (cr, x, y);
-	break;
-      case CAIRO_PATH_CURVE_TO:
-	x = data[i+3].point.x;
-	y = data[i+3].point.y;
-	cairo_user_to_device (cr, &x, &y);
-	x = rint (x - 0.5) + 0.5;
-	y = rint (y - 0.5) + 0.5;
-	cairo_device_to_user (cr, &x, &y);
-	/* FIXME: currently we need to clamp this due to extents */
-	x = CLAMP (x, data[i+3].point.x - MAX_ALIGN, data[i+3].point.x + MAX_ALIGN);
-	y = CLAMP (y, data[i+3].point.y - MAX_ALIGN, data[i+3].point.y + MAX_ALIGN);
-	cairo_curve_to (cr, data[i+1].point.x, data[i+1].point.y, 
-	    data[i+2].point.x, data[i+2].point.y, x, y);
-	i += 3;
-	break;
-      case CAIRO_PATH_CLOSE_PATH:
-	/* doesn't exist in our code */
-      default:
-	g_assert_not_reached ();
-    }
-  }
-}
-
-static void
-swfdec_stroke_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *path,
-    const SwfdecColorTransform *trans, guint ratio)
-{
-  SwfdecColor color;
-  double width;
-  SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
-
-  swfdec_pattern_append_path_snapped (cr, path);
-  color = swfdec_color_apply_morph (stroke->start_color, stroke->end_color, ratio);
-  color = swfdec_color_apply_transform (color, trans);
-  swfdec_color_set_source (cr, color);
-  if (ratio == 0) {
-    width = stroke->start_width;
-  } else if (ratio == 65535) {
-    width = stroke->end_width;
-  } else {
-    width = (stroke->start_width * (65535 - ratio) + stroke->end_width * ratio) / 65535;
-  }
-  if (width < SWFDEC_TWIPS_SCALE_FACTOR)
-    width = SWFDEC_TWIPS_SCALE_FACTOR;
-  cairo_set_line_width (cr, width);
-  cairo_stroke (cr);
-}
-
-static void
-swfdec_stroke_pattern_class_init (SwfdecStrokePatternClass *klass)
-{
-  SWFDEC_PATTERN_CLASS (klass)->paint = swfdec_stroke_pattern_paint;
-}
-
-static void
-swfdec_stroke_pattern_init (SwfdecStrokePattern *pattern)
-{
 }
 
 /*** COLOR PATTERN ***/
@@ -644,61 +514,12 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
     SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     return g_strdup_printf ("%s gradient (%u colors)", gradient->radial ? "radial" : "linear",
 	gradient->gradient->n_gradients);
-  } else if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
-    SwfdecStrokePattern *line = SWFDEC_STROKE_PATTERN (pattern);
+  } else if (SWFDEC_IS_STROKE (pattern)) {
+    SwfdecStroke *line = SWFDEC_STROKE (pattern);
     return g_strdup_printf ("line (width %u, color #%08X)", line->start_width, line->start_color);
   } else {
     return g_strdup_printf ("%s", G_OBJECT_TYPE_NAME (pattern));
   }
-}
-
-SwfdecPattern *
-swfdec_pattern_parse_stroke (SwfdecSwfDecoder *dec, gboolean rgba)
-{
-  SwfdecBits *bits = &dec->b;
-  SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
-
-  pattern->start_width = swfdec_bits_get_u16 (bits);
-  pattern->end_width = pattern->start_width;
-  if (rgba) {
-    pattern->start_color = swfdec_bits_get_rgba (bits);
-  } else {
-    pattern->start_color = swfdec_bits_get_color (bits);
-  }
-  pattern->end_color = pattern->start_color;
-  SWFDEC_LOG ("new stroke pattern: width %u color %08x", pattern->start_width, pattern->start_color);
-
-  return SWFDEC_PATTERN (pattern);
-}
-
-SwfdecPattern *
-swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *dec)
-{
-  SwfdecBits *bits = &dec->b;
-  SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
-
-  pattern->start_width = swfdec_bits_get_u16 (bits);
-  pattern->end_width = swfdec_bits_get_u16 (bits);
-  pattern->start_color = swfdec_bits_get_rgba (bits);
-  pattern->end_color = swfdec_bits_get_rgba (bits);
-  SWFDEC_LOG ("new stroke pattern: width %u => %u color %08X => %08X", 
-      pattern->start_width, pattern->end_width,
-      pattern->start_color, pattern->end_color);
-
-  return SWFDEC_PATTERN (pattern);
-}
-
-SwfdecPattern *
-swfdec_pattern_new_stroke (guint width, SwfdecColor color)
-{
-  SwfdecStrokePattern *pattern = g_object_new (SWFDEC_TYPE_STROKE_PATTERN, NULL);
-
-  pattern->start_width = width;
-  pattern->end_width = width;
-  pattern->start_color = color;
-  pattern->end_color = color;
-
-  return SWFDEC_PATTERN (pattern);
 }
 
 static void
@@ -772,11 +593,13 @@ swfdec_path_get_extents (const cairo_path_t *path, SwfdecRect *extents, double l
 #undef ADD_POINT
 }
 
+#define MAX_ALIGN 10
+
 void
 swfdec_pattern_get_path_extents (SwfdecPattern *pattern, const cairo_path_t *path, SwfdecRect *extents)
 {
-  if (SWFDEC_IS_STROKE_PATTERN (pattern)) {
-    SwfdecStrokePattern *stroke = SWFDEC_STROKE_PATTERN (pattern);
+  if (SWFDEC_IS_STROKE (pattern)) {
+    SwfdecStroke *stroke = SWFDEC_STROKE (pattern);
     double line_width = MAX (stroke->start_width, stroke->end_width);
     line_width = MAX (line_width, SWFDEC_TWIPS_SCALE_FACTOR);
     swfdec_path_get_extents (path, extents, line_width / 2);

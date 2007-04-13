@@ -125,8 +125,6 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
 	{
 	  SwfdecPlayer *player;
 	  player = swfdec_loader_target_get_player (target);
-	  g_assert (dec->width > 0);
-	  g_assert (dec->height > 0);
 	  swfdec_player_initialize (player, dec->rate, 
 	      dec->width, dec->height);
 	  if (!swfdec_loader_target_init (target)) {

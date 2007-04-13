@@ -1,4 +1,21 @@
-
+/* Swfdec
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
 
 #ifndef _SWFDEC_PATTERN_H_
 #define _SWFDEC_PATTERN_H_
@@ -42,14 +59,9 @@ struct _SwfdecPatternClass
 GType		swfdec_pattern_get_type		(void);
 
 SwfdecPattern *	swfdec_pattern_new_color	(SwfdecColor			color);
-SwfdecPattern *	swfdec_pattern_new_stroke	(guint				width,
-						 SwfdecColor			color);
 SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
 						 gboolean			rgba);
-SwfdecPattern *	swfdec_pattern_parse_stroke   	(SwfdecSwfDecoder *		dec,
-						 gboolean			rgba);
 SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
-SwfdecPattern *	swfdec_pattern_parse_morph_stroke (SwfdecSwfDecoder *		dec);
 
 void		swfdec_pattern_paint		(SwfdecPattern *		pattern, 
 						 cairo_t *			cr,

@@ -60,7 +60,7 @@ swfdec_debug_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
     return FALSE;
 
   if (event->button == 1 && swfdec_gtk_widget_get_interactive (widget)) {
-    double scale = swfdec_gtk_widget_get_scale (widget);
+    double scale = swfdec_gtk_widget_get_current_scale (widget);
     SwfdecPlayer *player = swfdec_gtk_widget_get_player (widget);
     switch (event->type) {
       case GDK_BUTTON_PRESS:

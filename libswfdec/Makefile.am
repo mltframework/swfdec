@@ -79,6 +79,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_scriptable.c \
 	swfdec_shape.c \
 	swfdec_sound.c \
+	swfdec_stroke.c \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
 	swfdec_swf_decoder.c \
@@ -159,6 +160,7 @@ noinst_HEADERS = \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_swf_decoder.h \
+	swfdec_stroke.h \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_types.h \

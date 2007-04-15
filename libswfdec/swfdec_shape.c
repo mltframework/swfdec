@@ -313,8 +313,6 @@ swfdec_shape_init (SwfdecShape * shape)
   shape->vecs = g_array_new (FALSE, TRUE, sizeof (SwfdecShapeVec));
 }
 
-typedef SwfdecPattern * (* SwfdecPatternFunc) (SwfdecSwfDecoder * s);
-typedef SwfdecStroke * (* SwfdecStrokeFunc) (SwfdecSwfDecoder * s);
 static void
 swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     SwfdecPatternFunc parse_fill, SwfdecStrokeFunc parse_stroke)
@@ -356,30 +354,6 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
   shape->n_line_bits = swfdec_bits_getbits (bits, 4);
 }
 
-static SwfdecPattern *
-parse_rgb (SwfdecSwfDecoder * s)
-{
-  return swfdec_pattern_parse (s, FALSE);
-}
-
-static SwfdecPattern *
-parse_rgba (SwfdecSwfDecoder * s)
-{
-  return swfdec_pattern_parse (s, TRUE);
-}
-
-static SwfdecStroke *
-parse_stroke_rgb (SwfdecSwfDecoder * s)
-{
-  return swfdec_stroke_parse (s, FALSE);
-}
-
-static SwfdecStroke *
-parse_stroke_rgba (SwfdecSwfDecoder * s)
-{
-  return swfdec_stroke_parse (s, TRUE);
-}
-
 int
 tag_define_shape (SwfdecSwfDecoder * s)
 {
@@ -397,9 +371,9 @@ tag_define_shape (SwfdecSwfDecoder * s)
 
   swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
 
-  swfdec_shape_add_styles (s, shape, parse_rgb, parse_stroke_rgb);
+  swfdec_shape_add_styles (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
 
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
 
   return SWFDEC_STATUS_OK;
 }
@@ -418,11 +392,9 @@ tag_define_shape_3 (SwfdecSwfDecoder * s)
 
   swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
 
-  shape->rgba = 1;
+  swfdec_shape_add_styles (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_rgba);
 
-  swfdec_shape_add_styles (s, shape, parse_rgba, parse_stroke_rgba);
-
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_rgba);
 
   return SWFDEC_STATUS_OK;
 }
@@ -433,29 +405,39 @@ tag_define_shape_2 (SwfdecSwfDecoder * s)
   return tag_define_shape (s);
 }
 
-#if 0
 int
 tag_define_shape_4 (SwfdecSwfDecoder *s)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
   int id;
+  SwfdecRect tmp;
+  gboolean has_scale_strokes, has_noscale_strokes;
 
   id = swfdec_bits_get_u16 (bits);
   shape = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SHAPE);
   if (!shape)
     return SWFDEC_STATUS_OK;
-  shape->rgba = 1;
 
   swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
+  SWFDEC_LOG ("  extents: %g %g x %g %g", 
+      SWFDEC_GRAPHIC (shape)->extents.x0, SWFDEC_GRAPHIC (shape)->extents.y0,
+      SWFDEC_GRAPHIC (shape)->extents.x1, SWFDEC_GRAPHIC (shape)->extents.y1);
+  swfdec_bits_get_rect (bits, &tmp);
+  SWFDEC_LOG ("  extents: %g %g x %g %g", 
+      tmp.x0, tmp.y0, tmp.x1, tmp.y1);
+  swfdec_bits_getbits (bits, 6);
+  has_scale_strokes = swfdec_bits_getbit (bits);
+  has_noscale_strokes = swfdec_bits_getbit (bits);
+  SWFDEC_LOG ("  has scaling strokes: %d", has_scale_strokes);
+  SWFDEC_LOG ("  has non-scaling strokes: %d", has_noscale_strokes);
 
-  swfdec_shape_add_styles (s, shape, parse_rgba, swfdec_stroke_parse_extended);
+  swfdec_shape_add_styles (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_extended);
 
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_extended);
 
   return SWFDEC_STATUS_OK;
 }
-#endif
 
 /* The shape creation process is a bit complicated since it requires matching 
  * the Flash model to the cairo model. Note that this code is just random 
@@ -828,7 +810,8 @@ swfdec_shape_initialize_from_sub_paths (SwfdecShape *shape, GArray *path_array)
 }
 
 void
-swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape)
+swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape,
+    SwfdecPatternFunc pattern_func, SwfdecStrokeFunc stroke_func)
 {
   int x = 0, y = 0;
   SubPath *path = NULL;
@@ -842,10 +825,7 @@ swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape)
   while ((type = swfdec_shape_peek_type (bits))) {
     switch (type) {
       case SWFDEC_SHAPE_TYPE_CHANGE:
-	if (shape->rgba)
-	  path = swfdec_shape_parse_change (s, shape, path_array, path, &x, &y, parse_rgba, parse_stroke_rgba);
-	else
-	  path = swfdec_shape_parse_change (s, shape, path_array, path, &x, &y, parse_rgb, parse_stroke_rgb);
+	path = swfdec_shape_parse_change (s, shape, path_array, path, &x, &y, pattern_func, stroke_func);
 	break;
       case SWFDEC_SHAPE_TYPE_LINE:
 	swfdec_shape_parse_line (bits, path, &x, &y, FALSE);

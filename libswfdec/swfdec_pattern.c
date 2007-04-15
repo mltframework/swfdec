@@ -269,23 +269,12 @@ swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
 
 /*** EXPORTED API ***/
 
-/**
- * swfdec_pattern_parse:
- * @dec: a #SwfdecDecoder to parse from
- * @rgba: TRUE if colors are RGBA, FALSE if they're just RGB
- *
- * Continues parsing @dec into a new #SwfdecPattern
- *
- * Returns: a new #SwfdecPattern or NULL on error
- **/
-SwfdecPattern *
-swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
+static SwfdecPattern *
+swfdec_pattern_do_parse (SwfdecSwfDecoder *dec, gboolean rgba)
 {
   guint paint_style_type;
   SwfdecBits *bits;
   SwfdecPattern *pattern;
-
-  g_return_val_if_fail (dec != NULL, NULL);
 
   bits = &dec->b;
   paint_style_type = swfdec_bits_get_u8 (bits);
@@ -353,6 +342,31 @@ swfdec_pattern_parse (SwfdecSwfDecoder *dec, gboolean rgba)
   }
   swfdec_bits_syncbits (bits);
   return pattern;
+}
+
+/**
+ * swfdec_pattern_parse:
+ * @dec: a #SwfdecDecoder to parse from
+ * @rgba: TRUE if colors are RGBA, FALSE if they're just RGB
+ *
+ * Continues parsing @dec into a new #SwfdecPattern
+ *
+ * Returns: a new #SwfdecPattern or NULL on error
+ **/
+SwfdecPattern *
+swfdec_pattern_parse (SwfdecSwfDecoder *dec)
+{
+  g_return_val_if_fail (dec != NULL, NULL);
+
+  return swfdec_pattern_do_parse (dec, FALSE);
+}
+
+SwfdecPattern *
+swfdec_pattern_parse_rgba (SwfdecSwfDecoder *dec)
+{
+  g_return_val_if_fail (dec != NULL, NULL);
+
+  return swfdec_pattern_do_parse (dec, TRUE);
 }
 
 /**
@@ -511,9 +525,6 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
     SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     return g_strdup_printf ("%s gradient (%u colors)", gradient->radial ? "radial" : "linear",
 	gradient->gradient->n_gradients);
-  } else if (SWFDEC_IS_STROKE (pattern)) {
-    SwfdecStroke *line = SWFDEC_STROKE (pattern);
-    return g_strdup_printf ("line (width %u, color #%08X)", line->start_width, line->start_color);
   } else {
     return g_strdup_printf ("%s", G_OBJECT_TYPE_NAME (pattern));
   }

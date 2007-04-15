@@ -58,8 +58,8 @@ struct _SwfdecPatternClass
 GType		swfdec_pattern_get_type		(void);
 
 SwfdecPattern *	swfdec_pattern_new_color	(SwfdecColor			color);
-SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec,
-						 gboolean			rgba);
+SwfdecPattern *	swfdec_pattern_parse		(SwfdecSwfDecoder *		dec);
+SwfdecPattern *	swfdec_pattern_parse_rgba     	(SwfdecSwfDecoder *		dec);
 SwfdecPattern *	swfdec_pattern_parse_morph    	(SwfdecSwfDecoder *		dec);
 
 void		swfdec_pattern_paint		(SwfdecPattern *		pattern, 

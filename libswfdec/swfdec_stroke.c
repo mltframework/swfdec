@@ -143,18 +143,29 @@ swfdec_stroke_init (SwfdecStroke *stroke)
 /*** EXPORTED API ***/
 
 SwfdecStroke *
-swfdec_stroke_parse (SwfdecSwfDecoder *dec, gboolean rgba)
+swfdec_stroke_parse (SwfdecSwfDecoder *dec)
 {
   SwfdecBits *bits = &dec->b;
   SwfdecStroke *stroke = g_object_new (SWFDEC_TYPE_STROKE, NULL);
 
   stroke->start_width = swfdec_bits_get_u16 (bits);
   stroke->end_width = stroke->start_width;
-  if (rgba) {
-    stroke->start_color = swfdec_bits_get_rgba (bits);
-  } else {
-    stroke->start_color = swfdec_bits_get_color (bits);
-  }
+  stroke->start_color = swfdec_bits_get_color (bits);
+  stroke->end_color = stroke->start_color;
+  SWFDEC_LOG ("new stroke stroke: width %u color %08x", stroke->start_width, stroke->start_color);
+
+  return stroke;
+}
+
+SwfdecStroke *
+swfdec_stroke_parse_rgba (SwfdecSwfDecoder *dec)
+{
+  SwfdecBits *bits = &dec->b;
+  SwfdecStroke *stroke = g_object_new (SWFDEC_TYPE_STROKE, NULL);
+
+  stroke->start_width = swfdec_bits_get_u16 (bits);
+  stroke->end_width = stroke->start_width;
+  stroke->start_color = swfdec_bits_get_rgba (bits);
   stroke->end_color = stroke->start_color;
   SWFDEC_LOG ("new stroke stroke: width %u color %08x", stroke->start_width, stroke->start_color);
 
@@ -269,7 +280,7 @@ swfdec_stroke_do_parse_extended (SwfdecSwfDecoder *dec, gboolean morph)
     if (morph) {
       stroke->pattern = swfdec_pattern_parse_morph (dec);
     } else {
-      stroke->pattern = swfdec_pattern_parse (dec, TRUE);
+      stroke->pattern = swfdec_pattern_parse_rgba (dec);
     }
   } else {
     stroke->start_color = swfdec_bits_get_rgba (bits);

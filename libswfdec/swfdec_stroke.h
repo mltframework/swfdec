@@ -70,8 +70,8 @@ void		swfdec_stroke_paint		(SwfdecStroke *		stroke,
 						 const SwfdecColorTransform *trans,
 						 guint			ratio);
 
-SwfdecStroke *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec,
-						 gboolean		rgba);
+SwfdecStroke *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec);
+SwfdecStroke *	swfdec_stroke_parse_rgba      	(SwfdecSwfDecoder *	dec);
 SwfdecStroke *	swfdec_stroke_parse_extended	(SwfdecSwfDecoder *	dec);
 SwfdecStroke *	swfdec_stroke_parse_morph    	(SwfdecSwfDecoder *	dec);
 SwfdecStroke *	swfdec_stroke_parse_morph_extended

@@ -154,6 +154,10 @@ SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 const char *		name,
 						 SwfdecAsNative		native,
 						 guint			min_args);
+void		swfdec_as_object_add_variable	(SwfdecAsObject *	object,
+						 const char *		name,
+						 SwfdecAsVariableSetter	set,
+						 SwfdecAsVariableGetter get);
 
 void		swfdec_as_object_run		(SwfdecAsObject *       object,
 						 SwfdecScript *		script);

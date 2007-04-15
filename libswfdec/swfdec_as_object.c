@@ -240,8 +240,12 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   if (var == NULL ||
       var->flags & SWFDEC_AS_VARIABLE_READONLY)
     return;
-  g_assert ((var->flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
-  var->value.value = *value;
+  if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
+    g_return_if_fail (var->value.funcs.set != NULL);
+    var->value.funcs.set (object, value);
+  } else {
+    var->value.value = *value;
+  }
 }
 
 void
@@ -261,8 +265,12 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
       object = object->prototype;
       continue;
     }
-    g_assert ((var->flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
-    *value = var->value.value;
+    if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (value); /* just to be sure */
+      var->value.funcs.get (object, value);
+    } else {
+      *value = var->value.value;
+    }
     return;
   }
   if (i == 256) {
@@ -417,6 +425,44 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name,
   swfdec_as_object_set (object, name, &val);
   swfdec_as_object_set_flags (object, name, SWFDEC_AS_VARIABLE_DONT_ENUM);
   return function;
+}
+
+/**
+ * swfdec_as_object_add_variable:
+ * @object: a #SwfdecAsObject
+ * @name: name of the function. The string does not have to be 
+ *        garbage-collected.
+ * @set: function to set this value or %NULL if the value should be read-only
+ * @get: function to get the value.
+ *
+ * Adds a new property with name @name to @object. The property is native, so
+ * the value is not managed by the script engine, but the @set and @get 
+ * function are used to access the value. The variable will not be enumerated
+ * and cannot be deleted.
+ **/
+void
+swfdec_as_object_add_variable (SwfdecAsObject *object, const char *name,
+    SwfdecAsVariableSetter set, SwfdecAsVariableGetter get)
+{
+  SwfdecAsVariable *var;
+  SwfdecAsValue variable;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (get != NULL);
+
+  name = swfdec_as_context_get_string (object->context, name);
+  SWFDEC_AS_VALUE_SET_STRING (&variable, name);
+  var = swfdec_as_object_lookup (object, &variable, TRUE);
+  if (var == NULL)
+    return;
+  var->flags = SWFDEC_AS_VARIABLE_NATIVE | SWFDEC_AS_VARIABLE_PERMANENT |
+    SWFDEC_AS_VARIABLE_DONT_ENUM;
+  if (set == NULL)
+    var->flags |= SWFDEC_AS_VARIABLE_READONLY;
+  g_assert ((var->flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
+  var->value.funcs.get = get;
+  var->value.funcs.set = set;
 }
 
 /**

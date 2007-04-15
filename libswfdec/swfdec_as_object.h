@@ -37,6 +37,8 @@ typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 typedef struct _SwfdecAsVariable SwfdecAsVariable;
 typedef void (* SwfdecAsVariableSetter) (SwfdecAsObject *object, const SwfdecAsValue *value);
 typedef void (* SwfdecAsVariableGetter) (SwfdecAsObject *object, SwfdecAsValue *value);
+typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
+    const SwfdecAsValue *variable, SwfdecAsVariable *value, gpointer data);
 
 struct _SwfdecAsVariable {
   guint			flags;		/* SwfdecAsVariableFlag values */
@@ -85,6 +87,10 @@ struct _SwfdecAsObjectClass {
   /* delete the variable - it does exists */
   void			(* delete)		(SwfdecAsObject *       object,
 						 const SwfdecAsValue *	variable);
+  /* call with every variable until func returns FALSE */
+  gboolean		(* foreach)		(SwfdecAsObject *	object,
+						 SwfdecAsVariableForeach func,
+						 gpointer		data);
 };
 
 GType		swfdec_as_object_get_type	(void);
@@ -118,6 +124,9 @@ void		swfdec_as_object_unset_variable_flags
 						(SwfdecAsObject *       object,
 						 const SwfdecAsValue *	variable,
 						 SwfdecAsVariableFlag	flags);
+gboolean	swfdec_as_object_foreach	(SwfdecAsObject *       object,
+						 SwfdecAsVariableForeach func,
+						 gpointer		data);
 
 /* shortcuts, you probably don't want to bind them */
 #define swfdec_as_object_set(object, name, value) G_STMT_START { \

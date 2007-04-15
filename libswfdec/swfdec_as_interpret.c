@@ -1790,40 +1790,60 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     return JS_FALSE;
   return JS_TRUE;
 }
+#endif
+
+static gboolean
+swfdec_action_do_enumerate (SwfdecAsObject *object, const SwfdecAsValue *val,
+    SwfdecAsVariable *var, gpointer stackp)
+{
+  SwfdecAsStack *stack = stackp;
+
+  if (var->flags | SWFDEC_AS_VARIABLE_DONT_ENUM)
+    return TRUE;
+  swfdec_as_stack_ensure_left (stack, 1);
+  *swfdec_as_stack_push (stack) = *val;
+  return TRUE;
+}
+
+static void
+swfdec_action_enumerate (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val;
+  SwfdecAsStack *stack;
+  SwfdecAsObject *obj;
+
+  stack = cx->frame->stack;
+  val = swfdec_as_stack_peek (stack, 1);
+
+  swfdec_as_interpret_eval (cx, NULL, val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    SWFDEC_ERROR ("Enumerate not pointing to an object");
+    SWFDEC_AS_VALUE_SET_NULL (val);
+    return;
+  }
+  obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  SWFDEC_AS_VALUE_SET_NULL (val);
+  swfdec_as_object_foreach (obj, swfdec_action_do_enumerate, stack);
+}
 
 static void
 swfdec_action_enumerate2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSObject *obj;
-  JSIdArray *array;
-  guint i;
+  SwfdecAsValue *val;
+  SwfdecAsStack *stack;
+  SwfdecAsObject *obj;
 
-  if (!JSVAL_IS_OBJECT (cx->fp->sp[-1]) || cx->fp->sp[-1] == JSVAL_NULL) {
+  stack = cx->frame->stack;
+  val = swfdec_as_stack_peek (stack, 1);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     SWFDEC_ERROR ("Enumerate2 called without an object");
-    cx->fp->sp[-1] = JSVAL_NULL;
-    return JS_TRUE;
+    SWFDEC_AS_VALUE_SET_NULL (val);
+    return;
   }
-  obj = JSVAL_TO_OBJECT (cx->fp->sp[-1]);
-  cx->fp->sp[-1] = JSVAL_NULL;
-  array = JS_Enumerate (cx, obj);
-  if (!array)
-    return JS_FALSE;
-  if ((guint) (cx->fp->spend - cx->fp->sp) < array->length) {
-    SWFDEC_ERROR ("FIXME: not enough stack space, need %u, got %td",
-	array->length, cx->fp->spend - cx->fp->sp);
-    JS_DestroyIdArray (cx, array);
-    return JS_FALSE;
-  }
-  for (i = 0; i < array->length; i++) {
-    if (!JS_IdToValue (cx, array->vector[i], cx->fp->sp++)) {
-      JS_DestroyIdArray (cx, array);
-      return JS_FALSE;
-    }
-  }
-  JS_DestroyIdArray (cx, array);
-  return JS_TRUE;
+  obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  SWFDEC_AS_VALUE_SET_NULL (val);
+  swfdec_as_object_foreach (obj, swfdec_action_do_enumerate, stack);
 }
-#endif
 
 static void
 swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2204,7 +2224,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
 #endif
-  [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL },
+  [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, { NULL, NULL, swfdec_action_enumerate, swfdec_action_enumerate, swfdec_action_enumerate } },
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
   [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
@@ -2220,9 +2240,11 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x53] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
   /* version 6 */
-  [0x54] = { "InstanceOf", NULL },
-  [0x55] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
+#endif
+  [SWFDEC_AS_ACTION_INSTANCE_OF] = { "InstanceOf", NULL },
+  [SWFDEC_AS_ACTION_ENUMERATE2] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
   /* version 5 */
+#if 0
   [0x60] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [0x61] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [0x62] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },

@@ -507,7 +507,8 @@ swfdec_shape_accumulate_one_polygon (SwfdecShape *shape, SwfdecShapeVec *target,
       break;
     }
     if (i == paths_len) {
-      SWFDEC_ERROR ("could not find a closed path for style %u", style);
+      SWFDEC_ERROR ("could not find a closed path for style %u, starting at %d %d", style,
+	  paths[start].x_start, paths[start].y_start);
       goto fail;
     }
   }
@@ -794,6 +795,14 @@ swfdec_shape_initialize_from_sub_paths (SwfdecShape *shape, GArray *path_array)
 {
   guint i;
 
+#if 0
+  g_print ("\n\n");
+  for (i = 0; i < path_array->len; i++) {
+    SubPath *path = &g_array_index (path_array, SubPath, i);
+    g_print ("%d %d => %d %d  -  %u %u %u\n", path->x_start, path->y_start, path->x_end, path->y_end,
+	path->fill0style, path->fill1style, path->linestyle);
+  }
+#endif
   swfdec_shape_accumulate_fills (shape, (SubPath *) path_array->data, path_array->len);
   swfdec_shape_accumulate_lines (shape, (SubPath *) path_array->data, path_array->len);
   for (i = 0; i < path_array->len; i++) {
@@ -927,13 +936,14 @@ swfdec_morph_shape_get_recs (SwfdecSwfDecoder * s, SwfdecMorphShape *morph, Swfd
     end_type = swfdec_shape_peek_type (end_bits);
     if (end_type == SWFDEC_SHAPE_TYPE_CHANGE && start_type != SWFDEC_SHAPE_TYPE_CHANGE) {
       SubPath *path;
-      g_array_set_size (start_path_array, start_path_array->len + 1);
-      path = &g_array_index (start_path_array, SubPath, start_path_array->len - 1);
       if (start_path) {
 	start_path->x_end = start_x;
 	start_path->y_end = start_y;
-	*path = *start_path;
       }
+      g_array_set_size (start_path_array, start_path_array->len + 1);
+      path = &g_array_index (start_path_array, SubPath, start_path_array->len - 1);
+      if (start_path)
+	*path = *start_path;
       start_path = path;
       swfdec_path_init (&start_path->path);
       start_path->x_start = start_x;

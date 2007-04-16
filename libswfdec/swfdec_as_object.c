@@ -460,7 +460,6 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *name,
     SWFDEC_AS_VARIABLE_DONT_ENUM;
   if (set == NULL)
     var->flags |= SWFDEC_AS_VARIABLE_READONLY;
-  g_assert ((var->flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
   var->value.funcs.get = get;
   var->value.funcs.set = set;
 }

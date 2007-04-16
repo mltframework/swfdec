@@ -822,6 +822,7 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
    */
   player->movies = g_list_prepend (player->movies, movie);
   /* we have to create the JSObject here to get actions queued before init_movie executes */
+  swfdec_movie_add_asprops (movie);
   //swfdec_js_movie_create_jsobject (movie);
   /* queue init and construct events for non-root movies */
   if (movie != movie->root) {

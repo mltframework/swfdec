@@ -200,6 +200,7 @@ SwfdecDepthClass
 /* in swfdec_js_movie.c */
 void		swfdec_movie_run_init		(SwfdecMovie *		movie);
 void		swfdec_movie_run_construct	(SwfdecMovie *		movie);
+void		swfdec_movie_add_asprops	(SwfdecMovie *		movie);
 
 G_END_DECLS
 #endif

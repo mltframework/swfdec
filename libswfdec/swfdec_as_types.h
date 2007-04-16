@@ -98,7 +98,7 @@ struct _SwfdecAsValue {
 
 
 /* List of static strings that are required all the time */
-extern const char *swfdec_as_strings[];
+extern const char const * swfdec_as_strings[];
 #define SWFDEC_AS_STR_CONSTANT(n) (&swfdec_as_strings[(n)][1])
 
 #define SWFDEC_AS_STR_EMPTY		SWFDEC_AS_STR_CONSTANT(0)
@@ -174,6 +174,8 @@ extern const char *swfdec_as_strings[];
 #define SWFDEC_AS_STR_Function		SWFDEC_AS_STR_CONSTANT(70)
 #define SWFDEC_AS_STR_prototype		SWFDEC_AS_STR_CONSTANT(71)
 #define SWFDEC_AS_STR_constructor	SWFDEC_AS_STR_CONSTANT(72)
+#define SWFDEC_AS_STR__parent		SWFDEC_AS_STR_CONSTANT(73)
+#define SWFDEC_AS_STR__root		SWFDEC_AS_STR_CONSTANT(74)
 
 /* all existing actions */
 typedef enum {

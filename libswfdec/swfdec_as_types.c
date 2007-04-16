@@ -28,8 +28,8 @@
 #include "swfdec_as_context.h"
 #include "swfdec_debug.h"
 
-#define SWFDEC_AS_CONSTANT_STRING(str) "\2" str
-const char *swfdec_as_strings[] = {
+#define SWFDEC_AS_CONSTANT_STRING(str) ((const char *) "\2" str)
+const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING (""),
   SWFDEC_AS_CONSTANT_STRING ("__proto__"),
   SWFDEC_AS_CONSTANT_STRING ("this"),
@@ -103,6 +103,8 @@ const char *swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("Function"),
   SWFDEC_AS_CONSTANT_STRING ("prototype"),
   SWFDEC_AS_CONSTANT_STRING ("constructor"),
+  SWFDEC_AS_CONSTANT_STRING ("_parent"),
+  SWFDEC_AS_CONSTANT_STRING ("_root"),
   /* add more here */
   NULL
 };

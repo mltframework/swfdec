@@ -152,7 +152,7 @@ swfdec_stroke_parse (SwfdecSwfDecoder *dec)
   stroke->end_width = stroke->start_width;
   stroke->start_color = swfdec_bits_get_color (bits);
   stroke->end_color = stroke->start_color;
-  SWFDEC_LOG ("new stroke stroke: width %u color %08x", stroke->start_width, stroke->start_color);
+  SWFDEC_LOG ("new stroke: width %u color %08x", stroke->start_width, stroke->start_color);
 
   return stroke;
 }
@@ -167,7 +167,7 @@ swfdec_stroke_parse_rgba (SwfdecSwfDecoder *dec)
   stroke->end_width = stroke->start_width;
   stroke->start_color = swfdec_bits_get_rgba (bits);
   stroke->end_color = stroke->start_color;
-  SWFDEC_LOG ("new stroke stroke: width %u color %08x", stroke->start_width, stroke->start_color);
+  SWFDEC_LOG ("new stroke: width %u color %08x", stroke->start_width, stroke->start_color);
 
   return stroke;
 }
@@ -182,7 +182,7 @@ swfdec_stroke_parse_morph (SwfdecSwfDecoder *dec)
   stroke->end_width = swfdec_bits_get_u16 (bits);
   stroke->start_color = swfdec_bits_get_rgba (bits);
   stroke->end_color = swfdec_bits_get_rgba (bits);
-  SWFDEC_LOG ("new stroke stroke: width %u => %u color %08X => %08X", 
+  SWFDEC_LOG ("new stroke: width %u => %u color %08X => %08X", 
       stroke->start_width, stroke->end_width,
       stroke->start_color, stroke->end_color);
 

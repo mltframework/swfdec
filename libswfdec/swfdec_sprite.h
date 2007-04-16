@@ -102,6 +102,7 @@ void swfdec_content_free (SwfdecContent *content);
 int tag_show_frame (SwfdecSwfDecoder * s);
 int tag_func_set_background_color (SwfdecSwfDecoder * s);
 int swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s);
+int swfdec_spriteseg_place_object_3 (SwfdecSwfDecoder * s);
 int swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s);
 int swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s);
 

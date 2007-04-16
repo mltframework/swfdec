@@ -247,32 +247,29 @@ swfdec_action_goto_label (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
 }
 
-#if 0
 static int
-swfdec_value_to_frame (SwfdecAsContext *cx, SwfdecMovie *movie, jsval val)
+swfdec_value_to_frame (SwfdecAsContext *cx, SwfdecMovie *movie, SwfdecAsValue *val)
 {
   int frame;
 
-  if (JSVAL_IS_STRING (val)) {
-    const char *name = swfdec_js_to_string (cx, val);
-    char *end;
-    if (name == NULL ||
-        !SWFDEC_IS_SPRITE_MOVIE (movie))
+  if (SWFDEC_AS_VALUE_IS_STRING (val)) {
+    const char *name = SWFDEC_AS_VALUE_GET_STRING (val);
+    double d;
+    if (!SWFDEC_IS_SPRITE_MOVIE (movie))
       return -1;
     if (strchr (name, ':')) {
       SWFDEC_ERROR ("FIXME: handle targets");
     }
     /* treat valid encoded numbers as numbers, otherwise assume it's a frame label */
-    frame = strtol (name, &end, 0);
-    if (*end != '\0')
+    d = swfdec_as_value_to_number (cx, val);
+    if (isnan (d))
       frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, name);
     else
-      frame--;
-  } else if (JSVAL_IS_INT (val)) {
-    return JSVAL_TO_INT (val) - 1;
-  } else if (JSVAL_IS_DOUBLE (val)) {
-    return (int) *JSVAL_TO_DOUBLE (val) - 1;
+      frame = d - 1;
+  } else if (SWFDEC_AS_VALUE_IS_NUMBER (val)) {
+    return (int) SWFDEC_AS_VALUE_GET_NUMBER (val) - 1;
   } else {
+    SWFDEC_WARNING ("cannot convert value to frame number");
     /* FIXME: how do we treat undefined etc? */
     frame = -1;
   }
@@ -285,7 +282,7 @@ swfdec_action_goto_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecBits bits;
   guint bias;
   gboolean play;
-  jsval val;
+  SwfdecAsValue *val;
   SwfdecMovie *movie;
 
   swfdec_bits_init_data (&bits, data, len);
@@ -297,24 +294,22 @@ swfdec_action_goto_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data
   if (bias) {
     bias = swfdec_bits_get_u16 (&bits);
   }
-  val = cx->fp->sp[-1];
-  cx->fp->sp--;
+  val = swfdec_as_stack_peek (cx->frame->stack, 1);
   movie = swfdec_action_get_target (cx);
   /* now set it */
   if (movie) {
     int frame = swfdec_value_to_frame (cx, movie, val);
-    if (frame < 0)
-      return JS_TRUE;
-    frame += bias;
-    frame = CLAMP (frame, 0, (int) movie->n_frames - 1);
-    swfdec_movie_goto (movie, frame);
-    movie->stopped = !play;
+    if (frame >= 0) {
+      frame += bias;
+      frame = CLAMP (frame, 0, (int) movie->n_frames - 1);
+      swfdec_movie_goto (movie, frame);
+      movie->stopped = !play;
+    }
   } else {
     SWFDEC_ERROR ("no movie to GotoFrame2 on");
   }
-  return JS_TRUE;
+  swfdec_as_stack_pop (cx->frame->stack);
 }
-#endif
 
 static void
 swfdec_script_skip_actions (SwfdecAsContext *cx, guint jump)
@@ -2079,6 +2074,7 @@ swfdec_action_print_wait_for_frame2 (guint action, const guint8 *data, guint len
   }
   return g_strdup_printf ("WaitForFrame2 %u", (guint) *data);
 }
+#endif
 
 static char *
 swfdec_action_print_goto_frame2 (guint action, const guint8 *data, guint len)
@@ -2099,7 +2095,6 @@ swfdec_action_print_goto_frame2 (guint action, const guint8 *data, guint len)
     return g_strdup_printf ("GotoFrame2 %s", play ? "play" : "stop");
   }
 }
-#endif
 
 static char *
 swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
@@ -2285,8 +2280,6 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   [SWFDEC_AS_ACTION_IF] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
   [SWFDEC_AS_ACTION_CALL] = { "Call", NULL },
-#if 0
-  [0x9f] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }
-#endif
+  [SWFDEC_AS_ACTION_GOTO_FRAME2] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }
 };
 

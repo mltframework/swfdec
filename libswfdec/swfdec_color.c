@@ -250,3 +250,26 @@ swfdec_matrix_get_rotation (const cairo_matrix_t *matrix)
   return atan2 (matrix->yx, matrix->xx) * 180 / G_PI;
 }
 
+void
+swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
+    const cairo_matrix_t *end, guint ratio)
+{
+  guint inv_ratio = 65535 - ratio;
+  g_assert (ratio < 65536);
+
+  if (ratio == 0) {
+    *dest = *start;
+    return;
+  }
+  if (ratio == 65535) {
+    *dest = *end;
+    return;
+  }
+  dest->xx = (start->xx * inv_ratio + end->xx * ratio) / 65535;
+  dest->xy = (start->xy * inv_ratio + end->xy * ratio) / 65535;
+  dest->yy = (start->yy * inv_ratio + end->yy * ratio) / 65535;
+  dest->yx = (start->yx * inv_ratio + end->yx * ratio) / 65535;
+  dest->x0 = (start->x0 * inv_ratio + end->x0 * ratio) / 65535;
+  dest->y0 = (start->y0 * inv_ratio + end->y0 * ratio) / 65535;
+}
+

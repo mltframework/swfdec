@@ -27,6 +27,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_shape.h"
+#include "swfdec_stroke.h"
 #include "swfdec_swf_decoder.h"
 
 G_DEFINE_TYPE (SwfdecFont, swfdec_font, SWFDEC_TYPE_CHARACTER)
@@ -184,14 +185,14 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
   entry->shape = shape;
 
   g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-  g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
+  g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
 
   shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
   shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
   swfdec_bits_syncbits (&s->b);
   if (swfdec_bits_skip_bytes (&save_bits, size) != size) {
     SWFDEC_ERROR ("invalid offset value, not enough bytes available");
@@ -327,7 +328,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     entry->shape = shape;
 
     g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-    g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
+    g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
 
     swfdec_bits_syncbits (&s->b);
     shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
@@ -335,7 +336,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swfdec_shape_get_recs (s, shape);
+    swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
   }
   if (wide_codes) {
     swfdec_bits_skip_bytes (bits, 2 * n_glyphs);

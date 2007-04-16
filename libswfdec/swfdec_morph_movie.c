@@ -23,6 +23,7 @@
 
 #include "swfdec_morph_movie.h"
 #include "swfdec_debug.h"
+#include "swfdec_stroke.h"
 
 G_DEFINE_TYPE (SwfdecMorphMovie, swfdec_morph_movie, SWFDEC_TYPE_MOVIE)
 
@@ -49,8 +50,6 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
-  cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-  cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
   for (i = 0; i < shape->vecs->len; i++) {
     SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
@@ -63,13 +62,18 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
       continue;
     
     /* hack to not append paths for lines */
-    if (!fill && vec->last_index % 2 != 0) 
+    if (!fill && SWFDEC_IS_STROKE (vec->pattern))
       continue;
 
-    if (fill)
-      swfdec_pattern_paint (vec->pattern, cr, path, trans, movie->content->ratio);
-    else
-      cairo_append_path (cr, &vec->path);
+    if (fill) {
+      if (SWFDEC_IS_PATTERN (vec->pattern)) {
+	swfdec_pattern_paint (vec->pattern, cr, path, trans, movie->content->ratio);
+      } else {
+	swfdec_stroke_paint (vec->pattern, cr, path, trans, movie->content->ratio);
+      }
+    } else {
+      cairo_append_path (cr, path);
+    }
   }
 }
 

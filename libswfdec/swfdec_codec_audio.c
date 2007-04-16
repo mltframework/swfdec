@@ -118,7 +118,7 @@ extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_mad_new;
 extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_ffmpeg_new;
 #endif
 
-#ifdef HAVE_FFMPEG
+#ifdef HAVE_GST
 extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_gst_new;
 #endif
 
@@ -141,7 +141,6 @@ swfdec_audio_decoder_new (SwfdecAudioFormat format, gboolean width, SwfdecAudioO
   ret = swfdec_audio_decoder_uncompressed_new (format, width, data_format);
   if (ret == NULL)
     ret = swfdec_audio_decoder_adpcm_new (format, width, data_format);
-#if 0
 #ifdef HAVE_MAD
   if (ret == NULL)
     ret = swfdec_audio_decoder_mad_new (format, width, data_format);
@@ -149,7 +148,6 @@ swfdec_audio_decoder_new (SwfdecAudioFormat format, gboolean width, SwfdecAudioO
 #ifdef HAVE_FFMPEG
   if (ret == NULL)
     ret = swfdec_audio_decoder_ffmpeg_new (format, width, data_format);
-#endif
 #endif
 #ifdef HAVE_GST
   if (ret == NULL)

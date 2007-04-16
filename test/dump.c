@@ -188,17 +188,22 @@ dump_shape (SwfdecShape *shape)
     shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
 
     g_print("   %3u: ", shapevec->last_index);
-    if (shapevec->pattern == NULL) {
-      g_print ("not filled\n");
-    } else {
-      char *str = swfdec_pattern_to_string (shapevec->pattern);
+    if (SWFDEC_IS_PATTERN (shapevec->pattern)) {
+      SwfdecPattern *pattern = shapevec->pattern;
+      char *str = swfdec_pattern_to_string (pattern);
       g_print ("%s\n", str);
       g_free (str);
-      if (verbose)
-      g_print ("        %g %g  %g %g  %g %g\n", 
-	  shapevec->pattern->start_transform.xx, shapevec->pattern->start_transform.xy,
-	  shapevec->pattern->start_transform.yx, shapevec->pattern->start_transform.yy,
-	  shapevec->pattern->start_transform.x0, shapevec->pattern->start_transform.y0);
+      if (verbose) {
+	g_print ("        %g %g  %g %g  %g %g\n", 
+	    pattern->start_transform.xx, pattern->start_transform.xy,
+	    pattern->start_transform.yx, pattern->start_transform.yy,
+	    pattern->start_transform.x0, pattern->start_transform.y0);
+      }
+    } else if (SWFDEC_IS_STROKE (shapevec->pattern)) {
+      SwfdecStroke *line = SWFDEC_STROKE (shapevec->pattern);
+      g_print ("line (width %u, color #%08X)\n", line->start_width, line->start_color);
+    } else {
+      g_print ("not filled\n");
     }
     if (verbose) {
       dump_path (&shapevec->path);

@@ -172,13 +172,13 @@ swfdec_audio_decoder_adpcm_new (SwfdecAudioFormat type, gboolean width, SwfdecAu
 
   if (type != SWFDEC_AUDIO_FORMAT_ADPCM)
     return NULL;
+  adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
   adpcm->decoder.out_format = format;
   adpcm->decoder.push = swfdec_audio_decoder_adpcm_push;
   adpcm->decoder.pull = swfdec_audio_decoder_adpcm_pull;
   adpcm->decoder.free = swfdec_audio_decoder_adpcm_free;
   adpcm->queue = swfdec_buffer_queue_new ();
 
-  adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
   return &adpcm->decoder;
 }
 

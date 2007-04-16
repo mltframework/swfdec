@@ -274,6 +274,7 @@ swfdec_content_new (int depth)
   cairo_matrix_init_identity (&content->transform);
   swfdec_color_transform_init_identity (&content->color_transform);
   content->depth = depth;
+  content->operator = CAIRO_OPERATOR_OVER;
   content->sequence = content;
   content->end = G_MAXUINT;
   return content;
@@ -313,8 +314,14 @@ swfdec_contents_create (SwfdecSprite *sprite,
   return content;
 }
 
-int
-swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
+static cairo_operator_t
+swfdec_sprite_convert_operator (guint operator)
+{
+  return CAIRO_OPERATOR_OVER;
+}
+
+static int
+swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
 {
   SwfdecBits *bits = &s->b;
   int has_clip_actions;
@@ -326,6 +333,9 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   int has_character;
   int move;
   int depth;
+  int cache;
+  int has_blend_mode = 0;
+  int has_filter = 0;
   SwfdecContent *content;
 
   has_clip_actions = swfdec_bits_getbit (bits);
@@ -336,7 +346,6 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   has_matrix = swfdec_bits_getbit (bits);
   has_character = swfdec_bits_getbit (bits);
   move = swfdec_bits_getbit (bits);
-  depth = swfdec_bits_get_u16 (bits);
 
   SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
   SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
@@ -346,6 +355,18 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
   SWFDEC_LOG ("  move = %d", move);
+
+  if (version > 2) {
+    swfdec_bits_getbits (bits, 5);
+    cache = swfdec_bits_getbit (bits);
+    has_blend_mode = swfdec_bits_getbit (bits);
+    has_filter = swfdec_bits_getbit (bits);
+    SWFDEC_LOG ("  cache = %d", cache);
+    SWFDEC_LOG ("  has filter = %d", has_filter);
+    SWFDEC_LOG ("  has blend mode = %d", has_blend_mode);
+  }
+
+  depth = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
   depth -= 16384;
 
@@ -402,6 +423,19 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     content->clip_depth = swfdec_bits_get_u16 (bits) - 16384;
     SWFDEC_LOG ("  clip_depth = %d (=> %d)", content->clip_depth + 16384, content->clip_depth);
   }
+  if (has_filter) {
+    SWFDEC_ERROR ("filters aren't implemented, skipping PlaceObject tag!");
+    g_hash_table_remove (s->parse_sprite->live_content, GUINT_TO_POINTER (content->depth));
+    swfdec_content_free (content);
+    swfdec_sprite_remove_last_action (s->parse_sprite,
+	      s->parse_sprite->parse_frame);
+    return SWFDEC_STATUS_OK;
+  }
+  if (has_blend_mode) {
+    guint operator = swfdec_bits_get_u8 (bits);
+    content->operator = swfdec_sprite_convert_operator (operator);
+    SWFDEC_ERROR ("  operator = %u", operator);
+  }
   if (has_clip_actions) {
     int reserved, clip_event_flags, event_flags, key_code;
     char *script_name;
@@ -447,6 +481,18 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   }
 
   return SWFDEC_STATUS_OK;
+}
+
+int
+swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
+{
+  return swfdec_spriteseg_do_place_object (s, 2);
+}
+
+int
+swfdec_spriteseg_place_object_3 (SwfdecSwfDecoder * s)
+{
+  return swfdec_spriteseg_do_place_object (s, 3);
 }
 
 int

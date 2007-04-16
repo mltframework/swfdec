@@ -308,7 +308,9 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   
   if (argc == 1) {
-    SwfdecMovie *other;
+    SwfdecMovie *other, *tmp;
+    SwfdecRect movie_rect, other_rect;
+    guint movie_depth, other_depth;
     other = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_MOVIE);
     if (other == NULL) {
       SWFDEC_ERROR ("FIXME: what happens now?");
@@ -316,9 +318,36 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     other = SWFDEC_MOVIE (JS_GetPrivate(cx, JSVAL_TO_OBJECT (argv[0])));
     swfdec_movie_update (movie);
-    swfdec_movie_update (other);
-    /* FIXME */
-    g_assert (movie->parent == other->parent);
+    if (movie->parent != other->parent) {
+      movie_rect = movie->original_extents;
+      other_rect = other->original_extents;
+      swfdec_movie_update (other);
+      tmp = movie;
+      for (movie_depth = 0; tmp->parent; movie_depth++)
+	tmp = tmp->parent;
+      tmp = other;
+      for (other_depth = 0; tmp->parent; other_depth++)
+	tmp = tmp->parent;
+      while (movie_depth > other_depth) {
+	swfdec_rect_transform (&movie_rect, &movie_rect, &movie->matrix);
+	movie = movie->parent;
+	movie_depth--;
+      }
+      while (other_depth > movie_depth) {
+	swfdec_rect_transform (&other_rect, &other_rect, &other->matrix);
+	other = other->parent;
+	other_depth--;
+      }
+      while (other != movie && other->parent) {
+	swfdec_rect_transform (&movie_rect, &movie_rect, &movie->matrix);
+	movie = movie->parent;
+	swfdec_rect_transform (&other_rect, &other_rect, &other->matrix);
+	other = other->parent;
+      }
+    } else {
+      movie_rect = movie->extents;
+      other_rect = other->extents;
+    }
 #if 0
     g_print ("%g %g  %g %g --- %g %g  %g %g\n", 
 	SWFDEC_OBJECT (movie)->extents.x0, SWFDEC_OBJECT (movie)->extents.y0,
@@ -326,7 +355,7 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	SWFDEC_OBJECT (other)->extents.x0, SWFDEC_OBJECT (other)->extents.y0,
 	SWFDEC_OBJECT (other)->extents.x1, SWFDEC_OBJECT (other)->extents.y1);
 #endif
-    if (swfdec_rect_intersect (NULL, &movie->extents, &other->extents)) {
+    if (swfdec_rect_intersect (NULL, &movie_rect, &other_rect)) {
       *rval = BOOLEAN_TO_JSVAL (JS_TRUE);
     } else {
       *rval = BOOLEAN_TO_JSVAL (JS_FALSE);

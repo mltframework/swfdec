@@ -178,6 +178,7 @@ struct _SwfdecGradientPattern
   SwfdecGradient *	gradient;		/* gradient to paint */
   gboolean		radial;			/* TRUE for radial gradient, FALSE for linear gradient */
   gboolean		morph;			/* TRUE for morph gradients */
+  double		focus;			/* focus point */
 };
 
 struct _SwfdecGradientPatternClass
@@ -208,10 +209,12 @@ swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat,
   {
     cairo_matrix_t mat;
     swfdec_matrix_morph (&mat, &pat->start_transform, &pat->end_transform, ratio);
-    if (gradient->radial)
-      pattern = cairo_pattern_create_radial (0, 0, 0, 0, 0, 16384 / 256.0);
-    else
+    if (gradient->radial) {
+      pattern = cairo_pattern_create_radial ((16384.0 / 256.0) * gradient->focus, 
+	  0, 0, 0, 0, 16384 / 256.0);
+    } else {
       pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
+    }
     cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
     mat.x0 /= 256.0;
     mat.y0 /= 256.0;
@@ -289,16 +292,22 @@ swfdec_pattern_do_parse (SwfdecSwfDecoder *dec, gboolean rgba)
     }
     SWFDEC_COLOR_PATTERN (pattern)->end_color = SWFDEC_COLOR_PATTERN (pattern)->start_color;
     SWFDEC_LOG ("    color %08x", SWFDEC_COLOR_PATTERN (pattern)->start_color);
-  } else if (paint_style_type == 0x10 || paint_style_type == 0x12) {
+  } else if (paint_style_type == 0x10 || paint_style_type == 0x12 || paint_style_type == 0x13) {
+    SwfdecGradientPattern *gradient;
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
+    gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
     pattern->end_transform = pattern->start_transform;
     if (rgba) {
-      SWFDEC_GRADIENT_PATTERN (pattern)->gradient = swfdec_bits_get_gradient_rgba (bits);
+      gradient->gradient = swfdec_bits_get_gradient_rgba (bits);
     } else {
-      SWFDEC_GRADIENT_PATTERN (pattern)->gradient = swfdec_bits_get_gradient (bits);
+      gradient->gradient = swfdec_bits_get_gradient (bits);
     }
-    SWFDEC_GRADIENT_PATTERN (pattern)->radial = (paint_style_type == 0x12);
+    gradient->radial = (paint_style_type != 0x10);
+    /* FIXME: need a way to ensure 0x13 only happens in Flash 8 */
+    if (paint_style_type == 0x13) {
+      gradient->focus = swfdec_bits_get_s16 (bits) / 256.0;
+    }
   } else if (paint_style_type >= 0x40 && paint_style_type <= 0x43) {
     guint paint_id = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG ("   background paint id = %d (type 0x%02x)",

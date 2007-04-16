@@ -201,7 +201,7 @@ dump_shape (SwfdecShape *shape)
       }
     } else if (SWFDEC_IS_STROKE (shapevec->pattern)) {
       SwfdecStroke *line = SWFDEC_STROKE (shapevec->pattern);
-      g_print ("line (width %u, color #%08X)", line->start_width, line->start_color);
+      g_print ("line (width %u, color #%08X)\n", line->start_width, line->start_color);
     } else {
       g_print ("not filled\n");
     }

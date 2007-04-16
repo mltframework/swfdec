@@ -656,6 +656,8 @@ swfdec_as_context_eval_internal (SwfdecAsContext *cx, SwfdecAsObject *obj, const
   }
   if (obj == NULL && cx->frame) {
     swfdec_as_object_get (SWFDEC_AS_OBJECT (cx->frame), SWFDEC_AS_STR_THIS, &cur);
+  } else {
+    SWFDEC_AS_VALUE_SET_OBJECT (&cur, obj);
   }
 
 finish:

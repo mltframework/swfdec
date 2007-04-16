@@ -36,33 +36,46 @@ typedef struct _SwfdecStrokeClass SwfdecStrokeClass;
 
 struct _SwfdecStroke
 {
-  SwfdecPattern		pattern;
+  GObject		object;
 
   guint			start_width;		/* width of line */
   SwfdecColor		start_color;		/* color to paint with */
   guint			end_width;		/* width of line */
   SwfdecColor		end_color;		/* color to paint with */
+  /* Flash 8 */
+  SwfdecPattern *	pattern;		/* pattern to use instead of color if not NULL */
+  cairo_line_cap_t	start_cap;
+  cairo_line_cap_t	end_cap;
+  cairo_line_join_t	join;
+  guint			miter_limit;		/* only set when join = MITER */
+  gboolean		no_vscale;		/* don't scale line in vertical direction */
+  gboolean		no_hscale;		/* don't scale line in horizontal direction */
+  gboolean		align_pixel;		/* align control points on pixel boundaries */
+  gboolean		no_close;		/* don't auto-close lines */
 };
 
 struct _SwfdecStrokeClass
 {
-  SwfdecPatternClass  	pattern_class;
+  GObjectClass		object_class;
 };
 
 GType		swfdec_stroke_get_type		(void);
 
-SwfdecPattern *	swfdec_stroke_new		(guint			width,
+SwfdecStroke *	swfdec_stroke_new		(guint			width,
 						 SwfdecColor		color);
-SwfdecPattern *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec,
-						 gboolean		rgba);
-SwfdecPattern *	swfdec_stroke_parse_extended	(SwfdecSwfDecoder *	dec,
-						 SwfdecPattern *	fill_styles,
-						 guint			n_fill_styles);
-SwfdecPattern *	swfdec_stroke_parse_morph    	(SwfdecSwfDecoder *	dec);
-SwfdecPattern *	swfdec_stroke_parse_morph_extended
-						(SwfdecSwfDecoder *	dec,
-						 SwfdecPattern *	fill_styles,
-						 guint			n_fill_styles);
+
+void		swfdec_stroke_paint		(SwfdecStroke *		stroke,
+						 cairo_t *		cr,
+						 const cairo_path_t *	path,
+						 const SwfdecColorTransform *trans,
+						 guint			ratio);
+
+SwfdecStroke *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec);
+SwfdecStroke *	swfdec_stroke_parse_rgba      	(SwfdecSwfDecoder *	dec);
+SwfdecStroke *	swfdec_stroke_parse_extended	(SwfdecSwfDecoder *	dec);
+SwfdecStroke *	swfdec_stroke_parse_morph    	(SwfdecSwfDecoder *	dec);
+SwfdecStroke *	swfdec_stroke_parse_morph_extended
+						(SwfdecSwfDecoder *	dec);
 
 
 G_END_DECLS

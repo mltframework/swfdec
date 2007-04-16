@@ -192,7 +192,7 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
   shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
   swfdec_bits_syncbits (&s->b);
   if (swfdec_bits_skip_bytes (&save_bits, size) != size) {
     SWFDEC_ERROR ("invalid offset value, not enough bytes available");
@@ -336,7 +336,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swfdec_shape_get_recs (s, shape);
+    swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
   }
   if (wide_codes) {
     swfdec_bits_skip_bytes (bits, 2 * n_glyphs);

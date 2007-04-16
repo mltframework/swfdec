@@ -27,12 +27,16 @@
 #include <libswfdec/swfdec_bits.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_pattern.h>
+#include <libswfdec/swfdec_stroke.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 
 G_BEGIN_DECLS
 
 //typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeClass SwfdecShapeClass;
+
+typedef SwfdecPattern * (* SwfdecPatternFunc) (SwfdecSwfDecoder * s);
+typedef SwfdecStroke * (* SwfdecStrokeFunc) (SwfdecSwfDecoder * s);
 
 #define SWFDEC_TYPE_SHAPE                    (swfdec_shape_get_type())
 #define SWFDEC_IS_SHAPE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SHAPE))
@@ -42,7 +46,7 @@ typedef struct _SwfdecShapeClass SwfdecShapeClass;
 
 struct _SwfdecShapeVec
 {
-  SwfdecPattern *pattern;		/* pattern to display */
+  gpointer pattern;			/* pattern or stroke to display */
   cairo_path_t path;			/* accumulated path */
   SwfdecRect extents;			/* extents of path */
   guint last_index;			/* index of last segment that was added */
@@ -63,7 +67,6 @@ struct _SwfdecShape
   guint lines_offset;
   guint n_fill_bits;
   guint n_line_bits;
-  gboolean rgba;
 };
 
 struct _SwfdecShapeClass
@@ -76,7 +79,9 @@ GType swfdec_shape_get_type (void);
 int tag_define_shape (SwfdecSwfDecoder * s);
 int tag_define_shape_2 (SwfdecSwfDecoder * s);
 int tag_define_shape_3 (SwfdecSwfDecoder * s);
-void swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape);
+int tag_define_shape_4 (SwfdecSwfDecoder * s);
+void swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape,
+    SwfdecPatternFunc pattern_func, SwfdecStrokeFunc stroke_func);
 
 
 G_END_DECLS

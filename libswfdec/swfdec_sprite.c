@@ -346,7 +346,6 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
   has_matrix = swfdec_bits_getbit (bits);
   has_character = swfdec_bits_getbit (bits);
   move = swfdec_bits_getbit (bits);
-  depth = swfdec_bits_get_u16 (bits);
 
   SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
   SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
@@ -356,17 +355,20 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
   SWFDEC_LOG ("  move = %d", move);
-  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
-  depth -= 16384;
 
   if (version > 2) {
     swfdec_bits_getbits (bits, 5);
     cache = swfdec_bits_getbit (bits);
     has_blend_mode = swfdec_bits_getbit (bits);
     has_filter = swfdec_bits_getbit (bits);
+    SWFDEC_LOG ("  cache = %d", cache);
     SWFDEC_LOG ("  has filter = %d", has_filter);
     SWFDEC_LOG ("  has blend mode = %d", has_blend_mode);
   }
+
+  depth = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
+  depth -= 16384;
 
   /* new name always means new object */
   content = swfdec_contents_create (s->parse_sprite, depth, move, has_character || has_name);

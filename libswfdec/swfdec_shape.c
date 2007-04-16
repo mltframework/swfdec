@@ -1007,6 +1007,7 @@ error:
   /* FIXME: there's probably a problem if start and end paths get accumulated in 
    * different ways, this could lead to the morphs not looking like they should. 
    * Need a good testcase for this first though.
+   * FIXME: Also, due to error handling, there needs to be syncing of code paths
    */
   tmp = shape->vecs;
   shape->vecs = morph->end_vecs;

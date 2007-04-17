@@ -329,7 +329,7 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     n_fill_styles = swfdec_bits_get_u16 (bits);
   }
   SWFDEC_LOG ("   n_fill_styles %d", n_fill_styles);
-  for (i = 0; i < n_fill_styles; i++) {
+  for (i = 0; i < n_fill_styles && swfdec_bits_left (bits); i++) {
     SwfdecPattern *pattern;
 
     SWFDEC_LOG ("   fill style %d:", i);
@@ -344,7 +344,7 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     n_line_styles = swfdec_bits_get_u16 (bits);
   }
   SWFDEC_LOG ("   n_line_styles %d", n_line_styles);
-  for (i = 0; i < n_line_styles; i++) {
+  for (i = 0; i < n_line_styles && swfdec_bits_left (bits); i++) {
     g_ptr_array_add (shape->lines, parse_stroke (s));
   }
 

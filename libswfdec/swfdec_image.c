@@ -542,7 +542,12 @@ swfdec_image_colormap_decode (SwfdecImage * image,
   for (j = 0; j < image->height; j++) {
     for (i = 0; i < image->width; i++) {
       c = src[i];
-      if (c >= colormap_len) {
+      if (colormap_len < 256 && c == 255) {
+        dest[0] = 0;
+        dest[1] = 0;
+        dest[2] = 0;
+        dest[3] = 0;
+      } else if (c >= colormap_len) {
         SWFDEC_ERROR ("colormap index out of range (%d>=%d) (%d,%d)",
             c, colormap_len, i, j);
         dest[0] = 0;

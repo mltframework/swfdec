@@ -289,6 +289,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
   int font_descent;
   int font_leading;
   int i;
+  guint skip;
 
   id = swfdec_bits_get_u16 (bits);
   font = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_FONT);
@@ -318,10 +319,18 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
 
   n_glyphs = swfdec_bits_get_u16 (bits);
   if (wide_offsets) {
-    bits->ptr += 4 * n_glyphs;
+    skip = 4 * n_glyphs;
+    if (swfdec_bits_skip_bytes (bits, skip) != skip) {
+      SWFDEC_ERROR ("could not skip %u bytes", skip);
+      return SWFDEC_STATUS_OK;
+    }
     code_table_offset = swfdec_bits_get_u32 (bits);
   } else {
-    bits->ptr += 2 * n_glyphs;
+    skip = 2 * n_glyphs;
+    if (swfdec_bits_skip_bytes (bits, skip) != skip) {
+      SWFDEC_ERROR ("could not skip %u bytes", skip);
+      return SWFDEC_STATUS_OK;
+    }
     code_table_offset = swfdec_bits_get_u16 (bits);
   }
 

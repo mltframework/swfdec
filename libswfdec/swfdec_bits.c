@@ -95,7 +95,9 @@ swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, guint bytes)
 
   bits->buffer = from->buffer;
   bits->ptr = from->ptr;
-  bits->end = MIN (bits->ptr + bytes, from->end);
+  if (bytes > (guint) (from->end - from->ptr))
+    bytes = from->end - from->ptr;
+  bits->end = bits->ptr + bytes;
   bits->idx = 0;
   from->ptr = bits->end;
 }

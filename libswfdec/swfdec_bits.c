@@ -646,7 +646,8 @@ swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
  * @len: length of buffer or -1 for maximum
  *
  * Gets the contents of the next @len bytes of @bits and buts them in a new
- * subbuffer.
+ * subbuffer. If @len is 0 (or @len is -1 and no more data is available), this
+ * is considered a reading error and %NULL is returned.
  *
  * Returns: the new #SwfdecBuffer or NULL if the requested amount of data 
  *          isn't available

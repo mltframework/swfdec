@@ -338,7 +338,6 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     g_ptr_array_add (shape->fills, pattern);
   }
 
-  swfdec_bits_syncbits (bits);
   shape->lines_offset = shape->lines->len;
   n_line_styles = swfdec_bits_get_u8 (bits);
   if (n_line_styles == 0xff) {
@@ -349,7 +348,6 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     g_ptr_array_add (shape->lines, parse_stroke (s));
   }
 
-  swfdec_bits_syncbits (bits);
   shape->n_fill_bits = swfdec_bits_getbits (bits, 4);
   shape->n_line_bits = swfdec_bits_getbits (bits, 4);
 }

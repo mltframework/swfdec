@@ -532,7 +532,6 @@ jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
   va_end (varargs);
 
   SWFDEC_ERROR("decoder error: %s", dec->error_message);
-  abort();
   dec->error = TRUE;
 }
 

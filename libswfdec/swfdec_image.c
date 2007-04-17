@@ -127,42 +127,87 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
+/**
+ * swfdec_jpeg_decode_argb:
+ *
+ * This is a wrapper around jpeg_decode_argb() that takes two segments,
+ * strips off (sometimes bogus) start-of-image and end-of-image codes,
+ * concatenates them, and puts new SOI and EOI codes on the resulting
+ * buffer.  This makes a real JPEG image out of the crap in SWF files.
+ */
+static gboolean
+swfdec_jpeg_decode_argb (unsigned char *data1, int length1,
+    unsigned char *data2, int length2,
+    void *outdata, int *width, int *height)
+{
+  unsigned char *tmpdata;
+  int tmplength;
+  gboolean ret;
+
+  while (length1 >= 2 && data1[0] == 0xff &&
+      (data1[1] == 0xd9 || data1[1] == 0xd8)) {
+    data1 += 2;
+    length1 -= 2;
+  }
+  while (length1 >= 2 && data1[length1-2] == 0xff &&
+      (data1[length1-1] == 0xd9 || data1[length1-1] == 0xd8)) {
+    length1 -= 2;
+  }
+
+  if (data2) {
+    while (length2 >= 2 && data2[0] == 0xff &&
+        (data2[1] == 0xd9 || data2[1] == 0xd8)) {
+      data2 += 2;
+      length2 -= 2;
+    }
+    while (length2 >= 2 && data2[length2-2] == 0xff &&
+        (data2[length2-1] == 0xd9 || data2[length2-1] == 0xd8)) {
+      length2 -= 2;
+    }
+  } else {
+    length2 = 0;
+  }
+
+  tmplength = length1 + length2 + 4;
+  tmpdata = g_malloc (tmplength);
+
+  tmpdata[0] = 0xff;
+  tmpdata[1] = 0xd8;
+  memcpy (tmpdata + 2, data1, length1);
+  memcpy (tmpdata + 2 + length1, data2, length2);
+  tmpdata[2 + length1 + length2] = 0xff;
+  tmpdata[2 + length1 + length2 + 1] = 0xd9;
+
+  ret = jpeg_decode_argb (tmpdata, tmplength, outdata, width, height);
+
+  g_free(tmpdata);
+
+  return ret;
+}
+
 static void
 swfdec_image_jpeg_load (SwfdecImage *image)
 {
-  JpegDecoder *dec;
-
-  dec = jpeg_decoder_new ();
+  gboolean ret;
 
   if (image->jpegtables) {
-    if (image->jpegtables->data[0] != 0xff || image->jpegtables->data[1] != 0xd8) {
-      SWFDEC_ERROR("not jpeg %02x %02x",
-          image->jpegtables->data[0], image->jpegtables->data[1]);
-      jpeg_decoder_free (dec);
-      return;
-    }
-    jpeg_decoder_addbits (dec, image->jpegtables->data,
-        image->jpegtables->length);
+    ret = swfdec_jpeg_decode_argb (
+        image->jpegtables->data, image->jpegtables->length,
+        image->raw_data->data, image->raw_data->length,
+        (void *)&image->data, &image->width, &image->height);
+  } else {
+    ret = swfdec_jpeg_decode_argb (
+        image->raw_data->data, image->raw_data->length,
+        NULL, 0,
+        (void *)&image->data, &image->width, &image->height);
   }
-  if (image->raw_data->data[0] != 0xff || image->raw_data->data[1] != 0xd8) {
-    SWFDEC_ERROR("not jpeg %02x %02x",
-        image->raw_data->data[0], image->raw_data->data[1]);
-    jpeg_decoder_free (dec);
-    return;
-  }
-  jpeg_decoder_addbits (dec, image->raw_data->data,
-      image->raw_data->length);
-  jpeg_decoder_decode (dec);
-  jpeg_decoder_get_image_size (dec, &image->width, &image->height);
-  if (image->width == 0 || image->height == 0) {
-    jpeg_decoder_free (dec);
+
+  if (!ret) {
     return;
   }
 
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  image->data = jpeg_decoder_get_argb_image (dec);
   image->rowstride = image->width * 4;
-  jpeg_decoder_free (dec);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -191,10 +236,12 @@ tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s)
 static void
 swfdec_image_jpeg2_load (SwfdecImage *image)
 {
-  jpeg_decode_argb (image->raw_data->data, image->raw_data->length,
-      (void *)&image->data, &image->width, &image->height);
+  gboolean ret;
 
-  if (image->data == NULL) {
+  ret = swfdec_jpeg_decode_argb (image->raw_data->data, image->raw_data->length,
+      NULL, 0,
+      (void *)&image->data, &image->width, &image->height);
+  if (!ret) {
     return;
   }
 
@@ -231,6 +278,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   SwfdecBits bits;
   SwfdecBuffer *buffer;
   int jpeg_length;
+  gboolean ret;
 
   swfdec_bits_init (&bits, image->raw_data);
 
@@ -239,11 +287,12 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   if (buffer == NULL)
     return;
 
-  jpeg_decode_argb (buffer->data, buffer->length,
+  ret = swfdec_jpeg_decode_argb (buffer->data, buffer->length,
+      NULL, 0,
       (void *)&image->data, &image->width, &image->height);
   swfdec_buffer_unref (buffer);
 
-  if (image->data == NULL) {
+  if (!ret) {
     return;
   }
 

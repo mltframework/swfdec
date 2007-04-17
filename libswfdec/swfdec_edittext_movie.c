@@ -22,8 +22,8 @@
 #endif
 
 #include "swfdec_edittext_movie.h"
+#include "swfdec_as_context.h"
 #include "swfdec_debug.h"
-#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
 
@@ -68,26 +68,21 @@ static void
 swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
 {
   SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
-  SwfdecScriptable *parent;
-  JSObject *jsobj;
-  jsval val;
+  SwfdecAsObject *parent;
   const char *s;
+  SwfdecAsValue val = { 0, };
 
   if (text->text->variable == NULL)
     return;
 
-  parent = SWFDEC_SCRIPTABLE (movie->parent);
-  jsobj = swfdec_scriptable_get_object (parent);
-  if (jsobj == NULL)
-    return;
-  val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable);
-  if (JSVAL_IS_VOID (val))
+  parent = SWFDEC_AS_OBJECT (movie->parent);
+  swfdec_as_context_eval (parent->context, parent, text->text->variable, &val);
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val))
     return;
 
-  s = swfdec_js_to_string (parent->jscx, val);
-  if (!s && !text->str)
-    return;
-  if (s && text->str && g_str_equal (s, text->str))
+  s = swfdec_as_value_to_string (parent->context, &val);
+  g_assert (s);
+  if (text->str && g_str_equal (s, text->str))
     return;
 
   swfdec_edit_text_movie_set_text (text, s);
@@ -97,44 +92,30 @@ static void
 swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
 {
   SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
-  SwfdecScriptable *parent;
-  JSObject *jsobj;
-  JSString *string;
-  jsval val;
+  SwfdecAsObject *parent;
+  SwfdecAsValue val = { 0, };
+  const char *s;
 
   if (text->text->variable == NULL)
     return;
 
-  parent = SWFDEC_SCRIPTABLE (movie->parent);
-  jsobj = swfdec_scriptable_get_object (parent);
-  if (jsobj == NULL)
-    return;
-  if (text->text->variable_prefix) {
-    val = swfdec_js_eval (parent->jscx, jsobj, text->text->variable_prefix);
-    if (!JSVAL_IS_OBJECT (val))
-      return;
-    jsobj = JSVAL_TO_OBJECT (val);
-  }
-  if (!JS_GetProperty (parent->jscx, jsobj, text->text->variable_name, &val))
-    return;
-  if (!JSVAL_IS_VOID (val)) {
-    const char *s = swfdec_js_to_string (parent->jscx, val);
-    if (!s && !text->str)
-      return;
-    if (s && text->str && g_str_equal (s, text->str))
+  parent = SWFDEC_AS_OBJECT (movie->parent);
+  swfdec_as_context_eval (parent->context, parent, text->text->variable, &val);
+  if (!SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
+    s = swfdec_as_value_to_string (parent->context, &val);
+    g_assert (s);
+    if (text->str && g_str_equal (s, text->str))
       return;
 
     swfdec_edit_text_movie_set_text (text, s);
     return;
   }
 
-  SWFDEC_LOG ("setting variable %s (%s) to \"%s\"", text->text->variable_name,
-      text->text->variable, text->str ? text->str : "");
-  string = JS_NewStringCopyZ (parent->jscx, text->str ? text->str : "");
-  if (string == NULL)
-    return;
-  val = STRING_TO_JSVAL (string);
-  JS_SetProperty (parent->jscx, jsobj, text->text->variable_name, &val);
+  SWFDEC_LOG ("setting variable %s to \"%s\"", text->text->variable, 
+      text->str ? text->str : "");
+  s = text->str ? swfdec_as_context_get_string (parent->context, text->str) : SWFDEC_AS_STR_EMPTY;
+  SWFDEC_AS_VALUE_SET_STRING (&val, s);
+  swfdec_as_context_eval_set (parent->context, parent, text->text->variable, &val);
 }
 
 static void

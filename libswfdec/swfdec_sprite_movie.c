@@ -22,10 +22,10 @@
 #endif
 
 #include "swfdec_sprite_movie.h"
+#include "swfdec_as_object.h"
 #include "swfdec_audio_event.h"
 #include "swfdec_audio_stream.h"
 #include "swfdec_debug.h"
-#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_ringbuffer.h"
 #include "swfdec_root_movie.h"
@@ -66,7 +66,7 @@ swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
 static void
 swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
 {
-  swfdec_script_execute (data, SWFDEC_SCRIPTABLE (movie));
+  swfdec_as_object_run (movie, data);
 }
 
 static void

@@ -20,11 +20,10 @@
 #ifndef _SWFDEC_PLAYER_INTERNAL_H_
 #define _SWFDEC_PLAYER_INTERNAL_H_
 
-#include <glib-object.h>
 #include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
-#include <libswfdec/js/jspubtd.h>
 
 G_BEGIN_DECLS
 
@@ -39,7 +38,7 @@ struct _SwfdecTimeout {
 
 struct _SwfdecPlayer
 {
-  GObject		object;
+  SwfdecAsContext	context;
 
   /* global properties */
   gboolean		initialized;		/* if width and height are set already */
@@ -52,12 +51,10 @@ struct _SwfdecPlayer
   SwfdecColor		bgcolor;		/* background color */
   SwfdecLoader *	loader;			/* initial loader */
 
-  /* javascript */
-  JSContext *		jscx;			/* global Javascript context */
-  JSObject *		jsobj;			/* the global object */
-  guint		interval_id;		/* id returned from setInterval call */
+  /* ActionScript */
+  guint			interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
-  GHashTable *		registered_classes;	/* name => jsval* to constructor */
+  GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
   SwfdecListener *	mouse_listener;		/* emitting mouse events */
   SwfdecListener *	key_listener;		/* emitting keyboard events */
 
@@ -93,7 +90,7 @@ struct _SwfdecPlayer
 
 struct _SwfdecPlayerClass
 {
-  GObjectClass		object_class;
+  SwfdecAsContextClass	context_class;
 
   void			(* advance)		(SwfdecPlayer *		player,
 						 guint			msecs,
@@ -105,6 +102,7 @@ struct _SwfdecPlayerClass
 };
 
 void		swfdec_player_initialize	(SwfdecPlayer *		player,
+						 guint			version,
 						 guint			rate,
 						 guint			width,
 						 guint			height);
@@ -118,11 +116,11 @@ void		swfdec_player_lock		(SwfdecPlayer *		player);
 void		swfdec_player_unlock		(SwfdecPlayer *		player);
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
-jsval		swfdec_player_get_export_class	(SwfdecPlayer *		player,
+SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
 						 const char *		name,
-						 jsval			val);
+						 SwfdecAsObject *	object);
 
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
@@ -140,8 +138,6 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,
 						 gboolean		center,
 						 SwfdecRect *		rect);
-void		swfdec_player_trace		(SwfdecPlayer *		player,
-						 const char *		text);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 SwfdecRootMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,

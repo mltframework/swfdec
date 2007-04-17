@@ -22,140 +22,137 @@
 #endif
 
 #include "swfdec_amf.h"
-#include "swfdec_bits.h"
+#include "swfdec_as_array.h"
 #include "swfdec_debug.h"
-#include "js/jsapi.h"
 
-typedef gboolean (* SwfdecAmfParseFunc) (JSContext *cx, SwfdecBits *bits, jsval *val);
+typedef gboolean (* SwfdecAmfParseFunc) (SwfdecAsContext *cx, SwfdecBits *bits, SwfdecAsValue *val);
 extern const SwfdecAmfParseFunc parse_funcs[SWFDEC_AMF_N_TYPES];
 
 static gboolean
-swfdec_amf_parse_boolean (JSContext *cx, SwfdecBits *bits, jsval *val)
+swfdec_amf_parse_boolean (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
-  *val = swfdec_bits_get_u8 (bits) ? JSVAL_TRUE : JSVAL_FALSE;
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, swfdec_bits_get_u8 (bits) ? TRUE : FALSE);
   return TRUE;
 }
 
 static gboolean
-swfdec_amf_parse_number (JSContext *cx, SwfdecBits *bits, jsval *val)
+swfdec_amf_parse_number (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
-  double d = swfdec_bits_get_bdouble (bits);
-
-  if (!JS_NewNumberValue (cx, d, val))
-    return FALSE;
+  SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_bits_get_bdouble (bits));
   return TRUE;
 }
 
 static gboolean
-swfdec_amf_parse_string (JSContext *cx, SwfdecBits *bits, jsval *val)
+swfdec_amf_parse_string (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
   guint len = swfdec_bits_get_bu16 (bits);
   char *s;
-  JSString *string;
   
   s = swfdec_bits_get_string_length (bits, len);
   if (s == NULL)
     return FALSE;
-
-  string = JS_NewStringCopyZ (cx, s);
-  g_free (s);
-  if (!string)
-    return FALSE;
-  *val = STRING_TO_JSVAL (string);
+  SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (context, s));
   return TRUE;
 }
+
 static gboolean
-swfdec_amf_parse_properties (JSContext *cx, SwfdecBits *bits, jsval *val)
+swfdec_amf_parse_properties (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsObject *object)
 {
   guint type;
   SwfdecAmfParseFunc func;
-  JSObject *object;
 
-  g_assert (JSVAL_IS_OBJECT (*val));
-  object = JSVAL_TO_OBJECT (*val);
-
+  /* need to root here due to GC */
+  swfdec_as_object_root (object);
   while (swfdec_bits_left (bits)) {
-    jsval id, val;
-    if (!swfdec_amf_parse_string (cx, bits, &id))
+    SwfdecAsValue id, val;
+
+    if (!swfdec_amf_parse_string (context, bits, &id))
       return FALSE;
     type = swfdec_bits_get_u8 (bits);
     if (type == SWFDEC_AMF_END_OBJECT)
-      return TRUE;
+      break;
     if (type >= SWFDEC_AMF_N_TYPES ||
 	(func = parse_funcs[type]) == NULL) {
       SWFDEC_ERROR ("no parse func for AMF type %u", type);
-      return FALSE;
+      goto error;
     }
-    if (!func (cx, bits, &val))
-      return FALSE;
-    if (!JS_SetProperty (cx, object, JS_GetStringBytes (JSVAL_TO_STRING (id)), &val))
-      return FALSE;
+    swfdec_as_object_set_variable (object, &id, &id); /* GC... */
+    if (!func (context, bits, &val)) {
+      goto error;
+    }
+    swfdec_as_object_set_variable (object, &id, &val); /* GC... */
   }
   /* no more bytes seems to end automatically */
+  swfdec_as_object_unroot (object);
+  return TRUE;
+
+error:
+  swfdec_as_object_unroot (object);
+  return FALSE;
+}
+
+static gboolean
+swfdec_amf_parse_object (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
+{
+  SwfdecAsObject *object;
+  
+  object = swfdec_as_object_new (context);
+  if (object == NULL)
+    return FALSE;
+  if (!swfdec_amf_parse_properties (context, bits, object))
+    return FALSE;
+  SWFDEC_AS_VALUE_SET_OBJECT (val, object);
   return TRUE;
 }
 
 static gboolean
-swfdec_amf_parse_object (JSContext *cx, SwfdecBits *bits, jsval *val)
-{
-  JSObject *object;
-  
-  object = JS_NewObject (cx, NULL, NULL, NULL);
-  if (object == NULL)
-    return FALSE;
-
-  *val = OBJECT_TO_JSVAL (object);
-  return swfdec_amf_parse_properties (cx, bits, val);
-}
-
-static gboolean
-swfdec_amf_parse_mixed_array (JSContext *cx, SwfdecBits *bits, jsval *val)
+swfdec_amf_parse_mixed_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
   guint len;
-  JSObject *object;
+  SwfdecAsObject *array;
   
   len = swfdec_bits_get_bu32 (bits);
-  object = JS_NewArrayObject (cx, len, NULL);
-  if (object == NULL)
+  array = swfdec_as_array_new (context, len);
+  if (array == NULL)
     return FALSE;
-
-  *val = OBJECT_TO_JSVAL (object);
-  return swfdec_amf_parse_properties (cx, bits, val);
+  if (!swfdec_amf_parse_properties (context, bits, array))
+    return FALSE;
+  SWFDEC_AS_VALUE_SET_OBJECT (val, array);
+  return TRUE;
 }
 
 static gboolean
-swfdec_amf_parse_array (JSContext *cx, SwfdecBits *bits, jsval *val)
+swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
   guint i, len;
-  JSObject *object;
-  jsval *vector;
+  SwfdecAsObject *array;
   guint type;
   SwfdecAmfParseFunc func;
   
   len = swfdec_bits_get_bu32 (bits);
-  vector = g_try_new (jsval, len);
-  if (vector == NULL)
+  array = swfdec_as_array_new (context, len);
+  if (array == NULL)
     return FALSE;
+  swfdec_as_object_root (array);
   for (i = 0; i < len; i++) {
     type = swfdec_bits_get_u8 (bits);
+    SwfdecAsValue val;
     if (type >= SWFDEC_AMF_N_TYPES ||
 	(func = parse_funcs[type]) == NULL) {
       SWFDEC_ERROR ("no parse func for AMF type %u", type);
       goto fail;
     }
-    if (!func (cx, bits, &vector[i]))
+    if (!func (context, bits, &val))
       goto fail;
+    g_array_append_val (SWFDEC_AS_ARRAY (array)->values, val);
   }
-  object = JS_NewArrayObject (cx, len, vector);
-  if (object == NULL)
-    goto fail;
 
-  *val = OBJECT_TO_JSVAL (object);
-  g_free (vector);
+  swfdec_as_object_unroot (array);
+  SWFDEC_AS_VALUE_SET_OBJECT (val, array);
   return TRUE;
 
 fail:
-  g_free (vector);
+  swfdec_as_object_unroot (array);
   return FALSE;
 }
 
@@ -183,13 +180,13 @@ const SwfdecAmfParseFunc parse_funcs[SWFDEC_AMF_N_TYPES] = {
 };
 
 gboolean
-swfdec_amf_parse_one (JSContext *cx, SwfdecBits *bits, SwfdecAmfType expected_type, 
-    jsval *rval)
+swfdec_amf_parse_one (SwfdecAsContext *context, SwfdecBits *bits, 
+    SwfdecAmfType expected_type, SwfdecAsValue *rval)
 {
   SwfdecAmfParseFunc func;
   guint type;
 
-  g_return_val_if_fail (cx != NULL, FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0);
   g_return_val_if_fail (bits != NULL, FALSE);
   g_return_val_if_fail (rval != NULL, FALSE);
   g_return_val_if_fail (expected_type < SWFDEC_AMF_N_TYPES, FALSE);
@@ -205,23 +202,24 @@ swfdec_amf_parse_one (JSContext *cx, SwfdecBits *bits, SwfdecAmfType expected_ty
     SWFDEC_ERROR ("no parse func for AMF type %u", type);
     return FALSE;
   }
-  return func (cx, bits, rval);
+  return func (context, bits, rval);
 }
 
+/* FIXME: parsed values aren't gc rooted... */
 guint
-swfdec_amf_parse (JSContext *cx, SwfdecBits *bits, guint n_items, ...)
+swfdec_amf_parse (SwfdecAsContext *context, SwfdecBits *bits, guint n_items, ...)
 {
   va_list args;
   guint i;
 
-  g_return_val_if_fail (cx != NULL, 0);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0);
   g_return_val_if_fail (bits != NULL, 0);
 
   va_start (args, n_items);
   for (i = 0; i < n_items; i++) {
     SwfdecAmfType type = va_arg (args, SwfdecAmfType);
-    jsval *val = va_arg (args, jsval *);
-    if (!swfdec_amf_parse_one (cx, bits, type, val))
+    SwfdecAsValue *val = va_arg (args, SwfdecAsValue *);
+    if (!swfdec_amf_parse_one (context, bits, type, val))
       break;
   }
   va_end (args);

@@ -18,8 +18,8 @@
  */
 
 #include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_types.h>
-#include <libswfdec/js/jspubtd.h>
 
 #ifndef _SWFDEC_LISTENER_H_
 #define _SWFDEC_LISTENER_H_
@@ -27,14 +27,15 @@
 G_BEGIN_DECLS
 
 
-SwfdecListener *	swfdec_listener_new	(SwfdecPlayer *		player);
+SwfdecListener *	swfdec_listener_new	(SwfdecAsContext *	context);
 void			swfdec_listener_free	(SwfdecListener *	listener);
 gboolean		swfdec_listener_add	(SwfdecListener *	listener,
-						 JSObject *		obj);
+						 SwfdecAsObject *     	obj);
 void			swfdec_listener_remove	(SwfdecListener *	listener,
-						 JSObject *		obj);
+						 SwfdecAsObject *     	obj);
 void			swfdec_listener_execute	(SwfdecListener *	listener,
 						 const char *		event);
+void			swfdec_listener_mark	(SwfdecListener *	listener);
 
 
 G_END_DECLS

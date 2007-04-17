@@ -652,8 +652,9 @@ swfdec_shape_parse_curve (SwfdecBits *bits, SubPath *path,
   int cur_x, cur_y;
   int control_x, control_y;
 
-  if (swfdec_bits_getbits (bits, 2) != 2)
+  if (swfdec_bits_getbits (bits, 2) != 2) {
     g_assert_not_reached ();
+  }
 
   n_bits = swfdec_bits_getbits (bits, 4) + 2;
 
@@ -685,8 +686,9 @@ swfdec_shape_parse_line (SwfdecBits *bits, SubPath *path,
   int general_line_flag;
   int cur_x, cur_y;
 
-  if (swfdec_bits_getbits (bits, 2) != 3)
+  if (swfdec_bits_getbits (bits, 2) != 3) {
     g_assert_not_reached ();
+  }
 
   cur_x = *x;
   cur_y = *y;
@@ -722,8 +724,9 @@ swfdec_shape_parse_change (SwfdecSwfDecoder *s, SwfdecShape *shape, GArray *path
   int state_new_styles, state_line_styles, state_fill_styles1, state_fill_styles0, state_moveto;
   SwfdecBits *bits = &s->b;
 
-  if (swfdec_bits_getbit (bits) != 0)
+  if (swfdec_bits_getbit (bits) != 0) {
     g_assert_not_reached ();
+  }
 
   state_new_styles = swfdec_bits_getbit (bits);
   state_line_styles = swfdec_bits_getbit (bits);

@@ -21,31 +21,32 @@
 #include "config.h"
 #endif
 #include "swfdec_listener.h"
-#include "js/jsapi.h"
-#include "js/jsfun.h"
-#include "js/jsinterp.h"
+#include "swfdec_as_context.h"
+#include "swfdec_as_object.h"
 #include "swfdec_debug.h"
-#include "swfdec_player_internal.h"
 
 typedef struct {
-  JSObject *	object;			/* the object we care about or NULL if empty */
-  gboolean	blocked :1;		/* TRUE if may not be removed */
-  gboolean	removed :1;		/* TRUE if was removed but is blocked */
+  SwfdecAsObject *	object;		/* the object we care about or NULL if empty */
+  const char *		blocked_by;	/* string of event we're about to execute */
+  gboolean		removed;   	/* TRUE if was removed but is blocked */
 } SwfdecListenerEntry;
 
 struct _SwfdecListener {
-  SwfdecPlayer *	player;
+  SwfdecAsContext *	context;
   /* we can't use GArray here because it reallocated below us, which JS_AddRoot doesn't like */
   SwfdecListenerEntry * entries;	/* all allocated entries */
   guint			n_entries;	/* number of allocated entries */
 };
 
 SwfdecListener *
-swfdec_listener_new (SwfdecPlayer *player)
+swfdec_listener_new (SwfdecAsContext *context)
 {
-  SwfdecListener *listener = g_new0 (SwfdecListener, 1);
+  SwfdecListener *listener;
+  
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  listener->player = player;
+  listener = g_new0 (SwfdecListener, 1);
+  listener->context = context;
   listener->entries = NULL;
   listener->n_entries = 0;
 
@@ -55,27 +56,19 @@ swfdec_listener_new (SwfdecPlayer *player)
 void
 swfdec_listener_free (SwfdecListener *listener)
 {
-  guint i;
-  JSContext *cx;
-
   g_return_if_fail (listener != NULL);
 
-  cx = listener->player->jscx;
-  for (i = 0; i < listener->n_entries; i++) {
-    JS_RemoveRoot (cx, &listener->entries[i].object);
-  }
   g_free (listener->entries);
-  swfdec_player_remove_all_actions (listener->player, listener);
   g_free (listener);
 }
 
 gboolean
-swfdec_listener_add (SwfdecListener *listener, JSObject *obj)
+swfdec_listener_add (SwfdecListener *listener, SwfdecAsObject *obj)
 {
   guint found, i;
 
   g_return_val_if_fail (listener != NULL, FALSE);
-  g_return_val_if_fail (obj != NULL, FALSE);
+  g_return_val_if_fail (SWFDEC_AS_OBJECT (obj), FALSE);
 
   found = listener->n_entries;
   for (i = 0; i < listener->n_entries; i++) {
@@ -87,24 +80,11 @@ swfdec_listener_add (SwfdecListener *listener, JSObject *obj)
   if (found >= listener->n_entries) {
     gpointer mem;
     guint new_len = listener->n_entries + 16;
-    JSContext *cx = listener->player->jscx;
 
-    for (i = 0; i < listener->n_entries; i++) {
-      JS_RemoveRoot (cx, &listener->entries[i].object);
-    }
     mem = g_try_realloc (listener->entries, sizeof (SwfdecListenerEntry) * new_len);
     if (mem == NULL)
       return FALSE;
     listener->entries = mem;
-    for (i = listener->n_entries; i < new_len; i++) {
-      listener->entries[i].object = NULL;
-      listener->entries[i].blocked = 0;
-      listener->entries[i].removed = 0;
-      if (!JS_AddRoot (cx, &listener->entries[i].object)) {
-	listener->n_entries = i;
-	return FALSE;
-      }
-    }
     listener->n_entries = new_len;
   }
   g_assert (listener->entries[found].object == NULL);
@@ -113,7 +93,7 @@ swfdec_listener_add (SwfdecListener *listener, JSObject *obj)
 }
 
 void
-swfdec_listener_remove (SwfdecListener *listener, JSObject *obj)
+swfdec_listener_remove (SwfdecListener *listener, SwfdecAsObject *obj)
 {
   guint i;
 
@@ -122,7 +102,7 @@ swfdec_listener_remove (SwfdecListener *listener, JSObject *obj)
 
   for (i = 0; i < listener->n_entries; i++) {
     if (listener->entries[i].object == obj) {
-      if (listener->entries[i].blocked) {
+      if (listener->entries[i].blocked_by) {
 	listener->entries[i].removed = TRUE;
       } else {
 	listener->entries[i].object = NULL;
@@ -132,53 +112,47 @@ swfdec_listener_remove (SwfdecListener *listener, JSObject *obj)
   }
 }
 
-static void
-swfdec_listener_do_execute (gpointer listenerp, gpointer event_name)
-{
-  guint i;
-  SwfdecListener *listener = listenerp;
-  JSContext *cx = listener->player->jscx;
-
-  for (i = 0; i < listener->n_entries; i++) {
-    if (listener->entries[i].blocked) {
-      jsval fun;
-      JSObject *obj = listener->entries[i].object;
-      if (listener->entries[i].removed) {
-	listener->entries[i].object = NULL;
-	listener->entries[i].removed = FALSE;
-      }
-      listener->entries[i].blocked = FALSE;
-      if (!JS_GetProperty (cx, obj, event_name, &fun))
-	continue;
-      if (!JSVAL_IS_OBJECT (fun) || fun == JSVAL_NULL ||
-	  JS_GetClass (JSVAL_TO_OBJECT (fun)) != &js_FunctionClass) {
-	SWFDEC_INFO ("object has no handler for %s event", (char *) event_name);
-	continue;
-      }
-      js_InternalCall (cx, obj, fun, 0, NULL, &fun);
-    }
-  }
-  g_free (event_name);
-}
-
 void
 swfdec_listener_execute	(SwfdecListener *listener, const char *event_name)
 {
-  gboolean found = FALSE;
   guint i;
 
   g_return_if_fail (listener != NULL);
   g_return_if_fail (event_name != NULL);
 
   for (i = 0; i < listener->n_entries; i++) {
-    g_assert (!listener->entries[i].blocked); /* ensure this happens only once */
+    g_assert (listener->entries[i].blocked_by == NULL); /* ensure this happens only once */
     if (listener->entries[i].object) {
-      listener->entries[i].blocked = TRUE;
-      found = TRUE;
+      listener->entries[i].blocked_by = event_name;
     }
   }
-  if (found)
-    swfdec_player_add_action (listener->player, listener, 
-	swfdec_listener_do_execute, g_strdup (event_name));
+  for (i = 0; i < listener->n_entries; i++) {
+    if (listener->entries[i].blocked_by) {
+      SwfdecAsObject *obj = listener->entries[i].object;
+      const char *event = listener->entries[i].blocked_by;
+      if (listener->entries[i].removed) {
+	listener->entries[i].object = NULL;
+	listener->entries[i].removed = FALSE;
+      }
+      listener->entries[i].blocked_by = NULL;
+      swfdec_as_object_call (obj, event, 0, NULL, NULL);
+    }
+  }
+}
+
+void
+swfdec_listener_mark (SwfdecListener *listener)
+{
+  guint i;
+
+  g_return_if_fail (listener != NULL);
+
+  for (i = 0; i < listener->n_entries; i++) {
+    if (listener->entries[i].object) {
+      swfdec_as_object_mark (listener->entries[i].object);
+      if (listener->entries[i].blocked_by)
+	swfdec_as_string_mark (listener->entries[i].blocked_by);
+    }
+  }
 }
 

@@ -21,9 +21,9 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec_js.h>
-#include <libswfdec/js/jsdbgapi.h>
-#include <libswfdec/js/jsinterp.h>
+#include <libswfdec/swfdec_as_frame.h>
+#include <libswfdec/swfdec_as_types.h>
+#include <libswfdec/swfdec_as_stack.h>
 #include "swfdec_debug_stack.h"
 
 G_DEFINE_TYPE (SwfdecDebugStack, swfdec_debug_stack, GTK_TYPE_TREE_VIEW)
@@ -36,42 +36,48 @@ enum {
 };
 
 static const char *
-swfdec_get_jsval_type (JSContext *cx, jsval val)
+swfdec_get_value_type (SwfdecAsContext *cx, SwfdecAsValue *value)
 {
-  if (JSVAL_IS_VOID (val))
-    return "undefined";
-  if (JSVAL_IS_NULL (val))
-    return "null";
-  if (JSVAL_IS_INT (val))
-    return "Integer";
-  if (JSVAL_IS_DOUBLE (val))
-    return "Double";
-  if (JSVAL_IS_BOOLEAN (val))
-    return "Boolean";
-  if (JSVAL_IS_STRING (val))
-    return "String";
-  g_assert (JSVAL_IS_OBJECT (val));
-  return JS_GetClass (JSVAL_TO_OBJECT (val))->name;
+  switch (value->type) {
+    case SWFDEC_AS_TYPE_UNDEFINED:
+      return "undefined";
+    case SWFDEC_AS_TYPE_NULL:
+      return "null";
+    case SWFDEC_AS_TYPE_NUMBER:
+      return "Number";
+    case SWFDEC_AS_TYPE_BOOLEAN:
+      return "Boolean";
+    case SWFDEC_AS_TYPE_STRING:
+      return "String";
+    case SWFDEC_AS_TYPE_OBJECT:
+      /* FIXME: improve */
+      return "Object";
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
 }
 
 static void
 swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
 {
-  JSStackFrame *frame = NULL;
-  guint i, min, max;
+  SwfdecAsFrame *frame = NULL;
   GtkListStore *store = gtk_list_store_new (N_COLUMNS, G_TYPE_UINT, 
       G_TYPE_STRING, G_TYPE_STRING);
   GtkTreeIter iter;
 
-  JS_FrameIterator (debug->manager->player->jscx, &frame);
-  min = 1;
-  max = frame->sp - frame->spbase;
-  for (i = min; i <= max; i++) {
-    const char *s = swfdec_js_to_string (debug->manager->player->jscx, frame->sp[-i]);
-    gtk_list_store_append (store, &iter);
-    gtk_list_store_set (store, &iter, COLUMN_LINE, i, 
-      COLUMN_TYPE, swfdec_get_jsval_type (debug->manager->player->jscx, frame->sp[-i]),
-      COLUMN_CONTENT, s, -1);
+  frame = SWFDEC_AS_CONTEXT (debug->manager->player)->frame;
+  if (frame) {
+    SwfdecAsValue *val;
+    guint i = 0;
+    for (val = frame->stack->base; val < frame->stack->cur; val++) {
+      /* FIXME: dangerous, this calls back into the engine */
+      const char *s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (debug->manager->player), val);
+      gtk_list_store_append (store, &iter);
+      gtk_list_store_set (store, &iter, COLUMN_LINE, ++i, 
+	COLUMN_TYPE, swfdec_get_value_type (SWFDEC_AS_CONTEXT (debug->manager->player), val),
+	COLUMN_CONTENT, s, -1);
+    }
   }
 
   gtk_tree_view_set_model (GTK_TREE_VIEW (debug), GTK_TREE_MODEL (store));

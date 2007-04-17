@@ -30,12 +30,13 @@
 G_DEFINE_ABSTRACT_TYPE (SwfdecGraphic, swfdec_graphic, SWFDEC_TYPE_CHARACTER)
 
 static SwfdecMovie *
-swfdec_graphic_create_movie (SwfdecGraphic *graphic)
+swfdec_graphic_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   SwfdecGraphicMovie *movie = g_object_new (SWFDEC_TYPE_GRAPHIC_MOVIE, NULL);
 
   movie->graphic = graphic;
   g_object_ref (graphic);
+  *size = sizeof (SwfdecGraphicMovie);
   return SWFDEC_MOVIE (movie);
 }
 

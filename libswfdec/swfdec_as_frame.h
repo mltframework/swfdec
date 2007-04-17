@@ -39,14 +39,24 @@ struct _SwfdecAsFrame {
   SwfdecAsObject	object;
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
+  SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
+  /* debugging */
+  char *		function_name;	/* name of function */
+  SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
+  guint			argc;		/* number of arguments */
+  SwfdecAsValue *	argv;		/* arguments */
+  /* normal execution */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsObject *	scope;		/* scope object coming after this */
+  SwfdecAsObject *	scope;		/* next scope object or this for native functions */
+  SwfdecAsObject *	target;		/* target to use instead of last object in scope chain */
   SwfdecAsObject *	var_object;	/* new variables go here */
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
   SwfdecConstantPool *	constant_pool;	/* constant pool currently in use */
+  SwfdecBuffer *	constant_pool_buffer;	/* buffer containing the raw data for constant_pool */
   SwfdecAsStack *	stack;		/* variables on the stack */
   guint8 *		pc;		/* program counter on stack */
+  /* native function */
 };
 
 struct _SwfdecAsFrameClass {
@@ -55,10 +65,15 @@ struct _SwfdecAsFrameClass {
 
 GType		swfdec_as_frame_get_type	(void);
 
-SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *    	context,
-						 SwfdecAsObject *	thisp,
+SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsObject *	thisp,
 						 SwfdecScript *		script);
+SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsObject *	thisp);
 
+SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
+						 const SwfdecAsValue *	variable);
+
+void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
+						 SwfdecAsObject *	target);
 
 
 G_END_DECLS

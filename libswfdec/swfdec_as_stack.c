@@ -73,9 +73,11 @@ swfdec_as_stack_ensure_size (SwfdecAsStack *stack, guint n_elements)
   guint current;
 
   g_return_if_fail (stack != NULL);
-  g_return_if_fail (n_elements > (guint) (stack->end - stack->base));
+  g_return_if_fail (n_elements <= (guint) (stack->end - stack->base));
 
   current = (guint) (stack->cur - stack->base);
+  if (current >= n_elements)
+    return;
   if (current) {
     n_elements -= current;
     memmove (stack->base + n_elements, stack->base, current * sizeof (SwfdecAsValue));
@@ -93,6 +95,7 @@ swfdec_as_stack_ensure_left (SwfdecAsStack *stack, guint n_elements)
   if ((guint) (stack->end - stack->cur) < n_elements) {
     /* FIXME FIXME FIXME */
     swfdec_as_context_abort (stack->context, "Out of stack space");
+    stack->cur = stack->end - n_elements;
   }
 }
 

@@ -34,7 +34,6 @@
 #include "swfdec_bits.h"
 #include "swfdec_cached.h"
 #include "swfdec_debug.h"
-#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_sprite.h"
 

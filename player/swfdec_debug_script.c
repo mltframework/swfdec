@@ -191,7 +191,8 @@ swfdec_debug_script_set_model (SwfdecDebugScript *debug)
 
     gtk_list_store_append (store, &iter);
     gtk_list_store_set (store, &iter, COLUMN_COMMAND, command, COLUMN_LINE, i,
-	COLUMN_BREAKPOINT, command->breakpoint, COLUMN_DESC, command->description, -1);
+	COLUMN_BREAKPOINT, swfdec_debugger_script_has_breakpoint (debug->debugger, debug->script, i),
+	COLUMN_DESC, command->description, -1);
   }
 
   gtk_tree_view_set_model (GTK_TREE_VIEW (debug), GTK_TREE_MODEL (store));

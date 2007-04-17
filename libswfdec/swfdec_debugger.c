@@ -23,13 +23,26 @@
 
 #include <string.h>
 #include "swfdec_debugger.h"
+#include "swfdec_as_context.h"
+#include "swfdec_as_frame.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
-#include "swfdec_js.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
-#include "js/jsdbgapi.h"
-#include "js/jsinterp.h" /* for frame->swf */
+
+enum {
+  SCRIPT_ADDED,
+  SCRIPT_REMOVED,
+  BREAKPOINT,
+  BREAKPOINT_ADDED,
+  BREAKPOINT_REMOVED,
+  MOVIE_ADDED,
+  MOVIE_REMOVED,
+  LAST_SIGNAL
+};
+
+G_DEFINE_TYPE (SwfdecDebugger, swfdec_debugger, SWFDEC_TYPE_PLAYER)
+static guint signals[LAST_SIGNAL] = { 0, };
 
 /*** SwfdecDebuggerScript ***/
 
@@ -57,10 +70,8 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
       case 0: /* string */
 	{
 	  const char *s = swfdec_bits_skip_string (&bits);
-	  if (!s) {
-	    g_string_free (string, TRUE);
-	    return NULL;
-	  }
+	  if (!s)
+	    goto error;
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
 	  g_string_append_c (string, '"');
@@ -95,15 +106,13 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 
 	  if (!parser->constant_pool) {
 	    SWFDEC_ERROR ("no constant pool");
-	    g_string_free (string, TRUE);
-	    return NULL;
+	    goto error;
 	  }
 	  id = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
 	  s = swfdec_constant_pool_get (parser->constant_pool, id);
 	  if (!s) {
 	    SWFDEC_ERROR ("constant pool size too small");
-	    g_string_free (string, TRUE);
-	    return NULL;
+	    goto error;
 	  }
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
@@ -112,10 +121,14 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 	break;
       default:
 	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return JS_FALSE;
+	goto error;
     }
   }
   return g_string_free (string, FALSE);
+
+error:
+  g_string_free (string, TRUE);
+  return "erroneous action Push";
 }
 
 /* NB: constant pool actions are special in that they are called at init time */
@@ -127,16 +140,14 @@ swfdec_debugger_add_command (gconstpointer bytecode, guint action,
   SwfdecDebuggerCommand command;
 
   command.code = bytecode;
-  command.breakpoint = 0;
-  if (action == 0x96) {
-    /* PUSH */
+  if (action == SWFDEC_AS_ACTION_PUSH) {
     command.description = swfdec_debugger_print_push (parser, data, len);
   } else {
     command.description = swfdec_script_print_action (action, data, len);
   }
+  g_assert (command.description != NULL);
   g_array_append_val (parser->commands, command);
-  if (action == 0x88) {
-    /* constant pool */
+  if (action == SWFDEC_AS_ACTION_CONSTANT_POOL) {
     if (parser->constant_pool)
       swfdec_constant_pool_free (parser->constant_pool);
     parser->constant_pool = swfdec_constant_pool_new_from_action (data, len);
@@ -183,21 +194,179 @@ swfdec_debugger_script_free (SwfdecDebuggerScript *script)
   g_free (script);
 }
 
+/*** BREAKPOINTS ***/
+
+typedef enum {
+  BREAKPOINT_NONE,
+  BREAKPOINT_PC
+} BreakpointType;
+
+typedef struct {
+  BreakpointType	type;
+  const guint8 *	pc;
+} Breakpoint;
+
+static void
+swfdec_debugger_update_interrupting (SwfdecDebugger *debugger)
+{
+  guint i;
+  
+  debugger->has_breakpoints = debugger->stepping;
+
+  for (i = 0; i < debugger->breakpoints->len && !debugger->has_breakpoints; i++) {
+    Breakpoint *br = &g_array_index (debugger->breakpoints, Breakpoint, i);
+
+    if (br->type != BREAKPOINT_NONE)
+      debugger->has_breakpoints = TRUE;
+  }
+}
+
+guint
+swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger, 
+    SwfdecDebuggerScript *script, guint line)
+{
+  guint i;
+  Breakpoint *br = NULL;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), 0);
+  g_return_val_if_fail (script != NULL, 0);
+  g_return_val_if_fail (line < script->n_commands, 0);
+
+  for (i = 0; i < debugger->breakpoints->len; i++) {
+    br = &g_array_index (debugger->breakpoints, Breakpoint, i);
+    if (br->type == BREAKPOINT_NONE)
+      break;
+    br = NULL;
+  }
+
+  if (br == NULL) {
+    g_array_set_size (debugger->breakpoints, debugger->breakpoints->len + 1);
+    br = &g_array_index (debugger->breakpoints, Breakpoint, 
+	debugger->breakpoints->len - 1);
+  }
+  br->type = BREAKPOINT_PC;
+  br->pc = script->commands[line].code;
+  swfdec_debugger_update_interrupting (debugger);
+  g_signal_emit (debugger, signals[BREAKPOINT_ADDED], 0, i + 1);
+  return i + 1;
+}
+
+void
+swfdec_debugger_unset_breakpoint (SwfdecDebugger *debugger, guint id)
+{
+  Breakpoint *br;
+
+  g_return_if_fail (SWFDEC_IS_DEBUGGER (debugger));
+  g_return_if_fail (id > 0);
+
+  if (debugger->breakpoints == NULL)
+    return;
+  if (id > debugger->breakpoints->len)
+    return;
+  br = &g_array_index (debugger->breakpoints, Breakpoint, id - 1);
+  if (br->type == BREAKPOINT_NONE)
+    return;
+
+  g_signal_emit (debugger, signals[BREAKPOINT_REMOVED], 0, id);
+  br->type = BREAKPOINT_NONE;
+  swfdec_debugger_update_interrupting (debugger);
+}
+
+static gboolean
+swfdec_debugger_get_from_as (SwfdecDebugger *debugger, SwfdecScript *script, 
+    const guint8 *pc, SwfdecDebuggerScript **script_out, guint *line_out)
+{
+  guint line;
+  SwfdecDebuggerScript *dscript = swfdec_debugger_get_script (debugger, script);
+
+  if (dscript == NULL)
+    return FALSE;
+  for (line = 0; line < dscript->n_commands; line++) {
+    if (pc == dscript->commands[line].code) {
+      if (script_out)
+	*script_out = dscript;
+      if (line_out)
+	*line_out = line;
+      return TRUE;
+    }
+    if (pc < (guint8 *) dscript->commands[line].code)
+      return FALSE;
+  }
+  return FALSE;
+}
+
+gboolean
+swfdec_debugger_get_current (SwfdecDebugger *debugger,
+    SwfdecDebuggerScript **dscript, guint *line)
+{
+  SwfdecAsFrame *frame;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
+
+  frame = SWFDEC_AS_CONTEXT (debugger)->frame;
+  if (frame == NULL)
+    return FALSE;
+  if (frame->script == NULL) /* native function */
+    return FALSE;
+  return swfdec_debugger_get_from_as (debugger, frame->script, frame->pc, dscript, line);
+}
+
+typedef struct {
+  const guint8 *pc;
+  SwfdecScript *current;
+} BreakpointFinder;
+
+static void
+swfdec_debugger_find_script (gpointer key, gpointer value, gpointer data)
+{
+  BreakpointFinder *find = data;
+  SwfdecScript *script = key;
+
+  if (script->buffer->data > find->pc ||
+      find->pc >= (script->buffer->data + script->buffer->length))
+    return;
+  if (find->current == NULL ||
+      find->current->buffer->length > script->buffer->length)
+    find->current = script;
+}
+
+gboolean
+swfdec_debugger_get_breakpoint (SwfdecDebugger *debugger, guint id, 
+    SwfdecDebuggerScript **script, guint *line)
+{
+  Breakpoint *br;
+  BreakpointFinder find = { NULL, NULL };
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
+  g_return_val_if_fail (id > 0, FALSE);
+
+  if (debugger->breakpoints == NULL)
+    return FALSE;
+  if (id > debugger->breakpoints->len)
+    return FALSE;
+  br = &g_array_index (debugger->breakpoints, Breakpoint, id - 1);
+  if (br->type == BREAKPOINT_NONE)
+    return FALSE;
+
+  find.pc = br->pc;
+  g_hash_table_foreach (debugger->scripts, swfdec_debugger_find_script, &find);
+  if (find.current == NULL)
+    return FALSE;
+  return swfdec_debugger_get_from_as (debugger, find.current, find.pc, script, line);
+}
+
+guint
+swfdec_debugger_get_n_breakpoints (SwfdecDebugger *debugger)
+{
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), 0);
+
+  if (debugger->breakpoints == NULL)
+    return 0;
+
+  return debugger->breakpoints->len;
+}
+
 /*** SwfdecDebugger ***/
-
-enum {
-  SCRIPT_ADDED,
-  SCRIPT_REMOVED,
-  BREAKPOINT,
-  BREAKPOINT_ADDED,
-  BREAKPOINT_REMOVED,
-  MOVIE_ADDED,
-  MOVIE_REMOVED,
-  LAST_SIGNAL
-};
-
-G_DEFINE_TYPE (SwfdecDebugger, swfdec_debugger, SWFDEC_TYPE_PLAYER)
-guint signals [LAST_SIGNAL] = { 0, };
 
 static void
 swfdec_debugger_dispose (GObject *object)
@@ -214,9 +383,62 @@ swfdec_debugger_dispose (GObject *object)
 }
 
 static void
+swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (debugger);
+
+  GList *walk;
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  g_object_thaw_notify (G_OBJECT (debugger));
+  if (!swfdec_rect_is_empty (&player->invalid)) {
+    double x, y, width, height;
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
+    g_signal_emit_by_name (player, "invalidate", x, y, width, height);
+    swfdec_rect_init_empty (&player->invalid);
+  }
+
+  g_signal_emit (debugger, signals[BREAKPOINT], 0, id);
+
+  g_object_freeze_notify (G_OBJECT (debugger));
+}
+
+static void
+swfdec_debugger_step (SwfdecAsContext *context)
+{
+  SwfdecDebugger *debugger = SWFDEC_DEBUGGER (context);
+
+  if (!debugger->has_breakpoints)
+    return;
+
+  if (debugger->stepping) {
+    swfdec_debugger_do_breakpoint (debugger, 0);
+  } else {
+    guint i;
+    Breakpoint *br;
+    const guint8 *pc = context->frame->pc;
+
+    for (i = 0; i < debugger->breakpoints->len; i++) {
+      br = &g_array_index (debugger->breakpoints, Breakpoint, i);
+      if (br->type == BREAKPOINT_NONE)
+	continue;
+      if (br->pc == pc) {
+	swfdec_debugger_do_breakpoint (debugger, i + 1);
+	return;
+      }
+    }
+  }
+}
+
+static void
 swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsContextClass *context_class = SWFDEC_AS_CONTEXT_CLASS (klass);
 
   object_class->dispose = swfdec_debugger_dispose;
 
@@ -241,6 +463,8 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[MOVIE_REMOVED] = g_signal_new ("movie-removed", 
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+
+  context_class->step = swfdec_debugger_step;
 }
 
 static void
@@ -248,6 +472,7 @@ swfdec_debugger_init (SwfdecDebugger *debugger)
 {
   debugger->scripts = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
       NULL, (GDestroyNotify) swfdec_debugger_script_free);
+  debugger->breakpoints = g_array_new (FALSE, FALSE, sizeof (Breakpoint));
 }
 
 /**
@@ -314,211 +539,6 @@ swfdec_debugger_foreach_script (SwfdecDebugger *debugger, GFunc func, gpointer d
   g_hash_table_foreach (debugger->scripts, do_foreach, &fdata);
 }
 
-/*** BREAKPOINTS ***/
-
-typedef struct {
-  SwfdecDebuggerScript *	script;
-  guint				line;
-} Breakpoint;
-
-static void
-swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
-{
-  SwfdecPlayer *player = SWFDEC_PLAYER (debugger);
-
-  GList *walk;
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
-  g_object_thaw_notify (G_OBJECT (debugger));
-  if (!swfdec_rect_is_empty (&player->invalid)) {
-    double x, y, width, height;
-    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
-    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
-    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
-    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
-    g_signal_emit_by_name (player, "invalidate", x, y, width, height);
-    swfdec_rect_init_empty (&player->invalid);
-  }
-
-  g_signal_emit (debugger, signals[BREAKPOINT], 0, id);
-
-  g_object_freeze_notify (G_OBJECT (debugger));
-}
-
-static JSTrapStatus
-swfdec_debugger_interrupt_cb (JSContext *cx, JSScript *script,
-        jsbytecode *pc, jsval *rval, void *debugger)
-{
-  SwfdecDebuggerScript *dscript;
-  guint line;
-  if (!swfdec_debugger_get_current (debugger, &dscript, &line))
-    return JSTRAP_CONTINUE; 
-  if (dscript->commands[line].breakpoint) {
-    swfdec_debugger_do_breakpoint (debugger, dscript->commands[line].breakpoint);
-  } else if (SWFDEC_DEBUGGER (debugger)->stepping) {
-    swfdec_debugger_do_breakpoint (debugger, 0);
-  }
-  return JSTRAP_CONTINUE;
-}
-
-static void
-swfdec_debugger_update_interrupting (SwfdecDebugger *debugger)
-{
-  guint i;
-  gboolean should_interrupt = debugger->stepping;
-
-  for (i = 0; i < debugger->breakpoints->len && !should_interrupt; i++) {
-    Breakpoint *br = &g_array_index (debugger->breakpoints, Breakpoint, i);
-
-    if (br->script) {
-      should_interrupt = TRUE;
-      break;
-    }
-  }
-  if (should_interrupt) {
-    JS_SetInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), 
-	swfdec_debugger_interrupt_cb, debugger);
-  } else {
-    JS_ClearInterrupt (JS_GetRuntime (SWFDEC_PLAYER (debugger)->jscx), NULL, NULL);
-  }
-}
-
-guint
-swfdec_debugger_set_breakpoint (SwfdecDebugger *debugger, 
-    SwfdecDebuggerScript *script, guint line)
-{
-  guint i;
-  Breakpoint *br = NULL;
-
-  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), 0);
-  g_return_val_if_fail (script != NULL, 0);
-  g_return_val_if_fail (line < script->n_commands, 0);
-
-  if (debugger->breakpoints == NULL) {
-    debugger->breakpoints = g_array_new (FALSE, FALSE, sizeof (Breakpoint));
-  }
-  if (script->commands[line].breakpoint != 0)
-    return script->commands[line].breakpoint;
-
-  for (i = 0; i < debugger->breakpoints->len; i++) {
-    br = &g_array_index (debugger->breakpoints, Breakpoint, i);
-    if (br->script == NULL)
-      break;
-    br = NULL;
-  }
-
-  if (br == NULL) {
-    g_array_set_size (debugger->breakpoints, debugger->breakpoints->len + 1);
-    br = &g_array_index (debugger->breakpoints, Breakpoint, 
-	debugger->breakpoints->len - 1);
-  }
-  br->script = script;
-  br->line = line;
-  script->commands[line].breakpoint = i + 1;
-  swfdec_debugger_update_interrupting (debugger);
-  g_signal_emit (debugger, signals[BREAKPOINT_ADDED], 0, i + 1);
-  return i + 1;
-}
-
-void
-swfdec_debugger_unset_breakpoint (SwfdecDebugger *debugger, guint id)
-{
-  Breakpoint *br;
-
-  g_return_if_fail (SWFDEC_IS_DEBUGGER (debugger));
-  g_return_if_fail (id > 0);
-
-  if (debugger->breakpoints == NULL)
-    return;
-  if (id > debugger->breakpoints->len)
-    return;
-  br = &g_array_index (debugger->breakpoints, Breakpoint, id - 1);
-  if (br->script == NULL)
-    return;
-
-  g_signal_emit (debugger, signals[BREAKPOINT_REMOVED], 0, id);
-  br->script->commands[br->line].breakpoint = 0;
-  br->script = NULL;
-  swfdec_debugger_update_interrupting (debugger);
-}
-
-static gboolean
-swfdec_debugger_get_from_js (SwfdecDebugger *debugger, SwfdecScript *script, 
-    jsbytecode *pc, SwfdecDebuggerScript **script_out, guint *line_out)
-{
-  guint line;
-  SwfdecDebuggerScript *dscript = swfdec_debugger_get_script (debugger, script);
-
-  if (dscript == NULL)
-    return FALSE;
-  for (line = 0; line < dscript->n_commands; line++) {
-    if (pc == dscript->commands[line].code) {
-      if (script_out)
-	*script_out = dscript;
-      if (line_out)
-	*line_out = line;
-      return TRUE;
-    }
-    if (pc < (jsbytecode *) dscript->commands[line].code)
-      return FALSE;
-  }
-  return FALSE;
-}
-
-gboolean
-swfdec_debugger_get_current (SwfdecDebugger *debugger,
-    SwfdecDebuggerScript **dscript, guint *line)
-{
-  JSStackFrame *frame = NULL;
-  JSContext *cx;
-  jsbytecode *pc;
-
-  cx = SWFDEC_PLAYER (debugger)->jscx;
-  JS_FrameIterator (cx, &frame);
-  if (frame == NULL)
-    return FALSE;
-  if (frame->swf == NULL)
-    return FALSE;
-  pc = JS_GetFramePC (cx, frame);
-  return swfdec_debugger_get_from_js (debugger, frame->swf, pc, dscript, line);
-}
-
-gboolean
-swfdec_debugger_get_breakpoint (SwfdecDebugger *debugger, guint id, 
-    SwfdecDebuggerScript **script, guint *line)
-{
-  Breakpoint *br;
-
-  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
-  g_return_val_if_fail (id > 0, FALSE);
-
-  if (debugger->breakpoints == NULL)
-    return FALSE;
-  if (id > debugger->breakpoints->len)
-    return FALSE;
-  br = &g_array_index (debugger->breakpoints, Breakpoint, id - 1);
-  if (br->script == NULL)
-    return FALSE;
-
-  if (script)
-    *script = br->script;
-  if (line)
-    *line = br->line;
-  return TRUE;
-}
-
-guint
-swfdec_debugger_get_n_breakpoints (SwfdecDebugger *debugger)
-{
-  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), 0);
-
-  if (debugger->breakpoints == NULL)
-    return 0;
-
-  return debugger->breakpoints->len;
-}
-
 void
 swfdec_debugger_set_stepping (SwfdecDebugger *debugger, gboolean stepping)
 {
@@ -542,7 +562,6 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
 {
   SwfdecPlayer *player;
   GList *walk;
-  jsval rval;
   const char *ret;
 
   g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
@@ -552,11 +571,7 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
   g_object_freeze_notify (G_OBJECT (debugger));
 
 
-  if (swfdec_js_run (player, command, &rval)) {
-    ret = swfdec_js_to_string (player->jscx, rval);
-  } else {
-    ret = NULL;
-  }
+  SWFDEC_ERROR ("ooops");
 
 
   for (walk = player->roots; walk; walk = walk->next) {
@@ -576,3 +591,23 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
   return ret;
 }
 
+gboolean
+swfdec_debugger_script_has_breakpoint (SwfdecDebugger *debugger, 
+    SwfdecDebuggerScript *script, guint line)
+{
+  guint i;
+  const guint8 *pc;
+
+  g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), FALSE);
+  g_return_val_if_fail (script != NULL, FALSE);
+  g_return_val_if_fail (line < script->n_commands, FALSE);
+
+  pc = script->commands[line].code;
+  for (i = 0; i < debugger->breakpoints->len; i++) {
+    Breakpoint *br = &g_array_index (debugger->breakpoints, Breakpoint, i);
+
+    if (br->type == BREAKPOINT_PC && pc == br->pc)
+      return TRUE;
+  }
+  return FALSE;
+}

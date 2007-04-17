@@ -23,14 +23,13 @@
 #include <string.h>
 #include <math.h>
 
-#include <js/jsapi.h>
-
 #include "swfdec_movie.h"
+#include "swfdec_as_context.h"
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
-#include "swfdec_js.h"
+#include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
@@ -39,7 +38,7 @@
 
 static const SwfdecContent default_content = SWFDEC_CONTENT_DEFAULT;
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_SCRIPTABLE)
+G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
 
 static void
 swfdec_movie_init (SwfdecMovie * movie)
@@ -324,7 +323,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   swfdec_movie_set_content (movie, NULL);
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  swfdec_js_movie_remove_jsobject (movie);
+  //swfdec_js_movie_remove_jsobject (movie);
   player->movies = g_list_remove (player->movies, movie);
   g_object_unref (movie);
 }
@@ -348,6 +347,55 @@ swfdec_movie_remove (SwfdecMovie *movie)
     swfdec_movie_destroy (movie);
 }
 
+/**
+ * swfdec_movie_run_init:
+ * @movie: a #SwfdecMovie
+ *
+ * Runs onClipEvent(initialize) on the given @movie.
+ */
+void
+swfdec_movie_run_init (SwfdecMovie *movie)
+{
+  SwfdecPlayer *player;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  g_queue_remove (player->init_queue, movie);
+  swfdec_movie_execute_script (movie, SWFDEC_EVENT_INITIALIZE);
+}
+
+/**
+ * swfdec_movie_run_construct:
+ * @movie: a #SwfdecMovie
+ *
+ * Runs the constructors for @movie. This is (in the given order) 
+ * onClipEvent(construct), movie.onConstruct and the constructor registered
+ * via Object.registerClass.
+ **/
+void
+swfdec_movie_run_construct (SwfdecMovie *movie)
+{
+  SwfdecPlayer *player;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  g_queue_remove (player->construct_queue, movie);
+  swfdec_movie_execute_script (movie, SWFDEC_EVENT_CONSTRUCT);
+#if 0
+  /* FIXME: need a check if the constructor can be unregistered after construction */
+  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
+      (fun = swfdec_js_movie_lookup_class (SWFDEC_SPRITE_MOVIE (movie))) != JSVAL_NULL) {
+    SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
+    SWFDEC_LOG ("Executing constructor for %s %p", G_OBJECT_TYPE_NAME (movie), movie);
+    if (!js_InternalCall (script->jscx, script->jsobj, fun, 0, NULL, &fun)) {
+      SWFDEC_ERROR ("constructor execution failed");
+    }
+  }
+#endif
+}
+
 void
 swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
 {
@@ -358,11 +406,11 @@ swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
 
   if (movie->content->events) {
     swfdec_event_list_execute (movie->content->events, 
-	SWFDEC_SCRIPTABLE (movie), condition, 0);
+	SWFDEC_AS_OBJECT (movie), condition, 0);
   }
   name = swfdec_event_type_get_name (condition);
   if (name != NULL)
-    swfdec_scriptable_execute (SWFDEC_SCRIPTABLE (movie), name, 0, NULL);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
 }
 
 static void
@@ -390,12 +438,12 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
 
   if (movie->content->events) {
     if (!swfdec_event_list_has_conditions (movie->content->events, 
-	  SWFDEC_SCRIPTABLE (movie), condition, 0))
+	  SWFDEC_AS_OBJECT (movie), condition, 0))
       return FALSE;
   } else {
     const char *name = swfdec_event_type_get_name (condition);
     if (name == NULL ||
-	!swfdec_scriptable_can_execute (SWFDEC_SCRIPTABLE (movie), name))
+	!swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), name))
       return FALSE;
   }
 
@@ -403,6 +451,52 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   swfdec_player_add_action (player, movie, swfdec_movie_do_execute_script, 
       GUINT_TO_POINTER (condition));
   return TRUE;
+}
+
+/**
+ * swfdec_movie_set_variables:
+ * @script: a #SwfdecMovie
+ * @variables: variables to set on @movie in application-x-www-form-urlencoded 
+ *             format
+ * 
+ * Verifies @variables to be encoded correctly and sets them as string 
+ * properties on the given @movie.
+ **/
+void
+swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
+{
+  SwfdecAsObject *as;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (variables != NULL);
+
+  as = SWFDEC_AS_OBJECT (movie);
+  SWFDEC_DEBUG ("setting variables on %p: %s", movie, variables);
+  while (TRUE) {
+    char *name, *value;
+    const char *asname;
+    SwfdecAsValue val;
+
+    if (!swfdec_urldecode_one (variables, &name, &value, &variables)) {
+      SWFDEC_WARNING ("variables invalid at \"%s\"", variables);
+      break;
+    }
+    if (*variables != '\0' && *variables != '&') {
+      SWFDEC_WARNING ("variables not delimited with & at \"%s\"", variables);
+      g_free (name);
+      g_free (value);
+      break;
+    }
+    asname = swfdec_as_context_get_string (as->context, name);
+    g_free (name);
+    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (as->context, value));
+    g_free (value);
+    swfdec_as_object_set (as, asname, &val);
+    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
+    if (*variables == '\0')
+      break;
+    variables++;
+  }
 }
 
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
@@ -672,24 +766,12 @@ swfdec_movie_iterate_end (SwfdecMovie *movie)
 	 g_list_find (movie->parent->list, movie) != NULL;
 }
 
-static JSObject *
-swfdec_movie_create_js_object (SwfdecScriptable *script)
-{
-  /* we create the objects manually and ensure persistence */
-  g_assert_not_reached ();
-}
-
-extern const JSClass movieclip_class;
 static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
-  SwfdecScriptableClass *script_class = SWFDEC_SCRIPTABLE_CLASS (movie_class);
 
   object_class->dispose = swfdec_movie_dispose;
-
-  script_class->jsclass = &movieclip_class;
-  script_class->create_js_object = swfdec_movie_create_js_object;
 
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }
@@ -740,7 +822,8 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
    */
   player->movies = g_list_prepend (player->movies, movie);
   /* we have to create the JSObject here to get actions queued before init_movie executes */
-  swfdec_js_movie_create_jsobject (movie);
+  swfdec_movie_add_asprops (movie);
+  //swfdec_js_movie_create_jsobject (movie);
   /* queue init and construct events for non-root movies */
   if (movie != movie->root) {
     g_queue_push_tail (player->init_queue, movie);
@@ -781,6 +864,8 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
 {
   SwfdecGraphicClass *klass;
   SwfdecMovie *ret;
+  SwfdecAsObject *object;
+  gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (parent), NULL);
   g_return_val_if_fail (SWFDEC_IS_GRAPHIC (content->graphic), NULL);
@@ -789,9 +874,15 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   SWFDEC_DEBUG ("new movie for parent %p", parent);
   klass = SWFDEC_GRAPHIC_GET_CLASS (content->graphic);
   g_return_val_if_fail (klass->create_movie != NULL, NULL);
-  ret = klass->create_movie (content->graphic);
+  ret = klass->create_movie (content->graphic, &size);
+  object = SWFDEC_AS_OBJECT (parent);
+  if (swfdec_as_context_use_mem (object->context, size)) {
+    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
+    g_object_ref (ret);
+  } else {
+    SWFDEC_AS_OBJECT (ret)->context = object->context;
+  }
   ret->parent = parent;
-  SWFDEC_SCRIPTABLE (ret)->jscx = SWFDEC_SCRIPTABLE (parent)->jscx;
   g_object_ref (parent);
   ret->root = parent->root;
   swfdec_movie_initialize (ret, content);
@@ -811,7 +902,13 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   SWFDEC_ROOT_MOVIE (ret)->player = player;
-  SWFDEC_SCRIPTABLE (ret)->jscx = player->jscx;
+  if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie))) {
+    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),
+	SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie));
+    g_object_ref (ret);
+  } else {
+    SWFDEC_AS_OBJECT (ret)->context = SWFDEC_AS_CONTEXT (player);
+  }
   ret->root = ret;
   swfdec_movie_initialize (ret, content);
   ret->has_name = FALSE;

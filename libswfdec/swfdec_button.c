@@ -23,7 +23,6 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <js/jsapi.h>
 #include "swfdec_button.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_sound.h"
@@ -60,11 +59,12 @@ swfdec_button_dispose (GObject *object)
 }
 
 static SwfdecMovie *
-swfdec_button_create_movie (SwfdecGraphic *graphic)
+swfdec_button_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   SwfdecButtonMovie *movie = g_object_new (SWFDEC_TYPE_BUTTON_MOVIE, NULL);
 
   movie->button = SWFDEC_BUTTON (graphic);
+  *size = sizeof (SwfdecButtonMovie);
 
   return SWFDEC_MOVIE (movie);
 }

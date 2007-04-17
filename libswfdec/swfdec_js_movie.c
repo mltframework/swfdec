@@ -1456,56 +1456,6 @@ swfdec_js_movie_create_jsobject	(SwfdecMovie *movie)
   swfdec_js_movie_add_property (movie);
 }
 
-/**
- * swfdec_movie_run_init:
- * @movie: a #SwfdecMovie
- *
- * Runs onClipEvent(initialize) on the given @movie.
- */
-void
-swfdec_movie_run_init (SwfdecMovie *movie)
-{
-  SwfdecPlayer *player;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (SWFDEC_SCRIPTABLE (movie)->jsobj != NULL);
-
-  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  g_queue_remove (player->init_queue, movie);
-  swfdec_movie_execute_script (movie, SWFDEC_EVENT_INITIALIZE);
-}
-
-/**
- * swfdec_movie_run_construct:
- * @movie: a #SwfdecMovie
- *
- * Runs the constructors for @movie. This is (in the given order) 
- * onClipEvent(construct), movie.onConstruct and the constructor registered
- * via Object.registerClass.
- **/
-void
-swfdec_movie_run_construct (SwfdecMovie *movie)
-{
-  SwfdecPlayer *player;
-  jsval fun;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (SWFDEC_SCRIPTABLE (movie)->jsobj != NULL);
-
-  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-  g_queue_remove (player->construct_queue, movie);
-  swfdec_movie_execute_script (movie, SWFDEC_EVENT_CONSTRUCT);
-  /* FIXME: need a check if the constructor can be unregistered after construction */
-  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
-      (fun = swfdec_js_movie_lookup_class (SWFDEC_SPRITE_MOVIE (movie))) != JSVAL_NULL) {
-    SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
-    SWFDEC_LOG ("Executing constructor for %s %p", G_OBJECT_TYPE_NAME (movie), movie);
-    if (!js_InternalCall (script->jscx, script->jsobj, fun, 0, NULL, &fun)) {
-      SWFDEC_ERROR ("constructor execution failed");
-    }
-  }
-}
-
 void
 swfdec_js_movie_remove_jsobject	(SwfdecMovie *movie)
 {

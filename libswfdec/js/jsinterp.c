@@ -626,9 +626,6 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
     return JS_TRUE;
 }
 
-extern JSBool
-swfdec_script_interpret(void *script, JSContext *cx, jsval *rval);
-
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -966,11 +963,8 @@ have_fun:
         }
         ok = js_Interpret(cx, &v);
     } else if (swf) {
-	if (!js_GetCallObject(cx, &frame, parent)) {
-	    ok = JS_FALSE;
-	    goto out;
-	}
-        ok = swfdec_script_interpret(swf, cx, &v);
+	ok = JS_FALSE;
+	goto out;
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
         frame.scopeChain = NULL;

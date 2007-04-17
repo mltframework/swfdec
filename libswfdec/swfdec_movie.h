@@ -21,11 +21,11 @@
 #define _SWFDEC_MOVIE_H_
 
 #include <glib-object.h>
+#include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_event.h>
-#include <libswfdec/swfdec_scriptable.h>
+#include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
@@ -76,7 +76,7 @@ typedef enum {
 } SwfdecMovieState;
 
 struct _SwfdecMovie {
-  SwfdecScriptable	scriptable;
+  SwfdecAsObject	object;
 
   char *		name;			/* name used in to_string */
   gboolean		has_name;		/* TRUE if name wasn't given automagically */
@@ -116,7 +116,7 @@ struct _SwfdecMovie {
 };
 
 struct _SwfdecMovieClass {
-  SwfdecScriptableClass	scriptable_class;
+  SwfdecAsObjectClass	object_class;
 
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);
@@ -190,6 +190,8 @@ void		swfdec_movie_execute_script	(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
 gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
+void		swfdec_movie_set_variables	(SwfdecMovie *		movie,
+						 const char *		variables);
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);
 SwfdecDepthClass
@@ -198,6 +200,7 @@ SwfdecDepthClass
 /* in swfdec_js_movie.c */
 void		swfdec_movie_run_init		(SwfdecMovie *		movie);
 void		swfdec_movie_run_construct	(SwfdecMovie *		movie);
+void		swfdec_movie_add_asprops	(SwfdecMovie *		movie);
 
 G_END_DECLS
 #endif

@@ -26,6 +26,7 @@
 G_BEGIN_DECLS
 
 typedef enum {
+  SWFDEC_AS_CONTEXT_NEW,
   SWFDEC_AS_CONTEXT_RUNNING,
   SWFDEC_AS_CONTEXT_INTERRUPTED,
   SWFDEC_AS_CONTEXT_ABORTED
@@ -47,6 +48,8 @@ struct _SwfdecAsContext {
   GObject		object;
 
   SwfdecAsContextState	state;		/* our current state */
+  SwfdecAsObject *	global;		/* the global object */
+  GRand *		rand;		/* random number generator */
 
   /* bookkeeping for GC */
   gsize			memory;		/* memory currently in use */
@@ -56,15 +59,23 @@ struct _SwfdecAsContext {
   /* execution state */
   unsigned int	      	version;	/* currently active version */
   SwfdecAsFrame *	frame;		/* topmost stack frame */
+  SwfdecAsFrame *	last_frame;   	/* last frame before calling context_run */
 };
 
 struct _SwfdecAsContextClass {
   GObjectClass		object_class;
+
+  /* mark all objects that should not be collected */
+  void			(* mark)		(SwfdecAsContext *	context);
+  /* call this function before executing a bytecode if non-NULL */
+  void			(* step)		(SwfdecAsContext *	context);
 };
 
 GType		swfdec_as_context_get_type	(void);
 
 SwfdecAsContext *swfdec_as_context_new		(void);
+void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
+						 guint			version);
 
 const char *	swfdec_as_context_get_string	(SwfdecAsContext *	context,
 						 const char *		string);
@@ -74,16 +85,27 @@ void		swfdec_as_context_abort		(SwfdecAsContext *	context,
 						 const char *		reason);
 
 gboolean	swfdec_as_context_use_mem     	(SwfdecAsContext *	context, 
-						 gsize			len);
+						 gsize			bytes);
 void		swfdec_as_context_unuse_mem   	(SwfdecAsContext *	context,
-						 gsize			len);
+						 gsize			bytes);
 void		swfdec_as_object_mark		(SwfdecAsObject *	object);
 void		swfdec_as_value_mark		(SwfdecAsValue *	value);
 void		swfdec_as_string_mark		(const char *		string);
 void		swfdec_as_context_gc		(SwfdecAsContext *	context);
 
-void		swfdec_as_context_return	(SwfdecAsContext *	context,
-						 SwfdecAsValue *	retval);
+void		swfdec_as_context_run		(SwfdecAsContext *	context);
+void		swfdec_as_context_return	(SwfdecAsContext *	context);
+void		swfdec_as_context_trace		(SwfdecAsContext *	context,
+						 const char *		string);
+
+void		swfdec_as_context_eval		(SwfdecAsContext *	cx,
+						 SwfdecAsObject *	obj,
+						 const char *		str,
+						 SwfdecAsValue *	val);
+void		swfdec_as_context_eval_set	(SwfdecAsContext *	cx,
+						 SwfdecAsObject *	obj,
+						 const char *		str,
+						 const SwfdecAsValue *	val);
 
 G_END_DECLS
 #endif

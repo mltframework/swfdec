@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -67,8 +67,6 @@ struct _SwfdecEditText
 
   /* variable info */
   char *		variable;	/* full name of the variable in dot notation */
-  char *		variable_prefix;/* prefix of the variable (or NULL) */
-  char *		variable_name;	/* name of the variable without dots */
   gboolean		readonly;
 };
 

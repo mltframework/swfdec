@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_CONNECTION_H_
 #define _SWFDEC_CONNECTION_H_
 
-#include <libswfdec/swfdec_scriptable.h>
+#include <libswfdec/swfdec_as_object.h>
 
 G_BEGIN_DECLS
 
@@ -36,18 +36,18 @@ typedef struct _SwfdecConnectionClass SwfdecConnectionClass;
 #define SWFDEC_CONNECTION_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_CONNECTION, SwfdecConnectionClass))
 
 struct _SwfdecConnection {
-  SwfdecScriptable	scriptable;
+  SwfdecAsObject	object;
 
   char *		url;		/* url for this connection or NULL for none */
 };
 
 struct _SwfdecConnectionClass {
-  SwfdecScriptableClass	scriptable_class;
+  SwfdecAsObjectClass	object_class;
 };
 
 GType			swfdec_connection_get_type	(void);
 
-SwfdecConnection *	swfdec_connection_new		(JSContext *		cx);
+SwfdecConnection *	swfdec_connection_new		(SwfdecAsContext *	context);
 
 void			swfdec_connection_connect	(SwfdecConnection *	conn,
 							 const char *		url);

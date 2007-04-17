@@ -20,7 +20,8 @@
 #ifndef _SWFDEC_XML_H_
 #define _SWFDEC_XML_H_
 
-#include <libswfdec/swfdec_scriptable.h>
+#include <libswfdec/swfdec.h>
+#include <libswfdec/swfdec_as_object.h>
 
 G_BEGIN_DECLS
 
@@ -36,23 +37,22 @@ typedef struct _SwfdecXmlClass SwfdecXmlClass;
 #define SWFDEC_XML_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_XML, SwfdecXmlClass))
 
 struct _SwfdecXml {
-  SwfdecScriptable	scriptable;
+  SwfdecAsObject	object;
 
   char *		text;		/* string that this XML displays */
-  SwfdecPlayer *	player;		/* player we're playing in */
   SwfdecLoader *	loader;		/* loader when loading or NULL */
 };
 
 struct _SwfdecXmlClass {
-  SwfdecScriptableClass	scriptable_class;
+  SwfdecAsObjectClass	object_class;
 };
 
 GType		swfdec_xml_get_type	(void);
 
-SwfdecXml *	swfdec_xml_new		(SwfdecPlayer *	player);
+SwfdecAsObject *swfdec_xml_new		(SwfdecAsContext *	context);
 
-void		swfdec_xml_load		(SwfdecXml *	xml,
-					 const char *	url);
+void		swfdec_xml_load		(SwfdecXml *		xml,
+					 const char *		url);
 
 
 G_END_DECLS

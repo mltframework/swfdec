@@ -521,11 +521,22 @@ swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
   return n_bytes;
 }
 
+/**
+ * swfdec_bits_get_string_length:
+ * @bits: a #SwfdecBits
+ * @len: number of bytes to read
+ *
+ * Reads the next @len bytes into a string and validates it as UTF-8.
+ *
+ * Returns: a new string or %NULL on error
+ **/
 char *
 swfdec_bits_get_string_length (SwfdecBits * bits, guint len)
 {
   char *ret;
 
+  if (len == 0)
+    return g_strdup ("");
   SWFDEC_BYTES_CHECK (bits, len);
 
   ret = g_strndup ((char *) bits->ptr, len);

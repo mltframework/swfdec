@@ -96,8 +96,7 @@ swfdec_image_jpegtables (SwfdecSwfDecoder * s)
 
   SWFDEC_DEBUG ("swfdec_image_jpegtables");
 
-  s->jpegtables = swfdec_buffer_ref (bits->buffer);
-  bits->ptr += bits->buffer->length;
+  s->jpegtables = swfdec_bits_get_buffer (bits, -1);
 
   return SWFDEC_STATUS_OK;
 }

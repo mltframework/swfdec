@@ -213,8 +213,7 @@ AC_ARG_ENABLE(gstreamer,
 	enable_gstreamer="yes")
 
 if test "$enable_gstreamer" = "yes"; then
-	dnl I used my own version here, it might work with lower versions
-	GST_REQUIRED=0.10.10
+	GST_REQUIRED=0.10.11
 	PKG_CHECK_MODULES(GST, gstreamer-0.10 >= $GST_REQUIRED, HAVE_GST=yes, HAVE_GST=no)
 	if test "x$HAVE_GST" = xyes; then
 	  AC_DEFINE(HAVE_GST, 1, [Define if GStreamer is enabled])

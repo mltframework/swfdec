@@ -1038,7 +1038,10 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   swfdec_bits_get_rect (bits, &morph->end_extents);
   offset = swfdec_bits_get_u32 (bits);
   end_bits = *bits;
-  end_bits.ptr += offset;
+  if (swfdec_bits_skip_bytes (&end_bits, offset) != offset) {
+    SWFDEC_ERROR ("wrong offset in DefineMorphShape");
+    return SWFDEC_STATUS_OK;
+  }
   bits->end = end_bits.ptr;
 
   swfdec_shape_add_styles (s, SWFDEC_SHAPE (morph),

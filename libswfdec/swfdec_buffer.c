@@ -110,7 +110,7 @@ swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *priv)
  * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc (unsigned int size)
+swfdec_buffer_new_and_alloc (guint size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
@@ -131,7 +131,7 @@ swfdec_buffer_new_and_alloc (unsigned int size)
  * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc0 (unsigned int size)
+swfdec_buffer_new_and_alloc0 (guint size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
@@ -152,7 +152,7 @@ swfdec_buffer_new_and_alloc0 (unsigned int size)
  * Returns: a new #SwfdecBuffer pointing to @data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_for_data (unsigned char *data, unsigned int size)
+swfdec_buffer_new_for_data (unsigned char *data, guint size)
 {
   SwfdecBuffer *buffer;
   
@@ -185,7 +185,7 @@ swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv)
  * Returns: a new #SwfdecBuffer managing the indicated region.
  **/
 SwfdecBuffer *
-swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, unsigned int offset, unsigned int length)
+swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset, guint length)
 {
   SwfdecBuffer *subbuffer;
   
@@ -353,6 +353,16 @@ swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
   queue->depth += buffer->length;
 }
 
+/**
+ * swfdec_buffer_queue_pull_buffer:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Pulls the first buffer out of @queue and returns it. This function is 
+ * equivalent to calling swfdec_buffer_queue_pull() with the size of the
+ * first buffer in it.
+ *
+ * Returns: The first buffer in @queue or %NULL if @queue is empty.
+ **/
 SwfdecBuffer *
 swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
 {
@@ -368,7 +378,7 @@ swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
 }
 
 SwfdecBuffer *
-swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
+swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
@@ -398,7 +408,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
     queue->buffers = g_list_remove (queue->buffers, buffer);
     newbuffer = buffer;
   } else {
-    unsigned int offset = 0;
+    guint offset = 0;
 
     newbuffer = swfdec_buffer_new_and_alloc (length);
 
@@ -407,7 +417,7 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
       buffer = g->data;
 
       if (buffer->length > length - offset) {
-        unsigned int n = length - offset;
+        guint n = length - offset;
 
         oil_copy_u8 (newbuffer->data + offset, buffer->data, n);
         subbuffer = swfdec_buffer_new_subbuffer (buffer, n, buffer->length - n);
@@ -442,12 +452,12 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, unsigned int length)
  *          readonly #SwfdecBuffer. Use swfdec_buffer_unref() after use.
  **/
 SwfdecBuffer *
-swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, unsigned int length)
+swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, guint length)
 {
   GList *g;
   SwfdecBuffer *newbuffer;
   SwfdecBuffer *buffer;
-  unsigned int offset = 0;
+  guint offset = 0;
 
   g_return_val_if_fail (length > 0, NULL);
 

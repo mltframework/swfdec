@@ -189,7 +189,7 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
   if (g_str_has_prefix (target, "_level")) {
     const char *nr = target + strlen ("_level");
     char *end;
-    unsigned int depth;
+    guint depth;
 
     errno = 0;
     depth = strtoul (nr, &end, 10);

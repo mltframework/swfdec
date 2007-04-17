@@ -48,7 +48,7 @@ static void
 swfdec_sprite_dispose (GObject *object)
 {
   SwfdecSprite * sprite = SWFDEC_SPRITE (object);
-  unsigned int i;
+  guint i;
 
   if (sprite->live_content) {
     g_hash_table_destroy (sprite->live_content);
@@ -97,7 +97,7 @@ swfdec_sprite_dispose (GObject *object)
 }
 
 void
-swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
+swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
     SwfdecBuffer * chunk, int skip, guint n_samples)
 {
   g_assert (sprite->frames != NULL);
@@ -182,7 +182,7 @@ swfdec_content_update_live (SwfdecSprite *sprite,
 
 /* NB: does not free the action data */
 static void
-swfdec_sprite_remove_last_action (SwfdecSprite * sprite, unsigned int frame_id)
+swfdec_sprite_remove_last_action (SwfdecSprite * sprite, guint frame_id)
 {
   SwfdecSpriteFrame *frame;
   
@@ -274,6 +274,7 @@ swfdec_content_new (int depth)
   cairo_matrix_init_identity (&content->transform);
   swfdec_color_transform_init_identity (&content->color_transform);
   content->depth = depth;
+  content->operator = CAIRO_OPERATOR_OVER;
   content->sequence = content;
   content->end = G_MAXUINT;
   return content;
@@ -292,7 +293,7 @@ swfdec_contents_create (SwfdecSprite *sprite,
 
     copy = swfdec_content_find (sprite, depth);
     if (copy == NULL) {
-      SWFDEC_WARNING ("Couldn't copy depth %u in frame %u", depth, sprite->parse_frame);
+      SWFDEC_WARNING ("Couldn't copy depth %d in frame %u", (depth + 16384), sprite->parse_frame);
     } else {
       *content = *copy;
       SWFDEC_LOG ("Copying from content %p", copy);
@@ -313,8 +314,14 @@ swfdec_contents_create (SwfdecSprite *sprite,
   return content;
 }
 
-int
-swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
+static cairo_operator_t
+swfdec_sprite_convert_operator (guint operator)
+{
+  return CAIRO_OPERATOR_OVER;
+}
+
+static int
+swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
 {
   SwfdecBits *bits = &s->b;
   int has_clip_actions;
@@ -326,6 +333,9 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   int has_character;
   int move;
   int depth;
+  int cache;
+  int has_blend_mode = 0;
+  int has_filter = 0;
   SwfdecContent *content;
 
   has_clip_actions = swfdec_bits_getbit (bits);
@@ -336,7 +346,6 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   has_matrix = swfdec_bits_getbit (bits);
   has_character = swfdec_bits_getbit (bits);
   move = swfdec_bits_getbit (bits);
-  depth = swfdec_bits_get_u16 (bits);
 
   SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
   SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
@@ -346,6 +355,18 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
   SWFDEC_LOG ("  has_matrix = %d", has_matrix);
   SWFDEC_LOG ("  has_character = %d", has_character);
   SWFDEC_LOG ("  move = %d", move);
+
+  if (version > 2) {
+    swfdec_bits_getbits (bits, 5);
+    cache = swfdec_bits_getbit (bits);
+    has_blend_mode = swfdec_bits_getbit (bits);
+    has_filter = swfdec_bits_getbit (bits);
+    SWFDEC_LOG ("  cache = %d", cache);
+    SWFDEC_LOG ("  has filter = %d", has_filter);
+    SWFDEC_LOG ("  has blend mode = %d", has_blend_mode);
+  }
+
+  depth = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
   depth -= 16384;
 
@@ -402,6 +423,19 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
     content->clip_depth = swfdec_bits_get_u16 (bits) - 16384;
     SWFDEC_LOG ("  clip_depth = %d (=> %d)", content->clip_depth + 16384, content->clip_depth);
   }
+  if (has_filter) {
+    SWFDEC_ERROR ("filters aren't implemented, skipping PlaceObject tag!");
+    g_hash_table_remove (s->parse_sprite->live_content, GUINT_TO_POINTER (content->depth));
+    swfdec_content_free (content);
+    swfdec_sprite_remove_last_action (s->parse_sprite,
+	      s->parse_sprite->parse_frame);
+    return SWFDEC_STATUS_OK;
+  }
+  if (has_blend_mode) {
+    guint operator = swfdec_bits_get_u8 (bits);
+    content->operator = swfdec_sprite_convert_operator (operator);
+    SWFDEC_ERROR ("  operator = %u", operator);
+  }
   if (has_clip_actions) {
     int reserved, clip_event_flags, event_flags, key_code;
     char *script_name;
@@ -450,6 +484,18 @@ swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
 }
 
 int
+swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
+{
+  return swfdec_spriteseg_do_place_object (s, 2);
+}
+
+int
+swfdec_spriteseg_place_object_3 (SwfdecSwfDecoder * s)
+{
+  return swfdec_spriteseg_do_place_object (s, 3);
+}
+
+int
 swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s)
 {
   int depth;
@@ -466,7 +512,7 @@ swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s)
 int
 swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s)
 {
-  unsigned int depth;
+  guint depth;
 
   depth = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG ("  depth = %u", depth);
@@ -504,8 +550,8 @@ swfdec_sprite_init (SwfdecSprite * sprite)
 }
 
 void
-swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames,
-    unsigned int rate)
+swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames,
+    guint rate)
 {
   guint i;
 
@@ -516,17 +562,19 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames,
   sprite->frames = g_new0 (SwfdecSpriteFrame, n_frames);
   sprite->n_frames = n_frames;
 
-  for (i = 0; i < n_frames; i++) {
-    sprite->frames[i].sound_samples = 44100 * 256 / rate;
+  if (rate > 0) {
+    for (i = 0; i < n_frames; i++) {
+      sprite->frames[i].sound_samples = 44100 * 256 / rate;
+    }
   }
 
   SWFDEC_LOG ("n_frames = %d", sprite->n_frames);
 }
 
-unsigned int
-swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame)
+guint
+swfdec_sprite_get_next_frame (SwfdecSprite *sprite, guint current_frame)
 {
-  unsigned int next_frame, n_frames;
+  guint next_frame, n_frames;
 
   g_return_val_if_fail (SWFDEC_IS_SPRITE (sprite), 0);
 

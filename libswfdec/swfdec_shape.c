@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 #include "swfdec_shape.h"
 #include "swfdec.h"
 #include "swfdec_debug.h"
+#include "swfdec_stroke.h"
 
 G_DEFINE_TYPE (SwfdecShape, swfdec_shape, SWFDEC_TYPE_GRAPHIC)
 
@@ -206,7 +207,7 @@ swfdec_shape_vec_init (SwfdecShapeVec *vec)
 static void
 swfdec_shape_dispose (GObject *object)
 {
-  unsigned int i;
+  guint i;
   SwfdecShape * shape = SWFDEC_SHAPE (object);
 
   for (i = 0; i < shape->vecs->len; i++) {
@@ -233,12 +234,10 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (graphic);
-  unsigned int i;
+  guint i;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
-  cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-  cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
 
   for (i = 0; i < shape->vecs->len; i++) {
     SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
@@ -252,10 +251,15 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
     if (!fill && vec->last_index % 2 != 0) 
       continue;
 
-    if (fill)
-      swfdec_pattern_paint (vec->pattern, cr, &vec->path, trans, 0);
-    else
+    if (fill) {
+      if (SWFDEC_IS_PATTERN (vec->pattern)) {
+	swfdec_pattern_paint (vec->pattern, cr, &vec->path, trans, 0);
+      } else {
+	swfdec_stroke_paint (vec->pattern, cr, &vec->path, trans, 0);
+      }
+    } else {
       cairo_append_path (cr, &vec->path);
+    }
   }
 }
 
@@ -273,7 +277,7 @@ swfdec_shape_mouse_in (SwfdecGraphic *graphic, double x, double y)
     g_assert (shapevec->path.num_data);
     g_assert (shapevec->pattern);
     /* FIXME: handle strokes */
-    if (shapevec->last_index & 1)
+    if (SWFDEC_IS_STROKE (shapevec->pattern))
       continue;
     if (shapevec->fill_cr == NULL) {
       /* FIXME: do less memory intensive fill checking plz */
@@ -309,10 +313,9 @@ swfdec_shape_init (SwfdecShape * shape)
   shape->vecs = g_array_new (FALSE, TRUE, sizeof (SwfdecShapeVec));
 }
 
-typedef SwfdecPattern * (* SwfdecPatternFunc) (SwfdecSwfDecoder * s);
 static void
 swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
-    SwfdecPatternFunc parse_fill, SwfdecPatternFunc parse_stroke)
+    SwfdecPatternFunc parse_fill, SwfdecStrokeFunc parse_stroke)
 {
   int n_fill_styles;
   int n_line_styles;
@@ -326,7 +329,7 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     n_fill_styles = swfdec_bits_get_u16 (bits);
   }
   SWFDEC_LOG ("   n_fill_styles %d", n_fill_styles);
-  for (i = 0; i < n_fill_styles; i++) {
+  for (i = 0; i < n_fill_styles && swfdec_bits_left (bits); i++) {
     SwfdecPattern *pattern;
 
     SWFDEC_LOG ("   fill style %d:", i);
@@ -335,45 +338,18 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     g_ptr_array_add (shape->fills, pattern);
   }
 
-  swfdec_bits_syncbits (bits);
   shape->lines_offset = shape->lines->len;
   n_line_styles = swfdec_bits_get_u8 (bits);
   if (n_line_styles == 0xff) {
     n_line_styles = swfdec_bits_get_u16 (bits);
   }
   SWFDEC_LOG ("   n_line_styles %d", n_line_styles);
-  for (i = 0; i < n_line_styles; i++) {
-    SwfdecPattern *pattern = parse_stroke (s);
-    g_ptr_array_add (shape->lines, pattern);
+  for (i = 0; i < n_line_styles && swfdec_bits_left (bits); i++) {
+    g_ptr_array_add (shape->lines, parse_stroke (s));
   }
 
-  swfdec_bits_syncbits (bits);
   shape->n_fill_bits = swfdec_bits_getbits (bits, 4);
   shape->n_line_bits = swfdec_bits_getbits (bits, 4);
-}
-
-static SwfdecPattern *
-parse_rgb (SwfdecSwfDecoder * s)
-{
-  return swfdec_pattern_parse (s, FALSE);
-}
-
-static SwfdecPattern *
-parse_rgba (SwfdecSwfDecoder * s)
-{
-  return swfdec_pattern_parse (s, TRUE);
-}
-
-static SwfdecPattern *
-parse_stroke_rgb (SwfdecSwfDecoder * s)
-{
-  return swfdec_pattern_parse_stroke (s, FALSE);
-}
-
-static SwfdecPattern *
-parse_stroke_rgba (SwfdecSwfDecoder * s)
-{
-  return swfdec_pattern_parse_stroke (s, TRUE);
 }
 
 int
@@ -393,9 +369,9 @@ tag_define_shape (SwfdecSwfDecoder * s)
 
   swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
 
-  swfdec_shape_add_styles (s, shape, parse_rgb, parse_stroke_rgb);
+  swfdec_shape_add_styles (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
 
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
 
   return SWFDEC_STATUS_OK;
 }
@@ -414,11 +390,9 @@ tag_define_shape_3 (SwfdecSwfDecoder * s)
 
   swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
 
-  shape->rgba = 1;
+  swfdec_shape_add_styles (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_rgba);
 
-  swfdec_shape_add_styles (s, shape, parse_rgba, parse_stroke_rgba);
-
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_rgba);
 
   return SWFDEC_STATUS_OK;
 }
@@ -427,6 +401,40 @@ int
 tag_define_shape_2 (SwfdecSwfDecoder * s)
 {
   return tag_define_shape (s);
+}
+
+int
+tag_define_shape_4 (SwfdecSwfDecoder *s)
+{
+  SwfdecBits *bits = &s->b;
+  SwfdecShape *shape;
+  int id;
+  SwfdecRect tmp;
+  gboolean has_scale_strokes, has_noscale_strokes;
+
+  id = swfdec_bits_get_u16 (bits);
+  shape = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SHAPE);
+  if (!shape)
+    return SWFDEC_STATUS_OK;
+
+  swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (shape)->extents);
+  SWFDEC_LOG ("  extents: %g %g x %g %g", 
+      SWFDEC_GRAPHIC (shape)->extents.x0, SWFDEC_GRAPHIC (shape)->extents.y0,
+      SWFDEC_GRAPHIC (shape)->extents.x1, SWFDEC_GRAPHIC (shape)->extents.y1);
+  swfdec_bits_get_rect (bits, &tmp);
+  SWFDEC_LOG ("  extents: %g %g x %g %g", 
+      tmp.x0, tmp.y0, tmp.x1, tmp.y1);
+  swfdec_bits_getbits (bits, 6);
+  has_scale_strokes = swfdec_bits_getbit (bits);
+  has_noscale_strokes = swfdec_bits_getbit (bits);
+  SWFDEC_LOG ("  has scaling strokes: %d", has_scale_strokes);
+  SWFDEC_LOG ("  has non-scaling strokes: %d", has_noscale_strokes);
+
+  swfdec_shape_add_styles (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_extended);
+
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse_rgba, swfdec_stroke_parse_extended);
+
+  return SWFDEC_STATUS_OK;
 }
 
 /* The shape creation process is a bit complicated since it requires matching 
@@ -497,7 +505,8 @@ swfdec_shape_accumulate_one_polygon (SwfdecShape *shape, SwfdecShapeVec *target,
       break;
     }
     if (i == paths_len) {
-      SWFDEC_ERROR ("could not find a closed path for style %u", style);
+      SWFDEC_ERROR ("could not find a closed path for style %u, starting at %d %d", style,
+	  paths[start].x_start, paths[start].y_start);
       goto fail;
     }
   }
@@ -708,7 +717,7 @@ swfdec_shape_parse_line (SwfdecBits *bits, SubPath *path,
 
 SubPath *
 swfdec_shape_parse_change (SwfdecSwfDecoder *s, SwfdecShape *shape, GArray *path_array, SubPath *path,
-    int *x, int *y, SwfdecPatternFunc parse_fill, SwfdecPatternFunc parse_stroke)
+    int *x, int *y, SwfdecPatternFunc parse_fill, SwfdecStrokeFunc parse_stroke)
 {
   int state_new_styles, state_line_styles, state_fill_styles1, state_fill_styles0, state_moveto;
   SwfdecBits *bits = &s->b;
@@ -784,6 +793,14 @@ swfdec_shape_initialize_from_sub_paths (SwfdecShape *shape, GArray *path_array)
 {
   guint i;
 
+#if 0
+  g_print ("\n\n");
+  for (i = 0; i < path_array->len; i++) {
+    SubPath *path = &g_array_index (path_array, SubPath, i);
+    g_print ("%d %d => %d %d  -  %u %u %u\n", path->x_start, path->y_start, path->x_end, path->y_end,
+	path->fill0style, path->fill1style, path->linestyle);
+  }
+#endif
   swfdec_shape_accumulate_fills (shape, (SubPath *) path_array->data, path_array->len);
   swfdec_shape_accumulate_lines (shape, (SubPath *) path_array->data, path_array->len);
   for (i = 0; i < path_array->len; i++) {
@@ -800,7 +817,8 @@ swfdec_shape_initialize_from_sub_paths (SwfdecShape *shape, GArray *path_array)
 }
 
 void
-swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape)
+swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape,
+    SwfdecPatternFunc pattern_func, SwfdecStrokeFunc stroke_func)
 {
   int x = 0, y = 0;
   SubPath *path = NULL;
@@ -814,10 +832,7 @@ swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape)
   while ((type = swfdec_shape_peek_type (bits))) {
     switch (type) {
       case SWFDEC_SHAPE_TYPE_CHANGE:
-	if (shape->rgba)
-	  path = swfdec_shape_parse_change (s, shape, path_array, path, &x, &y, parse_rgba, parse_stroke_rgba);
-	else
-	  path = swfdec_shape_parse_change (s, shape, path_array, path, &x, &y, parse_rgb, parse_stroke_rgb);
+	path = swfdec_shape_parse_change (s, shape, path_array, path, &x, &y, pattern_func, stroke_func);
 	break;
       case SWFDEC_SHAPE_TYPE_LINE:
 	swfdec_shape_parse_line (bits, path, &x, &y, FALSE);
@@ -878,19 +893,19 @@ swfdec_morph_shape_do_change (SwfdecBits *end_bits, SubPath *other, SwfdecMorphS
       SWFDEC_LOG ("   moveto %d,%d", *x, *y);
     }
     if (state_fill_styles0) {
-      unsigned int check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
+      guint check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
 	SWFDEC_SHAPE (morph)->fills_offset;
       if (check != path->fill0style)
 	SWFDEC_ERROR ("end fill0style %u differs from start fill0style %u", check, path->fill0style);
     }
     if (state_fill_styles1) {
-      unsigned int check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
+      guint check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
 	SWFDEC_SHAPE (morph)->fills_offset;
       if (check != path->fill1style)
 	SWFDEC_ERROR ("end fill1style %u differs from start fill1style %u", check, path->fill1style);
     }
     if (state_line_styles) {
-      unsigned int check = swfdec_bits_getbits (end_bits, morph->n_line_bits) + 
+      guint check = swfdec_bits_getbits (end_bits, morph->n_line_bits) + 
 	SWFDEC_SHAPE (morph)->lines_offset;
       if (check != path->linestyle)
 	SWFDEC_ERROR ("end linestyle %u differs from start linestyle %u", check, path->linestyle);
@@ -919,13 +934,14 @@ swfdec_morph_shape_get_recs (SwfdecSwfDecoder * s, SwfdecMorphShape *morph, Swfd
     end_type = swfdec_shape_peek_type (end_bits);
     if (end_type == SWFDEC_SHAPE_TYPE_CHANGE && start_type != SWFDEC_SHAPE_TYPE_CHANGE) {
       SubPath *path;
-      g_array_set_size (start_path_array, start_path_array->len + 1);
-      path = &g_array_index (start_path_array, SubPath, start_path_array->len - 1);
       if (start_path) {
 	start_path->x_end = start_x;
 	start_path->y_end = start_y;
-	*path = *start_path;
       }
+      g_array_set_size (start_path_array, start_path_array->len + 1);
+      path = &g_array_index (start_path_array, SubPath, start_path_array->len - 1);
+      if (start_path)
+	*path = *start_path;
       start_path = path;
       swfdec_path_init (&start_path->path);
       start_path->x_start = start_x;
@@ -936,7 +952,7 @@ swfdec_morph_shape_get_recs (SwfdecSwfDecoder * s, SwfdecMorphShape *morph, Swfd
     switch (start_type) {
       case SWFDEC_SHAPE_TYPE_CHANGE:
 	start_path = swfdec_shape_parse_change (s, shape, start_path_array, start_path, &start_x, &start_y, 
-	    swfdec_pattern_parse_morph, swfdec_pattern_parse_morph_stroke);
+	    swfdec_pattern_parse_morph, swfdec_stroke_parse_morph);
 	end_path = swfdec_morph_shape_do_change (end_bits, start_path, morph, end_path_array, end_path, &end_x, &end_y);
 	break;
       case SWFDEC_SHAPE_TYPE_LINE:
@@ -989,6 +1005,7 @@ error:
   /* FIXME: there's probably a problem if start and end paths get accumulated in 
    * different ways, this could lead to the morphs not looking like they should. 
    * Need a good testcase for this first though.
+   * FIXME: Also, due to error handling, there needs to be syncing of code paths
    */
   tmp = shape->vecs;
   shape->vecs = morph->end_vecs;
@@ -1005,7 +1022,7 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   SwfdecBits end_bits;
   SwfdecBits *bits = &s->b;
   SwfdecMorphShape *morph;
-  unsigned int offset;
+  guint offset;
   int id;
   id = swfdec_bits_get_u16 (bits);
 
@@ -1019,11 +1036,14 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   swfdec_bits_get_rect (bits, &morph->end_extents);
   offset = swfdec_bits_get_u32 (bits);
   end_bits = *bits;
-  end_bits.ptr += offset;
+  if (swfdec_bits_skip_bytes (&end_bits, offset) != offset) {
+    SWFDEC_ERROR ("wrong offset in DefineMorphShape");
+    return SWFDEC_STATUS_OK;
+  }
   bits->end = end_bits.ptr;
 
   swfdec_shape_add_styles (s, SWFDEC_SHAPE (morph),
-      swfdec_pattern_parse_morph, swfdec_pattern_parse_morph_stroke);
+      swfdec_pattern_parse_morph, swfdec_stroke_parse_morph);
 
   morph->n_fill_bits = swfdec_bits_getbits (&end_bits, 4);
   morph->n_line_bits = swfdec_bits_getbits (&end_bits, 4);

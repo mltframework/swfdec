@@ -120,7 +120,7 @@ try_write (Stream *stream)
 static void
 swfdec_stream_remove_handlers (Stream *stream)
 {
-  unsigned int i;
+  guint i;
 
   for (i = 0; i < stream->n_sources; i++) {
     if (stream->sources[i]) {
@@ -152,7 +152,7 @@ swfdec_stream_install_handlers (Stream *stream)
 {
   if (stream->n_sources > 0) {
     struct pollfd polls[stream->n_sources];
-    unsigned int i, count;
+    guint i, count;
     if (stream->n_sources > 1)
       g_printerr ("attention: more than one fd!\n");
     count = snd_pcm_poll_descriptors (stream->pcm, polls, stream->n_sources);
@@ -198,7 +198,7 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   Stream *stream;
   snd_pcm_t *ret;
   snd_pcm_hw_params_t *hw_params;
-  unsigned int rate;
+  guint rate;
   snd_pcm_uframes_t uframes;
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
@@ -318,7 +318,7 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
   g_return_val_if_fail (context != NULL, NULL);
 
   sound = g_new0 (SwfdecPlayback, 1);
-  sound->player = g_object_ref (player);
+  sound->player = player;
   g_signal_connect (player, "advance", G_CALLBACK (advance_before), sound);
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), sound);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), sound);
@@ -346,7 +346,6 @@ swfdec_playback_close (SwfdecPlayback *sound)
   REMOVE_HANDLER (sound->player, advance_before, sound);
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);
-  g_object_unref (sound->player);
   g_main_context_unref (sound->context);
   g_free (sound);
 }

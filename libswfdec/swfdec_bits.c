@@ -87,7 +87,7 @@ swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer)
  * available using swfdec_bits_left() before calling this function.
  **/
 void
-swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, unsigned int bytes)
+swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, guint bytes)
 {
   g_return_if_fail (bits != NULL);
   g_return_if_fail (from != NULL);
@@ -95,7 +95,9 @@ swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, unsigned int bytes)
 
   bits->buffer = from->buffer;
   bits->ptr = from->ptr;
-  bits->end = MIN (bits->ptr + bytes, from->end);
+  if (bytes > (guint) (from->end - from->ptr))
+    bytes = from->end - from->ptr;
+  bits->end = bits->ptr + bytes;
   bits->idx = 0;
   from->ptr = bits->end;
 }
@@ -122,7 +124,7 @@ swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len)
   bits->end = bits->ptr + len;
 }
 
-unsigned int 
+guint 
 swfdec_bits_left (SwfdecBits *b)
 {
   if (b->ptr == NULL)
@@ -150,11 +152,11 @@ swfdec_bits_getbit (SwfdecBits * b)
   return r;
 }
 
-unsigned int
-swfdec_bits_getbits (SwfdecBits * b, unsigned int n)
+guint
+swfdec_bits_getbits (SwfdecBits * b, guint n)
 {
   unsigned long r = 0;
-  unsigned int i;
+  guint i;
 
   SWFDEC_BITS_CHECK (b, n);
 
@@ -176,8 +178,8 @@ swfdec_bits_getbits (SwfdecBits * b, unsigned int n)
   return r;
 }
 
-unsigned int
-swfdec_bits_peekbits (SwfdecBits * b, unsigned int n)
+guint
+swfdec_bits_peekbits (SwfdecBits * b, guint n)
 {
   SwfdecBits tmp = *b;
 
@@ -185,7 +187,7 @@ swfdec_bits_peekbits (SwfdecBits * b, unsigned int n)
 }
 
 int
-swfdec_bits_getsbits (SwfdecBits * b, unsigned int n)
+swfdec_bits_getsbits (SwfdecBits * b, guint n)
 {
   unsigned long r = 0;
 
@@ -198,7 +200,7 @@ swfdec_bits_getsbits (SwfdecBits * b, unsigned int n)
   return r;
 }
 
-unsigned int
+guint
 swfdec_bits_peek_u8 (SwfdecBits * b)
 {
   SWFDEC_BYTES_CHECK (b, 1);
@@ -206,7 +208,7 @@ swfdec_bits_peek_u8 (SwfdecBits * b)
   return *b->ptr;
 }
 
-unsigned int
+guint
 swfdec_bits_get_u8 (SwfdecBits * b)
 {
   SWFDEC_BYTES_CHECK (b, 1);
@@ -214,10 +216,10 @@ swfdec_bits_get_u8 (SwfdecBits * b)
   return *b->ptr++;
 }
 
-unsigned int
+guint
 swfdec_bits_get_u16 (SwfdecBits * b)
 {
-  unsigned int r;
+  guint r;
 
   SWFDEC_BYTES_CHECK (b, 2);
 
@@ -240,10 +242,10 @@ swfdec_bits_get_s16 (SwfdecBits * b)
   return r;
 }
 
-unsigned int
+guint
 swfdec_bits_get_u32 (SwfdecBits * b)
 {
-  unsigned int r;
+  guint r;
 
   SWFDEC_BYTES_CHECK (b, 4);
 
@@ -253,10 +255,10 @@ swfdec_bits_get_u32 (SwfdecBits * b)
   return r;
 }
 
-unsigned int
+guint
 swfdec_bits_get_bu16 (SwfdecBits *b)
 {
-  unsigned int r;
+  guint r;
 
   SWFDEC_BYTES_CHECK (b, 2);
 
@@ -266,10 +268,10 @@ swfdec_bits_get_bu16 (SwfdecBits *b)
   return r;
 }
 
-unsigned int
+guint
 swfdec_bits_get_bu24 (SwfdecBits *b)
 {
-  unsigned int r;
+  guint r;
 
   SWFDEC_BYTES_CHECK (b, 3);
 
@@ -279,10 +281,10 @@ swfdec_bits_get_bu24 (SwfdecBits *b)
   return r;
 }
 
-unsigned int 
+guint 
 swfdec_bits_get_bu32 (SwfdecBits *b)
 {
-  unsigned int r;
+  guint r;
 
   SWFDEC_BYTES_CHECK (b, 4);
 
@@ -478,7 +480,7 @@ swfdec_bits_skip_string (SwfdecBits *bits)
 {
   char *s;
   const char *end;
-  unsigned int len;
+  guint len;
 
   swfdec_bits_syncbits (bits);
   end = memchr (bits->ptr, 0, bits->end - bits->ptr);
@@ -521,11 +523,22 @@ swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
   return n_bytes;
 }
 
+/**
+ * swfdec_bits_get_string_length:
+ * @bits: a #SwfdecBits
+ * @len: number of bytes to read
+ *
+ * Reads the next @len bytes into a string and validates it as UTF-8.
+ *
+ * Returns: a new string or %NULL on error
+ **/
 char *
-swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len)
+swfdec_bits_get_string_length (SwfdecBits * bits, guint len)
 {
   char *ret;
 
+  if (len == 0)
+    return g_strdup ("");
   SWFDEC_BYTES_CHECK (bits, len);
 
   ret = g_strndup ((char *) bits->ptr, len);
@@ -541,7 +554,7 @@ swfdec_bits_get_string_length (SwfdecBits * bits, unsigned int len)
 SwfdecColor
 swfdec_bits_get_color (SwfdecBits * bits)
 {
-  unsigned int r, g, b;
+  guint r, g, b;
 
   r = swfdec_bits_get_u8 (bits);
   g = swfdec_bits_get_u8 (bits);
@@ -553,7 +566,7 @@ swfdec_bits_get_color (SwfdecBits * bits)
 SwfdecColor
 swfdec_bits_get_rgba (SwfdecBits * bits)
 {
-  unsigned int r, g, b, a;
+  guint r, g, b, a;
 
   r = swfdec_bits_get_u8 (bits);
   g = swfdec_bits_get_u8 (bits);
@@ -567,7 +580,7 @@ SwfdecGradient *
 swfdec_bits_get_gradient (SwfdecBits * bits)
 {
   SwfdecGradient *grad;
-  unsigned int i, n_gradients;
+  guint i, n_gradients;
 
   n_gradients = swfdec_bits_get_u8 (bits);
   grad = g_malloc (sizeof (SwfdecGradient) +
@@ -584,7 +597,7 @@ SwfdecGradient *
 swfdec_bits_get_gradient_rgba (SwfdecBits * bits)
 {
   SwfdecGradient *grad;
-  unsigned int i, n_gradients;
+  guint i, n_gradients;
 
   n_gradients = swfdec_bits_get_u8 (bits);
   grad = g_malloc (sizeof (SwfdecGradient) +
@@ -601,7 +614,7 @@ SwfdecGradient *
 swfdec_bits_get_morph_gradient (SwfdecBits * bits)
 {
   SwfdecGradient *grad;
-  unsigned int i, n_gradients;
+  guint i, n_gradients;
 
   n_gradients = swfdec_bits_get_u8 (bits);
   n_gradients *= 2;
@@ -635,7 +648,8 @@ swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
  * @len: length of buffer or -1 for maximum
  *
  * Gets the contents of the next @len bytes of @bits and buts them in a new
- * subbuffer.
+ * subbuffer. If @len is 0 (or @len is -1 and no more data is available), this
+ * is considered a reading error and %NULL is returned.
  *
  * Returns: the new #SwfdecBuffer or NULL if the requested amount of data 
  *          isn't available
@@ -648,7 +662,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
   g_return_val_if_fail (len >= -1, NULL);
 
   if (len > 0) {
-    SWFDEC_BYTES_CHECK (bits, (unsigned int) len);
+    SWFDEC_BYTES_CHECK (bits, (guint) len);
   } else {
     g_assert (bits->idx == 0);
     len = bits->end - bits->ptr;
@@ -667,7 +681,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
 }
 
 static void *
-swfdec_bits_zalloc (void *opaque, unsigned int items, unsigned int size)
+swfdec_bits_zalloc (void *opaque, guint items, guint size)
 {
   return g_malloc (items * size);
 }
@@ -706,7 +720,7 @@ swfdec_bits_decompress (SwfdecBits *bits, int compressed, int decompressed)
 
   /* prepare the bits structure */
   if (compressed > 0) {
-    SWFDEC_BYTES_CHECK (bits, (unsigned int) compressed);
+    SWFDEC_BYTES_CHECK (bits, (guint) compressed);
   } else {
     g_assert (bits->idx == 0);
     compressed = bits->end - bits->ptr;

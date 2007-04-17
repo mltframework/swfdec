@@ -337,9 +337,9 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    unsigned int character;
-    unsigned int depth;
-    unsigned int states;
+    guint character;
+    guint depth;
+    guint states;
     SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);
@@ -413,9 +413,9 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 
   while (swfdec_bits_peek_u8 (bits)) {
     int reserved;
-    unsigned int character;
-    unsigned int depth;
-    unsigned int states;
+    guint character;
+    guint depth;
+    guint states;
     SwfdecContent *content;
 
     swfdec_bits_syncbits (bits);
@@ -558,7 +558,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
   [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, 0},
-  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", NULL, 0},
+  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", swfdec_spriteseg_place_object_3, SPRITE},
   [SWFDEC_TAG_IMPORTASSETS2] = {"ImportAssets2", NULL, 0},
   [SWFDEC_TAG_DEFINEFONTALIGNZONES] = {"DefineFontAlignZones", NULL, 0},
   [SWFDEC_TAG_CSMTEXTSETTINGS] = {"CSMTextSettings", NULL, 0},
@@ -567,7 +567,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_METADATA] = {"Metadata", NULL, 0},
   [SWFDEC_TAG_DEFINESCALINGGRID] = {"DefineScalingGrid", NULL, 0},
   [SWFDEC_TAG_AVM2ACTION] = {"AVM2Action", NULL, 0},
-  [SWFDEC_TAG_DEFINESHAPE4] = {"DefineShape4", NULL, 0},
+  [SWFDEC_TAG_DEFINESHAPE4] = {"DefineShape4", tag_define_shape_4, 0},
   [SWFDEC_TAG_DEFINEMORPHSHAPE2] = {"DefineMorphShape2", NULL, 0},
 };
 

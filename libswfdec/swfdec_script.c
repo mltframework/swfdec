@@ -369,7 +369,8 @@ swfdec_action_goto_frame (JSContext *cx, guint action, const guint8 *data, guint
   }
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   if (movie) {
-    swfdec_movie_goto (movie, frame);
+    if (frame < movie->n_frames)
+      swfdec_movie_goto (movie, frame);
     movie->stopped = TRUE;
   } else {
     SWFDEC_ERROR ("no movie to goto on");
@@ -1194,6 +1195,20 @@ swfdec_action_not_5 (JSContext *cx, guint action, const guint8 *data, guint len)
 }
 
 static JSBool
+swfdec_action_string_equals (JSContext *cx, guint action, const guint8 *data, guint len)
+{
+  JSString *lval, *rval;
+
+  if (!(rval = JS_ValueToString (cx, cx->fp->sp[-1])) ||
+      !(lval = JS_ValueToString (cx, cx->fp->sp[-2])))
+    return JS_FALSE;
+
+  cx->fp->sp--;
+  cx->fp->sp[-1] = BOOLEAN_TO_JSVAL (js_CompareStrings (rval, lval) == 0);
+  return JS_TRUE;
+}
+
+static JSBool
 swfdec_action_jump (JSContext *cx, guint action, const guint8 *data, guint len)
 {
   if (len != 2) {
@@ -1689,7 +1704,7 @@ swfdec_action_define_function (JSContext *cx, guint action,
   gboolean v2 = (action == 0x8e);
 
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_get_string (&bits);
+  function_name = swfdec_bits_skip_string (&bits);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     return JS_FALSE;
@@ -2517,7 +2532,7 @@ const SwfdecActionSpec actions[256] = {
   [0x10] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x11] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical_5, swfdec_action_logical_5, swfdec_action_logical_7 } },
   [0x12] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
-  [0x13] = { "StringEquals", NULL },
+  [0x13] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_equals, swfdec_action_string_equals, swfdec_action_string_equals, swfdec_action_string_equals } },
   [0x14] = { "StringLength", NULL },
   [0x15] = { "StringExtract", NULL },
   [0x17] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
@@ -2709,7 +2724,7 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
 
 SwfdecScript *
 swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits, 
-    const char *name, unsigned int version)
+    const char *name, guint version)
 {
   SwfdecScript *script;
 
@@ -2723,10 +2738,11 @@ swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits,
 }
 
 SwfdecScript *
-swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
+swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
-  const guchar *start;
+  SwfdecBits org;
+  guint len;
   
   g_return_val_if_fail (bits != NULL, NULL);
 
@@ -2735,8 +2751,8 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
     return NULL;
   }
 
-  swfdec_bits_syncbits (bits);
-  start = bits->ptr;
+  org = *bits;
+  len = swfdec_bits_left (bits) / 8;
   script = g_new0 (SwfdecScript, 1);
   script->refcount = 1;
   script->name = g_strdup (name ? name : "Unnamed script");
@@ -2747,15 +2763,12 @@ swfdec_script_new (SwfdecBits *bits, const char *name, unsigned int version)
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
-  if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
-    /* assign a random buffer here so we have something to unref */
-    script->buffer = bits->buffer;
-    swfdec_buffer_ref (script->buffer);
+  if (!swfdec_script_foreach_internal (bits, validate_action, script) ||
+      (len -= swfdec_bits_left (bits) / 8) == 0) {
     swfdec_script_unref (script);
     return NULL;
   }
-  script->buffer = swfdec_buffer_new_subbuffer (bits->buffer, start - bits->buffer->data,
-      bits->ptr - start);
+  script->buffer = swfdec_bits_get_buffer (&org, len);
   return script;
 }
 
@@ -2784,7 +2797,8 @@ swfdec_script_unref (SwfdecScript *script)
   if (script->refcount > 0)
     return;
 
-  swfdec_buffer_unref (script->buffer);
+  if (script->buffer)
+    swfdec_buffer_unref (script->buffer);
   if (script->constant_pool)
     swfdec_buffer_unref (script->constant_pool);
   g_free (script->name);
@@ -3036,6 +3050,10 @@ no_catch:
   /* Reset sp before freeing stack slots, because our caller may GC soon. */
   fp->sp = fp->spbase;
   fp->spbase = NULL;
+  if (fp->constant_pool) {
+    swfdec_constant_pool_free (fp->constant_pool);
+    fp->constant_pool = NULL;
+  }
   js_FreeRawStack(cx, mark);
   cx->interpLevel--;
   swfdec_script_unref (script);
@@ -3137,8 +3155,6 @@ swfdec_script_execute (SwfdecScript *script, SwfdecScriptable *scriptable)
   ok = swfdec_script_interpret (script, cx, &frame.rval);
 
   js_FreeRawStack (cx, mark);
-  if (frame.constant_pool)
-    swfdec_constant_pool_free (frame.constant_pool);
 
   cx->fp = oldfp;
   if (oldfp) {

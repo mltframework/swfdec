@@ -39,10 +39,10 @@ static const char *swfdec_debug_level_names[] = {
 #  define SWFDEC_LEVEL_DEFAULT SWFDEC_LEVEL_ERROR
 #endif
 
-static unsigned int swfdec_debug_level = SWFDEC_LEVEL_DEFAULT;
+static guint swfdec_debug_level = SWFDEC_LEVEL_DEFAULT;
 
 void
-swfdec_debug_log (unsigned int level, const char *file, const char *function,
+swfdec_debug_log (guint level, const char *file, const char *function,
     int line, const char *format, ...)
 {
   va_list varargs;
@@ -61,7 +61,7 @@ swfdec_debug_log (unsigned int level, const char *file, const char *function,
 }
 
 void
-swfdec_debug_set_level (unsigned int level)
+swfdec_debug_set_level (guint level)
 {
   if (swfdec_debug_level >= G_N_ELEMENTS (swfdec_debug_level_names))
     swfdec_debug_level = G_N_ELEMENTS (swfdec_debug_level_names) - 1;

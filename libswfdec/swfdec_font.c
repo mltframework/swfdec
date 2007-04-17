@@ -27,6 +27,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_shape.h"
+#include "swfdec_stroke.h"
 #include "swfdec_swf_decoder.h"
 
 G_DEFINE_TYPE (SwfdecFont, swfdec_font, SWFDEC_TYPE_CHARACTER)
@@ -37,14 +38,23 @@ swfdec_font_dispose (GObject *object)
   SwfdecFont * font = SWFDEC_FONT (object);
   guint i;
 
-  for (i = 0; i < font->glyphs->len; i++) {
-    g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+  if (font->glyphs) {
+    for (i = 0; i < font->glyphs->len; i++) {
+      g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+    }
+    g_array_free (font->glyphs, TRUE);
+    font->glyphs = NULL;
   }
-  if (font->desc)
+  if (font->desc) {
     pango_font_description_free (font->desc);
-  g_free (font->name);
+    font->desc = NULL;
+  }
+  if (font->name) {
+    g_free (font->name);
+    font->name = NULL;
+  }
 
-  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (G_OBJECT (font));
+  G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (object);
 }
 
 static void
@@ -73,7 +83,7 @@ swfdec_font_init (SwfdecFont * font)
  * Returns: the shape of the requested glyph or %NULL if no such glyph exists.
  **/
 SwfdecShape *
-swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
+swfdec_font_get_glyph (SwfdecFont * font, guint glyph)
 {
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
   
@@ -83,6 +93,7 @@ swfdec_font_get_glyph (SwfdecFont * font, unsigned int glyph)
   return g_array_index (font->glyphs, SwfdecFontEntry, glyph).shape;
 }
 
+#if 0
 static char *
 convert_from_language (const char *s, SwfdecLanguage language)
 {
@@ -110,12 +121,13 @@ convert_from_language (const char *s, SwfdecLanguage language)
     SWFDEC_ERROR ("given text is not in language %s", langcode);
   return ret;
 }
+#endif
 
 int
-tag_func_define_font_info (SwfdecSwfDecoder *s, unsigned int version)
+tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
 {
   SwfdecFont *font;
-  unsigned int id, len, i;
+  guint id, len, i;
   int reserved, wide, ansi, jis;
   char *name;
   /* we just assume Latin1 (FIXME: option to change this?) */
@@ -148,7 +160,6 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, unsigned int version)
   wide = swfdec_bits_getbit (&s->b);
   if (version > 1)
     language = swfdec_bits_get_u8 (&s->b);
-  font->name = convert_from_language (name, language);
   g_free (name);
   if (font->name) {
     SWFDEC_LOG ("Creating font description for font %d", id);
@@ -175,14 +186,14 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
   entry->shape = shape;
 
   g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-  g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
+  g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
 
   shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
   shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-  swfdec_shape_get_recs (s, shape);
+  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
   swfdec_bits_syncbits (&s->b);
   if (swfdec_bits_skip_bytes (&save_bits, size) != size) {
     SWFDEC_ERROR ("invalid offset value, not enough bytes available");
@@ -198,7 +209,7 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
 int
 tag_func_define_font (SwfdecSwfDecoder * s)
 {
-  unsigned int i, id, n_glyphs, offset, next_offset;
+  guint i, id, n_glyphs, offset, next_offset;
   SwfdecFont *font;
   SwfdecBits offsets;
 
@@ -257,7 +268,7 @@ int
 tag_func_define_font_2 (SwfdecSwfDecoder * s)
 {
   SwfdecBits *bits = &s->b;
-  unsigned int id;
+  guint id;
   SwfdecShape *shape;
   SwfdecFont *font;
   SwfdecRect rect;
@@ -278,6 +289,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
   int font_descent;
   int font_leading;
   int i;
+  guint skip;
 
   id = swfdec_bits_get_u16 (bits);
   font = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_FONT);
@@ -298,15 +310,27 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
   SWFDEC_DEBUG("langcode %d", langcode);
 
   font_name_len = swfdec_bits_get_u8 (bits);
-  //font_name = 
-  bits->ptr += font_name_len;
+  font->name = swfdec_bits_get_string_length (bits, font_name_len);
+  if (font->name == NULL) {
+    SWFDEC_ERROR ("error reading font name");
+  } else {
+    SWFDEC_LOG ("  font name = %s", font->name);
+  }
 
   n_glyphs = swfdec_bits_get_u16 (bits);
   if (wide_offsets) {
-    bits->ptr += 4 * n_glyphs;
+    skip = 4 * n_glyphs;
+    if (swfdec_bits_skip_bytes (bits, skip) != skip) {
+      SWFDEC_ERROR ("could not skip %u bytes", skip);
+      return SWFDEC_STATUS_OK;
+    }
     code_table_offset = swfdec_bits_get_u32 (bits);
   } else {
-    bits->ptr += 2 * n_glyphs;
+    skip = 2 * n_glyphs;
+    if (swfdec_bits_skip_bytes (bits, skip) != skip) {
+      SWFDEC_ERROR ("could not skip %u bytes", skip);
+      return SWFDEC_STATUS_OK;
+    }
     code_table_offset = swfdec_bits_get_u16 (bits);
   }
 
@@ -318,7 +342,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     entry->shape = shape;
 
     g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-    g_ptr_array_add (shape->lines, swfdec_pattern_new_stroke (20, 0xFFFFFFFF));
+    g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
 
     swfdec_bits_syncbits (&s->b);
     shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
@@ -326,7 +350,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
     shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
     SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
 
-    swfdec_shape_get_recs (s, shape);
+    swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
   }
   if (wide_codes) {
     swfdec_bits_skip_bytes (bits, 2 * n_glyphs);
@@ -387,7 +411,11 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s)
   SWFDEC_LOG (" language = %u", (guint) language);
   len = swfdec_bits_get_u8 (&s->b);
   font->name = swfdec_bits_get_string_length (&s->b, len);
-  SWFDEC_LOG (" name = %s", font->name);
+  if (font->name == NULL) {
+    SWFDEC_ERROR ("error reading font name");
+  } else {
+    SWFDEC_LOG ("  font name = %s", font->name);
+  }
   n_glyphs = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG (" n_glyphs = %u", n_glyphs);
   

@@ -408,10 +408,10 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  loader = swfdec_loader_new_from_file (argv[1], &error);
-  if (loader == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
+  loader = swfdec_loader_new_from_file (argv[1]);
+  if (loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
+    g_object_unref (loader);
     return 1;
   }
   player = swfdec_debugger_new ();

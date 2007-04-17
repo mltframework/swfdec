@@ -48,8 +48,7 @@ void		swfdec_init			(void);
 GType		swfdec_player_get_type		(void);
 
 SwfdecPlayer *	swfdec_player_new		(void);
-SwfdecPlayer *	swfdec_player_new_from_file	(const char *	filename,
-						 GError **	error);
+SwfdecPlayer *	swfdec_player_new_from_file	(const char *	filename);
 void		swfdec_player_set_loader	(SwfdecPlayer *	player,
 						 SwfdecLoader *	loader);
 void		swfdec_player_set_loader_with_variables 
@@ -63,11 +62,11 @@ double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);
-unsigned int	swfdec_player_get_background_color 
+guint	swfdec_player_get_background_color 
 						(SwfdecPlayer *	player);
 void		swfdec_player_set_background_color 
 						(SwfdecPlayer *	player,
-						 unsigned int	color);
+						 guint	color);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

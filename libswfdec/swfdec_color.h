@@ -40,7 +40,7 @@ struct swfdec_gradient_entry_struct
 
 struct swfdec_gradient_struct
 {
-  unsigned int n_gradients;
+  guint n_gradients;
   SwfdecGradientEntry array[1];
 };
 
@@ -64,7 +64,7 @@ struct swfdec_gradient_struct
 #define SWFDEC_COLOR_G(x)		(((x)>>8)&0xff)
 #define SWFDEC_COLOR_B(x)		((x)&0xff)
 
-SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, unsigned int ratio);
+SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, guint ratio);
 void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);
 void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
 void swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color);
@@ -80,5 +80,8 @@ void swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *in
 double swfdec_matrix_get_xscale (const cairo_matrix_t *matrix);
 double swfdec_matrix_get_yscale (const cairo_matrix_t *matrix);
 double swfdec_matrix_get_rotation (const cairo_matrix_t *matrix);
+void swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
+    const cairo_matrix_t *end, guint ratio);
+
 
 #endif

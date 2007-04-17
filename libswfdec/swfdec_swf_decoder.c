@@ -72,7 +72,7 @@ swfdec_decoder_dispose (GObject *object)
 }
 
 static void *
-zalloc (void *opaque, unsigned int items, unsigned int size)
+zalloc (void *opaque, guint items, guint size)
 {
   return g_malloc (items * size);
 }
@@ -194,9 +194,11 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
 
   swfdec_bits_get_rect (&s->b, &rect);
   if (rect.x0 != 0.0 || rect.y0 != 0.0)
-    SWFDEC_ERROR ("SWF window doesn't start at 0 0 but at %g %g\n", rect.x0, rect.y0);
-  dec->width = ceil (rect.x1 / SWFDEC_TWIPS_SCALE_FACTOR);
-  dec->height = ceil (rect.y1 / SWFDEC_TWIPS_SCALE_FACTOR);
+    SWFDEC_ERROR ("SWF window doesn't start at 0 0 but at %g %g", rect.x0, rect.y0);
+  SWFDEC_INFO ("SWF size: %g x %g pixels", rect.x1 / SWFDEC_TWIPS_SCALE_FACTOR,
+      rect.y1 / SWFDEC_TWIPS_SCALE_FACTOR);
+  dec->width = MAX (0, ceil (rect.x1 / SWFDEC_TWIPS_SCALE_FACTOR));
+  dec->height = MAX (0, ceil (rect.y1 / SWFDEC_TWIPS_SCALE_FACTOR));
   swfdec_bits_syncbits (&s->b);
   dec->rate = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG ("rate = %g", dec->rate / 256.0);
@@ -349,7 +351,7 @@ swfdec_swf_decoder_init (SwfdecSwfDecoder *s)
 }
 
 gpointer
-swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, unsigned int id)
+swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, guint id)
 {
   g_return_val_if_fail (SWFDEC_IS_SWF_DECODER (s), NULL);
 
@@ -369,7 +371,7 @@ swfdec_swf_decoder_get_character (SwfdecSwfDecoder * s, unsigned int id)
  * Returns: The requested character or NULL on failure;
  **/
 gpointer
-swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, unsigned int id, GType type)
+swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, guint id, GType type)
 {
   SwfdecCharacter *result;
 

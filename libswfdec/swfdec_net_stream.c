@@ -85,32 +85,17 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   } else {
     if (format != stream->format) {
       if (stream->decoder)
-	swfdec_video_codec_finish (stream->codec, stream->decoder);
+	swfdec_video_decoder_free (stream->decoder);
       stream->format = format;
-      stream->codec = swfdec_codec_get_video (format);
-      if (stream->codec)
-	stream->decoder = swfdec_video_codec_init (stream->codec);
-      else
-	stream->decoder = NULL;
+      stream->decoder = swfdec_video_decoder_new (format);
     }
     if (stream->decoder) {
-      SwfdecBuffer *decoded = swfdec_video_codec_decode (stream->codec, stream->decoder, buffer);
-      if (decoded) {
-	static const cairo_user_data_key_t key;
-	guint w, h;
-	if (!swfdec_video_codec_get_size (stream->codec, stream->decoder, &w, &h)) {
-	    g_assert_not_reached ();
-	}
-	stream->surface = cairo_image_surface_create_for_data (decoded->data, 
-	    CAIRO_FORMAT_RGB24, w, h, w * 4);
-	cairo_surface_set_user_data (stream->surface, &key, 
-	    decoded, (cairo_destroy_func_t) swfdec_buffer_unref);
-	if (old != stream->surface) {
-	  GList *walk;
-	  for (walk = stream->movies; walk; walk = walk->next) {
-	    swfdec_video_movie_new_image (walk->data, stream->surface, w, h);
-	  }
-	}
+      stream->surface = swfdec_video_decoder_decode (stream->decoder, buffer);
+    }
+    if (stream->surface) {
+      GList *walk;
+      for (walk = stream->movies; walk; walk = walk->next) {
+	swfdec_video_movie_new_image (walk->data, stream->surface);
       }
     }
   }
@@ -225,7 +210,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     return;
   }
   if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
-    SWFDEC_WARNING ("nothing to parse?!");
+    SWFDEC_INFO ("nothing to do");
     return;
   }
   if (stream->flvdecoder == NULL) {
@@ -336,8 +321,10 @@ swfdec_net_stream_dispose (GObject *object)
     cairo_surface_destroy (stream->surface);
     stream->surface = NULL;
   }
-  if (stream->decoder)
-    swfdec_video_codec_finish (stream->codec, stream->decoder);
+  if (stream->decoder) {
+    swfdec_video_decoder_free (stream->decoder);
+    stream->decoder = NULL;
+  }
   swfdec_net_stream_set_loader (stream, NULL);
   g_object_unref (stream->conn);
   stream->conn = NULL;
@@ -395,6 +382,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   /* FIXME: use the connection once connections are implemented */
   loader = swfdec_player_load (stream->player, url);
   swfdec_net_stream_set_loader (stream, loader);
+  g_object_unref (loader);
 }
 
 void

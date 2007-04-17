@@ -25,6 +25,9 @@
 #include <libswfdec/swfdec.h>
 
 #include <libswfdec-gtk/swfdec-gtk.h>
+#if HAVE_GNOMEVFS
+#include <libgnomevfs/gnome-vfs.h>
+#endif
 
 #include "swfdec_slow_loader.h"
 
@@ -76,6 +79,7 @@ main (int argc, char *argv[])
   gboolean trace = FALSE;
   char *variables = NULL;
   GtkWidget *window;
+  char *s;
 
   GOptionEntry options[] = {
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
@@ -109,10 +113,16 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  loader = swfdec_loader_new_from_file (argv[1], &error);
-  if (loader == NULL) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], error->message);
-    g_error_free (error);
+#if HAVE_GNOMEVFS
+  s = gnome_vfs_make_uri_from_shell_arg (argv[1]);
+  loader = swfdec_gtk_loader_new (s);
+  g_free (s);
+#else
+  loader = swfdec_gtk_loader_new (argv[1]);
+#endif
+  if (loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
+    g_object_unref (loader);
     return 1;
   }
   player = swfdec_gtk_player_new ();
@@ -123,13 +133,6 @@ main (int argc, char *argv[])
     loader = swfdec_slow_loader_new (loader, delay);
 
   swfdec_player_set_loader_with_variables (player, loader, variables);
-  /* FIXME add smarter "not my file" detection */
-  if (!swfdec_player_is_initialized (player) && delay == 0) {
-    g_printerr ("File \"%s\" is not a file Swfdec can play\n", argv[1]);
-    g_object_unref (player);
-    player = NULL;
-    return 1;
-  }
 
   if (no_sound)
     swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);

@@ -42,9 +42,10 @@ struct _SwfdecPlayer
   GObject		object;
 
   /* global properties */
-  unsigned int		rate;			/* divide by 256 to get iterations per second */
-  unsigned int		width;			/* width of movie */
-  unsigned int		height;			/* height of movie */
+  gboolean		initialized;		/* if width and height are set already */
+  guint		  	rate;			/* divide by 256 to get iterations per second */
+  guint			width;			/* width of movie */
+  guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
@@ -54,7 +55,7 @@ struct _SwfdecPlayer
   /* javascript */
   JSContext *		jscx;			/* global Javascript context */
   JSObject *		jsobj;			/* the global object */
-  unsigned int		interval_id;		/* id returned from setInterval call */
+  guint		interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
   GHashTable *		registered_classes;	/* name => jsval* to constructor */
   SwfdecListener *	mouse_listener;		/* emitting mouse events */

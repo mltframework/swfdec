@@ -59,7 +59,7 @@ struct _SwfdecSpriteFrame
   SwfdecSound *sound_head;		/* sound head for this frame */
   int sound_skip;			/* samples to skip - maybe even backwards */
   SwfdecBuffer *sound_block;		/* sound chunk to play here or NULL for none */
-  unsigned int sound_samples;		/* number of samples in this frame */
+  guint sound_samples;		/* number of samples in this frame */
   GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
 
   /* visuals */
@@ -71,11 +71,11 @@ struct _SwfdecSprite
   SwfdecGraphic		graphic;
 
   SwfdecSpriteFrame *	frames;		/* the n_frames different frames */
-  unsigned int		n_frames;	/* number of frames in this sprite */
+  guint		n_frames;	/* number of frames in this sprite */
   SwfdecScript *	init_action;	/* action to run when initializing this sprite */
 
   /* parse state */
-  unsigned int		parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
+  guint		parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
   GHashTable *		live_content;	/* depth->SwfdecSpriteContent for every content in parse_frame */
 };
 
@@ -87,12 +87,12 @@ struct _SwfdecSpriteClass
 GType swfdec_sprite_get_type (void);
 
 int tag_func_define_sprite (SwfdecSwfDecoder * s);
-void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, unsigned int frame,
-    SwfdecBuffer * chunk, int skip, unsigned int n_samples);
-void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, unsigned int n_frames, unsigned int rate);
+void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
+    SwfdecBuffer * chunk, int skip, guint n_samples);
+void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames, guint rate);
 void swfdec_sprite_add_action (SwfdecSprite * sprite,
     SwfdecSpriteActionType type, gpointer data);
-unsigned int swfdec_sprite_get_next_frame (SwfdecSprite *sprite, unsigned int current_frame);
+guint swfdec_sprite_get_next_frame (SwfdecSprite *sprite, guint current_frame);
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 				      		 const char *		label);
 
@@ -102,6 +102,7 @@ void swfdec_content_free (SwfdecContent *content);
 int tag_show_frame (SwfdecSwfDecoder * s);
 int tag_func_set_background_color (SwfdecSwfDecoder * s);
 int swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s);
+int swfdec_spriteseg_place_object_3 (SwfdecSwfDecoder * s);
 int swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s);
 int swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s);
 

@@ -30,7 +30,7 @@
 typedef struct _SwfdecEvent SwfdecEvent;
 
 struct _SwfdecEvent {
-  unsigned int	conditions;
+  guint	conditions;
   guint8	key;
   SwfdecScript *script;
 };
@@ -140,7 +140,7 @@ swfdec_event_list_copy (SwfdecEventList *list)
 void
 swfdec_event_list_free (SwfdecEventList *list)
 {
-  unsigned int i;
+  guint i;
 
   g_return_if_fail (list != NULL);
 
@@ -157,7 +157,7 @@ swfdec_event_list_free (SwfdecEventList *list)
 }
 
 static const char *
-swfdec_event_list_condition_name (unsigned int conditions)
+swfdec_event_list_condition_name (guint conditions)
 {
   if (conditions & SWFDEC_EVENT_LOAD)
     return "Load";
@@ -202,7 +202,7 @@ swfdec_event_list_condition_name (unsigned int conditions)
 
 void
 swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
-    unsigned int conditions, guint8 key, const char *description)
+    guint conditions, guint8 key, const char *description)
 {
   SwfdecEvent event;
   char *name;
@@ -223,9 +223,9 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
 
 void
 swfdec_event_list_execute (SwfdecEventList *list, SwfdecScriptable *scriptable, 
-    unsigned int condition, guint8 key)
+    guint condition, guint8 key)
 {
-  unsigned int i;
+  guint i;
 
   g_return_if_fail (list != NULL);
 
@@ -241,9 +241,9 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecScriptable *scriptable,
 
 gboolean
 swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecScriptable *scriptable,
-    unsigned int condition, guint8 key)
+    guint condition, guint8 key)
 {
-  unsigned int i;
+  guint i;
   const char *name;
 
   g_return_val_if_fail (list != NULL, FALSE);

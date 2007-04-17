@@ -1,21 +1,19 @@
 
 
 noinst_LTLIBRARIES = libjpeg.la
-noinst_PROGRAMS = jpeg_test jpeg_rgb_test
 
-libjpeg_la_SOURCES = jpeg.c huffman.c jpeg_rgb_decoder.c
-libjpeg_la_CFLAGS = $(GLOBAL_CFLAGS) $(LIBOIL_CFLAGS)
+libjpeg_la_SOURCES = \
+	jpeg.c \
+	jpeg_bits.c \
+	jpeg_huffman.c \
+	jpeg_rgb_decoder.c \
+	jpeg_tables.c
 
-noinst_HEADERS = bits.h huffman.h jpeg.h jpeg_debug.h \
-	jpeg_internal.h
-	
+noinst_HEADERS = \
+	jpeg.h \
+	jpeg_bits.h \
+	jpeg_huffman.h \
+	jpeg_rgb_decoder.h
 
-
-jpeg_test_SOURCES = test.c
-jpeg_test_CFLAGS = $(GLOBAL_CFLAGS) $(LIBOIL_CFLAGS)
-jpeg_test_LDADD = libjpeg.la $(LIBOIL_LIBS)
-
-jpeg_rgb_test_SOURCES = test_rgb.c
-jpeg_rgb_test_CFLAGS = $(GLOBAL_CFLAGS) $(LIBOIL_CFLAGS)
-jpeg_rgb_test_LDADD = libjpeg.la $(LIBOIL_LIBS)
+libjpeg_la_CFLAGS = $(GLOBAL_CFLAGS) $(GLIB_CFLAGS) $(LIBOIL_CFLAGS) -I$(srcdir)/..
 

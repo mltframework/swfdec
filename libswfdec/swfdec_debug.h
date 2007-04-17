@@ -22,6 +22,8 @@
 #ifndef __SWFDEC_DEBUG_H__
 #define __SWFDEC_DEBUG_H__
 
+#include <glib.h>
+
 enum {
   SWFDEC_LEVEL_NONE = 0,
   SWFDEC_LEVEL_ERROR,

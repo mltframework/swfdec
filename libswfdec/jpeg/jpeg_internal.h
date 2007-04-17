@@ -3,26 +3,37 @@
 #define _JPEG_INTERNAL_H_
 
 #include "jpeg.h"
-#include "huffman.h"
-#include "bits.h"
-#include "jpeg_debug.h"
+#include "jpeg_huffman.h"
+#include "jpeg_bits.h"
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 
-
-//#define N_COMPONENTS 256
-#define JPEG_N_COMPONENTS 4
+#define JPEG_MAX_COMPONENTS 256
 
 typedef struct _JpegScan JpegScan;
+typedef struct _JpegQuantTable JpegQuantTable;
 
-#define JPEG_ENTROPY_SEGMENT 0x0001
-#define JPEG_LENGTH 0x0002
+struct _JpegQuantTable {
+  int pq;
+  int16_t quantizer[64];
+};
 
 struct _JpegDecoder {
 	int width;
 	int height;
 	int depth;
 	int n_components;
-	bits_t bits;
+	JpegBits bits;
+        int error;
+        char *error_message;
+
+        int sof_type;
 
 	int width_blocks;
 	int height_blocks;
@@ -34,18 +45,19 @@ struct _JpegDecoder {
 
 	struct{
 		int id;
-		int h_oversample;
-		int v_oversample;
+		int h_sample;
+		int v_sample;
+		int quant_table;
+
 		int h_subsample;
 		int v_subsample;
-		int quant_table;
 		unsigned char *image;
 		int rowstride;
-	} components[JPEG_N_COMPONENTS];
+	} components[JPEG_MAX_COMPONENTS];
 
-	short quant_table[4][64];
-	HuffmanTable *dc_huff_table[4];
-	HuffmanTable *ac_huff_table[4];
+        JpegQuantTable quant_tables[4];
+	HuffmanTable dc_huff_table[4];
+	HuffmanTable ac_huff_table[4];
 
 	int scan_list_length;
 	struct{
@@ -79,18 +91,18 @@ struct _JpegScan {
 
 /* jpeg.c */
 
-int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_define_quant_table(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_define_huffman_table(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_sos(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_soi(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_eoi(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_application0(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_application_misc(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_comment(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_restart_interval(JpegDecoder *dec, bits_t *bits);
-int jpeg_decoder_restart(JpegDecoder *dec, bits_t *bits);
-void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec, bits_t *bits);
+int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_define_quant_table(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_define_huffman_table(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_sos(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_soi(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_eoi(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_application0(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_application_misc(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_comment(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_restart_interval(JpegDecoder *dec, JpegBits *bits);
+int jpeg_decoder_restart(JpegDecoder *dec, JpegBits *bits);
+void jpeg_decoder_decode_entropy_segment(JpegDecoder *dec);
 
 
 #endif

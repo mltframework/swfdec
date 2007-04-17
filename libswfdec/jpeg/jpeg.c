@@ -1,338 +1,226 @@
 
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <liboil/liboil.h>
+#include <liboil/liboil-stdint.h>
+#include <swfdec_debug.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
-#include <limits.h>
-#include <liboil/liboil-stdint.h>
-#include <liboil/liboil.h>
-//#include <liboil/liboildebug.h>
-#include <stdarg.h>
 
-#define OIL_DEBUG(...) do {} while (0)
 
 #include "jpeg_internal.h"
 
 
-#define MAX(a,b) ((a)>(b) ? (a) : (b))
+//#define MAX(a,b) ((a)>(b) ? (a) : (b))
 
 
-#define JPEG_MARKER_STUFFED		0x00
-#define JPEG_MARKER_TEM			0x01
-#define JPEG_MARKER_RES			0x02
+extern uint8_t jpeg_standard_tables[];
+extern int jpeg_standard_tables_size;
 
-#define JPEG_MARKER_SOF_0		0xc0
-#define JPEG_MARKER_SOF_1		0xc1
-#define JPEG_MARKER_SOF_2		0xc2
-#define JPEG_MARKER_SOF_3		0xc3
-#define JPEG_MARKER_DHT			0xc4
-#define JPEG_MARKER_SOF_5		0xc5
-#define JPEG_MARKER_SOF_6		0xc6
-#define JPEG_MARKER_SOF_7		0xc7
-#define JPEG_MARKER_JPG			0xc8
-#define JPEG_MARKER_SOF_9		0xc9
-#define JPEG_MARKER_SOF_10		0xca
-#define JPEG_MARKER_SOF_11		0xcb
-#define JPEG_MARKER_DAC			0xcc
-#define JPEG_MARKER_SOF_13		0xcd
-#define JPEG_MARKER_SOF_14		0xce
-#define JPEG_MARKER_SOF_15		0xcf
+void jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...);
 
-#define JPEG_MARKER_RST_0		0xd0
-#define JPEG_MARKER_RST_1		0xd1
-#define JPEG_MARKER_RST_2		0xd2
-#define JPEG_MARKER_RST_3		0xd3
-#define JPEG_MARKER_RST_4		0xd4
-#define JPEG_MARKER_RST_5		0xd5
-#define JPEG_MARKER_RST_6		0xd6
-#define JPEG_MARKER_RST_7		0xd7
-#define JPEG_MARKER_SOI			0xd8
-#define JPEG_MARKER_EOI			0xd9
-#define JPEG_MARKER_SOS			0xda
-#define JPEG_MARKER_DQT			0xdb
-#define JPEG_MARKER_DNL			0xdc
-#define JPEG_MARKER_DRI			0xdd
-#define JPEG_MARKER_DHP			0xde
-#define JPEG_MARKER_EXP			0xdf
-#define JPEG_MARKER_APP(x)		(0xe0 + (x))
-#define JPEG_MARKER_JPG_(x)		(0xf0 + (x))
-#define JPEG_MARKER_COM			0xfe
-
-#define JPEG_MARKER_JFIF		JPEG_MARKER_APP(0)
-
-struct jpeg_marker_struct
-{
-  unsigned int tag;
-  int (*func) (JpegDecoder * dec, bits_t * bits);
-  char *name;
-  unsigned int flags;
-};
-static struct jpeg_marker_struct jpeg_markers[] = {
-  {0xc0, jpeg_decoder_sof_baseline_dct,
-      "baseline DCT"},
-  {0xc4, jpeg_decoder_define_huffman_table,
-      "define Huffman table(s)"},
-  {0xd8, jpeg_decoder_soi,
-      "start of image"},
-  {0xd9, jpeg_decoder_eoi,
-      "end of image"},
-  {0xda, jpeg_decoder_sos,
-      "start of scan", JPEG_ENTROPY_SEGMENT},
-  {0xdb, jpeg_decoder_define_quant_table,
-      "define quantization table"},
-  {0xe0, jpeg_decoder_application0,
-      "application segment 0"},
-
-  {0x00, NULL, "illegal"},
-  {0x01, NULL, "TEM"},
-  {0x02, NULL, "RES"},
-
-  {0xc1, NULL, "extended sequential DCT"},
-  {0xc2, NULL, "progressive DCT"},
-  {0xc3, NULL, "lossless (sequential)"},
-  {0xc5, NULL, "differential sequential DCT"},
-  {0xc6, NULL, "differential progressive DCT"},
-  {0xc7, NULL, "differential lossless (sequential)"},
-  {0xc8, NULL, "reserved"},
-  {0xc9, NULL, "extended sequential DCT (arith)"},
-  {0xca, NULL, "progressive DCT (arith)"},
-  {0xcb, NULL, "lossless (sequential) (arith)"},
-  {0xcc, NULL, "define arithmetic coding conditioning(s)"},
-  {0xcd, NULL, "differential sequential DCT (arith)"},
-  {0xce, NULL, "differential progressive DCT (arith)"},
-  {0xcf, NULL, "differential lossless (sequential) (arith)"},
-
-  {0xd0, jpeg_decoder_restart, "restart0", JPEG_ENTROPY_SEGMENT},
-  {0xd1, jpeg_decoder_restart, "restart1", JPEG_ENTROPY_SEGMENT},
-  {0xd2, jpeg_decoder_restart, "restart2", JPEG_ENTROPY_SEGMENT},
-  {0xd3, jpeg_decoder_restart, "restart3", JPEG_ENTROPY_SEGMENT},
-  {0xd4, jpeg_decoder_restart, "restart4", JPEG_ENTROPY_SEGMENT},
-  {0xd5, jpeg_decoder_restart, "restart5", JPEG_ENTROPY_SEGMENT},
-  {0xd6, jpeg_decoder_restart, "restart6", JPEG_ENTROPY_SEGMENT},
-  {0xd7, jpeg_decoder_restart, "restart7", JPEG_ENTROPY_SEGMENT},
-
-  {0xdc, NULL, "define number of lines"},
-  {0xdd, jpeg_decoder_restart_interval, "define restart interval"},
-  {0xde, NULL, "define hierarchical progression"},
-  {0xdf, NULL, "expand reference component(s)"},
-
-  {0xe1, jpeg_decoder_application_misc, "application segment 1"},
-  {0xe2, jpeg_decoder_application_misc, "application segment 2"},
-  {0xe3, jpeg_decoder_application_misc, "application segment 3"},
-  {0xe4, jpeg_decoder_application_misc, "application segment 4"},
-  {0xe5, jpeg_decoder_application_misc, "application segment 5"},
-  {0xe6, jpeg_decoder_application_misc, "application segment 6"},
-  {0xe7, jpeg_decoder_application_misc, "application segment 7"},
-  {0xe8, jpeg_decoder_application_misc, "application segment 8"},
-  {0xe9, jpeg_decoder_application_misc, "application segment 9"},
-  {0xea, jpeg_decoder_application_misc, "application segment a"},
-  {0xeb, jpeg_decoder_application_misc, "application segment b"},
-  {0xec, jpeg_decoder_application_misc, "application segment c"},
-  {0xed, jpeg_decoder_application_misc, "application segment d"},
-  {0xee, jpeg_decoder_application_misc, "application segment e"},
-  {0xef, jpeg_decoder_application_misc, "application segment f"},
-
-  {0xf0, NULL, "JPEG extension 0"},
-  {0xfe, jpeg_decoder_comment, "comment"},
-
-  {0x00, NULL, "illegal"},
-};
-static const int n_jpeg_markers =
-    sizeof (jpeg_markers) / sizeof (jpeg_markers[0]);
-
-static unsigned char std_tables[] = {
-  0x00, 0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01,
-  0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-
-  0x00, 0x02, 0x01, 0x03, 0x03, 0x02, 0x04, 0x03,
-  0x05, 0x05, 0x04, 0x04, 0x00, 0x00, 0x01, 0x7d,
-  0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31,
-  0x41, 0x06, 0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32,
-  0x81, 0x91, 0xa1, 0x08, 0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52,
-  0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a, 0x16,
-  0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a,
-  0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45,
-  0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57,
-  0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
-  0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x83,
-  0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92, 0x93, 0x94,
-  0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5,
-  0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6,
-  0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
-  0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8,
-  0xd9, 0xda, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8,
-  0xe9, 0xea, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
-  0xf9, 0xfa,
-
-  0x00, 0x03, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-  0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
-  0x0a, 0x0b,
-
-  0x00, 0x02, 0x01, 0x02, 0x04, 0x04, 0x03, 0x04,
-  0x07, 0x05, 0x04, 0x04, 0x00, 0x01, 0x02, 0x77,
-  0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06,
-  0x12, 0x41, 0x51, 0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81,
-  0x08, 0x14, 0x42, 0x91, 0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33,
-  0x52, 0xf0, 0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34,
-  0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26, 0x27, 0x28,
-  0x29, 0x2a, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44,
-  0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56,
-  0x57, 0x58, 0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-  0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a,
-  0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x92,
-  0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3,
-  0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4,
-  0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5,
-  0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6,
-  0xd7, 0xd8, 0xd9, 0xda, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7,
-  0xe8, 0xe9, 0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
-  0xf9, 0xfa,
-};
+void jpeg_decoder_define_huffman_tables (JpegDecoder * dec);
+void jpeg_decoder_define_arithmetic_conditioning (JpegDecoder *dec);
+void jpeg_decoder_define_quantization_tables (JpegDecoder *dec);
+void jpeg_decoder_define_restart_interval (JpegDecoder *dec);
+void jpeg_decoder_start_of_frame (JpegDecoder * dec, int marker);
+void jpeg_decoder_start_of_scan (JpegDecoder * dec);
 
 
 /* misc helper function declarations */
 
-static void dumpbits (bits_t * bits);
+static char *sprintbits (char *str, unsigned int bits, int n);
 
-static void huffman_table_load_std_jpeg (JpegDecoder * dec);
+static void jpeg_load_standard_huffman_tables (JpegDecoder * dec);
+
+static void jpeg_decoder_verify_header (JpegDecoder *dec);
+static void jpeg_decoder_init_decoder (JpegDecoder *dec);
 
 
-int
-jpeg_decoder_soi (JpegDecoder * dec, bits_t * bits)
+
+static void
+jpeg_decoder_verify_header (JpegDecoder *dec)
 {
-  return 0;
-}
-
-int
-jpeg_decoder_eoi (JpegDecoder * dec, bits_t * bits)
-{
-  return 0;
-}
-
-int
-jpeg_decoder_sof_baseline_dct (JpegDecoder * dec, bits_t * bits)
-{
+  int max_quant_table = 0;
   int i;
-  int length;
-  int image_size;
-  int rowstride;
-  int max_h_oversample = 0, max_v_oversample = 0;
 
-  OIL_DEBUG ("start of frame (baseline DCT)");
-
-  length = get_be_u16 (bits);
-  bits->end = bits->ptr + length - 2;
-
-  dec->depth = get_u8 (bits);
-  dec->height = get_be_u16 (bits);
-  dec->width = get_be_u16 (bits);
-  dec->n_components = get_u8 (bits);
-
-  OIL_DEBUG (
-      "frame_length=%d depth=%d height=%d width=%d n_components=%d", length,
-      dec->depth, dec->height, dec->width, dec->n_components);
-
-  for (i = 0; i < dec->n_components; i++) {
-    dec->components[i].id = get_u8 (bits);
-    dec->components[i].h_oversample = getbits (bits, 4);
-    dec->components[i].v_oversample = getbits (bits, 4);
-    dec->components[i].quant_table = get_u8 (bits);
-
-    OIL_DEBUG (
-        "[%d] id=%d h_oversample=%d v_oversample=%d quant_table=%d", i,
-        dec->components[i].id, dec->components[i].h_oversample,
-        dec->components[i].v_oversample, dec->components[i].quant_table);
-
-    max_h_oversample = MAX (max_h_oversample, dec->components[i].h_oversample);
-    max_v_oversample = MAX (max_v_oversample, dec->components[i].v_oversample);
+  if (dec->sof_type != JPEG_MARKER_SOF_0) {
+    SWFDEC_ERROR("only handle baseline DCT");
+    dec->error = TRUE;
   }
-  dec->width_blocks =
-      (dec->width + 8 * max_h_oversample - 1) / (8 * max_h_oversample);
-  dec->height_blocks =
-      (dec->height + 8 * max_v_oversample - 1) / (8 * max_v_oversample);
-  for (i = 0; i < dec->n_components; i++) {
-    dec->components[i].h_subsample = max_h_oversample /
-        dec->components[i].h_oversample;
-    dec->components[i].v_subsample = max_v_oversample /
-        dec->components[i].v_oversample;
 
-    rowstride = dec->width_blocks * 8 * max_h_oversample /
+  if (dec->width < 1) {
+    SWFDEC_ERROR("height can't be 0");
+    dec->error = TRUE;
+  }
+
+  switch (dec->sof_type) {
+    case JPEG_MARKER_SOF_0:
+      /* baseline DCT */
+      max_quant_table = 3;
+      if (dec->depth != 8) {
+        SWFDEC_ERROR("depth must be 8 (%d)", dec->depth);
+        dec->error = TRUE;
+      }
+      break;
+    case JPEG_MARKER_SOF_1:
+      /* extended DCT */
+      max_quant_table = 3;
+      if (dec->depth != 8 && dec->depth != 12) {
+        SWFDEC_ERROR("depth must be 8 or 12 (%d)", dec->depth);
+        dec->error = TRUE;
+      }
+      break;
+    case JPEG_MARKER_SOF_2:
+      /* progressive DCT */
+      max_quant_table = 3;
+      if (dec->depth != 8 && dec->depth != 12) {
+        SWFDEC_ERROR("depth must be 8 or 12 (%d)", dec->depth);
+        dec->error = TRUE;
+      }
+      break;
+    case JPEG_MARKER_SOF_3:
+      /* lossless DCT */
+      max_quant_table = 0;
+      if (dec->depth < 2 || dec->depth > 16) {
+        SWFDEC_ERROR("depth must be between 2 and 16 (%d)", dec->depth);
+        dec->error = TRUE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (dec->n_components < 0 || dec->n_components > 255) {
+    SWFDEC_ERROR("n_components must be in the range 0-255 (%d)",
+        dec->n_components);
+    dec->error = TRUE;
+  }
+  if (dec->sof_type == JPEG_MARKER_SOF_2 && dec->n_components > 4) {
+    SWFDEC_ERROR("n_components must be <= 4 for progressive DCT (%d)",
+        dec->n_components);
+    dec->error = TRUE;
+  }
+
+  for (i = 0; i < dec->n_components; i++) {
+    if (dec->components[i].id < 0 || dec->components[i].id > 255) {
+      SWFDEC_ERROR("component ID out of range");
+      dec->error = TRUE;
+      break;
+    }
+    if (dec->components[i].h_sample < 1 || dec->components[i].h_sample > 4 ||
+        dec->components[i].v_sample < 1 || dec->components[i].v_sample > 4) {
+      SWFDEC_ERROR("sample factor(s) for component %d out of range %d %d",
+          i, dec->components[i].h_sample, dec->components[i].v_sample);
+      dec->error = TRUE;
+      break;
+    }
+    if (dec->components[i].quant_table < 0 ||
+        dec->components[i].quant_table > max_quant_table) {
+      SWFDEC_ERROR("quant table for component %d out of range (%d)",
+          i, dec->components[i].quant_table);
+      dec->error = TRUE;
+      break;
+    }
+  }
+}
+
+static void
+jpeg_decoder_init_decoder (JpegDecoder *dec)
+{
+  int max_h_sample = 0;
+  int max_v_sample = 0;
+  int i;
+
+  /* decoder limitations */
+  if (dec->n_components != 3) {
+    jpeg_decoder_error(dec, "wrong number of components %d", dec->n_components);
+    return;
+  }
+  if (dec->sof_type != JPEG_MARKER_SOF_0) {
+    jpeg_decoder_error(dec, "only handle baseline DCT");
+    return;
+  }
+
+
+
+
+  for (i=0; i < dec->n_components; i++) {
+    max_h_sample = MAX (max_h_sample, dec->components[i].h_sample);
+    max_v_sample = MAX (max_v_sample, dec->components[i].v_sample);
+  }
+
+  dec->width_blocks =
+      (dec->width + 8 * max_h_sample - 1) / (8 * max_h_sample);
+  dec->height_blocks =
+      (dec->height + 8 * max_v_sample - 1) / (8 * max_v_sample);
+  for (i = 0; i < dec->n_components; i++) {
+    int rowstride;
+    int image_size;
+
+    dec->components[i].h_subsample = max_h_sample /
+        dec->components[i].h_sample;
+    dec->components[i].v_subsample = max_v_sample /
+        dec->components[i].v_sample;
+
+    rowstride = dec->width_blocks * 8 * max_h_sample /
         dec->components[i].h_subsample;
     image_size = rowstride *
-        (dec->height_blocks * 8 * max_v_oversample /
+        (dec->height_blocks * 8 * max_v_sample /
         dec->components[i].v_subsample);
     dec->components[i].rowstride = rowstride;
     dec->components[i].image = malloc (image_size);
   }
+}
 
-  if (bits->end != bits->ptr)
-    OIL_DEBUG ("endptr != bits");
 
-  return length;
+void
+generate_code_table (int *huffsize)
+{
+  int code;
+  int i;
+  int j;
+  int k;
+  char str[33];
+
+  //int l;
+
+  code = 0;
+  k = 0;
+  for (i = 0; i < 16; i++) {
+    for (j = 0; j < huffsize[i]; j++) {
+      SWFDEC_DEBUG ("huffcode[%d] = %s", k,
+          sprintbits (str, code >> (15 - i), i + 1));
+      code++;
+      k++;
+    }
+    code <<= 1;
+  }
+
 }
 
 int
-jpeg_decoder_define_quant_table (JpegDecoder * dec, bits_t * bits)
-{
-  int length;
-  int pq;
-  int tq;
-  int i;
-  short *q;
-
-  OIL_DEBUG ("define quantization table");
-
-  length = get_be_u16 (bits);
-  bits->end = bits->ptr + length - 2;
-
-  while (bits->ptr < bits->end) {
-    pq = getbits (bits, 4);
-    tq = getbits (bits, 4);
-
-    q = dec->quant_table[tq];
-    if (pq) {
-      for (i = 0; i < 64; i++) {
-        q[i] = get_be_u16 (bits);
-      }
-    } else {
-      for (i = 0; i < 64; i++) {
-        q[i] = get_u8 (bits);
-      }
-    }
-
-    OIL_DEBUG ("quant table index %d:", tq);
-    for (i = 0; i < 8; i++) {
-      OIL_DEBUG ("%3d %3d %3d %3d %3d %3d %3d %3d",
-          q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7]);
-      q += 8;
-    }
-  }
-
-  return length;
-}
-
-HuffmanTable *
-huffman_table_new_jpeg (bits_t * bits)
+huffman_table_init_jpeg (HuffmanTable *table, JpegBits * bits)
 {
   int n_symbols;
   int huffsize[16];
   int i, j, k;
-  HuffmanTable *table;
   unsigned int symbol;
+  int n = 0;
 
-  table = huffman_table_new ();
+  huffman_table_init (table);
 
   /* huffsize[i] is the number of symbols that have length
    * (i+1) bits.  Maximum bit length is 16 bits, so there are
    * 16 entries. */
   n_symbols = 0;
   for (i = 0; i < 16; i++) {
-    huffsize[i] = get_u8 (bits);
+    huffsize[i] = jpeg_bits_get_u8 (bits);
+    n++;
     n_symbols += huffsize[i];
   }
 
@@ -345,7 +233,8 @@ huffman_table_new_jpeg (bits_t * bits)
   k = 0;
   for (i = 0; i < 16; i++) {
     for (j = 0; j < huffsize[i]; j++) {
-      huffman_table_add (table, symbol, i + 1, get_u8 (bits));
+      huffman_table_add (table, symbol, i + 1, jpeg_bits_get_u8 (bits));
+      n++;
       symbol++;
       k++;
     }
@@ -353,8 +242,9 @@ huffman_table_new_jpeg (bits_t * bits)
      * number of bits we think it is.  This is only triggered
      * for bad huffsize[] arrays. */
     if (symbol >= (1U << (i + 1))) {
-      OIL_DEBUG ("bad huffsize[] array");
-      return NULL;
+      /* FIXME jpeg_decoder_error() */
+      SWFDEC_DEBUG ("bad huffsize[] array");
+      return -1;
     }
 
     symbol <<= 1;
@@ -362,65 +252,7 @@ huffman_table_new_jpeg (bits_t * bits)
 
   huffman_table_dump (table);
 
-  return table;
-}
-
-int
-jpeg_decoder_define_huffman_table (JpegDecoder * dec, bits_t * bits)
-{
-  int length;
-  int tc;
-  int th;
-  HuffmanTable *hufftab;
-
-  OIL_DEBUG ("define huffman table");
-
-  length = get_be_u16 (bits);
-  bits->end = bits->ptr + length - 2;
-
-  while (bits->ptr < bits->end) {
-    tc = getbits (bits, 4);
-    th = getbits (bits, 4);
-
-    OIL_DEBUG ("huff table index %d:", th);
-    OIL_DEBUG ("type %d (%s)", tc, tc ? "ac" : "dc");
-
-    hufftab = huffman_table_new_jpeg (bits);
-    if (tc) {
-      if (dec->ac_huff_table[th]) {
-        huffman_table_free (dec->ac_huff_table[th]);
-      }
-      dec->ac_huff_table[th] = hufftab;
-    } else {
-      if (dec->dc_huff_table[th]) {
-        huffman_table_free (dec->dc_huff_table[th]);
-      }
-      dec->dc_huff_table[th] = hufftab;
-    }
-  }
-
-  return length;
-}
-
-static void
-dumpbits (bits_t * bits)
-{
-  int i;
-  int j;
-  unsigned char *p;
-  char s[40];
-
-  p = bits->ptr;
-  for (i = 0; i < 8; i++) {
-    sprintf (s, "%02x %02x %02x %02x %02x %02x %02x %02x ........",
-        p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-    for (j = 0; j < 8; j++) {
-      s[j + 24] = (isprint (p[j])) ? p[j] : '.';
-    }
-    OIL_DEBUG ("%s", s);
-    p += 8;
-  }
-
+  return n;
 }
 
 int
@@ -432,104 +264,19 @@ jpeg_decoder_find_component_by_id (JpegDecoder * dec, int id)
     if (dec->components[i].id == id)
       return i;
   }
-  OIL_DEBUG ("undefined component id %d", id);
+  SWFDEC_DEBUG ("undefined component id %d", id);
   return 0;
 }
 
 int
-jpeg_decoder_sos (JpegDecoder * dec, bits_t * bits)
-{
-  int length;
-  int i;
-
-  int n_components;
-  int spectral_start;
-  int spectral_end;
-  int approx_high;
-  int approx_low;
-  int n;
-
-  OIL_DEBUG ("start of scan");
-
-  length = get_be_u16 (bits);
-  bits->end = bits->ptr + length - 2;
-  OIL_DEBUG ("length=%d", length);
-
-  n_components = get_u8 (bits);
-  n = 0;
-  dec->scan_h_subsample = 0;
-  dec->scan_v_subsample = 0;
-  for (i = 0; i < n_components; i++) {
-    int component_id;
-    int dc_table;
-    int ac_table;
-    int x;
-    int y;
-    int index;
-    int h_subsample;
-    int v_subsample;
-    int quant_index;
-
-    component_id = get_u8 (bits);
-    dc_table = getbits (bits, 4);
-    ac_table = getbits (bits, 4);
-    index = jpeg_decoder_find_component_by_id (dec, component_id);
-
-    h_subsample = dec->components[index].h_oversample;
-    v_subsample = dec->components[index].v_oversample;
-    quant_index = dec->components[index].quant_table;
-
-    for (y = 0; y < v_subsample; y++) {
-      for (x = 0; x < h_subsample; x++) {
-        dec->scan_list[n].component_index = index;
-        dec->scan_list[n].dc_table = dc_table;
-        dec->scan_list[n].ac_table = ac_table;
-        dec->scan_list[n].quant_table = quant_index;
-        dec->scan_list[n].x = x;
-        dec->scan_list[n].y = y;
-        dec->scan_list[n].offset =
-            y * 8 * dec->components[index].rowstride + x * 8;
-        n++;
-      }
-    }
-
-    dec->scan_h_subsample = MAX (dec->scan_h_subsample, h_subsample);
-    dec->scan_v_subsample = MAX (dec->scan_v_subsample, v_subsample);
-
-    syncbits (bits);
-
-    OIL_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
-        component_id, index, dc_table, ac_table, n);
-  }
-  dec->scan_list_length = n;
-
-  spectral_start = get_u8 (bits);
-  spectral_end = get_u8 (bits);
-  OIL_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
-  approx_high = getbits (bits, 4);
-  approx_low = getbits (bits, 4);
-  OIL_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
-  syncbits (bits);
-
-  dec->x = 0;
-  dec->y = 0;
-  dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
-
-  if (bits->end != bits->ptr)
-    OIL_DEBUG ("endptr != bits");
-
-  return length;
-}
-
-int
-jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
+jpeg_decoder_application0 (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  OIL_DEBUG ("app0");
+  SWFDEC_DEBUG ("app0");
 
   length = get_be_u16 (bits);
-  OIL_DEBUG ("length=%d", length);
+  SWFDEC_DEBUG ("length=%d", length);
 
   if (memcmp (bits->ptr, "JFIF", 4) == 0 && bits->ptr[4] == 0) {
     int version;
@@ -539,7 +286,7 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
     int x_thumbnail;
     int y_thumbnail;
 
-    OIL_DEBUG ("JFIF");
+    SWFDEC_DEBUG ("JFIF");
     bits->ptr += 5;
 
     version = get_be_u16 (bits);
@@ -549,17 +296,17 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
     x_thumbnail = get_u8 (bits);
     y_thumbnail = get_u8 (bits);
 
-    OIL_DEBUG ("version = %04x", version);
-    OIL_DEBUG ("units = %d", units);
-    OIL_DEBUG ("x_density = %d", x_density);
-    OIL_DEBUG ("y_density = %d", y_density);
-    OIL_DEBUG ("x_thumbnail = %d", x_thumbnail);
-    OIL_DEBUG ("y_thumbnail = %d", y_thumbnail);
+    SWFDEC_DEBUG ("version = %04x", version);
+    SWFDEC_DEBUG ("units = %d", units);
+    SWFDEC_DEBUG ("x_density = %d", x_density);
+    SWFDEC_DEBUG ("y_density = %d", y_density);
+    SWFDEC_DEBUG ("x_thumbnail = %d", x_thumbnail);
+    SWFDEC_DEBUG ("y_thumbnail = %d", y_thumbnail);
 
   }
 
   if (memcmp (bits->ptr, "JFXX", 4) == 0 && bits->ptr[4] == 0) {
-    OIL_DEBUG ("JFIF extension (not handled)");
+    SWFDEC_DEBUG ("JFIF extension (not handled)");
     bits->ptr += length - 2;
   }
 
@@ -567,17 +314,17 @@ jpeg_decoder_application0 (JpegDecoder * dec, bits_t * bits)
 }
 
 int
-jpeg_decoder_application_misc (JpegDecoder * dec, bits_t * bits)
+jpeg_decoder_application_misc (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  OIL_DEBUG ("appX");
+  SWFDEC_DEBUG ("appX");
 
   length = get_be_u16 (bits);
-  OIL_DEBUG ("length=%d", length);
+  SWFDEC_DEBUG ("length=%d", length);
 
-  OIL_DEBUG ("JPEG application tag X ignored");
-  dumpbits (bits);
+  SWFDEC_DEBUG ("JPEG application tag X ignored");
+  //dumpbits (bits);
 
   bits->ptr += length - 2;
 
@@ -585,16 +332,16 @@ jpeg_decoder_application_misc (JpegDecoder * dec, bits_t * bits)
 }
 
 int
-jpeg_decoder_comment (JpegDecoder * dec, bits_t * bits)
+jpeg_decoder_comment (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  OIL_DEBUG ("comment");
+  SWFDEC_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  OIL_DEBUG ("length=%d", length);
+  SWFDEC_DEBUG ("length=%d", length);
 
-  dumpbits (bits);
+  //dumpbits (bits);
 
   bits->ptr += length - 2;
 
@@ -602,33 +349,34 @@ jpeg_decoder_comment (JpegDecoder * dec, bits_t * bits)
 }
 
 int
-jpeg_decoder_restart_interval (JpegDecoder * dec, bits_t * bits)
+jpeg_decoder_restart_interval (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  OIL_DEBUG ("comment");
+  SWFDEC_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  OIL_DEBUG ("length=%d", length);
+  SWFDEC_DEBUG ("length=%d", length);
 
   dec->restart_interval = get_be_u16 (bits);
-  OIL_DEBUG ("restart_interval=%d", dec->restart_interval);
+  SWFDEC_DEBUG ("restart_interval=%d", dec->restart_interval);
 
   return length;
 }
 
 int
-jpeg_decoder_restart (JpegDecoder * dec, bits_t * bits)
+jpeg_decoder_restart (JpegDecoder * dec, JpegBits * bits)
 {
-  OIL_DEBUG ("restart");
+  SWFDEC_DEBUG ("restart");
 
   return 0;
 }
 
 void
-jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
+jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
 {
-  bits_t b2, *bits2 = &b2;
+  JpegBits * bits = &dec->bits;
+  JpegBits b2, *bits2 = &b2;
   short block[64];
   short block2[64];
   unsigned char *newptr;
@@ -648,7 +396,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
     }
     len++;
   }
-  OIL_DEBUG ("entropy length = %d", len);
+  SWFDEC_DEBUG ("entropy length = %d", len);
 
   /* we allocate extra space, since the getbits() code can
    * potentially read past the end of the buffer */
@@ -672,7 +420,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
   x = dec->x;
   y = dec->y;
   n = dec->restart_interval;
-  if (n == 0) n = INT_MAX;
+  if (n == 0) n = (1<<26); /* max number of blocks */
   while (n-- > 0) {
     for (i = 0; i < dec->scan_list_length; i++) {
       int dc_table_index;
@@ -681,7 +429,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       unsigned char *ptr;
       int component_index;
 
-      OIL_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+      SWFDEC_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
           x, y,
           dec->scan_list[i].component_index,
           dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -692,10 +440,10 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       quant_index = dec->scan_list[i].quant_table;
 
       ret = huffman_table_decode_macroblock (block,
-          dec->dc_huff_table[dc_table_index],
-          dec->ac_huff_table[ac_table_index], bits2);
+          &dec->dc_huff_table[dc_table_index],
+          &dec->ac_huff_table[ac_table_index], bits2);
       if (ret < 0) {
-        OIL_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+        SWFDEC_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
             x, y,
             dec->scan_list[i].component_index,
             dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -703,8 +451,8 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
         break;
       }
 
-      OIL_DEBUG ("using quant table %d", quant_index);
-      oil_mult8x8_s16 (block2, block, dec->quant_table[quant_index],
+      SWFDEC_DEBUG ("using quant table %d", quant_index);
+      oil_mult8x8_s16 (block2, block, dec->quant_tables[quant_index].quantizer,
           sizeof (short) * 8, sizeof(short) * 8, sizeof (short) * 8);
       dec->dc[component_index] += block2[0];
       block2[0] = dec->dc[component_index];
@@ -714,10 +462,10 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec, bits_t * bits)
       oil_trans8x8_s16 (block, sizeof (short) * 8, block2, sizeof (short) * 8);
 
       ptr = dec->components[component_index].image +
-          x * dec->components[component_index].h_oversample +
+          x * dec->components[component_index].h_sample +
           dec->scan_list[i].offset +
           dec->components[component_index].rowstride * y *
-          dec->components[component_index].v_oversample;
+          dec->components[component_index].v_sample;
 
       oil_clipconv8x8_u8_s16 (ptr,
           dec->components[component_index].rowstride,
@@ -749,7 +497,7 @@ jpeg_decoder_new (void)
   dec = malloc (sizeof(JpegDecoder));
   memset (dec, 0, sizeof(JpegDecoder));
 
-  huffman_table_load_std_jpeg (dec);
+  jpeg_load_standard_huffman_tables (dec);
 
   return dec;
 }
@@ -759,12 +507,7 @@ jpeg_decoder_free (JpegDecoder * dec)
 {
   int i;
 
-  huffman_table_free (dec->dc_huff_table[0]);
-  huffman_table_free (dec->ac_huff_table[0]);
-  huffman_table_free (dec->dc_huff_table[1]);
-  huffman_table_free (dec->ac_huff_table[1]);
-
-  for (i = 0; i < JPEG_N_COMPONENTS; i++) {
+  for (i = 0; i < JPEG_MAX_COMPONENTS; i++) {
     if (dec->components[i].image)
       free (dec->components[i].image);
   }
@@ -775,26 +518,417 @@ jpeg_decoder_free (JpegDecoder * dec)
   free (dec);
 }
 
+void
+jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
+{
+  va_list varargs;
+
+  if (dec->error) return;
+
+  dec->error_message = malloc(250);
+  va_start (varargs, fmt);
+  vsnprintf(dec->error_message, 250 - 1, fmt, varargs);
+  dec->error_message[250 - 1] = 0;
+  va_end (varargs);
+
+  SWFDEC_ERROR("decoder error: %s", dec->error_message);
+  abort();
+  dec->error = TRUE;
+}
+
+int
+jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
+{
+  int a,b;
+  JpegBits *bits = &dec->bits;
+
+  if (jpeg_bits_available(bits) < 2) {
+    return FALSE;
+  }
+
+  a = jpeg_bits_get_u8(bits);
+  if (a != 0xff) {
+    jpeg_decoder_error(dec, "expected marker, not 0x%02x", a);
+    return FALSE;
+  }
+
+  do {
+    b = jpeg_bits_get_u8 (bits);
+  } while (b == 0xff && jpeg_bits_error(bits));
+
+  *marker = b;
+  return TRUE;
+}
+
+void
+jpeg_decoder_skip (JpegDecoder *dec)
+{
+  int length;
+
+  length = jpeg_bits_get_u16_be (&dec->bits);
+  jpeg_bits_skip (&dec->bits, length - 2);
+}
+
+int
+jpeg_decoder_decode (JpegDecoder *dec)
+{
+  JpegBits *bits;
+  int marker;
+
+  dec->error = FALSE;
+
+  bits = &dec->bits;
+
+  /* Note: The spec is ambiguous as to whether fill bytes can come
+   * before the first marker.  We'll assume yes. */
+  if (!jpeg_decoder_get_marker (dec, &marker)) {
+    return FALSE;
+  }
+  if (marker != JPEG_MARKER_SOI) {
+    jpeg_decoder_error(dec, "not a JPEG image");
+    return FALSE;
+  }
+
+  /* Interpret markers up to the start of frame */
+  while (!dec->error) {
+    if (!jpeg_decoder_get_marker (dec, &marker)) {
+      return FALSE;
+    }
+
+    if (marker == JPEG_MARKER_DEFINE_HUFFMAN_TABLES) {
+      jpeg_decoder_define_huffman_tables (dec);
+    } else if (marker == JPEG_MARKER_DEFINE_ARITHMETIC_CONDITIONING) {
+      jpeg_decoder_define_arithmetic_conditioning (dec);
+    } else if (marker == JPEG_MARKER_DEFINE_QUANTIZATION_TABLES) {
+      jpeg_decoder_define_quantization_tables (dec);
+    } else if (marker == JPEG_MARKER_DEFINE_RESTART_INTERVAL) {
+      jpeg_decoder_define_restart_interval (dec);
+    } else if (JPEG_MARKER_IS_APP(marker)) {
+      /* FIXME decode app segment */
+      jpeg_decoder_skip (dec);
+    } else if (marker == JPEG_MARKER_COMMENT) {
+      jpeg_decoder_skip (dec);
+    } else if (JPEG_MARKER_IS_START_OF_FRAME(marker)) {
+      break;
+    } else {
+      jpeg_decoder_error(dec, "unexpected marker 0x%02x", marker);
+      return FALSE;
+    }
+  }
+
+  jpeg_decoder_start_of_frame(dec, marker);
+
+  jpeg_decoder_verify_header (dec);
+  if (dec->error) {
+    return FALSE;
+  }
+
+  jpeg_decoder_init_decoder (dec);
+  if (dec->error) {
+    return FALSE;
+  }
+
+  /* In this section, we loop over parse units until we reach the end
+   * of the image. */
+  while (!dec->error) {
+    if (!jpeg_decoder_get_marker (dec, &marker)) {
+      return FALSE;
+    }
+
+    if (marker == JPEG_MARKER_DEFINE_HUFFMAN_TABLES) {
+      jpeg_decoder_define_huffman_tables (dec);
+    } else if (marker == JPEG_MARKER_DEFINE_ARITHMETIC_CONDITIONING) {
+      jpeg_decoder_define_arithmetic_conditioning (dec);
+    } else if (marker == JPEG_MARKER_DEFINE_QUANTIZATION_TABLES) {
+      jpeg_decoder_define_quantization_tables (dec);
+    } else if (marker == JPEG_MARKER_DEFINE_RESTART_INTERVAL) {
+      jpeg_decoder_define_restart_interval (dec);
+    } else if (JPEG_MARKER_IS_APP(marker)) {
+      jpeg_decoder_skip (dec);
+    } else if (marker == JPEG_MARKER_COMMENT) {
+      jpeg_decoder_skip (dec);
+    } else if (marker == JPEG_MARKER_SOS) {
+      jpeg_decoder_start_of_scan (dec);
+      jpeg_decoder_decode_entropy_segment (dec);
+    } else if (JPEG_MARKER_IS_RESET(marker)) {
+      jpeg_decoder_decode_entropy_segment (dec);
+    } else if (marker == JPEG_MARKER_EOI) {
+      break;
+    } else {
+      jpeg_decoder_error(dec, "unexpected marker 0x%02x", marker);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+/* handle markers */
+
+void
+jpeg_decoder_define_huffman_tables (JpegDecoder * dec)
+{
+  JpegBits *bits = &dec->bits;
+  int length;
+  int tc;
+  int th;
+  int x;
+  HuffmanTable *hufftab;
+
+  SWFDEC_DEBUG ("define huffman tables");
+
+  length = jpeg_bits_get_u16_be (bits);
+  if (length < 2) {
+    jpeg_decoder_error(dec, "length too short");
+    return;
+  }
+  length -= 2;
+
+  while (length > 0) {
+    x = jpeg_bits_get_u8 (bits);
+    length--;
+
+    tc = x >> 4;
+    th = x & 0xf;
+
+    SWFDEC_DEBUG ("huff table type %d (%s) index %d", tc, tc ? "ac" : "dc", th);
+    if (tc > 1 || th > 3) {
+      jpeg_decoder_error(dec, "huffman table type or index out of range");
+      return;
+    }
+
+    if (tc) {
+      hufftab = &dec->ac_huff_table[th];
+      length -= huffman_table_init_jpeg (hufftab, bits);
+    } else {
+      hufftab = &dec->dc_huff_table[th];
+      length -= huffman_table_init_jpeg (hufftab, bits);
+    }
+  }
+  if (length < 0) {
+    jpeg_decoder_error(dec, "huffman table overran available bytes");
+    return;
+  }
+}
+
+void
+jpeg_decoder_define_quantization_tables (JpegDecoder *dec)
+{
+  JpegBits *bits = &dec->bits;
+  JpegQuantTable *table;
+  int length;
+  int pq;
+  int tq;
+  int i;
+
+  SWFDEC_INFO ("define quantization table");
+
+  length = jpeg_bits_get_u16_be (bits);
+  if (length < 2) {
+    jpeg_decoder_error(dec, "length too short");
+    return;
+  }
+  length -= 2;
+
+  while (length > 0) {
+    int x;
+    
+    x = jpeg_bits_get_u8 (bits);
+    length--;
+    pq = x >> 4;
+    tq = x & 0xf;
+
+    if (pq > 1) {
+      jpeg_decoder_error (dec, "bad pq value");
+      return;
+    }
+    if (tq > 3) {
+      jpeg_decoder_error (dec, "bad tq value");
+      return;
+    }
+
+    table = &dec->quant_tables[tq];
+    if (pq) {
+      for (i = 0; i < 64; i++) {
+        table->quantizer[i] = jpeg_bits_get_u16_be (bits);
+        length -= 2;
+      }
+    } else {
+      for (i = 0; i < 64; i++) {
+        table->quantizer[i] = jpeg_bits_get_u8 (bits);
+        length -= 1;
+      }
+    }
+  }
+  if (length < 0) {
+    jpeg_decoder_error(dec, "quantization table overran available bytes");
+    return;
+  }
+}
+
+void
+jpeg_decoder_define_restart_interval (JpegDecoder *dec)
+{
+  JpegBits *bits = &dec->bits;
+  int length;
+
+  length = jpeg_bits_get_u16_be (bits);
+  if (length != 4) {
+    jpeg_decoder_error(dec, "length supposed to be 4 (%d)", length);
+    return;
+  }
+
+  /* FIXME this needs to be checked somewhere */
+  dec->restart_interval = jpeg_bits_get_u16_be (bits);
+}
+
+void
+jpeg_decoder_define_arithmetic_conditioning (JpegDecoder *dec)
+{
+  /* we don't handle arithmetic coding, so skip it */
+  jpeg_decoder_skip (dec);
+}
+
+void
+jpeg_decoder_start_of_frame (JpegDecoder * dec, int marker)
+{
+  JpegBits *bits = &dec->bits;
+  int i;
+  int length;
+
+  SWFDEC_INFO ("start of frame");
+
+  dec->sof_type = marker;
+
+  length = jpeg_bits_get_u16_be (bits);
+
+  if (jpeg_bits_available(bits) < length) {
+    jpeg_decoder_error(dec, "not enough data for start_of_frame (%d < %d)",
+        length, jpeg_bits_available(bits));
+    return;
+  }
+
+  dec->depth = jpeg_bits_get_u8 (bits);
+  dec->height = jpeg_bits_get_u16_be (bits);
+  dec->width = jpeg_bits_get_u16_be (bits);
+  dec->n_components = jpeg_bits_get_u8 (bits);
+
+  SWFDEC_DEBUG (
+      "frame_length=%d depth=%d height=%d width=%d n_components=%d", length,
+      dec->depth, dec->height, dec->width, dec->n_components);
+
+  if (dec->n_components * 3 + 8 != length) {
+    jpeg_decoder_error(dec, "inconsistent header");
+    return;
+  }
+
+  for (i = 0; i < dec->n_components; i++) {
+    dec->components[i].id = get_u8 (bits);
+    dec->components[i].h_sample = getbits (bits, 4);
+    dec->components[i].v_sample = getbits (bits, 4);
+    dec->components[i].quant_table = get_u8 (bits);
+
+    SWFDEC_DEBUG (
+        "[%d] id=%d h_sample=%d v_sample=%d quant_table=%d", i,
+        dec->components[i].id, dec->components[i].h_sample,
+        dec->components[i].v_sample, dec->components[i].quant_table);
+  }
+}
+
+void
+jpeg_decoder_start_of_scan (JpegDecoder * dec)
+{
+  JpegBits *bits = &dec->bits;
+  int length;
+  int i;
+  int spectral_start;
+  int spectral_end;
+  int approx_high;
+  int approx_low;
+  int n;
+  int tmp;
+  int n_components;
+
+  SWFDEC_DEBUG ("start of scan");
+
+  length = jpeg_bits_get_u16_be (bits);
+  SWFDEC_DEBUG ("length=%d", length);
+
+  n_components = jpeg_bits_get_u8 (bits);
+  n = 0;
+  dec->scan_h_subsample = 0;
+  dec->scan_v_subsample = 0;
+  for (i = 0; i < n_components; i++) {
+    int component_id;
+    int dc_table;
+    int ac_table;
+    int x;
+    int y;
+    int index;
+    int h_subsample;
+    int v_subsample;
+    int quant_index;
+
+    component_id = jpeg_bits_get_u8 (bits);
+    tmp = jpeg_bits_get_u8 (bits);
+    dc_table = tmp >> 4;
+    ac_table = tmp & 0xf;
+    index = jpeg_decoder_find_component_by_id (dec, component_id);
+
+    h_subsample = dec->components[index].h_sample;
+    v_subsample = dec->components[index].v_sample;
+    quant_index = dec->components[index].quant_table;
+
+    for (y = 0; y < v_subsample; y++) {
+      for (x = 0; x < h_subsample; x++) {
+        dec->scan_list[n].component_index = index;
+        dec->scan_list[n].dc_table = dc_table;
+        dec->scan_list[n].ac_table = ac_table;
+        dec->scan_list[n].quant_table = quant_index;
+        dec->scan_list[n].x = x;
+        dec->scan_list[n].y = y;
+        dec->scan_list[n].offset =
+            y * 8 * dec->components[index].rowstride + x * 8;
+        n++;
+      }
+    }
+
+    dec->scan_h_subsample = MAX (dec->scan_h_subsample, h_subsample);
+    dec->scan_v_subsample = MAX (dec->scan_v_subsample, v_subsample);
+
+    SWFDEC_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
+        component_id, index, dc_table, ac_table, n);
+  }
+  dec->scan_list_length = n;
+
+  spectral_start = jpeg_bits_get_u8 (bits);
+  spectral_end = jpeg_bits_get_u8 (bits);
+  SWFDEC_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
+  tmp = jpeg_bits_get_u8 (bits);
+  approx_high = tmp >> 4;
+  approx_low = tmp & 0xf;
+  SWFDEC_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
+
+  dec->x = 0;
+  dec->y = 0;
+  dec->dc[0] = dec->dc[1] = dec->dc[2] = dec->dc[3] = 128 * 8;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 int
 jpeg_decoder_addbits (JpegDecoder * dec, unsigned char *data, unsigned int len)
 {
   unsigned int offset;
-
-  if (len == 0)
-    return 0;
-
-#if 0
-  {
-    static int index = 0;
-    FILE *file;
-    char s[100];
-
-    sprintf(s, "image-%d.jpg", index++);
-    file = fopen(s, "w");
-    fwrite (data, len, 1, file);
-    fclose(file);
-  }
-#endif
 
   offset = dec->bits.ptr - dec->data;
 
@@ -821,7 +955,7 @@ jpeg_decoder_get_image_size (JpegDecoder * dec, int *width, int *height)
 
 int
 jpeg_decoder_get_component_ptr (JpegDecoder * dec, int id,
-    const unsigned char **image, int *rowstride)
+    unsigned char **image, int *rowstride)
 {
   int i;
 
@@ -866,11 +1000,12 @@ jpeg_decoder_get_component_subsampling (JpegDecoder * dec, int id,
   return 0;
 }
 
+#if 0
 int
 jpeg_decoder_parse (JpegDecoder * dec)
 {
-  bits_t *bits = &dec->bits;
-  bits_t b2;
+  JpegBits *bits = &dec->bits;
+  JpegBits b2;
   unsigned int x;
   unsigned int tag;
   int i;
@@ -915,22 +1050,40 @@ jpeg_decoder_parse (JpegDecoder * dec)
 
   return 0;
 }
+#endif
 
 
 /* misc helper functins */
 
-static void
-huffman_table_load_std_jpeg (JpegDecoder * dec)
+static char *
+sprintbits (char *str, unsigned int bits, int n)
 {
-  bits_t b, *bits = &b;
+  int i;
+  int bit = 1 << (n - 1);
 
-  bits->ptr = std_tables;
-  bits->idx = 0;
-  bits->end = std_tables + sizeof (std_tables);
+  for (i = 0; i < n; i++) {
+    str[i] = (bits & bit) ? '1' : '0';
+    bit >>= 1;
+  }
+  str[i] = 0;
 
-  dec->dc_huff_table[0] = huffman_table_new_jpeg (bits);
-  dec->ac_huff_table[0] = huffman_table_new_jpeg (bits);
-  dec->dc_huff_table[1] = huffman_table_new_jpeg (bits);
-  dec->ac_huff_table[1] = huffman_table_new_jpeg (bits);
+  return str;
 }
+
+static void
+jpeg_load_standard_huffman_tables (JpegDecoder * dec)
+{
+  JpegBits b, *bits = &b;
+
+  bits->ptr = jpeg_standard_tables;
+  bits->idx = 0;
+  bits->end = jpeg_standard_tables + jpeg_standard_tables_size;
+
+  huffman_table_init_jpeg (&dec->dc_huff_table[0], bits);
+  huffman_table_init_jpeg (&dec->ac_huff_table[0], bits);
+  huffman_table_init_jpeg (&dec->dc_huff_table[1], bits);
+  huffman_table_init_jpeg (&dec->ac_huff_table[1], bits);
+}
+
+
 

@@ -329,7 +329,7 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     n_fill_styles = swfdec_bits_get_u16 (bits);
   }
   SWFDEC_LOG ("   n_fill_styles %d", n_fill_styles);
-  for (i = 0; i < n_fill_styles; i++) {
+  for (i = 0; i < n_fill_styles && swfdec_bits_left (bits); i++) {
     SwfdecPattern *pattern;
 
     SWFDEC_LOG ("   fill style %d:", i);
@@ -338,18 +338,16 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
     g_ptr_array_add (shape->fills, pattern);
   }
 
-  swfdec_bits_syncbits (bits);
   shape->lines_offset = shape->lines->len;
   n_line_styles = swfdec_bits_get_u8 (bits);
   if (n_line_styles == 0xff) {
     n_line_styles = swfdec_bits_get_u16 (bits);
   }
   SWFDEC_LOG ("   n_line_styles %d", n_line_styles);
-  for (i = 0; i < n_line_styles; i++) {
+  for (i = 0; i < n_line_styles && swfdec_bits_left (bits); i++) {
     g_ptr_array_add (shape->lines, parse_stroke (s));
   }
 
-  swfdec_bits_syncbits (bits);
   shape->n_fill_bits = swfdec_bits_getbits (bits, 4);
   shape->n_line_bits = swfdec_bits_getbits (bits, 4);
 }
@@ -1038,7 +1036,10 @@ tag_define_morph_shape (SwfdecSwfDecoder * s)
   swfdec_bits_get_rect (bits, &morph->end_extents);
   offset = swfdec_bits_get_u32 (bits);
   end_bits = *bits;
-  end_bits.ptr += offset;
+  if (swfdec_bits_skip_bytes (&end_bits, offset) != offset) {
+    SWFDEC_ERROR ("wrong offset in DefineMorphShape");
+    return SWFDEC_STATUS_OK;
+  }
   bits->end = end_bits.ptr;
 
   swfdec_shape_add_styles (s, SWFDEC_SHAPE (morph),

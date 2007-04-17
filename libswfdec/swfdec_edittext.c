@@ -76,7 +76,8 @@ swfdec_edit_text_parse_variable (SwfdecEditText *text)
     return;
   }
   /* FIXME: check the variable for valid identifiers */
-  if (strchr (text->variable, '/')) {
+  if (text->variable &&
+      strchr (text->variable, '/')) {
     char *ret = swfdec_js_slash_to_dot (text->variable);
     g_free (text->variable);
     text->variable = ret;

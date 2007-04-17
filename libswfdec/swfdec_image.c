@@ -96,8 +96,7 @@ swfdec_image_jpegtables (SwfdecSwfDecoder * s)
 
   SWFDEC_DEBUG ("swfdec_image_jpegtables");
 
-  s->jpegtables = swfdec_buffer_ref (bits->buffer);
-  bits->ptr += bits->buffer->length;
+  s->jpegtables = swfdec_bits_get_buffer (bits, -1);
 
   return SWFDEC_STATUS_OK;
 }
@@ -123,9 +122,7 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
   } else {
     image->jpegtables = swfdec_buffer_ref (s->jpegtables);
   }
-  image->raw_data = swfdec_buffer_ref (bits->buffer);
-
-  bits->ptr += bits->buffer->length - 2;
+  image->raw_data = swfdec_bits_get_buffer (bits, -1);
 
   return SWFDEC_STATUS_OK;
 }
@@ -147,14 +144,14 @@ swfdec_image_jpeg_load (SwfdecImage *image)
     jpeg_decoder_addbits (dec, image->jpegtables->data,
         image->jpegtables->length);
   }
-  if (image->raw_data->data[2] != 0xff || image->raw_data->data[3] != 0xd8) {
+  if (image->raw_data->data[0] != 0xff || image->raw_data->data[1] != 0xd8) {
     SWFDEC_ERROR("not jpeg %02x %02x",
-        image->raw_data->data[2], image->raw_data->data[3]);
+        image->raw_data->data[0], image->raw_data->data[1]);
     jpeg_decoder_free (dec);
     return;
   }
-  jpeg_decoder_addbits (dec, image->raw_data->data + 2,
-      image->raw_data->length - 2);
+  jpeg_decoder_addbits (dec, image->raw_data->data,
+      image->raw_data->length);
   jpeg_decoder_parse (dec);
   jpeg_decoder_get_image_size (dec, &image->width, &image->height);
   if (image->width == 0 || image->height == 0) {
@@ -185,9 +182,7 @@ tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
 
   image->type = SWFDEC_IMAGE_TYPE_JPEG2;
-  image->raw_data = swfdec_buffer_ref (bits->buffer);
-
-  bits->ptr += bits->buffer->length - 2;
+  image->raw_data = swfdec_bits_get_buffer (bits, -1);
 
   return SWFDEC_STATUS_OK;
 }
@@ -199,14 +194,14 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
 
   dec = jpeg_decoder_new ();
 
-  if (image->raw_data->data[2] != 0xff || image->raw_data->data[3] != 0xd8) {
+  if (image->raw_data->data[0] != 0xff || image->raw_data->data[1] != 0xd8) {
     SWFDEC_ERROR("not jpeg %02x %02x",
-        image->raw_data->data[2], image->raw_data->data[3]);
+        image->raw_data->data[0], image->raw_data->data[1]);
     jpeg_decoder_free (dec);
     return;
   }
-  jpeg_decoder_addbits (dec, image->raw_data->data + 2,
-      image->raw_data->length - 2);
+  jpeg_decoder_addbits (dec, image->raw_data->data,
+      image->raw_data->length);
   jpeg_decoder_parse (dec);
   jpeg_decoder_get_image_size (dec, &image->width, &image->height);
   if (image->width == 0 || image->height == 0) {
@@ -540,6 +535,9 @@ swfdec_image_colormap_decode (SwfdecImage * image,
 static gboolean
 swfdec_image_ensure_loaded (SwfdecImage *image)
 {
+  if (image->raw_data == NULL)
+    return FALSE;
+
   if (image->data == NULL) {
     switch (image->type) {
       case SWFDEC_IMAGE_TYPE_JPEG:

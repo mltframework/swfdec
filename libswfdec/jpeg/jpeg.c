@@ -780,6 +780,9 @@ jpeg_decoder_addbits (JpegDecoder * dec, unsigned char *data, unsigned int len)
 {
   unsigned int offset;
 
+  if (len == 0)
+    return 0;
+
 #if 0
   {
     static int index = 0;

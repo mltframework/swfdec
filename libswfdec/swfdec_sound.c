@@ -98,6 +98,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s)
     SWFDEC_DEBUG ("empty sound block n_samples=%d skip=%d", n_samples,
         skip);
     chunk = NULL;
+    return SWFDEC_STATUS_OK;
   } else {
     chunk = swfdec_bits_get_buffer (&s->b, -1);
     if (chunk == NULL) {

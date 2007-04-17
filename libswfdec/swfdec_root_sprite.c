@@ -117,7 +117,7 @@ tag_func_export_assets (SwfdecSwfDecoder * s)
 
   count = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("exporting %u assets", count);
-  for (i = 0; i < count; i++) {
+  for (i = 0; i < count && swfdec_bits_left (bits); i++) {
     guint id;
     SwfdecCharacter *object;
     char *name;

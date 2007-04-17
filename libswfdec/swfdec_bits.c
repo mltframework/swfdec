@@ -95,7 +95,9 @@ swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, guint bytes)
 
   bits->buffer = from->buffer;
   bits->ptr = from->ptr;
-  bits->end = MIN (bits->ptr + bytes, from->end);
+  if (bytes > (guint) (from->end - from->ptr))
+    bytes = from->end - from->ptr;
+  bits->end = bits->ptr + bytes;
   bits->idx = 0;
   from->ptr = bits->end;
 }
@@ -521,11 +523,22 @@ swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
   return n_bytes;
 }
 
+/**
+ * swfdec_bits_get_string_length:
+ * @bits: a #SwfdecBits
+ * @len: number of bytes to read
+ *
+ * Reads the next @len bytes into a string and validates it as UTF-8.
+ *
+ * Returns: a new string or %NULL on error
+ **/
 char *
 swfdec_bits_get_string_length (SwfdecBits * bits, guint len)
 {
   char *ret;
 
+  if (len == 0)
+    return g_strdup ("");
   SWFDEC_BYTES_CHECK (bits, len);
 
   ret = g_strndup ((char *) bits->ptr, len);
@@ -635,7 +648,8 @@ swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
  * @len: length of buffer or -1 for maximum
  *
  * Gets the contents of the next @len bytes of @bits and buts them in a new
- * subbuffer.
+ * subbuffer. If @len is 0 (or @len is -1 and no more data is available), this
+ * is considered a reading error and %NULL is returned.
  *
  * Returns: the new #SwfdecBuffer or NULL if the requested amount of data 
  *          isn't available

@@ -2731,7 +2731,8 @@ SwfdecScript *
 swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
-  const guchar *start;
+  SwfdecBits org;
+  guint len;
   
   g_return_val_if_fail (bits != NULL, NULL);
 
@@ -2740,8 +2741,8 @@ swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
     return NULL;
   }
 
-  swfdec_bits_syncbits (bits);
-  start = bits->ptr;
+  org = *bits;
+  len = swfdec_bits_left (bits) / 8;
   script = g_new0 (SwfdecScript, 1);
   script->refcount = 1;
   script->name = g_strdup (name ? name : "Unnamed script");
@@ -2750,15 +2751,12 @@ swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
-  if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
-    /* assign a random buffer here so we have something to unref */
-    script->buffer = bits->buffer;
-    swfdec_buffer_ref (script->buffer);
+  if (!swfdec_script_foreach_internal (bits, validate_action, script) ||
+      (len -= swfdec_bits_left (bits) / 8) == 0) {
     swfdec_script_unref (script);
     return NULL;
   }
-  script->buffer = swfdec_buffer_new_subbuffer (bits->buffer, start - bits->buffer->data,
-      bits->ptr - start);
+  script->buffer = swfdec_bits_get_buffer (&org, len);
   return script;
 }
 
@@ -2785,7 +2783,8 @@ swfdec_script_unref (SwfdecScript *script)
   if (script->refcount > 0)
     return;
 
-  swfdec_buffer_unref (script->buffer);
+  if (script->buffer)
+    swfdec_buffer_unref (script->buffer);
   if (script->constant_pool)
     swfdec_buffer_unref (script->constant_pool);
   g_free (script->name);

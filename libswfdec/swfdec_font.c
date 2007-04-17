@@ -93,6 +93,7 @@ swfdec_font_get_glyph (SwfdecFont * font, guint glyph)
   return g_array_index (font->glyphs, SwfdecFontEntry, glyph).shape;
 }
 
+#if 0
 static char *
 convert_from_language (const char *s, SwfdecLanguage language)
 {
@@ -120,6 +121,7 @@ convert_from_language (const char *s, SwfdecLanguage language)
     SWFDEC_ERROR ("given text is not in language %s", langcode);
   return ret;
 }
+#endif
 
 int
 tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
@@ -158,7 +160,6 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
   wide = swfdec_bits_getbit (&s->b);
   if (version > 1)
     language = swfdec_bits_get_u8 (&s->b);
-  font->name = convert_from_language (name, language);
   g_free (name);
   if (font->name) {
     SWFDEC_LOG ("Creating font description for font %d", id);
@@ -308,8 +309,12 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
   SWFDEC_DEBUG("langcode %d", langcode);
 
   font_name_len = swfdec_bits_get_u8 (bits);
-  //font_name = 
-  bits->ptr += font_name_len;
+  font->name = swfdec_bits_get_string_length (bits, font_name_len);
+  if (font->name == NULL) {
+    SWFDEC_ERROR ("error reading font name");
+  } else {
+    SWFDEC_LOG ("  font name = %s", font->name);
+  }
 
   n_glyphs = swfdec_bits_get_u16 (bits);
   if (wide_offsets) {
@@ -397,7 +402,11 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s)
   SWFDEC_LOG (" language = %u", (guint) language);
   len = swfdec_bits_get_u8 (&s->b);
   font->name = swfdec_bits_get_string_length (&s->b, len);
-  SWFDEC_LOG (" name = %s", font->name);
+  if (font->name == NULL) {
+    SWFDEC_ERROR ("error reading font name");
+  } else {
+    SWFDEC_LOG ("  font name = %s", font->name);
+  }
   n_glyphs = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG (" n_glyphs = %u", n_glyphs);
   

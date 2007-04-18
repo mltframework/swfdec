@@ -543,6 +543,7 @@ jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
   int a,b;
   JpegBits *bits = &dec->bits;
 
+again:
   if (jpeg_bits_available(bits) < 2) {
     return FALSE;
   }
@@ -556,6 +557,12 @@ jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
   do {
     b = jpeg_bits_get_u8 (bits);
   } while (b == 0xff && jpeg_bits_error(bits));
+
+  /* Flash seems to ignore SOI and EOI markers, so we do, too */
+  if (b == JPEG_MARKER_SOI ||
+      (b == JPEG_MARKER_EOI && jpeg_bits_available (bits) > 0)) {
+    goto again;
+  }
 
   *marker = b;
   return TRUE;
@@ -580,6 +587,7 @@ jpeg_decoder_decode (JpegDecoder *dec)
 
   bits = &dec->bits;
 
+#if 0
   /* Note: The spec is ambiguous as to whether fill bytes can come
    * before the first marker.  We'll assume yes. */
   if (!jpeg_decoder_get_marker (dec, &marker)) {
@@ -589,6 +597,7 @@ jpeg_decoder_decode (JpegDecoder *dec)
     jpeg_decoder_error(dec, "not a JPEG image");
     return FALSE;
   }
+#endif
 
   /* Interpret markers up to the start of frame */
   while (!dec->error) {

@@ -381,6 +381,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
   short block2[64];
   unsigned char *newptr;
   int len;
+  int maxlen;
   int j;
   int i;
   int go;
@@ -389,11 +390,11 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
   int ret;
 
   len = 0;
+  maxlen = jpeg_bits_available (bits) - 1;
   j = 0;
-  while (1) {
-    if (bits->ptr[len] == 0xff && bits->ptr[len + 1] != 0x00) {
+  while (len < maxlen) {
+    if (bits->ptr[len] == 0xff && bits->ptr[len + 1] != 0x00)
       break;
-    }
     len++;
   }
   SWFDEC_DEBUG ("entropy length = %d", len);

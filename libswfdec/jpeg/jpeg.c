@@ -21,8 +21,6 @@
 extern uint8_t jpeg_standard_tables[];
 extern int jpeg_standard_tables_size;
 
-void jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...);
-
 void jpeg_decoder_define_huffman_tables (JpegDecoder * dec);
 void jpeg_decoder_define_arithmetic_conditioning (JpegDecoder *dec);
 void jpeg_decoder_define_quantization_tables (JpegDecoder *dec);
@@ -41,6 +39,26 @@ static void jpeg_decoder_verify_header (JpegDecoder *dec);
 static void jpeg_decoder_init_decoder (JpegDecoder *dec);
 
 
+static void
+jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
+{
+  va_list varargs;
+
+  if (dec->error) return;
+
+  dec->error_message = malloc(250);
+  va_start (varargs, fmt);
+  vsnprintf(dec->error_message, 250 - 1, fmt, varargs);
+  dec->error_message[250 - 1] = 0;
+  va_end (varargs);
+
+  dec->error = TRUE;
+}
+
+#define jpeg_decoder_error(dec, ...) { \
+  SWFDEC_ERROR("decoder error: "__VA_ARGS__); \
+  jpeg_decoder_error (dec, __VA_ARGS__); \
+}
 
 static void
 jpeg_decoder_verify_header (JpegDecoder *dec)
@@ -517,23 +535,6 @@ jpeg_decoder_free (JpegDecoder * dec)
     free (dec->data);
 
   free (dec);
-}
-
-void
-jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
-{
-  va_list varargs;
-
-  if (dec->error) return;
-
-  dec->error_message = malloc(250);
-  va_start (varargs, fmt);
-  vsnprintf(dec->error_message, 250 - 1, fmt, varargs);
-  dec->error_message[250 - 1] = 0;
-  va_end (varargs);
-
-  SWFDEC_ERROR("decoder error: %s", dec->error_message);
-  dec->error = TRUE;
 }
 
 int

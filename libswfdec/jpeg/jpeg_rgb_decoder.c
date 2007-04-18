@@ -202,7 +202,6 @@ get_argb_422v (JpegDecoder *dec)
   int halfheight;
   int j;
 
-OIL_ERROR("got here");
   tmp = malloc (4 * dec->width * dec->height);
   tmp_u = malloc (dec->width);
   tmp_v = malloc (dec->width);

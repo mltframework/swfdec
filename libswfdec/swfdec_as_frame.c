@@ -124,6 +124,16 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, thisp);
   swfdec_as_object_set (SWFDEC_AS_OBJECT (frame), SWFDEC_AS_STR_THIS, &val);
+  if (script->constant_pool) {
+    frame->constant_pool_buffer = swfdec_buffer_ref (script->constant_pool);
+    frame->constant_pool = swfdec_constant_pool_new_from_action (
+	script->constant_pool->data, script->constant_pool->length);
+    if (frame->constant_pool) {
+      swfdec_constant_pool_attach_to_context (frame->constant_pool, context);
+    } else {
+      SWFDEC_ERROR ("couldn't create constant pool");
+    }
+  }
   return frame;
 }
 

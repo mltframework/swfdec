@@ -169,6 +169,9 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 						 SwfdecAsValue *	argv,
 						 SwfdecAsValue *	return_value);
 						 
+void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
+					      	 guint			version);
+
 
 G_END_DECLS
 #endif

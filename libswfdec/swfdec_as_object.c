@@ -159,6 +159,16 @@ swfdec_as_object_new (SwfdecAsContext *context)
     return NULL;
   object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
   swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
+  if (context->Object) {
+    SwfdecAsValue val;
+    swfdec_as_object_root (object);
+    g_assert (context->Object_prototype);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+    swfdec_as_object_set (object, SWFDEC_AS_STR___proto__, &val);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
+    swfdec_as_object_set (object, SWFDEC_AS_STR_constructor, &val);
+    swfdec_as_object_unroot (object);
+  }
   return object;
 }
 
@@ -276,6 +286,11 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
     return;
+  }
+  if (SWFDEC_AS_VALUE_IS_STRING (variable)) {
+    SWFDEC_WARNING ("no such variable %s", SWFDEC_AS_VALUE_GET_STRING (variable));
+  } else {
+    SWFDEC_WARNING ("variable not found");
   }
   SWFDEC_AS_VALUE_SET_UNDEFINED (value);
 }
@@ -532,5 +547,49 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return FALSE;
   return SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&val));
+}
+
+/*** AS CODE ***/
+
+static void
+swfdec_as_object_hasOwnProperty (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecAsVariable *var = swfdec_as_object_lookup (object, &argv[0], FALSE);
+
+  if (var != NULL && (var->flags & SWFDEC_AS_VARIABLE_NATIVE) == 0)
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+  else
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+}
+
+static void
+swfdec_as_object_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+}
+
+void
+swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *object, *proto;
+
+  object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
+      SWFDEC_AS_STR_Object, swfdec_as_object_construct, 0));
+  if (!object)
+    return;
+  swfdec_as_object_root (object);
+  proto = swfdec_as_object_new (context);
+  swfdec_as_object_unroot (object);
+  if (!proto)
+    return;
+  context->Object = object;
+  context->Object_prototype = proto;
+  /* first, finish the function prototype */
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set (context->Function_prototype, SWFDEC_AS_STR___proto__, &val);
+  /* now, set our own */
+  swfdec_as_object_set (object, SWFDEC_AS_STR_prototype, &val);
+
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, swfdec_as_object_hasOwnProperty, 1);
 }
 

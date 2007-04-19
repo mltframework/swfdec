@@ -176,6 +176,8 @@ extern const char const * swfdec_as_strings[];
 #define SWFDEC_AS_STR_constructor	SWFDEC_AS_STR_CONSTANT(72)
 #define SWFDEC_AS_STR__parent		SWFDEC_AS_STR_CONSTANT(73)
 #define SWFDEC_AS_STR__root		SWFDEC_AS_STR_CONSTANT(74)
+#define SWFDEC_AS_STR_Object		SWFDEC_AS_STR_CONSTANT(75)
+#define SWFDEC_AS_STR_hasOwnProperty	SWFDEC_AS_STR_CONSTANT(76)
 
 /* all existing actions */
 typedef enum {

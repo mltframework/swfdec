@@ -231,6 +231,8 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (context->global);
   swfdec_as_object_mark (context->Function);
   swfdec_as_object_mark (context->Function_prototype);
+  swfdec_as_object_mark (context->Object);
+  swfdec_as_object_mark (context->Object_prototype);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 
@@ -241,6 +243,9 @@ swfdec_as_context_gc (SwfdecAsContext *context)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
+  /* no GC during setup */
+  if (context->state == SWFDEC_AS_CONTEXT_NEW)
+    return;
   SWFDEC_INFO ("invoking the garbage collector");
   klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
   g_assert (klass->mark);
@@ -527,6 +532,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
 
   context->version = version;
   swfdec_as_function_init_context (context, version);
+  swfdec_as_object_init_context (context, version);
   context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }
 

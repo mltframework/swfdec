@@ -62,8 +62,10 @@ struct _SwfdecAsContext {
   SwfdecAsFrame *	last_frame;   	/* last frame before calling context_run */
 
   /* magic objects - initialized during swfdec_as_context_startup() */
-  SwfdecAsObject *	Function;	/* the Function object */
-  SwfdecAsObject *	Function_prototype;	/* the Function.prototype object */
+  SwfdecAsObject *	Function;	/* Function */
+  SwfdecAsObject *	Function_prototype;	/* Function.prototype */
+  SwfdecAsObject *	Object;		/* Object */
+  SwfdecAsObject *	Object_prototype;	/* Object.prototype */
 };
 
 struct _SwfdecAsContextClass {

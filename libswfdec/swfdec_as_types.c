@@ -105,6 +105,8 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("constructor"),
   SWFDEC_AS_CONSTANT_STRING ("_parent"),
   SWFDEC_AS_CONSTANT_STRING ("_root"),
+  SWFDEC_AS_CONSTANT_STRING ("Object"),
+  SWFDEC_AS_CONSTANT_STRING ("hasOwnProperty"),
   /* add more here */
   NULL
 };

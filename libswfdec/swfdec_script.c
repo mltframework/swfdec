@@ -250,12 +250,15 @@ swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
-  if (!swfdec_script_foreach_internal (bits, validate_action, script) ||
-      (len -= swfdec_bits_left (bits) / 8) == 0) {
+  if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
     swfdec_script_unref (script);
     return NULL;
   }
-  script->buffer = swfdec_bits_get_buffer (&org, len);
+  len -= swfdec_bits_left (bits) / 8;
+  if (len)
+    script->buffer = swfdec_bits_get_buffer (&org, len);
+  else
+    script->buffer = swfdec_buffer_new ();
   return script;
 }
 

@@ -1317,6 +1317,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (args);
+    return;
   }
   if (frame->constant_pool_buffer)
     script->constant_pool = swfdec_buffer_ref (frame->constant_pool_buffer);

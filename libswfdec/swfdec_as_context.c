@@ -471,6 +471,13 @@ start:
 #endif
     /* execute action */
     spec->exec[version] (context, action, data, len);
+    /* adapt the pc if the action did not, otherwise, leave it alone */
+    /* FIXME: do this via flag? */
+    if (frame->pc == pc) {
+      frame->pc = pc = nextpc;
+    } else {
+      pc = frame->pc;
+    }
     if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT
       if (check != NULL && check != stack->cur) {
@@ -479,12 +486,6 @@ start:
 	    stack->cur - check + spec->add - spec->remove);
       }
 #endif
-      /* adapt the pc if the action did not, otherwise, leave it alone */
-      if (frame->pc == pc) {
-	frame->pc = pc = nextpc;
-      } else {
-	pc = frame->pc;
-      }
     } else {
       /* someone called/returned from a function, reread variables */
       goto start;

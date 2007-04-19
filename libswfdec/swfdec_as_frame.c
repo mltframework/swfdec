@@ -55,8 +55,11 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   guint i;
 
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
-  swfdec_as_object_mark (frame->scope);
-  swfdec_as_object_mark (frame->var_object);
+  if (frame->script) {
+    swfdec_as_object_mark (frame->scope);
+    swfdec_as_object_mark (frame->var_object);
+  }
+  swfdec_as_object_mark (frame->thisp);
   if (frame->target)
     swfdec_as_object_mark (frame->target);
   if (frame->function)
@@ -92,7 +95,6 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
 SwfdecAsFrame *
 swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
 {
-  SwfdecAsValue val;
   SwfdecAsContext *context;
   SwfdecAsFrame *frame;
   SwfdecAsStack *stack;
@@ -122,8 +124,7 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   frame->var_object = thisp;
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, thisp);
-  swfdec_as_object_set (SWFDEC_AS_OBJECT (frame), SWFDEC_AS_STR_THIS, &val);
+  frame->thisp = thisp;
   if (script->constant_pool) {
     frame->constant_pool_buffer = swfdec_buffer_ref (script->constant_pool);
     frame->constant_pool = swfdec_constant_pool_new_from_action (
@@ -156,6 +157,7 @@ swfdec_as_frame_new_native (SwfdecAsObject *thisp)
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
   frame->next = context->frame;
   context->frame = frame;
+  frame->thisp = thisp;
   return frame;
 }
 
@@ -213,3 +215,74 @@ swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
   frame->target = target;
 }
 
+void
+swfdec_as_frame_preload (SwfdecAsFrame *frame)
+{
+  SwfdecAsObject *object;
+  guint i, current_reg = 1;
+  SwfdecScript *script;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+
+  if (frame->script == NULL)
+    return;
+
+  object = SWFDEC_AS_OBJECT (frame);
+  script = frame->script;
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
+    swfdec_as_object_set (object, SWFDEC_AS_STR_THIS, &val);
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
+    SWFDEC_ERROR ("implement arguments object");
+    current_reg++;
+  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
+    SWFDEC_ERROR ("implement arguments object");
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
+    SWFDEC_ERROR ("implement super object");
+    current_reg++;
+  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
+    SWFDEC_ERROR ("implement super object");
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
+    SwfdecAsObject *obj;
+    
+    SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR__root);
+    obj = swfdec_as_frame_find_variable (frame, &val);
+    if (obj) {
+      swfdec_as_object_get_variable (obj, &val, &frame->registers[current_reg]);
+    } else {
+      SWFDEC_WARNING ("no root to preload");
+    }
+    current_reg++;
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
+    SwfdecAsObject *obj;
+    
+    SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR__parent);
+    obj = swfdec_as_frame_find_variable (frame, &val);
+    if (obj) {
+      swfdec_as_object_get_variable (obj, &val, &frame->registers[current_reg++]);
+    } else {
+      SWFDEC_WARNING ("no parentto preload");
+    }
+    current_reg++;
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], object->context->global);
+  }
+  for (i = 0; i < script->n_arguments; i++) {
+    if (script->arguments[i].preload) {
+      /* the script is responsible for ensuring this */
+      g_assert (script->arguments[i].preload < frame->n_registers);
+      frame->registers[script->arguments[i].preload] = frame->argv[i];
+    } else {
+      const char *tmp = swfdec_as_context_get_string (object->context, script->arguments[i].name);
+      swfdec_as_object_set (object, tmp, &frame->argv[i]);
+    }
+  }
+}

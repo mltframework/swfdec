@@ -386,7 +386,7 @@ start:
     goto out;
   if (frame->function && frame->function->native) {
     if (frame->argc >= frame->function->min_args) {
-      frame->function->native (frame->scope, frame->argc, frame->argv, frame->return_value);
+      frame->function->native (frame->thisp, frame->argc, frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);
     goto start;

@@ -40,6 +40,7 @@ struct _SwfdecAsFrame {
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
+  SwfdecAsObject *	thisp;		/* this object in current frame */
   /* debugging */
   char *		function_name;	/* name of function */
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
@@ -68,6 +69,7 @@ GType		swfdec_as_frame_get_type	(void);
 SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsObject *	thisp,
 						 SwfdecScript *		script);
 SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsObject *	thisp);
+void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);
 
 SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
 						 const SwfdecAsValue *	variable);

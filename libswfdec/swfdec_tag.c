@@ -38,6 +38,7 @@
 #include "swfdec_morphshape.h"
 #include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_root_sprite.h"
 #include "swfdec_script.h"
 #include "swfdec_shape.h"
@@ -262,9 +263,9 @@ tag_func_do_action (SwfdecSwfDecoder * s)
   SwfdecScript *script;
   char *name;
 
-  name = g_strdup_printf ("Sprite%u.Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
+  name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
-  script = swfdec_script_new_for_player (SWFDEC_DECODER (s)->player, &s->b, name, s->version);
+  script = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player), &s->b, name, s->version);
   g_free (name);
   if (script)
     swfdec_sprite_add_action (s->parse_sprite, SWFDEC_SPRITE_ACTION_SCRIPT, script);

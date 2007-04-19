@@ -113,12 +113,12 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
 
 /*** SUPPORT FUNCTIONS ***/
 
-static void
-swfdec_script_add_to_player (SwfdecScript *script, SwfdecPlayer *player)
+void
+swfdec_script_add_to_context (SwfdecScript *script, SwfdecAsContext *context)
 {
-  if (SWFDEC_IS_DEBUGGER (player)) {
-    swfdec_debugger_add_script (SWFDEC_DEBUGGER (player), script);
-    script->debugger = player;
+  if (SWFDEC_IS_DEBUGGER (context)) {
+    swfdec_debugger_add_script (SWFDEC_DEBUGGER (context), script);
+    script->debugger = context;
   }
 }
 
@@ -210,17 +210,17 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
 }
 
 SwfdecScript *
-swfdec_script_new_for_player (SwfdecPlayer *player, SwfdecBits *bits, 
+swfdec_script_new_for_context (SwfdecAsContext *context, SwfdecBits *bits, 
     const char *name, guint version)
 {
   SwfdecScript *script;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (bits != NULL, NULL);
 
   script = swfdec_script_new (bits, name, version);
   if (script)
-    swfdec_script_add_to_player (script, player);
+    swfdec_script_add_to_context (script, context);
   return script;
 }
 
@@ -272,6 +272,8 @@ swfdec_script_ref (SwfdecScript *script)
 void
 swfdec_script_unref (SwfdecScript *script)
 {
+  guint i;
+
   g_return_if_fail (script != NULL);
   g_return_if_fail (script->refcount > 0);
 
@@ -289,7 +291,10 @@ swfdec_script_unref (SwfdecScript *script)
   if (script->constant_pool)
     swfdec_buffer_unref (script->constant_pool);
   g_free (script->name);
-  g_free (script->preloads);
+  for (i = 0; i < script->n_arguments; i++) {
+    g_free (script->arguments[i].name);
+  }
+  g_free (script->arguments);
   g_free (script);
 }
 

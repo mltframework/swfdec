@@ -24,6 +24,7 @@
 
 #include "swfdec_root_sprite.h"
 #include "swfdec_debug.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_script.h"
 #include "swfdec_swf_decoder.h"
 
@@ -161,7 +162,7 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
     return SWFDEC_STATUS_OK;
   }
   name = g_strdup_printf ("InitAction %u", id);
-  sprite->init_action = swfdec_script_new_for_player (SWFDEC_DECODER (s)->player,
+  sprite->init_action = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player),
       bits, name, s->version);
   g_free (name);
   if (sprite->init_action) {

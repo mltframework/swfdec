@@ -28,6 +28,7 @@
 G_BEGIN_DECLS
 
 //typedef struct _SwfdecScript SwfdecScript;
+typedef struct _SwfdecScriptArgument SwfdecScriptArgument;
 typedef GPtrArray SwfdecConstantPool;
 
 typedef enum {
@@ -50,15 +51,20 @@ struct _SwfdecScript {
   /* must be first arg */
   gpointer		fun;			/* function script belongs to or NULL */
   SwfdecBuffer *	buffer;			/* buffer holding the script */
-  guint	  	refcount;		/* reference count */
+  guint		 	refcount;		/* reference count */
   char *		name;			/* name identifying this script */
   guint			version;		/* version of the script */
   guint			n_registers;		/* number of registers */
   gpointer		debugger;		/* debugger owning us or NULL */
-  /* needed by functions */
   SwfdecBuffer *	constant_pool;		/* constant pool action */
   guint			flags;			/* SwfdecScriptFlags */
-  guint8 *		preloads;		/* NULL or where to preload variables to */
+  guint			n_arguments;  		/* number of arguments */
+  SwfdecScriptArgument *arguments;		/* arguments or NULL if none */
+};
+
+struct _SwfdecScriptArgument {
+  char *		name;			/* name of the argument (not GC'ed) */
+  guint			preload;		/* preload slot to preload to or 0 */
 };
 
 const char *	swfdec_action_get_name		(guint			action);
@@ -77,10 +83,12 @@ void		swfdec_constant_pool_attach_to_context	(SwfdecConstantPool *	pool,
 SwfdecScript *	swfdec_script_new			(SwfdecBits *		bits,
 							 const char *		name,
 							 guint			version);
-SwfdecScript *	swfdec_script_new_for_player	  	(SwfdecPlayer *		player,
+SwfdecScript *	swfdec_script_new_for_context	  	(SwfdecAsContext *	context,
 							 SwfdecBits *		bits,
 							 const char *		name,
 							 guint			version);
+void		swfdec_script_add_to_context		(SwfdecScript *		script,
+							 SwfdecAsContext *	context);
 SwfdecScript *	swfdec_script_ref			(SwfdecScript *		script);
 void		swfdec_script_unref			(SwfdecScript *		script);
 

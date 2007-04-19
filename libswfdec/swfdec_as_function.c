@@ -70,6 +70,29 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 }
 
 SwfdecAsFunction *
+swfdec_as_function_do_create (SwfdecAsContext *context)
+{
+  SwfdecAsObject *fun;
+
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsFunction)))
+    return NULL;
+  fun = g_object_new (SWFDEC_TYPE_AS_FUNCTION, NULL);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsFunction));
+  if (context->Function) {
+    SwfdecAsValue val;
+    swfdec_as_object_root (fun);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
+    swfdec_as_object_set (fun, SWFDEC_AS_STR_constructor, &val);
+    g_assert (context->Function_prototype);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
+    swfdec_as_object_set (fun, SWFDEC_AS_STR___proto__, &val);
+    swfdec_as_object_unroot (fun);
+  }
+
+  return SWFDEC_AS_FUNCTION (fun);
+}
+
+SwfdecAsFunction *
 swfdec_as_function_new (SwfdecAsObject *scope)
 {
   SwfdecAsFunction *fun;
@@ -96,10 +119,9 @@ swfdec_as_function_new_native (SwfdecAsContext *context, SwfdecAsNative native,
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsFunction)))
+  fun = swfdec_as_function_do_create (context);
+  if (fun == NULL)
     return NULL;
-  fun = g_object_new (SWFDEC_TYPE_AS_FUNCTION, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsFunction));
   fun->native = native;
   fun->min_args = min_args;
 
@@ -160,14 +182,16 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_AS_STR_Function, swfdec_as_function_construct, 0));
   if (!function)
     return;
+  swfdec_as_object_root (function);
   proto = swfdec_as_object_new (context);
+  swfdec_as_object_unroot (function);
   if (!proto)
     return;
-  swfdec_as_object_root (proto);
+  context->Function = function;
+  context->Function_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set (function, SWFDEC_AS_STR___proto__, &val);
   swfdec_as_object_set (function, SWFDEC_AS_STR_prototype, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set (function, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_unroot (proto);
 }

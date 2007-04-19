@@ -228,8 +228,9 @@ swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
 static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
-  if (context->global)
-    swfdec_as_object_mark (context->global);
+  swfdec_as_object_mark (context->global);
+  swfdec_as_object_mark (context->Function);
+  swfdec_as_object_mark (context->Function_prototype);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 

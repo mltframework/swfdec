@@ -70,7 +70,7 @@ swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
   if (frame) {
     SwfdecAsValue *val;
     guint i = 0;
-    for (val = frame->stack->base; val < frame->stack->cur; val++) {
+    for (val = frame->stack->cur - 1; val >= frame->stack->base; val--) {
       /* FIXME: dangerous, this calls back into the engine */
       const char *s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (debug->manager->player), val);
       gtk_list_store_append (store, &iter);

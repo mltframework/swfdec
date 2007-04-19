@@ -46,7 +46,7 @@ struct _SwfdecAsFunction {
 
   /* for script functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */
-  SwfdecAsFrame *	scope;		/* scope this function was defined in or NULL */
+  SwfdecAsObject *	scope;		/* scope this function was defined in or NULL */
 };
 
 struct _SwfdecAsFunctionClass {
@@ -55,8 +55,7 @@ struct _SwfdecAsFunctionClass {
 
 GType			swfdec_as_function_get_type	(void);
 
-SwfdecAsFunction *	swfdec_as_function_new		(SwfdecAsFrame *	scope,
-							 SwfdecScript *		script);
+SwfdecAsFunction *	swfdec_as_function_new		(SwfdecAsObject *	scope);
 SwfdecAsFunction *	swfdec_as_function_new_native	(SwfdecAsContext *	context,
 							 SwfdecAsNative		native,
 							 guint			min_args);

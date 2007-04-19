@@ -70,21 +70,19 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new (SwfdecAsFrame *scope, SwfdecScript *script)
+swfdec_as_function_new (SwfdecAsObject *scope)
 {
   SwfdecAsFunction *fun;
   SwfdecAsContext *context;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (scope), NULL);
-  g_return_val_if_fail (script != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (scope), NULL);
 
-  context = SWFDEC_AS_OBJECT (scope)->context;
+  context = scope->context;
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsFunction)))
     return NULL;
   fun = g_object_new (SWFDEC_TYPE_AS_FUNCTION, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsFunction));
   fun->scope = scope;
-  fun->script = script;
 
   return fun;
 }
@@ -128,11 +126,6 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     n_args = 0;
   }
   SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
-  frame->argc = n_args;
-  frame->argv = args;
-  frame->return_value = return_value;
-  frame->function = function;
-  /* now do different things depending on if we're a native function or not */
   if (function->native) {
     frame = swfdec_as_frame_new_native (thisp);
     g_assert (function->name);
@@ -141,6 +134,10 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     frame = swfdec_as_frame_new (thisp, function->script);
     SWFDEC_ERROR ("do the preloading here");
   }
+  frame->argc = n_args;
+  frame->argv = args;
+  frame->return_value = return_value;
+  frame->function = function;
 }
 
 /*** AS CODE ***/

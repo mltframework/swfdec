@@ -529,9 +529,9 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
   if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 2))) {
     SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 2));
     swfdec_as_object_get_variable (o, swfdec_as_stack_peek (cx->frame->stack, 1),
-	swfdec_as_stack_peek (cx->frame->stack, 1));
+	swfdec_as_stack_peek (cx->frame->stack, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
-    if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1))) {
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 2))) {
 	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (o), s);
     }
 #endif
@@ -1226,153 +1226,120 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
   fp->sp[-1] = OBJECT_TO_JSVAL (array);
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     const guint8 *data, guint len)
 {
   const char *function_name;
-  guint i, n_args, size;
+  const char *name = NULL;
+  guint i, n_args, size, n_registers;
   SwfdecBits bits;
-  JSFunction *fun;
+  SwfdecAsFunction *fun;
+  SwfdecAsFrame *frame;
   SwfdecScript *script;
-  JSObject *scope;
-  gboolean has_preloads = FALSE;
   guint flags = 0;
-  guint8 *preloads = NULL;
+  SwfdecScriptArgument *args;
   gboolean v2 = (action == 0x8e);
 
+  frame = cx->frame;
   swfdec_bits_init_data (&bits, data, len);
   function_name = swfdec_bits_skip_string (&bits);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
-    return JS_FALSE;
+    return;
   }
-  n_args = swfdec_bits_get_u16 (&bits);
-  scope = cx->fp->scopeChain;
-  script = cx->fp->swf;
-  if (script->version == 5) {
-    /* In Flash 5 there's only the root scope as a parent scope */
-    JSObject *parent;
-    /* FIXME: this implementation is hacky (but it works) */
-    while (JS_GetClass (scope) == &js_CallClass && (parent = JS_GetParent (cx, scope)))
-      scope = parent;
-  }
-  if (*function_name == '\0') {
-    /* anonymous function */
-    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_LAMBDA | JSFUN_HEAVYWEIGHT,
-	scope, NULL);
-  } else {
-    /* named function */
-    fun = JS_NewFunction (cx, NULL, n_args, JSFUN_HEAVYWEIGHT, 
-	scope, function_name);
-  }
+  fun = swfdec_as_function_new (frame->scope);
   if (fun == NULL)
-    return JS_FALSE;
+    return;
+  n_args = swfdec_bits_get_u16 (&bits);
   if (v2) {
-    script->n_registers = swfdec_bits_get_u8 (&bits) + 1;
+    n_registers = swfdec_bits_get_u8 (&bits) + 1;
     flags = swfdec_bits_get_u16 (&bits);
-    preloads = g_new0 (guint8, n_args);
   } else {
-    script->n_registers = 5;
+    n_registers = 5;
   }
-  fun->nvars = script->n_registers;
-  for (i = 0; i < n_args; i++) {
-    JSAtom *atom;
-    const char *arg_name;
-    if (v2) {
-      guint preload = swfdec_bits_get_u8 (&bits);
-      if (preload && preload >= script->n_registers) {
-	SWFDEC_ERROR ("argument %u is preloaded into register %u out of %u", 
-	    i, preload, script->n_registers);
-	return JS_FALSE;
+  if (n_args) {
+    args = g_new0 (SwfdecScriptArgument, n_args);
+    for (i = 0; i < n_args && swfdec_bits_left (&bits); i++) {
+      if (v2) {
+	args[i].preload = swfdec_bits_get_u8 (&bits);
+	if (args[i].preload && args[i].preload >= n_registers) {
+	  SWFDEC_ERROR ("argument %u cannot be preloaded into register %u out of %u", 
+	      i, args[i].preload, n_registers);
+	  /* FIXME: figure out correct error handling here */
+	  args[i].preload = 0;
+	}
       }
-      if (preload != 0) {
-	preloads[i] = preload;
-	swfdec_bits_skip_string (&bits);
-	has_preloads = TRUE;
-	continue;
+      args[i].name = swfdec_bits_get_string (&bits);
+      if (args[i].name == NULL || args[i].name == '\0') {
+	SWFDEC_ERROR ("empty argument name not allowed");
+	g_free (args);
+	return;
       }
+      /* FIXME: check duplicate arguments */
     }
-    arg_name = swfdec_bits_skip_string (&bits);
-    if (arg_name == NULL || *arg_name == '\0') {
-      SWFDEC_ERROR ("empty argument name not allowed");
-      return JS_FALSE;
-    }
-    /* FIXME: check duplicate arguments */
-    atom = js_Atomize (cx, arg_name, strlen (arg_name), 0);
-    if (atom == NULL)
-      return JS_FALSE;
-    if (!js_AddNativeProperty (cx, fun->object, (jsid) atom,
-	js_GetArgument, js_SetArgument, SPROP_INVALID_SLOT,
-	JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED,
-	SPROP_HAS_SHORTID, i)) {
-      return JS_FALSE;
-    }
-  }
-  if (preloads && !has_preloads) {
-    g_free (preloads);
-    preloads = NULL;
+  } else {
+    args = NULL;
   }
   size = swfdec_bits_get_u16 (&bits);
   /* check the script can be created */
-  if (script->buffer->data + script->buffer->length < cx->fp->pc + 3 + len + size) {
+  if (frame->script->buffer->data + frame->script->buffer->length < frame->pc + 3 + len + size) {
     SWFDEC_ERROR ("size of function is too big");
-    return FALSE;
-  } else {
-    /* create the script */
-    const char *name = NULL;
-    SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (script->buffer, 
-	cx->fp->pc + 3 + len - script->buffer->data, size);
-    swfdec_bits_init (&bits, buffer);
-    if (*function_name) {
-      name = function_name;
-    } else if (cx->fp->sp > cx->fp->spbase) {
-      /* This is kind of a hack that uses a feature of the Adobe compiler:
-       * foo = function () {} is compiled as these actions:
-       * Push "foo", DefineFunction, SetVariable/SetMember
-       * With this knowledge we can inspect the topmost stack member, since
-       * it will contain the name this function will soon be assigned to.
-       */
-      if (JSVAL_IS_STRING (cx->fp->sp[-1]))
-	name = JS_GetStringBytes (JSVAL_TO_STRING (cx->fp->sp[-1]));
-    }
-    if (name == NULL)
-      name = "unnamed_function";
-    script = swfdec_script_new (&bits, name, ((SwfdecScript *) cx->fp->swf)->version);
-    swfdec_buffer_unref (buffer);
+    g_free (args);
+    return;
   }
+  /* create the script */
+  SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (frame->script->buffer, 
+      frame->pc + 3 + len - frame->script->buffer->data, size);
+  swfdec_bits_init (&bits, buffer);
+  if (*function_name) {
+    name = function_name;
+  } else if (swfdec_as_stack_get_size (frame->stack) > 0) {
+    /* This is kind of a hack that uses a feature of the Adobe compiler:
+     * foo = function () {} is compiled as these actions:
+     * Push "foo", DefineFunction, SetVariable/SetMember
+     * With this knowledge we can inspect the topmost stack member, since
+     * it will contain the name this function will soon be assigned to.
+     */
+    if (SWFDEC_AS_VALUE_IS_STRING (swfdec_as_stack_peek (frame->stack, 1)))
+      name = SWFDEC_AS_VALUE_GET_STRING (swfdec_as_stack_peek (frame->stack, 1));
+  }
+  if (name == NULL)
+    name = "unnamed_function";
+  script = swfdec_script_new (&bits, name, cx->version);
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
-    g_free (preloads);
-    return JS_FALSE;
+    g_free (args);
   }
-  if (cx->fp->constant_pool) {
-    script->constant_pool = swfdec_constant_pool_get_area (cx->fp->swf,
-	cx->fp->constant_pool);
-  }
+  if (frame->constant_pool_buffer)
+    script->constant_pool = swfdec_buffer_ref (frame->constant_pool_buffer);
   script->flags = flags;
-  script->preloads = preloads;
-  fun->swf = script;
-  swfdec_script_add_to_player (script, JS_GetContextPrivate (cx));
+  script->n_registers = n_registers;
+  script->n_arguments = n_args;
+  script->arguments = args;
+  fun->script = script;
+  swfdec_script_add_to_context (script, cx);
   /* attach the function */
   if (*function_name == '\0') {
-    if (cx->fp->sp >= cx->fp->spend) {
-      SWFDEC_ERROR ("not enough stack space available");
-      return JS_FALSE;
-    }
-    *cx->fp->sp++ = OBJECT_TO_JSVAL (fun->object);
+    swfdec_as_stack_ensure_left (frame->stack, 1);
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (frame->stack), SWFDEC_AS_OBJECT (fun));
   } else {
-    jsval val = OBJECT_TO_JSVAL (fun->object);
-    if (!JS_SetProperty (cx, cx->fp->varobj, function_name, &val))
-      return JS_FALSE;
+    SwfdecAsValue funval;
+    swfdec_as_object_root (SWFDEC_AS_OBJECT (fun));
+    /* FIXME: really varobj? Not eval or sth like that? */
+    function_name = swfdec_as_context_get_string (cx, function_name);
+    SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
+    swfdec_as_object_set (frame->var_object, function_name, &funval);
+    swfdec_as_object_unroot (SWFDEC_AS_OBJECT (fun));
   }
 
   /* update current context */
-  cx->fp->pc += 3 + len + size;
-  return JS_TRUE;
+  frame->pc += 3 + len + size;
 }
 
+#if 0
 static void
 swfdec_action_bitwise (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1778,7 +1745,6 @@ swfdec_action_print_set_target (guint action, const guint8 *data, guint len)
   return g_strconcat ("SetTarget ", data, NULL);
 }
 
-#if 0
 static char *
 swfdec_action_print_define_function (guint action, const guint8 *data, guint len)
 {
@@ -1822,10 +1788,9 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
     }
     if (i)
       g_string_append (string, ", ");
+    g_string_append (string, arg_name);
     if (preload)
-      g_string_append_printf (string, "PRELOAD %u", preload);
-    else
-      g_string_append (string, arg_name);
+      g_string_append_printf (string, " (%u)", preload);
   }
   g_string_append_c (string, ')');
   size = swfdec_bits_get_u16 (&bits);
@@ -1833,6 +1798,7 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
   return g_string_free (string, FALSE);
 }
 
+#if 0
 static char *
 swfdec_action_print_get_url2 (guint action, const guint8 *data, guint len)
 {
@@ -2172,9 +2138,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   /* version 4 */
   [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
-  /* version 7 */
-  [0x8e] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
 #endif
+  /* version 7 */
+  [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
   [SWFDEC_AS_ACTION_TRY] = { "Try", NULL },
   /* version 5 */
   [SWFDEC_AS_ACTION_WITH] = { "With", NULL },
@@ -2183,10 +2149,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
 #if 0
   [0x9a] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
-  /* version 5 */
-  [0x9b] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
-  /* version 4 */
 #endif
+  /* version 5 */
+  [SWFDEC_AS_ACTION_DEFINE_FUNCTION] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
+  /* version 4 */
   [SWFDEC_AS_ACTION_IF] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
   [SWFDEC_AS_ACTION_CALL] = { "Call", NULL },
   [SWFDEC_AS_ACTION_GOTO_FRAME2] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }

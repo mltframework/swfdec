@@ -277,10 +277,17 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     if (script->arguments[i].preload) {
       /* the script is responsible for ensuring this */
       g_assert (script->arguments[i].preload < frame->n_registers);
-      frame->registers[script->arguments[i].preload] = frame->argv[i];
+      if (i < frame->argc) {
+	frame->registers[script->arguments[i].preload] = frame->argv[i];
+      }
     } else {
       const char *tmp = swfdec_as_context_get_string (object->context, script->arguments[i].name);
-      swfdec_as_object_set_variable (object, tmp, &frame->argv[i]);
+      if (i < frame->argc) {
+	swfdec_as_object_set_variable (object, tmp, &frame->argv[i]);
+      } else {
+	SwfdecAsValue val = { 0, };
+	swfdec_as_object_set_variable (object, tmp, &val);
+      }
     }
   }
 }

@@ -167,7 +167,7 @@ swfdec_debugger_script_new (SwfdecScript *script)
   parser.commands = g_array_new (TRUE, FALSE, sizeof (SwfdecDebuggerCommand));
   if (script->constant_pool) {
     parser.constant_pool = swfdec_constant_pool_new_from_action (
-	script->constant_pool->data + 3, script->constant_pool->length - 3);
+	script->constant_pool->data, script->constant_pool->length);
   } else {
     parser.constant_pool = NULL;
   }

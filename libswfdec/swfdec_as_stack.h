@@ -38,11 +38,44 @@ SwfdecAsStack *	swfdec_as_stack_new		(SwfdecAsContext *	context,
 						 guint	  		n_elements);
 void		swfdec_as_stack_free		(SwfdecAsStack *	stack);
 
+//#define SWFDEC_MAD_CHECKS
+#ifdef SWFDEC_MAD_CHECKS
+#define swfdec_as_stack_peek(stack,n) (&(stack)->cur[-(gssize)(n)])
+
+static inline SwfdecAsValue *
+swfdec_as_stack_pop (SwfdecAsStack *stack)
+{
+  g_assert (stack != NULL);
+  g_assert (stack->cur > stack->base);
+
+  return --(stack)->cur;
+}
+
+static inline SwfdecAsValue *
+swfdec_as_stack_pop_n (SwfdecAsStack *stack, guint n)
+{
+  g_assert (stack != NULL);
+  g_assert ((guint) (stack->cur - stack->base) >= n);
+
+  return stack->cur -= n;
+}
+
+static inline SwfdecAsValue *
+swfdec_as_stack_push (SwfdecAsStack *stack)
+{
+  g_assert (stack != NULL);
+  g_assert (stack->cur < stack->end);
+
+  return stack->cur++;
+}
+#define swfdec_as_stack_get_size(stack) ((guint)((stack)->cur - (stack)->base))
+#else /* SWFDEC_MAD_CHECKS */
 #define swfdec_as_stack_peek(stack,n) (&(stack)->cur[-(gssize)(n)])
 #define swfdec_as_stack_pop(stack) (--(stack)->cur)
 #define swfdec_as_stack_pop_n(stack, n) ((stack)->cur -= (n))
 #define swfdec_as_stack_push(stack) ((stack)->cur++)
 #define swfdec_as_stack_get_size(stack) ((guint)((stack)->cur - (stack)->base))
+#endif
 
 void		swfdec_as_stack_mark		(SwfdecAsStack *	stack);
 void		swfdec_as_stack_ensure_size	(SwfdecAsStack *	stack,

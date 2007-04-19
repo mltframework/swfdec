@@ -38,7 +38,7 @@ typedef struct _SwfdecAsVariable SwfdecAsVariable;
 typedef void (* SwfdecAsVariableSetter) (SwfdecAsObject *object, const SwfdecAsValue *value);
 typedef void (* SwfdecAsVariableGetter) (SwfdecAsObject *object, SwfdecAsValue *value);
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
-    const SwfdecAsValue *variable, SwfdecAsVariable *value, gpointer data);
+    const char *variable, SwfdecAsVariable *value, gpointer data);
 
 struct _SwfdecAsVariable {
   guint			flags;		/* SwfdecAsVariableFlag values */
@@ -82,11 +82,11 @@ struct _SwfdecAsObjectClass {
   void			(* mark)		(SwfdecAsObject *	object);
   /* get the place that holds a variable or return NULL */
   SwfdecAsVariable *	(* get)			(SwfdecAsObject *       object,
-						 const SwfdecAsValue *	variable,
+						 const char *		variable,
 						 gboolean		create);
   /* delete the variable - it does exists */
   void			(* delete)		(SwfdecAsObject *       object,
-						 const SwfdecAsValue *	variable);
+						 const char *		variable);
   /* call with every variable until func returns FALSE */
   gboolean		(* foreach)		(SwfdecAsObject *	object,
 						 SwfdecAsVariableForeach func,
@@ -107,48 +107,26 @@ void		swfdec_as_object_unroot	  	(SwfdecAsObject *     	object);
 /* I'd like to name these [gs]et_property, but binding authors will complain
  * about overlap with g_object_[gs]et_property then */
 void		swfdec_as_object_set_variable	(SwfdecAsObject *	object,
-						 const SwfdecAsValue *	variable,
+						 const char *		variable,
 						 const SwfdecAsValue *	value);
 void		swfdec_as_object_get_variable	(SwfdecAsObject *	object,
-						 const SwfdecAsValue *	variable,
+						 const char *		variable,
 						 SwfdecAsValue *	value);
 void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
-						 const SwfdecAsValue *	variable);
+						 const char *		variable);
 SwfdecAsObject *swfdec_as_object_find_variable	(SwfdecAsObject *	object,
-						 const SwfdecAsValue *	variable);
+						 const char *		variable);
 void		swfdec_as_object_set_variable_flags
 						(SwfdecAsObject *       object,
-						 const SwfdecAsValue *	variable,
+						 const char *		variable,
 						 SwfdecAsVariableFlag	flags);
 void		swfdec_as_object_unset_variable_flags
 						(SwfdecAsObject *       object,
-						 const SwfdecAsValue *	variable,
+						 const char *		variable,
 						 SwfdecAsVariableFlag	flags);
 gboolean	swfdec_as_object_foreach	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);
-
-/* shortcuts, you probably don't want to bind them */
-#define swfdec_as_object_set(object, name, value) G_STMT_START { \
-  SwfdecAsValue __variable; \
-  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
-  swfdec_as_object_set_variable ((object), &__variable, (value)); \
-}G_STMT_END
-#define swfdec_as_object_get(object, name, value) G_STMT_START { \
-  SwfdecAsValue __variable; \
-  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
-  swfdec_as_object_get_variable ((object), &__variable, (value)); \
-}G_STMT_END
-#define swfdec_as_object_set_flags(object, name, flags) G_STMT_START { \
-  SwfdecAsValue __variable; \
-  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
-  swfdec_as_object_set_variable_flags ((object), &__variable, (flags)); \
-}G_STMT_END
-#define swfdec_as_object_unset_flags(object, name, flags) G_STMT_START { \
-  SwfdecAsValue __variable; \
-  SWFDEC_AS_VALUE_SET_STRING (&__variable, (name)); \
-  swfdec_as_object_set_variable_flags ((object), &__variable, (flags)); \
-}G_STMT_END
 
 SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 const char *		name,

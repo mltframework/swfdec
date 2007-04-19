@@ -491,7 +491,7 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
     g_free (name);
     SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (as->context, value));
     g_free (value);
-    swfdec_as_object_set (as, asname, &val);
+    swfdec_as_object_set_variable (as, asname, &val);
     SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
     if (*variables == '\0')
       break;

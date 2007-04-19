@@ -64,10 +64,12 @@ swfdec_amf_parse_properties (SwfdecAsContext *context, SwfdecBits *bits, SwfdecA
   /* need to root here due to GC */
   swfdec_as_object_root (object);
   while (swfdec_bits_left (bits)) {
-    SwfdecAsValue id, val;
+    SwfdecAsValue val;
+    const char *name;
 
-    if (!swfdec_amf_parse_string (context, bits, &id))
+    if (!swfdec_amf_parse_string (context, bits, &val))
       return FALSE;
+    name = SWFDEC_AS_VALUE_GET_STRING (&val);
     type = swfdec_bits_get_u8 (bits);
     if (type == SWFDEC_AMF_END_OBJECT)
       break;
@@ -76,11 +78,11 @@ swfdec_amf_parse_properties (SwfdecAsContext *context, SwfdecBits *bits, SwfdecA
       SWFDEC_ERROR ("no parse func for AMF type %u", type);
       goto error;
     }
-    swfdec_as_object_set_variable (object, &id, &id); /* GC... */
+    swfdec_as_object_set_variable (object, name, &val); /* GC... */
     if (!func (context, bits, &val)) {
       goto error;
     }
-    swfdec_as_object_set_variable (object, &id, &val); /* GC... */
+    swfdec_as_object_set_variable (object, name, &val);
   }
   /* no more bytes seems to end automatically */
   swfdec_as_object_unroot (object);

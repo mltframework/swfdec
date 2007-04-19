@@ -72,7 +72,7 @@ SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsObject *	thisp);
 void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);
 
 SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
-						 const SwfdecAsValue *	variable);
+						 const char *		variable);
 
 void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	target);

@@ -162,13 +162,13 @@ swfdec_as_frame_new_native (SwfdecAsObject *thisp)
 }
 
 SwfdecAsObject *
-swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const SwfdecAsValue *variable)
+swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
 {
   SwfdecAsObject *cur, *ret = NULL;
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (variable), NULL);
+  g_return_val_if_fail (variable != NULL, NULL);
 
   cur = SWFDEC_AS_OBJECT (frame);
   for (i = 0; i < 256 && frame != NULL; i++) {
@@ -234,7 +234,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
   } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
-    swfdec_as_object_set (object, SWFDEC_AS_STR_THIS, &val);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_THIS, &val);
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
     SWFDEC_ERROR ("implement arguments object");
@@ -251,10 +251,9 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
     SwfdecAsObject *obj;
     
-    SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR__root);
-    obj = swfdec_as_frame_find_variable (frame, &val);
+    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__root);
     if (obj) {
-      swfdec_as_object_get_variable (obj, &val, &frame->registers[current_reg]);
+      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__root, &frame->registers[current_reg]);
     } else {
       SWFDEC_WARNING ("no root to preload");
     }
@@ -263,10 +262,9 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
     SwfdecAsObject *obj;
     
-    SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR__parent);
-    obj = swfdec_as_frame_find_variable (frame, &val);
+    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__parent);
     if (obj) {
-      swfdec_as_object_get_variable (obj, &val, &frame->registers[current_reg++]);
+      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__parent, &frame->registers[current_reg++]);
     } else {
       SWFDEC_WARNING ("no parentto preload");
     }
@@ -282,7 +280,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       frame->registers[script->arguments[i].preload] = frame->argv[i];
     } else {
       const char *tmp = swfdec_as_context_get_string (object->context, script->arguments[i].name);
-      swfdec_as_object_set (object, tmp, &frame->argv[i]);
+      swfdec_as_object_set_variable (object, tmp, &frame->argv[i]);
     }
   }
 }

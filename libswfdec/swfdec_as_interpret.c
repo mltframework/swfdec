@@ -486,7 +486,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't GetProperty");
     goto out;
   }
-  swfdec_as_object_get (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
+  swfdec_as_object_get_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
       swfdec_as_stack_peek (cx->frame->stack, 1));
   return;
 
@@ -516,7 +516,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't get SetProperty");
     goto out;
   }
-  swfdec_as_object_set (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
+  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
       swfdec_as_stack_peek (cx->frame->stack, 3));
 out:
   swfdec_as_stack_pop_n (cx->frame->stack, 3);
@@ -527,9 +527,10 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
 {
   /* FIXME: do we need a "convert to object" function here? */
   if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 2))) {
+    const char *name;
     SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 2));
-    swfdec_as_object_get_variable (o, swfdec_as_stack_peek (cx->frame->stack, 1),
-	swfdec_as_stack_peek (cx->frame->stack, 2));
+    name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+    swfdec_as_object_get_variable (o, name, swfdec_as_stack_peek (cx->frame->stack, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 2))) {
 	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (o), s);
@@ -545,8 +546,9 @@ static void
 swfdec_action_set_member (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 3))) {
+    const char *name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
     swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 3)),
-	swfdec_as_stack_peek (cx->frame->stack, 2), swfdec_as_stack_peek (cx->frame->stack, 1));
+	name, swfdec_as_stack_peek (cx->frame->stack, 1));
   }
   swfdec_as_stack_pop_n (cx->frame->stack, 3);
 }
@@ -606,14 +608,15 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsFrame *frame = cx->frame;
   SwfdecAsObject *obj;
   guint n_args;
+  const char *name;
   
   swfdec_as_stack_ensure_size (frame->stack, 2);
-  obj = swfdec_as_frame_find_variable (frame, swfdec_as_stack_peek (frame->stack, 1));
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (frame->stack, 2));
+  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (frame->stack, 1));
+  obj = swfdec_as_frame_find_variable (frame, name);
   if (obj) {
     SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
-    swfdec_as_object_get_variable (obj, swfdec_as_stack_peek (frame->stack, 1), 
-	swfdec_as_stack_peek (frame->stack, 1));
+    swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (frame->stack, 1));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 2));
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 1));
@@ -632,23 +635,25 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   swfdec_as_stack_ensure_size (frame->stack, 3);
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (frame->stack, 2));
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (frame->stack, 3));
-  val = swfdec_as_stack_pop (frame->stack);
+  val = swfdec_as_stack_peek (frame->stack, 1);
   /* FIXME: this is a hack for constructtors calling super - is this correct? */
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
   }
   if (obj) {
-    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 3), obj);
     if (SWFDEC_AS_VALUE_IS_STRING (val) && 
 	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
-      SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 1), obj);
+      SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
     } else {
-      swfdec_as_object_get_variable (obj, val, swfdec_as_stack_peek (frame->stack, 1));
+      const char *name = swfdec_as_value_to_string (cx, val);
+      swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (frame->stack, 2));
     }
   } else {
-    SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 2));
-    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 1));
+    SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 3));
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 2));
   }
+  swfdec_as_stack_pop (frame->stack);
   swfdec_action_call (cx, n_args);
 }
 
@@ -1331,7 +1336,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     /* FIXME: really varobj? Not eval or sth like that? */
     function_name = swfdec_as_context_get_string (cx, function_name);
     SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
-    swfdec_as_object_set (frame->var_object, function_name, &funval);
+    swfdec_as_object_set_variable (frame->var_object, function_name, &funval);
     swfdec_as_object_unroot (SWFDEC_AS_OBJECT (fun));
   }
 
@@ -1658,7 +1663,7 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 #endif
 
 static gboolean
-swfdec_action_do_enumerate (SwfdecAsObject *object, const SwfdecAsValue *val,
+swfdec_action_do_enumerate (SwfdecAsObject *object, const char *val,
     SwfdecAsVariable *var, gpointer stackp)
 {
   SwfdecAsStack *stack = stackp;
@@ -1666,7 +1671,7 @@ swfdec_action_do_enumerate (SwfdecAsObject *object, const SwfdecAsValue *val,
   if (var->flags | SWFDEC_AS_VARIABLE_DONT_ENUM)
     return TRUE;
   swfdec_as_stack_ensure_left (stack, 1);
-  *swfdec_as_stack_push (stack) = *val;
+  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), val);
   return TRUE;
 }
 

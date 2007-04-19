@@ -588,14 +588,12 @@ swfdec_as_context_eval_get_property (SwfdecAsContext *cx,
     SwfdecAsObject *obj, const char *name, SwfdecAsValue *ret)
 {
   if (obj) {
-    swfdec_as_object_get (obj, name, ret);
+    swfdec_as_object_get_variable (obj, name, ret);
   } else {
-    SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_STRING (&val, name);
     if (cx->frame) {
-      obj = swfdec_as_frame_find_variable (cx->frame, &val);
+      obj = swfdec_as_frame_find_variable (cx->frame, name);
       if (obj) {
-	swfdec_as_object_get_variable (obj, &val, ret);
+	swfdec_as_object_get_variable (obj, name, ret);
 	return;
       }
     } else {
@@ -610,17 +608,15 @@ swfdec_as_context_eval_set_property (SwfdecAsContext *cx,
     SwfdecAsObject *obj, const char *name, const SwfdecAsValue *ret)
 {
   if (obj == NULL) {
-    SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_STRING (&val, name);
     if (cx->frame == NULL) {
       SWFDEC_ERROR ("no frame in eval_set?");
       return;
     }
-    obj = swfdec_as_frame_find_variable (cx->frame, &val);
+    obj = swfdec_as_frame_find_variable (cx->frame, name);
     if (obj == NULL)
       obj = cx->frame->var_object;
   }
-  swfdec_as_object_set (obj, name, ret);
+  swfdec_as_object_set_variable (obj, name, ret);
 }
 
 static void
@@ -662,7 +658,7 @@ swfdec_as_context_eval_internal (SwfdecAsContext *cx, SwfdecAsObject *obj, const
     }
   }
   if (obj == NULL && cx->frame) {
-    swfdec_as_object_get (SWFDEC_AS_OBJECT (cx->frame), SWFDEC_AS_STR_THIS, &cur);
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cx->frame), SWFDEC_AS_STR_THIS, &cur);
   } else {
     SWFDEC_AS_VALUE_SET_OBJECT (&cur, obj);
   }

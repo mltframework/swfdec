@@ -41,9 +41,9 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
     return;
   SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   SWFDEC_AS_VALUE_SET_STRING (&val, code);
-  swfdec_as_object_set (object, SWFDEC_AS_STR_CODE, &val);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_CODE, &val);
   SWFDEC_AS_VALUE_SET_STRING (&val, level);
-  swfdec_as_object_set (object, SWFDEC_AS_STR_LEVEL, &val);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_LEVEL, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_ON_STATUS, 1, &val, NULL);

@@ -67,12 +67,12 @@ swfdec_connection_onstatus (SwfdecConnection *conn, const char *code,
     return;
   swfdec_as_object_root (info);
   SWFDEC_AS_VALUE_SET_STRING (&value, code);
-  swfdec_as_object_set (info, SWFDEC_AS_STR_CODE, &value);
+  swfdec_as_object_set_variable (info, SWFDEC_AS_STR_CODE, &value);
   SWFDEC_AS_VALUE_SET_STRING (&value, level);
-  swfdec_as_object_set (info, SWFDEC_AS_STR_LEVEL, &value);
+  swfdec_as_object_set_variable (info, SWFDEC_AS_STR_LEVEL, &value);
   if (description) {
     SWFDEC_AS_VALUE_SET_STRING (&value, description);
-    swfdec_as_object_set (info, SWFDEC_AS_STR_DESCRIPTION, &value);
+    swfdec_as_object_set_variable (info, SWFDEC_AS_STR_DESCRIPTION, &value);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&value, info);
   swfdec_as_object_unroot (info);

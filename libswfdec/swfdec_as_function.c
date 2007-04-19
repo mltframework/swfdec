@@ -82,10 +82,10 @@ swfdec_as_function_do_create (SwfdecAsContext *context)
     SwfdecAsValue val;
     swfdec_as_object_root (fun);
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-    swfdec_as_object_set (fun, SWFDEC_AS_STR_constructor, &val);
+    swfdec_as_object_set_variable (fun, SWFDEC_AS_STR_constructor, &val);
     g_assert (context->Function_prototype);
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
-    swfdec_as_object_set (fun, SWFDEC_AS_STR___proto__, &val);
+    swfdec_as_object_set_variable (fun, SWFDEC_AS_STR___proto__, &val);
     swfdec_as_object_unroot (fun);
   }
 
@@ -190,8 +190,8 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   context->Function = function;
   context->Function_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set (function, SWFDEC_AS_STR___proto__, &val);
-  swfdec_as_object_set (function, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable (function, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable (function, SWFDEC_AS_STR_prototype, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
-  swfdec_as_object_set (function, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable (function, SWFDEC_AS_STR_constructor, &val);
 }

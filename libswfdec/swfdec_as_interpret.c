@@ -563,6 +563,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 }
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
+/* stack must be at least 2 elements big */
 static void
 swfdec_action_call (SwfdecAsContext *cx, guint n_args)
 {
@@ -580,6 +581,9 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
     goto error;
   thisp = SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (frame->stack, 2));
   swfdec_as_stack_pop_n (frame->stack, 2);
+  /* sanitize argument count */
+  if (n_args > swfdec_as_stack_get_size (frame->stack))
+    n_args = swfdec_as_stack_get_size (frame->stack);
   /* swap arguments on the stack */
   /* FIXME: can we somehow keep this order please, it might be interesting for debuggers */
   for (i = 0; i < n_args / 2; i++) {
@@ -598,7 +602,8 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
 
 error:
   n_args += 2;
-  n_args = MIN (n_args, swfdec_as_stack_get_size (frame->stack));
+  if (n_args > swfdec_as_stack_get_size (frame->stack))
+    n_args = swfdec_as_stack_get_size (frame->stack);
   swfdec_as_stack_pop_n (frame->stack, n_args);
 }
 

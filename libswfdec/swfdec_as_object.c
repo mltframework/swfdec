@@ -283,7 +283,7 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
     return;
   }
-  SWFDEC_WARNING ("no such variable %s", variable);
+  //SWFDEC_WARNING ("no such variable %s", variable);
   SWFDEC_AS_VALUE_SET_UNDEFINED (value);
 }
 

@@ -1,4 +1,19 @@
 
+ 0.4.4 ()
+
+This is a stability release. The number of new supported Flash features
+is limited.
+- add initial support for some tags from Flash 8 (in particular 
+  DefineShape4 and PlaceObject3)
+- audio and video can now be decoded with GStreamer
+- add new API in the form of libswfdec-gtk for people that want to 
+  include Swfdec in their applications
+- improve the JPEG decoding code (less crashy, more JPEGs decoded)
+- throw zzuf (http://sam.zoy.org/zzuf/) at Swfdec and fix exposed
+  issues
+- various fixes that make writing bindings simpler
+- lots of bugs fixed, including: 10551, 10629
+
  0.4.3 ("Your tube")
 
 This release can play Youtube video. While this alone is enough for a 

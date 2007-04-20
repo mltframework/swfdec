@@ -21,8 +21,6 @@
 extern uint8_t jpeg_standard_tables[];
 extern int jpeg_standard_tables_size;
 
-void jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...);
-
 void jpeg_decoder_define_huffman_tables (JpegDecoder * dec);
 void jpeg_decoder_define_arithmetic_conditioning (JpegDecoder *dec);
 void jpeg_decoder_define_quantization_tables (JpegDecoder *dec);
@@ -41,6 +39,26 @@ static void jpeg_decoder_verify_header (JpegDecoder *dec);
 static void jpeg_decoder_init_decoder (JpegDecoder *dec);
 
 
+static void
+jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
+{
+  va_list varargs;
+
+  if (dec->error) return;
+
+  dec->error_message = malloc(250);
+  va_start (varargs, fmt);
+  vsnprintf(dec->error_message, 250 - 1, fmt, varargs);
+  dec->error_message[250 - 1] = 0;
+  va_end (varargs);
+
+  dec->error = TRUE;
+}
+
+#define jpeg_decoder_error(dec, ...) { \
+  SWFDEC_ERROR("decoder error: "__VA_ARGS__); \
+  jpeg_decoder_error (dec, __VA_ARGS__); \
+}
 
 static void
 jpeg_decoder_verify_header (JpegDecoder *dec)
@@ -381,6 +399,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
   short block2[64];
   unsigned char *newptr;
   int len;
+  int maxlen;
   int j;
   int i;
   int go;
@@ -389,11 +408,11 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
   int ret;
 
   len = 0;
+  maxlen = jpeg_bits_available (bits) - 1;
   j = 0;
-  while (1) {
-    if (bits->ptr[len] == 0xff && bits->ptr[len + 1] != 0x00) {
+  while (len < maxlen) {
+    if (bits->ptr[len] == 0xff && bits->ptr[len + 1] != 0x00)
       break;
-    }
     len++;
   }
   SWFDEC_DEBUG ("entropy length = %d", len);
@@ -518,29 +537,13 @@ jpeg_decoder_free (JpegDecoder * dec)
   free (dec);
 }
 
-void
-jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
-{
-  va_list varargs;
-
-  if (dec->error) return;
-
-  dec->error_message = malloc(250);
-  va_start (varargs, fmt);
-  vsnprintf(dec->error_message, 250 - 1, fmt, varargs);
-  dec->error_message[250 - 1] = 0;
-  va_end (varargs);
-
-  SWFDEC_ERROR("decoder error: %s", dec->error_message);
-  dec->error = TRUE;
-}
-
 int
 jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
 {
   int a,b;
   JpegBits *bits = &dec->bits;
 
+again:
   if (jpeg_bits_available(bits) < 2) {
     return FALSE;
   }
@@ -554,6 +557,12 @@ jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
   do {
     b = jpeg_bits_get_u8 (bits);
   } while (b == 0xff && jpeg_bits_error(bits));
+
+  /* Flash seems to ignore SOI and EOI markers, so we do, too */
+  if (b == JPEG_MARKER_SOI ||
+      (b == JPEG_MARKER_EOI && jpeg_bits_available (bits) > 0)) {
+    goto again;
+  }
 
   *marker = b;
   return TRUE;
@@ -578,6 +587,7 @@ jpeg_decoder_decode (JpegDecoder *dec)
 
   bits = &dec->bits;
 
+#if 0
   /* Note: The spec is ambiguous as to whether fill bytes can come
    * before the first marker.  We'll assume yes. */
   if (!jpeg_decoder_get_marker (dec, &marker)) {
@@ -587,6 +597,7 @@ jpeg_decoder_decode (JpegDecoder *dec)
     jpeg_decoder_error(dec, "not a JPEG image");
     return FALSE;
   }
+#endif
 
   /* Interpret markers up to the start of frame */
   while (!dec->error) {

@@ -140,47 +140,23 @@ swfdec_jpeg_decode_argb (unsigned char *data1, int length1,
     unsigned char *data2, int length2,
     void *outdata, int *width, int *height)
 {
-  unsigned char *tmpdata;
-  int tmplength;
   gboolean ret;
 
-  while (length1 >= 2 && data1[0] == 0xff &&
-      (data1[1] == 0xd9 || data1[1] == 0xd8)) {
-    data1 += 2;
-    length1 -= 2;
-  }
-  while (length1 >= 2 && data1[length1-2] == 0xff &&
-      (data1[length1-1] == 0xd9 || data1[length1-1] == 0xd8)) {
-    length1 -= 2;
-  }
-
   if (data2) {
-    while (length2 >= 2 && data2[0] == 0xff &&
-        (data2[1] == 0xd9 || data2[1] == 0xd8)) {
-      data2 += 2;
-      length2 -= 2;
-    }
-    while (length2 >= 2 && data2[length2-2] == 0xff &&
-        (data2[length2-1] == 0xd9 || data2[length2-1] == 0xd8)) {
-      length2 -= 2;
-    }
+    unsigned char *tmpdata;
+    int tmplength;
+
+    tmplength = length1 + length2;
+    tmpdata = g_malloc (tmplength);
+
+    memcpy (tmpdata, data1, length1);
+    memcpy (tmpdata + length1, data2, length2);
+    ret = jpeg_decode_argb (tmpdata, tmplength, outdata, width, height);
+
+    g_free (tmpdata);
   } else {
-    length2 = 0;
+    ret = jpeg_decode_argb (data1, length1, outdata, width, height);
   }
-
-  tmplength = length1 + length2 + 4;
-  tmpdata = g_malloc (tmplength);
-
-  tmpdata[0] = 0xff;
-  tmpdata[1] = 0xd8;
-  memcpy (tmpdata + 2, data1, length1);
-  memcpy (tmpdata + 2 + length1, data2, length2);
-  tmpdata[2 + length1 + length2] = 0xff;
-  tmpdata[2 + length1 + length2 + 1] = 0xd9;
-
-  ret = jpeg_decode_argb (tmpdata, tmplength, outdata, width, height);
-
-  g_free(tmpdata);
 
   return ret;
 }

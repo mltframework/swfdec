@@ -33,6 +33,7 @@ struct _SwfdecBuffer
   unsigned char *data;
   guint length;
 
+  /*< private >*/
   int ref_count;
 
   SwfdecBuffer *parent;
@@ -46,6 +47,7 @@ GType swfdec_buffer_get_type  (void);
 
 struct _SwfdecBufferQueue
 {
+  /*< private >*/
   GList *buffers;
   guint depth;
   guint offset;
@@ -68,8 +70,8 @@ void swfdec_buffer_unref (SwfdecBuffer * buffer);
 
 SwfdecBufferQueue *swfdec_buffer_queue_new (void);
 void swfdec_buffer_queue_clear (SwfdecBufferQueue *queue);
-int swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue);
-int swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
+guint swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue);
+guint swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_push (SwfdecBufferQueue * queue,
     SwfdecBuffer * buffer);
 SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length);

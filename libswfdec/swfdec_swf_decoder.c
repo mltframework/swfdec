@@ -238,11 +238,11 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       break;
     case SWFDEC_STATE_PARSETAG:
     {
-      int header_length;
-      int x;
+      guint header_length;
+      guint x;
       SwfdecTagFunc *func;
-      int tag;
-      int tag_len;
+      guint tag;
+      guint tag_len;
 
       if (!swfdec_swf_decoder_deflate_all (s))
 	return SWFDEC_STATUS_ERROR;

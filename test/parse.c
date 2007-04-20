@@ -28,13 +28,13 @@
 int
 main (int argc, char *argv[])
 {
-  char *fn = "it.swf";
   SwfdecPlayer *player;
 
   swfdec_init ();
 
-  if(argc>=2){
-	fn = argv[1];
+  if (argc < 2){
+    g_print ("usage: %s FILENAME\n", argv[0]);
+    return 0;
   }
 
   player = swfdec_player_new_from_file (argv[1]);

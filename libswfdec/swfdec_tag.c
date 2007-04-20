@@ -195,7 +195,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   int id;
   SwfdecSprite *sprite;
   int ret;
-  guint tag;
+  guint tag = 1;
 
   parse = s->b;
 
@@ -209,7 +209,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (&parse), SWFDEC_DECODER (s)->rate);
 
   s->parse_sprite = sprite;
-  do {
+  while (tag != 0 && s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
     int x;
     guint tag_len;
     SwfdecTagFunc *func;
@@ -246,7 +246,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
       }
     }
 
-  } while (tag != 0);
+  }
 
   s->b = parse;
   /* this assumes that no recursive DefineSprite happens and we check it doesn't */

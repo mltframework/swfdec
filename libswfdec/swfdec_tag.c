@@ -221,7 +221,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
       tag_len = swfdec_bits_get_u32 (&parse);
     }
     SWFDEC_INFO ("sprite parsing at %td, tag %d %s, length %d",
-        parse.ptr - parse.buffer->data, tag,
+        parse.buffer ? parse.ptr - parse.buffer->data : 0, tag,
         swfdec_swf_decoder_get_tag_name (tag), tag_len);
 
     if (tag_len == 0) {

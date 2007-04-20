@@ -36,6 +36,17 @@
  * @title: SwfdecBuffer
  * @short_description: memory region handling
  *
+ * This section describes how memory is to be handled when interacting with the 
+ * Swfdec library. Memory regions are refcounted and passed using a 
+ * #SwfdecBuffer. If large memory segments need to be handled that may span
+ * multiple buffers, Swfdec uses a #SwfdecBufferQueue.
+ */
+
+/*** SwfdecBuffer ***/
+
+/**
+ * SwfdecBuffer:
+ *
  * To allow for easy sharing of memory regions, #SwfdecBuffer was created. 
  * Every buffer refers to a memory region and its size and takes care of 
  * freeing that region when the buffer is no longer needed. They are 
@@ -44,14 +55,7 @@
  * functionalities like extracting parts of the buffer using 
  * swfdec_buffer_new_subbuffer() or using mmapped files with 
  * swfdec_buffer_new_from_file() without the need for a different API.
- *
- * A #SwfdecBufferQueue is a queue of continuous buffers that allows reading
- * its data in chunks of pre-defined sizes. It is used to transform a data 
- * stream that was provided by buffers of random sizes to buffers of the right
- * size.
  */
-
-/*** SwfdecBuffer ***/
 
 /**
  * SWFDEC_TYPE_BUFFER:
@@ -288,6 +292,15 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
 }
 
 /*** SwfdecBufferQueue ***/
+
+/**
+ * SwfdecBufferQueue:
+ *
+ * A #SwfdecBufferQueue is a queue of continuous buffers that allows reading
+ * its data in chunks of pre-defined sizes. It is used to transform a data 
+ * stream that was provided by buffers of random sizes to buffers of the right
+ * size.
+ */
 
 /**
  * SWFDEC_TYPE_BUFFER_QUEUE:

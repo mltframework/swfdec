@@ -69,7 +69,7 @@ if test "$HAVE_GLIB" = "no"; then
 fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_REQUIRES)
+AC_SUBST(GLIB_VER)
 dnl FIXME: detect these executables correctly
 GLIB_GENMARSHAL=glib-genmarshal
 AC_SUBST(GLIB_GENMARSHAL)
@@ -92,17 +92,17 @@ AC_ARG_ENABLE(gtk,
 dnl 
 dnl GTK: We want this for swfdec-gtk
 dnl
-GTK_REQUIRES=2.8.0
-AC_SUBST(GTK_REQUIRES)
+GTK_VER=2.8.0
+AC_SUBST(GTK_VER)
 if test "$enable_gtk" = "yes"; then
-	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRES, HAVE_GTK=yes, HAVE_GTK=no)
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
 	if test "$HAVE_GTK" = "no"; then
 	  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
 	fi
 	if test "x$HAVE_GTK" = xyes; then
 	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_REQUIRES])
+	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_VER])
 	fi
 else
 	AC_MSG_WARN([*** Gtk support was not enabled. ***])

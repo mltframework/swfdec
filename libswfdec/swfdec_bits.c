@@ -585,11 +585,15 @@ swfdec_bits_get_gradient (SwfdecBits * bits)
   n_gradients = swfdec_bits_get_u8 (bits);
   grad = g_malloc (sizeof (SwfdecGradient) +
       sizeof (SwfdecGradientEntry) * (n_gradients - 1));
-  grad->n_gradients = n_gradients;
-  for (i = 0; i < n_gradients; i++) {
+  for (i = 0; i < n_gradients && swfdec_bits_left (bits); i++) {
     grad->array[i].ratio = swfdec_bits_get_u8 (bits);
     grad->array[i].color = swfdec_bits_get_color (bits);
   }
+  if (i < n_gradients) {
+    SWFDEC_ERROR ("not enough data for %u gradients, could only read %u",
+	n_gradients, i);
+  }
+  grad->n_gradients = i;
   return grad;
 }
 
@@ -602,11 +606,15 @@ swfdec_bits_get_gradient_rgba (SwfdecBits * bits)
   n_gradients = swfdec_bits_get_u8 (bits);
   grad = g_malloc (sizeof (SwfdecGradient) +
       sizeof (SwfdecGradientEntry) * (n_gradients - 1));
-  grad->n_gradients = n_gradients;
-  for (i = 0; i < n_gradients; i++) {
+  for (i = 0; i < n_gradients && swfdec_bits_left (bits); i++) {
     grad->array[i].ratio = swfdec_bits_get_u8 (bits);
     grad->array[i].color = swfdec_bits_get_rgba (bits);
   }
+  if (i < n_gradients) {
+    SWFDEC_ERROR ("not enough data for %u gradients, could only read %u",
+	n_gradients, i);
+  }
+  grad->n_gradients = i;
   return grad;
 }
 
@@ -620,11 +628,15 @@ swfdec_bits_get_morph_gradient (SwfdecBits * bits)
   n_gradients *= 2;
   grad = g_malloc (sizeof (SwfdecGradient) +
       sizeof (SwfdecGradientEntry) * (n_gradients - 1));
-  grad->n_gradients = n_gradients;
-  for (i = 0; i < n_gradients; i++) {
+  for (i = 0; i < n_gradients && swfdec_bits_left (bits); i++) {
     grad->array[i].ratio = swfdec_bits_get_u8 (bits);
     grad->array[i].color = swfdec_bits_get_rgba (bits);
   }
+  if (i < n_gradients) {
+    SWFDEC_ERROR ("not enough data for %u gradients, could only read %u",
+	n_gradients, i);
+  }
+  grad->n_gradients = i;
   return grad;
 }
 

@@ -10,6 +10,8 @@ CLEANFILES = swfdec_playback.c
 
 lib_LTLIBRARIES = libswfdec-gtk-@SWFDEC_MAJORMINOR@.la
 
+js_cflags = -I$(srcdir)/js/ -I$(top_builddir)/libswfdec/js -DXP_UNIX -DDEBUG
+
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_playback.c \
 	swfdec_source.c \
@@ -22,7 +24,8 @@ noinst_HEADERS = \
 	swfdec_source.h
 
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
-	$(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) $(AUDIO_CFLAGS) $(GNOMEVFS_CFLAGS) \
+	-I$(top_srcdir) $(js_cflags) $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) \
+	$(AUDIO_CFLAGS) $(GNOMEVFS_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Swfdec-Gtk\" -DXP_UNIX
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(SWFDEC_LIBVERSION) \

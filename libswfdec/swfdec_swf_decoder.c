@@ -114,23 +114,28 @@ swfdec_swf_decoder_deflate_all (SwfdecSwfDecoder * s)
   return TRUE;
 }
 
-static void
+static gboolean
 swf_inflate_init (SwfdecSwfDecoder * s)
 {
   SwfdecDecoder *dec = SWFDEC_DECODER (s);
   z_stream *z;
   int ret;
+  guint8 *data;
 
+  data = g_try_malloc (dec->bytes_total - 8);
+  if (data == NULL)
+    return FALSE;
+  s->uncompressed_buffer = swfdec_buffer_new_for_data (data, dec->bytes_total - 8);
   z = &s->z;
   z->zalloc = zalloc;
   z->zfree = zfree;
   ret = inflateInit (z);
   SWFDEC_DEBUG ("inflateInit returned %d", ret);
 
-  s->uncompressed_buffer = swfdec_buffer_new_and_alloc (dec->bytes_total - 8);
   z->next_out = s->uncompressed_buffer->data;
   z->avail_out = s->uncompressed_buffer->length;
   z->opaque = NULL;
+  return TRUE;
 }
 
 static int
@@ -168,7 +173,8 @@ swf_parse_header1 (SwfdecSwfDecoder * s)
   s->compressed = (sig1 == 'C');
   if (s->compressed) {
     SWFDEC_DEBUG ("compressed");
-    swf_inflate_init (s);
+    if (!swf_inflate_init (s))
+      return SWFDEC_STATUS_ERROR;
   } else {
     SWFDEC_DEBUG ("not compressed");
   }

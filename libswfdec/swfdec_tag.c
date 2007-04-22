@@ -272,11 +272,44 @@ tag_func_do_action (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
+#define CONTENT_IN_FRAME(content, frame) \
+  ((content)->sequence->start <= frame && \
+   (content)->sequence->end > frame)
+static guint
+swfdec_button_remove_duplicates (SwfdecButton *button, int depth, guint states)
+{
+  GList *walk;
+  guint taken = 0;
+  guint i;
+
+  /* 1) find out which states are already taken */
+  for (walk = button->records; walk; walk = walk->next) {
+    SwfdecContent *cur = walk->data;
+    if (cur->depth != depth)
+      continue;
+    for (i = 0; i < 4; i++) {
+      if (CONTENT_IN_FRAME (cur, i))
+	taken |= (1 << i);
+    }
+  }
+  /* 2) mark states that overlap */
+  taken &= states;
+  /* 3) remove the overlapping states */
+  if (taken) {
+    SWFDEC_ERROR ("overlapping contents in button, removing for depth %u and states %u",
+	depth, taken);
+    states &= ~taken;
+  }
+  return states;
+}
+
 static void
 swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent *content)
 {
   guint i;
   SwfdecContent *cur = NULL;
+
+  states = swfdec_button_remove_duplicates (button, content->depth, states);
 
   for (i = 0; i < 4; i++) {
     if (!cur && (states & 1)) {

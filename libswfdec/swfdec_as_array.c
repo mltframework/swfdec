@@ -224,7 +224,7 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Function, swfdec_as_array_construct, 0));
+      SWFDEC_AS_STR_Array, swfdec_as_array_construct, 0));
   if (!array)
     return;
   context->Array = array;

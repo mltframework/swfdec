@@ -34,8 +34,14 @@ swfdec_as_frame_dispose (GObject *object)
   SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
 
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
-  swfdec_script_unref (frame->script);
-  swfdec_as_stack_free (frame->stack);
+  if (frame->script) {
+    swfdec_script_unref (frame->script);
+    frame->script = NULL;
+  }
+  if (frame->stack) {
+    swfdec_as_stack_free (frame->stack);
+    frame->stack = NULL;
+  }
   if (frame->constant_pool) {
     swfdec_constant_pool_free (frame->constant_pool);
     frame->constant_pool = NULL;

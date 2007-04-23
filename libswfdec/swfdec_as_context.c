@@ -518,28 +518,6 @@ swfdec_as_context_trace (SwfdecAsContext *context, const char *string)
   g_signal_emit (context, signals[TRACE], 0, string);
 }
 
-/**
- * swfdec_as_context_startup:
- * @context: a #SwfdecAsContext
- * @version: Flash version to use
- *
- * Starts up the context. This function must be called before any Actionscript
- * is called on @context. The version is responsible for deciding which native
- * functions and properties are available in the context.
- **/
-void
-swfdec_as_context_startup (SwfdecAsContext *context, guint version)
-{
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
-
-  context->version = version;
-  swfdec_as_function_init_context (context, version);
-  swfdec_as_object_init_context (context, version);
-  swfdec_as_array_init_context (context, version);
-  context->state = SWFDEC_AS_CONTEXT_RUNNING;
-}
-
 /*** EVAL ***/
 
 char *
@@ -706,5 +684,75 @@ swfdec_as_context_eval_set (SwfdecAsContext *cx, SwfdecAsObject *obj, const char
   g_return_if_fail (val != NULL);
 
   swfdec_as_context_eval_internal (cx, obj, str, (SwfdecAsValue *) val, TRUE);
+}
+
+/*** AS CODE ***/
+
+static gboolean
+swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object, const char *s, SwfdecAsVariable *var, gpointer data)
+{
+  guint *flags = data;
+  guint real;
+
+  /* first set all relevant flags */
+  real = flags[0] & flags[1];
+  var->flags |= real;
+  /* then unset all relevant flags */
+  real = flags[0] | ~flags[1];
+  var->flags &= real;
+  return TRUE;
+}
+
+static void
+swfdec_as_context_ASSetPropFlags (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  guint flags[2]; /* flags and mask - array so we can pass it as data pointer */
+  SwfdecAsObject *obj;
+
+  if (object->context->version < 6) {
+    SWFDEC_WARNING ("ASSetPropFlags needs some limiteations for Flash 5");
+  }
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+    return;
+  obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  flags[0] = swfdec_as_value_to_integer (object->context, &argv[2]);
+  /* be sure to not delete the NATIVE flag */
+  flags[0] &= 7;
+  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (object->context, &argv[3]) : -1;
+  if (SWFDEC_AS_VALUE_IS_NULL (&argv[1])) {
+    swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
+  } else {
+    SWFDEC_ERROR ("ASSetPropFlags for non-null properties not implemented yet");
+  }
+}
+
+static void
+swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
+{
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASSetPropFlags,
+      swfdec_as_context_ASSetPropFlags, 3);
+}
+
+/**
+ * swfdec_as_context_startup:
+ * @context: a #SwfdecAsContext
+ * @version: Flash version to use
+ *
+ * Starts up the context. This function must be called before any Actionscript
+ * is called on @context. The version is responsible for deciding which native
+ * functions and properties are available in the context.
+ **/
+void
+swfdec_as_context_startup (SwfdecAsContext *context, guint version)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
+
+  context->version = version;
+  swfdec_as_function_init_context (context, version);
+  swfdec_as_object_init_context (context, version);
+  swfdec_as_context_init_global (context, version);
+  swfdec_as_array_init_context (context, version);
+  context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }
 

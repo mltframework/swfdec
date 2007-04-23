@@ -113,6 +113,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("DESCENDING"),
   SWFDEC_AS_CONSTANT_STRING ("CASEINSENSITIVE"),
   SWFDEC_AS_CONSTANT_STRING ("Array"),
+  SWFDEC_AS_CONSTANT_STRING ("ASSetPropFlags"),
   /* add more here */
   NULL
 };

@@ -183,6 +183,7 @@ extern const char const * swfdec_as_strings[];
 #define SWFDEC_AS_STR_UNIQUESORT      	SWFDEC_AS_STR_CONSTANT(79)
 #define SWFDEC_AS_STR_DESCENDING      	SWFDEC_AS_STR_CONSTANT(80)
 #define SWFDEC_AS_STR_CASEINSENSITIVE 	SWFDEC_AS_STR_CONSTANT(81)
+#define SWFDEC_AS_STR_Array		SWFDEC_AS_STR_CONSTANT(82)
 
 /* all existing actions */
 typedef enum {

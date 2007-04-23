@@ -112,6 +112,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("UNIQUESORT"),
   SWFDEC_AS_CONSTANT_STRING ("DESCENDING"),
   SWFDEC_AS_CONSTANT_STRING ("CASEINSENSITIVE"),
+  SWFDEC_AS_CONSTANT_STRING ("Array"),
   /* add more here */
   NULL
 };

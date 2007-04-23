@@ -564,7 +564,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
 /* stack must be at least 2 elements big */
-static void
+static gboolean
 swfdec_action_call (SwfdecAsContext *cx, guint n_args)
 {
   SwfdecAsFunction *fun;
@@ -596,13 +596,14 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
     swfdec_as_stack_pop_n (frame->stack, n_args);
   swfdec_as_function_call (fun, thisp, n_args, swfdec_as_stack_peek (frame->stack, 0), 
       swfdec_as_stack_peek (frame->stack, 1));
-  return;
+  return TRUE;
 
 error:
   n_args += 2;
   if (n_args > swfdec_as_stack_get_size (frame->stack))
     n_args = swfdec_as_stack_get_size (frame->stack);
   swfdec_as_stack_pop_n (frame->stack, n_args);
+  return FALSE;
 }
 
 static void
@@ -624,7 +625,9 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
     SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 2));
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 1));
   }
-  swfdec_action_call (cx, n_args);
+  if (!swfdec_action_call (cx, n_args)) {
+    SWFDEC_ERROR ("no function named %s", name);
+  }
 }
 
 static void
@@ -634,6 +637,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsValue *val;
   SwfdecAsObject *obj;
   guint n_args;
+  const char *name = NULL;
   
   swfdec_as_stack_ensure_size (frame->stack, 3);
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (frame->stack, 2));
@@ -649,7 +653,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
 	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
     } else {
-      const char *name = swfdec_as_value_to_string (cx, val);
+      name = swfdec_as_value_to_string (cx, val);
       swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (frame->stack, 2));
     }
   } else {
@@ -657,7 +661,9 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 2));
   }
   swfdec_as_stack_pop (frame->stack);
-  swfdec_action_call (cx, n_args);
+  if (!swfdec_action_call (cx, n_args)) {
+    SWFDEC_ERROR ("no function named %s", name ? name : "unknown");
+  }
 }
 
 static void

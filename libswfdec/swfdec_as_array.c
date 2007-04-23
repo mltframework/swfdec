@@ -25,7 +25,7 @@
 
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_stack.h"
+#include "swfdec_as_function.h"
 #include "swfdec_debug.h"
 
 typedef struct {
@@ -153,27 +153,25 @@ swfdec_as_array_init (SwfdecAsArray *array)
 /**
  * swfdec_as_array_new:
  * @context: a #SwfdecAsContext
- * @preallocated_items: number of items to preallocate
  *
- * Creates a new #SwfdecAsArray. @preallocated_items is a hint on how many
- * space to reserve to avoid frequent reallocations later on.
+ * Creates a new #SwfdecAsArray. This is the same as executing the Actionscript
+ * code "new Array ()"
  *
  * Returns: the new array or %NULL on OOM.
  **/
 SwfdecAsObject *
 swfdec_as_array_new (SwfdecAsContext *context)
 {
-  guint size;
-  SwfdecAsObject *object;
+  SwfdecAsObject *ret;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (context->Array == NULL, NULL);
   
-  size = sizeof (SwfdecAsArray);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
-  object = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
-  swfdec_as_object_add (object, context, size);
-  return object;
+  ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Array), 0, NULL);
+  swfdec_as_object_root (ret);
+  swfdec_as_context_run (context);
+  swfdec_as_object_unroot (ret);
+  return ret;
 }
 
 void
@@ -206,5 +204,57 @@ swfdec_as_array_get_value (SwfdecAsArray *array, guint index, SwfdecAsValue *val
   } else {
     swfdec_as_variable_get (SWFDEC_AS_OBJECT (array), var, value);
   }
+}
+
+/*** AS CODE ***/
+
+static void
+swfdec_as_array_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+
+}
+
+
+void
+swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
+{
+  SwfdecAsObject *array, *proto;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+
+  array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
+      SWFDEC_AS_STR_Function, swfdec_as_array_construct, 0));
+  if (!array)
+    return;
+  context->Array = array;
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
+    return;
+  proto = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
+  swfdec_as_object_add (proto, context, sizeof (SwfdecAsArray));
+  /* set the right properties on the Array object */
+  swfdec_as_object_root (proto);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR___proto__, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_unroot (proto);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_constructor, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, 1);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_CASEINSENSITIVE, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, 2);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_DESCENDING, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, 4);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_UNIQUESORT, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, 8);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_RETURNINDEXEDARRAY, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, 16);
+  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_NUMERIC, &val);
+  /* set the right properties on the Array.prototype object */
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
 }
 

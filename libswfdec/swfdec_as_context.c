@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "swfdec_as_context.h"
+#include "swfdec_as_array.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_interpret.h"
@@ -233,6 +234,7 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
   swfdec_as_object_mark (context->Object_prototype);
+  swfdec_as_object_mark (context->Array);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 
@@ -534,6 +536,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   context->version = version;
   swfdec_as_function_init_context (context, version);
   swfdec_as_object_init_context (context, version);
+  swfdec_as_array_init_context (context, version);
   context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }
 

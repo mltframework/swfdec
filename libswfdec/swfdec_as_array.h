@@ -59,5 +59,9 @@ void		swfdec_as_array_get_value     	(SwfdecAsArray *	array,
 						 guint			index,
 						 SwfdecAsValue *	value);
 
+void	      	swfdec_as_array_init_context	(SwfdecAsContext *	context,
+					      	 guint			version);
+
+
 G_END_DECLS
 #endif

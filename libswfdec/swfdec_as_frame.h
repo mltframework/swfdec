@@ -41,6 +41,7 @@ struct _SwfdecAsFrame {
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
   SwfdecAsObject *	thisp;		/* this object in current frame */
+  gboolean		construct;	/* TRUE if this is the constructor for thisp */
   /* debugging */
   char *		function_name;	/* name of function */
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */

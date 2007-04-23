@@ -96,6 +96,9 @@ struct _SwfdecAsObjectClass {
 GType		swfdec_as_object_get_type	(void);
 
 SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context);
+SwfdecAsObject *swfdec_as_object_create		(SwfdecAsFunction *	construct,
+						 guint			n_args,
+						 SwfdecAsValue *	args);
 
 void		swfdec_as_object_add		(SwfdecAsObject *     	object,
 						 SwfdecAsContext *    	context,

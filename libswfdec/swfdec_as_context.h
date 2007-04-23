@@ -66,6 +66,7 @@ struct _SwfdecAsContext {
   SwfdecAsObject *	Function_prototype;	/* Function.prototype */
   SwfdecAsObject *	Object;		/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
+  SwfdecAsObject *	Array;		/* Array */
 };
 
 struct _SwfdecAsContextClass {

@@ -195,3 +195,4 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable (function, SWFDEC_AS_STR_constructor, &val);
 }
+

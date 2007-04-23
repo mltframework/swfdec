@@ -69,7 +69,8 @@ struct _SwfdecAsObject {
   GObject		object;
 
   SwfdecAsContext *	context;	/* context used */
-  SwfdecAsObject *	prototype;	/* prototype object (referred to as __prototype__ */
+  SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
+  SwfdecAsValue		proto_val;	/* value assigned to prototype */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   guint8		flags;		/* GC flags */
   gsize			size;		/* size reserved in GC */
@@ -80,6 +81,8 @@ struct _SwfdecAsObjectClass {
 
   /* mark everything that should survive during GC */
   void			(* mark)		(SwfdecAsObject *	object);
+  /* object was added to the context */
+  void			(* add)			(SwfdecAsObject *	object);
   /* get the place that holds a variable or return NULL */
   SwfdecAsVariable *	(* get)			(SwfdecAsObject *       object,
 						 const char *		variable,

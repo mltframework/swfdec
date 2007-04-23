@@ -447,7 +447,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (native != NULL, NULL);
 
-  function = swfdec_as_function_new_native (object->context, native, min_args);
+  function = swfdec_as_function_new_native (object->context, name, native, min_args);
   if (function == NULL)
     return NULL;
   name = swfdec_as_context_get_string (object->context, name);

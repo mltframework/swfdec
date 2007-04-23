@@ -38,6 +38,8 @@ swfdec_as_function_dispose (GObject *object)
     swfdec_script_unref (function->script);
     function->script = NULL;
   }
+  g_free (function->name);
+  function->name = NULL;
 
   G_OBJECT_CLASS (swfdec_as_function_parent_class)->dispose (object);
 }
@@ -111,8 +113,8 @@ swfdec_as_function_new (SwfdecAsObject *scope)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new_native (SwfdecAsContext *context, SwfdecAsNative native,
-    guint min_args)
+swfdec_as_function_new_native (SwfdecAsContext *context, const char *name,
+    SwfdecAsNative native, guint min_args)
 {
   SwfdecAsFunction *fun;
 
@@ -124,6 +126,7 @@ swfdec_as_function_new_native (SwfdecAsContext *context, SwfdecAsNative native,
     return NULL;
   fun->native = native;
   fun->min_args = min_args;
+  fun->name = g_strdup (name);
 
   return fun;
 }

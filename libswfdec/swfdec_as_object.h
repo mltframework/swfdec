@@ -150,6 +150,13 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);
 
+void		swfdec_as_variable_set		(SwfdecAsObject *	object,
+						 SwfdecAsVariable *	var,
+						 const SwfdecAsValue *	value);
+void		swfdec_as_variable_get		(SwfdecAsObject *	object,
+						 SwfdecAsVariable *	var,
+						 SwfdecAsValue *	value);
+
 
 G_END_DECLS
 #endif

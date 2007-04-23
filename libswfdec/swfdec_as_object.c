@@ -243,15 +243,9 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   var = swfdec_as_object_lookup (object, variable, TRUE);
-  if (var == NULL ||
-      var->flags & SWFDEC_AS_VARIABLE_READONLY)
+  if (var == NULL)
     return;
-  if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
-    g_return_if_fail (var->value.funcs.set != NULL);
-    var->value.funcs.set (object, value);
-  } else {
-    var->value.value = *value;
-  }
+  swfdec_as_variable_set (object, var, value);
 }
 
 void
@@ -271,12 +265,7 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
       object = object->prototype;
       continue;
     }
-    if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (value); /* just to be sure */
-      var->value.funcs.get (object, value);
-    } else {
-      *value = var->value.value;
-    }
+    swfdec_as_variable_get (object, var, value);
     return;
   }
   if (i == 256) {
@@ -592,3 +581,34 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, swfdec_as_object_hasOwnProperty, 1);
 }
 
+void
+swfdec_as_variable_set (SwfdecAsObject *object, SwfdecAsVariable *var, const SwfdecAsValue *value)
+{
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (var != NULL);
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+
+  if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
+    return;
+  if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
+    g_return_if_fail (var->value.funcs.set != NULL);
+    var->value.funcs.set (object, value);
+  } else {
+    var->value.value = *value;
+  }
+}
+
+void
+swfdec_as_variable_get (SwfdecAsObject *object, SwfdecAsVariable *var, SwfdecAsValue *value)
+{
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (var != NULL);
+  g_return_if_fail (value != NULL);
+
+  if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (value); /* just to be sure */
+    var->value.funcs.get (object, value);
+  } else {
+    *value = var->value.value;
+  }
+}

@@ -114,7 +114,7 @@ swfdec_amf_parse_mixed_array (SwfdecAsContext *context, SwfdecBits *bits, Swfdec
   SwfdecAsObject *array;
   
   len = swfdec_bits_get_bu32 (bits);
-  array = swfdec_as_array_new (context, len);
+  array = swfdec_as_array_new (context);
   if (array == NULL)
     return FALSE;
   if (!swfdec_amf_parse_properties (context, bits, array))
@@ -132,7 +132,7 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
   SwfdecAmfParseFunc func;
   
   len = swfdec_bits_get_bu32 (bits);
-  array = swfdec_as_array_new (context, len);
+  array = swfdec_as_array_new (context);
   if (array == NULL)
     return FALSE;
   swfdec_as_object_root (array);
@@ -146,7 +146,7 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
     }
     if (!func (context, bits, &val))
       goto fail;
-    g_array_append_val (SWFDEC_AS_ARRAY (array)->values, val);
+    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
   }
 
   swfdec_as_object_unroot (array);

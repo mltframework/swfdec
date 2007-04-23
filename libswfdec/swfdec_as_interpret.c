@@ -570,7 +570,6 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
   SwfdecAsFrame *frame = cx->frame;
-  SwfdecAsValue retval;
   guint i;
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (frame->stack, 1)) ||
@@ -584,20 +583,19 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
   /* sanitize argument count */
   if (n_args > swfdec_as_stack_get_size (frame->stack))
     n_args = swfdec_as_stack_get_size (frame->stack);
-  /* swap arguments on the stack */
+  /* push return value on stack */
+  swfdec_as_stack_push (frame->stack);
+  /* swap arguments and return value on the stack */
   /* FIXME: can we somehow keep this order please, it might be interesting for debuggers */
-  for (i = 0; i < n_args / 2; i++) {
+  for (i = 0; i < (n_args + 1) / 2; i++) {
     SwfdecAsValue tmp = *swfdec_as_stack_peek (frame->stack, i + 1);
-    *swfdec_as_stack_peek (frame->stack, i + 1) = *swfdec_as_stack_peek (frame->stack, n_args - i);
-    *swfdec_as_stack_peek (frame->stack, n_args - i) = tmp;
+    *swfdec_as_stack_peek (frame->stack, i + 1) = *swfdec_as_stack_peek (frame->stack, n_args + 1 - i);
+    *swfdec_as_stack_peek (frame->stack, n_args + 1 - i) = tmp;
   }
-  swfdec_as_function_call (fun, thisp, n_args, swfdec_as_stack_peek (frame->stack, n_args), &retval);
-  if (n_args) {
-    swfdec_as_stack_pop_n (frame->stack, n_args - 1);
-    *swfdec_as_stack_peek (frame->stack, 1) = retval;
-  } else {
-    *swfdec_as_stack_push (frame->stack) = retval;
-  }
+  if (n_args)
+    swfdec_as_stack_pop_n (frame->stack, n_args);
+  swfdec_as_function_call (fun, thisp, n_args, swfdec_as_stack_peek (frame->stack, 0), 
+      swfdec_as_stack_peek (frame->stack, 1));
   return;
 
 error:

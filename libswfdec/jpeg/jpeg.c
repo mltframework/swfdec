@@ -443,7 +443,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
   y = dec->y;
   n = dec->restart_interval;
   if (n == 0) n = (1<<26); /* max number of blocks */
-  while (n-- > 0) {
+  while (go && n-- > 0) {
     for (i = 0; i < dec->scan_list_length; i++) {
       int dc_table_index;
       int ac_table_index;
@@ -546,7 +546,6 @@ jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
   int a,b;
   JpegBits *bits = &dec->bits;
 
-again:
   if (jpeg_bits_available(bits) < 2) {
     return FALSE;
   }
@@ -560,12 +559,6 @@ again:
   do {
     b = jpeg_bits_get_u8 (bits);
   } while (b == 0xff && jpeg_bits_error(bits));
-
-  /* Flash seems to ignore SOI and EOI markers, so we do, too */
-  if (b == JPEG_MARKER_SOI ||
-      (b == JPEG_MARKER_EOI && jpeg_bits_available (bits) > 0)) {
-    goto again;
-  }
 
   *marker = b;
   return TRUE;
@@ -590,17 +583,15 @@ jpeg_decoder_decode (JpegDecoder *dec)
 
   bits = &dec->bits;
 
-#if 0
   /* Note: The spec is ambiguous as to whether fill bytes can come
    * before the first marker.  We'll assume yes. */
   if (!jpeg_decoder_get_marker (dec, &marker)) {
     return FALSE;
   }
-  if (marker != JPEG_MARKER_SOI) {
+  if (dec->strict && marker != JPEG_MARKER_SOI) {
     jpeg_decoder_error(dec, "not a JPEG image");
     return FALSE;
   }
-#endif
 
   /* Interpret markers up to the start of frame */
   while (!dec->error) {
@@ -623,6 +614,16 @@ jpeg_decoder_decode (JpegDecoder *dec)
       jpeg_decoder_skip (dec);
     } else if (JPEG_MARKER_IS_START_OF_FRAME(marker)) {
       break;
+    } else if (marker == JPEG_MARKER_SOI) {
+      if (dec->strict) {
+        jpeg_decoder_error (dec, "unexpected SOI");
+        return FALSE;
+      }
+    } else if (marker == JPEG_MARKER_EOI) {
+      if (dec->strict) {
+        jpeg_decoder_error (dec, "unexpected EOI");
+        return FALSE;
+      }
     } else {
       jpeg_decoder_error(dec, "unexpected marker 0x%02x", marker);
       return FALSE;
@@ -665,8 +666,18 @@ jpeg_decoder_decode (JpegDecoder *dec)
       jpeg_decoder_decode_entropy_segment (dec);
     } else if (JPEG_MARKER_IS_RESET(marker)) {
       jpeg_decoder_decode_entropy_segment (dec);
+    } else if (marker == JPEG_MARKER_SOI) {
+      if (dec->strict) {
+        jpeg_decoder_error (dec, "unexpected SOI");
+        return FALSE;
+      }
     } else if (marker == JPEG_MARKER_EOI) {
-      break;
+      if (dec->strict) {
+        jpeg_decoder_error (dec, "unexpected EOI");
+        return FALSE;
+      } else {
+        break;
+      }
     } else {
       jpeg_decoder_error(dec, "unexpected marker 0x%02x", marker);
       return FALSE;

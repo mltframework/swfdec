@@ -393,7 +393,8 @@ start:
   if (frame == context->last_frame)
     goto out;
   if (frame->function && frame->function->native) {
-    if (frame->argc >= frame->function->min_args) {
+    if (frame->argc >= frame->function->min_args && 
+	g_type_is_a (G_OBJECT_TYPE (frame->thisp), frame->function->type)) {
       frame->function->native (frame->thisp, frame->argc, frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);

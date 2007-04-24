@@ -42,6 +42,7 @@ struct _SwfdecAsFunction {
   /* for native functions */
   SwfdecAsNative	native;		/* native call or NULL when script */
   guint			min_args;	/* minimum number of required arguments */
+  GType			type;		/* required type for this object when caling function */
   char *		name;		/* function name */
 
   /* for script functions */
@@ -61,6 +62,8 @@ SwfdecAsFunction *	swfdec_as_function_new_native	(SwfdecAsContext *	context,
 							 SwfdecAsNative		native,
 							 guint			min_args);
 
+void			swfdec_as_function_set_object_type (SwfdecAsFunction *	function,
+							 GType			type);
 void			swfdec_as_function_call		(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
 							 guint			n_args,

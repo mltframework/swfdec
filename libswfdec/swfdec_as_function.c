@@ -69,6 +69,7 @@ swfdec_as_function_class_init (SwfdecAsFunctionClass *klass)
 static void
 swfdec_as_function_init (SwfdecAsFunction *function)
 {
+  function->type = SWFDEC_TYPE_AS_OBJECT;
 }
 
 SwfdecAsFunction *
@@ -157,6 +158,24 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   frame->return_value = return_value;
   frame->function = function;
   swfdec_as_frame_preload (frame);
+}
+
+/**
+ * swfdec_as_function_set_object_type:
+ * @function: a native #SwfdecAsFunction
+ * @type: required #GType for this object
+ *
+ * Sets the required type for the this object to @type. If the this object 
+ * isn't of the required type, the function will not be called and its
+ * return value will be undefined.
+ **/
+void
+swfdec_as_function_set_object_type (SwfdecAsFunction *function, GType type)
+{
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
+  g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT));
+
+  function->type = type;
 }
 
 /*** AS CODE ***/

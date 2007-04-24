@@ -10,6 +10,7 @@ libjpeg_la_SOURCES = \
 	jpeg_tables.c
 
 noinst_HEADERS = \
+	cogcompat.h \
 	jpeg.h \
 	jpeg_bits.h \
 	jpeg_huffman.h \

@@ -5,7 +5,8 @@
 
 #include <liboil/liboil.h>
 #include <liboil/liboil-stdint.h>
-#include <swfdec_debug.h>
+
+#include <cogcompat.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,9 +14,6 @@
 
 
 #include "jpeg_internal.h"
-
-
-//#define MAX(a,b) ((a)>(b) ? (a) : (b))
 
 
 extern uint8_t jpeg_standard_tables[];
@@ -46,17 +44,21 @@ jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
 
   if (dec->error) return;
 
-  dec->error_message = malloc(250);
   va_start (varargs, fmt);
+#ifdef HAVE_VASPRINTF
+  vasprintf(&dec->error_message, fmt, varargs);
+#else
+  dec->error_message = malloc(250);
   vsnprintf(dec->error_message, 250 - 1, fmt, varargs);
   dec->error_message[250 - 1] = 0;
+#endif
   va_end (varargs);
 
   dec->error = TRUE;
 }
 
 #define jpeg_decoder_error(dec, ...) { \
-  SWFDEC_ERROR("decoder error: "__VA_ARGS__); \
+  COG_ERROR("decoder error: "__VA_ARGS__); \
   jpeg_decoder_error (dec, __VA_ARGS__); \
 }
 
@@ -67,12 +69,12 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
   int i;
 
   if (dec->sof_type != JPEG_MARKER_SOF_0) {
-    SWFDEC_ERROR("only handle baseline DCT");
+    COG_ERROR("only handle baseline DCT");
     dec->error = TRUE;
   }
 
   if (dec->width < 1) {
-    SWFDEC_ERROR("height can't be 0");
+    COG_ERROR("height can't be 0");
     dec->error = TRUE;
   }
 
@@ -81,7 +83,7 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
       /* baseline DCT */
       max_quant_table = 3;
       if (dec->depth != 8) {
-        SWFDEC_ERROR("depth must be 8 (%d)", dec->depth);
+        COG_ERROR("depth must be 8 (%d)", dec->depth);
         dec->error = TRUE;
       }
       break;
@@ -89,7 +91,7 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
       /* extended DCT */
       max_quant_table = 3;
       if (dec->depth != 8 && dec->depth != 12) {
-        SWFDEC_ERROR("depth must be 8 or 12 (%d)", dec->depth);
+        COG_ERROR("depth must be 8 or 12 (%d)", dec->depth);
         dec->error = TRUE;
       }
       break;
@@ -97,7 +99,7 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
       /* progressive DCT */
       max_quant_table = 3;
       if (dec->depth != 8 && dec->depth != 12) {
-        SWFDEC_ERROR("depth must be 8 or 12 (%d)", dec->depth);
+        COG_ERROR("depth must be 8 or 12 (%d)", dec->depth);
         dec->error = TRUE;
       }
       break;
@@ -105,7 +107,7 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
       /* lossless DCT */
       max_quant_table = 0;
       if (dec->depth < 2 || dec->depth > 16) {
-        SWFDEC_ERROR("depth must be between 2 and 16 (%d)", dec->depth);
+        COG_ERROR("depth must be between 2 and 16 (%d)", dec->depth);
         dec->error = TRUE;
       }
       break;
@@ -114,32 +116,32 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
   }
 
   if (dec->n_components < 0 || dec->n_components > 255) {
-    SWFDEC_ERROR("n_components must be in the range 0-255 (%d)",
+    COG_ERROR("n_components must be in the range 0-255 (%d)",
         dec->n_components);
     dec->error = TRUE;
   }
   if (dec->sof_type == JPEG_MARKER_SOF_2 && dec->n_components > 4) {
-    SWFDEC_ERROR("n_components must be <= 4 for progressive DCT (%d)",
+    COG_ERROR("n_components must be <= 4 for progressive DCT (%d)",
         dec->n_components);
     dec->error = TRUE;
   }
 
   for (i = 0; i < dec->n_components; i++) {
     if (dec->components[i].id < 0 || dec->components[i].id > 255) {
-      SWFDEC_ERROR("component ID out of range");
+      COG_ERROR("component ID out of range");
       dec->error = TRUE;
       break;
     }
     if (dec->components[i].h_sample < 1 || dec->components[i].h_sample > 4 ||
         dec->components[i].v_sample < 1 || dec->components[i].v_sample > 4) {
-      SWFDEC_ERROR("sample factor(s) for component %d out of range %d %d",
+      COG_ERROR("sample factor(s) for component %d out of range %d %d",
           i, dec->components[i].h_sample, dec->components[i].v_sample);
       dec->error = TRUE;
       break;
     }
     if (dec->components[i].quant_table < 0 ||
         dec->components[i].quant_table > max_quant_table) {
-      SWFDEC_ERROR("quant table for component %d out of range (%d)",
+      COG_ERROR("quant table for component %d out of range (%d)",
           i, dec->components[i].quant_table);
       dec->error = TRUE;
       break;
@@ -211,7 +213,7 @@ generate_code_table (int *huffsize)
   k = 0;
   for (i = 0; i < 16; i++) {
     for (j = 0; j < huffsize[i]; j++) {
-      SWFDEC_DEBUG ("huffcode[%d] = %s", k,
+      COG_DEBUG ("huffcode[%d] = %s", k,
           sprintbits (str, code >> (15 - i), i + 1));
       code++;
       k++;
@@ -261,7 +263,7 @@ huffman_table_init_jpeg (HuffmanTable *table, JpegBits * bits)
      * for bad huffsize[] arrays. */
     if (symbol >= (1U << (i + 1))) {
       /* FIXME jpeg_decoder_error() */
-      SWFDEC_DEBUG ("bad huffsize[] array");
+      COG_ERROR ("bad huffsize[] array");
       return -1;
     }
 
@@ -282,7 +284,7 @@ jpeg_decoder_find_component_by_id (JpegDecoder * dec, int id)
     if (dec->components[i].id == id)
       return i;
   }
-  SWFDEC_DEBUG ("undefined component id %d", id);
+  COG_DEBUG ("undefined component id %d", id);
   return 0;
 }
 
@@ -291,10 +293,10 @@ jpeg_decoder_application0 (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  SWFDEC_DEBUG ("app0");
+  COG_DEBUG ("app0");
 
   length = get_be_u16 (bits);
-  SWFDEC_DEBUG ("length=%d", length);
+  COG_DEBUG ("length=%d", length);
 
   if (memcmp (bits->ptr, "JFIF", 4) == 0 && bits->ptr[4] == 0) {
     int version;
@@ -304,7 +306,7 @@ jpeg_decoder_application0 (JpegDecoder * dec, JpegBits * bits)
     int x_thumbnail;
     int y_thumbnail;
 
-    SWFDEC_DEBUG ("JFIF");
+    COG_DEBUG ("JFIF");
     bits->ptr += 5;
 
     version = get_be_u16 (bits);
@@ -314,17 +316,17 @@ jpeg_decoder_application0 (JpegDecoder * dec, JpegBits * bits)
     x_thumbnail = get_u8 (bits);
     y_thumbnail = get_u8 (bits);
 
-    SWFDEC_DEBUG ("version = %04x", version);
-    SWFDEC_DEBUG ("units = %d", units);
-    SWFDEC_DEBUG ("x_density = %d", x_density);
-    SWFDEC_DEBUG ("y_density = %d", y_density);
-    SWFDEC_DEBUG ("x_thumbnail = %d", x_thumbnail);
-    SWFDEC_DEBUG ("y_thumbnail = %d", y_thumbnail);
+    COG_DEBUG ("version = %04x", version);
+    COG_DEBUG ("units = %d", units);
+    COG_DEBUG ("x_density = %d", x_density);
+    COG_DEBUG ("y_density = %d", y_density);
+    COG_DEBUG ("x_thumbnail = %d", x_thumbnail);
+    COG_DEBUG ("y_thumbnail = %d", y_thumbnail);
 
   }
 
   if (memcmp (bits->ptr, "JFXX", 4) == 0 && bits->ptr[4] == 0) {
-    SWFDEC_DEBUG ("JFIF extension (not handled)");
+    COG_DEBUG ("JFIF extension (not handled)");
     bits->ptr += length - 2;
   }
 
@@ -336,12 +338,12 @@ jpeg_decoder_application_misc (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  SWFDEC_DEBUG ("appX");
+  COG_DEBUG ("appX");
 
   length = get_be_u16 (bits);
-  SWFDEC_DEBUG ("length=%d", length);
+  COG_DEBUG ("length=%d", length);
 
-  SWFDEC_DEBUG ("JPEG application tag X ignored");
+  COG_DEBUG ("JPEG application tag X ignored");
   //dumpbits (bits);
 
   bits->ptr += length - 2;
@@ -354,10 +356,10 @@ jpeg_decoder_comment (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  SWFDEC_DEBUG ("comment");
+  COG_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  SWFDEC_DEBUG ("length=%d", length);
+  COG_DEBUG ("length=%d", length);
 
   //dumpbits (bits);
 
@@ -371,13 +373,13 @@ jpeg_decoder_restart_interval (JpegDecoder * dec, JpegBits * bits)
 {
   int length;
 
-  SWFDEC_DEBUG ("comment");
+  COG_DEBUG ("comment");
 
   length = get_be_u16 (bits);
-  SWFDEC_DEBUG ("length=%d", length);
+  COG_DEBUG ("length=%d", length);
 
   dec->restart_interval = get_be_u16 (bits);
-  SWFDEC_DEBUG ("restart_interval=%d", dec->restart_interval);
+  COG_DEBUG ("restart_interval=%d", dec->restart_interval);
 
   return length;
 }
@@ -385,7 +387,7 @@ jpeg_decoder_restart_interval (JpegDecoder * dec, JpegBits * bits)
 int
 jpeg_decoder_restart (JpegDecoder * dec, JpegBits * bits)
 {
-  SWFDEC_DEBUG ("restart");
+  COG_DEBUG ("restart");
 
   return 0;
 }
@@ -411,11 +413,12 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
   maxlen = jpeg_bits_available (bits) - 1;
   j = 0;
   while (len < maxlen) {
-    if (bits->ptr[len] == 0xff && bits->ptr[len + 1] != 0x00)
+    if (bits->ptr[len] == 0xff && bits->ptr[len + 1] != 0x00) {
       break;
+    }
     len++;
   }
-  SWFDEC_DEBUG ("entropy length = %d", len);
+  COG_DEBUG ("entropy length = %d", len);
 
   /* we allocate extra space, since the getbits() code can
    * potentially read past the end of the buffer */
@@ -448,7 +451,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
       unsigned char *ptr;
       int component_index;
 
-      SWFDEC_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+      COG_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
           x, y,
           dec->scan_list[i].component_index,
           dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -462,7 +465,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
           &dec->dc_huff_table[dc_table_index],
           &dec->ac_huff_table[ac_table_index], bits2);
       if (ret < 0) {
-        SWFDEC_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
+        COG_DEBUG ("%d,%d: component=%d dc_table=%d ac_table=%d",
             x, y,
             dec->scan_list[i].component_index,
             dec->scan_list[i].dc_table, dec->scan_list[i].ac_table);
@@ -470,7 +473,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
         break;
       }
 
-      SWFDEC_DEBUG ("using quant table %d", quant_index);
+      COG_DEBUG ("using quant table %d", quant_index);
       oil_mult8x8_s16 (block2, block, dec->quant_tables[quant_index].quantizer,
           sizeof (short) * 8, sizeof(short) * 8, sizeof (short) * 8);
       dec->dc[component_index] += block2[0];
@@ -685,7 +688,7 @@ jpeg_decoder_define_huffman_tables (JpegDecoder * dec)
   int x;
   HuffmanTable *hufftab;
 
-  SWFDEC_DEBUG ("define huffman tables");
+  COG_DEBUG ("define huffman tables");
 
   length = jpeg_bits_get_u16_be (bits);
   if (length < 2) {
@@ -701,7 +704,7 @@ jpeg_decoder_define_huffman_tables (JpegDecoder * dec)
     tc = x >> 4;
     th = x & 0xf;
 
-    SWFDEC_DEBUG ("huff table type %d (%s) index %d", tc, tc ? "ac" : "dc", th);
+    COG_DEBUG ("huff table type %d (%s) index %d", tc, tc ? "ac" : "dc", th);
     if (tc > 1 || th > 3) {
       jpeg_decoder_error(dec, "huffman table type or index out of range");
       return;
@@ -731,7 +734,7 @@ jpeg_decoder_define_quantization_tables (JpegDecoder *dec)
   int tq;
   int i;
 
-  SWFDEC_INFO ("define quantization table");
+  COG_INFO ("define quantization table");
 
   length = jpeg_bits_get_u16_be (bits);
   if (length < 2) {
@@ -806,7 +809,7 @@ jpeg_decoder_start_of_frame (JpegDecoder * dec, int marker)
   int i;
   int length;
 
-  SWFDEC_INFO ("start of frame");
+  COG_INFO ("start of frame");
 
   dec->sof_type = marker;
 
@@ -823,7 +826,7 @@ jpeg_decoder_start_of_frame (JpegDecoder * dec, int marker)
   dec->width = jpeg_bits_get_u16_be (bits);
   dec->n_components = jpeg_bits_get_u8 (bits);
 
-  SWFDEC_DEBUG (
+  COG_DEBUG (
       "frame_length=%d depth=%d height=%d width=%d n_components=%d", length,
       dec->depth, dec->height, dec->width, dec->n_components);
 
@@ -838,7 +841,7 @@ jpeg_decoder_start_of_frame (JpegDecoder * dec, int marker)
     dec->components[i].v_sample = getbits (bits, 4);
     dec->components[i].quant_table = get_u8 (bits);
 
-    SWFDEC_DEBUG (
+    COG_DEBUG (
         "[%d] id=%d h_sample=%d v_sample=%d quant_table=%d", i,
         dec->components[i].id, dec->components[i].h_sample,
         dec->components[i].v_sample, dec->components[i].quant_table);
@@ -859,10 +862,10 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
   int tmp;
   int n_components;
 
-  SWFDEC_DEBUG ("start of scan");
+  COG_DEBUG ("start of scan");
 
   length = jpeg_bits_get_u16_be (bits);
-  SWFDEC_DEBUG ("length=%d", length);
+  COG_DEBUG ("length=%d", length);
 
   n_components = jpeg_bits_get_u8 (bits);
   n = 0;
@@ -906,18 +909,18 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
     dec->scan_h_subsample = MAX (dec->scan_h_subsample, h_subsample);
     dec->scan_v_subsample = MAX (dec->scan_v_subsample, v_subsample);
 
-    SWFDEC_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
+    COG_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
         component_id, index, dc_table, ac_table, n);
   }
   dec->scan_list_length = n;
 
   spectral_start = jpeg_bits_get_u8 (bits);
   spectral_end = jpeg_bits_get_u8 (bits);
-  SWFDEC_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
+  COG_DEBUG ("spectral range [%d,%d]", spectral_start, spectral_end);
   tmp = jpeg_bits_get_u8 (bits);
   approx_high = tmp >> 4;
   approx_low = tmp & 0xf;
-  SWFDEC_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
+  COG_DEBUG ("approx range [%d,%d]", approx_low, approx_high);
 
   dec->x = 0;
   dec->y = 0;

@@ -8,15 +8,14 @@
 
 #include <string.h>
 
+#include "cogcompat.h"
+
 #include "jpeg_huffman.h"
 
 /* misc helper function definitions */
 
 static char *sprintbits (char *str, unsigned int bits, int n);
 
-
-//#define TRUE 1
-//#define FALSE 0
 
 void
 huffman_table_dump (HuffmanTable * table)
@@ -27,13 +26,13 @@ huffman_table_dump (HuffmanTable * table)
   int i;
   HuffmanEntry *entry;
 
-  SWFDEC_DEBUG ("dumping huffman table %p", table);
+  COG_DEBUG ("dumping huffman table %p", table);
   for (i = 0; i < table->len; i++) {
     entry = table->entries + i;
     n_bits = entry->n_bits;
     code = entry->symbol >> (16 - n_bits);
     sprintbits (str, code, n_bits);
-    SWFDEC_DEBUG ("%s --> %d", str, entry->value);
+    COG_DEBUG ("%s --> %d", str, entry->value);
   }
 }
 
@@ -70,11 +69,11 @@ huffman_table_decode_jpeg (HuffmanTable * tab, JpegBits * bits)
     if ((code & entry->mask) == entry->symbol) {
       code = getbits (bits, entry->n_bits);
       sprintbits (str, code, entry->n_bits);
-      SWFDEC_DEBUG ("%s --> %d", str, entry->value);
+      COG_DEBUG ("%s --> %d", str, entry->value);
       return entry->value;
     }
   }
-  SWFDEC_ERROR ("huffman sync lost");
+  COG_ERROR ("huffman sync lost");
 
   return -1;
 }
@@ -96,33 +95,33 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
   if ((x >> (s - 1)) == 0) {
     x -= (1 << s) - 1;
   }
-  SWFDEC_DEBUG ("s=%d (block[0]=%d)", s, x);
+  COG_DEBUG ("s=%d (block[0]=%d)", s, x);
   block[0] = x;
 
   for (k = 1; k < 64; k++) {
     rs = huffman_table_decode_jpeg (ac_tab, bits);
     if (rs < 0) {
-      SWFDEC_DEBUG ("huffman error");
+      COG_DEBUG ("huffman error");
       return -1;
     }
     if (bits->ptr > bits->end) {
-      SWFDEC_DEBUG ("overrun");
+      COG_DEBUG ("overrun");
       return -1;
     }
     s = rs & 0xf;
     r = rs >> 4;
     if (s == 0) {
       if (r == 15) {
-        SWFDEC_DEBUG ("r=%d s=%d (skip 16)", r, s);
+        COG_DEBUG ("r=%d s=%d (skip 16)", r, s);
         k += 15;
       } else {
-        SWFDEC_DEBUG ("r=%d s=%d (eob)", r, s);
+        COG_DEBUG ("r=%d s=%d (eob)", r, s);
         break;
       }
     } else {
       k += r;
       if (k >= 64) {
-        SWFDEC_ERROR ("macroblock overrun");
+        COG_ERROR ("macroblock overrun");
         return -1;
       }
       x = getbits (bits, s);
@@ -131,7 +130,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
         x -= (1 << s) - 1;
       }
       block[k] = x;
-      SWFDEC_DEBUG ("r=%d s=%d (%s -> block[%d]=%d)", r, s, str, k, x);
+      COG_DEBUG ("r=%d s=%d (%s -> block[%d]=%d)", r, s, str, k, x);
     }
   }
   return 0;

@@ -50,32 +50,13 @@ swfdec_as_object_mark_property (gpointer key, gpointer value, gpointer unused)
 static void
 swfdec_as_object_do_mark (SwfdecAsObject *object)
 {
-  swfdec_as_variable_mark (&object->proto_val);
+  swfdec_as_object_mark (object->prototype);
   g_hash_table_foreach (object->properties, swfdec_as_object_mark_property, NULL);
-}
-
-static void
-swfdec_as_object_set_property (SwfdecAsObject *object, const SwfdecAsValue *val)
-{
-  object->proto_val = *val;
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
-  } else {
-    object->prototype = NULL;
-  }
-}
-
-static void
-swfdec_as_object_get_property (SwfdecAsObject *object, SwfdecAsValue *val)
-{
-  *val = object->proto_val;
 }
 
 static void
 swfdec_as_object_do_add (SwfdecAsObject *object)
 {
-  swfdec_as_object_add_variable (object, SWFDEC_AS_STR___proto__,
-      swfdec_as_object_set_property, swfdec_as_object_get_property);
 }
 
 static SwfdecAsVariable *
@@ -272,6 +253,9 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+
+  if (variable == SWFDEC_AS_STR___proto__ && SWFDEC_AS_VALUE_IS_OBJECT (value))
+    object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (value);
 
   var = swfdec_as_object_lookup (object, variable, TRUE);
   if (var == NULL)

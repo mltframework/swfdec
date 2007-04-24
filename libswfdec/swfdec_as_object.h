@@ -71,7 +71,6 @@ struct _SwfdecAsObject {
 
   SwfdecAsContext *	context;	/* context used */
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
-  SwfdecAsValue		proto_val;	/* value assigned to prototype */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   guint8		flags;		/* GC flags */
   gsize			size;		/* size reserved in GC */

@@ -125,7 +125,7 @@ swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len)
 }
 
 guint 
-swfdec_bits_left (SwfdecBits *b)
+swfdec_bits_left (const SwfdecBits *b)
 {
   if (b->ptr == NULL)
     return 0;
@@ -179,7 +179,7 @@ swfdec_bits_getbits (SwfdecBits * b, guint n)
 }
 
 guint
-swfdec_bits_peekbits (SwfdecBits * b, guint n)
+swfdec_bits_peekbits (const SwfdecBits * b, guint n)
 {
   SwfdecBits tmp = *b;
 
@@ -201,9 +201,12 @@ swfdec_bits_getsbits (SwfdecBits * b, guint n)
 }
 
 guint
-swfdec_bits_peek_u8 (SwfdecBits * b)
+swfdec_bits_peek_u8 (const SwfdecBits * b)
 {
-  SWFDEC_BYTES_CHECK (b, 1);
+  g_assert (b->idx == 0);
+  g_assert (b->ptr <= b->end);
+  if (b->ptr == b->end)
+    return 0;
 
   return *b->ptr;
 }

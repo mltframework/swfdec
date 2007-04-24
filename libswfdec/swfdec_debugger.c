@@ -591,7 +591,7 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
   return ret;
 }
 
-gboolean
+guint
 swfdec_debugger_script_has_breakpoint (SwfdecDebugger *debugger, 
     SwfdecDebuggerScript *script, guint line)
 {
@@ -607,7 +607,7 @@ swfdec_debugger_script_has_breakpoint (SwfdecDebugger *debugger,
     Breakpoint *br = &g_array_index (debugger->breakpoints, Breakpoint, i);
 
     if (br->type == BREAKPOINT_PC && pc == br->pc)
-      return TRUE;
+      return i + 1;
   }
-  return FALSE;
+  return 0;
 }

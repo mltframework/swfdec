@@ -95,7 +95,7 @@ void			swfdec_debugger_remove_script	(SwfdecDebugger *	debugger,
 void			swfdec_debugger_foreach_script	(SwfdecDebugger *	debugger,
 							 GFunc			func,
 							 gpointer		data);
-gboolean		swfdec_debugger_script_has_breakpoint
+guint			swfdec_debugger_script_has_breakpoint
 							(SwfdecDebugger *       debugger,
 							 SwfdecDebuggerScript *	script,
 							 guint			line);

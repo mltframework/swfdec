@@ -114,6 +114,10 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("CASEINSENSITIVE"),
   SWFDEC_AS_CONSTANT_STRING ("Array"),
   SWFDEC_AS_CONSTANT_STRING ("ASSetPropFlags"),
+  SWFDEC_AS_CONSTANT_STRING ("0"),
+  SWFDEC_AS_CONSTANT_STRING ("-Infinity"),
+  SWFDEC_AS_CONSTANT_STRING ("Infinity"),
+  SWFDEC_AS_CONSTANT_STRING ("NaN"),
   /* add more here */
   NULL
 };
@@ -148,10 +152,22 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       return SWFDEC_AS_STR_NULL;
     case SWFDEC_AS_TYPE_NUMBER:
       {
-	char *s = g_strdup_printf ("%g", SWFDEC_AS_VALUE_GET_NUMBER (value));
-	const char *ret = swfdec_as_context_get_string (context, s);
-	g_free (s);
-	return ret;
+	double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
+	switch (fpclassify (d)) {
+	  case FP_ZERO:
+	    return SWFDEC_AS_STR_0;
+	  case FP_INFINITE:
+	    return d < 0 ? SWFDEC_AS_STR__Infinity : SWFDEC_AS_STR_Infinity;
+	  case FP_NAN:
+	    return SWFDEC_AS_STR_NaN;
+	  default:
+	    {
+	      char *s = g_strdup_printf ("%g", SWFDEC_AS_VALUE_GET_NUMBER (value));
+	      const char *ret = swfdec_as_context_get_string (context, s);
+	      g_free (s);
+	      return ret;
+	    }
+	}
       }
     case SWFDEC_AS_TYPE_OBJECT:
       {

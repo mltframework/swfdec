@@ -118,6 +118,12 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("-Infinity"),
   SWFDEC_AS_CONSTANT_STRING ("Infinity"),
   SWFDEC_AS_CONSTANT_STRING ("NaN"),
+  SWFDEC_AS_CONSTANT_STRING ("Number"),
+  SWFDEC_AS_CONSTANT_STRING ("NAN"),
+  SWFDEC_AS_CONSTANT_STRING ("MAX_VALUE"),
+  SWFDEC_AS_CONSTANT_STRING ("MIN_VALUE"),
+  SWFDEC_AS_CONSTANT_STRING ("NEGATIVE_INFINITY"),
+  SWFDEC_AS_CONSTANT_STRING ("POSITIVE_INFINITY"),
   /* add more here */
   NULL
 };
@@ -172,7 +178,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsValue ret;
-	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_TOSTRING,
+	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_toString,
 	    0, NULL, &ret);
 	if (SWFDEC_AS_VALUE_IS_STRING (&ret))
 	  return SWFDEC_AS_VALUE_GET_STRING (&ret);
@@ -237,7 +243,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsValue ret;
-	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_VALUEOF,
+	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
 	    0, NULL, &ret);
 	if (SWFDEC_AS_VALUE_IS_NUMBER (&ret))
 	  return SWFDEC_AS_VALUE_GET_NUMBER (&ret);

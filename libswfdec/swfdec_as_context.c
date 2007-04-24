@@ -27,6 +27,7 @@
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_interpret.h"
+#include "swfdec_as_number.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_types.h"
@@ -752,8 +753,11 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   context->version = version;
   swfdec_as_function_init_context (context, version);
   swfdec_as_object_init_context (context, version);
+
   swfdec_as_context_init_global (context, version);
   swfdec_as_array_init_context (context, version);
+
+  swfdec_as_number_init_context (context, version);
   context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }
 

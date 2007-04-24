@@ -144,12 +144,6 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   g_return_if_fail (return_value != NULL);
 
   context = thisp->context;
-  if (context->frame) {
-    guint available_args = swfdec_as_stack_get_size (context->frame->stack);
-    n_args = MIN (available_args, n_args);
-  } else {
-    n_args = 0;
-  }
   SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   if (function->native) {
     frame = swfdec_as_frame_new_native (thisp);

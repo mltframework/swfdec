@@ -677,8 +677,8 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 {
   double l, r;
 
-  l = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
   r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  l = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
   switch (action) {
     case 0x0a:
       l = l + r;
@@ -705,6 +705,7 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
       g_assert_not_reached ();
       break;
   }
+  swfdec_as_stack_pop (cx->frame->stack);
   SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), l);
 }
 

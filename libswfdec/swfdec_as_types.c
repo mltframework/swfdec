@@ -124,6 +124,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("MIN_VALUE"),
   SWFDEC_AS_CONSTANT_STRING ("NEGATIVE_INFINITY"),
   SWFDEC_AS_CONSTANT_STRING ("POSITIVE_INFINITY"),
+  SWFDEC_AS_CONSTANT_STRING ("[type Object]"),
   /* add more here */
   NULL
 };
@@ -183,7 +184,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	if (SWFDEC_AS_VALUE_IS_STRING (&ret))
 	  return SWFDEC_AS_VALUE_GET_STRING (&ret);
 	else
-	  return SWFDEC_AS_STR_OBJECT_OBJECT;
+	  return SWFDEC_AS_STR_type_Object;
       }
     default:
       g_assert_not_reached ();
@@ -245,10 +246,10 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	SwfdecAsValue ret;
 	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
 	    0, NULL, &ret);
-	if (SWFDEC_AS_VALUE_IS_NUMBER (&ret))
-	  return SWFDEC_AS_VALUE_GET_NUMBER (&ret);
-	else
+	if (SWFDEC_AS_VALUE_IS_OBJECT (&ret))
 	  return NAN;
+	else
+	  return swfdec_as_value_to_number (context, &ret);
       }
     default:
       g_assert_not_reached ();

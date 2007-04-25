@@ -254,8 +254,13 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   g_return_if_fail (variable != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (variable == SWFDEC_AS_STR___proto__ && SWFDEC_AS_VALUE_IS_OBJECT (value))
-    object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (value);
+  if (variable == SWFDEC_AS_STR___proto__) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
+      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (value);
+    } else {
+      object->prototype = NULL;
+    }
+  }
 
   var = swfdec_as_object_lookup (object, variable, TRUE);
   if (var == NULL)
@@ -612,6 +617,18 @@ swfdec_as_object_hasOwnProperty (SwfdecAsObject *object, guint argc, SwfdecAsVal
 }
 
 static void
+swfdec_as_object_valueOf (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
+}
+
+static void
+swfdec_as_object_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_object_Object);
+}
+
+static void
 swfdec_as_object_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
 }
@@ -633,13 +650,17 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
     return;
   context->Object = object;
   context->Object_prototype = proto;
-  /* first, finish the function prototype */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (context->Function_prototype, SWFDEC_AS_STR___proto__, &val);
+  if (context->Function_prototype) {
+    /* first, finish the function prototype */
+    swfdec_as_object_set_variable (context->Function_prototype, SWFDEC_AS_STR___proto__, &val);
+  }
   /* now, set our own */
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
 
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, swfdec_as_object_hasOwnProperty, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, swfdec_as_object_valueOf, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, swfdec_as_object_toString, 0);
 }
 
 void

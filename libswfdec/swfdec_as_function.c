@@ -75,22 +75,23 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 SwfdecAsFunction *
 swfdec_as_function_do_create (SwfdecAsContext *context)
 {
+  SwfdecAsValue val;
   SwfdecAsObject *fun;
 
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsFunction)))
     return NULL;
   fun = g_object_new (SWFDEC_TYPE_AS_FUNCTION, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsFunction));
+  swfdec_as_object_root (fun);
   if (context->Function) {
-    SwfdecAsValue val;
-    swfdec_as_object_root (fun);
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
     swfdec_as_object_set_variable (fun, SWFDEC_AS_STR_constructor, &val);
-    g_assert (context->Function_prototype);
+  }
+  if (context->Function_prototype) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
     swfdec_as_object_set_variable (fun, SWFDEC_AS_STR___proto__, &val);
-    swfdec_as_object_unroot (fun);
   }
+  swfdec_as_object_unroot (fun);
 
   return SWFDEC_AS_FUNCTION (fun);
 }
@@ -198,17 +199,17 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_AS_STR_Function, swfdec_as_function_construct, 0));
   if (!function)
     return;
-  swfdec_as_object_root (function);
-  proto = swfdec_as_object_new (context);
-  swfdec_as_object_unroot (function);
-  if (!proto)
-    return;
   context->Function = function;
-  context->Function_prototype = proto;
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (function, SWFDEC_AS_STR___proto__, &val);
-  swfdec_as_object_set_variable (function, SWFDEC_AS_STR_prototype, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable (function, SWFDEC_AS_STR_constructor, &val);
+  if (version > 5) {
+    proto = swfdec_as_object_new (context);
+    if (!proto)
+      return;
+    context->Function_prototype = proto;
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+    swfdec_as_object_set_variable (function, SWFDEC_AS_STR___proto__, &val);
+    swfdec_as_object_set_variable (function, SWFDEC_AS_STR_prototype, &val);
+  }
 }
 

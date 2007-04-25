@@ -123,8 +123,6 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_add (proto, context, sizeof (SwfdecAsNumber));
   /* set the right properties on the Number object */
   swfdec_as_object_root (proto);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
-  swfdec_as_object_set_variable (number, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (number, SWFDEC_AS_STR_prototype, &val);
   swfdec_as_object_unroot (proto);

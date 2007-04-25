@@ -232,7 +232,8 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   swfdec_as_object_mark (context->global);
   swfdec_as_object_mark (context->Function);
-  swfdec_as_object_mark (context->Function_prototype);
+  if (context->Function_prototype)
+    swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
   swfdec_as_object_mark (context->Object_prototype);
   swfdec_as_object_mark (context->Array);

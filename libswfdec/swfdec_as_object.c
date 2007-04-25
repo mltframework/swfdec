@@ -610,7 +610,7 @@ swfdec_as_object_hasOwnProperty (SwfdecAsObject *object, guint argc, SwfdecAsVal
   
   var = swfdec_as_object_lookup (object, name, FALSE);
 
-  if (var != NULL && (var->flags & SWFDEC_AS_VARIABLE_NATIVE) == 0)
+  if (var != NULL && (var->flags & (SWFDEC_AS_VARIABLE_NATIVE | SWFDEC_AS_VARIABLE_TEMPORARY)) == 0)
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
   else
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);

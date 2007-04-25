@@ -28,10 +28,13 @@ G_BEGIN_DECLS
 
 /* NB: matches ASSetPropFlags */
 typedef enum {
+  /* ActionScript flags go here */
   SWFDEC_AS_VARIABLE_DONT_ENUM = (1 << 0),
   SWFDEC_AS_VARIABLE_PERMANENT = (1 << 1),
   SWFDEC_AS_VARIABLE_READONLY = (1 << 2),
-  SWFDEC_AS_VARIABLE_NATIVE = (1 << 3)
+  /* internal flags go here */
+  SWFDEC_AS_VARIABLE_NATIVE = (1 << 3),
+  SWFDEC_AS_VARIABLE_TEMPORARY = (1 << 4)
 } SwfdecAsVariableFlag;
 
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;

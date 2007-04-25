@@ -327,13 +327,57 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
   }
 }
 
+static SwfdecMovie *
+swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
+{
+  GList *walk;
+
+  for (walk = movie->list; walk; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    if (!cur->has_name)
+      continue;
+    /* FIXME: make the name string GC'd */
+    if (g_str_equal (cur->name, name))
+      return cur;
+  }
+  return NULL;
+}
+
+static SwfdecAsVariable *
+swfdec_sprite_movie_get_variable (SwfdecAsObject *object, const char *variable, gboolean create)
+{
+  SwfdecAsVariable *var;
+  SwfdecMovie *movie;
+
+  var = SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->get (object, variable, create);
+  if (var)
+    return var;
+  
+  /* cannot happen since the parent class created a var object already */
+  g_assert (create == FALSE);
+  movie = swfdec_sprite_movie_get_by_name (SWFDEC_MOVIE (object), variable);
+  if (movie == NULL)
+    return NULL;
+
+  {
+    /* FIXME: big hack - never do threading please */
+    static SwfdecAsVariable tmp;
+    tmp.flags = SWFDEC_AS_VARIABLE_TEMPORARY;
+    SWFDEC_AS_VALUE_SET_OBJECT (&tmp.value.value, SWFDEC_AS_OBJECT (movie));
+    return &tmp;
+  }
+}
+
 static void
 swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
   object_class->dispose = swfdec_sprite_movie_dispose;
+
+  asobject_class->get = swfdec_sprite_movie_get_variable;
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;

@@ -25,6 +25,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_swf_decoder.h" /* HACK */
 
 static void
 swfdec_loader_target_base_init (gpointer g_class)
@@ -74,6 +75,7 @@ swfdec_loader_target_get_player (SwfdecLoaderTarget *target)
   return iface->get_player (target);
 }
 
+/* FIXME: this function is old and needs to die - that's why it's full of hacks */
 void
 swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
@@ -125,8 +127,9 @@ swfdec_loader_target_parse_default (SwfdecLoaderTarget *target, SwfdecLoader *lo
 	{
 	  SwfdecPlayer *player;
 	  player = swfdec_loader_target_get_player (target);
-	  swfdec_player_initialize (player, 7, dec->rate, 
-	      dec->width, dec->height);
+	  swfdec_player_initialize (player, 
+	      SWFDEC_IS_SWF_DECODER (dec) ? SWFDEC_SWF_DECODER (dec)->version : 7, /* <-- HACK */
+	      dec->rate, dec->width, dec->height);
 	  if (!swfdec_loader_target_init (target)) {
 	    swfdec_loader_error_locked (loader, "Internal error");
 	    return;

@@ -378,7 +378,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	break;
       case 7: /* 32bit int */
 	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (stack), 
-	    swfdec_bits_get_u32 (&bits));
+	    (int) swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
 	{

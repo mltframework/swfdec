@@ -141,7 +141,11 @@ const char const * swfdec_as_strings[] = {
  * Returns: a garbage-collected string
  **/
 /* FIXME: this function is still buggy - and it's ugly as hell.
- * Someone with the right expertise should rewrite it */
+ * Someone with the right expertise should rewrite it 
+ * Some pointers:
+ * http://www.cs.indiana.edu/~burger/FP-Printing-PLDI96.pdf
+ * http://lxr.mozilla.org/mozilla/source/js/tamarin/core/MathUtils.cpp
+ */
 const char *
 swfdec_as_double_to_string (SwfdecAsContext *context, double d)
 {

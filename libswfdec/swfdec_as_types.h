@@ -64,8 +64,10 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_GET_BOOLEAN(val) ((val)->value.boolean)
 #define SWFDEC_AS_VALUE_SET_BOOLEAN(val,b) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
+  gboolean __tmp = (b); \
+  g_assert (__tmp == TRUE || __tmp == FALSE); \
   (__val)->type = SWFDEC_AS_TYPE_BOOLEAN; \
-  (__val)->value.boolean = b; \
+  (__val)->value.boolean = __tmp; \
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_AS_TYPE_NUMBER)

@@ -22,6 +22,7 @@
 #endif
 
 #include <math.h>
+#include <string.h>
 
 #include "swfdec_as_types.h"
 #include "swfdec_as_object.h"
@@ -130,6 +131,104 @@ const char const * swfdec_as_strings[] = {
 };
 
 /**
+ * swfdec_as_double_to_string:
+ * @context: a #SwfdecAsContext
+ * @d: a double
+ *
+ * Converts @d into a string using the same conversion algorithm as the 
+ * official Flash player.
+ *
+ * Returns: a garbage-collected string
+ **/
+/* FIXME: this function is still buggy - and it's ugly as hell.
+ * Someone with the right expertise should rewrite it */
+const char *
+swfdec_as_double_to_string (SwfdecAsContext *context, double d)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_EMPTY);
+
+  switch (fpclassify (d)) {
+    case FP_ZERO:
+      return SWFDEC_AS_STR_0;
+    case FP_INFINITE:
+      return d < 0 ? SWFDEC_AS_STR__Infinity : SWFDEC_AS_STR_Infinity;
+    case FP_NAN:
+      return SWFDEC_AS_STR_NaN;
+    default:
+      {
+	gboolean found = FALSE, gotdot = FALSE;
+	guint digits = 15;
+	char s[50], *end, *start;
+	if (ABS (d) > 0.00001 && ABS (d) < 1e+15) {
+	  g_ascii_formatd (s, 50, "%.22f", d);
+	} else {
+	  g_ascii_formatd (s, 50, "%.25e", d);
+	}
+	start = s;
+	/* skip - sign */
+	if (*start == '-')
+	  start++;
+	/* count digits (maximum allowed is 15) */
+	while (digits) {
+	  if (*start == '.') {
+	    start++;
+	    gotdot = TRUE;
+	    continue;
+	  }
+	  if (*start < '0' || *start > '9')
+	    break;
+	  if (found || *start != '0') {
+	    digits--;
+	    found = TRUE;
+	  }
+	  start++;
+	}
+	end = start;
+	/* go to end of string */
+	while (*end != 'e' && *end != 0)
+	  end++;
+	/* round using the next digit */
+	if (*start >= '5' && *start <= '9') {
+	  while (TRUE) {
+	    if (start[-1] == '.') {
+	      SWFDEC_ERROR ("FIXME: fix rounding!");
+	      break;
+	    }
+	    if (start[-1] != '9') {
+	      start[-1]++;
+	      break;
+	    }
+	    start--;
+	  }
+	}
+	/* remove trailing zeros (note we skipped zero above, so there will be non-0 bytes left) */
+	if (gotdot) {
+	  while (start[-1] == '0')
+	    start--;
+	  if (start[-1] == '.')
+	    start--;
+	}
+	/* add exponent */
+	if (*end == 'e') {
+	  /* 'e' */
+	  *start++ = *end++;
+	  /* + or - */
+	  *start++ = *end++;
+	  /* skip 0s */
+	  while (*end == '0')
+	    end++;
+	  /* add rest */
+	  while (*end != 0)
+	    *start++ = *end++;
+	}
+	/* end string */
+	*start = 0;
+	return swfdec_as_context_get_string (context, s);
+      }
+  }
+}
+
+/**
  * swfdec_as_value_to_string:
  * @context: a #SwfdecAsContext
  * @value: value to be expressed as string
@@ -158,24 +257,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_NULL:
       return SWFDEC_AS_STR_NULL;
     case SWFDEC_AS_TYPE_NUMBER:
-      {
-	double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
-	switch (fpclassify (d)) {
-	  case FP_ZERO:
-	    return SWFDEC_AS_STR_0;
-	  case FP_INFINITE:
-	    return d < 0 ? SWFDEC_AS_STR__Infinity : SWFDEC_AS_STR_Infinity;
-	  case FP_NAN:
-	    return SWFDEC_AS_STR_NaN;
-	  default:
-	    {
-	      char *s = g_strdup_printf ("%g", SWFDEC_AS_VALUE_GET_NUMBER (value));
-	      const char *ret = swfdec_as_context_get_string (context, s);
-	      g_free (s);
-	      return ret;
-	    }
-	}
-      }
+      return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsValue ret;

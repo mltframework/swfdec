@@ -300,6 +300,7 @@ typedef enum {
   SWFDEC_AS_ACTION_GOTO_FRAME2 = 0x9F
 } SwfdecAsAction;
 
+/* value conversion functions */
 gboolean	swfdec_as_value_to_boolean	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 int		swfdec_as_value_to_integer	(SwfdecAsContext *	context,
@@ -312,6 +313,10 @@ const char *	swfdec_as_value_to_printable	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
+
+/* special conversion functions */
+const char *	swfdec_as_double_to_string	(SwfdecAsContext *	context,
+						 double			d);
 
 
 G_END_DECLS

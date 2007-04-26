@@ -65,7 +65,8 @@ IGNORE_HFILES= \
 	swfdec_cache.h \
 	swfdec_cached.h \
 	swfdec_character.h \
-	swfdec_codec.h \
+	swfdec_codec_audio.h \
+	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_connection.h \
 	swfdec_debug.h \
@@ -100,6 +101,7 @@ IGNORE_HFILES= \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
+	swfdec_stroke.h \
 	swfdec_swf_decoder.h \
 	swfdec_tag.h \
 	swfdec_text.h \

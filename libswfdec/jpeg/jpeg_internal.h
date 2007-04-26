@@ -31,6 +31,7 @@ struct _JpegDecoder {
 	int n_components;
 	JpegBits bits;
         int error;
+        int strict;
         char *error_message;
 
         int sof_type;

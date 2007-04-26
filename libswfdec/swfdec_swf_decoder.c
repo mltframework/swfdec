@@ -298,7 +298,9 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	buffer = NULL;
       swfdec_bits_init (&s->b, buffer);
       func = swfdec_swf_decoder_get_tag_func (tag);
-      if (func == NULL) {
+      if (tag == 0) {
+	s->state = SWFDEC_STATE_EOF;
+      } else if (func == NULL) {
 	SWFDEC_WARNING ("tag function not implemented for %d %s",
 	    tag, swfdec_swf_decoder_get_tag_name (tag));
       } else if (s->main_sprite->parse_frame < s->main_sprite->n_frames) {
@@ -319,9 +321,6 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	SWFDEC_ERROR ("data after last frame");
       }
 
-      if (tag == 0) {
-	s->state = SWFDEC_STATE_EOF;
-      }
 
       if (buffer)
 	swfdec_buffer_unref (buffer);

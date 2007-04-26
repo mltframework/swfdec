@@ -67,6 +67,16 @@ EXTRA_DIST = \
 	doaction-before-placeobject.swf \
 	doaction-before-placeobject.swf.trace \
 	double.swf \
+	double-to-string.as
+	double-to-string-5.swf \
+	double-to-string-5.swf.trace \
+	double-to-string-5.swf.trace.org \
+	double-to-string-6.swf \
+	double-to-string-6.swf.trace \
+	double-to-string-6.swf.trace.org \
+	double-to-string-7.swf \
+	double-to-string-7.swf.trace \
+	double-to-string-7.swf.trace.org \
 	event-order.swf \
 	empty-stack.as \
 	empty-stack.swf \

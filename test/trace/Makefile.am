@@ -67,6 +67,8 @@ EXTRA_DIST = \
 	doaction-before-placeobject.swf \
 	doaction-before-placeobject.swf.trace \
 	double.swf \
+	double.swf.trace \
+	double.swf.trace.org \
 	double-to-string.as
 	double-to-string-5.swf \
 	double-to-string-5.swf.trace \

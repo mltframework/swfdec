@@ -3,6 +3,10 @@ Swfdec is a decoder/renderer for Macromedia Flash animations. The decoding and
 rendering engine is provided in a library that can be used by other 
 applications.  
 
+An additional library named libswfdec-gtk is provided for easy integration of
+Swfdec into Gtk applications. This library is what developers most likely want 
+to target their applications at. Building this library can be disabled.
+
 The library is still in heavy development. The intended audience are developers
 or people using it for pretested Flash animations (think embedded here). If you
 use it on unknown content, expect it to have issues and don't be surprised if 
@@ -63,9 +67,10 @@ Dependencies:
   zlib (>= 1.1.4)
 
   FFMpeg (>= 0.4.8 - optional, required for various audio and video formats)
+  GStreamer (>= 0.10.11 - optional, required for various audio and video formats)
   MAD (>= 0.15.1b - optional, required for MP3 audio format support)
 
-  GTK+ (>= 2.0 - optional)
-  ALSA (>= 1.0 - optional)
+  GTK+ (>= 2.0 - used by libswfdec-gtk)
+  ALSA (>= 1.0 - used by libswfdec-gtk)
 
 

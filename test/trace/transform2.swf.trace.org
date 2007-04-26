@@ -1,9 +1,8 @@
-# These values are the originalo values for the transform2.swf test.
+# These values are the original values for the transform2.swf test.
 # Reasons why they don't work exactly:
 # - The algorithm for determining the scale isn't known.
 #   It's known that the scale is a multiple of 1/65536, but not how it is
 #   computed.
-# - The accuracy when printing doubles isn't known.
 
 Test various transformations and their effect on AS variables
 Frame 1

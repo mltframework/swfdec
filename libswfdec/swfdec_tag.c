@@ -209,7 +209,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (&parse), SWFDEC_DECODER (s)->rate);
 
   s->parse_sprite = sprite;
-  while (tag != 0 && s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
+  while (swfdec_bits_left (&parse)) {
     int x;
     guint tag_len;
     SwfdecTagFunc *func;
@@ -231,21 +231,24 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
     }
 
     func = swfdec_swf_decoder_get_tag_func (tag);
-    if (func == NULL) {
+    if (tag == 0) {
+      break;
+    } else if (func == NULL) {
       SWFDEC_WARNING ("tag function not implemented for %d %s",
           tag, swfdec_swf_decoder_get_tag_name (tag));
     } else if ((swfdec_swf_decoder_get_tag_flag (tag) & 1) == 0) {
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",
           tag, swfdec_swf_decoder_get_tag_name (tag));
-    } else {
+    } else if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
       ret = func (s);
 
       if (swfdec_bits_left (&s->b)) {
         SWFDEC_WARNING ("early parse finish (%d bytes)", 
 	    swfdec_bits_left (&s->b) / 8);
       }
+    } else {
+      SWFDEC_ERROR ("data after last frame");
     }
-
   }
 
   s->b = parse;

@@ -788,10 +788,8 @@ swfdec_action_not_4 (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 static void
 swfdec_action_not_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
-
-  d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
-  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d == 0 ? TRUE : FALSE);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), 
+      !swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx->frame->stack, 1)));
 }
 
 static void

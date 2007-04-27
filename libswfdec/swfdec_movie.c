@@ -383,17 +383,7 @@ swfdec_movie_run_construct (SwfdecMovie *movie)
   player = SWFDEC_ROOT_MOVIE (movie->root)->player;
   g_queue_remove (player->construct_queue, movie);
   swfdec_movie_execute_script (movie, SWFDEC_EVENT_CONSTRUCT);
-#if 0
-  /* FIXME: need a check if the constructor can be unregistered after construction */
-  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
-      (fun = swfdec_js_movie_lookup_class (SWFDEC_SPRITE_MOVIE (movie))) != JSVAL_NULL) {
-    SwfdecScriptable *script = SWFDEC_SCRIPTABLE (movie);
-    SWFDEC_LOG ("Executing constructor for %s %p", G_OBJECT_TYPE_NAME (movie), movie);
-    if (!js_InternalCall (script->jscx, script->jsobj, fun, 0, NULL, &fun)) {
-      SWFDEC_ERROR ("constructor execution failed");
-    }
-  }
-#endif
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, 0, NULL, NULL);
 }
 
 void
@@ -849,6 +839,31 @@ swfdec_movie_initialize (SwfdecMovie *movie, const SwfdecContent *content)
   swfdec_movie_set_content (movie, content);
 }
 
+void
+swfdec_movie_set_prototype (SwfdecMovie *movie)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecAsObject *klass = player->MovieClip;
+  SwfdecAsValue val;
+
+  /* happens for root movies during init */
+  if (klass == NULL)
+    return;
+
+  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
+      SWFDEC_SPRITE_MOVIE (movie)->sprite != NULL) {
+    const char *name = swfdec_root_movie_get_export_name (SWFDEC_ROOT_MOVIE (movie->root), 
+	SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (movie)->sprite));
+    if (name != NULL) {
+      klass = swfdec_player_get_export_class (player, name);
+    }
+  }
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, klass);
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_get_variable (klass, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR___proto__, &val);
+}
+
 /**
  * swfdec_movie_new:
  * @parent: the parent movie that will contain this movie
@@ -876,15 +891,17 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   g_return_val_if_fail (klass->create_movie != NULL, NULL);
   ret = klass->create_movie (content->graphic, &size);
   object = SWFDEC_AS_OBJECT (parent);
-  if (swfdec_as_context_use_mem (object->context, size)) {
-    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
-    g_object_ref (ret);
-  } else {
-    SWFDEC_AS_OBJECT (ret)->context = object->context;
-  }
   ret->parent = parent;
   g_object_ref (parent);
   ret->root = parent->root;
+  if (swfdec_as_context_use_mem (object->context, size)) {
+    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
+    g_object_ref (ret);
+    /* now set prototype etc */
+    swfdec_movie_set_prototype (ret);
+  } else {
+    SWFDEC_AS_OBJECT (ret)->context = object->context;
+  }
   swfdec_movie_initialize (ret, content);
   return ret;
 }
@@ -902,14 +919,15 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   SWFDEC_ROOT_MOVIE (ret)->player = player;
+  ret->root = ret;
   if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie))) {
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),
 	SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie));
     g_object_ref (ret);
+    swfdec_movie_set_prototype (ret);
   } else {
     SWFDEC_AS_OBJECT (ret)->context = SWFDEC_AS_CONTEXT (player);
   }
-  ret->root = ret;
   swfdec_movie_initialize (ret, content);
   ret->has_name = FALSE;
 

@@ -57,6 +57,7 @@ struct _SwfdecPlayer
   GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
   SwfdecListener *	mouse_listener;		/* emitting mouse events */
   SwfdecListener *	key_listener;		/* emitting keyboard events */
+  SwfdecAsObject *	MovieClip;		/* MovieClip object */
 
   /* rendering */
   SwfdecRect		invalid;      		/* area that needs a rredraw */

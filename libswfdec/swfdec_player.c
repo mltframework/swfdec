@@ -774,6 +774,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   g_hash_table_foreach (player->registered_classes, swfdec_player_mark_string_object, NULL);
   swfdec_listener_mark (player->mouse_listener);
   swfdec_listener_mark (player->key_listener);
+  swfdec_as_object_mark (player->MovieClip);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }
@@ -1031,8 +1032,10 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     context->state = SWFDEC_AS_CONTEXT_NEW;
     swfdec_mouse_init_context (player, version);
     swfdec_sprite_movie_init_context (player, version);
-    if (context->state == SWFDEC_AS_CONTEXT_NEW)
+    if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
+      swfdec_movie_set_prototype (player->roots->data);
+    }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
   player->rate = rate;
@@ -1060,7 +1063,12 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 SwfdecAsObject *
 swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
 {
-  return g_hash_table_lookup (player->registered_classes, name);
+  SwfdecAsObject *ret;
+  
+  ret = g_hash_table_lookup (player->registered_classes, name);
+  if (ret)
+    return ret;
+  return player->MovieClip;
 }
 
 /**

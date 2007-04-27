@@ -154,6 +154,7 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
 SwfdecMovie *	swfdec_movie_new_for_player	(SwfdecPlayer *		player,
 						 guint			depth);
+void		swfdec_movie_set_prototype	(SwfdecMovie *		movie);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);

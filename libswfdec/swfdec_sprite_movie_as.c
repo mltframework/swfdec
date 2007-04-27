@@ -400,17 +400,17 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
   SwfdecAsValue val;
-  SwfdecAsObject *movie, *proto;
+  SwfdecAsObject *proto;
 
-  movie = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+  player->MovieClip = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_MovieClip, 0, NULL, 0));
-  if (movie == NULL)
+  if (player->MovieClip == NULL)
     return;
   proto = swfdec_as_object_new (context);
   if (!proto)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (movie, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable (player->MovieClip, SWFDEC_AS_STR_prototype, &val);
   /* now add all the functions */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_SPRITE_MOVIE,
       swfdec_sprite_movie_attachMovie, 3);

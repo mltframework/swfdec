@@ -76,6 +76,14 @@ swfdec_as_stack_push (SwfdecAsStack *stack)
 #define swfdec_as_stack_push(stack) ((stack)->cur++)
 #define swfdec_as_stack_get_size(stack) ((guint)((stack)->cur - (stack)->base))
 #endif
+#define swfdec_as_stack_swap(stack,x,y) G_STMT_START { \
+  SwfdecAsStack *__stack = (stack); \
+  SwfdecAsValue __tmp; \
+  guint __x = (x), __y = (y); \
+  __tmp = *swfdec_as_stack_peek(__stack, __x); \
+  *swfdec_as_stack_peek(__stack, __x) = *swfdec_as_stack_peek(__stack, __y); \
+  *swfdec_as_stack_peek(__stack, __y) = __tmp; \
+}G_STMT_END
 
 void		swfdec_as_stack_mark		(SwfdecAsStack *	stack);
 void		swfdec_as_stack_ensure_size	(SwfdecAsStack *	stack,

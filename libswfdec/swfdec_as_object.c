@@ -492,12 +492,17 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *name,
 void
 swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
 {
+  SwfdecAsFrame *frame;
+
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
   g_return_if_fail (script != NULL);
 
-  if (swfdec_as_frame_new (object, script))
-    swfdec_as_context_run (object->context);
+  frame = swfdec_as_frame_new (object, script);
+  if (frame == NULL)
+    return;
+  swfdec_as_frame_preload (frame);
+  swfdec_as_context_run (object->context);
 }
 
 /**

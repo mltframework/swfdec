@@ -999,6 +999,7 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 
+extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1020,6 +1021,11 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     return;
   
   swfdec_as_context_startup (SWFDEC_AS_CONTEXT (player), version);
+  /* reset state for initialization */
+  /* FIXME: have a better way to do this */
+  SWFDEC_AS_CONTEXT (player)->state = SWFDEC_AS_CONTEXT_NEW;
+  swfdec_mouse_init_context (player, version);
+  SWFDEC_AS_CONTEXT (player)->state = SWFDEC_AS_CONTEXT_RUNNING;
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
   player->rate = rate;
   player->width = width;

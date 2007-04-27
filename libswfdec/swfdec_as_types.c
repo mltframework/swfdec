@@ -126,6 +126,12 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("NEGATIVE_INFINITY"),
   SWFDEC_AS_CONSTANT_STRING ("POSITIVE_INFINITY"),
   SWFDEC_AS_CONSTANT_STRING ("[type Object]"),
+  SWFDEC_AS_CONSTANT_STRING ("startDrag"),
+  SWFDEC_AS_CONSTANT_STRING ("Mouse"),
+  SWFDEC_AS_CONSTANT_STRING ("hide"),
+  SWFDEC_AS_CONSTANT_STRING ("show"),
+  SWFDEC_AS_CONSTANT_STRING ("addListener"),
+  SWFDEC_AS_CONSTANT_STRING ("removeListener"),
   /* add more here */
   NULL
 };

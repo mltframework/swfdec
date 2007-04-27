@@ -240,7 +240,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
   } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_THIS, &val);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
     SWFDEC_ERROR ("implement arguments object");

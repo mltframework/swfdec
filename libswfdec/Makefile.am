@@ -74,6 +74,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_marshal.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
+	swfdec_mouse_as.c \
 	swfdec_movie.c \
 	swfdec_movie_asprops.c \
 	swfdec_net_stream.c \

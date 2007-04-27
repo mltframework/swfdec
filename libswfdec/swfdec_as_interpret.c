@@ -588,9 +588,7 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
   /* swap arguments and return value on the stack */
   /* FIXME: can we somehow keep this order please, it might be interesting for debuggers */
   for (i = 0; i < (n_args + 1) / 2; i++) {
-    SwfdecAsValue tmp = *swfdec_as_stack_peek (frame->stack, i + 1);
-    *swfdec_as_stack_peek (frame->stack, i + 1) = *swfdec_as_stack_peek (frame->stack, n_args + 1 - i);
-    *swfdec_as_stack_peek (frame->stack, n_args + 1 - i) = tmp;
+    swfdec_as_stack_swap (frame->stack, i + 1, n_args + 1 - i);
   }
   if (n_args)
     swfdec_as_stack_pop_n (frame->stack, n_args);
@@ -1045,51 +1043,45 @@ swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data
   swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (val));
 }
 
-#if 0
 static void
 swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSStackFrame *fp = cx->fp;
+  SwfdecAsStack *stack = cx->frame->stack;
   guint n_args = 1;
 
-  if (!swfdec_script_ensure_stack (cx, 3))
-    return JS_FALSE;
-  if (!swfdec_eval_jsval (cx, NULL, &fp->sp[-1]))
-    return JS_FALSE;
-  if (swfdec_value_to_number (cx, fp->sp[-3])) {
-    jsval tmp;
-    if (!swfdec_script_ensure_stack (cx, 7))
-      return JS_FALSE;
+  swfdec_as_stack_ensure_left (stack, 3);
+  swfdec_as_interpret_eval (cx, NULL, swfdec_as_stack_peek (stack, 1));
+  if (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (stack, 3))) {
+    swfdec_as_stack_ensure_left (stack, 7);
     n_args = 5;
     /* yay for order */
-    tmp = fp->sp[-4];
-    fp->sp[-4] = fp->sp[-7];
-    fp->sp[-7] = tmp;
-    tmp = fp->sp[-6];
-    fp->sp[-6] = fp->sp[-5];
-    fp->sp[-5] = tmp;
+    swfdec_as_stack_swap (stack, 4, 7);
+    swfdec_as_stack_swap (stack, 5, 6);
   }
-  if (!JSVAL_IS_OBJECT (fp->sp[-1]) || JSVAL_IS_NULL (fp->sp[-1])) {
-    fp->sp -= n_args + 2;
-    return JS_TRUE;
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (stack, 1))) {
+    swfdec_as_stack_pop_n (stack, n_args + 2);
+    return;
   }
-  fp->sp[-3] = fp->sp[-2];
-  fp->sp[-2] = fp->sp[-1];
-  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (fp->sp[-2]), "startDrag", &fp->sp[-1]))
-    return JS_FALSE;
-  swfdec_action_call (cx, n_args, 0);
-  fp->sp--;
-  return JS_TRUE;
+  *swfdec_as_stack_peek (stack, 3) = *swfdec_as_stack_peek (stack, 2);
+  *swfdec_as_stack_peek (stack, 2) = *swfdec_as_stack_peek (stack, 1);
+  swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (stack, 2)),
+      SWFDEC_AS_STR_startDrag, swfdec_as_stack_peek (stack, 1));
+  swfdec_action_call (cx, n_args);
+  /* FIXME: the return value will still be written to this position */
+  swfdec_as_stack_pop (stack);
 }
 
 static void
 swfdec_action_end_drag (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
-  swfdec_player_set_drag_movie (player, NULL, FALSE, NULL);
-  return JS_TRUE;
+  if (SWFDEC_IS_PLAYER (cx)) {
+    swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), NULL, FALSE, NULL);
+  } else {
+    SWFDEC_WARNING ("can't end a drag on non-players");
+  }
 }
 
+#if 0
 static void
 swfdec_action_stop_sounds (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1570,10 +1562,7 @@ swfdec_action_modulo_7 (SwfdecAsContext *cx, guint action, const guint8 *data, g
 static void
 swfdec_action_swap (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue val;
-  val = *swfdec_as_stack_peek (cx->frame->stack, 1);
-  *swfdec_as_stack_peek (cx->frame->stack, 1) = *swfdec_as_stack_peek (cx->frame->stack, 2);
-  *swfdec_as_stack_peek (cx->frame->stack, 2) = val;
+  swfdec_as_stack_swap (cx->frame->stack, 1, 2);
 }
 
 static void
@@ -2061,10 +2050,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },
   [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL },
   [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
-#if 0
-  [0x27] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
-  [0x28] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
-#endif
+  [SWFDEC_AS_ACTION_START_DRAG] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
+  [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
   [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL },
   /* version 7 */
   [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL },

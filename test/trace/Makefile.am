@@ -67,7 +67,7 @@ EXTRA_DIST = \
 	doaction-before-placeobject.swf \
 	doaction-before-placeobject.swf.trace \
 	double.swf \
-	event-order.swf \
+	double.swf.trace \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
@@ -165,7 +165,7 @@ EXTRA_DIST = \
 	scope2.swf \
 	scope2.swf.trace \
 	setinterval.swf \
-	setinterval.swf.trace
+	setinterval.swf.trace \
 	setinterval2.swf \
 	setinterval2.swf.trace \
 	setinterval-arguments.as \

@@ -213,13 +213,22 @@ main (int argc, char **argv)
     }
   } else {
     GDir *dir;
-    const char *file;
-    dir = g_dir_open (".", 0, NULL);
+    char *name;
+    const char *path, *file;
+    /* automake defines this */
+    path = g_getenv ("srcdir");
+    if (path == NULL)
+      path = ".";
+    dir = g_dir_open (path, 0, NULL);
     while ((file = g_dir_read_name (dir))) {
       if (!g_str_has_suffix (file, ".swf"))
 	continue;
-      if (!run_test (file))
-	failed_tests = g_list_prepend (failed_tests, g_strdup (file));
+      name = g_build_filename (path, file, NULL);
+      if (!run_test (name)) {
+	failed_tests = g_list_prepend (failed_tests, name);
+      } else {
+	g_free (name);
+      }
     }
     g_dir_close (dir);
   }

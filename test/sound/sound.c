@@ -173,7 +173,7 @@ run_test (const char *filename)
   SwfdecPlayer *player = NULL;
   guint i, msecs;
   GError *error = NULL;
-  char *dirname;
+  char *dirname, *basename, *file;
   const char *name;
   GDir *dir;
   GList *walk;
@@ -181,6 +181,7 @@ run_test (const char *filename)
 
   g_print ("Testing %s:\n", filename);
   dirname = g_path_get_dirname (filename);
+  basename = g_path_get_basename (filename);
   dir = g_dir_open (dirname, 0, &error);
   if (!dir) {
     g_print ("  ERROR: %s\n", error->message);
@@ -188,13 +189,16 @@ run_test (const char *filename)
     return FALSE;
   }
   while ((name = g_dir_read_name (dir))) {
-    if (!g_str_has_prefix (name, filename))
+    if (!g_str_has_prefix (name, basename))
       continue;
     if (!g_str_has_suffix (name, ".raw"))
       continue;
-    data.files = g_list_prepend (data.files, g_strdup (name));
+    file = g_build_filename (dirname, name, NULL);
+    data.files = g_list_prepend (data.files, file);
   }
   g_dir_close (dir);
+  g_free (dirname);
+  g_free (basename);
 
   loader = swfdec_loader_new_from_file (filename);
   if (loader->error) {
@@ -257,13 +261,22 @@ main (int argc, char **argv)
     }
   } else {
     GDir *dir;
-    const char *file;
-    dir = g_dir_open (".", 0, NULL);
+    char *name;
+    const char *path, *file;
+    /* automake defines this */
+    path = g_getenv ("srcdir");
+    if (path == NULL)
+      path = ".";
+    dir = g_dir_open (path, 0, NULL);
     while ((file = g_dir_read_name (dir))) {
       if (!g_str_has_suffix (file, ".swf"))
 	continue;
-      if (!run_test (file))
-	failed_tests = g_list_prepend (failed_tests, g_strdup (file));
+      name = g_build_filename (path, file, NULL);
+      if (!run_test (name)) {
+	failed_tests = g_list_prepend (failed_tests, name);
+      } else {
+	g_free (name);
+      }
     }
     g_dir_close (dir);
   }

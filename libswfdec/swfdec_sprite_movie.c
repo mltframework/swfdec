@@ -369,6 +369,20 @@ swfdec_sprite_movie_get_variable (SwfdecAsObject *object, const char *variable, 
 }
 
 static void
+swfdec_sprite_movie_mark (SwfdecAsObject *object)
+{
+  GList *walk;
+
+  for (walk = SWFDEC_MOVIE (object)->list; walk; walk = walk->next) {
+    SwfdecAsObject *child = walk->data;
+    g_assert (SWFDEC_AS_OBJECT_HAS_CONTEXT (child));
+    swfdec_as_object_mark (child);
+  }
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->mark (object);
+}
+
+static void
 swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -378,6 +392,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
   object_class->dispose = swfdec_sprite_movie_dispose;
 
   asobject_class->get = swfdec_sprite_movie_get_variable;
+  asobject_class->mark = swfdec_sprite_movie_mark;
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;

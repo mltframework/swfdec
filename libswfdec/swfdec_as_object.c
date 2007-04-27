@@ -417,6 +417,8 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
  * @object: a #SwfdecAsObject
  * @name: name of the function. The string does not have to be 
  *        garbage-collected.
+ * @type: the required type of the this Object to make this function execute.
+ *        May be 0 to accept any type.
  * @native: a native function
  * @min_args: minimum number of arguments to pass to @native
  *
@@ -426,7 +428,7 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
  * Returns: the newly created #SwfdecAsFunction or %NULL on error.
  **/
 SwfdecAsFunction *
-swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, 
+swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType type,
     SwfdecAsNative native, guint min_args)
 {
   SwfdecAsFunction *function;
@@ -434,11 +436,14 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name,
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
   g_return_val_if_fail (native != NULL, NULL);
 
   function = swfdec_as_function_new_native (object->context, name, native, min_args);
   if (function == NULL)
     return NULL;
+  if (type != 0)
+    swfdec_as_function_set_object_type (function, type);
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
@@ -644,8 +649,8 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   SwfdecAsValue val;
   SwfdecAsObject *object, *proto;
 
-  object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Object, swfdec_as_object_construct, 0));
+  object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+      SWFDEC_AS_STR_Object, 0,swfdec_as_object_construct, 0));
   if (!object)
     return;
   swfdec_as_object_root (object);
@@ -663,9 +668,9 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   /* now, set our own */
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
 
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, swfdec_as_object_hasOwnProperty, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, swfdec_as_object_valueOf, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, swfdec_as_object_toString, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 0, swfdec_as_object_hasOwnProperty, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, 0, swfdec_as_object_valueOf, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0, swfdec_as_object_toString, 0);
 }
 
 void

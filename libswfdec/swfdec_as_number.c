@@ -112,7 +112,7 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   number = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Number, swfdec_as_number_construct, 0));
+      SWFDEC_AS_STR_Number, SWFDEC_TYPE_AS_NUMBER, swfdec_as_number_construct, 0));
   if (!number)
     return;
   context->Number = number;
@@ -143,7 +143,7 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, number);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, swfdec_as_number_toString, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, swfdec_as_number_valueOf, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, SWFDEC_TYPE_AS_NUMBER, swfdec_as_number_toString, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, SWFDEC_TYPE_AS_NUMBER, swfdec_as_number_valueOf, 0);
 }
 

@@ -732,7 +732,7 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsObject *object, guint argc, SwfdecAsVa
 static void
 swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
 {
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASSetPropFlags,
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASSetPropFlags, 0, 
       swfdec_as_context_ASSetPropFlags, 3);
 }
 

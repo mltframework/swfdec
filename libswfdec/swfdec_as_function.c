@@ -196,7 +196,7 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   function = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Function, swfdec_as_function_construct, 0));
+      SWFDEC_AS_STR_Function, 0, swfdec_as_function_construct, 0));
   if (!function)
     return;
   context->Function = function;

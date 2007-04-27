@@ -69,13 +69,13 @@ swfdec_mouse_init_context (SwfdecPlayer *player, guint version)
   SwfdecAsObject *mouse;
   
   mouse = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (SWFDEC_AS_CONTEXT (player)->global,
-      SWFDEC_AS_STR_Mouse, swfdec_mouse_construct, 0));
+      SWFDEC_AS_STR_Mouse, 0, swfdec_mouse_construct, 0));
   if (!mouse)
     return;
 
-  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_addListener, swfdec_mouse_addListener, 1);
-  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_removeListener, swfdec_mouse_removeListener, 1);
-  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_hide, swfdec_mouse_hide, 0);
-  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_show, swfdec_mouse_show, 0);
+  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_addListener, 0, swfdec_mouse_addListener, 1);
+  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_removeListener, 0, swfdec_mouse_removeListener, 1);
+  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_hide, 0, swfdec_mouse_hide, 0);
+  swfdec_as_object_add_function (mouse, SWFDEC_AS_STR_show, 0, swfdec_mouse_show, 0);
 }
 

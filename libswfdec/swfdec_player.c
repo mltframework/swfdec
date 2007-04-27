@@ -1000,6 +1000,7 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
 }
 
 extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
+extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1015,17 +1016,24 @@ void
 swfdec_player_initialize (SwfdecPlayer *player, guint version, 
     guint rate, guint width, guint height)
 {
+  SwfdecAsContext *context;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   if (swfdec_player_is_initialized (player))
     return;
   
-  swfdec_as_context_startup (SWFDEC_AS_CONTEXT (player), version);
+  context = SWFDEC_AS_CONTEXT (player);
+  swfdec_as_context_startup (context, version);
   /* reset state for initialization */
   /* FIXME: have a better way to do this */
-  SWFDEC_AS_CONTEXT (player)->state = SWFDEC_AS_CONTEXT_NEW;
-  swfdec_mouse_init_context (player, version);
-  SWFDEC_AS_CONTEXT (player)->state = SWFDEC_AS_CONTEXT_RUNNING;
+  if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
+    context->state = SWFDEC_AS_CONTEXT_NEW;
+    swfdec_mouse_init_context (player, version);
+    swfdec_sprite_movie_init_context (player, version);
+    if (context->state == SWFDEC_AS_CONTEXT_NEW)
+      context->state = SWFDEC_AS_CONTEXT_RUNNING;
+  }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
   player->rate = rate;
   player->width = width;

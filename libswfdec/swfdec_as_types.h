@@ -78,6 +78,8 @@ struct _SwfdecAsValue {
   (__val)->value.number = d; \
 } G_STMT_END
 
+#define SWFDEC_AS_VALUE_SET_INT SWFDEC_AS_VALUE_SET_NUMBER
+
 #define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
@@ -204,6 +206,25 @@ extern const char const * swfdec_as_strings[];
 #define SWFDEC_AS_STR_show		SWFDEC_AS_STR_CONSTANT(98)
 #define SWFDEC_AS_STR_addListener     	SWFDEC_AS_STR_CONSTANT(99)
 #define SWFDEC_AS_STR_removeListener  	SWFDEC_AS_STR_CONSTANT(100)
+#define SWFDEC_AS_STR_MovieClip		SWFDEC_AS_STR_CONSTANT(101)
+#define SWFDEC_AS_STR_attachMovie	SWFDEC_AS_STR_CONSTANT(102)
+#define SWFDEC_AS_STR_duplicateMovieClip SWFDEC_AS_STR_CONSTANT(103)
+#define SWFDEC_AS_STR_getBytesLoaded	SWFDEC_AS_STR_CONSTANT(104)
+#define SWFDEC_AS_STR_getBytesTotal	SWFDEC_AS_STR_CONSTANT(105)
+#define SWFDEC_AS_STR_getDepth		SWFDEC_AS_STR_CONSTANT(106)
+#define SWFDEC_AS_STR_getNextHighestDepth SWFDEC_AS_STR_CONSTANT(107)
+#define SWFDEC_AS_STR_getURL		SWFDEC_AS_STR_CONSTANT(108)
+#define SWFDEC_AS_STR_gotoAndPlay	SWFDEC_AS_STR_CONSTANT(109)
+#define SWFDEC_AS_STR_gotoAndStop	SWFDEC_AS_STR_CONSTANT(110)
+#define SWFDEC_AS_STR_hitTest		SWFDEC_AS_STR_CONSTANT(111)
+#define SWFDEC_AS_STR_nextFrame		SWFDEC_AS_STR_CONSTANT(112)
+#define SWFDEC_AS_STR_play		SWFDEC_AS_STR_CONSTANT(113)
+#define SWFDEC_AS_STR_prevFrame		SWFDEC_AS_STR_CONSTANT(114)
+#define SWFDEC_AS_STR_removeMovieClip	SWFDEC_AS_STR_CONSTANT(115)
+#define SWFDEC_AS_STR_stop		SWFDEC_AS_STR_CONSTANT(116)
+#define SWFDEC_AS_STR_stopDrag		SWFDEC_AS_STR_CONSTANT(117)
+#define SWFDEC_AS_STR_swapDepths	SWFDEC_AS_STR_CONSTANT(118)
+
 
 /* all existing actions */
 typedef enum {

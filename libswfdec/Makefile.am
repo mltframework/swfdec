@@ -90,6 +90,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_stroke.c \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
+	swfdec_sprite_movie_as.c \
 	swfdec_swf_decoder.c \
 	swfdec_tag.c \
 	swfdec_text.c \

@@ -759,6 +759,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_array_init_context (context, version);
 
   swfdec_as_number_init_context (context, version);
-  context->state = SWFDEC_AS_CONTEXT_RUNNING;
+  if (context->state == SWFDEC_AS_CONTEXT_NEW)
+    context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }
 

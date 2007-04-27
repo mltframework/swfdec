@@ -412,6 +412,11 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
 
 /*** SIMPLIFICATIONS ***/
 
+static void
+swfdec_as_object_do_nothing (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+}
+
 /**
  * swfdec_as_object_add_function:
  * @object: a #SwfdecAsObject
@@ -419,7 +424,7 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
  *        garbage-collected.
  * @type: the required type of the this Object to make this function execute.
  *        May be 0 to accept any type.
- * @native: a native function
+ * @native: a native function or %NULL to just not do anything
  * @min_args: minimum number of arguments to pass to @native
  *
  * Adds @native as a variable named @name to @object. The newly added variable
@@ -437,8 +442,9 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
-  g_return_val_if_fail (native != NULL, NULL);
 
+  if (!native)
+    native = swfdec_as_object_do_nothing;
   function = swfdec_as_function_new_native (object->context, name, native, min_args);
   if (function == NULL)
     return NULL;
@@ -638,11 +644,6 @@ swfdec_as_object_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *ar
   SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_object_Object);
 }
 
-static void
-swfdec_as_object_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
-{
-}
-
 void
 swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
 {
@@ -650,12 +651,10 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   SwfdecAsObject *object, *proto;
 
   object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Object, 0,swfdec_as_object_construct, 0));
+      SWFDEC_AS_STR_Object, 0, NULL, 0));
   if (!object)
     return;
-  swfdec_as_object_root (object);
   proto = swfdec_as_object_new (context);
-  swfdec_as_object_unroot (object);
   if (!proto)
     return;
   context->Object = object;

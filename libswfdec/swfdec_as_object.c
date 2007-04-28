@@ -535,7 +535,7 @@ void
 swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
-  SwfdecAsValue tmp;
+  static SwfdecAsValue tmp; /* ignored */
   SwfdecAsFunction *fun;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
@@ -584,8 +584,8 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
 SwfdecAsObject *
 swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValue *args)
 {
+  static SwfdecAsValue val; /* ignored */
   SwfdecAsObject *new, *proto;
-  SwfdecAsValue val;
   SwfdecAsContext *context;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (construct), NULL);

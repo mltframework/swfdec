@@ -224,6 +224,7 @@ extern const char const * swfdec_as_strings[];
 #define SWFDEC_AS_STR_stop		SWFDEC_AS_STR_CONSTANT(116)
 #define SWFDEC_AS_STR_stopDrag		SWFDEC_AS_STR_CONSTANT(117)
 #define SWFDEC_AS_STR_swapDepths	SWFDEC_AS_STR_CONSTANT(118)
+#define SWFDEC_AS_STR_super		SWFDEC_AS_STR_CONSTANT(119)
 
 
 /* all existing actions */

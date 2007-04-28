@@ -150,6 +150,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("stop"),
   SWFDEC_AS_CONSTANT_STRING ("stopDrag"),
   SWFDEC_AS_CONSTANT_STRING ("swapDepths"),
+  SWFDEC_AS_CONSTANT_STRING ("super"),
   /* add more here */
   NULL
 };

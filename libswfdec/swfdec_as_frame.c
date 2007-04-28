@@ -24,6 +24,7 @@
 #include "swfdec_as_frame.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsFrame, swfdec_as_frame, SWFDEC_TYPE_AS_OBJECT)
@@ -245,14 +246,21 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
     SWFDEC_ERROR ("implement arguments object");
     current_reg++;
+    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
   } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
     SWFDEC_ERROR ("implement arguments object");
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-    SWFDEC_ERROR ("implement super object");
-    current_reg++;
+    SwfdecAsObject *super = swfdec_as_super_new (object->context);
+    if (super) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
+    }
   } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
-    SWFDEC_ERROR ("implement super object");
+    SwfdecAsObject *super = swfdec_as_super_new (object->context);
+    if (super) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, super);
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
+    }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
     SwfdecAsObject *obj;

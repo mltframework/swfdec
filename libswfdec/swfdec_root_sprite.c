@@ -128,6 +128,8 @@ tag_func_export_assets (SwfdecSwfDecoder * s)
     if (object == NULL) {
       SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
       g_free (name);
+    } else if (name == NULL) {
+      SWFDEC_ERROR ("cannot export id %u, no name was given", id);
     } else {
       SwfdecRootExportData *data = g_new (SwfdecRootExportData, 1);
       data->name = name;

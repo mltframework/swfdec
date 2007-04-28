@@ -39,12 +39,12 @@ struct _SwfdecBits
 void swfdec_bits_init (SwfdecBits *bits, SwfdecBuffer *buffer);
 void swfdec_bits_init_data (SwfdecBits *bits, const guint8 *data, guint len);
 void swfdec_bits_init_bits (SwfdecBits *bits, SwfdecBits *from, guint bytes);
-guint swfdec_bits_left (SwfdecBits *b);
+guint swfdec_bits_left (const SwfdecBits *b);
 int swfdec_bits_getbit (SwfdecBits * b);
 guint swfdec_bits_getbits (SwfdecBits * b, guint n);
-guint swfdec_bits_peekbits (SwfdecBits * b, guint n);
+guint swfdec_bits_peekbits (const SwfdecBits * b, guint n);
 int swfdec_bits_getsbits (SwfdecBits * b, guint n);
-guint swfdec_bits_peek_u8 (SwfdecBits * b);
+guint swfdec_bits_peek_u8 (const SwfdecBits * b);
 guint swfdec_bits_get_u8 (SwfdecBits * b);
 guint swfdec_bits_get_u16 (SwfdecBits * b);
 int swfdec_bits_get_s16 (SwfdecBits * b);

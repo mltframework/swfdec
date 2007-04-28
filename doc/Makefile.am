@@ -25,7 +25,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 DOC_SOURCE_DIR=../libswfdec
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
-SCANGOBJ_OPTIONS=--type-init-func="swfdec_init(); gtk_init (NULL, NULL);" 
+SCANGOBJ_OPTIONS=--type-init-func="swfdec_init();"
 
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED" 
@@ -65,7 +65,8 @@ IGNORE_HFILES= \
 	swfdec_cache.h \
 	swfdec_cached.h \
 	swfdec_character.h \
-	swfdec_codec.h \
+	swfdec_codec_audio.h \
+	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_connection.h \
 	swfdec_debug.h \
@@ -100,6 +101,7 @@ IGNORE_HFILES= \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
+	swfdec_stroke.h \
 	swfdec_swf_decoder.h \
 	swfdec_tag.h \
 	swfdec_text.h \

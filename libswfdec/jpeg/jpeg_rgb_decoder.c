@@ -8,18 +8,17 @@
 
 #include <liboil/liboil.h>
 #include <liboil/liboildebug.h>
-//#include <liboil/liboilcolorspace.h>
 
+#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define oil_argb(a,r,g,b) \
   ((oil_clamp_255(a)<<24) | \
    (oil_clamp_255(r)<<16) | \
    (oil_clamp_255(g)<<8) | \
    (oil_clamp_255(b)<<0))
-#define oil_clamp_255(x) oil_max(0,oil_min((x),255))
-#define oil_min(x,y) ((x)<(y)?(x):(y))
 #define oil_max(x,y) ((x)>(y)?(x):(y))
+#define oil_min(x,y) ((x)<(y)?(x):(y))
+#define oil_clamp_255(x) oil_max(0,oil_min((x),255))
 
-#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 
 static int16_t jfif_matrix[24] = {
   0,      0,      -8192,   -8192,
@@ -47,6 +46,26 @@ static void scanlinescale2_u8 (unsigned char *dest, unsigned char *src,
     int len);
 #endif
 
+
+int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
+    int *width, int *height)
+{
+  JpegDecoder *dec;
+  int ret;
+
+  dec = jpeg_decoder_new();
+
+  jpeg_decoder_addbits (dec, data, length);
+  ret = jpeg_decoder_decode(dec);
+
+  if (!ret) return FALSE;
+
+  jpeg_decoder_get_image_size (dec, width, height);
+  *image = (uint32_t *)jpeg_decoder_get_argb_image (dec);
+  jpeg_decoder_free (dec);
+
+  return TRUE;
+}
 
 unsigned char *
 jpeg_decoder_get_argb_image (JpegDecoder *dec)

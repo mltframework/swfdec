@@ -255,10 +255,11 @@ swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
     return NULL;
   }
   len -= swfdec_bits_left (bits) / 8;
-  if (len)
-    script->buffer = swfdec_bits_get_buffer (&org, len);
-  else
+  if (len == 0) {
     script->buffer = swfdec_buffer_new ();
+  } else {
+    script->buffer = swfdec_bits_get_buffer (&org, len);
+  }
   return script;
 }
 

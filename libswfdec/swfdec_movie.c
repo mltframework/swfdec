@@ -321,6 +321,10 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   SWFDEC_LOG ("destroying movie %s", movie->name);
   swfdec_movie_do_remove (movie, swfdec_movie_destroy);
   swfdec_movie_set_content (movie, NULL);
+  /* FIXME: figure out how to handle destruction pre-init/construct.
+   * This is just a stop-gap measure to avoid dead movies in those queues */
+  g_queue_remove (player->init_queue, movie);
+  g_queue_remove (player->construct_queue, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
   //swfdec_js_movie_remove_jsobject (movie);

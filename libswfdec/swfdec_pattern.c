@@ -486,7 +486,11 @@ swfdec_pattern_paint (SwfdecPattern *pattern, cairo_t *cr, const cairo_path_t *p
   cpattern = swfdec_pattern_get_pattern (pattern, trans, ratio);
   if (cpattern == NULL)
     return;
+#if CAIRO_VERSION_MAJOR < 2 && CAIRO_VERSION_MINOR < 4
+  cairo_append_path (cr, (cairo_path_t *) path);
+#else
   cairo_append_path (cr, path);
+#endif
   cairo_set_source (cr, cpattern);
   cairo_pattern_destroy (cpattern);
   cairo_fill (cr);

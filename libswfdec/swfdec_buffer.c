@@ -36,6 +36,19 @@
  * @title: SwfdecBuffer
  * @short_description: memory region handling
  *
+ * This section describes how memory is to be handled when interacting with the 
+ * Swfdec library. Memory regions are refcounted and passed using a 
+ * #SwfdecBuffer. If large memory segments need to be handled that may span
+ * multiple buffers, Swfdec uses a #SwfdecBufferQueue.
+ */
+
+/*** SwfdecBuffer ***/
+
+/**
+ * SwfdecBuffer:
+ * @data: the data. read-only
+ * @length: number of bytes in @data. read-only
+ *
  * To allow for easy sharing of memory regions, #SwfdecBuffer was created. 
  * Every buffer refers to a memory region and its size and takes care of 
  * freeing that region when the buffer is no longer needed. They are 
@@ -44,14 +57,7 @@
  * functionalities like extracting parts of the buffer using 
  * swfdec_buffer_new_subbuffer() or using mmapped files with 
  * swfdec_buffer_new_from_file() without the need for a different API.
- *
- * A #SwfdecBufferQueue is a queue of continuous buffers that allows reading
- * its data in chunks of pre-defined sizes. It is used to transform a data 
- * stream that was provided by buffers of random sizes to buffers of the right
- * size.
  */
-
-/*** SwfdecBuffer ***/
 
 /**
  * SWFDEC_TYPE_BUFFER:
@@ -290,6 +296,15 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
 /*** SwfdecBufferQueue ***/
 
 /**
+ * SwfdecBufferQueue:
+ *
+ * A #SwfdecBufferQueue is a queue of continuous buffers that allows reading
+ * its data in chunks of pre-defined sizes. It is used to transform a data 
+ * stream that was provided by buffers of random sizes to buffers of the right
+ * size.
+ */
+
+/**
  * SWFDEC_TYPE_BUFFER_QUEUE:
  *
  * #SwfdecBufferQueue is a boxed type for the glib type system. This macro
@@ -309,6 +324,13 @@ swfdec_buffer_queue_get_type (void)
   return type_swfdec_buffer_queue;
 }
 
+/**
+ * swfdec_buffer_queue_new:
+ *
+ * Creates a new empty buffer queue.
+ *
+ * Returns: a new buffer queue. Use swfdec_buffer_queue_unref () to free it.
+ **/
 SwfdecBufferQueue *
 swfdec_buffer_queue_new (void)
 {
@@ -319,26 +341,65 @@ swfdec_buffer_queue_new (void)
   return buffer_queue;
 }
 
-int
+/**
+ * swfdec_buffer_queue_get_depth:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Returns the number of bytes currently in @queue.
+ *
+ * Returns: amount of bytes in @queue.
+ **/
+guint
 swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue)
 {
+  g_return_val_if_fail (queue != NULL, 0);
+
   return queue->depth;
 }
 
-int
+/**
+ * swfdec_buffer_queue_get_offset:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Queries the amount of bytes that has already been pulled out of
+ * @queue using functions like swfdec_buffer_queue_pull().
+ *
+ * Returns: Number of bytes that were already pulled from this queue.
+ **/
+guint
 swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue)
 {
+  g_return_val_if_fail (queue != NULL, 0);
+
   return queue->offset;
 }
 
+/**
+ * swfdec_buffer_queue_clear:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Resets @queue into to initial state. All buffers it contains will be 
+ * released and the offset will be reset to 0.
+ **/
 void
 swfdec_buffer_queue_clear (SwfdecBufferQueue *queue)
 {
+  g_return_if_fail (queue != NULL);
+
   g_list_foreach (queue->buffers, (GFunc) swfdec_buffer_unref, NULL);
   g_list_free (queue->buffers);
   memset (queue, 0, sizeof (SwfdecBufferQueue));
 }
 
+/**
+ * swfdec_buffer_queue_push:
+ * @queue: a #SwfdecBufferQueue
+ * @buffer: #SwfdecBuffer to append to @queue
+ *
+ * Appends the given @buffer to the buffers already in @queue. This function
+ * will take ownership of the given @buffer. Use swfdec_buffer_ref () before
+ * calling this function to keep a reference.
+ **/
 void
 swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
 {
@@ -377,6 +438,18 @@ swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
   return swfdec_buffer_queue_pull (queue, buffer->length);
 }
 
+/**
+ * swfdec_buffer_queue_pull:
+ * @queue: a #SwfdecBufferQueue
+ * @length: amount of bytes to pull
+ *
+ * If enough data is still available in @queue, the first @length bytes are 
+ * put into a new buffer and that buffer is returned. The @length bytes are
+ * removed from the head of the queue. If not enough data is available, %NULL
+ * is returned.
+ *
+ * Returns: a new #SwfdecBuffer or %NULL
+ **/
 SwfdecBuffer *
 swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length)
 {

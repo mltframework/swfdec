@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.4.3.1)
+AC_INIT(swfdec,0.4.4.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -64,14 +64,15 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-GLIB_REQUIRES=2.0
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRES gobject-2.0 >= $GLIB_REQUIRES, HAVE_GLIB=yes, HAVE_GLIB=no)
+GLIB_VER=2.4
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER,
+		HAVE_GLIB=yes, HAVE_GLIB=no)
 if test "$HAVE_GLIB" = "no"; then
-  AC_MSG_ERROR([cannot find GLIB-2.0, which is required for build])
+  AC_MSG_ERROR([glib-2.0 >= $GLIB_VER and gobject-2.0 >= $GLIB_VER are required to build swfdec])
 fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_REQUIRES)
+AC_SUBST(GLIB_VER)
 dnl FIXME: detect these executables correctly
 GLIB_GENMARSHAL=glib-genmarshal
 AC_SUBST(GLIB_GENMARSHAL)
@@ -80,7 +81,7 @@ AC_SUBST(GLIB_MKENUMS)
 
 PKG_CHECK_MODULES(PANGO, pangocairo, HAVE_PANGO=yes, HAVE_PANGO=no)
 if test "$HAVE_PANGO" = "no"; then
-  AC_MSG_ERROR([cannot find pangocairo, which is required for build])
+  AC_MSG_ERROR([pangocairo is required to build swfdec])
 fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)
@@ -94,17 +95,17 @@ AC_ARG_ENABLE(gtk,
 dnl 
 dnl GTK: We want this for swfdec-gtk
 dnl
-GTK_REQUIRES=2.8.0
-AC_SUBST(GTK_REQUIRES)
+GTK_VER=2.8.0
+AC_SUBST(GTK_VER)
 if test "$enable_gtk" = "yes"; then
-	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_REQUIRES, HAVE_GTK=yes, HAVE_GTK=no)
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
 	if test "$HAVE_GTK" = "no"; then
 	  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
 	fi
 	if test "x$HAVE_GTK" = xyes; then
 	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_REQUIRES])
+	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_VER])
 	fi
 else
 	AC_MSG_WARN([*** Gtk support was not enabled. ***])
@@ -150,19 +151,20 @@ AC_SUBST(AUDIO_LIBS)
 AC_SUBST(AUDIO_CFLAGS)
 AC_SUBST(AUDIO_TYPE)
 
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.1.1, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+LIBOIL_VER=0.3.1
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= $LIBOIL_VER, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 AC_SUBST(LIBOIL_LIBS)
 AC_SUBST(LIBOIL_CFLAGS)
 if test "$HAVE_LIBOIL" = "no"; then
-  AC_MSG_ERROR([cannot find liboil-0.3, which is required for build])
+  AC_MSG_ERROR([liboil-0.3 >= $LIBOIL_VER is required to build swfdec])
 fi
 
-CAIRO_REQUIRES=1.2
-PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_REQUIRES, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+CAIRO_VER=1.2.0
+PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VER, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
-  AC_MSG_ERROR([cannot find cairo >= $CAIRO_REQUIRES, which is required for build])
+  AC_MSG_ERROR([cairo >= $CAIRO_VER is required to build swfdec])
 fi
 
 AC_ARG_ENABLE(mad,
@@ -214,8 +216,7 @@ AC_ARG_ENABLE(gstreamer,
 	enable_gstreamer="yes")
 
 if test "$enable_gstreamer" = "yes"; then
-	dnl I used my own version here, it might work with lower versions
-	GST_REQUIRED=0.10.10
+	GST_REQUIRED=0.10.11
 	PKG_CHECK_MODULES(GST, gstreamer-0.10 >= $GST_REQUIRED, HAVE_GST=yes, HAVE_GST=no)
 	if test "x$HAVE_GST" = xyes; then
 	  AC_DEFINE(HAVE_GST, 1, [Define if GStreamer is enabled])

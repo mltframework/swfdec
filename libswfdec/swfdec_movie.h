@@ -42,7 +42,7 @@ typedef enum {
 } SwfdecDepthClass;
 
 struct _SwfdecContent {
-  SwfdecGraphic *	graphic;	/* object to display or NULL */
+  SwfdecGraphic *	graphic;	/* object to display */
   int	         	depth;		/* at which depth to display */
   int			clip_depth;	/* clip depth of object */
   guint			ratio;

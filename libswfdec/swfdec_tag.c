@@ -196,7 +196,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   int id;
   SwfdecSprite *sprite;
   int ret;
-  guint tag;
+  guint tag = 1;
 
   parse = s->b;
 
@@ -210,7 +210,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   swfdec_sprite_set_n_frames (sprite, swfdec_bits_get_u16 (&parse), SWFDEC_DECODER (s)->rate);
 
   s->parse_sprite = sprite;
-  do {
+  while (swfdec_bits_left (&parse)) {
     int x;
     guint tag_len;
     SwfdecTagFunc *func;
@@ -222,7 +222,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
       tag_len = swfdec_bits_get_u32 (&parse);
     }
     SWFDEC_INFO ("sprite parsing at %td, tag %d %s, length %d",
-        parse.ptr - parse.buffer->data, tag,
+        parse.buffer ? parse.ptr - parse.buffer->data : 0, tag,
         swfdec_swf_decoder_get_tag_name (tag), tag_len);
 
     if (tag_len == 0) {
@@ -232,22 +232,25 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
     }
 
     func = swfdec_swf_decoder_get_tag_func (tag);
-    if (func == NULL) {
+    if (tag == 0) {
+      break;
+    } else if (func == NULL) {
       SWFDEC_WARNING ("tag function not implemented for %d %s",
           tag, swfdec_swf_decoder_get_tag_name (tag));
     } else if ((swfdec_swf_decoder_get_tag_flag (tag) & 1) == 0) {
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",
           tag, swfdec_swf_decoder_get_tag_name (tag));
-    } else {
+    } else if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
       ret = func (s);
 
       if (swfdec_bits_left (&s->b)) {
         SWFDEC_WARNING ("early parse finish (%d bytes)", 
 	    swfdec_bits_left (&s->b) / 8);
       }
+    } else {
+      SWFDEC_ERROR ("data after last frame");
     }
-
-  } while (tag != 0);
+  }
 
   s->b = parse;
   /* this assumes that no recursive DefineSprite happens and we check it doesn't */
@@ -273,11 +276,44 @@ tag_func_do_action (SwfdecSwfDecoder * s)
   return SWFDEC_STATUS_OK;
 }
 
+#define CONTENT_IN_FRAME(content, frame) \
+  ((content)->sequence->start <= frame && \
+   (content)->sequence->end > frame)
+static guint
+swfdec_button_remove_duplicates (SwfdecButton *button, int depth, guint states)
+{
+  GList *walk;
+  guint taken = 0;
+  guint i;
+
+  /* 1) find out which states are already taken */
+  for (walk = button->records; walk; walk = walk->next) {
+    SwfdecContent *cur = walk->data;
+    if (cur->depth != depth)
+      continue;
+    for (i = 0; i < 4; i++) {
+      if (CONTENT_IN_FRAME (cur, i))
+	taken |= (1 << i);
+    }
+  }
+  /* 2) mark states that overlap */
+  taken &= states;
+  /* 3) remove the overlapping states */
+  if (taken) {
+    SWFDEC_ERROR ("overlapping contents in button, removing for depth %u and states %u",
+	depth, taken);
+    states &= ~taken;
+  }
+  return states;
+}
+
 static void
 swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent *content)
 {
   guint i;
   SwfdecContent *cur = NULL;
+
+  states = swfdec_button_remove_duplicates (button, content->depth, states);
 
   for (i = 0; i < 4; i++) {
     if (!cur && (states & 1)) {

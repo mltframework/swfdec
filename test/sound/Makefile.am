@@ -30,7 +30,7 @@ EXTRA_DIST = \
 	adpcm-4.swf.0.0.raw \
 	adpcm-4-2.swf \
 	adpcm-4-2.swf.0.0.raw \
-	adpcm-5.swf
+	adpcm-5.swf \
 	adpcm-5.swf.0.0.raw \
 	adpcm-5-2.swf \
 	adpcm-5-2.swf.0.0.raw

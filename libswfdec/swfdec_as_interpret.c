@@ -1050,10 +1050,13 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
   SwfdecAsStack *stack = cx->frame->stack;
   guint n_args = 1;
 
-  swfdec_as_stack_ensure_left (stack, 3);
-  swfdec_as_interpret_eval (cx, NULL, swfdec_as_stack_peek (stack, 1));
+  swfdec_as_stack_ensure_size (stack, 3);
+  if (swfdec_as_interpret_eval (cx, NULL, swfdec_as_stack_peek (stack, 1)) == SWFDEC_AS_STR_EMPTY) {
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (stack, 1), 
+	SWFDEC_AS_OBJECT (swfdec_action_get_target (cx)));
+  }
   if (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (stack, 3))) {
-    swfdec_as_stack_ensure_left (stack, 7);
+    swfdec_as_stack_ensure_size (stack, 7);
     n_args = 5;
     /* yay for order */
     swfdec_as_stack_swap (stack, 4, 7);

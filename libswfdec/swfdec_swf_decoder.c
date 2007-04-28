@@ -113,23 +113,28 @@ swfdec_swf_decoder_deflate_all (SwfdecSwfDecoder * s)
   return TRUE;
 }
 
-static void
+static gboolean
 swf_inflate_init (SwfdecSwfDecoder * s)
 {
   SwfdecDecoder *dec = SWFDEC_DECODER (s);
   z_stream *z;
   int ret;
+  guint8 *data;
 
+  data = g_try_malloc (dec->bytes_total - 8);
+  if (data == NULL)
+    return FALSE;
+  s->uncompressed_buffer = swfdec_buffer_new_for_data (data, dec->bytes_total - 8);
   z = &s->z;
   z->zalloc = zalloc;
   z->zfree = zfree;
   ret = inflateInit (z);
   SWFDEC_DEBUG ("inflateInit returned %d", ret);
 
-  s->uncompressed_buffer = swfdec_buffer_new_and_alloc (dec->bytes_total - 8);
   z->next_out = s->uncompressed_buffer->data;
   z->avail_out = s->uncompressed_buffer->length;
   z->opaque = NULL;
+  return TRUE;
 }
 
 static int
@@ -167,7 +172,8 @@ swf_parse_header1 (SwfdecSwfDecoder * s)
   s->compressed = (sig1 == 'C');
   if (s->compressed) {
     SWFDEC_DEBUG ("compressed");
-    swf_inflate_init (s);
+    if (!swf_inflate_init (s))
+      return SWFDEC_STATUS_ERROR;
   } else {
     SWFDEC_DEBUG ("not compressed");
   }
@@ -237,11 +243,11 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       break;
     case SWFDEC_STATE_PARSETAG:
     {
-      int header_length;
-      int x;
+      guint header_length;
+      guint x;
       SwfdecTagFunc *func;
-      int tag;
-      int tag_len;
+      guint tag;
+      guint tag_len;
 
       if (!swfdec_swf_decoder_deflate_all (s))
 	return SWFDEC_STATUS_ERROR;
@@ -291,10 +297,12 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	buffer = NULL;
       swfdec_bits_init (&s->b, buffer);
       func = swfdec_swf_decoder_get_tag_func (tag);
-      if (func == NULL) {
+      if (tag == 0) {
+	s->state = SWFDEC_STATE_EOF;
+      } else if (func == NULL) {
 	SWFDEC_WARNING ("tag function not implemented for %d %s",
 	    tag, swfdec_swf_decoder_get_tag_name (tag));
-      } else {
+      } else if (s->main_sprite->parse_frame < s->main_sprite->n_frames) {
 	s->parse_sprite = s->main_sprite;
 	ret = func (s);
 	s->parse_sprite = NULL;
@@ -307,11 +315,11 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	      swfdec_buffer_queue_get_offset (s->input_queue), tag,
 	      swfdec_swf_decoder_get_tag_name (tag), tag_len);
 	}
+      } else {
+	ret = SWFDEC_STATE_EOF;
+	SWFDEC_ERROR ("data after last frame");
       }
 
-      if (tag == 0) {
-	s->state = SWFDEC_STATE_EOF;
-      }
 
       if (buffer)
 	swfdec_buffer_unref (buffer);

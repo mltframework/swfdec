@@ -177,7 +177,7 @@ EXTRA_DIST = \
 	scope2.swf \
 	scope2.swf.trace \
 	setinterval.swf \
-	setinterval.swf.trace
+	setinterval.swf.trace \
 	setinterval2.swf \
 	setinterval2.swf.trace \
 	setinterval-arguments.as \

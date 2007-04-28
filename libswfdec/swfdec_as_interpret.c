@@ -1085,16 +1085,15 @@ swfdec_action_end_drag (SwfdecAsContext *cx, guint action, const guint8 *data, g
   }
 }
 
-#if 0
 static void
 swfdec_action_stop_sounds (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
-
-  swfdec_player_stop_all_sounds (player);
-  return JS_TRUE;
+  if (SWFDEC_IS_PLAYER (cx)) {
+    swfdec_player_stop_all_sounds (SWFDEC_PLAYER (cx));
+  }
 }
 
+#if 0
 static void
 swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2023,9 +2022,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, { swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play } },
   [SWFDEC_AS_ACTION_STOP] = { "Stop", NULL, 0, 0, { swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop } },
   [SWFDEC_AS_ACTION_TOGGLE_QUALITY] = { "ToggleQuality", NULL },
-#if 0
-  [0x09] = { "StopSounds", NULL, 0, 0, { swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds } },
-#endif
+  [SWFDEC_AS_ACTION_STOP_SOUNDS] = { "StopSounds", NULL, 0, 0, { swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds } },
   /* version 4 */
   [SWFDEC_AS_ACTION_ADD] = { "Add", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
   [SWFDEC_AS_ACTION_SUBTRACT] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },

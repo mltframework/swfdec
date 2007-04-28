@@ -4,9 +4,8 @@
 #endif
 
 #include <liboil/liboil.h>
-#include <cog/cog-stdint.h>
-#include <cog/cogdebug.h>
-#include <cog/cogutils.h>
+#include <liboil/liboil-stdint.h>
+#include <cogcompat.h>
 
 #include <stdlib.h>
 #include <stdio.h>

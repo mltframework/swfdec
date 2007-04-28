@@ -2,7 +2,7 @@
 #ifndef _JPEG_DECODER_H_
 #define _JPEG_DECODER_H_
 
-#include <cog/jpeg/jpeg_bits.h>
+#include <jpeg/jpeg_bits.h>
 
 #include <stdint.h>
 

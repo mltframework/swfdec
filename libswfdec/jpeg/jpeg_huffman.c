@@ -3,7 +3,7 @@
 #include "config.h"
 #endif
 
-#include <cog/cogdebug.h>
+#include <cogcompat.h>
 #include <liboil/liboil.h>
 
 #include <string.h>

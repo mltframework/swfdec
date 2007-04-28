@@ -269,7 +269,7 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
     } else {
       loaded = movie->n_frames;
     }
-    if (loaded < (guint) frame)
+    if (loaded <= (guint) frame)
       swfdec_script_skip_actions (cx, jump);
   } else {
     SWFDEC_ERROR ("no movie to WaitForFrame2 on");
@@ -303,7 +303,7 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
   } else {
     loaded = movie->n_frames;
   }
-  if (loaded < frame)
+  if (loaded <= frame)
     swfdec_script_skip_actions (cx, jump);
 }
 

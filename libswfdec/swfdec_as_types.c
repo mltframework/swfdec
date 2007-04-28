@@ -28,6 +28,7 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
 #include "swfdec_debug.h"
+#include "swfdec_movie.h"
 
 #define SWFDEC_AS_CONSTANT_STRING(str) ((const char *) "\2" str)
 const char const * swfdec_as_strings[] = {
@@ -288,7 +289,12 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_NUMBER:
       return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
-      {
+      if (SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value))) {
+	char *str = swfdec_movie_get_path (SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value)));
+	const char *ret = swfdec_as_context_get_string (context, str);
+	g_free (str);
+	return ret;
+      } else {
 	SwfdecAsValue ret;
 	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_toString,
 	    0, NULL, &ret);

@@ -506,7 +506,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("trying to SetProperty %u, not allowed", id);
     goto out;
   }
-  val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  val = swfdec_as_stack_peek (cx->frame->stack, 3);
   swfdec_as_interpret_eval (cx, NULL, val);
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
     obj = cx->frame->var_object;
@@ -517,7 +517,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     goto out;
   }
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
-      swfdec_as_stack_peek (cx->frame->stack, 3));
+      swfdec_as_stack_peek (cx->frame->stack, 1));
 out:
   swfdec_as_stack_pop_n (cx->frame->stack, 3);
 }

@@ -188,13 +188,14 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
   g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
   g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
 
+  swfdec_bits_init_bits (&s->b, &save_bits, size);
+
   shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
   shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
   SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
-
-  swfdec_bits_init_bits (&s->b, &save_bits, size);
   swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
+
   swfdec_bits_syncbits (&s->b);
   if (swfdec_bits_left (&s->b)) {
     SWFDEC_WARNING ("parsing shape didn't use %d bytes",

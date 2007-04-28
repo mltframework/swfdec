@@ -1037,10 +1037,11 @@ swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data
   val = swfdec_as_stack_peek (cx->frame->stack, 1);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     SWFDEC_WARNING ("target is not an object");
-    return;
-  } 
-  /* FIXME: allow non-movieclips as targets? */
-  swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (val));
+  } else {
+    /* FIXME: allow non-movieclips as targets? */
+    swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (val));
+  }
+  swfdec_as_stack_pop (cx->frame->stack);
 }
 
 static void

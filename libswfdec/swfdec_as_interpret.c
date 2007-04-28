@@ -1093,45 +1093,52 @@ swfdec_action_stop_sounds (SwfdecAsContext *cx, guint action, const guint8 *data
   }
 }
 
-#if 0
+/* Stack looks like this: [ rval, arg1, arg2, ...] */
+static void
+swfdec_action_create (SwfdecAsFunction *fun, guint n_args)
+{
+  SwfdecAsStack *stack = SWFDEC_AS_OBJECT (fun)->context->frame->stack;
+  SwfdecAsObject *object;
+  guint i;
+
+  /* swap arguments and return value on the stack */
+  for (i = 0; i < (n_args + 1) / 2; i++) {
+    swfdec_as_stack_swap (stack, i + 1, n_args + 1 - i);
+  }
+  if (n_args)
+    swfdec_as_stack_pop_n (stack, n_args);
+  object = swfdec_as_object_create (fun, n_args, swfdec_as_stack_peek (stack, 0));
+  g_assert (object);
+  SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (stack, 1), object);
+}
+
 static void
 swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSStackFrame *fp = cx->fp;
-  jsval constructor;
-  JSObject *object;
+  SwfdecAsValue *constructor;
+  SwfdecAsFunction *fun;
   guint n_args;
   const char *name;
 
-  if (!swfdec_script_ensure_stack (cx, 2))
-    return JS_FALSE;
-  constructor = fp->sp[-1];
-  name = swfdec_eval_jsval (cx, NULL, &constructor);
-  if (name == NULL)
-    return JS_FALSE;
-  if (!JS_ValueToECMAUint32 (cx, fp->sp[-2], &n_args))
-    return JS_FALSE;
-  if (constructor == JSVAL_VOID) {
-    SWFDEC_WARNING ("no constructor for %s", name);
-  }
-  fp->sp[-1] = constructor;
-
-  if (!swfdec_js_construct_object (cx, NULL, constructor, &object))
-    return JS_FALSE;
-  if (object == NULL)
+  swfdec_as_stack_ensure_size (cx->frame->stack, 2);
+  constructor = swfdec_as_stack_peek (cx->frame->stack, 1);
+  name = swfdec_as_interpret_eval (cx, NULL, constructor);
+  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  n_args = MIN (swfdec_as_stack_get_size (cx->frame->stack) - 2, n_args);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor))) {
+    SWFDEC_WARNING ("%s is not a constructor", name);
     goto fail;
-  fp->sp[-2] = OBJECT_TO_JSVAL (object);
-  if (!swfdec_action_call (cx, n_args, JSINVOKE_CONSTRUCT))
-    return JS_FALSE;
-  fp->sp[-1] = OBJECT_TO_JSVAL (object);
-  return JS_TRUE;
+  }
+
+  swfdec_action_create (fun, n_args);
 
 fail:
-  fp->sp -= n_args + 1;
-  fp->sp[-1] = JSVAL_VOID;
-  return JS_TRUE;
+  swfdec_as_stack_pop_n (cx->frame->stack, n_args + 1);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1));
 }
 
+#if 0
 static void
 swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2079,7 +2086,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
 #if 0
   [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
-  [0x40] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
+#endif
+  [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
+#if 0
   [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [0x42] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },

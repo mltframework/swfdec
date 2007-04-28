@@ -574,14 +574,15 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames,
 guint
 swfdec_sprite_get_next_frame (SwfdecSprite *sprite, guint current_frame)
 {
-  guint next_frame, n_frames;
+  guint next_frame;
 
   g_return_val_if_fail (SWFDEC_IS_SPRITE (sprite), 0);
 
-  n_frames = MIN (sprite->n_frames, sprite->parse_frame);
   next_frame = current_frame + 1;
-  if (next_frame >= n_frames)
+  if (next_frame >= sprite->n_frames)
     next_frame = 0;
+  if (next_frame >= sprite->parse_frame)
+    next_frame = current_frame;
   return next_frame;
 }
 

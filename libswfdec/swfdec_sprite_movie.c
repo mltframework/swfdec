@@ -165,6 +165,11 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
   guint i, j, start;
 
   g_assert (goto_frame < mov->n_frames);
+  if (goto_frame >= movie->sprite->parse_frame) {
+    SWFDEC_WARNING ("jumping to not-yet-loaded frame %u (loaded: %u)",
+	goto_frame, movie->sprite->parse_frame);
+    return;
+  }
 
   if (mov->will_be_removed)
     return;

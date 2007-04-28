@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "jpeg_internal.h"
 #include "jpeg.h"
 
 #include <liboil/liboil.h>

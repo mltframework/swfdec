@@ -14,7 +14,6 @@ noinst_HEADERS = \
 	jpeg.h \
 	jpeg_bits.h \
 	jpeg_huffman.h \
-	jpeg_internal.h \
 	jpeg_rgb_decoder.h
 
 libjpeg_la_CFLAGS = $(GLOBAL_CFLAGS) $(GLIB_CFLAGS) $(LIBOIL_CFLAGS) -I$(srcdir)/..

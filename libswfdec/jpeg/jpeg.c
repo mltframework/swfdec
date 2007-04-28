@@ -4,16 +4,15 @@
 #endif
 
 #include <liboil/liboil.h>
-#include <liboil/liboil-stdint.h>
-
-#include <cogcompat.h>
+#include <cog/cog-stdint.h>
+#include <cog/cogdebug.h>
+#include <cog/cogutils.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-
-#include "jpeg_internal.h"
+#include "jpeg.h"
 
 
 extern uint8_t jpeg_standard_tables[];
@@ -37,7 +36,7 @@ static void jpeg_decoder_verify_header (JpegDecoder *dec);
 static void jpeg_decoder_init_decoder (JpegDecoder *dec);
 
 
-static void
+void
 jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
 {
   va_list varargs;
@@ -224,7 +223,7 @@ generate_code_table (int *huffsize)
 }
 
 int
-huffman_table_init_jpeg (HuffmanTable *table, JpegBits * bits)
+huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * bits)
 {
   int n_symbols;
   int huffsize[16];
@@ -262,8 +261,7 @@ huffman_table_init_jpeg (HuffmanTable *table, JpegBits * bits)
      * number of bits we think it is.  This is only triggered
      * for bad huffsize[] arrays. */
     if (symbol >= (1U << (i + 1))) {
-      /* FIXME jpeg_decoder_error() */
-      COG_ERROR ("bad huffsize[] array");
+      jpeg_decoder_error (decoder, "bad huffsize[] array");
       return -1;
     }
 
@@ -461,7 +459,7 @@ jpeg_decoder_decode_entropy_segment (JpegDecoder * dec)
       ac_table_index = dec->scan_list[i].ac_table;
       quant_index = dec->scan_list[i].quant_table;
 
-      ret = huffman_table_decode_macroblock (block,
+      ret = huffman_table_decode_macroblock (dec, block,
           &dec->dc_huff_table[dc_table_index],
           &dec->ac_huff_table[ac_table_index], bits2);
       if (ret < 0) {
@@ -529,7 +527,7 @@ jpeg_decoder_free (JpegDecoder * dec)
 {
   int i;
 
-  for (i = 0; i < JPEG_MAX_COMPONENTS; i++) {
+  for (i = 0; i < JPEG_LIMIT_COMPONENTS; i++) {
     if (dec->components[i].image)
       free (dec->components[i].image);
   }
@@ -629,6 +627,9 @@ jpeg_decoder_decode (JpegDecoder *dec)
       return FALSE;
     }
   }
+  if (dec->error) {
+    return FALSE;
+  }
 
   jpeg_decoder_start_of_frame(dec, marker);
 
@@ -663,6 +664,9 @@ jpeg_decoder_decode (JpegDecoder *dec)
       jpeg_decoder_skip (dec);
     } else if (marker == JPEG_MARKER_SOS) {
       jpeg_decoder_start_of_scan (dec);
+      if (dec->error) {
+        return FALSE;
+      }
       jpeg_decoder_decode_entropy_segment (dec);
     } else if (JPEG_MARKER_IS_RESET(marker)) {
       jpeg_decoder_decode_entropy_segment (dec);
@@ -682,6 +686,9 @@ jpeg_decoder_decode (JpegDecoder *dec)
       jpeg_decoder_error(dec, "unexpected marker 0x%02x", marker);
       return FALSE;
     }
+  }
+  if (dec->error) {
+    return FALSE;
   }
 
   return TRUE;
@@ -723,10 +730,13 @@ jpeg_decoder_define_huffman_tables (JpegDecoder * dec)
 
     if (tc) {
       hufftab = &dec->ac_huff_table[th];
-      length -= huffman_table_init_jpeg (hufftab, bits);
+      length -= huffman_table_init_jpeg (dec, hufftab, bits);
     } else {
       hufftab = &dec->dc_huff_table[th];
-      length -= huffman_table_init_jpeg (hufftab, bits);
+      length -= huffman_table_init_jpeg (dec, hufftab, bits);
+    }
+    if (dec->error) {
+      return;
     }
   }
   if (length < 0) {
@@ -914,6 +924,10 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
         dec->scan_list[n].offset =
             y * 8 * dec->components[index].rowstride + x * 8;
         n++;
+        if (n > JPEG_LIMIT_SCAN_LIST_LENGTH) {
+          jpeg_decoder_error(dec, "scan list too long");
+          return;
+        }
       }
     }
 
@@ -924,6 +938,7 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
         component_id, index, dc_table, ac_table, n);
   }
   dec->scan_list_length = n;
+
 
   spectral_start = jpeg_bits_get_u8 (bits);
   spectral_end = jpeg_bits_get_u8 (bits);
@@ -1103,10 +1118,10 @@ jpeg_load_standard_huffman_tables (JpegDecoder * dec)
   bits->idx = 0;
   bits->end = jpeg_standard_tables + jpeg_standard_tables_size;
 
-  huffman_table_init_jpeg (&dec->dc_huff_table[0], bits);
-  huffman_table_init_jpeg (&dec->ac_huff_table[0], bits);
-  huffman_table_init_jpeg (&dec->dc_huff_table[1], bits);
-  huffman_table_init_jpeg (&dec->ac_huff_table[1], bits);
+  huffman_table_init_jpeg (dec, &dec->dc_huff_table[0], bits);
+  huffman_table_init_jpeg (dec, &dec->ac_huff_table[0], bits);
+  huffman_table_init_jpeg (dec, &dec->dc_huff_table[1], bits);
+  huffman_table_init_jpeg (dec, &dec->ac_huff_table[1], bits);
 }
 
 

@@ -3,14 +3,12 @@
 #include "config.h"
 #endif
 
-#include <swfdec_debug.h>
+#include <cog/cogdebug.h>
 #include <liboil/liboil.h>
 
 #include <string.h>
 
-#include "cogcompat.h"
-
-#include "jpeg_huffman.h"
+#include "jpeg.h"
 
 /* misc helper function definitions */
 
@@ -56,7 +54,7 @@ huffman_table_add (HuffmanTable * table, uint32_t code, int n_bits, int value)
 }
 
 unsigned int
-huffman_table_decode_jpeg (HuffmanTable * tab, JpegBits * bits)
+huffman_table_decode_jpeg (JpegDecoder *dec, HuffmanTable * tab, JpegBits * bits)
 {
   unsigned int code;
   int i;
@@ -79,7 +77,7 @@ huffman_table_decode_jpeg (HuffmanTable * tab, JpegBits * bits)
 }
 
 int
-huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
+huffman_table_decode_macroblock (JpegDecoder *dec, short *block, HuffmanTable * dc_tab,
     HuffmanTable * ac_tab, JpegBits * bits)
 {
   int r, s, x, rs;
@@ -88,7 +86,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
 
   memset (block, 0, sizeof (short) * 64);
 
-  s = huffman_table_decode_jpeg (dc_tab, bits);
+  s = huffman_table_decode_jpeg (dec, dc_tab, bits);
   if (s < 0)
     return -1;
   x = getbits (bits, s);
@@ -99,7 +97,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
   block[0] = x;
 
   for (k = 1; k < 64; k++) {
-    rs = huffman_table_decode_jpeg (ac_tab, bits);
+    rs = huffman_table_decode_jpeg (dec, ac_tab, bits);
     if (rs < 0) {
       COG_DEBUG ("huffman error");
       return -1;
@@ -121,7 +119,7 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
     } else {
       k += r;
       if (k >= 64) {
-        COG_ERROR ("macroblock overrun");
+        jpeg_decoder_error (dec, "macroblock overrun");
         return -1;
       }
       x = getbits (bits, s);
@@ -137,14 +135,14 @@ huffman_table_decode_macroblock (short *block, HuffmanTable * dc_tab,
 }
 
 int
-huffman_table_decode (HuffmanTable * dc_tab, HuffmanTable * ac_tab,
+huffman_table_decode (JpegDecoder *dec, HuffmanTable * dc_tab, HuffmanTable * ac_tab,
     JpegBits * bits)
 {
   int16_t zz[64];
   int ret;
 
   while (bits->ptr < bits->end) {
-    ret = huffman_table_decode_macroblock (zz, dc_tab, ac_tab, bits);
+    ret = huffman_table_decode_macroblock (dec, zz, dc_tab, ac_tab, bits);
     if (ret < 0)
       return -1;
   }

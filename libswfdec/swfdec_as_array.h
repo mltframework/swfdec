@@ -38,8 +38,7 @@ typedef struct _SwfdecAsArrayClass SwfdecAsArrayClass;
 struct _SwfdecAsArray {
   SwfdecAsObject	object;
 
-  guint			length;		/* length of the array */
-  GArray *		values;		/* values in array */
+  guint			length;
 };
 
 struct _SwfdecAsArrayClass {
@@ -51,13 +50,10 @@ GType		swfdec_as_array_get_type	(void);
 SwfdecAsObject *swfdec_as_array_new		(SwfdecAsContext *	context);
 
 #define		swfdec_as_array_push(array,value) \
-  swfdec_as_array_set_value ((array), (array)->length, (value))
-void		swfdec_as_array_set_value     	(SwfdecAsArray *	array,
-						 guint			index,
-						 const SwfdecAsValue *	value);
-void		swfdec_as_array_get_value     	(SwfdecAsArray *	array,
-						 guint			index,
-						 SwfdecAsValue *	value);
+  swfdec_as_array_append ((array), 1, (value))
+void		swfdec_as_array_append		(SwfdecAsArray *	array,
+						 guint			n,
+						 const SwfdecAsValue *	values);
 
 void	      	swfdec_as_array_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);

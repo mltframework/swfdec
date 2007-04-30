@@ -22,116 +22,68 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_function.h"
 #include "swfdec_debug.h"
 
-typedef struct {
-  guint			id;
-  SwfdecAsValue		value;
-} SwfdecAsArrayEntry;
-
 G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
 
 static void
 swfdec_as_array_dispose (GObject *object)
 {
-  SwfdecAsArray *array = SWFDEC_AS_ARRAY (object);
-
-  g_array_free (array->values, TRUE);
+  //SwfdecAsArray *array = SWFDEC_AS_ARRAY (object);
 
   G_OBJECT_CLASS (swfdec_as_array_parent_class)->dispose (object);
 }
 
-static void
-swfdec_as_array_mark (SwfdecAsObject *object)
+/* NB: type is important for overflow */
+static inline gint32
+swfdec_as_array_to_index (const char *str)
 {
-  SwfdecAsArray *array = SWFDEC_AS_ARRAY (object);
-  guint i;
-
-  for (i = 0; i < array->values->len; i++) {
-    swfdec_as_value_mark (&g_array_index (array->values, SwfdecAsArrayEntry, i).value);
-  }
-
-  SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->mark (object);
-}
-
-/* finds the biggest element < the desired element */
-static int
-compare_array_entry (gconstpointer keyp, gconstpointer arrp)
-{
-  const SwfdecAsArrayEntry *key = keyp;
-  const SwfdecAsArrayEntry *arr = arrp;
-
-  if (arr->id > key->id)
+  char *end;
+  gulong l;
+  
+  l = strtoul (str, &end, 10);
+  if (*end != 0 || l > G_MAXINT32)
     return -1;
-  arr++;
-  if (arr->id == 0 || arr->id > key->id)
+  return l;
+}
+
+static gint32
+swfdec_as_array_get_length (SwfdecAsObject *array)
+{
+  SwfdecAsValue val;
+  gint32 length;
+
+  swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
+  length = swfdec_as_value_to_integer (array->context, &val);
+  if (length < 0)
     return 0;
-  return 1;
+  else
+    return length;
 }
 
-/* returns the smallest element >= the desired element
- * The returned element may be the zeroed element after the array
- */
-static SwfdecAsArrayEntry *
-swfdec_as_array_find (GArray *array, guint id)
+static void
+swfdec_as_array_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
 {
-  SwfdecAsArrayEntry entry = { id, };
-  SwfdecAsArrayEntry *ret;
+  gint32 l = swfdec_as_array_to_index (variable);
 
-  g_assert (array->len > 0);
-  ret = bsearch (&entry, array->data, array->len, sizeof (SwfdecAsArrayEntry), compare_array_entry);
-  ret++;
-  return ret;
-}
-
-static SwfdecAsValue *
-swfdec_as_array_get_variable (SwfdecAsArray *array, guint index, gboolean create)
-{
-  if (array->values->len == 0 ||
-      index >= array->length) {
-    if (create) {
-      SwfdecAsArrayEntry append = { index, };
-      g_array_append_val (array->values, append);
-      /* FIXME: handle pushing in length == G_MAXINT case */
-      array->length = index + 1;
-      return &g_array_index (array->values, SwfdecAsArrayEntry, array->values->len - 1).value;
-    } else {
-      return NULL;
-    }
-  } else {
-    SwfdecAsArrayEntry *entry = swfdec_as_array_find (array->values, index);
-    if (entry->id == index) {
-      return &entry->value;
-    } else if (create) {
-      guint pos = (guint) (entry - (SwfdecAsArrayEntry *) array->values->data);
-      SwfdecAsArrayEntry append = { index, };
-      g_array_insert_val (array->values, pos, append);
-      return &g_array_index (array->values, SwfdecAsArrayEntry, array->values->len - 1).value;
-    } else {
-      return NULL;
+  SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->set (object, variable, val);
+  if (l > -1) {
+    int cur;
+    l++;
+    cur = swfdec_as_array_get_length (object);
+    if (l > cur) {
+      SwfdecAsValue val;
+      SWFDEC_AS_VALUE_SET_INT (&val, l);
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_length, &val);
     }
   }
 }
 
-static gboolean
-swfdec_as_array_get (SwfdecAsObject *object, const char *variable, SwfdecAsValue *val, guint *flags)
-{
-  return SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->get (object, variable, val, flags);
-}
-
-#if 0
-  /* delete the variable - it does exists */
-  void			(* delete)		(SwfdecAsObject *       object,
-						 const char *		variable);
-  /* call with every variable until func returns FALSE */
-  gboolean		(* foreach)		(SwfdecAsObject *	object,
-						 SwfdecAsVariableForeach func,
-						 gpointer		data);
-#endif
 static void
 swfdec_as_array_class_init (SwfdecAsArrayClass *klass)
 {
@@ -140,14 +92,12 @@ swfdec_as_array_class_init (SwfdecAsArrayClass *klass)
 
   object_class->dispose = swfdec_as_array_dispose;
 
-  asobject_class->mark = swfdec_as_array_mark;
-  asobject_class->get = swfdec_as_array_get;
+  asobject_class->set = swfdec_as_array_set;
 }
 
 static void
 swfdec_as_array_init (SwfdecAsArray *array)
 {
-  array->values = g_array_new (TRUE, FALSE, sizeof (SwfdecAsArrayEntry));
 }
 
 /**
@@ -175,34 +125,22 @@ swfdec_as_array_new (SwfdecAsContext *context)
 }
 
 void
-swfdec_as_array_set_value (SwfdecAsArray *array, guint index, const SwfdecAsValue *value)
+swfdec_as_array_append (SwfdecAsArray *array, guint n, const SwfdecAsValue *value)
 {
-  SwfdecAsValue *val;
+  SwfdecAsObject *object;
+  guint i;
+  gint32 length;
 
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
-  g_return_if_fail (index < G_MAXINT32);
+  g_return_if_fail (n > 0);
   g_return_if_fail (value != NULL);
 
-  val = swfdec_as_array_get_variable (array, index, TRUE);
-  if (val == NULL)
-    return;
-  *val = *value;
-}
-
-void
-swfdec_as_array_get_value (SwfdecAsArray *array, guint index, SwfdecAsValue *value)
-{
-  SwfdecAsValue *val;
-
-  g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
-  g_return_if_fail (index < G_MAXINT32); 
-  g_return_if_fail (value != NULL);
-
-  val = swfdec_as_array_get_variable (array, index, FALSE);
-  if (val == NULL) {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (value);
-  } else {
-    *value = *val;
+  object = SWFDEC_AS_OBJECT (array);
+  length = swfdec_as_array_get_length (object);
+  for (i = 0; i < n; i++) {
+    const char *var = swfdec_as_double_to_string (object->context, length);
+    swfdec_as_object_set_variable (object, var, &value[i]);
+    length++;
   }
 }
 

@@ -62,8 +62,9 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   guint i;
 
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
+  if (frame->scope)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->scope));
   if (frame->script) {
-    swfdec_as_object_mark (frame->scope);
     swfdec_as_object_mark (frame->var_object);
   }
   swfdec_as_object_mark (frame->thisp);
@@ -127,8 +128,8 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
   frame->pc = script->buffer->data;
   frame->stack = stack;
-  frame->scope = thisp;
-  frame->var_object = thisp;
+  frame->scope = NULL;
+  frame->var_object = frame->next ? frame->next->var_object : thisp;
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   frame->thisp = thisp;
@@ -171,20 +172,19 @@ swfdec_as_frame_new_native (SwfdecAsObject *thisp)
 SwfdecAsObject *
 swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
 {
-  SwfdecAsObject *cur, *ret = NULL;
+  SwfdecAsObject *ret = NULL;
+  SwfdecAsFrame *cur;
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
-  cur = SWFDEC_AS_OBJECT (frame);
-  for (i = 0; i < 256 && frame != NULL; i++) {
-    if (!SWFDEC_IS_AS_FRAME (cur))
-      break;
-    ret = swfdec_as_object_find_variable (cur, variable);
+  cur = frame;
+  for (i = 0; i < 256 && cur->scope != NULL; i++) {
+    ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (cur), variable);
     if (ret)
       return ret;
-    cur = SWFDEC_AS_FRAME (cur)->scope;
+    cur = cur->scope;
   }
   g_assert (cur);
   if (i == 256) {
@@ -196,11 +196,11 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   if (frame->target) {
     ret = swfdec_as_object_find_variable (frame->target, variable);
   } else {
-    ret = swfdec_as_object_find_variable (cur, variable);
+    ret = swfdec_as_object_find_variable (cur->thisp, variable);
   }
   if (ret)
     return ret;
-  ret = swfdec_as_object_find_variable (cur->context->global, variable);
+  ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
   return ret;
 }
 

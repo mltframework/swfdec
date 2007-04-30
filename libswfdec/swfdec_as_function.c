@@ -97,13 +97,13 @@ swfdec_as_function_do_create (SwfdecAsContext *context)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new (SwfdecAsObject *scope)
+swfdec_as_function_new (SwfdecAsFrame *scope)
 {
   SwfdecAsFunction *fun;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (scope), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (scope), NULL);
 
-  fun = swfdec_as_function_do_create (scope->context);
+  fun = swfdec_as_function_do_create (SWFDEC_AS_OBJECT (scope)->context);
   if (fun == NULL)
     return NULL;
   fun->scope = scope;
@@ -150,6 +150,8 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     frame->function_name = function->name;
   } else {
     frame = swfdec_as_frame_new (thisp, function->script);
+    if (frame->script->version > 5)
+      frame->scope = function->scope;
   }
   frame->argc = n_args;
   frame->argv = args;

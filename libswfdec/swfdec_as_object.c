@@ -632,7 +632,11 @@ swfdec_as_object_valueOf (SwfdecAsObject *object, guint argc, SwfdecAsValue *arg
 static void
 swfdec_as_object_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_object_Object);
+  if (SWFDEC_IS_AS_FUNCTION (object)) {
+    SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_type_Function);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_object_Object);
+  }
 }
 
 void

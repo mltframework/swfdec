@@ -153,6 +153,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("swapDepths"),
   SWFDEC_AS_CONSTANT_STRING ("super"),
   SWFDEC_AS_CONSTANT_STRING ("length"),
+  SWFDEC_AS_CONSTANT_STRING ("[type Function]"),
   /* add more here */
   NULL
 };

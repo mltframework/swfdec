@@ -100,15 +100,12 @@ SwfdecAsFunction *
 swfdec_as_function_new (SwfdecAsObject *scope)
 {
   SwfdecAsFunction *fun;
-  SwfdecAsContext *context;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (scope), NULL);
 
-  context = scope->context;
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsFunction)))
+  fun = swfdec_as_function_do_create (scope->context);
+  if (fun == NULL)
     return NULL;
-  fun = g_object_new (SWFDEC_TYPE_AS_FUNCTION, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsFunction));
   fun->scope = scope;
 
   return fun;

@@ -102,6 +102,13 @@ EXTRA_DIST = \
 	function-scope-6.swf.trace \
 	function-scope-7.swf \
 	function-scope-7.swf.trace \
+	function-tostring.as \
+	function-tostring-5.swf \
+	function-tostring-5.swf.trace \
+	function-tostring-6.swf \
+	function-tostring-6.swf.trace \
+	function-tostring-7.swf \
+	function-tostring-7.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
 	goto1.swf \

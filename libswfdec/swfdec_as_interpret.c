@@ -1132,6 +1132,7 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
     goto fail;
   }
 
+  swfdec_as_stack_pop (cx->frame->stack);
   swfdec_action_create (fun, n_args);
   return;
 

@@ -1476,7 +1476,7 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
 static void
 swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  cx->frame->return_value = swfdec_as_stack_pop (cx->frame->stack);
+  *cx->frame->return_value = *swfdec_as_stack_pop (cx->frame->stack);
   swfdec_as_context_return (cx);
 }
 

@@ -754,6 +754,26 @@ swfdec_movie_dispose (GObject *object)
 }
 
 static gboolean
+swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable, 
+    SwfdecAsValue *val, guint *flags)
+{
+  if (swfdec_movie_get_asprop (SWFDEC_MOVIE (object), variable, val)) {
+    *flags = 0;
+    return TRUE;
+  }
+  return SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags);
+}
+
+static void
+swfdec_movie_class_set_variable (SwfdecAsObject *object, const char *variable, 
+    const SwfdecAsValue *val)
+{
+  if (swfdec_movie_set_asprop (SWFDEC_MOVIE (object), variable, val))
+    return;
+  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val);
+}
+
+static gboolean
 swfdec_movie_iterate_end (SwfdecMovie *movie)
 {
   return movie->parent == NULL || 
@@ -764,8 +784,12 @@ static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (movie_class);
 
   object_class->dispose = swfdec_movie_dispose;
+
+  asobject_class->get = swfdec_movie_class_get_variable;
+  asobject_class->set = swfdec_movie_class_set_variable;
 
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }
@@ -815,8 +839,6 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
    * new movies to be created (and added to this list)
    */
   player->movies = g_list_prepend (player->movies, movie);
-  /* we have to create the JSObject here to get actions queued before init_movie executes */
-  swfdec_movie_add_asprops (movie);
   //swfdec_js_movie_create_jsobject (movie);
   /* queue init and construct events for non-root movies */
   if (movie != movie->root) {

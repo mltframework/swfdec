@@ -33,32 +33,12 @@ typedef enum {
   SWFDEC_AS_VARIABLE_PERMANENT = (1 << 1),
   SWFDEC_AS_VARIABLE_READONLY = (1 << 2),
   /* internal flags go here */
-  SWFDEC_AS_VARIABLE_NATIVE = (1 << 3),
-  SWFDEC_AS_VARIABLE_TEMPORARY = (1 << 4)
+  SWFDEC_AS_VARIABLE_NATIVE = (1 << 3)
 } SwfdecAsVariableFlag;
 
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
-typedef struct _SwfdecAsVariable SwfdecAsVariable;
-typedef void (* SwfdecAsVariableSetter) (SwfdecAsObject *object, const SwfdecAsValue *value);
-typedef void (* SwfdecAsVariableGetter) (SwfdecAsObject *object, SwfdecAsValue *value);
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
-    const char *variable, SwfdecAsVariable *value, gpointer data);
-
-struct _SwfdecAsVariable {
-  guint			flags;		/* SwfdecAsVariableFlag values */
-  union {
-    SwfdecAsValue     	value;		/* value of property */
-    struct {
-      SwfdecAsVariableSetter set;	/* setter for native property */
-      SwfdecAsVariableGetter get;	/* getter for native property */
-    } funcs;
-  }			value;
-};
-#define swfdec_as_variable_mark(var) G_STMT_START{ \
-  SwfdecAsVariable *__var = (SwfdecAsVariable *) (var); \
-  if (!(__var->flags & SWFDEC_AS_VARIABLE_NATIVE)) \
-    swfdec_as_value_mark (&__var->value.value); \
-}G_STMT_END
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 
 #define SWFDEC_TYPE_AS_OBJECT                    (swfdec_as_object_get_type())
 #define SWFDEC_IS_AS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_OBJECT))
@@ -86,10 +66,20 @@ struct _SwfdecAsObjectClass {
   void			(* mark)		(SwfdecAsObject *	object);
   /* object was added to the context */
   void			(* add)			(SwfdecAsObject *	object);
-  /* get the place that holds a variable or return NULL */
-  SwfdecAsVariable *	(* get)			(SwfdecAsObject *       object,
+  /* get the valueand flags for a variables */
+  gboolean	      	(* get)			(SwfdecAsObject *       object,
 						 const char *		variable,
-						 gboolean		create);
+						 SwfdecAsValue *	val,
+						 guint *      		flags);
+  /* set the variable - and return it (or NULL on error) */
+  void			(* set)			(SwfdecAsObject *	object,
+						 const char *		variable,
+						 const SwfdecAsValue *	val);
+  /* set flags of a variable */
+  void			(* set_flags)	      	(SwfdecAsObject *	object,
+						 const char *		variable,
+						 guint			flags,
+						 guint			mask);
   /* delete the variable - it does exists */
   void			(* delete)		(SwfdecAsObject *       object,
 						 const char *		variable);
@@ -142,10 +132,6 @@ SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 GType			type,
 						 SwfdecAsNative		native,
 						 guint			min_args);
-void		swfdec_as_object_add_variable	(SwfdecAsObject *	object,
-						 const char *		name,
-						 SwfdecAsVariableSetter	set,
-						 SwfdecAsVariableGetter get);
 
 void		swfdec_as_object_run		(SwfdecAsObject *       object,
 						 SwfdecScript *		script);
@@ -159,13 +145,6 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 						 
 void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);
-
-void		swfdec_as_variable_set		(SwfdecAsObject *	object,
-						 SwfdecAsVariable *	var,
-						 const SwfdecAsValue *	value);
-void		swfdec_as_variable_get		(SwfdecAsObject *	object,
-						 SwfdecAsVariable *	var,
-						 SwfdecAsValue *	value);
 
 
 G_END_DECLS

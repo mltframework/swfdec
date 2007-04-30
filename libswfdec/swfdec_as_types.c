@@ -93,6 +93,8 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("_quality"),
   SWFDEC_AS_CONSTANT_STRING ("_xmouse"), 
   SWFDEC_AS_CONSTANT_STRING ("_ymouse"),
+  SWFDEC_AS_CONSTANT_STRING ("_parent"),
+  SWFDEC_AS_CONSTANT_STRING ("_root"),
   SWFDEC_AS_CONSTANT_STRING ("#ERROR#"),
   SWFDEC_AS_CONSTANT_STRING ("number"),
   SWFDEC_AS_CONSTANT_STRING ("boolean"),
@@ -105,8 +107,6 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("Function"),
   SWFDEC_AS_CONSTANT_STRING ("prototype"),
   SWFDEC_AS_CONSTANT_STRING ("constructor"),
-  SWFDEC_AS_CONSTANT_STRING ("_parent"),
-  SWFDEC_AS_CONSTANT_STRING ("_root"),
   SWFDEC_AS_CONSTANT_STRING ("Object"),
   SWFDEC_AS_CONSTANT_STRING ("hasOwnProperty"),
   SWFDEC_AS_CONSTANT_STRING ("NUMERIC"),
@@ -152,6 +152,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("stopDrag"),
   SWFDEC_AS_CONSTANT_STRING ("swapDepths"),
   SWFDEC_AS_CONSTANT_STRING ("super"),
+  SWFDEC_AS_CONSTANT_STRING ("length"),
   /* add more here */
   NULL
 };

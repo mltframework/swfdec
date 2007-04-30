@@ -36,16 +36,9 @@
 #include "swfdec_swf_decoder.h"
 
 static void
-mc_x_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_x_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
   double d;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0);
@@ -53,18 +46,11 @@ mc_x_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_x_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to move %s._x to a non-finite value, ignoring", movie->name);
     return;
@@ -78,16 +64,9 @@ mc_x_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_y_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_y_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
   double d;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0);
@@ -95,18 +74,11 @@ mc_y_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_y_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to move %s._y to a non-finite value, ignoring", movie->name);
     return;
@@ -120,32 +92,17 @@ mc_y_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_xscale_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_xscale_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->xscale);
 }
 
 static void
-mc_xscale_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return;
@@ -156,32 +113,17 @@ mc_xscale_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_yscale_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_yscale_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->yscale);
 }
 
 static void
-mc_yscale_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set yscale to a non-finite value, ignoring");
     return;
@@ -192,30 +134,15 @@ mc_yscale_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_currentframe (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->frame + 1);
 }
 
 static void
-mc_framesloaded (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_framesloaded (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
   guint loaded;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   /* only root movies can be partially loaded */
   if (SWFDEC_IS_ROOT_MOVIE (movie)) {
@@ -229,20 +156,13 @@ mc_framesloaded (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_name_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
   const char *string;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   if (movie->has_name) {
     /* FIXME: make names GC'd */
-    string = swfdec_as_context_get_string (obj->context, movie->name);
+    string = swfdec_as_context_get_string (SWFDEC_AS_OBJECT (movie)->context, movie->name);
   } else {
     string = SWFDEC_AS_STR_EMPTY;
   }
@@ -250,74 +170,36 @@ mc_name_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_name_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   const char *str;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  str = swfdec_as_value_to_string (obj->context, val);
-#if 0
-  if (!SWFDEC_IS_ROOT_MOVIE (movie))
-    swfdec_js_movie_remove_property (movie);
-#endif
+  str = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
   g_free (movie->name);
   movie->name = g_strdup (str);
   movie->has_name = TRUE;
-#if 0
-  if (!SWFDEC_IS_ROOT_MOVIE (movie))
-    swfdec_js_movie_add_property (movie);
-#endif
 }
 
 static void
-mc_totalframes (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_totalframes (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->n_frames);
 }
 
 static void
-mc_alpha_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_alpha_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_NUMBER (rval,
       movie->color_transform.aa * 100.0 / 256.0);
 }
 
 static void
-mc_alpha_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_alpha_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d;
   int alpha;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set alpha to a non-finite value, ignoring");
     return;
@@ -330,32 +212,17 @@ mc_alpha_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_visible_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_visible_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, movie->visible);
 }
 
 static void
-mc_visible_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_visible_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   gboolean b;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
-  b = swfdec_as_value_to_boolean (obj->context, val);
+  b = swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (movie)->context, val);
   if (b != movie->visible) {
     movie->visible = b;
     swfdec_movie_invalidate (movie);
@@ -363,16 +230,9 @@ mc_visible_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_width_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_width_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
   double d;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.x1 - movie->extents.x0)));
@@ -380,21 +240,14 @@ mc_width_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_width_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d, cur;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   /* property was readonly in Flash 4 and before */
-  if (obj->context->version < 5)
+  if (SWFDEC_AS_OBJECT (movie)->context->version < 5)
     return;
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return;
@@ -412,16 +265,9 @@ mc_width_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_height_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_height_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
   double d;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.y1 - movie->extents.y0)));
@@ -429,21 +275,14 @@ mc_height_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_height_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d, cur;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   /* property was readonly in Flash 4 and before */
-  if (obj->context->version < 5)
+  if (SWFDEC_AS_OBJECT (movie)->context->version < 5)
     return;
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return;
@@ -461,39 +300,24 @@ mc_height_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_rotation_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_rotation_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->rotation);
 }
 
 static void
-mc_rotation_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
+mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  SwfdecMovie *movie;
   double d;
 
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   /* FIXME: Flash 4 handles this differently */
-  d = swfdec_as_value_to_number (obj->context, val);
+  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   d = fmod (d, 360.0);
   if (d > 180.0)
     d -= 360.0;
   if (d < -180.0)
     d += 360.0;
-  if (obj->context->version < 5) {
+  if (SWFDEC_AS_OBJECT (movie)->context->version < 5) {
     if (!isfinite (d))
       return;
     SWFDEC_ERROR ("FIXME: implement correct rounding errors here");
@@ -504,16 +328,9 @@ mc_rotation_set (SwfdecAsObject *obj, const SwfdecAsValue *val)
 }
 
 static void
-mc_xmouse_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_xmouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   double x, y;
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   swfdec_movie_get_mouse (movie, &x, &y);
   x = rint (x * SWFDEC_TWIPS_SCALE_FACTOR) / SWFDEC_TWIPS_SCALE_FACTOR;
@@ -521,16 +338,9 @@ mc_xmouse_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_ymouse_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_ymouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   double x, y;
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
 
   swfdec_movie_get_mouse (movie, &x, &y);
   y = rint (y * SWFDEC_TWIPS_SCALE_FACTOR) / SWFDEC_TWIPS_SCALE_FACTOR;
@@ -538,16 +348,8 @@ mc_ymouse_get (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_parent (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_parent (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   if (movie->parent) {
     SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie->parent));
   } else {
@@ -556,59 +358,84 @@ mc_parent (SwfdecAsObject *obj, SwfdecAsValue *rval)
 }
 
 static void
-mc_root (SwfdecAsObject *obj, SwfdecAsValue *rval)
+mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-
-  if (!SWFDEC_IS_MOVIE (obj)) {
-    SWFDEC_WARNING ("not a movie");
-    return;
-  }
-  movie = SWFDEC_MOVIE (obj);
-
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie->root));
 }
 
 static struct {
-  guint				id;
-  SwfdecAsVariableGetter	get;
-  SwfdecAsVariableSetter	set;
+  void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
+  void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
 } movieclip_props[] = {
-  { 39,		mc_x_get,	    mc_x_set },
-  { 40,			mc_y_get,	    mc_y_set },
-  { 41,		mc_xscale_get,	    mc_xscale_set },
-  { 42,		mc_yscale_get,	    mc_yscale_set },
-  { 43,	mc_currentframe,    NULL },
-  { 44,		mc_totalframes,	    NULL },
-  { 45,		mc_alpha_get,	    mc_alpha_set },
-  { 46,		mc_visible_get,	    mc_visible_set },
-  { 47,		mc_width_get,	    mc_width_set },
-  { 48,		mc_height_get,	    mc_height_set },
-  { 49,		mc_rotation_get,    mc_rotation_set },
-  //{"_target",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  { 51,      	mc_framesloaded,    NULL},
-  { 52,		mc_name_get,	    mc_name_set },
-  //{"_droptarget",   -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  //{"_url",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  //{"_highquality",  -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  //{"_focusrect",    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  //{"_soundbuftime", -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  //{"_quality",	    -1,		MC_PROP_ATTRS,			  not_reached,	    not_reached },
-  { 59,		mc_xmouse_get,	    NULL },
-  { 60,		mc_ymouse_get,	    NULL },
-  { 73,		mc_parent,	    NULL },
-  { 74,		mc_root,	    NULL },
+  { mc_x_get,	    mc_x_set },
+  { mc_y_get,	    mc_y_set },
+  { mc_xscale_get,	    mc_xscale_set },
+  { mc_yscale_get,	    mc_yscale_set },
+  { mc_currentframe,    NULL },
+  { mc_totalframes,	    NULL },
+  { mc_alpha_get,	    mc_alpha_set },
+  { mc_visible_get,	    mc_visible_set },
+  { mc_width_get,	    mc_width_set },
+  { mc_height_get,	    mc_height_set },
+  { mc_rotation_get,    mc_rotation_set },
+  { NULL,  NULL }, //"_target"
+  { mc_framesloaded,    NULL},
+  { mc_name_get,	  mc_name_set },
+  { NULL,  NULL }, //"_droptarget"
+  { NULL,  NULL }, //"_url"
+  { NULL,  NULL }, //"_highquality"
+  { NULL,  NULL }, //"_focusrect"
+  { NULL,  NULL }, //"_soundbuftime"
+  { NULL,  NULL }, //"_quality"
+  { mc_xmouse_get,	    NULL },
+  { mc_ymouse_get,	    NULL },
+  { mc_parent,	    NULL },
+  { mc_root,	    NULL },
 };
 
-void
-swfdec_movie_add_asprops (SwfdecMovie *movie)
+static inline int
+swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
 {
-  SwfdecAsObject *object = SWFDEC_AS_OBJECT (movie);
   guint i;
-  
-  /* FIXME: figure out a way to not add all of these to buttons etc */
+
   for (i = 0; i < G_N_ELEMENTS (movieclip_props); i++) {
-    swfdec_as_object_add_variable (object, SWFDEC_AS_STR_CONSTANT (movieclip_props[i].id),
-	movieclip_props[i].set, movieclip_props[i].get);
+    if (SWFDEC_AS_STR_CONSTANT (i + 39) == name) {
+      if (movieclip_props[i].get == NULL) {
+	SWFDEC_ERROR ("property %s not implemented", name);
+      }
+      return i;
+    }
   }
+  return -1;
 }
+
+gboolean
+swfdec_movie_set_asprop (SwfdecMovie *movie, const char *name, const SwfdecAsValue *val)
+{
+  int i;
+  
+  i = swfdec_movie_get_asprop_index (movie, name);
+  if (i == -1)
+    return FALSE;
+  if (movieclip_props[i].set != NULL) {
+    movieclip_props[i].set (movie, val);
+  }
+  return TRUE;
+}
+
+gboolean
+swfdec_movie_get_asprop (SwfdecMovie *movie, const char *name, SwfdecAsValue *val)
+{
+  int i;
+  
+  i = swfdec_movie_get_asprop_index (movie, name);
+  if (i == -1)
+    return FALSE;
+  if (movieclip_props[i].get != NULL) {
+    movieclip_props[i].get (movie, val);
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+  }
+  return TRUE;
+}
+

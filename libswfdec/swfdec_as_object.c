@@ -28,6 +28,12 @@
 #include "swfdec_debug.h"
 
 
+typedef struct _SwfdecAsVariable SwfdecAsVariable;
+struct _SwfdecAsVariable {
+  guint			flags;		/* SwfdecAsVariableFlag values */
+  SwfdecAsValue     	value;		/* value of property */
+};
+
 G_DEFINE_TYPE (SwfdecAsObject, swfdec_as_object, G_TYPE_OBJECT)
 
 static void
@@ -43,8 +49,10 @@ swfdec_as_object_dispose (GObject *gobject)
 static void
 swfdec_as_object_mark_property (gpointer key, gpointer value, gpointer unused)
 {
+  SwfdecAsVariable *var = value;
+
   swfdec_as_string_mark (key);
-  swfdec_as_variable_mark (value);
+  swfdec_as_value_mark (&var->value);
 }
 
 static void
@@ -59,20 +67,51 @@ swfdec_as_object_do_add (SwfdecAsObject *object)
 {
 }
 
-static SwfdecAsVariable *
+static gboolean
 swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable, 
-    gboolean create)
+    SwfdecAsValue *val, guint *flags)
+{
+  SwfdecAsVariable *var = g_hash_table_lookup (object->properties, variable);
+
+  if (var) {
+    *val = var->value;
+    *flags = var->flags;
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static void
+swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
+    const SwfdecAsValue *val)
 {
   SwfdecAsVariable *var;
 
+  if (variable == SWFDEC_AS_STR___proto__) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    } else {
+      object->prototype = NULL;
+    }
+  }
+
   var = g_hash_table_lookup (object->properties, variable);
-  if (var != NULL || !create)
-    return var;
-  if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
-    return NULL;
-  var = g_slice_new0 (SwfdecAsVariable);
-  g_hash_table_insert (object->properties, (gpointer) variable, var);
-  return var;
+  if (var == NULL) {
+    if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
+      return;
+    var = g_slice_new0 (SwfdecAsVariable);
+    g_hash_table_insert (object->properties, (gpointer) variable, var);
+  }
+  var->value = *val;
+}
+
+static void
+swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, guint flags, guint mask)
+{
+  SwfdecAsVariable *var = g_hash_table_lookup (object->properties, variable);
+
+  if (var)
+    var->flags = (var->flags & ~mask) | flags;
 }
 
 static void
@@ -105,11 +144,12 @@ static void
 swfdec_as_object_hash_foreach (gpointer key, gpointer value, gpointer data)
 {
   ForeachData *fdata = data;
+  SwfdecAsVariable *var = value;
 
   if (!fdata->retval)
     return;
 
-  fdata->retval = fdata->func (fdata->object, key, value, fdata->data);
+  fdata->retval = fdata->func (fdata->object, key, &var->value, var->flags, fdata->data);
 }
 
 /* FIXME: does not do Adobe Flash's order for Enumerate actions */
@@ -132,6 +172,8 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
   klass->mark = swfdec_as_object_do_mark;
   klass->add = swfdec_as_object_do_add;
   klass->get = swfdec_as_object_do_get;
+  klass->set = swfdec_as_object_do_set;
+  klass->set_flags = swfdec_as_object_do_set_flags;
   klass->delete = swfdec_as_object_do_delete;
   klass->foreach = swfdec_as_object_do_foreach;
 }
@@ -236,43 +278,41 @@ swfdec_as_object_unroot (SwfdecAsObject *object)
   object->flags &= ~SWFDEC_AS_GC_ROOT;
 }
 
-static inline SwfdecAsVariable *
-swfdec_as_object_lookup (SwfdecAsObject *object, const char *variable, gboolean create)
-{
-  SwfdecAsObjectClass *klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-
-  return klass->get (object, variable, create);
-}
-
 void
 swfdec_as_object_set_variable (SwfdecAsObject *object,
     const char *variable, const SwfdecAsValue *value)
 {
-  SwfdecAsVariable *var;
+  SwfdecAsObjectClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (value);
-    } else {
-      object->prototype = NULL;
-    }
-  }
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  klass->set (object, variable, value);
+}
 
-  var = swfdec_as_object_lookup (object, variable, TRUE);
-  if (var == NULL)
-    return;
-  swfdec_as_variable_set (object, var, value);
+static inline gboolean
+swfdec_as_object_lookup (SwfdecAsObject *object, const char *variable, 
+    SwfdecAsValue *value, guint *flags)
+{
+  SwfdecAsObjectClass *klass;
+  SwfdecAsValue tmp_val;
+  guint tmp_flags;
+
+  if (value == NULL)
+    value = &tmp_val;
+  if (flags == NULL)
+    flags = &tmp_flags;
+
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  return klass->get (object, variable, value, flags);
 }
 
 void
 swfdec_as_object_get_variable (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value)
 {
-  SwfdecAsVariable *var;
   guint i;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
@@ -280,13 +320,9 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
   g_return_if_fail (value != NULL);
 
   for (i = 0; i < 256 && object != NULL; i++) {
-    var = swfdec_as_object_lookup (object, variable, FALSE);
-    if (var == NULL) {
-      object = object->prototype;
-      continue;
-    }
-    swfdec_as_variable_get (object, var, value);
-    return;
+    if (swfdec_as_object_lookup (object, variable, value, NULL))
+      return;
+    object = object->prototype;
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
@@ -301,22 +337,20 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object,
     const char *variable)
 {
   SwfdecAsObjectClass *klass;
-  SwfdecAsVariable *var;
-  guint i;
+  guint i, flags;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
 
   for (i = 0; i < 256 && object != NULL; i++) {
-    var = swfdec_as_object_lookup (object, variable, FALSE);
-    if (var == NULL) {
+    if (!swfdec_as_object_lookup (object, variable, NULL, &flags)) {
       object = object->prototype;
       continue;
     }
-    if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
-      return;
-    klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-    klass->delete (object, variable);
+    if (!(flags & SWFDEC_AS_VARIABLE_PERMANENT)) {
+      klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+      klass->delete (object, variable);
+    }
     return;
   }
   if (i == 256) {
@@ -329,15 +363,13 @@ SwfdecAsObject *
 swfdec_as_object_find_variable (SwfdecAsObject *object,
     const char *variable)
 {
-  SwfdecAsVariable *var;
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
   for (i = 0; i < 256 && object != NULL; i++) {
-    var = swfdec_as_object_lookup (object, variable, FALSE);
-    if (var)
+    if (swfdec_as_object_lookup (object, variable, NULL, NULL))
       return object;
     object = object->prototype;
   }
@@ -354,22 +386,19 @@ swfdec_as_object_find_variable (SwfdecAsObject *object,
  * @variable: the variable to modify
  * @flags: flags to set
  *
- * Sets the given flags for the given variable. The variable must exist in 
- * @object.
+ * Sets the given flags for the given variable.
  **/
 void
 swfdec_as_object_set_variable_flags (SwfdecAsObject *object, 
     const char *variable, SwfdecAsVariableFlag flags)
 {
-  SwfdecAsVariable *var;
+  SwfdecAsObjectClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
-  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
 
-  var = swfdec_as_object_lookup (object, variable, FALSE);
-  g_return_if_fail (var != NULL);
-  var->flags |= flags;
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  klass->set_flags (object, variable, flags, flags);
 }
 
 /**
@@ -385,15 +414,13 @@ void
 swfdec_as_object_unset_variable_flags (SwfdecAsObject *object,
     const char *variable, SwfdecAsVariableFlag flags)
 {
-  SwfdecAsVariable *var;
+  SwfdecAsObjectClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
-  g_return_if_fail ((flags & SWFDEC_AS_VARIABLE_NATIVE) == 0);
 
-  var = swfdec_as_object_lookup (object, variable, FALSE);
-  g_return_if_fail (var != NULL);
-  var->flags &= ~flags;
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  klass->set_flags (object, variable, 0, flags);
 }
 
 gboolean
@@ -456,41 +483,6 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
   swfdec_as_object_set_variable (object, name, &val);
   swfdec_as_object_set_variable_flags (object, name, SWFDEC_AS_VARIABLE_DONT_ENUM);
   return function;
-}
-
-/**
- * swfdec_as_object_add_variable:
- * @object: a #SwfdecAsObject
- * @name: name of the function. The string does not have to be 
- *        garbage-collected.
- * @set: function to set this value or %NULL if the value should be read-only
- * @get: function to get the value.
- *
- * Adds a new property with name @name to @object. The property is native, so
- * the value is not managed by the script engine, but the @set and @get 
- * function are used to access the value. The variable will not be enumerated
- * and cannot be deleted.
- **/
-void
-swfdec_as_object_add_variable (SwfdecAsObject *object, const char *name,
-    SwfdecAsVariableSetter set, SwfdecAsVariableGetter get)
-{
-  SwfdecAsVariable *var;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (name != NULL);
-  g_return_if_fail (get != NULL);
-
-  name = swfdec_as_context_get_string (object->context, name);
-  var = swfdec_as_object_lookup (object, name, TRUE);
-  if (var == NULL)
-    return;
-  var->flags = SWFDEC_AS_VARIABLE_NATIVE | SWFDEC_AS_VARIABLE_PERMANENT |
-    SWFDEC_AS_VARIABLE_DONT_ENUM;
-  if (set == NULL)
-    var->flags |= SWFDEC_AS_VARIABLE_READONLY;
-  var->value.funcs.get = get;
-  var->value.funcs.set = set;
 }
 
 /**
@@ -619,14 +611,13 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValu
 static void
 swfdec_as_object_hasOwnProperty (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecAsVariable *var;
   const char *name;
+  guint flags;
 
   name = swfdec_as_value_to_string (object->context, &argv[0]);
   
-  var = swfdec_as_object_lookup (object, name, FALSE);
-
-  if (var != NULL && (var->flags & (SWFDEC_AS_VARIABLE_NATIVE | SWFDEC_AS_VARIABLE_TEMPORARY)) == 0)
+  if (swfdec_as_object_lookup (object, name, NULL, &flags) &&
+      (flags & SWFDEC_AS_VARIABLE_NATIVE) == 0)
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
   else
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
@@ -673,33 +664,13 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
 }
 
 void
-swfdec_as_variable_set (SwfdecAsObject *object, SwfdecAsVariable *var, const SwfdecAsValue *value)
+swfdec_as_variable_set (SwfdecAsVariable *var, const SwfdecAsValue *value)
 {
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (var != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
     return;
-  if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
-    g_return_if_fail (var->value.funcs.set != NULL);
-    var->value.funcs.set (object, value);
-  } else {
-    var->value.value = *value;
-  }
+  var->value = *value;
 }
 
-void
-swfdec_as_variable_get (SwfdecAsObject *object, SwfdecAsVariable *var, SwfdecAsValue *value)
-{
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (var != NULL);
-  g_return_if_fail (value != NULL);
-
-  if ((var->flags & SWFDEC_AS_VARIABLE_NATIVE)) {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (value); /* just to be sure */
-    var->value.funcs.get (object, value);
-  } else {
-    *value = var->value.value;
-  }
-}

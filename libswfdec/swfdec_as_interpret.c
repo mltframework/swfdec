@@ -1670,15 +1670,15 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 #endif
 
 static gboolean
-swfdec_action_do_enumerate (SwfdecAsObject *object, const char *val,
-    SwfdecAsVariable *var, gpointer stackp)
+swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
+    SwfdecAsValue *value, guint flags, gpointer stackp)
 {
   SwfdecAsStack *stack = stackp;
 
-  if (var->flags & SWFDEC_AS_VARIABLE_DONT_ENUM)
+  if (flags & SWFDEC_AS_VARIABLE_DONT_ENUM)
     return TRUE;
   swfdec_as_stack_ensure_left (stack, 1);
-  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), val);
+  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), variable);
   return TRUE;
 }
 

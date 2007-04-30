@@ -692,17 +692,22 @@ swfdec_as_context_eval_set (SwfdecAsContext *cx, SwfdecAsObject *obj, const char
 /*** AS CODE ***/
 
 static gboolean
-swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object, const char *s, SwfdecAsVariable *var, gpointer data)
+swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object, const char *s, 
+    SwfdecAsValue *val, guint cur_flags, gpointer data)
 {
   guint *flags = data;
   guint real;
 
+  /* shortcut if the flags already match */
+  if ((cur_flags & flags[1]) == flags[0])
+    return TRUE;
+
   /* first set all relevant flags */
   real = flags[0] & flags[1];
-  var->flags |= real;
+  swfdec_as_object_set_variable_flags (object, s, real);
   /* then unset all relevant flags */
-  real = flags[0] | ~flags[1];
-  var->flags &= real;
+  real = ~flags[0] & flags[1];
+  swfdec_as_object_unset_variable_flags (object, s, real);
   return TRUE;
 }
 

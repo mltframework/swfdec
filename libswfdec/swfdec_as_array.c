@@ -30,7 +30,7 @@
 
 typedef struct {
   guint			id;
-  SwfdecAsVariable	variable;
+  SwfdecAsValue		value;
 } SwfdecAsArrayEntry;
 
 G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
@@ -52,7 +52,7 @@ swfdec_as_array_mark (SwfdecAsObject *object)
   guint i;
 
   for (i = 0; i < array->values->len; i++) {
-    swfdec_as_variable_mark (&g_array_index (array->values, SwfdecAsArrayEntry, i).variable);
+    swfdec_as_value_mark (&g_array_index (array->values, SwfdecAsArrayEntry, i).value);
   }
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->mark (object);
@@ -88,7 +88,7 @@ swfdec_as_array_find (GArray *array, guint id)
   return ret;
 }
 
-static SwfdecAsVariable *
+static SwfdecAsValue *
 swfdec_as_array_get_variable (SwfdecAsArray *array, guint index, gboolean create)
 {
   if (array->values->len == 0 ||
@@ -98,29 +98,29 @@ swfdec_as_array_get_variable (SwfdecAsArray *array, guint index, gboolean create
       g_array_append_val (array->values, append);
       /* FIXME: handle pushing in length == G_MAXINT case */
       array->length = index + 1;
-      return &g_array_index (array->values, SwfdecAsArrayEntry, array->values->len - 1).variable;
+      return &g_array_index (array->values, SwfdecAsArrayEntry, array->values->len - 1).value;
     } else {
       return NULL;
     }
   } else {
     SwfdecAsArrayEntry *entry = swfdec_as_array_find (array->values, index);
     if (entry->id == index) {
-      return &entry->variable;
+      return &entry->value;
     } else if (create) {
       guint pos = (guint) (entry - (SwfdecAsArrayEntry *) array->values->data);
       SwfdecAsArrayEntry append = { index, };
       g_array_insert_val (array->values, pos, append);
-      return &g_array_index (array->values, SwfdecAsArrayEntry, array->values->len - 1).variable;
+      return &g_array_index (array->values, SwfdecAsArrayEntry, array->values->len - 1).value;
     } else {
       return NULL;
     }
   }
 }
 
-static SwfdecAsVariable *
-swfdec_as_array_get (SwfdecAsObject *object, const char *variable, gboolean create)
+static gboolean
+swfdec_as_array_get (SwfdecAsObject *object, const char *variable, SwfdecAsValue *val, guint *flags)
 {
-  return SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->get (object, variable, create);
+  return SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->get (object, variable, val, flags);
 }
 
 #if 0
@@ -177,32 +177,32 @@ swfdec_as_array_new (SwfdecAsContext *context)
 void
 swfdec_as_array_set_value (SwfdecAsArray *array, guint index, const SwfdecAsValue *value)
 {
-  SwfdecAsVariable *var;
+  SwfdecAsValue *val;
 
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (index < G_MAXINT32);
   g_return_if_fail (value != NULL);
 
-  var = swfdec_as_array_get_variable (array, index, TRUE);
-  if (var == NULL)
+  val = swfdec_as_array_get_variable (array, index, TRUE);
+  if (val == NULL)
     return;
-  swfdec_as_variable_set (SWFDEC_AS_OBJECT (array), var, value);
+  *val = *value;
 }
 
 void
 swfdec_as_array_get_value (SwfdecAsArray *array, guint index, SwfdecAsValue *value)
 {
-  SwfdecAsVariable *var;
+  SwfdecAsValue *val;
 
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (index < G_MAXINT32); 
   g_return_if_fail (value != NULL);
 
-  var = swfdec_as_array_get_variable (array, index, FALSE);
-  if (var == NULL) {
+  val = swfdec_as_array_get_variable (array, index, FALSE);
+  if (val == NULL) {
     SWFDEC_AS_VALUE_SET_UNDEFINED (value);
   } else {
-    swfdec_as_variable_get (SWFDEC_AS_OBJECT (array), var, value);
+    *value = *val;
   }
 }
 

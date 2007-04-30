@@ -198,10 +198,15 @@ int		swfdec_movie_compare_depths	(gconstpointer		a,
 SwfdecDepthClass
 		swfdec_depth_classify		(int			depth);
 
-/* in swfdec_js_movie.c */
 void		swfdec_movie_run_init		(SwfdecMovie *		movie);
 void		swfdec_movie_run_construct	(SwfdecMovie *		movie);
-void		swfdec_movie_add_asprops	(SwfdecMovie *		movie);
+/* in swfdec_movie_asprops.c */
+gboolean	swfdec_movie_set_asprop		(SwfdecMovie *		movie,
+						 const char *		name,
+						 const SwfdecAsValue *	val);
+gboolean	swfdec_movie_get_asprop		(SwfdecMovie *		movie,
+						 const char *		name,
+						 SwfdecAsValue *	val);
 
 G_END_DECLS
 #endif

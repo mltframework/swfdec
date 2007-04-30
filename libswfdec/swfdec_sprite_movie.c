@@ -348,29 +348,22 @@ swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
   return NULL;
 }
 
-static SwfdecAsVariable *
-swfdec_sprite_movie_get_variable (SwfdecAsObject *object, const char *variable, gboolean create)
+static gboolean
+swfdec_sprite_movie_get_variable (SwfdecAsObject *object, const char *variable,
+    SwfdecAsValue *val, guint *flags)
 {
-  SwfdecAsVariable *var;
   SwfdecMovie *movie;
 
-  var = SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->get (object, variable, create);
-  if (var)
-    return var;
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->get (object, variable, val, flags))
+    return TRUE;
   
-  /* cannot happen since the parent class created a var object already */
-  g_assert (create == FALSE);
   movie = swfdec_sprite_movie_get_by_name (SWFDEC_MOVIE (object), variable);
   if (movie == NULL)
-    return NULL;
+    return FALSE;
 
-  {
-    /* FIXME: big hack - never do threading please */
-    static SwfdecAsVariable tmp;
-    tmp.flags = SWFDEC_AS_VARIABLE_TEMPORARY;
-    SWFDEC_AS_VALUE_SET_OBJECT (&tmp.value.value, SWFDEC_AS_OBJECT (movie));
-    return &tmp;
-  }
+  SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
+  *flags = 0;
+  return TRUE;
 }
 
 static void

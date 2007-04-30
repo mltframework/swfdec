@@ -54,12 +54,6 @@
 
 /*** RUNNING STATE ***/
 
-static void
-swfdec_context_trace (SwfdecAsContext *context, const char *message)
-{
-  SWFDEC_ERROR ("FIXME: implement trace");
-}
-
 void
 swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 {
@@ -68,7 +62,7 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 
   SWFDEC_ERROR (reason);
   context->state = SWFDEC_AS_CONTEXT_ABORTED;
-  swfdec_context_trace (context, reason);
+  swfdec_as_context_trace (context, reason);
 }
 
 /*** MEMORY MANAGEMENT ***/

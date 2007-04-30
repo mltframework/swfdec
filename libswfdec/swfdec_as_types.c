@@ -354,7 +354,11 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_STRING:
       {
 	char *end;
-	double d = g_ascii_strtod (SWFDEC_AS_VALUE_GET_STRING (value), &end);
+	double d;
+	
+	if (SWFDEC_AS_VALUE_GET_STRING (value) == SWFDEC_AS_STR_EMPTY)
+	  return NAN;
+	d = g_ascii_strtod (SWFDEC_AS_VALUE_GET_STRING (value), &end);
 	if (*end == '\0')
 	  return d;
 	else

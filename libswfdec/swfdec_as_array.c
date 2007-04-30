@@ -165,7 +165,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
   SwfdecAsObject *ret;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (context->Array == NULL, NULL);
+  g_return_val_if_fail (context->Array != NULL, NULL);
   
   ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Array), 0, NULL);
   swfdec_as_object_root (ret);

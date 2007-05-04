@@ -54,9 +54,10 @@ swfdec_action_get_target (SwfdecAsContext *context)
   SwfdecAsObject *target = context->frame->target;
 
   if (target == NULL) {
-    target = SWFDEC_AS_OBJECT (context->frame);
-    while (SWFDEC_IS_AS_FRAME (target))
-      target = SWFDEC_AS_FRAME (target)->scope;
+    SwfdecAsFrame *frame = context->frame;
+    while (frame->scope)
+      frame = frame->scope;
+    target = frame->thisp;
   }
   if (!SWFDEC_IS_MOVIE (target)) {
     SWFDEC_ERROR ("no valid target");
@@ -480,7 +481,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
   val = swfdec_as_stack_peek (cx->frame->stack, 1);
   swfdec_as_interpret_eval (cx, NULL, val);
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
-    obj = cx->frame->scope;
+    obj = SWFDEC_AS_OBJECT (swfdec_action_get_target (cx));
   } else if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
   } else {
@@ -1440,38 +1441,28 @@ swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *name;
 
-  g_assert (cx->fp->scopeChain != NULL);
-  name = swfdec_js_to_string (cx, cx->fp->sp[-2]);
-  if (name == NULL)
-    return JS_FALSE;
-  if (!JS_SetProperty (cx, cx->fp->scopeChain, name, &cx->fp->sp[-1]))
-    return JS_FALSE;
-  cx->fp->sp -= 2;
-  return JS_TRUE;
+  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  swfdec_as_object_set_variable (cx->frame->scope ? cx->frame : cx->frame->thisp, name,
+      swfdec_as_stack_peek (cx->frame->stack, 1));
+  swfdec_as_stack_pop_n (cx->frame->stack, 2);
 }
 
 static void
 swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecAsValue val = { 0, };
   const char *name;
-  jsval val = JSVAL_VOID;
 
-  g_assert (cx->fp->scopeChain != NULL);
-  name = swfdec_js_to_string (cx, cx->fp->sp[-1]);
-  if (name == NULL)
-    return JS_FALSE;
-  if (!JS_SetProperty (cx, cx->fp->scopeChain, name, &val))
-    return JS_FALSE;
-  cx->fp->sp--;
-  return JS_TRUE;
+  name = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  swfdec_as_object_set_variable (cx->frame->scope ? cx->frame : cx->frame->thisp, name, &val);
 }
-#endif
 
 static void
 swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2080,17 +2071,15 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #if 0
   [0x3a] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
   [0x3b] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
-  [0x3c] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
 #endif
+  [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
 #if 0
   [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
 #endif
   [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
-#if 0
-  [0x41] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
-#endif
+  [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
 #if 0
   [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },

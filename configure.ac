@@ -96,9 +96,6 @@ GTK_VER=2.8.0
 AC_SUBST(GTK_VER)
 if test "$enable_gtk" = "yes"; then
 	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
-	if test "$HAVE_GTK" = "no"; then
-	  AC_MSG_WARN([cannot find GTK+-2.0, player will be disabled])
-	fi
 	if test "x$HAVE_GTK" = xyes; then
 	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
 	else

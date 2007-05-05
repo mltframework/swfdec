@@ -1268,7 +1268,15 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     SWFDEC_ERROR ("could not parse function name");
     return;
   }
-  fun = swfdec_as_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame));
+  /* see function-scope tests */
+  if (cx->version > 5) {
+    fun = swfdec_as_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame));
+  } else {
+    SwfdecAsScope *scope = frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame);
+    while (scope->next)
+      scope = scope->next;
+    fun = swfdec_as_function_new (scope);
+  }
   if (fun == NULL)
     return;
   n_args = swfdec_bits_get_u16 (&bits);

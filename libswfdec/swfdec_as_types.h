@@ -40,6 +40,7 @@ typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsObject SwfdecAsObject;
+typedef struct _SwfdecAsScope SwfdecAsScope;
 typedef struct _SwfdecAsStack SwfdecAsStack;
 typedef struct _SwfdecAsValue SwfdecAsValue;
 typedef void (* SwfdecAsNative) (SwfdecAsObject *thisp, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval);

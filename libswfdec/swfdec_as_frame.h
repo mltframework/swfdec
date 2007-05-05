@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_AS_FRAME_H_
 #define _SWFDEC_AS_FRAME_H_
 
-#include <libswfdec/swfdec_as_object.h>
+#include <libswfdec/swfdec_as_scope.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_script.h>
 
@@ -36,7 +36,7 @@ typedef struct _SwfdecAsFrameClass SwfdecAsFrameClass;
 #define SWFDEC_AS_FRAME_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrameClass))
 
 struct _SwfdecAsFrame {
-  SwfdecAsObject	object;
+  SwfdecAsScope		scope_object;
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
@@ -49,7 +49,7 @@ struct _SwfdecAsFrame {
   SwfdecAsValue *	argv;		/* arguments */
   /* normal execution */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsFrame *	scope;		/* next scope object or NULL */
+  SwfdecAsScope *	scope;		/* first object in scope chain (can be NULL) */
   SwfdecAsObject *	target;		/* target to use instead of last object in scope chain */
   SwfdecAsObject *	var_object;	/* new variables go here */
   SwfdecAsValue *	registers;	/* the registers */
@@ -62,7 +62,7 @@ struct _SwfdecAsFrame {
 };
 
 struct _SwfdecAsFrameClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsScopeClass	scope_class;
 };
 
 GType		swfdec_as_frame_get_type	(void);

@@ -54,10 +54,12 @@ swfdec_action_get_target (SwfdecAsContext *context)
   SwfdecAsObject *target = context->frame->target;
 
   if (target == NULL) {
-    SwfdecAsFrame *frame = context->frame;
-    while (frame->scope)
-      frame = frame->scope;
-    target = frame->thisp;
+    SwfdecAsScope *scope = context->frame->scope ? 
+	context->frame->scope : SWFDEC_AS_SCOPE (context->frame);
+    while (scope->next)
+      scope = scope->next;
+    g_assert (SWFDEC_IS_AS_FRAME (scope));
+    target = SWFDEC_AS_FRAME (scope)->thisp;
   }
   if (!SWFDEC_IS_MOVIE (target)) {
     SWFDEC_ERROR ("no valid target");
@@ -1266,7 +1268,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     SWFDEC_ERROR ("could not parse function name");
     return;
   }
-  fun = swfdec_as_function_new (frame->scope);
+  fun = swfdec_as_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame));
   if (fun == NULL)
     return;
   n_args = swfdec_bits_get_u16 (&bits);
@@ -1449,7 +1451,7 @@ swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *dat
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
-  swfdec_as_object_set_variable (cx->frame->scope ? cx->frame : cx->frame->thisp, name,
+  swfdec_as_object_set_variable (cx->frame->var_object, name,
       swfdec_as_stack_peek (cx->frame->stack, 1));
   swfdec_as_stack_pop_n (cx->frame->stack, 2);
 }
@@ -1461,7 +1463,7 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
-  swfdec_as_object_set_variable (cx->frame->scope ? cx->frame : cx->frame->thisp, name, &val);
+  swfdec_as_object_set_variable (cx->frame->var_object, name, &val);
 }
 
 static void

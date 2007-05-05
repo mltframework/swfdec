@@ -27,7 +27,7 @@
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecAsFrame, swfdec_as_frame, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecAsFrame, swfdec_as_frame, SWFDEC_TYPE_AS_SCOPE)
 
 static void
 swfdec_as_frame_dispose (GObject *object)
@@ -173,33 +173,37 @@ SwfdecAsObject *
 swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
 {
   SwfdecAsObject *ret = NULL;
-  SwfdecAsFrame *cur;
+  SwfdecAsScope *cur;
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
-  cur = frame;
-  for (i = 0; i < 256 && cur->scope != NULL; i++) {
+  cur = SWFDEC_AS_SCOPE (frame);
+  for (i = 0; i < 256; i++) {
     ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (cur), variable);
     if (ret)
       return ret;
-    cur = cur->scope;
+    if (cur->next == NULL)
+      break;
+    cur = cur->next;
   }
-  g_assert (cur);
   if (i == 256) {
     swfdec_as_context_abort (SWFDEC_AS_OBJECT (frame)->context, "Scope recursion limit exceeded");
     return NULL;
   }
-  /* we've walked the scope chain down until the last object now.
-   * The last 2 objects in the scope chain are the current target and the global object */
+  g_assert (SWFDEC_IS_AS_FRAME (cur));
+  /* we've walked the scope chain down. Now look in the special objects. */
+  /* 1) the target set via SetTarget */
   if (frame->target) {
     ret = swfdec_as_object_find_variable (frame->target, variable);
   } else {
-    ret = swfdec_as_object_find_variable (cur->thisp, variable);
+    /* The default target is the original object that called into us */
+    ret = swfdec_as_object_find_variable (SWFDEC_AS_FRAME (cur)->thisp, variable);
   }
   if (ret)
     return ret;
+  /* 2) the global object */
   ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
   return ret;
 }

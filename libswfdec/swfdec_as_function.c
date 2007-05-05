@@ -97,11 +97,11 @@ swfdec_as_function_do_create (SwfdecAsContext *context)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new (SwfdecAsFrame *scope)
+swfdec_as_function_new (SwfdecAsScope *scope)
 {
   SwfdecAsFunction *fun;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (scope), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_SCOPE (scope), NULL);
 
   fun = swfdec_as_function_do_create (SWFDEC_AS_OBJECT (scope)->context);
   if (fun == NULL)

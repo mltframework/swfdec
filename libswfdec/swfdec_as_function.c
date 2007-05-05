@@ -150,8 +150,10 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     frame->function_name = function->name;
   } else {
     frame = swfdec_as_frame_new (thisp, function->script);
-    if (frame->script->version > 5)
-      frame->scope = function->scope;
+    if (frame->script->version > 5) {
+      SWFDEC_AS_SCOPE (frame)->next = function->scope;
+      frame->scope = SWFDEC_AS_SCOPE (frame);
+    }
   }
   frame->argc = n_args;
   frame->argv = args;

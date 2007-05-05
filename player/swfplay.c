@@ -79,7 +79,6 @@ main (int argc, char *argv[])
   gboolean trace = FALSE;
   char *variables = NULL;
   GtkWidget *window;
-  char *s;
 
   GOptionEntry options[] = {
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
@@ -114,9 +113,12 @@ main (int argc, char *argv[])
   }
 
 #if HAVE_GNOMEVFS
-  s = gnome_vfs_make_uri_from_shell_arg (argv[1]);
-  loader = swfdec_gtk_loader_new (s);
-  g_free (s);
+  {
+    char *s;
+    s = gnome_vfs_make_uri_from_shell_arg (argv[1]);
+    loader = swfdec_gtk_loader_new (s);
+    g_free (s);
+  }
 #else
   loader = swfdec_gtk_loader_new (argv[1]);
 #endif

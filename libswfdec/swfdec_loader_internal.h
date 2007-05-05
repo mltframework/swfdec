@@ -47,6 +47,7 @@ struct _SwfdecFileLoaderClass
   SwfdecLoaderClass   	loader_class;
 };
 
+GType			swfdec_file_loader_get_type	(void);
 
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 							 const char *		url);

@@ -711,7 +711,6 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), l);
 }
 
-
 static void
 swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -720,14 +719,11 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   rval = swfdec_as_stack_peek (cx->frame->stack, 1);
   lval = swfdec_as_stack_peek (cx->frame->stack, 2);
   if (SWFDEC_AS_VALUE_IS_STRING (lval) || SWFDEC_AS_VALUE_IS_STRING (rval)) {
-    const char *l, *r;
-    char *ret;
-    r = swfdec_as_value_to_string (cx, rval);
-    l = swfdec_as_value_to_string (cx, lval);
-    ret = g_strconcat (l, r, NULL);
-    l = swfdec_as_context_get_string (cx, ret);
+    const char *str;
+    str = swfdec_as_str_concat (cx, swfdec_as_value_to_string (cx, lval),
+	swfdec_as_value_to_string (cx, rval));
     swfdec_as_stack_pop (cx->frame->stack);
-    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), l);
+    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), str);
   } else {
     double d, d2;
     d2 = swfdec_as_value_to_number (cx, rval);

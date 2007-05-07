@@ -351,6 +351,9 @@ const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,
 /* special conversion functions */
 const char *	swfdec_as_double_to_string	(SwfdecAsContext *	context,
 						 double			d);
+const char *	swfdec_as_str_concat		(SwfdecAsContext *	cx,
+						 const char *		s1,
+						 const char *		s2);
 
 
 G_END_DECLS

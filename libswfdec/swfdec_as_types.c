@@ -159,6 +159,23 @@ const char const * swfdec_as_strings[] = {
   NULL
 };
 
+const char *
+swfdec_as_str_concat (SwfdecAsContext *cx, const char * s1, const char *s2)
+{
+  const char *ret;
+  char *s;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), SWFDEC_AS_STR_EMPTY);
+  g_return_val_if_fail (s1, SWFDEC_AS_STR_EMPTY);
+  g_return_val_if_fail (s2, SWFDEC_AS_STR_EMPTY);
+
+  s = g_strconcat (s1, s2, NULL);
+  ret = swfdec_as_context_get_string (cx, ret);
+  g_free (s);
+
+  return ret;
+}
+
 /**
  * swfdec_as_double_to_string:
  * @context: a #SwfdecAsContext

@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
@@ -731,8 +732,14 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsObject *object, guint argc, SwfdecAsVa
 static void
 swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
 {
+  SwfdecAsValue val;
+
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASSetPropFlags, 0, 
       swfdec_as_context_ASSetPropFlags, 3);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, NAN);
+  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, HUGE_VAL);
+  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Infinity, &val);
 }
 
 /**

@@ -147,11 +147,30 @@ swfdec_as_array_append (SwfdecAsArray *array, guint n, const SwfdecAsValue *valu
 /*** AS CODE ***/
 
 static void
-swfdec_as_array_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_array_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecAsContext *cx = object->context;
+  int i, length;
+  const char *s, *str;
+  SwfdecAsValue val;
 
+  length = swfdec_as_array_get_length (object);
+  if (length > 0) {
+    s = swfdec_as_double_to_string (cx, 0);
+    swfdec_as_object_get_variable (object, s, &val);
+    str = swfdec_as_value_to_string (cx, &val);
+    for (i = 1; i < length; i++) {
+      s = swfdec_as_double_to_string (cx, i);
+      swfdec_as_object_get_variable (object, s, &val);
+      s = swfdec_as_value_to_string (cx, &val);
+      str = swfdec_as_str_concat (cx, str, SWFDEC_AS_STR_COMMA);
+      str = swfdec_as_str_concat (cx, str, s);
+    }
+  } else {
+    str = SWFDEC_AS_STR_EMPTY;
+  }
+  SWFDEC_AS_VALUE_SET_STRING (ret, str);
 }
-
 
 void
 swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
@@ -162,7 +181,7 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Array, 0, swfdec_as_array_construct, 0));
+      SWFDEC_AS_STR_Array, 0, NULL, 0));
   if (!array)
     return;
   context->Array = array;
@@ -192,5 +211,6 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0, swfdec_as_array_toString, 0);
 }
 

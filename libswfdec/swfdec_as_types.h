@@ -229,6 +229,7 @@ extern const char const * swfdec_as_strings[];
 #define SWFDEC_AS_STR_length		SWFDEC_AS_STR_CONSTANT(120)
 #define SWFDEC_AS_STR_type_Function	SWFDEC_AS_STR_CONSTANT(121)
 #define SWFDEC_AS_STR_arguments		SWFDEC_AS_STR_CONSTANT(122)
+#define SWFDEC_AS_STR_COMMA		SWFDEC_AS_STR_CONSTANT(123)
 
 
 /* all existing actions */

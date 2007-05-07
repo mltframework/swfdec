@@ -155,6 +155,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("length"),
   SWFDEC_AS_CONSTANT_STRING ("[type Function]"),
   SWFDEC_AS_CONSTANT_STRING ("arguments"),
+  SWFDEC_AS_CONSTANT_STRING (","),
   /* add more here */
   NULL
 };
@@ -170,7 +171,7 @@ swfdec_as_str_concat (SwfdecAsContext *cx, const char * s1, const char *s2)
   g_return_val_if_fail (s2, SWFDEC_AS_STR_EMPTY);
 
   s = g_strconcat (s1, s2, NULL);
-  ret = swfdec_as_context_get_string (cx, ret);
+  ret = swfdec_as_context_get_string (cx, s);
   g_free (s);
 
   return ret;

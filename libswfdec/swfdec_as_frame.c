@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_as_frame.h"
+#include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_super.h"
@@ -247,12 +248,20 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
-    SWFDEC_ERROR ("implement arguments object");
-    current_reg++;
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
-  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
-    SWFDEC_ERROR ("implement arguments object");
+  if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
+    SwfdecAsObject *args = swfdec_as_array_new (object->context);
+
+    if (!args)
+      return;
+    if (frame->argc > 0)
+      swfdec_as_array_append (SWFDEC_AS_ARRAY (args), frame->argc, frame->argv);
+    /* FIXME: implement callee/caller */
+    if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], args);
+    } else {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, args);
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_arguments, &val);
+    }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
     SwfdecAsObject *super = swfdec_as_super_new (object->context);

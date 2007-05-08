@@ -891,24 +891,19 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   cx->fp->sp -= 2;
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_string_add (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSString *lval, *rval;
+  const char *lval, *rval;
 
-  rval = JS_ValueToString (cx, cx->fp->sp[-1]);
-  lval = JS_ValueToString (cx, cx->fp->sp[-2]);
-  if (lval == NULL || rval == NULL)
-    return FALSE;
-  lval = JS_ConcatStrings (cx, lval, rval);
-  if (lval == NULL)
-    return FALSE;
-  cx->fp->sp--;
-  cx->fp->sp[-1] = STRING_TO_JSVAL (lval);
-  return JS_TRUE;
+  rval = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  lval = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  lval = swfdec_as_str_concat (cx, lval, rval);
+  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 2), lval);
+  swfdec_as_stack_pop (cx->frame->stack);
 }
-#endif
 
 static void
 swfdec_action_push_duplicate (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2047,9 +2042,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
   [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
-#if 0
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
-#endif
   [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
   [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },

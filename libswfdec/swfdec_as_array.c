@@ -67,6 +67,17 @@ swfdec_as_array_get_length (SwfdecAsObject *array)
 }
 
 static void
+swfdec_as_array_add (SwfdecAsObject *object)
+{
+  SwfdecAsValue val;
+
+  SWFDEC_AS_VALUE_SET_INT (&val, 0);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_length, &val);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->add (object);
+}
+
+static void
 swfdec_as_array_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
 {
   gint32 l = swfdec_as_array_to_index (variable);
@@ -92,6 +103,7 @@ swfdec_as_array_class_init (SwfdecAsArrayClass *klass)
 
   object_class->dispose = swfdec_as_array_dispose;
 
+  asobject_class->add = swfdec_as_array_add;
   asobject_class->set = swfdec_as_array_set;
 }
 

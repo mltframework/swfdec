@@ -84,7 +84,7 @@ swfdec_as_stack_ensure_size (SwfdecAsStack *stack, guint n_elements)
   }
   stack->cur += n_elements;
   if (n_elements)
-    memset (stack->cur - n_elements, 0, n_elements * sizeof (SwfdecAsValue));
+    memset (stack->base, 0, n_elements * sizeof (SwfdecAsValue));
 }
 
 void

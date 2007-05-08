@@ -372,12 +372,14 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
       return SWFDEC_AS_VALUE_GET_NUMBER (value);
     case SWFDEC_AS_TYPE_STRING:
       {
+	const char *s;
 	char *end;
 	double d;
 	
-	if (SWFDEC_AS_VALUE_GET_STRING (value) == SWFDEC_AS_STR_EMPTY)
+	s = SWFDEC_AS_VALUE_GET_STRING (value);
+	if (s == SWFDEC_AS_STR_EMPTY)
 	  return NAN;
-	d = g_ascii_strtod (SWFDEC_AS_VALUE_GET_STRING (value), &end);
+	d = g_ascii_strtod (s, &end);
 	if (*end == '\0')
 	  return d;
 	else

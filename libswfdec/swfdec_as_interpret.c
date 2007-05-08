@@ -1416,15 +1416,17 @@ swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   cx->fp->sp--;
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
+#endif
 
 static void
 swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
 
-  return JS_NewNumberValue (cx, (int) d, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_INT (val, swfdec_as_value_to_integer (cx, val));
 }
 
+#if 0
 static void
 swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1934,7 +1936,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
 
   pool = swfdec_constant_pool_new_from_action (data, len);
   if (pool == NULL)
-    return NULL;
+    return g_strdup ("ConstantPool (invalid)");
   string = g_string_new ("ConstantPool");
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
     g_string_append (string, i ? ", " : " ");
@@ -2036,9 +2038,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL },
   [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL },
   [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
-#if 0
-  [0x18] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
-#endif
+  [SWFDEC_AS_ACTION_TO_INTEGER] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
   [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
   [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },

@@ -82,6 +82,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_net_stream.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
+	swfdec_player_as.c \
 	swfdec_rect.c \
 	swfdec_ringbuffer.c \
 	swfdec_root_movie.c \

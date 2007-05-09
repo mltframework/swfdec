@@ -156,6 +156,7 @@ const char const * swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("[type Function]"),
   SWFDEC_AS_CONSTANT_STRING ("arguments"),
   SWFDEC_AS_CONSTANT_STRING (","),
+  SWFDEC_AS_CONSTANT_STRING ("registerClass"),
   /* add more here */
   NULL
 };

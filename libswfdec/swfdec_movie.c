@@ -747,8 +747,6 @@ swfdec_movie_dispose (GObject *object)
 
   SWFDEC_LOG ("disposing movie %s", movie->name);
   g_free (movie->name);
-  if (movie->parent)
-    g_object_unref (movie->parent);
 
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
@@ -865,31 +863,6 @@ swfdec_movie_initialize (SwfdecMovie *movie, const SwfdecContent *content)
   swfdec_movie_set_content (movie, content);
 }
 
-void
-swfdec_movie_set_prototype (SwfdecMovie *movie)
-{
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  SwfdecAsObject *klass = player->MovieClip;
-  SwfdecAsValue val;
-
-  /* happens for root movies during init */
-  if (klass == NULL)
-    return;
-
-  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
-      SWFDEC_SPRITE_MOVIE (movie)->sprite != NULL) {
-    const char *name = swfdec_root_movie_get_export_name (SWFDEC_ROOT_MOVIE (movie->root), 
-	SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (movie)->sprite));
-    if (name != NULL) {
-      klass = swfdec_player_get_export_class (player, name);
-    }
-  }
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, klass);
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_get_variable (klass, SWFDEC_AS_STR_prototype, &val);
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR___proto__, &val);
-}
-
 /**
  * swfdec_movie_new:
  * @parent: the parent movie that will contain this movie
@@ -918,13 +891,10 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   ret = klass->create_movie (content->graphic, &size);
   object = SWFDEC_AS_OBJECT (parent);
   ret->parent = parent;
-  g_object_ref (parent);
   ret->root = parent->root;
   if (swfdec_as_context_use_mem (object->context, size)) {
-    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
     g_object_ref (ret);
-    /* now set prototype etc */
-    swfdec_movie_set_prototype (ret);
+    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
   } else {
     SWFDEC_AS_OBJECT (ret)->context = object->context;
   }
@@ -947,10 +917,9 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   SWFDEC_ROOT_MOVIE (ret)->player = player;
   ret->root = ret;
   if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie))) {
+    g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),
 	SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie));
-    g_object_ref (ret);
-    swfdec_movie_set_prototype (ret);
   } else {
     SWFDEC_AS_OBJECT (ret)->context = SWFDEC_AS_CONTEXT (player);
   }

@@ -332,6 +332,27 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
   }
 }
 
+static void
+swfdec_sprite_movie_add (SwfdecAsObject *object)
+{
+  const char *name;
+  SwfdecAsObject *constructor;
+
+  if (!SWFDEC_SPRITE_MOVIE (object)->sprite)
+    return;
+  name = swfdec_root_movie_get_export_name (SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (object)->root),
+      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (object)->sprite));
+  if (name != NULL) {
+    name = swfdec_as_context_get_string (object->context, name);
+    constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (object->context),
+      name);
+  } else {
+    constructor = SWFDEC_PLAYER (object->context)->MovieClip;
+  }
+  swfdec_as_object_set_constructor (object, constructor);
+  SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
+}
+
 static SwfdecMovie *
 swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 {
@@ -389,6 +410,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   object_class->dispose = swfdec_sprite_movie_dispose;
 
+  asobject_class->add = swfdec_sprite_movie_add;
   asobject_class->get = swfdec_sprite_movie_get_variable;
   asobject_class->mark = swfdec_sprite_movie_mark;
 

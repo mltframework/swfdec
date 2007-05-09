@@ -42,12 +42,15 @@ struct _SwfdecAsFunction {
   /* for native functions */
   SwfdecAsNative	native;		/* native call or NULL when script */
   guint			min_args;	/* minimum number of required arguments */
-  GType			type;		/* required type for this object when caling function */
   char *		name;		/* function name */
 
   /* for script functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */
   SwfdecAsScope *	scope;		/* scope this function was defined in or NULL */
+
+  /* constructor info */
+  GType			type;		/* required type for this object when caling function */
+  guint			type_size;	/* instance size of type */
 };
 
 struct _SwfdecAsFunctionClass {

@@ -70,6 +70,7 @@ static void
 swfdec_as_function_init (SwfdecAsFunction *function)
 {
   function->type = SWFDEC_TYPE_AS_OBJECT;
+  function->type_size = sizeof (SwfdecAsObject);
 }
 
 SwfdecAsFunction *
@@ -173,10 +174,14 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 void
 swfdec_as_function_set_object_type (SwfdecAsFunction *function, GType type)
 {
+  GTypeQuery query;
+
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT));
 
+  g_type_query (type, &query);
   function->type = type;
+  function->type_size = query.instance_size;
 }
 
 /*** AS CODE ***/

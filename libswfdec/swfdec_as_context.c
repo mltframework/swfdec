@@ -171,13 +171,13 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
 static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
-  SWFDEC_INFO (">> collecting garbage\n");
+  SWFDEC_INFO (">> collecting garbage");
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
   g_hash_table_foreach_remove (context->strings, 
     swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context);
-  SWFDEC_INFO (">> done collecting garbage\n");
+  SWFDEC_INFO (">> done collecting garbage");
 }
 
 void

@@ -89,7 +89,7 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
  * Queues an update of all cached values inside @movie and invalidates it.
  **/
 void
-swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieState state)
+swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieCacheState state)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
@@ -268,21 +268,78 @@ swfdec_movie_find (SwfdecMovie *movie, int depth)
   return NULL;
 }
 
-typedef void (* SwfdecMovieRemoveFunc) (SwfdecMovie *, gpointer);
-
-static void
-swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
+static gboolean
+swfdec_movie_do_remove (SwfdecMovie *movie)
 {
+  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
+
   movie->will_be_removed = TRUE;
-  /* remove all children */
   while (movie->list) {
-    (*(SwfdecMovieRemoveFunc) child_remove) (movie->list->data, child_remove);
+    GList *walk = movie->list;
+    while (walk && SWFDEC_MOVIE (walk->data)->will_be_removed)
+      walk = walk->next;
+    if (walk == NULL)
+      break;
+    swfdec_movie_remove (walk->data);
   }
+  /* FIXME: all of this here or in destroy callback? */
   if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab == movie)
     SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab = NULL;
   if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag == movie)
     SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
+  movie->depth = -16385 - movie->depth; /* don't ask me why... */
+  if (movie->parent)
+    movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
+
+  return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
+}
+
+/**
+ * swfdec_movie_remove:
+ * @movie: #SwfdecMovie to remove
+ *
+ * Removes this movie from its parent. In contrast to swfdec_movie_destroy (),
+ * it will definitely cause a removal from the display list, but depending on
+ * movie, it might still be possible to reference it from Actionscript.
+ **/
+void
+swfdec_movie_remove (SwfdecMovie *movie)
+{
+  gboolean result;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  if (movie->state > SWFDEC_MOVIE_STATE_RUNNING)
+    return;
+  result = swfdec_movie_do_remove (movie);
+  movie->state = SWFDEC_MOVIE_STATE_REMOVED;
+  if (result)
+    swfdec_movie_destroy (movie);
+}
+
+/**
+ * swfdec_movie_destroy:
+ * @movie: #SwfdecMovie to destroy
+ *
+ * Removes this movie from its parent. After this it will no longer be present,
+ * neither visually nor via ActionScript. This function will not cause an 
+ * unload event. Compare with swfdec_movie_destroy ().
+ **/
+void
+swfdec_movie_destroy (SwfdecMovie *movie)
+{
+  SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+
+  g_assert (movie->state < SWFDEC_MOVIE_STATE_DESTROYED);
+  if (movie->state < SWFDEC_MOVIE_STATE_REMOVED) {
+    swfdec_movie_do_remove (movie);
+  }
+  SWFDEC_LOG ("destroying movie %s", movie->name);
+  while (movie->list) {
+    swfdec_movie_destroy (movie->list->data);
+  }
   if (movie->parent) {
     SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
     if (SWFDEC_IS_DEBUGGER (player) &&
@@ -302,24 +359,6 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
       player->roots = g_list_remove (player->roots, movie);
     }
   }
-}
-
-/**
- * swfdec_movie_destroy:
- * @movie: #SwfdecMovie to destroy
- *
- * Removes this movie from its parent. After this it will no longer be present,
- * neither visually nor via ActionScript. This function will not cause an 
- * unload event. Compare with swfdec_movie_destroy ().
- **/
-void
-swfdec_movie_destroy (SwfdecMovie *movie)
-{
-  SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-
-  SWFDEC_LOG ("destroying movie %s", movie->name);
-  swfdec_movie_do_remove (movie, swfdec_movie_destroy);
   swfdec_movie_set_content (movie, NULL);
   /* FIXME: figure out how to handle destruction pre-init/construct.
    * This is just a stop-gap measure to avoid dead movies in those queues */
@@ -327,28 +366,9 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   g_queue_remove (player->construct_queue, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  //swfdec_js_movie_remove_jsobject (movie);
   player->movies = g_list_remove (player->movies, movie);
+  movie->parent = NULL;
   g_object_unref (movie);
-}
-
-/**
- * swfdec_movie_remove:
- * @movie: #SwfdecMovie to remove
- *
- * Removes this movie from its parent. In contrast to swfdec_movie_destroy (),
- * it will definitely cause a removal from the display list, but depending on
- * movie, it might still be possible to reference it from Actionscript.
- **/
-void
-swfdec_movie_remove (SwfdecMovie *movie)
-{
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-
-  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
-  swfdec_movie_do_remove (movie, swfdec_movie_remove);
-  if (!swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD))
-    swfdec_movie_destroy (movie);
 }
 
 /**

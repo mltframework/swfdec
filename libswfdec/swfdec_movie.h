@@ -41,6 +41,12 @@ typedef enum {
   SWFDEC_DEPTH_CLASS_RESERVED
 } SwfdecDepthClass;
 
+typedef enum {
+  SWFDEC_MOVIE_STATE_RUNNING = 0,	/* the movie has been created */
+  SWFDEC_MOVIE_STATE_REMOVED,		/* swfdec_movie_remove has been called */
+  SWFDEC_MOVIE_STATE_DESTROYED		/* swfdec_movie_destroy has been called */
+} SwfdecMovieState;
+
 struct _SwfdecContent {
   SwfdecGraphic *	graphic;	/* object to display */
   int	         	depth;		/* at which depth to display */
@@ -73,7 +79,7 @@ typedef enum {
   SWFDEC_MOVIE_INVALID_EXTENTS,
   SWFDEC_MOVIE_INVALID_AREA,
   SWFDEC_MOVIE_INVALID_MATRIX,
-} SwfdecMovieState;
+} SwfdecMovieCacheState;
 
 struct _SwfdecMovie {
   SwfdecAsObject	object;
@@ -83,7 +89,8 @@ struct _SwfdecMovie {
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   const SwfdecContent *	content;           	/* the content we are displaying */
-  SwfdecMovieState	cache_state;		/* whether we are up to date */
+  SwfdecMovieCacheState	cache_state;		/* whether we are up to date */
+  SwfdecMovieState	state;			/* state the movie is in */
 
   /* parenting information */
   SwfdecMovie *		root;			/* root movie for this movie */
@@ -163,7 +170,7 @@ void		swfdec_movie_set_content	(SwfdecMovie *		movie,
 						 const SwfdecContent *	content);
 void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,
-						 SwfdecMovieState	state);
+						 SwfdecMovieCacheState	state);
 void		swfdec_movie_update		(SwfdecMovie *		movie);
 void		swfdec_movie_local_to_global	(SwfdecMovie *		movie,
 						 double *		x,

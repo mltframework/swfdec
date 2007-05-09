@@ -80,12 +80,6 @@ swfdec_video_decoder_free (SwfdecVideoDecoder *decoder)
   decoder->free (decoder);
 }
 
-static void
-foo (gpointer data)
-{
-  //g_print ("boom baby %u\n", ((SwfdecBuffer *) data)->ref_count);
-  swfdec_buffer_unref (data);
-}
 /**
  * swfdec_video_decoder_decode:
  * @decoder: a #SwfdecVideoDecoder
@@ -144,8 +138,7 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
     return NULL;
   }
   cairo_surface_set_user_data (surface, &key, buffer, 
-      foo);
-      //(cairo_destroy_func_t) swfdec_buffer_unref);
+      (cairo_destroy_func_t) swfdec_buffer_unref);
   return surface;
 }
 

@@ -376,9 +376,19 @@ swfdec_player_dispose (GObject *object)
 
   swfdec_listener_free (player->mouse_listener);
   swfdec_listener_free (player->key_listener);
-  //swfdec_js_finish_player (player);
-
   swfdec_player_remove_all_actions (player, player); /* HACK to allow non-removable actions */
+
+  /* we do this here so references to GC'd objects get freed */
+  G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
+
+#ifndef G_DISABLE_ASSERT
+  {
+    SwfdecPlayerAction *action;
+    while ((action = swfdec_ring_buffer_pop (player->actions)) != NULL) {
+      g_assert (action->object == NULL); /* skip removed actions */
+    }
+  }
+#endif
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
@@ -396,8 +406,6 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (player->loader);
     player->loader = NULL;
   }
-
-  G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
 
 static void

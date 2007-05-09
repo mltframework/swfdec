@@ -27,6 +27,7 @@
 #include "swfdec_as_types.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_number.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 
@@ -432,8 +433,9 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return NULL;
-    case SWFDEC_AS_TYPE_BOOLEAN:
     case SWFDEC_AS_TYPE_NUMBER:
+      return swfdec_as_number_new (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
+    case SWFDEC_AS_TYPE_BOOLEAN:
     case SWFDEC_AS_TYPE_STRING:
       SWFDEC_ERROR ("FIXME: implement conversion to object");
       return NULL;

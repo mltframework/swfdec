@@ -74,7 +74,7 @@ static void
 swfdec_as_number_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (object->context->frame->construct && argc > 0) {
-    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (num);
+    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
     num->number = swfdec_as_value_to_number (object->context, &argv[0]);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);

@@ -1640,34 +1640,38 @@ swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, g
   *cx->fp->sp++ = INT_TO_JSVAL ((int) SWFDEC_TICKS_TO_MSECS (player->time));
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval superclass, subclass, proto;
-  JSObject *prototype;
+  SwfdecAsValue *superclass, *subclass, proto;
+  SwfdecAsObject *prototype;
+  SwfdecAsFunction *super;
 
-  superclass = cx->fp->sp[-1];
-  subclass = cx->fp->sp[-2];
-  cx->fp->sp -= 2;
-  if (!JSVAL_IS_OBJECT (superclass) || superclass == JSVAL_NULL ||
-      !JSVAL_IS_OBJECT (subclass) || subclass == JSVAL_NULL) {
-    SWFDEC_ERROR ("superclass or subclass aren't objects");
-    return JS_TRUE;
+  superclass = swfdec_as_stack_pop (cx->frame->stack);
+  subclass = swfdec_as_stack_pop (cx->frame->stack);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (superclass) ||
+      !SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass))) {
+    SWFDEC_ERROR ("superclass is not a function");
+    return;
   }
-  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (superclass), "prototype", &proto) ||
-      !JSVAL_IS_OBJECT (proto))
-    return JS_FALSE;
-  prototype = JS_NewObject (cx, NULL, JSVAL_TO_OBJECT (proto), NULL);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (subclass)) {
+    SWFDEC_ERROR ("subclass is not an object");
+    return;
+  }
+  super = SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass));
+  prototype = swfdec_as_object_new (cx);
   if (prototype == NULL)
-    return JS_FALSE;
-  proto = OBJECT_TO_JSVAL (prototype);
-  if (!JS_SetProperty (cx, prototype, "__constructor__", &superclass) ||
-      !JS_SetProperty (cx, JSVAL_TO_OBJECT (subclass), "prototype", &proto))
-    return JS_FALSE;
-  return JS_TRUE;
+    return;
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (super),
+      SWFDEC_AS_STR_prototype, &proto);
+  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
+  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___constructor__,
+      superclass);
+  swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
+      SWFDEC_AS_STR_prototype, superclass);
 }
-#endif
 
 static gboolean
 swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
@@ -2125,10 +2129,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */
-#if 0
-  [0x69] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
-#endif
-
+  [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
   /* version 3 */
   [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
 #if 0

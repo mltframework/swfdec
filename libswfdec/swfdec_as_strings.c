@@ -22,7 +22,7 @@
 #endif
 
 #define SWFDEC_AS_CONSTANT_STRING(str) "\2" str "\0"
-const char * swfdec_as_strings = 
+const char swfdec_as_strings[] = 
   SWFDEC_AS_CONSTANT_STRING ("")
   SWFDEC_AS_CONSTANT_STRING ("__proto__")
   SWFDEC_AS_CONSTANT_STRING ("this")
@@ -168,7 +168,7 @@ main (int argc, char **argv)
   printf ("#ifndef _SWFDEC_AS_STRINGS_H_\n");
   printf ("#define _SWFDEC_AS_STRINGS_H_\n");
   printf ("\n");
-  printf ("extern const char *swfdec_as_strings;\n");
+  printf ("extern const char swfdec_as_strings[];\n");
   printf ("\n");
   while (*cur != 0) {
     cur++;

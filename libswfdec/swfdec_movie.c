@@ -795,7 +795,7 @@ static gboolean
 swfdec_movie_iterate_end (SwfdecMovie *movie)
 {
   return movie->parent == NULL || 
-	 g_list_find (movie->parent->list, movie) != NULL;
+	 movie->state < SWFDEC_MOVIE_STATE_REMOVED;
 }
 
 static void

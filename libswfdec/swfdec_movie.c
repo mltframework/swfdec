@@ -344,20 +344,17 @@ swfdec_movie_destroy (SwfdecMovie *movie)
     SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
     if (SWFDEC_IS_DEBUGGER (player) &&
 	g_list_find (movie->parent->list, movie)) {
-      movie->parent->list = g_list_remove (movie->parent->list, movie);
       g_signal_emit_by_name (player, "movie-removed", movie);
-    } else {
-      movie->parent->list = g_list_remove (movie->parent->list, movie);
     }
+    movie->parent->list = g_list_remove (movie->parent->list, movie);
+    movie->parent = NULL;
   } else {
     SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie)->player;
     if (SWFDEC_IS_DEBUGGER (player) &&
 	g_list_find (player->roots, movie)) {
-      player->roots = g_list_remove (player->roots, movie);
       g_signal_emit_by_name (player, "movie-removed", movie);
-    } else {
-      player->roots = g_list_remove (player->roots, movie);
     }
+    player->roots = g_list_remove (player->roots, movie);
   }
   swfdec_movie_set_content (movie, NULL);
   /* FIXME: figure out how to handle destruction pre-init/construct.
@@ -367,7 +364,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   if (klass->finish_movie)
     klass->finish_movie (movie);
   player->movies = g_list_remove (player->movies, movie);
-  movie->parent = NULL;
+  movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
   g_object_unref (movie);
 }
 
@@ -849,14 +846,14 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  swfdec_movie_set_name (movie);
   if (parent) {
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
-    SWFDEC_DEBUG ("inserting %s %p (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
+    SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
-  swfdec_movie_set_name (movie);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   /* NB: adding to the movies list happens before setting the parent.
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause

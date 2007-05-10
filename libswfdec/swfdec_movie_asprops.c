@@ -363,49 +363,57 @@ mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie->root));
 }
 
-static struct {
+#define NAME(name) SWFDEC_AS_STR_ ## name - swfdec_as_strings
+struct {
+  guint offset;
   void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
   void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
-} movieclip_props[] = {
-  { mc_x_get,	    mc_x_set },
-  { mc_y_get,	    mc_y_set },
-  { mc_xscale_get,	    mc_xscale_set },
-  { mc_yscale_get,	    mc_yscale_set },
-  { mc_currentframe,    NULL },
-  { mc_totalframes,	    NULL },
-  { mc_alpha_get,	    mc_alpha_set },
-  { mc_visible_get,	    mc_visible_set },
-  { mc_width_get,	    mc_width_set },
-  { mc_height_get,	    mc_height_set },
-  { mc_rotation_get,    mc_rotation_set },
-  { NULL,  NULL }, //"_target"
-  { mc_framesloaded,    NULL},
-  { mc_name_get,	  mc_name_set },
-  { NULL,  NULL }, //"_droptarget"
-  { NULL,  NULL }, //"_url"
-  { NULL,  NULL }, //"_highquality"
-  { NULL,  NULL }, //"_focusrect"
-  { NULL,  NULL }, //"_soundbuftime"
-  { NULL,  NULL }, //"_quality"
-  { mc_xmouse_get,	    NULL },
-  { mc_ymouse_get,	    NULL },
-  { mc_parent,	    NULL },
-  { mc_root,	    NULL },
+} swfdec_movieclip_props[] = {
+  { NAME(_x),		mc_x_get,	    mc_x_set },
+  { NAME(_y),		mc_y_get,	    mc_y_set },
+  { NAME(_xscale),	mc_xscale_get,	    mc_xscale_set },
+  { NAME(_yscale),	mc_yscale_get,	    mc_yscale_set },
+  { NAME(_currentframe),mc_currentframe,    NULL },
+  { NAME(_totalframes),	mc_totalframes,	    NULL },
+  { NAME(_alpha),	mc_alpha_get,	    mc_alpha_set },
+  { NAME(_visible),	mc_visible_get,	    mc_visible_set },
+  { NAME(_width),	mc_width_get,	    mc_width_set },
+  { NAME(_height),	mc_height_get,	    mc_height_set },
+  { NAME(_rotation),	mc_rotation_get,    mc_rotation_set },
+  { NAME(_target),	NULL,  NULL }, //"_target"
+  { NAME(_framesloaded),mc_framesloaded,    NULL},
+  { NAME(_name),	mc_name_get,	  mc_name_set },
+  { NAME(_droptarget),	NULL,  NULL }, //"_droptarget"
+  { NAME(_url),		NULL,  NULL }, //"_url"
+  { NAME(_highquality),	NULL,  NULL }, //"_highquality"
+  { NAME(_focusrect),	NULL,  NULL }, //"_focusrect"
+  { NAME(_soundbuftime),NULL,  NULL }, //"_soundbuftime"
+  { NAME(_quality),	NULL,  NULL }, //"_quality"
+  { NAME(_xmouse),	mc_xmouse_get,	    NULL },
+  { NAME(_ymouse),	mc_ymouse_get,	    NULL },
+  { NAME(_parent),	mc_parent,	    NULL },
+  { NAME(_root),	mc_root,	    NULL },
 };
+#undef NAME
 
 static inline int
 swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
 {
-  guint i;
+  guint i, offset;
 
-  for (i = 0; i < G_N_ELEMENTS (movieclip_props); i++) {
-    if (SWFDEC_AS_STR_CONSTANT (i + 39) == name) {
-      if (movieclip_props[i].get == NULL) {
+  if (name < SWFDEC_AS_STR__x || name > SWFDEC_AS_STR__root)
+    return -1;
+  offset = name - swfdec_as_strings;
+
+  for (i = 0; i < G_N_ELEMENTS (swfdec_movieclip_props); i++) {
+    if (swfdec_movieclip_props[i].offset == offset) {
+      if (swfdec_movieclip_props[i].get == NULL) {
 	SWFDEC_ERROR ("property %s not implemented", name);
       }
       return i;
     }
   }
+  g_assert_not_reached ();
   return -1;
 }
 
@@ -417,8 +425,8 @@ swfdec_movie_set_asprop (SwfdecMovie *movie, const char *name, const SwfdecAsVal
   i = swfdec_movie_get_asprop_index (movie, name);
   if (i == -1)
     return FALSE;
-  if (movieclip_props[i].set != NULL) {
-    movieclip_props[i].set (movie, val);
+  if (swfdec_movieclip_props[i].set != NULL) {
+    swfdec_movieclip_props[i].set (movie, val);
   }
   return TRUE;
 }
@@ -431,8 +439,8 @@ swfdec_movie_get_asprop (SwfdecMovie *movie, const char *name, SwfdecAsValue *va
   i = swfdec_movie_get_asprop_index (movie, name);
   if (i == -1)
     return FALSE;
-  if (movieclip_props[i].get != NULL) {
-    movieclip_props[i].get (movie, val);
+  if (swfdec_movieclip_props[i].get != NULL) {
+    swfdec_movieclip_props[i].get (movie, val);
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   }

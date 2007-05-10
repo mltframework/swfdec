@@ -31,137 +31,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 
-#define SWFDEC_AS_CONSTANT_STRING(str) ((const char *) "\2" str)
-const char const * swfdec_as_strings[] = {
-  SWFDEC_AS_CONSTANT_STRING (""),
-  SWFDEC_AS_CONSTANT_STRING ("__proto__"),
-  SWFDEC_AS_CONSTANT_STRING ("this"),
-  SWFDEC_AS_CONSTANT_STRING ("code"),
-  SWFDEC_AS_CONSTANT_STRING ("level"),
-  SWFDEC_AS_CONSTANT_STRING ("description"),
-  SWFDEC_AS_CONSTANT_STRING ("status"),
-  SWFDEC_AS_CONSTANT_STRING ("success"),
-  SWFDEC_AS_CONSTANT_STRING ("NetConnection.Connect.Success"),
-  SWFDEC_AS_CONSTANT_STRING ("onLoad"),
-  SWFDEC_AS_CONSTANT_STRING ("onEnterFrame"),
-  SWFDEC_AS_CONSTANT_STRING ("onUnload"),
-  SWFDEC_AS_CONSTANT_STRING ("onMouseMove"),
-  SWFDEC_AS_CONSTANT_STRING ("onMouseDown"),
-  SWFDEC_AS_CONSTANT_STRING ("onMouseUp"),
-  SWFDEC_AS_CONSTANT_STRING ("onKeyUp"),
-  SWFDEC_AS_CONSTANT_STRING ("onKeyDown"),
-  SWFDEC_AS_CONSTANT_STRING ("onData"),
-  SWFDEC_AS_CONSTANT_STRING ("onPress"),
-  SWFDEC_AS_CONSTANT_STRING ("onRelease"),
-  SWFDEC_AS_CONSTANT_STRING ("onReleaseOutside"),
-  SWFDEC_AS_CONSTANT_STRING ("onRollOver"),
-  SWFDEC_AS_CONSTANT_STRING ("onRollOut"),
-  SWFDEC_AS_CONSTANT_STRING ("onDragOver"),
-  SWFDEC_AS_CONSTANT_STRING ("onDragOut"),
-  SWFDEC_AS_CONSTANT_STRING ("onConstruct"),
-  SWFDEC_AS_CONSTANT_STRING ("onStatus"),
-  SWFDEC_AS_CONSTANT_STRING ("error"),
-  SWFDEC_AS_CONSTANT_STRING ("NetStream.Buffer.Empty"),
-  SWFDEC_AS_CONSTANT_STRING ("NetStream.Buffer.Full"),
-  SWFDEC_AS_CONSTANT_STRING ("NetStream.Buffer.Flush"),
-  SWFDEC_AS_CONSTANT_STRING ("NetStream.Play.Start"),
-  SWFDEC_AS_CONSTANT_STRING ("NetStream.Play.Stop"),
-  SWFDEC_AS_CONSTANT_STRING ("NetStream.Play.StreamNotFound"),
-  SWFDEC_AS_CONSTANT_STRING ("undefined"),
-  SWFDEC_AS_CONSTANT_STRING ("null"),
-  SWFDEC_AS_CONSTANT_STRING ("[object Object]"),
-  SWFDEC_AS_CONSTANT_STRING ("true"),
-  SWFDEC_AS_CONSTANT_STRING ("false"),
-  SWFDEC_AS_CONSTANT_STRING ("_x"),
-  SWFDEC_AS_CONSTANT_STRING ("_y"),
-  SWFDEC_AS_CONSTANT_STRING ("_xscale"),
-  SWFDEC_AS_CONSTANT_STRING ("_yscale"),
-  SWFDEC_AS_CONSTANT_STRING ("_currentframe"),
-  SWFDEC_AS_CONSTANT_STRING ("_totalframes"),
-  SWFDEC_AS_CONSTANT_STRING ("_alpha"),
-  SWFDEC_AS_CONSTANT_STRING ("_visible"),
-  SWFDEC_AS_CONSTANT_STRING ("_width"),
-  SWFDEC_AS_CONSTANT_STRING ("_height"),
-  SWFDEC_AS_CONSTANT_STRING ("_rotation"), 
-  SWFDEC_AS_CONSTANT_STRING ("_target"),
-  SWFDEC_AS_CONSTANT_STRING ("_framesloaded"),
-  SWFDEC_AS_CONSTANT_STRING ("_name"), 
-  SWFDEC_AS_CONSTANT_STRING ("_droptarget"),
-  SWFDEC_AS_CONSTANT_STRING ("_url"), 
-  SWFDEC_AS_CONSTANT_STRING ("_highquality"), 
-  SWFDEC_AS_CONSTANT_STRING ("_focusrect"), 
-  SWFDEC_AS_CONSTANT_STRING ("_soundbuftime"), 
-  SWFDEC_AS_CONSTANT_STRING ("_quality"),
-  SWFDEC_AS_CONSTANT_STRING ("_xmouse"), 
-  SWFDEC_AS_CONSTANT_STRING ("_ymouse"),
-  SWFDEC_AS_CONSTANT_STRING ("_parent"),
-  SWFDEC_AS_CONSTANT_STRING ("_root"),
-  SWFDEC_AS_CONSTANT_STRING ("#ERROR#"),
-  SWFDEC_AS_CONSTANT_STRING ("number"),
-  SWFDEC_AS_CONSTANT_STRING ("boolean"),
-  SWFDEC_AS_CONSTANT_STRING ("string"),
-  SWFDEC_AS_CONSTANT_STRING ("movieclip"),
-  SWFDEC_AS_CONSTANT_STRING ("function"),
-  SWFDEC_AS_CONSTANT_STRING ("object"),
-  SWFDEC_AS_CONSTANT_STRING ("toString"),
-  SWFDEC_AS_CONSTANT_STRING ("valueOf"),
-  SWFDEC_AS_CONSTANT_STRING ("Function"),
-  SWFDEC_AS_CONSTANT_STRING ("prototype"),
-  SWFDEC_AS_CONSTANT_STRING ("constructor"),
-  SWFDEC_AS_CONSTANT_STRING ("Object"),
-  SWFDEC_AS_CONSTANT_STRING ("hasOwnProperty"),
-  SWFDEC_AS_CONSTANT_STRING ("NUMERIC"),
-  SWFDEC_AS_CONSTANT_STRING ("RETURNINDEXEDARRAY"),
-  SWFDEC_AS_CONSTANT_STRING ("UNIQUESORT"),
-  SWFDEC_AS_CONSTANT_STRING ("DESCENDING"),
-  SWFDEC_AS_CONSTANT_STRING ("CASEINSENSITIVE"),
-  SWFDEC_AS_CONSTANT_STRING ("Array"),
-  SWFDEC_AS_CONSTANT_STRING ("ASSetPropFlags"),
-  SWFDEC_AS_CONSTANT_STRING ("0"),
-  SWFDEC_AS_CONSTANT_STRING ("-Infinity"),
-  SWFDEC_AS_CONSTANT_STRING ("Infinity"),
-  SWFDEC_AS_CONSTANT_STRING ("NaN"),
-  SWFDEC_AS_CONSTANT_STRING ("Number"),
-  SWFDEC_AS_CONSTANT_STRING ("NAN"),
-  SWFDEC_AS_CONSTANT_STRING ("MAX_VALUE"),
-  SWFDEC_AS_CONSTANT_STRING ("MIN_VALUE"),
-  SWFDEC_AS_CONSTANT_STRING ("NEGATIVE_INFINITY"),
-  SWFDEC_AS_CONSTANT_STRING ("POSITIVE_INFINITY"),
-  SWFDEC_AS_CONSTANT_STRING ("[type Object]"),
-  SWFDEC_AS_CONSTANT_STRING ("startDrag"),
-  SWFDEC_AS_CONSTANT_STRING ("Mouse"),
-  SWFDEC_AS_CONSTANT_STRING ("hide"),
-  SWFDEC_AS_CONSTANT_STRING ("show"),
-  SWFDEC_AS_CONSTANT_STRING ("addListener"),
-  SWFDEC_AS_CONSTANT_STRING ("removeListener"),
-  SWFDEC_AS_CONSTANT_STRING ("MovieClip"),
-  SWFDEC_AS_CONSTANT_STRING ("attachMovie"),
-  SWFDEC_AS_CONSTANT_STRING ("duplicateMovieClip"),
-  SWFDEC_AS_CONSTANT_STRING ("getBytesLoaded"),
-  SWFDEC_AS_CONSTANT_STRING ("getBytesTotal"),
-  SWFDEC_AS_CONSTANT_STRING ("getDepth"),
-  SWFDEC_AS_CONSTANT_STRING ("getNextHighestDepth"),
-  SWFDEC_AS_CONSTANT_STRING ("getURL"),
-  SWFDEC_AS_CONSTANT_STRING ("gotoAndPlay"),
-  SWFDEC_AS_CONSTANT_STRING ("gotoAndStop"),
-  SWFDEC_AS_CONSTANT_STRING ("hitTest"),
-  SWFDEC_AS_CONSTANT_STRING ("nextFrame"),
-  SWFDEC_AS_CONSTANT_STRING ("play"),
-  SWFDEC_AS_CONSTANT_STRING ("prevFrame"),
-  SWFDEC_AS_CONSTANT_STRING ("removeMovieClip"),
-  SWFDEC_AS_CONSTANT_STRING ("stop"),
-  SWFDEC_AS_CONSTANT_STRING ("stopDrag"),
-  SWFDEC_AS_CONSTANT_STRING ("swapDepths"),
-  SWFDEC_AS_CONSTANT_STRING ("super"),
-  SWFDEC_AS_CONSTANT_STRING ("length"),
-  SWFDEC_AS_CONSTANT_STRING ("[type Function]"),
-  SWFDEC_AS_CONSTANT_STRING ("arguments"),
-  SWFDEC_AS_CONSTANT_STRING (","),
-  SWFDEC_AS_CONSTANT_STRING ("registerClass"),
-  /* add more here */
-  NULL
-};
-
 const char *
 swfdec_as_str_concat (SwfdecAsContext *cx, const char * s1, const char *s2)
 {
@@ -302,13 +171,13 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       return SWFDEC_AS_VALUE_GET_STRING (value);
     case SWFDEC_AS_TYPE_UNDEFINED:
       if (context->version > 6)
-	return SWFDEC_AS_STR_UNDEFINED;
+	return SWFDEC_AS_STR_undefined;
       else
 	return SWFDEC_AS_STR_EMPTY;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? SWFDEC_AS_STR_TRUE : SWFDEC_AS_STR_FALSE;
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false;
     case SWFDEC_AS_TYPE_NULL:
-      return SWFDEC_AS_STR_NULL;
+      return SWFDEC_AS_STR_null;
     case SWFDEC_AS_TYPE_NUMBER:
       return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
@@ -324,7 +193,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	if (SWFDEC_AS_VALUE_IS_STRING (&ret))
 	  return SWFDEC_AS_VALUE_GET_STRING (&ret);
 	else
-	  return SWFDEC_AS_STR_type_Object;
+	  return SWFDEC_AS_STR__type_Object_;
       }
     default:
       g_assert_not_reached ();
@@ -351,7 +220,7 @@ swfdec_as_value_to_printable (SwfdecAsContext *context, const SwfdecAsValue *val
 
   switch (value->type) {
     case SWFDEC_AS_TYPE_UNDEFINED:
-      return SWFDEC_AS_STR_UNDEFINED;
+      return SWFDEC_AS_STR_undefined;
     default:
       break;
   }

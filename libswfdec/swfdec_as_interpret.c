@@ -467,7 +467,12 @@ swfdec_as_interpret_eval (SwfdecAsContext *cx, SwfdecAsObject *obj,
   return SWFDEC_AS_STR_EMPTY;
 }
 
-#define CONSTANT_INDEX 39
+/* FIXME: this sucks */
+extern struct {
+  guint offset; /* GC'd */
+  void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
+  void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
+} swfdec_movieclip_props[];
 static void
 swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -490,7 +495,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't GetProperty");
     goto out;
   }
-  swfdec_as_object_get_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
+  swfdec_as_object_get_variable (obj, swfdec_as_strings + swfdec_movieclip_props[id].offset,
       swfdec_as_stack_peek (cx->frame->stack, 1));
   return;
 
@@ -520,7 +525,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't get SetProperty");
     goto out;
   }
-  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
+  swfdec_as_object_set_variable (obj, swfdec_as_strings + swfdec_movieclip_props[id].offset,
       swfdec_as_stack_peek (cx->frame->stack, 1));
 out:
   swfdec_as_stack_pop_n (cx->frame->stack, 3);
@@ -694,7 +699,7 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
     case 0x0d:
       if (cx->version < 5) {
 	if (r == 0) {
-	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR_HASH_ERROR);
+	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR__ERROR_);
 	  return;
 	}
       } else if (cx->version < 7) {
@@ -1592,29 +1597,29 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   val = swfdec_as_stack_peek (cx->frame->stack, 1);
   switch (val->type) {
     case SWFDEC_AS_TYPE_NUMBER:
-      type = SWFDEC_AS_STR_NUMBER;
+      type = SWFDEC_AS_STR_number;
       break;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      type = SWFDEC_AS_STR_BOOLEAN;
+      type = SWFDEC_AS_STR_boolean;
       break;
     case SWFDEC_AS_TYPE_STRING:
-      type = SWFDEC_AS_STR_STRING;
+      type = SWFDEC_AS_STR_string;
       break;
     case SWFDEC_AS_TYPE_UNDEFINED:
-      type = SWFDEC_AS_STR_UNDEFINED;
+      type = SWFDEC_AS_STR_undefined;
       break;
     case SWFDEC_AS_TYPE_NULL:
-      type = SWFDEC_AS_STR_NULL;
+      type = SWFDEC_AS_STR_null;
       break;
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
 	if (SWFDEC_IS_MOVIE (obj)) {
-	  type = SWFDEC_AS_STR_MOVIECLIP;
+	  type = SWFDEC_AS_STR_movieclip;
 	} else if (SWFDEC_IS_AS_FUNCTION (obj)) {
-	  type = SWFDEC_AS_STR_FUNCTION;
+	  type = SWFDEC_AS_STR_function;
 	} else {
-	  type = SWFDEC_AS_STR_OBJECT;
+	  type = SWFDEC_AS_STR_object;
 	}
       }
       break;

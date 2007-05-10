@@ -304,15 +304,15 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
 static void
 swfdec_as_context_init (SwfdecAsContext *context)
 {
-  guint i;
+  const char *s;
 
   context->strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  for (i = 0; swfdec_as_strings[i]; i++) {
-    g_hash_table_insert (context->strings, (char *) swfdec_as_strings[i] + 1, 
-	(char *) swfdec_as_strings[i]);
+  for (s = swfdec_as_strings; *s == '\2'; s += strlen (s) + 1) {
+    g_hash_table_insert (context->strings, (char *) s + 1, (char *) s);
   }
+  g_assert (*s == 0);
   context->global = swfdec_as_object_new (context);
   context->rand = g_rand_new ();
 }

@@ -11,5 +11,6 @@ Makefile.in
 *.lo
 *.loT
 
-swfdec_marshal.[ch]
+swfdec_as_strings.h
 swfdec_enums.[ch]
+swfdec_marshal.[ch]

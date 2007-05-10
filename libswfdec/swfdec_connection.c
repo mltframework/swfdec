@@ -67,16 +67,16 @@ swfdec_connection_onstatus (SwfdecConnection *conn, const char *code,
     return;
   swfdec_as_object_root (info);
   SWFDEC_AS_VALUE_SET_STRING (&value, code);
-  swfdec_as_object_set_variable (info, SWFDEC_AS_STR_CODE, &value);
+  swfdec_as_object_set_variable (info, SWFDEC_AS_STR_code, &value);
   SWFDEC_AS_VALUE_SET_STRING (&value, level);
-  swfdec_as_object_set_variable (info, SWFDEC_AS_STR_LEVEL, &value);
+  swfdec_as_object_set_variable (info, SWFDEC_AS_STR_level, &value);
   if (description) {
     SWFDEC_AS_VALUE_SET_STRING (&value, description);
-    swfdec_as_object_set_variable (info, SWFDEC_AS_STR_DESCRIPTION, &value);
+    swfdec_as_object_set_variable (info, SWFDEC_AS_STR_description, &value);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&value, info);
   swfdec_as_object_unroot (info);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (conn), SWFDEC_AS_STR_STATUS, 1, &value, NULL);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (conn), SWFDEC_AS_STR_status, 1, &value, NULL);
 }
 
 SwfdecConnection *
@@ -104,7 +104,7 @@ swfdec_connection_connect (SwfdecConnection *conn, const char *url)
   if (url) {
     SWFDEC_ERROR ("FIXME: using NetConnection with non-null URLs is not implemented");
   }
-  swfdec_connection_onstatus (conn, SWFDEC_AS_STR_NET_CONNECTION_CONNECT_SUCCESS,
-       SWFDEC_AS_STR_SUCCESS, NULL);
+  swfdec_connection_onstatus (conn, SWFDEC_AS_STR_NetConnection_Connect_Success,
+       SWFDEC_AS_STR_success, NULL);
 }
 

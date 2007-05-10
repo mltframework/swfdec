@@ -537,7 +537,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
   }
-  swfdec_listener_execute (player->mouse_listener, SWFDEC_AS_STR_ON_MOUSE_MOVE);
+  swfdec_listener_execute (player->mouse_listener, SWFDEC_AS_STR_onMouseMove);
   swfdec_player_update_mouse_position (player);
 }
 
@@ -550,10 +550,10 @@ swfdec_player_do_mouse_button (SwfdecPlayer *player)
 
   if (player->mouse_button) {
     event = SWFDEC_EVENT_MOUSE_DOWN;
-    event_name = SWFDEC_AS_STR_ON_MOUSE_DOWN;
+    event_name = SWFDEC_AS_STR_onMouseDown;
   } else {
     event = SWFDEC_EVENT_MOUSE_UP;
-    event_name = SWFDEC_AS_STR_ON_MOUSE_UP;
+    event_name = SWFDEC_AS_STR_onMouseUp;
   }
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, event);

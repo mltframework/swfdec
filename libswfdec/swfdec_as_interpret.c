@@ -469,7 +469,7 @@ swfdec_as_interpret_eval (SwfdecAsContext *cx, SwfdecAsObject *obj,
 
 /* FIXME: this sucks */
 extern struct {
-  guint offset; /* GC'd */
+  const char * name; /* GC'd */
   void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
   void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
 } swfdec_movieclip_props[];
@@ -495,7 +495,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't GetProperty");
     goto out;
   }
-  swfdec_as_object_get_variable (obj, swfdec_as_strings + swfdec_movieclip_props[id].offset,
+  swfdec_as_object_get_variable (obj, swfdec_movieclip_props[id].name,
       swfdec_as_stack_peek (cx->frame->stack, 1));
   return;
 
@@ -525,7 +525,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't get SetProperty");
     goto out;
   }
-  swfdec_as_object_set_variable (obj, swfdec_as_strings + swfdec_movieclip_props[id].offset,
+  swfdec_as_object_set_variable (obj, swfdec_movieclip_props[id].name,
       swfdec_as_stack_peek (cx->frame->stack, 1));
 out:
   swfdec_as_stack_pop_n (cx->frame->stack, 3);

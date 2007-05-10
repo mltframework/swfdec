@@ -779,6 +779,12 @@ swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable,
     *flags = 0;
     return TRUE;
   }
+  /* FIXME: check that this is correct */
+  if (variable == SWFDEC_AS_STR__global) {
+    SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
+    *flags = 0;
+    return TRUE;
+  }
   return SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags);
 }
 

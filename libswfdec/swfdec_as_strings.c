@@ -148,6 +148,8 @@ const char * swfdec_as_strings =
   SWFDEC_AS_CONSTANT_STRING ("arguments")
   SWFDEC_AS_CONSTANT_STRING (",")
   SWFDEC_AS_CONSTANT_STRING ("registerClass")
+  SWFDEC_AS_CONSTANT_STRING ("__constructor__")
+  SWFDEC_AS_CONSTANT_STRING ("_global")
   /* add more here */
 ;
 

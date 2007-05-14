@@ -1956,10 +1956,10 @@ swfdec_action_delete (JSContext *cx, guint action, const guint8 *data, guint len
 {
   const char *name;
   
-  cx->fp->sp -= 2;
-  name = swfdec_js_to_string (cx, cx->fp->sp[1]);
+  name = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (name == NULL)
     return JS_FALSE;
+  cx->fp->sp -= 2;
   if (!JSVAL_IS_OBJECT (cx->fp->sp[0]))
     return JS_TRUE;
   return JS_DeleteProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[0]), name);
@@ -1973,13 +1973,13 @@ swfdec_action_delete2 (JSContext *cx, guint action, const guint8 *data, guint le
   JSProperty *prop;
   JSAtom *atom;
   
-  cx->fp->sp -= 1;
-  name = swfdec_js_to_string (cx, cx->fp->sp[1]);
+  name = swfdec_js_to_string (cx, cx->fp->sp[-1]);
   if (name == NULL)
     return JS_FALSE;
   if (!(atom = js_Atomize (cx, name, strlen (name), 0)) ||
       !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
     return JS_FALSE;
+  cx->fp->sp -= 1;
   if (!pobj)
     return JS_TRUE;
   return JS_DeleteProperty (cx, pobj, name);

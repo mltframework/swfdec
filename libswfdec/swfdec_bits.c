@@ -587,7 +587,7 @@ swfdec_bits_get_gradient (SwfdecBits * bits)
 
   n_gradients = swfdec_bits_get_u8 (bits);
   grad = g_malloc (sizeof (SwfdecGradient) +
-      sizeof (SwfdecGradientEntry) * (n_gradients - 1));
+      sizeof (SwfdecGradientEntry) * (MAX (n_gradients, 1) - 1));
   for (i = 0; i < n_gradients && swfdec_bits_left (bits); i++) {
     grad->array[i].ratio = swfdec_bits_get_u8 (bits);
     grad->array[i].color = swfdec_bits_get_color (bits);

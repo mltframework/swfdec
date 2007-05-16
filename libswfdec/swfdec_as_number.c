@@ -58,7 +58,7 @@ swfdec_as_number_new (SwfdecAsContext *context, double number)
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (context->Number == NULL, NULL);
+  g_return_val_if_fail (context->Number != NULL, NULL);
   
   SWFDEC_AS_VALUE_SET_NUMBER (&val, number);
   ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Number), 1, &val);
@@ -74,7 +74,7 @@ static void
 swfdec_as_number_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (object->context->frame->construct && argc > 0) {
-    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (num);
+    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
     num->number = swfdec_as_value_to_number (object->context, &argv[0]);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);

@@ -367,6 +367,9 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
   }
 
   depth = swfdec_bits_get_u16 (bits);
+  if (depth >= 16384) {
+    SWFDEC_WARNING ("depth of placement too high: %u >= 16384", depth);
+  }
   SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
   depth -= 16384;
 

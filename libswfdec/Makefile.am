@@ -1,5 +1,10 @@
 SUBDIRS = jpeg
 
+noinst_PROGRAMS = compute-strings
+
+compute_strings_SOURCES = swfdec_as_strings.c
+compute_strings_CFLAGS = -DCOMPUTE_SWFDEC_AS_STRINGS_H
+
 CODECS =
 
 if HAVE_FFMPEG
@@ -34,7 +39,9 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_interpret.c \
 	swfdec_as_number.c \
 	swfdec_as_object.c \
+	swfdec_as_scope.c \
 	swfdec_as_stack.c \
+	swfdec_as_strings.c \
 	swfdec_as_super.c \
 	swfdec_as_types.c \
 	swfdec_amf.c \
@@ -81,6 +88,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_net_stream.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
+	swfdec_player_as.c \
 	swfdec_rect.c \
 	swfdec_ringbuffer.c \
 	swfdec_root_movie.c \
@@ -129,7 +137,9 @@ noinst_HEADERS = \
 	swfdec_as_interpret.h \
 	swfdec_as_number.h \
 	swfdec_as_object.h \
+	swfdec_as_scope.h \
 	swfdec_as_stack.h \
+	swfdec_as_strings.h \
 	swfdec_as_super.h \
 	swfdec_as_types.h \
 	swfdec_amf.h \
@@ -189,16 +199,14 @@ noinst_HEADERS = \
 EXTRA_DIST = swfdec_marshal.list
 
 BUILT_SOURCES = \
+	swfdec_as_strings.h \
 	swfdec_enums.c \
 	swfdec_enums.h \
 	swfdec_marshal.c \
 	swfdec_marshal.h
 
 CLEANFILES = \
-	swfdec_enums.c \
-	swfdec_enums.h \
-	swfdec_marshal.c \
-	swfdec_marshal.h
+	$(BUILT_SOURCES)
 
 swfdec_marshal.h: swfdec_marshal.list Makefile
 	$(GLIB_GENMARSHAL) --prefix=swfdec_marshal $(srcdir)/swfdec_marshal.list --header >> xgen-smh \
@@ -232,3 +240,7 @@ swfdec_enums.c: $(public_headers) Makefile
 	&& cp xgen-sec swfdec_enums.c  \
 	&& rm -f xgen-sec
 
+swfdec_as_strings.h: swfdec_as_strings.c compute-strings
+	./compute-strings >> xgen-sas \
+	&& cp xgen-sas swfdec_as_strings.h \
+	&& rm -f xgen-sas

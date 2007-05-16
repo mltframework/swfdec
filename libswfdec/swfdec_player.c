@@ -376,9 +376,19 @@ swfdec_player_dispose (GObject *object)
 
   swfdec_listener_free (player->mouse_listener);
   swfdec_listener_free (player->key_listener);
-  //swfdec_js_finish_player (player);
-
   swfdec_player_remove_all_actions (player, player); /* HACK to allow non-removable actions */
+
+  /* we do this here so references to GC'd objects get freed */
+  G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
+
+#ifndef G_DISABLE_ASSERT
+  {
+    SwfdecPlayerAction *action;
+    while ((action = swfdec_ring_buffer_pop (player->actions)) != NULL) {
+      g_assert (action->object == NULL); /* skip removed actions */
+    }
+  }
+#endif
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
@@ -396,8 +406,6 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (player->loader);
     player->loader = NULL;
   }
-
-  G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 }
 
 static void
@@ -529,7 +537,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
   }
-  swfdec_listener_execute (player->mouse_listener, SWFDEC_AS_STR_ON_MOUSE_MOVE);
+  swfdec_listener_execute (player->mouse_listener, SWFDEC_AS_STR_onMouseMove);
   swfdec_player_update_mouse_position (player);
 }
 
@@ -542,10 +550,10 @@ swfdec_player_do_mouse_button (SwfdecPlayer *player)
 
   if (player->mouse_button) {
     event = SWFDEC_EVENT_MOUSE_DOWN;
-    event_name = SWFDEC_AS_STR_ON_MOUSE_DOWN;
+    event_name = SWFDEC_AS_STR_onMouseDown;
   } else {
     event = SWFDEC_EVENT_MOUSE_UP;
-    event_name = SWFDEC_AS_STR_ON_MOUSE_UP;
+    event_name = SWFDEC_AS_STR_onMouseUp;
   }
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, event);
@@ -1000,6 +1008,7 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 
+extern void swfdec_player_init_global (SwfdecPlayer *player, guint version);
 extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
 /**
@@ -1030,11 +1039,12 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   /* FIXME: have a better way to do this */
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
     context->state = SWFDEC_AS_CONTEXT_NEW;
+    swfdec_player_init_global (player, version);
     swfdec_mouse_init_context (player, version);
     swfdec_sprite_movie_init_context (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
-      swfdec_movie_set_prototype (player->roots->data);
+      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
     }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
@@ -1066,8 +1076,10 @@ swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
   SwfdecAsObject *ret;
   
   ret = g_hash_table_lookup (player->registered_classes, name);
-  if (ret)
+  if (ret) {
+    SWFDEC_LOG ("found registered class %p for %s\n", ret, name);
     return ret;
+  }
   return player->MovieClip;
 }
 
@@ -1087,10 +1099,12 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
   g_return_if_fail (name != NULL);
   g_return_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object));
 
-  if (object)
+  if (object) {
+    SWFDEC_LOG ("setting class %p for %s\n", object, name);
     g_hash_table_insert (player->registered_classes, (gpointer) name, object);
-  else
+  } else {
     g_hash_table_remove (player->registered_classes, name);
+  }
 }
 
 /** PUBLIC API ***/

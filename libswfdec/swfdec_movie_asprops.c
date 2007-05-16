@@ -363,34 +363,35 @@ mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie->root));
 }
 
-static struct {
+struct {
+  const char *name;
   void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
   void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
-} movieclip_props[] = {
-  { mc_x_get,	    mc_x_set },
-  { mc_y_get,	    mc_y_set },
-  { mc_xscale_get,	    mc_xscale_set },
-  { mc_yscale_get,	    mc_yscale_set },
-  { mc_currentframe,    NULL },
-  { mc_totalframes,	    NULL },
-  { mc_alpha_get,	    mc_alpha_set },
-  { mc_visible_get,	    mc_visible_set },
-  { mc_width_get,	    mc_width_set },
-  { mc_height_get,	    mc_height_set },
-  { mc_rotation_get,    mc_rotation_set },
-  { NULL,  NULL }, //"_target"
-  { mc_framesloaded,    NULL},
-  { mc_name_get,	  mc_name_set },
-  { NULL,  NULL }, //"_droptarget"
-  { NULL,  NULL }, //"_url"
-  { NULL,  NULL }, //"_highquality"
-  { NULL,  NULL }, //"_focusrect"
-  { NULL,  NULL }, //"_soundbuftime"
-  { NULL,  NULL }, //"_quality"
-  { mc_xmouse_get,	    NULL },
-  { mc_ymouse_get,	    NULL },
-  { mc_parent,	    NULL },
-  { mc_root,	    NULL },
+} swfdec_movieclip_props[] = {
+  { SWFDEC_AS_STR__x,		mc_x_get,	    mc_x_set },
+  { SWFDEC_AS_STR__y,		mc_y_get,	    mc_y_set },
+  { SWFDEC_AS_STR__xscale,	mc_xscale_get,	    mc_xscale_set },
+  { SWFDEC_AS_STR__yscale,	mc_yscale_get,	    mc_yscale_set },
+  { SWFDEC_AS_STR__currentframe,mc_currentframe,    NULL },
+  { SWFDEC_AS_STR__totalframes,	mc_totalframes,	    NULL },
+  { SWFDEC_AS_STR__alpha,	mc_alpha_get,	    mc_alpha_set },
+  { SWFDEC_AS_STR__visible,	mc_visible_get,	    mc_visible_set },
+  { SWFDEC_AS_STR__width,	mc_width_get,	    mc_width_set },
+  { SWFDEC_AS_STR__height,	mc_height_get,	    mc_height_set },
+  { SWFDEC_AS_STR__rotation,	mc_rotation_get,    mc_rotation_set },
+  { SWFDEC_AS_STR__target,	NULL,  NULL }, //"_target"
+  { SWFDEC_AS_STR__framesloaded,mc_framesloaded,    NULL},
+  { SWFDEC_AS_STR__name,	mc_name_get,	    mc_name_set },
+  { SWFDEC_AS_STR__droptarget,	NULL,  NULL }, //"_droptarget"
+  { SWFDEC_AS_STR__url,		NULL,  NULL }, //"_url"
+  { SWFDEC_AS_STR__highquality,	NULL,  NULL }, //"_highquality"
+  { SWFDEC_AS_STR__focusrect,	NULL,  NULL }, //"_focusrect"
+  { SWFDEC_AS_STR__soundbuftime,NULL,  NULL }, //"_soundbuftime"
+  { SWFDEC_AS_STR__quality,	NULL,  NULL }, //"_quality"
+  { SWFDEC_AS_STR__xmouse,	mc_xmouse_get,	    NULL },
+  { SWFDEC_AS_STR__ymouse,	mc_ymouse_get,	    NULL },
+  { SWFDEC_AS_STR__parent,	mc_parent,	    NULL },
+  { SWFDEC_AS_STR__root,	mc_root,	    NULL },
 };
 
 static inline int
@@ -398,14 +399,18 @@ swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
 {
   guint i;
 
-  for (i = 0; i < G_N_ELEMENTS (movieclip_props); i++) {
-    if (SWFDEC_AS_STR_CONSTANT (i + 39) == name) {
-      if (movieclip_props[i].get == NULL) {
+  if (name < SWFDEC_AS_STR__x || name > SWFDEC_AS_STR__root)
+    return -1;
+
+  for (i = 0; i < G_N_ELEMENTS (swfdec_movieclip_props); i++) {
+    if (swfdec_movieclip_props[i].name == name) {
+      if (swfdec_movieclip_props[i].get == NULL) {
 	SWFDEC_ERROR ("property %s not implemented", name);
       }
       return i;
     }
   }
+  g_assert_not_reached ();
   return -1;
 }
 
@@ -417,8 +422,8 @@ swfdec_movie_set_asprop (SwfdecMovie *movie, const char *name, const SwfdecAsVal
   i = swfdec_movie_get_asprop_index (movie, name);
   if (i == -1)
     return FALSE;
-  if (movieclip_props[i].set != NULL) {
-    movieclip_props[i].set (movie, val);
+  if (swfdec_movieclip_props[i].set != NULL) {
+    swfdec_movieclip_props[i].set (movie, val);
   }
   return TRUE;
 }
@@ -431,8 +436,8 @@ swfdec_movie_get_asprop (SwfdecMovie *movie, const char *name, SwfdecAsValue *va
   i = swfdec_movie_get_asprop_index (movie, name);
   if (i == -1)
     return FALSE;
-  if (movieclip_props[i].get != NULL) {
-    movieclip_props[i].get (movie, val);
+  if (swfdec_movieclip_props[i].get != NULL) {
+    swfdec_movieclip_props[i].get (movie, val);
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   }

@@ -54,10 +54,12 @@ swfdec_action_get_target (SwfdecAsContext *context)
   SwfdecAsObject *target = context->frame->target;
 
   if (target == NULL) {
-    SwfdecAsFrame *frame = context->frame;
-    while (frame->scope)
-      frame = frame->scope;
-    target = frame->thisp;
+    SwfdecAsScope *scope = context->frame->scope ? 
+	context->frame->scope : SWFDEC_AS_SCOPE (context->frame);
+    while (scope->next)
+      scope = scope->next;
+    g_assert (SWFDEC_IS_AS_FRAME (scope));
+    target = SWFDEC_AS_FRAME (scope)->thisp;
   }
   if (!SWFDEC_IS_MOVIE (target)) {
     SWFDEC_ERROR ("no valid target");
@@ -465,7 +467,12 @@ swfdec_as_interpret_eval (SwfdecAsContext *cx, SwfdecAsObject *obj,
   return SWFDEC_AS_STR_EMPTY;
 }
 
-#define CONSTANT_INDEX 39
+/* FIXME: this sucks */
+extern struct {
+  const char * name; /* GC'd */
+  void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
+  void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
+} swfdec_movieclip_props[];
 static void
 swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -488,7 +495,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't GetProperty");
     goto out;
   }
-  swfdec_as_object_get_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
+  swfdec_as_object_get_variable (obj, swfdec_movieclip_props[id].name,
       swfdec_as_stack_peek (cx->frame->stack, 1));
   return;
 
@@ -518,7 +525,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
     SWFDEC_WARNING ("not an object, can't get SetProperty");
     goto out;
   }
-  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_CONSTANT (CONSTANT_INDEX + id),
+  swfdec_as_object_set_variable (obj, swfdec_movieclip_props[id].name,
       swfdec_as_stack_peek (cx->frame->stack, 1));
 out:
   swfdec_as_stack_pop_n (cx->frame->stack, 3);
@@ -692,7 +699,7 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
     case 0x0d:
       if (cx->version < 5) {
 	if (r == 0) {
-	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR_HASH_ERROR);
+	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR__ERROR_);
 	  return;
 	}
       } else if (cx->version < 7) {
@@ -709,7 +716,6 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), l);
 }
 
-
 static void
 swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -718,14 +724,11 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   rval = swfdec_as_stack_peek (cx->frame->stack, 1);
   lval = swfdec_as_stack_peek (cx->frame->stack, 2);
   if (SWFDEC_AS_VALUE_IS_STRING (lval) || SWFDEC_AS_VALUE_IS_STRING (rval)) {
-    const char *l, *r;
-    char *ret;
-    r = swfdec_as_value_to_string (cx, rval);
-    l = swfdec_as_value_to_string (cx, lval);
-    ret = g_strconcat (l, r, NULL);
-    l = swfdec_as_context_get_string (cx, ret);
+    const char *str;
+    str = swfdec_as_str_concat (cx, swfdec_as_value_to_string (cx, lval),
+	swfdec_as_value_to_string (cx, rval));
     swfdec_as_stack_pop (cx->frame->stack);
-    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), l);
+    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), str);
   } else {
     double d, d2;
     d2 = swfdec_as_value_to_number (cx, rval);
@@ -893,24 +896,19 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   cx->fp->sp -= 2;
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_string_add (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSString *lval, *rval;
+  const char *lval, *rval;
 
-  rval = JS_ValueToString (cx, cx->fp->sp[-1]);
-  lval = JS_ValueToString (cx, cx->fp->sp[-2]);
-  if (lval == NULL || rval == NULL)
-    return FALSE;
-  lval = JS_ConcatStrings (cx, lval, rval);
-  if (lval == NULL)
-    return FALSE;
-  cx->fp->sp--;
-  cx->fp->sp[-1] = STRING_TO_JSVAL (lval);
-  return JS_TRUE;
+  rval = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  lval = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  lval = swfdec_as_str_concat (cx, lval, rval);
+  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 2), lval);
+  swfdec_as_stack_pop (cx->frame->stack);
 }
-#endif
 
 static void
 swfdec_action_push_duplicate (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -1266,7 +1264,15 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     SWFDEC_ERROR ("could not parse function name");
     return;
   }
-  fun = swfdec_as_function_new (frame->scope);
+  /* see function-scope tests */
+  if (cx->version > 5) {
+    fun = swfdec_as_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame));
+  } else {
+    SwfdecAsScope *scope = frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame);
+    while (scope->next)
+      scope = scope->next;
+    fun = swfdec_as_function_new (scope);
+  }
   if (fun == NULL)
     return;
   n_args = swfdec_bits_get_u16 (&bits);
@@ -1415,15 +1421,17 @@ swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   cx->fp->sp--;
   return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
 }
+#endif
 
 static void
 swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d = swfdec_value_to_number (cx, cx->fp->sp[-1]);
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
 
-  return JS_NewNumberValue (cx, (int) d, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_INT (val, swfdec_as_value_to_integer (cx, val));
 }
 
+#if 0
 static void
 swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -1449,7 +1457,7 @@ swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *dat
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
-  swfdec_as_object_set_variable (cx->frame->scope ? cx->frame : cx->frame->thisp, name,
+  swfdec_as_object_set_variable (cx->frame->var_object, name,
       swfdec_as_stack_peek (cx->frame->stack, 1));
   swfdec_as_stack_pop_n (cx->frame->stack, 2);
 }
@@ -1461,7 +1469,7 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
-  swfdec_as_object_set_variable (cx->frame->scope ? cx->frame : cx->frame->thisp, name, &val);
+  swfdec_as_object_set_variable (cx->frame->var_object, name, &val);
 }
 
 static void
@@ -1589,29 +1597,29 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   val = swfdec_as_stack_peek (cx->frame->stack, 1);
   switch (val->type) {
     case SWFDEC_AS_TYPE_NUMBER:
-      type = SWFDEC_AS_STR_NUMBER;
+      type = SWFDEC_AS_STR_number;
       break;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      type = SWFDEC_AS_STR_BOOLEAN;
+      type = SWFDEC_AS_STR_boolean;
       break;
     case SWFDEC_AS_TYPE_STRING:
-      type = SWFDEC_AS_STR_STRING;
+      type = SWFDEC_AS_STR_string;
       break;
     case SWFDEC_AS_TYPE_UNDEFINED:
-      type = SWFDEC_AS_STR_UNDEFINED;
+      type = SWFDEC_AS_STR_undefined;
       break;
     case SWFDEC_AS_TYPE_NULL:
-      type = SWFDEC_AS_STR_NULL;
+      type = SWFDEC_AS_STR_null;
       break;
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
 	if (SWFDEC_IS_MOVIE (obj)) {
-	  type = SWFDEC_AS_STR_MOVIECLIP;
+	  type = SWFDEC_AS_STR_movieclip;
 	} else if (SWFDEC_IS_AS_FUNCTION (obj)) {
-	  type = SWFDEC_AS_STR_FUNCTION;
+	  type = SWFDEC_AS_STR_function;
 	} else {
-	  type = SWFDEC_AS_STR_OBJECT;
+	  type = SWFDEC_AS_STR_object;
 	}
       }
       break;
@@ -1632,34 +1640,38 @@ swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, g
   *cx->fp->sp++ = INT_TO_JSVAL ((int) SWFDEC_TICKS_TO_MSECS (player->time));
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval superclass, subclass, proto;
-  JSObject *prototype;
+  SwfdecAsValue *superclass, *subclass, proto;
+  SwfdecAsObject *prototype;
+  SwfdecAsFunction *super;
 
-  superclass = cx->fp->sp[-1];
-  subclass = cx->fp->sp[-2];
-  cx->fp->sp -= 2;
-  if (!JSVAL_IS_OBJECT (superclass) || superclass == JSVAL_NULL ||
-      !JSVAL_IS_OBJECT (subclass) || subclass == JSVAL_NULL) {
-    SWFDEC_ERROR ("superclass or subclass aren't objects");
-    return JS_TRUE;
+  superclass = swfdec_as_stack_pop (cx->frame->stack);
+  subclass = swfdec_as_stack_pop (cx->frame->stack);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (superclass) ||
+      !SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass))) {
+    SWFDEC_ERROR ("superclass is not a function");
+    return;
   }
-  if (!JS_GetProperty (cx, JSVAL_TO_OBJECT (superclass), "prototype", &proto) ||
-      !JSVAL_IS_OBJECT (proto))
-    return JS_FALSE;
-  prototype = JS_NewObject (cx, NULL, JSVAL_TO_OBJECT (proto), NULL);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (subclass)) {
+    SWFDEC_ERROR ("subclass is not an object");
+    return;
+  }
+  super = SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass));
+  prototype = swfdec_as_object_new (cx);
   if (prototype == NULL)
-    return JS_FALSE;
-  proto = OBJECT_TO_JSVAL (prototype);
-  if (!JS_SetProperty (cx, prototype, "__constructor__", &superclass) ||
-      !JS_SetProperty (cx, JSVAL_TO_OBJECT (subclass), "prototype", &proto))
-    return JS_FALSE;
-  return JS_TRUE;
+    return;
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (super),
+      SWFDEC_AS_STR_prototype, &proto);
+  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
+  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___constructor__,
+      superclass);
+  swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
+      SWFDEC_AS_STR_prototype, superclass);
 }
-#endif
 
 static gboolean
 swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
@@ -1933,7 +1945,7 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
 
   pool = swfdec_constant_pool_new_from_action (data, len);
   if (pool == NULL)
-    return NULL;
+    return g_strdup ("ConstantPool (invalid)");
   string = g_string_new ("ConstantPool");
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
     g_string_append (string, i ? ", " : " ");
@@ -2035,15 +2047,11 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL },
   [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL },
   [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
-#if 0
-  [0x18] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
-#endif
+  [SWFDEC_AS_ACTION_TO_INTEGER] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
   [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
   [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
   [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
-#if 0
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
-#endif
   [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
   [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },
@@ -2121,10 +2129,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */
-#if 0
-  [0x69] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
-#endif
-
+  [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
   /* version 3 */
   [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
 #if 0

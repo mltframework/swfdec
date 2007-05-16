@@ -89,7 +89,7 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
  * Queues an update of all cached values inside @movie and invalidates it.
  **/
 void
-swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieState state)
+swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieCacheState state)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
@@ -268,40 +268,54 @@ swfdec_movie_find (SwfdecMovie *movie, int depth)
   return NULL;
 }
 
-typedef void (* SwfdecMovieRemoveFunc) (SwfdecMovie *, gpointer);
-
-static void
-swfdec_movie_do_remove (SwfdecMovie *movie, gpointer child_remove)
+static gboolean
+swfdec_movie_do_remove (SwfdecMovie *movie)
 {
+  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
+
   movie->will_be_removed = TRUE;
-  /* remove all children */
   while (movie->list) {
-    (*(SwfdecMovieRemoveFunc) child_remove) (movie->list->data, child_remove);
+    GList *walk = movie->list;
+    while (walk && SWFDEC_MOVIE (walk->data)->will_be_removed)
+      walk = walk->next;
+    if (walk == NULL)
+      break;
+    swfdec_movie_remove (walk->data);
   }
+  /* FIXME: all of this here or in destroy callback? */
   if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab == movie)
     SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_grab = NULL;
   if (SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag == movie)
     SWFDEC_ROOT_MOVIE (movie->root)->player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
-  if (movie->parent) {
-    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
-    if (SWFDEC_IS_DEBUGGER (player) &&
-	g_list_find (movie->parent->list, movie)) {
-      movie->parent->list = g_list_remove (movie->parent->list, movie);
-      g_signal_emit_by_name (player, "movie-removed", movie);
-    } else {
-      movie->parent->list = g_list_remove (movie->parent->list, movie);
-    }
-  } else {
-    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie)->player;
-    if (SWFDEC_IS_DEBUGGER (player) &&
-	g_list_find (player->roots, movie)) {
-      player->roots = g_list_remove (player->roots, movie);
-      g_signal_emit_by_name (player, "movie-removed", movie);
-    } else {
-      player->roots = g_list_remove (player->roots, movie);
-    }
-  }
+  movie->depth = -16385 - movie->depth; /* don't ask me why... */
+  if (movie->parent)
+    movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
+
+  return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
+}
+
+/**
+ * swfdec_movie_remove:
+ * @movie: #SwfdecMovie to remove
+ *
+ * Removes this movie from its parent. In contrast to swfdec_movie_destroy (),
+ * it will definitely cause a removal from the display list, but depending on
+ * movie, it might still be possible to reference it from Actionscript.
+ **/
+void
+swfdec_movie_remove (SwfdecMovie *movie)
+{
+  gboolean result;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  if (movie->state > SWFDEC_MOVIE_STATE_RUNNING)
+    return;
+  result = swfdec_movie_do_remove (movie);
+  movie->state = SWFDEC_MOVIE_STATE_REMOVED;
+  if (result)
+    swfdec_movie_destroy (movie);
 }
 
 /**
@@ -318,8 +332,30 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
   SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
 
+  g_assert (movie->state < SWFDEC_MOVIE_STATE_DESTROYED);
+  if (movie->state < SWFDEC_MOVIE_STATE_REMOVED) {
+    swfdec_movie_do_remove (movie);
+  }
   SWFDEC_LOG ("destroying movie %s", movie->name);
-  swfdec_movie_do_remove (movie, swfdec_movie_destroy);
+  while (movie->list) {
+    swfdec_movie_destroy (movie->list->data);
+  }
+  if (movie->parent) {
+    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+    if (SWFDEC_IS_DEBUGGER (player) &&
+	g_list_find (movie->parent->list, movie)) {
+      g_signal_emit_by_name (player, "movie-removed", movie);
+    }
+    movie->parent->list = g_list_remove (movie->parent->list, movie);
+    movie->parent = NULL;
+  } else {
+    SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie)->player;
+    if (SWFDEC_IS_DEBUGGER (player) &&
+	g_list_find (player->roots, movie)) {
+      g_signal_emit_by_name (player, "movie-removed", movie);
+    }
+    player->roots = g_list_remove (player->roots, movie);
+  }
   swfdec_movie_set_content (movie, NULL);
   /* FIXME: figure out how to handle destruction pre-init/construct.
    * This is just a stop-gap measure to avoid dead movies in those queues */
@@ -327,28 +363,9 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   g_queue_remove (player->construct_queue, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  //swfdec_js_movie_remove_jsobject (movie);
   player->movies = g_list_remove (player->movies, movie);
+  movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
   g_object_unref (movie);
-}
-
-/**
- * swfdec_movie_remove:
- * @movie: #SwfdecMovie to remove
- *
- * Removes this movie from its parent. In contrast to swfdec_movie_destroy (),
- * it will definitely cause a removal from the display list, but depending on
- * movie, it might still be possible to reference it from Actionscript.
- **/
-void
-swfdec_movie_remove (SwfdecMovie *movie)
-{
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-
-  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
-  swfdec_movie_do_remove (movie, swfdec_movie_remove);
-  if (!swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD))
-    swfdec_movie_destroy (movie);
 }
 
 /**
@@ -747,8 +764,6 @@ swfdec_movie_dispose (GObject *object)
 
   SWFDEC_LOG ("disposing movie %s", movie->name);
   g_free (movie->name);
-  if (movie->parent)
-    g_object_unref (movie->parent);
 
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
@@ -758,6 +773,12 @@ swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable,
     SwfdecAsValue *val, guint *flags)
 {
   if (swfdec_movie_get_asprop (SWFDEC_MOVIE (object), variable, val)) {
+    *flags = 0;
+    return TRUE;
+  }
+  /* FIXME: check that this is correct */
+  if (variable == SWFDEC_AS_STR__global) {
+    SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
     *flags = 0;
     return TRUE;
   }
@@ -777,7 +798,7 @@ static gboolean
 swfdec_movie_iterate_end (SwfdecMovie *movie)
 {
   return movie->parent == NULL || 
-	 g_list_find (movie->parent->list, movie) != NULL;
+	 movie->state < SWFDEC_MOVIE_STATE_REMOVED;
 }
 
 static void
@@ -825,14 +846,14 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  swfdec_movie_set_name (movie);
   if (parent) {
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
-    SWFDEC_DEBUG ("inserting %s %p (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
+    SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
-  swfdec_movie_set_name (movie);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   /* NB: adding to the movies list happens before setting the parent.
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
@@ -865,31 +886,6 @@ swfdec_movie_initialize (SwfdecMovie *movie, const SwfdecContent *content)
   swfdec_movie_set_content (movie, content);
 }
 
-void
-swfdec_movie_set_prototype (SwfdecMovie *movie)
-{
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  SwfdecAsObject *klass = player->MovieClip;
-  SwfdecAsValue val;
-
-  /* happens for root movies during init */
-  if (klass == NULL)
-    return;
-
-  if (SWFDEC_IS_SPRITE_MOVIE (movie) &&
-      SWFDEC_SPRITE_MOVIE (movie)->sprite != NULL) {
-    const char *name = swfdec_root_movie_get_export_name (SWFDEC_ROOT_MOVIE (movie->root), 
-	SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (movie)->sprite));
-    if (name != NULL) {
-      klass = swfdec_player_get_export_class (player, name);
-    }
-  }
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, klass);
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_get_variable (klass, SWFDEC_AS_STR_prototype, &val);
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR___proto__, &val);
-}
-
 /**
  * swfdec_movie_new:
  * @parent: the parent movie that will contain this movie
@@ -918,13 +914,10 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   ret = klass->create_movie (content->graphic, &size);
   object = SWFDEC_AS_OBJECT (parent);
   ret->parent = parent;
-  g_object_ref (parent);
   ret->root = parent->root;
   if (swfdec_as_context_use_mem (object->context, size)) {
-    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
     g_object_ref (ret);
-    /* now set prototype etc */
-    swfdec_movie_set_prototype (ret);
+    swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
   } else {
     SWFDEC_AS_OBJECT (ret)->context = object->context;
   }
@@ -947,10 +940,9 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   SWFDEC_ROOT_MOVIE (ret)->player = player;
   ret->root = ret;
   if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie))) {
+    g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),
 	SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie));
-    g_object_ref (ret);
-    swfdec_movie_set_prototype (ret);
   } else {
     SWFDEC_AS_OBJECT (ret)->context = SWFDEC_AS_CONTEXT (player);
   }

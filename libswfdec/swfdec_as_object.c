@@ -577,33 +577,51 @@ SwfdecAsObject *
 swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValue *args)
 {
   static SwfdecAsValue val; /* ignored */
-  SwfdecAsObject *new, *proto;
+  SwfdecAsObject *new;
   SwfdecAsContext *context;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (construct), NULL);
   g_return_val_if_fail (n_args == 0 || args != NULL, NULL);
 
   context = SWFDEC_AS_OBJECT (construct)->context;
+  if (!swfdec_as_context_use_mem (context, construct->type_size)) {
+    SwfdecAsObject *proto;
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct), SWFDEC_AS_STR_prototype, &val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+      proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+    } else {
+      proto = context->Object_prototype;
+    }
+    return proto;
+  }
+  new = g_object_new (construct->type, NULL);
+  swfdec_as_object_add (new, context, construct->type_size);
+  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (construct));
+  swfdec_as_function_call (construct, new, n_args, args, &val);
+  context->frame->construct = TRUE;
+  return new;
+}
+
+void
+swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *construct)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *proto;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (construct));
+
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct), SWFDEC_AS_STR_prototype, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
     proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   } else {
     SWFDEC_WARNING ("constructor has no prototype, using Object.prototype");
-    proto = context->Object_prototype;
+    proto = object->context->Object_prototype;
   }
-  if (!swfdec_as_context_use_mem (context, proto->size))
-    return proto;
-  new = g_object_new (G_OBJECT_TYPE (proto), NULL);
-  swfdec_as_object_add (new, context, proto->size);
-  swfdec_as_object_root (new);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (new, SWFDEC_AS_STR___proto__, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (construct));
-  swfdec_as_object_set_variable (new, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_function_call (construct, new, n_args, args, &val);
-  context->frame->construct = TRUE;
-  swfdec_as_object_unroot (new);
-  return new;
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
 }
 
 /*** AS CODE ***/
@@ -633,9 +651,9 @@ static void
 swfdec_as_object_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   if (SWFDEC_IS_AS_FUNCTION (object)) {
-    SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_type_Function);
+    SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__type_Function_);
   } else {
-    SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR_object_Object);
+    SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__object_Object_);
   }
 }
 

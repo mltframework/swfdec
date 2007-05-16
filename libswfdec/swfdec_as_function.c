@@ -70,6 +70,7 @@ static void
 swfdec_as_function_init (SwfdecAsFunction *function)
 {
   function->type = SWFDEC_TYPE_AS_OBJECT;
+  function->type_size = sizeof (SwfdecAsObject);
 }
 
 SwfdecAsFunction *
@@ -97,11 +98,11 @@ swfdec_as_function_do_create (SwfdecAsContext *context)
 }
 
 SwfdecAsFunction *
-swfdec_as_function_new (SwfdecAsFrame *scope)
+swfdec_as_function_new (SwfdecAsScope *scope)
 {
   SwfdecAsFunction *fun;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (scope), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_SCOPE (scope), NULL);
 
   fun = swfdec_as_function_do_create (SWFDEC_AS_OBJECT (scope)->context);
   if (fun == NULL)
@@ -150,9 +151,10 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     frame->function_name = function->name;
   } else {
     frame = swfdec_as_frame_new (thisp, function->script);
-    if (frame->script->version > 5)
-      frame->scope = function->scope;
+    SWFDEC_AS_SCOPE (frame)->next = function->scope;
+    frame->scope = SWFDEC_AS_SCOPE (frame);
   }
+  frame->var_object = SWFDEC_AS_OBJECT (frame);
   frame->argc = n_args;
   frame->argv = args;
   frame->return_value = return_value;
@@ -172,10 +174,14 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 void
 swfdec_as_function_set_object_type (SwfdecAsFunction *function, GType type)
 {
+  GTypeQuery query;
+
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT));
 
+  g_type_query (type, &query);
   function->type = type;
+  function->type_size = query.instance_size;
 }
 
 /*** AS CODE ***/

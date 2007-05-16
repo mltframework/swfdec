@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
@@ -170,13 +171,13 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
 static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
-  SWFDEC_INFO (">> collecting garbage\n");
+  SWFDEC_INFO (">> collecting garbage");
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
   g_hash_table_foreach_remove (context->strings, 
     swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context);
-  SWFDEC_INFO (">> done collecting garbage\n");
+  SWFDEC_INFO (">> done collecting garbage");
 }
 
 void
@@ -303,15 +304,15 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
 static void
 swfdec_as_context_init (SwfdecAsContext *context)
 {
-  guint i;
+  const char *s;
 
   context->strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  for (i = 0; swfdec_as_strings[i]; i++) {
-    g_hash_table_insert (context->strings, (char *) swfdec_as_strings[i] + 1, 
-	(char *) swfdec_as_strings[i]);
+  for (s = swfdec_as_strings; *s == '\2'; s += strlen (s) + 1) {
+    g_hash_table_insert (context->strings, (char *) s + 1, (char *) s);
   }
+  g_assert (*s == 0);
   context->global = swfdec_as_object_new (context);
   context->rand = g_rand_new ();
 }
@@ -731,8 +732,14 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsObject *object, guint argc, SwfdecAsVa
 static void
 swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
 {
+  SwfdecAsValue val;
+
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASSetPropFlags, 0, 
       swfdec_as_context_ASSetPropFlags, 3);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, NAN);
+  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, HUGE_VAL);
+  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Infinity, &val);
 }
 
 /**

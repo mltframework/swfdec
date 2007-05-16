@@ -41,12 +41,12 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
     return;
   SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   SWFDEC_AS_VALUE_SET_STRING (&val, code);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_CODE, &val);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_code, &val);
   SWFDEC_AS_VALUE_SET_STRING (&val, level);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_LEVEL, &val);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_level, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_ON_STATUS, 1, &val, NULL);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_onStatus, 1, &val, NULL);
 }
 
 static void swfdec_net_stream_update_playing (SwfdecNetStream *stream);
@@ -90,11 +90,11 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   }
   if (stream->next_time <= stream->current_time) {
     if (swfdec_flv_decoder_is_eof (stream->flvdecoder)) {
-      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_PLAY_STOP, SWFDEC_AS_STR_STATUS);
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_Stop, SWFDEC_AS_STR_status);
     } else {
       stream->buffering = TRUE;
-      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_EMPTY, 
-	  SWFDEC_AS_STR_STATUS);
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Empty,
+	  SWFDEC_AS_STR_status);
     }
     swfdec_net_stream_update_playing (stream);
   }
@@ -196,8 +196,8 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   
   if (loader->error) {
     if (stream->flvdecoder == NULL)
-      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_PLAY_STREAMNOTFOUND,
-	  SWFDEC_AS_STR_ERROR);
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_StreamNotFound,
+	  SWFDEC_AS_STR_error);
     return;
   }
   if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
@@ -209,8 +209,8 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     stream->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
     SWFDEC_DECODER (stream->flvdecoder)->player = stream->player;
     SWFDEC_DECODER (stream->flvdecoder)->queue = loader->queue;
-    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_PLAY_START,
-	SWFDEC_AS_STR_STATUS);
+    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_Start,
+	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
   }
   klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
@@ -244,14 +244,14 @@ out:
     guint first, last;
     swfdec_flv_decoder_eof (stream->flvdecoder);
     recheck = TRUE;
-    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_FLUSH,
-	SWFDEC_AS_STR_STATUS);
+    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Flush,
+	SWFDEC_AS_STR_status);
     swfdec_net_stream_video_goto (stream, stream->current_time);
     stream->buffering = FALSE;
     if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last) &&
 	stream->current_time + stream->buffer_time <= last) {
-      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL,
-	  SWFDEC_AS_STR_STATUS);
+      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
+	  SWFDEC_AS_STR_status);
     }
   }
   if (recheck) {
@@ -262,8 +262,8 @@ out:
 	if (current + stream->buffer_time <= last) {
 	  swfdec_net_stream_video_goto (stream, current);
 	  stream->buffering = FALSE;
-	  swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NETSTREAM_BUFFER_FULL,
-	      SWFDEC_AS_STR_STATUS);
+	  swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
+	      SWFDEC_AS_STR_status);
 	}
       } else {
 	SWFDEC_ERROR ("no video stream, how do we update buffering?");

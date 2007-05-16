@@ -54,43 +54,43 @@ swfdec_event_type_get_name (SwfdecEventType type)
 {
   switch (type) {
     case SWFDEC_EVENT_LOAD:
-      return SWFDEC_AS_STR_ON_LOAD;
+      return SWFDEC_AS_STR_onLoad;
     case SWFDEC_EVENT_ENTER:
-      return SWFDEC_AS_STR_ON_ENTER_FRAME;
+      return SWFDEC_AS_STR_onEnterFrame;
     case SWFDEC_EVENT_UNLOAD:
-      return SWFDEC_AS_STR_ON_UNLOAD;
+      return SWFDEC_AS_STR_onUnload;
     case SWFDEC_EVENT_MOUSE_MOVE:
-      return SWFDEC_AS_STR_ON_MOUSE_MOVE;
+      return SWFDEC_AS_STR_onMouseMove;
     case SWFDEC_EVENT_MOUSE_DOWN:
-      return SWFDEC_AS_STR_ON_MOUSE_DOWN;
+      return SWFDEC_AS_STR_onMouseDown;
     case SWFDEC_EVENT_MOUSE_UP:
-      return SWFDEC_AS_STR_ON_MOUSE_UP;
+      return SWFDEC_AS_STR_onMouseUp;
     case SWFDEC_EVENT_KEY_UP:
-      return SWFDEC_AS_STR_ON_KEY_UP;
+      return SWFDEC_AS_STR_onKeyUp;
     case SWFDEC_EVENT_KEY_DOWN:
-      return SWFDEC_AS_STR_ON_KEY_DOWN;
+      return SWFDEC_AS_STR_onKeyDown;
     case SWFDEC_EVENT_DATA:
-      return SWFDEC_AS_STR_ON_DATA;
+      return SWFDEC_AS_STR_onData;
     case SWFDEC_EVENT_INITIALIZE:
       return NULL;
     case SWFDEC_EVENT_PRESS:
-      return SWFDEC_AS_STR_ON_PRESS;
+      return SWFDEC_AS_STR_onPress;
     case SWFDEC_EVENT_RELEASE:
-      return SWFDEC_AS_STR_ON_RELEASE;
+      return SWFDEC_AS_STR_onRelease;
     case SWFDEC_EVENT_RELEASE_OUTSIDE:
-      return SWFDEC_AS_STR_ON_RELEASE_OUTSIDE;
+      return SWFDEC_AS_STR_onReleaseOutside;
     case SWFDEC_EVENT_ROLL_OVER:
-      return SWFDEC_AS_STR_ON_ROLL_OVER;
+      return SWFDEC_AS_STR_onRollOver;
     case SWFDEC_EVENT_ROLL_OUT:
-      return SWFDEC_AS_STR_ON_ROLL_OUT;
+      return SWFDEC_AS_STR_onRollOut;
     case SWFDEC_EVENT_DRAG_OVER:
-      return SWFDEC_AS_STR_ON_DRAG_OVER;
+      return SWFDEC_AS_STR_onDragOver;
     case SWFDEC_EVENT_DRAG_OUT:
-      return SWFDEC_AS_STR_ON_DRAG_OUT;
+      return SWFDEC_AS_STR_onDragOut;
     case SWFDEC_EVENT_KEY_PRESS:
       return NULL;
     case SWFDEC_EVENT_CONSTRUCT:
-      return SWFDEC_AS_STR_ON_CONSTRUCT;
+      return SWFDEC_AS_STR_onConstruct;
     default:
       g_assert_not_reached ();
       return NULL;

@@ -347,7 +347,6 @@ swfdec_movie_destroy (SwfdecMovie *movie)
       g_signal_emit_by_name (player, "movie-removed", movie);
     }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
-    movie->parent = NULL;
   } else {
     SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (movie)->player;
     if (SWFDEC_IS_DEBUGGER (player) &&

@@ -100,13 +100,22 @@ swfdec_as_function_do_create (SwfdecAsContext *context)
 SwfdecAsFunction *
 swfdec_as_function_new (SwfdecAsScope *scope)
 {
+  SwfdecAsValue val;
   SwfdecAsFunction *fun;
+  SwfdecAsObject *proto;
 
   g_return_val_if_fail (SWFDEC_IS_AS_SCOPE (scope), NULL);
 
   fun = swfdec_as_function_do_create (SWFDEC_AS_OBJECT (scope)->context);
   if (fun == NULL)
     return NULL;
+  proto = swfdec_as_object_new (SWFDEC_AS_OBJECT (scope)->context);
+  if (proto == NULL)
+    return NULL;
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val);
   fun->scope = scope;
 
   return fun;

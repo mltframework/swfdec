@@ -66,7 +66,7 @@ struct _SwfdecAsObjectClass {
   void			(* mark)		(SwfdecAsObject *	object);
   /* object was added to the context */
   void			(* add)			(SwfdecAsObject *	object);
-  /* get the valueand flags for a variables */
+  /* get the value and flags for a variables */
   gboolean	      	(* get)			(SwfdecAsObject *       object,
 						 const char *		variable,
 						 SwfdecAsValue *	val,

@@ -170,6 +170,19 @@ swfdec_as_frame_new_native (SwfdecAsObject *thisp)
   return frame;
 }
 
+/**
+ * swfdec_as_frame_find_variable:
+ * @frame: a #SwfdecAsFrame
+ * @variable: name of the variable to find
+ *
+ * Finds the given variable in the current scope chain. Returns the first 
+ * object in the scope chain that contains this variable in its prototype 
+ * chain. If you want to know the explicit object that contains the variable,
+ * you have to call swfdec_as_object_find_variable() on the result.
+ * If no such variable exist in the scope chain, %NULL is returned.
+ *
+ * Returns: the object that contains @variable or %NULL if none.
+ **/
 SwfdecAsObject *
 swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
 {
@@ -184,7 +197,7 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   for (i = 0; i < 256; i++) {
     ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (cur), variable);
     if (ret)
-      return ret;
+      return SWFDEC_AS_OBJECT (cur);
     if (cur->next == NULL)
       break;
     cur = cur->next;
@@ -198,15 +211,17 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   /* 1) the target set via SetTarget */
   if (frame->target) {
     ret = swfdec_as_object_find_variable (frame->target, variable);
+    if (ret)
+      return frame->target;
   } else {
     /* The default target is the original object that called into us */
     ret = swfdec_as_object_find_variable (SWFDEC_AS_FRAME (cur)->thisp, variable);
+    if (ret)
+      return SWFDEC_AS_FRAME (cur)->thisp;
   }
-  if (ret)
-    return ret;
   /* 2) the global object */
   ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
-  return ret;
+  return ret ? SWFDEC_AS_OBJECT (frame)->context->global : NULL;
 }
 
 /**

@@ -294,6 +294,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
     } else {
       SWFDEC_WARNING ("can only use attachMovie with sprites");
     }
+    return;
   }
   depth = swfdec_as_value_to_integer (obj->context, &argv[2]);
   if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)

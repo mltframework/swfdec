@@ -24,7 +24,7 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
-#include "swfdec_as_function.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_debug.h"
 
 
@@ -472,11 +472,11 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
 
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_function_new_native (object->context, name, native, min_args);
+  function = swfdec_as_native_function_new (object->context, name, native, min_args);
   if (function == NULL)
     return NULL;
   if (type != 0)
-    swfdec_as_function_set_object_type (function, type);
+    swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (function), type);
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
@@ -576,15 +576,41 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
 SwfdecAsObject *
 swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValue *args)
 {
-  static SwfdecAsValue val; /* ignored */
+  SwfdecAsValue val;
   SwfdecAsObject *new;
   SwfdecAsContext *context;
+  SwfdecAsFunction *cur;
+  guint size;
+  GType type = 0;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (construct), NULL);
   g_return_val_if_fail (n_args == 0 || args != NULL, NULL);
 
   context = SWFDEC_AS_OBJECT (construct)->context;
-  if (!swfdec_as_context_use_mem (context, construct->type_size)) {
+  cur = construct;
+  while (type == 0 && cur != NULL) {
+    if (SWFDEC_IS_AS_NATIVE_FUNCTION (construct)) {
+      SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (construct);
+      if (native->type_size) {
+	type = native->type;
+	size = native->type_size;
+	break;
+      }
+    }
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR___constructor__, &val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+      cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
+      if (!SWFDEC_IS_AS_FUNCTION (cur))
+	cur = NULL;
+    } else {
+      cur = NULL;
+    }
+  }
+  if (type == 0) {
+    type = SWFDEC_TYPE_AS_OBJECT;
+    size = sizeof (SwfdecAsObject);
+  }
+  if (!swfdec_as_context_use_mem (context, size)) {
     SwfdecAsObject *proto;
     swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct), SWFDEC_AS_STR_prototype, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
@@ -594,8 +620,8 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValu
     }
     return proto;
   }
-  new = g_object_new (construct->type, NULL);
-  swfdec_as_object_add (new, context, construct->type_size);
+  new = g_object_new (type, NULL);
+  swfdec_as_object_add (new, context, size);
   swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (construct));
   swfdec_as_function_call (construct, new, n_args, args, &val);
   context->frame->construct = TRUE;

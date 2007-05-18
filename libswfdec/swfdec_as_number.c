@@ -26,7 +26,7 @@
 #include "swfdec_as_number.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
-#include "swfdec_as_function.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsNumber, swfdec_as_number, SWFDEC_TYPE_AS_OBJECT)
@@ -116,7 +116,8 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   if (!number)
     return;
   context->Number = number;
-  swfdec_as_function_set_object_type (SWFDEC_AS_FUNCTION (number), SWFDEC_TYPE_AS_NUMBER);
+  swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (number), 
+      SWFDEC_TYPE_AS_NUMBER);
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsNumber)))
     return;
   proto = g_object_new (SWFDEC_TYPE_AS_NUMBER, NULL);

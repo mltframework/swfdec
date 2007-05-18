@@ -28,6 +28,7 @@
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_interpret.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_as_number.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
@@ -389,10 +390,11 @@ start:
   frame = context->frame;
   if (frame == context->last_frame)
     goto out;
-  if (frame->function && frame->function->native) {
-    if (frame->argc >= frame->function->min_args && 
-	g_type_is_a (G_OBJECT_TYPE (frame->thisp), frame->function->type)) {
-      frame->function->native (frame->thisp, frame->argc, frame->argv, frame->return_value);
+  if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
+    SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
+    if (frame->argc >= native->min_args && 
+	(native->type == 0 || g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type))) {
+      native->native (frame->thisp, frame->argc, frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);
     goto start;

@@ -38,36 +38,22 @@ typedef struct _SwfdecAsFunctionClass SwfdecAsFunctionClass;
 /* FIXME: do two obejcts, one for scripts and one for native? */
 struct _SwfdecAsFunction {
   SwfdecAsObject	object;
-
-  /* for native functions */
-  SwfdecAsNative	native;		/* native call or NULL when script */
-  guint			min_args;	/* minimum number of required arguments */
-  char *		name;		/* function name */
-
-  /* for script functions */
-  SwfdecScript *	script;		/* script being executed or NULL when native */
-  SwfdecAsScope *	scope;		/* scope this function was defined in or NULL */
-
-  /* constructor info */
-  GType			type;		/* required type for this object when caling function */
-  guint			type_size;	/* instance size of type */
 };
 
 struct _SwfdecAsFunctionClass {
   SwfdecAsObjectClass	object_class;
+
+  /* call this function: push a new frame onto the stack */
+  void			(* call)			(SwfdecAsFunction *	function,
+							 SwfdecAsObject *	thisp);
 };
 
 GType			swfdec_as_function_get_type	(void);
 
-/* FIXME: verify what scope a function gets that is defined inside a With statement */
-SwfdecAsFunction *	swfdec_as_function_new		(SwfdecAsScope *	scope);
-SwfdecAsFunction *	swfdec_as_function_new_native	(SwfdecAsContext *	context,
-							 const char *		name,
-							 SwfdecAsNative		native,
-							 guint			min_args);
+SwfdecAsFunction *	swfdec_as_function_create	(SwfdecAsContext *	context, 
+							 GType			type,
+							 guint			size);
 
-void			swfdec_as_function_set_object_type (SwfdecAsFunction *	function,
-							 GType			type);
 void			swfdec_as_function_call		(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
 							 guint			n_args,

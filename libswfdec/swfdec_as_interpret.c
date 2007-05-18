@@ -25,6 +25,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
@@ -1266,12 +1267,12 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   }
   /* see function-scope tests */
   if (cx->version > 5) {
-    fun = swfdec_as_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame));
+    fun = swfdec_as_script_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame));
   } else {
     SwfdecAsScope *scope = frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame);
     while (scope->next)
       scope = scope->next;
-    fun = swfdec_as_function_new (scope);
+    fun = swfdec_as_script_function_new (scope);
   }
   if (fun == NULL)
     return;
@@ -1342,7 +1343,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   script->n_registers = n_registers;
   script->n_arguments = n_args;
   script->arguments = args;
-  fun->script = script;
+  SWFDEC_AS_SCRIPT_FUNCTION (fun)->script = script;
   swfdec_script_add_to_context (script, cx);
   /* attach the function */
   if (*function_name == '\0') {

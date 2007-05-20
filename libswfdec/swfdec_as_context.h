@@ -50,6 +50,7 @@ struct _SwfdecAsContext {
   SwfdecAsContextState	state;		/* our current state */
   SwfdecAsObject *	global;		/* the global object */
   GRand *		rand;		/* random number generator */
+  GTimeVal		start_time;   	/* time this movie started (for GetTime action) */
 
   /* bookkeeping for GC */
   gsize			memory;		/* memory currently in use */
@@ -75,8 +76,11 @@ struct _SwfdecAsContextClass {
 
   /* mark all objects that should not be collected */
   void			(* mark)		(SwfdecAsContext *	context);
-  /* call this function before executing a bytecode if non-NULL */
+  /* debugging: call this function before executing a bytecode if non-NULL */
   void			(* step)		(SwfdecAsContext *	context);
+  /* overwrite if you want to report a different time than gettimeofday */
+  void			(* get_time)		(SwfdecAsContext *      context,
+						 GTimeVal *		tv);
 };
 
 GType		swfdec_as_context_get_type	(void);
@@ -85,6 +89,8 @@ SwfdecAsContext *swfdec_as_context_new		(void);
 void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
 						 guint			version);
 
+void		swfdec_as_context_get_time	(SwfdecAsContext *	context,
+						 GTimeVal *		tv);
 const char *	swfdec_as_context_get_string	(SwfdecAsContext *	context,
 						 const char *		string);
 

@@ -316,6 +316,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
   g_assert (*s == 0);
   context->global = swfdec_as_object_new (context);
   context->rand = g_rand_new ();
+  g_get_current_time (&context->start_time);
 }
 
 /*** STRINGS ***/
@@ -357,6 +358,30 @@ SwfdecAsContext *
 swfdec_as_context_new (void)
 {
   return g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
+}
+
+/**
+ * swfdec_as_context_get_time:
+ * @context: a #SwfdecAsContext
+ * @tv: a #GTimeVal to be set to the context's time
+ *
+ * This function queries the time to be used inside this context. By default,
+ * this is the same as g_get_current_time(), but it may be overwriten to allow
+ * things such as slower or faster playback.
+ **/
+void
+swfdec_as_context_get_time (SwfdecAsContext *context, GTimeVal *tv)
+{
+  SwfdecAsContextClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (tv != NULL);
+
+  klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
+  if (klass->get_time)
+    klass->get_time (context, tv);
+  else
+    g_get_current_time (tv);
 }
 
 void

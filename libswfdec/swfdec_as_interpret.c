@@ -1635,16 +1635,23 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   SWFDEC_AS_VALUE_SET_STRING (val, type);
 }
 
-#if 0
 static void
 swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+  GTimeVal tv;
+  gulong diff;
 
-  *cx->fp->sp++ = INT_TO_JSVAL ((int) SWFDEC_TICKS_TO_MSECS (player->time));
-  return JS_TRUE;
+  swfdec_as_context_get_time (cx, &tv);
+  /* we assume here that swfdec_as_context_get_time always returns a tv > start_time */
+  diff = tv.tv_sec - cx->start_time.tv_sec;
+  if (diff > G_MAXULONG / 1000 - 1) {
+    SWFDEC_ERROR ("FIXME: time overflow");
+  }
+  diff *= 1000;
+  diff = diff + (tv.tv_usec - cx->start_time.tv_usec) / 1000;
+
+  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_push (cx->frame->stack), diff);
 }
-#endif
 
 static void
 swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2073,9 +2080,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },
   [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL },
   [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL },
-#if 0
-  [0x34] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
-#endif
+  [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
   [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL },
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
   [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL },

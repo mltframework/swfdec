@@ -788,6 +788,15 @@ swfdec_player_mark (SwfdecAsContext *context)
 }
 
 static void
+swfdec_player_get_time (SwfdecAsContext *context, GTimeVal *tv)
+{
+  *tv = context->start_time;
+
+  /* FIXME: what granularity do we want? Currently it's milliseconds */
+  g_time_val_add (tv, SWFDEC_TICKS_TO_MSECS (SWFDEC_PLAYER (context)->time) * 1000);
+}
+
+static void
 swfdec_player_class_init (SwfdecPlayerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -897,6 +906,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 
   context_class->mark = swfdec_player_mark;
+  context_class->get_time = swfdec_player_get_time;
 
   klass->advance = swfdec_player_do_advance;
   klass->handle_mouse = swfdec_player_do_handle_mouse;

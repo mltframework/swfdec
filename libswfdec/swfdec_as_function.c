@@ -83,8 +83,10 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
   g_assert (klass->call);
-  klass->call (function, thisp);
+  klass->call (function);
   frame = context->frame;
+  if (thisp)
+    swfdec_as_frame_set_this (frame, thisp);
   frame->var_object = SWFDEC_AS_OBJECT (frame);
   frame->argc = n_args;
   frame->argv = args;

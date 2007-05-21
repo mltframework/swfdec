@@ -501,9 +501,10 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
   g_return_if_fail (script != NULL);
 
-  frame = swfdec_as_frame_new (object, script);
+  frame = swfdec_as_frame_new (object->context, script);
   if (frame == NULL)
     return;
+  swfdec_as_frame_set_this (frame, object);
   swfdec_as_frame_preload (frame);
   swfdec_as_context_run (object->context);
 }

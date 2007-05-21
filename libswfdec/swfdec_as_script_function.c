@@ -35,6 +35,10 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
   SwfdecAsFrame *frame;
 
+  if (thisp == NULL) {
+    SWFDEC_ERROR ("IMPLEMENT: whoops, this can be empty?!");
+    return;
+  }
   frame = swfdec_as_frame_new (thisp, script->script);
   SWFDEC_AS_SCOPE (frame)->next = script->scope;
   frame->scope = SWFDEC_AS_SCOPE (frame);

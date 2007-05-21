@@ -74,11 +74,11 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   SwfdecAsFunctionClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
+  g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
   g_return_if_fail (n_args == 0 || args != NULL);
   g_return_if_fail (return_value != NULL);
 
-  context = thisp->context;
+  context = SWFDEC_AS_OBJECT (function)->context;
   /* just to be sure... */
   SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);

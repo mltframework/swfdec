@@ -35,6 +35,10 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
   SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (function);
   SwfdecAsFrame *frame;
 
+  if (thisp == NULL) {
+    SWFDEC_ERROR ("IMPLEMENT: whoops, this can be empty?!");
+    return;
+  }
   frame = swfdec_as_frame_new_native (thisp);
   g_assert (native->name);
   frame->function_name = native->name;

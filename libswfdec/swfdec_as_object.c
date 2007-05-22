@@ -523,6 +523,8 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   frame = swfdec_as_frame_new (object->context, script);
   if (frame == NULL)
     return;
+  frame->next = object->context->frame;
+  object->context->frame = frame;
   swfdec_as_frame_set_this (frame, object);
   swfdec_as_frame_preload (frame);
   swfdec_as_context_run (object->context);

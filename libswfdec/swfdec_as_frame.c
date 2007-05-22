@@ -119,8 +119,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
     return NULL;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
-  frame->next = context->frame;
-  context->frame = frame;
   frame->script = swfdec_script_ref (script);
   frame->function_name = script->name;
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
@@ -158,8 +156,6 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   SWFDEC_DEBUG ("new native frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
-  frame->next = context->frame;
-  context->frame = frame;
   return frame;
 }
 

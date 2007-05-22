@@ -420,7 +420,7 @@ start:
     if (frame->argc >= native->min_args && 
 	(native->type == 0 || 
 	 (frame->thisp != NULL && 
-	  !g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)))) {
+	  g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)))) {
       native->native (frame->thisp, frame->argc, frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);

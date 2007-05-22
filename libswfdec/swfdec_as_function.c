@@ -74,17 +74,19 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   SwfdecAsFunctionClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
+  g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
   g_return_if_fail (n_args == 0 || args != NULL);
   g_return_if_fail (return_value != NULL);
 
-  context = thisp->context;
+  context = SWFDEC_AS_OBJECT (function)->context;
   /* just to be sure... */
   SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
   g_assert (klass->call);
-  klass->call (function);
-  frame = context->frame;
+  frame = klass->call (function);
+  /* FIXME: figure out what to do in these situations */
+  if (frame == NULL)
+    return;
   if (thisp)
     swfdec_as_frame_set_this (frame, thisp);
   frame->var_object = SWFDEC_AS_OBJECT (frame);
@@ -93,6 +95,9 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   frame->return_value = return_value;
   frame->function = function;
   swfdec_as_frame_preload (frame);
+  /* FIXME: make this a seperate function? */
+  frame->next = context->frame;
+  context->frame = frame;
 }
 
 /*** AS CODE ***/

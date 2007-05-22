@@ -29,7 +29,7 @@
 
 G_DEFINE_TYPE (SwfdecAsScriptFunction, swfdec_as_script_function, SWFDEC_TYPE_AS_FUNCTION)
 
-static void
+static SwfdecAsFrame *
 swfdec_as_script_function_call (SwfdecAsFunction *function)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
@@ -38,6 +38,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function)
   frame = swfdec_as_frame_new (SWFDEC_AS_OBJECT (function)->context, script->script);
   SWFDEC_AS_SCOPE (frame)->next = script->scope;
   frame->scope = SWFDEC_AS_SCOPE (frame);
+  return frame;
 }
 
 static void

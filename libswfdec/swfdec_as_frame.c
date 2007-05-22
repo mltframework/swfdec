@@ -119,8 +119,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
     return NULL;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
-  frame->next = context->frame;
-  context->frame = frame;
   frame->script = swfdec_script_ref (script);
   frame->function_name = script->name;
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
@@ -158,8 +156,6 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   SWFDEC_DEBUG ("new native frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
-  frame->next = context->frame;
-  context->frame = frame;
   return frame;
 }
 
@@ -275,9 +271,17 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   object = SWFDEC_AS_OBJECT (frame);
   script = frame->script;
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+    if (frame->thisp) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+    } else {
+      current_reg++;
+    }
   } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
+    if (frame->thisp) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
+    } else {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    }
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
@@ -295,16 +299,14 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_arguments, &val);
     }
   }
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-    SwfdecAsObject *super = swfdec_as_super_new (object->context);
+  if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
+    SwfdecAsObject *super = swfdec_as_super_new (frame);
     if (super) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
-    }
-  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
-    SwfdecAsObject *super = swfdec_as_super_new (object->context);
-    if (super) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, super);
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
+      if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
+	SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
+      } else {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
+      }
     }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {

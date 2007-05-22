@@ -43,8 +43,8 @@ struct _SwfdecAsFunction {
 struct _SwfdecAsFunctionClass {
   SwfdecAsObjectClass	object_class;
 
-  /* call this function: push a new frame onto the stack */
-  void			(* call)			(SwfdecAsFunction *	function);
+  /* return a frame that calls this function or NULL if uncallable */
+  SwfdecAsFrame *	(* call)			(SwfdecAsFunction *	function);
 };
 
 GType			swfdec_as_function_get_type	(void);

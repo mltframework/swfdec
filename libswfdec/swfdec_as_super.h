@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_AS_SUPER_H_
 #define _SWFDEC_AS_SUPER_H_
 
-#include <libswfdec/swfdec_as_object.h>
+#include <libswfdec/swfdec_as_function.h>
 #include <libswfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
@@ -36,16 +36,19 @@ typedef struct _SwfdecAsSuperClass SwfdecAsSuperClass;
 #define SWFDEC_AS_SUPER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_SUPER, SwfdecAsSuperClass))
 
 struct _SwfdecAsSuper {
-  SwfdecAsObject	object;
+  SwfdecAsFunction	function;
+
+  SwfdecAsFunction *	constructor;	/* super function or NULL */
+  SwfdecAsObject *	object;		/* object super was called on or NULL */
 };
 
 struct _SwfdecAsSuperClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsFunctionClass	function_class;
 };
 
 GType		swfdec_as_super_get_type	(void);
 
-SwfdecAsObject *swfdec_as_super_new		(SwfdecAsContext *	context);
+SwfdecAsObject *swfdec_as_super_new		(SwfdecAsFrame *	frame);
 
 
 G_END_DECLS

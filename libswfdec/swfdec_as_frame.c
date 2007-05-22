@@ -297,16 +297,14 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_arguments, &val);
     }
   }
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-    SwfdecAsObject *super = swfdec_as_super_new (object->context);
+  if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
+    SwfdecAsObject *super = swfdec_as_super_new (frame);
     if (super) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
-    }
-  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
-    SwfdecAsObject *super = swfdec_as_super_new (object->context);
-    if (super) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, super);
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
+      if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
+	SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
+      } else {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
+      }
     }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {

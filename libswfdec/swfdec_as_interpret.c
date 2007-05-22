@@ -659,11 +659,12 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
   }
   if (obj) {
-    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 3), obj);
     if (SWFDEC_AS_VALUE_IS_STRING (val) && 
 	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 3));
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
     } else {
+      SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 3), obj);
       name = swfdec_as_value_to_string (cx, val);
       swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (frame->stack, 2));
     }

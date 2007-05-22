@@ -315,9 +315,9 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
 {
   guint i;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (variable != NULL);
-  g_return_if_fail (value != NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
+  g_return_val_if_fail (variable != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
 
   for (i = 0; i < 256 && object != NULL; i++) {
     if (swfdec_as_object_lookup (object, variable, value, NULL))
@@ -330,7 +330,7 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
   }
   //SWFDEC_WARNING ("no such variable %s", variable);
   SWFDEC_AS_VALUE_SET_UNDEFINED (value);
-  return FALSE:
+  return FALSE;
 }
 
 void

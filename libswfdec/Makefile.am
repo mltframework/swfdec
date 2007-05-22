@@ -21,7 +21,6 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 foofiles = \
 	swfdec_js.c \
-	swfdec_js_color.c \
 	swfdec_js_connection.c \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
@@ -64,6 +63,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_screen.c \
 	swfdec_codec_video.c \
 	swfdec_color.c \
+	swfdec_color_as.c \
 	swfdec_connection.c \
 	swfdec_debug.c \
 	swfdec_debugger.c \
@@ -160,6 +160,7 @@ noinst_HEADERS = \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \
 	swfdec_color.h \
+	swfdec_color_as.h \
 	swfdec_connection.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \

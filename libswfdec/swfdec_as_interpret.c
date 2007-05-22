@@ -1192,35 +1192,31 @@ fail:
   fp->sp[-1] = JSVAL_VOID;
   return JS_TRUE;
 }
+#endif
 
 static void
 swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  JSStackFrame *fp = cx->fp;
-  JSObject *object;
-  guint n_args;
-  gulong i;
+  SwfdecAsStack *stack = cx->frame->stack;
+  SwfdecAsObject *object;
+  guint i, n_args;
 
-  if (!JS_ValueToECMAUint32 (cx, fp->sp[-1], &n_args))
-    return JS_FALSE;
-  if (!swfdec_script_ensure_stack (cx, 2 * n_args + 1))
-    return JS_FALSE;
-
-  object = JS_NewObject (cx, &js_ObjectClass, NULL, NULL);
-  if (object == NULL)
-    return JS_FALSE;
-  for (i = 0; i < n_args; i++) {
-    const char *s = swfdec_js_to_string (cx, fp->sp[-3 - 2 * i]);
-    if (s == NULL)
-      return JS_FALSE;
-    if (!JS_SetProperty (cx, object, s, &fp->sp[-2 - 2 * i]))
-      return JS_FALSE;
+  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (stack));
+  if (n_args * 2 < swfdec_as_stack_get_size (stack)) {
+    SWFDEC_FIXME ("InitObject action with too small stack, help!");
+    n_args = swfdec_as_stack_get_size (stack) / 2;
   }
-  fp->sp -= 2 * n_args;
-  fp->sp[-1] = OBJECT_TO_JSVAL (object);
-  return JS_TRUE;
+
+  object = swfdec_as_object_new (cx);
+  if (object == NULL)
+    return;
+  for (i = 0; i < n_args; i++) {
+    const char *s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (stack, 2));
+    swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (stack, 1));
+    swfdec_as_stack_pop_n (stack, 2);
+  }
+  SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (stack), object);
 }
-#endif
 
 static void
 swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2099,9 +2095,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
-#if 0
-  [0x43] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
-#endif
+  [SWFDEC_AS_ACTION_INIT_OBJECT] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
   [SWFDEC_AS_ACTION_TYPE_OF] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
 #if 0
   [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },

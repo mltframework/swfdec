@@ -273,9 +273,17 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   object = SWFDEC_AS_OBJECT (frame);
   script = frame->script;
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+    if (frame->thisp) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+    } else {
+      current_reg++;
+    }
   } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
+    if (frame->thisp) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
+    } else {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    }
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {

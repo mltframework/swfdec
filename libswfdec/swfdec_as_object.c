@@ -309,7 +309,7 @@ swfdec_as_object_lookup (SwfdecAsObject *object, const char *variable,
   return klass->get (object, variable, value, flags);
 }
 
-void
+gboolean
 swfdec_as_object_get_variable (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value)
 {
@@ -321,15 +321,16 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
 
   for (i = 0; i < 256 && object != NULL; i++) {
     if (swfdec_as_object_lookup (object, variable, value, NULL))
-      return;
+      return TRUE;
     object = object->prototype;
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
-    return;
+    return FALSE;
   }
   //SWFDEC_WARNING ("no such variable %s", variable);
   SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+  return FALSE:
 }
 
 void

@@ -110,7 +110,7 @@ void		swfdec_as_object_unroot	  	(SwfdecAsObject *     	object);
 void		swfdec_as_object_set_variable	(SwfdecAsObject *	object,
 						 const char *		variable,
 						 const SwfdecAsValue *	value);
-void		swfdec_as_object_get_variable	(SwfdecAsObject *	object,
+gboolean	swfdec_as_object_get_variable	(SwfdecAsObject *	object,
 						 const char *		variable,
 						 SwfdecAsValue *	value);
 void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,

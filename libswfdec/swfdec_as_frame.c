@@ -68,7 +68,8 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   if (frame->script) {
     swfdec_as_object_mark (frame->var_object);
   }
-  swfdec_as_object_mark (frame->thisp);
+  if (frame->thisp)
+    swfdec_as_object_mark (frame->thisp);
   if (frame->target)
     swfdec_as_object_mark (frame->target);
   if (frame->function)
@@ -76,7 +77,6 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   for (i = 0; i < frame->n_registers; i++) {
     swfdec_as_value_mark (&frame->registers[i]);
   }
-  /* FIXME: do we want this? */
   for (i = 0; i < frame->argc; i++) {
     swfdec_as_value_mark (&frame->argv[i]);
   }
@@ -102,18 +102,15 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
 }
 
 SwfdecAsFrame *
-swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
+swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
 {
-  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
   SwfdecAsStack *stack;
   gsize size;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (thisp), NULL);
-  g_return_val_if_fail (thisp->properties, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (script != NULL, NULL);
   
-  context = thisp->context;
   stack = swfdec_as_stack_new (context, 100); /* FIXME: invent better numbers here */
   if (!stack)
     return NULL;
@@ -130,10 +127,10 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
   frame->pc = script->buffer->data;
   frame->stack = stack;
   frame->scope = NULL;
-  frame->var_object = frame->next ? frame->next->var_object : thisp;
+  if (frame->next)
+    frame->var_object = frame->next->var_object;
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
-  frame->thisp = thisp;
   if (script->constant_pool) {
     frame->constant_pool_buffer = swfdec_buffer_ref (script->constant_pool);
     frame->constant_pool = swfdec_constant_pool_new_from_action (
@@ -148,16 +145,13 @@ swfdec_as_frame_new (SwfdecAsObject *thisp, SwfdecScript *script)
 }
 
 SwfdecAsFrame *
-swfdec_as_frame_new_native (SwfdecAsObject *thisp)
+swfdec_as_frame_new_native (SwfdecAsContext *context)
 {
-  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
   gsize size;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (thisp), NULL);
-  g_return_val_if_fail (thisp->properties, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
-  context = thisp->context;
   size = sizeof (SwfdecAsFrame);
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
@@ -166,8 +160,29 @@ swfdec_as_frame_new_native (SwfdecAsObject *thisp)
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
   frame->next = context->frame;
   context->frame = frame;
-  frame->thisp = thisp;
   return frame;
+}
+
+/**
+ * swfdec_as_frame_set_this:
+ * @frame: a #SwfdecAsFrame
+ * @thisp: object to use as the this object
+ *
+ * Sets the object to be used as this pointer. If this function is not called,
+ * the this value will be undefined.
+ * You may only call this function once per @frame and it must be called 
+ * directly after creating the frame and before calling swfdec_as_frame_preload().
+ **/
+void
+swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
+{
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame->thisp == NULL);
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
+
+  frame->thisp = thisp;
+  if (frame->var_object == NULL)
+    frame->var_object = thisp;
 }
 
 /**

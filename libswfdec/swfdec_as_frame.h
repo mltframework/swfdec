@@ -67,9 +67,11 @@ struct _SwfdecAsFrameClass {
 
 GType		swfdec_as_frame_get_type	(void);
 
-SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsObject *	thisp,
+SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *	context,
 						 SwfdecScript *		script);
-SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsObject *	thisp);
+SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsContext *	context);
+void		swfdec_as_frame_set_this	(SwfdecAsFrame *	frame,
+						 SwfdecAsObject *	thisp);
 void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);
 
 SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,

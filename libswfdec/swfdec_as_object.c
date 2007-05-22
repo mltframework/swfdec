@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <strings.h>
+
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
@@ -68,10 +70,27 @@ swfdec_as_object_do_add (SwfdecAsObject *object)
 }
 
 static gboolean
+swfdec_as_object_lookup_case_insensitive (gpointer key, gpointer value, gpointer user_data)
+{
+  return strcasecmp (key, user_data) == 0;
+}
+
+static inline SwfdecAsVariable *
+swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
+{
+  SwfdecAsVariable *var = g_hash_table_lookup (object->properties, variable);
+
+  if (var || object->context->version >= 7)
+    return var;
+  var = g_hash_table_find (object->properties, swfdec_as_object_lookup_case_insensitive, (gpointer) variable);
+  return var;
+}
+
+static gboolean
 swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable, 
     SwfdecAsValue *val, guint *flags)
 {
-  SwfdecAsVariable *var = g_hash_table_lookup (object->properties, variable);
+  SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
   if (var) {
     *val = var->value;
@@ -95,7 +114,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
   }
 
-  var = g_hash_table_lookup (object->properties, variable);
+  var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL) {
     if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
       return;
@@ -108,7 +127,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
 static void
 swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, guint flags, guint mask)
 {
-  SwfdecAsVariable *var = g_hash_table_lookup (object->properties, variable);
+  SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
   if (var)
     var->flags = (var->flags & ~mask) | flags;
@@ -501,9 +520,10 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
   g_return_if_fail (script != NULL);
 
-  frame = swfdec_as_frame_new (object, script);
+  frame = swfdec_as_frame_new (object->context, script);
   if (frame == NULL)
     return;
+  swfdec_as_frame_set_this (frame, object);
   swfdec_as_frame_preload (frame);
   swfdec_as_context_run (object->context);
 }

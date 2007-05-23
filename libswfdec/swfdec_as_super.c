@@ -79,10 +79,10 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
   if (frame->thisp) {
     SwfdecAsValue val;
     super->object = frame->thisp;
-    swfdec_as_object_get_variable (frame->thisp, SWFDEC_AS_STR_constructor, &val);
+    swfdec_as_object_get_variable (frame->thisp, SWFDEC_AS_STR___proto__, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      SwfdecAsObject *constructor = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-      swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR___constructor__, &val);
+      SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR___constructor__, &val);
       if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
 	super->constructor = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
 	if (!SWFDEC_IS_AS_FUNCTION (super->constructor))

@@ -353,8 +353,7 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
 }
 
 void
-swfdec_as_object_delete_variable (SwfdecAsObject *object, 
-    const char *variable)
+swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsObjectClass *klass;
   guint i, flags;

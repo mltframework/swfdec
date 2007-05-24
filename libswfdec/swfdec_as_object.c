@@ -150,6 +150,9 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   var = g_hash_table_lookup (object->properties, variable);
   g_assert (var);
   swfdec_as_object_free_property (NULL, var, object);
+  if (!g_hash_table_remove (object->properties, variable)) {
+    g_assert_not_reached ();
+  }
 }
 
 typedef struct {

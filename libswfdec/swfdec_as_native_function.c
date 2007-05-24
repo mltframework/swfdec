@@ -38,6 +38,7 @@ swfdec_as_native_function_call (SwfdecAsFunction *function)
   frame = swfdec_as_frame_new_native (SWFDEC_AS_OBJECT (function)->context);
   g_assert (native->name);
   frame->function_name = native->name;
+  frame->function = function;
   return frame;
 }
 

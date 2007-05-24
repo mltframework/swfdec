@@ -44,6 +44,11 @@ swfdec_as_super_call (SwfdecAsFunction *function)
   }
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (super->constructor);
   frame = klass->call (super->constructor);
+  /* We set the real function here. 1) swfdec_as_context_run() requires it. 
+   * And b) it makes more sense reading the constructor's name than reading "super" 
+   * in a debugger
+   */
+  frame->function = super->constructor;
   /* FIXME: this is ugly */
   swfdec_as_frame_set_this (frame, super->object);
   return frame;
@@ -82,7 +87,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
     swfdec_as_object_get_variable (frame->thisp, SWFDEC_AS_STR___proto__, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR___constructor__, &val);
+      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR_constructor, &val);
       if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
 	super->constructor = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
 	if (!SWFDEC_IS_AS_FUNCTION (super->constructor))

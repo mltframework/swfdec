@@ -349,7 +349,7 @@ swfdec_sprite_movie_add (SwfdecAsObject *object)
   } else {
     constructor = SWFDEC_PLAYER (object->context)->MovieClip;
   }
-  swfdec_as_object_set_constructor (object, constructor);
+  swfdec_as_object_set_constructor (object, constructor, FALSE);
   SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
 }
 

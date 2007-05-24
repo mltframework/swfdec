@@ -1112,7 +1112,7 @@ swfdec_action_create (SwfdecAsFunction *fun, guint n_args)
   }
   if (n_args)
     swfdec_as_stack_pop_n (stack, n_args);
-  object = swfdec_as_object_create (fun, n_args, swfdec_as_stack_peek (stack, 0));
+  object = swfdec_as_object_create (fun, n_args, swfdec_as_stack_peek (stack, 0), TRUE);
   g_assert (object);
   SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (stack, 1), object);
 }

@@ -588,6 +588,7 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * @construct: constructor
  * @n_args: number of arguments
  * @args: arguments to pass to constructor
+ * @scripted: If this variable is %TRUE, the variable "constructor" will be named "__constructor__"
  *
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
@@ -597,7 +598,7 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  *          so the returned object will always be valid.
  **/
 SwfdecAsObject *
-swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValue *args)
+swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValue *args, gboolean scripted)
 {
   SwfdecAsValue val;
   SwfdecAsObject *new;
@@ -620,6 +621,8 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValu
 	break;
       }
     }
+#if 0
+    This doesn't work. It's supposed to figure out the last native object in the inheritance chain.
     swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR___constructor__, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
@@ -628,6 +631,9 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValu
     } else {
       cur = NULL;
     }
+#else
+    cur = NULL;
+#endif
   }
   if (type == 0) {
     type = SWFDEC_TYPE_AS_OBJECT;
@@ -645,14 +651,14 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValu
   }
   new = g_object_new (type, NULL);
   swfdec_as_object_add (new, context, size);
-  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (construct));
+  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (construct), FALSE);
   swfdec_as_function_call (construct, new, n_args, args, &val);
   context->frame->construct = TRUE;
   return new;
 }
 
 void
-swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *construct)
+swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *construct, gboolean scripted)
 {
   SwfdecAsValue val;
   SwfdecAsObject *proto;
@@ -670,7 +676,7 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable (object, scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__, &val);
 }
 
 /*** AS CODE ***/

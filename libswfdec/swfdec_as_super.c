@@ -54,10 +54,55 @@ swfdec_as_super_call (SwfdecAsFunction *function)
   return frame;
 }
 
+static gboolean
+swfdec_as_super_get (SwfdecAsObject *object, const char *variable,
+    SwfdecAsValue *val, guint *flags)
+{
+  SwfdecAsValue value;
+  SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
+
+  if (super->object == NULL)
+    return FALSE;
+  swfdec_as_object_get_variable (super->object, SWFDEC_AS_STR___proto__, &value);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&value))
+    return FALSE;
+  swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&value), SWFDEC_AS_STR___proto__, &value);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&value))
+    return FALSE;
+  if (!swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&value), variable, val))
+    return FALSE;
+  *flags = 0;
+  return TRUE;
+}
+
+static void
+swfdec_as_super_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
+{
+  /* This seems to be ignored completely */
+}
+
+static void
+swfdec_as_super_set_flags (SwfdecAsObject *object, const char *variable, guint flags, guint mask)
+{
+  /* if we have no variables, we also can't set its flags... */
+}
+
+static void
+swfdec_as_super_delete (SwfdecAsObject *object, const char *variable)
+{
+  /* if we have no variables... */
+}
+
 static void
 swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
 {
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
+
+  asobject_class->get = swfdec_as_super_get;
+  asobject_class->set = swfdec_as_super_set;
+  asobject_class->set_flags = swfdec_as_super_set_flags;
+  asobject_class->delete = swfdec_as_super_delete;
 
   function_class->call = swfdec_as_super_call;
 }

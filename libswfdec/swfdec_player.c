@@ -1056,7 +1056,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_movie_color_init_context (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
-      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
+      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);
     }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);

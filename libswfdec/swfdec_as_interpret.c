@@ -1675,10 +1675,11 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (super),
       SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
-  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___constructor__,
+  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR_constructor,
       superclass);
+  SWFDEC_AS_VALUE_SET_OBJECT (&proto, prototype);
   swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
-      SWFDEC_AS_STR_prototype, superclass);
+      SWFDEC_AS_STR_prototype, &proto);
 }
 
 static gboolean

@@ -426,6 +426,7 @@ start:
     swfdec_as_context_return (context);
     goto start;
   }
+  g_assert (frame->script);
   script = frame->script;
   stack = frame->stack;
   version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);

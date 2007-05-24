@@ -35,20 +35,29 @@ static SwfdecAsFrame *
 swfdec_as_super_call (SwfdecAsFunction *function)
 {
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (function);
+  SwfdecAsValue val;
+  SwfdecAsFunction *fun;
   SwfdecAsFunctionClass *klass;
   SwfdecAsFrame *frame;
 
-  if (super->constructor == NULL) {
-    SWFDEC_FIXME ("figure out what happens when super doesn't have a constructor");
+  if (super->object == NULL) {
+    SWFDEC_WARNING ("super () called without a this object.");
     return NULL;
   }
-  klass = SWFDEC_AS_FUNCTION_GET_CLASS (super->constructor);
-  frame = klass->call (super->constructor);
+  if (super->object->prototype == NULL)
+    return NULL;
+  swfdec_as_object_get_variable (super->object->prototype, SWFDEC_AS_STR___constructor__, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+    return NULL;
+
+  klass = SWFDEC_AS_FUNCTION_GET_CLASS (fun);
+  frame = klass->call (fun);
   /* We set the real function here. 1) swfdec_as_context_run() requires it. 
    * And b) it makes more sense reading the constructor's name than reading "super" 
    * in a debugger
    */
-  frame->function = super->constructor;
+  frame->function = fun;
   /* FIXME: this is ugly */
   swfdec_as_frame_set_this (frame, super->object);
   return frame;
@@ -58,18 +67,16 @@ static gboolean
 swfdec_as_super_get (SwfdecAsObject *object, const char *variable,
     SwfdecAsValue *val, guint *flags)
 {
-  SwfdecAsValue value;
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
 
-  if (super->object == NULL)
+  if (super->object == NULL) {
+    SWFDEC_WARNING ("super () called without a this object.");
     return FALSE;
-  swfdec_as_object_get_variable (super->object, SWFDEC_AS_STR___proto__, &value);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&value))
+  }
+  if (super->object->prototype == NULL ||
+      super->object->prototype->prototype == NULL)
     return FALSE;
-  swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&value), SWFDEC_AS_STR___proto__, &value);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&value))
-    return FALSE;
-  if (!swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&value), variable, val))
+  if (!swfdec_as_object_get_variable (super->object->prototype->prototype, variable, val))
     return FALSE;
   *flags = 0;
   return TRUE;

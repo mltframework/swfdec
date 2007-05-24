@@ -215,6 +215,7 @@ double		swfdec_as_value_to_number	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 SwfdecAsObject *swfdec_as_value_to_object	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
+void		swfdec_as_value_to_primitive	(SwfdecAsValue *	value);
 const char *	swfdec_as_value_to_printable	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,

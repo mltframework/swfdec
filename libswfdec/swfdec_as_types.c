@@ -230,24 +230,29 @@ swfdec_as_value_to_printable (SwfdecAsContext *context, const SwfdecAsValue *val
 double
 swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
+  SwfdecAsValue tmp;
+
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0.0);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), 0.0);
 
-  switch (value->type) {
+  tmp = *value;
+  swfdec_as_value_to_primitive (&tmp);
+
+  switch (tmp.type) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return (context->version >= 7) ? NAN : 0.0;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? 1 : 0;
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (&tmp) ? 1 : 0;
     case SWFDEC_AS_TYPE_NUMBER:
-      return SWFDEC_AS_VALUE_GET_NUMBER (value);
+      return SWFDEC_AS_VALUE_GET_NUMBER (&tmp);
     case SWFDEC_AS_TYPE_STRING:
       {
 	const char *s;
 	char *end;
 	double d;
 	
-	s = SWFDEC_AS_VALUE_GET_STRING (value);
+	s = SWFDEC_AS_VALUE_GET_STRING (&tmp);
 	if (s == SWFDEC_AS_STR_EMPTY)
 	  return NAN;
 	d = g_ascii_strtod (s, &end);
@@ -257,15 +262,6 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  return NAN;
       }
     case SWFDEC_AS_TYPE_OBJECT:
-      {
-	SwfdecAsValue ret;
-	swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
-	    0, NULL, &ret);
-	if (SWFDEC_AS_VALUE_IS_OBJECT (&ret))
-	  return NAN;
-	else
-	  return swfdec_as_value_to_number (context, &ret);
-      }
     default:
       g_assert_not_reached ();
       return NAN;
@@ -356,6 +352,30 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value
     default:
       g_assert_not_reached ();
       return FALSE;
+  }
+}
+
+/**
+ * swfdec_as_value_to_primitive:
+ * @context: a #SwfdecAsContext
+ * @value: value to convert
+ *
+ * Converts the given @value inline to its primitive value. Primitive values
+ * are values that are not objects. If the value is an object, the object's
+ * valueOf function is called. If the result of that function is still an 
+ * object, @value is set to undefined.
+ **/
+void
+swfdec_as_value_to_primitive (SwfdecAsValue *value)
+{
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+
+  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
+    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
+	0, NULL, value);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+    }
   }
 }
 

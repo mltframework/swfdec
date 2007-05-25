@@ -184,6 +184,15 @@ swfdec_as_array_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *arg
   SWFDEC_AS_VALUE_SET_STRING (ret, str);
 }
 
+static void
+swfdec_as_array_do_push (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecAsArray *array = SWFDEC_AS_ARRAY (object);
+
+  swfdec_as_array_append (array, argc, argv);
+  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_get_length (object));
+}
+
 void
 swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
 {
@@ -224,5 +233,6 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0, swfdec_as_array_toString, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_push, SWFDEC_TYPE_AS_ARRAY, swfdec_as_array_do_push, 0);
 }
 

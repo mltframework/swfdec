@@ -968,48 +968,84 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 {
   SwfdecAsValue *rval, *lval;
   SwfdecAsType ltype, rtype;
+  double l, r;
   gboolean cond;
 
   rval = swfdec_as_stack_peek (cx->frame->stack, 1);
   lval = swfdec_as_stack_peek (cx->frame->stack, 2);
   ltype = lval->type;
   rtype = rval->type;
-  if (ltype == rtype) {
-    switch (ltype) {
-      case SWFDEC_AS_TYPE_UNDEFINED:
-      case SWFDEC_AS_TYPE_NULL:
-	cond = TRUE;
-	break;
-      case SWFDEC_AS_TYPE_BOOLEAN:
-	cond = SWFDEC_AS_VALUE_GET_BOOLEAN (lval) == SWFDEC_AS_VALUE_GET_BOOLEAN (rval);
-	break;
-      case SWFDEC_AS_TYPE_NUMBER:
-	cond = SWFDEC_AS_VALUE_GET_NUMBER (lval) == SWFDEC_AS_VALUE_GET_NUMBER (rval);
-	break;
-      case SWFDEC_AS_TYPE_STRING:
-	cond = SWFDEC_AS_VALUE_GET_STRING (lval) == SWFDEC_AS_VALUE_GET_STRING (rval);
-	break;
-      case SWFDEC_AS_TYPE_OBJECT:
-	cond = SWFDEC_AS_VALUE_GET_OBJECT (lval) == SWFDEC_AS_VALUE_GET_OBJECT (rval);
-	break;
-      default:
-	g_assert_not_reached ();
+  
+  /* get objects compared */
+  if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {
+    SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+
+    if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
+      /* do nothing */
+    } else if (SWFDEC_IS_MOVIE (lo)) {
+      swfdec_as_value_to_primitive (rval);
+      rtype = rval->type;
+      if (rtype != SWFDEC_AS_TYPE_OBJECT) {
 	cond = FALSE;
-	break;
+	goto out;
+      }
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+    } else if (SWFDEC_IS_MOVIE (ro)) {
+      swfdec_as_value_to_primitive (lval);
+      ltype = lval->type;
+      if (ltype != SWFDEC_AS_TYPE_OBJECT) {
+	cond = FALSE;
+	goto out;
+      }
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
     }
-  } else {
-    if (ltype == SWFDEC_AS_TYPE_UNDEFINED || ltype == SWFDEC_AS_TYPE_NULL) {
-      cond = (rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL);
-    } else if (rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL) {
+    cond = lo == ro;
+    goto out;
+  }
+
+  /* if one of the values is an object, call valueOf. 
+   * If it's still an object, return FALSE */
+  if (ltype == SWFDEC_AS_TYPE_OBJECT) {
+    swfdec_as_value_to_primitive (lval);
+    ltype = lval->type;
+    if (ltype == SWFDEC_AS_TYPE_OBJECT) {
       cond = FALSE;
-    } else {
-      SWFDEC_WARNING ("FIXME: test equality operations between non-equal types");
-      double l, r;
-      r = swfdec_as_value_to_number (cx, rval);
-      l = swfdec_as_value_to_number (cx, lval);
-      cond = r == l;
+      goto out;
     }
   }
+  if (rtype == SWFDEC_AS_TYPE_OBJECT) {
+    swfdec_as_value_to_primitive (rval);
+    rtype = rval->type;
+    if (rtype == SWFDEC_AS_TYPE_OBJECT) {
+      cond = FALSE;
+      goto out;
+    }
+  }
+  /* now we have a comparison without objects */
+
+  /* get rid of undefined and null */
+  cond = rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL;
+  if (ltype == SWFDEC_AS_TYPE_UNDEFINED || ltype == SWFDEC_AS_TYPE_NULL) {
+    goto out;
+  } else if (cond) {
+    cond = FALSE;
+    goto out;
+  }
+
+  /* compare strings */
+  if (ltype == SWFDEC_AS_TYPE_STRING && rtype == SWFDEC_AS_TYPE_STRING) {
+    /* FIXME: flash 5 case insensitive? */
+    cond = SWFDEC_AS_VALUE_GET_STRING (lval) == SWFDEC_AS_VALUE_GET_STRING (rval);
+    goto out;
+  }
+
+  /* else compare as numbers */
+  l = swfdec_as_value_to_number (cx, lval);
+  r = swfdec_as_value_to_number (cx, rval);
+  cond = l == r;
+
+out:
   swfdec_as_stack_pop (cx->frame->stack);
   SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
 }

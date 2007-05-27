@@ -164,6 +164,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("setTransform")
   SWFDEC_AS_CONSTANT_STRING ("Color")
   SWFDEC_AS_CONSTANT_STRING ("push")
+  SWFDEC_AS_CONSTANT_STRING ("parseInt")
   /* add more here */
 ;
 

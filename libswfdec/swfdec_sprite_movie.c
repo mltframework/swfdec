@@ -166,8 +166,8 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
 
   g_assert (goto_frame < mov->n_frames);
   if (goto_frame >= movie->sprite->parse_frame) {
-    SWFDEC_WARNING ("jumping to not-yet-loaded frame %u (loaded: %u)",
-	goto_frame, movie->sprite->parse_frame);
+    SWFDEC_WARNING ("jumping to not-yet-loaded frame %u (loaded: %u/%u)",
+	goto_frame, movie->sprite->parse_frame, movie->sprite->n_frames);
     return;
   }
 
@@ -312,6 +312,7 @@ swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
 
   mov->n_frames = movie->sprite->n_frames;
+  g_assert (movie->sprite->parse_frame > 0);
   swfdec_sprite_movie_goto (mov, 0);
   if (!swfdec_sprite_movie_iterate_end (mov)) {
     g_assert_not_reached ();

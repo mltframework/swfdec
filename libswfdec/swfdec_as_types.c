@@ -257,11 +257,12 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  return NAN;
 	d = g_ascii_strtod (s, &end);
 	if (*end == '\0')
-	  return d;
+	  return d == -0.0 ? 0.0 : d;
 	else
 	  return NAN;
       }
     case SWFDEC_AS_TYPE_OBJECT:
+      return NAN;
     default:
       g_assert_not_reached ();
       return NAN;
@@ -360,10 +361,10 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value
  * @context: a #SwfdecAsContext
  * @value: value to convert
  *
- * Converts the given @value inline to its primitive value. Primitive values
- * are values that are not objects. If the value is an object, the object's
- * valueOf function is called. If the result of that function is still an 
- * object, @value is set to undefined.
+ * Tries to convert the given @value inline to its primitive value. Primitive 
+ * values are values that are not objects. If the value is an object, the 
+ * object's valueOf function is called. If the result of that function is still 
+ * an object, it is returned nonetheless.
  **/
 void
 swfdec_as_value_to_primitive (SwfdecAsValue *value)
@@ -373,9 +374,6 @@ swfdec_as_value_to_primitive (SwfdecAsValue *value)
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
     swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
 	0, NULL, value);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (value);
-    }
   }
 }
 

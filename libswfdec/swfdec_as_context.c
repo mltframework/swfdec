@@ -28,6 +28,7 @@
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_interpret.h"
+#include "swfdec_as_math.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_number.h"
 #include "swfdec_as_object.h"
@@ -797,13 +798,17 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
 
   context->version = version;
+  /* get the necessary objects up to define objects and functions sanely */
   swfdec_as_function_init_context (context, version);
   swfdec_as_object_init_context (context, version);
-
+  /* define the global object and other important ones */
   swfdec_as_context_init_global (context, version);
   swfdec_as_array_init_context (context, version);
-
+  /* define the type objects */
   swfdec_as_number_init_context (context, version);
+  /* define the rest */
+  swfdec_as_math_init_context (context, version);
+
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;
 }

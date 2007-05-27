@@ -36,6 +36,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
 	swfdec_as_interpret.c \
+	swfdec_as_math.c \
 	swfdec_as_native_function.c \
 	swfdec_as_number.c \
 	swfdec_as_object.c \
@@ -137,6 +138,7 @@ noinst_HEADERS = \
 	swfdec_as_frame.h \
 	swfdec_as_function.h \
 	swfdec_as_interpret.h \
+	swfdec_as_math.h \
 	swfdec_as_native_function.h \
 	swfdec_as_number.h \
 	swfdec_as_object.h \

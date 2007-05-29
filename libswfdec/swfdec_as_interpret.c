@@ -1621,44 +1621,25 @@ swfdec_action_store_register (SwfdecAsContext *cx, guint action, const guint8 *d
   cx->frame->registers[*data] = *swfdec_as_stack_peek (cx->frame->stack, 1);
 }
 
-#if 0
 static void
-swfdec_action_modulo_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_modulo (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   double x, y;
 
-  x = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  y = swfdec_value_to_number (cx, cx->fp->sp[-2]);
-  cx->fp->sp--;
-  errno = 0;
-  x = fmod (x, y);
-  if (errno != 0) {
-    cx->fp->sp[-1] = DOUBLE_TO_JSVAL (cx->runtime->jsNaN);
-    return JS_TRUE;
+  x = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
+  y = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  /* yay, we're portable! */
+  if (y == 0.0) {
+    x = NAN;
   } else {
-    return JS_NewNumberValue (cx, x, &cx->fp->sp[-1]);
+    errno = 0;
+    x = fmod (x, y);
+    if (errno != 0) {
+      SWFDEC_FIXME ("errno set after fmod");
+    }
   }
+  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), x);
 }
-
-static void
-swfdec_action_modulo_7 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  double x, y;
-
-  if (!swfdec_value_to_number_7 (cx, cx->fp->sp[-1], &x) ||
-      !swfdec_value_to_number_7 (cx, cx->fp->sp[-2], &y))
-    return JS_FALSE;
-  cx->fp->sp--;
-  errno = 0;
-  x = fmod (x, y);
-  if (errno != 0) {
-    cx->fp->sp[-1] = DOUBLE_TO_JSVAL (cx->runtime->jsNaN);
-    return JS_TRUE;
-  } else {
-    return JS_NewNumberValue (cx, x, &cx->fp->sp[-1]);
-  }
-}
-#endif
 
 static void
 swfdec_action_swap (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2180,10 +2161,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
-  [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
-#if 0
-  [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
-#endif
+  [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
+  [SWFDEC_AS_ACTION_MODULO] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo, swfdec_action_modulo, swfdec_action_modulo } },
   [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },

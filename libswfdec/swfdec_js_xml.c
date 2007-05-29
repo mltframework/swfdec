@@ -32,7 +32,7 @@ swfdec_js_xml_load (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   SwfdecXml *xml;
   const char *url;
 
-  xml = JS_GetPrivate (cx, obj);
+  xml = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_XML);
   if (xml == NULL)
     return JS_TRUE;
   url = swfdec_js_to_string (cx, argv[0]);

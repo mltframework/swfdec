@@ -1063,6 +1063,45 @@ out:
 }
 
 static void
+swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *rval, *lval;
+  gboolean cond;
+
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+
+  if (rval->type != lval->type) {
+    cond = FALSE;
+  } else {
+    switch (rval->type) {
+      case SWFDEC_AS_TYPE_UNDEFINED:
+      case SWFDEC_AS_TYPE_NULL:
+	cond = TRUE;
+	break;
+      case SWFDEC_AS_TYPE_BOOLEAN:
+	cond = SWFDEC_AS_VALUE_GET_BOOLEAN (rval) == SWFDEC_AS_VALUE_GET_BOOLEAN (lval);
+	break;
+      case SWFDEC_AS_TYPE_NUMBER:
+	cond = SWFDEC_AS_VALUE_GET_NUMBER (rval) == SWFDEC_AS_VALUE_GET_NUMBER (lval);
+	break;
+      case SWFDEC_AS_TYPE_STRING:
+	cond = SWFDEC_AS_VALUE_GET_STRING (rval) == SWFDEC_AS_VALUE_GET_STRING (lval);
+	break;
+      case SWFDEC_AS_TYPE_OBJECT:
+	cond = SWFDEC_AS_VALUE_GET_OBJECT (rval) == SWFDEC_AS_VALUE_GET_OBJECT (lval);
+	break;
+      default:
+	g_assert_not_reached ();
+	cond = FALSE;
+    }
+  }
+
+  swfdec_as_stack_pop (cx->frame->stack);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
+}
+
+static void
 swfdec_action_set_target (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   if (!memchr (data, 0, len)) {
@@ -2178,7 +2217,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
 #endif
   /* version 6 */
-  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL },
+  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_strict_equals, swfdec_action_strict_equals } },
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */

@@ -271,6 +271,16 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
   }
 }
 
+/**
+ * swfdec_as_value_to_integer:
+ * @context: a #SwfdecAsContext
+ * @value: value to convert
+ *
+ * Converts the given value to an integer. This is done similar to the 
+ * conversion used by swfdec_as_value_to_number().
+ *
+ * Returns: An Integer that can be represented in 32 bits.
+ **/
 int
 swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value)
 {

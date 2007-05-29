@@ -1022,21 +1022,17 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
   /* if one of the values is an object, call valueOf. 
    * If it's still an object, return FALSE */
+  swfdec_as_value_to_primitive (lval);
+  ltype = lval->type;
   if (ltype == SWFDEC_AS_TYPE_OBJECT) {
-    swfdec_as_value_to_primitive (lval);
-    ltype = lval->type;
-    if (ltype == SWFDEC_AS_TYPE_OBJECT) {
-      cond = FALSE;
-      goto out;
-    }
+    cond = FALSE;
+    goto out;
   }
+  swfdec_as_value_to_primitive (rval);
+  rtype = rval->type;
   if (rtype == SWFDEC_AS_TYPE_OBJECT) {
-    swfdec_as_value_to_primitive (rval);
-    rtype = rval->type;
-    if (rtype == SWFDEC_AS_TYPE_OBJECT) {
-      cond = FALSE;
-      goto out;
-    }
+    cond = FALSE;
+    goto out;
   }
   /* now we have a comparison without objects */
 

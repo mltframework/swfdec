@@ -215,6 +215,20 @@ EXTRA_DIST = \
 	setinterval-clear.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
+	tointeger-numbers.as \
+	tointeger-numbers-5.swf \
+	tointeger-numbers-5.swf.trace \
+	tointeger-numbers-6.swf \
+	tointeger-numbers-6.swf.trace \
+	tointeger-numbers-7.swf \
+	tointeger-numbers-7.swf.trace \
+	tointeger-various.as \
+	tointeger-various-5.swf \
+	tointeger-various-5.swf.trace \
+	tointeger-various-6.swf \
+	tointeger-various-6.swf.trace \
+	tointeger-various-7.swf \
+	tointeger-various-7.swf.trace \
 	transform.swf \
 	transform.swf.trace \
 	transform2.swf \

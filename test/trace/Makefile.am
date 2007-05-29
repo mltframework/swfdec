@@ -24,6 +24,13 @@ EXTRA_DIST = \
 	and-or-7.swf.trace \
 	array.swf \
 	array.swf.trace \
+	bitwise.as \
+	bitwise-5.swf \
+	bitwise-5.swf.trace \
+	bitwise-6.swf \
+	bitwise-6.swf.trace \
+	bitwise-7.swf \
+	bitwise-7.swf.trace \
 	callfunction-stack.as \
 	callfunction-stack.swf \
 	callfunction-stack.swf.trace \

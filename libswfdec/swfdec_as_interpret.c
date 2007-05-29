@@ -976,6 +976,93 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
 }
 
 static void
+swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *rval, *lval;
+  SwfdecAsValue rtmp, ltmp;
+  SwfdecAsType ltype, rtype;
+  double l, r;
+  gboolean cond;
+
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  rtmp = *rval;
+  ltmp = *lval;
+  swfdec_as_value_to_primitive (&rtmp);
+  swfdec_as_value_to_primitive (&ltmp);
+  ltype = ltmp.type;
+  rtype = rtmp.type;
+  
+  /* get objects compared */
+  if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {
+    SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (&ltmp);
+    SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (&rtmp);
+
+    if (!SWFDEC_IS_MOVIE (lo))
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    if (!SWFDEC_IS_MOVIE (ro))
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+
+    if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
+      /* do nothing */
+    } else if (SWFDEC_IS_MOVIE (lo)) {
+      swfdec_as_value_to_primitive (rval);
+      rtype = rval->type;
+      if (rtype != SWFDEC_AS_TYPE_OBJECT) {
+	cond = FALSE;
+	goto out;
+      }
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+    } else if (SWFDEC_IS_MOVIE (ro)) {
+      swfdec_as_value_to_primitive (lval);
+      ltype = lval->type;
+      if (ltype != SWFDEC_AS_TYPE_OBJECT) {
+	cond = FALSE;
+	goto out;
+      }
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    }
+    cond = lo == ro;
+    goto out;
+  }
+
+  /* compare strings */
+  if (ltype == SWFDEC_AS_TYPE_STRING && rtype == SWFDEC_AS_TYPE_STRING) {
+    /* FIXME: flash 5 case insensitive? */
+    cond = SWFDEC_AS_VALUE_GET_STRING (&ltmp) == SWFDEC_AS_VALUE_GET_STRING (&rtmp);
+    goto out;
+  }
+
+  /* convert to numbers */
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&ltmp) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&ltmp))) {
+    l = swfdec_as_value_to_number (cx, lval);
+  } else {
+    l = swfdec_as_value_to_number (cx, &ltmp);
+  }
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&rtmp) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&rtmp))) {
+    r = swfdec_as_value_to_number (cx, rval);
+  } else {
+    r = swfdec_as_value_to_number (cx, &rtmp);
+  }
+
+  /* get rid of undefined and null */
+  cond = rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL;
+  if (ltype == SWFDEC_AS_TYPE_UNDEFINED || ltype == SWFDEC_AS_TYPE_NULL) {
+    goto out;
+  } else if (cond) {
+    cond = FALSE;
+    goto out;
+  }
+
+  /* else compare as numbers */
+  cond = l == r;
+
+out:
+  swfdec_as_stack_pop (cx->frame->stack);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
+}
+
+static void
 swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *rval, *lval;
@@ -985,10 +1072,6 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
   rval = swfdec_as_stack_peek (cx->frame->stack, 1);
   lval = swfdec_as_stack_peek (cx->frame->stack, 2);
-  if (cx->version == 5) {
-    swfdec_as_value_to_primitive (rval);
-    swfdec_as_value_to_primitive (lval);
-  }
   ltype = lval->type;
   rtype = rval->type;
   
@@ -2170,7 +2253,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, { NULL, NULL, swfdec_action_enumerate, swfdec_action_enumerate, swfdec_action_enumerate } },
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
   [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
-  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
+  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2_5, swfdec_action_equals2, swfdec_action_equals2 } },
   [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
   [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },

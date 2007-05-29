@@ -1,8 +1,6 @@
 // makeswf -v 7 -s 200x150 -r 1 -o movie62.swf movie62.as
 
 #include "values.as"
-attachValueOf ();
-attachNames ();
 
 trace ("check Equals and StrictEquals action");
 for (i = 0; i < values.length; i++) {

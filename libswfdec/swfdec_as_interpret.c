@@ -726,20 +726,30 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 static void
 swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *rval, *lval;
+  SwfdecAsValue *rval, *lval, rtmp, ltmp;
 
   rval = swfdec_as_stack_peek (cx->frame->stack, 1);
   lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  rtmp = *rval;
+  ltmp = *lval;
+  swfdec_as_value_to_primitive (&rtmp);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&rtmp) || SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&rtmp)))
+    rval = &rtmp;
+  swfdec_as_value_to_primitive (&ltmp);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&ltmp) || SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&ltmp)))
+    lval = &ltmp;
+
   if (SWFDEC_AS_VALUE_IS_STRING (lval) || SWFDEC_AS_VALUE_IS_STRING (rval)) {
-    const char *str;
-    str = swfdec_as_str_concat (cx, swfdec_as_value_to_string (cx, lval),
-	swfdec_as_value_to_string (cx, rval));
+    const char *lstr, *rstr;
+    lstr = swfdec_as_value_to_string (cx, lval);
+    rstr = swfdec_as_value_to_string (cx, rval);
+    lstr = swfdec_as_str_concat (cx, lstr, rstr);
     swfdec_as_stack_pop (cx->frame->stack);
-    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), str);
+    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), lstr);
   } else {
     double d, d2;
-    d2 = swfdec_as_value_to_number (cx, rval);
     d = swfdec_as_value_to_number (cx, lval);
+    d2 = swfdec_as_value_to_number (cx, rval);
     d += d2;
     swfdec_as_stack_pop (cx->frame->stack);
     SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), d);
@@ -966,6 +976,93 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
 }
 
 static void
+swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *rval, *lval;
+  SwfdecAsValue rtmp, ltmp;
+  SwfdecAsType ltype, rtype;
+  double l, r;
+  gboolean cond;
+
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  rtmp = *rval;
+  ltmp = *lval;
+  swfdec_as_value_to_primitive (&rtmp);
+  swfdec_as_value_to_primitive (&ltmp);
+  ltype = ltmp.type;
+  rtype = rtmp.type;
+  
+  /* get objects compared */
+  if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {
+    SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (&ltmp);
+    SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (&rtmp);
+
+    if (!SWFDEC_IS_MOVIE (lo))
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    if (!SWFDEC_IS_MOVIE (ro))
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+
+    if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
+      /* do nothing */
+    } else if (SWFDEC_IS_MOVIE (lo)) {
+      swfdec_as_value_to_primitive (rval);
+      rtype = rval->type;
+      if (rtype != SWFDEC_AS_TYPE_OBJECT) {
+	cond = FALSE;
+	goto out;
+      }
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+    } else if (SWFDEC_IS_MOVIE (ro)) {
+      swfdec_as_value_to_primitive (lval);
+      ltype = lval->type;
+      if (ltype != SWFDEC_AS_TYPE_OBJECT) {
+	cond = FALSE;
+	goto out;
+      }
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    }
+    cond = lo == ro;
+    goto out;
+  }
+
+  /* compare strings */
+  if (ltype == SWFDEC_AS_TYPE_STRING && rtype == SWFDEC_AS_TYPE_STRING) {
+    /* FIXME: flash 5 case insensitive? */
+    cond = SWFDEC_AS_VALUE_GET_STRING (&ltmp) == SWFDEC_AS_VALUE_GET_STRING (&rtmp);
+    goto out;
+  }
+
+  /* convert to numbers */
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&ltmp) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&ltmp))) {
+    l = swfdec_as_value_to_number (cx, lval);
+  } else {
+    l = swfdec_as_value_to_number (cx, &ltmp);
+  }
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&rtmp) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&rtmp))) {
+    r = swfdec_as_value_to_number (cx, rval);
+  } else {
+    r = swfdec_as_value_to_number (cx, &rtmp);
+  }
+
+  /* get rid of undefined and null */
+  cond = rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL;
+  if (ltype == SWFDEC_AS_TYPE_UNDEFINED || ltype == SWFDEC_AS_TYPE_NULL) {
+    goto out;
+  } else if (cond) {
+    cond = FALSE;
+    goto out;
+  }
+
+  /* else compare as numbers */
+  cond = l == r;
+
+out:
+  swfdec_as_stack_pop (cx->frame->stack);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
+}
+
+static void
 swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *rval, *lval;
@@ -1008,21 +1105,17 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
   /* if one of the values is an object, call valueOf. 
    * If it's still an object, return FALSE */
+  swfdec_as_value_to_primitive (lval);
+  ltype = lval->type;
   if (ltype == SWFDEC_AS_TYPE_OBJECT) {
-    swfdec_as_value_to_primitive (lval);
-    ltype = lval->type;
-    if (ltype == SWFDEC_AS_TYPE_OBJECT) {
-      cond = FALSE;
-      goto out;
-    }
+    cond = FALSE;
+    goto out;
   }
+  swfdec_as_value_to_primitive (rval);
+  rtype = rval->type;
   if (rtype == SWFDEC_AS_TYPE_OBJECT) {
-    swfdec_as_value_to_primitive (rval);
-    rtype = rval->type;
-    if (rtype == SWFDEC_AS_TYPE_OBJECT) {
-      cond = FALSE;
-      goto out;
-    }
+    cond = FALSE;
+    goto out;
   }
   /* now we have a comparison without objects */
 
@@ -1048,6 +1141,45 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   cond = l == r;
 
 out:
+  swfdec_as_stack_pop (cx->frame->stack);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
+}
+
+static void
+swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *rval, *lval;
+  gboolean cond;
+
+  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+
+  if (rval->type != lval->type) {
+    cond = FALSE;
+  } else {
+    switch (rval->type) {
+      case SWFDEC_AS_TYPE_UNDEFINED:
+      case SWFDEC_AS_TYPE_NULL:
+	cond = TRUE;
+	break;
+      case SWFDEC_AS_TYPE_BOOLEAN:
+	cond = SWFDEC_AS_VALUE_GET_BOOLEAN (rval) == SWFDEC_AS_VALUE_GET_BOOLEAN (lval);
+	break;
+      case SWFDEC_AS_TYPE_NUMBER:
+	cond = SWFDEC_AS_VALUE_GET_NUMBER (rval) == SWFDEC_AS_VALUE_GET_NUMBER (lval);
+	break;
+      case SWFDEC_AS_TYPE_STRING:
+	cond = SWFDEC_AS_VALUE_GET_STRING (rval) == SWFDEC_AS_VALUE_GET_STRING (lval);
+	break;
+      case SWFDEC_AS_TYPE_OBJECT:
+	cond = SWFDEC_AS_VALUE_GET_OBJECT (rval) == SWFDEC_AS_VALUE_GET_OBJECT (lval);
+	break;
+      default:
+	g_assert_not_reached ();
+	cond = FALSE;
+    }
+  }
+
   swfdec_as_stack_pop (cx->frame->stack);
   SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
 }
@@ -1568,44 +1700,25 @@ swfdec_action_store_register (SwfdecAsContext *cx, guint action, const guint8 *d
   cx->frame->registers[*data] = *swfdec_as_stack_peek (cx->frame->stack, 1);
 }
 
-#if 0
 static void
-swfdec_action_modulo_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_modulo (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   double x, y;
 
-  x = swfdec_value_to_number (cx, cx->fp->sp[-1]);
-  y = swfdec_value_to_number (cx, cx->fp->sp[-2]);
-  cx->fp->sp--;
-  errno = 0;
-  x = fmod (x, y);
-  if (errno != 0) {
-    cx->fp->sp[-1] = DOUBLE_TO_JSVAL (cx->runtime->jsNaN);
-    return JS_TRUE;
+  x = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
+  y = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  /* yay, we're portable! */
+  if (y == 0.0) {
+    x = NAN;
   } else {
-    return JS_NewNumberValue (cx, x, &cx->fp->sp[-1]);
+    errno = 0;
+    x = fmod (x, y);
+    if (errno != 0) {
+      SWFDEC_FIXME ("errno set after fmod");
+    }
   }
+  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), x);
 }
-
-static void
-swfdec_action_modulo_7 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  double x, y;
-
-  if (!swfdec_value_to_number_7 (cx, cx->fp->sp[-1], &x) ||
-      !swfdec_value_to_number_7 (cx, cx->fp->sp[-2], &y))
-    return JS_FALSE;
-  cx->fp->sp--;
-  errno = 0;
-  x = fmod (x, y);
-  if (errno != 0) {
-    cx->fp->sp[-1] = DOUBLE_TO_JSVAL (cx->runtime->jsNaN);
-    return JS_TRUE;
-  } else {
-    return JS_NewNumberValue (cx, x, &cx->fp->sp[-1]);
-  }
-}
-#endif
 
 static void
 swfdec_action_swap (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2127,10 +2240,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
-  [0x3e] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
-#if 0
-  [0x3f] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo_5, swfdec_action_modulo_5, swfdec_action_modulo_7 } },
-#endif
+  [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
+  [SWFDEC_AS_ACTION_MODULO] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo, swfdec_action_modulo, swfdec_action_modulo } },
   [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
   [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
   [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
@@ -2142,7 +2253,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, { NULL, NULL, swfdec_action_enumerate, swfdec_action_enumerate, swfdec_action_enumerate } },
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
   [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
-  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2, swfdec_action_equals2, swfdec_action_equals2 } },
+  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2_5, swfdec_action_equals2, swfdec_action_equals2 } },
   [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
   [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
@@ -2168,7 +2279,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
 #endif
   /* version 6 */
-  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL },
+  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_strict_equals, swfdec_action_strict_equals } },
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */

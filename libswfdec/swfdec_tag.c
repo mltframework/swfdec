@@ -254,7 +254,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
 
   /* sanity check the sprite */
   if (s->parse_sprite->n_frames != s->parse_sprite->parse_frame) {
-    SWFDEC_ERROR ("not enough frames in sprite %u (have %u, want %u), filling up with empty frames",
+    SWFDEC_INFO ("not enough frames in sprite %u (have %u, want %u), filling up with empty frames",
 	id, s->parse_sprite->parse_frame, s->parse_sprite->n_frames);
     s->parse_sprite->parse_frame = s->parse_sprite->n_frames;
   }

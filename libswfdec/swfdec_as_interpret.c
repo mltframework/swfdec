@@ -985,6 +985,10 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
   rval = swfdec_as_stack_peek (cx->frame->stack, 1);
   lval = swfdec_as_stack_peek (cx->frame->stack, 2);
+  if (cx->version == 5) {
+    swfdec_as_value_to_primitive (rval);
+    swfdec_as_value_to_primitive (lval);
+  }
   ltype = lval->type;
   rtype = rval->type;
   

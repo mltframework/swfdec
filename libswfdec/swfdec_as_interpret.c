@@ -1535,36 +1535,33 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   frame->pc += 3 + len + size;
 }
 
-#if 0
 static void
 swfdec_action_bitwise (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  guint32 a, b;
-  double d;
+  int a, b;
 
-  if (!JS_ValueToECMAUint32 (cx, cx->fp->sp[-1], &a) ||
-      !JS_ValueToECMAUint32 (cx, cx->fp->sp[-2], &b))
-    return JS_FALSE;
+  a = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (cx->frame->stack));
+  b = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
 
   switch (action) {
     case 0x60:
-      d = (int) (a & b);
+      a = (int) (a & b);
       break;
     case 0x61:
-      d = (int) (a | b);
+      a = (int) (a | b);
       break;
     case 0x62:
-      d = (int) (a ^ b);
+      a = (int) (a ^ b);
       break;
     default:
       g_assert_not_reached ();
-      return JS_FALSE;
+      break;
   }
 
-  cx->fp->sp--;
-  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx->frame->stack, 1), a);
 }
 
+#if 0
 static void
 swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -2256,10 +2253,10 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_INSTANCE_OF] = { "InstanceOf", NULL },
   [SWFDEC_AS_ACTION_ENUMERATE2] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
   /* version 5 */
+  [SWFDEC_AS_ACTION_BIT_AND] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
+  [SWFDEC_AS_ACTION_BIT_OR] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
+  [SWFDEC_AS_ACTION_BIT_XOR] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
 #if 0
-  [0x60] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-  [0x61] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-  [0x62] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [0x63] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   [0x64] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },

@@ -1652,41 +1652,29 @@ swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   swfdec_as_context_return (cx);
 }
 
-#if 0
 static void
 swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecAsValue *val;
   const char *name;
   
-  cx->fp->sp -= 2;
-  name = swfdec_js_to_string (cx, cx->fp->sp[1]);
-  if (name == NULL)
-    return JS_FALSE;
-  if (!JSVAL_IS_OBJECT (cx->fp->sp[0]))
-    return JS_TRUE;
-  return JS_DeleteProperty (cx, JSVAL_TO_OBJECT (cx->fp->sp[0]), name);
+  name = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  val = swfdec_as_stack_pop (cx->frame->stack);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val))
+    swfdec_as_object_delete_variable (SWFDEC_AS_VALUE_GET_OBJECT (val), name);
 }
 
 static void
 swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *name;
-  JSObject *obj, *pobj;
-  JSProperty *prop;
-  JSAtom *atom;
+  SwfdecAsObject *object;
   
-  cx->fp->sp -= 1;
-  name = swfdec_js_to_string (cx, cx->fp->sp[1]);
-  if (name == NULL)
-    return JS_FALSE;
-  if (!(atom = js_Atomize (cx, name, strlen (name), 0)) ||
-      !js_FindProperty (cx, (jsid) atom, &obj, &pobj, &prop))
-    return JS_FALSE;
-  if (!pobj)
-    return JS_TRUE;
-  return JS_DeleteProperty (cx, pobj, name);
+  name = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  object = swfdec_as_frame_find_variable (cx->frame, name);
+  if (object)
+    swfdec_as_object_delete_variable (object, name);
 }
-#endif
 
 static void
 swfdec_action_store_register (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2236,10 +2224,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
   [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL },
   /* version 5 */
-#if 0
-  [0x3a] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
-  [0x3b] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
-#endif
+  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
+  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },

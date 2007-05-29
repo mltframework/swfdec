@@ -1055,7 +1055,10 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   }
 
   /* else compare as numbers */
-  cond = l == r;
+  if (isnan (l) && isnan (r))
+    cond = ltype == rtype;
+  else
+    cond = l == r;
 
 out:
   swfdec_as_stack_pop (cx->frame->stack);
@@ -1138,7 +1141,11 @@ swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   /* else compare as numbers */
   l = swfdec_as_value_to_number (cx, lval);
   r = swfdec_as_value_to_number (cx, rval);
-  cond = l == r;
+
+  if (isnan (l) && isnan (r))
+    cond = ltype == rtype;
+  else
+    cond = l == r;
 
 out:
   swfdec_as_stack_pop (cx->frame->stack);
@@ -1166,7 +1173,12 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
 	cond = SWFDEC_AS_VALUE_GET_BOOLEAN (rval) == SWFDEC_AS_VALUE_GET_BOOLEAN (lval);
 	break;
       case SWFDEC_AS_TYPE_NUMBER:
-	cond = SWFDEC_AS_VALUE_GET_NUMBER (rval) == SWFDEC_AS_VALUE_GET_NUMBER (lval);
+	{
+	  double l, r;
+	  r = SWFDEC_AS_VALUE_GET_NUMBER (rval);
+	  l = SWFDEC_AS_VALUE_GET_NUMBER (lval);
+	  cond = (l == r) || (isnan (l) && isnan (r));
+	}
 	break;
       case SWFDEC_AS_TYPE_STRING:
 	cond = SWFDEC_AS_VALUE_GET_STRING (rval) == SWFDEC_AS_VALUE_GET_STRING (lval);

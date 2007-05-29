@@ -9,6 +9,13 @@ trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	add2.as \
+	add2-5.swf \
+	add2-5.swf.trace \
+	add2-6.swf \
+	add2-6.swf.trace \
+	add2-7.swf \
+	add2-7.swf.trace \
 	and-or-5.swf \
 	and-or-5.swf.trace \
 	and-or-6.swf \

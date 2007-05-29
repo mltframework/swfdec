@@ -274,8 +274,12 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 int
 swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
-  /* FIXME */
-  return swfdec_as_value_to_number (context, value);
+  double d;
+  
+  d = swfdec_as_value_to_number (context, value);
+  if (!isfinite (d))
+    return 0;
+  return (guint) fmod (d, 4294967296);
 }
 
 /**

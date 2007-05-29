@@ -97,6 +97,13 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	equality.as \
+	equality-5.swf \
+	equality-5.swf.trace \
+	equality-6.swf \
+	equality-6.swf.trace \
+	equality-7.swf \
+	equality-7.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
 	extends-simple.swf \

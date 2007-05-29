@@ -1,0 +1,1805 @@
+valueOf called
+toString called
+toString called with 
+valueOf called with 
+check Equals and StrictEquals action
+---
+(0) undefined (undefined) == (0) undefined (undefined) = true
+(0) undefined (undefined) === (0) undefined (undefined) = true
+---
+(0) undefined (undefined) == (1) null (null) = true
+(0) undefined (undefined) === (1) null (null) = false
+---
+(0) undefined (undefined) == (2) true (boolean) = false
+(0) undefined (undefined) === (2) true (boolean) = false
+---
+(0) undefined (undefined) == (3) false (boolean) = false
+(0) undefined (undefined) === (3) false (boolean) = false
+---
+(0) undefined (undefined) == (4) 0 (number) = false
+(0) undefined (undefined) === (4) 0 (number) = false
+---
+(0) undefined (undefined) == (5) 1 (number) = false
+(0) undefined (undefined) === (5) 1 (number) = false
+---
+(0) undefined (undefined) == (6) 0.5 (number) = false
+(0) undefined (undefined) === (6) 0.5 (number) = false
+---
+(0) undefined (undefined) == (7) -1 (number) = false
+(0) undefined (undefined) === (7) -1 (number) = false
+---
+(0) undefined (undefined) == (8) -0.5 (number) = false
+(0) undefined (undefined) === (8) -0.5 (number) = false
+---
+(0) undefined (undefined) == (9)  (string) = false
+(0) undefined (undefined) === (9)  (string) = false
+---
+(0) undefined (undefined) == (10) 0 (string) = false
+(0) undefined (undefined) === (10) 0 (string) = false
+---
+(0) undefined (undefined) == (11) -0 (string) = false
+(0) undefined (undefined) === (11) -0 (string) = false
+---
+(0) undefined (undefined) == (12) 0.0 (string) = false
+(0) undefined (undefined) === (12) 0.0 (string) = false
+---
+(0) undefined (undefined) == (13) 1 (string) = false
+(0) undefined (undefined) === (13) 1 (string) = false
+---
+(0) undefined (undefined) == (14) Hello World! (string) = false
+(0) undefined (undefined) === (14) Hello World! (string) = false
+---
+(0) undefined (undefined) == (15) true (string) = false
+(0) undefined (undefined) === (15) true (string) = false
+---
+(0) undefined (undefined) == (16) _level0 (string) = false
+(0) undefined (undefined) === (16) _level0 (string) = false
+---
+(0) undefined (undefined) == (17) _level0 (movieclip) = false
+(0) undefined (undefined) === (17) _level0 (movieclip) = false
+---
+(0) undefined (undefined) == (18) [object Object] (object) = false
+(0) undefined (undefined) === (18) [object Object] (object) = false
+---
+(0) undefined (undefined) == (19) [type Function] (function) = false
+(0) undefined (undefined) === (19) [type Function] (function) = false
+---
+valueOf called
+(0) undefined (undefined) == (20) [type Object] (object) = false
+(0) undefined (undefined) === (20) [type Object] (object) = false
+---
+(0) undefined (undefined) == (21) [type Object] (object) = false
+(0) undefined (undefined) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(0) undefined (undefined) == (22) [object Object] (object) = false
+(0) undefined (undefined) === (22) [object Object] (object) = false
+---
+(0) undefined (undefined) == (23) undefined (object) = true
+(0) undefined (undefined) === (23) undefined (object) = false
+---
+(1) null (null) == (0) undefined (undefined) = true
+(1) null (null) === (0) undefined (undefined) = false
+---
+(1) null (null) == (1) null (null) = true
+(1) null (null) === (1) null (null) = true
+---
+(1) null (null) == (2) true (boolean) = false
+(1) null (null) === (2) true (boolean) = false
+---
+(1) null (null) == (3) false (boolean) = false
+(1) null (null) === (3) false (boolean) = false
+---
+(1) null (null) == (4) 0 (number) = false
+(1) null (null) === (4) 0 (number) = false
+---
+(1) null (null) == (5) 1 (number) = false
+(1) null (null) === (5) 1 (number) = false
+---
+(1) null (null) == (6) 0.5 (number) = false
+(1) null (null) === (6) 0.5 (number) = false
+---
+(1) null (null) == (7) -1 (number) = false
+(1) null (null) === (7) -1 (number) = false
+---
+(1) null (null) == (8) -0.5 (number) = false
+(1) null (null) === (8) -0.5 (number) = false
+---
+(1) null (null) == (9)  (string) = false
+(1) null (null) === (9)  (string) = false
+---
+(1) null (null) == (10) 0 (string) = false
+(1) null (null) === (10) 0 (string) = false
+---
+(1) null (null) == (11) -0 (string) = false
+(1) null (null) === (11) -0 (string) = false
+---
+(1) null (null) == (12) 0.0 (string) = false
+(1) null (null) === (12) 0.0 (string) = false
+---
+(1) null (null) == (13) 1 (string) = false
+(1) null (null) === (13) 1 (string) = false
+---
+(1) null (null) == (14) Hello World! (string) = false
+(1) null (null) === (14) Hello World! (string) = false
+---
+(1) null (null) == (15) true (string) = false
+(1) null (null) === (15) true (string) = false
+---
+(1) null (null) == (16) _level0 (string) = false
+(1) null (null) === (16) _level0 (string) = false
+---
+(1) null (null) == (17) _level0 (movieclip) = false
+(1) null (null) === (17) _level0 (movieclip) = false
+---
+(1) null (null) == (18) [object Object] (object) = false
+(1) null (null) === (18) [object Object] (object) = false
+---
+(1) null (null) == (19) [type Function] (function) = false
+(1) null (null) === (19) [type Function] (function) = false
+---
+valueOf called
+(1) null (null) == (20) [type Object] (object) = false
+(1) null (null) === (20) [type Object] (object) = false
+---
+(1) null (null) == (21) [type Object] (object) = false
+(1) null (null) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(1) null (null) == (22) [object Object] (object) = false
+(1) null (null) === (22) [object Object] (object) = false
+---
+(1) null (null) == (23) undefined (object) = true
+(1) null (null) === (23) undefined (object) = false
+---
+(2) true (boolean) == (0) undefined (undefined) = false
+(2) true (boolean) === (0) undefined (undefined) = false
+---
+(2) true (boolean) == (1) null (null) = false
+(2) true (boolean) === (1) null (null) = false
+---
+(2) true (boolean) == (2) true (boolean) = true
+(2) true (boolean) === (2) true (boolean) = true
+---
+(2) true (boolean) == (3) false (boolean) = false
+(2) true (boolean) === (3) false (boolean) = false
+---
+(2) true (boolean) == (4) 0 (number) = false
+(2) true (boolean) === (4) 0 (number) = false
+---
+(2) true (boolean) == (5) 1 (number) = true
+(2) true (boolean) === (5) 1 (number) = false
+---
+(2) true (boolean) == (6) 0.5 (number) = false
+(2) true (boolean) === (6) 0.5 (number) = false
+---
+(2) true (boolean) == (7) -1 (number) = false
+(2) true (boolean) === (7) -1 (number) = false
+---
+(2) true (boolean) == (8) -0.5 (number) = false
+(2) true (boolean) === (8) -0.5 (number) = false
+---
+(2) true (boolean) == (9)  (string) = false
+(2) true (boolean) === (9)  (string) = false
+---
+(2) true (boolean) == (10) 0 (string) = false
+(2) true (boolean) === (10) 0 (string) = false
+---
+(2) true (boolean) == (11) -0 (string) = false
+(2) true (boolean) === (11) -0 (string) = false
+---
+(2) true (boolean) == (12) 0.0 (string) = false
+(2) true (boolean) === (12) 0.0 (string) = false
+---
+(2) true (boolean) == (13) 1 (string) = true
+(2) true (boolean) === (13) 1 (string) = false
+---
+(2) true (boolean) == (14) Hello World! (string) = false
+(2) true (boolean) === (14) Hello World! (string) = false
+---
+(2) true (boolean) == (15) true (string) = false
+(2) true (boolean) === (15) true (string) = false
+---
+(2) true (boolean) == (16) _level0 (string) = false
+(2) true (boolean) === (16) _level0 (string) = false
+---
+(2) true (boolean) == (17) _level0 (movieclip) = false
+(2) true (boolean) === (17) _level0 (movieclip) = false
+---
+(2) true (boolean) == (18) [object Object] (object) = false
+(2) true (boolean) === (18) [object Object] (object) = false
+---
+(2) true (boolean) == (19) [type Function] (function) = false
+(2) true (boolean) === (19) [type Function] (function) = false
+---
+valueOf called
+(2) true (boolean) == (20) [type Object] (object) = false
+(2) true (boolean) === (20) [type Object] (object) = false
+---
+(2) true (boolean) == (21) [type Object] (object) = false
+(2) true (boolean) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(2) true (boolean) == (22) [object Object] (object) = false
+(2) true (boolean) === (22) [object Object] (object) = false
+---
+(2) true (boolean) == (23) undefined (object) = false
+(2) true (boolean) === (23) undefined (object) = false
+---
+(3) false (boolean) == (0) undefined (undefined) = false
+(3) false (boolean) === (0) undefined (undefined) = false
+---
+(3) false (boolean) == (1) null (null) = false
+(3) false (boolean) === (1) null (null) = false
+---
+(3) false (boolean) == (2) true (boolean) = false
+(3) false (boolean) === (2) true (boolean) = false
+---
+(3) false (boolean) == (3) false (boolean) = true
+(3) false (boolean) === (3) false (boolean) = true
+---
+(3) false (boolean) == (4) 0 (number) = true
+(3) false (boolean) === (4) 0 (number) = false
+---
+(3) false (boolean) == (5) 1 (number) = false
+(3) false (boolean) === (5) 1 (number) = false
+---
+(3) false (boolean) == (6) 0.5 (number) = false
+(3) false (boolean) === (6) 0.5 (number) = false
+---
+(3) false (boolean) == (7) -1 (number) = false
+(3) false (boolean) === (7) -1 (number) = false
+---
+(3) false (boolean) == (8) -0.5 (number) = false
+(3) false (boolean) === (8) -0.5 (number) = false
+---
+(3) false (boolean) == (9)  (string) = false
+(3) false (boolean) === (9)  (string) = false
+---
+(3) false (boolean) == (10) 0 (string) = true
+(3) false (boolean) === (10) 0 (string) = false
+---
+(3) false (boolean) == (11) -0 (string) = true
+(3) false (boolean) === (11) -0 (string) = false
+---
+(3) false (boolean) == (12) 0.0 (string) = true
+(3) false (boolean) === (12) 0.0 (string) = false
+---
+(3) false (boolean) == (13) 1 (string) = false
+(3) false (boolean) === (13) 1 (string) = false
+---
+(3) false (boolean) == (14) Hello World! (string) = false
+(3) false (boolean) === (14) Hello World! (string) = false
+---
+(3) false (boolean) == (15) true (string) = false
+(3) false (boolean) === (15) true (string) = false
+---
+(3) false (boolean) == (16) _level0 (string) = false
+(3) false (boolean) === (16) _level0 (string) = false
+---
+(3) false (boolean) == (17) _level0 (movieclip) = false
+(3) false (boolean) === (17) _level0 (movieclip) = false
+---
+(3) false (boolean) == (18) [object Object] (object) = false
+(3) false (boolean) === (18) [object Object] (object) = false
+---
+(3) false (boolean) == (19) [type Function] (function) = false
+(3) false (boolean) === (19) [type Function] (function) = false
+---
+valueOf called
+(3) false (boolean) == (20) [type Object] (object) = false
+(3) false (boolean) === (20) [type Object] (object) = false
+---
+(3) false (boolean) == (21) [type Object] (object) = false
+(3) false (boolean) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(3) false (boolean) == (22) [object Object] (object) = false
+(3) false (boolean) === (22) [object Object] (object) = false
+---
+(3) false (boolean) == (23) undefined (object) = false
+(3) false (boolean) === (23) undefined (object) = false
+---
+(4) 0 (number) == (0) undefined (undefined) = false
+(4) 0 (number) === (0) undefined (undefined) = false
+---
+(4) 0 (number) == (1) null (null) = false
+(4) 0 (number) === (1) null (null) = false
+---
+(4) 0 (number) == (2) true (boolean) = false
+(4) 0 (number) === (2) true (boolean) = false
+---
+(4) 0 (number) == (3) false (boolean) = true
+(4) 0 (number) === (3) false (boolean) = false
+---
+(4) 0 (number) == (4) 0 (number) = true
+(4) 0 (number) === (4) 0 (number) = true
+---
+(4) 0 (number) == (5) 1 (number) = false
+(4) 0 (number) === (5) 1 (number) = false
+---
+(4) 0 (number) == (6) 0.5 (number) = false
+(4) 0 (number) === (6) 0.5 (number) = false
+---
+(4) 0 (number) == (7) -1 (number) = false
+(4) 0 (number) === (7) -1 (number) = false
+---
+(4) 0 (number) == (8) -0.5 (number) = false
+(4) 0 (number) === (8) -0.5 (number) = false
+---
+(4) 0 (number) == (9)  (string) = false
+(4) 0 (number) === (9)  (string) = false
+---
+(4) 0 (number) == (10) 0 (string) = true
+(4) 0 (number) === (10) 0 (string) = false
+---
+(4) 0 (number) == (11) -0 (string) = true
+(4) 0 (number) === (11) -0 (string) = false
+---
+(4) 0 (number) == (12) 0.0 (string) = true
+(4) 0 (number) === (12) 0.0 (string) = false
+---
+(4) 0 (number) == (13) 1 (string) = false
+(4) 0 (number) === (13) 1 (string) = false
+---
+(4) 0 (number) == (14) Hello World! (string) = false
+(4) 0 (number) === (14) Hello World! (string) = false
+---
+(4) 0 (number) == (15) true (string) = false
+(4) 0 (number) === (15) true (string) = false
+---
+(4) 0 (number) == (16) _level0 (string) = false
+(4) 0 (number) === (16) _level0 (string) = false
+---
+(4) 0 (number) == (17) _level0 (movieclip) = false
+(4) 0 (number) === (17) _level0 (movieclip) = false
+---
+(4) 0 (number) == (18) [object Object] (object) = false
+(4) 0 (number) === (18) [object Object] (object) = false
+---
+(4) 0 (number) == (19) [type Function] (function) = false
+(4) 0 (number) === (19) [type Function] (function) = false
+---
+valueOf called
+(4) 0 (number) == (20) [type Object] (object) = false
+(4) 0 (number) === (20) [type Object] (object) = false
+---
+(4) 0 (number) == (21) [type Object] (object) = false
+(4) 0 (number) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(4) 0 (number) == (22) [object Object] (object) = false
+(4) 0 (number) === (22) [object Object] (object) = false
+---
+(4) 0 (number) == (23) undefined (object) = false
+(4) 0 (number) === (23) undefined (object) = false
+---
+(5) 1 (number) == (0) undefined (undefined) = false
+(5) 1 (number) === (0) undefined (undefined) = false
+---
+(5) 1 (number) == (1) null (null) = false
+(5) 1 (number) === (1) null (null) = false
+---
+(5) 1 (number) == (2) true (boolean) = true
+(5) 1 (number) === (2) true (boolean) = false
+---
+(5) 1 (number) == (3) false (boolean) = false
+(5) 1 (number) === (3) false (boolean) = false
+---
+(5) 1 (number) == (4) 0 (number) = false
+(5) 1 (number) === (4) 0 (number) = false
+---
+(5) 1 (number) == (5) 1 (number) = true
+(5) 1 (number) === (5) 1 (number) = true
+---
+(5) 1 (number) == (6) 0.5 (number) = false
+(5) 1 (number) === (6) 0.5 (number) = false
+---
+(5) 1 (number) == (7) -1 (number) = false
+(5) 1 (number) === (7) -1 (number) = false
+---
+(5) 1 (number) == (8) -0.5 (number) = false
+(5) 1 (number) === (8) -0.5 (number) = false
+---
+(5) 1 (number) == (9)  (string) = false
+(5) 1 (number) === (9)  (string) = false
+---
+(5) 1 (number) == (10) 0 (string) = false
+(5) 1 (number) === (10) 0 (string) = false
+---
+(5) 1 (number) == (11) -0 (string) = false
+(5) 1 (number) === (11) -0 (string) = false
+---
+(5) 1 (number) == (12) 0.0 (string) = false
+(5) 1 (number) === (12) 0.0 (string) = false
+---
+(5) 1 (number) == (13) 1 (string) = true
+(5) 1 (number) === (13) 1 (string) = false
+---
+(5) 1 (number) == (14) Hello World! (string) = false
+(5) 1 (number) === (14) Hello World! (string) = false
+---
+(5) 1 (number) == (15) true (string) = false
+(5) 1 (number) === (15) true (string) = false
+---
+(5) 1 (number) == (16) _level0 (string) = false
+(5) 1 (number) === (16) _level0 (string) = false
+---
+(5) 1 (number) == (17) _level0 (movieclip) = false
+(5) 1 (number) === (17) _level0 (movieclip) = false
+---
+(5) 1 (number) == (18) [object Object] (object) = false
+(5) 1 (number) === (18) [object Object] (object) = false
+---
+(5) 1 (number) == (19) [type Function] (function) = false
+(5) 1 (number) === (19) [type Function] (function) = false
+---
+valueOf called
+(5) 1 (number) == (20) [type Object] (object) = false
+(5) 1 (number) === (20) [type Object] (object) = false
+---
+(5) 1 (number) == (21) [type Object] (object) = false
+(5) 1 (number) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(5) 1 (number) == (22) [object Object] (object) = false
+(5) 1 (number) === (22) [object Object] (object) = false
+---
+(5) 1 (number) == (23) undefined (object) = false
+(5) 1 (number) === (23) undefined (object) = false
+---
+(6) 0.5 (number) == (0) undefined (undefined) = false
+(6) 0.5 (number) === (0) undefined (undefined) = false
+---
+(6) 0.5 (number) == (1) null (null) = false
+(6) 0.5 (number) === (1) null (null) = false
+---
+(6) 0.5 (number) == (2) true (boolean) = false
+(6) 0.5 (number) === (2) true (boolean) = false
+---
+(6) 0.5 (number) == (3) false (boolean) = false
+(6) 0.5 (number) === (3) false (boolean) = false
+---
+(6) 0.5 (number) == (4) 0 (number) = false
+(6) 0.5 (number) === (4) 0 (number) = false
+---
+(6) 0.5 (number) == (5) 1 (number) = false
+(6) 0.5 (number) === (5) 1 (number) = false
+---
+(6) 0.5 (number) == (6) 0.5 (number) = true
+(6) 0.5 (number) === (6) 0.5 (number) = true
+---
+(6) 0.5 (number) == (7) -1 (number) = false
+(6) 0.5 (number) === (7) -1 (number) = false
+---
+(6) 0.5 (number) == (8) -0.5 (number) = false
+(6) 0.5 (number) === (8) -0.5 (number) = false
+---
+(6) 0.5 (number) == (9)  (string) = false
+(6) 0.5 (number) === (9)  (string) = false
+---
+(6) 0.5 (number) == (10) 0 (string) = false
+(6) 0.5 (number) === (10) 0 (string) = false
+---
+(6) 0.5 (number) == (11) -0 (string) = false
+(6) 0.5 (number) === (11) -0 (string) = false
+---
+(6) 0.5 (number) == (12) 0.0 (string) = false
+(6) 0.5 (number) === (12) 0.0 (string) = false
+---
+(6) 0.5 (number) == (13) 1 (string) = false
+(6) 0.5 (number) === (13) 1 (string) = false
+---
+(6) 0.5 (number) == (14) Hello World! (string) = false
+(6) 0.5 (number) === (14) Hello World! (string) = false
+---
+(6) 0.5 (number) == (15) true (string) = false
+(6) 0.5 (number) === (15) true (string) = false
+---
+(6) 0.5 (number) == (16) _level0 (string) = false
+(6) 0.5 (number) === (16) _level0 (string) = false
+---
+(6) 0.5 (number) == (17) _level0 (movieclip) = false
+(6) 0.5 (number) === (17) _level0 (movieclip) = false
+---
+(6) 0.5 (number) == (18) [object Object] (object) = false
+(6) 0.5 (number) === (18) [object Object] (object) = false
+---
+(6) 0.5 (number) == (19) [type Function] (function) = false
+(6) 0.5 (number) === (19) [type Function] (function) = false
+---
+valueOf called
+(6) 0.5 (number) == (20) [type Object] (object) = false
+(6) 0.5 (number) === (20) [type Object] (object) = false
+---
+(6) 0.5 (number) == (21) [type Object] (object) = false
+(6) 0.5 (number) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(6) 0.5 (number) == (22) [object Object] (object) = false
+(6) 0.5 (number) === (22) [object Object] (object) = false
+---
+(6) 0.5 (number) == (23) undefined (object) = false
+(6) 0.5 (number) === (23) undefined (object) = false
+---
+(7) -1 (number) == (0) undefined (undefined) = false
+(7) -1 (number) === (0) undefined (undefined) = false
+---
+(7) -1 (number) == (1) null (null) = false
+(7) -1 (number) === (1) null (null) = false
+---
+(7) -1 (number) == (2) true (boolean) = false
+(7) -1 (number) === (2) true (boolean) = false
+---
+(7) -1 (number) == (3) false (boolean) = false
+(7) -1 (number) === (3) false (boolean) = false
+---
+(7) -1 (number) == (4) 0 (number) = false
+(7) -1 (number) === (4) 0 (number) = false
+---
+(7) -1 (number) == (5) 1 (number) = false
+(7) -1 (number) === (5) 1 (number) = false
+---
+(7) -1 (number) == (6) 0.5 (number) = false
+(7) -1 (number) === (6) 0.5 (number) = false
+---
+(7) -1 (number) == (7) -1 (number) = true
+(7) -1 (number) === (7) -1 (number) = true
+---
+(7) -1 (number) == (8) -0.5 (number) = false
+(7) -1 (number) === (8) -0.5 (number) = false
+---
+(7) -1 (number) == (9)  (string) = false
+(7) -1 (number) === (9)  (string) = false
+---
+(7) -1 (number) == (10) 0 (string) = false
+(7) -1 (number) === (10) 0 (string) = false
+---
+(7) -1 (number) == (11) -0 (string) = false
+(7) -1 (number) === (11) -0 (string) = false
+---
+(7) -1 (number) == (12) 0.0 (string) = false
+(7) -1 (number) === (12) 0.0 (string) = false
+---
+(7) -1 (number) == (13) 1 (string) = false
+(7) -1 (number) === (13) 1 (string) = false
+---
+(7) -1 (number) == (14) Hello World! (string) = false
+(7) -1 (number) === (14) Hello World! (string) = false
+---
+(7) -1 (number) == (15) true (string) = false
+(7) -1 (number) === (15) true (string) = false
+---
+(7) -1 (number) == (16) _level0 (string) = false
+(7) -1 (number) === (16) _level0 (string) = false
+---
+(7) -1 (number) == (17) _level0 (movieclip) = false
+(7) -1 (number) === (17) _level0 (movieclip) = false
+---
+(7) -1 (number) == (18) [object Object] (object) = false
+(7) -1 (number) === (18) [object Object] (object) = false
+---
+(7) -1 (number) == (19) [type Function] (function) = false
+(7) -1 (number) === (19) [type Function] (function) = false
+---
+valueOf called
+(7) -1 (number) == (20) [type Object] (object) = false
+(7) -1 (number) === (20) [type Object] (object) = false
+---
+(7) -1 (number) == (21) [type Object] (object) = false
+(7) -1 (number) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(7) -1 (number) == (22) [object Object] (object) = false
+(7) -1 (number) === (22) [object Object] (object) = false
+---
+(7) -1 (number) == (23) undefined (object) = false
+(7) -1 (number) === (23) undefined (object) = false
+---
+(8) -0.5 (number) == (0) undefined (undefined) = false
+(8) -0.5 (number) === (0) undefined (undefined) = false
+---
+(8) -0.5 (number) == (1) null (null) = false
+(8) -0.5 (number) === (1) null (null) = false
+---
+(8) -0.5 (number) == (2) true (boolean) = false
+(8) -0.5 (number) === (2) true (boolean) = false
+---
+(8) -0.5 (number) == (3) false (boolean) = false
+(8) -0.5 (number) === (3) false (boolean) = false
+---
+(8) -0.5 (number) == (4) 0 (number) = false
+(8) -0.5 (number) === (4) 0 (number) = false
+---
+(8) -0.5 (number) == (5) 1 (number) = false
+(8) -0.5 (number) === (5) 1 (number) = false
+---
+(8) -0.5 (number) == (6) 0.5 (number) = false
+(8) -0.5 (number) === (6) 0.5 (number) = false
+---
+(8) -0.5 (number) == (7) -1 (number) = false
+(8) -0.5 (number) === (7) -1 (number) = false
+---
+(8) -0.5 (number) == (8) -0.5 (number) = true
+(8) -0.5 (number) === (8) -0.5 (number) = true
+---
+(8) -0.5 (number) == (9)  (string) = false
+(8) -0.5 (number) === (9)  (string) = false
+---
+(8) -0.5 (number) == (10) 0 (string) = false
+(8) -0.5 (number) === (10) 0 (string) = false
+---
+(8) -0.5 (number) == (11) -0 (string) = false
+(8) -0.5 (number) === (11) -0 (string) = false
+---
+(8) -0.5 (number) == (12) 0.0 (string) = false
+(8) -0.5 (number) === (12) 0.0 (string) = false
+---
+(8) -0.5 (number) == (13) 1 (string) = false
+(8) -0.5 (number) === (13) 1 (string) = false
+---
+(8) -0.5 (number) == (14) Hello World! (string) = false
+(8) -0.5 (number) === (14) Hello World! (string) = false
+---
+(8) -0.5 (number) == (15) true (string) = false
+(8) -0.5 (number) === (15) true (string) = false
+---
+(8) -0.5 (number) == (16) _level0 (string) = false
+(8) -0.5 (number) === (16) _level0 (string) = false
+---
+(8) -0.5 (number) == (17) _level0 (movieclip) = false
+(8) -0.5 (number) === (17) _level0 (movieclip) = false
+---
+(8) -0.5 (number) == (18) [object Object] (object) = false
+(8) -0.5 (number) === (18) [object Object] (object) = false
+---
+(8) -0.5 (number) == (19) [type Function] (function) = false
+(8) -0.5 (number) === (19) [type Function] (function) = false
+---
+valueOf called
+(8) -0.5 (number) == (20) [type Object] (object) = false
+(8) -0.5 (number) === (20) [type Object] (object) = false
+---
+(8) -0.5 (number) == (21) [type Object] (object) = false
+(8) -0.5 (number) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(8) -0.5 (number) == (22) [object Object] (object) = false
+(8) -0.5 (number) === (22) [object Object] (object) = false
+---
+(8) -0.5 (number) == (23) undefined (object) = false
+(8) -0.5 (number) === (23) undefined (object) = false
+---
+(9)  (string) == (0) undefined (undefined) = false
+(9)  (string) === (0) undefined (undefined) = false
+---
+(9)  (string) == (1) null (null) = false
+(9)  (string) === (1) null (null) = false
+---
+(9)  (string) == (2) true (boolean) = false
+(9)  (string) === (2) true (boolean) = false
+---
+(9)  (string) == (3) false (boolean) = false
+(9)  (string) === (3) false (boolean) = false
+---
+(9)  (string) == (4) 0 (number) = false
+(9)  (string) === (4) 0 (number) = false
+---
+(9)  (string) == (5) 1 (number) = false
+(9)  (string) === (5) 1 (number) = false
+---
+(9)  (string) == (6) 0.5 (number) = false
+(9)  (string) === (6) 0.5 (number) = false
+---
+(9)  (string) == (7) -1 (number) = false
+(9)  (string) === (7) -1 (number) = false
+---
+(9)  (string) == (8) -0.5 (number) = false
+(9)  (string) === (8) -0.5 (number) = false
+---
+(9)  (string) == (9)  (string) = true
+(9)  (string) === (9)  (string) = true
+---
+(9)  (string) == (10) 0 (string) = false
+(9)  (string) === (10) 0 (string) = false
+---
+(9)  (string) == (11) -0 (string) = false
+(9)  (string) === (11) -0 (string) = false
+---
+(9)  (string) == (12) 0.0 (string) = false
+(9)  (string) === (12) 0.0 (string) = false
+---
+(9)  (string) == (13) 1 (string) = false
+(9)  (string) === (13) 1 (string) = false
+---
+(9)  (string) == (14) Hello World! (string) = false
+(9)  (string) === (14) Hello World! (string) = false
+---
+(9)  (string) == (15) true (string) = false
+(9)  (string) === (15) true (string) = false
+---
+(9)  (string) == (16) _level0 (string) = false
+(9)  (string) === (16) _level0 (string) = false
+---
+(9)  (string) == (17) _level0 (movieclip) = false
+(9)  (string) === (17) _level0 (movieclip) = false
+---
+(9)  (string) == (18) [object Object] (object) = false
+(9)  (string) === (18) [object Object] (object) = false
+---
+(9)  (string) == (19) [type Function] (function) = false
+(9)  (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(9)  (string) == (20) [type Object] (object) = false
+(9)  (string) === (20) [type Object] (object) = false
+---
+(9)  (string) == (21) [type Object] (object) = false
+(9)  (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(9)  (string) == (22) [object Object] (object) = false
+(9)  (string) === (22) [object Object] (object) = false
+---
+(9)  (string) == (23) undefined (object) = false
+(9)  (string) === (23) undefined (object) = false
+---
+(10) 0 (string) == (0) undefined (undefined) = false
+(10) 0 (string) === (0) undefined (undefined) = false
+---
+(10) 0 (string) == (1) null (null) = false
+(10) 0 (string) === (1) null (null) = false
+---
+(10) 0 (string) == (2) true (boolean) = false
+(10) 0 (string) === (2) true (boolean) = false
+---
+(10) 0 (string) == (3) false (boolean) = true
+(10) 0 (string) === (3) false (boolean) = false
+---
+(10) 0 (string) == (4) 0 (number) = true
+(10) 0 (string) === (4) 0 (number) = false
+---
+(10) 0 (string) == (5) 1 (number) = false
+(10) 0 (string) === (5) 1 (number) = false
+---
+(10) 0 (string) == (6) 0.5 (number) = false
+(10) 0 (string) === (6) 0.5 (number) = false
+---
+(10) 0 (string) == (7) -1 (number) = false
+(10) 0 (string) === (7) -1 (number) = false
+---
+(10) 0 (string) == (8) -0.5 (number) = false
+(10) 0 (string) === (8) -0.5 (number) = false
+---
+(10) 0 (string) == (9)  (string) = false
+(10) 0 (string) === (9)  (string) = false
+---
+(10) 0 (string) == (10) 0 (string) = true
+(10) 0 (string) === (10) 0 (string) = true
+---
+(10) 0 (string) == (11) -0 (string) = false
+(10) 0 (string) === (11) -0 (string) = false
+---
+(10) 0 (string) == (12) 0.0 (string) = false
+(10) 0 (string) === (12) 0.0 (string) = false
+---
+(10) 0 (string) == (13) 1 (string) = false
+(10) 0 (string) === (13) 1 (string) = false
+---
+(10) 0 (string) == (14) Hello World! (string) = false
+(10) 0 (string) === (14) Hello World! (string) = false
+---
+(10) 0 (string) == (15) true (string) = false
+(10) 0 (string) === (15) true (string) = false
+---
+(10) 0 (string) == (16) _level0 (string) = false
+(10) 0 (string) === (16) _level0 (string) = false
+---
+(10) 0 (string) == (17) _level0 (movieclip) = false
+(10) 0 (string) === (17) _level0 (movieclip) = false
+---
+(10) 0 (string) == (18) [object Object] (object) = false
+(10) 0 (string) === (18) [object Object] (object) = false
+---
+(10) 0 (string) == (19) [type Function] (function) = false
+(10) 0 (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(10) 0 (string) == (20) [type Object] (object) = false
+(10) 0 (string) === (20) [type Object] (object) = false
+---
+(10) 0 (string) == (21) [type Object] (object) = false
+(10) 0 (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(10) 0 (string) == (22) [object Object] (object) = false
+(10) 0 (string) === (22) [object Object] (object) = false
+---
+(10) 0 (string) == (23) undefined (object) = false
+(10) 0 (string) === (23) undefined (object) = false
+---
+(11) -0 (string) == (0) undefined (undefined) = false
+(11) -0 (string) === (0) undefined (undefined) = false
+---
+(11) -0 (string) == (1) null (null) = false
+(11) -0 (string) === (1) null (null) = false
+---
+(11) -0 (string) == (2) true (boolean) = false
+(11) -0 (string) === (2) true (boolean) = false
+---
+(11) -0 (string) == (3) false (boolean) = true
+(11) -0 (string) === (3) false (boolean) = false
+---
+(11) -0 (string) == (4) 0 (number) = true
+(11) -0 (string) === (4) 0 (number) = false
+---
+(11) -0 (string) == (5) 1 (number) = false
+(11) -0 (string) === (5) 1 (number) = false
+---
+(11) -0 (string) == (6) 0.5 (number) = false
+(11) -0 (string) === (6) 0.5 (number) = false
+---
+(11) -0 (string) == (7) -1 (number) = false
+(11) -0 (string) === (7) -1 (number) = false
+---
+(11) -0 (string) == (8) -0.5 (number) = false
+(11) -0 (string) === (8) -0.5 (number) = false
+---
+(11) -0 (string) == (9)  (string) = false
+(11) -0 (string) === (9)  (string) = false
+---
+(11) -0 (string) == (10) 0 (string) = false
+(11) -0 (string) === (10) 0 (string) = false
+---
+(11) -0 (string) == (11) -0 (string) = true
+(11) -0 (string) === (11) -0 (string) = true
+---
+(11) -0 (string) == (12) 0.0 (string) = false
+(11) -0 (string) === (12) 0.0 (string) = false
+---
+(11) -0 (string) == (13) 1 (string) = false
+(11) -0 (string) === (13) 1 (string) = false
+---
+(11) -0 (string) == (14) Hello World! (string) = false
+(11) -0 (string) === (14) Hello World! (string) = false
+---
+(11) -0 (string) == (15) true (string) = false
+(11) -0 (string) === (15) true (string) = false
+---
+(11) -0 (string) == (16) _level0 (string) = false
+(11) -0 (string) === (16) _level0 (string) = false
+---
+(11) -0 (string) == (17) _level0 (movieclip) = false
+(11) -0 (string) === (17) _level0 (movieclip) = false
+---
+(11) -0 (string) == (18) [object Object] (object) = false
+(11) -0 (string) === (18) [object Object] (object) = false
+---
+(11) -0 (string) == (19) [type Function] (function) = false
+(11) -0 (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(11) -0 (string) == (20) [type Object] (object) = false
+(11) -0 (string) === (20) [type Object] (object) = false
+---
+(11) -0 (string) == (21) [type Object] (object) = false
+(11) -0 (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(11) -0 (string) == (22) [object Object] (object) = false
+(11) -0 (string) === (22) [object Object] (object) = false
+---
+(11) -0 (string) == (23) undefined (object) = false
+(11) -0 (string) === (23) undefined (object) = false
+---
+(12) 0.0 (string) == (0) undefined (undefined) = false
+(12) 0.0 (string) === (0) undefined (undefined) = false
+---
+(12) 0.0 (string) == (1) null (null) = false
+(12) 0.0 (string) === (1) null (null) = false
+---
+(12) 0.0 (string) == (2) true (boolean) = false
+(12) 0.0 (string) === (2) true (boolean) = false
+---
+(12) 0.0 (string) == (3) false (boolean) = true
+(12) 0.0 (string) === (3) false (boolean) = false
+---
+(12) 0.0 (string) == (4) 0 (number) = true
+(12) 0.0 (string) === (4) 0 (number) = false
+---
+(12) 0.0 (string) == (5) 1 (number) = false
+(12) 0.0 (string) === (5) 1 (number) = false
+---
+(12) 0.0 (string) == (6) 0.5 (number) = false
+(12) 0.0 (string) === (6) 0.5 (number) = false
+---
+(12) 0.0 (string) == (7) -1 (number) = false
+(12) 0.0 (string) === (7) -1 (number) = false
+---
+(12) 0.0 (string) == (8) -0.5 (number) = false
+(12) 0.0 (string) === (8) -0.5 (number) = false
+---
+(12) 0.0 (string) == (9)  (string) = false
+(12) 0.0 (string) === (9)  (string) = false
+---
+(12) 0.0 (string) == (10) 0 (string) = false
+(12) 0.0 (string) === (10) 0 (string) = false
+---
+(12) 0.0 (string) == (11) -0 (string) = false
+(12) 0.0 (string) === (11) -0 (string) = false
+---
+(12) 0.0 (string) == (12) 0.0 (string) = true
+(12) 0.0 (string) === (12) 0.0 (string) = true
+---
+(12) 0.0 (string) == (13) 1 (string) = false
+(12) 0.0 (string) === (13) 1 (string) = false
+---
+(12) 0.0 (string) == (14) Hello World! (string) = false
+(12) 0.0 (string) === (14) Hello World! (string) = false
+---
+(12) 0.0 (string) == (15) true (string) = false
+(12) 0.0 (string) === (15) true (string) = false
+---
+(12) 0.0 (string) == (16) _level0 (string) = false
+(12) 0.0 (string) === (16) _level0 (string) = false
+---
+(12) 0.0 (string) == (17) _level0 (movieclip) = false
+(12) 0.0 (string) === (17) _level0 (movieclip) = false
+---
+(12) 0.0 (string) == (18) [object Object] (object) = false
+(12) 0.0 (string) === (18) [object Object] (object) = false
+---
+(12) 0.0 (string) == (19) [type Function] (function) = false
+(12) 0.0 (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(12) 0.0 (string) == (20) [type Object] (object) = false
+(12) 0.0 (string) === (20) [type Object] (object) = false
+---
+(12) 0.0 (string) == (21) [type Object] (object) = false
+(12) 0.0 (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(12) 0.0 (string) == (22) [object Object] (object) = false
+(12) 0.0 (string) === (22) [object Object] (object) = false
+---
+(12) 0.0 (string) == (23) undefined (object) = false
+(12) 0.0 (string) === (23) undefined (object) = false
+---
+(13) 1 (string) == (0) undefined (undefined) = false
+(13) 1 (string) === (0) undefined (undefined) = false
+---
+(13) 1 (string) == (1) null (null) = false
+(13) 1 (string) === (1) null (null) = false
+---
+(13) 1 (string) == (2) true (boolean) = true
+(13) 1 (string) === (2) true (boolean) = false
+---
+(13) 1 (string) == (3) false (boolean) = false
+(13) 1 (string) === (3) false (boolean) = false
+---
+(13) 1 (string) == (4) 0 (number) = false
+(13) 1 (string) === (4) 0 (number) = false
+---
+(13) 1 (string) == (5) 1 (number) = true
+(13) 1 (string) === (5) 1 (number) = false
+---
+(13) 1 (string) == (6) 0.5 (number) = false
+(13) 1 (string) === (6) 0.5 (number) = false
+---
+(13) 1 (string) == (7) -1 (number) = false
+(13) 1 (string) === (7) -1 (number) = false
+---
+(13) 1 (string) == (8) -0.5 (number) = false
+(13) 1 (string) === (8) -0.5 (number) = false
+---
+(13) 1 (string) == (9)  (string) = false
+(13) 1 (string) === (9)  (string) = false
+---
+(13) 1 (string) == (10) 0 (string) = false
+(13) 1 (string) === (10) 0 (string) = false
+---
+(13) 1 (string) == (11) -0 (string) = false
+(13) 1 (string) === (11) -0 (string) = false
+---
+(13) 1 (string) == (12) 0.0 (string) = false
+(13) 1 (string) === (12) 0.0 (string) = false
+---
+(13) 1 (string) == (13) 1 (string) = true
+(13) 1 (string) === (13) 1 (string) = true
+---
+(13) 1 (string) == (14) Hello World! (string) = false
+(13) 1 (string) === (14) Hello World! (string) = false
+---
+(13) 1 (string) == (15) true (string) = false
+(13) 1 (string) === (15) true (string) = false
+---
+(13) 1 (string) == (16) _level0 (string) = false
+(13) 1 (string) === (16) _level0 (string) = false
+---
+(13) 1 (string) == (17) _level0 (movieclip) = false
+(13) 1 (string) === (17) _level0 (movieclip) = false
+---
+(13) 1 (string) == (18) [object Object] (object) = false
+(13) 1 (string) === (18) [object Object] (object) = false
+---
+(13) 1 (string) == (19) [type Function] (function) = false
+(13) 1 (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(13) 1 (string) == (20) [type Object] (object) = false
+(13) 1 (string) === (20) [type Object] (object) = false
+---
+(13) 1 (string) == (21) [type Object] (object) = false
+(13) 1 (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(13) 1 (string) == (22) [object Object] (object) = false
+(13) 1 (string) === (22) [object Object] (object) = false
+---
+(13) 1 (string) == (23) undefined (object) = false
+(13) 1 (string) === (23) undefined (object) = false
+---
+(14) Hello World! (string) == (0) undefined (undefined) = false
+(14) Hello World! (string) === (0) undefined (undefined) = false
+---
+(14) Hello World! (string) == (1) null (null) = false
+(14) Hello World! (string) === (1) null (null) = false
+---
+(14) Hello World! (string) == (2) true (boolean) = false
+(14) Hello World! (string) === (2) true (boolean) = false
+---
+(14) Hello World! (string) == (3) false (boolean) = false
+(14) Hello World! (string) === (3) false (boolean) = false
+---
+(14) Hello World! (string) == (4) 0 (number) = false
+(14) Hello World! (string) === (4) 0 (number) = false
+---
+(14) Hello World! (string) == (5) 1 (number) = false
+(14) Hello World! (string) === (5) 1 (number) = false
+---
+(14) Hello World! (string) == (6) 0.5 (number) = false
+(14) Hello World! (string) === (6) 0.5 (number) = false
+---
+(14) Hello World! (string) == (7) -1 (number) = false
+(14) Hello World! (string) === (7) -1 (number) = false
+---
+(14) Hello World! (string) == (8) -0.5 (number) = false
+(14) Hello World! (string) === (8) -0.5 (number) = false
+---
+(14) Hello World! (string) == (9)  (string) = false
+(14) Hello World! (string) === (9)  (string) = false
+---
+(14) Hello World! (string) == (10) 0 (string) = false
+(14) Hello World! (string) === (10) 0 (string) = false
+---
+(14) Hello World! (string) == (11) -0 (string) = false
+(14) Hello World! (string) === (11) -0 (string) = false
+---
+(14) Hello World! (string) == (12) 0.0 (string) = false
+(14) Hello World! (string) === (12) 0.0 (string) = false
+---
+(14) Hello World! (string) == (13) 1 (string) = false
+(14) Hello World! (string) === (13) 1 (string) = false
+---
+(14) Hello World! (string) == (14) Hello World! (string) = true
+(14) Hello World! (string) === (14) Hello World! (string) = true
+---
+(14) Hello World! (string) == (15) true (string) = false
+(14) Hello World! (string) === (15) true (string) = false
+---
+(14) Hello World! (string) == (16) _level0 (string) = false
+(14) Hello World! (string) === (16) _level0 (string) = false
+---
+(14) Hello World! (string) == (17) _level0 (movieclip) = false
+(14) Hello World! (string) === (17) _level0 (movieclip) = false
+---
+(14) Hello World! (string) == (18) [object Object] (object) = false
+(14) Hello World! (string) === (18) [object Object] (object) = false
+---
+(14) Hello World! (string) == (19) [type Function] (function) = false
+(14) Hello World! (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(14) Hello World! (string) == (20) [type Object] (object) = false
+(14) Hello World! (string) === (20) [type Object] (object) = false
+---
+(14) Hello World! (string) == (21) [type Object] (object) = false
+(14) Hello World! (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(14) Hello World! (string) == (22) [object Object] (object) = false
+(14) Hello World! (string) === (22) [object Object] (object) = false
+---
+(14) Hello World! (string) == (23) undefined (object) = false
+(14) Hello World! (string) === (23) undefined (object) = false
+---
+(15) true (string) == (0) undefined (undefined) = false
+(15) true (string) === (0) undefined (undefined) = false
+---
+(15) true (string) == (1) null (null) = false
+(15) true (string) === (1) null (null) = false
+---
+(15) true (string) == (2) true (boolean) = false
+(15) true (string) === (2) true (boolean) = false
+---
+(15) true (string) == (3) false (boolean) = false
+(15) true (string) === (3) false (boolean) = false
+---
+(15) true (string) == (4) 0 (number) = false
+(15) true (string) === (4) 0 (number) = false
+---
+(15) true (string) == (5) 1 (number) = false
+(15) true (string) === (5) 1 (number) = false
+---
+(15) true (string) == (6) 0.5 (number) = false
+(15) true (string) === (6) 0.5 (number) = false
+---
+(15) true (string) == (7) -1 (number) = false
+(15) true (string) === (7) -1 (number) = false
+---
+(15) true (string) == (8) -0.5 (number) = false
+(15) true (string) === (8) -0.5 (number) = false
+---
+(15) true (string) == (9)  (string) = false
+(15) true (string) === (9)  (string) = false
+---
+(15) true (string) == (10) 0 (string) = false
+(15) true (string) === (10) 0 (string) = false
+---
+(15) true (string) == (11) -0 (string) = false
+(15) true (string) === (11) -0 (string) = false
+---
+(15) true (string) == (12) 0.0 (string) = false
+(15) true (string) === (12) 0.0 (string) = false
+---
+(15) true (string) == (13) 1 (string) = false
+(15) true (string) === (13) 1 (string) = false
+---
+(15) true (string) == (14) Hello World! (string) = false
+(15) true (string) === (14) Hello World! (string) = false
+---
+(15) true (string) == (15) true (string) = true
+(15) true (string) === (15) true (string) = true
+---
+(15) true (string) == (16) _level0 (string) = false
+(15) true (string) === (16) _level0 (string) = false
+---
+(15) true (string) == (17) _level0 (movieclip) = false
+(15) true (string) === (17) _level0 (movieclip) = false
+---
+(15) true (string) == (18) [object Object] (object) = false
+(15) true (string) === (18) [object Object] (object) = false
+---
+(15) true (string) == (19) [type Function] (function) = false
+(15) true (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(15) true (string) == (20) [type Object] (object) = false
+(15) true (string) === (20) [type Object] (object) = false
+---
+(15) true (string) == (21) [type Object] (object) = false
+(15) true (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(15) true (string) == (22) [object Object] (object) = false
+(15) true (string) === (22) [object Object] (object) = false
+---
+(15) true (string) == (23) undefined (object) = false
+(15) true (string) === (23) undefined (object) = false
+---
+(16) _level0 (string) == (0) undefined (undefined) = false
+(16) _level0 (string) === (0) undefined (undefined) = false
+---
+(16) _level0 (string) == (1) null (null) = false
+(16) _level0 (string) === (1) null (null) = false
+---
+(16) _level0 (string) == (2) true (boolean) = false
+(16) _level0 (string) === (2) true (boolean) = false
+---
+(16) _level0 (string) == (3) false (boolean) = false
+(16) _level0 (string) === (3) false (boolean) = false
+---
+(16) _level0 (string) == (4) 0 (number) = false
+(16) _level0 (string) === (4) 0 (number) = false
+---
+(16) _level0 (string) == (5) 1 (number) = false
+(16) _level0 (string) === (5) 1 (number) = false
+---
+(16) _level0 (string) == (6) 0.5 (number) = false
+(16) _level0 (string) === (6) 0.5 (number) = false
+---
+(16) _level0 (string) == (7) -1 (number) = false
+(16) _level0 (string) === (7) -1 (number) = false
+---
+(16) _level0 (string) == (8) -0.5 (number) = false
+(16) _level0 (string) === (8) -0.5 (number) = false
+---
+(16) _level0 (string) == (9)  (string) = false
+(16) _level0 (string) === (9)  (string) = false
+---
+(16) _level0 (string) == (10) 0 (string) = false
+(16) _level0 (string) === (10) 0 (string) = false
+---
+(16) _level0 (string) == (11) -0 (string) = false
+(16) _level0 (string) === (11) -0 (string) = false
+---
+(16) _level0 (string) == (12) 0.0 (string) = false
+(16) _level0 (string) === (12) 0.0 (string) = false
+---
+(16) _level0 (string) == (13) 1 (string) = false
+(16) _level0 (string) === (13) 1 (string) = false
+---
+(16) _level0 (string) == (14) Hello World! (string) = false
+(16) _level0 (string) === (14) Hello World! (string) = false
+---
+(16) _level0 (string) == (15) true (string) = false
+(16) _level0 (string) === (15) true (string) = false
+---
+(16) _level0 (string) == (16) _level0 (string) = true
+(16) _level0 (string) === (16) _level0 (string) = true
+---
+(16) _level0 (string) == (17) _level0 (movieclip) = false
+(16) _level0 (string) === (17) _level0 (movieclip) = false
+---
+(16) _level0 (string) == (18) [object Object] (object) = false
+(16) _level0 (string) === (18) [object Object] (object) = false
+---
+(16) _level0 (string) == (19) [type Function] (function) = false
+(16) _level0 (string) === (19) [type Function] (function) = false
+---
+valueOf called
+(16) _level0 (string) == (20) [type Object] (object) = false
+(16) _level0 (string) === (20) [type Object] (object) = false
+---
+(16) _level0 (string) == (21) [type Object] (object) = false
+(16) _level0 (string) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(16) _level0 (string) == (22) [object Object] (object) = false
+(16) _level0 (string) === (22) [object Object] (object) = false
+---
+(16) _level0 (string) == (23) undefined (object) = false
+(16) _level0 (string) === (23) undefined (object) = false
+---
+(17) _level0 (movieclip) == (0) undefined (undefined) = false
+(17) _level0 (movieclip) === (0) undefined (undefined) = false
+---
+(17) _level0 (movieclip) == (1) null (null) = false
+(17) _level0 (movieclip) === (1) null (null) = false
+---
+(17) _level0 (movieclip) == (2) true (boolean) = false
+(17) _level0 (movieclip) === (2) true (boolean) = false
+---
+(17) _level0 (movieclip) == (3) false (boolean) = false
+(17) _level0 (movieclip) === (3) false (boolean) = false
+---
+(17) _level0 (movieclip) == (4) 0 (number) = false
+(17) _level0 (movieclip) === (4) 0 (number) = false
+---
+(17) _level0 (movieclip) == (5) 1 (number) = false
+(17) _level0 (movieclip) === (5) 1 (number) = false
+---
+(17) _level0 (movieclip) == (6) 0.5 (number) = false
+(17) _level0 (movieclip) === (6) 0.5 (number) = false
+---
+(17) _level0 (movieclip) == (7) -1 (number) = false
+(17) _level0 (movieclip) === (7) -1 (number) = false
+---
+(17) _level0 (movieclip) == (8) -0.5 (number) = false
+(17) _level0 (movieclip) === (8) -0.5 (number) = false
+---
+(17) _level0 (movieclip) == (9)  (string) = false
+(17) _level0 (movieclip) === (9)  (string) = false
+---
+(17) _level0 (movieclip) == (10) 0 (string) = false
+(17) _level0 (movieclip) === (10) 0 (string) = false
+---
+(17) _level0 (movieclip) == (11) -0 (string) = false
+(17) _level0 (movieclip) === (11) -0 (string) = false
+---
+(17) _level0 (movieclip) == (12) 0.0 (string) = false
+(17) _level0 (movieclip) === (12) 0.0 (string) = false
+---
+(17) _level0 (movieclip) == (13) 1 (string) = false
+(17) _level0 (movieclip) === (13) 1 (string) = false
+---
+(17) _level0 (movieclip) == (14) Hello World! (string) = false
+(17) _level0 (movieclip) === (14) Hello World! (string) = false
+---
+(17) _level0 (movieclip) == (15) true (string) = false
+(17) _level0 (movieclip) === (15) true (string) = false
+---
+(17) _level0 (movieclip) == (16) _level0 (string) = false
+(17) _level0 (movieclip) === (16) _level0 (string) = false
+---
+(17) _level0 (movieclip) == (17) _level0 (movieclip) = true
+(17) _level0 (movieclip) === (17) _level0 (movieclip) = true
+---
+(17) _level0 (movieclip) == (18) [object Object] (object) = false
+(17) _level0 (movieclip) === (18) [object Object] (object) = false
+---
+(17) _level0 (movieclip) == (19) [type Function] (function) = false
+(17) _level0 (movieclip) === (19) [type Function] (function) = false
+---
+valueOf called
+(17) _level0 (movieclip) == (20) [type Object] (object) = false
+(17) _level0 (movieclip) === (20) [type Object] (object) = false
+---
+(17) _level0 (movieclip) == (21) [type Object] (object) = false
+(17) _level0 (movieclip) === (21) [type Object] (object) = false
+---
+valueOf called with 
+(17) _level0 (movieclip) == (22) [object Object] (object) = false
+(17) _level0 (movieclip) === (22) [object Object] (object) = false
+---
+(17) _level0 (movieclip) == (23) undefined (object) = false
+(17) _level0 (movieclip) === (23) undefined (object) = false
+---
+(18) [object Object] (object) == (0) undefined (undefined) = false
+(18) [object Object] (object) === (0) undefined (undefined) = false
+---
+(18) [object Object] (object) == (1) null (null) = false
+(18) [object Object] (object) === (1) null (null) = false
+---
+(18) [object Object] (object) == (2) true (boolean) = false
+(18) [object Object] (object) === (2) true (boolean) = false
+---
+(18) [object Object] (object) == (3) false (boolean) = false
+(18) [object Object] (object) === (3) false (boolean) = false
+---
+(18) [object Object] (object) == (4) 0 (number) = false
+(18) [object Object] (object) === (4) 0 (number) = false
+---
+(18) [object Object] (object) == (5) 1 (number) = false
+(18) [object Object] (object) === (5) 1 (number) = false
+---
+(18) [object Object] (object) == (6) 0.5 (number) = false
+(18) [object Object] (object) === (6) 0.5 (number) = false
+---
+(18) [object Object] (object) == (7) -1 (number) = false
+(18) [object Object] (object) === (7) -1 (number) = false
+---
+(18) [object Object] (object) == (8) -0.5 (number) = false
+(18) [object Object] (object) === (8) -0.5 (number) = false
+---
+(18) [object Object] (object) == (9)  (string) = false
+(18) [object Object] (object) === (9)  (string) = false
+---
+(18) [object Object] (object) == (10) 0 (string) = false
+(18) [object Object] (object) === (10) 0 (string) = false
+---
+(18) [object Object] (object) == (11) -0 (string) = false
+(18) [object Object] (object) === (11) -0 (string) = false
+---
+(18) [object Object] (object) == (12) 0.0 (string) = false
+(18) [object Object] (object) === (12) 0.0 (string) = false
+---
+(18) [object Object] (object) == (13) 1 (string) = false
+(18) [object Object] (object) === (13) 1 (string) = false
+---
+(18) [object Object] (object) == (14) Hello World! (string) = false
+(18) [object Object] (object) === (14) Hello World! (string) = false
+---
+(18) [object Object] (object) == (15) true (string) = false
+(18) [object Object] (object) === (15) true (string) = false
+---
+(18) [object Object] (object) == (16) _level0 (string) = false
+(18) [object Object] (object) === (16) _level0 (string) = false
+---
+(18) [object Object] (object) == (17) _level0 (movieclip) = false
+(18) [object Object] (object) === (17) _level0 (movieclip) = false
+---
+(18) [object Object] (object) == (18) [object Object] (object) = true
+(18) [object Object] (object) === (18) [object Object] (object) = true
+---
+(18) [object Object] (object) == (19) [type Function] (function) = false
+(18) [object Object] (object) === (19) [type Function] (function) = false
+---
+(18) [object Object] (object) == (20) [type Object] (object) = false
+(18) [object Object] (object) === (20) [type Object] (object) = false
+---
+(18) [object Object] (object) == (21) [type Object] (object) = false
+(18) [object Object] (object) === (21) [type Object] (object) = false
+---
+(18) [object Object] (object) == (22) [object Object] (object) = false
+(18) [object Object] (object) === (22) [object Object] (object) = false
+---
+(18) [object Object] (object) == (23) undefined (object) = false
+(18) [object Object] (object) === (23) undefined (object) = false
+---
+(19) [type Function] (function) == (0) undefined (undefined) = false
+(19) [type Function] (function) === (0) undefined (undefined) = false
+---
+(19) [type Function] (function) == (1) null (null) = false
+(19) [type Function] (function) === (1) null (null) = false
+---
+(19) [type Function] (function) == (2) true (boolean) = false
+(19) [type Function] (function) === (2) true (boolean) = false
+---
+(19) [type Function] (function) == (3) false (boolean) = false
+(19) [type Function] (function) === (3) false (boolean) = false
+---
+(19) [type Function] (function) == (4) 0 (number) = false
+(19) [type Function] (function) === (4) 0 (number) = false
+---
+(19) [type Function] (function) == (5) 1 (number) = false
+(19) [type Function] (function) === (5) 1 (number) = false
+---
+(19) [type Function] (function) == (6) 0.5 (number) = false
+(19) [type Function] (function) === (6) 0.5 (number) = false
+---
+(19) [type Function] (function) == (7) -1 (number) = false
+(19) [type Function] (function) === (7) -1 (number) = false
+---
+(19) [type Function] (function) == (8) -0.5 (number) = false
+(19) [type Function] (function) === (8) -0.5 (number) = false
+---
+(19) [type Function] (function) == (9)  (string) = false
+(19) [type Function] (function) === (9)  (string) = false
+---
+(19) [type Function] (function) == (10) 0 (string) = false
+(19) [type Function] (function) === (10) 0 (string) = false
+---
+(19) [type Function] (function) == (11) -0 (string) = false
+(19) [type Function] (function) === (11) -0 (string) = false
+---
+(19) [type Function] (function) == (12) 0.0 (string) = false
+(19) [type Function] (function) === (12) 0.0 (string) = false
+---
+(19) [type Function] (function) == (13) 1 (string) = false
+(19) [type Function] (function) === (13) 1 (string) = false
+---
+(19) [type Function] (function) == (14) Hello World! (string) = false
+(19) [type Function] (function) === (14) Hello World! (string) = false
+---
+(19) [type Function] (function) == (15) true (string) = false
+(19) [type Function] (function) === (15) true (string) = false
+---
+(19) [type Function] (function) == (16) _level0 (string) = false
+(19) [type Function] (function) === (16) _level0 (string) = false
+---
+(19) [type Function] (function) == (17) _level0 (movieclip) = false
+(19) [type Function] (function) === (17) _level0 (movieclip) = false
+---
+(19) [type Function] (function) == (18) [object Object] (object) = false
+(19) [type Function] (function) === (18) [object Object] (object) = false
+---
+(19) [type Function] (function) == (19) [type Function] (function) = true
+(19) [type Function] (function) === (19) [type Function] (function) = true
+---
+(19) [type Function] (function) == (20) [type Object] (object) = false
+(19) [type Function] (function) === (20) [type Object] (object) = false
+---
+(19) [type Function] (function) == (21) [type Object] (object) = false
+(19) [type Function] (function) === (21) [type Object] (object) = false
+---
+(19) [type Function] (function) == (22) [object Object] (object) = false
+(19) [type Function] (function) === (22) [object Object] (object) = false
+---
+(19) [type Function] (function) == (23) undefined (object) = false
+(19) [type Function] (function) === (23) undefined (object) = false
+---
+valueOf called
+(20) [type Object] (object) == (0) undefined (undefined) = false
+(20) [type Object] (object) === (0) undefined (undefined) = false
+---
+valueOf called
+(20) [type Object] (object) == (1) null (null) = false
+(20) [type Object] (object) === (1) null (null) = false
+---
+valueOf called
+(20) [type Object] (object) == (2) true (boolean) = false
+(20) [type Object] (object) === (2) true (boolean) = false
+---
+valueOf called
+(20) [type Object] (object) == (3) false (boolean) = false
+(20) [type Object] (object) === (3) false (boolean) = false
+---
+valueOf called
+(20) [type Object] (object) == (4) 0 (number) = false
+(20) [type Object] (object) === (4) 0 (number) = false
+---
+valueOf called
+(20) [type Object] (object) == (5) 1 (number) = false
+(20) [type Object] (object) === (5) 1 (number) = false
+---
+valueOf called
+(20) [type Object] (object) == (6) 0.5 (number) = false
+(20) [type Object] (object) === (6) 0.5 (number) = false
+---
+valueOf called
+(20) [type Object] (object) == (7) -1 (number) = false
+(20) [type Object] (object) === (7) -1 (number) = false
+---
+valueOf called
+(20) [type Object] (object) == (8) -0.5 (number) = false
+(20) [type Object] (object) === (8) -0.5 (number) = false
+---
+valueOf called
+(20) [type Object] (object) == (9)  (string) = false
+(20) [type Object] (object) === (9)  (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (10) 0 (string) = false
+(20) [type Object] (object) === (10) 0 (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (11) -0 (string) = false
+(20) [type Object] (object) === (11) -0 (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (12) 0.0 (string) = false
+(20) [type Object] (object) === (12) 0.0 (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (13) 1 (string) = false
+(20) [type Object] (object) === (13) 1 (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (14) Hello World! (string) = false
+(20) [type Object] (object) === (14) Hello World! (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (15) true (string) = false
+(20) [type Object] (object) === (15) true (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (16) _level0 (string) = false
+(20) [type Object] (object) === (16) _level0 (string) = false
+---
+valueOf called
+(20) [type Object] (object) == (17) _level0 (movieclip) = false
+(20) [type Object] (object) === (17) _level0 (movieclip) = false
+---
+(20) [type Object] (object) == (18) [object Object] (object) = false
+(20) [type Object] (object) === (18) [object Object] (object) = false
+---
+(20) [type Object] (object) == (19) [type Function] (function) = false
+(20) [type Object] (object) === (19) [type Function] (function) = false
+---
+(20) [type Object] (object) == (20) [type Object] (object) = true
+(20) [type Object] (object) === (20) [type Object] (object) = true
+---
+(20) [type Object] (object) == (21) [type Object] (object) = false
+(20) [type Object] (object) === (21) [type Object] (object) = false
+---
+(20) [type Object] (object) == (22) [object Object] (object) = false
+(20) [type Object] (object) === (22) [object Object] (object) = false
+---
+(20) [type Object] (object) == (23) undefined (object) = false
+(20) [type Object] (object) === (23) undefined (object) = false
+---
+(21) [type Object] (object) == (0) undefined (undefined) = false
+(21) [type Object] (object) === (0) undefined (undefined) = false
+---
+(21) [type Object] (object) == (1) null (null) = false
+(21) [type Object] (object) === (1) null (null) = false
+---
+(21) [type Object] (object) == (2) true (boolean) = false
+(21) [type Object] (object) === (2) true (boolean) = false
+---
+(21) [type Object] (object) == (3) false (boolean) = false
+(21) [type Object] (object) === (3) false (boolean) = false
+---
+(21) [type Object] (object) == (4) 0 (number) = false
+(21) [type Object] (object) === (4) 0 (number) = false
+---
+(21) [type Object] (object) == (5) 1 (number) = false
+(21) [type Object] (object) === (5) 1 (number) = false
+---
+(21) [type Object] (object) == (6) 0.5 (number) = false
+(21) [type Object] (object) === (6) 0.5 (number) = false
+---
+(21) [type Object] (object) == (7) -1 (number) = false
+(21) [type Object] (object) === (7) -1 (number) = false
+---
+(21) [type Object] (object) == (8) -0.5 (number) = false
+(21) [type Object] (object) === (8) -0.5 (number) = false
+---
+(21) [type Object] (object) == (9)  (string) = false
+(21) [type Object] (object) === (9)  (string) = false
+---
+(21) [type Object] (object) == (10) 0 (string) = false
+(21) [type Object] (object) === (10) 0 (string) = false
+---
+(21) [type Object] (object) == (11) -0 (string) = false
+(21) [type Object] (object) === (11) -0 (string) = false
+---
+(21) [type Object] (object) == (12) 0.0 (string) = false
+(21) [type Object] (object) === (12) 0.0 (string) = false
+---
+(21) [type Object] (object) == (13) 1 (string) = false
+(21) [type Object] (object) === (13) 1 (string) = false
+---
+(21) [type Object] (object) == (14) Hello World! (string) = false
+(21) [type Object] (object) === (14) Hello World! (string) = false
+---
+(21) [type Object] (object) == (15) true (string) = false
+(21) [type Object] (object) === (15) true (string) = false
+---
+(21) [type Object] (object) == (16) _level0 (string) = false
+(21) [type Object] (object) === (16) _level0 (string) = false
+---
+(21) [type Object] (object) == (17) _level0 (movieclip) = false
+(21) [type Object] (object) === (17) _level0 (movieclip) = false
+---
+(21) [type Object] (object) == (18) [object Object] (object) = false
+(21) [type Object] (object) === (18) [object Object] (object) = false
+---
+(21) [type Object] (object) == (19) [type Function] (function) = false
+(21) [type Object] (object) === (19) [type Function] (function) = false
+---
+(21) [type Object] (object) == (20) [type Object] (object) = false
+(21) [type Object] (object) === (20) [type Object] (object) = false
+---
+(21) [type Object] (object) == (21) [type Object] (object) = true
+(21) [type Object] (object) === (21) [type Object] (object) = true
+---
+(21) [type Object] (object) == (22) [object Object] (object) = false
+(21) [type Object] (object) === (22) [object Object] (object) = false
+---
+(21) [type Object] (object) == (23) undefined (object) = false
+(21) [type Object] (object) === (23) undefined (object) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (0) undefined (undefined) = false
+(22) [object Object] (object) === (0) undefined (undefined) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (1) null (null) = false
+(22) [object Object] (object) === (1) null (null) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (2) true (boolean) = false
+(22) [object Object] (object) === (2) true (boolean) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (3) false (boolean) = false
+(22) [object Object] (object) === (3) false (boolean) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (4) 0 (number) = false
+(22) [object Object] (object) === (4) 0 (number) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (5) 1 (number) = false
+(22) [object Object] (object) === (5) 1 (number) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (6) 0.5 (number) = false
+(22) [object Object] (object) === (6) 0.5 (number) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (7) -1 (number) = false
+(22) [object Object] (object) === (7) -1 (number) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (8) -0.5 (number) = false
+(22) [object Object] (object) === (8) -0.5 (number) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (9)  (string) = false
+(22) [object Object] (object) === (9)  (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (10) 0 (string) = false
+(22) [object Object] (object) === (10) 0 (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (11) -0 (string) = false
+(22) [object Object] (object) === (11) -0 (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (12) 0.0 (string) = false
+(22) [object Object] (object) === (12) 0.0 (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (13) 1 (string) = false
+(22) [object Object] (object) === (13) 1 (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (14) Hello World! (string) = false
+(22) [object Object] (object) === (14) Hello World! (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (15) true (string) = false
+(22) [object Object] (object) === (15) true (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (16) _level0 (string) = false
+(22) [object Object] (object) === (16) _level0 (string) = false
+---
+valueOf called with 
+(22) [object Object] (object) == (17) _level0 (movieclip) = false
+(22) [object Object] (object) === (17) _level0 (movieclip) = false
+---
+(22) [object Object] (object) == (18) [object Object] (object) = false
+(22) [object Object] (object) === (18) [object Object] (object) = false
+---
+(22) [object Object] (object) == (19) [type Function] (function) = false
+(22) [object Object] (object) === (19) [type Function] (function) = false
+---
+(22) [object Object] (object) == (20) [type Object] (object) = false
+(22) [object Object] (object) === (20) [type Object] (object) = false
+---
+(22) [object Object] (object) == (21) [type Object] (object) = false
+(22) [object Object] (object) === (21) [type Object] (object) = false
+---
+(22) [object Object] (object) == (22) [object Object] (object) = true
+(22) [object Object] (object) === (22) [object Object] (object) = true
+---
+(22) [object Object] (object) == (23) undefined (object) = false
+(22) [object Object] (object) === (23) undefined (object) = false
+---
+(23) undefined (object) == (0) undefined (undefined) = true
+(23) undefined (object) === (0) undefined (undefined) = false
+---
+(23) undefined (object) == (1) null (null) = true
+(23) undefined (object) === (1) null (null) = false
+---
+(23) undefined (object) == (2) true (boolean) = false
+(23) undefined (object) === (2) true (boolean) = false
+---
+(23) undefined (object) == (3) false (boolean) = false
+(23) undefined (object) === (3) false (boolean) = false
+---
+(23) undefined (object) == (4) 0 (number) = false
+(23) undefined (object) === (4) 0 (number) = false
+---
+(23) undefined (object) == (5) 1 (number) = false
+(23) undefined (object) === (5) 1 (number) = false
+---
+(23) undefined (object) == (6) 0.5 (number) = false
+(23) undefined (object) === (6) 0.5 (number) = false
+---
+(23) undefined (object) == (7) -1 (number) = false
+(23) undefined (object) === (7) -1 (number) = false
+---
+(23) undefined (object) == (8) -0.5 (number) = false
+(23) undefined (object) === (8) -0.5 (number) = false
+---
+(23) undefined (object) == (9)  (string) = false
+(23) undefined (object) === (9)  (string) = false
+---
+(23) undefined (object) == (10) 0 (string) = false
+(23) undefined (object) === (10) 0 (string) = false
+---
+(23) undefined (object) == (11) -0 (string) = false
+(23) undefined (object) === (11) -0 (string) = false
+---
+(23) undefined (object) == (12) 0.0 (string) = false
+(23) undefined (object) === (12) 0.0 (string) = false
+---
+(23) undefined (object) == (13) 1 (string) = false
+(23) undefined (object) === (13) 1 (string) = false
+---
+(23) undefined (object) == (14) Hello World! (string) = false
+(23) undefined (object) === (14) Hello World! (string) = false
+---
+(23) undefined (object) == (15) true (string) = false
+(23) undefined (object) === (15) true (string) = false
+---
+(23) undefined (object) == (16) _level0 (string) = false
+(23) undefined (object) === (16) _level0 (string) = false
+---
+(23) undefined (object) == (17) _level0 (movieclip) = false
+(23) undefined (object) === (17) _level0 (movieclip) = false
+---
+(23) undefined (object) == (18) [object Object] (object) = false
+(23) undefined (object) === (18) [object Object] (object) = false
+---
+(23) undefined (object) == (19) [type Function] (function) = false
+(23) undefined (object) === (19) [type Function] (function) = false
+---
+(23) undefined (object) == (20) [type Object] (object) = false
+(23) undefined (object) === (20) [type Object] (object) = false
+---
+(23) undefined (object) == (21) [type Object] (object) = false
+(23) undefined (object) === (21) [type Object] (object) = false
+---
+(23) undefined (object) == (22) [object Object] (object) = false
+(23) undefined (object) === (22) [object Object] (object) = false
+---
+(23) undefined (object) == (23) undefined (object) = true
+(23) undefined (object) === (23) undefined (object) = true

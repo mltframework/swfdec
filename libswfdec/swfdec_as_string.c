@@ -217,7 +217,11 @@ swfdec_as_string_substring (SwfdecAsObject *object, guint argc, SwfdecAsValue *a
   } else {
     to = len;
   }
-  from = CLAMP (from, 0, len);
+  from = MAX (from, 0);
+  if (from >= len) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    return;
+  }
   to = CLAMP (to, 0, len);
   if (to < from) {
     int tmp = to;

@@ -222,6 +222,13 @@ EXTRA_DIST = \
 	setinterval-clear.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
+	string-construct.as \
+	string-construct-5.swf \
+	string-construct-5.swf.trace \
+	string-construct-6.swf \
+	string-construct-6.swf.trace \
+	string-construct-7.swf \
+	string-construct-7.swf.trace \
 	tointeger-numbers.as \
 	tointeger-numbers-5.swf \
 	tointeger-numbers-5.swf.trace \

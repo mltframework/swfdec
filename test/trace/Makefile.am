@@ -117,6 +117,13 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	fromcharcode.as \
+	fromcharcode-5.swf \
+	fromcharcode-5.swf.trace \
+	fromcharcode-6.swf \
+	fromcharcode-6.swf.trace \
+	fromcharcode-7.swf \
+	fromcharcode-7.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \

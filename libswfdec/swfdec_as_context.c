@@ -33,6 +33,7 @@
 #include "swfdec_as_number.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_string.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
 #include "swfdec_script.h"
@@ -806,6 +807,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_array_init_context (context, version);
   /* define the type objects */
   swfdec_as_number_init_context (context, version);
+  swfdec_as_string_init_context (context, version);
   /* define the rest */
   swfdec_as_math_init_context (context, version);
 

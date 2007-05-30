@@ -27,6 +27,7 @@
 #include "swfdec_as_types.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_function.h"
 #include "swfdec_as_number.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
@@ -308,6 +309,8 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
 SwfdecAsObject *
 swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
+  SwfdecAsValue val;
+
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), NULL);
 
@@ -317,9 +320,21 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
       return NULL;
     case SWFDEC_AS_TYPE_NUMBER:
       return swfdec_as_number_new (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
-    case SWFDEC_AS_TYPE_BOOLEAN:
     case SWFDEC_AS_TYPE_STRING:
-      SWFDEC_ERROR ("FIXME: implement conversion to object");
+      {
+	SwfdecAsFunction *fun;
+	SwfdecAsObject *ret;
+
+	swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_String, &val);
+	if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
+	    !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+	  return NULL;
+	ret = swfdec_as_object_create (fun, 1, value, TRUE);
+	swfdec_as_context_run (context);
+	return ret;
+      }
+    case SWFDEC_AS_TYPE_BOOLEAN:
+      SWFDEC_ERROR ("FIXME: implement Boolean");
       return NULL;
     case SWFDEC_AS_TYPE_OBJECT:
       return SWFDEC_AS_VALUE_GET_OBJECT (value);

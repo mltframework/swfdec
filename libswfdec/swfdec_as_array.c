@@ -27,6 +27,7 @@
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
@@ -203,6 +204,7 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
 
   array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_Array, SWFDEC_TYPE_AS_ARRAY, NULL, 0));
+  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (array), SWFDEC_TYPE_AS_ARRAY);
   if (!array)
     return;
   context->Array = array;

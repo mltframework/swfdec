@@ -93,8 +93,8 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
 
 /**
  * swfdec_as_native_function_set_object_type:
- * @function: a native #SwfdecAsNativeFunction
- * @type: required #GType for this object
+ * @function: a #SwfdecAsNativeFunction
+ * @type: required #GType for the this object
  *
  * Sets the required type for the this object to @type. If the this object 
  * isn't of the required type, the function will not be called and its
@@ -110,6 +110,26 @@ swfdec_as_native_function_set_object_type (SwfdecAsNativeFunction *function, GTy
 
   g_type_query (type, &query);
   function->type = type;
-  function->type_size = query.instance_size;
+}
+
+/**
+ * swfdec_as_native_function_set_construct_type:
+ * @function: a #SwfdecAsNativeFunction
+ * @type: #GType used when constructing an object with @function
+ *
+ * Sets the @type to be used when using @function as a constructor. If this is
+ * not set, using @function as a constructor will create a #SwfdecAsObject.
+ **/
+void
+swfdec_as_native_function_set_construct_type (SwfdecAsNativeFunction *function, GType type)
+{
+  GTypeQuery query;
+
+  g_return_if_fail (SWFDEC_IS_AS_NATIVE_FUNCTION (function));
+  g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT));
+
+  g_type_query (type, &query);
+  function->construct_type = type;
+  function->construct_size = query.instance_size;
 }
 

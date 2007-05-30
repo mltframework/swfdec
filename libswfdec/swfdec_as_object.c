@@ -617,9 +617,9 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValu
   while (type == 0 && cur != NULL) {
     if (SWFDEC_IS_AS_NATIVE_FUNCTION (construct)) {
       SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (construct);
-      if (native->type_size) {
-	type = native->type;
-	size = native->type_size;
+      if (native->construct_size) {
+	type = native->construct_type;
+	size = native->construct_size;
 	break;
       }
     }

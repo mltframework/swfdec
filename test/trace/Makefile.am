@@ -236,6 +236,13 @@ EXTRA_DIST = \
 	string-construct-6.swf.trace \
 	string-construct-7.swf \
 	string-construct-7.swf.trace \
+	substring.as \
+	substring-5.swf \
+	substring-5.swf.trace \
+	substring-6.swf \
+	substring-6.swf.trace \
+	substring-7.swf \
+	substring-7.swf.trace \
 	tointeger-numbers.as \
 	tointeger-numbers-5.swf \
 	tointeger-numbers-5.swf.trace \

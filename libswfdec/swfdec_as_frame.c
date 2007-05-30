@@ -77,9 +77,7 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   for (i = 0; i < frame->n_registers; i++) {
     swfdec_as_value_mark (&frame->registers[i]);
   }
-  for (i = 0; i < frame->argc; i++) {
-    swfdec_as_value_mark (&frame->argv[i]);
-  }
+  /* don't mark argv, it's const, others have to take care of it */
   swfdec_as_stack_mark (frame->stack);
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
 }

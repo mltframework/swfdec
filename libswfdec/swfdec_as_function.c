@@ -67,7 +67,7 @@ swfdec_as_function_create (SwfdecAsContext *context, GType type, guint size)
 
 void
 swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
-    SwfdecAsValue *args, SwfdecAsValue *return_value)
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsContext *context;
   SwfdecAsFrame *frame;

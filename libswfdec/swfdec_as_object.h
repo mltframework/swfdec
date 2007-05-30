@@ -94,7 +94,7 @@ GType		swfdec_as_object_get_type	(void);
 SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context);
 SwfdecAsObject *swfdec_as_object_create		(SwfdecAsFunction *	construct,
 						 guint			n_args,
-						 SwfdecAsValue *	args,
+						 const SwfdecAsValue *	args,
 						 gboolean		scripted);
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct,

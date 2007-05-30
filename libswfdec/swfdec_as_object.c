@@ -600,7 +600,8 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  *          so the returned object will always be valid.
  **/
 SwfdecAsObject *
-swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, SwfdecAsValue *args, gboolean scripted)
+swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, 
+    const SwfdecAsValue *args, gboolean scripted)
 {
   SwfdecAsValue val;
   SwfdecAsObject *new;

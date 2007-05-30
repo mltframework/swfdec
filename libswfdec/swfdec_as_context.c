@@ -423,7 +423,8 @@ start:
 	(native->type == 0 || 
 	 (frame->thisp != NULL && 
 	  g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)))) {
-      native->native (frame->thisp, frame->argc, frame->argv, frame->return_value);
+      /* FIXME FIXME FIXME! */
+      native->native (frame->thisp, frame->argc, (SwfdecAsValue *) frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);
     goto start;

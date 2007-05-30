@@ -56,7 +56,7 @@ SwfdecAsFunction *	swfdec_as_function_create	(SwfdecAsContext *	context,
 void			swfdec_as_function_call		(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
 							 guint			n_args,
-							 SwfdecAsValue *	args,
+							 const SwfdecAsValue *	args,
 							 SwfdecAsValue *	return_value);
 
 void			swfdec_as_function_init_context (SwfdecAsContext *	context,

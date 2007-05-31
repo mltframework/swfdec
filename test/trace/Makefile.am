@@ -236,6 +236,13 @@ EXTRA_DIST = \
 	string-construct-6.swf.trace \
 	string-construct-7.swf \
 	string-construct-7.swf.trace \
+	string-convert.as \
+	string-convert-5.swf \
+	string-convert-5.swf.trace \
+	string-convert-6.swf \
+	string-convert-6.swf.trace \
+	string-convert-7.swf \
+	string-convert-7.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \

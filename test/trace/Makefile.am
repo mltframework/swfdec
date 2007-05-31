@@ -218,6 +218,13 @@ EXTRA_DIST = \
 	scope.swf.trace \
 	scope2.swf \
 	scope2.swf.trace \
+	set-overwrite-global-5.swf \
+	set-overwrite-global-6.swf \
+	set-overwrite-global-7.swf \
+	set-overwrite-global.as \
+	set-overwrite-global-5.swf.trace \
+	set-overwrite-global-6.swf.trace \
+	set-overwrite-global-7.swf.trace \
 	setinterval.swf \
 	setinterval.swf.trace \
 	setinterval2.swf \

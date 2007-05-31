@@ -626,7 +626,7 @@ swfdec_as_context_eval_set_property (SwfdecAsContext *cx,
       return;
     }
     obj = swfdec_as_frame_find_variable (cx->frame, name);
-    if (obj == NULL)
+    if (obj == NULL || obj == cx->global)
       obj = cx->frame->var_object;
   }
   swfdec_as_object_set_variable (obj, name, ret);

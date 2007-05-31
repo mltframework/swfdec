@@ -166,6 +166,13 @@ EXTRA_DIST = \
 	height3.swf.trace \
 	height4.swf \
 	height4.swf.trace \
+	isnan.as \
+	isnan-5.swf \
+	isnan-5.swf.trace \
+	isnan-6.swf \
+	isnan-6.swf.trace \
+	isnan-7.swf \
+	isnan-7.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
 	load-4.swf \

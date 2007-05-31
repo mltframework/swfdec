@@ -535,15 +535,14 @@ out:
 static void
 swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  /* FIXME: do we need a "convert to object" function here? */
-  if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 2))) {
+  SwfdecAsObject *object = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
+  if (object) {
     const char *name;
-    SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx->frame->stack, 2));
     name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
-    swfdec_as_object_get_variable (o, name, swfdec_as_stack_peek (cx->frame->stack, 2));
+    swfdec_as_object_get_variable (object, name, swfdec_as_stack_peek (cx->frame->stack, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 2))) {
-	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (o), s);
+	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (object), s);
     }
 #endif
   } else {

@@ -763,6 +763,20 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsObject *object, guint argc, SwfdecAsVa
 }
 
 static void
+swfdec_as_context_isFinite (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  double d = swfdec_as_value_to_number (object->context, &argv[0]);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isfinite (d) ? TRUE : FALSE);
+}
+
+static void
+swfdec_as_context_isNaN (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  double d = swfdec_as_value_to_number (object->context, &argv[0]);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isnan (d) ? TRUE : FALSE);
+}
+
+static void
 swfdec_as_context_parseInt (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   int i = swfdec_as_value_to_integer (object->context, &argv[0]);
@@ -780,6 +794,10 @@ swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, HUGE_VAL);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Infinity, &val);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_isFinite, 0,
+      swfdec_as_context_isFinite, 1);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_isNaN, 0,
+      swfdec_as_context_isNaN, 1);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_parseInt, 0,
       swfdec_as_context_parseInt, 1);
 }

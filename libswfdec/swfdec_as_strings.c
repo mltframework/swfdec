@@ -197,6 +197,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("substring")
   SWFDEC_AS_CONSTANT_STRING ("toLowerCase")
   SWFDEC_AS_CONSTANT_STRING ("toUpperCase")
+  SWFDEC_AS_CONSTANT_STRING ("isFinite")
+  SWFDEC_AS_CONSTANT_STRING ("isNaN")
   /* add more here */
 ;
 

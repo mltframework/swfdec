@@ -191,14 +191,25 @@ swfdec_as_string_substr (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv
 
   from = swfdec_as_value_to_integer (object->context, &argv[0]);
   len = g_utf8_strlen (string->string, -1);
-  if (from < 0)
-    from += len; /* from = len - ABS (from) aka start from end */
   
   if (argc > 1) {
     to = swfdec_as_value_to_integer (object->context, &argv[1]);
+    /* FIXME: wtf? */
+    if (to < 0) {
+      if (-to <= from)
+	to = 0;
+      else
+	to += len;
+      if (to < 0)
+	to = 0;
+      if (from < 0 && to >= -from)
+	to = 0;
+    }
   } else {
     to = G_MAXINT;
   }
+  if (from < 0)
+    from += len;
   from = CLAMP (from, 0, len);
   to = CLAMP (to, 0, len - from);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_str_sub (object->context, string->string, from, to));

@@ -397,6 +397,8 @@ swfdec_player_dispose (GObject *object)
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
   g_assert (player->timeouts == NULL);
+  g_list_free (player->intervals);
+  player->intervals = NULL;
   g_assert (g_queue_is_empty (player->init_queue));
   g_assert (g_queue_is_empty (player->construct_queue));
   g_queue_free (player->init_queue);

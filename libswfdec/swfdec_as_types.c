@@ -292,7 +292,11 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
   d = swfdec_as_value_to_number (context, value);
   if (!isfinite (d))
     return 0;
-  return (guint) fmod (d, 4294967296);
+  if (d < 0) {
+    return - (guint) fmod (-d, 4294967296);
+  } else {
+    return (guint) fmod (d, 4294967296);
+  }
 }
 
 /**

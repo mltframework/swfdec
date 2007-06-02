@@ -562,7 +562,6 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
 {
   SwfdecPlayer *player;
   GList *walk;
-  const char *ret;
 
   g_return_val_if_fail (SWFDEC_IS_DEBUGGER (debugger), NULL);
   g_return_val_if_fail (command != NULL, NULL);
@@ -588,7 +587,7 @@ swfdec_debugger_run (SwfdecDebugger *debugger, const char *command)
   }
   g_object_thaw_notify (G_OBJECT (debugger));
 
-  return ret;
+  return command;
 }
 
 guint

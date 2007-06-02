@@ -63,7 +63,7 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsObject *obj, guint argc,
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
     }
-    id = swfdec_interval_new_object (player, msecs, TRUE, object, name, argc - 2, &argv[2]);
+    id = swfdec_interval_new_object (player, msecs, TRUE, object, name, argc - 3, &argv[3]);
   }
   SWFDEC_AS_VALUE_SET_INT (rval, id);
 }

@@ -119,15 +119,10 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   context->Number = number;
   swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (number), 
       SWFDEC_TYPE_AS_NUMBER);
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsNumber)))
-    return;
-  proto = g_object_new (SWFDEC_TYPE_AS_NUMBER, NULL);
-  swfdec_as_object_add (proto, context, sizeof (SwfdecAsNumber));
+  proto = swfdec_as_object_new (context);
   /* set the right properties on the Number object */
-  swfdec_as_object_root (proto);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (number, SWFDEC_AS_STR_prototype, &val);
-  swfdec_as_object_unroot (proto);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
   swfdec_as_object_set_variable (number, SWFDEC_AS_STR_constructor, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, NAN);

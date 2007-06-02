@@ -222,13 +222,11 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
     ret = swfdec_as_object_find_variable (frame->target, variable);
     if (ret)
       return frame->target;
-  } else if (frame->thisp) {
+  } else {
     /* The default target is the original object that called into us */
     ret = swfdec_as_object_find_variable (SWFDEC_AS_FRAME (cur)->thisp, variable);
     if (ret)
       return SWFDEC_AS_FRAME (cur)->thisp;
-  } else {
-    SWFDEC_ERROR ("FIXME: what happens when no target and no this exists?");
   }
   /* 2) the global object */
   ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);

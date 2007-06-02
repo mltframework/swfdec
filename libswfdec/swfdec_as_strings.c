@@ -201,6 +201,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("isNaN")
   SWFDEC_AS_CONSTANT_STRING ("setInterval")
   SWFDEC_AS_CONSTANT_STRING ("clearInterval")
+  SWFDEC_AS_CONSTANT_STRING ("escape")
+  SWFDEC_AS_CONSTANT_STRING ("unescape")
   /* add more here */
 ;
 

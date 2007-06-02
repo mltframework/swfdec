@@ -248,6 +248,13 @@ EXTRA_DIST = \
 	setinterval-arguments.swf.trace \
 	setinterval-clear.swf \
 	setinterval-clear.swf.trace \
+	setinterval-this.as \
+	setinterval-this-5.swf \
+	setinterval-this-5.swf.trace \
+	setinterval-this-6.swf \
+	setinterval-this-6.swf.trace \
+	setinterval-this-7.swf \
+	setinterval-this-7.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	string-construct.as \

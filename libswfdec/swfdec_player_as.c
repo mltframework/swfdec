@@ -22,161 +22,73 @@
 #endif
 
 #include "swfdec_player_internal.h"
+#include "swfdec_as_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_debug.h"
+#include "swfdec_interval.h"
 
-#if 0
-/*** INTERVAL ***/
-
-typedef struct _SwfdecAsInterval SwfdecAsInterval;
-struct _SwfdecAsInterval {
-  SwfdecTimeout		timeout;
-  SwfdecPlayer *	player;		/* needed so it can be readded */
-  guint			id;		/* id this interval is identified with */
-  guint			msecs;		/* interval in milliseconds */
-  guint			n_args;		/* number of arguments to call function with */
-  SwfdecAsValue		vals[0];	/* values: 0 is function, 1 is object, 2-n are arguments */
-};
-
-void
-swfdec_js_interval_free (SwfdecAsInterval *interval)
-{
-  JSContext *cx = interval->player->jscx;
-  guint i;
-
-  swfdec_player_remove_timeout (interval->player, &interval->timeout);
-  interval->player->intervals = 
-    g_list_remove (interval->player->intervals, interval);
-  for (i = 0; i < interval->n_args + 2; i++) {
-    JS_RemoveRoot (cx, &interval->vals[i]);
-  }
-  g_free (interval);
-}
+/*** INTERVALS ***/
 
 static void
-swfdec_js_interval_trigger (SwfdecTimeout *timeout)
+swfdec_player_do_set_interval (gboolean repeat, SwfdecAsObject *obj, guint argc, 
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecAsInterval *interval = (SwfdecAsInterval *) timeout;
-  JSContext *cx = interval->player->jscx;
-  SwfdecAsValue fun, rval;
-
-  timeout->timestamp += SWFDEC_MSECS_TO_TICKS (interval->msecs);
-  swfdec_player_add_timeout (interval->player, timeout);
-  g_assert (JSVAL_IS_OBJECT (interval->vals[1]));
-  if (JSVAL_IS_STRING (interval->vals[0])) {
-    JSAtom *atom = js_AtomizeString (cx, JSVAL_TO_STRING (interval->vals[0]), 0);
-    if (!atom)
-      return;
-    if (!js_GetProperty (cx, JSVAL_TO_OBJECT (interval->vals[1]),
-	  (jsid) atom, &fun))
-      return;
-  } else {
-    fun = interval->vals[0];
-  }
-  js_InternalCall (cx, JSVAL_TO_OBJECT (interval->vals[1]), fun,
-      interval->n_args, &interval->vals[2], &rval);
-}
-
-static SwfdecAsInterval *
-swfdec_js_interval_new (guint n_args)
-{
-  SwfdecAsInterval *ret = g_malloc (sizeof (SwfdecAsInterval) + sizeof (SwfdecAsValue) * (2 + n_args));
-
-  ret->timeout.callback = swfdec_js_interval_trigger;
-  ret->n_args = n_args;
-  return ret;
-}
-
-static void
-swfdec_js_global_setInterval (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
-{
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
+  SwfdecPlayer *player = SWFDEC_PLAYER (obj->context);
   SwfdecAsObject *object;
-  SwfdecAsValue fun;
-  guint i, n_args, first_arg, msecs;
-  SwfdecAsInterval *interval;
+  guint id, msecs;
+#define MIN_INTERVAL_TIME 10
 
-  if (!JSVAL_IS_OBJECT (argv[0])) {
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
     SWFDEC_WARNING ("first argument to setInterval is not an object");
-    return JS_TRUE;
+    return;
   }
-  object = JSVAL_TO_OBJECT (argv[0]);
-  if (JS_GetClass (object) == &js_FunctionClass) {
-    fun = argv[0];
-    object = JS_GetParent (cx, object);
-    if (object == NULL) {
-      SWFDEC_WARNING ("function has no parent?!");
-      return JS_TRUE;
+  object = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  if (SWFDEC_IS_AS_FUNCTION (object)) {
+    msecs = swfdec_as_value_to_integer (obj->context, &argv[1]);
+    if (msecs < MIN_INTERVAL_TIME) {
+      SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
+      msecs = MIN_INTERVAL_TIME;
     }
-    first_arg = 2;
+    id = swfdec_interval_new_function (player, msecs, TRUE, 
+	SWFDEC_AS_FUNCTION (object), argc - 2, &argv[2]);
   } else {
+    const char *name;
     if (argc < 3) {
       SWFDEC_WARNING ("setInterval needs 3 arguments when not called with function");
-      return JS_TRUE;
+      return;
     }
-    if (!JSVAL_IS_STRING (argv[1])) {
-      SWFDEC_WARNING ("function name passed to setInterval is not a string");
-      return JS_TRUE;
+    name = swfdec_as_value_to_string (obj->context, &argv[1]);
+    msecs = swfdec_as_value_to_integer (obj->context, &argv[2]);
+    if (msecs < MIN_INTERVAL_TIME) {
+      SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
+      msecs = MIN_INTERVAL_TIME;
     }
-    fun = argv[1];
-    first_arg = 3;
+    id = swfdec_interval_new_object (player, msecs, TRUE, object, name, argc - 2, &argv[2]);
   }
-  if (!JS_ValueToECMAUint32 (cx, argv[first_arg - 1], &msecs))
-    return JS_FALSE;
-#define MIN_INTERVAL_TIME 10
-  if (msecs < MIN_INTERVAL_TIME) {
-    SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
-    msecs = MIN_INTERVAL_TIME;
-  }
-  n_args = argc - first_arg;
-  interval = swfdec_js_interval_new (n_args);
-  interval->player = player;
-  interval->id = ++player->interval_id;
-  interval->msecs = msecs;
-  interval->vals[0] = fun;
-  interval->vals[1] = OBJECT_TO_JSVAL (object);
-  memcpy (&interval->vals[2], &argv[first_arg], n_args * sizeof (SwfdecAsValue));
-  for (i = 0; i < n_args + 2; i++) {
-    if (!JS_AddRoot (cx, &interval->vals[i])) {
-      /* FIXME: is it save roots that weren't added before? */
-      swfdec_js_interval_free (interval);
-      return JS_FALSE;
-    }
-  }
-  interval->timeout.timestamp = player->time + SWFDEC_MSECS_TO_TICKS (interval->msecs);
-  swfdec_player_add_timeout (player, &interval->timeout);
-  interval->player->intervals = 
-    g_list_prepend (interval->player->intervals, interval);
-  *rval = INT_TO_JSVAL (interval->id);
-  return JS_TRUE;
+  SWFDEC_AS_VALUE_SET_INT (rval, id);
 }
 
 static void
-swfdec_js_global_clearInterval (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_player_setInterval (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecPlayer *player = JS_GetContextPrivate (cx);
-  guint id;
-  GList *walk;
+  swfdec_player_do_set_interval (TRUE, obj, argc, argv, rval);
+}
 
-  if (!JSVAL_IS_INT (argv[0])) {
-    SWFDEC_WARNING ("argument is not an int");
-    return JS_TRUE;
-  }
-  id = JSVAL_TO_INT (argv[0]);
-  for (walk = player->intervals; walk; walk = walk->next) {
-    SwfdecAsInterval *interval = walk->data;
-    if (interval->id != id)
-      continue;
-    swfdec_js_interval_free (interval);
-    break;
-  }
-  return JS_TRUE;
+static void
+swfdec_player_clearInterval (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (obj->context);
+  guint id;
+  
+  id = swfdec_as_value_to_integer (obj->context, &argv[0]);
+  swfdec_interval_remove (player, id);
 }
 
 /*** VARIOUS ***/
 
+#if 0
 void
-swfdec_js_global_eval (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_js_global_eval (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   if (JSVAL_IS_STRING (argv[0])) {
     const char *bytes = swfdec_js_to_string (cx, argv[0]);
@@ -190,7 +102,7 @@ swfdec_js_global_eval (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, Swf
 }
 
 static void
-swfdec_js_trace (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_js_trace (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
   const char *bytes;
@@ -204,7 +116,7 @@ swfdec_js_trace (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsV
 }
 
 static void
-swfdec_js_random (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_js_random (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   gint32 max, result;
 
@@ -220,7 +132,7 @@ swfdec_js_random (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAs
 }
 
 static void
-swfdec_js_stopAllSounds (SwfdecAsObject *obj, uintN argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_js_stopAllSounds (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecPlayer *player = JS_GetContextPrivate (cx);
 
@@ -263,5 +175,9 @@ swfdec_player_init_global (SwfdecPlayer *player, guint version)
 
   swfdec_as_object_add_function (context->Object, SWFDEC_AS_STR_registerClass, 
       0, swfdec_player_object_registerClass, 2);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_setInterval, 
+      0, swfdec_player_setInterval, 2);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_clearInterval, 
+      0, swfdec_player_clearInterval, 1);
 }
 

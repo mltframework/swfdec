@@ -199,6 +199,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("toUpperCase")
   SWFDEC_AS_CONSTANT_STRING ("isFinite")
   SWFDEC_AS_CONSTANT_STRING ("isNaN")
+  SWFDEC_AS_CONSTANT_STRING ("setInterval")
+  SWFDEC_AS_CONSTANT_STRING ("clearInterval")
   /* add more here */
 ;
 

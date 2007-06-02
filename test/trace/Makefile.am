@@ -111,6 +111,13 @@ EXTRA_DIST = \
 	equality-6.swf.trace \
 	equality-7.swf \
 	equality-7.swf.trace \
+	escape.as \
+	escape-5.swf \
+	escape-5.swf.trace \
+	escape-6.swf \
+	escape-6.swf.trace \
+	escape-7.swf \
+	escape-7.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
 	extends-simple.swf \
@@ -312,6 +319,23 @@ EXTRA_DIST = \
 	undefined2-6.swf.trace \
 	undefined2-7.swf \
 	undefined2-7.swf.trace \
+	unescape.as \
+	unescape-5.swf \
+	unescape-5.swf.trace \
+	unescape-5.swf.trace.org \
+	unescape-6.swf \
+	unescape-6.swf.trace \
+	unescape-6.swf.trace.org \
+	unescape-7.swf \
+	unescape-7.swf.trace \
+	unescape-7.swf.trace.org \
+	unescape2.as \
+	unescape2-5.swf \
+	unescape2-5.swf.trace \
+	unescape2-6.swf \
+	unescape2-6.swf.trace \
+	unescape2-7.swf \
+	unescape2-7.swf.trace \
 	video.flv \
 	xscale.swf \
 	xscale.swf.trace

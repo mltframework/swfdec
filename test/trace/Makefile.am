@@ -172,6 +172,13 @@ EXTRA_DIST = \
 	isnan-6.swf \
 	isnan-6.swf.trace \
 	isnan-7.swf \
+	if.as \
+	if-5.swf \
+	if-5.swf.trace \
+	if-6.swf \
+	if-6.swf.trace \
+	if-7.swf \
+	if-7.swf.trace \
 	isnan-7.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \

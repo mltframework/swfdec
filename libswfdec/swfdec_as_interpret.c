@@ -824,14 +824,11 @@ swfdec_action_jump (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_if (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
-
   if (len != 2) {
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return;
   }
-  d = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
-  if (d != 0)
+  if (swfdec_as_value_to_boolean (cx, swfdec_as_stack_pop (cx->frame->stack)))
     cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
 }
 

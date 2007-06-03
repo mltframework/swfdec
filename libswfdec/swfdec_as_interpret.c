@@ -675,7 +675,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   swfdec_as_stack_pop (frame->stack);
   if (!swfdec_action_call (cx, n_args)) {
-    SWFDEC_ERROR ("no function named %s", name ? name : "unknown");
+    SWFDEC_ERROR ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
 

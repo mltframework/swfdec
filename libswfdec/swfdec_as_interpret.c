@@ -693,16 +693,16 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
   l = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
   switch (action) {
-    case 0x0a:
+    case SWFDEC_AS_ACTION_ADD:
       l = l + r;
       break;
-    case 0x0b:
+    case SWFDEC_AS_ACTION_SUBTRACT:
       l = l - r;
       break;
-    case 0x0c:
+    case SWFDEC_AS_ACTION_MULTIPLY:
       l = l * r;
       break;
-    case 0x0d:
+    case SWFDEC_AS_ACTION_DIVIDE:
       if (cx->version < 5) {
 	if (r == 0) {
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR__ERROR_);

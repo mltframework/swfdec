@@ -54,6 +54,13 @@ MATH_FUN (sqrt)
 MATH_FUN (tan)
 
 static void
+swfdec_as_math_abs (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  double v = swfdec_as_value_to_number (object->context, &argv[0]);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (v));
+}
+
+static void
 swfdec_as_math_atan2 (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   double y = swfdec_as_value_to_number (object->context, &argv[0]);
@@ -138,6 +145,7 @@ swfdec_as_math_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_SQRT2, &val);
 
   /* set the right functions on the Math object */
+  swfdec_as_object_add_function (math, SWFDEC_AS_STR_abs, 0, swfdec_as_math_abs, 1);
   swfdec_as_object_add_function (math, SWFDEC_AS_STR_acos, 0, swfdec_as_math_acos, 1);
   swfdec_as_object_add_function (math, SWFDEC_AS_STR_asin, 0, swfdec_as_math_asin, 1);
   swfdec_as_object_add_function (math, SWFDEC_AS_STR_atan, 0, swfdec_as_math_atan, 1);

@@ -542,7 +542,7 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
     swfdec_as_object_get_variable (object, name, swfdec_as_stack_peek (cx->frame->stack, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 2))) {
-	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (object), s);
+	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (object), name);
     }
 #endif
   } else {

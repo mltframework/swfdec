@@ -264,6 +264,13 @@ EXTRA_DIST = \
 	setinterval-this-7.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
+	shift.as \
+	shift-5.swf \
+	shift-5.swf.trace \
+	shift-6.swf \
+	shift-6.swf.trace \
+	shift-7.swf \
+	shift-7.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

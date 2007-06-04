@@ -31,7 +31,7 @@ swfdec_mouse_addListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *arg
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
 
-  if (!SWFDEC_IS_AS_OBJECT (&argv[0]))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
   swfdec_listener_add (player->mouse_listener, SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
 }
@@ -41,7 +41,7 @@ swfdec_mouse_removeListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
 
-  if (!SWFDEC_IS_AS_OBJECT (&argv[0]))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
   swfdec_listener_remove (player->mouse_listener, SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
 }

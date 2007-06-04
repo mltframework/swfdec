@@ -38,7 +38,6 @@ struct _SwfdecRootMovie
 {
   SwfdecSpriteMovie	sprite_movie;
 
-  gboolean		error;		/* we're in error */
   SwfdecPlayer *	player;		/* player we're played in */
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */

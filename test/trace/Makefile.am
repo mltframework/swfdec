@@ -173,6 +173,13 @@ EXTRA_DIST = \
 	height3.swf.trace \
 	height4.swf \
 	height4.swf.trace \
+	initobject-stack.as \
+	initobject-stack-5.swf \
+	initobject-stack-5.swf.trace \
+	initobject-stack-6.swf \
+	initobject-stack-6.swf.trace \
+	initobject-stack-7.swf \
+	initobject-stack-7.swf.trace \
 	isnan.as \
 	isnan-5.swf \
 	isnan-5.swf.trace \

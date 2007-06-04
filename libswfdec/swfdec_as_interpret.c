@@ -1881,6 +1881,70 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, (action == 0x10) ? (l && r) : (l || r));
 }
 
+static void
+swfdec_action_ascii_to_char (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  char *s;
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  gunichar c = ((guint) swfdec_as_value_to_integer (cx, val)) % 65536;
+
+  s = g_ucs4_to_utf8 (&c, 1, NULL, NULL, NULL);
+  if (s == NULL) {
+    g_warning ("conversion of character %u failed", (guint) c);
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, s));
+    g_free (s);
+  }
+}
+
+static void
+swfdec_action_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  char s[2];
+  char *utf8;
+  
+  s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
+  s[1] = 0;
+
+  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  if (utf8 == NULL) {
+    g_warning ("conversion of character %u failed", (guint) s[0]);
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
+    g_free (utf8);
+  }
+}
+
+static void
+swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  char s[3];
+  char *utf8;
+  guint i;
+  
+  i = ((guint) swfdec_as_value_to_integer (cx, val));
+  if (i > 255) {
+    s[0] = i / 256;
+    s[1] = i % 256;
+    s[2] = 0;
+  } else {
+    s[0] = i;
+    s[1] = 0;
+  }
+  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  if (utf8 == NULL) {
+    g_warning ("conversion of character %u failed", i);
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
+    g_free (utf8);
+  }
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2210,11 +2274,11 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
   [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },
   [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL },
-  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL },
+  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, { NULL, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char } },
   [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
   [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL },
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
-  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL },
+  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, { NULL, swfdec_action_mb_ascii_to_char_5, swfdec_action_mb_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char }  },
   /* version 5 */
   [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
   [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },

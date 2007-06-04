@@ -47,7 +47,7 @@ G_DEFINE_TYPE_WITH_CODE (SwfdecRootMovie, swfdec_root_movie, SWFDEC_TYPE_SPRITE_
 static SwfdecPlayer *
 swfdec_root_movie_loader_target_get_player (SwfdecLoaderTarget *target)
 {
-  return SWFDEC_ROOT_MOVIE (target)->player;
+  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
 }
 
 static SwfdecDecoder *
@@ -148,7 +148,7 @@ swfdec_root_movie_iterate_end (SwfdecMovie *movie)
   if (!SWFDEC_MOVIE_CLASS (swfdec_root_movie_parent_class)->iterate_end (movie))
     return FALSE;
 
-  return g_list_find (SWFDEC_ROOT_MOVIE (movie)->player->roots, movie) != NULL;
+  return g_list_find (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->roots, movie) != NULL;
 }
 
 static void
@@ -173,10 +173,13 @@ swfdec_root_movie_init (SwfdecRootMovie *root)
 void
 swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *target)
 {
+  SwfdecPlayer *player;
+
   g_return_if_fail (SWFDEC_IS_ROOT_MOVIE (root));
   g_return_if_fail (url != NULL);
   g_return_if_fail (target != NULL);
 
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (root)->context);
   /* yay for the multiple uses of GetURL - one of the crappier Flash things */
   if (g_str_has_prefix (target, "_level")) {
     const char *nr = target + strlen ("_level");
@@ -187,11 +190,11 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
     depth = strtoul (nr, &end, 10);
     if (errno == 0 && *end == '\0') {
       if (url[0] == '\0') {
-	swfdec_player_remove_level (root->player, depth);
+	swfdec_player_remove_level (player, depth);
       } else {
 	SwfdecLoader *loader = swfdec_loader_load (root->loader, url);
 	if (loader) {
-	  swfdec_player_add_level_from_loader (root->player, depth, loader, NULL);
+	  swfdec_player_add_level_from_loader (player, depth, loader, NULL);
 	  swfdec_loader_queue_parse (loader);
 	} else {
 	  SWFDEC_WARNING ("didn't get a loader for url \"%s\" at depth %u", url, depth);
@@ -207,7 +210,7 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
     SWFDEC_WARNING ("unhandled fscommand: %s %s", command, target);
     return;
   }
-  swfdec_player_launch (root->player, url, target);
+  swfdec_player_launch (player, url, target);
 }
 
 void

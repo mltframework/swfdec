@@ -201,6 +201,7 @@ static void
 swfdec_sprite_movie_startDrag (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
+  SwfdecPlayer *player = SWFDEC_PLAYER (obj->context);
   gboolean center = FALSE;
 
   if (argc > 0) {
@@ -213,11 +214,9 @@ swfdec_sprite_movie_startDrag (SwfdecAsObject *obj, guint argc, SwfdecAsValue *a
     rect.x1 = swfdec_as_value_to_number (obj->context, &argv[3]);
     rect.y1 = swfdec_as_value_to_number (obj->context, &argv[4]);
     swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
-    swfdec_player_set_drag_movie (SWFDEC_ROOT_MOVIE (movie->root)->player, movie,
-	center, &rect);
+    swfdec_player_set_drag_movie (player, movie, center, &rect);
   } else {
-    swfdec_player_set_drag_movie (SWFDEC_ROOT_MOVIE (movie->root)->player, movie,
-	center, NULL);
+    swfdec_player_set_drag_movie (player, movie, center, NULL);
   }
 }
 
@@ -268,7 +267,7 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie, SwfdecAsObject *obj)
 {
   SwfdecPlayer *player;
 
-  player = SWFDEC_ROOT_MOVIE (movie->root)->player;
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   g_queue_remove (player->init_queue, movie);
 }
 

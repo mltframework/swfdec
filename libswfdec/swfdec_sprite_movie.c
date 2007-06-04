@@ -74,7 +74,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
     gboolean skip_scripts, GList **movie_list)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (mov->root)->player;
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   SwfdecMovie *child;
   SwfdecContent *content;
 
@@ -176,7 +176,7 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
   if (goto_frame == movie->current_frame)
     return;
 
-  player = SWFDEC_ROOT_MOVIE (mov->root)->player;
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   SWFDEC_LOG ("doing goto %u for %p %d", goto_frame, mov, 
       SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (mov)->sprite)->id);
   mov->frame = goto_frame;
@@ -248,7 +248,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   SwfdecSpriteFrame *last;
   SwfdecSpriteFrame *current;
   GSList *walk;
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player;
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
   current = &movie->sprite->frames[movie->current_frame];
   if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
@@ -323,7 +323,7 @@ static void
 swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecPlayer *player = SWFDEC_ROOT_MOVIE (mov->root)->player;
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
   swfdec_player_remove_all_actions (player, mov);
   if (movie->sound_stream) {

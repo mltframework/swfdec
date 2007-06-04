@@ -968,7 +968,6 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   swfdec_player_remove_level (player, depth);
   movie = swfdec_movie_new_for_player (player, depth);
   root = SWFDEC_ROOT_MOVIE (movie);
-  root->player = player;
   root->loader = loader;
   if (variables)
     swfdec_movie_set_variables (movie, variables);

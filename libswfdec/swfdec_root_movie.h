@@ -38,7 +38,6 @@ struct _SwfdecRootMovie
 {
   SwfdecSpriteMovie	sprite_movie;
 
-  SwfdecPlayer *	player;		/* player we're played in */
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */
   guint			unnamed_count;	/* variable used for naming unnamed movies */

@@ -182,7 +182,7 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
     SwfdecAudio *audio;
     SWFDEC_LOG ("playing button sound %d", sound);
     audio = swfdec_audio_event_new (
-	SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (movie)->root)->player,
+	SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
 	movie->button->sounds[sound]);
     if (audio)
       g_object_unref (audio);

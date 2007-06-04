@@ -738,7 +738,9 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   /* now, set our own */
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
 
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 0, swfdec_as_object_hasOwnProperty, 1);
+  if (version > 5) {
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 0, swfdec_as_object_hasOwnProperty, 1);
+  }
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, 0, swfdec_as_object_valueOf, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0, swfdec_as_object_toString, 0);
 }

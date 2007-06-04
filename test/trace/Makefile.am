@@ -47,6 +47,13 @@ EXTRA_DIST = \
 	case1-7.swf.trace \
 	children.swf \
 	children.swf.trace \
+	chr.as \
+	chr-5.swf \
+	chr-5.swf.trace \
+	chr-6.swf \
+	chr-6.swf.trace \
+	chr-7.swf \
+	chr-7.swf.trace \
 	classes.swf \
 	classes.swf.trace \
 	color-getters.swf \

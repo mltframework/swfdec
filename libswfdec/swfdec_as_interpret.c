@@ -1367,12 +1367,16 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
 {
   SwfdecAsStack *stack = cx->frame->stack;
   SwfdecAsObject *object;
-  guint i, n_args;
+  guint i, n_args, size;
 
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (stack));
-  if (n_args * 2 < swfdec_as_stack_get_size (stack)) {
+  if (n_args * 2 > swfdec_as_stack_get_size (stack)) {
+    size = swfdec_as_stack_get_size (stack);
     SWFDEC_FIXME ("InitObject action with too small stack, help!");
-    n_args = swfdec_as_stack_get_size (stack) / 2;
+    n_args = size / 2;
+    size &= 1;
+  } else {
+    size = 0;
   }
 
   object = swfdec_as_object_new (cx);
@@ -1383,6 +1387,7 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
     swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (stack, 1));
     swfdec_as_stack_pop_n (stack, 2);
   }
+  swfdec_as_stack_pop_n (stack, size);
   SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (stack), object);
 }
 

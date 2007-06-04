@@ -1557,37 +1557,31 @@ swfdec_action_bitwise (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx->frame->stack, 1), a);
 }
 
-#if 0
 static void
 swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  guint32 amount, value;
-  double d;
+  int amount, value;
 
-  if (!JS_ValueToECMAUint32 (cx, cx->fp->sp[-1], &amount) ||
-      !JS_ValueToECMAUint32 (cx, cx->fp->sp[-2], &value))
-    return JS_FALSE;
-
+  amount = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (cx->frame->stack));
   amount &= 31;
+  value = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+
   switch (action) {
     case 0x63:
-      d = value << amount;
+      value = value << amount;
       break;
     case 0x64:
-      d = ((gint) value) >> amount;
+      value = ((gint) value) >> amount;
       break;
     case 0x65:
-      d = ((guint) value) >> amount;
+      value = ((guint) value) >> amount;
       break;
     default:
       g_assert_not_reached ();
-      return JS_FALSE;
   }
 
-  cx->fp->sp--;
-  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx->frame->stack, 1), value);
 }
-#endif
 
 static void
 swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2252,11 +2246,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_BIT_AND] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [SWFDEC_AS_ACTION_BIT_OR] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [SWFDEC_AS_ACTION_BIT_XOR] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-#if 0
-  [0x63] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  [0x64] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-#endif
+  [SWFDEC_AS_ACTION_BIT_LSHIFT] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
+  [SWFDEC_AS_ACTION_BIT_RSHIFT] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
+  [SWFDEC_AS_ACTION_BIT_URSHIFT] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   /* version 6 */
   [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_strict_equals, swfdec_action_strict_equals } },
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },

@@ -27,6 +27,7 @@
 #include "swfdec_as_function.h"
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_with.h"
 #include "swfdec_debug.h"
 
 #include <errno.h>
@@ -55,8 +56,7 @@ swfdec_action_get_target (SwfdecAsContext *context)
   SwfdecAsObject *target = context->frame->target;
 
   if (target == NULL) {
-    SwfdecAsScope *scope = context->frame->scope ? 
-	context->frame->scope : SWFDEC_AS_SCOPE (context->frame);
+    SwfdecAsScope *scope = context->frame->scope;
     while (scope->next)
       scope = scope->next;
     g_assert (SWFDEC_IS_AS_FRAME (scope));
@@ -1945,7 +1945,34 @@ swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint
   }
 }
 
+static void
+swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsObject *object;
+
+  if (len != 2) {
+    SWFDEC_ERROR ("With action requires a length of 2, but got %u", len);
+    return;
+  }
+  object = swfdec_as_value_to_object (cx, swfdec_as_stack_pop (cx->frame->stack));
+  if (object == NULL) {
+    SWFDEC_ERROR ("With called without an object");
+    return;
+  }
+  swfdec_as_with_new (object, data + len, GUINT16_FROM_LE (*(guint16 *) data));
+}
+
 /*** PRINT FUNCTIONS ***/
+
+static char *
+swfdec_action_print_with (guint action, const guint8 *data, guint len)
+{
+  if (len != 2) {
+    SWFDEC_ERROR ("With action requires a length of 2, but got %u", len);
+    return NULL;
+  }
+  return g_strdup_printf ("With %u", GUINT16_FROM_LE (*(guint16 *) data));
+}
 
 static char *
 swfdec_action_print_store_register (guint action, const guint8 *data, guint len)
@@ -2344,7 +2371,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
   [SWFDEC_AS_ACTION_TRY] = { "Try", NULL },
   /* version 5 */
-  [SWFDEC_AS_ACTION_WITH] = { "With", NULL },
+  [SWFDEC_AS_ACTION_WITH] = { "With", swfdec_action_print_with, 1, 0, { NULL, NULL, swfdec_action_with, swfdec_action_with, swfdec_action_with } },
   /* version 4 */
   [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
   [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },

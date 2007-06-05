@@ -40,6 +40,8 @@ struct _SwfdecAsScope {
 
   /*< private >*/
   SwfdecAsScope *	next;		/* next scope or NULL if last */
+  const guint8 *      	startpc;	/* start of this scope */
+  const guint8 *      	endpc;		/* end of this scope */
 };
 
 struct _SwfdecAsScopeClass {

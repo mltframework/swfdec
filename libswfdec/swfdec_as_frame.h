@@ -42,11 +42,11 @@ struct _SwfdecAsFrame {
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
   SwfdecAsObject *	thisp;		/* this object in current frame or NULL if none */
   gboolean		construct;	/* TRUE if this is the constructor for thisp */
-  /* debugging */
-  char *		function_name;	/* name of function */
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
   guint			argc;		/* number of arguments */
   const SwfdecAsValue *	argv;		/* arguments */
+  /* debugging */
+  char *		function_name;	/* name of function */
   /* normal execution */
   SwfdecScript *	script;		/* script being executed */
   SwfdecAsScope *	scope;		/* first object in scope chain (can be NULL) */
@@ -79,6 +79,7 @@ SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
 
 void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	target);
+void		swfdec_as_frame_check_scope	(SwfdecAsFrame *	frame);
 
 
 G_END_DECLS

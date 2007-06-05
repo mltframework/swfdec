@@ -402,6 +402,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   int version;
   SwfdecAsContextClass *klass;
   void (* step) (SwfdecAsContext *context);
+  gboolean check_scope; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   if (context->frame == NULL)
@@ -437,6 +438,7 @@ start:
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
   pc = frame->pc;
+  check_scope = TRUE;
 
   while (TRUE) {
     if (pc == endpc) {
@@ -447,6 +449,8 @@ start:
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto error;
     }
+    if (check_scope)
+      swfdec_as_frame_check_scope (frame);
 
     /* decode next action */
     action = *pc;
@@ -508,8 +512,10 @@ start:
     /* FIXME: do this via flag? */
     if (frame->pc == pc) {
       frame->pc = pc = nextpc;
+      check_scope = TRUE;
     } else {
       pc = frame->pc;
+      check_scope = FALSE;
     }
     if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT

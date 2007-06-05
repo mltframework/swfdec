@@ -47,6 +47,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_strings.c \
 	swfdec_as_super.c \
 	swfdec_as_types.c \
+	swfdec_as_with.c \
 	swfdec_amf.c \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
@@ -151,6 +152,7 @@ noinst_HEADERS = \
 	swfdec_as_strings.h \
 	swfdec_as_super.h \
 	swfdec_as_types.h \
+	swfdec_as_with.h \
 	swfdec_amf.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \

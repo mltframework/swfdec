@@ -122,7 +122,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
   frame->pc = script->buffer->data;
   frame->stack = stack;
-  frame->scope = NULL;
+  frame->scope = SWFDEC_AS_SCOPE (frame);
   if (frame->next)
     frame->var_object = frame->next->var_object;
   frame->n_registers = script->n_registers;
@@ -202,7 +202,7 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
-  cur = SWFDEC_AS_SCOPE (frame);
+  cur = frame->scope;
   for (i = 0; i < 256; i++) {
     ret = swfdec_as_object_find_variable (SWFDEC_AS_OBJECT (cur), variable);
     if (ret)
@@ -348,3 +348,31 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     }
   }
 }
+
+/**
+ * swfdec_as_frame_check_scope:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Checks that the current scope of the given @frame is still correct.
+ * If it is not, the current scope is popped and the next one is used.
+ * If the
+ **/
+void
+swfdec_as_frame_check_scope (SwfdecAsFrame *frame)
+{
+  SwfdecAsScope *frame_scope;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+
+  frame_scope = SWFDEC_AS_SCOPE (frame);
+  while (frame->scope != frame_scope) {
+    SwfdecAsScope *cur = frame->scope;
+
+    if (frame->pc >= cur->startpc && 
+	frame->pc < cur->endpc)
+      break;
+    
+    frame->scope = cur->next;
+  }
+}
+

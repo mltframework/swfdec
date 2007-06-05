@@ -542,7 +542,7 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
     swfdec_as_object_get_variable (object, name, swfdec_as_stack_peek (cx->frame->stack, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 2))) {
-	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (object), s);
+	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (object), name);
     }
 #endif
   } else {
@@ -675,7 +675,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   swfdec_as_stack_pop (frame->stack);
   if (!swfdec_action_call (cx, n_args)) {
-    SWFDEC_ERROR ("no function named %s", name ? name : "unknown");
+    SWFDEC_ERROR ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
 
@@ -693,16 +693,16 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
   l = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
   switch (action) {
-    case 0x0a:
+    case SWFDEC_AS_ACTION_ADD:
       l = l + r;
       break;
-    case 0x0b:
+    case SWFDEC_AS_ACTION_SUBTRACT:
       l = l - r;
       break;
-    case 0x0c:
+    case SWFDEC_AS_ACTION_MULTIPLY:
       l = l * r;
       break;
-    case 0x0d:
+    case SWFDEC_AS_ACTION_DIVIDE:
       if (cx->version < 5) {
 	if (r == 0) {
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR__ERROR_);
@@ -824,14 +824,11 @@ swfdec_action_jump (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_if (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
-
   if (len != 2) {
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return;
   }
-  d = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
-  if (d != 0)
+  if (swfdec_as_value_to_boolean (cx, swfdec_as_stack_pop (cx->frame->stack)))
     cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
 }
 
@@ -1370,12 +1367,16 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
 {
   SwfdecAsStack *stack = cx->frame->stack;
   SwfdecAsObject *object;
-  guint i, n_args;
+  guint i, n_args, size;
 
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (stack));
-  if (n_args * 2 < swfdec_as_stack_get_size (stack)) {
+  if (n_args * 2 > swfdec_as_stack_get_size (stack)) {
+    size = swfdec_as_stack_get_size (stack);
     SWFDEC_FIXME ("InitObject action with too small stack, help!");
-    n_args = swfdec_as_stack_get_size (stack) / 2;
+    n_args = size / 2;
+    size &= 1;
+  } else {
+    size = 0;
   }
 
   object = swfdec_as_object_new (cx);
@@ -1386,6 +1387,7 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
     swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (stack, 1));
     swfdec_as_stack_pop_n (stack, 2);
   }
+  swfdec_as_stack_pop_n (stack, size);
   SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (stack), object);
 }
 
@@ -1560,37 +1562,31 @@ swfdec_action_bitwise (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx->frame->stack, 1), a);
 }
 
-#if 0
 static void
 swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  guint32 amount, value;
-  double d;
+  int amount, value;
 
-  if (!JS_ValueToECMAUint32 (cx, cx->fp->sp[-1], &amount) ||
-      !JS_ValueToECMAUint32 (cx, cx->fp->sp[-2], &value))
-    return JS_FALSE;
-
+  amount = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (cx->frame->stack));
   amount &= 31;
+  value = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+
   switch (action) {
     case 0x63:
-      d = value << amount;
+      value = value << amount;
       break;
     case 0x64:
-      d = ((gint) value) >> amount;
+      value = ((gint) value) >> amount;
       break;
     case 0x65:
-      d = ((guint) value) >> amount;
+      value = ((guint) value) >> amount;
       break;
     default:
       g_assert_not_reached ();
-      return JS_FALSE;
   }
 
-  cx->fp->sp--;
-  return JS_NewNumberValue (cx, d, &cx->fp->sp[-1]);
+  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx->frame->stack, 1), value);
 }
-#endif
 
 static void
 swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -1883,6 +1879,70 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   r = swfdec_as_value_to_boolean (cx, val);
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, (action == 0x10) ? (l && r) : (l || r));
+}
+
+static void
+swfdec_action_ascii_to_char (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  char *s;
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  gunichar c = ((guint) swfdec_as_value_to_integer (cx, val)) % 65536;
+
+  s = g_ucs4_to_utf8 (&c, 1, NULL, NULL, NULL);
+  if (s == NULL) {
+    g_warning ("conversion of character %u failed", (guint) c);
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, s));
+    g_free (s);
+  }
+}
+
+static void
+swfdec_action_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  char s[2];
+  char *utf8;
+  
+  s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
+  s[1] = 0;
+
+  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  if (utf8 == NULL) {
+    g_warning ("conversion of character %u failed", (guint) s[0]);
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
+    g_free (utf8);
+  }
+}
+
+static void
+swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  char s[3];
+  char *utf8;
+  guint i;
+  
+  i = ((guint) swfdec_as_value_to_integer (cx, val));
+  if (i > 255) {
+    s[0] = i / 256;
+    s[1] = i % 256;
+    s[2] = 0;
+  } else {
+    s[0] = i;
+    s[1] = 0;
+  }
+  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  if (utf8 == NULL) {
+    g_warning ("conversion of character %u failed", i);
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
+    g_free (utf8);
+  }
 }
 
 /*** PRINT FUNCTIONS ***/
@@ -2214,11 +2274,11 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
   [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },
   [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL },
-  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL },
+  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, { NULL, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char } },
   [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
   [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL },
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
-  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL },
+  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, { NULL, swfdec_action_mb_ascii_to_char_5, swfdec_action_mb_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char }  },
   /* version 5 */
   [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
   [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
@@ -2255,11 +2315,9 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_BIT_AND] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [SWFDEC_AS_ACTION_BIT_OR] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
   [SWFDEC_AS_ACTION_BIT_XOR] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-#if 0
-  [0x63] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  [0x64] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  [0x65] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-#endif
+  [SWFDEC_AS_ACTION_BIT_LSHIFT] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
+  [SWFDEC_AS_ACTION_BIT_RSHIFT] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
+  [SWFDEC_AS_ACTION_BIT_URSHIFT] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   /* version 6 */
   [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_strict_equals, swfdec_action_strict_equals } },
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },

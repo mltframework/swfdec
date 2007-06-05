@@ -47,6 +47,13 @@ EXTRA_DIST = \
 	case1-7.swf.trace \
 	children.swf \
 	children.swf.trace \
+	chr.as \
+	chr-5.swf \
+	chr-5.swf.trace \
+	chr-6.swf \
+	chr-6.swf.trace \
+	chr-7.swf \
+	chr-7.swf.trace \
 	classes.swf \
 	classes.swf.trace \
 	color-getters.swf \
@@ -111,6 +118,13 @@ EXTRA_DIST = \
 	equality-6.swf.trace \
 	equality-7.swf \
 	equality-7.swf.trace \
+	escape.as \
+	escape-5.swf \
+	escape-5.swf.trace \
+	escape-6.swf \
+	escape-6.swf.trace \
+	escape-7.swf \
+	escape-7.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
 	extends-simple.swf \
@@ -166,12 +180,26 @@ EXTRA_DIST = \
 	height3.swf.trace \
 	height4.swf \
 	height4.swf.trace \
+	initobject-stack.as \
+	initobject-stack-5.swf \
+	initobject-stack-5.swf.trace \
+	initobject-stack-6.swf \
+	initobject-stack-6.swf.trace \
+	initobject-stack-7.swf \
+	initobject-stack-7.swf.trace \
 	isnan.as \
 	isnan-5.swf \
 	isnan-5.swf.trace \
 	isnan-6.swf \
 	isnan-6.swf.trace \
 	isnan-7.swf \
+	if.as \
+	if-5.swf \
+	if-5.swf.trace \
+	if-6.swf \
+	if-6.swf.trace \
+	if-7.swf \
+	if-7.swf.trace \
 	isnan-7.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
@@ -241,8 +269,22 @@ EXTRA_DIST = \
 	setinterval-arguments.swf.trace \
 	setinterval-clear.swf \
 	setinterval-clear.swf.trace \
+	setinterval-this.as \
+	setinterval-this-5.swf \
+	setinterval-this-5.swf.trace \
+	setinterval-this-6.swf \
+	setinterval-this-6.swf.trace \
+	setinterval-this-7.swf \
+	setinterval-this-7.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
+	shift.as \
+	shift-5.swf \
+	shift-5.swf.trace \
+	shift-6.swf \
+	shift-6.swf.trace \
+	shift-7.swf \
+	shift-7.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \
@@ -298,6 +340,23 @@ EXTRA_DIST = \
 	undefined2-6.swf.trace \
 	undefined2-7.swf \
 	undefined2-7.swf.trace \
+	unescape.as \
+	unescape-5.swf \
+	unescape-5.swf.trace \
+	unescape-5.swf.trace.org \
+	unescape-6.swf \
+	unescape-6.swf.trace \
+	unescape-6.swf.trace.org \
+	unescape-7.swf \
+	unescape-7.swf.trace \
+	unescape-7.swf.trace.org \
+	unescape2.as \
+	unescape2-5.swf \
+	unescape2-5.swf.trace \
+	unescape2-6.swf \
+	unescape2-6.swf.trace \
+	unescape2-7.swf \
+	unescape2-7.swf.trace \
 	video.flv \
 	xscale.swf \
 	xscale.swf.trace

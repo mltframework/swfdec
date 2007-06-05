@@ -166,6 +166,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("push")
   SWFDEC_AS_CONSTANT_STRING ("parseInt")
   SWFDEC_AS_CONSTANT_STRING ("Math")
+  SWFDEC_AS_CONSTANT_STRING ("abs")
   SWFDEC_AS_CONSTANT_STRING ("acos")
   SWFDEC_AS_CONSTANT_STRING ("asin")
   SWFDEC_AS_CONSTANT_STRING ("atan")
@@ -201,6 +202,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("isNaN")
   SWFDEC_AS_CONSTANT_STRING ("setInterval")
   SWFDEC_AS_CONSTANT_STRING ("clearInterval")
+  SWFDEC_AS_CONSTANT_STRING ("escape")
+  SWFDEC_AS_CONSTANT_STRING ("unescape")
   /* add more here */
 ;
 

@@ -20,6 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <string.h>
 #include "swfdec_listener.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_object.h"
@@ -84,6 +85,7 @@ swfdec_listener_add (SwfdecListener *listener, SwfdecAsObject *obj)
     mem = g_try_realloc (listener->entries, sizeof (SwfdecListenerEntry) * new_len);
     if (mem == NULL)
       return FALSE;
+    memset(mem+found, 0, sizeof(SwfdecListenerEntry) * (new_len - listener->n_entries));
     listener->entries = mem;
     listener->n_entries = new_len;
   }

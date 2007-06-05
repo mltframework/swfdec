@@ -126,7 +126,7 @@ swfdec_debug_movies_movie_to_path (SwfdecMovie *movie)
     path = swfdec_debug_movies_movie_to_path (movie->parent);
     gtk_tree_path_append_index (path, i);
   } else {
-    i = my_g_list_is_nth (SWFDEC_ROOT_MOVIE (movie)->player->roots, movie);
+    i = my_g_list_is_nth (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->roots, movie);
     g_assert (i >= 0);
     path = gtk_tree_path_new ();
     gtk_tree_path_append_index (path, i);
@@ -182,7 +182,7 @@ swfdec_debug_movies_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
   if (movie->parent) {
     list = movie->parent->list;
   } else {
-    list = SWFDEC_ROOT_MOVIE (movie)->player->roots;
+    list = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->roots;
   }
   list = g_list_find (list, movie);
   g_assert (list);

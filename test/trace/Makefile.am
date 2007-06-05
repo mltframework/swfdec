@@ -193,6 +193,7 @@ EXTRA_DIST = \
 	isnan-6.swf \
 	isnan-6.swf.trace \
 	isnan-7.swf \
+	isnan-7.swf.trace \
 	if.as \
 	if-5.swf \
 	if-5.swf.trace \
@@ -200,7 +201,27 @@ EXTRA_DIST = \
 	if-6.swf.trace \
 	if-7.swf \
 	if-7.swf.trace \
-	isnan-7.swf.trace \
+	jump-into-with.as \
+	jump-into-with.swf \
+	jump-into-with.swf.trace \
+	jump-out-and-back-into-with.as \
+	jump-out-and-back-into-with.swf \
+	jump-out-and-back-into-with.swf.trace \
+	jump-out-and-back-into-with-2.as \
+	jump-out-and-back-into-with-2.swf \
+	jump-out-and-back-into-with-2.swf.trace \
+	jump-out-and-back-into-with-3.as \
+	jump-out-and-back-into-with-3.swf \
+	jump-out-and-back-into-with-3.swf.trace \
+	jump-out-and-back-into-with-4.as \
+	jump-out-and-back-into-with-4.swf \
+	jump-out-and-back-into-with-4.swf.trace \
+	jump-out-and-back-into-with-5.as \
+	jump-out-and-back-into-with-5.swf \
+	jump-out-and-back-into-with-5.swf.trace \
+	jump-out-of-with.as \
+	jump-out-of-with.swf \
+	jump-out-of-with.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
 	load-4.swf \

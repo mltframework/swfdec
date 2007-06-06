@@ -400,6 +400,13 @@ EXTRA_DIST = \
 	with-delete-6.swf.trace \
 	with-delete-7.swf \
 	with-delete-7.swf.trace \
+	with-function-delete.as \
+	with-function-delete-5.swf \
+	with-function-delete-5.swf.trace \
+	with-function-delete-6.swf \
+	with-function-delete-6.swf.trace \
+	with-function-delete-7.swf \
+	with-function-delete-7.swf.trace \
 	with-prototypes.as \
 	with-prototypes-5.swf \
 	with-prototypes-5.swf.trace \

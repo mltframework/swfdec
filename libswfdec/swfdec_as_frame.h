@@ -49,7 +49,7 @@ struct _SwfdecAsFrame {
   char *		function_name;	/* name of function */
   /* normal execution */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsScope *	scope;		/* first object in scope chain (can be NULL) */
+  SwfdecAsScope *	scope;		/* first object in scope chain (either this frame or a with object) */
   SwfdecAsObject *	target;		/* target to use instead of last object in scope chain */
   SwfdecAsObject *	var_object;	/* new variables go here */
   SwfdecAsValue *	registers;	/* the registers */

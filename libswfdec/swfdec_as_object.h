@@ -112,9 +112,13 @@ void		swfdec_as_object_unroot	  	(SwfdecAsObject *     	object);
 void		swfdec_as_object_set_variable	(SwfdecAsObject *	object,
 						 const char *		variable,
 						 const SwfdecAsValue *	value);
-gboolean	swfdec_as_object_get_variable	(SwfdecAsObject *	object,
+#define swfdec_as_object_get_variable(object, variable, value) \
+  swfdec_as_object_get_variable_and_flags (object, variable, value, NULL)
+gboolean	swfdec_as_object_get_variable_and_flags
+						(SwfdecAsObject *	object,
 						 const char *		variable,
-						 SwfdecAsValue *	value);
+						 SwfdecAsValue *	value,
+						 guint *		flags);
 void		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const char *		variable);
 void		swfdec_as_object_set_variable_flags

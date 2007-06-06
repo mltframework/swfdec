@@ -332,8 +332,8 @@ swfdec_as_object_lookup (SwfdecAsObject *object, const char *variable,
 }
 
 gboolean
-swfdec_as_object_get_variable (SwfdecAsObject *object, 
-    const char *variable, SwfdecAsValue *value)
+swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object, 
+    const char *variable, SwfdecAsValue *value, guint *flags)
 {
   guint i;
 
@@ -342,7 +342,7 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
   g_return_val_if_fail (value != NULL, FALSE);
 
   for (i = 0; i < 256 && object != NULL; i++) {
-    if (swfdec_as_object_lookup (object, variable, value, NULL))
+    if (swfdec_as_object_lookup (object, variable, value, flags))
       return TRUE;
     object = object->prototype;
   }
@@ -351,7 +351,10 @@ swfdec_as_object_get_variable (SwfdecAsObject *object,
     return FALSE;
   }
   //SWFDEC_WARNING ("no such variable %s", variable);
-  SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+  if (value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+  if (flags)
+    *flags = 0;
   return FALSE;
 }
 

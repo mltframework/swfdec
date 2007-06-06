@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <strings.h>
 #include <math.h>
 
 #include "swfdec_movie.h"
@@ -768,21 +769,50 @@ swfdec_movie_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
 
+static SwfdecMovie *
+swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
+{
+  GList *walk;
+  guint version = SWFDEC_AS_CONTEXT (player)->version;
+
+  for (walk = player->roots; walk; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    /* FIXME: make the name string GC'd */
+    if ((version >= 7 && g_str_equal (cur->name, name)) ||
+	strcasecmp (cur->name, name) == 0)
+      return cur;
+  }
+  return NULL;
+}
+
 static gboolean
 swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable, 
     SwfdecAsValue *val, guint *flags)
 {
-  if (swfdec_movie_get_asprop (SWFDEC_MOVIE (object), variable, val)) {
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+
+  if (swfdec_movie_get_asprop (movie, variable, val)) {
     *flags = 0;
     return TRUE;
   }
+
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags))
+    return TRUE;
+
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
     *flags = 0;
     return TRUE;
   }
-  return SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags);
+  
+  movie = swfdec_movie_get_by_name (SWFDEC_PLAYER (object->context), variable);
+  if (movie) {
+    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
+    *flags = 0;
+    return TRUE;
+  }
+  return FALSE;
 }
 
 static void

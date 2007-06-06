@@ -180,6 +180,13 @@ EXTRA_DIST = \
 	height3.swf.trace \
 	height4.swf \
 	height4.swf.trace \
+	if.as \
+	if-5.swf \
+	if-5.swf.trace \
+	if-6.swf \
+	if-6.swf.trace \
+	if-7.swf \
+	if-7.swf.trace \
 	initobject-stack.as \
 	initobject-stack-5.swf \
 	initobject-stack-5.swf.trace \
@@ -194,13 +201,6 @@ EXTRA_DIST = \
 	isnan-6.swf.trace \
 	isnan-7.swf \
 	isnan-7.swf.trace \
-	if.as \
-	if-5.swf \
-	if-5.swf.trace \
-	if-6.swf \
-	if-6.swf.trace \
-	if-7.swf \
-	if-7.swf.trace \
 	jump-into-with.as \
 	jump-into-with.swf \
 	jump-into-with.swf.trace \

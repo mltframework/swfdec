@@ -379,6 +379,13 @@ EXTRA_DIST = \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
 	video.flv \
+	with-prototypes.as \
+	with-prototypes-5.swf \
+	with-prototypes-5.swf.trace \
+	with-prototypes-6.swf \
+	with-prototypes-6.swf.trace \
+	with-prototypes-7.swf \
+	with-prototypes-7.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

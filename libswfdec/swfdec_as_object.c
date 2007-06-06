@@ -330,7 +330,6 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
 
   if (value == NULL)
     value = &tmp_val;

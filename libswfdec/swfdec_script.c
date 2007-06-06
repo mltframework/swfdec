@@ -44,36 +44,37 @@
 
 /*** CONSTANT POOLS ***/
 
-SwfdecConstantPool *
-swfdec_constant_pool_new_from_action (const guint8 *data, guint len)
-{
-  guint8 *next;
-  guint i, n;
-  GPtrArray *pool;
+struct _SwfdecConstantPool {
+  SwfdecAsContext *	context;	/* context we are attached to or NULL */
+  guint			n_strings;	/* number of strings */
+  char *		strings[1];	/* n_strings strings */
+};
 
-  if (len < 2) {
-    SWFDEC_ERROR ("constant pool too small");
+SwfdecConstantPool *
+swfdec_constant_pool_new_from_action (const guint8 *data, guint len, guint version)
+{
+  guint i, n;
+  SwfdecBits bits;
+  SwfdecConstantPool *pool;
+
+  swfdec_bits_init_data (&bits, data, len);
+
+  n = swfdec_bits_get_u16 (&bits);
+  if (n == 0)
     return NULL;
-  }
-  n = GUINT16_FROM_LE (*((guint16*) data));
-  data += 2;
-  len -= 2;
-  pool = g_ptr_array_sized_new (n);
-  g_ptr_array_set_size (pool, n);
+
+  pool = g_malloc0 (sizeof (SwfdecConstantPool) + (n - 1) * sizeof (char *));
+  pool->n_strings = n;
   for (i = 0; i < n; i++) {
-    next = memchr (data, 0, len);
-    if (next == NULL) {
+    pool->strings[i] = swfdec_bits_get_string_with_version (&bits, version);
+    if (pool->strings[i] == NULL) {
       SWFDEC_ERROR ("not enough strings available");
-      g_ptr_array_free (pool, TRUE);
+      swfdec_constant_pool_free (pool);
       return NULL;
     }
-    next++;
-    g_ptr_array_index (pool, i) = (gpointer) data;
-    len -= next - data;
-    data = next;
   }
-  if (len != 0) {
-    SWFDEC_WARNING ("constant pool didn't consume whole buffer (%u bytes leftover)", len);
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("constant pool didn't consume whole buffer (%u bytes leftover)", swfdec_bits_left (&bits) / 8);
   }
   return pool;
 }
@@ -84,31 +85,38 @@ swfdec_constant_pool_attach_to_context (SwfdecConstantPool *pool, SwfdecAsContex
   guint i;
 
   g_return_if_fail (pool != NULL);
+  g_return_if_fail (pool->context == NULL);
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
-  for (i = 0; i < pool->len; i++) {
-    g_ptr_array_index (pool, i) = (gpointer) swfdec_as_context_get_string (context, 
-	g_ptr_array_index (pool, i));
+  pool->context = context;
+  for (i = 0; i < pool->n_strings; i++) {
+    pool->strings[i] = (char *) swfdec_as_context_give_string (context, pool->strings[i]);
   }
 }
 
 guint
 swfdec_constant_pool_size (SwfdecConstantPool *pool)
 {
-  return pool->len;
+  return pool->n_strings;
 }
 
 const char *
 swfdec_constant_pool_get (SwfdecConstantPool *pool, guint i)
 {
-  g_assert (i < pool->len);
-  return g_ptr_array_index (pool, i);
+  g_assert (i < pool->n_strings);
+  return pool->strings[i];
 }
 
 void
 swfdec_constant_pool_free (SwfdecConstantPool *pool)
 {
-  g_ptr_array_free (pool, TRUE);
+  if (pool->context == NULL) {
+    guint i;
+    for (i = 0; i < pool->n_strings; i++) {
+      g_free (pool->strings[i]);
+    }
+  }
+  g_free (pool);
 }
 
 /*** SUPPORT FUNCTIONS ***/

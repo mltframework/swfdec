@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 //typedef struct _SwfdecScript SwfdecScript;
 typedef struct _SwfdecScriptArgument SwfdecScriptArgument;
-typedef GPtrArray SwfdecConstantPool;
+typedef struct _SwfdecConstantPool SwfdecConstantPool;
 
 typedef enum {
   SWFDEC_SCRIPT_PRELOAD_THIS = (1 << 0),
@@ -71,8 +71,9 @@ const char *	swfdec_action_get_name		(guint			action);
 guint		swfdec_action_get_from_name	(const char *		name);
 
 SwfdecConstantPool *
-		swfdec_constant_pool_new_from_action	(const guint8 *	data,
-							 guint			len);
+		swfdec_constant_pool_new_from_action	(const guint8 *		data,
+							 guint			len,
+							 guint			version);
 void		swfdec_constant_pool_free	  	(SwfdecConstantPool *	pool);
 guint		swfdec_constant_pool_size		(SwfdecConstantPool *	pool);
 const char *	swfdec_constant_pool_get		(SwfdecConstantPool *	pool,

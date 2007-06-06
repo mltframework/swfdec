@@ -470,22 +470,14 @@ swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix,
   swfdec_bits_syncbits (bits);
 }
 
-char *
-swfdec_bits_get_string (SwfdecBits * bits)
-{
-  const char *s = swfdec_bits_skip_string (bits);
-
-  return g_strdup (s);
-}
-
-const char *
+static const char *
 swfdec_bits_skip_string (SwfdecBits *bits)
 {
   char *s;
   const char *end;
   guint len;
 
-  swfdec_bits_syncbits (bits);
+  SWFDEC_BYTES_CHECK (bits, 1);
   end = memchr (bits->ptr, 0, bits->end - bits->ptr);
   if (end == NULL) {
     SWFDEC_ERROR ("could not parse string");
@@ -495,12 +487,51 @@ swfdec_bits_skip_string (SwfdecBits *bits)
   len = end - (const char *) bits->ptr;
   s = (char *) bits->ptr;
   bits->ptr += len + 1;
-  if (!g_utf8_validate (s, -1, NULL)) {
-    SWFDEC_ERROR ("parsed string is not valid utf-8");
-    s = NULL;
-  }
 
   return s;
+}
+
+/**
+ * swfdec_bits_get_string_with_version:
+ * @bits: a #SwfdecBits
+ * @version: Flash player version
+ *
+ * Prior to Flash 6, strings used to be encoded as LATIN1. Since Flash 6, 
+ * strings are encoded as UTF8. This version does the check automatically
+ * and converts strings to UTF-8.
+ *
+ * Returns: a UTF-8 encoded string or %NULL on error
+ **/
+char *
+swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version)
+{
+  const char *s;
+  
+  g_return_val_if_fail (bits != NULL, NULL);
+
+  s = swfdec_bits_skip_string (bits);
+  if (s == NULL)
+    return NULL;
+
+  if (version < 6) {
+    char *ret = g_convert (s, -1, "UTF8", "LATIN1", NULL , NULL, NULL);
+    if (ret == NULL)
+      g_warning ("Could not convert string from LATIN1 to UTF8");
+    return ret;
+  } else {
+    if (!g_utf8_validate (s, -1, NULL)) {
+      SWFDEC_ERROR ("parsed string is not valid utf-8");
+      return NULL;
+    }
+    return g_strdup (s);
+  }
+}
+
+/* FIXME: deprecated - someone remove this */
+char *
+swfdec_bits_get_string (SwfdecBits * bits)
+{
+  return swfdec_bits_get_string_with_version (bits, 6);
 }
 
 /**

@@ -204,6 +204,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("clearInterval")
   SWFDEC_AS_CONSTANT_STRING ("escape")
   SWFDEC_AS_CONSTANT_STRING ("unescape")
+  SWFDEC_AS_CONSTANT_STRING ("charAt")
+  SWFDEC_AS_CONSTANT_STRING ("charCodeAt")
   /* add more here */
 ;
 

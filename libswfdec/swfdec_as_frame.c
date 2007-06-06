@@ -130,7 +130,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   if (script->constant_pool) {
     frame->constant_pool_buffer = swfdec_buffer_ref (script->constant_pool);
     frame->constant_pool = swfdec_constant_pool_new_from_action (
-	script->constant_pool->data, script->constant_pool->length);
+	script->constant_pool->data, script->constant_pool->length, script->version);
     if (frame->constant_pool) {
       swfdec_constant_pool_attach_to_context (frame->constant_pool, context);
     } else {

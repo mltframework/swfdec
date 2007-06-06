@@ -319,7 +319,7 @@ swfdec_action_constant_pool (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsFrame *frame;
 
   frame = cx->frame;
-  pool = swfdec_constant_pool_new_from_action (data, len);
+  pool = swfdec_constant_pool_new_from_action (data, len, cx->version);
   if (pool == NULL)
     return;
   swfdec_constant_pool_attach_to_context (pool, cx);
@@ -346,7 +346,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     switch (type) {
       case 0: /* string */
 	{
-	  const char *s = swfdec_bits_skip_string (&bits);
+	  char *s = swfdec_bits_get_string_with_version (&bits, cx->version);
 	  if (s == NULL)
 	    return;
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), 
@@ -1433,7 +1433,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
 
   frame = cx->frame;
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_skip_string (&bits);
+  function_name = swfdec_bits_get_string_with_version (&bits, cx->version);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     return;
@@ -2120,7 +2120,8 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
     switch (type) {
       case 0: /* string */
 	{
-	  const char *s = swfdec_bits_skip_string (&bits);
+	  /* FIXME: need version! */
+	  char *s = swfdec_bits_get_string (&bits);
 	  if (!s) {
 	    g_string_free (string, TRUE);
 	    return NULL;
@@ -2128,6 +2129,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
 	  g_string_append_c (string, '"');
+	  g_free (s);
 	  break;
 	}
       case 1: /* float */
@@ -2173,7 +2175,8 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   GString *string;
   SwfdecConstantPool *pool;
 
-  pool = swfdec_constant_pool_new_from_action (data, len);
+  /* FIXME: version */
+  pool = swfdec_constant_pool_new_from_action (data, len, 6);
   if (pool == NULL)
     return g_strdup ("ConstantPool (invalid)");
   string = g_string_new ("ConstantPool");

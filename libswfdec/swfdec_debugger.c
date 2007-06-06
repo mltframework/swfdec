@@ -47,6 +47,7 @@ static guint signals[LAST_SIGNAL] = { 0, };
 /*** SwfdecDebuggerScript ***/
 
 typedef struct {
+  guint			version;	/* version of parsed file */
   SwfdecConstantPool *	constant_pool;	/* current constant pool */
   GArray *		commands;	/* SwfdecDebuggerCommands parsed so far */
 } ScriptParser;
@@ -69,12 +70,13 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
     switch (type) {
       case 0: /* string */
 	{
-	  const char *s = swfdec_bits_skip_string (&bits);
+	  char *s = swfdec_bits_get_string_with_version (&bits, parser->version);
 	  if (!s)
 	    goto error;
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
 	  g_string_append_c (string, '"');
+	  g_free (s);
 	  break;
 	}
       case 1: /* float */
@@ -150,7 +152,7 @@ swfdec_debugger_add_command (gconstpointer bytecode, guint action,
   if (action == SWFDEC_AS_ACTION_CONSTANT_POOL) {
     if (parser->constant_pool)
       swfdec_constant_pool_free (parser->constant_pool);
-    parser->constant_pool = swfdec_constant_pool_new_from_action (data, len);
+    parser->constant_pool = swfdec_constant_pool_new_from_action (data, len, parser->version);
   }
   return TRUE;
 }
@@ -165,9 +167,10 @@ swfdec_debugger_script_new (SwfdecScript *script)
   ret->script = script;
   swfdec_script_ref (script);
   parser.commands = g_array_new (TRUE, FALSE, sizeof (SwfdecDebuggerCommand));
+  parser.version = script->version;
   if (script->constant_pool) {
     parser.constant_pool = swfdec_constant_pool_new_from_action (
-	script->constant_pool->data, script->constant_pool->length);
+	script->constant_pool->data, script->constant_pool->length, parser.version);
   } else {
     parser.constant_pool = NULL;
   }

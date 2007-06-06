@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <strings.h>
+
 #include "swfdec_sprite_movie.h"
 #include "swfdec_as_object.h"
 #include "swfdec_audio_event.h"

@@ -39,7 +39,6 @@
 #include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_sprite.h"
 #include "swfdec_script.h"
 #include "swfdec_shape.h"
 #include "swfdec_sound.h"
@@ -528,6 +527,70 @@ tag_func_file_attributes (SwfdecSwfDecoder *s)
   /* FIXME: do something useful with this data */
   if (swfdec_bits_getbits (&s->b, 24))
     SWFDEC_INFO ("reserved bits (3) aren't 0");
+
+  return SWFDEC_STATUS_OK;
+}
+
+int
+tag_func_export_assets (SwfdecSwfDecoder * s)
+{
+  SwfdecBits *bits = &s->b;
+  guint count, i;
+
+  count = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("exporting %u assets", count);
+  for (i = 0; i < count && swfdec_bits_left (bits); i++) {
+    guint id;
+    SwfdecCharacter *object;
+    char *name;
+    id = swfdec_bits_get_u16 (bits);
+    object = swfdec_swf_decoder_get_character (s, id);
+    name = swfdec_bits_get_string (bits);
+    if (object == NULL) {
+      SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
+      g_free (name);
+    } else if (name == NULL) {
+      SWFDEC_ERROR ("cannot export id %u, no name was given", id);
+    } else {
+      SwfdecRootExportData *data = g_new (SwfdecRootExportData, 1);
+      data->name = name;
+      data->character = object;
+      SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
+      g_object_ref (object);
+      swfdec_swf_decoder_add_root_action (s, SWFDEC_ROOT_ACTION_EXPORT, data);
+    }
+  }
+
+  return SWFDEC_STATUS_OK;
+}
+
+int
+tag_func_do_init_action (SwfdecSwfDecoder * s)
+{
+  SwfdecBits *bits = &s->b;
+  guint id;
+  SwfdecSprite *sprite;
+  char *name;
+
+  id = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("  id = %u", id);
+  sprite = swfdec_swf_decoder_get_character (s, id);
+  if (!SWFDEC_IS_SPRITE (sprite)) {
+    SWFDEC_ERROR ("character %u is not a sprite", id);
+    return SWFDEC_STATUS_OK;
+  }
+  if (sprite->init_action != NULL) {
+    SWFDEC_ERROR ("sprite %u already has an init action", id);
+    return SWFDEC_STATUS_OK;
+  }
+  name = g_strdup_printf ("InitAction %u", id);
+  sprite->init_action = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player),
+      bits, name, s->version);
+  g_free (name);
+  if (sprite->init_action) {
+    swfdec_script_ref (sprite->init_action);
+    swfdec_swf_decoder_add_root_action (s, SWFDEC_ROOT_ACTION_INIT_SCRIPT, sprite->init_action);
+  }
 
   return SWFDEC_STATUS_OK;
 }

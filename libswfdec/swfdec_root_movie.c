@@ -33,8 +33,8 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_sprite.h"
 #include "swfdec_script.h"
+#include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
 
 
@@ -216,7 +216,7 @@ swfdec_root_movie_load (SwfdecRootMovie *root, const char *url, const char *targ
 void
 swfdec_root_movie_perform_root_actions (SwfdecRootMovie *root, guint frame)
 {
-  SwfdecRootSprite *sprite;
+  SwfdecSwfDecoder *s;
   GArray *array;
   guint i;
 
@@ -226,12 +226,12 @@ swfdec_root_movie_perform_root_actions (SwfdecRootMovie *root, guint frame)
   if (frame < root->root_actions_performed)
     return;
 
-  sprite = SWFDEC_ROOT_SPRITE (SWFDEC_SPRITE_MOVIE (root)->sprite);
+  s = SWFDEC_SWF_DECODER (root->decoder);
   SWFDEC_LOG ("performing root actions for frame %u", root->root_actions_performed);
   root->root_actions_performed++;
-  if (!sprite->root_actions)
+  if (!s->root_actions)
     return;
-  array = sprite->root_actions[frame];
+  array = s->root_actions[frame];
   if (array == NULL)
     return;
   for (i = 0; i < array->len; i++) {

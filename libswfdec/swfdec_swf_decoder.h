@@ -35,6 +35,17 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecSwfDecoderClass SwfdecSwfDecoderClass;
 typedef int SwfdecTagFunc (SwfdecSwfDecoder *);
+typedef struct _SwfdecRootExportData SwfdecRootExportData;
+
+typedef enum {
+  SWFDEC_ROOT_ACTION_EXPORT,		/* contains a SwfdecExportData */
+  SWFDEC_ROOT_ACTION_INIT_SCRIPT,	/* contains a SwfdecScript */
+} SwfdecRootActionType;
+
+struct _SwfdecRootExportData {
+  char *		name;
+  SwfdecCharacter *	character;
+};
 
 #define SWFDEC_TYPE_SWF_DECODER                    (swfdec_swf_decoder_get_type())
 #define SWFDEC_IS_SWF_DECODER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SWF_DECODER))
@@ -62,6 +73,7 @@ struct _SwfdecSwfDecoder
   GHashTable *characters;		/* list of all objects with an id (called characters) */
   SwfdecSprite *main_sprite;
   SwfdecSprite *parse_sprite;
+  GArray **root_actions;		/* actions to be executed by the root sprite */
 
   gboolean protection;			/* TRUE is this file is protected and may not be edited */
   char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
@@ -77,10 +89,14 @@ struct _SwfdecSwfDecoderClass {
 GType		swfdec_swf_decoder_get_type		(void);
 
 gpointer	swfdec_swf_decoder_get_character	(SwfdecSwfDecoder *	s, 
-							 guint	      	id);
+							 guint	        	id);
 gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
-							 guint	      	id,
+							 guint	        	id,
 							 GType			type);
+
+void		swfdec_swf_decoder_add_root_action	(SwfdecSwfDecoder *	s,
+							 SwfdecRootActionType	type,
+							 gpointer		data);
 
 SwfdecTagFunc *swfdec_swf_decoder_get_tag_func (int tag);
 const char *swfdec_swf_decoder_get_tag_name (int tag);

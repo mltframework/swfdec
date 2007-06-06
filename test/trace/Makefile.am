@@ -86,6 +86,20 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	delete-object.as \
+	delete-object-5.swf \
+	delete-object-5.swf.trace \
+	delete-object-6.swf \
+	delete-object-6.swf.trace \
+	delete-object-7.swf \
+	delete-object-7.swf.trace \
+	delete-prototypes.as \
+	delete-prototypes-5.swf \
+	delete-prototypes-5.swf.trace \
+	delete-prototypes-6.swf \
+	delete-prototypes-6.swf.trace \
+	delete-prototypes-7.swf \
+	delete-prototypes-7.swf.trace \
 	divide.as \
 	divide-7.swf \
 	divide-7.swf.trace \
@@ -379,6 +393,13 @@ EXTRA_DIST = \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
 	video.flv \
+	with-delete.as \
+	with-delete-5.swf \
+	with-delete-5.swf.trace \
+	with-delete-6.swf \
+	with-delete-6.swf.trace \
+	with-delete-7.swf \
+	with-delete-7.swf.trace \
 	with-prototypes.as \
 	with-prototypes-5.swf \
 	with-prototypes-5.swf.trace \

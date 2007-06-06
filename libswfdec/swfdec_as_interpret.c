@@ -1660,12 +1660,9 @@ static void
 swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *name;
-  SwfdecAsObject *object;
   
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
-  object = swfdec_as_frame_find_variable (cx->frame, name);
-  if (object)
-    swfdec_as_object_delete_variable (object, name);
+  swfdec_as_frame_delete_variable (cx->frame, name);
 }
 
 static void

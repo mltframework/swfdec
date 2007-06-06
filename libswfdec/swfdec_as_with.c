@@ -67,13 +67,12 @@ swfdec_as_with_set_flags (SwfdecAsObject *object, const char *variable,
   klass->set_flags (with->object, variable, flags, mask);
 }
 
-static void
+static gboolean
 swfdec_as_with_delete (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsWith *with = SWFDEC_AS_WITH (object);
-  SwfdecAsObjectClass *klass = SWFDEC_AS_OBJECT_GET_CLASS (with->object);
 
-  klass->delete (with->object, variable);
+  return swfdec_as_object_delete_variable (with->object, variable);
 }
 
 static gboolean

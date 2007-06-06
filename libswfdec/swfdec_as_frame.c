@@ -232,6 +232,43 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   return NULL;
 }
 
+/* FIXME: merge with find_variable somehow */
+gboolean
+swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
+{
+  SwfdecAsScope *cur;
+  guint i;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), FALSE);
+  g_return_val_if_fail (variable != NULL, FALSE);
+
+  cur = frame->scope;
+  for (i = 0; i < 256; i++) {
+    if (swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (cur), variable))
+      return TRUE;
+    if (cur->next == NULL)
+      break;
+    cur = cur->next;
+  }
+  if (i == 256) {
+    swfdec_as_context_abort (SWFDEC_AS_OBJECT (frame)->context, "Scope recursion limit exceeded");
+    return FALSE;
+  }
+  g_assert (SWFDEC_IS_AS_FRAME (cur));
+  /* we've walked the scope chain down. Now look in the special objects. */
+  /* 1) the target set via SetTarget */
+  if (frame->target) {
+    if (swfdec_as_object_delete_variable (frame->target, variable))
+      return TRUE;
+  } else {
+    /* The default target is the original object that called into us */
+    if (swfdec_as_object_delete_variable (SWFDEC_AS_FRAME (cur)->thisp, variable))
+      return TRUE;
+  }
+  /* 2) the global object */
+  return swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
+}
+
 /**
  * swfdec_as_frame_set_target:
  * @frame: a #SwfdecAsFrame

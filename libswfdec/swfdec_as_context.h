@@ -93,6 +93,8 @@ void		swfdec_as_context_get_time	(SwfdecAsContext *	context,
 						 GTimeVal *		tv);
 const char *	swfdec_as_context_get_string	(SwfdecAsContext *	context,
 						 const char *		string);
+const char *	swfdec_as_context_give_string	(SwfdecAsContext *	context,
+						 char *			string);
 
 #define swfdec_as_context_abort_oom(context) swfdec_as_context_abort (context, "Out of memory")
 void		swfdec_as_context_abort		(SwfdecAsContext *	context,

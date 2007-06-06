@@ -356,6 +356,30 @@ swfdec_as_context_get_string (SwfdecAsContext *context, const char *string)
   return swfdec_as_context_create_string (context, string, len);
 }
 
+/**
+ * swfdec_as_context_give_string:
+ * @context: a #SwfdecAsContext
+ * @string: string to make refcounted
+ *
+ * Takes ownership of @string and returns a refcounted version of the same 
+ * string. This function is the same as swfdec_as_context_get_string(), but 
+ * takes ownership of @string.
+ *
+ * Returns: A refcounted string
+ **/
+const char *
+swfdec_as_context_give_string (SwfdecAsContext *context, char *string)
+{
+  const char *ret;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (string != NULL, NULL);
+
+  ret = swfdec_as_context_get_string (context, string);
+  g_free (string);
+  return ret;
+}
+
 SwfdecAsContext *
 swfdec_as_context_new (void)
 {

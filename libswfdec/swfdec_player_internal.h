@@ -51,6 +51,7 @@ struct _SwfdecPlayer
   SwfdecColor		bgcolor;		/* background color */
   SwfdecLoader *	loader;			/* initial loader */
 
+  guint			unnamed_count;		/* variable used for naming unnamed movies */
   /* ActionScript */
   guint			interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */

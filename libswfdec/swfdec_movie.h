@@ -93,8 +93,7 @@ struct _SwfdecMovie {
   SwfdecMovieState	state;			/* state the movie is in */
 
   /* parenting information */
-  SwfdecMovie *		root;			/* root movie for this movie */
-  SwfdecMovie *		parent;			/* movie that contains us or NULL for root */
+  SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
 
   /* positioning - the values are applied in this order */
   SwfdecRect		extents;		/* the extents occupied after transform is applied */

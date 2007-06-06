@@ -40,7 +40,6 @@ struct _SwfdecRootMovie
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */
-  guint			unnamed_count;	/* variable used for naming unnamed movies */
 
   guint			root_actions_performed;	/* root actions been performed in all frames < this*/
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */

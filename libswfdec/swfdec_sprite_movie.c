@@ -340,10 +340,16 @@ swfdec_sprite_movie_add (SwfdecAsObject *object)
 {
   const char *name;
   SwfdecAsObject *constructor;
+  SwfdecMovie *root;
 
   if (!SWFDEC_SPRITE_MOVIE (object)->sprite)
     return;
-  name = swfdec_root_movie_get_export_name (SWFDEC_ROOT_MOVIE (SWFDEC_MOVIE (object)->root),
+
+  /* FIXME: exports are handled differently, right? RIGHT? */
+  root = SWFDEC_MOVIE (object);
+  while (root->parent)
+    root = root->parent;
+  name = swfdec_root_movie_get_export_name (SWFDEC_ROOT_MOVIE (root),
       SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (object)->sprite));
   if (name != NULL) {
     name = swfdec_as_context_get_string (object->context, name);

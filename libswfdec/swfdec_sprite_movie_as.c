@@ -49,18 +49,26 @@ static void
 swfdec_sprite_movie_getBytesLoaded (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
-  SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
 
-  SWFDEC_AS_VALUE_SET_INT (rval, dec->bytes_loaded);
+  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
+    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
+    SWFDEC_AS_VALUE_SET_INT (rval, dec->bytes_loaded);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (rval, 0);
+  }
 }
 
 static void
 swfdec_sprite_movie_getBytesTotal (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
-  SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
 
-  SWFDEC_AS_VALUE_SET_INT (rval, dec->bytes_total);
+  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
+    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
+    SWFDEC_AS_VALUE_SET_INT (rval, dec->bytes_total);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (rval, 0);
+  }
 }
 
 static void
@@ -286,7 +294,10 @@ swfdec_sprite_movie_attachMovie (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
   if (argc > 3) {
     SWFDEC_WARNING ("attachMovie's initObject isn't implemented");
   }
-  sprite = swfdec_root_movie_get_export (SWFDEC_ROOT_MOVIE (movie->root), export);
+  ret = movie;
+  while (ret->parent)
+    ret = ret->parent;
+  sprite = swfdec_root_movie_get_export (SWFDEC_ROOT_MOVIE (ret), export);
   if (!SWFDEC_IS_SPRITE (sprite)) {
     if (sprite == NULL) {
       SWFDEC_WARNING ("no symbol with name %s exported", export);
@@ -383,7 +394,9 @@ swfdec_sprite_movie_getURL (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv
   if (argc > 2) {
     SWFDEC_ERROR ("passing variables is not implemented");
   }
-  swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
+  while (movie->parent)
+    movie = movie->parent;
+  swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie), url, target);
   /* FIXME: does this function return something */
 }
 

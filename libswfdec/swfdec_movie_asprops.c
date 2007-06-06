@@ -140,19 +140,17 @@ mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
 }
 
 static void
-mc_framesloaded (SwfdecMovie *movie, SwfdecAsValue *rval)
+mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
 {
-  guint loaded;
-
   /* only root movies can be partially loaded */
-  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
-    loaded = dec->frames_loaded;
-    g_assert (loaded <= movie->n_frames);
-  } else {
-    loaded = movie->n_frames;
+  if (SWFDEC_IS_SPRITE_MOVIE (mov)) {
+    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+    if (movie->sprite) {
+      SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->sprite->parse_frame);
+      return;
+    }
   }
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, loaded);
+  SWFDEC_AS_VALUE_SET_NUMBER (rval, mov->n_frames);
 }
 
 static void
@@ -360,7 +358,9 @@ mc_parent (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie->root));
+  while (movie->parent)
+    movie = movie->parent;
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 
 struct {

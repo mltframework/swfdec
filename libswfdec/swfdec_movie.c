@@ -20,9 +20,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <math.h>
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
@@ -769,18 +771,30 @@ swfdec_movie_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
 
+/* FIXME: This function can definitely be implemented easier */
 static SwfdecMovie *
 swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
 {
   GList *walk;
-  guint version = SWFDEC_AS_CONTEXT (player)->version;
+  int i = SWFDEC_AS_CONTEXT (player)->version;
+  gulong l;
+  char *end;
 
+  if ((i >= 7 && !g_str_has_prefix (name, "_level")) ||
+      strncasecmp (name, "_level", 6) != 0)
+    return NULL;
+
+  l = strtoul (name + 6, &end, 10);
+  if (*end != 0 || l > G_MAXINT)
+    return NULL;
+  i = l;
   for (walk = player->roots; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    /* FIXME: make the name string GC'd */
-    if ((version >= 7 && g_str_equal (cur->name, name)) ||
-	strcasecmp (cur->name, name) == 0)
+    if (cur->depth < i)
+      continue;
+    if (cur->depth == i)
       return cur;
+    break;
   }
   return NULL;
 }
@@ -854,11 +868,8 @@ swfdec_movie_set_name (SwfdecMovie *movie)
     movie->name = g_strdup (movie->content->name);
     movie->has_name = TRUE;
   } else if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    /* FIXME: figure out if it's relative to root or player or something else
-     * entirely 
-     */
-    SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie->root);
-    movie->name = g_strdup_printf ("instance%u", ++root->unnamed_count);
+    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    movie->name = g_strdup_printf ("instance%u", ++player->unnamed_count);
     movie->has_name = FALSE;
   } else {
     movie->name = g_strdup (G_OBJECT_TYPE_NAME (movie));
@@ -892,7 +903,7 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
   player->movies = g_list_prepend (player->movies, movie);
   //swfdec_js_movie_create_jsobject (movie);
   /* queue init and construct events for non-root movies */
-  if (movie != movie->root) {
+  if (movie->parent) {
     g_queue_push_tail (player->init_queue, movie);
     g_queue_push_tail (player->construct_queue, movie);
   }
@@ -944,7 +955,6 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   ret = klass->create_movie (content->graphic, &size);
   object = SWFDEC_AS_OBJECT (parent);
   ret->parent = parent;
-  ret->root = parent->root;
   if (swfdec_as_context_use_mem (object->context, size)) {
     g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
@@ -967,7 +977,6 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   content->name = g_strdup_printf ("_level%u", depth);
   ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
-  ret->root = ret;
   if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie))) {
     g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),

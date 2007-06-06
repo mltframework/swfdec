@@ -43,9 +43,8 @@ swfdec_as_with_get (SwfdecAsObject *object, const char *variable,
   SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsWith *with = SWFDEC_AS_WITH (object);
-  SwfdecAsObjectClass *klass = SWFDEC_AS_OBJECT_GET_CLASS (with->object);
 
-  return klass->get (with->object, variable, val, flags);
+  return swfdec_as_object_get_variable_and_flags (with->object, variable, val, flags);
 }
 
 static void

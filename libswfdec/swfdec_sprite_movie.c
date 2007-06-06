@@ -358,13 +358,15 @@ static SwfdecMovie *
 swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 {
   GList *walk;
+  guint version = SWFDEC_AS_OBJECT (movie)->context->version;
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
     if (!cur->has_name)
       continue;
     /* FIXME: make the name string GC'd */
-    if (g_str_equal (cur->name, name))
+    if ((version >= 7 && g_str_equal (cur->name, name)) ||
+	strcasecmp (cur->name, name) == 0)
       return cur;
   }
   return NULL;

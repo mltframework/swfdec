@@ -381,27 +381,6 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
   }
 }
 
-SwfdecAsObject *
-swfdec_as_object_find_variable (SwfdecAsObject *object,
-    const char *variable)
-{
-  guint i;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
-  g_return_val_if_fail (variable != NULL, NULL);
-
-  for (i = 0; i < 256 && object != NULL; i++) {
-    if (swfdec_as_object_lookup (object, variable, NULL, NULL))
-      return object;
-    object = object->prototype;
-  }
-  if (i == 256) {
-    swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
-    return NULL;
-  }
-  return NULL;
-}
-
 /**
  * swfdec_as_object_set_variable_flags:
  * @object: a #SwfdecAsObject

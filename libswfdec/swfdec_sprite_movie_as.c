@@ -394,9 +394,7 @@ swfdec_sprite_movie_getURL (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv
   if (argc > 2) {
     SWFDEC_ERROR ("passing variables is not implemented");
   }
-  while (movie->parent)
-    movie = movie->parent;
-  swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie), url, target);
+  swfdec_movie_load (movie, url, target);
   /* FIXME: does this function return something */
 }
 

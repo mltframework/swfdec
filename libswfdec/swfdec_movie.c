@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <errno.h>
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
@@ -784,10 +785,11 @@ swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
       strncasecmp (name, "_level", 6) != 0)
     return NULL;
 
+  errno = 0;
   l = strtoul (name + 6, &end, 10);
-  if (*end != 0 || l > G_MAXINT)
+  if (errno != 0 || *end != 0 || l > G_MAXINT)
     return NULL;
-  i = l;
+  i = l - 16384;
   for (walk = player->roots; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
     if (cur->depth < i)
@@ -988,6 +990,51 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   ret->has_name = FALSE;
 
   return ret;
+}
+
+void
+swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target)
+{
+  SwfdecPlayer *player;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (url != NULL);
+  g_return_if_fail (target != NULL);
+
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  /* yay for the multiple uses of GetURL - one of the crappier Flash things */
+  if (g_str_has_prefix (target, "_level")) {
+    const char *nr = target + strlen ("_level");
+    char *end;
+    guint depth;
+
+    errno = 0;
+    depth = strtoul (nr, &end, 10);
+    if (errno == 0 && *end == '\0') {
+      if (url[0] == '\0') {
+	swfdec_player_remove_level (player, depth);
+      } else {
+	SwfdecMovie *root;
+
+	root = movie;
+	while (root->parent)
+	  root = root->parent;
+	SwfdecLoader *loader = swfdec_loader_load (SWFDEC_ROOT_MOVIE (root)->loader, url);
+	g_assert (loader);
+	swfdec_player_add_level_from_loader (player, depth, loader, NULL);
+	swfdec_loader_queue_parse (loader);
+      }
+    } else {
+      SWFDEC_ERROR ("%s does not specify a valid level", target);
+    }
+    /* FIXME: what do we do here? Is returning correct?*/
+    return;
+  } else if (g_str_has_prefix (target, "FSCommand:")) {
+    const char *command = url + strlen ("FSCommand:");
+    SWFDEC_WARNING ("unhandled fscommand: %s %s", command, target);
+    return;
+  }
+  swfdec_player_launch (player, url, target);
 }
 
 void

@@ -177,13 +177,15 @@ swfdec_movie_color_construct (SwfdecAsObject *obj, guint argc, SwfdecAsValue *ar
 }
 
 void
-swfdec_movie_color_init_context (SwfdecAsContext *context, guint version)
+swfdec_movie_color_init_context (SwfdecPlayer *player, guint version)
 {
+  SwfdecAsContext *context;
   SwfdecAsObject *color, *proto;
   SwfdecAsValue val;
 
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
+  context = SWFDEC_AS_CONTEXT (player);
   color = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_Color, SWFDEC_TYPE_MOVIE_COLOR, swfdec_movie_color_construct, 0));
   swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (color), SWFDEC_TYPE_MOVIE_COLOR);

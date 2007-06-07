@@ -48,9 +48,6 @@ struct _SwfdecMovieColorClass {
 
 GType		swfdec_movie_color_get_type	(void);
 
-void	      	swfdec_movie_color_init_context	(SwfdecAsContext *	context,
-					      	 guint			version);
-
 
 G_END_DECLS
 #endif

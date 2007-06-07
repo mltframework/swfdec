@@ -23,7 +23,7 @@
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_codec_video.h>
-#include <libswfdec/swfdec_connection.h>
+#include <libswfdec/swfdec_net_connection.h>
 #include <libswfdec/swfdec_flv_decoder.h>
 #include <libswfdec/swfdec_player_internal.h>
 #include <libswfdec/swfdec_video_movie.h>

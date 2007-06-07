@@ -66,7 +66,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_video.c \
 	swfdec_color.c \
 	swfdec_color_as.c \
-	swfdec_connection.c \
 	swfdec_debug.c \
 	swfdec_debugger.c \
 	swfdec_decoder.c \
@@ -90,6 +89,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_mouse_as.c \
 	swfdec_movie.c \
 	swfdec_movie_asprops.c \
+	swfdec_net_connection.c \
 	swfdec_net_stream.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
@@ -166,7 +166,6 @@ noinst_HEADERS = \
 	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_color_as.h \
-	swfdec_connection.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
@@ -186,6 +185,7 @@ noinst_HEADERS = \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_net_connection.h \
 	swfdec_net_stream.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \

@@ -22,7 +22,7 @@
 #endif
 
 #include <string.h>
-#include "swfdec_connection.h"
+#include "swfdec_net_connection.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_native_function.h"

@@ -36,9 +36,9 @@
 #include "swfdec_decoder.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_swf_instance.h"
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
@@ -301,8 +301,8 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
 
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   jump = data[2];
-  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
+  if (SWFDEC_MOVIE (movie->swf->movie) == movie) {
+    SwfdecDecoder *dec = movie->swf->decoder;
     loaded = dec->frames_loaded;
     g_assert (loaded <= movie->n_frames);
   } else {

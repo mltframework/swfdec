@@ -96,7 +96,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_player_as.c \
 	swfdec_rect.c \
 	swfdec_ringbuffer.c \
-	swfdec_root_movie.c \
 	swfdec_script.c \
 	swfdec_shape.c \
 	swfdec_sound.c \
@@ -105,6 +104,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_sprite_movie.c \
 	swfdec_sprite_movie_as.c \
 	swfdec_swf_decoder.c \
+	swfdec_swf_instance.c \
 	swfdec_tag.c \
 	swfdec_text.c \
 	swfdec_utils.c \
@@ -192,13 +192,13 @@ noinst_HEADERS = \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
-	swfdec_root_movie.h \
 	swfdec_script.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_swf_decoder.h \
+	swfdec_swf_instance.h \
 	swfdec_stroke.h \
 	swfdec_tag.h \
 	swfdec_text.h \

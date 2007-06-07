@@ -36,8 +36,8 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_swf_instance.h"
 
 /*** gtk-doc ***/
 
@@ -958,21 +958,19 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
       player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
 }
 
-SwfdecRootMovie *
+SwfdecMovie *
 swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     SwfdecLoader *loader, const char *variables)
 {
   SwfdecMovie *movie;
-  SwfdecRootMovie *root;
 
   swfdec_player_remove_level (player, depth);
   movie = swfdec_movie_new_for_player (player, depth);
-  root = SWFDEC_ROOT_MOVIE (movie);
-  root->loader = loader;
+  swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader);
+  g_object_unref (loader);
   if (variables)
     swfdec_movie_set_variables (movie, variables);
-  swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
-  return root;
+  return movie;
 }
 
 void
@@ -1182,15 +1180,13 @@ void
 swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
     const char *variables)
 {
-  SwfdecRootMovie *movie;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   player->loader = loader;
   g_object_ref (loader);
-  movie = swfdec_player_add_level_from_loader (player, 0, loader, variables);
+  swfdec_player_add_level_from_loader (player, 0, loader, variables);
   swfdec_loader_parse (loader);
 }
 

@@ -94,6 +94,7 @@ struct _SwfdecMovie {
 
   /* parenting information */
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
+  SwfdecSwfInstance *	swf;			/* the instance that created us */
 
   /* positioning - the values are applied in this order */
   SwfdecRect		extents;		/* the extents occupied after transform is applied */
@@ -127,8 +128,6 @@ struct _SwfdecMovieClass {
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);
   void			(* finish_movie)	(SwfdecMovie *		movie);
-  void			(* content_changed)	(SwfdecMovie *		movie,
-						 const SwfdecContent *	content);
   void			(* update_extents)	(SwfdecMovie *		movie,
 						 SwfdecRect *   	extents);
   void			(* render)		(SwfdecMovie *		movie, 
@@ -160,7 +159,7 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
 SwfdecMovie *	swfdec_movie_new_for_player	(SwfdecPlayer *		player,
 						 guint			depth);
-void		swfdec_movie_set_prototype	(SwfdecMovie *		movie);
+void		swfdec_movie_initialize		(SwfdecMovie *		movie);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);

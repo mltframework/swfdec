@@ -40,6 +40,7 @@ struct _SwfdecMorphMovie {
   SwfdecMovie		movie;
 
   SwfdecMorphShape *	morph;
+  guint			ratio;		/* current ratio for paths */
   cairo_path_t *	paths;
 };
 

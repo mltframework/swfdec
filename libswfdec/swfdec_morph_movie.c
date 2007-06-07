@@ -28,16 +28,66 @@
 G_DEFINE_TYPE (SwfdecMorphMovie, swfdec_morph_movie, SWFDEC_TYPE_MOVIE)
 
 static void
+swfdec_cairo_path_merge (cairo_path_t *dest, const cairo_path_t *start, const cairo_path_t *end, double ratio)
+{
+  int i;
+  cairo_path_data_t *ddata, *sdata, *edata;
+  double inv = 1.0 - ratio;
+
+  g_assert (dest->num_data == start->num_data);
+  g_assert (dest->num_data == end->num_data);
+
+  ddata = dest->data;
+  sdata = start->data;
+  edata = end->data;
+  for (i = 0; i < dest->num_data; i++) {
+    g_assert (sdata[i].header.type == edata[i].header.type);
+    ddata[i] = sdata[i];
+    switch (sdata[i].header.type) {
+      case CAIRO_PATH_CURVE_TO:
+	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
+	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
+	ddata[i+2].point.x = sdata[i+2].point.x * inv + edata[i+2].point.x * ratio;
+	ddata[i+2].point.y = sdata[i+2].point.y * inv + edata[i+2].point.y * ratio;
+	i += 2;
+      case CAIRO_PATH_MOVE_TO:
+      case CAIRO_PATH_LINE_TO:
+	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
+	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
+	i++;
+      case CAIRO_PATH_CLOSE_PATH:
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+  }
+}
+
+static void
 swfdec_morph_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
   guint ratio = movie->content->ratio;
-  SwfdecMorphShape *morph = SWFDEC_MORPH_MOVIE (movie)->morph;
+  SwfdecMorphMovie *mmovie = SWFDEC_MORPH_MOVIE (movie);
+  SwfdecMorphShape *morph = mmovie->morph;
   SwfdecGraphic *graphic = SWFDEC_GRAPHIC (morph);
   extents->x0 = ((65535 - ratio) * graphic->extents.x0 + ratio * morph->end_extents.x0) / 65535;
   extents->x1 = ((65535 - ratio) * graphic->extents.x1 + ratio * morph->end_extents.x1) / 65535;
   extents->y0 = ((65535 - ratio) * graphic->extents.y0 + ratio * morph->end_extents.y0) / 65535;
   extents->y1 = ((65535 - ratio) * graphic->extents.y1 + ratio * morph->end_extents.y1) / 65535;
+
+  /* update the vectors */
+  if (ratio != mmovie->ratio) {
+    guint i;
+    SwfdecShape *shape = SWFDEC_SHAPE (mmovie->morph);
+
+    for (i = 0; i < shape->vecs->len; i++) {
+      swfdec_cairo_path_merge (&mmovie->paths[i], 
+	  &g_array_index (shape->vecs, SwfdecShapeVec, i).path,
+	  &g_array_index (morph->end_vecs, SwfdecShapeVec, i).path, ratio / 65535.);
+    }
+    mmovie->ratio = ratio;
+  }
 }
 
 static void
@@ -78,56 +128,6 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 static void
-swfdec_cairo_path_merge (cairo_path_t *dest, const cairo_path_t *start, const cairo_path_t *end, double ratio)
-{
-  int i;
-  cairo_path_data_t *ddata, *sdata, *edata;
-  double inv = 1.0 - ratio;
-
-  g_assert (dest->num_data == start->num_data);
-  g_assert (dest->num_data == end->num_data);
-
-  ddata = dest->data;
-  sdata = start->data;
-  edata = end->data;
-  for (i = 0; i < dest->num_data; i++) {
-    g_assert (sdata[i].header.type == edata[i].header.type);
-    ddata[i] = sdata[i];
-    switch (sdata[i].header.type) {
-      case CAIRO_PATH_CURVE_TO:
-	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
-	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
-	ddata[i+2].point.x = sdata[i+2].point.x * inv + edata[i+2].point.x * ratio;
-	ddata[i+2].point.y = sdata[i+2].point.y * inv + edata[i+2].point.y * ratio;
-	i += 2;
-      case CAIRO_PATH_MOVE_TO:
-      case CAIRO_PATH_LINE_TO:
-	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
-	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
-	i++;
-      case CAIRO_PATH_CLOSE_PATH:
-	break;
-      default:
-	g_assert_not_reached ();
-    }
-  }
-}
-
-static void
-swfdec_morph_movie_content_changed (SwfdecMovie *movie, const SwfdecContent *content)
-{
-  guint i;
-  SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
-  SwfdecShape *shape = SWFDEC_SHAPE (morph->morph);
-
-  for (i = 0; i < shape->vecs->len; i++) {
-    swfdec_cairo_path_merge (&morph->paths[i], 
-	&g_array_index (SWFDEC_SHAPE (morph->morph)->vecs, SwfdecShapeVec, i).path,
-	&g_array_index (morph->morph->end_vecs, SwfdecShapeVec, i).path, content->ratio / 65535.);
-  }
-}
-
-static void
 swfdec_morph_movie_dispose (GObject *object)
 {
   guint i;
@@ -151,14 +151,14 @@ swfdec_morph_movie_class_init (SwfdecMorphMovieClass * g_class)
   object_class->dispose = swfdec_morph_movie_dispose;
 
   movie_class->update_extents = swfdec_morph_movie_update_extents;
-  movie_class->content_changed = swfdec_morph_movie_content_changed;
   movie_class->render = swfdec_morph_movie_render;
   /* FIXME */
   //movie_class->handle_mouse = swfdec_morph_movie_handle_mouse;
 }
 
 static void
-swfdec_morph_movie_init (SwfdecMorphMovie *movie)
+swfdec_morph_movie_init (SwfdecMorphMovie *morph)
 {
+  morph->ratio = (guint) -1;
 }
 

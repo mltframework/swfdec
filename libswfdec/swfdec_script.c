@@ -27,16 +27,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"
 
-#include <errno.h>
-#include <math.h>
-#include <string.h>
-#include "swfdec_decoder.h"
-#include "swfdec_movie.h"
-#include "swfdec_player_internal.h"
-#include "swfdec_root_movie.h"
-#include "swfdec_sprite.h"
-#include "swfdec_sprite_movie.h"
-
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
  * but usually just causes a lot of spam. */

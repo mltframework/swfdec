@@ -606,7 +606,6 @@ swfdec_flv_decoder_get_data (SwfdecFlvDecoder *flv, guint timestamp, guint *real
 
 #include "swfdec_loadertarget.h"
 #include "swfdec_net_stream.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_video_movie.h"
 

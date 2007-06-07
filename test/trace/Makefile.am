@@ -148,6 +148,13 @@ EXTRA_DIST = \
 	escape-7.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
+	export-case.c \
+	export-case-5.swf \
+	export-case-5.swf.trace \
+	export-case-6.swf \
+	export-case-6.swf.trace \
+	export-case-7.swf \
+	export-case-7.swf.trace \
 	extends-simple.swf \
 	extends-simple.swf.trace \
 	extends-super.swf \

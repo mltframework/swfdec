@@ -21,7 +21,6 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 foofiles = \
 	swfdec_js.c \
-	swfdec_js_connection.c \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \

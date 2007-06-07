@@ -17,39 +17,39 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_CONNECTION_H_
-#define _SWFDEC_CONNECTION_H_
+#ifndef _SWFDEC_NET_CONNECTION_H_
+#define _SWFDEC_NET_CONNECTION_H_
 
 #include <libswfdec/swfdec_as_object.h>
 
 G_BEGIN_DECLS
 
 
-typedef struct _SwfdecConnection SwfdecConnection;
-typedef struct _SwfdecConnectionClass SwfdecConnectionClass;
+typedef struct _SwfdecNetConnection SwfdecNetConnection;
+typedef struct _SwfdecNetConnectionClass SwfdecNetConnectionClass;
 
-#define SWFDEC_TYPE_CONNECTION                    (swfdec_connection_get_type())
-#define SWFDEC_IS_CONNECTION(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_CONNECTION))
-#define SWFDEC_IS_CONNECTION_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_CONNECTION))
-#define SWFDEC_CONNECTION(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_CONNECTION, SwfdecConnection))
-#define SWFDEC_CONNECTION_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_CONNECTION, SwfdecConnectionClass))
-#define SWFDEC_CONNECTION_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_CONNECTION, SwfdecConnectionClass))
+#define SWFDEC_TYPE_NET_CONNECTION                    (swfdec_net_connection_get_type())
+#define SWFDEC_IS_NET_CONNECTION(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_NET_CONNECTION))
+#define SWFDEC_IS_NET_CONNECTION_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_NET_CONNECTION))
+#define SWFDEC_NET_CONNECTION(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_NET_CONNECTION, SwfdecNetConnection))
+#define SWFDEC_NET_CONNECTION_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_NET_CONNECTION, SwfdecNetConnectionClass))
+#define SWFDEC_NET_CONNECTION_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_NET_CONNECTION, SwfdecNetConnectionClass))
 
-struct _SwfdecConnection {
+struct _SwfdecNetConnection {
   SwfdecAsObject	object;
 
-  char *		url;		/* url for this connection or NULL for none */
+  char *		url;		/* url for this net_connection or NULL for none */
 };
 
-struct _SwfdecConnectionClass {
+struct _SwfdecNetConnectionClass {
   SwfdecAsObjectClass	object_class;
 };
 
-GType			swfdec_connection_get_type	(void);
+GType			swfdec_net_connection_get_type	(void);
 
-SwfdecConnection *	swfdec_connection_new		(SwfdecAsContext *	context);
+SwfdecNetConnection *	swfdec_net_connection_new	(SwfdecAsContext *	context);
 
-void			swfdec_connection_connect	(SwfdecConnection *	conn,
+void			swfdec_net_connection_connect	(SwfdecNetConnection *	conn,
 							 const char *		url);
 
 

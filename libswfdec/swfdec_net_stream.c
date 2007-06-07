@@ -359,12 +359,12 @@ swfdec_net_stream_init (SwfdecNetStream *stream)
 }
 
 SwfdecNetStream *
-swfdec_net_stream_new (SwfdecPlayer *player, SwfdecConnection *conn)
+swfdec_net_stream_new (SwfdecPlayer *player, SwfdecNetConnection *conn)
 {
   SwfdecAsContext *context;
   SwfdecNetStream *stream;
   
-  g_return_val_if_fail (SWFDEC_IS_CONNECTION (conn), NULL);
+  g_return_val_if_fail (SWFDEC_IS_NET_CONNECTION (conn), NULL);
 
   context = SWFDEC_AS_OBJECT (conn)->context;
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecNetStream)))

@@ -30,7 +30,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("level")
   SWFDEC_AS_CONSTANT_STRING ("description")
   SWFDEC_AS_CONSTANT_STRING ("status")
-  SWFDEC_AS_CONSTANT_STRING ("success")
   SWFDEC_AS_CONSTANT_STRING ("NetConnection.Connect.Success")
   SWFDEC_AS_CONSTANT_STRING ("onLoad")
   SWFDEC_AS_CONSTANT_STRING ("onEnterFrame")
@@ -206,6 +205,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("unescape")
   SWFDEC_AS_CONSTANT_STRING ("charAt")
   SWFDEC_AS_CONSTANT_STRING ("charCodeAt")
+  SWFDEC_AS_CONSTANT_STRING ("NetConnection")
+  SWFDEC_AS_CONSTANT_STRING ("connect")
   /* add more here */
 ;
 

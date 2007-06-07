@@ -107,6 +107,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_swf_decoder.c \
 	swfdec_tag.c \
 	swfdec_text.c \
+	swfdec_utils.c \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_xml.c
@@ -202,6 +203,7 @@ noinst_HEADERS = \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_types.h \
+	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
 	swfdec_xml.h

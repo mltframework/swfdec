@@ -36,6 +36,7 @@
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_utils.h"
 
 
 static void swfdec_root_movie_loader_target_init (SwfdecLoaderTargetInterface *iface);
@@ -167,7 +168,7 @@ swfdec_root_movie_class_init (SwfdecRootMovieClass *klass)
 static void
 swfdec_root_movie_init (SwfdecRootMovie *root)
 {
-  root->exports = g_hash_table_new (g_str_hash, g_str_equal);
+  root->exports = g_hash_table_new (swfdec_str_case_hash, swfdec_str_case_equal);
 }
 
 void

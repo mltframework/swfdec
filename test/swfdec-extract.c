@@ -37,10 +37,11 @@
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_image.h>
 #include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_root_movie.h>
 #include <libswfdec/swfdec_sound.h>
 #include <libswfdec/swfdec_sprite.h>
+#include <libswfdec/swfdec_sprite_movie.h>
 #include <libswfdec/swfdec_swf_decoder.h>
+#include <libswfdec/swfdec_swf_instance.h>
 
 static SwfdecBuffer *
 encode_wav (SwfdecBuffer *buffer)
@@ -239,7 +240,7 @@ main (int argc, char *argv[])
   }
 
   player = swfdec_player_new_from_file (argv[1]);
-  if (!SWFDEC_IS_ROOT_MOVIE (player->roots->data)) {
+  if (!SWFDEC_IS_SPRITE_MOVIE (player->roots->data)) {
     g_printerr ("Error parsing file \"%s\"\n", argv[1]);
     g_object_unref (player);
     player = NULL;
@@ -248,11 +249,11 @@ main (int argc, char *argv[])
   id = strtol (argv[2], NULL, 0);
   if (id >= 0) {
     character = swfdec_swf_decoder_get_character (
-	SWFDEC_SWF_DECODER (SWFDEC_ROOT_MOVIE (player->roots->data)->decoder),
+	SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->roots->data)->swf->decoder),
 	id);
   } else {
     character = SWFDEC_CHARACTER (SWFDEC_SWF_DECODER (
-	  SWFDEC_ROOT_MOVIE (player->roots->data)->decoder)->main_sprite);
+	  SWFDEC_MOVIE (player->roots->data)->swf->decoder)->main_sprite);
   }
   if (SWFDEC_IS_SPRITE (character)) {
     if (!export_sprite_sound (SWFDEC_SPRITE (character), argv[3]))

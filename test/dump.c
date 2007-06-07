@@ -37,11 +37,11 @@
 #include <libswfdec/swfdec_image.h>
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_root_movie.h>
 #include <libswfdec/swfdec_sprite.h>
 #include <libswfdec/swfdec_shape.h>
 #include <libswfdec/swfdec_sound.h>
 #include <libswfdec/swfdec_swf_decoder.h>
+#include <libswfdec/swfdec_swf_instance.h>
 #include <libswfdec/swfdec_text.h>
 
 static gboolean verbose = FALSE;
@@ -393,7 +393,7 @@ main (int argc, char *argv[])
     g_object_unref (player);
     return 1;
   }
-  s = (SwfdecSwfDecoder *) SWFDEC_ROOT_MOVIE (player->roots->data)->decoder;
+  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->swf->decoder;
   if (swfdec_player_get_rate (player) == 0 || 
       !SWFDEC_IS_SWF_DECODER (s)) {
     g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);

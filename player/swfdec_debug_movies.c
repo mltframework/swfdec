@@ -25,7 +25,6 @@
 #include <libswfdec/swfdec_debugger.h>
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_root_movie.h>
 #include "swfdec_debug_movies.h"
 
 /*** GTK_TREE_MODEL ***/

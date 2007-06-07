@@ -148,6 +148,13 @@ EXTRA_DIST = \
 	escape-7.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
+	export-case.c \
+	export-case-5.swf \
+	export-case-5.swf.trace \
+	export-case-6.swf \
+	export-case-6.swf.trace \
+	export-case-7.swf \
+	export-case-7.swf.trace \
 	extends-simple.swf \
 	extends-simple.swf.trace \
 	extends-super.swf \
@@ -215,6 +222,13 @@ EXTRA_DIST = \
 	initobject-stack-6.swf.trace \
 	initobject-stack-7.swf \
 	initobject-stack-7.swf.trace \
+	instance-name-loaded.c \
+	instance-name-loaded-5.swf \
+	instance-name-loaded-5.swf.trace \
+	instance-name-loaded-6.swf \
+	instance-name-loaded-6.swf.trace \
+	instance-name-loaded-7.swf \
+	instance-name-loaded-7.swf.trace \
 	isnan.as \
 	isnan-5.swf \
 	isnan-5.swf.trace \

@@ -48,7 +48,6 @@ typedef struct _SwfdecMovie SwfdecMovie;
 typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeVec SwfdecShapeVec;
 typedef struct _SwfdecRect SwfdecRect;
-typedef struct _SwfdecRootMovie SwfdecRootMovie;
 typedef struct _SwfdecRootSprite SwfdecRootSprite;
 typedef struct _SwfdecScript SwfdecScript;
 typedef struct _SwfdecScriptable SwfdecScriptable;
@@ -57,6 +56,7 @@ typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteFrame SwfdecSpriteFrame;
 typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
+typedef struct _SwfdecSwfInstance SwfdecSwfInstance;
 typedef struct _SwfdecText SwfdecText;
 
 #endif

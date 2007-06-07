@@ -21,7 +21,6 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 foofiles = \
 	swfdec_js.c \
-	swfdec_js_connection.c \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
@@ -67,7 +66,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_video.c \
 	swfdec_color.c \
 	swfdec_color_as.c \
-	swfdec_connection.c \
 	swfdec_debug.c \
 	swfdec_debugger.c \
 	swfdec_decoder.c \
@@ -91,13 +89,13 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_mouse_as.c \
 	swfdec_movie.c \
 	swfdec_movie_asprops.c \
+	swfdec_net_connection.c \
 	swfdec_net_stream.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_player_as.c \
 	swfdec_rect.c \
 	swfdec_ringbuffer.c \
-	swfdec_root_movie.c \
 	swfdec_script.c \
 	swfdec_shape.c \
 	swfdec_sound.c \
@@ -106,8 +104,10 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_sprite_movie.c \
 	swfdec_sprite_movie_as.c \
 	swfdec_swf_decoder.c \
+	swfdec_swf_instance.c \
 	swfdec_tag.c \
 	swfdec_text.c \
+	swfdec_utils.c \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_xml.c
@@ -167,7 +167,6 @@ noinst_HEADERS = \
 	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_color_as.h \
-	swfdec_connection.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
@@ -187,22 +186,24 @@ noinst_HEADERS = \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_net_connection.h \
 	swfdec_net_stream.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
-	swfdec_root_movie.h \
 	swfdec_script.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_swf_decoder.h \
+	swfdec_swf_instance.h \
 	swfdec_stroke.h \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_types.h \
+	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
 	swfdec_xml.h

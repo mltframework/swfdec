@@ -20,8 +20,12 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <string.h>
+
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <errno.h>
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
@@ -31,8 +35,9 @@
 #include "swfdec_graphic.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
+#include "swfdec_sprite_movie.h"
+#include "swfdec_swf_instance.h"
 
 /*** MOVIE ***/
 
@@ -232,13 +237,13 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
     } else {
       g_return_if_fail (movie->content->name == NULL);
     }
+  } else {
+    movie->depth = content->depth;
   }
   SWFDEC_LOG ("setting content of movie %s from %p to %p", 
       movie->name, movie->content, content);
   old_content = movie->content;
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->content_changed)
-    klass->content_changed (movie, content);
   movie->content = content;
   if (!movie->modified) {
     movie->matrix = content->transform;
@@ -764,25 +769,71 @@ swfdec_movie_dispose (GObject *object)
 
   SWFDEC_LOG ("disposing movie %s", movie->name);
   g_free (movie->name);
+  if (movie->swf) {
+    g_object_unref (movie->swf);
+    movie->swf = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
+}
+
+/* FIXME: This function can definitely be implemented easier */
+static SwfdecMovie *
+swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
+{
+  GList *walk;
+  int i = SWFDEC_AS_CONTEXT (player)->version;
+  gulong l;
+  char *end;
+
+  if ((i >= 7 && !g_str_has_prefix (name, "_level")) ||
+      strncasecmp (name, "_level", 6) != 0)
+    return NULL;
+
+  errno = 0;
+  l = strtoul (name + 6, &end, 10);
+  if (errno != 0 || *end != 0 || l > G_MAXINT)
+    return NULL;
+  i = l - 16384;
+  for (walk = player->roots; walk; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    if (cur->depth < i)
+      continue;
+    if (cur->depth == i)
+      return cur;
+    break;
+  }
+  return NULL;
 }
 
 static gboolean
 swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable, 
     SwfdecAsValue *val, guint *flags)
 {
-  if (swfdec_movie_get_asprop (SWFDEC_MOVIE (object), variable, val)) {
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+
+  if (swfdec_movie_get_asprop (movie, variable, val)) {
     *flags = 0;
     return TRUE;
   }
+
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags))
+    return TRUE;
+
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
     *flags = 0;
     return TRUE;
   }
-  return SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags);
+  
+  movie = swfdec_movie_get_by_name (SWFDEC_PLAYER (object->context), variable);
+  if (movie) {
+    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
+    *flags = 0;
+    return TRUE;
+  }
+  return FALSE;
 }
 
 static void
@@ -824,11 +875,8 @@ swfdec_movie_set_name (SwfdecMovie *movie)
     movie->name = g_strdup (movie->content->name);
     movie->has_name = TRUE;
   } else if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    /* FIXME: figure out if it's relative to root or player or something else
-     * entirely 
-     */
-    SwfdecRootMovie *root = SWFDEC_ROOT_MOVIE (movie->root);
-    movie->name = g_strdup_printf ("instance%u", ++root->unnamed_count);
+    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    movie->name = g_strdup_printf ("instance%u", ++player->unnamed_count);
     movie->has_name = FALSE;
   } else {
     movie->name = g_strdup (G_OBJECT_TYPE_NAME (movie));
@@ -842,7 +890,6 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
 {
   SwfdecMovie *parent = movie->parent;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  SwfdecMovieClass *klass;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
@@ -854,7 +901,6 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
   /* NB: adding to the movies list happens before setting the parent.
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
    * new movies to be created (and added to this list)
@@ -862,28 +908,25 @@ swfdec_movie_set_parent (SwfdecMovie *movie)
   player->movies = g_list_prepend (player->movies, movie);
   //swfdec_js_movie_create_jsobject (movie);
   /* queue init and construct events for non-root movies */
-  if (movie != movie->root) {
+  if (movie->parent) {
     g_queue_push_tail (player->init_queue, movie);
     g_queue_push_tail (player->construct_queue, movie);
   }
   if (SWFDEC_IS_DEBUGGER (player))
     g_signal_emit_by_name (player, "movie-added", movie);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
-  if (klass->init_movie)
-    klass->init_movie (movie);
 }
 
-static void
-swfdec_movie_initialize (SwfdecMovie *movie, const SwfdecContent *content)
+void
+swfdec_movie_initialize (SwfdecMovie *movie)
 {
-  const SwfdecContent *old;
+  SwfdecMovieClass *klass;
 
-  old = movie->content;
-  movie->content = content;
-  movie->depth = content->depth;
-  swfdec_movie_set_parent (movie);
-  movie->content = old;
-  swfdec_movie_set_content (movie, content);
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  if (klass->init_movie)
+    klass->init_movie (movie);
 }
 
 /**
@@ -914,14 +957,17 @@ swfdec_movie_new (SwfdecMovie *parent, const SwfdecContent *content)
   ret = klass->create_movie (content->graphic, &size);
   object = SWFDEC_AS_OBJECT (parent);
   ret->parent = parent;
-  ret->root = parent->root;
+  ret->swf = g_object_ref (parent->swf);
   if (swfdec_as_context_use_mem (object->context, size)) {
     g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret), object->context, size);
   } else {
     SWFDEC_AS_OBJECT (ret)->context = object->context;
   }
-  swfdec_movie_initialize (ret, content);
+  swfdec_movie_set_content (ret, content);
+  swfdec_movie_set_parent (ret);
+  swfdec_movie_initialize (ret);
+
   return ret;
 }
 
@@ -935,20 +981,60 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
 
   content = swfdec_content_new ((int) depth - 16384);
   content->name = g_strdup_printf ("_level%u", depth);
-  ret = g_object_new (SWFDEC_TYPE_ROOT_MOVIE, NULL);
+  ret = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, NULL);
   g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
-  ret->root = ret;
-  if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie))) {
+  if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecSpriteMovie))) {
     g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),
-	SWFDEC_AS_CONTEXT (player), sizeof (SwfdecRootMovie));
+	SWFDEC_AS_CONTEXT (player), sizeof (SwfdecSpriteMovie));
   } else {
     SWFDEC_AS_OBJECT (ret)->context = SWFDEC_AS_CONTEXT (player);
   }
-  swfdec_movie_initialize (ret, content);
+  swfdec_movie_set_content (ret, content);
+  swfdec_movie_set_parent (ret);
   ret->has_name = FALSE;
 
   return ret;
+}
+
+void
+swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target)
+{
+  SwfdecPlayer *player;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (url != NULL);
+  g_return_if_fail (target != NULL);
+
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  /* yay for the multiple uses of GetURL - one of the crappier Flash things */
+  if (g_str_has_prefix (target, "_level")) {
+    const char *nr = target + strlen ("_level");
+    char *end;
+    guint depth;
+
+    errno = 0;
+    depth = strtoul (nr, &end, 10);
+    if (errno == 0 && *end == '\0') {
+      if (url[0] == '\0') {
+	swfdec_player_remove_level (player, depth);
+      } else {
+	SwfdecLoader *loader = swfdec_loader_load (movie->swf->loader, url);
+	g_assert (loader);
+	swfdec_player_add_level_from_loader (player, depth, loader, NULL);
+	swfdec_loader_queue_parse (loader);
+      }
+    } else {
+      SWFDEC_ERROR ("%s does not specify a valid level", target);
+    }
+    /* FIXME: what do we do here? Is returning correct?*/
+    return;
+  } else if (g_str_has_prefix (target, "FSCommand:")) {
+    const char *command = url + strlen ("FSCommand:");
+    SWFDEC_WARNING ("unhandled fscommand: %s %s", command, target);
+    return;
+  }
+  swfdec_player_launch (player, url, target);
 }
 
 void

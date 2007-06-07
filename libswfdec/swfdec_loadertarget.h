@@ -40,13 +40,6 @@ struct _SwfdecLoaderTargetInterface {
   SwfdecPlayer *	(* get_player)      	(SwfdecLoaderTarget *	target);
   void			(* parse)		(SwfdecLoaderTarget *   target,
 						 SwfdecLoader *		loader);
-  /* if default parser is used, you need the following - consider them deprecated */
-  SwfdecDecoder *	(* get_decoder)		(SwfdecLoaderTarget *	target);
-  gboolean		(* set_decoder)		(SwfdecLoaderTarget *	target,
-						 SwfdecDecoder *	decoder);
-  /* optional vfuncs */
-  gboolean    		(* init)		(SwfdecLoaderTarget *	target);
-  gboolean		(* image)		(SwfdecLoaderTarget *	target);
 };
 
 GType		swfdec_loader_target_get_type		(void) G_GNUC_CONST;
@@ -54,12 +47,6 @@ GType		swfdec_loader_target_get_type		(void) G_GNUC_CONST;
 SwfdecPlayer *	swfdec_loader_target_get_player		(SwfdecLoaderTarget *	target);
 void		swfdec_loader_target_parse		(SwfdecLoaderTarget *	target,
 							 SwfdecLoader *		loader);
-SwfdecDecoder *	swfdec_loader_target_get_decoder	(SwfdecLoaderTarget *	target);
-gboolean	swfdec_loader_target_set_decoder	(SwfdecLoaderTarget *	target,
-							 SwfdecDecoder *	decoder);
-void		swfdec_loader_target_error		(SwfdecLoaderTarget *	target);
-gboolean	swfdec_loader_target_init		(SwfdecLoaderTarget *	target);
-gboolean	swfdec_loader_target_image		(SwfdecLoaderTarget *	target);
 
 G_END_DECLS
 

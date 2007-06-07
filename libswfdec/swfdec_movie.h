@@ -93,8 +93,8 @@ struct _SwfdecMovie {
   SwfdecMovieState	state;			/* state the movie is in */
 
   /* parenting information */
-  SwfdecMovie *		root;			/* root movie for this movie */
-  SwfdecMovie *		parent;			/* movie that contains us or NULL for root */
+  SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
+  SwfdecSwfInstance *	swf;			/* the instance that created us */
 
   /* positioning - the values are applied in this order */
   SwfdecRect		extents;		/* the extents occupied after transform is applied */
@@ -128,8 +128,6 @@ struct _SwfdecMovieClass {
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);
   void			(* finish_movie)	(SwfdecMovie *		movie);
-  void			(* content_changed)	(SwfdecMovie *		movie,
-						 const SwfdecContent *	content);
   void			(* update_extents)	(SwfdecMovie *		movie,
 						 SwfdecRect *   	extents);
   void			(* render)		(SwfdecMovie *		movie, 
@@ -161,7 +159,7 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
 SwfdecMovie *	swfdec_movie_new_for_player	(SwfdecPlayer *		player,
 						 guint			depth);
-void		swfdec_movie_set_prototype	(SwfdecMovie *		movie);
+void		swfdec_movie_initialize		(SwfdecMovie *		movie);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
@@ -200,6 +198,10 @@ gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
 void		swfdec_movie_set_variables	(SwfdecMovie *		movie,
 						 const char *		variables);
+void		swfdec_movie_load		(SwfdecMovie *		movie,
+						 const char *		url,
+						 const char *		target);
+
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);
 SwfdecDepthClass

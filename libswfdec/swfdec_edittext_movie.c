@@ -25,7 +25,6 @@
 #include "swfdec_as_context.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_movie.h"
 
 G_DEFINE_TYPE (SwfdecEditTextMovie, swfdec_edit_text_movie, SWFDEC_TYPE_MOVIE)
 

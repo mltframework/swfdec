@@ -28,10 +28,10 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_swf_instance.h"
 
 static void
 swfdec_sprite_movie_play (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
@@ -49,18 +49,24 @@ static void
 swfdec_sprite_movie_getBytesLoaded (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
-  SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
 
-  SWFDEC_AS_VALUE_SET_INT (rval, dec->bytes_loaded);
+  if (SWFDEC_MOVIE (movie->swf->movie) == movie) {
+    SWFDEC_AS_VALUE_SET_INT (rval, movie->swf->decoder->bytes_loaded);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (rval, 0);
+  }
 }
 
 static void
 swfdec_sprite_movie_getBytesTotal (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
-  SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie->root)->decoder;
 
-  SWFDEC_AS_VALUE_SET_INT (rval, dec->bytes_total);
+  if (SWFDEC_MOVIE (movie->swf->movie) == movie) {
+    SWFDEC_AS_VALUE_SET_INT (rval, movie->swf->decoder->bytes_total);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (rval, 0);
+  }
 }
 
 static void
@@ -286,7 +292,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
   if (argc > 3) {
     SWFDEC_WARNING ("attachMovie's initObject isn't implemented");
   }
-  sprite = swfdec_root_movie_get_export (SWFDEC_ROOT_MOVIE (movie->root), export);
+  sprite = swfdec_swf_instance_get_export (movie->swf, export);
   if (!SWFDEC_IS_SPRITE (sprite)) {
     if (sprite == NULL) {
       SWFDEC_WARNING ("no symbol with name %s exported", export);
@@ -383,7 +389,7 @@ swfdec_sprite_movie_getURL (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv
   if (argc > 2) {
     SWFDEC_ERROR ("passing variables is not implemented");
   }
-  swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
+  swfdec_movie_load (movie, url, target);
   /* FIXME: does this function return something */
 }
 

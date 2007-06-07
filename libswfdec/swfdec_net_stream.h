@@ -23,7 +23,7 @@
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_codec_video.h>
-#include <libswfdec/swfdec_connection.h>
+#include <libswfdec/swfdec_net_connection.h>
 #include <libswfdec/swfdec_flv_decoder.h>
 #include <libswfdec/swfdec_player_internal.h>
 #include <libswfdec/swfdec_video_movie.h>
@@ -45,7 +45,7 @@ struct _SwfdecNetStream
   SwfdecAsObject	object;
 
   SwfdecPlayer *	player;		/* the player we play in */
-  SwfdecConnection *	conn;		/* connection used for opening streams */
+  SwfdecNetConnection *	conn;		/* connection used for opening streams */
   SwfdecLoader *	loader;		/* input stream */
   SwfdecFlvDecoder *	flvdecoder;	/* flv decoder */
   gboolean		playing;	/* TRUE if this stream is playing */
@@ -77,7 +77,7 @@ struct _SwfdecNetStreamClass
 GType			swfdec_net_stream_get_type	(void);
 
 SwfdecNetStream *	swfdec_net_stream_new		(SwfdecPlayer *		player,
-							 SwfdecConnection *	conn);
+							 SwfdecNetConnection *	conn);
 
 void			swfdec_net_stream_set_url	(SwfdecNetStream *	stream,
 							 const char *		url);

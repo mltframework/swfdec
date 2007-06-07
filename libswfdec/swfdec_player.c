@@ -36,8 +36,8 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_swf_instance.h"
 
 /*** gtk-doc ***/
 
@@ -958,21 +958,19 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
       player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
 }
 
-SwfdecRootMovie *
+SwfdecMovie *
 swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     SwfdecLoader *loader, const char *variables)
 {
   SwfdecMovie *movie;
-  SwfdecRootMovie *root;
 
   swfdec_player_remove_level (player, depth);
   movie = swfdec_movie_new_for_player (player, depth);
-  root = SWFDEC_ROOT_MOVIE (movie);
-  root->loader = loader;
+  swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader);
+  g_object_unref (loader);
   if (variables)
     swfdec_movie_set_variables (movie, variables);
-  swfdec_loader_set_target (root->loader, SWFDEC_LOADER_TARGET (root));
-  return root;
+  return movie;
 }
 
 void
@@ -1022,6 +1020,7 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
 extern void swfdec_player_init_global (SwfdecPlayer *player, guint version);
 extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_movie_color_init_context (SwfdecPlayer *player, guint version);
+extern void swfdec_net_connection_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
@@ -1055,6 +1054,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_mouse_init_context (player, version);
     swfdec_sprite_movie_init_context (player, version);
     swfdec_movie_color_init_context (player, version);
+    swfdec_net_connection_init_context (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
       swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);
@@ -1180,15 +1180,13 @@ void
 swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
     const char *variables)
 {
-  SwfdecRootMovie *movie;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   player->loader = loader;
   g_object_ref (loader);
-  movie = swfdec_player_add_level_from_loader (player, 0, loader, variables);
+  swfdec_player_add_level_from_loader (player, 0, loader, variables);
   swfdec_loader_parse (loader);
 }
 

@@ -36,9 +36,9 @@
 #include "swfdec_decoder.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_root_movie.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_swf_instance.h"
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
@@ -301,8 +301,8 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
 
   frame = GUINT16_FROM_LE (*((guint16 *) data));
   jump = data[2];
-  if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-    SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
+  if (SWFDEC_MOVIE (movie->swf->movie) == movie) {
+    SwfdecDecoder *dec = movie->swf->decoder;
     loaded = dec->frames_loaded;
     g_assert (loaded <= movie->n_frames);
   } else {
@@ -850,26 +850,32 @@ swfdec_action_increment (SwfdecAsContext *cx, guint action, const guint8 *data, 
   SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_as_value_to_number (cx, val) + 1);
 }
 
-#if 0
 static void
 swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecMovie *movie;
   SwfdecBits bits;
-  const char *url, *target;
+  char *url, *target;
 
   swfdec_bits_init_data (&bits, data, len);
-  url = swfdec_bits_skip_string (&bits);
-  target = swfdec_bits_skip_string (&bits);
+  url = swfdec_bits_get_string_with_version (&bits, cx->version);
+  target = swfdec_bits_get_string_with_version (&bits, cx->version);
+  if (url == NULL || target == NULL) {
+    SWFDEC_ERROR ("not enough data in GetURL");
+    g_free (url);
+    g_free (target);
+    return;
+  }
   if (swfdec_bits_left (&bits)) {
     SWFDEC_WARNING ("leftover bytes in GetURL action");
   }
   movie = swfdec_action_get_target (cx);
   if (movie)
-    swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
+    swfdec_movie_load (movie, url, target);
   else
     SWFDEC_WARNING ("no movie to load");
-  return JS_TRUE;
+  g_free (url);
+  g_free (target);
 }
 
 static void
@@ -881,35 +887,30 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
 
   if (len != 1) {
     SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
-    return JS_FALSE;
+    return;
   }
-  target = swfdec_js_to_string (cx, cx->fp->sp[-1]);
-  url = swfdec_js_to_string (cx, cx->fp->sp[-2]);
-  if (target == NULL || url == NULL)
-    return JS_FALSE;
+  target = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  url = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
   method = data[0] >> 6;
   if (method == 3) {
     SWFDEC_ERROR ("GetURL method 3 invalid");
     method = 0;
   }
   if (method) {
-    SWFDEC_ERROR ("FIXME: implement encoding variables using %s", method == 1 ? "GET" : "POST");
+    SWFDEC_FIXME ("implement encoding variables using %s", method == 1 ? "GET" : "POST");
   }
   if (data[0] & 2) {
-    SWFDEC_ERROR ("FIXME: implement LoadTarget");
+    SWFDEC_FIXME ("implement LoadTarget");
   }
   if (data[0] & 1) {
-    SWFDEC_ERROR ("FIXME: implement LoadVariables");
+    SWFDEC_FIXME ("implement LoadVariables");
   }
   movie = swfdec_action_get_target (cx);
   if (movie)
-    swfdec_root_movie_load (SWFDEC_ROOT_MOVIE (movie->root), url, target);
+    swfdec_movie_load (movie, url, target);
   else
     SWFDEC_WARNING ("no movie to load");
-  cx->fp->sp -= 2;
-  return JS_TRUE;
 }
-#endif
 
 static void
 swfdec_action_string_add (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2044,7 +2045,6 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
   return g_string_free (string, FALSE);
 }
 
-#if 0
 static char *
 swfdec_action_print_get_url2 (guint action, const guint8 *data, guint len)
 {
@@ -2060,7 +2060,7 @@ swfdec_action_print_get_url2 (guint action, const guint8 *data, guint len)
     method = 0;
   }
   if (method) {
-    SWFDEC_ERROR ("FIXME: implement encoding variables using %s", method == 1 ? "GET" : "POST");
+    SWFDEC_FIXME ("implement encoding variables using %s", method == 1 ? "GET" : "POST");
   }
   return g_strdup_printf ("GetURL2%s%s%s", method == 0 ? "" : (method == 1 ? " GET" : " POST"),
       data[0] & 2 ? " LoadTarget" : "", data[0] & 1 ? " LoadVariables" : "");
@@ -2070,17 +2070,27 @@ static char *
 swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
 {
   SwfdecBits bits;
-  const char *url, *target;
+  char *url, *target, *ret;
 
   swfdec_bits_init_data (&bits, data, len);
-  url = swfdec_bits_skip_string (&bits);
-  target = swfdec_bits_skip_string (&bits);
+  url = swfdec_bits_get_string (&bits);
+  target = swfdec_bits_get_string (&bits);
+  if (url == NULL) {
+    SWFDEC_ERROR ("not enough data in GetURL");
+    url = g_strdup ("???");
+  }
+  if (target == NULL) {
+    SWFDEC_ERROR ("not enough data in GetURL");
+    target = g_strdup ("???");
+  }
   if (swfdec_bits_left (&bits)) {
     SWFDEC_WARNING ("leftover bytes in GetURL action");
   }
-  return g_strdup_printf ("GetURL %s %s", url, target);
+  ret = g_strdup_printf ("GetURL %s %s", url, target);
+  g_free (url);
+  g_free (target);
+  return ret;
 }
-#endif
 
 static char *
 swfdec_action_print_if (guint action, const guint8 *data, guint len)
@@ -2353,9 +2363,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },
   /* version 3 */
   [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
-#if 0
-  [0x83] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
-#endif
+  [SWFDEC_AS_ACTION_GET_URL] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
   /* version 5 */
   [SWFDEC_AS_ACTION_STORE_REGISTER] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, { NULL, NULL, swfdec_action_store_register, swfdec_action_store_register, swfdec_action_store_register } },
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
@@ -2375,9 +2383,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   /* version 4 */
   [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
   [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
-#if 0
-  [0x9a] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
-#endif
+  [SWFDEC_AS_ACTION_GET_URL2] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
   /* version 5 */
   [SWFDEC_AS_ACTION_DEFINE_FUNCTION] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
   /* version 4 */

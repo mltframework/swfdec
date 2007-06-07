@@ -545,7 +545,7 @@ tag_func_export_assets (SwfdecSwfDecoder * s)
     char *name;
     id = swfdec_bits_get_u16 (bits);
     object = swfdec_swf_decoder_get_character (s, id);
-    name = swfdec_bits_get_string (bits);
+    name = swfdec_bits_get_string_with_version (bits, s->version);
     if (object == NULL) {
       SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
       g_free (name);

@@ -257,7 +257,7 @@ Exactly one of IEEE_8087 or IEEE_MC68k should be defined.
 #define word1(x)        JSDOUBLE_LO32(x)
 #define set_word1(x, y) JSDOUBLE_SET_LO32(x, y)
 
-#define Storeinc(a,b,c) (*(a)++ = (b) << 16 | (c) & 0xffff)
+#define Storeinc(a,b,c) (*(a)++ = ((b) << 16 | (c) & 0xffff))
 
 /* #define P DBL_MANT_DIG */
 /* Ten_pmax = floor(P*log(2)/log(5)) */

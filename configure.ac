@@ -37,6 +37,11 @@ SWFDEC_LIBVERSION="3:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
+dnl ensures the library is linked against the internal Mozilla
+dnl if this doesn't work on your platform, I'll take patches :)
+SYMBOLIC_LDFLAGS="-Wl,-Bsymbolic"
+AC_SUBST(SYMBOLIC_LDFLAGS)
+
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 #ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"

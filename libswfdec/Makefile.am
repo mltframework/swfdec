@@ -95,6 +95,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GST_CFLAGS) $(FFMPEG_CFLAGS) $(MAD_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Swfdec\"
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
+	$(SYMBOLIC_LDFLAGS) \
 	-version-info $(SWFDEC_LIBVERSION) \
 	-export-symbols-regex '^(swfdec_.*)' \
 	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(LIBOIL_LIBS) -lz \

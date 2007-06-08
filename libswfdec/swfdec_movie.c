@@ -218,9 +218,6 @@ swfdec_movie_update (SwfdecMovie *movie)
 void
 swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
 {
-  const SwfdecContent *old_content;
-  SwfdecMovieClass *klass;
-
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
   if (movie->content == content)
@@ -242,8 +239,6 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   }
   SWFDEC_LOG ("setting content of movie %s from %p to %p", 
       movie->name, movie->content, content);
-  old_content = movie->content;
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
   movie->content = content;
   if (!movie->modified) {
     movie->matrix = content->transform;

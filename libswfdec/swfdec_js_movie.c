@@ -361,7 +361,7 @@ mc_hitTest (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       *rval = BOOLEAN_TO_JSVAL (JS_FALSE);
     }
   } else if (argc == 3) {
-    g_assert_not_reached ();
+    SWFDEC_ERROR ("hitTest with 3 arguments not implemented");
   } else {
     return JS_FALSE;
   }

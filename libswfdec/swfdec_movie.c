@@ -768,13 +768,26 @@ swfdec_movie_dispose (GObject *object)
   g_assert (movie->content == &default_content);
 
   SWFDEC_LOG ("disposing movie %s", movie->name);
-  g_free (movie->name);
   if (movie->swf) {
     g_object_unref (movie->swf);
     movie->swf = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
+}
+
+static void
+swfdec_movie_class_mark (SwfdecAsObject *object)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+  GList *walk;
+
+  swfdec_as_string_mark (movie->name);
+  for (walk = movie->list; walk; walk = walk->next) {
+    swfdec_as_object_mark (walk->data);
+  }
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }
 
 /* FIXME: This function can definitely be implemented easier */
@@ -860,6 +873,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 
   object_class->dispose = swfdec_movie_dispose;
 
+  asobject_class->mark = swfdec_movie_class_mark;
   asobject_class->get = swfdec_movie_class_get_variable;
   asobject_class->set = swfdec_movie_class_set_variable;
 
@@ -869,17 +883,20 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 static void
 swfdec_movie_set_name (SwfdecMovie *movie)
 {
+  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
+
   /* FIXME: implement this function in a smarter way, not if (IS_FOO_MOVIE (x)) */
   g_assert (movie->name == NULL);
   if (movie->content->name) {
-    movie->name = g_strdup (movie->content->name);
+    movie->name = swfdec_as_context_get_string (context, movie->content->name);
     movie->has_name = TRUE;
   } else if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-    movie->name = g_strdup_printf ("instance%u", ++player->unnamed_count);
+    movie->name = swfdec_as_context_give_string (context, 
+	g_strdup_printf ("instance%u", ++player->unnamed_count));
     movie->has_name = FALSE;
   } else {
-    movie->name = g_strdup (G_OBJECT_TYPE_NAME (movie));
+    movie->name = swfdec_as_context_get_string (context, G_OBJECT_TYPE_NAME (movie));
     movie->has_name = FALSE;
   }
   SWFDEC_LOG ("created movie %s", movie->name);

@@ -84,7 +84,7 @@ typedef enum {
 struct _SwfdecMovie {
   SwfdecAsObject	object;
 
-  char *		name;			/* name used in to_string */
+  const char *		name;			/* name of movie - GC'd */
   gboolean		has_name;		/* TRUE if name wasn't given automagically */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */

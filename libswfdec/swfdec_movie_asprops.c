@@ -156,8 +156,7 @@ mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   const char *string;
 
   if (movie->has_name) {
-    /* FIXME: make names GC'd */
-    string = swfdec_as_context_get_string (SWFDEC_AS_OBJECT (movie)->context, movie->name);
+    string = movie->name;
   } else {
     string = SWFDEC_AS_STR_EMPTY;
   }
@@ -169,9 +168,9 @@ mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   const char *str;
 
+  /* FIXME: check how names really work */
   str = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
-  g_free (movie->name);
-  movie->name = g_strdup (str);
+  movie->name = str;
   movie->has_name = TRUE;
 }
 

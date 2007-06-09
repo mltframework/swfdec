@@ -24,9 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libswfdec/swfdec_debugger.h>
-#include <libswfdec/swfdec_js.h>
-#include <libswfdec/js/jsdbgapi.h>
-#include <libswfdec/js/jsinterp.h>
 #include "swfdec_player_manager.h"
 #include <libswfdec-gtk/swfdec_source.h>
 

@@ -29,7 +29,6 @@ swfplay_LDFLAGS = $(GTK_LIBS) $(SWFDEC_GTK_LIBS) $(GNOMEVFS_LIBS)
 
 swfdebug_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
 swfdebug_LDFLAGS = $(GTK_LIBS) $(SWFDEC_GTK_LIBS)
-swfdebug_LDADD = $(top_builddir)/libswfdec/js/libjs.la
 
 endif
 

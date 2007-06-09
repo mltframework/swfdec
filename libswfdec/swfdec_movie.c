@@ -220,12 +220,13 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  if (content == NULL)
+    content = &default_content;
+
   if (movie->content == content)
     return;
 
-  if (content == NULL) {
-    content = &default_content;
-  } else if (movie->content != &default_content) {
+  if (movie->content != &default_content && content != &default_content) {
     g_return_if_fail (movie->depth == content->depth);
     g_return_if_fail (movie->content->graphic == content->graphic);
     if (content->name) {
@@ -239,6 +240,8 @@ swfdec_movie_set_content (SwfdecMovie *movie, const SwfdecContent *content)
   }
   SWFDEC_LOG ("setting content of movie %s from %p to %p", 
       movie->name, movie->content, content);
+  if (movie->content->free)
+    swfdec_content_free ((SwfdecContent *) movie->content);
   movie->content = content;
   if (!movie->modified) {
     movie->matrix = content->transform;
@@ -994,7 +997,7 @@ swfdec_movie_new_for_player (SwfdecPlayer *player, guint depth)
   content = swfdec_content_new ((int) depth - 16384);
   content->name = g_strdup_printf ("_level%u", depth);
   ret = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, NULL);
-  g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
+  content->free = TRUE;
   if (swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecSpriteMovie))) {
     g_object_ref (ret);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (ret),

@@ -315,8 +315,8 @@ swfdec_sprite_movie_attachMovie (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
   content->sequence = content;
   content->start = 0;
   content->end = G_MAXUINT;
+  content->free = TRUE;
   ret = swfdec_movie_new (movie, content);
-  g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
   /* run init and construct */
@@ -355,8 +355,8 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsObject *obj, guint argc, SwfdecA
   content->sequence = content;
   content->start = 0;
   content->end = G_MAXUINT;
+  content->free = TRUE;
   ret = swfdec_movie_new (movie->parent, content);
-  g_object_weak_ref (G_OBJECT (ret), (GWeakNotify) swfdec_content_free, content);
   /* must be set by now, the movie has a name */
   swfdec_sprite_movie_copy_props (ret, movie);
   SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, ret->name, ret->depth);

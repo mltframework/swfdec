@@ -653,8 +653,8 @@ swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
   video->width = G_MAXUINT;
   video->height = G_MAXUINT;
   content->graphic = SWFDEC_GRAPHIC (video);
+  content->free = TRUE;
   movie = swfdec_movie_new (parent, content);
-  g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) swfdec_content_free, content);
   g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) g_object_unref, video);
   g_signal_connect (SWFDEC_ROOT_MOVIE (parent)->player, "notify::initialized",
       G_CALLBACK (notify_initialized), movie);

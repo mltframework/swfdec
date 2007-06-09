@@ -278,7 +278,6 @@ Makefile
 doc/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
-libswfdec/js/Makefile
 libswfdec-gtk/Makefile
 player/Makefile
 test/Makefile

@@ -327,7 +327,7 @@ mc_xmouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   double x, y;
 
   swfdec_movie_get_mouse (movie, &x, &y);
-  x = rint (x * SWFDEC_TWIPS_SCALE_FACTOR) / SWFDEC_TWIPS_SCALE_FACTOR;
+  x = SWFDEC_TWIPS_TO_DOUBLE (rint (x));
   SWFDEC_AS_VALUE_SET_NUMBER (rval, x);
 }
 
@@ -337,7 +337,7 @@ mc_ymouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   double x, y;
 
   swfdec_movie_get_mouse (movie, &x, &y);
-  y = rint (y * SWFDEC_TWIPS_SCALE_FACTOR) / SWFDEC_TWIPS_SCALE_FACTOR;
+  y = SWFDEC_TWIPS_TO_DOUBLE (rint (y));
   SWFDEC_AS_VALUE_SET_NUMBER (rval, y);
 }
 

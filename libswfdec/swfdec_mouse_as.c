@@ -47,15 +47,21 @@ swfdec_mouse_removeListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *
 }
 
 static void
-swfdec_mouse_show (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value)
+swfdec_mouse_show (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SWFDEC_PLAYER (object->context)->mouse_visible = TRUE;
+  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+
+  SWFDEC_AS_VALUE_SET_INT (retval, player->mouse_visible ? 1 : 0);
+  player->mouse_visible = TRUE;
 }
 
 static void
-swfdec_mouse_hide (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value)
+swfdec_mouse_hide (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SWFDEC_PLAYER (object->context)->mouse_visible = FALSE;
+  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+
+  SWFDEC_AS_VALUE_SET_INT (retval, player->mouse_visible ? 1 : 0);
+  player->mouse_visible = FALSE;
 }
 
 void

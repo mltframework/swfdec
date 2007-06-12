@@ -57,7 +57,8 @@ swfdec_movie_color_init (SwfdecMovieColor *color)
 /*** AS CODE ***/
 
 static void
-swfdec_movie_color_getRGB (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   int result;
   SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
@@ -81,7 +82,8 @@ add_variable (SwfdecAsObject *obj, const char *name, double value)
 }
 
 static void
-swfdec_movie_color_getTransform (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsObject *ret;
   SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
@@ -89,7 +91,7 @@ swfdec_movie_color_getTransform (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
   if (movie == NULL)
     return;
 
-  ret = swfdec_as_object_new (obj->context);
+  ret = swfdec_as_object_new (cx);
   if (ret == NULL)
     return;
 
@@ -105,7 +107,8 @@ swfdec_movie_color_getTransform (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
 }
 
 static void
-swfdec_movie_color_setRGB (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   guint color;
   SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
@@ -113,7 +116,7 @@ swfdec_movie_color_setRGB (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv,
   if (movie == NULL)
     return;
 
-  color = swfdec_as_value_to_integer (obj->context, &argv[0]);
+  color = swfdec_as_value_to_integer (cx, &argv[0]);
 
   movie->color_transform.ra = 0;
   movie->color_transform.rb = (color & 0xFF0000) >> 16;
@@ -141,7 +144,8 @@ parse_property (SwfdecAsObject *obj, const char *name, int *target, gboolean sca
 }
 
 static void
-swfdec_movie_color_setTransform (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_movie_color_setTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsObject *parse;
   SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
@@ -164,7 +168,8 @@ swfdec_movie_color_setTransform (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
 }
 
 static void
-swfdec_movie_color_construct (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_movie_color_construct (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovieColor *color = SWFDEC_MOVIE_COLOR (obj);
 

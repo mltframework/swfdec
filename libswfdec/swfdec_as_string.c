@@ -66,7 +66,8 @@ swfdec_as_str_nth_char (const char *s, guint n)
 }
 
 static void
-swfdec_as_string_charAt (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_charAt (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
   int i;
@@ -83,26 +84,27 @@ swfdec_as_string_charAt (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv
     return;
   }
   t = g_utf8_next_char (s);
-  s = swfdec_as_context_give_string (object->context, g_strndup (s, t - s));
+  s = swfdec_as_context_give_string (cx, g_strndup (s, t - s));
   SWFDEC_AS_VALUE_SET_STRING (ret, s);
 }
 
 static void
-swfdec_as_string_charCodeAt (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_charCodeAt (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
   int i;
   const char *s;
   gunichar c;
 
-  i = swfdec_as_value_to_integer (object->context, &argv[0]);
+  i = swfdec_as_value_to_integer (cx, &argv[0]);
   if (i < 0) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
     return;
   }
   s = swfdec_as_str_nth_char (string->string, i);
   if (*s == 0) {
-    if (object->context->version > 5) {
+    if (cx->version > 5) {
       SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
     } else {
       SWFDEC_AS_VALUE_SET_INT (ret, 0);
@@ -114,7 +116,8 @@ swfdec_as_string_charCodeAt (SwfdecAsObject *object, guint argc, SwfdecAsValue *
 }
 
 static void
-swfdec_as_string_fromCharCode_5 (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_fromCharCode_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   guint i, c;
   guint8 append;
@@ -123,7 +126,7 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsObject *object, guint argc, SwfdecAsVal
   GByteArray *array = g_byte_array_new ();
 
   for (i = 0; i < argc; i++) {
-    c = ((guint) swfdec_as_value_to_integer (object->context, &argv[i])) % 65536;
+    c = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
     if (c > 255) {
       append = c / 256;
       g_byte_array_append (array, &append, 1);
@@ -135,7 +138,7 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsObject *object, guint argc, SwfdecAsVal
   /* FIXME: are these the correct charset names? */
   s = g_convert ((char *) array->data, array->len, "UTF8", "LATIN1", NULL, NULL, &error);
   if (s) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, s));
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
     g_free (s);
   } else {
     SWFDEC_ERROR ("%s", error->message);
@@ -145,7 +148,8 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsObject *object, guint argc, SwfdecAsVal
 }
 
 static void
-swfdec_as_string_fromCharCode (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_fromCharCode (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   gunichar tmp[8];
   gunichar *chars;
@@ -159,12 +163,12 @@ swfdec_as_string_fromCharCode (SwfdecAsObject *object, guint argc, SwfdecAsValue
     chars = g_new (gunichar, argc);
 
   for (i = 0; i < argc; i++) {
-    chars[i] = ((guint) swfdec_as_value_to_integer (object->context, &argv[i])) % 65536;
+    chars[i] = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
   }
 
   s = g_ucs4_to_utf8 (chars, argc, NULL, NULL, &error);
   if (s) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, s));
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
     g_free (s);
   } else {
     SWFDEC_ERROR ("%s", error->message);
@@ -176,17 +180,18 @@ swfdec_as_string_fromCharCode (SwfdecAsObject *object, guint argc, SwfdecAsValue
 }
 
 static void
-swfdec_as_string_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   const char *s;
 
   if (argc > 0) {
-    s = swfdec_as_value_to_string (object->context, &argv[0]);
+    s = swfdec_as_value_to_string (cx, &argv[0]);
   } else {
     s = SWFDEC_AS_STR_EMPTY;
   }
 
-  if (object->context->frame->construct) {
+  if (cx->frame->construct) {
     SwfdecAsString *string = SWFDEC_AS_STRING (object);
     SwfdecAsValue val;
 
@@ -200,7 +205,8 @@ swfdec_as_string_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *a
 }
 
 static void
-swfdec_as_string_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
 
@@ -208,7 +214,8 @@ swfdec_as_string_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *ar
 }
 
 static void
-swfdec_as_string_valueOf (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
 
@@ -229,27 +236,25 @@ static const char *
 swfdec_as_str_sub (SwfdecAsContext *cx, const char *str, guint offset, guint len)
 {
   const char *end;
-  char *dup;
 
   str = g_utf8_offset_to_pointer (str, offset);
   end = g_utf8_offset_to_pointer (str, len);
-  dup = g_strndup (str, end - str);
-  str = swfdec_as_context_get_string (cx, dup);
-  g_free (dup);
+  str = swfdec_as_context_give_string (cx, g_strndup (str, end - str));
   return str;
 }
 
 static void
-swfdec_as_string_substr (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_substr (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
   int from, to, len;
 
-  from = swfdec_as_value_to_integer (object->context, &argv[0]);
+  from = swfdec_as_value_to_integer (cx, &argv[0]);
   len = g_utf8_strlen (string->string, -1);
   
   if (argc > 1) {
-    to = swfdec_as_value_to_integer (object->context, &argv[1]);
+    to = swfdec_as_value_to_integer (cx, &argv[1]);
     /* FIXME: wtf? */
     if (to < 0) {
       if (-to <= from)
@@ -268,19 +273,20 @@ swfdec_as_string_substr (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv
     from += len;
   from = CLAMP (from, 0, len);
   to = CLAMP (to, 0, len - from);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_str_sub (object->context, string->string, from, to));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_str_sub (cx, string->string, from, to));
 }
 
 static void
-swfdec_as_string_substring (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_substring (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
   int from, to, len;
 
   len = g_utf8_strlen (string->string, -1);
-  from = swfdec_as_value_to_integer (object->context, &argv[0]);
+  from = swfdec_as_value_to_integer (cx, &argv[0]);
   if (argc > 1) {
-    to = swfdec_as_value_to_integer (object->context, &argv[1]);
+    to = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
     to = len;
   }
@@ -295,35 +301,38 @@ swfdec_as_string_substring (SwfdecAsObject *object, guint argc, SwfdecAsValue *a
     to = from;
     from = tmp;
   }
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_str_sub (object->context, string->string, from, to - from));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_str_sub (cx, string->string, from, to - from));
 }
 
 static void
-swfdec_as_string_toLowerCase (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_toLowerCase (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
   char *s;
 
   s = g_utf8_strdown (string->string, -1);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, s));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
   g_free (s);
 }
 
 static void
-swfdec_as_string_toUpperCase (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
   char *s;
 
   s = g_utf8_strup (string->string, -1);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, s));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
   g_free (s);
 }
 
 /* escape and unescape are implemented here so the mad string functions share the same place */
 
 static void
-swfdec_as_string_unescape_5 (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_unescape_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   GByteArray *array;
   const char *msg;
@@ -336,7 +345,7 @@ swfdec_as_string_unescape_5 (SwfdecAsObject *object, guint argc, SwfdecAsValue *
   g_byte_array_append (array, (guchar *) chr, 1); \
 }G_STMT_END
   array = g_byte_array_new ();
-  msg = swfdec_as_value_to_string (object->context, &argv[0]);
+  msg = swfdec_as_value_to_string (cx, &argv[0]);
   in = s = g_convert (msg, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
   if (s == NULL) {
     SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", msg);
@@ -379,7 +388,7 @@ swfdec_as_string_unescape_5 (SwfdecAsObject *object, guint argc, SwfdecAsValue *
   g_byte_array_append (array, (guchar *) &cur, 1);
   out = g_convert ((char *) array->data, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
   if (out) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, out));
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, out));
     g_free (out);
   } else {
     g_warning ("can't convert %s to UTF-8", msg);
@@ -390,15 +399,16 @@ swfdec_as_string_unescape_5 (SwfdecAsObject *object, guint argc, SwfdecAsValue *
 }
 
 static void
-swfdec_as_string_escape (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   GByteArray *array;
   const char *s;
   char *in = NULL;
 
   array = g_byte_array_new ();
-  s = swfdec_as_value_to_string (object->context, &argv[0]);
-  if (object->context->version <= 5) {
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  if (cx->version <= 5) {
     in = g_convert (s, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
     if (s == NULL) {
       SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", s);
@@ -423,13 +433,14 @@ swfdec_as_string_escape (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv
     s++;
   }
   g_byte_array_append (array, (guchar *) s, 1);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, (char *) array->data));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, (char *) array->data));
   g_byte_array_free (array, TRUE);
   g_free (in);
 }
 
 static void
-swfdec_as_string_unescape (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_string_unescape (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   GByteArray *array;
   const char *s, *msg;
@@ -469,7 +480,7 @@ swfdec_as_string_unescape (SwfdecAsObject *object, guint argc, SwfdecAsValue *ar
   } \
 }G_STMT_END
   array = g_byte_array_new ();
-  msg = s = swfdec_as_value_to_string (object->context, &argv[0]);
+  msg = s = swfdec_as_value_to_string (cx, &argv[0]);
   while (*s != 0) {
     if (decoding) {
       decoding++;
@@ -511,7 +522,7 @@ swfdec_as_string_unescape (SwfdecAsObject *object, guint argc, SwfdecAsValue *ar
   }
   g_byte_array_append (array, (guchar *) &cur, 1);
   if (g_utf8_validate ((char *) array->data, -1, NULL)) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (object->context, (char *) array->data));
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, (char *) array->data));
   } else {
     g_warning ("%s unescaped is invalid UTF-8", msg);
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);

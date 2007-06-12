@@ -27,6 +27,10 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
+/*** GTK-DOC ***/
+
+/*** IMPLEMENTATION ***/
+
 G_DEFINE_TYPE (SwfdecAsNativeFunction, swfdec_as_native_function, SWFDEC_TYPE_AS_FUNCTION)
 
 static SwfdecAsFrame *

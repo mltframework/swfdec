@@ -30,10 +30,10 @@
 /*** INTERVALS ***/
 
 static void
-swfdec_player_do_set_interval (gboolean repeat, SwfdecAsObject *obj, guint argc, 
+swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (obj->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
   SwfdecAsObject *object;
   guint id, msecs;
 #define MIN_INTERVAL_TIME 10
@@ -44,7 +44,7 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsObject *obj, guint argc,
   }
   object = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   if (SWFDEC_IS_AS_FUNCTION (object)) {
-    msecs = swfdec_as_value_to_integer (obj->context, &argv[1]);
+    msecs = swfdec_as_value_to_integer (cx, &argv[1]);
     if (msecs < MIN_INTERVAL_TIME) {
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
@@ -57,8 +57,8 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsObject *obj, guint argc,
       SWFDEC_WARNING ("setInterval needs 3 arguments when not called with function");
       return;
     }
-    name = swfdec_as_value_to_string (obj->context, &argv[1]);
-    msecs = swfdec_as_value_to_integer (obj->context, &argv[2]);
+    name = swfdec_as_value_to_string (cx, &argv[1]);
+    msecs = swfdec_as_value_to_integer (cx, &argv[2]);
     if (msecs < MIN_INTERVAL_TIME) {
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
@@ -69,18 +69,20 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsObject *obj, guint argc,
 }
 
 static void
-swfdec_player_setInterval (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_player_setInterval (SwfdecAsContext *cx, SwfdecAsObject *obj, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  swfdec_player_do_set_interval (TRUE, obj, argc, argv, rval);
+  swfdec_player_do_set_interval (TRUE, cx, argc, argv, rval);
 }
 
 static void
-swfdec_player_clearInterval (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (obj->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
   guint id;
   
-  id = swfdec_as_value_to_integer (obj->context, &argv[0]);
+  id = swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_interval_remove (player, id);
 }
 
@@ -152,18 +154,18 @@ static JSFunctionSpec global_methods[] = {
 #endif
 
 static void
-swfdec_player_object_registerClass (SwfdecAsObject *object, guint argc, 
-    SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *name;
   
-  name = swfdec_as_value_to_string (object->context, &argv[0]);
+  name = swfdec_as_value_to_string (cx, &argv[0]);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }
   
-  swfdec_player_set_export_class (SWFDEC_PLAYER (object->context), name, 
+  swfdec_player_set_export_class (SWFDEC_PLAYER (cx), name, 
       SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]));
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }

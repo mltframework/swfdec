@@ -32,9 +32,10 @@
 
 #define MATH_FUN(name) \
 static void \
-swfdec_as_math_ ## name (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret) \
+swfdec_as_math_ ## name (SwfdecAsContext *cx, SwfdecAsObject *object, \
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret) \
 { \
-  double d = swfdec_as_value_to_number (object->context, &argv[0]); \
+  double d = swfdec_as_value_to_number (cx, &argv[0]); \
 \
   d = name (d); \
   SWFDEC_AS_VALUE_SET_NUMBER (ret, d); \
@@ -54,52 +55,58 @@ MATH_FUN (sqrt)
 MATH_FUN (tan)
 
 static void
-swfdec_as_math_abs (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_math_abs (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double v = swfdec_as_value_to_number (object->context, &argv[0]);
+  double v = swfdec_as_value_to_number (cx, &argv[0]);
   SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (v));
 }
 
 static void
-swfdec_as_math_atan2 (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_math_atan2 (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double y = swfdec_as_value_to_number (object->context, &argv[0]);
-  double x = swfdec_as_value_to_number (object->context, &argv[1]);
+  double y = swfdec_as_value_to_number (cx, &argv[0]);
+  double x = swfdec_as_value_to_number (cx, &argv[1]);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, atan2 (y, x));
 }
 
 static void
-swfdec_as_math_max (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_math_max (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double x = swfdec_as_value_to_number (object->context, &argv[0]);
-  double y = swfdec_as_value_to_number (object->context, &argv[1]);
+  double x = swfdec_as_value_to_number (cx, &argv[0]);
+  double y = swfdec_as_value_to_number (cx, &argv[1]);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, MAX (x, y));
 }
 
 static void
-swfdec_as_math_min (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_math_min (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double x = swfdec_as_value_to_number (object->context, &argv[0]);
-  double y = swfdec_as_value_to_number (object->context, &argv[1]);
+  double x = swfdec_as_value_to_number (cx, &argv[0]);
+  double y = swfdec_as_value_to_number (cx, &argv[1]);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, MIN (x, y));
 }
 
 static void
-swfdec_as_math_pow (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_math_pow (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double x = swfdec_as_value_to_number (object->context, &argv[0]);
-  double y = swfdec_as_value_to_number (object->context, &argv[1]);
+  double x = swfdec_as_value_to_number (cx, &argv[0]);
+  double y = swfdec_as_value_to_number (cx, &argv[1]);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, pow (x, y));
 }
 
 static void
-swfdec_as_math_random (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_math_random (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, g_rand_double (object->context->rand));
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, g_rand_double (cx->rand));
 }
 
 /* define some math constants if glib doesn't have them */

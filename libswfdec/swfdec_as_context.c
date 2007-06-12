@@ -446,8 +446,7 @@ start:
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
     if (frame->argc >= native->min_args && 
 	(native->type == 0 || 
-	 (frame->thisp != NULL && 
-	  g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)))) {
+	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type))) {
       /* FIXME FIXME FIXME: no casting here please! */
       native->native (context, frame->thisp, frame->argc, 
 	  (SwfdecAsValue *) frame->argv, frame->return_value);

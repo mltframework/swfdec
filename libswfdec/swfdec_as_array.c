@@ -26,6 +26,7 @@
 
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_debug.h"
@@ -194,6 +195,38 @@ swfdec_as_array_do_push (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv
   SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_get_length (object));
 }
 
+static void
+swfdec_as_array_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecAsContext *cx = object->context;
+  SwfdecAsArray *array;
+
+  if (!cx->frame->construct) {
+    SwfdecAsValue val;
+    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsArray)))
+      return;
+    object = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
+    swfdec_as_object_add (object, cx, sizeof (SwfdecAsArray));
+    swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Array, &val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+      swfdec_as_object_set_constructor (object, SWFDEC_AS_VALUE_GET_OBJECT (&val), FALSE);
+    } else {
+      SWFDEC_INFO ("\"Array\" is not an object");
+    }
+  }
+  array = SWFDEC_AS_ARRAY (object);
+  if (argc == 1 && SWFDEC_AS_VALUE_IS_NUMBER (&argv[0])) {
+    SwfdecAsValue val;
+    int l = swfdec_as_value_to_integer (cx, &argv[0]);
+    SWFDEC_AS_VALUE_SET_INT (&val, l < 0 ? 0 : l);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_length, &val);
+  } else if (argc > 0) {
+    swfdec_as_array_append (array, argc, argv);
+  }
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+}
+
 void
 swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
 {
@@ -203,7 +236,7 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Array, SWFDEC_TYPE_AS_ARRAY, NULL, 0));
+      SWFDEC_AS_STR_Array, 0, swfdec_as_array_construct, 0));
   swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (array), SWFDEC_TYPE_AS_ARRAY);
   if (!array)
     return;

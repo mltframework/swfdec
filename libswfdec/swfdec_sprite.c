@@ -369,7 +369,7 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
 #define SWFDEC_IMPLEMENTED_EVENTS \
-  (SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER | \
+  (SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER | SWFDEC_EVENT_INITIALIZE | SWFDEC_EVENT_CONSTRUCT | \
    SWFDEC_EVENT_MOUSE_DOWN | SWFDEC_EVENT_MOUSE_MOVE | SWFDEC_EVENT_MOUSE_UP)
       if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
 	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);

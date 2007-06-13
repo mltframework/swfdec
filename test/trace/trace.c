@@ -17,7 +17,7 @@ run_test (const char *filename)
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
-  guint time_left;
+  guint advance;
   char *str;
   GString *string;
   GError *error = NULL;
@@ -38,17 +38,8 @@ run_test (const char *filename)
     return FALSE;
   }
 
-  time_left = ceil (10000 / swfdec_player_get_rate (player));
-  /* FIXME: Make the number of iterations configurable? */
-  while (TRUE) {
-    /* FIXME: will not do 10 iterations if there's other stuff loaded */
-    guint advance = swfdec_player_get_next_event (player);
-
-    if (advance > time_left)
-      break;
-    swfdec_player_advance (player, advance);
-    time_left -= advance;
-  }
+  advance = ceil (10000 / swfdec_player_get_rate (player));
+  swfdec_player_advance (player, advance);
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);
 

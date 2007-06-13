@@ -197,9 +197,8 @@ swfdec_as_array_do_push (SwfdecAsContext *cx,
 }
 
 static void
-swfdec_as_array_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsContext *cx = object->context;
   SwfdecAsArray *array;
 
   if (!cx->frame->construct) {

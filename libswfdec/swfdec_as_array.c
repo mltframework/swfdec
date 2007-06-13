@@ -161,9 +161,9 @@ swfdec_as_array_append (SwfdecAsArray *array, guint n, const SwfdecAsValue *valu
 /*** AS CODE ***/
 
 static void
-swfdec_as_array_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_array_toString (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsContext *cx = object->context;
   int i, length;
   const char *s, *str;
   SwfdecAsValue val;
@@ -187,7 +187,8 @@ swfdec_as_array_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *arg
 }
 
 static void
-swfdec_as_array_do_push (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_array_do_push (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsArray *array = SWFDEC_AS_ARRAY (object);
 

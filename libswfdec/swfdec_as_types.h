@@ -45,7 +45,11 @@ typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsScope SwfdecAsScope;
 typedef struct _SwfdecAsStack SwfdecAsStack;
 typedef struct _SwfdecAsValue SwfdecAsValue;
-typedef void (* SwfdecAsNative) (SwfdecAsObject *thisp, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval);
+typedef void (* SwfdecAsNative) (SwfdecAsContext *	context, 
+				 SwfdecAsObject *	thisp,
+				 guint			argc,
+				 SwfdecAsValue *	argv,
+				 SwfdecAsValue *	retval);
 
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {

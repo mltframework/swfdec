@@ -71,24 +71,36 @@ swfdec_as_number_new (SwfdecAsContext *context, double number)
 /*** AS CODE ***/
 
 static void
-swfdec_as_number_construct (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (object->context->frame->construct && argc > 0) {
-    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
-    num->number = swfdec_as_value_to_number (object->context, &argv[0]);
+  double d;
+
+  if (argc > 0) {
+    d = swfdec_as_value_to_number (object->context, &argv[0]);
+  } else {
+    d = NAN;
   }
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+
+  if (cx->frame->construct) {
+    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
+    num->number = d;
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  } else {
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, d);
+  }
 }
 
 static void
-swfdec_as_number_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
   SwfdecAsValue val;
   const char *s;
   
   if (argc > 0) {
-    SWFDEC_ERROR ("radix is not yet implemented");
+    SWFDEC_FIXME ("radix is not yet implemented");
   }
   SWFDEC_AS_VALUE_SET_NUMBER (&val, num->number);
   s = swfdec_as_value_to_string (object->context, &val);
@@ -96,7 +108,8 @@ swfdec_as_number_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *ar
 }
 
 static void
-swfdec_as_number_valueOf (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
 

@@ -27,9 +27,10 @@
 #include "swfdec_player_internal.h"
 
 static void
-swfdec_mouse_addListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value)
+swfdec_mouse_addListener (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
@@ -37,9 +38,10 @@ swfdec_mouse_addListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *arg
 }
 
 static void
-swfdec_mouse_removeListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value)
+swfdec_mouse_removeListener (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
@@ -47,18 +49,20 @@ swfdec_mouse_removeListener (SwfdecAsObject *object, guint argc, SwfdecAsValue *
 }
 
 static void
-swfdec_mouse_show (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_mouse_show (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
   SWFDEC_AS_VALUE_SET_INT (retval, player->mouse_visible ? 1 : 0);
   player->mouse_visible = TRUE;
 }
 
 static void
-swfdec_mouse_hide (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_mouse_hide (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
   SWFDEC_AS_VALUE_SET_INT (retval, player->mouse_visible ? 1 : 0);
   player->mouse_visible = FALSE;

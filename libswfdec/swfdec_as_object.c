@@ -424,7 +424,8 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
 /*** SIMPLIFICATIONS ***/
 
 static void
-swfdec_as_object_do_nothing (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_object_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
 }
 
@@ -647,7 +648,8 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
 /*** AS CODE ***/
 
 static void
-swfdec_as_object_hasOwnProperty (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   const char *name;
   guint flags;
@@ -662,13 +664,15 @@ swfdec_as_object_hasOwnProperty (SwfdecAsObject *object, guint argc, SwfdecAsVal
 }
 
 static void
-swfdec_as_object_valueOf (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_object_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
 static void
-swfdec_as_object_toString (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_object_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   if (SWFDEC_IS_AS_FUNCTION (object)) {
     SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__type_Function_);
@@ -701,10 +705,13 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
 
   if (version > 5) {
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 0, swfdec_as_object_hasOwnProperty, 1);
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 
+	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_hasOwnProperty, 1);
   }
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, 0, swfdec_as_object_valueOf, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0, swfdec_as_object_toString, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, 
+      SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_valueOf, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 
+      SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_toString, 0);
 }
 
 void

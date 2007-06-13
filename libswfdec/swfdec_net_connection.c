@@ -110,7 +110,8 @@ swfdec_net_connection_connect (SwfdecNetConnection *conn, const char *url)
 /*** AS CODE ***/
 
 static void
-swfdec_net_connection_do_connect (SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_net_connection_do_connect (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecNetConnection *conn = SWFDEC_NET_CONNECTION (obj);
   const char *url;

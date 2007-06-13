@@ -27,6 +27,21 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
+/*** GTK-DOC ***/
+
+/**
+ * SwfdecAsNative:
+ * context: #SwfdecAsContext
+ * thisp: the this object. <warning>Can be %NULL.</warning>
+ * argc: number of arguments passed to this function
+ * argv: the @argc arguments passed to this function
+ * retval: set to the return value. Initialized to undefined by default
+ *
+ * This is the prototype for all native functions.
+ */
+
+/*** IMPLEMENTATION ***/
+
 G_DEFINE_TYPE (SwfdecAsNativeFunction, swfdec_as_native_function, SWFDEC_TYPE_AS_FUNCTION)
 
 static SwfdecAsFrame *

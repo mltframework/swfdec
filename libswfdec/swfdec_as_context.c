@@ -446,10 +446,10 @@ start:
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
     if (frame->argc >= native->min_args && 
 	(native->type == 0 || 
-	 (frame->thisp != NULL && 
-	  g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)))) {
-      /* FIXME FIXME FIXME! */
-      native->native (frame->thisp, frame->argc, (SwfdecAsValue *) frame->argv, frame->return_value);
+	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type))) {
+      /* FIXME FIXME FIXME: no casting here please! */
+      native->native (context, frame->thisp, frame->argc, 
+	  (SwfdecAsValue *) frame->argv, frame->return_value);
     }
     swfdec_as_context_return (context);
     goto start;
@@ -770,46 +770,50 @@ swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object, const char *s,
 }
 
 static void
-swfdec_as_context_ASSetPropFlags (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   guint flags[2]; /* flags and mask - array so we can pass it as data pointer */
   SwfdecAsObject *obj;
 
-  if (object->context->version < 6) {
-    SWFDEC_WARNING ("ASSetPropFlags needs some limiteations for Flash 5");
+  if (cx->version < 6) {
+    SWFDEC_FIXME ("ASSetPropFlags needs some limitations for Flash 5");
   }
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
   obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
-  flags[0] = swfdec_as_value_to_integer (object->context, &argv[2]);
+  flags[0] = swfdec_as_value_to_integer (cx, &argv[2]);
   /* be sure to not delete the NATIVE flag */
   flags[0] &= 7;
-  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (object->context, &argv[3]) : -1;
+  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : -1;
   if (SWFDEC_AS_VALUE_IS_NULL (&argv[1])) {
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
   } else {
-    SWFDEC_ERROR ("ASSetPropFlags for non-null properties not implemented yet");
+    SWFDEC_FIXME ("ASSetPropFlags for non-null properties not implemented yet");
   }
 }
 
 static void
-swfdec_as_context_isFinite (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_context_isFinite (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  double d = swfdec_as_value_to_number (object->context, &argv[0]);
+  double d = swfdec_as_value_to_number (cx, &argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isfinite (d) ? TRUE : FALSE);
 }
 
 static void
-swfdec_as_context_isNaN (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_context_isNaN (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  double d = swfdec_as_value_to_number (object->context, &argv[0]);
+  double d = swfdec_as_value_to_number (cx, &argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isnan (d) ? TRUE : FALSE);
 }
 
 static void
-swfdec_as_context_parseInt (SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  int i = swfdec_as_value_to_integer (object->context, &argv[0]);
+  int i = swfdec_as_value_to_integer (cx, &argv[0]);
   SWFDEC_AS_VALUE_SET_INT (retval, i);
 }
 

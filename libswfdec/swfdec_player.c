@@ -630,13 +630,7 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   GList *walk;
 
   SWFDEC_INFO ("=== START ITERATION ===");
-  /* First, we prepare the iteration. We flag all movies for removal that will 
-   * be removed */
-  for (walk = player->movies; walk; walk = walk->next) {
-    if (SWFDEC_IS_SPRITE_MOVIE (walk->data))
-      swfdec_sprite_movie_prepare (walk->data);
-  }
-  /* Step 2: start the iteration. This performs a goto next frame on all 
+  /* start the iteration. This performs a goto next frame on all 
    * movies that are not stopped. It also queues onEnterFrame.
    */
   for (walk = player->movies; walk; walk = walk->next) {
@@ -963,9 +957,12 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     SwfdecLoader *loader, const char *variables)
 {
   SwfdecMovie *movie;
+  const char *name;
 
   swfdec_player_remove_level (player, depth);
-  movie = swfdec_movie_new_for_player (player, depth);
+  name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%u", depth));
+  movie = swfdec_movie_new (player, depth - 16384, NULL, NULL, name);
+  movie->name = SWFDEC_AS_STR_EMPTY;
   swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader);
   g_object_unref (loader);
   if (variables)

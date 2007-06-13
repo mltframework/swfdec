@@ -271,10 +271,7 @@ swfdec_sprite_movie_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 static void
 swfdec_sprite_movie_init_from_object (SwfdecMovie *movie, SwfdecAsObject *obj)
 {
-  SwfdecPlayer *player;
-
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  g_queue_remove (player->init_queue, movie);
+  swfdec_movie_initialize (movie);
 }
 
 static void
@@ -284,7 +281,6 @@ swfdec_sprite_movie_attachMovie (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
   SwfdecMovie *ret;
   const char *name, *export;
   int depth;
-  SwfdecContent *content;
   SwfdecGraphic *sprite;
 
   export = swfdec_as_value_to_string (obj->context, &argv[0]);
@@ -307,21 +303,11 @@ swfdec_sprite_movie_attachMovie (SwfdecAsObject *obj, guint argc, SwfdecAsValue 
   ret = swfdec_movie_find (movie, depth);
   if (ret)
     swfdec_movie_remove (ret);
-  content = swfdec_content_new (depth);
-  content->graphic = sprite;
-  content->depth = depth;
-  content->clip_depth = 0; /* FIXME: check this */
-  content->name = g_strdup (name);
-  content->sequence = content;
-  content->start = 0;
-  content->end = G_MAXUINT;
-  content->free = TRUE;
-  ret = swfdec_movie_new (movie, content);
+  ret = swfdec_movie_new (SWFDEC_PLAYER (obj->context), depth, movie, sprite, name);
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
   /* run init and construct */
   swfdec_sprite_movie_init_from_object (ret, NULL);
-  swfdec_movie_run_construct (ret);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
 }
 
@@ -332,7 +318,7 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsObject *obj, guint argc, SwfdecA
   SwfdecMovie *ret;
   const char *name;
   int depth;
-  SwfdecContent *content;
+  SwfdecGraphic *graphic = NULL;
 
   name = swfdec_as_value_to_string (obj->context, &argv[0]);
   depth = swfdec_as_value_to_integer (obj->context, &argv[1]);
@@ -345,20 +331,17 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsObject *obj, guint argc, SwfdecA
   ret = swfdec_movie_find (movie->parent, depth);
   if (ret)
     swfdec_movie_remove (ret);
-  content = swfdec_content_new (depth);
-  *content = *movie->content;
-  if (content->events)
-    content->events = swfdec_event_list_copy (content->events);
-  content->depth = depth;
-  content->clip_depth = 0; /* FIXME: check this */
-  content->name = g_strdup (name);
-  content->sequence = content;
-  content->start = 0;
-  content->end = G_MAXUINT;
-  content->free = TRUE;
-  ret = swfdec_movie_new (movie->parent, content);
-  /* must be set by now, the movie has a name */
+  /* FIXME: make this a vfunc */
+  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    graphic = SWFDEC_GRAPHIC (SWFDEC_SPRITE_MOVIE (movie)->sprite);
+  } else {
+    SWFDEC_FIXME ("need a way to get the graphic from a movie");
+  }
+  ret = swfdec_movie_new (SWFDEC_PLAYER (obj->context), depth, movie->parent, graphic, name);
+  swfdec_movie_set_static_properties (ret, &movie->original_transform,
+      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, movie->events);
   swfdec_sprite_movie_copy_props (ret, movie);
+  swfdec_movie_initialize (ret);
   SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, ret->name, ret->depth);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
 }

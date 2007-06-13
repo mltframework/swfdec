@@ -111,15 +111,16 @@ dump_sprite (SwfdecSprite *s)
 	switch (action->type) {
 	  case SWFDEC_SPRITE_ACTION_SCRIPT:
 	    g_print ("   %4u script\n", i);
-	  case SWFDEC_SPRITE_ACTION_UPDATE:
+	    break;
 	  case SWFDEC_SPRITE_ACTION_REMOVE:
+	    g_print ("   %4u %4d remove\n", i, GPOINTER_TO_INT (action->data) + 16384);
 	    break;
 	  case SWFDEC_SPRITE_ACTION_ADD:
+	  case SWFDEC_SPRITE_ACTION_UPDATE:
 	    {
 	      SwfdecContent *content = action->data;
-	      g_assert (content == content->sequence);
-	      g_assert (content->start == i);
-	      g_print ("   %4u -%4u %3d", i, content->end, content->depth + 16384);
+	      g_print ("   %4u %4u %s", i, content->depth + 16384, 
+		  action->type == SWFDEC_SPRITE_ACTION_ADD ? "add   " : "update");
 	      if (content->clip_depth)
 		g_print ("%4d", content->clip_depth + 16384);
 	      else

@@ -71,12 +71,11 @@ struct _SwfdecSprite
   SwfdecGraphic		graphic;
 
   SwfdecSpriteFrame *	frames;		/* the n_frames different frames */
-  guint		n_frames;	/* number of frames in this sprite */
+  guint			n_frames;	/* number of frames in this sprite */
   SwfdecScript *	init_action;	/* action to run when initializing this sprite */
 
   /* parse state */
-  guint		parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
-  GHashTable *		live_content;	/* depth->SwfdecSpriteContent for every content in parse_frame */
+  guint			parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
 };
 
 struct _SwfdecSpriteClass

@@ -33,25 +33,9 @@
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_utils.h"
 
 /*** SWFDEC_SPRITE_MOVIE ***/
-
-static SwfdecMovie *
-swfdec_sprite_movie_find (GList *movie_list, int depth)
-{
-  GList *walk;
-
-  for (walk = movie_list; walk; walk = walk->next) {
-    SwfdecMovie *movie = walk->data;
-
-    if (movie->depth < depth)
-      continue;
-    if (movie->depth == depth)
-      return movie;
-    break;
-  }
-  return NULL;
-}
 
 static gboolean
 swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
@@ -73,7 +57,7 @@ swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
 
 static void
 swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAction *action,
-    gboolean skip_scripts, GList **movie_list)
+    gboolean skip_scripts)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
@@ -90,28 +74,26 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
     case SWFDEC_SPRITE_ACTION_ADD:
       content = action->data;
       SWFDEC_LOG ("ADD action: depth %d", content->depth);
-      if (swfdec_sprite_movie_remove_child (mov, content->depth))
-	SWFDEC_DEBUG ("removed a child before adding new one");
-      child = swfdec_sprite_movie_find (*movie_list, content->depth);
-      if (child == NULL || child->content->sequence != content->sequence) {
-	child = swfdec_movie_new (mov, content);
+      if (swfdec_movie_find (mov, content->depth)) {
+	SWFDEC_WARNING ("Could not add movie, depth %d is already occupied", content->depth);
       } else {
-	swfdec_movie_set_content (child, content);
-	*movie_list = g_list_remove (*movie_list, child);
-	mov->list = g_list_insert_sorted (mov->list, child, swfdec_movie_compare_depths);
+	child = swfdec_movie_new_for_content (mov, content);
       }
       break;
     case SWFDEC_SPRITE_ACTION_UPDATE:
       content = action->data;
-      SWFDEC_LOG ("UPDATE action: depth %d", content->depth);
+      SWFDEC_LOG ("ADD action: depth %d", content->depth);
       child = swfdec_movie_find (mov, content->depth);
-      if (child != NULL && child->content->sequence == content->sequence) {
-	swfdec_movie_set_content (child, content);
-      } else if (child) {
-	SWFDEC_INFO ("supposed to update depth %d, but child is in different sequence", 
-	    content->depth);
+      if (child != NULL) {
+	/* FIXME: add ability to change characters - This needs lots of refactoring */
+	swfdec_movie_set_static_properties (child, &content->transform,
+	    &content->color_transform, content->ratio, content->clip_depth, content->events);
+	if (content->name && !g_str_equal (content->name, child->name)) {
+	  /* test this more */
+	  child->name = swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (player), content->name);
+	}
       } else {
-	SWFDEC_INFO ("supposed to update depth %d, but no child", content->depth);
+	SWFDEC_WARNING ("supposed to move a character, but can't");
       }
       break;
     case SWFDEC_SPRITE_ACTION_REMOVE:
@@ -124,38 +106,20 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
   }
 }
 
-static void
-swfdec_movie_tell_about_removal (SwfdecMovie *movie)
+static gboolean
+swfdec_movie_is_compatible (SwfdecMovie *movie, SwfdecMovie *with)
 {
-  GList *walk;
-  if (movie->will_be_removed)
-    return;
-  movie->will_be_removed = TRUE;
-  for (walk = movie->list; walk; walk = walk->next) {
-    swfdec_movie_tell_about_removal (walk->data);
+  g_assert (movie->depth == with->depth);
+
+  if (movie->original_ratio != with->original_ratio)
+    return FALSE;
+
+  if (G_OBJECT_TYPE (movie) != G_OBJECT_TYPE (with)) {
+    SWFDEC_FIXME ("this should work, shouldn't it?");
+    return FALSE;
   }
-}
 
-void
-swfdec_sprite_movie_prepare (SwfdecSpriteMovie *movie)
-{
-  GList *walk;
-  guint frame;
-
-  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
-
-  if (SWFDEC_MOVIE (movie)->stopped ||
-      movie->sprite == NULL)
-    return;
-
-  frame = swfdec_sprite_get_next_frame (movie->sprite, SWFDEC_MOVIE (movie)->frame);
-  /* tell all relevant movies that they won't survive this */
-  for (walk = SWFDEC_MOVIE (movie)->list; walk; walk = walk->next) {
-    SwfdecMovie *cur = walk->data;
-    if (frame < cur->content->sequence->start || 
-	frame >= cur->content->sequence->end)
-      swfdec_movie_tell_about_removal (cur);
-  }
+  return TRUE;
 }
 
 static void
@@ -163,12 +127,10 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecPlayer *player;
-  GList *old, *walk;
+  GList *old;
   guint i, j, start;
 
   g_assert (goto_frame < mov->n_frames);
-  if (movie->sprite == NULL)
-    return;
   if (goto_frame >= movie->sprite->parse_frame) {
     SWFDEC_WARNING ("jumping to not-yet-loaded frame %u (loaded: %u/%u)",
 	goto_frame, movie->sprite->parse_frame, movie->sprite->n_frames);
@@ -196,6 +158,8 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
   movie->current_frame = goto_frame;
   SWFDEC_DEBUG ("performing goto %u -> %u for character %u", 
       start, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
+  if (movie->sprite == NULL)
+    return;
   for (i = start; i <= movie->current_frame; i++) {
     SwfdecSpriteFrame *frame = &movie->sprite->frames[i];
     if (movie == mov->swf->movie &&
@@ -207,14 +171,43 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
     for (j = 0; j < frame->actions->len; j++) {
       swfdec_sprite_movie_perform_one_action (movie,
 	  &g_array_index (frame->actions, SwfdecSpriteAction, j),
-	  i != movie->current_frame, &old);
+	  i != movie->current_frame);
     }
   }
-  /* FIXME: not sure about the order here, might be relevant for unload events */
-  for (walk = old; walk; walk = walk->next) {
-    swfdec_movie_remove (walk->data);
+  /* now try to copy eventual movies */
+  if (old) {
+    SwfdecMovie *prev, *cur;
+    GList *old_walk, *walk;
+    walk = mov->list;
+    old_walk = old;
+    if (!walk)
+      goto out;
+    cur = walk->data;
+    for (; old_walk; old_walk = old_walk->next) {
+      prev = old_walk->data;
+      while (cur->depth < prev->depth) {
+	walk = walk->next;
+	if (!walk)
+	  goto out;
+	cur = walk->data;
+      }
+      if (cur->depth == prev->depth &&
+	  swfdec_movie_is_compatible (prev, cur)) {
+	walk->data = prev;
+	swfdec_movie_set_static_properties (prev, &cur->original_transform,
+	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, cur->events);
+	swfdec_movie_destroy (cur);
+	cur = prev;
+	continue;
+      }
+      swfdec_movie_remove (prev);
+    }
+out:
+    for (; old_walk; old_walk = old_walk->next) {
+      swfdec_movie_remove (old_walk->data);
+    }
+    g_list_free (old);
   }
-  g_list_free (old);
 }
 
 /*** MOVIE ***/
@@ -232,15 +225,24 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
+swfdec_sprite_movie_do_enter_frame (gpointer movie, gpointer unused)
+{
+  if (SWFDEC_MOVIE (movie)->will_be_removed)
+    return;
+  swfdec_movie_execute_script (movie, SWFDEC_EVENT_ENTER);
+}
+
+static void
 swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   guint goto_frame;
 
   if (mov->will_be_removed)
     return;
 
-  swfdec_movie_queue_script (mov, SWFDEC_EVENT_ENTER);
+  swfdec_player_add_action (player, movie, swfdec_sprite_movie_do_enter_frame, NULL);
   if (!mov->stopped && movie->sprite != NULL) {
     goto_frame = swfdec_sprite_get_next_frame (movie->sprite, mov->frame);
     swfdec_sprite_movie_goto (mov, goto_frame);
@@ -256,6 +258,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   GSList *walk;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
+  g_assert (movie->current_frame < mov->n_frames);
   if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
     g_assert (movie->sound_stream == NULL);
     return FALSE;
@@ -318,9 +321,25 @@ static void
 swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecAsContext *context;
+  SwfdecAsObject *constructor;
+  const char *name;
+
+  g_assert (movie->sprite->parse_frame > 0);
+  g_assert (mov->swf != NULL);
 
   mov->n_frames = movie->sprite->n_frames;
-  g_assert (movie->sprite->parse_frame > 0);
+  name = swfdec_swf_instance_get_export_name (mov->swf,
+      SWFDEC_CHARACTER (movie->sprite));
+  context = SWFDEC_AS_OBJECT (movie)->context;
+  if (name != NULL) {
+    name = swfdec_as_context_get_string (context, name);
+    constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
+      name);
+  } else {
+    constructor = SWFDEC_PLAYER (context)->MovieClip;
+  }
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor, FALSE);
   swfdec_sprite_movie_goto (mov, 0);
   if (!swfdec_sprite_movie_iterate_end (mov)) {
     g_assert_not_reached ();
@@ -341,30 +360,6 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
   }
 }
 
-static void
-swfdec_sprite_movie_add (SwfdecAsObject *object)
-{
-  const char *name;
-  SwfdecAsObject *constructor;
-  SwfdecSpriteMovie *movie;
-
-  movie = SWFDEC_SPRITE_MOVIE (object);
-  if (!movie->sprite)
-    return;
-
-  name = swfdec_swf_instance_get_export_name (SWFDEC_MOVIE (movie)->swf,
-      SWFDEC_CHARACTER (movie->sprite));
-  if (name != NULL) {
-    name = swfdec_as_context_get_string (object->context, name);
-    constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (object->context),
-      name);
-  } else {
-    constructor = SWFDEC_PLAYER (object->context)->MovieClip;
-  }
-  swfdec_as_object_set_constructor (object, constructor, FALSE);
-  SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
-}
-
 static SwfdecMovie *
 swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 {
@@ -373,11 +368,10 @@ swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (!cur->has_name)
+    if (movie->original_name == SWFDEC_AS_STR_EMPTY)
       continue;
-    /* FIXME: make the name string GC'd */
-    if ((version >= 7 && g_str_equal (cur->name, name)) ||
-	strcasecmp (cur->name, name) == 0)
+    if ((version >= 7 && cur->name == name) ||
+	swfdec_str_case_equal (cur->name, name))
       return cur;
   }
   return NULL;
@@ -424,7 +418,6 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   object_class->dispose = swfdec_sprite_movie_dispose;
 
-  asobject_class->add = swfdec_sprite_movie_add;
   asobject_class->get = swfdec_sprite_movie_get_variable;
   asobject_class->mark = swfdec_sprite_movie_mark;
 

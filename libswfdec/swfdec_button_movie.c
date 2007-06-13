@@ -144,7 +144,7 @@ swfdec_button_movie_change_state (SwfdecButtonMovie *movie, SwfdecButtonState st
       if (child) {
 	g_assert_not_reached ();
       }
-      swfdec_movie_new (mov, content);
+      swfdec_movie_new_for_content (mov, content);
     }
   }
   movie->state = state;

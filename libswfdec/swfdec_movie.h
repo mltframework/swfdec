@@ -58,12 +58,10 @@ struct _SwfdecContent {
   SwfdecEventList *	events;
   cairo_operator_t	operator;	/* operator to use when painting (aka blend mode) */   
 
-  SwfdecContent *	sequence;	/* first element in sequence this content belongs to */
-  /* NB: the next two elements are only filled for the sequence leader */
-  guint			start;		/* first frame that contains this sequence */
-  guint			end;		/* first frame that does not contain this sequence anymore */
-
-  gboolean		free;		/* free when unsetting */
+  /* only used by buttons */
+  SwfdecContent *	sequence;
+  guint			start;
+  guint			end;
 };
 #define SWFDEC_CONTENT_DEFAULT { NULL, -1, 0, 0, { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 }, \
   { 256, 0, 256, 0, 256, 0, 256, 0 }, NULL, NULL, CAIRO_OPERATOR_OVER, NULL, 0, G_MAXUINT, FALSE }
@@ -79,20 +77,25 @@ typedef enum {
   SWFDEC_MOVIE_UP_TO_DATE = 0,
   SWFDEC_MOVIE_INVALID_CHILDREN,
   SWFDEC_MOVIE_INVALID_EXTENTS,
-  SWFDEC_MOVIE_INVALID_AREA,
-  SWFDEC_MOVIE_INVALID_MATRIX,
+  SWFDEC_MOVIE_INVALID_MATRIX
 } SwfdecMovieCacheState;
 
 struct _SwfdecMovie {
   SwfdecAsObject	object;
 
   const char *		name;			/* name of movie - GC'd */
-  gboolean		has_name;		/* TRUE if name wasn't given automagically */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
-  const SwfdecContent *	content;           	/* the content we are displaying */
   SwfdecMovieCacheState	cache_state;		/* whether we are up to date */
   SwfdecMovieState	state;			/* state the movie is in */
+
+  /* static properties (set by PlaceObject tags) */
+  const char *		original_name;		/* the original name - GC'd and static */
+  SwfdecColorTransform	original_ctrans;	/* color transform set on this movie */
+  cairo_matrix_t	original_transform;	/* initial transform used */
+  guint			original_ratio;		/* ratio used in this movie */
+  int			clip_depth;		/* up to which movie this movie clips */
+  SwfdecEventList *	events;			/* events queued on this movie */
 
   /* parenting information */
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
@@ -157,17 +160,25 @@ struct _SwfdecMovieClass {
 
 GType		swfdec_movie_get_type		(void);
 
-SwfdecMovie *	swfdec_movie_new		(SwfdecMovie *		parent,
+SwfdecMovie *	swfdec_movie_new		(SwfdecPlayer *		player,
+						 int			depth,
+						 SwfdecMovie *		parent,
+						 SwfdecGraphic *	graphic,
+						 const char *		name);
+SwfdecMovie *	swfdec_movie_new_for_content  	(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
-SwfdecMovie *	swfdec_movie_new_for_player	(SwfdecPlayer *		player,
-						 guint			depth);
 void		swfdec_movie_initialize		(SwfdecMovie *		movie);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_destroy		(SwfdecMovie *		movie);
-void		swfdec_movie_set_content	(SwfdecMovie *		movie,
-						 const SwfdecContent *	content);
+void		swfdec_movie_set_static_properties 
+						(SwfdecMovie *		movie,
+						 const cairo_matrix_t *	transform,
+						 const SwfdecColorTransform *ctrans,
+						 guint			ratio,
+						 int			clip_depth,
+						 SwfdecEventList *	events);
 void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,
 						 SwfdecMovieCacheState	state);

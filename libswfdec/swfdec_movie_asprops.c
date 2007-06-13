@@ -153,25 +153,13 @@ mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
 static void
 mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  const char *string;
-
-  if (movie->has_name) {
-    string = movie->name;
-  } else {
-    string = SWFDEC_AS_STR_EMPTY;
-  }
-  SWFDEC_AS_VALUE_SET_STRING (rval, string);
+  SWFDEC_AS_VALUE_SET_STRING (rval, movie->name);
 }
 
 static void
 mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  const char *str;
-
-  /* FIXME: check how names really work */
-  str = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
-  movie->name = str;
-  movie->has_name = TRUE;
+  movie->name = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
 }
 
 static void

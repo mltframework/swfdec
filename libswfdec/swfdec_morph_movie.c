@@ -67,7 +67,7 @@ static void
 swfdec_morph_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
-  guint ratio = movie->content->ratio;
+  guint ratio = movie->original_ratio;
   SwfdecMorphMovie *mmovie = SWFDEC_MORPH_MOVIE (movie);
   SwfdecMorphShape *morph = mmovie->morph;
   SwfdecGraphic *graphic = SWFDEC_GRAPHIC (morph);
@@ -117,9 +117,9 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
     if (fill) {
       if (SWFDEC_IS_PATTERN (vec->pattern)) {
-	swfdec_pattern_paint (vec->pattern, cr, path, trans, movie->content->ratio);
+	swfdec_pattern_paint (vec->pattern, cr, path, trans, morph->ratio);
       } else {
-	swfdec_stroke_paint (vec->pattern, cr, path, trans, movie->content->ratio);
+	swfdec_stroke_paint (vec->pattern, cr, path, trans, morph->ratio);
       }
     } else {
       cairo_append_path (cr, path);

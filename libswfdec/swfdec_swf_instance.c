@@ -76,12 +76,12 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
 {
   SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
-  SwfdecDecoder *dec;
+  SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
 
   if (loader->error)
     return;
-  if (instance->decoder == NULL) {
+  if (dec == NULL) {
     if (!swfdec_decoder_can_detect (loader->queue))
       return;
     dec = swfdec_decoder_new (player, loader->queue);

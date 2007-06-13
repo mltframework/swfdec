@@ -239,6 +239,10 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
   dec->height = MAX (0, ceil (rect.y1 / SWFDEC_TWIPS_SCALE_FACTOR));
   swfdec_bits_syncbits (&s->b);
   dec->rate = swfdec_bits_get_u16 (&s->b);
+  if (dec->rate == 0) {
+    SWFDEC_INFO ("rate is 0, setting to 1");
+    dec->rate = 1;
+  }
   SWFDEC_LOG ("rate = %g", dec->rate / 256.0);
   dec->frames_total = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG ("n_frames = %d", dec->frames_total);

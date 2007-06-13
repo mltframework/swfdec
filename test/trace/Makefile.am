@@ -24,6 +24,20 @@ EXTRA_DIST = \
 	and-or-7.swf.trace \
 	array.swf \
 	array.swf.trace \
+	array-new.as \
+	array-new-5.swf \
+	array-new-5.swf.trace \
+	array-new-6.swf \
+	array-new-6.swf.trace \
+	array-new-7.swf \
+	array-new-7.swf.trace \
+	array-new-override.as \
+	array-new-override-5.swf \
+	array-new-override-5.swf.trace \
+	array-new-override-6.swf \
+	array-new-override-6.swf.trace \
+	array-new-override-7.swf \
+	array-new-override-7.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

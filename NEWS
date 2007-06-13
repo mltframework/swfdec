@@ -1,4 +1,10 @@
 
+ 0.4.5 ("Death of the Desktop")
+
+This is strictly a bugfix release. Have fun.
+- fix linking issues on Solaris/BSD.
+- fix various crashers.
+
  0.4.4 ("Birthday Cards")
 
 This is a stability release. The number of new supported Flash features

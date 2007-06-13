@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.4.4.1)
+AC_INIT(swfdec,0.4.5)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -33,12 +33,17 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="3:0:0"
+SWFDEC_LIBVERSION="3:0:1"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
 dnl C99 is only required to get definitions for NAN and INFINITY.
 GLOBAL_CFLAGS="$GLOBAL_CFLAGS -std=c99"
+
+dnl ensures the library is linked against the internal Mozilla
+dnl if this doesn't work on your platform, I'll take patches :)
+SYMBOLIC_LDFLAGS="-Wl,-Bsymbolic"
+AC_SUBST(SYMBOLIC_LDFLAGS)
 
 dnl Add parameters for aclocal
 dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)

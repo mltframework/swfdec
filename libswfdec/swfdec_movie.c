@@ -951,6 +951,9 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   }
   if (transform) {
     movie->original_transform = *transform;
+    movie->xscale = swfdec_matrix_get_xscale (&movie->original_transform);
+    movie->yscale = swfdec_matrix_get_yscale (&movie->original_transform);
+    movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
   if (ctrans) {

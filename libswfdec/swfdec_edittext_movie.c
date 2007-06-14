@@ -56,9 +56,14 @@ swfdec_edit_text_movie_render (SwfdecMovie *movie, cairo_t *cr,
 static void
 swfdec_edit_text_movie_dispose (GObject *object)
 {
-  SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (object);
+  SwfdecEditTextMovie *movie = SWFDEC_EDIT_TEXT_MOVIE (object);
 
-  swfdec_edit_text_movie_set_text (text, NULL);
+  if (movie->paragraph) {
+    swfdec_paragraph_free (movie->paragraph);
+    movie->paragraph = NULL;
+  }
+  g_free (movie->str);
+  movie->str = NULL;
 
   G_OBJECT_CLASS (swfdec_edit_text_movie_parent_class)->dispose (object);
 }

@@ -293,6 +293,7 @@ enum {
   AUDIO_ADDED,
   AUDIO_REMOVED,
   LAUNCH,
+  FSCOMMAND,
   LAST_SIGNAL
 };
 
@@ -887,6 +888,36 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, SWFDEC_TYPE_AUDIO);
   /**
+   * SwfdecPlayer::fscommand:
+   * @player: the #SwfdecPlayer affected
+   * @command: the command to execute
+   * @paramter: parameter to pass to the command. The parameter depends on the 
+   *            function.
+   *
+   * This signal is emited whenever a Flash script command (also known as 
+   * fscommand) is encountered. This method is ued by the Flash file to
+   * communicate with the hosting environment. In web browsers it is used to 
+   * call Javascript functions. Standalone Flash players understand a limited 
+   * set of functions. They vary from player to player, but the most common are 
+   * listed here: <itemizedlist>
+   * <listitem><para>"quit": quits the player.</para>
+   * <listitem><para>"fullscreen": A boolean setting (parameter is "true" or 
+   * "false") that sets the player into fullscreen mode.</para>
+   * <listitem><para>"allowscale": A boolean setting that tells the player to
+   * not scale the Flash application.</para>
+   * <listitem><para>"showmenu": A boolean setting that tells the Flash player
+   * to not show its own entries in the right-click menu.</para>
+   * <listitem><para>"exec": Run an external executable. The parameter 
+   * specifies the path.</para>
+   * <listitem><para>"trapallkeys": A boolean setting that tells the Flash 
+   * player to pass all key events to the Flash application instead of using it
+   * for keyboard shortcuts or similar.
+   * </itemizedlist>
+   */
+  signals[FSCOMMAND] = g_signal_new ("fscommand", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING,
+      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
+  /**
    * SwfdecPlayer::launch:
    * @player: the #SwfdecPlayer affected
    * @url: URL to open
@@ -1012,6 +1043,11 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_return_if_fail (url != NULL);
   g_return_if_fail (target != NULL);
 
+  if (g_str_has_prefix (url, "FSCommand:")) {
+    const char *command = url + strlen ("FSCommand:");
+    g_signal_emit (player, signals[FSCOMMAND], 0, command, target);
+    return;
+  }
   g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 

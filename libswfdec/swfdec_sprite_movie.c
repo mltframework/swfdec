@@ -86,8 +86,9 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       child = swfdec_movie_find (mov, content->depth);
       if (child != NULL) {
 	/* FIXME: add ability to change characters - This needs lots of refactoring */
-	swfdec_movie_set_static_properties (child, &content->transform,
-	    &content->color_transform, content->ratio, content->clip_depth, content->events);
+	swfdec_movie_set_static_properties (child, content->has_transform ? &content->transform : NULL,
+	    content->has_color_transform ? &content->color_transform : NULL, 
+	    content->ratio, content->clip_depth, content->events);
 	if (content->name && !g_str_equal (content->name, child->name)) {
 	  /* test this more */
 	  child->name = swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (player), content->name);
@@ -368,7 +369,7 @@ swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (movie->original_name == SWFDEC_AS_STR_EMPTY)
+    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
       continue;
     if ((version >= 7 && cur->name == name) ||
 	swfdec_str_case_equal (cur->name, name))

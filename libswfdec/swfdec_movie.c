@@ -138,10 +138,15 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
 {
   double d, e;
 
-  movie->matrix.xx = movie->original_transform.xx;
-  movie->matrix.xy = movie->original_transform.xy;
-  movie->matrix.yx = movie->original_transform.yx;
-  movie->matrix.yy = movie->original_transform.yy;
+  /* we operate on x0 and y0 when setting movie._x and movie._y */
+  if (movie->modified) {
+    movie->matrix.xx = movie->original_transform.xx;
+    movie->matrix.yx = movie->original_transform.yx;
+    movie->matrix.xy = movie->original_transform.xy;
+    movie->matrix.yy = movie->original_transform.yy;
+  } else {
+    movie->matrix = movie->original_transform;
+  }
 
   d = movie->xscale / swfdec_matrix_get_xscale (&movie->original_transform);
   e = movie->yscale / swfdec_matrix_get_yscale (&movie->original_transform);
@@ -717,7 +722,7 @@ swfdec_movie_dispose (GObject *object)
 
   g_assert (movie->list == NULL);
 
-  SWFDEC_LOG ("disposing movie %s", movie->name);
+  SWFDEC_LOG ("disposing movie %s (depth %d)", movie->name, movie->depth);
   if (movie->swf) {
     g_object_unref (movie->swf);
     movie->swf = NULL;
@@ -899,6 +904,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     SWFDEC_AS_OBJECT (movie)->context = SWFDEC_AS_CONTEXT (player);
   }
   /* set essential properties */
+  movie->depth = depth;
   movie->parent = parent;
   if (parent) {
     movie->swf = g_object_ref (parent->swf);
@@ -908,7 +914,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
-  movie->depth = depth;
   /* set its name */
   if (name) {
     movie->original_name = name;
@@ -991,8 +996,9 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
   movie = swfdec_movie_new (player, content->depth, parent, content->graphic, 
       content->name ? swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (player), content->name) : NULL);
 
-  swfdec_movie_set_static_properties (movie, &content->transform,
-      &content->color_transform, content->ratio, content->clip_depth, content->events);
+  swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
+      content->has_color_transform ? &content->color_transform : NULL, 
+      content->ratio, content->clip_depth, content->events);
   g_queue_push_tail (player->init_queue, movie);
   g_queue_push_tail (player->construct_queue, movie);
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);

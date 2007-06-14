@@ -54,6 +54,8 @@ struct _SwfdecContent {
   guint			ratio;
   cairo_matrix_t	transform;
   SwfdecColorTransform	color_transform;
+  gboolean		has_transform : 1;
+  gboolean		has_color_transform : 1;
   char *		name;
   SwfdecEventList *	events;
   cairo_operator_t	operator;	/* operator to use when painting (aka blend mode) */   

@@ -500,6 +500,7 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
   /* FIXME: need a way to make sure we get updated */
   if (drag) {
     swfdec_movie_update (drag);
+    drag->modified = TRUE;
     swfdec_player_update_drag_movie (player);
   }
 }

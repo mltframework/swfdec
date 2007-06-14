@@ -359,7 +359,7 @@ swfdec_debug_movies_new (SwfdecPlayer *player)
   movies = g_object_new (SWFDEC_TYPE_DEBUG_MOVIES, NULL);
   movies->player = player;
   g_object_ref (player);
-  if (SWFDEC_IS_DEBUGGER (player)) {
+  if (SWFDEC_IS_DEBUGGER (player) && FALSE) {
     g_signal_connect (player, "movie-added", G_CALLBACK (swfdec_debug_movies_added), movies);
     g_signal_connect (player, "movie-removed", G_CALLBACK (swfdec_debug_movies_removed), movies);
   }

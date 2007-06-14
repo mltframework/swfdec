@@ -369,7 +369,7 @@ swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (movie->original_name == SWFDEC_AS_STR_EMPTY)
+    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
       continue;
     if ((version >= 7 && cur->name == name) ||
 	swfdec_str_case_equal (cur->name, name))

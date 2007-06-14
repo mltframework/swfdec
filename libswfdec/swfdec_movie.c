@@ -322,6 +322,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
    * This is just a stop-gap measure to avoid dead movies in those queues */
   g_queue_remove (player->init_queue, movie);
   g_queue_remove (player->construct_queue, movie);
+  swfdec_player_remove_all_actions (player, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
   player->movies = g_list_remove (player->movies, movie);

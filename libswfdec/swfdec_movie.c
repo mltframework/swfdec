@@ -138,10 +138,7 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
 {
   double d, e;
 
-  movie->matrix.xx = movie->original_transform.xx;
-  movie->matrix.xy = movie->original_transform.xy;
-  movie->matrix.yx = movie->original_transform.yx;
-  movie->matrix.yy = movie->original_transform.yy;
+  movie->matrix = movie->original_transform;
 
   d = movie->xscale / swfdec_matrix_get_xscale (&movie->original_transform);
   e = movie->yscale / swfdec_matrix_get_yscale (&movie->original_transform);

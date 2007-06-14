@@ -401,11 +401,13 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
     content = swfdec_content_new (depth);
 
     swfdec_bits_get_matrix (bits, &content->transform, NULL);
+    content->has_transform = TRUE;
     SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
 	content->transform.xx, content->transform.yy, 
 	content->transform.xy, content->transform.yx,
 	content->transform.x0, content->transform.y0);
     swfdec_bits_get_color_transform (bits, &content->color_transform);
+    content->has_color_transform = TRUE;
 
     content->graphic = swfdec_swf_decoder_get_character (s, character);
     if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
@@ -477,6 +479,7 @@ tag_func_define_button (SwfdecSwfDecoder * s)
     content = swfdec_content_new (depth);
 
     swfdec_bits_get_matrix (bits, &content->transform, NULL);
+    content->has_transform = TRUE;
     SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
 	content->transform.xx, content->transform.yy, 
 	content->transform.xy, content->transform.yx,

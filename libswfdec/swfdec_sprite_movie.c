@@ -86,7 +86,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAc
       child = swfdec_movie_find (mov, content->depth);
       if (child != NULL) {
 	/* FIXME: add ability to change characters - This needs lots of refactoring */
-	swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
+	swfdec_movie_set_static_properties (child, content->has_transform ? &content->transform : NULL,
 	    content->has_color_transform ? &content->color_transform : NULL, 
 	    content->ratio, content->clip_depth, content->events);
 	if (content->name && !g_str_equal (content->name, child->name)) {

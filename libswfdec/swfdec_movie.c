@@ -896,6 +896,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     SWFDEC_AS_OBJECT (movie)->context = SWFDEC_AS_CONTEXT (player);
   }
   /* set essential properties */
+  movie->depth = depth;
   movie->parent = parent;
   if (parent) {
     movie->swf = g_object_ref (parent->swf);
@@ -905,7 +906,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
-  movie->depth = depth;
   /* set its name */
   if (name) {
     movie->original_name = name;

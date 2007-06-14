@@ -138,7 +138,15 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
 {
   double d, e;
 
-  movie->matrix = movie->original_transform;
+  /* we operate on x0 and y0 when setting movie._x and movie._y */
+  if (movie->modified) {
+    movie->matrix.xx = movie->original_transform.xx;
+    movie->matrix.yx = movie->original_transform.yx;
+    movie->matrix.xy = movie->original_transform.xy;
+    movie->matrix.yy = movie->original_transform.yy;
+  } else {
+    movie->matrix = movie->original_transform;
+  }
 
   d = movie->xscale / swfdec_matrix_get_xscale (&movie->original_transform);
   e = movie->yscale / swfdec_matrix_get_yscale (&movie->original_transform);
@@ -714,7 +722,7 @@ swfdec_movie_dispose (GObject *object)
 
   g_assert (movie->list == NULL);
 
-  SWFDEC_LOG ("disposing movie %s", movie->name);
+  SWFDEC_LOG ("disposing movie %s (depth %d)", movie->name, movie->depth);
   if (movie->swf) {
     g_object_unref (movie->swf);
     movie->swf = NULL;

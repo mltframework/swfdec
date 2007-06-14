@@ -309,6 +309,7 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
 	content->transform.xx, content->transform.yx,
 	content->transform.xy, content->transform.yy,
 	content->transform.x0, content->transform.y0);
+    content->has_transform = TRUE;
   }
   if (has_color_transform) {
     swfdec_bits_get_color_transform (bits, &content->color_transform);
@@ -317,6 +318,7 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
 	content->color_transform.ga, content->color_transform.gb,
 	content->color_transform.ba, content->color_transform.bb,
 	content->color_transform.aa, content->color_transform.ab);
+    content->has_color_transform = TRUE;
   }
   swfdec_bits_syncbits (bits);
   if (has_ratio) {

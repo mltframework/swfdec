@@ -271,6 +271,13 @@ EXTRA_DIST = \
 	jump-out-of-with.as \
 	jump-out-of-with.swf \
 	jump-out-of-with.swf.trace \
+	level-property.as \
+	level-property-5.swf \
+	level-property-5.swf.trace \
+	level-property-6.swf \
+	level-property-6.swf.trace \
+	level-property-7.swf \
+	level-property-7.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
 	load-4.swf \

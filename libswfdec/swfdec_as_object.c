@@ -60,7 +60,8 @@ swfdec_as_object_mark_property (gpointer key, gpointer value, gpointer unused)
 static void
 swfdec_as_object_do_mark (SwfdecAsObject *object)
 {
-  swfdec_as_object_mark (object->prototype);
+  if (object->prototype)
+    swfdec_as_object_mark (object->prototype);
   g_hash_table_foreach (object->properties, swfdec_as_object_mark_property, NULL);
 }
 

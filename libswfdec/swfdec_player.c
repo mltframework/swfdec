@@ -777,11 +777,15 @@ static void
 swfdec_player_mark (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
+  GList *walk;
 
   g_hash_table_foreach (player->registered_classes, swfdec_player_mark_string_object, NULL);
   swfdec_listener_mark (player->mouse_listener);
   swfdec_listener_mark (player->key_listener);
   swfdec_as_object_mark (player->MovieClip);
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_as_object_mark (walk->data);
+  }
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }

@@ -76,10 +76,9 @@ struct _SwfdecShapeClass
 
 GType swfdec_shape_get_type (void);
 
-int tag_define_shape (SwfdecSwfDecoder * s);
-int tag_define_shape_2 (SwfdecSwfDecoder * s);
-int tag_define_shape_3 (SwfdecSwfDecoder * s);
-int tag_define_shape_4 (SwfdecSwfDecoder * s);
+int tag_define_shape (SwfdecSwfDecoder * s, guint tag);
+int tag_define_shape_3 (SwfdecSwfDecoder * s, guint tag);
+int tag_define_shape_4 (SwfdecSwfDecoder * s, guint tag);
 void swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape,
     SwfdecPatternFunc pattern_func, SwfdecStrokeFunc stroke_func);
 

@@ -83,7 +83,7 @@ swfdec_edit_text_init (SwfdecEditText * text)
 }
 
 int
-tag_func_define_edit_text (SwfdecSwfDecoder * s)
+tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecEditText *text;
   guint id;

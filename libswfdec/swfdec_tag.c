@@ -47,13 +47,13 @@
 #include "swfdec_video.h"
 
 int
-tag_func_end (SwfdecSwfDecoder * s)
+tag_func_end (SwfdecSwfDecoder * s, guint tag)
 {
   return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_protect (SwfdecSwfDecoder * s)
+tag_func_protect (SwfdecSwfDecoder * s, guint tag)
 {
   if (s->protection) {
     SWFDEC_INFO ("This file is really protected.");
@@ -70,7 +70,7 @@ tag_func_protect (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_frame_label (SwfdecSwfDecoder * s)
+tag_func_frame_label (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
   
@@ -87,8 +87,8 @@ tag_func_frame_label (SwfdecSwfDecoder * s)
 
 /* text */
 
-static int
-define_text (SwfdecSwfDecoder * s, int rgba)
+int
+tag_func_define_text (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -150,10 +150,10 @@ define_text (SwfdecSwfDecoder * s, int rgba)
         //printf("  font = %d\n",font);
       }
       if (has_color) {
-        if (rgba) {
-          glyph.color = swfdec_bits_get_rgba (bits);
-        } else {
+        if (tag == SWFDEC_TAG_DEFINETEXT) {
           glyph.color = swfdec_bits_get_color (bits);
+        } else {
+          glyph.color = swfdec_bits_get_rgba (bits);
         }
         //printf("  color = %08x\n",glyph.color);
       }
@@ -175,21 +175,7 @@ define_text (SwfdecSwfDecoder * s, int rgba)
 }
 
 int
-tag_func_define_text (SwfdecSwfDecoder * s)
-{
-  return define_text (s, 0);
-}
-
-int
-tag_func_define_text_2 (SwfdecSwfDecoder * s)
-{
-  return define_text (s, 1);
-}
-
-
-
-int
-tag_func_define_sprite (SwfdecSwfDecoder * s)
+tag_func_define_sprite (SwfdecSwfDecoder * s, guint define_sprite_tag)
 {
   SwfdecBits parse;
   int id;
@@ -212,7 +198,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
   while (swfdec_bits_left (&parse)) {
     int x;
     guint tag_len;
-    SwfdecTagFunc *func;
+    SwfdecTagFunc func;
 
     x = swfdec_bits_get_u16 (&parse);
     tag = (x >> 6) & 0x3ff;
@@ -240,7 +226,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",
           tag, swfdec_swf_decoder_get_tag_name (tag));
     } else if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
-      ret = func (s);
+      ret = func (s, tag);
 
       if (swfdec_bits_left (&s->b)) {
         SWFDEC_WARNING ("early parse finish (%d bytes)", 
@@ -267,7 +253,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_do_action (SwfdecSwfDecoder * s)
+tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecScript *script;
   char *name;
@@ -354,7 +340,7 @@ swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent 
 }
 
 int
-tag_func_define_button_2 (SwfdecSwfDecoder * s)
+tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -442,7 +428,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_define_button (SwfdecSwfDecoder * s)
+tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -505,19 +491,7 @@ tag_func_define_button (SwfdecSwfDecoder * s)
 }
 
 static int
-tag_func_define_font_info_1 (SwfdecSwfDecoder *s)
-{
-  return tag_func_define_font_info (s, 1);
-}
-
-static int
-tag_func_define_font_info_2 (SwfdecSwfDecoder *s)
-{
-  return tag_func_define_font_info (s, 2);
-}
-
-static int
-tag_func_file_attributes (SwfdecSwfDecoder *s)
+tag_func_file_attributes (SwfdecSwfDecoder *s, guint tag)
 {
   int has_metadata, use_network;
 
@@ -535,7 +509,7 @@ tag_func_file_attributes (SwfdecSwfDecoder *s)
 }
 
 int
-tag_func_export_assets (SwfdecSwfDecoder * s)
+tag_func_export_assets (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   guint count, i;
@@ -568,7 +542,7 @@ tag_func_export_assets (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_do_init_action (SwfdecSwfDecoder * s)
+tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   guint id;
@@ -603,7 +577,7 @@ tag_func_do_init_action (SwfdecSwfDecoder * s)
 struct tag_func_struct
 {
   char *name;
-  int (*func) (SwfdecSwfDecoder * s);
+  SwfdecTagFunc func;
   int flag;
 };
 static struct tag_func_struct tag_funcs[] = {
@@ -621,7 +595,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
   [SWFDEC_TAG_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
   [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
-  [SWFDEC_TAG_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info_1, 0},
+  [SWFDEC_TAG_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info, 0},
   [SWFDEC_TAG_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
   [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
   [SWFDEC_TAG_DEFINEBUTTONSOUND] =
@@ -631,13 +605,13 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DEFINEBITSLOSSLESS] =
       {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
   [SWFDEC_TAG_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
-  [SWFDEC_TAG_DEFINESHAPE2] = {"DefineShape2", tag_define_shape_2, 0},
+  [SWFDEC_TAG_DEFINESHAPE2] = {"DefineShape2", tag_define_shape, 0},
   [SWFDEC_TAG_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
   [SWFDEC_TAG_PROTECT] = {"Protect", tag_func_protect, 0},
-  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object_2, SPRITE},
+  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object, SPRITE},
   [SWFDEC_TAG_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, SPRITE},
   [SWFDEC_TAG_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
-  [SWFDEC_TAG_DEFINETEXT2] = {"DefineText2", tag_func_define_text_2, 0},
+  [SWFDEC_TAG_DEFINETEXT2] = {"DefineText2", tag_func_define_text, 0},
   [SWFDEC_TAG_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
   [SWFDEC_TAG_DEFINEBITSJPEG3] = {"DefineBitsJPEG3", tag_func_define_bits_jpeg_3, 0},
   [SWFDEC_TAG_DEFINEBITSLOSSLESS2] =
@@ -662,13 +636,13 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
   [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", tag_func_define_video, 0},
   [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, 0},
-  [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info_2, 0},
+  [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info, 0},
   [SWFDEC_TAG_MX4] = {"MX4", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
   [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, 0},
-  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", swfdec_spriteseg_place_object_3, SPRITE},
+  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", swfdec_spriteseg_place_object, SPRITE},
   [SWFDEC_TAG_IMPORTASSETS2] = {"ImportAssets2", NULL, 0},
   [SWFDEC_TAG_DEFINEFONTALIGNZONES] = {"DefineFontAlignZones", NULL, 0},
   [SWFDEC_TAG_CSMTEXTSETTINGS] = {"CSMTextSettings", NULL, 0},
@@ -695,7 +669,7 @@ swfdec_swf_decoder_get_tag_name (int tag)
   return "unknown";
 }
 
-SwfdecTagFunc *
+SwfdecTagFunc
 swfdec_swf_decoder_get_tag_func (int tag)
 { 
   if (tag >= 0 && tag < n_tag_funcs) {

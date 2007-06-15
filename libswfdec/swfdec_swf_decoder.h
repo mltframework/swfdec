@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 
 //typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecSwfDecoderClass SwfdecSwfDecoderClass;
-typedef int SwfdecTagFunc (SwfdecSwfDecoder *);
+typedef int (* SwfdecTagFunc) (SwfdecSwfDecoder *, guint);
 typedef struct _SwfdecRootExportData SwfdecRootExportData;
 
 typedef enum {
@@ -98,7 +98,7 @@ void		swfdec_swf_decoder_add_root_action	(SwfdecSwfDecoder *	s,
 							 SwfdecRootActionType	type,
 							 gpointer		data);
 
-SwfdecTagFunc *swfdec_swf_decoder_get_tag_func (int tag);
+SwfdecTagFunc swfdec_swf_decoder_get_tag_func (int tag);
 const char *swfdec_swf_decoder_get_tag_name (int tag);
 int swfdec_swf_decoder_get_tag_flag (int tag);
 

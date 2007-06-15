@@ -61,8 +61,7 @@ struct _SwfdecTextClass {
 
 GType swfdec_text_get_type (void);
 
-int tag_func_define_text (SwfdecSwfDecoder * s);
-int tag_func_define_text_2 (SwfdecSwfDecoder * s);
+int tag_func_define_text (SwfdecSwfDecoder * s, guint tag);
 
 
 G_END_DECLS

@@ -85,7 +85,7 @@ struct _SwfdecSpriteClass
 
 GType swfdec_sprite_get_type (void);
 
-int tag_func_define_sprite (SwfdecSwfDecoder * s);
+int tag_func_define_sprite (SwfdecSwfDecoder * s, guint tag);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
     SwfdecBuffer * chunk, int skip, guint n_samples);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames, guint rate);
@@ -98,12 +98,11 @@ int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 SwfdecContent *swfdec_content_new (int depth);
 void swfdec_content_free (SwfdecContent *content);
 
-int tag_show_frame (SwfdecSwfDecoder * s);
-int tag_func_set_background_color (SwfdecSwfDecoder * s);
-int swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s);
-int swfdec_spriteseg_place_object_3 (SwfdecSwfDecoder * s);
-int swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s);
-int swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s);
+int tag_show_frame (SwfdecSwfDecoder * s, guint tag);
+int tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag);
+int swfdec_spriteseg_place_object (SwfdecSwfDecoder * s, guint tag);
+int swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s, guint tag);
+int swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s, guint tag);
 
 
 G_END_DECLS

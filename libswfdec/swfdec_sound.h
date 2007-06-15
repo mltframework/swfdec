@@ -81,11 +81,11 @@ struct _SwfdecSoundClass
 
 GType swfdec_sound_get_type (void);
 
-int tag_func_define_sound (SwfdecSwfDecoder * s);
-int tag_func_sound_stream_block (SwfdecSwfDecoder * s);
-int tag_func_sound_stream_head (SwfdecSwfDecoder * s);
-int tag_func_start_sound (SwfdecSwfDecoder * s);
-int tag_func_define_button_sound (SwfdecSwfDecoder * s);
+int tag_func_define_sound (SwfdecSwfDecoder * s, guint tag);
+int tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag);
+int tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag);
+int tag_func_start_sound (SwfdecSwfDecoder * s, guint tag);
+int tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag);
 
 void			swfdec_sound_render		(SwfdecSound *		sound, 
 							 gint16 *		dest, 

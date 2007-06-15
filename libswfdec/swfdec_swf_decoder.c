@@ -282,7 +282,7 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
     {
       guint header_length;
       guint x;
-      SwfdecTagFunc *func;
+      SwfdecTagFunc func;
       guint tag;
       guint tag_len;
 
@@ -341,7 +341,7 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	    tag, swfdec_swf_decoder_get_tag_name (tag));
       } else if (s->main_sprite->parse_frame < s->main_sprite->n_frames) {
 	s->parse_sprite = s->main_sprite;
-	ret = func (s);
+	ret = func (s, tag);
 	s->parse_sprite = NULL;
 
 	swfdec_bits_syncbits (&s->b);

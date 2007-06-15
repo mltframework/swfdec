@@ -71,12 +71,12 @@ cairo_surface_t *	swfdec_image_create_surface_transformed
 							(SwfdecImage *		image,
 							 const SwfdecColorTransform *trans);
 
-int swfdec_image_jpegtables (SwfdecSwfDecoder * s);
-int tag_func_define_bits_jpeg (SwfdecSwfDecoder * s);
-int tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s);
-int tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s);
-int tag_func_define_bits_lossless (SwfdecSwfDecoder * s);
-int tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s);
+int swfdec_image_jpegtables (SwfdecSwfDecoder * s, guint tag);
+int tag_func_define_bits_jpeg (SwfdecSwfDecoder * s, guint tag);
+int tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s, guint tag);
+int tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s, guint tag);
+int tag_func_define_bits_lossless (SwfdecSwfDecoder * s, guint tag);
+int tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s, guint tag);
 
 G_END_DECLS
 #endif

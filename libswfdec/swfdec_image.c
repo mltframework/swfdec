@@ -90,19 +90,23 @@ swfdec_image_init (SwfdecImage * image)
 }
 
 int
-swfdec_image_jpegtables (SwfdecSwfDecoder * s)
+swfdec_image_jpegtables (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
 
   SWFDEC_DEBUG ("swfdec_image_jpegtables");
 
+  if (s->jpegtables) {
+    SWFDEC_FIXME ("duplicate DefineJPEGTables tag. Deleting first one");
+    swfdec_buffer_unref (s->jpegtables);
+  }
   s->jpegtables = swfdec_bits_get_buffer (bits, -1);
 
   return SWFDEC_STATUS_OK;
 }
 
 int
-tag_func_define_bits_jpeg (SwfdecSwfDecoder * s)
+tag_func_define_bits_jpeg (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -190,7 +194,7 @@ swfdec_image_jpeg_load (SwfdecImage *image)
 }
 
 int
-tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s)
+tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   int id;
@@ -229,7 +233,7 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
 }
 
 int
-tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s)
+tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   guint id;
@@ -463,7 +467,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
 }
 
 int
-tag_func_define_bits_lossless (SwfdecSwfDecoder * s)
+tag_func_define_bits_lossless (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecImage *image;
   int id;
@@ -483,7 +487,7 @@ tag_func_define_bits_lossless (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s)
+tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecImage *image;
   int id;

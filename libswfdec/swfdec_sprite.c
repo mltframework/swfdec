@@ -32,6 +32,7 @@
 #include "swfdec_sound.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_tag.h"
 
 G_DEFINE_TYPE (SwfdecSprite, swfdec_sprite, SWFDEC_TYPE_GRAPHIC)
 
@@ -159,7 +160,7 @@ swfdec_get_clipeventflags (SwfdecSwfDecoder * s, SwfdecBits * bits)
 }
 
 int
-tag_show_frame (SwfdecSwfDecoder * s)
+tag_show_frame (SwfdecSwfDecoder * s, guint tag)
 {
   SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
       SWFDEC_CHARACTER (s->parse_sprite)->id);
@@ -176,7 +177,7 @@ tag_show_frame (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_set_background_color (SwfdecSwfDecoder * s)
+tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecPlayer *player = SWFDEC_DECODER (s)->player;
   SwfdecColor color = swfdec_bits_get_color (&s->b);
@@ -228,8 +229,8 @@ swfdec_sprite_convert_operator (guint operator)
   return CAIRO_OPERATOR_OVER;
 }
 
-static int
-swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
+int
+swfdec_spriteseg_place_object (SwfdecSwfDecoder *s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   int has_clip_actions;
@@ -264,7 +265,7 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
   SWFDEC_LOG ("  has_character = %d", has_character);
   SWFDEC_LOG ("  move = %d", move);
 
-  if (version > 2) {
+  if (tag == SWFDEC_TAG_PLACEOBJECT3) {
     swfdec_bits_getbits (bits, 5);
     cache = swfdec_bits_getbit (bits);
     has_blend_mode = swfdec_bits_getbit (bits);
@@ -390,19 +391,7 @@ swfdec_spriteseg_do_place_object (SwfdecSwfDecoder *s, unsigned int version)
 }
 
 int
-swfdec_spriteseg_place_object_2 (SwfdecSwfDecoder * s)
-{
-  return swfdec_spriteseg_do_place_object (s, 2);
-}
-
-int
-swfdec_spriteseg_place_object_3 (SwfdecSwfDecoder * s)
-{
-  return swfdec_spriteseg_do_place_object (s, 3);
-}
-
-int
-swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s)
+swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s, guint tag)
 {
   int depth;
 
@@ -416,7 +405,7 @@ swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s)
 }
 
 int
-swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s)
+swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s, guint tag)
 {
   guint depth;
 

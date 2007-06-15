@@ -51,8 +51,10 @@ struct _SwfdecVideoClass {
 
 GType	swfdec_video_get_type		(void);
 
-int	tag_func_define_video		(SwfdecSwfDecoder *	s);
-int	tag_func_video_frame    	(SwfdecSwfDecoder *	s);
+int	tag_func_define_video		(SwfdecSwfDecoder *	s,
+					 guint			tag);
+int	tag_func_video_frame    	(SwfdecSwfDecoder *	s,
+					 guint			tag);
 
 
 G_END_DECLS

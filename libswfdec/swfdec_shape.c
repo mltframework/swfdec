@@ -353,7 +353,7 @@ swfdec_shape_add_styles (SwfdecSwfDecoder * s, SwfdecShape * shape,
 }
 
 int
-tag_define_shape (SwfdecSwfDecoder * s)
+tag_define_shape (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
@@ -377,7 +377,7 @@ tag_define_shape (SwfdecSwfDecoder * s)
 }
 
 int
-tag_define_shape_3 (SwfdecSwfDecoder * s)
+tag_define_shape_3 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
@@ -398,13 +398,7 @@ tag_define_shape_3 (SwfdecSwfDecoder * s)
 }
 
 int
-tag_define_shape_2 (SwfdecSwfDecoder * s)
-{
-  return tag_define_shape (s);
-}
-
-int
-tag_define_shape_4 (SwfdecSwfDecoder *s)
+tag_define_shape_4 (SwfdecSwfDecoder *s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   SwfdecShape *shape;
@@ -1020,7 +1014,7 @@ error:
 }
 
 int
-tag_define_morph_shape (SwfdecSwfDecoder * s)
+tag_define_morph_shape (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits end_bits;
   SwfdecBits *bits = &s->b;

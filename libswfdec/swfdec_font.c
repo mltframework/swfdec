@@ -29,6 +29,7 @@
 #include "swfdec_shape.h"
 #include "swfdec_stroke.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_tag.h"
 
 G_DEFINE_TYPE (SwfdecFont, swfdec_font, SWFDEC_TYPE_CHARACTER)
 
@@ -124,7 +125,7 @@ convert_from_language (const char *s, SwfdecLanguage language)
 #endif
 
 int
-tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
+tag_func_define_font_info (SwfdecSwfDecoder *s, guint tag)
 {
   SwfdecFont *font;
   guint id, len, i;
@@ -132,8 +133,6 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
   char *name;
   /* we just assume Latin1 (FIXME: option to change this?) */
   SwfdecLanguage language = SWFDEC_LANGUAGE_LATIN;
-
-  g_assert (version == 1 || version == 2);
 
   id = swfdec_bits_get_u16 (&s->b);
   font = swfdec_swf_decoder_get_character (s, id);
@@ -150,7 +149,7 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
   ansi = swfdec_bits_getbit (&s->b);
   if (jis != 0 || ansi != 0) {
     SWFDEC_LOG ("ansi = %d, jis = %d", ansi, jis);
-    if (version == 2)
+    if (tag == SWFDEC_TAG_DEFINEFONTINFO2)
       SWFDEC_INFO ("ANSI and JIS flags are supposed to be 0 in DefineFontInfo");
     if (jis)
       language = SWFDEC_LANGUAGE_JAPANESE;
@@ -158,7 +157,7 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, guint version)
   font->italic = swfdec_bits_getbit (&s->b);
   font->bold = swfdec_bits_getbit (&s->b);
   wide = swfdec_bits_getbit (&s->b);
-  if (version > 1)
+  if (tag == SWFDEC_TAG_DEFINEFONTINFO2)
     language = swfdec_bits_get_u8 (&s->b);
   g_free (name);
   if (font->name) {
@@ -205,7 +204,7 @@ swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size
 }
 
 int
-tag_func_define_font (SwfdecSwfDecoder * s)
+tag_func_define_font (SwfdecSwfDecoder * s, guint tag)
 {
   guint i, id, n_glyphs, offset, next_offset;
   SwfdecFont *font;
@@ -267,7 +266,7 @@ swfdec_font_parse_kerning_table (SwfdecSwfDecoder *s, SwfdecFont *font, gboolean
 }
 
 int
-tag_func_define_font_2 (SwfdecSwfDecoder * s)
+tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
   guint id;
@@ -380,7 +379,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_define_font_3 (SwfdecSwfDecoder * s)
+tag_func_define_font_3 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits offsets, *bits = &s->b;
   SwfdecFont *font;

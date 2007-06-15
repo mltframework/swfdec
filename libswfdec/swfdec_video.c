@@ -177,7 +177,7 @@ swfdec_video_init (SwfdecVideo * video)
 }
 
 int
-tag_func_define_video (SwfdecSwfDecoder *s)
+tag_func_define_video (SwfdecSwfDecoder *s, guint tag)
 {
   SwfdecVideo *video;
   guint id;
@@ -205,7 +205,7 @@ tag_func_define_video (SwfdecSwfDecoder *s)
 }
 
 int
-tag_func_video_frame (SwfdecSwfDecoder *s)
+tag_func_video_frame (SwfdecSwfDecoder *s, guint unused_tag)
 {
   SwfdecVideo *video;
   guint id;

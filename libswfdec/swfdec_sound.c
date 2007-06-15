@@ -74,7 +74,7 @@ swfdec_sound_init (SwfdecSound * sound)
 }
 
 int
-tag_func_sound_stream_block (SwfdecSwfDecoder * s)
+tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecSound *sound;
   SwfdecBuffer *chunk;
@@ -117,7 +117,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_define_sound (SwfdecSwfDecoder * s)
+tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   int id;
@@ -247,7 +247,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
 }
 
 int
-tag_func_sound_stream_head (SwfdecSwfDecoder * s)
+tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   int format;
@@ -399,7 +399,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
 }
 
 int
-tag_func_start_sound (SwfdecSwfDecoder * s)
+tag_func_start_sound (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   SwfdecSoundChunk *chunk;
@@ -420,7 +420,7 @@ tag_func_start_sound (SwfdecSwfDecoder * s)
 }
 
 int
-tag_func_define_button_sound (SwfdecSwfDecoder * s)
+tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
 {
   guint i;
   guint id;

@@ -52,7 +52,8 @@ struct _SwfdecMorphShapeClass {
 GType	swfdec_morph_shape_get_type	(void);
 
 /* in swfdec_shape.c */
-int	tag_define_morph_shape		(SwfdecSwfDecoder *	s);
+int	tag_define_morph_shape		(SwfdecSwfDecoder *	s,
+					 guint			tag);
 
 
 G_END_DECLS

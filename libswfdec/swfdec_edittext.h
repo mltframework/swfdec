@@ -77,7 +77,8 @@ struct _SwfdecEditTextClass
 
 GType			swfdec_edit_text_get_type	(void);
 
-int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s);
+int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
+							 guint			tag);
 
 /* implemented in swfdec_html_parser.c */
 SwfdecParagraph *	swfdec_paragraph_html_parse   	(SwfdecEditText *	text, 

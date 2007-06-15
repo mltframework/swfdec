@@ -62,7 +62,8 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
   guint i;
 
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
+  if (frame->next)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
   if (frame->scope)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->scope));
   if (frame->script) {

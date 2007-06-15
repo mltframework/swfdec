@@ -901,18 +901,18 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * call Javascript functions. Standalone Flash players understand a limited 
    * set of functions. They vary from player to player, but the most common are 
    * listed here: <itemizedlist>
-   * <listitem><para>"quit": quits the player.</para>
+   * <listitem><para>"quit": quits the player.</para></listitem>
    * <listitem><para>"fullscreen": A boolean setting (parameter is "true" or 
-   * "false") that sets the player into fullscreen mode.</para>
+   * "false") that sets the player into fullscreen mode.</para></listitem>
    * <listitem><para>"allowscale": A boolean setting that tells the player to
-   * not scale the Flash application.</para>
+   * not scale the Flash application.</para></listitem>
    * <listitem><para>"showmenu": A boolean setting that tells the Flash player
-   * to not show its own entries in the right-click menu.</para>
+   * to not show its own entries in the right-click menu.</para></listitem>
    * <listitem><para>"exec": Run an external executable. The parameter 
-   * specifies the path.</para>
+   * specifies the path.</para></listitem>
    * <listitem><para>"trapallkeys": A boolean setting that tells the Flash 
    * player to pass all key events to the Flash application instead of using it
-   * for keyboard shortcuts or similar.
+   * for keyboard shortcuts or similar.</para></listitem>
    * </itemizedlist>
    */
   signals[FSCOMMAND] = g_signal_new ("fscommand", G_TYPE_FROM_CLASS (klass),

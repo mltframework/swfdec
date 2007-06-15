@@ -11,16 +11,27 @@ trace_cb (SwfdecPlayer *player, const char *message, GString *string)
   g_string_append_printf (string, "%s\n", message);
 }
 
+static void
+fscommand_cb (SwfdecPlayer *player, const char *command, const char *parameter, gpointer data)
+{
+  gboolean *quit = data;
+
+  if (g_str_equal (command, "quit")) {
+    *quit = TRUE;
+  }
+}
+
 static gboolean
 run_test (const char *filename)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
-  guint advance;
+  guint time_left;
   char *str;
   GString *string;
   GError *error = NULL;
+  gboolean quit = FALSE;
 
   g_print ("Testing %s:\n", filename);
   loader = swfdec_loader_new_from_file (filename);
@@ -31,6 +42,7 @@ run_test (const char *filename)
   string = g_string_new ("");
   player = swfdec_player_new ();
   g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
+  g_signal_connect (player, "fscommand", G_CALLBACK (fscommand_cb), &quit);
   swfdec_player_set_loader (player, loader);
   if (!swfdec_player_is_initialized (player)) {
     g_print ("  ERROR: player is not initialized\n");
@@ -38,8 +50,17 @@ run_test (const char *filename)
     return FALSE;
   }
 
-  advance = ceil (10000 / swfdec_player_get_rate (player));
-  swfdec_player_advance (player, advance);
+  time_left = ceil (10000 / swfdec_player_get_rate (player));
+  /* FIXME: Make the number of iterations configurable? */
+  while (quit == FALSE) {
+    /* FIXME: will not do 10 iterations if there's other stuff loaded */
+    guint advance = swfdec_player_get_next_event (player);
+
+    if (advance > time_left)
+      break;
+    swfdec_player_advance (player, advance);
+    time_left -= advance;
+  }
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);
 

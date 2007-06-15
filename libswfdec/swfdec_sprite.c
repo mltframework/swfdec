@@ -358,8 +358,10 @@ swfdec_spriteseg_place_object (SwfdecSwfDecoder *s, guint tag)
 
     if (content->name)
       script_name = g_strdup (content->name);
-    else
+    else if (content->graphic)
       script_name = g_strdup_printf ("Sprite%u", SWFDEC_CHARACTER (content->graphic)->id);
+    else
+      script_name = g_strdup ("unknown");
     while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
       guint length = swfdec_bits_get_u32 (bits);
       SwfdecBits action_bits;

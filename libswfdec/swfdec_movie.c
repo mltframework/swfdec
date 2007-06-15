@@ -322,6 +322,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
    * This is just a stop-gap measure to avoid dead movies in those queues */
   g_queue_remove (player->init_queue, movie);
   g_queue_remove (player->construct_queue, movie);
+  swfdec_player_remove_all_actions (player, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
   player->movies = g_list_remove (player->movies, movie);
@@ -1038,10 +1039,6 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target)
       SWFDEC_ERROR ("%s does not specify a valid level", target);
     }
     /* FIXME: what do we do here? Is returning correct?*/
-    return;
-  } else if (g_str_has_prefix (target, "FSCommand:")) {
-    const char *command = url + strlen ("FSCommand:");
-    SWFDEC_WARNING ("unhandled fscommand: %s %s", command, target);
     return;
   }
   swfdec_player_launch (player, url, target);

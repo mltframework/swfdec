@@ -271,6 +271,13 @@ EXTRA_DIST = \
 	jump-out-of-with.as \
 	jump-out-of-with.swf \
 	jump-out-of-with.swf.trace \
+	level-property.as \
+	level-property-5.swf \
+	level-property-5.swf.trace \
+	level-property-6.swf \
+	level-property-6.swf.trace \
+	level-property-7.swf \
+	level-property-7.swf.trace \
 	lifetime1.swf \
 	lifetime1.swf.trace \
 	load-4.swf \
@@ -376,6 +383,20 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-split.as \
+	string-split-5.swf \
+	string-split-5.swf.trace \
+	string-split-6.swf \
+	string-split-6.swf.trace \
+	string-split-7.swf \
+	string-split-7.swf.trace \
+	string-split-empty.as \
+	string-split-empty-5.swf \
+	string-split-empty-5.swf.trace \
+	string-split-empty-6.swf \
+	string-split-empty-6.swf.trace \
+	string-split-empty-7.swf \
+	string-split-empty-7.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \
@@ -434,6 +455,7 @@ EXTRA_DIST = \
 	unescape2-6.swf.trace \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
+	values.as \
 	video.flv \
 	with-delete.as \
 	with-delete-5.swf \

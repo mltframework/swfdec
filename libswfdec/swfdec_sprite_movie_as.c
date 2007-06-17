@@ -274,6 +274,24 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *obj,
 }
 
 static void
+swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecMovie *movie, *parent;
+  int depth;
+  const char *name;
+
+  parent = SWFDEC_MOVIE (obj);
+  name = swfdec_as_value_to_string (cx, &argv[0]);
+  depth = swfdec_as_value_to_number (cx, &argv[1]);
+  movie = swfdec_movie_find (parent, depth);
+  if (movie)
+    swfdec_movie_remove (movie);
+  movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, NULL, name);
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
+}
+
+static void
 swfdec_sprite_movie_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 {
   target->matrix = src->matrix;
@@ -421,6 +439,10 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
   /* now add all the functions */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_SPRITE_MOVIE,
       swfdec_sprite_movie_attachMovie, 3);
+  if (version >= 6) {
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_createEmptyMovieClip, SWFDEC_TYPE_SPRITE_MOVIE,
+	swfdec_sprite_movie_createEmptyMovieClip, 2);
+  }
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_duplicateMovieClip, SWFDEC_TYPE_SPRITE_MOVIE, 
       swfdec_sprite_movie_duplicateMovieClip, 2);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getBytesLoaded, SWFDEC_TYPE_SPRITE_MOVIE, 

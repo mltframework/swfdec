@@ -52,8 +52,12 @@ struct _SwfdecAsContext {
   GRand *		rand;		/* random number generator */
   GTimeVal		start_time;   	/* time this movie started (for GetTime action) */
 
+  /* GC properties */
+  gsize			memory_until_gc;/* amount of memory allocations that trigger a GC */
+
   /* bookkeeping for GC */
-  gsize			memory;		/* memory currently in use */
+  gsize			memory;		/* total memory currently in use */
+  gsize			memory_since_gc;/* memory allocated since last GC run */
   GHashTable *		strings;	/* string=>memory mapping the context manages */
   GHashTable *		objects;	/* all objects the context manages */
 
@@ -108,6 +112,7 @@ void		swfdec_as_object_mark		(SwfdecAsObject *	object);
 void		swfdec_as_value_mark		(SwfdecAsValue *	value);
 void		swfdec_as_string_mark		(const char *		string);
 void		swfdec_as_context_gc		(SwfdecAsContext *	context);
+void		swfdec_as_context_maybe_gc	(SwfdecAsContext *	context);
 
 void		swfdec_as_context_run		(SwfdecAsContext *	context);
 void		swfdec_as_context_return	(SwfdecAsContext *	context);

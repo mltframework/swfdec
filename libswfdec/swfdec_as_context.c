@@ -104,6 +104,7 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
   g_return_val_if_fail (bytes > 0, FALSE);
 
   context->memory += bytes;
+  context->memory_since_gc += bytes;
   return TRUE;
 }
 
@@ -244,15 +245,33 @@ swfdec_as_context_gc (SwfdecAsContext *context)
   SwfdecAsContextClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-
+  g_return_if_fail (context->frame == NULL);
   /* no GC during setup */
-  if (context->state == SWFDEC_AS_CONTEXT_NEW)
-    return;
+  g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_NEW);
+
   SWFDEC_INFO ("invoking the garbage collector");
+  g_print ("invoking the garbage collector\n");
   klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
   g_assert (klass->mark);
   klass->mark (context);
   swfdec_as_context_collect (context);
+  context->memory_since_gc = 0;
+}
+
+static gboolean
+swfdec_as_context_needs_gc (SwfdecAsContext *context)
+{
+  return context->memory_since_gc >= context->memory_until_gc;
+}
+
+void
+swfdec_as_context_maybe_gc (SwfdecAsContext *context)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (context->frame == NULL);
+
+  if (swfdec_as_context_needs_gc (context))
+    swfdec_as_context_gc (context);
 }
 
 /*** SWFDEC_AS_CONTEXT ***/
@@ -309,6 +328,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
 {
   const char *s;
 
+  context->memory_until_gc = 8 * 1024 * 1024; /* 8 MB before we run the GC */
   context->strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
 

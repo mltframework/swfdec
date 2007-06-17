@@ -383,6 +383,13 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-split.as \
+	string-split-5.swf \
+	string-split-5.swf.trace \
+	string-split-6.swf \
+	string-split-6.swf.trace \
+	string-split-7.swf \
+	string-split-7.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \

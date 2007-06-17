@@ -752,6 +752,7 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
   SWFDEC_DEBUG ("UNLOCK");
+  swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
   swfdec_player_update_mouse_cursor (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);

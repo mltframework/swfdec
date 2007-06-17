@@ -441,6 +441,7 @@ EXTRA_DIST = \
 	unescape2-6.swf.trace \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
+	values.as \
 	video.flv \
 	with-delete.as \
 	with-delete-5.swf \

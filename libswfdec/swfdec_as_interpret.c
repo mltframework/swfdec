@@ -780,7 +780,8 @@ swfdec_action_new_comparison_7 (SwfdecAsContext *cx, guint action, const guint8 
     swfdec_as_stack_pop (cx->frame->stack);
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1));
   } else if (SWFDEC_AS_VALUE_IS_STRING (rval) || SWFDEC_AS_VALUE_IS_STRING (lval)) {
-    int comp = strcmp (SWFDEC_AS_VALUE_GET_STRING (rval), SWFDEC_AS_VALUE_GET_STRING (lval));
+    int comp = strcmp (swfdec_as_value_to_string (cx, rval), 
+	               swfdec_as_value_to_string (cx, lval));
     swfdec_as_stack_pop (cx->frame->stack);
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), action == 0x48 ? comp < 0 : comp > 0);
   } else {

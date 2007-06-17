@@ -250,7 +250,6 @@ swfdec_as_context_gc (SwfdecAsContext *context)
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_NEW);
 
   SWFDEC_INFO ("invoking the garbage collector");
-  g_print ("invoking the garbage collector\n");
   klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
   g_assert (klass->mark);
   klass->mark (context);

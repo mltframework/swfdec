@@ -208,6 +208,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("NetConnection")
   SWFDEC_AS_CONSTANT_STRING ("connect")
   SWFDEC_AS_CONSTANT_STRING ("createEmptyMovieClip")
+  SWFDEC_AS_CONSTANT_STRING ("split")
   /* add more here */
 ;
 

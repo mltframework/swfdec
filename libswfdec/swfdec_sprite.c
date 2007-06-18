@@ -59,32 +59,18 @@ swfdec_sprite_dispose (GObject *object)
       if (sprite->frames[i].sound_block) {
         swfdec_buffer_unref (sprite->frames[i].sound_block);
       }
-      if (sprite->frames[i].actions) {
-	guint j;
-	for (j = 0; j < sprite->frames[i].actions->len; j++) {
-	  SwfdecSpriteAction *action = 
-	    &g_array_index (sprite->frames[i].actions, SwfdecSpriteAction, j);
-	  switch (action->type) {
-	    case SWFDEC_SPRITE_ACTION_SCRIPT:
-	      swfdec_script_unref (action->data);
-	      break;
-	    case SWFDEC_SPRITE_ACTION_ADD:
-	    case SWFDEC_SPRITE_ACTION_UPDATE:
-	      swfdec_content_free (action->data);
-	      break;
-	    case SWFDEC_SPRITE_ACTION_REMOVE:
-	      break;
-	    default:
-	      g_assert_not_reached ();
-	  }
-	}
-	g_array_free (sprite->frames[i].actions, TRUE);
-      }
       g_slist_foreach (sprite->frames[i].sound, (GFunc) swfdec_sound_chunk_free, NULL);
       g_slist_free (sprite->frames[i].sound);
     }
     g_free(sprite->frames);
   }
+  for (i = 0; i < sprite->actions->len; i++) {
+    SwfdecSpriteAction *cur = &g_array_index (sprite->actions, SwfdecSpriteAction, i);
+    if (cur->buffer)
+      swfdec_buffer_unref (cur->buffer);
+  }
+  g_array_free (sprite->actions, TRUE);
+  sprite->actions = NULL;
   if (sprite->init_action) {
     swfdec_script_unref (sprite->init_action);
     sprite->init_action = NULL;
@@ -118,62 +104,31 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
     SWFDEC_AUDIO_OUT_GRANULARITY (sprite->frames[frame].sound_head->original_format);
 }
 
-static void
-swfdec_sprite_remove_last_action (SwfdecSprite * sprite, guint frame_id)
-{
-  SwfdecSpriteFrame *frame;
-  
-  g_assert (frame_id < sprite->n_frames);
-  frame = &sprite->frames[frame_id];
-
-  g_assert (frame->actions != NULL);
-  g_assert (frame->actions->len > 0);
-  g_array_set_size (frame->actions, frame->actions->len - 1);
-}
-
 void
-swfdec_sprite_add_action (SwfdecSprite *sprite, SwfdecSpriteActionType type, 
-    gpointer data)
+swfdec_sprite_add_action (SwfdecSprite *sprite, guint tag, SwfdecBuffer *buffer)
 {
   SwfdecSpriteAction action;
-  SwfdecSpriteFrame *frame;
   
-  g_assert (sprite->parse_frame < sprite->n_frames);
-  frame = &sprite->frames[sprite->parse_frame];
-
-  if (frame->actions == NULL)
-    frame->actions = g_array_new (FALSE, FALSE, sizeof (SwfdecSpriteAction));
-
-  action.type = type;
-  action.data = data;
-  g_array_append_val (frame->actions, action);
+  action.tag = tag;
+  action.buffer = buffer;
+  g_array_append_val (sprite->actions, action);
 }
 
-static int
-swfdec_get_clipeventflags (SwfdecSwfDecoder * s, SwfdecBits * bits)
+gboolean
+swfdec_sprite_get_action (SwfdecSprite *sprite, guint n, guint *tag, SwfdecBuffer **buffer)
 {
-  if (s->version <= 5) {
-    return swfdec_bits_get_u16 (bits);
-  } else {
-    return swfdec_bits_get_u32 (bits);
-  }
-}
+  SwfdecSpriteAction *action;
 
-int
-tag_show_frame (SwfdecSwfDecoder * s, guint tag)
-{
-  SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
-      SWFDEC_CHARACTER (s->parse_sprite)->id);
+  g_return_val_if_fail (SWFDEC_IS_SPRITE (sprite), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (buffer != NULL, FALSE);
 
-  s->parse_sprite->parse_frame++;
-  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
-    SwfdecSpriteFrame *old = &s->parse_sprite->frames[s->parse_sprite->parse_frame - 1];
-    SwfdecSpriteFrame *new = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-    if (old->sound_head)
-      new->sound_head = g_object_ref (old->sound_head);
-  }
-
-  return SWFDEC_STATUS_IMAGE;
+  if (n >= sprite->actions->len)
+    return FALSE;
+  action = &g_array_index (sprite->actions, SwfdecSpriteAction, n);
+  *tag = action->tag;
+  *buffer = action->buffer;
+  return TRUE;
 }
 
 int
@@ -213,212 +168,6 @@ swfdec_content_new (int depth)
   return content;
 }
 
-static SwfdecContent *
-swfdec_contents_create (SwfdecSprite *sprite, 
-    int depth, gboolean move)
-{
-  SwfdecContent *content = swfdec_content_new (depth);
-
-  swfdec_sprite_add_action (sprite, move ? SWFDEC_SPRITE_ACTION_UPDATE : SWFDEC_SPRITE_ACTION_ADD, content);
-  return content;
-}
-
-static cairo_operator_t
-swfdec_sprite_convert_operator (guint operator)
-{
-  return CAIRO_OPERATOR_OVER;
-}
-
-int
-swfdec_spriteseg_place_object (SwfdecSwfDecoder *s, guint tag)
-{
-  SwfdecBits *bits = &s->b;
-  int has_clip_actions;
-  int has_clip_depth;
-  int has_name;
-  int has_ratio;
-  int has_color_transform;
-  int has_matrix;
-  int has_character;
-  int move;
-  int depth;
-  int cache;
-  int has_blend_mode = 0;
-  int has_filter = 0;
-  SwfdecContent *content;
-
-  has_clip_actions = swfdec_bits_getbit (bits);
-  has_clip_depth = swfdec_bits_getbit (bits);
-  has_name = swfdec_bits_getbit (bits);
-  has_ratio = swfdec_bits_getbit (bits);
-  has_color_transform = swfdec_bits_getbit (bits);
-  has_matrix = swfdec_bits_getbit (bits);
-  has_character = swfdec_bits_getbit (bits);
-  move = swfdec_bits_getbit (bits);
-
-  SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
-  SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
-  SWFDEC_LOG ("  has_name = %d", has_name);
-  SWFDEC_LOG ("  has_ratio = %d", has_ratio);
-  SWFDEC_LOG ("  has_color_transform = %d", has_color_transform);
-  SWFDEC_LOG ("  has_matrix = %d", has_matrix);
-  SWFDEC_LOG ("  has_character = %d", has_character);
-  SWFDEC_LOG ("  move = %d", move);
-
-  if (tag == SWFDEC_TAG_PLACEOBJECT3) {
-    swfdec_bits_getbits (bits, 5);
-    cache = swfdec_bits_getbit (bits);
-    has_blend_mode = swfdec_bits_getbit (bits);
-    has_filter = swfdec_bits_getbit (bits);
-    SWFDEC_LOG ("  cache = %d", cache);
-    SWFDEC_LOG ("  has filter = %d", has_filter);
-    SWFDEC_LOG ("  has blend mode = %d", has_blend_mode);
-  }
-
-  depth = swfdec_bits_get_u16 (bits);
-  if (depth >= 16384) {
-    SWFDEC_WARNING ("depth of placement too high: %u >= 16384", depth);
-  }
-  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
-  depth -= 16384;
-
-  /* new name always means new object */
-  content = swfdec_contents_create (s->parse_sprite, depth, move);
-  if (has_character) {
-    int id = swfdec_bits_get_u16 (bits);
-    content->graphic = swfdec_swf_decoder_get_character (s, id);
-    if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
-      swfdec_content_free (content);
-      swfdec_sprite_remove_last_action (s->parse_sprite,
-	        s->parse_sprite->parse_frame);
-      SWFDEC_ERROR ("id %u does not specify a graphic", id);
-      return SWFDEC_STATUS_OK;
-    }
-    SWFDEC_LOG ("  id = %d", id);
-  } else if (!move) {
-    SWFDEC_ERROR ("no character specified and not a move command");
-    swfdec_content_free (content);
-    swfdec_sprite_remove_last_action (s->parse_sprite,
-      s->parse_sprite->parse_frame);
-    return SWFDEC_STATUS_OK;
-  }
-
-
-  if (has_matrix) {
-    swfdec_bits_get_matrix (bits, &content->transform, NULL);
-    SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %g %g }", 
-	content->transform.xx, content->transform.yx,
-	content->transform.xy, content->transform.yy,
-	content->transform.x0, content->transform.y0);
-    content->has_transform = TRUE;
-  }
-  if (has_color_transform) {
-    swfdec_bits_get_color_transform (bits, &content->color_transform);
-    SWFDEC_LOG ("  color transform = %d %d  %d %d  %d %d  %d %d",
-	content->color_transform.ra, content->color_transform.rb,
-	content->color_transform.ga, content->color_transform.gb,
-	content->color_transform.ba, content->color_transform.bb,
-	content->color_transform.aa, content->color_transform.ab);
-    content->has_color_transform = TRUE;
-  }
-  swfdec_bits_syncbits (bits);
-  if (has_ratio) {
-    content->ratio = swfdec_bits_get_u16 (bits);
-    SWFDEC_LOG ("  ratio = %d", content->ratio);
-  }
-  if (has_name) {
-    g_free (content->name);
-    content->name = swfdec_bits_get_string (bits);
-    SWFDEC_LOG ("  name = %s", content->name);
-  }
-  if (has_clip_depth) {
-    content->clip_depth = swfdec_bits_get_u16 (bits) - 16384;
-    SWFDEC_LOG ("  clip_depth = %d (=> %d)", content->clip_depth + 16384, content->clip_depth);
-  }
-  if (has_filter) {
-    SWFDEC_ERROR ("filters aren't implemented, skipping PlaceObject tag!");
-    swfdec_content_free (content);
-    swfdec_sprite_remove_last_action (s->parse_sprite,
-	      s->parse_sprite->parse_frame);
-    return SWFDEC_STATUS_OK;
-  }
-  if (has_blend_mode) {
-    guint operator = swfdec_bits_get_u8 (bits);
-    content->operator = swfdec_sprite_convert_operator (operator);
-    SWFDEC_ERROR ("  operator = %u", operator);
-  }
-  if (has_clip_actions) {
-    int reserved, clip_event_flags, event_flags, key_code;
-    char *script_name;
-
-    g_assert (content->events == NULL);
-    content->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-    reserved = swfdec_bits_get_u16 (bits);
-    clip_event_flags = swfdec_get_clipeventflags (s, bits);
-
-    if (content->name)
-      script_name = g_strdup (content->name);
-    else if (content->graphic)
-      script_name = g_strdup_printf ("Sprite%u", SWFDEC_CHARACTER (content->graphic)->id);
-    else
-      script_name = g_strdup ("unknown");
-    while ((event_flags = swfdec_get_clipeventflags (s, bits)) != 0) {
-      guint length = swfdec_bits_get_u32 (bits);
-      SwfdecBits action_bits;
-
-      swfdec_bits_init_bits (&action_bits, bits, length);
-      if (event_flags & SWFDEC_EVENT_KEY_PRESS)
-	key_code = swfdec_bits_get_u8 (&action_bits);
-      else
-	key_code = 0;
-
-      SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
-#define SWFDEC_IMPLEMENTED_EVENTS \
-  (SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER | SWFDEC_EVENT_INITIALIZE | SWFDEC_EVENT_CONSTRUCT | \
-   SWFDEC_EVENT_MOUSE_DOWN | SWFDEC_EVENT_MOUSE_MOVE | SWFDEC_EVENT_MOUSE_UP)
-      if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
-	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);
-      }
-      swfdec_event_list_parse (content->events, &action_bits, s->version, 
-	  event_flags, key_code, script_name);
-      if (swfdec_bits_left (&action_bits)) {
-	SWFDEC_ERROR ("not all action data was parsed: %u bytes left",
-	    swfdec_bits_left (&action_bits));
-      }
-    }
-    g_free (script_name);
-  }
-
-  return SWFDEC_STATUS_OK;
-}
-
-int
-swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s, guint tag)
-{
-  int depth;
-
-  swfdec_bits_get_u16 (&s->b);
-  depth = swfdec_bits_get_u16 (&s->b);
-  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
-  depth -= 16384;
-  swfdec_sprite_add_action (s->parse_sprite, SWFDEC_SPRITE_ACTION_REMOVE, GINT_TO_POINTER (depth));
-
-  return SWFDEC_STATUS_OK;
-}
-
-int
-swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s, guint tag)
-{
-  guint depth;
-
-  depth = swfdec_bits_get_u16 (&s->b);
-  SWFDEC_LOG ("  depth = %u", depth);
-  depth -= 16384;
-  swfdec_sprite_add_action (s->parse_sprite, SWFDEC_SPRITE_ACTION_REMOVE, GINT_TO_POINTER (depth));
-
-  return SWFDEC_STATUS_OK;
-}
-
 static SwfdecMovie *
 swfdec_sprite_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
@@ -444,6 +193,7 @@ swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 static void
 swfdec_sprite_init (SwfdecSprite * sprite)
 {
+  sprite->actions = g_array_new (FALSE, FALSE, sizeof (SwfdecSpriteAction));
 }
 
 void

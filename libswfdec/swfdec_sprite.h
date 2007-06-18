@@ -33,16 +33,14 @@ typedef struct _SwfdecSpriteClass SwfdecSpriteClass;
 typedef struct _SwfdecSpriteAction SwfdecSpriteAction;
 typedef struct _SwfdecExport SwfdecExport;
 
-typedef enum {
-  SWFDEC_SPRITE_ACTION_SCRIPT,		/* contains an action only */
-  SWFDEC_SPRITE_ACTION_ADD,		/* contains a SwfdecSpriteContent */
-  SWFDEC_SPRITE_ACTION_REMOVE,		/* contains a depth */
-  SWFDEC_SPRITE_ACTION_UPDATE		/* contains a SwfdecSpriteContent */
-} SwfdecSpriteActionType;
-
+/* FIXME: It might make sense to event a SwfdecActionBuffer - a subclass of 
+ * SwfdecBuffer that carries around a the tag.
+ * It might also make more sense to not parse the file into buffers at all
+ * and operate on the memory directly.
+ */
 struct _SwfdecSpriteAction {
-  guint				type;
-  gpointer			data;
+  guint				tag;	/* the data tag (see swfdec_tag.h) */
+  SwfdecBuffer *		buffer;	/* the buffer for this data (can be NULL) */
 };
 
 #define SWFDEC_TYPE_SPRITE                    (swfdec_sprite_get_type())
@@ -59,11 +57,8 @@ struct _SwfdecSpriteFrame
   SwfdecSound *sound_head;		/* sound head for this frame */
   int sound_skip;			/* samples to skip - maybe even backwards */
   SwfdecBuffer *sound_block;		/* sound chunk to play here or NULL for none */
-  guint sound_samples;		/* number of samples in this frame */
+  guint sound_samples;			/* number of samples in this frame */
   GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
-
-  /* visuals */
-  GArray *actions;			/* SwfdecSpriteAction in execution order */
 };
 
 struct _SwfdecSprite
@@ -73,6 +68,7 @@ struct _SwfdecSprite
   SwfdecSpriteFrame *	frames;		/* the n_frames different frames */
   guint			n_frames;	/* number of frames in this sprite */
   SwfdecScript *	init_action;	/* action to run when initializing this sprite */
+  GArray *		actions;      	/* SwfdecSpriteAction in execution order */
 
   /* parse state */
   guint			parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
@@ -89,20 +85,20 @@ int tag_func_define_sprite (SwfdecSwfDecoder * s, guint tag);
 void swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
     SwfdecBuffer * chunk, int skip, guint n_samples);
 void swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames, guint rate);
-void swfdec_sprite_add_action (SwfdecSprite * sprite,
-    SwfdecSpriteActionType type, gpointer data);
-guint swfdec_sprite_get_next_frame (SwfdecSprite *sprite, guint current_frame);
+void swfdec_sprite_add_action (SwfdecSprite * sprite, guint tag, SwfdecBuffer *buffer);
+gboolean	swfdec_sprite_get_action	(SwfdecSprite *		sprite,
+						 guint			n,
+						 guint *      		tag,
+						 SwfdecBuffer **	buffer);
+guint		swfdec_sprite_get_next_frame	(SwfdecSprite *		sprite,
+						 guint			current_frame);
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 				      		 const char *		label);
 
 SwfdecContent *swfdec_content_new (int depth);
 void swfdec_content_free (SwfdecContent *content);
 
-int tag_show_frame (SwfdecSwfDecoder * s, guint tag);
 int tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag);
-int swfdec_spriteseg_place_object (SwfdecSwfDecoder * s, guint tag);
-int swfdec_spriteseg_remove_object (SwfdecSwfDecoder * s, guint tag);
-int swfdec_spriteseg_remove_object_2 (SwfdecSwfDecoder * s, guint tag);
 
 
 G_END_DECLS

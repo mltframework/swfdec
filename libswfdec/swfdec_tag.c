@@ -252,22 +252,6 @@ tag_func_define_sprite (SwfdecSwfDecoder * s, guint define_sprite_tag)
   return SWFDEC_STATUS_OK;
 }
 
-int
-tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecScript *script;
-  char *name;
-
-  name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
-      s->parse_sprite->parse_frame);
-  script = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player), &s->b, name, s->version);
-  g_free (name);
-  if (script)
-    swfdec_sprite_add_action (s->parse_sprite, SWFDEC_SPRITE_ACTION_SCRIPT, script);
-
-  return SWFDEC_STATUS_OK;
-}
-
 #define CONTENT_IN_FRAME(content, frame) \
   ((content)->sequence->start <= frame && \
    (content)->sequence->end > frame)
@@ -572,6 +556,55 @@ tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
+static int
+tag_func_enqueue (SwfdecSwfDecoder *s, guint tag)
+{
+  SwfdecBuffer *buffer;
+
+  buffer = swfdec_bits_get_buffer (&s->b, -1);
+  SWFDEC_LOG ("queueing %s tag for sprite %u", swfdec_swf_decoder_get_tag_name (tag),
+      SWFDEC_CHARACTER (s->parse_sprite)->id);
+  swfdec_sprite_add_action (s->parse_sprite, tag, buffer);
+
+  return SWFDEC_STATUS_OK;
+}
+
+static int
+tag_func_show_frame (SwfdecSwfDecoder * s, guint tag)
+{
+  SWFDEC_DEBUG("show_frame %d of id %d", s->parse_sprite->parse_frame,
+      SWFDEC_CHARACTER (s->parse_sprite)->id);
+
+  s->parse_sprite->parse_frame++;
+  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
+    SwfdecSpriteFrame *old = &s->parse_sprite->frames[s->parse_sprite->parse_frame - 1];
+    SwfdecSpriteFrame *new = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
+    if (old->sound_head)
+      new->sound_head = g_object_ref (old->sound_head);
+  }
+  tag_func_enqueue (s, tag);
+
+  return SWFDEC_STATUS_IMAGE;
+}
+
+static int
+tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
+{
+  SwfdecScript *script;
+  char *name;
+
+  name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
+      s->parse_sprite->parse_frame);
+  script = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player), &s->b, name, s->version);
+  g_free (name);
+  if (script) {
+    swfdec_swf_decoder_add_script (s, script);
+    swfdec_sprite_add_action (s->parse_sprite, tag, swfdec_buffer_ref (script->buffer));
+  }
+
+  return SWFDEC_STATUS_OK;
+}
+
 /* may appear inside DefineSprite */
 #define SPRITE 1
 struct tag_func_struct
@@ -582,11 +615,11 @@ struct tag_func_struct
 };
 static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_END] = {"End", tag_func_end, SPRITE},
-  [SWFDEC_TAG_SHOWFRAME] = {"ShowFrame", tag_show_frame, SPRITE},
+  [SWFDEC_TAG_SHOWFRAME] = {"ShowFrame", tag_func_show_frame, SPRITE},
   [SWFDEC_TAG_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
   [SWFDEC_TAG_FREECHARACTER] = {"FreeCharacter", NULL, 0},
   [SWFDEC_TAG_PLACEOBJECT] = {"PlaceObject", NULL, SPRITE},
-  [SWFDEC_TAG_REMOVEOBJECT] = {"RemoveObject", swfdec_spriteseg_remove_object, SPRITE},
+  [SWFDEC_TAG_REMOVEOBJECT] = {"RemoveObject", tag_func_enqueue, SPRITE},
   [SWFDEC_TAG_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
   [SWFDEC_TAG_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
   [SWFDEC_TAG_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
@@ -608,8 +641,8 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DEFINESHAPE2] = {"DefineShape2", tag_define_shape, 0},
   [SWFDEC_TAG_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
   [SWFDEC_TAG_PROTECT] = {"Protect", tag_func_protect, 0},
-  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", swfdec_spriteseg_place_object, SPRITE},
-  [SWFDEC_TAG_REMOVEOBJECT2] = {"RemoveObject2", swfdec_spriteseg_remove_object_2, SPRITE},
+  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", tag_func_enqueue, SPRITE},
+  [SWFDEC_TAG_REMOVEOBJECT2] = {"RemoveObject2", tag_func_enqueue, SPRITE},
   [SWFDEC_TAG_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
   [SWFDEC_TAG_DEFINETEXT2] = {"DefineText2", tag_func_define_text, 0},
   [SWFDEC_TAG_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
@@ -642,7 +675,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
   [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, 0},
-  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", swfdec_spriteseg_place_object, SPRITE},
+  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", tag_func_enqueue, SPRITE},
   [SWFDEC_TAG_IMPORTASSETS2] = {"ImportAssets2", NULL, 0},
   [SWFDEC_TAG_DEFINEFONTALIGNZONES] = {"DefineFontAlignZones", NULL, 0},
   [SWFDEC_TAG_CSMTEXTSETTINGS] = {"CSMTextSettings", NULL, 0},

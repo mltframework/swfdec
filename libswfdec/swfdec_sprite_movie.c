@@ -33,6 +33,7 @@
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_tag.h"
 #include "swfdec_utils.h"
 
 /*** SWFDEC_SPRITE_MOVIE ***/
@@ -55,55 +56,269 @@ swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
   swfdec_as_object_run (movie, data);
 }
 
-static void
-swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, SwfdecSpriteAction *action,
+static cairo_operator_t
+swfdec_sprite_convert_operator (guint operator)
+{
+  return CAIRO_OPERATOR_OVER;
+}
+
+static int
+swfdec_get_clipeventflags (SwfdecMovie *movie, SwfdecBits * bits)
+{
+  if (SWFDEC_SWF_DECODER (movie->swf->decoder)->version <= 5) {
+    return swfdec_bits_get_u16 (bits);
+  } else {
+    return swfdec_bits_get_u32 (bits);
+  }
+}
+
+gboolean
+swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, guint tag)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecMovie *cur;
+  gboolean has_clip_actions;
+  gboolean has_clip_depth;
+  gboolean has_name;
+  gboolean has_ratio;
+  gboolean has_ctrans;
+  gboolean has_transform;
+  gboolean has_character;
+  gboolean move;
+  gboolean depth;
+  gboolean cache;
+  gboolean has_blend_mode = 0;
+  gboolean has_filter = 0;
+  int clip_depth;
+  cairo_matrix_t transform;
+  SwfdecColorTransform ctrans;
+  guint ratio, id, version;
+  SwfdecEventList *events;
+  const char *name;
+
+  version = SWFDEC_SWF_DECODER (mov->swf->decoder)->version;
+
+  /* 1) check which stuff is set */
+  has_clip_actions = swfdec_bits_getbit (bits);
+  has_clip_depth = swfdec_bits_getbit (bits);
+  has_name = swfdec_bits_getbit (bits);
+  has_ratio = swfdec_bits_getbit (bits);
+  has_ctrans = swfdec_bits_getbit (bits);
+  has_transform = swfdec_bits_getbit (bits);
+  has_character = swfdec_bits_getbit (bits);
+  move = swfdec_bits_getbit (bits);
+
+  SWFDEC_LOG ("performing PlaceObject%d on movie %s", tag == SWFDEC_TAG_PLACEOBJECT2 ? 2 : 3, mov->name);
+  SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
+  SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
+  SWFDEC_LOG ("  has_name = %d", has_name);
+  SWFDEC_LOG ("  has_ratio = %d", has_ratio);
+  SWFDEC_LOG ("  has_ctrans = %d", has_ctrans);
+  SWFDEC_LOG ("  has_transform = %d", has_transform);
+  SWFDEC_LOG ("  has_character = %d", has_character);
+  SWFDEC_LOG ("  move = %d", move);
+
+  if (tag == SWFDEC_TAG_PLACEOBJECT3) {
+    swfdec_bits_getbits (bits, 5);
+    cache = swfdec_bits_getbit (bits);
+    has_blend_mode = swfdec_bits_getbit (bits);
+    has_filter = swfdec_bits_getbit (bits);
+    SWFDEC_LOG ("  cache = %d", cache);
+    SWFDEC_LOG ("  has filter = %d", has_filter);
+    SWFDEC_LOG ("  has blend mode = %d", has_blend_mode);
+  }
+
+  /* 2) read all properties */
+  depth = swfdec_bits_get_u16 (bits);
+  if (depth >= 16384) {
+    SWFDEC_FIXME ("depth of placement too high: %u >= 16384", depth);
+  }
+  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
+  depth -= 16384;
+  if (has_character) {
+    id = swfdec_bits_get_u16 (bits);
+    SWFDEC_LOG ("  id = %d", id);
+  } else {
+    id = 0;
+  }
+
+  if (has_transform) {
+    swfdec_bits_get_matrix (bits, &transform, NULL);
+    SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %g %g }", 
+	transform.xx, transform.yx,
+	transform.xy, transform.yy,
+	transform.x0, transform.y0);
+  }
+  if (has_ctrans) {
+    swfdec_bits_get_color_transform (bits, &ctrans);
+    SWFDEC_LOG ("  color transform = %d %d  %d %d  %d %d  %d %d",
+	ctrans.ra, ctrans.rb,
+	ctrans.ga, ctrans.gb,
+	ctrans.ba, ctrans.bb,
+	ctrans.aa, ctrans.ab);
+  }
+
+  if (has_ratio) {
+    ratio = swfdec_bits_get_u16 (bits);
+    SWFDEC_LOG ("  ratio = %d", ratio);
+  } else {
+    ratio = 0;
+  }
+
+  if (has_name) {
+    char *s = swfdec_bits_get_string_with_version (bits, version);
+    name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), s);
+    SWFDEC_LOG ("  name = %s", name);
+  } else {
+    name = NULL;
+  }
+
+  if (has_clip_depth) {
+    clip_depth = swfdec_bits_get_u16 (bits) - 16384;
+    SWFDEC_LOG ("  clip_depth = %d (=> %d)", clip_depth + 16384, clip_depth);
+  } else {
+    clip_depth = 0;
+  }
+
+  if (has_filter) {
+    SWFDEC_ERROR ("filters aren't implemented, skipping PlaceObject tag!");
+    return TRUE;
+  }
+
+  if (has_blend_mode) {
+    /* FIXME: implement */
+    guint operator = swfdec_bits_get_u8 (bits);
+    swfdec_sprite_convert_operator (operator);
+    SWFDEC_ERROR ("  operator = %u", operator);
+  }
+
+  if (has_clip_actions) {
+    int reserved, clip_event_flags, event_flags, key_code;
+    char *script_name;
+
+    events = swfdec_event_list_new (player);
+    reserved = swfdec_bits_get_u16 (bits);
+    clip_event_flags = swfdec_get_clipeventflags (mov, bits);
+
+    if (name)
+      script_name = g_strdup (name);
+    else if (id)
+      script_name = g_strdup_printf ("Sprite%u", id);
+    else
+      script_name = g_strdup ("unknown");
+    while ((event_flags = swfdec_get_clipeventflags (mov, bits)) != 0) {
+      guint length = swfdec_bits_get_u32 (bits);
+      SwfdecBits action_bits;
+
+      swfdec_bits_init_bits (&action_bits, bits, length);
+      if (event_flags & SWFDEC_EVENT_KEY_PRESS)
+	key_code = swfdec_bits_get_u8 (&action_bits);
+      else
+	key_code = 0;
+
+      SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
+#define SWFDEC_IMPLEMENTED_EVENTS \
+  (SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER | SWFDEC_EVENT_INITIALIZE | SWFDEC_EVENT_CONSTRUCT | \
+   SWFDEC_EVENT_MOUSE_DOWN | SWFDEC_EVENT_MOUSE_MOVE | SWFDEC_EVENT_MOUSE_UP)
+      if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
+	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);
+      }
+      swfdec_event_list_parse (events, &action_bits, version, 
+	  event_flags, key_code, script_name);
+      if (swfdec_bits_left (&action_bits)) {
+	SWFDEC_ERROR ("not all action data was parsed: %u bytes left",
+	    swfdec_bits_left (&action_bits));
+      }
+    }
+    g_free (script_name);
+  } else {
+    events = NULL;
+  }
+
+  /* 3) perform the actions depending on the set properties */
+  cur = swfdec_movie_find (mov, depth);
+  if (move) {
+    if (cur == NULL) {
+      SWFDEC_INFO ("no movie at depth %d, ignoring move command", depth);
+      return TRUE;
+    }
+    swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
+	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
+  } else {
+    SwfdecGraphic *graphic;
+    if (cur != NULL) {
+      SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->name);
+      return TRUE;
+    }
+    graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->swf->decoder), id);
+    if (!SWFDEC_IS_GRAPHIC (graphic)) {
+      SWFDEC_FIXME ("character %u is not a graphic (does it eve exist?), ignoring", id);
+      return TRUE;
+    }
+    cur = swfdec_movie_new (player, depth, mov, graphic, name);
+    swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
+	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
+    g_queue_push_tail (player->init_queue, cur);
+    g_queue_push_tail (player->construct_queue, cur);
+    swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+    swfdec_movie_initialize (cur);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, SwfdecBuffer *buffer,
     gboolean skip_scripts)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
-  SwfdecMovie *child;
-  SwfdecContent *content;
+  SwfdecBits bits;
 
-  switch (action->type) {
-    case SWFDEC_SPRITE_ACTION_SCRIPT:
+  g_assert (mov->swf);
+  swfdec_bits_init (&bits, buffer);
+
+  SWFDEC_LOG ("%p: executing %uth tag %s in frame %u", movie, movie->next_action - 1, 
+      swfdec_swf_decoder_get_tag_name (tag), mov->frame);
+  switch (tag) {
+    case SWFDEC_TAG_DOACTION:
       SWFDEC_LOG ("SCRIPT action");
       if (!skip_scripts) {
-	swfdec_player_add_action (player, mov, swfdec_sprite_movie_run_script, action->data);
+	SwfdecScript *script = swfdec_swf_decoder_get_script (
+	    SWFDEC_SWF_DECODER (mov->swf->decoder), buffer->data);
+	g_assert (script);
+	swfdec_player_add_action (player, mov, swfdec_sprite_movie_run_script, script);
       }
-      break;
-    case SWFDEC_SPRITE_ACTION_ADD:
-      content = action->data;
-      SWFDEC_LOG ("ADD action: depth %d", content->depth);
-      if (swfdec_movie_find (mov, content->depth)) {
-	SWFDEC_WARNING ("Could not add movie, depth %d is already occupied", content->depth);
+      return TRUE;
+    case SWFDEC_TAG_PLACEOBJECT2:
+    case SWFDEC_TAG_PLACEOBJECT3:
+      return swfdec_sprite_movie_perform_place (movie, &bits, tag);
+    case SWFDEC_TAG_REMOVEOBJECT:
+      /* yes, this code is meant to be like this - the following u16 is the 
+       * character id, that we don't care about, the rest is like RemoveObject2
+       */
+      swfdec_bits_get_u16 (&bits);
+      /* fall through */
+    case SWFDEC_TAG_REMOVEOBJECT2:
+      {
+	int depth = swfdec_bits_get_u16 (&bits);
+	SWFDEC_LOG ("REMOVE action: depth %d => %d", depth, depth - 16384);
+	depth -= 16384;
+	if (!swfdec_sprite_movie_remove_child (mov, depth))
+	  SWFDEC_INFO ("could not remove, no child at depth %d", depth);
+      }
+      return TRUE;
+    case SWFDEC_TAG_SHOWFRAME:
+      if (mov->frame < mov->n_frames) {
+	mov->frame++;
       } else {
-	child = swfdec_movie_new_for_content (mov, content);
+	SWFDEC_ERROR ("too many ShowFrame tags");
       }
-      break;
-    case SWFDEC_SPRITE_ACTION_UPDATE:
-      content = action->data;
-      SWFDEC_LOG ("ADD action: depth %d", content->depth);
-      child = swfdec_movie_find (mov, content->depth);
-      if (child != NULL) {
-	/* FIXME: add ability to change characters - This needs lots of refactoring */
-	swfdec_movie_set_static_properties (child, content->has_transform ? &content->transform : NULL,
-	    content->has_color_transform ? &content->color_transform : NULL, 
-	    content->ratio, content->clip_depth, content->events);
-	if (content->name && !g_str_equal (content->name, child->name)) {
-	  /* test this more */
-	  child->name = swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (player), content->name);
-	}
-      } else {
-	SWFDEC_WARNING ("supposed to move a character, but can't");
-      }
-      break;
-    case SWFDEC_SPRITE_ACTION_REMOVE:
-      SWFDEC_LOG ("REMOVE action: depth %d", GPOINTER_TO_INT (action->data));
-      if (!swfdec_sprite_movie_remove_child (mov, GPOINTER_TO_INT (action->data)))
-	SWFDEC_INFO ("could not remove, no child at depth %d", GPOINTER_TO_INT (action->data));
-      break;
+      return FALSE;
     default:
       g_assert_not_reached ();
+      return FALSE;
   }
 }
 
@@ -129,7 +344,7 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecPlayer *player;
   GList *old;
-  guint i, j, start;
+  guint n;
 
   g_assert (goto_frame < mov->n_frames);
   if (goto_frame >= movie->sprite->parse_frame) {
@@ -140,40 +355,48 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
 
   if (mov->will_be_removed)
     return;
-  if (goto_frame == movie->current_frame)
+  if (goto_frame == mov->frame)
     return;
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   SWFDEC_LOG ("doing goto %u for %p %d", goto_frame, mov, 
       SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (mov)->sprite)->id);
-  mov->frame = goto_frame;
 
-  if (goto_frame < movie->current_frame) {
-    start = 0;
+  SWFDEC_DEBUG ("performing goto %u -> %u for character %u", 
+      mov->frame, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
+  if (goto_frame < mov->frame) {
+    /* this path is also taken on init */
+    mov->frame = 0;
     old = mov->list;
     mov->list = NULL;
+    n = goto_frame + 1;
+    movie->next_action = 0;
   } else {
-    start = movie->current_frame + 1;
     old = NULL;
+    n = goto_frame - mov->frame;
+    mov->frame++;
   }
-  movie->current_frame = goto_frame;
-  SWFDEC_DEBUG ("performing goto %u -> %u for character %u", 
-      start, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
+  /* from here on, mov->frame is 1-indexed */
   if (movie->sprite == NULL)
     return;
-  for (i = start; i <= movie->current_frame; i++) {
-    SwfdecSpriteFrame *frame = &movie->sprite->frames[i];
+  while (n) {
+    guint tag;
+    SwfdecBuffer *buffer;
+    /* FIXME: These actions should probably just be added to the action queue */
     if (movie == mov->swf->movie &&
-	mov->swf->parse_frame <= i) {
+	mov->swf->parse_frame <= mov->frame)
       swfdec_swf_instance_advance (mov->swf);
-    }
-    if (frame->actions == NULL)
-      continue;
-    for (j = 0; j < frame->actions->len; j++) {
-      swfdec_sprite_movie_perform_one_action (movie,
-	  &g_array_index (frame->actions, SwfdecSpriteAction, j),
-	  i != movie->current_frame);
-    }
+    if (!swfdec_sprite_get_action (movie->sprite, movie->next_action, &tag, &buffer))
+      break;
+    movie->next_action++;
+    if (!swfdec_sprite_movie_perform_one_action (movie, tag, buffer, n > 1))
+      n--;
+  }
+  /* now make mov->frame 0-indexed again */
+  if (mov->frame) {
+    mov->frame--;
+  } else {
+    SWFDEC_FIXME ("how to handle movies without a ShowFrame tag?");
   }
   /* now try to copy eventual movies */
   if (old) {
@@ -259,7 +482,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   GSList *walk;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
-  g_assert (movie->current_frame < mov->n_frames);
+  g_assert (mov->frame < mov->n_frames);
   if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
     g_assert (movie->sound_stream == NULL);
     return FALSE;
@@ -267,10 +490,10 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   
   if (movie->sprite == NULL)
     return TRUE;
-  current = &movie->sprite->frames[movie->current_frame];
+  current = &movie->sprite->frames[mov->frame];
   /* first start all event sounds */
   /* FIXME: is this correct? */
-  if (movie->sound_frame != movie->current_frame) {
+  if (movie->sound_frame != mov->frame) {
     for (walk = current->sound; walk; walk = walk->next) {
       SwfdecAudio *audio = swfdec_audio_event_new (player, walk->data);
       if (audio)
@@ -290,8 +513,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   }
   if (movie->sound_stream == NULL && current->sound_block == NULL)
     goto exit;
-  SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->current_frame);
-  if (movie->sound_frame + 1 != movie->current_frame)
+  SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, mov->frame);
+  if (movie->sound_frame + 1 != mov->frame)
     goto new_decoder;
   if (movie->sound_frame == (guint) -1)
     goto new_decoder;
@@ -301,7 +524,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   if (last->sound_head != current->sound_head)
     goto new_decoder;
 exit:
-  movie->sound_frame = movie->current_frame;
+  movie->sound_frame = mov->frame;
   return TRUE;
 
 new_decoder:
@@ -312,8 +535,8 @@ new_decoder:
 
   if (current->sound_block) {
     movie->sound_stream = swfdec_audio_stream_new (player, 
-	movie->sprite, movie->current_frame);
-    movie->sound_frame = movie->current_frame;
+	movie->sprite, mov->frame);
+    movie->sound_frame = mov->frame;
   }
   return TRUE;
 }
@@ -432,7 +655,9 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 static void
 swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
-  movie->current_frame = (guint) -1;
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+
+  mov->frame = (guint) -1;
   movie->sound_frame = (guint) -1;
 }
 

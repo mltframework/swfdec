@@ -43,7 +43,7 @@ struct _SwfdecSpriteMovie
   SwfdecSprite *	sprite;		/* displayed sprite */
 
   /* frame information */
-  guint			current_frame;	/* frame that is currently displayed (NB: indexed from 0) */
+  guint			next_action;	/* next action in sprite to perform */
 
   /* color information */
   SwfdecColor		bg_color;	/* background color (only used on main sprite) */

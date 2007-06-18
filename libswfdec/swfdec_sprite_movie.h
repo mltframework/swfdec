@@ -40,17 +40,17 @@ struct _SwfdecSpriteMovie
 {
   SwfdecMovie		movie;
 
-  SwfdecSprite *	sprite;			/* displayed sprite */
+  SwfdecSprite *	sprite;		/* displayed sprite */
 
   /* frame information */
-  guint		current_frame;		/* frame that is currently displayed (NB: indexed from 0) */
+  guint			current_frame;	/* frame that is currently displayed (NB: indexed from 0) */
 
   /* color information */
-  SwfdecColor		bg_color;		/* background color (only used on main sprite) */
+  SwfdecColor		bg_color;	/* background color (only used on main sprite) */
 
   /* audio stream handling */
-  guint		sound_frame;		/* current sound frame */
-  SwfdecAudio *		sound_stream;		/* stream that currently plays */
+  guint			sound_frame;	/* current sound frame */
+  SwfdecAudio *		sound_stream;	/* stream that currently plays */
 };
 
 struct _SwfdecSpriteMovieClass
@@ -59,8 +59,6 @@ struct _SwfdecSpriteMovieClass
 };
 
 GType		swfdec_sprite_movie_get_type		(void);
-
-void		swfdec_sprite_movie_prepare		(SwfdecSpriteMovie *	movie);
 
 
 G_END_DECLS

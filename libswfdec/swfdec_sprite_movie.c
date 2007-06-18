@@ -253,15 +253,17 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     }
     graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->swf->decoder), id);
     if (!SWFDEC_IS_GRAPHIC (graphic)) {
-      SWFDEC_FIXME ("character %u is not a graphic (does it eve exist?), ignoring", id);
+      SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
       return TRUE;
     }
     cur = swfdec_movie_new (player, depth, mov, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
-    g_queue_push_tail (player->init_queue, cur);
-    g_queue_push_tail (player->construct_queue, cur);
-    swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+    if (SWFDEC_IS_SPRITE_MOVIE (cur)) {
+      g_queue_push_tail (player->init_queue, cur);
+      g_queue_push_tail (player->construct_queue, cur);
+      swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+    }
     swfdec_movie_initialize (cur);
   }
 

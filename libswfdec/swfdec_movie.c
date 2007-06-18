@@ -257,7 +257,10 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   if (movie->parent)
     movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
 
-  return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
+  if (SWFDEC_IS_SPRITE_MOVIE (movie))
+    return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
+  else
+    return TRUE;
 }
 
 /**
@@ -1000,9 +1003,11 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
   swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
       content->has_color_transform ? &content->color_transform : NULL, 
       content->ratio, content->clip_depth, content->events);
-  g_queue_push_tail (player->init_queue, movie);
-  g_queue_push_tail (player->construct_queue, movie);
-  swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    g_queue_push_tail (player->init_queue, movie);
+    g_queue_push_tail (player->construct_queue, movie);
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+  }
   swfdec_movie_initialize (movie);
 
   return movie;

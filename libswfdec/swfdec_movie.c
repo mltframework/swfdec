@@ -883,11 +883,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (depth > -16385, NULL); /* the lower depths are for deleted movies */
   g_return_val_if_fail (parent == NULL || SWFDEC_IS_MOVIE (parent), NULL);
-  if (parent) {
-    g_return_val_if_fail (swfdec_movie_find (parent, depth) == NULL, NULL);
-  } else {
-    /* FIXME: do a find on player here */
-  }
   g_return_val_if_fail (graphic == NULL || SWFDEC_IS_GRAPHIC (graphic), NULL);
 
   /* create the right movie */

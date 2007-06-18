@@ -247,7 +247,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
   } else {
     SwfdecGraphic *graphic;
-    if (cur != NULL) {
+    if (cur != NULL && version > 5) {
       SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->name);
       return TRUE;
     }

@@ -254,7 +254,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->swf->decoder), id);
     if (!SWFDEC_IS_GRAPHIC (graphic)) {
       SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
-      return TRUE;
+      return FALSE;
     }
     cur = swfdec_movie_new (player, depth, mov, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 

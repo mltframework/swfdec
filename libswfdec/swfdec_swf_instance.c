@@ -245,7 +245,7 @@ swfdec_swf_instance_advance (SwfdecSwfInstance *instance)
   if (array == NULL)
     return;
   for (i = 0; i < array->len; i++) {
-    SwfdecSpriteAction *action = &g_array_index (array, SwfdecSpriteAction, i);
+    SwfdecRootAction *action = &g_array_index (array, SwfdecRootAction, i);
     switch (action->type) {
       case SWFDEC_ROOT_ACTION_INIT_SCRIPT:
 	swfdec_as_object_run (SWFDEC_AS_OBJECT (instance->movie), action->data);

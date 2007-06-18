@@ -42,6 +42,12 @@ typedef enum {
   SWFDEC_ROOT_ACTION_INIT_SCRIPT,	/* contains a SwfdecScript */
 } SwfdecRootActionType;
 
+typedef struct _SwfdecRootAction SwfdecRootAction;
+struct _SwfdecRootAction {
+  guint type;
+  gpointer data;
+};
+
 struct _SwfdecRootExportData {
   char *		name;
   SwfdecCharacter *	character;
@@ -74,6 +80,7 @@ struct _SwfdecSwfDecoder
   SwfdecSprite *main_sprite;
   SwfdecSprite *parse_sprite;
   GArray **root_actions;		/* actions to be executed by the root sprite */
+  GHashTable *scripts;			/* buffer -> script mapping for all scripts */
 
   gboolean protection;			/* TRUE is this file is protected and may not be edited */
   char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
@@ -97,6 +104,10 @@ gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
 void		swfdec_swf_decoder_add_root_action	(SwfdecSwfDecoder *	s,
 							 SwfdecRootActionType	type,
 							 gpointer		data);
+void		swfdec_swf_decoder_add_script		(SwfdecSwfDecoder *	s,
+							 SwfdecScript *		script);
+SwfdecScript *	swfdec_swf_decoder_get_script		(SwfdecSwfDecoder *	s,
+							 guint8 *		data);
 
 SwfdecTagFunc swfdec_swf_decoder_get_tag_func (int tag);
 const char *swfdec_swf_decoder_get_tag_name (int tag);

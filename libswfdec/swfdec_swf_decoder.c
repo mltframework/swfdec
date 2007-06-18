@@ -48,7 +48,7 @@ enum {
 G_DEFINE_TYPE (SwfdecSwfDecoder, swfdec_swf_decoder, SWFDEC_TYPE_DECODER)
 
 static void
-swfdec_decoder_dispose (GObject *object)
+swfdec_swf_decoder_dispose (GObject *object)
 {
   SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (object);
   guint i,j;
@@ -58,7 +58,7 @@ swfdec_decoder_dispose (GObject *object)
       GArray *array = s->root_actions[i];
       if (array) {
 	for (j = 0; j < array->len; j++) {
-	  SwfdecSpriteAction *action = &g_array_index (array, SwfdecSpriteAction, j);
+	  SwfdecRootAction *action = &g_array_index (array, SwfdecRootAction, j);
 
 	  switch (action->type) {
 	    case SWFDEC_ROOT_ACTION_EXPORT:
@@ -86,6 +86,7 @@ swfdec_decoder_dispose (GObject *object)
 
   g_hash_table_destroy (s->characters);
   g_object_unref (s->main_sprite);
+  g_hash_table_destroy (s->scripts);
 
   if (s->uncompressed_buffer) {
     inflateEnd (&s->z);
@@ -379,7 +380,7 @@ swfdec_swf_decoder_class_init (SwfdecSwfDecoderClass *class)
   GObjectClass *object_class = G_OBJECT_CLASS (class);
   SwfdecDecoderClass *decoder_class = SWFDEC_DECODER_CLASS (class);
 
-  object_class->dispose = swfdec_decoder_dispose;
+  object_class->dispose = swfdec_swf_decoder_dispose;
 
   decoder_class->parse = swfdec_swf_decoder_parse;
 }
@@ -392,6 +393,8 @@ swfdec_swf_decoder_init (SwfdecSwfDecoder *s)
   s->characters = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
       NULL, g_object_unref);
   s->input_queue = swfdec_buffer_queue_new ();
+  s->scripts = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) swfdec_script_unref);
 }
 
 gpointer
@@ -444,7 +447,7 @@ swfdec_swf_decoder_add_root_action (SwfdecSwfDecoder *s,
 {
   SwfdecSprite *sprite;
   GArray *array;
-  SwfdecSpriteAction action;
+  SwfdecRootAction action;
 
   g_return_if_fail (SWFDEC_IS_SWF_DECODER (s));
   sprite = s->main_sprite;
@@ -456,11 +459,30 @@ swfdec_swf_decoder_add_root_action (SwfdecSwfDecoder *s,
   array = s->root_actions[sprite->parse_frame];
   if (array == NULL) {
     s->root_actions[sprite->parse_frame] = 
-      g_array_new (FALSE, FALSE, sizeof (SwfdecSpriteAction));
+      g_array_new (FALSE, FALSE, sizeof (SwfdecRootAction));
     array = s->root_actions[sprite->parse_frame];
   }
   action.type = type;
   action.data = data;
   g_array_append_val (array, action);
+}
+
+void
+swfdec_swf_decoder_add_script (SwfdecSwfDecoder *s, SwfdecScript *script)
+{
+  g_return_if_fail (SWFDEC_IS_SWF_DECODER (s));
+  g_return_if_fail (script != NULL);
+  g_return_if_fail (script->buffer != NULL);
+
+  g_hash_table_insert (s->scripts, script->buffer->data, script);
+}
+
+SwfdecScript *
+swfdec_swf_decoder_get_script (SwfdecSwfDecoder *s, guint8 *data)
+{
+  g_return_val_if_fail (SWFDEC_IS_SWF_DECODER (s), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
+
+  return g_hash_table_lookup (s->scripts, data);
 }
 

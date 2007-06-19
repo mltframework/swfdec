@@ -29,6 +29,7 @@
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
+#include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"
 #include "swfdec_event.h"
@@ -919,7 +920,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     movie->name = name;
   } else {
     movie->original_name = SWFDEC_AS_STR_EMPTY;
-    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    if (SWFDEC_IS_SPRITE_MOVIE (movie) || SWFDEC_IS_BUTTON_MOVIE (movie)) {
       movie->name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), 
 	  g_strdup_printf ("instance%u", ++player->unnamed_count));
     } else {

@@ -61,7 +61,7 @@ swfdec_video_decoder_new (SwfdecVideoFormat format)
     g_return_val_if_fail (ret->decode, ret);
     g_return_val_if_fail (ret->free, ret);
   } else {
-    SWFDEC_WARNING ("no decoder found for codec %u\n", (guint) format);
+    SWFDEC_WARNING ("no decoder found for codec %u", (guint) format);
   }
   return ret;
 }

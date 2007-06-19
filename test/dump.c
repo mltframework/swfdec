@@ -42,6 +42,7 @@
 #include <libswfdec/swfdec_sound.h>
 #include <libswfdec/swfdec_swf_decoder.h>
 #include <libswfdec/swfdec_swf_instance.h>
+#include <libswfdec/swfdec_tag.h>
 #include <libswfdec/swfdec_text.h>
 
 static gboolean verbose = FALSE;
@@ -78,18 +79,17 @@ dump_sound (SwfdecSound *sound)
 }
 
 static void
-dump_sprite (SwfdecSprite *s)
+dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 {
   if (!verbose) {
     g_print ("  %u frames\n", s->n_frames);
   } else {
-    guint i, j;
+    guint i, j, tag;
+    SwfdecBuffer *buffer;
     SwfdecSound *sound = NULL;
 
     for (i = 0; i < s->n_frames; i++) {
       SwfdecSpriteFrame *frame = &s->frames[i];
-      if (frame->actions == NULL)
-	continue;
       if (frame->sound_head != sound &&
 	  frame->sound_block != NULL) {
 	sound = frame->sound_head;
@@ -105,40 +105,55 @@ dump_sprite (SwfdecSprite *s)
 	      SWFDEC_AUDIO_OUT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
 	      sound->width ? 16 : 8);
       }
-      for (j = 0; j < frame->actions->len; j++) {
-	SwfdecSpriteAction *action = 
-	  &g_array_index (frame->actions, SwfdecSpriteAction, j);
-	switch (action->type) {
-	  case SWFDEC_SPRITE_ACTION_SCRIPT:
-	    g_print ("   %4u script\n", i);
-	    break;
-	  case SWFDEC_SPRITE_ACTION_REMOVE:
-	    g_print ("   %4u %4d remove\n", i, GPOINTER_TO_INT (action->data) + 16384);
-	    break;
-	  case SWFDEC_SPRITE_ACTION_ADD:
-	  case SWFDEC_SPRITE_ACTION_UPDATE:
-	    {
-	      SwfdecContent *content = action->data;
-	      g_print ("   %4u %4u %s", i, content->depth + 16384, 
-		  action->type == SWFDEC_SPRITE_ACTION_ADD ? "add   " : "update");
-	      if (content->clip_depth)
-		g_print ("%4d", content->clip_depth + 16384);
-	      else
-		g_print ("    ");
-	      if (content->graphic) {
-		g_print (" %s %u", G_OBJECT_TYPE_NAME (content->graphic), 
-		    SWFDEC_CHARACTER (content->graphic)->id);
-	      } else {
-		g_print (" ---");
-	      }
-	      if (content->name)
-		g_print (" as %s", content->name);
-	      g_print ("\n");
+    }
+
+    j = 0;
+    for (i = 0; ; i++) {
+      if (!swfdec_sprite_get_action (s, i, &tag, &buffer))
+	break;
+      switch (tag) {
+	case SWFDEC_TAG_DOACTION:
+	  g_print ("   %4u script\n", j);
+	  break;
+	case SWFDEC_TAG_PLACEOBJECT2:
+	case SWFDEC_TAG_PLACEOBJECT3:
+	  {
+	    SwfdecBits bits;
+	    gboolean has_char, is_move;
+	    guint depth;
+
+	    swfdec_bits_init (&bits, buffer);
+	    swfdec_bits_getbits (&bits, 6);
+	    has_char = swfdec_bits_getbit (&bits);
+	    is_move = swfdec_bits_getbit (&bits);
+	    if (tag == SWFDEC_TAG_PLACEOBJECT3)
+	      swfdec_bits_get_u8 (&bits);
+	    depth = swfdec_bits_get_u16 (&bits);
+	    g_print ("   %4u %5u %s", j, depth, is_move ? "move" : "place");
+	    if (has_char) {
+	      SwfdecCharacter *c;
+	      c = swfdec_swf_decoder_get_character (dec, swfdec_bits_get_u16 (&bits));
+	      if (c)
+		g_print (" %s %u", G_OBJECT_TYPE_NAME (c), c->id);
 	    }
-	    break;
-	  default:
-	    g_assert_not_reached ();
-	}
+	    g_print ("\n");
+	  }
+	  break;
+	case SWFDEC_TAG_REMOVEOBJECT:
+	case SWFDEC_TAG_REMOVEOBJECT2:
+	  {
+	    SwfdecBits bits;
+	    swfdec_bits_init (&bits, buffer);
+	    if (tag == SWFDEC_TAG_REMOVEOBJECT)
+	      swfdec_bits_get_u16 (&bits);
+	    g_print ("   %4u %5u remove\n", j, swfdec_bits_get_u16 (&bits));
+	  }
+	  break;
+	case SWFDEC_TAG_SHOWFRAME:
+	  j++;
+	  break;
+	default:
+	  g_assert_not_reached ();
       }
     }
   }
@@ -323,7 +338,7 @@ dump_image (SwfdecImage *image)
 }
 
 static void 
-dump_object (gpointer key, gpointer value, gpointer unused)
+dump_object (gpointer key, gpointer value, gpointer dec)
 {
   SwfdecCharacter *c = value;
 
@@ -337,7 +352,7 @@ dump_object (gpointer key, gpointer value, gpointer unused)
     dump_image (SWFDEC_IMAGE (c));
   }
   if (SWFDEC_IS_SPRITE (c)) {
-    dump_sprite (SWFDEC_SPRITE (c));
+    dump_sprite (dec, SWFDEC_SPRITE (c));
   }
   if (SWFDEC_IS_SHAPE(c)) {
     dump_shape(SWFDEC_SHAPE(c));
@@ -408,12 +423,13 @@ main (int argc, char *argv[])
   g_print ("  rate   : %g fps\n",  SWFDEC_DECODER (s)->rate / 256.0);
   g_print ("  size   : %ux%u pixels\n", SWFDEC_DECODER (s)->width, SWFDEC_DECODER (s)->height);
   g_print ("objects:\n");
-  g_hash_table_foreach (s->characters, dump_object, NULL);
+  g_hash_table_foreach (s->characters, dump_object, s);
 
   g_print ("main sprite:\n");
-  dump_sprite(s->main_sprite);
-  g_object_unref (s);
+  dump_sprite (s, s->main_sprite);
+  g_object_unref (player);
   s = NULL;
+  player = NULL;
 
   return 0;
 }

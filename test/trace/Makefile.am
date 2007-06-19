@@ -1,4 +1,4 @@
-check_PROGRAMS = trace \
+check_PROGRAMS = trace
 
 TESTS = $(check_PROGRAMS)
 

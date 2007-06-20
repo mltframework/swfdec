@@ -22,6 +22,15 @@
 #endif
 
 #include "swfdec_graphic_movie.h"
+#include "swfdec_button.h"
+#include "swfdec_debug.h"
+#include "swfdec_edittext.h"
+#include "swfdec_movie.h"
+#include "swfdec_shape.h"
+#include "swfdec_sprite.h"
+#include "swfdec_swf_decoder.h"
+#include "swfdec_swf_instance.h"
+#include "swfdec_text.h"
 
 G_DEFINE_TYPE (SwfdecGraphicMovie, swfdec_graphic_movie, SWFDEC_TYPE_MOVIE)
 
@@ -51,6 +60,31 @@ swfdec_graphic_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 }
 
 static void
+swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
+{
+  SwfdecGraphicMovie *gmovie = SWFDEC_GRAPHIC_MOVIE (movie);
+
+  if (SWFDEC_IS_SHAPE (graphic) ||
+      SWFDEC_IS_TEXT (graphic)) {
+    /* wtf? */
+    if (SWFDEC_SWF_DECODER (movie->swf->decoder)->version == 6)
+      return;
+  } else if (SWFDEC_IS_SPRITE (graphic) ||
+      SWFDEC_IS_BUTTON (graphic) ||
+      SWFDEC_IS_EDIT_TEXT (graphic)) {
+    SWFDEC_INFO ("can't replace with scriptable objects");
+    return;
+  } else {
+    SWFDEC_FIXME ("Can we replace with %s objects?", G_OBJECT_TYPE_NAME (graphic));
+    return;
+  }
+  swfdec_movie_invalidate (movie);
+  g_object_unref (gmovie->graphic);
+  gmovie->graphic = g_object_ref (graphic);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+}
+
+static void
 swfdec_graphic_movie_dispose (GObject *object)
 {
   SwfdecGraphicMovie *movie = SWFDEC_GRAPHIC_MOVIE (object);
@@ -69,6 +103,7 @@ swfdec_graphic_movie_class_init (SwfdecGraphicMovieClass * g_class)
   object_class->dispose = swfdec_graphic_movie_dispose;
 
   movie_class->update_extents = swfdec_graphic_movie_update_extents;
+  movie_class->replace = swfdec_graphic_movie_replace;
   movie_class->render = swfdec_graphic_movie_render;
   movie_class->mouse_in = swfdec_graphic_movie_mouse_in;
 }

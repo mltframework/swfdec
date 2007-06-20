@@ -135,6 +135,8 @@ struct _SwfdecMovieClass {
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);
   void			(* finish_movie)	(SwfdecMovie *		movie);
+  void			(* replace)		(SwfdecMovie *		movie,
+						 SwfdecGraphic *	graphic);
   void			(* update_extents)	(SwfdecMovie *		movie,
 						 SwfdecRect *   	extents);
   void			(* render)		(SwfdecMovie *		movie, 

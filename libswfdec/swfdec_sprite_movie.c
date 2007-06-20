@@ -96,6 +96,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   guint ratio, id, version;
   SwfdecEventList *events;
   const char *name;
+  SwfdecGraphic *graphic;
 
   version = SWFDEC_SWF_DECODER (mov->swf->decoder)->version;
 
@@ -238,20 +239,24 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 
   /* 3) perform the actions depending on the set properties */
   cur = swfdec_movie_find (mov, depth);
+  graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->swf->decoder), id);
   if (move) {
     if (cur == NULL) {
       SWFDEC_INFO ("no movie at depth %d, ignoring move command", depth);
       return TRUE;
     }
+    if (graphic) {
+      SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (cur);
+      if (klass->replace)
+	klass->replace (cur, graphic);
+    }
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
   } else {
-    SwfdecGraphic *graphic;
     if (cur != NULL && version > 5) {
       SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->name);
       return TRUE;
     }
-    graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->swf->decoder), id);
     if (!SWFDEC_IS_GRAPHIC (graphic)) {
       SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
       return FALSE;
@@ -332,10 +337,8 @@ swfdec_movie_is_compatible (SwfdecMovie *movie, SwfdecMovie *with)
   if (movie->original_ratio != with->original_ratio)
     return FALSE;
 
-  if (G_OBJECT_TYPE (movie) != G_OBJECT_TYPE (with)) {
-    SWFDEC_FIXME ("this should work, shouldn't it?");
+  if (G_OBJECT_TYPE (movie) != G_OBJECT_TYPE (with))
     return FALSE;
-  }
 
   return TRUE;
 }

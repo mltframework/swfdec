@@ -997,7 +997,6 @@ static void
 swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *l, *r;
-  int comp;
   gboolean cond;
 
   r = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));

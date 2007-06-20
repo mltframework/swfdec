@@ -28,6 +28,7 @@
 #include "swfdec_audio_event.h"
 #include "swfdec_audio_stream.h"
 #include "swfdec_debug.h"
+#include "swfdec_graphic_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_ringbuffer.h"
 #include "swfdec_script.h"
@@ -423,6 +424,12 @@ swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
       if (cur->depth == prev->depth &&
 	  swfdec_movie_is_compatible (prev, cur)) {
 	walk->data = prev;
+	/* FIXME: This merging stuff probably needs to be improved a _lot_ */
+	if (SWFDEC_IS_GRAPHIC_MOVIE (cur)) {
+	  SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (prev);
+	  if (klass->replace)
+	    klass->replace (prev, SWFDEC_GRAPHIC_MOVIE (cur)->graphic);
+	}
 	swfdec_movie_set_static_properties (prev, &cur->original_transform,
 	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, cur->events);
 	swfdec_movie_destroy (cur);

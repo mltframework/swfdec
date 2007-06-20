@@ -76,7 +76,7 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
     SWFDEC_FIXME ("Can we replace with %s objects?", G_OBJECT_TYPE_NAME (graphic));
     return;
   }
-  g_print ("replacing %u with %u\n", SWFDEC_CHARACTER (gmovie->graphic)->id,
+  SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (gmovie->graphic)->id,
       SWFDEC_CHARACTER (graphic)->id);
   swfdec_movie_invalidate (movie);
   g_object_unref (gmovie->graphic);

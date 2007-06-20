@@ -66,9 +66,7 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
 
   if (SWFDEC_IS_SHAPE (graphic) ||
       SWFDEC_IS_TEXT (graphic)) {
-    /* wtf? */
-    if (SWFDEC_SWF_DECODER (movie->swf->decoder)->version == 6)
-      return;
+    /* nothing to do here, please move along */
   } else if (SWFDEC_IS_SPRITE (graphic) ||
       SWFDEC_IS_BUTTON (graphic) ||
       SWFDEC_IS_EDIT_TEXT (graphic)) {
@@ -78,6 +76,8 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
     SWFDEC_FIXME ("Can we replace with %s objects?", G_OBJECT_TYPE_NAME (graphic));
     return;
   }
+  g_print ("replacing %u with %u\n", SWFDEC_CHARACTER (gmovie->graphic)->id,
+      SWFDEC_CHARACTER (graphic)->id);
   swfdec_movie_invalidate (movie);
   g_object_unref (gmovie->graphic);
   gmovie->graphic = g_object_ref (graphic);

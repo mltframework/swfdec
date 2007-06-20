@@ -331,7 +331,6 @@ swfdec_movie_destroy (SwfdecMovie *movie)
     klass->finish_movie (movie);
   player->movies = g_list_remove (player->movies, movie);
   movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
-  g_print ("destroying movie %p %s\n", movie, movie->name);
   g_object_unref (movie);
 }
 
@@ -937,8 +936,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   /* emit the new-movie signal */
   if (SWFDEC_IS_DEBUGGER (player))
     g_signal_emit_by_name (player, "movie-added", movie);
-  g_print ("new movie %p %s for %p %s @ %u\n", movie, movie->name, parent, 
-      parent ? parent->name : "", movie->depth);
   return movie;
 }
 

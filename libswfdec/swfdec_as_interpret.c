@@ -756,44 +756,65 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 }
 
 static void
-swfdec_action_new_comparison_6 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  double d, d2;
-
-  d2 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
-  d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
-  swfdec_as_stack_pop (cx->frame->stack);
-  if (action == 0x48)
-    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d < d2);
-  else 
-    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d > d2);
-}
-
-static void
-swfdec_action_new_comparison_7 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_new_comparison (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *lval, *rval;
+  double l, r;
 
-  rval = swfdec_as_stack_peek (cx->frame->stack, 1);
-  lval = swfdec_as_stack_peek (cx->frame->stack, 2);
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (rval) || SWFDEC_AS_VALUE_IS_UNDEFINED (lval)) {
-    swfdec_as_stack_pop (cx->frame->stack);
-    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1));
-  } else if (SWFDEC_AS_VALUE_IS_STRING (rval) || SWFDEC_AS_VALUE_IS_STRING (lval)) {
-    int comp = strcmp (swfdec_as_value_to_string (cx, rval), 
-	               swfdec_as_value_to_string (cx, lval));
-    swfdec_as_stack_pop (cx->frame->stack);
-    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), action == 0x48 ? comp < 0 : comp > 0);
-  } else {
-    double d, d2;
-    d2 = swfdec_as_value_to_number (cx, rval);
-    d = swfdec_as_value_to_number (cx, lval);
-    swfdec_as_stack_pop (cx->frame->stack);
-    if (action == 0x48)
-      SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d < d2);
-    else 
-      SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), d > d2);
+  rval = swfdec_as_stack_pop (cx->frame->stack);
+  lval = swfdec_as_stack_peek (cx->frame->stack, 1);
+
+  /* swap if we do a greater comparison */
+  if (action == SWFDEC_AS_ACTION_GREATER) {
+    SwfdecAsValue *tmp = lval;
+    lval = rval;
+    rval = tmp;
   }
+  /* comparison with object is always false */
+  swfdec_as_value_to_primitive (lval);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (lval) &&
+      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (lval))) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), FALSE);
+    return;
+  }
+  /* same for the rval */
+  swfdec_as_value_to_primitive (rval);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (rval) &&
+      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (rval))) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), FALSE);
+    return;
+  }
+  /* movieclips are not objects, but they evaluate to NaN, so we can handle them here */
+  if (SWFDEC_AS_VALUE_IS_OBJECT (rval) ||
+      SWFDEC_AS_VALUE_IS_OBJECT (lval)) {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1));
+    return;
+  }
+  /* if both are strings, compare strings */
+  if (SWFDEC_AS_VALUE_IS_STRING (rval) &&
+      SWFDEC_AS_VALUE_IS_STRING (lval)) {
+    const char *ls = SWFDEC_AS_VALUE_GET_STRING (lval);
+    const char *rs = SWFDEC_AS_VALUE_GET_STRING (rval);
+    int cmp;
+    if (ls == SWFDEC_AS_STR_EMPTY) {
+      cmp = rs == SWFDEC_AS_STR_EMPTY ? 0 : 1;
+    } else if (rs == SWFDEC_AS_STR_EMPTY) {
+      cmp = -1;
+    } else {
+      cmp = strcmp (ls, rs);
+    }
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cmp < 0);
+    return;
+  }
+  /* convert to numbers and compare those */
+  l = swfdec_as_value_to_number (cx, lval);
+  r = swfdec_as_value_to_number (cx, rval);
+  /* NaN results in undefined */
+  if (isnan (l) || isnan (r)) {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx->frame->stack, 1));
+    return;
+  }
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), l < r);
 }
 
 static void
@@ -953,19 +974,46 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
   gboolean cond;
 
   l = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 2));
-  r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  r = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
   switch (action) {
-    case 0x0e:
+    case SWFDEC_AS_ACTION_EQUALS:
       cond = l == r;
       break;
-    case 0x0f:
+    case SWFDEC_AS_ACTION_LESS:
       cond = l < r;
       break;
     default: 
       g_assert_not_reached ();
       return;
   }
-  swfdec_as_stack_pop (cx->frame->stack);
+  if (cx->version < 5) {
+    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), cond ? 1 : 0);
+  } else {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx->frame->stack, 1), cond);
+  }
+}
+
+static void
+swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *l, *r;
+  int comp;
+  gboolean cond;
+
+  r = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
+  l = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  comp = strcmp (l, r);
+  switch (action) {
+    case SWFDEC_AS_ACTION_STRING_EQUALS:
+      cond = comp == 0;
+      break;
+    case SWFDEC_AS_ACTION_STRING_LESS:
+      cond = comp < 0;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
   if (cx->version < 5) {
     SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx->frame->stack, 1), cond ? 1 : 0);
   } else {
@@ -2287,7 +2335,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_AND] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
   [SWFDEC_AS_ACTION_OR] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
   [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
-  [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL },
+  [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
   [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL },
   [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL },
   [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
@@ -2303,7 +2351,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
   [SWFDEC_AS_ACTION_START_DRAG] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
   [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
-  [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL },
+  [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
   /* version 7 */
   [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL },
   [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL },
@@ -2334,7 +2382,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, { NULL, NULL, swfdec_action_enumerate, swfdec_action_enumerate, swfdec_action_enumerate } },
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
-  [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
+  [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison, swfdec_action_new_comparison, swfdec_action_new_comparison } },
   [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2_5, swfdec_action_equals2, swfdec_action_equals2 } },
   [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
   [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
@@ -2358,7 +2406,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_BIT_URSHIFT] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
   /* version 6 */
   [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_strict_equals, swfdec_action_strict_equals } },
-  [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison_6, swfdec_action_new_comparison_7 } },
+  [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison, swfdec_action_new_comparison } },
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
   /* version 7 */
   [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, NULL, swfdec_action_extends } },

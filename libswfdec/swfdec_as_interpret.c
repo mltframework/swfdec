@@ -1732,8 +1732,8 @@ swfdec_action_modulo (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 {
   double x, y;
 
-  x = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
-  y = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
+  y = swfdec_as_value_to_number (cx, swfdec_as_stack_pop (cx->frame->stack));
+  x = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
   /* yay, we're portable! */
   if (y == 0.0) {
     x = NAN;

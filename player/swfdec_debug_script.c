@@ -159,6 +159,7 @@ swfdec_debug_script_add_columns (GtkTreeView *treeview)
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes ("Command", renderer,
     "text", COLUMN_DESC, NULL);
+  g_object_set (renderer, "width-chars", 30, NULL);
   gtk_tree_view_column_set_sort_column_id (column, COLUMN_DESC);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_append_column (treeview, column);

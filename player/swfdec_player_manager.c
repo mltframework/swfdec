@@ -442,18 +442,21 @@ command_continue (SwfdecPlayerManager *manager, const char *arg)
 }
 
 static void
-set_breakpoint (gpointer script, gpointer debugger)
-{
-  swfdec_debugger_set_breakpoint (debugger, script, 0);
-}
-
-static void
 command_next (SwfdecPlayerManager *manager, const char *arg)
 {
   if (!swfdec_player_manager_get_interrupted (manager))
     swfdec_player_manager_error (manager, "Not interrupted, cannot continue");
   else 
     swfdec_player_manager_next (manager);
+}
+
+static void
+set_breakpoint (gpointer scriptp, gpointer debugger)
+{
+  SwfdecDebuggerScript *script = scriptp;
+
+  if (script->n_commands > 0)
+    swfdec_debugger_set_breakpoint (debugger, script, 0);
 }
 
 static void

@@ -1002,13 +1002,12 @@ swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *d
 
   r = swfdec_as_value_to_string (cx, swfdec_as_stack_pop (cx->frame->stack));
   l = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
-  comp = strcmp (l, r);
   switch (action) {
     case SWFDEC_AS_ACTION_STRING_EQUALS:
-      cond = comp == 0;
+      cond = l == r;
       break;
     case SWFDEC_AS_ACTION_STRING_LESS:
-      cond = comp < 0;
+      cond = strcmp (l, r) < 0;
       break;
     default:
       g_assert_not_reached ();

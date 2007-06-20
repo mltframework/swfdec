@@ -575,6 +575,7 @@ start:
   }
 
 error:
+  context->frame = context->last_frame;
 out:
   context->last_frame = last_frame;
   return;

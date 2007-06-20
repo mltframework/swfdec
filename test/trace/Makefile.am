@@ -524,6 +524,13 @@ EXTRA_DIST = \
 	registerclass-previous.swf.trace \
 	registerclass-properties.swf \
 	registerclass-properties.swf.trace \
+	relational.as \
+	relational-5.swf \
+	relational-5.swf.trace \
+	relational-6.swf \
+	relational-6.swf.trace \
+	relational-7.swf \
+	relational-7.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	scope.swf \

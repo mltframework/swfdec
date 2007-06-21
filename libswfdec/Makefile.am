@@ -24,7 +24,6 @@ foofiles = \
 	swfdec_js_global.c \
 	swfdec_js_mouse.c \
 	swfdec_js_movie.c \
-	swfdec_js_net_stream.c \
 	swfdec_js_sound.c \
 	swfdec_js_video.c \
 	swfdec_js_xml.c
@@ -91,6 +90,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_movie_asprops.c \
 	swfdec_net_connection.c \
 	swfdec_net_stream.c \
+	swfdec_net_stream_as.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_player_as.c \

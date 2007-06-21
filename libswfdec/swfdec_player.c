@@ -1068,6 +1068,7 @@ extern void swfdec_player_init_global (SwfdecPlayer *player, guint version);
 extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_movie_color_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_net_connection_init_context (SwfdecPlayer *player, guint version);
+extern void swfdec_net_stream_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
@@ -1102,6 +1103,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_sprite_movie_init_context (player, version);
     swfdec_movie_color_init_context (player, version);
     swfdec_net_connection_init_context (player, version);
+    swfdec_net_stream_init_context (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
       swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);

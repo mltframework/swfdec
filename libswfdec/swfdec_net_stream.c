@@ -131,7 +131,7 @@ swfdec_net_stream_timeout (SwfdecTimeout *timeout)
     SWFDEC_LOG ("readding timeout");
     stream->timeout.timestamp += SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     stream->timeout.callback = swfdec_net_stream_timeout;
-    swfdec_player_add_timeout (stream->player, &stream->timeout);
+    swfdec_player_add_timeout (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), &stream->timeout);
   } else {
     if (stream->audio) {
       /* FIXME: just unref and let it take care of removing itself? */
@@ -146,6 +146,7 @@ swfdec_net_stream_timeout (SwfdecTimeout *timeout)
 static void
 swfdec_net_stream_update_playing (SwfdecNetStream *stream)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context);
   gboolean should_play;
     
   should_play = stream->playing; /* checks user-set play/pause */
@@ -155,12 +156,12 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
   if (should_play && stream->timeout.callback == NULL) {
     SWFDEC_DEBUG ("starting playback");
     stream->timeout.callback = swfdec_net_stream_timeout;
-    stream->timeout.timestamp = stream->player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
-    swfdec_player_add_timeout (stream->player, &stream->timeout);
+    stream->timeout.timestamp = player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
+    swfdec_player_add_timeout (player, &stream->timeout);
     if (stream->flvdecoder->audio) {
       g_assert (stream->audio == NULL);
       SWFDEC_LOG ("starting audio");
-      stream->audio = swfdec_audio_flv_new (stream->player, 
+      stream->audio = swfdec_audio_flv_new (player, 
 	  stream->flvdecoder, stream->current_time);
     } else {
       SWFDEC_LOG ("no audio");
@@ -172,7 +173,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
       g_object_unref (stream->audio);
       stream->audio = NULL;
     }
-    swfdec_player_remove_timeout (stream->player, &stream->timeout);
+    swfdec_player_remove_timeout (player, &stream->timeout);
     stream->timeout.callback = NULL;
     SWFDEC_DEBUG ("stopping playback");
   }
@@ -183,7 +184,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
 static SwfdecPlayer *
 swfdec_net_stream_loader_target_get_player (SwfdecLoaderTarget *target)
 {
-  return SWFDEC_NET_STREAM (target)->player;
+  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
 }
 
 static void
@@ -207,7 +208,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   if (stream->flvdecoder == NULL) {
     /* FIXME: add mp3 support */
     stream->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
-    SWFDEC_DECODER (stream->flvdecoder)->player = stream->player;
+    SWFDEC_DECODER (stream->flvdecoder)->player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context);
     SWFDEC_DECODER (stream->flvdecoder)->queue = loader->queue;
     swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_Start,
 	SWFDEC_AS_STR_status);
@@ -223,7 +224,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	break;
       case SWFDEC_STATUS_INIT:
 	/* HACK for native flv playback */
-	swfdec_player_initialize (stream->player, 7,
+	swfdec_player_initialize (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), 7,
 	    SWFDEC_DECODER (stream->flvdecoder)->rate, 
 	    SWFDEC_DECODER (stream->flvdecoder)->width, 
 	    SWFDEC_DECODER (stream->flvdecoder)->height);
@@ -321,8 +322,6 @@ swfdec_net_stream_dispose (GObject *object)
     stream->decoder = NULL;
   }
   swfdec_net_stream_set_loader (stream, NULL);
-  g_object_unref (stream->conn);
-  stream->conn = NULL;
   g_assert (stream->movies == NULL);
 
   G_OBJECT_CLASS (swfdec_net_stream_parent_class)->dispose (object);
@@ -359,7 +358,7 @@ swfdec_net_stream_init (SwfdecNetStream *stream)
 }
 
 SwfdecNetStream *
-swfdec_net_stream_new (SwfdecPlayer *player, SwfdecNetConnection *conn)
+swfdec_net_stream_new (SwfdecNetConnection *conn)
 {
   SwfdecAsContext *context;
   SwfdecNetStream *stream;
@@ -385,7 +384,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   g_return_if_fail (url != NULL);
 
   /* FIXME: use the connection once connections are implemented */
-  loader = swfdec_player_load (stream->player, url);
+  loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), url);
   swfdec_net_stream_set_loader (stream, loader);
   g_object_unref (loader);
 }
@@ -482,7 +481,7 @@ swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
     SWFDEC_WARNING ("FIXME: restarting audio after seek");
     swfdec_audio_remove (stream->audio);
     g_object_unref (stream->audio);
-    stream->audio = swfdec_audio_flv_new (stream->player, 
+    stream->audio = swfdec_audio_flv_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), 
 	stream->flvdecoder, stream->current_time);
   }
 }

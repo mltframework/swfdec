@@ -209,6 +209,10 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("connect")
   SWFDEC_AS_CONSTANT_STRING ("createEmptyMovieClip")
   SWFDEC_AS_CONSTANT_STRING ("split")
+  SWFDEC_AS_CONSTANT_STRING ("NetStream")
+  SWFDEC_AS_CONSTANT_STRING ("pause")
+  SWFDEC_AS_CONSTANT_STRING ("seek")
+  SWFDEC_AS_CONSTANT_STRING ("setBufferTime")
   /* add more here */
 ;
 

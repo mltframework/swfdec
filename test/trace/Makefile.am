@@ -2,7 +2,12 @@ check_PROGRAMS = trace
 
 TESTS = $(check_PROGRAMS)
 
-trace_SOURCES = trace.c
+trace_SOURCES = \
+	swfdec_interaction.c \
+	trace.c
+
+noinst_HEADERS = \
+	swfdec_interaction.h
 
 trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
 trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
@@ -286,6 +291,16 @@ EXTRA_DIST = \
 	load-5.swf.trace \
 	local.swf \
 	local.swf.trace \
+	math-actions.as \
+	math-actions-5.swf \
+	math-actions-5.swf.trace \
+	math-actions-5.swf.trace.org \
+	math-actions-6.swf \
+	math-actions-6.swf.trace \
+	math-actions-6.swf.trace.org \
+	math-actions-7.swf \
+	math-actions-7.swf.trace \
+	math-actions-7.swf.trace.org \
 	mouse-show-hide.as \
 	mouse-show-hide-5.swf \
 	mouse-show-hide-5.swf.trace \

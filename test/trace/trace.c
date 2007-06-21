@@ -1,9 +1,29 @@
+/* Swfdec
+ * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include <math.h>
 #include <string.h>
 #include <libswfdec/swfdec.h>
+#include "swfdec_interaction.h"
 
 static void
 trace_cb (SwfdecPlayer *player, const char *message, GString *string)
@@ -32,6 +52,7 @@ run_test (const char *filename)
   GString *string;
   GError *error = NULL;
   gboolean quit = FALSE;
+  SwfdecInteraction *inter;
 
   g_print ("Testing %s:\n", filename);
   loader = swfdec_loader_new_from_file (filename);
@@ -49,16 +70,38 @@ run_test (const char *filename)
     g_object_unref (player);
     return FALSE;
   }
+  str = g_strdup_printf ("%s.act", filename);
+  if (g_file_test (str, G_FILE_TEST_EXISTS)) {
+    inter = swfdec_interaction_new_from_file (str, &error);
+    if (inter == NULL) {
+      g_print ("  ERROR: %s\n", error->message);
+      g_object_unref (player);
+      g_error_free (error);
+      g_free (str);
+      return FALSE;
+    }
+    time_left = swfdec_interaction_get_duration (inter);
+  } else {
+    time_left = ceil (10000 / swfdec_player_get_rate (player));
+    inter = NULL;
+  }
+  g_free (str);
 
-  time_left = ceil (10000 / swfdec_player_get_rate (player));
   /* FIXME: Make the number of iterations configurable? */
   while (quit == FALSE) {
     /* FIXME: will not do 10 iterations if there's other stuff loaded */
     guint advance = swfdec_player_get_next_event (player);
 
+    if (inter) {
+      int t = swfdec_interaction_get_next_event (inter);
+      g_assert (t >= 0);
+      advance = MIN (advance, (guint) t);
+    }
     if (advance > time_left)
       break;
     swfdec_player_advance (player, advance);
+    if (inter)
+      swfdec_interaction_advance (inter, player, advance);
     time_left -= advance;
   }
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);

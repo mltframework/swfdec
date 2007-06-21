@@ -1,0 +1,9 @@
+Simple check for mouse movements on scaled movie
+499.5
+5
+499.5
+5
+999
+10
+999
+10

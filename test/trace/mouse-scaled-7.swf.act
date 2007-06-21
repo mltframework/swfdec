@@ -1,0 +1,9 @@
+wait 500
+move 50, 50
+wait 500
+down
+wait 500
+move 100, 100
+wait 500
+up
+wait 1000

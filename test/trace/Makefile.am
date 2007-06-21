@@ -301,6 +301,18 @@ EXTRA_DIST = \
 	math-actions-7.swf \
 	math-actions-7.swf.trace \
 	math-actions-7.swf.trace.org \
+	mouse-scaled.as \
+	mouse-scaled-5.swf \
+	mouse-scaled-5.swf.act \
+	mouse-scaled-5.swf.trace \
+	mouse-scaled-6.swf \
+	mouse-scaled-6.swf.act \
+	mouse-scaled-6.swf.trace \
+	mouse-scaled-6.swf.trace.org \
+	mouse-scaled-7.swf \
+	mouse-scaled-7.swf.act \
+	mouse-scaled-7.swf.trace \
+	mouse-scaled-7.swf.trace.org \
 	mouse-show-hide.as \
 	mouse-show-hide-5.swf \
 	mouse-show-hide-5.swf.trace \

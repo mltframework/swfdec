@@ -81,7 +81,9 @@ swfdec_as_double_to_string (SwfdecAsContext *context, double d)
       {
 	gboolean found = FALSE, gotdot = FALSE;
 	guint digits = 15;
-	char s[50], *end, *start;
+	char tmp[50], *end, *start, *s;
+	tmp[0] = ' ';
+	s = &tmp[1];
 	if (ABS (d) > 0.00001 && ABS (d) < 1e+15) {
 	  g_ascii_formatd (s, 50, "%.22f", d);
 	} else {
@@ -112,17 +114,33 @@ swfdec_as_double_to_string (SwfdecAsContext *context, double d)
 	  end++;
 	/* round using the next digit */
 	if (*start >= '5' && *start <= '9') {
-	  while (TRUE) {
-	    if (start[-1] == '.') {
-	      SWFDEC_ERROR ("FIXME: fix rounding!");
-	      break;
-	    }
-	    if (start[-1] != '9') {
-	      start[-1]++;
-	      break;
-	    }
+	  char *finish = NULL;
+	  /* skip all 9s at the end */
+	  while (start[-1] == '9')
+	    start--;
+	  /* if we're before the dot, replace 9s with 0s */
+	  if (start[-1] == '.') {
+	    finish = start;
 	    start--;
 	  }
+	  while (start[-1] == '9') {
+	    start[-1] = '0';
+	    start--;
+	  }
+	  /* write out correct number */
+	  if (start[-1] == '-') {
+	    s--;
+	    start[-2] = '-';
+	    start[-1] = '1';
+	  } else if (start[-1] == ' ') {
+	    s--;
+	    start[-1] = '1';
+	  } else {
+	    start[-1]++;
+	  }
+	  /* reposition cursor at end */
+	  if (finish)
+	    start = finish;
 	}
 	/* remove trailing zeros (note we skipped zero above, so there will be non-0 bytes left) */
 	if (gotdot) {

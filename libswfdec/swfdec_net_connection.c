@@ -139,9 +139,9 @@ swfdec_net_connection_init_context (SwfdecPlayer *player, guint version)
   context = SWFDEC_AS_CONTEXT (player);
   conn = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_NetConnection, SWFDEC_TYPE_NET_CONNECTION, NULL, 0));
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (conn), SWFDEC_TYPE_NET_CONNECTION);
   if (!conn)
     return;
+  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (conn), SWFDEC_TYPE_NET_CONNECTION);
   proto = swfdec_as_object_new (context);
   /* set the right properties on the NetConnection object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);

@@ -437,7 +437,6 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
 static void
 swfdec_player_update_drag_movie (SwfdecPlayer *player)
 {
-  double mouse_x, mouse_y;
   double x, y;
   SwfdecMovie *movie;
 
@@ -446,23 +445,23 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
 
   movie = player->mouse_drag;
   g_assert (movie->cache_state == SWFDEC_MOVIE_UP_TO_DATE);
-  mouse_x = player->mouse_x;
-  mouse_y = player->mouse_y;
-  swfdec_movie_global_to_local (movie->parent, &mouse_x, &mouse_y);
-  mouse_x = CLAMP (mouse_x, player->mouse_drag_rect.x0, player->mouse_drag_rect.x1);
-  mouse_y = CLAMP (mouse_y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
-  SWFDEC_LOG ("mouse is at %g %g, orighinally (%g %g)", mouse_x, mouse_y, player->mouse_x, player->mouse_y);
+  x = player->mouse_x;
+  y = player->mouse_y;
+  if (movie->parent)
+    swfdec_movie_global_to_local (movie->parent, &x, &y);
   if (player->mouse_drag_center) {
-    x = (movie->extents.x1 + movie->extents.x0) / 2;
-    y = (movie->extents.y1 + movie->extents.y0) / 2;
+    x -= (movie->extents.x1 - movie->extents.x0) / 2;
+    y -= (movie->extents.y1 - movie->extents.y0) / 2;
   } else {
-    x = 0;
-    y = 0;
+    x -= player->mouse_drag_x;
+    y -= player->mouse_drag_y;
   }
-  SWFDEC_LOG ("center is at %g %g, mouse is at %g %g", x, y, mouse_x, mouse_y);
-  if (mouse_x - x != movie->matrix.x0 || mouse_y -y != movie->matrix.y0) {
-    movie->matrix.x0 += mouse_x - x;
-    movie->matrix.y0 += mouse_y - y;
+  x = CLAMP (x, player->mouse_drag_rect.x0, player->mouse_drag_rect.x1);
+  y = CLAMP (y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
+  SWFDEC_LOG ("mouse is at %g %g, orighinally (%g %g)", x, y, player->mouse_x, player->mouse_y);
+  if (x != movie->matrix.x0 || y != movie->matrix.y0) {
+    movie->matrix.x0 = x;
+    movie->matrix.y0 = y;
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 }
@@ -488,6 +487,14 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
   /* FIXME: need to do anything with old drag? */
   player->mouse_drag = drag;
   player->mouse_drag_center = center;
+  if (drag && !center) {
+    player->mouse_drag_x = player->mouse_x;
+    player->mouse_drag_y = player->mouse_y;
+    if (drag->parent)
+      swfdec_movie_global_to_local (drag->parent, &player->mouse_drag_x, &player->mouse_drag_y);
+    player->mouse_drag_x -= drag->matrix.x0;
+    player->mouse_drag_y -= drag->matrix.y0;
+  }
   if (rect) {
     player->mouse_drag_rect = *rect;
   } else {

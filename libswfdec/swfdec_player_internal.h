@@ -73,6 +73,8 @@ struct _SwfdecPlayer
   SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */
   gboolean		mouse_drag_center;	/* TRUE to use center of movie at mouse, FALSE for movie's (0,0) */
   SwfdecRect		mouse_drag_rect;	/* clipping rectangle for movements */
+  double		mouse_drag_x;		/* offset of mouse in x direction */
+  double		mouse_drag_y;		/* offset of mouse in y direction */
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */

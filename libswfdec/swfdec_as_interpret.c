@@ -708,11 +708,17 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx->frame->stack, 1), SWFDEC_AS_STR__ERROR_);
 	  return;
 	}
-      } else if (cx->version < 7) {
-	if (isnan (r))
-	  r = 0;
       }
-      l = l / r;
+      if (r == 0) {
+	if (l > 0)
+	  l = INFINITY;
+	else if (l < 0)
+	  l = -INFINITY;
+	else
+	  l = NAN;
+      } else {
+	l = l / r;
+      }
       break;
     default:
       g_assert_not_reached ();

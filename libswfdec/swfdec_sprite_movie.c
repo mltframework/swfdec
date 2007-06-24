@@ -555,24 +555,27 @@ static void
 swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecAsContext *context;
-  SwfdecAsObject *constructor;
-  const char *name;
+  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
+  SwfdecAsObject *constructor = NULL;
 
-  g_assert (movie->sprite->parse_frame > 0);
   g_assert (mov->swf != NULL);
 
-  movie->n_frames = movie->sprite->n_frames;
-  name = swfdec_swf_instance_get_export_name (mov->swf,
-      SWFDEC_CHARACTER (movie->sprite));
-  context = SWFDEC_AS_OBJECT (movie)->context;
-  if (name != NULL) {
-    name = swfdec_as_context_get_string (context, name);
-    constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
-      name);
-  } else {
-    constructor = SWFDEC_PLAYER (context)->MovieClip;
+  if (movie->sprite) {
+    const char *name;
+
+    g_assert (movie->sprite->parse_frame > 0);
+    movie->n_frames = movie->sprite->n_frames;
+    name = swfdec_swf_instance_get_export_name (mov->swf,
+	SWFDEC_CHARACTER (movie->sprite));
+    if (name != NULL) {
+      name = swfdec_as_context_get_string (context, name);
+      constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
+	  name);
+    }
   }
+  if (constructor == NULL)
+    constructor = SWFDEC_PLAYER (context)->MovieClip;
+
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor, FALSE);
   swfdec_sprite_movie_goto (movie, 1);
   if (!swfdec_sprite_movie_iterate_end (mov)) {

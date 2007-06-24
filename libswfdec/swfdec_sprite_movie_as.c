@@ -286,6 +286,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
   if (movie)
     swfdec_movie_remove (movie);
   movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, NULL, name);
+  swfdec_movie_initialize (movie);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 

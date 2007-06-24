@@ -90,8 +90,6 @@ gboolean	swfdec_sprite_get_action	(SwfdecSprite *		sprite,
 						 guint			n,
 						 guint *      		tag,
 						 SwfdecBuffer **	buffer);
-guint		swfdec_sprite_get_next_frame	(SwfdecSprite *		sprite,
-						 guint			current_frame);
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 				      		 const char *		label);
 

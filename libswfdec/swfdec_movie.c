@@ -57,7 +57,6 @@ swfdec_movie_init (SwfdecMovie * movie)
   swfdec_color_transform_init_identity (&movie->original_ctrans);
 
   movie->visible = TRUE;
-  movie->n_frames = 1;
 
   swfdec_rect_init_empty (&movie->extents);
 }
@@ -1043,19 +1042,6 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target)
     return;
   }
   swfdec_player_launch (player, url, target);
-}
-
-void
-swfdec_movie_goto (SwfdecMovie *movie, guint frame)
-{
-  SwfdecMovieClass *klass;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (frame < movie->n_frames);
-
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->goto_frame)
-    klass->goto_frame (movie, frame);
 }
 
 char *

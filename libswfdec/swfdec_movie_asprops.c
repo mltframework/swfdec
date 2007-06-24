@@ -133,21 +133,19 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->frame + 1);
+  g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
+  SWFDEC_AS_VALUE_SET_NUMBER (rval, SWFDEC_SPRITE_MOVIE (movie)->frame);
 }
 
 static void
 mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
 {
-  /* only root movies can be partially loaded */
-  if (SWFDEC_IS_SPRITE_MOVIE (mov)) {
-    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-    if (movie->sprite) {
-      SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->sprite->parse_frame);
-      return;
-    }
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  if (movie->sprite) {
+    SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->sprite->parse_frame);
+    return;
   }
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, mov->n_frames);
+  SWFDEC_AS_VALUE_SET_INT (rval, movie->n_frames);
 }
 
 static void
@@ -165,7 +163,8 @@ mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_totalframes (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->n_frames);
+  g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
+  SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_SPRITE_MOVIE (movie)->n_frames);
 }
 
 static void

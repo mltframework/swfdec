@@ -44,6 +44,9 @@ struct _SwfdecSpriteMovie
 
   /* frame information */
   guint			next_action;	/* next action in sprite to perform */
+  guint			frame;		/* current frame */
+  guint			n_frames;	/* amount of frames */
+  gboolean		playing;	/* TRUE if the movie automatically advances */
 
   /* color information */
   SwfdecColor		bg_color;	/* background color (only used on main sprite) */
@@ -59,6 +62,9 @@ struct _SwfdecSpriteMovieClass
 };
 
 GType		swfdec_sprite_movie_get_type		(void);
+
+void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
+							 guint			goto_frame);
 
 
 G_END_DECLS

@@ -115,9 +115,6 @@ struct _SwfdecMovie {
   SwfdecColorTransform	color_transform;	/* scripted color transformation */
 
   /* iteration state */
-  guint			frame;			/* current frame */
-  guint			n_frames;		/* amount of frames */
-  gboolean		stopped;		/* if we currently iterate */
   gboolean		visible;		/* whether we currently can be seen or iterate */
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
@@ -156,8 +153,6 @@ struct _SwfdecMovieClass {
 						 int			button);
 
   /* iterating */
-  void			(* goto_frame)		(SwfdecMovie *		movie,
-						 guint			frame);
   void			(* iterate_start)     	(SwfdecMovie *		movie);
   gboolean		(* iterate_end)		(SwfdecMovie *		movie);
 };
@@ -207,8 +202,6 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval,
 						 gboolean		fill);
-void		swfdec_movie_goto		(SwfdecMovie *		movie,
-						 guint			frame);
 void		swfdec_movie_execute_script	(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
 gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,

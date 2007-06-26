@@ -280,7 +280,7 @@ swfdec_video_decoder_ffmpeg_new (SwfdecVideoFormat type)
 
   if (ctx == NULL)
     return NULL;
-  codec = g_new (SwfdecVideoDecoderFFMpeg, 1);
+  codec = g_new0 (SwfdecVideoDecoderFFMpeg, 1);
   codec->decoder.decode = swfdec_video_decoder_ffmpeg_decode;
   codec->decoder.free = swfdec_video_decoder_ffmpeg_free;
   codec->ctx = ctx;

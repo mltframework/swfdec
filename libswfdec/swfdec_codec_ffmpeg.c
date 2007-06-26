@@ -270,6 +270,9 @@ swfdec_video_decoder_ffmpeg_new (SwfdecVideoFormat type)
     case SWFDEC_VIDEO_FORMAT_SCREEN:
       id = CODEC_ID_FLASHSV;
       break;
+    case SWFDEC_VIDEO_FORMAT_VP6:
+      id = CODEC_ID_VP6F;
+      break;
     default:
       return NULL;
   }

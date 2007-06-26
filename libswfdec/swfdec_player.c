@@ -1070,6 +1070,7 @@ extern void swfdec_movie_color_init_context (SwfdecPlayer *player, guint version
 extern void swfdec_net_connection_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_net_stream_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
+extern void swfdec_xml_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1104,6 +1105,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_movie_color_init_context (player, version);
     swfdec_net_connection_init_context (player, version);
     swfdec_net_stream_init_context (player, version);
+    swfdec_xml_init_context (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
       swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);

@@ -213,6 +213,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("pause")
   SWFDEC_AS_CONSTANT_STRING ("seek")
   SWFDEC_AS_CONSTANT_STRING ("setBufferTime")
+  SWFDEC_AS_CONSTANT_STRING ("load")
   /* add more here */
 ;
 

@@ -22,66 +22,44 @@
 #endif
 
 #include "swfdec_xml.h"
+#include "swfdec_as_native_function.h"
+#include "swfdec_as_object.h"
 #include "swfdec_debug.h"
-#include "swfdec_js.h"
 #include "swfdec_player_internal.h"
 
-static JSBool
-swfdec_js_xml_load (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+static void
+swfdec_xml_do_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecXml *xml;
+  SwfdecXml *xml = SWFDEC_XML (obj);
   const char *url;
 
-  xml = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_XML);
-  if (xml == NULL)
-    return JS_TRUE;
-  url = swfdec_js_to_string (cx, argv[0]);
-  if (url == NULL)
-    return JS_FALSE;
+  url = swfdec_as_value_to_string (cx, &argv[0]);
   swfdec_xml_load (xml, url);
-  return JS_TRUE;
-}
-
-static JSFunctionSpec xml_methods[] = {
-  { "load",		swfdec_js_xml_load,		1, 0, 0 },
-  {0,0,0,0,0}
-};
-
-static void
-swfdec_js_xml_finalize (JSContext *cx, JSObject *obj)
-{
-  SwfdecXml *conn;
-
-  conn = JS_GetPrivate (cx, obj);
-  if (conn) {
-    SWFDEC_SCRIPTABLE (conn)->jsobj = NULL;
-    g_object_unref (conn);
-  }
-}
-
-const JSClass xml_class = {
-    "XML", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   swfdec_js_xml_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
-
-static JSBool
-swfdec_js_xml_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  SwfdecXml *xml = swfdec_xml_new (JS_GetContextPrivate (cx));
-
-  JS_SetPrivate (cx, obj, xml);
-  SWFDEC_SCRIPTABLE (xml)->jsobj = obj;
-  *rval = OBJECT_TO_JSVAL (obj);
-  return JS_TRUE;
 }
 
 void
-swfdec_js_add_xml (SwfdecPlayer *player)
+swfdec_xml_init_context (SwfdecPlayer *player, guint version)
 {
-  JS_InitClass (player->jscx, player->jsobj, NULL,
-      &xml_class, swfdec_js_xml_new, 0, NULL, xml_methods,
-      NULL, NULL);
+  SwfdecAsContext *context;
+  SwfdecAsObject *stream, *proto;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  context = SWFDEC_AS_CONTEXT (player);
+  stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+      SWFDEC_AS_STR_NetStream, 0, NULL, 0));
+  if (stream == NULL)
+    return;
+  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (stream), SWFDEC_TYPE_XML);
+  proto = swfdec_as_object_new (context);
+  /* set the right properties on the NetStream object */
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set_variable (stream, SWFDEC_AS_STR_prototype, &val);
+  /* set the right properties on the NetStream.prototype object */
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, stream);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_load, SWFDEC_TYPE_XML,
+      swfdec_xml_do_load, 1);
 }
 

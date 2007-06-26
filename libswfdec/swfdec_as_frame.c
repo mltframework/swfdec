@@ -214,15 +214,9 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   }
   g_assert (SWFDEC_IS_AS_FRAME (cur));
   /* we've walked the scope chain down. Now look in the special objects. */
-  /* 1) the target set via SetTarget */
-  if (frame->target) {
-    if (swfdec_as_object_get_variable (frame->target, variable, &val))
-      return frame->target;
-  } else {
-    /* The default target is the original object that called into us */
-    if (swfdec_as_object_get_variable (SWFDEC_AS_FRAME (cur)->thisp, variable, &val))
-      return SWFDEC_AS_FRAME (cur)->thisp;
-  }
+  /* 1) the target */
+  if (swfdec_as_object_get_variable (frame->target, variable, &val))
+    return frame->target;
   /* 2) the global object */
   if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable, &val))
     return SWFDEC_AS_OBJECT (frame)->context->global;
@@ -255,14 +249,8 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
   g_assert (SWFDEC_IS_AS_FRAME (cur));
   /* we've walked the scope chain down. Now look in the special objects. */
   /* 1) the target set via SetTarget */
-  if (frame->target) {
-    if (swfdec_as_object_delete_variable (frame->target, variable))
-      return TRUE;
-  } else {
-    /* The default target is the original object that called into us */
-    if (swfdec_as_object_delete_variable (SWFDEC_AS_FRAME (cur)->thisp, variable))
-      return TRUE;
-  }
+  if (swfdec_as_object_delete_variable (frame->target, variable))
+    return TRUE;
   /* 2) the global object */
   return swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
 }

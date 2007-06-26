@@ -200,7 +200,7 @@ AC_ARG_ENABLE(ffmpeg,
 	enable_ffmpeg="yes")
 
 if test "$enable_ffmpeg" = "yes"; then
-	PKG_CHECK_MODULES(FFMPEG, libavcodec, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
+	PKG_CHECK_MODULES(FFMPEG, libavcodec libswscale, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
 	AC_SUBST(FFMPEG_CFLAGS)
 	AC_SUBST(FFMPEG_LIBS)
 	if test "x$HAVE_FFMPEG" = xyes; then

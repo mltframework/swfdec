@@ -47,11 +47,12 @@ struct _SwfdecAsFrame {
   const SwfdecAsValue *	argv;		/* arguments */
   /* debugging */
   char *		function_name;	/* name of function */
-  /* normal execution */
+  /* script execution */
   SwfdecScript *	script;		/* script being executed */
   SwfdecAsScope *	scope;		/* first object in scope chain (either this frame or a with object) */
-  SwfdecAsObject *	target;		/* target to use instead of last object in scope chain */
-  SwfdecAsObject *	var_object;	/* new variables go here */
+  SwfdecAsObject *	target;		/* target to use as last object in scope chain or for SetVariable */
+  SwfdecAsObject *	original_target;/* original target (used when resetting target) */
+  gboolean		is_local;	/* TRUE if this frame takes local variables */
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
   SwfdecConstantPool *	constant_pool;	/* constant pool currently in use */

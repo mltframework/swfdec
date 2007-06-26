@@ -66,13 +66,10 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
   if (frame->scope)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->scope));
-  if (frame->script) {
-    swfdec_as_object_mark (frame->var_object);
-  }
   if (frame->thisp)
     swfdec_as_object_mark (frame->thisp);
-  if (frame->target)
-    swfdec_as_object_mark (frame->target);
+  swfdec_as_object_mark (frame->target);
+  swfdec_as_object_mark (frame->original_target);
   if (frame->function)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->function));
   for (i = 0; i < frame->n_registers; i++) {
@@ -124,8 +121,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   frame->pc = script->buffer->data;
   frame->stack = stack;
   frame->scope = SWFDEC_AS_SCOPE (frame);
-  if (frame->next)
-    frame->var_object = frame->next->var_object;
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   if (script->constant_pool) {
@@ -176,8 +171,10 @@ swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
 
   frame->thisp = thisp;
-  if (frame->var_object == NULL)
-    frame->var_object = thisp;
+  if (frame->target == NULL) {
+    frame->target = thisp;
+    frame->original_target = thisp;
+  }
 }
 
 /**
@@ -285,7 +282,11 @@ swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (target == NULL || SWFDEC_IS_AS_OBJECT (target));
 
-  frame->target = target;
+  if (target) {
+    frame->target = target;
+  } else {
+    frame->target = frame->original_target;
+  }
 }
 
 void

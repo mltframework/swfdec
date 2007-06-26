@@ -89,7 +89,7 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     return;
   if (thisp)
     swfdec_as_frame_set_this (frame, thisp);
-  frame->var_object = SWFDEC_AS_OBJECT (frame);
+  frame->is_local = TRUE;
   frame->argc = n_args;
   frame->argv = args;
   frame->return_value = return_value;

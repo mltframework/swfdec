@@ -474,6 +474,7 @@ start:
     goto start;
   }
   g_assert (frame->script);
+  g_assert (frame->target);
   script = frame->script;
   stack = frame->stack;
   version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);
@@ -677,7 +678,7 @@ swfdec_as_context_eval_set_property (SwfdecAsContext *cx,
     }
     obj = swfdec_as_frame_find_variable (cx->frame, name);
     if (obj == NULL || obj == cx->global)
-      obj = cx->frame->var_object;
+      obj = cx->frame->target;
   }
   swfdec_as_object_set_variable (obj, name, ret);
 }

@@ -42,7 +42,8 @@ struct _SwfdecAsScriptFunction {
 
   /* for script script_functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */
-  SwfdecAsScope *	scope;		/* scope this script_function was defined in or NULL */
+  SwfdecAsScope *	scope;		/* scope this script_function was defined in */
+  SwfdecAsObject *	target;		/* target this object was defined in */
 };
 
 struct _SwfdecAsScriptFunctionClass {
@@ -51,8 +52,8 @@ struct _SwfdecAsScriptFunctionClass {
 
 GType			swfdec_as_script_function_get_type	(void);
 
-/* FIXME: verify what scope a script_function gets that is defined inside a With statement */
-SwfdecAsFunction *	swfdec_as_script_function_new		(SwfdecAsScope *	scope);
+SwfdecAsFunction *	swfdec_as_script_function_new		(SwfdecAsScope *	scope,
+								 SwfdecAsObject *	target);
 
 
 G_END_DECLS

@@ -48,7 +48,7 @@ swfdec_xml_init_context (SwfdecPlayer *player, guint version)
 
   context = SWFDEC_AS_CONTEXT (player);
   stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_NetStream, 0, NULL, 0));
+      SWFDEC_AS_STR_XML, 0, NULL, 0));
   if (stream == NULL)
     return;
   swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (stream), SWFDEC_TYPE_XML);

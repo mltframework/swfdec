@@ -596,6 +596,13 @@ EXTRA_DIST = \
 	setinterval-this-7.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
+	setvariable-function.as \
+	setvariable-function-5.swf \
+	setvariable-function-5.swf.trace \
+	setvariable-function-6.swf \
+	setvariable-function-6.swf.trace \
+	setvariable-function-7.swf \
+	setvariable-function-7.swf.trace \
 	shift.as \
 	shift-5.swf \
 	shift-5.swf.trace \

@@ -147,6 +147,13 @@ EXTRA_DIST = \
 	double-to-string-7.swf \
 	double-to-string-7.swf.trace \
 	double-to-string-7.swf.trace.org \
+	duplicate-names.as \
+	duplicate-names-5.swf \
+	duplicate-names-5.swf.trace \
+	duplicate-names-6.swf \
+	duplicate-names-6.swf.trace \
+	duplicate-names-7.swf \
+	duplicate-names-7.swf.trace \
 	event-order.swf \
 	empty-stack.as \
 	empty-stack.swf \

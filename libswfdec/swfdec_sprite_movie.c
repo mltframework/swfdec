@@ -288,7 +288,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
   swfdec_bits_init (&bits, buffer);
 
   SWFDEC_LOG ("%p: executing %uth tag %s in frame %u", movie, movie->next_action - 1, 
-      swfdec_swf_decoder_get_tag_name (tag), mov->frame);
+      swfdec_swf_decoder_get_tag_name (tag), movie->frame);
   switch (tag) {
     case SWFDEC_TAG_DOACTION:
       SWFDEC_LOG ("SCRIPT action");
@@ -318,8 +318,8 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       }
       return TRUE;
     case SWFDEC_TAG_SHOWFRAME:
-      if (mov->frame < mov->n_frames) {
-	mov->frame++;
+      if (movie->frame < movie->n_frames) {
+	movie->frame++;
       } else {
 	SWFDEC_ERROR ("too many ShowFrame tags");
       }
@@ -344,65 +344,57 @@ swfdec_movie_is_compatible (SwfdecMovie *movie, SwfdecMovie *with)
   return TRUE;
 }
 
-static void
-swfdec_sprite_movie_goto (SwfdecMovie *mov, guint goto_frame)
+void
+swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecMovie *mov;
   SwfdecPlayer *player;
   GList *old;
   guint n;
 
-  g_assert (goto_frame < mov->n_frames);
-  if (goto_frame >= movie->sprite->parse_frame) {
+  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
+
+  mov = SWFDEC_MOVIE (movie);
+  /* lots of things where we've got nothing to do */
+  if (goto_frame == 0 || goto_frame > movie->n_frames || 
+      movie->sprite == NULL || mov->will_be_removed || goto_frame == movie->frame)
+    return;
+
+  if (goto_frame > movie->sprite->parse_frame) {
     SWFDEC_WARNING ("jumping to not-yet-loaded frame %u (loaded: %u/%u)",
 	goto_frame, movie->sprite->parse_frame, movie->sprite->n_frames);
     return;
   }
 
-  if (mov->will_be_removed)
-    return;
-  if (goto_frame == mov->frame)
-    return;
-
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
-  SWFDEC_LOG ("doing goto %u for %p %d", goto_frame, mov, 
-      SWFDEC_CHARACTER (SWFDEC_SPRITE_MOVIE (mov)->sprite)->id);
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SWFDEC_LOG ("doing goto %u for %p %d", goto_frame, movie, 
+      SWFDEC_CHARACTER (movie->sprite)->id);
 
   SWFDEC_DEBUG ("performing goto %u -> %u for character %u", 
-      mov->frame, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
-  if (goto_frame < mov->frame) {
-    /* this path is also taken on init */
-    mov->frame = 0;
+      movie->frame, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
+  if (goto_frame < movie->frame) {
+    movie->frame = 0;
     old = mov->list;
     mov->list = NULL;
-    n = goto_frame + 1;
+    n = goto_frame;
     movie->next_action = 0;
   } else {
+    /* NB: this path is also taken on init */
     old = NULL;
-    n = goto_frame - mov->frame;
-    mov->frame++;
+    n = goto_frame - movie->frame;
   }
-  /* from here on, mov->frame is 1-indexed */
-  if (movie->sprite == NULL)
-    return;
   while (n) {
     guint tag;
     SwfdecBuffer *buffer;
     /* FIXME: These actions should probably just be added to the action queue */
     if (movie == mov->swf->movie &&
-	mov->swf->parse_frame <= mov->frame)
+	mov->swf->parse_frame <= movie->frame)
       swfdec_swf_instance_advance (mov->swf);
     if (!swfdec_sprite_get_action (movie->sprite, movie->next_action, &tag, &buffer))
       break;
     movie->next_action++;
     if (!swfdec_sprite_movie_perform_one_action (movie, tag, buffer, n > 1))
       n--;
-  }
-  /* now make mov->frame 0-indexed again */
-  if (mov->frame) {
-    mov->frame--;
-  } else {
-    SWFDEC_FIXME ("how to handle movies without a ShowFrame tag?");
   }
   /* now try to copy eventual movies */
   if (old) {
@@ -479,12 +471,18 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
     return;
 
   swfdec_player_add_action (player, movie, swfdec_sprite_movie_do_enter_frame, NULL);
-  if (!mov->stopped && movie->sprite != NULL) {
-    goto_frame = swfdec_sprite_get_next_frame (movie->sprite, mov->frame);
-    swfdec_sprite_movie_goto (mov, goto_frame);
+  if (movie->playing && movie->sprite != NULL) {
+    if (movie->frame == movie->n_frames)
+      goto_frame = 1;
+    else if (movie->sprite && movie->frame == movie->sprite->parse_frame)
+      goto_frame = movie->frame;
+    else
+      goto_frame = movie->frame + 1;
+    swfdec_sprite_movie_goto (movie, goto_frame);
   }
 }
 
+/* FIXME: This function is a mess */
 static gboolean
 swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
 {
@@ -494,7 +492,6 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   GSList *walk;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
-  g_assert (mov->frame < mov->n_frames);
   if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
     g_assert (movie->sound_stream == NULL);
     return FALSE;
@@ -502,10 +499,11 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   
   if (movie->sprite == NULL)
     return TRUE;
-  current = &movie->sprite->frames[mov->frame];
+  g_assert (movie->frame <= movie->n_frames);
+  current = &movie->sprite->frames[movie->frame - 1];
   /* first start all event sounds */
   /* FIXME: is this correct? */
-  if (movie->sound_frame != mov->frame) {
+  if (movie->sound_frame != movie->frame) {
     for (walk = current->sound; walk; walk = walk->next) {
       SwfdecAudio *audio = swfdec_audio_event_new (player, walk->data);
       if (audio)
@@ -515,7 +513,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
 
   /* then do the streaming thing */
   if (current->sound_head == NULL ||
-      SWFDEC_MOVIE (movie)->stopped) {
+      !movie->playing) {
     if (movie->sound_stream) {
       swfdec_audio_remove (movie->sound_stream);
       g_object_unref (movie->sound_stream);
@@ -525,8 +523,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   }
   if (movie->sound_stream == NULL && current->sound_block == NULL)
     goto exit;
-  SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, mov->frame);
-  if (movie->sound_frame + 1 != mov->frame)
+  SWFDEC_LOG ("iterating audio (from %u to %u)", movie->sound_frame, movie->frame);
+  if (movie->sound_frame + 1 != movie->frame)
     goto new_decoder;
   if (movie->sound_frame == (guint) -1)
     goto new_decoder;
@@ -536,7 +534,7 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   if (last->sound_head != current->sound_head)
     goto new_decoder;
 exit:
-  movie->sound_frame = mov->frame;
+  movie->sound_frame = movie->frame;
   return TRUE;
 
 new_decoder:
@@ -547,8 +545,8 @@ new_decoder:
 
   if (current->sound_block) {
     movie->sound_stream = swfdec_audio_stream_new (player, 
-	movie->sprite, mov->frame);
-    movie->sound_frame = mov->frame;
+	movie->sprite, movie->frame);
+    movie->sound_frame = movie->frame;
   }
   return TRUE;
 }
@@ -557,26 +555,29 @@ static void
 swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecAsContext *context;
-  SwfdecAsObject *constructor;
-  const char *name;
+  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
+  SwfdecAsObject *constructor = NULL;
 
-  g_assert (movie->sprite->parse_frame > 0);
   g_assert (mov->swf != NULL);
 
-  mov->n_frames = movie->sprite->n_frames;
-  name = swfdec_swf_instance_get_export_name (mov->swf,
-      SWFDEC_CHARACTER (movie->sprite));
-  context = SWFDEC_AS_OBJECT (movie)->context;
-  if (name != NULL) {
-    name = swfdec_as_context_get_string (context, name);
-    constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
-      name);
-  } else {
-    constructor = SWFDEC_PLAYER (context)->MovieClip;
+  if (movie->sprite) {
+    const char *name;
+
+    g_assert (movie->sprite->parse_frame > 0);
+    movie->n_frames = movie->sprite->n_frames;
+    name = swfdec_swf_instance_get_export_name (mov->swf,
+	SWFDEC_CHARACTER (movie->sprite));
+    if (name != NULL) {
+      name = swfdec_as_context_get_string (context, name);
+      constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
+	  name);
+    }
   }
+  if (constructor == NULL)
+    constructor = SWFDEC_PLAYER (context)->MovieClip;
+
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor, FALSE);
-  swfdec_sprite_movie_goto (mov, 0);
+  swfdec_sprite_movie_goto (movie, 1);
   if (!swfdec_sprite_movie_iterate_end (mov)) {
     g_assert_not_reached ();
   }
@@ -659,7 +660,6 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
-  movie_class->goto_frame = swfdec_sprite_movie_goto;
   movie_class->iterate_start = swfdec_sprite_movie_iterate;
   movie_class->iterate_end = swfdec_sprite_movie_iterate_end;
 }
@@ -667,9 +667,6 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 static void
 swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-
-  mov->frame = (guint) -1;
-  movie->sound_frame = (guint) -1;
+  movie->playing = TRUE;
 }
 

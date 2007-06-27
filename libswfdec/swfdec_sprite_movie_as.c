@@ -37,14 +37,14 @@ static void
 swfdec_sprite_movie_play (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_MOVIE (obj)->stopped = FALSE;
+  SWFDEC_SPRITE_MOVIE (obj)->playing = TRUE;
 }
 
 static void
 swfdec_sprite_movie_stop (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_MOVIE (obj)->stopped = TRUE;
+  SWFDEC_SPRITE_MOVIE (obj)->playing = FALSE;
 }
 
 static void
@@ -91,13 +91,13 @@ swfdec_sprite_movie_getNextHighestDepth (SwfdecAsContext *cx, SwfdecAsObject *ob
 }
 
 static void
-swfdec_sprite_movie_do_goto (SwfdecMovie *movie, SwfdecAsValue *target)
+swfdec_sprite_movie_do_goto (SwfdecSpriteMovie *movie, SwfdecAsValue *target)
 {
   int frame;
 
   if (SWFDEC_AS_VALUE_IS_STRING (target)) {
     const char *label = SWFDEC_AS_VALUE_GET_STRING (target);
-    frame = swfdec_sprite_get_frame (SWFDEC_SPRITE_MOVIE (movie)->sprite, label);
+    frame = swfdec_sprite_get_frame (movie->sprite, label);
     /* FIXME: nonexisting frames? */
     if (frame == -1)
       return;
@@ -106,51 +106,49 @@ swfdec_sprite_movie_do_goto (SwfdecMovie *movie, SwfdecAsValue *target)
     frame = swfdec_as_value_to_integer (SWFDEC_AS_OBJECT (movie)->context, target);
   }
   /* FIXME: how to handle overflow? */
-  frame = CLAMP (frame, 1, (int) movie->n_frames) - 1;
+  frame = CLAMP (frame, 1, (int) movie->n_frames);
 
-  swfdec_movie_goto (movie, frame);
+  swfdec_sprite_movie_goto (movie, frame);
 }
 
 static void
 swfdec_sprite_movie_gotoAndPlay (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (obj);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (obj);
   
   swfdec_sprite_movie_do_goto (movie, &argv[0]);
-  movie->stopped = FALSE;
+  movie->playing = TRUE;
 }
 
 static void
 swfdec_sprite_movie_gotoAndStop (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (obj);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (obj);
   
   swfdec_sprite_movie_do_goto (movie, &argv[0]);
-  movie->stopped = TRUE;
+  movie->playing = FALSE;
 }
 
 static void
 swfdec_sprite_movie_nextFrame (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (obj);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (obj);
   
-  if (movie->frame + 1 < movie->n_frames)
-    swfdec_movie_goto (movie, movie->frame + 1);
-  movie->stopped = TRUE;
+  swfdec_sprite_movie_goto (movie, movie->frame + 1);
+  movie->playing = FALSE;
 }
 
 static void
 swfdec_sprite_movie_prevFrame (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (obj);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (obj);
   
-  if (movie->frame > 0)
-    swfdec_movie_goto (movie, movie->frame - 1);
-  movie->stopped = TRUE;
+  swfdec_sprite_movie_goto (movie, movie->frame - 1);
+  movie->playing = FALSE;
 }
 
 static void
@@ -288,6 +286,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
   if (movie)
     swfdec_movie_remove (movie);
   movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, NULL, name);
+  swfdec_movie_initialize (movie);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 

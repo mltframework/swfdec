@@ -1365,16 +1365,13 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
   constructor = swfdec_as_stack_pop (cx->frame->stack);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx->frame->stack, 1));
   n_args = MIN (swfdec_as_stack_get_size (cx->frame->stack) - 1, n_args);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor))) {
-    SWFDEC_WARNING ("%s is not a constructor", name);
-    goto fail;
-  }
   if (name != SWFDEC_AS_STR_EMPTY) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (constructor)) {
-      swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (constructor),
-	  name, constructor);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor)) {
+      SWFDEC_WARNING ("NewMethod called without an object to get variable %s from", name);
+      goto fail;
     }
+    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (constructor),
+	name, constructor);
   }
   if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor))) {

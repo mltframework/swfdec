@@ -327,6 +327,49 @@ swfdec_net_stream_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_net_stream_parent_class)->dispose (object);
 }
 
+static gboolean
+swfdec_net_stream_get_variable (SwfdecAsObject *object, const char *variable,
+    SwfdecAsValue *val, guint *flags)
+{
+  SwfdecNetStream *stream;
+
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->get (object, variable, val, flags))
+    return TRUE;
+
+  stream = SWFDEC_NET_STREAM (object);
+  /* FIXME: need case insensitive comparisons? */
+  if (variable == SWFDEC_AS_STR_time) {
+    guint msecs;
+    if (stream->flvdecoder == NULL ||
+	!swfdec_flv_decoder_get_video_info (stream->flvdecoder, &msecs, NULL)) {
+      SWFDEC_AS_VALUE_SET_INT (val, 0);
+    } else {
+      if (msecs >= stream->current_time)
+	msecs = 0;
+      else 
+	msecs = stream->current_time - msecs;
+    }
+    SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
+    *flags = 0;
+    return TRUE;
+  } else if (variable == SWFDEC_AS_STR_bytesLoaded) {
+    if (stream->loader == NULL)
+      SWFDEC_AS_VALUE_SET_INT (val, 0);
+    else
+      SWFDEC_AS_VALUE_SET_INT (val, swfdec_loader_get_loaded (stream->loader));
+    *flags = 0;
+    return TRUE;
+  } else if (variable == SWFDEC_AS_STR_bytesTotal) {
+    guint bytes = swfdec_loader_get_size (stream->loader);
+    if (bytes == 0)
+      bytes = swfdec_loader_get_loaded (stream->loader);
+    SWFDEC_AS_VALUE_SET_INT (val, bytes);
+    *flags = 0;
+    return TRUE;
+  }
+  return FALSE;
+}
+
 static void
 swfdec_net_stream_mark (SwfdecAsObject *object)
 {
@@ -345,6 +388,7 @@ swfdec_net_stream_class_init (SwfdecNetStreamClass *klass)
 
   object_class->dispose = swfdec_net_stream_dispose;
 
+  asobject_class->get = swfdec_net_stream_get_variable;
   asobject_class->mark = swfdec_net_stream_mark;
 }
 

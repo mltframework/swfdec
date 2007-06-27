@@ -218,6 +218,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("Video")
   SWFDEC_AS_CONSTANT_STRING ("attachVideo")
   SWFDEC_AS_CONSTANT_STRING ("clear")
+  SWFDEC_AS_CONSTANT_STRING ("time")
+  SWFDEC_AS_CONSTANT_STRING ("bytesLoaded")
+  SWFDEC_AS_CONSTANT_STRING ("bytesTotal")
   /* add more here */
 ;
 

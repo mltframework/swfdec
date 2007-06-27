@@ -206,7 +206,7 @@ if test "$enable_ffmpeg" = "yes"; then
 	if test "x$HAVE_FFMPEG" = xyes; then
 	  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev package.])
+	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev and libswscale-dev packages.])
 	fi
 else
 	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])

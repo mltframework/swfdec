@@ -791,6 +791,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   swfdec_listener_mark (player->mouse_listener);
   swfdec_listener_mark (player->key_listener);
   swfdec_as_object_mark (player->MovieClip);
+  swfdec_as_object_mark (player->Video);
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_as_object_mark (walk->data);
   }
@@ -1070,6 +1071,7 @@ extern void swfdec_movie_color_init_context (SwfdecPlayer *player, guint version
 extern void swfdec_net_connection_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_net_stream_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
+extern void swfdec_video_movie_init_context (SwfdecPlayer *player, guint version);
 extern void swfdec_xml_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
@@ -1102,6 +1104,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_player_init_global (player, version);
     swfdec_mouse_init_context (player, version);
     swfdec_sprite_movie_init_context (player, version);
+    swfdec_video_movie_init_context (player, version);
     swfdec_movie_color_init_context (player, version);
     swfdec_net_connection_init_context (player, version);
     swfdec_net_stream_init_context (player, version);
@@ -1393,12 +1396,6 @@ swfdec_player_advance (SwfdecPlayer *player, guint msecs)
   guint frames;
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (msecs > 0);
-
-#if 0
-  while (TRUE)
-    swfdec_js_run (player, "i = new Object(); i.foo = 7", NULL);
-  //swfdec_js_run (player, "s=\"/A/B:foo\"; t=s.indexOf (\":\"); if (t) t=s.substring(0,s.indexOf (\":\")); else t=s;", NULL);
-#endif
 
   frames = SWFDEC_TICKS_TO_SAMPLES (player->time + SWFDEC_MSECS_TO_TICKS (msecs))
     - SWFDEC_TICKS_TO_SAMPLES (player->time);

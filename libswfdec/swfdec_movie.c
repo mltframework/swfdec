@@ -881,7 +881,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (depth > -16385, NULL); /* the lower depths are for deleted movies */
   g_return_val_if_fail (parent == NULL || SWFDEC_IS_MOVIE (parent), NULL);
   g_return_val_if_fail (graphic == NULL || SWFDEC_IS_GRAPHIC (graphic), NULL);
 

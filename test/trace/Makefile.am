@@ -112,6 +112,20 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	definelocal-function-target.as \
+	definelocal-function-target-5.swf \
+	definelocal-function-target-5.swf.trace \
+	definelocal-function-target-6.swf \
+	definelocal-function-target-6.swf.trace \
+	definelocal-function-target-7.swf \
+	definelocal-function-target-7.swf.trace \
+	definelocal-target.as \
+	definelocal-target-5.swf \
+	definelocal-target-5.swf.trace \
+	definelocal-target-6.swf \
+	definelocal-target-6.swf.trace \
+	definelocal-target-7.swf \
+	definelocal-target-7.swf.trace \
 	delete-object.as \
 	delete-object-5.swf \
 	delete-object-5.swf.trace \

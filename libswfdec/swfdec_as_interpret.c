@@ -448,6 +448,7 @@ swfdec_as_interpret_eval (SwfdecAsContext *cx, SwfdecAsObject *obj,
 
 /* FIXME: this sucks */
 extern struct {
+  gboolean needs_movie;
   const char * name; /* GC'd */
   void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
   void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);

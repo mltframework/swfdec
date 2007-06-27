@@ -59,6 +59,7 @@ struct _SwfdecPlayer
   SwfdecListener *	mouse_listener;		/* emitting mouse events */
   SwfdecListener *	key_listener;		/* emitting keyboard events */
   SwfdecAsObject *	MovieClip;		/* MovieClip object */
+  SwfdecAsObject *	Video;			/* Video object */
 
   /* rendering */
   SwfdecRect		invalid;      		/* area that needs a rredraw */

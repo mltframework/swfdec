@@ -63,14 +63,15 @@ swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
       SWFDEC_AS_STR_Video, 0, NULL, 0));
   if (video == NULL)
     return;
+  player->Video = video;
   proto = swfdec_as_object_new (context);
-  /* set the right properties on the NetStream object */
+  /* set the right properties on the Video object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (video, SWFDEC_AS_STR_prototype, &val);
-  /* set the right properties on the NetStream.prototype object */
+  /* set the right properties on the Video.prototype object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, video);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_VIDEO_MOVIE,
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachVideo, SWFDEC_TYPE_VIDEO_MOVIE,
       swfdec_video_attach_video, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_clear, SWFDEC_TYPE_VIDEO_MOVIE,
       swfdec_video_clear, 0);

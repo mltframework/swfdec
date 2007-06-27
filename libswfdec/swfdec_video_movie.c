@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_video_movie.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecVideoMovie, swfdec_video_movie, SWFDEC_TYPE_MOVIE)
 
@@ -95,6 +96,14 @@ swfdec_video_movie_iterate_end (SwfdecMovie *mov)
 }
 
 static void
+swfdec_video_movie_init_movie (SwfdecMovie *movie)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), player->Video, FALSE);
+}
+
+static void
 swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -104,6 +113,7 @@ swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;
+  movie_class->init_movie = swfdec_video_movie_init_movie;
   movie_class->iterate_end = swfdec_video_movie_iterate_end;
 }
 
@@ -116,10 +126,11 @@ void
 swfdec_video_movie_set_input (SwfdecVideoMovie *movie, SwfdecVideoMovieInput *input)
 {
   g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
-  g_return_if_fail (input != NULL);
 
   swfdec_video_movie_unset_input (movie);
   movie->input = input;
+  if (input == NULL)
+    return;
   if (input->connect)
     input->connect (input, movie);
 }

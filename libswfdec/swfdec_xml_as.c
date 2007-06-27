@@ -41,23 +41,23 @@ void
 swfdec_xml_init_context (SwfdecPlayer *player, guint version)
 {
   SwfdecAsContext *context;
-  SwfdecAsObject *stream, *proto;
+  SwfdecAsObject *xml, *proto;
   SwfdecAsValue val;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   context = SWFDEC_AS_CONTEXT (player);
-  stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+  xml = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_XML, 0, NULL, 0));
-  if (stream == NULL)
+  if (xml == NULL)
     return;
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (stream), SWFDEC_TYPE_XML);
+  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (xml), SWFDEC_TYPE_XML);
   proto = swfdec_as_object_new (context);
   /* set the right properties on the NetStream object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (stream, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable (xml, SWFDEC_AS_STR_prototype, &val);
   /* set the right properties on the NetStream.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, stream);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, xml);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_load, SWFDEC_TYPE_XML,
       swfdec_xml_do_load, 1);

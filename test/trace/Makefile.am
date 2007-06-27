@@ -610,6 +610,11 @@ EXTRA_DIST = \
 	setinterval-this-7.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
+	setvariable-callback.as \
+	setvariable-callback-6.swf \
+	setvariable-callback-6.swf.trace \
+	setvariable-callback-7.swf \
+	setvariable-callback-7.swf.trace \
 	setvariable-function.as \
 	setvariable-function-5.swf \
 	setvariable-function-5.swf.trace \

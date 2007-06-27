@@ -603,6 +603,13 @@ EXTRA_DIST = \
 	setvariable-function-6.swf.trace \
 	setvariable-function-7.swf \
 	setvariable-function-7.swf.trace \
+	setvariable-function-target.as \
+	setvariable-function-target-5.swf \
+	setvariable-function-target-5.swf.trace \
+	setvariable-function-target-6.swf \
+	setvariable-function-target-6.swf.trace \
+	setvariable-function-target-7.swf \
+	setvariable-function-target-7.swf.trace \
 	shift.as \
 	shift-5.swf \
 	shift-5.swf.trace \

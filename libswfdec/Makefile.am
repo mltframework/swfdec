@@ -19,14 +19,6 @@ endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
-foofiles = \
-	swfdec_js.c \
-	swfdec_js_global.c \
-	swfdec_js_mouse.c \
-	swfdec_js_movie.c \
-	swfdec_js_sound.c \
-	swfdec_js_video.c
-
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_array.c \
 	swfdec_as_context.c \
@@ -78,6 +70,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_html_parser.c \
 	swfdec_image.c \
 	swfdec_interval.c \
+	swfdec_js_video.c \
 	swfdec_listener.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \

@@ -23,78 +23,56 @@
 
 #include "swfdec_video.h"
 #include "swfdec_debug.h"
-#include "swfdec_js.h"
 #include "swfdec_net_stream.h"
 #include "swfdec_player_internal.h"
 
-static JSBool
-swfdec_js_video_attach_video (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+static void
+swfdec_video_attach_video (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
+  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (obj);
   SwfdecNetStream *stream;
-  SwfdecVideoMovie *video;
 
-  video = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_VIDEO_MOVIE);
-  if (video == NULL)
-    return JS_TRUE;
-
-  stream = swfdec_scriptable_from_jsval (cx, argv[0], SWFDEC_TYPE_NET_STREAM);
-  if (stream != NULL) {
-    swfdec_video_movie_set_input (video, &stream->input);
-    return JS_TRUE;
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
+      !SWFDEC_IS_NET_STREAM (stream = (SwfdecNetStream *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
+    SWFDEC_WARNING ("calling attachVideo without a NetStraem object");
+    swfdec_video_movie_set_input (video, NULL);
+    return;
   }
-  swfdec_video_movie_set_input (video, NULL);
-  return JS_TRUE;
+  swfdec_video_movie_set_input (video, &stream->input);
 }
-
-static JSBool
-swfdec_js_video_clear (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  SwfdecVideoMovie *video;
-
-  video = swfdec_scriptable_from_object (cx, obj, SWFDEC_TYPE_VIDEO_MOVIE);
-  if (video == NULL)
-    return JS_TRUE;
-
-  swfdec_video_movie_clear (video);
-  return JS_TRUE;
-}
-
-static JSFunctionSpec video_methods[] = {
-  { "attachVideo",    	swfdec_js_video_attach_video,	1, 0, 0 },
-  { "clear",    	swfdec_js_video_clear,		0, 0, 0 },
-  {0,0,0,0,0}
-};
 
 static void
-swfdec_js_video_finalize (JSContext *cx, JSObject *obj)
+swfdec_video_clear (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecVideo *video;
+  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (obj);
 
-  video = JS_GetPrivate (cx, obj);
-  if (video) {
-    SWFDEC_SCRIPTABLE (video)->jsobj = NULL;
-    g_object_unref (video);
-  }
-}
-
-const JSClass video_class = {
-    "Video", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   swfdec_js_video_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
-
-static JSBool
-swfdec_js_video_new (JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  return JS_TRUE;
+  swfdec_video_movie_clear (video);
 }
 
 void
-swfdec_js_add_video (SwfdecPlayer *player)
+swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
 {
-  JS_InitClass (player->jscx, player->jsobj, NULL,
-      &video_class, swfdec_js_video_new, 0, NULL, video_methods,
-      NULL, NULL);
+  SwfdecAsContext *context;
+  SwfdecAsObject *video, *proto;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  context = SWFDEC_AS_CONTEXT (player);
+  video = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+      SWFDEC_AS_STR_Video, 0, NULL, 0));
+  if (video == NULL)
+    return;
+  proto = swfdec_as_object_new (context);
+  /* set the right properties on the NetStream object */
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set_variable (video, SWFDEC_AS_STR_prototype, &val);
+  /* set the right properties on the NetStream.prototype object */
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, video);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_VIDEO_MOVIE,
+      swfdec_video_attach_video, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_clear, SWFDEC_TYPE_VIDEO_MOVIE,
+      swfdec_video_clear, 0);
 }
 

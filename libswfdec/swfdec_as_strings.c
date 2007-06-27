@@ -215,6 +215,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("setBufferTime")
   SWFDEC_AS_CONSTANT_STRING ("load")
   SWFDEC_AS_CONSTANT_STRING ("XML")
+  SWFDEC_AS_CONSTANT_STRING ("Video")
+  SWFDEC_AS_CONSTANT_STRING ("attachVideo")
+  SWFDEC_AS_CONSTANT_STRING ("clear")
   /* add more here */
 ;
 

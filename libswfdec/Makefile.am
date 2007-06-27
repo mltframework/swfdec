@@ -70,7 +70,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_html_parser.c \
 	swfdec_image.c \
 	swfdec_interval.c \
-	swfdec_js_video.c \
 	swfdec_listener.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
@@ -102,6 +101,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_utils.c \
 	swfdec_video.c \
 	swfdec_video_movie.c \
+	swfdec_video_movie_as.c \
 	swfdec_xml.c \
 	swfdec_xml_as.c
 

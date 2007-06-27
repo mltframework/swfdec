@@ -51,6 +51,7 @@ dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 
 AC_PROG_CC
 AM_PROG_CC_STDC
+AM_PROG_CC_C_O
 
 AC_HEADER_STDC([])
 

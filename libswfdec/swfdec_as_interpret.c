@@ -592,6 +592,7 @@ error:
   if (n_args > swfdec_as_stack_get_size (frame->stack))
     n_args = swfdec_as_stack_get_size (frame->stack);
   swfdec_as_stack_pop_n (frame->stack, n_args);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (frame->stack));
   return FALSE;
 }
 

@@ -943,10 +943,11 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
  */
 void
 swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *transform,
-    const SwfdecColorTransform *ctrans, guint ratio, int clip_depth, SwfdecEventList *events)
+    const SwfdecColorTransform *ctrans, int ratio, int clip_depth, SwfdecEventList *events)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (clip_depth >= -16384 || clip_depth <= 0);
+  g_return_if_fail (ratio >= -1);
 
   if (movie->modified) {
     SWFDEC_LOG ("%s has already been modified by scripts, ignoring updates", movie->name);
@@ -963,11 +964,11 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     movie->original_ctrans = *ctrans;
     swfdec_movie_invalidate (movie);
   }
-  if (ratio != movie->original_ratio) {
+  if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
     movie->original_ratio = ratio;
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
   }
-  if (clip_depth != movie->clip_depth) {
+  if (clip_depth && clip_depth != movie->clip_depth) {
     movie->clip_depth = clip_depth;
     /* FIXME: is this correct? */
     swfdec_movie_invalidate (movie->parent ? movie->parent : movie);

@@ -165,7 +165,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     ratio = swfdec_bits_get_u16 (bits);
     SWFDEC_LOG ("  ratio = %d", ratio);
   } else {
-    ratio = 0;
+    ratio = -1;
   }
 
   if (has_name) {

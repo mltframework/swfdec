@@ -544,9 +544,14 @@ swfdec_action_set_member (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecAsValue *val;
   const char *s;
 
-  s = swfdec_as_value_to_printable (cx, swfdec_as_stack_pop (cx->frame->stack));
+  val = swfdec_as_stack_pop (cx->frame->stack);
+  if (val->type == SWFDEC_AS_TYPE_UNDEFINED)
+    s = SWFDEC_AS_STR_undefined;
+  else
+    s = swfdec_as_value_to_string (cx, val);
   swfdec_as_context_trace (cx, s);
 }
 

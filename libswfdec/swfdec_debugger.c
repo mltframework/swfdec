@@ -111,11 +111,11 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 	    goto error;
 	  }
 	  id = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
-	  s = swfdec_constant_pool_get (parser->constant_pool, id);
-	  if (!s) {
+	  if (id >= swfdec_constant_pool_size (parser->constant_pool)) {
 	    SWFDEC_ERROR ("constant pool size too small");
 	    goto error;
 	  }
+	  s = swfdec_constant_pool_get (parser->constant_pool, id);
 	  g_string_append_c (string, '"');
 	  g_string_append (string, s);
 	  g_string_append_c (string, '"');

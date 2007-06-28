@@ -175,7 +175,7 @@ void		swfdec_movie_set_static_properties
 						(SwfdecMovie *		movie,
 						 const cairo_matrix_t *	transform,
 						 const SwfdecColorTransform *ctrans,
-						 guint			ratio,
+						 int			ratio,
 						 int			clip_depth,
 						 SwfdecEventList *	events);
 void		swfdec_movie_invalidate		(SwfdecMovie *		movie);

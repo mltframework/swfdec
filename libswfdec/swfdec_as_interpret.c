@@ -1998,6 +1998,35 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   swfdec_as_with_new (object, data + len, GUINT16_FROM_LE (*(guint16 *) data));
 }
 
+static void
+swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_pop (cx->frame->stack);
+  SwfdecAsObject *sprite;
+  SwfdecMovie *movie;
+
+  if (SWFDEC_AS_VALUE_IS_STRING (val)) {
+    const char *name = SWFDEC_AS_VALUE_GET_STRING (val);
+
+    swfdec_as_context_eval (cx, NULL, name, val);
+  }
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    sprite = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  } else {
+    SWFDEC_FIXME ("unknown type in RemoveSprite");
+    return;
+  }
+  if (!SWFDEC_IS_MOVIE (sprite)) {
+    SWFDEC_FIXME ("cannot remove non movieclip objects");
+    return;
+  }
+  movie = SWFDEC_MOVIE (sprite);
+  if (swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC) {
+    SWFDEC_LOG ("removing clip %s", movie->name);
+    swfdec_movie_remove (movie);
+  }
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2336,7 +2365,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
   [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },
-  [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL },
+  [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL, 1, 0, { NULL, swfdec_action_remove_sprite, swfdec_action_remove_sprite, swfdec_action_remove_sprite, swfdec_action_remove_sprite } },
   [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
   [SWFDEC_AS_ACTION_START_DRAG] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
   [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },

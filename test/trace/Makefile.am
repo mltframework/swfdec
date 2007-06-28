@@ -650,6 +650,13 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-indexof.as \
+	string-indexof-5.swf \
+	string-indexof-5.swf.trace \
+	string-indexof-6.swf \
+	string-indexof-6.swf.trace \
+	string-indexof-7.swf \
+	string-indexof-7.swf.trace \
 	string-split.as \
 	string-split-5.swf \
 	string-split-5.swf.trace \

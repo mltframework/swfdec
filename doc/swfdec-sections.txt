@@ -178,3 +178,16 @@ SWFDEC_IS_GTK_LOADER
 SWFDEC_IS_GTK_LOADER_CLASS
 SWFDEC_TYPE_GTK_LOADER
 </SECTION>
+
+<SECTION>
+<FILE>SwfdecAsValue</FILE>
+<TITLE>SwfdecAsValue</TITLE>
+SwfdecAsValueType
+SwfdecAsValue
+swfdec_as_value_to_boolean
+swfdec_as_value_to_integer
+swfdec_as_value_to_number
+swfdec_as_value_to_object
+swfdec_as_value_to_primitive
+swfdec_as_value_to_string
+</SECTION>

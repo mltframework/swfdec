@@ -20,4 +20,8 @@
     <xi:include href="xml/SwfdecBuffer.xml"/>
     <xi:include href="xml/SwfdecLoader.xml"/>
   </chapter>
+  <chapter>
+    <title>Actionscript interpreter</title>
+    <xi:include href="xml/SwfdecAsValue.xml"/>
+  </chapter>
 </book>

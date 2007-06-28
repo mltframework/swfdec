@@ -55,6 +55,12 @@ IGNORE_HFILES= \
 	js \
 	jpeg \
 	swfdec_amf.h \
+	swfdec_as_interpret.h \
+	swfdec_as_number.h \
+	swfdec_as_string.h \
+	swfdec_as_strings.h \
+	swfdec_as_super.h \
+	swfdec_as_with.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
@@ -68,7 +74,7 @@ IGNORE_HFILES= \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \
 	swfdec_color.h \
-	swfdec_connection.h \
+	swfdec_color_as.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
@@ -80,6 +86,7 @@ IGNORE_HFILES= \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
+	swfdec_interval.h \
 	swfdec_js.h \
 	swfdec_listener.h \
 	swfdec_loader_internal.h \
@@ -88,6 +95,7 @@ IGNORE_HFILES= \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_net_connection.h \
 	swfdec_net_stream.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
@@ -103,9 +111,11 @@ IGNORE_HFILES= \
 	swfdec_sprite_movie.h \
 	swfdec_stroke.h \
 	swfdec_swf_decoder.h \
+	swfdec_swf_instance.h \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_types.h \
+	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
 	swfdec_xml.h

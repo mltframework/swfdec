@@ -35,7 +35,7 @@ typedef enum {
   SWFDEC_AS_TYPE_STRING,
   SWFDEC_AS_TYPE_NULL,
   SWFDEC_AS_TYPE_OBJECT
-} SwfdecAsType;
+} SwfdecAsValueType;
 
 typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
@@ -53,7 +53,7 @@ typedef void (* SwfdecAsNative) (SwfdecAsContext *	context,
 
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {
-  SwfdecAsType		type;
+  SwfdecAsValueType	type;
   union {
     gboolean		boolean;
     double		number;

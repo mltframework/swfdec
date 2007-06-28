@@ -1011,7 +1011,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 {
   SwfdecAsValue *rval, *lval;
   SwfdecAsValue rtmp, ltmp;
-  SwfdecAsType ltype, rtype;
+  SwfdecAsValueType ltype, rtype;
   double l, r;
   gboolean cond;
 
@@ -1100,7 +1100,7 @@ static void
 swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *rval, *lval;
-  SwfdecAsType ltype, rtype;
+  SwfdecAsValueType ltype, rtype;
   double l, r;
   gboolean cond;
 

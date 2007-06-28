@@ -330,6 +330,8 @@ swfdec_movie_destroy (SwfdecMovie *movie)
     klass->finish_movie (movie);
   player->movies = g_list_remove (player->movies, movie);
   movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
+  /* unset prototype here, so we don't work in AS anymore */
+  SWFDEC_AS_OBJECT (movie)->prototype = NULL;
   g_object_unref (movie);
 }
 
@@ -788,6 +790,9 @@ swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable,
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
+  if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
+    return FALSE;
+
   if (swfdec_movie_get_asprop (movie, variable, val)) {
     *flags = 0;
     return TRUE;
@@ -816,7 +821,11 @@ static void
 swfdec_movie_class_set_variable (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val)
 {
-  if (swfdec_movie_set_asprop (SWFDEC_MOVIE (object), variable, val))
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+
+  if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
+    return;
+  if (swfdec_movie_set_asprop (movie, variable, val))
     return;
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val);
 }

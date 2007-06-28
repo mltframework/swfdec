@@ -68,28 +68,29 @@ swfdec_button_condition_get_name (SwfdecButtonCondition condition)
   /* FIXME: check if these events are based on conditions or if they're independant of button type */
   switch (condition) {
     case SWFDEC_BUTTON_IDLE_TO_OVER_UP:
-      return "onRollOver";
+      return SWFDEC_AS_STR_onRollOver;
     case SWFDEC_BUTTON_OVER_UP_TO_IDLE:
-      return "onRollOut";
+      return SWFDEC_AS_STR_onRollOut;
     case SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN:
-      return "onPress";
+      return SWFDEC_AS_STR_onPress;
     case SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP:
-      return "onRelease";
+      return SWFDEC_AS_STR_onRelease;
     case SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN:
-      return "onDragOut";
+      return SWFDEC_AS_STR_onDragOut;
     case SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN:
-      return "onDragOver";
+      return SWFDEC_AS_STR_onDragOver;
     case SWFDEC_BUTTON_OUT_DOWN_TO_IDLE:
-      return "onReleaseOutside";
+      return SWFDEC_AS_STR_onReleaseOutside;
     case SWFDEC_BUTTON_IDLE_TO_OVER_DOWN:
-      return "onDragOver";
+      return SWFDEC_AS_STR_onDragOver;
     case SWFDEC_BUTTON_OVER_DOWN_TO_IDLE:
-      return "onDragOut";
+      return SWFDEC_AS_STR_onDragOut;
     default:
       g_assert_not_reached ();
       return NULL;
   }
 }
+
 static void
 swfdec_button_movie_execute (SwfdecButtonMovie *movie,
     SwfdecButtonCondition condition)

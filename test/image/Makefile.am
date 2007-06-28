@@ -26,6 +26,9 @@ EXTRA_DIST = \
 	negative-color-transform.c \
 	negative-color-transform.swf \
 	negative-color-transform.swf.png \
+	placeobject-ratio.swf \
+	placeobject-ratio.swf.png \
+	placeobject-ratio.xml \
 	replace.c \
 	replace-button-button-5.swf \
 	replace-button-button-5.swf.png \

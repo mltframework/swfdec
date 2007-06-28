@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<swf version="6" compressed="1">
+  <!-- swfmill xml2swf placeobject-ratio.xml placeobject-ratio.swf -->
+  <!-- Check that replace PlaceObject calls that don't modify the ratio _really_
+       don't modify the ratio. -->
+  <Header framerate="100" frames="1">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <SetBackgroundColor>
+        <color>
+          <Color red="255" green="255" blue="255"/>
+        </color>
+      </SetBackgroundColor>
+      <UnknownTag id="0x18"/>
+      <DefineShape objectID="1">
+        <bounds>
+          <Rectangle left="0" right="1000" top="0" bottom="1000"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+	      <Solid>
+		<color>
+                  <Color red="255" green="0" blue="0"/>
+		</color>
+	      </Solid>
+            </fillStyles>
+            <lineStyles/>
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="0" y="0" fillStyle0="1"/>
+              <LineTo x="1000" y="0"/>
+              <LineTo x="0" y="1000"/>
+              <LineTo x="-1000" y="0"/>
+              <LineTo x="0" y="-1000"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <DefineSprite objectID="2" frames="1">
+        <tags>
+          <PlaceObject2 replace="0" depth="1" objectID="1">
+            <transform>
+              <Transform transX="0" transY="0"/>
+            </transform>
+          </PlaceObject2>
+          <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <DefineShape objectID="3">
+        <bounds>
+          <Rectangle left="0" right="1000" top="0" bottom="1000"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+              <Solid>
+                <color>
+                  <Color red="128" green="128" blue="128"/>
+                </color>
+              </Solid>
+            </fillStyles>
+            <lineStyles/>
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="0" y="0" fillStyle0="1"/>
+              <LineTo x="1000" y="0"/>
+              <LineTo x="0" y="1000"/>
+              <LineTo x="-1000" y="0"/>
+              <LineTo x="0" y="-1000"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <DefineSprite objectID="4" frames="1">
+        <tags>
+          <PlaceObject2 replace="0" depth="1" objectID="3">
+            <transform>
+              <Transform transX="0" transY="0"/>
+            </transform>
+          </PlaceObject2>
+          <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <DefineSprite objectID="5" frames="26">
+        <tags>
+          <PlaceObject2 replace="0" depth="1" objectID="2">
+          </PlaceObject2>
+          <ShowFrame/>
+          <RemoveObject2 depth="1"/>
+          <PlaceObject2 replace="0" depth="1" objectID="4" morph="5">
+          </PlaceObject2>
+          <ShowFrame/>
+          <PlaceObject2 replace="1" depth="1">
+          </PlaceObject2>
+          <DoAction>
+            <actions>
+              <Dictionary>
+                <strings>
+                  <String value="gotoAndStop"/>
+                </strings>
+              </Dictionary>
+              <PushData>
+                <items>
+                  <StackInteger value="1"/>
+                  <StackInteger value="1"/>
+                  <StackDictionaryLookup index="0"/>
+                </items>
+              </PushData>
+              <CallFunction/>
+              <Pop/>
+              <EndAction/>
+            </actions>
+          </DoAction>
+          <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <PlaceObject2 replace="0" depth="1" objectID="5" morph="5">
+      </PlaceObject2>
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

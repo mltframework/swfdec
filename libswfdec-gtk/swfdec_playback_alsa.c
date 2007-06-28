@@ -21,9 +21,6 @@
 #include "config.h"
 #endif
 
-/* HACK: ALSA headers don't compile with C99 otherwise */
-#define __need_timespec 1
-
 #include <alsa/asoundlib.h>
 #include "swfdec_playback.h"
 

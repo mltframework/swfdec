@@ -40,7 +40,7 @@
  * @short_description: exchanging values with the Actionscript engine
  *
  * This section describes how values are handled inside the Actionscript 
- * engine. Sice Actionscript is a dynamically typed language, the variable type 
+ * engine. Since Actionscript is a dynamically typed language, the variable type 
  * has to be carried with every value. #SwfdecAsValue accomplishes that. Swfdec
  * allows two possible ways of accessing these values: The common method is to
  * use the provided functions to explicitly convert the values to a given type
@@ -78,6 +78,106 @@
  * spirit to #GValue. The value held is garbage-collected. Apart from the type 
  * member, use the provided macros to access this structure.
  * <note>If you memset a SwfdecAsValue to 0, it is a valid undefined value.</note>
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_UNDEFINED:
+ * @val: value to set as undefined
+ *
+ * Sets @val to the special undefined value. If you create a temporary value, 
+ * you can instead use code such as |[ SwfdecAsValue val = { 0, }; ]|
+ */
+
+/**
+ * SWFDEC_AS_VALUE_GET_BOOLEAN:
+ * @val: value to get, the value must reference a boolean
+ *
+ * Gets the boolean associated with value. If you are not sure if the value is
+ * a boolean, use swfdec_as_value_to_boolean () instead.
+ *
+ * Returns: %TRUE or %FALSE
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_BOOLEAN:
+ * @val: value to set
+ * @b: boolean value to set, must be either %TRUE or %FALSE
+ *
+ * Sets @val to the specified boolean value.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_GET_NUMBER:
+ * @val: value to get, the value must reference a number
+ *
+ * Gets the number associated with @val. If you are not sure that the value is
+ * a valid number value, consider using swfdec_as_value_to_number() or 
+ * swfdec_as_value_to_int() instead.
+ *
+ * Returns: a double. It can be NaN or +-Infinity, but not -0.0
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_NUMBER:
+ * @val: value to set
+ * @d: double value to set
+ *
+ * Sets @val to the given value. If you are sure the value is a valid
+ * integer value, use SWFDEC_AS_VALUE_SET_INT() instead.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_INT:
+ * @val: value to set
+ * @d: integer value to set
+ *
+ * Sets @val to the given value. Currently this macro is equivalent to
+ * SWFDEC_AS_VALUE_SET_NUMBER(), but this may change in future versions of
+ * Swfdec.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_GET_STRING:
+ * @val: value to get, the value must reference a string
+ *
+ * Gets the string associated with @val. If you are not sure that the value is
+ * a string value, consider using swfdec_as_value_to_string() instead.
+ *
+ * Returns: a garbage-collected string.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_STRING:
+ * @val: value to set
+ * @s: garbage-collected string to use
+ *
+ * Sets @val to the given string value.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_NULL:
+ * @val: value to set
+ *
+ * Sets @val to the special null value.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_GET_OBJECT:
+ * @val: value to get, the value must reference an object
+ *
+ * Gets the object associated with @val. If you are not sure that the value is
+ * an object value, consider using swfdec_as_value_to_object() instead.
+ *
+ * Returns: a #SwfdecAsObject
+ */
+
+/**
+ * SWFDEC_AS_VALUE_SET_OBJECT:
+ * @val: value to set
+ * @o: garbage-collected #SwfdecAsObject to use
+ *
+ * Sets @val to the given object. The object must have been added to the 
+ * garbage collector via swfdec_as_object_add() previously.
  */
 
 /*** actual code ***/

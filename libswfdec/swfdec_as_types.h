@@ -54,6 +54,7 @@ typedef void (* SwfdecAsNative) (SwfdecAsContext *	context,
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {
   SwfdecAsValueType	type;
+  /*< private >*/
   union {
     gboolean		boolean;
     double		number;

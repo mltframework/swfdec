@@ -32,6 +32,67 @@
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 
+/*** GTK-DOC ***/
+
+/**
+ * SECTION:SwfdecAsValue
+ * @title: SwfdecAsValue
+ * @short_description: exchanging values with the Actionscript engine
+ *
+ * This section describes how values are handled inside the Actionscript 
+ * engine. Sice Actionscript is a dynamically typed language, the variable type 
+ * has to be carried with every value. #SwfdecAsValue accomplishes that. Swfdec
+ * allows two possible ways of accessing these values: The common method is to
+ * use the provided functions to explicitly convert the values to a given type
+ * with a function such as swfdec_as_value_to_string (). This is convenient, 
+ * but can be very slow as it can call back into the Actionscript engine when
+ * converting various objects. So it can be unsuitable in some cases.
+ * A different possibiltiy is accessing the values directly using the accessor
+ * macros. You must check the type before doing so though. For setting values,
+ * there only exist macros, since type conversion is not necessary.
+ */
+
+/**
+ * SwfdecAsValueType:
+ * @SWFDEC_AS_TYPE_UNDEFINED: the special undefined value
+ * @SWFDEC_AS_TYPE_BOOLEAN: a boolean value - true or false
+ * @SWFDEC_AS_TYPE_INT: reserved value for integers. Should the need arise for
+ *                      performance enhancements - especially on embedded 
+ *                      devices - it might be useful to implement this type.
+ *                      For now, this type will never appear in Swfdec. Using 
+ *                      it will cause Swfdec to crash.
+ * @SWFDEC_AS_TYPE_NUMBER: a double value - also used for integer numbers
+ * @SWFDEC_AS_TYPE_STRING: a string. Strings are garbage-collected and unique.
+ * @SWFDEC_AS_TYPE_NULL: the spaecial null value
+ * @SWFDEC_AS_TYPE_OBJECT: an object - must be of type #SwfdecAsObject
+ *
+ * These are the possible values the Swfdec Actionscript engine knows about.
+ */
+
+/**
+ * SwfdecAsValue:
+ * @type: the type of this value.
+ *
+ * This is the type used to present an opaque value in the Actionscript 
+ * engine. See #SwfdecAsValueType for possible types. It's similar in 
+ * spirit to #GValue. The value held is garbage-collected. Apart from the type 
+ * member, use the provided macros to access this structure.
+ * <note>If you memset a SwfdecAsValue to 0, it is a valid undefined value.</note>
+ */
+
+/*** actual code ***/
+
+/**
+ * swfdec_as_str_concat:
+ * @cx: a #SwfdecAsContext
+ * @s1: first string
+ * @s2: second string
+ *
+ * Convenience function to concatenate two garbage-collected strings. This
+ * function is equivalent to g_strconcat ().
+ *
+ * Returns: A new garbage-collected string
+ **/
 const char *
 swfdec_as_str_concat (SwfdecAsContext *cx, const char * s1, const char *s2)
 {
@@ -174,10 +235,13 @@ swfdec_as_double_to_string (SwfdecAsContext *context, double d)
  * @context: a #SwfdecAsContext
  * @value: value to be expressed as string
  *
- * Converts @value to a string.
- * <warning>This function may run the garbage collector.</warning>
+ * Converts @value to a string according to the rules of Flash. This might 
+ * cause calling back into the script engine if the @value is an object. In
+ * that case, the object's valueOf function is called. 
+ * <warning>Never use this function for debugging purposes.</warning>
  *
- * Returns: a garbage-collected string representing @value
+ * Returns: a garbage-collected string representing @value. The value will 
+ *          never be %NULL.
  **/
 const char *
 swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
@@ -224,6 +288,18 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
   }
 }
 
+/**
+ * swfdec_as_value_to_number:
+ * @context: a #SwfdecAsContext
+ * @value: a #SwfdecAsValue used by context
+ *
+ * Converts the value to a number according to Flash's conversion routines and
+ * the current Flash version. This conversion routine is similar, but not equal
+ * to ECMAScript. For objects, it can call back into the script engine by 
+ * calling the object's valueOf function.
+ *
+ * Returns: a double value. It can be NaN or +-Infinity. It will not be -0.0.
+ **/
 double
 swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 {

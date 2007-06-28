@@ -68,6 +68,30 @@ swfdec_as_str_nth_char (const char *s, guint n)
 }
 
 static void
+swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecAsString *string = SWFDEC_AS_STRING (object);
+  int offset=0, len, i=-1;
+  const char *s, *t = NULL;
+
+  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  if (argc == 2)
+    offset = swfdec_as_value_to_integer (object->context, &argv[1]);
+  if (offset < 0)
+    offset = 0;
+  len = g_utf8_strlen (string->string, -1);
+  if (offset < len) {
+    t = strstr (g_utf8_offset_to_pointer (string->string, offset), s);
+  }
+  if (t != NULL) {
+    i = g_utf8_pointer_to_offset (string->string, t);
+  }
+
+  SWFDEC_AS_VALUE_SET_INT (ret, i);
+}
+
+static void
 swfdec_as_string_charAt (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -671,6 +695,7 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, string);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_charAt, SWFDEC_TYPE_AS_STRING, swfdec_as_string_charAt, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_indexOf, SWFDEC_TYPE_AS_STRING, swfdec_as_string_indexOf, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_charCodeAt, SWFDEC_TYPE_AS_STRING, swfdec_as_string_charCodeAt, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_substr, SWFDEC_TYPE_AS_STRING, swfdec_as_string_substr, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_substring, SWFDEC_TYPE_AS_STRING, swfdec_as_string_substring, 1);

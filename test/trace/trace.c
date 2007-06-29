@@ -31,6 +31,8 @@ struct _Test {
   char *	filename;		/* name of the file to be tested */
   char *	output;			/* test result */
   gboolean	success;		/* TRUE if test was successful, FALSE on error */
+  GMutex *	mutex;			/* NULL or mutex for protecting output */
+  GCond *	cond;			/* NULL or cond to signal after setting output */
 };
 
 static Test *
@@ -77,8 +79,9 @@ fscommand_cb (SwfdecPlayer *player, const char *command, const char *parameter, 
 }
 
 static void
-run_test (Test *test)
+run_test (gpointer testp, gpointer unused)
 {
+  Test *test = testp;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
@@ -179,17 +182,27 @@ run_test (Test *test)
   g_string_append (output, "  OK\n");
   test->success = TRUE;
 fail:
+  if (test->mutex)
+    g_mutex_lock (test->mutex);
   test->output = g_string_free (output, FALSE);
+  if (test->mutex) {
+    g_cond_signal (test->cond);
+    g_mutex_unlock (test->mutex);
+  }
 }
 
 int
 main (int argc, char **argv)
 {
   GList *walk, *tests = NULL;
-  GString *failed_tests = g_string_new ("");
+  GString *failed_tests;
   guint failures = 0;
+  GThreadPool *pool;
+  GError *error = NULL;
 
+  g_thread_init (NULL);
   swfdec_init ();
+  failed_tests = g_string_new ("");
 
   /* collect all tests into the tests list */
   if (argc > 1) {
@@ -219,18 +232,63 @@ main (int argc, char **argv)
   tests = g_list_sort (tests, test_compare);
 
   /* run them and put failed ones in failed_tests */
-  for (walk = tests; walk; walk = walk->next) {
-    Test *test = walk->data;
-    
-    run_test (test);
-    g_print (test->output);
-    if (!test->success) {
-      failures++;
-      g_string_append_printf (failed_tests, 
-	  "          %s\n", test->filename);
+  if (g_getenv ("SWFDEC_TEST_THREADS")) {
+    pool = g_thread_pool_new (run_test, NULL, -1, FALSE, &error);
+    if (pool == NULL) {
+      g_print ("  WARNING: Could not start thread pool: %s\n", error->message);
+      g_print ("  WARNING: testing unthreaded\n");
+      g_error_free (error);
+      error = NULL;
     }
-    test_free (test);
+  } else {
+    pool = NULL;
   }
+  if (pool == NULL) {
+    for (walk = tests; walk; walk = walk->next) {
+      Test *test = walk->data;
+      
+      run_test (test, NULL);
+      g_print (test->output);
+      if (!test->success) {
+	failures++;
+	g_string_append_printf (failed_tests, 
+	    "          %s\n", test->filename);
+      }
+      test_free (test);
+    }
+  } else {
+    GMutex *mutex = g_mutex_new ();
+    GCond *cond = g_cond_new ();
+    for (walk = tests; walk; walk = walk->next) {
+      Test *test = walk->data;
+      test->mutex = mutex;
+      test->cond = cond;
+      g_thread_pool_push (pool, test, &error);
+      if (error) {
+	/* huh? */
+	g_assert_not_reached ();
+	g_error_free (error);
+	error = NULL;
+      }
+    }
+    g_mutex_lock (mutex);
+    for (walk = tests; walk; walk = walk->next) {
+      Test *test = walk->data;
+      while (test->output == NULL)
+	g_cond_wait (cond, mutex);
+      g_print (test->output);
+      if (!test->success) {
+	failures++;
+	g_string_append_printf (failed_tests, 
+	    "          %s\n", test->filename);
+      }
+      test_free (test);
+    }
+    g_mutex_unlock (mutex);
+    g_cond_free (cond);
+    g_mutex_free (mutex);
+  }
+  g_list_free (tests);
 
   /* report failures and exit */
   if (failures > 0) {

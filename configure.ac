@@ -79,6 +79,12 @@ fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_VER)
+dnl we detect gthread seperately for now, since we don't want to link libswfdec to it (yet)
+PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= $GLIB_VER,
+		HAVE_GLIB=yes, HAVE_GLIB=no)
+if test "$HAVE_GTHREAD" = "no"; then
+  AC_MSG_ERROR([gthread-2.0 >= $GLIB_VER is required to build swfdec])
+fi
 dnl FIXME: detect these executables correctly
 GLIB_GENMARSHAL=glib-genmarshal
 AC_SUBST(GLIB_GENMARSHAL)

@@ -38,7 +38,71 @@
 #include "swfdec_debug.h"
 #include "swfdec_script.h"
 
-/*** GTK_DOC ***/
+/*** GARBAGE COLLECTION DOCS ***/
+
+/**
+ * SECTION:Internals
+ * @title: Internals and garbage collection
+ * @short_description: understanding internals such as garbage collection
+ * @see_also: #SwfdecAsContext
+ *
+ * This section deals with the internals of the Swfdec Actionscript engine. You
+ * should probably read this first when trying to write code with it. If you're
+ * just trying to use Swfdec for creating Flash content, you can probably skip
+ * this section.
+ *
+ * First, I'd like to note that the Swfdec script engine has to be modeled very 
+ * closely after the existing Flash players. So if there are some behaviours
+ * that seem stupid at first sight, it might very well be that it was chosen for
+ * a very particular reason. Now on to the features.
+ *
+ * The Swfdec script engine tries to imitate Actionscript as good as possible.
+ * Actionscript is similar to Javascript, but not equal. Depending on the 
+ * version of the script executed it might be more or less similar. An important
+ * example is that Flash in versions up to 6 did case-insensitive variable 
+ * lookups.
+ *
+ * The script engine starts its life when it is initialized via 
+ * swfdec_as_context_startup (). At that point, the basic objects are created.
+ * After this function has been called, you can start executing code. All code
+ * execution happens by creating a new #SwfdecAsFrame and then calling 
+ * swfdec_as_context_run () to execute it. This function is the single entry 
+ * point for code execution. Convenience functions exist that make executing 
+ * code easy, most notably swfdec_as_object_run() and 
+ * swfdec_as_object_call().
+ *
+ * It is also easily possible to extend the environment by adding new objects.
+ * In fact, without doing so, the environment is pretty bare as it just contains
+ * the basic Math, String, Number, Array, Date and Boolean objects. This is done
+ * by adding #SwfdecAsNative functions to the environment. The easy way
+ * to do this is via swfdec_as_object_add_function().
+ *
+ * The Swfdec script engine is dynamically typed and knows about different types
+ * of values. See #SwfdecAsValue for the different values. Memory management is
+ * done using a mark and sweep garbage collector. You can initiate a garbage 
+ * collection cycle by calling swfdec_as_context_gc() or 
+ * swfdec_as_context_maybe_gc(). You should do this regularly to avoid excessive
+ * memory use. The #SwfdecAsContext will then collect the objects and strings it
+ * is keeping track of. If you want to use an object or string in the script 
+ * engine, you'll have to add it first via swfdec_as_object_add() or
+ * swfdec_as_context_get_string() and swfdec_as_context_give_string(), 
+ * respectively.
+ *
+ * Garbage-collected strings are special in Swfdec in that they are unique. This
+ * means the same string exists exactly once. Because of this you can do 
+ * equality comparisons using == instead of strcmp. It also means that if you 
+ * forget to add a string to the context before using it, your app will most 
+ * likely not work, since the string will not compare equal to any other string.
+ *
+ * When a garbage collection cycle happens, all reachable objects and strings 
+ * are marked and all unreachable ones are freed. This is done by calling the
+ * context class's mark function which will mark all reachable objects. This is
+ * usually called the "root set". For any reachable object, the object's mark
+ * function is called so that the object in turn can mark all objects it can 
+ * reach itself. Marking is done via functions described below.
+ */
+
+/*** GTK-DOC ***/
 
 /**
  * SwfdecAsContextState
@@ -58,6 +122,15 @@
 
 /*** RUNNING STATE ***/
 
+/**
+ * swfdec_as_context_abort:
+ * @context: a #SwfdecAsContext
+ * @reason: a string describing why execution was aborted
+ *
+ * Aborts script execution in @context. Call this functon if the script engine 
+ * encountered a fatal error and cannot continue. A possible reason for this is
+ * an out-of-memory condition.
+ **/
 void
 swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 {
@@ -78,22 +151,8 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
  *
  * Registers @bytes additional bytes as in use by the @context. This function
  * keeps track of the memory that script code consumes. If too many memory is 
- * in use, this function may decide to abort execution with an out of memory 
- * error. It may also invoke the garbage collector to free unused memory. Note
- * that running the garbage collector is a potentially dangerous operation,
- * since the calling code must ensure that all memory is reachable for the 
- * garbage collector. Consider the following innocent looking code:
- * <informalexample><programlisting>SwfdecAsValue *v = swfdec_as_stack_pop (stack);
- * SwfdecAsObject *object = swfdec_as_object_new (context);
- * swfdec_as_object_set (object, swfdec_as_context_get_string (context, "something"), v);
- * </programlisting></informalexample>
- * This code may cause the value stored in v to be lost, as it is not reachable
- * when swfdec_as_object_new() invokes the garbage collector. Because of this,
- * all functions in the Actionscript engine that might invoke the garbage 
- * collector contain this warning:
- * <warning>This function may run the garbage collector.</warning>
- * All memory allocated with this function must be released with 
- * swfdec_as_context_unuse_mem(), when it is freed.
+ * in use, this function may decide to stop the script engine with an out of 
+ * memory error.
  *
  * Returns: %TRUE if the memory could be allocated. %FALSE on OOM.
  **/
@@ -105,6 +164,7 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
 
   context->memory += bytes;
   context->memory_since_gc += bytes;
+  /* FIXME: Don't foget to abort on OOM */
   return TRUE;
 }
 
@@ -184,6 +244,13 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   SWFDEC_INFO (">> done collecting garbage");
 }
 
+/**
+ * swfdec_as_object_mark:
+ * @object: a #SwfdecAsObject
+ *
+ * Mark @object as being in use. Calling this function is only valid during
+ * the marking phase of garbage collection.
+ **/
 void
 swfdec_as_object_mark (SwfdecAsObject *object)
 {
@@ -197,6 +264,13 @@ swfdec_as_object_mark (SwfdecAsObject *object)
   klass->mark (object);
 }
 
+/**
+ * swfdec_as_string_mark:
+ * @string: a garbage-collected string
+ *
+ * Mark @string as being in use. Calling this function is only valid during
+ * the marking phase of garbage collection.
+ **/
 void
 swfdec_as_string_mark (const char *string)
 {
@@ -205,6 +279,14 @@ swfdec_as_string_mark (const char *string)
     *str = SWFDEC_AS_GC_MARK;
 }
 
+/**
+ * swfdec_as_value_mark:
+ * @value: a #SwfdecAsValue
+ *
+ * Mark @value as being in use. This is just a convenience function that calls
+ * the right marking function depending on the value's type. Calling this 
+ * function is only valid during the marking phase of garbage collection.
+ **/
 void
 swfdec_as_value_mark (SwfdecAsValue *value)
 {
@@ -745,27 +827,38 @@ finish:
  * during evaluation, the return value will be the undefined value.
  **/
 void
-swfdec_as_context_eval (SwfdecAsContext *cx, SwfdecAsObject *obj, const char *str, 
+swfdec_as_context_eval (SwfdecAsContext *context, SwfdecAsObject *obj, const char *str, 
     SwfdecAsValue *val)
 {
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (obj == NULL || SWFDEC_IS_AS_OBJECT (obj));
   g_return_if_fail (str != NULL);
   g_return_if_fail (val != NULL);
 
-  swfdec_as_context_eval_internal (cx, obj, str, val, FALSE);
+  swfdec_as_context_eval_internal (context, obj, str, val, FALSE);
 }
 
+/**
+ * swfdec_as_context_eval_set:
+ * @context: a #SwfdecAsContext
+ * @obj: #SwfdecAsObject to use as source for evaluating or NULL for the 
+ *       default object.
+ * @str: The string to evaluate
+ * @val: the value to set the variable to
+ *
+ * Sets the variable referenced by @str to @val. If @str does not reference 
+ * a valid property, nothing happens.
+ **/
 void
-swfdec_as_context_eval_set (SwfdecAsContext *cx, SwfdecAsObject *obj, const char *str,
+swfdec_as_context_eval_set (SwfdecAsContext *context, SwfdecAsObject *obj, const char *str,
     const SwfdecAsValue *val)
 {
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (obj == NULL || SWFDEC_IS_AS_OBJECT (obj));
   g_return_if_fail (str != NULL);
   g_return_if_fail (val != NULL);
 
-  swfdec_as_context_eval_internal (cx, obj, str, (SwfdecAsValue *) val, TRUE);
+  swfdec_as_context_eval_internal (context, obj, str, (SwfdecAsValue *) val, TRUE);
 }
 
 /*** AS CODE ***/

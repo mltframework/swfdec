@@ -100,7 +100,6 @@ const char *	swfdec_as_context_get_string	(SwfdecAsContext *	context,
 const char *	swfdec_as_context_give_string	(SwfdecAsContext *	context,
 						 char *			string);
 
-#define swfdec_as_context_abort_oom(context) swfdec_as_context_abort (context, "Out of memory")
 void		swfdec_as_context_abort		(SwfdecAsContext *	context,
 						 const char *		reason);
 
@@ -119,11 +118,11 @@ void		swfdec_as_context_return	(SwfdecAsContext *	context);
 void		swfdec_as_context_trace		(SwfdecAsContext *	context,
 						 const char *		string);
 
-void		swfdec_as_context_eval		(SwfdecAsContext *	cx,
+void		swfdec_as_context_eval		(SwfdecAsContext *	context,
 						 SwfdecAsObject *	obj,
 						 const char *		str,
 						 SwfdecAsValue *	val);
-void		swfdec_as_context_eval_set	(SwfdecAsContext *	cx,
+void		swfdec_as_context_eval_set	(SwfdecAsContext *	context,
 						 SwfdecAsObject *	obj,
 						 const char *		str,
 						 const SwfdecAsValue *	val);

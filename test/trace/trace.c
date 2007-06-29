@@ -49,16 +49,17 @@ run_test (const char *filename)
   SwfdecBuffer *buffer;
   guint time_left;
   char *str;
-  GString *string;
+  GString *string, *output;
   GError *error = NULL;
   gboolean quit = FALSE;
   SwfdecInteraction *inter;
 
-  g_print ("Testing %s:\n", filename);
+  output = g_string_new ("");
+  g_string_append_printf (output, "Testing %s:\n", filename);
   loader = swfdec_loader_new_from_file (filename);
   if (loader->error) {
-    g_print ("  ERROR: %s\n", loader->error);
-    return FALSE;
+    g_string_append_printf (output, "  ERROR: %s\n", loader->error);
+    goto fail;
   }
   string = g_string_new ("");
   player = swfdec_player_new ();
@@ -66,19 +67,19 @@ run_test (const char *filename)
   g_signal_connect (player, "fscommand", G_CALLBACK (fscommand_cb), &quit);
   swfdec_player_set_loader (player, loader);
   if (!swfdec_player_is_initialized (player)) {
-    g_print ("  ERROR: player is not initialized\n");
+    g_string_append_printf (output, "  ERROR: player is not initialized\n");
     g_object_unref (player);
-    return FALSE;
+    goto fail;
   }
   str = g_strdup_printf ("%s.act", filename);
   if (g_file_test (str, G_FILE_TEST_EXISTS)) {
     inter = swfdec_interaction_new_from_file (str, &error);
     if (inter == NULL) {
-      g_print ("  ERROR: %s\n", error->message);
+      g_string_append_printf (output, "  ERROR: %s\n", error->message);
       g_object_unref (player);
       g_error_free (error);
       g_free (str);
-      return FALSE;
+      goto fail;
     }
     time_left = swfdec_interaction_get_duration (inter);
   } else {
@@ -110,35 +111,44 @@ run_test (const char *filename)
   str = g_strdup_printf ("%s.trace", filename);
   buffer = swfdec_buffer_new_from_file (str, &error);
   if (buffer == NULL) {
-    g_print ("  ERROR: %s\n", error->message);
+    g_string_append_printf (output, "  ERROR: %s\n", error->message);
     g_error_free (error);
     g_string_free (string, TRUE);
     g_free (str);
-    return FALSE;
+    goto fail;
   }
   if (string->len != buffer->length ||
       memcmp (buffer->data, string->str, buffer->length) != 0) {
-    g_print ("  ERROR: unexpected trace output\n");
+    g_string_append (output, "  ERROR: unexpected trace output\n");
     if (g_file_set_contents ("tmp", string->str, string->len, NULL)) {
       char *command[] = { "diff", "-u", (char *) str, "tmp", NULL };
       char *result;
       if (!g_spawn_sync (NULL, command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
 	  &result, NULL, NULL, &error)) {
-	g_printerr ("  Couldn't spawn diff to compare the results: %s\n", error->message);
+	g_string_append_printf (output, 
+	    "  ERROR: Could not spawn diff to compare the results: %s\n", 
+	    error->message);
 	g_error_free (error);
       } else {
-	g_print ("%s", result);
+	g_string_append (output, result);
       }
     }
     g_string_free (string, TRUE);
     swfdec_buffer_unref (buffer);
     g_free (str);
-    return FALSE;
+    goto fail;
   }
   g_free (str);
   g_string_free (string, TRUE);
   swfdec_buffer_unref (buffer);
-  g_print ("  OK\n");
+  g_string_append (output, "  OK\n");
+  g_print ("%s", output->str);
+  g_string_free (output, TRUE);
+  return TRUE;
+
+fail:
+  g_print ("%s", output->str);
+  g_string_free (output, FALSE);
   return TRUE;
 }
 

@@ -21,9 +21,44 @@
 #include "config.h"
 #endif
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 #include <libswfdec/swfdec.h>
 #include "swfdec_interaction.h"
+
+typedef struct _Test Test;
+struct _Test {
+  char *	filename;		/* name of the file to be tested */
+  char *	output;			/* test result */
+  gboolean	success;		/* TRUE if test was successful, FALSE on error */
+};
+
+static Test *
+test_new (char *filename)
+{
+  Test *test;
+
+  test = g_slice_new0 (Test);
+  test->filename = filename;
+  return test;
+}
+
+static void
+test_free (Test *test)
+{
+  g_free (test->filename);
+  g_free (test->output);
+  g_slice_free (Test, test);
+}
+
+static int
+test_compare (gconstpointer a, gconstpointer b)
+{
+  const Test *ta = (const Test *) a;
+  const Test *tb = (const Test *) b;
+
+  return strcmp (ta->filename, tb->filename);
+}
 
 static void
 trace_cb (SwfdecPlayer *player, const char *message, GString *string)
@@ -41,8 +76,8 @@ fscommand_cb (SwfdecPlayer *player, const char *command, const char *parameter, 
   }
 }
 
-static gboolean
-run_test (const char *filename)
+static void
+run_test (Test *test)
 {
   SwfdecLoader *loader;
   SwfdecPlayer *player;
@@ -55,8 +90,8 @@ run_test (const char *filename)
   SwfdecInteraction *inter;
 
   output = g_string_new ("");
-  g_string_append_printf (output, "Testing %s:\n", filename);
-  loader = swfdec_loader_new_from_file (filename);
+  g_string_append_printf (output, "Testing %s:\n", test->filename);
+  loader = swfdec_loader_new_from_file (test->filename);
   if (loader->error) {
     g_string_append_printf (output, "  ERROR: %s\n", loader->error);
     goto fail;
@@ -71,7 +106,7 @@ run_test (const char *filename)
     g_object_unref (player);
     goto fail;
   }
-  str = g_strdup_printf ("%s.act", filename);
+  str = g_strdup_printf ("%s.act", test->filename);
   if (g_file_test (str, G_FILE_TEST_EXISTS)) {
     inter = swfdec_interaction_new_from_file (str, &error);
     if (inter == NULL) {
@@ -108,7 +143,7 @@ run_test (const char *filename)
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);
 
-  str = g_strdup_printf ("%s.trace", filename);
+  str = g_strdup_printf ("%s.trace", test->filename);
   buffer = swfdec_buffer_new_from_file (str, &error);
   if (buffer == NULL) {
     g_string_append_printf (output, "  ERROR: %s\n", error->message);
@@ -142,28 +177,25 @@ run_test (const char *filename)
   g_string_free (string, TRUE);
   swfdec_buffer_unref (buffer);
   g_string_append (output, "  OK\n");
-  g_print ("%s", output->str);
-  g_string_free (output, TRUE);
-  return TRUE;
-
+  test->success = TRUE;
 fail:
-  g_print ("%s", output->str);
-  g_string_free (output, FALSE);
-  return TRUE;
+  test->output = g_string_free (output, FALSE);
 }
 
 int
 main (int argc, char **argv)
 {
-  GList *failed_tests = NULL;
+  GList *walk, *tests = NULL;
+  GString *failed_tests = g_string_new ("");
+  guint failures = 0;
 
   swfdec_init ();
 
+  /* collect all tests into the tests list */
   if (argc > 1) {
     int i;
     for (i = 1; i < argc; i++) {
-      if (!run_test (argv[i]))
-	failed_tests = g_list_prepend (failed_tests, g_strdup (argv[i]));;
+      tests = g_list_append (tests, test_new (g_strdup (argv[i])));
     }
   } else {
     GDir *dir;
@@ -178,28 +210,38 @@ main (int argc, char **argv)
       if (!g_str_has_suffix (file, ".swf"))
 	continue;
       name = g_build_filename (path, file, NULL);
-      if (!run_test (name)) {
-	failed_tests = g_list_prepend (failed_tests, name);
-      } else {
-	g_free (name);
-      }
+      tests = g_list_append (tests, test_new (name));
     }
     g_dir_close (dir);
   }
 
-  if (failed_tests) {
-    GList *walk;
-    failed_tests = g_list_sort (failed_tests, (GCompareFunc) strcmp);
-    g_print ("\nFAILURES: %u\n", g_list_length (failed_tests));
-    for (walk = failed_tests; walk; walk = walk->next) {
-      g_print ("          %s\n", (char *) walk->data);
-      g_free (walk->data);
+  /* sort the tests by filename */
+  tests = g_list_sort (tests, test_compare);
+
+  /* run them and put failed ones in failed_tests */
+  for (walk = tests; walk; walk = walk->next) {
+    Test *test = walk->data;
+    
+    run_test (test);
+    g_print (test->output);
+    if (!test->success) {
+      failures++;
+      g_string_append_printf (failed_tests, 
+	  "          %s\n", test->filename);
     }
-    g_list_free (failed_tests);
-    return 1;
+    test_free (test);
+  }
+
+  /* report failures and exit */
+  if (failures > 0) {
+    g_print ("\nFAILURES: %u\n", failures);
+    g_print ("%s", failed_tests->str);
+    g_string_free (failed_tests, TRUE);
+    return EXIT_FAILURE;
   } else {
     g_print ("\nEVERYTHING OK\n");
-    return 0;
+    g_string_free (failed_tests, TRUE);
+    return EXIT_SUCCESS;
   }
 }
 

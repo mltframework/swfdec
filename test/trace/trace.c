@@ -121,10 +121,13 @@ run_test (const char *filename)
     g_print ("  ERROR: unexpected trace output\n");
     if (g_file_set_contents ("tmp", string->str, string->len, NULL)) {
       char *command[] = { "diff", "-u", (char *) str, "tmp", NULL };
+      char *result;
       if (!g_spawn_sync (NULL, command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
-	  NULL, NULL, NULL, &error)) {
+	  &result, NULL, NULL, &error)) {
 	g_printerr ("  Couldn't spawn diff to compare the results: %s\n", error->message);
 	g_error_free (error);
+      } else {
+	g_print ("%s", result);
       }
     }
     g_string_free (string, TRUE);

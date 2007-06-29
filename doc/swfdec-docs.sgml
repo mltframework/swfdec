@@ -22,6 +22,8 @@
   </chapter>
   <chapter>
     <title>Actionscript interpreter</title>
+    <xi:include href="xml/Internals.xml"/>
     <xi:include href="xml/SwfdecAsValue.xml"/>
+    <xi:include href="xml/SwfdecAsContext.xml"/>
   </chapter>
 </book>

@@ -56,6 +56,7 @@ IGNORE_HFILES= \
 	jpeg \
 	swfdec_amf.h \
 	swfdec_as_interpret.h \
+	swfdec_as_math.h \
 	swfdec_as_number.h \
 	swfdec_as_string.h \
 	swfdec_as_strings.h \

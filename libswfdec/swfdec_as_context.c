@@ -66,7 +66,7 @@
  * swfdec_as_context_startup (). At that point, the basic objects are created.
  * After this function has been called, you can start executing code. All code
  * execution happens by creating a new #SwfdecAsFrame and then calling 
- * swfdec_as_context_run () to execute it. This function is the single entry 
+ * swfdec_as_context_run() to execute it. This function is the single entry 
  * point for code execution. Convenience functions exist that make executing 
  * code easy, most notably swfdec_as_object_run() and 
  * swfdec_as_object_call().
@@ -179,6 +179,9 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
   g_return_val_if_fail (bytes > 0, FALSE);
 
+  if (context->state == SWFDEC_AS_CONTEXT_ABORTED)
+    return FALSE;
+  
   context->memory += bytes;
   context->memory_since_gc += bytes;
   /* FIXME: Don't foget to abort on OOM */
@@ -356,6 +359,8 @@ swfdec_as_context_gc (SwfdecAsContext *context)
   g_return_if_fail (context->frame == NULL);
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_NEW);
 
+  if (context->state == SWFDEC_AS_CONTEXT_ABORTED)
+    return;
   SWFDEC_INFO ("invoking the garbage collector");
   klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
   g_assert (klass->mark);
@@ -383,6 +388,8 @@ void
 swfdec_as_context_maybe_gc (SwfdecAsContext *context)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  if (context->state == SWFDEC_AS_CONTEXT_ABORTED)
+    return;
   g_return_if_fail (context->frame == NULL);
 
   if (swfdec_as_context_needs_gc (context))
@@ -594,6 +601,11 @@ start:
   frame = context->frame;
   if (frame == context->last_frame)
     goto out;
+  if (context->call_depth > 256) {
+    /* we've exceeded our maximum call depth, throw an error and abort */
+    swfdec_as_context_abort (context, "Stack overflow");
+    return;
+  }
   if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
     if (frame->argc >= native->min_args && 

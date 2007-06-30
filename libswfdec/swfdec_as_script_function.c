@@ -36,6 +36,8 @@ swfdec_as_script_function_call (SwfdecAsFunction *function)
   SwfdecAsFrame *frame;
 
   frame = swfdec_as_frame_new (SWFDEC_AS_OBJECT (function)->context, script->script);
+  if (frame == NULL)
+    return NULL;
   SWFDEC_AS_SCOPE (frame)->next = script->scope;
   frame->function = function;
   frame->target = script->target;

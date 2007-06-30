@@ -94,9 +94,6 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   frame->argv = args;
   frame->return_value = return_value;
   swfdec_as_frame_preload (frame);
-  /* FIXME: make this a seperate function? */
-  frame->next = context->frame;
-  context->frame = frame;
 }
 
 /*** AS CODE ***/

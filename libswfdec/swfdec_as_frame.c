@@ -133,6 +133,8 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
       SWFDEC_ERROR ("couldn't create constant pool");
     }
   }
+  frame->next = context->frame;
+  context->frame = frame;
   return frame;
 }
 
@@ -150,6 +152,8 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   SWFDEC_DEBUG ("new native frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
+  frame->next = context->frame;
+  context->frame = frame;
   return frame;
 }
 

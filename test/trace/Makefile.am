@@ -643,6 +643,13 @@ EXTRA_DIST = \
 	shift-6.swf.trace \
 	shift-7.swf \
 	shift-7.swf.trace \
+	stack-overflow.as \
+	stack-overflow-5.swf \
+	stack-overflow-5.swf.trace \
+	stack-overflow-6.swf \
+	stack-overflow-6.swf.trace \
+	stack-overflow-7.swf \
+	stack-overflow-7.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

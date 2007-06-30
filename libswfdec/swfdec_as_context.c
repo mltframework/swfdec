@@ -40,6 +40,9 @@
 
 /*** GARBAGE COLLECTION DOCS ***/
 
+#define SWFDEC_AS_GC_MARK (1 << 0)		/* only valid during GC */
+#define SWFDEC_AS_GC_ROOT (1 << 1)		/* for objects: rooted, for strings: static */
+
 /**
  * SECTION:Internals
  * @title: Internals and garbage collection

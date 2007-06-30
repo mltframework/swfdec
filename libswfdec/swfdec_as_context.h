@@ -32,9 +32,6 @@ typedef enum {
   SWFDEC_AS_CONTEXT_ABORTED
 } SwfdecAsContextState;
 
-#define SWFDEC_AS_GC_MARK (1 << 0)		/* only valid during GC */
-#define SWFDEC_AS_GC_ROOT (1 << 1)		/* for objects: rooted, for strings: static */
-
 typedef struct _SwfdecAsContextClass SwfdecAsContextClass;
 
 #define SWFDEC_TYPE_AS_CONTEXT                    (swfdec_as_context_get_type())

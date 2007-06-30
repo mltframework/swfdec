@@ -14,6 +14,13 @@ trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(GTHREAD_LIBS)
 
 EXTRA_DIST = \
 	README \
+	abort-really-aborts.as \
+	abort-really-aborts-5.swf \
+	abort-really-aborts-5.swf.trace \
+	abort-really-aborts-6.swf \
+	abort-really-aborts-6.swf.trace \
+	abort-really-aborts-7.swf \
+	abort-really-aborts-7.swf.trace \
 	add2.as \
 	add2-5.swf \
 	add2-5.swf.trace \

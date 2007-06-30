@@ -23,6 +23,7 @@
 
 #include "swfdec_edittext_movie.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 

@@ -24,6 +24,7 @@
 #endif
 
 #include "swfdec_movie.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"

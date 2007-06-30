@@ -24,6 +24,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_object.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_interval.h"
 

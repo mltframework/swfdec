@@ -27,6 +27,7 @@
 #include <liboil/liboil.h>
 
 #include "swfdec_player_internal.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_button_movie.h" /* for mouse cursor */
 #include "swfdec_cache.h"

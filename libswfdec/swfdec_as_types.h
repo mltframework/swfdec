@@ -22,8 +22,6 @@
 
 #include <glib.h>
 
-#include "swfdec_as_strings.h"
-
 G_BEGIN_DECLS
 
 /* fundamental types */

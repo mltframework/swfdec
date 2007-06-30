@@ -27,6 +27,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsSuper, swfdec_as_super, SWFDEC_TYPE_AS_FUNCTION)

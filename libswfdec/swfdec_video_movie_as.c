@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_video.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_net_stream.h"
 #include "swfdec_player_internal.h"

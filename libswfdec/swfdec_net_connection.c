@@ -24,8 +24,9 @@
 #include <string.h>
 #include "swfdec_net_connection.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_object.h"
 #include "swfdec_as_native_function.h"
+#include "swfdec_as_object.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
 /*** SwfdecNetConnection ***/

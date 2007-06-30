@@ -29,6 +29,7 @@
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_debugger.h"

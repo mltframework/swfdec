@@ -24,6 +24,7 @@
 #include <math.h>
 #include "swfdec_net_stream.h"
 #include "swfdec_amf.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_audio_flv.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"

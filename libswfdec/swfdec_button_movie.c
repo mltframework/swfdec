@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_button_movie.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_audio_event.h"
 #include "swfdec_debug.h"
 #include "swfdec_event.h"

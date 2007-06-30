@@ -25,6 +25,7 @@
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 

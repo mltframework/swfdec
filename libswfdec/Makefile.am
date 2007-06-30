@@ -21,6 +21,7 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_array.c \
+	swfdec_as_context.c \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
 	swfdec_as_interpret.c \
@@ -34,6 +35,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_string.c \
 	swfdec_as_strings.c \
 	swfdec_as_super.c \
+	swfdec_as_types.c \
 	swfdec_as_with.c \
 	swfdec_amf.c \
 	swfdec_audio.c \
@@ -117,8 +119,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 
 public_headers = \
 	swfdec.h \
-	swfdec_as_context.c \
-	swfdec_as_types.c \
+	swfdec_as_context.h \
+	swfdec_as_types.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \
 	swfdec_loader.h \
@@ -130,7 +132,6 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
 	swfdec_as_array.h \
-	swfdec_as_context.h \
 	swfdec_as_frame.h \
 	swfdec_as_function.h \
 	swfdec_as_interpret.h \
@@ -144,7 +145,6 @@ noinst_HEADERS = \
 	swfdec_as_string.h \
 	swfdec_as_strings.h \
 	swfdec_as_super.h \
-	swfdec_as_types.h \
 	swfdec_as_with.h \
 	swfdec_amf.h \
 	swfdec_audio_internal.h \

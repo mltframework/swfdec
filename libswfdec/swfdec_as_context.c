@@ -586,7 +586,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   gboolean check_scope; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  if (context->frame == NULL)
+  if (context->frame == NULL || context->state == SWFDEC_AS_CONTEXT_ABORTED)
     return;
 
   klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
@@ -627,7 +627,7 @@ start:
   pc = frame->pc;
   check_scope = TRUE;
 
-  while (TRUE) {
+  while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
     if (pc == endpc) {
       swfdec_as_frame_return (frame);
       goto start;

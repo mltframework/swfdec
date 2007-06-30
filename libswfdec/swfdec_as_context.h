@@ -63,6 +63,7 @@ struct _SwfdecAsContext {
 
   /* execution state */
   unsigned int	      	version;	/* currently active version */
+  unsigned int		call_depth;   	/* current depth of call stack (equals length of frame list) */
   SwfdecAsFrame *	frame;		/* topmost stack frame */
   SwfdecAsFrame *	last_frame;   	/* last frame before calling context_run */
 

@@ -97,6 +97,16 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
   frame->function_name = "unnamed";
 }
 
+static void
+swfdec_as_frame_load (SwfdecAsFrame *frame)
+{
+  SwfdecAsContext *context = SWFDEC_AS_OBJECT (frame)->context;
+
+  frame->next = context->frame;
+  context->frame = frame;
+  context->call_depth++;
+}
+
 SwfdecAsFrame *
 swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
 {
@@ -133,8 +143,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
       SWFDEC_ERROR ("couldn't create constant pool");
     }
   }
-  frame->next = context->frame;
-  context->frame = frame;
+  swfdec_as_frame_load (frame);
   return frame;
 }
 
@@ -152,8 +161,7 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   SWFDEC_DEBUG ("new native frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
-  frame->next = context->frame;
-  context->frame = frame;
+  swfdec_as_frame_load (frame);
   return frame;
 }
 
@@ -174,6 +182,8 @@ swfdec_as_frame_return (SwfdecAsFrame *frame)
   g_return_if_fail (frame == context->frame);
 
   context->frame = frame->next;
+  g_assert (context->call_depth > 0);
+  context->call_depth--;
 }
 
 /**

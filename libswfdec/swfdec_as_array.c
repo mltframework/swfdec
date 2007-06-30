@@ -118,8 +118,7 @@ swfdec_as_array_init (SwfdecAsArray *array)
  * swfdec_as_array_new:
  * @context: a #SwfdecAsContext
  *
- * Creates a new #SwfdecAsArray. This is the same as executing the Actionscript
- * code "new Array ()"
+ * Creates a new #SwfdecAsArray. 
  *
  * Returns: the new array or %NULL on OOM.
  **/
@@ -131,8 +130,11 @@ swfdec_as_array_new (SwfdecAsContext *context)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (context->Array != NULL, NULL);
   
-  ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Array), 0, NULL, FALSE);
-  swfdec_as_context_run (context);
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
+    return FALSE;
+  ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
+  swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
+  swfdec_as_object_set_constructor (ret, context->Array, FALSE);
   return ret;
 }
 

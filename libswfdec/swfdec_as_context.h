@@ -89,7 +89,6 @@ struct _SwfdecAsContextClass {
 
 GType		swfdec_as_context_get_type	(void);
 
-SwfdecAsContext *swfdec_as_context_new		(void);
 void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
 						 guint			version);
 

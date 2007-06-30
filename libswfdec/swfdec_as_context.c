@@ -105,6 +105,23 @@
 /*** GTK-DOC ***/
 
 /**
+ * SECTION:SwfdecAsContext
+ * @title: SwfdecAsContext
+ * @short_description: the main script engine context
+ * @see_also: SwfdecPlayer
+ *
+ * A #SwfdecAsContext provides the main execution environment for Actionscript
+ * execution. It provides the objects typically available in ECMAScript and
+ * manages script execution, garbage collection etc. #SwfdecPlayer is a
+ * subclass of the context that implements Flash specific objects on top of it.
+ * However, it is possible to use the context for completely different functions
+ * where a sandboxed scripting environment is needed. An example is the Swfdec 
+ * debugger.
+ * <note>The Actionscript engine is similar, but not equal to Javascript. It
+ * is not very different, but it is different.</note>
+ */
+
+/**
  * SwfdecAsContextState
  * @SWFDEC_AS_CONTEXT_NEW: the context is not yet initialized, 
  *                         swfdec_as_context_startup() needs to be called.
@@ -321,6 +338,15 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 
+/**
+ * swfdec_as_context_gc:
+ * @context: a #SwfdecAsContext
+ *
+ * Calls the Swfdec Gargbage collector and reclaims any unused memory. You 
+ * should call this function or swfdec_as_context_maybe_gc() regularly.
+ * <warning>Calling the GC during execution of code or initialization is not
+ *          allowed.</warning>
+ **/
 void
 swfdec_as_context_gc (SwfdecAsContext *context)
 {
@@ -328,7 +354,6 @@ swfdec_as_context_gc (SwfdecAsContext *context)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->frame == NULL);
-  /* no GC during setup */
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_NEW);
 
   SWFDEC_INFO ("invoking the garbage collector");
@@ -345,6 +370,15 @@ swfdec_as_context_needs_gc (SwfdecAsContext *context)
   return context->memory_since_gc >= context->memory_until_gc;
 }
 
+/**
+ * swfdec_as_context_maybe_gc:
+ * @context: a #SwfdecAsContext
+ *
+ * Calls the garbage collector if necessary. It's a good idea to call this
+ * function regularly instead of swfdec_as_context_gc() as it only does collect
+ * garage as needed. For example, #SwfdecPlayer calls this function after every
+ * frame advancement.
+ **/
 void
 swfdec_as_context_maybe_gc (SwfdecAsContext *context)
 {
@@ -441,6 +475,17 @@ swfdec_as_context_create_string (SwfdecAsContext *context, const char *string, g
   return new + 1;
 }
 
+/**
+ * swfdec_as_context_get_string:
+ * @context: a #SwfdecAsContext
+ * @string: a sting that is not garbage-collected
+ *
+ * Gets the garbage-collected version of @string. You need to call this function
+ * for every not garbage-collected string that you want to use in Swfdecs script
+ * interpreter.
+ *
+ * Returns: the garbage-collected version of @string
+ **/
 const char *
 swfdec_as_context_get_string (SwfdecAsContext *context, const char *string)
 {
@@ -481,12 +526,6 @@ swfdec_as_context_give_string (SwfdecAsContext *context, char *string)
   return ret;
 }
 
-SwfdecAsContext *
-swfdec_as_context_new (void)
-{
-  return g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
-}
-
 /**
  * swfdec_as_context_get_time:
  * @context: a #SwfdecAsContext
@@ -511,6 +550,18 @@ swfdec_as_context_get_time (SwfdecAsContext *context, GTimeVal *tv)
     g_get_current_time (tv);
 }
 
+/**
+ * swfdec_as_context_run:
+ * @context: a #SwfdecAsContext
+ *
+ * Continues running the script engine. Executing code in this engine works
+ * in 2 steps: First, you push the frame to be executed onto the stack, then
+ * you call this function to execute it. So this function is the single entry
+ * point to script execution. This might be helpful when debugging your 
+ * application. 
+ * <note>A lot of convenience functions like swfdec_as_object_run() call this 
+ * function automatically.</note>
+ **/
 void
 swfdec_as_context_run (SwfdecAsContext *context)
 {
@@ -673,6 +724,13 @@ swfdec_as_context_return (SwfdecAsContext *context)
   context->frame = context->frame->next;
 }
 
+/**
+ * swfdec_as_context_trace:
+ * @context: a #SwfdecAsContext
+ * @string: a string to output
+ *
+ * Causes the emission of the trace signal with the provided @string.
+ **/
 void
 swfdec_as_context_trace (SwfdecAsContext *context, const char *string)
 {

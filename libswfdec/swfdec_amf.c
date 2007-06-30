@@ -61,8 +61,6 @@ swfdec_amf_parse_properties (SwfdecAsContext *context, SwfdecBits *bits, SwfdecA
   guint type;
   SwfdecAmfParseFunc func;
 
-  /* need to root here due to GC */
-  swfdec_as_object_root (object);
   while (swfdec_bits_left (bits)) {
     SwfdecAsValue val;
     const char *name;
@@ -85,11 +83,9 @@ swfdec_amf_parse_properties (SwfdecAsContext *context, SwfdecBits *bits, SwfdecA
     swfdec_as_object_set_variable (object, name, &val);
   }
   /* no more bytes seems to end automatically */
-  swfdec_as_object_unroot (object);
   return TRUE;
 
 error:
-  swfdec_as_object_unroot (object);
   return FALSE;
 }
 
@@ -135,7 +131,6 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
   array = swfdec_as_array_new (context);
   if (array == NULL)
     return FALSE;
-  swfdec_as_object_root (array);
   for (i = 0; i < len; i++) {
     type = swfdec_bits_get_u8 (bits);
     SwfdecAsValue val;
@@ -149,12 +144,10 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
     swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
   }
 
-  swfdec_as_object_unroot (array);
   SWFDEC_AS_VALUE_SET_OBJECT (val, array);
   return TRUE;
 
 fail:
-  swfdec_as_object_unroot (array);
   return FALSE;
 }
 
@@ -207,7 +200,6 @@ swfdec_amf_parse_one (SwfdecAsContext *context, SwfdecBits *bits,
   return func (context, bits, rval);
 }
 
-/* FIXME: parsed values aren't gc rooted... */
 guint
 swfdec_amf_parse (SwfdecAsContext *context, SwfdecBits *bits, guint n_items, ...)
 {

@@ -132,9 +132,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
   g_return_val_if_fail (context->Array != NULL, NULL);
   
   ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Array), 0, NULL, FALSE);
-  swfdec_as_object_root (ret);
   swfdec_as_context_run (context);
-  swfdec_as_object_unroot (ret);
   return ret;
 }
 
@@ -246,10 +244,8 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   proto = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (proto, context, sizeof (SwfdecAsArray));
   /* set the right properties on the Array object */
-  swfdec_as_object_root (proto);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (array, SWFDEC_AS_STR_prototype, &val);
-  swfdec_as_object_unroot (proto);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
   swfdec_as_object_set_variable (array, SWFDEC_AS_STR_constructor, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, 1);

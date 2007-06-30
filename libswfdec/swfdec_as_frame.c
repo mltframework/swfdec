@@ -154,6 +154,25 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
 }
 
 /**
+ * swfdec_as_frame_return:
+ * @frame: a #SwfdecAsFrame that is currently executing.
+ *
+ * Ends execution of the frame and instructs the frame's context to continue 
+ * execution with its parent frame. This function may only be called on the
+ * currently executing frame.
+ **/
+void
+swfdec_as_frame_return (SwfdecAsFrame *frame)
+{
+  SwfdecAsContext *context;
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  context = SWFDEC_AS_OBJECT (frame)->context;
+  g_return_if_fail (frame == context->frame);
+
+  context->frame = frame->next;
+}
+
+/**
  * swfdec_as_frame_set_this:
  * @frame: a #SwfdecAsFrame
  * @thisp: object to use as the this object

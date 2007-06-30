@@ -603,7 +603,7 @@ start:
       native->native (context, frame->thisp, frame->argc, 
 	  (SwfdecAsValue *) frame->argv, frame->return_value);
     }
-    swfdec_as_context_return (context);
+    swfdec_as_frame_return (frame);
     goto start;
   }
   g_assert (frame->script);
@@ -619,7 +619,7 @@ start:
 
   while (TRUE) {
     if (pc == endpc) {
-      swfdec_as_context_return (context);
+      swfdec_as_frame_return (frame);
       goto start;
     }
     if (pc < startpc || pc >= endpc) {
@@ -632,7 +632,7 @@ start:
     /* decode next action */
     action = *pc;
     if (action == 0) {
-      swfdec_as_context_return (context);
+      swfdec_as_frame_return (frame);
       goto start;
     }
     /* invoke debugger if there is one */
@@ -713,15 +713,6 @@ error:
 out:
   context->last_frame = last_frame;
   return;
-}
-
-void
-swfdec_as_context_return (SwfdecAsContext *context)
-{
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (context->frame != NULL);
-
-  context->frame = context->frame->next;
 }
 
 /**

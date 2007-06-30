@@ -234,13 +234,11 @@ swfdec_as_object_new (SwfdecAsContext *context)
   swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
   if (context->Object) {
     SwfdecAsValue val;
-    swfdec_as_object_root (object);
     g_assert (context->Object_prototype);
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
-    swfdec_as_object_unroot (object);
   }
   return object;
 }
@@ -286,24 +284,6 @@ swfdec_as_object_collect (SwfdecAsObject *object)
   object->properties = NULL;
   swfdec_as_context_unuse_mem (object->context, object->size);
   g_object_unref (object);
-}
-
-void
-swfdec_as_object_root (SwfdecAsObject *object)
-{
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail ((object->flags & SWFDEC_AS_GC_ROOT) == 0);
-
-  object->flags |= SWFDEC_AS_GC_ROOT;
-}
-
-void
-swfdec_as_object_unroot (SwfdecAsObject *object)
-{
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail ((object->flags & SWFDEC_AS_GC_ROOT) != 0);
-
-  object->flags &= ~SWFDEC_AS_GC_ROOT;
 }
 
 void

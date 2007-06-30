@@ -62,9 +62,7 @@ swfdec_as_number_new (SwfdecAsContext *context, double number)
   
   SWFDEC_AS_VALUE_SET_NUMBER (&val, number);
   ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Number), 1, &val, FALSE);
-  swfdec_as_object_root (ret);
   swfdec_as_context_run (context);
-  swfdec_as_object_unroot (ret);
   return ret;
 }
 

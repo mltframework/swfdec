@@ -1556,12 +1556,10 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (frame->stack), SWFDEC_AS_OBJECT (fun));
   } else {
     SwfdecAsValue funval;
-    swfdec_as_object_root (SWFDEC_AS_OBJECT (fun));
     /* FIXME: really varobj? Not eval or sth like that? */
     function_name = swfdec_as_context_get_string (cx, function_name);
     SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
     swfdec_as_object_set_variable (frame->target, function_name, &funval);
-    swfdec_as_object_unroot (SWFDEC_AS_OBJECT (fun));
   }
 
   /* update current context */
@@ -1685,7 +1683,7 @@ static void
 swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   *cx->frame->return_value = *swfdec_as_stack_pop (cx->frame->stack);
-  swfdec_as_context_return (cx);
+  swfdec_as_frame_return (cx->frame);
 }
 
 static void

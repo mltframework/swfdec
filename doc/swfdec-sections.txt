@@ -237,7 +237,6 @@ swfdec_as_context_new
 swfdec_as_context_return
 swfdec_as_context_run
 swfdec_as_context_startup
-swfdec_as_context_trace
 swfdec_as_context_unuse_mem
 swfdec_as_context_use_mem
 <SUBSECTION Standard>

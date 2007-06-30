@@ -114,8 +114,6 @@ void		swfdec_as_context_gc		(SwfdecAsContext *	context);
 void		swfdec_as_context_maybe_gc	(SwfdecAsContext *	context);
 
 void		swfdec_as_context_run		(SwfdecAsContext *	context);
-void		swfdec_as_context_trace		(SwfdecAsContext *	context,
-						 const char *		string);
 
 void		swfdec_as_context_eval		(SwfdecAsContext *	context,
 						 SwfdecAsObject *	obj,

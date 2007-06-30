@@ -552,7 +552,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
     s = SWFDEC_AS_STR_undefined;
   else
     s = swfdec_as_value_to_string (cx, val);
-  swfdec_as_context_trace (cx, s);
+  g_signal_emit_by_name (cx, "trace", s);
 }
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */

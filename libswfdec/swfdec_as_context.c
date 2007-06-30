@@ -156,7 +156,6 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 
   SWFDEC_ERROR (reason);
   context->state = SWFDEC_AS_CONTEXT_ABORTED;
-  swfdec_as_context_trace (context, reason);
 }
 
 /*** MEMORY MANAGEMENT ***/
@@ -725,22 +724,6 @@ error:
 out:
   context->last_frame = last_frame;
   return;
-}
-
-/**
- * swfdec_as_context_trace:
- * @context: a #SwfdecAsContext
- * @string: a string to output
- *
- * Causes the emission of the trace signal with the provided @string.
- **/
-void
-swfdec_as_context_trace (SwfdecAsContext *context, const char *string)
-{
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (string != NULL);
-
-  g_signal_emit (context, signals[TRACE], 0, string);
 }
 
 /*** EVAL ***/

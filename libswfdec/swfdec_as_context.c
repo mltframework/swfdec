@@ -34,6 +34,7 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
 #include "swfdec_script.h"

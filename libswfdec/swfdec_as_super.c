@@ -53,6 +53,8 @@ swfdec_as_super_call (SwfdecAsFunction *function)
 
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (fun);
   frame = klass->call (fun);
+  if (frame == NULL)
+    return NULL;
   /* We set the real function here. 1) swfdec_as_context_run() requires it. 
    * And b) it makes more sense reading the constructor's name than reading "super" 
    * in a debugger

@@ -81,6 +81,7 @@ IGNORE_HFILES= \
 	swfdec_decoder.h \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \
+	swfdec_enums.h \
 	swfdec_event.h \
 	swfdec_flv_decoder.h \
 	swfdec_font.h \

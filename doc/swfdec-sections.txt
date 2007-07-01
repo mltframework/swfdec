@@ -105,11 +105,6 @@ swfdec_buffer_queue_get_type
 SwfdecLoaderDataType
 swfdec_loader_data_type_get_extension
 SwfdecMouseCursor
-<SUBSECTION Standard>
-SWFDEC_TYPE_LOADER_DATA_TYPE
-swfdec_loader_data_type_get_type
-SWFDEC_TYPE_MOUSE_CURSOR
-swfdec_mouse_cursor_get_type
 </SECTION>
 
 
@@ -224,21 +219,18 @@ SWFDEC_AS_VALUE_IS_OBJECT
 <SECTION>
 <FILE>SwfdecAsContext</FILE>
 <TITLE>SwfdecAsContext</TITLE>
+swfdec_as_context_startup
 swfdec_as_context_abort
-swfdec_as_context_abort_oom
+swfdec_as_context_get_string
+swfdec_as_context_give_string
+swfdec_as_context_use_mem
+swfdec_as_context_gc
+swfdec_as_context_maybe_gc
+swfdec_as_context_run
+swfdec_as_context_unuse_mem
 swfdec_as_context_eval
 swfdec_as_context_eval_set
-swfdec_as_context_gc
-swfdec_as_context_get_string
 swfdec_as_context_get_time
-swfdec_as_context_give_string
-swfdec_as_context_maybe_gc
-swfdec_as_context_new
-swfdec_as_context_return
-swfdec_as_context_run
-swfdec_as_context_startup
-swfdec_as_context_unuse_mem
-swfdec_as_context_use_mem
 <SUBSECTION Standard>
 swfdec_as_context_get_type
 SwfdecAsContextClass

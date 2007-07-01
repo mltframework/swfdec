@@ -321,7 +321,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   while (swfdec_bits_left (&bits)) {
     guint type = swfdec_bits_get_u8 (&bits);
     SWFDEC_LOG ("push type %u", type);
-    swfdec_as_stack_ensure_left (stack, 1);
+    swfdec_as_stack_ensure_free (stack, 1);
     switch (type) {
       case 0: /* string */
 	{
@@ -1553,7 +1553,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   swfdec_script_add_to_context (script, cx);
   /* attach the function */
   if (*function_name == '\0') {
-    swfdec_as_stack_ensure_left (frame->stack, 1);
+    swfdec_as_stack_ensure_free (frame->stack, 1);
     SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (frame->stack), SWFDEC_AS_OBJECT (fun));
   } else {
     SwfdecAsValue funval;
@@ -1863,7 +1863,7 @@ swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
 
   if (flags & SWFDEC_AS_VARIABLE_DONT_ENUM)
     return TRUE;
-  swfdec_as_stack_ensure_left (stack, 1);
+  swfdec_as_stack_ensure_free (stack, 1);
   SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (stack), variable);
   return TRUE;
 }

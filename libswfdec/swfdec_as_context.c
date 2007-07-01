@@ -687,10 +687,10 @@ start:
     if (spec->remove > 0) {
       swfdec_as_stack_ensure_size (stack, spec->remove);
       if (spec->add > spec->remove)
-	swfdec_as_stack_ensure_left (stack, spec->add - spec->remove);
+	swfdec_as_stack_ensure_free (stack, spec->add - spec->remove);
     } else {
       if (spec->add > 0)
-	swfdec_as_stack_ensure_left (stack, spec->add);
+	swfdec_as_stack_ensure_free (stack, spec->add);
     }
     if (context->state != SWFDEC_AS_CONTEXT_RUNNING)
       goto error;

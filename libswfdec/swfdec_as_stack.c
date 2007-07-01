@@ -88,7 +88,7 @@ swfdec_as_stack_ensure_size (SwfdecAsStack *stack, guint n_elements)
 }
 
 void
-swfdec_as_stack_ensure_left (SwfdecAsStack *stack, guint n_elements)
+swfdec_as_stack_ensure_free (SwfdecAsStack *stack, guint n_elements)
 {
   g_return_if_fail (stack != NULL);
 

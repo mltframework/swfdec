@@ -88,7 +88,7 @@ swfdec_as_stack_push (SwfdecAsStack *stack)
 void		swfdec_as_stack_mark		(SwfdecAsStack *	stack);
 void		swfdec_as_stack_ensure_size	(SwfdecAsStack *	stack,
 						 guint	  		n_elements);
-void		swfdec_as_stack_ensure_left	(SwfdecAsStack *	stack,
+void		swfdec_as_stack_ensure_free	(SwfdecAsStack *	stack,
 						 guint	  		n_elements);
 						
 

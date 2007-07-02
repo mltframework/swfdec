@@ -1922,6 +1922,42 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 }
 
 static void
+swfdec_action_char_to_ascii_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  const char *s = swfdec_as_value_to_string (cx, val);
+
+  char *ascii;
+  ascii = g_convert (s, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
+  if (ascii == NULL) {
+    /* This can happen if a Flash 5 movie gets loaded into a Flash 7 movie */
+    SWFDEC_FIXME ("Someone threw unconvertible text %s at Flash <= 5", s);
+    SWFDEC_AS_VALUE_SET_INT (val, 0); /* FIXME: what to return??? */
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (val, (guchar) ascii[0]);
+    g_free (ascii);
+  }
+}
+
+static void
+swfdec_action_char_to_ascii (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx->frame->stack, 1);
+  const char *s = swfdec_as_value_to_string(cx, val);
+  gunichar *uni;
+  
+  uni = g_utf8_to_ucs4_fast (s, -1, NULL);
+  if (uni == NULL) {
+    /* This should never happen, everything is valid UTF-8 in here */
+    g_warning ("conversion of character %s failed", s);
+    SWFDEC_AS_VALUE_SET_INT (val, 0);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (val, uni[0]);
+    g_free (uni);
+  }
+}
+
+static void
 swfdec_action_ascii_to_char (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   char *s;
@@ -2381,7 +2417,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   /* version 4 */
   [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
   [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },
-  [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL },
+  [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL, 1, 1, { NULL, swfdec_action_char_to_ascii_5, swfdec_action_char_to_ascii_5, swfdec_action_char_to_ascii, swfdec_action_char_to_ascii } },
   [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, { NULL, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char } },
   [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
   [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL },

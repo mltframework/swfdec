@@ -136,21 +136,21 @@ swfdec_as_math_init_context (SwfdecAsContext *context, guint version)
 
   /* set the right properties on the Math object */
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_E);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_E, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_E, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LN10);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_LN10, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_LN10, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LN2);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_LN2, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_LN2, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LOG10E);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_LOG10E, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_LOG10E, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LOG2E);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_LOG2E, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_LOG2E, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_PI);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_PI, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_PI, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_SQRT1_2);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_SQRT1_2, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_SQRT1_2, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_SQRT2);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_SQRT2, &val);
+  swfdec_as_object_set_variable (math, SWFDEC_AS_STR_SQRT2, &val);
 
   /* set the right functions on the Math object */
   swfdec_as_object_add_function (math, SWFDEC_AS_STR_abs, 0, swfdec_as_math_abs, 1);

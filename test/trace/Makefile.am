@@ -338,6 +338,13 @@ EXTRA_DIST = \
 	math-actions-7.swf \
 	math-actions-7.swf.trace \
 	math-actions-7.swf.trace.org \
+	math-constants.as \
+	math-constants-5.swf \
+	math-constants-5.swf.trace \
+	math-constants-6.swf \
+	math-constants-6.swf.trace \
+	math-constants-7.swf \
+	math-constants-7.swf.trace \
 	mouse-scaled.as \
 	mouse-scaled-5.swf \
 	mouse-scaled-5.swf.act \

@@ -982,6 +982,17 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
 }
 
 static void
+swfdec_action_string_length (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  const char *s;
+  SwfdecAsValue *v;
+
+  v = swfdec_as_stack_peek (cx->frame->stack, 1);
+  s = swfdec_as_value_to_string (cx, v);
+  SWFDEC_AS_VALUE_SET_INT (v, g_utf8_strlen (s, -1));  
+}
+
+static void
 swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *l, *r;
@@ -2394,7 +2405,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_OR] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
   [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
   [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
-  [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL },
+  [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL, 1, 1, { NULL, swfdec_action_string_length, swfdec_action_string_length, swfdec_action_string_length, swfdec_action_string_length } },
   [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL },
   [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
   [SWFDEC_AS_ACTION_TO_INTEGER] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },

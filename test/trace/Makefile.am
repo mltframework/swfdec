@@ -701,6 +701,13 @@ EXTRA_DIST = \
 	string-split-empty-6.swf.trace \
 	string-split-empty-7.swf \
 	string-split-empty-7.swf.trace \
+	stringlength.as \
+	stringlength-5.swf \
+	stringlength-5.swf.trace \
+	stringlength-6.swf \
+	stringlength-6.swf.trace \
+	stringlength-7.swf \
+	stringlength-7.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \

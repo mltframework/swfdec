@@ -1512,7 +1512,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
 	  args[i].preload = 0;
 	}
       }
-      args[i].name = swfdec_bits_get_string (&bits);
+      args[i].name = swfdec_bits_get_string_with_version (&bits, cx->version);
       if (args[i].name == NULL || args[i].name == '\0') {
 	SWFDEC_ERROR ("empty argument name not allowed");
 	g_free (args);

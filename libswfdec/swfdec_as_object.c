@@ -283,7 +283,8 @@ swfdec_as_object_collect (SwfdecAsObject *object)
   g_hash_table_foreach (object->properties, swfdec_as_object_free_property, object);
   g_hash_table_destroy (object->properties);
   object->properties = NULL;
-  swfdec_as_context_unuse_mem (object->context, object->size);
+  if (object->size)
+    swfdec_as_context_unuse_mem (object->context, object->size);
   g_object_unref (object);
 }
 

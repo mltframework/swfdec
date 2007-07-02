@@ -1638,25 +1638,26 @@ swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data,
   SWFDEC_AS_VALUE_SET_INT (val, swfdec_as_value_to_integer (cx, val));
 }
 
-#if 0
 static void
 swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecMovie *movie = swfdec_scriptable_from_jsval (cx, cx->fp->sp[-1], SWFDEC_TYPE_MOVIE);
+  SwfdecAsValue *val;
+  SwfdecMovie *movie;
+  SwfdecAsStack *stack;
+  char *s;
 
-  if (movie == NULL) {
-    cx->fp->sp[-1] = JSVAL_VOID;
-  } else {
-    char *s = swfdec_movie_get_path (movie);
-    JSString *string = JS_NewStringCopyZ (cx, s);
-    g_free (s);
-    if (string == NULL)
-      return JS_FALSE;
-    cx->fp->sp[-1] = STRING_TO_JSVAL (string);
+  stack = cx->frame->stack;
+  val = swfdec_as_stack_peek (stack, 1);
+
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val) ||
+      !SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (val))) {
+    SWFDEC_FIXME ("What's the TargetPath for non-movies?");
+    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+    return;
   }
-  return JS_TRUE;
+  s = swfdec_movie_get_path (movie);
+  SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_give_string (cx, s));
 }
-#endif
 
 static void
 swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -2446,9 +2447,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
   [SWFDEC_AS_ACTION_INIT_OBJECT] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
   [SWFDEC_AS_ACTION_TYPE_OF] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
-#if 0
-  [0x45] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
-#endif
+  [SWFDEC_AS_ACTION_TARGET_PATH] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
   [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, { NULL, NULL, swfdec_action_enumerate, swfdec_action_enumerate, swfdec_action_enumerate } },
   [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
   [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison, swfdec_action_new_comparison, swfdec_action_new_comparison } },

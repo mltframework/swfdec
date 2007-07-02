@@ -542,6 +542,7 @@ new_decoder:
   if (movie->sound_stream) {
     swfdec_audio_remove (movie->sound_stream);
     g_object_unref (movie->sound_stream);
+    movie->sound_stream = NULL;
   }
 
   if (current->sound_block) {

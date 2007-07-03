@@ -191,6 +191,15 @@ swfdec_as_object_do_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach fun
   return fdata.retval;
 }
 
+static char *
+swfdec_as_object_do_debug (SwfdecAsObject *object)
+{
+  if (G_OBJECT_TYPE (object) != SWFDEC_TYPE_AS_OBJECT)
+    return g_strdup (G_OBJECT_TYPE_NAME (object));
+
+  return g_strdup ("Object");
+}
+
 static void
 swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
 {
@@ -205,6 +214,7 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
   klass->set_flags = swfdec_as_object_do_set_flags;
   klass->delete = swfdec_as_object_do_delete;
   klass->foreach = swfdec_as_object_do_foreach;
+  klass->debug = swfdec_as_object_do_debug;
 }
 
 static void
@@ -704,5 +714,16 @@ swfdec_as_variable_set (SwfdecAsVariable *var, const SwfdecAsValue *value)
   if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
     return;
   var->value = *value;
+}
+
+char *
+swfdec_as_object_get_debug (SwfdecAsObject *object)
+{
+  SwfdecAsObjectClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  return klass->debug (object);
 }
 

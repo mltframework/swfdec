@@ -62,12 +62,32 @@ swfdec_as_script_function_dispose (GObject *object)
 static void
 swfdec_as_script_function_mark (SwfdecAsObject *object)
 {
-  SwfdecAsScriptFunction *script= SWFDEC_AS_SCRIPT_FUNCTION (object);
+  SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
 
   if (script->scope)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (script->scope));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_script_function_parent_class)->mark (object);
+}
+
+static char *
+swfdec_as_script_function_debug (SwfdecAsObject *object)
+{
+  SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
+  SwfdecScript *s = script->script;
+  GString *string;
+  guint i;
+
+  string = g_string_new (s->name);
+  g_string_append (string, " (");
+  for (i = 0; i < s->n_arguments; i++) {
+    if (i > 0)
+      g_string_append (string, ", ");
+    g_string_append (string, s->arguments[i].name);
+  }
+  g_string_append (string, ")");
+
+  return g_string_free (string, FALSE);
 }
 
 static void
@@ -80,6 +100,7 @@ swfdec_as_script_function_class_init (SwfdecAsScriptFunctionClass *klass)
   object_class->dispose = swfdec_as_script_function_dispose;
 
   asobject_class->mark = swfdec_as_script_function_mark;
+  asobject_class->debug = swfdec_as_script_function_debug;
 
   function_class->call = swfdec_as_script_function_call;
 }

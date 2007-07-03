@@ -59,6 +59,14 @@ swfdec_as_native_function_call (SwfdecAsFunction *function)
   return frame;
 }
 
+static char *
+swfdec_as_native_function_debug (SwfdecAsObject *object)
+{
+  SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (object);
+
+  return g_strdup_printf ("%s ()", native->name);
+}
+
 static void
 swfdec_as_native_function_dispose (GObject *object)
 {
@@ -74,9 +82,12 @@ static void
 swfdec_as_native_function_class_init (SwfdecAsNativeFunctionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
 
   object_class->dispose = swfdec_as_native_function_dispose;
+
+  asobject_class->debug = swfdec_as_native_function_debug;
 
   function_class->call = swfdec_as_native_function_call;
 }

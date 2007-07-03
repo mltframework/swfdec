@@ -456,6 +456,10 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
     const char *asname;
     SwfdecAsValue val;
 
+    while (*variables == '&')
+      variables++;
+    if (*variables == '\0')
+      break;
     if (!swfdec_urldecode_one (variables, &name, &value, &variables)) {
       SWFDEC_WARNING ("variables invalid at \"%s\"", variables);
       break;
@@ -471,9 +475,6 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
     g_free (value);
     swfdec_as_object_set_variable (as, asname, &val);
     SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
-    if (*variables == '\0')
-      break;
-    variables++;
   }
 }
 

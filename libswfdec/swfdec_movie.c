@@ -1007,12 +1007,12 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
   swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
       content->has_color_transform ? &content->color_transform : NULL, 
       content->ratio, content->clip_depth, content->events);
+  swfdec_movie_initialize (movie);
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     g_queue_push_tail (player->init_queue, movie);
     g_queue_push_tail (player->construct_queue, movie);
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
   }
-  swfdec_movie_initialize (movie);
 
   return movie;
 }

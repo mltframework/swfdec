@@ -361,6 +361,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
 	SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
       } else {
+	SWFDEC_AS_VALUE_SET_OBJECT (&val, super);
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
       }
     }

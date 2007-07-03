@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libswfdec/swfdec_debugger.h>
+#include <libswfdec/swfdec_as_object.h>
 #include "swfdec_player_manager.h"
 #include <libswfdec-gtk/swfdec_source.h>
 
@@ -563,49 +564,38 @@ command_find (SwfdecPlayerManager *manager, const char *arg)
   swfdec_debugger_foreach_script (SWFDEC_DEBUGGER (manager->player), do_find, &data);
 }
 
-#if 0
+static gboolean
+enumerate_foreach (SwfdecAsObject *object, const char *variable, 
+    SwfdecAsValue *value, guint flags, gpointer manager)
+{
+  char *s;
+
+  s = swfdec_as_value_to_debug (value);
+  swfdec_player_manager_output (manager, "  %s: %s", variable, s);
+  g_free (s);
+  
+  return TRUE;
+}
+
 static void
 command_enumerate (SwfdecPlayerManager *manager, const char *arg)
 {
-  jsval rval;
-  JSObject *obj;
-  JSIdArray *array;
-  const char *s, *t;
-  guint i;
+  SwfdecAsValue val;
+  char *s;
+  SwfdecAsObject *object;
 
-  if (!swfdec_js_run (manager->player, arg, &rval)) {
-    swfdec_player_manager_error (manager, "Invalid command");
+  if (arg == NULL)
     return;
-  }
-  if (!JSVAL_IS_OBJECT (rval)) {
-    swfdec_player_manager_error (manager, "Given expression is not an object");
+
+  swfdec_as_context_eval (SWFDEC_AS_CONTEXT (manager->player), NULL, arg, &val);
+  s = swfdec_as_value_to_debug (&val);
+  swfdec_player_manager_output (manager, "%s", s);
+  g_free (s);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  }
-  obj = JSVAL_TO_OBJECT (rval);
-  array = JS_Enumerate (manager->player->jscx, obj);
-  if (array == NULL) {
-    swfdec_player_manager_error (manager, "Error enumerating");
-    return;
-  }
-  s = swfdec_js_to_string (manager->player->jscx, rval);
-  if (s == NULL) {
-    swfdec_player_manager_error (manager, "Cannot convert object to string");
-  }
-  swfdec_player_manager_output (manager, "properties for %s:", s);
-  for (i = 0; i < array->length; i++) {
-    if (!JS_IdToValue (manager->player->jscx, array->vector[i], &rval))
-      continue;
-    s = swfdec_js_to_string (manager->player->jscx, rval);
-    if (s == NULL)
-      continue;
-    if (!JS_GetProperty (manager->player->jscx, obj, s, &rval) ||
-	!(t = swfdec_js_to_string (manager->player->jscx, rval)))
-      t = "<error querying value>";
-    swfdec_player_manager_output (manager, "  %s: %s", s, t);
-  }
-  JS_DestroyIdArray (manager->player->jscx, array);
+  object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  swfdec_as_object_foreach (object, enumerate_foreach, manager);
 }
-#endif
 
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
@@ -625,9 +615,7 @@ struct {
   { "continue",	command_continue,	"continue when stopped inside a breakpoint" },
   { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
   { "find",	command_find,		"find the given argument verbatim in all scripts" },
-#if 0
   { "enumerate",command_enumerate,    	"enumerate all properties of the given object" },
-#endif
 };
 
 static void

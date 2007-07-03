@@ -642,12 +642,15 @@ static void
 swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+  SwfdecAsObjectClass *klass;
   const char *name;
   guint flags;
+  SwfdecAsValue value;
 
   name = swfdec_as_value_to_string (object->context, &argv[0]);
   
-  if (swfdec_as_object_get_variable_and_flags (object, name, NULL, &flags) &&
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  if (klass->get (object, name, &value, &flags) &&
       (flags & SWFDEC_AS_VARIABLE_NATIVE) == 0)
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
   else

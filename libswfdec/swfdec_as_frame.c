@@ -403,7 +403,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       if (i < frame->argc) {
 	swfdec_as_object_set_variable (object, tmp, &frame->argv[i]);
       } else {
-	SwfdecAsValue val = { 0, };
+	SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
 	swfdec_as_object_set_variable (object, tmp, &val);
       }
     }

@@ -88,7 +88,7 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   /* FIXME: figure out what to do in these situations */
   if (frame == NULL)
     return;
-  if (thisp)
+  if (thisp && frame->thisp == NULL)
     swfdec_as_frame_set_this (frame, thisp);
   frame->is_local = TRUE;
   frame->argc = n_args;

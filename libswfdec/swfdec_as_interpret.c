@@ -593,10 +593,9 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args, gboolean use_super)
   swfdec_as_function_call (fun, thisp, n_args, swfdec_as_stack_peek (frame->stack, 0), 
       swfdec_as_stack_peek (frame->stack, 1));
   if (use_super) {
-    g_print ("replacing super object\n");
     if (cx->frame->super && SWFDEC_AS_SUPER (frame->super)->object) {
+      SWFDEC_LOG ("replacing super object on frame");
       SWFDEC_AS_SUPER (cx->frame->super)->object = SWFDEC_AS_SUPER (frame->super)->object->prototype;
-      g_print ("  ... done\n");
     }
   }
   return TRUE;

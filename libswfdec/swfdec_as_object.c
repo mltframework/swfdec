@@ -222,6 +222,20 @@ swfdec_as_object_init (SwfdecAsObject *object)
 {
 }
 
+SwfdecAsObject *
+swfdec_as_object_new_empty (SwfdecAsContext *context)
+{
+  SwfdecAsObject *object;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsObject)))
+    return NULL;
+  object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
+  swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
+  return object;
+}
+
 /**
  * swfdec_as_object_new:
  * @context: a #SwfdecAsContext
@@ -236,21 +250,17 @@ SwfdecAsObject *
 swfdec_as_object_new (SwfdecAsContext *context)
 {
   SwfdecAsObject *object;
+  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_assert (context->Object);
+  g_assert (context->Object_prototype);
   
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsObject)))
-    return NULL;
-  object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
-  swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
-  if (context->Object) {
-    SwfdecAsValue val;
-    g_assert (context->Object_prototype);
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
-  }
+  object = swfdec_as_object_new_empty (context);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
   return object;
 }
 
@@ -685,7 +695,7 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_AS_STR_Object, 0, NULL, 0));
   if (!object)
     return;
-  proto = swfdec_as_object_new (context);
+  proto = swfdec_as_object_new_empty (context);
   if (!proto)
     return;
   context->Object = object;

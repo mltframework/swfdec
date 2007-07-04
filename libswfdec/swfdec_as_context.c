@@ -460,7 +460,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
     g_hash_table_insert (context->strings, (char *) s + 1, (char *) s);
   }
   g_assert (*s == 0);
-  context->global = swfdec_as_object_new (context);
+  context->global = swfdec_as_object_new_empty (context);
   context->rand = g_rand_new ();
   g_get_current_time (&context->start_time);
 }

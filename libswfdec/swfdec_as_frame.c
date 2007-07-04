@@ -69,6 +69,8 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->scope));
   if (frame->thisp)
     swfdec_as_object_mark (frame->thisp);
+  if (frame->super)
+    swfdec_as_object_mark (frame->super);
   swfdec_as_object_mark (frame->target);
   swfdec_as_object_mark (frame->original_target);
   if (frame->function)
@@ -356,12 +358,12 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     }
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
-    SwfdecAsObject *super = swfdec_as_super_new (frame);
-    if (super) {
+    frame->super = swfdec_as_super_new (frame);
+    if (frame->super) {
       if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-	SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], super);
+	SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->super);
       } else {
-	SWFDEC_AS_VALUE_SET_OBJECT (&val, super);
+	SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->super);
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
       }
     }

@@ -28,6 +28,7 @@
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_super.h"
 #include "swfdec_as_with.h"
 #include "swfdec_debug.h"
 
@@ -559,7 +560,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
 /* stack must be at least 2 elements big */
 static gboolean
-swfdec_action_call (SwfdecAsContext *cx, guint n_args)
+swfdec_action_call (SwfdecAsContext *cx, guint n_args, gboolean use_super)
 {
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
@@ -591,6 +592,13 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
     swfdec_as_stack_pop_n (frame->stack, n_args);
   swfdec_as_function_call (fun, thisp, n_args, swfdec_as_stack_peek (frame->stack, 0), 
       swfdec_as_stack_peek (frame->stack, 1));
+  if (use_super) {
+    g_print ("replacing super object\n");
+    if (cx->frame->super && SWFDEC_AS_SUPER (frame->super)->object) {
+      SWFDEC_AS_SUPER (cx->frame->super)->object = SWFDEC_AS_SUPER (frame->super)->object->prototype;
+      g_print ("  ... done\n");
+    }
+  }
   return TRUE;
 
 error:
@@ -609,19 +617,23 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsObject *obj;
   guint n_args;
   const char *name;
+  SwfdecAsValue *fun, *thisp;
   
   swfdec_as_stack_ensure_size (frame->stack, 2);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (frame->stack, 2));
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (frame->stack, 1));
+  thisp = swfdec_as_stack_peek (frame->stack, 2);
+  fun = swfdec_as_stack_peek (frame->stack, 1);
   obj = swfdec_as_frame_find_variable (frame, name);
   if (obj) {
-    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (frame->stack, 2), obj);
-    swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (frame->stack, 1));
+    SWFDEC_AS_VALUE_SET_OBJECT (thisp, obj);
+    swfdec_as_object_get_variable (obj, name, fun);
   } else {
-    SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (frame->stack, 2));
-    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 1));
+    SWFDEC_AS_VALUE_SET_NULL (thisp);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (fun);
   }
-  if (!swfdec_action_call (cx, n_args)) {
+  if (!swfdec_action_call (cx, n_args, SWFDEC_AS_VALUE_IS_OBJECT (fun) && 
+	SWFDEC_IS_AS_SUPER (SWFDEC_AS_VALUE_GET_OBJECT (fun)))) {
     SWFDEC_ERROR ("no function named %s", name);
   }
 }
@@ -634,16 +646,19 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsObject *obj;
   guint n_args;
   const char *name = NULL;
+  gboolean use_super = FALSE;
   
   swfdec_as_stack_ensure_size (frame->stack, 3);
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (frame->stack, 2));
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (frame->stack, 3));
   val = swfdec_as_stack_peek (frame->stack, 1);
-  /* FIXME: this is a hack for constructtors calling super - is this correct? */
+  /* FIXME: this is a hack for constructors calling super - is this correct? */
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
   }
   if (obj) {
+    if (SWFDEC_IS_AS_SUPER (obj))
+      use_super = TRUE;
     if (SWFDEC_AS_VALUE_IS_STRING (val) && 
 	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
       SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 3));
@@ -660,7 +675,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (frame->stack, 2));
   }
   swfdec_as_stack_pop (frame->stack);
-  if (!swfdec_action_call (cx, n_args)) {
+  if (!swfdec_action_call (cx, n_args, use_super)) {
     SWFDEC_ERROR ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
@@ -1299,7 +1314,7 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
   *swfdec_as_stack_peek (stack, 2) = *swfdec_as_stack_peek (stack, 1);
   swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (stack, 2)),
       SWFDEC_AS_STR_startDrag, swfdec_as_stack_peek (stack, 1));
-  swfdec_action_call (cx, n_args);
+  swfdec_action_call (cx, n_args, FALSE);
   /* FIXME: the return value will still be written to this position */
   swfdec_as_stack_pop (stack);
 }

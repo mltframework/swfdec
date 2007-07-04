@@ -42,12 +42,11 @@ swfdec_as_super_call (SwfdecAsFunction *function)
   SwfdecAsFrame *frame;
 
   if (super->object == NULL) {
-    SWFDEC_WARNING ("super () called without a this object.");
+    SWFDEC_WARNING ("super () called without an object.");
     return NULL;
   }
-  if (super->object->prototype == NULL)
-    return NULL;
-  swfdec_as_object_get_variable (super->object->prototype, SWFDEC_AS_STR___constructor__, &val);
+
+  swfdec_as_object_get_variable (super->object, SWFDEC_AS_STR___constructor__, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
     return NULL;
@@ -76,10 +75,7 @@ swfdec_as_super_get (SwfdecAsObject *object, const char *variable,
     SWFDEC_WARNING ("super () called without a this object.");
     return FALSE;
   }
-  if (super->object->prototype == NULL ||
-      super->object->prototype->prototype == NULL)
-    return FALSE;
-  if (!swfdec_as_object_get_variable (super->object->prototype->prototype, variable, val))
+  if (!swfdec_as_object_get_variable (super->object->prototype, variable, val))
     return FALSE;
   *flags = 0;
   return TRUE;
@@ -136,22 +132,10 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
     return NULL;
   ret = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
-  super = SWFDEC_AS_SUPER (ret);
-  if (frame->thisp) {
-    SwfdecAsValue val;
-    super->object = frame->thisp;
-    swfdec_as_object_get_variable (frame->thisp, SWFDEC_AS_STR___proto__, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR_constructor, &val);
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	super->constructor = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
-	if (!SWFDEC_IS_AS_FUNCTION (super->constructor))
-	  super->constructor = NULL;
-      }
-    }
-  }
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsSuper));
+  super = SWFDEC_AS_SUPER (ret);
+  if (frame->thisp)
+    super->object = frame->thisp->prototype;
   return ret;
 }
 

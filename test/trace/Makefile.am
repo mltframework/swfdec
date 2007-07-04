@@ -745,6 +745,13 @@ EXTRA_DIST = \
 	super-calls-7.swf.trace \
 	super-calls-8.swf \
 	super-calls-8.swf.trace \
+	targetpath.as \
+	targetpath-5.swf \
+	targetpath-5.swf.trace \
+	targetpath-6.swf \
+	targetpath-6.swf.trace \
+	targetpath-7.swf \
+	targetpath-7.swf.trace \
 	tointeger-numbers.as \
 	tointeger-numbers-5.swf \
 	tointeger-numbers-5.swf.trace \

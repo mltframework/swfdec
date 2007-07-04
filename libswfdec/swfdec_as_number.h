@@ -47,9 +47,6 @@ struct _SwfdecAsNumberClass {
 
 GType		swfdec_as_number_get_type	(void);
 
-SwfdecAsObject *swfdec_as_number_new		(SwfdecAsContext *	context,
-						 double			num);
-
 void		swfdec_as_number_init_context	(SwfdecAsContext *	context,
 						 guint			version);
 

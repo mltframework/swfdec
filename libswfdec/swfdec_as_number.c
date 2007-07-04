@@ -42,31 +42,6 @@ swfdec_as_number_init (SwfdecAsNumber *number)
 {
 }
 
-/**
- * swfdec_as_number_new:
- * @context: a #SwfdecAsContext
- * @number: value of the number
- *
- * Creates a new #SwfdecAsNumber. This is the same as executing the Actionscript
- * code "new Number ()"
- *
- * Returns: the new number or %NULL on OOM.
- **/
-SwfdecAsObject *
-swfdec_as_number_new (SwfdecAsContext *context, double number)
-{
-  SwfdecAsObject *ret;
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (context->Number != NULL, NULL);
-  
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, number);
-  ret = swfdec_as_object_create (SWFDEC_AS_FUNCTION (context->Number), 1, &val, FALSE);
-  swfdec_as_context_run (context);
-  return ret;
-}
-
 /*** AS CODE ***/
 
 static void
@@ -128,7 +103,6 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   if (!number)
     return;
   swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (number), SWFDEC_TYPE_AS_NUMBER);
-  context->Number = number;
   swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (number), 
       SWFDEC_TYPE_AS_NUMBER);
   proto = swfdec_as_object_new (context);

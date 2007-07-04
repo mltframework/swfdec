@@ -21,6 +21,7 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_array.c \
+	swfdec_as_boolean.c \
 	swfdec_as_context.c \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
@@ -132,6 +133,7 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
 	swfdec_as_array.h \
+	swfdec_as_boolean.h \
 	swfdec_as_frame.h \
 	swfdec_as_function.h \
 	swfdec_as_interpret.h \

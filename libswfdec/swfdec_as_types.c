@@ -517,7 +517,10 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
 SwfdecAsObject *
 swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
+  SwfdecAsFunction *fun;
+  SwfdecAsObject *ret;
   SwfdecAsValue val;
+  const char *s;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), NULL);
@@ -527,92 +530,91 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_NULL:
       return NULL;
     case SWFDEC_AS_TYPE_NUMBER:
-      return swfdec_as_number_new (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
+      s = SWFDEC_AS_STR_Number;
+      break;
     case SWFDEC_AS_TYPE_STRING:
-      {
-	SwfdecAsFunction *fun;
-	SwfdecAsObject *ret;
-
-	swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_String, &val);
-	if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-	    !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
-	  return NULL;
-	ret = swfdec_as_object_create (fun, 1, value, TRUE);
-	swfdec_as_context_run (context);
-	return ret;
-      }
+      s = SWFDEC_AS_STR_String;
+      break;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      SWFDEC_ERROR ("FIXME: implement Boolean");
-      return NULL;
+      s = SWFDEC_AS_STR_Boolean;
+      break;
     case SWFDEC_AS_TYPE_OBJECT:
       return SWFDEC_AS_VALUE_GET_OBJECT (value);
     default:
       g_assert_not_reached ();
       return NULL;
   }
+
+  swfdec_as_object_get_variable (context->global, s, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+    return NULL;
+  ret = swfdec_as_object_create (fun, 1, value, TRUE);
+  swfdec_as_context_run (context);
+  return ret;
 }
 
 /**
- * swfdec_as_value_to_boolean:
- * @context: a #SwfdecAsContext
- * @value: value to convert
- *
- * Converts the given value to a boolean according to Flash's rules. Note that
- * these rules changed significantly for strings between Flash 6 and 7.
- *
- * Returns: either %TRUE or %FALSE.
- **/
+* swfdec_as_value_to_boolean:
+* @context: a #SwfdecAsContext
+* @value: value to convert
+*
+* Converts the given value to a boolean according to Flash's rules. Note that
+* these rules changed significantly for strings between Flash 6 and 7.
+*
+* Returns: either %TRUE or %FALSE.
+**/
 gboolean
 swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), FALSE);
+g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), FALSE);
 
-  /* FIXME: what do we do when called in flash 4? */
-  switch (value->type) {
-    case SWFDEC_AS_TYPE_UNDEFINED:
-    case SWFDEC_AS_TYPE_NULL:
-      return FALSE;
-    case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (value);
-    case SWFDEC_AS_TYPE_NUMBER:
-      {
-	double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
-	return d != 0.0 && !isnan (d);
-      }
-    case SWFDEC_AS_TYPE_STRING:
-      if (context->version <= 6) {
-	double d = swfdec_as_value_to_number (context, value);
-	return d != 0.0 && !isnan (d);
-      } else {
-	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
-      }
-    case SWFDEC_AS_TYPE_OBJECT:
-      return TRUE;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
-  }
+/* FIXME: what do we do when called in flash 4? */
+switch (value->type) {
+case SWFDEC_AS_TYPE_UNDEFINED:
+case SWFDEC_AS_TYPE_NULL:
+return FALSE;
+case SWFDEC_AS_TYPE_BOOLEAN:
+return SWFDEC_AS_VALUE_GET_BOOLEAN (value);
+case SWFDEC_AS_TYPE_NUMBER:
+{
+  double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
+  return d != 0.0 && !isnan (d);
+}
+case SWFDEC_AS_TYPE_STRING:
+if (context->version <= 6) {
+  double d = swfdec_as_value_to_number (context, value);
+  return d != 0.0 && !isnan (d);
+} else {
+  return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
+}
+case SWFDEC_AS_TYPE_OBJECT:
+return TRUE;
+default:
+g_assert_not_reached ();
+return FALSE;
+}
 }
 
 /**
- * swfdec_as_value_to_primitive:
- * @context: a #SwfdecAsContext
- * @value: value to convert
- *
- * Tries to convert the given @value inline to its primitive value. Primitive 
- * values are values that are not objects. If the value is an object, the 
- * object's valueOf function is called. If the result of that function is still 
- * an object, it is returned nonetheless.
- **/
+* swfdec_as_value_to_primitive:
+* @context: a #SwfdecAsContext
+* @value: value to convert
+*
+* Tries to convert the given @value inline to its primitive value. Primitive 
+* values are values that are not objects. If the value is an object, the 
+* object's valueOf function is called. If the result of that function is still 
+* an object, it is returned nonetheless.
+**/
 void
 swfdec_as_value_to_primitive (SwfdecAsValue *value)
 {
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value))) {
-    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
-	0, NULL, value);
-  }
+if (SWFDEC_AS_VALUE_IS_OBJECT (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value))) {
+swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
+  0, NULL, value);
+}
 }
 

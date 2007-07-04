@@ -25,6 +25,7 @@
 #include <string.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
+#include "swfdec_as_boolean.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_interpret.h"
@@ -1020,6 +1021,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_context_init_global (context, version);
   swfdec_as_array_init_context (context, version);
   /* define the type objects */
+  swfdec_as_boolean_init_context (context, version);
   swfdec_as_number_init_context (context, version);
   swfdec_as_string_init_context (context, version);
   /* define the rest */

@@ -57,6 +57,15 @@ EXTRA_DIST = \
 	bitwise-6.swf.trace \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
+	call-arguments.as \
+	call-arguments-5.swf \
+	call-arguments-5.swf.trace \
+	call-arguments-6.swf \
+	call-arguments-6.swf.trace \
+	call-arguments-7.swf \
+	call-arguments-7.swf.trace \
+	call-arguments-8.swf \
+	call-arguments-8.swf.trace \
 	callfunction-stack.as \
 	callfunction-stack.swf \
 	callfunction-stack.swf.trace \

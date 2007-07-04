@@ -738,6 +738,13 @@ EXTRA_DIST = \
 	substring-6.swf.trace \
 	substring-7.swf \
 	substring-7.swf.trace \
+	super-calls.as \
+	super-calls-6.swf \
+	super-calls-6.swf.trace \
+	super-calls-7.swf \
+	super-calls-7.swf.trace \
+	super-calls-8.swf \
+	super-calls-8.swf.trace \
 	tointeger-numbers.as \
 	tointeger-numbers-5.swf \
 	tointeger-numbers-5.swf.trace \

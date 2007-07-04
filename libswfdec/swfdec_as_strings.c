@@ -222,6 +222,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("bytesLoaded")
   SWFDEC_AS_CONSTANT_STRING ("bytesTotal")
   SWFDEC_AS_CONSTANT_STRING ("indexOf")
+  SWFDEC_AS_CONSTANT_STRING ("call")
   /* add more here */
 ;
 

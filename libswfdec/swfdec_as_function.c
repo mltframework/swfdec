@@ -88,7 +88,8 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   /* FIXME: figure out what to do in these situations */
   if (frame == NULL)
     return;
-  if (thisp && frame->thisp == NULL)
+  /* second check especially for super object */
+  if (thisp != NULL && frame->thisp == NULL)
     swfdec_as_frame_set_this (frame, thisp);
   frame->is_local = TRUE;
   frame->argc = n_args;
@@ -98,6 +99,25 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 }
 
 /*** AS CODE ***/
+
+static void
+swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecAsObject *thisp;
+
+  if (argc > 0) {
+    thisp = swfdec_as_value_to_object (context, &argv[0]);
+    argc -= 1;
+    argv++;
+  } else {
+    thisp = NULL;
+  }
+  if (thisp == NULL)
+    thisp = swfdec_as_object_new_empty (context);
+  swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, argc, argv, ret);
+  swfdec_as_context_run (context);
+}
 
 void
 swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
@@ -126,6 +146,9 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
     SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
     swfdec_as_object_set_variable (function, SWFDEC_AS_STR___proto__, &val);
     swfdec_as_object_set_variable (function, SWFDEC_AS_STR_prototype, &val);
+    /* prototype functions */
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call, SWFDEC_TYPE_AS_FUNCTION, 
+	swfdec_as_function_do_call, 0);
   }
 }
 

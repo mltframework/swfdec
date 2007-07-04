@@ -125,9 +125,9 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
 
   number = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
       SWFDEC_AS_STR_Number, SWFDEC_TYPE_AS_NUMBER, swfdec_as_number_construct, 0));
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (number), SWFDEC_TYPE_AS_NUMBER);
   if (!number)
     return;
+  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (number), SWFDEC_TYPE_AS_NUMBER);
   context->Number = number;
   swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (number), 
       SWFDEC_TYPE_AS_NUMBER);

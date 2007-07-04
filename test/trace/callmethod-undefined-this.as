@@ -3,6 +3,8 @@
 trace ("Test the behaviour of CallMethod with a function name of undefined or \"\"");
 function foo () {
   trace (this);
+  this.x = 15;
+  trace (this.x);
   return this;
 };
 asm {

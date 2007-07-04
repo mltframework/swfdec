@@ -266,12 +266,12 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     cur = swfdec_movie_new (player, depth, mov, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
-    swfdec_movie_initialize (cur);
     if (SWFDEC_IS_SPRITE_MOVIE (cur)) {
       g_queue_push_tail (player->init_queue, cur);
       g_queue_push_tail (player->construct_queue, cur);
       swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
     }
+    swfdec_movie_initialize (cur);
   }
 
   return TRUE;

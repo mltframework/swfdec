@@ -50,7 +50,6 @@ MATH_FUN (cos)
 MATH_FUN (exp)
 MATH_FUN (floor)
 MATH_FUN (log)
-MATH_FUN (round)
 MATH_FUN (sin)
 MATH_FUN (sqrt)
 MATH_FUN (tan)
@@ -108,6 +107,15 @@ swfdec_as_math_random (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_NUMBER (ret, g_rand_double (cx->rand));
+}
+
+static void
+swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  double d = swfdec_as_value_to_number (cx, &argv[0]);
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, trunc (d + 0.5));
 }
 
 /* define some math constants if glib doesn't have them */

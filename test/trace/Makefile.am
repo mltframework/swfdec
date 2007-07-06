@@ -50,6 +50,15 @@ EXTRA_DIST = \
 	array-new-override-6.swf.trace \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
+	array2.as \
+	array2-5.swf \
+	array2-5.swf.trace \
+	array2-6.swf \
+	array2-6.swf.trace \
+	array2-7.swf \
+	array2-7.swf.trace \
+	array2-8.swf \
+	array2-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

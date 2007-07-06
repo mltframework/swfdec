@@ -2,9 +2,12 @@
 
 trace ("Check rounding direction");
 
-trace (Math.round (-0.5));
-trace (Math.round (-1.5));
-trace (Math.round (0.5));
 trace (Math.round (1.5));
+trace (Math.round (1));
+trace (Math.round (0.5));
+trace (Math.round (0));
+trace (Math.round (-0.5));
+trace (Math.round (-1));
+trace (Math.round (-1.5));
 
 loadMovie ("FSCommand:quit", "");

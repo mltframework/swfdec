@@ -39,6 +39,9 @@ typedef enum {
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
+typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;
+typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object, 
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 
 #define SWFDEC_TYPE_AS_OBJECT                    (swfdec_as_object_get_type())
 #define SWFDEC_IS_AS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_OBJECT))
@@ -132,6 +135,12 @@ void		swfdec_as_object_unset_variable_flags
 						 SwfdecAsVariableFlag	flags);
 gboolean	swfdec_as_object_foreach	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,
+						 gpointer		data);
+guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
+						 SwfdecAsVariableForeach func,
+						 gpointer		data);
+void		swfdec_as_object_foreach_rename	(SwfdecAsObject *       object,
+						 SwfdecAsVariableForeachRename func,
 						 gpointer		data);
 
 SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,

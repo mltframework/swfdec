@@ -191,6 +191,71 @@ swfdec_as_object_do_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach fun
   return fdata.retval;
 }
 
+typedef struct {
+  SwfdecAsObject *		object;
+  SwfdecAsVariableForeachRemove	func;
+  gpointer			data;
+} ForeachRemoveData;
+
+static gboolean
+swfdec_as_object_hash_foreach_remove (gpointer key, gpointer value, gpointer data)
+{
+  ForeachRemoveData *fdata = data;
+  SwfdecAsVariable *var = value;
+
+  if (!fdata->func (fdata->object, key, &var->value, var->flags, fdata->data))
+    return FALSE;
+
+  swfdec_as_object_free_property (NULL, var, fdata->object);
+  return TRUE;
+}
+
+guint
+swfdec_as_object_foreach_remove (SwfdecAsObject *object, SwfdecAsVariableForeach func,
+    gpointer data)
+{
+  ForeachRemoveData fdata = { object, func, data };
+
+  return g_hash_table_foreach_remove (object->properties,
+      swfdec_as_object_hash_foreach_remove, &fdata);
+}
+
+typedef struct {
+  SwfdecAsObject *		object;
+  GHashTable *			properties_new;
+  SwfdecAsVariableForeachRename	func;
+  gpointer			data;
+} ForeachRenameData;
+
+static gboolean
+swfdec_as_object_hash_foreach_rename (gpointer key, gpointer value, gpointer data)
+{
+  ForeachRenameData *fdata = data;
+  SwfdecAsVariable *var = value;
+  const char *key_new;
+
+  key_new = fdata->func (fdata->object, key, &var->value, var->flags, fdata->data);
+  if (key_new) {
+    g_hash_table_insert (fdata->properties_new, (gpointer) key_new, var);
+  } else {
+    swfdec_as_object_free_property (NULL, var, fdata->object);
+  }
+
+  return TRUE;
+}
+
+void
+swfdec_as_object_foreach_rename (SwfdecAsObject *object, SwfdecAsVariableForeachRename func,
+    gpointer data)
+{
+  GHashTable *properties_new = g_hash_table_new (g_direct_hash, g_direct_equal);
+  ForeachRenameData fdata = { object, properties_new, func, data };
+
+  g_hash_table_foreach_remove (object->properties, swfdec_as_object_hash_foreach_rename, &fdata);
+  g_hash_table_destroy (object->properties);
+  object->properties = properties_new;
+}
+
 static char *
 swfdec_as_object_do_debug (SwfdecAsObject *object)
 {

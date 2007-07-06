@@ -389,12 +389,13 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
 
 gboolean
 swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object, 
-    const char *variable, SwfdecAsValue *value, guint *flags)
+    const char *variable, SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
   SwfdecAsObjectClass *klass;
   guint i;
   SwfdecAsValue tmp_val;
   guint tmp_flags;
+  SwfdecAsObject *tmp_pobject;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
@@ -403,20 +404,27 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     value = &tmp_val;
   if (flags == NULL)
     flags = &tmp_flags;
+  if (pobject == NULL)
+    pobject = &tmp_pobject;
 
   for (i = 0; i < 256 && object != NULL; i++) {
     klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-    if (klass->get (object, variable, value, flags))
+    if (klass->get (object, variable, value, flags)) {
+      *pobject = object;
       return TRUE;
+    }
     object = object->prototype;
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+    *flags = 0;
+    *pobject = NULL;
     return FALSE;
   }
   //SWFDEC_WARNING ("no such variable %s", variable);
   SWFDEC_AS_VALUE_SET_UNDEFINED (value);
   *flags = 0;
+  *pobject = NULL;
   return FALSE;
 }
 

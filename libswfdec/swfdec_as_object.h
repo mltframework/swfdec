@@ -117,12 +117,13 @@ void		swfdec_as_object_set_variable	(SwfdecAsObject *	object,
 						 const char *		variable,
 						 const SwfdecAsValue *	value);
 #define swfdec_as_object_get_variable(object, variable, value) \
-  swfdec_as_object_get_variable_and_flags (object, variable, value, NULL)
+  swfdec_as_object_get_variable_and_flags (object, variable, value, NULL, NULL)
 gboolean	swfdec_as_object_get_variable_and_flags
 						(SwfdecAsObject *	object,
 						 const char *		variable,
 						 SwfdecAsValue *	value,
-						 guint *		flags);
+						 guint *		flags,
+						 SwfdecAsObject **	pobject);
 gboolean	swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const char *		variable);
 void		swfdec_as_object_set_variable_flags

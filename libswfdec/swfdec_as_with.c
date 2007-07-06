@@ -44,7 +44,7 @@ swfdec_as_with_get (SwfdecAsObject *object, const char *variable,
 {
   SwfdecAsWith *with = SWFDEC_AS_WITH (object);
 
-  return swfdec_as_object_get_variable_and_flags (with->object, variable, val, flags);
+  return swfdec_as_object_get_variable_and_flags (with->object, variable, val, flags, NULL);
 }
 
 static void

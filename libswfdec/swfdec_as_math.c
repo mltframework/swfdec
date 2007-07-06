@@ -115,7 +115,7 @@ swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double d = swfdec_as_value_to_number (cx, &argv[0]);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, trunc (d + 0.5));
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, floor (d + 0.5));
 }
 
 /* define some math constants if glib doesn't have them */

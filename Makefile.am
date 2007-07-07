@@ -1,8 +1,15 @@
+if WITH_GTK
+GTK_SUBDIRS = \
+	libswfdec-gtk \
+	doc \
+	player
+else
+GTK_SUBDIRS =
+endif
+
 SUBDIRS= \
 	libswfdec \
-	libswfdec-gtk \
-	player \
-	doc \
+	$(GTK_SUBDIRS) \
 	test
 
 ACLOCAL_FLAGS = -I m4

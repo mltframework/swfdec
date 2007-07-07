@@ -1,5 +1,3 @@
-if WITH_GTK
-
 # this workaround is needed or autotools don't generate the .deps/*.Plo files correctly
 swfdec_playback.c: swfdec_playback_$(AUDIO_TYPE).c Makefile
 	cmp -s $(srcdir)/swfdec_playback_$(AUDIO_TYPE).c swfdec_playback.c \
@@ -37,8 +35,6 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec_gtk_loader.h \
 	swfdec_gtk_player.h \
 	swfdec_gtk_widget.h
-
-endif
 
 EXTRA_DIST = \
 	swfdec_playback_alsa.c \

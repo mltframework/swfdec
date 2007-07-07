@@ -110,10 +110,15 @@ IGNORE_HFILES= \
 	swfdec_video_movie.h \
 	swfdec_xml.h
 
+if WITH_GTK
 EXTRA_HFILES = \
 	../libswfdec-gtk/swfdec_gtk_loader.h \
 	../libswfdec-gtk/swfdec_gtk_player.h \
 	../libswfdec-gtk/swfdec_gtk_widget.h
+else
+EXTRA_HFILES =
+endif
+ 
 
 # Images to copy into HTML directory.
 # e.g. HTML_IMAGES=$(top_srcdir)/gtk/stock-icons/stock_about_24.png

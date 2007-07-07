@@ -680,10 +680,11 @@ start:
     }
     /* check action is valid */
     if (spec->exec[version] == NULL) {
-      SWFDEC_ERROR ("cannot interpret action %3u 0x%02X %s for version %u", action,
+      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
 	  action, spec->name ? spec->name : "Unknown", script->version);
-      /* FIXME: figure out what flash player does here */
-      goto error;
+      frame->pc = pc = nextpc;
+      check_scope = TRUE;
+      continue;
     }
     if (spec->remove > 0) {
       swfdec_as_stack_ensure_size (stack, spec->remove);

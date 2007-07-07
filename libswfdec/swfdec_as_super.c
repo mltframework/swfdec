@@ -72,10 +72,14 @@ swfdec_as_super_get (SwfdecAsObject *object, const char *variable,
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
 
   if (super->object == NULL) {
-    SWFDEC_WARNING ("super () called without a this object.");
+    SWFDEC_WARNING ("super.%s () called without an object.", variable);
     return FALSE;
   }
-  if (!swfdec_as_object_get_variable (super->object->prototype, variable, val))
+  if (super->object->prototype == NULL) {
+    SWFDEC_WARNING ("super.%s () called without a prototype.", variable);
+    return FALSE;
+  }
+  if (!swfdec_as_object_get_variable_and_flags (super->object->prototype, variable, val, NULL, NULL))
     return FALSE;
   *flags = 0;
   return TRUE;
@@ -139,3 +143,41 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
   return ret;
 }
 
+/**
+ * swfdec_as_super_replace:
+ * @super: the super object to replace from
+ * @function_name: garbage-collected name of the function that was called on 
+ *                 @super or %NULL
+ *
+ * This is an internal function used to replace the current frame's super object
+ * with the next one starting from @super. (FIXME: nice explanation!) So when 
+ * super.foo () has been called, a new frame is constructed and after that this 
+ * function is called with @super and "foo" as @function_name.
+ **/
+void
+swfdec_as_super_replace (SwfdecAsSuper *super, const char *function_name)
+{
+  SwfdecAsSuper *replace;
+  SwfdecAsContext *context;
+
+  g_return_if_fail (SWFDEC_IS_AS_SUPER (super));
+
+  context = SWFDEC_AS_OBJECT (super)->context;
+  replace = SWFDEC_AS_SUPER (context->frame->super);
+  if (replace == NULL)
+    return;
+  if (super->object == NULL || super->object->prototype == NULL) {
+    replace->object = NULL;
+    return;
+  }
+  replace->object = super->object->prototype;
+  if (function_name && context->version > 6) {
+    SwfdecAsObject *res;
+    if (swfdec_as_object_get_variable_and_flags (replace->object, 
+	  function_name, NULL, NULL, &res) &&
+	replace->object != res) {
+      while (replace->object->prototype != res)
+	replace->object = replace->object->prototype;
+    }
+  }
+}

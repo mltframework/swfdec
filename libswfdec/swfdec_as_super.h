@@ -49,6 +49,8 @@ GType		swfdec_as_super_get_type	(void);
 
 SwfdecAsObject *swfdec_as_super_new		(SwfdecAsFrame *	frame);
 
+void		swfdec_as_super_replace		(SwfdecAsSuper *	super,
+						 const char *		function_name);
 
 G_END_DECLS
 #endif

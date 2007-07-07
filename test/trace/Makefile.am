@@ -770,6 +770,13 @@ EXTRA_DIST = \
 	super-calls-7.swf.trace \
 	super-calls-8.swf \
 	super-calls-8.swf.trace \
+	super-reference.as \
+	super-reference-6.swf \
+	super-reference-6.swf.trace \
+	super-reference-7.swf \
+	super-reference-7.swf.trace \
+	super-reference-8.swf \
+	super-reference-8.swf.trace \
 	targetpath.as \
 	targetpath-5.swf \
 	targetpath-5.swf.trace \

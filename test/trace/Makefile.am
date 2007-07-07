@@ -229,6 +229,13 @@ EXTRA_DIST = \
 	export-case-6.swf.trace \
 	export-case-7.swf \
 	export-case-7.swf.trace \
+	extends-constructors.as \
+	extends-constructors-6.swf \
+	extends-constructors-6.swf.trace \
+	extends-constructors-7.swf \
+	extends-constructors-7.swf.trace \
+	extends-constructors-8.swf \
+	extends-constructors-8.swf.trace \
 	extends-simple.swf \
 	extends-simple.swf.trace \
 	extends-super.swf \

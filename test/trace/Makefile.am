@@ -779,6 +779,15 @@ EXTRA_DIST = \
 	super-different-7.swf.trace \
 	super-different-8.swf \
 	super-different-8.swf.trace \
+	super-missing.as \
+	super-missing-5.swf \
+	super-missing-5.swf.trace \
+	super-missing-6.swf \
+	super-missing-6.swf.trace \
+	super-missing-7.swf \
+	super-missing-7.swf.trace \
+	super-missing-8.swf \
+	super-missing-8.swf.trace \
 	super-reference.as \
 	super-reference-6.swf \
 	super-reference-6.swf.trace \

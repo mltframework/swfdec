@@ -1,8 +1,8 @@
 SUBDIRS = image sound trace various
 
-noinst_LTLIBRARIES = libswfedit.la
 
 if WITH_GTK
+noinst_LTLIBRARIES = libswfedit.la
 noinst_PROGRAMS = swfdec-extract dump parse swfedit swfscript
 else
 noinst_PROGRAMS = swfdec-extract dump parse 

@@ -185,8 +185,62 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   }
 
   if (has_filter) {
-    SWFDEC_ERROR ("filters aren't implemented, skipping PlaceObject tag!");
-    return TRUE;
+    guint i, n_filters, id;
+    n_filters = swfdec_bits_get_u8 (bits);
+    SWFDEC_LOG ("  filters: %u", n_filters);
+    for (i = 0; i < n_filters && swfdec_bits_left (bits); i++) {
+      id = swfdec_bits_get_u8 (bits);
+      switch (id) {
+	case 0:
+	  SWFDEC_WARNING ("    drop shadow");
+	  swfdec_bits_skip_bytes (bits, 16);
+	  break;
+	case 1:
+	  SWFDEC_WARNING ("    blur");
+	  swfdec_bits_skip_bytes (bits, 9);
+	  break;
+	case 2:
+	  SWFDEC_WARNING ("    glow");
+	  swfdec_bits_skip_bytes (bits, 15);
+	  break;
+	case 3:
+	  SWFDEC_WARNING ("    bevel");
+	  swfdec_bits_skip_bytes (bits, 27);
+	  break;
+	case 4:
+	  {
+	    guint n;
+	    n = swfdec_bits_get_u8 (bits);
+	    SWFDEC_WARNING ("    gradient glow");
+	    swfdec_bits_skip_bytes (bits, n * 5 + 19);
+	  }
+	  break;
+	case 5:
+	  {
+	    guint x, y;
+	    x = swfdec_bits_get_u8 (bits);
+	    y = swfdec_bits_get_u8 (bits);
+	    SWFDEC_WARNING ("    %u x %u convolution", x, y);
+	    swfdec_bits_skip_bytes (bits, (x + y) * 4 + 13);
+	  }
+	  break;
+	case 6:
+	  SWFDEC_WARNING ("    color matrix");
+	  swfdec_bits_skip_bytes (bits, 20 * 4);
+	  break;
+	case 7:
+	  {
+	    guint n;
+	    n = swfdec_bits_get_u8 (bits);
+	    SWFDEC_WARNING ("    gradient bevel");
+	    swfdec_bits_skip_bytes (bits, n * 5 + 19);
+	  }
+	  break;
+	default:
+	  SWFDEC_ERROR ("unknown filter id %u", id);
+	  break;
+      }
+    }
   }
 
   if (has_blend_mode) {

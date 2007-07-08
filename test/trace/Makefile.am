@@ -411,6 +411,15 @@ EXTRA_DIST = \
 	object-math-6.swf.trace \
 	object-math-7.swf \
 	object-math-7.swf.trace \
+	object-valueof.as \
+	object-valueof-5.swf \
+	object-valueof-5.swf.trace \
+	object-valueof-6.swf \
+	object-valueof-6.swf.trace \
+	object-valueof-7.swf \
+	object-valueof-7.swf.trace \
+	object-valueof-8.swf \
+	object-valueof-8.swf.trace \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \

@@ -29,6 +29,7 @@
 #include "swfdec_as_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_movie.h"
 
 G_DEFINE_TYPE (SwfdecAsSuper, swfdec_as_super, SWFDEC_TYPE_AS_FUNCTION)
 
@@ -132,6 +133,10 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   
+  /* functions called on native objects don't get a super object */
+  if (frame->thisp && SWFDEC_IS_MOVIE (frame->thisp))
+    return NULL;
+
   context = SWFDEC_AS_OBJECT (frame)->context;
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
     return NULL;

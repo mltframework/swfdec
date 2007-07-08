@@ -23,6 +23,7 @@
 
 #include "libswfdec/swfdec_as_context.h"
 #include "libswfdec/swfdec_as_object.h"
+#include "libswfdec/swfdec_as_strings.h"
 
 #define ERROR(...) G_STMT_START { \
   g_printerr ("ERROR (line %u): ", __LINE__); \
@@ -38,11 +39,13 @@ check_strings ()
   guint errors = 0;
   SwfdecAsContext *context;
   
-  context = swfdec_as_context_new ();
+  context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
+  swfdec_as_context_startup (context, 7);
 
   s = swfdec_as_context_get_string (context, "hi mom");
-  if (!g_str_equal (s, "hi mom"))
+  if (!g_str_equal (s, "hi mom")) {
     ERROR ("swfdec_as_context_get_string returns different string from input");
+  }
 
   g_object_unref (context);
   return errors;
@@ -54,24 +57,28 @@ check_objects ()
   SwfdecAsObject *object;
   guint errors = 0;
   SwfdecAsContext *context;
+  SwfdecAsValue val;
   gpointer check = GUINT_TO_POINTER (-1); /* NOT NULL */
   
-  context = swfdec_as_context_new ();
+  context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
+  swfdec_as_context_startup (context, 7);
   g_assert (check != NULL);
 
   object = swfdec_as_object_new (context);
   g_object_add_weak_pointer (G_OBJECT (object), &check);
-  swfdec_as_object_root (object);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR__root, &val);
   swfdec_as_context_gc (context);
   if (check == NULL) {
     ERROR ("GC collected a rooted object, bailing");
     g_object_unref (context);
     return errors;
   }
-  swfdec_as_object_unroot (object);
+  swfdec_as_object_delete_variable (context->global, SWFDEC_AS_STR__root);
   swfdec_as_context_gc (context);
-  if (check != NULL)
+  if (check != NULL) {
     ERROR ("GC did not collect an unreferenced object");
+  }
 
   g_object_unref (context);
   return errors;
@@ -88,21 +95,22 @@ check_object_variables ()
   gpointer check2 = GUINT_TO_POINTER (-1); /* NOT NULL */
   SwfdecAsValue v1, v2;
   
-  context = swfdec_as_context_new ();
+  context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
+  swfdec_as_context_startup (context, 7);
   g_assert (check != NULL);
 
   o = swfdec_as_object_new (context);
-  swfdec_as_object_root (o);
   o2 = swfdec_as_object_new (context);
   g_object_add_weak_pointer (G_OBJECT (o), &check);
   g_object_add_weak_pointer (G_OBJECT (o2), &check2);
   s = swfdec_as_context_get_string (context, "foo");
   /* step one: set a variable */
-  SWFDEC_AS_VALUE_SET_STRING (&v1, s);
+  SWFDEC_AS_VALUE_SET_OBJECT (&v1, o);
+  swfdec_as_object_set_variable (context->global, s, &v1);
   SWFDEC_AS_VALUE_SET_OBJECT (&v2, o2);
-  swfdec_as_object_set_variable (o, &v1, &v2);
+  swfdec_as_object_set_variable (o, s, &v2);
   SWFDEC_AS_VALUE_SET_UNDEFINED (&v2);
-  swfdec_as_object_get_variable (o, &v1, &v2);
+  swfdec_as_object_get_variable (o, s, &v2);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&v2)) {
     ERROR ("variable changed type");
   } else if (o2 != SWFDEC_AS_VALUE_GET_OBJECT (&v2)) {
@@ -115,30 +123,21 @@ check_object_variables ()
     g_object_unref (context);
     return errors;
   }
-  /* step 3: set cyclic variable */
-  SWFDEC_AS_VALUE_SET_OBJECT (&v2, o);
-  swfdec_as_object_set_variable (o, &v1, &v2);
-  SWFDEC_AS_VALUE_SET_UNDEFINED (&v2);
-  swfdec_as_object_get_variable (o, &v1, &v2);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&v2)) {
+  /* step 3: unset root reference and set cyclic variable */
+  swfdec_as_object_delete_variable (context->global, s);
+  swfdec_as_object_set_variable (o2, s, &v1);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&v1);
+  swfdec_as_object_get_variable (o2, s, &v1);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&v1)) {
     ERROR ("variable changed type");
-  } else if (o != SWFDEC_AS_VALUE_GET_OBJECT (&v2)) {
+  } else if (o != SWFDEC_AS_VALUE_GET_OBJECT (&v1)) {
     ERROR ("variable changed value");
   }
-  /* step 4: gc, ensure that object 2 disappears */
+  /* step 4: gc, ensure that both objects disappears */
   swfdec_as_context_gc (context);
-  if (check == NULL) {
-    ERROR ("GC collected a used object, bailing");
-    g_object_unref (context);
-    return errors;
-  }
-  if (check2 != NULL)
+  if (check != NULL || check2 != NULL) {
     ERROR ("GC didn't collect unused object");
-  /* step 5: unroot, gc, ensure that object disappears */
-  swfdec_as_object_unroot (o);
-  swfdec_as_context_gc (context);
-  if (check != NULL)
-    ERROR ("GC did not collect an unreferenced object");
+  }
 
   g_object_unref (context);
   return errors;

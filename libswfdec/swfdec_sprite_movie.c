@@ -470,13 +470,11 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
       }
       if (cur->depth == prev->depth &&
 	  swfdec_movie_is_compatible (prev, cur)) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (prev);
 	walk->data = prev;
 	/* FIXME: This merging stuff probably needs to be improved a _lot_ */
-	if (SWFDEC_IS_GRAPHIC_MOVIE (cur)) {
-	  SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (prev);
-	  if (klass->replace)
-	    klass->replace (prev, SWFDEC_GRAPHIC_MOVIE (cur)->graphic);
-	}
+	if (klass->replace)
+	  klass->replace (prev, cur->graphic);
 	swfdec_movie_set_static_properties (prev, &cur->original_transform,
 	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, cur->events);
 	swfdec_movie_destroy (cur);

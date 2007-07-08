@@ -39,31 +39,25 @@ swfdec_graphic_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
   swfdec_rect_union (extents, extents, 
-      &SWFDEC_GRAPHIC_MOVIE (movie)->graphic->extents);
+      &movie->graphic->extents);
 }
 
 static void
 swfdec_graphic_movie_render (SwfdecMovie *movie, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
-  SwfdecGraphic *graphic = SWFDEC_GRAPHIC_MOVIE (movie)->graphic;
-
-  swfdec_graphic_render (graphic, cr, trans, inval, fill);
+  swfdec_graphic_render (movie->graphic, cr, trans, inval, fill);
 }
 
 static gboolean
 swfdec_graphic_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
-  SwfdecGraphic *graphic = SWFDEC_GRAPHIC_MOVIE (movie)->graphic;
-
-  return swfdec_graphic_mouse_in (graphic, x, y);
+  return swfdec_graphic_mouse_in (movie->graphic, x, y);
 }
 
 static void
 swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
 {
-  SwfdecGraphicMovie *gmovie = SWFDEC_GRAPHIC_MOVIE (movie);
-
   if (SWFDEC_IS_SHAPE (graphic) ||
       SWFDEC_IS_TEXT (graphic)) {
     /* nothing to do here, please move along */
@@ -76,31 +70,18 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
     SWFDEC_FIXME ("Can we replace with %s objects?", G_OBJECT_TYPE_NAME (graphic));
     return;
   }
-  SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (gmovie->graphic)->id,
+  SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (movie->graphic)->id,
       SWFDEC_CHARACTER (graphic)->id);
   swfdec_movie_invalidate (movie);
-  g_object_unref (gmovie->graphic);
-  gmovie->graphic = g_object_ref (graphic);
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
-}
-
-static void
-swfdec_graphic_movie_dispose (GObject *object)
-{
-  SwfdecGraphicMovie *movie = SWFDEC_GRAPHIC_MOVIE (object);
-
   g_object_unref (movie->graphic);
-
-  G_OBJECT_CLASS (swfdec_graphic_movie_parent_class)->dispose (object);
+  movie->graphic = g_object_ref (graphic);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
 }
 
 static void
 swfdec_graphic_movie_class_init (SwfdecGraphicMovieClass * g_class)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
-
-  object_class->dispose = swfdec_graphic_movie_dispose;
 
   movie_class->update_extents = swfdec_graphic_movie_update_extents;
   movie_class->replace = swfdec_graphic_movie_replace;

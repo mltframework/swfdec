@@ -38,8 +38,6 @@ typedef struct _SwfdecGraphicMovieClass SwfdecGraphicMovieClass;
 
 struct _SwfdecGraphicMovie {
   SwfdecMovie		movie;
-
-  SwfdecGraphic *	graphic;
 };
 
 struct _SwfdecGraphicMovieClass {

@@ -28,6 +28,7 @@
 #include "swfdec_as_frame.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
 
@@ -751,7 +752,7 @@ static void
 swfdec_as_object_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  if (SWFDEC_IS_AS_FUNCTION (object)) {
+  if (SWFDEC_IS_AS_FUNCTION (object) && !SWFDEC_IS_AS_SUPER (object)) {
     SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__type_Function_);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__object_Object_);

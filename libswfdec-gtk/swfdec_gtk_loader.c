@@ -191,7 +191,8 @@ swfdec_gtk_loader_dispose (GObject *object)
 }
 
 static SwfdecLoader *
-swfdec_gtk_loader_load (SwfdecLoader *loader, const char *url)
+swfdec_gtk_loader_load (SwfdecLoader *loader, const char *url, 
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
   GnomeVFSURI *parent, *new;

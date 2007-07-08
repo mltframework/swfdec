@@ -69,6 +69,18 @@
  * inside a #SwfdecLoader.
  */
 
+/**
+ * SwfdecLoaderRequest:
+ * @SWFDEC_LOADER_REQUEST_DEFAULT: Use the default method (this most likely is 
+ *                                 equal to HTTPget)
+ * @SWFDEC_LOADER_REQUEST_GET: Use HTTP get
+ * @SWFDEC_LOADER_REQUEST_POST: Use HTTP post
+ *
+ * Describes the moethod to use for requesting a given URL. These methods map
+ * naturally to HTTP methods, since HTTP is the common method for requesting 
+ * Flash content.
+ */
+
 /*** SwfdecLoader ***/
 
 enum {
@@ -194,7 +206,8 @@ swfdec_file_loader_dispose (GObject *object)
 }
 
 static SwfdecLoader *
-swfdec_file_loader_load (SwfdecLoader *loader, const char *url)
+swfdec_file_loader_load (SwfdecLoader *loader, const char *url, 
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecBuffer *buffer;
   char *real_path;
@@ -244,17 +257,19 @@ swfdec_file_loader_init (SwfdecFileLoader *loader)
 /*** INTERNAL API ***/
 
 SwfdecLoader *
-swfdec_loader_load (SwfdecLoader *loader, const char *url)
+swfdec_loader_load (SwfdecLoader *loader, const char *url,
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecLoader *ret;
   SwfdecLoaderClass *klass;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
   g_return_val_if_fail (url != NULL, NULL);
+  g_return_val_if_fail (data != NULL || data_len == 0, NULL);
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  ret = klass->load (loader, url);
+  ret = klass->load (loader, url, request, data, data_len);
   g_assert (ret != NULL);
   return ret;
 }

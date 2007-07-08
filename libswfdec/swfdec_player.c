@@ -1048,7 +1048,7 @@ swfdec_player_load (SwfdecPlayer *player, const char *url)
   g_return_val_if_fail (url != NULL, NULL);
 
   g_assert (player->loader);
-  return swfdec_loader_load (player->loader, url);
+  return swfdec_loader_load (player->loader, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
 }
 
 void

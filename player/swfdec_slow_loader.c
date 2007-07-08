@@ -52,12 +52,13 @@ swfdec_slow_loader_dispose (GObject *object)
 }
 
 static SwfdecLoader *
-swfdec_slow_loader_load (SwfdecLoader *loader, const char *url)
+swfdec_slow_loader_load (SwfdecLoader *loader, const char *url,
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecSlowLoader *slow = SWFDEC_SLOW_LOADER (loader);
   SwfdecLoader *new;
 
-  new = swfdec_loader_load (slow->loader, url); 
+  new = swfdec_loader_load (slow->loader, url, request, data, data_len); 
   if (new == NULL)
     return NULL;
   return swfdec_slow_loader_new (new, slow->duration / 1000);

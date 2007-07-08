@@ -1062,7 +1062,8 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
 }
 
 void
-swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target)
+swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecPlayer *player;
 
@@ -1083,7 +1084,8 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target)
       if (url[0] == '\0') {
 	swfdec_player_remove_level (player, depth);
       } else {
-	SwfdecLoader *loader = swfdec_loader_load (movie->swf->loader, url);
+	SwfdecLoader *loader = swfdec_loader_load (movie->swf->loader, url,
+	    request, data, data_len);
 	g_assert (loader);
 	swfdec_player_add_level_from_loader (player, depth, loader, NULL);
 	swfdec_loader_queue_parse (loader);

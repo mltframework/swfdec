@@ -50,7 +50,10 @@ struct _SwfdecFileLoaderClass
 GType			swfdec_file_loader_get_type	(void);
 
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
-							 const char *		url);
+							 const char *		url,
+							 SwfdecLoaderRequest	request,
+							 const char *		data,
+							 gsize			data_len);
 void			swfdec_loader_parse		(SwfdecLoader *		loader);
 void			swfdec_loader_queue_parse	(SwfdecLoader *		loader);
 void			swfdec_loader_set_target	(SwfdecLoader *		loader,

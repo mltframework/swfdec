@@ -214,7 +214,10 @@ void		swfdec_movie_set_variables	(SwfdecMovie *		movie,
 						 const char *		variables);
 void		swfdec_movie_load		(SwfdecMovie *		movie,
 						 const char *		url,
-						 const char *		target);
+						 const char *		target,
+						 SwfdecLoaderRequest	request,
+						 const char *		data,
+						 gsize			data_len);
 
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);

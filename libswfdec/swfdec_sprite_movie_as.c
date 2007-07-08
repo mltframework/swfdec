@@ -393,7 +393,7 @@ swfdec_sprite_movie_getURL (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (argc > 2) {
     SWFDEC_ERROR ("passing variables is not implemented");
   }
-  swfdec_movie_load (movie, url, target);
+  swfdec_movie_load (movie, url, target, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   /* FIXME: does this function return something */
 }
 

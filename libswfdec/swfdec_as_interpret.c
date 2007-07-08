@@ -906,7 +906,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     SWFDEC_WARNING ("leftover bytes in GetURL action");
   }
   if (SWFDEC_IS_MOVIE (cx->frame->target))
-    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target);
+    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, 
+	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   else
     SWFDEC_WARNING ("no movie to load");
   g_free (url);
@@ -930,9 +931,6 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_ERROR ("GetURL method 3 invalid");
     method = 0;
   }
-  if (method) {
-    SWFDEC_FIXME ("implement encoding variables using %s", method == 1 ? "GET" : "POST");
-  }
   if (data[0] & 2) {
     SWFDEC_FIXME ("implement LoadTarget");
   }
@@ -940,7 +938,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_FIXME ("implement LoadVariables");
   }
   if (SWFDEC_IS_MOVIE (cx->frame->target))
-    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target);
+    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, method, NULL, 0);
   else
     SWFDEC_WARNING ("no movie to load");
 }

@@ -351,28 +351,14 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
   SwfdecMovie *ret;
   const char *name;
   int depth;
-  SwfdecGraphic *graphic = NULL;
 
   name = swfdec_as_value_to_string (cx, &argv[0]);
   depth = swfdec_as_value_to_integer (cx, &argv[1]);
   if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
     return;
-  if (!movie->parent) {
-    SWFDEC_ERROR ("don't know how to duplicate root movies");
+  ret = swfdec_movie_duplicate (movie, name, depth);
+  if (ret == NULL)
     return;
-  }
-  ret = swfdec_movie_find (movie->parent, depth);
-  if (ret)
-    swfdec_movie_remove (ret);
-  /* FIXME: make this a vfunc */
-  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    graphic = SWFDEC_GRAPHIC (SWFDEC_SPRITE_MOVIE (movie)->sprite);
-  } else {
-    SWFDEC_FIXME ("need a way to get the graphic from a movie");
-  }
-  ret = swfdec_movie_new (SWFDEC_PLAYER (obj->context), depth, movie->parent, graphic, name);
-  swfdec_movie_set_static_properties (ret, &movie->original_transform,
-      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, movie->events);
   swfdec_sprite_movie_copy_props (ret, movie);
   swfdec_movie_initialize (ret);
   SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, ret->name, ret->depth);

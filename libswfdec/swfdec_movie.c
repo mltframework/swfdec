@@ -738,6 +738,10 @@ swfdec_movie_dispose (GObject *object)
     swfdec_event_list_free (movie->events);
     movie->events = NULL;
   }
+  if (movie->graphic) {
+    g_object_unref (movie->graphic);
+    movie->graphic = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
@@ -902,6 +906,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     SwfdecGraphicClass *klass = SWFDEC_GRAPHIC_GET_CLASS (graphic);
     g_return_val_if_fail (klass->create_movie != NULL, NULL);
     movie = klass->create_movie (graphic, &size);
+    movie->graphic = g_object_ref (graphic);
   }
   /* register it to the VM */
   /* FIXME: It'd be nice if we'd not overuse memory here when calling this function from a script */
@@ -987,6 +992,45 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
       swfdec_event_list_free (movie->events);
     movie->events = swfdec_event_list_copy (events);
   }
+}
+
+/**
+ * swfdec_movie_duplicate:
+ * @movie: #SwfdecMovie to copy
+ * @name: garbage-collected name for the new copy
+ * @depth: depth to put this movie in
+ *
+ * Creates a duplicate of @movie. The duplicate will not be initialized or
+ * queued up for any events. You have to do this manually. In particular calling
+ * swfdec_movie_initialize() on the returned movie must be done.
+ *
+ * Returns: a newly created movie or %NULL on error
+ **/
+SwfdecMovie *
+swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
+{
+  SwfdecMovie *parent, *copy;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  parent = movie->parent;
+  if (movie->parent == NULL) {
+    SWFDEC_FIXME ("don't know how to duplicate root movies");
+    return NULL;
+  }
+  copy = swfdec_movie_find (movie->parent, depth);
+  if (copy) {
+    SWFDEC_LOG ("depth %d already occupied while duplicating, removing old movie", depth);
+    swfdec_movie_remove (copy);
+  }
+  copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), depth, 
+      parent, movie->graphic, name);
+  if (copy == NULL)
+    return NULL;
+  swfdec_movie_set_static_properties (copy, &movie->original_transform,
+      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, movie->events);
+  return copy;
 }
 
 SwfdecMovie *

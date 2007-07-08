@@ -85,6 +85,7 @@ typedef enum {
 struct _SwfdecMovie {
   SwfdecAsObject	object;
 
+  SwfdecGraphic *	graphic;		/* graphic represented by this movie or NULL if script-created */
   const char *		name;			/* name of movie - GC'd */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
@@ -166,6 +167,9 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecPlayer *		player,
 						 const char *		name);
 SwfdecMovie *	swfdec_movie_new_for_content  	(SwfdecMovie *		parent,
 						 const SwfdecContent *	content);
+SwfdecMovie *	swfdec_movie_duplicate		(SwfdecMovie *		movie, 
+						 const char *		name,
+						 int			depth);
 void		swfdec_movie_initialize		(SwfdecMovie *		movie);
 SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);

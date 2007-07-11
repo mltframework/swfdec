@@ -414,6 +414,8 @@ swfdec_as_context_dispose (GObject *object)
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
 
+  while (context->stack)
+    swfdec_as_stack_pop_segment (context);
   swfdec_as_context_collect (context);
   if (context->memory != 0) {
     g_critical ("%zu bytes of memory left over\n", context->memory);
@@ -576,7 +578,6 @@ void
 swfdec_as_context_run (SwfdecAsContext *context)
 {
   SwfdecAsFrame *frame, *last_frame;
-  SwfdecAsStack *stack;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
   guint8 *startpc, *pc, *endpc, *nextpc;
@@ -611,20 +612,48 @@ start:
   }
   if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
+    SwfdecAsValue rval = { 0, };
     if (frame->argc >= native->min_args && 
 	(native->type == 0 || 
 	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type))) {
-      /* FIXME FIXME FIXME: no casting here please! */
+      SwfdecAsValue *argv;
+      /* accumulate argv */
+      if (frame->argc == 0 || frame->argv != NULL) {
+	/* FIXME FIXME FIXME: no casting here please! */
+	argv = (SwfdecAsValue *) frame->argv;
+      } else {
+	SwfdecAsStack *stack;
+	SwfdecAsValue *cur;
+	guint i, n;
+	if (frame->argc > 128) {
+	  SWFDEC_FIXME ("allow calling native functions with more than 128 args");
+	  n = 128;
+	} else {
+	  n = frame->argc;
+	}
+	argv = g_new (SwfdecAsValue, n);
+	stack = context->stack;
+	cur = context->cur;
+	for (i = 0; i < n; i++) {
+	  if (cur <= &stack->elements[0]) {
+	    stack = stack->next;
+	    cur = &stack->elements[stack->used_elements];
+	  }
+	  cur--;
+	  argv[i] = *cur;
+	}
+      }
       native->native (context, frame->thisp, frame->argc, 
-	  (SwfdecAsValue *) frame->argv, frame->return_value);
+	  argv, &rval);
+      if (argv != frame->argv)
+	g_free (argv);
     }
-    swfdec_as_frame_return (frame);
+    swfdec_as_frame_return (frame, &rval);
     goto start;
   }
   g_assert (frame->script);
   g_assert (frame->target);
   script = frame->script;
-  stack = frame->stack;
   version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);
   context->version = script->version;
   startpc = script->buffer->data;
@@ -634,7 +663,7 @@ start:
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
     if (pc == endpc) {
-      swfdec_as_frame_return (frame);
+      swfdec_as_frame_return (frame, NULL);
       goto start;
     }
     if (pc < startpc || pc >= endpc) {
@@ -647,7 +676,7 @@ start:
     /* decode next action */
     action = *pc;
     if (action == 0) {
-      swfdec_as_frame_return (frame);
+      swfdec_as_frame_return (frame, NULL);
       goto start;
     }
     /* invoke debugger if there is one */
@@ -687,17 +716,17 @@ start:
       continue;
     }
     if (spec->remove > 0) {
-      swfdec_as_stack_ensure_size (stack, spec->remove);
       if (spec->add > spec->remove)
-	swfdec_as_stack_ensure_free (stack, spec->add - spec->remove);
+	swfdec_as_stack_ensure_free (context, spec->add - spec->remove);
+      swfdec_as_stack_ensure_size (context, spec->remove);
     } else {
       if (spec->add > 0)
-	swfdec_as_stack_ensure_free (stack, spec->add);
+	swfdec_as_stack_ensure_free (context, spec->add);
     }
     if (context->state != SWFDEC_AS_CONTEXT_RUNNING)
       goto error;
 #ifndef G_DISABLE_ASSERT
-    check = (spec->add >= 0 && spec->remove >= 0) ? stack->cur + spec->add - spec->remove : NULL;
+    check = (spec->add >= 0 && spec->remove >= 0) ? context->cur + spec->add - spec->remove : NULL;
 #endif
     /* execute action */
     spec->exec[version] (context, action, data, len);
@@ -712,10 +741,10 @@ start:
     }
     if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT
-      if (check != NULL && check != stack->cur) {
+      if (check != NULL && check != context->cur) {
 	g_error ("action %s was supposed to change the stack by %d (+%d -%d), but it changed by %td",
 	    spec->name, spec->add - spec->remove, spec->add, spec->remove,
-	    stack->cur - check + spec->add - spec->remove);
+	    context->cur - check + spec->add - spec->remove);
       }
 #endif
     } else {
@@ -1014,6 +1043,8 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
 
+  if (!swfdec_as_stack_push_segment (context))
+    return;
   context->version = version;
   /* get the necessary objects up to define objects and functions sanely */
   swfdec_as_function_init_context (context, version);

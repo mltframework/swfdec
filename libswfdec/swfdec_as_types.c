@@ -29,6 +29,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_number.h"
+#include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
@@ -518,7 +519,6 @@ SwfdecAsObject *
 swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
   SwfdecAsFunction *fun;
-  SwfdecAsObject *ret;
   SwfdecAsValue val;
   const char *s;
 
@@ -549,9 +549,15 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
     return NULL;
-  ret = swfdec_as_object_create (fun, 1, value, TRUE);
+  swfdec_as_object_create (fun, 1, value, TRUE);
   swfdec_as_context_run (context);
-  return ret;
+  value = swfdec_as_stack_pop (context);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
+    return SWFDEC_AS_VALUE_GET_OBJECT (value);
+  } else {
+    SWFDEC_ERROR ("did not construct an object");
+    return NULL;
+  }
 }
 
 /**

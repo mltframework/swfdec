@@ -628,28 +628,25 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * @construct: constructor
  * @n_args: number of arguments
  * @args: arguments to pass to constructor
- * @scripted: If this variable is %TRUE, the variable "constructor" will be named "__constructor__"
+ * @scripted: If this variable is %TRUE, the variable "constructor" will be 
+ *            named "__constructor__"
  *
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
- * swfdec_as_context_run() yourself.
- *
- * Returns: The newly created object. On OOM, the prototype will be returned, 
- *          so the returned object will always be valid.
+ * swfdec_as_context_run() yourself. After the constructor has been run, the new
+ * object will be pushed on top of the stack.
  **/
-SwfdecAsObject *
+void
 swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, 
     const SwfdecAsValue *args, gboolean scripted)
 {
-  SwfdecAsValue val;
   SwfdecAsObject *new;
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
   guint size;
   GType type = 0;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (construct), NULL);
-  g_return_val_if_fail (n_args == 0 || args != NULL, NULL);
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (construct));
 
   context = SWFDEC_AS_OBJECT (construct)->context;
   cur = construct;
@@ -680,22 +677,13 @@ swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args,
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
   }
-  if (!swfdec_as_context_use_mem (context, size)) {
-    SwfdecAsObject *proto;
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct), SWFDEC_AS_STR_prototype, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-    } else {
-      proto = context->Object_prototype;
-    }
-    return proto;
-  }
+  if (!swfdec_as_context_use_mem (context, size))
+    return;
   new = g_object_new (type, NULL);
   swfdec_as_object_add (new, context, size);
   swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (construct), FALSE);
-  swfdec_as_function_call (construct, new, n_args, args, &val);
+  swfdec_as_function_call (construct, new, n_args, args, NULL);
   context->frame->construct = TRUE;
-  return new;
 }
 
 void

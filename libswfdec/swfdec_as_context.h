@@ -64,6 +64,12 @@ struct _SwfdecAsContext {
   SwfdecAsFrame *	frame;		/* topmost stack frame */
   SwfdecAsFrame *	last_frame;   	/* last frame before calling context_run */
 
+  /* stack */
+  SwfdecAsValue	*	base;		/* stack base */
+  SwfdecAsValue	*	end;		/* end of stack */
+  SwfdecAsValue	*	cur;		/* pointer to current top of stack */
+  SwfdecAsStack *	stack;		/* current stack */
+
   /* magic objects - initialized during swfdec_as_context_startup() */
   SwfdecAsObject *	Function;	/* Function */
   SwfdecAsObject *	Function_prototype;	/* Function.prototype - NULL in Flash 5 */

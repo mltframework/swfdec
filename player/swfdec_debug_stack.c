@@ -61,18 +61,26 @@ swfdec_get_value_type (SwfdecAsContext *cx, SwfdecAsValue *value)
 static void
 swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
 {
-  SwfdecAsFrame *frame = NULL;
+  SwfdecAsContext *context;
+  SwfdecAsFrame *frame;
   GtkListStore *store = gtk_list_store_new (N_COLUMNS, G_TYPE_UINT, 
       G_TYPE_STRING, G_TYPE_STRING);
   GtkTreeIter iter;
+  char *s;
 
-  frame = SWFDEC_AS_CONTEXT (debug->manager->player)->frame;
+  context= SWFDEC_AS_CONTEXT (debug->manager->player);
+  frame = context->frame;
   if (frame) {
-    SwfdecAsValue *val;
+    SwfdecAsValue *val = context->cur;
+    SwfdecAsStack *stack = context->stack;
     guint i = 0;
-    for (val = frame->stack->cur - 1; val >= frame->stack->base; val--) {
-      /* FIXME: dangerous, this calls back into the engine */
-      char *s = swfdec_as_value_to_debug (val);
+    while (val != frame->stack_begin) {
+      if (val == &stack->elements[0]) {
+	stack = stack->next;
+	val = &stack->elements[stack->used_elements];
+      }
+      val--;
+      s = swfdec_as_value_to_debug (val);
       gtk_list_store_append (store, &iter);
       gtk_list_store_set (store, &iter, COLUMN_LINE, ++i, 
 	COLUMN_TYPE, swfdec_get_value_type (SWFDEC_AS_CONTEXT (debug->manager->player), val),

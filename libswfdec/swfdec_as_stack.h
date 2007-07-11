@@ -25,71 +25,66 @@
 G_BEGIN_DECLS
 
 struct _SwfdecAsStack {
-  SwfdecAsContext *	context;	/* context we operate on */
-
-  SwfdecAsValue	*	base;		/* stack base */
-  SwfdecAsValue	*	end;		/* end of stack */
-  SwfdecAsValue	*	cur;		/* pointer to current top of stack */
-
-  SwfdecAsStack *	next;		/* pointer to next stack area */
+  guint			n_elements;	/* number of elements */
+  guint			used_elements;	/* elements in use (only set on stored stack) */
+  SwfdecAsStack *	next;		/* pointer to next stack */
+  SwfdecAsValue		elements[0];	/* the elements */
 };
 
-SwfdecAsStack *	swfdec_as_stack_new		(SwfdecAsContext *	context,
-						 guint	  		n_elements);
-void		swfdec_as_stack_free		(SwfdecAsStack *	stack);
+gboolean	swfdec_as_stack_push_segment  	(SwfdecAsContext *	context);
+void		swfdec_as_stack_pop_segment   	(SwfdecAsContext *	context);
 
 //#define SWFDEC_MAD_CHECKS
 #ifdef SWFDEC_MAD_CHECKS
-#define swfdec_as_stack_peek(stack,n) (&(stack)->cur[-(gssize)(n)])
+#define swfdec_as_stack_peek(cx,n) (&(cx)->cur[-(gssize)(n)])
 
 static inline SwfdecAsValue *
-swfdec_as_stack_pop (SwfdecAsStack *stack)
+swfdec_as_stack_pop (SwfdecAsContext *cx)
 {
   g_assert (stack != NULL);
-  g_assert (stack->cur > stack->base);
+  g_assert (cx->cur > cx->base);
 
-  return --(stack)->cur;
+  return --cx->cur;
 }
 
 static inline SwfdecAsValue *
-swfdec_as_stack_pop_n (SwfdecAsStack *stack, guint n)
+swfdec_as_stack_pop_n (SwfdecAsContext *cx, guint n)
 {
-  g_assert (stack != NULL);
-  g_assert ((guint) (stack->cur - stack->base) >= n);
+  g_assert (cx != NULL);
+  g_assert ((guint) (cx->cur - cx->base) >= n);
 
-  return stack->cur -= n;
+  return cx->cur -= n;
 }
 
 static inline SwfdecAsValue *
-swfdec_as_stack_push (SwfdecAsStack *stack)
+swfdec_as_stack_push (SwfdecAsContext *cx)
 {
-  g_assert (stack != NULL);
-  g_assert (stack->cur < stack->end);
+  g_assert (cx != NULL);
+  g_assert (cx->cur < cx->end);
 
-  return stack->cur++;
+  return cx->cur++;
 }
-#define swfdec_as_stack_get_size(stack) ((guint)((stack)->cur - (stack)->base))
 #else /* SWFDEC_MAD_CHECKS */
-#define swfdec_as_stack_peek(stack,n) (&(stack)->cur[-(gssize)(n)])
-#define swfdec_as_stack_pop(stack) (--(stack)->cur)
-#define swfdec_as_stack_pop_n(stack, n) ((stack)->cur -= (n))
-#define swfdec_as_stack_push(stack) ((stack)->cur++)
-#define swfdec_as_stack_get_size(stack) ((guint)((stack)->cur - (stack)->base))
+#define swfdec_as_stack_peek(cx,n) (&(cx)->cur[-(gssize)(n)])
+#define swfdec_as_stack_pop(cx) (--(cx)->cur)
+#define swfdec_as_stack_pop_n(cx, n) ((cx)->cur -= (n))
+#define swfdec_as_stack_push(cx) ((cx)->cur++)
 #endif
-#define swfdec_as_stack_swap(stack,x,y) G_STMT_START { \
-  SwfdecAsStack *__stack = (stack); \
+#define swfdec_as_stack_swap(cx,x,y) G_STMT_START { \
+  SwfdecAsContext *__cx = (cx); \
   SwfdecAsValue __tmp; \
   guint __x = (x), __y = (y); \
-  __tmp = *swfdec_as_stack_peek(__stack, __x); \
-  *swfdec_as_stack_peek(__stack, __x) = *swfdec_as_stack_peek(__stack, __y); \
-  *swfdec_as_stack_peek(__stack, __y) = __tmp; \
+  __tmp = *swfdec_as_stack_peek(__cx, __x); \
+  *swfdec_as_stack_peek(__cx, __x) = *swfdec_as_stack_peek(__cx, __y); \
+  *swfdec_as_stack_peek(__cx, __y) = __tmp; \
 }G_STMT_END
 
 void		swfdec_as_stack_mark		(SwfdecAsStack *	stack);
-void		swfdec_as_stack_ensure_size	(SwfdecAsStack *	stack,
+void		swfdec_as_stack_ensure_size	(SwfdecAsContext *	context,
 						 guint	  		n_elements);
-void		swfdec_as_stack_ensure_free	(SwfdecAsStack *	stack,
+void		swfdec_as_stack_ensure_free	(SwfdecAsContext *	context,
 						 guint	  		n_elements);
+guint		swfdec_as_stack_get_size	(SwfdecAsContext *	context);
 						
 
 G_END_DECLS

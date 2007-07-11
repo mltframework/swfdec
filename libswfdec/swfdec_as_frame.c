@@ -41,10 +41,6 @@ swfdec_as_frame_dispose (GObject *object)
     swfdec_script_unref (frame->script);
     frame->script = NULL;
   }
-  if (frame->stack) {
-    swfdec_as_stack_free (frame->stack);
-    frame->stack = NULL;
-  }
   if (frame->constant_pool) {
     swfdec_constant_pool_free (frame->constant_pool);
     frame->constant_pool = NULL;
@@ -79,7 +75,6 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
     swfdec_as_value_mark (&frame->registers[i]);
   }
   /* don't mark argv, it's const, others have to take care of it */
-  swfdec_as_stack_mark (frame->stack);
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
 }
 
@@ -105,6 +100,8 @@ swfdec_as_frame_load (SwfdecAsFrame *frame)
 {
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (frame)->context;
 
+  frame->stack_begin = context->cur;
+  context->base = frame->stack_begin;
   frame->next = context->frame;
   context->frame = frame;
   context->call_depth++;
@@ -114,15 +111,11 @@ SwfdecAsFrame *
 swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
 {
   SwfdecAsFrame *frame;
-  SwfdecAsStack *stack;
   gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (script != NULL, NULL);
   
-  stack = swfdec_as_stack_new (context, 100); /* FIXME: invent better numbers here */
-  if (!stack)
-    return NULL;
   size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
@@ -132,7 +125,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   frame->function_name = script->name;
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
   frame->pc = script->buffer->data;
-  frame->stack = stack;
   frame->scope = SWFDEC_AS_SCOPE (frame);
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
@@ -171,22 +163,73 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
 /**
  * swfdec_as_frame_return:
  * @frame: a #SwfdecAsFrame that is currently executing.
+ * @return_value: return value of the function or %NULL for none. An undefined
+ *                value will be used in that case.
  *
  * Ends execution of the frame and instructs the frame's context to continue 
  * execution with its parent frame. This function may only be called on the
  * currently executing frame.
  **/
 void
-swfdec_as_frame_return (SwfdecAsFrame *frame)
+swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
 {
   SwfdecAsContext *context;
+  SwfdecAsValue retval;
+  SwfdecAsFrame *next;
+
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   context = SWFDEC_AS_OBJECT (frame)->context;
   g_return_if_fail (frame == context->frame);
 
-  context->frame = frame->next;
+  /* save return value in case it was on the stack somewhere */
+  if (frame->construct) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&retval, frame->thisp);
+  } else if (return_value) {
+    retval = *return_value;
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&retval);
+  }
+  /* pop frame and leftover stack */
+  next = frame->next;
+  context->frame = next;
   g_assert (context->call_depth > 0);
   context->call_depth--;
+  while (context->base > frame->stack_begin || 
+      context->end < frame->stack_begin)
+    swfdec_as_stack_pop_segment (context);
+  context->cur = frame->stack_begin;
+  /* setup stack for previous frame */
+  if (next) {
+    if (next->stack_begin >= &context->stack->elements[0] &&
+	next->stack_begin <= context->cur) {
+      context->base = next->stack_begin;
+    } else {
+      context->base = &context->stack->elements[0];
+    }
+  } else {
+    g_assert (context->stack->next == NULL);
+    context->base = &context->stack->elements[0];
+  }
+  /* pop argv if on stack */
+  if (frame->argv == NULL && frame->argc > 0) {
+    guint i = frame->argc;
+    while (TRUE) {
+      guint n = context->cur - context->base;
+      n = MIN (n, i);
+      swfdec_as_stack_pop_n (context, n);
+      i -= n;
+      if (i == 0)
+	break;
+      swfdec_as_stack_pop_segment (context);
+    }
+  }
+  /* set return value */
+  if (frame->return_value) {
+    *frame->return_value = retval;
+  } else {
+    swfdec_as_stack_ensure_free (context, 1);
+    *swfdec_as_stack_push (context) = retval;
+  }
 }
 
 /**
@@ -319,7 +362,10 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   SwfdecAsObject *object;
   guint i, current_reg = 1;
   SwfdecScript *script;
+  SwfdecAsStack *stack;
   SwfdecAsValue val;
+  const SwfdecAsValue *cur;
+  SwfdecAsContext *context;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
@@ -327,6 +373,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     return;
 
   object = SWFDEC_AS_OBJECT (frame);
+  context = object->context;
   script = frame->script;
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS) {
     if (frame->thisp) {
@@ -343,12 +390,26 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
-    SwfdecAsObject *args = swfdec_as_array_new (object->context);
+    SwfdecAsObject *args = swfdec_as_array_new (context);
 
     if (!args)
       return;
-    if (frame->argc > 0)
-      swfdec_as_array_append (SWFDEC_AS_ARRAY (args), frame->argc, frame->argv);
+    if (frame->argc > 0) {
+      if (frame->argv) {
+	swfdec_as_array_append (SWFDEC_AS_ARRAY (args), frame->argc, frame->argv);
+      } else {
+	stack = context->stack;
+	cur = context->cur;
+	for (i = 0; i < frame->argc; i++) {
+	  if (cur <= &stack->elements[0]) {
+	    stack = stack->next;
+	    cur = &stack->elements[stack->used_elements];
+	  }
+	  cur--;
+	  swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
+	}
+      }
+    }
     /* FIXME: implement callee/caller */
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
       SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], args);
@@ -386,28 +447,40 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     if (obj) {
       swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__parent, &frame->registers[current_reg++]);
     } else {
-      SWFDEC_WARNING ("no parentto preload");
+      SWFDEC_WARNING ("no parent to preload");
     }
     current_reg++;
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], object->context->global);
+    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
   }
+  stack = context->stack;
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+  cur = frame->argv ? frame->argv - 1 : context->cur;
   for (i = 0; i < script->n_arguments; i++) {
+    /* first figure out the right value to set */
+    if (i >= frame->argc) {
+      cur = &val;
+    } else if (frame->argv) {
+      cur++;
+    } else {
+      if (cur <= &stack->elements[0]) {
+	stack = stack->next;
+	cur = &stack->elements[stack->used_elements];
+      }
+      cur--;
+    }
+    /* now set this value at the right place */
     if (script->arguments[i].preload) {
-      /* the script is responsible for ensuring this */
-      g_assert (script->arguments[i].preload < frame->n_registers);
-      if (i < frame->argc) {
-	frame->registers[script->arguments[i].preload] = frame->argv[i];
+      if (script->arguments[i].preload < frame->n_registers) {
+	frame->registers[script->arguments[i].preload] = *cur;
+      } else {
+	SWFDEC_ERROR ("trying to set %uth argument %s in nonexisting register %u", 
+	    i, script->arguments[i].name, script->arguments[i].preload);
       }
     } else {
-      const char *tmp = swfdec_as_context_get_string (object->context, script->arguments[i].name);
-      if (i < frame->argc) {
-	swfdec_as_object_set_variable (object, tmp, &frame->argv[i]);
-      } else {
-	SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-	swfdec_as_object_set_variable (object, tmp, &val);
-      }
+      const char *tmp = swfdec_as_context_get_string (context, script->arguments[i].name);
+      swfdec_as_object_set_variable (object, tmp, cur);
     }
   }
 }

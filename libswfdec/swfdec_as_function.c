@@ -66,6 +66,19 @@ swfdec_as_function_create (SwfdecAsContext *context, GType type, guint size)
   return SWFDEC_AS_FUNCTION (fun);
 }
 
+/**
+ * swfdec_as_function_call:
+ * @function: the #SwfdecAsFunction to call
+ * @thisp: this argument to use for the call or %NULL for none
+ * @n_args: number of arguments to pass to the function
+ * @args: the arguments to pass or %NULL to read the last @n_args stack elements
+ * @return_value: pointer for return value or %NULL to push the return value to 
+ *                the stack
+ *
+ * Calls the given function. This means a #SwfdecAsFrame is created for the 
+ * function and pushed on top of the execution stack. The function is however
+ * not executed. Call swfdec_as_context_run () to execute it.
+ **/
 void
 swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
@@ -76,12 +89,12 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
-  g_return_if_fail (n_args == 0 || args != NULL);
-  g_return_if_fail (return_value != NULL);
 
   context = SWFDEC_AS_OBJECT (function)->context;
   /* just to be sure... */
-  SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+  if (return_value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
   g_assert (klass->call);
   frame = klass->call (function);

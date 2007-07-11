@@ -2041,11 +2041,13 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 
   if (len != 2) {
     SWFDEC_ERROR ("With action requires a length of 2, but got %u", len);
+    swfdec_as_stack_pop (cx);
     return;
   }
   object = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 1));
   if (object == NULL) {
     SWFDEC_ERROR ("With called without an object");
+    swfdec_as_stack_pop (cx);
     return;
   }
   swfdec_as_with_new (object, data + len, GUINT16_FROM_LE (*(guint16 *) data));

@@ -368,16 +368,20 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, S
 
   length = swfdec_as_array_get_length (object);
   if (length > 0) {
+    /* FIXME: implement this with the StringBuilder class */
+    GString *string;
     var = swfdec_as_double_to_string (cx, 0);
     swfdec_as_object_get_variable (object, var, &val);
     str = swfdec_as_value_to_string (cx, &val);
+    string = g_string_new (str);
     for (i = 1; i < length; i++) {
       var = swfdec_as_double_to_string (cx, i);
       swfdec_as_object_get_variable (object, var, &val);
       var = swfdec_as_value_to_string (cx, &val);
-      str = swfdec_as_str_concat (cx, str, sep);
-      str = swfdec_as_str_concat (cx, str, var);
+      g_string_append (string, sep);
+      g_string_append (string, var);
     }
+    str = swfdec_as_context_give_string (cx, g_string_free (string, FALSE));
   } else {
     str = SWFDEC_AS_STR_EMPTY;
   }

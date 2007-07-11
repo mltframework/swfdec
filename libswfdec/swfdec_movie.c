@@ -143,8 +143,10 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
   d = movie->xscale / swfdec_matrix_get_xscale (&movie->content->transform);
   e = movie->yscale / swfdec_matrix_get_yscale (&movie->content->transform);
   cairo_matrix_scale (&movie->matrix, d, e);
-  d = movie->rotation - swfdec_matrix_get_rotation (&movie->content->transform);
-  cairo_matrix_rotate (&movie->matrix, d * G_PI / 180);
+  if (finite (movie->rotation)) {
+    d = movie->rotation - swfdec_matrix_get_rotation (&movie->content->transform);
+    cairo_matrix_rotate (&movie->matrix, d * G_PI / 180);
+  }
   swfdec_matrix_ensure_invertible (&movie->matrix, &movie->inverse_matrix);
 
   swfdec_movie_update_extents (movie);

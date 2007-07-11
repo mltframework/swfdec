@@ -428,9 +428,11 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SwfdecAsArray *array = SWFDEC_AS_ARRAY (object);
   gint32 length;
 
-  length = swfdec_as_array_get_length (object);
-  swfdec_as_array_move_range (array, 0, length, argc);
-  swfdec_as_array_set_range (array, 0, argc, argv);
+  if (argc) {
+    length = swfdec_as_array_get_length (object);
+    swfdec_as_array_move_range (array, 0, length, argc);
+    swfdec_as_array_set_range (array, 0, argc, argv);
+  }
 
   SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_get_length (object));
 }

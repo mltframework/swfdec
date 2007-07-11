@@ -2083,6 +2083,36 @@ fail:
   swfdec_as_stack_pop (cx);
 }
 
+static void
+swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecMovie *movie, *new_movie;
+  SwfdecAsObject *obj;
+  const char *new_name;
+  int depth;
+
+  depth = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1)) - 16384;
+  new_name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  if (SWFDEC_AS_VALUE_IS_STRING (swfdec_as_stack_peek (cx, 3))) {
+    const char *name;
+    name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 3));
+    swfdec_as_context_eval (cx, NULL, name, swfdec_as_stack_peek (cx, 3));
+  }
+  obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 3));
+  if (!SWFDEC_IS_MOVIE(obj)) {
+    SWFDEC_ERROR ("Object is not an SwfdecMovie object");
+    swfdec_as_stack_pop_n (cx, 3);
+    return;
+  }
+  movie = SWFDEC_MOVIE(obj);
+  new_movie = swfdec_movie_duplicate (movie, new_name, depth);
+  if (new_movie) {
+    SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new_movie->name, new_movie->depth);
+    swfdec_movie_initialize (new_movie);
+  }
+  swfdec_as_stack_pop_n (cx, 3);
+}
+
 /*** PRINT FUNCTIONS ***/
 
 static char *
@@ -2420,7 +2450,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
   [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
   [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
-  [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL },
+  [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL, 3, 0, { NULL, swfdec_action_clone_sprite, swfdec_action_clone_sprite, swfdec_action_clone_sprite, swfdec_action_clone_sprite } },
   [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL, 1, 0, { NULL, swfdec_action_remove_sprite, swfdec_action_remove_sprite, swfdec_action_remove_sprite, swfdec_action_remove_sprite } },
   [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
   [SWFDEC_AS_ACTION_START_DRAG] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },

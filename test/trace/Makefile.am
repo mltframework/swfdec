@@ -645,6 +645,15 @@ EXTRA_DIST = \
 	removesprite-depths-7.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
+	rotation2.as \
+	rotation2-5.swf \
+	rotation2-5.swf.trace \
+	rotation2-6.swf \
+	rotation2-6.swf.trace \
+	rotation2-7.swf \
+	rotation2-7.swf.trace \
+	rotation2-8.swf \
+	rotation2-8.swf.trace \
 	round-direction.as \
 	round-direction-5.swf \
 	round-direction-5.swf.trace \

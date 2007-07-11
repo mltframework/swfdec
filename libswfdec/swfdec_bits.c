@@ -307,10 +307,8 @@ swfdec_bits_get_float (SwfdecBits * b)
 
   SWFDEC_BYTES_CHECK (b, 4);
 
-  conv.i = *((gint32 *) b->ptr);
+  conv.i = (b->ptr[3] << 24) | (b->ptr[2] << 16) | (b->ptr[1] << 8) | b->ptr[0];
   b->ptr += 4;
-
-  conv.i = GINT32_FROM_LE (conv.i);
 
   return conv.f;
 }
@@ -323,40 +321,30 @@ swfdec_bits_get_float (SwfdecBits * b)
  * use this command line:
  * python -c "import struct; print struct.unpack('8c', struct.pack('d', 7.949928895127363e-275))"
  */
-static double 
-swfdec_bits_double_to_host (double in)
+double
+swfdec_bits_get_double (SwfdecBits * b)
 {
   union {
     guint32 i[2];
     double d;
   } conv;
 
-  conv.d = in;
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  {
-    int tmp = conv.i[0];
-    conv.i[0] = conv.i[1];
-    conv.i[1] = tmp;
-  }
-#else
-  conv.i[0] = GUINT32_FROM_LE (conv.i[0]);
-  conv.i[1] = GUINT32_FROM_LE (conv.i[1]);
-#endif
-  return conv.d;
-}
-
-double
-swfdec_bits_get_double (SwfdecBits * b)
-{
-  double d;
-
   SWFDEC_BYTES_CHECK (b, 8);
 
-  d = *((double *) b->ptr);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  conv.i[1] = (b->ptr[3] << 24) | (b->ptr[2] << 16) | (b->ptr[1] << 8) | b->ptr[0];
+  conv.i[0] = (b->ptr[7] << 24) | (b->ptr[6] << 16) | (b->ptr[5] << 8) | b->ptr[4];
+#else
+  conv.i[0] = (b->ptr[3] << 24) | (b->ptr[2] << 16) | (b->ptr[1] << 8) | b->ptr[0];
+  conv.i[1] = (b->ptr[7] << 24) | (b->ptr[6] << 16) | (b->ptr[5] << 8) | b->ptr[4];
+#if 0
+  conv.i[0] = (b->ptr[0] << 24) | (b->ptr[1] << 16) | (b->ptr[2] << 8) | b->ptr[3];
+  conv.i[1] = (b->ptr[4] << 24) | (b->ptr[5] << 16) | (b->ptr[6] << 8) | b->ptr[7];
+#endif
+#endif
   b->ptr += 8;
-  d = swfdec_bits_double_to_host (d);
 
-  return d;
+  return conv.d;
 }
 
 double

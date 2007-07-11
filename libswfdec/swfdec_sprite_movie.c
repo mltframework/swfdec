@@ -299,7 +299,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   if (move) {
     if (cur == NULL) {
       SWFDEC_INFO ("no movie at depth %d, ignoring move command", depth);
-      return TRUE;
+      goto out;
     }
     if (graphic) {
       SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (cur);
@@ -311,10 +311,12 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   } else {
     if (cur != NULL && version > 5) {
       SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->name);
-      return TRUE;
+      goto out;
     }
     if (!SWFDEC_IS_GRAPHIC (graphic)) {
       SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
+      if (events)
+	swfdec_event_list_free (events);
       return FALSE;
     }
     cur = swfdec_movie_new (player, depth, mov, graphic, name);
@@ -328,6 +330,9 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     swfdec_movie_initialize (cur);
   }
 
+out:
+  if (events)
+    swfdec_event_list_free (events);
   return TRUE;
 }
 

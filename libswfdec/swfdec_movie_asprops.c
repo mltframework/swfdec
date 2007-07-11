@@ -294,6 +294,10 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 
   /* FIXME: Flash 4 handles this differently */
   d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  if (isnan (d)) {
+    SWFDEC_WARNING ("setting rotation to NaN - not allowed");
+    return;
+  }
   d = fmod (d, 360.0);
   if (d > 180.0)
     d -= 360.0;

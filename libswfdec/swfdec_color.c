@@ -196,6 +196,7 @@ swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse
   if (inverse == NULL)
     inverse = &tmp;
   
+  g_assert (isfinite (matrix->xx) && isfinite (matrix->yx) && isfinite (matrix->xy) && isfinite (matrix->yy));
   *inverse = *matrix;
   while (cairo_matrix_invert (inverse)) {
     SWFDEC_INFO ("matrix not invertible, adding epsilon to smallest member");

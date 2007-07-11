@@ -27,6 +27,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_native_function.h"
+#include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
@@ -557,18 +558,21 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
 void
 swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
 {
+  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
   g_return_if_fail (script != NULL);
 
-  frame = swfdec_as_frame_new (object->context, script);
+  context = object->context;
+  frame = swfdec_as_frame_new (context, script);
   if (frame == NULL)
     return;
   swfdec_as_frame_set_this (frame, object);
   swfdec_as_frame_preload (frame);
-  swfdec_as_context_run (object->context);
+  swfdec_as_context_run (context);
+  swfdec_as_stack_pop (context);
 }
 
 /**

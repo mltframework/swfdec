@@ -2039,19 +2039,21 @@ static void
 swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsObject *object;
+  guint offset;
 
   if (len != 2) {
     SWFDEC_ERROR ("With action requires a length of 2, but got %u", len);
     swfdec_as_stack_pop (cx);
     return;
   }
+  offset = data[0] | (data[1] << 8);
   object = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 1));
   if (object == NULL) {
-    SWFDEC_ERROR ("With called without an object");
-    swfdec_as_stack_pop (cx);
-    return;
+    SWFDEC_INFO ("With called without an object, skipping");
+    cx->frame->pc = (guint8 *) data + len + offset;
+  } else {
+    swfdec_as_with_new (object, data + len, offset);
   }
-  swfdec_as_with_new (object, data + len, GUINT16_FROM_LE (*(guint16 *) data));
   swfdec_as_stack_pop (cx);
 }
 

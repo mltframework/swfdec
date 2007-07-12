@@ -837,6 +837,14 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val);
 }
 
+static char *
+swfdec_movie_get_debug (SwfdecAsObject *object)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+
+  return swfdec_movie_get_path (movie);
+}
+
 static gboolean
 swfdec_movie_iterate_end (SwfdecMovie *movie)
 {
@@ -855,6 +863,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   asobject_class->mark = swfdec_movie_mark;
   asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
+  asobject_class->debug = swfdec_movie_get_debug;
 
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }

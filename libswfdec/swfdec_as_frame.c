@@ -264,8 +264,11 @@ swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
  * Finds the given variable in the current scope chain. Returns the first 
  * object in the scope chain that contains this variable in its prototype 
  * chain. If you want to know the explicit object that contains the variable,
- * you have to call swfdec_as_object_find_variable() on the result.
+ * you have to call swfdec_as_object_get_variable_and_flags() on the result.
  * If no such variable exist in the scope chain, %NULL is returned.
+ * <note>The returned object might be an internal object. You probably do not
+ * want to expose it to scripts. Call swfdec_as_object_resolve () on the
+ * returned value to be sure of not having an internal object.</note>
  *
  * Returns: the object that contains @variable or %NULL if none.
  **/

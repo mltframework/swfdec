@@ -38,6 +38,14 @@ swfdec_as_with_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_with_parent_class)->mark (object);
 }
 
+static SwfdecAsObject *
+swfdec_as_with_resolve (SwfdecAsObject *object)
+{
+  SwfdecAsWith *with = SWFDEC_AS_WITH (object);
+
+  return with->object;
+}
+
 static gboolean
 swfdec_as_with_get (SwfdecAsObject *object, const char *variable,
   SwfdecAsValue *val, guint *flags)
@@ -96,6 +104,7 @@ swfdec_as_with_class_init (SwfdecAsWithClass *klass)
   asobject_class->set_flags = swfdec_as_with_set_flags;
   asobject_class->delete = swfdec_as_with_delete;
   asobject_class->foreach = swfdec_as_with_foreach;
+  asobject_class->resolve = swfdec_as_with_resolve;
 }
 
 static void

@@ -611,8 +611,9 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   fun = swfdec_as_stack_peek (cx, 1);
   obj = swfdec_as_frame_find_variable (frame, name);
   if (obj) {
-    SWFDEC_AS_VALUE_SET_OBJECT (thisp, obj);
     swfdec_as_object_get_variable (obj, name, fun);
+    obj = swfdec_as_object_resolve (obj);
+    SWFDEC_AS_VALUE_SET_OBJECT (thisp, obj);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (thisp);
     SWFDEC_AS_VALUE_SET_UNDEFINED (fun);

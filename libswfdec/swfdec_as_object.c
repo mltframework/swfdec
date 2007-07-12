@@ -806,3 +806,27 @@ swfdec_as_object_get_debug (SwfdecAsObject *object)
   return klass->debug (object);
 }
 
+/**
+ * swfdec_as_object_resolve:
+ * @object: a #SwfdecAsObject
+ *
+ * Resolves the object to its real object. Some internal objects should not be
+ * exposed to scripts, for example #SwfdecAsFrame objects. If an object you want
+ * to expose might be internal, call this function to resolve it to an object
+ * that is safe to expose.
+ *
+ * Returns: a non-internal object
+ **/
+SwfdecAsObject *
+swfdec_as_object_resolve (SwfdecAsObject *object)
+{
+  SwfdecAsObjectClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+
+  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
+  if (klass->resolve == NULL)
+    return object;
+
+  return klass->resolve (object);
+}

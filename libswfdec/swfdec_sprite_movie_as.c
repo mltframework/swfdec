@@ -348,7 +348,7 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
-  SwfdecMovie *ret;
+  SwfdecMovie *new;
   const char *name;
   int depth;
 
@@ -356,13 +356,18 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
   depth = swfdec_as_value_to_integer (cx, &argv[1]);
   if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
     return;
-  ret = swfdec_movie_duplicate (movie, name, depth);
-  if (ret == NULL)
+  new = swfdec_movie_duplicate (movie, name, depth);
+  if (new == NULL)
     return;
-  swfdec_sprite_movie_copy_props (ret, movie);
-  swfdec_movie_initialize (ret);
-  SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, ret->name, ret->depth);
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
+  swfdec_sprite_movie_copy_props (new, movie);
+  if (SWFDEC_IS_SPRITE_MOVIE (new)) {
+    g_queue_push_tail (SWFDEC_PLAYER (cx)->init_queue, new);
+    swfdec_movie_queue_script (new, SWFDEC_EVENT_LOAD);
+    swfdec_movie_run_construct (new);
+  }
+  swfdec_movie_initialize (new);
+  SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new->name, new->depth);
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (new));
 }
 
 static void

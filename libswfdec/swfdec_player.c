@@ -165,7 +165,7 @@ swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
  * @player: a #SwfdecPlayer
  * @timeout: a timeout that should be removed
  *
- * Removes the @timeout from the list of scheduled timeouts. THe tiemout must 
+ * Removes the @timeout from the list of scheduled timeouts. The timeout must 
  * have been added with swfdec_player_add_timeout() before.
  **/
 void

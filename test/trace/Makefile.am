@@ -889,6 +889,15 @@ EXTRA_DIST = \
 	with-function-delete-6.swf.trace \
 	with-function-delete-7.swf \
 	with-function-delete-7.swf.trace \
+	with-outobject.as \
+	with-outobject-5.swf \
+	with-outobject-5.swf.trace \
+	with-outobject-6.swf \
+	with-outobject-6.swf.trace \
+	with-outobject-7.swf \
+	with-outobject-7.swf.trace \
+	with-outobject-8.swf \
+	with-outobject-8.swf.trace \
 	with-prototypes.as \
 	with-prototypes-5.swf \
 	with-prototypes-5.swf.trace \

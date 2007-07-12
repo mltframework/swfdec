@@ -1,0 +1,5476 @@
+valueOf called
+toString called
+toString called with 
+valueOf called with 
+0: valueOf!
+1: valueOf!
+2: valueOf!
+3: valueOf!
+4: valueOf!
+5: valueOf!
+6: valueOf!
+7: valueOf!
+8: valueOf!
+9: valueOf!
+10: valueOf!
+11: valueOf!
+12: valueOf!
+13: valueOf!
+14: valueOf!
+15: valueOf!
+16: valueOf!
+17: valueOf!
+18: valueOf!
+19: valueOf!
+20: valueOf!
+21: valueOf!
+21: toString!
+22: valueOf!
+22: toString!
+23: valueOf!
+23: toString!
+24: valueOf!
+24: toString!
+25: valueOf!
+25: toString!
+26: valueOf!
+26: toString!
+Date.UTC (1983 (number))
+undefined
+Date.UTC (1983 (number), 5, 25, 13, 50, 50, 300)
+425397050300
+425397050300 425397050300
+1983-5-25 13:50:50.300
+Date.UTC (83 (number))
+undefined
+Date.UTC (83 (number), 5, 25, 13, 50, 50, 300)
+425397050300
+425397050300 425397050300
+1983-5-25 13:50:50.300
+Date.UTC (0 (number))
+undefined
+Date.UTC (0 (number), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (100 (number))
+undefined
+Date.UTC (100 (number), 5, 25, 13, 50, 50, 300)
+-58996289349700
+-58996289349700 -58996289349700
+100-5-25 13:50:50.300
+Date.UTC (99 (number))
+undefined
+Date.UTC (99 (number), 5, 25, 13, 50, 50, 300)
+930318650300
+930318650300 930318650300
+1999-5-25 13:50:50.300
+Date.UTC (101 (number))
+undefined
+Date.UTC (101 (number), 5, 25, 13, 50, 50, 300)
+-58964753349700
+-58964753349700 -58964753349700
+101-5-25 13:50:50.300
+Date.UTC (-100 (number))
+undefined
+Date.UTC (-100 (number), 5, 25, 13, 50, 50, 300)
+-5349492549700
+-5349492549700 -5349492549700
+1800-5-25 13:50:50.300
+Date.UTC (-50 (number))
+undefined
+Date.UTC (-50 (number), 5, 25, 13, 50, 50, 300)
+-3771655749700
+-3771655749700 -3771655749700
+1850-5-25 13:50:50.300
+Date.UTC (-500 (number))
+undefined
+Date.UTC (-500 (number), 5, 25, 13, 50, 50, 300)
+-17972273349700
+-17972273349700 -17972273349700
+1400-5-25 13:50:50.300
+Date.UTC (276447232 (number))
+undefined
+Date.UTC (276447232 (number), 5, 25, 13, 50, 50, 300)
+8.72376987881465e+18
+8.72376987881465e+18 8.72376987881465e+18
+276447232-5-25 13:50:50.368
+Date.UTC (-276447232 (number))
+undefined
+Date.UTC (-276447232 (number), 5, 25, 13, 50, 50, 300)
+-8.72383422451015e+18
+-8.72383422451015e+18 -8.72383422451015e+18
+-276445332-5-25 13:50:50.368
+Date.UTC ( (undefined))
+undefined
+Date.UTC ( (undefined), 5, 25, 13, 50, 50, 300)
+undefined
+Date.UTC (null (null))
+undefined
+Date.UTC (null (null), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (true (boolean))
+undefined
+Date.UTC (true (boolean), 5, 25, 13, 50, 50, 300)
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+Date.UTC (false (boolean))
+undefined
+Date.UTC (false (boolean), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (0 (number))
+undefined
+Date.UTC (0 (number), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (1 (number))
+undefined
+Date.UTC (1 (number), 5, 25, 13, 50, 50, 300)
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+Date.UTC (0.5 (number))
+undefined
+Date.UTC (0.5 (number), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (-1 (number))
+undefined
+Date.UTC (-1 (number), 5, 25, 13, 50, 50, 300)
+-2225354949700
+-2225354949700 -2225354949700
+1899-5-25 13:50:50.300
+Date.UTC (-0.5 (number))
+undefined
+Date.UTC (-0.5 (number), 5, 25, 13, 50, 50, 300)
+-2225354949700
+-2225354949700 -2225354949700
+1899-5-25 13:50:50.300
+Date.UTC (Infinity (number))
+undefined
+Date.UTC (Infinity (number), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (-Infinity (number))
+undefined
+Date.UTC (-Infinity (number), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (NaN (number))
+undefined
+Date.UTC (NaN (number), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC ( (string))
+undefined
+Date.UTC ( (string), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (0 (string))
+undefined
+Date.UTC (0 (string), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (-0 (string))
+undefined
+Date.UTC (-0 (string), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (0.0 (string))
+undefined
+Date.UTC (0.0 (string), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+Date.UTC (1 (string))
+undefined
+Date.UTC (1 (string), 5, 25, 13, 50, 50, 300)
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+Date.UTC (Hello World! (string))
+undefined
+Date.UTC (Hello World! (string), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (true (string))
+undefined
+Date.UTC (true (string), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (_level0 (string))
+undefined
+Date.UTC (_level0 (string), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (_level0 (movieclip))
+undefined
+Date.UTC (_level0 (movieclip), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC ([object Object] (object))
+undefined
+Date.UTC ([object Object] (object), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC ([type Function] (function))
+undefined
+Date.UTC ([type Function] (function), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+valueOf called
+toString called
+Date.UTC ([type Object] (object))
+valueOf called
+undefined
+valueOf called
+toString called
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+valueOf called
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+toString called with 
+Date.UTC ([type Object] (object))
+undefined
+toString called with 
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+valueOf called with 
+Date.UTC ([object Object] (object))
+valueOf called with 
+undefined
+valueOf called with 
+Date.UTC ([object Object] (object), 5, 25, 13, 50, 50, 300)
+valueOf called with 
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC ( (object))
+undefined
+Date.UTC ( (object), 5, 25, 13, 50, 50, 300)
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+0: valueOf!
+Date.UTC ( (object))
+0: valueOf!
+undefined
+0: valueOf!
+Date.UTC ( (object), 5, 25, 13, 50, 50, 300)
+0: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+1: valueOf!
+Date.UTC (null (object))
+1: valueOf!
+undefined
+1: valueOf!
+Date.UTC (null (object), 5, 25, 13, 50, 50, 300)
+1: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+2: valueOf!
+Date.UTC (true (object))
+2: valueOf!
+undefined
+2: valueOf!
+Date.UTC (true (object), 5, 25, 13, 50, 50, 300)
+2: valueOf!
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+3: valueOf!
+Date.UTC (false (object))
+3: valueOf!
+undefined
+3: valueOf!
+Date.UTC (false (object), 5, 25, 13, 50, 50, 300)
+3: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+4: valueOf!
+Date.UTC (0 (object))
+4: valueOf!
+undefined
+4: valueOf!
+Date.UTC (0 (object), 5, 25, 13, 50, 50, 300)
+4: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+5: valueOf!
+Date.UTC (1 (object))
+5: valueOf!
+undefined
+5: valueOf!
+Date.UTC (1 (object), 5, 25, 13, 50, 50, 300)
+5: valueOf!
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+6: valueOf!
+Date.UTC (0.5 (object))
+6: valueOf!
+undefined
+6: valueOf!
+Date.UTC (0.5 (object), 5, 25, 13, 50, 50, 300)
+6: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+7: valueOf!
+Date.UTC (-1 (object))
+7: valueOf!
+undefined
+7: valueOf!
+Date.UTC (-1 (object), 5, 25, 13, 50, 50, 300)
+7: valueOf!
+-2225354949700
+-2225354949700 -2225354949700
+1899-5-25 13:50:50.300
+8: valueOf!
+Date.UTC (-0.5 (object))
+8: valueOf!
+undefined
+8: valueOf!
+Date.UTC (-0.5 (object), 5, 25, 13, 50, 50, 300)
+8: valueOf!
+-2225354949700
+-2225354949700 -2225354949700
+1899-5-25 13:50:50.300
+9: valueOf!
+Date.UTC (Infinity (object))
+9: valueOf!
+undefined
+9: valueOf!
+Date.UTC (Infinity (object), 5, 25, 13, 50, 50, 300)
+9: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+10: valueOf!
+Date.UTC (-Infinity (object))
+10: valueOf!
+undefined
+10: valueOf!
+Date.UTC (-Infinity (object), 5, 25, 13, 50, 50, 300)
+10: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+11: valueOf!
+Date.UTC (NaN (object))
+11: valueOf!
+undefined
+11: valueOf!
+Date.UTC (NaN (object), 5, 25, 13, 50, 50, 300)
+11: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+12: valueOf!
+Date.UTC ( (object))
+12: valueOf!
+undefined
+12: valueOf!
+Date.UTC ( (object), 5, 25, 13, 50, 50, 300)
+12: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+13: valueOf!
+Date.UTC (0 (object))
+13: valueOf!
+undefined
+13: valueOf!
+Date.UTC (0 (object), 5, 25, 13, 50, 50, 300)
+13: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+14: valueOf!
+Date.UTC (-0 (object))
+14: valueOf!
+undefined
+14: valueOf!
+Date.UTC (-0 (object), 5, 25, 13, 50, 50, 300)
+14: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+15: valueOf!
+Date.UTC (0.0 (object))
+15: valueOf!
+undefined
+15: valueOf!
+Date.UTC (0.0 (object), 5, 25, 13, 50, 50, 300)
+15: valueOf!
+-2193818949700
+-2193818949700 -2193818949700
+1900-5-25 13:50:50.300
+16: valueOf!
+Date.UTC (1 (object))
+16: valueOf!
+undefined
+16: valueOf!
+Date.UTC (1 (object), 5, 25, 13, 50, 50, 300)
+16: valueOf!
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+17: valueOf!
+Date.UTC (Hello World! (object))
+17: valueOf!
+undefined
+17: valueOf!
+Date.UTC (Hello World! (object), 5, 25, 13, 50, 50, 300)
+17: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+18: valueOf!
+Date.UTC (true (object))
+18: valueOf!
+undefined
+18: valueOf!
+Date.UTC (true (object), 5, 25, 13, 50, 50, 300)
+18: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+19: valueOf!
+Date.UTC (_level0 (object))
+19: valueOf!
+undefined
+19: valueOf!
+Date.UTC (_level0 (object), 5, 25, 13, 50, 50, 300)
+19: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+20: valueOf!
+Date.UTC (_level0 (object))
+20: valueOf!
+undefined
+20: valueOf!
+Date.UTC (_level0 (object), 5, 25, 13, 50, 50, 300)
+20: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+21: valueOf!
+21: toString!
+Date.UTC ([type Object] (object))
+21: valueOf!
+undefined
+21: valueOf!
+21: toString!
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+21: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+22: valueOf!
+22: toString!
+Date.UTC ([type Object] (object))
+22: valueOf!
+undefined
+22: valueOf!
+22: toString!
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+22: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+23: valueOf!
+23: toString!
+Date.UTC ([type Object] (object))
+23: valueOf!
+undefined
+23: valueOf!
+23: toString!
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+23: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+24: valueOf!
+24: toString!
+Date.UTC ([type Object] (object))
+24: valueOf!
+undefined
+24: valueOf!
+24: toString!
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+24: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+25: valueOf!
+25: toString!
+Date.UTC ([type Object] (object))
+25: valueOf!
+undefined
+25: valueOf!
+25: toString!
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+25: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+26: valueOf!
+26: toString!
+Date.UTC ([type Object] (object))
+26: valueOf!
+undefined
+26: valueOf!
+26: toString!
+Date.UTC ([type Object] (object), 5, 25, 13, 50, 50, 300)
+26: valueOf!
+-62151962949700
+-62151962949700 -62151962949700
+0-5-25 13:50:50.300
+Date.UTC (-0.6 (number))
+undefined
+Date.UTC (-0.6 (number), 5, 25, 13, 50, 50, 300)
+-2225354949700
+-2225354949700 -2225354949700
+1899-5-25 13:50:50.300
+Date.UTC (-0.4 (number))
+undefined
+Date.UTC (-0.4 (number), 5, 25, 13, 50, 50, 300)
+-2225354949700
+-2225354949700 -2225354949700
+1899-5-25 13:50:50.300
+Date.UTC (1.4 (number))
+undefined
+Date.UTC (1.4 (number), 5, 25, 13, 50, 50, 300)
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+Date.UTC (1.6 (number))
+undefined
+Date.UTC (1.6 (number), 5, 25, 13, 50, 50, 300)
+-2162282949700
+-2162282949700 -2162282949700
+1901-5-25 13:50:50.300
+Date.UTC (1983, 5 (number))
+423273600000
+Date.UTC (1983, 5 (number), 25, 13, 50, 50, 300)
+425397050300
+Date.UTC (1983, 0 (number))
+410227200000
+Date.UTC (1983, 0 (number), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, 11 (number))
+439084800000
+Date.UTC (1983, 11 (number), 25, 13, 50, 50, 300)
+441208250300
+Date.UTC (1983, 12 (number))
+441763200000
+Date.UTC (1983, 12 (number), 25, 13, 50, 50, 300)
+443886650300
+Date.UTC (1983, -1 (number))
+407548800000
+Date.UTC (1983, -1 (number), 25, 13, 50, 50, 300)
+409672250300
+Date.UTC (1983, 20 (number))
+462844800000
+Date.UTC (1983, 20 (number), 25, 13, 50, 50, 300)
+464968250300
+Date.UTC (1983, -20 (number))
+357523200000
+Date.UTC (1983, -20 (number), 25, 13, 50, 50, 300)
+359646650300
+Date.UTC (1983,  (undefined))
+undefined
+Date.UTC (1983,  (undefined), 25, 13, 50, 50, 300)
+undefined
+Date.UTC (1983, null (null))
+410227200000
+Date.UTC (1983, null (null), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, true (boolean))
+412905600000
+Date.UTC (1983, true (boolean), 25, 13, 50, 50, 300)
+415029050300
+Date.UTC (1983, false (boolean))
+410227200000
+Date.UTC (1983, false (boolean), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, 0 (number))
+410227200000
+Date.UTC (1983, 0 (number), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, 1 (number))
+412905600000
+Date.UTC (1983, 1 (number), 25, 13, 50, 50, 300)
+415029050300
+Date.UTC (1983, 0.5 (number))
+410227200000
+Date.UTC (1983, 0.5 (number), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, -1 (number))
+407548800000
+Date.UTC (1983, -1 (number), 25, 13, 50, 50, 300)
+409672250300
+Date.UTC (1983, -0.5 (number))
+410227200000
+Date.UTC (1983, -0.5 (number), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, Infinity (number))
+-62167219200000
+Date.UTC (1983, Infinity (number), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, -Infinity (number))
+-62167219200000
+Date.UTC (1983, -Infinity (number), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, NaN (number))
+-62167219200000
+Date.UTC (1983, NaN (number), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983,  (string))
+-62167219200000
+Date.UTC (1983,  (string), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, 0 (string))
+410227200000
+Date.UTC (1983, 0 (string), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, -0 (string))
+410227200000
+Date.UTC (1983, -0 (string), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, 0.0 (string))
+410227200000
+Date.UTC (1983, 0.0 (string), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, 1 (string))
+412905600000
+Date.UTC (1983, 1 (string), 25, 13, 50, 50, 300)
+415029050300
+Date.UTC (1983, Hello World! (string))
+-62167219200000
+Date.UTC (1983, Hello World! (string), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, true (string))
+-62167219200000
+Date.UTC (1983, true (string), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, _level0 (string))
+-62167219200000
+Date.UTC (1983, _level0 (string), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, _level0 (movieclip))
+-62167219200000
+Date.UTC (1983, _level0 (movieclip), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, [object Object] (object))
+-62167219200000
+Date.UTC (1983, [object Object] (object), 25, 13, 50, 50, 300)
+-62165095749700
+Date.UTC (1983, [type Function] (function))
+-62167219200000
+Date.UTC (1983, [type Function] (function), 25, 13, 50, 50, 300)
+-62165095749700
+valueOf called
+toString called
+Date.UTC (1983, [type Object] (object))
+valueOf called
+-62167219200000
+valueOf called
+toString called
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+valueOf called
+-62165095749700
+toString called with 
+Date.UTC (1983, [type Object] (object))
+-62167219200000
+toString called with 
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+-62165095749700
+valueOf called with 
+Date.UTC (1983, [object Object] (object))
+valueOf called with 
+-62167219200000
+valueOf called with 
+Date.UTC (1983, [object Object] (object), 25, 13, 50, 50, 300)
+valueOf called with 
+-62165095749700
+Date.UTC (1983,  (object))
+410227200000
+Date.UTC (1983,  (object), 25, 13, 50, 50, 300)
+412350650300
+0: valueOf!
+Date.UTC (1983,  (object))
+0: valueOf!
+410227200000
+0: valueOf!
+Date.UTC (1983,  (object), 25, 13, 50, 50, 300)
+0: valueOf!
+412350650300
+1: valueOf!
+Date.UTC (1983, null (object))
+1: valueOf!
+410227200000
+1: valueOf!
+Date.UTC (1983, null (object), 25, 13, 50, 50, 300)
+1: valueOf!
+412350650300
+2: valueOf!
+Date.UTC (1983, true (object))
+2: valueOf!
+412905600000
+2: valueOf!
+Date.UTC (1983, true (object), 25, 13, 50, 50, 300)
+2: valueOf!
+415029050300
+3: valueOf!
+Date.UTC (1983, false (object))
+3: valueOf!
+410227200000
+3: valueOf!
+Date.UTC (1983, false (object), 25, 13, 50, 50, 300)
+3: valueOf!
+412350650300
+4: valueOf!
+Date.UTC (1983, 0 (object))
+4: valueOf!
+410227200000
+4: valueOf!
+Date.UTC (1983, 0 (object), 25, 13, 50, 50, 300)
+4: valueOf!
+412350650300
+5: valueOf!
+Date.UTC (1983, 1 (object))
+5: valueOf!
+412905600000
+5: valueOf!
+Date.UTC (1983, 1 (object), 25, 13, 50, 50, 300)
+5: valueOf!
+415029050300
+6: valueOf!
+Date.UTC (1983, 0.5 (object))
+6: valueOf!
+410227200000
+6: valueOf!
+Date.UTC (1983, 0.5 (object), 25, 13, 50, 50, 300)
+6: valueOf!
+412350650300
+7: valueOf!
+Date.UTC (1983, -1 (object))
+7: valueOf!
+407548800000
+7: valueOf!
+Date.UTC (1983, -1 (object), 25, 13, 50, 50, 300)
+7: valueOf!
+409672250300
+8: valueOf!
+Date.UTC (1983, -0.5 (object))
+8: valueOf!
+410227200000
+8: valueOf!
+Date.UTC (1983, -0.5 (object), 25, 13, 50, 50, 300)
+8: valueOf!
+412350650300
+9: valueOf!
+Date.UTC (1983, Infinity (object))
+9: valueOf!
+-62167219200000
+9: valueOf!
+Date.UTC (1983, Infinity (object), 25, 13, 50, 50, 300)
+9: valueOf!
+-62165095749700
+10: valueOf!
+Date.UTC (1983, -Infinity (object))
+10: valueOf!
+-62167219200000
+10: valueOf!
+Date.UTC (1983, -Infinity (object), 25, 13, 50, 50, 300)
+10: valueOf!
+-62165095749700
+11: valueOf!
+Date.UTC (1983, NaN (object))
+11: valueOf!
+-62167219200000
+11: valueOf!
+Date.UTC (1983, NaN (object), 25, 13, 50, 50, 300)
+11: valueOf!
+-62165095749700
+12: valueOf!
+Date.UTC (1983,  (object))
+12: valueOf!
+-62167219200000
+12: valueOf!
+Date.UTC (1983,  (object), 25, 13, 50, 50, 300)
+12: valueOf!
+-62165095749700
+13: valueOf!
+Date.UTC (1983, 0 (object))
+13: valueOf!
+410227200000
+13: valueOf!
+Date.UTC (1983, 0 (object), 25, 13, 50, 50, 300)
+13: valueOf!
+412350650300
+14: valueOf!
+Date.UTC (1983, -0 (object))
+14: valueOf!
+410227200000
+14: valueOf!
+Date.UTC (1983, -0 (object), 25, 13, 50, 50, 300)
+14: valueOf!
+412350650300
+15: valueOf!
+Date.UTC (1983, 0.0 (object))
+15: valueOf!
+410227200000
+15: valueOf!
+Date.UTC (1983, 0.0 (object), 25, 13, 50, 50, 300)
+15: valueOf!
+412350650300
+16: valueOf!
+Date.UTC (1983, 1 (object))
+16: valueOf!
+412905600000
+16: valueOf!
+Date.UTC (1983, 1 (object), 25, 13, 50, 50, 300)
+16: valueOf!
+415029050300
+17: valueOf!
+Date.UTC (1983, Hello World! (object))
+17: valueOf!
+-62167219200000
+17: valueOf!
+Date.UTC (1983, Hello World! (object), 25, 13, 50, 50, 300)
+17: valueOf!
+-62165095749700
+18: valueOf!
+Date.UTC (1983, true (object))
+18: valueOf!
+-62167219200000
+18: valueOf!
+Date.UTC (1983, true (object), 25, 13, 50, 50, 300)
+18: valueOf!
+-62165095749700
+19: valueOf!
+Date.UTC (1983, _level0 (object))
+19: valueOf!
+-62167219200000
+19: valueOf!
+Date.UTC (1983, _level0 (object), 25, 13, 50, 50, 300)
+19: valueOf!
+-62165095749700
+20: valueOf!
+Date.UTC (1983, _level0 (object))
+20: valueOf!
+-62167219200000
+20: valueOf!
+Date.UTC (1983, _level0 (object), 25, 13, 50, 50, 300)
+20: valueOf!
+-62165095749700
+21: valueOf!
+21: toString!
+Date.UTC (1983, [type Object] (object))
+21: valueOf!
+-62167219200000
+21: valueOf!
+21: toString!
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+21: valueOf!
+-62165095749700
+22: valueOf!
+22: toString!
+Date.UTC (1983, [type Object] (object))
+22: valueOf!
+-62167219200000
+22: valueOf!
+22: toString!
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+22: valueOf!
+-62165095749700
+23: valueOf!
+23: toString!
+Date.UTC (1983, [type Object] (object))
+23: valueOf!
+-62167219200000
+23: valueOf!
+23: toString!
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+23: valueOf!
+-62165095749700
+24: valueOf!
+24: toString!
+Date.UTC (1983, [type Object] (object))
+24: valueOf!
+-62167219200000
+24: valueOf!
+24: toString!
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+24: valueOf!
+-62165095749700
+25: valueOf!
+25: toString!
+Date.UTC (1983, [type Object] (object))
+25: valueOf!
+-62167219200000
+25: valueOf!
+25: toString!
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+25: valueOf!
+-62165095749700
+26: valueOf!
+26: toString!
+Date.UTC (1983, [type Object] (object))
+26: valueOf!
+-62167219200000
+26: valueOf!
+26: toString!
+Date.UTC (1983, [type Object] (object), 25, 13, 50, 50, 300)
+26: valueOf!
+-62165095749700
+Date.UTC (1983, -0.6 (number))
+410227200000
+Date.UTC (1983, -0.6 (number), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, -0.4 (number))
+410227200000
+Date.UTC (1983, -0.4 (number), 25, 13, 50, 50, 300)
+412350650300
+Date.UTC (1983, 1.4 (number))
+412905600000
+Date.UTC (1983, 1.4 (number), 25, 13, 50, 50, 300)
+415029050300
+Date.UTC (1983, 1.6 (number))
+412905600000
+Date.UTC (1983, 1.6 (number), 25, 13, 50, 50, 300)
+415029050300
+Date.UTC (1983, 5, 25 (number))
+425347200000
+Date.UTC (1983, 5, 25 (number), 13, 50, 50, 300)
+425397050300
+Date.UTC (1983, 5, 1 (number))
+423273600000
+Date.UTC (1983, 5, 1 (number), 13, 50, 50, 300)
+423323450300
+Date.UTC (1983, 5, 10 (number))
+424051200000
+Date.UTC (1983, 5, 10 (number), 13, 50, 50, 300)
+424101050300
+Date.UTC (1983, 5, 29 (number))
+425692800000
+Date.UTC (1983, 5, 29 (number), 13, 50, 50, 300)
+425742650300
+Date.UTC (1983, 5, 30 (number))
+425779200000
+Date.UTC (1983, 5, 30 (number), 13, 50, 50, 300)
+425829050300
+Date.UTC (1983, 5, 31 (number))
+425865600000
+Date.UTC (1983, 5, 31 (number), 13, 50, 50, 300)
+425915450300
+Date.UTC (1983, 5, 32 (number))
+425952000000
+Date.UTC (1983, 5, 32 (number), 13, 50, 50, 300)
+426001850300
+Date.UTC (1983, 5, 0 (number))
+423187200000
+Date.UTC (1983, 5, 0 (number), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, -1 (number))
+423100800000
+Date.UTC (1983, 5, -1 (number), 13, 50, 50, 300)
+423150650300
+Date.UTC (1983, 5, 200 (number))
+440467200000
+Date.UTC (1983, 5, 200 (number), 13, 50, 50, 300)
+440517050300
+Date.UTC (1983, 5, -20 (number))
+421459200000
+Date.UTC (1983, 5, -20 (number), 13, 50, 50, 300)
+421509050300
+Date.UTC (1983, 5,  (undefined))
+423273600000
+Date.UTC (1983, 5,  (undefined), 13, 50, 50, 300)
+423273600000
+Date.UTC (1983, 5, null (null))
+423187200000
+Date.UTC (1983, 5, null (null), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, true (boolean))
+423273600000
+Date.UTC (1983, 5, true (boolean), 13, 50, 50, 300)
+423323450300
+Date.UTC (1983, 5, false (boolean))
+423187200000
+Date.UTC (1983, 5, false (boolean), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, 0 (number))
+423187200000
+Date.UTC (1983, 5, 0 (number), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, 1 (number))
+423273600000
+Date.UTC (1983, 5, 1 (number), 13, 50, 50, 300)
+423323450300
+Date.UTC (1983, 5, 0.5 (number))
+423187200000
+Date.UTC (1983, 5, 0.5 (number), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, -1 (number))
+423100800000
+Date.UTC (1983, 5, -1 (number), 13, 50, 50, 300)
+423150650300
+Date.UTC (1983, 5, -0.5 (number))
+423187200000
+Date.UTC (1983, 5, -0.5 (number), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, Infinity (number))
+Infinity
+Date.UTC (1983, 5, Infinity (number), 13, 50, 50, 300)
+Infinity
+Date.UTC (1983, 5, -Infinity (number))
+-Infinity
+Date.UTC (1983, 5, -Infinity (number), 13, 50, 50, 300)
+-Infinity
+Date.UTC (1983, 5, NaN (number))
+NaN
+Date.UTC (1983, 5, NaN (number), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5,  (string))
+NaN
+Date.UTC (1983, 5,  (string), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 0 (string))
+423187200000
+Date.UTC (1983, 5, 0 (string), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, -0 (string))
+423187200000
+Date.UTC (1983, 5, -0 (string), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, 0.0 (string))
+423187200000
+Date.UTC (1983, 5, 0.0 (string), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, 1 (string))
+423273600000
+Date.UTC (1983, 5, 1 (string), 13, 50, 50, 300)
+423323450300
+Date.UTC (1983, 5, Hello World! (string))
+NaN
+Date.UTC (1983, 5, Hello World! (string), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5, true (string))
+NaN
+Date.UTC (1983, 5, true (string), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5, _level0 (string))
+NaN
+Date.UTC (1983, 5, _level0 (string), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5, _level0 (movieclip))
+NaN
+Date.UTC (1983, 5, _level0 (movieclip), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5, [object Object] (object))
+NaN
+Date.UTC (1983, 5, [object Object] (object), 13, 50, 50, 300)
+NaN
+Date.UTC (1983, 5, [type Function] (function))
+NaN
+Date.UTC (1983, 5, [type Function] (function), 13, 50, 50, 300)
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, [type Object] (object))
+valueOf called
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+valueOf called
+NaN
+toString called with 
+Date.UTC (1983, 5, [type Object] (object))
+NaN
+toString called with 
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+NaN
+valueOf called with 
+Date.UTC (1983, 5, [object Object] (object))
+valueOf called with 
+NaN
+valueOf called with 
+Date.UTC (1983, 5, [object Object] (object), 13, 50, 50, 300)
+valueOf called with 
+NaN
+Date.UTC (1983, 5,  (object))
+423187200000
+Date.UTC (1983, 5,  (object), 13, 50, 50, 300)
+423237050300
+0: valueOf!
+Date.UTC (1983, 5,  (object))
+0: valueOf!
+423187200000
+0: valueOf!
+Date.UTC (1983, 5,  (object), 13, 50, 50, 300)
+0: valueOf!
+423237050300
+1: valueOf!
+Date.UTC (1983, 5, null (object))
+1: valueOf!
+423187200000
+1: valueOf!
+Date.UTC (1983, 5, null (object), 13, 50, 50, 300)
+1: valueOf!
+423237050300
+2: valueOf!
+Date.UTC (1983, 5, true (object))
+2: valueOf!
+423273600000
+2: valueOf!
+Date.UTC (1983, 5, true (object), 13, 50, 50, 300)
+2: valueOf!
+423323450300
+3: valueOf!
+Date.UTC (1983, 5, false (object))
+3: valueOf!
+423187200000
+3: valueOf!
+Date.UTC (1983, 5, false (object), 13, 50, 50, 300)
+3: valueOf!
+423237050300
+4: valueOf!
+Date.UTC (1983, 5, 0 (object))
+4: valueOf!
+423187200000
+4: valueOf!
+Date.UTC (1983, 5, 0 (object), 13, 50, 50, 300)
+4: valueOf!
+423237050300
+5: valueOf!
+Date.UTC (1983, 5, 1 (object))
+5: valueOf!
+423273600000
+5: valueOf!
+Date.UTC (1983, 5, 1 (object), 13, 50, 50, 300)
+5: valueOf!
+423323450300
+6: valueOf!
+Date.UTC (1983, 5, 0.5 (object))
+6: valueOf!
+423187200000
+6: valueOf!
+Date.UTC (1983, 5, 0.5 (object), 13, 50, 50, 300)
+6: valueOf!
+423237050300
+7: valueOf!
+Date.UTC (1983, 5, -1 (object))
+7: valueOf!
+423100800000
+7: valueOf!
+Date.UTC (1983, 5, -1 (object), 13, 50, 50, 300)
+7: valueOf!
+423150650300
+8: valueOf!
+Date.UTC (1983, 5, -0.5 (object))
+8: valueOf!
+423187200000
+8: valueOf!
+Date.UTC (1983, 5, -0.5 (object), 13, 50, 50, 300)
+8: valueOf!
+423237050300
+9: valueOf!
+Date.UTC (1983, 5, Infinity (object))
+9: valueOf!
+Infinity
+9: valueOf!
+Date.UTC (1983, 5, Infinity (object), 13, 50, 50, 300)
+9: valueOf!
+Infinity
+10: valueOf!
+Date.UTC (1983, 5, -Infinity (object))
+10: valueOf!
+-Infinity
+10: valueOf!
+Date.UTC (1983, 5, -Infinity (object), 13, 50, 50, 300)
+10: valueOf!
+-Infinity
+11: valueOf!
+Date.UTC (1983, 5, NaN (object))
+11: valueOf!
+NaN
+11: valueOf!
+Date.UTC (1983, 5, NaN (object), 13, 50, 50, 300)
+11: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5,  (object))
+12: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5,  (object), 13, 50, 50, 300)
+12: valueOf!
+NaN
+13: valueOf!
+Date.UTC (1983, 5, 0 (object))
+13: valueOf!
+423187200000
+13: valueOf!
+Date.UTC (1983, 5, 0 (object), 13, 50, 50, 300)
+13: valueOf!
+423237050300
+14: valueOf!
+Date.UTC (1983, 5, -0 (object))
+14: valueOf!
+423187200000
+14: valueOf!
+Date.UTC (1983, 5, -0 (object), 13, 50, 50, 300)
+14: valueOf!
+423237050300
+15: valueOf!
+Date.UTC (1983, 5, 0.0 (object))
+15: valueOf!
+423187200000
+15: valueOf!
+Date.UTC (1983, 5, 0.0 (object), 13, 50, 50, 300)
+15: valueOf!
+423237050300
+16: valueOf!
+Date.UTC (1983, 5, 1 (object))
+16: valueOf!
+423273600000
+16: valueOf!
+Date.UTC (1983, 5, 1 (object), 13, 50, 50, 300)
+16: valueOf!
+423323450300
+17: valueOf!
+Date.UTC (1983, 5, Hello World! (object))
+17: valueOf!
+NaN
+17: valueOf!
+Date.UTC (1983, 5, Hello World! (object), 13, 50, 50, 300)
+17: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, true (object))
+18: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, true (object), 13, 50, 50, 300)
+18: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, _level0 (object))
+19: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, _level0 (object), 13, 50, 50, 300)
+19: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, _level0 (object))
+20: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, _level0 (object), 13, 50, 50, 300)
+20: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, [type Object] (object))
+21: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+21: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, [type Object] (object))
+22: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+22: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, [type Object] (object))
+23: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+23: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, [type Object] (object))
+24: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+24: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, [type Object] (object))
+25: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+25: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, [type Object] (object))
+26: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, [type Object] (object), 13, 50, 50, 300)
+26: valueOf!
+NaN
+Date.UTC (1983, 5, -0.6 (number))
+423187200000
+Date.UTC (1983, 5, -0.6 (number), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, -0.4 (number))
+423187200000
+Date.UTC (1983, 5, -0.4 (number), 13, 50, 50, 300)
+423237050300
+Date.UTC (1983, 5, 1.4 (number))
+423273600000
+Date.UTC (1983, 5, 1.4 (number), 13, 50, 50, 300)
+423323450300
+Date.UTC (1983, 5, 1.6 (number))
+423273600000
+Date.UTC (1983, 5, 1.6 (number), 13, 50, 50, 300)
+423323450300
+Date.UTC (1983, 5, 25, 13 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13 (number), 50, 50, 300)
+425397050300
+Date.UTC (1983, 5, 25, 0 (number))
+425347200000
+Date.UTC (1983, 5, 25, 0 (number), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, 5 (number))
+425365200000
+Date.UTC (1983, 5, 25, 5 (number), 50, 50, 300)
+425368250300
+Date.UTC (1983, 5, 25, 19 (number))
+425415600000
+Date.UTC (1983, 5, 25, 19 (number), 50, 50, 300)
+425418650300
+Date.UTC (1983, 5, 25, 23 (number))
+425430000000
+Date.UTC (1983, 5, 25, 23 (number), 50, 50, 300)
+425433050300
+Date.UTC (1983, 5, 25, -1 (number))
+425343600000
+Date.UTC (1983, 5, 25, -1 (number), 50, 50, 300)
+425346650300
+Date.UTC (1983, 5, 25, 24 (number))
+425433600000
+Date.UTC (1983, 5, 25, 24 (number), 50, 50, 300)
+425436650300
+Date.UTC (1983, 5, 25, 30 (number))
+425455200000
+Date.UTC (1983, 5, 25, 30 (number), 50, 50, 300)
+425458250300
+Date.UTC (1983, 5, 25, -20 (number))
+425275200000
+Date.UTC (1983, 5, 25, -20 (number), 50, 50, 300)
+425278250300
+Date.UTC (1983, 5, 25,  (undefined))
+425347200000
+Date.UTC (1983, 5, 25,  (undefined), 50, 50, 300)
+425347200000
+Date.UTC (1983, 5, 25, null (null))
+425347200000
+Date.UTC (1983, 5, 25, null (null), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, true (boolean))
+425350800000
+Date.UTC (1983, 5, 25, true (boolean), 50, 50, 300)
+425353850300
+Date.UTC (1983, 5, 25, false (boolean))
+425347200000
+Date.UTC (1983, 5, 25, false (boolean), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, 0 (number))
+425347200000
+Date.UTC (1983, 5, 25, 0 (number), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, 1 (number))
+425350800000
+Date.UTC (1983, 5, 25, 1 (number), 50, 50, 300)
+425353850300
+Date.UTC (1983, 5, 25, 0.5 (number))
+425347200000
+Date.UTC (1983, 5, 25, 0.5 (number), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, -1 (number))
+425343600000
+Date.UTC (1983, 5, 25, -1 (number), 50, 50, 300)
+425346650300
+Date.UTC (1983, 5, 25, -0.5 (number))
+425347200000
+Date.UTC (1983, 5, 25, -0.5 (number), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, Infinity (number))
+Infinity
+Date.UTC (1983, 5, 25, Infinity (number), 50, 50, 300)
+Infinity
+Date.UTC (1983, 5, 25, -Infinity (number))
+-Infinity
+Date.UTC (1983, 5, 25, -Infinity (number), 50, 50, 300)
+-Infinity
+Date.UTC (1983, 5, 25, NaN (number))
+NaN
+Date.UTC (1983, 5, 25, NaN (number), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25,  (string))
+NaN
+Date.UTC (1983, 5, 25,  (string), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 0 (string))
+425347200000
+Date.UTC (1983, 5, 25, 0 (string), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, -0 (string))
+425347200000
+Date.UTC (1983, 5, 25, -0 (string), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, 0.0 (string))
+425347200000
+Date.UTC (1983, 5, 25, 0.0 (string), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, 1 (string))
+425350800000
+Date.UTC (1983, 5, 25, 1 (string), 50, 50, 300)
+425353850300
+Date.UTC (1983, 5, 25, Hello World! (string))
+NaN
+Date.UTC (1983, 5, 25, Hello World! (string), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25, true (string))
+NaN
+Date.UTC (1983, 5, 25, true (string), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25, _level0 (string))
+NaN
+Date.UTC (1983, 5, 25, _level0 (string), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25, _level0 (movieclip))
+NaN
+Date.UTC (1983, 5, 25, _level0 (movieclip), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25, [object Object] (object))
+NaN
+Date.UTC (1983, 5, 25, [object Object] (object), 50, 50, 300)
+NaN
+Date.UTC (1983, 5, 25, [type Function] (function))
+NaN
+Date.UTC (1983, 5, 25, [type Function] (function), 50, 50, 300)
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, [type Object] (object))
+valueOf called
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+valueOf called
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, [type Object] (object))
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, [object Object] (object))
+valueOf called with 
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, [object Object] (object), 50, 50, 300)
+valueOf called with 
+NaN
+Date.UTC (1983, 5, 25,  (object))
+425347200000
+Date.UTC (1983, 5, 25,  (object), 50, 50, 300)
+425350250300
+0: valueOf!
+Date.UTC (1983, 5, 25,  (object))
+0: valueOf!
+425347200000
+0: valueOf!
+Date.UTC (1983, 5, 25,  (object), 50, 50, 300)
+0: valueOf!
+425350250300
+1: valueOf!
+Date.UTC (1983, 5, 25, null (object))
+1: valueOf!
+425347200000
+1: valueOf!
+Date.UTC (1983, 5, 25, null (object), 50, 50, 300)
+1: valueOf!
+425350250300
+2: valueOf!
+Date.UTC (1983, 5, 25, true (object))
+2: valueOf!
+425350800000
+2: valueOf!
+Date.UTC (1983, 5, 25, true (object), 50, 50, 300)
+2: valueOf!
+425353850300
+3: valueOf!
+Date.UTC (1983, 5, 25, false (object))
+3: valueOf!
+425347200000
+3: valueOf!
+Date.UTC (1983, 5, 25, false (object), 50, 50, 300)
+3: valueOf!
+425350250300
+4: valueOf!
+Date.UTC (1983, 5, 25, 0 (object))
+4: valueOf!
+425347200000
+4: valueOf!
+Date.UTC (1983, 5, 25, 0 (object), 50, 50, 300)
+4: valueOf!
+425350250300
+5: valueOf!
+Date.UTC (1983, 5, 25, 1 (object))
+5: valueOf!
+425350800000
+5: valueOf!
+Date.UTC (1983, 5, 25, 1 (object), 50, 50, 300)
+5: valueOf!
+425353850300
+6: valueOf!
+Date.UTC (1983, 5, 25, 0.5 (object))
+6: valueOf!
+425347200000
+6: valueOf!
+Date.UTC (1983, 5, 25, 0.5 (object), 50, 50, 300)
+6: valueOf!
+425350250300
+7: valueOf!
+Date.UTC (1983, 5, 25, -1 (object))
+7: valueOf!
+425343600000
+7: valueOf!
+Date.UTC (1983, 5, 25, -1 (object), 50, 50, 300)
+7: valueOf!
+425346650300
+8: valueOf!
+Date.UTC (1983, 5, 25, -0.5 (object))
+8: valueOf!
+425347200000
+8: valueOf!
+Date.UTC (1983, 5, 25, -0.5 (object), 50, 50, 300)
+8: valueOf!
+425350250300
+9: valueOf!
+Date.UTC (1983, 5, 25, Infinity (object))
+9: valueOf!
+Infinity
+9: valueOf!
+Date.UTC (1983, 5, 25, Infinity (object), 50, 50, 300)
+9: valueOf!
+Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, -Infinity (object))
+10: valueOf!
+-Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, -Infinity (object), 50, 50, 300)
+10: valueOf!
+-Infinity
+11: valueOf!
+Date.UTC (1983, 5, 25, NaN (object))
+11: valueOf!
+NaN
+11: valueOf!
+Date.UTC (1983, 5, 25, NaN (object), 50, 50, 300)
+11: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25,  (object))
+12: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25,  (object), 50, 50, 300)
+12: valueOf!
+NaN
+13: valueOf!
+Date.UTC (1983, 5, 25, 0 (object))
+13: valueOf!
+425347200000
+13: valueOf!
+Date.UTC (1983, 5, 25, 0 (object), 50, 50, 300)
+13: valueOf!
+425350250300
+14: valueOf!
+Date.UTC (1983, 5, 25, -0 (object))
+14: valueOf!
+425347200000
+14: valueOf!
+Date.UTC (1983, 5, 25, -0 (object), 50, 50, 300)
+14: valueOf!
+425350250300
+15: valueOf!
+Date.UTC (1983, 5, 25, 0.0 (object))
+15: valueOf!
+425347200000
+15: valueOf!
+Date.UTC (1983, 5, 25, 0.0 (object), 50, 50, 300)
+15: valueOf!
+425350250300
+16: valueOf!
+Date.UTC (1983, 5, 25, 1 (object))
+16: valueOf!
+425350800000
+16: valueOf!
+Date.UTC (1983, 5, 25, 1 (object), 50, 50, 300)
+16: valueOf!
+425353850300
+17: valueOf!
+Date.UTC (1983, 5, 25, Hello World! (object))
+17: valueOf!
+NaN
+17: valueOf!
+Date.UTC (1983, 5, 25, Hello World! (object), 50, 50, 300)
+17: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, true (object))
+18: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, true (object), 50, 50, 300)
+18: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, _level0 (object))
+19: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, _level0 (object), 50, 50, 300)
+19: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, _level0 (object))
+20: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, _level0 (object), 50, 50, 300)
+20: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, [type Object] (object))
+21: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+21: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, [type Object] (object))
+22: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+22: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, [type Object] (object))
+23: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+23: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, [type Object] (object))
+24: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+24: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, [type Object] (object))
+25: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+25: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, [type Object] (object))
+26: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, [type Object] (object), 50, 50, 300)
+26: valueOf!
+NaN
+Date.UTC (1983, 5, 25, -0.6 (number))
+425347200000
+Date.UTC (1983, 5, 25, -0.6 (number), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, -0.4 (number))
+425347200000
+Date.UTC (1983, 5, 25, -0.4 (number), 50, 50, 300)
+425350250300
+Date.UTC (1983, 5, 25, 1.4 (number))
+425350800000
+Date.UTC (1983, 5, 25, 1.4 (number), 50, 50, 300)
+425353850300
+Date.UTC (1983, 5, 25, 1.6 (number))
+425350800000
+Date.UTC (1983, 5, 25, 1.6 (number), 50, 50, 300)
+425353850300
+Date.UTC (1983, 5, 25, 13, 50 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50 (number), 50, 300)
+425397050300
+Date.UTC (1983, 5, 25, 13, 0 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13, 0 (number), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, 10 (number))
+425394600000
+Date.UTC (1983, 5, 25, 13, 10 (number), 50, 300)
+425394650300
+Date.UTC (1983, 5, 25, 13, 48 (number))
+425396880000
+Date.UTC (1983, 5, 25, 13, 48 (number), 50, 300)
+425396930300
+Date.UTC (1983, 5, 25, 13, 59 (number))
+425397540000
+Date.UTC (1983, 5, 25, 13, 59 (number), 50, 300)
+425397590300
+Date.UTC (1983, 5, 25, 13, -1 (number))
+425393940000
+Date.UTC (1983, 5, 25, 13, -1 (number), 50, 300)
+425393990300
+Date.UTC (1983, 5, 25, 13, 60 (number))
+425397600000
+Date.UTC (1983, 5, 25, 13, 60 (number), 50, 300)
+425397650300
+Date.UTC (1983, 5, 25, 13, -20 (number))
+425392800000
+Date.UTC (1983, 5, 25, 13, -20 (number), 50, 300)
+425392850300
+Date.UTC (1983, 5, 25, 13, 200 (number))
+425406000000
+Date.UTC (1983, 5, 25, 13, 200 (number), 50, 300)
+425406050300
+Date.UTC (1983, 5, 25, 13,  (undefined))
+425394000000
+Date.UTC (1983, 5, 25, 13,  (undefined), 50, 300)
+425394000000
+Date.UTC (1983, 5, 25, 13, null (null))
+425394000000
+Date.UTC (1983, 5, 25, 13, null (null), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, true (boolean))
+425394060000
+Date.UTC (1983, 5, 25, 13, true (boolean), 50, 300)
+425394110300
+Date.UTC (1983, 5, 25, 13, false (boolean))
+425394000000
+Date.UTC (1983, 5, 25, 13, false (boolean), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, 0 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13, 0 (number), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, 1 (number))
+425394060000
+Date.UTC (1983, 5, 25, 13, 1 (number), 50, 300)
+425394110300
+Date.UTC (1983, 5, 25, 13, 0.5 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13, 0.5 (number), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, -1 (number))
+425393940000
+Date.UTC (1983, 5, 25, 13, -1 (number), 50, 300)
+425393990300
+Date.UTC (1983, 5, 25, 13, -0.5 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13, -0.5 (number), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, Infinity (number))
+Infinity
+Date.UTC (1983, 5, 25, 13, Infinity (number), 50, 300)
+Infinity
+Date.UTC (1983, 5, 25, 13, -Infinity (number))
+-Infinity
+Date.UTC (1983, 5, 25, 13, -Infinity (number), 50, 300)
+-Infinity
+Date.UTC (1983, 5, 25, 13, NaN (number))
+NaN
+Date.UTC (1983, 5, 25, 13, NaN (number), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13,  (string))
+NaN
+Date.UTC (1983, 5, 25, 13,  (string), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 0 (string))
+425394000000
+Date.UTC (1983, 5, 25, 13, 0 (string), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, -0 (string))
+425394000000
+Date.UTC (1983, 5, 25, 13, -0 (string), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, 0.0 (string))
+425394000000
+Date.UTC (1983, 5, 25, 13, 0.0 (string), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, 1 (string))
+425394060000
+Date.UTC (1983, 5, 25, 13, 1 (string), 50, 300)
+425394110300
+Date.UTC (1983, 5, 25, 13, Hello World! (string))
+NaN
+Date.UTC (1983, 5, 25, 13, Hello World! (string), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13, true (string))
+NaN
+Date.UTC (1983, 5, 25, 13, true (string), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13, _level0 (string))
+NaN
+Date.UTC (1983, 5, 25, 13, _level0 (string), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13, _level0 (movieclip))
+NaN
+Date.UTC (1983, 5, 25, 13, _level0 (movieclip), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13, [object Object] (object))
+NaN
+Date.UTC (1983, 5, 25, 13, [object Object] (object), 50, 300)
+NaN
+Date.UTC (1983, 5, 25, 13, [type Function] (function))
+NaN
+Date.UTC (1983, 5, 25, 13, [type Function] (function), 50, 300)
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+valueOf called
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+valueOf called
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, 13, [object Object] (object))
+valueOf called with 
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, 13, [object Object] (object), 50, 300)
+valueOf called with 
+NaN
+Date.UTC (1983, 5, 25, 13,  (object))
+425394000000
+Date.UTC (1983, 5, 25, 13,  (object), 50, 300)
+425394050300
+0: valueOf!
+Date.UTC (1983, 5, 25, 13,  (object))
+0: valueOf!
+425394000000
+0: valueOf!
+Date.UTC (1983, 5, 25, 13,  (object), 50, 300)
+0: valueOf!
+425394050300
+1: valueOf!
+Date.UTC (1983, 5, 25, 13, null (object))
+1: valueOf!
+425394000000
+1: valueOf!
+Date.UTC (1983, 5, 25, 13, null (object), 50, 300)
+1: valueOf!
+425394050300
+2: valueOf!
+Date.UTC (1983, 5, 25, 13, true (object))
+2: valueOf!
+425394060000
+2: valueOf!
+Date.UTC (1983, 5, 25, 13, true (object), 50, 300)
+2: valueOf!
+425394110300
+3: valueOf!
+Date.UTC (1983, 5, 25, 13, false (object))
+3: valueOf!
+425394000000
+3: valueOf!
+Date.UTC (1983, 5, 25, 13, false (object), 50, 300)
+3: valueOf!
+425394050300
+4: valueOf!
+Date.UTC (1983, 5, 25, 13, 0 (object))
+4: valueOf!
+425394000000
+4: valueOf!
+Date.UTC (1983, 5, 25, 13, 0 (object), 50, 300)
+4: valueOf!
+425394050300
+5: valueOf!
+Date.UTC (1983, 5, 25, 13, 1 (object))
+5: valueOf!
+425394060000
+5: valueOf!
+Date.UTC (1983, 5, 25, 13, 1 (object), 50, 300)
+5: valueOf!
+425394110300
+6: valueOf!
+Date.UTC (1983, 5, 25, 13, 0.5 (object))
+6: valueOf!
+425394000000
+6: valueOf!
+Date.UTC (1983, 5, 25, 13, 0.5 (object), 50, 300)
+6: valueOf!
+425394050300
+7: valueOf!
+Date.UTC (1983, 5, 25, 13, -1 (object))
+7: valueOf!
+425393940000
+7: valueOf!
+Date.UTC (1983, 5, 25, 13, -1 (object), 50, 300)
+7: valueOf!
+425393990300
+8: valueOf!
+Date.UTC (1983, 5, 25, 13, -0.5 (object))
+8: valueOf!
+425394000000
+8: valueOf!
+Date.UTC (1983, 5, 25, 13, -0.5 (object), 50, 300)
+8: valueOf!
+425394050300
+9: valueOf!
+Date.UTC (1983, 5, 25, 13, Infinity (object))
+9: valueOf!
+Infinity
+9: valueOf!
+Date.UTC (1983, 5, 25, 13, Infinity (object), 50, 300)
+9: valueOf!
+Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, 13, -Infinity (object))
+10: valueOf!
+-Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, 13, -Infinity (object), 50, 300)
+10: valueOf!
+-Infinity
+11: valueOf!
+Date.UTC (1983, 5, 25, 13, NaN (object))
+11: valueOf!
+NaN
+11: valueOf!
+Date.UTC (1983, 5, 25, 13, NaN (object), 50, 300)
+11: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25, 13,  (object))
+12: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25, 13,  (object), 50, 300)
+12: valueOf!
+NaN
+13: valueOf!
+Date.UTC (1983, 5, 25, 13, 0 (object))
+13: valueOf!
+425394000000
+13: valueOf!
+Date.UTC (1983, 5, 25, 13, 0 (object), 50, 300)
+13: valueOf!
+425394050300
+14: valueOf!
+Date.UTC (1983, 5, 25, 13, -0 (object))
+14: valueOf!
+425394000000
+14: valueOf!
+Date.UTC (1983, 5, 25, 13, -0 (object), 50, 300)
+14: valueOf!
+425394050300
+15: valueOf!
+Date.UTC (1983, 5, 25, 13, 0.0 (object))
+15: valueOf!
+425394000000
+15: valueOf!
+Date.UTC (1983, 5, 25, 13, 0.0 (object), 50, 300)
+15: valueOf!
+425394050300
+16: valueOf!
+Date.UTC (1983, 5, 25, 13, 1 (object))
+16: valueOf!
+425394060000
+16: valueOf!
+Date.UTC (1983, 5, 25, 13, 1 (object), 50, 300)
+16: valueOf!
+425394110300
+17: valueOf!
+Date.UTC (1983, 5, 25, 13, Hello World! (object))
+17: valueOf!
+NaN
+17: valueOf!
+Date.UTC (1983, 5, 25, 13, Hello World! (object), 50, 300)
+17: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, 13, true (object))
+18: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, 13, true (object), 50, 300)
+18: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, 13, _level0 (object))
+19: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, 13, _level0 (object), 50, 300)
+19: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, 13, _level0 (object))
+20: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, 13, _level0 (object), 50, 300)
+20: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+21: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+21: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+22: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+22: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+23: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+23: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+24: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+24: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+25: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+25: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object))
+26: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, 13, [type Object] (object), 50, 300)
+26: valueOf!
+NaN
+Date.UTC (1983, 5, 25, 13, -0.6 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13, -0.6 (number), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, -0.4 (number))
+425394000000
+Date.UTC (1983, 5, 25, 13, -0.4 (number), 50, 300)
+425394050300
+Date.UTC (1983, 5, 25, 13, 1.4 (number))
+425394060000
+Date.UTC (1983, 5, 25, 13, 1.4 (number), 50, 300)
+425394110300
+Date.UTC (1983, 5, 25, 13, 1.6 (number))
+425394060000
+Date.UTC (1983, 5, 25, 13, 1.6 (number), 50, 300)
+425394110300
+Date.UTC (1983, 5, 25, 13, 50, 50 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50 (number), 300)
+425397050300
+Date.UTC (1983, 5, 25, 13, 50, 0 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, 0 (number), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, 10 (number))
+425397010000
+Date.UTC (1983, 5, 25, 13, 50, 10 (number), 300)
+425397010300
+Date.UTC (1983, 5, 25, 13, 50, 48 (number))
+425397048000
+Date.UTC (1983, 5, 25, 13, 50, 48 (number), 300)
+425397048300
+Date.UTC (1983, 5, 25, 13, 50, 59 (number))
+425397059000
+Date.UTC (1983, 5, 25, 13, 50, 59 (number), 300)
+425397059300
+Date.UTC (1983, 5, 25, 13, 50, -1 (number))
+425396999000
+Date.UTC (1983, 5, 25, 13, 50, -1 (number), 300)
+425396999300
+Date.UTC (1983, 5, 25, 13, 50, 60 (number))
+425397060000
+Date.UTC (1983, 5, 25, 13, 50, 60 (number), 300)
+425397060300
+Date.UTC (1983, 5, 25, 13, 50, -20 (number))
+425396980000
+Date.UTC (1983, 5, 25, 13, 50, -20 (number), 300)
+425396980300
+Date.UTC (1983, 5, 25, 13, 50, 200 (number))
+425397200000
+Date.UTC (1983, 5, 25, 13, 50, 200 (number), 300)
+425397200300
+Date.UTC (1983, 5, 25, 13, 50,  (undefined))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50,  (undefined), 300)
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, null (null))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, null (null), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, true (boolean))
+425397001000
+Date.UTC (1983, 5, 25, 13, 50, true (boolean), 300)
+425397001300
+Date.UTC (1983, 5, 25, 13, 50, false (boolean))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, false (boolean), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, 0 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, 0 (number), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, 1 (number))
+425397001000
+Date.UTC (1983, 5, 25, 13, 50, 1 (number), 300)
+425397001300
+Date.UTC (1983, 5, 25, 13, 50, 0.5 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, 0.5 (number), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, -1 (number))
+425396999000
+Date.UTC (1983, 5, 25, 13, 50, -1 (number), 300)
+425396999300
+Date.UTC (1983, 5, 25, 13, 50, -0.5 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, -0.5 (number), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, Infinity (number))
+Infinity
+Date.UTC (1983, 5, 25, 13, 50, Infinity (number), 300)
+Infinity
+Date.UTC (1983, 5, 25, 13, 50, -Infinity (number))
+-Infinity
+Date.UTC (1983, 5, 25, 13, 50, -Infinity (number), 300)
+-Infinity
+Date.UTC (1983, 5, 25, 13, 50, NaN (number))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, NaN (number), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50,  (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50,  (string), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 0 (string))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, 0 (string), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, -0 (string))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, -0 (string), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, 0.0 (string))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, 0.0 (string), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, 1 (string))
+425397001000
+Date.UTC (1983, 5, 25, 13, 50, 1 (string), 300)
+425397001300
+Date.UTC (1983, 5, 25, 13, 50, Hello World! (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, Hello World! (string), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50, true (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, true (string), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50, _level0 (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, _level0 (string), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50, _level0 (movieclip))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, _level0 (movieclip), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50, [object Object] (object))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, [object Object] (object), 300)
+NaN
+Date.UTC (1983, 5, 25, 13, 50, [type Function] (function))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, [type Function] (function), 300)
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+valueOf called
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+valueOf called
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, 13, 50, [object Object] (object))
+valueOf called with 
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, 13, 50, [object Object] (object), 300)
+valueOf called with 
+NaN
+Date.UTC (1983, 5, 25, 13, 50,  (object))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50,  (object), 300)
+425397000300
+0: valueOf!
+Date.UTC (1983, 5, 25, 13, 50,  (object))
+0: valueOf!
+425397000000
+0: valueOf!
+Date.UTC (1983, 5, 25, 13, 50,  (object), 300)
+0: valueOf!
+425397000300
+1: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, null (object))
+1: valueOf!
+425397000000
+1: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, null (object), 300)
+1: valueOf!
+425397000300
+2: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, true (object))
+2: valueOf!
+425397001000
+2: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, true (object), 300)
+2: valueOf!
+425397001300
+3: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, false (object))
+3: valueOf!
+425397000000
+3: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, false (object), 300)
+3: valueOf!
+425397000300
+4: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0 (object))
+4: valueOf!
+425397000000
+4: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0 (object), 300)
+4: valueOf!
+425397000300
+5: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 1 (object))
+5: valueOf!
+425397001000
+5: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 1 (object), 300)
+5: valueOf!
+425397001300
+6: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0.5 (object))
+6: valueOf!
+425397000000
+6: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0.5 (object), 300)
+6: valueOf!
+425397000300
+7: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -1 (object))
+7: valueOf!
+425396999000
+7: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -1 (object), 300)
+7: valueOf!
+425396999300
+8: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -0.5 (object))
+8: valueOf!
+425397000000
+8: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -0.5 (object), 300)
+8: valueOf!
+425397000300
+9: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, Infinity (object))
+9: valueOf!
+Infinity
+9: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, Infinity (object), 300)
+9: valueOf!
+Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -Infinity (object))
+10: valueOf!
+-Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -Infinity (object), 300)
+10: valueOf!
+-Infinity
+11: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, NaN (object))
+11: valueOf!
+NaN
+11: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, NaN (object), 300)
+11: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25, 13, 50,  (object))
+12: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25, 13, 50,  (object), 300)
+12: valueOf!
+NaN
+13: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0 (object))
+13: valueOf!
+425397000000
+13: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0 (object), 300)
+13: valueOf!
+425397000300
+14: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -0 (object))
+14: valueOf!
+425397000000
+14: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, -0 (object), 300)
+14: valueOf!
+425397000300
+15: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0.0 (object))
+15: valueOf!
+425397000000
+15: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 0.0 (object), 300)
+15: valueOf!
+425397000300
+16: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 1 (object))
+16: valueOf!
+425397001000
+16: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 1 (object), 300)
+16: valueOf!
+425397001300
+17: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, Hello World! (object))
+17: valueOf!
+NaN
+17: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, Hello World! (object), 300)
+17: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, true (object))
+18: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, true (object), 300)
+18: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, _level0 (object))
+19: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, _level0 (object), 300)
+19: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, _level0 (object))
+20: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, _level0 (object), 300)
+20: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+21: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+21: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+22: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+22: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+23: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+23: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+24: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+24: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+25: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+25: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object))
+26: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, 13, 50, [type Object] (object), 300)
+26: valueOf!
+NaN
+Date.UTC (1983, 5, 25, 13, 50, -0.6 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, -0.6 (number), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, -0.4 (number))
+425397000000
+Date.UTC (1983, 5, 25, 13, 50, -0.4 (number), 300)
+425397000300
+Date.UTC (1983, 5, 25, 13, 50, 1.4 (number))
+425397001000
+Date.UTC (1983, 5, 25, 13, 50, 1.4 (number), 300)
+425397001300
+Date.UTC (1983, 5, 25, 13, 50, 1.6 (number))
+425397001000
+Date.UTC (1983, 5, 25, 13, 50, 1.6 (number), 300)
+425397001300
+Date.UTC (1983, 5, 25, 13, 50, 50, 300 (number))
+425397050300
+Date.UTC (1983, 5, 25, 13, 50, 50, 0 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, 12 (number))
+425397050012
+Date.UTC (1983, 5, 25, 13, 50, 50, 123 (number))
+425397050123
+Date.UTC (1983, 5, 25, 13, 50, 50, 580 (number))
+425397050580
+Date.UTC (1983, 5, 25, 13, 50, 50, 900 (number))
+425397050900
+Date.UTC (1983, 5, 25, 13, 50, 50, 934 (number))
+425397050934
+Date.UTC (1983, 5, 25, 13, 50, 50, 999 (number))
+425397050999
+Date.UTC (1983, 5, 25, 13, 50, 50, -1 (number))
+425397049999
+Date.UTC (1983, 5, 25, 13, 50, 50, 1000 (number))
+425397051000
+Date.UTC (1983, 5, 25, 13, 50, 50, 3123 (number))
+425397053123
+Date.UTC (1983, 5, 25, 13, 50, 50, -213 (number))
+425397049787
+Date.UTC (1983, 5, 25, 13, 50, 50,  (undefined))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, null (null))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, true (boolean))
+425397050001
+Date.UTC (1983, 5, 25, 13, 50, 50, false (boolean))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, 0 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, 1 (number))
+425397050001
+Date.UTC (1983, 5, 25, 13, 50, 50, 0.5 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, -1 (number))
+425397049999
+Date.UTC (1983, 5, 25, 13, 50, 50, -0.5 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, Infinity (number))
+Infinity
+Date.UTC (1983, 5, 25, 13, 50, 50, -Infinity (number))
+-Infinity
+Date.UTC (1983, 5, 25, 13, 50, 50, NaN (number))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50,  (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, 0 (string))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, -0 (string))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, 0.0 (string))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, 1 (string))
+425397050001
+Date.UTC (1983, 5, 25, 13, 50, 50, Hello World! (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, true (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, _level0 (string))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, _level0 (movieclip))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, [object Object] (object))
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Function] (function))
+NaN
+valueOf called
+toString called
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+valueOf called
+NaN
+toString called with 
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+NaN
+valueOf called with 
+Date.UTC (1983, 5, 25, 13, 50, 50, [object Object] (object))
+valueOf called with 
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50,  (object))
+425397050000
+0: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50,  (object))
+0: valueOf!
+425397050000
+1: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, null (object))
+1: valueOf!
+425397050000
+2: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, true (object))
+2: valueOf!
+425397050001
+3: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, false (object))
+3: valueOf!
+425397050000
+4: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, 0 (object))
+4: valueOf!
+425397050000
+5: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, 1 (object))
+5: valueOf!
+425397050001
+6: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, 0.5 (object))
+6: valueOf!
+425397050000
+7: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, -1 (object))
+7: valueOf!
+425397049999
+8: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, -0.5 (object))
+8: valueOf!
+425397050000
+9: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, Infinity (object))
+9: valueOf!
+Infinity
+10: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, -Infinity (object))
+10: valueOf!
+-Infinity
+11: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, NaN (object))
+11: valueOf!
+NaN
+12: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50,  (object))
+12: valueOf!
+NaN
+13: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, 0 (object))
+13: valueOf!
+425397050000
+14: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, -0 (object))
+14: valueOf!
+425397050000
+15: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, 0.0 (object))
+15: valueOf!
+425397050000
+16: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, 1 (object))
+16: valueOf!
+425397050001
+17: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, Hello World! (object))
+17: valueOf!
+NaN
+18: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, true (object))
+18: valueOf!
+NaN
+19: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, _level0 (object))
+19: valueOf!
+NaN
+20: valueOf!
+Date.UTC (1983, 5, 25, 13, 50, 50, _level0 (object))
+20: valueOf!
+NaN
+21: valueOf!
+21: toString!
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+21: valueOf!
+NaN
+22: valueOf!
+22: toString!
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+22: valueOf!
+NaN
+23: valueOf!
+23: toString!
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+23: valueOf!
+NaN
+24: valueOf!
+24: toString!
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+24: valueOf!
+NaN
+25: valueOf!
+25: toString!
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+25: valueOf!
+NaN
+26: valueOf!
+26: toString!
+Date.UTC (1983, 5, 25, 13, 50, 50, [type Object] (object))
+26: valueOf!
+NaN
+Date.UTC (1983, 5, 25, 13, 50, 50, -0.6 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, -0.4 (number))
+425397050000
+Date.UTC (1983, 5, 25, 13, 50, 50, 1.4 (number))
+425397050001
+Date.UTC (1983, 5, 25, 13, 50, 50, 1.6 (number))
+425397050001
+new Date (1983 (number))
+1970-0-1 3:0:1.983
+new Date (1983 (number), 5, 25, 13, 50, 50, 300)
+1983-5-25 13:50:50.300
+new Date (83 (number))
+1970-0-1 3:0:0.83
+new Date (83 (number), 5, 25, 13, 50, 50, 300)
+1983-5-25 13:50:50.300
+new Date (0 (number))
+1970-0-1 3:0:0.0
+new Date (0 (number), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (100 (number))
+1970-0-1 3:0:0.100
+new Date (100 (number), 5, 25, 13, 50, 50, 300)
+100-5-25 13:50:50.300
+new Date (99 (number))
+1970-0-1 3:0:0.99
+new Date (99 (number), 5, 25, 13, 50, 50, 300)
+1999-5-25 13:50:50.300
+new Date (101 (number))
+1970-0-1 3:0:0.101
+new Date (101 (number), 5, 25, 13, 50, 50, 300)
+101-5-25 13:50:50.300
+new Date (-100 (number))
+1970-0-1 2:59:59.900
+new Date (-100 (number), 5, 25, 13, 50, 50, 300)
+1800-5-25 13:50:50.300
+new Date (-50 (number))
+1970-0-1 2:59:59.950
+new Date (-50 (number), 5, 25, 13, 50, 50, 300)
+1850-5-25 13:50:50.300
+new Date (-500 (number))
+1970-0-1 2:59:59.500
+new Date (-500 (number), 5, 25, 13, 50, 50, 300)
+1400-5-25 13:50:50.300
+new Date (276447232 (number))
+1970-0-4 7:47:27.232
+new Date (276447232 (number), 5, 25, 13, 50, 50, 300)
+276447232-5-25 13:50:50.368
+new Date (-276447232 (number))
+1969-11-28 22:12:32.768
+new Date (-276447232 (number), 5, 25, 13, 50, 50, 300)
+-276445332-5-25 13:50:50.368
+new Date (true (boolean))
+1970-0-1 3:0:0.1
+new Date (true (boolean), 5, 25, 13, 50, 50, 300)
+1901-5-25 13:50:50.300
+new Date (false (boolean))
+1970-0-1 3:0:0.0
+new Date (false (boolean), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (0 (number))
+1970-0-1 3:0:0.0
+new Date (0 (number), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (1 (number))
+1970-0-1 3:0:0.1
+new Date (1 (number), 5, 25, 13, 50, 50, 300)
+1901-5-25 13:50:50.300
+new Date (0.5 (number))
+1970-0-1 3:0:0.0
+new Date (0.5 (number), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (-1 (number))
+1970-0-1 2:59:59.999
+new Date (-1 (number), 5, 25, 13, 50, 50, 300)
+1899-5-25 13:50:50.300
+new Date (-0.5 (number))
+1970-0-1 3:59:59.999
+new Date (-0.5 (number), 5, 25, 13, 50, 50, 300)
+1899-5-25 13:50:50.300
+new Date (Infinity (number))
+1970-0-1 0:0:0.0
+new Date (Infinity (number), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date (-Infinity (number))
+1970-0-1 0:0:0.0
+new Date (-Infinity (number), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date (NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (NaN (number), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date ( (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date ( (string), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date (0 (string))
+1970-0-1 3:0:0.0
+new Date (0 (string), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (-0 (string))
+1970-0-1 3:0:0.0
+new Date (-0 (string), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (0.0 (string))
+1970-0-1 3:0:0.0
+new Date (0.0 (string), 5, 25, 13, 50, 50, 300)
+1900-5-25 13:50:50.300
+new Date (1 (string))
+1970-0-1 3:0:0.1
+new Date (1 (string), 5, 25, 13, 50, 50, 300)
+1901-5-25 13:50:50.300
+new Date (Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (Hello World! (string), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date (true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (true (string), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date (_level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (_level0 (string), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date (_level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (_level0 (movieclip), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date ([object Object] (object), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+new Date ([type Function] (function))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date ([type Function] (function), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+valueOf called
+valueOf called
+toString called
+new Date ([type Object] (object))
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+valueOf called
+0-5-25 13:50:50.300
+toString called with 
+new Date ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+0-5-25 13:50:50.300
+valueOf called with 
+valueOf called with 
+new Date ([object Object] (object))
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+new Date ([object Object] (object), 5, 25, 13, 50, 50, 300)
+valueOf called with 
+0-5-25 13:50:50.300
+0: valueOf!
+1: valueOf!
+2: valueOf!
+2: valueOf!
+new Date (true (object))
+2: valueOf!
+1970-0-1 3:0:0.1
+2: valueOf!
+new Date (true (object), 5, 25, 13, 50, 50, 300)
+2: valueOf!
+1901-5-25 13:50:50.300
+3: valueOf!
+3: valueOf!
+new Date (false (object))
+3: valueOf!
+1970-0-1 3:0:0.0
+3: valueOf!
+new Date (false (object), 5, 25, 13, 50, 50, 300)
+3: valueOf!
+1900-5-25 13:50:50.300
+4: valueOf!
+4: valueOf!
+new Date (0 (object))
+4: valueOf!
+1970-0-1 3:0:0.0
+4: valueOf!
+new Date (0 (object), 5, 25, 13, 50, 50, 300)
+4: valueOf!
+1900-5-25 13:50:50.300
+5: valueOf!
+5: valueOf!
+new Date (1 (object))
+5: valueOf!
+1970-0-1 3:0:0.1
+5: valueOf!
+new Date (1 (object), 5, 25, 13, 50, 50, 300)
+5: valueOf!
+1901-5-25 13:50:50.300
+6: valueOf!
+6: valueOf!
+new Date (0.5 (object))
+6: valueOf!
+1970-0-1 3:0:0.0
+6: valueOf!
+new Date (0.5 (object), 5, 25, 13, 50, 50, 300)
+6: valueOf!
+1900-5-25 13:50:50.300
+7: valueOf!
+7: valueOf!
+new Date (-1 (object))
+7: valueOf!
+1970-0-1 2:59:59.999
+7: valueOf!
+new Date (-1 (object), 5, 25, 13, 50, 50, 300)
+7: valueOf!
+1899-5-25 13:50:50.300
+8: valueOf!
+8: valueOf!
+new Date (-0.5 (object))
+8: valueOf!
+1970-0-1 3:59:59.999
+8: valueOf!
+new Date (-0.5 (object), 5, 25, 13, 50, 50, 300)
+8: valueOf!
+1899-5-25 13:50:50.300
+9: valueOf!
+9: valueOf!
+new Date (Infinity (object))
+9: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+new Date (Infinity (object), 5, 25, 13, 50, 50, 300)
+9: valueOf!
+0-5-25 13:50:50.300
+10: valueOf!
+10: valueOf!
+new Date (-Infinity (object))
+10: valueOf!
+1970-0-1 0:0:0.0
+10: valueOf!
+new Date (-Infinity (object), 5, 25, 13, 50, 50, 300)
+10: valueOf!
+0-5-25 13:50:50.300
+11: valueOf!
+11: valueOf!
+new Date (NaN (object))
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+new Date (NaN (object), 5, 25, 13, 50, 50, 300)
+11: valueOf!
+0-5-25 13:50:50.300
+12: valueOf!
+12: valueOf!
+new Date ( (object))
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+new Date ( (object), 5, 25, 13, 50, 50, 300)
+12: valueOf!
+0-5-25 13:50:50.300
+13: valueOf!
+13: valueOf!
+new Date (0 (object))
+13: valueOf!
+1970-0-1 3:0:0.0
+13: valueOf!
+new Date (0 (object), 5, 25, 13, 50, 50, 300)
+13: valueOf!
+1900-5-25 13:50:50.300
+14: valueOf!
+14: valueOf!
+new Date (-0 (object))
+14: valueOf!
+1970-0-1 3:0:0.0
+14: valueOf!
+new Date (-0 (object), 5, 25, 13, 50, 50, 300)
+14: valueOf!
+1900-5-25 13:50:50.300
+15: valueOf!
+15: valueOf!
+new Date (0.0 (object))
+15: valueOf!
+1970-0-1 3:0:0.0
+15: valueOf!
+new Date (0.0 (object), 5, 25, 13, 50, 50, 300)
+15: valueOf!
+1900-5-25 13:50:50.300
+16: valueOf!
+16: valueOf!
+new Date (1 (object))
+16: valueOf!
+1970-0-1 3:0:0.1
+16: valueOf!
+new Date (1 (object), 5, 25, 13, 50, 50, 300)
+16: valueOf!
+1901-5-25 13:50:50.300
+17: valueOf!
+17: valueOf!
+new Date (Hello World! (object))
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+new Date (Hello World! (object), 5, 25, 13, 50, 50, 300)
+17: valueOf!
+0-5-25 13:50:50.300
+18: valueOf!
+18: valueOf!
+new Date (true (object))
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+new Date (true (object), 5, 25, 13, 50, 50, 300)
+18: valueOf!
+0-5-25 13:50:50.300
+19: valueOf!
+19: valueOf!
+new Date (_level0 (object))
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+new Date (_level0 (object), 5, 25, 13, 50, 50, 300)
+19: valueOf!
+0-5-25 13:50:50.300
+20: valueOf!
+20: valueOf!
+new Date (_level0 (object))
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+new Date (_level0 (object), 5, 25, 13, 50, 50, 300)
+20: valueOf!
+0-5-25 13:50:50.300
+21: valueOf!
+21: valueOf!
+21: toString!
+new Date ([type Object] (object))
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+21: valueOf!
+0-5-25 13:50:50.300
+22: valueOf!
+22: valueOf!
+22: toString!
+new Date ([type Object] (object))
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+22: valueOf!
+0-5-25 13:50:50.300
+23: valueOf!
+23: valueOf!
+23: toString!
+new Date ([type Object] (object))
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+23: valueOf!
+0-5-25 13:50:50.300
+24: valueOf!
+24: valueOf!
+24: toString!
+new Date ([type Object] (object))
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+24: valueOf!
+0-5-25 13:50:50.300
+25: valueOf!
+25: valueOf!
+25: toString!
+new Date ([type Object] (object))
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+25: valueOf!
+0-5-25 13:50:50.300
+26: valueOf!
+26: valueOf!
+26: toString!
+new Date ([type Object] (object))
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+new Date ([type Object] (object), 5, 25, 13, 50, 50, 300)
+26: valueOf!
+0-5-25 13:50:50.300
+new Date (-0.6 (number))
+1970-0-1 2:59:59.999
+new Date (-0.6 (number), 5, 25, 13, 50, 50, 300)
+1899-5-25 13:50:50.300
+new Date (-0.4 (number))
+1970-0-1 3:59:59.999
+new Date (-0.4 (number), 5, 25, 13, 50, 50, 300)
+1899-5-25 13:50:50.300
+new Date (1.4 (number))
+1970-0-1 3:0:0.1
+new Date (1.4 (number), 5, 25, 13, 50, 50, 300)
+1901-5-25 13:50:50.300
+new Date (1.6 (number))
+1970-0-1 3:0:0.1
+new Date (1.6 (number), 5, 25, 13, 50, 50, 300)
+1901-5-25 13:50:50.300
+new Date (1983, 5 (number))
+1983-5-1 0:0:0.0
+new Date (1983, 5 (number), 25, 13, 50, 50, 300)
+1983-5-25 13:50:50.300
+new Date (1983, 0 (number))
+1983-0-1 0:0:0.0
+new Date (1983, 0 (number), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, 11 (number))
+1983-11-1 0:0:0.0
+new Date (1983, 11 (number), 25, 13, 50, 50, 300)
+1983-11-25 13:50:50.300
+new Date (1983, 12 (number))
+1984-0-1 0:0:0.0
+new Date (1983, 12 (number), 25, 13, 50, 50, 300)
+1984-0-25 13:50:50.300
+new Date (1983, -1 (number))
+1982-11-1 0:0:0.0
+new Date (1983, -1 (number), 25, 13, 50, 50, 300)
+1982-11-25 13:50:50.300
+new Date (1983, 20 (number))
+1984-8-1 0:0:0.0
+new Date (1983, 20 (number), 25, 13, 50, 50, 300)
+1984-8-25 13:50:50.300
+new Date (1983, -20 (number))
+1981-4-1 0:0:0.0
+new Date (1983, -20 (number), 25, 13, 50, 50, 300)
+1981-4-25 13:50:50.300
+new Date (1983,  (undefined))
+1970-0-1 3:0:1.983
+new Date (1983,  (undefined), 25, 13, 50, 50, 300)
+1970-0-1 3:0:1.983
+new Date (1983, null (null))
+1983-0-1 0:0:0.0
+new Date (1983, null (null), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, true (boolean))
+1983-1-1 0:0:0.0
+new Date (1983, true (boolean), 25, 13, 50, 50, 300)
+1983-1-25 13:50:50.300
+new Date (1983, false (boolean))
+1983-0-1 0:0:0.0
+new Date (1983, false (boolean), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, 0 (number))
+1983-0-1 0:0:0.0
+new Date (1983, 0 (number), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, 1 (number))
+1983-1-1 0:0:0.0
+new Date (1983, 1 (number), 25, 13, 50, 50, 300)
+1983-1-25 13:50:50.300
+new Date (1983, 0.5 (number))
+1983-0-1 0:0:0.0
+new Date (1983, 0.5 (number), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, -1 (number))
+1982-11-1 0:0:0.0
+new Date (1983, -1 (number), 25, 13, 50, 50, 300)
+1982-11-25 13:50:50.300
+new Date (1983, -0.5 (number))
+1983-0-1 0:0:0.0
+new Date (1983, -0.5 (number), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, Infinity (number))
+0-0-1 0:0:0.0
+new Date (1983, Infinity (number), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, -Infinity (number))
+0-0-1 0:0:0.0
+new Date (1983, -Infinity (number), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, NaN (number))
+0-0-1 0:0:0.0
+new Date (1983, NaN (number), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983,  (string))
+0-0-1 0:0:0.0
+new Date (1983,  (string), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, 0 (string))
+1983-0-1 0:0:0.0
+new Date (1983, 0 (string), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, -0 (string))
+1983-0-1 0:0:0.0
+new Date (1983, -0 (string), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, 0.0 (string))
+1983-0-1 0:0:0.0
+new Date (1983, 0.0 (string), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, 1 (string))
+1983-1-1 0:0:0.0
+new Date (1983, 1 (string), 25, 13, 50, 50, 300)
+1983-1-25 13:50:50.300
+new Date (1983, Hello World! (string))
+0-0-1 0:0:0.0
+new Date (1983, Hello World! (string), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, true (string))
+0-0-1 0:0:0.0
+new Date (1983, true (string), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, _level0 (string))
+0-0-1 0:0:0.0
+new Date (1983, _level0 (string), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, _level0 (movieclip))
+0-0-1 0:0:0.0
+new Date (1983, _level0 (movieclip), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, [object Object] (object))
+0-0-1 0:0:0.0
+new Date (1983, [object Object] (object), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+new Date (1983, [type Function] (function))
+0-0-1 0:0:0.0
+new Date (1983, [type Function] (function), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+valueOf called
+toString called
+new Date (1983, [type Object] (object))
+valueOf called
+0-0-1 0:0:0.0
+valueOf called
+toString called
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+valueOf called
+0-0-25 13:50:50.300
+toString called with 
+new Date (1983, [type Object] (object))
+0-0-1 0:0:0.0
+toString called with 
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+0-0-25 13:50:50.300
+valueOf called with 
+new Date (1983, [object Object] (object))
+valueOf called with 
+0-0-1 0:0:0.0
+valueOf called with 
+new Date (1983, [object Object] (object), 25, 13, 50, 50, 300)
+valueOf called with 
+0-0-25 13:50:50.300
+new Date (1983,  (object))
+1983-0-1 0:0:0.0
+new Date (1983,  (object), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+0: valueOf!
+new Date (1983,  (object))
+0: valueOf!
+1983-0-1 0:0:0.0
+0: valueOf!
+new Date (1983,  (object), 25, 13, 50, 50, 300)
+0: valueOf!
+1983-0-25 13:50:50.300
+1: valueOf!
+new Date (1983, null (object))
+1: valueOf!
+1983-0-1 0:0:0.0
+1: valueOf!
+new Date (1983, null (object), 25, 13, 50, 50, 300)
+1: valueOf!
+1983-0-25 13:50:50.300
+2: valueOf!
+new Date (1983, true (object))
+2: valueOf!
+1983-1-1 0:0:0.0
+2: valueOf!
+new Date (1983, true (object), 25, 13, 50, 50, 300)
+2: valueOf!
+1983-1-25 13:50:50.300
+3: valueOf!
+new Date (1983, false (object))
+3: valueOf!
+1983-0-1 0:0:0.0
+3: valueOf!
+new Date (1983, false (object), 25, 13, 50, 50, 300)
+3: valueOf!
+1983-0-25 13:50:50.300
+4: valueOf!
+new Date (1983, 0 (object))
+4: valueOf!
+1983-0-1 0:0:0.0
+4: valueOf!
+new Date (1983, 0 (object), 25, 13, 50, 50, 300)
+4: valueOf!
+1983-0-25 13:50:50.300
+5: valueOf!
+new Date (1983, 1 (object))
+5: valueOf!
+1983-1-1 0:0:0.0
+5: valueOf!
+new Date (1983, 1 (object), 25, 13, 50, 50, 300)
+5: valueOf!
+1983-1-25 13:50:50.300
+6: valueOf!
+new Date (1983, 0.5 (object))
+6: valueOf!
+1983-0-1 0:0:0.0
+6: valueOf!
+new Date (1983, 0.5 (object), 25, 13, 50, 50, 300)
+6: valueOf!
+1983-0-25 13:50:50.300
+7: valueOf!
+new Date (1983, -1 (object))
+7: valueOf!
+1982-11-1 0:0:0.0
+7: valueOf!
+new Date (1983, -1 (object), 25, 13, 50, 50, 300)
+7: valueOf!
+1982-11-25 13:50:50.300
+8: valueOf!
+new Date (1983, -0.5 (object))
+8: valueOf!
+1983-0-1 0:0:0.0
+8: valueOf!
+new Date (1983, -0.5 (object), 25, 13, 50, 50, 300)
+8: valueOf!
+1983-0-25 13:50:50.300
+9: valueOf!
+new Date (1983, Infinity (object))
+9: valueOf!
+0-0-1 0:0:0.0
+9: valueOf!
+new Date (1983, Infinity (object), 25, 13, 50, 50, 300)
+9: valueOf!
+0-0-25 13:50:50.300
+10: valueOf!
+new Date (1983, -Infinity (object))
+10: valueOf!
+0-0-1 0:0:0.0
+10: valueOf!
+new Date (1983, -Infinity (object), 25, 13, 50, 50, 300)
+10: valueOf!
+0-0-25 13:50:50.300
+11: valueOf!
+new Date (1983, NaN (object))
+11: valueOf!
+0-0-1 0:0:0.0
+11: valueOf!
+new Date (1983, NaN (object), 25, 13, 50, 50, 300)
+11: valueOf!
+0-0-25 13:50:50.300
+12: valueOf!
+new Date (1983,  (object))
+12: valueOf!
+0-0-1 0:0:0.0
+12: valueOf!
+new Date (1983,  (object), 25, 13, 50, 50, 300)
+12: valueOf!
+0-0-25 13:50:50.300
+13: valueOf!
+new Date (1983, 0 (object))
+13: valueOf!
+1983-0-1 0:0:0.0
+13: valueOf!
+new Date (1983, 0 (object), 25, 13, 50, 50, 300)
+13: valueOf!
+1983-0-25 13:50:50.300
+14: valueOf!
+new Date (1983, -0 (object))
+14: valueOf!
+1983-0-1 0:0:0.0
+14: valueOf!
+new Date (1983, -0 (object), 25, 13, 50, 50, 300)
+14: valueOf!
+1983-0-25 13:50:50.300
+15: valueOf!
+new Date (1983, 0.0 (object))
+15: valueOf!
+1983-0-1 0:0:0.0
+15: valueOf!
+new Date (1983, 0.0 (object), 25, 13, 50, 50, 300)
+15: valueOf!
+1983-0-25 13:50:50.300
+16: valueOf!
+new Date (1983, 1 (object))
+16: valueOf!
+1983-1-1 0:0:0.0
+16: valueOf!
+new Date (1983, 1 (object), 25, 13, 50, 50, 300)
+16: valueOf!
+1983-1-25 13:50:50.300
+17: valueOf!
+new Date (1983, Hello World! (object))
+17: valueOf!
+0-0-1 0:0:0.0
+17: valueOf!
+new Date (1983, Hello World! (object), 25, 13, 50, 50, 300)
+17: valueOf!
+0-0-25 13:50:50.300
+18: valueOf!
+new Date (1983, true (object))
+18: valueOf!
+0-0-1 0:0:0.0
+18: valueOf!
+new Date (1983, true (object), 25, 13, 50, 50, 300)
+18: valueOf!
+0-0-25 13:50:50.300
+19: valueOf!
+new Date (1983, _level0 (object))
+19: valueOf!
+0-0-1 0:0:0.0
+19: valueOf!
+new Date (1983, _level0 (object), 25, 13, 50, 50, 300)
+19: valueOf!
+0-0-25 13:50:50.300
+20: valueOf!
+new Date (1983, _level0 (object))
+20: valueOf!
+0-0-1 0:0:0.0
+20: valueOf!
+new Date (1983, _level0 (object), 25, 13, 50, 50, 300)
+20: valueOf!
+0-0-25 13:50:50.300
+21: valueOf!
+21: toString!
+new Date (1983, [type Object] (object))
+21: valueOf!
+0-0-1 0:0:0.0
+21: valueOf!
+21: toString!
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+21: valueOf!
+0-0-25 13:50:50.300
+22: valueOf!
+22: toString!
+new Date (1983, [type Object] (object))
+22: valueOf!
+0-0-1 0:0:0.0
+22: valueOf!
+22: toString!
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+22: valueOf!
+0-0-25 13:50:50.300
+23: valueOf!
+23: toString!
+new Date (1983, [type Object] (object))
+23: valueOf!
+0-0-1 0:0:0.0
+23: valueOf!
+23: toString!
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+23: valueOf!
+0-0-25 13:50:50.300
+24: valueOf!
+24: toString!
+new Date (1983, [type Object] (object))
+24: valueOf!
+0-0-1 0:0:0.0
+24: valueOf!
+24: toString!
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+24: valueOf!
+0-0-25 13:50:50.300
+25: valueOf!
+25: toString!
+new Date (1983, [type Object] (object))
+25: valueOf!
+0-0-1 0:0:0.0
+25: valueOf!
+25: toString!
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+25: valueOf!
+0-0-25 13:50:50.300
+26: valueOf!
+26: toString!
+new Date (1983, [type Object] (object))
+26: valueOf!
+0-0-1 0:0:0.0
+26: valueOf!
+26: toString!
+new Date (1983, [type Object] (object), 25, 13, 50, 50, 300)
+26: valueOf!
+0-0-25 13:50:50.300
+new Date (1983, -0.6 (number))
+1983-0-1 0:0:0.0
+new Date (1983, -0.6 (number), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, -0.4 (number))
+1983-0-1 0:0:0.0
+new Date (1983, -0.4 (number), 25, 13, 50, 50, 300)
+1983-0-25 13:50:50.300
+new Date (1983, 1.4 (number))
+1983-1-1 0:0:0.0
+new Date (1983, 1.4 (number), 25, 13, 50, 50, 300)
+1983-1-25 13:50:50.300
+new Date (1983, 1.6 (number))
+1983-1-1 0:0:0.0
+new Date (1983, 1.6 (number), 25, 13, 50, 50, 300)
+1983-1-25 13:50:50.300
+new Date (1983, 5, 25 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25 (number), 13, 50, 50, 300)
+1983-5-25 13:50:50.300
+new Date (1983, 5, 1 (number))
+1983-5-1 0:0:0.0
+new Date (1983, 5, 1 (number), 13, 50, 50, 300)
+1983-5-1 13:50:50.300
+new Date (1983, 5, 10 (number))
+1983-5-10 0:0:0.0
+new Date (1983, 5, 10 (number), 13, 50, 50, 300)
+1983-5-10 13:50:50.300
+new Date (1983, 5, 29 (number))
+1983-5-29 0:0:0.0
+new Date (1983, 5, 29 (number), 13, 50, 50, 300)
+1983-5-29 13:50:50.300
+new Date (1983, 5, 30 (number))
+1983-5-30 0:0:0.0
+new Date (1983, 5, 30 (number), 13, 50, 50, 300)
+1983-5-30 13:50:50.300
+new Date (1983, 5, 31 (number))
+1983-6-1 0:0:0.0
+new Date (1983, 5, 31 (number), 13, 50, 50, 300)
+1983-6-1 13:50:50.300
+new Date (1983, 5, 32 (number))
+1983-6-2 0:0:0.0
+new Date (1983, 5, 32 (number), 13, 50, 50, 300)
+1983-6-2 13:50:50.300
+new Date (1983, 5, 0 (number))
+1983-4-31 0:0:0.0
+new Date (1983, 5, 0 (number), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, -1 (number))
+1983-4-30 0:0:0.0
+new Date (1983, 5, -1 (number), 13, 50, 50, 300)
+1983-4-30 13:50:50.300
+new Date (1983, 5, 200 (number))
+1983-11-17 0:0:0.0
+new Date (1983, 5, 200 (number), 13, 50, 50, 300)
+1983-11-17 13:50:50.300
+new Date (1983, 5, -20 (number))
+1983-4-11 0:0:0.0
+new Date (1983, 5, -20 (number), 13, 50, 50, 300)
+1983-4-11 13:50:50.300
+new Date (1983, 5,  (undefined))
+1983-5-1 0:0:0.0
+new Date (1983, 5,  (undefined), 13, 50, 50, 300)
+1983-5-1 0:0:0.0
+new Date (1983, 5, null (null))
+1983-4-31 0:0:0.0
+new Date (1983, 5, null (null), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, true (boolean))
+1983-5-1 0:0:0.0
+new Date (1983, 5, true (boolean), 13, 50, 50, 300)
+1983-5-1 13:50:50.300
+new Date (1983, 5, false (boolean))
+1983-4-31 0:0:0.0
+new Date (1983, 5, false (boolean), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, 0 (number))
+1983-4-31 0:0:0.0
+new Date (1983, 5, 0 (number), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, 1 (number))
+1983-5-1 0:0:0.0
+new Date (1983, 5, 1 (number), 13, 50, 50, 300)
+1983-5-1 13:50:50.300
+new Date (1983, 5, 0.5 (number))
+1983-4-31 0:0:0.0
+new Date (1983, 5, 0.5 (number), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, -1 (number))
+1983-4-30 0:0:0.0
+new Date (1983, 5, -1 (number), 13, 50, 50, 300)
+1983-4-30 13:50:50.300
+new Date (1983, 5, -0.5 (number))
+1983-4-31 0:0:0.0
+new Date (1983, 5, -0.5 (number), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, Infinity (number), 13, 50, 50, 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, -Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, -Infinity (number), 13, 50, 50, 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, NaN (number), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5,  (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5,  (string), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 0 (string))
+1983-4-31 0:0:0.0
+new Date (1983, 5, 0 (string), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, -0 (string))
+1983-4-31 0:0:0.0
+new Date (1983, 5, -0 (string), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, 0.0 (string))
+1983-4-31 0:0:0.0
+new Date (1983, 5, 0.0 (string), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, 1 (string))
+1983-5-1 0:0:0.0
+new Date (1983, 5, 1 (string), 13, 50, 50, 300)
+1983-5-1 13:50:50.300
+new Date (1983, 5, Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, Hello World! (string), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, true (string), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0 (string), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0 (movieclip), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, [object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, [object Object] (object), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, [type Function] (function))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, [type Function] (function), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, [type Object] (object))
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+new Date (1983, 5, [object Object] (object))
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+new Date (1983, 5, [object Object] (object), 13, 50, 50, 300)
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5,  (object))
+1983-4-31 0:0:0.0
+new Date (1983, 5,  (object), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+0: valueOf!
+new Date (1983, 5,  (object))
+0: valueOf!
+1983-4-31 0:0:0.0
+0: valueOf!
+new Date (1983, 5,  (object), 13, 50, 50, 300)
+0: valueOf!
+1983-4-31 13:50:50.300
+1: valueOf!
+new Date (1983, 5, null (object))
+1: valueOf!
+1983-4-31 0:0:0.0
+1: valueOf!
+new Date (1983, 5, null (object), 13, 50, 50, 300)
+1: valueOf!
+1983-4-31 13:50:50.300
+2: valueOf!
+new Date (1983, 5, true (object))
+2: valueOf!
+1983-5-1 0:0:0.0
+2: valueOf!
+new Date (1983, 5, true (object), 13, 50, 50, 300)
+2: valueOf!
+1983-5-1 13:50:50.300
+3: valueOf!
+new Date (1983, 5, false (object))
+3: valueOf!
+1983-4-31 0:0:0.0
+3: valueOf!
+new Date (1983, 5, false (object), 13, 50, 50, 300)
+3: valueOf!
+1983-4-31 13:50:50.300
+4: valueOf!
+new Date (1983, 5, 0 (object))
+4: valueOf!
+1983-4-31 0:0:0.0
+4: valueOf!
+new Date (1983, 5, 0 (object), 13, 50, 50, 300)
+4: valueOf!
+1983-4-31 13:50:50.300
+5: valueOf!
+new Date (1983, 5, 1 (object))
+5: valueOf!
+1983-5-1 0:0:0.0
+5: valueOf!
+new Date (1983, 5, 1 (object), 13, 50, 50, 300)
+5: valueOf!
+1983-5-1 13:50:50.300
+6: valueOf!
+new Date (1983, 5, 0.5 (object))
+6: valueOf!
+1983-4-31 0:0:0.0
+6: valueOf!
+new Date (1983, 5, 0.5 (object), 13, 50, 50, 300)
+6: valueOf!
+1983-4-31 13:50:50.300
+7: valueOf!
+new Date (1983, 5, -1 (object))
+7: valueOf!
+1983-4-30 0:0:0.0
+7: valueOf!
+new Date (1983, 5, -1 (object), 13, 50, 50, 300)
+7: valueOf!
+1983-4-30 13:50:50.300
+8: valueOf!
+new Date (1983, 5, -0.5 (object))
+8: valueOf!
+1983-4-31 0:0:0.0
+8: valueOf!
+new Date (1983, 5, -0.5 (object), 13, 50, 50, 300)
+8: valueOf!
+1983-4-31 13:50:50.300
+9: valueOf!
+new Date (1983, 5, Infinity (object))
+9: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+new Date (1983, 5, Infinity (object), 13, 50, 50, 300)
+9: valueOf!
+1970-0-1 0:0:0.0
+10: valueOf!
+new Date (1983, 5, -Infinity (object))
+10: valueOf!
+1970-0-1 0:0:0.0
+10: valueOf!
+new Date (1983, 5, -Infinity (object), 13, 50, 50, 300)
+10: valueOf!
+1970-0-1 0:0:0.0
+11: valueOf!
+new Date (1983, 5, NaN (object))
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+new Date (1983, 5, NaN (object), 13, 50, 50, 300)
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+new Date (1983, 5,  (object))
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+new Date (1983, 5,  (object), 13, 50, 50, 300)
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+new Date (1983, 5, 0 (object))
+13: valueOf!
+1983-4-31 0:0:0.0
+13: valueOf!
+new Date (1983, 5, 0 (object), 13, 50, 50, 300)
+13: valueOf!
+1983-4-31 13:50:50.300
+14: valueOf!
+new Date (1983, 5, -0 (object))
+14: valueOf!
+1983-4-31 0:0:0.0
+14: valueOf!
+new Date (1983, 5, -0 (object), 13, 50, 50, 300)
+14: valueOf!
+1983-4-31 13:50:50.300
+15: valueOf!
+new Date (1983, 5, 0.0 (object))
+15: valueOf!
+1983-4-31 0:0:0.0
+15: valueOf!
+new Date (1983, 5, 0.0 (object), 13, 50, 50, 300)
+15: valueOf!
+1983-4-31 13:50:50.300
+16: valueOf!
+new Date (1983, 5, 1 (object))
+16: valueOf!
+1983-5-1 0:0:0.0
+16: valueOf!
+new Date (1983, 5, 1 (object), 13, 50, 50, 300)
+16: valueOf!
+1983-5-1 13:50:50.300
+17: valueOf!
+new Date (1983, 5, Hello World! (object))
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+new Date (1983, 5, Hello World! (object), 13, 50, 50, 300)
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+new Date (1983, 5, true (object))
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+new Date (1983, 5, true (object), 13, 50, 50, 300)
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+new Date (1983, 5, _level0 (object))
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+new Date (1983, 5, _level0 (object), 13, 50, 50, 300)
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+new Date (1983, 5, _level0 (object))
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+new Date (1983, 5, _level0 (object), 13, 50, 50, 300)
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+new Date (1983, 5, [type Object] (object))
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+new Date (1983, 5, [type Object] (object))
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+new Date (1983, 5, [type Object] (object))
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+new Date (1983, 5, [type Object] (object))
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object] (object))
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object] (object))
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object] (object), 13, 50, 50, 300)
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, -0.6 (number))
+1983-4-31 0:0:0.0
+new Date (1983, 5, -0.6 (number), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, -0.4 (number))
+1983-4-31 0:0:0.0
+new Date (1983, 5, -0.4 (number), 13, 50, 50, 300)
+1983-4-31 13:50:50.300
+new Date (1983, 5, 1.4 (number))
+1983-5-1 0:0:0.0
+new Date (1983, 5, 1.4 (number), 13, 50, 50, 300)
+1983-5-1 13:50:50.300
+new Date (1983, 5, 1.6 (number))
+1983-5-1 0:0:0.0
+new Date (1983, 5, 1.6 (number), 13, 50, 50, 300)
+1983-5-1 13:50:50.300
+new Date (1983, 5, 25, 13 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13 (number), 50, 50, 300)
+1983-5-25 13:50:50.300
+new Date (1983, 5, 1, 0 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, 0 (number), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, 10, 5 (number))
+1983-5-25 5:0:0.0
+new Date (1983, 5, 25, 5 (number), 50, 50, 300)
+1983-5-25 5:50:50.300
+new Date (1983, 5, 29, 19 (number))
+1983-5-25 19:0:0.0
+new Date (1983, 5, 25, 19 (number), 50, 50, 300)
+1983-5-25 19:50:50.300
+new Date (1983, 5, 30, 23 (number))
+1983-5-25 23:0:0.0
+new Date (1983, 5, 25, 23 (number), 50, 50, 300)
+1983-5-25 23:50:50.300
+new Date (1983, 5, 31, -1 (number))
+1983-5-24 23:0:0.0
+new Date (1983, 5, 25, -1 (number), 50, 50, 300)
+1983-5-24 23:50:50.300
+new Date (1983, 5, 32, 24 (number))
+1983-5-26 0:0:0.0
+new Date (1983, 5, 25, 24 (number), 50, 50, 300)
+1983-5-26 0:50:50.300
+new Date (1983, 5, 0, 30 (number))
+1983-5-26 6:0:0.0
+new Date (1983, 5, 25, 30 (number), 50, 50, 300)
+1983-5-26 6:50:50.300
+new Date (1983, 5, -1, -20 (number))
+1983-5-24 4:0:0.0
+new Date (1983, 5, 25, -20 (number), 50, 50, 300)
+1983-5-24 4:50:50.300
+new Date (1983, 5, 200,  (undefined))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25,  (undefined), 50, 50, 300)
+1983-5-25 0:0:0.0
+new Date (1983, 5, -20, null (null))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, null (null), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, , true (boolean))
+1983-5-25 1:0:0.0
+new Date (1983, 5, 25, true (boolean), 50, 50, 300)
+1983-5-25 1:50:50.300
+new Date (1983, 5, null, false (boolean))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, false (boolean), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, true, 0 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, 0 (number), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, false, 1 (number))
+1983-5-25 1:0:0.0
+new Date (1983, 5, 25, 1 (number), 50, 50, 300)
+1983-5-25 1:50:50.300
+new Date (1983, 5, 0, 0.5 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, 0.5 (number), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, 1, -1 (number))
+1983-5-24 23:0:0.0
+new Date (1983, 5, 25, -1 (number), 50, 50, 300)
+1983-5-24 23:50:50.300
+new Date (1983, 5, 0.5, -0.5 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, -0.5 (number), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, -1, Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, Infinity (number), 50, 50, 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, -0.5, -Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, -Infinity (number), 50, 50, 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, Infinity, NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, NaN (number), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, -Infinity,  (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25,  (string), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, NaN, 0 (string))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, 0 (string), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, , -0 (string))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, -0 (string), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, 0, 0.0 (string))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, 0.0 (string), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, -0, 1 (string))
+1983-5-25 1:0:0.0
+new Date (1983, 5, 25, 1 (string), 50, 50, 300)
+1983-5-25 1:50:50.300
+new Date (1983, 5, 0.0, Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, Hello World! (string), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 1, true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, true (string), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, Hello World!, _level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, _level0 (string), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, true, _level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, _level0 (movieclip), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0, [object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, [object Object] (object), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0, [type Function] (function))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, [type Function] (function), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, [object Object], [type Object] (object))
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Function], [type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+valueOf called with 
+new Date (1983, 5, [type Object], [object Object] (object))
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+new Date (1983, 5, 25, [object Object] (object), 50, 50, 300)
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Object],  (object))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25,  (object), 50, 50, 300)
+1983-5-25 0:50:50.300
+valueOf called with 
+0: valueOf!
+new Date (1983, 5, [object Object],  (object))
+0: valueOf!
+1983-5-25 0:0:0.0
+0: valueOf!
+new Date (1983, 5, 25,  (object), 50, 50, 300)
+0: valueOf!
+1983-5-25 0:50:50.300
+1: valueOf!
+new Date (1983, 5, , null (object))
+1: valueOf!
+1983-5-25 0:0:0.0
+1: valueOf!
+new Date (1983, 5, 25, null (object), 50, 50, 300)
+1: valueOf!
+1983-5-25 0:50:50.300
+0: valueOf!
+2: valueOf!
+new Date (1983, 5, , true (object))
+2: valueOf!
+1983-5-25 1:0:0.0
+2: valueOf!
+new Date (1983, 5, 25, true (object), 50, 50, 300)
+2: valueOf!
+1983-5-25 1:50:50.300
+1: valueOf!
+3: valueOf!
+new Date (1983, 5, null, false (object))
+3: valueOf!
+1983-5-25 0:0:0.0
+3: valueOf!
+new Date (1983, 5, 25, false (object), 50, 50, 300)
+3: valueOf!
+1983-5-25 0:50:50.300
+2: valueOf!
+4: valueOf!
+new Date (1983, 5, true, 0 (object))
+4: valueOf!
+1983-5-25 0:0:0.0
+4: valueOf!
+new Date (1983, 5, 25, 0 (object), 50, 50, 300)
+4: valueOf!
+1983-5-25 0:50:50.300
+3: valueOf!
+5: valueOf!
+new Date (1983, 5, false, 1 (object))
+5: valueOf!
+1983-5-25 1:0:0.0
+5: valueOf!
+new Date (1983, 5, 25, 1 (object), 50, 50, 300)
+5: valueOf!
+1983-5-25 1:50:50.300
+4: valueOf!
+6: valueOf!
+new Date (1983, 5, 0, 0.5 (object))
+6: valueOf!
+1983-5-25 0:0:0.0
+6: valueOf!
+new Date (1983, 5, 25, 0.5 (object), 50, 50, 300)
+6: valueOf!
+1983-5-25 0:50:50.300
+5: valueOf!
+7: valueOf!
+new Date (1983, 5, 1, -1 (object))
+7: valueOf!
+1983-5-24 23:0:0.0
+7: valueOf!
+new Date (1983, 5, 25, -1 (object), 50, 50, 300)
+7: valueOf!
+1983-5-24 23:50:50.300
+6: valueOf!
+8: valueOf!
+new Date (1983, 5, 0.5, -0.5 (object))
+8: valueOf!
+1983-5-25 0:0:0.0
+8: valueOf!
+new Date (1983, 5, 25, -0.5 (object), 50, 50, 300)
+8: valueOf!
+1983-5-25 0:50:50.300
+7: valueOf!
+9: valueOf!
+new Date (1983, 5, -1, Infinity (object))
+9: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+new Date (1983, 5, 25, Infinity (object), 50, 50, 300)
+9: valueOf!
+1970-0-1 0:0:0.0
+8: valueOf!
+10: valueOf!
+new Date (1983, 5, -0.5, -Infinity (object))
+10: valueOf!
+1970-0-1 0:0:0.0
+10: valueOf!
+new Date (1983, 5, 25, -Infinity (object), 50, 50, 300)
+10: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+11: valueOf!
+new Date (1983, 5, Infinity, NaN (object))
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+new Date (1983, 5, 25, NaN (object), 50, 50, 300)
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+12: valueOf!
+new Date (1983, 5, -Infinity,  (object))
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+new Date (1983, 5, 25,  (object), 50, 50, 300)
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+13: valueOf!
+new Date (1983, 5, NaN, 0 (object))
+13: valueOf!
+1983-5-25 0:0:0.0
+13: valueOf!
+new Date (1983, 5, 25, 0 (object), 50, 50, 300)
+13: valueOf!
+1983-5-25 0:50:50.300
+12: valueOf!
+14: valueOf!
+new Date (1983, 5, , -0 (object))
+14: valueOf!
+1983-5-25 0:0:0.0
+14: valueOf!
+new Date (1983, 5, 25, -0 (object), 50, 50, 300)
+14: valueOf!
+1983-5-25 0:50:50.300
+13: valueOf!
+15: valueOf!
+new Date (1983, 5, 0, 0.0 (object))
+15: valueOf!
+1983-5-25 0:0:0.0
+15: valueOf!
+new Date (1983, 5, 25, 0.0 (object), 50, 50, 300)
+15: valueOf!
+1983-5-25 0:50:50.300
+14: valueOf!
+16: valueOf!
+new Date (1983, 5, -0, 1 (object))
+16: valueOf!
+1983-5-25 1:0:0.0
+16: valueOf!
+new Date (1983, 5, 25, 1 (object), 50, 50, 300)
+16: valueOf!
+1983-5-25 1:50:50.300
+15: valueOf!
+17: valueOf!
+new Date (1983, 5, 0.0, Hello World! (object))
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+new Date (1983, 5, 25, Hello World! (object), 50, 50, 300)
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+18: valueOf!
+new Date (1983, 5, 1, true (object))
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+new Date (1983, 5, 25, true (object), 50, 50, 300)
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+19: valueOf!
+new Date (1983, 5, Hello World!, _level0 (object))
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+new Date (1983, 5, 25, _level0 (object), 50, 50, 300)
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+20: valueOf!
+new Date (1983, 5, true, _level0 (object))
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+new Date (1983, 5, 25, _level0 (object), 50, 50, 300)
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+21: valueOf!
+21: toString!
+new Date (1983, 5, _level0, [type Object] (object))
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+22: valueOf!
+22: toString!
+new Date (1983, 5, _level0, [type Object] (object))
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+23: valueOf!
+23: toString!
+new Date (1983, 5, [type Object], [type Object] (object))
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+24: valueOf!
+24: toString!
+new Date (1983, 5, [type Object], [type Object] (object))
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object], [type Object] (object))
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object], [type Object] (object))
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+new Date (1983, 5, 25, [type Object] (object), 50, 50, 300)
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object], -0.6 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, -0.6 (number), 50, 50, 300)
+1983-5-25 0:50:50.300
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object], -0.4 (number))
+1983-5-25 0:0:0.0
+new Date (1983, 5, 25, -0.4 (number), 50, 50, 300)
+1983-5-25 0:50:50.300
+new Date (1983, 5, -0.6, 1.4 (number))
+1983-5-25 1:0:0.0
+new Date (1983, 5, 25, 1.4 (number), 50, 50, 300)
+1983-5-25 1:50:50.300
+new Date (1983, 5, -0.4, 1.6 (number))
+1983-5-25 1:0:0.0
+new Date (1983, 5, 25, 1.6 (number), 50, 50, 300)
+1983-5-25 1:50:50.300
+new Date (1983, 5, 25, 13, 50 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50 (number), 50, 300)
+1983-5-25 13:50:50.300
+new Date (1983, 5, 1, 13, 0 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, 0 (number), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, 10, 13, 10 (number))
+1983-5-25 13:10:0.0
+new Date (1983, 5, 25, 13, 10 (number), 50, 300)
+1983-5-25 13:10:50.300
+new Date (1983, 5, 29, 13, 48 (number))
+1983-5-25 13:48:0.0
+new Date (1983, 5, 25, 13, 48 (number), 50, 300)
+1983-5-25 13:48:50.300
+new Date (1983, 5, 30, 13, 59 (number))
+1983-5-25 13:59:0.0
+new Date (1983, 5, 25, 13, 59 (number), 50, 300)
+1983-5-25 13:59:50.300
+new Date (1983, 5, 31, 13, -1 (number))
+1983-5-25 12:59:0.0
+new Date (1983, 5, 25, 13, -1 (number), 50, 300)
+1983-5-25 12:59:50.300
+new Date (1983, 5, 32, 13, 60 (number))
+1983-5-25 14:0:0.0
+new Date (1983, 5, 25, 13, 60 (number), 50, 300)
+1983-5-25 14:0:50.300
+new Date (1983, 5, 0, 13, -20 (number))
+1983-5-25 12:40:0.0
+new Date (1983, 5, 25, 13, -20 (number), 50, 300)
+1983-5-25 12:40:50.300
+new Date (1983, 5, -1, 13, 200 (number))
+1983-5-25 16:20:0.0
+new Date (1983, 5, 25, 13, 200 (number), 50, 300)
+1983-5-25 16:20:50.300
+new Date (1983, 5, 200, 13,  (undefined))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13,  (undefined), 50, 300)
+1983-5-25 13:0:0.0
+new Date (1983, 5, -20, 13, null (null))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, null (null), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, , 13, true (boolean))
+1983-5-25 13:1:0.0
+new Date (1983, 5, 25, 13, true (boolean), 50, 300)
+1983-5-25 13:1:50.300
+new Date (1983, 5, null, 13, false (boolean))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, false (boolean), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, true, 13, 0 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, 0 (number), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, false, 13, 1 (number))
+1983-5-25 13:1:0.0
+new Date (1983, 5, 25, 13, 1 (number), 50, 300)
+1983-5-25 13:1:50.300
+new Date (1983, 5, 0, 13, 0.5 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, 0.5 (number), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, 1, 13, -1 (number))
+1983-5-25 12:59:0.0
+new Date (1983, 5, 25, 13, -1 (number), 50, 300)
+1983-5-25 12:59:50.300
+new Date (1983, 5, 0.5, 13, -0.5 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, -0.5 (number), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, -1, 13, Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, Infinity (number), 50, 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, -0.5, 13, -Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, -Infinity (number), 50, 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, Infinity, 13, NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, NaN (number), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, -Infinity, 13,  (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13,  (string), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, NaN, 13, 0 (string))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, 0 (string), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, , 13, -0 (string))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, -0 (string), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, 0, 13, 0.0 (string))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, 0.0 (string), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, -0, 13, 1 (string))
+1983-5-25 13:1:0.0
+new Date (1983, 5, 25, 13, 1 (string), 50, 300)
+1983-5-25 13:1:50.300
+new Date (1983, 5, 0.0, 13, Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, Hello World! (string), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 1, 13, true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, true (string), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, Hello World!, 13, _level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, _level0 (string), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, true, 13, _level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, _level0 (movieclip), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0, 13, [object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, [object Object] (object), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0, 13, [type Function] (function))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, [type Function] (function), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, [object Object], 13, [type Object] (object))
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Function], 13, [type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+valueOf called with 
+new Date (1983, 5, [type Object], 13, [object Object] (object))
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+new Date (1983, 5, 25, 13, [object Object] (object), 50, 300)
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Object], 13,  (object))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13,  (object), 50, 300)
+1983-5-25 13:0:50.300
+valueOf called with 
+0: valueOf!
+new Date (1983, 5, [object Object], 13,  (object))
+0: valueOf!
+1983-5-25 13:0:0.0
+0: valueOf!
+new Date (1983, 5, 25, 13,  (object), 50, 300)
+0: valueOf!
+1983-5-25 13:0:50.300
+1: valueOf!
+new Date (1983, 5, , 13, null (object))
+1: valueOf!
+1983-5-25 13:0:0.0
+1: valueOf!
+new Date (1983, 5, 25, 13, null (object), 50, 300)
+1: valueOf!
+1983-5-25 13:0:50.300
+0: valueOf!
+2: valueOf!
+new Date (1983, 5, , 13, true (object))
+2: valueOf!
+1983-5-25 13:1:0.0
+2: valueOf!
+new Date (1983, 5, 25, 13, true (object), 50, 300)
+2: valueOf!
+1983-5-25 13:1:50.300
+1: valueOf!
+3: valueOf!
+new Date (1983, 5, null, 13, false (object))
+3: valueOf!
+1983-5-25 13:0:0.0
+3: valueOf!
+new Date (1983, 5, 25, 13, false (object), 50, 300)
+3: valueOf!
+1983-5-25 13:0:50.300
+2: valueOf!
+4: valueOf!
+new Date (1983, 5, true, 13, 0 (object))
+4: valueOf!
+1983-5-25 13:0:0.0
+4: valueOf!
+new Date (1983, 5, 25, 13, 0 (object), 50, 300)
+4: valueOf!
+1983-5-25 13:0:50.300
+3: valueOf!
+5: valueOf!
+new Date (1983, 5, false, 13, 1 (object))
+5: valueOf!
+1983-5-25 13:1:0.0
+5: valueOf!
+new Date (1983, 5, 25, 13, 1 (object), 50, 300)
+5: valueOf!
+1983-5-25 13:1:50.300
+4: valueOf!
+6: valueOf!
+new Date (1983, 5, 0, 13, 0.5 (object))
+6: valueOf!
+1983-5-25 13:0:0.0
+6: valueOf!
+new Date (1983, 5, 25, 13, 0.5 (object), 50, 300)
+6: valueOf!
+1983-5-25 13:0:50.300
+5: valueOf!
+7: valueOf!
+new Date (1983, 5, 1, 13, -1 (object))
+7: valueOf!
+1983-5-25 12:59:0.0
+7: valueOf!
+new Date (1983, 5, 25, 13, -1 (object), 50, 300)
+7: valueOf!
+1983-5-25 12:59:50.300
+6: valueOf!
+8: valueOf!
+new Date (1983, 5, 0.5, 13, -0.5 (object))
+8: valueOf!
+1983-5-25 13:0:0.0
+8: valueOf!
+new Date (1983, 5, 25, 13, -0.5 (object), 50, 300)
+8: valueOf!
+1983-5-25 13:0:50.300
+7: valueOf!
+9: valueOf!
+new Date (1983, 5, -1, 13, Infinity (object))
+9: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+new Date (1983, 5, 25, 13, Infinity (object), 50, 300)
+9: valueOf!
+1970-0-1 0:0:0.0
+8: valueOf!
+10: valueOf!
+new Date (1983, 5, -0.5, 13, -Infinity (object))
+10: valueOf!
+1970-0-1 0:0:0.0
+10: valueOf!
+new Date (1983, 5, 25, 13, -Infinity (object), 50, 300)
+10: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+11: valueOf!
+new Date (1983, 5, Infinity, 13, NaN (object))
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+new Date (1983, 5, 25, 13, NaN (object), 50, 300)
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+12: valueOf!
+new Date (1983, 5, -Infinity, 13,  (object))
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+new Date (1983, 5, 25, 13,  (object), 50, 300)
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+13: valueOf!
+new Date (1983, 5, NaN, 13, 0 (object))
+13: valueOf!
+1983-5-25 13:0:0.0
+13: valueOf!
+new Date (1983, 5, 25, 13, 0 (object), 50, 300)
+13: valueOf!
+1983-5-25 13:0:50.300
+12: valueOf!
+14: valueOf!
+new Date (1983, 5, , 13, -0 (object))
+14: valueOf!
+1983-5-25 13:0:0.0
+14: valueOf!
+new Date (1983, 5, 25, 13, -0 (object), 50, 300)
+14: valueOf!
+1983-5-25 13:0:50.300
+13: valueOf!
+15: valueOf!
+new Date (1983, 5, 0, 13, 0.0 (object))
+15: valueOf!
+1983-5-25 13:0:0.0
+15: valueOf!
+new Date (1983, 5, 25, 13, 0.0 (object), 50, 300)
+15: valueOf!
+1983-5-25 13:0:50.300
+14: valueOf!
+16: valueOf!
+new Date (1983, 5, -0, 13, 1 (object))
+16: valueOf!
+1983-5-25 13:1:0.0
+16: valueOf!
+new Date (1983, 5, 25, 13, 1 (object), 50, 300)
+16: valueOf!
+1983-5-25 13:1:50.300
+15: valueOf!
+17: valueOf!
+new Date (1983, 5, 0.0, 13, Hello World! (object))
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+new Date (1983, 5, 25, 13, Hello World! (object), 50, 300)
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+18: valueOf!
+new Date (1983, 5, 1, 13, true (object))
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+new Date (1983, 5, 25, 13, true (object), 50, 300)
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+19: valueOf!
+new Date (1983, 5, Hello World!, 13, _level0 (object))
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+new Date (1983, 5, 25, 13, _level0 (object), 50, 300)
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+20: valueOf!
+new Date (1983, 5, true, 13, _level0 (object))
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+new Date (1983, 5, 25, 13, _level0 (object), 50, 300)
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+21: valueOf!
+21: toString!
+new Date (1983, 5, _level0, 13, [type Object] (object))
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+22: valueOf!
+22: toString!
+new Date (1983, 5, _level0, 13, [type Object] (object))
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+23: valueOf!
+23: toString!
+new Date (1983, 5, [type Object], 13, [type Object] (object))
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+24: valueOf!
+24: toString!
+new Date (1983, 5, [type Object], 13, [type Object] (object))
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object], 13, [type Object] (object))
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object], 13, [type Object] (object))
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+new Date (1983, 5, 25, 13, [type Object] (object), 50, 300)
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object], 13, -0.6 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, -0.6 (number), 50, 300)
+1983-5-25 13:0:50.300
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object], 13, -0.4 (number))
+1983-5-25 13:0:0.0
+new Date (1983, 5, 25, 13, -0.4 (number), 50, 300)
+1983-5-25 13:0:50.300
+new Date (1983, 5, -0.6, 13, 1.4 (number))
+1983-5-25 13:1:0.0
+new Date (1983, 5, 25, 13, 1.4 (number), 50, 300)
+1983-5-25 13:1:50.300
+new Date (1983, 5, -0.4, 13, 1.6 (number))
+1983-5-25 13:1:0.0
+new Date (1983, 5, 25, 13, 1.6 (number), 50, 300)
+1983-5-25 13:1:50.300
+new Date (1983, 5, 25, 13, 50, 50 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50 (number), 300)
+1983-5-25 13:50:50.300
+new Date (1983, 5, 1, 13, 50, 0 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, 0 (number), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, 10, 13, 50, 10 (number))
+1983-5-25 13:50:10.0
+new Date (1983, 5, 25, 13, 50, 10 (number), 300)
+1983-5-25 13:50:10.300
+new Date (1983, 5, 29, 13, 50, 48 (number))
+1983-5-25 13:50:48.0
+new Date (1983, 5, 25, 13, 50, 48 (number), 300)
+1983-5-25 13:50:48.300
+new Date (1983, 5, 30, 13, 50, 59 (number))
+1983-5-25 13:50:59.0
+new Date (1983, 5, 25, 13, 50, 59 (number), 300)
+1983-5-25 13:50:59.300
+new Date (1983, 5, 31, 13, 50, -1 (number))
+1983-5-25 13:49:59.0
+new Date (1983, 5, 25, 13, 50, -1 (number), 300)
+1983-5-25 13:49:59.300
+new Date (1983, 5, 32, 13, 50, 60 (number))
+1983-5-25 13:51:0.0
+new Date (1983, 5, 25, 13, 50, 60 (number), 300)
+1983-5-25 13:51:0.300
+new Date (1983, 5, 0, 13, 50, -20 (number))
+1983-5-25 13:49:40.0
+new Date (1983, 5, 25, 13, 50, -20 (number), 300)
+1983-5-25 13:49:40.300
+new Date (1983, 5, -1, 13, 50, 200 (number))
+1983-5-25 13:53:20.0
+new Date (1983, 5, 25, 13, 50, 200 (number), 300)
+1983-5-25 13:53:20.300
+new Date (1983, 5, 200, 13, 50,  (undefined))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50,  (undefined), 300)
+1983-5-25 13:50:0.0
+new Date (1983, 5, -20, 13, 50, null (null))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, null (null), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, , 13, 50, true (boolean))
+1983-5-25 13:50:1.0
+new Date (1983, 5, 25, 13, 50, true (boolean), 300)
+1983-5-25 13:50:1.300
+new Date (1983, 5, null, 13, 50, false (boolean))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, false (boolean), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, true, 13, 50, 0 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, 0 (number), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, false, 13, 50, 1 (number))
+1983-5-25 13:50:1.0
+new Date (1983, 5, 25, 13, 50, 1 (number), 300)
+1983-5-25 13:50:1.300
+new Date (1983, 5, 0, 13, 50, 0.5 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, 0.5 (number), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, 1, 13, 50, -1 (number))
+1983-5-25 13:49:59.0
+new Date (1983, 5, 25, 13, 50, -1 (number), 300)
+1983-5-25 13:49:59.300
+new Date (1983, 5, 0.5, 13, 50, -0.5 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, -0.5 (number), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, -1, 13, 50, Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, 50, Infinity (number), 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, -0.5, 13, 50, -Infinity (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, 50, -Infinity (number), 300)
+1970-0-1 0:0:0.0
+new Date (1983, 5, Infinity, 13, 50, NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, NaN (number), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, -Infinity, 13, 50,  (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50,  (string), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, NaN, 13, 50, 0 (string))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, 0 (string), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, , 13, 50, -0 (string))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, -0 (string), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, 0, 13, 50, 0.0 (string))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, 0.0 (string), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, -0, 13, 50, 1 (string))
+1983-5-25 13:50:1.0
+new Date (1983, 5, 25, 13, 50, 1 (string), 300)
+1983-5-25 13:50:1.300
+new Date (1983, 5, 0.0, 13, 50, Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, Hello World! (string), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 1, 13, 50, true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, true (string), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, Hello World!, 13, 50, _level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, _level0 (string), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, true, 13, 50, _level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, _level0 (movieclip), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0, 13, 50, [object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, [object Object] (object), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, _level0, 13, 50, [type Function] (function))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, [type Function] (function), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, [object Object], 13, 50, [type Object] (object))
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Function], 13, 50, [type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+valueOf called with 
+new Date (1983, 5, [type Object], 13, 50, [object Object] (object))
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+new Date (1983, 5, 25, 13, 50, [object Object] (object), 300)
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+new Date (1983, 5, [type Object], 13, 50,  (object))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50,  (object), 300)
+1983-5-25 13:50:0.300
+valueOf called with 
+0: valueOf!
+new Date (1983, 5, [object Object], 13, 50,  (object))
+0: valueOf!
+1983-5-25 13:50:0.0
+0: valueOf!
+new Date (1983, 5, 25, 13, 50,  (object), 300)
+0: valueOf!
+1983-5-25 13:50:0.300
+1: valueOf!
+new Date (1983, 5, , 13, 50, null (object))
+1: valueOf!
+1983-5-25 13:50:0.0
+1: valueOf!
+new Date (1983, 5, 25, 13, 50, null (object), 300)
+1: valueOf!
+1983-5-25 13:50:0.300
+0: valueOf!
+2: valueOf!
+new Date (1983, 5, , 13, 50, true (object))
+2: valueOf!
+1983-5-25 13:50:1.0
+2: valueOf!
+new Date (1983, 5, 25, 13, 50, true (object), 300)
+2: valueOf!
+1983-5-25 13:50:1.300
+1: valueOf!
+3: valueOf!
+new Date (1983, 5, null, 13, 50, false (object))
+3: valueOf!
+1983-5-25 13:50:0.0
+3: valueOf!
+new Date (1983, 5, 25, 13, 50, false (object), 300)
+3: valueOf!
+1983-5-25 13:50:0.300
+2: valueOf!
+4: valueOf!
+new Date (1983, 5, true, 13, 50, 0 (object))
+4: valueOf!
+1983-5-25 13:50:0.0
+4: valueOf!
+new Date (1983, 5, 25, 13, 50, 0 (object), 300)
+4: valueOf!
+1983-5-25 13:50:0.300
+3: valueOf!
+5: valueOf!
+new Date (1983, 5, false, 13, 50, 1 (object))
+5: valueOf!
+1983-5-25 13:50:1.0
+5: valueOf!
+new Date (1983, 5, 25, 13, 50, 1 (object), 300)
+5: valueOf!
+1983-5-25 13:50:1.300
+4: valueOf!
+6: valueOf!
+new Date (1983, 5, 0, 13, 50, 0.5 (object))
+6: valueOf!
+1983-5-25 13:50:0.0
+6: valueOf!
+new Date (1983, 5, 25, 13, 50, 0.5 (object), 300)
+6: valueOf!
+1983-5-25 13:50:0.300
+5: valueOf!
+7: valueOf!
+new Date (1983, 5, 1, 13, 50, -1 (object))
+7: valueOf!
+1983-5-25 13:49:59.0
+7: valueOf!
+new Date (1983, 5, 25, 13, 50, -1 (object), 300)
+7: valueOf!
+1983-5-25 13:49:59.300
+6: valueOf!
+8: valueOf!
+new Date (1983, 5, 0.5, 13, 50, -0.5 (object))
+8: valueOf!
+1983-5-25 13:50:0.0
+8: valueOf!
+new Date (1983, 5, 25, 13, 50, -0.5 (object), 300)
+8: valueOf!
+1983-5-25 13:50:0.300
+7: valueOf!
+9: valueOf!
+new Date (1983, 5, -1, 13, 50, Infinity (object))
+9: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+new Date (1983, 5, 25, 13, 50, Infinity (object), 300)
+9: valueOf!
+1970-0-1 0:0:0.0
+8: valueOf!
+10: valueOf!
+new Date (1983, 5, -0.5, 13, 50, -Infinity (object))
+10: valueOf!
+1970-0-1 0:0:0.0
+10: valueOf!
+new Date (1983, 5, 25, 13, 50, -Infinity (object), 300)
+10: valueOf!
+1970-0-1 0:0:0.0
+9: valueOf!
+11: valueOf!
+new Date (1983, 5, Infinity, 13, 50, NaN (object))
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+new Date (1983, 5, 25, 13, 50, NaN (object), 300)
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+12: valueOf!
+new Date (1983, 5, -Infinity, 13, 50,  (object))
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+new Date (1983, 5, 25, 13, 50,  (object), 300)
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+13: valueOf!
+new Date (1983, 5, NaN, 13, 50, 0 (object))
+13: valueOf!
+1983-5-25 13:50:0.0
+13: valueOf!
+new Date (1983, 5, 25, 13, 50, 0 (object), 300)
+13: valueOf!
+1983-5-25 13:50:0.300
+12: valueOf!
+14: valueOf!
+new Date (1983, 5, , 13, 50, -0 (object))
+14: valueOf!
+1983-5-25 13:50:0.0
+14: valueOf!
+new Date (1983, 5, 25, 13, 50, -0 (object), 300)
+14: valueOf!
+1983-5-25 13:50:0.300
+13: valueOf!
+15: valueOf!
+new Date (1983, 5, 0, 13, 50, 0.0 (object))
+15: valueOf!
+1983-5-25 13:50:0.0
+15: valueOf!
+new Date (1983, 5, 25, 13, 50, 0.0 (object), 300)
+15: valueOf!
+1983-5-25 13:50:0.300
+14: valueOf!
+16: valueOf!
+new Date (1983, 5, -0, 13, 50, 1 (object))
+16: valueOf!
+1983-5-25 13:50:1.0
+16: valueOf!
+new Date (1983, 5, 25, 13, 50, 1 (object), 300)
+16: valueOf!
+1983-5-25 13:50:1.300
+15: valueOf!
+17: valueOf!
+new Date (1983, 5, 0.0, 13, 50, Hello World! (object))
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+new Date (1983, 5, 25, 13, 50, Hello World! (object), 300)
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+18: valueOf!
+new Date (1983, 5, 1, 13, 50, true (object))
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+new Date (1983, 5, 25, 13, 50, true (object), 300)
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+19: valueOf!
+new Date (1983, 5, Hello World!, 13, 50, _level0 (object))
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+new Date (1983, 5, 25, 13, 50, _level0 (object), 300)
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+20: valueOf!
+new Date (1983, 5, true, 13, 50, _level0 (object))
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+new Date (1983, 5, 25, 13, 50, _level0 (object), 300)
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+21: valueOf!
+21: toString!
+new Date (1983, 5, _level0, 13, 50, [type Object] (object))
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+22: valueOf!
+22: toString!
+new Date (1983, 5, _level0, 13, 50, [type Object] (object))
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+23: valueOf!
+23: toString!
+new Date (1983, 5, [type Object], 13, 50, [type Object] (object))
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+22: toString!
+24: valueOf!
+24: toString!
+new Date (1983, 5, [type Object], 13, 50, [type Object] (object))
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object], 13, 50, [type Object] (object))
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object], 13, 50, [type Object] (object))
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+new Date (1983, 5, 25, 13, 50, [type Object] (object), 300)
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+new Date (1983, 5, [type Object], 13, 50, -0.6 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, -0.6 (number), 300)
+1983-5-25 13:50:0.300
+26: valueOf!
+26: toString!
+new Date (1983, 5, [type Object], 13, 50, -0.4 (number))
+1983-5-25 13:50:0.0
+new Date (1983, 5, 25, 13, 50, -0.4 (number), 300)
+1983-5-25 13:50:0.300
+new Date (1983, 5, -0.6, 13, 50, 1.4 (number))
+1983-5-25 13:50:1.0
+new Date (1983, 5, 25, 13, 50, 1.4 (number), 300)
+1983-5-25 13:50:1.300
+new Date (1983, 5, -0.4, 13, 50, 1.6 (number))
+1983-5-25 13:50:1.0
+new Date (1983, 5, 25, 13, 50, 1.6 (number), 300)
+1983-5-25 13:50:1.300
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.300
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.12
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.123
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.580
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.900
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.934
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.999
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:49.999
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:51.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:53.123
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:49.787
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:49.999
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+0: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+2: valueOf!
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+3: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+4: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+5: valueOf!
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+6: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+7: valueOf!
+1983-5-25 13:50:49.999
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+8: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+9: valueOf!
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+10: valueOf!
+1970-0-1 0:0:0.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+13: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+14: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+15: valueOf!
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+16: valueOf!
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.0
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.1
+new Date (1983, 5, 25, 13, 50, 50, 300 (number))
+1983-5-25 13:50:50.1

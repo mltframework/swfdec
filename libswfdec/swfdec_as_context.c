@@ -1235,6 +1235,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_string_init_context (context, version);
   /* define the rest */
   swfdec_as_math_init_context (context, version);
+  swfdec_as_date_init_context (context, version);
 
   /* run init script */
   swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize));

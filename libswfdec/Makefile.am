@@ -23,6 +23,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
 	swfdec_as_context.c \
+	swfdec_as_date.c \
 	swfdec_as_debugger.c \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
@@ -158,6 +159,7 @@ noinst_HEADERS = \
 	swfdec_as_frame_internal.h \
 	swfdec_as_initialize.h \
 	swfdec_as_internal.h \
+	swfdec_as_date.h \
 	swfdec_as_interpret.h \
 	swfdec_as_math.h \
 	swfdec_as_number.h \

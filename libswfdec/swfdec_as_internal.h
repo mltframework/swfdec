@@ -37,6 +37,9 @@ G_BEGIN_DECLS
 void	      	swfdec_as_array_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);
 
+/* swfdec_as_date.c */
+void		swfdec_as_date_init_context	(SwfdecAsContext *	context,
+						 guint			version);
 
 void		swfdec_as_function_set_constructor (SwfdecAsFunction *	fun);
 void		swfdec_as_function_init_context (SwfdecAsContext *	context,

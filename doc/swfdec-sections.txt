@@ -102,6 +102,7 @@ swfdec_buffer_queue_get_type
 <SECTION>
 <FILE>Enumerations</FILE>
 <TITLE>Enumerations</TITLE>
+SwfdecAsContextState
 SwfdecLoaderDataType
 SwfdecLoaderRequest
 swfdec_loader_data_type_get_extension
@@ -205,6 +206,7 @@ SWFDEC_AS_VALUE_GET_OBJECT
 swfdec_as_value_to_object
 SWFDEC_AS_VALUE_SET_OBJECT
 swfdec_as_value_to_primitive
+swfdec_as_value_to_debug
 swfdec_as_double_to_string
 swfdec_as_str_concat
 <SUBSECTION Standard>
@@ -220,6 +222,7 @@ SWFDEC_AS_VALUE_IS_OBJECT
 <SECTION>
 <FILE>SwfdecAsContext</FILE>
 <TITLE>SwfdecAsContext</TITLE>
+SwfdecAsContext
 swfdec_as_context_startup
 swfdec_as_context_abort
 swfdec_as_context_get_string

@@ -749,7 +749,7 @@ swfdec_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_movie_class_mark (SwfdecAsObject *object)
+swfdec_movie_mark (SwfdecAsObject *object)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
   GList *walk;
@@ -792,7 +792,7 @@ swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
 }
 
 static gboolean
-swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable, 
+swfdec_movie_get_variable (SwfdecAsObject *object, const char *variable, 
     SwfdecAsValue *val, guint *flags)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
@@ -825,7 +825,7 @@ swfdec_movie_class_get_variable (SwfdecAsObject *object, const char *variable,
 }
 
 static void
-swfdec_movie_class_set_variable (SwfdecAsObject *object, const char *variable, 
+swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
@@ -852,9 +852,9 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 
   object_class->dispose = swfdec_movie_dispose;
 
-  asobject_class->mark = swfdec_movie_class_mark;
-  asobject_class->get = swfdec_movie_class_get_variable;
-  asobject_class->set = swfdec_movie_class_set_variable;
+  asobject_class->mark = swfdec_movie_mark;
+  asobject_class->get = swfdec_movie_get_variable;
+  asobject_class->set = swfdec_movie_set_variable;
 
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }

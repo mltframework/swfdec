@@ -29,6 +29,99 @@
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
+/*** STACK ITERATOR ***/
+
+SwfdecAsValue *
+swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
+{
+  SwfdecAsContext *context;
+
+  g_return_val_if_fail (iter != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  /* FIXME! */
+  context = SWFDEC_AS_OBJECT (frame)->context;
+  g_return_val_if_fail (context->frame == frame, NULL);
+
+  if (frame->argv) {
+    iter->stack = NULL;
+    iter->current = (SwfdecAsValue *) frame->argv;
+  } else {
+    iter->stack = context->stack;
+    iter->current = frame->stack_begin - 1;
+  }
+  iter->i = 0;
+  iter->n = frame->argc;
+  if (frame->argc == 0)
+    iter->current = NULL;
+  return iter->current;
+}
+
+SwfdecAsValue *
+swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
+{
+  SwfdecAsContext *context;
+  SwfdecAsStack *stack;
+
+  g_return_val_if_fail (iter != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  context = SWFDEC_AS_OBJECT (frame)->context;
+  iter->i = 0;
+  stack = context->stack;
+  if (context->frame == frame) {
+    iter->current = context->cur;
+  } else {
+    SwfdecAsFrame *follow = context->frame;
+    while (follow->next != frame)
+      follow = follow->next;
+    iter->current = follow->stack_begin;
+    /* FIXME: get rid of arguments on stack */
+    while (iter->current < &stack->elements[0] || iter->current > &stack->elements[stack->n_elements]) {
+      stack = stack->next;
+      g_assert (stack);
+    }
+  }
+  iter->stack = stack;
+  /* figure out number of args */
+  iter->n = iter->current - &stack->elements[0];
+  while (frame->stack_begin < &stack->elements[0] && frame->stack_begin > &stack->elements[stack->n_elements]) {
+    iter->n += stack->used_elements;
+    stack = stack->next;
+  };
+  g_assert (iter->n >= (guint) (frame->stack_begin - &stack->elements[0]));
+  iter->n -= frame->stack_begin - &stack->elements[0];
+  if (iter->n == 0)
+    return NULL;
+  if (iter->current == &iter->stack->elements[0]) {
+    iter->stack = iter->stack->next;
+    g_assert (iter->stack);
+    iter->current = &iter->stack->elements[iter->stack->used_elements];
+  }
+  iter->current--;
+  return iter->current;
+}
+
+SwfdecAsValue *
+swfdec_as_stack_iterator_next (SwfdecAsStackIterator *iter)
+{
+  if (iter->i < iter->n)
+    iter->i++;
+  if (iter->i >= iter->n)
+    return NULL;
+  if (iter->stack) {
+    if (iter->current == &iter->stack->elements[0]) {
+      iter->stack = iter->stack->next;
+      g_assert (iter->stack);
+      iter->current = &iter->stack->elements[iter->stack->used_elements];
+    }
+    iter->current--;
+  } else {
+    iter->current++;
+  }
+  return iter->current;
+}
+
+
 G_DEFINE_TYPE (SwfdecAsFrame, swfdec_as_frame, SWFDEC_TYPE_AS_SCOPE)
 
 static void

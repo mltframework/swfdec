@@ -27,6 +27,16 @@
 G_BEGIN_DECLS
 
 typedef struct _SwfdecAsFrameClass SwfdecAsFrameClass;
+typedef struct _SwfdecAsStackIterator SwfdecAsStackIterator;
+
+struct _SwfdecAsStackIterator {
+  /*< private >*/
+  SwfdecAsStack *	stack;
+  SwfdecAsValue *	current;
+  guint			i;
+  guint			n;
+};
+
 
 #define SWFDEC_TYPE_AS_FRAME                    (swfdec_as_frame_get_type())
 #define SWFDEC_IS_AS_FRAME(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_FRAME))
@@ -88,6 +98,9 @@ void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	target);
 void		swfdec_as_frame_check_scope	(SwfdecAsFrame *	frame);
 
+SwfdecAsValue *	swfdec_as_stack_iterator_init	(SwfdecAsStackIterator *	iter,
+						 SwfdecAsFrame *	frame);
+SwfdecAsValue *	swfdec_as_stack_iterator_next	(SwfdecAsStackIterator *	iter);
 
 G_END_DECLS
 #endif

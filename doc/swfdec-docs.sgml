@@ -25,5 +25,6 @@
     <xi:include href="xml/Internals.xml"/>
     <xi:include href="xml/SwfdecAsValue.xml"/>
     <xi:include href="xml/SwfdecAsContext.xml"/>
+    <xi:include href="xml/SwfdecAsObject.xml"/>
   </chapter>
 </book>

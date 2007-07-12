@@ -47,9 +47,6 @@ struct _SwfdecAsStringClass {
 
 GType		swfdec_as_string_get_type	(void);
 
-SwfdecAsObject *swfdec_as_string_new		(SwfdecAsContext *	context,
-						 const char *		string);
-
 void		swfdec_as_string_init_context	(SwfdecAsContext *	context,
 						 guint			version);
 

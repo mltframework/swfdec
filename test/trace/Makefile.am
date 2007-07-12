@@ -116,6 +116,15 @@ EXTRA_DIST = \
 	chr-7.swf.trace \
 	classes.swf \
 	classes.swf.trace \
+	clonesprite-events.c \
+	clonesprite-events-5.swf \
+	clonesprite-events-5.swf.trace \
+	clonesprite-events-6.swf \
+	clonesprite-events-6.swf.trace \
+	clonesprite-events-7.swf \
+	clonesprite-events-7.swf.trace \
+	clonesprite-events-8.swf \
+	clonesprite-events-8.swf.trace \
 	color-getters.swf \
 	color-getters.swf.trace \
 	color-new.swf \

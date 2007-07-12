@@ -361,9 +361,14 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, const char *variable,
     *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bytesTotal) {
-    guint bytes = swfdec_loader_get_size (stream->loader);
-    if (bytes == 0)
-      bytes = swfdec_loader_get_loaded (stream->loader);
+    guint bytes;
+    if (stream->loader == NULL) {
+      bytes = 0;
+    } else { 
+      bytes = swfdec_loader_get_size (stream->loader);
+      if (bytes == 0)
+	bytes = swfdec_loader_get_loaded (stream->loader);
+    }
     SWFDEC_AS_VALUE_SET_INT (val, bytes);
     *flags = 0;
     return TRUE;

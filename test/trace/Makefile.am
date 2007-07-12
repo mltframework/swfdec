@@ -195,6 +195,15 @@ EXTRA_DIST = \
 	double-to-string-7.swf \
 	double-to-string-7.swf.trace \
 	double-to-string-7.swf.trace.org \
+	duplicateMovieClip-events.c \
+	duplicateMovieClip-events-5.swf \
+	duplicateMovieClip-events-5.swf.trace \
+	duplicateMovieClip-events-6.swf \
+	duplicateMovieClip-events-6.swf.trace \
+	duplicateMovieClip-events-7.swf \
+	duplicateMovieClip-events-7.swf.trace \
+	duplicateMovieClip-events-8.swf \
+	duplicateMovieClip-events-8.swf.trace \
 	duplicate-names.as \
 	duplicate-names-5.swf \
 	duplicate-names-5.swf.trace \

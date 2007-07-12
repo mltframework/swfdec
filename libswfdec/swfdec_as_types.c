@@ -406,7 +406,7 @@ swfdec_as_value_to_debug (const SwfdecAsValue *value)
 
   switch (value->type) {
     case SWFDEC_AS_TYPE_STRING:
-      return g_strdup (SWFDEC_AS_VALUE_GET_STRING (value));
+      return g_shell_quote (SWFDEC_AS_VALUE_GET_STRING (value));
     case SWFDEC_AS_TYPE_UNDEFINED:
       return g_strdup ("undefined");
     case SWFDEC_AS_TYPE_BOOLEAN:

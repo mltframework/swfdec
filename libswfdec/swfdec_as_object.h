@@ -55,7 +55,9 @@ typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object,
 struct _SwfdecAsObject {
   GObject		object;
 
-  SwfdecAsContext *	context;	/* context used */
+  /*< protected >*/
+  SwfdecAsContext *	context;	/* context the object belongs to */
+  /*< private >*/
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   guint8		flags;		/* GC flags */

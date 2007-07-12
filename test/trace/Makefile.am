@@ -820,6 +820,15 @@ EXTRA_DIST = \
 	targetpath-6.swf.trace \
 	targetpath-7.swf \
 	targetpath-7.swf.trace \
+	this-localfunction.as \
+	this-localfunction-5.swf \
+	this-localfunction-5.swf.trace \
+	this-localfunction-6.swf \
+	this-localfunction-6.swf.trace \
+	this-localfunction-7.swf \
+	this-localfunction-7.swf.trace \
+	this-localfunction-8.swf \
+	this-localfunction-8.swf.trace \
 	tointeger-numbers.as \
 	tointeger-numbers-5.swf \
 	tointeger-numbers-5.swf.trace \

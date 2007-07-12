@@ -71,15 +71,11 @@ swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
   context= SWFDEC_AS_CONTEXT (debug->manager->player);
   frame = context->frame;
   if (frame) {
-    SwfdecAsValue *val = context->cur;
-    SwfdecAsStack *stack = context->stack;
+    SwfdecAsStackIterator siter;
+    SwfdecAsValue *val;
     guint i = 0;
-    while (val != frame->stack_begin) {
-      if (val == &stack->elements[0]) {
-	stack = stack->next;
-	val = &stack->elements[stack->used_elements];
-      }
-      val--;
+    for (val = swfdec_as_stack_iterator_init (&siter, frame); val;
+	val = swfdec_as_stack_iterator_next (&siter)) {
       s = swfdec_as_value_to_debug (val);
       gtk_list_store_append (store, &iter);
       gtk_list_store_set (store, &iter, COLUMN_LINE, ++i, 

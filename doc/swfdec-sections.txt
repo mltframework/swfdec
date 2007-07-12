@@ -103,6 +103,7 @@ swfdec_buffer_queue_get_type
 <FILE>Enumerations</FILE>
 <TITLE>Enumerations</TITLE>
 SwfdecLoaderDataType
+SwfdecLoaderRequest
 swfdec_loader_data_type_get_extension
 SwfdecMouseCursor
 </SECTION>

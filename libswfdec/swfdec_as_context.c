@@ -127,6 +127,16 @@
  */
 
 /**
+ * SwfdecAsContext
+ *
+ * This is the main object ued to hold the state of a script engine. All members 
+ * are private and should not be accessed.
+ *
+ * Subclassing this structure to get scripting support in your own appliation is
+ * encouraged.
+ */
+
+/**
  * SwfdecAsContextState
  * @SWFDEC_AS_CONTEXT_NEW: the context is not yet initialized, 
  *                         swfdec_as_context_startup() needs to be called.

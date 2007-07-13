@@ -21,9 +21,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec_as_frame.h>
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_as_stack.h>
+#include <libswfdec/swfdec.h>
 #include "swfdec_debug_stack.h"
 
 G_DEFINE_TYPE (SwfdecDebugStack, swfdec_debug_stack, GTK_TYPE_TREE_VIEW)
@@ -69,7 +67,7 @@ swfdec_debug_stack_set_model (SwfdecDebugStack *debug)
   char *s;
 
   context= SWFDEC_AS_CONTEXT (debug->manager->player);
-  frame = context->frame;
+  frame = swfdec_as_context_get_frame (context);
   if (frame) {
     SwfdecAsStackIterator siter;
     SwfdecAsValue *val;

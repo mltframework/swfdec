@@ -208,10 +208,6 @@ swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date, struct tm *broken
 
   if (isfinite (date->milliseconds)) {
     seconds = floor (date->milliseconds / 1000) + date->timezone_offset_minutes * 60;
-
-    // special case: add an hour if the milliseconds from epoch is between -0.5 and 0 (wtf)
-    if (date->milliseconds < 0 && date->milliseconds >= -0.5)
-      seconds += 60 * 60;
   } else {
     seconds = 0;
   }
@@ -459,7 +455,7 @@ swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object, 
 
   milliseconds = swfdec_as_date_get_milliseconds_utc (date);
 
-  if (milliseconds >= 0) {
+  if (milliseconds >= 0 || (milliseconds % 1000 == 0)) {
     SWFDEC_AS_VALUE_SET_INT (ret, milliseconds % 1000);
   } else {
     SWFDEC_AS_VALUE_SET_INT (ret, 1000 + milliseconds % 1000);

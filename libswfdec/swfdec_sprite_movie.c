@@ -24,7 +24,7 @@
 #include <strings.h>
 
 #include "swfdec_sprite_movie.h"
-#include "swfdec_as_object.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_event.h"
 #include "swfdec_audio_stream.h"

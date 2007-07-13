@@ -95,8 +95,8 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
  * Initializes @iter to walk the stack of @frame. The first value on the stack
  * will alread be returned. This makes it possible to write a simple loop to 
  * print the whole stack:
- * |[for (value = swfdec_as_stack_iterator_init (&iter, frame); value != NULL;
- *     value = swfdec_as_stack_iterator_next (&iter)) {
+ * |[for (value = swfdec_as_stack_iterator_init (&amp;iter, frame); value != NULL;
+ *     value = swfdec_as_stack_iterator_next (&amp;iter)) {
  *   char *s = swfdec_as_value_to_debug (value);
  *   g_print ("%s\n", s);
  *   g_free (s);

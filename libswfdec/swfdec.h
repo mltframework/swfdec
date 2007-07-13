@@ -29,6 +29,7 @@
 #include <libswfdec/swfdec_player.h>
 
 #include <libswfdec/swfdec_as_context.h>
+#include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
 
 #endif

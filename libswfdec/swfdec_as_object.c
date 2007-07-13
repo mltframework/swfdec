@@ -46,7 +46,7 @@ swfdec_as_object_dispose (GObject *gobject)
 {
   SwfdecAsObject *object = SWFDEC_AS_OBJECT (gobject);
 
-  g_assert (!SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
+  g_assert (object->properties == NULL);
 
   G_OBJECT_CLASS (swfdec_as_object_parent_class)->dispose (gobject);
 }
@@ -350,7 +350,7 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (!SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
+  g_return_if_fail (object->properties == NULL);
 
   object->context = context;
   object->size = size;
@@ -365,7 +365,7 @@ void
 swfdec_as_object_collect (SwfdecAsObject *object)
 {
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
+  g_return_if_fail (object->properties != NULL);
 
   g_hash_table_foreach (object->properties, swfdec_as_object_free_property, object);
   g_hash_table_destroy (object->properties);
@@ -562,7 +562,6 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   SwfdecAsFrame *frame;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (SWFDEC_AS_OBJECT_HAS_CONTEXT (object));
   g_return_if_fail (script != NULL);
 
   context = object->context;
@@ -629,7 +628,7 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
 
 /**
  * swfdec_as_object_create:
- * @construct: constructor
+ * @fun: constructor
  * @n_args: number of arguments
  * @args: arguments to pass to constructor
  * @scripted: If this variable is %TRUE, the variable "constructor" will be 
@@ -641,7 +640,7 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * object will be pushed on top of the stack.
  **/
 void
-swfdec_as_object_create (SwfdecAsFunction *construct, guint n_args, 
+swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
     const SwfdecAsValue *args, gboolean scripted)
 {
   SwfdecAsObject *new;

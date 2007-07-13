@@ -702,7 +702,7 @@ swfdec_sprite_movie_mark (SwfdecAsObject *object)
 
   for (walk = SWFDEC_MOVIE (object)->list; walk; walk = walk->next) {
     SwfdecAsObject *child = walk->data;
-    g_assert (SWFDEC_AS_OBJECT_HAS_CONTEXT (child));
+    g_assert (child->properties != NULL);
     swfdec_as_object_mark (child);
   }
 

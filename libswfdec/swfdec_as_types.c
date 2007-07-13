@@ -605,7 +605,6 @@ return FALSE;
 
 /**
 * swfdec_as_value_to_primitive:
-* @context: a #SwfdecAsContext
 * @value: value to convert
 *
 * Tries to convert the given @value inline to its primitive value. Primitive 

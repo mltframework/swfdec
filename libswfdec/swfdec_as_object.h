@@ -50,8 +50,6 @@ typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object,
 #define SWFDEC_AS_OBJECT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
 #define SWFDEC_AS_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
 
-#define SWFDEC_AS_OBJECT_HAS_CONTEXT(obj)	 (SWFDEC_AS_OBJECT (obj)->properties != NULL)
-
 struct _SwfdecAsObject {
   GObject		object;
 
@@ -102,7 +100,7 @@ GType		swfdec_as_object_get_type	(void);
 
 SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context);
 SwfdecAsObject *swfdec_as_object_new_empty    	(SwfdecAsContext *    	context);
-void		swfdec_as_object_create		(SwfdecAsFunction *	construct,
+void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
 						 const SwfdecAsValue *	args,
 						 gboolean		scripted);

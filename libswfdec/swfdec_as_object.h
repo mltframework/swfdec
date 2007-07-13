@@ -22,7 +22,6 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -143,8 +142,6 @@ SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 SwfdecAsNative		native,
 						 guint			min_args);
 
-void		swfdec_as_object_run		(SwfdecAsObject *       object,
-						 SwfdecScript *		script);
 gboolean	swfdec_as_object_has_function	(SwfdecAsObject *       object,
 						 const char *		name);
 void		swfdec_as_object_call		(SwfdecAsObject *       object,

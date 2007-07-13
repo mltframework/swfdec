@@ -631,8 +631,6 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * @fun: constructor
  * @n_args: number of arguments
  * @args: arguments to pass to constructor
- * @scripted: If this variable is %TRUE, the variable "constructor" will be 
- *            named "__constructor__"
  *
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
@@ -641,7 +639,7 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  **/
 void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
-    const SwfdecAsValue *args, gboolean scripted)
+    const SwfdecAsValue *args)
 {
   SwfdecAsObject *new;
   SwfdecAsContext *context;
@@ -649,13 +647,13 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   guint size;
   GType type = 0;
 
-  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (construct));
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
 
-  context = SWFDEC_AS_OBJECT (construct)->context;
-  cur = construct;
+  context = SWFDEC_AS_OBJECT (fun)->context;
+  cur = fun;
   while (type == 0 && cur != NULL) {
-    if (SWFDEC_IS_AS_NATIVE_FUNCTION (construct)) {
-      SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (construct);
+    if (SWFDEC_IS_AS_NATIVE_FUNCTION (cur)) {
+      SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (cur);
       if (native->construct_size) {
 	type = native->construct_type;
 	size = native->construct_size;
@@ -684,8 +682,8 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     return;
   new = g_object_new (type, NULL);
   swfdec_as_object_add (new, context, size);
-  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (construct), FALSE);
-  swfdec_as_function_call (construct, new, n_args, args, NULL);
+  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (fun), FALSE);
+  swfdec_as_function_call (fun, new, n_args, args, NULL);
   context->frame->construct = TRUE;
 }
 

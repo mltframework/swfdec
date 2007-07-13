@@ -549,7 +549,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
     return NULL;
-  swfdec_as_object_create (fun, 1, value, TRUE);
+  swfdec_as_object_create (fun, 1, value);
   swfdec_as_context_run (context);
   value = swfdec_as_stack_pop (context);
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {

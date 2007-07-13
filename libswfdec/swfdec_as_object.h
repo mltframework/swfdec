@@ -102,8 +102,7 @@ SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context);
 SwfdecAsObject *swfdec_as_object_new_empty    	(SwfdecAsContext *    	context);
 void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
-						 const SwfdecAsValue *	args,
-						 gboolean		scripted);
+						 const SwfdecAsValue *	args);
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct,
 						 gboolean		scripted);

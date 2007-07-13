@@ -280,3 +280,20 @@ SWFDEC_IS_AS_OBJECT
 SWFDEC_IS_AS_OBJECT_CLASS
 SWFDEC_TYPE_AS_OBJECT
 </SECTION>
+
+<SECTION>
+<FILE>SwfdecAsArray</FILE>
+<TITLE>SwfdecAsArray</TITLE>
+SwfdecAsArray
+swfdec_as_array_new
+swfdec_as_array_append
+swfdec_as_array_push
+<SUBSECTION Standard>
+swfdec_as_array_get_type
+SwfdecAsArrayClass
+SWFDEC_AS_ARRAY
+SWFDEC_AS_ARRAY_CLASS
+SWFDEC_AS_ARRAY_GET_CLASS
+SWFDEC_IS_AS_ARRAY
+SWFDEC_IS_AS_ARRAY_CLASS
+</SECTION>

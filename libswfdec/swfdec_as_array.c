@@ -36,6 +36,21 @@
 
 G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
 
+/**
+ * SECTION:SwfdecAsArray
+ * @title: SwfdecAsArray
+ * @short_description: the array object
+ *
+ * The array object provides some convenience functions for creating and
+ * modifying arrays.
+ */
+
+/**
+ * SwfdecAsArray
+ *
+ * This is the type of the array object.
+ */
+
 /*
  * Internal helper functions
  */
@@ -197,6 +212,23 @@ swfdec_as_array_set_range (SwfdecAsArray *array, gint32 start_index, gint32 num,
   }
 }
 
+/**
+ * swfdec_as_array_push:
+ * @array: a #SwfdecAsArray
+ * @value: the value to add
+ *
+ * Adds the given value to the array. This a macro that just calls
+ * swfdec_as_array_append().
+ */
+
+/**
+ * swfdec_as_array_append:
+ * @array: a #SwfdecAsArray
+ * @n: number of values to add
+ * @values: the values to add
+ *
+ * Appends the given @values to the array.
+ **/
 void
 swfdec_as_array_append (SwfdecAsArray *array, guint n, const SwfdecAsValue *value)
 {

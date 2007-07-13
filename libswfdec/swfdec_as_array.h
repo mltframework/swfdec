@@ -37,6 +37,7 @@ typedef struct _SwfdecAsArrayClass SwfdecAsArrayClass;
 #define SWFDEC_AS_ARRAY_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_ARRAY, SwfdecAsArrayClass))
 
 struct _SwfdecAsArray {
+  /*< private >*/
   SwfdecAsObject	object;
 };
 

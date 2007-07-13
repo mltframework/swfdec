@@ -76,6 +76,19 @@
  * Swfdec. You can manually set them with swfdec_as_object_set_variable_flags().
  */
 
+/**
+ * SwfdecAsVariableForeach:
+ * @object: The object this function is run on
+ * @variable: garbage-collected name of the current variables
+ * @value: value of the current variable
+ * @flags: Flags associated with the current variable
+ * @data: User dta passed to swfdec_as_object_foreach()
+ *
+ * Function prototype for the swfdec_as_object_foreach() function.
+ *
+ * Returns: %TRUE to continue running the foreach function, %FALSE to stop
+ */
+
 typedef struct _SwfdecAsVariable SwfdecAsVariable;
 struct _SwfdecAsVariable {
   guint			flags;		/* SwfdecAsVariableFlag values */

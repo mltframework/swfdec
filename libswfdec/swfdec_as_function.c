@@ -40,6 +40,17 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 {
 }
 
+/**
+ * swfdec_as_function_create:
+ * @context: a #SwfdecAsFunction
+ * @type: the type of function to create
+ * @size: size of @type
+ *
+ * Creates a new function. The function will be of @type. It will be added to
+ * @context and its prototype and constructor object will be set correctly.
+ *
+ * Returns: a new object of @type or %NULL on OOM
+ **/
 SwfdecAsFunction *
 swfdec_as_function_create (SwfdecAsContext *context, GType type, guint size)
 {

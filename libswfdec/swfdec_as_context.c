@@ -28,6 +28,7 @@
 #include "swfdec_as_boolean.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_math.h"
 #include "swfdec_as_native_function.h"

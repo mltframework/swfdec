@@ -136,6 +136,7 @@ noinst_HEADERS = \
 	swfdec_as_boolean.h \
 	swfdec_as_frame.h \
 	swfdec_as_function.h \
+	swfdec_as_internal.h \
 	swfdec_as_interpret.h \
 	swfdec_as_math.h \
 	swfdec_as_native_function.h \

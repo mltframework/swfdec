@@ -54,9 +54,6 @@ void		swfdec_as_array_append		(SwfdecAsArray *	array,
 						 guint			n,
 						 const SwfdecAsValue *	values);
 
-void	      	swfdec_as_array_init_context	(SwfdecAsContext *	context,
-					      	 guint			version);
-
 
 G_END_DECLS
 #endif

@@ -112,7 +112,6 @@ char *		swfdec_as_object_get_debug	(SwfdecAsObject *	object);
 void		swfdec_as_object_add		(SwfdecAsObject *     	object,
 						 SwfdecAsContext *    	context,
 						 gsize			size);
-void		swfdec_as_object_collect	(SwfdecAsObject *     	object);
 
 /* I'd like to name these [gs]et_property, but binding authors will complain
  * about overlap with g_object_[gs]et_property then */

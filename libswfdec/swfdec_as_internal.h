@@ -37,6 +37,7 @@ void		swfdec_as_function_init_context (SwfdecAsContext *	context,
 						 guint			version);
 
 /* swfdec_as_object.c */
+void		swfdec_as_object_collect	(SwfdecAsObject *     	object);
 guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);

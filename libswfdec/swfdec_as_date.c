@@ -43,6 +43,12 @@
 
 G_DEFINE_TYPE (SwfdecAsDate, swfdec_as_date, SWFDEC_TYPE_AS_OBJECT)
 
+// forward definations
+
+static void
+swfdec_as_date_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *ret);
+
 /*
  * Class functions
  */
@@ -210,25 +216,34 @@ swfdec_as_date_set_brokentime_local (SwfdecAsDate *date, struct tm *brokentime)
 
 // set and get function helpers
 
-#define BROKENTIME_VALUE_SECOND		G_STRUCT_OFFSET (struct tm, tm_sec)
-#define BROKENTIME_VALUE_MINUTE		G_STRUCT_OFFSET (struct tm, tm_min)
-#define BROKENTIME_VALUE_HOUR		G_STRUCT_OFFSET (struct tm, tm_hour)
-#define BROKENTIME_VALUE_WEEK_DAY	G_STRUCT_OFFSET (struct tm, tm_wday)
-#define BROKENTIME_VALUE_MONTH_DAY	G_STRUCT_OFFSET (struct tm, tm_mday)
-#define BROKENTIME_VALUE_MONTH		G_STRUCT_OFFSET (struct tm, tm_mon)
-#define BROKENTIME_VALUE_YEAR_DAY	G_STRUCT_OFFSET (struct tm, tm_yday)
-#define BROKENTIME_VALUE_YEAR		G_STRUCT_OFFSET (struct tm, tm_year)
+typedef enum {
+  FIELD_SECONDS,
+  FIELD_MINUTES,
+  FIELD_HOURS,
+  FIELD_WEEK_DAYS,
+  FIELD_MONTH_DAYS,
+  FIELD_MONTHS,
+  FIELD_YEAR_DAYS,
+  FIELD_YEAR,
+  FIELD_FULL_YEAR
+} field_t;
 
-static void
-swfdec_as_date_get_brokentime_value (SwfdecAsDate *date, gboolean utc, int field_offset,
-    SwfdecAsValue *ret)
+static int field_offsets[] = {
+  G_STRUCT_OFFSET (struct tm, tm_sec),
+  G_STRUCT_OFFSET (struct tm, tm_min),
+  G_STRUCT_OFFSET (struct tm, tm_hour),
+  G_STRUCT_OFFSET (struct tm, tm_wday),
+  G_STRUCT_OFFSET (struct tm, tm_mday),
+  G_STRUCT_OFFSET (struct tm, tm_mon),
+  G_STRUCT_OFFSET (struct tm, tm_yday),
+  G_STRUCT_OFFSET (struct tm, tm_year),
+  G_STRUCT_OFFSET (struct tm, tm_year)
+};
+
+static int
+swfdec_as_date_get_brokentime_value (SwfdecAsDate *date, gboolean utc, int field_offset)
 {
   struct tm brokentime;
-
-  if (!swfdec_as_date_is_valid(date)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
-    return;
-  }
 
   if (utc) {
     swfdec_as_date_get_brokentime_utc (date, &brokentime);
@@ -236,7 +251,7 @@ swfdec_as_date_get_brokentime_value (SwfdecAsDate *date, gboolean utc, int field
     swfdec_as_date_get_brokentime_local (date, &brokentime);
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, G_STRUCT_MEMBER (int, &brokentime, field_offset));
+  return G_STRUCT_MEMBER (int, &brokentime, field_offset);
 }
 
 static void
@@ -258,6 +273,81 @@ swfdec_as_date_set_brokentime_value (SwfdecAsDate *date, gboolean utc, int field
   } else {
     swfdec_as_date_set_brokentime_local (date, &brokentime);
   }
+}
+
+static void
+swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *ret, field_t field, gboolean utc)
+{
+  if (argc > 0) {
+    SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+    gboolean set;
+    gint64 milliseconds;
+    double d;
+    int number;
+
+    set = TRUE;
+    swfdec_as_date_value_to_number_and_integer (cx, &argv[0], &d, &number);
+
+    switch (field) {
+      case FIELD_MONTHS:
+	if (!isfinite (d)) {
+	  if (!isnan (d)) {
+	    swfdec_as_date_set_brokentime_value (date, utc, field_offsets[FIELD_YEAR], cx,
+		0 - 1900);
+	  }
+	  swfdec_as_date_set_brokentime_value (date, utc, field_offsets[field], cx, 0);
+	  set = FALSE;
+	}
+	break;
+      case FIELD_YEAR:
+	// NOTE: Test against double, not the integer
+	if (d >= 100 || d < 0)
+		number -= 1900;
+	// fall trough
+      case FIELD_FULL_YEAR:
+	if (!isfinite (d)) {
+	  swfdec_as_date_set_brokentime_value (date, utc, field_offsets[field], cx, 0 - 1900);
+	  set = FALSE;
+	}
+	break;
+      default:
+	break;
+    }
+
+    if (set)
+      swfdec_as_date_set_brokentime_value (date, utc, field_offsets[field], cx, number);
+
+    milliseconds = swfdec_as_date_get_milliseconds_utc (date);
+    if (milliseconds < -8.64e15 || milliseconds > 8.64e15)
+      date->milliseconds = NAN;
+  }
+
+  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+}
+
+static void
+swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *ret, field_t field, gboolean utc)
+{
+  int number;
+
+  if (!swfdec_as_date_is_valid (SWFDEC_AS_DATE (object))) {
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+    return;
+  }
+
+  number = swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), utc, field_offsets[field]);
+
+  switch (field) {
+    case FIELD_FULL_YEAR:
+      number += 1900;
+      break;
+    default:
+      break;
+  }
+
+  SWFDEC_AS_VALUE_SET_INT (ret, number);
 }
 
 /*** AS CODE ***/
@@ -298,13 +388,6 @@ swfdec_as_date_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 }
 
 static void
-swfdec_as_date_getTime (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
-    SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
-}
-
-static void
 swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -313,6 +396,13 @@ swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object, g
 }
 
 // get* functions
+
+static void
+swfdec_as_date_getTime (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+}
 
 static void
 swfdec_as_date_getMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
@@ -360,128 +450,112 @@ static void
 swfdec_as_date_getSeconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_SECOND, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_SECONDS, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_SECOND, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_SECONDS, TRUE);
 }
 
 static void
 swfdec_as_date_getMinutes (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_MINUTE, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MINUTES, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_MINUTE, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MINUTES, TRUE);
 }
 
 static void
 swfdec_as_date_getHours (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_HOUR, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_HOURS, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_HOUR, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_HOURS, TRUE);
 }
 
 static void
 swfdec_as_date_getDay (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_WEEK_DAY, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_WEEK_DAYS, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCDay (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_WEEK_DAY, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_WEEK_DAYS, TRUE);
 }
 
 static void
 swfdec_as_date_getDate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_MONTH_DAY, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MONTH_DAYS, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCDate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_MONTH_DAY, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MONTH_DAYS, TRUE);
 }
 
 static void
 swfdec_as_date_getMonth (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_MONTH, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MONTHS, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_MONTH, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MONTHS, TRUE);
 }
 
 static void
 swfdec_as_date_getYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_YEAR, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_YEAR, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_YEAR, ret);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_YEAR, TRUE);
 }
 
 static void
 swfdec_as_date_getFullYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
-
-  if (!swfdec_as_date_is_valid(date)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
-    return;
-  }
-
-  swfdec_as_date_get_brokentime_value (date, FALSE, BROKENTIME_VALUE_YEAR, ret);
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_value_to_integer (cx, ret) + 1900);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_FULL_YEAR, FALSE);
 }
 
 static void
 swfdec_as_date_getUTCFullYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
-
-  if (!swfdec_as_date_is_valid(date)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
-    return;
-  }
-
-  swfdec_as_date_get_brokentime_value (date, TRUE, BROKENTIME_VALUE_YEAR, ret);
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_value_to_integer (cx, ret) + 1900);
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_FULL_YEAR, TRUE);
 }
 
 // set* functions
@@ -530,211 +604,98 @@ static void
 swfdec_as_date_setSeconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_SECOND,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_SECONDS, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_SECOND,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_SECONDS, TRUE);
 }
 
 static void
 swfdec_as_date_setMinutes (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_MINUTE,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MINUTES, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_MINUTE,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MINUTES, TRUE);
 }
 
 static void
 swfdec_as_date_setHours (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_HOUR,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_HOURS, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_HOUR,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_HOURS, TRUE);
 }
 
 static void
 swfdec_as_date_setDate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_MONTH_DAY,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTH_DAYS, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCDate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_MONTH_DAY,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTH_DAYS, TRUE);
 }
 
 static void
 swfdec_as_date_setMonth (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    double d;
-    int number;
-
-    swfdec_as_date_value_to_number_and_integer (cx, &argv[0], &d, &number);
-
-    if (!isfinite (d) && !isnan (d)) {
-      swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_YEAR,
-	  cx, 0 - 1900);
-    }
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), FALSE, BROKENTIME_VALUE_MONTH,
-	cx, number);
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTHS, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    swfdec_as_date_set_brokentime_value (SWFDEC_AS_DATE (object), TRUE, BROKENTIME_VALUE_MONTH,
-	cx, swfdec_as_value_to_integer (cx, &argv[0]));
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTHS, TRUE);
 }
 
 static void
 swfdec_as_date_setYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
-
-  if (argc > 0) {
-    struct tm brokentime;
-    int number;
-    double d;
-
-    swfdec_as_date_get_brokentime_local (date, &brokentime);
-    swfdec_as_date_value_to_number_and_integer (cx, &argv[0], &d, &number);
-    if (!isfinite (d)) {
-      brokentime.tm_year = 0 - 1900;
-      swfdec_as_date_set_brokentime_local (date, &brokentime);
-    } else if (number <= -271822 || number >= 275760) {
-      date->milliseconds = NAN;
-    } else {
-      brokentime.tm_year = number;
-      if (d >= 100 || d < 0)
-	brokentime.tm_year -= 1900;
-      swfdec_as_date_set_brokentime_local (date, &brokentime);
-    }
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_YEAR, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
-
-  if (argc > 0) {
-    struct tm brokentime;
-
-    swfdec_as_date_get_brokentime_utc (date, &brokentime);
-    brokentime.tm_year = swfdec_as_value_to_integer (cx, &argv[0]);
-    if (brokentime.tm_year >= 100)
-      brokentime.tm_year -= 1900;
-    swfdec_as_date_set_brokentime_utc (date, &brokentime);
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_YEAR, TRUE);
 }
 
 static void
 swfdec_as_date_setFullYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
-
-  if (argc > 0) {
-    struct tm brokentime;
-
-    swfdec_as_date_get_brokentime_local (date, &brokentime);
-    brokentime.tm_year = swfdec_as_value_to_integer (cx, &argv[0]) - 1900;
-    swfdec_as_date_set_brokentime_local (date, &brokentime);
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_FULL_YEAR, FALSE);
 }
 
 static void
 swfdec_as_date_setUTCFullYear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
-
-  if (argc > 0) {
-    struct tm brokentime;
-
-    swfdec_as_date_get_brokentime_utc (date, &brokentime);
-    brokentime.tm_year = swfdec_as_value_to_integer (cx, &argv[0]) - 1900;
-    swfdec_as_date_set_brokentime_utc (date, &brokentime);
-  }
-
-  swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_FULL_YEAR, TRUE);
 }
 
 // Static methods

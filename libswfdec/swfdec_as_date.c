@@ -328,15 +328,22 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
 	}
 	break;
       default:
+	if (!isfinite (d)) {
+	  swfdec_as_date_set_invalid (date);
+	  set = FALSE;
+	}
 	break;
     }
 
-    if (set)
+    if (set) {
       swfdec_as_date_set_brokentime_value (date, utc, field_offsets[field], cx, number);
+    }
 
-    milliseconds = swfdec_as_date_get_milliseconds_utc (date);
-    if (milliseconds < -8.64e15 || milliseconds > 8.64e15)
-      swfdec_as_date_set_invalid (date);
+    if (swfdec_as_date_is_valid (date)) {
+      milliseconds = swfdec_as_date_get_milliseconds_utc (date);
+      if (milliseconds < -8.64e15 || milliseconds > 8.64e15)
+	swfdec_as_date_set_invalid (date);
+    }
   }
 
   swfdec_as_date_valueOf (cx, object, 0, NULL, ret);

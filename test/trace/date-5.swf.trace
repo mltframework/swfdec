@@ -5865,6 +5865,279 @@ test_date (1).setYear ([type Object] (object))
 NaN-NaN-NaN NaN:NaN:NaN.NaN
 26: valueOf!
 NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear (1983 (number))
+275762-0-1 0:0:0.0
+1983-0-1 0:0:0.0
+test_date (2).setYear (83 (number))
+275762-0-1 0:0:0.0
+1983-0-1 0:0:0.0
+test_date (2).setYear (0 (number))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (100 (number))
+275762-0-1 0:0:0.0
+100-0-1 0:0:0.0
+test_date (2).setYear (99 (number))
+275762-0-1 0:0:0.0
+1999-0-1 0:0:0.0
+test_date (2).setYear (101 (number))
+275762-0-1 0:0:0.0
+101-0-1 0:0:0.0
+test_date (2).setYear (-100 (number))
+275762-0-1 0:0:0.0
+-100-0-1 0:0:0.0
+test_date (2).setYear (-500 (number))
+275762-0-1 0:0:0.0
+-500-0-1 0:0:0.0
+test_date (2).setYear (-271823 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear (-271822 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear (-271821 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear (275759 (number))
+275762-0-1 0:0:0.0
+275759-0-1 0:0:0.0
+test_date (2).setYear (275760 (number))
+275762-0-1 0:0:0.0
+275760-0-1 0:0:0.0
+test_date (2).setYear (275761 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear (276447232 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear (-276447232 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setYear ( (undefined))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (null (null))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (true (boolean))
+275762-0-1 0:0:0.0
+1901-0-1 0:0:0.0
+test_date (2).setYear (false (boolean))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (0 (number))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (1 (number))
+275762-0-1 0:0:0.0
+1901-0-1 0:0:0.0
+test_date (2).setYear (0.5 (number))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (-1 (number))
+275762-0-1 0:0:0.0
+-1-0-1 0:0:0.0
+test_date (2).setYear (-8.6 (number))
+275762-0-1 0:0:0.0
+-8-0-1 0:0:0.0
+test_date (2).setYear (Infinity (number))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (-Infinity (number))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (NaN (number))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear ( (string))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (0 (string))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (-0 (string))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (0.0 (string))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+test_date (2).setYear (1 (string))
+275762-0-1 0:0:0.0
+1901-0-1 0:0:0.0
+test_date (2).setYear (Hello World! (string))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (true (string))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (_level0 (string))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear (_level0 (movieclip))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear ([object Object] (object))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setYear ( (undefined))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+valueOf called
+toString called
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+valueOf called
+0-0-1 0:0:0.0
+toString called with 
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+valueOf called with 
+test_date (2).setYear ([object Object] (object))
+275762-0-1 0:0:0.0
+valueOf called with 
+0-0-1 0:0:0.0
+test_date (2).setYear ( (object))
+275762-0-1 0:0:0.0
+1900-0-1 0:0:0.0
+0: valueOf!
+test_date (2).setYear ( (object))
+275762-0-1 0:0:0.0
+0: valueOf!
+1900-0-1 0:0:0.0
+1: valueOf!
+test_date (2).setYear (null (object))
+275762-0-1 0:0:0.0
+1: valueOf!
+1900-0-1 0:0:0.0
+2: valueOf!
+test_date (2).setYear (true (object))
+275762-0-1 0:0:0.0
+2: valueOf!
+1901-0-1 0:0:0.0
+3: valueOf!
+test_date (2).setYear (false (object))
+275762-0-1 0:0:0.0
+3: valueOf!
+1900-0-1 0:0:0.0
+4: valueOf!
+test_date (2).setYear (0 (object))
+275762-0-1 0:0:0.0
+4: valueOf!
+1900-0-1 0:0:0.0
+5: valueOf!
+test_date (2).setYear (1 (object))
+275762-0-1 0:0:0.0
+5: valueOf!
+1901-0-1 0:0:0.0
+6: valueOf!
+test_date (2).setYear (0.5 (object))
+275762-0-1 0:0:0.0
+6: valueOf!
+1900-0-1 0:0:0.0
+7: valueOf!
+test_date (2).setYear (-1 (object))
+275762-0-1 0:0:0.0
+7: valueOf!
+-1-0-1 0:0:0.0
+test_date (2).setYear (-35.6 (number))
+275762-0-1 0:0:0.0
+-35-0-1 0:0:0.0
+9: valueOf!
+test_date (2).setYear (Infinity (object))
+275762-0-1 0:0:0.0
+9: valueOf!
+0-0-1 0:0:0.0
+10: valueOf!
+test_date (2).setYear (-Infinity (object))
+275762-0-1 0:0:0.0
+10: valueOf!
+0-0-1 0:0:0.0
+11: valueOf!
+test_date (2).setYear (NaN (object))
+275762-0-1 0:0:0.0
+11: valueOf!
+0-0-1 0:0:0.0
+12: valueOf!
+test_date (2).setYear ( (object))
+275762-0-1 0:0:0.0
+12: valueOf!
+0-0-1 0:0:0.0
+13: valueOf!
+test_date (2).setYear (0 (object))
+275762-0-1 0:0:0.0
+13: valueOf!
+1900-0-1 0:0:0.0
+14: valueOf!
+test_date (2).setYear (-0 (object))
+275762-0-1 0:0:0.0
+14: valueOf!
+1900-0-1 0:0:0.0
+15: valueOf!
+test_date (2).setYear (0.0 (object))
+275762-0-1 0:0:0.0
+15: valueOf!
+1900-0-1 0:0:0.0
+16: valueOf!
+test_date (2).setYear (1 (object))
+275762-0-1 0:0:0.0
+16: valueOf!
+1901-0-1 0:0:0.0
+17: valueOf!
+test_date (2).setYear (Hello World! (object))
+275762-0-1 0:0:0.0
+17: valueOf!
+0-0-1 0:0:0.0
+18: valueOf!
+test_date (2).setYear (true (object))
+275762-0-1 0:0:0.0
+18: valueOf!
+0-0-1 0:0:0.0
+19: valueOf!
+test_date (2).setYear (_level0 (object))
+275762-0-1 0:0:0.0
+19: valueOf!
+0-0-1 0:0:0.0
+20: valueOf!
+test_date (2).setYear (_level0 (object))
+275762-0-1 0:0:0.0
+20: valueOf!
+0-0-1 0:0:0.0
+21: valueOf!
+21: toString!
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+21: valueOf!
+0-0-1 0:0:0.0
+22: valueOf!
+test_date (2).setYear ( (object))
+275762-0-1 0:0:0.0
+22: valueOf!
+1900-0-1 0:0:0.0
+23: valueOf!
+23: toString!
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+23: valueOf!
+0-0-1 0:0:0.0
+24: valueOf!
+24: toString!
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+24: valueOf!
+0-0-1 0:0:0.0
+25: valueOf!
+25: toString!
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+25: valueOf!
+0-0-1 0:0:0.0
+26: valueOf!
+26: toString!
+test_date (2).setYear ([type Object] (object))
+275762-0-1 0:0:0.0
+26: valueOf!
+0-0-1 0:0:0.0
 test_date (0).setMonth (5 (number))
 1983-5-25 13:50:50.300
 1983-5-25 13:50:50.300
@@ -6355,5 +6628,1025 @@ NaN-NaN-NaN NaN:NaN:NaN.NaN
 26: toString!
 test_date (1).setMonth ([type Object] (object))
 NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (5 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (0 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (11 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (12 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (-1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (20 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (-20 (number))
+275762-0-1 0:0:0.0
+275760-4-1 0:0:0.0
+test_date (2).setMonth ( (undefined))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (null (null))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (true (boolean))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (false (boolean))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (0 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (0.5 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (-1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (-8.6 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (Infinity (number))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setMonth (-Infinity (number))
+275762-0-1 0:0:0.0
+0-0-1 0:0:0.0
+test_date (2).setMonth (NaN (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth ( (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (-0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (0.0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (1 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (Hello World! (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (true (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (_level0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (_level0 (movieclip))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth ([object Object] (object))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth ( (undefined))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+test_date (2).setMonth ([object Object] (object))
+275762-0-1 0:0:0.0
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth ( (object))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+test_date (2).setMonth ( (object))
+275762-0-1 0:0:0.0
+0: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+test_date (2).setMonth (null (object))
+275762-0-1 0:0:0.0
+1: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+test_date (2).setMonth (true (object))
+275762-0-1 0:0:0.0
+2: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+test_date (2).setMonth (false (object))
+275762-0-1 0:0:0.0
+3: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+test_date (2).setMonth (0 (object))
+275762-0-1 0:0:0.0
+4: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+test_date (2).setMonth (1 (object))
+275762-0-1 0:0:0.0
+5: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+test_date (2).setMonth (0.5 (object))
+275762-0-1 0:0:0.0
+6: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+test_date (2).setMonth (-1 (object))
+275762-0-1 0:0:0.0
+7: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setMonth (-35.6 (number))
+275762-0-1 0:0:0.0
+275759-1-1 0:0:0.0
+9: valueOf!
+test_date (2).setMonth (Infinity (object))
+275762-0-1 0:0:0.0
+9: valueOf!
+0-0-1 0:0:0.0
+10: valueOf!
+test_date (2).setMonth (-Infinity (object))
+275762-0-1 0:0:0.0
+10: valueOf!
+0-0-1 0:0:0.0
+11: valueOf!
+test_date (2).setMonth (NaN (object))
+275762-0-1 0:0:0.0
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+test_date (2).setMonth ( (object))
+275762-0-1 0:0:0.0
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+test_date (2).setMonth (0 (object))
+275762-0-1 0:0:0.0
+13: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+test_date (2).setMonth (-0 (object))
+275762-0-1 0:0:0.0
+14: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+test_date (2).setMonth (0.0 (object))
+275762-0-1 0:0:0.0
+15: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+test_date (2).setMonth (1 (object))
+275762-0-1 0:0:0.0
+16: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+test_date (2).setMonth (Hello World! (object))
+275762-0-1 0:0:0.0
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+test_date (2).setMonth (true (object))
+275762-0-1 0:0:0.0
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+test_date (2).setMonth (_level0 (object))
+275762-0-1 0:0:0.0
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+test_date (2).setMonth (_level0 (object))
+275762-0-1 0:0:0.0
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+test_date (2).setMonth ( (object))
+275762-0-1 0:0:0.0
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+test_date (2).setMonth ([type Object] (object))
+275762-0-1 0:0:0.0
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (25 (number))
+1983-5-25 13:50:50.300
+1983-5-25 13:50:50.300
+test_date (0).setDate (1 (number))
+1983-5-25 13:50:50.300
+1983-5-1 13:50:50.300
+test_date (0).setDate (10 (number))
+1983-5-25 13:50:50.300
+1983-5-10 13:50:50.300
+test_date (0).setDate (29 (number))
+1983-5-25 13:50:50.300
+1983-5-29 13:50:50.300
+test_date (0).setDate (30 (number))
+1983-5-25 13:50:50.300
+1983-5-30 13:50:50.300
+test_date (0).setDate (31 (number))
+1983-5-25 13:50:50.300
+1983-6-1 13:50:50.300
+test_date (0).setDate (32 (number))
+1983-5-25 13:50:50.300
+1983-6-2 13:50:50.300
+test_date (0).setDate (0 (number))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (-1 (number))
+1983-5-25 13:50:50.300
+1983-4-30 13:50:50.300
+test_date (0).setDate (200 (number))
+1983-5-25 13:50:50.300
+1983-11-17 13:50:50.300
+test_date (0).setDate (-20 (number))
+1983-5-25 13:50:50.300
+1983-4-11 13:50:50.300
+test_date (0).setDate ( (undefined))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (null (null))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (true (boolean))
+1983-5-25 13:50:50.300
+1983-5-1 13:50:50.300
+test_date (0).setDate (false (boolean))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (0 (number))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (1 (number))
+1983-5-25 13:50:50.300
+1983-5-1 13:50:50.300
+test_date (0).setDate (0.5 (number))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (-1 (number))
+1983-5-25 13:50:50.300
+1983-4-30 13:50:50.300
+test_date (0).setDate (-8.6 (number))
+1983-5-25 13:50:50.300
+1983-4-23 13:50:50.300
+test_date (0).setDate (Infinity (number))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (-Infinity (number))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (NaN (number))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate ( (string))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (0 (string))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (-0 (string))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (0.0 (string))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+test_date (0).setDate (1 (string))
+1983-5-25 13:50:50.300
+1983-5-1 13:50:50.300
+test_date (0).setDate (Hello World! (string))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (true (string))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (_level0 (string))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate (_level0 (movieclip))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate ([object Object] (object))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate ( (undefined))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+test_date (0).setDate ([object Object] (object))
+1983-5-25 13:50:50.300
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (0).setDate ( (object))
+1983-5-25 13:50:50.300
+1983-4-31 13:50:50.300
+0: valueOf!
+test_date (0).setDate ( (object))
+1983-5-25 13:50:50.300
+0: valueOf!
+1983-4-31 13:50:50.300
+1: valueOf!
+test_date (0).setDate (null (object))
+1983-5-25 13:50:50.300
+1: valueOf!
+1983-4-31 13:50:50.300
+2: valueOf!
+test_date (0).setDate (true (object))
+1983-5-25 13:50:50.300
+2: valueOf!
+1983-5-1 13:50:50.300
+3: valueOf!
+test_date (0).setDate (false (object))
+1983-5-25 13:50:50.300
+3: valueOf!
+1983-4-31 13:50:50.300
+4: valueOf!
+test_date (0).setDate (0 (object))
+1983-5-25 13:50:50.300
+4: valueOf!
+1983-4-31 13:50:50.300
+5: valueOf!
+test_date (0).setDate (1 (object))
+1983-5-25 13:50:50.300
+5: valueOf!
+1983-5-1 13:50:50.300
+6: valueOf!
+test_date (0).setDate (0.5 (object))
+1983-5-25 13:50:50.300
+6: valueOf!
+1983-4-31 13:50:50.300
+7: valueOf!
+test_date (0).setDate (-1 (object))
+1983-5-25 13:50:50.300
+7: valueOf!
+1983-4-30 13:50:50.300
+test_date (0).setDate (-35.6 (number))
+1983-5-25 13:50:50.300
+1983-3-26 13:50:50.300
+9: valueOf!
+test_date (0).setDate (Infinity (object))
+1983-5-25 13:50:50.300
+9: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+test_date (0).setDate (-Infinity (object))
+1983-5-25 13:50:50.300
+10: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+test_date (0).setDate (NaN (object))
+1983-5-25 13:50:50.300
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+test_date (0).setDate ( (object))
+1983-5-25 13:50:50.300
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+test_date (0).setDate (0 (object))
+1983-5-25 13:50:50.300
+13: valueOf!
+1983-4-31 13:50:50.300
+14: valueOf!
+test_date (0).setDate (-0 (object))
+1983-5-25 13:50:50.300
+14: valueOf!
+1983-4-31 13:50:50.300
+15: valueOf!
+test_date (0).setDate (0.0 (object))
+1983-5-25 13:50:50.300
+15: valueOf!
+1983-4-31 13:50:50.300
+16: valueOf!
+test_date (0).setDate (1 (object))
+1983-5-25 13:50:50.300
+16: valueOf!
+1983-5-1 13:50:50.300
+17: valueOf!
+test_date (0).setDate (Hello World! (object))
+1983-5-25 13:50:50.300
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+test_date (0).setDate (true (object))
+1983-5-25 13:50:50.300
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+test_date (0).setDate (_level0 (object))
+1983-5-25 13:50:50.300
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+test_date (0).setDate (_level0 (object))
+1983-5-25 13:50:50.300
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+test_date (0).setDate ( (object))
+1983-5-25 13:50:50.300
+22: valueOf!
+1983-4-31 13:50:50.300
+23: valueOf!
+23: toString!
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+test_date (0).setDate ([type Object] (object))
+1983-5-25 13:50:50.300
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (25 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (10 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (29 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (30 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (31 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (32 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (0 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (200 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-20 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate ( (undefined))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (null (null))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (true (boolean))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (false (boolean))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (0 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (0.5 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-8.6 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (Infinity (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-Infinity (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate ( (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (0.0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (1 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (_level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (_level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate ( (undefined))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+test_date (1).setDate ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+test_date (1).setDate ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+test_date (1).setDate (null (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+test_date (1).setDate (true (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+test_date (1).setDate (false (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+test_date (1).setDate (0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+test_date (1).setDate (1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+test_date (1).setDate (0.5 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+test_date (1).setDate (-1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setDate (-35.6 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+test_date (1).setDate (Infinity (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+test_date (1).setDate (-Infinity (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+test_date (1).setDate (NaN (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+test_date (1).setDate ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+test_date (1).setDate (0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+test_date (1).setDate (-0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+test_date (1).setDate (0.0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+test_date (1).setDate (1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+test_date (1).setDate (Hello World! (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+test_date (1).setDate (true (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+test_date (1).setDate (_level0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+test_date (1).setDate (_level0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+test_date (1).setDate ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+test_date (1).setDate ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (25 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (10 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (29 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (30 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (31 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (32 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (0 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (200 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-20 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate ( (undefined))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (null (null))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (true (boolean))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (false (boolean))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (0 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (0.5 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-1 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-8.6 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (Infinity (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-Infinity (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (NaN (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate ( (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (0.0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (1 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (Hello World! (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (true (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (_level0 (string))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (_level0 (movieclip))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate ([object Object] (object))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate ( (undefined))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
+valueOf called
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+test_date (2).setDate ([object Object] (object))
+275762-0-1 0:0:0.0
+valueOf called with 
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate ( (object))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+test_date (2).setDate ( (object))
+275762-0-1 0:0:0.0
+0: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+test_date (2).setDate (null (object))
+275762-0-1 0:0:0.0
+1: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+test_date (2).setDate (true (object))
+275762-0-1 0:0:0.0
+2: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+test_date (2).setDate (false (object))
+275762-0-1 0:0:0.0
+3: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+test_date (2).setDate (0 (object))
+275762-0-1 0:0:0.0
+4: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+test_date (2).setDate (1 (object))
+275762-0-1 0:0:0.0
+5: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+test_date (2).setDate (0.5 (object))
+275762-0-1 0:0:0.0
+6: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+test_date (2).setDate (-1 (object))
+275762-0-1 0:0:0.0
+7: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (2).setDate (-35.6 (number))
+275762-0-1 0:0:0.0
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+test_date (2).setDate (Infinity (object))
+275762-0-1 0:0:0.0
+9: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+test_date (2).setDate (-Infinity (object))
+275762-0-1 0:0:0.0
+10: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+test_date (2).setDate (NaN (object))
+275762-0-1 0:0:0.0
+11: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+test_date (2).setDate ( (object))
+275762-0-1 0:0:0.0
+12: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+test_date (2).setDate (0 (object))
+275762-0-1 0:0:0.0
+13: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+test_date (2).setDate (-0 (object))
+275762-0-1 0:0:0.0
+14: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+test_date (2).setDate (0.0 (object))
+275762-0-1 0:0:0.0
+15: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+test_date (2).setDate (1 (object))
+275762-0-1 0:0:0.0
+16: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+test_date (2).setDate (Hello World! (object))
+275762-0-1 0:0:0.0
+17: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+test_date (2).setDate (true (object))
+275762-0-1 0:0:0.0
+18: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+test_date (2).setDate (_level0 (object))
+275762-0-1 0:0:0.0
+19: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+test_date (2).setDate (_level0 (object))
+275762-0-1 0:0:0.0
+20: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
+21: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+test_date (2).setDate ( (object))
+275762-0-1 0:0:0.0
+22: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
+23: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
+24: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
+25: valueOf!
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+test_date (2).setDate ([type Object] (object))
+275762-0-1 0:0:0.0
 26: valueOf!
 NaN-NaN-NaN NaN:NaN:NaN.NaN

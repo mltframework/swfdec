@@ -121,6 +121,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 public_headers = \
 	swfdec.h \
 	swfdec_as_context.h \
+	swfdec_as_object.h \
 	swfdec_as_types.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \
@@ -141,7 +142,6 @@ noinst_HEADERS = \
 	swfdec_as_math.h \
 	swfdec_as_native_function.h \
 	swfdec_as_number.h \
-	swfdec_as_object.h \
 	swfdec_as_scope.h \
 	swfdec_as_script_function.h \
 	swfdec_as_stack.h \

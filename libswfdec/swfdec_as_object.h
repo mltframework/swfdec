@@ -140,12 +140,6 @@ void		swfdec_as_object_unset_variable_flags
 gboolean	swfdec_as_object_foreach	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);
-guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
-						 SwfdecAsVariableForeach func,
-						 gpointer		data);
-void		swfdec_as_object_foreach_rename	(SwfdecAsObject *       object,
-						 SwfdecAsVariableForeachRename func,
-						 gpointer		data);
 
 SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 const char *		name,

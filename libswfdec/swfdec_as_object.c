@@ -212,11 +212,25 @@ swfdec_as_object_hash_foreach_remove (gpointer key, gpointer value, gpointer dat
   return TRUE;
 }
 
+/**
+ * swfdec_as_object_foreach_remove:
+ * @object: a #SwfdecAsObject
+ * @func: function that determines which object to remove
+ * @data: data to pass to @func
+ *
+ * Removes all variables form @object where @func returns %TRUE. This is an 
+ * internal function for array operations.
+ *
+ * Returns: he number of variables removed
+ **/
 guint
 swfdec_as_object_foreach_remove (SwfdecAsObject *object, SwfdecAsVariableForeach func,
     gpointer data)
 {
   ForeachRemoveData fdata = { object, func, data };
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), 0);
+  g_return_val_if_fail (func != NULL, 0);
 
   return g_hash_table_foreach_remove (object->properties,
       swfdec_as_object_hash_foreach_remove, &fdata);
@@ -246,13 +260,27 @@ swfdec_as_object_hash_foreach_rename (gpointer key, gpointer value, gpointer dat
   return TRUE;
 }
 
+/**
+ * swfdec_as_object_foreach_rename:
+ * @object: a #SwfdecAsObject
+ * @func: function determining the new name
+ * @data: data to pass to @func
+ *
+ * Calls @func for each variable of @object. If The function is then supposed 
+ * to return the new name of the variable or %NULL if the variable should be 
+ * removed. This is an internal function for array operations.
+ **/
 void
 swfdec_as_object_foreach_rename (SwfdecAsObject *object, SwfdecAsVariableForeachRename func,
     gpointer data)
 {
-  GHashTable *properties_new = g_hash_table_new (g_direct_hash, g_direct_equal);
+  GHashTable *properties_new;
   ForeachRenameData fdata = { object, properties_new, func, data };
 
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (func != NULL);
+
+  properties_new = g_hash_table_new (g_direct_hash, g_direct_equal);
   g_hash_table_foreach_remove (object->properties, swfdec_as_object_hash_foreach_rename, &fdata);
   g_hash_table_destroy (object->properties);
   object->properties = properties_new;

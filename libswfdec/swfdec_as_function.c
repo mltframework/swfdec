@@ -30,6 +30,31 @@
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecAsFunction, swfdec_as_function, SWFDEC_TYPE_AS_OBJECT)
 
+/**
+ * SECTION:SwfdecAsFunction
+ * @title: SwfdecAsFunction
+ * @short_description: script objects that can be executed
+ *
+ * Functions is the basic object for executing code in the Swfdec script engine.
+ * There is multiple different variants of functions, such as script-created 
+ * ones and native functions.
+ *
+ * If you want to create your own functions, you should create native functions.
+ * The easiest way to do this is with swfdec_as_object_add_function() or
+ * swfdec_as_native_function_new().
+ *
+ * In Actionscript, every function can be used as a constructor. If you want to
+ * make a native function be used as a constructor for your own #SwfdecAsObject
+ * subclass, have a look at swfdec_as_native_function_set_construct_type().
+ */
+
+/**
+ * SwfdecAsFunction
+ *
+ * This is the base executable object in Swfdec. It is an abstract object. If 
+ * you want to create functions yourself, use #SwfdecAsNativeFunction.
+ */
+
 static void
 swfdec_as_function_class_init (SwfdecAsFunctionClass *klass)
 {

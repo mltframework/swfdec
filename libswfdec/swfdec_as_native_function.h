@@ -37,6 +37,7 @@ typedef struct _SwfdecAsNativeFunctionClass SwfdecAsNativeFunctionClass;
 
 /* FIXME: do two obejcts, one for scripts and one for native? */
 struct _SwfdecAsNativeFunction {
+  /*< private >*/
   SwfdecAsFunction	function;
 
   SwfdecAsNative	native;		/* native call or NULL when script */

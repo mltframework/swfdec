@@ -61,6 +61,7 @@ IGNORE_HFILES= \
 	swfdec_as_math.h \
 	swfdec_as_number.h \
 	swfdec_as_scope.h \
+	swfdec_as_script_function.h \
 	swfdec_as_stack.h \
 	swfdec_as_string.h \
 	swfdec_as_strings.h \

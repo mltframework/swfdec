@@ -40,6 +40,12 @@
  * This is the prototype for all native functions.
  */
 
+/**
+ * SwfdecAsNativeFunction:
+ *
+ * This is the object type for native functions.
+ */
+
 /*** IMPLEMENTATION ***/
 
 G_DEFINE_TYPE (SwfdecAsNativeFunction, swfdec_as_native_function, SWFDEC_TYPE_AS_FUNCTION)
@@ -97,6 +103,21 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
 {
 }
 
+/**
+ * swfdec_as_native_function_new:
+ * @context: a #SwfdecAsContext
+ * @name: name of the function
+ * @native: function to call when executed
+ * @min_args: minimum number of arguments required
+ *
+ * Creates a new native function, that will execute @native when called. The
+ * @min_args parameter sets a requirement for the minimum number of arguments
+ * to pass to @native. If the function gets called with less arguments, it
+ * will just redurn undefined. You might want to use 
+ * swfdec_as_object_add_function() instead of this function.
+ *
+ * Returns: a new #SwfdecAsFunction or %NULL on OOM
+ **/
 SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
     SwfdecAsNative native, guint min_args)

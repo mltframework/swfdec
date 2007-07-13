@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_AS_FRAME_H_
 #define _SWFDEC_AS_FRAME_H_
 
+#include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS

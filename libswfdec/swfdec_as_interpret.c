@@ -23,7 +23,7 @@
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_frame.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"

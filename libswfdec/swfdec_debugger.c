@@ -24,7 +24,7 @@
 #include <string.h>
 #include "swfdec_debugger.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_frame.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"

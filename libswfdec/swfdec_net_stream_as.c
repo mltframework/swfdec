@@ -23,7 +23,6 @@
 
 #include "swfdec_net_stream.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_frame.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -81,7 +80,7 @@ swfdec_net_stream_construct (SwfdecAsContext *cx, SwfdecAsObject *obj, guint arg
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
   SwfdecNetConnection *conn;
   
-  if (!cx->frame->construct) {
+  if (!swfdec_as_context_is_constructing (cx)) {
     SWFDEC_FIXME ("What do we do if not constructing?");
     return;
   }

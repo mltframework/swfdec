@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_frame.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
@@ -606,5 +607,22 @@ swfdec_as_frame_check_scope (SwfdecAsFrame *frame)
     
     frame->scope = cur->next;
   }
+}
+
+/**
+ * swfdec_as_frame_get_next:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the next frame in the frame stack. The next frame is the frame that
+ * will be executed after this @frame.
+ *
+ * Returns: the next #SwfdecAsFrame or %NULL if this is the bottommost frame.
+ **/
+SwfdecAsFrame *
+swfdec_as_frame_get_next (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  return frame->next;
 }
 

@@ -23,7 +23,7 @@
 
 #include "swfdec_as_with.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_frame.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsWith, swfdec_as_with, SWFDEC_TYPE_AS_SCOPE)

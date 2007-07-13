@@ -95,6 +95,9 @@ GType		swfdec_as_context_get_type	(void);
 void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
 						 guint			version);
 
+gboolean	swfdec_as_context_is_constructing
+						(SwfdecAsContext *	context);
+SwfdecAsFrame *	swfdec_as_context_get_frame	(SwfdecAsContext *	context);
 void		swfdec_as_context_get_time	(SwfdecAsContext *	context,
 						 GTimeVal *		tv);
 const char *	swfdec_as_context_get_string	(SwfdecAsContext *	context,

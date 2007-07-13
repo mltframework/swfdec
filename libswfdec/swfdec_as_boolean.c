@@ -25,7 +25,6 @@
 
 #include "swfdec_as_boolean.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_frame.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -56,7 +55,7 @@ swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     b = FALSE;
   }
 
-  if (cx->frame->construct) {
+  if (swfdec_as_context_is_constructing (cx)) {
     SWFDEC_AS_BOOLEAN (object)->boolean = b;
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {

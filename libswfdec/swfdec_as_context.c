@@ -26,7 +26,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_boolean.h"
-#include "swfdec_as_frame.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
@@ -547,6 +547,50 @@ swfdec_as_context_give_string (SwfdecAsContext *context, char *string)
   ret = swfdec_as_context_get_string (context, string);
   g_free (string);
   return ret;
+}
+
+/**
+ * swfdec_as_context_is_constructing:
+ * @context: a #SwfdecAsConstruct
+ *
+ * Determines if the contexxt is currently constructing. This information is
+ * used by various constructors to do different things when they are 
+ * constructing and when they are not. The Boolean, Number and String functions
+ * for example setup the newly constructed objects when constructing but only
+ * cast the provided argument when being called.
+ *
+ * Returns: %TRUE if the currently executing frame is a constructor
+ **/
+gboolean
+swfdec_as_context_is_constructing (SwfdecAsContext *context)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+
+  return context->frame && context->frame->construct;
+}
+
+/**
+ * swfdec_as_context_get_frame:
+ * @context: a #SwfdecAsContext
+ *
+ * This is a debugging function. It gets the topmost stack frame that is 
+ * currently executing. If no function is executing, %NULL is returned. You can
+ * easily get a backtrace with code like this:
+ * |[for (frame = swfdec_as_context_get_frame (context); frame != NULL; 
+ *     frame = swfdec_as_frame_get_next (frame)) {
+ *   char *s = swfdec_as_object_get_debug (SWFDEC_AS_OBJECT (frame));
+ *   g_print ("%s\n", s);
+ *   g_free (s);
+ * }]|
+ *
+ * Returns: the currently executing frame or %NULL if none
+ **/
+SwfdecAsFrame *
+swfdec_as_context_get_frame (SwfdecAsContext *context)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+
+  return context->frame;
 }
 
 /**

@@ -27,7 +27,6 @@
 #include "swfdec_as_string.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_frame.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -218,7 +217,7 @@ swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     s = SWFDEC_AS_STR_EMPTY;
   }
 
-  if (cx->frame->construct) {
+  if (swfdec_as_context_is_constructing (cx)) {
     SwfdecAsString *string = SWFDEC_AS_STRING (object);
     SwfdecAsValue val;
 

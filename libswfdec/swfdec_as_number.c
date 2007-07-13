@@ -56,7 +56,7 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     d = NAN;
   }
 
-  if (cx->frame->construct) {
+  if (swfdec_as_context_is_constructing (cx)) {
     SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
     num->number = d;
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);

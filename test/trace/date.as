@@ -195,7 +195,7 @@ for (i = 0; i < millisecondValues.length; i++) {
 
 // new Date ()
 
-num_test_dates = 1;
+num_test_dates = 2;
 function test_date (num)
 {
   // FIXME: we don't check < 1970 year values, because there is weird flashplayer

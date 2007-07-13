@@ -5821,6 +5821,359 @@ test_date (0).setYear (1.6 (number))
 1983-5-25 13:50:50.300
 -2162293749700
 1901-5-25 13:50:50.300
+test_date (1).setYear (1983 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (83 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (0 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (100 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (99 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (101 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-100 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-500 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-271822 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-271821 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (275760 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (275759 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (276447232 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-276447232 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear ( (undefined))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (null (null))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (true (boolean))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (false (boolean))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (0 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (0.5 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-0.5 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (Infinity (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-Infinity (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear ( (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (0.0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (1 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (_level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (_level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear ( (undefined))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+test_date (1).setYear ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+test_date (1).setYear ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+test_date (1).setYear (null (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+test_date (1).setYear (true (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+test_date (1).setYear (false (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+test_date (1).setYear (0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+test_date (1).setYear (1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+test_date (1).setYear (0.5 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+test_date (1).setYear (-1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+8: valueOf!
+test_date (1).setYear (-0.5 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+8: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+test_date (1).setYear (Infinity (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+test_date (1).setYear (-Infinity (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+test_date (1).setYear (NaN (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+test_date (1).setYear ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+test_date (1).setYear (0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+test_date (1).setYear (-0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+test_date (1).setYear (0.0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+test_date (1).setYear (1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+test_date (1).setYear (Hello World! (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+test_date (1).setYear (true (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+test_date (1).setYear (_level0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+test_date (1).setYear (_level0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+test_date (1).setYear ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+test_date (1).setYear ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-0.6 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (-0.4 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (1.4 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setYear (1.6 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
 test_date (0).setMonth (5 (number))
 1983-5-25 13:50:50.300
 425386250300
@@ -6146,3 +6499,328 @@ test_date (0).setMonth (1.6 (number))
 1983-5-25 13:50:50.300
 415018250300
 1983-1-25 13:50:50.300
+test_date (1).setMonth (5 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (0 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (11 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (12 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (20 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-20 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth ( (undefined))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (null (null))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (true (boolean))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (false (boolean))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (0 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (0.5 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-1 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-0.5 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (Infinity (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-Infinity (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (NaN (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth ( (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (0.0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (1 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (Hello World! (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (true (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (_level0 (string))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (_level0 (movieclip))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth ( (undefined))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+toString called
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+toString called with 
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+test_date (1).setMonth ([object Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+valueOf called with 
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+test_date (1).setMonth ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+0: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+test_date (1).setMonth (null (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+1: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+test_date (1).setMonth (true (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+2: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+test_date (1).setMonth (false (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+3: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+test_date (1).setMonth (0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+4: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+test_date (1).setMonth (1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+5: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+test_date (1).setMonth (0.5 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+6: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+test_date (1).setMonth (-1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+7: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+8: valueOf!
+test_date (1).setMonth (-0.5 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+8: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+test_date (1).setMonth (Infinity (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+9: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+test_date (1).setMonth (-Infinity (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+10: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+test_date (1).setMonth (NaN (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+11: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+test_date (1).setMonth ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+12: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+test_date (1).setMonth (0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+13: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+test_date (1).setMonth (-0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+14: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+test_date (1).setMonth (0.0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+15: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+test_date (1).setMonth (1 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+16: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+test_date (1).setMonth (Hello World! (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+17: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+test_date (1).setMonth (true (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+18: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+test_date (1).setMonth (_level0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+19: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+test_date (1).setMonth (_level0 (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+20: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+21: toString!
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+21: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+test_date (1).setMonth ( (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+22: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+23: toString!
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+23: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+24: toString!
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+24: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+25: toString!
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+25: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+26: toString!
+test_date (1).setMonth ([type Object] (object))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+26: valueOf!
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-0.6 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (-0.4 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (1.4 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+test_date (1).setMonth (1.6 (number))
+NaN-NaN-NaN NaN:NaN:NaN.NaN
+NaN
+NaN-NaN-NaN NaN:NaN:NaN.NaN

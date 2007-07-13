@@ -103,7 +103,7 @@ swfdec_as_date_value_to_number_and_integer (SwfdecAsContext *context, const Swfd
   g_assert (d != NULL);
   g_assert (num != NULL);
 
-  // undefined == NAN here, even in 6 and 7
+  // undefined == NAN here, even in version < 7
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value)) {
     *d = NAN;
   } else {
@@ -127,12 +127,20 @@ swfdec_as_date_value_to_number_and_integer (SwfdecAsContext *context, const Swfd
 static gboolean
 swfdec_as_date_is_valid (const SwfdecAsDate *date)
 {
-  return !isnan(date->milliseconds);
+  return !isnan (date->milliseconds);
 }
 
-static gint64 G_GNUC_UNUSED
+static void
+swfdec_as_date_set_invalid (SwfdecAsDate *date)
+{
+  date->milliseconds = NAN;
+}
+
+static gint64
 swfdec_as_date_get_milliseconds_utc (const SwfdecAsDate *date)
 {
+  g_assert (swfdec_as_date_is_valid (date));
+
   if (isfinite (date->milliseconds)) {
     return date->milliseconds;
   } else {
@@ -140,15 +148,17 @@ swfdec_as_date_get_milliseconds_utc (const SwfdecAsDate *date)
   }
 }
 
-static void G_GNUC_UNUSED
+static void
 swfdec_as_date_set_milliseconds_utc (SwfdecAsDate *date, gint64 milliseconds)
 {
   date->milliseconds = milliseconds;
 }
 
-static gint64 G_GNUC_UNUSED
+static gint64
 swfdec_as_date_get_milliseconds_local (const SwfdecAsDate *date)
 {
+  g_assert (swfdec_as_date_is_valid (date));
+
   if (isfinite (date->milliseconds)) {
     return date->milliseconds + date->timezone_offset_minutes * 60 * 1000;
   } else {
@@ -156,42 +166,48 @@ swfdec_as_date_get_milliseconds_local (const SwfdecAsDate *date)
   }
 }
 
-static void G_GNUC_UNUSED
+static void
 swfdec_as_date_set_milliseconds_local (SwfdecAsDate *date, gint64 milliseconds)
 {
   date->milliseconds = milliseconds - date->timezone_offset_minutes * 60 * 1000;
 }
 
-static void G_GNUC_UNUSED
+static void
 swfdec_as_date_get_brokentime_utc (const SwfdecAsDate *date, struct tm *brokentime)
 {
   time_t seconds;
+
+  g_assert (swfdec_as_date_is_valid (date));
+
   if (isfinite (date->milliseconds)) {
-    seconds = floor(date->milliseconds / 1000);
+    seconds = floor (date->milliseconds / 1000);
   } else {
     seconds = 0;
   }
   gmtime_r (&seconds, brokentime);
 }
 
-static void G_GNUC_UNUSED
+static void
 swfdec_as_date_set_brokentime_utc (SwfdecAsDate *date, struct tm *brokentime)
 {
   time_t seconds = timegm (brokentime);
   if (isfinite (date->milliseconds)) {
-    date->milliseconds -= floor(date->milliseconds / 1000) * 1000;
+    date->milliseconds -= floor (date->milliseconds / 1000) * 1000;
   } else {
     date->milliseconds = 0;
   }
   date->milliseconds += seconds * 1000;
 }
 
-static void G_GNUC_UNUSED
+static void
 swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date, struct tm *brokentime)
 {
   time_t seconds;
+
+  g_assert (swfdec_as_date_is_valid (date));
+
   if (isfinite (date->milliseconds)) {
-    seconds = floor(date->milliseconds / 1000) + date->timezone_offset_minutes * 60;
+    seconds = floor (date->milliseconds / 1000) + date->timezone_offset_minutes * 60;
 
     // special case: add an hour if the milliseconds from epoch is between -0.5 and 0 (wtf)
     if (date->milliseconds < 0 && date->milliseconds >= -0.5)
@@ -202,12 +218,12 @@ swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date, struct tm *broken
   gmtime_r (&seconds, brokentime);
 }
 
-static void G_GNUC_UNUSED
+static void
 swfdec_as_date_set_brokentime_local (SwfdecAsDate *date, struct tm *brokentime)
 {
   time_t seconds = timegm (brokentime) - date->timezone_offset_minutes * 60;
   if (isfinite (date->milliseconds)) {
-    date->milliseconds -= floor(date->milliseconds / 1000) * 1000;
+    date->milliseconds -= floor (date->milliseconds / 1000) * 1000;
   } else {
     date->milliseconds = 0;
   }
@@ -279,7 +295,11 @@ static void
 swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret, field_t field, gboolean utc)
 {
-  if (argc > 0) {
+  if (!swfdec_as_date_is_valid (SWFDEC_AS_DATE (object)))
+    swfdec_as_value_to_number (cx, &argv[0]); // calls valueOf
+
+  if (swfdec_as_date_is_valid (SWFDEC_AS_DATE (object)) && argc > 0)
+  {
     SwfdecAsDate *date = SWFDEC_AS_DATE (object);
     gboolean set;
     gint64 milliseconds;
@@ -320,7 +340,7 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
 
     milliseconds = swfdec_as_date_get_milliseconds_utc (date);
     if (milliseconds < -8.64e15 || milliseconds > 8.64e15)
-      date->milliseconds = NAN;
+      swfdec_as_date_set_invalid (date);
   }
 
   swfdec_as_date_valueOf (cx, object, 0, NULL, ret);
@@ -360,7 +380,7 @@ swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   char buffer[256];
   struct tm brokentime;
 
-  if (!swfdec_as_date_is_valid(date)) {
+  if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
     return;
   }
@@ -392,7 +412,7 @@ swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object, g
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   // reverse of timezone_offset_minutes
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, -SWFDEC_AS_DATE(object)->timezone_offset_minutes);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, -SWFDEC_AS_DATE (object)->timezone_offset_minutes);
 }
 
 // get* functions
@@ -411,7 +431,7 @@ swfdec_as_date_getMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object, gui
   SwfdecAsDate *date = SWFDEC_AS_DATE (object);
   gint64 milliseconds;
 
-  if (!swfdec_as_date_is_valid(date)) {
+  if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
     return;
   }
@@ -432,7 +452,7 @@ swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object, 
   SwfdecAsDate *date = SWFDEC_AS_DATE (object);
   gint64 milliseconds;
 
-  if (!swfdec_as_date_is_valid(date)) {
+  if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
     return;
   }
@@ -576,8 +596,9 @@ static void
 swfdec_as_date_setMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+
+  if (swfdec_as_date_is_valid (date) && argc > 0) {
     gint64 milliseconds = swfdec_as_date_get_milliseconds_local (date);
     milliseconds = milliseconds - milliseconds % 1000 + swfdec_as_value_to_integer (cx, &argv[0]);
     swfdec_as_date_set_milliseconds_local (date, milliseconds);
@@ -590,8 +611,9 @@ static void
 swfdec_as_date_setUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (argc > 0) {
-    SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+
+  if (swfdec_as_date_is_valid (date) && argc > 0) {
     gint64 milliseconds = swfdec_as_date_get_milliseconds_utc (date);
     milliseconds = milliseconds - milliseconds % 1000 + swfdec_as_value_to_integer (cx, &argv[0]);
     swfdec_as_date_set_milliseconds_utc (date, milliseconds);
@@ -712,7 +734,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, Swf
   struct tm brokentime;
 
   // special case: ignore undefined and everything after it
-  for(i = 0; i < argc; i++) {
+  for (i = 0; i < argc; i++) {
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[i])) {
       argc = i;
       break;
@@ -833,7 +855,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   date = SWFDEC_AS_DATE (object);
 
   // special case: ignore undefined and everything after it
-  for(i = 0; i < argc; i++) {
+  for (i = 0; i < argc; i++) {
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[i])) {
       argc = i;
       break;
@@ -850,6 +872,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   else if (argc == 1) // milliseconds from epoch, local
   {
+    // need to save directly to keep fractions of a milliseconds
     date->milliseconds = swfdec_as_value_to_number (cx, &argv[0]);
   }
   else // year, month etc. local

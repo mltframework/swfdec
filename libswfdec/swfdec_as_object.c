@@ -317,6 +317,17 @@ swfdec_as_object_init (SwfdecAsObject *object)
 {
 }
 
+/**
+ * swfdec_as_object_new_empty:
+ * @context: a #SwfdecAsContext
+ *
+ * Creates an empty object. The prototype and constructor properties of the
+ * returned object will not be set. You probably want to call 
+ * swfdec_as_object_set_constructor() on the returned object yourself.
+ * You may want to use swfdec_as_object_new() instead.
+ *
+ * Returns: A new #SwfdecAsObject adde to @context or %NULL on OOM.
+ **/
 SwfdecAsObject *
 swfdec_as_object_new_empty (SwfdecAsContext *context)
 {
@@ -337,7 +348,6 @@ swfdec_as_object_new_empty (SwfdecAsContext *context)
  *
  * Allocates a new Object. This does the same as the Actionscript code 
  * "new Object()".
- * <warning>This function may run the garbage collector.</warning>
  *
  * Returns: the new object or NULL on out of memory.
  **/
@@ -662,8 +672,8 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  *
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
- * swfdec_as_context_run() yourself. After the constructor has been run, the new
- * object will be pushed on top of the stack.
+ * swfdec_as_context_run(). After the constructor has been run, the new object 
+ * will be pushed on top of the stack.
  **/
 void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
@@ -715,6 +725,21 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   context->frame->construct = TRUE;
 }
 
+/**
+ * swfdec_as_object_set_constructor:
+ * @object: a #SwfdecAsObject
+ * @construct: the constructor of @object
+ * @scripted: %TRUE if this object was created by a script. Flash sets the 
+ *            property named "__constructor__" on script-created objects, but
+ *            "constructor" on native ones.
+ *
+ * Sets the constructor variables for @object. Most objects get these 
+ * variables set automatically, but for objects you created yourself, you want
+ * to call this function. This is essentially the same as the following script
+ * code:
+ * |[ object.__constructor__ = construct;
+ * object.__proto__ = construct.prototype; ]|
+ **/
 void
 swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *construct, gboolean scripted)
 {

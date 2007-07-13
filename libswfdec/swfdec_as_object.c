@@ -330,16 +330,15 @@ void
 swfdec_as_object_foreach_rename (SwfdecAsObject *object, SwfdecAsVariableForeachRename func,
     gpointer data)
 {
-  GHashTable *properties_new;
-  ForeachRenameData fdata = { object, properties_new, func, data };
+  ForeachRenameData fdata = { object, NULL, func, data };
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (func != NULL);
 
-  properties_new = g_hash_table_new (g_direct_hash, g_direct_equal);
+  fdata.properties_new = g_hash_table_new (g_direct_hash, g_direct_equal);
   g_hash_table_foreach_remove (object->properties, swfdec_as_object_hash_foreach_rename, &fdata);
   g_hash_table_destroy (object->properties);
-  object->properties = properties_new;
+  object->properties = fdata.properties_new;
 }
 
 static char *

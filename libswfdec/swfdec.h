@@ -22,14 +22,15 @@
 #ifndef __SWFDEC_H__
 #define __SWFDEC_H__
 
+#include <libswfdec/swfdec_as_context.h>
+#include <libswfdec/swfdec_as_frame.h>
+#include <libswfdec/swfdec_as_object.h>
+#include <libswfdec/swfdec_as_types.h>
+
 #include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_buffer.h>
 #include <libswfdec/swfdec_enums.h>
 #include <libswfdec/swfdec_loader.h>
 #include <libswfdec/swfdec_player.h>
-
-#include <libswfdec/swfdec_as_context.h>
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_as_types.h>
 
 #endif

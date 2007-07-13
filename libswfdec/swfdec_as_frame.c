@@ -30,7 +30,37 @@
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
+/**
+ * SECTION:SwfdecAsFrame
+ * @title: SwfdecAsFrame
+ * @short_description: information about currently executing frames
+ *
+ * This section is only interesting for people that want to look into debugging.
+ * A SwfdecAsFrame describes a currently executing function while it is
+ * running. On every new function call, a new frame is created and pushed on top
+ * of the frame stack. To get the topmost one, use 
+ * swfdec_as_context_get_frame(). After that you can inspect various properties
+ * of the frame, like the current stack.
+ *
+ * a #SwfdecAsFrame is a #SwfdecAsObject, so it is possible to set variables on
+ * it. These are local variables inside the executing function. So you can use
+ * functions such as swfdec_as_object_get_variable() to inspect them.
+ */
+
+/**
+ * SwfdecAsFrame:
+ *
+ * the object used to represent an executing function.
+ */
+
 /*** STACK ITERATOR ***/
+
+/**
+ * SwfdecAsStackIterator:
+ *
+ * This is a struct used to walk the stack of a frame. It is supposed to be 
+ * allocated on the stack. All of its members are private.
+ */
 
 SwfdecAsValue *
 swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
@@ -57,6 +87,23 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
   return iter->current;
 }
 
+/**
+ * swfdec_as_stack_iterator_init:
+ * @iter: a #SwfdecStackIterator
+ * @frame: the frame to initialize from
+ *
+ * Initializes @iter to walk the stack of @frame. The first value on the stack
+ * will alread be returned. This makes it possible to write a simple loop to 
+ * print the whole stack:
+ * |[for (value = swfdec_as_stack_iterator_init (&iter, frame); value != NULL;
+ *     value = swfdec_as_stack_iterator_next (&iter)) {
+ *   char *s = swfdec_as_value_to_debug (value);
+ *   g_print ("%s\n", s);
+ *   g_free (s);
+ * }]|
+ *
+ * Returns: the topmost value on the stack of @frame or %NULL if none
+ **/
 SwfdecAsValue *
 swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
 {
@@ -102,6 +149,14 @@ swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame
   return iter->current;
 }
 
+/**
+ * swfdec_as_stack_iterator_next:
+ * @iter: a #SwfdecAsStackIterator
+ *
+ * Gets the next value on the stack.
+ *
+ * Returns: The next value on the stack or %NULL if no more values are on the stack
+ **/
 SwfdecAsValue *
 swfdec_as_stack_iterator_next (SwfdecAsStackIterator *iter)
 {

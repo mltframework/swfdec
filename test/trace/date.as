@@ -13,7 +13,7 @@ function traced (d)
 
 function traced_utc (d)
 {
-  trace (d.getTime() + " " + d.valueOf());
+  trace (d.getTime () + " " + d.valueOf ());
   trace (d.getUTCFullYear () + "-" + d.getUTCMonth () + "-" + d.getUTCDate () + " " + d.getUTCHours () + ":" + d.getUTCMinutes () + ":" + d.getUTCSeconds () + "." + d.getUTCMilliseconds ());
 }
 
@@ -24,7 +24,7 @@ function p (val)
 
 extraValues = [-0.6, -0.4, 1.4, 1.6];
 
-yearValues = [1983, 83, 0, 100, 99, 101, -100, -50, -500, 100000000000000, -100000000000000];
+yearValues = [1983, 83, 0, 100, 99, 101, -100, -500, -271822, -271821, 275760, 275759, 100000000000000, -100000000000000];
 yearValues = yearValues.concat (values).concat (extraValues);
 monthValues = [5, 0, 11, 12, -1, 20, -20];
 monthValues = monthValues.concat (values).concat (extraValues);
@@ -44,7 +44,7 @@ for (i = 0; i < yearValues.length; i++) {
   val = Date.UTC (yearValues[i]);
   trace (val);
   if (val != undefined)
-    traced_utc (new Date(val));
+    traced_utc (new Date (val));
   trace ("Date.UTC (" + p (yearValues[i]) + ", " + monthValues[0] + ", " + dateValues[0] + ", " +
       hourValues[0] + ", " + minuteValues[0] + ", " + secondValues[0] + ", " +
       millisecondValues[0] + ")");
@@ -52,7 +52,7 @@ for (i = 0; i < yearValues.length; i++) {
     secondValues[0], millisecondValues[0]);
   trace (val);
   if (val != undefined)
-    traced_utc (new Date(val));
+    traced_utc (new Date (val));
 }
 
 for (i = 0; i < monthValues.length; i++) {
@@ -191,6 +191,41 @@ for (i = 0; i < millisecondValues.length; i++) {
       p (millisecondValues[0]) + ")");
   traced (new Date (yearValues[0], monthValues[0], dateValues[0], hourValues[0], minuteValues[0],
     secondValues[0], millisecondValues[i]));
+}
+
+// new Date ()
+
+num_test_dates = 1;
+function test_date (num)
+{
+  // FIXME: we don't check < 1970 year values, because there is weird flashplayer
+  // bug that is not copied by swfdec (yet)
+  if (num == 0) {
+    return new Date (yearValues[0], monthValues[0], dateValues[0], hourValues[0], minuteValues[0],
+	secondValues[0], millisecondValues[0]);
+  } else {
+    return new Date (2005, 8, 20, NaN);
+  }
+}
+
+for (var num = 0; num < num_test_dates; num++) {
+  for (var i = 0; i < yearValues.length; i++) {
+    var d = test_date (num);
+    trace ("test_date (" + num + ").setYear (" + p (yearValues[i]) + ")");
+    traced (d);
+    trace (d.setYear (yearValues[i]));
+    traced (d);
+  }
+}
+
+for (var num = 0; num < num_test_dates; num++) {
+  for (var i = 0; i < monthValues.length; i++) {
+    var d = test_date (num);
+    trace ("test_date (" + num + ").setMonth (" + p (monthValues[i]) + ")");
+    traced (d);
+    trace (d.setMonth (monthValues[i]));
+    traced (d);
+  }
 }
 
 loadMovie ("FSCommand:quit", "");

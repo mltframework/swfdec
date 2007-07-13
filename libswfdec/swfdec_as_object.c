@@ -26,12 +26,55 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
+/**
+ * SECTION:SwfdecAsObject
+ * @title: SwfdecAsObject
+ * @short_description: the base object type for scriptable objects
+ *
+ * This is the basic object type in Swfdec. Every object used by the script 
+ * engine must be a #SwfdecAsObject. It handles memory management and assigning
+ * variables to it. Almost all functions that are called on objects require that
+ * the objects have been added to the garbage collector previously. For 
+ * custom-created objects, you need to do this using swfdec_as_object_add(), 
+ * built-in functions that create objects do this manually.
+ *
+ * Note that you cannot know the lifetime of a #SwfdecAsObject, since scripts 
+ * may assign it as a variable to other objects. So you should not assume to 
+ * know when an object gets removed.
+ */
+
+/**
+ * SwfdecAsObject:
+ * @object: do not access
+ * @context: the context the object was added to or %NULL if it has not yet been
+ *           added. Read-only.
+ *
+ * Every object value inside the Swfdec script engine must be a SwfdecAsObject.
+ * If you want to add custom objects to your script engine, you need to create a
+ * subclass. The class provides a number of virtual functions that you can 
+ * override to achieve the desired behaviour.
+ */
+
+/**
+ * SwfdecAsVariableFlag:
+ * @SWFDEC_AS_VARIABLE_DONT_ENUM: Do not include variable in enumerations and
+ *                                swfdec_as_object_foreach().
+ * @SWFDEC_AS_VARIABLE_PERMANENT: Do not all swfdec_as_object_delete_variable()
+ *                                to delete this variable.
+ * @SWFDEC_AS_VARIABLE_READONLY: Do not allow changing the value with
+ *                               swfdec_as_object_set_variable().
+ * @SWFDEC_AS_VARIABLE_NATIVE: The variable is implemented natively.
+ *
+ * These flags are used to describe various properties of a variable inside
+ * Swfdec. You can manually set them with swfdec_as_object_set_variable_flags().
+ */
 
 typedef struct _SwfdecAsVariable SwfdecAsVariable;
 struct _SwfdecAsVariable {
@@ -413,6 +456,16 @@ swfdec_as_object_collect (SwfdecAsObject *object)
   g_object_unref (object);
 }
 
+/**
+ * swfdec_as_object_set_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: garbage-collected name of the variable to set
+ * @value: value to set the variable to
+ *
+ * Sets a variable on @object. It is not guaranteed that getting the variable
+ * after setting it results in the same value, as some variables can be 
+ * read-only or require a specific type.
+ **/
 void
 swfdec_as_object_set_variable (SwfdecAsObject *object,
     const char *variable, const SwfdecAsValue *value)
@@ -427,6 +480,34 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   klass->set (object, variable, value);
 }
 
+/**
+ * swfdec_as_object_get_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: a garbage-collected string containing the name of the variable
+ * @value: pointer to a #SwfdecAsValue that takes the return value or %NULL
+ *
+ * Gets the value of the given @variable on @object. It walks the prototype 
+ * chain. This is a shortcut macro for 
+ * swfdec_as_object_get_variable_and_flags().
+ *
+ * Returns: %TRUE if the variable existed, %FALSE otherwise
+ */
+
+/**
+ * swfdec_as_object_get_variable_and_flags:
+ * @object: a #SwfdecAsObject
+ * @variable: a garbage-collected string containing the name of the variable
+ * @value: pointer to a #SwfdecAsValue that takes the return value or %NULL
+ * @flags: pointer to a guint taking the variable's flags or %NULL
+ * @pobject: pointer to set to the object that really holds the property or 
+ *           %NULL
+ *
+ * Looks up @variable on @object. It also walks the object's prototype chain.
+ * If the variable exists, its value, flags and the real object containing the
+ * variable will be set and %TRUE will be returned.
+ *
+ * Returns: %TRUE if the variable exists, %FALSE otherwise
+ **/
 gboolean
 swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
@@ -468,6 +549,18 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
   return FALSE;
 }
 
+/**
+ * swfdec_as_object_delete_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: garbage-collected name of the variable
+ *
+ * Deletes the given variable if possible. If the variable is protected from 
+ * deletion, it will not be deleted.
+ *
+ * Returns: %TRUE if the variable existed. Note that this doesn't mean that the
+ *          variable was actually removed. Permanent variables for example 
+ *          cannot be removed.
+ **/
 gboolean
 swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 {
@@ -523,6 +616,17 @@ swfdec_as_object_unset_variable_flags (SwfdecAsObject *object,
   klass->set_flags (object, variable, 0, flags);
 }
 
+/**
+ * swfdec_as_object_foreach:
+ * @object: a #SwfdecAsObject
+ * @func: function to call
+ * @data: data to pass to @func
+ *
+ * Calls @func for every variable of @object or until @func returns %FALSE. The
+ * variables of @object must not be modified by @func.
+ *
+ * Returns: %TRUE if @func always returned %TRUE
+ **/
 gboolean
 swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
     gpointer data)
@@ -650,6 +754,16 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
   swfdec_as_context_run (object->context);
 }
 
+/**
+ * swfdec_as_object_has_function:
+ * @object: a #SwfdecAsObject
+ * @name: garbage-collected name of th function
+ *
+ * Convenience function that checks of @object has a variable that references 
+ * a function.
+ *
+ * Returns: %TRUE if object.name is a function.
+ **/
 gboolean
 swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
 {
@@ -673,7 +787,7 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
  * swfdec_as_context_run(). After the constructor has been run, the new object 
- * will be pushed on top of the stack.
+ * will be pushed to the top of the stack.
  **/
 void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
@@ -845,6 +959,16 @@ swfdec_as_variable_set (SwfdecAsVariable *var, const SwfdecAsValue *value)
   var->value = *value;
 }
 
+/**
+ * swfdec_as_object_get_debug:
+ * @object: a #SwfdecAsObject
+ *
+ * Gets a representation string suitable for debugging. This function is 
+ * guaranteed to not modify the state of the script engine, unlike 
+ * swfdec_as_value_to_string() for example.
+ *
+ * Returns: A newly allocated string. Free it with g_free() after use.
+ **/
 char *
 swfdec_as_object_get_debug (SwfdecAsObject *object)
 {

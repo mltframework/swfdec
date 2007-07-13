@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_AS_INTERNAL_H_
 #define _SWFDEC_AS_INTERNAL_H_
 
+#include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
@@ -37,6 +38,9 @@ void		swfdec_as_function_init_context (SwfdecAsContext *	context,
 						 guint			version);
 
 /* swfdec_as_object.c */
+typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;
+typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object, 
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 void		swfdec_as_object_collect	(SwfdecAsObject *     	object);
 guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,

@@ -1,4 +1,20 @@
 
+ 0.5.0 ("Meet Plan Party!")
+
+Here's the long overdue update. Lots of backend stuff was rewritten. The only
+thing that is missing now is more features. Expect them in the next releases.
+- New and more correct script interpreter engine. The engine is even exported 
+  for your coding pleasure.
+- New instance placement handling algorithm. This one seems to produce much
+  better correctness results than the old one.
+- More ActionScript bytecodes are supported, in particular CloneSprite and
+  RemoveSprite
+- improve String reading in earlier Flash versions (Flash <=5 is Latin1, not 
+  UTF8)
+- implement some more Actionscript functions (most important is probably
+  createEmptyMovieClip ())
+- lots of bugfixes
+
  0.4.5 ("Death of the Desktop")
 
 This is strictly a bugfix release. Have fun.

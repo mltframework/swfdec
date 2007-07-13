@@ -28,5 +28,6 @@
     <xi:include href="xml/SwfdecAsObject.xml"/>
     <xi:include href="xml/SwfdecAsArray.xml"/>
     <xi:include href="xml/SwfdecAsFunction.xml"/>
+    <xi:include href="xml/SwfdecAsFrame.xml"/>
   </chapter>
 </book>

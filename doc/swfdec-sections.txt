@@ -235,6 +235,8 @@ swfdec_as_context_unuse_mem
 swfdec_as_context_eval
 swfdec_as_context_eval_set
 swfdec_as_context_get_time
+swfdec_as_context_get_frame
+swfdec_as_context_is_constructing
 <SUBSECTION Standard>
 swfdec_as_context_get_type
 SwfdecAsContextClass
@@ -327,4 +329,25 @@ SWFDEC_AS_NATIVE_FUNCTION_GET_CLASS
 SWFDEC_IS_AS_NATIVE_FUNCTION
 SWFDEC_IS_AS_NATIVE_FUNCTION_CLASS
 SWFDEC_TYPE_AS_NATIVE_FUNCTION
+</SECTION>
+
+<SECTION>
+<FILE>SwfdecAsFrame</FILE>
+<TITLE>SwfdecAsFrame</TITLE>
+SwfdecAsFrame
+swfdec_as_frame_get_next
+SwfdecAsStackIterator
+swfdec_as_stack_iterator_init
+swfdec_as_stack_iterator_next
+<SUBSECTION Standard>
+swfdec_as_frame_get_type
+SwfdecAsScope
+SwfdecAsStack
+SwfdecAsFrameClass
+SWFDEC_AS_FRAME
+SWFDEC_AS_FRAME_CLASS
+SWFDEC_AS_FRAME_GET_CLASS
+SWFDEC_IS_AS_FRAME
+SWFDEC_IS_AS_FRAME_CLASS
+SWFDEC_TYPE_AS_FRAME
 </SECTION>

@@ -770,6 +770,15 @@ EXTRA_DIST = \
 	stack-segment-7.swf.trace \
 	stack-segment-8.swf \
 	stack-segment-8.swf.trace \
+	stack-segments2.as \
+	stack-segments2-5.swf \
+	stack-segments2-5.swf.trace \
+	stack-segments2-6.swf \
+	stack-segments2-6.swf.trace \
+	stack-segments2-7.swf \
+	stack-segments2-7.swf.trace \
+	stack-segments2-8.swf \
+	stack-segments2-8.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

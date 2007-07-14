@@ -743,6 +743,15 @@ EXTRA_DIST = \
 	stack-overflow-6.swf.trace \
 	stack-overflow-7.swf \
 	stack-overflow-7.swf.trace \
+	stack-segment.as \
+	stack-segment-5.swf \
+	stack-segment-5.swf.trace \
+	stack-segment-6.swf \
+	stack-segment-6.swf.trace \
+	stack-segment-7.swf \
+	stack-segment-7.swf.trace \
+	stack-segment-8.swf \
+	stack-segment-8.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

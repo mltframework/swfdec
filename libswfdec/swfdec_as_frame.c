@@ -227,6 +227,42 @@ swfdec_as_frame_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
 }
 
+static char *
+swfdec_as_frame_debug (SwfdecAsObject *object)
+{
+  SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
+  GString *string = g_string_new ("");
+  SwfdecAsStackIterator iter;
+  SwfdecAsValue *val;
+  char *s;
+  guint i;
+
+  if (frame->thisp) {
+    s = swfdec_as_object_get_debug (frame->thisp);
+    g_string_append (string, s);
+    g_string_append (string, ".");
+    g_free (s);
+  }
+  g_string_append (string, frame->function_name);
+  g_string_append (string, " (");
+  i = 0;
+  for (val = swfdec_as_stack_iterator_init_arguments (&iter, frame); val && i < 4;
+      val = swfdec_as_stack_iterator_next (&iter)) {
+    if (i > 0)
+      g_string_append (string, ", ");
+    i++;
+    if (i == 3 && frame->argc > 4) {
+      g_string_append (string, "...");
+    } else {
+      s = swfdec_as_value_to_debug (val);
+      g_string_append (string, s);
+      g_free (s);
+    }
+  }
+  g_string_append (string, ")");
+  return g_string_free (string, FALSE);
+}
+
 static void
 swfdec_as_frame_class_init (SwfdecAsFrameClass *klass)
 {
@@ -236,6 +272,7 @@ swfdec_as_frame_class_init (SwfdecAsFrameClass *klass)
   object_class->dispose = swfdec_as_frame_dispose;
 
   asobject_class->mark = swfdec_as_frame_mark;
+  asobject_class->debug = swfdec_as_frame_debug;
 }
 
 static void

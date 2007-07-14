@@ -435,6 +435,7 @@ swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
   g_return_if_fail (frame->thisp == NULL);
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
 
+  g_assert (!SWFDEC_IS_AS_SUPER (thisp));
   frame->thisp = thisp;
   if (frame->target == NULL) {
     frame->target = thisp;

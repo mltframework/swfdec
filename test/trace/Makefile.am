@@ -116,6 +116,15 @@ EXTRA_DIST = \
 	chr-7.swf.trace \
 	classes.swf \
 	classes.swf.trace \
+	clonesprite-depths.as \
+	clonesprite-depths-5.swf \
+	clonesprite-depths-5.swf.trace \
+	clonesprite-depths-6.swf \
+	clonesprite-depths-6.swf.trace \
+	clonesprite-depths-7.swf \
+	clonesprite-depths-7.swf.trace \
+	clonesprite-depths-8.swf \
+	clonesprite-depths-8.swf.trace \
 	clonesprite-events.c \
 	clonesprite-events-5.swf \
 	clonesprite-events-5.swf.trace \

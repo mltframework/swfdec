@@ -800,6 +800,8 @@ EXTRA_DIST = \
 	substring-7.swf \
 	substring-7.swf.trace \
 	super-calls.as \
+	super-calls-5.swf \
+	super-calls-5.swf.trace \
 	super-calls-6.swf \
 	super-calls-6.swf.trace \
 	super-calls-7.swf \

@@ -833,6 +833,15 @@ EXTRA_DIST = \
 	super-reference-7.swf.trace \
 	super-reference-8.swf \
 	super-reference-8.swf.trace \
+	super-this.as \
+	super-this-5.swf \
+	super-this-5.swf.trace \
+	super-this-6.swf \
+	super-this-6.swf.trace \
+	super-this-7.swf \
+	super-this-7.swf.trace \
+	super-this-8.swf \
+	super-this-8.swf.trace \
 	targetpath.as \
 	targetpath-5.swf \
 	targetpath-5.swf.trace \

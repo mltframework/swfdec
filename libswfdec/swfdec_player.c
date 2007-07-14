@@ -307,7 +307,9 @@ enum {
   PROP_INITIALIZED,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT,
-  PROP_BACKGROUND_COLOR
+  PROP_BACKGROUND_COLOR,
+  PROP_WIDTH,
+  PROP_HEIGHT
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -341,6 +343,12 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_NEXT_EVENT:
       g_value_set_uint (value, swfdec_player_get_next_event (player));
       break;
+    case PROP_WIDTH:
+      g_value_set_int (value, player->stage_width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_int (value, player->stage_height);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -359,6 +367,12 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_CACHE_SIZE:
       player->cache->max_size = g_value_get_uint (value);
+      break;
+    case PROP_WIDTH:
+      swfdec_player_set_size (player, g_value_get_int (value), player->stage_height);
+      break;
+    case PROP_HEIGHT:
+      swfdec_player_set_size (player, player->stage_width, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -410,6 +424,25 @@ swfdec_player_dispose (GObject *object)
   if (player->loader) {
     g_object_unref (player->loader);
     player->loader = NULL;
+  }
+}
+
+static void
+swfdec_player_dispatch_properties_changed (GObject *object, guint n_pspecs, 
+    GParamSpec **pspecs)
+{
+  guint i;
+
+  G_OBJECT_CLASS (swfdec_player_parent_class)->dispatch_properties_changed (
+      object, n_pspecs, pspecs);
+  
+  /* check if we need to emit any stage signals */
+  for (i = 0; i < n_pspecs; i++) {
+    if (g_str_equal (pspecs[i]->name, "width") ||
+        g_str_equal (pspecs[i]->name, "height")) {
+      SWFDEC_FIXME ("width or height got changed, emit a Stage signal!");
+      break;
+    }
   }
 }
 
@@ -818,6 +851,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   object_class->get_property = swfdec_player_get_property;
   object_class->set_property = swfdec_player_set_property;
   object_class->dispose = swfdec_player_dispose;
+  object_class->dispatch_properties_changed = swfdec_player_dispatch_properties_changed;
 
   g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
@@ -834,6 +868,12 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
       g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
 	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_WIDTH,
+      g_param_spec_int ("width", "width", "current width of the movie",
+	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_HEIGHT,
+      g_param_spec_int ("height", "height", "current height of the movie",
+	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1472,11 +1512,11 @@ swfdec_player_get_rate (SwfdecPlayer *player)
 /**
  * swfdec_player_get_image_size:
  * @player: a #SwfdecPlayer
- * @width: integer to store the width in or NULL
- * @height: integer to store the height in or NULL
+ * @width: integer to store the width in or %NULL
+ * @height: integer to store the height in or %NULL
  *
- * If the size of the movie is already known, fills in @width and @height with
- * the size. Otherwise @width and @height are set to 0.
+ * If the default size of the movie is initialized, fills in @width and @height 
+ * with the size. Otherwise @width and @height are set to 0.
  **/
 void
 swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
@@ -1487,6 +1527,57 @@ swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
     *width = player->width;
   if (height)
     *height = player->height;
+}
+
+/**
+ * swfdec_player_get_size:
+ * @player: a #SwfdecPlayer
+ * @width: integer to store the width in or %NULL
+ * @height: integer to store the height in or %NULL
+ *
+ * Gets the currently set image size. If the default width or height should be 
+ * used, the width or height respectively is set to -1.
+ **/
+void
+swfdec_player_get_size (SwfdecPlayer *player, int *width, int *height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  if (width)
+    *width = player->stage_width;
+  if (height)
+    *height = player->stage_height;
+}
+
+/**
+ * swfdec_player_set_size:
+ * @player: a #SwfdecPlayer
+ * @width: desired width of the movie or -1 for default
+ * @height: desired height of the movie or -1 for default
+ *
+ * Sets the image size to the given values. The image size is what the area that
+ * the @player will render and advocate with scripts.
+ * <note>Calling this function or setting the corresponding properties causes 
+ * the emission of an event inside the script engine for listeners registered on
+ * the Stage object.</note>
+ **/
+void
+swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (width >= -1);
+  g_return_if_fail (height >= -1);
+
+  g_object_freeze_notify (G_OBJECT (player));
+  if (player->stage_width != width) {
+    player->stage_width = width;
+    g_object_notify (G_OBJECT (player), "width");
+  }
+  if (player->stage_height != height) {
+    player->stage_height = height;
+    g_object_notify (G_OBJECT (player), "height");
+  }
+  g_object_thaw_notify (G_OBJECT (player));
 }
 
 /**

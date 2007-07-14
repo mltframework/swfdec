@@ -50,6 +50,9 @@ struct _SwfdecPlayer
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
   SwfdecLoader *	loader;			/* initial loader */
+  /* stage properties */
+  gint			stage_width;		/* width set by the user */
+  gint			stage_height;		/* height set by the user */
 
   guint			unnamed_count;		/* variable used for naming unnamed movies */
   /* ActionScript */

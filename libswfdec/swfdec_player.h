@@ -62,7 +62,13 @@ double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);
-guint	swfdec_player_get_background_color 
+void		swfdec_player_get_size		(SwfdecPlayer *	player,
+						 int *		width,
+						 int *		height);
+void		swfdec_player_set_size		(SwfdecPlayer *	player,
+						 int		width,
+						 int		height);
+guint		swfdec_player_get_background_color 
 						(SwfdecPlayer *	player);
 void		swfdec_player_set_background_color 
 						(SwfdecPlayer *	player,

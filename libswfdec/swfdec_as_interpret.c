@@ -1942,7 +1942,7 @@ swfdec_action_char_to_ascii_5 (SwfdecAsContext *cx, guint action, const guint8 *
   const char *s = swfdec_as_value_to_string (cx, val);
 
   char *ascii;
-  ascii = g_convert (s, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
+  ascii = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
   if (ascii == NULL) {
     /* This can happen if a Flash 5 movie gets loaded into a Flash 7 movie */
     SWFDEC_FIXME ("Someone threw unconvertible text %s at Flash <= 5", s);
@@ -1998,7 +1998,7 @@ swfdec_action_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *
   s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
   s[1] = 0;
 
-  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
   if (utf8 == NULL) {
     g_warning ("conversion of character %u failed", (guint) s[0]);
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
@@ -2025,7 +2025,7 @@ swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint
     s[0] = i;
     s[1] = 0;
   }
-  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
   if (utf8 == NULL) {
     g_warning ("conversion of character %u failed", i);
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);

@@ -371,6 +371,15 @@ EXTRA_DIST = \
 	load-5.swf.trace \
 	local.swf \
 	local.swf.trace \
+	lots-of-arguments.as \
+	lots-of-arguments-5.swf \
+	lots-of-arguments-5.swf.trace \
+	lots-of-arguments-6.swf \
+	lots-of-arguments-6.swf.trace \
+	lots-of-arguments-7.swf \
+	lots-of-arguments-7.swf.trace \
+	lots-of-arguments-8.swf \
+	lots-of-arguments-8.swf.trace \
 	math-actions.as \
 	math-actions-5.swf \
 	math-actions-5.swf.trace \

@@ -151,13 +151,20 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
     return NULL;
 
   context = SWFDEC_AS_OBJECT (frame)->context;
+  if (context->version <= 5 && !frame->construct)
+    return NULL;
+
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
     return NULL;
   ret = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsSuper));
   super = SWFDEC_AS_SUPER (ret);
   super->thisp = frame->thisp;
-  super->object = frame->thisp->prototype;
+  if (context->version <= 5) {
+    super->object = NULL;
+  } else {
+    super->object = frame->thisp->prototype;
+  }
   return ret;
 }
 

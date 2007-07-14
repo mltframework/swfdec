@@ -60,23 +60,18 @@ swfdec_debug_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
     return FALSE;
 
   if (event->button == 1 && swfdec_gtk_widget_get_interactive (widget)) {
-    double scale = swfdec_gtk_widget_get_current_scale (widget);
     SwfdecPlayer *player = swfdec_gtk_widget_get_player (widget);
     switch (event->type) {
       case GDK_BUTTON_PRESS:
 	swfdec_debug_widget_invalidate_click_area (debug);
 	debug->x = event->x;
 	debug->y = event->y;
-	swfdec_player_handle_mouse (player, 
-	    debug->x / scale, debug->y / scale, 
-	    debug->button);
+	swfdec_player_handle_mouse (player, debug->x, debug->y, debug->button);
 	swfdec_debug_widget_invalidate_click_area (debug);
 	break;
       case GDK_2BUTTON_PRESS:
 	debug->button = 1 - debug->button;
-	swfdec_player_handle_mouse (player, 
-	    debug->x / scale, debug->y / scale, 
-	    debug->button);
+	swfdec_player_handle_mouse (player, debug->x, debug->y, debug->button);
 	swfdec_debug_widget_invalidate_click_area (debug);
 	break;
       default:

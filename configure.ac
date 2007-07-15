@@ -125,7 +125,7 @@ dnl
 dnl audio backend
 dnl
 AC_ARG_WITH(audio,
-            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
+            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/oss/none@:>@],
                             [audio backend to use])],,
 	    [with_audio=auto])
 
@@ -134,6 +134,8 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
   PKG_CHECK_MODULES(ALSA, alsa >= 1.0, AUDIO_TYPE=alsa)
   if test "$AUDIO_TYPE" = "alsa"; then
     with_audio=alsa
+    AUDIO_CFLAGS=$ALSA_CFLAGS
+    AUDIO_LIBS=$ALSA_LIBS
   else
     if test "$with_audio" = "alsa"; then
       AC_MSG_ERROR([no alsa audio support])
@@ -141,8 +143,14 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
       AC_MSG_WARN([no alsa audio support])
     fi
   fi
-  AUDIO_CFLAGS=$ALSA_CFLAGS
-  AUDIO_LIBS=$ALSA_LIBS
+fi
+
+dnl Assume OSS is available if ALSA wasn't found and we're "auto".
+if test "$with_audio" = "auto" -o "$with_audio" = "oss"; then
+  with_audio="oss"
+  AUDIO_CFLAGS=
+  AUDIO_LIBS=
+  AUDIO_TYPE=oss
 fi
 
 if test "$with_audio" = "auto" -o "$with_audio" = "none"; then

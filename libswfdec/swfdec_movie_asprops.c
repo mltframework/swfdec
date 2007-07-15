@@ -231,7 +231,7 @@ mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     return;
   d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
-    SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
+    SWFDEC_WARNING ("trying to set width to a non-finite value, ignoring");
     return;
   }
   swfdec_movie_update (movie);

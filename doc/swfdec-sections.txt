@@ -142,9 +142,6 @@ SwfdecGtkWidget
 swfdec_gtk_widget_new
 swfdec_gtk_widget_get_player
 swfdec_gtk_widget_set_player
-swfdec_gtk_widget_get_current_scale
-swfdec_gtk_widget_get_scale
-swfdec_gtk_widget_set_scale
 swfdec_gtk_widget_get_interactive
 swfdec_gtk_widget_set_interactive
 swfdec_gtk_widget_get_renderer
@@ -270,7 +267,6 @@ SwfdecAsVariableForeach
 swfdec_as_object_foreach
 swfdec_as_object_has_function
 swfdec_as_object_call
-swfdec_as_object_run
 swfdec_as_object_add_function
 swfdec_as_object_get_debug
 swfdec_as_object_resolve

@@ -63,7 +63,7 @@ static const int sound_table[2][4][4] = {
     { -1,  0,  3, -1 } }
 };
 
-const char *
+static const char *
 swfdec_button_condition_get_name (SwfdecButtonCondition condition)
 {
   /* FIXME: check if these events are based on conditions or if they're independant of button type */

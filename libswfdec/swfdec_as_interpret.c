@@ -1465,6 +1465,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   const char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
+  SwfdecBuffer *buffer;
   SwfdecBits bits;
   SwfdecAsFunction *fun;
   SwfdecAsFrame *frame;
@@ -1530,7 +1531,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     return;
   }
   /* create the script */
-  SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (frame->script->buffer, 
+  buffer = swfdec_buffer_new_subbuffer (frame->script->buffer, 
       frame->pc + 3 + len - frame->script->buffer->data, size);
   swfdec_bits_init (&bits, buffer);
   if (*function_name) {

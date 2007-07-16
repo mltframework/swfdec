@@ -177,7 +177,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-SwfdecBuffer *
+static SwfdecBuffer *
 swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
 {
   gpointer decoder;

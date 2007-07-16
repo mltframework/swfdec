@@ -222,12 +222,12 @@ swfdec_movie_find (SwfdecMovie *movie, int depth)
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
   for (walk = movie->list; walk; walk = walk->next) {
-    SwfdecMovie *movie = walk->data;
+    SwfdecMovie *cur= walk->data;
 
-    if (movie->depth < depth)
+    if (cur->depth < depth)
       continue;
-    if (movie->depth == depth)
-      return movie;
+    if (cur->depth == depth)
+      return cur;
     break;
   }
   return NULL;

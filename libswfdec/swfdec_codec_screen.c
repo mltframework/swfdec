@@ -28,6 +28,7 @@
 #include "swfdec_codec_video.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 
 typedef struct _SwfdecCodecScreen SwfdecCodecScreen;
 
@@ -84,19 +85,19 @@ swfdec_video_decoder_screen_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
   for (j = 0; j < h; j += bh) {
     for (i = 0; i < w; i += bw) {
       guint x, y, size;
-      SwfdecBuffer *buffer;
+      SwfdecBuffer *buf;
       guint8 *in, *out;
       size = swfdec_bits_get_bu16 (&bits);
       if (size == 0)
 	continue;
-      buffer = swfdec_bits_decompress (&bits, size, bw * bh * 4);
-      if (buffer == NULL) {
+      buf = swfdec_bits_decompress (&bits, size, bw * bh * 4);
+      if (buf == NULL) {
 	SWFDEC_WARNING ("error decoding block");
 	continue;
       }
       /* convert format and write out data */
       out = ret->data + stride * (h - j - 1) + i * 4;
-      in = buffer->data;
+      in = buf->data;
       for (y = 0; y < MIN (bh, h - j); y++) {
 	for (x = 0; x < MIN (bw, w - i); x++) {
 	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_BLUE] = *in++;

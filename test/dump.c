@@ -309,7 +309,7 @@ dump_button (SwfdecButton *button)
   }
 }
 
-const char *
+static const char *
 get_image_type_name (SwfdecImageType type)
 {
   switch (type) {
@@ -377,7 +377,6 @@ dump_object (gpointer key, gpointer value, gpointer dec)
 int
 main (int argc, char *argv[])
 {
-  char *fn = "it.swf";
   SwfdecSwfDecoder *s;
   SwfdecPlayer *player;
   GError *error = NULL;
@@ -399,8 +398,9 @@ main (int argc, char *argv[])
 
   swfdec_init();
 
-  if(argc>=2){
-	fn = argv[1];
+  if(argc < 2){
+    g_print ("usage: %s [OPTIONS] file\n", argv[0]);
+    return 0;
   }
 
   player = swfdec_player_new_from_file (argv[1]);

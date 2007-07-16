@@ -180,7 +180,8 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     var = g_slice_new0 (SwfdecAsVariable);
     g_hash_table_insert (object->properties, (gpointer) variable, var);
   }
-  var->value = *val;
+  if (!(var->flags & SWFDEC_AS_VARIABLE_READONLY))
+    var->value = *val;
 }
 
 static void
@@ -957,17 +958,6 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_valueOf, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 
       SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_toString, 0);
-}
-
-void
-swfdec_as_variable_set (SwfdecAsVariable *var, const SwfdecAsValue *value)
-{
-  g_return_if_fail (var != NULL);
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
-
-  if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
-    return;
-  var->value = *value;
 }
 
 /**

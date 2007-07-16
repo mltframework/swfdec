@@ -68,8 +68,8 @@ gboolean		swfdec_urldecode_one		(const char *		string,
 							 char **		value,
 							 const char **		end);
 void			swfdec_string_append_urlencoded	(GString *		str,
-							 char *			name,
-							 char *			value);
+							 const char *		name,
+							 const char *		value);
 
 G_END_DECLS
 #endif

@@ -711,7 +711,7 @@ swfdec_shape_parse_line (SwfdecBits *bits, SubPath *path,
   }
 }
 
-SubPath *
+static SubPath *
 swfdec_shape_parse_change (SwfdecSwfDecoder *s, SwfdecShape *shape, GArray *path_array, SubPath *path,
     int *x, int *y, SwfdecPatternFunc parse_fill, SwfdecStrokeFunc parse_stroke)
 {

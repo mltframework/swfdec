@@ -38,7 +38,7 @@ typedef struct _SwfdecAsBooleanClass SwfdecAsBooleanClass;
 struct _SwfdecAsBoolean {
   SwfdecAsObject	object;
 
-  double		boolean;		/* boolean represented by this boolean object */
+  gboolean		boolean;		/* boolean represented by this boolean object */
 };
 
 struct _SwfdecAsBooleanClass {

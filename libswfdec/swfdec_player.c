@@ -34,6 +34,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_internal.h"
 #include "swfdec_listener.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
@@ -685,7 +686,7 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
 static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER ((void *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
+  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
   SWFDEC_INFO ("=== START ITERATION ===");
@@ -1121,14 +1122,6 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 
-extern void swfdec_player_init_global (SwfdecPlayer *player, guint version);
-extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_movie_color_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_net_connection_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_net_stream_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_video_movie_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_xml_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1490,14 +1483,14 @@ swfdec_player_is_initialized (SwfdecPlayer *player)
 guint
 swfdec_player_get_next_event (SwfdecPlayer *player)
 {
-  SwfdecTick time;
+  SwfdecTick tick;
   guint ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
-  time = swfdec_player_get_next_event_time (player);
-  ret = SWFDEC_TICKS_TO_MSECS (time);
-  if (time % (SWFDEC_TICKS_PER_SECOND / 1000))
+  tick = swfdec_player_get_next_event_time (player);
+  ret = SWFDEC_TICKS_TO_MSECS (tick);
+  if (tick % (SWFDEC_TICKS_PER_SECOND / 1000))
     ret++;
 
   return ret;

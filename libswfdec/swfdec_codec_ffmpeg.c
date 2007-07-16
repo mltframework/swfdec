@@ -27,6 +27,7 @@
 #include "swfdec_codec_audio.h"
 #include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 
 /*** GENERAL ***/
 
@@ -209,7 +210,7 @@ typedef struct {
   struct SwsContext *	sws;		/* the format conversion */
 } SwfdecVideoDecoderFFMpeg;
 
-SwfdecBuffer *
+static SwfdecBuffer *
 swfdec_video_decoder_ffmpeg_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
     guint *width, guint *height, guint *rowstride)
 {

@@ -88,7 +88,7 @@ swfedit_u8_write (SwfeditToken *token, gpointer data, SwfdecOut *out, gconstpoin
 static gpointer
 swfedit_u8_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
-  return GUINT_TO_POINTER (swfdec_bits_get_u8 (bits));
+  return GUINT_TO_POINTER ((gulong) swfdec_bits_get_u8 (bits));
 }
 
 static void
@@ -397,7 +397,7 @@ swfedit_tag_changed (SwfeditToken *token, guint i)
     }
   }
   if (def[i].n_items != 0) {
-    SwfeditTokenEntry *entry = &g_array_index (token->tokens, 
+    entry = &g_array_index (token->tokens, 
 	SwfeditTokenEntry, def[i].n_items - 1);
     if (entry->type == SWFEDIT_TOKEN_UINT32) {
       SwfdecOut *out = swfdec_out_open ();

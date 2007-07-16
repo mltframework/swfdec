@@ -23,14 +23,7 @@
 
 #include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
-
-extern SwfdecVideoDecoderNewFunc swfdec_video_decoder_screen_new;
-#ifdef HAVE_FFMPEG
-extern SwfdecVideoDecoderNewFunc swfdec_video_decoder_ffmpeg_new;
-#endif
-#ifdef HAVE_GST
-extern SwfdecVideoDecoderNewFunc swfdec_video_decoder_gst_new;
-#endif
+#include "swfdec_internal.h"
 
 /**
  * swfdec_video_decoder_new:

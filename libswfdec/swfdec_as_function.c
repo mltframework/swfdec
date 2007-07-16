@@ -24,6 +24,7 @@
 #include "swfdec_as_function.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"

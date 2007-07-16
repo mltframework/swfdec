@@ -71,7 +71,7 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
   }
 }
 
-void
+static void
 swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);

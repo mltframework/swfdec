@@ -24,6 +24,7 @@
 #include "swfdec_codec_audio.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 
 typedef struct {
   SwfdecAudioDecoder	decoder;

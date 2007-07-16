@@ -675,7 +675,7 @@ swfdec_as_array_sort_compare (SwfdecAsContext *cx, SwfdecAsValue *a, SwfdecAsVal
     } else {
       double an = swfdec_as_value_to_number (cx, a);
       double bn = swfdec_as_value_to_number (cx, b);
-      retval = (an < bn ? -1 : (an == bn ? 0 : 1));
+      retval = (an < bn ? -1 : (an > bn ? 1 : 0));
     }
   }
   else if (options & ARRAY_SORT_OPTION_CASEINSENSITIVE)

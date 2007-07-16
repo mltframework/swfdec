@@ -132,16 +132,16 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
   if (array == NULL)
     return FALSE;
   for (i = 0; i < len; i++) {
+    SwfdecAsValue tmp;
     type = swfdec_bits_get_u8 (bits);
-    SwfdecAsValue val;
     if (type >= SWFDEC_AMF_N_TYPES ||
 	(func = parse_funcs[type]) == NULL) {
       SWFDEC_ERROR ("no parse func for AMF type %u", type);
       goto fail;
     }
-    if (!func (context, bits, &val))
+    if (!func (context, bits, &tmp))
       goto fail;
-    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &tmp);
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (val, array);

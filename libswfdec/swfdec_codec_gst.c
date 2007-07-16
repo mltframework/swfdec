@@ -26,6 +26,7 @@
 #include "swfdec_codec_audio.h"
 #include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 
 #if 0
 #define swfdec_cond_wait(cond, mutex) G_STMT_START { \

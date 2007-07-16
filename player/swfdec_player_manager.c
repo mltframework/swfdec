@@ -51,10 +51,10 @@ typedef enum {
 
 static void
 swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
-    SwfdecMessageType type, char *format, ...) G_GNUC_PRINTF (3, 4);
+    SwfdecMessageType type, const char *format, ...) G_GNUC_PRINTF (3, 4);
 static void
 swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
-    SwfdecMessageType type, char *format, ...)
+    SwfdecMessageType type, const char *format, ...)
 {
   va_list args;
   char *msg;
@@ -332,7 +332,7 @@ swfdec_player_manager_continue (SwfdecPlayerManager *manager)
 
 /*** commands ***/
 
-const char *
+static const char *
 parse_skip (const char *input)
 {
   g_assert (input);
@@ -341,7 +341,7 @@ parse_skip (const char *input)
   return input;
 }
 
-const char *
+static const char *
 parse_string (const char *input, char **output)
 {
   const char *start = input;
@@ -358,7 +358,7 @@ parse_string (const char *input, char **output)
   return parse_skip (input);
 }
 
-const char *
+static const char *
 parse_uint (const char *input, guint *output)
 {
   char *end;

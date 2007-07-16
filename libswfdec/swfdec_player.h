@@ -33,6 +33,18 @@ typedef enum {
   SWFDEC_MOUSE_CURSOR_CLICK
 } SwfdecMouseCursor;
 
+typedef enum {
+  SWFDEC_ALIGNMENT_TOP_LEFT,
+  SWFDEC_ALIGNMENT_TOP,
+  SWFDEC_ALIGNMENT_TOP_RIGHT,
+  SWFDEC_ALIGNMENT_LEFT,
+  SWFDEC_ALIGNMENT_CENTER,
+  SWFDEC_ALIGNMENT_RIGHT,
+  SWFDEC_ALIGNMENT_BOTTOM_LEFT,
+  SWFDEC_ALIGNMENT_BOTTOM,
+  SWFDEC_ALIGNMENT_BOTTOM_RIGHT
+} SwfdecAlignment;
+
 typedef struct _SwfdecPlayer SwfdecPlayer;
 typedef struct _SwfdecPlayerClass SwfdecPlayerClass;
 

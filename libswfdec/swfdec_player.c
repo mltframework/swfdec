@@ -99,6 +99,21 @@
  * property.
  */
 
+/**
+ * SwfdecAlignment:
+ * @SWFDEC_ALIGNMENT_TOP_LEFT: top left
+ * @SWFDEC_ALIGNMENT_TOP: top
+ * @SWFDEC_ALIGNMENT_TOP_RIGHT: top right
+ * @SWFDEC_ALIGNMENT_LEFT: left
+ * @SWFDEC_ALIGNMENT_CENTER: center
+ * @SWFDEC_ALIGNMENT_RIGHT: right
+ * @SWFDEC_ALIGNMENT_BOTTOM_LEFT: left
+ * @SWFDEC_ALIGNMENT_BOTTOM: bottom
+ * @SWFDEC_ALIGNMENT_BOTTOM_RIGHT bottom right
+ *
+ * These are the possible values for the alignment of an unscaled movie.
+ */
+
 /*** Timeouts ***/
 
 static SwfdecTick

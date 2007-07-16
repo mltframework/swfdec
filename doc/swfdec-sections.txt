@@ -108,6 +108,7 @@ SwfdecAsContextState
 SwfdecLoaderDataType
 SwfdecLoaderRequest
 swfdec_loader_data_type_get_extension
+SwfdecAlignment
 SwfdecMouseCursor
 </SECTION>
 

@@ -159,7 +159,7 @@ unsigned char *jpeg_decoder_get_argb_image (JpegDecoder *dec);
 int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
     int *width, int *height);
 
-void jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...);
+void jpeg_decoder_error(JpegDecoder *dec, const char *fmt, ...);
 
 int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, JpegBits *bits);
 int jpeg_decoder_define_quant_table(JpegDecoder *dec, JpegBits *bits);

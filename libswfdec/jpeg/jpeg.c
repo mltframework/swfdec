@@ -27,8 +27,6 @@ void jpeg_decoder_start_of_scan (JpegDecoder * dec);
 
 /* misc helper function declarations */
 
-static char *sprintbits (char *str, unsigned int bits, int n);
-
 static void jpeg_load_standard_huffman_tables (JpegDecoder * dec);
 
 static void jpeg_decoder_verify_header (JpegDecoder *dec);
@@ -36,7 +34,7 @@ static void jpeg_decoder_init_decoder (JpegDecoder *dec);
 
 
 void
-jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
+jpeg_decoder_error(JpegDecoder *dec, const char *fmt, ...)
 {
   va_list varargs;
 
@@ -195,8 +193,23 @@ jpeg_decoder_init_decoder (JpegDecoder *dec)
   }
 }
 
+#if 0
+static char *
+sprintbits (char *str, unsigned int bits, int n)
+{
+  int i;
+  int bit = 1 << (n - 1);
 
-void
+  for (i = 0; i < n; i++) {
+    str[i] = (bits & bit) ? '1' : '0';
+    bit >>= 1;
+  }
+  str[i] = 0;
+
+  return str;
+}
+
+static void
 generate_code_table (int *huffsize)
 {
   int code;
@@ -220,8 +233,9 @@ generate_code_table (int *huffsize)
   }
 
 }
+#endif
 
-int
+static int
 huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * bits)
 {
   int n_symbols;
@@ -272,7 +286,7 @@ huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * b
   return n;
 }
 
-int
+static int
 jpeg_decoder_find_component_by_id (JpegDecoder * dec, int id)
 {
   int i;
@@ -537,7 +551,7 @@ jpeg_decoder_free (JpegDecoder * dec)
   free (dec);
 }
 
-int
+static int
 jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
 {
   int a,b;
@@ -561,7 +575,7 @@ jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
   return TRUE;
 }
 
-void
+static void
 jpeg_decoder_skip (JpegDecoder *dec)
 {
   int length;
@@ -1092,21 +1106,6 @@ jpeg_decoder_parse (JpegDecoder * dec)
 
 
 /* misc helper functins */
-
-static char *
-sprintbits (char *str, unsigned int bits, int n)
-{
-  int i;
-  int bit = 1 << (n - 1);
-
-  for (i = 0; i < n; i++) {
-    str[i] = (bits & bit) ? '1' : '0';
-    bit >>= 1;
-  }
-  str[i] = 0;
-
-  return str;
-}
 
 static void
 jpeg_load_standard_huffman_tables (JpegDecoder * dec)

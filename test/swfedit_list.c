@@ -49,7 +49,7 @@ swfedit_list_changed (SwfeditToken *token, guint i)
   /* update length */
   j = list->def[i % list->n_defs].n_items;
   if (j != 0) {
-    SwfeditTokenEntry *entry = &g_array_index (token->tokens, 
+    entry = &g_array_index (token->tokens, 
 	SwfeditTokenEntry, j - 1);
     if (entry->type == SWFEDIT_TOKEN_UINT32) {
       SwfdecOut *out = swfdec_out_open ();

@@ -80,7 +80,7 @@ struct _SwfdecAsObjectClass {
 						 guint			flags,
 						 guint			mask);
   /* delete the variable - return TRUE if it exists */
-  gboolean		(* delete)		(SwfdecAsObject *       object,
+  gboolean		(* del)			(SwfdecAsObject *       object,
 						 const char *		variable);
   /* call with every variable until func returns FALSE */
   gboolean		(* foreach)		(SwfdecAsObject *	object,

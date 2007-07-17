@@ -102,7 +102,7 @@ swfdec_as_with_class_init (SwfdecAsWithClass *klass)
   asobject_class->get = swfdec_as_with_get;
   asobject_class->set = swfdec_as_with_set;
   asobject_class->set_flags = swfdec_as_with_set_flags;
-  asobject_class->delete = swfdec_as_with_delete;
+  asobject_class->del = swfdec_as_with_delete;
   asobject_class->foreach = swfdec_as_with_foreach;
   asobject_class->resolve = swfdec_as_with_resolve;
 }

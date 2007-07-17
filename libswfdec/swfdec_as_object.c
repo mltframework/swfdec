@@ -362,7 +362,7 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
   klass->get = swfdec_as_object_do_get;
   klass->set = swfdec_as_object_do_set;
   klass->set_flags = swfdec_as_object_do_set_flags;
-  klass->delete = swfdec_as_object_do_delete;
+  klass->del = swfdec_as_object_do_delete;
   klass->foreach = swfdec_as_object_do_foreach;
   klass->debug = swfdec_as_object_do_debug;
 }
@@ -582,7 +582,7 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
   g_return_val_if_fail (variable != NULL, FALSE);
 
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  return klass->delete (object, variable);
+  return klass->del (object, variable);
 }
 
 /**

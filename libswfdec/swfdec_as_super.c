@@ -122,7 +122,7 @@ swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
   asobject_class->get = swfdec_as_super_get;
   asobject_class->set = swfdec_as_super_set;
   asobject_class->set_flags = swfdec_as_super_set_flags;
-  asobject_class->delete = swfdec_as_super_delete;
+  asobject_class->del = swfdec_as_super_delete;
   asobject_class->resolve = swfdec_as_super_resolve;
 
   function_class->call = swfdec_as_super_call;

@@ -285,8 +285,10 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
     SwfdecDecoder *dec = SWFDEC_MOVIE (movie)->swf->decoder;
     loaded = dec->frames_loaded;
     g_assert (loaded <= movie->n_frames);
+    if (loaded == dec->frames_total)
+      loaded = G_MAXUINT;
   } else {
-    loaded = movie->n_frames;
+    loaded = G_MAXUINT;
   }
   if (loaded <= frame)
     swfdec_script_skip_actions (cx, jump);

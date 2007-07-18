@@ -27,6 +27,13 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  SWFDEC_ALIGN_FLAG_TOP		= (1 << 0),
+  SWFDEC_ALIGN_FLAG_BOTTOM	= (1 << 1),
+  SWFDEC_ALIGN_FLAG_LEFT	= (1 << 2),
+  SWFDEC_ALIGN_FLAG_RIGHT	= (1 << 3)
+} SwfdecAlignFlag;
+
 typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
@@ -53,6 +60,7 @@ struct _SwfdecPlayer
   /* stage properties */
   gint			stage_width;		/* width set by the user */
   gint			stage_height;		/* height set by the user */
+  guint			align_flags;		/* SwfdecAlignFlag */
 
   guint			unnamed_count;		/* variable used for naming unnamed movies */
   /* ActionScript */

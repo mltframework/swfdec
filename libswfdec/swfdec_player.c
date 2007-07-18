@@ -325,7 +325,8 @@ enum {
   PROP_NEXT_EVENT,
   PROP_BACKGROUND_COLOR,
   PROP_WIDTH,
-  PROP_HEIGHT
+  PROP_HEIGHT,
+  PROP_ALIGNMENT
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -335,6 +336,53 @@ swfdec_player_remove_movie (SwfdecPlayer *player, SwfdecMovie *movie)
 {
   swfdec_movie_remove (movie);
   player->movies = g_list_remove (player->movies, movie);
+}
+
+static guint
+swfdec_player_alignment_to_flags (SwfdecAlignment alignment)
+{
+  static const guint align_flags[9] = { 
+    SWFDEC_ALIGN_FLAG_TOP | SWFDEC_ALIGN_FLAG_LEFT,
+    SWFDEC_ALIGN_FLAG_TOP,
+    SWFDEC_ALIGN_FLAG_TOP | SWFDEC_ALIGN_FLAG_RIGHT,
+    SWFDEC_ALIGN_FLAG_LEFT,
+    0,
+    SWFDEC_ALIGN_FLAG_RIGHT,
+    SWFDEC_ALIGN_FLAG_BOTTOM | SWFDEC_ALIGN_FLAG_LEFT,
+    SWFDEC_ALIGN_FLAG_BOTTOM,
+    SWFDEC_ALIGN_FLAG_BOTTOM | SWFDEC_ALIGN_FLAG_RIGHT
+  };
+  return align_flags[alignment];
+}
+
+static SwfdecAlignment
+swfdec_player_alignment_from_flags (guint flags)
+{
+  if (flags & SWFDEC_ALIGN_FLAG_TOP) {
+    if (flags & SWFDEC_ALIGN_FLAG_LEFT) {
+      return SWFDEC_ALIGNMENT_TOP_LEFT;
+    } else if (flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+      return SWFDEC_ALIGNMENT_TOP_RIGHT;
+    } else {
+      return SWFDEC_ALIGNMENT_TOP;
+    }
+  } else if (flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
+    if (flags & SWFDEC_ALIGN_FLAG_LEFT) {
+      return SWFDEC_ALIGNMENT_BOTTOM_LEFT;
+    } else if (flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+      return SWFDEC_ALIGNMENT_BOTTOM_RIGHT;
+    } else {
+      return SWFDEC_ALIGNMENT_BOTTOM;
+    }
+  } else {
+    if (flags & SWFDEC_ALIGN_FLAG_LEFT) {
+      return SWFDEC_ALIGNMENT_LEFT;
+    } else if (flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+      return SWFDEC_ALIGNMENT_RIGHT;
+    } else {
+      return SWFDEC_ALIGNMENT_CENTER;
+    }
+  }
 }
 
 static void
@@ -365,6 +413,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_HEIGHT:
       g_value_set_int (value, player->stage_height);
       break;
+    case PROP_ALIGNMENT:
+      g_value_set_enum (value, swfdec_player_alignment_from_flags (player->align_flags));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -389,6 +440,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_HEIGHT:
       swfdec_player_set_size (player, player->stage_width, g_value_get_int (value));
+      break;
+    case PROP_ALIGNMENT:
+      player->align_flags = swfdec_player_alignment_to_flags (g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -890,6 +944,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height", "current height of the movie",
 	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_ALIGNMENT,
+      g_param_spec_enum ("alignment", "alignment", "point of the screen to align the output to",
+	  SWFDEC_TYPE_ALIGNMENT, SWFDEC_ALIGNMENT_CENTER, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:

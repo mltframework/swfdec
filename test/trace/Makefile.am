@@ -949,6 +949,9 @@ EXTRA_DIST = \
 	unescape2-7.swf.trace \
 	values.as \
 	video.flv \
+	waitforframe-huge.as \
+	waitforframe-huge-4.swf \
+	waitforframe-huge-4.swf.trace \
 	with-delete.as \
 	with-delete-5.swf \
 	with-delete-5.swf.trace \

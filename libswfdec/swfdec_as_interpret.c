@@ -279,7 +279,7 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
   }
 
   movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = data[0] || (data[1] << 8);
   jump = data[2];
   if (SWFDEC_MOVIE (movie)->swf->movie == movie) {
     SwfdecDecoder *dec = SWFDEC_MOVIE (movie)->swf->decoder;
@@ -2132,7 +2132,7 @@ swfdec_action_print_with (guint action, const guint8 *data, guint len)
     SWFDEC_ERROR ("With action requires a length of 2, but got %u", len);
     return NULL;
   }
-  return g_strdup_printf ("With %u", GUINT16_FROM_LE (*(guint16 *) data));
+  return g_strdup_printf ("With %u", data[0] | (data[1] << 8));
 }
 
 static char *
@@ -2401,7 +2401,7 @@ swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
   if (len != 2)
     return NULL;
 
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = data[0] | (data[1] << 8);
   return g_strdup_printf ("GotoFrame %u", frame);
 }
 
@@ -2424,7 +2424,7 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
   if (len != 3)
     return NULL;
 
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = data[0] | (data[1] << 8);
   jump = data[2];
   return g_strdup_printf ("WaitForFrame %u %u", frame, jump);
 }

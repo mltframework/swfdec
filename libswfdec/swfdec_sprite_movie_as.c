@@ -208,8 +208,31 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
 	SWFDEC_OBJECT (other)->extents.x1, SWFDEC_OBJECT (other)->extents.y1);
 #endif
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, swfdec_rect_intersect (NULL, &movie_rect, &other_rect));
+  } else if (argc >= 2) {
+    SwfdecRect movie_rect;
+    double x, y;
+
+    x = swfdec_as_value_to_number (cx, &argv[0]);
+    y = swfdec_as_value_to_number (cx, &argv[1]);
+
+    if (argc >= 3) {
+      if (swfdec_as_value_to_boolean (cx, &argv[2])) {
+	SWFDEC_FIXME ("hitTest's shapeFlag parameter not supported");
+	// just continue...
+      }
+    }
+
+    swfdec_movie_update (movie);
+    movie_rect = movie->original_extents;
+    while (movie->parent) {
+      swfdec_rect_transform (&movie_rect, &movie_rect, &movie->matrix);
+      movie = movie->parent;
+    }
+
+    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, swfdec_rect_contains (&movie_rect,
+	  SWFDEC_PLAYER (cx)->mouse_x, SWFDEC_PLAYER (cx)->mouse_y));
   } else {
-    SWFDEC_ERROR ("hitTest for x, y coordinate not implemented");
+    SWFDEC_FIXME ("hitText with 0 parameters, what to do?");
   }
 }
 

@@ -162,6 +162,7 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
   if (var) {
     if (var->get) {
       swfdec_as_function_call (var->get, object, 0, NULL, val);
+      swfdec_as_context_run (object->context);
       *flags = var->flags;
     } else {
       *val = var->value;
@@ -170,6 +171,21 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
     return TRUE;
   }
   return FALSE;
+}
+
+static SwfdecAsVariable *
+swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
+{
+  SwfdecAsVariable *var;
+
+  var = swfdec_as_object_hash_lookup (object, variable);
+  if (var == NULL) {
+    if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
+      return NULL;
+    var = g_slice_new0 (SwfdecAsVariable);
+    g_hash_table_insert (object->properties, (gpointer) variable, var);
+  }
+  return var;
 }
 
 static void
@@ -186,19 +202,16 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
   }
 
-  var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) {
-    if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
-      return;
-    var = g_slice_new0 (SwfdecAsVariable);
-    g_hash_table_insert (object->properties, (gpointer) variable, var);
-  }
+  var = swfdec_as_object_lookup_variable (object, variable);
+  if (var == NULL)
+    return;
   if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
     return;
   if (var->get) {
     if (var->set) {
       SwfdecAsValue tmp;
       swfdec_as_function_call (var->set, object, 1, val, &tmp);
+      swfdec_as_context_run (object->context);
     }
   } else { 
     var->value = *val;
@@ -912,6 +925,43 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
 /*** AS CODE ***/
 
 static void
+swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecAsFunction *get, *set;
+  SwfdecAsVariable *var;
+  const char *name;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+  if (argc < 3)
+    return;
+  name = swfdec_as_value_to_string (cx, &argv[0]);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]) ||
+      !SWFDEC_IS_AS_FUNCTION ((get = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]))))
+    return;
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[2])) {
+    set = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[2]);
+    if (!SWFDEC_IS_AS_FUNCTION (set))
+      return;
+  } else if (SWFDEC_AS_VALUE_IS_NULL (&argv[2])) {
+    set = NULL;
+  } else {
+    return;
+  }
+
+  var = swfdec_as_object_lookup_variable (object, name);
+  if (var == NULL)
+    return;
+  var->get = get;
+  var->set = set;
+  var->flags = SWFDEC_AS_VARIABLE_PERMANENT;
+  if (set == NULL)
+    var->flags |= SWFDEC_AS_VARIABLE_READONLY;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+}
+
+static void
 swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
@@ -972,6 +1022,8 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
 
   if (version > 5) {
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_addProperty, 
+	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_addProperty, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 
 	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_hasOwnProperty, 1);
   }

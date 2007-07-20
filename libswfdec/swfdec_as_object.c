@@ -92,6 +92,8 @@ typedef struct _SwfdecAsVariable SwfdecAsVariable;
 struct _SwfdecAsVariable {
   guint			flags;		/* SwfdecAsVariableFlag values */
   SwfdecAsValue     	value;		/* value of property */
+  SwfdecAsFunction *	get;		/* getter set with swfdec_as_object_add_property */
+  SwfdecAsFunction *	set;		/* setter or %NULL */
 };
 
 G_DEFINE_TYPE (SwfdecAsObject, swfdec_as_object, G_TYPE_OBJECT)
@@ -112,7 +114,13 @@ swfdec_as_object_mark_property (gpointer key, gpointer value, gpointer unused)
   SwfdecAsVariable *var = value;
 
   swfdec_as_string_mark (key);
-  swfdec_as_value_mark (&var->value);
+  if (var->get) {
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (var->get));
+    if (var->set)
+      swfdec_as_object_mark (SWFDEC_AS_OBJECT (var->set));
+  } else {
+    swfdec_as_value_mark (&var->value);
+  }
 }
 
 static void
@@ -152,8 +160,13 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
   SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
   if (var) {
-    *val = var->value;
-    *flags = var->flags;
+    if (var->get) {
+      swfdec_as_function_call (var->get, object, 0, NULL, val);
+      *flags = var->flags;
+    } else {
+      *val = var->value;
+      *flags = var->flags;
+    }
     return TRUE;
   }
   return FALSE;
@@ -180,8 +193,16 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     var = g_slice_new0 (SwfdecAsVariable);
     g_hash_table_insert (object->properties, (gpointer) variable, var);
   }
-  if (!(var->flags & SWFDEC_AS_VARIABLE_READONLY))
+  if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
+    return;
+  if (var->get) {
+    if (var->set) {
+      SwfdecAsValue tmp;
+      swfdec_as_function_call (var->set, object, 1, val, &tmp);
+    }
+  } else { 
     var->value = *val;
+  }
 }
 
 static void

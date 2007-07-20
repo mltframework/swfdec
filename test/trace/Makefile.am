@@ -28,6 +28,15 @@ EXTRA_DIST = \
 	add2-6.swf.trace \
 	add2-7.swf \
 	add2-7.swf.trace \
+	addProperty.as \
+	addProperty-5.swf \
+	addProperty-5.swf.trace \
+	addProperty-6.swf \
+	addProperty-6.swf.trace \
+	addProperty-7.swf \
+	addProperty-7.swf.trace \
+	addProperty-8.swf \
+	addProperty-8.swf.trace \
 	and-or-5.swf \
 	and-or-5.swf.trace \
 	and-or-6.swf \

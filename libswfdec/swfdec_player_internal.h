@@ -61,6 +61,7 @@ struct _SwfdecPlayer
   gint			stage_width;		/* width set by the user */
   gint			stage_height;		/* height set by the user */
   guint			align_flags;		/* SwfdecAlignFlag */
+  SwfdecScaleMode	scale_mode;		/* scale mode */
 
   guint			unnamed_count;		/* variable used for naming unnamed movies */
   /* ActionScript */

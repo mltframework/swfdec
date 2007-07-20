@@ -110,9 +110,20 @@
  * @SWFDEC_ALIGNMENT_RIGHT: right
  * @SWFDEC_ALIGNMENT_BOTTOM_LEFT: left
  * @SWFDEC_ALIGNMENT_BOTTOM: bottom
- * @SWFDEC_ALIGNMENT_BOTTOM_RIGHT bottom right
+ * @SWFDEC_ALIGNMENT_BOTTOM_RIGHT: bottom right
  *
  * These are the possible values for the alignment of an unscaled movie.
+ */
+
+/**
+ * SwfdecScaleMode:
+ * @SWFDEC_SCALE_SHOW_ALL: Show the whole content as large as possible
+ * @SWFDEC_SCALE_NO_BORDER: Fill the whole area, possibly cropping parts
+ * @SWFDEC_SCALE_EXACT_FIT: Fill the whole area, don't keep aspect ratio
+ * @SWFDEC_SCALE_NO_SCALE: Do not scale the movie at all
+ *
+ * Describes how the movie should be scaled if the given size doesn't equal the
+ * movie's size.
  */
 
 /*** Timeouts ***/
@@ -326,7 +337,8 @@ enum {
   PROP_BACKGROUND_COLOR,
   PROP_WIDTH,
   PROP_HEIGHT,
-  PROP_ALIGNMENT
+  PROP_ALIGNMENT,
+  PROP_SCALE
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -416,6 +428,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_ALIGNMENT:
       g_value_set_enum (value, swfdec_player_alignment_from_flags (player->align_flags));
       break;
+    case PROP_SCALE:
+      g_value_set_enum (value, player->scale_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -443,6 +458,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_ALIGNMENT:
       player->align_flags = swfdec_player_alignment_to_flags (g_value_get_enum (value));
+      break;
+    case PROP_SCALE:
+      player->scale_mode = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -947,6 +965,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_ALIGNMENT,
       g_param_spec_enum ("alignment", "alignment", "point of the screen to align the output to",
 	  SWFDEC_TYPE_ALIGNMENT, SWFDEC_ALIGNMENT_CENTER, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SCALE,
+      g_param_spec_enum ("scale-mode", "scale mode", "method used to scale the movie",
+	  SWFDEC_TYPE_SCALE_MODE, SWFDEC_SCALE_SHOW_ALL, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:

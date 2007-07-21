@@ -530,8 +530,7 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       swfdec_player_update_scale (player);
       break;
     case PROP_SCALE:
-      player->scale_mode = g_value_get_enum (value);
-      swfdec_player_update_scale (player);
+      swfdec_player_set_scale_mode (player, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1803,3 +1802,41 @@ swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
 	(double) player->width, (double) player->height);
   }
 }
+
+/**
+ * swfdec_player_get_scale_mode:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the currrent mode used for scaling the movie. See #SwfdecScaleMode for 
+ * the different modes.
+ *
+ * Returns: the current scale mode
+ **/
+SwfdecScaleMode
+swfdec_player_get_scale_mode (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_SCALE_SHOW_ALL);
+
+  return player->scale_mode;
+}
+
+/**
+ * swfdec_player_set_scale_mode:
+ * @player: a #SwfdecPlayer
+ * @mode: a #SwfdecScaleMode
+ *
+ * Sets the currrent mode used for scaling the movie. See #SwfdecScaleMode for 
+ * the different modes.
+ **/
+void
+swfdec_player_set_scale_mode (SwfdecPlayer *player, SwfdecScaleMode mode)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  if (player->scale_mode != mode) {
+    player->scale_mode = mode;
+    swfdec_player_update_scale (player);
+    g_object_notify (G_OBJECT (player), "scale-mode");
+  }
+}
+

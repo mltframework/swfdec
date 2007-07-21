@@ -92,6 +92,9 @@ guint		swfdec_player_get_background_color
 void		swfdec_player_set_background_color 
 						(SwfdecPlayer *	player,
 						 guint	color);
+SwfdecScaleMode	swfdec_player_get_scale_mode	(SwfdecPlayer *		player);
+void		swfdec_player_set_scale_mode	(SwfdecPlayer *		player,
+						 SwfdecScaleMode	mode);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

@@ -1326,6 +1326,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
   }
   g_object_notify (G_OBJECT (player), "initialized");
+  swfdec_player_update_scale (player);
 }
 
 /**

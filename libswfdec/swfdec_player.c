@@ -120,7 +120,7 @@
  * @SWFDEC_SCALE_SHOW_ALL: Show the whole content as large as possible
  * @SWFDEC_SCALE_NO_BORDER: Fill the whole area, possibly cropping parts
  * @SWFDEC_SCALE_EXACT_FIT: Fill the whole area, don't keep aspect ratio
- * @SWFDEC_SCALE_NO_SCALE: Do not scale the movie at all
+ * @SWFDEC_SCALE_NONE: Do not scale the movie at all
  *
  * Describes how the movie should be scaled if the given size doesn't equal the
  * movie's size.
@@ -1837,6 +1837,47 @@ swfdec_player_set_scale_mode (SwfdecPlayer *player, SwfdecScaleMode mode)
     player->scale_mode = mode;
     swfdec_player_update_scale (player);
     g_object_notify (G_OBJECT (player), "scale-mode");
+  }
+}
+
+/**
+ * swfdec_player_get_alignment:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the alignment of the player. The alignment describes what point is used
+ * as the anchor for drawing the contents. See #SwfdecAlignment for possible 
+ * values.
+ *
+ * Returns: the current alignment
+ **/
+SwfdecAlignment
+swfdec_player_get_alignment (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_ALIGNMENT_CENTER);
+
+  return swfdec_player_alignment_from_flags (player->align_flags);
+}
+
+/**
+ * swfdec_player_set_alignment:
+ * @player: a #SwfdecPlayer
+ * @align: #SwfdecAlignment to set
+ *
+ * Sets the alignment to @align. For details about alignment, see 
+ * swfdec_player_get_alignment() and #SwfdecAlignment.
+ **/
+void
+swfdec_player_set_alignment (SwfdecPlayer *player, SwfdecAlignment align)
+{
+  guint flags;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  flags = swfdec_player_alignment_to_flags (align);
+  if (flags != player->align_flags) {
+    player->align_flags = flags;
+    swfdec_player_update_scale (player);
+    g_object_notify (G_OBJECT (player), "alignment");
   }
 }
 

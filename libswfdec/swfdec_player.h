@@ -95,6 +95,9 @@ void		swfdec_player_set_background_color
 SwfdecScaleMode	swfdec_player_get_scale_mode	(SwfdecPlayer *		player);
 void		swfdec_player_set_scale_mode	(SwfdecPlayer *		player,
 						 SwfdecScaleMode	mode);
+SwfdecAlignment	swfdec_player_get_alignment	(SwfdecPlayer *		player);
+void		swfdec_player_set_alignment	(SwfdecPlayer *		player,
+						 SwfdecAlignment	align);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

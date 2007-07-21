@@ -438,6 +438,75 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
 }
 
 static void
+swfdec_player_update_scale (SwfdecPlayer *player)
+{
+  int width, height;
+  double scale_x, scale_y;
+
+  width = player->stage_width >= 0 ? player->stage_width : (int) player->width;
+  height = player->stage_height >= 0 ? player->stage_height : (int) player->height;
+  if (height == 0 || width == 0) {
+    player->scale_x = 1.0;
+    player->scale_y = 1.0;
+    player->offset_x = 0;
+    player->offset_y = 0;
+    return;
+  }
+  if (player->width == 0 || player->height == 0) {
+    scale_x = 1.0;
+    scale_y = 1.0;
+  } else {
+    scale_x = (double) width / player->width;
+    scale_y = (double) height / player->height;
+  }
+  switch (player->scale_mode) {
+    case SWFDEC_SCALE_SHOW_ALL:
+      player->scale_x = MIN (scale_x, scale_y);
+      player->scale_y = player->scale_x;
+      break;
+    case SWFDEC_SCALE_NO_BORDER:
+      player->scale_x = MAX (scale_x, scale_y);
+      player->scale_y = player->scale_x;
+      break;
+    case SWFDEC_SCALE_EXACT_FIT:
+      player->scale_x = scale_x;
+      player->scale_y = scale_y;
+      break;
+    case SWFDEC_SCALE_NONE:
+      player->scale_x = 1.0;
+      player->scale_y = 1.0;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+  width = player->stage_width - ceil (player->width * player->scale_x);
+  height = player->stage_height - ceil (player->height * player->scale_y);
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
+    player->offset_x = 0;
+  } else if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+    player->offset_x = width;
+  } else {
+    player->offset_x = width / 2;
+  }
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_TOP) {
+    player->offset_y = 0;
+  } else if (player->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
+    player->offset_y = height;
+  } else {
+    player->offset_y = height / 2;
+  }
+  SWFDEC_LOG ("coordinate translation is %g * x + %d - %g * y + %d", 
+      player->scale_x, player->offset_x, player->scale_y, player->offset_y);
+#if 0
+  /* FIXME: make this emit the signal at the right time */
+  player->invalid.x0 = 0;
+  player->invalid.y0 = 0;
+  player->invalid.x1 = player->stage_width;
+  player->invalid.y1 = player->stage_height;
+#endif
+}
+
+static void
 swfdec_player_set_property (GObject *object, guint param_id, const GValue *value,
     GParamSpec *pspec)
 {
@@ -458,9 +527,11 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_ALIGNMENT:
       player->align_flags = swfdec_player_alignment_to_flags (g_value_get_enum (value));
+      swfdec_player_update_scale (player);
       break;
     case PROP_SCALE:
       player->scale_mode = g_value_get_enum (value);
+      swfdec_player_update_scale (player);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -708,14 +779,14 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be
      * changed */
-    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0) * player->scale_x + player->offset_x;
     x = MAX (x, 0.0);
-    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0) * player->scale_y + player->offset_y;
     y = MAX (y, 0.0);
-    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
-    width = MIN (width, player->width - x);
-    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
-    height = MIN (height, player->height - y);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0) * player->scale_x;
+    width = MIN (width, player->stage_width - x);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0) * player->scale_y;
+    height = MIN (height, player->stage_height - y);
     g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }
@@ -736,8 +807,10 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   swfdec_player_lock (player);
-  x *= SWFDEC_TWIPS_SCALE_FACTOR;
-  y *= SWFDEC_TWIPS_SCALE_FACTOR;
+  x -= player->offset_x;
+  y -= player->offset_y;
+  x = x * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_x;
+  y = y * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_y;
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
@@ -1486,19 +1559,25 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
     return;
 
   if (width == 0.0)
-    width = player->width;
+    width = player->stage_width;
   if (height == 0.0)
-    height = player->height;
-  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR);
-  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR);
-  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR);
-  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR);
-  SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
-      real.x0, real.y0, real.x1, real.y1);
+    height = player->stage_height;
+  /* clip the area */
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
-  cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  /* compute the rectangle */
+  x -= player->offset_x;
+  y -= player->offset_y;
+  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_x;
+  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_y;
+  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_x;
+  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_y;
+  SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
+      real.x0, real.y0, real.x1, real.y1);
+  /* convert the cairo matrix */
+  cairo_translate (cr, player->offset_x, player->offset_y);
+  cairo_scale (cr, player->scale_x / SWFDEC_TWIPS_SCALE_FACTOR, player->scale_y / SWFDEC_TWIPS_SCALE_FACTOR);
   swfdec_color_set_source (cr, player->bgcolor);
   cairo_paint (cr);
 
@@ -1664,6 +1743,7 @@ swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
     g_object_notify (G_OBJECT (player), "height");
   }
   g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_update_scale (player);
 }
 
 /**

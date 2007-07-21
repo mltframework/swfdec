@@ -49,7 +49,7 @@ typedef enum {
   SWFDEC_SCALE_SHOW_ALL,
   SWFDEC_SCALE_NO_BORDER,
   SWFDEC_SCALE_EXACT_FIT,
-  SWFDEC_SCALE_NO_SCALE
+  SWFDEC_SCALE_NONE
 } SwfdecScaleMode;
 
 typedef struct _SwfdecPlayer SwfdecPlayer;

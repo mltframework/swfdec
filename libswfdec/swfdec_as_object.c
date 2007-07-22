@@ -188,11 +188,20 @@ swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
   return var;
 }
 
+static gboolean
+swfdec_as_variable_name_is_valid (const char *name)
+{
+  return name != SWFDEC_AS_STR_EMPTY;
+}
+
 static void
 swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val)
 {
   SwfdecAsVariable *var;
+
+  if (!swfdec_as_variable_name_is_valid (variable))
+    return;
 
   if (variable == SWFDEC_AS_STR___proto__) {
     if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {

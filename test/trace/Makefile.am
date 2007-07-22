@@ -346,6 +346,15 @@ EXTRA_DIST = \
 	instance-name-loaded-6.swf.trace \
 	instance-name-loaded-7.swf \
 	instance-name-loaded-7.swf.trace \
+	invalid-variable-name.as \
+	invalid-variable-name-5.swf \
+	invalid-variable-name-5.swf.trace \
+	invalid-variable-name-6.swf \
+	invalid-variable-name-6.swf.trace \
+	invalid-variable-name-7.swf \
+	invalid-variable-name-7.swf.trace \
+	invalid-variable-name-8.swf \
+	invalid-variable-name-8.swf.trace \
 	isnan.as \
 	isnan-5.swf \
 	isnan-5.swf.trace \

@@ -809,7 +809,8 @@ start:
   }
 
 error:
-  context->frame = context->last_frame;
+  while (context->frame != context->last_frame)
+    swfdec_as_frame_return (context->frame, NULL);
 out:
   context->last_frame = last_frame;
   return;

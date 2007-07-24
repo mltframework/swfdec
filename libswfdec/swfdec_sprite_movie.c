@@ -24,7 +24,7 @@
 #include <strings.h>
 
 #include "swfdec_sprite_movie.h"
-#include "swfdec_as_object.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_event.h"
 #include "swfdec_audio_stream.h"
@@ -74,7 +74,7 @@ swfdec_get_clipeventflags (SwfdecMovie *movie, SwfdecBits * bits)
   }
 }
 
-gboolean
+static gboolean
 swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, guint tag)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
@@ -185,12 +185,12 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   }
 
   if (has_filter) {
-    guint i, n_filters, id;
+    guint i, n_filters, filter_id;
     n_filters = swfdec_bits_get_u8 (bits);
     SWFDEC_LOG ("  filters: %u", n_filters);
     for (i = 0; i < n_filters && swfdec_bits_left (bits); i++) {
-      id = swfdec_bits_get_u8 (bits);
-      switch (id) {
+      filter_id = swfdec_bits_get_u8 (bits);
+      switch (filter_id) {
 	case 0:
 	  SWFDEC_WARNING ("    drop shadow");
 	  swfdec_bits_skip_bytes (bits, 16);
@@ -237,7 +237,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	  }
 	  break;
 	default:
-	  SWFDEC_ERROR ("unknown filter id %u", id);
+	  SWFDEC_ERROR ("unknown filter id %u", filter_id);
 	  break;
       }
     }

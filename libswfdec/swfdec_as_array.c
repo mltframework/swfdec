@@ -109,13 +109,13 @@ static gboolean swfdec_as_array_foreach_remove_range (SwfdecAsObject *object,
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
 {
   ForeachRemoveRangeData *fdata = data;
-  gint32 index;
+  gint32 idx;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return FALSE;
 
-  if (index >= fdata->start_index && index < fdata->start_index + fdata->num)
+  if (idx >= fdata->start_index && idx < fdata->start_index + fdata->num)
     return TRUE;
 
   return FALSE;
@@ -155,16 +155,16 @@ swfdec_as_array_foreach_move_range (SwfdecAsObject *object, const char *variable
     SwfdecAsValue *value, guint flags, gpointer data)
 {
   ForeachMoveRangeData *fdata = data;
-  gint32 index;
+  gint32 idx;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return variable;
 
-  if (index >= fdata->start_index && index < fdata->start_index + fdata->num) {
+  if (idx >= fdata->start_index && idx < fdata->start_index + fdata->num) {
     return swfdec_as_double_to_string (object->context,
-	fdata->to_index + index - fdata->start_index);
-  } else if (index >= fdata->to_index && index < fdata->to_index + fdata->num) {
+	fdata->to_index + idx - fdata->start_index);
+  } else if (idx >= fdata->to_index && idx < fdata->to_index + fdata->num) {
     return NULL;
   } else {
     return variable;
@@ -248,13 +248,13 @@ swfdec_as_array_foreach_append_array_range (SwfdecAsObject *object, const char *
     SwfdecAsValue *value, guint flags, gpointer data)
 {
   ForeachAppendArrayRangeData *fdata = data;
-  gint32 index;
+  gint32 idx;
   const char *var;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index >= fdata->start_index && index < fdata->start_index + fdata->num) {
+  idx = swfdec_as_array_to_index (variable);
+  if (idx >= fdata->start_index && idx < fdata->start_index + fdata->num) {
     var = swfdec_as_double_to_string (fdata->object_to->context,
-	fdata->offset + (index - fdata->start_index));
+	fdata->offset + (idx - fdata->start_index));
     swfdec_as_object_set_variable (fdata->object_to, var, value);
   }
 
@@ -498,13 +498,13 @@ swfdec_as_array_foreach_reverse (SwfdecAsObject *object, const char *variable,
     SwfdecAsValue *value, guint flags, gpointer data)
 {
   gint32 *length = data;
-  gint32 index;
+  gint32 idx;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return variable;
 
-  return swfdec_as_double_to_string (object->context, *length - 1 - index);
+  return swfdec_as_double_to_string (object->context, *length - 1 - idx);
 }
 
 static void
@@ -675,7 +675,7 @@ swfdec_as_array_sort_compare (SwfdecAsContext *cx, SwfdecAsValue *a, SwfdecAsVal
     } else {
       double an = swfdec_as_value_to_number (cx, a);
       double bn = swfdec_as_value_to_number (cx, b);
-      retval = (an < bn ? -1 : (an == bn ? 0 : 1));
+      retval = (an < bn ? -1 : (an > bn ? 1 : 0));
     }
   }
   else if (options & ARRAY_SORT_OPTION_CASEINSENSITIVE)
@@ -700,11 +700,11 @@ swfdec_as_array_foreach_sort_rename (SwfdecAsObject *object, const char *variabl
     SwfdecAsValue *value, guint flags, gpointer data)
 {
   ForeachSortData *fdata = data;
-  gint32 index, i;
+  gint32 idx, i;
   gboolean after_undefined = FALSE;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return variable;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -734,11 +734,11 @@ static gboolean swfdec_as_array_foreach_sort_indexedarray (SwfdecAsObject *objec
   ForeachSortData *fdata = data;
   SwfdecAsValue val;
   const char *var;
-  gint32 index, i;
+  gint32 idx, i;
   gboolean after_undefined = FALSE;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return TRUE;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -751,7 +751,7 @@ static gboolean swfdec_as_array_foreach_sort_indexedarray (SwfdecAsObject *objec
       if (after_undefined)
 	i += fdata->length - fdata->defined_values - 1;
       var = swfdec_as_double_to_string (object->context, i);
-      SWFDEC_AS_VALUE_SET_INT (&val, index);
+      SWFDEC_AS_VALUE_SET_INT (&val, idx);
       swfdec_as_object_set_variable (fdata->object_new, var, &val);
       return TRUE;
     }
@@ -771,10 +771,10 @@ swfdec_as_array_sort_set_undefined_indexedarray (SwfdecAsObject *object, Foreach
 {
   SwfdecAsValue val;
   const char *var;
-  gint32 index, i, length, num;
+  gint32 idx, i, length, num;
 
-  for (index = 0; index < fdata->order_size; index++) {
-    if (fdata->order[index] == &fdata->undefined)
+  for (idx = 0; idx < fdata->order_size; idx++) {
+    if (fdata->order[idx] == &fdata->undefined)
       break;
   }
 
@@ -785,7 +785,7 @@ swfdec_as_array_sort_set_undefined_indexedarray (SwfdecAsObject *object, Foreach
       var = swfdec_as_double_to_string (object->context, num);
       num++;
     } while (swfdec_as_object_get_variable (object, var, &val));
-    var = swfdec_as_double_to_string (fdata->object_new->context, index + i);
+    var = swfdec_as_double_to_string (fdata->object_new->context, idx + i);
     SWFDEC_AS_VALUE_SET_INT (&val, num - 1);
     swfdec_as_object_set_variable (fdata->object_new, var, &val);
   }
@@ -799,10 +799,10 @@ swfdec_as_array_foreach_sort_compare_undefined (SwfdecAsObject *object, const ch
     SwfdecAsValue *value, guint flags, gpointer data)
 {
   ForeachSortData *fdata = data;
-  gint32 index;
+  gint32 idx;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return TRUE;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -822,11 +822,11 @@ swfdec_as_array_foreach_sort_populate (SwfdecAsObject *object, const char *varia
     SwfdecAsValue *value, guint flags, gpointer data)
 {
   ForeachSortData *fdata = data;
-  gint32 index, i;
+  gint32 idx, i;
   gint cval = -1;
 
-  index = swfdec_as_array_to_index (variable);
-  if (index == -1)
+  idx = swfdec_as_array_to_index (variable);
+  if (idx == -1)
     return TRUE;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))

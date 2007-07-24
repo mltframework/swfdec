@@ -27,8 +27,6 @@ void jpeg_decoder_start_of_scan (JpegDecoder * dec);
 
 /* misc helper function declarations */
 
-static char *sprintbits (char *str, unsigned int bits, int n);
-
 static void jpeg_load_standard_huffman_tables (JpegDecoder * dec);
 
 static void jpeg_decoder_verify_header (JpegDecoder *dec);
@@ -36,7 +34,7 @@ static void jpeg_decoder_init_decoder (JpegDecoder *dec);
 
 
 void
-jpeg_decoder_error(JpegDecoder *dec, char *fmt, ...)
+jpeg_decoder_error(JpegDecoder *dec, const char *fmt, ...)
 {
   va_list varargs;
 
@@ -195,8 +193,23 @@ jpeg_decoder_init_decoder (JpegDecoder *dec)
   }
 }
 
+#if 0
+static char *
+sprintbits (char *str, unsigned int bits, int n)
+{
+  int i;
+  int bit = 1 << (n - 1);
 
-void
+  for (i = 0; i < n; i++) {
+    str[i] = (bits & bit) ? '1' : '0';
+    bit >>= 1;
+  }
+  str[i] = 0;
+
+  return str;
+}
+
+static void
 generate_code_table (int *huffsize)
 {
   int code;
@@ -220,8 +233,9 @@ generate_code_table (int *huffsize)
   }
 
 }
+#endif
 
-int
+static int
 huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * bits)
 {
   int n_symbols;
@@ -272,7 +286,7 @@ huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * b
   return n;
 }
 
-int
+static int
 jpeg_decoder_find_component_by_id (JpegDecoder * dec, int id)
 {
   int i;
@@ -537,7 +551,7 @@ jpeg_decoder_free (JpegDecoder * dec)
   free (dec);
 }
 
-int
+static int
 jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
 {
   int a,b;
@@ -561,7 +575,7 @@ jpeg_decoder_get_marker (JpegDecoder *dec, int *marker)
   return TRUE;
 }
 
-void
+static void
 jpeg_decoder_skip (JpegDecoder *dec)
 {
   int length;
@@ -721,9 +735,9 @@ jpeg_decoder_define_huffman_tables (JpegDecoder * dec)
     tc = x >> 4;
     th = x & 0xf;
 
-    COG_DEBUG ("huff table type %d (%s) index %d", tc, tc ? "ac" : "dc", th);
+    COG_DEBUG ("huff table type %d (%s) idx %d", tc, tc ? "ac" : "dc", th);
     if (tc > 1 || th > 3) {
-      jpeg_decoder_error(dec, "huffman table type or index out of range");
+      jpeg_decoder_error(dec, "huffman table type or idx out of range");
       return;
     }
 
@@ -897,7 +911,7 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
     int ac_table;
     int x;
     int y;
-    int index;
+    int idx;
     int h_subsample;
     int v_subsample;
     int quant_index;
@@ -906,22 +920,22 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
     tmp = jpeg_bits_get_u8 (bits);
     dc_table = tmp >> 4;
     ac_table = tmp & 0xf;
-    index = jpeg_decoder_find_component_by_id (dec, component_id);
+    idx = jpeg_decoder_find_component_by_id (dec, component_id);
 
-    h_subsample = dec->components[index].h_sample;
-    v_subsample = dec->components[index].v_sample;
-    quant_index = dec->components[index].quant_table;
+    h_subsample = dec->components[idx].h_sample;
+    v_subsample = dec->components[idx].v_sample;
+    quant_index = dec->components[idx].quant_table;
 
     for (y = 0; y < v_subsample; y++) {
       for (x = 0; x < h_subsample; x++) {
-        dec->scan_list[n].component_index = index;
+        dec->scan_list[n].component_index = idx;
         dec->scan_list[n].dc_table = dc_table;
         dec->scan_list[n].ac_table = ac_table;
         dec->scan_list[n].quant_table = quant_index;
         dec->scan_list[n].x = x;
         dec->scan_list[n].y = y;
         dec->scan_list[n].offset =
-            y * 8 * dec->components[index].rowstride + x * 8;
+            y * 8 * dec->components[idx].rowstride + x * 8;
         n++;
         if (n > JPEG_LIMIT_SCAN_LIST_LENGTH) {
           jpeg_decoder_error(dec, "scan list too long");
@@ -933,8 +947,8 @@ jpeg_decoder_start_of_scan (JpegDecoder * dec)
     dec->scan_h_subsample = MAX (dec->scan_h_subsample, h_subsample);
     dec->scan_v_subsample = MAX (dec->scan_v_subsample, v_subsample);
 
-    COG_DEBUG ("component %d: index=%d dc_table=%d ac_table=%d n=%d",
-        component_id, index, dc_table, ac_table, n);
+    COG_DEBUG ("component %d: idx=%d dc_table=%d ac_table=%d n=%d",
+        component_id, idx, dc_table, ac_table, n);
   }
   dec->scan_list_length = n;
 
@@ -1092,21 +1106,6 @@ jpeg_decoder_parse (JpegDecoder * dec)
 
 
 /* misc helper functins */
-
-static char *
-sprintbits (char *str, unsigned int bits, int n)
-{
-  int i;
-  int bit = 1 << (n - 1);
-
-  for (i = 0; i < n; i++) {
-    str[i] = (bits & bit) ? '1' : '0';
-    bit >>= 1;
-  }
-  str[i] = 0;
-
-  return str;
-}
 
 static void
 jpeg_load_standard_huffman_tables (JpegDecoder * dec)

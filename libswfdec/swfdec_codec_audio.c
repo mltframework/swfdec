@@ -23,6 +23,7 @@
 
 #include "swfdec_codec_audio.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 
 /*** UNCOMPRESSED SOUND ***/
 
@@ -105,22 +106,6 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioFormat type, gboolean width, S
 
   return &dec->decoder;
 }
-
-/*** DECODER LIST ***/
-
-extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_adpcm_new;
-
-#ifdef HAVE_MAD
-extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_mad_new;
-#endif
-
-#ifdef HAVE_FFMPEG
-extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_ffmpeg_new;
-#endif
-
-#ifdef HAVE_GST
-extern SwfdecAudioDecoderNewFunc swfdec_audio_decoder_gst_new;
-#endif
 
 /*** PUBLIC API ***/
 

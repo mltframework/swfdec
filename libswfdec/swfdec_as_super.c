@@ -105,6 +105,14 @@ swfdec_as_super_delete (SwfdecAsObject *object, const char *variable)
   return FALSE;
 }
 
+static SwfdecAsObject *
+swfdec_as_super_resolve (SwfdecAsObject *object)
+{
+  SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
+
+  return super->thisp;
+}
+
 static void
 swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
 {
@@ -114,7 +122,8 @@ swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
   asobject_class->get = swfdec_as_super_get;
   asobject_class->set = swfdec_as_super_set;
   asobject_class->set_flags = swfdec_as_super_set_flags;
-  asobject_class->delete = swfdec_as_super_delete;
+  asobject_class->del = swfdec_as_super_delete;
+  asobject_class->resolve = swfdec_as_super_resolve;
 
   function_class->call = swfdec_as_super_call;
 }
@@ -133,18 +142,29 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   
-  /* functions called on native objects don't get a super object */
-  if (frame->thisp && SWFDEC_IS_MOVIE (frame->thisp))
+  if (frame->thisp == NULL) {
+    SWFDEC_FIXME ("found a case where this was NULL, test how super behaves here!");
+    return NULL;
+  }
+  /* functions called on native objects don't get a super object?! */
+  if (SWFDEC_IS_MOVIE (frame->thisp))
     return NULL;
 
   context = SWFDEC_AS_OBJECT (frame)->context;
+  if (context->version <= 5 && !frame->construct)
+    return NULL;
+
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
     return NULL;
   ret = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsSuper));
   super = SWFDEC_AS_SUPER (ret);
-  if (frame->thisp)
+  super->thisp = frame->thisp;
+  if (context->version <= 5) {
+    super->object = NULL;
+  } else {
     super->object = frame->thisp->prototype;
+  }
   return ret;
 }
 

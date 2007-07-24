@@ -51,10 +51,10 @@ typedef enum {
 
 static void
 swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
-    SwfdecMessageType type, char *format, ...) G_GNUC_PRINTF (3, 4);
+    SwfdecMessageType type, const char *format, ...) G_GNUC_PRINTF (3, 4);
 static void
 swfdec_player_manager_send_message (SwfdecPlayerManager *manager,
-    SwfdecMessageType type, char *format, ...)
+    SwfdecMessageType type, const char *format, ...)
 {
   va_list args;
   char *msg;
@@ -332,7 +332,7 @@ swfdec_player_manager_continue (SwfdecPlayerManager *manager)
 
 /*** commands ***/
 
-const char *
+static const char *
 parse_skip (const char *input)
 {
   g_assert (input);
@@ -341,7 +341,7 @@ parse_skip (const char *input)
   return input;
 }
 
-const char *
+static const char *
 parse_string (const char *input, char **output)
 {
   const char *start = input;
@@ -358,7 +358,7 @@ parse_string (const char *input, char **output)
   return parse_skip (input);
 }
 
-const char *
+static const char *
 parse_uint (const char *input, guint *output)
 {
   char *end;
@@ -597,6 +597,21 @@ command_enumerate (SwfdecPlayerManager *manager, const char *arg)
   swfdec_as_object_foreach (object, enumerate_foreach, manager);
 }
 
+static void
+command_where (SwfdecPlayerManager *manager, const char *arg)
+{
+  SwfdecAsFrame *frame;
+  guint i = 0;
+
+  for (frame = swfdec_as_context_get_frame (SWFDEC_AS_CONTEXT (manager->player)); frame;
+      frame = swfdec_as_frame_get_next (frame)) {
+    char *s = swfdec_as_object_get_debug (SWFDEC_AS_OBJECT (frame));
+    i++;
+    swfdec_player_manager_output (manager, "%u: %s", i, s);
+    g_free (s);
+  }
+}
+
 static void command_help (SwfdecPlayerManager *manager, const char *arg);
 /* NB: the first word in the command string is used, partial matches are ok */
 struct {
@@ -616,6 +631,7 @@ struct {
   { "next",	command_next,		"step forward one command when stopped inside a breakpoint" },
   { "find",	command_find,		"find the given argument verbatim in all scripts" },
   { "enumerate",command_enumerate,    	"enumerate all properties of the given object" },
+  { "where",	command_where,    	"print a backtrace" },
 };
 
 static void

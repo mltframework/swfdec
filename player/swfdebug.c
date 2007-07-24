@@ -238,7 +238,7 @@ create_movieview (SwfdecPlayer *player)
 }
 
 static void
-view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
+view_swf (SwfdecPlayer *player, gboolean use_image)
 {
   SwfdecPlayerManager *manager;
   GtkWidget *window, *widget, *vpaned, *hpaned, *vbox, *hbox, *scroll, *scripts;
@@ -292,7 +292,6 @@ view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
   gtk_paned_add2 (GTK_PANED (hpaned), vbox);
 
   widget = swfdec_debug_widget_new (player);
-  swfdec_gtk_widget_set_scale (SWFDEC_GTK_WIDGET (widget), scale);
   if (use_image)
     swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
   gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, TRUE, 0);
@@ -370,8 +369,6 @@ add_variables (gpointer player)
 int 
 main (int argc, char *argv[])
 {
-  int ret = 0;
-  double scale;
   gboolean do_break = FALSE;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
@@ -380,7 +377,6 @@ main (int argc, char *argv[])
   char *variables = NULL;
 
   GOptionEntry options[] = {
-    { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "break", 'b', 0, G_OPTION_ARG_NONE, &do_break, "break at the beginning of every script", NULL },
     { "variables", 'v', 0, G_OPTION_ARG_STRING, &variables, "variables to pass to player", "VAR=NAME[&VAR=NAME..]" },
@@ -400,7 +396,6 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  scale = ret / 100.;
   swfdec_init ();
 
   if (argc < 2) {
@@ -417,7 +412,7 @@ main (int argc, char *argv[])
   player = swfdec_debugger_new ();
   if (do_break)
     g_signal_connect (player, "script-added", G_CALLBACK (do_break_cb), NULL);
-  view_swf (player, scale, use_image);
+  view_swf (player, use_image);
   g_object_set_data (G_OBJECT (player), "loader", loader);
   g_object_set_data (G_OBJECT (player), "variables", variables);
   g_idle_add_full (G_PRIORITY_HIGH, add_variables, player, NULL);

@@ -33,6 +33,25 @@ typedef enum {
   SWFDEC_MOUSE_CURSOR_CLICK
 } SwfdecMouseCursor;
 
+typedef enum {
+  SWFDEC_ALIGNMENT_TOP_LEFT,
+  SWFDEC_ALIGNMENT_TOP,
+  SWFDEC_ALIGNMENT_TOP_RIGHT,
+  SWFDEC_ALIGNMENT_LEFT,
+  SWFDEC_ALIGNMENT_CENTER,
+  SWFDEC_ALIGNMENT_RIGHT,
+  SWFDEC_ALIGNMENT_BOTTOM_LEFT,
+  SWFDEC_ALIGNMENT_BOTTOM,
+  SWFDEC_ALIGNMENT_BOTTOM_RIGHT
+} SwfdecAlignment;
+
+typedef enum {
+  SWFDEC_SCALE_SHOW_ALL,
+  SWFDEC_SCALE_NO_BORDER,
+  SWFDEC_SCALE_EXACT_FIT,
+  SWFDEC_SCALE_NONE
+} SwfdecScaleMode;
+
 typedef struct _SwfdecPlayer SwfdecPlayer;
 typedef struct _SwfdecPlayerClass SwfdecPlayerClass;
 
@@ -62,7 +81,13 @@ double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);
-guint	swfdec_player_get_background_color 
+void		swfdec_player_get_size		(SwfdecPlayer *	player,
+						 int *		width,
+						 int *		height);
+void		swfdec_player_set_size		(SwfdecPlayer *	player,
+						 int		width,
+						 int		height);
+guint		swfdec_player_get_background_color 
 						(SwfdecPlayer *	player);
 void		swfdec_player_set_background_color 
 						(SwfdecPlayer *	player,

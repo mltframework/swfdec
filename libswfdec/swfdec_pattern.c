@@ -72,6 +72,7 @@ struct _SwfdecColorPatternClass
   SwfdecPatternClass	pattern_class;
 };
 
+GType swfdec_color_pattern_get_type (void);
 G_DEFINE_TYPE (SwfdecColorPattern, swfdec_color_pattern, SWFDEC_TYPE_PATTERN);
 
 static cairo_pattern_t *
@@ -125,6 +126,7 @@ struct _SwfdecImagePatternClass
   SwfdecPatternClass	pattern_class;
 };
 
+GType swfdec_image_pattern_get_type (void);
 G_DEFINE_TYPE (SwfdecImagePattern, swfdec_image_pattern, SWFDEC_TYPE_PATTERN);
 
 static cairo_pattern_t *
@@ -186,6 +188,7 @@ struct _SwfdecGradientPatternClass
   SwfdecPatternClass	pattern_class;
 };
 
+GType swfdec_gradient_pattern_get_type (void);
 G_DEFINE_TYPE (SwfdecGradientPattern, swfdec_gradient_pattern, SWFDEC_TYPE_PATTERN);
 
 static cairo_pattern_t *

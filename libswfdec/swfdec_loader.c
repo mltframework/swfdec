@@ -694,7 +694,7 @@ swfdec_urldecode_one_string (const char *s, const char **out)
  * to the given @str
  **/
 void
-swfdec_string_append_urlencoded (GString *str, char *name, char *value)
+swfdec_string_append_urlencoded (GString *str, const char *name, const char *value)
 {
   g_return_if_fail (str != NULL);
   g_return_if_fail (name != NULL);

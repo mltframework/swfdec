@@ -28,6 +28,15 @@ EXTRA_DIST = \
 	add2-6.swf.trace \
 	add2-7.swf \
 	add2-7.swf.trace \
+	addProperty.as \
+	addProperty-5.swf \
+	addProperty-5.swf.trace \
+	addProperty-6.swf \
+	addProperty-6.swf.trace \
+	addProperty-7.swf \
+	addProperty-7.swf.trace \
+	addProperty-8.swf \
+	addProperty-8.swf.trace \
 	and-or-5.swf \
 	and-or-5.swf.trace \
 	and-or-6.swf \
@@ -116,6 +125,15 @@ EXTRA_DIST = \
 	chr-7.swf.trace \
 	classes.swf \
 	classes.swf.trace \
+	clonesprite-depths.as \
+	clonesprite-depths-5.swf \
+	clonesprite-depths-5.swf.trace \
+	clonesprite-depths-6.swf \
+	clonesprite-depths-6.swf.trace \
+	clonesprite-depths-7.swf \
+	clonesprite-depths-7.swf.trace \
+	clonesprite-depths-8.swf \
+	clonesprite-depths-8.swf.trace \
 	clonesprite-events.c \
 	clonesprite-events-5.swf \
 	clonesprite-events-5.swf.trace \
@@ -371,6 +389,15 @@ EXTRA_DIST = \
 	load-5.swf.trace \
 	local.swf \
 	local.swf.trace \
+	lots-of-arguments.as \
+	lots-of-arguments-5.swf \
+	lots-of-arguments-5.swf.trace \
+	lots-of-arguments-6.swf \
+	lots-of-arguments-6.swf.trace \
+	lots-of-arguments-7.swf \
+	lots-of-arguments-7.swf.trace \
+	lots-of-arguments-8.swf \
+	lots-of-arguments-8.swf.trace \
 	math-actions.as \
 	math-actions-5.swf \
 	math-actions-5.swf.trace \
@@ -743,6 +770,24 @@ EXTRA_DIST = \
 	stack-overflow-6.swf.trace \
 	stack-overflow-7.swf \
 	stack-overflow-7.swf.trace \
+	stack-segment.as \
+	stack-segment-5.swf \
+	stack-segment-5.swf.trace \
+	stack-segment-6.swf \
+	stack-segment-6.swf.trace \
+	stack-segment-7.swf \
+	stack-segment-7.swf.trace \
+	stack-segment-8.swf \
+	stack-segment-8.swf.trace \
+	stack-segments2.as \
+	stack-segments2-5.swf \
+	stack-segments2-5.swf.trace \
+	stack-segments2-6.swf \
+	stack-segments2-6.swf.trace \
+	stack-segments2-7.swf \
+	stack-segments2-7.swf.trace \
+	stack-segments2-8.swf \
+	stack-segments2-8.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \
@@ -800,6 +845,8 @@ EXTRA_DIST = \
 	substring-7.swf \
 	substring-7.swf.trace \
 	super-calls.as \
+	super-calls-5.swf \
+	super-calls-5.swf.trace \
 	super-calls-6.swf \
 	super-calls-6.swf.trace \
 	super-calls-7.swf \
@@ -815,6 +862,15 @@ EXTRA_DIST = \
 	super-different-7.swf.trace \
 	super-different-8.swf \
 	super-different-8.swf.trace \
+	super-equals-this.as \
+	super-equals-this-5.swf \
+	super-equals-this-5.swf.trace \
+	super-equals-this-6.swf \
+	super-equals-this-6.swf.trace \
+	super-equals-this-7.swf \
+	super-equals-this-7.swf.trace \
+	super-equals-this-8.swf \
+	super-equals-this-8.swf.trace \
 	super-missing.as \
 	super-missing-5.swf \
 	super-missing-5.swf.trace \
@@ -831,6 +887,15 @@ EXTRA_DIST = \
 	super-reference-7.swf.trace \
 	super-reference-8.swf \
 	super-reference-8.swf.trace \
+	super-this.as \
+	super-this-5.swf \
+	super-this-5.swf.trace \
+	super-this-6.swf \
+	super-this-6.swf.trace \
+	super-this-7.swf \
+	super-this-7.swf.trace \
+	super-this-8.swf \
+	super-this-8.swf.trace \
 	targetpath.as \
 	targetpath-5.swf \
 	targetpath-5.swf.trace \
@@ -893,6 +958,9 @@ EXTRA_DIST = \
 	unescape2-7.swf.trace \
 	values.as \
 	video.flv \
+	waitforframe-huge.as \
+	waitforframe-huge-4.swf \
+	waitforframe-huge-4.swf.trace \
 	with-delete.as \
 	with-delete-5.swf \
 	with-delete-5.swf.trace \

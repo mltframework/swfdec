@@ -26,6 +26,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 #include "swfdec_movie.h"
 
 G_DEFINE_TYPE (SwfdecMovieColor, swfdec_movie_color, SWFDEC_TYPE_AS_OBJECT)

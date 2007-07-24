@@ -521,12 +521,14 @@ static gboolean
 swfedit_token_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   SwfeditToken *token = SWFEDIT_TOKEN (iter->user_data);
+  int i;
 
   REPORT;
-  if ((guint) GPOINTER_TO_INT (iter->user_data2) + 1 >= token->tokens->len)
+  i = GPOINTER_TO_INT (iter->user_data2) + 1;
+  if ((guint) i >= token->tokens->len)
     return FALSE;
 
-  iter->user_data2++;
+  iter->user_data2 = GINT_TO_POINTER (i);
   return TRUE;
 }
 

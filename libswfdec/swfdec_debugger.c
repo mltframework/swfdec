@@ -131,7 +131,7 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
 
 error:
   g_string_free (string, TRUE);
-  return "erroneous action Push";
+  return g_strdup ("erroneous action Push");
 }
 
 /* NB: constant pool actions are special in that they are called at init time */

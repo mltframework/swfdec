@@ -159,9 +159,9 @@ run_test (gpointer testp, gpointer unused)
       memcmp (buffer->data, string->str, buffer->length) != 0) {
     g_string_append (output, "  ERROR: unexpected trace output\n");
     if (g_file_set_contents ("tmp", string->str, string->len, NULL)) {
-      char *command[] = { "diff", "-u", (char *) str, "tmp", NULL };
+      const char *command[] = { "diff", "-u", str, "tmp", NULL };
       char *result;
-      if (!g_spawn_sync (NULL, command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
+      if (!g_spawn_sync (NULL, (char **) command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
 	  &result, NULL, NULL, &error)) {
 	g_string_append_printf (output, 
 	    "  ERROR: Could not spawn diff to compare the results: %s\n", 

@@ -217,7 +217,8 @@ mc_width_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   double d;
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.x1 - movie->extents.x0)));
+  d = rint (movie->extents.x1 - movie->extents.x0);
+  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) d);
   SWFDEC_AS_VALUE_SET_NUMBER (rval, d);
 }
 
@@ -231,12 +232,13 @@ mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     return;
   d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
   if (!isfinite (d)) {
-    SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
+    SWFDEC_WARNING ("trying to set width to a non-finite value, ignoring");
     return;
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->original_extents.x1 - movie->original_extents.x0)));
+  cur = rint (movie->original_extents.x1 - movie->original_extents.x0);
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) cur);
   if (cur != 0) {
     movie->xscale = 100 * d / cur;
   } else {
@@ -252,7 +254,8 @@ mc_height_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   double d;
 
   swfdec_movie_update (movie);
-  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->extents.y1 - movie->extents.y0)));
+  d = rint (movie->extents.y1 - movie->extents.y0);
+  d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) d);
   SWFDEC_AS_VALUE_SET_NUMBER (rval, d);
 }
 
@@ -271,7 +274,8 @@ mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
   swfdec_movie_update (movie);
   movie->modified = TRUE;
-  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) (rint (movie->original_extents.y1 - movie->original_extents.y0)));
+  cur = rint (movie->original_extents.y1 - movie->original_extents.y0);
+  cur = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) cur);
   if (cur != 0) {
     movie->yscale = 100 * d / cur;
   } else {

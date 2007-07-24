@@ -99,7 +99,7 @@ swfdec_debug_movies_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTr
   return TRUE;
 }
 
-gint
+static gint
 my_g_list_is_nth (GList *list, gpointer data)
 {
   gint count;

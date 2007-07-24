@@ -818,7 +818,7 @@ out:
 
 /*** EVAL ***/
 
-char *
+static char *
 swfdec_as_slash_to_dot (const char *slash_str)
 {
   const char *cur = slash_str;

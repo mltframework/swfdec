@@ -79,7 +79,7 @@ swfdec_listener_add (SwfdecListener *listener, SwfdecAsObject *obj)
       return TRUE;
   }
   if (found >= listener->n_entries) {
-    gpointer mem;
+    SwfdecListenerEntry *mem;
     guint new_len = listener->n_entries + 16;
 
     mem = g_try_realloc (listener->entries, sizeof (SwfdecListenerEntry) * new_len);

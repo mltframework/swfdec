@@ -176,6 +176,7 @@ noinst_HEADERS = \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
+	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_listener.h \
 	swfdec_loader_internal.h \

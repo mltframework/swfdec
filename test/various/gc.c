@@ -33,7 +33,7 @@
 }G_STMT_END
 
 static guint
-check_strings ()
+check_strings (void)
 {
   const char *s;
   guint errors = 0;
@@ -52,7 +52,7 @@ check_strings ()
 }
 
 static guint
-check_objects ()
+check_objects (void)
 {
   SwfdecAsObject *object;
   guint errors = 0;
@@ -85,7 +85,7 @@ check_objects ()
 }
 
 static guint
-check_object_variables ()
+check_object_variables (void)
 {
   SwfdecAsObject *o, *o2;
   guint errors = 0;

@@ -26,13 +26,6 @@
 
 G_BEGIN_DECLS
 
-#define SWFDEC_TYPE_AS_FRAME                    (swfdec_as_frame_get_type())
-#define SWFDEC_IS_AS_FRAME(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_FRAME))
-#define SWFDEC_IS_AS_FRAME_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_FRAME))
-#define SWFDEC_AS_FRAME(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrame))
-#define SWFDEC_AS_FRAME_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrameClass))
-#define SWFDEC_AS_FRAME_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrameClass))
-
 struct _SwfdecAsFrame {
   SwfdecAsScope		scope_object;
 
@@ -45,7 +38,7 @@ struct _SwfdecAsFrame {
   guint			argc;		/* number of arguments */
   const SwfdecAsValue *	argv;		/* arguments or %NULL if taken from stack */
   /* debugging */
-  char *		function_name;	/* name of function */
+  const char *		function_name;	/* name of function */
   /* script execution */
   SwfdecScript *	script;		/* script being executed */
   SwfdecAsScope *	scope;		/* first object in scope chain (either this frame or a with object) */
@@ -64,8 +57,6 @@ struct _SwfdecAsFrame {
 struct _SwfdecAsFrameClass {
   SwfdecAsScopeClass	scope_class;
 };
-
-GType		swfdec_as_frame_get_type	(void);
 
 SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *	context,
 						 SwfdecScript *		script);

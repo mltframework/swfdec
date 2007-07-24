@@ -279,14 +279,16 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
   }
 
   movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = data[0] || (data[1] << 8);
   jump = data[2];
   if (SWFDEC_MOVIE (movie)->swf->movie == movie) {
     SwfdecDecoder *dec = SWFDEC_MOVIE (movie)->swf->decoder;
     loaded = dec->frames_loaded;
     g_assert (loaded <= movie->n_frames);
+    if (loaded == dec->frames_total)
+      loaded = G_MAXUINT;
   } else {
-    loaded = movie->n_frames;
+    loaded = G_MAXUINT;
   }
   if (loaded <= frame)
     swfdec_script_skip_actions (cx, jump);
@@ -612,7 +614,6 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   obj = swfdec_as_frame_find_variable (frame, name);
   if (obj) {
     swfdec_as_object_get_variable (obj, name, fun);
-    obj = swfdec_as_object_resolve (obj);
     SWFDEC_AS_VALUE_SET_OBJECT (thisp, obj);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (thisp);
@@ -1466,6 +1467,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   const char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
+  SwfdecBuffer *buffer;
   SwfdecBits bits;
   SwfdecAsFunction *fun;
   SwfdecAsFrame *frame;
@@ -1531,7 +1533,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     return;
   }
   /* create the script */
-  SwfdecBuffer *buffer = swfdec_buffer_new_subbuffer (frame->script->buffer, 
+  buffer = swfdec_buffer_new_subbuffer (frame->script->buffer, 
       frame->pc + 3 + len - frame->script->buffer->data, size);
   swfdec_bits_init (&bits, buffer);
   if (*function_name) {
@@ -1942,7 +1944,7 @@ swfdec_action_char_to_ascii_5 (SwfdecAsContext *cx, guint action, const guint8 *
   const char *s = swfdec_as_value_to_string (cx, val);
 
   char *ascii;
-  ascii = g_convert (s, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
+  ascii = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
   if (ascii == NULL) {
     /* This can happen if a Flash 5 movie gets loaded into a Flash 7 movie */
     SWFDEC_FIXME ("Someone threw unconvertible text %s at Flash <= 5", s);
@@ -1998,7 +2000,7 @@ swfdec_action_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *
   s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
   s[1] = 0;
 
-  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
   if (utf8 == NULL) {
     g_warning ("conversion of character %u failed", (guint) s[0]);
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
@@ -2025,7 +2027,7 @@ swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint
     s[0] = i;
     s[1] = 0;
   }
-  utf8 = g_convert (s, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
   if (utf8 == NULL) {
     g_warning ("conversion of character %u failed", i);
     SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
@@ -2132,7 +2134,7 @@ swfdec_action_print_with (guint action, const guint8 *data, guint len)
     SWFDEC_ERROR ("With action requires a length of 2, but got %u", len);
     return NULL;
   }
-  return g_strdup_printf ("With %u", GUINT16_FROM_LE (*(guint16 *) data));
+  return g_strdup_printf ("With %u", data[0] | (data[1] << 8));
 }
 
 static char *
@@ -2401,7 +2403,7 @@ swfdec_action_print_goto_frame (guint action, const guint8 *data, guint len)
   if (len != 2)
     return NULL;
 
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = data[0] | (data[1] << 8);
   return g_strdup_printf ("GotoFrame %u", frame);
 }
 
@@ -2424,7 +2426,7 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
   if (len != 3)
     return NULL;
 
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = data[0] | (data[1] << 8);
   jump = data[2];
   return g_strdup_printf ("WaitForFrame %u %u", frame, jump);
 }

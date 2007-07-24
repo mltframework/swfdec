@@ -38,7 +38,8 @@ typedef struct _SwfdecAsSuperClass SwfdecAsSuperClass;
 struct _SwfdecAsSuper {
   SwfdecAsFunction	function;
 
-  SwfdecAsObject *	object;		/* object super was called on or NULL */
+  SwfdecAsObject *	thisp;		/* object super was called on */
+  SwfdecAsObject *	object;		/* current prototype we reference */
 };
 
 struct _SwfdecAsSuperClass {

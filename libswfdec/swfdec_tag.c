@@ -46,13 +46,13 @@
 #include "swfdec_text.h"
 #include "swfdec_video.h"
 
-int
+static int
 tag_func_end (SwfdecSwfDecoder * s, guint tag)
 {
   return SWFDEC_STATUS_OK;
 }
 
-int
+static int
 tag_func_protect (SwfdecSwfDecoder * s, guint tag)
 {
   if (s->protection) {
@@ -69,7 +69,7 @@ tag_func_protect (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-int
+static int
 tag_func_frame_label (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
@@ -323,7 +323,7 @@ swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent 
   }
 }
 
-int
+static int
 tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
@@ -411,7 +411,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-int
+static int
 tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
@@ -492,7 +492,7 @@ tag_func_file_attributes (SwfdecSwfDecoder *s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-int
+static int
 tag_func_export_assets (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
@@ -525,7 +525,7 @@ tag_func_export_assets (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-int
+static int
 tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
@@ -609,7 +609,7 @@ tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
 #define SPRITE 1
 struct tag_func_struct
 {
-  char *name;
+  const char *name;
   SwfdecTagFunc func;
   int flag;
 };
@@ -668,7 +668,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
   [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
   [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", tag_func_define_video, 0},
-  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, 0},
+  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, SPRITE},
   [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info, 0},
   [SWFDEC_TAG_MX4] = {"MX4", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},

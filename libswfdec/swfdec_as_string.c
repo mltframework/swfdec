@@ -162,7 +162,7 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   /* FIXME: are these the correct charset names? */
-  s = g_convert ((char *) array->data, array->len, "UTF8", "LATIN1", NULL, NULL, &error);
+  s = g_convert ((char *) array->data, array->len, "UTF-8", "LATIN1", NULL, NULL, &error);
   if (s) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
     g_free (s);
@@ -481,7 +481,7 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
 }G_STMT_END
   array = g_byte_array_new ();
   msg = swfdec_as_value_to_string (cx, &argv[0]);
-  in = s = g_convert (msg, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
+  in = s = g_convert (msg, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
   if (s == NULL) {
     SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", msg);
     return;
@@ -521,7 +521,7 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   cur = 0;
   g_byte_array_append (array, (guchar *) &cur, 1);
-  out = g_convert ((char *) array->data, -1, "UTF8", "LATIN1", NULL, NULL, NULL);
+  out = g_convert ((char *) array->data, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
   if (out) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, out));
     g_free (out);
@@ -544,7 +544,7 @@ swfdec_as_string_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
   array = g_byte_array_new ();
   s = swfdec_as_value_to_string (cx, &argv[0]);
   if (cx->version <= 5) {
-    in = g_convert (s, -1, "LATIN1", "UTF8", NULL, NULL, NULL);
+    in = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
     if (s == NULL) {
       SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", s);
       return;

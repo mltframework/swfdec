@@ -38,7 +38,7 @@ swfdec_loader_target_base_init (gpointer g_class)
 }
 
 GType
-swfdec_loader_target_get_type ()
+swfdec_loader_target_get_type (void)
 {
   static GType loader_target_type = 0;
   

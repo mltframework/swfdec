@@ -485,7 +485,7 @@ swfdec_bits_skip_string (SwfdecBits *bits)
  * @version: Flash player version
  *
  * Prior to Flash 6, strings used to be encoded as LATIN1. Since Flash 6, 
- * strings are encoded as UTF8. This version does the check automatically
+ * strings are encoded as UTF-8. This version does the check automatically
  * and converts strings to UTF-8.
  *
  * Returns: a UTF-8 encoded string or %NULL on error
@@ -502,9 +502,9 @@ swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version)
     return NULL;
 
   if (version < 6) {
-    char *ret = g_convert (s, -1, "UTF8", "LATIN1", NULL , NULL, NULL);
+    char *ret = g_convert (s, -1, "UTF-8", "LATIN1", NULL , NULL, NULL);
     if (ret == NULL)
-      g_warning ("Could not convert string from LATIN1 to UTF8");
+      g_warning ("Could not convert string from LATIN1 to UTF-8");
     return ret;
   } else {
     if (!g_utf8_validate (s, -1, NULL)) {

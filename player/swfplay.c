@@ -43,13 +43,12 @@ set_title (GtkWindow *window, const char *filename)
 }
 
 static GtkWidget *
-view_swf (SwfdecPlayer *player, double scale, gboolean use_image)
+view_swf (SwfdecPlayer *player, gboolean use_image)
 {
   GtkWidget *window, *widget;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   widget = swfdec_gtk_widget_new (player);
-  swfdec_gtk_widget_set_scale (SWFDEC_GTK_WIDGET (widget), scale);
   if (use_image)
     swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
   gtk_container_add (GTK_CONTAINER (window), widget);
@@ -68,10 +67,8 @@ print_trace (SwfdecPlayer *player, const char *message, gpointer unused)
 int 
 main (int argc, char *argv[])
 {
-  int ret = 0;
   int delay = 0;
   int speed = 100;
-  double scale;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   GError *error = NULL;
@@ -84,7 +81,6 @@ main (int argc, char *argv[])
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
-    { "scale", 's', 0, G_OPTION_ARG_INT, &ret, "scale factor", "PERCENT" },
     { "speed", 0, 0, G_OPTION_ARG_INT, &speed, "replay speed (will deactivate sound)", "PERCENT" },
     { "trace", 't', 0, G_OPTION_ARG_NONE, &trace, "print trace output to stdout", NULL },
     { "variables", 'v', 0, G_OPTION_ARG_STRING, &variables, "variables to pass to player", "VAR=NAME[&VAR=NAME..]" },
@@ -104,7 +100,6 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  scale = ret / 100.;
   swfdec_init ();
 
   if (argc < 2) {
@@ -144,7 +139,7 @@ main (int argc, char *argv[])
   swfdec_gtk_player_set_speed (SWFDEC_GTK_PLAYER (player), speed / 100.);
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
 
-  window = view_swf (player, scale, use_image);
+  window = view_swf (player, use_image);
   set_title (GTK_WINDOW (window), argv[1]);
 
   gtk_main ();

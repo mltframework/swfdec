@@ -24,10 +24,10 @@
 #include "libswfdec/swfdec_loader_internal.h"
 
 typedef struct {
-  char *  encoded;
-  char *  names[10];
-  char *  values[10];
-  guint	  n_props;
+  const char *  encoded;
+  const char *  names[10];
+  const char *  values[10];
+  guint		n_props;
 } Test;
 Test tests[] = {
   { "a=b", { "a" }, { "b" }, 1 },

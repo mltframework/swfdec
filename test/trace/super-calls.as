@@ -13,6 +13,14 @@ function Three () {
   super ();
   trace (3);
 };
+#if __SWF_VERSION__ <= 5
+  Two.prototype = new Object();
+  Two.prototype.__proto__ = One.prototype;
+  Two.prototype.__constructor__ = One;
+  Three.prototype = new Object();
+  Three.prototype.__proto__ = Two.prototype;
+  Three.prototype.__constructor__ = Two;
+#else
 asm {
   push "Two"
   getvariable
@@ -27,6 +35,7 @@ asm {
   getvariable
   extends
 };
+#endif
 One.prototype.foo = function () {
   trace ("foo: 1");
 };

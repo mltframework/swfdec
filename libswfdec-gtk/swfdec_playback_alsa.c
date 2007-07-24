@@ -82,8 +82,8 @@ write_player (Stream *stream, const snd_pcm_channel_area_t *dst,
   g_assert (dst[0].step == dst[1].step);
   g_assert (dst[0].step == 32);
 
-  memset (dst[0].addr + offset * dst[0].step / 8, 0, avail * 4);
-  swfdec_audio_render (stream->audio, dst[0].addr + offset * dst[0].step / 8, 
+  memset ((guint8 *) dst[0].addr + offset * dst[0].step / 8, 0, avail * 4);
+  swfdec_audio_render (stream->audio, (gint16 *) ((guint8 *) dst[0].addr + offset * dst[0].step / 8), 
       stream->offset, avail);
   //g_print ("rendering %u %u\n", stream->offset, (guint) avail);
   return avail;
@@ -150,6 +150,8 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 static void
 swfdec_stream_install_handlers (Stream *stream)
 {
+  GIOChannel *channel;
+
   if (stream->n_sources > 0) {
     struct pollfd polls[stream->n_sources];
     guint i, count;
@@ -159,7 +161,7 @@ swfdec_stream_install_handlers (Stream *stream)
     for (i = 0; i < count; i++) {
       if (stream->sources[i] != NULL)
 	continue;
-      GIOChannel *channel = g_io_channel_unix_new (polls[i].fd);
+      channel = g_io_channel_unix_new (polls[i].fd);
       stream->sources[i] = g_io_create_watch (channel, polls[i].events);
       g_source_set_priority (stream->sources[i], G_PRIORITY_HIGH);
       g_source_set_callback (stream->sources[i], (GSourceFunc) handle_stream, stream, NULL);

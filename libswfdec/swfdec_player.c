@@ -34,6 +34,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_internal.h"
 #include "swfdec_listener.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
@@ -97,6 +98,32 @@
  *
  * This enumeration describes the possible types for the SwfdecPlayer::mouse-cursor
  * property.
+ */
+
+/**
+ * SwfdecAlignment:
+ * @SWFDEC_ALIGNMENT_TOP_LEFT: top left
+ * @SWFDEC_ALIGNMENT_TOP: top
+ * @SWFDEC_ALIGNMENT_TOP_RIGHT: top right
+ * @SWFDEC_ALIGNMENT_LEFT: left
+ * @SWFDEC_ALIGNMENT_CENTER: center
+ * @SWFDEC_ALIGNMENT_RIGHT: right
+ * @SWFDEC_ALIGNMENT_BOTTOM_LEFT: left
+ * @SWFDEC_ALIGNMENT_BOTTOM: bottom
+ * @SWFDEC_ALIGNMENT_BOTTOM_RIGHT: bottom right
+ *
+ * These are the possible values for the alignment of an unscaled movie.
+ */
+
+/**
+ * SwfdecScaleMode:
+ * @SWFDEC_SCALE_SHOW_ALL: Show the whole content as large as possible
+ * @SWFDEC_SCALE_NO_BORDER: Fill the whole area, possibly cropping parts
+ * @SWFDEC_SCALE_EXACT_FIT: Fill the whole area, don't keep aspect ratio
+ * @SWFDEC_SCALE_NO_SCALE: Do not scale the movie at all
+ *
+ * Describes how the movie should be scaled if the given size doesn't equal the
+ * movie's size.
  */
 
 /*** Timeouts ***/
@@ -307,7 +334,11 @@ enum {
   PROP_INITIALIZED,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT,
-  PROP_BACKGROUND_COLOR
+  PROP_BACKGROUND_COLOR,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_ALIGNMENT,
+  PROP_SCALE
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -317,6 +348,53 @@ swfdec_player_remove_movie (SwfdecPlayer *player, SwfdecMovie *movie)
 {
   swfdec_movie_remove (movie);
   player->movies = g_list_remove (player->movies, movie);
+}
+
+static guint
+swfdec_player_alignment_to_flags (SwfdecAlignment alignment)
+{
+  static const guint align_flags[9] = { 
+    SWFDEC_ALIGN_FLAG_TOP | SWFDEC_ALIGN_FLAG_LEFT,
+    SWFDEC_ALIGN_FLAG_TOP,
+    SWFDEC_ALIGN_FLAG_TOP | SWFDEC_ALIGN_FLAG_RIGHT,
+    SWFDEC_ALIGN_FLAG_LEFT,
+    0,
+    SWFDEC_ALIGN_FLAG_RIGHT,
+    SWFDEC_ALIGN_FLAG_BOTTOM | SWFDEC_ALIGN_FLAG_LEFT,
+    SWFDEC_ALIGN_FLAG_BOTTOM,
+    SWFDEC_ALIGN_FLAG_BOTTOM | SWFDEC_ALIGN_FLAG_RIGHT
+  };
+  return align_flags[alignment];
+}
+
+static SwfdecAlignment
+swfdec_player_alignment_from_flags (guint flags)
+{
+  if (flags & SWFDEC_ALIGN_FLAG_TOP) {
+    if (flags & SWFDEC_ALIGN_FLAG_LEFT) {
+      return SWFDEC_ALIGNMENT_TOP_LEFT;
+    } else if (flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+      return SWFDEC_ALIGNMENT_TOP_RIGHT;
+    } else {
+      return SWFDEC_ALIGNMENT_TOP;
+    }
+  } else if (flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
+    if (flags & SWFDEC_ALIGN_FLAG_LEFT) {
+      return SWFDEC_ALIGNMENT_BOTTOM_LEFT;
+    } else if (flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+      return SWFDEC_ALIGNMENT_BOTTOM_RIGHT;
+    } else {
+      return SWFDEC_ALIGNMENT_BOTTOM;
+    }
+  } else {
+    if (flags & SWFDEC_ALIGN_FLAG_LEFT) {
+      return SWFDEC_ALIGNMENT_LEFT;
+    } else if (flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+      return SWFDEC_ALIGNMENT_RIGHT;
+    } else {
+      return SWFDEC_ALIGNMENT_CENTER;
+    }
+  }
 }
 
 static void
@@ -341,10 +419,91 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_NEXT_EVENT:
       g_value_set_uint (value, swfdec_player_get_next_event (player));
       break;
+    case PROP_WIDTH:
+      g_value_set_int (value, player->stage_width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_int (value, player->stage_height);
+      break;
+    case PROP_ALIGNMENT:
+      g_value_set_enum (value, swfdec_player_alignment_from_flags (player->align_flags));
+      break;
+    case PROP_SCALE:
+      g_value_set_enum (value, player->scale_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
   }
+}
+
+static void
+swfdec_player_update_scale (SwfdecPlayer *player)
+{
+  int width, height;
+  double scale_x, scale_y;
+
+  width = player->stage_width >= 0 ? player->stage_width : (int) player->width;
+  height = player->stage_height >= 0 ? player->stage_height : (int) player->height;
+  if (height == 0 || width == 0) {
+    player->scale_x = 1.0;
+    player->scale_y = 1.0;
+    player->offset_x = 0;
+    player->offset_y = 0;
+    return;
+  }
+  if (player->width == 0 || player->height == 0) {
+    scale_x = 1.0;
+    scale_y = 1.0;
+  } else {
+    scale_x = (double) width / player->width;
+    scale_y = (double) height / player->height;
+  }
+  switch (player->scale_mode) {
+    case SWFDEC_SCALE_SHOW_ALL:
+      player->scale_x = MIN (scale_x, scale_y);
+      player->scale_y = player->scale_x;
+      break;
+    case SWFDEC_SCALE_NO_BORDER:
+      player->scale_x = MAX (scale_x, scale_y);
+      player->scale_y = player->scale_x;
+      break;
+    case SWFDEC_SCALE_EXACT_FIT:
+      player->scale_x = scale_x;
+      player->scale_y = scale_y;
+      break;
+    case SWFDEC_SCALE_NONE:
+      player->scale_x = 1.0;
+      player->scale_y = 1.0;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+  width = player->stage_width - ceil (player->width * player->scale_x);
+  height = player->stage_height - ceil (player->height * player->scale_y);
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
+    player->offset_x = 0;
+  } else if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+    player->offset_x = width;
+  } else {
+    player->offset_x = width / 2;
+  }
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_TOP) {
+    player->offset_y = 0;
+  } else if (player->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
+    player->offset_y = height;
+  } else {
+    player->offset_y = height / 2;
+  }
+  SWFDEC_LOG ("coordinate translation is %g * x + %d - %g * y + %d", 
+      player->scale_x, player->offset_x, player->scale_y, player->offset_y);
+#if 0
+  /* FIXME: make this emit the signal at the right time */
+  player->invalid.x0 = 0;
+  player->invalid.y0 = 0;
+  player->invalid.x1 = player->stage_width;
+  player->invalid.y1 = player->stage_height;
+#endif
 }
 
 static void
@@ -359,6 +518,20 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_CACHE_SIZE:
       player->cache->max_size = g_value_get_uint (value);
+      break;
+    case PROP_WIDTH:
+      swfdec_player_set_size (player, g_value_get_int (value), player->stage_height);
+      break;
+    case PROP_HEIGHT:
+      swfdec_player_set_size (player, player->stage_width, g_value_get_int (value));
+      break;
+    case PROP_ALIGNMENT:
+      player->align_flags = swfdec_player_alignment_to_flags (g_value_get_enum (value));
+      swfdec_player_update_scale (player);
+      break;
+    case PROP_SCALE:
+      player->scale_mode = g_value_get_enum (value);
+      swfdec_player_update_scale (player);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -410,6 +583,25 @@ swfdec_player_dispose (GObject *object)
   if (player->loader) {
     g_object_unref (player->loader);
     player->loader = NULL;
+  }
+}
+
+static void
+swfdec_player_dispatch_properties_changed (GObject *object, guint n_pspecs, 
+    GParamSpec **pspecs)
+{
+  guint i;
+
+  G_OBJECT_CLASS (swfdec_player_parent_class)->dispatch_properties_changed (
+      object, n_pspecs, pspecs);
+  
+  /* check if we need to emit any stage signals */
+  for (i = 0; i < n_pspecs; i++) {
+    if (g_str_equal (pspecs[i]->name, "width") ||
+        g_str_equal (pspecs[i]->name, "height")) {
+      SWFDEC_FIXME ("width or height got changed, emit a Stage signal!");
+      break;
+    }
   }
 }
 
@@ -587,14 +779,14 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be
      * changed */
-    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0);
+    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0) * player->scale_x + player->offset_x;
     x = MAX (x, 0.0);
-    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0);
+    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0) * player->scale_y + player->offset_y;
     y = MAX (y, 0.0);
-    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0);
-    width = MIN (width, player->width - x);
-    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0);
-    height = MIN (height, player->height - y);
+    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0) * player->scale_x;
+    width = MIN (width, player->stage_width - x);
+    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0) * player->scale_y;
+    height = MIN (height, player->stage_height - y);
     g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }
@@ -615,8 +807,10 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   swfdec_player_lock (player);
-  x *= SWFDEC_TWIPS_SCALE_FACTOR;
-  y *= SWFDEC_TWIPS_SCALE_FACTOR;
+  x -= player->offset_x;
+  y -= player->offset_y;
+  x = x * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_x;
+  y = y * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_y;
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
@@ -637,7 +831,7 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
 static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER ((void *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
+  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
   SWFDEC_INFO ("=== START ITERATION ===");
@@ -818,6 +1012,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   object_class->get_property = swfdec_player_get_property;
   object_class->set_property = swfdec_player_set_property;
   object_class->dispose = swfdec_player_dispose;
+  object_class->dispatch_properties_changed = swfdec_player_dispatch_properties_changed;
 
   g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
@@ -834,6 +1029,18 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
       g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
 	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_WIDTH,
+      g_param_spec_int ("width", "width", "current width of the movie",
+	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_HEIGHT,
+      g_param_spec_int ("height", "height", "current height of the movie",
+	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_ALIGNMENT,
+      g_param_spec_enum ("alignment", "alignment", "point of the screen to align the output to",
+	  SWFDEC_TYPE_ALIGNMENT, SWFDEC_ALIGNMENT_CENTER, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SCALE,
+      g_param_spec_enum ("scale-mode", "scale mode", "method used to scale the movie",
+	  SWFDEC_TYPE_SCALE_MODE, SWFDEC_SCALE_SHOW_ALL, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1066,14 +1273,6 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_signal_emit (player, signals[LAUNCH], 0, url, target);
 }
 
-extern void swfdec_player_init_global (SwfdecPlayer *player, guint version);
-extern void swfdec_mouse_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_movie_color_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_net_connection_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_net_stream_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_video_movie_init_context (SwfdecPlayer *player, guint version);
-extern void swfdec_xml_init_context (SwfdecPlayer *player, guint version);
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1127,6 +1326,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
   }
   g_object_notify (G_OBJECT (player), "initialized");
+  swfdec_player_update_scale (player);
 }
 
 /**
@@ -1360,19 +1560,25 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
     return;
 
   if (width == 0.0)
-    width = player->width;
+    width = player->stage_width;
   if (height == 0.0)
-    height = player->height;
-  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR);
-  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR);
-  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR);
-  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR);
-  SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
-      real.x0, real.y0, real.x1, real.y1);
+    height = player->stage_height;
+  /* clip the area */
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
-  cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  /* compute the rectangle */
+  x -= player->offset_x;
+  y -= player->offset_y;
+  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_x;
+  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_y;
+  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_x;
+  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_y;
+  SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
+      real.x0, real.y0, real.x1, real.y1);
+  /* convert the cairo matrix */
+  cairo_translate (cr, player->offset_x, player->offset_y);
+  cairo_scale (cr, player->scale_x / SWFDEC_TWIPS_SCALE_FACTOR, player->scale_y / SWFDEC_TWIPS_SCALE_FACTOR);
   swfdec_color_set_source (cr, player->bgcolor);
   cairo_paint (cr);
 
@@ -1435,14 +1641,14 @@ swfdec_player_is_initialized (SwfdecPlayer *player)
 guint
 swfdec_player_get_next_event (SwfdecPlayer *player)
 {
-  SwfdecTick time;
+  SwfdecTick tick;
   guint ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
-  time = swfdec_player_get_next_event_time (player);
-  ret = SWFDEC_TICKS_TO_MSECS (time);
-  if (time % (SWFDEC_TICKS_PER_SECOND / 1000))
+  tick = swfdec_player_get_next_event_time (player);
+  ret = SWFDEC_TICKS_TO_MSECS (tick);
+  if (tick % (SWFDEC_TICKS_PER_SECOND / 1000))
     ret++;
 
   return ret;
@@ -1472,11 +1678,11 @@ swfdec_player_get_rate (SwfdecPlayer *player)
 /**
  * swfdec_player_get_image_size:
  * @player: a #SwfdecPlayer
- * @width: integer to store the width in or NULL
- * @height: integer to store the height in or NULL
+ * @width: integer to store the width in or %NULL
+ * @height: integer to store the height in or %NULL
  *
- * If the size of the movie is already known, fills in @width and @height with
- * the size. Otherwise @width and @height are set to 0.
+ * If the default size of the movie is initialized, fills in @width and @height 
+ * with the size. Otherwise @width and @height are set to 0.
  **/
 void
 swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
@@ -1487,6 +1693,58 @@ swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
     *width = player->width;
   if (height)
     *height = player->height;
+}
+
+/**
+ * swfdec_player_get_size:
+ * @player: a #SwfdecPlayer
+ * @width: integer to store the width in or %NULL
+ * @height: integer to store the height in or %NULL
+ *
+ * Gets the currently set image size. If the default width or height should be 
+ * used, the width or height respectively is set to -1.
+ **/
+void
+swfdec_player_get_size (SwfdecPlayer *player, int *width, int *height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  if (width)
+    *width = player->stage_width;
+  if (height)
+    *height = player->stage_height;
+}
+
+/**
+ * swfdec_player_set_size:
+ * @player: a #SwfdecPlayer
+ * @width: desired width of the movie or -1 for default
+ * @height: desired height of the movie or -1 for default
+ *
+ * Sets the image size to the given values. The image size is what the area that
+ * the @player will render and advocate with scripts.
+ * <note>Calling this function or setting the corresponding properties causes 
+ * the emission of an event inside the script engine for listeners registered on
+ * the Stage object.</note>
+ **/
+void
+swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (width >= -1);
+  g_return_if_fail (height >= -1);
+
+  g_object_freeze_notify (G_OBJECT (player));
+  if (player->stage_width != width) {
+    player->stage_width = width;
+    g_object_notify (G_OBJECT (player), "width");
+  }
+  if (player->stage_height != height) {
+    player->stage_height = height;
+    g_object_notify (G_OBJECT (player), "height");
+  }
+  g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_update_scale (player);
 }
 
 /**

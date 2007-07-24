@@ -104,7 +104,7 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   }
 }
 
-guint
+static guint
 swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat, 
     SwfdecAsObject *object, const char *fun_name,
     guint n_args, const SwfdecAsValue *args)

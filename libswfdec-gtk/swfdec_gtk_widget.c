@@ -28,11 +28,9 @@ struct _SwfdecGtkWidgetPrivate
 {
   SwfdecPlayer *	player;		/* the video we play */
 
-  double		real_scale;	/* the real scale factor used */
-  double		set_scale;    	/* the set scale factor of the video */
   gboolean		renderer_set;	/* TRUE if a special renderer has been set */
   cairo_surface_type_t	renderer;	/* the renderer that was set */
-  gboolean		interactive;	/* if this gtk_widget propagates keyboard and mouse events */
+  gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
 
   int			button;		/* status of mouse button in displayed movie */
 };
@@ -40,7 +38,6 @@ struct _SwfdecGtkWidgetPrivate
 enum {
   PROP_0,
   PROP_PLAYER,
-  PROP_SCALE,
   PROP_INTERACTIVE,
   PROP_RENDERER_SET,
   PROP_RENDERER
@@ -82,8 +79,7 @@ swfdec_gtk_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
   gdk_window_get_pointer (gtkwidget->window, &x, &y, NULL);
 
   if (priv->interactive)
-    swfdec_player_handle_mouse (priv->player, 
-	x / priv->real_scale, y / priv->real_scale, priv->button);
+    swfdec_player_handle_mouse (priv->player, x, y, priv->button);
   
   return FALSE;
 }
@@ -96,8 +92,7 @@ swfdec_gtk_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
 
   if (priv->interactive) {
     priv->button = 0;
-    swfdec_player_handle_mouse (priv->player, 
-	event->x / priv->real_scale, event->y / priv->real_scale, 0);
+    swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
   }
   return FALSE;
 }
@@ -111,8 +106,7 @@ swfdec_gtk_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
   if (event->button == 1) {
     priv->button = 1;
     if (priv->interactive)
-      swfdec_player_handle_mouse (priv->player, 
-	  event->x / priv->real_scale, event->y / priv->real_scale, 1);
+      swfdec_player_handle_mouse (priv->player, event->x, event->y, 1);
   }
   return FALSE;
 }
@@ -126,8 +120,7 @@ swfdec_gtk_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
   if (event->button == 1) {
     priv->button = 0;
     if (priv->interactive)
-      swfdec_player_handle_mouse (priv->player, 
-	  event->x / priv->real_scale, event->y / priv->real_scale, 0);
+      swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
   }
   return FALSE;
 }
@@ -164,10 +157,8 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
     cr = cairo_create (surface);
     cairo_translate (cr, -event->area.x, -event->area.y);
   }
-  cairo_scale (cr, priv->real_scale, priv->real_scale);
   swfdec_player_render (priv->player, cr,
-      event->area.x / priv->real_scale, event->area.y / priv->real_scale, 
-      event->area.width / priv->real_scale, event->area.height / priv->real_scale);
+      event->area.x, event->area.y, event->area.width, event->area.height);
   cairo_show_page (cr);
   cairo_destroy (cr);
 
@@ -192,9 +183,6 @@ swfdec_gtk_widget_get_property (GObject *object, guint param_id, GValue *value,
   switch (param_id) {
     case PROP_PLAYER:
       g_value_set_object (value, priv->player);
-      break;
-    case PROP_SCALE:
-      g_value_set_double (value, priv->set_scale);
       break;
     case PROP_INTERACTIVE:
       g_value_set_boolean (value, priv->interactive);
@@ -221,9 +209,6 @@ swfdec_gtk_widget_set_property (GObject *object, guint param_id, const GValue *v
   switch (param_id) {
     case PROP_PLAYER:
       swfdec_gtk_widget_set_player (widget, g_value_get_object (value));
-      break;
-    case PROP_SCALE:
-      swfdec_gtk_widget_set_scale (widget, g_value_get_double (value));
       break;
     case PROP_INTERACTIVE:
       swfdec_gtk_widget_set_interactive (widget, g_value_get_boolean (value));
@@ -256,44 +241,21 @@ swfdec_gtk_widget_dispose (GObject *object)
 static void
 swfdec_gtk_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation)
 {
-  double scale;
-  int w, h;
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   gtkwidget->allocation = *allocation;
 
-  swfdec_player_get_image_size (priv->player, &w, &h);
-  if (priv->set_scale > 0.0) {
-    scale = priv->set_scale;
-  } else if (priv->player == NULL) {
-    scale = 1.0;
-  } else {
-    if (w != 0 && h != 0)
-      scale = MIN ((double) allocation->width / w, (double) allocation->height / h);
-    else
-      scale = 1.0;
-  }
-  w = ceil (w * scale);
-  h = ceil (h * scale);
-  if (w > allocation->width)
-    w = allocation->width;
-  if (h > allocation->height)
-    h = allocation->height;
-
+  swfdec_player_set_size (priv->player, allocation->width, allocation->height);
   if (GTK_WIDGET_REALIZED (gtkwidget)) {
     gdk_window_move_resize (gtkwidget->window, 
-	allocation->x + (allocation->width - w) / 2,
-	allocation->y + (allocation->height - h) / 2,
-	w, h);
+	allocation->x, allocation->y, allocation->width, allocation->height);
   }
-  priv->real_scale = scale;
 }
 
 static void
 swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
 {
-  double scale;
   SwfdecGtkWidget * widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
@@ -303,12 +265,6 @@ swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
     swfdec_player_get_image_size (priv->player, 
 	  &req->width, &req->height);
   } 
-  if (priv->set_scale != 0.0)
-    scale = priv->set_scale;
-  else
-    scale = 1.0;
-  req->width = ceil (req->width * scale);
-  req->height = ceil (req->height * scale);
 }
 
 static void
@@ -413,9 +369,6 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   g_object_class_install_property (object_class, PROP_PLAYER,
       g_param_spec_object ("player", "player", "player that is displayed",
 	  SWFDEC_TYPE_PLAYER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  g_object_class_install_property (object_class, PROP_SCALE,
-      g_param_spec_double ("scale", "scale", "scale factor to use or 0.0 for automatic",
-	  0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_INTERACTIVE,
       g_param_spec_boolean ("interactive", "interactive", "if mouse events are processed",
 	  TRUE, G_PARAM_READWRITE));
@@ -446,7 +399,6 @@ swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
   
   priv = widget->priv = G_TYPE_INSTANCE_GET_PRIVATE (widget, SWFDEC_TYPE_GTK_WIDGET, SwfdecGtkWidgetPrivate);
 
-  priv->real_scale = 1.0;
   priv->interactive = TRUE;
   priv->renderer = CAIRO_SURFACE_TYPE_IMAGE;
 }
@@ -455,15 +407,14 @@ static void
 swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, double x, double y, 
     double width, double height, SwfdecGtkWidget *widget)
 {
-  SwfdecGtkWidgetPrivate *priv = widget->priv;
   GdkRectangle rect;
 
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  rect.x = floor (x * priv->real_scale);
-  rect.y = floor (y * priv->real_scale);
-  rect.width = ceil ((x + width) * priv->real_scale) - rect.x;
-  rect.height = ceil ((y + height) * priv->real_scale) - rect.y;
+  rect.x = floor (x);
+  rect.y = floor (y);
+  rect.width = ceil (x + width) - rect.x;
+  rect.height = ceil (y + height) - rect.y;
   gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &rect, FALSE);
 }
 
@@ -547,61 +498,6 @@ swfdec_gtk_widget_new (SwfdecPlayer *player)
   widget = g_object_new (SWFDEC_TYPE_GTK_WIDGET, "player", player, NULL);
 
   return GTK_WIDGET (widget);
-}
-
-/**
- * swfdec_gtk_widget_set_scale:
- * @widget: a #SwfdecGtkWidget
- * @scale: scale factor to use or 0 for automatic
- *
- * Sets the scale factor to use. If you set @scale to 0, the movie is displayed
- * as big as the window is.
- **/
-void
-swfdec_gtk_widget_set_scale (SwfdecGtkWidget *widget, double scale)
-{
-  g_return_if_fail (SWFDEC_IS_GTK_WIDGET (widget));
-  g_return_if_fail (scale >= 0.0);
-
-  widget->priv->set_scale = scale;
-  gtk_widget_queue_resize (GTK_WIDGET (widget));
-  g_object_notify (G_OBJECT (widget), "scale");
-}
-
-/**
- * swfdec_gtk_widget_get_scale:
- * @widget: a #SwfdecGtkWidget
- *
- * Gets the user-set scale factor for this @widget. If you want the scale 
- * factor that is currently in effect, use swfdec_gtk_widget_get_current_scale().
- *
- * Returns: The current scale factor or 0.0 if automatic.
- **/
-double
-swfdec_gtk_widget_get_scale (SwfdecGtkWidget *widget)
-{
-  g_return_val_if_fail (SWFDEC_IS_GTK_WIDGET (widget), 1.0);
-
-  return widget->priv->set_scale;
-}
-
-/**
- * swfdec_gtk_widget_get_current_scale:
- * @widget: a #SwfdecGtkWidget
- *
- * Queries the current scale factor in use. The returned value is undefined 
- * if the widget has not been allocated a size. This value is only different 
- * from the value returned by swfdec_gtk_widget_get_scale(), if automatic 
- * scaling is in effect.
- *
- * Returns: The current scale factor.
- **/
-double
-swfdec_gtk_widget_get_current_scale (SwfdecGtkWidget *widget)
-{
-  g_return_val_if_fail (SWFDEC_IS_GTK_WIDGET (widget), 1.0);
-
-  return widget->priv->real_scale;
 }
 
 /**

@@ -24,10 +24,10 @@
 #include "swfdec_interaction.h"
 
 static const GScannerConfig scanner_config = {
-  ",; \t\n",
-  G_CSET_a_2_z G_CSET_A_2_Z,
-  G_CSET_a_2_z G_CSET_A_2_Z,
-  "#\n",
+  (char *) ",; \t\n",
+  (char *) G_CSET_a_2_z G_CSET_A_2_Z,
+  (char *) G_CSET_a_2_z G_CSET_A_2_Z,
+  (char *) "#\n",
   FALSE,
   FALSE, TRUE, FALSE, TRUE, TRUE, FALSE,
   TRUE, FALSE, FALSE, FALSE, FALSE, FALSE,
@@ -81,12 +81,12 @@ swfdec_command_append_mouse (SwfdecInteraction *inter, int x, int y, int button)
 }
 
 static void
-swfdec_command_append_wait (SwfdecInteraction *inter, int time)
+swfdec_command_append_wait (SwfdecInteraction *inter, int msecs)
 {
   SwfdecCommand command;
 
   command.command = SWFDEC_COMMAND_WAIT;
-  command.args.time = time;
+  command.args.time = msecs;
   g_array_append_val (inter->commands, command);
 }
 

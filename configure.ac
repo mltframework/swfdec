@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.5.0)
+AC_INIT(swfdec,0.5.0.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -23,7 +23,7 @@ dnl if we support them, we set them unconditionally
 AS_COMPILER_FLAG(-Wall, GLOBAL_CFLAGS="-Wall", GLOBAL_CFLAGS="")
 dnl I want this but stupid headers don't let me
 dnl AS_COMPILER_FLAG(-Wshadow, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wshadow")
-AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
+AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline")
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
@@ -38,7 +38,7 @@ AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
 dnl C99 is only required to get definitions for NAN and INFINITY.
-GLOBAL_CFLAGS="$GLOBAL_CFLAGS -std=c99"
+AS_COMPILER_FLAG(-std=gnu99, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -std=gnu99")
 
 dnl ensures the library is linked against the internal Mozilla
 dnl if this doesn't work on your platform, I'll take patches :)
@@ -125,7 +125,7 @@ dnl
 dnl audio backend
 dnl
 AC_ARG_WITH(audio,
-            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
+            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/oss/none@:>@],
                             [audio backend to use])],,
 	    [with_audio=auto])
 
@@ -134,6 +134,8 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
   PKG_CHECK_MODULES(ALSA, alsa >= 1.0, AUDIO_TYPE=alsa)
   if test "$AUDIO_TYPE" = "alsa"; then
     with_audio=alsa
+    AUDIO_CFLAGS=$ALSA_CFLAGS
+    AUDIO_LIBS=$ALSA_LIBS
   else
     if test "$with_audio" = "alsa"; then
       AC_MSG_ERROR([no alsa audio support])
@@ -141,8 +143,14 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
       AC_MSG_WARN([no alsa audio support])
     fi
   fi
-  AUDIO_CFLAGS=$ALSA_CFLAGS
-  AUDIO_LIBS=$ALSA_LIBS
+fi
+
+dnl Assume OSS is available if ALSA wasn't found and we're "auto".
+if test "$with_audio" = "auto" -o "$with_audio" = "oss"; then
+  with_audio="oss"
+  AUDIO_CFLAGS=
+  AUDIO_LIBS=
+  AUDIO_TYPE=oss
 fi
 
 if test "$with_audio" = "auto" -o "$with_audio" = "none"; then

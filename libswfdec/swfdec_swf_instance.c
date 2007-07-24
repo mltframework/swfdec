@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "swfdec_swf_instance.h"
-#include "swfdec_as_object.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -71,7 +71,7 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
   }
 }
 
-void
+static void
 swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);

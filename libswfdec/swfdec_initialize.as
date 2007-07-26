@@ -49,9 +49,10 @@ AsBroadcaster.initialize = function (o) {
   o._listeners = new Array ();
   ASSetPropFlags(o, "broadcastMessage,addListener,removeListener,_listeners", 131);
 };
-ASSetPropFlags(o, null, 131);
+ASSetPropFlags(AsBroadcaster, null, 131);
 
 /*** MOUSE ***/
+
 Mouse = new Object ();
 Mouse.show = ASnative (5, 0);
 Mouse.hide = ASnative (5, 1);

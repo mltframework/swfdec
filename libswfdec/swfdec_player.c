@@ -1188,6 +1188,8 @@ swfdec_player_init (SwfdecPlayer *player)
   player->iterate_timeout.callback = swfdec_player_iterate;
   player->init_queue = g_queue_new ();
   player->construct_queue = g_queue_new ();
+  player->stage_width = -1;
+  player->stage_height = -1;
 }
 
 void

@@ -68,6 +68,7 @@ IGNORE_HFILES= \
 	swfdec_as_strings.h \
 	swfdec_as_super.h \
 	swfdec_as_with.h \
+	swfdec_asnative.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \

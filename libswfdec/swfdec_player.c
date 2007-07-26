@@ -1167,8 +1167,7 @@ swfdec_player_init (SwfdecPlayer *player)
   //swfdec_js_init_player (player);
   player->mouse_listener = swfdec_listener_new (SWFDEC_AS_CONTEXT (player));
   player->key_listener = swfdec_listener_new (SWFDEC_AS_CONTEXT (player));
-  player->registered_classes = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
-      NULL, NULL);
+  player->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */

@@ -72,7 +72,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_html_parser.c \
 	swfdec_image.c \
 	swfdec_interval.c \
-	swfdec_listener.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
 	swfdec_marshal.c \
@@ -181,7 +180,6 @@ noinst_HEADERS = \
 	swfdec_initialize.h \
 	swfdec_internal.h \
 	swfdec_interval.h \
-	swfdec_listener.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \

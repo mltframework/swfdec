@@ -39,6 +39,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_types.c \
 	swfdec_as_with.c \
 	swfdec_amf.c \
+	swfdec_asbroadcaster.c \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
 	swfdec_audio_flv.c \

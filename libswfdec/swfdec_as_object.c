@@ -176,6 +176,12 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
   return TRUE;
 }
 
+static gboolean
+swfdec_as_variable_name_is_valid (const char *name)
+{
+  return name != SWFDEC_AS_STR_EMPTY;
+}
+
 static SwfdecAsVariable *
 swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
 {
@@ -185,16 +191,12 @@ swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
   if (var == NULL) {
     if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
       return NULL;
+    if (!swfdec_as_variable_name_is_valid (variable))
+      return NULL;
     var = g_slice_new0 (SwfdecAsVariable);
     g_hash_table_insert (object->properties, (gpointer) variable, var);
   }
   return var;
-}
-
-static gboolean
-swfdec_as_variable_name_is_valid (const char *name)
-{
-  return name != SWFDEC_AS_STR_EMPTY;
 }
 
 static void
@@ -934,6 +936,39 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   swfdec_as_object_set_variable (object, scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__, &val);
 }
 
+/**
+ * swfdec_as_object_add_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: name of the variable
+ * @get: getter function to call when reading the variable
+ * @set: setter function to call when writing the variable or %NULL if read-only
+ *
+ * Adds a variable to @object in the same way as the Actionscript code 
+ * "object.addProperty()" would do. Accessing the variable will from now on be
+ * handled by calling the @get or @set functions. A previous value of the 
+ * variable or a previous call to this function will be overwritten.
+ **/
+void
+swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable, 
+    SwfdecAsFunction *get, SwfdecAsFunction *set)
+{
+  SwfdecAsVariable *var;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (variable != NULL);
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (get));
+  g_return_if_fail (set == NULL || SWFDEC_IS_AS_FUNCTION (set));
+
+  var = swfdec_as_object_lookup_variable (object, variable);
+  if (var == NULL)
+    return;
+  var->get = get;
+  var->set = set;
+  var->flags = SWFDEC_AS_VARIABLE_PERMANENT;
+  if (set == NULL)
+    var->flags |= SWFDEC_AS_VARIABLE_READONLY;
+}
+
 /*** AS CODE ***/
 
 static void
@@ -941,7 +976,6 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecAsFunction *get, *set;
-  SwfdecAsVariable *var;
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
@@ -961,15 +995,7 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  var = swfdec_as_object_lookup_variable (object, name);
-  if (var == NULL)
-    return;
-  var->get = get;
-  var->set = set;
-  var->flags = SWFDEC_AS_VARIABLE_PERMANENT;
-  if (set == NULL)
-    var->flags |= SWFDEC_AS_VARIABLE_READONLY;
-
+  swfdec_as_object_add_variable (object, name, get, set);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 

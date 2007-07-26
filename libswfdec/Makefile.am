@@ -176,6 +176,7 @@ noinst_HEADERS = \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
+	swfdec_initialize.h \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_listener.h \
@@ -207,7 +208,10 @@ noinst_HEADERS = \
 	swfdec_video_movie.h \
 	swfdec_xml.h
 
-EXTRA_DIST = swfdec_marshal.list
+EXTRA_DIST = \
+	compiler.c \
+	swfdec_initialize.as \
+	swfdec_marshal.list
 
 BUILT_SOURCES = \
 	swfdec_as_strings.h \

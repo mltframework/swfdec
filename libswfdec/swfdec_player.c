@@ -27,6 +27,7 @@
 #include <liboil/liboil.h>
 
 #include "swfdec_player_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_button_movie.h" /* for mouse cursor */
@@ -34,11 +35,13 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_initialize.h"
 #include "swfdec_internal.h"
 #include "swfdec_listener.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
+#include "swfdec_script.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
 
@@ -1310,6 +1313,15 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
       swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);
+    }
+    if (version > 4) {
+      SwfdecBits bits;
+      SwfdecScript *script;
+      swfdec_bits_init_data (&bits, swfdec_initialize, sizeof (swfdec_initialize));
+      script = swfdec_script_new (&bits, "init", version);
+      g_assert (script);
+      swfdec_as_object_run (context->global, script);
+      swfdec_script_unref (script);
     }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);

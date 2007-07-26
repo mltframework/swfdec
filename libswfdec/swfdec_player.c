@@ -37,7 +37,6 @@
 #include "swfdec_event.h"
 #include "swfdec_initialize.h"
 #include "swfdec_internal.h"
-#include "swfdec_listener.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
@@ -552,8 +551,6 @@ swfdec_player_dispose (GObject *object)
   while (player->roots)
     swfdec_movie_destroy (player->roots->data);
 
-  swfdec_listener_free (player->mouse_listener);
-  swfdec_listener_free (player->key_listener);
   swfdec_player_remove_all_actions (player, player); /* HACK to allow non-removable actions */
 
   /* we do this here so references to GC'd objects get freed */
@@ -736,6 +733,21 @@ swfdec_player_update_mouse_position (SwfdecPlayer *player)
 }
 
 static void
+swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *obj;
+
+  obj = SWFDEC_AS_CONTEXT (player)->global;
+  swfdec_as_object_get_variable (obj, object_name, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, signal);
+  swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, 1, &val, NULL);
+}
+
+static void
 swfdec_player_do_mouse_move (SwfdecPlayer *player)
 {
   GList *walk;
@@ -744,7 +756,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
   }
-  swfdec_listener_execute (player->mouse_listener, SWFDEC_AS_STR_onMouseMove);
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
   swfdec_player_update_mouse_position (player);
 }
 
@@ -765,7 +777,7 @@ swfdec_player_do_mouse_button (SwfdecPlayer *player)
   for (walk = player->movies; walk; walk = walk->next) {
     swfdec_movie_queue_script (walk->data, event);
   }
-  swfdec_listener_execute (player->mouse_listener, event_name);
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, event_name);
   if (player->mouse_grab)
     swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
 }
@@ -985,8 +997,6 @@ swfdec_player_mark (SwfdecAsContext *context)
   GList *walk;
 
   g_hash_table_foreach (player->registered_classes, swfdec_player_mark_string_object, NULL);
-  swfdec_listener_mark (player->mouse_listener);
-  swfdec_listener_mark (player->key_listener);
   swfdec_as_object_mark (player->MovieClip);
   swfdec_as_object_mark (player->Video);
   for (walk = player->roots; walk; walk = walk->next) {
@@ -1167,9 +1177,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 static void
 swfdec_player_init (SwfdecPlayer *player)
 {
-  //swfdec_js_init_player (player);
-  player->mouse_listener = swfdec_listener_new (SWFDEC_AS_CONTEXT (player));
-  player->key_listener = swfdec_listener_new (SWFDEC_AS_CONTEXT (player));
   player->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
@@ -1303,7 +1310,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
     context->state = SWFDEC_AS_CONTEXT_NEW;
     swfdec_player_init_global (player, version);
-    swfdec_mouse_init_context (player, version);
     swfdec_sprite_movie_init_context (player, version);
     swfdec_video_movie_init_context (player, version);
     swfdec_movie_color_init_context (player, version);

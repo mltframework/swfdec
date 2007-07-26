@@ -75,8 +75,6 @@ struct _SwfdecPlayer
   guint			interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
   GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
-  SwfdecListener *	mouse_listener;		/* emitting mouse events */
-  SwfdecListener *	key_listener;		/* emitting keyboard events */
   SwfdecAsObject *	MovieClip;		/* MovieClip object */
   SwfdecAsObject *	Video;			/* Video object */
 

@@ -237,6 +237,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("addProperty")
   SWFDEC_AS_CONSTANT_STRING ("ASnative")
   SWFDEC_AS_CONSTANT_STRING ("_listeners")
+  SWFDEC_AS_CONSTANT_STRING ("broadcastMessage")
   /* add more here */
 ;
 

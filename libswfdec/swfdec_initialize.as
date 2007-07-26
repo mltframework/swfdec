@@ -17,7 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-/* initialize the AsBroadcaster object */
+/*** ASBROADCASTER ***/
 
 function AsBroadcaster () { };
 
@@ -51,3 +51,8 @@ AsBroadcaster.initialize = function (o) {
 };
 ASSetPropFlags(o, null, 131);
 
+/*** MOUSE ***/
+Mouse = new Object ();
+Mouse.show = ASnative (5, 0);
+Mouse.hide = ASnative (5, 1);
+AsBroadcaster.initialize (Mouse);

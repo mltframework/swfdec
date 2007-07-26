@@ -815,6 +815,15 @@ EXTRA_DIST = \
 	stage-align-7.swf.trace \
 	stage-align-8.swf \
 	stage-align-8.swf.trace \
+	stage-size.as \
+	stage-size-5.swf \
+	stage-size-5.swf.trace \
+	stage-size-6.swf \
+	stage-size-6.swf.trace \
+	stage-size-7.swf \
+	stage-size-7.swf.trace \
+	stage-size-8.swf \
+	stage-size-8.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

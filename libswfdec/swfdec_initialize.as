@@ -65,5 +65,5 @@ AsBroadcaster.initialize (Mouse);
 /*** STAGE ***/
 
 Stage = new Object ();
-ASSetNativeAccessor (Stage, 666, "scaleMode,align", 1);
+ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height", 1);
 

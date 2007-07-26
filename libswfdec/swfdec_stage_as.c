@@ -126,3 +126,47 @@ set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     g_object_notify (G_OBJECT (player), "alignment");
   }
 }
+
+SWFDEC_AS_NATIVE (666, 5, get_width)
+void
+get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+
+  if (player->stage_width > -1) {
+    SWFDEC_AS_VALUE_SET_INT (ret, player->stage_width);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (ret, player->width);
+  }
+}
+
+SWFDEC_AS_NATIVE (666, 7, get_height)
+void
+get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+
+  if (player->stage_height > -1) {
+    SWFDEC_AS_VALUE_SET_INT (ret, player->stage_height);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (ret, player->height);
+  }
+}
+
+/* FIXME: do this smarter */
+SWFDEC_AS_NATIVE (666, 6, set_width)
+void
+set_width (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+}
+
+SWFDEC_AS_NATIVE (666, 8, set_height)
+void
+set_height (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+}
+

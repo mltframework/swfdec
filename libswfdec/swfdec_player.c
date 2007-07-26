@@ -586,22 +586,19 @@ swfdec_player_dispose (GObject *object)
 }
 
 static void
-swfdec_player_dispatch_properties_changed (GObject *object, guint n_pspecs, 
-    GParamSpec **pspecs)
+swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal)
 {
-  guint i;
+  SwfdecAsValue val;
+  SwfdecAsObject *obj;
 
-  G_OBJECT_CLASS (swfdec_player_parent_class)->dispatch_properties_changed (
-      object, n_pspecs, pspecs);
-  
-  /* check if we need to emit any stage signals */
-  for (i = 0; i < n_pspecs; i++) {
-    if (g_str_equal (pspecs[i]->name, "width") ||
-        g_str_equal (pspecs[i]->name, "height")) {
-      SWFDEC_FIXME ("width or height got changed, emit a Stage signal!");
-      break;
-    }
-  }
+  SWFDEC_DEBUG ("broadcasting message %s.%s", object_name, signal);
+  obj = SWFDEC_AS_CONTEXT (player)->global;
+  swfdec_as_object_get_variable (obj, object_name, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, signal);
+  swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, 1, &val, NULL);
 }
 
 static void
@@ -730,21 +727,6 @@ swfdec_player_update_mouse_position (SwfdecPlayer *player)
   player->mouse_grab = mouse_grab;
   if (mouse_grab)
     swfdec_movie_send_mouse_change (mouse_grab, FALSE);
-}
-
-static void
-swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal)
-{
-  SwfdecAsValue val;
-  SwfdecAsObject *obj;
-
-  obj = SWFDEC_AS_CONTEXT (player)->global;
-  swfdec_as_object_get_variable (obj, object_name, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return;
-  obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  SWFDEC_AS_VALUE_SET_STRING (&val, signal);
-  swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, 1, &val, NULL);
 }
 
 static void
@@ -1024,7 +1006,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   object_class->get_property = swfdec_player_get_property;
   object_class->set_property = swfdec_player_set_property;
   object_class->dispose = swfdec_player_dispose;
-  object_class->dispatch_properties_changed = swfdec_player_dispatch_properties_changed;
 
   g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
@@ -1733,6 +1714,27 @@ swfdec_player_get_size (SwfdecPlayer *player, int *width, int *height)
     *height = player->stage_height;
 }
 
+static void
+swfdec_player_set_size_internal (SwfdecPlayer *player, int width, int height)
+{
+  gboolean changed = FALSE;
+
+  if (player->stage_width != width) {
+    player->stage_width = width;
+    g_object_notify (G_OBJECT (player), "width");
+    changed = TRUE;
+  }
+  if (player->stage_height != height) {
+    player->stage_height = height;
+    g_object_notify (G_OBJECT (player), "height");
+    changed = TRUE;
+  }
+  swfdec_player_update_scale (player);
+  if (changed && player->scale_mode == SWFDEC_SCALE_NONE) {
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
+  }
+}
+
 /**
  * swfdec_player_set_size:
  * @player: a #SwfdecPlayer
@@ -1752,17 +1754,9 @@ swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
   g_return_if_fail (width >= -1);
   g_return_if_fail (height >= -1);
 
-  g_object_freeze_notify (G_OBJECT (player));
-  if (player->stage_width != width) {
-    player->stage_width = width;
-    g_object_notify (G_OBJECT (player), "width");
-  }
-  if (player->stage_height != height) {
-    player->stage_height = height;
-    g_object_notify (G_OBJECT (player), "height");
-  }
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_update_scale (player);
+  swfdec_player_lock (player);
+  swfdec_player_set_size_internal (player, width, height);
+  swfdec_player_unlock (player);
 }
 
 /**

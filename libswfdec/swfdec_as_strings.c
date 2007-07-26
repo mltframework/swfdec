@@ -242,6 +242,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("noBorder")
   SWFDEC_AS_CONSTANT_STRING ("exactFit")
   SWFDEC_AS_CONSTANT_STRING ("noScale")
+  SWFDEC_AS_CONSTANT_STRING ("Stage")
+  SWFDEC_AS_CONSTANT_STRING ("onResize")
   /* add more here */
 ;
 

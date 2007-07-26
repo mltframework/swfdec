@@ -778,8 +778,10 @@ start:
       if (spec->add > 0)
 	swfdec_as_stack_ensure_free (context, spec->add);
     }
-    if (context->state != SWFDEC_AS_CONTEXT_RUNNING)
+    if (context->state != SWFDEC_AS_CONTEXT_RUNNING) {
+      SWFDEC_WARNING ("context not running anymore, aborting");
       goto error;
+    }
 #ifndef G_DISABLE_ASSERT
     check = (spec->add >= 0 && spec->remove >= 0) ? context->cur + spec->add - spec->remove : NULL;
 #endif

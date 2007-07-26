@@ -21,15 +21,20 @@
 #include "config.h"
 #endif
 
+/* NB: include this first, it redefines SWFDEC_AS_NATIVE */
+#include "swfdec_asnative.h"
+
 #include "swfdec_player_internal.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
-#include "swfdec_asnative.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_interval.h"
+/* FIXME: to avoid duplicate definitions */
+#undef SWFDEC_AS_NATIVE
+#define SWFDEC_AS_NATIVE(x, y, func)
 
 /*** INTERVALS ***/
 
@@ -90,28 +95,79 @@ swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *obj,
   swfdec_interval_remove (player, id);
 }
 
+/*** VARIOUS ***/
+
+static SwfdecAsFunction *
+swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
+{
+  guint i;
+
+  for (i = 0; native_funcs[i].func != NULL; i++) {
+    if (native_funcs[i].x == x && native_funcs[i].y == y) {
+      return swfdec_as_native_function_new (cx, native_funcs[i].name,
+	  native_funcs[i].func, 0);
+    }
+  }
+  return NULL;
+}
+
 static void
 swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  guint i, x, y;
+  SwfdecAsFunction *func;
+  guint x, y;
 
   x = swfdec_as_value_to_integer (cx, &argv[0]);
   y = swfdec_as_value_to_integer (cx, &argv[1]);
 
-  for (i = 0; native_funcs[i].func != NULL; i++) {
-    if (native_funcs[i].x == x && native_funcs[i].y == y) {
-      SwfdecAsFunction *func = swfdec_as_native_function_new (cx, native_funcs[i].name,
-	  native_funcs[i].func, 0);
-      if (func)
-	SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
-      return;
-    }
+  func = swfdec_get_asnative (cx, x, y);
+  if (func) {
+    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
+  } else {
+    SWFDEC_FIXME ("ASnative for %u %u missing", x, y);
   }
-  SWFDEC_FIXME ("ASnative for %u %u missing", x, y);
 }
 
-/*** VARIOUS ***/
+SWFDEC_AS_NATIVE (4, 1, ASSetNativeAccessor)
+void
+ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecAsFunction *get, *set;
+  SwfdecAsObject *target;
+  const char *s;
+  char **names;
+  guint i, x, y;
+
+  if (argc < 3)
+    return;
+
+  target = swfdec_as_value_to_object (cx, &argv[0]);
+  x = swfdec_as_value_to_integer (cx, &argv[1]);
+  s = swfdec_as_value_to_string (cx, &argv[2]);
+  if (argc > 3)
+    y = swfdec_as_value_to_integer (cx, &argv[3]);
+  else
+    y = 0;
+  names = g_strsplit (s, ",", -1);
+  for (i = 0; names[i]; i++) {
+    s = names[i];
+    if (s[0] >= '0' && s[0] <= '9') {
+      SWFDEC_FIXME ("implement the weird numbers");
+      s++;
+    }
+    get = swfdec_get_asnative (cx, x, y++);
+    set = swfdec_get_asnative (cx, x, y++);
+    if (get == NULL) {
+      SWFDEC_ERROR ("no getter for %s", s);
+      return;
+    }
+    swfdec_as_object_add_variable (target, swfdec_as_context_get_string (cx, s),
+	get, set);
+  }
+  g_free (names);
+}
 
 static void
 swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,

@@ -717,6 +717,15 @@ EXTRA_DIST = \
 	round-direction-7.swf.trace \
 	round-direction-8.swf \
 	round-direction-8.swf.trace \
+	scalemode.as \
+	scalemode-5.swf \
+	scalemode-5.swf.trace \
+	scalemode-6.swf \
+	scalemode-6.swf.trace \
+	scalemode-7.swf \
+	scalemode-7.swf.trace \
+	scalemode-8.swf \
+	scalemode-8.swf.trace \
 	scope.swf \
 	scope.swf.trace \
 	scope2.swf \

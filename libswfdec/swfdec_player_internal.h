@@ -160,6 +160,8 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,
 						 gboolean		center,
 						 SwfdecRect *		rect);
+void		swfdec_player_set_align_flags	(SwfdecPlayer *		player,
+						 guint			flags);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 SwfdecMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,

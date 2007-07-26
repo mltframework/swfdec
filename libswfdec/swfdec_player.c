@@ -1891,6 +1891,12 @@ swfdec_player_set_alignment (SwfdecPlayer *player, SwfdecAlignment align)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   flags = swfdec_player_alignment_to_flags (align);
+  swfdec_player_set_align_flags (player, flags);
+}
+
+void
+swfdec_player_set_align_flags (SwfdecPlayer *player, guint flags)
+{
   if (flags != player->align_flags) {
     player->align_flags = flags;
     swfdec_player_update_scale (player);

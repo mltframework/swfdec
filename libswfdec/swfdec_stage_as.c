@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
@@ -77,3 +78,51 @@ set_scaleMode (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_player_set_scale_mode (player, mode);
 }
 
+SWFDEC_AS_NATIVE (666, 3, get_align)
+void
+get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  char s[5];
+  guint i = 0;
+
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT)
+    s[i++] = 'L';
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_TOP)
+    s[i++] = 'T';
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT)
+    s[i++] = 'R';
+  if (player->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM)
+    s[i++] = 'B';
+  s[i] = 0;
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
+}
+
+SWFDEC_AS_NATIVE (666, 4, set_align)
+void
+set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  guint flags = 0;
+  const char *s;
+
+  if (argc == 0)
+    return;
+
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  if (strchr (s, 'l') || strchr (s, 'L'))
+    flags |= SWFDEC_ALIGN_FLAG_LEFT;
+  if (strchr (s, 't') || strchr (s, 'T'))
+    flags |= SWFDEC_ALIGN_FLAG_TOP;
+  if (strchr (s, 'r') || strchr (s, 'R'))
+    flags |= SWFDEC_ALIGN_FLAG_RIGHT;
+  if (strchr (s, 'b') || strchr (s, 'B'))
+    flags |= SWFDEC_ALIGN_FLAG_BOTTOM;
+
+  if (flags != player->align_flags) {
+    player->align_flags = flags;
+    g_object_notify (G_OBJECT (player), "alignment");
+  }
+}

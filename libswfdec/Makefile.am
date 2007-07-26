@@ -95,6 +95,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
 	swfdec_sprite_movie_as.c \
+	swfdec_stage_as.c \
 	swfdec_swf_decoder.c \
 	swfdec_swf_instance.c \
 	swfdec_tag.c \

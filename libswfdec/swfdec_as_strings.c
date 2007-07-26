@@ -238,6 +238,10 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("ASnative")
   SWFDEC_AS_CONSTANT_STRING ("_listeners")
   SWFDEC_AS_CONSTANT_STRING ("broadcastMessage")
+  SWFDEC_AS_CONSTANT_STRING ("showAll")
+  SWFDEC_AS_CONSTANT_STRING ("noBorder")
+  SWFDEC_AS_CONSTANT_STRING ("exactFit")
+  SWFDEC_AS_CONSTANT_STRING ("noScale")
   /* add more here */
 ;
 

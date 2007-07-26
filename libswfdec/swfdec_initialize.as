@@ -57,3 +57,8 @@ Mouse = new Object ();
 Mouse.show = ASnative (5, 0);
 Mouse.hide = ASnative (5, 1);
 AsBroadcaster.initialize (Mouse);
+
+/*** STAGE ***/
+
+Stage = new Object ();
+Stage.addProperty ("scaleMode", ASnative (666, 1), ASnative (666, 2));

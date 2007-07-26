@@ -162,12 +162,8 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
   if (var == NULL)
     return FALSE;
 
-  if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP && object->context->version < 6) {
-    g_print ("HARHAR\n");
+  if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP && object->context->version < 6)
     return FALSE;
-  } else if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP) {
-    g_print ("HI MOM\n");
-  }
 
   if (var->get) {
     swfdec_as_function_call (var->get, object, 0, NULL, val);

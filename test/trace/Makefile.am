@@ -806,6 +806,15 @@ EXTRA_DIST = \
 	stack-segments2-7.swf.trace \
 	stack-segments2-8.swf \
 	stack-segments2-8.swf.trace \
+	stage-align.as \
+	stage-align-5.swf \
+	stage-align-5.swf.trace \
+	stage-align-6.swf \
+	stage-align-6.swf.trace \
+	stage-align-7.swf \
+	stage-align-7.swf.trace \
+	stage-align-8.swf \
+	stage-align-8.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

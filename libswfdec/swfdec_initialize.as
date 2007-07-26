@@ -17,6 +17,10 @@
  * Boston, MA  02110-1301  USA
  */
 
+/*** GENERAL ***/
+
+ASSetNativeAccessor = ASnative (4, 1);
+
 /*** ASBROADCASTER ***/
 
 function AsBroadcaster () { };
@@ -61,4 +65,5 @@ AsBroadcaster.initialize (Mouse);
 /*** STAGE ***/
 
 Stage = new Object ();
-Stage.addProperty ("scaleMode", ASnative (666, 1), ASnative (666, 2));
+ASSetNativeAccessor (Stage, 666, "scaleMode", 1);
+

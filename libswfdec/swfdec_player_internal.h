@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+#define SWFDEC_AS_NATIVE(x, y, func) void func (SwfdecAsContext *cx, \
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);
+
 typedef enum {
   SWFDEC_ALIGN_FLAG_TOP		= (1 << 0),
   SWFDEC_ALIGN_FLAG_BOTTOM	= (1 << 1),

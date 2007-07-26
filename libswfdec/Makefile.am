@@ -226,14 +226,18 @@ CLEANFILES = \
 	$(BUILT_SOURCES)
 
 swfdec_asnative.h: $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES)
-	(echo "#include \"swfdec_player.h\"" \
+	(echo "#include \"swfdec_as_types.h\"" \
+	  && echo "#define SWFDEC_AS_NATIVE(x, y, func) void func (SwfdecAsContext *cx, \\" \
+	  && echo "    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);" \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) { x, y, func, G_STRINGIFY (func) }," \
 	  && echo "static const struct { guint x, y; SwfdecAsNative func; const char *name; } native_funcs[] = {" \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
 	  && echo "  { 0, 0, NULL }" \
-	  && echo "};") >> xgen-san \
+	  && echo "};" \
+	  && echo "#undef SWFDEC_AS_NATIVE" \
+	 ) >> xgen-san \
 	&& (cmp -s xgen-san swfdec_asnative.h || cp xgen-san swfdec_asnative.h) \
 	&& rm -f xgen-san
 

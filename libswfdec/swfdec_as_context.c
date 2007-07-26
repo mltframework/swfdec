@@ -1033,8 +1033,6 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   flags[0] = swfdec_as_value_to_integer (cx, &argv[2]);
-  /* be sure to not delete the NATIVE flag */
-  flags[0] &= 7;
   flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : -1;
   if (SWFDEC_AS_VALUE_IS_NULL (&argv[1])) {
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);

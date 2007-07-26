@@ -159,18 +159,25 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
 {
   SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
-  if (var) {
-    if (var->get) {
-      swfdec_as_function_call (var->get, object, 0, NULL, val);
-      swfdec_as_context_run (object->context);
-      *flags = var->flags;
-    } else {
-      *val = var->value;
-      *flags = var->flags;
-    }
-    return TRUE;
+  if (var == NULL)
+    return FALSE;
+
+  if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP && object->context->version < 6) {
+    g_print ("HARHAR\n");
+    return FALSE;
+  } else if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP) {
+    g_print ("HI MOM\n");
   }
-  return FALSE;
+
+  if (var->get) {
+    swfdec_as_function_call (var->get, object, 0, NULL, val);
+    swfdec_as_context_run (object->context);
+    *flags = var->flags;
+  } else {
+    *val = var->value;
+    *flags = var->flags;
+  }
+  return TRUE;
 }
 
 static SwfdecAsVariable *
@@ -974,16 +981,11 @@ static void
 swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecAsObjectClass *klass;
   const char *name;
-  guint flags;
-  SwfdecAsValue value;
 
   name = swfdec_as_value_to_string (object->context, &argv[0]);
   
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  if (klass->get (object, name, &value, &flags) &&
-      (flags & SWFDEC_AS_VARIABLE_NATIVE) == 0)
+  if (swfdec_as_object_hash_lookup (object, name))
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
   else
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);

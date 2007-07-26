@@ -12,7 +12,9 @@ Makefile.in
 *.loT
 
 swfdec_as_strings.h
+swfdec_asnative.h
 swfdec_enums.[ch]
 swfdec_marshal.[ch]
 
+compiler
 compute-strings

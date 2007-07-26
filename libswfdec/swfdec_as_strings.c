@@ -235,6 +235,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("call")
   SWFDEC_AS_CONSTANT_STRING ("Boolean")
   SWFDEC_AS_CONSTANT_STRING ("addProperty")
+  SWFDEC_AS_CONSTANT_STRING ("ASnative")
+  SWFDEC_AS_CONSTANT_STRING ("_listeners")
   /* add more here */
 ;
 

@@ -23,8 +23,10 @@
 
 #include "swfdec_player_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_asnative.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_interval.h"
@@ -88,6 +90,27 @@ swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *obj,
   swfdec_interval_remove (player, id);
 }
 
+static void
+swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  guint i, x, y;
+
+  x = swfdec_as_value_to_integer (cx, &argv[0]);
+  y = swfdec_as_value_to_integer (cx, &argv[1]);
+
+  for (i = 0; native_funcs[i].func != NULL; i++) {
+    if (native_funcs[i].x == x && native_funcs[i].y == y) {
+      SwfdecAsFunction *func = swfdec_as_native_function_new (cx, native_funcs[i].name,
+	  native_funcs[i].func, 0);
+      if (func)
+	SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
+      return;
+    }
+  }
+  SWFDEC_FIXME ("ASnative for %u %u missing", x, y);
+}
+
 /*** VARIOUS ***/
 
 static void
@@ -118,5 +141,7 @@ swfdec_player_init_global (SwfdecPlayer *player, guint version)
       0, swfdec_player_setInterval, 2);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_clearInterval, 
       0, swfdec_player_clearInterval, 1);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASnative, 
+      0, swfdec_player_ASnative, 2);
 }
 

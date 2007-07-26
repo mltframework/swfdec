@@ -150,6 +150,7 @@ noinst_HEADERS = \
 	swfdec_as_strings.h \
 	swfdec_as_super.h \
 	swfdec_as_with.h \
+	swfdec_asnative.h \
 	swfdec_amf.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
@@ -214,6 +215,7 @@ EXTRA_DIST = \
 	swfdec_marshal.list
 
 BUILT_SOURCES = \
+	swfdec_asnative.h \
 	swfdec_as_strings.h \
 	swfdec_enums.c \
 	swfdec_enums.h \
@@ -222,6 +224,18 @@ BUILT_SOURCES = \
 
 CLEANFILES = \
 	$(BUILT_SOURCES)
+
+swfdec_asnative.h: $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES)
+	(echo "#include \"swfdec_player.h\"" \
+	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
+	  && echo "#undef SWFDEC_AS_NATIVE" \
+	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) { x, y, func, G_STRINGIFY (func) }," \
+	  && echo "static const struct { guint x, y; SwfdecAsNative func; const char *name; } native_funcs[] = {" \
+	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
+	  && echo "  { 0, 0, NULL }" \
+	  && echo "};") >> xgen-san \
+	&& (cmp -s xgen-san swfdec_asnative.h || cp xgen-san swfdec_asnative.h) \
+	&& rm -f xgen-san
 
 swfdec_marshal.h: swfdec_marshal.list Makefile
 	$(GLIB_GENMARSHAL) --prefix=swfdec_marshal $(srcdir)/swfdec_marshal.list --header >> xgen-smh \

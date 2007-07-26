@@ -365,6 +365,10 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
     }
       break;
     case SWFDEC_STATE_EOF:
+      if (swfdec_buffer_queue_get_depth (s->input_queue) > 0) {
+	SWFDEC_WARNING ("%u bytes after EOF", swfdec_buffer_queue_get_depth (s->input_queue));
+	swfdec_buffer_queue_clear (s->input_queue);
+      }
       return SWFDEC_STATUS_EOF;
   }
 

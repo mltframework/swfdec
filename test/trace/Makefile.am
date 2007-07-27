@@ -68,6 +68,15 @@ EXTRA_DIST = \
 	array2-7.swf.trace \
 	array2-8.swf \
 	array2-8.swf.trace \
+	asnative-create.as \
+	asnative-create-5.swf \
+	asnative-create-5.swf.trace \
+	asnative-create-6.swf \
+	asnative-create-6.swf.trace \
+	asnative-create-7.swf \
+	asnative-create-7.swf.trace \
+	asnative-create-8.swf \
+	asnative-create-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

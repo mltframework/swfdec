@@ -21,7 +21,6 @@
 #include "config.h"
 #endif
 
-#include "swfdec_as_array.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -47,10 +46,10 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   argc--;
 
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR__listeners, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-      !SWFDEC_IS_AS_ARRAY (listeners = SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
 
+  listeners = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   swfdec_as_object_get_variable (listeners, SWFDEC_AS_STR_length, &val);
   length = swfdec_as_value_to_integer (cx, &val);
 

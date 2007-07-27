@@ -35,7 +35,7 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsValue val;
-  SwfdecAsObject *listeners;
+  SwfdecAsObject *listeners, *o;
   gint i, length;
   const char *name;
   GSList *list = NULL, *walk;
@@ -61,9 +61,13 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   /* FIXME: solve this wth foreach, so it gets faster for weird cases */
   for (i = 0; i < length; i++) {
     swfdec_as_object_get_variable (listeners, swfdec_as_double_to_string (cx, i), &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-      list = g_slist_prepend (list, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+    o = swfdec_as_value_to_object (cx, &val);
+    if (o == NULL)
+      continue;
+    list = g_slist_prepend (list, o);
   }
+  if (list == NULL)
+    return;
   list = g_slist_reverse (list);
   for (walk = list; walk; walk = walk->next) {
     swfdec_as_object_call (walk->data, name, argc, argv, &val);

@@ -244,6 +244,11 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("noScale")
   SWFDEC_AS_CONSTANT_STRING ("Stage")
   SWFDEC_AS_CONSTANT_STRING ("onResize")
+  SWFDEC_AS_CONSTANT_STRING ("getBounds")
+  SWFDEC_AS_CONSTANT_STRING ("xMin")
+  SWFDEC_AS_CONSTANT_STRING ("xMax")
+  SWFDEC_AS_CONSTANT_STRING ("yMin")
+  SWFDEC_AS_CONSTANT_STRING ("yMax")
   /* add more here */
 ;
 

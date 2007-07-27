@@ -412,6 +412,39 @@ swfdec_sprite_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_AS_VALUE_SET_INT (rval, movie->depth);
 }
 
+static void
+swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *obj,
+        guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  int x0, x1, y0, y1;
+  SwfdecAsValue val;
+  SwfdecAsObject *object;
+  SwfdecMovie *movie = SWFDEC_MOVIE (obj);
+
+  object = swfdec_as_object_new_empty (cx);
+  if (object == NULL)
+    return;
+
+  if (swfdec_rect_is_empty (&movie->extents)) {
+    x0 = x1 = y0 = y1 = 0x7FFFFFF;
+  } else {
+    x0 = movie->extents.x0;
+    y0 = movie->extents.y0;
+    x1 = movie->extents.x1;
+    y1 = movie->extents.y1;
+  }
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (x0));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_xMin, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (y0));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_yMin, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (x1));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_xMax, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (y1));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_yMax, &val);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, object);
+}
+
 void
 swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
 {
@@ -469,4 +502,6 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
       swfdec_sprite_movie_stopDrag, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_swapDepths, SWFDEC_TYPE_SPRITE_MOVIE, 
       swfdec_sprite_movie_swapDepths, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getBounds, SWFDEC_TYPE_SPRITE_MOVIE, 
+      swfdec_sprite_movie_getBounds, 0);
 };

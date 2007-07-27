@@ -63,15 +63,19 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   SWFDEC_LOG ("goto %ums", timestamp);
   process_events = timestamp == stream->next_time;
   process_events_from = MIN (stream->next_time, stream->current_time + 1);
-  buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
-      FALSE, &format, &stream->current_time, &stream->next_time);
   old = stream->surface;
   if (stream->surface) {
     cairo_surface_destroy (stream->surface);
     stream->surface = NULL;
   }
+  if (stream->flvdecoder->video) {
+    buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
+	FALSE, &format, &stream->current_time, &stream->next_time);
+  } else {
+    buffer = NULL;
+  }
   if (buffer == NULL) {
-    SWFDEC_ERROR ("got no buffer?!");
+    SWFDEC_ERROR ("got no buffer - no video available?");
   } else {
     if (format != stream->format) {
       if (stream->decoder)

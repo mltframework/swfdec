@@ -1756,6 +1756,7 @@ swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
 
   swfdec_player_lock (player);
   swfdec_player_set_size_internal (player, width, height);
+  swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 }
 

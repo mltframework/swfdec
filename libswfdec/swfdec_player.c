@@ -481,8 +481,8 @@ swfdec_player_update_scale (SwfdecPlayer *player)
     default:
       g_assert_not_reached ();
   }
-  width = player->stage_width - ceil (player->width * player->scale_x);
-  height = player->stage_height - ceil (player->height * player->scale_y);
+  width = width - ceil (player->width * player->scale_x);
+  height = height - ceil (player->height * player->scale_y);
   if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
     player->offset_x = 0;
   } else if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {

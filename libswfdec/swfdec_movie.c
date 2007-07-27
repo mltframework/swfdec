@@ -496,16 +496,30 @@ swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 void
 swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+
   do {
     cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
+
+  *x /= player->scale_x;
+  *y /= player->scale_y;
+  *x += SWFDEC_TWIPS_TO_DOUBLE (player->offset_x);
+  *y += SWFDEC_TWIPS_TO_DOUBLE (player->offset_y);
 }
 
 void
 swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
-  if (movie->parent)
+  if (movie->parent) {
     swfdec_movie_global_to_local (movie->parent, x, y);
+  } else {
+    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    *x -= SWFDEC_TWIPS_TO_DOUBLE (player->offset_x);
+    *y -= SWFDEC_TWIPS_TO_DOUBLE (player->offset_y);
+    *x *= player->scale_x;
+    *y *= player->scale_y;
+  }
   if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
     swfdec_movie_update (movie);
   cairo_matrix_transform_point (&movie->inverse_matrix, x, y);

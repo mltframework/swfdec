@@ -68,6 +68,15 @@ EXTRA_DIST = \
 	array2-7.swf.trace \
 	array2-8.swf \
 	array2-8.swf.trace \
+	asbroadcaster-broadcastMessage-retval.as \
+	asbroadcaster-broadcastMessage-retval-5.swf \
+	asbroadcaster-broadcastMessage-retval-5.swf.trace \
+	asbroadcaster-broadcastMessage-retval-6.swf \
+	asbroadcaster-broadcastMessage-retval-6.swf.trace \
+	asbroadcaster-broadcastMessage-retval-7.swf \
+	asbroadcaster-broadcastMessage-retval-7.swf.trace \
+	asbroadcaster-broadcastMessage-retval-8.swf \
+	asbroadcaster-broadcastMessage-retval-8.swf.trace \
 	asbroadcaster-override.as \
 	asbroadcaster-override-5.swf \
 	asbroadcaster-override-5.swf.trace \

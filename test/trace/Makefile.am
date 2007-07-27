@@ -477,6 +477,15 @@ EXTRA_DIST = \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \
+	onresize.as \
+	onresize-5.swf \
+	onresize-5.swf.trace \
+	onresize-6.swf \
+	onresize-6.swf.trace \
+	onresize-7.swf \
+	onresize-7.swf.trace \
+	onresize-8.swf \
+	onresize-8.swf.trace \
 	order.swf \
 	order.swf.trace \
 	parent-root.swf \

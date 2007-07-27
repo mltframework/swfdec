@@ -68,6 +68,15 @@ EXTRA_DIST = \
 	array2-7.swf.trace \
 	array2-8.swf \
 	array2-8.swf.trace \
+	asbroadcaster-override.as \
+	asbroadcaster-override-5.swf \
+	asbroadcaster-override-5.swf.trace \
+	asbroadcaster-override-6.swf \
+	asbroadcaster-override-6.swf.trace \
+	asbroadcaster-override-7.swf \
+	asbroadcaster-override-7.swf.trace \
+	asbroadcaster-override-8.swf \
+	asbroadcaster-override-8.swf.trace \
 	asnative-create.as \
 	asnative-create-5.swf \
 	asnative-create-5.swf.trace \

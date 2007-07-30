@@ -209,6 +209,9 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	definefunction2-arguments-registers.swf \
+	definefunction2-arguments-registers.swf.trace \
+	definefunction2-arguments-registers.xml \
 	definelocal-function-target.as \
 	definelocal-function-target-5.swf \
 	definelocal-function-target-5.swf.trace \

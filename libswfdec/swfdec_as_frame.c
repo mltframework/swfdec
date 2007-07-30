@@ -556,6 +556,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   SwfdecAsValue val;
   const SwfdecAsValue *cur;
   SwfdecAsContext *context;
+  SwfdecAsStackIterator iter;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
@@ -644,23 +645,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL) {
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
   }
-  stack = context->stack;
+
+  cur = swfdec_as_stack_iterator_init_arguments (&iter, frame);
   SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-  cur = frame->argv ? frame->argv - 1 : context->cur;
   for (i = 0; i < script->n_arguments; i++) {
-    /* first figure out the right value to set */
-    if (i >= frame->argc) {
+    if (cur == NULL)
       cur = &val;
-    } else if (frame->argv) {
-      cur++;
-    } else {
-      if (cur <= &stack->elements[0]) {
-	stack = stack->next;
-	cur = &stack->elements[stack->used_elements];
-      }
-      cur--;
-    }
-    /* now set this value at the right place */
+    /* set this value at the right place */
     if (script->arguments[i].preload) {
       if (script->arguments[i].preload < frame->n_registers) {
 	frame->registers[script->arguments[i].preload] = *cur;
@@ -672,6 +663,8 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       const char *tmp = swfdec_as_context_get_string (context, script->arguments[i].name);
       swfdec_as_object_set_variable (object, tmp, cur);
     }
+    /* get the next argument */
+    cur = swfdec_as_stack_iterator_next (&iter);
   }
 }
 

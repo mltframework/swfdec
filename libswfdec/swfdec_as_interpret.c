@@ -1497,7 +1497,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     return;
   n_args = swfdec_bits_get_u16 (&bits);
   if (v2) {
-    n_registers = swfdec_bits_get_u8 (&bits) + 1;
+    n_registers = swfdec_bits_get_u8 (&bits);
     flags = swfdec_bits_get_u16 (&bits);
   } else {
     n_registers = 5;

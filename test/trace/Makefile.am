@@ -209,9 +209,18 @@ EXTRA_DIST = \
 	countdown.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	definefunction2-arguments.swf \
+	definefunction2-arguments.swf.trace \
+	definefunction2-arguments.xml \
 	definefunction2-arguments-registers.swf \
 	definefunction2-arguments-registers.swf.trace \
 	definefunction2-arguments-registers.xml \
+	definefunction2-overwrite.swf \
+	definefunction2-overwrite.swf.trace \
+	definefunction2-overwrite.xml \
+	definefunction2-this.swf \
+	definefunction2-this.swf.trace \
+	definefunction2-this.xml \
 	definelocal-function-target.as \
 	definelocal-function-target-5.swf \
 	definelocal-function-target-5.swf.trace \

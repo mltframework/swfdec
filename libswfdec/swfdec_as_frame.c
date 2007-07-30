@@ -549,10 +549,10 @@ swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
 void
 swfdec_as_frame_preload (SwfdecAsFrame *frame)
 {
-  SwfdecAsObject *object;
+  SwfdecAsObject *object, *args;
   guint i, current_reg = 1;
   SwfdecScript *script;
-  SwfdecAsValue val;
+  SwfdecAsValue val = { 0, };
   const SwfdecAsValue *cur;
   SwfdecAsContext *context;
   SwfdecAsStackIterator iter;
@@ -561,17 +561,30 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   if (frame->script == NULL)
     return;
-
+  /* setup */
   object = SWFDEC_AS_OBJECT (frame);
   context = object->context;
   script = frame->script;
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_THIS) {
-    if (frame->thisp) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
-    } else {
-      current_reg++;
+
+  /* create arguments and super object if necessary */
+  if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
+    args = swfdec_as_array_new (context);
+    if (!args)
+      return;
+    for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
+	cur = swfdec_as_stack_iterator_next (&iter)) {
+      swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
     }
-  } else if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
+  } else {
+    /* silence gcc */
+    args = NULL;
+  }
+  if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_SUPER | SWFDEC_SCRIPT_SUPPRESS_SUPER)) != SWFDEC_SCRIPT_SUPPRESS_SUPER) {
+    frame->super = swfdec_as_super_new (frame);
+  }
+
+  /* set the default variables (unless suppressed */
+  if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
     if (frame->thisp) {
       SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
     } else {
@@ -580,61 +593,20 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
-    SwfdecAsObject *args = swfdec_as_array_new (context);
-
-    if (!args)
-      return;
-    for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
-	cur = swfdec_as_stack_iterator_next (&iter)) {
-      swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
-    }
-    /* FIXME: implement callee/caller */
-    if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], args);
-    } else {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, args);
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_arguments, &val);
-    }
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, args);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_arguments, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
-    frame->super = swfdec_as_super_new (frame);
     if (frame->super) {
-      if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER) {
-	SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->super);
-      } else {
-	SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->super);
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
-      }
-    }
-  }
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT) {
-    SwfdecAsObject *obj;
-    
-    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__root);
-    if (obj) {
-      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__root, &frame->registers[current_reg]);
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->super);
     } else {
-      SWFDEC_WARNING ("no root to preload");
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
     }
-    current_reg++;
-  }
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT) {
-    SwfdecAsObject *obj;
-    
-    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__parent);
-    if (obj) {
-      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__parent, &frame->registers[current_reg++]);
-    } else {
-      SWFDEC_WARNING ("no parent to preload");
-    }
-    current_reg++;
-  }
-  if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_super, &val);
   }
 
+  /* set and preload argument variables */
   cur = swfdec_as_stack_iterator_init_arguments (&iter, frame);
-  SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   for (i = 0; i < script->n_arguments; i++) {
     if (cur == NULL)
       cur = &val;
@@ -652,6 +624,52 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     }
     /* get the next argument */
     cur = swfdec_as_stack_iterator_next (&iter);
+  }
+
+  /* preload from flags */
+  if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_THIS | SWFDEC_SCRIPT_SUPPRESS_THIS)) == SWFDEC_SCRIPT_PRELOAD_THIS
+      && current_reg < script->n_registers) {
+    if (frame->thisp) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+    } else {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
+    }
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS && current_reg < script->n_registers) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], args);
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER && current_reg < script->n_registers) {
+    if (frame->super) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->super);
+    } else {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
+    }
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT && current_reg < script->n_registers) {
+    SwfdecAsObject *obj;
+    
+    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__root);
+    if (obj) {
+      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__root, &frame->registers[current_reg]);
+    } else {
+      SWFDEC_WARNING ("no root to preload");
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
+    }
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT && current_reg < script->n_registers) {
+    SwfdecAsObject *obj;
+    
+    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__parent);
+    if (obj) {
+      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__parent, &frame->registers[current_reg++]);
+    } else {
+      SWFDEC_WARNING ("no parent to preload");
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
+    }
+    current_reg++;
+  }
+  if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL && current_reg < script->n_registers) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
   }
 }
 

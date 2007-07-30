@@ -552,7 +552,6 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   SwfdecAsObject *object;
   guint i, current_reg = 1;
   SwfdecScript *script;
-  SwfdecAsStack *stack;
   SwfdecAsValue val;
   const SwfdecAsValue *cur;
   SwfdecAsContext *context;
@@ -585,21 +584,9 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
     if (!args)
       return;
-    if (frame->argc > 0) {
-      if (frame->argv) {
-	swfdec_as_array_append (SWFDEC_AS_ARRAY (args), frame->argc, frame->argv);
-      } else {
-	stack = context->stack;
-	cur = context->cur;
-	for (i = 0; i < frame->argc; i++) {
-	  if (cur <= &stack->elements[0]) {
-	    stack = stack->next;
-	    cur = &stack->elements[stack->used_elements];
-	  }
-	  cur--;
-	  swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
-	}
-      }
+    for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
+	cur = swfdec_as_stack_iterator_next (&iter)) {
+      swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
     }
     /* FIXME: implement callee/caller */
     if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS) {

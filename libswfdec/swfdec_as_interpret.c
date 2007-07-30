@@ -349,9 +349,10 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  guint regnum = swfdec_bits_get_u8 (&bits);
 	  if (!swfdec_action_has_register (cx, regnum)) {
 	    SWFDEC_ERROR ("cannot Push register %u: not enough registers", regnum);
-	    return;
+	    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (cx));
+	  } else {
+	    *swfdec_as_stack_push (cx) = cx->frame->registers[regnum];
 	  }
-	  *swfdec_as_stack_push (cx) = cx->frame->registers[regnum];
 	  break;
 	}
       case 5: /* boolean */

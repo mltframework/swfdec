@@ -726,6 +726,9 @@ EXTRA_DIST = \
 	preload.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
+	register-count.swf \
+	register-count.swf.trace \
+	register-count.xml \
 	registerclass-previous.c \
 	registerclass-previous.swf \
 	registerclass-previous.swf.trace \

@@ -36,7 +36,7 @@ swfdec_video_attach_video (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
       !SWFDEC_IS_NET_STREAM (stream = (SwfdecNetStream *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
-    SWFDEC_WARNING ("calling attachVideo without a NetStraem object");
+    SWFDEC_WARNING ("calling attachVideo without a NetStream object");
     swfdec_video_movie_set_input (video, NULL);
     return;
   }

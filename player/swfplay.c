@@ -117,8 +117,6 @@ main (int argc, char *argv[])
 #else
   loader = swfdec_gtk_loader_new (argv[1]);
 #endif
-  g_object_unref (loader);
-  loader = swfdec_loader_new_from_file (argv[1]);
   if (loader->error) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
     g_object_unref (loader);

@@ -70,7 +70,7 @@ swfdec_url_get_type (void)
  *
  * Parses the given string into a URL for use in swfdec.
  *
- * Returns: a new #SwfdecURL or %NULL if an error was found in @string
+ * Returns: a new #SwfdecURL
  **/
 SwfdecURL *
 swfdec_url_new (const char *string)
@@ -80,13 +80,13 @@ swfdec_url_new (const char *string)
 
   g_return_val_if_fail (string != NULL, NULL);
 
+  g_print ("%s\n", string);
   url = g_slice_new0 (SwfdecURL);
   url->url = g_strdup (string);
   s = strstr (string, "://");
   if (s == NULL) {
     SWFDEC_ERROR ("URL %s has no protocol", string);
-    swfdec_url_free (url);
-    return NULL;
+    return url;
   }
   url->protocol = g_strndup (string, s - string);
   string = s + 3;
@@ -227,14 +227,17 @@ swfdec_url_get_url (const SwfdecURL *url)
  *
  * Gets the protocol used by this URL, such as "http" or "file".
  *
- * Returns: the protocol used
+ * Returns: the protocol used or "error" if the URL is broken
  **/
 const char *
 swfdec_url_get_protocol (const SwfdecURL *url)
 {
   g_return_val_if_fail (url != NULL, NULL);
 
-  return url->protocol;
+  if (url->protocol)
+    return url->protocol;
+  else
+    return "error";
 }
 
 /**

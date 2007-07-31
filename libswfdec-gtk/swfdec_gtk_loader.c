@@ -225,7 +225,7 @@ swfdec_gtk_loader_new (const char *uri)
   g_return_val_if_fail (uri != NULL, NULL);
 
   url = swfdec_url_new (uri);
-  g_return_val_if_fail (url == NULL, NULL); /* FIXME */
+  g_return_val_if_fail (url != NULL, NULL); /* FIXME */
   loader = g_object_new (SWFDEC_TYPE_GTK_LOADER, NULL);
   swfdec_gtk_loader_load (loader, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   return loader;

@@ -22,7 +22,7 @@
 #endif
 
 #include "swfdec_slow_loader.h"
-#include <libswfdec/swfdec_loader_internal.h>
+#include <libswfdec-gtk/swfdec-gtk.h>
 
 /*** SwfdecSlowLoader ***/
 
@@ -49,35 +49,6 @@ swfdec_slow_loader_dispose (GObject *object)
   }
 
   G_OBJECT_CLASS (swfdec_slow_loader_parent_class)->dispose (object);
-}
-
-static SwfdecLoader *
-swfdec_slow_loader_load (SwfdecLoader *loader, const char *url,
-    SwfdecLoaderRequest request, const char *data, gsize data_len)
-{
-  SwfdecSlowLoader *slow = SWFDEC_SLOW_LOADER (loader);
-  SwfdecLoader *new;
-
-  new = swfdec_loader_load (slow->loader, url, request, data, data_len); 
-  if (new == NULL)
-    return NULL;
-  return swfdec_slow_loader_new (new, slow->duration / 1000);
-}
-
-static void
-swfdec_slow_loader_class_init (SwfdecSlowLoaderClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
-
-  object_class->dispose = swfdec_slow_loader_dispose;
-
-  loader_class->load = swfdec_slow_loader_load;
-}
-
-static void
-swfdec_slow_loader_init (SwfdecSlowLoader *slow_loader)
-{
 }
 
 static gboolean
@@ -119,24 +90,59 @@ swfdec_slow_loader_tick (gpointer data)
   }
 }
 
+static void
+swfdec_slow_loader_initialize (SwfdecSlowLoader *slow, SwfdecLoader *loader, guint duration)
+{
+  gulong size;
+
+  slow->tick_time = 100;
+  slow->duration = duration * 1000;
+  slow->loader = loader;
+  g_signal_connect (loader, "notify", G_CALLBACK (swfdec_slow_loader_notify_cb), slow);
+  size = swfdec_loader_get_size (loader);
+  if (size)
+    swfdec_loader_set_size (SWFDEC_LOADER (slow), size);
+  slow->timeout_id = g_timeout_add (slow->tick_time, swfdec_slow_loader_tick, slow);
+}
+
+static void
+swfdec_slow_loader_load (SwfdecLoader *loader,
+    SwfdecLoaderRequest request, const char *data, gsize data_len)
+{
+  SwfdecSlowLoader *slow = SWFDEC_SLOW_LOADER (loader);
+  SwfdecLoader *new;
+
+  /* FIXME: include request and data */
+  new = swfdec_gtk_loader_new (swfdec_url_get_url (swfdec_loader_get_url (loader)));
+  swfdec_slow_loader_initialize (slow, new, slow->duration / 1000);
+}
+
+static void
+swfdec_slow_loader_class_init (SwfdecSlowLoaderClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
+
+  object_class->dispose = swfdec_slow_loader_dispose;
+
+  loader_class->load = swfdec_slow_loader_load;
+}
+
+static void
+swfdec_slow_loader_init (SwfdecSlowLoader *slow_loader)
+{
+}
+
 SwfdecLoader *
 swfdec_slow_loader_new (SwfdecLoader *loader, guint duration)
 {
   SwfdecSlowLoader *ret;
-  gulong size;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
   g_return_val_if_fail (duration > 0, NULL);
 
   ret = g_object_new (SWFDEC_TYPE_SLOW_LOADER, NULL);
-  ret->tick_time = 100;
-  ret->duration = duration * 1000;
-  ret->loader = loader;
-  g_signal_connect (loader, "notify", G_CALLBACK (swfdec_slow_loader_notify_cb), ret);
-  size = swfdec_loader_get_size (loader);
-  if (size)
-    swfdec_loader_set_size (SWFDEC_LOADER (ret), size);
-  ret->timeout_id = g_timeout_add (ret->tick_time, swfdec_slow_loader_tick, ret);
-
+  swfdec_slow_loader_initialize (ret, loader, duration);
   return SWFDEC_LOADER (ret);
 }
+

@@ -105,7 +105,8 @@ swfdec_gtk_loader_read_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result,
     gtk->handle = NULL;
     return;
   } else if (result != GNOME_VFS_OK) {
-    char *err = g_strdup_printf ("%s: %s", loader->url,
+    char *err = g_strdup_printf ("%s: %s", 
+	swfdec_url_get_url (swfdec_loader_get_url (loader)),
 	gnome_vfs_result_to_string (result));
     swfdec_loader_error (loader, err);
     g_free (err);
@@ -144,7 +145,8 @@ swfdec_gtk_loader_open_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result,
   SwfdecLoader *loader = loaderp;
 
   if (result != GNOME_VFS_OK) {
-    char *err = g_strdup_printf ("%s: %s", loader->url,
+    char *err = g_strdup_printf ("%s: %s",
+	swfdec_url_get_url (swfdec_loader_get_url (loader)),
 	gnome_vfs_result_to_string (result));
     swfdec_loader_error (loader, err);
     g_free (err);
@@ -153,20 +155,6 @@ swfdec_gtk_loader_open_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result,
     return;
   }
   swfdec_gtk_loader_start_read (gtk);
-}
-
-static SwfdecLoader *
-swfdec_gtk_loader_new_from_uri (GnomeVFSURI *uri)
-{
-  SwfdecGtkLoader *gtk;
-
-  g_assert (uri);
-  gtk = g_object_new (SWFDEC_TYPE_GTK_LOADER, NULL);
-  gtk->guri = uri;
-  gnome_vfs_async_open_uri (&gtk->handle, uri, GNOME_VFS_OPEN_READ, 
-      GNOME_VFS_PRIORITY_DEFAULT, swfdec_gtk_loader_open_cb, gtk);
-  SWFDEC_LOADER (gtk)->url = gnome_vfs_uri_to_string (uri, GNOME_VFS_URI_HIDE_PASSWORD);
-  return SWFDEC_LOADER (gtk);
 }
 
 static void
@@ -190,18 +178,14 @@ swfdec_gtk_loader_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_gtk_loader_parent_class)->dispose (object);
 }
 
-static SwfdecLoader *
-swfdec_gtk_loader_load (SwfdecLoader *loader, const char *url, 
+static void
+swfdec_gtk_loader_load (SwfdecLoader *loader,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
-  GnomeVFSURI *parent, *new;
 
-  /* FIXME: security! */
-  parent = gnome_vfs_uri_get_parent (gtk->guri);
-  new = gnome_vfs_uri_resolve_relative (parent, url);
-  gnome_vfs_uri_unref (parent);
-  return swfdec_gtk_loader_new_from_uri (new);
+  gnome_vfs_async_open (&gtk->handle, swfdec_url_get_url (swfdec_loader_get_url (loader)), 
+      GNOME_VFS_OPEN_READ, GNOME_VFS_PRIORITY_DEFAULT, swfdec_gtk_loader_open_cb, gtk);
 }
 
 static void
@@ -235,13 +219,16 @@ swfdec_gtk_loader_init (SwfdecGtkLoader *gtk_loader)
 SwfdecLoader *
 swfdec_gtk_loader_new (const char *uri)
 {
-  GnomeVFSURI *guri;
+  SwfdecURL *url;
+  SwfdecLoader *loader;
 
   g_return_val_if_fail (uri != NULL, NULL);
 
-  gnome_vfs_init ();
-  guri = gnome_vfs_uri_new (uri);
-  return swfdec_gtk_loader_new_from_uri (guri);
+  url = swfdec_url_new (uri);
+  g_return_val_if_fail (url == NULL, NULL); /* FIXME */
+  loader = g_object_new (SWFDEC_TYPE_GTK_LOADER, NULL);
+  swfdec_gtk_loader_load (loader, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
+  return loader;
 }
 
 #endif /* HAVE_GNOMEVFS */

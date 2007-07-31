@@ -38,8 +38,6 @@ typedef struct _SwfdecFileLoaderClass SwfdecFileLoaderClass;
 struct _SwfdecFileLoader
 {
   SwfdecLoader		loader;
-
-  char *		dir;		/* base directory for load operations */
 };
 
 struct _SwfdecFileLoaderClass

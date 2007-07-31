@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_url.h>
 
 G_BEGIN_DECLS
 
@@ -54,8 +55,8 @@ struct _SwfdecLoader
 {
   GObject		object;
 
-  char *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   /*< private >*/
+  SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   gulong		size;		/* number of bytes in stream or 0 if unknown */
   gboolean		eof;		/* if we're in EOF already */
   char *		error;		/* if there's an error (from parsing the loader) */
@@ -68,9 +69,8 @@ struct _SwfdecLoaderClass
 {
   GObjectClass		object_class;
 
-  /* loads the given URL. Must return a loader, the loader can be in the error state */
-  SwfdecLoader *      	(* load)	(SwfdecLoader *			loader, 
-					 const char *			url,
+  /* iitializes the loader. The URL will be set already. */
+  void			(* load)	(SwfdecLoader *			loader, 
 					 SwfdecLoaderRequest		request,
 					 const char *			data,
 					 gsize				data_len);
@@ -85,6 +85,8 @@ void		swfdec_loader_push		(SwfdecLoader *		loader,
 void		swfdec_loader_eof		(SwfdecLoader *		loader);
 void		swfdec_loader_error		(SwfdecLoader *		loader,
 						 const char *		error);
+const SwfdecURL *
+		swfdec_loader_get_url		(SwfdecLoader *		loader);
 void		swfdec_loader_set_size		(SwfdecLoader *		loader,
 						 gulong			size);
 gulong		swfdec_loader_get_size		(SwfdecLoader *		loader);

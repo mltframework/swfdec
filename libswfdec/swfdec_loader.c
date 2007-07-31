@@ -152,7 +152,7 @@ swfdec_loader_dispose (GObject *object)
   SwfdecLoader *loader = SWFDEC_LOADER (object);
 
   swfdec_buffer_queue_unref (loader->queue);
-  g_free (loader->url);
+  swfdec_url_free (loader->url);
   g_free (loader->error);
 
   G_OBJECT_CLASS (swfdec_loader_parent_class)->dispose (object);
@@ -196,55 +196,41 @@ swfdec_loader_init (SwfdecLoader *loader)
 G_DEFINE_TYPE (SwfdecFileLoader, swfdec_file_loader, SWFDEC_TYPE_LOADER)
 
 static void
-swfdec_file_loader_dispose (GObject *object)
+swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoaderRequest request, 
+    const char *data, gsize data_len)
 {
-  SwfdecFileLoader *file_loader = SWFDEC_FILE_LOADER (object);
-
-  g_free (file_loader->dir);
-
-  G_OBJECT_CLASS (swfdec_file_loader_parent_class)->dispose (object);
-}
-
-static SwfdecLoader *
-swfdec_file_loader_load (SwfdecLoader *loader, const char *url, 
-    SwfdecLoaderRequest request, const char *data, gsize data_len)
-{
+  const SwfdecURL *url;
   SwfdecBuffer *buffer;
-  char *real_path;
-  SwfdecLoader *ret;
   GError *error = NULL;
+  char *real;
 
-  if (g_path_is_absolute (url)) {
-    SWFDEC_ERROR ("\"%s\" is an absolute path - using relative instead", url);
-    while (*url == G_DIR_SEPARATOR)
-      url++;
+  url = swfdec_loader_get_url (loader);
+  if (!g_str_equal (swfdec_url_get_protocol (url), "file")) {
+    swfdec_loader_error (loader, "Don't know how to handle other protocols than file");
+    return;
+  }
+  if (swfdec_url_get_host (url)) {
+    swfdec_loader_error (loader, "filenames cannot have hostnames");
+    return;
   }
 
-  /* FIXME: need to rework seperators on windows? */
-  real_path = g_build_filename (SWFDEC_FILE_LOADER (loader)->dir, url, NULL);
-  buffer = swfdec_buffer_new_from_file (real_path, &error);
-  ret = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
-  ret->url = real_path;
-  SWFDEC_FILE_LOADER (ret)->dir = g_strdup (SWFDEC_FILE_LOADER (loader)->dir);
+  /* FIXME: append query string here? */
+  real = g_strconcat ("/", swfdec_url_get_path (url), NULL);
+  buffer = swfdec_buffer_new_from_file (real, &error);
   if (buffer == NULL) {
-    swfdec_loader_error (ret, error->message);
+    swfdec_loader_error (loader, error->message);
     g_error_free (error);
   } else {
-    swfdec_loader_set_size (ret, buffer->length);
-    swfdec_loader_push (ret, buffer);
-    swfdec_loader_eof (ret);
+    swfdec_loader_set_size (loader, buffer->length);
+    swfdec_loader_push (loader, buffer);
+    swfdec_loader_eof (loader);
   }
-
-  return ret;
 }
 
 static void
 swfdec_file_loader_class_init (SwfdecFileLoaderClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
-
-  object_class->dispose = swfdec_file_loader_dispose;
 
   loader_class->load = swfdec_file_loader_load;
 }
@@ -269,8 +255,10 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url,
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  ret = klass->load (loader, url, request, data, data_len);
-  g_assert (ret != NULL);
+  ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), NULL);
+  ret->url = swfdec_url_new_relative (loader->url, url);
+  g_assert (ret->url);
+  klass->load (ret, request, data, data_len);
   return ret;
 }
 
@@ -321,20 +309,31 @@ swfdec_loader_new_from_file (const char *filename)
   SwfdecBuffer *buf;
   SwfdecLoader *loader;
   GError *error = NULL;
+  char *url;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
   buf = swfdec_buffer_new_from_file (filename, &error);
 
-  loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
   if (g_path_is_absolute (filename)) {
-    loader->url = g_strdup (filename);
+    url = g_strconcat ("file://", filename, NULL);
   } else {
-    char *cur = g_get_current_dir ();
-    loader->url = g_build_filename (cur, filename, NULL);
+    char *abs, *cur;
+    cur = g_get_current_dir ();
+    abs = g_build_filename (cur, filename, NULL);
     g_free (cur);
+    url = g_strconcat ("file://", abs, NULL);
+    g_free (abs);
   }
-  SWFDEC_FILE_LOADER (loader)->dir = g_path_get_dirname (loader->url);
+
+  loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
+  loader->url = swfdec_url_new (url);
+  if (loader->url == NULL) {
+    g_warning ("WTF? %s is not a valid url!", url);
+    loader->url = swfdec_url_new ("file:///");
+  }
+  g_assert (loader->url);
+  g_free (url);
   if (buf == NULL) {
     swfdec_loader_error (loader, error->message);
     g_error_free (error);
@@ -463,47 +462,56 @@ swfdec_loader_eof (SwfdecLoader *loader)
 char *
 swfdec_loader_get_filename (SwfdecLoader *loader)
 {
-  char *start, *end, *ret;
+  const SwfdecURL *url;
+  const char *path, *ext;
+  char *ret;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-  /* every loader must set this */
-  g_return_val_if_fail (loader->url != NULL, NULL);
 
-  end = strchr (loader->url, '?');
-  if (end) {
-    char *next = NULL;
-    do {
-      start = next ? next + 1 : loader->url;
-      next = strchr (start, '/');
-    } while (next != NULL && next < end);
-  } else {
-    start = strrchr (loader->url, '/');
-    if (start == NULL) {
-      start = loader->url;
-    } else {
-      start++;
-    }
+  url = swfdec_loader_get_url (loader);
+  path = swfdec_url_get_path (url);
+  if (path) {
+    char *s = strchr (path, '/');
+    if (s)
+      path = s + 1;
+    if (path[0] == 0)
+      path = NULL;
   }
-  ret = g_filename_from_utf8 (start, end ? end - start : -1, NULL, NULL, NULL);
-  if (ret) {
-    const char *ext;
-    
-    ext = swfdec_loader_data_type_get_extension (loader->data_type);
-    if (*ext) {
-      char *dot = strrchr (ret, '.');
-      char *real;
-      guint len = dot ? strlen (dot) : G_MAXUINT;
-      if (len <= 5)
-	*dot = '\0';
-      real = g_strdup_printf ("%s.%s", ret, ext);
-      g_free (ret);
-      ret = real;
-    }
-  } else {
-    ret = g_strdup ("unknown file");
+  if (path)
+    ret = g_filename_from_utf8 (path, -1, NULL, NULL, NULL);
+  if (ret == NULL)
+    ret = g_strdup ("unknown");
+
+  ext = swfdec_loader_data_type_get_extension (loader->data_type);
+  if (*ext) {
+    char *dot = strrchr (ret, '.');
+    char *real;
+    guint len = dot ? strlen (dot) : G_MAXUINT;
+    if (len <= 5)
+      *dot = '\0';
+    real = g_strdup_printf ("%s.%s", ret, ext);
+    g_free (ret);
+    ret = real;
   }
 
   return ret;
+}
+
+/**
+ * swfdec_loader_get_url:
+ * @loader: a #SwfdecLoader
+ *
+ * Gets the url this loader is handling. This is mostly useful for writing 
+ * subclasses of #SwfdecLoader.
+ *
+ * Returns: a #SwfdecURL describing @loader.
+ **/
+const SwfdecURL *
+swfdec_loader_get_url (SwfdecLoader *loader)
+{
+  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
+
+  return loader->url;
 }
 
 /**

@@ -358,7 +358,8 @@ add_variables (gpointer player)
 
   swfdec_player_set_loader_with_variables (player, loader, variables);
   if (!swfdec_player_is_initialized (player)) {
-    g_printerr ("File \"%s\" is not a file Swfdec can play\n", loader->url);
+    g_printerr ("File \"%s\" is not a file Swfdec can play\n", 
+	swfdec_url_get_url (swfdec_loader_get_url (loader)));
     g_object_unref (player);
     gtk_main_quit ();
     return FALSE;

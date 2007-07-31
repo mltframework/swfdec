@@ -552,7 +552,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   SwfdecAsObject *object, *args;
   guint i, current_reg = 1;
   SwfdecScript *script;
-  SwfdecAsValue val = { 0, };
+  SwfdecAsValue val;
   const SwfdecAsValue *cur;
   SwfdecAsContext *context;
   SwfdecAsStackIterator iter;
@@ -606,6 +606,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   }
 
   /* set and preload argument variables */
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   cur = swfdec_as_stack_iterator_init_arguments (&iter, frame);
   for (i = 0; i < script->n_arguments; i++) {
     if (cur == NULL)

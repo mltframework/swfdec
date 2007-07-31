@@ -1299,10 +1299,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_net_connection_init_context (player, version);
     swfdec_net_stream_init_context (player, version);
     swfdec_xml_init_context (player, version);
-    if (context->state == SWFDEC_AS_CONTEXT_NEW) {
-      context->state = SWFDEC_AS_CONTEXT_RUNNING;
-      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);
-    }
     if (version > 4) {
       SwfdecBits bits;
       SwfdecScript *script;
@@ -1311,6 +1307,10 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       g_assert (script);
       swfdec_as_object_run (context->global, script);
       swfdec_script_unref (script);
+    }
+    if (context->state == SWFDEC_AS_CONTEXT_NEW) {
+      context->state = SWFDEC_AS_CONTEXT_RUNNING;
+      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip, FALSE);
     }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);

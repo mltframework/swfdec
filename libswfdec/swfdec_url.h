@@ -17,10 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_types.h>
+#include <glib-object.h>
 
 #ifndef _SWFDEC_URL_H_
 #define _SWFDEC_URL_H_

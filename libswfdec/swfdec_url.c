@@ -151,7 +151,7 @@ swfdec_url_new_relative (const SwfdecURL *url, const char *string)
       if (slash == NULL) {
 	g_string_append (str, string);
       } else {
-	g_string_append_len (str, string, slash - string + 1); /* append '/', too */
+	g_string_append_len (str, url->path, slash - url->path + 1); /* append '/', too */
 	g_string_append (str, string);
       }
     }

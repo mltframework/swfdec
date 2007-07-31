@@ -100,6 +100,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_swf_instance.c \
 	swfdec_tag.c \
 	swfdec_text.c \
+	swfdec_url.c \
 	swfdec_utils.c \
 	swfdec_video.c \
 	swfdec_video_movie.c \
@@ -128,7 +129,8 @@ public_headers = \
 	swfdec_audio.h \
 	swfdec_buffer.h \
 	swfdec_loader.h \
-	swfdec_player.h
+	swfdec_player.h \
+	swfdec_url.h
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la 
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec

@@ -39,6 +39,23 @@ SWFDEC_LOADER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>SwfdecURL</FILE>
+<TITLE>SwfdecURL</TITLE>
+SwfdecURL
+swfdec_url_copy
+swfdec_url_free
+swfdec_url_get_host
+swfdec_url_get_path
+swfdec_url_get_protocol
+swfdec_url_get_query
+swfdec_url_get_url
+swfdec_url_new
+swfdec_url_new_relative
+<SUBSECTION Standard>
+swfdec_url_get_type
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecPlayer</FILE>
 <TITLE>SwfdecPlayer</TITLE>
 SwfdecPlayer

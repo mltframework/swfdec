@@ -19,6 +19,7 @@
     <xi:include href="xml/SwfdecAudio.xml"/>
     <xi:include href="xml/SwfdecBuffer.xml"/>
     <xi:include href="xml/SwfdecLoader.xml"/>
+    <xi:include href="xml/SwfdecURL.xml"/>
   </chapter>
   <chapter>
     <title>Actionscript interpreter</title>

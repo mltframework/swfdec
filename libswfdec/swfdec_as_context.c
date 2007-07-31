@@ -778,7 +778,7 @@ start:
       if (spec->add > 0)
 	swfdec_as_stack_ensure_free (context, spec->add);
     }
-    if (context->state != SWFDEC_AS_CONTEXT_RUNNING) {
+    if (context->state > SWFDEC_AS_CONTEXT_RUNNING) {
       SWFDEC_WARNING ("context not running anymore, aborting");
       goto error;
     }

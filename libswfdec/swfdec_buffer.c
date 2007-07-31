@@ -59,12 +59,6 @@
  * swfdec_buffer_new_from_file() without the need for a different API.
  */
 
-/**
- * SWFDEC_TYPE_BUFFER:
- *
- * #SwfdecBuffer is a boxed type for the glib type system. This macro
- * returns its type.
- **/
 GType
 swfdec_buffer_get_type (void)
 {
@@ -304,12 +298,6 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
  * size.
  */
 
-/**
- * SWFDEC_TYPE_BUFFER_QUEUE:
- *
- * #SwfdecBufferQueue is a boxed type for the glib type system. This macro
- * returns its type.
- **/
 GType
 swfdec_buffer_queue_get_type (void)
 {

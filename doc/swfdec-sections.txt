@@ -96,9 +96,7 @@ SWFDEC_PLAYER_GET_CLASS
 <FILE>SwfdecBuffer</FILE>
 <TITLE>SwfdecBuffer</TITLE>
 SwfdecBuffer
-SWFDEC_TYPE_BUFFER
 SwfdecBufferQueue
-SWFDEC_TYPE_BUFFER_QUEUE
 swfdec_buffer_new
 swfdec_buffer_new_and_alloc
 swfdec_buffer_new_and_alloc0

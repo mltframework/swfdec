@@ -416,6 +416,8 @@ swfdec_debugger_step (SwfdecAsContext *context)
 {
   SwfdecDebugger *debugger = SWFDEC_DEBUGGER (context);
 
+  if (context->state != SWFDEC_AS_CONTEXT_RUNNING)
+    return;
   if (!debugger->has_breakpoints)
     return;
 

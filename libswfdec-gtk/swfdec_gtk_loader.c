@@ -194,6 +194,8 @@ swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
 
+  gnome_vfs_init ();
+
   object_class->dispose = swfdec_gtk_loader_dispose;
 
   loader_class->load = swfdec_gtk_loader_load;
@@ -219,14 +221,12 @@ swfdec_gtk_loader_init (SwfdecGtkLoader *gtk_loader)
 SwfdecLoader *
 swfdec_gtk_loader_new (const char *uri)
 {
-  SwfdecURL *url;
   SwfdecLoader *loader;
 
   g_return_val_if_fail (uri != NULL, NULL);
 
-  url = swfdec_url_new (uri);
-  g_return_val_if_fail (url != NULL, NULL); /* FIXME */
   loader = g_object_new (SWFDEC_TYPE_GTK_LOADER, NULL);
+  loader->url = swfdec_url_new (uri);
   swfdec_gtk_loader_load (loader, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   return loader;
 }

@@ -51,9 +51,6 @@
 
 /**
  * SwfdecAsObject:
- * @object: do not access
- * @context: the context the object was added to or %NULL if it has not yet been
- *           added. Read-only.
  *
  * Every object value inside the Swfdec script engine must be a SwfdecAsObject.
  * If you want to add custom objects to your script engine, you need to create a

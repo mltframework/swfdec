@@ -46,9 +46,8 @@ typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object,
 #define SWFDEC_AS_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
 
 struct _SwfdecAsObject {
-  GObject		object;
-
   /*< protected >*/
+  GObject		object;
   SwfdecAsContext *	context;	/* context the object belongs to */
   /*< private >*/
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */

@@ -45,7 +45,7 @@
  * backends, it is completely private.
  */
 
-#ifndef HAVE_GNOMEVFS
+#ifndef HAVE_HTTP
 
 #include <libswfdec/swfdec_loader_internal.h>
 
@@ -64,7 +64,7 @@ swfdec_gtk_loader_new (const char *uri)
 }
 
 
-#else /* HAVE_GNOMEVFS */
+#else /* HAVE_HTTP */
 
 /* size of buffer we read */
 #define BUFFER_SIZE 4096

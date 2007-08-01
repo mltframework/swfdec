@@ -253,16 +253,16 @@ AC_ARG_ENABLE(gnome-vfs,
 	enable_gnomevfs="yes")
 
 if test "$enable_gnomevfs" = "yes"; then
-	PKG_CHECK_MODULES(GNOMEVFS, gnome-vfs-2.0 >= 2.14.0, HAVE_GNOMEVFS=yes, HAVE_GNOMEVFS=no)
-	if test "x$HAVE_GNOMEVFS" = xyes; then
-	  AC_DEFINE(HAVE_GNOMEVFS, 1, [Define if gnome-vfs is enabled])
+	PKG_CHECK_MODULES(HTTP, gnome-vfs-2.0 >= 2.14.0, HAVE_HTTP=yes, HAVE_HTTP=no)
+	if test "x$HAVE_HTTP" = xyes; then
+	  AC_DEFINE(HAVE_HTTP, 1, [Define if gnome-vfs is enabled])
 	else
 	  AC_MSG_ERROR([Couldn't find gnome-vfs-2.0.])
 	fi
 else
 	AC_MSG_WARN([*** gnome-vfs support was not enabled. ***])
 fi
-AM_CONDITIONAL(HAVE_GNOMEVFS, [test "x$HAVE_GNOMEVFS" = xyes])
+AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 
 AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)

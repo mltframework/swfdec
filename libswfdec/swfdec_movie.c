@@ -1113,7 +1113,6 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
 	    request, data, data_len);
 	g_assert (loader);
 	swfdec_player_add_level_from_loader (player, depth, loader, NULL);
-	swfdec_loader_queue_parse (loader);
       }
     } else {
       SWFDEC_ERROR ("%s does not specify a valid level", target);

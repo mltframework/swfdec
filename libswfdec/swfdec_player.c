@@ -650,6 +650,8 @@ swfdec_player_dispose (GObject *object)
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
   g_assert (player->audio == NULL);
+  if (player->external_timeout.callback)
+    swfdec_player_remove_timeout (player, &player->external_timeout);
   if (player->rate) {
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
@@ -950,6 +952,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   
   swfdec_player_lock (player);
   swfdec_player_perform_external_actions (player);
+  swfdec_player_perform_actions (player);
   target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)", msecs, audio_samples);
 
@@ -1522,10 +1525,13 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (player->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
+  swfdec_player_lock (player);
   player->loader = loader;
   g_object_ref (loader);
   swfdec_player_add_level_from_loader (player, 0, loader, variables);
-  swfdec_loader_parse (loader);
+  swfdec_player_perform_external_actions (player);
+  swfdec_player_perform_actions (player);
+  swfdec_player_unlock (player);
 }
 
 /**

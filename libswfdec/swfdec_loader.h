@@ -56,10 +56,11 @@ struct _SwfdecLoader
   GObject		object;
 
   /*< private >*/
+  guint			state;		/* SwfdecLoaderState the loader is currently in */
   SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
+  guint			open_status;	/* HTTP status when opening or 0 if unknown */
   gulong		size;		/* number of bytes in stream or 0 if unknown */
-  gboolean		eof;		/* if we're in EOF already */
-  char *		error;		/* if there's an error (from parsing the loader) */
+  char *		error;		/* error message if in error state or NULL */
   gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
   gpointer		player;		/* SwfdecPlayer belonging to target or %NULL */
   SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
@@ -81,6 +82,8 @@ GType		swfdec_loader_get_type		(void);
 
 SwfdecLoader *	swfdec_loader_new_from_file	(const char *	 	filename);
 
+void		swfdec_loader_open		(SwfdecLoader *		loader,
+						 guint			status);
 void		swfdec_loader_push		(SwfdecLoader *		loader,
 						 SwfdecBuffer *		buffer);
 void		swfdec_loader_eof		(SwfdecLoader *		loader);

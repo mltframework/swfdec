@@ -86,7 +86,8 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
       return;
     dec = swfdec_decoder_new (player, loader->queue);
     if (dec == NULL) {
-      swfdec_loader_error_locked (loader, "Unknown format");
+      SWFDEC_ERROR ("no decoder found");
+      swfdec_loader_set_target (loader, NULL);
       return;
     }
 
@@ -99,7 +100,7 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
     } else {
       SWFDEC_FIXME ("implement handling of %s", G_OBJECT_TYPE_NAME (dec));
       g_object_unref (dec);
-      swfdec_loader_error_locked (loader, "Unknown format");
+      swfdec_loader_set_target (loader, NULL);
       return;
     }
     /* HACK for flv playback */
@@ -114,7 +115,8 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
     SwfdecStatus status = klass->parse (dec);
     switch (status) {
       case SWFDEC_STATUS_ERROR:
-	swfdec_loader_error_locked (loader, "parsing error");
+	SWFDEC_ERROR ("parsing error");
+	swfdec_loader_set_target (loader, NULL);
 	return;
       case SWFDEC_STATUS_OK:
 	break;

@@ -83,8 +83,7 @@ swfdec_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
   g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  SWFDEC_LOG ("parsing %p%s%s", loader,
-      loader->error ? " ERROR" : "", loader->eof ? " EOF" : "");
+  SWFDEC_LOG ("parsing %p (state %u)", loader, loader->state);
 
   iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
   g_return_if_fail (iface->parse != NULL);

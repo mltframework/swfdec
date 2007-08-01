@@ -105,7 +105,7 @@ swfdec_loader_get_property (GObject *object, guint param_id, GValue *value,
       g_value_set_string (value, loader->error);
       break;
     case PROP_EOF:
-      g_value_set_boolean (value, loader->eof);
+      g_value_set_boolean (value, loader->state == SWFDEC_LOADER_STATE_EOF);
       break;
     case PROP_DATA_TYPE:
       g_value_set_enum (value, loader->data_type);
@@ -131,10 +131,6 @@ swfdec_loader_set_property (GObject *object, guint param_id, const GValue *value
   switch (param_id) {
     case PROP_ERROR:
       swfdec_loader_error (loader, g_value_get_string (value));
-      break;
-    case PROP_EOF:
-      if (g_value_get_boolean (value) && !loader->eof)
-	swfdec_loader_eof (loader);
       break;
     case PROP_SIZE:
       if (loader->size == 0 && g_value_get_ulong (value) > 0)
@@ -224,6 +220,7 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoaderRequest request,
     g_error_free (error);
   } else {
     swfdec_loader_set_size (loader, buffer->length);
+    swfdec_loader_open (loader, 0);
     swfdec_loader_push (loader, buffer);
     swfdec_loader_eof (loader);
   }
@@ -243,6 +240,22 @@ swfdec_file_loader_init (SwfdecFileLoader *loader)
 }
 
 /*** INTERNAL API ***/
+
+static void
+swfdec_loader_perform_open (gpointer loaderp, gpointer unused)
+{
+  SWFDEC_FIXME ("add vfunc for open to SwfdecLoaderTarget");
+}
+
+#define swfdec_loader_perform_error swfdec_loader_perform_push
+#define swfdec_loader_perform_eof swfdec_loader_perform_push
+static void
+swfdec_loader_perform_push (gpointer loaderp, gpointer unused)
+{
+  SwfdecLoader *loader = loaderp;
+
+  swfdec_loader_target_parse (loader->target, loader);
+}
 
 SwfdecLoader *
 swfdec_loader_load (SwfdecLoader *loader, const char *url,
@@ -276,27 +289,38 @@ swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
   loader->target = target;
   if (target) {
     loader->player = swfdec_loader_target_get_player (target);
+    switch (loader->state) {
+      case SWFDEC_LOADER_STATE_NEW:
+	break;
+      case SWFDEC_LOADER_STATE_OPEN:
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_open, NULL);
+	break;
+      case SWFDEC_LOADER_STATE_READING:
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_open, NULL);
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_push, NULL);
+	break;
+      case SWFDEC_LOADER_STATE_EOF:
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_open, NULL);
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_push, NULL);
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_eof, NULL);
+	break;
+      case SWFDEC_LOADER_STATE_ERROR:
+	swfdec_player_add_external_action (loader->player, loader,
+	    swfdec_loader_perform_error, NULL);
+	break;
+      default:
+	g_assert_not_reached ();
+	break;
+    }
   } else {
     loader->player = NULL;
   }
-}
-
-static void
-swfdec_loader_do_parse (gpointer empty, gpointer loaderp)
-{
-  SwfdecLoader *loader = SWFDEC_LOADER (loaderp);
-
-  swfdec_loader_target_parse (loader->target, loader);
-}
-
-void
-swfdec_loader_queue_parse (SwfdecLoader *loader)
-{
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->target != NULL);
-
-  /* HACK: using player as action object makes them get auto-removed */
-  swfdec_player_add_action (loader->player, loader->player, swfdec_loader_do_parse, loader);
 }
 
 /** PUBLIC API ***/
@@ -346,6 +370,7 @@ swfdec_loader_new_from_file (const char *filename)
     g_error_free (error);
   } else {
     swfdec_loader_set_size (loader, buf->length);
+    swfdec_loader_open (loader, 0);
     swfdec_loader_push (loader, buf);
     swfdec_loader_eof (loader);
   }
@@ -372,40 +397,33 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
     return;
   }
 
-  if (loader->target) {
-    swfdec_player_lock (loader->player);
-    swfdec_loader_error_locked (loader, error);
-    swfdec_player_perform_actions (loader->player);
-    swfdec_player_unlock (loader->player);
-  } else {
-    swfdec_loader_error_locked (loader, error);
-  }
-}
-
-void
-swfdec_loader_error_locked (SwfdecLoader *loader, const char *error)
-{
-  if (loader->error)
-    return;
-
-  SWFDEC_WARNING ("error in %s %p: %s", G_OBJECT_TYPE_NAME (loader), loader, error);
+  loader->state = SWFDEC_LOADER_STATE_ERROR;
   loader->error = g_strdup (error);
-  g_object_notify (G_OBJECT (loader), "error");
   if (loader->target)
-    swfdec_loader_target_parse (loader->target, loader);
+    swfdec_player_add_external_action (loader->player, loader,
+	swfdec_loader_perform_error, NULL);
 }
 
+/**
+ * swfdec_loader_open:
+ * @loader: a #SwfdecLoader
+ * @status: HTTP state code when opening the connection or 0 if unknown or not
+ *          a HTTP connection.
+ *
+ * Call this function when your loader opened the resulting file. For HTTP this
+ * is when having received the headers. You must call this function before 
+ * swfdec_laoder_push() can be called.
+ **/
 void
-swfdec_loader_parse (SwfdecLoader *loader)
+swfdec_loader_open (SwfdecLoader *loader, guint status)
 {
-  if (loader->target == NULL ||
-      loader->error)
-    return;
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_NEW);
 
-  swfdec_player_lock (loader->player);
-  swfdec_loader_target_parse (loader->target, loader);
-  swfdec_player_perform_actions (loader->player);
-  swfdec_player_unlock (loader->player);
+  loader->state = SWFDEC_LOADER_STATE_OPEN;
+  loader->open_status = status;
+  if (loader->player)
+    swfdec_player_add_external_action (loader->player, loader, swfdec_loader_perform_open, NULL);
 }
 
 /**
@@ -414,40 +432,46 @@ swfdec_loader_parse (SwfdecLoader *loader)
  * @buffer: new data to make available. The loader takes the reference
  *          to the buffer.
  *
- * Makes the data in @buffer available to @loader and processes it.
+ * Makes the data in @buffer available to @loader and processes it. The @loader
+ * must be open.
  **/
 void
 swfdec_loader_push (SwfdecLoader *loader, SwfdecBuffer *buffer)
 {
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->eof == FALSE);
+  g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_OPEN || loader->state == SWFDEC_LOADER_STATE_READING);
   g_return_if_fail (buffer != NULL);
 
   swfdec_buffer_queue_push (loader->queue, buffer);
   g_object_notify (G_OBJECT (loader), "loaded");
-  swfdec_loader_parse (loader);
+  loader->state = SWFDEC_LOADER_STATE_READING;
+  if (loader->player)
+    swfdec_player_add_external_action (loader->player, loader,
+	swfdec_loader_perform_push, NULL);
 }
 
 /**
  * swfdec_loader_eof:
  * @loader: a #SwfdecLoader
  *
- * Indicates to @loader that no more data will follow.
+ * Indicates to @loader that no more data will follow. The loader must be open.
  **/
 void
 swfdec_loader_eof (SwfdecLoader *loader)
 {
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->eof == FALSE);
+  g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_OPEN || loader->state == SWFDEC_LOADER_STATE_READING);
 
-  loader->eof = TRUE;
   if (loader->size == 0) {
     gulong bytes = swfdec_loader_get_loaded (loader);
     if (bytes)
       swfdec_loader_set_size (loader, bytes);
   }
   g_object_notify (G_OBJECT (loader), "eof");
-  swfdec_loader_parse (loader);
+  loader->state = SWFDEC_LOADER_STATE_EOF;
+  if (loader->player)
+    swfdec_player_add_external_action (loader->player, loader,
+	swfdec_loader_perform_eof, NULL);
 }
 
 /**

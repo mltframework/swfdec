@@ -25,6 +25,14 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  SWFDEC_LOADER_STATE_NEW = 0,		/* loader is new and has not been opened yet */
+  SWFDEC_LOADER_STATE_OPEN,		/* loader is opened and has got the HTTP headers */
+  SWFDEC_LOADER_STATE_READING,		/* loader has read some bytes of data and is still reading */
+  SWFDEC_LOADER_STATE_EOF,		/* swfdec_loader_eof() has been called */
+  SWFDEC_LOADER_STATE_ERROR		/* loader is in error state */
+} SwfdecLoaderState;
+
 typedef struct _SwfdecFileLoader SwfdecFileLoader;
 typedef struct _SwfdecFileLoaderClass SwfdecFileLoaderClass;
 
@@ -52,14 +60,10 @@ SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 							 SwfdecLoaderRequest	request,
 							 const char *		data,
 							 gsize			data_len);
-void			swfdec_loader_parse		(SwfdecLoader *		loader);
-void			swfdec_loader_queue_parse	(SwfdecLoader *		loader);
 void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 							 SwfdecLoaderTarget *	target);
 void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 							 SwfdecLoaderDataType	type);
-void	  		swfdec_loader_error_locked	(SwfdecLoader *		loader,
-							 const char *		error);
 
 gboolean		swfdec_urldecode_one		(const char *		string,
 							 char **		name,

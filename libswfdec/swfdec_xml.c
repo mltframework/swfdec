@@ -56,16 +56,15 @@ swfdec_xml_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader
 {
   SwfdecXml *xml = SWFDEC_XML (target);
 
-  if (xml->loader != loader ||
-      (!loader->eof && !loader->error))
+  if (xml->loader != loader || loader->state <= SWFDEC_LOADER_STATE_READING)
     return;
 
   /* get the text from the loader */
-  if (loader->error) {
+  if (loader->state == SWFDEC_LOADER_STATE_ERROR) {
     /* nothing to do here */
   } else {
     guint size;
-    g_assert (loader->eof);
+    g_assert (loader->state == SWFDEC_LOADER_STATE_EOF);
     swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_TEXT);
     size = swfdec_buffer_queue_get_depth (loader->queue);
     xml->text = g_try_malloc (size + 1);
@@ -167,5 +166,4 @@ swfdec_xml_load (SwfdecXml *xml, const char *url)
   swfdec_xml_reset (xml);
   xml->loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (xml)->context), url);
   swfdec_loader_set_target (xml->loader, SWFDEC_LOADER_TARGET (xml));
-  swfdec_loader_queue_parse (xml->loader);
 }

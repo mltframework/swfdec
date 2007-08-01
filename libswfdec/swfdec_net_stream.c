@@ -206,7 +206,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	  SWFDEC_AS_STR_error);
     return;
   }
-  if (!loader->eof && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
+  if (loader->state != SWFDEC_LOADER_STATE_EOF && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
     SWFDEC_INFO ("nothing to do");
     return;
   }
@@ -246,7 +246,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     }
   }
 out:
-  if (loader->eof) {
+  if (loader->state == SWFDEC_LOADER_STATE_EOF) {
     guint first, last;
     swfdec_flv_decoder_eof (stream->flvdecoder);
     recheck = TRUE;
@@ -462,7 +462,6 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   if (loader) {
     g_object_ref (loader);
     swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (stream));
-    swfdec_loader_queue_parse (loader);
   }
   swfdec_net_stream_set_playing (stream, TRUE);
 }

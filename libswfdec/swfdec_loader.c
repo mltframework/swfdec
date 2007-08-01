@@ -151,6 +151,8 @@ swfdec_loader_dispose (GObject *object)
 {
   SwfdecLoader *loader = SWFDEC_LOADER (object);
 
+  /* targets are supposed to keep a reference around */
+  g_assert (loader->target == NULL);
   swfdec_buffer_queue_unref (loader->queue);
   swfdec_url_free (loader->url);
   g_free (loader->error);
@@ -268,7 +270,15 @@ swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
   g_return_if_fail (target == NULL || SWFDEC_IS_LOADER_TARGET (target));
 
+  if (loader->target) {
+    swfdec_player_remove_all_external_actions (loader->player, loader);
+  }
   loader->target = target;
+  if (target) {
+    loader->player = swfdec_loader_target_get_player (target);
+  } else {
+    loader->player = NULL;
+  }
 }
 
 static void
@@ -282,14 +292,11 @@ swfdec_loader_do_parse (gpointer empty, gpointer loaderp)
 void
 swfdec_loader_queue_parse (SwfdecLoader *loader)
 {
-  SwfdecPlayer *player;
-
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
   g_return_if_fail (loader->target != NULL);
 
-  player = swfdec_loader_target_get_player (loader->target);
   /* HACK: using player as action object makes them get auto-removed */
-  swfdec_player_add_action (player, player, swfdec_loader_do_parse, loader);
+  swfdec_player_add_action (loader->player, loader->player, swfdec_loader_do_parse, loader);
 }
 
 /** PUBLIC API ***/
@@ -357,8 +364,6 @@ swfdec_loader_new_from_file (const char *filename)
 void
 swfdec_loader_error (SwfdecLoader *loader, const char *error)
 {
-  SwfdecPlayer *player;
-
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
   g_return_if_fail (error != NULL);
 
@@ -368,11 +373,10 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
   }
 
   if (loader->target) {
-    player = swfdec_loader_target_get_player (loader->target);
-    swfdec_player_lock (player);
+    swfdec_player_lock (loader->player);
     swfdec_loader_error_locked (loader, error);
-    swfdec_player_perform_actions (player);
-    swfdec_player_unlock (player);
+    swfdec_player_perform_actions (loader->player);
+    swfdec_player_unlock (loader->player);
   } else {
     swfdec_loader_error_locked (loader, error);
   }
@@ -394,17 +398,14 @@ swfdec_loader_error_locked (SwfdecLoader *loader, const char *error)
 void
 swfdec_loader_parse (SwfdecLoader *loader)
 {
-  SwfdecPlayer *player;
-
   if (loader->target == NULL ||
       loader->error)
     return;
 
-  player = swfdec_loader_target_get_player (loader->target);
-  swfdec_player_lock (player);
+  swfdec_player_lock (loader->player);
   swfdec_loader_target_parse (loader->target, loader);
-  swfdec_player_perform_actions (player);
-  swfdec_player_unlock (player);
+  swfdec_player_perform_actions (loader->player);
+  swfdec_player_unlock (loader->player);
 }
 
 /**

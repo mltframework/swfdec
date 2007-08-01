@@ -149,6 +149,7 @@ swfdec_swf_instance_dispose (GObject *object)
 {
   SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (object);
 
+  swfdec_loader_set_target (instance->loader, NULL);
   g_object_unref (instance->loader);
   if (instance->decoder) {
     g_object_unref (instance->decoder);
@@ -186,12 +187,14 @@ swfdec_swf_instance_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader)
 
   mov = SWFDEC_MOVIE (movie);
   swf = g_object_new (SWFDEC_TYPE_SWF_INSTANCE, NULL);
-  swf->loader = g_object_ref (loader);
-  swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (swf));
+  /* set important variables */
+  swf->movie = movie;
   if (mov->swf)
     g_object_unref (mov->swf);
   mov->swf = swf;
-  swf->movie = movie;
+  /* set loader (that depends on those vars) */
+  swf->loader = g_object_ref (loader);
+  swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (swf));
 
   return swf;
 }

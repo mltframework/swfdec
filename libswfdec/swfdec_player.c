@@ -323,7 +323,7 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
 
   /* we need to query the number of current actions so newly added ones aren't
    * executed in here */
-  for (i = swfdec_ring_buffer_get_size (player->external_actions); i > 0; i--) {
+  for (i = swfdec_ring_buffer_get_n_elements (player->external_actions); i > 0; i--) {
     action = swfdec_ring_buffer_pop (player->external_actions);
     g_assert (action != NULL);
     /* skip removed actions */

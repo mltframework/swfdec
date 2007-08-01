@@ -112,6 +112,7 @@ static void
 swfdec_xml_reset (SwfdecXml *xml)
 {
   if (xml->loader) {
+    swfdec_loader_set_target (xml->loader, NULL);
     g_object_unref (xml->loader);
     xml->loader = NULL;
   }

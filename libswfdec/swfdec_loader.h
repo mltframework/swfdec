@@ -61,6 +61,7 @@ struct _SwfdecLoader
   gboolean		eof;		/* if we're in EOF already */
   char *		error;		/* if there's an error (from parsing the loader) */
   gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
+  gpointer		player;		/* SwfdecPlayer belonging to target or %NULL */
   SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
   SwfdecLoaderDataType	data_type;	/* type this stream is in (identified by swfdec) */
 };

@@ -449,8 +449,10 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (loader == NULL || SWFDEC_IS_LOADER (loader));
 
-  if (stream->loader)
+  if (stream->loader) {
+    swfdec_loader_set_target (stream->loader, NULL);
     g_object_unref (stream->loader);
+  }
   if (stream->flvdecoder) {
     g_object_unref (stream->flvdecoder);
     stream->flvdecoder = NULL;

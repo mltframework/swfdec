@@ -52,43 +52,49 @@ swfdec_xml_ondata (SwfdecXml *xml)
 }
 
 static void
-swfdec_xml_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_xml_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecXml *xml = SWFDEC_XML (target);
 
-  if (xml->loader != loader || loader->state <= SWFDEC_LOADER_STATE_READING)
-    return;
+  /* break reference to the loader */
+  swfdec_loader_set_target (loader, NULL);
+  xml->loader = NULL;
+  g_object_unref (loader);
+  /* emit onData */
+  swfdec_xml_ondata (xml);
+}
+
+static void
+swfdec_xml_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecXml *xml = SWFDEC_XML (target);
+  guint size;
 
   /* get the text from the loader */
-  if (loader->state == SWFDEC_LOADER_STATE_ERROR) {
-    /* nothing to do here */
-  } else {
-    guint size;
-    g_assert (loader->state == SWFDEC_LOADER_STATE_EOF);
-    swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_TEXT);
-    size = swfdec_buffer_queue_get_depth (loader->queue);
-    xml->text = g_try_malloc (size + 1);
-    if (xml->text) {
-      SwfdecBuffer *buffer;
-      guint i = 0;
-      while ((buffer = swfdec_buffer_queue_pull_buffer (loader->queue))) {
-	memcpy (xml->text + i, buffer->data, buffer->length);
-	i += buffer->length;
-	swfdec_buffer_unref (buffer);
-      }
-      g_assert (i == size);
-      xml->text[size] = '\0';
-      /* FIXME: validate otherwise? */
-      if (!g_utf8_validate (xml->text, size, NULL)) {
-	SWFDEC_ERROR ("downloaded data is not valid utf-8");
-	g_free (xml->text);
-	xml->text = NULL;
-      }
-    } else {
-      SWFDEC_ERROR ("not enough memory to copy %u bytes", size);
+  size = swfdec_buffer_queue_get_depth (loader->queue);
+  xml->text = g_try_malloc (size + 1);
+  if (xml->text) {
+    SwfdecBuffer *buffer;
+    guint i = 0;
+    while ((buffer = swfdec_buffer_queue_pull_buffer (loader->queue))) {
+      memcpy (xml->text + i, buffer->data, buffer->length);
+      i += buffer->length;
+      swfdec_buffer_unref (buffer);
     }
+    g_assert (i == size);
+    xml->text[size] = '\0';
+    /* FIXME: validate otherwise? */
+    if (!g_utf8_validate (xml->text, size, NULL)) {
+      SWFDEC_ERROR ("downloaded data is not valid utf-8");
+      g_free (xml->text);
+      xml->text = NULL;
+    }
+  } else {
+    SWFDEC_ERROR ("not enough memory to copy %u bytes", size);
   }
+
   /* break reference to the loader */
+  swfdec_loader_set_target (loader, NULL);
   xml->loader = NULL;
   g_object_unref (loader);
   /* emit onData */
@@ -99,7 +105,8 @@ static void
 swfdec_xml_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_xml_loader_target_get_player;
-  iface->parse = swfdec_xml_loader_target_parse;
+  iface->eof = swfdec_xml_loader_target_eof;
+  iface->error = swfdec_xml_loader_target_error;
 }
 
 /*** SWFDEC_XML ***/
@@ -166,4 +173,5 @@ swfdec_xml_load (SwfdecXml *xml, const char *url)
   swfdec_xml_reset (xml);
   xml->loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (xml)->context), url);
   swfdec_loader_set_target (xml->loader, SWFDEC_LOADER_TARGET (xml));
+  swfdec_loader_set_data_type (xml->loader, SWFDEC_LOADER_DATA_TEXT);
 }

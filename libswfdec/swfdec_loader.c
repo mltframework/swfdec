@@ -244,11 +244,27 @@ swfdec_file_loader_init (SwfdecFileLoader *loader)
 static void
 swfdec_loader_perform_open (gpointer loaderp, gpointer unused)
 {
-  SWFDEC_FIXME ("add vfunc for open to SwfdecLoaderTarget");
+  SwfdecLoader *loader = loaderp;
+
+  swfdec_loader_target_open (loader->target, loader, loader->open_status);
 }
 
-#define swfdec_loader_perform_error swfdec_loader_perform_push
-#define swfdec_loader_perform_eof swfdec_loader_perform_push
+static void
+swfdec_loader_perform_eof (gpointer loaderp, gpointer unused)
+{
+  SwfdecLoader *loader = loaderp;
+
+  swfdec_loader_target_eof (loader->target, loader);
+}
+
+static void
+swfdec_loader_perform_error (gpointer loaderp, gpointer unused)
+{
+  SwfdecLoader *loader = loaderp;
+
+  swfdec_loader_target_error (loader->target, loader);
+}
+
 static void
 swfdec_loader_perform_push (gpointer loaderp, gpointer unused)
 {

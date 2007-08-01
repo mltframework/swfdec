@@ -76,6 +76,21 @@ swfdec_loader_target_get_player (SwfdecLoaderTarget *target)
 }
 
 void
+swfdec_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader, guint status)
+{
+  SwfdecLoaderTargetInterface *iface;
+  
+  g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+
+  SWFDEC_LOG ("opening %p (state %u)", loader, loader->state);
+
+  iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
+  if (iface->open)
+    iface->open (target, loader, status);
+}
+
+void
 swfdec_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecLoaderTargetInterface *iface;
@@ -86,7 +101,37 @@ swfdec_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
   SWFDEC_LOG ("parsing %p (state %u)", loader, loader->state);
 
   iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
-  g_return_if_fail (iface->parse != NULL);
-  iface->parse (target, loader);
+  if (iface->parse)
+    iface->parse (target, loader);
+}
+
+void
+swfdec_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecLoaderTargetInterface *iface;
+  
+  g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+
+  SWFDEC_LOG ("eof on %p (state %u)", loader, loader->state);
+
+  iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
+  if (iface->eof)
+    iface->eof (target, loader);
+}
+
+void
+swfdec_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecLoaderTargetInterface *iface;
+  
+  g_return_if_fail (SWFDEC_IS_LOADER_TARGET (target));
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+
+  SWFDEC_LOG ("error on %p (state %u)", loader, loader->state);
+
+  iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
+  if (iface->error)
+    iface->error (target, loader);
 }
 

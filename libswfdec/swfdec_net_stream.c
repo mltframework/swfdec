@@ -193,6 +193,37 @@ swfdec_net_stream_loader_target_get_player (SwfdecLoaderTarget *target)
 }
 
 static void
+swfdec_net_stream_loader_target_error (SwfdecLoaderTarget *target, 
+    SwfdecLoader *loader)
+{
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
+
+  if (stream->flvdecoder == NULL)
+    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_StreamNotFound,
+	SWFDEC_AS_STR_error);
+}
+
+static void
+swfdec_net_stream_loader_target_recheck (SwfdecNetStream *stream)
+{
+  if (stream->buffering) {
+    guint first, last;
+    if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
+      guint current = MAX (first, stream->current_time);
+      if (current + stream->buffer_time <= last) {
+	swfdec_net_stream_video_goto (stream, current);
+	stream->buffering = FALSE;
+	swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
+	    SWFDEC_AS_STR_status);
+      }
+    } else {
+      SWFDEC_ERROR ("no video stream, how do we update buffering?");
+    }
+  }
+  swfdec_net_stream_update_playing (stream);
+}
+
+static void
 swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target, 
     SwfdecLoader *loader)
 {
@@ -200,12 +231,6 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   SwfdecDecoderClass *klass;
   gboolean recheck = FALSE;
   
-  if (loader->error) {
-    if (stream->flvdecoder == NULL)
-      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_StreamNotFound,
-	  SWFDEC_AS_STR_error);
-    return;
-  }
   if (loader->state != SWFDEC_LOADER_STATE_EOF && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
     SWFDEC_INFO ("nothing to do");
     return;
@@ -246,45 +271,37 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     }
   }
 out:
-  if (loader->state == SWFDEC_LOADER_STATE_EOF) {
-    guint first, last;
-    swfdec_flv_decoder_eof (stream->flvdecoder);
-    recheck = TRUE;
-    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Flush,
-	SWFDEC_AS_STR_status);
-    swfdec_net_stream_video_goto (stream, stream->current_time);
-    stream->buffering = FALSE;
-    if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last) &&
-	stream->current_time + stream->buffer_time <= last) {
-      swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
-	  SWFDEC_AS_STR_status);
-    }
-  }
-  if (recheck) {
-    if (stream->buffering) {
-      guint first, last;
-      if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
-	guint current = MAX (first, stream->current_time);
-	if (current + stream->buffer_time <= last) {
-	  swfdec_net_stream_video_goto (stream, current);
-	  stream->buffering = FALSE;
-	  swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
-	      SWFDEC_AS_STR_status);
-	}
-      } else {
-	SWFDEC_ERROR ("no video stream, how do we update buffering?");
-      }
-    }
-    swfdec_net_stream_update_playing (stream);
-  }
+  if (recheck)
+    swfdec_net_stream_loader_target_recheck (stream);
 }
 
+static void
+swfdec_net_stream_loader_target_eof (SwfdecLoaderTarget *target, 
+    SwfdecLoader *loader)
+{
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
+  guint first, last;
+
+  swfdec_flv_decoder_eof (stream->flvdecoder);
+  swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Flush,
+      SWFDEC_AS_STR_status);
+  swfdec_net_stream_video_goto (stream, stream->current_time);
+  stream->buffering = FALSE;
+  if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last) &&
+      stream->current_time + stream->buffer_time <= last) {
+    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
+	SWFDEC_AS_STR_status);
+  }
+  swfdec_net_stream_loader_target_recheck (stream);
+}
 
 static void
 swfdec_net_stream_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_net_stream_loader_target_get_player;
   iface->parse = swfdec_net_stream_loader_target_parse;
+  iface->eof = swfdec_net_stream_loader_target_eof;
+  iface->error = swfdec_net_stream_loader_target_error;
 }
 
 /*** SWFDEC VIDEO MOVIE INPUT ***/

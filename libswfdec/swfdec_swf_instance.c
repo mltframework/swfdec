@@ -79,8 +79,6 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
 
-  if (loader->error)
-    return;
   if (dec == NULL) {
     if (!swfdec_decoder_can_detect (loader->queue))
       return;

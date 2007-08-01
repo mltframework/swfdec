@@ -18,7 +18,8 @@ SWFDEC_AUDIO_GET_CLASS
 <FILE>SwfdecLoader</FILE>
 <TITLE>SwfdecLoader</TITLE>
 SwfdecLoader
-swfdec_loader_new_from_file
+SwfdecFileLoader
+swfdec_file_loader_new
 swfdec_loader_open
 swfdec_loader_push
 swfdec_loader_eof
@@ -38,6 +39,14 @@ swfdec_loader_get_type
 SWFDEC_LOADER_CLASS
 SWFDEC_IS_LOADER_CLASS
 SWFDEC_LOADER_GET_CLASS
+SwfdecFileLoaderClass
+SWFDEC_FILE_LOADER
+SWFDEC_FILE_LOADER_CLASS
+SWFDEC_FILE_LOADER_GET_CLASS
+SWFDEC_IS_FILE_LOADER
+SWFDEC_IS_FILE_LOADER_CLASS
+SWFDEC_TYPE_FILE_LOADER
+swfdec_file_loader_get_type
 </SECTION>
 
 <SECTION>

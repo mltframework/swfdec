@@ -33,28 +33,6 @@ typedef enum {
   SWFDEC_LOADER_STATE_ERROR		/* loader is in error state */
 } SwfdecLoaderState;
 
-typedef struct _SwfdecFileLoader SwfdecFileLoader;
-typedef struct _SwfdecFileLoaderClass SwfdecFileLoaderClass;
-
-#define SWFDEC_TYPE_FILE_LOADER                    (swfdec_file_loader_get_type())
-#define SWFDEC_IS_FILE_LOADER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_FILE_LOADER))
-#define SWFDEC_IS_FILE_LOADER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_FILE_LOADER))
-#define SWFDEC_FILE_LOADER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_FILE_LOADER, SwfdecFileLoader))
-#define SWFDEC_FILE_LOADER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_FILE_LOADER, SwfdecFileLoaderClass))
-#define SWFDEC_FILE_LOADER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_FILE_LOADER, SwfdecFileLoaderClass))
-
-struct _SwfdecFileLoader
-{
-  SwfdecLoader		loader;
-};
-
-struct _SwfdecFileLoaderClass
-{
-  SwfdecLoaderClass   	loader_class;
-};
-
-GType			swfdec_file_loader_get_type	(void);
-
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 							 const char *		url,
 							 SwfdecLoaderRequest	request,

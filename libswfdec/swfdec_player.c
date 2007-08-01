@@ -1551,7 +1551,7 @@ swfdec_player_new_from_file (const char *filename)
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  loader = swfdec_loader_new_from_file (filename);
+  loader = swfdec_file_loader_new (filename);
   player = swfdec_player_new ();
   swfdec_player_set_loader (player, loader);
 

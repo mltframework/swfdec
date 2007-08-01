@@ -200,7 +200,7 @@ run_test (const char *filename)
   g_free (dirname);
   g_free (basename);
 
-  loader = swfdec_loader_new_from_file (filename);
+  loader = swfdec_file_loader_new (filename);
   if (loader->error) {
     g_print ("  ERROR: %s\n", loader->error);
     g_object_unref (loader);

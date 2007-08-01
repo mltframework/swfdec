@@ -404,7 +404,7 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  loader = swfdec_loader_new_from_file (argv[1]);
+  loader = swfdec_file_loader_new (argv[1]);
   if (loader->error) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
     g_object_unref (loader);

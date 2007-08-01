@@ -189,56 +189,6 @@ swfdec_loader_init (SwfdecLoader *loader)
   loader->data_type = SWFDEC_LOADER_DATA_UNKNOWN;
 }
 
-/*** SwfdecFileLoader ***/
-
-G_DEFINE_TYPE (SwfdecFileLoader, swfdec_file_loader, SWFDEC_TYPE_LOADER)
-
-static void
-swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoaderRequest request, 
-    const char *data, gsize data_len)
-{
-  const SwfdecURL *url;
-  SwfdecBuffer *buffer;
-  GError *error = NULL;
-  char *real;
-
-  url = swfdec_loader_get_url (loader);
-  if (!g_str_equal (swfdec_url_get_protocol (url), "file")) {
-    swfdec_loader_error (loader, "Don't know how to handle other protocols than file");
-    return;
-  }
-  if (swfdec_url_get_host (url)) {
-    swfdec_loader_error (loader, "filenames cannot have hostnames");
-    return;
-  }
-
-  /* FIXME: append query string here? */
-  real = g_strconcat ("/", swfdec_url_get_path (url), NULL);
-  buffer = swfdec_buffer_new_from_file (real, &error);
-  if (buffer == NULL) {
-    swfdec_loader_error (loader, error->message);
-    g_error_free (error);
-  } else {
-    swfdec_loader_set_size (loader, buffer->length);
-    swfdec_loader_open (loader, 0);
-    swfdec_loader_push (loader, buffer);
-    swfdec_loader_eof (loader);
-  }
-}
-
-static void
-swfdec_file_loader_class_init (SwfdecFileLoaderClass *klass)
-{
-  SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
-
-  loader_class->load = swfdec_file_loader_load;
-}
-
-static void
-swfdec_file_loader_init (SwfdecFileLoader *loader)
-{
-}
-
 /*** INTERNAL API ***/
 
 static void
@@ -340,58 +290,6 @@ swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
 }
 
 /** PUBLIC API ***/
-
-/**
- * swfdec_loader_new_from_file:
- * @filename: name of the file to load
- *
- * Creates a new loader for local files. If an error occurred, the loader will
- * be in error.
- *
- * Returns: a new loader
- **/
-SwfdecLoader *
-swfdec_loader_new_from_file (const char *filename)
-{
-  SwfdecBuffer *buf;
-  SwfdecLoader *loader;
-  GError *error = NULL;
-  char *url;
-
-  g_return_val_if_fail (filename != NULL, NULL);
-
-  buf = swfdec_buffer_new_from_file (filename, &error);
-
-  if (g_path_is_absolute (filename)) {
-    url = g_strconcat ("file://", filename, NULL);
-  } else {
-    char *abs, *cur;
-    cur = g_get_current_dir ();
-    abs = g_build_filename (cur, filename, NULL);
-    g_free (cur);
-    url = g_strconcat ("file://", abs, NULL);
-    g_free (abs);
-  }
-
-  loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
-  loader->url = swfdec_url_new (url);
-  if (loader->url == NULL) {
-    g_warning ("WTF? %s is not a valid url!", url);
-    loader->url = swfdec_url_new ("file:///");
-  }
-  g_assert (loader->url);
-  g_free (url);
-  if (buf == NULL) {
-    swfdec_loader_error (loader, error->message);
-    g_error_free (error);
-  } else {
-    swfdec_loader_set_size (loader, buf->length);
-    swfdec_loader_open (loader, 0);
-    swfdec_loader_push (loader, buf);
-    swfdec_loader_eof (loader);
-  }
-  return loader;
-}
 
 /**
  * swfdec_loader_error:

@@ -94,7 +94,7 @@ run_test (gpointer testp, gpointer unused)
 
   output = g_string_new ("");
   g_string_append_printf (output, "Testing %s:\n", test->filename);
-  loader = swfdec_loader_new_from_file (test->filename);
+  loader = swfdec_file_loader_new (test->filename);
   if (loader->error) {
     g_string_append_printf (output, "  ERROR: %s\n", loader->error);
     goto fail;

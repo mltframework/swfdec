@@ -65,6 +65,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_edittext_movie.c \
 	swfdec_enums.c \
 	swfdec_event.c \
+	swfdec_file_loader.c \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
 	swfdec_graphic.c \
@@ -128,6 +129,7 @@ public_headers = \
 	swfdec_as_types.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \
+	swfdec_file_loader.h \
 	swfdec_loader.h \
 	swfdec_player.h \
 	swfdec_url.h

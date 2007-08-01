@@ -161,7 +161,7 @@ run_test (const char *filename)
 
   g_print ("Testing %s:\n", filename);
 
-  loader = swfdec_loader_new_from_file (filename);
+  loader = swfdec_file_loader_new (filename);
   if (loader->error) {
     g_print ("  ERROR: %s\n", loader->error);
     g_object_unref (loader);

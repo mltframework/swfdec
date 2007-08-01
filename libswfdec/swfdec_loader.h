@@ -80,8 +80,6 @@ struct _SwfdecLoaderClass
 
 GType		swfdec_loader_get_type		(void);
 
-SwfdecLoader *	swfdec_loader_new_from_file	(const char *	 	filename);
-
 void		swfdec_loader_open		(SwfdecLoader *		loader,
 						 guint			status);
 void		swfdec_loader_push		(SwfdecLoader *		loader,

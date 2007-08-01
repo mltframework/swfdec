@@ -19,9 +19,11 @@ SWFDEC_AUDIO_GET_CLASS
 <TITLE>SwfdecLoader</TITLE>
 SwfdecLoader
 swfdec_loader_new_from_file
+swfdec_loader_open
 swfdec_loader_push
 swfdec_loader_eof
 swfdec_loader_error
+swfdec_loader_get_url
 swfdec_loader_set_size
 swfdec_loader_get_size
 swfdec_loader_get_loaded
@@ -52,6 +54,7 @@ swfdec_url_get_url
 swfdec_url_new
 swfdec_url_new_relative
 <SUBSECTION Standard>
+SWFDEC_TYPE_URL
 swfdec_url_get_type
 </SECTION>
 
@@ -116,7 +119,9 @@ swfdec_buffer_queue_pull
 swfdec_buffer_queue_pull_buffer
 swfdec_buffer_queue_peek
 <SUBSECTION Standard>
+SWFDEC_TYPE_BUFFER
 swfdec_buffer_get_type
+SWFDEC_TYPE_BUFFER_QUEUE
 swfdec_buffer_queue_get_type
 </SECTION>
 

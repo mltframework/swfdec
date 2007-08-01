@@ -80,7 +80,7 @@ swfdec_url_new (const char *string)
 
   g_return_val_if_fail (string != NULL, NULL);
 
-  g_print ("%s\n", string);
+  SWFDEC_DEBUG ("new url: %s", string);
   url = g_slice_new0 (SwfdecURL);
   url->url = g_strdup (string);
   s = strstr (string, "://");

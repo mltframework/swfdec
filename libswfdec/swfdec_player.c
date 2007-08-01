@@ -633,8 +633,6 @@ swfdec_player_dispose (GObject *object)
   while (player->roots)
     swfdec_movie_destroy (player->roots->data);
 
-  swfdec_player_remove_all_actions (player, player); /* HACK to allow non-removable actions */
-
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 

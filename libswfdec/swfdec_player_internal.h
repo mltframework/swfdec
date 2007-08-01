@@ -106,6 +106,8 @@ struct _SwfdecPlayer
   /* iterating */
   GList *		movies;			/* list of all moveis that want to be iterated */
   SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */
+  SwfdecRingBuffer *	external_actions;     	/* external actions we've queued up, like resize or loader stuff */
+  SwfdecTimeout		external_timeout;      	/* callback for iterating */
   GQueue *		init_queue;		/* all movies that require an init event */
   GQueue *		construct_queue;      	/* all movies that require an construct event */
 };
@@ -150,12 +152,21 @@ void		swfdec_player_add_timeout	(SwfdecPlayer *		player,
 						 SwfdecTimeout *	timeout);
 void		swfdec_player_remove_timeout	(SwfdecPlayer *		player,
 						 SwfdecTimeout *	timeout);
+void		swfdec_player_add_external_action
+						(SwfdecPlayer *		player,
+						 gpointer		object,
+						 SwfdecActionFunc   	action_func,
+						 gpointer		action_data);
+void		swfdec_player_remove_all_external_actions
+						(SwfdecPlayer *      	player,
+						 gpointer		object);
 void		swfdec_player_add_action	(SwfdecPlayer *		player,
 						 gpointer		object,
 						 SwfdecActionFunc   	action_func,
 						 gpointer		action_data);
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
 						 gpointer		object);
+
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,
 						 gboolean		center,

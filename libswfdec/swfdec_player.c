@@ -315,6 +315,88 @@ swfdec_player_do_action (SwfdecPlayer *player)
   return TRUE;
 }
 
+static void
+swfdec_player_perform_external_actions (SwfdecPlayer *player)
+{
+  SwfdecPlayerAction *action;
+  guint i;
+
+  /* we need to query the number of current actions so newly added ones aren't
+   * executed in here */
+  for (i = swfdec_ring_buffer_get_size (player->external_actions); i > 0; i--) {
+    action = swfdec_ring_buffer_pop (player->external_actions);
+    g_assert (action != NULL);
+    /* skip removed actions */
+    if (action->object == NULL) 
+      continue;
+    action->func (action->object, action->data);
+  }
+
+  if (player->external_timeout.callback) {
+    swfdec_player_remove_timeout (player, &player->external_timeout);
+    player->external_timeout.callback = NULL;
+  }
+}
+
+static void
+swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) advance - G_STRUCT_OFFSET (SwfdecPlayer, external_timeout));
+
+  player->external_timeout.callback = NULL;
+  swfdec_player_perform_external_actions (player);
+}
+
+void
+swfdec_player_add_external_action (SwfdecPlayer *player, gpointer object, 
+    SwfdecActionFunc action_func, gpointer action_data)
+{
+  SwfdecPlayerAction *action;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (action_func != NULL);
+
+  SWFDEC_LOG ("adding external action %p %p %p", object, action_func, action_data);
+  action = swfdec_ring_buffer_push (player->external_actions);
+  if (action == NULL) {
+    /* FIXME: limit number of actions to not get inf loops due to scripts? */
+    swfdec_ring_buffer_set_size (player->actions,
+	swfdec_ring_buffer_get_size (player->actions) + 16);
+    action = swfdec_ring_buffer_push (player->actions);
+    g_assert (action);
+  }
+  action->object = object;
+  action->func = action_func;
+  action->data = action_data;
+  if (!player->external_timeout.callback) {
+    /* trigger execution in 100 ms */
+    player->external_timeout.timestamp = player->time + SWFDEC_MSECS_TO_TICKS (100);
+    player->external_timeout.callback = swfdec_player_trigger_external_actions;
+    swfdec_player_add_timeout (player, &player->external_timeout);
+  }
+}
+
+void
+swfdec_player_remove_all_external_actions (SwfdecPlayer *player, gpointer object)
+{
+  SwfdecPlayerAction *action;
+  guint i;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (object != NULL);
+
+  for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->external_actions); i++) {
+    action = swfdec_ring_buffer_peek_nth (player->external_actions, i);
+
+    if (action->object == object) {
+      SWFDEC_LOG ("removing external action %p %p %p", 
+	  action->object, action->func, action->data);
+      action->object = NULL;
+    }
+  }
+}
+
 /*** SwfdecPlayer ***/
 
 enum {
@@ -867,6 +949,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   guint frames_now;
   
   swfdec_player_lock (player);
+  swfdec_player_perform_external_actions (player);
   target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)", msecs, audio_samples);
 
@@ -1161,6 +1244,7 @@ swfdec_player_init (SwfdecPlayer *player)
   player->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
+  player->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 8);
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
   player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 

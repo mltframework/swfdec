@@ -62,6 +62,16 @@
  * allocated on the stack. All of its members are private.
  */
 
+/**
+ * swfdec_as_stack_iterator_init_arguments:
+ * @iter: iterator to be initialized
+ * @frame: the frame to initialize from
+ *
+ * Initializes a stack iterator to walk the arguments passed to the given @frame. See
+ * swfdec_as_stack_iterator_init() about suggested iterator usage.
+ *
+ * Returns: The value of the first argument
+ **/
 SwfdecAsValue *
 swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
 {

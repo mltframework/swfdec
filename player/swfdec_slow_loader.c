@@ -81,12 +81,16 @@ swfdec_slow_loader_tick (gpointer data)
     swfdec_loader_error (SWFDEC_LOADER (slow), slow->loader->error);
     slow->timeout_id = 0;
     return FALSE;
-  } else if (slow->loader->eof) {
-    swfdec_loader_eof (SWFDEC_LOADER (slow));
-    slow->timeout_id = 0;
-    return FALSE;
   } else {
-    return TRUE;
+    gboolean eof;
+    g_object_get (slow->loader, "eof", &eof, NULL);
+    if (eof) {
+      swfdec_loader_eof (SWFDEC_LOADER (slow));
+      slow->timeout_id = 0;
+      return FALSE;
+    } else {
+      return TRUE;
+    }
   }
 }
 
@@ -103,6 +107,7 @@ swfdec_slow_loader_initialize (SwfdecSlowLoader *slow, SwfdecLoader *loader, gui
   if (size)
     swfdec_loader_set_size (SWFDEC_LOADER (slow), size);
   slow->timeout_id = g_timeout_add (slow->tick_time, swfdec_slow_loader_tick, slow);
+  swfdec_loader_open (SWFDEC_LOADER (slow), 0);
 }
 
 static void

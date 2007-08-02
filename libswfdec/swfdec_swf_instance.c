@@ -72,6 +72,23 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
 }
 
 static void
+swfdec_swf_instance_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);
+  const char *query;
+
+  query = swfdec_url_get_query (swfdec_loader_get_url (loader));
+  if (query) {
+    SWFDEC_INFO ("set url query movie variables: %s", query);
+    swfdec_movie_set_variables (SWFDEC_MOVIE (instance->movie), query);
+  }
+  if (instance->variables) {
+    SWFDEC_INFO ("set manual movie variables: %s", instance->variables);
+    swfdec_movie_set_variables (SWFDEC_MOVIE (instance->movie), instance->variables);
+  }
+}
+
+static void
 swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);
@@ -141,6 +158,7 @@ static void
 swfdec_swf_instance_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_swf_instance_loader_target_get_player;
+  iface->open = swfdec_swf_instance_loader_target_open;
   iface->parse = swfdec_swf_instance_loader_target_parse;
 }
 
@@ -155,6 +173,7 @@ swfdec_swf_instance_dispose (GObject *object)
     g_object_unref (instance->decoder);
     instance->decoder = NULL;
   }
+  g_free (instance->variables);
   g_hash_table_destroy (instance->exports);
   g_hash_table_destroy (instance->export_names);
 
@@ -177,7 +196,7 @@ swfdec_swf_instance_init (SwfdecSwfInstance *instance)
 }
 
 SwfdecSwfInstance *
-swfdec_swf_instance_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader)
+swfdec_swf_instance_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader, const char *variables)
 {
   SwfdecMovie *mov;
   SwfdecSwfInstance *swf;
@@ -188,6 +207,7 @@ swfdec_swf_instance_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader)
   mov = SWFDEC_MOVIE (movie);
   swf = g_object_new (SWFDEC_TYPE_SWF_INSTANCE, NULL);
   /* set important variables */
+  swf->variables = g_strdup (variables);
   swf->movie = movie;
   if (mov->swf)
     g_object_unref (mov->swf);

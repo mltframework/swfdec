@@ -43,6 +43,7 @@ struct _SwfdecSwfInstance
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */
+  char *		variables;	/* extra variables to be set */
 
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */
   GHashTable *		export_names;	/* SwfdecCharacter->string mapping of exported characters */
@@ -57,7 +58,8 @@ GType		swfdec_swf_instance_get_type	  	(void);
 
 SwfdecSwfInstance *
 		swfdec_swf_instance_new			(SwfdecSpriteMovie *  	movie,
-							 SwfdecLoader *		loader);
+							 SwfdecLoader *		loader,
+							 const char *		variables);
 
 void		swfdec_swf_instance_advance		(SwfdecSwfInstance *	instance);
 

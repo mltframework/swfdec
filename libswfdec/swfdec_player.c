@@ -1293,10 +1293,8 @@ swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
   name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%u", depth));
   movie = swfdec_movie_new (player, depth - 16384, NULL, NULL, name);
   movie->name = SWFDEC_AS_STR_EMPTY;
-  swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader);
+  swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader, variables);
   g_object_unref (loader);
-  if (variables)
-    swfdec_movie_set_variables (movie, variables);
   return movie;
 }
 

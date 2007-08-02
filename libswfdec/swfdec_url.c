@@ -106,7 +106,7 @@ swfdec_url_new (const char *string)
   url->path = g_strndup (string, s - string);
   s++;
   if (*s)
-    url->query = g_strdup (s + 1);
+    url->query = g_strdup (s);
   return url;
 }
 

@@ -135,6 +135,7 @@ swfdec_gtk_loader_load (SwfdecLoader *loader,
     if (data)
       soup_message_set_request (gtk->message, "appliation/x-www-urlencoded",
 	  SOUP_BUFFER_USER_OWNED, (char *) data, data_len);
+    g_object_ref (gtk->message);
     soup_session_queue_message (klass->session, gtk->message, swfdec_gtk_loader_finish, gtk);
   }
 }

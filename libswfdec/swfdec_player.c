@@ -370,8 +370,9 @@ swfdec_player_add_external_action (SwfdecPlayer *player, gpointer object,
   action->func = action_func;
   action->data = action_data;
   if (!player->external_timeout.callback) {
-    /* trigger execution in 100 ms */
-    player->external_timeout.timestamp = player->time + SWFDEC_MSECS_TO_TICKS (100);
+    /* trigger execution immediately, but at least 100ms after the last external timeout */
+    player->external_timeout.timestamp = MAX (player->time + 1,
+	player->external_timeout.timestamp + SWFDEC_MSECS_TO_TICKS (100));
     player->external_timeout.callback = swfdec_player_trigger_external_actions;
     swfdec_player_add_timeout (player, &player->external_timeout);
   }

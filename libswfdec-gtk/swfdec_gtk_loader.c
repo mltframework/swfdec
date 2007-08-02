@@ -87,7 +87,6 @@ swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
     return;
 
   real_uri = soup_uri_to_string (soup_message_get_uri (gtk->message), FALSE);
-  g_print ("open %s\n", real_uri);
   swfdec_loader_open (SWFDEC_LOADER (gtk), real_uri);
   gtk->opened = TRUE;
   g_free (real_uri);
@@ -100,10 +99,8 @@ swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
   SwfdecBuffer *buffer;
 
   swfdec_gtk_loader_ensure_open (gtk);
-  g_print ("push\n");
   buffer = swfdec_buffer_new_and_alloc (msg->response.length);
   memcpy (buffer->data, msg->response.body, msg->response.length);
-  g_print (" ... %u bytes\n", msg->response.length);
   swfdec_loader_push (loader, buffer);
 }
 
@@ -112,10 +109,8 @@ swfdec_gtk_loader_finish (SoupMessage *msg, gpointer loader)
 {
   if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
     swfdec_gtk_loader_ensure_open (loader);
-    g_print ("eof\n");
     swfdec_loader_eof (loader);
   } else {
-    g_print ("error %u\n", msg->status_code);
     swfdec_loader_error (loader, "FIXME: make useful error message");
   }
 }
@@ -133,7 +128,6 @@ swfdec_gtk_loader_load (SwfdecLoader *loader,
     SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
     SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
 
-    g_print ("new %s\n", swfdec_url_get_url (url));
     gtk->message = soup_message_new (request == SWFDEC_LOADER_REQUEST_POST ? "POST" : "GET",
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);

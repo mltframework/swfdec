@@ -49,7 +49,7 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoaderRequest request,
 
   url = swfdec_loader_get_url (loader);
   if (!g_str_equal (swfdec_url_get_protocol (url), "file")) {
-    swfdec_loader_error (loader, "Don't know how to handle other protocols than file");
+    swfdec_loader_error (loader, "Don't know how to handle this protocol");
     return;
   }
   if (swfdec_url_get_host (url)) {
@@ -99,27 +99,28 @@ swfdec_file_loader_new (const char *filename)
   SwfdecBuffer *buf;
   SwfdecLoader *loader;
   GError *error = NULL;
-  char *url;
+  char *url_string;
+  SwfdecURL *url;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
   buf = swfdec_buffer_new_from_file (filename, &error);
 
   if (g_path_is_absolute (filename)) {
-    url = g_strconcat ("file://", filename, NULL);
+    url_string = g_strconcat ("file://", filename, NULL);
   } else {
     char *abs, *cur;
     cur = g_get_current_dir ();
     abs = g_build_filename (cur, filename, NULL);
     g_free (cur);
-    url = g_strconcat ("file://", abs, NULL);
+    url_string = g_strconcat ("file://", abs, NULL);
     g_free (abs);
   }
 
-  loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
-  loader->url = swfdec_url_new (url);
-  g_assert (loader->url);
-  g_free (url);
+  url = swfdec_url_new (url_string);
+  g_free (url_string);
+  loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, "url", url, NULL);
+  swfdec_url_free (url);
   if (buf == NULL) {
     swfdec_loader_error (loader, error->message);
     g_error_free (error);

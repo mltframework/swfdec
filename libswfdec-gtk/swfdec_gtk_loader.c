@@ -172,11 +172,13 @@ SwfdecLoader *
 swfdec_gtk_loader_new (const char *uri)
 {
   SwfdecLoader *loader;
+  SwfdecURL *url;
 
   g_return_val_if_fail (uri != NULL, NULL);
 
-  loader = g_object_new (SWFDEC_TYPE_GTK_LOADER, NULL);
-  loader->url = swfdec_url_new (uri);
+  url = swfdec_url_new (uri);
+  loader = g_object_new (SWFDEC_TYPE_GTK_LOADER, "url", url, NULL);
+  swfdec_url_free (url);
   swfdec_gtk_loader_load (loader, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   return loader;
 }

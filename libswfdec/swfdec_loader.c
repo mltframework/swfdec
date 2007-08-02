@@ -89,7 +89,8 @@ enum {
   PROP_EOF,
   PROP_DATA_TYPE,
   PROP_SIZE,
-  PROP_LOADED
+  PROP_LOADED,
+  PROP_URL
 };
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
@@ -116,6 +117,9 @@ swfdec_loader_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_LOADED:
       g_value_set_ulong (value, swfdec_loader_get_loaded (loader));
       break;
+    case PROP_URL:
+      g_value_set_boxed (value, loader->url);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -135,6 +139,13 @@ swfdec_loader_set_property (GObject *object, guint param_id, const GValue *value
     case PROP_SIZE:
       if (loader->size == 0 && g_value_get_ulong (value) > 0)
 	swfdec_loader_set_size (loader, g_value_get_ulong (value));
+      break;
+    case PROP_URL:
+      loader->url = g_value_dup_boxed (value);
+      if (loader->url == NULL) {
+	g_warning ("must set a valid URL");
+	loader->url = swfdec_url_new ("");
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -180,6 +191,9 @@ swfdec_loader_class_init (SwfdecLoaderClass *klass)
   g_object_class_install_property (object_class, PROP_LOADED,
       g_param_spec_ulong ("loaded", "loaded", "bytes already loaded",
 	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_URL,
+      g_param_spec_boxed ("url", "url", "URL for this file",
+	  SWFDEC_TYPE_URL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -224,11 +238,12 @@ swfdec_loader_perform_push (gpointer loaderp, gpointer unused)
 }
 
 SwfdecLoader *
-swfdec_loader_load (SwfdecLoader *loader, const char *url,
+swfdec_loader_load (SwfdecLoader *loader, const char *url_string,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecLoader *ret;
   SwfdecLoaderClass *klass;
+  SwfdecURL *url;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
   g_return_val_if_fail (url != NULL, NULL);
@@ -236,9 +251,9 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url,
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), NULL);
-  ret->url = swfdec_url_new_relative (loader->url, url);
-  g_assert (ret->url);
+  url = swfdec_url_new_relative (loader->url, url_string);
+  ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), "url", url, NULL);
+  swfdec_url_free (url);
   klass->load (ret, request, data, data_len);
   return ret;
 }

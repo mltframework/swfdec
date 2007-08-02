@@ -176,7 +176,8 @@ swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
   g_return_if_fail (timeout->timestamp > player->time);
   g_return_if_fail (timeout->callback != NULL);
 
-  SWFDEC_LOG ("adding timeout %p", timeout);
+  SWFDEC_LOG ("adding timeout %p in %"G_GUINT64_FORMAT" msecs", timeout, 
+      SWFDEC_TICKS_TO_MSECS (timeout->timestamp - player->time));
   next_tick = swfdec_player_get_next_event_time (player);
   /* the order is important, on events with the same time, we make sure the new one is last */
   for (walk = player->timeouts; walk; walk = walk->next) {
@@ -321,6 +322,12 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
   SwfdecPlayerAction *action;
   guint i;
 
+  /* remove timeout if it exists - do this before executing stuff below */
+  if (player->external_timeout.callback) {
+    swfdec_player_remove_timeout (player, &player->external_timeout);
+    player->external_timeout.callback = NULL;
+  }
+
   /* we need to query the number of current actions so newly added ones aren't
    * executed in here */
   for (i = swfdec_ring_buffer_get_n_elements (player->external_actions); i > 0; i--) {
@@ -332,10 +339,7 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
     action->func (action->object, action->data);
   }
 
-  if (player->external_timeout.callback) {
-    swfdec_player_remove_timeout (player, &player->external_timeout);
-    player->external_timeout.callback = NULL;
-  }
+  swfdec_player_perform_actions (player);
 }
 
 static void
@@ -916,6 +920,7 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
+  swfdec_player_perform_external_actions (player);
   SWFDEC_INFO ("=== START ITERATION ===");
   /* start the iteration. This performs a goto next frame on all 
    * movies that are not stopped. It also queues onEnterFrame.
@@ -953,8 +958,6 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   guint frames_now;
   
   swfdec_player_lock (player);
-  swfdec_player_perform_external_actions (player);
-  swfdec_player_perform_actions (player);
   target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)", msecs, audio_samples);
 
@@ -1532,7 +1535,6 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_object_ref (loader);
   swfdec_player_add_level_from_loader (player, 0, loader, variables);
   swfdec_player_perform_external_actions (player);
-  swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 }
 

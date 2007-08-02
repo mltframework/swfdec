@@ -1,4 +1,15 @@
 
+ 0.5.1 ("Heeeeelium")
+
+Features! This release got some. And they even give you the long awaited 
+embedded Youtube support. At the cost of lost of API changes, but who cares?
+- rewrite SwfdecLoader. Add SwfdecURL support structure in the process.
+- implement AsBroadcaster actionscript object.
+- implement Stage actionscript object. Movies can now do the scaling themselves.
+- change the HTTP in swfdec-gtk from gnome-vfs to libsoup
+- add an OSS backend for non-ALSA operating systems.
+- various fixes to super and DefineFunction2 flags.
+
  0.5.0 ("Meet Plan Party!")
 
 Here's the long overdue update. Lots of backend stuff was rewritten. The only

@@ -53,7 +53,7 @@ swfdec_iterate_get_msecs_to_next_event (GSource *source_)
     return G_MAXLONG;
   diff *= source->speed;
   g_source_get_current_time (source_, &now);
-  /* should really add to source->last instead of sutracting from now */
+  /* should really add to source->last instead of subtracting from now */
   g_time_val_add (&now, -diff * 1000);
   diff = my_time_val_difference (&source->last, &now);
 

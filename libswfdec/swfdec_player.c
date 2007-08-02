@@ -641,18 +641,19 @@ swfdec_player_dispose (GObject *object)
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 
+  swfdec_player_remove_all_external_actions (player, player);
 #ifndef G_DISABLE_ASSERT
   {
     SwfdecPlayerAction *action;
+    while ((action = swfdec_ring_buffer_pop (player->external_actions)) != NULL) {
+      g_assert (action->object == NULL); /* skip removed actions */
+    }
     while ((action = swfdec_ring_buffer_pop (player->actions)) != NULL) {
       g_assert (action->object == NULL); /* skip removed actions */
     }
   }
 #endif
-  swfdec_player_remove_all_external_actions (player, player);
-  g_assert (swfdec_ring_buffer_pop (player->external_actions) == NULL);
   swfdec_ring_buffer_free (player->external_actions);
-  g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
   g_assert (player->audio == NULL);

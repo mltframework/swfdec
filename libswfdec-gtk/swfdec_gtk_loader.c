@@ -79,12 +79,6 @@ swfdec_gtk_loader_dispose (GObject *object)
 }
 
 static void
-swfdec_gtk_loader_open (SoupMessage *msg, gpointer loader)
-{
-  g_print ("open %u\n", msg->status_code);
-}
-
-static void
 swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
 {
   char *real_uri;
@@ -143,7 +137,6 @@ swfdec_gtk_loader_load (SwfdecLoader *loader,
     gtk->message = soup_message_new (request == SWFDEC_LOADER_REQUEST_POST ? "POST" : "GET",
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
-    g_signal_connect (gtk->message, "got-headers", G_CALLBACK (swfdec_gtk_loader_open), gtk);
     g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);
     if (data)
       soup_message_set_request (gtk->message, "appliation/x-www-urlencoded",

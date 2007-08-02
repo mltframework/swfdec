@@ -361,9 +361,9 @@ swfdec_player_add_external_action (SwfdecPlayer *player, gpointer object,
   action = swfdec_ring_buffer_push (player->external_actions);
   if (action == NULL) {
     /* FIXME: limit number of actions to not get inf loops due to scripts? */
-    swfdec_ring_buffer_set_size (player->actions,
-	swfdec_ring_buffer_get_size (player->actions) + 16);
-    action = swfdec_ring_buffer_push (player->actions);
+    swfdec_ring_buffer_set_size (player->external_actions,
+	swfdec_ring_buffer_get_size (player->external_actions) + 16);
+    action = swfdec_ring_buffer_push (player->external_actions);
     g_assert (action);
   }
   action->object = object;

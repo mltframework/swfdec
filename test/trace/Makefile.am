@@ -499,6 +499,13 @@ EXTRA_DIST = \
 	names.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
+	netstream-load-loop.as \
+	netstream-load-loop-6.swf \
+	netstream-load-loop-6.swf.trace \
+	netstream-load-loop-7.swf \
+	netstream-load-loop-7.swf.trace \
+	netstream-load-loop-8.swf \
+	netstream-load-loop-8.swf.trace \
 	netstream-onstatus.c \
 	netstream-onstatus.swf \
 	netstream-onstatus.swf.trace \

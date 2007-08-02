@@ -205,7 +205,7 @@ swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (timeout != NULL);
-  g_return_if_fail (timeout->timestamp > player->time);
+  g_return_if_fail (timeout->timestamp >= player->time);
   g_return_if_fail (timeout->callback != NULL);
 
   SWFDEC_LOG ("removing timeout %p", timeout);

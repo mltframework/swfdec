@@ -177,7 +177,7 @@ swfdec_loader_class_init (SwfdecLoaderClass *klass)
   g_object_class_install_property (object_class, PROP_SIZE,
       g_param_spec_ulong ("size", "size", "amount of bytes in loader",
 	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_SIZE,
+  g_object_class_install_property (object_class, PROP_LOADED,
       g_param_spec_ulong ("loaded", "loaded", "bytes already loaded",
 	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
 }

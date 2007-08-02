@@ -111,7 +111,7 @@ swfdec_slow_loader_initialize (SwfdecSlowLoader *slow, SwfdecLoader *loader, gui
 }
 
 static void
-swfdec_slow_loader_load (SwfdecLoader *loader,
+swfdec_slow_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecSlowLoader *slow = SWFDEC_SLOW_LOADER (loader);

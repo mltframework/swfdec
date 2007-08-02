@@ -254,7 +254,7 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url_string,
   url = swfdec_url_new_relative (loader->url, url_string);
   ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), "url", url, NULL);
   swfdec_url_free (url);
-  klass->load (ret, request, data, data_len);
+  klass->load (ret, loader, request, data, data_len);
   return ret;
 }
 

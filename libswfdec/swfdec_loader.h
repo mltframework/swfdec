@@ -70,8 +70,9 @@ struct _SwfdecLoaderClass
 {
   GObjectClass		object_class;
 
-  /* iitializes the loader. The URL will be set already. */
+  /* initialize the loader. The URL will be set already. */
   void			(* load)	(SwfdecLoader *			loader, 
+					 SwfdecLoader *			parent,
 					 SwfdecLoaderRequest		request,
 					 const char *			data,
 					 gsize				data_len);

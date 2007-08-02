@@ -39,7 +39,7 @@
 G_DEFINE_TYPE (SwfdecFileLoader, swfdec_file_loader, SWFDEC_TYPE_LOADER)
 
 static void
-swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoaderRequest request, 
+swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, SwfdecLoaderRequest request, 
     const char *data, gsize data_len)
 {
   const SwfdecURL *url;

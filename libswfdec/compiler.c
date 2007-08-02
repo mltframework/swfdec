@@ -1,4 +1,4 @@
-//gcc -Wall -Werror `pkg-config --libs --cflags libming glib-2.0` compiler.c -o copiler
+//gcc -Wall -Werror `pkg-config --libs --cflags libming glib-2.0` compiler.c -o compiler
 
 #include <glib.h>
 #include <ming.h>
@@ -16,37 +16,6 @@ write_data (guint8 *data, gsize len)
 {
   gsize i;
 
-  /* debug */
-  //g_file_set_contents ("foo", (char *) data, len, NULL);
-
-  /* skip SWF crap */
-  data += 25;
-
-  /* sanity checks */
-  /* 1) ensure file is long enough */
-  if (len < 31)
-    return FALSE;
-  i = data[0] + (data[1] << 8);
-  data += 2;
-  /* 2) ensure we have a DoAction tag */
-  if (((i >> 6) & 0x3ff) != 12)
-    return FALSE;
-  i = i & 0x3F;
-  if (i == 0x3F) {
-    i = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
-    data += 4;
-    len -= 31;
-  } else {
-    len -= 27;
-  }
-  /* 3) check size of tag is correct */
-  if (i >= len + 2)
-    return FALSE;
-  /* 4) check a ShowFrame comes next */
-  if (data[i] != 0x40 || data[i + 1] != 0x00)
-    return FALSE;
-  /* trust the data */
-  len = i;
   for (i = 0; i < len; i++) {
     switch (i % 16) {
       case 0:
@@ -69,14 +38,6 @@ write_data (guint8 *data, gsize len)
   return TRUE;
 }
 
-static void
-output_array (guint8 b, void *data)
-{
-  GByteArray *array = data;
-
-  g_byte_array_append (array, &b, 1);
-}
-  
 static char *
 get_name (const char *filename)
 {
@@ -95,12 +56,12 @@ get_name (const char *filename)
 int
 main (int argc, char **argv)
 {
-  SWFMovie movie;
   SWFAction action;
-  GByteArray *array;
   char *contents;
   GError *error = NULL;
   guint i;
+  size_t len;
+  byte *data;
 
   if (argc < 2) {
     g_print ("usage: %s FILE ...\n\n", argv[0]);
@@ -118,23 +79,14 @@ main (int argc, char **argv)
       error = NULL;
       return 1;
     }
-    movie = newSWFMovie ();
     action = newSWFAction (contents);
-    SWFMovie_add (movie, (SWFBlock) action);
-    g_free (contents);
-
-    array = g_byte_array_new ();
-    SWFMovie_output (movie, output_array, array);
+    data = SWFAction_getByteCode (action, &len);
     contents = get_name (argv[i]);
     g_print ("/* compiled from %s */\n", argv[i]);
     g_print ("const unsigned char %s[] = {\n", contents);
     g_free (contents);
-    if (!write_data (array->data, array->len)) {
-      g_printerr ("failed extracting compiled data for %s\n", argv[i]);
-      return 1;
-    }
+    write_data (data, len);
     g_print ("};\n\n");
-    g_byte_array_free (array, TRUE);
   }
   return 0;
 }

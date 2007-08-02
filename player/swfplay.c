@@ -64,6 +64,26 @@ print_trace (SwfdecPlayer *player, const char *message, gpointer unused)
   g_print ("%s\n", message);
 }
 
+static char *
+sanitize_url (const char *s)
+{
+  SwfdecURL *url;
+
+  url = swfdec_url_new (s);
+  if (g_str_equal (swfdec_url_get_protocol (url), "error")) {
+    char *dir, *full;
+    if (g_path_is_absolute (s))
+      return g_strconcat ("file://", s, NULL);
+    dir = g_get_current_dir ();
+    full = g_strconcat ("file://", dir, G_DIR_SEPARATOR_S, s, NULL);
+    g_free (dir);
+    return full;
+  } else {
+    swfdec_url_free (url);
+    return g_strdup (s);
+  }
+}
+
 int 
 main (int argc, char *argv[])
 {
@@ -75,6 +95,7 @@ main (int argc, char *argv[])
   gboolean use_image = FALSE, no_sound = FALSE;
   gboolean trace = FALSE;
   char *variables = NULL;
+  char *s;
   GtkWidget *window;
 
   GOptionEntry options[] = {
@@ -106,17 +127,10 @@ main (int argc, char *argv[])
     g_printerr ("Usage: %s [OPTIONS] filename\n", argv[0]);
     return 1;
   }
-
-#if HAVE_GNOMEVFS
-  {
-    char *s;
-    s = gnome_vfs_make_uri_from_shell_arg (argv[1]);
-    loader = swfdec_gtk_loader_new (s);
-    g_free (s);
-  }
-#else
-  loader = swfdec_gtk_loader_new (argv[1]);
-#endif
+  
+  s = sanitize_url (argv[1]);
+  loader = swfdec_gtk_loader_new (s);
+  g_free (s);
   if (loader->error) {
     g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], loader->error);
     g_object_unref (loader);

@@ -1824,7 +1824,8 @@ swfdec_player_update_size (gpointer playerp, gpointer unused)
 
   player->internal_width = width;
   player->internal_height = height;
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
+  if (player->scale_mode == SWFDEC_SCALE_NONE)
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
 }
 
 /**
@@ -1856,7 +1857,7 @@ swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
     changed = TRUE;
   }
   swfdec_player_update_scale (player);
-  if (changed && player->scale_mode == SWFDEC_SCALE_NONE)
+  if (changed)
     swfdec_player_add_external_action (player, player, swfdec_player_update_size, NULL);
 }
 

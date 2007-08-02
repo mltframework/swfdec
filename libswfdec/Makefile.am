@@ -230,7 +230,8 @@ CLEANFILES = \
 	$(BUILT_SOURCES)
 
 swfdec_asnative.h: $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES)
-	(echo "#include \"swfdec_as_types.h\"" \
+	(cd $(srcdir) \
+	  && echo "#include \"swfdec_as_types.h\"" \
 	  && echo "#define SWFDEC_AS_NATIVE(x, y, func) void func (SwfdecAsContext *cx, \\" \
 	  && echo "    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);" \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \

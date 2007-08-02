@@ -353,6 +353,7 @@ swfdec_loader_open (SwfdecLoader *loader, const char *url)
   if (url) {
     swfdec_url_free (loader->url);
     loader->url = swfdec_url_new (url);
+    g_object_notify (G_OBJECT (loader), "url");
   }
   if (loader->player)
     swfdec_player_add_external_action (loader->player, loader, swfdec_loader_perform_open, NULL);

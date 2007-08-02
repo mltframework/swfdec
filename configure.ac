@@ -246,21 +246,21 @@ fi
 AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
 
 
-AC_ARG_ENABLE(gnome-vfs,
-	AS_HELP_STRING([--enable-gnome-vfs],
-			[enable gnome-vfs support for swfdec-gtk (default=yes)])],
-	enable_gnomevfs=$enableval,
-	enable_gnomevfs="yes")
+AC_ARG_ENABLE(soup,
+	AS_HELP_STRING([--enable-soup],
+			[enable libaoup HTTP support for swfdec-gtk (default=yes)])],
+	enable_libsoup=$enableval,
+	enable_libsoup="yes")
 
-if test "$enable_gnomevfs" = "yes"; then
-	PKG_CHECK_MODULES(HTTP, gnome-vfs-2.0 >= 2.14.0, HAVE_HTTP=yes, HAVE_HTTP=no)
+if test "$enable_libsoup" = "yes"; then
+	PKG_CHECK_MODULES(HTTP, libsoup-2.2 >= 2.2.0, HAVE_HTTP=yes, HAVE_HTTP=no)
 	if test "x$HAVE_HTTP" = xyes; then
-	  AC_DEFINE(HAVE_HTTP, 1, [Define if gnome-vfs is enabled])
+	  AC_DEFINE(HAVE_HTTP, 1, [Define if libsoup is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find gnome-vfs-2.0.])
+	  AC_MSG_ERROR([Couldn't find libsoup-2.2.])
 	fi
 else
-	AC_MSG_WARN([*** gnome-vfs support was not enabled. ***])
+	AC_MSG_WARN([*** libsoup HTTP support was not enabled. ***])
 fi
 AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 

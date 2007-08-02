@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <libsoup/soup.h>
+#include <string.h>
 #include "swfdec_gtk_loader.h"
 
 /*** GTK-DOC ***/
@@ -32,7 +34,7 @@
  * @see_also: #SwfdecLoader
  *
  * #SwfdecGtkLoader is a #SwfdecLoader that is intended as an easy way to be 
- * access ressources that are not stored in files, such as http. It can 
+ * access ressources that are not stored in files, such as HTTP. It can 
  * however be compiled with varying support for different protocols, so don't
  * rely on support for a particular protocol being available. If you need this,
  * code your own SwfdecLoader subclass.
@@ -45,147 +47,93 @@
  * backends, it is completely private.
  */
 
-#ifndef HAVE_HTTP
-
-#include <libswfdec/swfdec_loader_internal.h>
-
-GType
-swfdec_gtk_loader_get_type (void)
-{
-  return SWFDEC_TYPE_FILE_LOADER;
-}
-
-SwfdecLoader *
-swfdec_gtk_loader_new (const char *uri)
-{
-  g_return_val_if_fail (uri != NULL, NULL);
-
-  return swfdec_loader_new_from_file (uri);
-}
-
-
-#else /* HAVE_HTTP */
-
-/* size of buffer we read */
-#define BUFFER_SIZE 4096
-
-#include <libgnomevfs/gnome-vfs.h>
-
 struct _SwfdecGtkLoader
 {
   SwfdecLoader		loader;
 
-  GnomeVFSURI *		guri;		/* GnomeVFS URI used for resolving */
-  GnomeVFSAsyncHandle *	handle;		/* handle to file or NULL when done */
-  SwfdecBuffer *	current_buffer;	/* current buffer we're reading into */
+  SoupMessage *		message;	/* the message we're sending */
+  gboolean		opened;		/* set after first bytes of data have arrived */
 };
 
 struct _SwfdecGtkLoaderClass {
   SwfdecLoaderClass	loader_class;
+
+  SoupSession *		session;	/* the session used by the loader */
 };
 
 /*** SwfdecGtkLoader ***/
 
-G_DEFINE_TYPE (SwfdecGtkLoader, swfdec_gtk_loader, SWFDEC_TYPE_LOADER)
-
-static void swfdec_gtk_loader_start_read (SwfdecGtkLoader *gtk);
-static void
-swfdec_gtk_loader_read_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result,
-    gpointer buffer, GnomeVFSFileSize bytes_requested, GnomeVFSFileSize bytes_read, 
-    gpointer loaderp)
-{
-  SwfdecGtkLoader *gtk = loaderp;
-  SwfdecLoader *loader = loaderp;
-
-  if (result == GNOME_VFS_ERROR_EOF) {
-    swfdec_loader_eof (loader);
-    swfdec_buffer_unref (gtk->current_buffer);
-    gtk->current_buffer = NULL;
-    gnome_vfs_async_cancel (gtk->handle);
-    gtk->handle = NULL;
-    return;
-  } else if (result != GNOME_VFS_OK) {
-    char *err = g_strdup_printf ("%s: %s", 
-	swfdec_url_get_url (swfdec_loader_get_url (loader)),
-	gnome_vfs_result_to_string (result));
-    swfdec_loader_error (loader, err);
-    g_free (err);
-    swfdec_buffer_unref (gtk->current_buffer);
-    gtk->current_buffer = NULL;
-    gnome_vfs_async_cancel (gtk->handle);
-    gtk->handle = NULL;
-    return;
-  }
-  if (bytes_read) {
-    gtk->current_buffer->length = bytes_read;
-    swfdec_loader_push (loader, gtk->current_buffer);
-  } else {
-    swfdec_buffer_unref (gtk->current_buffer);
-  }
-  gtk->current_buffer = NULL;
-  swfdec_gtk_loader_start_read (gtk);
-}
-
-static void
-swfdec_gtk_loader_start_read (SwfdecGtkLoader *gtk)
-{
-  g_assert (gtk->current_buffer == NULL);
-  g_assert (gtk->handle != NULL);
-
-  gtk->current_buffer = swfdec_buffer_new_and_alloc (BUFFER_SIZE);
-  gnome_vfs_async_read (gtk->handle, gtk->current_buffer->data,
-      gtk->current_buffer->length, swfdec_gtk_loader_read_cb, gtk);
-}
-
-static void
-swfdec_gtk_loader_open_cb (GnomeVFSAsyncHandle *handle, GnomeVFSResult result, 
-    gpointer loaderp)
-{
-  SwfdecGtkLoader *gtk = loaderp;
-  SwfdecLoader *loader = loaderp;
-
-  if (result != GNOME_VFS_OK) {
-    char *err = g_strdup_printf ("%s: %s",
-	swfdec_url_get_url (swfdec_loader_get_url (loader)),
-	gnome_vfs_result_to_string (result));
-    swfdec_loader_error (loader, err);
-    g_free (err);
-    gnome_vfs_async_cancel (gtk->handle);
-    gtk->handle = NULL;
-    return;
-  }
-  swfdec_gtk_loader_start_read (gtk);
-}
+G_DEFINE_TYPE (SwfdecGtkLoader, swfdec_gtk_loader, SWFDEC_TYPE_FILE_LOADER)
 
 static void
 swfdec_gtk_loader_dispose (GObject *object)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (object);
 
-  if (gtk->current_buffer) {
-    swfdec_buffer_unref (gtk->current_buffer);
-    gtk->current_buffer = NULL;
-  }
-  if (gtk->handle) {
-    gnome_vfs_async_cancel (gtk->handle);
-    gtk->handle = NULL;
-  }
-  if (gtk->guri) {
-    gnome_vfs_uri_unref (gtk->guri);
-    gtk->guri = NULL;
+  if (gtk->message) {
+    g_object_unref (gtk->message);
+    gtk->message = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_gtk_loader_parent_class)->dispose (object);
 }
 
 static void
+swfdec_gtk_loader_open (SoupMessage *msg, gpointer loader)
+{
+  g_print ("open %u\n", msg->status_code);
+}
+
+static void
+swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
+{
+  SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
+  SwfdecBuffer *buffer;
+
+  if (!gtk->opened) {
+    char *real_uri = soup_uri_to_string (soup_message_get_uri (msg), TRUE);
+    g_print ("open %s\n", real_uri);
+    swfdec_loader_open (loader, real_uri);
+    gtk->opened = TRUE;
+    g_free (real_uri);
+  }
+  g_print ("push\n");
+  buffer = swfdec_buffer_new_and_alloc (msg->response.length);
+  memcpy (buffer->data, msg->response.body, msg->response.length);
+  g_print (" ... %u bytes\n", msg->response.length);
+  swfdec_loader_push (loader, buffer);
+}
+
+static void
+swfdec_gtk_loader_eof (SoupMessage *msg, gpointer loader)
+{
+  g_print ("eof\n");
+  swfdec_loader_eof (loader);
+}
+
+static void
 swfdec_gtk_loader_load (SwfdecLoader *loader,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
-  SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
+  const SwfdecURL *url = swfdec_loader_get_url (loader);
 
-  gnome_vfs_async_open (&gtk->handle, swfdec_url_get_url (swfdec_loader_get_url (loader)), 
-      GNOME_VFS_OPEN_READ, GNOME_VFS_PRIORITY_DEFAULT, swfdec_gtk_loader_open_cb, gtk);
+  if (g_ascii_strcasecmp (swfdec_url_get_protocol (url), "http") != 0 &&
+      g_ascii_strcasecmp (swfdec_url_get_protocol (url), "https") != 0) {
+    SWFDEC_LOADER_CLASS (swfdec_gtk_loader_parent_class)->load (loader, request, data, data_len);
+  } else {
+    SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
+    SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
+
+    gtk->message = soup_message_new (request == SWFDEC_LOADER_REQUEST_POST ? "POST" : "GET",
+	swfdec_url_get_url (swfdec_loader_get_url (loader)));
+    soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+    g_signal_connect (gtk->message, "got-headers", G_CALLBACK (swfdec_gtk_loader_open), gtk);
+    g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);
+    if (data)
+      soup_message_set_request (gtk->message, "appliation/x-www-urlencoded",
+	  SOUP_BUFFER_USER_OWNED, (char *) data, data_len);
+    soup_session_queue_message (klass->session, gtk->message, swfdec_gtk_loader_eof, gtk);
+  }
 }
 
 static void
@@ -194,11 +142,12 @@ swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
 
-  gnome_vfs_init ();
-
   object_class->dispose = swfdec_gtk_loader_dispose;
 
   loader_class->load = swfdec_gtk_loader_load;
+  
+  g_thread_init (NULL);
+  klass->session = soup_session_async_new ();
 }
 
 static void
@@ -210,13 +159,10 @@ swfdec_gtk_loader_init (SwfdecGtkLoader *gtk_loader)
  * swfdec_gtk_loader_new:
  * @uri: The location of the file to open
  *
- * Creates a new loader for the given URI using gnome-vfs (or using the local
- * file backend, if compiled without gnome-vfs support). The uri must be valid
- * UTF-8. If using gnome-vfs, you might want to use 
- * gnome_vfs_make_uri_from_shell_arg() or gnome_vfs_make_uri_from_input() on
- * the @uri prior to calling this function.
+ * Creates a new loader for the given URI. The uri must be a valid UTF-8-encoded
+ * URL. 
  *
- * Returns: a new #SwfdecLoader using gnome-vfs.
+ * Returns: a new #SwfdecGtkLoader
  **/
 SwfdecLoader *
 swfdec_gtk_loader_new (const char *uri)
@@ -230,5 +176,3 @@ swfdec_gtk_loader_new (const char *uri)
   swfdec_gtk_loader_load (loader, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   return loader;
 }
-
-#endif /* HAVE_GNOMEVFS */

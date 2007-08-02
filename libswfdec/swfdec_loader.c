@@ -246,7 +246,7 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url_string,
   SwfdecURL *url;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
+  g_return_val_if_fail (url_string != NULL, NULL);
   g_return_val_if_fail (data != NULL || data_len == 0, NULL);
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
@@ -422,7 +422,7 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
 {
   const SwfdecURL *url;
   const char *path, *ext;
-  char *ret;
+  char *ret = NULL;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 

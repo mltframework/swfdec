@@ -40,8 +40,7 @@ struct _SwfdecLoaderTargetInterface {
   SwfdecPlayer *	(* get_player)      	(SwfdecLoaderTarget *	target);
   /* optional vfuncs */
   void			(* open)		(SwfdecLoaderTarget *   target,
-						 SwfdecLoader *		loader,
-						 guint			status);
+						 SwfdecLoader *		loader);
   void			(* parse)		(SwfdecLoaderTarget *   target,
 						 SwfdecLoader *		loader);
   void			(* eof)			(SwfdecLoaderTarget *   target,
@@ -54,8 +53,7 @@ GType		swfdec_loader_target_get_type		(void) G_GNUC_CONST;
 
 SwfdecPlayer *	swfdec_loader_target_get_player		(SwfdecLoaderTarget *	target);
 void		swfdec_loader_target_open		(SwfdecLoaderTarget *	target,
-							 SwfdecLoader *		loader,
-							 guint			status);
+							 SwfdecLoader *		loader);
 void		swfdec_loader_target_parse		(SwfdecLoaderTarget *	target,
 							 SwfdecLoader *		loader);
 void		swfdec_loader_target_eof		(SwfdecLoaderTarget *	target,

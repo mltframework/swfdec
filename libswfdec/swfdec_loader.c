@@ -196,7 +196,7 @@ swfdec_loader_perform_open (gpointer loaderp, gpointer unused)
 {
   SwfdecLoader *loader = loaderp;
 
-  swfdec_loader_target_open (loader->target, loader, loader->open_status);
+  swfdec_loader_target_open (loader->target, loader);
 }
 
 static void
@@ -321,21 +321,24 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
 /**
  * swfdec_loader_open:
  * @loader: a #SwfdecLoader
- * @status: HTTP state code when opening the connection or 0 if unknown or not
- *          a HTTP connection.
+ * @url: the real URL used for this loader if it has changed (e.g. after HTTP 
+ *       redirects) or %NULL if it hasn't changed
  *
  * Call this function when your loader opened the resulting file. For HTTP this
  * is when having received the headers. You must call this function before 
  * swfdec_laoder_push() can be called.
  **/
 void
-swfdec_loader_open (SwfdecLoader *loader, guint status)
+swfdec_loader_open (SwfdecLoader *loader, const char *url)
 {
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
   g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_NEW);
 
   loader->state = SWFDEC_LOADER_STATE_OPEN;
-  loader->open_status = status;
+  if (url) {
+    swfdec_url_free (loader->url);
+    loader->url = swfdec_url_new (url);
+  }
   if (loader->player)
     swfdec_player_add_external_action (loader->player, loader, swfdec_loader_perform_open, NULL);
 }

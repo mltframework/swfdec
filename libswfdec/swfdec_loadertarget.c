@@ -76,7 +76,7 @@ swfdec_loader_target_get_player (SwfdecLoaderTarget *target)
 }
 
 void
-swfdec_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader, guint status)
+swfdec_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecLoaderTargetInterface *iface;
   
@@ -87,7 +87,7 @@ swfdec_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader, gui
 
   iface = SWFDEC_LOADER_TARGET_GET_INTERFACE (target);
   if (iface->open)
-    iface->open (target, loader, status);
+    iface->open (target, loader);
 }
 
 void

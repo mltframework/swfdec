@@ -1832,9 +1832,6 @@ swfdec_player_update_size (gpointer playerp, gpointer unused)
  *
  * Sets the image size to the given values. The image size is what the area that
  * the @player will render and advocate with scripts.
- * <note>Calling this function or setting the corresponding properties causes 
- * the emission of an event inside the script engine for listeners registered on
- * the Stage object.</note>
  **/
 void
 swfdec_player_set_size (SwfdecPlayer *player, int width, int height)

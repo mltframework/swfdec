@@ -644,6 +644,9 @@ swfdec_player_dispose (GObject *object)
     }
   }
 #endif
+  swfdec_player_remove_all_external_actions (player, player);
+  g_assert (swfdec_ring_buffer_pop (player->external_actions) == NULL);
+  swfdec_ring_buffer_free (player->external_actions);
   g_assert (swfdec_ring_buffer_pop (player->actions) == NULL);
   swfdec_ring_buffer_free (player->actions);
   g_assert (player->movies == NULL);
@@ -1400,6 +1403,8 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->rate = rate;
   player->width = width;
   player->height = height;
+  player->internal_width = player->stage_width >=0 ? (guint) player->stage_width : player->width;
+  player->internal_height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
   player->initialized = TRUE;
   if (rate) {
     player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / rate;
@@ -1801,24 +1806,21 @@ swfdec_player_get_size (SwfdecPlayer *player, int *width, int *height)
 }
 
 static void
-swfdec_player_set_size_internal (SwfdecPlayer *player, int width, int height)
+swfdec_player_update_size (gpointer playerp, gpointer unused)
 {
-  gboolean changed = FALSE;
+  SwfdecPlayer *player = playerp;
+  guint width, height;
 
-  if (player->stage_width != width) {
-    player->stage_width = width;
-    g_object_notify (G_OBJECT (player), "width");
-    changed = TRUE;
-  }
-  if (player->stage_height != height) {
-    player->stage_height = height;
-    g_object_notify (G_OBJECT (player), "height");
-    changed = TRUE;
-  }
-  swfdec_player_update_scale (player);
-  if (changed && player->scale_mode == SWFDEC_SCALE_NONE) {
-    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
-  }
+  /* FIXME: only update if not fullscreen */
+  width = player->stage_width >=0 ? (guint) player->stage_width : player->width;
+  height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
+  /* only broadcast once */
+  if (width == player->internal_width && height == player->internal_height)
+    return;
+
+  player->internal_width = width;
+  player->internal_height = height;
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
 }
 
 /**
@@ -1836,14 +1838,25 @@ swfdec_player_set_size_internal (SwfdecPlayer *player, int width, int height)
 void
 swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
 {
+  gboolean changed = FALSE;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (width >= -1);
   g_return_if_fail (height >= -1);
 
-  swfdec_player_lock (player);
-  swfdec_player_set_size_internal (player, width, height);
-  swfdec_player_perform_actions (player);
-  swfdec_player_unlock (player);
+  if (player->stage_width != width) {
+    player->stage_width = width;
+    g_object_notify (G_OBJECT (player), "width");
+    changed = TRUE;
+  }
+  if (player->stage_height != height) {
+    player->stage_height = height;
+    g_object_notify (G_OBJECT (player), "height");
+    changed = TRUE;
+  }
+  swfdec_player_update_scale (player);
+  if (changed && player->scale_mode == SWFDEC_SCALE_NONE)
+    swfdec_player_add_external_action (player, player, swfdec_player_update_size, NULL);
 }
 
 /**

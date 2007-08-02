@@ -61,6 +61,8 @@ struct _SwfdecPlayer
   SwfdecColor		bgcolor;		/* background color */
   SwfdecLoader *	loader;			/* initial loader */
   /* stage properties */
+  guint			internal_width;		/* width used by the scripting engine */
+  guint			internal_height;	/* height used by the scripting engine */
   gint			stage_width;		/* width set by the user */
   gint			stage_height;		/* height set by the user */
   guint			align_flags;		/* SwfdecAlignFlag */

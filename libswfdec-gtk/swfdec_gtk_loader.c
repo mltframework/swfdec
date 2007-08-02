@@ -85,18 +85,27 @@ swfdec_gtk_loader_open (SoupMessage *msg, gpointer loader)
 }
 
 static void
+swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
+{
+  char *real_uri;
+
+  if (gtk->opened)
+    return;
+
+  real_uri = soup_uri_to_string (soup_message_get_uri (gtk->message), FALSE);
+  g_print ("open %s\n", real_uri);
+  swfdec_loader_open (SWFDEC_LOADER (gtk), real_uri);
+  gtk->opened = TRUE;
+  g_free (real_uri);
+}
+
+static void
 swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
   SwfdecBuffer *buffer;
 
-  if (!gtk->opened) {
-    char *real_uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
-    g_print ("open %s\n", real_uri);
-    swfdec_loader_open (loader, real_uri);
-    gtk->opened = TRUE;
-    g_free (real_uri);
-  }
+  swfdec_gtk_loader_ensure_open (gtk);
   g_print ("push\n");
   buffer = swfdec_buffer_new_and_alloc (msg->response.length);
   memcpy (buffer->data, msg->response.body, msg->response.length);
@@ -108,6 +117,7 @@ static void
 swfdec_gtk_loader_finish (SoupMessage *msg, gpointer loader)
 {
   if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
+    swfdec_gtk_loader_ensure_open (loader);
     g_print ("eof\n");
     swfdec_loader_eof (loader);
   } else {

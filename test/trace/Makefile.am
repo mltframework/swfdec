@@ -324,6 +324,13 @@ EXTRA_DIST = \
 	crash-0.5.2-startdrag.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	date.as \
+	date-5.swf \
+	date-5.swf.trace \
+	date-6.swf \
+	date-6.swf.trace \
+	date-7.swf \
+	date-7.swf.trace \
 	definefunction2-arguments.swf \
 	definefunction2-arguments.swf.trace \
 	definefunction2-arguments.xml \

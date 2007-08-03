@@ -66,7 +66,6 @@
  *                                to delete this variable.
  * @SWFDEC_AS_VARIABLE_READONLY: Do not allow changing the value with
  *                               swfdec_as_object_set_variable().
- * @SWFDEC_AS_VARIABLE_NATIVE: The variable is implemented natively.
  *
  * These flags are used to describe various properties of a variable inside
  * Swfdec. You can manually set them with swfdec_as_object_set_variable_flags().

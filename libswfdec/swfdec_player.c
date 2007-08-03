@@ -1636,8 +1636,9 @@ swfdec_init (void)
  * probably want to call swfdec_player_advance() before to update the player to
  * the correct time when calling this function.
  *
- * Returns: TRUE if the mouse event was handled. A mouse event may not be 
- *          handled if the user clicked on a translucent area for example.
+ * Returns: %TRUE if the mouse event was handled. %FALSE to propagate the event
+ *          further. A mouse event may not be handled if the user clicked on a 
+ *          translucent area.
  **/
 gboolean
 swfdec_player_handle_mouse (SwfdecPlayer *player, 
@@ -1653,6 +1654,17 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
   return ret;
 }
 
+/**
+ * swfdec_player_key_press:
+ * @player: a #SwfdecPlayer
+ * @key: the key that was pressed
+ *
+ * Call this function to make the @player react to a key press. Be sure to
+ * transform the keycode to the right #SwfdecKey.
+ *
+ * Returns: %TRUE if the key press was handled by the @player, %FALSE if it
+ *          should be propagated further
+ **/
 gboolean
 swfdec_player_key_press (SwfdecPlayer *player, SwfdecKey key)
 {
@@ -1666,6 +1678,17 @@ swfdec_player_key_press (SwfdecPlayer *player, SwfdecKey key)
   return ret;
 }
 
+/**
+ * swfdec_player_key_release:
+ * @player: a #SwfdecPlayer
+ * @key: the key that was released
+ *
+ * Call this function to make the @player react to a key being released. Be 
+ * sure to transform the keycode to the right #SwfdecKey.
+ *
+ * Returns: %TRUE if the key press was handled by the @player, %FALSE if it
+ *          should be propagated further
+ **/
 gboolean
 swfdec_player_key_release (SwfdecPlayer *player, SwfdecKey key)
 {

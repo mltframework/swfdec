@@ -407,6 +407,7 @@ swfdec_player_remove_all_external_actions (SwfdecPlayer *player, gpointer object
 enum {
   INVALIDATE,
   ADVANCE,
+  HANDLE_KEY,
   HANDLE_MOUSE,
   AUDIO_ADDED,
   AUDIO_REMOVED,
@@ -890,6 +891,14 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 }
 
 static gboolean
+swfdec_player_do_handle_key (SwfdecPlayer *player, SwfdecKey key, gboolean down)
+{
+  g_assert (key < 256);
+
+  return TRUE;
+}
+
+static gboolean
 swfdec_player_do_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
@@ -1155,13 +1164,31 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       NULL, NULL, swfdec_marshal_VOID__UINT_UINT,
       G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
   /**
+   * SwfdecPlayer::handle-key:
+   * @player: the #SwfdecPlayer affected
+   * @key: #SwfdecKey that was pressed or released
+   * @pressed: %TRUE if the @key was pressed or %FALSE if it was released
+   *
+   * This signal is emitted whenever @player should respond to a key event. If
+   * any of the handlers returns TRUE, swfdec_player_key_press() or 
+   * swfdec_player_key_release() will return TRUE. Note that unlike many event 
+   * handlers in gtk, returning TRUE will not stop further event handlers from 
+   * being invoked. Use g_signal_stop_emission() in that case.
+   *
+   * Returns: TRUE if this handler handles the event. 
+   **/
+  signals[HANDLE_KEY] = g_signal_new ("handle-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, handle_key), 
+      swfdec_accumulate_or, NULL, swfdec_marshal_BOOLEAN__UINT_BOOLEAN,
+      G_TYPE_BOOLEAN, 2, G_TYPE_UINT, G_TYPE_BOOLEAN);
+  /**
    * SwfdecPlayer::handle-mouse:
    * @player: the #SwfdecPlayer affected
    * @x: new x coordinate of the mouse
    * @y: new y coordinate of the mouse
    * @button: 1 if the button is pressed, 0 if not
    *
-   * this signal is emitted whenever @player should respond to a mouse event. If
+   * This signal is emitted whenever @player should respond to a mouse event. If
    * any of the handlers returns TRUE, swfdec_player_handle_mouse() will return 
    * TRUE. Note that unlike many event handlers in gtk, returning TRUE will not 
    * stop further event handlers from being invoked. Use g_signal_stop_emission()
@@ -1244,6 +1271,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   context_class->get_time = swfdec_player_get_time;
 
   klass->advance = swfdec_player_do_advance;
+  klass->handle_key = swfdec_player_do_handle_key;
   klass->handle_mouse = swfdec_player_do_handle_mouse;
 }
 
@@ -1621,6 +1649,32 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
   g_return_val_if_fail (button == 0 || button == 1, FALSE);
 
   g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, button, &ret);
+
+  return ret;
+}
+
+gboolean
+swfdec_player_key_press (SwfdecPlayer *player, SwfdecKey key)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (key >= 256, FALSE);
+
+  g_signal_emit (player, signals[HANDLE_KEY], 0, key, TRUE, &ret);
+
+  return ret;
+}
+
+gboolean
+swfdec_player_key_release (SwfdecPlayer *player, SwfdecKey key)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (key >= 256, FALSE);
+
+  g_signal_emit (player, signals[HANDLE_KEY], 0, key, FALSE, &ret);
 
   return ret;
 }

@@ -31,6 +31,7 @@
 #include <libswfdec/swfdec_buffer.h>
 #include <libswfdec/swfdec_enums.h>
 #include <libswfdec/swfdec_file_loader.h>
+#include <libswfdec/swfdec_key.h>
 #include <libswfdec/swfdec_loader.h>
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_url.h>

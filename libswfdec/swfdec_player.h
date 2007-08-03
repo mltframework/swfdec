@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <cairo.h>
+#include <libswfdec/swfdec_key.h>
 #include <libswfdec/swfdec_loader.h>
 
 G_BEGIN_DECLS
@@ -111,6 +112,10 @@ gboolean	swfdec_player_handle_mouse	(SwfdecPlayer *	player,
 						 double		x,
 						 double		y,
 						 int		button);
+gboolean	swfdec_player_key_press		(SwfdecPlayer *	player,
+						 SwfdecKey	key);
+gboolean	swfdec_player_key_release	(SwfdecPlayer *	player,
+						 SwfdecKey	key);
 /* audio - see swfdec_audio.c */
 void		swfdec_player_render_audio	(SwfdecPlayer *	player,
 						 gint16 *	dest, 

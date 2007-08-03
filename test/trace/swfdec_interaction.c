@@ -244,7 +244,10 @@ swfdec_interaction_advance (SwfdecInteraction *inter, SwfdecPlayer *player, guin
 	    command->args.mouse.y, command->args.mouse.button);
 	break;
       case SWFDEC_COMMAND_PRESS:
+	swfdec_player_key_press (player, command->args.key);
+	break;
       case SWFDEC_COMMAND_RELEASE:
+	swfdec_player_key_release (player, command->args.key);
 	break;
       case SWFDEC_COMMAND_UP:
       case SWFDEC_COMMAND_DOWN:

@@ -81,6 +81,16 @@ swfdec_command_append_mouse (SwfdecInteraction *inter, int x, int y, int button)
 }
 
 static void
+swfdec_command_append_key (SwfdecInteraction *inter, guint key, SwfdecCommandType type)
+{
+  SwfdecCommand command;
+
+  command.command = type;
+  command.args.key = key;
+  g_array_append_val (inter->commands, command);
+}
+
+static void
 swfdec_command_append_wait (SwfdecInteraction *inter, int msecs)
 {
   SwfdecCommand command;
@@ -108,6 +118,8 @@ swfdec_interaction_new (const char *data, guint length, GError **error)
   g_scanner_scope_add_symbol (scanner, 0, "move", GINT_TO_POINTER (SWFDEC_COMMAND_MOVE));
   g_scanner_scope_add_symbol (scanner, 0, "down", GINT_TO_POINTER (SWFDEC_COMMAND_DOWN));
   g_scanner_scope_add_symbol (scanner, 0, "up", GINT_TO_POINTER (SWFDEC_COMMAND_UP));
+  g_scanner_scope_add_symbol (scanner, 0, "press", GINT_TO_POINTER (SWFDEC_COMMAND_PRESS));
+  g_scanner_scope_add_symbol (scanner, 0, "release", GINT_TO_POINTER (SWFDEC_COMMAND_RELEASE));
   g_scanner_input_text (scanner, data, length);
 
   /* setup inter */
@@ -145,6 +157,22 @@ swfdec_interaction_new (const char *data, guint length, GError **error)
 	break;
       case SWFDEC_COMMAND_UP:
 	swfdec_command_append_mouse (inter, inter->mouse_x, inter->mouse_y, 0);
+	break;
+      case SWFDEC_COMMAND_PRESS:
+	token = g_scanner_get_next_token (scanner);
+	if (token != G_TOKEN_INT) {
+	  g_scanner_unexp_token (scanner, G_TOKEN_INT, NULL, NULL, NULL, NULL, TRUE);
+	  goto error;
+	}
+	swfdec_command_append_key (inter, scanner->value.v_int, SWFDEC_COMMAND_PRESS);
+	break;
+      case SWFDEC_COMMAND_RELEASE:
+	token = g_scanner_get_next_token (scanner);
+	if (token != G_TOKEN_INT) {
+	  g_scanner_unexp_token (scanner, G_TOKEN_INT, NULL, NULL, NULL, NULL, TRUE);
+	  goto error;
+	}
+	swfdec_command_append_key (inter, scanner->value.v_int, SWFDEC_COMMAND_RELEASE);
 	break;
       default:
 	g_scanner_unexp_token (scanner, SWFDEC_COMMAND_WAIT, NULL, NULL, NULL, NULL, TRUE);
@@ -214,6 +242,9 @@ swfdec_interaction_advance (SwfdecInteraction *inter, SwfdecPlayer *player, guin
       case SWFDEC_COMMAND_MOVE:
 	swfdec_player_handle_mouse (player, command->args.mouse.x, 
 	    command->args.mouse.y, command->args.mouse.button);
+	break;
+      case SWFDEC_COMMAND_PRESS:
+      case SWFDEC_COMMAND_RELEASE:
 	break;
       case SWFDEC_COMMAND_UP:
       case SWFDEC_COMMAND_DOWN:

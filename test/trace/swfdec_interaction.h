@@ -29,10 +29,14 @@ typedef enum {
   SWFDEC_COMMAND_WAIT = G_TOKEN_LAST + 1,
   /* move (int x, int y) */
   SWFDEC_COMMAND_MOVE,
-  /* press (void) */
+  /* mouse press (void) */
   SWFDEC_COMMAND_DOWN,
-  /* release (void) */
-  SWFDEC_COMMAND_UP
+  /* mouse release (void) */
+  SWFDEC_COMMAND_UP,
+  /* key press (int key) */
+  SWFDEC_COMMAND_PRESS,
+  /* key release (int key) */
+  SWFDEC_COMMAND_RELEASE
 } SwfdecCommandType;
 
 typedef struct _SwfdecCommand SwfdecCommand;
@@ -45,6 +49,7 @@ struct _SwfdecCommand {
       int		button;
     }			mouse;
     guint		time;
+    guint		key;
   }			args;
 };
 

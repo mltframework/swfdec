@@ -307,7 +307,6 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
       return;
     }
   }
-  g_assert_not_reached ();
 }
 
 SwfdecPlayback *

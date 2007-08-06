@@ -26,7 +26,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 
-//getCode,isDown,isToggled
 SWFDEC_AS_NATIVE (800, 0, swfdec_key_getAscii)
 void
 swfdec_key_getAscii (SwfdecAsContext *cx, SwfdecAsObject *object,

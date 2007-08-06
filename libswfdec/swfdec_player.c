@@ -891,9 +891,9 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 }
 
 static gboolean
-swfdec_player_do_handle_key (SwfdecPlayer *player, SwfdecKey key, gboolean down)
+swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint character, gboolean down)
 {
-  g_assert (key < 256);
+  g_assert (keycode < 256);
 
   return TRUE;
 }
@@ -1179,8 +1179,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    **/
   signals[HANDLE_KEY] = g_signal_new ("handle-key", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, handle_key), 
-      swfdec_accumulate_or, NULL, swfdec_marshal_BOOLEAN__UINT_BOOLEAN,
-      G_TYPE_BOOLEAN, 2, G_TYPE_UINT, G_TYPE_BOOLEAN);
+      swfdec_accumulate_or, NULL, swfdec_marshal_BOOLEAN__UINT_UINT_BOOLEAN,
+      G_TYPE_BOOLEAN, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_BOOLEAN);
   /**
    * SwfdecPlayer::handle-mouse:
    * @player: the #SwfdecPlayer affected
@@ -1657,23 +1657,25 @@ swfdec_player_handle_mouse (SwfdecPlayer *player,
 /**
  * swfdec_player_key_press:
  * @player: a #SwfdecPlayer
- * @key: the key that was pressed
+ * @keycode: the key that was pressed
+ * @character: UCS4 of the character that was inserted or 0 if none
  *
  * Call this function to make the @player react to a key press. Be sure to
- * transform the keycode to the right #SwfdecKey.
+ * check that keycode transformations are done correctly. For a list of 
+ * keycodes see FIXME.
  *
  * Returns: %TRUE if the key press was handled by the @player, %FALSE if it
  *          should be propagated further
  **/
 gboolean
-swfdec_player_key_press (SwfdecPlayer *player, SwfdecKey key)
+swfdec_player_key_press (SwfdecPlayer *player, guint keycode, guint character)
 {
   gboolean ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
-  g_return_val_if_fail (key >= 256, FALSE);
+  g_return_val_if_fail (keycode < 256, FALSE);
 
-  g_signal_emit (player, signals[HANDLE_KEY], 0, key, TRUE, &ret);
+  g_signal_emit (player, signals[HANDLE_KEY], 0, keycode, character, TRUE, &ret);
 
   return ret;
 }
@@ -1681,23 +1683,24 @@ swfdec_player_key_press (SwfdecPlayer *player, SwfdecKey key)
 /**
  * swfdec_player_key_release:
  * @player: a #SwfdecPlayer
- * @key: the key that was released
+ * @keycode: the key that was released
+ * @character: UCS4 of the character that was inserted or 0 if none
  *
- * Call this function to make the @player react to a key being released. Be 
- * sure to transform the keycode to the right #SwfdecKey.
+ * Call this function to make the @player react to a key being released. See
+ * swfdec_player_key_press() for details.
  *
  * Returns: %TRUE if the key press was handled by the @player, %FALSE if it
  *          should be propagated further
  **/
 gboolean
-swfdec_player_key_release (SwfdecPlayer *player, SwfdecKey key)
+swfdec_player_key_release (SwfdecPlayer *player, guint keycode, guint character)
 {
   gboolean ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
-  g_return_val_if_fail (key >= 256, FALSE);
+  g_return_val_if_fail (keycode < 256, FALSE);
 
-  g_signal_emit (player, signals[HANDLE_KEY], 0, key, FALSE, &ret);
+  g_signal_emit (player, signals[HANDLE_KEY], 0, keycode, character, FALSE, &ret);
 
   return ret;
 }

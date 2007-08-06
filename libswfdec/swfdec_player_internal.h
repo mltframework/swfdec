@@ -122,7 +122,8 @@ struct _SwfdecPlayerClass
 						 guint			msecs,
 						 guint			audio_samples);
   gboolean		(* handle_key)		(SwfdecPlayer *		player,
-						 SwfdecKey		key,
+						 guint			key,
+						 guint			character,
 						 gboolean		down);
   gboolean		(* handle_mouse)	(SwfdecPlayer *		player,
 						 double			x,

@@ -575,34 +575,34 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 gboolean
 swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
-g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
-g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), FALSE);
 
-/* FIXME: what do we do when called in flash 4? */
-switch (value->type) {
-case SWFDEC_AS_TYPE_UNDEFINED:
-case SWFDEC_AS_TYPE_NULL:
-return FALSE;
-case SWFDEC_AS_TYPE_BOOLEAN:
-return SWFDEC_AS_VALUE_GET_BOOLEAN (value);
-case SWFDEC_AS_TYPE_NUMBER:
-{
-  double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
-  return d != 0.0 && !isnan (d);
-}
-case SWFDEC_AS_TYPE_STRING:
-if (context->version <= 6) {
-  double d = swfdec_as_value_to_number (context, value);
-  return d != 0.0 && !isnan (d);
-} else {
-  return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
-}
-case SWFDEC_AS_TYPE_OBJECT:
-return TRUE;
-default:
-g_assert_not_reached ();
-return FALSE;
-}
+  /* FIXME: what do we do when called in flash 4? */
+  switch (value->type) {
+    case SWFDEC_AS_TYPE_UNDEFINED:
+    case SWFDEC_AS_TYPE_NULL:
+      return FALSE;
+    case SWFDEC_AS_TYPE_BOOLEAN:
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value);
+    case SWFDEC_AS_TYPE_NUMBER:
+      {
+	double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
+	return d != 0.0 && !isnan (d);
+      }
+    case SWFDEC_AS_TYPE_STRING:
+      if (context->version <= 6) {
+	double d = swfdec_as_value_to_number (context, value);
+	return d != 0.0 && !isnan (d);
+      } else {
+	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
+      }
+    case SWFDEC_AS_TYPE_OBJECT:
+      return TRUE;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
+  }
 }
 
 /**
@@ -617,11 +617,11 @@ return FALSE;
 void
 swfdec_as_value_to_primitive (SwfdecAsValue *value)
 {
-g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-if (SWFDEC_AS_VALUE_IS_OBJECT (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value))) {
-swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
-  0, NULL, value);
-}
+  if (SWFDEC_AS_VALUE_IS_OBJECT (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value))) {
+    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
+	0, NULL, value);
+  }
 }
 

@@ -55,6 +55,13 @@ AsBroadcaster.initialize = function (o) {
 };
 ASSetPropFlags(AsBroadcaster, null, 131);
 
+Key = { ALT: 18, BACKSPACE: 8, CAPSLOCK: 20, CONTROL: 17, DELETEKEY: 46, 
+    DOWN: 40, END: 35, ENTER: 13, ESCAPE: 27, HOME: 36, INSERT: 45, LEFT: 37, 
+    PGDN: 34, PGUP: 33, RIGHT: 39, SHIFT: 16, SPACE: 32, TAB: 9, UP: 38 };
+ASSetNative(Key, 800, "getAscii,getCode,isDown");
+AsBroadcaster.initialize(Key);
+ASSetPropFlags(Key, null, 7);
+
 /*** MOUSE ***/
 
 Mouse = new Object ();

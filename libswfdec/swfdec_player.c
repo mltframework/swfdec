@@ -895,6 +895,16 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
 {
   g_assert (keycode < 256);
 
+  /* set the correct variables */
+  player->last_keycode = keycode;
+  player->last_character = character;
+  if (down) {
+    player->key_pressed[keycode / 8] |= 1 << keycode % 8;
+  } else {
+    player->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
+  }
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp);
+
   return TRUE;
 }
 

@@ -96,6 +96,11 @@ struct _SwfdecPlayer
   double		mouse_drag_x;		/* offset of mouse in x direction */
   double		mouse_drag_y;		/* offset of mouse in y direction */
 
+  /* key */
+  guint			last_keycode;		/* last keycode that was pressed/released */
+  guint			last_character;		/* UCS4 of last character pressed/released */
+  guint8		key_pressed[256/8];   	/* boolean array for isDown */
+
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
   guint			audio_skip;		/* number of frames to auto-skip when adding new audio */

@@ -73,6 +73,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_html_parser.c \
 	swfdec_image.c \
 	swfdec_interval.c \
+	swfdec_key_as.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
 	swfdec_marshal.c \

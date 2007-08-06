@@ -141,7 +141,7 @@ swfdec_debug_widget_class_init (SwfdecDebugWidgetClass * g_class)
 }
 
 static void
-swfdec_debug_widget_init (SwfdecDebugWidget * debug_widget)
+swfdec_debug_widget_init (SwfdecDebugWidget *widget)
 {
 }
 

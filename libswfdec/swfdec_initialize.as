@@ -19,6 +19,7 @@
 
 /*** GENERAL ***/
 
+ASSetNative = ASnative (4, 0);
 ASSetNativeAccessor = ASnative (4, 1);
 
 /*** ASBROADCASTER ***/

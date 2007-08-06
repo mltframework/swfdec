@@ -129,6 +129,47 @@ swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *obj,
   }
 }
 
+SWFDEC_AS_NATIVE (4, 0, ASSetNative)
+void
+ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecAsFunction *function;
+  SwfdecAsObject *target;
+  SwfdecAsValue val;
+  const char *s;
+  char **names;
+  guint i, x, y;
+
+  if (argc < 3)
+    return;
+
+  target = swfdec_as_value_to_object (cx, &argv[0]);
+  x = swfdec_as_value_to_integer (cx, &argv[1]);
+  s = swfdec_as_value_to_string (cx, &argv[2]);
+  if (argc > 3)
+    y = swfdec_as_value_to_integer (cx, &argv[3]);
+  else
+    y = 0;
+  names = g_strsplit (s, ",", -1);
+  for (i = 0; names[i]; i++) {
+    s = names[i];
+    if (s[0] >= '0' && s[0] <= '9') {
+      SWFDEC_FIXME ("implement the weird numbers");
+      s++;
+    }
+    function = swfdec_get_asnative (cx, x, y);
+    if (function == NULL) {
+      SWFDEC_FIXME ("no ASnative function for %u, %u, what now?", x, y);
+      return;
+    }
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
+    swfdec_as_object_set_variable (target, swfdec_as_context_get_string (cx, s), &val);
+    y++;
+  }
+  g_free (names);
+}
+
 SWFDEC_AS_NATIVE (4, 1, ASSetNativeAccessor)
 void
 ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,

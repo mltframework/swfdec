@@ -496,10 +496,10 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
   if (!isfinite (d))
     return 0;
   if (d < 0) {
-    d = fmod (-d, 4294967296);
+    d = fmod (-d, 4294967296.0);
     return - (guint) d;
   } else {
-    d = fmod (d, 4294967296);
+    d = fmod (d, 4294967296.0);
     return (guint) d;
   }
 }

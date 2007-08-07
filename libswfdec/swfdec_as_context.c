@@ -879,7 +879,8 @@ swfdec_as_context_eval_get_property (SwfdecAsContext *cx,
 	return;
       }
     } else {
-      SWFDEC_ERROR ("no frame in eval?");
+      SWFDEC_WARNING ("eval called without a frame");
+      swfdec_as_object_get_variable (cx->global, name, ret);
     }
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
@@ -939,11 +940,14 @@ swfdec_as_context_eval_internal (SwfdecAsContext *cx, SwfdecAsObject *obj, const
       goto finish;
     }
   }
-  if (obj == NULL && cx->frame) {
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cx->frame), SWFDEC_AS_STR_this, &cur);
-  } else {
-    SWFDEC_AS_VALUE_SET_OBJECT (&cur, obj);
+  if (obj == NULL) {
+    if (cx->frame)
+      obj = cx->frame->target;
+    else
+      obj = cx->global;
   }
+  g_assert (obj != NULL);
+  SWFDEC_AS_VALUE_SET_OBJECT (&cur, obj);
 
 finish:
   g_strfreev (varlist);

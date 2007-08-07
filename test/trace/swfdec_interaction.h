@@ -49,7 +49,10 @@ struct _SwfdecCommand {
       int		button;
     }			mouse;
     guint		time;
-    guint		key;
+    struct {
+      SwfdecKey		code;
+      guint		ascii;
+    }			key;
   }			args;
 };
 

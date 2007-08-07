@@ -81,12 +81,13 @@ swfdec_command_append_mouse (SwfdecInteraction *inter, int x, int y, int button)
 }
 
 static void
-swfdec_command_append_key (SwfdecInteraction *inter, guint key, SwfdecCommandType type)
+swfdec_command_append_key (SwfdecInteraction *inter, SwfdecKey code, guint ascii, SwfdecCommandType type)
 {
   SwfdecCommand command;
 
   command.command = type;
-  command.args.key = key;
+  command.args.key.code = code;
+  command.args.key.ascii = ascii;
   g_array_append_val (inter->commands, command);
 }
 
@@ -159,20 +160,25 @@ swfdec_interaction_new (const char *data, guint length, GError **error)
 	swfdec_command_append_mouse (inter, inter->mouse_x, inter->mouse_y, 0);
 	break;
       case SWFDEC_COMMAND_PRESS:
-	token = g_scanner_get_next_token (scanner);
-	if (token != G_TOKEN_INT) {
-	  g_scanner_unexp_token (scanner, G_TOKEN_INT, NULL, NULL, NULL, NULL, TRUE);
-	  goto error;
-	}
-	swfdec_command_append_key (inter, scanner->value.v_int, SWFDEC_COMMAND_PRESS);
-	break;
       case SWFDEC_COMMAND_RELEASE:
+	j = token;
 	token = g_scanner_get_next_token (scanner);
 	if (token != G_TOKEN_INT) {
 	  g_scanner_unexp_token (scanner, G_TOKEN_INT, NULL, NULL, NULL, NULL, TRUE);
 	  goto error;
 	}
-	swfdec_command_append_key (inter, scanner->value.v_int, SWFDEC_COMMAND_RELEASE);
+	i = scanner->value.v_int;
+	if (i >= 256) {
+	  g_scanner_unexp_token (scanner, G_TOKEN_INT, NULL, NULL, NULL, NULL, TRUE);
+	  goto error;
+	}
+	/* FIXME: allow string here and convert first char */
+	token = g_scanner_get_next_token (scanner);
+	if (token != G_TOKEN_INT) {
+	  g_scanner_unexp_token (scanner, G_TOKEN_INT, NULL, NULL, NULL, NULL, TRUE);
+	  goto error;
+	}
+	swfdec_command_append_key (inter, i, scanner->value.v_int, j);
 	break;
       default:
 	g_scanner_unexp_token (scanner, SWFDEC_COMMAND_WAIT, NULL, NULL, NULL, NULL, TRUE);
@@ -244,10 +250,10 @@ swfdec_interaction_advance (SwfdecInteraction *inter, SwfdecPlayer *player, guin
 	    command->args.mouse.y, command->args.mouse.button);
 	break;
       case SWFDEC_COMMAND_PRESS:
-	swfdec_player_key_press (player, command->args.key);
+	swfdec_player_key_press (player, command->args.key.code, command->args.key.ascii);
 	break;
       case SWFDEC_COMMAND_RELEASE:
-	swfdec_player_key_release (player, command->args.key);
+	swfdec_player_key_release (player, command->args.key.code, command->args.key.ascii);
 	break;
       case SWFDEC_COMMAND_UP:
       case SWFDEC_COMMAND_DOWN:

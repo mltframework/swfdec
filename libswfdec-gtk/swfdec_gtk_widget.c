@@ -22,7 +22,9 @@
 #endif
 
 #include <math.h>
-#include <libswfdec-gtk/swfdec_gtk_widget.h>
+#include <gdk/gdkkeysyms.h>
+#include "swfdec_gtk_widget.h"
+#include "swfdec_gtk_keys.h"
 
 struct _SwfdecGtkWidgetPrivate
 {
@@ -122,6 +124,67 @@ swfdec_gtk_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
     if (priv->interactive)
       swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
   }
+  return FALSE;
+}
+
+static guint
+swfdec_gtk_event_to_keycode (GdkEventKey *event)
+{
+  guint ret;
+
+  /* we try to match as well as possible to Flash _Windows_ key codes.
+   * Since a lot of Flash files won't special case weird Linux key codes and we
+   * want the best compatibility possible, we have to do that.
+   */
+  /* FIXME: I have no clue about non-western keyboards, so if you happen to use
+   * such a keyboard, please help out here if it doesn't match.
+   */
+
+  /* try to match latin keys directly */
+  if (event->keyval >= GDK_A && event->keyval <= GDK_Z)
+    return event->keyval - GDK_A + SWFDEC_KEY_A;
+  if (event->keyval >= GDK_a && event->keyval <= GDK_z)
+    return event->keyval - GDK_a + SWFDEC_KEY_A;
+
+  /* last resort: try to translate the hardware keycode directly */
+  ret = swfdec_keycode_from_hardware_keycode (event->hardware_keycode);
+  if (ret == 0)
+    g_printerr ("could not translate key to Flash keycode. HW keycode %u, keyval %u\n",
+	event->hardware_keycode, event->keyval);
+  return ret;
+}
+
+static gboolean
+swfdec_gtk_widget_key_press (GtkWidget *gtkwidget, GdkEventKey *event)
+{
+  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  if (priv->interactive) {
+    guint keycode = swfdec_gtk_event_to_keycode (event);
+    if (keycode != 0) {
+      swfdec_player_key_press (priv->player, keycode, 
+	  gdk_keyval_to_unicode (event->keyval));
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
+{
+  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  if (priv->interactive) {
+    guint keycode = swfdec_gtk_event_to_keycode (event);
+    if (keycode != 0) {
+      swfdec_player_key_release (priv->player, keycode, 
+	  gdk_keyval_to_unicode (event->keyval));
+    }
+  }
+
   return FALSE;
 }
 
@@ -341,7 +404,9 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
 			   GDK_BUTTON_RELEASE_MASK |
 			   GDK_LEAVE_NOTIFY_MASK | 
 			   GDK_POINTER_MOTION_MASK | 
-			   GDK_POINTER_MOTION_HINT_MASK;
+			   GDK_POINTER_MOTION_HINT_MASK |
+			   GDK_KEY_PRESS_MASK |
+			   GDK_KEY_RELEASE_MASK;
 
   attributes_mask = GDK_WA_X | GDK_WA_Y;
 
@@ -388,6 +453,8 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   widget_class->button_release_event = swfdec_gtk_widget_button_release;
   widget_class->motion_notify_event = swfdec_gtk_widget_motion_notify;
   widget_class->leave_notify_event = swfdec_gtk_widget_leave_notify;
+  widget_class->key_press_event = swfdec_gtk_widget_key_press;
+  widget_class->key_release_event = swfdec_gtk_widget_key_release;
 
   g_type_class_add_private (object_class, sizeof (SwfdecGtkWidgetPrivate));
 }
@@ -401,6 +468,8 @@ swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
 
   priv->interactive = TRUE;
   priv->renderer = CAIRO_SURFACE_TYPE_IMAGE;
+
+  GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS);
 }
 
 static void

@@ -13,6 +13,7 @@ js_cflags = -I$(srcdir)/js/ -I$(top_builddir)/libswfdec/js -DXP_UNIX -DDEBUG
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_playback.c \
 	swfdec_source.c \
+	swfdec_gtk_keys.c \
 	swfdec_gtk_loader.c \
 	swfdec_gtk_player.c \
 	swfdec_gtk_widget.c
@@ -32,6 +33,7 @@ libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec-gtk
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec-gtk.h \
+	swfdec_gtk_keys.h \
 	swfdec_gtk_loader.h \
 	swfdec_gtk_player.h \
 	swfdec_gtk_widget.h

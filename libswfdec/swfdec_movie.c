@@ -43,6 +43,11 @@
 
 /*** MOVIE ***/
 
+enum {
+  PROP_0,
+  PROP_DEPTH
+};
+
 G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
 
 static void
@@ -256,9 +261,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   if (player->mouse_drag == movie)
     player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
-  movie->depth = -16385 - movie->depth; /* don't ask me why... */
-  if (movie->parent)
-    movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
+  swfdec_movie_set_depth (movie, -16385 - movie->depth); /* don't ask me why... */
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie))
     return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
@@ -739,6 +742,38 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 static void
+swfdec_movie_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+
+  switch (param_id) {
+    case PROP_DEPTH:
+      g_value_set_int (value, movie->depth);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_movie_set_property (GObject *object, guint param_id, const GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+
+  switch (param_id) {
+    case PROP_DEPTH:
+      movie->depth = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
 swfdec_movie_dispose (GObject *object)
 {
   SwfdecMovie * movie = SWFDEC_MOVIE (object);
@@ -873,11 +908,17 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (movie_class);
 
   object_class->dispose = swfdec_movie_dispose;
+  object_class->get_property = swfdec_movie_get_property;
+  object_class->set_property = swfdec_movie_set_property;
 
   asobject_class->mark = swfdec_movie_mark;
   asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
   asobject_class->debug = swfdec_movie_get_debug;
+
+  g_object_class_install_property (object_class, PROP_DEPTH,
+      g_param_spec_int ("depth", "depth", "z order inside the parent",
+	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }
@@ -892,6 +933,25 @@ swfdec_movie_initialize (SwfdecMovie *movie)
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->init_movie)
     klass->init_movie (movie);
+}
+
+void
+swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  if (movie->depth == depth)
+    return;
+
+  swfdec_movie_invalidate (movie);
+  movie->depth = depth;
+  if (movie->parent) {
+    movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
+  } else {
+    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    player->roots = g_list_sort (player->roots, swfdec_movie_compare_depths);
+  }
+  g_object_notify (G_OBJECT (movie), "depth");
 }
 
 /**
@@ -925,13 +985,14 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
 
   /* create the right movie */
   if (graphic == NULL) {
-    movie = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, NULL);
+    movie = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, "depth", depth, NULL);
     size = sizeof (SwfdecSpriteMovie);
   } else {
     SwfdecGraphicClass *klass = SWFDEC_GRAPHIC_GET_CLASS (graphic);
     g_return_val_if_fail (klass->create_movie != NULL, NULL);
     movie = klass->create_movie (graphic, &size);
     movie->graphic = g_object_ref (graphic);
+    movie->depth = depth;
   }
   /* register it to the VM */
   /* FIXME: It'd be nice if we'd not overuse memory here when calling this function from a script */
@@ -941,7 +1002,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   g_object_ref (movie);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   /* set essential properties */
-  movie->depth = depth;
   movie->parent = parent;
   if (parent) {
     movie->swf = g_object_ref (parent->swf);

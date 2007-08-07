@@ -257,20 +257,14 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *obj,
     if (!SWFDEC_IS_MOVIE (other) ||
 	other->parent != movie->parent)
       return;
-    swfdec_movie_invalidate (other);
     depth = other->depth;
-    other->depth = movie->depth;
   } else {
     depth = swfdec_as_value_to_integer (cx, &argv[0]);
     other = swfdec_movie_find (movie->parent, depth);
-    if (other) {
-      swfdec_movie_invalidate (other);
-      other->depth = movie->depth;
-    }
   }
-  swfdec_movie_invalidate (movie);
-  movie->depth = depth;
-  movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
+  if (other)
+    swfdec_movie_set_depth (other, movie->depth);
+  swfdec_movie_set_depth (movie, depth);
 }
 
 static void

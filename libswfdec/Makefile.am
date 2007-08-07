@@ -131,6 +131,7 @@ public_headers = \
 	swfdec_audio.h \
 	swfdec_buffer.h \
 	swfdec_file_loader.h \
+	swfdec_keys.h \
 	swfdec_loader.h \
 	swfdec_player.h \
 	swfdec_url.h

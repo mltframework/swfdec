@@ -57,8 +57,8 @@ swfdec_debug_movies_get_column_type (GtkTreeModel *tree_model, gint index_)
       return G_TYPE_POINTER;
     case SWFDEC_DEBUG_MOVIES_COLUMN_NAME:
       return G_TYPE_STRING;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_VISIBLE:
-      return G_TYPE_BOOLEAN;
+    case SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH:
+      return G_TYPE_INT;
     case SWFDEC_DEBUG_MOVIES_COLUMN_TYPE:
       return G_TYPE_STRING;
     default:
@@ -72,63 +72,35 @@ static gboolean
 swfdec_debug_movies_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath *path)
 {
   SwfdecDebugMovies *movies = SWFDEC_DEBUG_MOVIES (tree_model);
-  guint depth;
+  GNode *node;
+  guint i, depth;
   int *indices;
-  GList *walk;
-  SwfdecMovie *movie;
 
   REPORT;
   depth = gtk_tree_path_get_depth (path);
   indices = gtk_tree_path_get_indices (path);
   if (indices == NULL)
     return FALSE;
-  walk = g_list_nth (movies->player->roots, *indices);
-  if (!walk)
-    return FALSE;
-  movie = walk->data;
-  indices++;
-  depth--;
-  for (; depth > 0; depth--) {
-    walk = g_list_nth (movie->list, *indices);
-    if (!walk)
+  node = movies->root;
+  for (i = 0; i < depth; i++) {
+    node = g_node_nth_child (node, indices[i]);
+    if (node == NULL)
       return FALSE;
-    movie = walk->data;
-    indices++;
   }
-  iter->user_data = movie;
+  iter->user_data = node;
+  iter->stamp = movies->stamp;
   return TRUE;
 }
 
-static gint
-my_g_list_is_nth (GList *list, gpointer data)
-{
-  gint count;
-
-  count = 0;
-  for (; list; list = list->next) {
-    if (list->data == data)
-      return count;
-    count++;
-  }
-  return -1;
-}
-
 static GtkTreePath *
-swfdec_debug_movies_movie_to_path (SwfdecMovie *movie)
+swfdec_debug_movies_node_to_path (GNode *node)
 {
   GtkTreePath *path;
-  gint i;
 
-  if (movie->parent) {
-    i = my_g_list_is_nth (movie->parent->list, movie);
-    g_assert (i >= 0);
-    path = swfdec_debug_movies_movie_to_path (movie->parent);
-    gtk_tree_path_append_index (path, i);
-  } else {
-    i = my_g_list_is_nth (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->roots, movie);
-    g_assert (i >= 0);
-    path = gtk_tree_path_new ();
-    gtk_tree_path_append_index (path, i);
+  path = gtk_tree_path_new ();
+  while (node->parent != NULL) {
+    gtk_tree_path_prepend_index (path, g_node_child_position (node->parent, node));
+    node = node->parent;
   }
   return path;
 }
@@ -137,14 +109,14 @@ static GtkTreePath *
 swfdec_debug_movies_get_path (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   REPORT;
-  return swfdec_debug_movies_movie_to_path (iter->user_data);
+  return swfdec_debug_movies_node_to_path (iter->user_data);
 }
 
 static void 
 swfdec_debug_movies_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
     gint column, GValue *value)
 {
-  SwfdecMovie *movie = iter->user_data;
+  SwfdecMovie *movie = ((GNode *) iter->user_data)->data;
 
   REPORT;
   switch (column) {
@@ -154,11 +126,14 @@ swfdec_debug_movies_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
       return;
     case SWFDEC_DEBUG_MOVIES_COLUMN_NAME:
       g_value_init (value, G_TYPE_STRING);
-      g_value_set_string (value, movie->name);
+      if (movie->name[0])
+	g_value_set_string (value, movie->name);
+      else
+	g_value_set_string (value, movie->original_name);
       return;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_VISIBLE:
-      g_value_init (value, G_TYPE_BOOLEAN);
-      g_value_set_boolean (value, movie->visible);
+    case SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH:
+      g_value_init (value, G_TYPE_INT);
+      g_value_set_int (value, movie->depth);
       return;
     case SWFDEC_DEBUG_MOVIES_COLUMN_TYPE:
       g_value_init (value, G_TYPE_STRING);
@@ -174,40 +149,31 @@ swfdec_debug_movies_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
 static gboolean
 swfdec_debug_movies_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
-  GList *list;
-  SwfdecMovie *movie = iter->user_data;
+  GNode *node;
 
   REPORT;
-  if (movie->parent) {
-    list = movie->parent->list;
-  } else {
-    list = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->roots;
-  }
-  list = g_list_find (list, movie);
-  g_assert (list);
-  list = list->next;
-  if (list == NULL)
+  node = iter->user_data;
+  node = node->next;
+  if (node == NULL)
     return FALSE;
-  iter->user_data = list->data;
+  iter->user_data = node;
   return TRUE;
 }
 
 static gboolean
 swfdec_debug_movies_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent)
 {
-  GList *list;
+  GNode *node;
 
   REPORT;
   if (parent) {
-    SwfdecMovie *movie = parent->user_data;
-    list = movie->list;
+    node = parent->user_data;
   } else {
-    SwfdecPlayer *player = SWFDEC_DEBUG_MOVIES (tree_model)->player;
-    list = player->roots;
+    node = SWFDEC_DEBUG_MOVIES (tree_model)->root;
   }
-  if (list == NULL)
+  if (node->children == NULL)
     return FALSE;
-  iter->user_data = list->data;
+  iter->user_data = node->children;
   return TRUE;
 }
 
@@ -223,49 +189,47 @@ swfdec_debug_movies_iter_has_child (GtkTreeModel *tree_model, GtkTreeIter *iter)
 static gint
 swfdec_debug_movies_iter_n_children (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
-  GList *list;
+  GNode *node;
 
   REPORT;
   if (iter) {
-    SwfdecMovie *movie = iter->user_data;
-    list = movie->list;
+    node = iter->user_data;
   } else {
-    SwfdecPlayer *player = SWFDEC_DEBUG_MOVIES (tree_model)->player;
-    list = player->roots;
+    node = SWFDEC_DEBUG_MOVIES (tree_model)->root;
   }
-  return g_list_length (list);
+  return g_node_n_children (node);
 }
 
 static gboolean
 swfdec_debug_movies_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
     GtkTreeIter *parent, gint n)
 {
-  GList *list;
+  GNode *node;
 
   REPORT;
   if (parent) {
-    SwfdecMovie *movie = parent->user_data;
-    list = movie->list;
+    node = parent->user_data;
   } else {
-    SwfdecPlayer *player = SWFDEC_DEBUG_MOVIES (tree_model)->player;
-    list = player->roots;
+    node = SWFDEC_DEBUG_MOVIES (tree_model)->root;
   }
-  list = g_list_nth (list, n);
-  if (list == NULL)
+  node = g_node_nth_child (node, n);
+  if (node == NULL)
     return FALSE;
-  iter->user_data = list->data;
+  iter->user_data = node;
   return TRUE;
 }
 
 static gboolean
 swfdec_debug_movies_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *child)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (child->user_data);
+  GNode *node;
 
   REPORT;
-  if (movie->parent == NULL)
+  node = child->user_data;
+  node = node->parent;
+  if (node->parent == NULL)
     return FALSE;
-  iter->user_data = movie->parent;
+  iter->user_data = node;
   return TRUE;
 }
 
@@ -291,37 +255,81 @@ swfdec_debug_movies_tree_model_init (GtkTreeModelIface *iface)
 G_DEFINE_TYPE_WITH_CODE (SwfdecDebugMovies, swfdec_debug_movies, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, swfdec_debug_movies_tree_model_init))
 
+static int
+swfdec_debug_movies_get_index (GNode *parent, GNode *new)
+{
+  GNode *walk;
+  int i = 0;
+
+  for (walk = parent->children; walk; walk = walk->next) {
+    if (walk == new)
+      continue;
+    if (swfdec_movie_compare_depths (walk->data, new->data) < 0) {
+      i++;
+      continue;
+    }
+    break;
+  }
+  return i;
+}
+
 static void
 swfdec_debug_movies_added (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDebugMovies *movies)
 {
-  GtkTreePath *path = swfdec_debug_movies_movie_to_path (movie);
+  GtkTreePath *path;
   GtkTreeIter iter;
+  GNode *node, *new;
+  int pos;
 
-  iter.user_data = movie;
+  if (movie->parent) {
+    node = g_hash_table_lookup (movies->nodes, movie->parent);
+    g_assert (node);
+  } else {
+    node = movies->root;
+  }
+  new = g_node_new (movie);
+  g_hash_table_insert (movies->nodes, movie, new);
+  pos = swfdec_debug_movies_get_index (node, new);
+  g_node_insert (node, pos, new);
+  movies->stamp++;
+  iter.stamp = movies->stamp;
+  iter.user_data = new;
+  path = swfdec_debug_movies_node_to_path (new);
   gtk_tree_model_row_inserted (GTK_TREE_MODEL (movies), path, &iter);
+  gtk_tree_path_free (path);
+}
+
+static void
+swfdec_debug_movies_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, SwfdecDebugMovies *movies)
+{
+  GtkTreeIter iter;
+  GtkTreePath *path;
+  GNode *node;
+
+  node = g_hash_table_lookup (movies->nodes, movie);
+  if (g_str_equal (pspec->name, "depth")) {
+    /* reorder when depth changes */
+    g_printerr ("FIXME: implement depth changes\n");
+  }
+  iter.stamp = movies->stamp;
+  iter.user_data = node;
+  path = swfdec_debug_movies_node_to_path (node);
+  gtk_tree_model_row_changed (GTK_TREE_MODEL (movies), path, &iter);
   gtk_tree_path_free (path);
 }
 
 static void
 swfdec_debug_movies_removed (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDebugMovies *movies)
 {
-  GList *list;
+  GNode *node;
   GtkTreePath *path;
-  int i = 0;
 
-  if (movie->parent) {
-    path = swfdec_debug_movies_movie_to_path (movie->parent);
-    list = movie->parent->list;
-  } else {
-    path = gtk_tree_path_new ();
-    list = player->roots;
-  }
-  for (;list; list = list->next) {
-    if (swfdec_movie_compare_depths (list->data, movie) >= 0)
-      break;
-    i++;
-  }
-  gtk_tree_path_append_index (path, i);
+  node = g_hash_table_lookup (movies->nodes, movie);
+  g_hash_table_remove (movies->nodes, movie);
+  g_signal_handlers_disconnect_by_func (movie, swfdec_debug_movies_movie_notify, movies);
+  path = swfdec_debug_movies_node_to_path (node);
+  g_assert (g_node_n_children (node) == 0);
+  g_node_destroy (node);
   gtk_tree_model_row_deleted (GTK_TREE_MODEL (movies), path);
   gtk_tree_path_free (path);
 }
@@ -334,6 +342,9 @@ swfdec_debug_movies_dispose (GObject *object)
   g_signal_handlers_disconnect_by_func (movies->player, swfdec_debug_movies_removed, movies);
   g_signal_handlers_disconnect_by_func (movies->player, swfdec_debug_movies_added, movies);
   g_object_unref (movies->player);
+  g_assert (g_node_n_children (movies->root) == 0);
+  g_node_destroy (movies->root);
+  g_hash_table_destroy (movies->nodes);
 
   G_OBJECT_CLASS (swfdec_debug_movies_parent_class)->dispose (object);
 }
@@ -347,8 +358,10 @@ swfdec_debug_movies_class_init (SwfdecDebugMoviesClass *class)
 }
 
 static void
-swfdec_debug_movies_init (SwfdecDebugMovies *token)
+swfdec_debug_movies_init (SwfdecDebugMovies *movies)
 {
+  movies->root = g_node_new (NULL);
+  movies->nodes = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 SwfdecDebugMovies *
@@ -359,7 +372,7 @@ swfdec_debug_movies_new (SwfdecPlayer *player)
   movies = g_object_new (SWFDEC_TYPE_DEBUG_MOVIES, NULL);
   movies->player = player;
   g_object_ref (player);
-  if (SWFDEC_IS_DEBUGGER (player) && FALSE) {
+  if (SWFDEC_IS_DEBUGGER (player)) {
     g_signal_connect (player, "movie-added", G_CALLBACK (swfdec_debug_movies_added), movies);
     g_signal_connect (player, "movie-removed", G_CALLBACK (swfdec_debug_movies_removed), movies);
   }

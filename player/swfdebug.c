@@ -228,9 +228,9 @@ create_movieview (SwfdecPlayer *player)
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 
-  renderer = gtk_cell_renderer_toggle_new ();
-  column = gtk_tree_view_column_new_with_attributes ("V", renderer,
-    "active", SWFDEC_DEBUG_MOVIES_COLUMN_VISIBLE, NULL);
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes ("Depth", renderer,
+    "text", SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH, NULL);
   gtk_tree_view_column_set_resizable (column, TRUE);
   gtk_tree_view_append_column (GTK_TREE_VIEW (treeview), column);
 

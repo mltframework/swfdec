@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 enum {
   SWFDEC_DEBUG_MOVIES_COLUMN_MOVIE,
   SWFDEC_DEBUG_MOVIES_COLUMN_NAME,
-  SWFDEC_DEBUG_MOVIES_COLUMN_VISIBLE,
+  SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH,
   SWFDEC_DEBUG_MOVIES_COLUMN_TYPE,
   /* add more */
   SWFDEC_DEBUG_MOVIES_N_COLUMNS
@@ -47,6 +47,9 @@ struct _SwfdecDebugMovies
   GObject		object;
 
   SwfdecPlayer *	player;		/* the video we play */
+  GNode *		root;		/* the root node containing all the movies */
+  int			stamp;		/* to validate tree iters */
+  GHashTable *		nodes;		/* movies => node fast lookup table */
 };
 
 struct _SwfdecDebugMoviesClass

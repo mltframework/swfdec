@@ -38,6 +38,7 @@ SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 							 SwfdecLoaderRequest	request,
 							 const char *		data,
 							 gsize			data_len);
+void			swfdec_loader_close		(SwfdecLoader *		loader);
 void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 							 SwfdecLoaderTarget *	target);
 void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,

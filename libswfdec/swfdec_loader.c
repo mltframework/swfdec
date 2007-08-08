@@ -259,6 +259,18 @@ swfdec_loader_load (SwfdecLoader *loader, const char *url_string,
 }
 
 void
+swfdec_loader_close (SwfdecLoader *loader)
+{
+  SwfdecLoaderClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  klass = SWFDEC_LOADER_GET_CLASS (loader);
+  
+  if (klass->close)
+    klass->close (loader);
+}
+
+void
 swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
 {
   g_return_if_fail (SWFDEC_IS_LOADER (loader));

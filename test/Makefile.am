@@ -8,23 +8,23 @@ else
 noinst_PROGRAMS = swfdec-extract dump parse 
 endif
 
-dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(PANGO_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(PANGO_CFLAGS)
 dump_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS)
 
 parse_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
 parse_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
-swfdec_extract_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+swfdec_extract_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
 swfdec_extract_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
-libswfedit_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+libswfedit_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
 libswfedit_la_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
 
-swfedit_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+swfedit_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
 swfedit_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
 swfedit_LDADD = libswfedit.la
 
-swfscript_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) -DXP_UNIX -I$(top_builddir)/libswfdec/js
+swfscript_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
 swfscript_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
 swfscript_LDADD = libswfedit.la
 

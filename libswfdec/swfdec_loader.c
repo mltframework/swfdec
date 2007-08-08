@@ -268,6 +268,8 @@ swfdec_loader_close (SwfdecLoader *loader)
   
   if (klass->close)
     klass->close (loader);
+  if (loader->state != SWFDEC_LOADER_STATE_ERROR)
+    loader->state = SWFDEC_LOADER_STATE_CLOSED;
 }
 
 void

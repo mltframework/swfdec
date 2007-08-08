@@ -76,7 +76,7 @@ struct _SwfdecLoaderClass
 					 SwfdecLoaderRequest		request,
 					 const char *			data,
 					 gsize				data_len);
-  /* if open, close the loader */
+  /* if open, close the loader. NB: you may not call push() or eof() after the loader has been closed */
   void			(* close)	(SwfdecLoader *			loader);
 };
 

@@ -30,6 +30,7 @@ typedef enum {
   SWFDEC_LOADER_STATE_OPEN,		/* loader is opened and has got the HTTP headers */
   SWFDEC_LOADER_STATE_READING,		/* loader has read some bytes of data and is still reading */
   SWFDEC_LOADER_STATE_EOF,		/* swfdec_loader_eof() has been called */
+  SWFDEC_LOADER_STATE_CLOSED,		/* loader has been closed by Swfdec */
   SWFDEC_LOADER_STATE_ERROR		/* loader is in error state */
 } SwfdecLoaderState;
 

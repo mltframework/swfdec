@@ -80,7 +80,7 @@ swfdec_gtk_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 
   gdk_window_get_pointer (gtkwidget->window, &x, &y, NULL);
 
-  if (priv->interactive)
+  if (priv->interactive && priv->player)
     swfdec_player_handle_mouse (priv->player, x, y, priv->button);
   
   return FALSE;
@@ -92,7 +92,7 @@ swfdec_gtk_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
-  if (priv->interactive) {
+  if (priv->interactive && priv->player) {
     priv->button = 0;
     swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
   }
@@ -107,7 +107,7 @@ swfdec_gtk_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     priv->button = 1;
-    if (priv->interactive)
+    if (priv->interactive && priv->player)
       swfdec_player_handle_mouse (priv->player, event->x, event->y, 1);
   }
   return FALSE;
@@ -121,7 +121,7 @@ swfdec_gtk_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1) {
     priv->button = 0;
-    if (priv->interactive)
+    if (priv->interactive && priv->player)
       swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
   }
   return FALSE;

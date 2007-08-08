@@ -141,6 +141,20 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
 }
 
 static void
+swfdec_gtk_loader_close (SwfdecLoader *loader)
+{
+  SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
+
+  if (gtk->message) {
+    SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
+
+    soup_session_cancel_message (klass->session, gtk->message);
+    g_object_unref (gtk->message);
+    gtk->message = NULL;
+  }
+}
+
+static void
 swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -149,6 +163,7 @@ swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
   object_class->dispose = swfdec_gtk_loader_dispose;
 
   loader_class->load = swfdec_gtk_loader_load;
+  loader_class->close = swfdec_gtk_loader_close;
   
   g_thread_init (NULL);
   klass->session = soup_session_async_new ();

@@ -211,6 +211,8 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 
   if (event->window != gtkwidget->window)
     return FALSE;
+  if (priv->player == NULL)
+    return FALSE;
 
   if (!priv->renderer_set ||
       (surface = swfdec_gtk_widget_create_renderer (priv->renderer, 
@@ -309,7 +311,8 @@ swfdec_gtk_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation
 
   gtkwidget->allocation = *allocation;
 
-  swfdec_player_set_size (priv->player, allocation->width, allocation->height);
+  if (priv->player)
+    swfdec_player_set_size (priv->player, allocation->width, allocation->height);
   if (GTK_WIDGET_REALIZED (gtkwidget)) {
     gdk_window_move_resize (gtkwidget->window, 
 	allocation->x, allocation->y, allocation->width, allocation->height);

@@ -7,9 +7,16 @@ else
 GTK_SUBDIRS =
 endif
 
+if HAVE_VIVI
+VIVI_SUBDIRS = vivified
+else
+VIVI_SUBDIRS =
+endif
+
 SUBDIRS= \
 	libswfdec \
 	$(GTK_SUBDIRS) \
+	$(VIVI_SUBDIRS) \
 	test
 
 ACLOCAL_FLAGS = -I m4

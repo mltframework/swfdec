@@ -264,6 +264,25 @@ else
 fi
 AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 
+AC_ARG_ENABLE(vivified,
+	AS_HELP_STRING([--enable-vivified],
+			[enable Vivified Flash debugger (default=no)])],
+	enable_vivi=$enableval,
+	enable_vivi="no")
+if test "$enable_vivi" = "yes"; then
+	MING_REQUIRED=0.4.0.beta5
+	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
+	if test "x$HAVE_VIVI" = xyes; then
+	  AC_DEFINE(HAVE_VIVI, 1, [Define if Vivified is enabled])
+	else
+	  AC_MSG_ERROR([Vivified requirements not met. You need at libming >= $MING_REQUIRED.])
+	fi
+else
+	AC_MSG_WARN([*** Vivified was not enabled. ***])
+fi
+AM_CONDITIONAL(HAVE_VIVI, [test "x$HAVE_VIVI" = xyes])
+
+
 AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)
 
@@ -305,6 +324,9 @@ test/image/Makefile
 test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
+vivified/Makefile
+vivified/core/Makefile
+vivified/ui/Makefile
 swfdec.pc
 swfdec-gtk.pc
 swfdec.spec

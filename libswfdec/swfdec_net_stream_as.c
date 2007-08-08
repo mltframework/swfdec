@@ -30,6 +30,15 @@
 #include "swfdec_player_internal.h"
 
 static void
+swfdec_net_stream_close (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+
+  swfdec_net_stream_set_loader (stream, NULL);
+  swfdec_net_stream_set_playing (stream, TRUE);
+}
+
+static void
 swfdec_net_stream_play (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
@@ -119,6 +128,8 @@ swfdec_net_stream_init_context (SwfdecPlayer *player, guint version)
       swfdec_net_stream_pause, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, SWFDEC_TYPE_NET_STREAM,
       swfdec_net_stream_play, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_close, SWFDEC_TYPE_NET_STREAM,
+      swfdec_net_stream_close, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_seek, SWFDEC_TYPE_NET_STREAM,
       swfdec_net_stream_do_seek, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setBufferTime, SWFDEC_TYPE_NET_STREAM,

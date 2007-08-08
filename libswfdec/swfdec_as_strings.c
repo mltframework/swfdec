@@ -249,6 +249,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("xMax")
   SWFDEC_AS_CONSTANT_STRING ("yMin")
   SWFDEC_AS_CONSTANT_STRING ("yMax")
+  SWFDEC_AS_CONSTANT_STRING ("close")
   /* add more here */
 ;
 

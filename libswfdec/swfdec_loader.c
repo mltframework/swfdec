@@ -338,6 +338,7 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
     return;
   }
 
+  SWFDEC_ERROR ("error in loader %p: %s", loader, error);
   loader->state = SWFDEC_LOADER_STATE_ERROR;
   loader->error = g_strdup (error);
   if (loader->target)

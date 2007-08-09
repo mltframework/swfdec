@@ -39,6 +39,30 @@ vivi_vdock_dispose (GObject *object)
 }
 
 static void
+vivi_vdock_size_request (GtkWidget *widget, GtkRequisition *req)
+{
+  GtkWidget *child = GTK_BIN (widget)->child;
+  
+  if (child) {
+    gtk_widget_size_request (child, req);
+  } else {
+    req->width = req->height = 0;
+  }
+}
+
+static void
+vivi_vdock_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
+{
+  GtkWidget *child = GTK_BIN (widget)->child;
+  
+  GTK_WIDGET_CLASS (vivi_vdock_parent_class)->size_allocate (widget, allocation);
+
+  if (child && GTK_WIDGET_VISIBLE (child)) {
+    gtk_widget_size_allocate (child, allocation);
+  }
+}
+
+static void
 vivi_vdock_add (GtkContainer *container, GtkWidget *widget)
 {
   ViviVDock *vdock = VIVI_VDOCK (container);
@@ -119,16 +143,37 @@ vivi_vdock_child_type (GtkContainer *container)
 }
 
 static void
+vivi_vdock_forall (GtkContainer *container, gboolean include_internals,
+    GtkCallback callback, gpointer callback_data)
+{
+  if (include_internals) {
+    GTK_CONTAINER_CLASS (vivi_vdock_parent_class)->forall (container, include_internals, 
+	callback, callback_data);
+  } else {
+    GList *walk;
+
+    for (walk = VIVI_VDOCK (container)->docklets; walk; walk = walk->next) {
+      callback (walk->data, callback_data);
+    }
+  }
+}
+
+static void
 vivi_vdock_class_init (ViviVDockClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
   GtkContainerClass *container_class = GTK_CONTAINER_CLASS (klass);
 
   object_class->dispose = vivi_vdock_dispose;
 
+  widget_class->size_request = vivi_vdock_size_request;
+  widget_class->size_allocate = vivi_vdock_size_allocate;
+
   container_class->add = vivi_vdock_add;
   container_class->remove = vivi_vdock_remove;
   container_class->child_type = vivi_vdock_child_type;
+  container_class->forall = vivi_vdock_forall;
 }
 
 static void

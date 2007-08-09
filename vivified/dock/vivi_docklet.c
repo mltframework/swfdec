@@ -81,9 +81,34 @@ vivi_docklet_dispose (GObject *object)
 }
 
 static void
+vivi_docklet_size_request (GtkWidget *widget, GtkRequisition *req)
+{
+  GtkWidget *child = GTK_BIN (widget)->child;
+  
+  if (child) {
+    gtk_widget_size_request (child, req);
+  } else {
+    req->width = req->height = 0;
+  }
+}
+
+static void
+vivi_docklet_size_allocate (GtkWidget *widget, GtkAllocation *allocation)
+{
+  GtkWidget *child = GTK_BIN (widget)->child;
+  
+  GTK_WIDGET_CLASS (vivi_docklet_parent_class)->size_allocate (widget, allocation);
+
+  if (child && GTK_WIDGET_VISIBLE (child)) {
+    gtk_widget_size_allocate (child, allocation);
+  }
+}
+
+static void
 vivi_docklet_class_init (ViviDockletClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
   object_class->dispose = vivi_docklet_dispose;
   object_class->get_property = vivi_docklet_get_property;
@@ -95,6 +120,9 @@ vivi_docklet_class_init (ViviDockletClass *klass)
   g_object_class_install_property (object_class, PROP_ICON,
       g_param_spec_string ("icon", "icon", "name of the icon to display",
 	  GTK_STOCK_MISSING_IMAGE, G_PARAM_READWRITE));
+
+  widget_class->size_request = vivi_docklet_size_request;
+  widget_class->size_allocate = vivi_docklet_size_allocate;
 }
 
 static void

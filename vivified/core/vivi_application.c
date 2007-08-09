@@ -26,12 +26,18 @@
 #include "vivi_ming.h"
 
 enum {
+  MESSAGE,
+  LAST_SIGNAL
+};
+
+enum {
   PROP_0,
   PROP_FILENAME,
   PROP_PLAYER
 };
 
 G_DEFINE_TYPE (ViviApplication, vivi_application, SWFDEC_TYPE_AS_CONTEXT)
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 vivi_application_get_property (GObject *object, guint param_id, GValue *value, 
@@ -93,6 +99,10 @@ vivi_application_class_init (ViviApplicationClass *klass)
   g_object_class_install_property (object_class, PROP_PLAYER,
       g_param_spec_object ("player", "player", "Flash player in use",
 	  SWFDEC_TYPE_PLAYER, G_PARAM_READABLE));
+
+  signals[MESSAGE] = g_signal_new ("message", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT_POINTER, /* FIXME */
+      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_POINTER);
 }
 
 static void
@@ -104,7 +114,11 @@ vivi_application_init (ViviApplication *app)
 ViviApplication *
 vivi_application_new (void)
 {
-  return g_object_new (VIVI_TYPE_APPLICATION, NULL);
+  ViviApplication *app;
+
+  app = g_object_new (VIVI_TYPE_APPLICATION, NULL);
+  swfdec_as_context_startup (SWFDEC_AS_CONTEXT (app), 8);
+  return app;
 }
 
 void
@@ -153,11 +167,27 @@ vivi_application_run (ViviApplication *app, const char *command)
   g_return_if_fail (VIVI_IS_APPLICATION (app));
   g_return_if_fail (command != NULL);
 
+  vivi_application_input (app, command);
   script = vivi_ming_compile (command, &error);
   if (script == NULL) {
+    vivi_application_error (app, error);
     g_free (error);
   }
   swfdec_as_object_run (SWFDEC_AS_CONTEXT (app)->global, script);
   swfdec_script_unref (script);
+}
+
+void
+vivi_application_send_message (ViviApplication *app,
+    ViviMessageType type, const char *format, ...)
+{
+  va_list args;
+  char *msg;
+
+  va_start (args, format);
+  msg = g_strdup_vprintf (format, args);
+  va_end (args);
+  g_signal_emit (app, signals[MESSAGE], 0, (guint) type, msg);
+  g_free (msg);
 }
 

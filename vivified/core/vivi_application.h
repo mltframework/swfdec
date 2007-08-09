@@ -28,6 +28,12 @@ G_BEGIN_DECLS
 typedef struct _ViviApplication ViviApplication;
 typedef struct _ViviApplicationClass ViviApplicationClass;
 
+typedef enum {
+  VIVI_MESSAGE_INPUT,
+  VIVI_MESSAGE_OUTPUT,
+  VIVI_MESSAGE_ERROR
+} ViviMessageType;
+
 #define VIVI_TYPE_APPLICATION                    (vivi_application_get_type())
 #define VIVI_IS_APPLICATION(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_APPLICATION))
 #define VIVI_IS_APPLICATION_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_APPLICATION))
@@ -51,6 +57,17 @@ struct _ViviApplicationClass
 GType			vivi_application_get_type   	(void);
 
 ViviApplication *	vivi_application_new		(void);
+
+void			vivi_application_send_message	(ViviApplication *	app,
+							 ViviMessageType	type,
+							 const char *		format, 
+							 ...) G_GNUC_PRINTF (3, 4);
+#define vivi_application_input(manager, ...) \
+  vivi_application_send_message (manager, VIVI_MESSAGE_INPUT, __VA_ARGS__)
+#define vivi_application_output(manager, ...) \
+  vivi_application_send_message (manager, VIVI_MESSAGE_OUTPUT, __VA_ARGS__)
+#define vivi_application_error(manager, ...) \
+  vivi_application_send_message (manager, VIVI_MESSAGE_ERROR, __VA_ARGS__)
 
 void			vivi_application_set_filename	(ViviApplication *	app,
 							 const char *		filename);

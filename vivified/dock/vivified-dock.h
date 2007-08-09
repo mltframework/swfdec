@@ -21,5 +21,6 @@
 #define __VIVIFIED_DOCK_H__
 
 #include <vivified/dock/vivi_docklet.h>
+#include <vivified/dock/vivi_vdock.h>
 
 #endif

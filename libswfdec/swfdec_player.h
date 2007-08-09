@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <cairo.h>
+#include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_loader.h>
 
 G_BEGIN_DECLS
@@ -66,7 +67,7 @@ void		swfdec_init			(void);
 
 GType		swfdec_player_get_type		(void);
 
-SwfdecPlayer *	swfdec_player_new		(void);
+SwfdecPlayer *	swfdec_player_new		(SwfdecAsDebugger *	debugger);
 SwfdecPlayer *	swfdec_player_new_from_file	(const char *	filename);
 void		swfdec_player_set_loader	(SwfdecPlayer *	player,
 						 SwfdecLoader *	loader);

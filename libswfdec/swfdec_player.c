@@ -1509,6 +1509,7 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
 
 /**
  * swfdec_player_new:
+ * @debugger: %NULL or a #SwfdecAsDebugger to use for debugging this player.
  *
  * Creates a new player.
  * This function calls swfdec_init () for you if it wasn't called before.
@@ -1516,12 +1517,12 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
  * Returns: The new player
  **/
 SwfdecPlayer *
-swfdec_player_new (void)
+swfdec_player_new (SwfdecAsDebugger *debugger)
 {
   SwfdecPlayer *player;
 
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_PLAYER, NULL);
+  player = g_object_new (SWFDEC_TYPE_PLAYER, "debugger", debugger, NULL);
 
   return player;
 }
@@ -1597,7 +1598,7 @@ swfdec_player_new_from_file (const char *filename)
   g_return_val_if_fail (filename != NULL, NULL);
 
   loader = swfdec_file_loader_new (filename);
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   swfdec_player_set_loader (player, loader);
 
   return player;

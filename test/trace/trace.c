@@ -100,7 +100,7 @@ run_test (gpointer testp, gpointer unused)
     goto fail;
   }
   string = g_string_new ("");
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
   g_signal_connect (player, "fscommand", G_CALLBACK (fscommand_cb), &quit);
   swfdec_player_set_loader (player, loader);

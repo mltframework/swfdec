@@ -167,7 +167,7 @@ run_test (const char *filename)
     g_object_unref (loader);
     goto error;
   }
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   swfdec_player_set_loader (player, loader);
 
   for (i = 0; i < 10; i++) {

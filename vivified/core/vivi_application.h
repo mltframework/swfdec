@@ -58,6 +58,8 @@ const char *		vivi_application_get_filename	(ViviApplication *	app);
 SwfdecPlayer *	      	vivi_application_get_player	(ViviApplication *	app);
 
 void			vivi_application_reset		(ViviApplication *	app);
+void			vivi_application_run		(ViviApplication *	app,
+							 const char *		command);
 
 G_END_DECLS
 #endif

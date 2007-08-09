@@ -21,8 +21,9 @@
 #include "config.h"
 #endif
 
-#include "vivi_application.h"
 #include <libswfdec-gtk/swfdec-gtk.h>
+#include "vivi_application.h"
+#include "vivi_ming.h"
 
 enum {
   PROP_0,
@@ -141,5 +142,22 @@ vivi_application_get_player (ViviApplication *app)
   g_return_val_if_fail (VIVI_IS_APPLICATION (app), NULL);
 
   return app->player;
+}
+
+void
+vivi_application_run (ViviApplication *app, const char *command)
+{
+  SwfdecScript *script;
+  char *error = NULL;
+
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+  g_return_if_fail (command != NULL);
+
+  script = vivi_ming_compile (command, &error);
+  if (script == NULL) {
+    g_free (error);
+  }
+  swfdec_as_object_run (SWFDEC_AS_CONTEXT (app)->global, script);
+  swfdec_script_unref (script);
 }
 

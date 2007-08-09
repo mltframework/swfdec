@@ -23,6 +23,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
 	swfdec_as_context.c \
+	swfdec_as_debugger.c \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
 	swfdec_as_interpret.c \
@@ -125,6 +126,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 public_headers = \
 	swfdec.h \
 	swfdec_as_context.h \
+	swfdec_as_debugger.h \
 	swfdec_as_frame.h \
 	swfdec_as_object.h \
 	swfdec_as_types.h \

@@ -23,6 +23,7 @@
 #define __SWFDEC_H__
 
 #include <libswfdec/swfdec_as_context.h>
+#include <libswfdec/swfdec_as_debugger.h>
 #include <libswfdec/swfdec_as_frame.h>
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>

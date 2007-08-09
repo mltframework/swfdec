@@ -37,6 +37,7 @@ typedef enum {
 
 typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
+typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsObject SwfdecAsObject;

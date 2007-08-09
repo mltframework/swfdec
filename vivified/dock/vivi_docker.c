@@ -69,7 +69,9 @@ vivi_docker_set_docklet (ViviDocker *docker, ViviDocklet *docklet)
   g_return_if_fail (VIVI_IS_DOCKLET (docklet));
 
   box = gtk_hbox_new (FALSE, 3);
+  gtk_widget_show (box);
   widget = gtk_label_new (vivi_docklet_get_title (docklet));
+  gtk_widget_show (widget);
   g_signal_connect (docklet, "notify::title", G_CALLBACK (vivi_docker_docklet_notify_title), widget);
   gtk_box_pack_start (GTK_BOX (box), widget, TRUE, TRUE, 0);
   gtk_expander_set_label_widget (GTK_EXPANDER (docker), box);

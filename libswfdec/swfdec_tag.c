@@ -545,8 +545,7 @@ tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
     return SWFDEC_STATUS_OK;
   }
   name = g_strdup_printf ("InitAction %u", id);
-  sprite->init_action = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player),
-      bits, name, s->version);
+  sprite->init_action = swfdec_script_new (bits, name, s->version);
   g_free (name);
   if (sprite->init_action) {
     swfdec_script_ref (sprite->init_action);
@@ -595,7 +594,7 @@ tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
 
   name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
-  script = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (SWFDEC_DECODER (s)->player), &s->b, name, s->version);
+  script = swfdec_script_new (&s->b, name, s->version);
   g_free (name);
   if (script) {
     swfdec_swf_decoder_add_script (s, script);

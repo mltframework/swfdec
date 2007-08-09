@@ -53,7 +53,6 @@ struct _SwfdecScript {
   char *		name;			/* name identifying this script */
   guint			version;		/* version of the script */
   guint			n_registers;		/* number of registers */
-  gpointer		debugger;		/* debugger owning us or NULL */
   SwfdecBuffer *	constant_pool;		/* constant pool action */
   guint			flags;			/* SwfdecScriptFlags */
   guint			n_arguments;  		/* number of arguments */
@@ -82,12 +81,6 @@ void		swfdec_constant_pool_attach_to_context	(SwfdecConstantPool *	pool,
 SwfdecScript *	swfdec_script_new			(SwfdecBits *		bits,
 							 const char *		name,
 							 guint			version);
-SwfdecScript *	swfdec_script_new_for_context	  	(SwfdecAsContext *	context,
-							 SwfdecBits *		bits,
-							 const char *		name,
-							 guint			version);
-void		swfdec_script_add_to_context		(SwfdecScript *		script,
-							 SwfdecAsContext *	context);
 SwfdecScript *	swfdec_script_ref			(SwfdecScript *		script);
 void		swfdec_script_unref			(SwfdecScript *		script);
 

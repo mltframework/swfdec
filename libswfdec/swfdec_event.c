@@ -202,7 +202,7 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
   event.key = key;
   name = g_strconcat (description, ".", 
       swfdec_event_list_condition_name (conditions), NULL);
-  event.script = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (list->player), bits, name, version);
+  event.script = swfdec_script_new (bits, name, version);
   g_free (name);
   if (event.script) 
     g_array_append_val (list->events, event);

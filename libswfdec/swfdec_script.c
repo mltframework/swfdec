@@ -111,15 +111,6 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
 
 /*** SUPPORT FUNCTIONS ***/
 
-void
-swfdec_script_add_to_context (SwfdecScript *script, SwfdecAsContext *context)
-{
-  if (SWFDEC_IS_DEBUGGER (context)) {
-    swfdec_debugger_add_script (SWFDEC_DEBUGGER (context), script);
-    script->debugger = context;
-  }
-}
-
 char *
 swfdec_script_print_action (guint action, const guint8 *data, guint len)
 {
@@ -208,21 +199,6 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
 }
 
 SwfdecScript *
-swfdec_script_new_for_context (SwfdecAsContext *context, SwfdecBits *bits, 
-    const char *name, guint version)
-{
-  SwfdecScript *script;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (bits != NULL, NULL);
-
-  script = swfdec_script_new (bits, name, version);
-  if (script)
-    swfdec_script_add_to_context (script, context);
-  return script;
-}
-
-SwfdecScript *
 swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
@@ -280,11 +256,6 @@ swfdec_script_unref (SwfdecScript *script)
   g_return_if_fail (script->refcount > 0);
 
   script->refcount--;
-  if (script->refcount == 1 && script->debugger) {
-    script->debugger = NULL;
-    swfdec_debugger_remove_script (script->debugger, script);
-    return;
-  }
   if (script->refcount > 0)
     return;
 

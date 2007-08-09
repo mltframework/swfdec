@@ -1564,7 +1564,6 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   script->n_arguments = n_args;
   script->arguments = args;
   SWFDEC_AS_SCRIPT_FUNCTION (fun)->script = script;
-  swfdec_script_add_to_context (script, cx);
   /* attach the function */
   if (*function_name == '\0') {
     swfdec_as_stack_ensure_free (cx, 1);

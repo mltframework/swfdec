@@ -26,9 +26,29 @@
 G_DEFINE_TYPE (ViviCommandLine, vivi_command_line, VIVI_TYPE_DOCKLET)
 
 static void
+vivi_command_line_append_message (ViviApplication *app, guint type, const char *message, GtkTextView *view)
+{
+  GtkTextBuffer *buffer = gtk_text_view_get_buffer (view);
+  GtkTextIter iter;
+  GtkTextMark *mark;
+  const char *tag_names[] = { "input", "output", "error" };
+
+  gtk_text_buffer_get_end_iter (buffer, &iter);
+  mark = gtk_text_buffer_get_mark (buffer, "end");
+  if (mark == NULL)
+    mark = gtk_text_buffer_create_mark (buffer, "end", &iter, FALSE);
+  if (gtk_text_buffer_get_char_count (buffer) > 0)
+    gtk_text_buffer_insert (buffer, &iter, "\n", 1);
+  gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, message, -1, tag_names[type], NULL);
+  gtk_text_view_scroll_to_mark (view, mark, 0.0, TRUE, 0.0, 0.0);
+}
+
+static void
 vivi_command_line_dispose (GObject *object)
 {
-  //ViviCommandLine *command_line = VIVI_COMMAND_LINE (object);
+  ViviCommandLine *cl = VIVI_COMMAND_LINE (object);
+
+  g_signal_handlers_disconnect_by_func (cl->app, vivi_command_line_append_message, cl->view);
 
   G_OBJECT_CLASS (vivi_command_line_parent_class)->dispose (object);
 }
@@ -49,27 +69,48 @@ command_line_entry_activate_cb (GtkEntry *entry, ViviCommandLine *command_line)
   if (text[0] == '\0')
     return;
 
-  g_print ("%s\n", text);
-  //swfdec_player_manager_execute (manager, text);
+  vivi_application_run (command_line->app, text);
   gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
 }
 
 static void
-vivi_command_line_init (ViviCommandLine *command_line)
+vivi_command_line_init (ViviCommandLine *cl)
 {
-  GtkWidget *entry;
+  GtkWidget *box, *widget, *scroll;
 
-  entry = gtk_entry_new ();
-  gtk_container_add (GTK_CONTAINER (command_line), entry);
-  g_signal_connect (entry, "activate", G_CALLBACK (command_line_entry_activate_cb), command_line);
+  box = gtk_vbox_new (FALSE, 0);
+  gtk_container_add (GTK_CONTAINER (cl), box);
+  /* the text entry */
+  widget = gtk_entry_new ();
+  g_signal_connect (widget, "activate", G_CALLBACK (command_line_entry_activate_cb), cl);
+  gtk_box_pack_end (GTK_BOX (box), widget, FALSE, TRUE, 0);
+  /* the text view for outputting messages */
+  scroll = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
+      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start (GTK_BOX (box), scroll, TRUE, TRUE, 0);
+  cl->view = gtk_text_view_new ();
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (cl->view), FALSE);
+  gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (cl->view), GTK_WRAP_WORD_CHAR);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (cl->view)),
+      "error", "foreground", "red", "left-margin", 15, NULL);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (cl->view)),
+      "input", "foreground", "dark grey", NULL);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (cl->view)),
+      "output", "left-margin", 15, NULL);
+  gtk_container_add (GTK_CONTAINER (scroll), cl->view);
+
+  gtk_widget_show_all (box);
 }
 
 GtkWidget *
 vivi_command_line_new (ViviApplication *app)
 {
-  GtkWidget *cl;
+  ViviCommandLine *cl;
 
   cl = g_object_new (VIVI_TYPE_COMMAND_LINE, "title", "Command Line", NULL);
-  return cl;
+  cl->app = app;
+  g_signal_connect (cl->app, "message", G_CALLBACK (vivi_command_line_append_message), cl->view);
+  return GTK_WIDGET (cl);
 }
 

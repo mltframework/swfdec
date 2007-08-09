@@ -38,6 +38,9 @@ typedef struct _ViviCommandLineClass ViviCommandLineClass;
 
 struct _ViviCommandLine {
   ViviDocklet		docklet;
+
+  ViviApplication *	app;		/* the application we connect to */
+  GtkWidget *		view;		/* text view for outputting stuff to */
 };
 
 struct _ViviCommandLineClass

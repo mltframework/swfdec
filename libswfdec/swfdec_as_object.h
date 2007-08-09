@@ -151,6 +151,8 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 						 guint			argc,
 						 SwfdecAsValue *	argv,
 						 SwfdecAsValue *	return_value);
+void		swfdec_as_object_run		(SwfdecAsObject *       object,
+						 SwfdecScript *		script);
 
 
 G_END_DECLS

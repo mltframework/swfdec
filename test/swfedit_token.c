@@ -26,7 +26,7 @@
 #include <gtk/gtk.h>
 #include <libswfdec/swfdec_buffer.h>
 #include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_script_internal.h>
 #include "swfedit_token.h"
 
 /*** CONVERTERS ***/
@@ -315,15 +315,13 @@ static gboolean
 swfedit_script_from_string (const char *s, gpointer* result)
 {
   gpointer buffer;
-  SwfdecBits bits;
   SwfdecScript *script;
   
   if (!swfedit_binary_from_string (s, &buffer)) {
     return FALSE;
   }
 
-  swfdec_bits_init (&bits, buffer);
-  script = swfdec_script_new (&bits, "unknown", 6 /* FIXME */);
+  script = swfdec_script_new (buffer, "unknown", 6 /* FIXME */);
   swfdec_buffer_unref (buffer);
   if (script != NULL) {
     *result = script;

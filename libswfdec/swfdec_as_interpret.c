@@ -1551,7 +1551,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   }
   if (name == NULL)
     name = "unnamed_function";
-  script = swfdec_script_new (&bits, name, cx->version);
+  script = swfdec_script_new_from_bits (&bits, name, cx->version);
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (args);

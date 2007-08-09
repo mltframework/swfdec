@@ -27,6 +27,7 @@
 #include <libswfdec/swfdec_as_frame.h>
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
+#include <libswfdec/swfdec_script.h>
 
 #include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_buffer.h>

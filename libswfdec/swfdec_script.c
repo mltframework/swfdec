@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
@@ -199,7 +200,18 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
 }
 
 SwfdecScript *
-swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
+swfdec_script_new (SwfdecBuffer *buffer, const char *name, guint version)
+{
+  SwfdecBits bits;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+
+  swfdec_bits_init (&bits, buffer);
+  return swfdec_script_new_from_bits (&bits, name, version);
+}
+
+SwfdecScript *
+swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
   SwfdecBits org;

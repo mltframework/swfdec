@@ -49,8 +49,6 @@ guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
 void		swfdec_as_object_foreach_rename	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeachRename func,
 						 gpointer		data);
-void		swfdec_as_object_run		(SwfdecAsObject *       object,
-						 SwfdecScript *		script);
 
 void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);

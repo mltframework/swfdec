@@ -22,7 +22,7 @@
 #endif
 
 #include <gtk/gtk.h>
-#include "libswfdec/swfdec_script.h"
+#include "libswfdec/swfdec_script_internal.h"
 #include "swfdec_out.h"
 #include "swfedit_file.h"
 
@@ -162,7 +162,6 @@ modify_file (SwfeditToken *token, guint idx, const char *name,
     SwfeditTokenType type, gconstpointer value, gpointer data)
 {
   Action end;
-  SwfdecBits bits;
   SwfdecScript *script;
   State state;
 
@@ -208,8 +207,7 @@ modify_file (SwfeditToken *token, guint idx, const char *name,
   g_print ("got a new script in %u bytes - old script was %u bytes\n", 
       state.buffer->length, state.script->buffer->length);
 #endif
-  swfdec_bits_init (&bits, state.buffer);
-  script = swfdec_script_new (&bits, state.script->name, state.script->version);
+  script = swfdec_script_new (state.buffer, state.script->name, state.script->version);
   swfdec_buffer_unref (state.buffer);
   g_assert (script);
   swfedit_token_set (token, idx, script);

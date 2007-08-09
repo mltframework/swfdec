@@ -26,7 +26,7 @@
 
 #include <libswfdec/swfdec_bits.h>
 #include <libswfdec/swfdec_debug.h>
-#include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_script_internal.h>
 #include <libswfdec/swfdec_tag.h>
 #include "swfedit_tag.h"
 #include "swfdec_out.h"
@@ -217,7 +217,7 @@ swfedit_script_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
     token = token->parent;
   if (!SWFEDIT_IS_FILE (token))
     return NULL;
-  return swfdec_script_new (bits, "original script", swfedit_file_get_version (SWFEDIT_FILE (token)));
+  return swfdec_script_new_from_bits (bits, "original script", swfedit_file_get_version (SWFEDIT_FILE (token)));
 }
 
 static void

@@ -40,7 +40,7 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
-#include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
 
@@ -1432,7 +1432,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       SwfdecBits bits;
       SwfdecScript *script;
       swfdec_bits_init_data (&bits, swfdec_initialize, sizeof (swfdec_initialize));
-      script = swfdec_script_new (&bits, "init", version);
+      script = swfdec_script_new_from_bits (&bits, "init", version);
       g_assert (script);
       swfdec_as_object_run (context->global, script);
       swfdec_script_unref (script);

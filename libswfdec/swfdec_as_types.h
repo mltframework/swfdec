@@ -49,6 +49,8 @@ typedef void (* SwfdecAsNative) (SwfdecAsContext *	context,
 				 guint			argc,
 				 SwfdecAsValue *	argv,
 				 SwfdecAsValue *	retval);
+typedef struct _SwfdecScript SwfdecScript;
+
 
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {

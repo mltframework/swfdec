@@ -136,6 +136,7 @@ public_headers = \
 	swfdec_keys.h \
 	swfdec_loader.h \
 	swfdec_player.h \
+	swfdec_script.h \
 	swfdec_url.h
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la 
@@ -201,7 +202,7 @@ noinst_HEADERS = \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
-	swfdec_script.h \
+	swfdec_script_internal.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \

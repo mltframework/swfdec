@@ -417,8 +417,45 @@ enum {
   LAST_SIGNAL
 };
 
+enum {
+  PROP_0,
+  PROP_DEBUGGER,
+};
+
 G_DEFINE_TYPE (SwfdecAsContext, swfdec_as_context, G_TYPE_OBJECT)
 static guint signals[LAST_SIGNAL] = { 0, };
+
+static void
+swfdec_as_context_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
+
+  switch (param_id) {
+    case PROP_DEBUGGER:
+      g_value_set_object (value, context->debugger);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_as_context_set_property (GObject *object, guint param_id, const GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
+
+  switch (param_id) {
+    case PROP_DEBUGGER:
+      context->debugger = g_value_dup_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
 
 static void
 swfdec_as_context_dispose (GObject *object)
@@ -435,6 +472,10 @@ swfdec_as_context_dispose (GObject *object)
   g_hash_table_destroy (context->objects);
   g_hash_table_destroy (context->strings);
   g_rand_free (context->rand);
+  if (context->debugger) {
+    g_object_unref (context->debugger);
+    context->debugger = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_as_context_parent_class)->dispose (object);
 }
@@ -445,6 +486,12 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_as_context_dispose;
+  object_class->get_property = swfdec_as_context_get_property;
+  object_class->set_property = swfdec_as_context_set_property;
+
+  g_object_class_install_property (object_class, PROP_DEBUGGER,
+      g_param_spec_object ("debugger", "debugger", "debugger used in this player",
+	  SWFDEC_TYPE_AS_DEBUGGER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * SwfdecAsContext::trace:
@@ -642,16 +689,19 @@ swfdec_as_context_run (SwfdecAsContext *context)
   guint action, len;
   guint8 *data;
   int version;
-  SwfdecAsContextClass *klass;
-  void (* step) (SwfdecAsContext *context);
+  void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);
   gboolean check_scope; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   if (context->frame == NULL || context->state == SWFDEC_AS_CONTEXT_ABORTED)
     return;
 
-  klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
-  step = klass->step;
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+    step = klass->step;
+  } else {
+    step = NULL;
+  }
 
   last_frame = context->last_frame;
   context->last_frame = context->frame->next;
@@ -737,7 +787,7 @@ start:
     /* invoke debugger if there is one */
     if (step) {
       frame->pc = pc;
-      (* step) (context);
+      (* step) (context->debugger, context);
       if (frame != context->frame || 
 	  frame->pc != pc) {
 	goto start;

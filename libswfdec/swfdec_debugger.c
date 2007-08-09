@@ -386,6 +386,7 @@ swfdec_debugger_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_debugger_parent_class)->dispose (object);
 }
 
+#if 0
 static void
 swfdec_debugger_do_breakpoint (SwfdecDebugger *debugger, guint id)
 {
@@ -439,12 +440,12 @@ swfdec_debugger_step (SwfdecAsContext *context)
     }
   }
 }
+#endif
 
 static void
 swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsContextClass *context_class = SWFDEC_AS_CONTEXT_CLASS (klass);
 
   object_class->dispose = swfdec_debugger_dispose;
 
@@ -469,8 +470,6 @@ swfdec_debugger_class_init (SwfdecDebuggerClass *klass)
   signals[MOVIE_REMOVED] = g_signal_new ("movie-removed", 
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, 
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
-
-  context_class->step = swfdec_debugger_step;
 }
 
 static void

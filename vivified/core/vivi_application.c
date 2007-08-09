@@ -85,6 +85,13 @@ vivi_application_class_init (ViviApplicationClass *klass)
   object_class->dispose = vivi_application_dispose;
   object_class->get_property = vivi_application_get_property;
   object_class->set_property = vivi_application_set_property;
+
+  g_object_class_install_property (object_class, PROP_FILENAME,
+      g_param_spec_string ("filename", "filename", "name of file to play",
+	  NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_PLAYER,
+      g_param_spec_object ("player", "player", "Flash player in use",
+	  SWFDEC_TYPE_PLAYER, G_PARAM_READABLE));
 }
 
 static void

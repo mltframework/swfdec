@@ -326,6 +326,7 @@ test/trace/Makefile
 test/various/Makefile
 vivified/Makefile
 vivified/core/Makefile
+vivified/dock/Makefile
 vivified/ui/Makefile
 swfdec.pc
 swfdec-gtk.pc

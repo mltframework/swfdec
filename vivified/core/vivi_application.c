@@ -97,7 +97,7 @@ vivi_application_class_init (ViviApplicationClass *klass)
 static void
 vivi_application_init (ViviApplication *app)
 {
-  app->player = swfdec_gtk_player_new ();
+  app->player = swfdec_gtk_player_new (NULL);
 }
 
 ViviApplication *
@@ -112,7 +112,7 @@ vivi_application_reset (ViviApplication *app)
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
   g_object_unref (app->player);
-  app->player = swfdec_gtk_player_new ();
+  app->player = swfdec_gtk_player_new (NULL);
 }
 
 void

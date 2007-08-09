@@ -24,18 +24,8 @@
 #include <gtk/gtk.h>
 #include <libswfdec-gtk/swfdec-gtk.h>
 #include "vivified/core/vivified-core.h"
-
-static void
-entry_activate_cb (GtkEntry *entry, ViviApplication *app)
-{
-  const char *text = gtk_entry_get_text (entry);
-
-  if (text[0] == '\0')
-    return;
-
-  //swfdec_player_manager_execute (manager, text);
-  gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
-}
+#include "vivified/dock/vivified-dock.h"
+#include "vivi_commandline.h"
 
 static void
 setup (const char *filename)
@@ -45,15 +35,10 @@ setup (const char *filename)
 
   app = vivi_application_new ();
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  box = gtk_vbox_new (FALSE, 0);
+  box = vivi_vdock_new ();
   gtk_container_add (GTK_CONTAINER (window), box);
-  /* widget displaying the Flash */
-  widget = swfdec_gtk_widget_new (NULL);
-  gtk_box_pack_start (GTK_BOX (box), widget, FALSE, FALSE, 0);
-  /* text entry */
-  widget = gtk_entry_new ();
-  g_signal_connect (widget, "activate", G_CALLBACK (entry_activate_cb), app);
-  gtk_box_pack_end (GTK_BOX (box), widget, FALSE, TRUE, 0);
+  widget = vivi_command_line_new (app);
+  gtk_container_add (GTK_CONTAINER (box), widget);
 
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);

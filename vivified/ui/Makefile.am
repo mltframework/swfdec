@@ -6,7 +6,9 @@ vivified_LDFLAGS = $(SWFDEC_GTK_LIBS) \
 	$(top_builddir)/vivified/dock/libvivified-dock.la
 
 vivified_SOURCES = \
+	vivi_commandline.c \
 	main.c
 
-noinst_HEADERS =
+noinst_HEADERS = \
+	vivi_commandline.h
 

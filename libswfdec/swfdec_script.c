@@ -199,15 +199,29 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
   return TRUE;
 }
 
+/**
+ * swfdec_script_new:
+ * @buffer: the #SwfdecBuffer containing the script. This function will take
+ *          ownership of the passed in buffer.
+ * @name: name of the script for debugging purposes
+ * @version: Actionscript version to use in this script
+ *
+ * Creates a new script for the actionscript provided in @buffer.
+ *
+ * Returns: a new #SwfdecScript for executing the script i @buffer.
+ **/
 SwfdecScript *
 swfdec_script_new (SwfdecBuffer *buffer, const char *name, guint version)
 {
   SwfdecBits bits;
+  SwfdecScript *script;
 
   g_return_val_if_fail (buffer != NULL, NULL);
 
   swfdec_bits_init (&bits, buffer);
-  return swfdec_script_new_from_bits (&bits, name, version);
+  script = swfdec_script_new_from_bits (&bits, name, version);
+  swfdec_buffer_unref (buffer);
+  return script;
 }
 
 SwfdecScript *

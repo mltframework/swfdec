@@ -322,7 +322,6 @@ swfedit_script_from_string (const char *s, gpointer* result)
   }
 
   script = swfdec_script_new (buffer, "unknown", 6 /* FIXME */);
-  swfdec_buffer_unref (buffer);
   if (script != NULL) {
     *result = script;
     return TRUE;

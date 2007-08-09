@@ -208,7 +208,6 @@ modify_file (SwfeditToken *token, guint idx, const char *name,
       state.buffer->length, state.script->buffer->length);
 #endif
   script = swfdec_script_new (state.buffer, state.script->name, state.script->version);
-  swfdec_buffer_unref (state.buffer);
   g_assert (script);
   swfedit_token_set (token, idx, script);
 

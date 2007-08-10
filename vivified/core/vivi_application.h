@@ -47,6 +47,9 @@ struct _ViviApplication
 
   char *		filename;	/* name of the file we play back or NULL if none set yet */
   SwfdecPlayer *	player;		/* the current player */
+  gboolean		player_inited;	/* if the player is inited already */
+  guint			playback_state;	/* (running, stepping or stopped) */
+  guint			playback_count;	/* how often to just restart this on breakpoints */
 };
 
 struct _ViviApplicationClass
@@ -74,7 +77,12 @@ void			vivi_application_set_filename	(ViviApplication *	app,
 const char *		vivi_application_get_filename	(ViviApplication *	app);
 SwfdecPlayer *	      	vivi_application_get_player	(ViviApplication *	app);
 
+void			vivi_application_init_player	(ViviApplication *	app);
 void			vivi_application_reset		(ViviApplication *	app);
+void			vivi_application_play		(ViviApplication *	app);
+void			vivi_application_step		(ViviApplication *	app,
+							 guint			n_times);
+
 void			vivi_application_run		(ViviApplication *	app,
 							 const char *		command);
 

@@ -1,0 +1,66 @@
+/* Vivified
+ * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "vivi_application.h"
+#include "vivi_function.h"
+
+VIVI_FUNCTION ("run", vivi_application_as_run)
+void
+vivi_application_as_run (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+
+  vivi_application_reset (app);
+  vivi_application_init_player (app);
+  vivi_application_play (app);
+}
+
+VIVI_FUNCTION ("continue", vivi_application_as_continue)
+void
+vivi_application_as_continue (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+
+  vivi_application_init_player (app);
+  vivi_application_play (app);
+}
+
+VIVI_FUNCTION ("step", vivi_application_as_step)
+void
+vivi_application_as_step (SwfdecAsContext *cx, SwfdecAsObject *this, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  int steps;
+
+  if (argc > 0) {
+    steps = swfdec_as_value_to_integer (cx, &argv[0]);
+    if (steps <= 1)
+      steps = 1;
+  } else {
+    steps = 1;
+  }
+  vivi_application_step (app, steps);
+}

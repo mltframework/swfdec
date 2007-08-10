@@ -122,12 +122,29 @@ vivi_application_new (void)
 }
 
 void
+vivi_application_init_player (ViviApplication *app)
+{
+  SwfdecLoader *loader;
+
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+
+  if (app->player_inited ||
+      app->filename == NULL)
+    return;
+
+  loader = swfdec_file_loader_new (app->filename);
+  swfdec_player_set_loader (app->player, loader);
+  app->player_inited = TRUE;
+}
+
+void
 vivi_application_reset (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
   g_object_unref (app->player);
   app->player = swfdec_gtk_player_new (NULL);
+  app->player_inited = FALSE;
 }
 
 void

@@ -201,6 +201,9 @@ vivi_application_send_message (ViviApplication *app,
   va_list args;
   char *msg;
 
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+  g_return_if_fail (format != NULL);
+
   va_start (args, format);
   msg = g_strdup_vprintf (format, args);
   va_end (args);
@@ -208,3 +211,31 @@ vivi_application_send_message (ViviApplication *app,
   g_free (msg);
 }
 
+typedef enum {
+  VIVI_APPLICATION_STOPPED,
+  VIVI_APPLICATION_PLAYING,
+  VIVI_APPLICATION_STEPPING,
+} ViviApplicationPlayback;
+
+static void
+vivi_application_set_playback (ViviApplication *app, ViviApplicationPlayback playback, guint steps)
+{
+  app->playback_state = playback;
+  app->playback_count = steps;
+}
+
+void
+vivi_application_play (ViviApplication *app)
+{
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+
+  vivi_application_set_playback (app, VIVI_APPLICATION_PLAYING, 1);
+}
+
+void
+vivi_application_step (ViviApplication *app, guint n_times)
+{
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+
+  vivi_application_set_playback (app, VIVI_APPLICATION_STEPPING, n_times);
+}

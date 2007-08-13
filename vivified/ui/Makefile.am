@@ -8,8 +8,10 @@ vivified_LDADD = \
 
 vivified_SOURCES = \
 	vivi_commandline.c \
+	vivi_player.c \
 	main.c
 
 noinst_HEADERS = \
-	vivi_commandline.h
+	vivi_commandline.h \
+	vivi_player.h
 

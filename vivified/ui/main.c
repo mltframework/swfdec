@@ -26,6 +26,7 @@
 #include "vivified/core/vivified-core.h"
 #include "vivified/dock/vivified-dock.h"
 #include "vivi_commandline.h"
+#include "vivi_player.h"
 
 static void
 setup (const char *filename)
@@ -37,6 +38,8 @@ setup (const char *filename)
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   box = vivi_vdock_new ();
   gtk_container_add (GTK_CONTAINER (window), box);
+  widget = vivi_player_new (app);
+  gtk_container_add (GTK_CONTAINER (box), widget);
   widget = vivi_command_line_new (app);
   gtk_container_add (GTK_CONTAINER (box), widget);
 

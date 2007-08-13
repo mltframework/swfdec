@@ -387,43 +387,56 @@ swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent 
 static int
 tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 {
-  SwfdecBits *bits = &s->b;
-  int id;
-  int flags;
-  int offset;
+  SwfdecBits bits;
+  int id, reserved;
+  guint length;
   SwfdecButton *button;
   char *script_name;
 
-  id = swfdec_bits_get_u16 (bits);
+  id = swfdec_bits_get_u16 (&s->b);
   button = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_BUTTON);
   if (!button)
     return SWFDEC_STATUS_OK;
 
   SWFDEC_LOG ("  ID: %d", id);
 
-  flags = swfdec_bits_get_u8 (bits);
-  if (flags & 0x01)
-    button->menubutton = TRUE;
-  offset = swfdec_bits_get_u16 (bits);
+  reserved = swfdec_bits_getbits (&s->b, 7);
+  button->menubutton = swfdec_bits_getbit (&s->b) ? TRUE : FALSE;
+  length = swfdec_bits_get_u16 (&s->b);
 
-  SWFDEC_LOG ("  flags = %d", flags);
-  SWFDEC_LOG ("  offset = %d", offset);
+  SWFDEC_LOG ("  reserved = %d", reserved);
+  SWFDEC_LOG ("  menu = %d", button->menubutton);
+  SWFDEC_LOG ("  length of region = %d", length);
 
-  while (swfdec_bits_peek_u8 (bits)) {
-    int reserved;
+  if (length)
+    swfdec_bits_init_bits (&bits, &s->b, length > 2 ? length - 2 : 0);
+  else
+    swfdec_bits_init_bits (&bits, &s->b, swfdec_bits_left (&s->b) / 8);
+  while (swfdec_bits_peek_u8 (&bits)) {
     guint character;
     guint depth;
     guint states;
+    gboolean blend_mode, has_filters;
     SwfdecContent *content;
 
-    swfdec_bits_syncbits (bits);
-    reserved = swfdec_bits_getbits (bits, 4);
-    states = swfdec_bits_getbits (bits, 4);
-    character = swfdec_bits_get_u16 (bits);
-    depth = swfdec_bits_get_u16 (bits);
+    if (s->version >= 8) {
+      reserved = swfdec_bits_getbits (&bits, 2);
+      blend_mode = swfdec_bits_getbit (&bits);
+      has_filters = swfdec_bits_getbit (&bits);
+      SWFDEC_LOG ("  reserved = %d", reserved);
+      SWFDEC_LOG ("  blend_mode = %d", blend_mode);
+      SWFDEC_LOG ("  has_filters = %d", has_filters);
+    } else {
+      reserved = swfdec_bits_getbits (&bits, 4);
+      blend_mode = 0;
+      has_filters = 0;
+      SWFDEC_LOG ("  reserved = %d", reserved);
+    }
+    states = swfdec_bits_getbits (&bits, 4);
+    character = swfdec_bits_get_u16 (&bits);
+    depth = swfdec_bits_get_u16 (&bits);
 
-    SWFDEC_LOG ("  reserved = %d", reserved);
-    SWFDEC_LOG ("states: %s%s%s%scharacter=%u layer=%u",
+    SWFDEC_LOG ("  states: %s%s%s%scharacter=%u layer=%u",
         states & (1 << SWFDEC_BUTTON_HIT) ? "HIT " : "", 
 	states & (1 << SWFDEC_BUTTON_DOWN) ? "DOWN " : "", 
         states & (1 << SWFDEC_BUTTON_OVER) ? "OVER " : "",
@@ -431,16 +444,22 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 	character, depth);
     content = swfdec_content_new (depth);
 
-    swfdec_bits_get_matrix (bits, &content->transform, NULL);
+    swfdec_bits_get_matrix (&bits, &content->transform, NULL);
     content->has_transform = TRUE;
     SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
 	content->transform.xx, content->transform.yy, 
 	content->transform.xy, content->transform.yx,
 	content->transform.x0, content->transform.y0);
-    swfdec_bits_get_color_transform (bits, &content->color_transform);
+    swfdec_bits_get_color_transform (&bits, &content->color_transform);
     content->has_color_transform = TRUE;
 
     content->graphic = swfdec_swf_decoder_get_character (s, character);
+    if (blend_mode) {
+      guint mode = swfdec_bits_get_u8 (&bits);
+      SWFDEC_WARNING ("  blend mode = %u", mode);
+    }
+    if (has_filters)
+      swfdec_filters_parse (&bits);
     if (!SWFDEC_IS_GRAPHIC (content->graphic)) {
       SWFDEC_ERROR ("id %u does not reference a graphic, ignoring", character);
       swfdec_content_free (content);
@@ -448,24 +467,34 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
       swfdec_button_append_content (button, states, content);
     }
   }
-  swfdec_bits_get_u8 (bits);
+  swfdec_bits_get_u8 (&bits);
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("%u bytes left when parsing button records", swfdec_bits_left (&bits) / 8);
+  }
 
   script_name = g_strdup_printf ("Button%u", SWFDEC_CHARACTER (button)->id);
-  while (offset != 0) {
+  while (length != 0) {
     guint condition, key;
 
-    offset = swfdec_bits_get_u16 (bits);
-    condition = swfdec_bits_get_u16 (bits);
+    length = swfdec_bits_get_u16 (&s->b);
+    if (length)
+      swfdec_bits_init_bits (&bits, &s->b, length > 2 ? length - 2 : 0);
+    else
+      swfdec_bits_init_bits (&bits, &s->b, swfdec_bits_left (&s->b) / 8);
+    condition = swfdec_bits_get_u16 (&bits);
     key = condition >> 9;
     condition &= 0x1FF;
 
-    SWFDEC_LOG ("  offset = %d", offset);
+    SWFDEC_LOG (" length = %d", length);
 
     if (button->events == NULL)
       button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
-    SWFDEC_LOG ("new event for condition %u (key %u)", condition, key);
-    swfdec_event_list_parse (button->events, &s->b, s->version, condition, key,
+    SWFDEC_LOG ("  new event for condition %u (key %u)", condition, key);
+    swfdec_event_list_parse (button->events, &bits, s->version, condition, key,
 	script_name);
+    if (swfdec_bits_left (&bits)) {
+      SWFDEC_WARNING ("%u bytes left after parsing script", swfdec_bits_left (&bits) / 8);
+    }
   }
   g_free (script_name);
 

@@ -69,7 +69,7 @@ command_line_entry_activate_cb (GtkEntry *entry, ViviCommandLine *command_line)
   if (text[0] == '\0')
     return;
 
-  vivi_application_run (command_line->app, text);
+  vivi_applciation_execute (command_line->app, text);
   gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
 }
 

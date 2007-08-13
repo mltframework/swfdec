@@ -83,7 +83,7 @@ void			vivi_application_play		(ViviApplication *	app);
 void			vivi_application_step		(ViviApplication *	app,
 							 guint			n_times);
 
-void			vivi_application_run		(ViviApplication *	app,
+void			vivi_applciation_execute	(ViviApplication *	app,
 							 const char *		command);
 
 G_END_DECLS

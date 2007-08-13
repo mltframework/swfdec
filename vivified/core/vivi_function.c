@@ -61,6 +61,6 @@ vivi_function_init_context (ViviApplication *app)
       swfdec_as_context_get_string (cx, functions[i].name),
       0, functions[i].fun, 0);
   }
-  vivi_application_run (app, vivi_initialize);
+  vivi_applciation_execute (app, vivi_initialize);
 }
 

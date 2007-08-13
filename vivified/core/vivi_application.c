@@ -178,7 +178,7 @@ vivi_application_get_player (ViviApplication *app)
 }
 
 void
-vivi_application_run (ViviApplication *app, const char *command)
+vivi_applciation_execute (ViviApplication *app, const char *command)
 {
   SwfdecScript *script;
   char *error = NULL;

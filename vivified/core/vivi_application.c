@@ -26,6 +26,12 @@
 #include "vivi_function.h"
 #include "vivi_ming.h"
 
+typedef enum {
+  VIVI_APPLICATION_STOPPED,
+  VIVI_APPLICATION_PLAYING,
+  VIVI_APPLICATION_STEPPING,
+} ViviApplicationPlayback;
+
 enum {
   MESSAGE,
   LAST_SIGNAL
@@ -130,10 +136,16 @@ vivi_application_init_player (ViviApplication *app)
 
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
-  if (app->player_inited ||
-      app->filename == NULL)
+  g_print ("init\n");
+  if (app->player_inited)
     return;
+  
+  if (app->filename == NULL) {
+    vivi_application_error (app, "no file set to play.");
+    return;
+  }
 
+  g_print ("really init\n");
   loader = swfdec_file_loader_new (app->filename);
   swfdec_player_set_loader (app->player, loader);
   app->player_inited = TRUE;
@@ -177,6 +189,51 @@ vivi_application_get_player (ViviApplication *app)
   return app->player;
 }
 
+static gboolean
+vivi_application_step_forward (gpointer appp)
+{
+  ViviApplication *app = appp;
+  guint next_event;
+
+  next_event = swfdec_player_get_next_event (app->player);
+  swfdec_player_advance (app->player, next_event);
+
+  return FALSE;
+}
+
+static void
+vivi_application_check (ViviApplication *app)
+{
+  gboolean is_playing = swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (app->player));
+  gboolean is_breakpoint = app->loop != NULL;
+
+  switch (app->playback_state) {
+    case VIVI_APPLICATION_STOPPED:
+      if (is_playing)
+	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
+      break;
+    case VIVI_APPLICATION_PLAYING:
+      if (!is_playing)
+	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), TRUE);
+      if (is_breakpoint)
+	g_main_loop_quit (app->loop);
+      break;
+    case VIVI_APPLICATION_STEPPING:
+      if (is_playing)
+	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
+      if (is_breakpoint) {
+	g_main_loop_quit (app->loop);
+      } else {
+	/* FIXME: sanely handle this */
+	g_idle_add_full (-100, vivi_application_step_forward, app, NULL);
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
 void
 vivi_applciation_execute (ViviApplication *app, const char *command)
 {
@@ -203,6 +260,7 @@ vivi_applciation_execute (ViviApplication *app, const char *command)
     object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   swfdec_as_object_run (object, script);
   swfdec_script_unref (script);
+  vivi_application_check (app);
 }
 
 void
@@ -222,25 +280,13 @@ vivi_application_send_message (ViviApplication *app,
   g_free (msg);
 }
 
-typedef enum {
-  VIVI_APPLICATION_STOPPED,
-  VIVI_APPLICATION_PLAYING,
-  VIVI_APPLICATION_STEPPING,
-} ViviApplicationPlayback;
-
-static void
-vivi_application_set_playback (ViviApplication *app, ViviApplicationPlayback playback, guint steps)
-{
-  app->playback_state = playback;
-  app->playback_count = steps;
-}
-
 void
 vivi_application_play (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
-  vivi_application_set_playback (app, VIVI_APPLICATION_PLAYING, 1);
+  app->playback_state = VIVI_APPLICATION_PLAYING;
+  app->playback_count = 1;
 }
 
 void
@@ -248,5 +294,7 @@ vivi_application_step (ViviApplication *app, guint n_times)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
-  vivi_application_set_playback (app, VIVI_APPLICATION_STEPPING, n_times);
+  app->playback_state = VIVI_APPLICATION_STEPPING;
+  app->playback_count = n_times;
 }
+

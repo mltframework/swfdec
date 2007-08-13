@@ -50,6 +50,7 @@ struct _ViviApplication
   gboolean		player_inited;	/* if the player is inited already */
   guint			playback_state;	/* (running, stepping or stopped) */
   guint			playback_count;	/* how often to just restart this on breakpoints */
+  GMainLoop *		loop;		/* the breakpoint main loop */
 };
 
 struct _ViviApplicationClass

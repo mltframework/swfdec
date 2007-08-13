@@ -41,6 +41,13 @@ static const struct {
 /* defined in vivi_initialize.s */
 extern const char vivi_initialize[];
 
+static void
+vivi_function_not_reached (ViviApplication *app, guint type, char *message, gpointer unused)
+{
+  if (type == VIVI_MESSAGE_ERROR)
+    g_error ("%s", message);
+}
+
 void
 vivi_function_init_context (ViviApplication *app)
 { 
@@ -61,6 +68,8 @@ vivi_function_init_context (ViviApplication *app)
       swfdec_as_context_get_string (cx, functions[i].name),
       0, functions[i].fun, 0);
   }
+  g_signal_connect (app, "message", G_CALLBACK (vivi_function_not_reached), NULL);
   vivi_applciation_execute (app, vivi_initialize);
+  g_signal_handlers_disconnect_by_func (app, G_CALLBACK (vivi_function_not_reached), NULL);
 }
 

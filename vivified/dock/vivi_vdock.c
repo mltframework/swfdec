@@ -75,20 +75,20 @@ vivi_vdock_add (GtkContainer *container, GtkWidget *widget)
   if (vdock->docklets == NULL) {
     GTK_CONTAINER_CLASS (vivi_vdock_parent_class)->add (container, docker);
   } else {
-    /* docklet is in docker */
+    /* docklet is in docker, so we need to use parent */
     GtkWidget *last = gtk_widget_get_parent (vdock->docklets->data);
     GtkWidget *parent = gtk_widget_get_parent (last);
     GtkWidget *paned;
 
-    g_object_ref (parent);
+    g_object_ref (last);
     if (parent == (GtkWidget *) container) {
       GTK_CONTAINER_CLASS (vivi_vdock_parent_class)->remove (container, last);
     } else {
       gtk_container_remove (GTK_CONTAINER (parent), last);
     }
     paned = gtk_vpaned_new ();
-    gtk_paned_pack1 (GTK_PANED (paned), docker, TRUE, FALSE);
-    gtk_paned_pack2 (GTK_PANED (paned), last, TRUE, FALSE);
+    gtk_paned_pack1 (GTK_PANED (paned), last, TRUE, FALSE);
+    gtk_paned_pack2 (GTK_PANED (paned), docker, TRUE, FALSE);
     g_object_unref (last);
     gtk_widget_show (paned);
     if (parent == (GtkWidget *) container) {

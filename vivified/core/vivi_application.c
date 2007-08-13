@@ -23,6 +23,7 @@
 
 #include <libswfdec-gtk/swfdec-gtk.h>
 #include "vivi_application.h"
+#include "vivi_function.h"
 #include "vivi_ming.h"
 
 enum {
@@ -118,6 +119,7 @@ vivi_application_new (void)
 
   app = g_object_new (VIVI_TYPE_APPLICATION, NULL);
   swfdec_as_context_startup (SWFDEC_AS_CONTEXT (app), 8);
+  vivi_function_init_context (app);
   return app;
 }
 

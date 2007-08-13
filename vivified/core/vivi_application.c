@@ -180,6 +180,8 @@ vivi_application_get_player (ViviApplication *app)
 void
 vivi_applciation_execute (ViviApplication *app, const char *command)
 {
+  SwfdecAsValue val;
+  SwfdecAsObject *object;
   SwfdecScript *script;
   char *error = NULL;
 
@@ -193,7 +195,13 @@ vivi_applciation_execute (ViviApplication *app, const char *command)
     g_free (error);
     return;
   }
-  swfdec_as_object_run (SWFDEC_AS_CONTEXT (app)->global, script);
+  object = SWFDEC_AS_CONTEXT (app)->global;
+  swfdec_as_object_get_variable (object, 
+      swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (app), "Commands"),
+      &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  swfdec_as_object_run (object, script);
   swfdec_script_unref (script);
 }
 

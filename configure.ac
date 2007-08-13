@@ -270,6 +270,7 @@ AC_ARG_ENABLE(vivified,
 	enable_vivi=$enableval,
 	enable_vivi="no")
 if test "$enable_vivi" = "yes"; then
+	AM_PROG_AS
 	MING_REQUIRED=0.4.0.beta5
 	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
 	if test "x$HAVE_VIVI" = xyes; then

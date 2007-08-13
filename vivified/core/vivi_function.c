@@ -38,6 +38,8 @@ static const struct {
 };
 #undef VIVI_FUNCTION
 
+/* defined in vivi_initialize.s */
+extern const char vivi_initialize[];
 
 void
 vivi_function_init_context (ViviApplication *app)
@@ -57,7 +59,8 @@ vivi_function_init_context (ViviApplication *app)
   for (i = 0; functions[i].name; i++) {
     swfdec_as_object_add_function (obj,
       swfdec_as_context_get_string (cx, functions[i].name),
-      G_TYPE_NONE, functions[i].fun, 0);
+      0, functions[i].fun, 0);
   }
+  vivi_application_run (app, vivi_initialize);
 }
 

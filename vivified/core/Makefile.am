@@ -7,6 +7,8 @@ libvivified_core_la_SOURCES = \
 	vivi_application.c \
 	vivi_application_as.c \
 	vivi_function.c \
+	vivi_initialize.as \
+	vivi_initialize.s \
 	vivi_ming.c
 
 noinst_HEADERS = \

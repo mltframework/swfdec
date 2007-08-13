@@ -64,3 +64,19 @@ vivi_application_as_step (SwfdecAsContext *cx, SwfdecAsObject *this,
   }
   vivi_application_step (app, steps);
 }
+
+VIVI_FUNCTION ("print", vivi_application_as_print)
+void
+vivi_application_as_print (SwfdecAsContext *cx, SwfdecAsObject *this, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  const char *s;
+
+  if (argc == 0)
+    return;
+
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  vivi_application_output (app, s);
+}
+

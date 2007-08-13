@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "vivi_commandline.h"
 
 G_DEFINE_TYPE (ViviCommandLine, vivi_command_line, VIVI_TYPE_DOCKLET)
@@ -62,6 +63,39 @@ vivi_command_line_class_init (ViviCommandLineClass *klass)
 }
 
 static void
+vivi_command_line_execute (ViviCommandLine *cl, const char *command)
+{
+  char *run;
+
+  if (!strpbrk (command, ";\"',()[]{}")) {
+    /* special mode: interpret as space-delimited list:
+     * first argument is function name, following arguemnts are function arguments
+     */
+    char **args = g_strsplit (command, " ", -1);
+    GString *str = g_string_new (args[0]);
+    guint i;
+
+    g_string_append (str, " (");
+    for (i = 1; args[i] != NULL; i++) {
+      if (i > 1)
+	g_string_append (str, ", ");
+      g_string_append_c (str, '"');
+      g_string_append (str, args[i]);
+      g_string_append_c (str, '"');
+    }
+    g_string_append (str, ");");
+    run = g_string_free (str, FALSE);
+  } else {
+    run = (char *) command;
+  }
+
+  
+  vivi_applciation_execute (cl->app, run);
+  if (command != run)
+    g_free (run);
+}
+
+static void
 command_line_entry_activate_cb (GtkEntry *entry, ViviCommandLine *command_line)
 {
   const char *text = gtk_entry_get_text (entry);
@@ -69,7 +103,7 @@ command_line_entry_activate_cb (GtkEntry *entry, ViviCommandLine *command_line)
   if (text[0] == '\0')
     return;
 
-  vivi_applciation_execute (command_line->app, text);
+  vivi_command_line_execute (command_line, text);
   gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
 }
 

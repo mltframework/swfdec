@@ -29,6 +29,15 @@
 #include "vivi_player.h"
 
 static void
+try_grab_focus (GtkWidget *widget, gpointer unused)
+{
+  if (GTK_IS_ENTRY (widget))
+    gtk_widget_grab_focus (widget);
+  else if (GTK_IS_CONTAINER (widget))
+    gtk_container_foreach (GTK_CONTAINER (widget), try_grab_focus, NULL);
+}
+
+static void
 setup (const char *filename)
 {
   GtkWidget *window, *box, *widget;
@@ -42,6 +51,7 @@ setup (const char *filename)
   gtk_container_add (GTK_CONTAINER (box), widget);
   widget = vivi_command_line_new (app);
   gtk_container_add (GTK_CONTAINER (box), widget);
+  gtk_container_foreach (GTK_CONTAINER (widget), try_grab_focus, NULL);
 
   g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
   gtk_widget_show_all (window);

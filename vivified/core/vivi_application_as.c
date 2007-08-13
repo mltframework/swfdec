@@ -24,21 +24,19 @@
 #include "vivi_application.h"
 #include "vivi_function.h"
 
-VIVI_FUNCTION ("run", vivi_application_as_run)
+VIVI_FUNCTION ("reset", vivi_application_as_reset)
 void
-vivi_application_as_run (SwfdecAsContext *cx, SwfdecAsObject *this,
+vivi_application_as_reset (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   ViviApplication *app = VIVI_APPLICATION (cx);
 
   vivi_application_reset (app);
-  vivi_application_init_player (app);
-  vivi_application_play (app);
 }
 
-VIVI_FUNCTION ("continue", vivi_application_as_continue)
+VIVI_FUNCTION ("run", vivi_application_as_run)
 void
-vivi_application_as_continue (SwfdecAsContext *cx, SwfdecAsObject *this,
+vivi_application_as_run (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   ViviApplication *app = VIVI_APPLICATION (cx);

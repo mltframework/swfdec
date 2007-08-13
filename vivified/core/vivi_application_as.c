@@ -53,6 +53,7 @@ vivi_application_as_step (SwfdecAsContext *cx, SwfdecAsObject *this,
   ViviApplication *app = VIVI_APPLICATION (cx);
   int steps;
 
+  vivi_application_init_player (app);
   if (argc > 0) {
     steps = swfdec_as_value_to_integer (cx, &argv[0]);
     if (steps <= 1)

@@ -57,6 +57,17 @@ vivi_ming_get_error (void)
 }
 
 static void
+vivi_ming_clear_error (void)
+{
+  char *ret;
+  
+  if (ming_errors != NULL) {
+    ret = vivi_ming_get_error ();
+    g_free (ret);
+  }
+}
+
+static void
 vivi_ming_init (void)
 {
   static gboolean ming_inited = FALSE;
@@ -85,14 +96,16 @@ vivi_ming_compile (const char *code, char **error)
 
   action = newSWFAction (code);
   data = SWFAction_getByteCode (action, &len);
-  if (data == NULL || len == 0) {
+  if (data == NULL || len <= 1) {
     if (error)
       *error = vivi_ming_get_error ();
-    return NULL;
+    script = NULL;
+  } else {
+    buffer = swfdec_buffer_new_and_alloc (len);
+    memcpy (buffer->data, data, len);
+    script = swfdec_script_new (buffer, "compiled script", 8);
   }
-  buffer = swfdec_buffer_new_and_alloc (len);
-  memcpy (buffer->data, data, len);
-  script = swfdec_script_new (buffer, "compiled script", 8);
+  vivi_ming_clear_error ();
   return script;
 }
 

@@ -191,6 +191,7 @@ vivi_application_run (ViviApplication *app, const char *command)
   if (script == NULL) {
     vivi_application_error (app, error);
     g_free (error);
+    return;
   }
   swfdec_as_object_run (SWFDEC_AS_CONTEXT (app)->global, script);
   swfdec_script_unref (script);

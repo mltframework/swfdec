@@ -44,6 +44,7 @@ setup (const char *filename)
   ViviApplication *app;
 
   app = vivi_application_new ();
+  vivi_application_set_filename (app, filename);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   box = vivi_vdock_new ();
   gtk_container_add (GTK_CONTAINER (window), box);

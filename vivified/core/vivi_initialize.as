@@ -19,9 +19,12 @@
 
 Commands = new Object ();
 Commands.print = Native.print;
-Commands.br = Native["break"];
-Commands["break"] = Native["break"];
-Commands.c = Native.play;
-Commands["continue"] = Native.play;
+Commands.r = Native.run;
+Commands.run = Native.run;
 Commands.s = Native.step;
 Commands.step = Native.step;
+Commands.reset = Native.reset;
+Commands.restart = function () {
+  Commands.reset ();
+  Commands.run ();
+};

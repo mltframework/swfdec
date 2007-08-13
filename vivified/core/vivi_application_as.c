@@ -77,6 +77,6 @@ vivi_application_as_print (SwfdecAsContext *cx, SwfdecAsObject *this,
     return;
 
   s = swfdec_as_value_to_string (cx, &argv[0]);
-  vivi_application_output (app, s);
+  vivi_application_output (app, "%s", s);
 }
 

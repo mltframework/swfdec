@@ -11,6 +11,9 @@ libvivified_core_la_SOURCES = \
 	vivi_initialize.s \
 	vivi_ming.c
 
+vivi_initialize.lo: vivi_initialize.s vivi_initialize.as
+	$(LTCCASCOMPILE) -c -o $@ vivi_initialize.s
+
 noinst_HEADERS = \
 	vivi_application.h \
 	vivi_function.h \

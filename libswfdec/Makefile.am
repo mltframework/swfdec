@@ -128,6 +128,8 @@ public_headers = \
 	swfdec_as_context.h \
 	swfdec_as_debugger.h \
 	swfdec_as_frame.h \
+	swfdec_as_function.h \
+	swfdec_as_native_function.h \
 	swfdec_as_object.h \
 	swfdec_as_types.h \
 	swfdec_audio.h \
@@ -147,11 +149,9 @@ noinst_HEADERS = \
 	swfdec_as_array.h \
 	swfdec_as_boolean.h \
 	swfdec_as_frame_internal.h \
-	swfdec_as_function.h \
 	swfdec_as_internal.h \
 	swfdec_as_interpret.h \
 	swfdec_as_math.h \
-	swfdec_as_native_function.h \
 	swfdec_as_number.h \
 	swfdec_as_scope.h \
 	swfdec_as_script_function.h \

@@ -163,6 +163,7 @@ vivi_application_reset (ViviApplication *app)
   g_object_unref (app->player);
   app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
   app->player_inited = FALSE;
+  g_object_notify (G_OBJECT (app), "player");
 }
 
 void

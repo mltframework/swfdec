@@ -73,8 +73,10 @@ vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecA
 	breakpoint->handlers[i] = g_signal_connect (debugger, events[i].signal,
 	    events[i].handler, object);
     } else {
-      if (breakpoint->handlers[i])
+      if (breakpoint->handlers[i]) {
 	g_signal_handler_disconnect (debugger, breakpoint->handlers[i]);
+	breakpoint->handlers[i] = 0;
+      }
     }
   }
   SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->set (object, variable, val);
@@ -90,6 +92,7 @@ vivi_breakpoint_delete (SwfdecAsObject *object, const char *variable)
   if (i && breakpoint->handlers[i]) {
     ViviDebugger *debugger = VIVI_APPLICATION (object->context)->debugger;
     g_signal_handler_disconnect (debugger, breakpoint->handlers[i]);
+    breakpoint->handlers[i] = 0;
   }
 
   return SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->del (object, variable);

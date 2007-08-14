@@ -6,6 +6,7 @@ libvivified_core_la_LDFLAGS = $(SWFDEC_GTK_LIBS) $(VIVI_LIBS)
 libvivified_core_la_SOURCES = \
 	vivi_application.c \
 	vivi_application_as.c \
+	vivi_debugger.c \
 	vivi_function.c \
 	vivi_initialize.as \
 	vivi_initialize.s \
@@ -16,6 +17,7 @@ vivi_initialize.lo: vivi_initialize.s vivi_initialize.as
 
 noinst_HEADERS = \
 	vivi_application.h \
+	vivi_debugger.h \
 	vivi_function.h \
 	vivi_function_list.h \
 	vivi_ming.h \

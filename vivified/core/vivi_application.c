@@ -23,6 +23,7 @@
 
 #include <libswfdec-gtk/swfdec-gtk.h>
 #include "vivi_application.h"
+#include "vivi_debugger.h"
 #include "vivi_function.h"
 #include "vivi_ming.h"
 
@@ -115,7 +116,9 @@ vivi_application_class_init (ViviApplicationClass *klass)
 static void
 vivi_application_init (ViviApplication *app)
 {
-  app->player = swfdec_gtk_player_new (NULL);
+  app->debugger = g_object_new (VIVI_TYPE_DEBUGGER, NULL);
+  app->debugger->app = app;
+  app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
 }
 
 ViviApplication *
@@ -156,8 +159,9 @@ vivi_application_reset (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
+  g_assert (app->loop == NULL); /* FIXME: what do we do if we're inside a breakpoint? */
   g_object_unref (app->player);
-  app->player = swfdec_gtk_player_new (NULL);
+  app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
   app->player_inited = FALSE;
 }
 

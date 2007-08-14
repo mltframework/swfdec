@@ -27,6 +27,8 @@ G_BEGIN_DECLS
 
 typedef struct _ViviApplication ViviApplication;
 typedef struct _ViviApplicationClass ViviApplicationClass;
+/* forward declarations */
+typedef struct _ViviDebugger ViviDebugger;
 
 typedef enum {
   VIVI_MESSAGE_INPUT,
@@ -47,6 +49,7 @@ struct _ViviApplication
 
   char *		filename;	/* name of the file we play back or NULL if none set yet */
   SwfdecPlayer *	player;		/* the current player */
+  ViviDebugger *	debugger;	/* the debugger used in player */
   gboolean		player_inited;	/* if the player is inited already */
   guint			playback_state;	/* (running, stepping or stopped) */
   guint			playback_count;	/* how often to just restart this on breakpoints */

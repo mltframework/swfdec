@@ -89,3 +89,13 @@ vivi_application_as_print (SwfdecAsContext *cx, SwfdecAsObject *this,
   vivi_application_output (app, "%s", s);
 }
 
+VIVI_FUNCTION ("quit", vivi_application_as_quit)
+void
+vivi_application_as_quit (SwfdecAsContext *cx, SwfdecAsObject *this, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+
+  vivi_application_quit (app);
+}
+

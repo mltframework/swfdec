@@ -30,5 +30,6 @@ Commands.restart = function () {
   Commands.reset ();
   Commands.run ();
 };
+Commands.quit = Native.quit;
 
 Breakpoint = Native.Breakpoint;

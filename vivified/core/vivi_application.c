@@ -31,6 +31,7 @@ typedef enum {
   VIVI_APPLICATION_STOPPED,
   VIVI_APPLICATION_PLAYING,
   VIVI_APPLICATION_STEPPING,
+  VIVI_APPLICATION_EXITING,
 } ViviApplicationPlayback;
 
 enum {
@@ -215,6 +216,12 @@ vivi_application_check (ViviApplication *app)
   swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (app));
 
   switch (app->playback_state) {
+    case VIVI_APPLICATION_EXITING:
+      if (is_playing)
+	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
+      if (is_breakpoint)
+	g_main_loop_quit (app->loop);
+      break;
     case VIVI_APPLICATION_STOPPED:
       if (is_playing)
 	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
@@ -312,5 +319,15 @@ vivi_application_step (ViviApplication *app, guint n_times)
 
   app->playback_state = VIVI_APPLICATION_STEPPING;
   app->playback_count = n_times;
+}
+
+void
+vivi_application_quit (ViviApplication *app)
+{
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+
+  app->playback_state = VIVI_APPLICATION_EXITING;
+  app->playback_count = 1;
+  gtk_main_quit ();
 }
 

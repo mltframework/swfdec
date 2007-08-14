@@ -30,3 +30,5 @@ Commands.restart = function () {
   Commands.reset ();
   Commands.run ();
 };
+
+Breakpoint = Native.Breakpoint;

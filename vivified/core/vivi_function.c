@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_function.h"
+#include "vivi_breakpoint.h"
 #include "vivi_function_list.h"
 
 /* include vivi_function_list with special macro definition, so we get a nice
@@ -52,6 +53,7 @@ void
 vivi_function_init_context (ViviApplication *app)
 { 
   SwfdecAsContext *cx = SWFDEC_AS_CONTEXT (app);
+  SwfdecAsFunction *fun;
   SwfdecAsObject *obj;
   SwfdecAsValue val;
   guint i;
@@ -68,6 +70,13 @@ vivi_function_init_context (ViviApplication *app)
       swfdec_as_context_get_string (cx, functions[i].name),
       0, functions[i].fun, 0);
   }
+  /* FIXME: find a better solution than this */
+  fun = swfdec_as_object_add_function (obj,
+    swfdec_as_context_get_string (cx, "Breakpoint"),
+    0, functions[i].fun, 0);
+  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (fun),
+      VIVI_TYPE_BREAKPOINT);
+
   g_signal_connect (app, "message", G_CALLBACK (vivi_function_not_reached), NULL);
   vivi_applciation_execute (app, vivi_initialize);
   g_signal_handlers_disconnect_by_func (app, G_CALLBACK (vivi_function_not_reached), NULL);

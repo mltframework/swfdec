@@ -45,6 +45,16 @@ vivi_application_as_run (SwfdecAsContext *cx, SwfdecAsObject *this,
   vivi_application_play (app);
 }
 
+VIVI_FUNCTION ("stop", vivi_application_as_stop)
+void
+vivi_application_as_stop (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+
+  vivi_application_stop (app);
+}
+
 VIVI_FUNCTION ("step", vivi_application_as_step)
 void
 vivi_application_as_step (SwfdecAsContext *cx, SwfdecAsObject *this, 

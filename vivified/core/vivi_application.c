@@ -290,6 +290,15 @@ vivi_application_play (ViviApplication *app)
 }
 
 void
+vivi_application_stop (ViviApplication *app)
+{
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+
+  app->playback_state = VIVI_APPLICATION_STOPPED;
+  app->playback_count = 0;
+}
+
+void
 vivi_application_step (ViviApplication *app, guint n_times)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));

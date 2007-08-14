@@ -81,6 +81,7 @@ SwfdecPlayer *	      	vivi_application_get_player	(ViviApplication *	app);
 void			vivi_application_init_player	(ViviApplication *	app);
 void			vivi_application_reset		(ViviApplication *	app);
 void			vivi_application_play		(ViviApplication *	app);
+void			vivi_application_stop		(ViviApplication *	app);
 void			vivi_application_step		(ViviApplication *	app,
 							 guint			n_times);
 

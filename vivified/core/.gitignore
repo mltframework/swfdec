@@ -12,3 +12,5 @@ Makefile.in
 *.loT
 
 vivi_function_list.h
+vivi_marshal.h
+vivi_marshal.c

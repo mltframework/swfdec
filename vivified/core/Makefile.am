@@ -12,6 +12,7 @@ libvivified_core_la_SOURCES = \
 	vivi_function.c \
 	vivi_initialize.as \
 	vivi_initialize.s \
+	vivi_marshal.c \
 	vivi_ming.c
 
 vivi_initialize.lo: vivi_initialize.s vivi_initialize.as
@@ -23,11 +24,14 @@ noinst_HEADERS = \
 	vivi_debugger.h \
 	vivi_function.h \
 	vivi_function_list.h \
+	vivi_marshal.h \
 	vivi_ming.h \
 	vivified-core.h
 
 BUILT_SOURCES = \
-	vivi_function_list.h
+	vivi_function_list.h \
+	vivi_marshal.h \
+	vivi_marshal.c
 
 CLEANFILES = \
 	$(BUILT_SOURCES)
@@ -36,5 +40,17 @@ vivi_function_list.h: $(libvivified_core_la_SOURCES)
 	(cd $(srcdir) \
 	  && grep -he "^VIVI_FUNCTION" $(libvivified_core_la_SOURCES) \
 	 ) >> xgen-vfl \
-	&& (cmp -s xgen-vfl swfdec_asnative.h || cp xgen-vfl vivi_function_list.h) \
+	&& (cmp -s xgen-vfl vivi_asnative.h || cp xgen-vfl vivi_function_list.h) \
 	&& rm -f xgen-vfl
+
+vivi_marshal.h: vivi_marshal.list Makefile
+	$(GLIB_GENMARSHAL) --prefix=vivi_marshal $(srcdir)/vivi_marshal.list --header >> xgen-vmh \
+	&& (cmp -s xgen-vmh vivi_marshal.h || cp xgen-vmh vivi_marshal.h) \
+	&& rm -f xgen-vmh
+
+vivi_marshal.c: vivi_marshal.list vivi_marshal.h Makefile
+	(echo "#include \"vivi_marshal.h\""; \
+	 $(GLIB_GENMARSHAL) --prefix=vivi_marshal $(srcdir)/vivi_marshal.list --body;) >> xgen-vmc \
+	&& cp xgen-vmc vivi_marshal.c \
+	&& rm -f xgen-vmc 
+

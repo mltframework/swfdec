@@ -23,6 +23,7 @@
 
 #include "vivi_debugger.h"
 #include "vivi_application.h"
+#include "vivi_marshal.h"
 /* FIXME: oops */
 #include "libswfdec/swfdec_player_internal.h"
 
@@ -90,7 +91,7 @@ vivi_debugger_class_init (ViviDebuggerClass *klass)
   object_class->dispose = vivi_debugger_dispose;
 
   signals[STEP] = g_signal_new ("step", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, g_cclosure_marshal_VOID__VOID,
+      G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__VOID,
       G_TYPE_BOOLEAN, 0);
 
   debugger_class->step = vivi_debugger_step;

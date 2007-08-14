@@ -419,6 +419,12 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
       swfdec_as_stack_pop_segment (context);
     }
   }
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+
+    if (klass->finish_frame)
+      klass->finish_frame (context->debugger, context, frame, &retval);
+  }
   /* set return value */
   if (frame->return_value) {
     *frame->return_value = retval;
@@ -569,12 +575,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
-  if (frame->script == NULL)
-    return;
+
   /* setup */
   object = SWFDEC_AS_OBJECT (frame);
   context = object->context;
   script = frame->script;
+  if (frame->script == NULL)
+    goto out;
 
   /* create arguments and super object if necessary */
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
@@ -681,6 +688,14 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL && current_reg < script->n_registers) {
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
+  }
+
+out:
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+
+    if (klass->start_frame)
+      klass->start_frame (context->debugger, context, frame);
   }
 }
 

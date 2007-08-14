@@ -46,9 +46,15 @@ struct _SwfdecAsDebuggerClass {
   /* called before executing a bytecode */
   void			(* step)	(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context);
-  /* called after adding or removing a frame from the function stack */
-  void			(* frame_change)(SwfdecAsDebugger *	debugger,
-					 SwfdecAsContext *	context);
+  /* called after adding a frame from the function stack */
+  void			(* start_frame)	(SwfdecAsDebugger *	debugger,
+					 SwfdecAsContext *	context,
+					 SwfdecAsFrame *	frame);
+  /* called after removing a frame from the function stack */
+  void			(* finish_frame)(SwfdecAsDebugger *	debugger,
+					 SwfdecAsContext *	context,
+					 SwfdecAsFrame *	frame,
+					 SwfdecAsValue *	return_value);
 };
 
 GType		swfdec_as_debugger_get_type	(void);

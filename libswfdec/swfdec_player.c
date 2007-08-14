@@ -1043,15 +1043,36 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
   player->invalid = old_inval;
 }
 
+/* used for breakpoints */
+void
+swfdec_player_lock_soft (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (swfdec_rect_is_empty (&player->invalid));
+
+  g_object_freeze_notify (G_OBJECT (player));
+  SWFDEC_DEBUG ("LOCKED");
+}
+
 void
 swfdec_player_lock (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
-  g_assert (swfdec_rect_is_empty (&player->invalid));
 
-  g_object_freeze_notify (G_OBJECT (player));
-  SWFDEC_DEBUG ("LOCKED");
+  swfdec_player_lock_soft (player);
+}
+
+/* used for breakpoints */
+void
+swfdec_player_unlock_soft (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  SWFDEC_DEBUG ("UNLOCK");
+  swfdec_player_update_mouse_cursor (player);
+  g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_signals (player);
 }
 
 void
@@ -1060,11 +1081,8 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
-  SWFDEC_DEBUG ("UNLOCK");
   swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
-  swfdec_player_update_mouse_cursor (player);
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_signals (player);
+  swfdec_player_unlock_soft (player);
 }
 
 static gboolean

@@ -140,7 +140,6 @@ vivi_application_init_player (ViviApplication *app)
 
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
-  g_print ("init\n");
   if (app->player_inited)
     return;
   
@@ -149,7 +148,6 @@ vivi_application_init_player (ViviApplication *app)
     return;
   }
 
-  g_print ("really init\n");
   loader = swfdec_file_loader_new (app->filename);
   swfdec_player_set_loader (app->player, loader);
   app->player_inited = TRUE;

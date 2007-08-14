@@ -25,6 +25,8 @@
 #include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_as_debugger.h>
 #include <libswfdec/swfdec_as_frame.h>
+#include <libswfdec/swfdec_as_function.h>
+#include <libswfdec/swfdec_as_native_function.h>
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_script.h>

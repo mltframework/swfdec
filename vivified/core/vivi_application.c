@@ -207,6 +207,8 @@ vivi_application_check (ViviApplication *app)
   gboolean is_playing = swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (app->player));
   gboolean is_breakpoint = app->loop != NULL;
 
+  swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (app));
+
   switch (app->playback_state) {
     case VIVI_APPLICATION_STOPPED:
       if (is_playing)

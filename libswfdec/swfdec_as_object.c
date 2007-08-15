@@ -31,6 +31,7 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_movie.h"
 
 /**
  * SECTION:SwfdecAsObject
@@ -205,7 +206,8 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     return;
 
   if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
       object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
     } else {
       object->prototype = NULL;

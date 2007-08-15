@@ -622,12 +622,12 @@ swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
 }
 
 static gboolean
-swfdec_sprite_movie_get_variable (SwfdecAsObject *object, const char *variable,
-    SwfdecAsValue *val, guint *flags)
+swfdec_sprite_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecMovie *movie;
 
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->get (object, variable, val, flags))
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->get (object, orig, variable, val, flags))
     return TRUE;
   
   movie = swfdec_sprite_movie_get_by_name (SWFDEC_MOVIE (object), variable);

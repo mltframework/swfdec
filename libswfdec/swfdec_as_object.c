@@ -31,6 +31,7 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_movie.h"
 
 /**
  * SECTION:SwfdecAsObject
@@ -138,6 +139,12 @@ swfdec_as_object_lookup_case_insensitive (gpointer key, gpointer value, gpointer
   return strcasecmp (key, user_data) == 0;
 }
 
+static gboolean
+swfdec_as_variable_name_is_valid (const char *name)
+{
+  return name != SWFDEC_AS_STR_EMPTY;
+}
+
 static inline SwfdecAsVariable *
 swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
 {
@@ -149,9 +156,24 @@ swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
   return var;
 }
 
+static inline SwfdecAsVariable *
+swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable)
+{
+  SwfdecAsVariable *var;
+
+  if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
+    return NULL;
+  if (!swfdec_as_variable_name_is_valid (variable))
+    return NULL;
+  var = g_slice_new0 (SwfdecAsVariable);
+  g_hash_table_insert (object->properties, (gpointer) variable, var);
+
+  return var;
+}
+
 static gboolean
-swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable, 
-    SwfdecAsValue *val, guint *flags)
+swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
@@ -162,7 +184,7 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
     return FALSE;
 
   if (var->get) {
-    swfdec_as_function_call (var->get, object, 0, NULL, val);
+    swfdec_as_function_call (var->get, orig, 0, NULL, val);
     swfdec_as_context_run (object->context);
     *flags = var->flags;
   } else {
@@ -172,26 +194,14 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
   return TRUE;
 }
 
-static gboolean
-swfdec_as_variable_name_is_valid (const char *name)
-{
-  return name != SWFDEC_AS_STR_EMPTY;
-}
-
 static SwfdecAsVariable *
 swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsVariable *var;
 
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) {
-    if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
-      return NULL;
-    if (!swfdec_as_variable_name_is_valid (variable))
-      return NULL;
-    var = g_slice_new0 (SwfdecAsVariable);
-    g_hash_table_insert (object->properties, (gpointer) variable, var);
-  }
+  if (var == NULL) 
+    var = swfdec_as_object_hash_create (object, variable);
   return var;
 }
 
@@ -205,16 +215,36 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     return;
 
   if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
       object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
     } else {
       object->prototype = NULL;
     }
   }
 
-  var = swfdec_as_object_lookup_variable (object, variable);
-  if (var == NULL)
-    return;
+  var = swfdec_as_object_hash_lookup (object, variable);
+  if (var == NULL) {
+    guint i;
+    SwfdecAsObject *proto = object->prototype;
+
+    for (i = 0; i < 256 && proto; i++) {
+      var = swfdec_as_object_hash_lookup (proto, variable);
+      if (var && var->get)
+	break;
+      proto = proto->prototype;
+      var = NULL;
+    }
+    if (i == 256) {
+      swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+      return;
+    }
+  }
+  if (var == NULL) {
+    var = swfdec_as_object_hash_create (object, variable);
+    if (var == NULL)
+      return;
+  }
   if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
     return;
   if (var->get) {
@@ -572,7 +602,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
   guint i;
   SwfdecAsValue tmp_val;
   guint tmp_flags;
-  SwfdecAsObject *tmp_pobject;
+  SwfdecAsObject *tmp_pobject, *cur;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
@@ -584,13 +614,14 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
   if (pobject == NULL)
     pobject = &tmp_pobject;
 
-  for (i = 0; i < 256 && object != NULL; i++) {
-    klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-    if (klass->get (object, variable, value, flags)) {
-      *pobject = object;
+  cur = object;
+  for (i = 0; i < 256 && cur != NULL; i++) {
+    klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
+    if (klass->get (cur, object, variable, value, flags)) {
+      *pobject = cur;
       return TRUE;
     }
-    object = object->prototype;
+    cur = cur->prototype;
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
@@ -960,7 +991,7 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
     return;
   var->get = get;
   var->set = set;
-  var->flags = SWFDEC_AS_VARIABLE_PERMANENT;
+  var->flags = 0;
   if (set == NULL)
     var->flags |= SWFDEC_AS_VARIABLE_READONLY;
 }

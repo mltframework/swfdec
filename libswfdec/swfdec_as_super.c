@@ -68,8 +68,8 @@ swfdec_as_super_call (SwfdecAsFunction *function)
 }
 
 static gboolean
-swfdec_as_super_get (SwfdecAsObject *object, const char *variable,
-    SwfdecAsValue *val, guint *flags)
+swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
 

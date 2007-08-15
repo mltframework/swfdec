@@ -37,6 +37,33 @@ EXTRA_DIST = \
 	addProperty-7.swf.trace \
 	addProperty-8.swf \
 	addProperty-8.swf.trace \
+	addProperty-delete.as \
+	addProperty-delete-5.swf \
+	addProperty-delete-5.swf.trace \
+	addProperty-delete-6.swf \
+	addProperty-delete-6.swf.trace \
+	addProperty-delete-7.swf \
+	addProperty-delete-7.swf.trace \
+	addProperty-delete-8.swf \
+	addProperty-delete-8.swf.trace \
+	addProperty-get-prototypes.as \
+	addProperty-get-prototypes-5.swf \
+	addProperty-get-prototypes-5.swf.trace \
+	addProperty-get-prototypes-6.swf \
+	addProperty-get-prototypes-6.swf.trace \
+	addProperty-get-prototypes-7.swf \
+	addProperty-get-prototypes-7.swf.trace \
+	addProperty-get-prototypes-8.swf \
+	addProperty-get-prototypes-8.swf.trace \
+	addProperty-set-prototypes.as \
+	addProperty-set-prototypes-5.swf \
+	addProperty-set-prototypes-5.swf.trace \
+	addProperty-set-prototypes-6.swf \
+	addProperty-set-prototypes-6.swf.trace \
+	addProperty-set-prototypes-7.swf \
+	addProperty-set-prototypes-7.swf.trace \
+	addProperty-set-prototypes-8.swf \
+	addProperty-set-prototypes-8.swf.trace \
 	and-or-5.swf \
 	and-or-5.swf.trace \
 	and-or-6.swf \
@@ -740,6 +767,24 @@ EXTRA_DIST = \
 	place-object-remove-name-7.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	property-native.as \
+	property-native-5.swf \
+	property-native-5.swf.trace \
+	property-native-6.swf \
+	property-native-6.swf.trace \
+	property-native-7.swf \
+	property-native-7.swf.trace \
+	property-native-8.swf \
+	property-native-8.swf.trace \
+	prototype-movie.as \
+	prototype-movie-5.swf \
+	prototype-movie-5.swf.trace \
+	prototype-movie-6.swf \
+	prototype-movie-6.swf.trace \
+	prototype-movie-7.swf \
+	prototype-movie-7.swf.trace \
+	prototype-movie-8.swf \
+	prototype-movie-8.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
 	register-count.swf \

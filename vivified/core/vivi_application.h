@@ -89,7 +89,7 @@ void			vivi_application_step		(ViviApplication *	app,
 							 guint			n_times);
 void			vivi_application_quit		(ViviApplication *	app);
 
-void			vivi_applciation_execute	(ViviApplication *	app,
+void			vivi_application_execute	(ViviApplication *	app,
 							 const char *		command);
 
 G_END_DECLS

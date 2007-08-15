@@ -90,7 +90,7 @@ vivi_command_line_execute (ViviCommandLine *cl, const char *command)
   }
 
   
-  vivi_applciation_execute (cl->app, run);
+  vivi_application_execute (cl->app, run);
   if (command != run)
     g_free (run);
 }

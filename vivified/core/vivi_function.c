@@ -78,7 +78,7 @@ vivi_function_init_context (ViviApplication *app)
       VIVI_TYPE_BREAKPOINT);
 
   g_signal_connect (app, "message", G_CALLBACK (vivi_function_not_reached), NULL);
-  vivi_applciation_execute (app, vivi_initialize);
+  vivi_application_execute (app, vivi_initialize);
   g_signal_handlers_disconnect_by_func (app, G_CALLBACK (vivi_function_not_reached), NULL);
 }
 

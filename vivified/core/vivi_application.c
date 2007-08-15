@@ -247,7 +247,7 @@ vivi_application_check (ViviApplication *app)
 }
 
 void
-vivi_applciation_execute (ViviApplication *app, const char *command)
+vivi_application_execute (ViviApplication *app, const char *command)
 {
   SwfdecAsValue val;
   SwfdecAsObject *object;

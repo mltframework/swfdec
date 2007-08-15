@@ -740,6 +740,15 @@ EXTRA_DIST = \
 	place-object-remove-name-7.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	prototype-movie.as \
+	prototype-movie-5.swf \
+	prototype-movie-5.swf.trace \
+	prototype-movie-6.swf \
+	prototype-movie-6.swf.trace \
+	prototype-movie-7.swf \
+	prototype-movie-7.swf.trace \
+	prototype-movie-8.swf \
+	prototype-movie-8.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
 	register-count.swf \

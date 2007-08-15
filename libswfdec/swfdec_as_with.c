@@ -47,11 +47,14 @@ swfdec_as_with_resolve (SwfdecAsObject *object)
 }
 
 static gboolean
-swfdec_as_with_get (SwfdecAsObject *object, const char *variable,
-  SwfdecAsValue *val, guint *flags)
+swfdec_as_with_get (SwfdecAsObject *object, SwfdecAsObject *orig,
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsWith *with = SWFDEC_AS_WITH (object);
 
+  if (orig != object) {
+    SWFDEC_FIXME ("write tests for this case");
+  }
   return swfdec_as_object_get_variable_and_flags (with->object, variable, val, flags, NULL);
 }
 

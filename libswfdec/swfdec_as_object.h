@@ -65,6 +65,7 @@ struct _SwfdecAsObjectClass {
   void			(* add)			(SwfdecAsObject *	object);
   /* get the value and flags for a variables */
   gboolean	      	(* get)			(SwfdecAsObject *       object,
+						 SwfdecAsObject *	orig,
 						 const char *		variable,
 						 SwfdecAsValue *	val,
 						 guint *      		flags);

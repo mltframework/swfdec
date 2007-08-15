@@ -841,15 +841,15 @@ swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
 }
 
 static gboolean
-swfdec_movie_get_variable (SwfdecAsObject *object, const char *variable, 
-    SwfdecAsValue *val, guint *flags)
+swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
   if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
     return FALSE;
 
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags))
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
     return TRUE;
 
   if (swfdec_movie_get_asprop (movie, variable, val)) {

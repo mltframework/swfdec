@@ -350,12 +350,12 @@ swfdec_net_stream_dispose (GObject *object)
 }
 
 static gboolean
-swfdec_net_stream_get_variable (SwfdecAsObject *object, const char *variable,
-    SwfdecAsValue *val, guint *flags)
+swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecNetStream *stream;
 
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->get (object, variable, val, flags))
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->get (object, orig, variable, val, flags))
     return TRUE;
 
   stream = SWFDEC_NET_STREAM (object);

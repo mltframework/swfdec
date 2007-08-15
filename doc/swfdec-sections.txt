@@ -373,6 +373,7 @@ SWFDEC_TYPE_AS_NATIVE_FUNCTION
 <TITLE>SwfdecAsFrame</TITLE>
 SwfdecAsFrame
 swfdec_as_frame_get_next
+swfdec_as_frame_get_function_name
 SwfdecAsStackIterator
 swfdec_as_stack_iterator_init
 swfdec_as_stack_iterator_init_arguments

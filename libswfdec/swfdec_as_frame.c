@@ -743,3 +743,20 @@ swfdec_as_frame_get_next (SwfdecAsFrame *frame)
   return frame->next;
 }
 
+/**
+ * swfdec_as_frame_get_function_name:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the name of the function that is currently executing. This function is
+ * intended for debugging purposes.
+ *
+ * Returns: a string. Do not free.
+ **/
+const char *
+swfdec_as_frame_get_function_name (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  g_assert (frame->function_name);
+  return frame->function_name;
+}

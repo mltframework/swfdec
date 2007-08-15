@@ -37,6 +37,15 @@ EXTRA_DIST = \
 	addProperty-7.swf.trace \
 	addProperty-8.swf \
 	addProperty-8.swf.trace \
+	addProperty-set-prototypes.as \
+	addProperty-set-prototypes-5.swf \
+	addProperty-set-prototypes-5.swf.trace \
+	addProperty-set-prototypes-6.swf \
+	addProperty-set-prototypes-6.swf.trace \
+	addProperty-set-prototypes-7.swf \
+	addProperty-set-prototypes-7.swf.trace \
+	addProperty-set-prototypes-8.swf \
+	addProperty-set-prototypes-8.swf.trace \
 	and-or-5.swf \
 	and-or-5.swf.trace \
 	and-or-6.swf \

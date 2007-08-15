@@ -55,6 +55,7 @@ vivi_wrap_init (ViviWrap *wrap)
 SwfdecAsObject *
 vivi_wrap_object (ViviApplication *app, SwfdecAsObject *object)
 {
+  const char *name;
   SwfdecAsContext *cx;
   SwfdecAsObject *wrap;
   SwfdecAsValue val;
@@ -68,7 +69,12 @@ vivi_wrap_object (ViviApplication *app, SwfdecAsObject *object)
     return NULL;
   wrap = g_object_new (VIVI_TYPE_WRAP, NULL);
   swfdec_as_object_add (wrap, cx, sizeof (ViviWrap));
-  swfdec_as_object_get_variable (cx->global, swfdec_as_context_get_string (cx, "Wrap"), &val);
+  /* frames are special */
+  if (SWFDEC_IS_AS_FRAME (object))
+    name = "Frame";
+  else
+    name = "Wrap";
+  swfdec_as_object_get_variable (cx->global, swfdec_as_context_get_string (cx, name), &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
     swfdec_as_object_set_constructor (wrap, SWFDEC_AS_VALUE_GET_OBJECT (&val), FALSE);
   VIVI_WRAP (wrap)->wrap = object;

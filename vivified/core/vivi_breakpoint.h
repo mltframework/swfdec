@@ -40,7 +40,7 @@ struct _ViviBreakpoint
 {
   SwfdecAsObject	object;
 
-  gulong		handlers[2];	/* handlers for every signal of the debugger or 0 */
+  gulong		handlers[4];	/* handlers for every signal of the debugger or 0 */
 };
 
 struct _ViviBreakpointClass

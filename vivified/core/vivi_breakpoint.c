@@ -24,6 +24,7 @@
 #include "vivi_breakpoint.h"
 #include "vivi_application.h"
 #include "vivi_function.h"
+#include "vivi_wrap.h"
 
 G_DEFINE_TYPE (ViviBreakpoint, vivi_breakpoint, SWFDEC_TYPE_AS_OBJECT)
 
@@ -31,10 +32,35 @@ static gboolean
 vivi_breakpoint_step (ViviDebugger *debugger, ViviBreakpoint *breakpoint)
 {
   SwfdecAsObject *obj = SWFDEC_AS_OBJECT (breakpoint);
-  SwfdecAsValue val;
+  SwfdecAsValue retval;
 
-  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onStep"), 0, NULL, &val);
-  return swfdec_as_value_to_boolean (obj->context, &val);
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onCommand"), 0, NULL, &retval);
+  return swfdec_as_value_to_boolean (obj->context, &retval);
+}
+
+static gboolean
+vivi_breakpoint_start_frame (ViviDebugger *debugger, SwfdecAsFrame *frame, ViviBreakpoint *breakpoint)
+{
+  SwfdecAsObject *obj = SWFDEC_AS_OBJECT (breakpoint);
+  SwfdecAsValue val;
+  SwfdecAsValue retval;
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, vivi_wrap_object (VIVI_APPLICATION (obj->context), SWFDEC_AS_OBJECT (frame)));
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onStartFrame"), 1, &val, &retval);
+  return swfdec_as_value_to_boolean (obj->context, &retval);
+}
+
+static gboolean
+vivi_breakpoint_finish_frame (ViviDebugger *debugger, SwfdecAsFrame *frame, const SwfdecAsValue *ret, ViviBreakpoint *breakpoint)
+{
+  SwfdecAsObject *obj = SWFDEC_AS_OBJECT (breakpoint);
+  SwfdecAsValue vals[2];
+  SwfdecAsValue retval;
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], vivi_wrap_object (VIVI_APPLICATION (obj->context), SWFDEC_AS_OBJECT (frame)));
+  vivi_wrap_value (VIVI_APPLICATION (obj->context), &vals[1], ret);
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onStartFrame"), 2, vals, &retval);
+  return swfdec_as_value_to_boolean (obj->context, &retval);
 }
 
 static const struct {
@@ -43,7 +69,9 @@ static const struct {
   GCallback	handler;
 } events[] = {
   { NULL, NULL, NULL }, /* invalid */
-  { "onStep", "step", G_CALLBACK (vivi_breakpoint_step) }
+  { "onCommand", "step", G_CALLBACK (vivi_breakpoint_step) },
+  { "onStartFrame", "start-frame", G_CALLBACK (vivi_breakpoint_start_frame) },
+  { "onExitFrame", "finish-frame", G_CALLBACK (vivi_breakpoint_finish_frame) }
 };
 
 static guint

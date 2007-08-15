@@ -89,6 +89,7 @@ vivi_application_dispose (GObject *object)
   ViviApplication *app = VIVI_APPLICATION (object);
 
   g_object_unref (app->player);
+  g_hash_table_destroy (app->wraps);
 
   G_OBJECT_CLASS (vivi_application_parent_class)->dispose (object);
 }
@@ -120,6 +121,8 @@ vivi_application_init (ViviApplication *app)
   app->debugger = g_object_new (VIVI_TYPE_DEBUGGER, NULL);
   app->debugger->app = app;
   app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
+
+  app->wraps = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 ViviApplication *

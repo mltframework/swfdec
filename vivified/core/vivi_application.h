@@ -54,6 +54,8 @@ struct _ViviApplication
   guint			playback_state;	/* (running, stepping or stopped) */
   guint			playback_count;	/* how often to just restart this on breakpoints */
   GMainLoop *		loop;		/* the breakpoint main loop */
+
+  GHashTable *		wraps;		/* all wrapped objects from @player */
 };
 
 struct _ViviApplicationClass

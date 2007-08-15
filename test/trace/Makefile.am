@@ -740,6 +740,15 @@ EXTRA_DIST = \
 	place-object-remove-name-7.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	property-native.as \
+	property-native-5.swf \
+	property-native-5.swf.trace \
+	property-native-6.swf \
+	property-native-6.swf.trace \
+	property-native-7.swf \
+	property-native-7.swf.trace \
+	property-native-8.swf \
+	property-native-8.swf.trace \
 	prototype-movie.as \
 	prototype-movie-5.swf \
 	prototype-movie-5.swf.trace \

@@ -991,7 +991,7 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
     return;
   var->get = get;
   var->set = set;
-  var->flags = SWFDEC_AS_VARIABLE_PERMANENT;
+  var->flags = 0;
   if (set == NULL)
     var->flags |= SWFDEC_AS_VARIABLE_READONLY;
 }

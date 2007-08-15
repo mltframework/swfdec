@@ -849,13 +849,13 @@ swfdec_movie_get_variable (SwfdecAsObject *object, const char *variable,
   if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
     return FALSE;
 
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags))
+    return TRUE;
+
   if (swfdec_movie_get_asprop (movie, variable, val)) {
     *flags = 0;
     return TRUE;
   }
-
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, variable, val, flags))
-    return TRUE;
 
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {

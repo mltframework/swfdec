@@ -88,7 +88,7 @@ vivi_debugger_step (SwfdecAsDebugger *debugger, SwfdecAsContext *context)
   g_signal_emit (debugger, signals[STEP], 0, &retval);
 
   if (!retval) {
-    ViviApplication *app = VIVI_APPLICATION (context);
+    ViviApplication *app = VIVI_DEBUGGER (debugger)->app;
 
     if (app->playback_state == VIVI_APPLICATION_STEPPING) {
       app->playback_count--;

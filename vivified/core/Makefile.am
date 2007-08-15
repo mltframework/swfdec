@@ -14,7 +14,8 @@ libvivified_core_la_SOURCES = \
 	vivi_initialize.s \
 	vivi_marshal.c \
 	vivi_ming.c \
-	vivi_wrap.c
+	vivi_wrap.c \
+	vivi_wrap_as.c
 
 vivi_initialize.lo: vivi_initialize.s vivi_initialize.as
 	$(LTCCASCOMPILE) -c -o $@ vivi_initialize.s

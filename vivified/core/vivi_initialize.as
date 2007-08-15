@@ -33,3 +33,12 @@ Commands.restart = function () {
 Commands.quit = Native.quit;
 
 Breakpoint = Native.Breakpoint;
+
+Wrap = function () {};
+Wrap.prototype = {};
+Wrap.prototype.toString = Native.wrap_toString;
+
+Frame = function () extends Wrap {};
+Frame.prototype = new Wrap ();
+Frame.prototype.addProperty ("name", Native.frame_name_get, null);
+

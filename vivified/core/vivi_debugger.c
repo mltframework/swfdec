@@ -60,6 +60,11 @@ vivi_debugger_break (ViviDebugger *debugger)
   g_assert (app);
   if (app->playback_state == VIVI_APPLICATION_EXITING)
     return;
+  if (app->playback_state == VIVI_APPLICATION_PLAYING) {
+    app->playback_count--;
+    if (app->playback_count > 0)
+      return;
+  }
   swfdec_player_unlock_soft (app->player);
 
   app->playback_state = 0;

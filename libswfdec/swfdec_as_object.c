@@ -139,6 +139,12 @@ swfdec_as_object_lookup_case_insensitive (gpointer key, gpointer value, gpointer
   return strcasecmp (key, user_data) == 0;
 }
 
+static gboolean
+swfdec_as_variable_name_is_valid (const char *name)
+{
+  return name != SWFDEC_AS_STR_EMPTY;
+}
+
 static inline SwfdecAsVariable *
 swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
 {
@@ -147,6 +153,21 @@ swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
   if (var || object->context->version >= 7)
     return var;
   var = g_hash_table_find (object->properties, swfdec_as_object_lookup_case_insensitive, (gpointer) variable);
+  return var;
+}
+
+static inline SwfdecAsVariable *
+swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable)
+{
+  SwfdecAsVariable *var;
+
+  if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
+    return NULL;
+  if (!swfdec_as_variable_name_is_valid (variable))
+    return NULL;
+  var = g_slice_new0 (SwfdecAsVariable);
+  g_hash_table_insert (object->properties, (gpointer) variable, var);
+
   return var;
 }
 
@@ -173,26 +194,14 @@ swfdec_as_object_do_get (SwfdecAsObject *object, const char *variable,
   return TRUE;
 }
 
-static gboolean
-swfdec_as_variable_name_is_valid (const char *name)
-{
-  return name != SWFDEC_AS_STR_EMPTY;
-}
-
 static SwfdecAsVariable *
 swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsVariable *var;
 
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) {
-    if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
-      return NULL;
-    if (!swfdec_as_variable_name_is_valid (variable))
-      return NULL;
-    var = g_slice_new0 (SwfdecAsVariable);
-    g_hash_table_insert (object->properties, (gpointer) variable, var);
-  }
+  if (var == NULL) 
+    var = swfdec_as_object_hash_create (object, variable);
   return var;
 }
 
@@ -214,9 +223,28 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
   }
 
-  var = swfdec_as_object_lookup_variable (object, variable);
-  if (var == NULL)
-    return;
+  var = swfdec_as_object_hash_lookup (object, variable);
+  if (var == NULL) {
+    guint i;
+    SwfdecAsObject *proto = object->prototype;
+
+    for (i = 0; i < 256 && proto; i++) {
+      var = swfdec_as_object_hash_lookup (proto, variable);
+      if (var && var->get)
+	break;
+      proto = proto->prototype;
+      var = NULL;
+    }
+    if (i == 256) {
+      swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+      return;
+    }
+  }
+  if (var == NULL) {
+    var = swfdec_as_object_hash_create (object, variable);
+    if (var == NULL)
+      return;
+  }
   if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
     return;
   if (var->get) {

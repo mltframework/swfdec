@@ -54,16 +54,13 @@ vivi_wrap_name_get (SwfdecAsContext *cx, SwfdecAsObject *this,
   ViviWrap *wrap;
   const char *s;
 
-  g_print ("1\n");
   if (!VIVI_IS_WRAP (this))
     return;
   
-  g_print ("2\n");
   wrap = VIVI_WRAP (this);
   if (!SWFDEC_IS_AS_FRAME (wrap->wrap))
     return;
   
-  g_print ("3\n");
   s = swfdec_as_frame_get_function_name (SWFDEC_AS_FRAME (wrap->wrap));
   SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_get_string (cx, s));
 }

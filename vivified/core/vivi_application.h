@@ -31,6 +31,13 @@ typedef struct _ViviApplicationClass ViviApplicationClass;
 typedef struct _ViviDebugger ViviDebugger;
 
 typedef enum {
+  VIVI_APPLICATION_STOPPED,
+  VIVI_APPLICATION_PLAYING,
+  VIVI_APPLICATION_STEPPING,
+  VIVI_APPLICATION_EXITING,
+} ViviApplicationPlayback;
+
+typedef enum {
   VIVI_MESSAGE_INPUT,
   VIVI_MESSAGE_OUTPUT,
   VIVI_MESSAGE_ERROR
@@ -51,7 +58,7 @@ struct _ViviApplication
   SwfdecPlayer *	player;		/* the current player */
   ViviDebugger *	debugger;	/* the debugger used in player */
   gboolean		player_inited;	/* if the player is inited already */
-  guint			playback_state;	/* (running, stepping or stopped) */
+  ViviApplicationPlayback playback_state;	/* (running, stepping or stopped) */
   guint			playback_count;	/* how often to just restart this on breakpoints */
   GMainLoop *		loop;		/* the breakpoint main loop */
 

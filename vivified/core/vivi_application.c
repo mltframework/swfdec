@@ -27,13 +27,6 @@
 #include "vivi_function.h"
 #include "vivi_ming.h"
 
-typedef enum {
-  VIVI_APPLICATION_STOPPED,
-  VIVI_APPLICATION_PLAYING,
-  VIVI_APPLICATION_STEPPING,
-  VIVI_APPLICATION_EXITING,
-} ViviApplicationPlayback;
-
 enum {
   MESSAGE,
   LAST_SIGNAL

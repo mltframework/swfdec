@@ -58,6 +58,8 @@ vivi_debugger_break (ViviDebugger *debugger)
   ViviApplication *app = debugger->app;
 
   g_assert (app);
+  if (app->playback_state == VIVI_APPLICATION_EXITING)
+    return;
   swfdec_player_unlock_soft (app->player);
 
   app->playback_state = 0;
@@ -78,6 +80,15 @@ vivi_debugger_step (SwfdecAsDebugger *debugger, SwfdecAsContext *context)
 
   g_signal_emit (debugger, signals[STEP], 0, &retval);
 
+  if (!retval) {
+    ViviApplication *app = VIVI_APPLICATION (context);
+
+    if (app->playback_state == VIVI_APPLICATION_STEPPING) {
+      app->playback_count--;
+      if (app->playback_count == 0)
+	retval = TRUE;
+    }
+  }
   if (retval)
     vivi_debugger_break (VIVI_DEBUGGER (debugger));
 }

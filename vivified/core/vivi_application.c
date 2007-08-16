@@ -291,7 +291,7 @@ vivi_application_execute (ViviApplication *app, const char *command)
   g_return_if_fail (VIVI_IS_APPLICATION (app));
   g_return_if_fail (command != NULL);
 
-  vivi_application_input (app, command);
+  vivi_application_input (app, "%s", command);
   script = vivi_ming_compile (command, &error);
   if (script == NULL) {
     vivi_application_error (app, error);

@@ -897,7 +897,6 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
       if (native->construct_size) {
 	type = native->construct_type;
 	size = native->construct_size;
-	g_print ("type is %s\n", g_type_name (type));
 	break;
       }
     }
@@ -908,7 +907,6 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
       if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
 	cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
 	if (SWFDEC_IS_AS_FUNCTION (cur)) {
-	  g_print ("found one!\n");
 	  continue;
 	}
       }

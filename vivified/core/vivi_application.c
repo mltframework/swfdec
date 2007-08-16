@@ -35,7 +35,9 @@ enum {
 enum {
   PROP_0,
   PROP_FILENAME,
-  PROP_PLAYER
+  PROP_PLAYER,
+  PROP_INTERRUPTED,
+  PROP_QUIT
 };
 
 G_DEFINE_TYPE (ViviApplication, vivi_application, SWFDEC_TYPE_AS_CONTEXT)
@@ -53,6 +55,12 @@ vivi_application_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_PLAYER:
       g_value_set_object (value, app->player);
+      break;
+    case PROP_INTERRUPTED:
+      g_value_set_boolean (value, app->loop != NULL);
+      break;
+    case PROP_QUIT:
+      g_value_set_boolean (value, app->playback_state == VIVI_APPLICATION_EXITING);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -81,6 +89,9 @@ vivi_application_dispose (GObject *object)
 {
   ViviApplication *app = VIVI_APPLICATION (object);
 
+  if (app->playback_state != VIVI_APPLICATION_EXITING)
+    vivi_application_quit (app);
+
   g_object_unref (app->player);
   g_hash_table_destroy (app->wraps);
 
@@ -102,6 +113,12 @@ vivi_application_class_init (ViviApplicationClass *klass)
   g_object_class_install_property (object_class, PROP_PLAYER,
       g_param_spec_object ("player", "player", "Flash player in use",
 	  SWFDEC_TYPE_PLAYER, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_INTERRUPTED,
+      g_param_spec_boolean ("interrupted", "interrupted", "TRUE if handling a breakpoint",
+	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_QUIT,
+      g_param_spec_boolean ("quit", "quit", "TRUE if application has been quit (no breakpoints will happen)",
+	  FALSE, G_PARAM_READABLE));
 
   signals[MESSAGE] = g_signal_new ("message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT_POINTER, /* FIXME */
@@ -189,6 +206,22 @@ vivi_application_get_player (ViviApplication *app)
   return app->player;
 }
 
+gboolean
+vivi_application_get_interrupted (ViviApplication *app)
+{
+  g_return_val_if_fail (VIVI_IS_APPLICATION (app), FALSE);
+
+  return app->loop != NULL;
+}
+
+gboolean
+vivi_application_is_quit (ViviApplication *app)
+{
+  g_return_val_if_fail (VIVI_IS_APPLICATION (app), FALSE);
+
+  return app->playback_state == VIVI_APPLICATION_EXITING;
+}
+
 static gboolean
 vivi_application_step_forward (gpointer appp)
 {
@@ -204,9 +237,14 @@ vivi_application_step_forward (gpointer appp)
 static void
 vivi_application_check (ViviApplication *app)
 {
-  gboolean is_playing = swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (app->player));
-  gboolean is_breakpoint = app->loop != NULL;
+  gboolean is_playing, is_breakpoint;
 
+  /* if we're inside some script code, don't do anything */
+  if (swfdec_as_context_get_frame (SWFDEC_AS_CONTEXT (app)))
+    return;
+
+  is_playing = swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (app->player));
+  is_breakpoint = app->loop != NULL;
   swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (app));
 
   switch (app->playback_state) {
@@ -293,8 +331,11 @@ vivi_application_play (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
+  if (app->playback_state == VIVI_APPLICATION_EXITING)
+    return;
   app->playback_state = VIVI_APPLICATION_PLAYING;
   app->playback_count = 1;
+  vivi_application_check (app);
 }
 
 void
@@ -302,8 +343,11 @@ vivi_application_stop (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
+  if (app->playback_state == VIVI_APPLICATION_EXITING)
+    return;
   app->playback_state = VIVI_APPLICATION_STOPPED;
   app->playback_count = 0;
+  vivi_application_check (app);
 }
 
 void
@@ -311,8 +355,11 @@ vivi_application_step (ViviApplication *app, guint n_times)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
+  if (app->playback_state == VIVI_APPLICATION_EXITING)
+    return;
   app->playback_state = VIVI_APPLICATION_STEPPING;
   app->playback_count = n_times;
+  vivi_application_check (app);
 }
 
 void
@@ -320,8 +367,11 @@ vivi_application_quit (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
+  if (app->playback_state == VIVI_APPLICATION_EXITING)
+    return;
   app->playback_state = VIVI_APPLICATION_EXITING;
   app->playback_count = 1;
-  gtk_main_quit ();
+  g_object_notify (G_OBJECT (app), "quit");
+  vivi_application_check (app);
 }
 

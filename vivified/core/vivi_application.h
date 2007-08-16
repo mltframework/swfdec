@@ -89,6 +89,8 @@ void			vivi_application_set_filename	(ViviApplication *	app,
 							 const char *		filename);
 const char *		vivi_application_get_filename	(ViviApplication *	app);
 SwfdecPlayer *	      	vivi_application_get_player	(ViviApplication *	app);
+gboolean	      	vivi_application_get_interrupted(ViviApplication *	app);
+gboolean	      	vivi_application_is_quit	(ViviApplication *	app);
 
 void			vivi_application_init_player	(ViviApplication *	app);
 void			vivi_application_reset		(ViviApplication *	app);

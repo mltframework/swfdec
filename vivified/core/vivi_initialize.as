@@ -17,7 +17,12 @@
  * Boston, MA  02110-1301  USA
  */
 
-Breakpoint = Native.Breakpoint;
+Breakpoint = function () extends Native.Breakpoint {
+  super ();
+  Breakpoint.list.push (this);
+};
+Breakpoint.list = new Array ();
+Breakpoint.prototype = new Object ();
 
 Wrap = function () {};
 Wrap.prototype = {};
@@ -59,5 +64,14 @@ Commands.add = function (name) {
     Commands.print ("  " + frame);
     return true;
   };
+  ret.toString = function () {
+    return "function call " + name;
+  };
 };
-
+Commands.list = function () {
+  var a = Breakpoint.list;
+  var i;
+  for (i = 0; i < a.length; i++) {
+    Commands.print (i + ": " + a[i]);
+  }
+};

@@ -22,7 +22,6 @@ Breakpoint = function () extends Native.Breakpoint {
   Breakpoint.list.push (this);
 };
 Breakpoint.list = new Array ();
-Breakpoint.prototype = new Object ();
 
 Wrap = function () {};
 Wrap.prototype = {};

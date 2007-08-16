@@ -65,4 +65,26 @@ vivi_wrap_name_get (SwfdecAsContext *cx, SwfdecAsObject *this,
   SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_get_string (cx, s));
 }
 
+VIVI_FUNCTION ("frame_code_get", vivi_wrap_code_get)
+void
+vivi_wrap_code_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviWrap *wrap;
+  SwfdecScript *script;
+
+  if (!VIVI_IS_WRAP (this))
+    return;
+  
+  wrap = VIVI_WRAP (this);
+  if (!SWFDEC_IS_AS_FRAME (wrap->wrap))
+    return;
+  
+  script = swfdec_as_frame_get_script (SWFDEC_AS_FRAME (wrap->wrap));
+  /* FIXME: wrap scripts */
+  if (script)
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+}
+
+
 

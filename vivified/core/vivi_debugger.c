@@ -76,9 +76,7 @@ vivi_debugger_break (ViviDebugger *debugger)
   g_object_notify (G_OBJECT (app), "interrupted");
   vivi_application_check (app);
 
-  g_print (">>>\n");
   g_main_loop_run (app->loop);
-  g_print ("<<<\n");
 
   g_main_loop_unref (app->loop);
   app->loop = NULL;

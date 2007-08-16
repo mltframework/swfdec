@@ -89,6 +89,21 @@ vivi_application_as_print (SwfdecAsContext *cx, SwfdecAsObject *this,
   vivi_application_output (app, "%s", s);
 }
 
+VIVI_FUNCTION ("error", vivi_application_as_error)
+void
+vivi_application_as_error (SwfdecAsContext *cx, SwfdecAsObject *this, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  const char *s;
+
+  if (argc == 0)
+    return;
+
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  vivi_application_error (app, "%s", s);
+}
+
 VIVI_FUNCTION ("quit", vivi_application_as_quit)
 void
 vivi_application_as_quit (SwfdecAsContext *cx, SwfdecAsObject *this, 

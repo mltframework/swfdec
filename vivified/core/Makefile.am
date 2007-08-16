@@ -14,6 +14,7 @@ libvivified_core_la_SOURCES = \
 	vivi_initialize.s \
 	vivi_marshal.c \
 	vivi_ming.c \
+	vivi_player_as.c \
 	vivi_wrap.c \
 	vivi_wrap_as.c
 

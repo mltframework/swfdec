@@ -38,6 +38,11 @@ Breakpoint = function () extends Native.Breakpoint {
 Breakpoint.list = new Array ();
 Breakpoint.prototype.addProperty ("active", Native.breakpoint_active_get, Native.breakpoint_active_set);
 
+/*** information about the player ***/
+
+Player = {};
+Player.addProperty ("frame", Native.player_frame_get, null);
+
 /*** commands available for debugging ***/
 
 Commands = new Object ();

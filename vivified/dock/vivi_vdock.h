@@ -50,5 +50,11 @@ GType			vivi_vdock_get_type   	(void);
 
 GtkWidget *		vivi_vdock_new		(void);
 
+void			vivi_vdock_add		(ViviVDock *	vdock, 
+						 GtkWidget *	widget);
+void			vivi_vdock_remove	(ViviVDock *	vdock,
+						 GtkWidget *	widget);
+
+
 G_END_DECLS
 #endif

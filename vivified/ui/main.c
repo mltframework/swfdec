@@ -37,6 +37,16 @@ try_grab_focus (GtkWidget *widget, gpointer unused)
     gtk_container_foreach (GTK_CONTAINER (widget), try_grab_focus, NULL);
 }
 
+static gboolean
+delete_event (GtkWidget *widget, GdkEvent *event, ViviApplication *app)
+{
+  if (!vivi_application_is_quit (app)) {
+    vivi_application_quit (app);
+    return TRUE;
+  }
+  return FALSE;
+}
+
 static void
 setup (const char *filename)
 {
@@ -46,15 +56,17 @@ setup (const char *filename)
   app = vivi_application_new ();
   vivi_application_set_filename (app, filename);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  g_signal_connect_swapped (app, "notify::quit", G_CALLBACK (gtk_widget_destroy), window);
   box = vivi_vdock_new ();
   gtk_container_add (GTK_CONTAINER (window), box);
   widget = vivi_player_new (app);
-  gtk_container_add (GTK_CONTAINER (box), widget);
+  vivi_vdock_add (VIVI_VDOCK (box), widget);
   widget = vivi_command_line_new (app);
-  gtk_container_add (GTK_CONTAINER (box), widget);
+  vivi_vdock_add (VIVI_VDOCK (box), widget);
   gtk_container_foreach (GTK_CONTAINER (widget), try_grab_focus, NULL);
 
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect (window, "delete-event", G_CALLBACK (delete_event), app);
+  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), app);
   gtk_widget_show_all (window);
 }
 

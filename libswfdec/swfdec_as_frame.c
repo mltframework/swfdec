@@ -79,21 +79,29 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
 
   g_return_val_if_fail (iter != NULL, NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
-  /* FIXME! */
-  context = SWFDEC_AS_OBJECT (frame)->context;
-  g_return_val_if_fail (context->frame == frame, NULL);
 
+  if (frame->argc == 0) {
+    iter->current = NULL;
+    return NULL;
+  }
+  context = SWFDEC_AS_OBJECT (frame)->context;
   if (frame->argv) {
     iter->stack = NULL;
     iter->current = (SwfdecAsValue *) frame->argv;
   } else {
-    iter->stack = context->stack;
+    SwfdecAsStack *stack = context->stack;
+    SwfdecAsValue *end;
     iter->current = frame->stack_begin - 1;
+    end = context->cur;
+    while (iter->current < stack->elements ||
+	iter->current > end) {
+      stack = stack->next;
+      end = &stack->elements[stack->used_elements];
+    }
+    iter->stack = stack;
   }
   iter->i = 0;
   iter->n = frame->argc;
-  if (frame->argc == 0)
-    iter->current = NULL;
   return iter->current;
 }
 

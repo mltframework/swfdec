@@ -58,6 +58,7 @@ static void
 vivi_debugger_break (ViviDebugger *debugger)
 {
   ViviApplication *app = debugger->app;
+  SwfdecPlayer *player = app->player;
 
   g_assert (app);
   if (app->playback_state == VIVI_APPLICATION_EXITING)
@@ -67,19 +68,23 @@ vivi_debugger_break (ViviDebugger *debugger)
     if (app->playback_count > 0)
       return;
   }
-  swfdec_player_unlock_soft (app->player);
+  swfdec_player_unlock_soft (player);
 
   app->playback_state = 0;
   app->playback_count = 0;
   app->loop = g_main_loop_new (NULL, FALSE);
   g_object_notify (G_OBJECT (app), "interrupted");
+  vivi_application_check (app);
 
+  g_print (">>>\n");
   g_main_loop_run (app->loop);
+  g_print ("<<<\n");
 
   g_main_loop_unref (app->loop);
   app->loop = NULL;
   g_object_notify (G_OBJECT (app), "interrupted");
-  swfdec_player_lock_soft (app->player);
+  vivi_application_check (app);
+  swfdec_player_lock_soft (player);
 }
 
 static void

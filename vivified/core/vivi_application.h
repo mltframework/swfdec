@@ -75,6 +75,8 @@ GType			vivi_application_get_type   	(void);
 
 ViviApplication *	vivi_application_new		(void);
 
+void			vivi_application_check		(ViviApplication *	app);
+
 void			vivi_application_send_message	(ViviApplication *	app,
 							 ViviMessageType	type,
 							 const char *		format, 

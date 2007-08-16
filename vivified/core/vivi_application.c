@@ -181,7 +181,8 @@ vivi_application_reset (ViviApplication *app)
 {
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
-  g_assert (app->loop == NULL); /* FIXME: what do we do if we're inside a breakpoint? */
+  if (app->loop != NULL)
+    g_main_loop_quit (app->loop);
   g_object_unref (app->player);
   app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
   app->player_inited = FALSE;
@@ -262,42 +263,25 @@ vivi_application_step_forward (gpointer appp)
   return FALSE;
 }
 
-static void
+void
 vivi_application_check (ViviApplication *app)
 {
-  gboolean is_playing, is_breakpoint;
+  gboolean is_breakpoint;
 
   /* if we're inside some script code, don't do anything */
   if (swfdec_as_context_get_frame (SWFDEC_AS_CONTEXT (app)))
     return;
 
-  is_playing = swfdec_gtk_player_get_playing (SWFDEC_GTK_PLAYER (app->player));
   is_breakpoint = app->loop != NULL;
   swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (app));
 
   switch (app->playback_state) {
     case VIVI_APPLICATION_EXITING:
-      if (is_playing)
-	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
-      if (is_breakpoint)
-	g_main_loop_quit (app->loop);
-      break;
     case VIVI_APPLICATION_STOPPED:
-      if (is_playing)
-	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
-      break;
     case VIVI_APPLICATION_PLAYING:
-      if (!is_playing)
-	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), TRUE);
-      if (is_breakpoint)
-	g_main_loop_quit (app->loop);
       break;
     case VIVI_APPLICATION_STEPPING:
-      if (is_playing)
-	swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), FALSE);
-      if (is_breakpoint) {
-	g_main_loop_quit (app->loop);
-      } else {
+      if (!is_breakpoint) {
 	/* FIXME: sanely handle this */
 	g_idle_add_full (-100, vivi_application_step_forward, app, NULL);
       }
@@ -306,6 +290,14 @@ vivi_application_check (ViviApplication *app)
       g_assert_not_reached ();
       break;
   }
+
+  /* only play when not in breakpoints and only when really playing */
+  swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (app->player), !is_breakpoint && 
+      app->playback_state == VIVI_APPLICATION_PLAYING);
+
+  /* leave breakpoint unless stopped */
+  if (is_breakpoint && app->playback_state != VIVI_APPLICATION_STOPPED)
+    g_main_loop_quit (app->loop);
 }
 
 void

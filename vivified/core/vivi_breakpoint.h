@@ -40,6 +40,7 @@ struct _ViviBreakpoint
 {
   SwfdecAsObject	object;
 
+  gboolean		active;		/* only active breakpoints receive events */
   gulong		handlers[4];	/* handlers for every signal of the debugger or 0 */
 };
 
@@ -50,6 +51,8 @@ struct _ViviBreakpointClass
 
 GType			vivi_breakpoint_get_type   	(void);
 
+void			vivi_breakpoint_set_active	(ViviBreakpoint *	breakpoint,
+							 gboolean		active);
 
 G_END_DECLS
 #endif

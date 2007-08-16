@@ -22,6 +22,7 @@ Breakpoint = function () extends Native.Breakpoint {
   Breakpoint.list.push (this);
 };
 Breakpoint.list = new Array ();
+Breakpoint.prototype.addProperty ("active", Native.breakpoint_active_get, Native.breakpoint_active_set);
 
 Wrap = function () {};
 Wrap.prototype = {};
@@ -74,3 +75,14 @@ Commands.list = function () {
     Commands.print (i + ": " + a[i]);
   }
 };
+Commands.del = function (id) {
+  var a = Breakpoint.list;
+  if (id == undefined) {
+    while (a[0])
+      Commands.del (0);
+  }
+  var b = a[id];
+  a.splice (id, 1);
+  b.active = false;
+};
+Commands.delete = Commands.del;

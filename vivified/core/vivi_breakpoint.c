@@ -87,6 +87,31 @@ vivi_breakpoint_find_event (const char *name)
 }
 
 static void
+vivi_breakpoint_add (ViviBreakpoint *breakpoint, guint i)
+{
+  ViviDebugger *debugger = VIVI_APPLICATION (SWFDEC_AS_OBJECT (breakpoint)->context)->debugger;
+
+  g_assert (i != 0);
+  if (breakpoint->active) {
+    breakpoint->handlers[i] = g_signal_connect (debugger, events[i].signal,
+	events[i].handler, breakpoint);
+  } else {
+    breakpoint->handlers[i] = 1;
+  }
+}
+
+static void
+vivi_breakpoint_remove (ViviBreakpoint *breakpoint, guint i)
+{
+  ViviDebugger *debugger = VIVI_APPLICATION (SWFDEC_AS_OBJECT (breakpoint)->context)->debugger;
+
+  g_assert (i != 0);
+  if (breakpoint->active)
+    g_signal_handler_disconnect (debugger, breakpoint->handlers[i]);
+  breakpoint->handlers[i] = 0;
+}
+
+static void
 vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
 {
   guint i;
@@ -94,17 +119,13 @@ vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecA
   i = vivi_breakpoint_find_event (variable);
   if (i) {
     ViviBreakpoint *breakpoint = VIVI_BREAKPOINT (object);
-    ViviDebugger *debugger = VIVI_APPLICATION (object->context)->debugger;
     if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
 	SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
       if (!breakpoint->handlers[i])
-	breakpoint->handlers[i] = g_signal_connect (debugger, events[i].signal,
-	    events[i].handler, object);
+	vivi_breakpoint_add (breakpoint, i);
     } else {
-      if (breakpoint->handlers[i]) {
-	g_signal_handler_disconnect (debugger, breakpoint->handlers[i]);
-	breakpoint->handlers[i] = 0;
-      }
+      if (breakpoint->handlers[i])
+	vivi_breakpoint_remove (breakpoint, i);
     }
   }
   SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->set (object, variable, val);
@@ -117,11 +138,8 @@ vivi_breakpoint_delete (SwfdecAsObject *object, const char *variable)
   guint i;
 
   i = vivi_breakpoint_find_event (variable);
-  if (i && breakpoint->handlers[i]) {
-    ViviDebugger *debugger = VIVI_APPLICATION (object->context)->debugger;
-    g_signal_handler_disconnect (debugger, breakpoint->handlers[i]);
-    breakpoint->handlers[i] = 0;
-  }
+  if (i && breakpoint->handlers[i])
+    vivi_breakpoint_remove (breakpoint, i);
 
   return SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->del (object, variable);
 }
@@ -130,13 +148,9 @@ static void
 vivi_breakpoint_dispose (GObject *object)
 {
   ViviBreakpoint *breakpoint = VIVI_BREAKPOINT (object);
-  ViviDebugger *debugger = VIVI_APPLICATION (SWFDEC_AS_OBJECT (breakpoint)->context)->debugger;
-  guint i;
 
-  for (i = 0; i < G_N_ELEMENTS (events); i++) {
-    if (breakpoint->handlers[i])
-      g_signal_handler_disconnect (debugger, breakpoint->handlers[i]);
-  }
+  vivi_breakpoint_set_active (breakpoint, FALSE);
+
   G_OBJECT_CLASS (vivi_breakpoint_parent_class)->dispose (object);
 }
 
@@ -155,7 +169,52 @@ vivi_breakpoint_class_init (ViviBreakpointClass *klass)
 static void
 vivi_breakpoint_init (ViviBreakpoint *breakpoint)
 {
+  breakpoint->active = TRUE;
+}
+
+void
+vivi_breakpoint_set_active (ViviBreakpoint *breakpoint, gboolean active)
+{
+  guint i;
+
+  g_return_if_fail (VIVI_IS_BREAKPOINT (breakpoint));
+
+  g_print ("active = %d", active);
+  if (breakpoint->active == active)
+    return;
+  breakpoint->active = !breakpoint->active;
+  for (i = 1; i < G_N_ELEMENTS (events); i++) {
+    if (breakpoint->handlers[i] == 0)
+      continue;
+    /* FIXME: this is hacky */
+    breakpoint->active = !breakpoint->active;
+    vivi_breakpoint_remove (breakpoint, i);
+    breakpoint->active = !breakpoint->active;
+    vivi_breakpoint_add (breakpoint, i);
+  }
 }
 
 /*** AS CODE ***/
+
+VIVI_FUNCTION ("breakpoint_active_get", vivi_breakpoint_as_get_active)
+void
+vivi_breakpoint_as_get_active (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  if (!VIVI_IS_BREAKPOINT (this))
+    return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, VIVI_BREAKPOINT (this)->active);
+}
+
+VIVI_FUNCTION ("breakpoint_active_set", vivi_breakpoint_as_set_active)
+void
+vivi_breakpoint_as_set_active (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  if (!VIVI_IS_BREAKPOINT (this) ||
+      argc == 0)
+    return;
+  vivi_breakpoint_set_active (VIVI_BREAKPOINT (this), swfdec_as_value_to_boolean (cx, &argv[0]));
+}
 

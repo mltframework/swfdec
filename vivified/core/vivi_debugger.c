@@ -72,11 +72,13 @@ vivi_debugger_break (ViviDebugger *debugger)
   app->playback_state = 0;
   app->playback_count = 0;
   app->loop = g_main_loop_new (NULL, FALSE);
+  g_object_notify (G_OBJECT (app), "interrupted");
 
   g_main_loop_run (app->loop);
 
   g_main_loop_unref (app->loop);
   app->loop = NULL;
+  g_object_notify (G_OBJECT (app), "interrupted");
   swfdec_player_lock_soft (app->player);
 }
 

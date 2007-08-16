@@ -31,6 +31,9 @@ vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, ViviPlayer *pla
 {
   if (g_str_equal (pspec->name, "player")) {
     swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (player->player), vivi_application_get_player (app));
+  } else if (g_str_equal (pspec->name, "interrupted")) {
+    swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (player->player), 
+	!vivi_application_get_interrupted (app));
   }
 }
 

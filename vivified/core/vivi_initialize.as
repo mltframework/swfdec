@@ -30,8 +30,9 @@ Wrap.prototype.toString = Native.wrap_toString;
 
 Frame = function () extends Wrap {};
 Frame.prototype = new Wrap ();
-Frame.prototype.addProperty ("name", Native.frame_name_get, null);
 Frame.prototype.addProperty ("code", Native.frame_code_get, null);
+Frame.prototype.addProperty ("name", Native.frame_name_get, null);
+Frame.prototype.addProperty ("next", Native.frame_next_get, null);
 
 /*** commands available for debugging ***/
 

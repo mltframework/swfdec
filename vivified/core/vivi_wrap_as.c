@@ -86,5 +86,24 @@ vivi_wrap_code_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
+VIVI_FUNCTION ("frame_next_get", vivi_wrap_next_get)
+void
+vivi_wrap_next_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviWrap *wrap;
+  SwfdecAsObject *obj;
+
+  if (!VIVI_IS_WRAP (this))
+    return;
+  
+  wrap = VIVI_WRAP (this);
+  if (!SWFDEC_IS_AS_FRAME (wrap->wrap))
+    return;
+  
+  obj = SWFDEC_AS_OBJECT (swfdec_as_frame_get_next (SWFDEC_AS_FRAME (wrap->wrap)));
+  if (obj)
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, vivi_wrap_object (VIVI_APPLICATION (cx), obj));
+}
 
 

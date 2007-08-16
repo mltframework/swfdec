@@ -78,6 +78,7 @@ Commands.add = function (name) {
   ret.toString = function () {
     return "function call " + name;
   };
+  return ret;
 };
 Commands.list = function () {
   var a = Breakpoint.list;

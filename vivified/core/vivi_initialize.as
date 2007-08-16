@@ -44,3 +44,20 @@ Commands.restart = function () {
   Commands.run ();
 };
 Commands.quit = Native.quit;
+/* can't use "break" as a function name, it's a keyword in JS */
+Commands.add = function (name) {
+  if (name == undefined) {
+    Commands.error ("add command requires a function name");
+    return undefined;
+  }
+  var ret = new Breakpoint ();
+  ret.onStartFrame = function (frame) {
+    if (frame.name != name)
+      return false;
+
+    Commands.print ("Breakpoint: function " + name + " called");
+    Commands.print ("  " + frame);
+    return true;
+  };
+};
+

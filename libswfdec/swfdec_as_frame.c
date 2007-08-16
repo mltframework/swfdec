@@ -760,3 +760,20 @@ swfdec_as_frame_get_function_name (SwfdecAsFrame *frame)
   g_assert (frame->function_name);
   return frame->function_name;
 }
+
+/**
+ * swfdec_as_frame_get_script:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the script associated with the given @frame. If the frame references
+ * a native function, there will be no script and this function returns %NULL.
+ *
+ * Returns: The script executed by this frame or %NULL
+ **/
+SwfdecScript *
+swfdec_as_frame_get_script (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  return frame->script;
+}

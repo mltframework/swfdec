@@ -98,3 +98,16 @@ Commands.del = function (id) {
   b.active = false;
 };
 Commands.delete = Commands.del;
+Commands.where = function () {
+  var frame = Player.frame;
+  if (frame == undefined) {
+    print ("---");
+    return;
+  }
+  while (frame) {
+    print (frame);
+    frame = frame.next;
+  }
+};
+Commands.backtrace = Commands.where;
+Commands.bt = Commands.where;

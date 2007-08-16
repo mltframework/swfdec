@@ -101,11 +101,12 @@ Commands.delete = Commands.del;
 Commands.where = function () {
   var frame = Player.frame;
   if (frame == undefined) {
-    print ("---");
+    Commands.print ("---");
     return;
   }
+  var i = 0;
   while (frame) {
-    print (frame);
+    Commands.print (i++ + ": " + frame);
     frame = frame.next;
   }
 };

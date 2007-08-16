@@ -17,8 +17,21 @@
  * Boston, MA  02110-1301  USA
  */
 
+Breakpoint = Native.Breakpoint;
+
+Wrap = function () {};
+Wrap.prototype = {};
+Wrap.prototype.toString = Native.wrap_toString;
+
+Frame = function () extends Wrap {};
+Frame.prototype = new Wrap ();
+Frame.prototype.addProperty ("name", Native.frame_name_get, null);
+
+/*** commands available for debugging ***/
+
 Commands = new Object ();
 Commands.print = Native.print;
+Commands.error = Native.error;
 Commands.r = Native.run;
 Commands.run = Native.run;
 Commands.halt = Native.stop;
@@ -31,14 +44,3 @@ Commands.restart = function () {
   Commands.run ();
 };
 Commands.quit = Native.quit;
-
-Breakpoint = Native.Breakpoint;
-
-Wrap = function () {};
-Wrap.prototype = {};
-Wrap.prototype.toString = Native.wrap_toString;
-
-Frame = function () extends Wrap {};
-Frame.prototype = new Wrap ();
-Frame.prototype.addProperty ("name", Native.frame_name_get, null);
-

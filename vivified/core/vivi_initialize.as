@@ -17,12 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-Breakpoint = function () extends Native.Breakpoint {
-  super ();
-  Breakpoint.list.push (this);
-};
-Breakpoint.list = new Array ();
-Breakpoint.prototype.addProperty ("active", Native.breakpoint_active_get, Native.breakpoint_active_set);
+/*** general objects ***/
 
 Wrap = function () {};
 Wrap.prototype = {};
@@ -33,6 +28,15 @@ Frame.prototype = new Wrap ();
 Frame.prototype.addProperty ("code", Native.frame_code_get, null);
 Frame.prototype.addProperty ("name", Native.frame_name_get, null);
 Frame.prototype.addProperty ("next", Native.frame_next_get, null);
+
+/*** breakpoints ***/
+
+Breakpoint = function () extends Native.Breakpoint {
+  super ();
+  Breakpoint.list.push (this);
+};
+Breakpoint.list = new Array ();
+Breakpoint.prototype.addProperty ("active", Native.breakpoint_active_get, Native.breakpoint_active_set);
 
 /*** commands available for debugging ***/
 

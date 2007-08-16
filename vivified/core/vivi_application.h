@@ -55,6 +55,7 @@ struct _ViviApplication
   SwfdecAsContext	context;
 
   char *		filename;	/* name of the file we play back or NULL if none set yet */
+  char *		variables;	/* variables to pass to player or NULL if none set */
   SwfdecPlayer *	player;		/* the current player */
   ViviDebugger *	debugger;	/* the debugger used in player */
   gboolean		player_inited;	/* if the player is inited already */
@@ -88,6 +89,9 @@ void			vivi_application_send_message	(ViviApplication *	app,
 void			vivi_application_set_filename	(ViviApplication *	app,
 							 const char *		filename);
 const char *		vivi_application_get_filename	(ViviApplication *	app);
+void			vivi_application_set_variables	(ViviApplication *	app,
+							 const char *		filename);
+const char *		vivi_application_get_variables	(ViviApplication *	app);
 SwfdecPlayer *	      	vivi_application_get_player	(ViviApplication *	app);
 gboolean	      	vivi_application_get_interrupted(ViviApplication *	app);
 gboolean	      	vivi_application_is_quit	(ViviApplication *	app);

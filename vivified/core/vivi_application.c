@@ -35,6 +35,7 @@ enum {
 enum {
   PROP_0,
   PROP_FILENAME,
+  PROP_VARIABLES,
   PROP_PLAYER,
   PROP_INTERRUPTED,
   PROP_QUIT
@@ -52,6 +53,9 @@ vivi_application_get_property (GObject *object, guint param_id, GValue *value,
   switch (param_id) {
     case PROP_FILENAME:
       g_value_set_string (value, app->filename);
+      break;
+    case PROP_VARIABLES:
+      g_value_set_string (value, app->variables);
       break;
     case PROP_PLAYER:
       g_value_set_object (value, app->player);
@@ -77,6 +81,9 @@ vivi_application_set_property (GObject *object, guint param_id, const GValue *va
   switch (param_id) {
     case PROP_FILENAME:
       vivi_application_set_filename (app, g_value_get_string (value));
+      break;
+    case PROP_VARIABLES:
+      vivi_application_set_variables (app, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -109,6 +116,9 @@ vivi_application_class_init (ViviApplicationClass *klass)
 
   g_object_class_install_property (object_class, PROP_FILENAME,
       g_param_spec_string ("filename", "filename", "name of file to play",
+	  NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_FILENAME,
+      g_param_spec_string ("variables", "variables", "variables to pass to the file",
 	  NULL, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_PLAYER,
       g_param_spec_object ("player", "player", "Flash player in use",
@@ -162,7 +172,7 @@ vivi_application_init_player (ViviApplication *app)
   }
 
   loader = swfdec_file_loader_new (app->filename);
-  swfdec_player_set_loader (app->player, loader);
+  swfdec_player_set_loader_with_variables (app->player, loader, app->variables);
   app->player_inited = TRUE;
 }
 
@@ -196,6 +206,24 @@ vivi_application_get_filename (ViviApplication *app)
   g_return_val_if_fail (VIVI_IS_APPLICATION (app), NULL);
 
   return app->filename;
+}
+
+void
+vivi_application_set_variables (ViviApplication *app, const char *variables)
+{
+  g_return_if_fail (VIVI_IS_APPLICATION (app));
+
+  g_free (app->variables);
+  app->variables = g_strdup (variables);
+  g_object_notify (G_OBJECT (app), "variables");
+}
+
+const char *
+vivi_application_get_variables (ViviApplication *app)
+{
+  g_return_val_if_fail (VIVI_IS_APPLICATION (app), NULL);
+
+  return app->variables;
 }
 
 SwfdecPlayer *
@@ -294,7 +322,7 @@ vivi_application_execute (ViviApplication *app, const char *command)
   vivi_application_input (app, "%s", command);
   script = vivi_ming_compile (command, &error);
   if (script == NULL) {
-    vivi_application_error (app, error);
+    vivi_application_error (app, "%s", error);
     g_free (error);
     return;
   }

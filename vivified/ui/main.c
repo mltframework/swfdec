@@ -48,13 +48,14 @@ delete_event (GtkWidget *widget, GdkEvent *event, ViviApplication *app)
 }
 
 static void
-setup (const char *filename)
+setup (const char *filename, const char *variables)
 {
   GtkWidget *window, *box, *widget;
   ViviApplication *app;
 
   app = vivi_application_new ();
   vivi_application_set_filename (app, filename);
+  vivi_application_set_variables (app, variables);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect_swapped (app, "notify::quit", G_CALLBACK (gtk_widget_destroy), window);
   box = vivi_vdock_new ();
@@ -75,12 +76,12 @@ main (int argc, char **argv)
 {
   gtk_init (&argc, &argv);
 
-  if (argc != 2) {
-    g_print ("usage: %s FILE\n", argv[0]);
+  if (argc < 2) {
+    g_print ("usage: %s FILE [VARIABLES]\n", argv[0]);
     return 0;
   }
 
-  setup (argv[1]);
+  setup (argv[1], argc > 2 ? argv[2] : NULL);
   gtk_main ();
 
   return 0;

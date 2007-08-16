@@ -169,7 +169,7 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 {
   g_return_if_fail (context);
 
-  SWFDEC_ERROR (reason);
+  SWFDEC_ERROR ("%s", reason);
   context->state = SWFDEC_AS_CONTEXT_ABORTED;
 }
 

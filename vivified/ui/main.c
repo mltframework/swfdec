@@ -48,6 +48,16 @@ delete_event (GtkWidget *widget, GdkEvent *event, ViviApplication *app)
 }
 
 static void
+set_title (ViviApplication *app, GParamSpec *pspec, GtkWindow *window)
+{
+  const char *filename = vivi_application_get_filename (app);
+
+  if (filename == NULL)
+    filename = "Vivified";
+  gtk_window_set_title (window, filename);
+}
+
+static void
 setup (const char *filename, const char *variables)
 {
   GtkWidget *window, *box, *widget;
@@ -58,6 +68,8 @@ setup (const char *filename, const char *variables)
   vivi_application_set_variables (app, variables);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect_swapped (app, "notify::quit", G_CALLBACK (gtk_widget_destroy), window);
+  g_signal_connect_swapped (app, "notify::filename", G_CALLBACK (set_title), window);
+  set_title (app, NULL, GTK_WINDOW (window));
   box = vivi_vdock_new ();
   gtk_container_add (GTK_CONTAINER (window), box);
   widget = vivi_player_new (app);

@@ -1007,8 +1007,6 @@ static void
 swfdec_as_context_ASSetPropFlags_set_one_flag (SwfdecAsObject *object,
     const char *s, guint *flags)
 {
-  guint real;
-
   swfdec_as_object_unset_variable_flags (object, s, flags[1]);
   swfdec_as_object_set_variable_flags (object, s, flags[0]);
 }

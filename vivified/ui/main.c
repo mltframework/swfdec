@@ -68,7 +68,7 @@ setup (const char *filename, const char *variables)
   vivi_application_set_variables (app, variables);
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect_swapped (app, "notify::quit", G_CALLBACK (gtk_widget_destroy), window);
-  g_signal_connect_swapped (app, "notify::filename", G_CALLBACK (set_title), window);
+  g_signal_connect (app, "notify::filename", G_CALLBACK (set_title), window);
   set_title (app, NULL, GTK_WINDOW (window));
   box = vivi_vdock_new ();
   gtk_container_add (GTK_CONTAINER (window), box);

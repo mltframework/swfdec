@@ -92,3 +92,16 @@ vivi_player_as_variables_set (SwfdecAsContext *cx, SwfdecAsObject *this,
   vivi_application_set_variables (app, s);
 }
 
+VIVI_FUNCTION ("player_global_get", vivi_player_as_global_get)
+void
+vivi_player_as_global_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  
+  if (SWFDEC_AS_CONTEXT (app->player)->global) {
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, vivi_wrap_object (app, 
+	  SWFDEC_AS_CONTEXT (app->player)->global));
+  }
+}
+

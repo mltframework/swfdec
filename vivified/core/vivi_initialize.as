@@ -41,8 +41,9 @@ Breakpoint.prototype.addProperty ("active", Native.breakpoint_active_get, Native
 /*** information about the player ***/
 
 Player = {};
-Player.addProperty ("frame", Native.player_frame_get, null);
 Player.addProperty ("filename", Native.player_filename_get, Native.player_filename_set);
+Player.addProperty ("frame", Native.player_frame_get, null);
+Player.addProperty ("global", Native.player_global_get, null);
 Player.addProperty ("variables", Native.player_variables_get, Native.player_variables_set);
 
 /*** commands available for debugging ***/

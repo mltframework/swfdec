@@ -38,3 +38,57 @@ vivi_player_as_frame_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     SWFDEC_AS_VALUE_SET_OBJECT (retval, vivi_wrap_object (app, obj));
 }
 
+VIVI_FUNCTION ("player_filename_get", vivi_player_as_filename_get)
+void
+vivi_player_as_filename_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  const char *s = vivi_application_get_filename (app);
+
+  if (s)
+    SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_get_string (cx, s));
+}
+
+VIVI_FUNCTION ("player_filename_set", vivi_player_as_filename_set)
+void
+vivi_player_as_filename_set (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  const char *s;
+  
+  if (argc == 0)
+    return;
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  
+  vivi_application_set_filename (app, s);
+}
+
+VIVI_FUNCTION ("player_variables_get", vivi_player_as_variables_get)
+void
+vivi_player_as_variables_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  const char *s = vivi_application_get_variables (app);
+
+  if (s)
+    SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_get_string (cx, s));
+}
+
+VIVI_FUNCTION ("player_variables_set", vivi_player_as_variables_set)
+void
+vivi_player_as_variables_set (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  const char *s;
+  
+  if (argc == 0)
+    return;
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  
+  vivi_application_set_variables (app, s);
+}
+

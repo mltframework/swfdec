@@ -115,3 +115,38 @@ Commands.where = function () {
 };
 Commands.backtrace = Commands.where;
 Commands.bt = Commands.where;
+Commands.watch = function () {
+  var object;
+  var name;
+  if (arguments.length == 1) {
+    name = arguments[0];
+  } else if (arguments.length == 2) {
+    object = arguments[0];
+    name = arguments[1];
+  } else {
+    Commands.error ("usage: watch [object] name");
+    return;
+  }
+  var ret = new Breakpoint ();
+  ret.onSetVariable = function (o, variable, value) {
+    if (object && o != object)
+      return false;
+    if (variable != name)
+      return;
+
+    if (object) {
+      Commands.print ("Breakpoint: variable " + name + " on " + object);
+    } else {
+      Commands.print ("Breakpoint: variable " + name);
+    }
+    Commands.print ("  " + Player.frame);
+    return true;
+  };
+  ret.toString = function () {
+    var s = "watch " + name;
+    if (object)
+      s += " on " + object;
+    return s;
+  };
+  return ret;
+};

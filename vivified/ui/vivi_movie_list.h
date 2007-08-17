@@ -1,4 +1,4 @@
-/* Swfdec
+/* Vivi
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -17,32 +17,32 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_DEBUG_MOVIES_H_
-#define _SWFDEC_DEBUG_MOVIES_H_
-
 #include <libswfdec/swfdec.h>
+
+#ifndef _VIVI_MOVIE_LIST_H_
+#define _VIVI_MOVIE_LIST_H_
 
 G_BEGIN_DECLS
 
 enum {
-  SWFDEC_DEBUG_MOVIES_COLUMN_MOVIE,
-  SWFDEC_DEBUG_MOVIES_COLUMN_NAME,
-  SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH,
-  SWFDEC_DEBUG_MOVIES_COLUMN_TYPE,
+  VIVI_MOVIE_LIST_COLUMN_MOVIE,
+  VIVI_MOVIE_LIST_COLUMN_NAME,
+  VIVI_MOVIE_LIST_COLUMN_DEPTH,
+  VIVI_MOVIE_LIST_COLUMN_TYPE,
   /* add more */
-  SWFDEC_DEBUG_MOVIES_N_COLUMNS
+  VIVI_MOVIE_LIST_N_COLUMNS
 };
 
-typedef struct _SwfdecDebugMovies SwfdecDebugMovies;
-typedef struct _SwfdecDebugMoviesClass SwfdecDebugMoviesClass;
+typedef struct _ViviMovieList ViviMovieList;
+typedef struct _ViviMovieListClass ViviMovieListClass;
 
-#define SWFDEC_TYPE_DEBUG_MOVIES                    (swfdec_debug_movies_get_type())
-#define SWFDEC_IS_DEBUG_MOVIES(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_DEBUG_MOVIES))
-#define SWFDEC_IS_DEBUG_MOVIES_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_DEBUG_MOVIES))
-#define SWFDEC_DEBUG_MOVIES(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_DEBUG_MOVIES, SwfdecDebugMovies))
-#define SWFDEC_DEBUG_MOVIES_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_DEBUG_MOVIES, SwfdecDebugMoviesClass))
+#define VIVI_TYPE_MOVIE_LIST                    (vivi_movie_list_get_type())
+#define VIVI_IS_MOVIE_LIST(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_MOVIE_LIST))
+#define VIVI_IS_MOVIE_LIST_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_MOVIE_LIST))
+#define VIVI_MOVIE_LIST(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_MOVIE_LIST, ViviMovieList))
+#define VIVI_MOVIE_LIST_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_MOVIE_LIST, ViviMovieListClass))
 
-struct _SwfdecDebugMovies
+struct _ViviMovieList
 {
   GObject		object;
 
@@ -52,15 +52,14 @@ struct _SwfdecDebugMovies
   GHashTable *		nodes;		/* movies => node fast lookup table */
 };
 
-struct _SwfdecDebugMoviesClass
+struct _ViviMovieListClass
 {
   GObjectClass		object_class;
 };
 
-GType		swfdec_debug_movies_get_type		(void);
+GType		vivi_movie_list_get_type		(void);
 
-SwfdecDebugMovies *
-		swfdec_debug_movies_new			(SwfdecPlayer *		player);
+ViviMovieList *	vivi_movie_list_new			(SwfdecPlayer *		player);
 
 
 G_END_DECLS

@@ -22,10 +22,10 @@
 #endif
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec_debugger.h>
+#include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_player_internal.h>
-#include "swfdec_debug_movies.h"
+#include "vivi_movie_list.h"
 
 /*** GTK_TREE_MODEL ***/
 
@@ -35,31 +35,31 @@
 #  define REPORT 
 #endif
 static GtkTreeModelFlags 
-swfdec_debug_movies_get_flags (GtkTreeModel *tree_model)
+vivi_movie_list_get_flags (GtkTreeModel *tree_model)
 {
   REPORT;
   return 0;
 }
 
 static gint
-swfdec_debug_movies_get_n_columns (GtkTreeModel *tree_model)
+vivi_movie_list_get_n_columns (GtkTreeModel *tree_model)
 {
   REPORT;
-  return SWFDEC_DEBUG_MOVIES_N_COLUMNS;
+  return VIVI_MOVIE_LIST_N_COLUMNS;
 }
 
 static GType
-swfdec_debug_movies_get_column_type (GtkTreeModel *tree_model, gint index_)
+vivi_movie_list_get_column_type (GtkTreeModel *tree_model, gint index_)
 {
   REPORT;
   switch (index_) {
-    case SWFDEC_DEBUG_MOVIES_COLUMN_MOVIE:
+    case VIVI_MOVIE_LIST_COLUMN_MOVIE:
       return G_TYPE_POINTER;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_NAME:
+    case VIVI_MOVIE_LIST_COLUMN_NAME:
       return G_TYPE_STRING;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH:
+    case VIVI_MOVIE_LIST_COLUMN_DEPTH:
       return G_TYPE_INT;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_TYPE:
+    case VIVI_MOVIE_LIST_COLUMN_TYPE:
       return G_TYPE_STRING;
     default:
       break;
@@ -69,9 +69,9 @@ swfdec_debug_movies_get_column_type (GtkTreeModel *tree_model, gint index_)
 }
 
 static gboolean
-swfdec_debug_movies_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath *path)
+vivi_movie_list_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath *path)
 {
-  SwfdecDebugMovies *movies = SWFDEC_DEBUG_MOVIES (tree_model);
+  ViviMovieList *movies = VIVI_MOVIE_LIST (tree_model);
   GNode *node;
   guint i, depth;
   int *indices;
@@ -93,7 +93,7 @@ swfdec_debug_movies_get_iter (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTr
 }
 
 static GtkTreePath *
-swfdec_debug_movies_node_to_path (GNode *node)
+vivi_movie_list_node_to_path (GNode *node)
 {
   GtkTreePath *path;
 
@@ -106,36 +106,36 @@ swfdec_debug_movies_node_to_path (GNode *node)
 }
 
 static GtkTreePath *
-swfdec_debug_movies_get_path (GtkTreeModel *tree_model, GtkTreeIter *iter)
+vivi_movie_list_get_path (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   REPORT;
-  return swfdec_debug_movies_node_to_path (iter->user_data);
+  return vivi_movie_list_node_to_path (iter->user_data);
 }
 
 static void 
-swfdec_debug_movies_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
+vivi_movie_list_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
     gint column, GValue *value)
 {
   SwfdecMovie *movie = ((GNode *) iter->user_data)->data;
 
   REPORT;
   switch (column) {
-    case SWFDEC_DEBUG_MOVIES_COLUMN_MOVIE:
+    case VIVI_MOVIE_LIST_COLUMN_MOVIE:
       g_value_init (value, G_TYPE_POINTER);
       g_value_set_pointer (value, movie);
       return;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_NAME:
+    case VIVI_MOVIE_LIST_COLUMN_NAME:
       g_value_init (value, G_TYPE_STRING);
       if (movie->name[0])
 	g_value_set_string (value, movie->name);
       else
 	g_value_set_string (value, movie->original_name);
       return;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_DEPTH:
+    case VIVI_MOVIE_LIST_COLUMN_DEPTH:
       g_value_init (value, G_TYPE_INT);
       g_value_set_int (value, movie->depth);
       return;
-    case SWFDEC_DEBUG_MOVIES_COLUMN_TYPE:
+    case VIVI_MOVIE_LIST_COLUMN_TYPE:
       g_value_init (value, G_TYPE_STRING);
       /* big hack: we skip the "Swfdec" here */
       g_value_set_string (value, G_OBJECT_TYPE_NAME (movie) + 6);
@@ -147,7 +147,7 @@ swfdec_debug_movies_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
 }
 
 static gboolean
-swfdec_debug_movies_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
+vivi_movie_list_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   GNode *node;
 
@@ -161,7 +161,7 @@ swfdec_debug_movies_iter_next (GtkTreeModel *tree_model, GtkTreeIter *iter)
 }
 
 static gboolean
-swfdec_debug_movies_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent)
+vivi_movie_list_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent)
 {
   GNode *node;
 
@@ -169,7 +169,7 @@ swfdec_debug_movies_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, 
   if (parent) {
     node = parent->user_data;
   } else {
-    node = SWFDEC_DEBUG_MOVIES (tree_model)->root;
+    node = VIVI_MOVIE_LIST (tree_model)->root;
   }
   if (node->children == NULL)
     return FALSE;
@@ -178,16 +178,16 @@ swfdec_debug_movies_iter_children (GtkTreeModel *tree_model, GtkTreeIter *iter, 
 }
 
 static gboolean
-swfdec_debug_movies_iter_has_child (GtkTreeModel *tree_model, GtkTreeIter *iter)
+vivi_movie_list_iter_has_child (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   GtkTreeIter unused;
 
   REPORT;
-  return swfdec_debug_movies_iter_children (tree_model, &unused, iter);
+  return vivi_movie_list_iter_children (tree_model, &unused, iter);
 }
 
 static gint
-swfdec_debug_movies_iter_n_children (GtkTreeModel *tree_model, GtkTreeIter *iter)
+vivi_movie_list_iter_n_children (GtkTreeModel *tree_model, GtkTreeIter *iter)
 {
   GNode *node;
 
@@ -195,13 +195,13 @@ swfdec_debug_movies_iter_n_children (GtkTreeModel *tree_model, GtkTreeIter *iter
   if (iter) {
     node = iter->user_data;
   } else {
-    node = SWFDEC_DEBUG_MOVIES (tree_model)->root;
+    node = VIVI_MOVIE_LIST (tree_model)->root;
   }
   return g_node_n_children (node);
 }
 
 static gboolean
-swfdec_debug_movies_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
+vivi_movie_list_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
     GtkTreeIter *parent, gint n)
 {
   GNode *node;
@@ -210,7 +210,7 @@ swfdec_debug_movies_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
   if (parent) {
     node = parent->user_data;
   } else {
-    node = SWFDEC_DEBUG_MOVIES (tree_model)->root;
+    node = VIVI_MOVIE_LIST (tree_model)->root;
   }
   node = g_node_nth_child (node, n);
   if (node == NULL)
@@ -220,7 +220,7 @@ swfdec_debug_movies_iter_nth_child (GtkTreeModel *tree_model, GtkTreeIter *iter,
 }
 
 static gboolean
-swfdec_debug_movies_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *child)
+vivi_movie_list_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *child)
 {
   GNode *node;
 
@@ -234,29 +234,29 @@ swfdec_debug_movies_iter_parent (GtkTreeModel *tree_model, GtkTreeIter *iter, Gt
 }
 
 static void
-swfdec_debug_movies_tree_model_init (GtkTreeModelIface *iface)
+vivi_movie_list_tree_model_init (GtkTreeModelIface *iface)
 {
-  iface->get_flags = swfdec_debug_movies_get_flags;
-  iface->get_n_columns = swfdec_debug_movies_get_n_columns;
-  iface->get_column_type = swfdec_debug_movies_get_column_type;
-  iface->get_iter = swfdec_debug_movies_get_iter;
-  iface->get_path = swfdec_debug_movies_get_path;
-  iface->get_value = swfdec_debug_movies_get_value;
-  iface->iter_next = swfdec_debug_movies_iter_next;
-  iface->iter_children = swfdec_debug_movies_iter_children;
-  iface->iter_has_child = swfdec_debug_movies_iter_has_child;
-  iface->iter_n_children = swfdec_debug_movies_iter_n_children;
-  iface->iter_nth_child = swfdec_debug_movies_iter_nth_child;
-  iface->iter_parent = swfdec_debug_movies_iter_parent;
+  iface->get_flags = vivi_movie_list_get_flags;
+  iface->get_n_columns = vivi_movie_list_get_n_columns;
+  iface->get_column_type = vivi_movie_list_get_column_type;
+  iface->get_iter = vivi_movie_list_get_iter;
+  iface->get_path = vivi_movie_list_get_path;
+  iface->get_value = vivi_movie_list_get_value;
+  iface->iter_next = vivi_movie_list_iter_next;
+  iface->iter_children = vivi_movie_list_iter_children;
+  iface->iter_has_child = vivi_movie_list_iter_has_child;
+  iface->iter_n_children = vivi_movie_list_iter_n_children;
+  iface->iter_nth_child = vivi_movie_list_iter_nth_child;
+  iface->iter_parent = vivi_movie_list_iter_parent;
 }
 
-/*** SWFDEC_DEBUG_MOVIES ***/
+/*** VIVI_MOVIE_LIST ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecDebugMovies, swfdec_debug_movies, G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, swfdec_debug_movies_tree_model_init))
+G_DEFINE_TYPE_WITH_CODE (ViviMovieList, vivi_movie_list, G_TYPE_OBJECT,
+    G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, vivi_movie_list_tree_model_init))
 
 static int
-swfdec_debug_movies_get_index (GNode *parent, GNode *new)
+vivi_movie_list_get_index (GNode *parent, GNode *new)
 {
   GNode *walk;
   int i = 0;
@@ -274,7 +274,7 @@ swfdec_debug_movies_get_index (GNode *parent, GNode *new)
 }
 
 static void
-swfdec_debug_movies_added (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDebugMovies *movies)
+vivi_movie_list_added (SwfdecPlayer *player, SwfdecMovie *movie, ViviMovieList *movies)
 {
   GtkTreePath *path;
   GtkTreeIter iter;
@@ -289,18 +289,18 @@ swfdec_debug_movies_added (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDebug
   }
   new = g_node_new (movie);
   g_hash_table_insert (movies->nodes, movie, new);
-  pos = swfdec_debug_movies_get_index (node, new);
+  pos = vivi_movie_list_get_index (node, new);
   g_node_insert (node, pos, new);
   movies->stamp++;
   iter.stamp = movies->stamp;
   iter.user_data = new;
-  path = swfdec_debug_movies_node_to_path (new);
+  path = vivi_movie_list_node_to_path (new);
   gtk_tree_model_row_inserted (GTK_TREE_MODEL (movies), path, &iter);
   gtk_tree_path_free (path);
 }
 
 static void
-swfdec_debug_movies_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, SwfdecDebugMovies *movies)
+vivi_movie_list_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, ViviMovieList *movies)
 {
   GtkTreeIter iter;
   GtkTreePath *path;
@@ -313,21 +313,21 @@ swfdec_debug_movies_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, SwfdecD
   }
   iter.stamp = movies->stamp;
   iter.user_data = node;
-  path = swfdec_debug_movies_node_to_path (node);
+  path = vivi_movie_list_node_to_path (node);
   gtk_tree_model_row_changed (GTK_TREE_MODEL (movies), path, &iter);
   gtk_tree_path_free (path);
 }
 
 static void
-swfdec_debug_movies_removed (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDebugMovies *movies)
+vivi_movie_list_removed (SwfdecPlayer *player, SwfdecMovie *movie, ViviMovieList *movies)
 {
   GNode *node;
   GtkTreePath *path;
 
   node = g_hash_table_lookup (movies->nodes, movie);
   g_hash_table_remove (movies->nodes, movie);
-  g_signal_handlers_disconnect_by_func (movie, swfdec_debug_movies_movie_notify, movies);
-  path = swfdec_debug_movies_node_to_path (node);
+  g_signal_handlers_disconnect_by_func (movie, vivi_movie_list_movie_notify, movies);
+  path = vivi_movie_list_node_to_path (node);
   g_assert (g_node_n_children (node) == 0);
   g_node_destroy (node);
   gtk_tree_model_row_deleted (GTK_TREE_MODEL (movies), path);
@@ -335,47 +335,45 @@ swfdec_debug_movies_removed (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecDeb
 }
 
 static void
-swfdec_debug_movies_dispose (GObject *object)
+vivi_movie_list_dispose (GObject *object)
 {
-  SwfdecDebugMovies *movies = SWFDEC_DEBUG_MOVIES (object);
+  ViviMovieList *movies = VIVI_MOVIE_LIST (object);
 
-  g_signal_handlers_disconnect_by_func (movies->player, swfdec_debug_movies_removed, movies);
-  g_signal_handlers_disconnect_by_func (movies->player, swfdec_debug_movies_added, movies);
+  g_signal_handlers_disconnect_by_func (movies->player, vivi_movie_list_removed, movies);
+  g_signal_handlers_disconnect_by_func (movies->player, vivi_movie_list_added, movies);
   g_object_unref (movies->player);
   g_assert (g_node_n_children (movies->root) == 0);
   g_node_destroy (movies->root);
   g_hash_table_destroy (movies->nodes);
 
-  G_OBJECT_CLASS (swfdec_debug_movies_parent_class)->dispose (object);
+  G_OBJECT_CLASS (vivi_movie_list_parent_class)->dispose (object);
 }
 
 static void
-swfdec_debug_movies_class_init (SwfdecDebugMoviesClass *class)
+vivi_movie_list_class_init (ViviMovieListClass *class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (class);
 
-  object_class->dispose = swfdec_debug_movies_dispose;
+  object_class->dispose = vivi_movie_list_dispose;
 }
 
 static void
-swfdec_debug_movies_init (SwfdecDebugMovies *movies)
+vivi_movie_list_init (ViviMovieList *movies)
 {
   movies->root = g_node_new (NULL);
   movies->nodes = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
-SwfdecDebugMovies *
-swfdec_debug_movies_new (SwfdecPlayer *player)
+ViviMovieList *
+vivi_movie_list_new (SwfdecPlayer *player)
 {
-  SwfdecDebugMovies *movies;
+  ViviMovieList *movies;
 
-  movies = g_object_new (SWFDEC_TYPE_DEBUG_MOVIES, NULL);
+  movies = g_object_new (VIVI_TYPE_MOVIE_LIST, NULL);
   movies->player = player;
   g_object_ref (player);
-  if (SWFDEC_IS_DEBUGGER (player)) {
-    g_signal_connect (player, "movie-added", G_CALLBACK (swfdec_debug_movies_added), movies);
-    g_signal_connect (player, "movie-removed", G_CALLBACK (swfdec_debug_movies_removed), movies);
-  }
+  g_signal_connect (player, "movie-added", G_CALLBACK (vivi_movie_list_added), movies);
+  g_signal_connect (player, "movie-removed", G_CALLBACK (vivi_movie_list_removed), movies);
   return movies;
 }
 

@@ -19,7 +19,7 @@ function hidden_properties (obj)
   }
   ASSetPropFlags (obj, hidden, 1, 0);
 
-  return hidden;
+  return hidden.sort ();
 }
 
 // loses flags from the properties that are not permanent
@@ -44,7 +44,7 @@ function permanent_properties (obj)
   ASSetPropFlags (obj, hidden, 1, 0);
   ASSetPropFlags (obj, constant, 3, 0);
 
-  return permanent;
+  return permanent.sort ();
 }
 
 function constant_properties (obj)
@@ -67,7 +67,7 @@ function constant_properties (obj)
 
   ASSetPropFlags (obj, hidden, 1, 0);
 
-  return constant;
+  return constant.sort ();
 }
 
 var obj = new Object ();

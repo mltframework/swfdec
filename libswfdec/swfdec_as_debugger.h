@@ -54,7 +54,13 @@ struct _SwfdecAsDebuggerClass {
   void			(* finish_frame)(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context,
 					 SwfdecAsFrame *	frame,
-					 SwfdecAsValue *	return_value);
+					 const SwfdecAsValue *	return_value);
+  /* called before setting a variable */
+  void			(* set_variable)(SwfdecAsDebugger *	debugger,
+					 SwfdecAsContext *	context,
+					 SwfdecAsObject *	object,
+					 const char *		variable,
+					 const SwfdecAsValue *	value);
 };
 
 GType		swfdec_as_debugger_get_type	(void);

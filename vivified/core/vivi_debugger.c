@@ -117,7 +117,8 @@ vivi_debugger_start_frame (SwfdecAsDebugger *debugger, SwfdecAsContext *context,
 }
 
 static void
-vivi_debugger_finish_frame (SwfdecAsDebugger *debugger, SwfdecAsContext *context, SwfdecAsFrame *frame, SwfdecAsValue *ret)
+vivi_debugger_finish_frame (SwfdecAsDebugger *debugger, SwfdecAsContext *context, 
+    SwfdecAsFrame *frame, const SwfdecAsValue *ret)
 {
   gboolean retval = FALSE;
 

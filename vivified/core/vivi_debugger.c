@@ -31,6 +31,7 @@ enum {
   STEP,
   START_FRAME,
   FINISH_FRAME,
+  SET_VARIABLE,
   LAST_SIGNAL
 };
 
@@ -129,6 +130,18 @@ vivi_debugger_finish_frame (SwfdecAsDebugger *debugger, SwfdecAsContext *context
 }
 
 static void
+vivi_debugger_set_variable (SwfdecAsDebugger *debugger, SwfdecAsContext *context, 
+    SwfdecAsObject *object, const char *variable, const SwfdecAsValue *value)
+{
+  gboolean retval = FALSE;
+
+  g_signal_emit (debugger, signals[SET_VARIABLE], 0, object, variable, value, &retval);
+
+  if (retval)
+    vivi_debugger_break (VIVI_DEBUGGER (debugger));
+}
+
+static void
 vivi_debugger_class_init (ViviDebuggerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -145,10 +158,14 @@ vivi_debugger_class_init (ViviDebuggerClass *klass)
   signals[FINISH_FRAME] = g_signal_new ("finish-frame", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT_POINTER,
       G_TYPE_BOOLEAN, 2, SWFDEC_TYPE_AS_FRAME, G_TYPE_POINTER);
+  signals[SET_VARIABLE] = g_signal_new ("set-variable", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT_STRING_POINTER,
+      G_TYPE_BOOLEAN, 3, SWFDEC_TYPE_AS_OBJECT, G_TYPE_STRING, G_TYPE_POINTER);
 
   debugger_class->step = vivi_debugger_step;
   debugger_class->start_frame = vivi_debugger_start_frame;
   debugger_class->finish_frame = vivi_debugger_finish_frame;
+  debugger_class->set_variable = vivi_debugger_set_variable;
 }
 
 static void

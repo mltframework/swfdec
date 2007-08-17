@@ -63,6 +63,21 @@ vivi_breakpoint_finish_frame (ViviDebugger *debugger, SwfdecAsFrame *frame, cons
   return swfdec_as_value_to_boolean (obj->context, &retval);
 }
 
+static gboolean
+vivi_breakpoint_set_variable (ViviDebugger *debugger, SwfdecAsObject *object, 
+    const char *variable, const SwfdecAsValue *value, ViviBreakpoint *breakpoint)
+{
+  SwfdecAsObject *obj = SWFDEC_AS_OBJECT (breakpoint);
+  SwfdecAsValue vals[3];
+  SwfdecAsValue retval;
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], vivi_wrap_object (VIVI_APPLICATION (obj->context), object));
+  SWFDEC_AS_VALUE_SET_STRING (&vals[1], swfdec_as_context_get_string (obj->context, variable));
+  vivi_wrap_value (VIVI_APPLICATION (obj->context), &vals[2], value);
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onSetVariable"), 3, vals, &retval);
+  return swfdec_as_value_to_boolean (obj->context, &retval);
+}
+
 static const struct {
   const char *	event;
   const char *	signal;
@@ -71,7 +86,8 @@ static const struct {
   { NULL, NULL, NULL }, /* invalid */
   { "onCommand", "step", G_CALLBACK (vivi_breakpoint_step) },
   { "onStartFrame", "start-frame", G_CALLBACK (vivi_breakpoint_start_frame) },
-  { "onExitFrame", "finish-frame", G_CALLBACK (vivi_breakpoint_finish_frame) }
+  { "onExitFrame", "finish-frame", G_CALLBACK (vivi_breakpoint_finish_frame) },
+  { "onSetVariable", "set-variable", G_CALLBACK (vivi_breakpoint_set_variable) }
 };
 
 static guint

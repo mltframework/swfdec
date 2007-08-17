@@ -245,6 +245,15 @@ EXTRA_DIST = \
 	definefunction2-overwrite.swf \
 	definefunction2-overwrite.swf.trace \
 	definefunction2-overwrite.xml \
+	definefunction2-registers.xml \
+	definefunction2-registers-5.swf \
+	definefunction2-registers-5.swf.trace \
+	definefunction2-registers-6.swf \
+	definefunction2-registers-6.swf.trace \
+	definefunction2-registers-7.swf \
+	definefunction2-registers-7.swf.trace \
+	definefunction2-registers-8.swf \
+	definefunction2-registers-8.swf.trace \
 	definefunction2-this.swf \
 	definefunction2-this.swf.trace \
 	definefunction2-this.xml \

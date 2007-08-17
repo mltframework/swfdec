@@ -1870,6 +1870,8 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   swfdec_as_object_delete_variable (prototype, SWFDEC_AS_STR_constructor);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___constructor__,
       superclass);
+  swfdec_as_object_set_variable_flags (prototype, SWFDEC_AS_STR___constructor__,
+      SWFDEC_AS_VARIABLE_HIDDEN);
   SWFDEC_AS_VALUE_SET_OBJECT (&proto, prototype);
   swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
       SWFDEC_AS_STR_prototype, &proto);
@@ -1883,7 +1885,7 @@ swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
 {
   SwfdecAsContext *cx = cxp;
 
-  if (flags & SWFDEC_AS_VARIABLE_DONT_ENUM)
+  if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
     return TRUE;
   swfdec_as_stack_ensure_free (cx, 1);
   SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), variable);

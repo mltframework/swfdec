@@ -245,7 +245,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     if (var == NULL)
       return;
   }
-  if (var->flags & SWFDEC_AS_VARIABLE_READONLY)
+  if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
     return;
   if (var->get) {
     if (var->set) {
@@ -773,7 +773,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
   swfdec_as_object_set_variable (object, name, &val);
-  swfdec_as_object_set_variable_flags (object, name, SWFDEC_AS_VARIABLE_DONT_ENUM);
+  swfdec_as_object_set_variable_flags (object, name, SWFDEC_AS_VARIABLE_HIDDEN);
   return function;
 }
 
@@ -993,7 +993,7 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
   var->set = set;
   var->flags = 0;
   if (set == NULL)
-    var->flags |= SWFDEC_AS_VARIABLE_READONLY;
+    var->flags |= SWFDEC_AS_VARIABLE_CONSTANT;
 }
 
 /*** AS CODE ***/

@@ -24,6 +24,7 @@
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -114,20 +115,26 @@ SwfdecAsFunction *
 swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target, SwfdecScript *script)
 {
   SwfdecAsValue val;
-  SwfdecAsFunction *fun;
+  SwfdecAsScriptFunction *fun;
   SwfdecAsObject *proto;
+  SwfdecAsContext *context;
 
   g_return_val_if_fail (SWFDEC_IS_AS_SCOPE (scope), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
   g_return_val_if_fail (script != NULL, NULL);
 
-  fun = swfdec_as_function_create (SWFDEC_AS_OBJECT (scope)->context, 
-      SWFDEC_TYPE_AS_SCRIPT_FUNCTION, sizeof (SwfdecAsScriptFunction));
+  context = target->context;
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsScriptFunction)))
+    return NULL;
+  fun = g_object_new (SWFDEC_TYPE_AS_SCRIPT_FUNCTION, NULL);
   if (fun == NULL)
     return NULL;
-  SWFDEC_AS_SCRIPT_FUNCTION (fun)->scope = scope;
-  SWFDEC_AS_SCRIPT_FUNCTION (fun)->script = script;
-  SWFDEC_AS_SCRIPT_FUNCTION (fun)->target = target;
+  fun->scope = scope;
+  fun->script = script;
+  fun->target = target;
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsScriptFunction));
+  swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
+  /* set prototype */
   proto = swfdec_as_object_new (SWFDEC_AS_OBJECT (scope)->context);
   if (proto == NULL)
     return NULL;
@@ -136,6 +143,6 @@ swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target, Swf
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val);
 
-  return fun;
+  return SWFDEC_AS_FUNCTION (fun);
 }
 

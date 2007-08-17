@@ -24,6 +24,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_debug.h"
 
@@ -122,22 +123,23 @@ SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
     SwfdecAsNative native, guint min_args)
 {
-  SwfdecAsNativeFunction *nfun;
-  SwfdecAsFunction *fun;
+  SwfdecAsNativeFunction *fun;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
 
-  fun = swfdec_as_function_create (context, SWFDEC_TYPE_AS_NATIVE_FUNCTION,
-      sizeof (SwfdecAsNativeFunction));
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsNativeFunction)))
+    return NULL;
+  fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, NULL);
   if (fun == NULL)
     return NULL;
-  nfun = SWFDEC_AS_NATIVE_FUNCTION (fun);
-  nfun->native = native;
-  nfun->min_args = min_args;
-  nfun->name = g_strdup (name);
+  fun->native = native;
+  fun->min_args = min_args;
+  fun->name = g_strdup (name);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsNativeFunction));
+  swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
 
-  return fun;
+  return SWFDEC_AS_FUNCTION (fun);
 }
 
 /**

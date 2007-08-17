@@ -787,6 +787,13 @@ EXTRA_DIST = \
 	prototype-movie-8.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
+	propflags.as \
+	propflags-5.swf \
+	propflags-5.swf.trace \
+	propflags-6.swf \
+	propflags-6.swf.trace \
+	propflags-7.swf \
+	propflags-7.swf.trace \
 	register-count.swf \
 	register-count.swf.trace \
 	register-count.xml \

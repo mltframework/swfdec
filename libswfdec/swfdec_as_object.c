@@ -61,11 +61,11 @@
 
 /**
  * SwfdecAsVariableFlag:
- * @SWFDEC_AS_VARIABLE_DONT_ENUM: Do not include variable in enumerations and
+ * @SWFDEC_AS_VARIABLE_HIDDEN: Do not include variable in enumerations and
  *                                swfdec_as_object_foreach().
  * @SWFDEC_AS_VARIABLE_PERMANENT: Do not all swfdec_as_object_delete_variable()
  *                                to delete this variable.
- * @SWFDEC_AS_VARIABLE_READONLY: Do not allow changing the value with
+ * @SWFDEC_AS_VARIABLE_CONSTANT: Do not allow changing the value with
  *                               swfdec_as_object_set_variable().
  *
  * These flags are used to describe various properties of a variable inside

@@ -682,6 +682,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   SwfdecAsFrame *frame, *last_frame;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
+  SwfdecActionExec exec;
   guint8 *startpc, *pc, *endpc, *nextpc;
 #ifndef G_DISABLE_ASSERT
   SwfdecAsValue *check;
@@ -813,12 +814,22 @@ start:
       nextpc = pc + 1;
     }
     /* check action is valid */
-    if (spec->exec[version] == NULL) {
-      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
-	  action, spec->name ? spec->name : "Unknown", script->version);
-      frame->pc = pc = nextpc;
-      check_scope = TRUE;
-      continue;
+    exec = spec->exec[version];
+    if (!exec) {
+      guint real_version;
+      for (real_version = version + 1; !exec && real_version <= SWFDEC_AS_MAX_SCRIPT_VERSION; real_version++) {
+	exec = spec->exec[real_version];
+      }
+      if (!exec) {
+	SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
+	    action, spec->name ? spec->name : "Unknown", script->version);
+	frame->pc = pc = nextpc;
+	check_scope = TRUE;
+	continue;
+      }
+      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, using version %u instead", 
+	  action, action, spec->name ? spec->name : "Unknown", script->version, 
+	  script->version + real_version - version);
     }
     if (spec->remove > 0) {
       if (spec->add > spec->remove)
@@ -836,7 +847,7 @@ start:
     check = (spec->add >= 0 && spec->remove >= 0) ? context->cur + spec->add - spec->remove : NULL;
 #endif
     /* execute action */
-    spec->exec[version] (context, action, data, len);
+    exec (context, action, data, len);
     /* adapt the pc if the action did not, otherwise, leave it alone */
     /* FIXME: do this via flag? */
     if (frame->pc == pc) {

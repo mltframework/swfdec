@@ -100,6 +100,11 @@ a = new Array (1, "b", "c", 4);		// negative value
 a.length = -4;
 mytrace (a);
 mytrace (a.length);
+a = new Array ();			// setting negative variable while negative length
+a.length = -4;
+a[-2] = "x";
+mytrace (a);
+mytrace (a.length);
 a = new Array (1, "b", "c", 4);		// floating point values
 a.length = 3.4;
 mytrace (a);
@@ -116,7 +121,7 @@ a = new Array (1, "b", "c", 4);		// non-numeric values
 a.length = new Object ();
 mytrace (a);
 mytrace (a.length);
-a = new Array (1, "b", "c", 4);		// disabled until crash bug fixed
+a = new Array (1, "b", "c", 4);
 a.length = "har";
 mytrace (a);
 mytrace (a.length);

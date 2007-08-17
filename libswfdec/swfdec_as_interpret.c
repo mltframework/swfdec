@@ -1709,22 +1709,25 @@ swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 {
   SwfdecAsValue *val;
   const char *name;
+  gboolean success = FALSE;
   
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   val = swfdec_as_stack_peek (cx, 2);
   if (SWFDEC_AS_VALUE_IS_OBJECT (val))
-    swfdec_as_object_delete_variable (SWFDEC_AS_VALUE_GET_OBJECT (val), name);
-  swfdec_as_stack_pop_n (cx, 2);
+    success = swfdec_as_object_delete_variable (SWFDEC_AS_VALUE_GET_OBJECT (val), name);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
+  swfdec_as_stack_pop_n (cx, 1);
 }
 
 static void
 swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecAsValue *val;
   const char *name;
   
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  swfdec_as_frame_delete_variable (cx->frame, name);
-  swfdec_as_stack_pop (cx);
+  val = swfdec_as_stack_peek (cx, 1);
+  name = swfdec_as_value_to_string (cx, val);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, swfdec_as_frame_delete_variable (cx->frame, name));
 }
 
 static void
@@ -2487,8 +2490,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
   [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, { NULL, swfdec_action_mb_ascii_to_char_5, swfdec_action_mb_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char }  },
   /* version 5 */
-  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
-  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
+  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 1, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
+  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 1, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },

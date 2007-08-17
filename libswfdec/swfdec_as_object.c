@@ -564,7 +564,7 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
 
   if (object->context->debugger) {
     SwfdecAsDebugger *debugger = object->context->debugger;
-    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_CLASS (klass);
+    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
     if (dklass->set_variable)
       dklass->set_variable (debugger, object->context, object, variable, value);
   }

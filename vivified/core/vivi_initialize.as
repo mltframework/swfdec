@@ -37,6 +37,9 @@ Breakpoint = function () extends Native.Breakpoint {
 };
 Breakpoint.list = new Array ();
 Breakpoint.prototype.addProperty ("active", Native.breakpoint_active_get, Native.breakpoint_active_set);
+Breakpoint.prototype.toString = function () {
+  return "user-defined breakpoint";
+};
 
 /*** information about the player ***/
 

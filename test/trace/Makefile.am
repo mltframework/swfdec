@@ -380,6 +380,13 @@ EXTRA_DIST = \
 	function-tostring-7.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
+	forin-delete.as \
+	forin-delete-5.swf \
+	forin-delete-5.swf.trace \
+	forin-delete-6.swf \
+	forin-delete-6.swf.trace \
+	forin-delete-7.swf \
+	forin-delete-7.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \

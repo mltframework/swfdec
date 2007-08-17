@@ -96,6 +96,10 @@ mytrace (a);
 mytrace (a[9]);
 a.length = 10;
 mytrace (a);
+a = new Array (1, "b", "c", 4);		// negative value
+a.length = -4;
+mytrace (a);
+mytrace (a.length);
 a = new Array (1, "b", "c", 4);		// floating point values
 a.length = 3.4;
 mytrace (a);
@@ -187,12 +191,27 @@ mytrace (a.push ());			// pushing nothing
 mytrace (a);
 mytrace (a.push (["a", "b", "c"]));	// pushing another array
 mytrace (a);
+a = new Array ();			// pushing when weird length
+a.length = "weird";
+mytrace (a.push ("weirder"));
+mytrace (a["weird"]);
+mytrace (a);
+a = new Array ();			// pushing nothing, weird length
+a.length = "weird";
+mytrace (a.push ());
+mytrace (a["weird"]);
+mytrace (a);
 a = new Array ();			// pushing on empty array
 mytrace (a.push (6));
 mytrace (a);
 a = new Array (5);			// pushing on array with only undefined values
 mytrace (a.push (6));
 mytrace (a);
+a = new Array ();			// pushing on array with negative length
+a.length = -3;
+mytrace (a.push ("x"));
+mytrace (a[-3]);
+mytrace (a.length);
 
 
 mytrace ("## Pop");
@@ -208,6 +227,10 @@ mytrace (a);
 mytrace ("# Special cases");
 
 a = new Array ();			// empty
+mytrace (a.pop ());
+mytrace (a);
+a = new Array ();			// empty, weird length
+a.length = "weird";
 mytrace (a.pop ());
 mytrace (a);
 a = new Array (1, "b", "c", 4);		// use parameters
@@ -442,6 +465,53 @@ sortall (a, null, 0, Array.UNIQUESORT | Array.CASEINSENSITIVE);
 
 a = new Array ([1,2,3], [1,2,3,4], [], [1,2], [1]);
 sortall (a, compare_array_length, 0, 0);
+
+
+mytrace ("## Fake Array (Object with Array's methods)");
+
+fake = new Object();
+
+fake.join = Array.prototype.join;
+fake.toString = Array.prototype.toString;
+fake.push = Array.prototype.push;
+fake.pop = Array.prototype.pop;
+fake.shift = Array.prototype.shift;
+fake.unshift = Array.prototype.unshift;
+fake.reverse = Array.prototype.reverse;
+fake.concat = Array.prototype.concat;
+fake.slice = Array.prototype.slice;
+fake.splice = Array.prototype.splice;
+fake.sort = Array.prototype.sort;
+
+trace (fake.push);
+trace (fake.push ("a", "b", "c", "x", "z"));
+trace (fake.length + ": " + fake.join (":"));
+trace (fake.pop ());
+trace (fake.length + ": " + fake.join (":"));
+
+trace (fake.unshift ("y"));
+trace (fake.length + ": " + fake.join (":"));
+trace (fake.unshift ("z"));
+trace (fake.length + ": " + fake.join (":"));
+fake.length++;
+trace (fake.length + ": " + fake.join (":"));
+trace (fake.shift ());
+trace (fake.length + ": " + fake.join (":"));
+
+trace (fake.reverse ());
+trace (fake.length + ": " + fake.join (":"));
+
+trace (fake.concat ("a", fake).join (":"));
+trace (fake.length + ": " + fake.join (":"));
+
+trace (fake.slice (1, 3));
+trace (fake.length + ": " + fake.join (":"));
+
+trace (fake.splice (2, 3, "i", "j"));
+trace (fake.length + ": " + fake.join (":"));
+
+trace (fake.sort ());
+trace (fake.length + ": " + fake.join (":"));
 
 
 mytrace ("## Done");

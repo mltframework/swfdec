@@ -53,7 +53,8 @@ struct _SwfdecAsScriptFunctionClass {
 GType			swfdec_as_script_function_get_type	(void);
 
 SwfdecAsFunction *	swfdec_as_script_function_new		(SwfdecAsScope *	scope,
-								 SwfdecAsObject *	target);
+								 SwfdecAsObject *	target,
+								 SwfdecScript *		script);
 
 
 G_END_DECLS

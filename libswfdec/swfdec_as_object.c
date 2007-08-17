@@ -942,7 +942,8 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
  * object.__proto__ = construct.prototype; ]|
  **/
 void
-swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *construct, gboolean scripted)
+swfdec_as_object_set_constructor (SwfdecAsObject *object,
+    SwfdecAsObject *construct, gboolean scripted)
 {
   SwfdecAsValue val;
   SwfdecAsObject *proto;
@@ -950,7 +951,8 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (construct));
 
-  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct), SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct),
+      SWFDEC_AS_STR_prototype, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
     proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   } else {
@@ -959,8 +961,15 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___proto__,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
-  swfdec_as_object_set_variable (object, scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__, &val);
+  swfdec_as_object_set_variable (object,
+      scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__,
+      &val);
+  swfdec_as_object_set_variable_flags (object,
+      scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__,
+      SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 /**

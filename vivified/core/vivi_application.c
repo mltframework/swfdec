@@ -257,9 +257,18 @@ vivi_application_step_forward (gpointer appp)
   ViviApplication *app = appp;
   guint next_event;
 
+  app->step_source = 0;
+  if (app->loop != NULL ||
+      app->playback_state != VIVI_APPLICATION_STEPPING)
+    return FALSE;
+
+  app->playback_count--;
+  if (app->playback_count == 0)
+    app->playback_state = VIVI_APPLICATION_STOPPED;
   next_event = swfdec_player_get_next_event (app->player);
   swfdec_player_advance (app->player, next_event);
 
+  vivi_application_check (app);
   return FALSE;
 }
 
@@ -281,9 +290,8 @@ vivi_application_check (ViviApplication *app)
     case VIVI_APPLICATION_PLAYING:
       break;
     case VIVI_APPLICATION_STEPPING:
-      if (!is_breakpoint) {
-	/* FIXME: sanely handle this */
-	g_idle_add_full (-100, vivi_application_step_forward, app, NULL);
+      if (!is_breakpoint && app->step_source == 0) {
+	app->step_source = g_idle_add_full (-100, vivi_application_step_forward, app, NULL);
       }
       break;
     default:
@@ -391,6 +399,12 @@ vivi_application_quit (ViviApplication *app)
     return;
   app->playback_state = VIVI_APPLICATION_EXITING;
   app->playback_count = 1;
+  if (app->step_source) {
+    if (!g_source_remove (app->step_source)) {
+      g_assert_not_reached ();
+    } 
+    app->step_source = 0;
+  }
   g_object_notify (G_OBJECT (app), "quit");
   vivi_application_check (app);
 }

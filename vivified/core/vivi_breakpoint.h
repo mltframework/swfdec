@@ -41,7 +41,7 @@ struct _ViviBreakpoint
   SwfdecAsObject	object;
 
   gboolean		active;		/* only active breakpoints receive events */
-  gulong		handlers[4];	/* handlers for every signal of the debugger or 0 */
+  gulong		handlers[5];	/* handlers for every signal of the debugger or 0 */
 };
 
 struct _ViviBreakpointClass

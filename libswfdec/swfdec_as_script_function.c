@@ -124,6 +124,8 @@ swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target)
       SWFDEC_TYPE_AS_SCRIPT_FUNCTION, sizeof (SwfdecAsScriptFunction));
   if (fun == NULL)
     return NULL;
+  SWFDEC_AS_SCRIPT_FUNCTION (fun)->scope = scope;
+  SWFDEC_AS_SCRIPT_FUNCTION (fun)->target = target;
   proto = swfdec_as_object_new (SWFDEC_AS_OBJECT (scope)->context);
   if (proto == NULL)
     return NULL;
@@ -131,8 +133,6 @@ swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target)
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val);
-  SWFDEC_AS_SCRIPT_FUNCTION (fun)->scope = scope;
-  SWFDEC_AS_SCRIPT_FUNCTION (fun)->target = target;
 
   return fun;
 }

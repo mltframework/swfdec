@@ -1004,21 +1004,18 @@ swfdec_as_context_eval_set (SwfdecAsContext *context, SwfdecAsObject *obj, const
 /*** AS CODE ***/
 
 static void
-swfdec_as_context_ASSetPropFlags_set_one_flag (SwfdecAsObject *object, const char *s, guint *flags)
+swfdec_as_context_ASSetPropFlags_set_one_flag (SwfdecAsObject *object,
+    const char *s, guint *flags)
 {
   guint real;
 
-  /* first set all relevant flags */
-  real = flags[0] & flags[1];
-  swfdec_as_object_set_variable_flags (object, s, real);
-  /* then unset all relevant flags */
-  real = ~flags[0] & flags[1];
-  swfdec_as_object_unset_variable_flags (object, s, real);
+  swfdec_as_object_unset_variable_flags (object, s, flags[1]);
+  swfdec_as_object_set_variable_flags (object, s, flags[0]);
 }
 
 static gboolean
-swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object, const char *s, 
-    SwfdecAsValue *val, guint cur_flags, gpointer data)
+swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object,
+    const char *s, SwfdecAsValue *val, guint cur_flags, gpointer data)
 {
   guint *flags = data;
 
@@ -1047,16 +1044,15 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : -1;
   if (SWFDEC_AS_VALUE_IS_NULL (&argv[1])) {
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
-  } else if (SWFDEC_AS_VALUE_IS_STRING (&argv[1])) {
-    char **split = g_strsplit (SWFDEC_AS_VALUE_GET_STRING (&argv[1]), ",", -1);
+  } else {
+    char **split =
+      g_strsplit (swfdec_as_value_to_string (cx, &argv[1]), ",", -1);
     guint i;
     for (i = 0; split[i]; i++) {
       swfdec_as_context_ASSetPropFlags_set_one_flag (obj, 
 	  swfdec_as_context_get_string (cx, split[i]), flags);
     }
     g_strfreev (split); 
-  } else {
-    SWFDEC_FIXME ("ASSetPropFlags for non-null properties not implemented yet");
   }
 }
 

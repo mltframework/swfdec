@@ -248,7 +248,7 @@ main (int argc, char **argv)
       Test *test = walk->data;
       
       run_test (test, NULL);
-      g_print (test->output);
+      g_print ("%s", test->output);
       if (!test->success) {
 	failures++;
 	g_string_append_printf (failed_tests, 
@@ -276,7 +276,7 @@ main (int argc, char **argv)
       Test *test = walk->data;
       while (test->output == NULL)
 	g_cond_wait (cond, mutex);
-      g_print (test->output);
+      g_print ("%s", test->output);
       if (!test->success) {
 	failures++;
 	g_string_append_printf (failed_tests, 

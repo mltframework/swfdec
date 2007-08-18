@@ -38,6 +38,20 @@ swfdec_load_object_loader_target_get_player (SwfdecLoaderTarget *target)
 }
 
 static void
+swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
+    SwfdecLoader *loader)
+{
+  SwfdecAsValue val;
+  SwfdecLoadObject *object = SWFDEC_LOAD_OBJECT (target)->target;
+
+  SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_loaded (loader));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR__bytesLoaded, &val);
+
+  SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_size (loader));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR__bytesTotal, &val);
+}
+
+static void
 swfdec_load_object_ondata (SwfdecLoadObject *load_object)
 {
   SwfdecAsValue val;
@@ -48,7 +62,7 @@ swfdec_load_object_ondata (SwfdecLoadObject *load_object)
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (load_object->target), SWFDEC_AS_STR_onData, 1, &val, NULL);
+  swfdec_as_object_call (load_object->target, SWFDEC_AS_STR_onData, 1, &val, NULL);
 }
 
 static void
@@ -105,6 +119,7 @@ static void
 swfdec_load_object_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_load_object_loader_target_get_player;
+  iface->parse = swfdec_load_object_loader_target_parse;
   iface->eof = swfdec_load_object_loader_target_eof;
   iface->error = swfdec_load_object_loader_target_error;
 }

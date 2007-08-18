@@ -250,6 +250,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("yMin")
   SWFDEC_AS_CONSTANT_STRING ("yMax")
   SWFDEC_AS_CONSTANT_STRING ("close")
+  SWFDEC_AS_CONSTANT_STRING ("_bytesLoaded")
+  SWFDEC_AS_CONSTANT_STRING ("_bytesTotal")
   /* add more here */
 ;
 

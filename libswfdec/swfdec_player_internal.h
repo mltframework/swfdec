@@ -56,6 +56,7 @@ struct _SwfdecPlayer
   guint			width;			/* width of movie */
   guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
+  GList *		load_objects;		/* all the load objects */
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */

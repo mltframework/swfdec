@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *		 2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,11 +21,11 @@
 #ifndef _SWFDEC_XML_H_
 #define _SWFDEC_XML_H_
 
-#include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_as_object.h>
+#include <libswfdec/swfdec_types.h>
+#include <libswfdec/swfdec_script.h>
 
 G_BEGIN_DECLS
-
 
 typedef struct _SwfdecXml SwfdecXml;
 typedef struct _SwfdecXmlClass SwfdecXmlClass;
@@ -38,9 +39,6 @@ typedef struct _SwfdecXmlClass SwfdecXmlClass;
 
 struct _SwfdecXml {
   SwfdecAsObject	object;
-
-  char *		text;		/* string that this XML displays */
-  SwfdecLoader *	loader;		/* loader when loading or NULL */
 };
 
 struct _SwfdecXmlClass {
@@ -48,12 +46,6 @@ struct _SwfdecXmlClass {
 };
 
 GType		swfdec_xml_get_type	(void);
-
-SwfdecAsObject *swfdec_xml_new		(SwfdecAsContext *	context);
-
-void		swfdec_xml_load		(SwfdecXml *		xml,
-					 const char *		url);
-
 
 G_END_DECLS
 #endif

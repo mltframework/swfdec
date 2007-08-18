@@ -38,6 +38,7 @@
 #include "swfdec_initialize.h"
 #include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
+#include "swfdec_load_object.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
 #include "swfdec_script.h"
@@ -1094,6 +1095,10 @@ swfdec_player_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (player->Video);
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_as_object_mark (walk->data);
+  }
+  for (walk = player->load_objects; walk; walk = walk->next) {
+    swfdec_as_object_mark (walk->data);
+    swfdec_as_object_mark (SWFDEC_LOAD_OBJECT (walk->data)->target);
   }
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);

@@ -74,6 +74,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_image.c \
 	swfdec_interval.c \
 	swfdec_key_as.c \
+	swfdec_load_object.c \
+	swfdec_load_object_as.c \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
 	swfdec_marshal.c \
@@ -107,7 +109,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
-	swfdec_xml.c \
 	swfdec_xml_as.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
@@ -187,6 +188,8 @@ noinst_HEADERS = \
 	swfdec_initialize.h \
 	swfdec_internal.h \
 	swfdec_interval.h \
+	swfdec_load_object.h \
+	swfdec_load_object_as.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \
@@ -213,7 +216,7 @@ noinst_HEADERS = \
 	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
-	swfdec_xml.h
+	swfdec_xml_as.h
 
 EXTRA_DIST = \
 	compiler.c \

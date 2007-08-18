@@ -478,6 +478,13 @@ EXTRA_DIST = \
 	load-4.swf.trace \
 	load-5.swf \
 	load-5.swf.trace \
+	loadobject.as \
+	loadobject-5.swf \
+	loadobject-5.swf.trace \
+	loadobject-6.swf \
+	loadobject-6.swf.trace \
+	loadobject-7.swf \
+	loadobject-7.swf.trace \
 	local.swf \
 	local.swf.trace \
 	lots-of-arguments.as \

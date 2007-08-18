@@ -42,13 +42,15 @@ swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
   SwfdecAsValue val;
-  SwfdecAsObject *object = SWFDEC_LOAD_OBJECT (target)->target;
+  SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
   SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_loaded (loader));
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR__bytesLoaded, &val);
+  swfdec_as_object_set_variable (load_object->target,
+      SWFDEC_AS_STR__bytesLoaded, &val);
 
   SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_size (loader));
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR__bytesTotal, &val);
+  swfdec_as_object_set_variable (load_object->target, SWFDEC_AS_STR__bytesTotal,
+      &val);
 }
 
 static void
@@ -58,15 +60,18 @@ swfdec_load_object_ondata (SwfdecLoadObject *load_object)
 
   if (load_object->text) {
     SWFDEC_AS_VALUE_SET_STRING (&val,
-	swfdec_as_context_get_string (SWFDEC_AS_OBJECT (load_object->target)->context, load_object->text));
+	swfdec_as_context_get_string (load_object->target->context,
+	  load_object->text));
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
-  swfdec_as_object_call (load_object->target, SWFDEC_AS_STR_onData, 1, &val, NULL);
+  swfdec_as_object_call (load_object->target, SWFDEC_AS_STR_onData, 1, &val,
+      NULL);
 }
 
 static void
-swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target,
+    SwfdecLoader *loader)
 {
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
@@ -79,7 +84,8 @@ swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader
 }
 
 static void
-swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
+    SwfdecLoader *loader)
 {
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
   guint size;
@@ -173,8 +179,10 @@ swfdec_load_object_load (SwfdecLoadObject *load_object, const char *url)
   g_return_if_fail (url != NULL);
 
   swfdec_load_object_reset (load_object);
-  load_object->loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load_object)->context), url);
-  swfdec_loader_set_target (load_object->loader, SWFDEC_LOADER_TARGET (load_object));
+  load_object->loader = swfdec_player_load (
+      SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load_object)->context), url);
+  swfdec_loader_set_target (load_object->loader,
+      SWFDEC_LOADER_TARGET (load_object));
   swfdec_loader_set_data_type (load_object->loader, SWFDEC_LOADER_DATA_TEXT);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
@@ -193,7 +201,8 @@ swfdec_load_object_new (SwfdecAsObject *target, const char *url)
   if (!swfdec_as_context_use_mem (target->context, sizeof (SwfdecLoadObject)))
     return NULL;
   load_object = g_object_new (SWFDEC_TYPE_LOAD_OBJECT, NULL);
-  swfdec_as_object_add (load_object, target->context, sizeof (SwfdecLoadObject));
+  swfdec_as_object_add (load_object, target->context,
+      sizeof (SwfdecLoadObject));
 
   SWFDEC_LOAD_OBJECT (load_object)->target = target;
 

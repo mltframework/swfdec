@@ -31,7 +31,8 @@
 
 SWFDEC_AS_NATIVE (301, 0, swfdec_load_object_load)
 void
-swfdec_load_object_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_load_object_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *url;
 

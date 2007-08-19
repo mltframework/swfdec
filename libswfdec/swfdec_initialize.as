@@ -76,3 +76,39 @@ Stage = new Object ();
 AsBroadcaster.initialize (Stage);
 ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height", 1);
 
+/*** XML ***/
+
+function XML () { };
+
+XML.prototype = new XMLNode (1, "");
+
+XML.prototype.loaded = undefined;
+XML.prototype._bytesLoaded = undefined;
+XML.prototype._bytesTotal = undefined;
+XML.prototype.contentType = "application/x-www-form-urlencoded";
+
+XML.prototype.load = ASnative (301, 0);
+//XML.prototype.send = ASnative (301, 1);
+//XML.prototype.sendAndLoad = ASnative (301, 2);
+XML.prototype.parseXML = ASnative (253, 10);
+
+XML.prototype.onLoad = function () {
+};
+
+XML.prototype.onData = function (src) {
+  if (src != null) {
+    this.parseXML (src);
+    this.loaded = true;
+    this.onLoad (true);
+  } else {
+    this.onLoad (false);
+  }
+};
+
+XML.prototype.getBytesLoaded = function () {
+  return this._bytesLoaded;
+};
+
+XML.prototype.getBytesTotal = function () {
+  return this._bytesTotal;
+};

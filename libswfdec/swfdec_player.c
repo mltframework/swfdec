@@ -1432,7 +1432,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_movie_color_init_context (player, version);
     swfdec_net_connection_init_context (player, version);
     swfdec_net_stream_init_context (player, version);
-    swfdec_xml_init_context (player, version);
+    swfdec_xml_node_init_context (player, version);
     if (version > 4) {
       SwfdecBits bits;
       SwfdecScript *script;

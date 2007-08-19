@@ -109,7 +109,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
-	swfdec_xml_as.c
+	swfdec_xml_as.c \
+	swfdec_xml_node_as.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
@@ -216,7 +217,8 @@ noinst_HEADERS = \
 	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
-	swfdec_xml_as.h
+	swfdec_xml_as.h \
+	swfdec_xml_node_as.h
 
 EXTRA_DIST = \
 	compiler.c \

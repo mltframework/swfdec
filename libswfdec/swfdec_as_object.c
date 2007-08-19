@@ -775,8 +775,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
-  swfdec_as_object_set_variable (object, name, &val);
-  swfdec_as_object_set_variable_flags (object, name, SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (object, name, &val, SWFDEC_AS_VARIABLE_HIDDEN);
   return function;
 }
 
@@ -959,12 +958,11 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
     proto = object->context->Object_prototype;
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
-  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___proto__,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___constructor__, &val);
-  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___constructor__, SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___constructor__, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 /**

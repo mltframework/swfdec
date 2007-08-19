@@ -72,7 +72,8 @@ struct _SwfdecAsObjectClass {
   /* set the variable - and return it (or NULL on error) */
   void			(* set)			(SwfdecAsObject *	object,
 						 const char *		variable,
-						 const SwfdecAsValue *	val);
+						 const SwfdecAsValue *	val,
+						 guint			default_flags);
   /* set flags of a variable */
   void			(* set_flags)	      	(SwfdecAsObject *	object,
 						 const char *		variable,
@@ -109,9 +110,13 @@ void		swfdec_as_object_add		(SwfdecAsObject *     	object,
 
 /* I'd like to name these [gs]et_property, but binding authors will complain
  * about overlap with g_object_[gs]et_property then */
-void		swfdec_as_object_set_variable	(SwfdecAsObject *	object,
+#define swfdec_as_object_set_variable(object, variable, value) \
+  swfdec_as_object_set_variable_and_flags (object, variable, value, 0)
+void		swfdec_as_object_set_variable_and_flags
+						(SwfdecAsObject *	object,
 						 const char *		variable,
-						 const SwfdecAsValue *	value);
+						 const SwfdecAsValue *	value,
+						 guint			default_flags);
 void		swfdec_as_object_add_variable	(SwfdecAsObject *	object,
 						 const char *		variable, 
 						 SwfdecAsFunction *	get,

@@ -332,7 +332,7 @@ swfdec_as_array_add (SwfdecAsObject *object)
 
 static void
 swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
-    const SwfdecAsValue *val)
+    const SwfdecAsValue *val, guint flags)
 {
   char *end;
   gboolean indexvar = TRUE;
@@ -353,7 +353,7 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
   }
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->set (object, variable,
-      val);
+      val, flags);
 
   // if we added new value outside the current length, set a bigger length
   if (indexvar) {

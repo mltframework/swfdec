@@ -875,7 +875,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 
 static void
 swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable, 
-    const SwfdecAsValue *val)
+    const SwfdecAsValue *val, guint flags)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
@@ -883,7 +883,7 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
     return;
   if (swfdec_movie_set_asprop (movie, variable, val))
     return;
-  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val);
+  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
 }
 
 static char *

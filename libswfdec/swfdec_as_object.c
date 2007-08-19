@@ -157,7 +157,7 @@ swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
 }
 
 static inline SwfdecAsVariable *
-swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable)
+swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable, guint flags)
 {
   SwfdecAsVariable *var;
 
@@ -166,6 +166,7 @@ swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable)
   if (!swfdec_as_variable_name_is_valid (variable))
     return NULL;
   var = g_slice_new0 (SwfdecAsVariable);
+  var->flags = flags;
   g_hash_table_insert (object->properties, (gpointer) variable, var);
 
   return var;
@@ -194,20 +195,9 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
   return TRUE;
 }
 
-static SwfdecAsVariable *
-swfdec_as_object_lookup_variable (SwfdecAsObject *object, const char *variable)
-{
-  SwfdecAsVariable *var;
-
-  var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) 
-    var = swfdec_as_object_hash_create (object, variable);
-  return var;
-}
-
 static void
 swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
-    const SwfdecAsValue *val)
+    const SwfdecAsValue *val, guint flags)
 {
   SwfdecAsVariable *var;
 
@@ -241,7 +231,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
   }
   if (var == NULL) {
-    var = swfdec_as_object_hash_create (object, variable);
+    var = swfdec_as_object_hash_create (object, variable, flags);
     if (var == NULL)
       return;
   }
@@ -549,12 +539,25 @@ swfdec_as_object_collect (SwfdecAsObject *object)
  * @value: value to set the variable to
  *
  * Sets a variable on @object. It is not guaranteed that getting the variable
- * after setting it results in the same value, as some variables can be 
- * read-only or require a specific type.
+ * after setting it results in the same value. This is a mcaro that calls 
+ * swfdec_as_object_set_variable_and_flags()
+ **/
+/**
+ * swfdec_as_object_set_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: garbage-collected name of the variable to set
+ * @value: value to set the variable to
+ * @default_flags: flags to use if creating the variable anew - the flags will
+ *                 be ignored if the property already exists.
+ *
+ * Sets a variable on @object. It is not guaranteed that getting the variable
+ * after setting it results in the same value, because various mechanisms (like
+ * the Actionscript Object.addProperty function or constant variables) can 
+ * avoid this.
  **/
 void
-swfdec_as_object_set_variable (SwfdecAsObject *object,
-    const char *variable, const SwfdecAsValue *value)
+swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
+    const char *variable, const SwfdecAsValue *value, guint default_flags)
 {
   SwfdecAsObjectClass *klass;
 
@@ -563,7 +566,7 @@ swfdec_as_object_set_variable (SwfdecAsObject *object,
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  klass->set (object, variable, value);
+  klass->set (object, variable, value, default_flags);
 }
 
 /**
@@ -987,12 +990,13 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (get));
   g_return_if_fail (set == NULL || SWFDEC_IS_AS_FUNCTION (set));
 
-  var = swfdec_as_object_lookup_variable (object, variable);
+  var = swfdec_as_object_hash_lookup (object, variable);
+  if (var == NULL) 
+    var = swfdec_as_object_hash_create (object, variable, 0);
   if (var == NULL)
     return;
   var->get = get;
   var->set = set;
-  var->flags = 0;
   if (set == NULL)
     var->flags |= SWFDEC_AS_VARIABLE_CONSTANT;
 }

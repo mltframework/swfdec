@@ -88,7 +88,7 @@ swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
 }
 
 static void
-swfdec_as_super_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
+swfdec_as_super_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val, guint flags)
 {
   /* This seems to be ignored completely */
 }

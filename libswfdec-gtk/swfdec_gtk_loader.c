@@ -22,6 +22,8 @@
 #endif
 
 #include <libsoup/soup.h>
+#include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include "swfdec_gtk_loader.h"
 
@@ -105,6 +107,22 @@ swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
 }
 
 static void
+swfdec_gtk_loader_headers (SoupMessage *msg, gpointer loader)
+{
+  const char *s = soup_message_get_header (msg->response_headers, "Content-Length");
+  unsigned long l;
+  char *end;
+
+  if (s == NULL)
+    return;
+
+  errno = 0;
+  l = strtoul (s, &end, 10);
+  if (errno == 0 && *end == 0)
+    swfdec_loader_set_size (loader, l);
+}
+
+static void
 swfdec_gtk_loader_finish (SoupMessage *msg, gpointer loader)
 {
   if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
@@ -134,6 +152,7 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
     g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);
+    g_signal_connect (gtk->message, "got-headers", G_CALLBACK (swfdec_gtk_loader_headers), gtk);
     if (data)
       soup_message_set_request (gtk->message, "appliation/x-www-urlencoded",
 	  SOUP_BUFFER_USER_OWNED, (char *) data, data_len);

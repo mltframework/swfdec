@@ -583,7 +583,7 @@ swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
   if (constructor == NULL)
     constructor = SWFDEC_PLAYER (context)->MovieClip;
 
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor, FALSE);
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
   swfdec_sprite_movie_goto (movie, 1);
   if (!swfdec_sprite_movie_iterate_end (mov)) {
     g_assert_not_reached ();

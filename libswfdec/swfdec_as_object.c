@@ -921,7 +921,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     return;
   new = g_object_new (type, NULL);
   swfdec_as_object_add (new, context, size);
-  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (fun), FALSE);
+  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (fun));
   swfdec_as_function_call (fun, new, n_args, args, NULL);
   context->frame->construct = TRUE;
 }
@@ -930,9 +930,6 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
  * swfdec_as_object_set_constructor:
  * @object: a #SwfdecAsObject
  * @construct: the constructor of @object
- * @scripted: %TRUE if this object was created by a script. Flash sets the 
- *            property named "__constructor__" on script-created objects, but
- *            "constructor" on native ones.
  *
  * Sets the constructor variables for @object. Most objects get these 
  * variables set automatically, but for objects you created yourself, you want
@@ -942,8 +939,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
  * object.__proto__ = construct.prototype; ]|
  **/
 void
-swfdec_as_object_set_constructor (SwfdecAsObject *object,
-    SwfdecAsObject *construct, gboolean scripted)
+swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *construct)
 {
   SwfdecAsValue val;
   SwfdecAsObject *proto;
@@ -964,12 +960,8 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object,
   swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___proto__,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
-  swfdec_as_object_set_variable (object,
-      scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__,
-      &val);
-  swfdec_as_object_set_variable_flags (object,
-      scripted ? SWFDEC_AS_STR_constructor : SWFDEC_AS_STR___constructor__,
-      SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___constructor__, &val);
+  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___constructor__, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 /**

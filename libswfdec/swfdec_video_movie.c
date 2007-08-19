@@ -100,7 +100,7 @@ swfdec_video_movie_init_movie (SwfdecMovie *movie)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
 
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), player->Video, FALSE);
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), player->Video);
 }
 
 static void

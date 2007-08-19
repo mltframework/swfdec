@@ -400,7 +400,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
     return FALSE;
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
-  swfdec_as_object_set_constructor (ret, context->Array, FALSE);
+  swfdec_as_object_set_constructor (ret, context->Array);
   return ret;
 }
 
@@ -1052,8 +1052,7 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_add (object, cx, sizeof (SwfdecAsArray));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Array, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_set_constructor (object,
-	  SWFDEC_AS_VALUE_GET_OBJECT (&val), FALSE);
+      swfdec_as_object_set_constructor (object, SWFDEC_AS_VALUE_GET_OBJECT (&val));
     } else {
       SWFDEC_INFO ("\"Array\" is not an object");
     }

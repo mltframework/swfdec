@@ -99,8 +99,7 @@ void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
 						 const SwfdecAsValue *	args);
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
-						 SwfdecAsObject *	construct,
-						 gboolean		scripted);
+						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
 char *		swfdec_as_object_get_debug	(SwfdecAsObject *	object);
 

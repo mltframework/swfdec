@@ -72,6 +72,48 @@ swfdec_xml_node_get_childNodes (SwfdecAsObject *object)
   return swfdec_as_value_to_object (object->context, &val);
 }
 
+typedef struct {
+  const char	character;
+  const char	*escaped;
+} EntityConversion;
+
+static EntityConversion xml_entities[] = {
+  { '&', "&amp;" },
+  { '"', "&quot;" },
+  { '\'', "&apos;" },
+  { '<', "&lt;" },
+  { '>', "&gt;" },
+  { '\0', NULL }
+};
+
+static char *
+swfdec_xml_node_escape (const char *orginal)
+{
+  int i;
+  const char *p, *start;
+  GString *string;
+
+  string = g_string_new ("");
+
+  p = start = orginal;
+  while (*(p += strcspn (p, "&<>\"'")) != '\0') {
+    string = g_string_append_len (string, start, p - start);
+    for (i = 0; xml_entities[i].escaped != NULL; i++) {
+      if (xml_entities[i].character == *p) {
+	string = g_string_append (string, xml_entities[i].escaped);
+	break;
+      }
+    }
+    g_assert (xml_entities[i].escaped != NULL);
+
+    p++;
+    start = p;
+  }
+  string = g_string_append (string, start);
+
+  return g_string_free (string, FALSE);
+}
+
 SWFDEC_AS_NATIVE (253, 1, swfdec_xml_node_cloneNode)
 void
 swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -101,7 +143,13 @@ void
 swfdec_xml_node_appendChild (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_FIXME ("XMLNode.appendChild not implemented");
+  SwfdecAsObject *childNodes;
+
+  if (argc < 1)
+    return;
+
+  childNodes = swfdec_xml_node_get_childNodes (object);
+  swfdec_as_object_call (childNodes, SWFDEC_AS_STR_push, 1, argv, NULL);
 }
 
 SWFDEC_AS_NATIVE (253, 5, swfdec_xml_node_hasChildNodes)
@@ -121,16 +169,19 @@ swfdec_xml_node_hasChildNodes (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static gboolean
-swfdec_xml_node_foreach_append_attribute (SwfdecAsObject *object,
+swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
 {
   GString *string = *(GString **)data;
+  char *escaped;
 
   string = g_string_append (string, " ");
   string = g_string_append (string, variable);
   string = g_string_append (string, "=\"");
-  string = g_string_append (string,
-      swfdec_as_value_to_string (object->context, value));
+  escaped =
+    swfdec_xml_node_escape (swfdec_as_value_to_string (object->context, value));
+  string = g_string_append (string, escaped);
+  g_free (escaped);
   string = g_string_append (string, "\"");
 
   return TRUE;
@@ -146,9 +197,9 @@ swfdec_xml_node_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   switch (swfdec_xml_node_get_nodeType (object)) {
     case SWFDEC_XML_NODE_ELEMENT:
       {
-	SwfdecAsObject *attributes, *childNodes;
+	SwfdecAsObject *attributes, *childNodes, *child;
 	GString *string;
-	int length;
+	int i, length;
 
 	string = g_string_new ("<");
 	swfdec_as_object_get_variable (object, SWFDEC_AS_STR_nodeName, &val);
@@ -157,7 +208,7 @@ swfdec_xml_node_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 	attributes = swfdec_xml_node_get_attributes (object);
 	swfdec_as_object_foreach (attributes,
-	    swfdec_xml_node_foreach_append_attribute, &string);
+	    swfdec_xml_node_foreach_string_append_attribute, &string);
 
 	childNodes = swfdec_xml_node_get_childNodes (object);
 	swfdec_as_object_get_variable (childNodes, SWFDEC_AS_STR_length, &val);
@@ -167,6 +218,13 @@ swfdec_xml_node_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 	  string = g_string_append (string, ">");
 
 	  for (i = 0; i < length; i++) {
+	    swfdec_as_object_get_variable (childNodes,
+		swfdec_as_double_to_string (childNodes->context, i), &val);
+	    child = swfdec_as_value_to_object (childNodes->context, &val);
+	    swfdec_as_object_call (child, SWFDEC_AS_STR_toString, 0, NULL,
+		&val);
+	    string = g_string_append (string,
+		swfdec_as_value_to_string (child->context, &val));
 	  }
 
 	  string = g_string_append (string, "</");

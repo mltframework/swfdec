@@ -111,7 +111,9 @@ swfdec_gtk_loader_finish (SoupMessage *msg, gpointer loader)
     swfdec_gtk_loader_ensure_open (loader);
     swfdec_loader_eof (loader);
   } else {
-    swfdec_loader_error (loader, "FIXME: make useful error message");
+    char *s = g_strdup_printf ("%u %s", msg->status_code, msg->reason_phrase);
+    swfdec_loader_error (loader, s);
+    g_free (s);
   }
 }
 

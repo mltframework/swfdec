@@ -99,11 +99,11 @@ swfdec_as_super_set_flags (SwfdecAsObject *object, const char *variable, guint f
   /* if we have no variables, we also can't set its flags... */
 }
 
-static gboolean
+static SwfdecAsDeleteReturn
 swfdec_as_super_delete (SwfdecAsObject *object, const char *variable)
 {
   /* if we have no variables... */
-  return FALSE;
+  return SWFDEC_AS_DELETE_NOT_FOUND;
 }
 
 static SwfdecAsObject *

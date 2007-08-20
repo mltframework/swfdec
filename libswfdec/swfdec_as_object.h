@@ -34,6 +34,12 @@ typedef enum {
   SWFDEC_AS_VARIABLE_FLASH6_UP = (1 << 7)
 } SwfdecAsVariableFlag;
 
+typedef enum {
+  SWFDEC_AS_DELETE_NOT_FOUND = 0,
+  SWFDEC_AS_DELETE_DELETED,
+  SWFDEC_AS_DELETE_NOT_DELETED
+} SwfdecAsDeleteReturn;
+
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
@@ -80,7 +86,7 @@ struct _SwfdecAsObjectClass {
 						 guint			flags,
 						 guint			mask);
   /* delete the variable - return TRUE if it exists */
-  gboolean		(* del)			(SwfdecAsObject *       object,
+  SwfdecAsDeleteReturn	(* del)			(SwfdecAsObject *       object,
 						 const char *		variable);
   /* call with every variable until func returns FALSE */
   gboolean		(* foreach)		(SwfdecAsObject *	object,
@@ -129,7 +135,8 @@ gboolean	swfdec_as_object_get_variable_and_flags
 						 SwfdecAsValue *	value,
 						 guint *		flags,
 						 SwfdecAsObject **	pobject);
-gboolean	swfdec_as_object_delete_variable(SwfdecAsObject *	object,
+SwfdecAsDeleteReturn
+		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const char *		variable);
 void		swfdec_as_object_set_variable_flags
 						(SwfdecAsObject *       object,

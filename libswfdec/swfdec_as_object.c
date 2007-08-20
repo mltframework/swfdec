@@ -73,6 +73,18 @@
  */
 
 /**
+ * SwfdecAsDeleteReturn:
+ * @SWFDEC_AS_DELETE_NOT_FOUND: The variable was not found and therefore 
+ *                              couldn't be deleted.
+ * @SWFDEC_AS_DELETE_DELETED: The variable was deleted.
+ * @SWFDEC_AS_DELETE_NOT_DELETED: The variable was found but could not be 
+ *                                deleted.
+ *
+ * This is the return value used by swfdec_as_object_delete_variable(). It 
+ * describes the various outcomes of trying to delete a variable.
+ */
+
+/**
  * SwfdecAsVariableForeach:
  * @object: The object this function is run on
  * @variable: garbage-collected name of the current variables
@@ -266,22 +278,22 @@ swfdec_as_object_free_property (gpointer key, gpointer value, gpointer data)
   g_slice_free (SwfdecAsVariable, value);
 }
 
-static gboolean
+static SwfdecAsDeleteReturn
 swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsVariable *var;
 
   var = g_hash_table_lookup (object->properties, variable);
   if (var == NULL)
-    return FALSE;
+    return SWFDEC_AS_DELETE_NOT_FOUND;
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
-    return TRUE;
+    return SWFDEC_AS_DELETE_NOT_DELETED;
 
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();
   }
-  return TRUE;
+  return SWFDEC_AS_DELETE_DELETED;
 }
 
 typedef struct {
@@ -647,11 +659,9 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
  * Deletes the given variable if possible. If the variable is protected from 
  * deletion, it will not be deleted.
  *
- * Returns: %TRUE if the variable existed. Note that this doesn't mean that the
- *          variable was actually removed. Permanent variables for example 
- *          cannot be removed.
+ * Returns: See #SwfdecAsDeleteReutnr for details of the return value.
  **/
-gboolean
+SwfdecAsDeleteReturn
 swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsObjectClass *klass;

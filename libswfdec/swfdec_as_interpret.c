@@ -1713,8 +1713,10 @@ swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   val = swfdec_as_stack_peek (cx, 2);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val))
-    success = swfdec_as_object_delete_variable (SWFDEC_AS_VALUE_GET_OBJECT (val), name);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    success = swfdec_as_object_delete_variable (
+	SWFDEC_AS_VALUE_GET_OBJECT (val), name) == SWFDEC_AS_DELETE_DELETED;
+  }
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
   swfdec_as_stack_pop_n (cx, 1);
 }
@@ -1724,10 +1726,12 @@ swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 {
   SwfdecAsValue *val;
   const char *name;
+  gboolean success = FALSE;
   
   val = swfdec_as_stack_peek (cx, 1);
   name = swfdec_as_value_to_string (cx, val);
-  SWFDEC_AS_VALUE_SET_BOOLEAN (val, swfdec_as_frame_delete_variable (cx->frame, name));
+  success = swfdec_as_frame_delete_variable (cx->frame, name) == SWFDEC_AS_DELETE_DELETED;
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
 }
 
 static void

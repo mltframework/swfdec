@@ -120,4 +120,4 @@ LoadVars.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-ASSetPropFlags(LoadVars.prototype, null, 1);
+ASSetPropFlags(LoadVars.prototype, null, 129);

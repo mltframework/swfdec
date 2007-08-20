@@ -43,6 +43,14 @@ struct _SwfdecAsDebugger {
 struct _SwfdecAsDebuggerClass {
   GObjectClass		object_class;
 
+  /* a new object was added to the GC */
+  void			(* add)		(SwfdecAsDebugger *	debugger,
+					 SwfdecAsContext *	context,
+					 SwfdecAsObject *	object);
+  /* an object was removed from the GC */
+  void			(* remove)    	(SwfdecAsDebugger *	debugger,
+					 SwfdecAsContext *	context,
+					 SwfdecAsObject *	object);
   /* called before executing a bytecode */
   void			(* step)	(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context);

@@ -248,7 +248,7 @@ swfdec_as_context_remove_strings (gpointer key, gpointer value, gpointer data)
 }
 
 static gboolean
-swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
+swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugger)
 {
   SwfdecAsObject *object;
 
@@ -262,6 +262,11 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
   } else {
     SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (object), object);
     swfdec_as_object_collect (object);
+    if (debugger) {
+      SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
+      if (klass->remove)
+	klass->remove (debugger, object->context, object);
+    }
     return TRUE;
   }
 }
@@ -274,7 +279,7 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   g_hash_table_foreach_remove (context->strings, 
     swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
-    swfdec_as_context_remove_objects, context);
+    swfdec_as_context_remove_objects, context->debugger);
   SWFDEC_INFO (">> done collecting garbage");
 }
 

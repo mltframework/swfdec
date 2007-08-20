@@ -528,6 +528,11 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
   g_return_if_fail (klass->add);
   klass->add (object);
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+    if (dklass->add)
+      dklass->add (context->debugger, context, object);
+  }
 }
 
 void

@@ -1,14 +1,18 @@
 Loaded: undefined
 Total: undefined
+Is loaded: undefined
 false
 Loaded: undefined
 Total: undefined
+Is loaded: undefined
 true
 Loaded: 0
 Total: undefined
+Is loaded: false
 true
 Loaded: 0
 Total: undefined
+Is loaded: false
 Got: string '// makeswf -v 7 -r 1 -o loadobject-7.swf loadobject.as
 
 var obj = new Object ();
@@ -19,19 +23,24 @@ obj.onData = function (str) {
   trace ("Got: " + typeof (str) + " '" + str + "'");
   trace ("Loaded: " + this._bytesLoaded);
   trace ("Total: " + this._bytesTotal);
+  trace ("Is loaded: " + obj.loaded);
 };
 
 trace ("Loaded: " + obj._bytesLoaded);
 trace ("Total: " + obj._bytesTotal);
+trace ("Is loaded: " + obj.loaded);
 trace (obj.load ());
 trace ("Loaded: " + obj._bytesLoaded);
 trace ("Total: " + obj._bytesTotal);
+trace ("Is loaded: " + obj.loaded);
 trace (obj.load ("loadobject.as"));
 trace ("Loaded: " + obj._bytesLoaded);
 trace ("Total: " + obj._bytesTotal);
+trace ("Is loaded: " + obj.loaded);
 trace (obj.load ("404"));
 trace ("Loaded: " + obj._bytesLoaded);
 trace ("Total: " + obj._bytesTotal);
+trace ("Is loaded: " + obj.loaded);
 
 function quit () {
   loadMovie ("FSCommand:quit", "");
@@ -39,8 +48,10 @@ function quit () {
 
 setInterval (quit, 1000);
 '
-Loaded: 755
-Total: 755
+Loaded: 937
+Total: 937
+Is loaded: false
 Got: undefined 'undefined'
-Loaded: 755
-Total: 755
+Loaded: 937
+Total: 937
+Is loaded: false

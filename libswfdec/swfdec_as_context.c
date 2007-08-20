@@ -1018,7 +1018,7 @@ swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object,
   guint *flags = data;
 
   /* shortcut if the flags already match */
-  if ((cur_flags & flags[1]) == flags[0])
+  if (cur_flags == ((cur_flags &~ flags[1]) | flags[0]))
     return TRUE;
 
   swfdec_as_context_ASSetPropFlags_set_one_flag (object, s, flags);
@@ -1039,7 +1039,7 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   flags[0] = swfdec_as_value_to_integer (cx, &argv[2]);
-  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : -1;
+  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : 0;
   if (SWFDEC_AS_VALUE_IS_NULL (&argv[1])) {
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
   } else {

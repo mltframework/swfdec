@@ -37,7 +37,6 @@ typedef struct _SwfdecCacheHandle SwfdecCacheHandle;
 typedef struct _SwfdecCharacter SwfdecCharacter;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
 typedef struct _SwfdecContent SwfdecContent;
-typedef struct _SwfdecDebugger SwfdecDebugger;
 typedef struct _SwfdecDecoder SwfdecDecoder;
 typedef struct _SwfdecEventList SwfdecEventList;
 typedef struct _SwfdecFont SwfdecFont;

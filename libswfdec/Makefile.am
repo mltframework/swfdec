@@ -60,7 +60,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_color.c \
 	swfdec_color_as.c \
 	swfdec_debug.c \
-	swfdec_debugger.c \
 	swfdec_decoder.c \
 	swfdec_edittext.c \
 	swfdec_edittext_movie.c \
@@ -179,7 +178,6 @@ noinst_HEADERS = \
 	swfdec_color.h \
 	swfdec_color_as.h \
 	swfdec_debug.h \
-	swfdec_debugger.h \
 	swfdec_decoder.h \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \

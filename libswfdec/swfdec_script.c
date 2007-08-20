@@ -26,7 +26,6 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
-#include "swfdec_debugger.h"
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,

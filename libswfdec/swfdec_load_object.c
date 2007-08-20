@@ -45,12 +45,12 @@ swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
   SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_loaded (loader));
-  swfdec_as_object_set_variable (load_object->target,
-      SWFDEC_AS_STR__bytesLoaded, &val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesLoaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
   SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_size (loader));
-  swfdec_as_object_set_variable (load_object->target, SWFDEC_AS_STR__bytesTotal,
-      &val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesTotal, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 static void
@@ -186,8 +186,8 @@ swfdec_load_object_load (SwfdecLoadObject *load_object, const char *url)
   swfdec_loader_set_data_type (load_object->loader, SWFDEC_LOADER_DATA_TEXT);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
-  swfdec_as_object_set_variable (load_object->target,
-      SWFDEC_AS_STR__bytesLoaded, &val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesLoaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 SwfdecAsObject *

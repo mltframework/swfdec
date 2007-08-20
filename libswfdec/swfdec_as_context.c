@@ -386,8 +386,7 @@ swfdec_as_context_gc (SwfdecAsContext *context)
 static gboolean
 swfdec_as_context_needs_gc (SwfdecAsContext *context)
 {
-  return TRUE;
-  //return context->memory_since_gc >= context->memory_until_gc;
+  return context->memory_since_gc >= context->memory_until_gc;
 }
 
 /**

@@ -386,7 +386,8 @@ swfdec_as_context_gc (SwfdecAsContext *context)
 static gboolean
 swfdec_as_context_needs_gc (SwfdecAsContext *context)
 {
-  return context->memory_since_gc >= context->memory_until_gc;
+  return TRUE;
+  //return context->memory_since_gc >= context->memory_until_gc;
 }
 
 /**
@@ -417,8 +418,45 @@ enum {
   LAST_SIGNAL
 };
 
+enum {
+  PROP_0,
+  PROP_UNTIL_GC
+};
+
 G_DEFINE_TYPE (SwfdecAsContext, swfdec_as_context, G_TYPE_OBJECT)
 static guint signals[LAST_SIGNAL] = { 0, };
+
+static void
+swfdec_as_context_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
+  
+  switch (param_id) {
+    case PROP_UNTIL_GC:
+      g_value_set_ulong (value, (gulong) context->memory_until_gc);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+swfdec_as_context_set_property (GObject *object, guint param_id, const GValue *value, 
+    GParamSpec * pspec)
+{
+  SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
+  
+  switch (param_id) {
+    case PROP_UNTIL_GC:
+      context->memory_until_gc = g_value_get_ulong (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
 
 static void
 swfdec_as_context_dispose (GObject *object)
@@ -445,6 +483,13 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_as_context_dispose;
+  object_class->get_property = swfdec_as_context_get_property;
+  object_class->set_property = swfdec_as_context_set_property;
+
+  g_object_class_install_property (object_class, PROP_UNTIL_GC,
+      g_param_spec_ulong ("memory-until-gc", "memory until gc", 
+	  "amount of bytes that need to be allocated before garbage collection triggers",
+	  0, G_MAXULONG, 8 * 1024 * 1024, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * SwfdecAsContext::trace:
@@ -466,7 +511,6 @@ swfdec_as_context_init (SwfdecAsContext *context)
 {
   const char *s;
 
-  context->memory_until_gc = 8 * 1024 * 1024; /* 8 MB before we run the GC */
   context->strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
 

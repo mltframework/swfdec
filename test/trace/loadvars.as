@@ -29,8 +29,8 @@ lv.onLoad = function (success) {
   }
 };
 
-lv.load ("params.txt");
-lv.load ("blah.txt");
+lv.load ("loadvars.txt");
+lv.load ("404");
 
 function quit () {
   loadMovie ("FSCommand:quit", "");

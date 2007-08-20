@@ -331,7 +331,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  if (s == NULL)
 	    return;
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
-	      swfdec_as_context_get_string (cx, s));
+	      swfdec_as_context_give_string (cx, s));
 	  break;
 	}
       case 1: /* float */
@@ -1465,7 +1465,7 @@ static void
 swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     const guint8 *data, guint len)
 {
-  const char *function_name;
+  char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
   SwfdecBuffer *buffer;
@@ -1533,6 +1533,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (frame->script->buffer->data + frame->script->buffer->length < frame->pc + 3 + len + size) {
     SWFDEC_ERROR ("size of function is too big");
     g_free (args);
+    g_free (function_name);
     return;
   }
   /* create the script */
@@ -1554,9 +1555,11 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (name == NULL)
     name = "unnamed_function";
   script = swfdec_script_new (&bits, name, cx->version);
+  swfdec_buffer_unref (buffer);
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (args);
+    g_free (function_name);
     return;
   }
   if (frame->constant_pool_buffer)
@@ -1574,13 +1577,14 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   } else {
     SwfdecAsValue funval;
     /* FIXME: really varobj? Not eval or sth like that? */
-    function_name = swfdec_as_context_get_string (cx, function_name);
+    name = swfdec_as_context_get_string (cx, function_name);
     SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
-    swfdec_as_object_set_variable (frame->target, function_name, &funval);
+    swfdec_as_object_set_variable (frame->target, name, &funval);
   }
 
   /* update current context */
   frame->pc += 3 + len + size;
+  g_free (function_name);
 }
 
 static void
@@ -1713,8 +1717,10 @@ swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   val = swfdec_as_stack_peek (cx, 2);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val))
-    success = swfdec_as_object_delete_variable (SWFDEC_AS_VALUE_GET_OBJECT (val), name);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    success = swfdec_as_object_delete_variable (
+	SWFDEC_AS_VALUE_GET_OBJECT (val), name) == SWFDEC_AS_DELETE_DELETED;
+  }
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
   swfdec_as_stack_pop_n (cx, 1);
 }
@@ -1724,10 +1730,12 @@ swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 {
   SwfdecAsValue *val;
   const char *name;
+  gboolean success = FALSE;
   
   val = swfdec_as_stack_peek (cx, 1);
   name = swfdec_as_value_to_string (cx, val);
-  SWFDEC_AS_VALUE_SET_BOOLEAN (val, swfdec_as_frame_delete_variable (cx->frame, name));
+  success = swfdec_as_frame_delete_variable (cx->frame, name) == SWFDEC_AS_DELETE_DELETED;
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
 }
 
 static void
@@ -1865,16 +1873,13 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     goto fail;
   }
   super = SWFDEC_AS_VALUE_GET_OBJECT (superclass);
-  prototype = swfdec_as_object_new (cx);
+  prototype = swfdec_as_object_new_empty (cx);
   if (prototype == NULL)
     return;
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
-  swfdec_as_object_delete_variable (prototype, SWFDEC_AS_STR_constructor);
-  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___constructor__,
-      superclass);
-  swfdec_as_object_set_variable_flags (prototype, SWFDEC_AS_STR___constructor__,
-      SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___constructor__,
+      superclass, SWFDEC_AS_VARIABLE_HIDDEN);
   SWFDEC_AS_VALUE_SET_OBJECT (&proto, prototype);
   swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
       SWFDEC_AS_STR_prototype, &proto);

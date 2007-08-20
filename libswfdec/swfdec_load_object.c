@@ -45,12 +45,12 @@ swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
   SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_loaded (loader));
-  swfdec_as_object_set_variable (load_object->target,
-      SWFDEC_AS_STR__bytesLoaded, &val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesLoaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
   SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_size (loader));
-  swfdec_as_object_set_variable (load_object->target, SWFDEC_AS_STR__bytesTotal,
-      &val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesTotal, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 static void
@@ -148,6 +148,14 @@ swfdec_load_object_reset (SwfdecLoadObject *load_object)
 }
 
 static void
+swfdec_load_object_mark (SwfdecAsObject *object)
+{
+  swfdec_as_object_mark (SWFDEC_LOAD_OBJECT (object)->target);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_load_object_parent_class)->mark (object);
+}
+
+static void
 swfdec_load_object_dispose (GObject *object)
 {
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (object);
@@ -161,8 +169,11 @@ static void
 swfdec_load_object_class_init (SwfdecLoadObjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsObjectClass *as_object_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_load_object_dispose;
+
+  as_object_class->mark = swfdec_load_object_mark;
 }
 
 static void
@@ -186,8 +197,12 @@ swfdec_load_object_load (SwfdecLoadObject *load_object, const char *url)
   swfdec_loader_set_data_type (load_object->loader, SWFDEC_LOADER_DATA_TEXT);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
-  swfdec_as_object_set_variable (load_object->target,
-      SWFDEC_AS_STR__bytesLoaded, &val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesLoaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, FALSE);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR_loaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 SwfdecAsObject *

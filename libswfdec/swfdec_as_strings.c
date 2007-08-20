@@ -252,6 +252,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("close")
   SWFDEC_AS_CONSTANT_STRING ("_bytesLoaded")
   SWFDEC_AS_CONSTANT_STRING ("_bytesTotal")
+<<<<<<< HEAD:libswfdec/swfdec_as_strings.c
   SWFDEC_AS_CONSTANT_STRING ("xmlDecl")
   SWFDEC_AS_CONSTANT_STRING ("docTypeDecl")
   SWFDEC_AS_CONSTANT_STRING ("XMLNode")
@@ -273,6 +274,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("appendChild")
   SWFDEC_AS_CONSTANT_STRING ("hasChildNodes")
   SWFDEC_AS_CONSTANT_STRING ("attributes")
+  SWFDEC_AS_CONSTANT_STRING ("loaded")
   /* add more here */
 ;
 

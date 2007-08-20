@@ -73,6 +73,18 @@
  */
 
 /**
+ * SwfdecAsDeleteReturn:
+ * @SWFDEC_AS_DELETE_NOT_FOUND: The variable was not found and therefore 
+ *                              couldn't be deleted.
+ * @SWFDEC_AS_DELETE_DELETED: The variable was deleted.
+ * @SWFDEC_AS_DELETE_NOT_DELETED: The variable was found but could not be 
+ *                                deleted.
+ *
+ * This is the return value used by swfdec_as_object_delete_variable(). It 
+ * describes the various outcomes of trying to delete a variable.
+ */
+
+/**
  * SwfdecAsVariableForeach:
  * @object: The object this function is run on
  * @variable: garbage-collected name of the current variables
@@ -266,22 +278,22 @@ swfdec_as_object_free_property (gpointer key, gpointer value, gpointer data)
   g_slice_free (SwfdecAsVariable, value);
 }
 
-static gboolean
+static SwfdecAsDeleteReturn
 swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsVariable *var;
 
   var = g_hash_table_lookup (object->properties, variable);
   if (var == NULL)
-    return FALSE;
+    return SWFDEC_AS_DELETE_NOT_FOUND;
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
-    return TRUE;
+    return SWFDEC_AS_DELETE_NOT_DELETED;
 
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();
   }
-  return TRUE;
+  return SWFDEC_AS_DELETE_DELETED;
 }
 
 typedef struct {
@@ -647,11 +659,9 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
  * Deletes the given variable if possible. If the variable is protected from 
  * deletion, it will not be deleted.
  *
- * Returns: %TRUE if the variable existed. Note that this doesn't mean that the
- *          variable was actually removed. Permanent variables for example 
- *          cannot be removed.
+ * Returns: See #SwfdecAsDeleteReutnr for details of the return value.
  **/
-gboolean
+SwfdecAsDeleteReturn
 swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsObjectClass *klass;
@@ -775,8 +785,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
-  swfdec_as_object_set_variable (object, name, &val);
-  swfdec_as_object_set_variable_flags (object, name, SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (object, name, &val, SWFDEC_AS_VARIABLE_HIDDEN);
   return function;
 }
 
@@ -883,6 +892,7 @@ void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
     const SwfdecAsValue *args)
 {
+  SwfdecAsValue val;
   SwfdecAsObject *new;
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
@@ -920,11 +930,27 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
   }
-  if (!swfdec_as_context_use_mem (context, size))
-    return;
-  new = g_object_new (type, NULL);
-  swfdec_as_object_add (new, context, size);
-  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (fun));
+  if (swfdec_as_context_use_mem (context, size)) {
+    new = g_object_new (type, NULL);
+    swfdec_as_object_add (new, context, size);
+    /* set initial variables */
+    if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
+	swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,
+	    &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    }
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+    if (context->version < 7) {
+      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
+	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
+    }
+    if (context->version <= 5)
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN);
+  } else {
+    /* need to do this, since we must push something to the frame stack */
+    new = NULL;
+  }
   swfdec_as_function_call (fun, new, n_args, args, NULL);
   context->frame->construct = TRUE;
 }
@@ -938,7 +964,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
  * variables set automatically, but for objects you created yourself, you want
  * to call this function. This is essentially the same as the following script
  * code:
- * |[ object.__constructor__ = construct;
+ * |[ object.constructor = construct;
  * object.__proto__ = construct.prototype; ]|
  **/
 void
@@ -959,12 +985,11 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
     proto = object->context->Object_prototype;
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
-  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___proto__,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___constructor__, &val);
-  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___constructor__, SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 /**
@@ -1085,6 +1110,8 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   }
   /* now, set our own */
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
 
   if (version > 5) {
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_addProperty, 

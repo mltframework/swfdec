@@ -49,6 +49,7 @@ GType		swfdec_as_string_get_type	(void);
 
 void		swfdec_as_string_init_context	(SwfdecAsContext *	context,
 						 guint			version);
+char		*swfdec_as_string_unescape	(SwfdecAsContext *	context,						 const char *		string);
 
 
 G_END_DECLS

@@ -465,12 +465,10 @@ swfdec_as_string_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 /* escape and unescape are implemented here so the mad string functions share the same place */
 
-static void
-swfdec_as_string_unescape_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+static char *
+swfdec_as_string_unescape_5 (SwfdecAsContext *cx, const char *msg)
 {
   GByteArray *array;
-  const char *msg;
   char cur = 0; /* currently decoded character */
   char *out, *in, *s;
   guint decoding = 0; /* set if we're decoding a %XY string */
@@ -480,11 +478,10 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   g_byte_array_append (array, (guchar *) chr, 1); \
 }G_STMT_END
   array = g_byte_array_new ();
-  msg = swfdec_as_value_to_string (cx, &argv[0]);
   in = s = g_convert (msg, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
   if (s == NULL) {
     SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", msg);
-    return;
+    return NULL;
   }
   while (*s != 0) {
     if (decoding) {
@@ -515,21 +512,19 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     s++;
   }
   g_free (in);
-  if (array->len == 0) {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
-    return;
-  }
+  if (array->len == 0)
+    return NULL;
   cur = 0;
   g_byte_array_append (array, (guchar *) &cur, 1);
   out = g_convert ((char *) array->data, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
+  g_byte_array_free (array, TRUE);
   if (out) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, out));
-    g_free (out);
+    return out;
   } else {
     g_warning ("can't convert %s to UTF-8", msg);
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    g_free (out);
+    return g_strdup ("");
   }
-  g_byte_array_free (array, TRUE);
 #undef APPEND
 }
 
@@ -573,12 +568,11 @@ swfdec_as_string_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
   g_free (in);
 }
 
-static void
-swfdec_as_string_unescape (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+static char *
+swfdec_as_string_unescape_6 (SwfdecAsContext *cx, const char *s)
 {
   GByteArray *array;
-  const char *s, *msg;
+  const char *msg;
   char cur = 0; /* currently decoded character */
   guint decoding = 0; /* set if we're decoding a %XY string */
   guint utf8left = 0; /* how many valid utf8 chars are still required */
@@ -615,7 +609,7 @@ swfdec_as_string_unescape (SwfdecAsContext *cx, SwfdecAsObject *object,
   } \
 }G_STMT_END
   array = g_byte_array_new ();
-  msg = s = swfdec_as_value_to_string (cx, &argv[0]);
+  msg = s;
   while (*s != 0) {
     if (decoding) {
       decoding++;
@@ -657,13 +651,39 @@ swfdec_as_string_unescape (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   g_byte_array_append (array, (guchar *) &cur, 1);
   if (g_utf8_validate ((char *) array->data, -1, NULL)) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, (char *) array->data));
+    return (char *) g_byte_array_free (array, FALSE);
   } else {
     g_warning ("%s unescaped is invalid UTF-8", msg);
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    g_byte_array_free (array, TRUE);
+    return g_strdup ("");
   }
-  g_byte_array_free (array, TRUE);
 #undef APPEND
+}
+
+char *
+swfdec_as_string_unescape (SwfdecAsContext *context, const char *string)
+{
+  if (context->version < 6) {
+    return swfdec_as_string_unescape_5 (context, string);
+  } else {
+    return swfdec_as_string_unescape_6 (context, string);
+  }
+}
+
+static void
+swfdec_as_string_unescape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  char *result;
+
+  result =
+    swfdec_as_string_unescape (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  if (result != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
+    g_free (result);
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
+  }
 }
 
 void
@@ -710,12 +730,7 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
   }
 
   /* add properties to global object */
-  if (version <= 5) {
-    swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_escape, 0, swfdec_as_string_escape, 1);
-    swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_unescape, 0, swfdec_as_string_unescape_5, 1);
-  } else {
-    swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_escape, 0, swfdec_as_string_escape, 1);
-    swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_unescape, 0, swfdec_as_string_unescape, 1);
-  }
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_escape, 0, swfdec_as_string_escape, 1);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_unescape, 0, swfdec_as_string_unescape_internal, 1);
 }
 

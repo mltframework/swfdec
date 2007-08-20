@@ -666,6 +666,7 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   g_list_free (player->intervals);
+  g_list_free (player->load_objects);
   player->intervals = NULL;
   g_assert (g_queue_is_empty (player->init_queue));
   g_assert (g_queue_is_empty (player->construct_queue));
@@ -1088,18 +1089,13 @@ static void
 swfdec_player_mark (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
-  GList *walk;
 
   g_hash_table_foreach (player->registered_classes, swfdec_player_mark_string_object, NULL);
   swfdec_as_object_mark (player->MovieClip);
   swfdec_as_object_mark (player->Video);
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_as_object_mark (walk->data);
-  }
-  for (walk = player->load_objects; walk; walk = walk->next) {
-    swfdec_as_object_mark (walk->data);
-    swfdec_as_object_mark (SWFDEC_LOAD_OBJECT (walk->data)->target);
-  }
+  g_list_foreach (player->roots, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (player->intervals, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (player->load_objects, (GFunc) swfdec_as_object_mark, NULL);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }

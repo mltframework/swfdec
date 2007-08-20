@@ -1,0 +1,16 @@
+[type Function]
+undefined
+true
+true
+84
+84
+on=lal%3Dlel%3Dluu%0A&hehe2=jotain%20muuta&hehe=jotain%20muuta&tyhja=&moi=terve&test=2&onLoad=%5Btype%20Function%5D
+--
+hehe = jotain muuta
+hehe2 = jotain muuta
+moi = terve
+on = lal=lel=luu
+
+onLoad = [type Function]
+test = 2
+tyhja = 

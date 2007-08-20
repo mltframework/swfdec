@@ -882,6 +882,7 @@ void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
     const SwfdecAsValue *args)
 {
+  SwfdecAsValue val;
   SwfdecAsObject *new;
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
@@ -919,11 +920,27 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
   }
-  if (!swfdec_as_context_use_mem (context, size))
-    return;
-  new = g_object_new (type, NULL);
-  swfdec_as_object_add (new, context, size);
-  swfdec_as_object_set_constructor (new, SWFDEC_AS_OBJECT (fun));
+  if (swfdec_as_context_use_mem (context, size)) {
+    new = g_object_new (type, NULL);
+    swfdec_as_object_add (new, context, size);
+    /* set initial variables */
+    if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
+	swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,
+	    &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    }
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+    if (context->version < 7) {
+      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
+	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
+    }
+    if (context->version <= 5)
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN);
+  } else {
+    /* need to do this, since we must push something to the frame stack */
+    new = NULL;
+  }
   swfdec_as_function_call (fun, new, n_args, args, NULL);
   context->frame->construct = TRUE;
 }
@@ -937,7 +954,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
  * variables set automatically, but for objects you created yourself, you want
  * to call this function. This is essentially the same as the following script
  * code:
- * |[ object.__constructor__ = construct;
+ * |[ object.constructor = construct;
  * object.__proto__ = construct.prototype; ]|
  **/
 void
@@ -1083,6 +1100,8 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   }
   /* now, set our own */
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
 
   if (version > 5) {
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_addProperty, 

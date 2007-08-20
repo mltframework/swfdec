@@ -80,9 +80,6 @@ ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height", 1);
 
 function LoadVars () { };
 
-LoadVars.prototype.loaded = undefined;
-LoadVars.prototype._bytesLoaded = undefined;
-LoadVars.prototype._bytesTotal = undefined;
 LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
 
 LoadVars.prototype.load = ASnative (301, 0);
@@ -94,9 +91,9 @@ LoadVars.prototype.onLoad = function () {
 };
 
 LoadVars.prototype.onData = function (src) {
+  this.loaded = true;
   if (src != null) {
     this.decode (src);
-    this.loaded = true;
     this.onLoad (true);
   } else {
     this.onLoad (false);
@@ -123,4 +120,4 @@ LoadVars.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-ASSetPropFlags(LoadVars.prototype, null, 132);
+ASSetPropFlags(LoadVars.prototype, null, 1);

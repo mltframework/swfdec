@@ -142,8 +142,8 @@ XML.prototype.onLoad = function () {
 };
 
 XML.prototype.onData = function (src) {
+  this.loaded = true;
   if (src != null) {
-    this.loaded = true;
     this.parseXML (src);
     this.onLoad (true);
   } else {

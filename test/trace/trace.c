@@ -182,6 +182,8 @@ run_test (gpointer testp, gpointer unused)
   g_string_append (output, "  OK\n");
   test->success = TRUE;
 fail:
+  if (inter)
+    swfdec_interaction_free (inter);
   if (test->mutex)
     g_mutex_lock (test->mutex);
   test->output = g_string_free (output, FALSE);

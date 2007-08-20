@@ -1,39 +1,51 @@
 [type Function]
 undefined
-onData: test=2&moi=terve&tyhja&=taysi&hehe=jotain%20muuta&hehe2=jotain muuta&on=lal=lel=luu
+onData: test=2&hi=hello&empty_value&=empty_name&spa%20ce=spa%20ce&sp ace&spa ce=sp ace&many=equal=signs=in=row&eof=
+was there&eof
+=was there&
 
 false
-84
-84
+134
+134
 onLoad: true
 true
-84
-84
-hehe = jotain muuta
-hehe2 = jotain muuta
-moi = terve
-on = lal=lel=luu
+134
+134
 
+ = 
+empty_value = 
+eof = 
+was there
+eof
+ = was there
+hi = hello
+many = equal=signs=in=row
 onData = [type Function]
 onDataReal = [type Function]
 onLoad = [type Function]
+sp ace = 
+spa ce = sp ace
 test = 2
-tyhja = 
 onData: undefined
 true
-84
-84
+134
+134
 onLoad: false
 true
-84
-84
-hehe = jotain muuta
-hehe2 = jotain muuta
-moi = terve
-on = lal=lel=luu
+134
+134
 
+ = 
+empty_value = 
+eof = 
+was there
+eof
+ = was there
+hi = hello
+many = equal=signs=in=row
 onData = [type Function]
 onDataReal = [type Function]
 onLoad = [type Function]
+sp ace = 
+spa ce = sp ace
 test = 2
-tyhja = 

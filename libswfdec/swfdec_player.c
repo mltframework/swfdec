@@ -1094,6 +1094,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (player->MovieClip);
   swfdec_as_object_mark (player->Video);
   g_list_foreach (player->roots, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (player->intervals, (GFunc) swfdec_as_object_mark, NULL);
   g_list_foreach (player->load_objects, (GFunc) swfdec_as_object_mark, NULL);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);

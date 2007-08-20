@@ -46,6 +46,15 @@ EXTRA_DIST = \
 	addProperty-delete-7.swf.trace \
 	addProperty-delete-8.swf \
 	addProperty-delete-8.swf.trace \
+	addProperty-flags.as \
+	addProperty-flags-5.swf \
+	addProperty-flags-5.swf.trace \
+	addProperty-flags-6.swf \
+	addProperty-flags-6.swf.trace \
+	addProperty-flags-7.swf \
+	addProperty-flags-7.swf.trace \
+	addProperty-flags-8.swf \
+	addProperty-flags-8.swf.trace \
 	addProperty-get-prototypes.as \
 	addProperty-get-prototypes-5.swf \
 	addProperty-get-prototypes-5.swf.trace \

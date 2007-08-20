@@ -331,7 +331,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  if (s == NULL)
 	    return;
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
-	      swfdec_as_context_get_string (cx, s));
+	      swfdec_as_context_give_string (cx, s));
 	  break;
 	}
       case 1: /* float */
@@ -1465,7 +1465,7 @@ static void
 swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     const guint8 *data, guint len)
 {
-  const char *function_name;
+  char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
   SwfdecBuffer *buffer;
@@ -1521,6 +1521,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (frame->script->buffer->data + frame->script->buffer->length < frame->pc + 3 + len + size) {
     SWFDEC_ERROR ("size of function is too big");
     g_free (args);
+    g_free (function_name);
     return;
   }
   /* create the script */
@@ -1542,9 +1543,11 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (name == NULL)
     name = "unnamed_function";
   script = swfdec_script_new_from_bits (&bits, name, cx->version);
+  swfdec_buffer_unref (buffer);
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (args);
+    g_free (function_name);
     return;
   }
   if (frame->constant_pool_buffer)
@@ -1572,13 +1575,14 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   } else {
     SwfdecAsValue funval;
     /* FIXME: really varobj? Not eval or sth like that? */
-    function_name = swfdec_as_context_get_string (cx, function_name);
+    name = swfdec_as_context_get_string (cx, function_name);
     SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
-    swfdec_as_object_set_variable (frame->target, function_name, &funval);
+    swfdec_as_object_set_variable (frame->target, name, &funval);
   }
 
   /* update current context */
   frame->pc += 3 + len + size;
+  g_free (function_name);
 }
 
 static void
@@ -1707,22 +1711,29 @@ swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 {
   SwfdecAsValue *val;
   const char *name;
+  gboolean success = FALSE;
   
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   val = swfdec_as_stack_peek (cx, 2);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val))
-    swfdec_as_object_delete_variable (SWFDEC_AS_VALUE_GET_OBJECT (val), name);
-  swfdec_as_stack_pop_n (cx, 2);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    success = swfdec_as_object_delete_variable (
+	SWFDEC_AS_VALUE_GET_OBJECT (val), name) == SWFDEC_AS_DELETE_DELETED;
+  }
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
+  swfdec_as_stack_pop_n (cx, 1);
 }
 
 static void
 swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecAsValue *val;
   const char *name;
+  gboolean success = FALSE;
   
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  swfdec_as_frame_delete_variable (cx->frame, name);
-  swfdec_as_stack_pop (cx);
+  val = swfdec_as_stack_peek (cx, 1);
+  name = swfdec_as_value_to_string (cx, val);
+  success = swfdec_as_frame_delete_variable (cx->frame, name) == SWFDEC_AS_DELETE_DELETED;
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
 }
 
 static void
@@ -1860,14 +1871,13 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     goto fail;
   }
   super = SWFDEC_AS_VALUE_GET_OBJECT (superclass);
-  prototype = swfdec_as_object_new (cx);
+  prototype = swfdec_as_object_new_empty (cx);
   if (prototype == NULL)
     return;
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
-  swfdec_as_object_delete_variable (prototype, SWFDEC_AS_STR_constructor);
-  swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___constructor__,
-      superclass);
+  swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___constructor__,
+      superclass, SWFDEC_AS_VARIABLE_HIDDEN);
   SWFDEC_AS_VALUE_SET_OBJECT (&proto, prototype);
   swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
       SWFDEC_AS_STR_prototype, &proto);
@@ -1881,7 +1891,7 @@ swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
 {
   SwfdecAsContext *cx = cxp;
 
-  if (flags & SWFDEC_AS_VARIABLE_DONT_ENUM)
+  if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
     return TRUE;
   swfdec_as_stack_ensure_free (cx, 1);
   SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), variable);
@@ -2483,8 +2493,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
   [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, { NULL, swfdec_action_mb_ascii_to_char_5, swfdec_action_mb_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char }  },
   /* version 5 */
-  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 0, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
-  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 0, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
+  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 1, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
+  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 1, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
   [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },

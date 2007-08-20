@@ -76,7 +76,7 @@ vivi_wrap_object (ViviApplication *app, SwfdecAsObject *object)
     name = "Wrap";
   swfdec_as_object_get_variable (cx->global, swfdec_as_context_get_string (cx, name), &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (wrap, SWFDEC_AS_VALUE_GET_OBJECT (&val), FALSE);
+    swfdec_as_object_set_constructor (wrap, SWFDEC_AS_VALUE_GET_OBJECT (&val));
   VIVI_WRAP (wrap)->wrap = object;
   g_hash_table_insert (app->wraps, object, wrap);
   return wrap;

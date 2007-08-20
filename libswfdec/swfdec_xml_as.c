@@ -21,22 +21,25 @@
 #include "config.h"
 #endif
 
-#include "swfdec_xml.h"
+#include "swfdec_xml_as.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_load_object_as.h"
+
+G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_xml_do_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_xml_class_init (SwfdecXmlClass *klass)
 {
-  SwfdecXml *xml = SWFDEC_XML (obj);
-  const char *url;
+}
 
-  url = swfdec_as_value_to_string (cx, &argv[0]);
-  swfdec_xml_load (xml, url);
+static void
+swfdec_xml_init (SwfdecXml *xml)
+{
 }
 
 void
@@ -62,6 +65,6 @@ swfdec_xml_init_context (SwfdecPlayer *player, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, xml);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_load, SWFDEC_TYPE_XML,
-      swfdec_xml_do_load, 1);
+      swfdec_load_object_load, 0);
 }
 

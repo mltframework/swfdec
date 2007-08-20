@@ -332,7 +332,7 @@ swfdec_as_array_add (SwfdecAsObject *object)
 
 static void
 swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
-    const SwfdecAsValue *val)
+    const SwfdecAsValue *val, guint flags)
 {
   char *end;
   gboolean indexvar = TRUE;
@@ -353,7 +353,7 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
   }
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->set (object, variable,
-      val);
+      val, flags);
 
   // if we added new value outside the current length, set a bigger length
   if (indexvar) {
@@ -400,7 +400,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
     return FALSE;
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
-  swfdec_as_object_set_constructor (ret, context->Array, FALSE);
+  swfdec_as_object_set_constructor (ret, context->Array);
   return ret;
 }
 
@@ -1052,8 +1052,7 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_add (object, cx, sizeof (SwfdecAsArray));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Array, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_set_constructor (object,
-	  SWFDEC_AS_VALUE_GET_OBJECT (&val), FALSE);
+      swfdec_as_object_set_constructor (object, SWFDEC_AS_VALUE_GET_OBJECT (&val));
     } else {
       SWFDEC_INFO ("\"Array\" is not an object");
     }

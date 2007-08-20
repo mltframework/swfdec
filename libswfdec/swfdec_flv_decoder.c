@@ -281,6 +281,7 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
     dec->width = cairo_image_surface_get_width (surface);
     dec->height = cairo_image_surface_get_height (surface);
     swfdec_video_decoder_free (decoder);
+    cairo_surface_destroy (surface);
     return SWFDEC_STATUS_INIT;
   } else {
     return SWFDEC_STATUS_IMAGE;

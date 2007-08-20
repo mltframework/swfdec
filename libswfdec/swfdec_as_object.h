@@ -27,12 +27,18 @@ G_BEGIN_DECLS
 
 /* NB: matches ASSetPropFlags */
 typedef enum {
-  SWFDEC_AS_VARIABLE_DONT_ENUM = (1 << 0),
+  SWFDEC_AS_VARIABLE_HIDDEN = (1 << 0),
   SWFDEC_AS_VARIABLE_PERMANENT = (1 << 1),
-  SWFDEC_AS_VARIABLE_READONLY = (1 << 2),
+  SWFDEC_AS_VARIABLE_CONSTANT = (1 << 2),
 
   SWFDEC_AS_VARIABLE_FLASH6_UP = (1 << 7)
 } SwfdecAsVariableFlag;
+
+typedef enum {
+  SWFDEC_AS_DELETE_NOT_FOUND = 0,
+  SWFDEC_AS_DELETE_DELETED,
+  SWFDEC_AS_DELETE_NOT_DELETED
+} SwfdecAsDeleteReturn;
 
 typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
@@ -72,14 +78,15 @@ struct _SwfdecAsObjectClass {
   /* set the variable - and return it (or NULL on error) */
   void			(* set)			(SwfdecAsObject *	object,
 						 const char *		variable,
-						 const SwfdecAsValue *	val);
+						 const SwfdecAsValue *	val,
+						 guint			default_flags);
   /* set flags of a variable */
   void			(* set_flags)	      	(SwfdecAsObject *	object,
 						 const char *		variable,
 						 guint			flags,
 						 guint			mask);
   /* delete the variable - return TRUE if it exists */
-  gboolean		(* del)			(SwfdecAsObject *       object,
+  SwfdecAsDeleteReturn	(* del)			(SwfdecAsObject *       object,
 						 const char *		variable);
   /* call with every variable until func returns FALSE */
   gboolean		(* foreach)		(SwfdecAsObject *	object,
@@ -99,8 +106,7 @@ void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
 						 const SwfdecAsValue *	args);
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
-						 SwfdecAsObject *	construct,
-						 gboolean		scripted);
+						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
 char *		swfdec_as_object_get_debug	(SwfdecAsObject *	object);
 
@@ -110,9 +116,13 @@ void		swfdec_as_object_add		(SwfdecAsObject *     	object,
 
 /* I'd like to name these [gs]et_property, but binding authors will complain
  * about overlap with g_object_[gs]et_property then */
-void		swfdec_as_object_set_variable	(SwfdecAsObject *	object,
+#define swfdec_as_object_set_variable(object, variable, value) \
+  swfdec_as_object_set_variable_and_flags (object, variable, value, 0)
+void		swfdec_as_object_set_variable_and_flags
+						(SwfdecAsObject *	object,
 						 const char *		variable,
-						 const SwfdecAsValue *	value);
+						 const SwfdecAsValue *	value,
+						 guint			default_flags);
 void		swfdec_as_object_add_variable	(SwfdecAsObject *	object,
 						 const char *		variable, 
 						 SwfdecAsFunction *	get,
@@ -125,7 +135,8 @@ gboolean	swfdec_as_object_get_variable_and_flags
 						 SwfdecAsValue *	value,
 						 guint *		flags,
 						 SwfdecAsObject **	pobject);
-gboolean	swfdec_as_object_delete_variable(SwfdecAsObject *	object,
+SwfdecAsDeleteReturn
+		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const char *		variable);
 void		swfdec_as_object_set_variable_flags
 						(SwfdecAsObject *       object,

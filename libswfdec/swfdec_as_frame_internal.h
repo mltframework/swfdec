@@ -70,7 +70,8 @@ void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);
 
 SwfdecAsObject *swfdec_as_frame_find_variable	(SwfdecAsFrame *	frame,
 						 const char *		variable);
-gboolean	swfdec_as_frame_delete_variable	(SwfdecAsFrame *	frame,
+SwfdecAsDeleteReturn
+		swfdec_as_frame_delete_variable	(SwfdecAsFrame *	frame,
 						 const char *		variable);
 
 void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,

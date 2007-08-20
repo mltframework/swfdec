@@ -88,7 +88,7 @@ swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
 }
 
 static void
-swfdec_as_super_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
+swfdec_as_super_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val, guint flags)
 {
   /* This seems to be ignored completely */
 }
@@ -99,11 +99,11 @@ swfdec_as_super_set_flags (SwfdecAsObject *object, const char *variable, guint f
   /* if we have no variables, we also can't set its flags... */
 }
 
-static gboolean
+static SwfdecAsDeleteReturn
 swfdec_as_super_delete (SwfdecAsObject *object, const char *variable)
 {
   /* if we have no variables... */
-  return FALSE;
+  return SWFDEC_AS_DELETE_NOT_FOUND;
 }
 
 static SwfdecAsObject *

@@ -46,6 +46,15 @@ EXTRA_DIST = \
 	addProperty-delete-7.swf.trace \
 	addProperty-delete-8.swf \
 	addProperty-delete-8.swf.trace \
+	addProperty-flags.as \
+	addProperty-flags-5.swf \
+	addProperty-flags-5.swf.trace \
+	addProperty-flags-6.swf \
+	addProperty-flags-6.swf.trace \
+	addProperty-flags-7.swf \
+	addProperty-flags-7.swf.trace \
+	addProperty-flags-8.swf \
+	addProperty-flags-8.swf.trace \
 	addProperty-get-prototypes.as \
 	addProperty-get-prototypes-5.swf \
 	addProperty-get-prototypes-5.swf.trace \
@@ -230,6 +239,24 @@ EXTRA_DIST = \
 	comparisons-6.swf.trace \
 	comparisons-7.swf \
 	comparisons-7.swf.trace \
+	construct-constructors.as \
+	construct-constructors-5.swf \
+	construct-constructors-5.swf.trace \
+	construct-constructors-6.swf \
+	construct-constructors-6.swf.trace \
+	construct-constructors-7.swf \
+	construct-constructors-7.swf.trace \
+	construct-constructors-8.swf \
+	construct-constructors-8.swf.trace \
+	construct-properties.as \
+	construct-properties-5.swf \
+	construct-properties-5.swf.trace \
+	construct-properties-6.swf \
+	construct-properties-6.swf.trace \
+	construct-properties-7.swf \
+	construct-properties-7.swf.trace \
+	construct-properties-8.swf \
+	construct-properties-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
 	countdown.swf \
@@ -389,6 +416,13 @@ EXTRA_DIST = \
 	function-tostring-7.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
+	forin-delete.as \
+	forin-delete-5.swf \
+	forin-delete-5.swf.trace \
+	forin-delete-6.swf \
+	forin-delete-6.swf.trace \
+	forin-delete-7.swf \
+	forin-delete-7.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \
@@ -480,6 +514,13 @@ EXTRA_DIST = \
 	load-4.swf.trace \
 	load-5.swf \
 	load-5.swf.trace \
+	loadobject.as \
+	loadobject-5.swf \
+	loadobject-5.swf.trace \
+	loadobject-6.swf \
+	loadobject-6.swf.trace \
+	loadobject-7.swf \
+	loadobject-7.swf.trace \
 	local.swf \
 	local.swf.trace \
 	lots-of-arguments.as \
@@ -796,6 +837,13 @@ EXTRA_DIST = \
 	prototype-movie-8.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
+	propflags.as \
+	propflags-5.swf \
+	propflags-5.swf.trace \
+	propflags-6.swf \
+	propflags-6.swf.trace \
+	propflags-7.swf \
+	propflags-7.swf.trace \
 	register-count.swf \
 	register-count.swf.trace \
 	register-count.xml \

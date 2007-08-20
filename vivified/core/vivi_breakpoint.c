@@ -128,7 +128,7 @@ vivi_breakpoint_remove (ViviBreakpoint *breakpoint, guint i)
 }
 
 static void
-vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val)
+vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val, guint flags)
 {
   guint i;
 
@@ -144,20 +144,25 @@ vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecA
 	vivi_breakpoint_remove (breakpoint, i);
     }
   }
-  SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->set (object, variable, val);
+  SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->set (object, variable, val, flags);
 }
 
-static gboolean
+static SwfdecAsDeleteReturn
 vivi_breakpoint_delete (SwfdecAsObject *object, const char *variable)
 {
   ViviBreakpoint *breakpoint = VIVI_BREAKPOINT (object);
   guint i;
+  SwfdecAsDeleteReturn ret;
 
-  i = vivi_breakpoint_find_event (variable);
-  if (i && breakpoint->handlers[i])
-    vivi_breakpoint_remove (breakpoint, i);
+  ret = SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->del (object, variable);
 
-  return SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->del (object, variable);
+  if (ret == SWFDEC_AS_DELETE_DELETED) {
+    i = vivi_breakpoint_find_event (variable);
+    if (i && breakpoint->handlers[i])
+      vivi_breakpoint_remove (breakpoint, i);
+  }
+
+  return ret;
 }
 
 static void

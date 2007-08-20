@@ -517,20 +517,21 @@ swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
   return NULL;
 }
 
-/* FIXME: merge with find_variable somehow */
-gboolean
+SwfdecAsDeleteReturn
 swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
 {
   SwfdecAsScope *cur;
   guint i;
+  SwfdecAsDeleteReturn ret;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
 
   cur = frame->scope;
   for (i = 0; i < 256; i++) {
-    if (swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (cur), variable))
-      return TRUE;
+    ret = swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (cur), variable);
+    if (ret)
+      return ret;
     if (cur->next == NULL)
       break;
     cur = cur->next;
@@ -542,8 +543,9 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
   g_assert (SWFDEC_IS_AS_FRAME (cur));
   /* we've walked the scope chain down. Now look in the special objects. */
   /* 1) the target set via SetTarget */
-  if (swfdec_as_object_delete_variable (frame->target, variable))
-    return TRUE;
+  ret = swfdec_as_object_delete_variable (frame->target, variable);
+  if (ret)
+    return ret;
   /* 2) the global object */
   return swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
 }

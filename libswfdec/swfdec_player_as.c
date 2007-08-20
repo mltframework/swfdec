@@ -161,13 +161,13 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
     function = swfdec_get_asnative (cx, x, y);
     if (function == NULL) {
       SWFDEC_FIXME ("no ASnative function for %u, %u, what now?", x, y);
-      return;
+      break;
     }
     SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
     swfdec_as_object_set_variable (target, swfdec_as_context_get_string (cx, s), &val);
     y++;
   }
-  g_free (names);
+  g_strfreev (names);
 }
 
 SWFDEC_AS_NATIVE (4, 1, ASSetNativeAccessor)
@@ -202,12 +202,12 @@ ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
     set = swfdec_get_asnative (cx, x, y++);
     if (get == NULL) {
       SWFDEC_ERROR ("no getter for %s", s);
-      return;
+      break;
     }
     swfdec_as_object_add_variable (target, swfdec_as_context_get_string (cx, s),
 	get, set);
   }
-  g_free (names);
+  g_strfreev (names);
 }
 
 static void

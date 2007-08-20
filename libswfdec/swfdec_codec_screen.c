@@ -106,6 +106,7 @@ swfdec_video_decoder_screen_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
 	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_ALPHA] = 0xFF;
 	}
       }
+      swfdec_buffer_unref (buf);
     }
   }
   *width = screen->width;

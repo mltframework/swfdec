@@ -377,7 +377,7 @@ swfdec_movie_run_construct (SwfdecMovie *movie)
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   g_queue_remove (player->construct_queue, movie);
   swfdec_movie_execute_script (movie, SWFDEC_EVENT_CONSTRUCT);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR___constructor__, 0, NULL, NULL);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, 0, NULL, NULL);
 }
 
 void
@@ -875,7 +875,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 
 static void
 swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable, 
-    const SwfdecAsValue *val)
+    const SwfdecAsValue *val, guint flags)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
@@ -883,7 +883,7 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
     return;
   if (swfdec_movie_set_asprop (movie, variable, val))
     return;
-  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val);
+  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
 }
 
 static char *

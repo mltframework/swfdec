@@ -60,12 +60,12 @@ swfdec_as_with_get (SwfdecAsObject *object, SwfdecAsObject *orig,
 
 static void
 swfdec_as_with_set (SwfdecAsObject *object, const char *variable,
-    const SwfdecAsValue *val)
+    const SwfdecAsValue *val, guint flags)
 {
   SwfdecAsWith *with = SWFDEC_AS_WITH (object);
   SwfdecAsObjectClass *klass = SWFDEC_AS_OBJECT_GET_CLASS (with->object);
 
-  klass->set (with->object, variable, val);
+  klass->set (with->object, variable, val, flags);
 }
 
 static void
@@ -78,7 +78,7 @@ swfdec_as_with_set_flags (SwfdecAsObject *object, const char *variable,
   klass->set_flags (with->object, variable, flags, mask);
 }
 
-static gboolean
+static SwfdecAsDeleteReturn
 swfdec_as_with_delete (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsWith *with = SWFDEC_AS_WITH (object);

@@ -1,0 +1,10 @@
+    0 = 0
+h   1 = 1
+ p  2 = 2
+hp  3 = 3
+  c 4 = 4
+h c 5 = 5
+ pc 6 = 6
+hpc 7 = 7
+h   __constructor__ = [type Function]
+hp  __proto__ = [object Object]

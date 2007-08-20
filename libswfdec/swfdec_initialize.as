@@ -76,3 +76,48 @@ Stage = new Object ();
 AsBroadcaster.initialize (Stage);
 ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height", 1);
 
+/*** LOADVARS ***/
+
+function LoadVars () { };
+
+LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
+
+LoadVars.prototype.load = ASnative (301, 0);
+//LoadVars.prototype.send = ASnative (301, 1);
+//LoadVars.prototype.sendAndLoad = ASnative (301, 2);
+LoadVars.prototype.decode = ASnative (301, 3);
+
+LoadVars.prototype.onLoad = function () {
+};
+
+LoadVars.prototype.onData = function (src) {
+  this.loaded = true;
+  if (src != null) {
+    this.decode (src);
+    this.onLoad (true);
+  } else {
+    this.onLoad (false);
+  }
+};
+
+LoadVars.prototype.toString = function () {
+  var str = null;
+  for (var x in this) {
+    if (str == null) {
+      str = escape(x) + "=" + escape(this[x]);
+    } else {
+      str += "&" + escape(x) + "=" + escape(this[x]);
+    }
+  }
+  return str;
+};
+
+LoadVars.prototype.getBytesLoaded = function () {
+  return this._bytesLoaded;
+};
+
+LoadVars.prototype.getBytesTotal = function () {
+  return this._bytesTotal;
+};
+
+ASSetPropFlags(LoadVars.prototype, null, 129);

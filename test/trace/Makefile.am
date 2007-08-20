@@ -230,6 +230,15 @@ EXTRA_DIST = \
 	comparisons-6.swf.trace \
 	comparisons-7.swf \
 	comparisons-7.swf.trace \
+	construct-properties.as \
+	construct-properties-5.swf \
+	construct-properties-5.swf.trace \
+	construct-properties-6.swf \
+	construct-properties-6.swf.trace \
+	construct-properties-7.swf \
+	construct-properties-7.swf.trace \
+	construct-properties-8.swf \
+	construct-properties-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
 	countdown.swf \

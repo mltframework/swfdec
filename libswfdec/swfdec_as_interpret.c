@@ -1465,7 +1465,7 @@ static void
 swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     const guint8 *data, guint len)
 {
-  const char *function_name;
+  char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
   SwfdecBuffer *buffer;
@@ -1533,6 +1533,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (frame->script->buffer->data + frame->script->buffer->length < frame->pc + 3 + len + size) {
     SWFDEC_ERROR ("size of function is too big");
     g_free (args);
+    g_free (function_name);
     return;
   }
   /* create the script */
@@ -1554,9 +1555,11 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   if (name == NULL)
     name = "unnamed_function";
   script = swfdec_script_new (&bits, name, cx->version);
+  swfdec_buffer_unref (buffer);
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
     g_free (args);
+    g_free (function_name);
     return;
   }
   if (frame->constant_pool_buffer)
@@ -1574,13 +1577,14 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   } else {
     SwfdecAsValue funval;
     /* FIXME: really varobj? Not eval or sth like that? */
-    function_name = swfdec_as_context_get_string (cx, function_name);
+    name = swfdec_as_context_get_string (cx, function_name);
     SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
-    swfdec_as_object_set_variable (frame->target, function_name, &funval);
+    swfdec_as_object_set_variable (frame->target, name, &funval);
   }
 
   /* update current context */
   frame->pc += 3 + len + size;
+  g_free (function_name);
 }
 
 static void

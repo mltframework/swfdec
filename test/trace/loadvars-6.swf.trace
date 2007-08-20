@@ -1,0 +1,39 @@
+[type Function]
+undefined
+onData: test=2&moi=terve&tyhja&=taysi&hehe=jotain%20muuta&hehe2=jotain muuta&on=lal=lel=luu
+
+false
+84
+84
+onLoad: true
+true
+84
+84
+hehe = jotain muuta
+hehe2 = jotain muuta
+moi = terve
+on = lal=lel=luu
+
+onData = [type Function]
+onDataReal = [type Function]
+onLoad = [type Function]
+test = 2
+tyhja = 
+onData: 
+true
+84
+84
+onLoad: false
+true
+84
+84
+hehe = jotain muuta
+hehe2 = jotain muuta
+moi = terve
+on = lal=lel=luu
+
+onData = [type Function]
+onDataReal = [type Function]
+onLoad = [type Function]
+test = 2
+tyhja = 

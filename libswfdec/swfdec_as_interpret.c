@@ -331,7 +331,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  if (s == NULL)
 	    return;
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
-	      swfdec_as_context_get_string (cx, s));
+	      swfdec_as_context_give_string (cx, s));
 	  break;
 	}
       case 1: /* float */

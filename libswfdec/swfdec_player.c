@@ -38,7 +38,6 @@
 #include "swfdec_initialize.h"
 #include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
-#include "swfdec_load_object.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
 #include "swfdec_script.h"

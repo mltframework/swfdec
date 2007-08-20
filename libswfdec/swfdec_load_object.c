@@ -148,6 +148,14 @@ swfdec_load_object_reset (SwfdecLoadObject *load_object)
 }
 
 static void
+swfdec_load_object_mark (SwfdecAsObject *object)
+{
+  swfdec_as_object_mark (SWFDEC_LOAD_OBJECT (object)->target);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_load_object_parent_class)->mark (object);
+}
+
+static void
 swfdec_load_object_dispose (GObject *object)
 {
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (object);
@@ -161,8 +169,11 @@ static void
 swfdec_load_object_class_init (SwfdecLoadObjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsObjectClass *as_object_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_load_object_dispose;
+
+  as_object_class->mark = swfdec_load_object_mark;
 }
 
 static void

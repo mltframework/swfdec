@@ -32,7 +32,6 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
-#include "swfdec_debugger.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
 #include "swfdec_loader_internal.h"
@@ -315,16 +314,8 @@ swfdec_movie_destroy (SwfdecMovie *movie)
     swfdec_movie_destroy (movie->list->data);
   }
   if (movie->parent) {
-    if (SWFDEC_IS_DEBUGGER (player) &&
-	g_list_find (movie->parent->list, movie)) {
-      g_signal_emit_by_name (player, "movie-removed", movie);
-    }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   } else {
-    if (SWFDEC_IS_DEBUGGER (player) &&
-	g_list_find (player->roots, movie)) {
-      g_signal_emit_by_name (player, "movie-removed", movie);
-    }
     player->roots = g_list_remove (player->roots, movie);
   }
   /* FIXME: figure out how to handle destruction pre-init/construct.
@@ -1000,7 +991,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     size = 0;
   }
   g_object_ref (movie);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   /* set essential properties */
   movie->parent = parent;
   if (parent) {
@@ -1030,9 +1020,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
    * new movies to be created (and added to this list)
    */
   player->movies = g_list_prepend (player->movies, movie);
-  /* emit the new-movie signal */
-  if (SWFDEC_IS_DEBUGGER (player))
-    g_signal_emit_by_name (player, "movie-added", movie);
+  /* only add the movie here, because it needs to be setup for the debugger */
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   return movie;
 }
 

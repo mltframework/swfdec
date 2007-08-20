@@ -523,7 +523,7 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, const char *msg)
   } else {
     g_warning ("can't convert %s to UTF-8", msg);
     g_free (out);
-    return NULL;
+    return g_strdup ("");
   }
 #undef APPEND
 }
@@ -655,7 +655,7 @@ swfdec_as_string_unescape_6 (SwfdecAsContext *cx, const char *s)
   } else {
     g_warning ("%s unescaped is invalid UTF-8", msg);
     g_byte_array_free (array, TRUE);
-    return NULL;
+    return g_strdup ("");
   }
 #undef APPEND
 }
@@ -680,11 +680,10 @@ swfdec_as_string_unescape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_string_unescape (cx, swfdec_as_value_to_string (cx, &argv[0]));
   if (result != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
+    g_free (result);
   } else {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
-
-  g_free (result);
 }
 
 void

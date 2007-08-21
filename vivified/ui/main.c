@@ -71,7 +71,7 @@ setup (const char *filename, const char *variables)
   builder = gtk_builder_new ();
   if (!gtk_builder_add_from_file (builder, "vivi_player.xml", &error))
     g_error ("%s", error->message);
-  gtk_builder_connect_signals (builder, NULL);
+  gtk_builder_connect_signals (builder, app);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size (GTK_WINDOW (window), 400, 450);

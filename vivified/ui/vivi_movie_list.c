@@ -272,6 +272,62 @@ vivi_movie_list_get_index (GNode *parent, GNode *new)
   return i;
 }
 
+static void
+vivi_movie_list_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, ViviMovieList *movies)
+{
+  GtkTreeIter iter;
+  GtkTreePath *path;
+  GNode *node;
+
+  node = g_hash_table_lookup (movies->nodes, movie);
+  if (g_str_equal (pspec->name, "depth")) {
+    guint old, new;
+    GNode *parent;
+
+    parent = node->parent;
+    old = g_node_child_position (parent, node);
+    new = vivi_movie_list_get_index (parent, node);
+    if (old != new) {
+      /* reorder */
+      guint min = MIN (old, new);
+      guint max = MAX (old, new);
+      guint i;
+      guint count = g_node_n_children (parent);
+      int *positions = g_new (int, count);
+      g_print ("reordering %u => %u (%u total)\n", old, new, count);
+      for (i = 0; i < min; i++) {
+	positions[i] = i;
+      }
+      if (old < new) {
+	for (i = min; i < max; i++) {
+	  positions[i] = i + 1;
+	}
+      } else {
+	for (i = min + 1; i <= max; i++) {
+	  positions[i] = i - 1;
+	}
+      }
+      positions[new] = old;
+      for (i = max + 1; i < count; i++) {
+	positions[i] = i;
+      }
+      g_node_unlink (node);
+      g_node_insert (parent, new, node);
+      iter.stamp = movies->stamp;
+      iter.user_data = parent;
+      path = vivi_movie_list_node_to_path (parent);
+      gtk_tree_model_rows_reordered (GTK_TREE_MODEL (movies), path, &iter, positions);
+      gtk_tree_path_free (path);
+      g_free (positions);
+    }
+  }
+  iter.stamp = movies->stamp;
+  iter.user_data = node;
+  path = vivi_movie_list_node_to_path (node);
+  gtk_tree_model_row_changed (GTK_TREE_MODEL (movies), path, &iter);
+  gtk_tree_path_free (path);
+}
+
 static gboolean
 vivi_movie_list_added (ViviDebugger *debugger, SwfdecAsObject *object, ViviMovieList *movies)
 {
@@ -284,6 +340,7 @@ vivi_movie_list_added (ViviDebugger *debugger, SwfdecAsObject *object, ViviMovie
   if (!SWFDEC_IS_MOVIE (object))
     return FALSE;
   movie = SWFDEC_MOVIE (object);
+  g_signal_connect (movie, "notify", G_CALLBACK (vivi_movie_list_movie_notify), movies);
   if (movie->parent) {
     node = g_hash_table_lookup (movies->nodes, movie->parent);
     g_assert (node);
@@ -301,25 +358,6 @@ vivi_movie_list_added (ViviDebugger *debugger, SwfdecAsObject *object, ViviMovie
   gtk_tree_model_row_inserted (GTK_TREE_MODEL (movies), path, &iter);
   gtk_tree_path_free (path);
   return FALSE;
-}
-
-static void
-vivi_movie_list_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, ViviMovieList *movies)
-{
-  GtkTreeIter iter;
-  GtkTreePath *path;
-  GNode *node;
-
-  node = g_hash_table_lookup (movies->nodes, movie);
-  if (g_str_equal (pspec->name, "depth")) {
-    /* reorder when depth changes */
-    g_printerr ("FIXME: implement depth changes\n");
-  }
-  iter.stamp = movies->stamp;
-  iter.user_data = node;
-  path = vivi_movie_list_node_to_path (node);
-  gtk_tree_model_row_changed (GTK_TREE_MODEL (movies), path, &iter);
-  gtk_tree_path_free (path);
 }
 
 static void

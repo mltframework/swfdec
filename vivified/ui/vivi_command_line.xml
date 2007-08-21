@@ -1,5 +1,6 @@
 <interface>
   <object class="ViviViviDocklet" id="command-line">
+    <property name="title">Command Line</property>
     <signal name="application-set" handler="vivi_command_line_application_set" />
     <signal name="application-unset" handler="vivi_command_line_application_unset" />
     <child>

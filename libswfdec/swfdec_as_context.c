@@ -261,12 +261,12 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugge
     return FALSE;
   } else {
     SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (object), object);
-    swfdec_as_object_collect (object);
     if (debugger) {
       SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
       if (klass->remove)
 	klass->remove (debugger, object->context, object);
     }
+    swfdec_as_object_collect (object);
     return TRUE;
   }
 }

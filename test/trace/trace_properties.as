@@ -2,81 +2,108 @@
 
 function new_empty_object () {
   var hash = new Object ();
+  ASSetPropFlags (hash, null, 0, 7);
   for (var prop in hash) {
     delete hash[prop];
   }
   return hash;
 }
 
+#if __SWF_VERSION__ >= 6
 function hasOwnProperty (o, prop)
 {
-  if (o.__proto__ == undefined || o.__proto__ == "assdofjkaofjojsafjpojsafa")
+  if (o.hasOwnProperty != undefined)
+    return o.hasOwnProperty (prop);
+
+  o.hasOwnProperty = Object.prototype.hasOwnProperty;
+  result = o.hasOwnProperty (prop);
+  delete o.hasOwnProperty;
+  return result;
+}
+#else
+// this gets the same result as the above, with following limitations:
+// - if there is a child __proto__[prop] with value that can't be changed, no
+//   test can be done and false is returned
+// - native properties that have value undefined by default get overwritten by
+//   __proto__[prop]'s value (atleast in version 6 and 7) so their existance
+//   won't be detected by this function
+function hasOwnProperty (o, prop)
+{
+  if (o.__proto__ == undefined)
   {
-    if (o[prop] != undefined)
-      return true;
-    else
-      return false;
     o.__proto__ = new_empty_object ();
-    o.__proto__[prop] = "rapojdfoajiofjhaijhfidsjnfiohrbma";
-    var result;
+
+    o.__proto__[prop] = "safdlojasfljsaiofhiwjhefa";
     if (o[prop] != o.__proto__[prop]) {
       result = true;
     } else {
       result = false;
     }
-    // have to be set to string first, otherwise it won't delete
+
     o.__proto__ = "to-be-deleted";
     delete o.__proto__;
+    if (o.__proto__ != undefined) {
+      trace ("ERROR: Couldn't delete temporary __proto__");
+      o.__proto__ = undefined;
+    }
+
+    return result;
+  }
+
+  if (hasOwnProperty (o.__proto__, prop))
+  {
+    var constant = false;
+    var old = o.__proto__[prop];
+
+    o.__proto__[prop] = "safdlojasfljsaiofhiwjhefa";
+    if (o.__proto__[prop] != "safdlojasfljsaiofhiwjhefa") {
+      constant = true;
+      ASSetPropFlags (o.__proto__, prop, 0, 4);
+      o.__proto__[prop] = "safdlojasfljsaiofhiwjhefa";
+      if (o.__proto__[prop] != "safdlojasfljsaiofhiwjhefa") {
+	if (o[prop] != o.__proto__[prop]) {
+	  return true;
+	} else {
+	  trace ("ERROR: can't test property '" + prop + "', __proto__ has superconstant version");
+	  return false;
+	}
+      }
+    }
+
+    if (o[prop] != o.__proto__[prop]) {
+      result = true;
+    } else {
+      result = false;
+    }
+
+    o.__proto__[prop] = old;
+    if (o.__proto__[prop] != old)
+      trace ("Error: Couldn't set __proto__[\"" + prop + "\"] back to old value");
+    if (constant)
+      ASSetPropFlags (o.__proto__, prop, 4);
+
     return result;
   }
   else
   {
-    var old = o.__proto__;
-    o.__proto__ = "assdofjkaofjojsafjpojsafa";
-    delete o.__proto__;
-    if (o.__proto__ != undefined && o.__proto__ != "assdofjkaofjojsafjpojsafa") {
-      if (hasOwnProperty (o.__proto__, prop))
-      {
-	var constant = false;
-	var old = o.__proto__[prop];
-	o.__proto__[prop] = "rapojdfoajiofjhaijhfidsjnfiohrbma";
-	if (o.__proto__[prop] != "rapojdfoajiofjhaijhfidsjnfiohrbma") {
-	  constant = true;
-	  ASSetPropFlags (o.__proto__, prop, 0, 4);
-	  o.__proto__[prop] = "rapojdfoajiofjhaijhfidsjnfiohrbma";
-	}
-	var result;
-	if (o[prop] != o.__proto__[prop]) {
-	  result = true;
-	} else {
-	  result = false;
-	}
-	o.__proto__[prop] = "to-be-replaced";
-	o.__proto__[prop] = old;
-	if (constant)
-	  ASSetPropFlags (o.__proto__, prop, 4);
-	return result;
-      }
-      else
-      {
-	o.__proto__[prop] = "rapojdfoajiofjhaijhfidsjnfiohrbma";
-	var result;
-	if (o[prop] != o.__proto__[prop]) {
-	  result = true;
-	} else {
-	  result = false;
-	}
-	o.__proto__[prop] = "to-be-deleted";
-	delete o.__proto__[prop];
-	return result;
-      }
+    o.__proto__[prop] = "safdlojasfljsaiofhiwjhefa";
+
+    if (o[prop] != o.__proto__[prop]) {
+      result = true;
+    } else {
+      result = false;
     }
-    result = hasOwnProperty (o, prop);
-    o.__proto__ = old;
+
+    ASSetPropFlags (o, prop, 0, 4);
+    o.__proto__[prop] = "to-be-deleted";
+    delete o.__proto__[prop];
+    if (o.__proto__[prop] != undefined)
+      trace ("ERROR: Couldn't delete temporary __proto__[\"" + prop + "\"]");
+
     return result;
   }
 }
-
+#endif
 
 function new_info () {
   return new_empty_object ();
@@ -95,11 +122,13 @@ function is_blaclisted (o, prop)
   if (prop == "mySecretId" || prop == "globalSecretId")
     return true;
 
+#if __SWF_VERSION__ >= 6
   if (o == _global.Camera && prop == "names")
     return true;
 
   if (o == _global.Microphone && prop == "names")
     return true;
+#endif
 
   return false;
 }
@@ -231,19 +260,21 @@ function trace_properties_recurse (o, level, nextSecretId)
       flags = " (" + flags + ")";
 
     // handle secretId that keeps track what things we have seen earlier
-    var seen = false;
-    if (hasOwnProperty (o[prop], "mySecretId")) {
-      seen = true;
-    } else {
-      o[prop]["mySecretId"] = nextSecretId;
-      if (o[prop]["mySecretId"] != undefined) {
-	ASSetPropFlags (o[prop], "mySecretId", 7);
-	nextSecretId++;
-      }
-    }
     var id_string = "";
-    if (o[prop]["mySecretId"] != undefined)
-      id_string = "[" + o[prop]["mySecretId"] + "]";
+    var seen = false;
+    if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function") {
+      if (hasOwnProperty (o[prop], "mySecretId")) {
+	seen = true;
+      } else {
+	o[prop]["mySecretId"] = nextSecretId;
+	if (o[prop]["mySecretId"] != undefined) {
+	  ASSetPropFlags (o[prop], "mySecretId", 7);
+	  nextSecretId++;
+	}
+      }
+      if (o[prop]["mySecretId"] != undefined)
+	id_string = "[" + o[prop]["mySecretId"] + "]";
+    }
 
     // put things together
     var output = prop + flags + " = " + typeof (o[prop]) + id_string;
@@ -285,5 +316,6 @@ function trace_properties (o, identifier)
     output += " : toString => \"" + o[prop] + "\"";
   trace (output);
 
-  trace_properties_recurse (o, 1, 1);
+  if (typeof (o) == "object" || typeof (o) == "function")
+    trace_properties_recurse (o, 1, 1);
 }

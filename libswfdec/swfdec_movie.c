@@ -794,6 +794,7 @@ swfdec_movie_mark (SwfdecAsObject *object)
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
   GList *walk;
 
+  swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_as_object_mark (walk->data);

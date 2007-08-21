@@ -21,6 +21,7 @@
 
 Wrap = function () {};
 Wrap.prototype = {};
+Wrap.prototype.get = Native.wrap_get;
 Wrap.prototype.toString = Native.wrap_toString;
 
 Frame = function () extends Wrap {};

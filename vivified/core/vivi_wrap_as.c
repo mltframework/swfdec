@@ -44,6 +44,29 @@ vivi_wrap_toString (SwfdecAsContext *cx, SwfdecAsObject *this,
   SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_give_string (cx, s));
 }
 
+VIVI_FUNCTION ("wrap_get", vivi_wrap_get)
+void
+vivi_wrap_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  ViviWrap *wrap;
+  SwfdecAsValue val;
+  const char *name;
+
+  if (!VIVI_IS_WRAP (this) || argc == 0)
+    return;
+  wrap = VIVI_WRAP (this);
+  if (wrap->wrap == NULL)
+    return;
+  
+  name = swfdec_as_value_to_string (cx, &argv[0]);
+  swfdec_as_object_get_variable (wrap->wrap, 
+      swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (app->player), name), 
+      &val);
+  vivi_wrap_value (app, retval, &val);
+}
+
 /*** FRAME specific code ***/
 
 VIVI_FUNCTION ("frame_name_get", vivi_wrap_name_get)

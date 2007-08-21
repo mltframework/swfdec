@@ -28,7 +28,14 @@ enum {
   PROP_APP
 };
 
+enum {
+  APPLICATION_SET,
+  APPLICATION_UNSET,
+  LAST_SIGNAL
+};
+
 G_DEFINE_ABSTRACT_TYPE (ViviViviDocklet, vivi_vivi_docklet, VIVI_TYPE_DOCKLET)
+guint signals[LAST_SIGNAL];
 
 static void
 vivi_vivi_docklet_get_property (GObject *object, guint param_id, GValue *value, 
@@ -51,14 +58,17 @@ vivi_vivi_docklet_set_property (GObject *object, guint param_id, const GValue *v
     GParamSpec *pspec)
 {
   ViviViviDocklet *docklet = VIVI_VIVI_DOCKLET (object);
-  ViviViviDockletClass *klass;
 
   switch (param_id) {
     case PROP_APP:
+      if (docklet->app) {
+	g_signal_emit (docklet, signals[APPLICATION_UNSET], 0, docklet->app);
+	g_object_unref (docklet->app);
+      }
       docklet->app = g_value_dup_object (value);
-      klass = VIVI_VIVI_DOCKLET_GET_CLASS (docklet);
-      if (klass->set_app)
-	klass->set_app (docklet, docklet->app);
+      if (docklet->app) {
+	g_signal_emit (docklet, signals[APPLICATION_SET], 0, docklet->app);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -70,12 +80,12 @@ static void
 vivi_vivi_docklet_dispose (GObject *object)
 {
   ViviViviDocklet *docklet = VIVI_VIVI_DOCKLET (object);
-  ViviViviDockletClass *klass;
 
-  klass = VIVI_VIVI_DOCKLET_GET_CLASS (docklet);
-  if (klass->unset_app)
-    klass->unset_app (docklet, docklet->app);
-  g_object_unref (docklet->app);
+  if (docklet->app) {
+    g_signal_emit (docklet, signals[APPLICATION_UNSET], 0, docklet->app);
+    g_object_unref (docklet->app);
+    docklet->app = NULL;
+  }
 
   G_OBJECT_CLASS (vivi_vivi_docklet_parent_class)->dispose (object);
 }
@@ -91,7 +101,16 @@ vivi_vivi_docklet_class_init (ViviViviDockletClass *klass)
 
   g_object_class_install_property (object_class, PROP_APP,
       g_param_spec_object ("application", "application", "application used by this docklet",
-	  VIVI_TYPE_APPLICATION, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	  VIVI_TYPE_APPLICATION, G_PARAM_READWRITE));
+
+  signals[APPLICATION_SET] = g_signal_new ("application-set", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (ViviViviDockletClass, application_set), 
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, VIVI_TYPE_APPLICATION);
+  signals[APPLICATION_UNSET] = g_signal_new ("application-unset", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (ViviViviDockletClass, application_unset), 
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, VIVI_TYPE_APPLICATION);
 }
 
 static void

@@ -38,7 +38,7 @@ vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, ViviPlayer *pla
 }
 
 static void
-vivi_player_set_app (ViviViviDocklet *docklet, ViviApplication *app)
+vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app)
 {
   ViviPlayer *player = VIVI_PLAYER (docklet);
 
@@ -47,7 +47,7 @@ vivi_player_set_app (ViviViviDocklet *docklet, ViviApplication *app)
 }
 
 static void
-vivi_player_unset_app (ViviViviDocklet *docklet, ViviApplication *app)
+vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app)
 {
   g_signal_handlers_disconnect_by_func (app, vivi_player_notify_app, docklet);
 }
@@ -57,8 +57,8 @@ vivi_player_class_init (ViviPlayerClass *klass)
 {
   ViviViviDockletClass *vivi_docklet_class = VIVI_VIVI_DOCKLET_CLASS (klass);
 
-  vivi_docklet_class->set_app = vivi_player_set_app;
-  vivi_docklet_class->unset_app = vivi_player_unset_app;
+  vivi_docklet_class->application_set = vivi_player_application_set;
+  vivi_docklet_class->application_unset = vivi_player_application_unset;
 }
 
 static void

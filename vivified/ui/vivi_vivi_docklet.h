@@ -46,9 +46,9 @@ struct _ViviViviDockletClass
 {
   ViviDockletClass    	docklet_class;
 
-  void			(* set_app)			(ViviViviDocklet *	docklet,
+  void			(* application_set)   		(ViviViviDocklet *	docklet,
 							 ViviApplication *	app);
-  void			(* unset_app)			(ViviViviDocklet *	docklet,
+  void			(* application_unset)	      	(ViviViviDocklet *	docklet,
 							 ViviApplication *	app);
 };
 

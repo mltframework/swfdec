@@ -92,7 +92,7 @@ vivi_vdock_add (ViviVDock *vdock, GtkWidget *widget)
     if (parent == (GtkWidget *) vdock) {
       gtk_container_add (GTK_CONTAINER (vdock), paned);
     } else {
-      gtk_paned_pack1 (GTK_PANED (parent), paned, TRUE, FALSE);
+      gtk_paned_pack2 (GTK_PANED (parent), paned, TRUE, FALSE);
     }
   }
   vdock->docklets = g_list_prepend (vdock->docklets, widget);

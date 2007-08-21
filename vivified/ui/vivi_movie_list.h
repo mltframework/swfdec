@@ -59,7 +59,7 @@ struct _ViviMovieListClass
 
 GType		vivi_movie_list_get_type		(void);
 
-ViviMovieList *	vivi_movie_list_new			(ViviApplication *	app);
+GtkTreeModel *	vivi_movie_list_new			(ViviApplication *	app);
 
 
 G_END_DECLS

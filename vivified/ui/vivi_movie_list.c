@@ -322,6 +322,18 @@ vivi_movie_list_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, ViviMovieLi
   gtk_tree_path_free (path);
 }
 
+static void
+vivi_movie_list_remove_node (ViviMovieList *movies, GNode *node)
+{
+  GNode *walk;
+
+  for (walk = node->children; walk; walk = walk->next) {
+    vivi_movie_list_remove_node (movies, walk);
+    g_hash_table_remove (movies->nodes, walk->data);
+    g_signal_handlers_disconnect_by_func (walk->data, vivi_movie_list_movie_notify, movies);
+  }
+}
+
 static gboolean
 vivi_movie_list_removed (ViviDebugger *debugger, SwfdecAsObject *object, ViviMovieList *movies)
 {
@@ -331,11 +343,12 @@ vivi_movie_list_removed (ViviDebugger *debugger, SwfdecAsObject *object, ViviMov
   if (!SWFDEC_IS_MOVIE (object))
     return FALSE;
   node = g_hash_table_lookup (movies->nodes, object);
-  g_hash_table_remove (movies->nodes, object);
-  g_signal_handlers_disconnect_by_func (object, vivi_movie_list_movie_notify, movies);
-  path = vivi_movie_list_node_to_path (node);
-  g_assert (g_node_n_children (node) == 0);
+  /* happens when parent was already removed */
+  if (node == NULL)
+    return FALSE;
+  vivi_movie_list_remove_node (movies, node);
   g_node_destroy (node);
+  path = vivi_movie_list_node_to_path (node);
   gtk_tree_model_row_deleted (GTK_TREE_MODEL (movies), path);
   gtk_tree_path_free (path);
   return FALSE;
@@ -353,6 +366,7 @@ vivi_movie_list_dispose (GObject *object)
   g_object_unref (movies->app);
   g_assert (g_node_n_children (movies->root) == 0);
   g_node_destroy (movies->root);
+  g_assert (g_hash_table_size (movies->nodes) == 0);
   g_hash_table_destroy (movies->nodes);
 
   G_OBJECT_CLASS (vivi_movie_list_parent_class)->dispose (object);
@@ -373,7 +387,7 @@ vivi_movie_list_init (ViviMovieList *movies)
   movies->nodes = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
-ViviMovieList *
+GtkTreeModel *
 vivi_movie_list_new (ViviApplication *app)
 {
   ViviMovieList *movies;
@@ -385,6 +399,6 @@ vivi_movie_list_new (ViviApplication *app)
   debugger = app->debugger;
   g_signal_connect (debugger, "add", G_CALLBACK (vivi_movie_list_added), movies);
   g_signal_connect (debugger, "remove", G_CALLBACK (vivi_movie_list_removed), movies);
-  return movies;
+  return GTK_TREE_MODEL (movies);
 }
 

@@ -309,9 +309,9 @@ swfdec_player_do_action (SwfdecPlayer *player)
       return FALSE;
   } while (action->object == NULL); /* skip removed actions */
 
-  action->func (action->object, action->data);
   SWFDEC_LOG ("executing action %p %p %p", 
       action->object, action->func, action->data);
+  action->func (action->object, action->data);
 
   return TRUE;
 }

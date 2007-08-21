@@ -22,7 +22,6 @@
 #endif
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_player_internal.h>
 #include "vivi_movie_list.h"
@@ -273,14 +272,18 @@ vivi_movie_list_get_index (GNode *parent, GNode *new)
   return i;
 }
 
-static void
-vivi_movie_list_added (SwfdecPlayer *player, SwfdecMovie *movie, ViviMovieList *movies)
+static gboolean
+vivi_movie_list_added (ViviDebugger *debugger, SwfdecAsObject *object, ViviMovieList *movies)
 {
+  SwfdecMovie *movie;
   GtkTreePath *path;
   GtkTreeIter iter;
   GNode *node, *new;
   int pos;
 
+  if (!SWFDEC_IS_MOVIE (object))
+    return FALSE;
+  movie = SWFDEC_MOVIE (object);
   if (movie->parent) {
     node = g_hash_table_lookup (movies->nodes, movie->parent);
     g_assert (node);
@@ -297,6 +300,7 @@ vivi_movie_list_added (SwfdecPlayer *player, SwfdecMovie *movie, ViviMovieList *
   path = vivi_movie_list_node_to_path (new);
   gtk_tree_model_row_inserted (GTK_TREE_MODEL (movies), path, &iter);
   gtk_tree_path_free (path);
+  return FALSE;
 }
 
 static void
@@ -318,30 +322,35 @@ vivi_movie_list_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, ViviMovieLi
   gtk_tree_path_free (path);
 }
 
-static void
-vivi_movie_list_removed (SwfdecPlayer *player, SwfdecMovie *movie, ViviMovieList *movies)
+static gboolean
+vivi_movie_list_removed (ViviDebugger *debugger, SwfdecAsObject *object, ViviMovieList *movies)
 {
   GNode *node;
   GtkTreePath *path;
 
-  node = g_hash_table_lookup (movies->nodes, movie);
-  g_hash_table_remove (movies->nodes, movie);
-  g_signal_handlers_disconnect_by_func (movie, vivi_movie_list_movie_notify, movies);
+  if (!SWFDEC_IS_MOVIE (object))
+    return FALSE;
+  node = g_hash_table_lookup (movies->nodes, object);
+  g_hash_table_remove (movies->nodes, object);
+  g_signal_handlers_disconnect_by_func (object, vivi_movie_list_movie_notify, movies);
   path = vivi_movie_list_node_to_path (node);
   g_assert (g_node_n_children (node) == 0);
   g_node_destroy (node);
   gtk_tree_model_row_deleted (GTK_TREE_MODEL (movies), path);
   gtk_tree_path_free (path);
+  return FALSE;
 }
 
 static void
 vivi_movie_list_dispose (GObject *object)
 {
   ViviMovieList *movies = VIVI_MOVIE_LIST (object);
+  ViviDebugger *debugger;
 
-  g_signal_handlers_disconnect_by_func (movies->player, vivi_movie_list_removed, movies);
-  g_signal_handlers_disconnect_by_func (movies->player, vivi_movie_list_added, movies);
-  g_object_unref (movies->player);
+  debugger = movies->app->debugger;
+  g_signal_handlers_disconnect_by_func (debugger, vivi_movie_list_removed, movies);
+  g_signal_handlers_disconnect_by_func (debugger, vivi_movie_list_added, movies);
+  g_object_unref (movies->app);
   g_assert (g_node_n_children (movies->root) == 0);
   g_node_destroy (movies->root);
   g_hash_table_destroy (movies->nodes);
@@ -365,15 +374,17 @@ vivi_movie_list_init (ViviMovieList *movies)
 }
 
 ViviMovieList *
-vivi_movie_list_new (SwfdecPlayer *player)
+vivi_movie_list_new (ViviApplication *app)
 {
   ViviMovieList *movies;
+  ViviDebugger *debugger;
 
   movies = g_object_new (VIVI_TYPE_MOVIE_LIST, NULL);
-  movies->player = player;
-  g_object_ref (player);
-  g_signal_connect (player, "movie-added", G_CALLBACK (vivi_movie_list_added), movies);
-  g_signal_connect (player, "movie-removed", G_CALLBACK (vivi_movie_list_removed), movies);
+  g_object_ref (app);
+  movies->app = app;
+  debugger = app->debugger;
+  g_signal_connect (debugger, "add", G_CALLBACK (vivi_movie_list_added), movies);
+  g_signal_connect (debugger, "remove", G_CALLBACK (vivi_movie_list_removed), movies);
   return movies;
 }
 

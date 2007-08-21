@@ -17,7 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <libswfdec/swfdec.h>
+#include <vivified/core/vivified-core.h>
 
 #ifndef _VIVI_MOVIE_LIST_H_
 #define _VIVI_MOVIE_LIST_H_
@@ -46,7 +46,7 @@ struct _ViviMovieList
 {
   GObject		object;
 
-  SwfdecPlayer *	player;		/* the video we play */
+  ViviApplication *	app;		/* the application we watch */
   GNode *		root;		/* the root node containing all the movies */
   int			stamp;		/* to validate tree iters */
   GHashTable *		nodes;		/* movies => node fast lookup table */
@@ -59,7 +59,7 @@ struct _ViviMovieListClass
 
 GType		vivi_movie_list_get_type		(void);
 
-ViviMovieList *	vivi_movie_list_new			(SwfdecPlayer *		player);
+ViviMovieList *	vivi_movie_list_new			(ViviApplication *	app);
 
 
 G_END_DECLS

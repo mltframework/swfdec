@@ -39,8 +39,6 @@ typedef struct _ViviPlayerClass ViviPlayerClass;
 
 struct _ViviPlayer {
   ViviViviDocklet     	docklet;
-
-  GtkWidget *		player;		/* SwfdecGtkWidget */
 };
 
 struct _ViviPlayerClass

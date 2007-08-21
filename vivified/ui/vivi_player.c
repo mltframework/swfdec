@@ -27,29 +27,47 @@
 G_DEFINE_TYPE (ViviPlayer, vivi_player, VIVI_TYPE_VIVI_DOCKLET)
 
 static void
-vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, ViviPlayer *player)
+find_player (GtkWidget *widget, gpointer result)
+{
+  if (SWFDEC_IS_GTK_WIDGET (widget)) {
+    *(gpointer *) result = widget;
+    return;
+  }
+
+  if (GTK_IS_CONTAINER (widget))
+    gtk_container_foreach (GTK_CONTAINER (widget), find_player, result);
+}
+
+static void
+vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, SwfdecGtkWidget *player)
 {
   if (g_str_equal (pspec->name, "player")) {
-    swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (player->player), vivi_application_get_player (app));
+    swfdec_gtk_widget_set_player (player, vivi_application_get_player (app));
   } else if (g_str_equal (pspec->name, "interrupted")) {
-    swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (player->player), 
-	!vivi_application_get_interrupted (app));
+    swfdec_gtk_widget_set_interactive (player, !vivi_application_get_interrupted (app));
   }
 }
 
 static void
 vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app)
 {
-  ViviPlayer *player = VIVI_PLAYER (docklet);
+  SwfdecGtkPlayer *player = NULL;
+
+  find_player (GTK_WIDGET (docklet), &player);
 
   g_signal_connect (app, "notify", G_CALLBACK (vivi_player_notify_app), player);
-  swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (player->player), vivi_application_get_player (app));
+  swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (player), vivi_application_get_player (app));
+  swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (player), !vivi_application_get_interrupted (app));
 }
 
 static void
 vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app)
 {
-  g_signal_handlers_disconnect_by_func (app, vivi_player_notify_app, docklet);
+  SwfdecGtkPlayer *player = NULL;
+
+  find_player (GTK_WIDGET (docklet), &player);
+
+  g_signal_handlers_disconnect_by_func (app, vivi_player_notify_app, player);
 }
 
 static void
@@ -64,13 +82,13 @@ vivi_player_class_init (ViviPlayerClass *klass)
 static void
 vivi_player_init (ViviPlayer *player)
 {
-  GtkWidget *box;
+  GtkWidget *box, *widget;
 
   box = gtk_alignment_new (0.5, 0.5, 0.0, 0.0);
   gtk_container_add (GTK_CONTAINER (player), box);
   /* the player */
-  player->player = swfdec_gtk_widget_new (NULL);
-  gtk_container_add (GTK_CONTAINER (box), player->player);
+  widget = swfdec_gtk_widget_new (NULL);
+  gtk_container_add (GTK_CONTAINER (box), widget);
 
   gtk_widget_show_all (box);
 }

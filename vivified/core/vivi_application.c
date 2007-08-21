@@ -179,12 +179,16 @@ vivi_application_init_player (ViviApplication *app)
 void
 vivi_application_reset (ViviApplication *app)
 {
+  gboolean audio;
+
   g_return_if_fail (VIVI_IS_APPLICATION (app));
 
   if (app->loop != NULL)
     g_main_loop_quit (app->loop);
+  audio = swfdec_gtk_player_get_audio_enabled (SWFDEC_GTK_PLAYER (app->player));
   g_object_unref (app->player);
   app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
+  swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (app->player), audio);
   app->player_inited = FALSE;
   g_object_notify (G_OBJECT (app), "player");
 }

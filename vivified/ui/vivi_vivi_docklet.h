@@ -54,6 +54,9 @@ struct _ViviViviDockletClass
 
 GType			vivi_vivi_docklet_get_type   	(void);
 
+GtkWidget *		vivi_vivi_docklet_find_widget_by_type 
+							(ViviViviDocklet *	docklet,
+							 GType			type);
 
 G_END_DECLS
 #endif

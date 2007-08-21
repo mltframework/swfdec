@@ -114,7 +114,37 @@ vivi_vivi_docklet_class_init (ViviViviDockletClass *klass)
 }
 
 static void
-vivi_vivi_docklet_init (ViviViviDocklet *vivi_docklet)
+vivi_vivi_docklet_init (ViviViviDocklet *docklet)
 {
 }
 
+typedef struct {
+  GtkWidget *	result;
+  GType		desired_type;
+} FindData;
+
+static void
+find_widget (GtkWidget *widget, gpointer datap)
+{
+  FindData *data = datap;
+
+  if (G_TYPE_CHECK_INSTANCE_TYPE (widget, data->desired_type)) {
+    data->result = widget;
+    return;
+  }
+  if (GTK_IS_CONTAINER (widget))
+    gtk_container_foreach (GTK_CONTAINER (widget), find_widget, data);
+}
+
+GtkWidget *
+vivi_vivi_docklet_find_widget_by_type (ViviViviDocklet *docklet, GType type)
+{
+  FindData data = { NULL, };
+
+  g_return_val_if_fail (VIVI_IS_VIVI_DOCKLET (docklet), NULL);
+  g_return_val_if_fail (g_type_is_a (type, GTK_TYPE_WIDGET), NULL);
+
+  data.desired_type = type;
+  gtk_container_foreach (GTK_CONTAINER (docklet), find_widget, &data);
+  return data.result;
+}

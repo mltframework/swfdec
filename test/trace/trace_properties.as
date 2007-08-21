@@ -16,8 +16,8 @@ function hasOwnProperty (o, prop)
   if (o.hasOwnProperty != undefined)
     return o.hasOwnProperty (prop);
 
-  o.hasOwnProperty = Object.prototype.hasOwnProperty;
-  result = o.hasOwnProperty (prop);
+  o.hasOwnProperty = _global.Object.prototype.hasOwnProperty;
+  var result = o.hasOwnProperty (prop);
   delete o.hasOwnProperty;
   return result;
 }

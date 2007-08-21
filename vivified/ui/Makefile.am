@@ -14,7 +14,6 @@ vivified_SOURCES = \
 	main.c
 
 noinst_HEADERS = \
-	vivi_commandline.h \
 	vivi_movie_list.h \
 	vivi_vivi_docklet.h
 

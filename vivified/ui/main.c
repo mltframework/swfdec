@@ -25,7 +25,6 @@
 #include <libswfdec-gtk/swfdec-gtk.h>
 #include "vivified/core/vivified-core.h"
 #include "vivified/dock/vivified-dock.h"
-#include "vivi_commandline.h"
 
 static void
 try_grab_focus (GtkWidget *widget, gpointer unused)
@@ -69,7 +68,8 @@ setup (const char *filename, const char *variables)
   vivi_application_set_variables (app, variables);
 
   builder = gtk_builder_new ();
-  if (!gtk_builder_add_from_file (builder, "vivi_player.xml", &error))
+  if (!gtk_builder_add_from_file (builder, "vivi_player.xml", &error) ||
+      !gtk_builder_add_from_file (builder, "vivi_command_line.xml", &error))
     g_error ("%s", error->message);
   gtk_builder_connect_signals (builder, app);
 
@@ -83,7 +83,8 @@ setup (const char *filename, const char *variables)
   widget = GTK_WIDGET (gtk_builder_get_object (builder, "player"));
   g_object_set (widget, "application", app, NULL);
   vivi_vdock_add (VIVI_VDOCK (box), widget);
-  widget = vivi_command_line_new (app);
+  widget = GTK_WIDGET (gtk_builder_get_object (builder, "command-line"));
+  g_object_set (widget, "application", app, NULL);
   vivi_vdock_add (VIVI_VDOCK (box), widget);
   gtk_container_foreach (GTK_CONTAINER (widget), try_grab_focus, NULL);
 

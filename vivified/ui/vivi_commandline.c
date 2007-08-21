@@ -22,48 +22,10 @@
 #endif
 
 #include <string.h>
-#include "vivi_commandline.h"
-
-G_DEFINE_TYPE (ViviCommandLine, vivi_command_line, VIVI_TYPE_DOCKLET)
+#include "vivi_vivi_docklet.h"
 
 static void
-vivi_command_line_append_message (ViviApplication *app, guint type, const char *message, GtkTextView *view)
-{
-  GtkTextBuffer *buffer = gtk_text_view_get_buffer (view);
-  GtkTextIter iter;
-  GtkTextMark *mark;
-  const char *tag_names[] = { "input", "output", "error" };
-
-  gtk_text_buffer_get_end_iter (buffer, &iter);
-  mark = gtk_text_buffer_get_mark (buffer, "end");
-  if (mark == NULL)
-    mark = gtk_text_buffer_create_mark (buffer, "end", &iter, FALSE);
-  if (gtk_text_buffer_get_char_count (buffer) > 0)
-    gtk_text_buffer_insert (buffer, &iter, "\n", 1);
-  gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, message, -1, tag_names[type], NULL);
-  gtk_text_view_scroll_to_mark (view, mark, 0.0, TRUE, 0.0, 0.0);
-}
-
-static void
-vivi_command_line_dispose (GObject *object)
-{
-  ViviCommandLine *cl = VIVI_COMMAND_LINE (object);
-
-  g_signal_handlers_disconnect_by_func (cl->app, vivi_command_line_append_message, cl->view);
-
-  G_OBJECT_CLASS (vivi_command_line_parent_class)->dispose (object);
-}
-
-static void
-vivi_command_line_class_init (ViviCommandLineClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  object_class->dispose = vivi_command_line_dispose;
-}
-
-static void
-vivi_command_line_execute (ViviCommandLine *cl, const char *command)
+vivi_command_line_execute (ViviApplication *app, const char *command)
 {
   char *run;
 
@@ -90,61 +52,67 @@ vivi_command_line_execute (ViviCommandLine *cl, const char *command)
   }
 
   
-  vivi_application_execute (cl->app, run);
+  vivi_application_execute (app, run);
   if (command != run)
     g_free (run);
 }
 
-static void
-command_line_entry_activate_cb (GtkEntry *entry, ViviCommandLine *command_line)
+void
+vivi_command_line_activate (GtkEntry *entry, ViviApplication *app);
+void
+vivi_command_line_activate (GtkEntry *entry, ViviApplication *app)
 {
   const char *text = gtk_entry_get_text (entry);
 
   if (text[0] == '\0')
     return;
 
-  vivi_command_line_execute (command_line, text);
+  vivi_command_line_execute (app, text);
   gtk_editable_select_region (GTK_EDITABLE (entry), 0, -1);
 }
 
 static void
-vivi_command_line_init (ViviCommandLine *cl)
+vivi_command_line_append_message (ViviApplication *app, guint type, const char *message, GtkTextView *view)
 {
-  GtkWidget *box, *widget, *scroll;
+  GtkTextBuffer *buffer = gtk_text_view_get_buffer (view);
+  GtkTextIter iter;
+  GtkTextMark *mark;
+  const char *tag_names[] = { "input", "output", "error" };
 
-  box = gtk_vbox_new (FALSE, 0);
-  gtk_container_add (GTK_CONTAINER (cl), box);
-  /* the text entry */
-  widget = gtk_entry_new ();
-  g_signal_connect (widget, "activate", G_CALLBACK (command_line_entry_activate_cb), cl);
-  gtk_box_pack_end (GTK_BOX (box), widget, FALSE, TRUE, 0);
-  /* the text view for outputting messages */
-  scroll = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), 
-      GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-  gtk_box_pack_start (GTK_BOX (box), scroll, TRUE, TRUE, 0);
-  cl->view = gtk_text_view_new ();
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (cl->view), FALSE);
-  gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW (cl->view), GTK_WRAP_WORD_CHAR);
-  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (cl->view)),
-      "error", "foreground", "red", "left-margin", 15, NULL);
-  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (cl->view)),
-      "input", "foreground", "dark grey", NULL);
-  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (cl->view)),
-      "output", "left-margin", 15, NULL);
-  gtk_container_add (GTK_CONTAINER (scroll), cl->view);
-
-  gtk_widget_show_all (box);
+  gtk_text_buffer_get_end_iter (buffer, &iter);
+  mark = gtk_text_buffer_get_mark (buffer, "end");
+  if (mark == NULL)
+    mark = gtk_text_buffer_create_mark (buffer, "end", &iter, FALSE);
+  if (gtk_text_buffer_get_char_count (buffer) > 0)
+    gtk_text_buffer_insert (buffer, &iter, "\n", 1);
+  gtk_text_buffer_insert_with_tags_by_name (buffer, &iter, message, -1, tag_names[type], NULL);
+  gtk_text_view_scroll_to_mark (view, mark, 0.0, TRUE, 0.0, 0.0);
 }
 
-GtkWidget *
-vivi_command_line_new (ViviApplication *app)
+void
+vivi_command_line_application_unset (ViviViviDocklet *docklet, ViviApplication *app);
+void
+vivi_command_line_application_unset (ViviViviDocklet *docklet, ViviApplication *app)
 {
-  ViviCommandLine *cl;
+  GtkWidget *view = vivi_vivi_docklet_find_widget_by_type (docklet, GTK_TYPE_TEXT_VIEW);
 
-  cl = g_object_new (VIVI_TYPE_COMMAND_LINE, "title", "Command Line", NULL);
-  cl->app = app;
-  g_signal_connect (cl->app, "message", G_CALLBACK (vivi_command_line_append_message), cl->view);
-  return GTK_WIDGET (cl);
+  g_signal_handlers_disconnect_by_func (app, vivi_command_line_append_message, view);
+}
+
+void
+vivi_command_line_application_set (ViviViviDocklet *docklet, ViviApplication *app);
+void
+vivi_command_line_application_set (ViviViviDocklet *docklet, ViviApplication *app)
+{
+  GtkWidget *view = vivi_vivi_docklet_find_widget_by_type (docklet, GTK_TYPE_TEXT_VIEW);
+
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+      "error", "foreground", "red", "left-margin", 15, NULL);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+      "input", "foreground", "dark grey", NULL);
+  gtk_text_buffer_create_tag (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)),
+      "output", "left-margin", 15, NULL);
+
+  g_signal_connect (app, "message", G_CALLBACK (vivi_command_line_append_message), view);
 }
 

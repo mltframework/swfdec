@@ -4,6 +4,7 @@ function new_empty_object () {
   var hash = new Object ();
   ASSetPropFlags (hash, null, 0, 7);
   for (var prop in hash) {
+    hash[prop] = "to-be-deleted";
     delete hash[prop];
   }
   return hash;

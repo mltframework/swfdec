@@ -90,7 +90,7 @@ run_test (gpointer testp, gpointer unused)
   GString *string, *output;
   GError *error = NULL;
   gboolean quit = FALSE;
-  SwfdecInteraction *inter;
+  SwfdecInteraction *inter = NULL;
 
   output = g_string_new ("");
   g_string_append_printf (output, "Testing %s:\n", test->filename);

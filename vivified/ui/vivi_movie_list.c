@@ -347,8 +347,8 @@ vivi_movie_list_removed (ViviDebugger *debugger, SwfdecAsObject *object, ViviMov
   if (node == NULL)
     return FALSE;
   vivi_movie_list_remove_node (movies, node);
-  g_node_destroy (node);
   path = vivi_movie_list_node_to_path (node);
+  g_node_destroy (node);
   gtk_tree_model_row_deleted (GTK_TREE_MODEL (movies), path);
   gtk_tree_path_free (path);
   return FALSE;

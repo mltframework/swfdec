@@ -34,7 +34,7 @@ enum {
   LAST_SIGNAL
 };
 
-G_DEFINE_ABSTRACT_TYPE (ViviViviDocklet, vivi_vivi_docklet, VIVI_TYPE_DOCKLET)
+G_DEFINE_TYPE (ViviViviDocklet, vivi_vivi_docklet, VIVI_TYPE_DOCKLET)
 guint signals[LAST_SIGNAL];
 
 static void

@@ -272,11 +272,12 @@ AC_ARG_ENABLE(vivified,
 if test "$enable_vivi" = "yes"; then
 	AM_PROG_AS
 	MING_REQUIRED=0.4.0.beta5
-	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
+	VIVI_GTK_REQUIRED=2.11.6
+	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED gmodule-export-2.0 gtk+-2.0 >= $VIVI_GTK_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
 	if test "x$HAVE_VIVI" = xyes; then
 	  AC_DEFINE(HAVE_VIVI, 1, [Define if Vivified is enabled])
 	else
-	  AC_MSG_ERROR([Vivified requirements not met. You need at libming >= $MING_REQUIRED.])
+	  AC_MSG_ERROR([Vivified requirements not met. You need libming >= $MING_REQUIRED and Gtk+ >= $VIVI_GTK_REQUIRED.])
 	fi
 else
 	AC_MSG_WARN([*** Vivified was not enabled. ***])

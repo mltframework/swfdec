@@ -21,10 +21,8 @@
 #include "config.h"
 #endif
 
-#include "vivi_player.h"
 #include <libswfdec-gtk/swfdec-gtk.h>
-
-G_DEFINE_TYPE (ViviPlayer, vivi_player, VIVI_TYPE_VIVI_DOCKLET)
+#include "vivi_vivi_docklet.h"
 
 static void
 find_player (GtkWidget *widget, gpointer result)
@@ -48,7 +46,9 @@ vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, SwfdecGtkWidget
   }
 }
 
-static void
+void
+vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app);
+void
 vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app)
 {
   SwfdecGtkPlayer *player = NULL;
@@ -60,7 +60,9 @@ vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app)
   swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (player), !vivi_application_get_interrupted (app));
 }
 
-static void
+void
+vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app);
+void
 vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app)
 {
   SwfdecGtkPlayer *player = NULL;
@@ -68,34 +70,5 @@ vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app)
   find_player (GTK_WIDGET (docklet), &player);
 
   g_signal_handlers_disconnect_by_func (app, vivi_player_notify_app, player);
-}
-
-static void
-vivi_player_class_init (ViviPlayerClass *klass)
-{
-  ViviViviDockletClass *vivi_docklet_class = VIVI_VIVI_DOCKLET_CLASS (klass);
-
-  vivi_docklet_class->application_set = vivi_player_application_set;
-  vivi_docklet_class->application_unset = vivi_player_application_unset;
-}
-
-static void
-vivi_player_init (ViviPlayer *player)
-{
-  GtkWidget *box, *widget;
-
-  box = gtk_alignment_new (0.5, 0.5, 0.0, 0.0);
-  gtk_container_add (GTK_CONTAINER (player), box);
-  /* the player */
-  widget = swfdec_gtk_widget_new (NULL);
-  gtk_container_add (GTK_CONTAINER (box), widget);
-
-  gtk_widget_show_all (box);
-}
-
-GtkWidget *
-vivi_player_new (ViviApplication *app)
-{
-  return g_object_new (VIVI_TYPE_PLAYER, "title", "Player", "application", app, NULL);
 }
 

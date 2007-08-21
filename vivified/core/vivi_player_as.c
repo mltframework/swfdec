@@ -24,6 +24,7 @@
 #include "vivi_wrap.h"
 #include "vivi_application.h"
 #include "vivi_function.h"
+#include <libswfdec-gtk/swfdec-gtk.h>
 
 VIVI_FUNCTION ("player_frame_get", vivi_player_as_frame_get)
 void
@@ -103,5 +104,29 @@ vivi_player_as_global_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     SWFDEC_AS_VALUE_SET_OBJECT (retval, vivi_wrap_object (app, 
 	  SWFDEC_AS_CONTEXT (app->player)->global));
   }
+}
+
+VIVI_FUNCTION ("player_sound_get", vivi_player_as_sound_get)
+void
+vivi_player_as_sound_get (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval,
+      swfdec_gtk_player_get_audio_enabled (SWFDEC_GTK_PLAYER (app->player)));
+}
+
+VIVI_FUNCTION ("player_sound_set", vivi_player_as_sound_set)
+void
+vivi_player_as_sound_set (SwfdecAsContext *cx, SwfdecAsObject *this,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  ViviApplication *app = VIVI_APPLICATION (cx);
+  
+  if (argc == 0)
+    return;
+  swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (app->player),
+      swfdec_as_value_to_boolean (cx, &argv[0]));
 }
 

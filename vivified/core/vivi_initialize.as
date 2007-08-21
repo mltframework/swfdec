@@ -49,6 +49,7 @@ Player = {};
 Player.addProperty ("filename", Native.player_filename_get, Native.player_filename_set);
 Player.addProperty ("frame", Native.player_frame_get, null);
 Player.addProperty ("global", Native.player_global_get, null);
+Player.addProperty ("sound", Native.player_sound_get, Native.player_sound_set);
 Player.addProperty ("variables", Native.player_variables_get, Native.player_variables_set);
 
 /*** commands available for debugging ***/

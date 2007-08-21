@@ -787,3 +787,20 @@ swfdec_as_frame_get_script (SwfdecAsFrame *frame)
 
   return frame->script;
 }
+
+/**
+ * swfdec_as_frame_get_this:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the this object of the given @frame. If the frame has no this object,
+ * %NULL is returned.
+ *
+ * Returns: The this object of the frame or %NULL if none.
+ **/
+SwfdecAsObject *
+swfdec_as_frame_get_this (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  return frame->thisp;
+}

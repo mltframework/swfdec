@@ -9,6 +9,7 @@ vivified_LDADD = \
 vivified_SOURCES = \
 	vivi_command_line.c \
 	vivi_movie_list.c \
+	vivi_movies.c \
 	vivi_player.c \
 	vivi_vivi_docklet.c \
 	main.c

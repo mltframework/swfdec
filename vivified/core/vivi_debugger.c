@@ -28,6 +28,8 @@
 #include "libswfdec/swfdec_player_internal.h"
 
 enum {
+  ADD,
+  REMOVE,
   STEP,
   START_FRAME,
   FINISH_FRAME,
@@ -84,6 +86,30 @@ vivi_debugger_break (ViviDebugger *debugger)
   g_object_notify (G_OBJECT (app), "interrupted");
   vivi_application_check (app);
   swfdec_player_lock_soft (player);
+}
+
+static void
+vivi_debugger_add (SwfdecAsDebugger *debugger, SwfdecAsContext *context, 
+    SwfdecAsObject *object)
+{
+  gboolean retval = FALSE;
+
+  g_signal_emit (debugger, signals[ADD], 0, object, &retval);
+
+  if (retval)
+    vivi_debugger_break (VIVI_DEBUGGER (debugger));
+}
+
+static void
+vivi_debugger_remove (SwfdecAsDebugger *debugger, SwfdecAsContext *context, 
+    SwfdecAsObject *object)
+{
+  gboolean retval = FALSE;
+
+  g_signal_emit (debugger, signals[REMOVE], 0, object, &retval);
+
+  if (retval)
+    vivi_debugger_break (VIVI_DEBUGGER (debugger));
 }
 
 static void
@@ -149,6 +175,12 @@ vivi_debugger_class_init (ViviDebuggerClass *klass)
 
   object_class->dispose = vivi_debugger_dispose;
 
+  signals[ADD] = g_signal_new ("add", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT,
+      G_TYPE_BOOLEAN, 1, SWFDEC_TYPE_AS_OBJECT);
+  signals[REMOVE] = g_signal_new ("remove", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT,
+      G_TYPE_BOOLEAN, 1, SWFDEC_TYPE_AS_OBJECT);
   signals[STEP] = g_signal_new ("step", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__VOID,
       G_TYPE_BOOLEAN, 0);
@@ -162,6 +194,8 @@ vivi_debugger_class_init (ViviDebuggerClass *klass)
       G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT_STRING_POINTER,
       G_TYPE_BOOLEAN, 3, SWFDEC_TYPE_AS_OBJECT, G_TYPE_STRING, G_TYPE_POINTER);
 
+  debugger_class->add = vivi_debugger_add;
+  debugger_class->remove = vivi_debugger_remove;
   debugger_class->step = vivi_debugger_step;
   debugger_class->start_frame = vivi_debugger_start_frame;
   debugger_class->finish_frame = vivi_debugger_finish_frame;

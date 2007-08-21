@@ -204,12 +204,17 @@ swfdec_movie_color_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_add (proto, context, sizeof (SwfdecMovieColor));
   /* set the right properties on the Color object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (color, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable_and_flags (color, SWFDEC_AS_STR_prototype, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   /* set the right properties on the Color.prototype object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_CONSTANT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, color);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_CONSTANT);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getRGB, SWFDEC_TYPE_MOVIE_COLOR,
       swfdec_movie_color_getRGB, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getTransform, SWFDEC_TYPE_MOVIE_COLOR,

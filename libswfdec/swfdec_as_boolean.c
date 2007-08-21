@@ -103,7 +103,8 @@ swfdec_as_boolean_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (boolean, SWFDEC_AS_STR_constructor, &val);
   /* set the right properties on the Boolean.prototype object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, boolean);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, SWFDEC_TYPE_AS_BOOLEAN, swfdec_as_boolean_toString, 0);

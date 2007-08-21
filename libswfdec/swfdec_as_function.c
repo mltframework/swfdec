@@ -97,7 +97,8 @@ swfdec_as_function_create (SwfdecAsContext *context, GType type, guint size)
   }
   if (context->Function_prototype) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
-    swfdec_as_object_set_variable (fun, SWFDEC_AS_STR___proto__, &val);
+    swfdec_as_object_set_variable_and_flags (fun, SWFDEC_AS_STR___proto__,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
 
   return SWFDEC_AS_FUNCTION (fun);
@@ -194,11 +195,13 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
       return;
     context->Function_prototype = proto;
     SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-    swfdec_as_object_set_variable (function, SWFDEC_AS_STR___proto__, &val);
-    swfdec_as_object_set_variable (function, SWFDEC_AS_STR_prototype, &val);
+    swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR___proto__,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
     /* prototype functions */
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call, SWFDEC_TYPE_AS_FUNCTION, 
-	swfdec_as_function_do_call, 0);
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call,
+	SWFDEC_TYPE_AS_FUNCTION, swfdec_as_function_do_call, 0);
   }
 }
 

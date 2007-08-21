@@ -108,9 +108,13 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   proto = swfdec_as_object_new (context);
   /* set the right properties on the Number object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (number, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable_and_flags (number, SWFDEC_AS_STR_prototype,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_CONSTANT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable (number, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (number, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_CONSTANT);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, NAN);
   swfdec_as_object_set_variable (number, SWFDEC_AS_STR_NaN, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, G_MAXDOUBLE);
@@ -123,9 +127,11 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (number, SWFDEC_AS_STR_POSITIVE_INFINITY, &val);
   /* set the right properties on the Number.prototype object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, number);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, SWFDEC_TYPE_AS_NUMBER, swfdec_as_number_toString, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, SWFDEC_TYPE_AS_NUMBER, swfdec_as_number_valueOf, 0);
 }

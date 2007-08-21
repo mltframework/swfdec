@@ -329,9 +329,9 @@ vivi_movie_list_remove_node (ViviMovieList *movies, GNode *node)
 
   for (walk = node->children; walk; walk = walk->next) {
     vivi_movie_list_remove_node (movies, walk);
-    g_hash_table_remove (movies->nodes, walk->data);
-    g_signal_handlers_disconnect_by_func (walk->data, vivi_movie_list_movie_notify, movies);
   }
+  g_hash_table_remove (movies->nodes, node->data);
+  g_signal_handlers_disconnect_by_func (node->data, vivi_movie_list_movie_notify, movies);
 }
 
 static gboolean
@@ -359,14 +359,21 @@ vivi_movie_list_dispose (GObject *object)
 {
   ViviMovieList *movies = VIVI_MOVIE_LIST (object);
   ViviDebugger *debugger;
+  GNode *walk;
 
   debugger = movies->app->debugger;
   g_signal_handlers_disconnect_by_func (debugger, vivi_movie_list_removed, movies);
   g_signal_handlers_disconnect_by_func (debugger, vivi_movie_list_added, movies);
   g_object_unref (movies->app);
-  g_assert (g_node_n_children (movies->root) == 0);
+  for (walk = movies->root->children; walk; walk = walk->next) {
+    vivi_movie_list_remove_node (movies, walk);
+  }
   g_node_destroy (movies->root);
-  g_assert (g_hash_table_size (movies->nodes) == 0);
+#ifndef G_DISABLE_ASSERT
+  if (g_hash_table_size (movies->nodes) != 0) {
+    g_error ("%u items left in hash table", g_hash_table_size (movies->nodes));
+  }
+#endif
   g_hash_table_destroy (movies->nodes);
 
   G_OBJECT_CLASS (vivi_movie_list_parent_class)->dispose (object);

@@ -7,7 +7,7 @@ vivified_LDADD = \
 	$(top_builddir)/vivified/dock/libvivified-dock.la
 
 vivified_SOURCES = \
-	vivi_commandline.c \
+	vivi_command_line.c \
 	vivi_movie_list.c \
 	vivi_player.c \
 	vivi_vivi_docklet.c \

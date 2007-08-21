@@ -10,10 +10,12 @@ vivified_SOURCES = \
 	vivi_commandline.c \
 	vivi_movie_list.c \
 	vivi_player.c \
+	vivi_vivi_docklet.c \
 	main.c
 
 noinst_HEADERS = \
 	vivi_commandline.h \
 	vivi_movie_list.h \
-	vivi_player.h
+	vivi_player.h \
+	vivi_vivi_docklet.h
 

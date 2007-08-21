@@ -22,6 +22,7 @@
 
 #include <vivified/core/vivified-core.h>
 #include <vivified/dock/vivified-dock.h>
+#include <vivified/ui/vivi_vivi_docklet.h>
 
 G_BEGIN_DECLS
 
@@ -37,15 +38,14 @@ typedef struct _ViviPlayerClass ViviPlayerClass;
 #define VIVI_PLAYER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_PLAYER, ViviPlayerClass))
 
 struct _ViviPlayer {
-  ViviDocklet		docklet;
+  ViviViviDocklet     	docklet;
 
-  ViviApplication *	app;		/* the application we connect to */
   GtkWidget *		player;		/* SwfdecGtkWidget */
 };
 
 struct _ViviPlayerClass
 {
-  ViviDockletClass    	docklet_class;
+  ViviViviDockletClass  docklet_class;
 };
 
 GType			vivi_player_get_type   	(void);

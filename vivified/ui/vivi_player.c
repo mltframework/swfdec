@@ -24,7 +24,7 @@
 #include "vivi_player.h"
 #include <libswfdec-gtk/swfdec-gtk.h>
 
-G_DEFINE_TYPE (ViviPlayer, vivi_player, VIVI_TYPE_DOCKLET)
+G_DEFINE_TYPE (ViviPlayer, vivi_player, VIVI_TYPE_VIVI_DOCKLET)
 
 static void
 vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, ViviPlayer *player)
@@ -38,21 +38,27 @@ vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, ViviPlayer *pla
 }
 
 static void
-vivi_player_dispose (GObject *object)
+vivi_player_set_app (ViviViviDocklet *docklet, ViviApplication *app)
 {
-  ViviPlayer *player = VIVI_PLAYER (object);
+  ViviPlayer *player = VIVI_PLAYER (docklet);
 
-  g_signal_handlers_disconnect_by_func (player->app, vivi_player_notify_app, player);
+  g_signal_connect (app, "notify", G_CALLBACK (vivi_player_notify_app), player);
+  swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (player->player), vivi_application_get_player (app));
+}
 
-  G_OBJECT_CLASS (vivi_player_parent_class)->dispose (object);
+static void
+vivi_player_unset_app (ViviViviDocklet *docklet, ViviApplication *app)
+{
+  g_signal_handlers_disconnect_by_func (app, vivi_player_notify_app, docklet);
 }
 
 static void
 vivi_player_class_init (ViviPlayerClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  ViviViviDockletClass *vivi_docklet_class = VIVI_VIVI_DOCKLET_CLASS (klass);
 
-  object_class->dispose = vivi_player_dispose;
+  vivi_docklet_class->set_app = vivi_player_set_app;
+  vivi_docklet_class->unset_app = vivi_player_unset_app;
 }
 
 static void
@@ -72,12 +78,6 @@ vivi_player_init (ViviPlayer *player)
 GtkWidget *
 vivi_player_new (ViviApplication *app)
 {
-  ViviPlayer *player;
-
-  player = g_object_new (VIVI_TYPE_PLAYER, "title", "Player", NULL);
-  player->app = app;
-  g_signal_connect (player->app, "notify", G_CALLBACK (vivi_player_notify_app), player);
-  swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (player->player), vivi_application_get_player (app));
-  return GTK_WIDGET (player);
+  return g_object_new (VIVI_TYPE_PLAYER, "title", "Player", "application", app, NULL);
 }
 

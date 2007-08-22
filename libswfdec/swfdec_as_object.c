@@ -833,7 +833,8 @@ swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GTyp
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
-  swfdec_as_object_set_variable_and_flags (object, name, &val, SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (object, name, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   return function;
 }
 

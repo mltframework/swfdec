@@ -134,15 +134,15 @@ function is_blaclisted (o, prop)
   return false;
 }
 
-function trace_properties_recurse (o, level, nextSecretId)
+function trace_properties_recurse (o, prefix, identifier, level)
 {
   // to collect info about different properties
   var info = new_info ();
 
-  // calculate prefix
-  var prefix = "";
+  // calculate indentation
+  var indentation = "";
   for (var j = 0; j < level; j++) {
-    prefix = prefix + "  ";
+    indentation = indentation + "  ";
   }
 
   // mark the ones that are not hidden
@@ -179,7 +179,7 @@ function trace_properties_recurse (o, level, nextSecretId)
   ASSetPropFlags (o, hidden, 1, 0);
 
   if (all.length == 0) {
-    trace (prefix + "no children");
+    trace (indentation + "no children");
     return nextSecretId;
   }
 
@@ -260,22 +260,9 @@ function trace_properties_recurse (o, level, nextSecretId)
     if (flags != "")
       flags = " (" + flags + ")";
 
-    // handle secretId that keeps track what things we have seen earlier
     var id_string = "";
-    var seen = false;
-    if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function") {
-      if (hasOwnProperty (o[prop], "mySecretId")) {
-	seen = true;
-      } else {
-	o[prop]["mySecretId"] = nextSecretId;
-	if (o[prop]["mySecretId"] != undefined) {
-	  ASSetPropFlags (o[prop], "mySecretId", 7);
-	  nextSecretId++;
-	}
-      }
-      if (o[prop]["mySecretId"] != undefined)
-	id_string = "[" + o[prop]["mySecretId"] + "]";
-    }
+    if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function")
+      id_string = "[" + o[prop]["mySecretId"] + "]";
 
     // put things together
     var output = prop + flags + " = " + typeof (o[prop]) + id_string;
@@ -290,33 +277,94 @@ function trace_properties_recurse (o, level, nextSecretId)
     }
 
     // print it out
-    trace (prefix + output);
+    trace (indentation + output);
 
     // recurse if it's object or function that hasn't been seen earlier
-    if (seen == false &&
-	(typeof (o[prop]) == "object" || typeof (o[prop]) == "function"))
+    if ((typeof (o[prop]) == "object" || typeof (o[prop]) == "function") &&
+	prefix + (prefix != "" ? "." : "") + identifier + "." + prop == o[prop]["mySecretId"])
     {
-      // move the next mySecretId to next hundred, this is to avoid screwing up
-      // all the ids between two runs if they disagree at the start
-      nextSecretId += 99;
-      nextSecretId -= nextSecretId % 100;
+      trace_properties_recurse (o[prop], prefix + (prefix != "" ? "." : "") +
+	  identifier, prop, level + 1);
+    }
+  }
+}
 
-      // recurse
-      nextSecretId =
-	trace_properties_recurse (o[prop], level + 1, nextSecretId);
+function generate_names (o, prefix, identifier)
+{
+  var info = new_info ();
+
+  // mark the ones that are not hidden
+  for (var prop in o)
+  {
+    // only get the ones that are not only in the __proto__
+    if (is_blaclisted (o, prop) == false) {
+      if (hasOwnProperty (o, prop) == true)
+	set_info (info, prop, "hidden", false);
     }
   }
 
-  return nextSecretId;
+  // unhide everything
+  ASSetPropFlags (o, null, 0, 1);
+
+  var all = new Array ();
+  var hidden = new Array ();
+  for (var prop in o)
+  {
+    // only get the ones that are not only in the __proto__
+    if (is_blaclisted (o, prop) == false) {
+      if (hasOwnProperty (o, prop) == true) {
+	all.push (prop);
+	if (get_info (info, prop, "hidden") != false) {
+	  set_info (info, prop, "hidden", true);
+	  hidden.push (prop);
+	}
+      }
+    }
+  }
+  all.sort ();
+
+  // hide the ones that were already hidden
+  ASSetPropFlags (o, hidden, 1, 0);
+
+  for (var i = 0; i < all.length; i++) {
+    var prop = all[i];
+
+    if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function") {
+      if (hasOwnProperty (o[prop], "mySecretId")) {
+	all[i] = null; // don't recurse to it again
+      } else {
+	o[prop]["mySecretId"] = prefix + (prefix != "" ? "." : "") +
+	  identifier + "." + prop;
+      }
+    }
+  }
+
+  for (var i = 0; i < all.length; i++) {
+    var prop = all[i];
+
+    if (prop != null) {
+      if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function")
+	generate_names (o[prop], prefix + (prefix != "" ? "." : "") +
+	    identifier, prop);
+    }
+  }
 }
 
-function trace_properties (o, identifier)
+function trace_properties (o, prefix, identifier)
 {
-  var output = identifier + " " + typeof (o) + "[0]";
+  _global["mySecretId"] = "_global";
+  _global.Object["mySecretId"] = "_global.Object";
+  generate_names (_global.Object, "_global", "Object");
+  generate_names (_global, "", "_global");
+
+  generate_names (o, prefix, identifier);
+
+  var output = identifier + " " + typeof (o) + "[" + prefix +
+    (prefix != "" ? "." : "") + identifier + "]";
   if (typeof (o) == "object")
     output += " : toString => \"" + o[prop] + "\"";
   trace (output);
 
   if (typeof (o) == "object" || typeof (o) == "function")
-    trace_properties_recurse (o, 1, 1);
+    trace_properties_recurse (o, prefix, identifier, 1);
 }

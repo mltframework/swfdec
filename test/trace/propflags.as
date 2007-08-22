@@ -9,6 +9,6 @@ for (var i = 1; i <= 7; i++) {
   ASSetPropFlags (o, i, i, 0);
 }
 
-trace_properties (o, "o");
+trace_properties (o, "local", "o");
 
 loadMovie ("FSCommand:quit", "");

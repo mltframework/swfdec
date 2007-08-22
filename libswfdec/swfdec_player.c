@@ -935,6 +935,28 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
   return TRUE;
 }
 
+void
+swfdec_player_global_to_stage (SwfdecPlayer *player, double *x, double *y)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
+  *x = *x / player->scale_x + player->offset_x;
+  *y = *y / player->scale_y + player->offset_y;
+}
+
+void
+swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
+  *x = (*x - player->offset_x) * player->scale_x;
+  *y = (*y - player->offset_y) * player->scale_y;
+}
+
 static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {

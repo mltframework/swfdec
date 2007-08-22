@@ -200,6 +200,12 @@ SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *         player,
 void		swfdec_player_launch		(SwfdecPlayer *         player,
 						 const char *		url,
 						 const char *		target);
+void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
+						 double *		x,
+						 double *		y);
+void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
+						 double *		x,
+						 double *		y);
 
 
 G_END_DECLS

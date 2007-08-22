@@ -398,6 +398,11 @@ EXTRA_DIST = \
 	function1.swf.trace \
 	function2.swf \
 	function2.swf.trace \
+	function-properties.as \
+	function-properties-6.swf \
+	function-properties-6.swf.trace \
+	function-properties-7.swf \
+	function-properties-7.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
 	function-scope.as \

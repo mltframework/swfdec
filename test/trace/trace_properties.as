@@ -421,10 +421,13 @@ function trace_properties (o, prefix, identifier)
   generate_names (_global.Object, "_global", "Object");
   generate_names (_global, "", "_global");
 
-  generate_names (o, prefix, identifier);
-
   if (typeof (o) == "object" || typeof (o) == "function")
   {
+    if (o["mySecretId"] == undefined) {
+      o["mySecretId"] = prefix + (prefix != "" ? "." : "") + identifier;
+      generate_names (o, prefix, identifier);
+    }
+
     if (prefix + (prefix != "" ? "." : "") + identifier == o["mySecretId"])
     {
       trace (prefix + (prefix != "" ? "." : "") + identifier + " = " +
@@ -439,7 +442,13 @@ function trace_properties (o, prefix, identifier)
   }
   else
   {
+    var value = "";
+    if (typeof (o) == "number" || typeof (o) == "boolean") {
+      value += " : " + o;
+    } else if (typeof (o) == "string") {
+      value += " : \"" + o + "\"";
+    }
     trace (prefix + (prefix != "" ? "." : "") + identifier + " = " +
-	typeof (o[prop]) + value);
+	typeof (o) + value);
   }
 }

@@ -62,7 +62,11 @@ static void
 do_fscommand (SwfdecPlayer *player, const char *command, const char *value, gpointer window)
 {
   if (g_str_equal (command, "quit")) {
-    gtk_main_quit ();
+    static gboolean already_quit = FALSE;
+    if (!already_quit) {
+      gtk_main_quit ();
+      already_quit = TRUE;
+    }
   }
   /* FIXME: add more */
 }

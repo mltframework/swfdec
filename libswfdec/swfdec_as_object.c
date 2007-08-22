@@ -246,9 +246,10 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     var = swfdec_as_object_hash_create (object, variable, flags);
     if (var == NULL)
       return;
+  } else {
+    if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
+      return;
   }
-  if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
-    return;
   if (var->get) {
     if (var->set) {
       SwfdecAsValue tmp;

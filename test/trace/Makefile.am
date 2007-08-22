@@ -875,6 +875,15 @@ EXTRA_DIST = \
 	removesprite-depths-6.swf.trace \
 	removesprite-depths-7.swf \
 	removesprite-depths-7.swf.trace \
+	rewind-remove.c \
+	rewind-remove-5.swf \
+	rewind-remove-5.swf.trace \
+	rewind-remove-6.swf \
+	rewind-remove-6.swf.trace \
+	rewind-remove-7.swf \
+	rewind-remove-7.swf.trace \
+	rewind-remove-8.swf \
+	rewind-remove-8.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	rotation2.as \

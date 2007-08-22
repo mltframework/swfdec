@@ -59,6 +59,15 @@ view_swf (SwfdecPlayer *player, gboolean use_image)
 }
 
 static void
+do_fscommand (SwfdecPlayer *player, const char *command, const char *value, gpointer window)
+{
+  if (g_str_equal (command, "quit")) {
+    gtk_main_quit ();
+  }
+  /* FIXME: add more */
+}
+
+static void
 print_trace (SwfdecPlayer *player, const char *message, gpointer unused)
 {
   g_print ("%s\n", message);
@@ -93,7 +102,7 @@ main (int argc, char *argv[])
   SwfdecPlayer *player;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
-  gboolean trace = FALSE;
+  gboolean trace = FALSE, no_scripts = FALSE;
   char *variables = NULL;
   char *s;
   GtkWidget *window;
@@ -101,6 +110,7 @@ main (int argc, char *argv[])
   GOptionEntry options[] = {
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
+    { "no-scripts", 0, 0, G_OPTION_ARG_NONE, &no_scripts, "don't execute scripts affecting the application", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
     { "speed", 0, 0, G_OPTION_ARG_INT, &speed, "replay speed (will deactivate sound)", "PERCENT" },
     { "trace", 't', 0, G_OPTION_ARG_NONE, &trace, "print trace output to stdout", NULL },
@@ -139,20 +149,23 @@ main (int argc, char *argv[])
   player = swfdec_gtk_player_new (NULL);
   if (trace)
     g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
+  swfdec_gtk_player_set_speed (SWFDEC_GTK_PLAYER (player), speed / 100.);
+
+  if (no_sound)
+    swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);
+
+  window = view_swf (player, use_image);
+  set_title (GTK_WINDOW (window), argv[1]);
+
+  if (!no_scripts)
+    g_signal_connect (player, "fscommand", G_CALLBACK (do_fscommand), window);
   
   if (delay) 
     loader = swfdec_slow_loader_new (loader, delay);
 
   swfdec_player_set_loader_with_variables (player, loader, variables);
 
-  if (no_sound)
-    swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);
-
-  swfdec_gtk_player_set_speed (SWFDEC_GTK_PLAYER (player), speed / 100.);
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
-
-  window = view_swf (player, use_image);
-  set_title (GTK_WINDOW (window), argv[1]);
 
   gtk_main ();
 

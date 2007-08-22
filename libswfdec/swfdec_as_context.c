@@ -834,7 +834,9 @@ start:
     exec = spec->exec[version];
     if (!exec) {
       guint real_version;
-      for (real_version = version + 1; !exec && real_version <= SWFDEC_AS_MAX_SCRIPT_VERSION; real_version++) {
+      for (real_version = version + 1; !exec && 
+	  real_version <= SWFDEC_AS_MAX_SCRIPT_VERSION - SWFDEC_AS_MIN_SCRIPT_VERSION; 
+	  real_version++) {
 	exec = spec->exec[real_version];
       }
       if (!exec) {

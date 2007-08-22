@@ -260,7 +260,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   if (player->mouse_drag == movie)
     player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
-  swfdec_movie_set_depth (movie, -16385 - movie->depth); /* don't ask me why... */
+  swfdec_movie_set_depth (movie, -32769 - movie->depth); /* don't ask me why... */
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie))
     return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);

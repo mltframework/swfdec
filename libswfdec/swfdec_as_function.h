@@ -50,10 +50,6 @@ struct _SwfdecAsFunctionClass {
 
 GType			swfdec_as_function_get_type	(void);
 
-SwfdecAsFunction *	swfdec_as_function_create	(SwfdecAsContext *	context, 
-							 GType			type,
-							 guint			size);
-
 void			swfdec_as_function_call		(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
 							 guint			n_args,

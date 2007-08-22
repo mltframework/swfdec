@@ -149,7 +149,9 @@ void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		movie);
 
 void		swfdec_player_lock		(SwfdecPlayer *		player);
+void		swfdec_player_lock_soft		(SwfdecPlayer *		player);
 void		swfdec_player_unlock		(SwfdecPlayer *		player);
+void		swfdec_player_unlock_soft	(SwfdecPlayer *		player);
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,

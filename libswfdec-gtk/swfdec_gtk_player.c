@@ -160,6 +160,7 @@ swfdec_gtk_player_init (SwfdecGtkPlayer * player)
 
 /**
  * swfdec_gtk_player_new:
+ * @debugger: %NULL or a #SwfdecAsDebugger to debug this player
  *
  * Creates a new Swfdec Gtk player.
  * This function calls swfdec_init () for you if it wasn't called before.
@@ -167,12 +168,12 @@ swfdec_gtk_player_init (SwfdecGtkPlayer * player)
  * Returns: The new player
  **/
 SwfdecPlayer *
-swfdec_gtk_player_new (void)
+swfdec_gtk_player_new (SwfdecAsDebugger *debugger)
 {
   SwfdecPlayer *player;
 
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_GTK_PLAYER, NULL);
+  player = g_object_new (SWFDEC_TYPE_GTK_PLAYER, "debugger", debugger, NULL);
 
   return player;
 }
@@ -198,8 +199,8 @@ swfdec_gtk_player_new_from_uri (const char *uri)
 
   g_return_val_if_fail (uri != NULL, NULL);
 
+  player = swfdec_gtk_player_new (NULL);
   loader = swfdec_gtk_loader_new (uri);
-  player = swfdec_gtk_player_new ();
   swfdec_player_set_loader (player, loader);
 
   return player;

@@ -22,7 +22,7 @@
 
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_movie.h>
 
 G_BEGIN_DECLS
 

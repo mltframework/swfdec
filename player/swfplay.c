@@ -136,7 +136,7 @@ main (int argc, char *argv[])
     g_object_unref (loader);
     return 1;
   }
-  player = swfdec_gtk_player_new ();
+  player = swfdec_gtk_player_new (NULL);
   if (trace)
     g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
   

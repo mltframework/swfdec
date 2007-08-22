@@ -171,7 +171,14 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
 		     [(movie->mouse_in ? 2 : 0) + movie->mouse_button]
 		     [(mouse_in ? 2 : 0) + button];
 
-  g_assert (event != (guint) -1);
+#ifndef G_DISABLE_ASSERT
+  if (event == (guint) -1) {
+    g_error ("Unhandled event for %s: %u => %u",
+	movie->button->menubutton ? "menu" : "button",
+	(movie->mouse_in ? 2 : 0) + movie->mouse_button,
+	(mouse_in ? 2 : 0) + button);
+  }
+#endif
   if (event != 0) {
     SWFDEC_LOG ("emitting event for condition %u", event);
     swfdec_button_movie_execute (movie, event);

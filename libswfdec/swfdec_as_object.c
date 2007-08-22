@@ -532,6 +532,11 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
   g_return_if_fail (klass->add);
   klass->add (object);
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+    if (dklass->add)
+      dklass->add (context->debugger, context, object);
+  }
 }
 
 void
@@ -581,6 +586,12 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
   g_return_if_fail (variable != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
+  if (object->context->debugger) {
+    SwfdecAsDebugger *debugger = object->context->debugger;
+    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
+    if (dklass->set_variable)
+      dklass->set_variable (debugger, object->context, object, variable, value);
+  }
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
   klass->set (object, variable, value, default_flags);
 }
@@ -907,7 +918,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 
   context = SWFDEC_AS_OBJECT (fun)->context;
   cur = fun;
-  while (type == 0 && cur != NULL) {
+  do {
     if (SWFDEC_IS_AS_NATIVE_FUNCTION (cur)) {
       SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (cur);
       if (native->construct_size) {
@@ -916,20 +927,19 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 	break;
       }
     }
-#if 0
-    This doesn't work. It's supposed to figure out the last native object in the inheritance chain.
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR___constructor__, &val);
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR_prototype, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
-      if (!SWFDEC_IS_AS_FUNCTION (cur))
-	cur = NULL;
-    } else {
-      cur = NULL;
+      SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR___constructor__, &val);
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+	cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
+	if (SWFDEC_IS_AS_FUNCTION (cur)) {
+	  continue;
+	}
+      }
     }
-#else
     cur = NULL;
-#endif
-  }
+  } while (type == 0 && cur != NULL);
   if (type == 0) {
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);

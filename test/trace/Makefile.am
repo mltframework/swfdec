@@ -272,6 +272,15 @@ EXTRA_DIST = \
 	definefunction2-overwrite.swf \
 	definefunction2-overwrite.swf.trace \
 	definefunction2-overwrite.xml \
+	definefunction2-registers.xml \
+	definefunction2-registers-5.swf \
+	definefunction2-registers-5.swf.trace \
+	definefunction2-registers-6.swf \
+	definefunction2-registers-6.swf.trace \
+	definefunction2-registers-7.swf \
+	definefunction2-registers-7.swf.trace \
+	definefunction2-registers-8.swf \
+	definefunction2-registers-8.swf.trace \
 	definefunction2-this.swf \
 	definefunction2-this.swf.trace \
 	definefunction2-this.xml \
@@ -850,6 +859,15 @@ EXTRA_DIST = \
 	relational-6.swf.trace \
 	relational-7.swf \
 	relational-7.swf.trace \
+	remove-depths.as \
+	remove-depths-5.swf \
+	remove-depths-5.swf.trace \
+	remove-depths-6.swf \
+	remove-depths-6.swf.trace \
+	remove-depths-7.swf \
+	remove-depths-7.swf.trace \
+	remove-depths-8.swf \
+	remove-depths-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \

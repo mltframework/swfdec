@@ -47,6 +47,9 @@ struct _SwfdecAsStackIterator {
 GType		swfdec_as_frame_get_type	(void);
 
 SwfdecAsFrame *	swfdec_as_frame_get_next	(SwfdecAsFrame *		frame);
+const char *	swfdec_as_frame_get_function_name (SwfdecAsFrame *		frame);
+SwfdecScript *	swfdec_as_frame_get_script	(SwfdecAsFrame *		frame);
+SwfdecAsObject *swfdec_as_frame_get_this	(SwfdecAsFrame *		frame);
 
 SwfdecAsValue *	swfdec_as_stack_iterator_init	(SwfdecAsStackIterator *	iter,
 						 SwfdecAsFrame *		frame);

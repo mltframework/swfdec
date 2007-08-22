@@ -206,7 +206,7 @@ run_test (const char *filename)
     g_object_unref (loader);
     goto error;
   }
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), &data);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), &data);
   g_signal_connect (player, "advance", G_CALLBACK (render_all_streams), &data);

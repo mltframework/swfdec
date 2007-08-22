@@ -166,6 +166,7 @@ swfdec_gtk_widget_key_press (GtkWidget *gtkwidget, GdkEventKey *event)
       swfdec_player_key_press (priv->player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
     }
+    return TRUE;
   }
 
   return FALSE;
@@ -183,6 +184,7 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
       swfdec_player_key_release (priv->player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
     }
+    return TRUE;
   }
 
   return FALSE;

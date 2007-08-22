@@ -76,6 +76,9 @@ struct _SwfdecAsContext {
   SwfdecAsObject *	Object;		/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
   SwfdecAsObject *	Array;		/* Array */
+
+  /* debugging */
+  SwfdecAsDebugger *	debugger;	/* debugger (or NULL if none) */
 };
 
 struct _SwfdecAsContextClass {
@@ -83,8 +86,6 @@ struct _SwfdecAsContextClass {
 
   /* mark all objects that should not be collected */
   void			(* mark)		(SwfdecAsContext *	context);
-  /* debugging: call this function before executing a bytecode if non-NULL */
-  void			(* step)		(SwfdecAsContext *	context);
   /* overwrite if you want to report a different time than gettimeofday */
   void			(* get_time)		(SwfdecAsContext *      context,
 						 GTimeVal *		tv);

@@ -36,6 +36,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_sprite.h"
 
 enum {

@@ -43,12 +43,21 @@ swfdec_as_string_do_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_string_parent_class)->mark (object);
 }
 
+static char *
+swfdec_as_string_debug (SwfdecAsObject *object)
+{
+  SwfdecAsString *string = SWFDEC_AS_STRING (object);
+
+  return g_strdup (string->string);
+}
+
 static void
 swfdec_as_string_class_init (SwfdecAsStringClass *klass)
 {
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   asobject_class->mark = swfdec_as_string_do_mark;
+  asobject_class->debug = swfdec_as_string_debug;
 }
 
 static void

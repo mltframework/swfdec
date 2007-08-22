@@ -40,7 +40,7 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
-#include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
 
@@ -309,9 +309,9 @@ swfdec_player_do_action (SwfdecPlayer *player)
       return FALSE;
   } while (action->object == NULL); /* skip removed actions */
 
-  action->func (action->object, action->data);
   SWFDEC_LOG ("executing action %p %p %p", 
       action->object, action->func, action->data);
+  action->func (action->object, action->data);
 
   return TRUE;
 }
@@ -1044,15 +1044,37 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
   player->invalid = old_inval;
 }
 
+/* used for breakpoints */
+void
+swfdec_player_lock_soft (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (swfdec_rect_is_empty (&player->invalid));
+
+  g_object_freeze_notify (G_OBJECT (player));
+  SWFDEC_DEBUG ("LOCKED");
+}
+
 void
 swfdec_player_lock (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
-  g_assert (swfdec_rect_is_empty (&player->invalid));
 
-  g_object_freeze_notify (G_OBJECT (player));
-  SWFDEC_DEBUG ("LOCKED");
+  g_object_ref (player);
+  swfdec_player_lock_soft (player);
+}
+
+/* used for breakpoints */
+void
+swfdec_player_unlock_soft (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  SWFDEC_DEBUG ("UNLOCK");
+  swfdec_player_update_mouse_cursor (player);
+  g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_signals (player);
 }
 
 void
@@ -1061,11 +1083,9 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
-  SWFDEC_DEBUG ("UNLOCK");
   swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
-  swfdec_player_update_mouse_cursor (player);
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_signals (player);
+  swfdec_player_unlock_soft (player);
+  g_object_unref (player);
 }
 
 static gboolean
@@ -1432,7 +1452,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       SwfdecBits bits;
       SwfdecScript *script;
       swfdec_bits_init_data (&bits, swfdec_initialize, sizeof (swfdec_initialize));
-      script = swfdec_script_new (&bits, "init", version);
+      script = swfdec_script_new_from_bits (&bits, "init", version);
       g_assert (script);
       swfdec_as_object_run (context->global, script);
       swfdec_script_unref (script);
@@ -1509,6 +1529,7 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
 
 /**
  * swfdec_player_new:
+ * @debugger: %NULL or a #SwfdecAsDebugger to use for debugging this player.
  *
  * Creates a new player.
  * This function calls swfdec_init () for you if it wasn't called before.
@@ -1516,12 +1537,12 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
  * Returns: The new player
  **/
 SwfdecPlayer *
-swfdec_player_new (void)
+swfdec_player_new (SwfdecAsDebugger *debugger)
 {
   SwfdecPlayer *player;
 
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_PLAYER, NULL);
+  player = g_object_new (SWFDEC_TYPE_PLAYER, "debugger", debugger, NULL);
 
   return player;
 }
@@ -1597,7 +1618,7 @@ swfdec_player_new_from_file (const char *filename)
   g_return_val_if_fail (filename != NULL, NULL);
 
   loader = swfdec_file_loader_new (filename);
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   swfdec_player_set_loader (player, loader);
 
   return player;

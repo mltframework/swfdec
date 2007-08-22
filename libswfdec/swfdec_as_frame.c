@@ -79,21 +79,29 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
 
   g_return_val_if_fail (iter != NULL, NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
-  /* FIXME! */
-  context = SWFDEC_AS_OBJECT (frame)->context;
-  g_return_val_if_fail (context->frame == frame, NULL);
 
+  if (frame->argc == 0) {
+    iter->current = NULL;
+    return NULL;
+  }
+  context = SWFDEC_AS_OBJECT (frame)->context;
   if (frame->argv) {
     iter->stack = NULL;
     iter->current = (SwfdecAsValue *) frame->argv;
   } else {
-    iter->stack = context->stack;
+    SwfdecAsStack *stack = context->stack;
+    SwfdecAsValue *end;
     iter->current = frame->stack_begin - 1;
+    end = context->cur;
+    while (iter->current < stack->elements ||
+	iter->current > end) {
+      stack = stack->next;
+      end = &stack->elements[stack->used_elements];
+    }
+    iter->stack = stack;
   }
   iter->i = 0;
   iter->n = frame->argc;
-  if (frame->argc == 0)
-    iter->current = NULL;
   return iter->current;
 }
 
@@ -419,6 +427,12 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
       swfdec_as_stack_pop_segment (context);
     }
   }
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+
+    if (klass->finish_frame)
+      klass->finish_frame (context->debugger, context, frame, &retval);
+  }
   /* set return value */
   if (frame->return_value) {
     *frame->return_value = retval;
@@ -571,12 +585,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
-  if (frame->script == NULL)
-    return;
+
   /* setup */
   object = SWFDEC_AS_OBJECT (frame);
   context = object->context;
   script = frame->script;
+  if (frame->script == NULL)
+    goto out;
 
   /* create arguments and super object if necessary */
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
@@ -684,6 +699,14 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL && current_reg < script->n_registers) {
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
   }
+
+out:
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+
+    if (klass->start_frame)
+      klass->start_frame (context->debugger, context, frame);
+  }
 }
 
 /**
@@ -730,3 +753,54 @@ swfdec_as_frame_get_next (SwfdecAsFrame *frame)
   return frame->next;
 }
 
+/**
+ * swfdec_as_frame_get_function_name:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the name of the function that is currently executing. This function is
+ * intended for debugging purposes.
+ *
+ * Returns: a string. Do not free.
+ **/
+const char *
+swfdec_as_frame_get_function_name (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  g_assert (frame->function_name);
+  return frame->function_name;
+}
+
+/**
+ * swfdec_as_frame_get_script:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the script associated with the given @frame. If the frame references
+ * a native function, there will be no script and this function returns %NULL.
+ *
+ * Returns: The script executed by this frame or %NULL
+ **/
+SwfdecScript *
+swfdec_as_frame_get_script (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  return frame->script;
+}
+
+/**
+ * swfdec_as_frame_get_this:
+ * @frame: a #SwfdecAsFrame
+ *
+ * Gets the this object of the given @frame. If the frame has no this object,
+ * %NULL is returned.
+ *
+ * Returns: The this object of the frame or %NULL if none.
+ **/
+SwfdecAsObject *
+swfdec_as_frame_get_this (SwfdecAsFrame *frame)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+
+  return frame->thisp;
+}

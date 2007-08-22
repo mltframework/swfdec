@@ -25,7 +25,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 
 typedef struct _SwfdecEvent SwfdecEvent;
 
@@ -202,7 +202,7 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
   event.key = key;
   name = g_strconcat (description, ".", 
       swfdec_event_list_condition_name (conditions), NULL);
-  event.script = swfdec_script_new_for_context (SWFDEC_AS_CONTEXT (list->player), bits, name, version);
+  event.script = swfdec_script_new_from_bits (bits, name, version);
   g_free (name);
   if (event.script) 
     g_array_append_val (list->events, event);

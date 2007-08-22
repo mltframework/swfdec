@@ -169,7 +169,7 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 {
   g_return_if_fail (context);
 
-  SWFDEC_ERROR (reason);
+  SWFDEC_ERROR ("%s", reason);
   context->state = SWFDEC_AS_CONTEXT_ABORTED;
 }
 
@@ -248,7 +248,7 @@ swfdec_as_context_remove_strings (gpointer key, gpointer value, gpointer data)
 }
 
 static gboolean
-swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
+swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugger)
 {
   SwfdecAsObject *object;
 
@@ -261,6 +261,11 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer data)
     return FALSE;
   } else {
     SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (object), object);
+    if (debugger) {
+      SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
+      if (klass->remove)
+	klass->remove (debugger, object->context, object);
+    }
     swfdec_as_object_collect (object);
     return TRUE;
   }
@@ -274,7 +279,7 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   g_hash_table_foreach_remove (context->strings, 
     swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
-    swfdec_as_context_remove_objects, context);
+    swfdec_as_context_remove_objects, context->debugger);
   SWFDEC_INFO (">> done collecting garbage");
 }
 
@@ -419,6 +424,7 @@ enum {
 
 enum {
   PROP_0,
+  PROP_DEBUGGER,
   PROP_UNTIL_GC
 };
 
@@ -430,8 +436,12 @@ swfdec_as_context_get_property (GObject *object, guint param_id, GValue *value,
     GParamSpec * pspec)
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
+
   
   switch (param_id) {
+    case PROP_DEBUGGER:
+      g_value_set_object (value, context->debugger);
+      break;
     case PROP_UNTIL_GC:
       g_value_set_ulong (value, (gulong) context->memory_until_gc);
       break;
@@ -446,8 +456,12 @@ swfdec_as_context_set_property (GObject *object, guint param_id, const GValue *v
     GParamSpec * pspec)
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
+
   
   switch (param_id) {
+    case PROP_DEBUGGER:
+      context->debugger = g_value_dup_object (value);
+      break;
     case PROP_UNTIL_GC:
       context->memory_until_gc = g_value_get_ulong (value);
       break;
@@ -472,6 +486,10 @@ swfdec_as_context_dispose (GObject *object)
   g_hash_table_destroy (context->objects);
   g_hash_table_destroy (context->strings);
   g_rand_free (context->rand);
+  if (context->debugger) {
+    g_object_unref (context->debugger);
+    context->debugger = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_as_context_parent_class)->dispose (object);
 }
@@ -485,6 +503,9 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   object_class->get_property = swfdec_as_context_get_property;
   object_class->set_property = swfdec_as_context_set_property;
 
+  g_object_class_install_property (object_class, PROP_DEBUGGER,
+      g_param_spec_object ("debugger", "debugger", "debugger used in this player",
+	  SWFDEC_TYPE_AS_DEBUGGER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (object_class, PROP_UNTIL_GC,
       g_param_spec_ulong ("memory-until-gc", "memory until gc", 
 	  "amount of bytes that need to be allocated before garbage collection triggers",
@@ -678,6 +699,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   SwfdecAsFrame *frame, *last_frame;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
+  SwfdecActionExec exec;
   guint8 *startpc, *pc, *endpc, *nextpc;
 #ifndef G_DISABLE_ASSERT
   SwfdecAsValue *check;
@@ -685,16 +707,19 @@ swfdec_as_context_run (SwfdecAsContext *context)
   guint action, len;
   guint8 *data;
   int version;
-  SwfdecAsContextClass *klass;
-  void (* step) (SwfdecAsContext *context);
+  void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);
   gboolean check_scope; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   if (context->frame == NULL || context->state == SWFDEC_AS_CONTEXT_ABORTED)
     return;
 
-  klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
-  step = klass->step;
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+    step = klass->step;
+  } else {
+    step = NULL;
+  }
 
   last_frame = context->last_frame;
   context->last_frame = context->frame->next;
@@ -780,7 +805,7 @@ start:
     /* invoke debugger if there is one */
     if (step) {
       frame->pc = pc;
-      (* step) (context);
+      (* step) (context->debugger, context);
       if (frame != context->frame || 
 	  frame->pc != pc) {
 	goto start;
@@ -806,12 +831,22 @@ start:
       nextpc = pc + 1;
     }
     /* check action is valid */
-    if (spec->exec[version] == NULL) {
-      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
-	  action, spec->name ? spec->name : "Unknown", script->version);
-      frame->pc = pc = nextpc;
-      check_scope = TRUE;
-      continue;
+    exec = spec->exec[version];
+    if (!exec) {
+      guint real_version;
+      for (real_version = version + 1; !exec && real_version <= SWFDEC_AS_MAX_SCRIPT_VERSION; real_version++) {
+	exec = spec->exec[real_version];
+      }
+      if (!exec) {
+	SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
+	    action, spec->name ? spec->name : "Unknown", script->version);
+	frame->pc = pc = nextpc;
+	check_scope = TRUE;
+	continue;
+      }
+      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, using version %u instead", 
+	  action, action, spec->name ? spec->name : "Unknown", script->version, 
+	  script->version + real_version - version);
     }
     if (spec->remove > 0) {
       if (spec->add > spec->remove)
@@ -829,7 +864,7 @@ start:
     check = (spec->add >= 0 && spec->remove >= 0) ? context->cur + spec->add - spec->remove : NULL;
 #endif
     /* execute action */
-    spec->exec[version] (context, action, data, len);
+    exec (context, action, data, len);
     /* adapt the pc if the action did not, otherwise, leave it alone */
     /* FIXME: do this via flag? */
     if (frame->pc == pc) {

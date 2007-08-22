@@ -476,7 +476,7 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
 
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
  * if you have global coordinates */
-static gboolean
+gboolean
 swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
   SwfdecMovieClass *klass;
@@ -490,20 +490,68 @@ swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 void
 swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 {
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
   do {
     cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
 }
 
 void
+swfdec_movie_rect_local_to_global (SwfdecMovie *movie, SwfdecRect *rect)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (rect != NULL);
+
+  swfdec_movie_local_to_global (movie, &rect->x0, &rect->y0);
+  swfdec_movie_local_to_global (movie, &rect->x1, &rect->y1);
+  if (rect->x0 > rect->x1) {
+    double tmp = rect->x1;
+    rect->x1 = rect->x0;
+    rect->x0 = tmp;
+  }
+  if (rect->y0 > rect->y1) {
+    double tmp = rect->y1;
+    rect->y1 = rect->y0;
+    rect->y0 = tmp;
+  }
+}
+
+void
 swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
   if (movie->parent) {
     swfdec_movie_global_to_local (movie->parent, x, y);
   }
   if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
     swfdec_movie_update (movie);
   cairo_matrix_transform_point (&movie->inverse_matrix, x, y);
+}
+
+void
+swfdec_movie_rect_global_to_local (SwfdecMovie *movie, SwfdecRect *rect)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (rect != NULL);
+
+  swfdec_movie_global_to_local (movie, &rect->x0, &rect->y0);
+  swfdec_movie_global_to_local (movie, &rect->x1, &rect->y1);
+  if (rect->x0 > rect->x1) {
+    double tmp = rect->x1;
+    rect->x1 = rect->x0;
+    rect->x0 = tmp;
+  }
+  if (rect->y0 > rect->y1) {
+    double tmp = rect->y1;
+    rect->y1 = rect->y0;
+    rect->y0 = tmp;
+  }
 }
 
 /**

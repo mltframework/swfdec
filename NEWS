@@ -2,7 +2,7 @@
  0.5.1 ("Heeeeelium")
 
 Features! This release got some. And they even give you the long awaited 
-embedded Youtube support. At the cost of lost of API changes, but who cares?
+embedded Youtube support. At the cost of lots of API changes, but who cares?
 - rewrite SwfdecLoader. Add SwfdecURL support structure in the process.
 - implement AsBroadcaster actionscript object.
 - implement Stage actionscript object. Movies can now do the scaling themselves.

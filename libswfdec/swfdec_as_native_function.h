@@ -59,7 +59,8 @@ GType		swfdec_as_native_function_get_type	(void);
 SwfdecAsFunction *swfdec_as_native_function_new	(SwfdecAsContext *	context,
 						 const char *		name,
 						 SwfdecAsNative		native,
-						 guint			min_args);
+						 guint			min_args,
+						 SwfdecAsObject *	prototype);
 
 void		swfdec_as_native_function_set_object_type
 						(SwfdecAsNativeFunction *function,

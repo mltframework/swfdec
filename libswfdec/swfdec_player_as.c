@@ -105,7 +105,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
   for (i = 0; native_funcs[i].func != NULL; i++) {
     if (native_funcs[i].x == x && native_funcs[i].y == y) {
       return swfdec_as_native_function_new (cx, native_funcs[i].name,
-	  native_funcs[i].func, 0);
+	  native_funcs[i].func, 0, NULL);
     }
   }
   return NULL;

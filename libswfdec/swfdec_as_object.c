@@ -792,7 +792,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
 
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_native_function_new (object->context, name, native, min_args);
+  function = swfdec_as_native_function_new (object->context, name, native, min_args, NULL);
   if (function == NULL)
     return NULL;
   if (type != 0)

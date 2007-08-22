@@ -26,6 +26,7 @@
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
 /*** GTK-DOC ***/
@@ -110,6 +111,8 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
  * @name: name of the function
  * @native: function to call when executed
  * @min_args: minimum number of arguments required
+ * @prototype: The object to be used as "prototype" property for the created 
+ *             function or %NULL for none.
  *
  * Creates a new native function, that will execute @native when called. The
  * @min_args parameter sets a requirement for the minimum number of arguments
@@ -121,12 +124,13 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
  **/
 SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
-    SwfdecAsNative native, guint min_args)
+    SwfdecAsNative native, guint min_args, SwfdecAsObject *prototype)
 {
   SwfdecAsNativeFunction *fun;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
+  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsNativeFunction)))
     return NULL;
@@ -137,6 +141,14 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
   fun->min_args = min_args;
   fun->name = g_strdup (name);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsNativeFunction));
+  /* need to set prototype before setting the constructor or Function.constructor 
+   * being CONSTANT disallows setting it. */
+  if (prototype) {
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, prototype);
+    swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  }
   swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
 
   return SWFDEC_AS_FUNCTION (fun);

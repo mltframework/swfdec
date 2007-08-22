@@ -157,26 +157,6 @@ vivi_application_new (void)
 }
 
 void
-vivi_application_init_player (ViviApplication *app)
-{
-  SwfdecLoader *loader;
-
-  g_return_if_fail (VIVI_IS_APPLICATION (app));
-
-  if (app->player_inited)
-    return;
-  
-  if (app->filename == NULL) {
-    vivi_application_error (app, "no file set to play.");
-    return;
-  }
-
-  app->player_inited = TRUE;
-  loader = swfdec_file_loader_new (app->filename);
-  swfdec_player_set_loader_with_variables (app->player, loader, app->variables);
-}
-
-void
 vivi_application_reset (ViviApplication *app)
 {
   gboolean audio;
@@ -310,6 +290,23 @@ vivi_application_check (ViviApplication *app)
   /* leave breakpoint unless stopped */
   if (is_breakpoint && app->playback_state != VIVI_APPLICATION_STOPPED)
     g_main_loop_quit (app->loop);
+
+  /* init player if playing */
+  if ((app->playback_state == VIVI_APPLICATION_PLAYING ||
+       app->playback_state == VIVI_APPLICATION_STEPPING) &&
+      !app->player_inited) {
+    if (app->filename == NULL) {
+      vivi_application_error (app, "no file set to play.");
+      app->playback_state = VIVI_APPLICATION_STOPPED;
+      vivi_application_check (app);
+    } else {
+      SwfdecLoader *loader;
+
+      app->player_inited = TRUE;
+      loader = swfdec_file_loader_new (app->filename);
+      swfdec_player_set_loader_with_variables (app->player, loader, app->variables);
+    }
+  }
 }
 
 void

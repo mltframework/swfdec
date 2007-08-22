@@ -859,6 +859,15 @@ EXTRA_DIST = \
 	relational-6.swf.trace \
 	relational-7.swf \
 	relational-7.swf.trace \
+	remove-depths.as \
+	remove-depths-5.swf \
+	remove-depths-5.swf.trace \
+	remove-depths-6.swf \
+	remove-depths-6.swf.trace \
+	remove-depths-7.swf \
+	remove-depths-7.swf.trace \
+	remove-depths-8.swf \
+	remove-depths-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \

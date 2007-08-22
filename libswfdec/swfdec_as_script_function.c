@@ -138,12 +138,16 @@ swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target, Swf
   if (proto == NULL)
     return NULL;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun),
+      SWFDEC_AS_STR_prototype, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   return SWFDEC_AS_FUNCTION (fun);
 }

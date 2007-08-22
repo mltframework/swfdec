@@ -82,13 +82,13 @@ struct _SwfdecPlayer
   SwfdecAsObject *	Video;			/* Video object */
 
   /* rendering */
-  SwfdecRect		invalid;      		/* area that needs a rredraw */
+  SwfdecRect		invalid;      		/* area that needs a redraw in global coordinates */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
   SwfdecMouseCursor	mouse_cursor;		/* cursor that should be shown */
-  double      		mouse_x;		/* in twips */
-  double		mouse_y;		/* in twips */
+  double      		mouse_x;		/* in stage coordinates */
+  double		mouse_y;		/* in stage coordinates */
   int			mouse_button; 		/* 0 for not pressed, 1 for pressed */
   SwfdecMovie *		mouse_grab;		/* movie that currently has the mouse */
   SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */

@@ -729,6 +729,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   g_assert (movie->cache_state == SWFDEC_MOVIE_UP_TO_DATE);
   x = player->mouse_x;
   y = player->mouse_y;
+  swfdec_player_stage_to_global (player, &x, &y);
   if (movie->parent)
     swfdec_movie_global_to_local (movie->parent, &x, &y);
   if (player->mouse_drag_center) {
@@ -740,7 +741,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   }
   x = CLAMP (x, player->mouse_drag_rect.x0, player->mouse_drag_rect.x1);
   y = CLAMP (y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
-  SWFDEC_LOG ("mouse is at %g %g, orighinally (%g %g)", x, y, player->mouse_x, player->mouse_y);
+  SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, player->mouse_x, player->mouse_y);
   if (x != movie->matrix.x0 || y != movie->matrix.y0) {
     movie->matrix.x0 = x;
     movie->matrix.y0 = y;
@@ -772,6 +773,7 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
   if (drag && !center) {
     player->mouse_drag_x = player->mouse_x;
     player->mouse_drag_y = player->mouse_y;
+    swfdec_player_stage_to_global (player, &player->mouse_drag_x, &player->mouse_drag_y);
     if (drag->parent)
       swfdec_movie_global_to_local (drag->parent, &player->mouse_drag_x, &player->mouse_drag_y);
     player->mouse_drag_x -= drag->matrix.x0;
@@ -805,9 +807,13 @@ swfdec_player_update_mouse_position (SwfdecPlayer *player)
   if (player->mouse_button) {
     mouse_grab = player->mouse_grab;
   } else {
+    double x, y;
     /* if the mouse button is pressed the grab widget stays the same (I think) */
+    x = player->mouse_x;
+    y = player->mouse_y;
+    swfdec_player_stage_to_global (player, &x, &y);
     for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
-      mouse_grab = swfdec_movie_get_movie_at (walk->data, player->mouse_x, player->mouse_y);
+      mouse_grab = swfdec_movie_get_movie_at (walk->data, x, y);
       if (mouse_grab)
 	break;
     }
@@ -868,14 +874,12 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be
      * changed */
-    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0) * player->scale_x + player->offset_x;
-    x = MAX (x, 0.0);
-    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0) * player->scale_y + player->offset_y;
-    y = MAX (y, 0.0);
-    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0) * player->scale_x;
-    width = MIN (width, player->stage_width - x);
-    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0) * player->scale_y;
-    height = MIN (height, player->stage_height - y);
+    swfdec_player_global_to_stage (player, &player->invalid.x0, &player->invalid.y0);
+    swfdec_player_global_to_stage (player, &player->invalid.x1, &player->invalid.y1);
+    x = MAX (player->invalid.x0, 0.0);
+    y = MAX (player->invalid.y0, 0.0);
+    width = MIN (player->invalid.x1, player->stage_width) - x;
+    height = MIN (player->invalid.y1, player->stage_height) - y;
     g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }
@@ -914,10 +918,6 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   swfdec_player_lock (player);
-  x -= player->offset_x;
-  y -= player->offset_y;
-  x = x * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_x;
-  y = y * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_y;
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
@@ -942,8 +942,8 @@ swfdec_player_global_to_stage (SwfdecPlayer *player, double *x, double *y)
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  *x = *x / player->scale_x + player->offset_x;
-  *y = *y / player->scale_y + player->offset_y;
+  *x = *x / SWFDEC_TWIPS_SCALE_FACTOR * player->scale_x + player->offset_x;
+  *y = *y / SWFDEC_TWIPS_SCALE_FACTOR * player->scale_y + player->offset_y;
 }
 
 void
@@ -953,8 +953,8 @@ swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  *x = (*x - player->offset_x) * player->scale_x;
-  *y = (*y - player->offset_y) * player->scale_y;
+  *x = (*x - player->offset_x) / player->scale_x * SWFDEC_TWIPS_SCALE_FACTOR;
+  *y = (*y - player->offset_y) / player->scale_y * SWFDEC_TWIPS_SCALE_FACTOR;
 }
 
 static void
@@ -1043,6 +1043,7 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
 {
   GList *walk;
   SwfdecRect old_inval;
+  double x, y;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
@@ -1053,7 +1054,10 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
       swfdec_movie_update (walk->data);
     }
     /* update the state of the mouse when stuff below it moved */
-    if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
+    x = player->mouse_x;
+    y = player->mouse_y;
+    swfdec_player_stage_to_global (player, &x, &y);
+    if (swfdec_rect_contains (&player->invalid, x, y)) {
       SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
       swfdec_player_update_mouse_position (player);
       for (walk = player->roots; walk; walk = walk->next) {
@@ -1356,6 +1360,7 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
   }
 }
 
+/* rect is in global coordinates */
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {

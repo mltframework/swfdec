@@ -229,10 +229,13 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
       movie = movie->parent;
     }
 
-    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, swfdec_rect_contains (&movie_rect,
-	  SWFDEC_PLAYER (cx)->mouse_x, SWFDEC_PLAYER (cx)->mouse_y));
+    g_print ("%d %d in { %g %g  %g %g }?\n", SWFDEC_DOUBLE_TO_TWIPS (x), 
+	SWFDEC_DOUBLE_TO_TWIPS (y), movie->extents.x0, movie->extents.y0,
+	movie->extents.x1, movie->extents.y1);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, swfdec_rect_contains (&movie->extents, 
+	  SWFDEC_DOUBLE_TO_TWIPS (x), SWFDEC_DOUBLE_TO_TWIPS (y)));
   } else {
-    SWFDEC_FIXME ("hitText with 0 parameters, what to do?");
+    SWFDEC_FIXME ("hitTest with 0 parameters, what to do?");
   }
 }
 

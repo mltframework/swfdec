@@ -490,16 +490,9 @@ swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 void
 swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-
   do {
     cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
-
-  *x /= player->scale_x;
-  *y /= player->scale_y;
-  *x += SWFDEC_TWIPS_TO_DOUBLE (player->offset_x);
-  *y += SWFDEC_TWIPS_TO_DOUBLE (player->offset_y);
 }
 
 void
@@ -507,12 +500,6 @@ swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
   if (movie->parent) {
     swfdec_movie_global_to_local (movie->parent, x, y);
-  } else {
-    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-    *x -= SWFDEC_TWIPS_TO_DOUBLE (player->offset_x);
-    *y -= SWFDEC_TWIPS_TO_DOUBLE (player->offset_y);
-    *x *= player->scale_x;
-    *y *= player->scale_y;
   }
   if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
     swfdec_movie_update (movie);
@@ -539,6 +526,7 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   *x = player->mouse_x;
   *y = player->mouse_y;
+  swfdec_player_stage_to_global (player, x, y);
   swfdec_movie_global_to_local (movie, x, y);
 }
 
@@ -563,6 +551,18 @@ swfdec_movie_send_mouse_change (SwfdecMovie *movie, gboolean release)
   klass->mouse_change (movie, x, y, mouse_in, button);
 }
 
+/**
+ * swfdec_movie_get_movie_at:
+ * @movie: a #SwfdecMovie
+ * @x: x coordinate in parent's coordinate space
+ * @y: y coordinate in the parent's coordinate space
+ *
+ * Gets the child at the given coordinates. The coordinates are in the 
+ * coordinate system of @movie's parent (or the global coordinate system for
+ * root movies).
+ *
+ * Returns: the child of @movie at the given coordinates or %NULL if none
+ **/
 SwfdecMovie *
 swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 {

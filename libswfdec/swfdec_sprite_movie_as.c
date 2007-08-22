@@ -160,9 +160,8 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
   
   if (argc == 1) {
-    SwfdecMovie *other, *tmp;
+    SwfdecMovie *other;
     SwfdecRect movie_rect, other_rect;
-    guint movie_depth, other_depth;
     if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
         !SWFDEC_IS_MOVIE (other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
       SWFDEC_ERROR ("FIXME: what happens now?");
@@ -170,70 +169,29 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
     }
     swfdec_movie_update (movie);
     swfdec_movie_update (other);
-    if (movie->parent != other->parent) {
-      movie_rect = movie->original_extents;
-      other_rect = other->original_extents;
-      swfdec_movie_update (other);
-      tmp = movie;
-      for (movie_depth = 0; tmp->parent; movie_depth++)
-	tmp = tmp->parent;
-      tmp = other;
-      for (other_depth = 0; tmp->parent; other_depth++)
-	tmp = tmp->parent;
-      while (movie_depth > other_depth) {
-	swfdec_rect_transform (&movie_rect, &movie_rect, &movie->matrix);
-	movie = movie->parent;
-	movie_depth--;
-      }
-      while (other_depth > movie_depth) {
-	swfdec_rect_transform (&other_rect, &other_rect, &other->matrix);
-	other = other->parent;
-	other_depth--;
-      }
-      while (other != movie && other->parent) {
-	swfdec_rect_transform (&movie_rect, &movie_rect, &movie->matrix);
-	movie = movie->parent;
-	swfdec_rect_transform (&other_rect, &other_rect, &other->matrix);
-	other = other->parent;
-      }
-    } else {
-      movie_rect = movie->extents;
-      other_rect = other->extents;
-    }
-#if 0
-    g_print ("%g %g  %g %g --- %g %g  %g %g\n", 
-	SWFDEC_OBJECT (movie)->extents.x0, SWFDEC_OBJECT (movie)->extents.y0,
-	SWFDEC_OBJECT (movie)->extents.x1, SWFDEC_OBJECT (movie)->extents.y1,
-	SWFDEC_OBJECT (other)->extents.x0, SWFDEC_OBJECT (other)->extents.y0,
-	SWFDEC_OBJECT (other)->extents.x1, SWFDEC_OBJECT (other)->extents.y1);
-#endif
+    movie_rect = movie->extents;
+    if (movie->parent)
+      swfdec_movie_rect_local_to_global (movie->parent, &movie_rect);
+    other_rect = other->extents;
+    if (other->parent)
+      swfdec_movie_rect_local_to_global (other->parent, &other_rect);
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, swfdec_rect_intersect (NULL, &movie_rect, &other_rect));
   } else if (argc >= 2) {
-    SwfdecRect movie_rect;
     double x, y;
+    gboolean shape, ret;
 
-    x = swfdec_as_value_to_number (cx, &argv[0]);
-    y = swfdec_as_value_to_number (cx, &argv[1]);
+    x = swfdec_as_value_to_number (cx, &argv[0]) * SWFDEC_TWIPS_SCALE_FACTOR;
+    y = swfdec_as_value_to_number (cx, &argv[1]) * SWFDEC_TWIPS_SCALE_FACTOR;
+    shape = (argc >= 3 && swfdec_as_value_to_boolean (cx, &argv[2]));
 
-    if (argc >= 3) {
-      if (swfdec_as_value_to_boolean (cx, &argv[2])) {
-	SWFDEC_FIXME ("hitTest's shapeFlag parameter not supported");
-	// just continue...
-      }
+    swfdec_movie_global_to_local (movie, &x, &y);
+
+    if (shape && FALSE) {
+      ret = swfdec_movie_mouse_in (movie, x, y);
+    } else {
+      ret = swfdec_rect_contains (&movie->original_extents, x, y);
     }
-
-    swfdec_movie_update (movie);
-    movie_rect = movie->original_extents;
-    while (movie->parent) {
-      swfdec_rect_transform (&movie_rect, &movie_rect, &movie->matrix);
-      movie = movie->parent;
-    }
-
-    g_print ("%d %d in { %g %g  %g %g }?\n", SWFDEC_DOUBLE_TO_TWIPS (x), 
-	SWFDEC_DOUBLE_TO_TWIPS (y), movie->extents.x0, movie->extents.y0,
-	movie->extents.x1, movie->extents.y1);
-    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, swfdec_rect_contains (&movie->extents, 
-	  SWFDEC_DOUBLE_TO_TWIPS (x), SWFDEC_DOUBLE_TO_TWIPS (y)));
+    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, ret);
   } else {
     SWFDEC_FIXME ("hitTest with 0 parameters, what to do?");
   }

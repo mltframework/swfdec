@@ -1,4 +1,71 @@
-// doesn't work for Flash 5
+#if __SWF_VERSION__ == 5
+// create a _global object, since it doesn't have one, these are ver 6 values
+_global = new_empty_object ();
+_global.ASSetNative = ASSetNative;
+_global.ASSetNativeAccessor = ASSetNativeAccessor;
+_global.ASSetPropFlags = ASSetPropFlags;
+_global.ASconstructor = ASconstructor;
+_global.ASnative = ASnative;
+_global.Accessibility = Accessibility;
+_global.Array = Array;
+_global.AsBroadcaster = AsBroadcaster;
+_global.AsSetupError = AsSetupError;
+_global.Boolean = Boolean;
+_global.Button = Button;
+_global.Camera = Camera;
+_global.Color = Color;
+_global.ContextMenu = ContextMenu;
+_global.ContextMenuItem = ContextMenuItem;
+_global.Date = Date;
+_global.Error = Error;
+_global.Function = Function;
+_global.Infinity = Infinity;
+_global.Key = Key;
+_global.LoadVars = LoadVars;
+_global.LocalConnection = LocalConnection;
+_global.Math = Math;
+_global.Microphone = Microphone;
+_global.Mouse = Mouse;
+_global.MovieClip = MovieClip;
+_global.MovieClipLoader = MovieClipLoader;
+_global.NaN = NaN;
+_global.NetConnection = NetConnection;
+_global.NetStream = NetStream;
+_global.Number = Number;
+_global.Object = Object;
+_global.PrintJob = PrintJob;
+_global.RemoteLSOUsage = RemoteLSOUsage;
+_global.Selection = Selection;
+_global.SharedObject = SharedObject;
+_global.Sound = Sound;
+_global.Stage = Stage;
+_global.String = String;
+_global.System = System;
+_global.TextField = TextField;
+_global.TextFormat = TextFormat;
+_global.TextSnapshot = TextSnapshot;
+_global.Video = Video;
+_global.XML = XML;
+_global.XMLNode = XMLNode;
+_global.XMLSocket = XMLSocket;
+_global.clearInterval = clearInterval;
+_global.clearTimeout = clearTimeout;
+_global.enableDebugConsole = enableDebugConsole;
+_global.escape = escape;
+_global.flash = flash;
+_global.isFinite = isFinite;
+_global.isNaN = isNaN;
+_global.o = o;
+_global.parseFloat = parseFloat;
+_global.parseInt = parseInt;
+_global.setInterval = setInterval;
+_global.setTimeout = setTimeout;
+_global.showRedrawRegions = showRedrawRegions;
+_global.textRenderer = textRenderer;
+_global.trace = trace;
+_global.unescape = unescape;
+_global.updateAfterEvent = updateAfterEvent;
+#endif
 
 function new_empty_object () {
   var hash = new Object ();
@@ -65,7 +132,8 @@ function hasOwnProperty (o, prop)
 	if (o[prop] != o.__proto__[prop]) {
 	  return true;
 	} else {
-	  trace ("ERROR: can't test property '" + prop + "', __proto__ has superconstant version");
+	  trace ("ERROR: can't test property '" + prop +
+	      "', __proto__ has superconstant version");
 	  return false;
 	}
       }
@@ -79,7 +147,8 @@ function hasOwnProperty (o, prop)
 
     o.__proto__[prop] = old;
     if (o.__proto__[prop] != old)
-      trace ("Error: Couldn't set __proto__[\"" + prop + "\"] back to old value");
+      trace ("Error: Couldn't set __proto__[\"" + prop +
+	  "\"] back to old value");
     if (constant)
       ASSetPropFlags (o.__proto__, prop, 4);
 
@@ -123,11 +192,14 @@ function is_blaclisted (o, prop)
   if (prop == "mySecretId" || prop == "globalSecretId")
     return true;
 
-#if __SWF_VERSION__ >= 6
   if (o == _global.Camera && prop == "names")
     return true;
 
   if (o == _global.Microphone && prop == "names")
+    return true;
+
+#if __SWF_VERSION__ < 6
+  if (prop == "__proto__" && o[prop] == undefined)
     return true;
 #endif
 
@@ -260,71 +332,63 @@ function trace_properties_recurse (o, prefix, identifier, level)
     if (flags != "")
       flags = " (" + flags + ")";
 
-    var id_string = "";
-    if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function")
-      id_string = "[" + o[prop]["mySecretId"] + "]";
-
-    // put things together
-    var output = prop + flags + " = " + typeof (o[prop]) + id_string;
-
+    var value = "";
     // add value depending on the type
     if (typeof (o[prop]) == "number" || typeof (o[prop]) == "boolean") {
-      output += " : " + o[prop];
+      value += " : " + o[prop];
     } else if (typeof (o[prop]) == "string") {
-      output += " : \"" + o[prop] + "\"";
-    } else if (typeof (o[prop]) == "object") {
-      output += " : toString => \"" + o[prop] + "\"";
+      value += " : \"" + o[prop] + "\"";
     }
 
-    // print it out
-    trace (indentation + output);
-
-    // recurse if it's object or function that hasn't been seen earlier
-    if ((typeof (o[prop]) == "object" || typeof (o[prop]) == "function") &&
-	prefix + (prefix != "" ? "." : "") + identifier + "." + prop == o[prop]["mySecretId"])
+    // recurse if it's object or function and this is the place it has been
+    // named after
+    if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function")
     {
-      trace_properties_recurse (o[prop], prefix + (prefix != "" ? "." : "") +
-	  identifier, prop, level + 1);
+      if (prefix + (prefix != "" ? "." : "") + identifier + "." + prop ==
+	  o[prop]["mySecretId"])
+      {
+	trace (indentation + prop + flags + " = " + typeof (o[prop]));
+	trace_properties_recurse (o[prop], prefix + (prefix != "" ? "." : "") +
+	    identifier, prop, level + 1);
+      }
+      else
+      {
+	trace (indentation + prop + flags + " = " + o[prop]["mySecretId"]);
+      }
+    }
+    else
+    {
+      trace (indentation + prop + flags + " = " + typeof (o[prop]) + value);
     }
   }
 }
 
 function generate_names (o, prefix, identifier)
 {
-  var info = new_info ();
-
   // mark the ones that are not hidden
-  for (var prop in o)
-  {
-    // only get the ones that are not only in the __proto__
-    if (is_blaclisted (o, prop) == false) {
-      if (hasOwnProperty (o, prop) == true)
-	set_info (info, prop, "hidden", false);
-    }
+  var nothidden = new Array ();
+  for (var prop in o) {
+    nothidden.push (prop);
   }
 
   // unhide everything
   ASSetPropFlags (o, null, 0, 1);
 
   var all = new Array ();
-  var hidden = new Array ();
   for (var prop in o)
   {
-    // only get the ones that are not only in the __proto__
     if (is_blaclisted (o, prop) == false) {
+      // only get the ones that are not only in the __proto__
       if (hasOwnProperty (o, prop) == true) {
 	all.push (prop);
-	if (get_info (info, prop, "hidden") != false) {
-	  set_info (info, prop, "hidden", true);
-	  hidden.push (prop);
-	}
       }
     }
   }
   all.sort ();
 
   // hide the ones that were already hidden
-  ASSetPropFlags (o, hidden, 1, 0);
+  ASSetPropFlags (o, null, 1, 0);
+  ASSetPropFlags (o, nothidden, 0, 1);
 
   for (var i = 0; i < all.length; i++) {
     var prop = all[i];
@@ -359,12 +423,23 @@ function trace_properties (o, prefix, identifier)
 
   generate_names (o, prefix, identifier);
 
-  var output = identifier + " " + typeof (o) + "[" + prefix +
-    (prefix != "" ? "." : "") + identifier + "]";
-  if (typeof (o) == "object")
-    output += " : toString => \"" + o[prop] + "\"";
-  trace (output);
-
   if (typeof (o) == "object" || typeof (o) == "function")
+  {
+    if (prefix + (prefix != "" ? "." : "") + identifier == o["mySecretId"])
+    {
+      trace (prefix + (prefix != "" ? "." : "") + identifier + " = " +
+	  typeof (o));
+    }
+    else
+    {
+      trace (prefix + (prefix != "" ? "." : "") + identifier + " = " +
+	  o["mySecretId"]);
+    }
     trace_properties_recurse (o, prefix, identifier, 1);
+  }
+  else
+  {
+    trace (prefix + (prefix != "" ? "." : "") + identifier + " = " +
+	typeof (o[prop]) + value);
+  }
 }

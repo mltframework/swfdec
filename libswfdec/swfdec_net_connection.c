@@ -139,19 +139,20 @@ swfdec_net_connection_init_context (SwfdecPlayer *player, guint version)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   context = SWFDEC_AS_CONTEXT (player);
-  conn = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_NetConnection, SWFDEC_TYPE_NET_CONNECTION, NULL, 0));
+  proto = swfdec_as_object_new_empty (context);
+  if (proto == NULL)
+    return;
+  conn = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global, 
+      SWFDEC_AS_STR_NetConnection, SWFDEC_TYPE_NET_CONNECTION, 
+      SWFDEC_TYPE_NET_CONNECTION, NULL, 0, proto));
   if (!conn)
     return;
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (conn), SWFDEC_TYPE_NET_CONNECTION);
-  proto = swfdec_as_object_new (context);
-  /* set the right properties on the NetConnection object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (conn, SWFDEC_AS_STR_prototype, &val);
   /* set the right properties on the NetConnection.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, conn);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_connect, SWFDEC_TYPE_NET_CONNECTION,
       swfdec_net_connection_do_connect, 1);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, conn);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
 }
 

@@ -1077,21 +1077,18 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
-  array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Array, 0, swfdec_as_array_construct, 0));
-  swfdec_as_native_function_set_construct_type (
-      SWFDEC_AS_NATIVE_FUNCTION (array), SWFDEC_TYPE_AS_ARRAY);
-  if (!array)
-    return;
-  context->Array = array;
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
     return;
   proto = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (proto, context, sizeof (SwfdecAsArray));
+  array = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
+      SWFDEC_AS_STR_Array, 0, SWFDEC_TYPE_AS_ARRAY, swfdec_as_array_construct, 
+      0, proto));
+  if (!array)
+    return;
+  context->Array = array;
 
   /* set the right properties on the Array object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_prototype, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
   swfdec_as_object_set_variable (array, SWFDEC_AS_STR_constructor, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_CASEINSENSITIVE);
@@ -1106,9 +1103,6 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (array, SWFDEC_AS_STR_NUMERIC, &val);
 
   /* set the right properties on the Array.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
@@ -1135,4 +1129,7 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_sort, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_sortOn,
       SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_sortOn, 0);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }

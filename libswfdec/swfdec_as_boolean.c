@@ -89,25 +89,21 @@ swfdec_as_boolean_init_context (SwfdecAsContext *context, guint version)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
-  boolean = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Boolean, SWFDEC_TYPE_AS_BOOLEAN, swfdec_as_boolean_construct, 0));
+  proto = swfdec_as_object_new_empty (context);
+  if (proto == NULL)
+    return;
+  boolean = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
+      SWFDEC_AS_STR_Boolean, SWFDEC_TYPE_AS_BOOLEAN, SWFDEC_TYPE_AS_BOOLEAN, 
+      swfdec_as_boolean_construct, 0, proto));
   if (!boolean)
     return;
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (boolean), SWFDEC_TYPE_AS_BOOLEAN);
-  swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (boolean), SWFDEC_TYPE_AS_BOOLEAN);
-  proto = swfdec_as_object_new (context);
-  /* set the right properties on the Boolean object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (boolean, SWFDEC_AS_STR_prototype, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable (boolean, SWFDEC_AS_STR_constructor, &val);
   /* set the right properties on the Boolean.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, boolean);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, SWFDEC_TYPE_AS_BOOLEAN, swfdec_as_boolean_toString, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, SWFDEC_TYPE_AS_BOOLEAN, swfdec_as_boolean_valueOf, 0);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 

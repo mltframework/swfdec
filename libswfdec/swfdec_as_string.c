@@ -703,15 +703,15 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
-  string = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_String, 0, swfdec_as_string_construct, 0));
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (string), SWFDEC_TYPE_AS_STRING);
+  proto = swfdec_as_object_new_empty (context);
+  if (proto == NULL)
+    return;
+  string = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
+      SWFDEC_AS_STR_String, 0, SWFDEC_TYPE_AS_STRING, 
+      swfdec_as_string_construct, 0, proto));
   if (!string)
     return;
-  proto = swfdec_as_object_new (context);
   /* set the right properties on the String object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (string, SWFDEC_AS_STR_prototype, &val);
   if (version <= 5) {
     swfdec_as_object_add_function (string, SWFDEC_AS_STR_fromCharCode, 0, swfdec_as_string_fromCharCode_5, 0);
   } else {
@@ -719,9 +719,6 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
   }
 
   /* set the right properties on the String.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, string);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
@@ -739,6 +736,9 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
   } else {
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_split, SWFDEC_TYPE_AS_STRING, swfdec_as_string_split, 1);
   }
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   /* add properties to global object */
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_escape, 0, swfdec_as_string_escape, 1);

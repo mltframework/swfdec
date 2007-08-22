@@ -294,7 +294,6 @@ vivi_movie_list_movie_notify (SwfdecMovie *movie, GParamSpec *pspec, ViviMovieLi
       guint i;
       guint count = g_node_n_children (parent);
       int *positions = g_new (int, count);
-      g_print ("reordering %u => %u (%u total)\n", old, new, count);
       for (i = 0; i < min; i++) {
 	positions[i] = i;
       }
@@ -393,6 +392,16 @@ vivi_movie_list_removed (ViviDebugger *debugger, SwfdecAsObject *object, ViviMov
 }
 
 static void
+vivi_movie_list_reset (ViviApplication *app, GParamSpec *pspec, ViviMovieList *movies)
+{
+  GNode *walk;
+
+  for (walk = movies->root->children; walk; walk = walk->next) {
+    vivi_movie_list_removed (NULL, walk->data, movies);
+  }
+}
+
+static void
 vivi_movie_list_dispose (GObject *object)
 {
   ViviMovieList *movies = VIVI_MOVIE_LIST (object);
@@ -400,6 +409,7 @@ vivi_movie_list_dispose (GObject *object)
   GNode *walk;
 
   debugger = movies->app->debugger;
+  g_signal_handlers_disconnect_by_func (movies->app, vivi_movie_list_reset, movies);
   g_signal_handlers_disconnect_by_func (debugger, vivi_movie_list_removed, movies);
   g_signal_handlers_disconnect_by_func (debugger, vivi_movie_list_added, movies);
   g_object_unref (movies->app);
@@ -442,6 +452,7 @@ vivi_movie_list_new (ViviApplication *app)
   g_object_ref (app);
   movies->app = app;
   debugger = app->debugger;
+  g_signal_connect (app, "notify::player", G_CALLBACK (vivi_movie_list_reset), movies);
   g_signal_connect (debugger, "add", G_CALLBACK (vivi_movie_list_added), movies);
   g_signal_connect (debugger, "remove", G_CALLBACK (vivi_movie_list_removed), movies);
   return GTK_TREE_MODEL (movies);

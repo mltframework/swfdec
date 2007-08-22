@@ -155,6 +155,14 @@ SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 GType			type,
 						 SwfdecAsNative		native,
 						 guint			min_args);
+SwfdecAsFunction *swfdec_as_object_add_constructor
+						(SwfdecAsObject *	object,
+						 const char *		name,
+						 GType			type,
+						 GType			construct_type,
+						 SwfdecAsNative		native,
+						 guint			min_args,
+						 SwfdecAsObject *	prototype);
 
 gboolean	swfdec_as_object_has_function	(SwfdecAsObject *       object,
 						 const char *		name);

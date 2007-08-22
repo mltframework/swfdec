@@ -783,20 +783,54 @@ SwfdecAsFunction *
 swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType type,
     SwfdecAsNative native, guint min_args)
 {
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
+
+  return swfdec_as_object_add_constructor (object, name, type, 0, native, min_args, NULL);
+}
+
+/**
+ * swfdec_as_object_add_function:
+ * @object: a #SwfdecAsObject
+ * @name: name of the function. The string does not have to be 
+ *        garbage-collected.
+ * @type: the required type of the this Object to make this function execute.
+ *        May be 0 to accept any type.
+ * @construct_type: type used when using this function as a constructor. May 
+ *                  be 0 to use the default type.
+ * @native: a native function or %NULL to just not do anything
+ * @min_args: minimum number of arguments to pass to @native
+ * @prototype: An optional object to be set as the "prototype" property of the
+ *             new function. The prototype will be hidden and constant.
+ *
+ * Adds @native as a constructor named @name to @object. The newly added variable
+ * will not be enumerated.
+ *
+ * Returns: the newly created #SwfdecAsFunction or %NULL on error.
+ **/
+SwfdecAsFunction *
+swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GType type,
+    GType construct_type, SwfdecAsNative native, guint min_args, SwfdecAsObject *prototype)
+{
   SwfdecAsFunction *function;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
+  g_return_val_if_fail (construct_type == 0 || g_type_is_a (construct_type, SWFDEC_TYPE_AS_OBJECT), NULL);
+  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_native_function_new (object->context, name, native, min_args, NULL);
+  function = swfdec_as_native_function_new (object->context, name, native, min_args, prototype);
   if (function == NULL)
     return NULL;
   if (type != 0)
     swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (function), type);
+  if (construct_type != 0)
+    swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (function), construct_type);
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */

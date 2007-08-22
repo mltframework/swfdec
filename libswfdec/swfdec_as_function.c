@@ -86,7 +86,8 @@ swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
   context = object->context;
   if (context->Function) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
+    swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
   if (context->Function_prototype) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);

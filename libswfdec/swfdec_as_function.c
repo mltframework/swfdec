@@ -180,7 +180,8 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   }
   context->Function = function;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
-  swfdec_as_object_set_variable (function, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   if (version > 5) {
     proto = swfdec_as_object_new_empty (context);
     if (!proto)

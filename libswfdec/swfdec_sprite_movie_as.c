@@ -477,7 +477,9 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
   if (!proto)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (player->MovieClip, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable_and_flags (player->MovieClip,
+      SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |
+      SWFDEC_AS_VARIABLE_PERMANENT);
   /* now add all the functions */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_SPRITE_MOVIE,
       swfdec_sprite_movie_attachMovie, 3);

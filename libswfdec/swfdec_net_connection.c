@@ -151,8 +151,10 @@ swfdec_net_connection_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_connect, SWFDEC_TYPE_NET_CONNECTION,
       swfdec_net_connection_do_connect, 1);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, conn);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 

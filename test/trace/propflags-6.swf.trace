@@ -1,4 +1,4 @@
-o object[local.o] : toString => ""
+local.o = object
   0 = number : 0
   1 (h) = number : 1
   2 (p) = number : 2

@@ -480,11 +480,22 @@ gboolean
 swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
   SwfdecMovieClass *klass;
+  GList *walk;
 
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->mouse_in == NULL)
-    return FALSE;
-  return klass->mouse_in (movie, x, y);
+  if (klass->mouse_in != NULL &&
+      klass->mouse_in (movie, x, y))
+    return TRUE;
+
+  for (walk = movie->list; walk; walk = walk->next) {
+    double tmp_x = x;
+    double tmp_y = y;
+    SwfdecMovie *cur = walk->data;
+    cairo_matrix_transform_point (&cur->inverse_matrix, &tmp_x, &tmp_y);
+    if (swfdec_movie_mouse_in (cur, tmp_x, tmp_y))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 void

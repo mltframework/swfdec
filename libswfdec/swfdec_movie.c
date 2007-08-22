@@ -1044,6 +1044,8 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   }
   if (transform) {
     movie->original_transform = *transform;
+    movie->matrix.x0 = movie->original_transform.x0;
+    movie->matrix.y0 = movie->original_transform.y0;
     movie->xscale = swfdec_matrix_get_xscale (&movie->original_transform);
     movie->yscale = swfdec_matrix_get_yscale (&movie->original_transform);
     movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);

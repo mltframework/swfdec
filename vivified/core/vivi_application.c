@@ -171,9 +171,9 @@ vivi_application_init_player (ViviApplication *app)
     return;
   }
 
+  app->player_inited = TRUE;
   loader = swfdec_file_loader_new (app->filename);
   swfdec_player_set_loader_with_variables (app->player, loader, app->variables);
-  app->player_inited = TRUE;
 }
 
 void

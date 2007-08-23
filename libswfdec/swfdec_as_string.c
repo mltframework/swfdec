@@ -77,6 +77,33 @@ swfdec_as_str_nth_char (const char *s, guint n)
 }
 
 static void
+swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecAsString *string = SWFDEC_AS_STRING (object);
+  gsize len;
+  const char *s;
+
+  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  if (argc == 2) {
+    int offset = swfdec_as_value_to_integer (object->context, &argv[1]);
+    if (offset < 0) {
+      SWFDEC_AS_VALUE_SET_INT (ret, -1);
+      return;
+    }
+    len = g_utf8_offset_to_pointer (string->string, offset + 1) - string->string;
+  } else {
+    len = G_MAXSIZE;
+  }
+  s = g_strrstr_len (string->string, len, s);
+  if (s) {
+    SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_pointer_to_offset (string->string, s));
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+  }
+}
+
+static void
 swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -262,7 +289,6 @@ charAt(index:Number) : String
 charCodeAt(index:Number) : Number
 concat(value:Object) : String
 indexOf(value:String, [startIndex:Number]) : Number
-lastIndexOf(value:String, [startIndex:Number]) : Number
 slice(start:Number, end:Number) : String
 split(delimiter:String, [limit:Number]) : Array
 #endif
@@ -724,6 +750,7 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_charAt, SWFDEC_TYPE_AS_STRING, swfdec_as_string_charAt, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_indexOf, SWFDEC_TYPE_AS_STRING, swfdec_as_string_indexOf, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_lastIndexOf, SWFDEC_TYPE_AS_STRING, swfdec_as_string_lastIndexOf, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_charCodeAt, SWFDEC_TYPE_AS_STRING, swfdec_as_string_charCodeAt, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_substr, SWFDEC_TYPE_AS_STRING, swfdec_as_string_substr, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_substring, SWFDEC_TYPE_AS_STRING, swfdec_as_string_substring, 1);

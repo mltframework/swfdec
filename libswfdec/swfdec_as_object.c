@@ -563,7 +563,7 @@ swfdec_as_object_collect (SwfdecAsObject *object)
  * swfdec_as_object_set_variable_and_flags()
  **/
 /**
- * swfdec_as_object_set_variable:
+ * swfdec_as_object_set_variable_and_flags:
  * @object: a #SwfdecAsObject
  * @variable: garbage-collected name of the variable to set
  * @value: value to set the variable to
@@ -790,7 +790,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
 }
 
 /**
- * swfdec_as_object_add_function:
+ * swfdec_as_object_add_constructor:
  * @object: a #SwfdecAsObject
  * @name: name of the function. The string does not have to be 
  *        garbage-collected.

@@ -140,9 +140,12 @@ run_test (gpointer testp, gpointer unused)
     if (advance > time_left)
       break;
     swfdec_player_advance (player, advance);
-    if (inter)
-      swfdec_interaction_advance (inter, player, advance);
     time_left -= advance;
+    if (inter) {
+      swfdec_interaction_advance (inter, player, advance);
+      if (time_left == 0)
+	break;
+    }
   }
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);

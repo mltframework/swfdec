@@ -52,12 +52,19 @@ G_DEFINE_TYPE (SwfdecAsDebugger, swfdec_as_debugger, G_TYPE_OBJECT)
  *       using swfdec_as_object_add ()
  * @remove: Called whenever an object is about to be collected by the garbage 
  *          collector.
- * @step: This function is called everytime just before a bytecode is executed by 
- *        the script engine. So it's very powerful, but can also slow down the
- *        script engine a lot.
- * @start_frame:
- * @finish_frame:
- * @set_variable:
+ * @step: This function is called everytime just before a bytecode is executed 
+ *        by the script engine. So it's very powerful, but can also slow down 
+ *        the script engine a lot.
+ * @start_frame: Called after a new #SwfdecAsFrame has been initialized and 
+ *               pushed to the top of the execution stack.
+ * @finish_frame: Called just after a #SwfdecAsFrame has been removed from the
+ *		  execution stack. The return value has not been forwarded to
+ *		  the parent when this function is called.
+ * @set_variable: Called whenever swfdec_as_object_set_variable() is called, 
+ *                before actually setting the variable. This function is also
+ *                called when variables are set by internal code, not just when
+ *                interpreting scripts. It also doesn't matter if setting the 
+ *                variable will succeed. 
  *
  * The class object for the debugger. You need to override these functions to 
  * get useful functionality for the debugger.

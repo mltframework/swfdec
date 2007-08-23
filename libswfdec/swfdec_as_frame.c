@@ -430,8 +430,8 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
   if (context->debugger) {
     SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
 
-    if (klass->finish_frame)
-      klass->finish_frame (context->debugger, context, frame, &retval);
+    if (klass->leave_frame)
+      klass->leave_frame (context->debugger, context, frame, &retval);
   }
   /* set return value */
   if (frame->return_value) {
@@ -704,8 +704,8 @@ out:
   if (context->debugger) {
     SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
 
-    if (klass->start_frame)
-      klass->start_frame (context->debugger, context, frame);
+    if (klass->enter_frame)
+      klass->enter_frame (context->debugger, context, frame);
   }
 }
 

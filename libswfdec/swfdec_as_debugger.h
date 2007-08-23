@@ -55,11 +55,11 @@ struct _SwfdecAsDebuggerClass {
   void			(* step)	(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context);
   /* called after adding a frame from the function stack */
-  void			(* start_frame)	(SwfdecAsDebugger *	debugger,
+  void			(* enter_frame)	(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context,
 					 SwfdecAsFrame *	frame);
   /* called after removing a frame from the function stack */
-  void			(* finish_frame)(SwfdecAsDebugger *	debugger,
+  void			(* leave_frame)	(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context,
 					 SwfdecAsFrame *	frame,
 					 const SwfdecAsValue *	return_value);

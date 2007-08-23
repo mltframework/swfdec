@@ -76,7 +76,7 @@ Commands.add = function (name) {
     return undefined;
   }
   var ret = new Breakpoint ();
-  ret.onStartFrame = function (frame) {
+  ret.onEnterFrame = function (frame) {
     if (frame.name != name)
       return false;
 

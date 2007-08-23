@@ -48,13 +48,16 @@ G_DEFINE_TYPE (SwfdecAsDebugger, swfdec_as_debugger, G_TYPE_OBJECT)
 
 /**
  * SwfdecAsDebuggerClass
+ * @add: Called whenever an object is added to the garbage collection engine 
+ *       using swfdec_as_object_add ()
+ * @remove: Called whenever an object is about to be collected by the garbage 
+ *          collector.
  * @step: This function is called everytime just before a bytecode is executed by 
  *        the script engine. So it's very powerful, but can also slow down the
  *        script engine a lot.
- * @frame_change: Called whenever the current frame changes. This happens either
- *                when calling a function or when a function call returns. The
- *                function call is called for any type of frame, even calls to
- *                native functions.
+ * @start_frame:
+ * @finish_frame:
+ * @set_variable:
  *
  * The class object for the debugger. You need to override these functions to 
  * get useful functionality for the debugger.

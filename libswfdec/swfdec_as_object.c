@@ -1034,7 +1034,7 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor, 
-      &val, SWFDEC_AS_VARIABLE_HIDDEN);
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

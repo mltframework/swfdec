@@ -1,0 +1,15 @@
+_global.Video = function
+  __proto__ (hp) = _global.Object.__proto__
+  constructor (hp) = _global.Object.constructor
+  prototype (hp) = object
+    __proto__ (hp) = _global.Object.prototype
+    attachVideo (hp) = function
+      __proto__ (hp) = _global.Object.__proto__
+      constructor (hp) = _global.Object.constructor
+    clear (hp) = function
+      __proto__ (hp) = _global.Object.__proto__
+      constructor (hp) = _global.Object.constructor
+    constructor (hp) = _global.Video
+local.a = _global.Video.prototype
+  __constructor__ (h) = _global.Video
+  __proto__ (hp) = _global.Video.prototype

@@ -95,6 +95,9 @@ EXTRA_DIST = \
 	array-new-override-6.swf.trace \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
+	array-properties.as \
+	array-properties-6.swf \
+	array-properties-6.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \
@@ -131,6 +134,16 @@ EXTRA_DIST = \
 	asbroadcaster-override-7.swf.trace \
 	asbroadcaster-override-8.swf \
 	asbroadcaster-override-8.swf.trace \
+	asbroadcaster-properties.as \
+	asbroadcaster-properties-6.swf \
+	asbroadcaster-properties-6.swf.trace \
+	asbroadcaster-properties-7.swf \
+	asbroadcaster-properties-7.swf.trace \
+	asfunction-properties.as \
+	asfunction-properties-6.swf \
+	asfunction-properties-6.swf.trace \
+	asfunction-properties-7.swf \
+	asfunction-properties-7.swf.trace \
 	asnative-create.as \
 	asnative-create-5.swf \
 	asnative-create-5.swf.trace \
@@ -147,6 +160,11 @@ EXTRA_DIST = \
 	bitwise-6.swf.trace \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
+	boolean-properties.as \
+	boolean-properties-6.swf \
+	boolean-properties-6.swf.trace \
+	boolean-properties-7.swf \
+	boolean-properties-7.swf.trace \
 	call-arguments.as \
 	call-arguments-5.swf \
 	call-arguments-5.swf.trace \
@@ -428,6 +446,16 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	global-function-properties.as \
+	global-function-properties-6.swf \
+	global-function-properties-6.swf.trace \
+	global-function-properties-7.swf \
+	global-function-properties-7.swf.trace \
+	global-variable-properties.as \
+	global-variable-properties-6.swf \
+	global-variable-properties-6.swf.trace \
+	global-variable-properties-7.swf \
+	global-variable-properties-7.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \
@@ -1186,6 +1214,11 @@ EXTRA_DIST = \
 	unescape2-7.swf.trace \
 	values.as \
 	video.flv \
+	video-properties.as \
+	video-properties-6.swf \
+	video-properties-6.swf.trace \
+	video-properties-7.swf \
+	video-properties-7.swf.trace \
 	waitforframe-huge.as \
 	waitforframe-huge-4.swf \
 	waitforframe-huge-4.swf.trace \

@@ -62,7 +62,6 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {
     movie->sprite = SWFDEC_SWF_DECODER (instance->decoder)->main_sprite;
 
-    swfdec_movie_initialize (SWFDEC_MOVIE (movie));
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
     /* nothing to do, please move along */

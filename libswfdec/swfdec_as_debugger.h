@@ -41,8 +41,10 @@ struct _SwfdecAsDebugger {
 };
 
 struct _SwfdecAsDebuggerClass {
+  /*< private >*/
   GObjectClass		object_class;
 
+  /*< public >*/
   /* a new object was added to the GC */
   void			(* add)		(SwfdecAsDebugger *	debugger,
 					 SwfdecAsContext *	context,

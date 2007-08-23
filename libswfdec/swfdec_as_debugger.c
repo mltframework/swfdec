@@ -47,7 +47,7 @@ G_DEFINE_TYPE (SwfdecAsDebugger, swfdec_as_debugger, G_TYPE_OBJECT)
  */
 
 /**
- * SwfdecAsDebuggerClass
+ * SwfdecAsDebuggerClass:
  * @add: Called whenever an object is added to the garbage collection engine 
  *       using swfdec_as_object_add ()
  * @remove: Called whenever an object is about to be collected by the garbage 
@@ -55,9 +55,9 @@ G_DEFINE_TYPE (SwfdecAsDebugger, swfdec_as_debugger, G_TYPE_OBJECT)
  * @step: This function is called everytime just before a bytecode is executed 
  *        by the script engine. So it's very powerful, but can also slow down 
  *        the script engine a lot.
- * @start_frame: Called after a new #SwfdecAsFrame has been initialized and 
+ * @enter_frame: Called after a new #SwfdecAsFrame has been initialized and 
  *               pushed to the top of the execution stack.
- * @finish_frame: Called just after a #SwfdecAsFrame has been removed from the
+ * @leave_frame: Called just after a #SwfdecAsFrame has been removed from the
  *		  execution stack. The return value has not been forwarded to
  *		  the parent when this function is called.
  * @set_variable: Called whenever swfdec_as_object_set_variable() is called, 

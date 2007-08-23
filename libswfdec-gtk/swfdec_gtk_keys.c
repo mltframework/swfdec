@@ -58,6 +58,16 @@ SWFDEC_KEY_META_R 116
 SWFDEC_KEY_MENU 117
 */
 
+/**
+ * swfdec_gtk_keycode_from_hardware_keycode:
+ * @hardware_keycode: a hardware keycode sent from the X server
+ *
+ * Tries to transform an X hardware keycode to the corresponding #SwfdecKey.
+ * This is a utility function for cases where key events need to be transformed
+ * manually.
+ *
+ * Returns: the corresponding key code as used in Flash.
+ **/
 guint
 swfdec_gtk_keycode_from_hardware_keycode (guint hardware_keycode)
 {

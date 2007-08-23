@@ -59,7 +59,7 @@ SWFDEC_KEY_MENU 117
 */
 
 guint
-swfdec_keycode_from_hardware_keycode (guint hardware_keycode)
+swfdec_gtk_keycode_from_hardware_keycode (guint hardware_keycode)
 {
   if (hardware_keycode >= G_N_ELEMENTS (flash_keycodes))
     return 0;

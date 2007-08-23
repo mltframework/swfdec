@@ -349,7 +349,6 @@ SWFDEC_TYPE_AS_ARRAY
 SwfdecAsFunction
 SwfdecAsNative
 SwfdecAsNativeFunction
-swfdec_as_function_create
 swfdec_as_function_call
 swfdec_as_native_function_new
 swfdec_as_native_function_set_construct_type

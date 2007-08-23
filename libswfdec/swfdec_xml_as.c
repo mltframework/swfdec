@@ -28,7 +28,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_load_object_as.h"
 
 G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_AS_OBJECT)
 
@@ -60,8 +59,6 @@ swfdec_xml_init_context (SwfdecPlayer *player, guint version)
   if (xml == NULL)
     return;
   /* set the right properties on the NetStream.prototype object */
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_load, SWFDEC_TYPE_XML,
-      swfdec_load_object_load, 0);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, xml);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);

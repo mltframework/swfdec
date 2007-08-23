@@ -123,6 +123,10 @@ LoadVars.prototype.getBytesTotal = function () {
 
 ASSetPropFlags(LoadVars.prototype, null, 131);
 
+/*** XML ***/
+
+XML.prototype.load = ASnative (301, 0);
+
 /*** OH THE HUMANITY ***/
 
 o = null;

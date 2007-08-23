@@ -191,7 +191,6 @@ noinst_HEADERS = \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_load_object.h \
-	swfdec_load_object_as.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \

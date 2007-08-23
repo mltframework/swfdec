@@ -128,6 +128,12 @@
  * movie's size.
  */
 
+/**
+ * SwfdecKey:
+ *
+ * Lists all known key codes in Swfdec.
+ */
+
 /*** Timeouts ***/
 
 static SwfdecTick

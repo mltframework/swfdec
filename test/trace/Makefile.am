@@ -1214,6 +1214,11 @@ EXTRA_DIST = \
 	unescape2-7.swf.trace \
 	values.as \
 	video.flv \
+	video-properties.as \
+	video-properties-6.swf \
+	video-properties-6.swf.trace \
+	video-properties-7.swf \
+	video-properties-7.swf.trace \
 	waitforframe-huge.as \
 	waitforframe-huge-4.swf \
 	waitforframe-huge-4.swf.trace \

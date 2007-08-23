@@ -99,6 +99,7 @@ IGNORE_HFILES= \
 	swfdec_interval.h \
 	swfdec_js.h \
 	swfdec_listener.h \
+	swfdec_load_object.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \
@@ -114,6 +115,7 @@ IGNORE_HFILES= \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
 	swfdec_script.h \
+	swfdec_script_internal.h \
 	swfdec_scriptable.h \
 	swfdec_shape.h \
 	swfdec_sound.h \

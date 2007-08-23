@@ -132,6 +132,7 @@ IGNORE_HFILES= \
 
 if WITH_GTK
 EXTRA_HFILES = \
+	../libswfdec-gtk/swfdec_gtk_keys.h \
 	../libswfdec-gtk/swfdec_gtk_loader.h \
 	../libswfdec-gtk/swfdec_gtk_player.h \
 	../libswfdec-gtk/swfdec_gtk_widget.h

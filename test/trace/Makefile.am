@@ -95,6 +95,9 @@ EXTRA_DIST = \
 	array-new-override-6.swf.trace \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
+	array-properties.as \
+	array-properties-6.swf \
+	array-properties-6.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \

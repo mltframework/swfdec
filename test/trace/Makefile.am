@@ -446,6 +446,11 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	global-variable-properties.as \
+	global-variable-properties-6.swf \
+	global-variable-properties-6.swf.trace \
+	global-variable-properties-7.swf \
+	global-variable-properties-7.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \

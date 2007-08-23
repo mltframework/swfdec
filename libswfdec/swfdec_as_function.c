@@ -176,6 +176,7 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
     return;
   if (version < 6) {
     /* deleting it later on is easier than duplicating swfdec_as_object_add_function() */
+    swfdec_as_object_unset_variable_flags (context->global, SWFDEC_AS_STR_Function, SWFDEC_AS_VARIABLE_PERMANENT);
     swfdec_as_object_delete_variable (context->global, SWFDEC_AS_STR_Function);
   }
   context->Function = function;

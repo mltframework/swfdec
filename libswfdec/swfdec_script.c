@@ -27,6 +27,14 @@
 #include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
 
+/**
+ * SwfdecScript:
+ *
+ * This is the object used for code to be executed by Swfdec. Scripts are 
+ * independant from the #SwfdecAsContext they are executed in, so you can 
+ * execute the same script in multiple contexts.
+ */
+
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
  * but usually just causes a lot of spam. */

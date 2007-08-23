@@ -2,8 +2,10 @@
 
 #include "trace_properties.as"
 
-o = new_empty_object ();
-o.myFunction = function () { };
-trace_properties (o, "local", "o");
+var a = new_empty_object ();
+a.myFunction = function () { };
+
+trace_properties (_global.Function, "_global", "Function");
+trace_properties (a, "local", "a");
 
 loadMovie ("FSCommand:quit", "");

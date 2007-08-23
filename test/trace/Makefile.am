@@ -134,6 +134,11 @@ EXTRA_DIST = \
 	asbroadcaster-override-7.swf.trace \
 	asbroadcaster-override-8.swf \
 	asbroadcaster-override-8.swf.trace \
+	asfunction-properties.as \
+	asfunction-properties-6.swf \
+	asfunction-properties-6.swf.trace \
+	asfunction-properties-7.swf \
+	asfunction-properties-7.swf.trace \
 	asnative-create.as \
 	asnative-create-5.swf \
 	asnative-create-5.swf.trace \

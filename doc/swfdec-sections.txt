@@ -398,8 +398,8 @@ SWFDEC_TYPE_AS_FRAME
 </SECTION>
 
 <SECTION>
-<FILE>SwfdecAsFrame</FILE>
-<TITLE>SwfdecAsFrame</TITLE>
+<FILE>SwfdecAsDebugger</FILE>
+<TITLE>SwfdecAsDebugger</TITLE>
 SwfdecAsDebugger
 SwfdecAsDebuggerClass
 SwfdecScript

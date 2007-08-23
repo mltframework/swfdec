@@ -2055,6 +2055,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
   player->bgcolor_set = TRUE;
   if (player->bgcolor == color)
     return;
+  player->bgcolor = color;
   g_object_notify (G_OBJECT (player), "background-color");
   if (swfdec_player_is_initialized (player)) {
     g_signal_emit (player, signals[INVALIDATE], 0, 0.0, 0.0, 

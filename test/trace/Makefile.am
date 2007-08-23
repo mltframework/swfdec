@@ -160,6 +160,11 @@ EXTRA_DIST = \
 	bitwise-6.swf.trace \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
+	boolean-properties.as \
+	boolean-properties-6.swf \
+	boolean-properties-6.swf.trace \
+	boolean-properties-7.swf \
+	boolean-properties-7.swf.trace \
 	call-arguments.as \
 	call-arguments-5.swf \
 	call-arguments-5.swf.trace \

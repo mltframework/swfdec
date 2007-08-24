@@ -177,6 +177,9 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 void		swfdec_as_object_run		(SwfdecAsObject *       object,
 						 SwfdecScript *		script);
 
+const char*	swfdec_as_object_to_string	(SwfdecAsContext *	context,
+						 SwfdecAsObject *	object);
+
 
 G_END_DECLS
 #endif

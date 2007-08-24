@@ -27,6 +27,7 @@
 #include "swfdec_as_function.h"
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_as_with.h"
@@ -552,10 +553,14 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   const char *s;
 
   val = swfdec_as_stack_peek (cx, 1);
-  if (val->type == SWFDEC_AS_TYPE_UNDEFINED)
+  if (val->type == SWFDEC_AS_TYPE_UNDEFINED) {
     s = SWFDEC_AS_STR_undefined;
-  else
+  } else if (val->type == SWFDEC_AS_TYPE_OBJECT &&
+      SWFDEC_IS_AS_STRING (swfdec_as_value_to_object (cx, val))) {
+    s = SWFDEC_AS_STRING (swfdec_as_value_to_object (cx, val))->string;
+  } else {
     s = swfdec_as_value_to_string (cx, val);
+  }
   swfdec_as_stack_pop (cx);
   g_signal_emit_by_name (cx, "trace", s);
 }

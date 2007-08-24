@@ -1067,6 +1067,13 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-fake.as \
+	string-fake-5.swf \
+	string-fake-5.swf.trace \
+	string-fake-6.swf \
+	string-fake-6.swf.trace \
+	string-fake-7.swf \
+	string-fake-7.swf.trace \
 	string-indexof.as \
 	string-indexof-5.swf \
 	string-indexof-5.swf.trace \

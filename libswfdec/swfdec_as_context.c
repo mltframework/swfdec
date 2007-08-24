@@ -460,7 +460,7 @@ swfdec_as_context_set_property (GObject *object, guint param_id, const GValue *v
   
   switch (param_id) {
     case PROP_DEBUGGER:
-      context->debugger = g_value_dup_object (value);
+      context->debugger = SWFDEC_AS_DEBUGGER (g_value_dup_object (value));
       break;
     case PROP_UNTIL_GC:
       context->memory_until_gc = g_value_get_ulong (value);

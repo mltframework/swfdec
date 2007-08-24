@@ -130,103 +130,103 @@
 
 /**
  * SwfdecKey:
- * @SWFDEC_KEYBACKSPACE: the backspace key
- * @SWFDEC_KEYTAB: the tab key
- * @SWFDEC_KEYCLEAR: the clear key
- * @SWFDEC_KEYENTER: the enter key
- * @SWFDEC_KEYSHIFT: the shift key
- * @SWFDEC_KEYCONTROL: the control key
- * @SWFDEC_KEYALT: the alt key
- * @SWFDEC_KEYCAPS_LOCK: the caps lock key
- * @SWFDEC_KEYESCAPE: the escape key
- * @SWFDEC_KEYSPACE: the space key
- * @SWFDEC_KEYPAGE_UP: the page up key
- * @SWFDEC_KEYPAGE_DOWN: the page down key
- * @SWFDEC_KEYEND: the end key
- * @SWFDEC_KEYHOME: the home key
- * @SWFDEC_KEYLEFT: the left key
- * @SWFDEC_KEYUP: the up key
- * @SWFDEC_KEYRIGHT: the right key
- * @SWFDEC_KEYDOWN: the down key
- * @SWFDEC_KEYINSERT: the insert key
- * @SWFDEC_KEYDELETE: the delete key
- * @SWFDEC_KEYHELP: the help key
- * @SWFDEC_KEY0: the 0 key
- * @SWFDEC_KEY1: the 1 key
- * @SWFDEC_KEY2: the 2 key
- * @SWFDEC_KEY3: the 3 key
- * @SWFDEC_KEY4: the 4 key
- * @SWFDEC_KEY5: the 5 key
- * @SWFDEC_KEY6: the 6 key
- * @SWFDEC_KEY7: the 7 key
- * @SWFDEC_KEY8: the 8 key
- * @SWFDEC_KEY9: the 9 key
- * @SWFDEC_KEYA: the ! key
- * @SWFDEC_KEYB: the B key
- * @SWFDEC_KEYC: the C key
- * @SWFDEC_KEYD: the D key
- * @SWFDEC_KEYE: the E key
- * @SWFDEC_KEYF: the F key
- * @SWFDEC_KEYG: the G key
- * @SWFDEC_KEYH: the H key
- * @SWFDEC_KEYI: the I key
- * @SWFDEC_KEYJ: the J key
- * @SWFDEC_KEYK: the K key
- * @SWFDEC_KEYL: the L key
- * @SWFDEC_KEYM: the M key
- * @SWFDEC_KEYN: the N key
- * @SWFDEC_KEYO: the O key
- * @SWFDEC_KEYP: the P key
- * @SWFDEC_KEYQ: the Q key
- * @SWFDEC_KEYR: the R key
- * @SWFDEC_KEYS: the S key
- * @SWFDEC_KEYT: the T key
- * @SWFDEC_KEYU: the U key
- * @SWFDEC_KEYV: the V key
- * @SWFDEC_KEYW: the W key
- * @SWFDEC_KEYX: the X key
- * @SWFDEC_KEYY: the Y key
- * @SWFDEC_KEYZ: the Z key
- * @SWFDEC_KEYNUMPAD_0: the 0 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_1: the 1 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_2: the 2 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_3: the 3 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_4: the 4 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_5: the 5 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_6: the 6 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_7: the 7 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_8: the 8 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_9: the 9 key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_MULTIPLY: the multiply key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_ADD: the add key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_SUBTRACT: the subtract key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_DECIMAL: the decimal key on the numeric keypad
- * @SWFDEC_KEYNUMPAD_DIVIDE: the divide key on the numeric keypad
- * @SWFDEC_KEYF1: the F1 key
- * @SWFDEC_KEYF2: the F2 key
- * @SWFDEC_KEYF3: the F3 key
- * @SWFDEC_KEYF4: the F4 key
- * @SWFDEC_KEYF5: the F5 key
- * @SWFDEC_KEYF6: the F6 key
- * @SWFDEC_KEYF7: the F7 key
- * @SWFDEC_KEYF8: the F8 key
- * @SWFDEC_KEYF9: the F9 key
- * @SWFDEC_KEYF10: the F10 key
- * @SWFDEC_KEYF11: the F11 key
- * @SWFDEC_KEYF12: the F12 key
- * @SWFDEC_KEYF13: the F13 key
- * @SWFDEC_KEYF14: the F14 key
- * @SWFDEC_KEYF15: the F15 key
- * @SWFDEC_KEYNUM_LOCK: the num lock key
- * @SWFDEC_KEYSEMICOLON: the semicolon key (on English keyboards)
- * @SWFDEC_KEYEQUAL: the equal key (on English keyboards)
- * @SWFDEC_KEYMINUS: the minus key (on English keyboards)
- * @SWFDEC_KEYSLASH: the slash key (on English keyboards)
- * @SWFDEC_KEYGRAVE: the grave key (on English keyboards)
- * @SWFDEC_KEYLEFT_BRACKET: the left bracket key (on English keyboards)
- * @SWFDEC_KEYBACKSLASH: the backslash key (on English keyboards)
- * @SWFDEC_KEYRIGHT_BRACKET: the right bracket key (on English keyboards)
- * @SWFDEC_KEYAPOSTROPHE: the apostrophe key (on English keyboards)
+ * @SWFDEC_KEY_BACKSPACE: the backspace key
+ * @SWFDEC_KEY_TAB: the tab key
+ * @SWFDEC_KEY_CLEAR: the clear key
+ * @SWFDEC_KEY_ENTER: the enter key
+ * @SWFDEC_KEY_SHIFT: the shift key
+ * @SWFDEC_KEY_CONTROL: the control key
+ * @SWFDEC_KEY_ALT: the alt key
+ * @SWFDEC_KEY_CAPS_LOCK: the caps lock key
+ * @SWFDEC_KEY_ESCAPE: the escape key
+ * @SWFDEC_KEY_SPACE: the space key
+ * @SWFDEC_KEY_PAGE_UP: the page up key
+ * @SWFDEC_KEY_PAGE_DOWN: the page down key
+ * @SWFDEC_KEY_END: the end key
+ * @SWFDEC_KEY_HOME: the home key
+ * @SWFDEC_KEY_LEFT: the left key
+ * @SWFDEC_KEY_UP: the up key
+ * @SWFDEC_KEY_RIGHT: the right key
+ * @SWFDEC_KEY_DOWN: the down key
+ * @SWFDEC_KEY_INSERT: the insert key
+ * @SWFDEC_KEY_DELETE: the delete key
+ * @SWFDEC_KEY_HELP: the help key
+ * @SWFDEC_KEY_0: the 0 key
+ * @SWFDEC_KEY_1: the 1 key
+ * @SWFDEC_KEY_2: the 2 key
+ * @SWFDEC_KEY_3: the 3 key
+ * @SWFDEC_KEY_4: the 4 key
+ * @SWFDEC_KEY_5: the 5 key
+ * @SWFDEC_KEY_6: the 6 key
+ * @SWFDEC_KEY_7: the 7 key
+ * @SWFDEC_KEY_8: the 8 key
+ * @SWFDEC_KEY_9: the 9 key
+ * @SWFDEC_KEY_A: the ! key
+ * @SWFDEC_KEY_B: the B key
+ * @SWFDEC_KEY_C: the C key
+ * @SWFDEC_KEY_D: the D key
+ * @SWFDEC_KEY_E: the E key
+ * @SWFDEC_KEY_F: the F key
+ * @SWFDEC_KEY_G: the G key
+ * @SWFDEC_KEY_H: the H key
+ * @SWFDEC_KEY_I: the I key
+ * @SWFDEC_KEY_J: the J key
+ * @SWFDEC_KEY_K: the K key
+ * @SWFDEC_KEY_L: the L key
+ * @SWFDEC_KEY_M: the M key
+ * @SWFDEC_KEY_N: the N key
+ * @SWFDEC_KEY_O: the O key
+ * @SWFDEC_KEY_P: the P key
+ * @SWFDEC_KEY_Q: the Q key
+ * @SWFDEC_KEY_R: the R key
+ * @SWFDEC_KEY_S: the S key
+ * @SWFDEC_KEY_T: the T key
+ * @SWFDEC_KEY_U: the U key
+ * @SWFDEC_KEY_V: the V key
+ * @SWFDEC_KEY_W: the W key
+ * @SWFDEC_KEY_X: the X key
+ * @SWFDEC_KEY_Y: the Y key
+ * @SWFDEC_KEY_Z: the Z key
+ * @SWFDEC_KEY_NUMPAD_0: the 0 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_1: the 1 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_2: the 2 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_3: the 3 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_4: the 4 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_5: the 5 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_6: the 6 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_7: the 7 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_8: the 8 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_9: the 9 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_MULTIPLY: the multiply key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_ADD: the add key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_SUBTRACT: the subtract key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_DECIMAL: the decimal key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_DIVIDE: the divide key on the numeric keypad
+ * @SWFDEC_KEY_F1: the F1 key
+ * @SWFDEC_KEY_F2: the F2 key
+ * @SWFDEC_KEY_F3: the F3 key
+ * @SWFDEC_KEY_F4: the F4 key
+ * @SWFDEC_KEY_F5: the F5 key
+ * @SWFDEC_KEY_F6: the F6 key
+ * @SWFDEC_KEY_F7: the F7 key
+ * @SWFDEC_KEY_F8: the F8 key
+ * @SWFDEC_KEY_F9: the F9 key
+ * @SWFDEC_KEY_F10: the F10 key
+ * @SWFDEC_KEY_F11: the F11 key
+ * @SWFDEC_KEY_F12: the F12 key
+ * @SWFDEC_KEY_F13: the F13 key
+ * @SWFDEC_KEY_F14: the F14 key
+ * @SWFDEC_KEY_F15: the F15 key
+ * @SWFDEC_KEY_NUM_LOCK: the num lock key
+ * @SWFDEC_KEY_SEMICOLON: the semicolon key (on English keyboards)
+ * @SWFDEC_KEY_EQUAL: the equal key (on English keyboards)
+ * @SWFDEC_KEY_MINUS: the minus key (on English keyboards)
+ * @SWFDEC_KEY_SLASH: the slash key (on English keyboards)
+ * @SWFDEC_KEY_GRAVE: the grave key (on English keyboards)
+ * @SWFDEC_KEY_LEFT_BRACKET: the left bracket key (on English keyboards)
+ * @SWFDEC_KEY_BACKSLASH: the backslash key (on English keyboards)
+ * @SWFDEC_KEY_RIGHT_BRACKET: the right bracket key (on English keyboards)
+ * @SWFDEC_KEY_APOSTROPHE: the apostrophe key (on English keyboards)
  *
  * Lists all known key codes in Swfdec and their meanings on an English 
  * keyboard.

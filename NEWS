@@ -1,6 +1,8 @@
 
  0.5.2 ("Kittencannon")
 
+This release saw a lot of internal cleanups and only little new features. But
+even that made a lot of files work and work better. Here's some detail:
 - add initial support for Keyboard events. This makes quite some games work.
 - add NetStream.close() functionality. This makes Youtube fullscreen work.
 - export more API for debugging, like SwfdecScript and SwfdecAsDebugger.

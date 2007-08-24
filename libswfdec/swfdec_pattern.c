@@ -335,7 +335,12 @@ swfdec_pattern_do_parse (SwfdecSwfDecoder *dec, gboolean rgba)
       if (paint_style_type == 0x40 || paint_style_type == 0x42) {
 	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_REPEAT;
       } else {
+#if 0
+	/* not implemented yet in cairo */
+	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_PAD;
+#else
 	SWFDEC_IMAGE_PATTERN (pattern)->extend = CAIRO_EXTEND_NONE;
+#endif
       }
       if (paint_style_type == 0x40 || paint_style_type == 0x41) {
 	SWFDEC_IMAGE_PATTERN (pattern)->filter = CAIRO_FILTER_BILINEAR;

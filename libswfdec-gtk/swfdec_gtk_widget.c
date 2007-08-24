@@ -147,7 +147,7 @@ swfdec_gtk_event_to_keycode (GdkEventKey *event)
     return event->keyval - GDK_a + SWFDEC_KEY_A;
 
   /* last resort: try to translate the hardware keycode directly */
-  ret = swfdec_keycode_from_hardware_keycode (event->hardware_keycode);
+  ret = swfdec_gtk_keycode_from_hardware_keycode (event->hardware_keycode);
   if (ret == 0)
     g_printerr ("could not translate key to Flash keycode. HW keycode %u, keyval %u\n",
 	event->hardware_keycode, event->keyval);
@@ -166,6 +166,7 @@ swfdec_gtk_widget_key_press (GtkWidget *gtkwidget, GdkEventKey *event)
       swfdec_player_key_press (priv->player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
     }
+    return TRUE;
   }
 
   return FALSE;
@@ -183,6 +184,7 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
       swfdec_player_key_release (priv->player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
     }
+    return TRUE;
   }
 
   return FALSE;

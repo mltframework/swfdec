@@ -82,13 +82,13 @@ struct _SwfdecPlayer
   SwfdecAsObject *	Video;			/* Video object */
 
   /* rendering */
-  SwfdecRect		invalid;      		/* area that needs a rredraw */
+  SwfdecRect		invalid;      		/* area that needs a redraw in global coordinates */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
   SwfdecMouseCursor	mouse_cursor;		/* cursor that should be shown */
-  double      		mouse_x;		/* in twips */
-  double		mouse_y;		/* in twips */
+  double      		mouse_x;		/* in stage coordinates */
+  double		mouse_y;		/* in stage coordinates */
   int			mouse_button; 		/* 0 for not pressed, 1 for pressed */
   SwfdecMovie *		mouse_grab;		/* movie that currently has the mouse */
   SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */
@@ -149,7 +149,9 @@ void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		movie);
 
 void		swfdec_player_lock		(SwfdecPlayer *		player);
+void		swfdec_player_lock_soft		(SwfdecPlayer *		player);
 void		swfdec_player_unlock		(SwfdecPlayer *		player);
+void		swfdec_player_unlock_soft	(SwfdecPlayer *		player);
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
@@ -198,6 +200,12 @@ SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *         player,
 void		swfdec_player_launch		(SwfdecPlayer *         player,
 						 const char *		url,
 						 const char *		target);
+void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
+						 double *		x,
+						 double *		y);
+void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
+						 double *		x,
+						 double *		y);
 
 
 G_END_DECLS

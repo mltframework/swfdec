@@ -1,0 +1,11 @@
+_global.Function = _global.Object.constructor
+  __proto__ (hp) = _global.Object.__proto__
+  constructor (hp) = _global.Object.constructor
+  prototype (hp) = _global.Object.__proto__
+local.a = object
+  myFunction = function
+    __proto__ (hp) = _global.Object.__proto__
+    constructor (hp) = _global.Object.constructor
+    prototype (hp) = object
+      __proto__ (hp) = _global.Object.prototype
+      constructor (hp) = local.a.myFunction

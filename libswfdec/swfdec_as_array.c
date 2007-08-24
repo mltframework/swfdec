@@ -108,7 +108,8 @@ swfdec_as_array_set_length (SwfdecAsObject *object, gint32 length)
   g_return_if_fail (object != NULL);
 
   SWFDEC_AS_VALUE_SET_INT (&val, length);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_length, &val);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 
 typedef struct {
@@ -323,14 +324,6 @@ swfdec_as_array_append_array (SwfdecAsArray *array_to, SwfdecAsObject *object_fr
  */
 
 static void
-swfdec_as_array_add (SwfdecAsObject *object)
-{
-  swfdec_as_array_set_length (object, 0);
-
-  SWFDEC_AS_OBJECT_CLASS (swfdec_as_array_parent_class)->add (object);
-}
-
-static void
 swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
     const SwfdecAsValue *val, guint flags)
 {
@@ -367,7 +360,6 @@ swfdec_as_array_class_init (SwfdecAsArrayClass *klass)
 {
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
-  asobject_class->add = swfdec_as_array_add;
   asobject_class->set = swfdec_as_array_set;
 }
 
@@ -401,6 +393,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
   swfdec_as_object_set_constructor (ret, context->Array);
+  swfdec_as_array_set_length (ret, 0);
   return ret;
 }
 
@@ -1064,6 +1057,8 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_set_length (object, l < 0 ? 0 : l);
   } else if (argc > 0) {
     swfdec_as_array_append (array, argc, argv);
+  } else {
+    swfdec_as_array_set_length (object, 0);
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
@@ -1077,23 +1072,21 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
-  array = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Array, 0, swfdec_as_array_construct, 0));
-  swfdec_as_native_function_set_construct_type (
-      SWFDEC_AS_NATIVE_FUNCTION (array), SWFDEC_TYPE_AS_ARRAY);
-  if (!array)
-    return;
-  context->Array = array;
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
     return;
   proto = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (proto, context, sizeof (SwfdecAsArray));
+  array = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
+      SWFDEC_AS_STR_Array, 0, SWFDEC_TYPE_AS_ARRAY, swfdec_as_array_construct, 
+      0, proto));
+  if (!array)
+    return;
+  context->Array = array;
 
   /* set the right properties on the Array object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_prototype, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (array, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_CASEINSENSITIVE);
   swfdec_as_object_set_variable (array, SWFDEC_AS_STR_CASEINSENSITIVE, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_DESCENDING);
@@ -1106,10 +1099,9 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (array, SWFDEC_AS_STR_NUMERIC, &val);
 
   /* set the right properties on the Array.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
       swfdec_as_array_toString, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_join,
@@ -1134,4 +1126,7 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_sort, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_sortOn,
       SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_sortOn, 0);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }

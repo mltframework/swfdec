@@ -23,6 +23,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
 	swfdec_as_context.c \
+	swfdec_as_debugger.c \
 	swfdec_as_frame.c \
 	swfdec_as_function.c \
 	swfdec_as_interpret.c \
@@ -59,7 +60,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_color.c \
 	swfdec_color_as.c \
 	swfdec_debug.c \
-	swfdec_debugger.c \
 	swfdec_decoder.c \
 	swfdec_edittext.c \
 	swfdec_edittext_movie.c \
@@ -110,8 +110,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
-	swfdec_xml_as.c \
-	swfdec_xml_node_as.c
+	swfdec_xml_node_as.c \
+	swfdec_xml.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
@@ -128,7 +128,10 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 public_headers = \
 	swfdec.h \
 	swfdec_as_context.h \
+	swfdec_as_debugger.h \
 	swfdec_as_frame.h \
+	swfdec_as_function.h \
+	swfdec_as_native_function.h \
 	swfdec_as_object.h \
 	swfdec_as_types.h \
 	swfdec_audio.h \
@@ -137,6 +140,7 @@ public_headers = \
 	swfdec_keys.h \
 	swfdec_loader.h \
 	swfdec_player.h \
+	swfdec_script.h \
 	swfdec_url.h
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la 
@@ -147,11 +151,9 @@ noinst_HEADERS = \
 	swfdec_as_array.h \
 	swfdec_as_boolean.h \
 	swfdec_as_frame_internal.h \
-	swfdec_as_function.h \
 	swfdec_as_internal.h \
 	swfdec_as_interpret.h \
 	swfdec_as_math.h \
-	swfdec_as_native_function.h \
 	swfdec_as_number.h \
 	swfdec_as_scope.h \
 	swfdec_as_script_function.h \
@@ -177,7 +179,6 @@ noinst_HEADERS = \
 	swfdec_color.h \
 	swfdec_color_as.h \
 	swfdec_debug.h \
-	swfdec_debugger.h \
 	swfdec_decoder.h \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \
@@ -191,7 +192,6 @@ noinst_HEADERS = \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_load_object.h \
-	swfdec_load_object_as.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \
@@ -204,7 +204,7 @@ noinst_HEADERS = \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
-	swfdec_script.h \
+	swfdec_script_internal.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \
@@ -218,8 +218,8 @@ noinst_HEADERS = \
 	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
-	swfdec_xml_as.h \
-	swfdec_xml_node_as.h
+	swfdec_xml_node_as.h \
+	swfdec_xml.h
 
 EXTRA_DIST = \
 	compiler.c \

@@ -67,6 +67,14 @@
  *                                to delete this variable.
  * @SWFDEC_AS_VARIABLE_CONSTANT: Do not allow changing the value with
  *                               swfdec_as_object_set_variable().
+ * @SWFDEC_AS_VARIABLE_VERSION_6_UP: This symbol is only visible in version 6 
+ *                                   and above.
+ * @SWFDEC_AS_VARIABLE_VERSION_NOT_6: This symbols is visible in all versions 
+ *                                    but version 6.
+ * @SWFDEC_AS_VARIABLE_VERSION_7_UP: This symbol is only visible in version 7 
+ *                                   and above.
+ * @SWFDEC_AS_VARIABLE_VERSION_8_UP: This symbol is only visible in version 8 
+ *                                   and above.
  *
  * These flags are used to describe various properties of a variable inside
  * Swfdec. You can manually set them with swfdec_as_object_set_variable_flags().
@@ -193,7 +201,14 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
   if (var == NULL)
     return FALSE;
 
-  if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP && object->context->version < 6)
+  /* variable flag checks */
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && object->context->version < 6)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_NOT_6 && object->context->version == 6)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && object->context->version < 7)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && object->context->version < 8)
     return FALSE;
 
   if (var->get) {
@@ -246,9 +261,10 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     var = swfdec_as_object_hash_create (object, variable, flags);
     if (var == NULL)
       return;
+  } else {
+    if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
+      return;
   }
-  if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
-    return;
   if (var->get) {
     if (var->set) {
       SwfdecAsValue tmp;
@@ -493,10 +509,12 @@ swfdec_as_object_new (SwfdecAsContext *context)
   g_assert (context->Object_prototype);
   
   object = swfdec_as_object_new_empty (context);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   return object;
 }
 
@@ -528,6 +546,11 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
   g_return_if_fail (klass->add);
   klass->add (object);
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+    if (dklass->add)
+      dklass->add (context->debugger, context, object);
+  }
 }
 
 void
@@ -555,7 +578,7 @@ swfdec_as_object_collect (SwfdecAsObject *object)
  * swfdec_as_object_set_variable_and_flags()
  **/
 /**
- * swfdec_as_object_set_variable:
+ * swfdec_as_object_set_variable_and_flags:
  * @object: a #SwfdecAsObject
  * @variable: garbage-collected name of the variable to set
  * @value: value to set the variable to
@@ -577,6 +600,12 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
   g_return_if_fail (variable != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
+  if (object->context->debugger) {
+    SwfdecAsDebugger *debugger = object->context->debugger;
+    SwfdecAsDebuggerClass *dklass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
+    if (dklass->set_variable)
+      dklass->set_variable (debugger, object->context, object, variable, value);
+  }
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
   klass->set (object, variable, value, default_flags);
 }
@@ -768,24 +797,59 @@ SwfdecAsFunction *
 swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType type,
     SwfdecAsNative native, guint min_args)
 {
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
+
+  return swfdec_as_object_add_constructor (object, name, type, 0, native, min_args, NULL);
+}
+
+/**
+ * swfdec_as_object_add_constructor:
+ * @object: a #SwfdecAsObject
+ * @name: name of the function. The string does not have to be 
+ *        garbage-collected.
+ * @type: the required type of the this Object to make this function execute.
+ *        May be 0 to accept any type.
+ * @construct_type: type used when using this function as a constructor. May 
+ *                  be 0 to use the default type.
+ * @native: a native function or %NULL to just not do anything
+ * @min_args: minimum number of arguments to pass to @native
+ * @prototype: An optional object to be set as the "prototype" property of the
+ *             new function. The prototype will be hidden and constant.
+ *
+ * Adds @native as a constructor named @name to @object. The newly added variable
+ * will not be enumerated.
+ *
+ * Returns: the newly created #SwfdecAsFunction or %NULL on error.
+ **/
+SwfdecAsFunction *
+swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GType type,
+    GType construct_type, SwfdecAsNative native, guint min_args, SwfdecAsObject *prototype)
+{
   SwfdecAsFunction *function;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
+  g_return_val_if_fail (construct_type == 0 || g_type_is_a (construct_type, SWFDEC_TYPE_AS_OBJECT), NULL);
+  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_native_function_new (object->context, name, native, min_args);
+  function = swfdec_as_native_function_new (object->context, name, native, min_args, prototype);
   if (function == NULL)
     return NULL;
   if (type != 0)
     swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (function), type);
+  if (construct_type != 0)
+    swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (function), construct_type);
   name = swfdec_as_context_get_string (object->context, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
-  swfdec_as_object_set_variable_and_flags (object, name, &val, SWFDEC_AS_VARIABLE_HIDDEN);
+  swfdec_as_object_set_variable_and_flags (object, name, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   return function;
 }
 
@@ -903,7 +967,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 
   context = SWFDEC_AS_OBJECT (fun)->context;
   cur = fun;
-  while (type == 0 && cur != NULL) {
+  do {
     if (SWFDEC_IS_AS_NATIVE_FUNCTION (cur)) {
       SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (cur);
       if (native->construct_size) {
@@ -912,20 +976,19 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 	break;
       }
     }
-#if 0
-    This doesn't work. It's supposed to figure out the last native object in the inheritance chain.
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR___constructor__, &val);
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR_prototype, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
-      if (!SWFDEC_IS_AS_FUNCTION (cur))
-	cur = NULL;
-    } else {
-      cur = NULL;
+      SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR___constructor__, &val);
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+	cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
+	if (SWFDEC_IS_AS_FUNCTION (cur)) {
+	  continue;
+	}
+      }
     }
-#else
     cur = NULL;
-#endif
-  }
+  } while (type == 0 && cur != NULL);
   if (type == 0) {
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
@@ -984,12 +1047,12 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
     SWFDEC_WARNING ("constructor has no prototype, using Object.prototype");
     proto = object->context->Object_prototype;
   }
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
-  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor, 
-      &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
 /**
@@ -1022,8 +1085,6 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
     return;
   var->get = get;
   var->set = set;
-  if (set == NULL)
-    var->flags |= SWFDEC_AS_VARIABLE_CONSTANT;
 }
 
 /*** AS CODE ***/
@@ -1094,24 +1155,30 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   SwfdecAsValue val;
   SwfdecAsObject *object, *proto;
 
+  proto = swfdec_as_object_new_empty (context);
+  if (!proto)
+    return;
   object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_Object, 0, NULL, 0));
   if (!object)
     return;
-  proto = swfdec_as_object_new_empty (context);
-  if (!proto)
-    return;
   context->Object = object;
   context->Object_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  /* first, set our own */
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_CONSTANT);
   if (context->Function_prototype) {
-    /* first, finish the function prototype */
-    swfdec_as_object_set_variable (context->Function_prototype, SWFDEC_AS_STR___proto__, &val);
+    /* then finish the function prototype (use this order or 
+     * SWFDEC_AS_VARIABLE_CONSTANT won't let us */
+    swfdec_as_object_set_variable_and_flags (context->Function_prototype,
+	SWFDEC_AS_STR___proto__, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  /* now, set our own */
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_prototype, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   if (version > 5) {
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_addProperty, 

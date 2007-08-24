@@ -37,6 +37,7 @@ typedef enum {
 
 typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
+typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsObject SwfdecAsObject;
@@ -48,6 +49,8 @@ typedef void (* SwfdecAsNative) (SwfdecAsContext *	context,
 				 guint			argc,
 				 SwfdecAsValue *	argv,
 				 SwfdecAsValue *	retval);
+typedef struct _SwfdecScript SwfdecScript;
+
 
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
 struct _SwfdecAsValue {
@@ -61,7 +64,7 @@ struct _SwfdecAsValue {
   } value;
 };
 
-#define SWFDEC_IS_AS_VALUE(val) ((val)->type <= SWFDEC_TYPE_AS_OBJECT)
+#define SWFDEC_IS_AS_VALUE(val) ((val) != NULL && (val)->type <= SWFDEC_TYPE_AS_OBJECT)
 
 #define SWFDEC_AS_VALUE_IS_UNDEFINED(val) ((val)->type == SWFDEC_AS_TYPE_UNDEFINED)
 #define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_AS_TYPE_UNDEFINED
@@ -101,9 +104,10 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  g_assert (o != NULL); \
+  SwfdecAsObject *__o = (o); \
+  g_assert (__o != NULL); \
   (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
-  (__val)->value.object = o; \
+  (__val)->value.object = __o; \
 } G_STMT_END
 
 /* value conversion functions */

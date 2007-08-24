@@ -99,6 +99,7 @@ IGNORE_HFILES= \
 	swfdec_interval.h \
 	swfdec_js.h \
 	swfdec_listener.h \
+	swfdec_load_object.h \
 	swfdec_loader_internal.h \
 	swfdec_loadertarget.h \
 	swfdec_marshal.h \
@@ -114,6 +115,7 @@ IGNORE_HFILES= \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
 	swfdec_script.h \
+	swfdec_script_internal.h \
 	swfdec_scriptable.h \
 	swfdec_shape.h \
 	swfdec_sound.h \
@@ -132,6 +134,7 @@ IGNORE_HFILES= \
 
 if WITH_GTK
 EXTRA_HFILES = \
+	../libswfdec-gtk/swfdec_gtk_keys.h \
 	../libswfdec-gtk/swfdec_gtk_loader.h \
 	../libswfdec-gtk/swfdec_gtk_player.h \
 	../libswfdec-gtk/swfdec_gtk_widget.h
@@ -167,3 +170,6 @@ include $(top_srcdir)/gtk-doc.make
 # Other files to distribute
 # e.g. EXTRA_DIST += version.xml.in
 EXTRA_DIST += 
+
+# Comment this out if you want your docs-status tested during 'make check'
+TESTS = $(GTKDOC_CHECK)

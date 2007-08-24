@@ -38,10 +38,9 @@
 #include "swfdec_initialize.h"
 #include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
-#include "swfdec_load_object.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
-#include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
 
@@ -127,6 +126,110 @@
  *
  * Describes how the movie should be scaled if the given size doesn't equal the
  * movie's size.
+ */
+
+/**
+ * SwfdecKey:
+ * @SWFDEC_KEY_BACKSPACE: the backspace key
+ * @SWFDEC_KEY_TAB: the tab key
+ * @SWFDEC_KEY_CLEAR: the clear key
+ * @SWFDEC_KEY_ENTER: the enter key
+ * @SWFDEC_KEY_SHIFT: the shift key
+ * @SWFDEC_KEY_CONTROL: the control key
+ * @SWFDEC_KEY_ALT: the alt key
+ * @SWFDEC_KEY_CAPS_LOCK: the caps lock key
+ * @SWFDEC_KEY_ESCAPE: the escape key
+ * @SWFDEC_KEY_SPACE: the space key
+ * @SWFDEC_KEY_PAGE_UP: the page up key
+ * @SWFDEC_KEY_PAGE_DOWN: the page down key
+ * @SWFDEC_KEY_END: the end key
+ * @SWFDEC_KEY_HOME: the home key
+ * @SWFDEC_KEY_LEFT: the left key
+ * @SWFDEC_KEY_UP: the up key
+ * @SWFDEC_KEY_RIGHT: the right key
+ * @SWFDEC_KEY_DOWN: the down key
+ * @SWFDEC_KEY_INSERT: the insert key
+ * @SWFDEC_KEY_DELETE: the delete key
+ * @SWFDEC_KEY_HELP: the help key
+ * @SWFDEC_KEY_0: the 0 key
+ * @SWFDEC_KEY_1: the 1 key
+ * @SWFDEC_KEY_2: the 2 key
+ * @SWFDEC_KEY_3: the 3 key
+ * @SWFDEC_KEY_4: the 4 key
+ * @SWFDEC_KEY_5: the 5 key
+ * @SWFDEC_KEY_6: the 6 key
+ * @SWFDEC_KEY_7: the 7 key
+ * @SWFDEC_KEY_8: the 8 key
+ * @SWFDEC_KEY_9: the 9 key
+ * @SWFDEC_KEY_A: the ! key
+ * @SWFDEC_KEY_B: the B key
+ * @SWFDEC_KEY_C: the C key
+ * @SWFDEC_KEY_D: the D key
+ * @SWFDEC_KEY_E: the E key
+ * @SWFDEC_KEY_F: the F key
+ * @SWFDEC_KEY_G: the G key
+ * @SWFDEC_KEY_H: the H key
+ * @SWFDEC_KEY_I: the I key
+ * @SWFDEC_KEY_J: the J key
+ * @SWFDEC_KEY_K: the K key
+ * @SWFDEC_KEY_L: the L key
+ * @SWFDEC_KEY_M: the M key
+ * @SWFDEC_KEY_N: the N key
+ * @SWFDEC_KEY_O: the O key
+ * @SWFDEC_KEY_P: the P key
+ * @SWFDEC_KEY_Q: the Q key
+ * @SWFDEC_KEY_R: the R key
+ * @SWFDEC_KEY_S: the S key
+ * @SWFDEC_KEY_T: the T key
+ * @SWFDEC_KEY_U: the U key
+ * @SWFDEC_KEY_V: the V key
+ * @SWFDEC_KEY_W: the W key
+ * @SWFDEC_KEY_X: the X key
+ * @SWFDEC_KEY_Y: the Y key
+ * @SWFDEC_KEY_Z: the Z key
+ * @SWFDEC_KEY_NUMPAD_0: the 0 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_1: the 1 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_2: the 2 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_3: the 3 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_4: the 4 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_5: the 5 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_6: the 6 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_7: the 7 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_8: the 8 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_9: the 9 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_MULTIPLY: the multiply key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_ADD: the add key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_SUBTRACT: the subtract key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_DECIMAL: the decimal key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_DIVIDE: the divide key on the numeric keypad
+ * @SWFDEC_KEY_F1: the F1 key
+ * @SWFDEC_KEY_F2: the F2 key
+ * @SWFDEC_KEY_F3: the F3 key
+ * @SWFDEC_KEY_F4: the F4 key
+ * @SWFDEC_KEY_F5: the F5 key
+ * @SWFDEC_KEY_F6: the F6 key
+ * @SWFDEC_KEY_F7: the F7 key
+ * @SWFDEC_KEY_F8: the F8 key
+ * @SWFDEC_KEY_F9: the F9 key
+ * @SWFDEC_KEY_F10: the F10 key
+ * @SWFDEC_KEY_F11: the F11 key
+ * @SWFDEC_KEY_F12: the F12 key
+ * @SWFDEC_KEY_F13: the F13 key
+ * @SWFDEC_KEY_F14: the F14 key
+ * @SWFDEC_KEY_F15: the F15 key
+ * @SWFDEC_KEY_NUM_LOCK: the num lock key
+ * @SWFDEC_KEY_SEMICOLON: the semicolon key (on English keyboards)
+ * @SWFDEC_KEY_EQUAL: the equal key (on English keyboards)
+ * @SWFDEC_KEY_MINUS: the minus key (on English keyboards)
+ * @SWFDEC_KEY_SLASH: the slash key (on English keyboards)
+ * @SWFDEC_KEY_GRAVE: the grave key (on English keyboards)
+ * @SWFDEC_KEY_LEFT_BRACKET: the left bracket key (on English keyboards)
+ * @SWFDEC_KEY_BACKSLASH: the backslash key (on English keyboards)
+ * @SWFDEC_KEY_RIGHT_BRACKET: the right bracket key (on English keyboards)
+ * @SWFDEC_KEY_APOSTROPHE: the apostrophe key (on English keyboards)
+ *
+ * Lists all known key codes in Swfdec and their meanings on an English 
+ * keyboard.
  */
 
 /*** Timeouts ***/
@@ -310,9 +413,9 @@ swfdec_player_do_action (SwfdecPlayer *player)
       return FALSE;
   } while (action->object == NULL); /* skip removed actions */
 
-  action->func (action->object, action->data);
   SWFDEC_LOG ("executing action %p %p %p", 
       action->object, action->func, action->data);
+  action->func (action->object, action->data);
 
   return TRUE;
 }
@@ -730,6 +833,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   g_assert (movie->cache_state == SWFDEC_MOVIE_UP_TO_DATE);
   x = player->mouse_x;
   y = player->mouse_y;
+  swfdec_player_stage_to_global (player, &x, &y);
   if (movie->parent)
     swfdec_movie_global_to_local (movie->parent, &x, &y);
   if (player->mouse_drag_center) {
@@ -741,7 +845,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   }
   x = CLAMP (x, player->mouse_drag_rect.x0, player->mouse_drag_rect.x1);
   y = CLAMP (y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
-  SWFDEC_LOG ("mouse is at %g %g, orighinally (%g %g)", x, y, player->mouse_x, player->mouse_y);
+  SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, player->mouse_x, player->mouse_y);
   if (x != movie->matrix.x0 || y != movie->matrix.y0) {
     movie->matrix.x0 = x;
     movie->matrix.y0 = y;
@@ -773,6 +877,7 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
   if (drag && !center) {
     player->mouse_drag_x = player->mouse_x;
     player->mouse_drag_y = player->mouse_y;
+    swfdec_player_stage_to_global (player, &player->mouse_drag_x, &player->mouse_drag_y);
     if (drag->parent)
       swfdec_movie_global_to_local (drag->parent, &player->mouse_drag_x, &player->mouse_drag_y);
     player->mouse_drag_x -= drag->matrix.x0;
@@ -806,9 +911,13 @@ swfdec_player_update_mouse_position (SwfdecPlayer *player)
   if (player->mouse_button) {
     mouse_grab = player->mouse_grab;
   } else {
+    double x, y;
     /* if the mouse button is pressed the grab widget stays the same (I think) */
+    x = player->mouse_x;
+    y = player->mouse_y;
+    swfdec_player_stage_to_global (player, &x, &y);
     for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
-      mouse_grab = swfdec_movie_get_movie_at (walk->data, player->mouse_x, player->mouse_y);
+      mouse_grab = swfdec_movie_get_movie_at (walk->data, x, y);
       if (mouse_grab)
 	break;
     }
@@ -869,14 +978,12 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be
      * changed */
-    x = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x0) * player->scale_x + player->offset_x;
-    x = MAX (x, 0.0);
-    y = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y0) * player->scale_y + player->offset_y;
-    y = MAX (y, 0.0);
-    width = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.x1 - player->invalid.x0) * player->scale_x;
-    width = MIN (width, player->stage_width - x);
-    height = SWFDEC_TWIPS_TO_DOUBLE (player->invalid.y1 - player->invalid.y0) * player->scale_y;
-    height = MIN (height, player->stage_height - y);
+    swfdec_player_global_to_stage (player, &player->invalid.x0, &player->invalid.y0);
+    swfdec_player_global_to_stage (player, &player->invalid.x1, &player->invalid.y1);
+    x = MAX (player->invalid.x0, 0.0);
+    y = MAX (player->invalid.y0, 0.0);
+    width = MIN (player->invalid.x1, player->stage_width) - x;
+    height = MIN (player->invalid.y1, player->stage_height) - y;
     g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
     swfdec_rect_init_empty (&player->invalid);
   }
@@ -915,10 +1022,6 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
     double x, double y, int button)
 {
   swfdec_player_lock (player);
-  x -= player->offset_x;
-  y -= player->offset_y;
-  x = x * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_x;
-  y = y * SWFDEC_TWIPS_SCALE_FACTOR / player->scale_y;
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
@@ -934,6 +1037,28 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
 
   /* FIXME: allow events to pass through */
   return TRUE;
+}
+
+void
+swfdec_player_global_to_stage (SwfdecPlayer *player, double *x, double *y)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
+  *x = *x / SWFDEC_TWIPS_SCALE_FACTOR * player->scale_x + player->offset_x;
+  *y = *y / SWFDEC_TWIPS_SCALE_FACTOR * player->scale_y + player->offset_y;
+}
+
+void
+swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
+  *x = (*x - player->offset_x) / player->scale_x * SWFDEC_TWIPS_SCALE_FACTOR;
+  *y = (*y - player->offset_y) / player->scale_y * SWFDEC_TWIPS_SCALE_FACTOR;
 }
 
 static void
@@ -1022,6 +1147,7 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
 {
   GList *walk;
   SwfdecRect old_inval;
+  double x, y;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
@@ -1032,7 +1158,10 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
       swfdec_movie_update (walk->data);
     }
     /* update the state of the mouse when stuff below it moved */
-    if (swfdec_rect_contains (&player->invalid, player->mouse_x, player->mouse_y)) {
+    x = player->mouse_x;
+    y = player->mouse_y;
+    swfdec_player_stage_to_global (player, &x, &y);
+    if (swfdec_rect_contains (&player->invalid, x, y)) {
       SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
       swfdec_player_update_mouse_position (player);
       for (walk = player->roots; walk; walk = walk->next) {
@@ -1045,15 +1174,37 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
   player->invalid = old_inval;
 }
 
+/* used for breakpoints */
+void
+swfdec_player_lock_soft (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (swfdec_rect_is_empty (&player->invalid));
+
+  g_object_freeze_notify (G_OBJECT (player));
+  SWFDEC_DEBUG ("LOCKED");
+}
+
 void
 swfdec_player_lock (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
-  g_assert (swfdec_rect_is_empty (&player->invalid));
 
-  g_object_freeze_notify (G_OBJECT (player));
-  SWFDEC_DEBUG ("LOCKED");
+  g_object_ref (player);
+  swfdec_player_lock_soft (player);
+}
+
+/* used for breakpoints */
+void
+swfdec_player_unlock_soft (SwfdecPlayer *player)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  SWFDEC_DEBUG ("UNLOCK");
+  swfdec_player_update_mouse_cursor (player);
+  g_object_thaw_notify (G_OBJECT (player));
+  swfdec_player_emit_signals (player);
 }
 
 void
@@ -1062,11 +1213,9 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
-  SWFDEC_DEBUG ("UNLOCK");
   swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
-  swfdec_player_update_mouse_cursor (player);
-  g_object_thaw_notify (G_OBJECT (player));
-  swfdec_player_emit_signals (player);
+  swfdec_player_unlock_soft (player);
+  g_object_unref (player);
 }
 
 static gboolean
@@ -1315,6 +1464,7 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
   }
 }
 
+/* rect is in global coordinates */
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
@@ -1433,7 +1583,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       SwfdecBits bits;
       SwfdecScript *script;
       swfdec_bits_init_data (&bits, swfdec_initialize, sizeof (swfdec_initialize));
-      script = swfdec_script_new (&bits, "init", version);
+      script = swfdec_script_new_from_bits (&bits, "init", version);
       g_assert (script);
       swfdec_as_object_run (context->global, script);
       swfdec_script_unref (script);
@@ -1510,6 +1660,7 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
 
 /**
  * swfdec_player_new:
+ * @debugger: %NULL or a #SwfdecAsDebugger to use for debugging this player.
  *
  * Creates a new player.
  * This function calls swfdec_init () for you if it wasn't called before.
@@ -1517,12 +1668,12 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
  * Returns: The new player
  **/
 SwfdecPlayer *
-swfdec_player_new (void)
+swfdec_player_new (SwfdecAsDebugger *debugger)
 {
   SwfdecPlayer *player;
 
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_PLAYER, NULL);
+  player = g_object_new (SWFDEC_TYPE_PLAYER, "debugger", debugger, NULL);
 
   return player;
 }
@@ -1598,7 +1749,7 @@ swfdec_player_new_from_file (const char *filename)
   g_return_val_if_fail (filename != NULL, NULL);
 
   loader = swfdec_file_loader_new (filename);
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   swfdec_player_set_loader (player, loader);
 
   return player;
@@ -2002,6 +2153,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
   player->bgcolor_set = TRUE;
   if (player->bgcolor == color)
     return;
+  player->bgcolor = color;
   g_object_notify (G_OBJECT (player), "background-color");
   if (swfdec_player_is_initialized (player)) {
     g_signal_emit (player, signals[INVALIDATE], 0, 0.0, 0.0, 

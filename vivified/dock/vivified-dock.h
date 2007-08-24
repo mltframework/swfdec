@@ -17,15 +17,10 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_LOADABLE_H_
-#define _SWFDEC_LOADABLE_H_
+#ifndef __VIVIFIED_DOCK_H__
+#define __VIVIFIED_DOCK_H__
 
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_as_object.h>
+#include <vivified/dock/vivi_docklet.h>
+#include <vivified/dock/vivi_vdock.h>
 
-G_BEGIN_DECLS
-
-void swfdec_load_object_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval);
-
-G_END_DECLS
 #endif

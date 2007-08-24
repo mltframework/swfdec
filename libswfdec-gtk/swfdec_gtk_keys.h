@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-guint		swfdec_keycode_from_hardware_keycode	(guint	hardware_keycode);
+guint		swfdec_gtk_keycode_from_hardware_keycode	(guint	hardware_keycode);
 
 G_END_DECLS
 #endif

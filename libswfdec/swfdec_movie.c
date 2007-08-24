@@ -32,7 +32,6 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
-#include "swfdec_debugger.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
 #include "swfdec_loader_internal.h"
@@ -261,7 +260,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   if (player->mouse_drag == movie)
     player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
-  swfdec_movie_set_depth (movie, -16385 - movie->depth); /* don't ask me why... */
+  swfdec_movie_set_depth (movie, -32769 - movie->depth); /* don't ask me why... */
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie))
     return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
@@ -315,16 +314,8 @@ swfdec_movie_destroy (SwfdecMovie *movie)
     swfdec_movie_destroy (movie->list->data);
   }
   if (movie->parent) {
-    if (SWFDEC_IS_DEBUGGER (player) &&
-	g_list_find (movie->parent->list, movie)) {
-      g_signal_emit_by_name (player, "movie-removed", movie);
-    }
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   } else {
-    if (SWFDEC_IS_DEBUGGER (player) &&
-	g_list_find (player->roots, movie)) {
-      g_signal_emit_by_name (player, "movie-removed", movie);
-    }
     player->roots = g_list_remove (player->roots, movie);
   }
   /* FIXME: figure out how to handle destruction pre-init/construct.
@@ -485,47 +476,93 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
 
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
  * if you have global coordinates */
-static gboolean
+gboolean
 swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
   SwfdecMovieClass *klass;
+  GList *walk;
 
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->mouse_in == NULL)
-    return FALSE;
-  return klass->mouse_in (movie, x, y);
+  if (klass->mouse_in != NULL &&
+      klass->mouse_in (movie, x, y))
+    return TRUE;
+
+  for (walk = movie->list; walk; walk = walk->next) {
+    double tmp_x = x;
+    double tmp_y = y;
+    SwfdecMovie *cur = walk->data;
+    cairo_matrix_transform_point (&cur->inverse_matrix, &tmp_x, &tmp_y);
+    if (swfdec_movie_mouse_in (cur, tmp_x, tmp_y))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 void
 swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
 
   do {
     cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
+}
 
-  *x /= player->scale_x;
-  *y /= player->scale_y;
-  *x += SWFDEC_TWIPS_TO_DOUBLE (player->offset_x);
-  *y += SWFDEC_TWIPS_TO_DOUBLE (player->offset_y);
+void
+swfdec_movie_rect_local_to_global (SwfdecMovie *movie, SwfdecRect *rect)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (rect != NULL);
+
+  swfdec_movie_local_to_global (movie, &rect->x0, &rect->y0);
+  swfdec_movie_local_to_global (movie, &rect->x1, &rect->y1);
+  if (rect->x0 > rect->x1) {
+    double tmp = rect->x1;
+    rect->x1 = rect->x0;
+    rect->x0 = tmp;
+  }
+  if (rect->y0 > rect->y1) {
+    double tmp = rect->y1;
+    rect->y1 = rect->y0;
+    rect->y0 = tmp;
+  }
 }
 
 void
 swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (x != NULL);
+  g_return_if_fail (y != NULL);
+
   if (movie->parent) {
     swfdec_movie_global_to_local (movie->parent, x, y);
-  } else {
-    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-    *x -= SWFDEC_TWIPS_TO_DOUBLE (player->offset_x);
-    *y -= SWFDEC_TWIPS_TO_DOUBLE (player->offset_y);
-    *x *= player->scale_x;
-    *y *= player->scale_y;
   }
   if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
     swfdec_movie_update (movie);
   cairo_matrix_transform_point (&movie->inverse_matrix, x, y);
+}
+
+void
+swfdec_movie_rect_global_to_local (SwfdecMovie *movie, SwfdecRect *rect)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (rect != NULL);
+
+  swfdec_movie_global_to_local (movie, &rect->x0, &rect->y0);
+  swfdec_movie_global_to_local (movie, &rect->x1, &rect->y1);
+  if (rect->x0 > rect->x1) {
+    double tmp = rect->x1;
+    rect->x1 = rect->x0;
+    rect->x0 = tmp;
+  }
+  if (rect->y0 > rect->y1) {
+    double tmp = rect->y1;
+    rect->y1 = rect->y0;
+    rect->y0 = tmp;
+  }
 }
 
 /**
@@ -548,6 +585,7 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   *x = player->mouse_x;
   *y = player->mouse_y;
+  swfdec_player_stage_to_global (player, x, y);
   swfdec_movie_global_to_local (movie, x, y);
 }
 
@@ -572,6 +610,18 @@ swfdec_movie_send_mouse_change (SwfdecMovie *movie, gboolean release)
   klass->mouse_change (movie, x, y, mouse_in, button);
 }
 
+/**
+ * swfdec_movie_get_movie_at:
+ * @movie: a #SwfdecMovie
+ * @x: x coordinate in parent's coordinate space
+ * @y: y coordinate in the parent's coordinate space
+ *
+ * Gets the child at the given coordinates. The coordinates are in the 
+ * coordinate system of @movie's parent (or the global coordinate system for
+ * root movies).
+ *
+ * Returns: the child of @movie at the given coordinates or %NULL if none
+ **/
 SwfdecMovie *
 swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
 {
@@ -803,6 +853,7 @@ swfdec_movie_mark (SwfdecAsObject *object)
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
   GList *walk;
 
+  swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_as_object_mark (walk->data);
@@ -1000,7 +1051,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     size = 0;
   }
   g_object_ref (movie);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   /* set essential properties */
   movie->parent = parent;
   if (parent) {
@@ -1030,9 +1080,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
    * new movies to be created (and added to this list)
    */
   player->movies = g_list_prepend (player->movies, movie);
-  /* emit the new-movie signal */
-  if (SWFDEC_IS_DEBUGGER (player))
-    g_signal_emit_by_name (player, "movie-added", movie);
+  /* only add the movie here, because it needs to be setup for the debugger */
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   return movie;
 }
 
@@ -1054,6 +1103,8 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   }
   if (transform) {
     movie->original_transform = *transform;
+    movie->matrix.x0 = movie->original_transform.x0;
+    movie->matrix.y0 = movie->original_transform.y0;
     movie->xscale = swfdec_matrix_get_xscale (&movie->original_transform);
     movie->yscale = swfdec_matrix_get_yscale (&movie->original_transform);
     movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);

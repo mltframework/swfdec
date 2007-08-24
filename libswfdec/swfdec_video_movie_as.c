@@ -66,16 +66,23 @@ swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
   if (video == NULL)
     return;
   player->Video = video;
-  proto = swfdec_as_object_new (context);
+  proto = swfdec_as_object_new_empty (context);
+  if (proto == NULL)
+    return;
   /* set the right properties on the Video object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (video, SWFDEC_AS_STR_prototype, &val);
+  swfdec_as_object_set_variable_and_flags (video, SWFDEC_AS_STR_prototype, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   /* set the right properties on the Video.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, video);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachVideo, SWFDEC_TYPE_VIDEO_MOVIE,
       swfdec_video_attach_video, 1);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_clear, SWFDEC_TYPE_VIDEO_MOVIE,
       swfdec_video_clear, 0);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, video);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 

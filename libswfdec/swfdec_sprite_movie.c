@@ -348,6 +348,22 @@ swfdec_movie_is_compatible (SwfdecMovie *movie, SwfdecMovie *with)
   return TRUE;
 }
 
+static GList *
+my_g_list_split (GList *list, GList *split)
+{
+  GList *prev;
+
+  if (split == NULL)
+    return list;
+
+  prev = split->prev;
+  if (prev == NULL)
+    return NULL;
+  prev->next = NULL;
+  split->prev = NULL;
+  return list;
+}
+
 void
 swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
 {
@@ -377,9 +393,22 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
   SWFDEC_DEBUG ("performing goto %u -> %u for character %u", 
       movie->frame, goto_frame, SWFDEC_CHARACTER (movie->sprite)->id);
   if (goto_frame < movie->frame) {
+    GList *walk;
     movie->frame = 0;
-    old = mov->list;
-    mov->list = NULL;
+    for (walk = mov->list; walk && 
+	swfdec_depth_classify (SWFDEC_MOVIE (walk->data)->depth) != SWFDEC_DEPTH_CLASS_TIMELINE;
+	walk = walk->next) {
+      /* do nothing */
+    }
+    old = walk;
+    mov->list = my_g_list_split (mov->list, old);
+    for (walk = old; walk && 
+	swfdec_depth_classify (SWFDEC_MOVIE (walk->data)->depth) == SWFDEC_DEPTH_CLASS_TIMELINE;
+	walk = walk->next) {
+      /* do nothing */
+    }
+    old = my_g_list_split (old, walk);
+    mov->list = g_list_concat (mov->list, walk);
     n = goto_frame;
     movie->next_action = 0;
   } else {

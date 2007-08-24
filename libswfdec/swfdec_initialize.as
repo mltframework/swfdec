@@ -69,6 +69,7 @@ Mouse = new Object ();
 Mouse.show = ASnative (5, 0);
 Mouse.hide = ASnative (5, 1);
 AsBroadcaster.initialize (Mouse);
+ASSetPropFlags(Mouse, null, 7);
 
 /*** STAGE ***/
 
@@ -120,7 +121,7 @@ LoadVars.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-ASSetPropFlags(LoadVars.prototype, null, 129);
+ASSetPropFlags(LoadVars.prototype, null, 131);
 
 /*** XML ***/
 
@@ -160,3 +161,7 @@ XML.prototype.getBytesTotal = function () {
 };
 
 ASSetPropFlags(XML.prototype, null, 129);
+
+/*** OH THE HUMANITY ***/
+
+o = null;

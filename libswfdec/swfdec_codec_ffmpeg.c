@@ -224,6 +224,10 @@ swfdec_video_decoder_ffmpeg_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
     SWFDEC_WARNING ("error decoding frame");
     return NULL;
   }
+  if (got_image == 0) {
+    SWFDEC_WARNING ("error: did not get an image from decoding");
+    return NULL;
+  }
   if (codec->sws == NULL) {
     codec->sws = sws_getContext (codec->ctx->width, codec->ctx->height, codec->ctx->pix_fmt,
 	codec->ctx->width, codec->ctx->height, PIX_FMT_RGB32, 0, NULL, NULL, NULL);

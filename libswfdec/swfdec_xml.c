@@ -23,14 +23,13 @@
 
 #include <string.h>
 
-#include "swfdec_xml_as.h"
+#include "swfdec_xml.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_load_object_as.h"
 
 G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_AS_OBJECT)
 

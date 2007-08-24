@@ -90,7 +90,7 @@ run_test (gpointer testp, gpointer unused)
   GString *string, *output;
   GError *error = NULL;
   gboolean quit = FALSE;
-  SwfdecInteraction *inter;
+  SwfdecInteraction *inter = NULL;
 
   output = g_string_new ("");
   g_string_append_printf (output, "Testing %s:\n", test->filename);
@@ -100,7 +100,7 @@ run_test (gpointer testp, gpointer unused)
     goto fail;
   }
   string = g_string_new ("");
-  player = swfdec_player_new ();
+  player = swfdec_player_new (NULL);
   g_object_set (player, "memory-until-gc", (gulong) 0, NULL);
   g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
   g_signal_connect (player, "fscommand", G_CALLBACK (fscommand_cb), &quit);
@@ -140,9 +140,12 @@ run_test (gpointer testp, gpointer unused)
     if (advance > time_left)
       break;
     swfdec_player_advance (player, advance);
-    if (inter)
-      swfdec_interaction_advance (inter, player, advance);
     time_left -= advance;
+    if (inter) {
+      swfdec_interaction_advance (inter, player, advance);
+      if (time_left == 0)
+	break;
+    }
   }
   g_signal_handlers_disconnect_by_func (player, trace_cb, string);
   g_object_unref (player);
@@ -279,7 +282,7 @@ main (int argc, char **argv)
       Test *test = walk->data;
       while (test->output == NULL)
 	g_cond_wait (cond, mutex);
-      g_print (test->output);
+      g_print ("%s", test->output);
       if (!test->success) {
 	failures++;
 	g_string_append_printf (failed_tests, 

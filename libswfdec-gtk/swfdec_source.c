@@ -36,7 +36,7 @@ struct _SwfdecIterateSource {
   GSource		source;
   SwfdecPlayer *	player;		/* player we manage or NULL if player was deleted */
   double		speed;		/* inverse playback speed (so 0.5 means double speed) */
-  gulong		notify;		/* set for iterate notifications */
+  gulong		notify;		/* set for iterate notifications (only valid when player != NULL) */
   GTimeVal		last;		/* last time */
 };
 
@@ -115,7 +115,7 @@ swfdec_iterate_finalize (GSource *source_)
 {
   SwfdecIterateSource *source = (SwfdecIterateSource *) source_;
 
-  if (source->notify) {
+  if (source->notify && source->player) {
     g_signal_handler_disconnect (source->player, source->notify);
   }
   if (source->player) {

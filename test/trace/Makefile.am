@@ -46,6 +46,15 @@ EXTRA_DIST = \
 	addProperty-delete-7.swf.trace \
 	addProperty-delete-8.swf \
 	addProperty-delete-8.swf.trace \
+	addProperty-flags.as \
+	addProperty-flags-5.swf \
+	addProperty-flags-5.swf.trace \
+	addProperty-flags-6.swf \
+	addProperty-flags-6.swf.trace \
+	addProperty-flags-7.swf \
+	addProperty-flags-7.swf.trace \
+	addProperty-flags-8.swf \
+	addProperty-flags-8.swf.trace \
 	addProperty-get-prototypes.as \
 	addProperty-get-prototypes-5.swf \
 	addProperty-get-prototypes-5.swf.trace \
@@ -86,6 +95,9 @@ EXTRA_DIST = \
 	array-new-override-6.swf.trace \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
+	array-properties.as \
+	array-properties-6.swf \
+	array-properties-6.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \
@@ -122,6 +134,16 @@ EXTRA_DIST = \
 	asbroadcaster-override-7.swf.trace \
 	asbroadcaster-override-8.swf \
 	asbroadcaster-override-8.swf.trace \
+	asbroadcaster-properties.as \
+	asbroadcaster-properties-6.swf \
+	asbroadcaster-properties-6.swf.trace \
+	asbroadcaster-properties-7.swf \
+	asbroadcaster-properties-7.swf.trace \
+	asfunction-properties.as \
+	asfunction-properties-6.swf \
+	asfunction-properties-6.swf.trace \
+	asfunction-properties-7.swf \
+	asfunction-properties-7.swf.trace \
 	asnative-create.as \
 	asnative-create-5.swf \
 	asnative-create-5.swf.trace \
@@ -131,6 +153,15 @@ EXTRA_DIST = \
 	asnative-create-7.swf.trace \
 	asnative-create-8.swf \
 	asnative-create-8.swf.trace \
+	ASSetPropFlags-ignore.as \
+	ASSetPropFlags-ignore-5.swf \
+	ASSetPropFlags-ignore-5.swf.trace \
+	ASSetPropFlags-ignore-6.swf \
+	ASSetPropFlags-ignore-6.swf.trace \
+	ASSetPropFlags-ignore-7.swf \
+	ASSetPropFlags-ignore-7.swf.trace \
+	ASSetPropFlags-ignore-8.swf \
+	ASSetPropFlags-ignore-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \
@@ -138,6 +169,11 @@ EXTRA_DIST = \
 	bitwise-6.swf.trace \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
+	boolean-properties.as \
+	boolean-properties-6.swf \
+	boolean-properties-6.swf.trace \
+	boolean-properties-7.swf \
+	boolean-properties-7.swf.trace \
 	call-arguments.as \
 	call-arguments-5.swf \
 	call-arguments-5.swf.trace \
@@ -263,6 +299,15 @@ EXTRA_DIST = \
 	definefunction2-overwrite.swf \
 	definefunction2-overwrite.swf.trace \
 	definefunction2-overwrite.xml \
+	definefunction2-registers.xml \
+	definefunction2-registers-5.swf \
+	definefunction2-registers-5.swf.trace \
+	definefunction2-registers-6.swf \
+	definefunction2-registers-6.swf.trace \
+	definefunction2-registers-7.swf \
+	definefunction2-registers-7.swf.trace \
+	definefunction2-registers-8.swf \
+	definefunction2-registers-8.swf.trace \
 	definefunction2-this.swf \
 	definefunction2-this.swf.trace \
 	definefunction2-this.xml \
@@ -380,6 +425,11 @@ EXTRA_DIST = \
 	function1.swf.trace \
 	function2.swf \
 	function2.swf.trace \
+	function-properties.as \
+	function-properties-6.swf \
+	function-properties-6.swf.trace \
+	function-properties-7.swf \
+	function-properties-7.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
 	function-scope.as \
@@ -405,6 +455,16 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	global-function-properties.as \
+	global-function-properties-6.swf \
+	global-function-properties-6.swf.trace \
+	global-function-properties-7.swf \
+	global-function-properties-7.swf.trace \
+	global-variable-properties.as \
+	global-variable-properties-6.swf \
+	global-variable-properties-6.swf.trace \
+	global-variable-properties-7.swf \
+	global-variable-properties-7.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \
@@ -841,6 +901,15 @@ EXTRA_DIST = \
 	relational-6.swf.trace \
 	relational-7.swf \
 	relational-7.swf.trace \
+	remove-depths.as \
+	remove-depths-5.swf \
+	remove-depths-5.swf.trace \
+	remove-depths-6.swf \
+	remove-depths-6.swf.trace \
+	remove-depths-7.swf \
+	remove-depths-7.swf.trace \
+	remove-depths-8.swf \
+	remove-depths-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \
@@ -848,6 +917,15 @@ EXTRA_DIST = \
 	removesprite-depths-6.swf.trace \
 	removesprite-depths-7.swf \
 	removesprite-depths-7.swf.trace \
+	rewind-remove.c \
+	rewind-remove-5.swf \
+	rewind-remove-5.swf.trace \
+	rewind-remove-6.swf \
+	rewind-remove-6.swf.trace \
+	rewind-remove-7.swf \
+	rewind-remove-7.swf.trace \
+	rewind-remove-8.swf \
+	rewind-remove-8.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	rotation2.as \
@@ -989,6 +1067,13 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-fake.as \
+	string-fake-5.swf \
+	string-fake-5.swf.trace \
+	string-fake-6.swf \
+	string-fake-6.swf.trace \
+	string-fake-7.swf \
+	string-fake-7.swf.trace \
 	string-indexof.as \
 	string-indexof-5.swf \
 	string-indexof-5.swf.trace \
@@ -996,6 +1081,15 @@ EXTRA_DIST = \
 	string-indexof-6.swf.trace \
 	string-indexof-7.swf \
 	string-indexof-7.swf.trace \
+	string-lastIndexOf.as \
+	string-lastIndexOf-5.swf \
+	string-lastIndexOf-5.swf.trace \
+	string-lastIndexOf-6.swf \
+	string-lastIndexOf-6.swf.trace \
+	string-lastIndexOf-7.swf \
+	string-lastIndexOf-7.swf.trace \
+	string-lastIndexOf-8.swf \
+	string-lastIndexOf-8.swf.trace \
 	string-split.as \
 	string-split-5.swf \
 	string-split-5.swf.trace \
@@ -1010,6 +1104,13 @@ EXTRA_DIST = \
 	string-split-empty-6.swf.trace \
 	string-split-empty-7.swf \
 	string-split-empty-7.swf.trace \
+	string-trace.as \
+	string-trace-5.swf \
+	string-trace-5.swf.trace \
+	string-trace-6.swf \
+	string-trace-6.swf.trace \
+	string-trace-7.swf \
+	string-trace-7.swf.trace \
 	stringlength.as \
 	stringlength-5.swf \
 	stringlength-5.swf.trace \
@@ -1145,6 +1246,11 @@ EXTRA_DIST = \
 	unescape2-7.swf.trace \
 	values.as \
 	video.flv \
+	video-properties.as \
+	video-properties-6.swf \
+	video-properties-6.swf.trace \
+	video-properties-7.swf \
+	video-properties-7.swf.trace \
 	waitforframe-huge.as \
 	waitforframe-huge-4.swf \
 	waitforframe-huge-4.swf.trace \

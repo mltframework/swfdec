@@ -67,40 +67,33 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 }
 
 /**
- * swfdec_as_function_create:
- * @context: a #SwfdecAsFunction
- * @type: the type of function to create
- * @size: size of @type
+ * swfdec_as_function_set_constructor:
+ * @fun: a #SwfdecAsFunction
  *
- * Creates a new function. The function will be of @type. It will be added to
- * @context and its prototype and constructor object will be set correctly.
- *
- * Returns: a new object of @type or %NULL on OOM
+ * Sets the constructor and prototype of @fun. This is a shortcut for calling
+ * swfdec_as_object_set_constructor() with the right arguments.
  **/
-SwfdecAsFunction *
-swfdec_as_function_create (SwfdecAsContext *context, GType type, guint size)
+void
+swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
 {
+  SwfdecAsContext *context;
+  SwfdecAsObject *object;
   SwfdecAsValue val;
-  SwfdecAsObject *fun;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_FUNCTION), NULL);
-  g_return_val_if_fail (size >= sizeof (SwfdecAsFunction), NULL);
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
 
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
-  fun = g_object_new (type, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, size);
+  object = SWFDEC_AS_OBJECT (fun);
+  context = object->context;
   if (context->Function) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-    swfdec_as_object_set_variable (fun, SWFDEC_AS_STR_constructor, &val);
+    swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
   if (context->Function_prototype) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
-    swfdec_as_object_set_variable (fun, SWFDEC_AS_STR___proto__, &val);
+    swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-
-  return SWFDEC_AS_FUNCTION (fun);
 }
 
 /**
@@ -183,22 +176,26 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
     return;
   if (version < 6) {
     /* deleting it later on is easier than duplicating swfdec_as_object_add_function() */
+    swfdec_as_object_unset_variable_flags (context->global, SWFDEC_AS_STR_Function, SWFDEC_AS_VARIABLE_PERMANENT);
     swfdec_as_object_delete_variable (context->global, SWFDEC_AS_STR_Function);
   }
   context->Function = function;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
-  swfdec_as_object_set_variable (function, SWFDEC_AS_STR_constructor, &val);
+  swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   if (version > 5) {
     proto = swfdec_as_object_new_empty (context);
     if (!proto)
       return;
     context->Function_prototype = proto;
     SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-    swfdec_as_object_set_variable (function, SWFDEC_AS_STR___proto__, &val);
-    swfdec_as_object_set_variable (function, SWFDEC_AS_STR_prototype, &val);
+    swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR___proto__,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
     /* prototype functions */
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call, SWFDEC_TYPE_AS_FUNCTION, 
-	swfdec_as_function_do_call, 0);
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call,
+	SWFDEC_TYPE_AS_FUNCTION, swfdec_as_function_do_call, 0);
   }
 }
 

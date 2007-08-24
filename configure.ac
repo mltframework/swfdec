@@ -23,7 +23,7 @@ dnl if we support them, we set them unconditionally
 AS_COMPILER_FLAG(-Wall, GLOBAL_CFLAGS="-Wall", GLOBAL_CFLAGS="")
 dnl I want this but stupid headers don't let me
 dnl AS_COMPILER_FLAG(-Wshadow, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wshadow")
-AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline")
+AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security")
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
@@ -33,7 +33,7 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="1:0:0"
+SWFDEC_LIBVERSION="2:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
@@ -264,6 +264,27 @@ else
 fi
 AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 
+AC_ARG_ENABLE(vivified,
+	AS_HELP_STRING([--enable-vivified],
+			[enable Vivified Flash debugger (default=no)])],
+	enable_vivi=$enableval,
+	enable_vivi="no")
+if test "$enable_vivi" = "yes"; then
+	AM_PROG_AS
+	MING_REQUIRED=0.4.0.beta5
+	VIVI_GTK_REQUIRED=2.11.6
+	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED gmodule-export-2.0 gtk+-2.0 >= $VIVI_GTK_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
+	if test "x$HAVE_VIVI" = xyes; then
+	  AC_DEFINE(HAVE_VIVI, 1, [Define if Vivified is enabled])
+	else
+	  AC_MSG_ERROR([Vivified requirements not met. You need libming >= $MING_REQUIRED and Gtk+ >= $VIVI_GTK_REQUIRED.])
+	fi
+else
+	AC_MSG_WARN([*** Vivified was not enabled. ***])
+fi
+AM_CONDITIONAL(HAVE_VIVI, [test "x$HAVE_VIVI" = xyes])
+
+
 AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)
 
@@ -305,6 +326,10 @@ test/image/Makefile
 test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
+vivified/Makefile
+vivified/core/Makefile
+vivified/dock/Makefile
+vivified/ui/Makefile
 swfdec.pc
 swfdec-gtk.pc
 swfdec.spec

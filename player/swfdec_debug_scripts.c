@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_debug_scripts.h"
+#include <libswfdec/swfdec_script_internal.h>
 
 G_DEFINE_TYPE (SwfdecDebugScripts, swfdec_debug_scripts, GTK_TYPE_TREE_VIEW)
 

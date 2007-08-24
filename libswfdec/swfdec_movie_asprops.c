@@ -32,6 +32,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_swf_instance.h"
 
 static void
 mc_x_get (SwfdecMovie *movie, SwfdecAsValue *rval)
@@ -355,6 +356,14 @@ mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 
+static void
+mc_url_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+{
+  SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_get_string (
+	SWFDEC_AS_OBJECT (movie)->context,
+	swfdec_url_get_url (swfdec_loader_get_url (movie->swf->loader))));
+}
+
 struct {
   gboolean needs_movie;
   const char *name;
@@ -376,7 +385,7 @@ struct {
   { 1, SWFDEC_AS_STR__framesloaded,mc_framesloaded,    NULL},
   { 0, SWFDEC_AS_STR__name,	mc_name_get,	    mc_name_set },
   { 1, SWFDEC_AS_STR__droptarget,	NULL,  NULL }, //"_droptarget"
-  { 0, SWFDEC_AS_STR__url,		NULL,  NULL }, //"_url"
+  { 0, SWFDEC_AS_STR__url,	mc_url_get,  NULL },
   { 0, SWFDEC_AS_STR__highquality,	NULL,  NULL }, //"_highquality"
   { 0, SWFDEC_AS_STR__focusrect,	NULL,  NULL }, //"_focusrect"
   { 0, SWFDEC_AS_STR__soundbuftime,NULL,  NULL }, //"_soundbuftime"

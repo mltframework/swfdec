@@ -27,6 +27,7 @@
 #include "swfdec_as_function.h"
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_as_with.h"
@@ -552,10 +553,14 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   const char *s;
 
   val = swfdec_as_stack_peek (cx, 1);
-  if (val->type == SWFDEC_AS_TYPE_UNDEFINED)
+  if (val->type == SWFDEC_AS_TYPE_UNDEFINED) {
     s = SWFDEC_AS_STR_undefined;
-  else
+  } else if (val->type == SWFDEC_AS_TYPE_OBJECT &&
+      SWFDEC_IS_AS_STRING (swfdec_as_value_to_object (cx, val))) {
+    s = SWFDEC_AS_STRING (swfdec_as_value_to_object (cx, val))->string;
+  } else {
     s = swfdec_as_value_to_string (cx, val);
+  }
   swfdec_as_stack_pop (cx);
   g_signal_emit_by_name (cx, "trace", s);
 }
@@ -1484,18 +1489,6 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     SWFDEC_ERROR ("could not parse function name");
     return;
   }
-  /* see function-scope tests */
-  if (cx->version > 5) {
-    /* FIXME: or original target? */
-    fun = swfdec_as_script_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame), frame->target);
-  } else {
-    SwfdecAsScope *scope = frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame);
-    while (scope->next)
-      scope = scope->next;
-    fun = swfdec_as_script_function_new (scope, frame->target);
-  }
-  if (fun == NULL)
-    return;
   n_args = swfdec_bits_get_u16 (&bits);
   if (v2) {
     n_registers = swfdec_bits_get_u8 (&bits);
@@ -1554,7 +1547,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   }
   if (name == NULL)
     name = "unnamed_function";
-  script = swfdec_script_new (&bits, name, cx->version);
+  script = swfdec_script_new_from_bits (&bits, name, cx->version);
   swfdec_buffer_unref (buffer);
   if (script == NULL) {
     SWFDEC_ERROR ("failed to create script");
@@ -1568,8 +1561,18 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   script->n_registers = n_registers;
   script->n_arguments = n_args;
   script->arguments = args;
-  SWFDEC_AS_SCRIPT_FUNCTION (fun)->script = script;
-  swfdec_script_add_to_context (script, cx);
+  /* see function-scope tests */
+  if (cx->version > 5) {
+    /* FIXME: or original target? */
+    fun = swfdec_as_script_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame), frame->target, script);
+  } else {
+    SwfdecAsScope *scope = frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame);
+    while (scope->next)
+      scope = scope->next;
+    fun = swfdec_as_script_function_new (scope, frame->target, script);
+  }
+  if (fun == NULL)
+    return;
   /* attach the function */
   if (*function_name == '\0') {
     swfdec_as_stack_ensure_free (cx, 1);

@@ -22,10 +22,18 @@
 #endif
 
 #include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
-#include "swfdec_debugger.h"
+
+/**
+ * SwfdecScript:
+ *
+ * This is the object used for code to be executed by Swfdec. Scripts are 
+ * independant from the #SwfdecAsContext they are executed in, so you can 
+ * execute the same script in multiple contexts.
+ */
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
@@ -110,15 +118,6 @@ swfdec_constant_pool_free (SwfdecConstantPool *pool)
 }
 
 /*** SUPPORT FUNCTIONS ***/
-
-void
-swfdec_script_add_to_context (SwfdecScript *script, SwfdecAsContext *context)
-{
-  if (SWFDEC_IS_DEBUGGER (context)) {
-    swfdec_debugger_add_script (SWFDEC_DEBUGGER (context), script);
-    script->debugger = context;
-  }
-}
 
 char *
 swfdec_script_print_action (guint action, const guint8 *data, guint len)
@@ -207,23 +206,33 @@ validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint
   return TRUE;
 }
 
+/**
+ * swfdec_script_new:
+ * @buffer: the #SwfdecBuffer containing the script. This function will take
+ *          ownership of the passed in buffer.
+ * @name: name of the script for debugging purposes
+ * @version: Actionscript version to use in this script
+ *
+ * Creates a new script for the actionscript provided in @buffer.
+ *
+ * Returns: a new #SwfdecScript for executing the script i @buffer.
+ **/
 SwfdecScript *
-swfdec_script_new_for_context (SwfdecAsContext *context, SwfdecBits *bits, 
-    const char *name, guint version)
+swfdec_script_new (SwfdecBuffer *buffer, const char *name, guint version)
 {
+  SwfdecBits bits;
   SwfdecScript *script;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (bits != NULL, NULL);
+  g_return_val_if_fail (buffer != NULL, NULL);
 
-  script = swfdec_script_new (bits, name, version);
-  if (script)
-    swfdec_script_add_to_context (script, context);
+  swfdec_bits_init (&bits, buffer);
+  script = swfdec_script_new_from_bits (&bits, name, version);
+  swfdec_buffer_unref (buffer);
   return script;
 }
 
 SwfdecScript *
-swfdec_script_new (SwfdecBits *bits, const char *name, guint version)
+swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
   SwfdecBits org;
@@ -280,11 +289,6 @@ swfdec_script_unref (SwfdecScript *script)
   g_return_if_fail (script->refcount > 0);
 
   script->refcount--;
-  if (script->refcount == 1 && script->debugger) {
-    script->debugger = NULL;
-    swfdec_debugger_remove_script (script->debugger, script);
-    return;
-  }
   if (script->refcount > 0)
     return;
 

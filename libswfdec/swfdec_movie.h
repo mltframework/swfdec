@@ -192,6 +192,10 @@ void		swfdec_movie_local_to_global	(SwfdecMovie *		movie,
 void		swfdec_movie_global_to_local	(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);
+void		swfdec_movie_rect_local_to_global (SwfdecMovie *	movie,
+						 SwfdecRect *		rect);
+void		swfdec_movie_rect_global_to_local (SwfdecMovie *	movie,
+						 SwfdecRect *		rect);
 void		swfdec_movie_set_depth		(SwfdecMovie *		movie,
 						 int			depth);
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
@@ -199,6 +203,9 @@ void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		y);
 void		swfdec_movie_send_mouse_change	(SwfdecMovie *		movie,
 						 gboolean		release);
+gboolean	swfdec_movie_mouse_in		(SwfdecMovie *		movie,
+						 double			x,
+						 double			y);
 SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,
 						 double			x,
 						 double			y);

@@ -171,7 +171,8 @@ main (int argc, char *argv[])
 
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
 
-  g_main_loop_run (loop);
+  if (g_main_loop_is_running (loop))
+    g_main_loop_run (loop);
 
   g_object_unref (player);
   g_main_loop_unref (loop);

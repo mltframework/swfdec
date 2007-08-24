@@ -52,6 +52,7 @@ dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
 AC_PROG_CC
 AM_PROG_CC_STDC
 AM_PROG_CC_C_O
+AM_PROG_AS
 
 AC_HEADER_STDC([])
 
@@ -270,7 +271,6 @@ AC_ARG_ENABLE(vivified,
 	enable_vivi=$enableval,
 	enable_vivi="no")
 if test "$enable_vivi" = "yes"; then
-	AM_PROG_AS
 	MING_REQUIRED=0.4.0.beta5
 	VIVI_GTK_REQUIRED=2.11.6
 	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED gmodule-export-2.0 gtk+-2.0 >= $VIVI_GTK_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)

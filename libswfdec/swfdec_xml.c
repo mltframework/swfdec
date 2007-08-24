@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "swfdec_xml.h"
+#include "swfdec_xml_node.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
@@ -158,15 +159,32 @@ swfdec_xml_parse_comment (SwfdecAsObject *object, const char *p)
 }
 
 static const char *
-swfdec_xml_parse_tag (SwfdecAsObject *object, const char *p)
+swfdec_xml_parse_tag (SwfdecAsObject *object, SwfdecXmlNode **node,
+    const char *p)
 {
-  const char *end;
+  SwfdecAsObject *unused;
+  SwfdecXmlNode *node_new;
+  SwfdecAsValue argv[2];
+  const char *end, *name;
 
   g_assert (p != NULL);
   g_return_val_if_fail (*p == '<', strchr (p, '\0'));
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), strchr (p, '\0'));
 
-  end = strchr (p, '>');
+  end = p + strcspn (p, " />");
+
+  if (end - (p + 1) <= 0 || *end == '\0') {
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_INT (&val, XML_PARSE_ERROR_ELEMENT_MALFORMED);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_status, &val);
+    return strchr (p, '\0');
+  }
+
+  name = g_strndup (p + 1 , end - (p + 1));
+  swfdec_xml_node_appendChild (node, SWFDEC_XML_NODE_ELEMENT, name);
+  g_free (name);
+
+  end = strchr (end, '>');
   if (end == NULL) {
     SwfdecAsValue val;
     SWFDEC_AS_VALUE_SET_INT (&val, XML_PARSE_ERROR_ELEMENT_MALFORMED);

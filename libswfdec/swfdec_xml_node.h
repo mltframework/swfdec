@@ -62,5 +62,9 @@ struct _SwfdecXmlNodeClass {
 
 GType		swfdec_xml_node_get_type	(void);
 
+void		swfdec_xml_node_removeNode	(SwfdecXmlNode *	node);
+void		swfdec_xml_node_appendChild	(SwfdecXmlNode *	node,
+						 SwfdecXmlNode *	child);
+
 G_END_DECLS
 #endif

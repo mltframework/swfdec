@@ -63,13 +63,15 @@ swfdec_xml_node_get_attributes (SwfdecAsObject *object)
   return swfdec_as_value_to_object (object->context, &val);
 }
 
-static SwfdecAsObject*
-swfdec_xml_node_get_childNodes (SwfdecAsObject *object)
+static SwfdecAsArray*
+swfdec_xml_node_get_childNodes (SwfdecXmlNode *node)
 {
   SwfdecAsValue val;
 
-  swfdec_as_object_get_variable (object, SWFDEC_AS_STR_childNodes, &val);
-  return swfdec_as_value_to_object (object->context, &val);
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT(node),
+      SWFDEC_AS_STR_childNodes, &val);
+  return SWFDEC_AS_ARRAY (swfdec_as_value_to_object (
+	SWFDEC_AS_OBJECT(node)->context, &val));
 }
 
 typedef struct {
@@ -122,12 +124,21 @@ swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_FIXME ("XMLNode.cloneNode not implemented");
 }
 
-SWFDEC_AS_NATIVE (253, 2, swfdec_xml_node_removeNode)
 void
-swfdec_xml_node_removeNode (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_xml_node_removeNode (SwfdecXmlNode *node)
 {
   SWFDEC_FIXME ("XMLNode.removeNode not implemented");
+}
+
+SWFDEC_AS_NATIVE (253, 2, swfdec_xml_node_do_removeNode)
+void
+swfdec_xml_node_do_removeNode (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  swfdec_xml_node_removeNode (SWFDEC_XML_NODE (object));
 }
 
 SWFDEC_AS_NATIVE (253, 3, swfdec_xml_node_insertBefore)
@@ -138,18 +149,69 @@ swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_FIXME ("XMLNode.insertBefore not implemented");
 }
 
-SWFDEC_AS_NATIVE (253, 4, swfdec_xml_node_appendChild)
 void
-swfdec_xml_node_appendChild (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_xml_node_appendChild (SwfdecXmlNode *node, SwfdecXmlNode *child)
+{
+  SwfdecAsValue val;
+  SwfdecAsArray *childNodes;
+
+  g_return_if_fail (SWFDEC_IS_XML_NODE (node));
+  g_return_if_fail (SWFDEC_IS_XML_NODE (child));
+
+  // remove the previous parent of the child
+  swfdec_xml_node_removeNode (child);
+
+  // set child in the childNodes array, to the lastChild property
+  // and depending on position to either firstChild property or another child's
+  // nextSibling property
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child));
+
+  childNodes = swfdec_xml_node_get_childNodes (node);
+  swfdec_as_array_push (childNodes, &val);
+
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (node),
+      SWFDEC_AS_STR_lastChild, &val);
+  if (swfdec_as_array_length (childNodes) == 1) {
+    swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (node),
+	SWFDEC_AS_STR_firstChild, &val);
+  } else {
+    SwfdecXmlNode *previous = swfdec_as_xml_node_get_child (node,
+	swfdec_as_array_length (childNodes) - 1);
+    g_assert (previous != NULL);
+    swfdec_as_object_set_variable (previous, SWFDEC_AS_STR_nextSibling, &val);
+    // set the previousSibling property of the child
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (previous));
+    swfdec_as_object_set_variable (child, SWFDEC_AS_STR_previousSibling, &val);
+  }
+
+  // set node as parent of child
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (node));
+  swfdec_as_object_set_variable (child, SWFDEC_AS_STR_parentNode, &val);
+}
+
+SWFDEC_AS_NATIVE (253, 4, swfdec_xml_node_do_appendChild)
+void
+swfdec_xml_node_do_appendChild (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsObject *childNodes;
+  SwfdecAsObject *child;
+  int i;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
 
   if (argc < 1)
     return;
 
-  childNodes = swfdec_xml_node_get_childNodes (object);
-  swfdec_as_object_call (childNodes, SWFDEC_AS_STR_push, 1, argv, NULL);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+    return;
+
+  child = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  if (!SWFDEC_IS_XML_NODE (child))
+    return;
+
+  swfdec_xml_node_appendChild (SWFDEC_XML_NODE (object),
+      SWFDEC_XML_NODE (child));
 }
 
 SWFDEC_AS_NATIVE (253, 5, swfdec_xml_node_hasChildNodes)
@@ -357,14 +419,14 @@ swfdec_xml_node_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, xml_node);
   swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_cloneNode, 0,
-      swfdec_xml_node_cloneNode, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_removeNode, 0,
-      swfdec_xml_node_removeNode, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_cloneNode,
+      SWFDEC_TYPE_AS_XML_NODE, swfdec_xml_node_cloneNode, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_removeNode,
+      SWFDEC_TYPE_AS_XML_NODE, swfdec_xml_node_do_removeNode, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_insertBefore, 0,
       swfdec_xml_node_insertBefore, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_appendChild, 0,
-      swfdec_xml_node_appendChild, 0);
+      swfdec_xml_node_do_appendChild, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasChildNodes, 0,
       swfdec_xml_node_hasChildNodes, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,

@@ -21,8 +21,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_HTTP
 #include <libsoup/soup.h>
 #include <errno.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "swfdec_gtk_loader.h"
@@ -53,20 +55,25 @@ struct _SwfdecGtkLoader
 {
   SwfdecLoader		loader;
 
+#ifdef HAVE_HTTP
   SoupMessage *		message;	/* the message we're sending */
   gboolean		opened;		/* set after first bytes of data have arrived */
+#endif
 };
 
 struct _SwfdecGtkLoaderClass {
   SwfdecLoaderClass	loader_class;
 
+#ifdef HAVE_HTTP
   SoupSession *		session;	/* the session used by the loader */
+#endif
 };
 
 /*** SwfdecGtkLoader ***/
 
 G_DEFINE_TYPE (SwfdecGtkLoader, swfdec_gtk_loader, SWFDEC_TYPE_FILE_LOADER)
 
+#ifdef HAVE_HTTP
 static void
 swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
 {
@@ -137,16 +144,20 @@ swfdec_gtk_loader_dispose (GObject *object)
 
   G_OBJECT_CLASS (swfdec_gtk_loader_parent_class)->dispose (object);
 }
+#endif
 
 static void
 swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
+#ifdef HAVE_HTTP
   const SwfdecURL *url = swfdec_loader_get_url (loader);
 
   if (g_ascii_strcasecmp (swfdec_url_get_protocol (url), "http") != 0 &&
       g_ascii_strcasecmp (swfdec_url_get_protocol (url), "https") != 0) {
+#endif
     SWFDEC_LOADER_CLASS (swfdec_gtk_loader_parent_class)->load (loader, parent, request, data, data_len);
+#ifdef HAVE_HTTP
   } else {
     SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
     SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
@@ -163,8 +174,10 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
     g_object_ref (gtk->message);
     soup_session_queue_message (klass->session, gtk->message, NULL, NULL);
   }
+#endif
 }
 
+#ifdef HAVE_HTTP
 static void
 swfdec_gtk_loader_close (SwfdecLoader *loader)
 {
@@ -178,10 +191,12 @@ swfdec_gtk_loader_close (SwfdecLoader *loader)
     gtk->message = NULL;
   }
 }
+#endif
 
 static void
 swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
 {
+#ifdef HAVE_HTTP
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
 
@@ -192,6 +207,7 @@ swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
   
   g_thread_init (NULL);
   klass->session = soup_session_async_new ();
+#endif
 }
 
 static void

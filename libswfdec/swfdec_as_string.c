@@ -69,6 +69,19 @@ swfdec_as_string_init (SwfdecAsString *string)
 
 /*** AS CODE ***/
 
+static const char *
+swfdec_as_string_object_to_string (SwfdecAsContext *context,
+    SwfdecAsObject *object)
+{
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+
+  return swfdec_as_value_to_string (context, &val);
+}
+
 static inline const char *
 swfdec_as_str_nth_char (const char *s, guint n)
 {
@@ -82,7 +95,7 @@ void
 swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   gsize len;
   const char *s;
 
@@ -110,7 +123,7 @@ void
 swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   int offset=0, len, i=-1;
   const char *s, *t = NULL;
 
@@ -135,7 +148,7 @@ void
 swfdec_as_string_charAt (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   int i;
   const char *s, *t;
 
@@ -159,7 +172,7 @@ void
 swfdec_as_string_charCodeAt (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   int i;
   const char *s;
   gunichar c;
@@ -309,7 +322,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *str, *end, *delim;
   int count;
 
-  str = swfdec_as_object_to_string (cx, object);
+  str = swfdec_as_string_object_to_string (cx, object);
   arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
   if (arr == NULL)
     return;
@@ -363,7 +376,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   int count;
   guint len;
 
-  str = swfdec_as_object_to_string (cx, object);
+  str = swfdec_as_string_object_to_string (cx, object);
   arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
   if (arr == NULL)
     return;
@@ -437,7 +450,7 @@ void
 swfdec_as_string_substr (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   int from, to, len;
 
   from = swfdec_as_value_to_integer (cx, &argv[0]);
@@ -471,7 +484,7 @@ void
 swfdec_as_string_substring (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   int from, to, len;
 
   len = g_utf8_strlen (string, -1);
@@ -500,7 +513,7 @@ void
 swfdec_as_string_toLowerCase (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   char *s;
 
   s = g_utf8_strdown (string, -1);
@@ -513,7 +526,7 @@ void
 swfdec_as_string_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_object_to_string (cx, object);
+  const char *string = swfdec_as_string_object_to_string (cx, object);
   char *s;
 
   s = g_utf8_strup (string, -1);

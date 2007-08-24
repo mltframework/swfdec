@@ -1237,27 +1237,3 @@ swfdec_as_object_resolve (SwfdecAsObject *object)
 
   return klass->resolve (object);
 }
-
-/**
- * swfdec_as_object_to_string:
- * @context: a #SwfdecAsContext
- * @object: a #SwfdecAsObject
- *
- * Converts @object to a string according to the rules of Flash. This might
- * cause calling back into the script engine.
- * <warning>Never use this function for debugging purposes.</warning>
- *
- * Returns: a garbage-collected string representing @object. The value will
- *          never be %NULL.
- **/
-const char *
-swfdec_as_object_to_string (SwfdecAsContext *context, SwfdecAsObject *object)
-{
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
-
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-
-  return swfdec_as_value_to_string (context, &val);
-}

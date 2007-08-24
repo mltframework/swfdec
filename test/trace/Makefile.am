@@ -153,6 +153,15 @@ EXTRA_DIST = \
 	asnative-create-7.swf.trace \
 	asnative-create-8.swf \
 	asnative-create-8.swf.trace \
+	ASSetPropFlags-ignore.as \
+	ASSetPropFlags-ignore-5.swf \
+	ASSetPropFlags-ignore-5.swf.trace \
+	ASSetPropFlags-ignore-6.swf \
+	ASSetPropFlags-ignore-6.swf.trace \
+	ASSetPropFlags-ignore-7.swf \
+	ASSetPropFlags-ignore-7.swf.trace \
+	ASSetPropFlags-ignore-8.swf \
+	ASSetPropFlags-ignore-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

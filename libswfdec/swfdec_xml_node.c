@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-#include "swfdec_xml_node_as.h"
+#include "swfdec_xml_node.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"

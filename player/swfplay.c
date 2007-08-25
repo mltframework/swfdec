@@ -31,6 +31,8 @@
 
 #include "swfdec_slow_loader.h"
 
+static GMainLoop *loop = NULL;
+
 static void
 set_title (GtkWindow *window, const char *filename)
 {
@@ -62,11 +64,8 @@ static void
 do_fscommand (SwfdecPlayer *player, const char *command, const char *value, gpointer window)
 {
   if (g_str_equal (command, "quit")) {
-    static gboolean already_quit = FALSE;
-    if (!already_quit) {
-      gtk_main_quit ();
-      already_quit = TRUE;
-    }
+    g_assert (loop);
+    g_main_loop_quit (loop);
   }
   /* FIXME: add more */
 }
@@ -150,6 +149,7 @@ main (int argc, char *argv[])
     g_object_unref (loader);
     return 1;
   }
+  loop = g_main_loop_new (NULL, TRUE);
   player = swfdec_gtk_player_new (NULL);
   if (trace)
     g_signal_connect (player, "trace", G_CALLBACK (print_trace), NULL);
@@ -171,9 +171,12 @@ main (int argc, char *argv[])
 
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
 
-  gtk_main ();
+  if (g_main_loop_is_running (loop))
+    g_main_loop_run (loop);
 
   g_object_unref (player);
+  g_main_loop_unref (loop);
+  loop = NULL;
   player = NULL;
   return 0;
 }

@@ -1,4 +1,19 @@
 
+ 0.5.2 ("Kittencannon")
+
+This release saw a lot of internal cleanups and only little new features. But
+even that made a lot of files work and work better. Here's some detail:
+- add initial support for Keyboard events. This makes quite some games work.
+- add NetStream.close() functionality. This makes Youtube fullscreen work.
+- export more API for debugging, like SwfdecScript and SwfdecAsDebugger.
+- add new Vivified internal debugger that makes use of those.
+- Swfdec can parse Flash 8 Buttons now.
+- Swfdec should now set and handle all property flags correctly.
+- implement LoadVars object
+- make lots of native functions more correct for weird situations.
+- various bugfixes, including some very visible ones. This should improve
+  playback for some Flash files a lot.
+
  0.5.1 ("Heeeeelium")
 
 Features! This release got some. And they even give you the long awaited 

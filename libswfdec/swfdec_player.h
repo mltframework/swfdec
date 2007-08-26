@@ -77,7 +77,7 @@ void		swfdec_player_set_loader_with_variables
 						 const char *	variables);
 
 gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
-guint		swfdec_player_get_next_event  	(SwfdecPlayer *	player);
+glong		swfdec_player_get_next_event  	(SwfdecPlayer *	player);
 double		swfdec_player_get_rate		(SwfdecPlayer *	player);
 void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
 						 int *		width,
@@ -107,7 +107,7 @@ void		swfdec_player_render		(SwfdecPlayer *	player,
 						 double		width,
 						 double		height);
 void		swfdec_player_advance		(SwfdecPlayer *	player,
-						 guint		msecs);
+						 gulong		msecs);
 gboolean	swfdec_player_handle_mouse	(SwfdecPlayer *	player, 
 						 double		x,
 						 double		y,

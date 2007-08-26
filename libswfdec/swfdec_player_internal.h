@@ -125,7 +125,7 @@ struct _SwfdecPlayerClass
   SwfdecAsContextClass	context_class;
 
   void			(* advance)		(SwfdecPlayer *		player,
-						 guint			msecs,
+						 gulong			msecs,
 						 guint			audio_samples);
   gboolean		(* handle_key)		(SwfdecPlayer *		player,
 						 guint			key,

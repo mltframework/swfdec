@@ -67,6 +67,14 @@
  *                                to delete this variable.
  * @SWFDEC_AS_VARIABLE_CONSTANT: Do not allow changing the value with
  *                               swfdec_as_object_set_variable().
+ * @SWFDEC_AS_VARIABLE_VERSION_6_UP: This symbol is only visible in version 6 
+ *                                   and above.
+ * @SWFDEC_AS_VARIABLE_VERSION_NOT_6: This symbols is visible in all versions 
+ *                                    but version 6.
+ * @SWFDEC_AS_VARIABLE_VERSION_7_UP: This symbol is only visible in version 7 
+ *                                   and above.
+ * @SWFDEC_AS_VARIABLE_VERSION_8_UP: This symbol is only visible in version 8 
+ *                                   and above.
  *
  * These flags are used to describe various properties of a variable inside
  * Swfdec. You can manually set them with swfdec_as_object_set_variable_flags().
@@ -193,7 +201,14 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
   if (var == NULL)
     return FALSE;
 
-  if (var->flags & SWFDEC_AS_VARIABLE_FLASH6_UP && object->context->version < 6)
+  /* variable flag checks */
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && object->context->version < 6)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_NOT_6 && object->context->version == 6)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && object->context->version < 7)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && object->context->version < 8)
     return FALSE;
 
   if (var->get) {

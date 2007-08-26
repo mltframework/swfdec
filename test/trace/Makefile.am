@@ -153,6 +153,15 @@ EXTRA_DIST = \
 	asnative-create-7.swf.trace \
 	asnative-create-8.swf \
 	asnative-create-8.swf.trace \
+	ASSetPropFlags-ignore.as \
+	ASSetPropFlags-ignore-5.swf \
+	ASSetPropFlags-ignore-5.swf.trace \
+	ASSetPropFlags-ignore-6.swf \
+	ASSetPropFlags-ignore-6.swf.trace \
+	ASSetPropFlags-ignore-7.swf \
+	ASSetPropFlags-ignore-7.swf.trace \
+	ASSetPropFlags-ignore-8.swf \
+	ASSetPropFlags-ignore-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \
@@ -1058,6 +1067,13 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-fake.as \
+	string-fake-5.swf \
+	string-fake-5.swf.trace \
+	string-fake-6.swf \
+	string-fake-6.swf.trace \
+	string-fake-7.swf \
+	string-fake-7.swf.trace \
 	string-indexof.as \
 	string-indexof-5.swf \
 	string-indexof-5.swf.trace \
@@ -1088,6 +1104,13 @@ EXTRA_DIST = \
 	string-split-empty-6.swf.trace \
 	string-split-empty-7.swf \
 	string-split-empty-7.swf.trace \
+	string-trace.as \
+	string-trace-5.swf \
+	string-trace-5.swf.trace \
+	string-trace-6.swf \
+	string-trace-6.swf.trace \
+	string-trace-7.swf \
+	string-trace-7.swf.trace \
 	stringlength.as \
 	stringlength-5.swf \
 	stringlength-5.swf.trace \

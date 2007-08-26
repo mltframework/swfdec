@@ -40,6 +40,9 @@ BUILT_SOURCES = \
 CLEANFILES = \
 	$(BUILT_SOURCES)
 
+EXTRA_DIST = \
+	vivi_marshal.list
+
 vivi_function_list.h: $(libvivified_core_la_SOURCES)
 	(cd $(srcdir) \
 	  && grep -he "^VIVI_FUNCTION" $(libvivified_core_la_SOURCES) \

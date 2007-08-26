@@ -102,6 +102,8 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
 	in != flv->in) {
       SWFDEC_ERROR ("FIXME: format change not implemented");
       return NULL;
+    } else if (flv->decoder == NULL) {
+      return NULL;
     }
     swfdec_audio_decoder_push (flv->decoder, buffer);
     if (flv->next_timestamp == 0)

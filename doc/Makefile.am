@@ -170,3 +170,6 @@ include $(top_srcdir)/gtk-doc.make
 # Other files to distribute
 # e.g. EXTRA_DIST += version.xml.in
 EXTRA_DIST += 
+
+# Comment this out if you want your docs-status tested during 'make check'
+TESTS = $(GTKDOC_CHECK)

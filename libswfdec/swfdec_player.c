@@ -130,8 +130,106 @@
 
 /**
  * SwfdecKey:
+ * @SWFDEC_KEY_BACKSPACE: the backspace key
+ * @SWFDEC_KEY_TAB: the tab key
+ * @SWFDEC_KEY_CLEAR: the clear key
+ * @SWFDEC_KEY_ENTER: the enter key
+ * @SWFDEC_KEY_SHIFT: the shift key
+ * @SWFDEC_KEY_CONTROL: the control key
+ * @SWFDEC_KEY_ALT: the alt key
+ * @SWFDEC_KEY_CAPS_LOCK: the caps lock key
+ * @SWFDEC_KEY_ESCAPE: the escape key
+ * @SWFDEC_KEY_SPACE: the space key
+ * @SWFDEC_KEY_PAGE_UP: the page up key
+ * @SWFDEC_KEY_PAGE_DOWN: the page down key
+ * @SWFDEC_KEY_END: the end key
+ * @SWFDEC_KEY_HOME: the home key
+ * @SWFDEC_KEY_LEFT: the left key
+ * @SWFDEC_KEY_UP: the up key
+ * @SWFDEC_KEY_RIGHT: the right key
+ * @SWFDEC_KEY_DOWN: the down key
+ * @SWFDEC_KEY_INSERT: the insert key
+ * @SWFDEC_KEY_DELETE: the delete key
+ * @SWFDEC_KEY_HELP: the help key
+ * @SWFDEC_KEY_0: the 0 key
+ * @SWFDEC_KEY_1: the 1 key
+ * @SWFDEC_KEY_2: the 2 key
+ * @SWFDEC_KEY_3: the 3 key
+ * @SWFDEC_KEY_4: the 4 key
+ * @SWFDEC_KEY_5: the 5 key
+ * @SWFDEC_KEY_6: the 6 key
+ * @SWFDEC_KEY_7: the 7 key
+ * @SWFDEC_KEY_8: the 8 key
+ * @SWFDEC_KEY_9: the 9 key
+ * @SWFDEC_KEY_A: the ! key
+ * @SWFDEC_KEY_B: the B key
+ * @SWFDEC_KEY_C: the C key
+ * @SWFDEC_KEY_D: the D key
+ * @SWFDEC_KEY_E: the E key
+ * @SWFDEC_KEY_F: the F key
+ * @SWFDEC_KEY_G: the G key
+ * @SWFDEC_KEY_H: the H key
+ * @SWFDEC_KEY_I: the I key
+ * @SWFDEC_KEY_J: the J key
+ * @SWFDEC_KEY_K: the K key
+ * @SWFDEC_KEY_L: the L key
+ * @SWFDEC_KEY_M: the M key
+ * @SWFDEC_KEY_N: the N key
+ * @SWFDEC_KEY_O: the O key
+ * @SWFDEC_KEY_P: the P key
+ * @SWFDEC_KEY_Q: the Q key
+ * @SWFDEC_KEY_R: the R key
+ * @SWFDEC_KEY_S: the S key
+ * @SWFDEC_KEY_T: the T key
+ * @SWFDEC_KEY_U: the U key
+ * @SWFDEC_KEY_V: the V key
+ * @SWFDEC_KEY_W: the W key
+ * @SWFDEC_KEY_X: the X key
+ * @SWFDEC_KEY_Y: the Y key
+ * @SWFDEC_KEY_Z: the Z key
+ * @SWFDEC_KEY_NUMPAD_0: the 0 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_1: the 1 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_2: the 2 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_3: the 3 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_4: the 4 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_5: the 5 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_6: the 6 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_7: the 7 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_8: the 8 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_9: the 9 key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_MULTIPLY: the multiply key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_ADD: the add key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_SUBTRACT: the subtract key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_DECIMAL: the decimal key on the numeric keypad
+ * @SWFDEC_KEY_NUMPAD_DIVIDE: the divide key on the numeric keypad
+ * @SWFDEC_KEY_F1: the F1 key
+ * @SWFDEC_KEY_F2: the F2 key
+ * @SWFDEC_KEY_F3: the F3 key
+ * @SWFDEC_KEY_F4: the F4 key
+ * @SWFDEC_KEY_F5: the F5 key
+ * @SWFDEC_KEY_F6: the F6 key
+ * @SWFDEC_KEY_F7: the F7 key
+ * @SWFDEC_KEY_F8: the F8 key
+ * @SWFDEC_KEY_F9: the F9 key
+ * @SWFDEC_KEY_F10: the F10 key
+ * @SWFDEC_KEY_F11: the F11 key
+ * @SWFDEC_KEY_F12: the F12 key
+ * @SWFDEC_KEY_F13: the F13 key
+ * @SWFDEC_KEY_F14: the F14 key
+ * @SWFDEC_KEY_F15: the F15 key
+ * @SWFDEC_KEY_NUM_LOCK: the num lock key
+ * @SWFDEC_KEY_SEMICOLON: the semicolon key (on English keyboards)
+ * @SWFDEC_KEY_EQUAL: the equal key (on English keyboards)
+ * @SWFDEC_KEY_MINUS: the minus key (on English keyboards)
+ * @SWFDEC_KEY_SLASH: the slash key (on English keyboards)
+ * @SWFDEC_KEY_GRAVE: the grave key (on English keyboards)
+ * @SWFDEC_KEY_LEFT_BRACKET: the left bracket key (on English keyboards)
+ * @SWFDEC_KEY_BACKSLASH: the backslash key (on English keyboards)
+ * @SWFDEC_KEY_RIGHT_BRACKET: the right bracket key (on English keyboards)
+ * @SWFDEC_KEY_APOSTROPHE: the apostrophe key (on English keyboards)
  *
- * Lists all known key codes in Swfdec.
+ * Lists all known key codes in Swfdec and their meanings on an English 
+ * keyboard.
  */
 
 /*** Timeouts ***/
@@ -2055,6 +2153,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
   player->bgcolor_set = TRUE;
   if (player->bgcolor == color)
     return;
+  player->bgcolor = color;
   g_object_notify (G_OBJECT (player), "background-color");
   if (swfdec_player_is_initialized (player)) {
     g_signal_emit (player, signals[INVALIDATE], 0, 0.0, 0.0, 

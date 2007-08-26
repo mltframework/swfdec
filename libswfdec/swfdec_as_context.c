@@ -460,7 +460,7 @@ swfdec_as_context_set_property (GObject *object, guint param_id, const GValue *v
   
   switch (param_id) {
     case PROP_DEBUGGER:
-      context->debugger = g_value_dup_object (value);
+      context->debugger = SWFDEC_AS_DEBUGGER (g_value_dup_object (value));
       break;
     case PROP_UNTIL_GC:
       context->memory_until_gc = g_value_get_ulong (value);
@@ -1120,6 +1120,13 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   flags[0] = swfdec_as_value_to_integer (cx, &argv[2]);
   flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : 0;
+
+  if (flags[0] == 0 && flags[1] == 0) {
+    // we should add autosizing length attribute here
+    SWFDEC_FIXME ("ASSetPropFlags to set special length attribute not implemented");
+    return;
+  }
+
   if (SWFDEC_AS_VALUE_IS_NULL (&argv[1])) {
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
   } else {

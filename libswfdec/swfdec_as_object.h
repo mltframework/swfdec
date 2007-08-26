@@ -31,7 +31,10 @@ typedef enum {
   SWFDEC_AS_VARIABLE_PERMANENT = (1 << 1),
   SWFDEC_AS_VARIABLE_CONSTANT = (1 << 2),
 
-  SWFDEC_AS_VARIABLE_FLASH6_UP = (1 << 7)
+  SWFDEC_AS_VARIABLE_VERSION_6_UP = (1 << 7),
+  SWFDEC_AS_VARIABLE_VERSION_NOT_6 = (1 << 8),
+  SWFDEC_AS_VARIABLE_VERSION_7_UP = (1 << 10),
+  SWFDEC_AS_VARIABLE_VERSION_8_UP = (1 << 12),
 } SwfdecAsVariableFlag;
 
 typedef enum {
@@ -173,6 +176,9 @@ void		swfdec_as_object_call		(SwfdecAsObject *       object,
 						 SwfdecAsValue *	return_value);
 void		swfdec_as_object_run		(SwfdecAsObject *       object,
 						 SwfdecScript *		script);
+
+const char*	swfdec_as_object_to_string	(SwfdecAsContext *	context,
+						 SwfdecAsObject *	object);
 
 
 G_END_DECLS

@@ -1112,9 +1112,6 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   guint flags[2]; /* flags and mask - array so we can pass it as data pointer */
   SwfdecAsObject *obj;
 
-  if (cx->version < 6) {
-    SWFDEC_FIXME ("ASSetPropFlags needs some limitations for Flash 5");
-  }
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
   obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);

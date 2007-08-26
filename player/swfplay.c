@@ -54,7 +54,7 @@ view_swf (SwfdecPlayer *player, gboolean use_image)
   if (use_image)
     swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
   gtk_container_add (GTK_CONTAINER (window), widget);
-  g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect_swapped (window, "destroy", G_CALLBACK (g_main_loop_quit), loop);
   gtk_widget_show_all (window);
 
   return window;

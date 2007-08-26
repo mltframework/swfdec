@@ -240,6 +240,8 @@ main (int argc, char *argv[])
   }
 
   player = swfdec_player_new_from_file (argv[1]);
+  /* FIXME: HACK! */
+  swfdec_player_advance (player, 0);
   if (!SWFDEC_IS_SPRITE_MOVIE (player->roots->data)) {
     g_printerr ("Error parsing file \"%s\"\n", argv[1]);
     g_object_unref (player);

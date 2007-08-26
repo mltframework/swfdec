@@ -133,7 +133,6 @@ run_test (gpointer testp, gpointer unused)
     /* FIXME: will not do 10 iterations if there's other stuff loaded */
     glong advance = swfdec_player_get_next_event (player);
 
-    g_print ("advancing %ld (of %lu left)\n", advance, time_left);
     g_assert (advance >= 0);
     if (inter) {
       int t = swfdec_interaction_get_next_event (inter);

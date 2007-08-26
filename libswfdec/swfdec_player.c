@@ -492,7 +492,6 @@ swfdec_player_add_external_action (SwfdecPlayer *player, gpointer object,
     }
     player->external_timeout.callback = swfdec_player_trigger_external_actions;
     swfdec_player_add_timeout (player, &player->external_timeout);
-    g_print ("adding at time %lu\n", (gulong) SWFDEC_TICKS_TO_MSECS (player->time));
   }
 }
 

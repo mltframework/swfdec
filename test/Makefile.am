@@ -3,16 +3,13 @@ SUBDIRS = image sound trace various
 
 if WITH_GTK
 noinst_LTLIBRARIES = libswfedit.la
-noinst_PROGRAMS = swfdec-extract dump parse swfedit swfscript
+noinst_PROGRAMS = swfdec-extract dump swfedit swfscript
 else
-noinst_PROGRAMS = swfdec-extract dump parse 
+noinst_PROGRAMS = swfdec-extract dump
 endif
 
 dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(PANGO_CFLAGS)
 dump_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS)
-
-parse_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
-parse_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 swfdec_extract_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
 swfdec_extract_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)

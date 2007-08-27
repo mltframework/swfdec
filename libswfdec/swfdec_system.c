@@ -116,7 +116,7 @@ swfdec_system_get_property (GObject *object, guint param_id, GValue *value,
       g_value_set_double (value, system->par);
       break;
     case PROP_DPI:
-      g_value_set_double (value, system->dpi);
+      g_value_set_uint (value, system->dpi);
       break;
     case PROP_COLOR_MODE:
       g_value_set_string (value, system->color_mode);
@@ -190,7 +190,7 @@ swfdec_system_set_property (GObject *object, guint param_id, const GValue *value
       system->par = g_value_get_double (value);
       break;
     case PROP_DPI:
-      system->dpi = g_value_get_double (value);
+      system->dpi = g_value_get_uint (value);
       break;
     case PROP_COLOR_MODE:
       s = g_value_dup_string (value);
@@ -249,7 +249,7 @@ swfdec_system_class_init (SwfdecSystemClass *klass)
       g_param_spec_string ("version", "version", "version string",
 	  "WIN 9.0.100.0", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, PROP_LANGUAGE,
-      g_param_spec_string ("screen-width", "screen-width", "ISO 639-1 screen-width code",
+      g_param_spec_string ("language", "language", "ISO 639-1 language code",
 	  "en", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, PROP_SCREEN_WIDTH,
       g_param_spec_uint ("screen-width", "screen width", "width of the screen in pixels",

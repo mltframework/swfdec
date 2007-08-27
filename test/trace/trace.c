@@ -79,13 +79,19 @@ fscommand_cb (SwfdecPlayer *player, const char *command, const char *parameter, 
 }
 
 static void
+initialized_cb (SwfdecPlayer *player, GParamSpec *pspec, gulong *time_left)
+{
+  *time_left = ceil (10000 / swfdec_player_get_rate (player));
+}
+
+static void
 run_test (gpointer testp, gpointer unused)
 {
   Test *test = testp;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   SwfdecBuffer *buffer;
-  guint time_left;
+  gulong time_left = G_MAXULONG;
   char *str;
   GString *string, *output;
   GError *error = NULL;
@@ -105,11 +111,6 @@ run_test (gpointer testp, gpointer unused)
   g_signal_connect (player, "trace", G_CALLBACK (trace_cb), string);
   g_signal_connect (player, "fscommand", G_CALLBACK (fscommand_cb), &quit);
   swfdec_player_set_loader (player, loader);
-  if (!swfdec_player_is_initialized (player)) {
-    g_string_append_printf (output, "  ERROR: player is not initialized\n");
-    g_object_unref (player);
-    goto fail;
-  }
   str = g_strdup_printf ("%s.act", test->filename);
   if (g_file_test (str, G_FILE_TEST_EXISTS)) {
     inter = swfdec_interaction_new_from_file (str, &error);
@@ -122,7 +123,7 @@ run_test (gpointer testp, gpointer unused)
     }
     time_left = swfdec_interaction_get_duration (inter);
   } else {
-    time_left = ceil (10000 / swfdec_player_get_rate (player));
+    g_signal_connect (player, "notify::initialized", G_CALLBACK (initialized_cb), &time_left);
     inter = NULL;
   }
   g_free (str);
@@ -130,17 +131,18 @@ run_test (gpointer testp, gpointer unused)
   /* FIXME: Make the number of iterations configurable? */
   while (quit == FALSE) {
     /* FIXME: will not do 10 iterations if there's other stuff loaded */
-    guint advance = swfdec_player_get_next_event (player);
+    glong advance = swfdec_player_get_next_event (player);
 
+    g_assert (advance >= 0);
     if (inter) {
       int t = swfdec_interaction_get_next_event (inter);
       g_assert (t >= 0);
-      advance = MIN (advance, (guint) t);
+      advance = MIN (advance, t);
     }
-    if (advance > time_left)
+    if ((guint) advance > time_left)
       break;
-    swfdec_player_advance (player, advance);
     time_left -= advance;
+    swfdec_player_advance (player, advance);
     if (inter) {
       swfdec_interaction_advance (inter, player, advance);
       if (time_left == 0)

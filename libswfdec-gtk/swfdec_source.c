@@ -49,7 +49,7 @@ swfdec_iterate_get_msecs_to_next_event (GSource *source_)
 
   g_assert (source->player);
   diff = swfdec_player_get_next_event (source->player);
-  if (diff == 0)
+  if (diff == -1)
     return G_MAXLONG;
   diff *= source->speed;
   g_source_get_current_time (source_, &now);

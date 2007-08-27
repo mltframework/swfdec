@@ -240,7 +240,7 @@ swfdec_player_get_next_event_time (SwfdecPlayer *player)
   if (player->timeouts) {
     return ((SwfdecTimeout *) player->timeouts->data)->timestamp - player->time;
   } else {
-    return 0;
+    return G_MAXUINT64;
   }
 }
 
@@ -277,7 +277,7 @@ swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (timeout != NULL);
-  g_return_if_fail (timeout->timestamp > player->time);
+  g_return_if_fail (timeout->timestamp >= player->time);
   g_return_if_fail (timeout->callback != NULL);
 
   SWFDEC_LOG ("adding timeout %p in %"G_GUINT64_FORMAT" msecs", timeout, 
@@ -478,9 +478,18 @@ swfdec_player_add_external_action (SwfdecPlayer *player, gpointer object,
   action->func = action_func;
   action->data = action_data;
   if (!player->external_timeout.callback) {
-    /* trigger execution immediately, but at least 100ms after the last external timeout */
-    player->external_timeout.timestamp = MAX (player->time + 1,
-	player->external_timeout.timestamp + SWFDEC_MSECS_TO_TICKS (100));
+    /* trigger execution immediately.
+     * But if initialized, keep at least 100ms from when the last external 
+     * timeout triggered. This is a crude method to get around infinite loops
+     * when script actions executed by external actions trigger another external
+     * action that would execute instantly.
+     */
+    if (player->initialized) {
+      player->external_timeout.timestamp = MAX (player->time,
+	  player->external_timeout.timestamp + SWFDEC_MSECS_TO_TICKS (100));
+    } else {
+      player->external_timeout.timestamp = player->time;
+    }
     player->external_timeout.callback = swfdec_player_trigger_external_actions;
     swfdec_player_add_timeout (player, &player->external_timeout);
   }
@@ -1096,7 +1105,7 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
 }
 
 static void
-swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples)
+swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_samples)
 {
   GList *walk;
   SwfdecAudio *audio;
@@ -1106,7 +1115,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, guint msecs, guint audio_samples
   
   swfdec_player_lock (player);
   target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
-  SWFDEC_DEBUG ("advancing %u msecs (%u audio frames)", msecs, audio_samples);
+  SWFDEC_DEBUG ("advancing %lu msecs (%u audio frames)", msecs, audio_samples);
 
   player->audio_skip = audio_samples;
   /* iterate all playing sounds */
@@ -1275,8 +1284,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       g_param_spec_enum ("mouse-cursor", "mouse cursor", "how the mouse pointer should be presented",
 	  SWFDEC_TYPE_MOUSE_CURSOR, SWFDEC_MOUSE_CURSOR_NONE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_NEXT_EVENT,
-      g_param_spec_uint ("next-event", "next event", "how many milliseconds until the next event or 0 when no event pending",
-	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+      g_param_spec_long ("next-event", "next event", "how many milliseconds until the next event or 0 when no event pending",
+	  -1, G_MAXLONG, -1, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_uint ("cache-size", "cache size", "maximum cache size in bytes",
 	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READABLE));
@@ -1321,8 +1330,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    */
   signals[ADVANCE] = g_signal_new ("advance", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, advance), 
-      NULL, NULL, swfdec_marshal_VOID__UINT_UINT,
-      G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, swfdec_marshal_VOID__ULONG_UINT,
+      G_TYPE_NONE, 2, G_TYPE_ULONG, G_TYPE_UINT);
   /**
    * SwfdecPlayer::handle-key:
    * @player: the #SwfdecPlayer affected
@@ -1601,7 +1610,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->internal_height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
   player->initialized = TRUE;
   if (rate) {
-    player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / rate;
+    player->iterate_timeout.timestamp = player->time;
     swfdec_player_add_timeout (player, &player->iterate_timeout);
     SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
@@ -1709,24 +1718,18 @@ swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
  * been set on @player yet.
  * If the @variables are set and validate, they will be set as properties on the 
  * root movie. 
- * <note>If you want to capture events during the setup process, you want to 
- * connect your signal handlers before calling swfdec_player_set_loader() and
- * not use conveniencse functions such as swfdec_player_new_from_file().</note>
  **/
 void
 swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
     const char *variables)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->roots == NULL);
+  g_return_if_fail (player->loader == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  swfdec_player_lock (player);
   player->loader = loader;
   g_object_ref (loader);
   swfdec_player_add_level_from_loader (player, 0, loader, variables);
-  swfdec_player_perform_external_actions (player);
-  swfdec_player_unlock (player);
 }
 
 /**
@@ -1934,11 +1937,10 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
  * often as the SwfdecPlayer::next-event property indicates.
  **/
 void
-swfdec_player_advance (SwfdecPlayer *player, guint msecs)
+swfdec_player_advance (SwfdecPlayer *player, gulong msecs)
 {
   guint frames;
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (msecs > 0);
 
   frames = SWFDEC_TICKS_TO_SAMPLES (player->time + SWFDEC_MSECS_TO_TICKS (msecs))
     - SWFDEC_TICKS_TO_SAMPLES (player->time);
@@ -1972,9 +1974,9 @@ swfdec_player_is_initialized (SwfdecPlayer *player)
  * Queries how long to the next event. This is the next time when you should 
  * call swfdec_player_advance() to forward to.
  *
- * Returns: number of milliseconds until next event or 0 if no outstanding event
+ * Returns: number of milliseconds until next event or -1 if no outstanding event
  **/
-guint
+glong
 swfdec_player_get_next_event (SwfdecPlayer *player)
 {
   SwfdecTick tick;
@@ -1983,9 +1985,10 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
   tick = swfdec_player_get_next_event_time (player);
-  ret = SWFDEC_TICKS_TO_MSECS (tick);
-  if (tick % (SWFDEC_TICKS_PER_SECOND / 1000))
-    ret++;
+  if (tick == G_MAXUINT64)
+    return -1;
+  /* round up to full msecs */
+  ret = SWFDEC_TICKS_TO_MSECS (tick + SWFDEC_TICKS_PER_SECOND / 1000 - 1); 
 
   return ret;
 }

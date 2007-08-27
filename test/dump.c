@@ -409,6 +409,8 @@ main (int argc, char *argv[])
     g_object_unref (player);
     return 1;
   }
+  /* FIXME: HACK! */
+  swfdec_player_advance (player, 0);
   s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->swf->decoder;
   if (swfdec_player_get_rate (player) == 0 || 
       !SWFDEC_IS_SWF_DECODER (s)) {

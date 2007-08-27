@@ -599,21 +599,18 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, const char *msg)
 #undef APPEND
 }
 
-static void
-swfdec_as_string_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+char *
+swfdec_as_string_escape (SwfdecAsContext *cx, const char *s)
 {
   GByteArray *array;
-  const char *s;
   char *in = NULL;
 
   array = g_byte_array_new ();
-  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (cx->version <= 5) {
     in = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
     if (s == NULL) {
       SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", s);
-      return;
+      return NULL;
     } else {
       s = in;
     }
@@ -634,9 +631,24 @@ swfdec_as_string_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
     s++;
   }
   g_byte_array_append (array, (guchar *) s, 1);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, (char *) array->data));
-  g_byte_array_free (array, TRUE);
   g_free (in);
+  return (char *) g_byte_array_free (array, FALSE);
+}
+
+static void
+swfdec_as_string_escape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  char *result;
+
+  result =
+    swfdec_as_string_escape (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  if (result != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
+    g_free (result);
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
+  }
 }
 
 static char *
@@ -800,7 +812,7 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   /* add properties to global object */
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_escape, 0, swfdec_as_string_escape, 1);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_escape, 0, swfdec_as_string_escape_internal, 1);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_unescape, 0, swfdec_as_string_unescape_internal, 1);
 }
 

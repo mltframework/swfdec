@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_player.h>
 
 G_BEGIN_DECLS
 
@@ -62,6 +63,9 @@ struct _SwfdecXmlNodeClass {
 
 GType		swfdec_xml_node_get_type	(void);
 
+SwfdecXmlNode *	swfdec_xml_node_new		(SwfdecAsContext *	context,
+						 SwfdecXmlNodeType	type,
+						 const char *		value);
 void		swfdec_xml_node_removeNode	(SwfdecXmlNode *	node);
 void		swfdec_xml_node_appendChild	(SwfdecXmlNode *	node,
 						 SwfdecXmlNode *	child);

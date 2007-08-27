@@ -162,10 +162,9 @@ static const char *
 swfdec_xml_parse_tag (SwfdecAsObject *object, SwfdecXmlNode **node,
     const char *p)
 {
-  SwfdecAsObject *unused;
-  SwfdecXmlNode *node_new;
-  SwfdecAsValue argv[2];
-  const char *end, *name;
+  SwfdecXmlNode *child;
+  char *name;
+  const char *end;
 
   g_assert (p != NULL);
   g_return_val_if_fail (*p == '<', strchr (p, '\0'));
@@ -181,8 +180,9 @@ swfdec_xml_parse_tag (SwfdecAsObject *object, SwfdecXmlNode **node,
   }
 
   name = g_strndup (p + 1 , end - (p + 1));
-  swfdec_xml_node_appendChild (node, SWFDEC_XML_NODE_ELEMENT, name);
+  child = swfdec_xml_node_new (object->context, SWFDEC_XML_NODE_ELEMENT, name);
   g_free (name);
+  swfdec_xml_node_appendChild (*node, child);
 
   end = strchr (end, '>');
   if (end == NULL) {
@@ -226,7 +226,11 @@ swfdec_xml_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsValue val;
+  SwfdecXmlNode *node;
   const char *value, *p;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
 
   if (argc < 1)
     return;
@@ -240,6 +244,7 @@ swfdec_xml_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   value = swfdec_as_value_to_string (cx, &argv[0]);
 
   p = value;
+  node = SWFDEC_XML_NODE (object);
 
   while (*p != '\0') {
     if (*p == '<') {
@@ -250,7 +255,7 @@ swfdec_xml_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
       } else if (strncmp (p + 1, "!--", strlen ("!--")) == 0) {
 	p = swfdec_xml_parse_comment (object, p);
       } else {
-	p = swfdec_xml_parse_tag (object, p);
+	p = swfdec_xml_parse_tag (object, &node, p);
       }
     } else {
       p = swfdec_xml_parse_text (object, p);

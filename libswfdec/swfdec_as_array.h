@@ -54,6 +54,9 @@ void		swfdec_as_array_append		(SwfdecAsArray *	array,
 						 guint			n,
 						 const SwfdecAsValue *	values);
 gint32		swfdec_as_array_length		(SwfdecAsArray *	array);
+void		swfdec_as_array_get_value	(SwfdecAsArray *	array,
+						 gint32			i,
+						 SwfdecAsValue *	value);
 
 
 G_END_DECLS

@@ -276,6 +276,24 @@ swfdec_as_array_append (SwfdecAsArray *array, guint n,
       swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array)), n, value);
 }
 
+/**
+ * swfdec_as_array_get_value:
+ * @array: a #SwfdecAsArray
+ * @i: index of the value to get
+ * @value: a pointer to #SwfdecAsValue that will be set
+ *
+ * Gets a value from given index. If the value doesn't exists, an undefined
+ * value is set.
+ **/
+void
+swfdec_as_array_get_value (SwfdecAsArray *array, gint32 i, SwfdecAsValue *value)
+{
+  const char *var;
+
+  var = swfdec_as_double_to_string (SWFDEC_AS_OBJECT (array)->context, i);
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (array), var, value);
+}
+
 typedef struct {
   SwfdecAsObject		*object_to;
   gint32			offset;

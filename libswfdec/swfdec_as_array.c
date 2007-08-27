@@ -100,6 +100,20 @@ swfdec_as_array_get_length (SwfdecAsObject *object)
   return length;
 }
 
+/**
+ * swfdec_as_array_get_length:
+ * @array: a #SwfdecAsArray
+ *
+ * Gets the current length of the array
+ *
+ * Returns: Current length of the array, always >= 0
+ **/
+gint32
+swfdec_as_array_length (SwfdecAsArray *array)
+{
+  return swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array));
+}
+
 static void
 swfdec_as_array_set_length (SwfdecAsObject *object, gint32 length)
 {

@@ -53,6 +53,7 @@ SwfdecAsObject *swfdec_as_array_new		(SwfdecAsContext *	context);
 void		swfdec_as_array_append		(SwfdecAsArray *	array,
 						 guint			n,
 						 const SwfdecAsValue *	values);
+gint32		swfdec_as_array_length		(SwfdecAsArray *	array);
 
 
 G_END_DECLS

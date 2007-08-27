@@ -104,6 +104,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_swf_decoder.c \
 	swfdec_swf_instance.c \
 	swfdec_system.c \
+	swfdec_system_as.c \
 	swfdec_tag.c \
 	swfdec_text.c \
 	swfdec_url.c \

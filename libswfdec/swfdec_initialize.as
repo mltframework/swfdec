@@ -127,6 +127,14 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 
 XML.prototype.load = ASnative (301, 0);
 
+/*** System ***/
+
+System = {};
+System.capabilities = {};
+System.capabilities.Query = ASnative(11, 0);
+System.capabilities.Query();
+delete System.capabilities.Query;
+
 /*** OH THE HUMANITY ***/
 
 o = null;

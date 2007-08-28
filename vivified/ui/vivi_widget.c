@@ -24,9 +24,44 @@
 #include <math.h>
 #include "vivi_widget.h"
 
+enum {
+  PROP_0,
+  PROP_APP
+};
 
 G_DEFINE_TYPE (ViviWidget, vivi_widget, SWFDEC_TYPE_GTK_WIDGET)
 
+static void
+vivi_widget_get_property (GObject *object, guint param_id, GValue *value, 
+    GParamSpec * pspec)
+{
+  ViviWidget *widget = VIVI_WIDGET (object);
+  
+  switch (param_id) {
+    case PROP_APP:
+      g_value_set_object (value, widget->app);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
+
+static void
+vivi_widget_set_property (GObject *object, guint param_id, const GValue *value,
+    GParamSpec *pspec)
+{
+  ViviWidget *widget = VIVI_WIDGET (object);
+  
+  switch (param_id) {
+    case PROP_APP:
+      vivi_widget_set_application (widget, VIVI_APPLICATION (g_value_get_object (value)));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
 
 static gboolean
 vivi_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
@@ -118,27 +153,12 @@ vivi_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 }
 
 static void
-vivi_widget_app_notify (ViviApplication *app, GParamSpec *pspec, ViviWidget *widget)
-{
-  if (g_str_equal (pspec->name, "interrupted")) {
-    swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (widget),
-	vivi_application_get_interrupted (widget->app));
-  } else if (g_str_equal (pspec->name, "player")) {
-    swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (widget),
-	vivi_application_get_player (widget->app));
-  }
-}
-
-static void
 vivi_widget_dispose (GObject *object)
 {
   ViviWidget *widget = VIVI_WIDGET (object);
 
-  if (widget->app) {
-    g_signal_handlers_disconnect_by_func (widget->app, vivi_widget_app_notify, widget);
-    g_object_unref (widget->app);
-    widget->app = NULL;
-  }
+  vivi_widget_set_application (widget, NULL);
+
   G_OBJECT_CLASS (vivi_widget_parent_class)->dispose (object);
 }
 
@@ -149,6 +169,12 @@ vivi_widget_class_init (ViviWidgetClass * g_class)
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (g_class);
 
   object_class->dispose = vivi_widget_dispose;
+  object_class->get_property = vivi_widget_get_property;
+  object_class->set_property = vivi_widget_set_property;
+
+  g_object_class_install_property (object_class, PROP_APP,
+      g_param_spec_object ("application", "application", "application that is playing",
+	  VIVI_TYPE_APPLICATION, G_PARAM_READWRITE));
 
   widget_class->expose_event = vivi_widget_expose;
   widget_class->button_press_event = vivi_widget_button_press;
@@ -170,9 +196,44 @@ vivi_widget_new (ViviApplication *app)
   g_return_val_if_fail (VIVI_IS_APPLICATION (app), NULL);
 
   widget = g_object_new (VIVI_TYPE_WIDGET, "player", vivi_application_get_player (app), NULL);
-  widget->app = g_object_ref (app);
-  g_signal_connect (app, "notify", G_CALLBACK (vivi_widget_app_notify), widget);
 
   return GTK_WIDGET (widget);
+}
+
+static void
+vivi_widget_app_notify (ViviApplication *app, GParamSpec *pspec, ViviWidget *widget)
+{
+  if (g_str_equal (pspec->name, "interrupted")) {
+    swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (widget),
+	!vivi_application_get_interrupted (widget->app));
+  } else if (g_str_equal (pspec->name, "player")) {
+    swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (widget),
+	vivi_application_get_player (widget->app));
+  }
+}
+
+void
+vivi_widget_set_application (ViviWidget *widget, ViviApplication *app)
+{
+  g_return_if_fail (VIVI_IS_WIDGET (widget));
+  g_return_if_fail (app == NULL || VIVI_IS_APPLICATION (app));
+
+  if (widget->app) {
+    g_signal_handlers_disconnect_by_func (widget->app, vivi_widget_app_notify, widget);
+    g_object_unref (widget->app);
+  }
+  widget->app = app;
+  if (app) {
+    g_object_ref (app);
+    g_signal_connect (app, "notify", G_CALLBACK (vivi_widget_app_notify), widget);
+    swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (widget),
+	!vivi_application_get_interrupted (app));
+    swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (widget),
+	vivi_application_get_player (app));
+  } else {
+    swfdec_gtk_widget_set_interactive (SWFDEC_GTK_WIDGET (widget), TRUE);
+    swfdec_gtk_widget_set_player (SWFDEC_GTK_WIDGET (widget), NULL);
+  }
+  g_object_notify (G_OBJECT (widget), "application");
 }
 

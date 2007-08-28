@@ -23,36 +23,14 @@
 
 #include <libswfdec-gtk/swfdec-gtk.h>
 #include "vivi_vivi_docklet.h"
-
-static void
-vivi_player_notify_app (ViviApplication *app, GParamSpec *pspec, SwfdecGtkWidget *player)
-{
-  if (g_str_equal (pspec->name, "player")) {
-    swfdec_gtk_widget_set_player (player, vivi_application_get_player (app));
-  } else if (g_str_equal (pspec->name, "interrupted")) {
-    swfdec_gtk_widget_set_interactive (player, !vivi_application_get_interrupted (app));
-  }
-}
+#include "vivi_widget.h"
 
 void
 vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app);
 void
 vivi_player_application_set (ViviViviDocklet *docklet, ViviApplication *app)
 {
-  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (vivi_vivi_docklet_find_widget_by_type (docklet, SWFDEC_TYPE_GTK_WIDGET));
+  ViviWidget *widget = VIVI_WIDGET (vivi_vivi_docklet_find_widget_by_type (docklet, VIVI_TYPE_WIDGET));
 
-  g_signal_connect (app, "notify", G_CALLBACK (vivi_player_notify_app), widget);
-  swfdec_gtk_widget_set_player (widget, vivi_application_get_player (app));
-  swfdec_gtk_widget_set_interactive (widget, !vivi_application_get_interrupted (app));
+  vivi_widget_set_application (widget, app);
 }
-
-void
-vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app);
-void
-vivi_player_application_unset (ViviViviDocklet *docklet, ViviApplication *app)
-{
-  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (vivi_vivi_docklet_find_widget_by_type (docklet, SWFDEC_TYPE_GTK_WIDGET));
-
-  g_signal_handlers_disconnect_by_func (app, vivi_player_notify_app, widget);
-}
-

@@ -54,6 +54,9 @@ GType		vivi_widget_get_type		(void);
 
 GtkWidget *	vivi_widget_new			(ViviApplication *	app);
 
+void		vivi_widget_set_application	(ViviWidget *		widget,
+						 ViviApplication *	app);
+
 
 G_END_DECLS
 #endif

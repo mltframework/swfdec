@@ -21,6 +21,7 @@
 #define _VIVI_WIDGET_H_
 
 #include <libswfdec-gtk/swfdec-gtk.h>
+#include <vivified/core/vivified-core.h>
 
 G_BEGIN_DECLS
 
@@ -37,6 +38,8 @@ struct _ViviWidget
 {
   SwfdecGtkWidget     	widget;
 
+  ViviApplication *	app;
+
   int			x;
   int			y;
   int			button;
@@ -49,7 +52,7 @@ struct _ViviWidgetClass
 
 GType		vivi_widget_get_type		(void);
 
-GtkWidget *	vivi_widget_new			(SwfdecPlayer *	player);
+GtkWidget *	vivi_widget_new			(ViviApplication *	app);
 
 
 G_END_DECLS

@@ -48,6 +48,16 @@ swfdec_xml_node_init (SwfdecXmlNode *xml_node)
 /*** AS CODE ***/
 
 static void
+swfdec_xml_node_get_nodeType (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (ret, SWFDEC_XML_NODE (object)->type);
+}
+
+static void
 swfdec_xml_node_get_nodeValue (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -624,6 +634,8 @@ swfdec_xml_node_init_context (SwfdecPlayer *player, guint version)
       swfdec_xml_node_hasChildNodes, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
       swfdec_xml_node_toString, 0);
+  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeType,
+      swfdec_xml_node_get_nodeType, NULL);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeValue,
       swfdec_xml_node_get_nodeValue, swfdec_xml_node_set_nodeValue);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeName,

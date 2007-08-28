@@ -56,9 +56,9 @@ typedef struct _SwfdecXmlNodeClass SwfdecXmlNodeClass;
 struct _SwfdecXmlNode {
   SwfdecAsObject	object;
 
-  int			type;
-  const char		*name; // for type == element
-  const char		*value; // for type != element
+  guint			type;		// SwfdecXmlNodeType
+  const char		*name;		// for type == element
+  const char		*value;		// for type != element
 
   SwfdecXmlNode		*parent;
   SwfdecAsArray		*children;

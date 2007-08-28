@@ -48,13 +48,100 @@ swfdec_xml_node_init (SwfdecXmlNode *xml_node)
 /*** AS CODE ***/
 
 static void
-swfdec_xml_node_get_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_xml_node_get_nodeValue (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (!SWFDEC_IS_XML_NODE (object))
     return;
 
   SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML_NODE (object)->value);
+}
+
+static void
+swfdec_xml_node_set_nodeValue (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *value;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  value = swfdec_as_value_to_string (cx, &argv[0]);
+
+  SWFDEC_XML_NODE (object)->value = value;
+  SWFDEC_AS_VALUE_SET_STRING (ret, value);
+}
+
+static void
+swfdec_xml_node_get_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML_NODE (object)->name);
+}
+
+static void
+swfdec_xml_node_set_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *name;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  name = swfdec_as_value_to_string (cx, &argv[0]);
+
+  SWFDEC_XML_NODE (object)->name = name;
+  SWFDEC_AS_VALUE_SET_STRING (ret, name);
+}
+
+static void
+swfdec_xml_node_get_prefix (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *p, *prefix, *name;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  name = SWFDEC_XML_NODE (object)->name;
+  p = strchr (name, ':');
+  if (p == NULL || *(p + 1) == '\0') {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    return;
+  }
+
+  prefix = swfdec_as_context_give_string (cx, g_strndup (name, p - name));
+  SWFDEC_AS_VALUE_SET_STRING (ret, prefix);
+}
+
+static void
+swfdec_xml_node_get_localName (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *p, *name;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  name = SWFDEC_XML_NODE (object)->name;
+  p = strchr (name, ':');
+  if (p == NULL || *(p + 1) == '\0') {
+    SWFDEC_AS_VALUE_SET_STRING (ret, name);
+    return;
+  }
+  p++;
+
+  SWFDEC_AS_VALUE_SET_STRING (ret,
+      swfdec_as_context_give_string (cx, g_strdup (p)));
 }
 
 static void
@@ -413,7 +500,11 @@ swfdec_xml_node_init_properties (SwfdecXmlNode *node, int type,
   node->children = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
   node->attributes = swfdec_as_object_new_empty (object->context);
   node->type = type;
-  node->value = value;
+  if (node->type == SWFDEC_XML_NODE_ELEMENT) {
+    node->name = value;
+  } else {
+    node->value = value;
+  }
 }
 
 /**
@@ -533,8 +624,14 @@ swfdec_xml_node_init_context (SwfdecPlayer *player, guint version)
       swfdec_xml_node_hasChildNodes, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
       swfdec_xml_node_toString, 0);
+  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeValue,
+      swfdec_xml_node_get_nodeValue, swfdec_xml_node_set_nodeValue);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeName,
-      swfdec_xml_node_get_nodeName, NULL);
+      swfdec_xml_node_get_nodeName, swfdec_xml_node_set_nodeName);
+  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_prefix,
+      swfdec_xml_node_get_prefix, NULL);
+  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_localName,
+      swfdec_xml_node_get_localName, NULL);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_childNodes,
       swfdec_xml_node_get_childNodes, NULL);
 }

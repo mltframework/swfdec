@@ -418,7 +418,9 @@ function trace_properties (o, prefix, identifier)
 {
   _global["mySecretId"] = "_global";
   _global.Object["mySecretId"] = "_global.Object";
+  _global.XMLNode["mySecretId"] = "_global.XMLNode";
   generate_names (_global.Object, "_global", "Object");
+  generate_names (_global.XMLNode, "_global", "XMLNode");
   generate_names (_global, "", "_global");
 
   if (typeof (o) == "object" || typeof (o) == "function")

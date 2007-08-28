@@ -39,6 +39,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_system.h"
 
 /*** MOVIE ***/
 
@@ -911,6 +912,12 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
+    *flags = 0;
+    return TRUE;
+  }
+  if (movie->parent == NULL && variable == SWFDEC_AS_STR__version) {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (object->context,
+	  SWFDEC_PLAYER (object->context)->system->version));
     *flags = 0;
     return TRUE;
   }

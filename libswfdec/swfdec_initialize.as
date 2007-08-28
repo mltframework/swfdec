@@ -125,7 +125,7 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 
 /*** XML ***/
 
-function XML () { };
+//function XML () { };
 
 XML.prototype = new XMLNode (1, "");
 

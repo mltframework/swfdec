@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_xml_node.h>
 
 G_BEGIN_DECLS
 
@@ -37,12 +38,29 @@ typedef struct _SwfdecXmlClass SwfdecXmlClass;
 #define SWFDEC_XML_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_XML, SwfdecXmlClass))
 #define SWFDEC_XML_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_XML, SwfdecXmlClass))
 
+typedef enum {
+  XML_PARSE_STATUS_OK = 0,
+  XML_PARSE_STATUS_CDATA_NOT_TERMINATED = -2,
+  XML_PARSE_STATUS_XMLDECL_NOT_TERMINATED = -3,
+  XML_PARSE_STATUS_DOCTYPEDECL_NOT_TERMINATED = -4,
+  XML_PARSE_STATUS_COMMENT_NOT_TERMINATED = -5,
+  XML_PARSE_STATUS_ELEMENT_MALFORMED = -6,
+  XML_PARSE_STATUS_OUT_OF_MEMORY = -7,
+  XML_PARSE_STATUS_ATTRIBUTE_NOT_TERMINATED = -8,
+  XML_PARSE_STATUS_TAG_NOT_CLOSED = -9, // FIXME are the two correct?
+  XML_PARSE_STATUS_TAG_MISMATCH = -10
+} SwfdecXmlParseStatus;
+
 struct _SwfdecXml {
-  SwfdecAsObject	object;
+  SwfdecXmlNode		xml_node;
+
+  SwfdecXmlParseStatus	status;
+  const char		*xmlDecl;
+  const char		*docTypeDecl;
 };
 
 struct _SwfdecXmlClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecXmlNodeClass	xml_node_class;
 };
 
 GType		swfdec_xml_get_type	(void);

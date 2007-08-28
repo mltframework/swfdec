@@ -129,9 +129,6 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 
 XML.prototype = new XMLNode (1, "");
 
-XML.prototype.loaded = undefined;
-XML.prototype._bytesLoaded = undefined;
-XML.prototype._bytesTotal = undefined;
 XML.prototype.contentType = "application/x-www-form-urlencoded";
 
 XML.prototype.load = ASnative (301, 0);

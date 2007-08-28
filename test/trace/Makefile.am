@@ -297,6 +297,9 @@ EXTRA_DIST = \
 	constructor-prototype.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
+	crash-0.5.2-startdrag.as \
+	crash-0.5.2-startdrag.swf \
+	crash-0.5.2-startdrag.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	definefunction2-arguments.swf \

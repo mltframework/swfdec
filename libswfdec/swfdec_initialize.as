@@ -162,6 +162,15 @@ XML.prototype.getBytesTotal = function () {
 
 ASSetPropFlags(XML.prototype, null, 129);
 
+/*** System ***/
+
+System = {};
+System.capabilities = {};
+System.capabilities.Query = ASnative (11, 0);
+System.capabilities.Query ();
+delete System.capabilities.Query;
+$version = System.capabilities.version;
+
 /*** OH THE HUMANITY ***/
 
 o = null;

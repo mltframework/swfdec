@@ -93,7 +93,7 @@ swfdec_as_boolean_init_context (SwfdecAsContext *context, guint version)
   if (proto == NULL)
     return;
   boolean = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
-      SWFDEC_AS_STR_Boolean, SWFDEC_TYPE_AS_BOOLEAN, SWFDEC_TYPE_AS_BOOLEAN, 
+      SWFDEC_AS_STR_Boolean, 0, SWFDEC_TYPE_AS_BOOLEAN, 
       swfdec_as_boolean_construct, 0, proto));
   if (!boolean)
     return;

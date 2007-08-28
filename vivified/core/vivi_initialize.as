@@ -141,9 +141,9 @@ Commands.watch = function () {
       return;
 
     if (object) {
-      Commands.print ("Breakpoint: variable " + name + " on " + object);
+      Commands.print ("Breakpoint: variable " + name + " on " + object + " set to: " + value);
     } else {
-      Commands.print ("Breakpoint: variable " + name);
+      Commands.print ("Breakpoint: variable " + name + " set to: " + value);
     }
     Commands.print ("  " + Player.frame);
     return true;

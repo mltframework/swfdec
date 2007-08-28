@@ -1303,30 +1303,33 @@ swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data
 static void
 swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  guint n_args = 1;
+  SwfdecRect rect, *rectp = NULL;
+  SwfdecMovie *movie;
+  gboolean center;
+  guint stack_size = 3;
 
   swfdec_as_stack_ensure_size (cx, 3);
   if (swfdec_as_interpret_eval (cx, NULL, swfdec_as_stack_peek (cx, 1)) == SWFDEC_AS_STR_EMPTY) {
     SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 1), cx->frame->target);
   }
+  center = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 2));
   if (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 3))) {
     swfdec_as_stack_ensure_size (cx, 7);
-    n_args = 5;
-    /* yay for order */
-    swfdec_as_stack_swap (cx, 4, 7);
-    swfdec_as_stack_swap (cx, 5, 6);
+    rect.x0 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 7));
+    rect.y0 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 6));
+    rect.x1 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 5));
+    rect.y1 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 4));
+    swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
+    stack_size = 7;
+    rectp = &rect;
   }
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 1))) {
-    swfdec_as_stack_pop_n (cx, n_args + 2);
-    return;
+  if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 1)) &&
+      SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 1)))) {
+    swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), movie, center, &rect);
+  } else {
+    SWFDEC_ERROR ("startDrag on something not a Movie");
   }
-  *swfdec_as_stack_peek (cx, 3) = *swfdec_as_stack_peek (cx, 2);
-  *swfdec_as_stack_peek (cx, 2) = *swfdec_as_stack_peek (cx, 1);
-  swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 2)),
-      SWFDEC_AS_STR_startDrag, swfdec_as_stack_peek (cx, 1));
-  swfdec_action_call (cx, n_args);
-  /* FIXME: the return value will still be written to this position */
-  swfdec_as_stack_pop (cx);
+  swfdec_as_stack_pop_n (cx, stack_size);
 }
 
 static void

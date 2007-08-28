@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
+#include <libswfdec/swfdec_system.h>
 
 G_BEGIN_DECLS
 
@@ -51,6 +52,7 @@ struct _SwfdecPlayer
   SwfdecAsContext	context;
 
   /* global properties */
+  SwfdecSystem *	system;			/* our system properties */
   gboolean		initialized;		/* if width and height are set already */
   guint		  	rate;			/* divide by 256 to get iterations per second */
   guint			width;			/* width of movie */

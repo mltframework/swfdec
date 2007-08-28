@@ -102,7 +102,7 @@ swfdec_as_number_init_context (SwfdecAsContext *context, guint version)
   if (proto == NULL)
     return;
   number = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
-      SWFDEC_AS_STR_Number, SWFDEC_TYPE_AS_NUMBER, SWFDEC_TYPE_AS_NUMBER, 
+      SWFDEC_AS_STR_Number, 0, SWFDEC_TYPE_AS_NUMBER, 
       swfdec_as_number_construct, 0, proto));
   if (!number)
     return;

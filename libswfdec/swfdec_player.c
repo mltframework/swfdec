@@ -541,7 +541,8 @@ enum {
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_ALIGNMENT,
-  PROP_SCALE
+  PROP_SCALE,
+  PROP_SYSTEM
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -633,6 +634,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_SCALE:
       g_value_set_enum (value, player->scale_mode);
+      break;
+    case PROP_SYSTEM:
+      g_value_set_object (value, player->system);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -735,6 +739,14 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
     case PROP_SCALE:
       swfdec_player_set_scale_mode (player, g_value_get_enum (value));
       break;
+    case PROP_SYSTEM:
+      g_object_unref (player->system);
+      if (g_value_get_object (value)) {
+	player->system = SWFDEC_SYSTEM (g_value_dup_object (value));
+      } else {
+	player->system = swfdec_system_new ();
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -788,6 +800,10 @@ swfdec_player_dispose (GObject *object)
   if (player->loader) {
     g_object_unref (player->loader);
     player->loader = NULL;
+  }
+  if (player->system) {
+    g_object_unref (player->system);
+    player->system = NULL;
   }
 }
 
@@ -1304,6 +1320,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_SCALE,
       g_param_spec_enum ("scale-mode", "scale mode", "method used to scale the movie",
 	  SWFDEC_TYPE_SCALE_MODE, SWFDEC_SCALE_SHOW_ALL, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SCALE,
+      g_param_spec_object ("system", "system", "object holding system information",
+	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1447,6 +1466,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 static void
 swfdec_player_init (SwfdecPlayer *player)
 {
+  player->system = swfdec_system_new ();
   player->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   player->actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);

@@ -180,9 +180,10 @@ swfdec_xml_parse_tag (SwfdecAsObject *object, SwfdecXmlNode **node,
   }
 
   name = g_strndup (p + 1 , end - (p + 1));
-  child = swfdec_xml_node_new (object->context, SWFDEC_XML_NODE_ELEMENT, name);
-  g_free (name);
+  child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (*node)->context,
+      SWFDEC_XML_NODE_ELEMENT, name);
   swfdec_xml_node_appendChild (*node, child);
+  g_free (name);
 
   end = strchr (end, '>');
   if (end == NULL) {

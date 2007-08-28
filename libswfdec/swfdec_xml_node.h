@@ -55,6 +55,13 @@ typedef struct _SwfdecXmlNodeClass SwfdecXmlNodeClass;
 
 struct _SwfdecXmlNode {
   SwfdecAsObject	object;
+
+  const char		*value;
+  int			type;
+
+  SwfdecXmlNode		*parent;
+  SwfdecAsArray		*children;
+  SwfdecAsObject	*attributes;
 };
 
 struct _SwfdecXmlNodeClass {
@@ -69,6 +76,7 @@ SwfdecXmlNode *	swfdec_xml_node_new		(SwfdecAsContext *	context,
 void		swfdec_xml_node_removeNode	(SwfdecXmlNode *	node);
 void		swfdec_xml_node_appendChild	(SwfdecXmlNode *	node,
 						 SwfdecXmlNode *	child);
+void		swfdec_xml_node_removeChildren	(SwfdecXmlNode *	node);
 
 G_END_DECLS
 #endif

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,27 +22,27 @@
 #endif
 
 #include <math.h>
-#include "swfdec_debug_widget.h"
+#include "vivi_widget.h"
 
 
-G_DEFINE_TYPE (SwfdecDebugWidget, swfdec_debug_widget, SWFDEC_TYPE_GTK_WIDGET)
+G_DEFINE_TYPE (ViviWidget, vivi_widget, SWFDEC_TYPE_GTK_WIDGET)
 
 
 static gboolean
-swfdec_debug_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
+vivi_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
 {
   return FALSE;
 }
 
 static gboolean
-swfdec_debug_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
+vivi_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
 {
   return FALSE;
 }
 
 #define RADIUS 10
 static void
-swfdec_debug_widget_invalidate_click_area (SwfdecDebugWidget *widget)
+vivi_widget_invalidate_click_area (ViviWidget *widget)
 {
   GtkWidget *gtkwidget = GTK_WIDGET (widget);
   GdkRectangle rect = { widget->x - RADIUS, widget->y - RADIUS, 2 * RADIUS, 2 * RADIUS };
@@ -51,10 +51,10 @@ swfdec_debug_widget_invalidate_click_area (SwfdecDebugWidget *widget)
 }
 
 static gboolean
-swfdec_debug_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
+vivi_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 {
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
-  SwfdecDebugWidget *debug = SWFDEC_DEBUG_WIDGET (gtkwidget);
+  ViviWidget *debug = VIVI_WIDGET (gtkwidget);
 
   if (event->window != gtkwidget->window)
     return FALSE;
@@ -63,16 +63,16 @@ swfdec_debug_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
     SwfdecPlayer *player = swfdec_gtk_widget_get_player (widget);
     switch (event->type) {
       case GDK_BUTTON_PRESS:
-	swfdec_debug_widget_invalidate_click_area (debug);
+	vivi_widget_invalidate_click_area (debug);
 	debug->x = event->x;
 	debug->y = event->y;
 	swfdec_player_handle_mouse (player, debug->x, debug->y, debug->button);
-	swfdec_debug_widget_invalidate_click_area (debug);
+	vivi_widget_invalidate_click_area (debug);
 	break;
       case GDK_2BUTTON_PRESS:
 	debug->button = 1 - debug->button;
 	swfdec_player_handle_mouse (player, debug->x, debug->y, debug->button);
-	swfdec_debug_widget_invalidate_click_area (debug);
+	vivi_widget_invalidate_click_area (debug);
 	break;
       default:
 	break;
@@ -82,21 +82,21 @@ swfdec_debug_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 }
 
 static gboolean
-swfdec_debug_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
+vivi_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
 {
   return FALSE;
 }
 
 static gboolean
-swfdec_debug_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
+vivi_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 {
-  SwfdecDebugWidget *debug = SWFDEC_DEBUG_WIDGET (gtkwidget);
+  ViviWidget *debug = VIVI_WIDGET (gtkwidget);
   cairo_t *cr;
 
   if (event->window != gtkwidget->window)
     return FALSE;
 
-  if (GTK_WIDGET_CLASS (swfdec_debug_widget_parent_class)->expose_event (gtkwidget, event))
+  if (GTK_WIDGET_CLASS (vivi_widget_parent_class)->expose_event (gtkwidget, event))
     return TRUE;
 
   cr = gdk_cairo_create (gtkwidget->window);
@@ -118,38 +118,38 @@ swfdec_debug_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 }
 
 static void
-swfdec_debug_widget_dispose (GObject *object)
+vivi_widget_dispose (GObject *object)
 {
   //SwfdecWidget *widget = SWFDEC_WIDGET (object);
 
-  G_OBJECT_CLASS (swfdec_debug_widget_parent_class)->dispose (object);
+  G_OBJECT_CLASS (vivi_widget_parent_class)->dispose (object);
 }
 
 static void
-swfdec_debug_widget_class_init (SwfdecDebugWidgetClass * g_class)
+vivi_widget_class_init (ViviWidgetClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  GtkWidgetClass *debug_widget_class = GTK_WIDGET_CLASS (g_class);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (g_class);
 
-  object_class->dispose = swfdec_debug_widget_dispose;
+  object_class->dispose = vivi_widget_dispose;
 
-  debug_widget_class->expose_event = swfdec_debug_widget_expose;
-  debug_widget_class->button_press_event = swfdec_debug_widget_button_press;
-  debug_widget_class->button_release_event = swfdec_debug_widget_button_release;
-  debug_widget_class->motion_notify_event = swfdec_debug_widget_motion_notify;
-  debug_widget_class->leave_notify_event = swfdec_debug_widget_leave_notify;
+  widget_class->expose_event = vivi_widget_expose;
+  widget_class->button_press_event = vivi_widget_button_press;
+  widget_class->button_release_event = vivi_widget_button_release;
+  widget_class->motion_notify_event = vivi_widget_motion_notify;
+  widget_class->leave_notify_event = vivi_widget_leave_notify;
 }
 
 static void
-swfdec_debug_widget_init (SwfdecDebugWidget *widget)
+vivi_widget_init (ViviWidget *widget)
 {
 }
 
 GtkWidget *
-swfdec_debug_widget_new (SwfdecPlayer *player)
+vivi_widget_new (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
-  return g_object_new (SWFDEC_TYPE_DEBUG_WIDGET, "player", player, NULL);
+  return g_object_new (VIVI_TYPE_WIDGET, "player", player, NULL);
 }
 

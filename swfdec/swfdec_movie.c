@@ -691,16 +691,26 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
     case SWFDEC_BLEND_MODE_ERASE:
       return CAIRO_OPERATOR_DEST_OUT;
     case SWFDEC_BLEND_MODE_MULTIPLY:
+      return CAIRO_OPERATOR_MULTIPLY;
     case SWFDEC_BLEND_MODE_SCREEN:
+      return CAIRO_OPERATOR_SCREEN;
     case SWFDEC_BLEND_MODE_LIGHTEN:
+      return CAIRO_OPERATOR_LIGHTEN;
     case SWFDEC_BLEND_MODE_DARKEN:
+      return CAIRO_OPERATOR_DARKEN;
     case SWFDEC_BLEND_MODE_DIFFERENCE:
-    case SWFDEC_BLEND_MODE_SUBTRACT:
+      return CAIRO_OPERATOR_DIFFERENCE;
     case SWFDEC_BLEND_MODE_INVERT:
-    case SWFDEC_BLEND_MODE_OVERLAY:
-    case SWFDEC_BLEND_MODE_HARDLIGHT:
-      SWFDEC_FIXME ("blend mode %u unimplemented in cairo", blend_mode);
+      /* this should be special cased using (white IN src) DIFFERENCE dest */
+      g_assert_not_reached ();
       return CAIRO_OPERATOR_OVER;
+    case SWFDEC_BLEND_MODE_OVERLAY:
+      return CAIRO_OPERATOR_OVERLAY;
+    case SWFDEC_BLEND_MODE_HARDLIGHT:
+      return CAIRO_OPERATOR_HARD_LIGHT;
+    case SWFDEC_BLEND_MODE_SUBTRACT:
+      SWFDEC_FIXME ("subtract blend mode is not implemented.");
+      return CAIRO_OPERATOR_DIFFERENCE;
     default:
       SWFDEC_WARNING ("invalid blend mode %u", blend_mode);
       return CAIRO_OPERATOR_OVER;
@@ -735,6 +745,25 @@ swfdec_movie_apply_filters (SwfdecMovie *movie, cairo_pattern_t *pattern)
     swfdec_filter_get_rectangle (walk->data, &area, xscale, yscale, &area);
   }
   return pattern;
+}
+
+static void
+swfdec_paint_with_blend_mode (cairo_t *cr, guint blend_mode)
+{
+  if (blend_mode == SWFDEC_BLEND_MODE_INVERT) {
+    cairo_push_group (cr);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (cr);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_set_operator (cr, CAIRO_OPERATOR_IN);
+    cairo_paint (cr);
+    cairo_pop_group_to_source (cr);
+    cairo_set_operator (cr, CAIRO_OPERATOR_DIFFERENCE);
+    cairo_paint (cr);
+  } else {
+    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (blend_mode));
+    cairo_paint (cr);
+  }
 }
 
 /**
@@ -872,14 +901,12 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     }
     pattern = swfdec_movie_apply_filters (movie, pattern);
     cairo_set_source (cr, pattern);
-    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
-    cairo_paint (cr);
     cairo_pattern_destroy (pattern);
+    swfdec_paint_with_blend_mode (cr, movie->blend_mode);
     cairo_restore (cr);
   } else if (group != SWFDEC_GROUP_NONE) {
     cairo_pop_group_to_source (cr);
-    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
-    cairo_paint (cr);
+    swfdec_paint_with_blend_mode (cr, movie->blend_mode);
   }
 }
 

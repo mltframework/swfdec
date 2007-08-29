@@ -685,6 +685,43 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
   return NULL;
 }
 
+static gboolean
+swfdec_movie_needs_group (SwfdecMovie *movie)
+{
+  return (movie->blend_mode > 1);
+}
+
+static cairo_operator_t
+swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
+{
+  switch (blend_mode) {
+    case 0:
+    case 1:
+      SWFDEC_ERROR ("shouldn't need to get operator without blend mode?!");
+    case 2:
+      return CAIRO_OPERATOR_OVER;
+    case 8:
+      return CAIRO_OPERATOR_ADD;
+    case 12:
+      return CAIRO_OPERATOR_CLEAR;
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 9:
+    case 10:
+    case 11:
+    case 13:
+    case 14:
+      SWFDEC_WARNING ("blend mode %u unimplemented in cairo", blend_mode);
+      return CAIRO_OPERATOR_OVER;
+    default:
+      SWFDEC_WARNING ("invalid blend mode %u", blend_mode);
+      return CAIRO_OPERATOR_OVER;
+  }
+}
+
 void
 swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
@@ -694,6 +731,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
+  gboolean group;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -717,6 +755,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   cairo_save (cr);
+  group = swfdec_movie_needs_group (movie);
+  if (group) {
+    SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
+    cairo_push_group (cr);
+  }
 
   SWFDEC_LOG ("transforming movie, transform: %g %g  %g %g   %g %g",
       movie->matrix.xx, movie->matrix.yy,
@@ -788,6 +831,14 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 #endif
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
+  }
+  if (group) {
+    cairo_pattern_t *pattern;
+
+    pattern = cairo_pop_group (cr);
+    cairo_set_source (cr, pattern);
+    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
+    cairo_paint (cr);
   }
   cairo_restore (cr);
 }

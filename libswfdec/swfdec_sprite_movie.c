@@ -184,7 +184,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 
   if (has_blend_mode) {
     blend_mode = swfdec_bits_get_u8 (bits);
-    SWFDEC_ERROR ("  blend mode = %u", blend_mode);
+    SWFDEC_LOG ("  blend mode = %u", blend_mode);
   } else {
     blend_mode = 0;
   }

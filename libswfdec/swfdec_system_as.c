@@ -215,7 +215,7 @@ const struct {
   { SWFDEC_AS_STR_hasAudio,		"A",	swfdec_system_has_audio },
   { SWFDEC_AS_STR_hasStreamingAudio,	"SA",	swfdec_system_has_streaming_audio },
   { SWFDEC_AS_STR_hasStreamingVideo,	"SV",	swfdec_system_has_streaming_video },
-  { SWFDEC_AS_STR_hasEmbeddedVideo,	"SV",	swfdec_system_has_embedded_video },
+  { SWFDEC_AS_STR_hasEmbeddedVideo,	"EV",	swfdec_system_has_embedded_video },
   { SWFDEC_AS_STR_hasMP3,		"MP3",	swfdec_system_has_mp3 },
   { SWFDEC_AS_STR_hasAudioEncoder,    	"AE",	swfdec_system_has_audio_encoder },
   { SWFDEC_AS_STR_hasVideoEncoder,    	"VE",	swfdec_system_has_video_encoder },

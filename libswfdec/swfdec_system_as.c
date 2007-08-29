@@ -263,7 +263,7 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (queries[i].name == SWFDEC_AS_STR_screenResolutionY) {
       g_string_append_printf (server, "x%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (&val));
     } else if (queries[i].name == SWFDEC_AS_STR_pixelAspectRatio) {
-      g_string_append_printf (server, "&AR=%.1g", SWFDEC_AS_VALUE_GET_NUMBER (&val));
+      g_string_append_printf (server, "&AR=%.1f", SWFDEC_AS_VALUE_GET_NUMBER (&val));
     } else {
       g_assert (queries[i].server_string);
       if (i > 0)

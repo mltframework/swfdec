@@ -93,6 +93,67 @@ EXTRA_DIST = \
 	bitmapFill-update-8.swf \
 	bitmapFill-update-8.swf.png \
 	bitmapFill-update.as \
+	blend-mode.c \
+	blend-mode-0-7.swf \
+	blend-mode-0-7.swf.png \
+	blend-mode-0-8.swf \
+	blend-mode-0-8.swf.png \
+	blend-mode-15-7.swf \
+	blend-mode-15-7.swf.png \
+	blend-mode-15-8.swf \
+	blend-mode-15-8.swf.png \
+	blend-mode-add-7.swf \
+	blend-mode-add-7.swf.png \
+	blend-mode-add-8.swf \
+	blend-mode-add-8.swf.png \
+	blend-mode-alpha-7.swf \
+	blend-mode-alpha-7.swf.png \
+	blend-mode-alpha-8.swf \
+	blend-mode-alpha-8.swf.png \
+	blend-mode-darken-7.swf \
+	blend-mode-darken-7.swf.png \
+	blend-mode-darken-8.swf \
+	blend-mode-darken-8.swf.png \
+	blend-mode-difference-7.swf \
+	blend-mode-difference-7.swf.png \
+	blend-mode-difference-8.swf \
+	blend-mode-difference-8.swf.png \
+	blend-mode-erase-7.swf \
+	blend-mode-erase-7.swf.png \
+	blend-mode-erase-8.swf \
+	blend-mode-erase-8.swf.png \
+	blend-mode-hardlight-7.swf \
+	blend-mode-hardlight-7.swf.png \
+	blend-mode-hardlight-8.swf \
+	blend-mode-hardlight-8.swf.png \
+	blend-mode-inverse-7.swf \
+	blend-mode-inverse-7.swf.png \
+	blend-mode-inverse-8.swf \
+	blend-mode-inverse-8.swf.png \
+	blend-mode-layer-7.swf \
+	blend-mode-layer-7.swf.png \
+	blend-mode-layer-8.swf \
+	blend-mode-layer-8.swf.png \
+	blend-mode-lighten-7.swf \
+	blend-mode-lighten-7.swf.png \
+	blend-mode-lighten-8.swf \
+	blend-mode-lighten-8.swf.png \
+	blend-mode-multiply-7.swf \
+	blend-mode-multiply-7.swf.png \
+	blend-mode-multiply-8.swf \
+	blend-mode-multiply-8.swf.png \
+	blend-mode-normal-7.swf \
+	blend-mode-normal-7.swf.png \
+	blend-mode-normal-8.swf \
+	blend-mode-normal-8.swf.png \
+	blend-mode-overlay-7.swf \
+	blend-mode-overlay-7.swf.png \
+	blend-mode-overlay-8.swf \
+	blend-mode-overlay-8.swf.png \
+	blend-mode-screen-7.swf \
+	blend-mode-screen-7.swf.png \
+	blend-mode-screen-8.swf \
+	blend-mode-screen-8.swf.png \
 	BlurFilter-rendering-5.swf \
 	BlurFilter-rendering-5.swf.png \
 	BlurFilter-rendering-6.swf \

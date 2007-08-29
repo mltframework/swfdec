@@ -702,6 +702,8 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
       return CAIRO_OPERATOR_OVER;
     case 8:
       return CAIRO_OPERATOR_ADD;
+    case 11:
+      return CAIRO_OPERATOR_DEST_IN;
     case 12:
       return CAIRO_OPERATOR_DEST_OUT;
     case 3:
@@ -711,7 +713,6 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
     case 7:
     case 9:
     case 10:
-    case 11:
     case 13:
     case 14:
       SWFDEC_WARNING ("blend mode %u unimplemented in cairo", blend_mode);

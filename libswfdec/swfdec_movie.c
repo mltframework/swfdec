@@ -703,7 +703,7 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
     case 8:
       return CAIRO_OPERATOR_ADD;
     case 12:
-      return CAIRO_OPERATOR_CLEAR;
+      return CAIRO_OPERATOR_DEST_OUT;
     case 3:
     case 4:
     case 5:

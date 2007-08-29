@@ -42,6 +42,7 @@ struct _SwfdecSystem
   /* player engine */
   gboolean		debugger;	/* TRUE if this engine is debugging */
   char *		manufacturer;	/* note that this includes OS information */
+  char *		server_manufacturer; /* manufacturer as reported in serverString */
   char *		os;		/* supposed to identify the operating system */
   char *		os_type;	/* usually WIN, LIN or MAC */
   char *		player_type;	/* "StandAlone", "External", "PlugIn" or "ActiveX" */

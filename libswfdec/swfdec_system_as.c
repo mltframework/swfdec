@@ -225,7 +225,7 @@ const struct {
   { SWFDEC_AS_STR_hasScreenBroadcast,  	"SB",	swfdec_system_has_screen_broadcast },
   { SWFDEC_AS_STR_isDebugger,   	"DEB",	swfdec_system_is_debugger },
   { SWFDEC_AS_STR_version,       	"V",	swfdec_system_version },
-  { SWFDEC_AS_STR_manufacturer,       	"M",	swfdec_system_manufacturer },
+  { SWFDEC_AS_STR_manufacturer,       	NULL,	swfdec_system_manufacturer },
   { SWFDEC_AS_STR_screenResolutionX,   	"R",	swfdec_system_screen_width },
   { SWFDEC_AS_STR_screenResolutionY,   	NULL,	swfdec_system_screen_height },
   { SWFDEC_AS_STR_screenDPI,	   	"DP",	swfdec_system_screen_dpi },
@@ -264,6 +264,10 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
       g_string_append_printf (server, "x%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (&val));
     } else if (queries[i].name == SWFDEC_AS_STR_pixelAspectRatio) {
       g_string_append_printf (server, "&AR=%.1f", SWFDEC_AS_VALUE_GET_NUMBER (&val));
+    } else if (queries[i].name == SWFDEC_AS_STR_manufacturer) {
+      char *s = swfdec_as_string_escape (cx, player->system->server_manufacturer);
+      g_string_append_printf (server, "&M=%s", s);
+      g_free (s);
     } else {
       g_assert (queries[i].server_string);
       if (i > 0)

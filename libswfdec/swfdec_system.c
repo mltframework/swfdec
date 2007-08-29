@@ -64,6 +64,7 @@ enum {
   PROP_0,
   PROP_DEBUGGER,
   PROP_MANUFACTURER,
+  PROP_SERVER_MANUFACTURER,
   PROP_OS,
   PROP_OS_TYPE,
   PROP_PLAYER_TYPE,
@@ -90,6 +91,9 @@ swfdec_system_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_MANUFACTURER:
       g_value_set_string (value, system->manufacturer);
+      break;
+    case PROP_SERVER_MANUFACTURER:
+      g_value_set_string (value, system->server_manufacturer);
       break;
     case PROP_OS:
       g_value_set_string (value, system->os);
@@ -143,6 +147,13 @@ swfdec_system_set_property (GObject *object, guint param_id, const GValue *value
       if (s) {
 	g_free (system->manufacturer);
 	system->manufacturer = s;
+      }
+      break;
+    case PROP_SERVER_MANUFACTURER:
+      s = g_value_dup_string (value);
+      if (s) {
+	g_free (system->server_manufacturer);
+	system->server_manufacturer = s;
       }
       break;
     case PROP_OS:
@@ -211,6 +222,7 @@ swfdec_system_finalize (GObject *object)
   SwfdecSystem *system = SWFDEC_SYSTEM (object);
 
   g_free (system->manufacturer);
+  g_free (system->server_manufacturer);
   g_free (system->os);
   g_free (system->os_type);
   g_free (system->player_type);
@@ -236,6 +248,9 @@ swfdec_system_class_init (SwfdecSystemClass *klass)
   g_object_class_install_property (object_class, PROP_MANUFACTURER,
       g_param_spec_string ("manufacturer", "manufacturer", "string describing the manufacturer of this system",
 	  "Macromedia Windows", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_SERVER_MANUFACTURER,
+      g_param_spec_string ("server-manufacturer", "server-manufacturer", "manufacturer of this system as used in serverString",
+	  "Adobe Windows", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, PROP_OS,
       g_param_spec_string ("os", "os", "description of the operating system",
 	  "Windows XP", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));

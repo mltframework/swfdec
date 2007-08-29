@@ -1098,7 +1098,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
  */
 void
 swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *transform,
-    const SwfdecColorTransform *ctrans, int ratio, int clip_depth, SwfdecEventList *events)
+    const SwfdecColorTransform *ctrans, int ratio, int clip_depth, guint blend_mode,
+    SwfdecEventList *events)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (clip_depth >= -16384 || clip_depth <= 0);
@@ -1129,6 +1130,10 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     movie->clip_depth = clip_depth;
     /* FIXME: is this correct? */
     swfdec_movie_invalidate (movie->parent ? movie->parent : movie);
+  }
+  if (blend_mode != movie->blend_mode) {
+    movie->blend_mode = blend_mode;
+    swfdec_movie_invalidate (movie);
   }
   if (events) {
     if (movie->events)
@@ -1172,7 +1177,8 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   if (copy == NULL)
     return NULL;
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
-      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, movie->events);
+      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, 
+      movie->blend_mode, movie->events);
   return copy;
 }
 
@@ -1193,7 +1199,7 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
 
   swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
       content->has_color_transform ? &content->color_transform : NULL, 
-      content->ratio, content->clip_depth, content->events);
+      content->ratio, content->clip_depth, content->blend_mode, content->events);
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     g_queue_push_tail (player->init_queue, movie);
     g_queue_push_tail (player->construct_queue, movie);

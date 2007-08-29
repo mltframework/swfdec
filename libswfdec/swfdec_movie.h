@@ -58,7 +58,7 @@ struct _SwfdecContent {
   gboolean		has_color_transform : 1;
   char *		name;
   SwfdecEventList *	events;
-  cairo_operator_t	operator;	/* operator to use when painting (aka blend mode) */   
+  guint			blend_mode;	/* operator to use when painting (aka blend mode) */   
 
   /* only used by buttons */
   SwfdecContent *	sequence;
@@ -114,6 +114,7 @@ struct _SwfdecMovie {
   cairo_matrix_t	matrix;			/* cairo matrix computed from above and content->transform */
   cairo_matrix_t	inverse_matrix;		/* the inverse of the cairo matrix */
   SwfdecColorTransform	color_transform;	/* scripted color transformation */
+  guint			blend_mode;		/* blend mode to use - see to-cairo conversion code for what they mean */
 
   /* iteration state */
   gboolean		visible;		/* whether we currently can be seen or iterate */
@@ -181,6 +182,7 @@ void		swfdec_movie_set_static_properties
 						 const SwfdecColorTransform *ctrans,
 						 int			ratio,
 						 int			clip_depth,
+						 guint			blend_mode,
 						 SwfdecEventList *	events);
 void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,

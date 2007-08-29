@@ -58,12 +58,6 @@ swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
   swfdec_as_object_run (movie, data);
 }
 
-static cairo_operator_t
-swfdec_sprite_convert_operator (guint operator)
-{
-  return CAIRO_OPERATOR_OVER;
-}
-
 static int
 swfdec_get_clipeventflags (SwfdecMovie *movie, SwfdecBits * bits)
 {
@@ -98,6 +92,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   guint ratio, id, version;
   SwfdecEventList *events;
   const char *name;
+  guint blend_mode;
   SwfdecGraphic *graphic;
 
   version = SWFDEC_SWF_DECODER (mov->swf->decoder)->version;
@@ -188,10 +183,10 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     swfdec_filters_parse (bits);
 
   if (has_blend_mode) {
-    /* FIXME: implement */
-    guint operator = swfdec_bits_get_u8 (bits);
-    swfdec_sprite_convert_operator (operator);
-    SWFDEC_ERROR ("  operator = %u", operator);
+    blend_mode = swfdec_bits_get_u8 (bits);
+    SWFDEC_ERROR ("  blend mode = %u", blend_mode);
+  } else {
+    blend_mode = 0;
   }
 
   if (has_clip_actions) {
@@ -251,7 +246,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	klass->replace (cur, graphic);
     }
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
-	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
+	has_ctrans ? &ctrans : NULL, ratio, clip_depth, blend_mode, events);
   } else {
     if (cur != NULL && version > 5) {
       SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->name);
@@ -265,7 +260,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     }
     cur = swfdec_movie_new (player, depth, mov, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
-	has_ctrans ? &ctrans : NULL, ratio, clip_depth, events);
+	has_ctrans ? &ctrans : NULL, ratio, clip_depth, blend_mode, events);
     if (SWFDEC_IS_SPRITE_MOVIE (cur)) {
       g_queue_push_tail (player->init_queue, cur);
       g_queue_push_tail (player->construct_queue, cur);
@@ -454,7 +449,8 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
 	if (klass->replace)
 	  klass->replace (prev, cur->graphic);
 	swfdec_movie_set_static_properties (prev, &cur->original_transform,
-	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, cur->events);
+	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, 
+	    cur->blend_mode, cur->events);
 	swfdec_movie_destroy (cur);
 	cur = prev;
 	continue;

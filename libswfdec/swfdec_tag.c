@@ -416,19 +416,19 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     guint character;
     guint depth;
     guint states;
-    gboolean blend_mode, has_filters;
+    gboolean has_blend_mode, has_filters;
     SwfdecContent *content;
 
     if (s->version >= 8) {
       reserved = swfdec_bits_getbits (&bits, 2);
-      blend_mode = swfdec_bits_getbit (&bits);
+      has_blend_mode = swfdec_bits_getbit (&bits);
       has_filters = swfdec_bits_getbit (&bits);
       SWFDEC_LOG ("  reserved = %d", reserved);
-      SWFDEC_LOG ("  blend_mode = %d", blend_mode);
+      SWFDEC_LOG ("  has_blend_mode = %d", has_blend_mode);
       SWFDEC_LOG ("  has_filters = %d", has_filters);
     } else {
       reserved = swfdec_bits_getbits (&bits, 4);
-      blend_mode = 0;
+      has_blend_mode = 0;
       has_filters = 0;
       SWFDEC_LOG ("  reserved = %d", reserved);
     }
@@ -454,9 +454,9 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     content->has_color_transform = TRUE;
 
     content->graphic = swfdec_swf_decoder_get_character (s, character);
-    if (blend_mode) {
-      guint mode = swfdec_bits_get_u8 (&bits);
-      SWFDEC_WARNING ("  blend mode = %u", mode);
+    if (has_blend_mode) {
+      content->blend_mode = swfdec_bits_get_u8 (&bits);
+      SWFDEC_LOG ("  blend mode = %u", content->blend_mode);
     }
     if (has_filters)
       swfdec_filters_parse (&bits);

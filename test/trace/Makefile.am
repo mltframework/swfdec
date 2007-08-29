@@ -1196,6 +1196,15 @@ EXTRA_DIST = \
 	super-this-7.swf.trace \
 	super-this-8.swf \
 	super-this-8.swf.trace \
+	system-capabilities-query.as \
+	system-capabilities-query-5.swf \
+	system-capabilities-query-5.swf.trace \
+	system-capabilities-query-6.swf \
+	system-capabilities-query-6.swf.trace \
+	system-capabilities-query-7.swf \
+	system-capabilities-query-7.swf.trace \
+	system-capabilities-query-8.swf \
+	system-capabilities-query-8.swf.trace \
 	targetpath.as \
 	targetpath-5.swf \
 	targetpath-5.swf.trace \

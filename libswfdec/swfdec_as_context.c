@@ -295,6 +295,8 @@ swfdec_as_object_mark (SwfdecAsObject *object)
 {
   SwfdecAsObjectClass *klass;
 
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+
   if (object->flags & SWFDEC_AS_GC_MARK)
     return;
   object->flags |= SWFDEC_AS_GC_MARK;
@@ -313,7 +315,11 @@ swfdec_as_object_mark (SwfdecAsObject *object)
 void
 swfdec_as_string_mark (const char *string)
 {
-  char *str = (char *) string - 1;
+  char *str;
+
+  g_return_if_fail (string != NULL);
+
+  str = (char *) string - 1;
   if (*str == 0)
     *str = SWFDEC_AS_GC_MARK;
 }

@@ -92,9 +92,5 @@ typedef enum {
   SWFDEC_TAG_DEFINEMORPHSHAPE2    = 84
 } SwfdecTag;
 
-/* FIXME: put this somewhere sane */
-#include "swfdec_bits.h"
-void	swfdec_filters_parse	(SwfdecBits *	bits);
-
 
 #endif

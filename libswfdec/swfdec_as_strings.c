@@ -271,6 +271,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("removeNode")
   SWFDEC_AS_CONSTANT_STRING ("insertBefore")
   SWFDEC_AS_CONSTANT_STRING ("appendChild")
+  SWFDEC_AS_CONSTANT_STRING ("getNamespaceForPrefix")
+  SWFDEC_AS_CONSTANT_STRING ("getPrefixForNamespace")
   SWFDEC_AS_CONSTANT_STRING ("hasChildNodes")
   SWFDEC_AS_CONSTANT_STRING ("attributes")
   SWFDEC_AS_CONSTANT_STRING ("loaded")

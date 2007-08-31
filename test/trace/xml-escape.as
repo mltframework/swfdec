@@ -7,5 +7,6 @@ trace (xmlEscape ("t\"'e&s;:''ät"));
 trace (xmlEscape ("te&lt;st"));
 trace (xmlEscape ());
 trace (xmlEscape ("ma'ny", "param&eters"));
+trace (xmlEscape ("hmm&amp;hrr"));
 
 loadMovie ("FSCommand:quit", "");

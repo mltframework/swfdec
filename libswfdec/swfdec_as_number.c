@@ -67,7 +67,8 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (106, 1, swfdec_as_number_toString)
+void
 swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -83,7 +84,8 @@ swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_STRING (ret, s);
 }
 
-static void
+SWFDEC_AS_NATIVE (106, 1, swfdec_as_number_valueOf)
+void
 swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {

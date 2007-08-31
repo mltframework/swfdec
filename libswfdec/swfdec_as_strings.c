@@ -306,6 +306,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("hasTLS")
   SWFDEC_AS_CONSTANT_STRING ("serverString")
   SWFDEC_AS_CONSTANT_STRING ("$version")
+  SWFDEC_AS_CONSTANT_STRING ("contentType")
+  SWFDEC_AS_CONSTANT_STRING ("application/x-www-form-urlencoded")
+  SWFDEC_AS_CONSTANT_STRING ("ignoreWhite")
   /* add more here */
 ;
 

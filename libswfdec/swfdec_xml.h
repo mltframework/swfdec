@@ -54,9 +54,13 @@ typedef enum {
 struct _SwfdecXml {
   SwfdecXmlNode		xml_node;
 
+  gboolean		ignoreWhite;
   SwfdecXmlParseStatus	status;
   const char		*xmlDecl;
   const char		*docTypeDecl;
+
+  SwfdecAsValue		contentType;
+  SwfdecAsValue		loaded;
 };
 
 struct _SwfdecXmlClass {

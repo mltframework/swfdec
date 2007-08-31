@@ -137,6 +137,29 @@ swfdec_xml_do_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
+swfdec_xml_get_ignoreWhite (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, SWFDEC_XML (object)->ignoreWhite);
+}
+
+static void
+swfdec_xml_set_ignoreWhite (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  SWFDEC_XML (object)->ignoreWhite = swfdec_as_value_to_boolean (cx, &argv[0]);
+}
+
+static void
 swfdec_xml_get_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -188,6 +211,52 @@ swfdec_xml_set_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_XML (object)->docTypeDecl = swfdec_as_value_to_string (cx, &argv[0]);
+}
+
+static void
+swfdec_xml_get_contentType (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  *ret = SWFDEC_XML (object)->contentType;
+}
+
+static void
+swfdec_xml_set_contentType (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  SWFDEC_XML (object)->contentType = argv[0];
+}
+
+static void
+swfdec_xml_get_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  *ret = SWFDEC_XML (object)->loaded;
+}
+
+static void
+swfdec_xml_set_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  SWFDEC_XML (object)->loaded = argv[0];
 }
 
 static void
@@ -550,7 +619,11 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR___constructor__,
       SWFDEC_AS_VARIABLE_HIDDEN);
 
+  SWFDEC_AS_VALUE_SET_STRING (&SWFDEC_XML (object)->contentType,
+      SWFDEC_AS_STR_application_x_www_form_urlencoded);
+
   SWFDEC_XML_NODE (object)->name = NULL;
+
   if (argc >= 1) {
     swfdec_xml_parseXML (SWFDEC_XML (object),
 	swfdec_as_value_to_string (cx, &argv[0]));
@@ -623,10 +696,17 @@ swfdec_xml_init_context2 (SwfdecPlayer *player, guint version)
   if (!proto)
     return;
 
+  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_ignoreWhite,
+      swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status, swfdec_xml_get_status,
       NULL);
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_xmlDecl, swfdec_xml_get_xmlDecl,
       swfdec_xml_set_xmlDecl);
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_docTypeDecl,
       swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
+
+  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_contentType,
+      swfdec_xml_get_contentType, swfdec_xml_set_contentType);
+  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_loaded,
+      swfdec_xml_get_loaded, swfdec_xml_set_loaded);
 }

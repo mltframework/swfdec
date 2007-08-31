@@ -128,6 +128,7 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 //function XML () { };
 
 XML.prototype = new XMLNode (1, "");
+ASSetPropFlags (XML, "prototype", 3);
 
 XML.prototype.contentType = "application/x-www-form-urlencoded";
 

@@ -110,6 +110,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 	swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (fun),
 	    native_funcs[i].get_type ());
       }
+      return fun;
     }
   }
   return NULL;

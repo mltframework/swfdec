@@ -283,6 +283,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("hasTLS")
   SWFDEC_AS_CONSTANT_STRING ("serverString")
   SWFDEC_AS_CONSTANT_STRING ("$version")
+  SWFDEC_AS_CONSTANT_STRING ("ASconstructor")
   /* add more here */
 ;
 

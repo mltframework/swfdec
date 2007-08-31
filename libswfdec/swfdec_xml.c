@@ -279,10 +279,8 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
   }
 
   text = g_strndup (p + 1, end - (p + 1));
-  g_print (":1: %s\n", text);
   unescaped = swfdec_xml_unescape (text);
   g_free (text);
-  g_print (":1: %s\n", unescaped);
   value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
       unescaped);
   SWFDEC_AS_VALUE_SET_STRING (&val, value);

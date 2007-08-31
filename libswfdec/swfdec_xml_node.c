@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "swfdec_xml_node.h"
+#include "swfdec_xml.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
@@ -437,8 +438,6 @@ swfdec_xml_node_do_getNamespaceForPrefix (SwfdecAsContext *cx,
 {
   const char *namespace;
 
-  g_print ("############### here\n");
-
   if (!SWFDEC_IS_XML_NODE (object))
     return;
 
@@ -601,17 +600,23 @@ swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
 static const char *
 swfdec_xml_node_toString (SwfdecXmlNode *node)
 {
+  GString *string;
   SwfdecAsObject *object;
 
   g_assert (SWFDEC_IS_XML_NODE (node));
 
   object = SWFDEC_AS_OBJECT (node);
 
+  string = g_string_new ("");
+  if (SWFDEC_IS_XML (node)) {
+    string = g_string_append (string, SWFDEC_XML (node)->xmlDecl);
+    string = g_string_append (string, SWFDEC_XML (node)->docTypeDecl);
+  }
+
   switch (node->type) {
     case SWFDEC_XML_NODE_ELEMENT:
       {
 	SwfdecXmlNode *child;
-	GString *string;
 	gint32 i, length;
 	gboolean visible;
 
@@ -621,7 +626,6 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
 	  visible = TRUE;
 	}
 
-	string = g_string_new ("");
 	if (visible) {
 	  string = g_string_append (string, "<");
 	  string = g_string_append (string, node->name);
@@ -652,13 +656,16 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
 	    string = g_string_append (string, " />");
 	}
 
-	return swfdec_as_context_give_string (object->context,
-	    g_string_free (string, FALSE));
+	break;
       }
     case SWFDEC_XML_NODE_TEXT:
     default:
-      return node->value;
+      string = g_string_append (string, node->value);
+      break;
   }
+
+  return swfdec_as_context_give_string (object->context,
+      g_string_free (string, FALSE));
 }
 
 SWFDEC_AS_NATIVE (253, 6, swfdec_xml_node_do_toString)

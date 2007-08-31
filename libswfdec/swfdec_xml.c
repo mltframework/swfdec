@@ -233,22 +233,10 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   }
 
   name = g_strndup (p + 1 , end - (p + 1));
-  if (close) {
-    if ((*node)->parent == NULL || g_ascii_strcasecmp ((*node)->name, name))
-      xml->status = XML_PARSE_STATUS_TAG_MISMATCH;
-    while ((*node)->parent != NULL &&
-	((*node)->type != SWFDEC_XML_NODE_ELEMENT ||
-	  g_ascii_strcasecmp ((*node)->name, name))) {
-      *node = (*node)->parent;
-    }
-    if ((*node)->parent != NULL)
-      *node = (*node)->parent;
-  } else {
+  if (!close) {
     child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (*node)->context,
 	SWFDEC_XML_NODE_ELEMENT, name);
-    swfdec_xml_node_appendChild (*node, child);
   }
-  g_free (name);
 
   if (close) {
     end = strchr (end, '>');
@@ -262,11 +250,27 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
     }
   }
 
-  if (end == '\0') {
+  if (*end == '\0') {
     if (xml->status == XML_PARSE_STATUS_OK)
       xml->status = XML_PARSE_STATUS_ELEMENT_MALFORMED;
+    g_free (name);
     return end;
   }
+
+  if (close) {
+    if ((*node)->parent == NULL || g_ascii_strcasecmp ((*node)->name, name))
+      xml->status = XML_PARSE_STATUS_TAG_MISMATCH;
+    while ((*node)->parent != NULL &&
+	((*node)->type != SWFDEC_XML_NODE_ELEMENT ||
+	  g_ascii_strcasecmp ((*node)->name, name))) {
+      *node = (*node)->parent;
+    }
+    if ((*node)->parent != NULL)
+      *node = (*node)->parent;
+  } else {
+    swfdec_xml_node_appendChild (*node, child);
+  }
+  g_free (name);
 
   if (!close) {
     if (*(end - 1) != '/')

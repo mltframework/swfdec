@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_AS_TYPES_H_
 #define _SWFDEC_AS_TYPES_H_
 
-#include <glib.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 

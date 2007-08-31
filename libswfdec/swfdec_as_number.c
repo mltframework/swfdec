@@ -29,6 +29,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecAsNumber, swfdec_as_number, SWFDEC_TYPE_AS_OBJECT)
 
@@ -44,7 +45,8 @@ swfdec_as_number_init (SwfdecAsNumber *number)
 
 /*** AS CODE ***/
 
-static void
+SWFDEC_AS_CONSTRUCTOR (106, 2, swfdec_as_number_construct, swfdec_as_number_get_type)
+void
 swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {

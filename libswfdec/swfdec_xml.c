@@ -204,6 +204,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   close = (*(p + 1) == '/');
 
   end = p + strcspn (p, "> \r\n\t");
+  if (*end == '>' && *(end - 1) == '/')
+    end = end - 1;
 
   if (end - (p + 1) <= 0 || *end == '\0') {
     xml->status = XML_PARSE_STATUS_ELEMENT_MALFORMED;

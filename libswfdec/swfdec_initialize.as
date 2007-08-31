@@ -123,14 +123,17 @@ LoadVars.prototype.getBytesTotal = function () {
 
 ASSetPropFlags(LoadVars.prototype, null, 131);
 
+/*** XMLNode ***/
+
+ASSetPropFlags (XMLNode.prototype, null, 0, 3);
+ASSetPropFlags (XMLNode.prototype, "__proto__,constructor", 3);
+
 /*** XML ***/
 
 //function XML () { };
 
 XML.prototype = new XMLNode (1, "");
 ASSetPropFlags (XML, "prototype", 3);
-
-XML.prototype.contentType = "application/x-www-form-urlencoded";
 
 XML.prototype.load = ASnative (301, 0);
 //XML.prototype.send = ASnative (301, 1);

@@ -1305,6 +1305,13 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
+	xml-escape.as \
+	xml-escape-5.swf \
+	xml-escape-5.swf.trace \
+	xml-escape-6.swf \
+	xml-escape-6.swf.trace \
+	xml-escape-7.swf \
+	xml-escape-7.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

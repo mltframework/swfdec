@@ -379,7 +379,7 @@ static EntityConversion xml_entities[] = {
 };
 
 static char *
-swfdec_xml_node_escape (const char *orginal)
+swfdec_xml_node_escape (const char *orginal, gboolean skip_already_escaped)
 {
   int i;
   const char *p, *start;
@@ -390,6 +390,24 @@ swfdec_xml_node_escape (const char *orginal)
   p = start = orginal;
   while (*(p += strcspn (p, "&<>\"'")) != '\0') {
     string = g_string_append_len (string, start, p - start);
+
+    // check if it's already an escaped entity
+    if (skip_already_escaped && *p == '&') {
+      for (i = 0; xml_entities[i].escaped != NULL; i++) {
+	if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
+	      strlen (xml_entities[i].escaped))) {
+	  break;
+	}
+      }
+      if (xml_entities[i].escaped != NULL) {
+	string = g_string_append (string, xml_entities[i].escaped);
+	p += strlen (xml_entities[i].escaped);
+	start = p;
+	continue;
+      }
+    }
+
+    // escape it
     for (i = 0; xml_entities[i].escaped != NULL; i++) {
       if (xml_entities[i].character == *p) {
 	string = g_string_append (string, xml_entities[i].escaped);
@@ -464,7 +482,8 @@ swfdec_xml_node_do_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  escaped = swfdec_xml_node_escape (swfdec_as_value_to_string (cx, &argv[0]));
+  escaped =
+    swfdec_xml_node_escape (swfdec_as_value_to_string (cx, &argv[0]), FALSE);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, escaped));
 }
 
@@ -588,8 +607,8 @@ swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
   string = g_string_append (string, " ");
   string = g_string_append (string, variable);
   string = g_string_append (string, "=\"");
-  escaped =
-    swfdec_xml_node_escape (swfdec_as_value_to_string (object->context, value));
+  escaped = swfdec_xml_node_escape (
+      swfdec_as_value_to_string (object->context, value), FALSE);
   string = g_string_append (string, escaped);
   g_free (escaped);
   string = g_string_append (string, "\"");
@@ -660,8 +679,12 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
       }
     case SWFDEC_XML_NODE_TEXT:
     default:
-      string = g_string_append (string, node->value);
-      break;
+      {
+	char *escaped = swfdec_xml_node_escape (node->value, TRUE);
+	string = g_string_append (string, escaped);
+	g_free (escaped);
+	break;
+      }
   }
 
   return swfdec_as_context_give_string (object->context,

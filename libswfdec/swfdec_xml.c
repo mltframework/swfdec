@@ -233,6 +233,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   }
 
   name = g_strndup (p + 1 , end - (p + 1));
+
+  // create the new element
   if (!close) {
     child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (*node)->context,
 	SWFDEC_XML_NODE_ELEMENT, name);
@@ -244,10 +246,12 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
       end = strchr (p, '\0');
   } else {
     end = end + strspn (end, " \r\n\t");
-    while (*end != '>' && *end != '\0') {
+    while (*end != '\0' && *end != '>' && (*end != '/' || *(end + 1) != '>')) {
       end = swfdec_xml_parse_attribute (xml, child, end);
       end = end + strspn (end, " \r\n\t");
     }
+    if (*end == '/')
+      end += 1;
   }
 
   if (*end == '\0') {

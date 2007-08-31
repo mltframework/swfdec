@@ -108,7 +108,11 @@ swfdec_xml_node_get_nodeValue (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_XML_NODE (object))
     return;
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML_NODE (object)->value);
+  if (SWFDEC_XML_NODE (object)->value != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML_NODE (object)->value);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
 }
 
 static void
@@ -136,7 +140,11 @@ swfdec_xml_node_get_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_XML_NODE (object))
     return;
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML_NODE (object)->name);
+  if (SWFDEC_XML_NODE (object)->name != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML_NODE (object)->name);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
 }
 
 static void
@@ -166,6 +174,11 @@ swfdec_xml_node_get_prefix (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_XML_NODE (object))
     return;
 
+  if (SWFDEC_XML_NODE (object)->name == NULL) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
+
   name = SWFDEC_XML_NODE (object)->name;
   p = strchr (name, ':');
   if (p == NULL || *(p + 1) == '\0') {
@@ -185,6 +198,11 @@ swfdec_xml_node_get_localName (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!SWFDEC_IS_XML_NODE (object))
     return;
+
+  if (SWFDEC_XML_NODE (object)->name == NULL) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
 
   name = SWFDEC_XML_NODE (object)->name;
   p = strchr (name, ':');

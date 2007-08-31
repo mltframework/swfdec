@@ -130,7 +130,7 @@ ASSetPropFlags (XMLNode.prototype, "__proto__,constructor", 3);
 
 /*** XML ***/
 
-//function XML () { };
+XML = ASconstructor (253, 7);
 
 XML.prototype = new XMLNode (1, "");
 ASSetPropFlags (XML, "prototype", 3);

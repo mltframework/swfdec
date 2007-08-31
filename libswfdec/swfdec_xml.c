@@ -598,7 +598,8 @@ swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
       swfdec_as_value_to_string (cx, &argv[0]));
 }
 
-static void
+SWFDEC_AS_CONSTRUCTOR (253, 7, swfdec_xml_construct, swfdec_xml_get_type)
+void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {

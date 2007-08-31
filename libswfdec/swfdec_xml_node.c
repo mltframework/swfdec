@@ -705,7 +705,8 @@ swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
   return node;
 }
 
-static void
+SWFDEC_AS_CONSTRUCTOR (253, 0, swfdec_xml_node_construct, swfdec_xml_node_get_type)
+void
 swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {

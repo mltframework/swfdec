@@ -710,6 +710,7 @@ SwfdecXmlNode *
 swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
     const char* value)
 {
+  SwfdecAsValue val;
   SwfdecXmlNode *node;
   guint size;
 
@@ -720,6 +721,10 @@ swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
     return NULL;
   node = g_object_new (SWFDEC_TYPE_XML_NODE, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (node), context, size);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node), SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
   swfdec_xml_node_init_properties (node, type,
       swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context, value));

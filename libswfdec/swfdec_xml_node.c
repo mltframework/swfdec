@@ -715,8 +715,10 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
+  if (argc < 2)
+    return;
+
   g_assert (SWFDEC_IS_XML_NODE (object));
-  g_assert (argc >= 2);
 
   swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
       swfdec_as_value_to_integer (cx, &argv[0]),
@@ -751,50 +753,24 @@ swfdec_xml_node_add_variable (SwfdecAsObject *object, const char *variable,
 }
 
 void
-swfdec_xml_node_init_context (SwfdecPlayer *player, guint version)
+swfdec_xml_node_init_native (SwfdecPlayer *player, guint version)
 {
   SwfdecAsContext *context;
-  SwfdecAsObject *xml_node, *proto;
   SwfdecAsValue val;
+  SwfdecAsObject *node;
+  SwfdecAsObject *proto;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   context = SWFDEC_AS_CONTEXT (player);
-  xml_node = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_XMLNode, 0, swfdec_xml_node_construct, 2));
-  if (!xml_node)
-    return;
-  swfdec_as_native_function_set_construct_type (
-      SWFDEC_AS_NATIVE_FUNCTION (xml_node), SWFDEC_TYPE_XML_NODE);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
+  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
+  node = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
-  proto = swfdec_as_object_new (context);
+  swfdec_as_object_get_variable (node, SWFDEC_AS_STR_prototype, &val);
+  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
-  /* set the right properties on the XmlNode object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (xml_node, SWFDEC_AS_STR_prototype,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable (xml_node, SWFDEC_AS_STR_constructor, &val);
-
-  /* set the right properties on the XmlNode.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, xml_node);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_cloneNode,
-      SWFDEC_TYPE_XML_NODE, swfdec_xml_node_cloneNode, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_removeNode,
-      SWFDEC_TYPE_XML_NODE, swfdec_xml_node_do_removeNode, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_insertBefore, 0,
-      swfdec_xml_node_insertBefore, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_appendChild, 0,
-      swfdec_xml_node_do_appendChild, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasChildNodes, 0,
-      swfdec_xml_node_hasChildNodes, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getNamespaceForPrefix, 0,
-      swfdec_xml_node_do_getNamespaceForPrefix, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
-      swfdec_xml_node_do_toString, 0); // FIXME: set type?
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeType,
       swfdec_xml_node_get_nodeType, NULL);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeValue,

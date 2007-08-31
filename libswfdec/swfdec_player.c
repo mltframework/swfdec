@@ -1607,7 +1607,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_movie_color_init_context (player, version);
     swfdec_net_connection_init_context (player, version);
     swfdec_net_stream_init_context (player, version);
-    swfdec_xml_node_init_context (player, version);
     if (version > 4) {
       SwfdecBits bits;
       SwfdecScript *script;
@@ -1617,6 +1616,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       swfdec_as_object_run (context->global, script);
       swfdec_script_unref (script);
     }
+    swfdec_xml_node_init_native (player, version);
     swfdec_xml_init_native (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;

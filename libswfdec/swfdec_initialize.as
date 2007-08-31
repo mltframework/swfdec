@@ -125,8 +125,14 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 
 /*** XMLNode ***/
 
-ASSetPropFlags (XMLNode.prototype, null, 0, 3);
-ASSetPropFlags (XMLNode.prototype, "__proto__,constructor", 3);
+XMLNode = ASconstructor (253, 0);
+
+XMLNode.prototype.cloneNode = ASnative (253, 1);
+XMLNode.prototype.removeNode = ASnative (253, 2);
+XMLNode.prototype.insertBefore = ASnative (253, 3);
+XMLNode.prototype.appendChild = ASnative (253, 4);
+XMLNode.prototype.hasChildNodes = ASnative (253, 5);
+XMLNode.prototype.toString = ASnative (253, 6);
 
 /*** XML ***/
 

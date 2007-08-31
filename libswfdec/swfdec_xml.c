@@ -627,23 +627,6 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-void
-swfdec_xml_init_context (SwfdecPlayer *player, guint version)
-{
-  SwfdecAsContext *context;
-  SwfdecAsObject *xml;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  context = SWFDEC_AS_CONTEXT (player);
-  xml = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_XML, 0, swfdec_xml_construct, 0));
-  if (!xml)
-    return;
-  swfdec_as_native_function_set_construct_type (
-      SWFDEC_AS_NATIVE_FUNCTION (xml), SWFDEC_TYPE_XML);
-}
-
 static void
 swfdec_xml_add_variable (SwfdecAsObject *object, const char *variable,
     SwfdecAsNative get, SwfdecAsNative set)
@@ -670,7 +653,7 @@ swfdec_xml_add_variable (SwfdecAsObject *object, const char *variable,
 }
 
 void
-swfdec_xml_init_context2 (SwfdecPlayer *player, guint version)
+swfdec_xml_init_native (SwfdecPlayer *player, guint version)
 {
   SwfdecAsContext *context;
   SwfdecAsValue val;
@@ -681,17 +664,12 @@ swfdec_xml_init_context2 (SwfdecPlayer *player, guint version)
 
   context = SWFDEC_AS_CONTEXT (player);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XML, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return;
+  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
   xml = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  if (!xml)
-    return;
+
   swfdec_as_object_get_variable (xml, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return;
+  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
   proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  if (!proto)
-    return;
 
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_ignoreWhite,
       swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);

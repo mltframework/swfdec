@@ -116,6 +116,31 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
   return NULL;
 }
 
+// same as ASnative, but also sets prototype
+static void
+swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecAsValue val;
+  SwfdecAsFunction *func;
+  guint x, y;
+
+  x = swfdec_as_value_to_integer (cx, &argv[0]);
+  y = swfdec_as_value_to_integer (cx, &argv[1]);
+
+  func = swfdec_get_asnative (cx, x, y);
+  if (func) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_object_new (cx));
+    swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (func),
+	SWFDEC_AS_STR_prototype, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
+  } else {
+    SWFDEC_FIXME ("ASconstructor for %u %u missing", x, y);
+  }
+}
+
 static void
 swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
@@ -235,6 +260,8 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_player_init_global (SwfdecPlayer *player, guint version)
 {
+  SwfdecAsValue val;
+  SwfdecAsObject *object;
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
 
   swfdec_as_object_add_function (context->Object, SWFDEC_AS_STR_registerClass, 
@@ -245,5 +272,30 @@ swfdec_player_init_global (SwfdecPlayer *player, guint version)
       0, swfdec_player_clearInterval, 1);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASnative, 
       0, swfdec_player_ASnative, 2);
+  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,
+      0, swfdec_player_ASconstructor, 2);
+
+  // remove __proto__ and constructor from ASnative and ASconstructor
+
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_ASnative, &val);
+  g_assert (SWFDEC_AS_VALUE_IS_OBJECT (&val));
+  object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR___proto__,
+      SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_delete_variable (object, SWFDEC_AS_STR___proto__);
+  swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR_constructor,
+      SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_delete_variable (object, SWFDEC_AS_STR_constructor);
+
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_ASconstructor,
+      &val);
+  g_assert (SWFDEC_AS_VALUE_IS_OBJECT (&val));
+  object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR___proto__,
+      SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_delete_variable (object, SWFDEC_AS_STR___proto__);
+  swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR_constructor,
+      SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_delete_variable (object, SWFDEC_AS_STR_constructor);
 }
 

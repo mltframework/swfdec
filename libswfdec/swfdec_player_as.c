@@ -104,8 +104,13 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 
   for (i = 0; native_funcs[i].func != NULL; i++) {
     if (native_funcs[i].x == x && native_funcs[i].y == y) {
-      return swfdec_as_native_function_new (cx, native_funcs[i].name,
+      SwfdecAsFunction *fun = swfdec_as_native_function_new (cx, native_funcs[i].name,
 	  native_funcs[i].func, 0, NULL);
+      if (native_funcs[i].get_type) {
+	swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (fun),
+	    native_funcs[i].get_type ());
+      }
+      return fun;
     }
   }
   return NULL;

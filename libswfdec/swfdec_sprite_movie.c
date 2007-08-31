@@ -29,6 +29,7 @@
 #include "swfdec_audio_event.h"
 #include "swfdec_audio_stream.h"
 #include "swfdec_debug.h"
+#include "swfdec_filter.h"
 #include "swfdec_graphic_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_ringbuffer.h"
@@ -179,8 +180,10 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     clip_depth = 0;
   }
 
-  if (has_filter)
-    swfdec_filters_parse (bits);
+  if (has_filter) {
+    GSList *filters = swfdec_filter_parse (player, bits);
+    g_slist_free (filters);
+  }
 
   if (has_blend_mode) {
     blend_mode = swfdec_bits_get_u8 (bits);

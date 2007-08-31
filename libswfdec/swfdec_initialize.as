@@ -157,8 +157,6 @@ XML.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-ASSetPropFlags(XML.prototype, null, 129);
-
 /*** System ***/
 
 System = {};

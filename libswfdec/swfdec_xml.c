@@ -137,6 +137,60 @@ swfdec_xml_do_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
+swfdec_xml_get_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (SWFDEC_XML (object)->xmlDecl != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML (object)->xmlDecl);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_xml_set_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  SWFDEC_XML (object)->xmlDecl = swfdec_as_value_to_string (cx, &argv[0]);
+}
+
+static void
+swfdec_xml_get_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (SWFDEC_XML (object)->docTypeDecl != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML (object)->docTypeDecl);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_xml_set_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  SWFDEC_XML (object)->docTypeDecl = swfdec_as_value_to_string (cx, &argv[0]);
+}
+
+static void
 swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -492,6 +546,10 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_STRING (&vals[1], SWFDEC_AS_STR_EMPTY);
 
   swfdec_xml_node_construct (cx, object, 2, vals, ret);
+
+  swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR___constructor__,
+      SWFDEC_AS_VARIABLE_HIDDEN);
+
   SWFDEC_XML_NODE (object)->name = NULL;
   if (argc >= 1) {
     swfdec_xml_parseXML (SWFDEC_XML (object),
@@ -567,4 +625,8 @@ swfdec_xml_init_context2 (SwfdecPlayer *player, guint version)
 
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status, swfdec_xml_get_status,
       NULL);
+  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_xmlDecl, swfdec_xml_get_xmlDecl,
+      swfdec_xml_set_xmlDecl);
+  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_docTypeDecl,
+      swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
 }

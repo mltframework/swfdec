@@ -305,6 +305,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("windowlessDisable")
   SWFDEC_AS_CONSTANT_STRING ("hasTLS")
   SWFDEC_AS_CONSTANT_STRING ("serverString")
+  SWFDEC_AS_CONSTANT_STRING ("$version")
   /* add more here */
 ;
 

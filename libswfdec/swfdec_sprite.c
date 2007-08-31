@@ -164,7 +164,6 @@ swfdec_content_new (int depth)
   cairo_matrix_init_identity (&content->transform);
   swfdec_color_transform_init_identity (&content->color_transform);
   content->depth = depth;
-  content->operator = CAIRO_OPERATOR_OVER;
   return content;
 }
 

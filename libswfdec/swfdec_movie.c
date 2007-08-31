@@ -39,6 +39,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_system.h"
 
 /*** MOVIE ***/
 
@@ -684,6 +685,44 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
   return NULL;
 }
 
+static gboolean
+swfdec_movie_needs_group (SwfdecMovie *movie)
+{
+  return (movie->blend_mode > 1);
+}
+
+static cairo_operator_t
+swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
+{
+  switch (blend_mode) {
+    case 0:
+    case 1:
+      SWFDEC_ERROR ("shouldn't need to get operator without blend mode?!");
+    case 2:
+      return CAIRO_OPERATOR_OVER;
+    case 8:
+      return CAIRO_OPERATOR_ADD;
+    case 11:
+      return CAIRO_OPERATOR_DEST_IN;
+    case 12:
+      return CAIRO_OPERATOR_DEST_OUT;
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 9:
+    case 10:
+    case 13:
+    case 14:
+      SWFDEC_WARNING ("blend mode %u unimplemented in cairo", blend_mode);
+      return CAIRO_OPERATOR_OVER;
+    default:
+      SWFDEC_WARNING ("invalid blend mode %u", blend_mode);
+      return CAIRO_OPERATOR_OVER;
+  }
+}
+
 void
 swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
@@ -693,6 +732,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
+  gboolean group;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -716,6 +756,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   cairo_save (cr);
+  group = swfdec_movie_needs_group (movie);
+  if (group) {
+    SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
+    cairo_push_group (cr);
+  }
 
   SWFDEC_LOG ("transforming movie, transform: %g %g  %g %g   %g %g",
       movie->matrix.xx, movie->matrix.yy,
@@ -787,6 +832,14 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 #endif
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
+  }
+  if (group) {
+    cairo_pattern_t *pattern;
+
+    pattern = cairo_pop_group (cr);
+    cairo_set_source (cr, pattern);
+    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
+    cairo_paint (cr);
   }
   cairo_restore (cr);
 }
@@ -911,6 +964,12 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
+    *flags = 0;
+    return TRUE;
+  }
+  if (movie->parent == NULL && variable == SWFDEC_AS_STR__version) {
+    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (object->context,
+	  SWFDEC_PLAYER (object->context)->system->version));
     *flags = 0;
     return TRUE;
   }
@@ -1091,7 +1150,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
  */
 void
 swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *transform,
-    const SwfdecColorTransform *ctrans, int ratio, int clip_depth, SwfdecEventList *events)
+    const SwfdecColorTransform *ctrans, int ratio, int clip_depth, guint blend_mode,
+    SwfdecEventList *events)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (clip_depth >= -16384 || clip_depth <= 0);
@@ -1122,6 +1182,10 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     movie->clip_depth = clip_depth;
     /* FIXME: is this correct? */
     swfdec_movie_invalidate (movie->parent ? movie->parent : movie);
+  }
+  if (blend_mode != movie->blend_mode) {
+    movie->blend_mode = blend_mode;
+    swfdec_movie_invalidate (movie);
   }
   if (events) {
     if (movie->events)
@@ -1165,7 +1229,8 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   if (copy == NULL)
     return NULL;
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
-      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, movie->events);
+      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, 
+      movie->blend_mode, movie->events);
   return copy;
 }
 
@@ -1186,7 +1251,7 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
 
   swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
       content->has_color_transform ? &content->color_transform : NULL, 
-      content->ratio, content->clip_depth, content->events);
+      content->ratio, content->clip_depth, content->blend_mode, content->events);
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     g_queue_push_tail (player->init_queue, movie);
     g_queue_push_tail (player->construct_queue, movie);

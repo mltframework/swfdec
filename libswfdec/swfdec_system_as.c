@@ -215,7 +215,7 @@ const struct {
   { SWFDEC_AS_STR_hasAudio,		"A",	swfdec_system_has_audio },
   { SWFDEC_AS_STR_hasStreamingAudio,	"SA",	swfdec_system_has_streaming_audio },
   { SWFDEC_AS_STR_hasStreamingVideo,	"SV",	swfdec_system_has_streaming_video },
-  { SWFDEC_AS_STR_hasEmbeddedVideo,	"SV",	swfdec_system_has_embedded_video },
+  { SWFDEC_AS_STR_hasEmbeddedVideo,	"EV",	swfdec_system_has_embedded_video },
   { SWFDEC_AS_STR_hasMP3,		"MP3",	swfdec_system_has_mp3 },
   { SWFDEC_AS_STR_hasAudioEncoder,    	"AE",	swfdec_system_has_audio_encoder },
   { SWFDEC_AS_STR_hasVideoEncoder,    	"VE",	swfdec_system_has_video_encoder },
@@ -225,7 +225,7 @@ const struct {
   { SWFDEC_AS_STR_hasScreenBroadcast,  	"SB",	swfdec_system_has_screen_broadcast },
   { SWFDEC_AS_STR_isDebugger,   	"DEB",	swfdec_system_is_debugger },
   { SWFDEC_AS_STR_version,       	"V",	swfdec_system_version },
-  { SWFDEC_AS_STR_manufacturer,       	"M",	swfdec_system_manufacturer },
+  { SWFDEC_AS_STR_manufacturer,       	NULL,	swfdec_system_manufacturer },
   { SWFDEC_AS_STR_screenResolutionX,   	"R",	swfdec_system_screen_width },
   { SWFDEC_AS_STR_screenResolutionY,   	NULL,	swfdec_system_screen_height },
   { SWFDEC_AS_STR_screenDPI,	   	"DP",	swfdec_system_screen_dpi },
@@ -263,7 +263,11 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (queries[i].name == SWFDEC_AS_STR_screenResolutionY) {
       g_string_append_printf (server, "x%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (&val));
     } else if (queries[i].name == SWFDEC_AS_STR_pixelAspectRatio) {
-      g_string_append_printf (server, "&AR=%.1g", SWFDEC_AS_VALUE_GET_NUMBER (&val));
+      g_string_append_printf (server, "&AR=%.1f", SWFDEC_AS_VALUE_GET_NUMBER (&val));
+    } else if (queries[i].name == SWFDEC_AS_STR_manufacturer) {
+      char *s = swfdec_as_string_escape (cx, player->system->server_manufacturer);
+      g_string_append_printf (server, "&M=%s", s);
+      g_free (s);
     } else {
       g_assert (queries[i].server_string);
       if (i > 0)

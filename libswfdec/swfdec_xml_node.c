@@ -646,7 +646,7 @@ swfdec_xml_node_do_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_xml_node_toString (SWFDEC_XML_NODE (object)));
 }
 
-static void
+void
 swfdec_xml_node_init_properties (SwfdecXmlNode *node, int type,
     const char* value)
 {
@@ -705,7 +705,7 @@ swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
   return node;
 }
 
-void
+static void
 swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {

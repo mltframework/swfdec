@@ -602,8 +602,6 @@ static void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsValue vals[2];
-
   if (!swfdec_as_context_is_constructing (cx)) {
     SWFDEC_FIXME ("What do we do if not constructing?");
     return;
@@ -611,10 +609,8 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_assert (SWFDEC_IS_XML (object));
 
-  SWFDEC_AS_VALUE_SET_INT (&vals[0], SWFDEC_XML_NODE_ELEMENT);
-  SWFDEC_AS_VALUE_SET_STRING (&vals[1], SWFDEC_AS_STR_EMPTY);
-
-  swfdec_xml_node_construct (cx, object, 2, vals, ret);
+  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
+      SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
 
   swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR___constructor__,
       SWFDEC_AS_VARIABLE_HIDDEN);

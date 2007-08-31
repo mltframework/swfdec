@@ -78,11 +78,9 @@ void		swfdec_xml_node_removeNode	(SwfdecXmlNode *	node);
 void		swfdec_xml_node_appendChild	(SwfdecXmlNode *	node,
 						 SwfdecXmlNode *	child);
 void		swfdec_xml_node_removeChildren	(SwfdecXmlNode *	node);
-void		swfdec_xml_node_construct	(SwfdecAsContext *	cx,
-						 SwfdecAsObject *	object,
-						 guint			argc,
-						 SwfdecAsValue *	argv,
-						 SwfdecAsValue *	ret);
+void		swfdec_xml_node_init_properties	(SwfdecXmlNode *	node,
+						 int			type,
+						 const char *		value);
 
 G_END_DECLS
 #endif

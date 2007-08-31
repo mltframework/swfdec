@@ -84,7 +84,7 @@ swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_STRING (ret, s);
 }
 
-SWFDEC_AS_NATIVE (106, 1, swfdec_as_number_valueOf)
+SWFDEC_AS_NATIVE (106, 0, swfdec_as_number_valueOf)
 void
 swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)

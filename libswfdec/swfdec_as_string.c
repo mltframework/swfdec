@@ -605,6 +605,9 @@ swfdec_as_string_escape (SwfdecAsContext *cx, const char *s)
   GByteArray *array;
   char *in = NULL;
 
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), NULL);
+  g_return_val_if_fail (s != NULL, NULL);
+
   array = g_byte_array_new ();
   if (cx->version <= 5) {
     in = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);

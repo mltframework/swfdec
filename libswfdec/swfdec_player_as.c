@@ -122,6 +122,7 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsValue val;
+  SwfdecAsObject *proto;
   SwfdecAsFunction *func;
   guint x, y;
 
@@ -130,10 +131,16 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *obj,
 
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_object_new (cx));
+    proto = swfdec_as_object_new (cx);
+
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
     swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (func),
 	SWFDEC_AS_STR_prototype, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (func));
+    swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
     SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
   } else {

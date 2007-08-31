@@ -44,6 +44,98 @@ swfdec_xml_init (SwfdecXml *xml)
 {
 }
 
+typedef struct {
+  const char	character;
+  const char	*escaped;
+} EntityConversion;
+
+static EntityConversion xml_entities[] = {
+  { '&', "&amp;" },
+  { '"', "&quot;" },
+  { '\'', "&apos;" },
+  { '<', "&lt;" },
+  { '>', "&gt;" },
+  { '\0', NULL }
+};
+
+char *
+swfdec_xml_escape (const char *orginal)
+{
+  int i;
+  const char *p, *start;
+  GString *string;
+
+  string = g_string_new ("");
+
+  p = start = orginal;
+  while (*(p += strcspn (p, "&<>\"'")) != '\0') {
+    string = g_string_append_len (string, start, p - start);
+
+    // escape it
+    for (i = 0; xml_entities[i].escaped != NULL; i++) {
+      if (xml_entities[i].character == *p) {
+	string = g_string_append (string, xml_entities[i].escaped);
+	break;
+      }
+    }
+    g_assert (xml_entities[i].escaped != NULL);
+
+    p++;
+    start = p;
+  }
+  string = g_string_append (string, start);
+
+  return g_string_free (string, FALSE);
+}
+
+char *
+swfdec_xml_unescape (const char *orginal)
+{
+  int i;
+  const char *p, *start;
+  GString *string;
+
+  string = g_string_new ("");
+
+  p = start = orginal;
+  while ((p = strchr (p, '&')) != NULL) {
+    string = g_string_append_len (string, start, p - start);
+
+    for (i = 0; xml_entities[i].escaped != NULL; i++) {
+      if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
+	    strlen (xml_entities[i].escaped))) {
+	string = g_string_append_c (string, xml_entities[i].character);
+	p += strlen (xml_entities[i].escaped);
+	break;
+      }
+    }
+    if (xml_entities[i].escaped == NULL) {
+      string = g_string_append_c (string, '&');
+      p++;
+    }
+
+    start = p;
+  }
+  string = g_string_append (string, start);
+
+  return g_string_free (string, FALSE);
+}
+
+// this is never declared, only available as ASnative (100, 5)
+SWFDEC_AS_NATIVE (100, 5, swfdec_xml_do_escape)
+void
+swfdec_xml_do_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  char *escaped;
+
+  if (argc < 1)
+    return;
+
+  escaped = swfdec_xml_escape (swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, escaped));
+}
+
 static void
 swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -149,6 +241,7 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 {
   SwfdecAsValue val;
   const char *end, *name, *value;
+  char *text, *unescaped;
 
   g_return_val_if_fail (SWFDEC_IS_XML (xml), strchr (p, '\0'));
   g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), strchr (p, '\0'));
@@ -185,8 +278,13 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
     return strchr (p, '\0');
   }
 
+  text = g_strndup (p + 1, end - (p + 1));
+  g_print (":1: %s\n", text);
+  unescaped = swfdec_xml_unescape (text);
+  g_free (text);
+  g_print (":1: %s\n", unescaped);
   value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
-      g_strndup (p + 1, end - (p + 1)));
+      unescaped);
   SWFDEC_AS_VALUE_SET_STRING (&val, value);
 
   swfdec_as_object_set_variable (node->attributes, name, &val);
@@ -301,7 +399,7 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
 {
   SwfdecXmlNode *child;
   const char *end;
-  char *text;
+  char *text, *unescaped;
 
   g_assert (p != NULL);
   g_return_val_if_fail (*p != '\0', p);
@@ -312,8 +410,11 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     end = strchr (p, '\0');
 
   text = g_strndup (p, end - p);
+  unescaped = swfdec_xml_unescape (text);
+  g_free (text);
   child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (node)->context,
-      SWFDEC_XML_NODE_TEXT, text);
+      SWFDEC_XML_NODE_TEXT, unescaped);
+  g_free (unescaped);
   swfdec_xml_node_appendChild (node, child);
 
   g_return_val_if_fail (end > p, strchr (p, '\0'));

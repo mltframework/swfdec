@@ -364,66 +364,6 @@ swfdec_xml_node_get_parent (SwfdecXmlNode *node)
   return SWFDEC_XML_NODE (parent);
 }
 
-typedef struct {
-  const char	character;
-  const char	*escaped;
-} EntityConversion;
-
-static EntityConversion xml_entities[] = {
-  { '&', "&amp;" },
-  { '"', "&quot;" },
-  { '\'', "&apos;" },
-  { '<', "&lt;" },
-  { '>', "&gt;" },
-  { '\0', NULL }
-};
-
-static char *
-swfdec_xml_node_escape (const char *orginal, gboolean skip_already_escaped)
-{
-  int i;
-  const char *p, *start;
-  GString *string;
-
-  string = g_string_new ("");
-
-  p = start = orginal;
-  while (*(p += strcspn (p, "&<>\"'")) != '\0') {
-    string = g_string_append_len (string, start, p - start);
-
-    // check if it's already an escaped entity
-    if (skip_already_escaped && *p == '&') {
-      for (i = 0; xml_entities[i].escaped != NULL; i++) {
-	if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
-	      strlen (xml_entities[i].escaped))) {
-	  break;
-	}
-      }
-      if (xml_entities[i].escaped != NULL) {
-	string = g_string_append (string, xml_entities[i].escaped);
-	p += strlen (xml_entities[i].escaped);
-	start = p;
-	continue;
-      }
-    }
-
-    // escape it
-    for (i = 0; xml_entities[i].escaped != NULL; i++) {
-      if (xml_entities[i].character == *p) {
-	string = g_string_append (string, xml_entities[i].escaped);
-	break;
-      }
-    }
-    g_assert (xml_entities[i].escaped != NULL);
-
-    p++;
-    start = p;
-  }
-  string = g_string_append (string, start);
-
-  return g_string_free (string, FALSE);
-}
-
 static const char *
 swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node,
     const char *prefix)
@@ -470,21 +410,6 @@ swfdec_xml_node_do_getNamespaceForPrefix (SwfdecAsContext *cx,
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
-}
-
-SWFDEC_AS_NATIVE (100, 5, swfdec_xml_node_do_escape)
-void
-swfdec_xml_node_do_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  char *escaped;
-
-  if (argc < 1)
-    return;
-
-  escaped =
-    swfdec_xml_node_escape (swfdec_as_value_to_string (cx, &argv[0]), FALSE);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, escaped));
 }
 
 SWFDEC_AS_NATIVE (253, 1, swfdec_xml_node_cloneNode)
@@ -607,8 +532,8 @@ swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
   string = g_string_append (string, " ");
   string = g_string_append (string, variable);
   string = g_string_append (string, "=\"");
-  escaped = swfdec_xml_node_escape (
-      swfdec_as_value_to_string (object->context, value), FALSE);
+  escaped =
+    swfdec_xml_escape (swfdec_as_value_to_string (object->context, value));
   string = g_string_append (string, escaped);
   g_free (escaped);
   string = g_string_append (string, "\"");
@@ -680,7 +605,7 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
     case SWFDEC_XML_NODE_TEXT:
     default:
       {
-	char *escaped = swfdec_xml_node_escape (node->value, TRUE);
+	char *escaped = swfdec_xml_escape (node->value);
 	string = g_string_append (string, escaped);
 	g_free (escaped);
 	break;

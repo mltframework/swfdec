@@ -65,5 +65,8 @@ struct _SwfdecXmlClass {
 
 GType		swfdec_xml_get_type	(void);
 
+char *		swfdec_xml_escape	(const char *orginal);
+char *		swfdec_xml_unescape	(const char *orginal);
+
 G_END_DECLS
 #endif

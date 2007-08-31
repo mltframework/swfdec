@@ -44,6 +44,16 @@ swfdec_xml_init (SwfdecXml *xml)
 {
 }
 
+static void
+swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (ret, SWFDEC_XML (object)->status);
+}
+
 static const char *
 swfdec_xml_parse_xmlDecl (SwfdecXml *xml, const char *p)
 {
@@ -201,9 +211,19 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 
   object = SWFDEC_AS_OBJECT (xml);
 
-  close = (*(p + 1) == '/');
+  // closing tag or opening tag?
+  if (*(p + 1) == '/') {
+    close = TRUE;
+    p++;
+  } else {
+    close = FALSE;
+  }
 
+  // find the end of the name
   end = p + strcspn (p, "> \r\n\t");
+
+  // don't count trailing / as part of the name if it's followed by >
+  // note we do this for close tags also, so <test/ ></test/> doesn't work
   if (*end == '>' && *(end - 1) == '/')
     end = end - 1;
 
@@ -214,6 +234,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 
   name = g_strndup (p + 1 , end - (p + 1));
   if (close) {
+    if ((*node)->parent == NULL || g_ascii_strcasecmp ((*node)->name, name))
+      xml->status = XML_PARSE_STATUS_TAG_MISMATCH;
     while ((*node)->parent != NULL &&
 	((*node)->type != SWFDEC_XML_NODE_ELEMENT ||
 	  g_ascii_strcasecmp ((*node)->name, name))) {
@@ -228,16 +250,16 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   }
   g_free (name);
 
-  if (!close) {
+  if (close) {
+    end = strchr (end, '>');
+    if (end == NULL)
+      end = strchr (p, '\0');
+  } else {
     end = end + strspn (end, " \r\n\t");
     while (*end != '>' && *end != '\0') {
       end = swfdec_xml_parse_attribute (xml, child, end);
       end = end + strspn (end, " \r\n\t");
     }
-  } else {
-    end = strchr (end, '>');
-    if (end == NULL)
-      end = strchr (p, '\0');
   }
 
   if (end == '\0') {
@@ -319,6 +341,9 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
     }
     g_assert (p != NULL);
   }
+
+  if (node != SWFDEC_XML_NODE (xml))
+    xml->status = XML_PARSE_STATUS_TAG_NOT_CLOSED;
 }
 
 SWFDEC_AS_NATIVE (253, 10, swfdec_xml_do_parseXML)
@@ -375,4 +400,57 @@ swfdec_xml_init_context (SwfdecPlayer *player, guint version)
     return;
   swfdec_as_native_function_set_construct_type (
       SWFDEC_AS_NATIVE_FUNCTION (xml), SWFDEC_TYPE_XML);
+}
+
+static void
+swfdec_xml_add_variable (SwfdecAsObject *object, const char *variable,
+    SwfdecAsNative get, SwfdecAsNative set)
+{
+  SwfdecAsFunction *get_func, *set_func;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (variable != NULL);
+  g_return_if_fail (get != NULL);
+
+  get_func =
+    swfdec_as_native_function_new (object->context, variable, get, 0, NULL);
+  if (get_func == NULL)
+    return;
+
+  if (set != NULL) {
+    set_func =
+      swfdec_as_native_function_new (object->context, variable, set, 0, NULL);
+  } else {
+    set_func = NULL;
+  }
+
+  swfdec_as_object_add_variable (object, variable, get_func, set_func);
+}
+
+void
+swfdec_xml_init_context2 (SwfdecPlayer *player, guint version)
+{
+  SwfdecAsContext *context;
+  SwfdecAsValue val;
+  SwfdecAsObject *xml;
+  SwfdecAsObject *proto;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  context = SWFDEC_AS_CONTEXT (player);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XML, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  xml = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  if (!xml)
+    return;
+  swfdec_as_object_get_variable (xml, SWFDEC_AS_STR_prototype, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  if (!proto)
+    return;
+
+  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status, swfdec_xml_get_status,
+      NULL);
 }

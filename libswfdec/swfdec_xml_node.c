@@ -758,8 +758,9 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
-static void swfdec_xml_node_add_variable (SwfdecAsObject *object,
-    const char *variable, SwfdecAsNative get, SwfdecAsNative set)
+static void
+swfdec_xml_node_add_variable (SwfdecAsObject *object, const char *variable,
+    SwfdecAsNative get, SwfdecAsNative set)
 {
   SwfdecAsFunction *get_func, *set_func;
 

@@ -238,6 +238,7 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   if (!close) {
     child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (*node)->context,
 	SWFDEC_XML_NODE_ELEMENT, name);
+    g_free (name);
   }
 
   if (close) {
@@ -257,26 +258,32 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   if (*end == '\0') {
     if (xml->status == XML_PARSE_STATUS_OK)
       xml->status = XML_PARSE_STATUS_ELEMENT_MALFORMED;
-    g_free (name);
+    if (close)
+      g_free (name);
     return end;
   }
 
   if (close) {
-    if ((*node)->parent == NULL || g_ascii_strcasecmp ((*node)->name, name))
-      xml->status = XML_PARSE_STATUS_TAG_MISMATCH;
-    while ((*node)->parent != NULL &&
-	((*node)->type != SWFDEC_XML_NODE_ELEMENT ||
-	  g_ascii_strcasecmp ((*node)->name, name))) {
+    if ((*node)->parent != NULL && !g_ascii_strcasecmp ((*node)->name, name))
+    {
       *node = (*node)->parent;
     }
-    if ((*node)->parent != NULL)
-      *node = (*node)->parent;
+    else // error
+    {
+      SwfdecXmlNode *iter = *node;
+      while (iter != NULL && (iter->name == NULL || g_ascii_strcasecmp (iter->name, name))) {
+	iter = iter->parent;
+      }
+      if (iter != NULL) {
+        xml->status = XML_PARSE_STATUS_TAG_NOT_CLOSED;
+      } else {
+        xml->status = XML_PARSE_STATUS_TAG_MISMATCH;
+      }
+    }
+    g_free (name);
   } else {
     swfdec_xml_node_appendChild (*node, child);
-  }
-  g_free (name);
 
-  if (!close) {
     if (*(end - 1) != '/')
       *node = child;
   }
@@ -333,7 +340,7 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   p = value;
   node = SWFDEC_XML_NODE (xml);
 
-  while (*p != '\0') {
+  while (xml->status == XML_PARSE_STATUS_OK && *p != '\0') {
     if (*p == '<') {
       if (g_ascii_strncasecmp (p + 1, "?xml", strlen ("?xml")) == 0) {
 	p = swfdec_xml_parse_xmlDecl (xml, p);
@@ -350,7 +357,7 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
     g_assert (p != NULL);
   }
 
-  if (node != SWFDEC_XML_NODE (xml))
+  if (xml->status == XML_PARSE_STATUS_OK && node != SWFDEC_XML_NODE (xml))
     xml->status = XML_PARSE_STATUS_TAG_NOT_CLOSED;
 }
 

@@ -151,12 +151,14 @@ XML.prototype.parseXML = ASnative (253, 10);
 XML.prototype.onLoad = function () {
 };
 
+// Note: handling of loaded is different here than in LoadVars
 XML.prototype.onData = function (src) {
-  this.loaded = true;
   if (src != null) {
+    this.loaded = true;
     this.parseXML (src);
     this.onLoad (true);
   } else {
+    this.loaded = false;
     this.onLoad (false);
   }
 };

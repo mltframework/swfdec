@@ -585,13 +585,11 @@ swfdec_xml_node_removeNode (SwfdecXmlNode *node)
 void
 swfdec_xml_node_removeChildren (SwfdecXmlNode *node)
 {
-  gint32 length, i;
+  SwfdecAsValue val;
 
-  length = swfdec_as_array_length (node->children);
-
-  for (i = 0; i < length; i++) {
-    swfdec_xml_node_removeNode (swfdec_xml_node_get_child (node, i));
-  }
+  SWFDEC_AS_VALUE_SET_INT (&val, 0);
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (node->children),
+      SWFDEC_AS_STR_length, &val);
 }
 
 SWFDEC_AS_NATIVE (253, 2, swfdec_xml_node_do_removeNode)

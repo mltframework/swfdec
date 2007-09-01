@@ -566,11 +566,12 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   SwfdecXmlNode *node;
   const char *p;
 
-  g_return_if_fail (SWFDEC_IS_XML_NODE (xml));
+  g_return_if_fail (SWFDEC_IS_XML (xml));
   g_return_if_fail (value != NULL);
 
   object = SWFDEC_AS_OBJECT (xml);
 
+  swfdec_xml_node_removeChildren (SWFDEC_XML_NODE (xml));
   xml->xmlDecl = SWFDEC_AS_STR_EMPTY;
   xml->docTypeDecl = SWFDEC_AS_STR_EMPTY;
   xml->status = XML_PARSE_STATUS_OK;

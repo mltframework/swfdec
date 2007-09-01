@@ -91,6 +91,23 @@ swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 i)
   return SWFDEC_XML_NODE (child);
 }
 
+static gint32
+swfdec_xml_node_index_of_child (SwfdecXmlNode *node, SwfdecXmlNode *child)
+{
+  gint32 length, i;
+
+  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), -1);
+  g_return_val_if_fail (SWFDEC_IS_XML_NODE (child), -1);
+
+  length = swfdec_as_array_length (node->children);
+  for (i = 0; i < length; i++) {
+    if (swfdec_xml_node_get_child (node, i) == child)
+      return i;
+  }
+
+  return -1;
+}
+
 static const char *
 swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node,
     const char *prefix)
@@ -603,12 +620,61 @@ swfdec_xml_node_do_removeNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_xml_node_removeNode (SWFDEC_XML_NODE (object));
 }
 
+static void
+swfdec_xml_node_insertAt (SwfdecXmlNode *node, SwfdecXmlNode *child, gint32 i)
+{
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_XML_NODE (node));
+  g_return_if_fail (SWFDEC_IS_XML_NODE (child));
+  g_return_if_fail (node->children != NULL);
+
+  // remove the previous parent of the child
+  swfdec_xml_node_removeNode (child);
+
+  // insert child to node's childNodes array
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child));
+  swfdec_as_array_insert (node->children, i, &val);
+
+  // set node as parent of child
+  child->parent = node;
+}
+
 SWFDEC_AS_NATIVE (253, 3, swfdec_xml_node_insertBefore)
 void
 swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_FIXME ("XMLNode.insertBefore not implemented");
+  gint32 i;
+  SwfdecAsObject *child, *point;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  if (argc < 2)
+    return;
+
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+    return;
+
+  child = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  if (!SWFDEC_IS_XML_NODE (child))
+    return;
+
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]))
+    return;
+
+  point = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
+  if (!SWFDEC_IS_XML_NODE (point))
+    return;
+
+  i = swfdec_xml_node_index_of_child (SWFDEC_XML_NODE (object),
+      SWFDEC_XML_NODE (point));
+
+  if (i != -1) {
+    swfdec_xml_node_insertAt (SWFDEC_XML_NODE (object),
+	SWFDEC_XML_NODE (child), i);
+  }
 }
 
 void

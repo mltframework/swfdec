@@ -26,6 +26,7 @@
 #include "swfdec_xml.h"
 #include "swfdec_xml_node.h"
 #include "swfdec_as_native_function.h"
+#include "swfdec_as_array.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -286,7 +287,7 @@ swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static const char *
-swfdec_xml_parse_xmlDecl (SwfdecXml *xml, const char *p)
+swfdec_xml_parse_xmlDecl (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 {
   const char *end;
   GString *string;
@@ -309,13 +310,22 @@ swfdec_xml_parse_xmlDecl (SwfdecXml *xml, const char *p)
   xml->xmlDecl = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (xml)->context,
 	g_string_free (string, FALSE));
 
+  // in version 5 parsing xmlDecl or docType always adds undefined element to
+  // the childNodes array
+  if (SWFDEC_AS_OBJECT (xml)->context->version < 6) {
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    swfdec_as_array_push (node->children, &val);
+  }
+
   g_return_val_if_fail (end > p, strchr (p, '\0'));
 
   return end;
 }
 
 static const char *
-swfdec_xml_parse_docTypeDecl (SwfdecXml *xml, const char *p)
+swfdec_xml_parse_docTypeDecl (SwfdecXml *xml, SwfdecXmlNode *node,
+    const char *p)
 {
   const char *end;
   int open;
@@ -344,6 +354,14 @@ swfdec_xml_parse_docTypeDecl (SwfdecXml *xml, const char *p)
   } else {
     xml->docTypeDecl = swfdec_as_context_give_string (
 	SWFDEC_AS_OBJECT (xml)->context, g_strndup (p, end - p));
+
+    // in version 5 parsing xmlDecl or docType always adds undefined element to
+    // the childNodes array
+    if (SWFDEC_AS_OBJECT (xml)->context->version < 6) {
+      SwfdecAsValue val;
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+      swfdec_as_array_push (node->children, &val);
+    }
   }
 
   g_return_val_if_fail (end > p, strchr (p, '\0'));
@@ -582,9 +600,9 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   while (xml->status == XML_PARSE_STATUS_OK && *p != '\0') {
     if (*p == '<') {
       if (g_ascii_strncasecmp (p + 1, "?xml", strlen ("?xml")) == 0) {
-	p = swfdec_xml_parse_xmlDecl (xml, p);
+	p = swfdec_xml_parse_xmlDecl (xml, node, p);
       } else if (g_ascii_strncasecmp (p + 1, "!DOCTYPE", strlen ("!DOCTYPE")) == 0) {
-	p = swfdec_xml_parse_docTypeDecl (xml, p);
+	p = swfdec_xml_parse_docTypeDecl (xml, node, p);
       } else if (strncmp (p + 1, "!--", strlen ("!--")) == 0) {
 	p = swfdec_xml_parse_comment (xml, p);
       } else {

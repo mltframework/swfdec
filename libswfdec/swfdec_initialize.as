@@ -146,7 +146,9 @@ ASSetPropFlags (XML, "prototype", 3);
 XML.prototype.load = ASnative (301, 0);
 //XML.prototype.send = ASnative (301, 1);
 //XML.prototype.sendAndLoad = ASnative (301, 2);
-XML.prototype.parseXML = ASnative (253, 10);
+XML.prototype.createElement = ASnative (253, 10);
+XML.prototype.createTextNode = ASnative (253, 11);
+XML.prototype.parseXML = ASnative (253, 12);
 
 XML.prototype.onLoad = function () {
 };

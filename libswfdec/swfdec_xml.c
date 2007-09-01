@@ -618,7 +618,7 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
     xml->status = XML_PARSE_STATUS_TAG_NOT_CLOSED;
 }
 
-SWFDEC_AS_NATIVE (253, 10, swfdec_xml_do_parseXML)
+SWFDEC_AS_NATIVE (253, 12, swfdec_xml_do_parseXML)
 void
 swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *rval)
@@ -631,6 +631,42 @@ swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   swfdec_xml_parseXML (SWFDEC_XML (object),
       swfdec_as_value_to_string (cx, &argv[0]));
+}
+
+SWFDEC_AS_NATIVE (253, 10, swfdec_xml_createElement)
+void
+swfdec_xml_createElement (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecXmlNode *node;
+
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT,
+      swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
+}
+
+SWFDEC_AS_NATIVE (253, 11, swfdec_xml_createTextNode)
+void
+swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecXmlNode *node;
+
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT,
+      swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
 SWFDEC_AS_CONSTRUCTOR (253, 9, swfdec_xml_construct, swfdec_xml_get_type)

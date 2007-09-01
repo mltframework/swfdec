@@ -391,21 +391,18 @@ swfdec_xml_node_get_parentNode (SwfdecAsContext *cx, SwfdecAsObject *object,
 static SwfdecXmlNode *
 swfdec_xml_node_previousSibling (SwfdecXmlNode *node)
 {
-  gint32 length, i;
+  gint32 i;
 
   if (node->parent == NULL)
     return NULL;
 
-  length = swfdec_as_array_length (node->parent->children);
-  for (i = 0; i < length; i++) {
-    if (swfdec_xml_node_get_child (node->parent, i) == node) {
-      if (i == 0)
-	return NULL;
-      return swfdec_xml_node_get_child (node->parent, i - 1);
-    }
-  }
+  i = swfdec_xml_node_index_of_child (node->parent, node);
+  g_assert (i >= 0);
 
-  g_assert_not_reached ();
+  if (i > 0)
+    return swfdec_xml_node_get_child (node->parent, i - 1);
+
+  return NULL;
 }
 
 static void
@@ -434,15 +431,13 @@ swfdec_xml_node_nextSibling (SwfdecXmlNode *node)
     return NULL;
 
   length = swfdec_as_array_length (node->parent->children);
-  for (i = 0; i < length; i++) {
-    if (swfdec_xml_node_get_child (node->parent, i) == node) {
-      if (i + 1 == length)
-	return NULL;
-      return swfdec_xml_node_get_child (node->parent, i + 1);
-    }
-  }
+  i = swfdec_xml_node_index_of_child (node->parent, node);
+  g_assert (i >= 0);
 
-  g_assert_not_reached ();
+  if (i + 1 < length)
+    return swfdec_xml_node_get_child (node->parent, i + 1);
+
+  return NULL;
 }
 
 static void

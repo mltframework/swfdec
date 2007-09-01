@@ -133,10 +133,12 @@ XMLNode.prototype.insertBefore = ASnative (253, 3);
 XMLNode.prototype.appendChild = ASnative (253, 4);
 XMLNode.prototype.hasChildNodes = ASnative (253, 5);
 XMLNode.prototype.toString = ASnative (253, 6);
+XMLNode.prototype.getNamespaceForPrefix = ASnative (253, 7);
+XMLNode.prototype.getPrefixForNamespace = ASnative (253, 8);
 
 /*** XML ***/
 
-XML = ASconstructor (253, 7);
+XML = ASconstructor (253, 9);
 
 XML.prototype = new XMLNode (1, "");
 ASSetPropFlags (XML, "prototype", 3);

@@ -91,6 +91,98 @@ swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 i)
   return SWFDEC_XML_NODE (child);
 }
 
+static const char *
+swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node,
+    const char *prefix)
+{
+  const char *var;
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+
+  if (prefix == NULL || strlen (prefix) == 0) {
+    var = swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context,
+	"xmlns");
+  } else {
+    var = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
+	g_strconcat ("xmlns:", prefix, NULL));
+  }
+
+  do {
+    swfdec_as_object_get_variable (node->attributes, var, &val);
+    if (!SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
+      return swfdec_as_value_to_string (SWFDEC_AS_OBJECT (node)->context, &val);
+    }
+    node = node->parent;
+  } while (node != NULL);
+
+  return NULL;
+}
+
+typedef struct {
+  const char	*namespace;
+  const char	*variable;
+} ForeachFindNamespaceData;
+
+static gboolean
+swfdec_xml_node_foreach_find_namespace (SwfdecAsObject *object,
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
+{
+  const char *uri;
+  ForeachFindNamespaceData *fdata = data;
+
+  // check whether it's namespace variable (xmlns or xmlns:*)
+  if (strlen (variable) < strlen("xmlns"))
+    return TRUE;
+
+  if (g_ascii_strncasecmp (variable, "xmlns", strlen("xmlns")))
+    return TRUE;
+
+  if (variable[strlen("xmlns")] != '\0' && variable[strlen("xmlns")] != ':')
+    return TRUE;
+
+  // ok, now check if the uri is the one we are searching for
+  uri = swfdec_as_value_to_string (object->context, value);
+  if (!g_ascii_strcasecmp (uri, fdata->namespace)) {
+    fdata->variable = variable;
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
+static const char *
+swfdec_xml_node_getPrefixForNamespace (SwfdecXmlNode *node,
+    const char *namespace)
+{
+  ForeachFindNamespaceData fdata;
+
+  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+  g_return_val_if_fail (namespace != NULL, NULL);
+
+  fdata.namespace = namespace;
+  fdata.variable = NULL;
+
+  do {
+    swfdec_as_object_foreach (node->attributes,
+	swfdec_xml_node_foreach_find_namespace, &fdata);
+    node = node->parent;
+  } while (node != NULL && fdata.variable == NULL);
+
+  if (fdata.variable != NULL) {
+    const char *p;
+
+    p = strchr (fdata.variable, ':');
+    if (p == NULL || *(p + 1) == '\0')
+      return SWFDEC_AS_STR_EMPTY;
+
+    return swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context,
+	p + 1);
+  } else {
+    return NULL;
+  }
+}
+
 static void
 swfdec_xml_node_get_nodeType (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -165,11 +257,29 @@ swfdec_xml_node_set_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_STRING (ret, name);
 }
 
+static const char *
+swfdec_xml_node_get_prefix (SwfdecXmlNode *node)
+{
+  const char *p;
+
+  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+
+  if (node->name == NULL)
+    return NULL;
+
+  p = strchr (node->name, ':');
+  if (p == NULL || *(p + 1) == '\0')
+    return NULL;
+
+  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
+      g_strndup (node->name, p - node->name));
+}
+
 static void
-swfdec_xml_node_get_prefix (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_xml_node_do_get_prefix (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *p, *prefix, *name;
+  const char *prefix;
 
   if (!SWFDEC_IS_XML_NODE (object))
     return;
@@ -179,15 +289,12 @@ swfdec_xml_node_get_prefix (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  name = SWFDEC_XML_NODE (object)->name;
-  p = strchr (name, ':');
-  if (p == NULL || *(p + 1) == '\0') {
+  prefix = swfdec_xml_node_get_prefix (SWFDEC_XML_NODE (object));
+  if (prefix != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, prefix);
+  } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
-    return;
   }
-
-  prefix = swfdec_as_context_give_string (cx, g_strndup (name, p - name));
-  SWFDEC_AS_VALUE_SET_STRING (ret, prefix);
 }
 
 static void
@@ -214,6 +321,29 @@ swfdec_xml_node_get_localName (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_STRING (ret,
       swfdec_as_context_give_string (cx, g_strdup (p)));
+}
+
+static void
+swfdec_xml_node_get_namespaceURI (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *uri;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  if (SWFDEC_XML_NODE (object)->name == NULL) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
+
+  uri = swfdec_xml_node_getNamespaceForPrefix (SWFDEC_XML_NODE (object),
+      swfdec_xml_node_get_prefix (SWFDEC_XML_NODE (object)));
+  if (uri != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, uri);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+  }
 }
 
 static void
@@ -382,31 +512,6 @@ swfdec_xml_node_get_parent (SwfdecXmlNode *node)
   return SWFDEC_XML_NODE (parent);
 }
 
-static const char *
-swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node,
-    const char *prefix)
-{
-  GString *string;
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
-
-  string = g_string_new ("xmlns:");
-  string = g_string_append (string, prefix);
-
-  do {
-    swfdec_as_object_get_variable (node->attributes, string->str, &val);
-    if (!SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
-      g_string_free (string, TRUE);
-      return swfdec_as_value_to_string (SWFDEC_AS_OBJECT (node)->context, &val);
-    }
-    node = node->parent;
-  } while (node != NULL);
-
-  g_string_free (string, TRUE);
-  return NULL;
-}
-
 SWFDEC_AS_NATIVE (253, 7, swfdec_xml_node_do_getNamespaceForPrefix)
 void
 swfdec_xml_node_do_getNamespaceForPrefix (SwfdecAsContext *cx,
@@ -417,14 +522,41 @@ swfdec_xml_node_do_getNamespaceForPrefix (SwfdecAsContext *cx,
   if (!SWFDEC_IS_XML_NODE (object))
     return;
 
-  if (argc < 1)
+  if (argc < 1) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
     return;
+  }
 
   namespace = swfdec_xml_node_getNamespaceForPrefix (SWFDEC_XML_NODE (object),
       swfdec_as_value_to_string (cx, &argv[0]));
 
   if (namespace != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, namespace);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+SWFDEC_AS_NATIVE (253, 8, swfdec_xml_node_do_getPrefixForNamespace)
+void
+swfdec_xml_node_do_getPrefixForNamespace (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *prefix;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  if (argc < 1) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
+
+  prefix = swfdec_xml_node_getPrefixForNamespace (SWFDEC_XML_NODE (object),
+      swfdec_as_value_to_string (cx, &argv[0]));
+
+  if (prefix != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, prefix);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -778,9 +910,11 @@ swfdec_xml_node_init_native (SwfdecPlayer *player, guint version)
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeName,
       swfdec_xml_node_get_nodeName, swfdec_xml_node_set_nodeName);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_prefix,
-      swfdec_xml_node_get_prefix, NULL);
+      swfdec_xml_node_do_get_prefix, NULL);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_localName,
       swfdec_xml_node_get_localName, NULL);
+  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_namespaceURI,
+      swfdec_xml_node_get_namespaceURI, NULL);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_attributes,
       swfdec_xml_node_get_attributes, NULL);
   swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_parentNode,

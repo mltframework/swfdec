@@ -277,6 +277,34 @@ swfdec_as_array_append (SwfdecAsArray *array, guint n,
 }
 
 /**
+ * swfdec_as_array_insert:
+ * @array: a #SwfdecAsArray
+ * @idx: index to insert the value to, must be >= 0
+ * @value: a #SwfdecAsValue
+ *
+ * Inserts @value to @array at given index, making room for it by moving
+ * elements to bigger indexes if necessary.
+ **/
+void
+swfdec_as_array_insert (SwfdecAsArray *array, gint32 idx, SwfdecAsValue *value)
+{
+  gint32 length;
+  SwfdecAsObject *object;
+
+  g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
+  g_return_if_fail (idx >= 0);
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+
+  object = SWFDEC_AS_OBJECT (array);
+
+  length = swfdec_as_array_get_length (object);
+
+  if (idx < length)
+    swfdec_as_array_move_range (object, idx, length - idx, idx + 1);
+  swfdec_as_array_set_range (object, idx, 1, value);
+}
+
+/**
  * swfdec_as_array_get_value:
  * @array: a #SwfdecAsArray
  * @i: index of the value to get

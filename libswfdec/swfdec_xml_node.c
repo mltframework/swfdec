@@ -574,12 +574,79 @@ swfdec_xml_node_do_getPrefixForNamespace (SwfdecAsContext *cx,
   }
 }
 
+static gboolean
+swfdec_xml_node_foreach_copy_attributes (SwfdecAsObject *object,
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
+{
+  SwfdecAsObject *target = data;
+  swfdec_as_object_set_variable (target, variable, value);
+  return TRUE;
+}
+
+static void
+swfdec_xml_node_copy_attributes (SwfdecXmlNode *node, SwfdecXmlNode *target)
+{
+  swfdec_as_object_foreach (node->attributes,
+      swfdec_xml_node_foreach_copy_attributes, target->attributes);
+}
+
+
+static SwfdecXmlNode *
+swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
+{
+  SwfdecXmlNode *new;
+
+  g_assert (SWFDEC_IS_AS_CONTEXT (cx));
+  g_assert (SWFDEC_IS_XML_NODE (node));
+
+  new = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+
+  new->type = node->type;
+  new->name = node->name;
+  new->value = node->value;
+
+  swfdec_xml_node_copy_attributes (node, new);
+
+  if (deep) {
+    SwfdecAsValue val;
+    SwfdecXmlNode *child, *child_new;
+    gint32 length, i;
+
+    length = swfdec_as_array_length (node->children);
+
+    for (i = 0; i < length; i++) {
+      child = swfdec_xml_node_get_child (node, i);
+      g_assert (child != NULL);
+
+      child_new = swfdec_xml_node_clone (cx, child, TRUE);
+      child_new->parent = new;
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child_new));
+      swfdec_as_array_push (new->children, &val);
+    }
+  }
+
+  return new;
+}
+
 SWFDEC_AS_NATIVE (253, 1, swfdec_xml_node_cloneNode)
 void
 swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_FIXME ("XMLNode.cloneNode not implemented");
+  gboolean deep;
+  SwfdecXmlNode *new;
+
+  if (!SWFDEC_IS_XML_NODE (object))
+    return;
+
+  if (argc >= 1) {
+    deep = swfdec_as_value_to_boolean (cx, &argv[0]);
+  } else {
+    deep = FALSE;
+  }
+
+  new = swfdec_xml_node_clone (cx, SWFDEC_XML_NODE (object), deep);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (new));
 }
 
 void

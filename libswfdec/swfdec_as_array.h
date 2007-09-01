@@ -55,11 +55,13 @@ void		swfdec_as_array_append		(SwfdecAsArray *	array,
 						 const SwfdecAsValue *	values);
 gint32		swfdec_as_array_length		(SwfdecAsArray *	array);
 void		swfdec_as_array_get_value	(SwfdecAsArray *	array,
-						 gint32			i,
+						 gint32			idx,
 						 SwfdecAsValue *	value);
 void		swfdec_as_array_insert		(SwfdecAsArray *	array,
-						 gint32			i,
+						 gint32			idx,
 						 SwfdecAsValue *	value);
+void		swfdec_as_array_remove		(SwfdecAsArray *	array,
+						 gint32			idx);
 
 
 G_END_DECLS

@@ -279,7 +279,7 @@ swfdec_as_array_append (SwfdecAsArray *array, guint n,
 /**
  * swfdec_as_array_insert:
  * @array: a #SwfdecAsArray
- * @idx: index to insert the value to, must be >= 0
+ * @idx: index to insert the value to
  * @value: a #SwfdecAsValue
  *
  * Inserts @value to @array at given index, making room for it by moving
@@ -296,7 +296,6 @@ swfdec_as_array_insert (SwfdecAsArray *array, gint32 idx, SwfdecAsValue *value)
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   object = SWFDEC_AS_OBJECT (array);
-
   length = swfdec_as_array_get_length (object);
 
   if (idx < length)
@@ -305,20 +304,48 @@ swfdec_as_array_insert (SwfdecAsArray *array, gint32 idx, SwfdecAsValue *value)
 }
 
 /**
+ * swfdec_as_array_remove:
+ * @array: a #SwfdecAsArray
+ * @idx: index of the value to remove
+ *
+ * Removes value at @idx from the @array, elements with higher indexes will be
+ * moved towards the start of the @array.
+ **/
+void
+swfdec_as_array_remove (SwfdecAsArray *array, gint32 idx)
+{
+  gint32 length;
+  SwfdecAsObject *object;
+
+  g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
+  g_return_if_fail (idx >= 0);
+
+  object = SWFDEC_AS_OBJECT (array);
+  length = swfdec_as_array_get_length (object);
+
+  if (idx >= length)
+    return;
+
+  swfdec_as_array_move_range (object, idx + 1, length - (idx + 1), idx);
+  swfdec_as_array_set_length (object, length - 1);
+}
+
+/**
  * swfdec_as_array_get_value:
  * @array: a #SwfdecAsArray
- * @i: index of the value to get
+ * @idx: index of the value to get
  * @value: a pointer to #SwfdecAsValue that will be set
  *
  * Gets a value from given index. If the value doesn't exists, an undefined
  * value is set.
  **/
 void
-swfdec_as_array_get_value (SwfdecAsArray *array, gint32 i, SwfdecAsValue *value)
+swfdec_as_array_get_value (SwfdecAsArray *array, gint32 idx,
+    SwfdecAsValue *value)
 {
   const char *var;
 
-  var = swfdec_as_double_to_string (SWFDEC_AS_OBJECT (array)->context, i);
+  var = swfdec_as_double_to_string (SWFDEC_AS_OBJECT (array)->context, idx);
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (array), var, value);
 }
 

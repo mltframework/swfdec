@@ -35,8 +35,24 @@
 G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_XML_NODE)
 
 static void
+swfdec_xml_do_mark (SwfdecAsObject *object)
+{
+  SwfdecXml *xml = SWFDEC_XML (object);
+
+  if (xml->xmlDecl != NULL)
+    swfdec_as_string_mark (xml->xmlDecl);
+  if (xml->docTypeDecl != NULL)
+    swfdec_as_string_mark (xml->docTypeDecl);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_xml_parent_class)->mark (object);
+}
+
+static void
 swfdec_xml_class_init (SwfdecXmlClass *klass)
 {
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+
+  asobject_class->mark = swfdec_xml_do_mark;
 }
 
 static void

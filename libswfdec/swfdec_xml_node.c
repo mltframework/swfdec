@@ -586,12 +586,16 @@ void
 swfdec_xml_node_removeNode (SwfdecXmlNode *node)
 {
   SwfdecXmlNode *parent;
+  gint32 i;
 
   parent = swfdec_xml_node_get_parent (node);
   if (parent == NULL)
     return;
 
-  SWFDEC_FIXME ("XMLNode.removeNode not implemented");
+  i = swfdec_xml_node_index_of_child (node->parent, node);
+  g_assert (i >= 0);
+
+  swfdec_as_array_remove (node->parent->children, i);
 }
 
 void

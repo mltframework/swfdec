@@ -63,6 +63,11 @@ struct _SwfdecXmlNode {
   SwfdecXmlNode		*parent;
   SwfdecAsArray		*children;
   SwfdecAsObject	*attributes;
+
+  // visible trough childNodes property, if modified by the user directly, the
+  // changes are not visible in children and will get overwritten by next
+  // internal change
+  SwfdecAsArray		*childNodes;
 };
 
 struct _SwfdecXmlNodeClass {
@@ -81,6 +86,7 @@ void		swfdec_xml_node_removeChildren	(SwfdecXmlNode *	node);
 void		swfdec_xml_node_init_properties	(SwfdecXmlNode *	node,
 						 int			type,
 						 const char *		value);
+gint32		swfdec_xml_node_num_children	(SwfdecXmlNode *	node);
 
 G_END_DECLS
 #endif

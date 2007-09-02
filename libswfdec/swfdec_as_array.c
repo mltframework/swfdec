@@ -233,7 +233,7 @@ swfdec_as_array_set_range (SwfdecAsObject *object, gint32 start_index,
   // allow negative indexes
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (num >= 0);
-  g_return_if_fail (value != NULL);
+  g_return_if_fail (num == 0 || value != NULL);
 
   for (i = 0; i < num; i++) {
     var = swfdec_as_double_to_string (object->context, start_index + i);
@@ -271,6 +271,9 @@ void
 swfdec_as_array_append (SwfdecAsArray *array, guint n,
     const SwfdecAsValue *value)
 {
+  g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
+  g_return_if_fail (n == 0 || value != NULL);
+
   // don't allow negative length
   swfdec_as_array_set_range (SWFDEC_AS_OBJECT (array),
       swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array)), n, value);
@@ -345,8 +348,34 @@ swfdec_as_array_get_value (SwfdecAsArray *array, gint32 idx,
 {
   const char *var;
 
+  g_assert (SWFDEC_IS_AS_ARRAY (array));
+  g_assert (idx >= 0);
+  g_assert (value != NULL);
+
   var = swfdec_as_double_to_string (SWFDEC_AS_OBJECT (array)->context, idx);
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (array), var, value);
+}
+
+/**
+ * swfdec_as_array_set_value:
+ * @array: a #SwfdecAsArray
+ * @idx: index of the value to set
+ * @value: a pointer to #SwfdecAsValue
+ *
+ * Sets a value to given index. Array will be expanded if necessary.
+ **/
+void
+swfdec_as_array_set_value (SwfdecAsArray *array, gint32 idx,
+    SwfdecAsValue *value)
+{
+  const char *var;
+
+  g_assert (SWFDEC_IS_AS_ARRAY (array));
+  g_assert (idx >= 0);
+  g_assert (SWFDEC_IS_AS_VALUE (value));
+
+  var = swfdec_as_double_to_string (SWFDEC_AS_OBJECT (array)->context, idx);
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (array), var, value);
 }
 
 typedef struct {

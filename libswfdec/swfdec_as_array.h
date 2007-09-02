@@ -57,6 +57,9 @@ gint32		swfdec_as_array_length		(SwfdecAsArray *	array);
 void		swfdec_as_array_get_value	(SwfdecAsArray *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);
+void		swfdec_as_array_set_value	(SwfdecAsArray *	array,
+						 gint32			idx,
+						 SwfdecAsValue *	value);
 void		swfdec_as_array_insert		(SwfdecAsArray *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);

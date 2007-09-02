@@ -3,7 +3,7 @@
 // xmlEscape method is only available as ASnative
 
 var xmlEscape = ASnative (100, 5);
-trace (xmlEscape ("t\"'e&s;:''ät"));
+trace (xmlEscape ("t\"'e&s;:''at"));
 trace (xmlEscape ("te&lt;st"));
 trace (xmlEscape ());
 trace (xmlEscape ("ma'ny", "param&eters"));

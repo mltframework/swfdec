@@ -312,11 +312,8 @@ swfdec_xml_parse_xmlDecl (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 
   // in version 5 parsing xmlDecl or docType always adds undefined element to
   // the childNodes array
-  if (SWFDEC_AS_OBJECT (xml)->context->version < 6) {
-    SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-    swfdec_as_array_push (node->children, &val);
-  }
+  if (SWFDEC_AS_OBJECT (xml)->context->version < 6)
+    SWFDEC_FIXME ("Need to add undefined element to childNodes array");
 
   g_return_val_if_fail (end > p, strchr (p, '\0'));
 
@@ -357,11 +354,8 @@ swfdec_xml_parse_docTypeDecl (SwfdecXml *xml, SwfdecXmlNode *node,
 
     // in version 5 parsing xmlDecl or docType always adds undefined element to
     // the childNodes array
-    if (SWFDEC_AS_OBJECT (xml)->context->version < 6) {
-      SwfdecAsValue val;
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-      swfdec_as_array_push (node->children, &val);
-    }
+    if (SWFDEC_AS_OBJECT (xml)->context->version < 6)
+      SWFDEC_FIXME ("Need to add undefined element to childNodes array");
   }
 
   g_return_val_if_fail (end > p, strchr (p, '\0'));
@@ -564,13 +558,16 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
   if (end == NULL)
     end = strchr (p, '\0');
 
-  text = g_strndup (p, end - p);
-  unescaped = swfdec_xml_unescape (text);
-  g_free (text);
-  child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (node)->context,
-      SWFDEC_XML_NODE_TEXT, unescaped);
-  g_free (unescaped);
-  swfdec_xml_node_appendChild (node, child);
+  if (!xml->ignoreWhite || strspn (p, " \t\r\n") < (size_t)(end - p))
+  {
+    text = g_strndup (p, end - p);
+    unescaped = swfdec_xml_unescape (text);
+    g_free (text);
+    child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (node)->context,
+	SWFDEC_XML_NODE_TEXT, unescaped);
+    g_free (unescaped);
+    swfdec_xml_node_appendChild (node, child);
+  }
 
   g_return_val_if_fail (end > p, strchr (p, '\0'));
 

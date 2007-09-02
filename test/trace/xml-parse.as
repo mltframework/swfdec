@@ -97,8 +97,6 @@ function print_node (node)
 var x = new XML ();
 var num = 1;
 
-//x.ignoreWhite = true;
-
 x.onLoad = function (success) {
   trace ("Success: " + success);
   trace ("---");
@@ -114,9 +112,19 @@ x.onLoad = function (success) {
     trace ("Loading: xml-parse-" + num + ".xml");
     this.load ("xml-parse-" + num + ".xml");
   } else {
-    loadMovie ("FSCommand:quit", "");
+    if (this.ignoreWhite == false) {
+      trace ("### Running tests with ignoreWhite...");
+      this.ignoreWhite = true;
+      num = 1;
+      trace ("Loading: xml-parse-" + num + ".xml");
+      this.load ("xml-parse-" + num + ".xml");
+    } else {
+      loadMovie ("FSCommand:quit", "");
+    }
   }
 };
 
+trace ("### Running tests without ignoreWhite...");
+x.ignoreWhite = true;
 trace ("Loading: xml-parse-" + num + ".xml");
 x.load ("xml-parse-" + num + ".xml");

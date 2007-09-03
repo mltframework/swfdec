@@ -19,6 +19,29 @@ function test_constructor ()
   }
 }
 
+function test_parse ()
+{
+  var x = new XML ();
+
+  // normal
+  trace (x.parseXML ("
+<?xml XML decl ?>
+<!DOCTYPE doctype decl>
+<element>
+  text <!-- comment -->  more text
+  <child_element attribute='value'/>
+</element>
+    "));
+  trace (x);
+
+  // weird parameters
+  for (var i = 0; i < values.length; i++) {
+    trace ("Constructing with: " + names[i]);
+    trace (x.parseXML (values[i]));
+    trace (x);
+  }
+}
+
 function test_create ()
 {
   var x = new XML ("<root/>");
@@ -45,9 +68,22 @@ function test_create ()
 
 function test_properties ()
 {
-  var x = new XML ("<?xml XML declaration ?><!DOCTYPE doctype declaration ><root/>");
-
   // normal
+  var x = new XML ("<?xml XML declaration ?><!DOCTYPE doctype declaration ><root/>");
+  trace (x.contentType);
+  trace (x.docTypeDecl);
+  trace (x.ignoreWhite);
+  trace (x.loaded);
+  trace (x.status);
+  trace (x.xmlDecl);
+  x = new XML ("<root/>");
+  trace (x.contentType);
+  trace (x.docTypeDecl);
+  trace (x.ignoreWhite);
+  trace (x.loaded);
+  trace (x.status);
+  trace (x.xmlDecl);
+  x = new XML ();
   trace (x.contentType);
   trace (x.docTypeDecl);
   trace (x.ignoreWhite);
@@ -74,6 +110,7 @@ function test_properties ()
 }
 
 test_constructor ();
+test_parse ();
 test_create ();
 test_properties ();
 

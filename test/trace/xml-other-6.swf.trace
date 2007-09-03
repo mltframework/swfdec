@@ -175,6 +175,213 @@ Constructing with: (52) [type Object] (object)
 Constructing with: (53) [type Object] (object)
 26: toString!
 [type Object]
+undefined
+<?xml XML decl ?><!DOCTYPE doctype decl>
+
+
+<element>
+  text  more text
+  <child_element attribute="value" />
+</element>
+    
+Constructing with: (0)  (undefined)
+undefined
+<?xml XML decl ?><!DOCTYPE doctype decl>
+
+
+<element>
+  text  more text
+  <child_element attribute="value" />
+</element>
+    
+Constructing with: (1) null (null)
+undefined
+null
+Constructing with: (2) true (boolean)
+undefined
+true
+Constructing with: (3) false (boolean)
+undefined
+false
+Constructing with: (4) 0 (number)
+undefined
+0
+Constructing with: (5) 1 (number)
+undefined
+1
+Constructing with: (6) 0.5 (number)
+undefined
+0.5
+Constructing with: (7) -1 (number)
+undefined
+-1
+Constructing with: (8) -0.5 (number)
+undefined
+-0.5
+Constructing with: (9) Infinity (number)
+undefined
+Infinity
+Constructing with: (10) -Infinity (number)
+undefined
+-Infinity
+Constructing with: (11) NaN (number)
+undefined
+NaN
+Constructing with: (12)  (string)
+undefined
+
+Constructing with: (13) 0 (string)
+undefined
+0
+Constructing with: (14) -0 (string)
+undefined
+-0
+Constructing with: (15) 0.0 (string)
+undefined
+0.0
+Constructing with: (16) 1 (string)
+undefined
+1
+Constructing with: (17) Hello World! (string)
+undefined
+Hello World!
+Constructing with: (18) true (string)
+undefined
+true
+Constructing with: (19) _level0 (string)
+undefined
+_level0
+Constructing with: (20) _level0 (movieclip)
+undefined
+_level0
+Constructing with: (21) [object Object] (object)
+undefined
+[object Object]
+Constructing with: (22) [type Function] (function)
+undefined
+[type Function]
+Constructing with: (23) [type Object] (object)
+toString called
+undefined
+[type Object]
+Constructing with: (24) [type Object] (object)
+toString called with 
+undefined
+[type Object]
+Constructing with: (25) [object Object] (object)
+undefined
+[object Object]
+Constructing with: (26)  (object)
+undefined
+[type Object]
+Constructing with: (27)  (object)
+0: toString!
+undefined
+[type Object]
+Constructing with: (28) null (object)
+1: toString!
+undefined
+[type Object]
+Constructing with: (29) true (object)
+2: toString!
+undefined
+[type Object]
+Constructing with: (30) false (object)
+3: toString!
+undefined
+[type Object]
+Constructing with: (31) 0 (object)
+4: toString!
+undefined
+[type Object]
+Constructing with: (32) 1 (object)
+5: toString!
+undefined
+[type Object]
+Constructing with: (33) 0.5 (object)
+6: toString!
+undefined
+[type Object]
+Constructing with: (34) -1 (object)
+7: toString!
+undefined
+[type Object]
+Constructing with: (35) -0.5 (object)
+8: toString!
+undefined
+[type Object]
+Constructing with: (36) Infinity (object)
+9: toString!
+undefined
+[type Object]
+Constructing with: (37) -Infinity (object)
+10: toString!
+undefined
+[type Object]
+Constructing with: (38) NaN (object)
+11: toString!
+undefined
+[type Object]
+Constructing with: (39)  (object)
+12: toString!
+undefined
+
+Constructing with: (40) 0 (object)
+13: toString!
+undefined
+0
+Constructing with: (41) -0 (object)
+14: toString!
+undefined
+-0
+Constructing with: (42) 0.0 (object)
+15: toString!
+undefined
+0.0
+Constructing with: (43) 1 (object)
+16: toString!
+undefined
+1
+Constructing with: (44) Hello World! (object)
+17: toString!
+undefined
+Hello World!
+Constructing with: (45) true (object)
+18: toString!
+undefined
+true
+Constructing with: (46) _level0 (object)
+19: toString!
+undefined
+_level0
+Constructing with: (47) _level0 (object)
+20: toString!
+undefined
+[type Object]
+Constructing with: (48) [type Object] (object)
+21: toString!
+undefined
+[type Object]
+Constructing with: (49) [type Object] (object)
+22: toString!
+undefined
+[type Object]
+Constructing with: (50) [type Object] (object)
+23: toString!
+undefined
+[type Object]
+Constructing with: (51) [type Object] (object)
+24: toString!
+undefined
+[type Object]
+Constructing with: (52) [type Object] (object)
+25: toString!
+undefined
+[type Object]
+Constructing with: (53) [type Object] (object)
+26: toString!
+undefined
+[type Object]
 <root />
 <name />
 <root />
@@ -410,13 +617,25 @@ false
 undefined
 0
 <?xml XML declaration ?>
-Testing with: (0)  (undefined)
 application/x-www-form-urlencoded
-<!DOCTYPE doctype declaration >
+undefined
 false
 undefined
 0
-<?xml XML declaration ?>
+undefined
+application/x-www-form-urlencoded
+undefined
+false
+undefined
+0
+undefined
+Testing with: (0)  (undefined)
+application/x-www-form-urlencoded
+undefined
+false
+undefined
+0
+undefined
 Testing with: (1) null (null)
 null
 null

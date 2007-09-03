@@ -241,6 +241,20 @@ function test_modify ()
   trace (root.firstChild.lastChild.nodeName);
 }
 
+function test_constructor ()
+{
+  // normal
+  trace (new XMLNode (1, "name"));
+  trace (new XMLNode (3, "value"));
+
+  for (var i = 0; i < values.length; i++) {
+    trace ("Creating with: " + names[i]);
+    trace (new XMLNode (1, values[i]));
+    trace (new XMLNode (3, values[i]));
+    trace (new XMLNode (values[i], "value"));
+  }
+}
+
 test_childNodes ();
 test_references ();
 test_cloneNode ();
@@ -248,5 +262,6 @@ test_nodeName ();
 test_namespace ();
 test_attributes ();
 test_modify ();
+test_constructor ();
 
 loadMovie ("FSCommand:quit", "");

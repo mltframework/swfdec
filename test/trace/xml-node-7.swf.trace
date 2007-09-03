@@ -334,3 +334,308 @@ nsa
 root
 root
 root
+<name />
+value
+Creating with: (0) undefined (undefined)
+[type Object]
+[type Object]
+[type Object]
+Creating with: (1) null (null)
+<null />
+null
+value
+Creating with: (2) true (boolean)
+<true />
+true
+<value />
+Creating with: (3) false (boolean)
+<false />
+false
+value
+Creating with: (4) 0 (number)
+<0 />
+0
+value
+Creating with: (5) 1 (number)
+<1 />
+1
+<value />
+Creating with: (6) 0.5 (number)
+<0.5 />
+0.5
+value
+Creating with: (7) -1 (number)
+<-1 />
+-1
+value
+Creating with: (8) -0.5 (number)
+<-0.5 />
+-0.5
+value
+Creating with: (9) Infinity (number)
+<Infinity />
+Infinity
+value
+Creating with: (10) -Infinity (number)
+<-Infinity />
+-Infinity
+value
+Creating with: (11) NaN (number)
+<NaN />
+NaN
+value
+Creating with: (12)  (string)
+< />
+
+value
+Creating with: (13) 0 (string)
+<0 />
+0
+value
+Creating with: (14) -0 (string)
+<-0 />
+-0
+value
+Creating with: (15) 0.0 (string)
+<0.0 />
+0.0
+value
+Creating with: (16) 1 (string)
+<1 />
+1
+<value />
+Creating with: (17) Hello World! (string)
+<Hello World! />
+Hello World!
+value
+Creating with: (18) true (string)
+<true />
+true
+value
+Creating with: (19) _level0 (string)
+<_level0 />
+_level0
+value
+Creating with: (20) _level0 (movieclip)
+<_level0 />
+_level0
+value
+Creating with: (21) [object Object] (object)
+<[object Object] />
+[object Object]
+value
+Creating with: (22) [type Function] (function)
+<[type Function] />
+[type Function]
+value
+Creating with: (23) [type Object] (object)
+toString called
+<[type Object] />
+toString called
+[type Object]
+valueOf called
+value
+Creating with: (24) [type Object] (object)
+toString called with 
+<[type Object] />
+toString called with 
+[type Object]
+value
+Creating with: (25) [object Object] (object)
+<[object Object] />
+[object Object]
+valueOf called with 
+value
+Creating with: (26) undefined (object)
+<[type Object] />
+[type Object]
+value
+Creating with: (27) undefined (object)
+0: toString!
+<[type Object] />
+0: toString!
+[type Object]
+0: valueOf!
+value
+Creating with: (28) null (object)
+1: toString!
+<[type Object] />
+1: toString!
+[type Object]
+1: valueOf!
+value
+Creating with: (29) true (object)
+2: toString!
+<[type Object] />
+2: toString!
+[type Object]
+2: valueOf!
+<value />
+Creating with: (30) false (object)
+3: toString!
+<[type Object] />
+3: toString!
+[type Object]
+3: valueOf!
+value
+Creating with: (31) 0 (object)
+4: toString!
+<[type Object] />
+4: toString!
+[type Object]
+4: valueOf!
+value
+Creating with: (32) 1 (object)
+5: toString!
+<[type Object] />
+5: toString!
+[type Object]
+5: valueOf!
+<value />
+Creating with: (33) 0.5 (object)
+6: toString!
+<[type Object] />
+6: toString!
+[type Object]
+6: valueOf!
+value
+Creating with: (34) -1 (object)
+7: toString!
+<[type Object] />
+7: toString!
+[type Object]
+7: valueOf!
+value
+Creating with: (35) -0.5 (object)
+8: toString!
+<[type Object] />
+8: toString!
+[type Object]
+8: valueOf!
+value
+Creating with: (36) Infinity (object)
+9: toString!
+<[type Object] />
+9: toString!
+[type Object]
+9: valueOf!
+value
+Creating with: (37) -Infinity (object)
+10: toString!
+<[type Object] />
+10: toString!
+[type Object]
+10: valueOf!
+value
+Creating with: (38) NaN (object)
+11: toString!
+<[type Object] />
+11: toString!
+[type Object]
+11: valueOf!
+value
+Creating with: (39)  (object)
+12: toString!
+< />
+12: toString!
+
+12: valueOf!
+value
+Creating with: (40) 0 (object)
+13: toString!
+<0 />
+13: toString!
+0
+13: valueOf!
+value
+Creating with: (41) -0 (object)
+14: toString!
+<-0 />
+14: toString!
+-0
+14: valueOf!
+value
+Creating with: (42) 0.0 (object)
+15: toString!
+<0.0 />
+15: toString!
+0.0
+15: valueOf!
+value
+Creating with: (43) 1 (object)
+16: toString!
+<1 />
+16: toString!
+1
+16: valueOf!
+<value />
+Creating with: (44) Hello World! (object)
+17: toString!
+<Hello World! />
+17: toString!
+Hello World!
+17: valueOf!
+value
+Creating with: (45) true (object)
+18: toString!
+<true />
+18: toString!
+true
+18: valueOf!
+value
+Creating with: (46) _level0 (object)
+19: toString!
+<_level0 />
+19: toString!
+_level0
+19: valueOf!
+value
+Creating with: (47) _level0 (object)
+20: toString!
+<[type Object] />
+20: toString!
+[type Object]
+20: valueOf!
+value
+Creating with: (48) [type Object] (object)
+21: toString!
+<[type Object] />
+21: toString!
+[type Object]
+21: valueOf!
+value
+Creating with: (49) [type Object] (object)
+22: toString!
+<[type Object] />
+22: toString!
+[type Object]
+22: valueOf!
+value
+Creating with: (50) [type Object] (object)
+23: toString!
+<[type Object] />
+23: toString!
+[type Object]
+23: valueOf!
+value
+Creating with: (51) [type Object] (object)
+24: toString!
+<[type Object] />
+24: toString!
+[type Object]
+24: valueOf!
+value
+Creating with: (52) [type Object] (object)
+25: toString!
+<[type Object] />
+25: toString!
+[type Object]
+25: valueOf!
+value
+Creating with: (53) [type Object] (object)
+26: toString!
+<[type Object] />
+26: toString!
+[type Object]
+26: valueOf!
+value

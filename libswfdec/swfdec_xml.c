@@ -194,7 +194,7 @@ swfdec_xml_get_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_XML (object)->xmlDecl != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML (object)->xmlDecl);
   } else {
-    SWFDEC_AS_VALUE_SET_NULL (ret);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
 }
 
@@ -225,7 +225,7 @@ swfdec_xml_get_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_XML (object)->docTypeDecl != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML (object)->docTypeDecl);
   } else {
-    SWFDEC_AS_VALUE_SET_NULL (ret);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
 }
 
@@ -355,7 +355,7 @@ swfdec_xml_parse_xmlDecl (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 
   end += strlen ("?>");
 
-  string = g_string_new (xml->xmlDecl);
+  string = g_string_new ((xml->xmlDecl != NULL ? xml->xmlDecl : ""));
   string = g_string_append_len (string, p, end - p);
   xml->xmlDecl = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (xml)->context,
 	g_string_free (string, FALSE));
@@ -639,8 +639,8 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   object = SWFDEC_AS_OBJECT (xml);
 
   swfdec_xml_node_removeChildren (SWFDEC_XML_NODE (xml));
-  xml->xmlDecl = SWFDEC_AS_STR_EMPTY;
-  xml->docTypeDecl = SWFDEC_AS_STR_EMPTY;
+  xml->xmlDecl = NULL;
+  xml->docTypeDecl = NULL;
   xml->status = XML_PARSE_STATUS_OK;
 
   p = value;

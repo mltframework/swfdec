@@ -4,6 +4,21 @@
 
 // Test XML issues that are not handled by the other tests
 
+function test_constructor ()
+{
+  // normal
+  trace (new XML ("<root/>"));
+  trace (new XML ());
+
+  // weird parameters
+  trace (new XML ("<root/>", "<more>stuff</more>"));
+
+  for (var i = 0; i < values.length; i++) {
+    trace ("Constructing with: " + names[i]);
+    trace (new XML (values[i]));
+  }
+}
+
 function test_create ()
 {
   var x = new XML ("<root/>");
@@ -58,6 +73,7 @@ function test_properties ()
   }
 }
 
+test_constructor ();
 test_create ();
 test_properties ();
 

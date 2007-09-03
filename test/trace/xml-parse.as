@@ -100,6 +100,8 @@ var num = 1;
 x.onLoad = function (success) {
   trace ("Success: " + success);
   trace ("---");
+  trace (this.getBytesLoaded ());
+  trace (this.getBytesTotal ());
   for (var i = 0; i < xml_properties.length; i++) {
     trace (xml_properties[i] + ": " + my_escape (this[xml_properties[i]]));
   }

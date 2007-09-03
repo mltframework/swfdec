@@ -24,6 +24,10 @@ ASSetNativeAccessor = ASnative (4, 1);
 
 /*** BASE OBJECTS ***/
 
+Boolean = ASconstructor(107, 2);
+ASSetNative(Boolean.prototype, 107, "valueOf,toString");
+ASSetPropFlags(Boolean.prototype, null, 3);
+
 Number = ASconstructor (106, 2);
 ASSetNative (Number.prototype, 106, "valueOf,toString");
 ASSetPropFlags(Number.prototype, null, 3);

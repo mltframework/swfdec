@@ -293,6 +293,15 @@ EXTRA_DIST = \
 	construct-properties-7.swf.trace \
 	construct-properties-8.swf \
 	construct-properties-8.swf.trace \
+	constructor-madness.as \
+	constructor-madness-5.swf \
+	constructor-madness-5.swf.trace \
+	constructor-madness-6.swf \
+	constructor-madness-6.swf.trace \
+	constructor-madness-7.swf \
+	constructor-madness-7.swf.trace \
+	constructor-madness-8.swf \
+	constructor-madness-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
 	countdown.swf \

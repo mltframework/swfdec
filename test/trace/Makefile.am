@@ -1326,6 +1326,13 @@ EXTRA_DIST = \
 	xml-node-6.swf.trace \
 	xml-node-7.swf \
 	xml-node-7.swf.trace \
+	xml-other.as \
+	xml-other-5.swf \
+	xml-other-5.swf.trace \
+	xml-other-6.swf \
+	xml-other-6.swf.trace \
+	xml-other-7.swf \
+	xml-other-7.swf.trace \
 	xml-parse.as \
 	xml-parse-5.swf \
 	xml-parse-5.swf.trace \

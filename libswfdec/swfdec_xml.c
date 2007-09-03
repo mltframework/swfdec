@@ -678,6 +678,9 @@ swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   if (argc < 1)
     return;
 
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
   swfdec_xml_parseXML (SWFDEC_XML (object),
       swfdec_as_value_to_string (cx, &argv[0]));
 }

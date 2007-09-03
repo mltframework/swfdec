@@ -670,6 +670,8 @@ swfdec_xml_node_removeNode (SwfdecXmlNode *node)
 {
   gint32 i;
 
+  g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (node));
+
   if (node->parent == NULL)
     return;
 
@@ -697,10 +699,12 @@ swfdec_xml_node_removeChildren (SwfdecXmlNode *node)
 {
   gint32 num, i;
 
+  g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (node));
+
   num = swfdec_xml_node_num_children (node);
 
   for (i = 0; i < num; i++) {
-    swfdec_xml_node_removeNode (swfdec_xml_node_get_child (node, i));
+    swfdec_xml_node_removeNode (swfdec_xml_node_get_child (node, 0));
   }
 }
 

@@ -744,9 +744,6 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
       SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
 
-  swfdec_as_object_unset_variable_flags (object, SWFDEC_AS_STR___constructor__,
-      SWFDEC_AS_VARIABLE_HIDDEN);
-
   SWFDEC_AS_VALUE_SET_STRING (&SWFDEC_XML (object)->contentType,
       SWFDEC_AS_STR_application_x_www_form_urlencoded);
 

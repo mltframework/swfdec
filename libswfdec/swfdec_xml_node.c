@@ -138,7 +138,8 @@ swfdec_xml_node_update_childNodes (SwfdecXmlNode *node)
     SWFDEC_AS_VALUE_SET_OBJECT (&vals[i],
 	SWFDEC_AS_OBJECT (swfdec_xml_node_get_child (node, i)));
   }
-  swfdec_as_array_append (node->childNodes, num, vals);
+  swfdec_as_array_append_with_flags (node->childNodes, num, vals,
+      SWFDEC_AS_VARIABLE_CONSTANT);
   g_free (vals);
 }
 

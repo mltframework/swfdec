@@ -404,8 +404,10 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
     return strchr (p, '\0');
   }
 
+  text = g_strndup (p, end - p);
   name = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
-      g_strndup (p, end - p));
+      swfdec_xml_unescape (text));
+  g_free (text);
 
   p = end + strspn (end, " \r\n\t");
   if (*p != '=') {

@@ -37,15 +37,10 @@ valueOf called with
 26: toString!
 <root><a /><b />c<d /></root>
 <a />,<b />,c,<d />
-<d />
-<root><a /><b />c<d /></root>
 <a />,<b />,c,<d />,fake
-<d />
 <b />,c,<d />
-<d />
 <b />,c,<d />,<fake />
 <b />,c,<d />,<e />
-<b />
 fake,c,<d />,<e />
 <b />,c,<d />,<f />,<e />
 parent
@@ -53,16 +48,25 @@ firstchild
 lastchild
 nextsibling
 previoussibling
+true
 parent
 firstchild
 lastchild
 nextsibling
 previoussibling
+true
 null
 null
 null
 null
 null
+false
+null
+null
+null
+null
+null
+false
 
 
 <a />,<b />,c,<d />
@@ -294,3 +298,20 @@ _level0
 [type Object]
 
 [type Object]
+nsa
+null
+nsdefault_at_child
+nsa
+
+null
+nsdefault_at_child
+nsa
+
+null
+nsdefault
+nsa
+
+null
+nsdefault
+nsa
+nsa

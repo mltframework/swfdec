@@ -9,25 +9,21 @@ function test_childNodes ()
   var x = new XML ("<root><a/><b/>c<d/></root>");
   var root = x.firstChild;
 
-  // add fake elements to childNodes array and test how they effect the methods
-  // and what methods reset the array
+  // normal
   trace (root);
   trace (root.childNodes);
+
+  // add fake elements to childNodes array and test what methods reset the array
   root.childNodes.push ("fake");
-  trace (root.lastChild);
-  trace (root);
   trace (root.childNodes);
   root.firstChild.removeNode ();
-  trace (root.lastChild);
   trace (root.childNodes);
   root.childNodes.push (new XMLNode (1, "fake"));
-  trace (root.lastChild);
   trace (root.childNodes);
   root.appendChild (new XMLNode (1, "e"));
   trace (root.childNodes);
   ASSetPropFlags (root.childNodes, "0", 0, 4); // remove write-protection
   root.childNodes[0] = new XMLNode (3, "fake");
-  trace (root.firstChild);
   trace (root.childNodes);
   root.insertBefore (new XMLNode (1, "f"), root.lastChild);
   trace (root.childNodes);
@@ -44,6 +40,7 @@ function test_references ()
   trace (root.lastChild.nodeName);
   trace (root.nextSibling.nodeName);
   trace (root.previousSibling.nodeName);
+  trace (root.hasChildNodes ());
 
   // writing
   root.parentNode = new XMLNode (1, "test");
@@ -56,6 +53,7 @@ function test_references ()
   trace (root.lastChild.nodeName);
   trace (root.nextSibling.nodeName);
   trace (root.previousSibling.nodeName);
+  trace (root.hasChildNodes ());
 
   // not found
   root = new XMLNode (1, "root");
@@ -64,6 +62,16 @@ function test_references ()
   trace (root.lastChild);
   trace (root.nextSibling);
   trace (root.previousSibling);
+  trace (root.hasChildNodes ());
+
+  // fake elements in childNodes array
+  root.childNodes.push (new XMLNode (1, "fake"));
+  trace (root.parentNode);
+  trace (root.firstChild);
+  trace (root.lastChild);
+  trace (root.nextSibling);
+  trace (root.previousSibling);
+  trace (root.hasChildNodes ());
 }
 
 function test_cloneNode ()
@@ -118,9 +126,55 @@ function test_nodeName ()
   }
 }
 
+function test_namespace ()
+{
+  var x = new XML ();
+  x.ignoreWhite = true;
+  x.parseXML ("
+<root:root xmlns='nsdefault' xmlns:a='nsa'>
+  <child xmlns='nsdefault_at_child' xmlns:d='nsd'>
+    <a:a/>
+    <b:b/>
+  </child>
+  c
+  <d:d/>
+  <e:e/>
+</root:root>
+    ");
+  var root = x.firstChild;
+
+  // normal
+  var ele = root.firstChild.firstChild;
+  trace (ele.namespaceURI);
+  trace (ele.getNamespaceForPrefix ());
+  trace (ele.getNamespaceForPrefix (""));
+  trace (ele.getNamespaceForPrefix ("a"));
+  ele = ele.nextSibling;
+  trace (ele.namespaceURI);
+  trace (ele.getNamespaceForPrefix ());
+  trace (ele.getNamespaceForPrefix (""));
+  trace (ele.getNamespaceForPrefix ("a"));
+  ele = root.lastChild.previousSibling;
+  trace (ele.namespaceURI);
+  trace (ele.getNamespaceForPrefix ());
+  trace (ele.getNamespaceForPrefix (""));
+  trace (ele.getNamespaceForPrefix ("a"));
+  ele = ele.nextSibling;
+  trace (ele.namespaceURI);
+  trace (ele.getNamespaceForPrefix ());
+  trace (ele.getNamespaceForPrefix (""));
+  trace (ele.getNamespaceForPrefix ("a"));
+
+  // writing
+  ele = root.firstChild.firstChild;
+  ele.namespaceURI = "fake";
+  trace (ele.namespaceURI);
+}
+
 test_childNodes ();
 test_references ();
 test_cloneNode ();
 test_nodeName ();
+test_namespace ();
 
 loadMovie ("FSCommand:quit", "");

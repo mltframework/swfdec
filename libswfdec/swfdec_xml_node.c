@@ -745,6 +745,11 @@ swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_XML_NODE (child))
     return;
 
+  // special case
+  if (swfdec_xml_node_index_of_child (SWFDEC_XML_NODE (object),
+	SWFDEC_XML_NODE (child)) != -1)
+    return;
+
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]))
     return;
 
@@ -800,6 +805,11 @@ swfdec_xml_node_do_appendChild (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   child = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   if (!SWFDEC_IS_XML_NODE (child))
+    return;
+
+  // special case
+  if (swfdec_xml_node_index_of_child (SWFDEC_XML_NODE (object),
+	SWFDEC_XML_NODE (child)) != -1)
     return;
 
   swfdec_xml_node_appendChild (SWFDEC_XML_NODE (object),

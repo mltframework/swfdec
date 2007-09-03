@@ -307,6 +307,9 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
     return SWFDEC_AS_DELETE_NOT_DELETED;
 
+  if (variable == SWFDEC_AS_STR___proto__ &&
+      object->context->version <= 6)
+    object->prototype = NULL;
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();

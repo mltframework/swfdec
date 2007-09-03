@@ -665,6 +665,13 @@ EXTRA_DIST = \
 	netstream-onstatus-notfound.swf.trace \
 	number.swf \
 	number.swf.trace \
+	number-properties.as \
+	number-properties-6.swf \
+	number-properties-6.swf.trace \
+	number-properties-7.swf \
+	number-properties-7.swf.trace \
+	number-properties-8.swf \
+	number-properties-8.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \

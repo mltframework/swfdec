@@ -234,7 +234,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     return;
 
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) {
+  if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
     guint i;
     SwfdecAsObject *proto = object->prototype;
 

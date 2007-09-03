@@ -297,6 +297,9 @@ EXTRA_DIST = \
 	constructor-prototype.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
+	crash-0.5.2-new-netstream.as \
+	crash-0.5.2-new-netstream.swf \
+	crash-0.5.2-new-netstream.swf.trace \
 	crash-0.5.2-startdrag.as \
 	crash-0.5.2-startdrag.swf \
 	crash-0.5.2-startdrag.swf.trace \

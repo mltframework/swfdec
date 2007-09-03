@@ -273,7 +273,8 @@ swfdec_xml_set_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  SWFDEC_XML (object)->loaded = argv[0];
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&SWFDEC_XML (object)->loaded,
+      swfdec_as_value_to_boolean (cx, &argv[0]));
 }
 
 static void
@@ -284,6 +285,27 @@ swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_INT (ret, SWFDEC_XML (object)->status);
+}
+
+static void
+swfdec_xml_set_status (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (!SWFDEC_IS_XML (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
+  // special case, call toString of objects
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+    swfdec_as_value_to_string (cx, &argv[0]);
+
+  SWFDEC_XML (object)->status = swfdec_as_value_to_number (cx, &argv[0]);
 }
 
 static const char *
@@ -752,7 +774,7 @@ swfdec_xml_init_native (SwfdecPlayer *player, guint version)
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_ignoreWhite,
       swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status, swfdec_xml_get_status,
-      NULL);
+      swfdec_xml_set_status);
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_xmlDecl, swfdec_xml_get_xmlDecl,
       swfdec_xml_set_xmlDecl);
   swfdec_xml_add_variable (proto, SWFDEC_AS_STR_docTypeDecl,

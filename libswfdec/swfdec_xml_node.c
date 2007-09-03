@@ -863,8 +863,10 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
 
   string = g_string_new ("");
   if (SWFDEC_IS_XML (node)) {
-    string = g_string_append (string, SWFDEC_XML (node)->xmlDecl);
-    string = g_string_append (string, SWFDEC_XML (node)->docTypeDecl);
+    if (SWFDEC_XML (node)->xmlDecl != NULL)
+      string = g_string_append (string, SWFDEC_XML (node)->xmlDecl);
+    if (SWFDEC_XML (node)->docTypeDecl != NULL)
+      string = g_string_append (string, SWFDEC_XML (node)->docTypeDecl);
   }
 
   switch (node->type) {

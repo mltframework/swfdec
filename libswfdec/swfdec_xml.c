@@ -749,7 +749,7 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_XML_NODE (object)->name = NULL;
 
-  if (argc >= 1) {
+  if (argc >= 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     swfdec_xml_parseXML (SWFDEC_XML (object),
 	swfdec_as_value_to_string (cx, &argv[0]));
   }

@@ -645,6 +645,10 @@ swfdec_xml_createElement (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT,
       swfdec_as_value_to_string (cx, &argv[0]));
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
@@ -661,6 +665,10 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   if (argc < 1)
+    return;
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT,

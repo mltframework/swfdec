@@ -75,7 +75,7 @@ swfdec_xml_node_init (SwfdecXmlNode *xml_node)
 gint32
 swfdec_xml_node_num_children (SwfdecXmlNode *node)
 {
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), 0);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), 0);
 
   return swfdec_as_array_length (node->children);
 }
@@ -85,7 +85,7 @@ swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 ind)
 {
   SwfdecAsValue val;
 
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
   g_return_val_if_fail (ind >= 0, NULL);
 
   if (ind >= swfdec_xml_node_num_children (node))
@@ -94,8 +94,8 @@ swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 ind)
   swfdec_as_array_get_value (node->children, ind, &val);
 
   g_return_val_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val), NULL);
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (SWFDEC_AS_VALUE_GET_OBJECT (&val)),
-      NULL);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (
+	SWFDEC_AS_VALUE_GET_OBJECT (&val)), NULL);
 
   return SWFDEC_XML_NODE (SWFDEC_AS_VALUE_GET_OBJECT (&val));
 }
@@ -105,8 +105,8 @@ swfdec_xml_node_index_of_child (SwfdecXmlNode *node, SwfdecXmlNode *child)
 {
   gint32 num, i;
 
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), -1);
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (child), -1);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), -1);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (child), -1);
 
   num = swfdec_xml_node_num_children (node);
   for (i = 0; i < num; i++) {
@@ -124,7 +124,7 @@ swfdec_xml_node_update_childNodes (SwfdecXmlNode *node)
   SwfdecAsValue *vals;
   gint32 num, i;
 
-  g_return_if_fail (SWFDEC_IS_XML_NODE (node));
+  g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (node));
 
   // remove old
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
@@ -148,7 +148,7 @@ swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node, const char *prefix)
   const char *var;
   SwfdecAsValue val;
 
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
 
   if (prefix == NULL || strlen (prefix) == 0) {
     var = swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context,
@@ -207,7 +207,7 @@ swfdec_xml_node_getPrefixForNamespace (SwfdecXmlNode *node,
 {
   ForeachFindNamespaceData fdata;
 
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
   g_return_val_if_fail (namespace != NULL, NULL);
 
   fdata.namespace = namespace;
@@ -237,7 +237,7 @@ static void
 swfdec_xml_node_get_nodeType (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   SWFDEC_AS_VALUE_SET_INT (ret, SWFDEC_XML_NODE (object)->type);
@@ -247,7 +247,7 @@ static void
 swfdec_xml_node_get_nodeValue (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (SWFDEC_XML_NODE (object)->value != NULL) {
@@ -263,7 +263,7 @@ swfdec_xml_node_set_nodeValue (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *value;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc < 1)
@@ -279,7 +279,7 @@ static void
 swfdec_xml_node_get_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (SWFDEC_XML_NODE (object)->name != NULL) {
@@ -295,7 +295,7 @@ swfdec_xml_node_set_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *name;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc < 1)
@@ -316,7 +316,7 @@ swfdec_xml_node_get_prefix (SwfdecXmlNode *node)
 {
   const char *p;
 
-  g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), NULL);
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
 
   if (node->name == NULL)
     return NULL;
@@ -335,7 +335,7 @@ swfdec_xml_node_do_get_prefix (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *prefix;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (SWFDEC_XML_NODE (object)->name == NULL) {
@@ -357,7 +357,7 @@ swfdec_xml_node_get_localName (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *p, *name;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (SWFDEC_XML_NODE (object)->name == NULL) {
@@ -383,7 +383,7 @@ swfdec_xml_node_get_namespaceURI (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *uri;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (SWFDEC_XML_NODE (object)->name == NULL) {
@@ -404,7 +404,7 @@ static void
 swfdec_xml_node_get_attributes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_XML_NODE (object)->attributes);
@@ -414,7 +414,7 @@ static void
 swfdec_xml_node_get_parentNode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (SWFDEC_XML_NODE (object)->parent != NULL) {
@@ -448,7 +448,7 @@ swfdec_xml_node_get_previousSibling (SwfdecAsContext *cx,
 {
   SwfdecXmlNode *sibling;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   sibling = swfdec_xml_node_previousSibling (SWFDEC_XML_NODE (object));
@@ -479,7 +479,7 @@ swfdec_xml_node_get_nextSibling (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecXmlNode *sibling;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   sibling = swfdec_xml_node_nextSibling (SWFDEC_XML_NODE (object));
@@ -496,7 +496,7 @@ swfdec_xml_node_get_firstChild (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecXmlNode *child;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   child = swfdec_xml_node_get_child (SWFDEC_XML_NODE (object), 0);
@@ -514,7 +514,7 @@ swfdec_xml_node_get_lastChild (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 num;
   SwfdecXmlNode *child;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   num = swfdec_xml_node_num_children (SWFDEC_XML_NODE (object));
@@ -533,7 +533,7 @@ static void
 swfdec_xml_node_get_childNodes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret,
@@ -547,7 +547,7 @@ swfdec_xml_node_do_getNamespaceForPrefix (SwfdecAsContext *cx,
 {
   const char *namespace;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc < 1) {
@@ -572,7 +572,7 @@ swfdec_xml_node_do_getPrefixForNamespace (SwfdecAsContext *cx,
 {
   const char *prefix;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc < 1) {
@@ -612,10 +612,11 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
   SwfdecXmlNode *new;
 
   g_assert (SWFDEC_IS_AS_CONTEXT (cx));
-  g_assert (SWFDEC_IS_XML_NODE (node));
+  g_assert (SWFDEC_IS_VALID_XML_NODE (node));
 
   new = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
 
+  new->valid = TRUE;
   new->type = node->type;
   new->name = node->name;
   new->value = node->value;
@@ -651,7 +652,7 @@ swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   gboolean deep;
   SwfdecXmlNode *new;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc >= 1) {
@@ -685,7 +686,7 @@ void
 swfdec_xml_node_do_removeNode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   swfdec_xml_node_removeNode (SWFDEC_XML_NODE (object));
@@ -708,8 +709,8 @@ swfdec_xml_node_insertAt (SwfdecXmlNode *node, SwfdecXmlNode *child, gint32 ind)
 {
   SwfdecAsValue val;
 
-  g_assert (SWFDEC_IS_XML_NODE (node));
-  g_assert (SWFDEC_IS_XML_NODE (child));
+  g_assert (SWFDEC_IS_VALID_XML_NODE (node));
+  g_assert (SWFDEC_IS_VALID_XML_NODE (child));
   g_assert (ind >= 0);
 
   // remove the previous parent of the child
@@ -732,7 +733,7 @@ swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 i;
   SwfdecAsObject *child, *point;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc < 2)
@@ -742,7 +743,7 @@ swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   child = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
-  if (!SWFDEC_IS_XML_NODE (child))
+  if (!SWFDEC_IS_VALID_XML_NODE (child))
     return;
 
   // special case
@@ -754,7 +755,7 @@ swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   point = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
-  if (!SWFDEC_IS_XML_NODE (point))
+  if (!SWFDEC_IS_VALID_XML_NODE (point))
     return;
 
   i = swfdec_xml_node_index_of_child (SWFDEC_XML_NODE (object),
@@ -771,8 +772,8 @@ swfdec_xml_node_appendChild (SwfdecXmlNode *node, SwfdecXmlNode *child)
 {
   SwfdecAsValue val;
 
-  g_return_if_fail (SWFDEC_IS_XML_NODE (node));
-  g_return_if_fail (SWFDEC_IS_XML_NODE (child));
+  g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (node));
+  g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (child));
   g_return_if_fail (node->children != NULL);
 
   // remove the previous parent of the child
@@ -794,7 +795,7 @@ swfdec_xml_node_do_appendChild (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsObject *child;
 
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (argc < 1)
@@ -804,7 +805,7 @@ swfdec_xml_node_do_appendChild (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   child = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
-  if (!SWFDEC_IS_XML_NODE (child))
+  if (!SWFDEC_IS_VALID_XML_NODE (child))
     return;
 
   // special case
@@ -821,7 +822,7 @@ void
 swfdec_xml_node_hasChildNodes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   if (swfdec_xml_node_num_children (SWFDEC_XML_NODE (object)) > 0) {
@@ -856,7 +857,7 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
   GString *string;
   SwfdecAsObject *object;
 
-  g_assert (SWFDEC_IS_XML_NODE (node));
+  g_assert (SWFDEC_IS_VALID_XML_NODE (node));
 
   object = SWFDEC_AS_OBJECT (node);
 
@@ -930,7 +931,7 @@ void
 swfdec_xml_node_do_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML_NODE (object))
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
     return;
 
   SWFDEC_AS_VALUE_SET_STRING (ret,
@@ -948,6 +949,7 @@ swfdec_xml_node_init_properties (SwfdecXmlNode *node, int type,
 
   object = SWFDEC_AS_OBJECT (node);
 
+  node->valid = TRUE;
   node->parent = NULL;
   // FIXME: use _global.Array constructor?
   node->children = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
@@ -1009,6 +1011,11 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   if (argc < 2)
+    return;
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
     return;
 
   g_assert (SWFDEC_IS_XML_NODE (object));

@@ -53,8 +53,12 @@ typedef struct _SwfdecXmlNodeClass SwfdecXmlNodeClass;
 #define SWFDEC_XML_NODE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_XML_NODE, SwfdecXmlNodeClass))
 #define SWFDEC_XML_NODE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_XML_NODE, SwfdecXmlNodeClass))
 
+#define SWFDEC_IS_VALID_XML_NODE(obj)           (SWFDEC_IS_XML_NODE (obj) && SWFDEC_XML_NODE (obj)->valid)
+
 struct _SwfdecXmlNode {
   SwfdecAsObject	object;
+
+  gboolean		valid;
 
   guint			type;		// SwfdecXmlNodeType
   const char		*name;		// for type == element

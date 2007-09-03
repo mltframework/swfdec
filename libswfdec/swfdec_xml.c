@@ -173,6 +173,14 @@ swfdec_xml_set_ignoreWhite (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
+  // special case, call toString of objects
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+    swfdec_as_value_to_string (cx, &argv[0]);
+
   SWFDEC_XML (object)->ignoreWhite = swfdec_as_value_to_boolean (cx, &argv[0]);
 }
 
@@ -198,6 +206,10 @@ swfdec_xml_set_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   if (argc < 1)
+    return;
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
   SWFDEC_XML (object)->xmlDecl = swfdec_as_value_to_string (cx, &argv[0]);
@@ -227,6 +239,10 @@ swfdec_xml_set_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
   SWFDEC_XML (object)->docTypeDecl = swfdec_as_value_to_string (cx, &argv[0]);
 }
 
@@ -250,6 +266,10 @@ swfdec_xml_set_contentType (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
   SWFDEC_XML (object)->contentType = argv[0];
 }
 
@@ -271,6 +291,14 @@ swfdec_xml_set_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   if (argc < 1)
+    return;
+
+  // special case, call toString of objects
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+    swfdec_as_value_to_string (cx, &argv[0]);
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (&SWFDEC_XML (object)->loaded,

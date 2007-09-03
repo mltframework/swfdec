@@ -943,6 +943,11 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   ForeachSortData fdata;
   guint pos;
 
+  if (!SWFDEC_IS_AS_ARRAY (object)) {
+    SWFDEC_FIXME ("Array.sort should work on non-array objects too");
+    return;
+  }
+
   fdata.length = swfdec_as_array_get_length (object);
   fdata.order_size =
     MIN ((gint32)g_hash_table_size (object->properties) + 1, fdata.length + 1);

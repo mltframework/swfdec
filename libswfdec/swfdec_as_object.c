@@ -233,15 +233,6 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   if (!swfdec_as_variable_name_is_valid (variable))
     return;
 
-  if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
-	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
-      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
-    } else {
-      object->prototype = NULL;
-    }
-  }
-
   var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL) {
     guint i;
@@ -276,6 +267,15 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   } else { 
     var->value = *val;
   }
+  if (variable == SWFDEC_AS_STR___proto__) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
+      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    } else {
+      object->prototype = NULL;
+    }
+  }
+
 }
 
 static void

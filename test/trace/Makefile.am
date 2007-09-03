@@ -438,6 +438,15 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	foreach-proto-simple.as \
+	foreach-proto-simple-5.swf \
+	foreach-proto-simple-5.swf.trace \
+	foreach-proto-simple-6.swf \
+	foreach-proto-simple-6.swf.trace \
+	foreach-proto-simple-7.swf \
+	foreach-proto-simple-7.swf.trace \
+	foreach-proto-simple-8.swf \
+	foreach-proto-simple-8.swf.trace \
 	fromcharcode.as \
 	fromcharcode-5.swf \
 	fromcharcode-5.swf.trace \

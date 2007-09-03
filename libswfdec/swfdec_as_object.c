@@ -33,7 +33,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 
-#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
+#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 257
 
 /**
  * SECTION:SwfdecAsObject

@@ -199,6 +199,9 @@ swfdec_load_object_load (SwfdecLoadObject *load_object, const char *url)
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
   swfdec_as_object_set_variable_and_flags (load_object->target,
       SWFDEC_AS_STR__bytesLoaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+  swfdec_as_object_set_variable_and_flags (load_object->target,
+      SWFDEC_AS_STR__bytesTotal, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (&val, FALSE);
   swfdec_as_object_set_variable_and_flags (load_object->target,

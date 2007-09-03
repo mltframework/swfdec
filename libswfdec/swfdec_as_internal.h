@@ -38,6 +38,11 @@ void		swfdec_as_function_set_constructor (SwfdecAsFunction *	fun);
 void		swfdec_as_function_init_context (SwfdecAsContext *	context,
 						 guint			version);
 
+/* swfdec_as_context.c */
+void		swfdec_as_context_run_init_script (SwfdecAsContext *	context,
+						 const guint8 *		data,
+						 gsize			length);
+
 /* swfdec_as_object.c */
 typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;
 typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object, 

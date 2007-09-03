@@ -155,6 +155,7 @@ noinst_HEADERS = \
 	swfdec_as_array.h \
 	swfdec_as_boolean.h \
 	swfdec_as_frame_internal.h \
+	swfdec_as_initialize.h \
 	swfdec_as_internal.h \
 	swfdec_as_interpret.h \
 	swfdec_as_math.h \
@@ -227,6 +228,7 @@ noinst_HEADERS = \
 
 EXTRA_DIST = \
 	compiler.c \
+	swfdec_as_initialize.as \
 	swfdec_initialize.as \
 	swfdec_marshal.list
 

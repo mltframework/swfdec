@@ -301,6 +301,10 @@ swfdec_xml_node_set_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
   name = swfdec_as_value_to_string (cx, &argv[0]);
 
   SWFDEC_XML_NODE (object)->name = name;
@@ -514,8 +518,10 @@ swfdec_xml_node_get_lastChild (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   num = swfdec_xml_node_num_children (SWFDEC_XML_NODE (object));
-  if (num == 0)
+  if (num == 0) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
     return;
+  }
 
   child = swfdec_xml_node_get_child (SWFDEC_XML_NODE (object), num - 1);
   g_assert (child != NULL);

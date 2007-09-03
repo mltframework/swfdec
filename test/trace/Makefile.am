@@ -1342,6 +1342,11 @@ EXTRA_DIST = \
 	xml-parse-7.swf.trace \
 	xml-parse-1.xml \
 	xml-parse-2.xml \
+	xml-properties.as \
+	xml-properties-6.swf \
+	xml-properties-6.swf.trace \
+	xml-properties-7.swf \
+	xml-properties-7.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

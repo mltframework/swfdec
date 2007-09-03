@@ -33,6 +33,8 @@
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 
+#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
+
 /**
  * SECTION:SwfdecAsObject
  * @title: SwfdecAsObject
@@ -245,14 +247,14 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     guint i;
     SwfdecAsObject *proto = object->prototype;
 
-    for (i = 0; i < 256 && proto; i++) {
+    for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto; i++) {
       var = swfdec_as_object_hash_lookup (proto, variable);
       if (var && var->get)
 	break;
       proto = proto->prototype;
       var = NULL;
     }
-    if (i == 256) {
+    if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
       swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
       return;
     }
@@ -659,7 +661,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     pobject = &tmp_pobject;
 
   cur = object;
-  for (i = 0; i < 256 && cur != NULL; i++) {
+  for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
     klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
     if (klass->get (cur, object, variable, value, flags)) {
       *pobject = cur;
@@ -667,7 +669,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     }
     cur = cur->prototype;
   }
-  if (i == 256) {
+  if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
     *flags = 0;
     *pobject = NULL;

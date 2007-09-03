@@ -314,3 +314,22 @@ null
 nsdefault
 nsa
 nsa
+&=&&a=a&b=b&c=&g=&
+&=&&a=a&b=b&c=&d=d&g=&
+&=&&a=A&b=b&c=&d=d&g=&
+&=&&a=A&c=&d=d&g=&
+"="&&=&&&amp;=&amp;&'='&a=A&c=&d=d&g=&
+<root><a /><b />c<d /></root>
+<root><a /><b />c<d /></root>
+
+<root><a /><b />c<d /></root>
+<root><a /><b />c<d /></root>
+<root><a /><b />c<d /></root>
+<root><a /><b />c<d /></root>
+<root><a /><b />c<f /><d /></root>
+<root><a /><b />c<f /><d /><g /></root>
+<root><a /><b />c<f /><d /><g /></root>
+<root><a /><b />c<f /><d /><g /></root>
+root
+root
+root

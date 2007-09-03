@@ -171,10 +171,82 @@ function test_namespace ()
   trace (ele.namespaceURI);
 }
 
+function trace_attributes (attrs)
+{
+  var props = new Array ();
+  for (var prop in attrs) {
+    props.push (prop);
+  }
+  props.sort ();
+  var str = "";
+  for (var i = 0; i < props.length; i++) {
+    var prop = props[i];
+    str += "&" + prop + "=" + attrs[prop];
+  }
+  trace (str.substr(1));
+}
+
+function test_attributes ()
+{
+  var x = new XML ("<root a='a' b='b' c='' &amp;='&amp;' g='&'/>");
+  var root = x.firstChild;
+
+  // normal
+  trace_attributes (root.attributes);
+  root.attributes["d"] = "d";
+  trace_attributes (root.attributes);
+  root.attributes["a"] = "A";
+  trace_attributes (root.attributes);
+  delete root.attributes["b"];
+  trace_attributes (root.attributes);
+
+  // evil characters
+  root.attributes["'"] = "'";
+  root.attributes["\""] = "\"";
+  root.attributes["&"] = "&";
+  root.attributes["&amp;"] = "&amp;";
+  trace_attributes (root.attributes);
+}
+
+function test_modify ()
+{
+  var x = new XML ("<root><a/><b/>c<d/></root>");
+  var root = x.firstChild;
+
+  // normal
+  trace (x);
+  trace (root);
+  root.removeNode ();
+  trace (x);
+  trace (root);
+  x.appendChild (root);
+  trace (x);
+  trace (root);
+  root.insertBefore (new XMLNode (1, "f"));
+  trace (root);
+  root.insertBefore (new XMLNode (1, "f"), root.lastChild);
+  trace (root);
+  root.appendChild (new XMLNode (1, "g"), new XMLNode (1, "h"));
+  trace (root);
+
+  // weird cases
+  root.appendChild (root.firstChild);
+  trace (root);
+  root.insertBefore (root.lastChild, root.lastChild);
+  trace (root);
+  root.appendChild (root);
+  trace (root.lastChild.nodeName);
+  root.firstChild.appendChild (root);
+  trace (root.firstChild.parentNode.nodeName);
+  trace (root.firstChild.lastChild.nodeName);
+}
+
 test_childNodes ();
 test_references ();
 test_cloneNode ();
 test_nodeName ();
 test_namespace ();
+test_attributes ();
+test_modify ();
 
 loadMovie ("FSCommand:quit", "");

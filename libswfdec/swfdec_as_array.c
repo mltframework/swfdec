@@ -224,8 +224,9 @@ swfdec_as_array_move_range (SwfdecAsObject *object, gint32 from_index,
 }
 
 static void
-swfdec_as_array_set_range (SwfdecAsObject *object, gint32 start_index,
-    gint32 num, const SwfdecAsValue *value)
+swfdec_as_array_set_range_with_flags (SwfdecAsObject *object,
+    gint32 start_index, gint32 num, const SwfdecAsValue *value,
+    SwfdecAsVariableFlag flags)
 {
   gint32 i;
   const char *var;
@@ -237,8 +238,15 @@ swfdec_as_array_set_range (SwfdecAsObject *object, gint32 start_index,
 
   for (i = 0; i < num; i++) {
     var = swfdec_as_double_to_string (object->context, start_index + i);
-    swfdec_as_object_set_variable (object, var, &value[i]);
+    swfdec_as_object_set_variable_and_flags (object, var, &value[i], flags);
   }
+}
+
+static void
+swfdec_as_array_set_range (SwfdecAsObject *object, gint32 start_index,
+    gint32 num, const SwfdecAsValue *value)
+{
+  swfdec_as_array_set_range_with_flags (object, start_index, num, value, 0);
 }
 
 static void
@@ -256,7 +264,17 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
  * @value: the value to add
  *
  * Adds the given value to the array. This a macro that just calls
- * swfdec_as_array_append().
+ * swfdec_as_array_append_with_flags().
+ */
+
+/**
+ * swfdec_as_array_push_with_flags:
+ * @array: a #SwfdecAsArray
+ * @value: the value to add
+ * @flags: the flags to use
+ *
+ * Adds the given value to the array with the given flags. This a macro that
+ * just calls swfdec_as_array_append_with_flags().
  */
 
 /**
@@ -267,16 +285,26 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
  *
  * Appends the given @values to the array.
  **/
+
+/**
+ * swfdec_as_array_append:
+ * @array: a #SwfdecAsArray
+ * @n: number of values to add
+ * @values: the values to add
+ * @flags: the flags to use
+ *
+ * Appends the given @values to the array using the given @flags.
+ **/
 void
-swfdec_as_array_append (SwfdecAsArray *array, guint n,
-    const SwfdecAsValue *value)
+swfdec_as_array_append_with_flags (SwfdecAsArray *array, guint n,
+    const SwfdecAsValue *value, SwfdecAsVariableFlag flags)
 {
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (n == 0 || value != NULL);
 
   // don't allow negative length
-  swfdec_as_array_set_range (SWFDEC_AS_OBJECT (array),
-      swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array)), n, value);
+  swfdec_as_array_set_range_with_flags (SWFDEC_AS_OBJECT (array),
+      swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array)), n, value, flags);
 }
 
 /**

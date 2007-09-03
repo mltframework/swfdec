@@ -108,6 +108,7 @@ function hasOwnProperty (o, prop)
       result = false;
     }
 
+    ASSetPropFlags (o, "__proto__", 0, 2);
     o.__proto__ = "to-be-deleted";
     delete o.__proto__;
     if (o.__proto__ != undefined) {

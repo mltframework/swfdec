@@ -891,6 +891,15 @@ EXTRA_DIST = \
 	property-native-7.swf.trace \
 	property-native-8.swf \
 	property-native-8.swf.trace \
+	prototype-addProperty.as \
+	prototype-addProperty-5.swf \
+	prototype-addProperty-5.swf.trace \
+	prototype-addProperty-6.swf \
+	prototype-addProperty-6.swf.trace \
+	prototype-addProperty-7.swf \
+	prototype-addProperty-7.swf.trace \
+	prototype-addProperty-8.swf \
+	prototype-addProperty-8.swf.trace \
 	prototype-movie.as \
 	prototype-movie-5.swf \
 	prototype-movie-5.swf.trace \

@@ -1,0 +1,7 @@
+_global.Function = undefined
+local.a = object
+  myFunction = function
+    constructor (hp) = _global.Object.constructor
+    prototype (hp) = object
+      __proto__ (hp) = _global.Object.prototype
+      constructor (hp) = local.a.myFunction

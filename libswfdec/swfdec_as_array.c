@@ -283,7 +283,8 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
  * @n: number of values to add
  * @values: the values to add
  *
- * Appends the given @values to the array.
+ * Appends the given @values to the array. This a macro that just calls
+ * swfdec_as_array_append_with_flags().
  **/
 
 /**
@@ -314,10 +315,22 @@ swfdec_as_array_append_with_flags (SwfdecAsArray *array, guint n,
  * @value: a #SwfdecAsValue
  *
  * Inserts @value to @array at given index, making room for it by moving
- * elements to bigger indexes if necessary.
+ * elements to bigger indexes if necessary. This a macro that just calls
+ * swfdec_as_array_append_with_flags().
+ **/
+/**
+ * swfdec_as_array_insert_with_flags:
+ * @array: a #SwfdecAsArray
+ * @idx: index to insert the value to
+ * @value: a #SwfdecAsValue
+ * @flags: the flags to use
+ *
+ * Inserts @value to @array at given index using given @flags, making room for
+ * it by moving elements to bigger indexes if necessary.
  **/
 void
-swfdec_as_array_insert (SwfdecAsArray *array, gint32 idx, SwfdecAsValue *value)
+swfdec_as_array_insert_with_flags (SwfdecAsArray *array, gint32 idx,
+    const SwfdecAsValue *value, SwfdecAsVariableFlag flags)
 {
   gint32 length;
   SwfdecAsObject *object;
@@ -331,7 +344,7 @@ swfdec_as_array_insert (SwfdecAsArray *array, gint32 idx, SwfdecAsValue *value)
 
   if (idx < length)
     swfdec_as_array_move_range (object, idx, length - idx, idx + 1);
-  swfdec_as_array_set_range (object, idx, 1, value);
+  swfdec_as_array_set_range_with_flags (object, idx, 1, value, flags);
 }
 
 /**

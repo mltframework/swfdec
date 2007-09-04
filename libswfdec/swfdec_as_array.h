@@ -58,14 +58,20 @@ void		swfdec_as_array_append_with_flags (SwfdecAsArray *	array,
 						 guint			n,
 						 const SwfdecAsValue *	values,
 						 SwfdecAsVariableFlag	flags);
+void		swfdec_as_array_insert		(SwfdecAsArray *	array,
+						 gint32			idx,
+						 SwfdecAsValue *	value);
+#define		swfdec_as_array_insert(array,idx,value) \
+  swfdec_as_array_insert_with_flags ((array), (idx), (value), 0)
+void		swfdec_as_array_insert_with_flags (SwfdecAsArray *	array,
+						 gint32			idx,
+						 const SwfdecAsValue *	value,
+						 SwfdecAsVariableFlag	flags);
 gint32		swfdec_as_array_get_length	(SwfdecAsArray *	array);
 void		swfdec_as_array_get_value	(SwfdecAsArray *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);
 void		swfdec_as_array_set_value	(SwfdecAsArray *	array,
-						 gint32			idx,
-						 SwfdecAsValue *	value);
-void		swfdec_as_array_insert		(SwfdecAsArray *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);
 void		swfdec_as_array_remove		(SwfdecAsArray *	array,

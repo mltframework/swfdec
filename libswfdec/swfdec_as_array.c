@@ -549,7 +549,7 @@ swfdec_as_array_foreach_reverse (SwfdecAsObject *object, const char *variable,
   gint32 idx;
 
   idx = swfdec_as_array_to_index (variable);
-  if (idx == -1)
+  if (idx == -1 || idx >= *length)
     return variable;
 
   return swfdec_as_double_to_string (object->context, *length - 1 - idx);
@@ -761,7 +761,7 @@ swfdec_as_array_foreach_sort_rename (SwfdecAsObject *object,
   gboolean after_undefined = FALSE;
 
   idx = swfdec_as_array_to_index (variable);
-  if (idx == -1)
+  if (idx == -1 || idx >= fdata->length)
     return variable;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -796,7 +796,7 @@ swfdec_as_array_foreach_sort_indexedarray (SwfdecAsObject *object,
   gboolean after_undefined = FALSE;
 
   idx = swfdec_as_array_to_index (variable);
-  if (idx == -1)
+  if (idx == -1 || idx >= fdata->length)
     return TRUE;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -861,7 +861,7 @@ swfdec_as_array_foreach_sort_compare_undefined (SwfdecAsObject *object,
   gint32 idx;
 
   idx = swfdec_as_array_to_index (variable);
-  if (idx == -1)
+  if (idx == -1 || idx >= fdata->length)
     return TRUE;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -886,7 +886,7 @@ swfdec_as_array_foreach_sort_populate (SwfdecAsObject *object,
   gint cval = -1;
 
   idx = swfdec_as_array_to_index (variable);
-  if (idx == -1)
+  if (idx == -1 || idx >= fdata->length)
     return TRUE;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
@@ -942,11 +942,6 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 {
   ForeachSortData fdata;
   guint pos;
-
-  if (!SWFDEC_IS_AS_ARRAY (object)) {
-    SWFDEC_FIXME ("Array.sort should work on non-array objects too");
-    return;
-  }
 
   fdata.length = swfdec_as_array_get_length (object);
   fdata.order_size =

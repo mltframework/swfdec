@@ -26,10 +26,10 @@
 #include "swfdec_as_number.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
-#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecAsNumber, swfdec_as_number, SWFDEC_TYPE_AS_OBJECT)
 

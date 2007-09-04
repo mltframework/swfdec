@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "swfdec_as_internal.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"

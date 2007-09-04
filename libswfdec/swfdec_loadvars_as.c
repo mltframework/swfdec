@@ -25,11 +25,12 @@
 #include <string.h>
 
 #include "swfdec_debug.h"
-#include "swfdec_as_types.h"
+#include "swfdec_as_context.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
-#include "swfdec_player_internal.h"
+#include "swfdec_as_types.h"
 
 /*** AS CODE ***/
 

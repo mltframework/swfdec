@@ -28,6 +28,10 @@ G_BEGIN_DECLS
 /* This header contains all the non-exported symbols that can't go into 
  * exported headers 
  */
+#define SWFDEC_AS_NATIVE(x, y, func) SWFDEC_AS_CONSTRUCTOR (x, y, func, NULL)
+#define SWFDEC_AS_CONSTRUCTOR(x, y, func, type) void func (SwfdecAsContext *cx, \
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);
+
 
 /* swfdec_as_array.c */
 void	      	swfdec_as_array_init_context	(SwfdecAsContext *	context,

@@ -130,6 +130,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 
 public_headers = \
 	swfdec.h \
+	swfdec_as_array.h \
 	swfdec_as_context.h \
 	swfdec_as_debugger.h \
 	swfdec_as_frame.h \
@@ -152,7 +153,6 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
-	swfdec_as_array.h \
 	swfdec_as_boolean.h \
 	swfdec_as_frame_internal.h \
 	swfdec_as_initialize.h \

@@ -331,7 +331,15 @@ SWFDEC_TYPE_AS_OBJECT
 SwfdecAsArray
 swfdec_as_array_new
 swfdec_as_array_append
+swfdec_as_array_append_with_flags
+swfdec_as_array_insert
+swfdec_as_array_insert_with_flags
 swfdec_as_array_push
+swfdec_as_array_push_with_flags
+swfdec_as_array_get_length
+swfdec_as_array_get_value
+swfdec_as_array_set_value
+swfdec_as_array_remove
 <SUBSECTION Standard>
 swfdec_as_array_get_type
 SwfdecAsArrayClass

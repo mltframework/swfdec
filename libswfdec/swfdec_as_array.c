@@ -104,9 +104,9 @@ swfdec_as_array_length (SwfdecAsObject *object)
  * swfdec_as_array_get_length:
  * @array: a #SwfdecAsArray
  *
- * Gets the current length of the array
+ * Gets the current length of the @array.
  *
- * Returns: Current length of the array, always >= 0
+ * Returns: Current length of the @array, always >= 0
  **/
 gint32
 swfdec_as_array_get_length (SwfdecAsArray *array)
@@ -263,7 +263,7 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
  * @array: a #SwfdecAsArray
  * @value: the value to add
  *
- * Adds the given value to the array. This a macro that just calls
+ * Adds the given @value to the @array. This is a macro that just calls
  * swfdec_as_array_append_with_flags().
  */
 
@@ -271,10 +271,10 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
  * swfdec_as_array_push_with_flags:
  * @array: a #SwfdecAsArray
  * @value: the value to add
- * @flags: the flags to use
+ * @flags: the #SwfdecAsVariableFlag flags to use
  *
- * Adds the given value to the array with the given flags. This a macro that
- * just calls swfdec_as_array_append_with_flags().
+ * Adds the given @value to the @array with the given @flags. This is a macro
+ * that just calls swfdec_as_array_append_with_flags().
  */
 
 /**
@@ -283,18 +283,18 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
  * @n: number of values to add
  * @values: the values to add
  *
- * Appends the given @values to the array. This a macro that just calls
+ * Appends the given @values to the @array. This is a macro that just calls
  * swfdec_as_array_append_with_flags().
  **/
 
 /**
- * swfdec_as_array_append:
+ * swfdec_as_array_append_with_flags:
  * @array: a #SwfdecAsArray
  * @n: number of values to add
  * @values: the values to add
- * @flags: the flags to use
+ * @flags: the #SwfdecAsVariableFlag flags to use
  *
- * Appends the given @values to the array using the given @flags.
+ * Appends the given @values to the @array using the given @flags.
  **/
 void
 swfdec_as_array_append_with_flags (SwfdecAsArray *array, guint n,
@@ -315,15 +315,15 @@ swfdec_as_array_append_with_flags (SwfdecAsArray *array, guint n,
  * @value: a #SwfdecAsValue
  *
  * Inserts @value to @array at given index, making room for it by moving
- * elements to bigger indexes if necessary. This a macro that just calls
- * swfdec_as_array_append_with_flags().
+ * elements to bigger indexes if necessary. This is a macro that just calls
+ * swfdec_as_array_insert_with_flags().
  **/
 /**
  * swfdec_as_array_insert_with_flags:
  * @array: a #SwfdecAsArray
  * @idx: index to insert the value to
  * @value: a #SwfdecAsValue
- * @flags: the flags to use
+ * @flags: the #SwfdecAsVariableFlag flags to use
  *
  * Inserts @value to @array at given index using given @flags, making room for
  * it by moving elements to bigger indexes if necessary.
@@ -352,8 +352,8 @@ swfdec_as_array_insert_with_flags (SwfdecAsArray *array, gint32 idx,
  * @array: a #SwfdecAsArray
  * @idx: index of the value to remove
  *
- * Removes value at @idx from the @array, elements with higher indexes will be
- * moved towards the start of the @array.
+ * Removes value at given index from the @array, elements with higher indexes
+ * will be moved towards the start of the @array.
  **/
 void
 swfdec_as_array_remove (SwfdecAsArray *array, gint32 idx)
@@ -380,7 +380,7 @@ swfdec_as_array_remove (SwfdecAsArray *array, gint32 idx)
  * @idx: index of the value to get
  * @value: a pointer to #SwfdecAsValue that will be set
  *
- * Gets a value from given index. If the value doesn't exists, an undefined
+ * Gets a value from given index, if the value doesn't exists an undefined
  * value is set.
  **/
 void
@@ -403,7 +403,8 @@ swfdec_as_array_get_value (SwfdecAsArray *array, gint32 idx,
  * @idx: index of the value to set
  * @value: a pointer to #SwfdecAsValue
  *
- * Sets a value to given index. Array will be expanded if necessary.
+ * Sets a @value to given index. The @array's length will be increased if
+ * necessary.
  **/
 void
 swfdec_as_array_set_value (SwfdecAsArray *array, gint32 idx,

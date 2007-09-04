@@ -58,7 +58,7 @@ void		swfdec_as_array_append_with_flags (SwfdecAsArray *	array,
 						 guint			n,
 						 const SwfdecAsValue *	values,
 						 SwfdecAsVariableFlag	flags);
-gint32		swfdec_as_array_length		(SwfdecAsArray *	array);
+gint32		swfdec_as_array_get_length	(SwfdecAsArray *	array);
 void		swfdec_as_array_get_value	(SwfdecAsArray *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);

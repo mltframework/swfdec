@@ -74,7 +74,7 @@ swfdec_as_array_to_index (const char *str)
 }
 
 static gint32
-swfdec_as_array_get_length_as_integer (SwfdecAsObject *object)
+swfdec_as_array_length_as_integer (SwfdecAsObject *object)
 {
   SwfdecAsValue val;
   gint32 length;
@@ -88,11 +88,11 @@ swfdec_as_array_get_length_as_integer (SwfdecAsObject *object)
 }
 
 static gint32
-swfdec_as_array_get_length (SwfdecAsObject *object)
+swfdec_as_array_length (SwfdecAsObject *object)
 {
   gint32 length;
 
-  length = swfdec_as_array_get_length_as_integer (object);
+  length = swfdec_as_array_length_as_integer (object);
 
   if (length < 0)
     return 0;
@@ -109,9 +109,9 @@ swfdec_as_array_get_length (SwfdecAsObject *object)
  * Returns: Current length of the array, always >= 0
  **/
 gint32
-swfdec_as_array_length (SwfdecAsArray *array)
+swfdec_as_array_get_length (SwfdecAsArray *array)
 {
-  return swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array));
+  return swfdec_as_array_length (SWFDEC_AS_OBJECT (array));
 }
 
 static void
@@ -157,7 +157,7 @@ swfdec_as_array_remove_range (SwfdecAsArray *array, gint32 start_index,
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (start_index >= 0);
   g_return_if_fail (num >= 0);
-  g_return_if_fail (start_index + num <= swfdec_as_array_get_length (object));
+  g_return_if_fail (start_index + num <= swfdec_as_array_length (object));
 
   if (num == 0)
     return;
@@ -209,7 +209,7 @@ swfdec_as_array_move_range (SwfdecAsObject *object, gint32 from_index,
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (from_index >= 0);
   g_return_if_fail (num >= 0);
-  g_return_if_fail (from_index + num <= swfdec_as_array_get_length (object));
+  g_return_if_fail (from_index + num <= swfdec_as_array_length (object));
   g_return_if_fail (to_index >= 0);
 
   if (num == 0 || from_index == to_index)
@@ -219,7 +219,7 @@ swfdec_as_array_move_range (SwfdecAsObject *object, gint32 from_index,
       &fdata);
 
   // only changes length if it becomes bigger, not if it becomes smaller
-  if (to_index + num > swfdec_as_array_get_length (object))
+  if (to_index + num > swfdec_as_array_length (object))
     swfdec_as_array_set_length (object, to_index + num);
 }
 
@@ -255,7 +255,7 @@ swfdec_as_array_append_internal (SwfdecAsObject *object, guint n,
 {
   // allow negative length
   swfdec_as_array_set_range (object,
-      swfdec_as_array_get_length_as_integer (object), n, value);
+      swfdec_as_array_length_as_integer (object), n, value);
 }
 
 /**
@@ -304,7 +304,7 @@ swfdec_as_array_append_with_flags (SwfdecAsArray *array, guint n,
 
   // don't allow negative length
   swfdec_as_array_set_range_with_flags (SWFDEC_AS_OBJECT (array),
-      swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array)), n, value, flags);
+      swfdec_as_array_length (SWFDEC_AS_OBJECT (array)), n, value, flags);
 }
 
 /**
@@ -327,7 +327,7 @@ swfdec_as_array_insert (SwfdecAsArray *array, gint32 idx, SwfdecAsValue *value)
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   object = SWFDEC_AS_OBJECT (array);
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
 
   if (idx < length)
     swfdec_as_array_move_range (object, idx, length - idx, idx + 1);
@@ -352,7 +352,7 @@ swfdec_as_array_remove (SwfdecAsArray *array, gint32 idx)
   g_return_if_fail (idx >= 0);
 
   object = SWFDEC_AS_OBJECT (array);
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
 
   if (idx >= length)
     return;
@@ -441,13 +441,13 @@ swfdec_as_array_append_array_range (SwfdecAsArray *array_to,
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object_from));
   g_return_if_fail (start_index >= 0);
   g_return_if_fail (
-      start_index + num <= swfdec_as_array_get_length (object_from));
+      start_index + num <= swfdec_as_array_length (object_from));
 
   if (num == 0)
     return;
 
   fdata.object_to = SWFDEC_AS_OBJECT (array_to);
-  fdata.offset = swfdec_as_array_get_length (SWFDEC_AS_OBJECT (array_to));
+  fdata.offset = swfdec_as_array_length (SWFDEC_AS_OBJECT (array_to));
   fdata.start_index = start_index;
   fdata.num = num;
 
@@ -460,7 +460,7 @@ static void
 swfdec_as_array_append_array (SwfdecAsArray *array_to, SwfdecAsObject *object_from)
 {
   swfdec_as_array_append_array_range (array_to, object_from, 0,
-      swfdec_as_array_get_length (object_from));
+      swfdec_as_array_length (object_from));
 }
 
 /*
@@ -480,7 +480,7 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
 
   // if we changed to smaller length, destroy all values that are outside it
   if (!strcmp (variable, SWFDEC_AS_STR_length)) {
-    gint32 length_old = swfdec_as_array_get_length (object);
+    gint32 length_old = swfdec_as_array_length (object);
     gint32 length_new = MAX (0,
 	swfdec_as_value_to_integer (object->context, val));
     if (length_old > length_new) {
@@ -494,7 +494,7 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
 
   // if we added new value outside the current length, set a bigger length
   if (indexvar) {
-    if (++l > swfdec_as_array_get_length_as_integer (object))
+    if (++l > swfdec_as_array_length_as_integer (object))
       swfdec_as_array_set_length (object, l);
   }
 }
@@ -558,7 +558,7 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     sep = SWFDEC_AS_STR_COMMA;
   }
 
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
   if (length > 0) {
     /* FIXME: implement this with the StringBuilder class */
     GString *string;
@@ -597,12 +597,12 @@ swfdec_as_array_do_push (SwfdecAsContext *cx, SwfdecAsObject *object,
   // if 0 args, just return the length
   // manually set the length here to make the function work on non-Arrays
   if (argc > 0) {
-    gint32 length = swfdec_as_array_get_length_as_integer (object);
+    gint32 length = swfdec_as_array_length_as_integer (object);
     swfdec_as_array_append_internal (object, argc, argv);
     swfdec_as_array_set_length (object, length + argc);
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_get_length_as_integer (object));
+  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_length_as_integer (object));
 }
 
 SWFDEC_AS_NATIVE (252, 2, swfdec_as_array_do_pop)
@@ -614,7 +614,7 @@ swfdec_as_array_do_pop (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   const char *var;
 
   // we allow negative indexes here, but not 0
-  length = swfdec_as_array_get_length_as_integer (object);
+  length = swfdec_as_array_length_as_integer (object);
   if (length == 0)
     return;
 
@@ -639,7 +639,7 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc) {
     // don't allow negative length
-    length = swfdec_as_array_get_length (object);
+    length = swfdec_as_array_length (object);
     swfdec_as_array_move_range (object, 0, length, argc);
     swfdec_as_array_set_range (object, 0, argc, argv);
     // if not Array, leave the length unchanged
@@ -647,7 +647,7 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_as_array_set_length (object, length);
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_get_length (object));
+  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_length (object));
 }
 
 SWFDEC_AS_NATIVE (252, 4, swfdec_as_array_do_shift)
@@ -659,7 +659,7 @@ swfdec_as_array_do_shift (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *var;
 
   // don't allow negative length
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
   if (length <= 0)
     return;
 
@@ -706,7 +706,7 @@ swfdec_as_array_reverse (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
   swfdec_as_object_foreach_rename (object, swfdec_as_array_foreach_reverse,
       &length);
 
@@ -738,7 +738,7 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     else
     {
       var = swfdec_as_double_to_string (object->context,
-	  swfdec_as_array_get_length (object_new));
+	  swfdec_as_array_length (object_new));
       swfdec_as_object_set_variable (object_new, var, &argv[j]);
     }
   }
@@ -755,7 +755,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SwfdecAsObject *object_new;
   SwfdecAsArray *array_new;
 
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
 
   if (argc > 0) {
     start_index = swfdec_as_value_to_integer (cx, &argv[0]);
@@ -793,7 +793,7 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SwfdecAsObject *object_new;
   SwfdecAsArray *array_new;
 
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
 
   if (argc > 0) {
     start_index = swfdec_as_value_to_integer (cx, &argv[0]);
@@ -982,7 +982,7 @@ swfdec_as_array_sort_set_undefined_indexedarray (SwfdecAsObject *object,
   }
 
   num = 0;
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_length (object);
   for (i = 0; i < length - fdata->defined_values; i++) {
     do {
       var = swfdec_as_double_to_string (object->context, num);
@@ -1087,7 +1087,7 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   ForeachSortData fdata;
   guint pos;
 
-  fdata.length = swfdec_as_array_get_length (object);
+  fdata.length = swfdec_as_array_length (object);
   fdata.order_size =
     MIN ((gint32)g_hash_table_size (object->properties) + 1, fdata.length + 1);
   fdata.order = g_new0 (SwfdecAsValue *, fdata.order_size);

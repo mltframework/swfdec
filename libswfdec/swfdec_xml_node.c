@@ -77,7 +77,7 @@ swfdec_xml_node_num_children (SwfdecXmlNode *node)
 {
   g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), 0);
 
-  return swfdec_as_array_length (node->children);
+  return swfdec_as_array_get_length (node->children);
 }
 
 static SwfdecXmlNode *

@@ -96,8 +96,12 @@ EXTRA_DIST = \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
 	array-properties.as \
+	array-properties-5.swf \
+	array-properties-5.swf.trace \
 	array-properties-6.swf \
 	array-properties-6.swf.trace \
+	array-properties-7.swf \
+	array-properties-7.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \
@@ -135,11 +139,15 @@ EXTRA_DIST = \
 	asbroadcaster-override-8.swf \
 	asbroadcaster-override-8.swf.trace \
 	asbroadcaster-properties.as \
+	asbroadcaster-properties-5.swf \
+	asbroadcaster-properties-5.swf.trace \
 	asbroadcaster-properties-6.swf \
 	asbroadcaster-properties-6.swf.trace \
 	asbroadcaster-properties-7.swf \
 	asbroadcaster-properties-7.swf.trace \
 	asfunction-properties.as \
+	asfunction-properties-5.swf \
+	asfunction-properties-5.swf.trace \
 	asfunction-properties-6.swf \
 	asfunction-properties-6.swf.trace \
 	asfunction-properties-7.swf \
@@ -179,6 +187,8 @@ EXTRA_DIST = \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
 	boolean-properties.as \
+	boolean-properties-5.swf \
+	boolean-properties-5.swf.trace \
 	boolean-properties-6.swf \
 	boolean-properties-6.swf.trace \
 	boolean-properties-7.swf \
@@ -459,6 +469,8 @@ EXTRA_DIST = \
 	function2.swf \
 	function2.swf.trace \
 	function-properties.as \
+	function-properties-5.swf \
+	function-properties-5.swf.trace \
 	function-properties-6.swf \
 	function-properties-6.swf.trace \
 	function-properties-7.swf \
@@ -489,11 +501,15 @@ EXTRA_DIST = \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
 	global-function-properties.as \
+	global-function-properties-5.swf \
+	global-function-properties-5.swf.trace \
 	global-function-properties-6.swf \
 	global-function-properties-6.swf.trace \
 	global-function-properties-7.swf \
 	global-function-properties-7.swf.trace \
 	global-variable-properties.as \
+	global-variable-properties-5.swf \
+	global-variable-properties-5.swf.trace \
 	global-variable-properties-6.swf \
 	global-variable-properties-6.swf.trace \
 	global-variable-properties-7.swf \
@@ -675,6 +691,8 @@ EXTRA_DIST = \
 	number.swf \
 	number.swf.trace \
 	number-properties.as \
+	number-properties-5.swf \
+	number-properties-5.swf.trace \
 	number-properties-6.swf \
 	number-properties-6.swf.trace \
 	number-properties-7.swf \
@@ -1331,6 +1349,8 @@ EXTRA_DIST = \
 	values.as \
 	video.flv \
 	video-properties.as \
+	video-properties-5.swf \
+	video-properties-5.swf.trace \
 	video-properties-6.swf \
 	video-properties-6.swf.trace \
 	video-properties-7.swf \

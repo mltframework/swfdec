@@ -112,8 +112,9 @@ function hasOwnProperty (o, prop)
     o.__proto__ = "to-be-deleted";
     delete o.__proto__;
     if (o.__proto__ != undefined) {
-      trace ("ERROR: Couldn't delete temporary __proto__");
       o.__proto__ = undefined;
+      if (o.__proto__ != undefined)
+	trace ("ERROR: Couldn't delete temporary __proto__");
     }
 
     return result;
@@ -133,8 +134,8 @@ function hasOwnProperty (o, prop)
 	if (o[prop] != o.__proto__[prop]) {
 	  return true;
 	} else {
-	  trace ("ERROR: can't test property '" + prop +
-	      "', __proto__ has superconstant version");
+	  //trace ("ERROR: can't test property '" + prop +
+	  //    "', __proto__ has superconstant version");
 	  return false;
 	}
       }
@@ -168,8 +169,11 @@ function hasOwnProperty (o, prop)
     ASSetPropFlags (o, prop, 0, 4);
     o.__proto__[prop] = "to-be-deleted";
     delete o.__proto__[prop];
-    if (o.__proto__[prop] != undefined)
-      trace ("ERROR: Couldn't delete temporary __proto__[\"" + prop + "\"]");
+    if (o.__proto__[prop] != undefined) {
+      o.__proto__[prop] = undefined;
+      if (o.__proto__[prop] != undefined)
+	trace ("ERROR: Couldn't delete temporary __proto__[\"" + prop + "\"]");
+    }
 
     return result;
   }

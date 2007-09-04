@@ -1,0 +1,17 @@
+_global.Number = function
+  MAX_VALUE (hpc) = number : 1.79769313486231e+308
+  MIN_VALUE (hpc) = number : 0
+  NEGATIVE_INFINITY (hpc) = number : -Infinity
+  NaN (hpc) = number : NaN
+  POSITIVE_INFINITY (hpc) = number : Infinity
+  constructor (hpc) = _global.Object.constructor
+  prototype (hpc) = object
+    __proto__ (hp) = _global.Object.prototype
+    constructor (hp) = _global.Number
+    toString (hp) = function
+      constructor (hp) = _global.Object.constructor
+    valueOf (hp) = function
+      constructor (hp) = _global.Object.constructor
+local.a = _global.Number.prototype
+  constructor (h) = _global.Number
+local.b = number : 42

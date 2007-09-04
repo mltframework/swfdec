@@ -22,6 +22,7 @@
 #endif
 
 #include <string.h>
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"

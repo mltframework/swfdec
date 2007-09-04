@@ -196,3 +196,159 @@ swfdec_as_native_function_set_construct_type (SwfdecAsNativeFunction *function, 
   function->construct_size = query.instance_size;
 }
 
+/**
+ * SWFDEC_AS_CHECK:
+ * @type: required type of this object or 0 for ignoring
+ * @result: converted this object
+ * @...: conversion string and pointers taking converted values
+ *
+ * This is a shortcut macro for calling swfdec_as_native_function_check() at
+ * the beginning of a native function. See that function for details.
+ * It requires the native function parameters to have the default name. So your
+ * function must be declared like this:
+ * |[static void
+ * my_function (SwfdecAsContext *cx, SwfdecAsObject *object,
+ *     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval);]|
+ */
+/**
+ * swfdec_as_native_function_check:
+ * @cx: a #SwfdecAsContext
+ * @object: this object passed to the native function
+ * @type: expected type of @object or 0 for any
+ * @result: pointer to variable taking cast result of @object
+ * @argc: count of arguments passed to the function
+ * @argv: arguments passed to the function
+ * @args: argument conversion string
+ * @...: pointers to variables taking converted arguments
+ *
+ * This function is a convenience function to validate and convert arguments to 
+ * a native function while avoiding common pitfalls. You typically want to call
+ * it at the beginning of every native function you write. Or you can use the 
+ * SWFDEC_AS_CHECK() macro instead which calls this function.
+ * The @cx, @object, @argc and @argv paramters should be passed verbatim from 
+ * the function call to your native function. If @type is not 0, @object is then
+ * checked to be of that type and cast to @result. After that the @args string 
+ * is used to convert the arguments. Every character in @args describes the 
+ * conversion of one argument. For that argument, you have to pass a pointer 
+ * that takes the value. For the conversion, the default conversion functions 
+ * like swfdec_as_value_to_string() are used. If not enough arguments are 
+ * available, the function stops converting and returns %NULL. The following 
+ * conversion characters are allowed:<itemizedlist>
+ * <listitem><para>"b": convert to boolean. Requires a %gboolean pointer
+ *                 </para></listitem>
+ * <listitem><para>"i": convert to integer. Requires an %integer pointer
+ *                 </para></listitem>
+ * <listitem><para>"n": convert to number. Requires a %double pointer
+ *                 </para></listitem>
+ * <listitem><para>"o": convert to object. Requires a #SwfdecAsObject pointer.
+ *                 If the conversion fails, this function immediately return %
+ *                 FALSE.</para></listitem>
+ * <listitem><para>"O": convert to object or %NULL. Requires a #SwfdecAsObject
+ *                 pointer.</para></listitem>
+ * <listitem><para>"s": convert to garbage-collected string. Requires a const 
+ *                 %char pointer</para></listitem>
+ * <listitem><para>"v": copy the value. The given argument must be a pointer 
+ *                 to a #SwfdecAsValue</para></listitem>
+ * </itemizedlist>
+ *
+ * Returns: %TRUE if the conversion succeeded, %FALSE otherwise
+ **/
+gboolean
+swfdec_as_native_function_check (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    GType type, gpointer *result, guint argc, SwfdecAsValue *argv, 
+    const char *args, ...)
+{
+  gboolean ret;
+  va_list varargs;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), FALSE);
+  g_return_val_if_fail (type == 0 || result != NULL, FALSE);
+
+  va_start (varargs, args);
+  ret = swfdec_as_native_function_checkv (cx, object, type, result, argc, argv, args, varargs);
+  va_end (varargs);
+  return ret;
+}
+
+/**
+ * swfdec_as_native_function_checkv:
+ * @cx: a #SwfdecAsContext
+ * @object: this object passed to the native function
+ * @type: expected type of @object
+ * @result: pointer to variable taking cast result of @object
+ * @argc: count of arguments passed to the function
+ * @argv: arguments passed to the function
+ * @args: argument conversion string
+ * @varargs: pointers to variables taking converted arguments
+ *
+ * This is the valist version of swfdec_as_native_function_check(). See that
+ * function for details.
+ *
+ * Returns: %TRUE if the conversion succeeded, %FALSE otherwise
+ **/
+gboolean
+swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    GType type, gpointer *result, guint argc, SwfdecAsValue *argv, 
+    const char *args, va_list varargs)
+{
+  guint i;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), FALSE);
+  g_return_val_if_fail (type == 0 || result != NULL, FALSE);
+
+  /* check that we got a valid type */
+  if (type) {
+    if (!G_TYPE_CHECK_INSTANCE_TYPE (object, type))
+      return FALSE;
+    *result = object;
+  }
+  for (i = 0; i < argc && *args; i++, args++) {
+    switch (*args) {
+      case 'v':
+	{
+	  SwfdecAsValue *val = va_arg (varargs, SwfdecAsValue *);
+	  *val = argv[i];
+	}
+	break;
+      case 'b':
+	{
+	  gboolean *b = va_arg (varargs, gboolean *);
+	  *b = swfdec_as_value_to_boolean (cx, &argv[i]);
+	}
+	break;
+      case 'i':
+	{
+	  int *j = va_arg (varargs, int *);
+	  *j = swfdec_as_value_to_integer (cx, &argv[i]);
+	}
+	break;
+      case 'n':
+	{
+	  double *d = va_arg (varargs, double *);
+	  *d = swfdec_as_value_to_number (cx, &argv[i]);
+	}
+	break;
+      case 's':
+	{
+	  const char **s = va_arg (varargs, const char **);
+	  *s = swfdec_as_value_to_string (cx, &argv[i]);
+	}
+	break;
+      case 'o':
+      case 'O':
+	{
+	  SwfdecAsObject **o = va_arg (varargs, SwfdecAsObject **);
+	  *o = swfdec_as_value_to_object (cx, &argv[i]);
+	  if (*o == NULL && *args != 'O')
+	    return FALSE;
+	}
+	break;
+      default:
+	g_warning ("'%c' is not a valid type conversion", *args);
+	return FALSE;
+    }
+  }
+  if (*args)
+    return FALSE;
+  return TRUE;
+}

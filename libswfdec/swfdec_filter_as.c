@@ -22,8 +22,8 @@
 #endif
 
 #include "swfdec_filter.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
-#include "swfdec_player_internal.h"
 
 SWFDEC_AS_NATIVE (1112, 1, swfdec_filter_clone)
 void

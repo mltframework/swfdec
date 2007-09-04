@@ -69,6 +69,27 @@ void		swfdec_as_native_function_set_construct_type
 						(SwfdecAsNativeFunction *function,
 						 GType			type);
 
+gboolean	swfdec_as_native_function_check	(SwfdecAsContext *	cx,
+						 SwfdecAsObject *	object,
+						 GType			type,
+						 gpointer *		result,
+						 guint			argc,
+						 SwfdecAsValue *	argv,
+						 const char *	      	args,
+						 ...);
+gboolean	swfdec_as_native_function_checkv(SwfdecAsContext *	cx,
+						 SwfdecAsObject *	object,
+						 GType			type,
+						 gpointer *		result,
+						 guint			argc,
+						 SwfdecAsValue *	argv,
+						 const char *	      	args,
+						 va_list		varargs);
+#define SWFDEC_AS_CHECK(type,result,...) G_STMT_START {\
+  if (!swfdec_as_native_function_check (cx, object, type, result, argc, argv, __VA_ARGS__)) \
+    return; \
+}G_STMT_END
+
 
 G_END_DECLS
 #endif

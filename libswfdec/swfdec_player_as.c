@@ -26,6 +26,7 @@
 
 #include "swfdec_player_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
@@ -118,7 +119,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 
 // same as ASnative, but also sets prototype
 static void
-swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *obj,
+swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsValue val;
@@ -126,8 +127,7 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SwfdecAsFunction *func;
   guint x, y;
 
-  x = swfdec_as_value_to_integer (cx, &argv[0]);
-  y = swfdec_as_value_to_integer (cx, &argv[1]);
+  SWFDEC_AS_CHECK (0, NULL, "ii", &x, &y);
 
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
@@ -149,14 +149,13 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *obj,
 }
 
 static void
-swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *obj,
+swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsFunction *func;
   guint x, y;
 
-  x = swfdec_as_value_to_integer (cx, &argv[0]);
-  y = swfdec_as_value_to_integer (cx, &argv[1]);
+  SWFDEC_AS_CHECK (0, NULL, "ii", &x, &y);
 
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
@@ -178,12 +177,8 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
   char **names;
   guint i, x, y;
 
-  if (argc < 3)
-    return;
+  SWFDEC_AS_CHECK (0, NULL, "ois", &target, &x, &s);
 
-  target = swfdec_as_value_to_object (cx, &argv[0]);
-  x = swfdec_as_value_to_integer (cx, &argv[1]);
-  s = swfdec_as_value_to_string (cx, &argv[2]);
   if (argc > 3)
     y = swfdec_as_value_to_integer (cx, &argv[3]);
   else

@@ -361,6 +361,9 @@ swfdec_as_function_call
 swfdec_as_native_function_new
 swfdec_as_native_function_set_construct_type
 swfdec_as_native_function_set_object_type
+swfdec_as_native_function_check
+swfdec_as_native_function_checkv
+SWFDEC_AS_CHECK
 <SUBSECTION Standard>
 swfdec_as_function_get_type
 SwfdecAsFunctionClass

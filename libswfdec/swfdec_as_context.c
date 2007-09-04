@@ -25,14 +25,13 @@
 #include <string.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
-#include "swfdec_as_boolean.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_initialize.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_math.h"
 #include "swfdec_as_native_function.h"
-#include "swfdec_as_number.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
@@ -1187,6 +1186,27 @@ swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
       swfdec_as_context_parseInt, 1);
 }
 
+void
+swfdec_as_context_run_init_script (SwfdecAsContext *context, const guint8 *data, gsize length)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (length > 0);
+
+  if (context->version > 4) {
+    SwfdecBits bits;
+    SwfdecScript *script;
+    swfdec_bits_init_data (&bits, data, length);
+    script = swfdec_script_new_from_bits (&bits, "init", context->version);
+    if (script == NULL) {
+      g_warning ("script passed to swfdec_as_context_run_init_script is invalid");
+      return;
+    }
+    swfdec_as_object_run (context->global, script);
+    swfdec_script_unref (script);
+  }
+}
+
 /**
  * swfdec_as_context_startup:
  * @context: a #SwfdecAsContext
@@ -1212,11 +1232,12 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_context_init_global (context, version);
   swfdec_as_array_init_context (context, version);
   /* define the type objects */
-  swfdec_as_boolean_init_context (context, version);
-  swfdec_as_number_init_context (context, version);
   swfdec_as_string_init_context (context, version);
   /* define the rest */
   swfdec_as_math_init_context (context, version);
+
+  /* run init script */
+  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize));
 
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;

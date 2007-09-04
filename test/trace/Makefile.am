@@ -96,8 +96,12 @@ EXTRA_DIST = \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
 	array-properties.as \
+	array-properties-5.swf \
+	array-properties-5.swf.trace \
 	array-properties-6.swf \
 	array-properties-6.swf.trace \
+	array-properties-7.swf \
+	array-properties-7.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \
@@ -135,11 +139,15 @@ EXTRA_DIST = \
 	asbroadcaster-override-8.swf \
 	asbroadcaster-override-8.swf.trace \
 	asbroadcaster-properties.as \
+	asbroadcaster-properties-5.swf \
+	asbroadcaster-properties-5.swf.trace \
 	asbroadcaster-properties-6.swf \
 	asbroadcaster-properties-6.swf.trace \
 	asbroadcaster-properties-7.swf \
 	asbroadcaster-properties-7.swf.trace \
 	asfunction-properties.as \
+	asfunction-properties-5.swf \
+	asfunction-properties-5.swf.trace \
 	asfunction-properties-6.swf \
 	asfunction-properties-6.swf.trace \
 	asfunction-properties-7.swf \
@@ -179,6 +187,8 @@ EXTRA_DIST = \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
 	boolean-properties.as \
+	boolean-properties-5.swf \
+	boolean-properties-5.swf.trace \
 	boolean-properties-6.swf \
 	boolean-properties-6.swf.trace \
 	boolean-properties-7.swf \
@@ -293,10 +303,22 @@ EXTRA_DIST = \
 	construct-properties-7.swf.trace \
 	construct-properties-8.swf \
 	construct-properties-8.swf.trace \
+	constructor-madness.as \
+	constructor-madness-5.swf \
+	constructor-madness-5.swf.trace \
+	constructor-madness-6.swf \
+	constructor-madness-6.swf.trace \
+	constructor-madness-7.swf \
+	constructor-madness-7.swf.trace \
+	constructor-madness-8.swf \
+	constructor-madness-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
+	crash-0.5.2-new-netstream.as \
+	crash-0.5.2-new-netstream.swf \
+	crash-0.5.2-new-netstream.swf.trace \
 	crash-0.5.2-startdrag.as \
 	crash-0.5.2-startdrag.swf \
 	crash-0.5.2-startdrag.swf.trace \
@@ -426,6 +448,15 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	foreach-proto-simple.as \
+	foreach-proto-simple-5.swf \
+	foreach-proto-simple-5.swf.trace \
+	foreach-proto-simple-6.swf \
+	foreach-proto-simple-6.swf.trace \
+	foreach-proto-simple-7.swf \
+	foreach-proto-simple-7.swf.trace \
+	foreach-proto-simple-8.swf \
+	foreach-proto-simple-8.swf.trace \
 	fromcharcode.as \
 	fromcharcode-5.swf \
 	fromcharcode-5.swf.trace \
@@ -438,6 +469,8 @@ EXTRA_DIST = \
 	function2.swf \
 	function2.swf.trace \
 	function-properties.as \
+	function-properties-5.swf \
+	function-properties-5.swf.trace \
 	function-properties-6.swf \
 	function-properties-6.swf.trace \
 	function-properties-7.swf \
@@ -468,11 +501,15 @@ EXTRA_DIST = \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
 	global-function-properties.as \
+	global-function-properties-5.swf \
+	global-function-properties-5.swf.trace \
 	global-function-properties-6.swf \
 	global-function-properties-6.swf.trace \
 	global-function-properties-7.swf \
 	global-function-properties-7.swf.trace \
 	global-variable-properties.as \
+	global-variable-properties-5.swf \
+	global-variable-properties-5.swf.trace \
 	global-variable-properties-6.swf \
 	global-variable-properties-6.swf.trace \
 	global-variable-properties-7.swf \
@@ -653,6 +690,15 @@ EXTRA_DIST = \
 	netstream-onstatus-notfound.swf.trace \
 	number.swf \
 	number.swf.trace \
+	number-properties.as \
+	number-properties-5.swf \
+	number-properties-5.swf.trace \
+	number-properties-6.swf \
+	number-properties-6.swf.trace \
+	number-properties-7.swf \
+	number-properties-7.swf.trace \
+	number-properties-8.swf \
+	number-properties-8.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \
@@ -888,6 +934,15 @@ EXTRA_DIST = \
 	property-native-7.swf.trace \
 	property-native-8.swf \
 	property-native-8.swf.trace \
+	prototype-addProperty.as \
+	prototype-addProperty-5.swf \
+	prototype-addProperty-5.swf.trace \
+	prototype-addProperty-6.swf \
+	prototype-addProperty-6.swf.trace \
+	prototype-addProperty-7.swf \
+	prototype-addProperty-7.swf.trace \
+	prototype-addProperty-8.swf \
+	prototype-addProperty-8.swf.trace \
 	prototype-movie.as \
 	prototype-movie-5.swf \
 	prototype-movie-5.swf.trace \
@@ -897,6 +952,24 @@ EXTRA_DIST = \
 	prototype-movie-7.swf.trace \
 	prototype-movie-8.swf \
 	prototype-movie-8.swf.trace \
+	prototype-recursion-addProperty.as \
+	prototype-recursion-addProperty-5.swf \
+	prototype-recursion-addProperty-5.swf.trace \
+	prototype-recursion-addProperty-6.swf \
+	prototype-recursion-addProperty-6.swf.trace \
+	prototype-recursion-addProperty-7.swf \
+	prototype-recursion-addProperty-7.swf.trace \
+	prototype-recursion-addProperty-8.swf \
+	prototype-recursion-addProperty-8.swf.trace \
+	prototype-recursion-get.as \
+	prototype-recursion-get-5.swf \
+	prototype-recursion-get-5.swf.trace \
+	prototype-recursion-get-6.swf \
+	prototype-recursion-get-6.swf.trace \
+	prototype-recursion-get-7.swf \
+	prototype-recursion-get-7.swf.trace \
+	prototype-recursion-get-8.swf \
+	prototype-recursion-get-8.swf.trace \
 	prototypes.swf \
 	prototypes.swf.trace \
 	propflags.as \
@@ -1276,6 +1349,8 @@ EXTRA_DIST = \
 	values.as \
 	video.flv \
 	video-properties.as \
+	video-properties-5.swf \
+	video-properties-5.swf.trace \
 	video-properties-6.swf \
 	video-properties-6.swf.trace \
 	video-properties-7.swf \

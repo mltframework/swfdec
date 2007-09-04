@@ -175,6 +175,7 @@ run_test (gpointer testp, gpointer unused)
 	g_error_free (error);
       } else {
 	g_string_append (output, result);
+	g_free (result);
       }
     }
     g_string_free (string, TRUE);

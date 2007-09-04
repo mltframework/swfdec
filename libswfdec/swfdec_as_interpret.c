@@ -1884,8 +1884,10 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     return;
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
-  swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___constructor__,
-      superclass, SWFDEC_AS_VARIABLE_HIDDEN);
+  if (cx->version > 5) {
+    swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___constructor__,
+	superclass, SWFDEC_AS_VARIABLE_HIDDEN);
+  }
   SWFDEC_AS_VALUE_SET_OBJECT (&proto, prototype);
   swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_OBJECT (subclass),
       SWFDEC_AS_STR_prototype, &proto);
@@ -1894,16 +1896,46 @@ fail:
 }
 
 static gboolean
-swfdec_action_do_enumerate (SwfdecAsObject *object, const char *variable,
-    SwfdecAsValue *value, guint flags, gpointer cxp)
+swfdec_action_enumerate_foreach (SwfdecAsObject *object, const char *variable,
+    SwfdecAsValue *value, guint flags, gpointer listp)
 {
-  SwfdecAsContext *cx = cxp;
+  GSList **list = listp;
 
   if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
     return TRUE;
-  swfdec_as_stack_ensure_free (cx, 1);
-  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), variable);
+
+  *list = g_slist_remove (*list, variable);
+  *list = g_slist_prepend (*list, (gpointer) variable);
   return TRUE;
+}
+
+static void
+swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
+{
+  guint i;
+  GSList *walk, *list = NULL;
+  
+  for (i = 0; i < 256 && object; i++) {
+    swfdec_as_object_foreach (object, swfdec_action_enumerate_foreach, &list);
+    object = object->prototype;
+  }
+  if (i == 256) {
+    swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+    g_slist_free (list);
+    return;
+  }
+  list = g_slist_reverse (list);
+  i = 0;
+  for (walk = list; walk; walk = walk->next) {
+    /* 8 is an arbitrary value */
+    if (i % 8 == 0) {
+      swfdec_as_stack_ensure_free (cx, 8);
+      i = 0;
+    }
+    i++;
+    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), walk->data);
+  }
+  g_slist_free (list);
 }
 
 static void
@@ -1922,7 +1954,7 @@ swfdec_action_enumerate (SwfdecAsContext *cx, guint action, const guint8 *data, 
   }
   obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
   SWFDEC_AS_VALUE_SET_NULL (val);
-  swfdec_as_object_foreach (obj, swfdec_action_do_enumerate, cx);
+  swfdec_action_do_enumerate (cx, obj);
 }
 
 static void
@@ -1939,7 +1971,7 @@ swfdec_action_enumerate2 (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
   obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
   SWFDEC_AS_VALUE_SET_NULL (val);
-  swfdec_as_object_foreach (obj, swfdec_action_do_enumerate, cx);
+  swfdec_action_do_enumerate (cx, obj);
 }
 
 static void

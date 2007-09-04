@@ -1,0 +1,14 @@
+_global.clearInterval = function
+  constructor (hp) = _global.Object.constructor
+_global.escape = function
+  constructor (hp) = _global.Object.constructor
+_global.isFinite = function
+  constructor (hp) = _global.Object.constructor
+_global.isNaN = function
+  constructor (hp) = _global.Object.constructor
+_global.parseInt = function
+  constructor (hp) = _global.Object.constructor
+_global.setInterval = function
+  constructor (hp) = _global.Object.constructor
+_global.unescape = function
+  constructor (hp) = _global.Object.constructor

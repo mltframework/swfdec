@@ -28,6 +28,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecAsBoolean, swfdec_as_boolean, SWFDEC_TYPE_AS_OBJECT)
 
@@ -43,7 +44,8 @@ swfdec_as_boolean_init (SwfdecAsBoolean *boolean)
 
 /*** AS CODE ***/
 
-static void
+SWFDEC_AS_CONSTRUCTOR (107, 2, swfdec_as_boolean_construct, swfdec_as_boolean_get_type)
+void
 swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -63,48 +65,31 @@ swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (107, 1, swfdec_as_boolean_toString)
+void
 swfdec_as_boolean_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsBoolean *b = SWFDEC_AS_BOOLEAN (object);
+  SwfdecAsBoolean *b;
+  
+  if (!SWFDEC_IS_AS_BOOLEAN (object))
+    return;
+  b = SWFDEC_AS_BOOLEAN (object);
   
   SWFDEC_AS_VALUE_SET_STRING (ret, b->boolean ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false);
 }
 
-static void
+SWFDEC_AS_NATIVE (107, 0, swfdec_as_boolean_valueOf)
+void
 swfdec_as_boolean_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsBoolean *b = SWFDEC_AS_BOOLEAN (object);
+  SwfdecAsBoolean *b;
 
+  if (!SWFDEC_IS_AS_BOOLEAN (object))
+    return;
+  b = SWFDEC_AS_BOOLEAN (object);
+  
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, b->boolean);
-}
-
-void
-swfdec_as_boolean_init_context (SwfdecAsContext *context, guint version)
-{
-  SwfdecAsObject *boolean, *proto;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-
-  proto = swfdec_as_object_new_empty (context);
-  if (proto == NULL)
-    return;
-  boolean = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
-      SWFDEC_AS_STR_Boolean, 0, SWFDEC_TYPE_AS_BOOLEAN, 
-      swfdec_as_boolean_construct, 0, proto));
-  if (!boolean)
-    return;
-  /* set the right properties on the Boolean.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, boolean);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, SWFDEC_TYPE_AS_BOOLEAN, swfdec_as_boolean_toString, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, SWFDEC_TYPE_AS_BOOLEAN, swfdec_as_boolean_valueOf, 0);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 

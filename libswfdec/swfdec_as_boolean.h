@@ -47,9 +47,6 @@ struct _SwfdecAsBooleanClass {
 
 GType		swfdec_as_boolean_get_type	(void);
 
-void		swfdec_as_boolean_init_context	(SwfdecAsContext *	context,
-						 guint			version);
-
 
 G_END_DECLS
 #endif

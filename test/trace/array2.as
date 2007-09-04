@@ -518,6 +518,13 @@ trace (fake.length + ": " + fake.join (":"));
 trace (fake.sort ());
 trace (fake.length + ": " + fake.join (":"));
 
+fake = new Object();
+fake.sort = Array.prototype.sort;
+fake[0] = 4;
+fake[1] = 3;
+trace (fake.sort ());
+trace (fake[0] + ", " + fake[1]);
+
 
 mytrace ("## Done");
 loadMovie ("FSCommand:quit", "");

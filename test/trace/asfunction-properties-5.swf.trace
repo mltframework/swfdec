@@ -1,0 +1,24 @@
+_global.ASconstructor = function
+  no children
+_global.ASnative = function
+  no children
+_global.ASSetNativeAccessor = function
+  constructor (hp) = _global.Object.constructor
+_global.ASSetNative = function
+  constructor (hp) = _global.Object.constructor
+_global.ASSetPropFlags = function
+  constructor (hp) = _global.Object.constructor
+local.a = function
+  constructor (hp) = _global.Object.constructor
+  prototype (hp) = object
+    __proto__ (hp) = _global.Object.prototype
+    constructor (hp) = local.a
+local.b = function
+  constructor (hp) = _global.Object.constructor
+local.c = function
+  constructor (hp) = _global.Object.constructor
+  prototype (hp) = object
+    __proto__ (hp) = _global.Object.prototype
+    constructor (hp) = local.c
+local.d = function
+  constructor (hp) = _global.Object.constructor

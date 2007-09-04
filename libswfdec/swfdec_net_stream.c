@@ -402,7 +402,8 @@ swfdec_net_stream_mark (SwfdecAsObject *object)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (object);
 
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->conn));
+  if (stream->conn)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->conn));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->mark (object);
 }

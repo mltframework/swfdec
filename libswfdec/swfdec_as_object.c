@@ -33,6 +33,8 @@
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 
+#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
+
 /**
  * SECTION:SwfdecAsObject
  * @title: SwfdecAsObject
@@ -231,28 +233,19 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   if (!swfdec_as_variable_name_is_valid (variable))
     return;
 
-  if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
-	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
-      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
-    } else {
-      object->prototype = NULL;
-    }
-  }
-
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) {
+  if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
     guint i;
     SwfdecAsObject *proto = object->prototype;
 
-    for (i = 0; i < 256 && proto; i++) {
+    for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto; i++) {
       var = swfdec_as_object_hash_lookup (proto, variable);
       if (var && var->get)
 	break;
       proto = proto->prototype;
       var = NULL;
     }
-    if (i == 256) {
+    if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
       swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
       return;
     }
@@ -274,6 +267,15 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   } else { 
     var->value = *val;
   }
+  if (variable == SWFDEC_AS_STR___proto__) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
+      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    } else {
+      object->prototype = NULL;
+    }
+  }
+
 }
 
 static void
@@ -305,6 +307,9 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
     return SWFDEC_AS_DELETE_NOT_DELETED;
 
+  if (variable == SWFDEC_AS_STR___proto__ &&
+      object->context->version <= 6)
+    object->prototype = NULL;
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();
@@ -659,7 +664,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     pobject = &tmp_pobject;
 
   cur = object;
-  for (i = 0; i < 256 && cur != NULL; i++) {
+  for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
     klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
     if (klass->get (cur, object, variable, value, flags)) {
       *pobject = cur;
@@ -667,7 +672,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     }
     cur = cur->prototype;
   }
-  if (i == 256) {
+  if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
     *flags = 0;
     *pobject = NULL;
@@ -1006,10 +1011,10 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
       swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
 	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
     }
-    if (context->version <= 5)
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
-	&val, SWFDEC_AS_VARIABLE_HIDDEN);
+    if (context->version > 5) {
+      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
+	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
+    }
   } else {
     /* need to do this, since we must push something to the frame stack */
     new = NULL;

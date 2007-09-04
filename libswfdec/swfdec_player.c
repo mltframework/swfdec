@@ -1617,9 +1617,10 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       g_assert (script);
       swfdec_as_object_run (context->global, script);
       swfdec_script_unref (script);
+
+      swfdec_xml_node_init_native (player, version);
+      swfdec_xml_init_native (player, version);
     }
-    swfdec_xml_node_init_native (player, version);
-    swfdec_xml_init_native (player, version);
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;
       swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);

@@ -31,7 +31,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
-#include "swfdec_player_internal.h"
+#include "swfdec_as_internal.h"
 
 G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_XML_NODE)
 

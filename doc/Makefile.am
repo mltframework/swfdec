@@ -130,7 +130,8 @@ IGNORE_HFILES= \
 	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
-	swfdec_xml.h
+	swfdec_xml.h \
+	swfdec_xml_node.h
 
 if WITH_GTK
 EXTRA_HFILES = \

@@ -971,16 +971,6 @@ swfdec_xml_node_init_properties (SwfdecXmlNode *node, int type,
   node->childNodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
 }
 
-/**
- * swfdec_xml_node_new:
- * @player: a #SwfdecPlayer
- * @type: the #SwfdecXmlNodeType
- * @value: initial value of the node
- *
- * Creates a new #SwfdecXmlNode.
- *
- * Returns: The new XML node or %NULL on OOM
- **/
 SwfdecXmlNode *
 swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
     const char* value)

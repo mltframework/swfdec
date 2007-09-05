@@ -1134,13 +1134,15 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
   SWFDEC_DEBUG ("advancing %lu msecs (%u audio frames)", msecs, audio_samples);
 
   player->audio_skip = audio_samples;
-  /* iterate all playing sounds */
-  walk = player->audio;
-  while (walk) {
-    audio = walk->data;
-    walk = walk->next;
-    if (swfdec_audio_iterate (audio, audio_samples) == 0)
-      swfdec_audio_remove (audio);
+  if (audio_samples) {
+    /* iterate all playing sounds */
+    walk = player->audio;
+    while (walk) {
+      audio = walk->data;
+      walk = walk->next;
+      if (swfdec_audio_iterate (audio, audio_samples) == 0)
+	swfdec_audio_remove (audio);
+    }
   }
 
   for (timeout = player->timeouts ? player->timeouts->data : NULL;

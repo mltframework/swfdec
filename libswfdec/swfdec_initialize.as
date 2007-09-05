@@ -184,3 +184,7 @@ delete System.capabilities.Query;
 /*** OH THE HUMANITY ***/
 
 o = null;
+
+/*** GLOBAL PROPFLAGS */
+
+ASSetPropFlags (this, null, 1, 6);

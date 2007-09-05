@@ -45,3 +45,7 @@ Date.prototype.valueOf = Date.prototype.getTime;
 Date.UTC = ASnative (103, 257);
 ASSetPropFlags (Date.prototype, null, 3);
 ASSetPropFlags (Date, null, 7);
+
+/*** GLOBAL PROPFLAGS */
+
+ASSetPropFlags (this, null, 1, 6);

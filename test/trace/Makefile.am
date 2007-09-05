@@ -331,6 +331,13 @@ EXTRA_DIST = \
 	date-6.swf.trace \
 	date-7.swf \
 	date-7.swf.trace \
+	date-properties.as \
+	date-properties-5.swf \
+	date-properties-5.swf.trace \
+	date-properties-6.swf \
+	date-properties-6.swf.trace \
+	date-properties-7.swf \
+	date-properties-7.swf.trace \
 	definefunction2-arguments.swf \
 	definefunction2-arguments.swf.trace \
 	definefunction2-arguments.xml \

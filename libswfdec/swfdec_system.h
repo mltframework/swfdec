@@ -58,6 +58,9 @@ struct _SwfdecSystem
   guint			dpi;		/* dpi setting */
   char *		color_mode;	/* "color", "gray" or "bw" */
 
+  /* date */
+  int			utc_offset;	/* difference between UTC and local timezeon in minutes */
+
 };
 
 struct _SwfdecSystemClass

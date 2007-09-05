@@ -74,7 +74,8 @@ enum {
   PROP_SCREEN_HEIGHT,
   PROP_PAR,
   PROP_DPI,
-  PROP_COLOR_MODE
+  PROP_COLOR_MODE,
+  PROP_UTC_OFFSET
 };
 
 G_DEFINE_TYPE (SwfdecSystem, swfdec_system, G_TYPE_OBJECT)
@@ -124,6 +125,9 @@ swfdec_system_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_COLOR_MODE:
       g_value_set_string (value, system->color_mode);
+      break;
+    case PROP_UTC_OFFSET:
+      g_value_set_int (value, system->utc_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -210,6 +214,9 @@ swfdec_system_set_property (GObject *object, guint param_id, const GValue *value
 	system->color_mode = s;
       }
       break;
+    case PROP_UTC_OFFSET:
+      system->utc_offset = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -281,6 +288,10 @@ swfdec_system_class_init (SwfdecSystemClass *klass)
   g_object_class_install_property (object_class, PROP_COLOR_MODE,
       g_param_spec_string ("color-mode", "color mode", "\"color\", \"gray\" or \"bw\"",
 	  "color", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_UTC_OFFSET,
+      g_param_spec_int ("utc-offset", "utc offset",
+	"Difference between UTC and local timezone in minutes",
+	  -12 * 60, 12 * 60, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -302,4 +313,3 @@ swfdec_system_new (void)
 {
   return g_object_new (SWFDEC_TYPE_SYSTEM, NULL);
 }
-

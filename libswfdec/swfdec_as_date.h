@@ -41,8 +41,11 @@ typedef struct _SwfdecAsDateClass SwfdecAsDateClass;
 struct _SwfdecAsDate {
   SwfdecAsObject	object;
 
-  double		milliseconds;			// time from epoch in UTC
-  int			timezone_offset_minutes;	// precalculated timezone information
+  // time from epoch in UTC
+  double		milliseconds;
+
+  // the difference between local timezone and UTC in minutes
+  int			utc_offset;
 };
 
 struct _SwfdecAsDateClass {

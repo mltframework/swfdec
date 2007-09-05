@@ -36,6 +36,8 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
+#include "swfdec_system.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsDate, swfdec_as_date, SWFDEC_TYPE_AS_OBJECT)
@@ -52,21 +54,6 @@ swfdec_as_date_class_init (SwfdecAsDateClass *klass)
 static void
 swfdec_as_date_init (SwfdecAsDate *date)
 {
-  char buffer[16];
-  time_t now;
-  struct tm *local;
-
-  // FIXME: Smarter way to get the offset?
-  // FIXME: DST handling v5 style?
-  now = time (NULL);
-  local = localtime (&now);
-
-  if (!strftime (buffer, sizeof (buffer), "%z", local) || buffer[0] == 0) {
-    date->timezone_offset_minutes = 0;
-  } else {
-    date->timezone_offset_minutes =
-      (strtol (buffer, NULL, 10) / 100) * 60 + strtol (buffer, NULL, 10) % 100;
-  }
 }
 
 /*** Helper functions ***/
@@ -151,7 +138,7 @@ swfdec_as_date_get_milliseconds_local (const SwfdecAsDate *date)
   g_assert (swfdec_as_date_is_valid (date));
 
   if (isfinite (date->milliseconds)) {
-    return date->milliseconds + date->timezone_offset_minutes * 60 * 1000;
+    return date->milliseconds + date->utc_offset * 60 * 1000;
   } else {
     return 0;
   }
@@ -161,7 +148,7 @@ static void
 swfdec_as_date_set_milliseconds_local (SwfdecAsDate *date, gint64 milliseconds)
 {
   date->milliseconds =
-    milliseconds - date->timezone_offset_minutes * 60 * 1000;
+    milliseconds - date->utc_offset * 60 * 1000;
 }
 
 static void
@@ -207,7 +194,7 @@ swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date,
 
   if (isfinite (date->milliseconds)) {
     seconds =
-      floor (date->milliseconds / 1000) + date->timezone_offset_minutes * 60;
+      floor (date->milliseconds / 1000) + date->utc_offset * 60;
   } else {
     seconds = 0;
   }
@@ -222,7 +209,7 @@ swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date,
 static void
 swfdec_as_date_set_brokentime_local (SwfdecAsDate *date, struct tm *brokentime)
 {
-  time_t seconds = timegm (brokentime) - date->timezone_offset_minutes * 60;
+  time_t seconds = timegm (brokentime) - date->utc_offset * 60;
   if (isfinite (date->milliseconds)) {
     date->milliseconds -= floor (date->milliseconds / 1000) * 1000;
   } else {
@@ -422,8 +409,8 @@ swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
   g_snprintf (buffer + strlen (buffer), sizeof (buffer) - strlen (buffer),
-      " GMT%+03i%02i", date->timezone_offset_minutes / 60,
-      ABS (date->timezone_offset_minutes % 60));
+      " GMT%+03i%02i", date->utc_offset / 60,
+      ABS (date->utc_offset % 60));
   if (!strftime (buffer + strlen (buffer), sizeof (buffer) - strlen (buffer),
       " %Y", &brokentime)) {
     SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
@@ -454,8 +441,8 @@ swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
-  // reverse of timezone_offset_minutes
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, -(date->timezone_offset_minutes));
+  // reverse of utc_offset
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, -(date->utc_offset));
 }
 
 // get* functions
@@ -948,6 +935,9 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   date = SWFDEC_AS_DATE (object);
+
+  date->utc_offset =
+    SWFDEC_PLAYER (SWFDEC_AS_OBJECT (date)->context)->system->utc_offset;
 
   // special case: ignore undefined and everything after it
   for (i = 0; i < argc; i++) {

@@ -183,7 +183,12 @@ swfdec_as_date_get_brokentime_utc (const SwfdecAsDate *date,
   } else {
     seconds = 0;
   }
-  gmtime_r (&seconds, brokentime);
+
+  // FIXME
+  if (gmtime_r (&seconds, brokentime) == NULL) {
+    seconds = 0;
+    gmtime_r (&seconds, brokentime);
+  }
 }
 
 static void
@@ -212,7 +217,12 @@ swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date,
   } else {
     seconds = 0;
   }
-  gmtime_r (&seconds, brokentime);
+
+  // FIXME
+  if (gmtime_r (&seconds, brokentime) == NULL) {
+    seconds = 0;
+    gmtime_r (&seconds, brokentime);
+  }
 }
 
 static void

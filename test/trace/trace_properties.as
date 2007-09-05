@@ -430,7 +430,7 @@ function trace_properties (o, prefix, identifier)
 
   if (typeof (o) == "object" || typeof (o) == "function")
   {
-    if (o["mySecretId"] == undefined) {
+    if (!o.hasOwnProperty ("mySecretId")) {
       o["mySecretId"] = prefix + (prefix != "" ? "." : "") + identifier;
       generate_names (o, prefix, identifier);
     }

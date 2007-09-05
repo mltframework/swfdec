@@ -38,6 +38,19 @@ Number.MIN_VALUE = 0;
 Number.MAX_VALUE = 1.79769313486231e+308;
 ASSetPropFlags(Number, null, 7);
 
+Math = {
+  E: 2.71828182845905,
+  LN10: 2.30258509299405,
+  LN2: 0.693147180559945,
+  LOG10E: 0.434294481903252,
+  LOG2E: 1.44269504088896,
+  PI: 3.14159265358979,
+  SQRT1_2: 0.707106781186548,
+  SQRT2: 1.4142135623731
+};
+ASSetNative (Math, 200, "abs,min,max,sin,cos,atan2,tan,exp,log,sqrt,round,random,floor,ceil,atan,asin,acos,pow");
+ASSetPropFlags (Math, null, 7);
+
 Date = ASconstructor (103, 256);
 ASSetNative (Date.prototype, 103, "getFullYear,getYear,getMonth,getDate,getDay,getHours,getMinutes,getSeconds,getMilliseconds,setFullYear,setMonth,setDate,setHours,setMinutes,setSeconds,setMilliseconds,getTime,setTime,getTimezoneOffset,toString,setYear");
 ASSetNative (Date.prototype, 103, "getUTCFullYear,getUTCYear,getUTCMonth,getUTCDate,getUTCDay,getUTCHours,getUTCMinutes,getUTCSeconds,getUTCMilliseconds,setUTCFullYear,setUTCMonth,setUTCDate,setUTCHours,setUTCMinutes,setUTCSeconds,setUTCMilliseconds", 128);

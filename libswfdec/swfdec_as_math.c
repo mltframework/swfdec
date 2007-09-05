@@ -23,16 +23,16 @@
 
 #include <math.h>
 
-#include "swfdec_as_math.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
 
 /*** AS CODE ***/
 
 #define MATH_FUN(name) \
-static void \
+void \
 swfdec_as_math_ ## name (SwfdecAsContext *cx, SwfdecAsObject *object, \
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret) \
 { \
@@ -42,19 +42,31 @@ swfdec_as_math_ ## name (SwfdecAsContext *cx, SwfdecAsObject *object, \
   SWFDEC_AS_VALUE_SET_NUMBER (ret, d); \
 }
 
+SWFDEC_AS_NATIVE (200, 16, swfdec_as_math_acos)
 MATH_FUN (acos)
+SWFDEC_AS_NATIVE (200, 15, swfdec_as_math_asin)
 MATH_FUN (asin)
+SWFDEC_AS_NATIVE (200, 14, swfdec_as_math_atan)
 MATH_FUN (atan)
+SWFDEC_AS_NATIVE (200, 13, swfdec_as_math_ceil)
 MATH_FUN (ceil)
+SWFDEC_AS_NATIVE (200, 4, swfdec_as_math_cos)
 MATH_FUN (cos)
+SWFDEC_AS_NATIVE (200, 7, swfdec_as_math_exp)
 MATH_FUN (exp)
+SWFDEC_AS_NATIVE (200, 12, swfdec_as_math_floor)
 MATH_FUN (floor)
+SWFDEC_AS_NATIVE (200, 8, swfdec_as_math_log)
 MATH_FUN (log)
+SWFDEC_AS_NATIVE (200, 3, swfdec_as_math_sin)
 MATH_FUN (sin)
+SWFDEC_AS_NATIVE (200, 9, swfdec_as_math_sqrt)
 MATH_FUN (sqrt)
+SWFDEC_AS_NATIVE (200, 6, swfdec_as_math_tan)
 MATH_FUN (tan)
 
-static void
+SWFDEC_AS_NATIVE (200, 0, swfdec_as_math_abs)
+void
 swfdec_as_math_abs (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -62,7 +74,8 @@ swfdec_as_math_abs (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (v));
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 5, swfdec_as_math_atan2)
+void
 swfdec_as_math_atan2 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -72,7 +85,8 @@ swfdec_as_math_atan2 (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, atan2 (y, x));
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 2, swfdec_as_math_max)
+void
 swfdec_as_math_max (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -82,7 +96,8 @@ swfdec_as_math_max (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, MAX (x, y));
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 1, swfdec_as_math_min)
+void
 swfdec_as_math_min (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -92,7 +107,8 @@ swfdec_as_math_min (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, MIN (x, y));
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 17, swfdec_as_math_pow)
+void
 swfdec_as_math_pow (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -102,14 +118,16 @@ swfdec_as_math_pow (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, pow (x, y));
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 11, swfdec_as_math_random)
+void
 swfdec_as_math_random (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_NUMBER (ret, g_rand_double (cx->rand));
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 10, swfdec_as_math_round)
+void
 swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -117,83 +135,3 @@ swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, floor (d + 0.5));
 }
-
-/* define some math constants if glib doesn't have them */
-#ifndef G_LOG10E
-#define G_LOG10E 0.43429448190325182765
-#endif
-#ifndef G_LOG2E
-#define G_LOG2E 1.4426950408889634074
-#endif
-#ifndef G_SQRT1_2
-#define G_SQRT1_2 0.70710678118654752440
-#endif
-void
-swfdec_as_math_init_context (SwfdecAsContext *context, guint version)
-{
-  SwfdecAsObject *math;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-
-  math = swfdec_as_object_new (context);
-  if (math == NULL)
-    return;
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, math);
-  swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Math, &val);
-
-  /* set the right properties on the Math object */
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_E);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_E, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LN10);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_LN10, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LN2);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_LN2, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LOG10E);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_LOG10E, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_LOG2E);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_LOG2E, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_PI);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_PI, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_SQRT1_2);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_SQRT1_2, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, G_SQRT2);
-  swfdec_as_object_set_variable_and_flags (math, SWFDEC_AS_STR_SQRT2, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_CONSTANT);
-
-  /* set the right functions on the Math object */
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_abs, 0, swfdec_as_math_abs, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_acos, 0, swfdec_as_math_acos, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_asin, 0, swfdec_as_math_asin, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_atan, 0, swfdec_as_math_atan, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_atan2, 0, swfdec_as_math_atan2, 2);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_ceil, 0, swfdec_as_math_ceil, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_cos, 0, swfdec_as_math_cos, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_exp, 0, swfdec_as_math_exp, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_floor, 0, swfdec_as_math_floor, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_log, 0, swfdec_as_math_log, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_min, 0, swfdec_as_math_min, 2);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_max, 0, swfdec_as_math_max, 2);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_pow, 0, swfdec_as_math_pow, 2);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_random, 0, swfdec_as_math_random, 0);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_round, 0, swfdec_as_math_round, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_sin, 0, swfdec_as_math_sin, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_sqrt, 0, swfdec_as_math_sqrt, 1);
-  swfdec_as_object_add_function (math, SWFDEC_AS_STR_tan, 0, swfdec_as_math_tan, 1);
-}
-

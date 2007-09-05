@@ -161,7 +161,6 @@ noinst_HEADERS = \
 	swfdec_as_internal.h \
 	swfdec_as_date.h \
 	swfdec_as_interpret.h \
-	swfdec_as_math.h \
 	swfdec_as_number.h \
 	swfdec_as_scope.h \
 	swfdec_as_script_function.h \

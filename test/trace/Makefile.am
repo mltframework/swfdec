@@ -662,6 +662,13 @@ EXTRA_DIST = \
 	math-constants-6.swf.trace \
 	math-constants-7.swf \
 	math-constants-7.swf.trace \
+	math-properties.as \
+	math-properties-5.swf \
+	math-properties-5.swf.trace \
+	math-properties-6.swf \
+	math-properties-6.swf.trace \
+	math-properties-7.swf \
+	math-properties-7.swf.trace \
 	mouse-scaled.as \
 	mouse-scaled-5.swf \
 	mouse-scaled-5.swf.act \

@@ -56,6 +56,7 @@ IGNORE_HFILES= \
 	jpeg \
 	swfdec_amf.h \
 	swfdec_as_boolean.h \
+	swfdec_as_date.h \
 	swfdec_as_frame_internal.h \
 	swfdec_as_internal.h \
 	swfdec_as_interpret.h \

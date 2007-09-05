@@ -618,7 +618,7 @@ new_decoder:
 
   if (current->sound_block) {
     movie->sound_stream = swfdec_audio_stream_new (player, 
-	movie->sprite, movie->frame);
+	movie->sprite, movie->frame - 1);
     movie->sound_frame = movie->frame;
   }
   return TRUE;

@@ -395,7 +395,7 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 /*** AS CODE ***/
 
-SWFDEC_AS_NATIVE (103, 20, swfdec_as_date_toString)
+SWFDEC_AS_NATIVE (103, 19, swfdec_as_date_toString)
 void
 swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -426,15 +426,19 @@ swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, buffer));
 }
 
-SWFDEC_AS_NATIVE (103, 17, swfdec_as_date_getTime)
+SWFDEC_AS_NATIVE (103, 16, swfdec_as_date_getTime)
 void
 swfdec_as_date_getTime (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_as_date_set_time_to_value (SWFDEC_AS_DATE (object), ret);
+  SwfdecAsDate *date;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+
+  swfdec_as_date_set_time_to_value (date, ret);
 }
 
-SWFDEC_AS_NATIVE (103, 19, swfdec_as_date_getTimezoneOffset)
+SWFDEC_AS_NATIVE (103, 18, swfdec_as_date_getTimezoneOffset)
 void
 swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -446,7 +450,7 @@ swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 // get* functions
 
-SWFDEC_AS_NATIVE (103, 9, swfdec_as_date_getMilliseconds)
+SWFDEC_AS_NATIVE (103, 8, swfdec_as_date_getMilliseconds)
 void
 swfdec_as_date_getMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -468,7 +472,7 @@ swfdec_as_date_getMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 9, swfdec_as_date_getUTCMilliseconds)
+SWFDEC_AS_NATIVE (103, 128 + 8, swfdec_as_date_getUTCMilliseconds)
 void
 swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -490,7 +494,7 @@ swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 8, swfdec_as_date_getSeconds)
+SWFDEC_AS_NATIVE (103, 7, swfdec_as_date_getSeconds)
 void
 swfdec_as_date_getSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -498,7 +502,7 @@ swfdec_as_date_getSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_SECONDS, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 8, swfdec_as_date_getUTCSeconds)
+SWFDEC_AS_NATIVE (103, 128 + 7, swfdec_as_date_getUTCSeconds)
 void
 swfdec_as_date_getUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -506,7 +510,7 @@ swfdec_as_date_getUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_SECONDS, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 7, swfdec_as_date_getMinutes)
+SWFDEC_AS_NATIVE (103, 6, swfdec_as_date_getMinutes)
 void
 swfdec_as_date_getMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -514,7 +518,7 @@ swfdec_as_date_getMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MINUTES, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 7, swfdec_as_date_getUTCMinutes)
+SWFDEC_AS_NATIVE (103, 128 + 6, swfdec_as_date_getUTCMinutes)
 void
 swfdec_as_date_getUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -522,7 +526,7 @@ swfdec_as_date_getUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MINUTES, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 6, swfdec_as_date_getHours)
+SWFDEC_AS_NATIVE (103, 5, swfdec_as_date_getHours)
 void
 swfdec_as_date_getHours (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -530,7 +534,7 @@ swfdec_as_date_getHours (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_HOURS, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 6, swfdec_as_date_getUTCHours)
+SWFDEC_AS_NATIVE (103, 128 + 5, swfdec_as_date_getUTCHours)
 void
 swfdec_as_date_getUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -538,7 +542,7 @@ swfdec_as_date_getUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_HOURS, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 5, swfdec_as_date_getDay)
+SWFDEC_AS_NATIVE (103, 4, swfdec_as_date_getDay)
 void
 swfdec_as_date_getDay (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -547,7 +551,7 @@ swfdec_as_date_getDay (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
       FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 5, swfdec_as_date_getUTCDay)
+SWFDEC_AS_NATIVE (103, 128 + 4, swfdec_as_date_getUTCDay)
 void
 swfdec_as_date_getUTCDay (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -556,7 +560,7 @@ swfdec_as_date_getUTCDay (SwfdecAsContext *cx, SwfdecAsObject *object,
       TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 4, swfdec_as_date_getDate)
+SWFDEC_AS_NATIVE (103, 3, swfdec_as_date_getDate)
 void
 swfdec_as_date_getDate (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -565,7 +569,7 @@ swfdec_as_date_getDate (SwfdecAsContext *cx, SwfdecAsObject *object,
       FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 4, swfdec_as_date_getUTCDate)
+SWFDEC_AS_NATIVE (103, 128 + 3, swfdec_as_date_getUTCDate)
 void
 swfdec_as_date_getUTCDate (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -574,7 +578,7 @@ swfdec_as_date_getUTCDate (SwfdecAsContext *cx, SwfdecAsObject *object,
       TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 3, swfdec_as_date_getMonth)
+SWFDEC_AS_NATIVE (103, 2, swfdec_as_date_getMonth)
 void
 swfdec_as_date_getMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -582,7 +586,7 @@ swfdec_as_date_getMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MONTHS, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 3, swfdec_as_date_getUTCMonth)
+SWFDEC_AS_NATIVE (103, 128 + 2, swfdec_as_date_getUTCMonth)
 void
 swfdec_as_date_getUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -590,7 +594,7 @@ swfdec_as_date_getUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MONTHS, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 2, swfdec_as_date_getYear)
+SWFDEC_AS_NATIVE (103, 1, swfdec_as_date_getYear)
 void
 swfdec_as_date_getYear (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -598,7 +602,7 @@ swfdec_as_date_getYear (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_YEAR, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 2, swfdec_as_date_getUTCYear)
+SWFDEC_AS_NATIVE (103, 128 + 1, swfdec_as_date_getUTCYear)
 void
 swfdec_as_date_getUTCYear (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -606,7 +610,7 @@ swfdec_as_date_getUTCYear (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_YEAR, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 1, swfdec_as_date_getFullYear)
+SWFDEC_AS_NATIVE (103, 0, swfdec_as_date_getFullYear)
 void
 swfdec_as_date_getFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -615,7 +619,7 @@ swfdec_as_date_getFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
       FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 1, swfdec_as_date_getUTCFullYear)
+SWFDEC_AS_NATIVE (103, 128 + 0, swfdec_as_date_getUTCFullYear)
 void
 swfdec_as_date_getUTCFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -626,7 +630,7 @@ swfdec_as_date_getUTCFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 // set* functions
 
-SWFDEC_AS_NATIVE (103, 18, swfdec_as_date_setTime)
+SWFDEC_AS_NATIVE (103, 17, swfdec_as_date_setTime)
 void
 swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -641,7 +645,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_time_to_value (date, ret);
 }
 
-SWFDEC_AS_NATIVE (103, 16, swfdec_as_date_setMilliseconds)
+SWFDEC_AS_NATIVE (103, 15, swfdec_as_date_setMilliseconds)
 void
 swfdec_as_date_setMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -658,7 +662,7 @@ swfdec_as_date_setMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_time_to_value (date, ret);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 16, swfdec_as_date_setUTCMilliseconds)
+SWFDEC_AS_NATIVE (103, 128 + 15, swfdec_as_date_setUTCMilliseconds)
 void
 swfdec_as_date_setUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -675,7 +679,7 @@ swfdec_as_date_setUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_time_to_value (date, ret);
 }
 
-SWFDEC_AS_NATIVE (103, 15, swfdec_as_date_setSeconds)
+SWFDEC_AS_NATIVE (103, 14, swfdec_as_date_setSeconds)
 void
 swfdec_as_date_setSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -683,7 +687,7 @@ swfdec_as_date_setSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_SECONDS, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 15, swfdec_as_date_setUTCSeconds)
+SWFDEC_AS_NATIVE (103, 128 + 14, swfdec_as_date_setUTCSeconds)
 void
 swfdec_as_date_setUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -691,7 +695,7 @@ swfdec_as_date_setUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_SECONDS, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 14, swfdec_as_date_setMinutes)
+SWFDEC_AS_NATIVE (103, 13, swfdec_as_date_setMinutes)
 void
 swfdec_as_date_setMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -699,7 +703,7 @@ swfdec_as_date_setMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MINUTES, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 14, swfdec_as_date_setUTCMinutes)
+SWFDEC_AS_NATIVE (103, 128 + 13, swfdec_as_date_setUTCMinutes)
 void
 swfdec_as_date_setUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -707,7 +711,7 @@ swfdec_as_date_setUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MINUTES, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 13, swfdec_as_date_setHours)
+SWFDEC_AS_NATIVE (103, 12, swfdec_as_date_setHours)
 void
 swfdec_as_date_setHours (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -715,7 +719,7 @@ swfdec_as_date_setHours (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_HOURS, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 13, swfdec_as_date_setUTCHours)
+SWFDEC_AS_NATIVE (103, 128 + 12, swfdec_as_date_setUTCHours)
 void
 swfdec_as_date_setUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -723,7 +727,7 @@ swfdec_as_date_setUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_HOURS, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 12, swfdec_as_date_setDate)
+SWFDEC_AS_NATIVE (103, 11, swfdec_as_date_setDate)
 void
 swfdec_as_date_setDate (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -732,7 +736,7 @@ swfdec_as_date_setDate (SwfdecAsContext *cx, SwfdecAsObject *object,
       FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 12, swfdec_as_date_setUTCDate)
+SWFDEC_AS_NATIVE (103, 128 + 11, swfdec_as_date_setUTCDate)
 void
 swfdec_as_date_setUTCDate (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -741,7 +745,7 @@ swfdec_as_date_setUTCDate (SwfdecAsContext *cx, SwfdecAsObject *object,
       TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 11, swfdec_as_date_setMonth)
+SWFDEC_AS_NATIVE (103, 10, swfdec_as_date_setMonth)
 void
 swfdec_as_date_setMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -749,7 +753,7 @@ swfdec_as_date_setMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTHS, FALSE);
 }
 
-SWFDEC_AS_NATIVE (103, 128 + 11, swfdec_as_date_setUTCMonth)
+SWFDEC_AS_NATIVE (103, 128 + 10, swfdec_as_date_setUTCMonth)
 void
 swfdec_as_date_setUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -757,20 +761,12 @@ swfdec_as_date_setUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTHS, TRUE);
 }
 
-SWFDEC_AS_NATIVE (103, 10, swfdec_as_date_setYear)
+SWFDEC_AS_NATIVE (103, 20, swfdec_as_date_setYear)
 void
 swfdec_as_date_setYear (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_YEAR, FALSE);
-}
-
-SWFDEC_AS_NATIVE (103, 128 + 10, swfdec_as_date_setUTCYear)
-void
-swfdec_as_date_setUTCYear (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_YEAR, TRUE);
 }
 
 SWFDEC_AS_NATIVE (103, 9, swfdec_as_date_setFullYear)
@@ -1054,112 +1050,4 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
-}
-
-void
-swfdec_as_date_init_context (SwfdecAsContext *context, guint version)
-{
-  SwfdecAsObject *date, *proto;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-
-  date = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Date, 0, swfdec_as_date_construct, 0));
-  swfdec_as_native_function_set_construct_type (
-      SWFDEC_AS_NATIVE_FUNCTION (date), SWFDEC_TYPE_AS_DATE);
-  if (!date)
-    return;
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsDate)))
-    return;
-  proto = g_object_new (SWFDEC_TYPE_AS_DATE, NULL);
-  swfdec_as_object_add (proto, context, sizeof (SwfdecAsDate));
-  /* set the right properties on the Date object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable (date, SWFDEC_AS_STR_prototype, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable (date, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_add_function (date, SWFDEC_AS_STR_UTC, 0,
-      swfdec_as_date_UTC, 1);
-  /* set the right properties on the Date.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR___proto__, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, date);
-  swfdec_as_object_set_variable (proto, SWFDEC_AS_STR_constructor, &val);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
-      swfdec_as_date_toString, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getTime, 0,
-      swfdec_as_date_getTime, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getTimezoneOffset, 0,
-      swfdec_as_date_getTimezoneOffset, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getMilliseconds, 0,
-      swfdec_as_date_getMilliseconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCMilliseconds, 0,
-      swfdec_as_date_getUTCMilliseconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getSeconds, 0,
-      swfdec_as_date_getSeconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCSeconds, 0,
-      swfdec_as_date_getUTCSeconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getMinutes, 0,
-      swfdec_as_date_getMinutes, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCMinutes, 0,
-      swfdec_as_date_getUTCMinutes, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getHours, 0,
-      swfdec_as_date_getHours, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCHours, 0,
-      swfdec_as_date_getUTCHours, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getDay, 0,
-      swfdec_as_date_getDay, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCDay, 0,
-      swfdec_as_date_getUTCDay, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getDate, 0,
-      swfdec_as_date_getDate, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCDate, 0,
-      swfdec_as_date_getUTCDate, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getMonth, 0,
-      swfdec_as_date_getMonth, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCMonth, 0,
-      swfdec_as_date_getUTCMonth, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getYear, 0,
-      swfdec_as_date_getYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCYear, 0,
-      swfdec_as_date_getUTCYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getFullYear, 0,
-      swfdec_as_date_getFullYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getUTCFullYear, 0,
-      swfdec_as_date_getUTCFullYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setTime, 0,
-      swfdec_as_date_setTime, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setMilliseconds, 0,
-      swfdec_as_date_setMilliseconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCMilliseconds, 0,
-      swfdec_as_date_setUTCMilliseconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setSeconds, 0,
-      swfdec_as_date_setSeconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCSeconds, 0,
-      swfdec_as_date_setUTCSeconds, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setMinutes, 0,
-      swfdec_as_date_setMinutes, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCMinutes, 0,
-      swfdec_as_date_setUTCMinutes, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setHours, 0,
-      swfdec_as_date_setHours, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCHours, 0,
-      swfdec_as_date_setUTCHours, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setDate, 0,
-      swfdec_as_date_setDate, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCDate, 0,
-      swfdec_as_date_setUTCDate, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setMonth, 0,
-      swfdec_as_date_setMonth, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCMonth, 0,
-      swfdec_as_date_setUTCMonth, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setYear, 0,
-      swfdec_as_date_setYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCYear, 0,
-      swfdec_as_date_setUTCYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setFullYear, 0,
-      swfdec_as_date_setFullYear, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setUTCFullYear, 0,
-      swfdec_as_date_setUTCFullYear, 0);
 }

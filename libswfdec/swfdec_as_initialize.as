@@ -37,3 +37,11 @@ Number.NEGATIVE_INFINITY = -Infinity;
 Number.MIN_VALUE = 0;
 Number.MAX_VALUE = 1.79769313486231e+308;
 ASSetPropFlags(Number, null, 7);
+
+Date = ASconstructor (103, 256);
+ASSetNative (Date.prototype, 103, "getFullYear,getYear,getMonth,getDate,getDay,getHours,getMinutes,getSeconds,getMilliseconds,setFullYear,setMonth,setDate,setHours,setMinutes,setSeconds,setMilliseconds,getTime,setTime,getTimezoneOffset,toString,setYear");
+ASSetNative (Date.prototype, 103, "getUTCFullYear,getUTCYear,getUTCMonth,getUTCDate,getUTCDay,getUTCHours,getUTCMinutes,getUTCSeconds,getUTCMilliseconds,setUTCFullYear,setUTCMonth,setUTCDate,setUTCHours,setUTCMinutes,setUTCSeconds,setUTCMilliseconds", 128);
+Date.prototype.valueOf = Date.prototype.getTime;
+Date.UTC = ASnative (103, 257);
+ASSetPropFlags (Date.prototype, null, 3);
+ASSetPropFlags (Date, null, 7);

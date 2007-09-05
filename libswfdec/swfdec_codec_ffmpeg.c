@@ -208,25 +208,46 @@ typedef struct {
   AVCodecContext *	ctx;		/* out context (d'oh) */
   AVFrame *		frame;		/* the frame we use for decoding */
   struct SwsContext *	sws;		/* the format conversion */
+  int			sws_width;	/* width used in resampler */
+  int			sws_height;	/* height used in resampler */
 } SwfdecVideoDecoderFFMpeg;
 
+#define ALIGNMENT 31
 static SwfdecBuffer *
 swfdec_video_decoder_ffmpeg_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
     guint *width, guint *height, guint *rowstride)
 {
   SwfdecVideoDecoderFFMpeg *codec = (SwfdecVideoDecoderFFMpeg *) dec;
-  int got_image;
+  int got_image = 0;
   SwfdecBuffer *ret;
   AVPicture picture;
+  guchar *tmp, *aligned;
 
+  /* fullfill alignment and padding requirements */
+  tmp = g_try_malloc (buffer->length + ALIGNMENT + FF_INPUT_BUFFER_PADDING_SIZE);
+  if (tmp == NULL) {
+    SWFDEC_WARNING ("Could not allocate temporary memory");
+    return NULL;
+  }
+  aligned = (guchar *) (((uintptr_t) tmp + ALIGNMENT) & ~ALIGNMENT);
+  memcpy (aligned, buffer->data, buffer->length);
+  memset (aligned + buffer->length, 0, FF_INPUT_BUFFER_PADDING_SIZE);
   if (avcodec_decode_video (codec->ctx, codec->frame, &got_image, 
-	buffer->data, buffer->length) < 0) {
+	aligned, buffer->length) < 0) {
+    g_free (tmp);
     SWFDEC_WARNING ("error decoding frame");
     return NULL;
   }
+  g_free (tmp);
   if (got_image == 0) {
-    SWFDEC_WARNING ("error: did not get an image from decoding");
+    SWFDEC_WARNING ("did not get an image from decoding");
     return NULL;
+  }
+  if (codec->sws &&
+      (codec->sws_width != codec->ctx->width ||
+       codec->sws_height != codec->ctx->height)) {
+    sws_freeContext (codec->sws);
+    codec->sws = NULL;
   }
   if (codec->sws == NULL) {
     codec->sws = sws_getContext (codec->ctx->width, codec->ctx->height, codec->ctx->pix_fmt,
@@ -235,6 +256,8 @@ swfdec_video_decoder_ffmpeg_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
       SWFDEC_ERROR ("Could not get conversion context");
       return NULL;
     }
+    codec->sws_width = codec->ctx->width;
+    codec->sws_height = codec->ctx->height;
   }
   ret = swfdec_buffer_new_and_alloc (codec->ctx->width * codec->ctx->height * 4);
   avpicture_fill (&picture, ret->data, PIX_FMT_RGB32, codec->ctx->width,

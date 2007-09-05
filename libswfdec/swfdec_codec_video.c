@@ -101,14 +101,15 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
     tmp = swfdec_buffer_new_subbuffer (buffer, 1, buffer->length - 1);
     buffer = decoder->decode (decoder, tmp, &width, &height, &rowstride);
     swfdec_buffer_unref (tmp);
-    if (wsub >= width || hsub >= height) {
-      SWFDEC_ERROR ("size subtraction too big");
-      if (buffer)
+    if (buffer) {
+      if (wsub >= width || hsub >= height) {
+	SWFDEC_ERROR ("size subtraction too big");
 	swfdec_buffer_unref (buffer);
-      return NULL;
+	return NULL;
+      }
+      width -= wsub;
+      height -= hsub;
     }
-    width -= wsub;
-    height -= hsub;
   } else {
     buffer = decoder->decode (decoder, buffer, &width, &height, &rowstride);
   }

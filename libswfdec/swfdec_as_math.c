@@ -27,6 +27,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_debug.h"
 
 /*** AS CODE ***/
@@ -36,7 +37,9 @@ void \
 swfdec_as_math_ ## name (SwfdecAsContext *cx, SwfdecAsObject *object, \
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret) \
 { \
-  double d = swfdec_as_value_to_number (cx, &argv[0]); \
+  double d; \
+\
+  SWFDEC_AS_CHECK (0, NULL, "n", &d); \
 \
   d = name (d); \
   SWFDEC_AS_VALUE_SET_NUMBER (ret, d); \
@@ -70,8 +73,11 @@ void
 swfdec_as_math_abs (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double v = swfdec_as_value_to_number (cx, &argv[0]);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (v));
+  double d;
+
+  SWFDEC_AS_CHECK (0, NULL, "n", &d);
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (d));
 }
 
 SWFDEC_AS_NATIVE (200, 5, swfdec_as_math_atan2)
@@ -79,8 +85,9 @@ void
 swfdec_as_math_atan2 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double y = swfdec_as_value_to_number (cx, &argv[0]);
-  double x = swfdec_as_value_to_number (cx, &argv[1]);
+  double x, y;
+
+  SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, atan2 (y, x));
 }
@@ -90,8 +97,9 @@ void
 swfdec_as_math_max (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double x = swfdec_as_value_to_number (cx, &argv[0]);
-  double y = swfdec_as_value_to_number (cx, &argv[1]);
+  double x, y;
+
+  SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, MAX (x, y));
 }
@@ -101,8 +109,9 @@ void
 swfdec_as_math_min (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double x = swfdec_as_value_to_number (cx, &argv[0]);
-  double y = swfdec_as_value_to_number (cx, &argv[1]);
+  double x, y;
+
+  SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, MIN (x, y));
 }
@@ -112,8 +121,9 @@ void
 swfdec_as_math_pow (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double x = swfdec_as_value_to_number (cx, &argv[0]);
-  double y = swfdec_as_value_to_number (cx, &argv[1]);
+  double x, y;
+
+  SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, pow (x, y));
 }
@@ -131,7 +141,9 @@ void
 swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double d = swfdec_as_value_to_number (cx, &argv[0]);
+  double d;
+
+  SWFDEC_AS_CHECK (0, NULL, "n", &d);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, floor (d + 0.5));
 }

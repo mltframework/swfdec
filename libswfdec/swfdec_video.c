@@ -80,6 +80,8 @@ swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
     return;
 
   surface = swfdec_video_decoder_decode (input->decoder, buffer);
+  if (surface == NULL)
+    return;
   swfdec_video_movie_new_image (input->movie, surface);
   cairo_surface_destroy (surface);
 }

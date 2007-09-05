@@ -138,7 +138,7 @@ swfdec_as_date_get_milliseconds_local (const SwfdecAsDate *date)
   g_assert (swfdec_as_date_is_valid (date));
 
   if (isfinite (date->milliseconds)) {
-    return date->milliseconds + date->utc_offset * 60 * 1000;
+    return date->milliseconds + (double) date->utc_offset * 60 * 1000;
   } else {
     return 0;
   }
@@ -148,7 +148,7 @@ static void
 swfdec_as_date_set_milliseconds_local (SwfdecAsDate *date, gint64 milliseconds)
 {
   date->milliseconds =
-    milliseconds - date->utc_offset * 60 * 1000;
+    milliseconds - (double) date->utc_offset * 60 * 1000;
 }
 
 static void
@@ -181,7 +181,7 @@ swfdec_as_date_set_brokentime_utc (SwfdecAsDate *date, struct tm *brokentime)
   } else {
     date->milliseconds = 0;
   }
-  date->milliseconds += seconds * 1000;
+  date->milliseconds += (gint64) seconds * 1000;
 }
 
 static void
@@ -215,7 +215,7 @@ swfdec_as_date_set_brokentime_local (SwfdecAsDate *date, struct tm *brokentime)
   } else {
     date->milliseconds = 0;
   }
-  date->milliseconds += seconds * 1000;
+  date->milliseconds += (gint64) seconds * 1000;
 }
 
 // set and get function helpers
@@ -489,9 +489,9 @@ swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
   milliseconds = swfdec_as_date_get_milliseconds_utc (date);
 
   if (milliseconds >= 0 || (milliseconds % 1000 == 0)) {
-    SWFDEC_AS_VALUE_SET_INT (ret, milliseconds % 1000);
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, milliseconds % 1000);
   } else {
-    SWFDEC_AS_VALUE_SET_INT (ret, 1000 + milliseconds % 1000);
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, 1000 + milliseconds % 1000);
   }
 }
 
@@ -894,7 +894,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     brokentime.tm_year = year;
   }
 
-  milliseconds = timegm (&brokentime) * 1000;
+  milliseconds = (gint64) timegm (&brokentime) * 1000;
 
   if (argc > i) {
     if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
@@ -906,7 +906,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, milliseconds);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, milliseconds);
 }
 
 // Constructor

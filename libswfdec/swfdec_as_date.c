@@ -18,9 +18,6 @@
  * Boston, MA  02110-1301  USA
  */
 
-// timegm, gmtime_r
-#define _BSD_SOURCE
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -389,12 +386,18 @@ swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   }
 
   swfdec_as_date_get_brokentime_local (date, &brokentime);
-  strftime (buffer, sizeof (buffer), "%a %b %-d %T", &brokentime);
+  if (!strftime (buffer, sizeof (buffer), "%a %b %-d %T", &brokentime)) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
+    return;
+  }
   g_snprintf (buffer + strlen (buffer), sizeof (buffer) - strlen (buffer),
       " GMT%+03i%02i", date->timezone_offset_minutes / 60,
       ABS (date->timezone_offset_minutes % 60));
-  strftime (buffer + strlen (buffer), sizeof (buffer) - strlen (buffer),
-      " %Y", &brokentime);
+  if (!strftime (buffer + strlen (buffer), sizeof (buffer) - strlen (buffer),
+      " %Y", &brokentime)) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
+    return;
+  }
 
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, buffer));
 }

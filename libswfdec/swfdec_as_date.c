@@ -305,7 +305,9 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret, field_t field,
     gboolean utc)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (!swfdec_as_date_is_valid (date))
     swfdec_as_value_to_number (cx, &argv[0]); // calls valueOf
@@ -372,14 +374,17 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret, field_t field,
     gboolean utc)
 {
+  SwfdecAsDate *date;
   int number;
 
-  if (!swfdec_as_date_is_valid (SWFDEC_AS_DATE (object))) {
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+
+  if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
     return;
   }
 
-  number = swfdec_as_date_get_brokentime_value (SWFDEC_AS_DATE (object), utc,
+  number = swfdec_as_date_get_brokentime_value (date, utc,
       field_offsets[field]);
 
   switch (field) {
@@ -400,9 +405,11 @@ void
 swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
   char buffer[256];
   struct tm brokentime;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
@@ -443,9 +450,12 @@ void
 swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecAsDate *date;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+
   // reverse of timezone_offset_minutes
-  SWFDEC_AS_VALUE_SET_NUMBER (ret,
-      -SWFDEC_AS_DATE (object)->timezone_offset_minutes);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, -(date->timezone_offset_minutes));
 }
 
 // get* functions
@@ -455,8 +465,10 @@ void
 swfdec_as_date_getMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
   gint64 milliseconds;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
@@ -477,8 +489,10 @@ void
 swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
   gint64 milliseconds;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
@@ -635,7 +649,9 @@ void
 swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (argc > 0) {
     swfdec_as_date_set_milliseconds_utc (date,
@@ -650,7 +666,9 @@ void
 swfdec_as_date_setMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (swfdec_as_date_is_valid (date) && argc > 0) {
     gint64 milliseconds = swfdec_as_date_get_milliseconds_local (date);
@@ -667,7 +685,9 @@ void
 swfdec_as_date_setUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date = SWFDEC_AS_DATE (object);
+  SwfdecAsDate *date;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
   if (swfdec_as_date_is_valid (date) && argc > 0) {
     gint64 milliseconds = swfdec_as_date_get_milliseconds_utc (date);
@@ -789,7 +809,6 @@ swfdec_as_date_setUTCFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 // Static methods
 
-// gets atleast two args
 SWFDEC_AS_NATIVE (103, 257, swfdec_as_date_UTC)
 void
 swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
@@ -800,9 +819,6 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   int year, num;
   double d;
   struct tm brokentime;
-
-  if (argc < 2)
-    return;
 
   // special case: ignore undefined and everything after it
   for (i = 0; i < argc; i++) {

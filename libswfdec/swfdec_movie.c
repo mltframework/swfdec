@@ -40,6 +40,7 @@
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
 #include "swfdec_system.h"
+#include "swfdec_utils.h"
 
 /*** MOVIE ***/
 
@@ -916,30 +917,40 @@ swfdec_movie_mark (SwfdecAsObject *object)
 }
 
 /* FIXME: This function can definitely be implemented easier */
-static SwfdecMovie *
-swfdec_movie_get_by_name (SwfdecPlayer *player, const char *name)
+SwfdecMovie *
+swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
 {
   GList *walk;
-  int i = SWFDEC_AS_CONTEXT (player)->version;
+  int i;
   gulong l;
+  guint version = SWFDEC_AS_OBJECT (movie)->context->version;
   char *end;
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
 
-  if ((i >= 7 && !g_str_has_prefix (name, "_level")) ||
-      strncasecmp (name, "_level", 6) != 0)
-    return NULL;
+  if ((version >= 7 && g_str_has_prefix (name, "_level")) ||
+      strncasecmp (name, "_level", 6) == 0) {
+    errno = 0;
+    l = strtoul (name + 6, &end, 10);
+    if (errno != 0 || *end != 0 || l > G_MAXINT)
+      return NULL;
+    i = l - 16384;
+    for (walk = player->roots; walk; walk = walk->next) {
+      SwfdecMovie *cur = walk->data;
+      if (cur->depth < i)
+	continue;
+      if (cur->depth == i)
+	return cur;
+      break;
+    }
+  }
 
-  errno = 0;
-  l = strtoul (name + 6, &end, 10);
-  if (errno != 0 || *end != 0 || l > G_MAXINT)
-    return NULL;
-  i = l - 16384;
-  for (walk = player->roots; walk; walk = walk->next) {
+  for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (cur->depth < i)
+    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
       continue;
-    if (cur->depth == i)
+    if ((version >= 7 && cur->name == name) ||
+	swfdec_str_case_equal (cur->name, name))
       return cur;
-    break;
   }
   return NULL;
 }
@@ -974,7 +985,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     return TRUE;
   }
   
-  movie = swfdec_movie_get_by_name (SWFDEC_PLAYER (object->context), variable);
+  movie = swfdec_movie_get_by_name (movie, variable);
   if (movie) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
     *flags = 0;

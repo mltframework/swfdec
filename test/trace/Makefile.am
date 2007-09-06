@@ -1409,6 +1409,13 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
+	xml-constructor-properties.as \
+	xml-constructor-properties-5.swf \
+	xml-constructor-properties-5.swf.trace \
+	xml-constructor-properties-6.swf \
+	xml-constructor-properties-6.swf.trace \
+	xml-constructor-properties-7.swf \
+	xml-constructor-properties-7.swf.trace \
 	xml-errors.as \
 	xml-errors-5.swf \
 	xml-errors-5.swf.trace \

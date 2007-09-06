@@ -928,7 +928,7 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
 
   if ((version >= 7 && g_str_has_prefix (name, "_level")) ||
-      strncasecmp (name, "_level", 6) == 0) {
+      (version < 7 && strncasecmp (name, "_level", 6) == 0)) {
     errno = 0;
     l = strtoul (name + 6, &end, 10);
     if (errno != 0 || *end != 0 || l > G_MAXINT)
@@ -949,7 +949,7 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
     if (cur->original_name == SWFDEC_AS_STR_EMPTY)
       continue;
     if ((version >= 7 && cur->name == name) ||
-	swfdec_str_case_equal (cur->name, name))
+	(version < 7 && swfdec_str_case_equal (cur->name, name)))
       return cur;
   }
   return NULL;

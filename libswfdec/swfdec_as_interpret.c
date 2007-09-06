@@ -409,6 +409,25 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   }
 }
 
+static SwfdecAsObject *
+super_special_movie_lookup_magic (SwfdecAsObject *movie, const char *name)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *ret;
+
+  ret = SWFDEC_AS_OBJECT (swfdec_movie_get_by_name (SWFDEC_MOVIE (movie), name));
+  if (ret)
+    return ret;
+  if (!swfdec_as_object_get_variable (movie, name, &val))
+    return NULL;
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  ret = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  if (!SWFDEC_IS_MOVIE (ret))
+    return NULL;
+  return ret;
+}
+
 /**
  * swfdec_action_get_movie_by_path:
  * @cx: a #SwfdecAsContext
@@ -428,7 +447,6 @@ swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path,
 {
   SwfdecAsObject *movie;
   const char *s;
-  SwfdecAsValue val;
   gboolean was_slash = FALSE;
 
   /* shortcut for the general case */
@@ -509,16 +527,15 @@ swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path,
     }
     was_slash = *s == '/';
     var = swfdec_as_context_give_string (cx, g_strndup (path, s - path));
-    if (!swfdec_as_object_get_variable (movie, var, &val) ||
-	!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-	!SWFDEC_IS_MOVIE ((movie = SWFDEC_AS_VALUE_GET_OBJECT (&val))))
+    movie = super_special_movie_lookup_magic (movie, var);
+    if (movie == NULL)
       return FALSE;
     path = s + 1;
   }
   if (was_slash) {
     if (*path) {
       const char *var = swfdec_as_context_get_string (cx, path);
-      movie = SWFDEC_AS_OBJECT (swfdec_movie_get_by_name (SWFDEC_MOVIE (movie), var));
+      movie = super_special_movie_lookup_magic (movie, var);
       if (movie == NULL)
 	return FALSE;
     }

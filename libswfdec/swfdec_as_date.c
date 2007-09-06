@@ -58,18 +58,17 @@ swfdec_as_date_init (SwfdecAsDate *date)
 
 /*** Helper functions ***/
 
-#define MILLISECONDS_PER_SECOND 1000
-#define MILLISECONDS_PER_MINUTE 60000
-#define MILLISECONDS_PER_HOUR 3600000
-#define MILLISECONDS_PER_DAY 86400000
+/* Kind of replacement for gmtime_r, timegm that works the way Flash works */
 
+#define MILLISECONDS_PER_SECOND 1000
 #define SECONDS_PER_MINUTE 60
 #define MINUTES_PER_HOUR 60
 #define HOURS_PER_DAY 24
 #define MONTHS_PER_YEAR 12
 
-#define SECONDS_PER_HOUR 3600
-#define SECONDS_PER_DAY 86400
+#define MILLISECONDS_PER_MINUTE 60000
+#define MILLISECONDS_PER_HOUR 3600000
+#define MILLISECONDS_PER_DAY 86400000
 
 static const int month_offsets[2][13] = {
   // Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total
@@ -88,48 +87,6 @@ typedef struct {
 
   int day_of_week;
 } BrokenTime;
-
-// returns TRUE if d is not Infinite or NAN
-static gboolean
-swfdec_as_date_value_to_number_and_integer_floor (SwfdecAsContext *context,
-    const SwfdecAsValue *value, double *d, int *num)
-{
-  *d = swfdec_as_value_to_number (context, value);
-  if (!isfinite (*d)) {
-    *num = 0;
-    return FALSE;
-  }
-
-  *num = floor (*d);
-  return TRUE;
-}
-
-// returns TRUE if d is not Infinite or NAN
-static gboolean
-swfdec_as_date_value_to_number_and_integer (SwfdecAsContext *context,
-    const SwfdecAsValue *value, double *d, int *num)
-{
-  g_assert (d != NULL);
-  g_assert (num != NULL);
-
-  // undefined == NAN here, even in version < 7
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (value)) {
-    *d = NAN;
-  } else {
-    *d = swfdec_as_value_to_number (context, value);
-  }
-  if (!isfinite (*d)) {
-    *num = 0;
-    return FALSE;
-  }
-
-  if (*d < 0) {
-    *num = - (guint) fmod (-*d, 4294967296);
-  } else {
-    *num =  (guint) fmod (*d, 4294967296);
-  }
-  return TRUE;
-}
 
 static int
 swfdec_as_date_days_in_year (int year)
@@ -265,6 +222,53 @@ swfdec_as_date_brokentime_to_milliseconds (const BrokenTime *brokentime)
   return milliseconds;
 }
 
+/* Wrappers for swfdec_as_value_to_number because we need both double and int
+ * often, and need to generate the right valueOf etc. */
+
+// returns TRUE if d is not Infinite or NAN
+static gboolean
+swfdec_as_date_value_to_number_and_integer_floor (SwfdecAsContext *context,
+    const SwfdecAsValue *value, double *d, int *num)
+{
+  *d = swfdec_as_value_to_number (context, value);
+  if (!isfinite (*d)) {
+    *num = 0;
+    return FALSE;
+  }
+
+  *num = floor (*d);
+  return TRUE;
+}
+
+// returns TRUE if d is not Infinite or NAN
+static gboolean
+swfdec_as_date_value_to_number_and_integer (SwfdecAsContext *context,
+    const SwfdecAsValue *value, double *d, int *num)
+{
+  g_assert (d != NULL);
+  g_assert (num != NULL);
+
+  // undefined == NAN here, even in version < 7
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (value)) {
+    *d = NAN;
+  } else {
+    *d = swfdec_as_value_to_number (context, value);
+  }
+  if (!isfinite (*d)) {
+    *num = 0;
+    return FALSE;
+  }
+
+  if (*d < 0) {
+    *num = - (guint) fmod (-*d, 4294967296);
+  } else {
+    *num =  (guint) fmod (*d, 4294967296);
+  }
+  return TRUE;
+}
+
+/* The functions to query/modify the current time */
+
 // returns TRUE with Infinite and -Infinite, because those values should be
 // handles like 0 that is returned by below functions
 static gboolean
@@ -359,7 +363,7 @@ swfdec_as_date_set_brokentime_local (SwfdecAsDate *date, BrokenTime *brokentime)
     date->utc_offset * 60 * 1000;
 }
 
-// set and get function helpers
+/* set and get function helpers */
 
 typedef enum {
   FIELD_MILLISECONDS,
@@ -419,13 +423,6 @@ swfdec_as_date_set_brokentime_value (SwfdecAsDate *date, gboolean utc,
   } else {
     swfdec_as_date_set_brokentime_local (date, &brokentime);
   }
-}
-
-static void
-swfdec_as_date_set_time_to_value (SwfdecAsDate *date, SwfdecAsValue *value)
-{
-  // milliseconds since epoch, UTC, including fractions of milliseconds
-  SWFDEC_AS_VALUE_SET_NUMBER (value, date->milliseconds);
 }
 
 static void
@@ -494,7 +491,7 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  swfdec_as_date_set_time_to_value (date, ret);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, date->milliseconds);
 }
 
 static void
@@ -571,7 +568,7 @@ swfdec_as_date_getTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
 
-  swfdec_as_date_set_time_to_value (date, ret);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, date->milliseconds);
 }
 
 SWFDEC_AS_NATIVE (103, 18, swfdec_as_date_getTimezoneOffset)
@@ -757,7 +754,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_as_value_to_integer (cx, &argv[0]));
   }
 
-  swfdec_as_date_set_time_to_value (date, ret);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, date->milliseconds);
 }
 
 SWFDEC_AS_NATIVE (103, 15, swfdec_as_date_setMilliseconds)

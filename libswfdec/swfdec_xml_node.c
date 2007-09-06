@@ -1007,6 +1007,15 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
+  // special case
+  if (cx->version < 6) {
+    SwfdecAsValue val;
+
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    swfdec_as_object_set_variable_and_flags (object,
+	SWFDEC_AS_STR___constructor__, &val, SWFDEC_AS_VARIABLE_HIDDEN);
+  }
+
   if (argc < 2)
     return;
 

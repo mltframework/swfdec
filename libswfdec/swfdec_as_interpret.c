@@ -409,18 +409,156 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   }
 }
 
+/**
+ * swfdec_action_get_movie_by_path:
+ * @cx: a #SwfdecAsContext
+ * @path: the path to look up
+ * @variable: pointer that takes variable part of the path or %NULL if not 
+ *            allowed
+ *
+ * Looks up a Flash4-compatible path using "/", ":" and "." style syntax. If 
+ * @variable is %NULL, no variable path is allowed.
+ *
+ * Returns: The #SwfdecMovie that was looked up or %NULL if the path does not 
+ *          specify a valid movie.
+ **/
+static gboolean
+swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path, 
+    SwfdecAsObject **object, const char **variable)
+{
+  SwfdecAsObject *movie;
+  const char *s;
+  SwfdecAsValue val;
+  gboolean was_slash = FALSE;
+
+  /* shortcut for the general case */
+  if (strpbrk (path, ".:/") == NULL) {
+    *object = NULL;
+    *variable = path;
+    return TRUE;
+  }
+
+  /* in general, any combination of dot, colon and slash is allowed, but there
+   * is some weird stuff that is not allowed. WE check this first: */
+  /* if a slash is last, no colon or dot may be before it. */
+  s = strrchr (path, '/');
+  if (s != NULL) {
+    const char *dot = strrchr (path, '.');
+    const char *colon = strrchr (path, ':');
+    if (!(dot > s || colon > s) && 
+	(dot != NULL || colon != NULL))
+      return FALSE;
+  }
+  /* if a dot follows a slash, it must be the last seperator */
+  s = strchr (path, '/');
+  if (s) {
+    const char *dot = strchr (s, '.');
+    if (dot && strpbrk (dot + 1, ".:"))
+      return FALSE;
+  }
+  /* a colon at the beginning may not be the only separator */
+  if (path[0] == ':') {
+    if (strpbrk (path + 1, ".:/") == NULL)
+      return FALSE;
+    else
+      path++;
+  }
+
+  movie = cx->frame->target;
+  if (!SWFDEC_IS_MOVIE (movie)) {
+    SWFDEC_FIXME ("target is not a movie");
+  } else {
+    if (path[0] == '/') {
+      /* if path starts with a slash, start from the root movie */
+      while (SWFDEC_MOVIE (movie)->parent)
+	movie = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (movie)->parent);
+      path++;
+      was_slash = TRUE;
+    } else {
+      /* if path starts with "..", move to parent */
+      while (path[0] == '.') {
+	if (path[1] != '.')
+	  return FALSE;
+	movie = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (movie)->parent);
+	if (movie == NULL)
+	  return FALSE;
+	path++;
+	if (path[0] == '/') {
+	  was_slash = TRUE;
+	  path++;
+	} else if (path[0] == ':' || path[0] == '.') {
+	  SWFDEC_FIXME ("what now?");
+	  path++;
+	  was_slash = FALSE;
+	  break;
+	} else {
+	  return FALSE;
+	}
+      }
+    }
+  }
+  while ((s = strpbrk (path, ".:/"))) {
+    const char *var;
+    
+    if (s == path) {
+      if (*s == '/')
+	return FALSE;
+      was_slash = FALSE;
+      path++;
+      continue;
+    }
+    was_slash = *s == '/';
+    var = swfdec_as_context_give_string (cx, g_strndup (path, s - path));
+    if (!swfdec_as_object_get_variable (movie, var, &val) ||
+	!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
+	!SWFDEC_IS_MOVIE ((movie = SWFDEC_AS_VALUE_GET_OBJECT (&val))))
+      return FALSE;
+    path = s + 1;
+  }
+  if (was_slash) {
+    if (*path) {
+      const char *var = swfdec_as_context_get_string (cx, path);
+      movie = SWFDEC_AS_OBJECT (swfdec_movie_get_by_name (SWFDEC_MOVIE (movie), var));
+      if (movie == NULL)
+	return FALSE;
+    }
+    *object = movie;
+    *variable = NULL;
+    return TRUE;
+  } else {
+    *object = movie;
+    *variable = path;
+    return TRUE;
+  }
+}
+
 static void
 swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecAsValue *val;
   const char *s;
+  SwfdecAsObject *object;
 
-  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  swfdec_as_context_eval (cx, NULL, s, swfdec_as_stack_peek (cx, 1));
-#ifdef SWFDEC_WARN_MISSING_PROPERTIES
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx, 1))) {
-    SWFDEC_WARNING ("no variable named %s", s);
+  val = swfdec_as_stack_peek (cx, 1);
+  s = swfdec_as_value_to_string (cx, val);
+  if (swfdec_action_get_movie_by_path (cx, s, &object, &s)) {
+    if (object == NULL)
+      object = swfdec_as_frame_find_variable (cx->frame, s);
+  } else {
+    object = NULL;
   }
+  if (object != NULL) {   
+    if (s) {
+      swfdec_as_object_get_variable (object, swfdec_as_context_get_string (cx, s), val);
+    } else {
+      SWFDEC_AS_VALUE_SET_OBJECT (val, object);
+    }
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+#ifdef SWFDEC_WARN_MISSING_PROPERTIES
+    SWFDEC_WARNING ("no variable named %s", s);
 #endif
+  }
 }
 
 static void

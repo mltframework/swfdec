@@ -37,7 +37,6 @@
 #include "swfdec_sprite.h"
 #include "swfdec_swf_instance.h"
 #include "swfdec_tag.h"
-#include "swfdec_utils.h"
 
 /*** SWFDEC_SPRITE_MOVIE ***/
 
@@ -618,7 +617,7 @@ new_decoder:
 
   if (current->sound_block) {
     movie->sound_stream = swfdec_audio_stream_new (player, 
-	movie->sprite, movie->frame);
+	movie->sprite, movie->frame - 1);
     movie->sound_frame = movie->frame;
   }
   return TRUE;
@@ -636,41 +635,6 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
     g_object_unref (movie->sound_stream);
     movie->sound_stream = NULL;
   }
-}
-
-static SwfdecMovie *
-swfdec_sprite_movie_get_by_name (SwfdecMovie *movie, const char *name)
-{
-  GList *walk;
-  guint version = SWFDEC_AS_OBJECT (movie)->context->version;
-
-  for (walk = movie->list; walk; walk = walk->next) {
-    SwfdecMovie *cur = walk->data;
-    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
-      continue;
-    if ((version >= 7 && cur->name == name) ||
-	swfdec_str_case_equal (cur->name, name))
-      return cur;
-  }
-  return NULL;
-}
-
-static gboolean
-swfdec_sprite_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags)
-{
-  SwfdecMovie *movie;
-
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->get (object, orig, variable, val, flags))
-    return TRUE;
-  
-  movie = swfdec_sprite_movie_get_by_name (SWFDEC_MOVIE (object), variable);
-  if (movie == NULL)
-    return FALSE;
-
-  SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
-  *flags = 0;
-  return TRUE;
 }
 
 static void
@@ -696,7 +660,6 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   object_class->dispose = swfdec_sprite_movie_dispose;
 
-  asobject_class->get = swfdec_sprite_movie_get_variable;
   asobject_class->mark = swfdec_sprite_movie_mark;
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;

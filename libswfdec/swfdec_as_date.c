@@ -185,9 +185,18 @@ swfdec_as_date_days_in_year (int year)
 
 #define IS_LEAP_YEAR(year) (swfdec_as_date_days_in_year ((year)) == 366)
 
-#define DAYS_SINCE_UTC_FOR_YEAR(year) \
-  (gint64)((365 * ((year) - 1970) + floor (((year) - 1969) / 4.0f) - \
-  floor (((year) - 1901) / 100.0f)) + floor(((year) - 1601) / 400.0f))
+static gint64
+swfdec_as_date_days_since_utc_for_year (int year)
+{
+  double year_big = year;
+
+  return (
+      365 * (year_big - 1970) +
+      floor (((year_big - 1969) / 4.0f)) -
+      floor (((year_big - 1901) / 100.0f)) +
+      floor (((year_big - 1601) / 400.0f))
+    );
+}
 
 static const int month_offsets[2][13] = {
   // Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total
@@ -206,13 +215,13 @@ swfdec_as_date_seconds_to_brokentime (gint64 seconds, BrokenTime *brokentime)
   remaining = seconds;
 
   brokentime->seconds = remaining % SECONDS_PER_MINUTE;
-  remaining = floor (remaining / SECONDS_PER_MINUTE);
+  remaining = remaining / SECONDS_PER_MINUTE;
 
   brokentime->minutes = remaining % MINUTES_PER_HOUR;
-  remaining = floor (remaining / MINUTES_PER_HOUR);
+  remaining = remaining / MINUTES_PER_HOUR;
 
   brokentime->hours = remaining % HOURS_PER_DAY;
-  remaining = floor (remaining / HOURS_PER_DAY);
+  remaining = remaining / HOURS_PER_DAY;
 
   if (seconds < 0) {
     if (brokentime->seconds < 0) {
@@ -243,8 +252,8 @@ swfdec_as_date_seconds_to_brokentime (gint64 seconds, BrokenTime *brokentime)
   while (low < high) {
     int pivot = ((double)low + (double)high) / 2.0;
 
-    if (DAYS_SINCE_UTC_FOR_YEAR (pivot) <= remaining) {
-      if (DAYS_SINCE_UTC_FOR_YEAR (pivot + 1) > remaining) {
+    if (swfdec_as_date_days_since_utc_for_year (pivot) <= remaining) {
+      if (swfdec_as_date_days_since_utc_for_year (pivot + 1) > remaining) {
 	high = low = pivot;
       } else {
 	low = pivot + 1;
@@ -255,7 +264,7 @@ swfdec_as_date_seconds_to_brokentime (gint64 seconds, BrokenTime *brokentime)
   }
   brokentime->year = low - 1900;
 
-  remaining -= DAYS_SINCE_UTC_FOR_YEAR (low);
+  remaining -= swfdec_as_date_days_since_utc_for_year (low);
   if (remaining < 0)
     remaining += swfdec_as_date_days_in_year (low);
 
@@ -268,7 +277,7 @@ swfdec_as_date_seconds_to_brokentime (gint64 seconds, BrokenTime *brokentime)
     brokentime->month++;
 
   brokentime->day_of_month =
-    brokentime->day_of_year - month_offsets[0][brokentime->month] + 1;
+    brokentime->day_of_year - month_offsets[leap][brokentime->month] + 1;
 }
 
 static gint64
@@ -279,7 +288,7 @@ swfdec_as_date_brokentime_to_seconds (BrokenTime *brokentime)
 
   leap = (IS_LEAP_YEAR (1900 + brokentime->year) ? 1 : 0);
 
-  seconds = (gint64)DAYS_SINCE_UTC_FOR_YEAR (1900 + brokentime->year) *
+  seconds = swfdec_as_date_days_since_utc_for_year (1900 + brokentime->year) *
     (gint64)SECONDS_PER_DAY;
 
   seconds += (month_offsets[leap][brokentime->month] +

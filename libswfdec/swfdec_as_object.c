@@ -1122,7 +1122,8 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
-static void
+SWFDEC_AS_NATIVE (101, 5, swfdec_as_object_hasOwnProperty)
+void
 swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {

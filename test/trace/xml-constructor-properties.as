@@ -3,6 +3,7 @@
 // Tests for when XML.prototype's native properties are created
 
 var properties = [
+  "__constructor__",
   "contentType",
   "docTypeDecl",
   "ignoreWhite",

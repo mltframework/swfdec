@@ -58,6 +58,11 @@ swfdec_as_date_init (SwfdecAsDate *date)
 
 /*** Helper functions ***/
 
+#define MILLISECONDS_PER_SECOND 1000
+#define MILLISECONDS_PER_MINUTE 60000
+#define MILLISECONDS_PER_HOUR 3600000
+#define MILLISECONDS_PER_DAY 86400000
+
 #define SECONDS_PER_MINUTE 60
 #define MINUTES_PER_HOUR 60
 #define HOURS_PER_DAY 24
@@ -66,7 +71,14 @@ swfdec_as_date_init (SwfdecAsDate *date)
 #define SECONDS_PER_HOUR 3600
 #define SECONDS_PER_DAY 86400
 
+static const int month_offsets[2][13] = {
+  // Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total
+  {    0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
+  {    0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
+};
+
 typedef struct {
+  int milliseconds;
   int seconds;
   int minutes;
   int hours;
@@ -119,6 +131,140 @@ swfdec_as_date_value_to_number_and_integer (SwfdecAsContext *context,
   return TRUE;
 }
 
+static int
+swfdec_as_date_days_in_year (int year)
+{
+  if (year % 4) {
+    return 365;
+  } else if (year % 100) {
+    return 366;
+  } else if (year % 400) {
+    return 365;
+  } else {
+    return 366;
+  }
+}
+
+#define IS_LEAP(year) (swfdec_as_date_days_in_year ((year)) == 366)
+
+static double
+swfdec_as_date_days_since_utc_for_year (int year)
+{
+  double year_big = year;
+
+  return (
+      365 * (year_big - 1970) +
+      floor (((year_big - 1969) / 4.0f)) -
+      floor (((year_big - 1901) / 100.0f)) +
+      floor (((year_big - 1601) / 400.0f))
+    );
+}
+
+static void
+swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
+    BrokenTime *brokentime)
+{
+  int leap, low, high;
+  double remaining;
+
+  g_assert (brokentime != NULL);
+
+  remaining = milliseconds;
+
+  brokentime->milliseconds = fmod (remaining, MILLISECONDS_PER_SECOND);
+  remaining = floor (remaining / MILLISECONDS_PER_SECOND);
+
+  brokentime->seconds = fmod (remaining, SECONDS_PER_MINUTE);
+  remaining = floor (remaining / SECONDS_PER_MINUTE);
+
+  brokentime->minutes = fmod (remaining, MINUTES_PER_HOUR);
+  remaining = floor (remaining / MINUTES_PER_HOUR);
+
+  brokentime->hours = fmod (remaining, HOURS_PER_DAY);
+  remaining = floor (remaining / HOURS_PER_DAY);
+
+  if (milliseconds < 0) {
+    if (brokentime->milliseconds < 0)
+      brokentime->milliseconds += MILLISECONDS_PER_SECOND;
+    if (brokentime->seconds < 0)
+      brokentime->seconds += SECONDS_PER_MINUTE;
+    if (brokentime->minutes < 0)
+      brokentime->minutes += MINUTES_PER_HOUR;
+    if (brokentime->hours < 0)
+      brokentime->hours += HOURS_PER_DAY;
+  }
+
+  // now remaining == days since 1970
+
+  brokentime->day_of_week = fmod ((remaining + 4), 7);
+  if (brokentime->day_of_week < 0)
+    brokentime->day_of_week += 7;
+
+  low =
+    floor ((milliseconds >= 0 ? remaining / 366.0 : remaining / 365.0)) + 1970;
+  high =
+    ceil ((milliseconds >= 0 ? remaining / 365.0 : remaining / 366.0)) + 1970;
+
+  while (low < high) {
+    int pivot = ((double)low + (double)high) / 2.0;
+
+    if (swfdec_as_date_days_since_utc_for_year (pivot) <= remaining) {
+      if (swfdec_as_date_days_since_utc_for_year (pivot + 1) > remaining) {
+	high = low = pivot;
+      } else {
+	low = pivot + 1;
+      }
+    } else {
+      high = pivot - 1;
+    }
+  }
+  brokentime->year = low - 1900;
+
+  remaining -= swfdec_as_date_days_since_utc_for_year (low);
+  g_assert (remaining >= 0 && remaining <= 365);
+
+  leap = (IS_LEAP (low) ? 1 : 0);
+
+  brokentime->month = 0;
+  while (month_offsets[leap][brokentime->month + 1] <= remaining)
+    brokentime->month++;
+
+  brokentime->day_of_month =
+    remaining - month_offsets[leap][brokentime->month] + 1;
+}
+
+static double
+swfdec_as_date_brokentime_to_milliseconds (const BrokenTime *brokentime)
+{
+  double milliseconds;
+  int month, year;
+
+  year = 1900 + brokentime->year;
+
+  milliseconds = brokentime->milliseconds;
+  milliseconds += brokentime->seconds * MILLISECONDS_PER_SECOND;
+  milliseconds += brokentime->minutes * MILLISECONDS_PER_MINUTE;
+  milliseconds += brokentime->hours * MILLISECONDS_PER_HOUR;
+  milliseconds += (double)(brokentime->day_of_month - 1) * MILLISECONDS_PER_DAY;
+
+  milliseconds +=
+    swfdec_as_date_days_since_utc_for_year (year) * MILLISECONDS_PER_DAY;
+
+  for (month = brokentime->month; month < 0; month += MONTHS_PER_YEAR) {
+    milliseconds -=
+      (double)month_offsets[IS_LEAP (--year)][MONTHS_PER_YEAR] * MILLISECONDS_PER_DAY;
+  }
+
+  for (month = month; month >= MONTHS_PER_YEAR; month -= MONTHS_PER_YEAR) {
+    milliseconds +=
+      (double)month_offsets[IS_LEAP (year++)][MONTHS_PER_YEAR] * MILLISECONDS_PER_DAY;
+  }
+
+  milliseconds += (double)month_offsets[IS_LEAP (year)][month] * MILLISECONDS_PER_DAY;
+
+  return milliseconds;
+}
+
 // returns TRUE with Infinite and -Infinite, because those values should be
 // handles like 0 that is returned by below functions
 static gboolean
@@ -151,7 +297,7 @@ swfdec_as_date_set_milliseconds_utc (SwfdecAsDate *date, double milliseconds)
   date->milliseconds = milliseconds;
 }
 
-static double
+/*static double
 swfdec_as_date_get_milliseconds_local (const SwfdecAsDate *date)
 {
   g_assert (swfdec_as_date_is_valid (date));
@@ -161,7 +307,7 @@ swfdec_as_date_get_milliseconds_local (const SwfdecAsDate *date)
   } else {
     return 0;
   }
-}
+}*/
 
 static void
 swfdec_as_date_set_milliseconds_local (SwfdecAsDate *date, double milliseconds)
@@ -170,205 +316,53 @@ swfdec_as_date_set_milliseconds_local (SwfdecAsDate *date, double milliseconds)
     milliseconds - (double) date->utc_offset * 60 * 1000;
 }
 
-static int
-swfdec_as_date_days_in_year (int year)
-{
-  if (year % 4) {
-    return 365;
-  } else if (year % 100) {
-    return 366;
-  } else if (year % 400) {
-    return 365;
-  } else {
-    return 366;
-  }
-}
-
-#define IS_LEAP(year) (swfdec_as_date_days_in_year ((year)) == 366)
-
-static double
-swfdec_as_date_days_since_utc_for_year (int year)
-{
-  double year_big = year;
-
-  return (
-      365 * (year_big - 1970) +
-      floor (((year_big - 1969) / 4.0f)) -
-      floor (((year_big - 1901) / 100.0f)) +
-      floor (((year_big - 1601) / 400.0f))
-    );
-}
-
-static const int month_offsets[2][13] = {
-  // Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec  Total
-  {    0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
-  {    0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
-};
-
-static void
-swfdec_as_date_seconds_to_brokentime (double seconds, BrokenTime *brokentime)
-{
-  int leap, low, high;
-  double remaining;
-
-  g_assert (brokentime != NULL);
-
-  remaining = seconds;
-
-  brokentime->seconds = fmod (remaining, SECONDS_PER_MINUTE);
-  remaining = floor (remaining / SECONDS_PER_MINUTE);
-
-  brokentime->minutes = fmod (remaining, MINUTES_PER_HOUR);
-  remaining = floor (remaining / MINUTES_PER_HOUR);
-
-  brokentime->hours = fmod (remaining, HOURS_PER_DAY);
-  remaining = floor (remaining / HOURS_PER_DAY);
-
-  if (seconds < 0) {
-    if (brokentime->seconds < 0) {
-      brokentime->seconds += SECONDS_PER_MINUTE;
-    }
-    if (brokentime->minutes < 0) {
-      brokentime->minutes += MINUTES_PER_HOUR;
-    }
-    if (brokentime->hours < 0) {
-      brokentime->hours += HOURS_PER_DAY;
-    }
-  }
-
-  // now remaining == days since 1970
-
-  brokentime->day_of_week = fmod ((remaining + 4), 7);
-  if (brokentime->day_of_week < 0)
-    brokentime->day_of_week += 7;
-
-  low = floor ((seconds >= 0 ? remaining / 366.0 : remaining / 365.0)) + 1970;
-  high = ceil ((seconds >= 0 ? remaining / 365.0 : remaining / 366.0)) + 1970;
-
-  while (low < high) {
-    int pivot = ((double)low + (double)high) / 2.0;
-
-    if (swfdec_as_date_days_since_utc_for_year (pivot) <= remaining) {
-      if (swfdec_as_date_days_since_utc_for_year (pivot + 1) > remaining) {
-	high = low = pivot;
-      } else {
-	low = pivot + 1;
-      }
-    } else {
-      high = pivot - 1;
-    }
-  }
-  brokentime->year = low - 1900;
-
-  remaining -= swfdec_as_date_days_since_utc_for_year (low);
-  g_assert (remaining >= 0 && remaining <= 365);
-
-  leap = (IS_LEAP (low) ? 1 : 0);
-
-  brokentime->month = 0;
-  while (month_offsets[leap][brokentime->month + 1] <= remaining)
-    brokentime->month++;
-
-  brokentime->day_of_month =
-    remaining - month_offsets[leap][brokentime->month] + 1;
-}
-
-static double
-swfdec_as_date_brokentime_to_seconds (BrokenTime *brokentime)
-{
-  double seconds;
-  int month, year;
-
-  year = 1900 + brokentime->year;
-
-  seconds = swfdec_as_date_days_since_utc_for_year (year) * SECONDS_PER_DAY;
-
-  for (month = brokentime->month; month < 0; month += MONTHS_PER_YEAR) {
-    seconds -=
-      month_offsets[IS_LEAP (--year)][MONTHS_PER_YEAR] * SECONDS_PER_DAY;
-  }
-
-  for (month = month; month >= MONTHS_PER_YEAR; month -= MONTHS_PER_YEAR) {
-    seconds +=
-      month_offsets[IS_LEAP (year++)][MONTHS_PER_YEAR] * SECONDS_PER_DAY;
-  }
-
-  seconds += month_offsets[IS_LEAP (year)][month] * SECONDS_PER_DAY;
-  seconds += (brokentime->day_of_month - 1) * SECONDS_PER_DAY;
-  seconds += brokentime->hours * SECONDS_PER_HOUR;
-  seconds += brokentime->minutes * SECONDS_PER_MINUTE;
-  seconds += brokentime->seconds;
-
-  return seconds;
-}
-
 static void
 swfdec_as_date_get_brokentime_utc (const SwfdecAsDate *date,
     BrokenTime *brokentime)
 {
-  double seconds;
-
   g_assert (swfdec_as_date_is_valid (date));
 
   if (isfinite (date->milliseconds)) {
-    seconds = floor (date->milliseconds / 1000);
+    swfdec_as_date_milliseconds_to_brokentime (date->milliseconds, brokentime);
   } else {
-    seconds = 0;
+    swfdec_as_date_milliseconds_to_brokentime (0, brokentime);
   }
-
-  swfdec_as_date_seconds_to_brokentime (seconds, brokentime);
 }
 
 static void
 swfdec_as_date_set_brokentime_utc (SwfdecAsDate *date, BrokenTime *brokentime)
 {
-  double seconds = swfdec_as_date_brokentime_to_seconds (brokentime);
-
-  if (isfinite (date->milliseconds)) {
-    date->milliseconds -= floor (date->milliseconds / 1000) * 1000;
-  } else {
-    date->milliseconds = 0;
-  }
-
-  date->milliseconds += (double) seconds * 1000;
+  date->milliseconds = swfdec_as_date_brokentime_to_milliseconds (brokentime);
 }
 
 static void
 swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date,
     BrokenTime *brokentime)
 {
-  double seconds;
+  double milliseconds;
 
   g_assert (swfdec_as_date_is_valid (date));
 
   if (isfinite (date->milliseconds)) {
-    seconds =
-      floor (date->milliseconds / 1000) + date->utc_offset * 60;
+    milliseconds = date->milliseconds + date->utc_offset * 60 * 1000;
   } else {
-    seconds = 0;
+    milliseconds = 0;
   }
 
-  swfdec_as_date_seconds_to_brokentime (seconds, brokentime);
+  swfdec_as_date_milliseconds_to_brokentime (milliseconds, brokentime);
 }
 
 static void
 swfdec_as_date_set_brokentime_local (SwfdecAsDate *date, BrokenTime *brokentime)
 {
-  double seconds =
-    swfdec_as_date_brokentime_to_seconds (brokentime) - date->utc_offset * 60;
-
-  if (isfinite (date->milliseconds)) {
-    date->milliseconds -= floor (date->milliseconds / 1000) * 1000;
-  } else {
-    date->milliseconds = 0;
-  }
-
-  date->milliseconds += (double) seconds * 1000;
+  date->milliseconds = swfdec_as_date_brokentime_to_milliseconds (brokentime) -
+    date->utc_offset * 60 * 1000;
 }
 
 // set and get function helpers
 
 typedef enum {
+  FIELD_MILLISECONDS,
   FIELD_SECONDS,
   FIELD_MINUTES,
   FIELD_HOURS,
@@ -380,6 +374,7 @@ typedef enum {
 } field_t;
 
 static int field_offsets[] = {
+  G_STRUCT_OFFSET (BrokenTime, milliseconds),
   G_STRUCT_OFFSET (BrokenTime, seconds),
   G_STRUCT_OFFSET (BrokenTime, minutes),
   G_STRUCT_OFFSET (BrokenTime, hours),
@@ -599,23 +594,8 @@ void
 swfdec_as_date_getMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date;
-  double milliseconds;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
-
-  if (!swfdec_as_date_is_valid (date)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
-    return;
-  }
-
-  milliseconds = swfdec_as_date_get_milliseconds_local (date);
-
-  if (milliseconds >= 0 || floor (fmod (milliseconds, 1000)) == 0) {
-    SWFDEC_AS_VALUE_SET_INT (ret, floor (fmod (milliseconds, 1000)));
-  } else {
-    SWFDEC_AS_VALUE_SET_INT (ret, 1000 + floor (fmod (milliseconds, 1000)));
-  }
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MILLISECONDS,
+      FALSE);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 8, swfdec_as_date_getUTCMilliseconds)
@@ -623,23 +603,8 @@ void
 swfdec_as_date_getUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date;
-  double milliseconds;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
-
-  if (!swfdec_as_date_is_valid (date)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
-    return;
-  }
-
-  milliseconds = swfdec_as_date_get_milliseconds_utc (date);
-
-  if (milliseconds >= 0 || floor (fmod (milliseconds, 1000)) == 0) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, floor (fmod (milliseconds, 1000)));
-  } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, 1000 + floor (fmod (milliseconds, 1000)));
-  }
+  swfdec_as_date_get_field (cx, object, argc, argv, ret, FIELD_MILLISECONDS,
+      TRUE);
 }
 
 SWFDEC_AS_NATIVE (103, 7, swfdec_as_date_getSeconds)
@@ -800,18 +765,8 @@ void
 swfdec_as_date_setMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
-
-  if (swfdec_as_date_is_valid (date) && argc > 0) {
-    double milliseconds = swfdec_as_date_get_milliseconds_local (date);
-    milliseconds = milliseconds - fmod (milliseconds, 1000) +
-      swfdec_as_value_to_integer (cx, &argv[0]);
-    swfdec_as_date_set_milliseconds_local (date, milliseconds);
-  }
-
-  swfdec_as_date_set_time_to_value (date, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MILLISECONDS,
+      FALSE);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 15, swfdec_as_date_setUTCMilliseconds)
@@ -819,18 +774,8 @@ void
 swfdec_as_date_setUTCMilliseconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsDate *date;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
-
-  if (swfdec_as_date_is_valid (date) && argc > 0) {
-    double milliseconds = swfdec_as_date_get_milliseconds_utc (date);
-    milliseconds = milliseconds - fmod (milliseconds, 1000) +
-      swfdec_as_value_to_integer (cx, &argv[0]);
-    swfdec_as_date_set_milliseconds_utc (date, milliseconds);
-  }
-
-  swfdec_as_date_set_time_to_value (date, ret);
+  swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MILLISECONDS,
+      TRUE);
 }
 
 SWFDEC_AS_NATIVE (103, 14, swfdec_as_date_setSeconds)
@@ -949,7 +894,6 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   guint i;
-  double milliseconds;
   int year, num;
   double d;
   BrokenTime brokentime;
@@ -1041,19 +985,18 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     brokentime.year = year;
   }
 
-  milliseconds = swfdec_as_date_brokentime_to_seconds (&brokentime) * 1000;
-
   if (argc > i) {
     if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
 	  &num)) {
-      milliseconds += num;
+      brokentime.milliseconds = num;
     } else {
       SWFDEC_AS_VALUE_SET_NUMBER (ret, d);
       return;
     }
   }
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, milliseconds);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+      swfdec_as_date_brokentime_to_milliseconds (&brokentime));
 }
 
 // Constructor
@@ -1109,7 +1052,6 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   else // year, month etc. local
   {
-    double milliseconds;
     int year, num;
     double d;
     BrokenTime brokentime;
@@ -1187,19 +1129,19 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       brokentime.year = year;
     }
 
-    milliseconds = swfdec_as_date_brokentime_to_seconds (&brokentime) * 1000;
-
     if (argc > i) {
       if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
 	    &num)) {
-	milliseconds += num;
+	brokentime.milliseconds += num;
       } else {
 	date->milliseconds = d;
       }
     }
 
-    if (date->milliseconds == 0)
-      swfdec_as_date_set_milliseconds_local (date, milliseconds);
+    if (date->milliseconds == 0) {
+      swfdec_as_date_set_milliseconds_local (date,
+	  swfdec_as_date_brokentime_to_milliseconds (&brokentime));
+    }
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);

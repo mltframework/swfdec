@@ -1458,6 +1458,11 @@ EXTRA_DIST = \
 	xml-properties-6.swf.trace \
 	xml-properties-7.swf \
 	xml-properties-7.swf.trace \
+	xml-properties2.as \
+	xml-properties2-6.swf \
+	xml-properties2-6.swf.trace \
+	xml-properties2-7.swf \
+	xml-properties2-7.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

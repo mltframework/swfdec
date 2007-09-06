@@ -117,12 +117,37 @@ swfdec_as_date_days_since_utc_for_year (int year)
     );
 }
 
+static int
+swfdec_as_date_days_from_utc_to_year (double days)
+{
+  int low, high, pivot;
+
+  low = floor ((days >= 0 ? days / 366.0 : days / 365.0)) + 1970;
+  high = ceil ((days >= 0 ? days / 365.0 : days / 366.0)) + 1970;
+
+  while (low < high) {
+    pivot = ((double)low + (double)high) / 2.0;
+
+    if (swfdec_as_date_days_since_utc_for_year (pivot) <= days) {
+      if (swfdec_as_date_days_since_utc_for_year (pivot + 1) > days) {
+	high = low = pivot;
+      } else {
+	low = pivot + 1;
+      }
+    } else {
+      high = pivot - 1;
+    }
+  }
+
+  return low;
+}
+
 static void
 swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
     BrokenTime *brokentime)
 {
-  int leap, low, high;
   double remaining;
+  int year;
 
   g_assert (brokentime != NULL);
 
@@ -157,37 +182,18 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
   if (brokentime->day_of_week < 0)
     brokentime->day_of_week += 7;
 
-  low =
-    floor ((milliseconds >= 0 ? remaining / 366.0 : remaining / 365.0)) + 1970;
-  high =
-    ceil ((milliseconds >= 0 ? remaining / 365.0 : remaining / 366.0)) + 1970;
+  year = swfdec_as_date_days_from_utc_to_year (remaining);
+  brokentime->year = year - 1900;
 
-  while (low < high) {
-    int pivot = ((double)low + (double)high) / 2.0;
-
-    if (swfdec_as_date_days_since_utc_for_year (pivot) <= remaining) {
-      if (swfdec_as_date_days_since_utc_for_year (pivot + 1) > remaining) {
-	high = low = pivot;
-      } else {
-	low = pivot + 1;
-      }
-    } else {
-      high = pivot - 1;
-    }
-  }
-  brokentime->year = low - 1900;
-
-  remaining -= swfdec_as_date_days_since_utc_for_year (low);
+  remaining -= swfdec_as_date_days_since_utc_for_year (year);
   g_assert (remaining >= 0 && remaining <= 365);
 
-  leap = (IS_LEAP (low) ? 1 : 0);
-
   brokentime->month = 0;
-  while (month_offsets[leap][brokentime->month + 1] <= remaining)
+  while (month_offsets[IS_LEAP (year)][brokentime->month + 1] <= remaining)
     brokentime->month++;
 
   brokentime->day_of_month =
-    remaining - month_offsets[leap][brokentime->month] + 1;
+    remaining - month_offsets[IS_LEAP (year)][brokentime->month] + 1;
 }
 
 static double

@@ -545,6 +545,13 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
+	hasownproperty-propflags.as \
+	hasownproperty-propflags-5.swf \
+	hasownproperty-propflags-5.swf.trace \
+	hasownproperty-propflags-6.swf \
+	hasownproperty-propflags-6.swf.trace \
+	hasownproperty-propflags-7.swf \
+	hasownproperty-propflags-7.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \

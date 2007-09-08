@@ -1237,10 +1237,13 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
 void
 swfdec_player_unlock (SwfdecPlayer *player)
 {
+  SwfdecAsContext *context;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
-
   context = SWFDEC_AS_CONTEXT (player);
+  g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_INTERRUPTED);
+
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING)
     swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
   swfdec_player_unlock_soft (player);

@@ -5,8 +5,8 @@
 trace_properties (_global.Infinity, "_global", "Infinity");
 trace_properties (_global.NaN, "_global", "NaN");
 trace_properties (_global.o, "_global", "o");
-// _global.flash is undefined, so we need to check extra
-//trace (hasOwnProperty (_global, "flash"));
+// Need to unhide it first on version < 8
+//ASSetPropFlags (_global, "flash", 0, 5248);
 //trace_properties (_global.flash, "_global", "flash");
 
 loadMovie ("FSCommand:quit", "");

@@ -711,6 +711,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   guint action, len;
   guint8 *data;
   int version;
+  guint original_version;
   void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);
   gboolean check_scope; /* some opcodes avoid a scope check */
 
@@ -727,6 +728,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
 
   last_frame = context->last_frame;
   context->last_frame = context->frame->next;
+  original_version = context->version;
 start:
   /* setup data */
   frame = context->frame;
@@ -899,6 +901,7 @@ error:
     swfdec_as_frame_return (context->frame, NULL);
 out:
   context->last_frame = last_frame;
+  context->version = original_version;
   return;
 }
 

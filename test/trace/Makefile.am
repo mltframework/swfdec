@@ -1216,6 +1216,13 @@ EXTRA_DIST = \
 	string-lastIndexOf-7.swf.trace \
 	string-lastIndexOf-8.swf \
 	string-lastIndexOf-8.swf.trace \
+	string-slice.as \
+	string-slice-5.swf \
+	string-slice-5.swf.trace \
+	string-slice-6.swf \
+	string-slice-6.swf.trace \
+	string-slice-7.swf \
+	string-slice-7.swf.trace \
 	string-split.as \
 	string-split-5.swf \
 	string-split-5.swf.trace \

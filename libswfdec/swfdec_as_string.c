@@ -454,6 +454,23 @@ swfdec_as_string_split (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
+static void
+swfdec_as_string_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  guint i;
+  GString *string;
+
+  string = g_string_new (swfdec_as_string_object_to_string (cx, object));
+
+  for (i = 0; i < argc; i++) {
+    string = g_string_append (string, swfdec_as_value_to_string (cx, &argv[i]));
+  }
+
+  SWFDEC_AS_VALUE_SET_STRING (ret,
+      swfdec_as_context_give_string (cx, g_string_free (string, FALSE)));
+}
+
 static const char *
 swfdec_as_str_sub (SwfdecAsContext *cx, const char *str, guint offset, guint len)
 {
@@ -836,6 +853,7 @@ swfdec_as_string_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toUpperCase, SWFDEC_TYPE_AS_OBJECT, swfdec_as_string_toUpperCase, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, SWFDEC_TYPE_AS_STRING, swfdec_as_string_valueOf, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_split, SWFDEC_TYPE_AS_OBJECT, swfdec_as_string_split, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_concat, SWFDEC_TYPE_AS_OBJECT, swfdec_as_string_concat, 0);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

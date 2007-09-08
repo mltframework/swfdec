@@ -32,6 +32,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_XML_NODE)
 
@@ -759,8 +760,6 @@ void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  static gboolean initialized = FALSE;
-
   if (!swfdec_as_context_is_constructing (cx)) {
     SWFDEC_FIXME ("What do we do if not constructing?");
     return;
@@ -768,7 +767,7 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_assert (SWFDEC_IS_XML (object));
 
-  if (!initialized) {
+  if (!SWFDEC_PLAYER (cx)->xml_properties_initialized) {
     SwfdecAsValue val;
     SwfdecAsObject *proto;
 
@@ -790,7 +789,7 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_xml_add_variable (proto, SWFDEC_AS_STR_loaded,
 	swfdec_xml_get_loaded, swfdec_xml_set_loaded);
 
-    initialized = TRUE;
+    SWFDEC_PLAYER (cx)->xml_properties_initialized = TRUE;
   }
 
   swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),

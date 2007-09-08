@@ -8,6 +8,6 @@ _global.Boolean = function
     valueOf (hp) = function
       constructor (hp) = _global.Object.constructor
 local.a = object
-  __constructor__ (h) = undefined
+  __constructor__ (hn) = _global.Boolean
   constructor (h) = _global.Boolean
 local.b = boolean : true

@@ -81,6 +81,6 @@ _global.Date = function
       constructor (hp) = _global.Object.constructor
     valueOf (hp) = _global.Date.prototype.getTime
 local.a = object
-  __constructor__ (h) = undefined
+  __constructor__ (hn) = _global.Date
   constructor (h) = _global.Date
 local.b = number : 439776000000

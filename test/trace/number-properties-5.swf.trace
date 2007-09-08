@@ -13,6 +13,6 @@ _global.Number = function
     valueOf (hp) = function
       constructor (hp) = _global.Object.constructor
 local.a = object
-  __constructor__ (h) = undefined
+  __constructor__ (hn) = _global.Number
   constructor (h) = _global.Number
 local.b = number : 42

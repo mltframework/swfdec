@@ -44,7 +44,8 @@ void		swfdec_as_function_init_context (SwfdecAsContext *	context,
 /* swfdec_as_context.c */
 void		swfdec_as_context_run_init_script (SwfdecAsContext *	context,
 						 const guint8 *		data,
-						 gsize			length);
+						 gsize			length,
+						 guint			version);
 
 /* swfdec_as_object.c */
 typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;

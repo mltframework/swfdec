@@ -381,7 +381,7 @@ swfdec_as_context_gc (SwfdecAsContext *context)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->frame == NULL);
-  g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_NEW);
+  g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_RUNNING);
 
   if (context->state == SWFDEC_AS_CONTEXT_ABORTED)
     return;
@@ -412,8 +412,7 @@ void
 swfdec_as_context_maybe_gc (SwfdecAsContext *context)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  if (context->state == SWFDEC_AS_CONTEXT_ABORTED)
-    return;
+  g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_RUNNING);
   g_return_if_fail (context->frame == NULL);
 
   if (swfdec_as_context_needs_gc (context))

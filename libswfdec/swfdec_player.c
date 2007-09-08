@@ -1240,7 +1240,9 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
 
-  swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
+  context = SWFDEC_AS_CONTEXT (player);
+  if (context->state == SWFDEC_AS_CONTEXT_RUNNING)
+    swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
   swfdec_player_unlock_soft (player);
   g_object_unref (player);
 }

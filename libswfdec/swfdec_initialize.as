@@ -65,7 +65,7 @@ ASSetPropFlags(Key, null, 7);
 
 /*** MOUSE ***/
 
-Mouse = new Object ();
+Mouse = { };
 Mouse.show = ASnative (5, 0);
 Mouse.hide = ASnative (5, 1);
 AsBroadcaster.initialize (Mouse);
@@ -73,7 +73,7 @@ ASSetPropFlags(Mouse, null, 7);
 
 /*** STAGE ***/
 
-Stage = new Object ();
+Stage = { };
 AsBroadcaster.initialize (Stage);
 ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height", 1);
 

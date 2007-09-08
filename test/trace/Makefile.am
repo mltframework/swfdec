@@ -1172,6 +1172,13 @@ EXTRA_DIST = \
 	stage-size-7.swf.trace \
 	stage-size-8.swf \
 	stage-size-8.swf.trace \
+	string-concat.as \
+	string-concat-5.swf \
+	string-concat-5.swf.trace \
+	string-concat-6.swf \
+	string-concat-6.swf.trace \
+	string-concat-7.swf \
+	string-concat-7.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \

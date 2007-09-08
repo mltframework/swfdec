@@ -1127,14 +1127,21 @@ void
 swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+  SwfdecAsVariable *var;
   const char *name;
 
   name = swfdec_as_value_to_string (object->context, &argv[0]);
-  
-  if (swfdec_as_object_hash_lookup (object, name))
-    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
-  else
-    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  if (!(var = swfdec_as_object_hash_lookup (object, name)))
+    return;
+
+  /* This functions only checks NOT 6 flag, and checks it on ALL VERSIONS */
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_NOT_6)
+    return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
 static void

@@ -36,6 +36,9 @@ valueOf called with
 25: toString!
 26: valueOf!
 26: toString!
+,,,,
+,,
+
 >>> split ("(0) undefined (undefined)'")
 2
 

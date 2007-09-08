@@ -4,6 +4,11 @@ trace ("Check String.split()");
 
 #include "values.as"
 
+s = new String ("aaaa");
+trace (s.split ("a"));
+trace (s.split ("a", 3));
+trace (s.split ("a", -2));
+
 s = names.toString ();
 for (i = 0; i < values.length; i++) {
   trace (">>> split (\"" + names[i] + "'\")");

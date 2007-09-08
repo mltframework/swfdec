@@ -1,2 +1,7 @@
 _global.AsBroadcaster = function
-  no children
+  addListener (hp) = undefined
+  broadcastMessage (hp) = undefined
+  constructor (hp) = undefined
+  initialize (hp) = undefined
+  prototype (hp) = undefined
+  removeListener (hp) = undefined

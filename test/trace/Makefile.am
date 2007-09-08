@@ -96,8 +96,6 @@ EXTRA_DIST = \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
 	array-properties.as \
-	array-properties-5.swf \
-	array-properties-5.swf.trace \
 	array-properties-6.swf \
 	array-properties-6.swf.trace \
 	array-properties-7.swf \
@@ -187,8 +185,6 @@ EXTRA_DIST = \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
 	boolean-properties.as \
-	boolean-properties-5.swf \
-	boolean-properties-5.swf.trace \
 	boolean-properties-6.swf \
 	boolean-properties-6.swf.trace \
 	boolean-properties-7.swf \
@@ -337,8 +333,6 @@ EXTRA_DIST = \
 	date-7.swf \
 	date-7.swf.trace \
 	date-properties.as \
-	date-properties-5.swf \
-	date-properties-5.swf.trace \
 	date-properties-6.swf \
 	date-properties-6.swf.trace \
 	date-properties-7.swf \
@@ -724,8 +718,6 @@ EXTRA_DIST = \
 	number.swf \
 	number.swf.trace \
 	number-properties.as \
-	number-properties-5.swf \
-	number-properties-5.swf.trace \
 	number-properties-6.swf \
 	number-properties-6.swf.trace \
 	number-properties-7.swf \
@@ -1408,8 +1400,6 @@ EXTRA_DIST = \
 	values.as \
 	video.flv \
 	video-properties.as \
-	video-properties-5.swf \
-	video-properties-5.swf.trace \
 	video-properties-6.swf \
 	video-properties-6.swf.trace \
 	video-properties-7.swf \

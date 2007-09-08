@@ -265,6 +265,11 @@ EXTRA_DIST = \
 	color-getters.swf.trace \
 	color-new.swf \
 	color-new.swf.trace \
+	color-properties.as \
+	color-properties-6.swf\
+	color-properties-6.swf.trace\
+	color-properties-7.swf\
+	color-properties-7.swf.trace\
 	color-setRGB.swf \
 	color-setRGB.swf.trace \
 	color-setTransform-alpha.swf \

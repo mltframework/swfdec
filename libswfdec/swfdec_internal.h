@@ -74,8 +74,6 @@ void			swfdec_sprite_movie_init_context	(SwfdecPlayer *		player,
 								 guint			version);
 void			swfdec_video_movie_init_context		(SwfdecPlayer *		player,
 								 guint			version);
-void			swfdec_xml_node_init_native		(SwfdecPlayer *		player,
-								 guint			version);
 
 G_END_DECLS
 #endif

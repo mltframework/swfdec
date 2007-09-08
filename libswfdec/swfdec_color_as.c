@@ -26,6 +26,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_movie.h"
 
 /*** AS CODE ***/
@@ -47,7 +48,8 @@ swfdec_movie_color_get_movie (SwfdecAsObject *object)
   return SWFDEC_MOVIE (target);
 }
 
-static void
+SWFDEC_AS_NATIVE (700, 2, swfdec_movie_color_getRGB)
+void
 swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -72,7 +74,8 @@ add_variable (SwfdecAsObject *obj, const char *name, double value)
   swfdec_as_object_set_variable (obj, name, &val);
 }
 
-static void
+SWFDEC_AS_NATIVE (700, 3, swfdec_movie_color_getTransform)
+void
 swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -97,7 +100,8 @@ swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_AS_VALUE_SET_OBJECT (rval, ret);
 }
 
-static void
+SWFDEC_AS_NATIVE (700, 0, swfdec_movie_color_setRGB)
+void
 swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -139,7 +143,8 @@ parse_property (SwfdecAsObject *obj, const char *name, int *target, gboolean sca
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (700, 1, swfdec_movie_color_setTransform)
+void
 swfdec_movie_color_setTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {

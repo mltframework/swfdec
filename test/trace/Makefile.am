@@ -1012,6 +1012,13 @@ EXTRA_DIST = \
 	propflags-6.swf.trace \
 	propflags-7.swf \
 	propflags-7.swf.trace \
+	propflags-set.as \
+	propflags-set-5.swf \
+	propflags-set-5.swf.trace \
+	propflags-set-6.swf \
+	propflags-set-6.swf.trace \
+	propflags-set-7.swf \
+	propflags-set-7.swf.trace \
 	register-count.swf \
 	register-count.swf.trace \
 	register-count.xml \

@@ -51,7 +51,7 @@ AsBroadcaster.initialize = function (o) {
   o.broadcastMessage = ASnative(101, 12);
   o.addListener = AsBroadcaster.addListener;
   o.removeListener = AsBroadcaster.removeListener;
-  o._listeners = new Array ();
+  o._listeners = [];
   ASSetPropFlags(o, "broadcastMessage,addListener,removeListener,_listeners", 131);
 };
 ASSetPropFlags(AsBroadcaster, null, 131);

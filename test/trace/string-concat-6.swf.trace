@@ -86,101 +86,93 @@ Hello, [object Object]!
 Testing: (22) [type Function] (function)
 Hello, [type Function]!
 Testing: (23) [type Object] (object)
-valueOf called
 toString called
 Hello, [type Object]!
 Testing: (24) [type Object] (object)
 toString called with 
 Hello, [type Object]!
 Testing: (25) [object Object] (object)
-valueOf called with 
 Hello, [object Object]!
 Testing: (26)  (object)
-Hello, !
+Hello, [type Object]!
 Testing: (27)  (object)
-0: valueOf!
-Hello, !
+0: toString!
+Hello, [type Object]!
 Testing: (28) null (object)
-1: valueOf!
-Hello, null!
+1: toString!
+Hello, [type Object]!
 Testing: (29) true (object)
-2: valueOf!
-Hello, true!
+2: toString!
+Hello, [type Object]!
 Testing: (30) false (object)
-3: valueOf!
-Hello, false!
+3: toString!
+Hello, [type Object]!
 Testing: (31) 0 (object)
-4: valueOf!
-Hello, 0!
+4: toString!
+Hello, [type Object]!
 Testing: (32) 1 (object)
-5: valueOf!
-Hello, 1!
+5: toString!
+Hello, [type Object]!
 Testing: (33) 0.5 (object)
-6: valueOf!
-Hello, 0.5!
+6: toString!
+Hello, [type Object]!
 Testing: (34) -1 (object)
-7: valueOf!
-Hello, -1!
+7: toString!
+Hello, [type Object]!
 Testing: (35) -0.5 (object)
-8: valueOf!
-Hello, -0.5!
+8: toString!
+Hello, [type Object]!
 Testing: (36) Infinity (object)
-9: valueOf!
-Hello, Infinity!
+9: toString!
+Hello, [type Object]!
 Testing: (37) -Infinity (object)
-10: valueOf!
-Hello, -Infinity!
+10: toString!
+Hello, [type Object]!
 Testing: (38) NaN (object)
-11: valueOf!
-Hello, NaN!
+11: toString!
+Hello, [type Object]!
 Testing: (39)  (object)
-12: valueOf!
+12: toString!
 Hello, !
 Testing: (40) 0 (object)
-13: valueOf!
+13: toString!
 Hello, 0!
 Testing: (41) -0 (object)
-14: valueOf!
+14: toString!
 Hello, -0!
 Testing: (42) 0.0 (object)
-15: valueOf!
+15: toString!
 Hello, 0.0!
 Testing: (43) 1 (object)
-16: valueOf!
+16: toString!
 Hello, 1!
 Testing: (44) Hello World! (object)
-17: valueOf!
+17: toString!
 Hello, Hello World!!
 Testing: (45) true (object)
-18: valueOf!
+18: toString!
 Hello, true!
 Testing: (46) _level0 (object)
-19: valueOf!
+19: toString!
 Hello, _level0!
 Testing: (47) _level0 (object)
-20: valueOf!
-Hello, _level0!
+20: toString!
+Hello, [type Object]!
 Testing: (48) [type Object] (object)
-21: valueOf!
 21: toString!
 Hello, [type Object]!
 Testing: (49) [type Object] (object)
-22: valueOf!
 22: toString!
 Hello, [type Object]!
 Testing: (50) [type Object] (object)
-23: valueOf!
 23: toString!
 Hello, [type Object]!
 Testing: (51) [type Object] (object)
-24: valueOf!
 24: toString!
 Hello, [type Object]!
 Testing: (52) [type Object] (object)
-25: valueOf!
 25: toString!
 Hello, [type Object]!
 Testing: (53) [type Object] (object)
-26: valueOf!
 26: toString!
 Hello, [type Object]!

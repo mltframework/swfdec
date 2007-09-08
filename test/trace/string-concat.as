@@ -11,7 +11,7 @@ trace (a.concat (", ", "world", "!"));
 
 for (var i = 0; i < values.length; i++) {
   trace ("Testing: " + names[i]);
-  trace (a.concat (", " + values[i], "!"));
+  trace (a.concat (", ", values[i], "!"));
 }
 
 loadMovie("FSCommand:quit", "");

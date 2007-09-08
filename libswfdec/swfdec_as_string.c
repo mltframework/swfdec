@@ -289,7 +289,8 @@ swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     string->string = s;
     SWFDEC_AS_VALUE_SET_INT (&val, g_utf8_strlen (string->string, -1));
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_length, &val);
+    swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, s);

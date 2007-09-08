@@ -74,7 +74,7 @@ swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_set_variable_and_flags (video, SWFDEC_AS_STR_prototype, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   /* set the right properties on the Video.prototype object */
-  if (context->version >= 6) {
+  if (version >= 6) {
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachVideo,
 	SWFDEC_TYPE_VIDEO_MOVIE, swfdec_video_attach_video, 1);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_clear,

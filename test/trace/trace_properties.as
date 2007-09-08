@@ -77,7 +77,7 @@ function new_empty_object () {
   return hash;
 }
 
-function hasOwnProperty (o, prop)
+function hasOwnProperty_inner (o, prop)
 {
   if (o.hasOwnProperty != undefined)
     return o.hasOwnProperty (prop);
@@ -85,6 +85,20 @@ function hasOwnProperty (o, prop)
   o.hasOwnProperty = ASnative (101, 5);
   var result = o.hasOwnProperty (prop);
   delete o.hasOwnProperty;
+  return result;
+}
+
+function hasOwnProperty (o, prop)
+{
+  var result = hasOwnProperty_inner (o, prop);
+#if __SWF_VERSION__ != 6
+  if (result == false) {
+    ASSetPropFlags (o, prop, 0, 256);
+    result = hasOwnProperty_inner (o, prop);
+    if (result)
+      ASSetPropFlags (o, prop, 256);
+  }
+#endif
   return result;
 }
 
@@ -168,6 +182,23 @@ function trace_properties_recurse (o, prefix, identifier, level)
     return nextSecretId;
   }
 
+#if __SWF_VERSION__ != 6
+  for (var i = 0; i < all.length; i++)
+  {
+    var prop = all[i];
+
+    // try changing value
+    if (!hasOwnProperty_inner(o, prop) && hasOwnProperty(o, prop))
+    {
+      set_info (info, prop, "not6", true);
+    }
+    else
+    {
+      set_info (info, prop, "not6", false);
+    }
+  }
+#endif
+
   for (var i = 0; i < all.length; i++)
   {
     var prop = all[i];
@@ -241,6 +272,9 @@ function trace_properties_recurse (o, prefix, identifier, level)
       flags += "C";
     } else if (get_info (info, prop, "constant") == true) {
       flags += "c";
+    }
+    if (get_info (info, prop, "not6") == true) {
+      flags += "6";
     }
     if (flags != "")
       flags = " (" + flags + ")";

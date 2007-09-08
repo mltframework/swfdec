@@ -1059,6 +1059,8 @@ swfdec_xml_node_init_native (SwfdecPlayer *player, guint version)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
+  if (version < 5)
+    return;
   context = SWFDEC_AS_CONTEXT (player);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
   g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));

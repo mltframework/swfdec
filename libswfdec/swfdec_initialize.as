@@ -181,6 +181,15 @@ System.capabilities.Query = ASnative (11, 0);
 System.capabilities.Query ();
 delete System.capabilities.Query;
 
+/*** Color ***/
+
+Color = function (target) {
+  this.target = target;
+  ASSetPropFlags (this, null, 7);
+};
+ASSetNative (Color.prototype, 700, "setRGB,setTransform,getRGB,getTransform");
+ASSetPropFlags (Color.prototype, null, 7);
+
 /*** OH THE HUMANITY ***/
 
 o = null;

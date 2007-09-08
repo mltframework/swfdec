@@ -66,8 +66,6 @@ void			swfdec_player_preinit_global		(SwfdecPlayer *		player,
 								 guint			version);
 void			swfdec_player_init_global		(SwfdecPlayer *		player,
 								 guint			version);
-void			swfdec_movie_color_init_context		(SwfdecPlayer *		player,
-								 guint			version);
 void			swfdec_net_connection_init_context	(SwfdecPlayer *		player,
 								 guint			version);
 void			swfdec_net_stream_init_context		(SwfdecPlayer *		player,

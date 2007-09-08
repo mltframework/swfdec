@@ -257,6 +257,17 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   } else {
     if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
       return;
+    // remove the flags that could make this variable hidden
+    if (object->context->version == 6) {
+      // version 6, so let's forget SWFDEC_AS_VARIABLE_VERSION_7_UP flag, oops!
+      // we will still set the value though, even if that flag is set
+      var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_8_UP);
+    } else {
+      var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_7_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_8_UP);
+    }
   }
   if (var->get) {
     if (var->set) {

@@ -21,7 +21,6 @@
 #include "config.h"
 #endif
 
-#include "swfdec_color_as.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
@@ -29,41 +28,31 @@
 #include "swfdec_internal.h"
 #include "swfdec_movie.h"
 
-G_DEFINE_TYPE (SwfdecMovieColor, swfdec_movie_color, SWFDEC_TYPE_AS_OBJECT)
-
-static void
-swfdec_movie_color_mark (SwfdecAsObject *object)
-{
-  SwfdecMovieColor *color = SWFDEC_MOVIE_COLOR (object);
-
-  /* FIXME: unset movie when movie is already dead */
-  if (color->movie)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (color->movie));
-
-  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_color_parent_class)->mark (object);
-}
-
-static void
-swfdec_movie_color_class_init (SwfdecMovieColorClass *klass)
-{
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
-
-  asobject_class->mark = swfdec_movie_color_mark;
-}
-
-static void
-swfdec_movie_color_init (SwfdecMovieColor *color)
-{
-}
-
 /*** AS CODE ***/
+
+static SwfdecMovie *
+swfdec_movie_color_get_movie (SwfdecAsObject *object)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *target;
+
+  swfdec_as_object_get_variable (object, SWFDEC_AS_STR_target, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+
+  target = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  if (!SWFDEC_IS_MOVIE (target))
+    return NULL;
+
+  return SWFDEC_MOVIE (target);
+}
 
 static void
 swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   int result;
-  SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
+  SwfdecMovie *movie = swfdec_movie_color_get_movie (obj);
   
   if (movie == NULL)
     return;
@@ -71,7 +60,7 @@ swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   result = (movie->color_transform.rb << 16) |
 	   ((movie->color_transform.gb % 256) << 8) | 
 	   (movie->color_transform.bb % 256);
-  SWFDEC_AS_VALUE_SET_INT (rval, result);
+  SWFDEC_AS_VALUE_SET_INT (ret, result);
 }
 
 static inline void
@@ -88,7 +77,7 @@ swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsObject *ret;
-  SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
+  SwfdecMovie *movie = swfdec_movie_color_get_movie (obj);
   
   if (movie == NULL)
     return;
@@ -113,7 +102,12 @@ swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   guint color;
-  SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
+  SwfdecMovie *movie;
+
+  if (argc < 1)
+    return;
+
+  movie = swfdec_movie_color_get_movie (obj);
   
   if (movie == NULL)
     return;
@@ -150,7 +144,12 @@ swfdec_movie_color_setTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsObject *parse;
-  SwfdecMovie *movie = SWFDEC_MOVIE_COLOR (obj)->movie;
+  SwfdecMovie *movie;
+
+  if (argc < 1)
+    return;
+
+  movie = swfdec_movie_color_get_movie (obj);
   
   if (movie == NULL)
     return;
@@ -173,13 +172,18 @@ static void
 swfdec_movie_color_construct (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovieColor *color = SWFDEC_MOVIE_COLOR (obj);
+  SwfdecAsValue val;
 
-  if (argc > 0 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
-    SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
-    if (SWFDEC_IS_MOVIE (object))
-      color->movie = SWFDEC_MOVIE (object);
+  if (argc > 0) {
+    val = argv[0];
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
+
+  swfdec_as_object_set_variable_and_flags (obj, SWFDEC_AS_STR_target, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_CONSTANT);
+
   SWFDEC_AS_VALUE_SET_OBJECT (rval, obj);
 }
 
@@ -194,14 +198,13 @@ swfdec_movie_color_init_context (SwfdecPlayer *player, guint version)
 
   context = SWFDEC_AS_CONTEXT (player);
   color = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Color, SWFDEC_TYPE_MOVIE_COLOR, swfdec_movie_color_construct, 0));
-  swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (color), SWFDEC_TYPE_MOVIE_COLOR);
+      SWFDEC_AS_STR_Color, 0, swfdec_movie_color_construct, 0));
   if (!color)
     return;
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecMovieColor)))
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsObject)))
     return;
-  proto = g_object_new (SWFDEC_TYPE_MOVIE_COLOR, NULL);
-  swfdec_as_object_add (proto, context, sizeof (SwfdecMovieColor));
+  proto = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
+  swfdec_as_object_add (proto, context, sizeof (SwfdecAsObject));
   /* set the right properties on the Color object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (color, SWFDEC_AS_STR_prototype, &val,
@@ -215,13 +218,13 @@ swfdec_movie_color_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
       SWFDEC_AS_VARIABLE_CONSTANT);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getRGB, SWFDEC_TYPE_MOVIE_COLOR,
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getRGB, 0,
       swfdec_movie_color_getRGB, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getTransform, SWFDEC_TYPE_MOVIE_COLOR,
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getTransform, 0,
       swfdec_movie_color_getTransform, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setRGB, SWFDEC_TYPE_MOVIE_COLOR,
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setRGB, 0,
       swfdec_movie_color_setRGB, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setTransform, SWFDEC_TYPE_MOVIE_COLOR,
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setTransform, 0,
       swfdec_movie_color_setTransform, 1);
 }
 

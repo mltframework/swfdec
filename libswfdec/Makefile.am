@@ -184,7 +184,6 @@ noinst_HEADERS = \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \
 	swfdec_color.h \
-	swfdec_color_as.h \
 	swfdec_debug.h \
 	swfdec_decoder.h \
 	swfdec_edittext.h \

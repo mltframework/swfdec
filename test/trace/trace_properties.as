@@ -203,6 +203,23 @@ function trace_properties_recurse (o, prefix, identifier, level)
   {
     var prop = all[i];
 
+    if (typeof (o[prop]) == "undefined") {
+      ASSetPropFlags (o, prop, 0, 5248);
+      if (typeof (o[prop]) != "undefined") {
+	set_info (info, prop, "newer", true);
+	// don't set the flags back
+      } else {
+	set_info (info, prop, "newer", false);
+      }
+    } else {
+      set_info (info, prop, "newer", false);
+    }
+  }
+
+  for (var i = 0; i < all.length; i++)
+  {
+    var prop = all[i];
+
     // try changing value
     var old = o[prop];
     var val = "hello " + o[prop];
@@ -276,6 +293,9 @@ function trace_properties_recurse (o, prefix, identifier, level)
     if (get_info (info, prop, "not6") == true) {
       flags += "6";
     }
+    if (get_info (info, prop, "newer") == true) {
+      flags += "n";
+    }
     if (flags != "")
       flags = " (" + flags + ")";
 
@@ -338,7 +358,14 @@ function generate_names (o, prefix, identifier)
   ASSetPropFlags (o, nothidden, 0, 1);
 
   for (var i = 0; i < all.length; i++) {
+    var newer = false;
     var prop = all[i];
+
+    if (typeof (o[prop]) == "undefined") {
+      ASSetPropFlags (o, prop, 0, 5248);
+      if (typeof (o[prop]) != "undefined")
+	newer = true;
+    }
 
     if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function") {
       if (hasOwnProperty (o[prop], "mySecretId")) {
@@ -348,15 +375,29 @@ function generate_names (o, prefix, identifier)
 	  identifier + "." + prop;
       }
     }
+
+    if (newer == true)
+      ASSetPropFlags (o, prop, 5248);
   }
 
   for (var i = 0; i < all.length; i++) {
     var prop = all[i];
 
     if (prop != null) {
+      var newer = false;
+
+      if (typeof (o[prop]) == "undefined") {
+	ASSetPropFlags (o, prop, 0, 5248);
+	if (typeof (o[prop]) != "undefined")
+	  newer = true;
+      }
+
       if (typeof (o[prop]) == "object" || typeof (o[prop]) == "function")
 	generate_names (o[prop], prefix + (prefix != "" ? "." : "") +
 	    identifier, prop);
+
+      if (newer == true)
+	ASSetPropFlags (o, prop, 5248);
     }
   }
 }

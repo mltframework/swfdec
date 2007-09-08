@@ -265,6 +265,13 @@ EXTRA_DIST = \
 	color-getters.swf.trace \
 	color-new.swf \
 	color-new.swf.trace \
+	color-properties.as \
+	color-properties-5.swf\
+	color-properties-5.swf.trace\
+	color-properties-6.swf\
+	color-properties-6.swf.trace\
+	color-properties-7.swf\
+	color-properties-7.swf.trace\
 	color-setRGB.swf \
 	color-setRGB.swf.trace \
 	color-setTransform-alpha.swf \
@@ -540,6 +547,13 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
+	hasownproperty-propflags.as \
+	hasownproperty-propflags-5.swf \
+	hasownproperty-propflags-5.swf.trace \
+	hasownproperty-propflags-6.swf \
+	hasownproperty-propflags-6.swf.trace \
+	hasownproperty-propflags-7.swf \
+	hasownproperty-propflags-7.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \
@@ -662,6 +676,13 @@ EXTRA_DIST = \
 	math-constants-6.swf.trace \
 	math-constants-7.swf \
 	math-constants-7.swf.trace \
+	math-properties.as \
+	math-properties-5.swf \
+	math-properties-5.swf.trace \
+	math-properties-6.swf \
+	math-properties-6.swf.trace \
+	math-properties-7.swf \
+	math-properties-7.swf.trace \
 	mouse-scaled.as \
 	mouse-scaled-5.swf \
 	mouse-scaled-5.swf.act \
@@ -993,6 +1014,13 @@ EXTRA_DIST = \
 	propflags-6.swf.trace \
 	propflags-7.swf \
 	propflags-7.swf.trace \
+	propflags-set.as \
+	propflags-set-5.swf \
+	propflags-set-5.swf.trace \
+	propflags-set-6.swf \
+	propflags-set-6.swf.trace \
+	propflags-set-7.swf \
+	propflags-set-7.swf.trace \
 	register-count.swf \
 	register-count.swf.trace \
 	register-count.xml \
@@ -1160,6 +1188,13 @@ EXTRA_DIST = \
 	stage-size-7.swf.trace \
 	stage-size-8.swf \
 	stage-size-8.swf.trace \
+	string-concat.as \
+	string-concat-5.swf \
+	string-concat-5.swf.trace \
+	string-concat-6.swf \
+	string-concat-6.swf.trace \
+	string-concat-7.swf \
+	string-concat-7.swf.trace \
 	string-construct.as \
 	string-construct-5.swf \
 	string-construct-5.swf.trace \
@@ -1197,6 +1232,18 @@ EXTRA_DIST = \
 	string-lastIndexOf-7.swf.trace \
 	string-lastIndexOf-8.swf \
 	string-lastIndexOf-8.swf.trace \
+	string-properties.as \
+	string-properties-6.swf \
+	string-properties-6.swf.trace \
+	string-properties-7.swf \
+	string-properties-7.swf.trace \
+	string-slice.as \
+	string-slice-5.swf \
+	string-slice-5.swf.trace \
+	string-slice-6.swf \
+	string-slice-6.swf.trace \
+	string-slice-7.swf \
+	string-slice-7.swf.trace \
 	string-split.as \
 	string-split-5.swf \
 	string-split-5.swf.trace \
@@ -1363,8 +1410,6 @@ EXTRA_DIST = \
 	values.as \
 	video.flv \
 	video-properties.as \
-	video-properties-5.swf \
-	video-properties-5.swf.trace \
 	video-properties-6.swf \
 	video-properties-6.swf.trace \
 	video-properties-7.swf \
@@ -1402,6 +1447,13 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
+	xml-constructor-properties.as \
+	xml-constructor-properties-5.swf \
+	xml-constructor-properties-5.swf.trace \
+	xml-constructor-properties-6.swf \
+	xml-constructor-properties-6.swf.trace \
+	xml-constructor-properties-7.swf \
+	xml-constructor-properties-7.swf.trace \
 	xml-errors.as \
 	xml-errors-5.swf \
 	xml-errors-5.swf.trace \
@@ -1444,6 +1496,11 @@ EXTRA_DIST = \
 	xml-properties-6.swf.trace \
 	xml-properties-7.swf \
 	xml-properties-7.swf.trace \
+	xml-properties2.as \
+	xml-properties2-6.swf \
+	xml-properties2-6.swf.trace \
+	xml-properties2-7.swf \
+	xml-properties2-7.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

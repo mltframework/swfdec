@@ -51,7 +51,7 @@ AsBroadcaster.initialize = function (o) {
   o.broadcastMessage = ASnative(101, 12);
   o.addListener = AsBroadcaster.addListener;
   o.removeListener = AsBroadcaster.removeListener;
-  o._listeners = new Array ();
+  o._listeners = [];
   ASSetPropFlags(o, "broadcastMessage,addListener,removeListener,_listeners", 131);
 };
 ASSetPropFlags(AsBroadcaster, null, 131);
@@ -65,7 +65,7 @@ ASSetPropFlags(Key, null, 7);
 
 /*** MOUSE ***/
 
-Mouse = new Object ();
+Mouse = { };
 Mouse.show = ASnative (5, 0);
 Mouse.hide = ASnative (5, 1);
 AsBroadcaster.initialize (Mouse);
@@ -73,7 +73,7 @@ ASSetPropFlags(Mouse, null, 7);
 
 /*** STAGE ***/
 
-Stage = new Object ();
+Stage = { };
 AsBroadcaster.initialize (Stage);
 ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height", 1);
 
@@ -181,6 +181,19 @@ System.capabilities.Query = ASnative (11, 0);
 System.capabilities.Query ();
 delete System.capabilities.Query;
 
+/*** Color ***/
+
+Color = function (target) {
+  this.target = target;
+  ASSetPropFlags (this, null, 7);
+};
+ASSetNative (Color.prototype, 700, "setRGB,setTransform,getRGB,getTransform");
+ASSetPropFlags (Color.prototype, null, 7);
+
 /*** OH THE HUMANITY ***/
 
 o = null;
+
+/*** GLOBAL PROPFLAGS */
+
+ASSetPropFlags (this, null, 1, 6);

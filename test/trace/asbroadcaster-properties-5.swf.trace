@@ -1,2 +1,26 @@
 _global.AsBroadcaster = function
-  no children
+  addListener (hpn) = function
+    constructor (hp) = _global.Object.constructor
+    prototype (hp) = object
+      __proto__ (hp) = _global.Object.prototype
+      constructor (hp) = _global.AsBroadcaster.addListener
+  broadcastMessage (hpn) = function
+    constructor (hp) = _global.Object.constructor
+  constructor (hpn) = _global.Object.constructor
+  initialize (hpn) = function
+    constructor (hp) = _global.Object.constructor
+    prototype (hp) = object
+      __proto__ (hp) = _global.Object.prototype
+      constructor (hp) = _global.AsBroadcaster.initialize
+  prototype (hpn) = object
+    __proto__ (hp) = _global.Object.prototype
+    constructor (hp) = _global.AsBroadcaster
+  removeListener (hpn) = function
+    constructor (hp) = _global.Object.constructor
+    prototype (hp) = object
+      __proto__ (hp) = _global.Object.prototype
+      constructor (hp) = _global.AsBroadcaster.removeListener
+local.a = object
+  __constructor__ (hn) = _global.Object
+  __proto__ (hp) = _global.Object.prototype
+  constructor (h) = _global.Object

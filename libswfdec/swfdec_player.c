@@ -1613,15 +1613,11 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     swfdec_player_init_global (player, version);
     swfdec_sprite_movie_init_context (player, version);
     swfdec_video_movie_init_context (player, version);
-    swfdec_movie_color_init_context (player, version);
     swfdec_net_connection_init_context (player, version);
     swfdec_net_stream_init_context (player, version);
 
     swfdec_as_context_run_init_script (context, swfdec_initialize, 
 	sizeof (swfdec_initialize), 8);
-
-    swfdec_xml_node_init_native (player, version);
-    swfdec_xml_init_native (player, version);
 
     if (context->state == SWFDEC_AS_CONTEXT_NEW) {
       context->state = SWFDEC_AS_CONTEXT_RUNNING;

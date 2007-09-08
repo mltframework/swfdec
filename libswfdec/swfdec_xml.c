@@ -32,6 +32,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecXml, swfdec_xml, SWFDEC_TYPE_XML_NODE)
 
@@ -729,32 +730,6 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
-SWFDEC_AS_CONSTRUCTOR (253, 9, swfdec_xml_construct, swfdec_xml_get_type)
-void
-swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  if (!swfdec_as_context_is_constructing (cx)) {
-    SWFDEC_FIXME ("What do we do if not constructing?");
-    return;
-  }
-
-  g_assert (SWFDEC_IS_XML (object));
-
-  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
-      SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
-
-  SWFDEC_AS_VALUE_SET_STRING (&SWFDEC_XML (object)->contentType,
-      SWFDEC_AS_STR_application_x_www_form_urlencoded);
-
-  SWFDEC_XML_NODE (object)->name = NULL;
-
-  if (argc >= 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
-    swfdec_xml_parseXML (SWFDEC_XML (object),
-	swfdec_as_value_to_string (cx, &argv[0]));
-  }
-}
-
 static void
 swfdec_xml_add_variable (SwfdecAsObject *object, const char *variable,
     SwfdecAsNative get, SwfdecAsNative set)
@@ -780,38 +755,53 @@ swfdec_xml_add_variable (SwfdecAsObject *object, const char *variable,
   swfdec_as_object_add_variable (object, variable, get_func, set_func);
 }
 
+SWFDEC_AS_CONSTRUCTOR (253, 9, swfdec_xml_construct, swfdec_xml_get_type)
 void
-swfdec_xml_init_native (SwfdecPlayer *player, guint version)
+swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsContext *context;
-  SwfdecAsValue val;
-  SwfdecAsObject *xml;
-  SwfdecAsObject *proto;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  
-  if (version < 5)
+  if (!swfdec_as_context_is_constructing (cx)) {
+    SWFDEC_FIXME ("What do we do if not constructing?");
     return;
-  context = SWFDEC_AS_CONTEXT (player);
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XML, &val);
-  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-  xml = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  }
 
-  swfdec_as_object_get_variable (xml, SWFDEC_AS_STR_prototype, &val);
-  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  g_assert (SWFDEC_IS_XML (object));
 
-  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_ignoreWhite,
-      swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
-  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status, swfdec_xml_get_status,
-      swfdec_xml_set_status);
-  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_xmlDecl, swfdec_xml_get_xmlDecl,
-      swfdec_xml_set_xmlDecl);
-  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_docTypeDecl,
-      swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
+  if (!SWFDEC_PLAYER (cx)->xml_properties_initialized) {
+    SwfdecAsValue val;
+    SwfdecAsObject *proto;
 
-  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_contentType,
-      swfdec_xml_get_contentType, swfdec_xml_set_contentType);
-  swfdec_xml_add_variable (proto, SWFDEC_AS_STR_loaded,
-      swfdec_xml_get_loaded, swfdec_xml_set_loaded);
+    swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
+    g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
+    proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_ignoreWhite,
+	swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
+    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status,
+	swfdec_xml_get_status, swfdec_xml_set_status);
+    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_xmlDecl,
+	swfdec_xml_get_xmlDecl, swfdec_xml_set_xmlDecl);
+    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_docTypeDecl,
+	swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
+
+    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_contentType,
+	swfdec_xml_get_contentType, swfdec_xml_set_contentType);
+    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_loaded,
+	swfdec_xml_get_loaded, swfdec_xml_set_loaded);
+
+    SWFDEC_PLAYER (cx)->xml_properties_initialized = TRUE;
+  }
+
+  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
+      SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+
+  SWFDEC_AS_VALUE_SET_STRING (&SWFDEC_XML (object)->contentType,
+      SWFDEC_AS_STR_application_x_www_form_urlencoded);
+
+  SWFDEC_XML_NODE (object)->name = NULL;
+
+  if (argc >= 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+    swfdec_xml_parseXML (SWFDEC_XML (object),
+	swfdec_as_value_to_string (cx, &argv[0]));
+  }
 }

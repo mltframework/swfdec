@@ -33,6 +33,7 @@
 #include "swfdec_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_load_object.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecXmlNode, swfdec_xml_node, SWFDEC_TYPE_AS_OBJECT)
 
@@ -997,33 +998,6 @@ swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
   return node;
 }
 
-SWFDEC_AS_CONSTRUCTOR (253, 0, swfdec_xml_node_construct, swfdec_xml_node_get_type)
-void
-swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  if (!swfdec_as_context_is_constructing (cx)) {
-    SWFDEC_FIXME ("What do we do if not constructing?");
-    return;
-  }
-
-  if (argc < 2)
-    return;
-
-  // special case
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
-    return;
-
-  g_assert (SWFDEC_IS_XML_NODE (object));
-
-  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
-      swfdec_as_value_to_integer (cx, &argv[0]),
-      swfdec_as_value_to_string (cx, &argv[1]));
-
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
-}
-
 static void
 swfdec_xml_node_add_variable (SwfdecAsObject *object, const char *variable,
     SwfdecAsNative get, SwfdecAsNative set)
@@ -1049,51 +1023,67 @@ swfdec_xml_node_add_variable (SwfdecAsObject *object, const char *variable,
   swfdec_as_object_add_variable (object, variable, get_func, set_func);
 }
 
+SWFDEC_AS_CONSTRUCTOR (253, 0, swfdec_xml_node_construct, swfdec_xml_node_get_type)
 void
-swfdec_xml_node_init_native (SwfdecPlayer *player, guint version)
+swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsContext *context;
-  SwfdecAsValue val;
-  SwfdecAsObject *node;
-  SwfdecAsObject *proto;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  if (version < 5)
+  if (!swfdec_as_context_is_constructing (cx)) {
+    SWFDEC_FIXME ("What do we do if not constructing?");
     return;
-  context = SWFDEC_AS_CONTEXT (player);
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
-  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-  node = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  }
 
-  swfdec_as_object_get_variable (node, SWFDEC_AS_STR_prototype, &val);
-  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  g_assert (SWFDEC_IS_XML_NODE (object));
 
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeType,
-      swfdec_xml_node_get_nodeType, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeValue,
-      swfdec_xml_node_get_nodeValue, swfdec_xml_node_set_nodeValue);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeName,
-      swfdec_xml_node_get_nodeName, swfdec_xml_node_set_nodeName);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_prefix,
-      swfdec_xml_node_do_get_prefix, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_localName,
-      swfdec_xml_node_get_localName, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_namespaceURI,
-      swfdec_xml_node_get_namespaceURI, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_attributes,
-      swfdec_xml_node_get_attributes, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_parentNode,
-      swfdec_xml_node_get_parentNode, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_previousSibling,
-      swfdec_xml_node_get_previousSibling, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nextSibling,
-      swfdec_xml_node_get_nextSibling, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_firstChild,
-      swfdec_xml_node_get_firstChild, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_lastChild,
-      swfdec_xml_node_get_lastChild, NULL);
-  swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_childNodes,
-      swfdec_xml_node_get_childNodes, NULL);
+  if (!SWFDEC_PLAYER (cx)->xml_node_properties_initialized) {
+    SwfdecAsValue val;
+    SwfdecAsObject *proto;
+
+    swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
+    g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
+    proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeType,
+	swfdec_xml_node_get_nodeType, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeValue,
+	swfdec_xml_node_get_nodeValue, swfdec_xml_node_set_nodeValue);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nodeName,
+	swfdec_xml_node_get_nodeName, swfdec_xml_node_set_nodeName);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_prefix,
+	swfdec_xml_node_do_get_prefix, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_localName,
+	swfdec_xml_node_get_localName, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_namespaceURI,
+	swfdec_xml_node_get_namespaceURI, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_attributes,
+	swfdec_xml_node_get_attributes, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_parentNode,
+	swfdec_xml_node_get_parentNode, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_previousSibling,
+	swfdec_xml_node_get_previousSibling, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_nextSibling,
+	swfdec_xml_node_get_nextSibling, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_firstChild,
+	swfdec_xml_node_get_firstChild, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_lastChild,
+	swfdec_xml_node_get_lastChild, NULL);
+    swfdec_xml_node_add_variable (proto, SWFDEC_AS_STR_childNodes,
+	swfdec_xml_node_get_childNodes, NULL);
+
+    SWFDEC_PLAYER (cx)->xml_node_properties_initialized = TRUE;
+  }
+
+  if (argc < 2)
+    return;
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
+    return;
+
+  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
+      swfdec_as_value_to_integer (cx, &argv[0]),
+      swfdec_as_value_to_string (cx, &argv[1]));
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

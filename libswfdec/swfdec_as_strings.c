@@ -349,6 +349,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("setUTCYear")
   SWFDEC_AS_CONSTANT_STRING ("setFullYear")
   SWFDEC_AS_CONSTANT_STRING ("setUTCFullYear")
+  SWFDEC_AS_CONSTANT_STRING ("target")
   /* add more here */
 ;
 

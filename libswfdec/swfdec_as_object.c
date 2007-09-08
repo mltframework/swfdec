@@ -257,6 +257,17 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   } else {
     if (var->flags & SWFDEC_AS_VARIABLE_CONSTANT)
       return;
+    // remove the flags that could make this variable hidden
+    if (object->context->version == 6) {
+      // version 6, so let's forget SWFDEC_AS_VARIABLE_VERSION_7_UP flag, oops!
+      // we will still set the value though, even if that flag is set
+      var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_8_UP);
+    } else {
+      var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_7_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_8_UP);
+    }
   }
   if (var->get) {
     if (var->set) {
@@ -1011,10 +1022,8 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
       swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
 	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
     }
-    if (context->version > 5) {
-      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
-	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
-    }
+    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
   } else {
     /* need to do this, since we must push something to the frame stack */
     new = NULL;
@@ -1122,18 +1131,26 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
-static void
+SWFDEC_AS_NATIVE (101, 5, swfdec_as_object_hasOwnProperty)
+void
 swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+  SwfdecAsVariable *var;
   const char *name;
 
   name = swfdec_as_value_to_string (object->context, &argv[0]);
-  
-  if (swfdec_as_object_hash_lookup (object, name))
-    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
-  else
-    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  if (!(var = swfdec_as_object_hash_lookup (object, name)))
+    return;
+
+  /* This functions only checks NOT 6 flag, and checks it on ALL VERSIONS */
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_NOT_6)
+    return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
 static void

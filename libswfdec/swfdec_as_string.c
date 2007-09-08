@@ -369,7 +369,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_push (arr, &val);
     return;
   }
-  while (*str && count > 0) {
+  while (count > 0) {
     end = strchr (str, delim[0]);
     if (end == NULL) {
       SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, str));

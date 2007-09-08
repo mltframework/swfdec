@@ -1022,11 +1022,8 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
       swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
 	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
     }
-    /* in version 5 objects have undefined __constructor__ property */
-    if (context->version <= 5)
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
     swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
-	&val, SWFDEC_AS_VARIABLE_HIDDEN);
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
   } else {
     /* need to do this, since we must push something to the frame stack */
     new = NULL;

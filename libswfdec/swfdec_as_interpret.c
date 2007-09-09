@@ -801,7 +801,7 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
     SWFDEC_AS_VALUE_SET_UNDEFINED (fun);
   }
   if (!swfdec_action_call (cx, n_args)) {
-    SWFDEC_ERROR ("no function named %s", name);
+    SWFDEC_WARNING ("no function named %s", name);
   }
 }
 
@@ -855,7 +855,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
       }
     }
   } else {
-    SWFDEC_ERROR ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
+    SWFDEC_WARNING ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
 

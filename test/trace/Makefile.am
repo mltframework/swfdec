@@ -763,6 +763,13 @@ EXTRA_DIST = \
 	object-valueof-7.swf.trace \
 	object-valueof-8.swf \
 	object-valueof-8.swf.trace \
+	object-watch.as \
+	object-watch-5.swf \
+	object-watch-5.swf.trace \
+	object-watch-6.swf \
+	object-watch-6.swf.trace \
+	object-watch-7.swf \
+	object-watch-7.swf.trace \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \

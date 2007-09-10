@@ -1139,9 +1139,13 @@ swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsVariable *var;
   const char *name;
 
-  name = swfdec_as_value_to_string (object->context, &argv[0]);
-
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  // return false even if no params
+  if (argc < 1)
+    return;
+
+  name = swfdec_as_value_to_string (object->context, &argv[0]);
 
   if (!(var = swfdec_as_object_hash_lookup (object, name)))
     return;
@@ -1232,7 +1236,7 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_addProperty, 
 	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_addProperty, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_hasOwnProperty, 1);
+	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_hasOwnProperty, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_isPropertyEnumerable,
 	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_isPropertyEnumerable, 0);
   }

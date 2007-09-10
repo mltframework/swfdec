@@ -6,13 +6,9 @@
 
 function traced (d)
 {
-  trace (d.getFullYear () + "-" + d.getMonth () + "-" + d.getDate () + " " + d.getHours () + ":" + d.getMinutes () + ":" + d.getSeconds () + "." + d.getMilliseconds ());
-}
-
-function traced_utc (d)
-{
-  trace (d.getTime () + " " + d.valueOf ());
-  trace (d.getUTCFullYear () + "-" + d.getUTCMonth () + "-" + d.getUTCDate () + " " + d.getUTCHours () + ":" + d.getUTCMinutes () + ":" + d.getUTCSeconds () + "." + d.getUTCMilliseconds ());
+  trace (d.getTime () + " " + d.valueOf () + ": " + d.toString ());
+  trace (d.getFullYear () + "/" + d.getYear () + "-" + d.getMonth () + "-" + d.getDate () + " " + d.getDay () + " " + d.getHours () + ":" + d.getMinutes () + ":" + d.getSeconds () + "." + d.getMilliseconds ());
+  trace (d.getUTCFullYear () + "/" + d.getUTCYear () + "-" + d.getUTCMonth () + "-" + d.getUTCDate () + " " + d.getUTCDay () + " " + d.getUTCHours () + ":" + d.getUTCMinutes () + ":" + d.getUTCSeconds () + "." + d.getUTCMilliseconds ());
 }
 
 function p (val)
@@ -23,10 +19,10 @@ function p (val)
 // FIXME: we don't test values between -0.5 (included) and 0 (not included) this
 // is because flash player seems to handle them in a strange way that is not
 // (yet) duplicated by swfdec
-  for (var i = 0; i < values.length; i++) {
-    if (values[i] >= -0.5 && values[i] < 0)
-      values[i] = -0.6 - i;
-  }
+for (var i = 0; i < values.length; i++) {
+  if (values[i] >= -0.5 && values[i] < 0)
+    values[i] = -0.6 - i;
+}
 
 yearValues = [1983, 83, 0, 100, 99, 101, -100, -500, -271823, -271822, -271821, 275759, 275760, 275761, 100000000000000, -100000000000000];
 yearValues = yearValues.concat (values);
@@ -48,7 +44,7 @@ for (i = 0; i < yearValues.length; i++) {
   val = Date.UTC (yearValues[i]);
   trace (val);
   if (val != undefined)
-    traced_utc (new Date (val));
+    traced (new Date (val));
   trace ("Date.UTC (" + p (yearValues[i]) + ", " + monthValues[0] + ", " + dateValues[0] + ", " +
       hourValues[0] + ", " + minuteValues[0] + ", " + secondValues[0] + ", " +
       millisecondValues[0] + ")");
@@ -56,7 +52,7 @@ for (i = 0; i < yearValues.length; i++) {
       secondValues[0], millisecondValues[0]);
   trace (val);
   if (val != undefined)
-    traced_utc (new Date (val));
+    traced (new Date (val));
 }
 
 for (i = 0; i < monthValues.length; i++) {
@@ -128,7 +124,7 @@ for (i = 0; i < yearValues.length; i++) {
   if (yearValues[i] == undefined) // FIXME: matches null too, shouldn't
     continue;
   trace ("new Date (" + p (yearValues[i]) + ")");
-  traced_utc (new Date (yearValues[i])); // Note: UTC here
+  traced (new Date (yearValues[i])); // Note: UTC here
   trace ("new Date (" + p (yearValues[i]) + ", " + monthValues[0] + ", " + dateValues[0] + ", " +
       hourValues[0] + ", " + minuteValues[0] + ", " + secondValues[0] + ", " +
       millisecondValues[0] + ")");
@@ -138,7 +134,7 @@ for (i = 0; i < yearValues.length; i++) {
 
 for (i = 0; i < monthValues.length; i++) {
   // we can't test undefined second parameter, creates time based on UTC
-  // FIXME: could just use traced_utc for those
+  // FIXME: could just use traced for those
   if (monthValues[i] == undefined)
     continue;
   trace ("new Date (" + yearValues[0] + ", " + p (monthValues[i]) + ")");

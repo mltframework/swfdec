@@ -61,6 +61,7 @@ struct _SwfdecAsObject {
   /*< private >*/
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
+  GHashTable *		watches;	/* string->WatchData mapping or NULL when not watching anything */
   guint8		flags;		/* GC flags */
   gsize			size;		/* size reserved in GC */
 };

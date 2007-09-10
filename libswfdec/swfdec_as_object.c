@@ -113,10 +113,13 @@ struct _SwfdecAsVariable {
   SwfdecAsValue     	value;		/* value of property */
   SwfdecAsFunction *	get;		/* getter set with swfdec_as_object_add_property */
   SwfdecAsFunction *	set;		/* setter or %NULL */
-  SwfdecAsFunction *	watch;		/* watcher or %NULL */
-  SwfdecAsValue *	watch_data;	/* user data to watcher */
-  gint8			watch_recurse;	/* times the watch function has been called without returning */
 };
+
+typedef struct {
+  SwfdecAsFunction *	watch;		/* watcher or %NULL */
+  SwfdecAsValue		watch_data;	/* user data to watcher */
+  guint			refcount;	/* refcount - misused for recursion detection */
+} SwfdecAsWatch;
 
 G_DEFINE_TYPE (SwfdecAsObject, swfdec_as_object, G_TYPE_OBJECT)
 
@@ -141,14 +144,18 @@ swfdec_as_object_mark_property (gpointer key, gpointer value, gpointer unused)
     if (var->set)
       swfdec_as_object_mark (SWFDEC_AS_OBJECT (var->set));
   } else {
-    if (var->watch) {
-      swfdec_as_object_mark (SWFDEC_AS_OBJECT (var->watch));
-      if (var->watch_data) {
-	swfdec_as_value_mark (var->watch_data);
-      }
-    }
     swfdec_as_value_mark (&var->value);
   }
+}
+
+static void
+swfdec_as_object_mark_watch (gpointer key, gpointer value, gpointer unused)
+{
+  SwfdecAsWatch *watch = value;
+
+  swfdec_as_string_mark (key);
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (watch->watch));
+  swfdec_as_value_mark (&watch->watch_data);
 }
 
 static void
@@ -157,6 +164,8 @@ swfdec_as_object_do_mark (SwfdecAsObject *object)
   if (object->prototype)
     swfdec_as_object_mark (object->prototype);
   g_hash_table_foreach (object->properties, swfdec_as_object_mark_property, NULL);
+  if (object->watches)
+    g_hash_table_foreach (object->watches, swfdec_as_object_mark_watch, NULL);
 }
 
 static void
@@ -233,6 +242,52 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
   return TRUE;
 }
 
+static SwfdecAsWatch *
+swfdec_as_watch_new (SwfdecAsFunction *function)
+{
+  SwfdecAsWatch *watch;
+
+  if (!swfdec_as_context_use_mem (SWFDEC_AS_OBJECT (function)->context, 
+	sizeof (SwfdecAsWatch)))
+    return NULL;
+
+  watch = g_slice_new (SwfdecAsWatch);
+  watch->refcount = 1;
+  watch->watch = function;
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&watch->watch_data);
+  return watch;
+}
+
+static inline gboolean
+swfdec_as_watch_can_recurse (SwfdecAsWatch *watch)
+{
+  guint version;
+
+  version = SWFDEC_AS_OBJECT (watch->watch)->context->version;
+  if (version <= 6) {
+    return watch->refcount <= 1;
+  } else {
+    return watch->refcount <= 64 + 1;
+  }
+}
+
+static inline void
+swfdec_as_watch_ref (SwfdecAsWatch *watch)
+{
+  watch->refcount++;
+}
+
+static inline void
+swfdec_as_watch_unref (SwfdecAsWatch *watch)
+{
+  watch->refcount--;
+  if (watch->refcount == 0) {
+    swfdec_as_context_unuse_mem (SWFDEC_AS_OBJECT (watch->watch)->context, 
+	sizeof (SwfdecAsWatch));
+    g_slice_free (SwfdecAsWatch, watch);
+  }
+}
+
 static void
 swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val, guint flags)
@@ -285,23 +340,29 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       swfdec_as_context_run (object->context);
     }
   } else { 
-    if (var->watch) {
-      SwfdecAsValue ret, args[4];
-      SWFDEC_AS_VALUE_SET_STRING (&args[0], variable);
-      args[1] = var->value;
-      args[2] = *val;
-      if (var->watch_data) {
-	args[3] = *var->watch_data;
-      } else {
-	SWFDEC_AS_VALUE_SET_UNDEFINED (&args[3]);
-      }
-      if (var->watch_recurse <= (object->context->version <= 6 ? 0 : 64)) {
-	var->watch_recurse++;
-	swfdec_as_function_call (var->watch, object, 4, args, &ret);
+    if (object->watches) {
+      SwfdecAsValue ret = *val;
+      SwfdecAsWatch *watch = g_hash_table_lookup (object->watches, variable);
+      /* FIXME: figure out if this limit here is correct. Add a watch in Flash 7 
+       * and set a variable using Flash 6 */
+      if (watch && swfdec_as_watch_can_recurse (watch)) {
+	SwfdecAsValue args[4];
+	SWFDEC_AS_VALUE_SET_STRING (&args[0], variable);
+	args[1] = var->value;
+	args[2] = *val;
+	args[3] = watch->watch_data;
+	swfdec_as_watch_ref (watch);
+	swfdec_as_function_call (watch->watch, object, 4, args, &ret);
 	swfdec_as_context_run (object->context);
-	var->value = ret;
-	var->watch_recurse--;
+	swfdec_as_watch_unref (watch);
+	var = swfdec_as_object_hash_lookup (object, variable);
+	if (var == NULL) {
+	  var = swfdec_as_object_hash_create (object, variable, flags);
+	  if (var == NULL)
+	    return;
+	}
       }
+      var->value = ret;
     } else {
       var->value = *val;
     }
@@ -329,11 +390,7 @@ swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, gui
 static void
 swfdec_as_object_free_property (gpointer key, gpointer value, gpointer data)
 {
-  SwfdecAsVariable *var = value;
   SwfdecAsObject *object = data;
-
-  if (var->watch_data)
-    g_free (var->watch_data);
 
   swfdec_as_context_unuse_mem (object->context, sizeof (SwfdecAsVariable));
   g_slice_free (SwfdecAsVariable, value);
@@ -601,6 +658,19 @@ swfdec_as_object_add (SwfdecAsObject *object, SwfdecAsContext *context, gsize si
   }
 }
 
+/* This is a huge hack design-wise, but we can't use watch->watch, 
+ * it might be gone already */
+static gboolean
+swfdec_as_object_steal_watches (gpointer key, gpointer value, gpointer object)
+{
+  SwfdecAsWatch *watch = value;
+
+  g_assert (watch->refcount == 1);
+  watch->watch = (SwfdecAsFunction *) object;
+  swfdec_as_watch_unref (watch);
+  return TRUE;
+}
+
 void
 swfdec_as_object_collect (SwfdecAsObject *object)
 {
@@ -610,6 +680,10 @@ swfdec_as_object_collect (SwfdecAsObject *object)
   g_hash_table_foreach (object->properties, swfdec_as_object_free_property, object);
   g_hash_table_destroy (object->properties);
   object->properties = NULL;
+  if (object->watches) {
+    g_hash_table_foreach_steal (object->watches, swfdec_as_object_steal_watches, object);
+    object->watches = NULL;
+  }
   if (object->size)
     swfdec_as_context_unuse_mem (object->context, object->size);
   g_object_unref (object);
@@ -1220,7 +1294,7 @@ void
 swfdec_as_object_watch (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecAsVariable *var;
+  SwfdecAsWatch *watch;
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
@@ -1230,34 +1304,30 @@ swfdec_as_object_watch (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   name = swfdec_as_value_to_string (cx, &argv[0]);
 
-  if (!(var = swfdec_as_object_hash_lookup (object, name))) {
-    SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-    swfdec_as_object_set_variable (object, name, &val);
-    if (!(var = swfdec_as_object_hash_lookup (object, name)))
-      return;
-  }
-
-  if (var->get != NULL)
-    return;
-
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]))
     return;
 
   if (!SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])))
     return;
 
-  var->watch = SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]));
+  if (object->watches == NULL) {
+    object->watches = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
+	NULL, (GDestroyNotify) swfdec_as_watch_unref);
+    watch = NULL;
+  } else {
+    watch = g_hash_table_lookup (object->watches, name);
+  }
+  if (watch == NULL) {
+    watch = swfdec_as_watch_new (SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])));
+    if (watch == NULL)
+      return;
+    g_hash_table_insert (object->watches, (char *) name, watch);
+  }
 
   if (argc >= 3) {
-    if (!var->watch_data)
-      var->watch_data = g_malloc (sizeof (SwfdecAsValue));
-    *var->watch_data = argv[2];
+    watch->watch_data = argv[2];
   } else {
-    if (var->watch_data) {
-      g_free (var->watch_data);
-      var->watch_data = NULL;
-    }
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&watch->watch_data);
   }
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
@@ -1268,7 +1338,6 @@ void
 swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecAsVariable *var;
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
@@ -1277,20 +1346,16 @@ swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   name = swfdec_as_value_to_string (cx, &argv[0]);
+  if (object->watches != NULL && 
+      g_hash_table_remove (object->watches, name)) {
 
-  if (!(var = swfdec_as_object_hash_lookup (object, name)))
-    return;
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 
-  if (var->watch == NULL)
-    return;
-
-  var->watch = NULL;
-  if (var->watch_data) {
-    g_free (var->watch_data);
-    var->watch_data = NULL;
+    if (g_hash_table_size (object->watches) == 0) {
+      g_hash_table_destroy (object->watches);
+      object->watches = NULL;
+    }
   }
-
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
 static void

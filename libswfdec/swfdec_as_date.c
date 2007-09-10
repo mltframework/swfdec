@@ -151,6 +151,17 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
 
   g_assert (brokentime != NULL);
 
+  /* special case: hours are calculated from different value */
+  if (isfinite (milliseconds)) {
+    remaining = floor (milliseconds + 0.5);
+  } else {
+    remaining = 0;
+  }
+
+  remaining = floor (remaining / MILLISECONDS_PER_HOUR);
+  brokentime->hours = fmod (remaining, HOURS_PER_DAY);
+
+  /* hours done, on with the rest */
   if (isfinite (milliseconds)) {
     remaining = milliseconds;
   } else {
@@ -165,8 +176,6 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
 
   brokentime->minutes = fmod (remaining, MINUTES_PER_HOUR);
   remaining = floor (remaining / MINUTES_PER_HOUR);
-
-  brokentime->hours = fmod (remaining, HOURS_PER_DAY);
   remaining = floor (remaining / HOURS_PER_DAY);
 
   if (milliseconds < 0) {

@@ -16,14 +16,6 @@ function p (val)
   return val + " (" + typeof (val) + ")";
 }
 
-// FIXME: we don't test values between -0.5 (included) and 0 (not included) this
-// is because flash player seems to handle them in a strange way that is not
-// (yet) duplicated by swfdec
-for (var i = 0; i < values.length; i++) {
-  if (values[i] >= -0.5 && values[i] < 0)
-    values[i] = -0.6 - i;
-}
-
 yearValues = [1983, 83, 0, 100, 99, 101, -100, -500, -271823, -271822, -271821, 275759, 275760, 275761, 100000000000000, -100000000000000];
 yearValues = yearValues.concat (values);
 monthValues = [5, 0, 11, 12, -1, 20, -20];

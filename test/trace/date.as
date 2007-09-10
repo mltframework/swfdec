@@ -121,7 +121,7 @@ for (i = 0; i < millisecondValues.length; i++) {
 
 for (i = 0; i < yearValues.length; i++) {
   // we can't test undefined first parameter, returns current time
-  if (yearValues[i] == undefined) // FIXME: matches null too, shouldn't
+  if (typeof (yearValues[i]) == "undefined")
     continue;
   trace ("new Date (" + p (yearValues[i]) + ")");
   traced (new Date (yearValues[i])); // Note: UTC here
@@ -133,10 +133,6 @@ for (i = 0; i < yearValues.length; i++) {
 }
 
 for (i = 0; i < monthValues.length; i++) {
-  // we can't test undefined second parameter, creates time based on UTC
-  // FIXME: could just use traced for those
-  if (monthValues[i] == undefined)
-    continue;
   trace ("new Date (" + yearValues[0] + ", " + p (monthValues[i]) + ")");
   traced (new Date (yearValues[0], monthValues[i]));
   trace ("new Date (" + yearValues[0] + ", " + p (monthValues[i]) + ", " + dateValues[0] + ", " +
@@ -200,20 +196,20 @@ for (i = 0; i < millisecondValues.length; i++) {
 
 // set* functions
 
-// can't trace the return values of the functions here, because they return valueOf that is in UTC
-
-num_test_dates = 3;
+num_test_dates = 5;
 function test_date (num)
 {
-  // FIXME: we don't check < 1970 year values, because there is weird flashplayer
-  // bug that is not copied by swfdec (yet)
   if (num == 0) {
-    return new Date (yearValues[0], monthValues[0], dateValues[0], hourValues[0], minuteValues[0],
-	secondValues[0], millisecondValues[0]);
+    return new Date (yearValues[0], monthValues[0], dateValues[0],
+	hourValues[0], minuteValues[0], secondValues[0], millisecondValues[0]);
   } else if (num == 1) {
     return new Date (2005, 8, 20, NaN);
-  } else {
+  } else if (num == 2) {
     return new Date (275762, 0, 1);
+  } else if (num == 3) {
+    return new Date (1804, 3, 24);
+  } else {
+    return new Date (-40, 1, 5);
   }
 }
 
@@ -221,8 +217,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < yearValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setYear (" + p (yearValues[i]) + ")");
-    traced (d);
-    d.setYear (yearValues[i]);
+    trace (d.setYear (yearValues[i]));
     traced (d);
   }
 }
@@ -231,8 +226,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < monthValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setMonth (" + p (monthValues[i]) + ")");
-    traced (d);
-    d.setMonth (monthValues[i]);
+    trace (d.setMonth (monthValues[i]));
     traced (d);
   }
 }
@@ -241,8 +235,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < dateValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setDate (" + p (dateValues[i]) + ")");
-    traced (d);
-    d.setDate (dateValues[i]);
+    trace (d.setDate (dateValues[i]));
     traced (d);
   }
 }
@@ -251,8 +244,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < hoursValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setHours (" + p (hoursValues[i]) + ")");
-    traced (d);
-    d.setHours (hoursValues[i]);
+    trace (d.setHours (hoursValues[i]));
     traced (d);
   }
 }
@@ -261,8 +253,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < minutesValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setMinutes (" + p (minutesValues[i]) + ")");
-    traced (d);
-    d.setMinutes (minutesValues[i]);
+    trace (d.setMinutes (minutesValues[i]));
     traced (d);
   }
 }
@@ -271,8 +262,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < secondsValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setSeconds (" + p (secondsValues[i]) + ")");
-    traced (d);
-    d.setSeconds (secondsValues[i]);
+    trace (d.setSeconds (secondsValues[i]));
     traced (d);
   }
 }
@@ -281,8 +271,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < millisecondsValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setMilliseconds (" + p (millisecondsValues[i]) + ")");
-    traced (d);
-    d.setMilliseconds (millisecondsValues[i]);
+    trace (d.setMilliseconds (millisecondsValues[i]));
     traced (d);
   }
 }

@@ -770,6 +770,15 @@ EXTRA_DIST = \
 	object-watch-6.swf.trace \
 	object-watch-7.swf \
 	object-watch-7.swf.trace \
+	object-watch-segv.as \
+	object-watch-segv-5.swf \
+	object-watch-segv-5.swf.trace \
+	object-watch-segv-6.swf \
+	object-watch-segv-6.swf.trace \
+	object-watch-segv-7.swf \
+	object-watch-segv-7.swf.trace \
+	object-watch-segv-8.swf \
+	object-watch-segv-8.swf.trace \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \

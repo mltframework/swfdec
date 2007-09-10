@@ -772,6 +772,13 @@ EXTRA_DIST = \
 	order.swf.trace \
 	parent-root.swf \
 	parent-root.swf.trace \
+	parse-int.as \
+	parse-int-5.swf \
+	parse-int-5.swf.trace \
+	parse-int-6.swf \
+	parse-int-6.swf.trace \
+	parse-int-7.swf \
+	parse-int-7.swf.trace \
 	place-object.c \
 	place-object-5.swf \
 	place-object-5.swf.trace \

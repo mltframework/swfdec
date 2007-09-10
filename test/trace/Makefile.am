@@ -741,6 +741,13 @@ EXTRA_DIST = \
 	number-properties-7.swf.trace \
 	number-properties-8.swf \
 	number-properties-8.swf.trace \
+	object-ispropertyenumerable.as \
+	object-ispropertyenumerable-5.swf \
+	object-ispropertyenumerable-5.swf.trace \
+	object-ispropertyenumerable-6.swf \
+	object-ispropertyenumerable-6.swf.trace \
+	object-ispropertyenumerable-7.swf \
+	object-ispropertyenumerable-7.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \

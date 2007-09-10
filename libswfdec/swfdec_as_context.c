@@ -23,6 +23,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_frame_internal.h"
@@ -1166,7 +1167,54 @@ void
 swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  int i = swfdec_as_value_to_integer (cx, &argv[0]);
+  const char *s;
+  char *tail;
+  int radix;
+  long int i;
+
+  if (argc < 1)
+    return;
+
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+
+  if (argc >= 2) {
+    radix = swfdec_as_value_to_integer (cx, &argv[1]);
+
+    if (radix < 2 || radix > 36) {
+      SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+      return;
+    }
+
+    // special case, strtol parses things that we shouldn't parse
+    if (radix == 16) {
+      const char *end = s + strspn (s, " \t\r\n");
+      if (end != s && end[0] == '0' && end[1] == 'x') {
+	SWFDEC_AS_VALUE_SET_NUMBER (retval, 0);
+	return;
+      }
+    }
+  } else {
+    radix = 0;
+  }
+
+  // special case
+  if ((s[0] == '-' || s[0] == '+') && s[1] == '0' && s[2] == 'x') {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    return;
+  }
+
+  if (s[0] == '0' && s[1] == 'x') {
+    s = s + 2;
+    i = strtol (s, &tail, (radix != 0 ? radix : 16));
+  } else {
+    i = strtol (s, &tail, (radix != 0 ? radix : 10));
+  }
+
+  if (tail == s) {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    return;
+  }
+
   SWFDEC_AS_VALUE_SET_INT (retval, i);
 }
 

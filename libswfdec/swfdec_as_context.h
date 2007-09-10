@@ -75,7 +75,6 @@ struct _SwfdecAsContext {
   SwfdecAsObject *	Function_prototype;	/* Function.prototype - NULL in Flash 5 */
   SwfdecAsObject *	Object;		/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
-  SwfdecAsObject *	Array;		/* Array */
 
   /* debugging */
   SwfdecAsDebugger *	debugger;	/* debugger (or NULL if none) */

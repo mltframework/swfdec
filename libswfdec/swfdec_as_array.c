@@ -541,16 +541,22 @@ SwfdecAsObject *
 swfdec_as_array_new (SwfdecAsContext *context)
 {
   SwfdecAsObject *ret;
+  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (context->Array != NULL, NULL);
 
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
-    return FALSE;
+    return NULL;
+
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
-  swfdec_as_object_set_constructor (ret, context->Array);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Array, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
   swfdec_as_array_set_length (ret, 0);
+
   return ret;
 }
 
@@ -1238,7 +1244,6 @@ swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
       0, proto));
   if (!array)
     return;
-  context->Array = array;
 
   /* set the right properties on the Array object */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);

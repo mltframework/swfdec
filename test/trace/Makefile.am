@@ -547,13 +547,6 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
-	hasownproperty-propflags.as \
-	hasownproperty-propflags-5.swf \
-	hasownproperty-propflags-5.swf.trace \
-	hasownproperty-propflags-6.swf \
-	hasownproperty-propflags-6.swf.trace \
-	hasownproperty-propflags-7.swf \
-	hasownproperty-propflags-7.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \
@@ -741,6 +734,13 @@ EXTRA_DIST = \
 	number-properties-7.swf.trace \
 	number-properties-8.swf \
 	number-properties-8.swf.trace \
+	object-hasownproperty.as \
+	object-hasownproperty-5.swf \
+	object-hasownproperty-5.swf.trace \
+	object-hasownproperty-6.swf \
+	object-hasownproperty-6.swf.trace \
+	object-hasownproperty-7.swf \
+	object-hasownproperty-7.swf.trace \
 	object-ispropertyenumerable.as \
 	object-ispropertyenumerable-5.swf \
 	object-ispropertyenumerable-5.swf.trace \

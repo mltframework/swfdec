@@ -22,6 +22,12 @@
 ASSetNative = ASnative (4, 0);
 ASSetNativeAccessor = ASnative (4, 1);
 
+/*** Object ***/
+/* Only Flash extensions here, rest to swfdec_as_initialize.as */
+
+Object.registerClass = ASnative(101, 8);
+ASSetPropFlags (Object, null, 7);
+
 /*** ASBROADCASTER ***/
 
 function AsBroadcaster () { };

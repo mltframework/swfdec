@@ -541,16 +541,22 @@ SwfdecAsObject *
 swfdec_as_array_new (SwfdecAsContext *context)
 {
   SwfdecAsObject *ret;
+  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_return_val_if_fail (context->Array != NULL, NULL);
 
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
-    return FALSE;
+    return NULL;
+
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
-  swfdec_as_object_set_constructor (ret, context->Array);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Array, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
   swfdec_as_array_set_length (ret, 0);
+
   return ret;
 }
 
@@ -1188,7 +1194,8 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
 // Constructor
 
-static void
+SWFDEC_AS_CONSTRUCTOR (252, 0, swfdec_as_array_construct, swfdec_as_array_get_type)
+void
 swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -1219,71 +1226,4 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
-}
-
-void
-swfdec_as_array_init_context (SwfdecAsContext *context, guint version)
-{
-  SwfdecAsObject *array, *proto;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
-    return;
-  proto = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
-  swfdec_as_object_add (proto, context, sizeof (SwfdecAsArray));
-  array = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global,
-      SWFDEC_AS_STR_Array, 0, SWFDEC_TYPE_AS_ARRAY, swfdec_as_array_construct, 
-      0, proto));
-  if (!array)
-    return;
-  context->Array = array;
-
-  /* set the right properties on the Array object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable_and_flags (array, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_CASEINSENSITIVE);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_CASEINSENSITIVE, &val);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_DESCENDING);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_DESCENDING, &val);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_UNIQUESORT);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_UNIQUESORT, &val);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_RETURNINDEXEDARRAY);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_RETURNINDEXEDARRAY, &val);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, ARRAY_SORT_OPTION_NUMERIC);
-  swfdec_as_object_set_variable (array, SWFDEC_AS_STR_NUMERIC, &val);
-
-  /* set the right properties on the Array.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 0,
-      swfdec_as_array_toString, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_join,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_join, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_push,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_do_push, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pop,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_do_pop, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_unshift,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_do_unshift, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_shift,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_do_shift, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_reverse,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_reverse, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_concat,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_concat, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_slice,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_slice, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_splice,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_splice, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_sort,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_sort, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_sortOn,
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_array_sortOn, 0);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }

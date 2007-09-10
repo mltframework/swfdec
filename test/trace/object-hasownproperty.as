@@ -9,6 +9,8 @@ for (var i = 1; i <= 8191; i++) {
   ASSetPropFlags (o, i, i, 0);
 }
 
+trace ("(no param): " + o.hasOwnProperty ());
+trace ("not_found: " + o.hasOwnProperty ("not_found"));
 for (var i = 0; i <= 8191; i++) {
   trace (i + ": " + o.hasOwnProperty (i));
 }

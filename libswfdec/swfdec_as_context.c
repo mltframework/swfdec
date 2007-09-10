@@ -23,6 +23,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include "swfdec_as_context.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_frame_internal.h"
@@ -33,7 +34,6 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
-#include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
@@ -360,7 +360,6 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
     swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
   swfdec_as_object_mark (context->Object_prototype);
-  swfdec_as_object_mark (context->Array);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 
@@ -1144,27 +1143,87 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 19, swfdec_as_context_isFinite)
+void
 swfdec_as_context_isFinite (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  double d = swfdec_as_value_to_number (cx, &argv[0]);
+  double d;
+
+  if (argc < 1)
+    return;
+
+  d = swfdec_as_value_to_number (cx, &argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isfinite (d) ? TRUE : FALSE);
 }
 
-static void
+SWFDEC_AS_NATIVE (200, 18, swfdec_as_context_isNaN)
+void
 swfdec_as_context_isNaN (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  double d = swfdec_as_value_to_number (cx, &argv[0]);
+  double d;
+
+  if (argc < 1)
+    return;
+
+  d = swfdec_as_value_to_number (cx, &argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isnan (d) ? TRUE : FALSE);
 }
 
-static void
+SWFDEC_AS_NATIVE (100, 2, swfdec_as_context_parseInt)
+void
 swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  int i = swfdec_as_value_to_integer (cx, &argv[0]);
+  const char *s;
+  char *tail;
+  int radix;
+  long int i;
+
+  if (argc < 1)
+    return;
+
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+
+  if (argc >= 2) {
+    radix = swfdec_as_value_to_integer (cx, &argv[1]);
+
+    if (radix < 2 || radix > 36) {
+      SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+      return;
+    }
+
+    // special case, strtol parses things that we shouldn't parse
+    if (radix == 16) {
+      const char *end = s + strspn (s, " \t\r\n");
+      if (end != s && end[0] == '0' && end[1] == 'x') {
+	SWFDEC_AS_VALUE_SET_NUMBER (retval, 0);
+	return;
+      }
+    }
+  } else {
+    radix = 0;
+  }
+
+  // special case
+  if ((s[0] == '-' || s[0] == '+') && s[1] == '0' && s[2] == 'x') {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    return;
+  }
+
+  if (s[0] == '0' && s[1] == 'x') {
+    s = s + 2;
+    i = strtol (s, &tail, (radix != 0 ? radix : 16));
+  } else {
+    i = strtol (s, &tail, (radix != 0 ? radix : 10));
+  }
+
+  if (tail == s) {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    return;
+  }
+
   SWFDEC_AS_VALUE_SET_INT (retval, i);
 }
 
@@ -1179,12 +1238,6 @@ swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, HUGE_VAL);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Infinity, &val);
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_isFinite, 0,
-      swfdec_as_context_isFinite, 1);
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_isNaN, 0,
-      swfdec_as_context_isNaN, 1);
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_parseInt, 0,
-      swfdec_as_context_parseInt, 1);
 }
 
 void
@@ -1234,9 +1287,6 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_object_init_context (context, version);
   /* define the global object and other important ones */
   swfdec_as_context_init_global (context, version);
-  swfdec_as_array_init_context (context, version);
-  /* define the type objects */
-  swfdec_as_string_init_context (context, version);
 
   /* run init script */
   swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), 8);

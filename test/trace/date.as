@@ -6,27 +6,15 @@
 
 function traced (d)
 {
-  trace (d.getFullYear () + "-" + d.getMonth () + "-" + d.getDate () + " " + d.getHours () + ":" + d.getMinutes () + ":" + d.getSeconds () + "." + d.getMilliseconds ());
-}
-
-function traced_utc (d)
-{
-  trace (d.getTime () + " " + d.valueOf ());
-  trace (d.getUTCFullYear () + "-" + d.getUTCMonth () + "-" + d.getUTCDate () + " " + d.getUTCHours () + ":" + d.getUTCMinutes () + ":" + d.getUTCSeconds () + "." + d.getUTCMilliseconds ());
+  trace (d.getTime () + " " + d.valueOf () + ": " + d.toString ());
+  trace (d.getFullYear () + "/" + d.getYear () + "-" + d.getMonth () + "-" + d.getDate () + " " + d.getDay () + " " + d.getHours () + ":" + d.getMinutes () + ":" + d.getSeconds () + "." + d.getMilliseconds ());
+  trace (d.getUTCFullYear () + "/" + d.getUTCYear () + "-" + d.getUTCMonth () + "-" + d.getUTCDate () + " " + d.getUTCDay () + " " + d.getUTCHours () + ":" + d.getUTCMinutes () + ":" + d.getUTCSeconds () + "." + d.getUTCMilliseconds ());
 }
 
 function p (val)
 {
   return val + " (" + typeof (val) + ")";
 }
-
-// FIXME: we don't test values between -0.5 (included) and 0 (not included) this
-// is because flash player seems to handle them in a strange way that is not
-// (yet) duplicated by swfdec
-  for (var i = 0; i < values.length; i++) {
-    if (values[i] >= -0.5 && values[i] < 0)
-      values[i] = -0.6 - i;
-  }
 
 yearValues = [1983, 83, 0, 100, 99, 101, -100, -500, -271823, -271822, -271821, 275759, 275760, 275761, 100000000000000, -100000000000000];
 yearValues = yearValues.concat (values);
@@ -48,7 +36,7 @@ for (i = 0; i < yearValues.length; i++) {
   val = Date.UTC (yearValues[i]);
   trace (val);
   if (val != undefined)
-    traced_utc (new Date (val));
+    traced (new Date (val));
   trace ("Date.UTC (" + p (yearValues[i]) + ", " + monthValues[0] + ", " + dateValues[0] + ", " +
       hourValues[0] + ", " + minuteValues[0] + ", " + secondValues[0] + ", " +
       millisecondValues[0] + ")");
@@ -56,7 +44,7 @@ for (i = 0; i < yearValues.length; i++) {
       secondValues[0], millisecondValues[0]);
   trace (val);
   if (val != undefined)
-    traced_utc (new Date (val));
+    traced (new Date (val));
 }
 
 for (i = 0; i < monthValues.length; i++) {
@@ -125,10 +113,10 @@ for (i = 0; i < millisecondValues.length; i++) {
 
 for (i = 0; i < yearValues.length; i++) {
   // we can't test undefined first parameter, returns current time
-  if (yearValues[i] == undefined) // FIXME: matches null too, shouldn't
+  if (typeof (yearValues[i]) == "undefined")
     continue;
   trace ("new Date (" + p (yearValues[i]) + ")");
-  traced_utc (new Date (yearValues[i])); // Note: UTC here
+  traced (new Date (yearValues[i])); // Note: UTC here
   trace ("new Date (" + p (yearValues[i]) + ", " + monthValues[0] + ", " + dateValues[0] + ", " +
       hourValues[0] + ", " + minuteValues[0] + ", " + secondValues[0] + ", " +
       millisecondValues[0] + ")");
@@ -137,10 +125,6 @@ for (i = 0; i < yearValues.length; i++) {
 }
 
 for (i = 0; i < monthValues.length; i++) {
-  // we can't test undefined second parameter, creates time based on UTC
-  // FIXME: could just use traced_utc for those
-  if (monthValues[i] == undefined)
-    continue;
   trace ("new Date (" + yearValues[0] + ", " + p (monthValues[i]) + ")");
   traced (new Date (yearValues[0], monthValues[i]));
   trace ("new Date (" + yearValues[0] + ", " + p (monthValues[i]) + ", " + dateValues[0] + ", " +
@@ -204,20 +188,20 @@ for (i = 0; i < millisecondValues.length; i++) {
 
 // set* functions
 
-// can't trace the return values of the functions here, because they return valueOf that is in UTC
-
-num_test_dates = 3;
+num_test_dates = 5;
 function test_date (num)
 {
-  // FIXME: we don't check < 1970 year values, because there is weird flashplayer
-  // bug that is not copied by swfdec (yet)
   if (num == 0) {
-    return new Date (yearValues[0], monthValues[0], dateValues[0], hourValues[0], minuteValues[0],
-	secondValues[0], millisecondValues[0]);
+    return new Date (yearValues[0], monthValues[0], dateValues[0],
+	hourValues[0], minuteValues[0], secondValues[0], millisecondValues[0]);
   } else if (num == 1) {
     return new Date (2005, 8, 20, NaN);
-  } else {
+  } else if (num == 2) {
     return new Date (275762, 0, 1);
+  } else if (num == 3) {
+    return new Date (1804, 3, 24);
+  } else {
+    return new Date (-40, 1, 5);
   }
 }
 
@@ -225,8 +209,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < yearValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setYear (" + p (yearValues[i]) + ")");
-    traced (d);
-    d.setYear (yearValues[i]);
+    trace (d.setYear (yearValues[i]));
     traced (d);
   }
 }
@@ -235,8 +218,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < monthValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setMonth (" + p (monthValues[i]) + ")");
-    traced (d);
-    d.setMonth (monthValues[i]);
+    trace (d.setMonth (monthValues[i]));
     traced (d);
   }
 }
@@ -245,8 +227,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < dateValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setDate (" + p (dateValues[i]) + ")");
-    traced (d);
-    d.setDate (dateValues[i]);
+    trace (d.setDate (dateValues[i]));
     traced (d);
   }
 }
@@ -255,8 +236,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < hoursValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setHours (" + p (hoursValues[i]) + ")");
-    traced (d);
-    d.setHours (hoursValues[i]);
+    trace (d.setHours (hoursValues[i]));
     traced (d);
   }
 }
@@ -265,8 +245,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < minutesValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setMinutes (" + p (minutesValues[i]) + ")");
-    traced (d);
-    d.setMinutes (minutesValues[i]);
+    trace (d.setMinutes (minutesValues[i]));
     traced (d);
   }
 }
@@ -275,8 +254,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < secondsValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setSeconds (" + p (secondsValues[i]) + ")");
-    traced (d);
-    d.setSeconds (secondsValues[i]);
+    trace (d.setSeconds (secondsValues[i]));
     traced (d);
   }
 }
@@ -285,8 +263,7 @@ for (var num = 0; num < num_test_dates; num++) {
   for (var i = 0; i < millisecondsValues.length; i++) {
     var d = test_date (num);
     trace ("test_date (" + num + ").setMilliseconds (" + p (millisecondsValues[i]) + ")");
-    traced (d);
-    d.setMilliseconds (millisecondsValues[i]);
+    trace (d.setMilliseconds (millisecondsValues[i]));
     traced (d);
   }
 }

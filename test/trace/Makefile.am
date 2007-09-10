@@ -547,13 +547,6 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
-	hasownproperty-propflags.as \
-	hasownproperty-propflags-5.swf \
-	hasownproperty-propflags-5.swf.trace \
-	hasownproperty-propflags-6.swf \
-	hasownproperty-propflags-6.swf.trace \
-	hasownproperty-propflags-7.swf \
-	hasownproperty-propflags-7.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \
@@ -683,6 +676,13 @@ EXTRA_DIST = \
 	math-properties-6.swf.trace \
 	math-properties-7.swf \
 	math-properties-7.swf.trace \
+	mouse-properties.as \
+	mouse-properties-5.swf \
+	mouse-properties-5.swf.trace \
+	mouse-properties-6.swf \
+	mouse-properties-6.swf.trace \
+	mouse-properties-7.swf \
+	mouse-properties-7.swf.trace \
 	mouse-scaled.as \
 	mouse-scaled-5.swf \
 	mouse-scaled-5.swf.act \
@@ -734,6 +734,20 @@ EXTRA_DIST = \
 	number-properties-7.swf.trace \
 	number-properties-8.swf \
 	number-properties-8.swf.trace \
+	object-hasownproperty.as \
+	object-hasownproperty-5.swf \
+	object-hasownproperty-5.swf.trace \
+	object-hasownproperty-6.swf \
+	object-hasownproperty-6.swf.trace \
+	object-hasownproperty-7.swf \
+	object-hasownproperty-7.swf.trace \
+	object-ispropertyenumerable.as \
+	object-ispropertyenumerable-5.swf \
+	object-ispropertyenumerable-5.swf.trace \
+	object-ispropertyenumerable-6.swf \
+	object-ispropertyenumerable-6.swf.trace \
+	object-ispropertyenumerable-7.swf \
+	object-ispropertyenumerable-7.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \
@@ -749,6 +763,13 @@ EXTRA_DIST = \
 	object-valueof-7.swf.trace \
 	object-valueof-8.swf \
 	object-valueof-8.swf.trace \
+	object-watch.as \
+	object-watch-5.swf \
+	object-watch-5.swf.trace \
+	object-watch-6.swf \
+	object-watch-6.swf.trace \
+	object-watch-7.swf \
+	object-watch-7.swf.trace \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \
@@ -765,6 +786,13 @@ EXTRA_DIST = \
 	order.swf.trace \
 	parent-root.swf \
 	parent-root.swf.trace \
+	parse-int.as \
+	parse-int-5.swf \
+	parse-int-5.swf.trace \
+	parse-int-6.swf \
+	parse-int-6.swf.trace \
+	parse-int-7.swf \
+	parse-int-7.swf.trace \
 	place-object.c \
 	place-object-5.swf \
 	place-object-5.swf.trace \

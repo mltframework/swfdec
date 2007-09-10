@@ -24,6 +24,8 @@ ASSetNativeAccessor = ASnative (4, 1);
 
 /*** BASE OBJECTS ***/
 
+ASSetPropFlags (Object, null, 7);
+
 Boolean = ASconstructor(107, 2);
 ASSetNative(Boolean.prototype, 107, "valueOf,toString");
 ASSetPropFlags(Boolean.prototype, null, 3);
@@ -37,6 +39,12 @@ Number.NEGATIVE_INFINITY = -Infinity;
 Number.MIN_VALUE = 0;
 Number.MAX_VALUE = 1.79769313486231e+308;
 ASSetPropFlags(Number, null, 7);
+
+String = ASconstructor(251, 0);
+ASSetNative(String.prototype, 251, "valueOf,toString,toUpperCase,toLowerCase,charAt,charCodeAt,concat,indexOf,lastIndexOf,slice,substring,split,substr", 1);
+ASSetPropFlags(String.prototype, null, 3);
+String.fromCharCode = ASnative(251, 14);
+ASSetPropFlags(String, null, 3);
 
 Math = {
   E: 2.71828182845905,
@@ -58,6 +66,23 @@ Date.prototype.valueOf = Date.prototype.getTime;
 Date.UTC = ASnative (103, 257);
 ASSetPropFlags (Date.prototype, null, 3);
 ASSetPropFlags (Date, null, 7);
+
+Array = ASconstructor (252, 0);
+ASSetNative (Array.prototype, 252, "push,pop,concat,shift,unshift,slice,join,splice,toString,sort,reverse,sortOn", 1);
+ASSetPropFlags (Array.prototype, null, 3);
+Array.CASEINSENSITIVE = 1;
+Array.DESCENDING = 2;
+Array.UNIQUESORT = 4;
+Array.RETURNINDEXEDARRAY = 8;
+Array.NUMERIC = 16;
+
+/* GLOBAL FUNCTIONS */
+
+escape = ASnative (100, 0);
+unescape = ASnative (100, 1);
+parseInt = ASnative (100, 2);
+isNaN = ASnative (200, 18);
+isFinite = ASnative (200, 19);
 
 /*** GLOBAL PROPFLAGS */
 

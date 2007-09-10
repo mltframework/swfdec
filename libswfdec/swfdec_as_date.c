@@ -151,7 +151,22 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
 
   g_assert (brokentime != NULL);
 
-  remaining = milliseconds;
+  /* special case: hours are calculated from different value */
+  if (isfinite (milliseconds)) {
+    remaining = floor (milliseconds + 0.5);
+  } else {
+    remaining = 0;
+  }
+
+  remaining = floor (remaining / MILLISECONDS_PER_HOUR);
+  brokentime->hours = fmod (remaining, HOURS_PER_DAY);
+
+  /* hours done, on with the rest */
+  if (isfinite (milliseconds)) {
+    remaining = milliseconds;
+  } else {
+    remaining = 0;
+  }
 
   brokentime->milliseconds = fmod (remaining, MILLISECONDS_PER_SECOND);
   remaining = floor (remaining / MILLISECONDS_PER_SECOND);
@@ -161,8 +176,6 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
 
   brokentime->minutes = fmod (remaining, MINUTES_PER_HOUR);
   remaining = floor (remaining / MINUTES_PER_HOUR);
-
-  brokentime->hours = fmod (remaining, HOURS_PER_DAY);
   remaining = floor (remaining / HOURS_PER_DAY);
 
   if (milliseconds < 0) {
@@ -178,9 +191,14 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
 
   // now remaining == days since 1970
 
-  brokentime->day_of_week = fmod ((remaining + 4), 7);
-  if (brokentime->day_of_week < 0)
-    brokentime->day_of_week += 7;
+  if (isfinite (milliseconds)) {
+    brokentime->day_of_week = fmod ((remaining + 4), 7);
+    if (brokentime->day_of_week < 0)
+      brokentime->day_of_week += 7;
+  } else {
+    // special case
+    brokentime->day_of_week = 0;
+  }
 
   year = swfdec_as_date_days_from_utc_to_year (remaining);
   brokentime->year = year - 1900;
@@ -332,11 +350,7 @@ swfdec_as_date_get_brokentime_utc (const SwfdecAsDate *date,
 {
   g_assert (swfdec_as_date_is_valid (date));
 
-  if (isfinite (date->milliseconds)) {
-    swfdec_as_date_milliseconds_to_brokentime (date->milliseconds, brokentime);
-  } else {
-    swfdec_as_date_milliseconds_to_brokentime (0, brokentime);
-  }
+  swfdec_as_date_milliseconds_to_brokentime (date->milliseconds, brokentime);
 }
 
 static void
@@ -349,17 +363,10 @@ static void
 swfdec_as_date_get_brokentime_local (const SwfdecAsDate *date,
     BrokenTime *brokentime)
 {
-  double milliseconds;
-
   g_assert (swfdec_as_date_is_valid (date));
 
-  if (isfinite (date->milliseconds)) {
-    milliseconds = date->milliseconds + date->utc_offset * 60 * 1000;
-  } else {
-    milliseconds = 0;
-  }
-
-  swfdec_as_date_milliseconds_to_brokentime (milliseconds, brokentime);
+  swfdec_as_date_milliseconds_to_brokentime (
+      date->milliseconds + date->utc_offset * 60 * 1000, brokentime);
 }
 
 static void

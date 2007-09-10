@@ -242,7 +242,8 @@ ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
   g_strfreev (names);
 }
 
-static void
+SWFDEC_AS_NATIVE (101, 8, swfdec_player_object_registerClass)
+void
 swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -278,8 +279,6 @@ swfdec_player_init_global (SwfdecPlayer *player, guint version)
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
 
-  swfdec_as_object_add_function (context->Object, SWFDEC_AS_STR_registerClass, 
-      0, swfdec_player_object_registerClass, 2);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_setInterval, 
       0, swfdec_player_setInterval, 2);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_clearInterval, 

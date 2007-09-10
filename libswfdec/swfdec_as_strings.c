@@ -350,6 +350,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("setFullYear")
   SWFDEC_AS_CONSTANT_STRING ("setUTCFullYear")
   SWFDEC_AS_CONSTANT_STRING ("target")
+  SWFDEC_AS_CONSTANT_STRING ("isPropertyEnumerable")
+  SWFDEC_AS_CONSTANT_STRING ("watch")
+  SWFDEC_AS_CONSTANT_STRING ("unwatch")
   /* add more here */
 ;
 

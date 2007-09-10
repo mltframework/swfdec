@@ -33,10 +33,6 @@ G_BEGIN_DECLS
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);
 
 
-/* swfdec_as_array.c */
-void	      	swfdec_as_array_init_context	(SwfdecAsContext *	context,
-					      	 guint			version);
-
 void		swfdec_as_function_set_constructor (SwfdecAsFunction *	fun);
 void		swfdec_as_function_init_context (SwfdecAsContext *	context,
 						 guint			version);

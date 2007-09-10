@@ -46,9 +46,6 @@ ASSetPropFlags(String.prototype, null, 3);
 String.fromCharCode = ASnative(251, 14);
 ASSetPropFlags(String, null, 3);
 
-escape = ASnative (100, 0);
-unescape = ASnative (100, 1);
-
 Math = {
   E: 2.71828182845905,
   LN10: 2.30258509299405,
@@ -69,6 +66,14 @@ Date.prototype.valueOf = Date.prototype.getTime;
 Date.UTC = ASnative (103, 257);
 ASSetPropFlags (Date.prototype, null, 3);
 ASSetPropFlags (Date, null, 7);
+
+/* GLOBAL FUNCTIONS */
+
+escape = ASnative (100, 0);
+unescape = ASnative (100, 1);
+parseInt = ASnative (100, 2);
+isNaN = ASnative (200, 18);
+isFinite = ASnative (200, 19);
 
 /*** GLOBAL PROPFLAGS */
 

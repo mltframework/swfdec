@@ -33,7 +33,6 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
-#include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
@@ -1235,8 +1234,6 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   /* define the global object and other important ones */
   swfdec_as_context_init_global (context, version);
   swfdec_as_array_init_context (context, version);
-  /* define the type objects */
-  swfdec_as_string_init_context (context, version);
 
   /* run init script */
   swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), 8);

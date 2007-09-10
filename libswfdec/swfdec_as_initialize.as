@@ -40,6 +40,15 @@ Number.MIN_VALUE = 0;
 Number.MAX_VALUE = 1.79769313486231e+308;
 ASSetPropFlags(Number, null, 7);
 
+String = ASconstructor(251, 0);
+ASSetNative(String.prototype, 251, "valueOf,toString,toUpperCase,toLowerCase,charAt,charCodeAt,concat,indexOf,lastIndexOf,slice,substring,split,substr", 1);
+ASSetPropFlags(String.prototype, null, 3);
+String.fromCharCode = ASnative(251, 14);
+ASSetPropFlags(String, null, 3);
+
+escape = ASnative (100, 0);
+unescape = ASnative (100, 1);
+
 Math = {
   E: 2.71828182845905,
   LN10: 2.30258509299405,

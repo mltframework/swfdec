@@ -9,5 +9,6 @@ trace (new MyArray (1, 2, 3));
 foo = MyArray (1, 2, 3);
 trace (foo[1]);
 trace (foo.length);
+trace (["hello", "world"]);
 
 loadMovie ("FSCommand:quit", "");

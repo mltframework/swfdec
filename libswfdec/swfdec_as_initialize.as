@@ -67,6 +67,15 @@ Date.UTC = ASnative (103, 257);
 ASSetPropFlags (Date.prototype, null, 3);
 ASSetPropFlags (Date, null, 7);
 
+Array = ASconstructor (252, 0);
+ASSetNative (Array.prototype, 252, "push,pop,concat,shift,unshift,slice,join,splice,toString,sort,reverse,sortOn", 1);
+ASSetPropFlags (Array.prototype, null, 3);
+Array.CASEINSENSITIVE = 1;
+Array.DESCENDING = 2;
+Array.UNIQUESORT = 4;
+Array.RETURNINDEXEDARRAY = 8;
+Array.NUMERIC = 16;
+
 /* GLOBAL FUNCTIONS */
 
 escape = ASnative (100, 0);

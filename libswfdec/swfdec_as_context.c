@@ -1287,7 +1287,6 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_object_init_context (context, version);
   /* define the global object and other important ones */
   swfdec_as_context_init_global (context, version);
-  swfdec_as_array_init_context (context, version);
 
   /* run init script */
   swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), 8);

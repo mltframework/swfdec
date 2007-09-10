@@ -1322,6 +1322,8 @@ swfdec_as_object_watch (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (watch == NULL)
       return;
     g_hash_table_insert (object->watches, (char *) name, watch);
+  } else {
+    watch->watch = SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]));
   }
 
   if (argc >= 3) {

@@ -333,39 +333,36 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
 	  SWFDEC_AS_VARIABLE_VERSION_8_UP);
     }
   }
+  if (object->watches) {
+    SwfdecAsValue ret = *val;
+    SwfdecAsWatch *watch = g_hash_table_lookup (object->watches, variable);
+    /* FIXME: figure out if this limit here is correct. Add a watch in Flash 7 
+     * and set a variable using Flash 6 */
+    if (watch && swfdec_as_watch_can_recurse (watch)) {
+      SwfdecAsValue args[4];
+      SWFDEC_AS_VALUE_SET_STRING (&args[0], variable);
+      args[1] = var->value;
+      args[2] = *val;
+      args[3] = watch->watch_data;
+      swfdec_as_watch_ref (watch);
+      swfdec_as_function_call (watch->watch, object, 4, args, &ret);
+      swfdec_as_context_run (object->context);
+      swfdec_as_watch_unref (watch);
+      var = swfdec_as_object_hash_lookup (object, variable);
+      if (var == NULL)
+	return;
+    }
+
+    var->value = ret;
+  }
   if (var->get) {
     if (var->set) {
       SwfdecAsValue tmp;
       swfdec_as_function_call (var->set, object, 1, val, &tmp);
       swfdec_as_context_run (object->context);
     }
-  } else { 
-    if (object->watches) {
-      SwfdecAsValue ret = *val;
-      SwfdecAsWatch *watch = g_hash_table_lookup (object->watches, variable);
-      /* FIXME: figure out if this limit here is correct. Add a watch in Flash 7 
-       * and set a variable using Flash 6 */
-      if (watch && swfdec_as_watch_can_recurse (watch)) {
-	SwfdecAsValue args[4];
-	SWFDEC_AS_VALUE_SET_STRING (&args[0], variable);
-	args[1] = var->value;
-	args[2] = *val;
-	args[3] = watch->watch_data;
-	swfdec_as_watch_ref (watch);
-	swfdec_as_function_call (watch->watch, object, 4, args, &ret);
-	swfdec_as_context_run (object->context);
-	swfdec_as_watch_unref (watch);
-	var = swfdec_as_object_hash_lookup (object, variable);
-	if (var == NULL) {
-	  var = swfdec_as_object_hash_create (object, variable, flags);
-	  if (var == NULL)
-	    return;
-	}
-      }
-      var->value = ret;
-    } else {
-      var->value = *val;
-    }
+  } else if (!object->watches) {
+    var->value = *val;
   }
   if (variable == SWFDEC_AS_STR___proto__) {
     if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
@@ -1340,6 +1337,7 @@ void
 swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+  SwfdecAsVariable *var;
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
@@ -1348,6 +1346,11 @@ swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   name = swfdec_as_value_to_string (cx, &argv[0]);
+
+  // special case: can't unwatch native properties
+  if ((var = swfdec_as_object_hash_lookup (object, name))&& var->get != NULL)
+      return;
+
   if (object->watches != NULL && 
       g_hash_table_remove (object->watches, name)) {
 

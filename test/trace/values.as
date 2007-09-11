@@ -16,14 +16,14 @@ printall.toString = function () {
   return this;
 };
 
-tostring = new Object ();
-tostring.toString = function () {
+printtostring = new Object ();
+printtostring.toString = function () {
   trace ("toString called with " + arguments);
   return this;
 };
 
-valueof = new Object ();
-valueof.valueOf = function () {
+printvalueof = new Object ();
+printvalueof.valueOf = function () {
   trace ("valueOf called with " + arguments);
   return this;
 };
@@ -36,7 +36,7 @@ values = [
   true, false, 
   0, 1, 0.5, -1, -0.5, Infinity, -Infinity, NaN,
   "", "0", "-0", "0.0", "1", "Hello World!", "true", "_level0",
-  this, new Object (), Function, printall, tostring, valueof, nothing ];
+  this, new Object (), Function, printall, printtostring, printvalueof, nothing ];
 
 var l = values.length;
 var v = function () {

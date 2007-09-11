@@ -24,6 +24,10 @@ ASSetNativeAccessor = ASnative (4, 1);
 
 /*** BASE OBJECTS ***/
 
+Object.prototype.toLocaleString = function () {
+  return this.toString ();
+};
+ASSetPropFlags (Object.prototype, null, 3);
 ASSetPropFlags (Object, null, 7);
 
 Boolean = ASconstructor(107, 2);

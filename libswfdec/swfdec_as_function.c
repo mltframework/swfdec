@@ -247,6 +247,9 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
     swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
+    swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
     /* prototype functions */
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call,
 	SWFDEC_TYPE_AS_FUNCTION, swfdec_as_function_do_call, 0);

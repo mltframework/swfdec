@@ -173,6 +173,7 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsFunction *function;
   SwfdecAsObject *target;
   SwfdecAsValue val;
+  SwfdecAsVariableFlag flags;
   const char *s;
   char **names;
   guint i, x, y;
@@ -186,8 +187,15 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
   names = g_strsplit (s, ",", -1);
   for (i = 0; names[i]; i++) {
     s = names[i];
-    if (s[0] >= '0' && s[0] <= '9') {
-      SWFDEC_FIXME ("implement the weird numbers");
+    flags = 0;
+    if (s[0] == '6') {
+      flags |= SWFDEC_AS_VARIABLE_VERSION_6_UP;
+      s++;
+    } else if (s[0] == '7') {
+      flags |= SWFDEC_AS_VARIABLE_VERSION_6_UP;
+      s++;
+    } else if (s[0] == '8') {
+      flags |= SWFDEC_AS_VARIABLE_VERSION_8_UP;
       s++;
     }
     function = swfdec_get_asnative (cx, x, y);
@@ -196,7 +204,8 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
       break;
     }
     SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
-    swfdec_as_object_set_variable (target, swfdec_as_context_get_string (cx, s), &val);
+    swfdec_as_object_set_variable_and_flags (target,
+	swfdec_as_context_get_string (cx, s), &val, flags);
     y++;
   }
   g_strfreev (names);

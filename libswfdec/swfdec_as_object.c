@@ -293,6 +293,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     const SwfdecAsValue *val, guint flags)
 {
   SwfdecAsVariable *var;
+  SwfdecAsWatch *watch;
 
   if (!swfdec_as_variable_name_is_valid (variable))
     return;
@@ -335,7 +336,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   }
   if (object->watches) {
     SwfdecAsValue ret = *val;
-    SwfdecAsWatch *watch = g_hash_table_lookup (object->watches, variable);
+    watch = g_hash_table_lookup (object->watches, variable);
     /* FIXME: figure out if this limit here is correct. Add a watch in Flash 7 
      * and set a variable using Flash 6 */
     if (watch && swfdec_as_watch_can_recurse (watch)) {
@@ -354,6 +355,8 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
 
     var->value = ret;
+  } else {
+    watch = NULL;
   }
   if (var->get) {
     if (var->set) {
@@ -361,7 +364,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       swfdec_as_function_call (var->set, object, 1, val, &tmp);
       swfdec_as_context_run (object->context);
     }
-  } else if (!object->watches) {
+  } else if (watch == NULL) {
     var->value = *val;
   }
   if (variable == SWFDEC_AS_STR___proto__) {

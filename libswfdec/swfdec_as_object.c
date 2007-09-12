@@ -1206,7 +1206,8 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
 
 /*** AS CODE ***/
 
-static void
+SWFDEC_AS_NATIVE (101, 2, swfdec_as_object_addProperty)
+void
 swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
@@ -1298,7 +1299,7 @@ swfdec_as_object_get_prototype (SwfdecAsObject *object)
   return SWFDEC_AS_VALUE_GET_OBJECT (&val);
 }
 
-SWFDEC_AS_NATIVE (101, 7, swfdec_as_object_isPrototypeOf)
+SWFDEC_AS_NATIVE (101, 6, swfdec_as_object_isPrototypeOf)
 void
 swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -1403,14 +1404,16 @@ swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (101, 3, swfdec_as_object_valueOf)
+void
 swfdec_as_object_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
-static void
+SWFDEC_AS_NATIVE (101, 4, swfdec_as_object_toString)
+void
 swfdec_as_object_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
@@ -1451,25 +1454,6 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-
-  if (version > 5) {
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_addProperty, 
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_addProperty, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hasOwnProperty, 
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_hasOwnProperty, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_isPropertyEnumerable,
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_isPropertyEnumerable, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_isPrototypeOf,
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_isPrototypeOf, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_watch,
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_watch, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_unwatch,
-	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_unwatch, 0);
-  }
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_valueOf, 
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_valueOf, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_toString, 
-      SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_toString, 0);
 }
 
 /**

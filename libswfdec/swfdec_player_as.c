@@ -192,7 +192,7 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
       flags |= SWFDEC_AS_VARIABLE_VERSION_6_UP;
       s++;
     } else if (s[0] == '7') {
-      flags |= SWFDEC_AS_VARIABLE_VERSION_6_UP;
+      flags |= SWFDEC_AS_VARIABLE_VERSION_7_UP;
       s++;
     } else if (s[0] == '8') {
       flags |= SWFDEC_AS_VARIABLE_VERSION_8_UP;

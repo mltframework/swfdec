@@ -1286,6 +1286,46 @@ swfdec_as_object_isPropertyEnumerable (SwfdecAsContext *cx,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
+static SwfdecAsObject *
+swfdec_as_object_get_prototype (SwfdecAsObject *object)
+{
+  SwfdecAsValue val;
+
+  swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+
+  return SWFDEC_AS_VALUE_GET_OBJECT (&val);
+}
+
+SWFDEC_AS_NATIVE (101, 7, swfdec_as_object_isPrototypeOf)
+void
+swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *retval)
+{
+  SwfdecAsObject *class;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  // return false even if no params
+  if (argc < 1)
+    return;
+
+  class = swfdec_as_value_to_object (cx, &argv[0]);
+  if (class == NULL)
+    return;
+
+  while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
+    if (object == class) {
+      SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+      return;
+    }
+  }
+
+  // not found, nothing to do
+}
+
 SWFDEC_AS_NATIVE (101, 0, swfdec_as_object_watch)
 void
 swfdec_as_object_watch (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -1419,6 +1459,8 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
 	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_hasOwnProperty, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_isPropertyEnumerable,
 	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_isPropertyEnumerable, 0);
+    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_isPrototypeOf,
+	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_isPrototypeOf, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_watch,
 	SWFDEC_TYPE_AS_OBJECT, swfdec_as_object_watch, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_unwatch,

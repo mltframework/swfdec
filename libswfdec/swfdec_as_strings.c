@@ -354,6 +354,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("watch")
   SWFDEC_AS_CONSTANT_STRING ("unwatch")
   SWFDEC_AS_CONSTANT_STRING ("apply")
+  SWFDEC_AS_CONSTANT_STRING ("isPrototypeOf")
   /* add more here */
 ;
 

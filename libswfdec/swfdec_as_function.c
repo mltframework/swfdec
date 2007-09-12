@@ -147,7 +147,8 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 
 /*** AS CODE ***/
 
-static void
+SWFDEC_AS_NATIVE (101, 10, swfdec_as_function_do_call)
+void
 swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -166,7 +167,8 @@ swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
   swfdec_as_context_run (context);
 }
 
-static void
+SWFDEC_AS_NATIVE (101, 11, swfdec_as_function_apply)
+void
 swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -250,11 +252,6 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
     SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
     swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-    /* prototype functions */
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call,
-	SWFDEC_TYPE_AS_FUNCTION, swfdec_as_function_do_call, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_apply,
-	SWFDEC_TYPE_AS_FUNCTION, swfdec_as_function_apply, 0);
   }
 }
 

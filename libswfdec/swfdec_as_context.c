@@ -797,6 +797,10 @@ start:
 	goto start;
     }
     if (pc < startpc || pc >= endpc) {
+      if (pc == endpc) {
+	swfdec_as_frame_return (frame, NULL);
+	goto start;
+      }
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto error;
     }

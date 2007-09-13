@@ -24,8 +24,8 @@ ASSetNativeAccessor = ASnative (4, 1);
 
 /*** BASE OBJECTS ***/
 
-ASSetNative (Function.prototype, 101, "6call,6apply", 10);
-ASSetPropFlags (Function.prototype, null, 3);
+ASSetNative (Object.constructor.prototype, 101, "6call,6apply", 10);
+ASSetPropFlags (Object.constructor.prototype, null, 3);
 
 ASSetNative(Object.prototype, 101, "6watch,6unwatch,6addProperty,valueOf,toString,6hasOwnProperty,6isPrototypeOf,6isPropertyEnumerable");
 Object.prototype.toLocaleString = function () {

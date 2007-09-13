@@ -1610,7 +1610,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   /* FIXME: have a better way to do this */
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
     context->state = SWFDEC_AS_CONTEXT_NEW;
-    swfdec_player_init_global (player, version);
     swfdec_sprite_movie_init_context (player, version);
     swfdec_video_movie_init_context (player, version);
     swfdec_net_connection_init_context (player, version);

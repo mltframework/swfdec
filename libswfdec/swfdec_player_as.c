@@ -59,7 +59,7 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
     }
-    id = swfdec_interval_new_function (player, msecs, TRUE, 
+    id = swfdec_interval_new_function (player, msecs, repeat, 
 	SWFDEC_AS_FUNCTION (object), argc - 2, &argv[2]);
   } else {
     const char *name;
@@ -73,19 +73,29 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
     }
-    id = swfdec_interval_new_object (player, msecs, TRUE, object, name, argc - 3, &argv[3]);
+    id = swfdec_interval_new_object (player, msecs, repeat, object, name, argc - 3, &argv[3]);
   }
   SWFDEC_AS_VALUE_SET_INT (rval, id);
 }
 
-static void
+SWFDEC_AS_NATIVE (250, 0, swfdec_player_setInterval)
+void
 swfdec_player_setInterval (SwfdecAsContext *cx, SwfdecAsObject *obj, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   swfdec_player_do_set_interval (TRUE, cx, argc, argv, rval);
 }
 
-static void
+SWFDEC_AS_NATIVE (250, 2, swfdec_player_setTimeout)
+void
+swfdec_player_setTimeout (SwfdecAsContext *cx, SwfdecAsObject *obj, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  swfdec_player_do_set_interval (FALSE, cx, argc, argv, rval);
+}
+
+SWFDEC_AS_NATIVE (250, 1, swfdec_player_clearInterval)
+void
 swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -282,15 +292,3 @@ swfdec_player_preinit_global (SwfdecPlayer *player, guint version)
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,
       0, swfdec_player_ASconstructor, 2);
 }
-
-void
-swfdec_player_init_global (SwfdecPlayer *player, guint version)
-{
-  SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
-
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_setInterval, 
-      0, swfdec_player_setInterval, 2);
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_clearInterval, 
-      0, swfdec_player_clearInterval, 1);
-}
-

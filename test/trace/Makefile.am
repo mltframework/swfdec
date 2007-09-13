@@ -818,6 +818,13 @@ EXTRA_DIST = \
 	order.swf.trace \
 	parent-root.swf \
 	parent-root.swf.trace \
+	parse-float.as \
+	parse-float-5.swf \
+	parse-float-5.swf.trace \
+	parse-float-6.swf \
+	parse-float-6.swf.trace \
+	parse-float-7.swf \
+	parse-float-7.swf.trace \
 	parse-int.as \
 	parse-int-5.swf \
 	parse-int-5.swf.trace \

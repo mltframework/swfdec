@@ -1290,18 +1290,6 @@ swfdec_as_object_isPropertyEnumerable (SwfdecAsContext *cx,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
-static SwfdecAsObject *
-swfdec_as_object_get_prototype (SwfdecAsObject *object)
-{
-  SwfdecAsValue val;
-
-  swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return NULL;
-
-  return SWFDEC_AS_VALUE_GET_OBJECT (&val);
-}
-
 SWFDEC_AS_NATIVE (101, 6, swfdec_as_object_isPrototypeOf)
 void
 swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
@@ -1320,7 +1308,8 @@ swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
   if (class == NULL)
     return;
 
-  while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
+  while (class->prototype != NULL) {
+    class = class->prototype;
     if (object == class) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
       return;

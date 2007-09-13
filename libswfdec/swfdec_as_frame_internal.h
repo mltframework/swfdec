@@ -20,14 +20,15 @@
 #ifndef _SWFDEC_AS_FRAME_INTERNAL_H_
 #define _SWFDEC_AS_FRAME_INTERNAL_H_
 
-#include <libswfdec/swfdec_as_scope.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_script_internal.h>
 
 G_BEGIN_DECLS
 
+typedef void (* SwfdecAsFrameBlockFunc) (SwfdecAsFrame *frame, gpointer data);
+
 struct _SwfdecAsFrame {
-  SwfdecAsScope		scope_object;
+  SwfdecAsObject	object;
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
@@ -41,7 +42,10 @@ struct _SwfdecAsFrame {
   const char *		function_name;	/* name of function */
   /* script execution */
   SwfdecScript *	script;		/* script being executed */
-  SwfdecAsScope *	scope;		/* first object in scope chain (either this frame or a with object) */
+  GSList *		scope_chain;  	/* the scope chain (with objects etc) */
+  const guint8 *      	block_start;	/* start of current block */
+  const guint8 *      	block_end;	/* end of current block */
+  GArray *		blocks;		/* blocks we have entered (like With) */
   SwfdecAsObject *	target;		/* target to use as last object in scope chain or for SetVariable */
   SwfdecAsObject *	original_target;/* original target (used when resetting target) */
   gboolean		is_local;	/* TRUE if this frame takes local variables */
@@ -55,7 +59,7 @@ struct _SwfdecAsFrame {
 };
 
 struct _SwfdecAsFrameClass {
-  SwfdecAsScopeClass	scope_class;
+  SwfdecAsObjectClass	object_class;
 };
 
 SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *	context,
@@ -76,7 +80,14 @@ SwfdecAsDeleteReturn
 
 void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	target);
-void		swfdec_as_frame_check_scope	(SwfdecAsFrame *	frame);
+void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
+						 const guint8 *		start,
+						 const guint8 *		end,
+						 SwfdecAsFrameBlockFunc	func,
+						 gpointer		data,
+						 GDestroyNotify		destroy);
+void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame);
+void		swfdec_as_frame_check_block	(SwfdecAsFrame *	frame);
 
 
 G_END_DECLS

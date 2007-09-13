@@ -32,14 +32,12 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_as_native_function.c \
 	swfdec_as_number.c \
 	swfdec_as_object.c \
-	swfdec_as_scope.c \
 	swfdec_as_script_function.c \
 	swfdec_as_stack.c \
 	swfdec_as_string.c \
 	swfdec_as_strings.c \
 	swfdec_as_super.c \
 	swfdec_as_types.c \
-	swfdec_as_with.c \
 	swfdec_amf.c \
 	swfdec_asbroadcaster.c \
 	swfdec_audio.c \
@@ -162,13 +160,11 @@ noinst_HEADERS = \
 	swfdec_as_date.h \
 	swfdec_as_interpret.h \
 	swfdec_as_number.h \
-	swfdec_as_scope.h \
 	swfdec_as_script_function.h \
 	swfdec_as_stack.h \
 	swfdec_as_string.h \
 	swfdec_as_strings.h \
 	swfdec_as_super.h \
-	swfdec_as_with.h \
 	swfdec_asnative.h \
 	swfdec_amf.h \
 	swfdec_audio_internal.h \

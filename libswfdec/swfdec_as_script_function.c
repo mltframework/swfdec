@@ -40,7 +40,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function)
   frame = swfdec_as_frame_new (SWFDEC_AS_OBJECT (function)->context, script->script);
   if (frame == NULL)
     return NULL;
-  SWFDEC_AS_SCOPE (frame)->next = script->scope;
+  frame->scope_chain = g_slist_concat (frame->scope_chain, g_slist_copy (script->scope_chain));
   frame->function = function;
   frame->target = script->target;
   frame->original_target = script->target;
@@ -65,8 +65,7 @@ swfdec_as_script_function_mark (SwfdecAsObject *object)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
 
-  if (script->scope)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (script->scope));
+  g_slist_foreach (script->scope_chain, (GFunc) swfdec_as_object_mark, NULL);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_as_script_function_parent_class)->mark (object);
 }
@@ -112,14 +111,13 @@ swfdec_as_script_function_init (SwfdecAsScriptFunction *script_function)
 }
 
 SwfdecAsFunction *
-swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target, SwfdecScript *script)
+swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain, SwfdecScript *script)
 {
   SwfdecAsValue val;
   SwfdecAsScriptFunction *fun;
   SwfdecAsObject *proto;
   SwfdecAsContext *context;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_SCOPE (scope), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
   g_return_val_if_fail (script != NULL, NULL);
 
@@ -129,7 +127,7 @@ swfdec_as_script_function_new (SwfdecAsScope *scope, SwfdecAsObject *target, Swf
   fun = g_object_new (SWFDEC_TYPE_AS_SCRIPT_FUNCTION, NULL);
   if (fun == NULL)
     return NULL;
-  fun->scope = scope;
+  fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;
   fun->target = target;
   swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsScriptFunction));

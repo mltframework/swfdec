@@ -30,7 +30,6 @@
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
-#include "swfdec_as_with.h"
 #include "swfdec_debug.h"
 
 #include <errno.h>
@@ -1742,12 +1741,9 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   /* see function-scope tests */
   if (cx->version > 5) {
     /* FIXME: or original target? */
-    fun = swfdec_as_script_function_new (frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame), frame->target, script);
+    fun = swfdec_as_script_function_new (frame->target, frame->scope_chain, script);
   } else {
-    SwfdecAsScope *scope = frame->scope ? frame->scope : SWFDEC_AS_SCOPE (frame);
-    while (scope->next)
-      scope = scope->next;
-    fun = swfdec_as_script_function_new (scope, frame->target, script);
+    fun = swfdec_as_script_function_new (frame->target, NULL, script);
   }
   if (fun == NULL)
     return;
@@ -2264,6 +2260,14 @@ swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint
 }
 
 static void
+swfdec_action_pop_with (SwfdecAsFrame *frame, gpointer with_object)
+{
+  g_assert (frame->scope_chain->data == with_object);
+  frame->scope_chain = g_slist_delete_link (frame->scope_chain, frame->scope_chain);
+  swfdec_as_frame_pop_block (frame);
+}
+
+static void
 swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsObject *object;
@@ -2280,7 +2284,9 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     SWFDEC_INFO ("With called without an object, skipping");
     cx->frame->pc = (guint8 *) data + len + offset;
   } else {
-    swfdec_as_with_new (object, data + len, offset);
+    cx->frame->scope_chain = g_slist_prepend (cx->frame->scope_chain, object);
+    swfdec_as_frame_push_block (cx->frame, data + len, data + len + offset,
+	swfdec_action_pop_with, object, NULL);
   }
   swfdec_as_stack_pop (cx);
 }

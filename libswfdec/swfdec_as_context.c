@@ -711,7 +711,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   int version;
   guint original_version;
   void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);
-  gboolean check_scope; /* some opcodes avoid a scope check */
+  gboolean check_block; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   if (context->frame == NULL || context->state == SWFDEC_AS_CONTEXT_ABORTED)
@@ -786,19 +786,20 @@ start:
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
   pc = frame->pc;
-  check_scope = TRUE;
+  check_block = TRUE;
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
-    if (pc == endpc) {
-      swfdec_as_frame_return (frame, NULL);
-      goto start;
+    if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
+      SWFDEC_LOG ("code exited block");
+      swfdec_as_frame_check_block (frame);
+      pc = frame->pc;
+      if (frame != context->frame)
+	goto start;
     }
     if (pc < startpc || pc >= endpc) {
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto error;
     }
-    if (check_scope)
-      swfdec_as_frame_check_scope (frame);
 
     /* decode next action */
     action = *pc;
@@ -847,7 +848,7 @@ start:
 	SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
 	    action, spec->name ? spec->name : "Unknown", script->version);
 	frame->pc = pc = nextpc;
-	check_scope = TRUE;
+	check_block = TRUE;
 	continue;
       }
       SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, using version %u instead", 
@@ -875,10 +876,10 @@ start:
     /* FIXME: do this via flag? */
     if (frame->pc == pc) {
       frame->pc = pc = nextpc;
-      check_scope = TRUE;
+      check_block = TRUE;
     } else {
       pc = frame->pc;
-      check_scope = FALSE;
+      check_block = FALSE;
     }
     if (frame == context->frame) {
 #ifndef G_DISABLE_ASSERT

@@ -42,7 +42,7 @@ struct _SwfdecAsScriptFunction {
 
   /* for script script_functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */
-  SwfdecAsScope *	scope;		/* scope this script_function was defined in */
+  GSList *		scope_chain;  	/* scope this script_function was defined in */
   SwfdecAsObject *	target;		/* target this object was defined in */
 };
 
@@ -52,8 +52,8 @@ struct _SwfdecAsScriptFunctionClass {
 
 GType			swfdec_as_script_function_get_type	(void);
 
-SwfdecAsFunction *	swfdec_as_script_function_new		(SwfdecAsScope *	scope,
-								 SwfdecAsObject *	target,
+SwfdecAsFunction *	swfdec_as_script_function_new		(SwfdecAsObject *	target,
+								 const GSList *		scope_chain,
 								 SwfdecScript *		script);
 
 

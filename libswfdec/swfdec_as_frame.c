@@ -535,43 +535,70 @@ swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
 }
 
 /**
- * swfdec_as_frame_find_variable:
+ * swfdec_as_frame_get_variable_and_flags:
  * @frame: a #SwfdecAsFrame
- * @variable: name of the variable to find
+ * @variable: name of the variable
+ * @value: pointer to take value of the variable or %NULL
+ * @flags: pointer to take flags or %NULL
+ * @pobject: pointer to take the actual object that held the variable or %NULL
  *
- * Finds the given variable in the current scope chain. Returns the first 
- * object in the scope chain that contains this variable in its prototype 
- * chain. If you want to know the explicit object that contains the variable,
- * you have to call swfdec_as_object_get_variable_and_flags() on the result.
- * If no such variable exist in the scope chain, %NULL is returned.
- * <note>The returned object might be an internal object. You probably do not
- * want to expose it to scripts. Call swfdec_as_object_resolve () on the
- * returned value to be sure of not having an internal object.</note>
+ * Walks the scope chain of @frame trying to resolve the given @variable and if
+ * found, returns its value and flags. Note that there might be a difference 
+ * between @pobject and the returned object, since the returned object will be
+ * part of the scope chain while @pobject will contain the actual property. It
+ * will be a prototype of the returned object though.
  *
- * Returns: the object that contains @variable or %NULL if none.
+ * Returns: Object in scope chain that contained the variable.
  **/
 SwfdecAsObject *
-swfdec_as_frame_find_variable (SwfdecAsFrame *frame, const char *variable)
+swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variable,
+    SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
   GSList *walk;
-  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
-    if (swfdec_as_object_get_variable (walk->data, variable, &val))
-      return SWFDEC_AS_OBJECT (walk->data);
+    if (swfdec_as_object_get_variable_and_flags (walk->data, variable, value, 
+	  flags, pobject))
+      return walk->data;
   }
   /* we've walked the scope chain down. Now look in the special objects. */
   /* 1) the target */
-  if (swfdec_as_object_get_variable (frame->target, variable, &val))
+  if (swfdec_as_object_get_variable_and_flags (frame->target, variable, value, 
+	flags, pobject))
     return frame->target;
   /* 2) the global object */
-  if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable, &val))
+  if (swfdec_as_object_get_variable_and_flags (
+	SWFDEC_AS_OBJECT (frame)->context->global, variable, value, flags, pobject))
     return SWFDEC_AS_OBJECT (frame)->context->global;
 
   return NULL;
+}
+
+void
+swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variable,
+    const SwfdecAsValue *value, guint default_flags)
+{
+  SwfdecAsObject *pobject, *set;
+  GSList *walk;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (variable != NULL);
+
+  set = NULL;
+  for (walk = frame->scope_chain; walk; walk = walk->next) {
+    if (swfdec_as_object_get_variable_and_flags (walk->data, variable, NULL, NULL, &pobject) &&
+	pobject == walk->data) {
+      set = walk->data;
+      break;
+    }
+  }
+  if (set == NULL)
+    set = frame->target;
+
+  swfdec_as_object_set_variable_and_flags (set, variable, value, default_flags);
 }
 
 SwfdecAsDeleteReturn
@@ -721,25 +748,14 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT && current_reg < script->n_registers) {
-    SwfdecAsObject *obj;
-    
-    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__root);
-    if (obj) {
-      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__root, &frame->registers[current_reg]);
-    } else {
+    if (!swfdec_as_frame_get_variable (frame, SWFDEC_AS_STR__root, &frame->registers[current_reg])) {
       SWFDEC_WARNING ("no root to preload");
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
     }
+    current_reg++;
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT && current_reg < script->n_registers) {
-    SwfdecAsObject *obj;
-    
-    obj = swfdec_as_frame_find_variable (frame, SWFDEC_AS_STR__parent);
-    if (obj) {
-      swfdec_as_object_get_variable (obj, SWFDEC_AS_STR__parent, &frame->registers[current_reg++]);
-    } else {
-      SWFDEC_WARNING ("no parent to preload");
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
+    if (!swfdec_as_frame_get_variable (frame, SWFDEC_AS_STR__parent, &frame->registers[current_reg])) {
+      SWFDEC_WARNING ("no root to preload");
     }
     current_reg++;
   }

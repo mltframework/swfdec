@@ -578,16 +578,14 @@ swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
   val = swfdec_as_stack_peek (cx, 1);
   s = swfdec_as_value_to_string (cx, val);
   if (swfdec_action_get_movie_by_path (cx, s, &object, &s)) {
-    if (object == NULL)
-      object = swfdec_as_frame_find_variable (cx->frame, s);
-  } else {
-    object = NULL;
-  }
-  if (object != NULL) {   
-    if (s) {
-      swfdec_as_object_get_variable (object, swfdec_as_context_get_string (cx, s), val);
+    if (object) {
+      if (s) {
+	swfdec_as_object_get_variable (object, swfdec_as_context_get_string (cx, s), val);
+      } else {
+	SWFDEC_AS_VALUE_SET_OBJECT (val, object);
+      }
     } else {
-      SWFDEC_AS_VALUE_SET_OBJECT (val, object);
+      swfdec_as_frame_get_variable (cx->frame, swfdec_as_context_get_string (cx, s), val);
     }
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
@@ -791,9 +789,8 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   thisp = swfdec_as_stack_peek (cx, 2);
   fun = swfdec_as_stack_peek (cx, 1);
-  obj = swfdec_as_frame_find_variable (frame, name);
+  obj = swfdec_as_frame_get_variable (frame, name, fun);
   if (obj) {
-    swfdec_as_object_get_variable (obj, name, fun);
     SWFDEC_AS_VALUE_SET_OBJECT (thisp, obj);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (thisp);

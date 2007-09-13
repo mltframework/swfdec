@@ -147,7 +147,8 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 
 /*** AS CODE ***/
 
-static void
+SWFDEC_AS_NATIVE (101, 10, swfdec_as_function_do_call)
+void
 swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -164,6 +165,57 @@ swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
     thisp = swfdec_as_object_new_empty (context);
   swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, argc, argv, ret);
   swfdec_as_context_run (context);
+}
+
+SWFDEC_AS_NATIVE (101, 11, swfdec_as_function_apply)
+void
+swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecAsObject *thisp;
+
+  if (argc > 0) {
+    thisp = swfdec_as_value_to_object (cx, &argv[0]);
+  } else {
+    thisp = NULL;
+  }
+  if (thisp == NULL)
+    thisp = swfdec_as_object_new_empty (cx);
+
+  if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]))
+  {
+    int length, i;
+    SwfdecAsObject *array;
+    SwfdecAsValue val, *argv_pass;
+
+    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
+
+    swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
+    length = swfdec_as_value_to_integer (cx, &val);
+
+    if (length > 0) {
+      argv_pass = g_malloc (sizeof (SwfdecAsValue) * length);
+
+      for (i = 0; i < length; i++) {
+	swfdec_as_object_get_variable (array,
+	    swfdec_as_double_to_string (cx, i), &argv_pass[i]);
+      }
+    } else {
+      argv_pass = NULL;
+    }
+
+    swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, length,
+	argv_pass, ret);
+
+    if (argv_pass != NULL)
+      g_free (argv_pass);
+  }
+  else
+  {
+    swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, 0, NULL, ret);
+  }
+
+  swfdec_as_context_run (cx);
 }
 
 void
@@ -187,19 +239,17 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  if (version > 5) {
-    proto = swfdec_as_object_new_empty (context);
-    if (!proto)
-      return;
-    context->Function_prototype = proto;
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-    swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR___proto__,
-	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-    swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
-	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-    /* prototype functions */
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_call,
-	SWFDEC_TYPE_AS_FUNCTION, swfdec_as_function_do_call, 0);
-  }
+  proto = swfdec_as_object_new_empty (context);
+  if (!proto)
+    return;
+  context->Function_prototype = proto;
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
+  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  if (version <= 5)
+    context->Function_prototype = NULL;
 }
 

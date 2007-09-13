@@ -161,6 +161,13 @@ EXTRA_DIST = \
 	asnative-create-7.swf.trace \
 	asnative-create-8.swf \
 	asnative-create-8.swf.trace \
+	assetnative.as \
+	assetnative-5.swf \
+	assetnative-5.swf.trace \
+	assetnative-6.swf \
+	assetnative-6.swf.trace \
+	assetnative-7.swf \
+	assetnative-7.swf.trace \
 	ASSetPropFlags-extended.as \
 	ASSetPropFlags-extended-5.swf \
 	ASSetPropFlags-extended-5.swf.trace \
@@ -489,13 +496,13 @@ EXTRA_DIST = \
 	function1.swf.trace \
 	function2.swf \
 	function2.swf.trace \
-	function-properties.as \
-	function-properties-5.swf \
-	function-properties-5.swf.trace \
-	function-properties-6.swf \
-	function-properties-6.swf.trace \
-	function-properties-7.swf \
-	function-properties-7.swf.trace \
+	function-apply.as \
+	function-apply-5.swf \
+	function-apply-5.swf.trace \
+	function-apply-6.swf \
+	function-apply-6.swf.trace \
+	function-apply-7.swf \
+	function-apply-7.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
 	function-scope.as \
@@ -748,6 +755,13 @@ EXTRA_DIST = \
 	object-ispropertyenumerable-6.swf.trace \
 	object-ispropertyenumerable-7.swf \
 	object-ispropertyenumerable-7.swf.trace \
+	object-isprototypeof.as \
+	object-isprototypeof-5.swf \
+	object-isprototypeof-5.swf.trace \
+	object-isprototypeof-6.swf \
+	object-isprototypeof-6.swf.trace \
+	object-isprototypeof-7.swf \
+	object-isprototypeof-7.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \

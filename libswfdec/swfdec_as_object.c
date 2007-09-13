@@ -176,7 +176,7 @@ swfdec_as_object_do_add (SwfdecAsObject *object)
 static gboolean
 swfdec_as_object_lookup_case_insensitive (gpointer key, gpointer value, gpointer user_data)
 {
-  return strcasecmp (key, user_data) == 0;
+  return g_ascii_strcasecmp (key, user_data) == 0;
 }
 
 static gboolean

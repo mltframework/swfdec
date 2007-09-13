@@ -242,16 +242,15 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   proto = swfdec_as_object_new_empty (context);
   if (!proto)
     return;
-  context->Function_prototype = proto;
+  if (version > 5)
+    context->Function_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR___proto__,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR___proto__,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  if (version <= 5)
-    context->Function_prototype = NULL;
 }
 

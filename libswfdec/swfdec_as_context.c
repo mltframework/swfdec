@@ -1226,6 +1226,34 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_INT (retval, i);
 }
 
+SWFDEC_AS_NATIVE (100, 3, swfdec_as_context_parseFloat)
+void
+swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  char *s, *p, *tail;
+  double d;
+
+  if (argc < 1)
+    return;
+
+  // we need to remove everything after x or I, since strtod parses hexadecimal
+  // numbers and Infinity
+  s = g_strdup (swfdec_as_value_to_string (cx, &argv[0]));
+  if ((p = strpbrk (s, "xI")) != NULL) {
+    *p = '\0';
+  }
+
+  d = strtod (s, &tail);
+
+  if (tail == s) {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+  } else {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, d);
+  }
+
+  g_free (s);
+}
 static void
 swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
 {

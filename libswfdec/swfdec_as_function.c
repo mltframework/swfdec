@@ -172,6 +172,8 @@ void
 swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecAsValue *argv_pass = NULL;
+  int length = 0;
   SwfdecAsObject *thisp;
 
   if (argc > 0) {
@@ -182,11 +184,10 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
   if (thisp == NULL)
     thisp = swfdec_as_object_new_empty (cx);
 
-  if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]))
-  {
-    int length, i;
+  if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+    int i;
     SwfdecAsObject *array;
-    SwfdecAsValue val, *argv_pass;
+    SwfdecAsValue val;
 
     array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
 
@@ -194,6 +195,9 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
     length = swfdec_as_value_to_integer (cx, &val);
 
     if (length > 0) {
+      /* FIXME: find a smarter way to do this, like providing argv not as an array */
+      if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsValue) * length))
+	return;
       argv_pass = g_malloc (sizeof (SwfdecAsValue) * length);
 
       for (i = 0; i < length; i++) {
@@ -201,21 +205,18 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
 	    swfdec_as_double_to_string (cx, i), &argv_pass[i]);
       }
     } else {
-      argv_pass = NULL;
+      length = 0;
     }
-
-    swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, length,
-	argv_pass, ret);
-
-    if (argv_pass != NULL)
-      g_free (argv_pass);
-  }
-  else
-  {
-    swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, 0, NULL, ret);
   }
 
+  swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, length,
+      argv_pass, ret);
   swfdec_as_context_run (cx);
+
+  if (argv_pass) {
+    swfdec_as_context_unuse_mem (cx, sizeof (SwfdecAsValue) * length);
+    g_free (argv_pass);
+  }
 }
 
 void

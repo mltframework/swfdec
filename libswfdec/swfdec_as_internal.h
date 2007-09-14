@@ -58,6 +58,8 @@ void		swfdec_as_object_foreach_rename	(SwfdecAsObject *       object,
 
 void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);
+void		swfdec_as_object_decode		(SwfdecAsObject *	obj,
+						 const char *		str);
 
 
 G_END_DECLS

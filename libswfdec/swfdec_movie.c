@@ -42,6 +42,7 @@
 #include "swfdec_system.h"
 #include "swfdec_utils.h"
 #include "swfdec_load_object.h"
+#include "swfdec_as_internal.h"
 
 /*** MOVIE ***/
 
@@ -1274,10 +1275,6 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
   return movie;
 }
 
-void
-swfdec_loadvars_decode (SwfdecAsContext *cx, SwfdecAsObject *obj,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval);
-
 static void
 swfdec_movie_load_variables_on_data (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -1297,7 +1294,7 @@ swfdec_movie_load_variables_on_data (SwfdecAsContext *cx,
   target = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   g_return_if_fail (SWFDEC_IS_MOVIE (target));
 
-  swfdec_loadvars_decode (cx, target, 1, &argv[0], &val);
+  swfdec_as_object_decode (target, swfdec_as_value_to_string (cx, &argv[0]));
 
   swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
 }

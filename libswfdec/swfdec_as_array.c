@@ -865,46 +865,72 @@ typedef struct {
   gint32		length;
   gint32		options;
   SwfdecAsFunction	*compare_custom_func;
+  const char *		field;
   SwfdecAsObject	*object_new;
 } ForeachSortData;
 
 static gint
-swfdec_as_array_sort_compare (SwfdecAsContext *cx, SwfdecAsValue *a,
-    SwfdecAsValue *b, gint32 options, SwfdecAsFunction *fun)
+swfdec_as_array_sort_compare (SwfdecAsContext *cx, const SwfdecAsValue *a,
+    const SwfdecAsValue *b, gint32 options, SwfdecAsFunction *fun,
+    const char *field)
 {
   gint retval;
+  SwfdecAsValue a_comp, b_comp;
+
+  if (field != NULL) {
+    SwfdecAsObject *object;
+
+    object = swfdec_as_value_to_object (cx, a);
+    if (object) {
+      swfdec_as_object_get_variable (object, field, &a_comp);
+    } else {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&a_comp);
+    }
+
+    object = swfdec_as_value_to_object (cx, b);
+    if (object) {
+      swfdec_as_object_get_variable (object, field, &b_comp);
+    } else {
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&b_comp);
+    }
+  } else {
+    a_comp = *a;
+    b_comp = *b;
+  }
 
   if (fun != NULL)
   {
-    SwfdecAsValue argv[2] = { *a, *b };
+    SwfdecAsValue argv[2] = { *&a_comp, *&b_comp };
     SwfdecAsValue ret;
     swfdec_as_function_call (fun, NULL, 2, argv, &ret);
     swfdec_as_context_run (fun->object.context);
     retval = swfdec_as_value_to_integer (cx, &ret);
   }
   else if (options & ARRAY_SORT_OPTION_NUMERIC &&
-      (SWFDEC_AS_VALUE_IS_NUMBER (a) || SWFDEC_AS_VALUE_IS_NUMBER (b)) &&
-      !SWFDEC_AS_VALUE_IS_UNDEFINED (a) && !SWFDEC_AS_VALUE_IS_UNDEFINED (b))
+      (SWFDEC_AS_VALUE_IS_NUMBER (&a_comp) ||
+       SWFDEC_AS_VALUE_IS_NUMBER (&b_comp)) &&
+      !SWFDEC_AS_VALUE_IS_UNDEFINED (&a_comp) &&
+      !SWFDEC_AS_VALUE_IS_UNDEFINED (&b_comp))
   {
-    if (!SWFDEC_AS_VALUE_IS_NUMBER (a)) {
+    if (!SWFDEC_AS_VALUE_IS_NUMBER (&a_comp)) {
       retval = 1;
-    } else if (!SWFDEC_AS_VALUE_IS_NUMBER (b)) {
+    } else if (!SWFDEC_AS_VALUE_IS_NUMBER (&b_comp)) {
       retval = -1;
     } else {
-      double an = swfdec_as_value_to_number (cx, a);
-      double bn = swfdec_as_value_to_number (cx, b);
+      double an = swfdec_as_value_to_number (cx, &a_comp);
+      double bn = swfdec_as_value_to_number (cx, &b_comp);
       retval = (an < bn ? -1 : (an > bn ? 1 : 0));
     }
   }
   else if (options & ARRAY_SORT_OPTION_CASEINSENSITIVE)
   {
-    retval = g_strcasecmp (swfdec_as_value_to_string (cx, a),
-	swfdec_as_value_to_string (cx, b));
+    retval = g_strcasecmp (swfdec_as_value_to_string (cx, &a_comp),
+	swfdec_as_value_to_string (cx, &b_comp));
   }
   else
   {
-    retval = strcmp (swfdec_as_value_to_string (cx, a),
-	swfdec_as_value_to_string (cx, b));
+    retval = strcmp (swfdec_as_value_to_string (cx, &a_comp),
+	swfdec_as_value_to_string (cx, &b_comp));
   }
 
   if (options & ARRAY_SORT_OPTION_DESCENDING) {
@@ -1034,12 +1060,13 @@ swfdec_as_array_foreach_sort_compare_undefined (SwfdecAsObject *object,
 
   // when testing for uniquesort the custom compare function is NOT used
   if (swfdec_as_array_sort_compare (object->context, value, &fdata->undefined,
-	fdata->options, NULL) == 0)
+	fdata->options, NULL, fdata->field) == 0)
     return FALSE;
 
   return TRUE;
 }
 
+// fill fdata->order and fdata->defined_values
 static gboolean
 swfdec_as_array_foreach_sort_populate (SwfdecAsObject *object,
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
@@ -1062,19 +1089,22 @@ swfdec_as_array_foreach_sort_populate (SwfdecAsObject *object,
   {
     if (fdata->order[i] == NULL ||
 	(cval = swfdec_as_array_sort_compare (object->context, value,
-	    fdata->order[i], fdata->options, fdata->compare_custom_func)) <= 0)
+	    fdata->order[i], fdata->options, fdata->compare_custom_func,
+	    fdata->field)) <= 0)
     {
       SwfdecAsValue *tmp2, *tmp;
 
       // if we are doing uniquesort, see if this value is the same as some
       // earlier value
-      if (fdata->options & ARRAY_SORT_OPTION_UNIQUESORT && fdata->order[i] != NULL &&
-	  fdata->order[i] != &fdata->undefined) {
+      if (fdata->options & ARRAY_SORT_OPTION_UNIQUESORT &&
+	  fdata->order[i] != NULL && fdata->order[i] != &fdata->undefined) {
 	// when using custom function, uniquesort is still based on the
 	// equality given by the normal method, not the custom function
 	if (fdata->compare_custom_func != NULL) {
-	  if (swfdec_as_array_sort_compare (object->context, value, fdata->order[i], fdata->options, NULL) == 0)
+	  if (swfdec_as_array_sort_compare (object->context, value,
+		fdata->order[i], fdata->options, NULL, fdata->field) == 0) {
 	    return FALSE;
+	  }
 	} else {
 	  if (cval == 0)
 	    return FALSE;
@@ -1098,14 +1128,14 @@ swfdec_as_array_foreach_sort_populate (SwfdecAsObject *object,
   return TRUE;
 }
 
-SWFDEC_AS_NATIVE (252, 10, swfdec_as_array_sort)
-void
-swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
-    SwfdecAsValue *argv, SwfdecAsValue *ret)
+static void
+swfdec_as_array_do_sort (SwfdecAsObject *object, gint32 options,
+    SwfdecAsFunction *custom_compare_func, const char *field,
+    SwfdecAsValue *ret)
 {
   ForeachSortData fdata;
-  guint pos;
 
+  // init foreach data
   fdata.length = swfdec_as_array_length (object);
   fdata.order_size =
     MIN ((gint32)g_hash_table_size (object->properties) + 1, fdata.length + 1);
@@ -1113,25 +1143,9 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_VALUE_SET_UNDEFINED (&fdata.undefined);
   fdata.order[0] = &fdata.undefined;
   fdata.defined_values = 0;
-
-  pos = 0;
-  if (argc > 0 && !SWFDEC_AS_VALUE_IS_NUMBER (&argv[0])) {
-    SwfdecAsFunction *fun;
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
-	!SWFDEC_IS_AS_FUNCTION (
-	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))
-	return;
-    fdata.compare_custom_func = fun;
-    pos++;
-  } else {
-    fdata.compare_custom_func = NULL;
-  }
-
-  if (argc > pos) {
-    fdata.options = swfdec_as_value_to_integer (cx, &argv[pos]);
-  } else {
-    fdata.options = 0;
-  }
+  fdata.options = options;
+  fdata.compare_custom_func = custom_compare_func;
+  fdata.field = field;
 
   // generate fdata.order which points to the values
   if (!swfdec_as_object_foreach (object, swfdec_as_array_foreach_sort_populate,
@@ -1168,7 +1182,7 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   if (fdata.options & ARRAY_SORT_OPTION_RETURNINDEXEDARRAY) {
     // make a new array and fill it with numbers based on the order
-    fdata.object_new = swfdec_as_array_new (cx);
+    fdata.object_new = swfdec_as_array_new (object->context);
     swfdec_as_object_foreach (object, swfdec_as_array_foreach_sort_indexedarray,
        &fdata);
     // we only have the elements that have been set so far, fill in the blanks
@@ -1184,12 +1198,71 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   g_free (fdata.order);
 }
 
+SWFDEC_AS_NATIVE (252, 10, swfdec_as_array_sort)
+void
+swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  guint pos;
+  gint32 options;
+  SwfdecAsFunction *custom_compare_func;
+
+  pos = 0;
+  if (argc > 0 && !SWFDEC_AS_VALUE_IS_NUMBER (&argv[0])) {
+    SwfdecAsFunction *fun;
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
+	!SWFDEC_IS_AS_FUNCTION (
+	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))
+	return;
+    custom_compare_func = fun;
+    pos++;
+  } else {
+    custom_compare_func = NULL;
+  }
+
+  if (argc > pos) {
+    options = swfdec_as_value_to_integer (cx, &argv[pos]);
+  } else {
+    options = 0;
+  }
+
+  swfdec_as_array_do_sort (object, options, custom_compare_func, NULL, ret);
+}
+
 SWFDEC_AS_NATIVE (252, 12, swfdec_as_array_sortOn)
 void
 swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_ERROR ("Array.sortOn method not implemented");
+  const char *field;
+  gint32 options;
+
+  if (argc < 1)
+    return;
+
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+    SwfdecAsValue val;
+    SwfdecAsObject *array;
+
+    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+    if (!SWFDEC_IS_AS_ARRAY (array)) {
+      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+      return;
+    }
+    SWFDEC_FIXME ("Array.sortOn with multiple fields not implemented");
+    swfdec_as_array_get_value (SWFDEC_AS_ARRAY (array), 0, &val);
+    field = swfdec_as_value_to_string (cx, &val);
+  } else {
+    field = swfdec_as_value_to_string (cx, &argv[0]);
+  }
+
+  if (argc > 1) {
+    options = swfdec_as_value_to_integer (cx, &argv[1]);
+  } else {
+    options = 0;
+  }
+
+  swfdec_as_array_do_sort (object, options, NULL, field, ret);
 }
 
 // Constructor

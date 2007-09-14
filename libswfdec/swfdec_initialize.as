@@ -196,6 +196,13 @@ Color = function (target) {
 ASSetNative (Color.prototype, 700, "setRGB,setTransform,getRGB,getTransform");
 ASSetPropFlags (Color.prototype, null, 7);
 
+/* Global Functions */
+
+setInterval = ASnative (250, 0);
+clearInterval = ASnative (250, 1);
+setTimeout = ASnative(250, 2);
+clearTimeout = clearInterval;
+
 /*** OH THE HUMANITY ***/
 
 o = null;

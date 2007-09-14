@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <strings.h>
+#include <string.h>
 
 #include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
@@ -29,6 +29,7 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
@@ -1413,6 +1414,38 @@ swfdec_as_object_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__type_Function_);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (retval, SWFDEC_AS_STR__object_Object_);
+  }
+}
+
+void
+swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
+{
+  SwfdecAsValue val;
+  char **varlist, *p;
+  guint i;
+
+  str = swfdec_as_string_unescape (object->context, str);
+  if (str == NULL)
+    return;
+
+  varlist = g_strsplit (str, "&", -1);
+
+  for (i = 0; varlist[i] != NULL; i++) {
+    p = strchr (varlist[i], '=');
+    if (p != NULL) {
+      *p++ = '\0';
+      if (*p == '\0')
+	p = NULL;
+    }
+
+    if (p != NULL) {
+      SWFDEC_AS_VALUE_SET_STRING (&val,
+	  swfdec_as_context_get_string (object->context, p));
+    } else {
+      SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_EMPTY);
+    }
+    swfdec_as_object_set_variable (object,
+	swfdec_as_context_get_string (object->context, varlist[i]), &val);
   }
 }
 

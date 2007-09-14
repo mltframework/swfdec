@@ -64,8 +64,6 @@ SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(SwfdecVideoFormat	format);
 
 void			swfdec_player_preinit_global		(SwfdecPlayer *		player,
 								 guint			version);
-void			swfdec_player_init_global		(SwfdecPlayer *		player,
-								 guint			version);
 void			swfdec_net_connection_init_context	(SwfdecPlayer *		player,
 								 guint			version);
 void			swfdec_net_stream_init_context		(SwfdecPlayer *		player,

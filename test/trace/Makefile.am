@@ -827,6 +827,13 @@ EXTRA_DIST = \
 	order.swf.trace \
 	parent-root.swf \
 	parent-root.swf.trace \
+	parse-float.as \
+	parse-float-5.swf \
+	parse-float-5.swf.trace \
+	parse-float-6.swf \
+	parse-float-6.swf.trace \
+	parse-float-7.swf \
+	parse-float-7.swf.trace \
 	parse-int.as \
 	parse-int-5.swf \
 	parse-int-5.swf.trace \
@@ -1150,6 +1157,13 @@ EXTRA_DIST = \
 	round-direction-7.swf.trace \
 	round-direction-8.swf \
 	round-direction-8.swf.trace \
+	settimeout.as \
+	settimeout-5.swf \
+	settimeout-5.swf.trace \
+	settimeout-6.swf \
+	settimeout-6.swf.trace \
+	settimeout-7.swf \
+	settimeout-7.swf.trace \
 	scalemode.as \
 	scalemode-5.swf \
 	scalemode-5.swf.trace \

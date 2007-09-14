@@ -89,6 +89,7 @@ Array.NUMERIC = 16;
 escape = ASnative (100, 0);
 unescape = ASnative (100, 1);
 parseInt = ASnative (100, 2);
+parseFloat = ASnative (100, 3);
 isNaN = ASnative (200, 18);
 isFinite = ASnative (200, 19);
 

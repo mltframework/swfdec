@@ -105,7 +105,9 @@ swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
  * @function: the #SwfdecAsFunction to call
  * @thisp: this argument to use for the call or %NULL for none
  * @n_args: number of arguments to pass to the function
- * @args: the arguments to pass or %NULL to read the last @n_args stack elements
+ * @args: the arguments to pass or %NULL to read the last @n_args stack elements.
+ *        The memory must be unchanged until the function call has completed.
+ *        This is after the call to swfdec_as_context_run () has finished.
  * @return_value: pointer for return value or %NULL to push the return value to 
  *                the stack
  *

@@ -212,7 +212,7 @@ swfdec_as_frame_push_block (SwfdecAsFrame *frame, const guint8 *start,
   SwfdecAsFrameBlock block = { start, end, func, data, destroy };
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  g_return_if_fail (start < end);
+  g_return_if_fail (start <= end);
   g_return_if_fail (start >= frame->block_start);
   g_return_if_fail (end <= frame->block_end);
   g_return_if_fail (func != NULL);

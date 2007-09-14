@@ -126,6 +126,7 @@ swfdec_audio_decoder_ffmpeg_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
   outbuf = swfdec_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
   for (amount = 0; amount < buffer->length; amount += len) {
     
+    out_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
     len = avcodec_decode_audio2 (ffmpeg->ctx, (short *) outbuf->data, &out_size, buffer->data + amount, buffer->length - amount);
 
     if (len < 0) {

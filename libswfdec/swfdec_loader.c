@@ -444,7 +444,7 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
   url = swfdec_loader_get_url (loader);
   path = swfdec_url_get_path (url);
   if (path) {
-    char *s = strchr (path, '/');
+    char *s = strrchr (path, '/');
     if (s)
       path = s + 1;
     if (path[0] == 0)

@@ -503,6 +503,15 @@ EXTRA_DIST = \
 	function-apply-6.swf.trace \
 	function-apply-7.swf \
 	function-apply-7.swf.trace \
+	function-apply-crash.as \
+	function-apply-crash-5.swf \
+	function-apply-crash-5.swf.trace \
+	function-apply-crash-6.swf \
+	function-apply-crash-6.swf.trace \
+	function-apply-crash-7.swf \
+	function-apply-crash-7.swf.trace \
+	function-apply-crash-8.swf \
+	function-apply-crash-8.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
 	function-scope.as \

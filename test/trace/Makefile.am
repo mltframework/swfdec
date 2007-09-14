@@ -439,6 +439,15 @@ EXTRA_DIST = \
 	duplicate-names-7.swf \
 	duplicate-names-7.swf.trace \
 	event-order.swf \
+	empty-function.as \
+	empty-function-5.swf \
+	empty-function-5.swf.trace \
+	empty-function-6.swf \
+	empty-function-6.swf.trace \
+	empty-function-7.swf \
+	empty-function-7.swf.trace \
+	empty-function-8.swf \
+	empty-function-8.swf.trace \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \

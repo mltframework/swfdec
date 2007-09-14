@@ -225,6 +225,10 @@ gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
 void		swfdec_movie_set_variables	(SwfdecMovie *		movie,
 						 const char *		variables);
+void		swfdec_movie_load_variables	(SwfdecMovie *		movie,
+						 const char *		url,
+						 const char *		target,
+						 SwfdecLoaderRequest	request);
 void		swfdec_movie_load		(SwfdecMovie *		movie,
 						 const char *		url,
 						 const char *		target,

@@ -1097,23 +1097,38 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
     return;
   }
+
   target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   url = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
   method = data[0] >> 6;
+
   if (method == 3) {
     SWFDEC_ERROR ("GetURL method 3 invalid");
     method = 0;
   }
-  if (data[0] & 2) {
+
+  if (data[0] & 64) {
     SWFDEC_FIXME ("implement LoadTarget");
   }
-  if (data[0] & 1) {
-    SWFDEC_FIXME ("implement LoadVariables");
+
+  if (data[0] & 128) {
+    if (SWFDEC_IS_MOVIE (cx->frame->target)) {
+      swfdec_movie_load_variables (SWFDEC_MOVIE (cx->frame->target), url,
+	  target, method);
+    } else {
+      SWFDEC_WARNING ("no movie to load");
+    }
+    swfdec_as_stack_pop_n (cx, 2);
+    return;
   }
-  if (SWFDEC_IS_MOVIE (cx->frame->target))
-    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, method, NULL, 0);
-  else
+
+  if (SWFDEC_IS_MOVIE (cx->frame->target)) {
+    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, method,
+	NULL, 0);
+  } else {
     SWFDEC_WARNING ("no movie to load");
+  }
+
   swfdec_as_stack_pop_n (cx, 2);
 }
 

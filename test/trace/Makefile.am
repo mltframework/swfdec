@@ -1522,6 +1522,13 @@ EXTRA_DIST = \
 	super-missing-7.swf.trace \
 	super-missing-8.swf \
 	super-missing-8.swf.trace \
+	super-property.as \
+	super-property-5.swf \
+	super-property-5.swf.trace \
+	super-property-6.swf \
+	super-property-6.swf.trace \
+	super-property-7.swf \
+	super-property-7.swf.trace \
 	super-reference.as \
 	super-reference-6.swf \
 	super-reference-6.swf.trace \

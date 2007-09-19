@@ -289,31 +289,28 @@ swfdec_as_watch_unref (SwfdecAsWatch *watch)
   }
 }
 
-static void
-swfdec_as_object_update_prototype (SwfdecAsObject *object,
-    const SwfdecAsValue *val, guint flags)
+SwfdecAsObject *
+swfdec_as_object_prototype_for_version (SwfdecAsObject *object, guint version,
+    gboolean check7)
 {
-  SwfdecAsContext *cx;
+  if (object->prototype == NULL)
+    return NULL;
 
-  cx = object->context;
-
-  object->prototype = NULL;
-
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
-    return;
-  if (SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val)))
-    return;
-
-  if (flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && cx->version < 6)
-    return;
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && version < 6)
+    return NULL;
   // don't check for NOT_6 flag
-  if (flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && cx->version < 7)
-    return;
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && version < 7)
+    return NULL;
   // only check 8_UP for version < 6
-  if (flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && cx->version < 6)
-    return;
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
+      version < 6)
+    return NULL;
+  if (check7) {
+    if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && version == 7)
+      return NULL;
+  }
 
-  object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  return object->prototype;
 }
 
 static void
@@ -329,13 +326,17 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
     guint i;
-    SwfdecAsObject *proto = object->prototype;
+    SwfdecAsObject *proto;
+
+    proto = swfdec_as_object_prototype_for_version (object,
+	object->context->version, FALSE);
 
     for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto; i++) {
       var = swfdec_as_object_hash_lookup (proto, variable);
       if (var && var->get)
 	break;
-      proto = proto->prototype;
+      proto = swfdec_as_object_prototype_for_version (proto,
+	  proto->context->version, FALSE);
       var = NULL;
     }
     if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
@@ -396,8 +397,16 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     var->value = *val;
   }
 
-  if (variable == SWFDEC_AS_STR___proto__)
-    swfdec_as_object_update_prototype (object, val, var->flags);
+  if (variable == SWFDEC_AS_STR___proto__) {
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
+      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+      object->prototype_flags = var->flags;
+    } else {
+      object->prototype = NULL;
+      object->prototype_flags = 0;
+    }
+  }
 }
 
 static void
@@ -409,7 +418,7 @@ swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, gui
     var->flags = (var->flags & ~mask) | flags;
 
     if (variable == SWFDEC_AS_STR___proto__)
-      swfdec_as_object_update_prototype (object, &var->value, var->flags);
+      object->prototype_flags = var->flags;
   }
 }
 
@@ -433,9 +442,10 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
     return SWFDEC_AS_DELETE_NOT_DELETED;
 
-  if (variable == SWFDEC_AS_STR___proto__ &&
-      object->context->version <= 6)
+  if (variable == SWFDEC_AS_STR___proto__ && object->context->version <= 6) {
     object->prototype = NULL;
+    object->prototype_flags = 0;
+  }
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();
@@ -813,7 +823,8 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
       *pobject = cur;
       return TRUE;
     }
-    cur = cur->prototype;
+    cur = swfdec_as_object_prototype_for_version (cur, cur->context->version,
+	FALSE);
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
@@ -1334,8 +1345,7 @@ swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
   if (class == NULL)
     return;
 
-  while (class->prototype != NULL) {
-    class = class->prototype;
+  while ((class = swfdec_as_object_prototype_for_version (class, cx->version, TRUE)) != NULL) {
     if (object == class) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
       return;

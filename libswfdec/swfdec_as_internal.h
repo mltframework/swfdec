@@ -60,6 +60,9 @@ void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);
 void		swfdec_as_object_decode		(SwfdecAsObject *	obj,
 						 const char *		str);
+SwfdecAsObject * swfdec_as_object_prototype_for_version (SwfdecAsObject *object,
+						 guint			version,
+						 gboolean		check7);
 
 
 G_END_DECLS

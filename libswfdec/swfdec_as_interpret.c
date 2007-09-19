@@ -30,6 +30,7 @@
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
 
 #include <errno.h>
@@ -847,6 +848,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
 	  swfdec_as_object_get_variable_and_flags (frame->thisp, 
 	    name, NULL, NULL, &super->object) && 
 	  super->object == frame->thisp) {
+	// FIXME: Do we need to check prototype_flags here?
 	super->object = super->object->prototype;
       }
     }
@@ -2096,7 +2098,7 @@ swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
   
   for (i = 0; i < 256 && object; i++) {
     swfdec_as_object_foreach (object, swfdec_action_enumerate_foreach, &list);
-    object = object->prototype;
+    object = swfdec_as_object_prototype_for_version (object, cx->version, TRUE);
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");

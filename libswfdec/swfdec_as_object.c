@@ -290,6 +290,33 @@ swfdec_as_watch_unref (SwfdecAsWatch *watch)
 }
 
 static void
+swfdec_as_object_update_prototype (SwfdecAsObject *object,
+    const SwfdecAsValue *val, guint flags)
+{
+  SwfdecAsContext *cx;
+
+  cx = object->context;
+
+  object->prototype = NULL;
+
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
+    return;
+  if (SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val)))
+    return;
+
+  if (flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && cx->version < 6)
+    return;
+  // don't check for NOT_6 flag
+  if (flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && cx->version < 7)
+    return;
+  // only check 8_UP for version < 6
+  if (flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && cx->version < 6)
+    return;
+
+  object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+}
+
+static void
 swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val, guint flags)
 {
@@ -368,15 +395,9 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   } else if (watch == NULL) {
     var->value = *val;
   }
-  if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
-	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
-      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
-    } else {
-      object->prototype = NULL;
-    }
-  }
 
+  if (variable == SWFDEC_AS_STR___proto__)
+    swfdec_as_object_update_prototype (object, val, var->flags);
 }
 
 static void
@@ -384,8 +405,12 @@ swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, gui
 {
   SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
-  if (var)
+  if (var) {
     var->flags = (var->flags & ~mask) | flags;
+
+    if (variable == SWFDEC_AS_STR___proto__)
+      swfdec_as_object_update_prototype (object, &var->value, var->flags);
+  }
 }
 
 static void

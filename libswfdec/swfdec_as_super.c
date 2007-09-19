@@ -62,8 +62,7 @@ swfdec_as_super_call (SwfdecAsFunction *function)
    */
   frame->function = fun;
   frame->construct = frame->next->construct;
-  /* FIXME: this is ugly */
-  swfdec_as_frame_set_this (frame, super->object);
+  swfdec_as_frame_set_this (frame, super->thisp);
   return frame;
 }
 

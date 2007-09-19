@@ -1499,8 +1499,7 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
    * SWFDEC_AS_VARIABLE_CONSTANT won't let us */
   swfdec_as_object_set_variable_and_flags (context->Function_prototype,
       SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_VERSION_6_UP);
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,

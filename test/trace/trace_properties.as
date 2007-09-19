@@ -125,11 +125,6 @@ function is_blaclisted (o, prop)
   if (o == _global.Microphone && prop == "names")
     return true;
 
-#if __SWF_VERSION__ < 6
-  if (prop == "__proto__" && o[prop] == undefined)
-    return true;
-#endif
-
   return false;
 }
 

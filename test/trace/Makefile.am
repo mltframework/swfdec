@@ -1070,6 +1070,13 @@ EXTRA_DIST = \
 	prototype-movie-7.swf.trace \
 	prototype-movie-8.swf \
 	prototype-movie-8.swf.trace \
+	prototype-propflags.as \
+	prototype-propflags-5.swf \
+	prototype-propflags-5.swf.trace \
+	prototype-propflags-6.swf \
+	prototype-propflags-6.swf.trace \
+	prototype-propflags-7.swf \
+	prototype-propflags-7.swf.trace \
 	prototype-recursion-addProperty.as \
 	prototype-recursion-addProperty-5.swf \
 	prototype-recursion-addProperty-5.swf.trace \

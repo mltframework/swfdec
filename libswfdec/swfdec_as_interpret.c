@@ -1107,18 +1107,16 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     method = 0;
   }
 
-  if (data[0] & 128 && data[0] & 64) {
+  // FIXME: What difference should LoadTarget flag (data[0] & 64) do?
+
+  if (data[0] & 128) {
     if (SWFDEC_IS_MOVIE (cx->frame->target)) {
       swfdec_movie_load_variables (SWFDEC_MOVIE (cx->frame->target), url,
 	  target, method);
     } else {
       SWFDEC_WARNING ("no movie to load");
     }
-  } else if (data[0] & 128) {
-    SWFDEC_FIXME ("LoadVariables without LoadTarget?");
   } else {
-    if (data[0] & 64)
-      SWFDEC_FIXME ("implement LoadTarget");
     if (SWFDEC_IS_MOVIE (cx->frame->target)) {
       swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, method,
 	  NULL, 0);

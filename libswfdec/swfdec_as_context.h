@@ -72,7 +72,7 @@ struct _SwfdecAsContext {
 
   /* magic objects - initialized during swfdec_as_context_startup() */
   SwfdecAsObject *	Function;	/* Function */
-  SwfdecAsObject *	Function_prototype;	/* Function.prototype - NULL in Flash 5 */
+  SwfdecAsObject *	Function_prototype;	/* Function.prototype */
   SwfdecAsObject *	Object;		/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
 

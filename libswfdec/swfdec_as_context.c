@@ -356,8 +356,7 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   swfdec_as_object_mark (context->global);
   swfdec_as_object_mark (context->Function);
-  if (context->Function_prototype)
-    swfdec_as_object_mark (context->Function_prototype);
+  swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
   swfdec_as_object_mark (context->Object_prototype);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);

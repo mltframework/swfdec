@@ -1296,7 +1296,8 @@ swfdec_movie_load_variables_on_data (SwfdecAsContext *cx,
 
   swfdec_as_object_decode (target, swfdec_as_value_to_string (cx, &argv[0]));
 
-  swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
+  if (cx->version >= 6)
+    swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
 }
 
 void

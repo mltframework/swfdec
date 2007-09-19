@@ -1456,6 +1456,8 @@ EXTRA_DIST = \
 	string-lastIndexOf-8.swf \
 	string-lastIndexOf-8.swf.trace \
 	string-properties.as \
+	string-properties-5.swf \
+	string-properties-5.swf.trace \
 	string-properties-6.swf \
 	string-properties-6.swf.trace \
 	string-properties-7.swf \

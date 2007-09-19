@@ -91,13 +91,10 @@ swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-  if (context->Function_prototype) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
-  } else {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-  }
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
+      SWFDEC_AS_VARIABLE_VERSION_6_UP);
 }
 
 /**
@@ -245,8 +242,7 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   proto = swfdec_as_object_new_empty (context);
   if (!proto)
     return;
-  if (version > 5)
-    context->Function_prototype = proto;
+  context->Function_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

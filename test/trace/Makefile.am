@@ -793,6 +793,13 @@ EXTRA_DIST = \
 	object-math-6.swf.trace \
 	object-math-7.swf \
 	object-math-7.swf.trace \
+	object-properties.as \
+	object-properties-5.swf \
+	object-properties-5.swf.trace \
+	object-properties-6.swf \
+	object-properties-6.swf.trace \
+	object-properties-7.swf \
+	object-properties-7.swf.trace \
 	object-valueof.as \
 	object-valueof-5.swf \
 	object-valueof-5.swf.trace \

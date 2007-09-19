@@ -1729,6 +1729,8 @@ EXTRA_DIST = \
 	xml-properties-7.swf \
 	xml-properties-7.swf.trace \
 	xml-properties2.as \
+	xml-properties2-5.swf \
+	xml-properties2-5.swf.trace \
 	xml-properties2-6.swf \
 	xml-properties2-6.swf.trace \
 	xml-properties2-7.swf \

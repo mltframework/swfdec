@@ -658,6 +658,13 @@ EXTRA_DIST = \
 	loadobject-6.swf.trace \
 	loadobject-7.swf \
 	loadobject-7.swf.trace \
+	loadvariables.as \
+	loadvariables-5.swf \
+	loadvariables-5.swf.trace \
+	loadvariables-6.swf \
+	loadvariables-6.swf.trace \
+	loadvariables-7.swf \
+	loadvariables-7.swf.trace \
 	loadvars.as \
 	loadvars-5.swf \
 	loadvars-5.swf.trace \

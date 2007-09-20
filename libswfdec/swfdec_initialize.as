@@ -198,6 +198,17 @@ ASSetPropFlags (Color.prototype, null, 7);
 
 /* MovieClip */
 
+MovieClip.prototype.meth = function (method) {
+  var lower = method.toLowerCase ();
+  if (lower == "post") {
+    return 2;
+  } else if (lower == "get") {
+    return 1;
+  } else {
+    return 0;
+  }
+};
+
 // work around ming bug, causing duplicateMovieClip etc. to be lower cased
 MovieClip.prototype.attachMovie = ASnative (900, 0);
 MovieClip.prototype.swapDepths = ASnative (900, 1);

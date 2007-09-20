@@ -377,28 +377,6 @@ swfdec_sprite_movie_removeMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj,
     swfdec_movie_remove (movie);
 }
 
-static void
-swfdec_sprite_movie_getURL (SwfdecAsContext *cx, SwfdecAsObject *obj,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
-{
-  SwfdecMovie *movie = SWFDEC_MOVIE (obj);
-  const char *url;
-  const char *target;
-
-  url = swfdec_as_value_to_string (cx, &argv[0]);
-  if (argc > 1) {
-    target = swfdec_as_value_to_string (cx, &argv[1]);
-  } else {
-    SWFDEC_ERROR ("what's the default target?");
-    target = NULL;
-  }
-  if (argc > 2) {
-    SWFDEC_ERROR ("passing variables is not implemented");
-  }
-  swfdec_movie_load (movie, url, target, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
-  /* FIXME: does this function return something */
-}
-
 SWFDEC_AS_NATIVE (900, 10, swfdec_sprite_movie_getDepth)
 void
 swfdec_sprite_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *obj,
@@ -464,6 +442,4 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
   /* now add all the functions */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getNextHighestDepth, SWFDEC_TYPE_SPRITE_MOVIE, 
       swfdec_sprite_movie_getNextHighestDepth, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getURL, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_getURL, 2);
 };

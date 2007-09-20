@@ -209,6 +209,20 @@ MovieClip.prototype.meth = function (method) {
   }
 };
 
+MovieClip.prototype.getURL = function (url, target, method) {
+  if (typeof (target) == "undefined")
+    target = ""; // undefined to empty string, even in version >= 7
+
+  var type = this.meth (method);
+  if (type == 0) {
+    getURL (url, target);
+  } else if (type == 1) {
+    getURL (url, target, "GET");
+  } else {
+    getURL (url, target, "POST");
+  }
+};
+
 // work around ming bug, causing duplicateMovieClip etc. to be lower cased
 MovieClip.prototype.attachMovie = ASnative (900, 0);
 MovieClip.prototype.swapDepths = ASnative (900, 1);

@@ -196,6 +196,31 @@ Color = function (target) {
 ASSetNative (Color.prototype, 700, "setRGB,setTransform,getRGB,getTransform");
 ASSetPropFlags (Color.prototype, null, 7);
 
+/* MovieClip */
+
+// work around ming bug, causing duplicateMovieClip etc. to be lower cased
+MovieClip.prototype.attachMovie = ASnative (900, 0);
+MovieClip.prototype.swapDepths = ASnative (900, 1);
+MovieClip.prototype.hitTest = ASnative (900, 4);
+MovieClip.prototype.getBounds = ASnative (900, 5);
+MovieClip.prototype.getBytesTotal = ASnative (900, 6);
+MovieClip.prototype.getBytesLoaded = ASnative (900, 7);
+MovieClip.prototype.getDepth = ASnative (900, 10);
+MovieClip.prototype.play = ASnative (900, 12);
+MovieClip.prototype.stop = ASnative (900, 13);
+MovieClip.prototype.nextFrame = ASnative (900, 14);
+MovieClip.prototype.prevFrame = ASnative (900, 15);
+MovieClip.prototype.gotoAndPlay = ASnative (900, 16);
+MovieClip.prototype.gotoAndStop = ASnative (900, 17);
+MovieClip.prototype["duplicateMovieClip"] = ASnative (900, 18);
+MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
+MovieClip.prototype.startDrag = ASnative (900, 20);
+MovieClip.prototype.stopDrag = ASnative (900, 21);
+MovieClip.prototype.createEmptyMovieClip = ASnative (901, 0);
+ASSetPropFlags (MovieClip.prototype, "getDepth,createEmptyMovieClip", 128);
+
+ASSetPropFlags (o, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

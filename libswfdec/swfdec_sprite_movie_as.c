@@ -462,46 +462,8 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
       SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |
       SWFDEC_AS_VARIABLE_PERMANENT);
   /* now add all the functions */
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_SPRITE_MOVIE,
-      swfdec_sprite_movie_attachMovie, 3);
-  if (version >= 6) {
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_createEmptyMovieClip, SWFDEC_TYPE_SPRITE_MOVIE,
-	swfdec_sprite_movie_createEmptyMovieClip, 2);
-  }
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_duplicateMovieClip, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_duplicateMovieClip, 2);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getBytesLoaded, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_getBytesLoaded, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getBytesTotal, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_getBytesTotal, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getDepth, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_getDepth, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getNextHighestDepth, SWFDEC_TYPE_SPRITE_MOVIE, 
       swfdec_sprite_movie_getNextHighestDepth, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getURL, SWFDEC_TYPE_SPRITE_MOVIE, 
       swfdec_sprite_movie_getURL, 2);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_gotoAndPlay, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_gotoAndPlay, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_gotoAndStop, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_gotoAndStop, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_hitTest, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_hitTest, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_nextFrame, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_nextFrame, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_play,	0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_prevFrame, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_prevFrame, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_removeMovieClip, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_removeMovieClip, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_startDrag, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_startDrag, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_stop, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_stop,	0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_stopDrag, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_stopDrag, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_swapDepths, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_swapDepths, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getBounds, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_getBounds, 0);
 };

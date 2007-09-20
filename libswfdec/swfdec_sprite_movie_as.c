@@ -34,22 +34,26 @@
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_as_internal.h"
 
-static void
+SWFDEC_AS_NATIVE (900, 12, swfdec_sprite_movie_play)
+void
 swfdec_sprite_movie_play (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SWFDEC_SPRITE_MOVIE (obj)->playing = TRUE;
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 13, swfdec_sprite_movie_stop)
+void
 swfdec_sprite_movie_stop (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SWFDEC_SPRITE_MOVIE (obj)->playing = FALSE;
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 7, swfdec_sprite_movie_getBytesLoaded)
+void
 swfdec_sprite_movie_getBytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -62,7 +66,8 @@ swfdec_sprite_movie_getBytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *obj,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 6, swfdec_sprite_movie_getBytesTotal)
+void
 swfdec_sprite_movie_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -75,6 +80,7 @@ swfdec_sprite_movie_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *obj,
   }
 }
 
+// No ASnative number
 static void
 swfdec_sprite_movie_getNextHighestDepth (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
@@ -113,7 +119,8 @@ swfdec_sprite_movie_do_goto (SwfdecSpriteMovie *movie, SwfdecAsValue *target)
   swfdec_sprite_movie_goto (movie, frame);
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 16, swfdec_sprite_movie_gotoAndPlay)
+void
 swfdec_sprite_movie_gotoAndPlay (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -123,7 +130,8 @@ swfdec_sprite_movie_gotoAndPlay (SwfdecAsContext *cx, SwfdecAsObject *obj,
   movie->playing = TRUE;
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 17, swfdec_sprite_movie_gotoAndStop)
+void
 swfdec_sprite_movie_gotoAndStop (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -133,7 +141,8 @@ swfdec_sprite_movie_gotoAndStop (SwfdecAsContext *cx, SwfdecAsObject *obj,
   movie->playing = FALSE;
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 14, swfdec_sprite_movie_nextFrame)
+void
 swfdec_sprite_movie_nextFrame (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -143,7 +152,8 @@ swfdec_sprite_movie_nextFrame (SwfdecAsContext *cx, SwfdecAsObject *obj,
   movie->playing = FALSE;
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 15, swfdec_sprite_movie_prevFrame)
+void
 swfdec_sprite_movie_prevFrame (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -153,7 +163,8 @@ swfdec_sprite_movie_prevFrame (SwfdecAsContext *cx, SwfdecAsObject *obj,
   movie->playing = FALSE;
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 4, swfdec_sprite_movie_hitTest)
+void
 swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -197,7 +208,8 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 20, swfdec_sprite_movie_startDrag)
+void
 swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -221,14 +233,16 @@ swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *obj,
   }
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 21, swfdec_sprite_movie_stopDrag)
+void
 swfdec_sprite_movie_stopDrag (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), NULL, FALSE, NULL);
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 1, swfdec_sprite_movie_swapDepths)
+void
 swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -251,7 +265,8 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *obj,
   swfdec_movie_set_depth (movie, depth);
 }
 
-static void
+SWFDEC_AS_NATIVE (901, 0, swfdec_sprite_movie_createEmptyMovieClip)
+void
 swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -284,7 +299,8 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie, SwfdecAsObject *obj)
   swfdec_movie_initialize (movie);
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 0, swfdec_sprite_movie_attachMovie)
+void
 swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -322,7 +338,8 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 18, swfdec_sprite_movie_duplicateMovieClip)
+void
 swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -349,7 +366,8 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (new));
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 19, swfdec_sprite_movie_removeMovieClip)
+void
 swfdec_sprite_movie_removeMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -381,7 +399,8 @@ swfdec_sprite_movie_getURL (SwfdecAsContext *cx, SwfdecAsObject *obj,
   /* FIXME: does this function return something */
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 10, swfdec_sprite_movie_getDepth)
+void
 swfdec_sprite_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -390,7 +409,8 @@ swfdec_sprite_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_AS_VALUE_SET_INT (rval, movie->depth);
 }
 
-static void
+SWFDEC_AS_NATIVE (900, 5, swfdec_sprite_movie_getBounds)
+void
 swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *obj,
         guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {

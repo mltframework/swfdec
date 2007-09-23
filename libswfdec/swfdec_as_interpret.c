@@ -506,6 +506,17 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *
 
     /* parse variable */
     if (start[0] == '.' && start[1] == '.' && start + 2 == path) {
+      if (o == NULL) {
+	GSList *walk;
+	for (walk = cx->frame->scope_chain; walk; walk = walk->next) {
+	  if (SWFDEC_IS_MOVIE (walk->data)) {
+	    o = walk->data;
+	    break;
+	  }
+	}
+	if (o == NULL)
+	  o = cx->frame->target;
+      }
       /* ".." goes back to parent */
       if (!SWFDEC_IS_MOVIE (o))
 	return NULL;

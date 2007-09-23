@@ -1477,7 +1477,7 @@ swfdec_action_set_target (SwfdecAsContext *cx, guint action, const guint8 *data,
     SwfdecAsValue target;
     swfdec_as_context_eval (cx, NULL, (const char *) data, &target);
     if (!SWFDEC_AS_VALUE_IS_OBJECT (&target)) {
-      SWFDEC_WARNING ("target is not an object");
+      SWFDEC_WARNING ("target \"%s\" is not an object", data);
       return;
     } 
     /* FIXME: allow non-movieclips as targets? */
@@ -1491,10 +1491,13 @@ swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsValue *val;
   val = swfdec_as_stack_peek (cx, 1);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    SWFDEC_WARNING ("target is not an object");
+    SWFDEC_FIXME ("target is not an object");
   } else {
-    /* FIXME: allow non-movieclips as targets? */
-    swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (val));
+    SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    if (!SWFDEC_IS_MOVIE (o)) {
+      SWFDEC_FIXME ("allow non-movieclips as targets?");
+    }
+    swfdec_as_frame_set_target (cx->frame, o);
   }
   swfdec_as_stack_pop (cx);
 }

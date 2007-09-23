@@ -957,6 +957,17 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
   return NULL;
 }
 
+SwfdecMovie *
+swfdec_movie_get_root (SwfdecMovie *movie)
+{
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+
+  while (movie->parent)
+    movie = movie->parent;
+
+  return movie;
+}
+
 static gboolean
 swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)

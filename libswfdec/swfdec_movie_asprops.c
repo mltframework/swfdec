@@ -351,8 +351,7 @@ mc_parent (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  while (movie->parent)
-    movie = movie->parent;
+  movie = swfdec_movie_get_root (movie);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 

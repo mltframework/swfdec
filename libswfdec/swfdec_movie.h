@@ -176,6 +176,7 @@ SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);
 SwfdecMovie *	swfdec_movie_get_by_name	(SwfdecMovie *		movie,
 						 const char *		name);
+SwfdecMovie *	swfdec_movie_get_root		(SwfdecMovie *		movie);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_destroy		(SwfdecMovie *		movie);
 void		swfdec_movie_set_static_properties 

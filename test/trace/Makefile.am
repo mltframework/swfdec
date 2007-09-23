@@ -564,6 +564,15 @@ EXTRA_DIST = \
 	getvariable-dotdot-7.swf.trace \
 	getvariable-dotdot-8.swf \
 	getvariable-dotdot-8.swf.trace \
+	getvariable-exhaustive.c \
+	getvariable-exhaustive-5.swf \
+	getvariable-exhaustive-5.swf.trace \
+	getvariable-exhaustive-6.swf \
+	getvariable-exhaustive-6.swf.trace \
+	getvariable-exhaustive-7.swf \
+	getvariable-exhaustive-7.swf.trace \
+	getvariable-exhaustive-8.swf \
+	getvariable-exhaustive-8.swf.trace \
 	getvariable-length.as \
 	getvariable-length-5.swf \
 	getvariable-length-5.swf.trace \

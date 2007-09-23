@@ -557,21 +557,18 @@ swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path,
   /* if no dot or colon, look up slash-path */
   if (end == NULL) {
     /* shortcut for the general case */
-    if (strchr (path, '/') == NULL) {
-      *object = NULL;
-      *variable = path;
-      return TRUE;
+    if (strchr (path, '/') != NULL) {
+      movie = swfdec_action_get_movie_by_slash_path (cx, path);
+      if (movie) {
+	*object = movie;
+	*variable = NULL;
+	return TRUE;
+      }
     }
 
-    *variable = NULL;
-    movie = swfdec_action_get_movie_by_slash_path (cx, path);
-    if (movie == NULL) {
-      *object = NULL;
-      return FALSE;
-    } else {
-      *object = movie;
-      return TRUE;
-    }
+    *object = NULL;
+    *variable = path;
+    return TRUE;
   }
   /* find last dot or colon */
   while ((s = strpbrk (end + 1, ".:")) != NULL)
@@ -620,17 +617,20 @@ swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
 static void
 swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  const char *s;
+  const char *s, *rest;
   SwfdecAsObject *object;
 
   s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-  if (swfdec_action_get_movie_by_path (cx, s, &object, &s) && s) {
-    if (object) {
-      swfdec_as_object_set_variable (object, swfdec_as_context_get_string (cx, s), 
+  if (swfdec_action_get_movie_by_path (cx, s, &object, &rest)) {
+    if (object && rest) {
+      swfdec_as_object_set_variable (object, swfdec_as_context_get_string (cx, rest), 
 	  swfdec_as_stack_peek (cx, 1));
     } else {
-      swfdec_as_frame_set_variable (cx->frame, swfdec_as_context_get_string (cx, s), 
-	  swfdec_as_stack_peek (cx, 1));
+      if (object)
+	rest = s;
+      else
+	rest = swfdec_as_context_get_string (cx, rest);
+      swfdec_as_frame_set_variable (cx->frame, rest, swfdec_as_stack_peek (cx, 1));
     }
   }
   swfdec_as_stack_pop_n (cx, 2);

@@ -614,9 +614,18 @@ static void
 swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *s;
+  SwfdecAsObject *object;
 
   s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-  swfdec_as_context_eval_set (cx, NULL, s, swfdec_as_stack_peek (cx, 1));
+  if (swfdec_action_get_movie_by_path (cx, s, &object, &s) && s) {
+    if (object) {
+      swfdec_as_object_set_variable (object, swfdec_as_context_get_string (cx, s), 
+	  swfdec_as_stack_peek (cx, 1));
+    } else {
+      swfdec_as_frame_set_variable (cx->frame, swfdec_as_context_get_string (cx, s), 
+	  swfdec_as_stack_peek (cx, 1));
+    }
+  }
   swfdec_as_stack_pop_n (cx, 2);
 }
 

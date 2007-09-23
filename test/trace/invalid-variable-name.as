@@ -8,14 +8,32 @@ for (i = 0; i < 300; i++) {
   if (name != "i" && name != "I") {
     this[name] = 42;
     trace (this[name]);
+    asm {
+      push "name"
+      getvariable
+      getvariable
+      trace
+    };
     trace (this.hasOwnProperty (name));
     name = "a" + name;
     this[name] = 42;
     trace (this[name]);
+    asm {
+      push "name"
+      getvariable
+      getvariable
+      trace
+    };
     trace (this.hasOwnProperty (name));
     name = name + "b";
     this[name] = 42;
     trace (this[name]);
+    asm {
+      push "name"
+      getvariable
+      getvariable
+      trace
+    };
     trace (this.hasOwnProperty (name));
   }
 }

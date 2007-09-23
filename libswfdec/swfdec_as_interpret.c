@@ -408,11 +408,17 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   }
 }
 
+/* NB: name must be GC'd */
 static SwfdecAsObject *
-super_special_movie_lookup_magic (SwfdecAsObject *o, const char *name)
+super_special_movie_lookup_magic (SwfdecAsContext *cx, SwfdecAsObject *o, const char *name)
 {
   SwfdecAsValue val;
 
+  if (o == NULL) {
+    o = swfdec_as_frame_get_variable (cx->frame, name, NULL);
+    if (o == NULL)
+      return NULL;
+  }
   if (SWFDEC_IS_MOVIE (o)) {
     SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name);
     if (ret)
@@ -449,7 +455,7 @@ swfdec_action_get_movie_by_slash_path (SwfdecAsContext *cx, const char *path)
       name = swfdec_as_context_get_string (cx, path);
       path += strlen (path);
     }
-    o = super_special_movie_lookup_magic (o, name);
+    o = super_special_movie_lookup_magic (cx, o, name);
     if (!SWFDEC_IS_MOVIE (o))
       return NULL;
   }
@@ -459,7 +465,7 @@ swfdec_action_get_movie_by_slash_path (SwfdecAsContext *cx, const char *path)
 static SwfdecAsObject *
 swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *end)
 {
-  SwfdecAsObject *o = cx->frame->target;
+  SwfdecAsObject *o = NULL;
   gboolean dot_allowed = TRUE;
   const char *start;
 
@@ -468,6 +474,7 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *
     return NULL;
 
   if (path[0] == '/') {
+    o = cx->frame->target;
     if (!SWFDEC_IS_MOVIE (o))
       return NULL;
     o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));
@@ -506,8 +513,8 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *
       if (o == NULL)
 	return NULL;
     } else {
-      o = super_special_movie_lookup_magic (o, swfdec_as_context_give_string (cx, 
-	      g_strndup (start, path - start)));
+      o = super_special_movie_lookup_magic (cx, o, 
+	      swfdec_as_context_give_string (cx, g_strndup (start, path - start)));
       if (o == NULL)
 	return NULL;
     }

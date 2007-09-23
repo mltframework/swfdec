@@ -239,7 +239,8 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   SwfdecFlvVideoTag tag;
 
   if (flv->video == NULL) {
-    SWFDEC_ERROR ("wow, video tags in an FLV without video!");
+    SWFDEC_INFO ("video tags even though header didn't decalre them. Initializing...");
+    flv->video = g_array_new (FALSE, FALSE, sizeof (SwfdecFlvVideoTag));
     return SWFDEC_STATUS_OK;
   }
 
@@ -296,7 +297,8 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   gboolean stereo;
 
   if (flv->audio == NULL) {
-    SWFDEC_ERROR ("wow, audio tags in an FLV without audio!");
+    SWFDEC_INFO ("audio tags even though header didn't decalre them. Initializing...");
+    flv->audio = g_array_new (FALSE, FALSE, sizeof (SwfdecFlvAudioTag));
     return;
   }
 

@@ -408,34 +408,126 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   }
 }
 
-static SwfdecMovie *
-super_special_movie_lookup_magic (SwfdecMovie *movie, const char *name)
+static SwfdecAsObject *
+super_special_movie_lookup_magic (SwfdecAsObject *o, const char *name)
 {
   SwfdecAsValue val;
-  SwfdecMovie *ret;
 
-  ret = swfdec_movie_get_by_name (movie, name);
-  if (ret)
-    return ret;
-  if (!swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (movie), name, &val))
+  if (SWFDEC_IS_MOVIE (o)) {
+    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name);
+    if (ret)
+      return SWFDEC_AS_OBJECT (ret);
+  }
+  if (!swfdec_as_object_get_variable (o, name, &val))
     return NULL;
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return NULL;
-  ret = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  if (!SWFDEC_IS_MOVIE (ret))
+  return SWFDEC_AS_VALUE_GET_OBJECT (&val);
+}
+
+static SwfdecAsObject *
+swfdec_action_get_movie_by_slash_path (SwfdecAsContext *cx, const char *path)
+{
+  SwfdecAsObject *o;
+
+  o = cx->frame->target;
+  if (!SWFDEC_IS_MOVIE (o))
     return NULL;
-  return ret;
+  if (*path == '/') {
+    o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));
+    path++;
+  }
+  while (*path) {
+    char *slash = strchr (path, '/');
+    const char *name;
+    if (slash) {
+      if (slash == path)
+	return NULL;
+      name = swfdec_as_context_give_string (cx, g_strndup (path, slash - path));
+      path = slash + 1;
+    } else {
+      name = swfdec_as_context_get_string (cx, path);
+      path += strlen (path);
+    }
+    o = super_special_movie_lookup_magic (o, name);
+    if (!SWFDEC_IS_MOVIE (o))
+      return NULL;
+  }
+  return o;
+}
+
+static SwfdecAsObject *
+swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *end)
+{
+  SwfdecAsObject *o = cx->frame->target;
+  gboolean dot_allowed = TRUE;
+  const char *start;
+
+  g_assert (*end == '.' || *end == ':');
+  if (path == end)
+    return NULL;
+
+  if (path[0] == '/') {
+    if (!SWFDEC_IS_MOVIE (o))
+      return NULL;
+    o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));
+    path++;
+    dot_allowed = FALSE;
+  }
+  while (path < end) {
+    for (start = path; path < end; path++) {
+      if (dot_allowed && path[0] == '.') {
+	if (end - path >= 2 && path[1] == '.') {
+	  dot_allowed = FALSE;
+	  continue;
+	}
+      } else if (path[0] == ':') {
+	if (path[1] == '/')
+	  continue;
+	if (path == start) {
+	  start++;
+	  continue;
+	}
+      } else if (path[0] == '/') {
+	dot_allowed = FALSE;
+      } else if (path - start < 127) {
+	continue;
+      }
+
+      break;
+    }
+
+    /* parse variable */
+    if (start[0] == '.' && start[1] == '.' && start + 2 == path) {
+      /* ".." goes back to parent */
+      if (!SWFDEC_IS_MOVIE (o))
+	return NULL;
+      o = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (o)->parent);
+      if (o == NULL)
+	return NULL;
+    } else {
+      o = super_special_movie_lookup_magic (o, swfdec_as_context_give_string (cx, 
+	      g_strndup (start, path - start)));
+      if (o == NULL)
+	return NULL;
+    }
+    if (path - start < 127)
+      path++;
+  }
+
+  return o;
 }
 
 /**
  * swfdec_action_get_movie_by_path:
  * @cx: a #SwfdecAsContext
  * @path: the path to look up
- * @variable: pointer that takes variable part of the path or %NULL if not 
- *            allowed
+ * @object: pointer that takes the object that was looked up. The object may be 
+ *          %NULL.
+ * @variable: pointer that takes variable part of the path. The variable will 
+ *            be either %NULL or a non-gc'ed variable name.
  *
- * Looks up a Flash4-compatible path using "/", ":" and "." style syntax. If 
- * @variable is %NULL, no variable path is allowed.
+ * Looks up a Flash4-compatible path using "/", ":" and "." style syntax.
  *
  * Returns: The #SwfdecMovie that was looked up or %NULL if the path does not 
  *          specify a valid movie.
@@ -444,128 +536,51 @@ static gboolean
 swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path, 
     SwfdecAsObject **object, const char **variable)
 {
-  SwfdecMovie *movie;
-  enum {
-    START,
-    IDENTIFIER,
-    BACK,
-    DOT,
-    COLON,
-    SLASH
-  } token = START;
-  enum {
-    STARTING = (1 << 0),
-    SLASHES = (1 << 1),
-    WAS_SLASH = (1 << 2),
-    DOTS = (1 << 3),
-    COLONS = (1 << 4),
-    DOUBLE = (1 << 5),
-    BACKS = (1 << 6)
-  } flags = STARTING;
+  SwfdecAsObject *movie;
+  char *end, *s;
 
   g_assert (path != NULL);
+  g_assert (object != NULL); 
+  g_assert (variable != NULL);
+  g_assert (cx->frame != NULL);
 
-  /* shortcut for the general case */
-  if (strpbrk (path, ".:/") == NULL) {
-    *object = NULL;
-    *variable = path;
-    return TRUE;
-  }
+  /* find dot or colon */
+  end = strpbrk (path, ".:");
 
-  *variable = NULL;
-  g_assert (cx->frame);
-  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
-    SWFDEC_FIXME ("target is not a movie");
-    return FALSE;
-  }
-  movie = SWFDEC_MOVIE (cx->frame->target);
-  while (*path) {
-    /* parse next token */
-    if (path[0] == '.' && path[1] == '.') {
-      /* BACK */
-      if (token == DOT || token == BACK || token == IDENTIFIER)
-	return FALSE;
-      movie = movie->parent;
-      if (movie == NULL)
-	return FALSE;
-      path += 2;
-      flags &= ~DOUBLE;
-      flags |= BACKS;
-      token = BACK;
-    } else if (path[0] == '.') {
-      /* DOT */
-      if (token == DOT || token == START || 
-	  (flags & DOUBLE) ||
-	  ((flags & SLASHES) && !(flags | WAS_SLASH)) ||
-	  (flags & (SLASHES | DOTS)) == (SLASHES | DOTS))
-	return FALSE;
-      flags &= ~WAS_SLASH;
-      flags |= DOTS;
-      if (token != IDENTIFIER)
-	flags |= DOUBLE;
-      path++;
-      token = DOT;
-    } else if (path[0] == ':') {
-      /* COLON */
-      if ((flags & DOUBLE) ||
-	  (flags & (SLASHES | DOTS)) == (SLASHES | DOTS))
-	return FALSE;
-      flags &= ~WAS_SLASH;
-      if (token != IDENTIFIER && token != BACK)
-	flags |= DOUBLE;
-      if (token != START && token != COLON)
-	flags |= COLONS;
-      path++;
-      token = COLON;
-    } else if (path[0] == '/') {
-      /* SLASH */
-      if (token == DOT || token == SLASH || token == COLON ||
-	  (flags & DOTS))
-	return FALSE;
-      g_assert (!(flags & DOUBLE)); /* can't happen, we'd have returned above */
-      if (flags & STARTING) {
-	while (movie->parent)
-	  movie = movie->parent;
-      }
-      flags |= SLASHES | WAS_SLASH;
-      path++;
-      token = SLASH;
-    } else {
-      /* IDENTIFIER */
-      const char *s = strpbrk (path, ".:/");
-      g_assert (token != IDENTIFIER);
-      if (token == BACK)
-	return FALSE;
-      if (s) {
-	const char *var = swfdec_as_context_give_string (cx, g_strndup (path, s - path));
-	movie = super_special_movie_lookup_magic (movie, var);
-	if (movie == NULL)
-	  return FALSE;
-	path = s;
-      } else {
-	if (token == SLASH) {
-	  movie = super_special_movie_lookup_magic (movie, swfdec_as_context_get_string (cx, path));
-	  if (movie == NULL)
-	    return FALSE;
-	} else {
-	  *variable = path;
-	}
-	path = "\0";
-      }
-      flags &= ~DOUBLE;
-      token = IDENTIFIER;
+  /* if no dot or colon, look up slash-path */
+  if (end == NULL) {
+    /* shortcut for the general case */
+    if (strchr (path, '/') == NULL) {
+      *object = NULL;
+      *variable = path;
+      return TRUE;
     }
-    flags &= ~STARTING;
+
+    *variable = NULL;
+    movie = swfdec_action_get_movie_by_slash_path (cx, path);
+    if (movie == NULL) {
+      *object = NULL;
+      return FALSE;
+    } else {
+      *object = movie;
+      return TRUE;
+    }
   }
-  if (token != IDENTIFIER && token != DOTS &&
-      !(token == SLASH && !(flags & (BACKS | COLONS | DOTS))))
+  /* find last dot or colon */
+  while ((s = strpbrk (end + 1, ".:")) != NULL)
+    end = s;
+
+  /* variable to use is the part after the last dot or colon */
+  *variable = end + 1;
+  /* look up object for start of path */
+  movie = swfdec_action_lookup_object (cx, path, end);
+  if (movie) {
+    *object = movie;
+    return TRUE;
+  } else {
+    *variable = NULL;
     return FALSE;
-  if ((flags & WAS_SLASH) && flags & (COLONS | DOTS | BACKS))
-    return FALSE;
-  if (!(flags & (COLONS | SLASHES | DOTS)))
-    return FALSE;
-  *object = SWFDEC_AS_OBJECT (movie);
-  return TRUE;
+  }
 }
 
 static void

@@ -658,6 +658,13 @@ EXTRA_DIST = \
 	load-4.swf.trace \
 	load-5.swf \
 	load-5.swf.trace \
+	loadmovie-case.as \
+	loadmovie-case-5.swf \
+	loadmovie-case-5.swf.trace \
+	loadmovie-case-6.swf \
+	loadmovie-case-6.swf.trace \
+	loadmovie-case-7.swf \
+	loadmovie-case-7.swf.trace \
 	loadobject.as \
 	loadobject-5.swf \
 	loadobject-5.swf.trace \

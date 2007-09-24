@@ -734,6 +734,13 @@ EXTRA_DIST = \
 	mouse-show-hide-6.swf.trace \
 	mouse-show-hide-7.swf \
 	mouse-show-hide-7.swf.trace \
+	movieclip-target.as \
+	movieclip-target-5.swf \
+	movieclip-target-5.swf.trace \
+	movieclip-target-6.swf \
+	movieclip-target-6.swf.trace \
+	movieclip-target-7.swf \
+	movieclip-target-7.swf.trace \
 	name.swf \
 	name.swf.trace \
 	name2.swf \

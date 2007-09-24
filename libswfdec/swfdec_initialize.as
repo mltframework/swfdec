@@ -234,6 +234,7 @@ MovieClip.prototype["loadVariables"] = function (url, method) {
   } else {
     loadVariables (url, this._target, "POST");
   }
+  setTarget (null);
 };
 
 MovieClip.prototype.attachMovie = ASnative (900, 0);

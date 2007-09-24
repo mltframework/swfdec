@@ -355,6 +355,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("unwatch")
   SWFDEC_AS_CONSTANT_STRING ("apply")
   SWFDEC_AS_CONSTANT_STRING ("isPrototypeOf")
+  SWFDEC_AS_CONSTANT_STRING ("/")
   /* add more here */
 ;
 
@@ -381,6 +382,8 @@ main (int argc, char **argv)
       name = strdup ("EMPTY");
     } else if (!strcmp (cur, ",")) {
       name = strdup ("COMMA");
+    } else if (!strcmp (cur, "/")) {
+      name = strdup ("SLASH");
     } else {
       s = name = strdup (cur);
       while (*s) {

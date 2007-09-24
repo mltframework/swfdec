@@ -356,6 +356,25 @@ mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
 }
 
 static void
+mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+{
+  GString *s;
+
+  s = g_string_new ("");
+  while (movie->parent) {
+    g_string_prepend (s, movie->name);
+    g_string_prepend_c (s, '/');
+    movie = movie->parent;
+  }
+  if (s->len == 0) {
+    SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_SLASH);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_give_string (
+	  SWFDEC_AS_OBJECT (movie)->context, g_string_free (s, FALSE)));
+  }
+}
+
+static void
 mc_url_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_get_string (
@@ -380,7 +399,7 @@ struct {
   { 0, SWFDEC_AS_STR__width,	mc_width_get,	    mc_width_set },
   { 0, SWFDEC_AS_STR__height,	mc_height_get,	    mc_height_set },
   { 0, SWFDEC_AS_STR__rotation,	mc_rotation_get,    mc_rotation_set },
-  { 1, SWFDEC_AS_STR__target,	NULL,  NULL }, //"_target"
+  { 1, SWFDEC_AS_STR__target,	mc_target_get,  NULL }, //"_target"
   { 1, SWFDEC_AS_STR__framesloaded,mc_framesloaded,    NULL},
   { 0, SWFDEC_AS_STR__name,	mc_name_get,	    mc_name_set },
   { 1, SWFDEC_AS_STR__droptarget,	NULL,  NULL }, //"_droptarget"

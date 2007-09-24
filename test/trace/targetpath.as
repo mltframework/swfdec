@@ -1,5 +1,7 @@
 // makeswf -v 7 -s 200x150 -r 1 -o targetpath.swf targetpath.as
 
+#include "values.as"
+
 asm {
   push "_root"
   getvariable
@@ -23,5 +25,9 @@ asm {
   trace
 };
 
+for (var i = 0; i < values.length; i++) {
+  var a = values[i];
+  trace (names[i] + " = " + targetPath (a));
+}
 
 loadMovie ("FSCommand:quit", "");

@@ -1847,7 +1847,6 @@ swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val) ||
       !SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (val))) {
-    SWFDEC_FIXME ("What's the TargetPath for non-movies?");
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }

@@ -469,7 +469,6 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *
   gboolean dot_allowed = TRUE;
   const char *start;
 
-  g_assert (*end == '.' || *end == ':');
   if (path == end)
     return NULL;
 
@@ -1492,40 +1491,42 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
 }
 
 static void
+swfdec_action_do_set_target (SwfdecAsContext *cx, const char *target, const char *end)
+{
+  if (target == end) {
+    swfdec_as_frame_set_target (cx->frame, NULL);
+  } else {
+    SwfdecAsObject *o = swfdec_action_lookup_object (cx, target, end);
+    if (o == NULL) {
+      SWFDEC_WARNING ("target \"%s\" is not an object", target);
+    } else if (!SWFDEC_IS_MOVIE (o)) {
+      SWFDEC_FIXME ("target \"%s\" is not a movie, something weird is supposed to happen now", target);
+      o = NULL;
+    }
+    swfdec_as_frame_set_target (cx->frame, o);
+  }
+}
+
+static void
 swfdec_action_set_target (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  if (!memchr (data, 0, len)) {
+  char *end;
+
+  end = memchr (data, 0, len);
+  if (end == NULL) {
     SWFDEC_ERROR ("SetTarget action does not specify a string");
     return;
   }
-  if (*data == '\0') {
-    swfdec_as_frame_set_target (cx->frame, NULL);
-  } else {
-    SwfdecAsValue target;
-    swfdec_as_context_eval (cx, NULL, (const char *) data, &target);
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&target)) {
-      SWFDEC_WARNING ("target \"%s\" is not an object", data);
-      return;
-    } 
-    /* FIXME: allow non-movieclips as targets? */
-    swfdec_as_frame_set_target (cx->frame, SWFDEC_AS_VALUE_GET_OBJECT (&target));
-  }
+  swfdec_action_do_set_target (cx, (const char *) data, end);
 }
 
 static void
 swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val;
-  val = swfdec_as_stack_peek (cx, 1);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    SWFDEC_FIXME ("target is not an object");
-  } else {
-    SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_OBJECT (val);
-    if (!SWFDEC_IS_MOVIE (o)) {
-      SWFDEC_FIXME ("allow non-movieclips as targets?");
-    }
-    swfdec_as_frame_set_target (cx->frame, o);
-  }
+  const char *s;
+
+  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  swfdec_action_do_set_target (cx, s, s + strlen (s));
   swfdec_as_stack_pop (cx);
 }
 

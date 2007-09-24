@@ -501,6 +501,13 @@ EXTRA_DIST = \
 	fromcharcode-6.swf.trace \
 	fromcharcode-7.swf \
 	fromcharcode-7.swf.trace \
+	fscommand.as \
+	fscommand-5.swf \
+	fscommand-5.swf.trace \
+	fscommand-6.swf \
+	fscommand-6.swf.trace \
+	fscommand-7.swf \
+	fscommand-7.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \

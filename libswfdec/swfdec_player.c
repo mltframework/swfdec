@@ -1602,8 +1602,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   if (swfdec_player_is_initialized (player))
     return;
   
-  swfdec_player_preinit_global (player, version);
-
   context = SWFDEC_AS_CONTEXT (player);
   swfdec_as_context_startup (context, version);
   /* reset state for initialization */

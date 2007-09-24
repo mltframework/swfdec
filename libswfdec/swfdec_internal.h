@@ -62,7 +62,7 @@ SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(SwfdecVideoFormat	format);
 
 /* AS engine setup code */
 
-void			swfdec_player_preinit_global		(SwfdecPlayer *		player,
+void			swfdec_player_preinit_global		(SwfdecAsContext *	context,
 								 guint			version);
 void			swfdec_net_connection_init_context	(SwfdecPlayer *		player,
 								 guint			version);

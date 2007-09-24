@@ -37,6 +37,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h" /* for swfdec_player_preinit_global() */
 #include "swfdec_script.h"
 
 /*** GARBAGE COLLECTION DOCS ***/
@@ -1309,6 +1310,9 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   if (!swfdec_as_stack_push_segment (context))
     return;
   context->version = version;
+  /* init the two internal functions */
+  /* FIXME: remove them for normal contexts? */
+  swfdec_player_preinit_global (context, version);
   /* get the necessary objects up to define objects and functions sanely */
   swfdec_as_function_init_context (context, version);
   swfdec_as_object_init_context (context, version);

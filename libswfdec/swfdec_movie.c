@@ -1339,16 +1339,20 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecPlayer *player;
+  guint version;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (url != NULL);
   g_return_if_fail (target != NULL);
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  version = SWFDEC_AS_CONTEXT (player)->version;
 
   /* yay for the multiple uses of GetURL - one of the crappier Flash things */
   if (g_ascii_strncasecmp (url, "FSCommand:", strlen ("FSCommand:")) != 0 &&
-      g_str_has_prefix (target, "_level"))
+      ((version >= 7 && g_str_has_prefix (target, "_level")) ||
+       (version < 7 &&
+	g_ascii_strncasecmp (target, "_level", strlen ("_level")) == 0)))
   {
     const char *nr = target + strlen ("_level");
     char *end;

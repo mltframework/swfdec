@@ -223,7 +223,19 @@ MovieClip.prototype.getURL = function (url, target, method) {
   }
 };
 
-// work around ming bug, causing duplicateMovieClip etc. to be lower cased
+// work around ming bug, causing loadVariables to be lower cased
+MovieClip.prototype["loadVariables"] = function (url, method) {
+  var type = this.meth (method);
+  setTarget (this);
+  if (type == 0) {
+    loadVariables (url, this._target);
+  } else if (type == 1) {
+    loadVariables (url, this._target, "GET");
+  } else {
+    loadVariables (url, this._target, "POST");
+  }
+};
+
 MovieClip.prototype.attachMovie = ASnative (900, 0);
 MovieClip.prototype.swapDepths = ASnative (900, 1);
 MovieClip.prototype.hitTest = ASnative (900, 4);
@@ -237,6 +249,7 @@ MovieClip.prototype.nextFrame = ASnative (900, 14);
 MovieClip.prototype.prevFrame = ASnative (900, 15);
 MovieClip.prototype.gotoAndPlay = ASnative (900, 16);
 MovieClip.prototype.gotoAndStop = ASnative (900, 17);
+// work around ming bug, causing these two to be lower cased
 MovieClip.prototype["duplicateMovieClip"] = ASnative (900, 18);
 MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
 MovieClip.prototype.startDrag = ASnative (900, 20);

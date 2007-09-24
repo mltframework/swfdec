@@ -1014,7 +1014,7 @@ swfdec_movie_get_debug (SwfdecAsObject *object)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  return swfdec_movie_get_path (movie);
+  return swfdec_movie_get_path (movie, TRUE);
 }
 
 static gboolean
@@ -1372,7 +1372,7 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
 }
 
 char *
-swfdec_movie_get_path (SwfdecMovie *movie)
+swfdec_movie_get_path (SwfdecMovie *movie, gboolean dot)
 {
   GString *s;
 
@@ -1382,16 +1382,24 @@ swfdec_movie_get_path (SwfdecMovie *movie)
   do {
     if (movie->parent) {
       g_string_prepend (s, movie->name);
-      g_string_prepend_c (s, '.');
+      g_string_prepend_c (s, (dot ? '.' : '/'));
     } else {
-      char *ret = g_strdup_printf ("_level%u%s",
-	movie->depth + 16384, s->str);
-      g_string_free (s, TRUE);
+      char *ret;
+      if (dot) {
+	ret = g_strdup_printf ("_level%u%s", movie->depth + 16384, s->str);
+	g_string_free (s, TRUE);
+      } else {
+	if (s->str[0] != '/')
+	  g_string_prepend_c (s, '/');
+	ret = g_string_free (s, FALSE);
+      }
       return ret;
     }
     movie = movie->parent;
   } while (TRUE);
+
   g_assert_not_reached ();
+
   return NULL;
 }
 

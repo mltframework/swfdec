@@ -1850,7 +1850,7 @@ swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }
-  s = swfdec_movie_get_path (movie);
+  s = swfdec_movie_get_path (movie, TRUE);
   SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_give_string (cx, s));
 }
 

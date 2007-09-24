@@ -370,7 +370,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       {
 	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (value);
 	if (SWFDEC_IS_MOVIE (object)) {
-	  char *str = swfdec_movie_get_path (SWFDEC_MOVIE (object));
+	  char *str = swfdec_movie_get_path (SWFDEC_MOVIE (object), TRUE);
 	  const char *ret = swfdec_as_context_get_string (context, str);
 	  g_free (str);
 	  return ret;

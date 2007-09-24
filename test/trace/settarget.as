@@ -25,6 +25,8 @@ setTarget ("/a");
 trace (test);
 setTarget ("/a/b");
 trace (test);
+setTarget ("o");
+trace (test);
 setTarget ("_level0.a");
 trace (test);
 setTarget ("");

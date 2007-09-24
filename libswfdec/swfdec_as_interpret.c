@@ -1461,7 +1461,6 @@ swfdec_action_set_target (SwfdecAsContext *cx, guint action, const guint8 *data,
   } else {
     SwfdecAsValue target;
     swfdec_as_context_eval (cx, NULL, (const char *) data, &target);
-    /* FIXME: Is this correct? */
     if (!SWFDEC_AS_VALUE_IS_OBJECT (&target) ||
 	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&target))) {
       swfdec_as_frame_set_target (cx->frame, NULL);

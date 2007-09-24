@@ -1201,6 +1201,13 @@ EXTRA_DIST = \
 	round-direction-7.swf.trace \
 	round-direction-8.swf \
 	round-direction-8.swf.trace \
+	settarget.as \
+	settarget-5.swf \
+	settarget-5.swf.trace \
+	settarget-6.swf \
+	settarget-6.swf.trace \
+	settarget-7.swf \
+	settarget-7.swf.trace \
 	settimeout.as \
 	settimeout-5.swf \
 	settimeout-5.swf.trace \

@@ -1572,7 +1572,7 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
   g_return_if_fail (url != NULL);
   g_return_if_fail (target != NULL);
 
-  if (g_str_has_prefix (url, "FSCommand:")) {
+  if (!g_ascii_strncasecmp (url, "FSCommand:", strlen ("FSCommand:"))) {
     const char *command = url + strlen ("FSCommand:");
     g_signal_emit (player, signals[FSCOMMAND], 0, command, target);
     return;

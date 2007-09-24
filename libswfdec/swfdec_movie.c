@@ -1345,8 +1345,11 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
   g_return_if_fail (target != NULL);
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+
   /* yay for the multiple uses of GetURL - one of the crappier Flash things */
-  if (g_str_has_prefix (target, "_level")) {
+  if (g_ascii_strncasecmp (url, "FSCommand:", strlen ("FSCommand:")) != 0 &&
+      g_str_has_prefix (target, "_level"))
+  {
     const char *nr = target + strlen ("_level");
     char *end;
     guint depth;

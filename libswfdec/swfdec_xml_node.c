@@ -1020,7 +1020,7 @@ swfdec_xml_node_add_variable (SwfdecAsObject *object, const char *variable,
     set_func = NULL;
   }
 
-  swfdec_as_object_add_variable (object, variable, get_func, set_func);
+  swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
 }
 
 SWFDEC_AS_CONSTRUCTOR (253, 0, swfdec_xml_node_construct, swfdec_xml_node_get_type)

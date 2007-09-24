@@ -1226,7 +1226,7 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
  **/
 void
 swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable, 
-    SwfdecAsFunction *get, SwfdecAsFunction *set)
+    SwfdecAsFunction *get, SwfdecAsFunction *set, guint flags)
 {
   SwfdecAsVariable *var;
 
@@ -1236,10 +1236,13 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
   g_return_if_fail (set == NULL || SWFDEC_IS_AS_FUNCTION (set));
 
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) 
-    var = swfdec_as_object_hash_create (object, variable, 0);
-  if (var == NULL)
-    return;
+  if (var == NULL) {
+    var = swfdec_as_object_hash_create (object, variable, flags);
+    if (var == NULL)
+      return;
+  } else {
+    var->flags = flags;
+  }
   var->get = get;
   var->set = set;
 }
@@ -1271,7 +1274,7 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  swfdec_as_object_add_variable (object, name, get, set);
+  swfdec_as_object_add_variable (object, name, get, set, 0);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 

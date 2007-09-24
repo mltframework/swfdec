@@ -1,4 +1,6 @@
-start a: 
 start _level0: 1
-quit a: 
+start a: 
+start b: 1
 quit _level0: 2
+quit a: 
+quit b: 

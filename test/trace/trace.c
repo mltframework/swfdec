@@ -210,6 +210,8 @@ main (int argc, char **argv)
   GError *error = NULL;
 
   g_thread_init (NULL);
+  /* by default get rid of the loads of warnings the tests produce */
+  g_setenv ("SWFDEC_DEBUG", "2", FALSE);
   swfdec_init ();
   failed_tests = g_string_new ("");
 

@@ -1398,6 +1398,33 @@ EXTRA_DIST = \
 	setinterval-this-6.swf.trace \
 	setinterval-this-7.swf \
 	setinterval-this-7.swf.trace \
+	settarget2-tostring.as \
+	settarget2-tostring-5.swf \
+	settarget2-tostring-5.swf.trace \
+	settarget2-tostring-6.swf \
+	settarget2-tostring-6.swf.trace \
+	settarget2-tostring-7.swf \
+	settarget2-tostring-7.swf.trace \
+	settarget2-tostring-8.swf \
+	settarget2-tostring-8.swf.trace \
+	settarget-delimiters.as \
+	settarget-delimiters-5.swf \
+	settarget-delimiters-5.swf.trace \
+	settarget-delimiters-6.swf \
+	settarget-delimiters-6.swf.trace \
+	settarget-delimiters-7.swf \
+	settarget-delimiters-7.swf.trace \
+	settarget-delimiters-8.swf \
+	settarget-delimiters-8.swf.trace \
+	settarget-nomovie.as \
+	settarget-nomovie-5.swf \
+	settarget-nomovie-5.swf.trace \
+	settarget-nomovie-6.swf \
+	settarget-nomovie-6.swf.trace \
+	settarget-nomovie-7.swf \
+	settarget-nomovie-7.swf.trace \
+	settarget-nomovie-8.swf \
+	settarget-nomovie-8.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	setvariable-callback.as \

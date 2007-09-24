@@ -272,7 +272,7 @@ MovieClip.prototype.stopDrag = ASnative (900, 21);
 MovieClip.prototype.createEmptyMovieClip = ASnative (901, 0);
 ASSetPropFlags (MovieClip.prototype, "getDepth,createEmptyMovieClip", 128);
 
-ASSetPropFlags (o, null, 3);
+ASSetPropFlags (MovieClip.prototype, null, 3);
 
 /* Global Functions */
 

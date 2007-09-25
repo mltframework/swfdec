@@ -315,37 +315,3 @@ swfdec_video_decoder_ffmpeg_new (SwfdecVideoCodec type)
   return &codec->decoder;
 }
 
-guint8 *
-swfdec_video_ffmpeg_i420_to_rgb (SwfdecVideoImage *image)
-{
-  struct SwsContext *sws;
-  AVPicture src, dst;
-  guint8 *data;
-
-  sws = sws_getContext (image->width, image->height, PIX_FMT_YUV420P,
-      image->width, image->height, PIX_FMT_RGB32, 0, NULL, NULL, NULL);
-  if (sws == NULL) {
-    SWFDEC_ERROR ("Could not get conversion context");
-    return NULL;
-  }
-  data = g_try_malloc (image->width * image->height * 4);
-  if (data == NULL) {
-    SWFDEC_ERROR ("Out of memory");
-    sws_freeContext (sws);
-    return NULL;
-  }
-  src.data[0] = (unsigned char *) image->plane[0];
-  src.data[1] = (unsigned char *) image->plane[1];
-  src.data[2] = (unsigned char *) image->plane[2];
-  src.data[3] = NULL;
-  src.linesize[0] = image->rowstride[0];
-  src.linesize[1] = image->rowstride[1];
-  src.linesize[2] = image->rowstride[2];
-  src.linesize[3] = 0;
-  avpicture_fill (&dst, data, PIX_FMT_RGB32, image->width, image->height);
-  sws_scale (sws, src.data, src.linesize, 0, image->height,
-      dst.data, dst.linesize);
-  sws_freeContext (sws);
-  return data;
-}
-

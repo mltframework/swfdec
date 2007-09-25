@@ -63,7 +63,7 @@ struct _SwfdecSound
 {
   SwfdecCached		cached;
 
-  SwfdecAudioFormat	format;			/* format in use */
+  SwfdecAudioCodec	format;			/* format in use */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
   guint		n_samples;		/* total number of samples when decoded to 44100kHz */

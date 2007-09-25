@@ -84,14 +84,14 @@ swfdec_audio_decoder_uncompressed_free (SwfdecAudioDecoder *decoder)
 }
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_uncompressed_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioOut format)
 {
   SwfdecAudioDecoderUncompressed *dec;
 
-  if (format != SWFDEC_AUDIO_FORMAT_UNDEFINED &&
-      format != SWFDEC_AUDIO_FORMAT_UNCOMPRESSED)
+  if (format != SWFDEC_AUDIO_CODEC_UNDEFINED &&
+      format != SWFDEC_AUDIO_CODEC_UNCOMPRESSED)
     return NULL;
-  if (format == SWFDEC_AUDIO_FORMAT_UNDEFINED) {
+  if (format == SWFDEC_AUDIO_CODEC_UNDEFINED) {
     SWFDEC_WARNING ("endianness of audio unknown, assuming little endian");
   }
   dec = g_new (SwfdecAudioDecoderUncompressed, 1);
@@ -111,7 +111,7 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioFormat type, gboolean width, S
 
 /**
  * swfdec_audio_decoder_new:
- * @format: #SwfdecAudioFormat to decode
+ * @format: #SwfdecAudioCodec to decode
  *
  * Creates a decoder suitable for decoding @format. If no decoder is available
  * for the given for mat, %NULL is returned.
@@ -119,7 +119,7 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioFormat type, gboolean width, S
  * Returns: a new decoder or %NULL
  **/
 SwfdecAudioDecoder *
-swfdec_audio_decoder_new (SwfdecAudioFormat format, gboolean width, SwfdecAudioOut data_format)
+swfdec_audio_decoder_new (SwfdecAudioCodec format, gboolean width, SwfdecAudioOut data_format)
 {
   SwfdecAudioDecoder *ret;
 

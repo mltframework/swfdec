@@ -197,7 +197,7 @@ swfdec_audio_decoder_gst_handle_bus (GstBus *bus, GstMessage *message, gpointer 
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_gst_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_gst_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioOut format)
 {
   SwfdecGstAudio *player;
   GstElement *fakesrc, *fakesink, *decoder, *convert;
@@ -208,7 +208,7 @@ swfdec_audio_decoder_gst_new (SwfdecAudioFormat type, gboolean width, SwfdecAudi
     return NULL;
 
   switch (type) {
-    case SWFDEC_AUDIO_FORMAT_MP3:
+    case SWFDEC_AUDIO_CODEC_MP3:
       caps = gst_caps_from_string ("audio/mpeg, mpegversion=(int)1, layer=(int)3");
       break;
     default:

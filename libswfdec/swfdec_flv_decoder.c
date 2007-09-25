@@ -46,7 +46,7 @@ struct _SwfdecFlvVideoTag {
 
 struct _SwfdecFlvAudioTag {
   guint			timestamp;		/* milliseconds */
-  SwfdecAudioFormat	format;			/* format in use */
+  SwfdecAudioCodec	format;			/* format in use */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioOut	original_format;      	/* channel/rate information */
   SwfdecBuffer *	buffer;			/* buffer for this data */
@@ -523,7 +523,7 @@ swfdec_flv_decoder_get_video_info (SwfdecFlvDecoder *flv,
 
 SwfdecBuffer *
 swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
-    SwfdecAudioFormat *codec_format, gboolean *width, SwfdecAudioOut *format,
+    SwfdecAudioCodec *codec_format, gboolean *width, SwfdecAudioOut *format,
     guint *real_timestamp, guint *next_timestamp)
 {
   guint id, offset;
@@ -538,7 +538,7 @@ swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
     if (real_timestamp)
       *real_timestamp = 0;
     if (codec_format)
-      *codec_format = SWFDEC_AUDIO_FORMAT_UNDEFINED;
+      *codec_format = SWFDEC_AUDIO_CODEC_UNDEFINED;
     if (width)
       *width = TRUE;
     if (format)

@@ -167,11 +167,11 @@ swfdec_audio_decoder_adpcm_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_adpcm_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_adpcm_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioOut format)
 {
   SwfdecAudioDecoderAdpcm *adpcm;
 
-  if (type != SWFDEC_AUDIO_FORMAT_ADPCM)
+  if (type != SWFDEC_AUDIO_CODEC_ADPCM)
     return NULL;
   adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
   adpcm->decoder.out_format = format;

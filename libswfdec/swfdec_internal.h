@@ -31,21 +31,21 @@ G_BEGIN_DECLS
 
 /* audio codecs */
 
-SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(SwfdecAudioFormat	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(SwfdecAudioCodec	type, 
 								 gboolean		width,
 								 SwfdecAudioOut		format);
 #ifdef HAVE_MAD
-SwfdecAudioDecoder *	swfdec_audio_decoder_mad_new		(SwfdecAudioFormat	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_mad_new		(SwfdecAudioCodec	type, 
 								 gboolean		width,
 								 SwfdecAudioOut		format);
 #endif
 #ifdef HAVE_FFMPEG
-SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(SwfdecAudioFormat	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(SwfdecAudioCodec	type, 
 								 gboolean		width,
 								 SwfdecAudioOut		format);
 #endif
 #ifdef HAVE_GST
-SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(SwfdecAudioFormat	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(SwfdecAudioCodec	type, 
 								 gboolean		width,
 								 SwfdecAudioOut		format);
 #endif

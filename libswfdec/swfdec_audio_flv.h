@@ -40,7 +40,7 @@ struct _SwfdecAudioFlv
   SwfdecAudio		audio;
 
   SwfdecFlvDecoder *	flvdecoder;	/* decoder we play back */
-  SwfdecAudioFormat	format;		/* codec format of audio */
+  SwfdecAudioCodec	format;		/* codec format of audio */
   gboolean		width;		/* width of audio */
   SwfdecAudioOut	in;		/* input format of data */
   SwfdecAudioDecoder *	decoder;	/* decoder used for playback */

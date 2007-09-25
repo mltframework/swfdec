@@ -89,7 +89,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
   }
 
   n_samples = swfdec_bits_get_u16 (&s->b);
-  if (sound->format == SWFDEC_AUDIO_FORMAT_MP3) {
+  if (sound->format == SWFDEC_AUDIO_CODEC_MP3) {
     skip = swfdec_bits_get_s16 (&s->b);
   } else {
     skip = 0;
@@ -154,11 +154,11 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
       /* fall through */
     case 3:
-      sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
+      sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 2:
-      sound->format = SWFDEC_AUDIO_FORMAT_MP3;
+      sound->format = SWFDEC_AUDIO_CODEC_MP3;
       sound->skip = swfdec_bits_get_u16 (b);
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
@@ -283,18 +283,18 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
       /* fall through */
     case 3:
-      sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
+      sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       break;
     case 1:
-      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
+      sound->format = SWFDEC_AUDIO_CODEC_ADPCM;
       break;
     case 2:
-      sound->format = SWFDEC_AUDIO_FORMAT_MP3;
+      sound->format = SWFDEC_AUDIO_CODEC_MP3;
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
     case 6:
-      sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
+      sound->format = SWFDEC_AUDIO_CODEC_NELLYMOSER;
       break;
     default:
       SWFDEC_WARNING ("unknown format %d", format);

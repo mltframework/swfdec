@@ -170,17 +170,17 @@ swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_ffmpeg_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_ffmpeg_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioOut format)
 {
   SwfdecAudioDecoderFFMpeg *ffmpeg;
   AVCodecContext *ctx;
   enum CodecID id;
 
   switch (type) {
-    case SWFDEC_AUDIO_FORMAT_ADPCM:
+    case SWFDEC_AUDIO_CODEC_ADPCM:
       id = CODEC_ID_ADPCM_SWF;
       break;
-    case SWFDEC_AUDIO_FORMAT_MP3:
+    case SWFDEC_AUDIO_CODEC_MP3:
       id = CODEC_ID_MP3;
       break;
     default:

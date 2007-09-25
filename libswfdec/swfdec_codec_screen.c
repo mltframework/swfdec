@@ -126,11 +126,11 @@ swfdec_video_decoder_screen_free (SwfdecVideoDecoder *dec)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_screen_new (SwfdecVideoFormat type)
+swfdec_video_decoder_screen_new (SwfdecVideoCodec type)
 {
   SwfdecCodecScreen *screen;
   
-  if (type != SWFDEC_VIDEO_FORMAT_SCREEN)
+  if (type != SWFDEC_VIDEO_CODEC_SCREEN)
     return NULL;
   
   screen = g_new0 (SwfdecCodecScreen, 1);

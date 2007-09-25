@@ -59,8 +59,8 @@ swfdec_net_stream_decode_video (SwfdecNetStream *stream, SwfdecBuffer *buffer)
   if (decoder == NULL)
     return NULL;
 
-  if (decoder->format == SWFDEC_VIDEO_FORMAT_VP6 ||
-      decoder->format == SWFDEC_VIDEO_FORMAT_VP6_ALPHA) {
+  if (decoder->format == SWFDEC_VIDEO_CODEC_VP6 ||
+      decoder->format == SWFDEC_VIDEO_CODEC_VP6_ALPHA) {
     guint wsub, hsub;
     SwfdecBuffer *tmp;
     wsub = *buffer->data;
@@ -83,7 +83,7 @@ static void
 swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 {
   SwfdecBuffer *buffer;
-  SwfdecVideoFormat format;
+  SwfdecVideoCodec format;
   cairo_surface_t *old;
   gboolean process_events;
   guint process_events_from;

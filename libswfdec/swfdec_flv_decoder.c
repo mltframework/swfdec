@@ -39,7 +39,7 @@ typedef struct _SwfdecFlvDataTag SwfdecFlvDataTag;
 
 struct _SwfdecFlvVideoTag {
   guint			timestamp;		/* milliseconds */
-  SwfdecVideoFormat	format;			/* format in use */
+  SwfdecVideoCodec	format;			/* format in use */
   int			frame_type;		/* 0: undefined, 1: keyframe, 2: iframe, 3: H263 disposable iframe */
   SwfdecBuffer *	buffer;			/* buffer for this data */
 };
@@ -458,7 +458,7 @@ swfdec_flv_decoder_init (SwfdecFlvDecoder *flv)
 
 SwfdecBuffer *
 swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
-    gboolean keyframe, SwfdecVideoFormat *format, guint *real_timestamp, guint *next_timestamp)
+    gboolean keyframe, SwfdecVideoCodec *format, guint *real_timestamp, guint *next_timestamp)
 {
   guint id, offset;
   SwfdecFlvVideoTag *tag;
@@ -472,7 +472,7 @@ swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
     if (real_timestamp)
       *real_timestamp = 0;
     if (format)
-      *format = SWFDEC_VIDEO_FORMAT_UNDEFINED;
+      *format = SWFDEC_VIDEO_CODEC_UNDEFINED;
     return NULL;
   }
   offset = g_array_index (flv->video, SwfdecFlvVideoTag, 0).timestamp;

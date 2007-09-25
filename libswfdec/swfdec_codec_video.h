@@ -25,19 +25,19 @@
 #include <libswfdec/swfdec_buffer.h>
 
 typedef enum {
-  SWFDEC_VIDEO_FORMAT_UNDEFINED = 0,
-  SWFDEC_VIDEO_FORMAT_H263 = 2,
-  SWFDEC_VIDEO_FORMAT_SCREEN = 3,
-  SWFDEC_VIDEO_FORMAT_VP6 = 4,
-  SWFDEC_VIDEO_FORMAT_VP6_ALPHA = 5,
-  SWFDEC_VIDEO_FORMAT_SCREEN2 = 6
-} SwfdecVideoFormat;
+  SWFDEC_VIDEO_CODEC_UNDEFINED = 0,
+  SWFDEC_VIDEO_CODEC_H263 = 2,
+  SWFDEC_VIDEO_CODEC_SCREEN = 3,
+  SWFDEC_VIDEO_CODEC_VP6 = 4,
+  SWFDEC_VIDEO_CODEC_VP6_ALPHA = 5,
+  SWFDEC_VIDEO_CODEC_SCREEN2 = 6
+} SwfdecVideoCodec;
 
 typedef struct _SwfdecVideoDecoder SwfdecVideoDecoder;
-typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (SwfdecVideoFormat format);
+typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (SwfdecVideoCodec format);
 
 struct _SwfdecVideoDecoder {
-  SwfdecVideoFormat	format;
+  SwfdecVideoCodec	format;
   SwfdecBuffer *	(* decode)	(SwfdecVideoDecoder *	decoder,
 					 SwfdecBuffer *		buffer,
 					 guint *		width,
@@ -46,7 +46,7 @@ struct _SwfdecVideoDecoder {
   void			(* free)	(SwfdecVideoDecoder *	decoder);
 };
 
-SwfdecVideoDecoder *	swfdec_video_decoder_new      	(SwfdecVideoFormat	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_new      	(SwfdecVideoCodec	format);
 void			swfdec_video_decoder_free	(SwfdecVideoDecoder *   decoder);
 
 cairo_surface_t *     	swfdec_video_decoder_decode	(SwfdecVideoDecoder *	decoder,

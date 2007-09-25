@@ -286,20 +286,20 @@ swfdec_video_decoder_ffmpeg_free (SwfdecVideoDecoder *dec)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_ffmpeg_new (SwfdecVideoFormat type)
+swfdec_video_decoder_ffmpeg_new (SwfdecVideoCodec type)
 {
   SwfdecVideoDecoderFFMpeg *codec;
   AVCodecContext *ctx;
   enum CodecID id;
 
   switch (type) {
-    case SWFDEC_VIDEO_FORMAT_H263:
+    case SWFDEC_VIDEO_CODEC_H263:
       id = CODEC_ID_FLV1;
       break;
-    case SWFDEC_VIDEO_FORMAT_SCREEN:
+    case SWFDEC_VIDEO_CODEC_SCREEN:
       id = CODEC_ID_FLASHSV;
       break;
-    case SWFDEC_VIDEO_FORMAT_VP6:
+    case SWFDEC_VIDEO_CODEC_VP6:
       id = CODEC_ID_VP6F;
       break;
     default:

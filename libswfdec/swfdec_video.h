@@ -42,7 +42,7 @@ struct _SwfdecVideo {
   guint				n_frames;	/* length of movie */
   GArray *			images;		/* actual images of the movie */
   
-  SwfdecVideoFormat		format;		/* format in use */
+  SwfdecVideoCodec		format;		/* format in use */
 };
 
 struct _SwfdecVideoClass {

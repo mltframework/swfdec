@@ -27,7 +27,7 @@
 
 /**
  * swfdec_video_decoder_new:
- * @format: #SwfdecVideoFormat to create the #SwfdecVideoDecoder for
+ * @format: #SwfdecVideoCodec to create the #SwfdecVideoDecoder for
  *
  * Creates a new decoder to decode videos of type @format. If no suitable
  * decoder could be created, %NULL is returned.
@@ -35,7 +35,7 @@
  * Returns:
  **/
 SwfdecVideoDecoder *
-swfdec_video_decoder_new (SwfdecVideoFormat format)
+swfdec_video_decoder_new (SwfdecVideoCodec format)
 {
   SwfdecVideoDecoder *ret;
 

@@ -60,7 +60,7 @@ void		swfdec_flv_decoder_eof			(SwfdecFlvDecoder *	flv);
 SwfdecBuffer *	swfdec_flv_decoder_get_video  		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,
 							 gboolean		keyframe,
-							 SwfdecVideoFormat *	format,
+							 SwfdecVideoCodec *	format,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);
 gboolean	swfdec_flv_decoder_get_video_info     	(SwfdecFlvDecoder *	flv,

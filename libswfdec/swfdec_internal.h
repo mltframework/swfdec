@@ -52,12 +52,12 @@ SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(SwfdecAudioFormat	type,
 
 /* video codecs */
 
-SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(SwfdecVideoFormat	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(SwfdecVideoCodec	format);
 #ifdef HAVE_FFMPEG
-SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(SwfdecVideoFormat	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(SwfdecVideoCodec	format);
 #endif
 #ifdef HAVE_GST
-SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(SwfdecVideoFormat	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(SwfdecVideoCodec	format);
 #endif
 
 /* AS engine setup code */

@@ -446,7 +446,7 @@ swfdec_video_decoder_gst_link (GstElement *src, GstPad *pad, GstElement *sink)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_gst_new (SwfdecVideoFormat type)
+swfdec_video_decoder_gst_new (SwfdecVideoCodec type)
 {
   SwfdecGstVideo *player;
   GstElement *fakesrc, *fakesink, *decoder, *csp;
@@ -456,10 +456,10 @@ swfdec_video_decoder_gst_new (SwfdecVideoFormat type)
     return NULL;
 
   switch (type) {
-    case SWFDEC_VIDEO_FORMAT_H263:
+    case SWFDEC_VIDEO_CODEC_H263:
       caps = gst_caps_from_string ("video/x-flash-video");
       break;
-    case SWFDEC_VIDEO_FORMAT_VP6:
+    case SWFDEC_VIDEO_CODEC_VP6:
       caps = gst_caps_from_string ("video/x-vp6-flash");
       break;
     default:

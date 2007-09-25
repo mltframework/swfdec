@@ -60,6 +60,7 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, SwfdecLoade
   /* FIXME: append query string here? */
   real = g_strconcat ("/", swfdec_url_get_path (url), NULL);
   buffer = swfdec_buffer_new_from_file (real, &error);
+  g_free (real);
   if (buffer == NULL) {
     swfdec_loader_error (loader, error->message);
     g_error_free (error);

@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <liboil/liboil.h>
 #include "swfdec_codec_video.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
@@ -76,16 +77,98 @@ swfdec_video_decoder_free (SwfdecVideoDecoder *decoder)
   decoder->free (decoder);
 }
 
-#ifdef HAVE_FFMPEG
-#define swfdec_video_i420_to_rgb swfdec_video_ffmpeg_i420_to_rgb
-#else
-static guint8 *
-swfdec_video_i420_to_rgb (&image)
+#define oil_argb(a,r,g,b) (((a) << 24) | ((r) << 16) | ((g) << 8) | b)
+static gint16 jfif_matrix[24] = {
+  0,      0,      -8192,   -8192,
+  16384,  0,      0,       0,
+  0,      16384,  16384,   16384,
+  0,      0,      -5638,   29032,
+  0,      22970,  -11700,  0,
+  0, 0, 0, 0
+};
+
+static void
+yuv_mux (guint32 *dest, const guint8 *src_y, const guint8 *src_u, const guint8 *src_v,
+    int n)
 {
-  SWFDEC_FIXME ("implement I420 => RGB without ffmpeg");
-  return NULL;
+  int i;
+  for (i = 0; i < n; i++) {
+    dest[i] = oil_argb(255, src_y[i], src_u[i], src_v[i]);
+  }
 }
-#endif /* HAVE_FFMPEG */
+
+static void
+upsample (guint8 *d, guint8 *s, int n)
+{
+  int i;
+
+  d[0] = s[0];
+
+  for (i = 0; i < n-3; i+=2) {
+    d[i + 1] = (3*s[i/2] + s[i/2+1] + 2)>>2;
+    d[i + 2] = (s[i/2] + 3*s[i/2+1] + 2)>>2;
+  }
+
+  if (n&1) {
+    i = n-3;
+    d[n-2] = s[n/2];
+    d[n-1] = s[n/2];
+  } else {
+    d[n-1] = s[n/2-1];
+  }
+}
+
+static guint8 *
+swfdec_video_i420_to_rgb (SwfdecVideoImage *image)
+{
+  guint32 *tmp;
+  guint8 *tmp_u;
+  guint8 *tmp_v;
+  guint8 *tmp1;
+  guint32 *argb_image;
+  const guint8 *yp, *up, *vp;
+  guint32 *argbp;
+  int j;
+  guint halfwidth;
+  int halfheight;
+
+  halfwidth = (image->width + 1)>>1;
+  tmp = g_malloc (4 * image->width * image->height);
+  tmp_u = g_malloc (image->width);
+  tmp_v = g_malloc (image->width);
+  tmp1 = g_malloc (halfwidth);
+  argb_image = g_malloc (4 * image->width * image->height);
+
+  yp = image->plane[0];
+  up = image->plane[1];
+  vp = image->plane[2];
+  argbp = argb_image;
+  halfheight = (image->height+1)>>1;
+  for(j=0;(guint)j<image->height;j++){
+    guint32 weight = 192 - 128*(j&1);
+
+    oil_merge_linear_u8(tmp1,
+        up + image->rowstride[1] * CLAMP((j-1)/2,0,halfheight-1),
+        up + image->rowstride[1] * CLAMP((j+1)/2,0,halfheight-1),
+        &weight, halfwidth);
+    upsample (tmp_u, tmp1, image->width);
+    oil_merge_linear_u8(tmp1,
+        vp + image->rowstride[2] * CLAMP((j-1)/2,0,halfheight-1),
+        vp + image->rowstride[2] * CLAMP((j+1)/2,0,halfheight-1),
+        &weight, halfwidth);
+    upsample (tmp_v, tmp1, image->width);
+
+    yuv_mux (tmp, yp, tmp_u, tmp_v, image->width);
+    oil_colorspace_argb(argbp, tmp, jfif_matrix, image->width);
+    yp += image->rowstride[0];
+    argbp += image->width;
+  }
+  g_free(tmp);
+  g_free(tmp_u);
+  g_free(tmp_v);
+  g_free(tmp1);
+  return (unsigned char *)argb_image;
+}
 
 /* FIXME: use liboil for this */
 static void
@@ -126,6 +209,7 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
   static const cairo_user_data_key_t key;
   cairo_surface_t *surface;
   guint8 *data;
+  guint rowstride;
 
   g_return_val_if_fail (decoder != NULL, NULL);
   g_return_val_if_fail (buffer != NULL, NULL);
@@ -142,8 +226,10 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
       SWFDEC_ERROR ("I420 => RGB conversion failed");
       return NULL;
     }
+    rowstride = image.width * 4;
   } else {
-    data = g_memdup (image.plane[0], image.rowstride[0] * image.height);
+    rowstride = image.rowstride[0];
+    data = g_memdup (image.plane[0], rowstride * image.height);
   }
   if (image.mask) {
     swfdec_video_codec_apply_mask (data, image.width * 4, image.mask, 
@@ -151,7 +237,7 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
   }
   surface = cairo_image_surface_create_for_data (data, 
       image.mask ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24,
-      image.width, image.height, image.width * 4);
+      image.width, image.height, rowstride);
   if (cairo_surface_status (surface)) {
     SWFDEC_ERROR ("failed to create surface: %s", 
 	cairo_status_to_string (cairo_surface_status (surface)));

@@ -92,27 +92,7 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
   g_return_val_if_fail (decoder != NULL, NULL);
   g_return_val_if_fail (buffer != NULL, NULL);
 
-  if (decoder->format == SWFDEC_VIDEO_FORMAT_VP6) {
-    guint wsub, hsub;
-    SwfdecBuffer *tmp;
-    wsub = *buffer->data;
-    hsub = wsub & 0xF;
-    wsub >>= 4;
-    tmp = swfdec_buffer_new_subbuffer (buffer, 1, buffer->length - 1);
-    buffer = decoder->decode (decoder, tmp, &width, &height, &rowstride);
-    swfdec_buffer_unref (tmp);
-    if (buffer) {
-      if (wsub >= width || hsub >= height) {
-	SWFDEC_ERROR ("size subtraction too big");
-	swfdec_buffer_unref (buffer);
-	return NULL;
-      }
-      width -= wsub;
-      height -= hsub;
-    }
-  } else {
-    buffer = decoder->decode (decoder, buffer, &width, &height, &rowstride);
-  }
+  buffer = decoder->decode (decoder, buffer, &width, &height, &rowstride);
   if (buffer == NULL) {
     SWFDEC_ERROR ("failed to decode video");
     return NULL;

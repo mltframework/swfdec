@@ -50,6 +50,34 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_onStatus, 1, &val, NULL);
 }
 
+static cairo_surface_t *
+swfdec_net_stream_decode_video (SwfdecNetStream *stream, SwfdecBuffer *buffer)
+{
+  SwfdecVideoDecoder *decoder = stream->decoder;
+  cairo_surface_t *surface;
+
+  if (decoder == NULL)
+    return NULL;
+
+  if (decoder->format == SWFDEC_VIDEO_FORMAT_VP6 ||
+      decoder->format == SWFDEC_VIDEO_FORMAT_VP6_ALPHA) {
+    guint wsub, hsub;
+    SwfdecBuffer *tmp;
+    wsub = *buffer->data;
+    hsub = wsub & 0xF;
+    wsub >>= 4;
+    tmp = swfdec_buffer_new_subbuffer (buffer, 1, buffer->length - 1);
+    surface = swfdec_video_decoder_decode (decoder, tmp);
+    swfdec_buffer_unref (tmp);
+    if (hsub || wsub) {
+      SWFDEC_FIXME ("need to subtract %ux%u pixels", wsub, hsub);
+    }
+  } else {
+    surface = swfdec_video_decoder_decode (decoder, buffer);
+  }
+  return surface;
+}
+
 static void swfdec_net_stream_update_playing (SwfdecNetStream *stream);
 static void
 swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
@@ -83,9 +111,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       stream->format = format;
       stream->decoder = swfdec_video_decoder_new (format);
     }
-    if (stream->decoder) {
-      stream->surface = swfdec_video_decoder_decode (stream->decoder, buffer);
-    }
+    stream->surface = swfdec_net_stream_decode_video (stream, buffer);
     if (stream->surface) {
       GList *walk;
       for (walk = stream->movies; walk; walk = walk->next) {

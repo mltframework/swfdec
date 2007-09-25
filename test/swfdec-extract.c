@@ -67,6 +67,10 @@ export_sound (SwfdecSound *sound, const char *filename)
 {
   GError *error = NULL;
   SwfdecBuffer *wav;
+  gint16 tmp[2];
+
+  /* try to render the sound, that should decode it. */
+  swfdec_sound_render (sound, tmp, 0, 1);
 
   if (sound->decoded == NULL) {
     g_printerr ("not a sound event. For extraction of streams extract the sprite.\n");

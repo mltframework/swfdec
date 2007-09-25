@@ -48,16 +48,16 @@
 static gboolean verbose = FALSE;
 
 static const char *
-get_audio_format_name (SwfdecAudioFormat format)
+get_audio_format_name (SwfdecAudioCodec codec)
 {
-  switch (format) {
-    case SWFDEC_AUDIO_FORMAT_ADPCM:
+  switch (codec) {
+    case SWFDEC_AUDIO_CODEC_ADPCM:
       return "ADPCM";
-    case SWFDEC_AUDIO_FORMAT_MP3:
+    case SWFDEC_AUDIO_CODEC_MP3:
       return "MP3";
-    case SWFDEC_AUDIO_FORMAT_UNCOMPRESSED:
+    case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
       return "uncompressed";
-    case SWFDEC_AUDIO_FORMAT_NELLYMOSER:
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
       return "Nellymoser";
     default:
       return "Unknown";
@@ -70,11 +70,11 @@ dump_sound (SwfdecSound *sound)
   g_print ("  codec: %s\n", get_audio_format_name (sound->format));
   if (verbose) {
     g_print ("  format: %uHz, %s, %ubit\n", 
-	SWFDEC_AUDIO_OUT_RATE (sound->original_format),
-	SWFDEC_AUDIO_OUT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
+	SWFDEC_AUDIO_FORMAT_RATE (sound->original_format),
+	SWFDEC_AUDIO_FORMAT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
 	sound->width ? 16 : 8);
     g_print ("  samples: %u (%gs)\n", sound->n_samples, 
-	(double) sound->n_samples / SWFDEC_AUDIO_OUT_RATE (sound->original_format));
+	(double) sound->n_samples / SWFDEC_AUDIO_FORMAT_RATE (sound->original_format));
   }
 }
 
@@ -101,8 +101,8 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	if (sound)
 	  g_print ("   %4u -%4u  sound: %s %uHz, %s, %ubit\n", i, j, 
 	      get_audio_format_name (sound->format),
-	      SWFDEC_AUDIO_OUT_RATE (sound->original_format),
-	      SWFDEC_AUDIO_OUT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
+	      SWFDEC_AUDIO_FORMAT_RATE (sound->original_format),
+	      SWFDEC_AUDIO_FORMAT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
 	      sound->width ? 16 : 8);
       }
     }

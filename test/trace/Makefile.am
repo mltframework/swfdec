@@ -186,6 +186,13 @@ EXTRA_DIST = \
 	ASSetPropFlags-ignore-7.swf.trace \
 	ASSetPropFlags-ignore-8.swf \
 	ASSetPropFlags-ignore-8.swf.trace \
+	attachmovie-object.c \
+	attachmovie-object-5.swf \
+	attachmovie-object-5.swf.trace \
+	attachmovie-object-6.swf \
+	attachmovie-object-6.swf.trace \
+	attachmovie-object-7.swf \
+	attachmovie-object-7.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

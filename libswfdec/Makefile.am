@@ -56,6 +56,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	$(CODECS) \
 	swfdec_codec_screen.c \
 	swfdec_codec_video.c \
+	swfdec_codec_vp6_alpha.c \
 	swfdec_color.c \
 	swfdec_color_as.c \
 	swfdec_debug.c \

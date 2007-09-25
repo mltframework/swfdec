@@ -59,8 +59,8 @@ swfdec_net_stream_decode_video (SwfdecNetStream *stream, SwfdecBuffer *buffer)
   if (decoder == NULL)
     return NULL;
 
-  if (decoder->format == SWFDEC_VIDEO_CODEC_VP6 ||
-      decoder->format == SWFDEC_VIDEO_CODEC_VP6_ALPHA) {
+  if (decoder->codec == SWFDEC_VIDEO_CODEC_VP6 ||
+      decoder->codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA) {
     guint wsub, hsub;
     SwfdecBuffer *tmp;
     wsub = *buffer->data;

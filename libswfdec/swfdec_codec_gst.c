@@ -298,7 +298,7 @@ typedef struct _SwfdecGstVideo SwfdecGstVideo;
 struct _SwfdecGstVideo {
   SwfdecVideoDecoder	decoder;
 
-  GMutex *	  	mutex;		/* mutex that blocks everything below */
+  GMutex *	  	mutex;		/* mutex that blocks everything below (NB: locked by default) */
   GCond *		cond;		/* cond used to signal when stuff below changes */
   volatile int		refcount;	/* refcount (d'oh) */
 
@@ -335,7 +335,6 @@ swfdec_video_decoder_gst_free (SwfdecVideoDecoder *dec)
   SwfdecGstVideo *player = (SwfdecGstVideo *) dec;
   GstElement *pipeline;
 
-  g_mutex_lock (player->mutex);
   pipeline = player->pipeline;
   player->pipeline = NULL;
   g_cond_signal (player->cond);
@@ -346,13 +345,12 @@ swfdec_video_decoder_gst_free (SwfdecVideoDecoder *dec)
   swfdec_gst_video_unref (player, NULL);
 }
 
-static SwfdecBuffer *
+static gboolean
 swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
-    guint *width, guint *height, guint *rowstride)
+    SwfdecVideoImage *image)
 {
   SwfdecGstVideo *player = (SwfdecGstVideo *) dec;
 
-  g_mutex_lock (player->mutex);
   while (player->in != NULL && !player->error) {
     swfdec_cond_wait (player->cond, player->mutex);
   }
@@ -361,17 +359,26 @@ swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
   while (player->out == NULL && !player->error) {
     swfdec_cond_wait (player->cond, player->mutex);
   }
-  if (player->error) {
-    g_mutex_unlock (player->mutex);
-    return NULL;
+  if (player->error)
+    return FALSE;
+  image->width = player->width;
+  image->height = player->height;
+  image->mask = NULL;
+  switch (swfdec_video_codec_get_format (dec->codec)) {
+    case SWFDEC_VIDEO_FORMAT_RGBA:
+      image->plane[0] = player->out->data;
+      image->rowstride[0] = player->width * 4;
+      break;
+    case SWFDEC_VIDEO_FORMAT_I420:
+      image->plane[0] = player->out->data;
+      image->rowstride[0] = player->width;
+      image->plane[1] = image->plane[0] + player->width * player->height;
+      image->rowstride[1] = (player->width + 1) / 2;
+      image->plane[2] = image->plane[1] + image->rowstride[1] * ((player->height + 1) / 2);
+      image->rowstride[2] = image->rowstride[1];
+      break;
   }
-  buffer = player->out;
-  player->out = NULL;
-  *width = player->width;
-  *height = player->height;
-  *rowstride = player->width * 4;
-  g_mutex_unlock (player->mutex);
-  return buffer;
+  return TRUE;
 }
 
 static void
@@ -430,8 +437,15 @@ swfdec_video_decoder_gst_fakesink_handoff (GstElement *fakesrc, GstBuffer *buf,
     g_mutex_unlock (player->mutex);
     return;
   }
-  player->out = swfdec_buffer_new_for_data (
-      g_memdup (buf->data, buf->size), buf->size);
+  if (player->out == NULL || player->out->length < buf->size) {
+    if (player->out)
+      swfdec_buffer_unref (player->out);
+    player->out = swfdec_buffer_new_for_data (
+	g_memdup (buf->data, buf->size), buf->size);
+  } else {
+    memcpy (player->out->data, buf->data, buf->size);
+    player->out->length = buf->size;
+  }
   player->out_next = FALSE;
   g_cond_signal (player->cond);
   g_mutex_unlock (player->mutex);
@@ -440,22 +454,46 @@ swfdec_video_decoder_gst_fakesink_handoff (GstElement *fakesrc, GstBuffer *buf,
 static void
 swfdec_video_decoder_gst_link (GstElement *src, GstPad *pad, GstElement *sink)
 {
-  if (!gst_element_link (src, sink)) {
+  GstCaps *caps;
+  
+  caps = g_object_get_data (G_OBJECT (sink), "swfdec-caps");
+  g_assert (caps);
+  if (!gst_element_link_filtered (src, sink, caps)) {
     SWFDEC_ERROR ("no delayed link");
   }
+  gst_caps_unref (caps);
+}
+
+static GstCaps *
+swfdec_video_decoder_get_sink_caps (SwfdecVideoCodec codec)
+{
+  switch (swfdec_video_codec_get_format (codec)) {
+    case SWFDEC_VIDEO_FORMAT_RGBA:
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+      return gst_caps_from_string ("video/x-raw-rgb, bpp=32, endianness=4321, depth=24, "
+	  "red_mask=16711680, green_mask=65280, blue_mask=255");
+#else
+      return gst_caps_from_string ("video/x-raw-rgb, bpp=32, endianness=4321, depth=24, "
+	  "red_mask=65280, green_mask=16711680, blue_mask=-16777216");
+#endif
+    case SWFDEC_VIDEO_FORMAT_I420:
+      return gst_caps_from_string ("video/x-raw-yuv, format=(fourcc)I420");
+  }
+  g_assert_not_reached ();
+  return NULL;
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_gst_new (SwfdecVideoCodec type)
+swfdec_video_decoder_gst_new (SwfdecVideoCodec codec)
 {
   SwfdecGstVideo *player;
-  GstElement *fakesrc, *fakesink, *decoder, *csp;
+  GstElement *fakesrc, *fakesink, *decoder;
   GstCaps *caps;
 
   if (!gst_init_check (NULL, NULL, NULL))
     return NULL;
 
-  switch (type) {
+  switch (codec) {
     case SWFDEC_VIDEO_CODEC_H263:
       caps = gst_caps_from_string ("video/x-flash-video");
       break;
@@ -498,6 +536,9 @@ swfdec_video_decoder_gst_new (SwfdecVideoCodec type)
   g_object_set (fakesink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (fakesink, "handoff", 
       G_CALLBACK (swfdec_video_decoder_gst_fakesink_handoff), player);
+  caps = swfdec_video_decoder_get_sink_caps (codec);
+  g_object_set_data_full (G_OBJECT (fakesink), "swfdec-caps", caps, 
+      (GDestroyNotify) gst_caps_unref);
   g_atomic_int_inc (&player->refcount);
   g_object_weak_ref (G_OBJECT (fakesink), swfdec_gst_video_unref, player);
   gst_bin_add (GST_BIN (player->pipeline), fakesink);
@@ -508,31 +549,14 @@ swfdec_video_decoder_gst_new (SwfdecVideoCodec type)
     return NULL;
   }
   gst_bin_add (GST_BIN (player->pipeline), decoder);
-  csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  if (csp == NULL) {
-    SWFDEC_ERROR ("failed to create colorspace");
-    swfdec_video_decoder_gst_free (&player->decoder);
-    return NULL;
-  }
-  gst_bin_add (GST_BIN (player->pipeline), csp);
   g_signal_connect (decoder, "pad-added", 
-      G_CALLBACK (swfdec_video_decoder_gst_link), csp);
+      G_CALLBACK (swfdec_video_decoder_gst_link), fakesink);
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  caps = gst_caps_from_string ("video/x-raw-rgb, bpp=32, endianness=4321, depth=24, "
-      "red_mask=16711680, green_mask=65280, blue_mask=255");
-#else
-  caps = gst_caps_from_string ("video/x-raw-rgb, bpp=32, endianness=4321, depth=24, "
-      "red_mask=65280, green_mask=16711680, blue_mask=-16777216");
-#endif
-  g_assert (caps);
-  if (!gst_element_link_filtered (fakesrc, decoder, player->srccaps) ||
-      !gst_element_link_filtered (csp, fakesink, caps)) {
+  if (!gst_element_link_filtered (fakesrc, decoder, player->srccaps)) {
     SWFDEC_ERROR ("linking failed");
     swfdec_video_decoder_gst_free (&player->decoder);
     return NULL;
   }
-  gst_caps_unref (caps);
   if (gst_element_set_state (player->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
     SWFDEC_ERROR ("failed to change sate");
     swfdec_video_decoder_gst_free (&player->decoder);

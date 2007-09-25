@@ -53,8 +53,10 @@ SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(SwfdecAudioCodec	type,
 /* video codecs */
 
 SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(SwfdecVideoCodec	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_vp6_alpha_new    	(SwfdecVideoCodec	format);
 #ifdef HAVE_FFMPEG
 SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(SwfdecVideoCodec	format);
+guint8 *		swfdec_video_ffmpeg_i420_to_rgb		(SwfdecVideoImage *	image);
 #endif
 #ifdef HAVE_GST
 SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(SwfdecVideoCodec	format);

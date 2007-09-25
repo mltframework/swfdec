@@ -70,7 +70,7 @@ SwfdecBuffer *	swfdec_flv_decoder_get_audio		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,
 							 SwfdecAudioCodec *	codec_format,
 							 gboolean *		width,
-							 SwfdecAudioOut *	format,
+							 SwfdecAudioFormat *	format,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);
 SwfdecBuffer *	swfdec_flv_decoder_get_data		(SwfdecFlvDecoder *	flv,

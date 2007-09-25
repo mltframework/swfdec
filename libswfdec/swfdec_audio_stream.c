@@ -142,7 +142,7 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   buffer = g_queue_peek_head (stream->playback_queue);
   while (buffer && stream->playback_skip >= 
 	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (stream->decoder)) 
-	 + SWFDEC_AUDIO_OUT_GRANULARITY (swfdec_audio_decoder_get_format (stream->decoder))) {
+	 + SWFDEC_AUDIO_FORMAT_GRANULARITY (swfdec_audio_decoder_get_format (stream->decoder))) {
     buffer = g_queue_pop_head (stream->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
 	swfdec_sound_buffer_get_n_samples (buffer, 
@@ -158,7 +158,7 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   } else {
     GList *walk;
     guint ret = 0;
-    SwfdecAudioOut format = swfdec_audio_decoder_get_format (stream->decoder);
+    SwfdecAudioFormat format = swfdec_audio_decoder_get_format (stream->decoder);
     
     for (walk = g_queue_peek_head_link (stream->playback_queue); walk; walk = walk->next) {
       ret += swfdec_sound_buffer_get_n_samples (walk->data, format);

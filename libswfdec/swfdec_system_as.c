@@ -59,7 +59,7 @@ swfdec_system_has_embedded_video (SwfdecPlayer *player, SwfdecAsValue *ret)
 static void
 swfdec_system_has_mp3 (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SwfdecAudioDecoder *dec = swfdec_audio_decoder_new (SWFDEC_AUDIO_CODEC_MP3, TRUE, SWFDEC_AUDIO_OUT_STEREO_44100);
+  SwfdecAudioDecoder *dec = swfdec_audio_decoder_new (SWFDEC_AUDIO_CODEC_MP3, TRUE, SWFDEC_AUDIO_FORMAT_STEREO_44100);
 
   if (dec) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (ret, TRUE);

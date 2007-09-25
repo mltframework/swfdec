@@ -141,11 +141,11 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
 
   sound->width = size;
   rate = 1 << (3 - rate);
-  sound->original_format = SWFDEC_AUDIO_OUT_GET (type ? 2 : 1, 44100 / rate);
+  sound->original_format = SWFDEC_AUDIO_FORMAT_GET (type ? 2 : 1, 44100 / rate);
   sound->n_samples = n_samples;
   SWFDEC_DEBUG ("%u samples, %sLE, %uch, %ukHz", n_samples,
-      size ? "S16" : "U8", SWFDEC_AUDIO_OUT_N_CHANNELS (sound->original_format),
-      SWFDEC_AUDIO_OUT_RATE (sound->original_format));
+      size ? "S16" : "U8", SWFDEC_AUDIO_FORMAT_N_CHANNELS (sound->original_format),
+      SWFDEC_AUDIO_FORMAT_RATE (sound->original_format));
 
   switch (format) {
     case 0:
@@ -178,7 +178,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
 }
 
 static SwfdecBuffer *
-swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
+swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
 {
   gpointer decoder;
   SwfdecBuffer *tmp;
@@ -200,7 +200,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
   if (decoder == NULL)
     return NULL;
   sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
-  sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
+  sample_bytes = 2 * SWFDEC_AUDIO_FORMAT_N_CHANNELS (sound->decoded_format);
   /* FIXME: The size is only a guess */
   swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
 
@@ -222,21 +222,21 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
     tmp = tmp2;
   }
   /* sound buffer may be bigger due to mp3 not having sample boundaries */
-  if (tmp->length * SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format) 
+  if (tmp->length * SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format) 
       > sound->n_samples * sample_bytes) {
     SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, 
-	sound->n_samples * sample_bytes / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format));
+	sound->n_samples * sample_bytes / SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format));
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
   }
-  if (tmp->length * SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format) 
+  if (tmp->length * SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format) 
       < sound->n_samples * sample_bytes) {
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
      * It's probably not worth more than INFO for the usual case though */
     SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	sound->n_samples / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format), 
-	sound->n_samples * sample_bytes / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format), 
+	sound->n_samples / SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format), 
+	sound->n_samples * sample_bytes / SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format), 
 	tmp->length);
   }
   /* only assign here, the decoding code checks this variable */
@@ -274,7 +274,7 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
   sound->width = size;
-  sound->original_format = SWFDEC_AUDIO_OUT_GET (type ? 2 : 1, 44100 / (1 << (3 - rate)));
+  sound->original_format = SWFDEC_AUDIO_FORMAT_GET (type ? 2 : 1, 44100 / (1 << (3 - rate)));
 
   switch (format) {
     case 0:
@@ -460,13 +460,13 @@ tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
  * Returns: Number of samples contained in @buffer when rendered
  **/
 guint
-swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut format)
+swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioFormat format)
 {
   g_return_val_if_fail (buffer != NULL, 0);
-  g_return_val_if_fail (buffer->length % (2 * SWFDEC_AUDIO_OUT_N_CHANNELS (format)) == 0, 0);
+  g_return_val_if_fail (buffer->length % (2 * SWFDEC_AUDIO_FORMAT_N_CHANNELS (format)) == 0, 0);
 
-  return buffer->length / (2 * SWFDEC_AUDIO_OUT_N_CHANNELS (format)) *
-    SWFDEC_AUDIO_OUT_GRANULARITY (format);
+  return buffer->length / (2 * SWFDEC_AUDIO_FORMAT_N_CHANNELS (format)) *
+    SWFDEC_AUDIO_FORMAT_GRANULARITY (format);
 }
 
 /**
@@ -486,12 +486,12 @@ swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut fo
 /* NB: if you improve the upsampling algorithm, tests might start to break */
 void
 swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
-    SwfdecAudioOut format, const SwfdecBuffer *previous, 
+    SwfdecAudioFormat format, const SwfdecBuffer *previous, 
     guint offset, guint n_samples)
 {
   guint i, j;
-  guint channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
-  guint rate = SWFDEC_AUDIO_OUT_GRANULARITY (format);
+  guint channels = SWFDEC_AUDIO_FORMAT_N_CHANNELS (format);
+  guint rate = SWFDEC_AUDIO_FORMAT_GRANULARITY (format);
   gint16 *src, *end;
 
   g_return_if_fail (dest != NULL);
@@ -601,7 +601,7 @@ swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
     guint offset, guint n_samples)
 {
   SwfdecBuffer *buffer;
-  SwfdecAudioOut format;
+  SwfdecAudioFormat format;
   g_return_if_fail (SWFDEC_IS_SOUND (sound));
   /* FIXME: I need a return_if_fail for !created_by_define_sound */
 

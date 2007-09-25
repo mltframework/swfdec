@@ -51,7 +51,7 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
   SwfdecBuffer *buffer;
   SwfdecAudioCodec format;
   gboolean width;
-  SwfdecAudioOut in;
+  SwfdecAudioFormat in;
   guint now, soon;
 
   if  (g_queue_is_empty (flv->playback_queue)) {
@@ -173,7 +173,7 @@ swfdec_audio_flv_iterate (SwfdecAudio *audio, guint remove)
   buffer = g_queue_peek_head (flv->playback_queue);
   while (buffer && flv->playback_skip >= 
 	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (flv->decoder)) 
-	 + SWFDEC_AUDIO_OUT_GRANULARITY (swfdec_audio_decoder_get_format (flv->decoder))) {
+	 + SWFDEC_AUDIO_FORMAT_GRANULARITY (swfdec_audio_decoder_get_format (flv->decoder))) {
     buffer = g_queue_pop_head (flv->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
 	swfdec_sound_buffer_get_n_samples (buffer, 

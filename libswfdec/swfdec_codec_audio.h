@@ -36,10 +36,10 @@ typedef enum {
 } SwfdecAudioCodec;
 
 typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (SwfdecAudioCodec type, gboolean width,
-    SwfdecAudioOut format);
+    SwfdecAudioFormat format);
 struct _SwfdecAudioDecoder {
   SwfdecAudioCodec	format;
-  SwfdecAudioOut	out_format;
+  SwfdecAudioFormat	out_format;
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
   SwfdecBuffer *	(* pull)	(SwfdecAudioDecoder *	decoder);
@@ -48,9 +48,9 @@ struct _SwfdecAudioDecoder {
 
 SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioCodec	format,
 							 gboolean		width,
-							 SwfdecAudioOut		data_format);
+							 SwfdecAudioFormat		data_format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
-SwfdecAudioOut		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
+SwfdecAudioFormat		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
 							 SwfdecBuffer *		buffer);
 SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);

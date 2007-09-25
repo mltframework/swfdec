@@ -212,7 +212,7 @@ swfdec_audio_decoder_mad_pull (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_mad_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_mad_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioFormat format)
 {
   MadData *data;
   
@@ -220,7 +220,7 @@ swfdec_audio_decoder_mad_new (SwfdecAudioCodec type, gboolean width, SwfdecAudio
     return NULL;
 
   data = g_slice_new (MadData);
-  data->decoder.out_format = SWFDEC_AUDIO_OUT_STEREO_44100;
+  data->decoder.out_format = SWFDEC_AUDIO_FORMAT_STEREO_44100;
   data->decoder.push = swfdec_audio_decoder_mad_push;
   data->decoder.pull = swfdec_audio_decoder_mad_pull;
   data->decoder.free = swfdec_audio_decoder_mad_free;

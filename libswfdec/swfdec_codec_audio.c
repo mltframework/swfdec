@@ -84,7 +84,7 @@ swfdec_audio_decoder_uncompressed_free (SwfdecAudioDecoder *decoder)
 }
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderUncompressed *dec;
 
@@ -119,7 +119,7 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, gboolean width, Sw
  * Returns: a new decoder or %NULL
  **/
 SwfdecAudioDecoder *
-swfdec_audio_decoder_new (SwfdecAudioCodec format, gboolean width, SwfdecAudioOut data_format)
+swfdec_audio_decoder_new (SwfdecAudioCodec format, gboolean width, SwfdecAudioFormat data_format)
 {
   SwfdecAudioDecoder *ret;
 
@@ -175,7 +175,7 @@ swfdec_audio_decoder_free (SwfdecAudioDecoder *decoder)
  *
  * Returns: the format of the decoded data
  **/
-SwfdecAudioOut
+SwfdecAudioFormat
 swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *decoder)
 {
   g_return_val_if_fail (decoder != NULL, 0);

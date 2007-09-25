@@ -65,12 +65,12 @@ struct _SwfdecSound
 
   SwfdecAudioCodec	format;			/* format in use */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
-  SwfdecAudioOut	original_format;      	/* channel/rate information */
+  SwfdecAudioFormat	original_format;      	/* channel/rate information */
   guint		n_samples;		/* total number of samples when decoded to 44100kHz */
   guint		skip;			/* samples to skip at start */
   SwfdecBuffer *	encoded;		/* encoded data */
 
-  SwfdecAudioOut	decoded_format;		/* format of decoded data */
+  SwfdecAudioFormat	decoded_format;		/* format of decoded data */
   SwfdecBuffer *	decoded;		/* decoded data */
 };
 
@@ -93,12 +93,12 @@ void			swfdec_sound_render		(SwfdecSound *		sound,
 		  					 guint		len);
 void			swfdec_sound_buffer_render	(gint16 *		dest, 
 							 const SwfdecBuffer *	source, 
-							 SwfdecAudioOut		format,
+							 SwfdecAudioFormat		format,
 							 const SwfdecBuffer *	previous, 
 							 guint		offset,
 							 guint		n_samples);
 guint			swfdec_sound_buffer_get_n_samples (const SwfdecBuffer * buffer, 
-                                                         SwfdecAudioOut		format);
+                                                         SwfdecAudioFormat		format);
 
 SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *	s,
 							 int			id);

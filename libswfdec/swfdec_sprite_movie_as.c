@@ -293,9 +293,31 @@ swfdec_sprite_movie_copy_props (SwfdecMovie *target, SwfdecMovie *src)
   swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
 }
 
-static void
-swfdec_sprite_movie_init_from_object (SwfdecMovie *movie, SwfdecAsObject *obj)
+static gboolean
+swfdec_sprite_movie_foreach_copy_properties (SwfdecAsObject *object,
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
 {
+  SwfdecAsObject *target = data;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), FALSE);
+
+  swfdec_as_object_set_variable (target, variable, value);
+
+  return TRUE;
+}
+
+static void
+swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
+    SwfdecAsObject *initObject)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (initObject == NULL || SWFDEC_IS_AS_OBJECT (initObject));
+
+  if (initObject != NULL) {
+    swfdec_as_object_foreach (initObject,
+	swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
+  }
+
   swfdec_movie_initialize (movie);
 }
 
@@ -306,14 +328,17 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *obj,
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (obj);
   SwfdecMovie *ret;
+  SwfdecAsObject *initObject;
   const char *name, *export;
   int depth;
   SwfdecGraphic *sprite;
 
   export = swfdec_as_value_to_string (cx, &argv[0]);
   name = swfdec_as_value_to_string (cx, &argv[1]);
-  if (argc > 3) {
-    SWFDEC_FIXME ("attachMovie's initObject isn't implemented");
+  if (argc > 3 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[3])) {
+    initObject = SWFDEC_AS_VALUE_GET_OBJECT ((&argv[3]));
+  } else {
+    initObject = NULL;
   }
   sprite = swfdec_swf_instance_get_export (movie->swf, export);
   if (!SWFDEC_IS_SPRITE (sprite)) {
@@ -334,7 +359,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
   /* run init and construct */
-  swfdec_sprite_movie_init_from_object (ret, NULL);
+  swfdec_sprite_movie_init_from_object (ret, initObject);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
 }
 

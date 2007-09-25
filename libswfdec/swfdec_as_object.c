@@ -1218,6 +1218,8 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
  * @variable: name of the variable
  * @get: getter function to call when reading the variable
  * @set: setter function to call when writing the variable or %NULL if read-only
+ * @default_flags: flags to use if creating the variable anew - the flags will
+ *                 be ignored if the property already exists.
  *
  * Adds a variable to @object in the same way as the Actionscript code 
  * "object.addProperty()" would do. Accessing the variable will from now on be
@@ -1226,7 +1228,7 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
  **/
 void
 swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable, 
-    SwfdecAsFunction *get, SwfdecAsFunction *set, guint flags)
+    SwfdecAsFunction *get, SwfdecAsFunction *set, guint default_flags)
 {
   SwfdecAsVariable *var;
 
@@ -1236,13 +1238,10 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
   g_return_if_fail (set == NULL || SWFDEC_IS_AS_FUNCTION (set));
 
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) {
-    var = swfdec_as_object_hash_create (object, variable, flags);
-    if (var == NULL)
-      return;
-  } else {
-    var->flags = flags;
-  }
+  if (var == NULL)
+    var = swfdec_as_object_hash_create (object, variable, default_flags);
+  if (var == NULL)
+    return;
   var->get = get;
   var->set = set;
 }

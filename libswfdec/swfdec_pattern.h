@@ -22,8 +22,8 @@
 
 #include <glib-object.h>
 #include <cairo.h>
+#include <libswfdec/swfdec_draw.h>
 #include <libswfdec/swfdec_swf_decoder.h>
-#include <libswfdec/swfdec_color.h>
 
 G_BEGIN_DECLS
 
@@ -39,7 +39,7 @@ typedef struct _SwfdecPatternClass SwfdecPatternClass;
 
 struct _SwfdecPattern
 {
-  GObject		object;
+  SwfdecDraw		draw;
 
   cairo_matrix_t	start_transform;	/* user-to-pattern transform */
   cairo_matrix_t	end_transform;		/* user-to-pattern transform */
@@ -47,7 +47,7 @@ struct _SwfdecPattern
 
 struct _SwfdecPatternClass
 {
-  GObjectClass		object_class;
+  SwfdecDrawClass	draw_class;
 
   /* create a cairo pattern for the given values */
   cairo_pattern_t *	(* get_pattern)		(SwfdecPattern *		pattern,

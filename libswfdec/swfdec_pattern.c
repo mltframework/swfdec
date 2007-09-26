@@ -33,7 +33,7 @@
 
 /*** PATTERN ***/
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecPattern, swfdec_pattern, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (SwfdecPattern, swfdec_pattern, SWFDEC_TYPE_DRAW);
 
 static void
 swfdec_pattern_class_init (SwfdecPatternClass *klass)

@@ -1177,7 +1177,7 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
   char *tail;
   int radix;
-  long int i;
+  gint64 i;
 
   if (argc < 1)
     return;
@@ -1212,9 +1212,9 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (s[0] == '0' && s[1] == 'x') {
     s = s + 2;
-    i = strtol (s, &tail, (radix != 0 ? radix : 16));
+    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 16));
   } else {
-    i = strtol (s, &tail, (radix != 0 ? radix : 10));
+    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 10));
   }
 
   if (tail == s) {

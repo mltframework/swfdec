@@ -1243,7 +1243,7 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
     *p = '\0';
   }
 
-  d = strtod (s, &tail);
+  d = g_ascii_strtod (s, &tail);
 
   if (tail == s) {
     SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);

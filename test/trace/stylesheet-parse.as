@@ -47,4 +47,13 @@ for (var i = 0; i < tests.length; i++)
   }
 }
 
+trace ("");
+trace ("Test on non-stylesheet object");
+var o = new Object ();
+o._copy = TextField.StyleSheet.prototype._copy;
+o.parseCSSInternal = TextField.StyleSheet.prototype.parseCSSInternal;
+o.parseCSS = TextField.StyleSheet.prototype.parseCSS;
+trace (o.parseCSS (tests[0]));
+trace (o._css["a"]["a"]);
+
 loadMovie ("FSCommand:quit", "");

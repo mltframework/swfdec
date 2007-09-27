@@ -355,6 +355,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("unwatch")
   SWFDEC_AS_CONSTANT_STRING ("apply")
   SWFDEC_AS_CONSTANT_STRING ("isPrototypeOf")
+  SWFDEC_AS_CONSTANT_STRING ("_typewriter")
+  SWFDEC_AS_CONSTANT_STRING ("_sans")
+  SWFDEC_AS_CONSTANT_STRING ("_serif")
   /* add more here */
 ;
 

@@ -234,6 +234,27 @@ swfdec_style_sheet_parseCSSInternal (SwfdecAsContext *cx,
   }
 }
 
+SWFDEC_AS_NATIVE (113, 102, swfdec_style_sheet_parseCSSFontFamily)
+void
+swfdec_style_sheet_parseCSSFontFamily (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  const char *name;
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
+
+  if (!g_ascii_strcasecmp (name, "mono")) {
+    SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR__typewriter);
+  } else if (!g_ascii_strcasecmp (name, "sans-serif")) {
+    SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR__sans);
+  } else if (!g_ascii_strcasecmp (name, "serif")) {
+    SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR__serif);
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (rval, name);
+  }
+}
+
 SWFDEC_AS_CONSTRUCTOR (113, 0, swfdec_style_sheet_construct, swfdec_style_sheet_get_type)
 void
 swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,

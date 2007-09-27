@@ -37,12 +37,6 @@ struct _SwfdecMorphShape {
   SwfdecShape		shape;
 
   SwfdecRect		end_extents;	/* extents at end of morph (compare with graphic->extents for start) */
-
-  GArray *		end_vecs;	/* end vectors */
-
-  /* used while parsing */
-  guint		n_fill_bits;
-  guint		n_line_bits;
 };
 
 struct _SwfdecMorphShapeClass {
@@ -51,7 +45,6 @@ struct _SwfdecMorphShapeClass {
 
 GType	swfdec_morph_shape_get_type	(void);
 
-/* in swfdec_shape.c */
 int	tag_define_morph_shape		(SwfdecSwfDecoder *	s,
 					 guint			tag);
 

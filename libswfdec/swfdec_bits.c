@@ -27,8 +27,8 @@
 #include <zlib.h>
 
 #include "swfdec_bits.h"
+#include "swfdec_color.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
 #include "swfdec_rect.h"
 
 
@@ -599,47 +599,61 @@ swfdec_bits_get_rgba (SwfdecBits * bits)
 }
 
 static inline SwfdecGradient *
-swfdec_bits_do_get_gradient (SwfdecBits *bits, gboolean alpha, gboolean morph)
+swfdec_bits_do_get_gradient (SwfdecBits *bits, gboolean alpha, SwfdecGradient **morph)
 {
-  SwfdecGradient *grad;
+  SwfdecGradient *grad, *mgrad;
   guint i, n_gradients;
 
   n_gradients = swfdec_bits_get_u8 (bits);
-  if (morph)
-    n_gradients *= 2;
-  grad = g_malloc (sizeof (SwfdecGradient) +
-      sizeof (SwfdecGradientEntry) * (MAX (n_gradients, 1) - 1));
+  grad = swfdec_gradient_new (n_gradients);
+  if (morph) {
+    *morph = mgrad = swfdec_gradient_new (n_gradients);
+  } else {
+    mgrad = NULL;
+  }
   for (i = 0; i < n_gradients && swfdec_bits_left (bits); i++) {
     grad->array[i].ratio = swfdec_bits_get_u8 (bits);
     if (alpha)
       grad->array[i].color = swfdec_bits_get_rgba (bits);
     else
       grad->array[i].color = swfdec_bits_get_color (bits);
+    if (mgrad) {
+      mgrad->array[i].ratio = swfdec_bits_get_u8 (bits);
+      if (alpha)
+	mgrad->array[i].color = swfdec_bits_get_rgba (bits);
+      else
+	mgrad->array[i].color = swfdec_bits_get_color (bits);
+    }
   }
   if (i < n_gradients) {
     SWFDEC_ERROR ("not enough data for %u gradients, could only read %u",
 	n_gradients, i);
   }
   grad->n_gradients = i;
+  if (mgrad)
+    mgrad->n_gradients = i;
   return grad;
 }
 
 SwfdecGradient *
 swfdec_bits_get_gradient (SwfdecBits * bits)
 {
-  return swfdec_bits_do_get_gradient (bits, FALSE, FALSE);
+  return swfdec_bits_do_get_gradient (bits, FALSE, NULL);
 }
 
 SwfdecGradient *
 swfdec_bits_get_gradient_rgba (SwfdecBits * bits)
 {
-  return swfdec_bits_do_get_gradient (bits, TRUE, FALSE);
+  return swfdec_bits_do_get_gradient (bits, TRUE, NULL);
 }
 
-SwfdecGradient *
-swfdec_bits_get_morph_gradient (SwfdecBits * bits)
+void
+swfdec_bits_get_morph_gradient (SwfdecBits * bits, SwfdecGradient **start, SwfdecGradient **end)
 {
-  return swfdec_bits_do_get_gradient (bits, TRUE, TRUE);
+  g_return_if_fail (start != NULL);
+  g_return_if_fail (end != NULL);
+
+  *start = swfdec_bits_do_get_gradient (bits, TRUE, end);
 }
 
 void

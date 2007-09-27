@@ -83,5 +83,9 @@ double swfdec_matrix_get_rotation (const cairo_matrix_t *matrix);
 void swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
     const cairo_matrix_t *end, guint ratio);
 
+SwfdecGradient *swfdec_gradient_new (guint n_elements);
+SwfdecGradient * swfdec_gradient_morph (SwfdecGradient *start, 
+    SwfdecGradient *end, guint ratio);
+
 
 #endif

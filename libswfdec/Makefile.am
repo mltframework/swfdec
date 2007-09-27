@@ -91,6 +91,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_net_connection.c \
 	swfdec_net_stream.c \
 	swfdec_net_stream_as.c \
+	swfdec_path.c \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_player_as.c \
@@ -98,6 +99,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_ringbuffer.c \
 	swfdec_script.c \
 	swfdec_shape.c \
+	swfdec_shape_parser.c \
 	swfdec_sound.c \
 	swfdec_stroke.c \
 	swfdec_sprite.c \
@@ -206,12 +208,14 @@ noinst_HEADERS = \
 	swfdec_movie.h \
 	swfdec_net_connection.h \
 	swfdec_net_stream.h \
+	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_ringbuffer.h \
 	swfdec_script_internal.h \
 	swfdec_shape.h \
+	swfdec_shape_parser.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \

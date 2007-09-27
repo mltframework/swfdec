@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecDraw SwfdecDraw;
+//typedef struct _SwfdecDraw SwfdecDraw;
 typedef struct _SwfdecDrawClass SwfdecDrawClass;
 
 #define SWFDEC_TYPE_DRAW                    (swfdec_draw_get_type())
@@ -71,9 +71,9 @@ SwfdecDraw *	swfdec_draw_morph		(SwfdecDraw *			draw,
 void		swfdec_draw_paint		(SwfdecDraw *			draw, 
 						 cairo_t *			cr,
 						 const SwfdecColorTransform *	trans);
-void		swfdec_draw_append_path		(SwfdecDraw *			draw,
-						 const cairo_path_t *	      	path,
-						 const cairo_path_t *	      	end_path);
+gboolean	swfdec_draw_contains		(SwfdecDraw *			draw,
+						 double				x,
+						 double				y);
 void		swfdec_draw_recompute		(SwfdecDraw *			draw);
 
 G_END_DECLS

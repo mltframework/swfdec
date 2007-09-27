@@ -23,45 +23,10 @@
 
 #include "swfdec_morph_movie.h"
 #include "swfdec_debug.h"
+#include "swfdec_draw.h"
 #include "swfdec_stroke.h"
 
 G_DEFINE_TYPE (SwfdecMorphMovie, swfdec_morph_movie, SWFDEC_TYPE_MOVIE)
-
-static void
-swfdec_cairo_path_merge (cairo_path_t *dest, const cairo_path_t *start, const cairo_path_t *end, double ratio)
-{
-  int i;
-  cairo_path_data_t *ddata, *sdata, *edata;
-  double inv = 1.0 - ratio;
-
-  g_assert (dest->num_data == start->num_data);
-  g_assert (dest->num_data == end->num_data);
-
-  ddata = dest->data;
-  sdata = start->data;
-  edata = end->data;
-  for (i = 0; i < dest->num_data; i++) {
-    g_assert (sdata[i].header.type == edata[i].header.type);
-    ddata[i] = sdata[i];
-    switch (sdata[i].header.type) {
-      case CAIRO_PATH_CURVE_TO:
-	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
-	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
-	ddata[i+2].point.x = sdata[i+2].point.x * inv + edata[i+2].point.x * ratio;
-	ddata[i+2].point.y = sdata[i+2].point.y * inv + edata[i+2].point.y * ratio;
-	i += 2;
-      case CAIRO_PATH_MOVE_TO:
-      case CAIRO_PATH_LINE_TO:
-	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
-	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
-	i++;
-      case CAIRO_PATH_CLOSE_PATH:
-	break;
-      default:
-	g_assert_not_reached ();
-    }
-  }
-}
 
 static void
 swfdec_morph_movie_update_extents (SwfdecMovie *movie,
@@ -78,14 +43,17 @@ swfdec_morph_movie_update_extents (SwfdecMovie *movie,
 
   /* update the vectors */
   if (ratio != mmovie->ratio) {
-    guint i;
     SwfdecShape *shape = SWFDEC_SHAPE (mmovie->morph);
+    GSList *walk;
 
-    for (i = 0; i < shape->vecs->len; i++) {
-      swfdec_cairo_path_merge (&mmovie->paths[i], 
-	  &g_array_index (shape->vecs, SwfdecShapeVec, i).path,
-	  &g_array_index (morph->end_vecs, SwfdecShapeVec, i).path, ratio / 65535.);
+    g_slist_foreach (mmovie->draws, (GFunc) g_object_unref, NULL);
+    g_slist_free (mmovie->draws);
+    mmovie->draws = NULL;
+
+    for (walk = shape->draws; walk; walk = walk->next) {
+      mmovie->draws = g_slist_prepend (mmovie->draws, swfdec_draw_morph (walk->data, ratio));
     }
+    mmovie->draws = g_slist_reverse (mmovie->draws);
     mmovie->ratio = ratio;
   }
 }
@@ -95,34 +63,21 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
 {
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
-  SwfdecShape *shape = SWFDEC_SHAPE (morph->morph);
-  guint i;
+  GSList *walk;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
 
-  for (i = 0; i < shape->vecs->len; i++) {
-    SwfdecShapeVec *vec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
-    cairo_path_t *path = &morph->paths[i];
+  for (walk = morph->draws; walk; walk = walk->next) {
+    SwfdecDraw *draw = walk->data;
 
-    /* FIXME: catch these two earlier */
-    if (vec->pattern == NULL)
-      continue;
-    if (path->num_data == 0)
+    if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
       continue;
     
-    /* hack to not append paths for lines */
-    if (!fill && SWFDEC_IS_STROKE (vec->pattern))
-      continue;
-
-    if (fill) {
-      if (SWFDEC_IS_PATTERN (vec->pattern)) {
-	swfdec_pattern_paint (vec->pattern, cr, path, trans, morph->ratio);
-      } else {
-	swfdec_stroke_paint (vec->pattern, cr, path, trans, morph->ratio);
-      }
+    if (!fill) {
+      SWFDEC_FIXME ("fix mask stuff!");
     } else {
-      cairo_append_path (cr, path);
+      swfdec_draw_paint (draw, cr, trans);
     }
   }
 }
@@ -130,13 +85,11 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 static void
 swfdec_morph_movie_dispose (GObject *object)
 {
-  guint i;
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (object);
 
-  for (i = 0; i < morph->morph->end_vecs->len; i++) {
-    g_free (morph->paths[i].data);
-  }
-  g_free (morph->paths);
+  g_slist_foreach (morph->draws, (GFunc) g_object_unref, NULL);
+  g_slist_free (morph->draws);
+  morph->draws = NULL;
   g_object_unref (morph->morph);
 
   G_OBJECT_CLASS (swfdec_morph_movie_parent_class)->dispose (object);

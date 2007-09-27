@@ -49,7 +49,7 @@ typedef enum {
 #define SWFDEC_FONT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_FONT, SwfdecFontClass))
 
 struct _SwfdecFontEntry {
-  SwfdecShape *		shape;		/* shape to use as fallback */
+  SwfdecDraw *		draw;		/* drawing operation to do or %NULL if none (ie space character) */
   gunichar		value;		/* UCS2 value of glyph */
 };
 
@@ -73,7 +73,7 @@ struct _SwfdecFontClass
 
 GType		swfdec_font_get_type		(void);
 
-SwfdecShape *	swfdec_font_get_glyph		(SwfdecFont *		font, 
+SwfdecDraw *	swfdec_font_get_glyph		(SwfdecFont *		font, 
 						 guint			glyph);
 
 int		tag_func_define_font_info	(SwfdecSwfDecoder *	s,

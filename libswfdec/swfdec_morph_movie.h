@@ -41,7 +41,7 @@ struct _SwfdecMorphMovie {
 
   SwfdecMorphShape *	morph;
   guint			ratio;		/* current ratio for paths */
-  cairo_path_t *	paths;
+  GSList *		draws;		/* drawing operations to use */
 };
 
 struct _SwfdecMorphMovieClass {

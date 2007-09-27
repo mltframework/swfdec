@@ -26,71 +26,16 @@
 #include "swfdec_draw.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
+#include "swfdec_path.h"
 
 /*** DRAW ***/
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecDraw, swfdec_draw, G_TYPE_OBJECT);
 
 static void
-swfdec_draw_ensure_path_size (cairo_path_t *path, int elements)
-{
-#define STEPPING 32
-  int current;
-
-  current = path->num_data;
-  current = current + STEPPING - 1;
-  current -= current % STEPPING;
-  elements = elements + STEPPING - 1;
-  elements -= elements % STEPPING;
-  if (elements <= current)
-    return;
-
-  path->data = g_realloc (path->data, elements);
-#undef STEPPING
-}
-
-static void
-swfdec_cairo_path_merge (cairo_path_t *dest, const cairo_path_t *start, const cairo_path_t *end, double ratio)
-{
-  int i;
-  cairo_path_data_t *ddata, *sdata, *edata;
-  double inv = 1.0 - ratio;
-
-  g_assert (dest->num_data == start->num_data);
-  g_assert (dest->num_data == end->num_data);
-
-  ddata = dest->data;
-  sdata = start->data;
-  edata = end->data;
-  for (i = 0; i < dest->num_data; i++) {
-    g_assert (sdata[i].header.type == edata[i].header.type);
-    ddata[i] = sdata[i];
-    switch (sdata[i].header.type) {
-      case CAIRO_PATH_CURVE_TO:
-	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
-	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
-	ddata[i+2].point.x = sdata[i+2].point.x * inv + edata[i+2].point.x * ratio;
-	ddata[i+2].point.y = sdata[i+2].point.y * inv + edata[i+2].point.y * ratio;
-	i += 2;
-      case CAIRO_PATH_MOVE_TO:
-      case CAIRO_PATH_LINE_TO:
-	ddata[i+1].point.x = sdata[i+1].point.x * inv + edata[i+1].point.x * ratio;
-	ddata[i+1].point.y = sdata[i+1].point.y * inv + edata[i+1].point.y * ratio;
-	i++;
-      case CAIRO_PATH_CLOSE_PATH:
-	break;
-      default:
-	g_assert_not_reached ();
-    }
-  }
-}
-
-static void
 swfdec_draw_do_morph (SwfdecDraw* dest, SwfdecDraw *source, guint ratio)
 {
-  swfdec_draw_ensure_path_size (&dest->path, source->path.num_data);
-
-  swfdec_cairo_path_merge (&dest->path, &source->path, &source->end_path, ratio / 65535.);
+  swfdec_path_merge (&dest->path, &source->path, &source->end_path, ratio / 65535.);
 }
 
 static void
@@ -98,12 +43,8 @@ swfdec_draw_dispose (GObject *object)
 {
   SwfdecDraw *draw = SWFDEC_DRAW (object);
 
-  g_free (draw->path.data);
-  draw->path.data = NULL;
-  draw->path.num_data = 0;
-  g_free (draw->end_path.data);
-  draw->end_path.data = NULL;
-  draw->end_path.num_data = 0;
+  swfdec_path_reset (&draw->path);
+  swfdec_path_reset (&draw->end_path);
 
   G_OBJECT_CLASS (swfdec_draw_parent_class)->dispose (object);
 }
@@ -121,6 +62,8 @@ swfdec_draw_class_init (SwfdecDrawClass *klass)
 static void
 swfdec_draw_init (SwfdecDraw *draw)
 {
+  swfdec_path_init (&draw->path);
+  swfdec_path_init (&draw->end_path);
 }
 
 static gboolean
@@ -187,37 +130,26 @@ swfdec_draw_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform *tr
 }
 
 /**
- * swfdec_draw_append_path:
+ * swfdec_draw_contains:
  * @draw: a #SwfdecDraw
- * @path: path to append to the drawing opeation
- * @end_path: end path of morph operation to append or %NULL if ot a morph 
- *            operation
+ * @x: x coordinate to check
+ * @y: y coordinate to check
  *
- * Appends the current path to the given drawing operation. Note that you need
- * to call swfdec_draw_recompute() before using this drawing operation for
- * drawing again.
+ * Checks if the given @x and @y coordinate is inside or outside the area drawn
+ * by the given drawing operation.
+ *
+ * Returns: %TRUE if the coordinates are inside the drawing operation.
  **/
-void
-swfdec_draw_append_path (SwfdecDraw *draw, const cairo_path_t *path,
-    const cairo_path_t *end_path)
+gboolean
+swfdec_draw_contains (SwfdecDraw *draw, double x, double y)
 {
-  g_return_if_fail (SWFDEC_IS_DRAW (draw));
-  g_return_if_fail (path != NULL);
-  g_return_if_fail (path->status == 0);
-  g_return_if_fail (end_path == NULL || draw->path.num_data == draw->end_path.num_data);
-  g_return_if_fail (end_path == NULL || path->num_data == end_path->num_data);
-  
+  g_return_val_if_fail (SWFDEC_IS_DRAW (draw), FALSE);
 
-  swfdec_draw_ensure_path_size (&draw->path, draw->path.num_data + path->num_data);
-  memcpy (&draw->path.data[draw->path.num_data], path->data, 
-      sizeof (cairo_path_data_t) * path->num_data);
-  draw->path.num_data += path->num_data;
-  if (end_path) {
-    swfdec_draw_ensure_path_size (&draw->end_path, draw->end_path.num_data + end_path->num_data);
-    memcpy (&draw->end_path.data[draw->end_path.num_data], end_path->data, 
-	sizeof (cairo_path_data_t) * end_path->num_data);
-    draw->end_path.num_data += end_path->num_data;
-  }
+  if (!swfdec_rect_contains (&draw->extents, x, y))
+    return FALSE;
+
+  SWFDEC_FIXME ("implement SwfdecDraw.contains");
+  return TRUE;
 }
 
 /**

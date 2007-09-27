@@ -150,9 +150,9 @@ gboolean
 swfdec_rect_contains (const SwfdecRect *rect, double x, double y)
 {
   return x >= rect->x0 &&
-    x <= rect->x1 &&
+    x < rect->x1 &&
     y >= rect->y0 &&
-    y <= rect->y1;
+    y < rect->y1;
 }
 
 /**

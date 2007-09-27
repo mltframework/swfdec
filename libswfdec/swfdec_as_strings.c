@@ -365,6 +365,11 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("justify")
   SWFDEC_AS_CONSTANT_STRING ("font")
   SWFDEC_AS_CONSTANT_STRING ("url")
+  SWFDEC_AS_CONSTANT_STRING ("bullet")
+  SWFDEC_AS_CONSTANT_STRING ("bold")
+  SWFDEC_AS_CONSTANT_STRING ("italic")
+  SWFDEC_AS_CONSTANT_STRING ("kerning")
+  SWFDEC_AS_CONSTANT_STRING ("underline")
   /* add more here */
 ;
 

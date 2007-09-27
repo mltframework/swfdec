@@ -47,8 +47,8 @@ typedef enum {
 } SwfdecTextAlign;
 
 typedef enum {
-  SWFDEC_TOGGLE_UNDEFINED = -1,
-  SWFDEC_TOGGLE_DISABLED = 0,
+  SWFDEC_TOGGLE_UNDEFINED = 0,
+  SWFDEC_TOGGLE_DISABLED = -1,
   SWFDEC_TOGGLE_ENABLED = 1
 } SwfdecToggle;
 

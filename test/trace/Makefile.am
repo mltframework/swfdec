@@ -1546,6 +1546,13 @@ EXTRA_DIST = \
 	stylesheet-parse-6.swf.trace \
 	stylesheet-parse-7.swf \
 	stylesheet-parse-7.swf.trace \
+	stylesheet-parsecssfontfamily.as \
+	stylesheet-parsecssfontfamily-5.swf \
+	stylesheet-parsecssfontfamily-5.swf.trace \
+	stylesheet-parsecssfontfamily-6.swf \
+	stylesheet-parsecssfontfamily-6.swf.trace \
+	stylesheet-parsecssfontfamily-7.swf \
+	stylesheet-parsecssfontfamily-7.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \

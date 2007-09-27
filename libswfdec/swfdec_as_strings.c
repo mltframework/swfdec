@@ -370,6 +370,13 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("italic")
   SWFDEC_AS_CONSTANT_STRING ("kerning")
   SWFDEC_AS_CONSTANT_STRING ("underline")
+  SWFDEC_AS_CONSTANT_STRING ("blockIndent")
+  SWFDEC_AS_CONSTANT_STRING ("color")
+  SWFDEC_AS_CONSTANT_STRING ("indent")
+  SWFDEC_AS_CONSTANT_STRING ("leading")
+  SWFDEC_AS_CONSTANT_STRING ("leftMargin")
+  SWFDEC_AS_CONSTANT_STRING ("rightMargin")
+  SWFDEC_AS_CONSTANT_STRING ("size")
   /* add more here */
 ;
 

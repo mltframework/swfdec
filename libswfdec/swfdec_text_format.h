@@ -47,8 +47,8 @@ typedef enum {
 } SwfdecTextAlign;
 
 typedef enum {
-  SWFDEC_TOGGLE_UNDEFINED = 0,
-  SWFDEC_TOGGLE_DISABLED = -1,
+  SWFDEC_TOGGLE_UNDEFINED = -1,
+  SWFDEC_TOGGLE_DISABLED = 0,
   SWFDEC_TOGGLE_ENABLED = 1
 } SwfdecToggle;
 
@@ -57,13 +57,13 @@ struct _SwfdecTextFormat {
 
   SwfdecTextAlign	align;
   int			blockIndent;
-  gboolean		bold;
-  gboolean		bullet;
+  SwfdecToggle		bold;
+  SwfdecToggle		bullet;
   int			color;
   const char *		font;
   int			indent;
-  gboolean		italic;
-  gboolean		kerning;
+  SwfdecToggle		italic;
+  SwfdecToggle		kerning;
   int			leading;
   int			leftMargin;
   SwfdecAsValue		letterSpacing;
@@ -71,7 +71,7 @@ struct _SwfdecTextFormat {
   int			size;		// null?
   SwfdecAsArray		tabStops;
   const char *		target;
-  gboolean		underline;
+  SwfdecToggle		underline;
   const char *		url;
 };
 

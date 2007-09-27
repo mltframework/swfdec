@@ -40,7 +40,9 @@ swfdec_font_dispose (GObject *object)
 
   if (font->glyphs) {
     for (i = 0; i < font->glyphs->len; i++) {
-      g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).draw);
+      SwfdecDraw *draw = g_array_index (font->glyphs, SwfdecFontEntry, i).draw;
+      if (draw)
+	g_object_unref (draw);
     }
     g_array_free (font->glyphs, TRUE);
     font->glyphs = NULL;

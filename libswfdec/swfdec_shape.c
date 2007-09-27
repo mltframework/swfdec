@@ -49,7 +49,7 @@ swfdec_shape_dispose (GObject *object)
 
 static void
 swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (graphic);
   GSList *walk;
@@ -60,11 +60,7 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
     if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
       continue;
     
-    if (!fill) {
-      SWFDEC_FIXME ("fix mask stuff!");
-    } else {
-      swfdec_draw_paint (draw, cr, trans);
-    }
+    swfdec_draw_paint (draw, cr, trans);
   }
 }
 

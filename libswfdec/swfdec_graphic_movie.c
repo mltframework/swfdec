@@ -44,9 +44,9 @@ swfdec_graphic_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_graphic_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
-  swfdec_graphic_render (movie->graphic, cr, trans, inval, fill);
+  swfdec_graphic_render (movie->graphic, cr, trans, inval);
 }
 
 static gboolean

@@ -356,7 +356,7 @@ swfdec_paragraph_free (SwfdecParagraph *paragraphs)
 
 void
 swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr, const SwfdecParagraph *paragraph,
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   guint i;
   PangoFontDescription *desc;
@@ -395,10 +395,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr, const SwfdecParagrap
     pango_layout_set_text (layout, paragraph[i].text, -1);
     pango_layout_set_attributes (layout, paragraph[i].attrs);
     pango_layout_set_alignment (layout, paragraph[i].align);
-    if (fill)
-      pango_cairo_show_layout (cr, layout);
-    else
-      pango_cairo_layout_path (cr, layout);
+    pango_cairo_show_layout (cr, layout);
   }
   g_object_unref (layout);
 }

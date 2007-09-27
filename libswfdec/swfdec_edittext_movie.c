@@ -39,19 +39,13 @@ swfdec_edit_text_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_edit_text_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (movie);
 
-  if (!fill) {
-    cairo_rectangle (cr, movie->extents.x0, movie->extents.y0,
-	movie->extents.x1 - movie->extents.x0,
-	movie->extents.y1 - movie->extents.y0);
-    return;
-  }
   if (text->paragraph == NULL)
     return;
-  swfdec_edit_text_render (text->text, cr, text->paragraph, trans, inval, fill);
+  swfdec_edit_text_render (text->text, cr, text->paragraph, trans, inval);
 }
 
 static void

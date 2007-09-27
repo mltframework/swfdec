@@ -1941,7 +1941,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
   cairo_paint (cr);
 
   for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_render (walk->data, cr, &trans, &real, TRUE);
+    swfdec_movie_render (walk->data, cr, &trans, &real);
   }
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
   cairo_restore (cr);

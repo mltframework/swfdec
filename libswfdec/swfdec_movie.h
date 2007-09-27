@@ -141,8 +141,7 @@ struct _SwfdecMovieClass {
   void			(* render)		(SwfdecMovie *		movie, 
 						 cairo_t *		cr,
 						 const SwfdecColorTransform *trans,
-						 const SwfdecRect *	inval,
-						 gboolean		fill);
+						 const SwfdecRect *	inval);
 
   /* mouse handling */
   gboolean		(* mouse_in)		(SwfdecMovie *		movie,
@@ -218,8 +217,7 @@ char *		swfdec_movie_get_path		(SwfdecMovie *		movie);
 void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,
-						 const SwfdecRect *	inval,
-						 gboolean		fill);
+						 const SwfdecRect *	inval);
 void		swfdec_movie_execute_script	(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
 gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,

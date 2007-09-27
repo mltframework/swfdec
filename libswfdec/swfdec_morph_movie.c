@@ -60,7 +60,7 @@ swfdec_morph_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
   GSList *walk;
@@ -71,11 +71,7 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
     if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
       continue;
     
-    if (!fill) {
-      SWFDEC_FIXME ("fix mask stuff!");
-    } else {
-      swfdec_draw_paint (draw, cr, trans);
-    }
+    swfdec_draw_paint (draw, cr, trans);
   }
 }
 

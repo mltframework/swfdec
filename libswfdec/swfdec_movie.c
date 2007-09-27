@@ -743,7 +743,7 @@ swfdec_movie_push_clip (cairo_t *cr, SwfdecMovie *clip_movie,
 
   swfdec_color_transform_init_color (&black, SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
   cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
-  swfdec_movie_render (clip_movie, cr, &black, inval, TRUE);
+  swfdec_movie_render (clip_movie, cr, &black, inval);
   mask = cairo_pop_group (cr);
   cairo_push_group (cr);
 
@@ -761,7 +761,7 @@ swfdec_movie_pop_clip (cairo_t *cr, cairo_pattern_t *mask)
 
 void
 swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
-    const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *color_transform, const SwfdecRect *inval)
 {
   SwfdecMovieClass *klass;
   GList *g;
@@ -834,7 +834,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
-    swfdec_movie_render (child, cr, &trans, &rect, fill);
+    swfdec_movie_render (child, cr, &trans, &rect);
   }
   if (clip_depth) {
     SWFDEC_INFO ("unsetting clip depth %d after rendering", clip_depth);
@@ -844,7 +844,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   g_assert (mask == NULL);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->render)
-    klass->render (movie, cr, &trans, &rect, fill);
+    klass->render (movie, cr, &trans, &rect);
 #if 0
   /* code to draw a red rectangle around the area occupied by this movie clip */
   {

@@ -59,7 +59,7 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 
 static void
 swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   guint i;
   SwfdecColor color;

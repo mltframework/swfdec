@@ -14,7 +14,8 @@ var tests = [
   "a b { a: 1; }", // missing ,
   "a b, c { a: 1; }", // missing ,
   "a { a: 1 } a {}", // empty declaration
-  "a { a: 1 } a { }" // empty declaration with space
+  "a { a: 1 } a { }", // empty declaration with space
+  "a { a-a: 1; b--b: 2; c-C: 3; d-+: 4; e-: 5; }" // names with -
 ];
 
 var style = new TextField.StyleSheet ();

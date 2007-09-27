@@ -39,3 +39,6 @@ undefined
 
 Parsing: 'a { a: 1 } a { }'
 undefined
+
+Parsing: 'a { a-a: 1; b--b: 2; c-C: 3; d-+: 4; e-: 5; }'
+undefined

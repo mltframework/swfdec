@@ -197,15 +197,11 @@ dump_path (cairo_path_t *path)
 static void
 dump_shape (SwfdecShape *shape)
 {
-  SwfdecShapeVec *shapevec;
-  unsigned int i;
+  GSList *walk;
 
-  for (i = 0; i < shape->vecs->len; i++) {
-    shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
-
-    g_print("   %3u: ", shapevec->last_index);
-    if (SWFDEC_IS_PATTERN (shapevec->pattern)) {
-      SwfdecPattern *pattern = shapevec->pattern;
+  for (walk = shape->draws; walk; walk = walk->next) {
+    if (SWFDEC_IS_PATTERN (walk->data)) {
+      SwfdecPattern *pattern = walk->data;
       char *str = swfdec_pattern_to_string (pattern);
       g_print ("%s\n", str);
       g_free (str);
@@ -215,14 +211,14 @@ dump_shape (SwfdecShape *shape)
 	    pattern->start_transform.yx, pattern->start_transform.yy,
 	    pattern->start_transform.x0, pattern->start_transform.y0);
       }
-    } else if (SWFDEC_IS_STROKE (shapevec->pattern)) {
-      SwfdecStroke *line = SWFDEC_STROKE (shapevec->pattern);
+    } else if (SWFDEC_IS_STROKE (walk->data)) {
+      SwfdecStroke *line = walk->data;
       g_print ("line (width %u, color #%08X)\n", line->start_width, line->start_color);
     } else {
       g_print ("not filled\n");
     }
     if (verbose) {
-      dump_path (&shapevec->path);
+      dump_path (&SWFDEC_DRAW (walk->data)->path);
     }
   }
 }
@@ -277,8 +273,6 @@ dump_font (SwfdecFont *font)
       if (c == 0 || (s = g_utf16_to_utf8 (&c, 1, NULL, NULL, NULL)) == NULL) {
 	g_print (" ");
       } else {
-	if (g_str_equal (s, "D"))
-	  dump_shape (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
 	g_print ("%s ", s);
 	g_free (s);
       }

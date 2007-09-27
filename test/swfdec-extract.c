@@ -206,7 +206,7 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
   cairo_translate (cr, - floor (graphic->extents.x0 / SWFDEC_TWIPS_SCALE_FACTOR),
     - floor (graphic->extents.y0 / SWFDEC_TWIPS_SCALE_FACTOR));
   cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
-  swfdec_graphic_render (graphic, cr, &trans, &graphic->extents, TRUE);
+  swfdec_graphic_render (graphic, cr, &trans, &graphic->extents);
   cairo_show_page (cr);
   cairo_destroy (cr);
   return surface_destroy_for_type (surface, filename);

@@ -728,6 +728,37 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
   }
 }
 
+/* NB: Since there is no way to union paths in cairo, we use masks 
+ * instead. To create the mask, we force black rendering using the color 
+ * transform and then do the usual rendering.
+ * Using a mask will of course cause artifacts on non pixel-aligned 
+ * boundaries, but without the help of cairo, there is no way to avoid 
+ * this. */ 
+static cairo_pattern_t *
+swfdec_movie_push_clip (cairo_t *cr, SwfdecMovie *clip_movie, 
+    const SwfdecRect *inval)
+{
+  SwfdecColorTransform black;
+  cairo_pattern_t *mask;
+
+  swfdec_color_transform_init_color (&black, SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
+  cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
+  swfdec_movie_render (clip_movie, cr, &black, inval, TRUE);
+  mask = cairo_pop_group (cr);
+  cairo_push_group (cr);
+
+  return mask;
+}
+
+static cairo_pattern_t *
+swfdec_movie_pop_clip (cairo_t *cr, cairo_pattern_t *mask)
+{
+  cairo_pop_group_to_source (cr);
+  cairo_mask (cr, mask);
+  cairo_pattern_destroy (mask);
+  return NULL;
+}
+
 void
 swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
@@ -738,6 +769,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecColorTransform trans;
   SwfdecRect rect;
   gboolean group;
+  cairo_pattern_t *mask = NULL;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -784,30 +816,21 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     if (child->clip_depth) {
       if (clip_depth) {
 	/* FIXME: is clipping additive? */
-	SWFDEC_INFO ("unsetting clip depth %d for new clip depth", clip_depth);
-	cairo_restore (cr);
-	clip_depth = 0;
+	SWFDEC_FIXME ("unsetting clip depth %d for new clip depth %d", clip_depth,
+	    child->clip_depth);
+	mask = swfdec_movie_pop_clip (cr, mask);
       }
-      if (fill == FALSE) {
-	SWFDEC_WARNING ("clipping inside clipping not implemented");
-      } else {
-	/* FIXME FIXME FIXME: overlapping objects in the clip movie cause problems
-	 * due to them being accumulated with CAIRO_FILL_RULE_EVEN_ODD
-	 */
-	SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->clip_depth,
-	    child, child->depth);
-	clip_depth = child->clip_depth;
-	cairo_save (cr);
-	swfdec_movie_render (child, cr, &trans, &rect, FALSE);
-	cairo_clip (cr);
-	continue;
-      }
+      SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->clip_depth,
+	  child, child->depth);
+      clip_depth = child->clip_depth;
+      mask = swfdec_movie_push_clip (cr, child, &rect);
+      continue;
     }
 
     if (clip_depth && child->depth > clip_depth) {
       SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
       clip_depth = 0;
-      cairo_restore (cr);
+      mask = swfdec_movie_pop_clip (cr, mask);
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
@@ -816,8 +839,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (clip_depth) {
     SWFDEC_INFO ("unsetting clip depth %d after rendering", clip_depth);
     clip_depth = 0;
-    cairo_restore (cr);
+    mask = swfdec_movie_pop_clip (cr, mask);
   }
+  g_assert (mask == NULL);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->render)
     klass->render (movie, cr, &trans, &rect, fill);

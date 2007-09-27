@@ -62,6 +62,11 @@ struct _SwfdecDrawClass
 						 const SwfdecColorTransform *	trans);
   /* compute extents of this drawing op for the given movie */
   void			(* compute_extents)   	(SwfdecDraw *			draw);
+  /* check if the given coordinate is part of the area rendered to */
+  gboolean		(* contains)		(SwfdecDraw *			draw,
+						 cairo_t *			cr,
+						 double				x,
+						 double				y);
 };
 
 GType		swfdec_draw_get_type		(void);

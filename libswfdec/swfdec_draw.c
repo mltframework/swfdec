@@ -129,6 +129,12 @@ swfdec_draw_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform *tr
   klass->paint (draw, cr, trans);
 }
 
+static gpointer
+swfdec_draw_init_empty_surface (gpointer unused)
+{
+  return cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
+}
+
 /**
  * swfdec_draw_contains:
  * @draw: a #SwfdecDraw
@@ -143,13 +149,21 @@ swfdec_draw_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform *tr
 gboolean
 swfdec_draw_contains (SwfdecDraw *draw, double x, double y)
 {
+  static GOnce empty_surface = G_ONCE_INIT;
+  SwfdecDrawClass *klass;
+  cairo_t *cr;
+      
   g_return_val_if_fail (SWFDEC_IS_DRAW (draw), FALSE);
 
   if (!swfdec_rect_contains (&draw->extents, x, y))
     return FALSE;
 
-  SWFDEC_FIXME ("implement SwfdecDraw.contains");
-  return TRUE;
+  g_once (&empty_surface, swfdec_draw_init_empty_surface, NULL);
+
+  klass = SWFDEC_DRAW_GET_CLASS (draw);
+  g_assert (klass->contains);
+  cr = cairo_create (empty_surface.retval);
+  return klass->contains (draw, cr, x, y);
 }
 
 /**

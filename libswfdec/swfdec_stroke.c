@@ -164,6 +164,22 @@ swfdec_stroke_compute_extents (SwfdecDraw *draw)
   draw->extents.y1 += width;
 }
 
+static gboolean
+swfdec_stroke_contains (SwfdecDraw *draw, cairo_t *cr, double x, double y)
+{
+  SwfdecStroke *stroke = SWFDEC_STROKE (draw);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_line_cap (cr, stroke->start_cap);
+  cairo_set_line_join (cr, stroke->join);
+  if (stroke->join == CAIRO_LINE_JOIN_MITER)
+    cairo_set_miter_limit (cr, stroke->miter_limit);
+  cairo_set_line_width (cr, MAX (stroke->start_width, SWFDEC_TWIPS_SCALE_FACTOR));
+  /* FIXME: do snapping here? */
+  cairo_append_path (cr, &draw->path);
+  return cairo_in_stroke (cr, x, y);
+}
+
 static void
 swfdec_stroke_class_init (SwfdecStrokeClass *klass)
 {
@@ -172,6 +188,7 @@ swfdec_stroke_class_init (SwfdecStrokeClass *klass)
   draw_class->morph = swfdec_stroke_morph;
   draw_class->paint = swfdec_stroke_paint;
   draw_class->compute_extents = swfdec_stroke_compute_extents;
+  draw_class->contains = swfdec_stroke_contains;
 }
 
 static void

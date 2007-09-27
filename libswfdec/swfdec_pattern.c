@@ -50,6 +50,8 @@ swfdec_pattern_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform 
   pattern = swfdec_pattern_get_pattern (SWFDEC_PATTERN (draw), trans);
   if (pattern == NULL)
     return;
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
   cairo_append_path (cr, &draw->path);
   cairo_set_source (cr, pattern);
   cairo_pattern_destroy (pattern);
@@ -68,6 +70,14 @@ swfdec_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
   SWFDEC_DRAW_CLASS (swfdec_pattern_parent_class)->morph (dest, source, ratio);
 }
 
+static gboolean
+swfdec_pattern_contains (SwfdecDraw *draw, cairo_t *cr, double x, double y)
+{
+  cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+  cairo_append_path (cr, &draw->path);
+  return cairo_in_fill (cr, x, y);
+}
+
 static void
 swfdec_pattern_class_init (SwfdecPatternClass *klass)
 {
@@ -76,6 +86,7 @@ swfdec_pattern_class_init (SwfdecPatternClass *klass)
   draw_class->morph = swfdec_pattern_morph;
   draw_class->paint = swfdec_pattern_paint;
   draw_class->compute_extents = swfdec_pattern_compute_extents;
+  draw_class->contains = swfdec_pattern_contains;
 }
 
 static void

@@ -813,6 +813,12 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovie *child = g->data;
 
+    if (clip_depth && child->depth > clip_depth) {
+      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
+      clip_depth = 0;
+      mask = swfdec_movie_pop_clip (cr, mask);
+    }
+
     if (child->clip_depth) {
       if (clip_depth) {
 	/* FIXME: is clipping additive? */
@@ -825,12 +831,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       clip_depth = child->clip_depth;
       mask = swfdec_movie_push_clip (cr, child, &rect);
       continue;
-    }
-
-    if (clip_depth && child->depth > clip_depth) {
-      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
-      clip_depth = 0;
-      mask = swfdec_movie_pop_clip (cr, mask);
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);

@@ -54,9 +54,6 @@ swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr,
   SwfdecShape *shape = SWFDEC_SHAPE (graphic);
   GSList *walk;
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
-
   for (walk = shape->draws; walk; walk = walk->next) {
     SwfdecDraw *draw = walk->data;
 

@@ -65,9 +65,6 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
   GSList *walk;
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
-
   for (walk = morph->draws; walk; walk = walk->next) {
     SwfdecDraw *draw = walk->data;
 

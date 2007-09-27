@@ -66,6 +66,8 @@ swfdec_movie_init (SwfdecMovie * movie)
   swfdec_color_transform_init_identity (&movie->original_ctrans);
 
   movie->visible = TRUE;
+  /* FIXME: Is this correct? */
+  movie->cache_state = SWFDEC_MOVIE_INVALID_EXTENTS;
 
   swfdec_rect_init_empty (&movie->extents);
 }
@@ -1141,6 +1143,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+    /* invalidate the parent, so it gets visible */
+    swfdec_movie_queue_update (parent, SWFDEC_MOVIE_INVALID_CHILDREN);
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }

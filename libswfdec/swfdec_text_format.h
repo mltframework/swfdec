@@ -56,19 +56,19 @@ struct _SwfdecTextFormat {
   SwfdecAsObject	object;
 
   SwfdecTextAlign	align;
-  int			blockIndent;
+  double		blockIndent;
   SwfdecToggle		bold;
   SwfdecToggle		bullet;
-  int			color;
+  double		color;
   const char *		font;
-  int			indent;
+  double		indent;
   SwfdecToggle		italic;
   SwfdecToggle		kerning;
-  int			leading;
-  int			leftMargin;
+  double		leading;
+  double		leftMargin;
   SwfdecAsValue		letterSpacing;
-  int			rightMargin;
-  int			size;		// null?
+  double		rightMargin;
+  double		size;		// null?
   SwfdecAsArray		tabStops;
   const char *		target;
   SwfdecToggle		underline;

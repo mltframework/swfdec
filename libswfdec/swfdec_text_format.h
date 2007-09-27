@@ -69,7 +69,7 @@ struct _SwfdecTextFormat {
   SwfdecAsValue		letterSpacing;
   double		rightMargin;
   double		size;		// null?
-  SwfdecAsArray		tabStops;
+  SwfdecAsArray *	tabStops;
   const char *		target;
   SwfdecToggle		underline;
   const char *		url;

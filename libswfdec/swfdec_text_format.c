@@ -37,8 +37,29 @@
 G_DEFINE_TYPE (SwfdecTextFormat, swfdec_text_format, SWFDEC_TYPE_AS_OBJECT)
 
 static void
+swfdec_text_format_do_mark (SwfdecAsObject *object)
+{
+  SwfdecTextFormat *format = SWFDEC_TEXTFORMAT (object);
+
+  if (format->font != NULL)
+    swfdec_as_string_mark (format->font);
+  swfdec_as_value_mark (&format->letterSpacing);
+  if (format->tabStops != NULL)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (format->tabStops));
+  if (format->target != NULL)
+    swfdec_as_string_mark (format->target);
+  if (format->url != NULL)
+    swfdec_as_string_mark (format->url);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_text_format_parent_class)->mark (object);
+}
+
+static void
 swfdec_text_format_class_init (SwfdecTextFormatClass *klass)
 {
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+
+  asobject_class->mark = swfdec_text_format_do_mark;
 }
 
 static void

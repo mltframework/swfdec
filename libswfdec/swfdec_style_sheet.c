@@ -186,6 +186,7 @@ swfdec_style_sheet_parse (SwfdecAsContext *cx, const char *css)
       if (*p == '}') {
 	selectors->len = 0;
 	p++;
+	p += strspn (p, " \t\r\n");
       } else {
 	const char *name, *value;
 	p = swfdec_style_sheet_parse_property (cx, p, &name, &value);

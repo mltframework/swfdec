@@ -293,6 +293,10 @@ TextField.StyleSheet.prototype._copy = function (o) {
   return o_new;
 };
 
+TextField.StyleSheet.prototype.clear = function () {
+  this._css = {};
+};
+
 TextField.StyleSheet.prototype.getStyle = function (name) {
   return (this._copy (this._css[name]));
 };

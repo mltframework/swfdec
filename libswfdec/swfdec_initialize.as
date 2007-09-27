@@ -274,6 +274,81 @@ ASSetPropFlags (MovieClip.prototype, "getDepth,createEmptyMovieClip", 128);
 
 ASSetPropFlags (MovieClip.prototype, null, 3);
 
+/* TextField */
+
+TextField = {};
+
+/* TextField.Stylesheet */
+
+TextField.StyleSheet = ASconstructor (113, 0);
+
+TextField.StyleSheet.prototype._copy = function (o) {
+  if (typeof (o) != "object")
+    return null;
+
+  var o_new = {};
+  for (var prop in o) {
+    o_new[prop] = o[prop];
+  }
+  return o_new;
+};
+
+TextField.StyleSheet.prototype.getStyle = function (name) {
+  return (this._copy (this._css[name]));
+};
+
+TextField.StyleSheet.prototype.setStyle = function (name, style) {
+  if (!this._css)
+    this._css = {};
+
+  this._css[name] = this._copy (style);
+};
+
+TextField.StyleSheet.prototype.getStyleNames = function () {
+  var tmp = this._css; /* ming bug? */
+  var names = [];
+  for (var prop in tmp) {
+    names.push (prop);
+  }
+  return names;
+};
+
+TextField.StyleSheet.prototype.parseCSS = function (css) {
+  var result = this.parseCSSInternal (css);
+  if (typeof (result) == "null")
+    return false;
+
+  if (!this._css)
+    this._css = {};
+
+  for (var prop in result) {
+    this._css[prop] = this._copy (result[prop]);
+  }
+
+  return true;
+};
+
+TextField.StyleSheet.prototype.parse = TextField.StyleSheet.prototype.parseCSS;
+
+TextField.StyleSheet.prototype.load = ASnative (301, 0);
+
+TextField.StyleSheet.prototype.onLoad = function () {
+};
+
+TextField.StyleSheet.prototype.onData = function (src) {
+  if (src != null) {
+    var result = this.parse (src);
+    this.loaded = result;
+    this.onLoad (result);
+  } else {
+    this.onLoad (false);
+  }
+};
+
+TextField.StyleSheet.prototype.parseCSSInternal = ASnative (113, 101);
+ASSetPropFlags (TextField.StyleSheet.prototype, null, 1027);
+ASSetPropFlags (TextField, "StyleSheet", 1027);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

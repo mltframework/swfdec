@@ -45,6 +45,7 @@ swfdec_style_sheet_init (SwfdecStyleSheet *style_sheet)
 {
 }
 
+// Note: This overwrites any old object with the same name
 static SwfdecAsObject *
 swfdec_style_sheet_get_selector_object (SwfdecAsObject *object,
     const char *name)
@@ -55,14 +56,10 @@ swfdec_style_sheet_get_selector_object (SwfdecAsObject *object,
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  swfdec_as_object_get_variable (object, name, &val);
-
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return SWFDEC_AS_VALUE_GET_OBJECT (&val);
-
   empty = swfdec_as_object_new_empty (object->context);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, empty);
-  // FIXME: unset flags?
+  swfdec_as_object_unset_variable_flags (object, name,
+      SWFDEC_AS_VARIABLE_CONSTANT);
   swfdec_as_object_set_variable (object, name, &val);
 
   return empty;

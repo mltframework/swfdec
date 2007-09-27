@@ -76,6 +76,7 @@ swfdec_style_sheet_parse_selectors (SwfdecAsContext *cx, const char *p,
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (selectors != NULL, NULL);
 
+  p += strspn (p, " \t\r\n,");
   if (*p == '{')
     return NULL;
 
@@ -131,8 +132,8 @@ swfdec_style_sheet_parse_property (SwfdecAsContext *cx, const char *p,
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (value != NULL, NULL);
 
-  end = strchr (p, ':');
-  if (end == NULL)
+  end = p + strcspn (p, ":;");
+  if (*end == '\0' || *end == ';')
     return NULL;
 
   *name = swfdec_as_context_give_string (cx,
@@ -143,9 +144,6 @@ swfdec_style_sheet_parse_property (SwfdecAsContext *cx, const char *p,
   if (p == '\0')
     return NULL;
   end = p + strcspn (p, ";}");
-  while (g_ascii_isspace (*(end-1))) {
-    end--;
-  }
 
   if (end == p) {
     *value = SWFDEC_AS_STR_EMPTY;
@@ -153,9 +151,12 @@ swfdec_style_sheet_parse_property (SwfdecAsContext *cx, const char *p,
     *value = swfdec_as_context_give_string (cx, g_strndup (p, end - p));
   }
 
-  p = end + strspn (end, " \t\r\n");
-  p++;
-  p += strspn (p, " \t\r\n");
+  if (*end == '}') {
+    p = end;
+  } else {
+    end++;
+    p = end + strspn (end, " \t\r\n");
+  }
 
   return p;
 }
@@ -187,10 +188,12 @@ swfdec_style_sheet_parse (SwfdecAsContext *cx, const char *css)
       } else {
 	const char *name, *value;
 	p = swfdec_style_sheet_parse_property (cx, p, &name, &value);
-	for (i = 0; i < selectors->len; i++) {
-	  SWFDEC_AS_VALUE_SET_STRING (&val, value);
-	  swfdec_as_object_set_variable (
-	      (SwfdecAsObject *)(selectors->pdata[i]), name, &val);
+	if (p != NULL) {
+	  for (i = 0; i < selectors->len; i++) {
+	    SWFDEC_AS_VALUE_SET_STRING (&val, value);
+	    swfdec_as_object_set_variable (
+		(SwfdecAsObject *)(selectors->pdata[i]), name, &val);
+	  }
 	}
       }
     }

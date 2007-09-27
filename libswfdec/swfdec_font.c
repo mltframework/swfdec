@@ -222,7 +222,6 @@ tag_func_define_font (SwfdecSwfDecoder * s, guint tag)
   if (n_glyphs == 0)
     return SWFDEC_STATUS_OK;
   swfdec_bits_init_bits (&offsets, &s->b, offset - 2);
-  offsets = s->b;
 
   g_array_set_size (font->glyphs, n_glyphs);
   for (i = 0; i < n_glyphs && swfdec_bits_left (&s->b); i++) {

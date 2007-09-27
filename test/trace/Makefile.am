@@ -1532,6 +1532,13 @@ EXTRA_DIST = \
 	stringlength-6.swf.trace \
 	stringlength-7.swf \
 	stringlength-7.swf.trace \
+	stylesheet-load.as \
+	stylesheet-load-5.swf \
+	stylesheet-load-5.swf.trace \
+	stylesheet-load-6.swf \
+	stylesheet-load-6.swf.trace \
+	stylesheet-load-7.swf \
+	stylesheet-load-7.swf.trace \
 	stylesheet-parse.as \
 	stylesheet-parse-5.swf \
 	stylesheet-parse-5.swf.trace \

@@ -1,0 +1,20 @@
+Parsing: 'a { a: 1; b: 2; }'
+undefined
+
+Parsing: 'a { a: 1; b: 2; } a { a: 0; c:3; }'
+undefined
+
+Parsing: 'a, a { a: 1; }'
+undefined
+
+Parsing: ',a,, ,, c,, { a: 1; }, b, ,,{ b: 2; }'
+undefined
+
+Parsing: 'a { a: 1   ; }'
+undefined
+
+Parsing: 'a { a: 1 } b { b: 2   } c { c: 3}'
+undefined
+
+Parsing: 'a { a: 1; b; }'
+undefined

@@ -332,7 +332,7 @@ dump_image (SwfdecImage *image)
 }
 
 static void 
-dump_object (gpointer key, gpointer value, gpointer dec)
+dump_object (gpointer value, gpointer dec)
 {
   SwfdecCharacter *c = value;
 
@@ -368,6 +368,22 @@ dump_object (gpointer key, gpointer value, gpointer dec)
   }
 }
 
+static void 
+enqueue (gpointer key, gpointer value, gpointer listp)
+{
+  GList **list = listp;
+
+  *list = g_list_prepend (*list, value);
+}
+
+static int
+sort_by_id (gconstpointer a, gconstpointer b)
+{
+  if (SWFDEC_CHARACTER (a)->id < SWFDEC_CHARACTER (b)->id)
+    return -1;
+  return 1;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -379,6 +395,7 @@ main (int argc, char *argv[])
     { NULL }
   };
   GOptionContext *ctx;
+  GList *list = NULL;
 
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, "options");
@@ -419,7 +436,10 @@ main (int argc, char *argv[])
   g_print ("  rate   : %g fps\n",  SWFDEC_DECODER (s)->rate / 256.0);
   g_print ("  size   : %ux%u pixels\n", SWFDEC_DECODER (s)->width, SWFDEC_DECODER (s)->height);
   g_print ("objects:\n");
-  g_hash_table_foreach (s->characters, dump_object, s);
+  g_hash_table_foreach (s->characters, enqueue, &list);
+  list = g_list_sort (list, sort_by_id);
+  g_list_foreach (list, dump_object, s);
+  g_list_free (list);
 
   g_print ("main sprite:\n");
   dump_sprite (s, s->main_sprite);

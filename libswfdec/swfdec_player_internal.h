@@ -71,6 +71,7 @@ struct _SwfdecPlayer
   double		scale_y;		/* cached y scale value */
   int			offset_x;		/* x offset from top left edge after scaling */
   int			offset_y;		/* y offset from top left edge after scaling */
+  gboolean		text_format_properties_initialized; /* whether TextFormat object's native properties have been initialized */
   gboolean		xml_properties_initialized; /* whether XML object's native properties have been initialized */
   gboolean		xml_node_properties_initialized; /* same for XMLNode */
 

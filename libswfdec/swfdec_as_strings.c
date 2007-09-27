@@ -358,6 +358,11 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("_typewriter")
   SWFDEC_AS_CONSTANT_STRING ("_sans")
   SWFDEC_AS_CONSTANT_STRING ("_serif")
+  SWFDEC_AS_CONSTANT_STRING ("align")
+  SWFDEC_AS_CONSTANT_STRING ("left")
+  SWFDEC_AS_CONSTANT_STRING ("right")
+  SWFDEC_AS_CONSTANT_STRING ("center")
+  SWFDEC_AS_CONSTANT_STRING ("justify")
   /* add more here */
 ;
 

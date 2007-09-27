@@ -278,6 +278,10 @@ ASSetPropFlags (MovieClip.prototype, null, 3);
 
 TextField = {};
 
+/* TextFormat */
+
+TextFormat = ASconstructor (110, 0);
+
 /* TextField.Stylesheet */
 
 TextField.StyleSheet = ASconstructor (113, 0);

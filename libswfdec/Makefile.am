@@ -109,6 +109,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_system_as.c \
 	swfdec_tag.c \
 	swfdec_text.c \
+	swfdec_text_format.c \
 	swfdec_url.c \
 	swfdec_utils.c \
 	swfdec_video.c \
@@ -219,6 +220,7 @@ noinst_HEADERS = \
 	swfdec_stroke.h \
 	swfdec_tag.h \
 	swfdec_text.h \
+	swfdec_text_format.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \

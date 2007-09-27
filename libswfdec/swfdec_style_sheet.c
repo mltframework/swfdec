@@ -255,6 +255,32 @@ swfdec_style_sheet_parseCSSFontFamily (SwfdecAsContext *cx,
   }
 }
 
+SWFDEC_AS_NATIVE (113, 103, swfdec_style_sheet_parseColor)
+void
+swfdec_style_sheet_parseColor (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  const char *value;
+  char *tail;
+  gint64 result;
+
+  SWFDEC_AS_VALUE_SET_NULL (rval);
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &value);
+
+  if (strlen(value) != 7)
+    return;
+
+  if (value[0] != '#')
+    return;
+
+  result = g_ascii_strtoll (value + 1, &tail, 16);
+  if (*tail != '\0')
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (rval, result);
+}
+
 SWFDEC_AS_CONSTRUCTOR (113, 0, swfdec_style_sheet_construct, swfdec_style_sheet_get_type)
 void
 swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,

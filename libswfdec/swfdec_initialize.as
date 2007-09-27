@@ -351,6 +351,7 @@ TextField.StyleSheet.prototype.onData = function (src) {
 
 TextField.StyleSheet.prototype.parseCSSInternal = ASnative (113, 101);
 TextField.StyleSheet.prototype.parseCSSFontFamily = ASnative (113, 102);
+TextField.StyleSheet.prototype.parseColor = ASnative (113, 103);
 ASSetPropFlags (TextField.StyleSheet.prototype, null, 1027);
 ASSetPropFlags (TextField, "StyleSheet", 1027);
 

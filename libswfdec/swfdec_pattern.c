@@ -140,6 +140,7 @@ swfdec_color_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform
 {
   SwfdecColor color = SWFDEC_COLOR_PATTERN (pat)->start_color;
 
+  color = swfdec_color_apply_transform (color, trans);
   return cairo_pattern_create_rgba ( 
       SWFDEC_COLOR_R (color) / 255.0, SWFDEC_COLOR_G (color) / 255.0,
       SWFDEC_COLOR_B (color) / 255.0, SWFDEC_COLOR_A (color) / 255.0);

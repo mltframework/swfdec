@@ -42,11 +42,74 @@ b: '2   '
 * 'c'
 c: '3'
 
-Parsing: 'a { a: 1; b; }'
+Parsing: 'a { a: 1; b: 2;; }'
 false
 * 'a'
 a: '1 '
 * 'b'
 b: '2   '
+* 'c'
+c: '3'
+
+Parsing: 'a { a: 1; b: 2; '
+true
+* 'a'
+a: '1'
+b: '2'
+* 'b'
+b: '2   '
+* 'c'
+c: '3'
+
+Parsing: 'a { a: 1; b: 2  '
+false
+* 'a'
+a: '1'
+b: '2'
+* 'b'
+b: '2   '
+* 'c'
+c: '3'
+
+Parsing: 'a , b  { a: 1; }'
+true
+* 'a'
+a: '1'
+* 'b'
+a: '1'
+* 'c'
+c: '3'
+
+Parsing: 'a b { a: 1; }'
+false
+* 'a'
+a: '1'
+* 'b'
+a: '1'
+* 'c'
+c: '3'
+
+Parsing: 'a b, c { a: 1; }'
+false
+* 'a'
+a: '1'
+* 'b'
+a: '1'
+* 'c'
+c: '3'
+
+Parsing: 'a { a: 1 } a {}'
+true
+* 'a'
+* 'b'
+a: '1'
+* 'c'
+c: '3'
+
+Parsing: 'a { a: 1 } a { }'
+false
+* 'a'
+* 'b'
+a: '1'
 * 'c'
 c: '3'

@@ -1,4 +1,4 @@
-// makeswf -v 7 -r 1 -o test-7.swf test.as
+// makeswf -v 7 -r 1 -o stylesheet-parse-7.swf stylesheet-parse.as
 
 var tests = [
   "a { a: 1; b: 2; }", // normal
@@ -7,7 +7,14 @@ var tests = [
   ",a,, ,, c,, { a: 1; }, b, ,,{ b: 2; }", // extra chars in selector
   "a { a: 1   ; }", // space before ;
   "a { a: 1 } b { b: 2   } c { c: 3}", // missing ;
-  "a { a: 1; b; }" // extra ;
+  "a { a: 1; b: 2;; }", // extra ;
+  "a { a: 1; b: 2; ", // missing }
+  "a { a: 1; b: 2  ", // missing } and ;
+  "a , b  { a: 1; }", // space in selector
+  "a b { a: 1; }", // missing ,
+  "a b, c { a: 1; }", // missing ,
+  "a { a: 1 } a {}", // empty declaration
+  "a { a: 1 } a { }" // empty declaration with space
 ];
 
 var style = new TextField.StyleSheet ();

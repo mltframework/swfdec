@@ -16,5 +16,26 @@ undefined
 Parsing: 'a { a: 1 } b { b: 2   } c { c: 3}'
 undefined
 
-Parsing: 'a { a: 1; b; }'
+Parsing: 'a { a: 1; b: 2;; }'
+undefined
+
+Parsing: 'a { a: 1; b: 2; '
+undefined
+
+Parsing: 'a { a: 1; b: 2  '
+undefined
+
+Parsing: 'a , b  { a: 1; }'
+undefined
+
+Parsing: 'a b { a: 1; }'
+undefined
+
+Parsing: 'a b, c { a: 1; }'
+undefined
+
+Parsing: 'a { a: 1 } a {}'
+undefined
+
+Parsing: 'a { a: 1 } a { }'
 undefined

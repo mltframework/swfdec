@@ -251,8 +251,10 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
     if (style->subpaths) {
       swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, FALSE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
-    } else {
+    } else if (parser->parse_fill) {
       SWFDEC_WARNING ("fillstyle %u has no path", i);
+    } else {
+      SWFDEC_INFO ("fillstyle %u has no path (probably a space sign?)", i);
     }
   }
   for (i = 0; i < parser->linestyles->len; i++) {

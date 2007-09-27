@@ -46,6 +46,47 @@ swfdec_text_format_init (SwfdecTextFormat *text_format)
 }
 
 static void
+swfdec_text_format_get_string (SwfdecAsObject *object, size_t offset,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+  const char *value;
+
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+
+  format = SWFDEC_TEXTFORMAT (object);
+  value = G_STRUCT_MEMBER (const char *, format, offset);
+
+  if (value != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, value);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_format_set_string (SwfdecAsObject *object, size_t offset,
+    guint argc, SwfdecAsValue *argv)
+{
+  SwfdecTextFormat *format;
+
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
+
+  if (argc < 1)
+    return;
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+    G_STRUCT_MEMBER (const char *, format, offset) = NULL;
+  } else {
+    G_STRUCT_MEMBER (const char *, format, offset) =
+      swfdec_as_value_to_string (object->context, &argv[0]);
+  }
+}
+
+static void
 swfdec_text_format_get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -85,7 +126,61 @@ swfdec_text_format_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!g_ascii_strcasecmp (value, "left")) {
     format->align = SWFDEC_TEXT_ALIGN_LEFT;
+  } else if (!g_ascii_strcasecmp (value, "center")) {
+    format->align = SWFDEC_TEXT_ALIGN_CENTER;
+  } else if (!g_ascii_strcasecmp (value, "right")) {
+    format->align = SWFDEC_TEXT_ALIGN_RIGHT;
+  } else if (!g_ascii_strcasecmp (value, "justify")) {
+    format->align = SWFDEC_TEXT_ALIGN_JUSTIFY;
   }
+}
+
+static void
+swfdec_text_format_get_font (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_text_format_get_string (object,
+      G_STRUCT_OFFSET (SwfdecTextFormat, font), ret);
+}
+
+static void
+swfdec_text_format_set_font (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_text_format_set_string (object,
+      G_STRUCT_OFFSET (SwfdecTextFormat, font), argc, argv);
+}
+
+static void
+swfdec_text_format_get_target (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_text_format_get_string (object,
+      G_STRUCT_OFFSET (SwfdecTextFormat, target), ret);
+}
+
+static void
+swfdec_text_format_set_target (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_text_format_set_string (object,
+      G_STRUCT_OFFSET (SwfdecTextFormat, target), argc, argv);
+}
+
+static void
+swfdec_text_format_get_url (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_text_format_get_string (object,
+      G_STRUCT_OFFSET (SwfdecTextFormat, url), ret);
+}
+
+static void
+swfdec_text_format_set_url (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  swfdec_text_format_set_string (object,
+      G_STRUCT_OFFSET (SwfdecTextFormat, url), argc, argv);
 }
 
 static void
@@ -135,6 +230,12 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_align,
 	swfdec_text_format_get_align, swfdec_text_format_set_align);
+    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_font,
+	swfdec_text_format_get_font, swfdec_text_format_set_font);
+    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_target,
+	swfdec_text_format_get_target, swfdec_text_format_set_target);
+    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_url,
+	swfdec_text_format_get_url, swfdec_text_format_set_url);
 
     SWFDEC_PLAYER (cx)->text_format_properties_initialized = TRUE;
   }

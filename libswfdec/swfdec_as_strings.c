@@ -363,6 +363,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("right")
   SWFDEC_AS_CONSTANT_STRING ("center")
   SWFDEC_AS_CONSTANT_STRING ("justify")
+  SWFDEC_AS_CONSTANT_STRING ("font")
+  SWFDEC_AS_CONSTANT_STRING ("url")
   /* add more here */
 ;
 

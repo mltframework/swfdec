@@ -88,7 +88,13 @@ swfdec_style_sheet_parse_selectors (SwfdecAsContext *cx, const char *p,
     g_ptr_array_add (selectors,
 	swfdec_style_sheet_get_selector_object (object, name));
 
+
     p = end + strspn (end, " \t\r\n,");
+    if (*p != '{') {
+      // no , between selectors?
+      if (strchr (end, ',') == NULL || strchr (end, ',') > p)
+	return NULL;
+    }
   }
 
   if (*p != '{')
@@ -141,9 +147,11 @@ swfdec_style_sheet_parse_property (SwfdecAsContext *cx, const char *p,
 
   end++;
   p = end + strspn (end, " \t\r\n");
-  if (p == '\0')
+  if (*p == '\0')
     return NULL;
   end = p + strcspn (p, ";}");
+  if (*end == '\0')
+    return NULL;
 
   if (end == p) {
     *value = SWFDEC_AS_STR_EMPTY;

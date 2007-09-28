@@ -1658,6 +1658,15 @@ EXTRA_DIST = \
 	textformat-7.swf.trace \
 	textformat-8.swf \
 	textformat-8.swf.trace \
+	textformat-valueof.as \
+	textformat-valueof-5.swf \
+	textformat-valueof-5.swf.trace \
+	textformat-valueof-6.swf \
+	textformat-valueof-6.swf.trace \
+	textformat-valueof-7.swf \
+	textformat-valueof-7.swf.trace \
+	textformat-valueof-8.swf \
+	textformat-valueof-8.swf.trace \
 	this-localfunction.as \
 	this-localfunction-5.swf \
 	this-localfunction-5.swf.trace \

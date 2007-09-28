@@ -70,6 +70,8 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
     SWFDEC_FIXME ("Can we replace with %s objects?", G_OBJECT_TYPE_NAME (graphic));
     return;
   }
+  if (movie->graphic == graphic)
+    return;
   SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (movie->graphic)->id,
       SWFDEC_CHARACTER (graphic)->id);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);

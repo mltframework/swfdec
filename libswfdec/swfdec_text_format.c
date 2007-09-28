@@ -43,7 +43,7 @@ swfdec_text_format_do_mark (SwfdecAsObject *object)
 
   if (format->font != NULL)
     swfdec_as_string_mark (format->font);
-  swfdec_as_value_mark (&format->letterSpacing);
+  // no need to mark letterSpacing, it's always number or null
   if (format->tabStops != NULL)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (format->tabStops));
   if (format->target != NULL)
@@ -452,6 +452,42 @@ swfdec_text_format_set_leftMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
+swfdec_text_format_get_letterSpacing (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+
+  *ret = format->letterSpacing;
+}
+
+static void
+swfdec_text_format_set_letterSpacing (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+
+  if (argc < 1)
+    return;
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
+  {
+    SWFDEC_AS_VALUE_SET_NULL (&format->letterSpacing);
+  }
+  else
+  {
+    SWFDEC_AS_VALUE_SET_NUMBER (&format->letterSpacing,
+	swfdec_as_value_to_number (cx, &argv[0]));
+  }
+}
+
+static void
 swfdec_text_format_get_rightMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -687,6 +723,11 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_text_format_get_leading, swfdec_text_format_set_leading);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_leftMargin,
 	swfdec_text_format_get_leftMargin, swfdec_text_format_set_leftMargin);
+    if (cx->version >= 8) {
+      swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_letterSpacing,
+	  swfdec_text_format_get_letterSpacing,
+	  swfdec_text_format_set_letterSpacing);
+    }
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_rightMargin,
 	swfdec_text_format_get_rightMargin, swfdec_text_format_set_rightMargin);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_size,
@@ -716,6 +757,5 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NULL (&format->letterSpacing);
   format->rightMargin = NAN;
   format->size = NAN;
-  // tabStops?
   format->underline = SWFDEC_TOGGLE_UNDEFINED;
 }

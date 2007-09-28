@@ -378,6 +378,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("rightMargin")
   SWFDEC_AS_CONSTANT_STRING ("size")
   SWFDEC_AS_CONSTANT_STRING ("tabStops")
+  SWFDEC_AS_CONSTANT_STRING ("letterSpacing")
   /* add more here */
 ;
 

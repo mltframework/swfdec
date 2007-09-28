@@ -66,9 +66,9 @@ struct _SwfdecTextFormat {
   SwfdecToggle		kerning;
   double		leading;
   double		leftMargin;
-  SwfdecAsValue		letterSpacing;
+  SwfdecAsValue		letterSpacing; // number or null
   double		rightMargin;
-  double		size;		// null?
+  double		size;
   SwfdecAsArray *	tabStops;
   const char *		target;
   SwfdecToggle		underline;

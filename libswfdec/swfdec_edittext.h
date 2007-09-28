@@ -45,7 +45,7 @@ struct _SwfdecEditText
   /* text info */
   char *		text;		/* initial displayed text or NULL if none */
   gboolean		password;	/* if text is a password and should be displayed as '*' */
-  guint		max_length;	/* maximum number of characters */
+  guint			max_length;	/* maximum number of characters */
   gboolean		html;		/* text is pseudo-html */
 
   /* layout info */
@@ -54,15 +54,15 @@ struct _SwfdecEditText
   gboolean		multiline;
   PangoAlignment	align;
   gboolean		justify;
-  guint		indent;		/* first line indentation */
+  guint			indent;		/* first line indentation */
   int			spacing;	/* spacing between lines */
   /* visual info */
   SwfdecColor		color;		/* text color */
   gboolean		selectable;
   gboolean		border;		/* draw a border around the text field */
-  guint		height;
-  guint		left_margin;
-  guint		right_margin;
+  guint			height;
+  guint			left_margin;
+  guint			right_margin;
   gboolean		autosize;	/* FIXME: implement */
 
   /* variable info */

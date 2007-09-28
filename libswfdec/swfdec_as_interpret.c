@@ -1232,6 +1232,33 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
 }
 
 static void
+swfdec_action_string_extract (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  int start, n, left;
+  const char *s;
+
+  n = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
+  start = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 3));
+  swfdec_as_stack_pop_n (cx, 2);
+  left = g_utf8_strlen (s, -1);
+  if (start > left) {
+    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1), SWFDEC_AS_STR_EMPTY);
+    return;
+  } else if (start < 2) {
+    start = 0;
+  } else {
+    start--;
+  }
+  left -= start;
+  if (n < 0 || n > left)
+    n = left;
+
+  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1),
+      swfdec_as_str_sub (cx, s, start, n));
+}
+
+static void
 swfdec_action_string_length (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *s;
@@ -2741,7 +2768,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
   [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
   [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL, 1, 1, { NULL, swfdec_action_string_length, swfdec_action_string_length, swfdec_action_string_length, swfdec_action_string_length } },
-  [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL },
+  [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL, 3, 1, { NULL, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract } },
   [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
   [SWFDEC_AS_ACTION_TO_INTEGER] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
   [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
@@ -2766,7 +2793,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL, 1, 1, { NULL, swfdec_action_char_to_ascii_5, swfdec_action_char_to_ascii_5, swfdec_action_char_to_ascii, swfdec_action_char_to_ascii } },
   [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, { NULL, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char } },
   [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
-  [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL },
+  [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL, 3, 1, { NULL, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract } },
+  [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
   [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
   [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, { NULL, swfdec_action_mb_ascii_to_char_5, swfdec_action_mb_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char }  },
   /* version 5 */

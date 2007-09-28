@@ -1,6 +1,6 @@
 // makeswf -v 7 -r 1 -o textformat-7.swf textformat.as
 
-//#include "values.as"
+#include "values.as"
 
 var properties = [
   "align",
@@ -77,10 +77,11 @@ for (var i = 0; i < properties.length; i++) {
   trace ("Testing: " + prop);
   trace (fmt[prop]);
 
-  /*for (var j = 0; j < values.length; j++) {
+  for (var j = 0; j < values.length; j++) {
     fmt[prop] = values[j];
-    trace (names[j] + " = " + fmt[prop]);
-  }*/
+    trace (prop + ": " + names[j] + " = " + fmt[prop] + " (" +
+	typeof (fmt[prop]) + ")");
+  }
 
   for (var j = 0; j < tests.length; j++) {
     fmt[prop] = tests[j];

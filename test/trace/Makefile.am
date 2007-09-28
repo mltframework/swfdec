@@ -1656,6 +1656,8 @@ EXTRA_DIST = \
 	textformat-6.swf.trace \
 	textformat-7.swf \
 	textformat-7.swf.trace \
+	textformat-8.swf \
+	textformat-8.swf.trace \
 	this-localfunction.as \
 	this-localfunction-5.swf \
 	this-localfunction-5.swf.trace \

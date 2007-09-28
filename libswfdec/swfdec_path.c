@@ -217,10 +217,12 @@ swfdec_path_get_extents (const cairo_path_t *path, SwfdecRect *extents)
       case CAIRO_PATH_CLOSE_PATH:
         x = 0;
         y = 0;
+	need_current = TRUE;
         break;
       case CAIRO_PATH_MOVE_TO:
         x = data[i+1].point.x;
         y = data[i+1].point.y;
+	need_current = TRUE;
         i++;
         break;
       default:

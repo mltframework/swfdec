@@ -64,17 +64,9 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
       goto end;
     if (frame->sound_samples == 0)
       continue;
-    /* FIXME: with this method and mad/gst not giving out full samples, we end up 
-     * putting silence too early */
-    if (frame->sound_block) {
+    if (frame->sound_block)
       swfdec_audio_decoder_push (stream->decoder, frame->sound_block);
-      continue;
-    } else {
-      SWFDEC_DEBUG ("frame %u has no sound block, inserting %u samples of silence", 
-	  stream->current_frame - 1, frame->sound_samples);
-      buffer = swfdec_buffer_new_and_alloc0 (4 * frame->sound_samples);
-      break;
-    }
+    continue;
 end:
     swfdec_audio_decoder_push (stream->decoder, NULL);
     stream->done = TRUE;

@@ -1517,6 +1517,15 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-extract.as \
+	string-extract-5.swf \
+	string-extract-5.swf.trace \
+	string-extract-6.swf \
+	string-extract-6.swf.trace \
+	string-extract-7.swf \
+	string-extract-7.swf.trace \
+	string-extract-8.swf \
+	string-extract-8.swf.trace \
 	string-fake.as \
 	string-fake-5.swf \
 	string-fake-5.swf.trace \

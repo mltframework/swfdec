@@ -182,6 +182,40 @@ swfdec_text_format_get_int (SwfdecAsObject *object, size_t offset,
   }
 }
 
+static double
+swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
+    gboolean allow_negative, gboolean is_unsigned)
+{
+  if (cx->version >= 8) {
+    double value = swfdec_as_value_to_number (cx, val);
+    if (!is_unsigned && !isnan (value) && !isfinite (value) && value > 0) {
+      // don't check allow_negative here
+      return -2147483648;
+    } else {
+      if (is_unsigned) {
+	return (unsigned)value;
+      } else {
+	if (!allow_negative && (int)value < 0) {
+	  return 0;
+	} else {
+	  return (int)value;
+	}
+      }
+    }
+  } else {
+    int value = swfdec_as_value_to_integer (cx, val);
+    if (is_unsigned) {
+      return (unsigned)value;
+    } else {
+      if (!allow_negative && value < 0) {
+	return 0;
+      } else {
+	return value;
+      }
+    }
+  }
+}
+
 static void
 swfdec_text_format_set_int (SwfdecAsObject *object, size_t offset, guint argc,
     SwfdecAsValue *argv, gboolean allow_negative, gboolean is_unsigned)
@@ -199,32 +233,9 @@ swfdec_text_format_set_int (SwfdecAsObject *object, size_t offset, guint argc,
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
     G_STRUCT_MEMBER (double, format, offset) = NAN;
   } else {
-    if (object->context->version >= 8) {
-      // FIXME: must be smarter way to get this result
-      double value = swfdec_as_value_to_number (object->context, &argv[0]);
-      if (!is_unsigned && !isnan (value) && !isfinite (value) && value > 0) {
-	G_STRUCT_MEMBER (double, format, offset) = -2147483648;
-	// don't check allow_negative here
-      } else {
-	if (is_unsigned) {
-	  G_STRUCT_MEMBER (double, format, offset) = (unsigned)value;
-	} else {
-	  G_STRUCT_MEMBER (double, format, offset) = (int)value;
-	}
-	if (!allow_negative && G_STRUCT_MEMBER (double, format, offset) < 0)
-	  G_STRUCT_MEMBER (double, format, offset) = 0;
-      }
-    } else {
-      if (is_unsigned) {
-	G_STRUCT_MEMBER (double, format, offset) =
-	  (unsigned)swfdec_as_value_to_integer (object->context, &argv[0]);
-      } else {
-	G_STRUCT_MEMBER (double, format, offset) =
-	  swfdec_as_value_to_integer (object->context, &argv[0]);
-      }
-      if (!allow_negative && G_STRUCT_MEMBER (double, format, offset) < 0)
-	G_STRUCT_MEMBER (double, format, offset) = 0;
-    }
+    G_STRUCT_MEMBER (double, format, offset) =
+      swfdec_text_format_value_to_integer (object->context, &argv[0],
+	  allow_negative, is_unsigned);
   }
 }
 
@@ -474,6 +485,90 @@ swfdec_text_format_set_size (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
+swfdec_text_format_get_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+
+  if (format->tabStops != NULL) {
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format->tabStops));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+
+  if (argc < 1)
+    return;
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
+  {
+    format->tabStops = NULL;
+  }
+  else if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) &&
+	SWFDEC_IS_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))
+  {
+    SwfdecAsArray *array;
+    SwfdecAsValue val;
+    gint32 len, i;
+    double d;
+
+    array = SWFDEC_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
+    len = swfdec_as_array_get_length (array);
+
+    if (format->tabStops == NULL) {
+      // special case, if we have null and array is empty, keep it at null
+      if (len == 0)
+	return;
+      format->tabStops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+    }
+
+    swfdec_as_array_set_length (format->tabStops, 0);
+    for (i = 0; i < len; i++) {
+      swfdec_as_array_get_value (array, i, &val);
+      d = swfdec_text_format_value_to_integer (cx, &val, TRUE, FALSE);
+      SWFDEC_AS_VALUE_SET_NUMBER (&val, d);
+      swfdec_as_array_set_value (format->tabStops, i, &val);
+    }
+  }
+  else
+  {
+    format->tabStops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+    if (SWFDEC_AS_VALUE_IS_STRING (&argv[0])) {
+      size_t i, len;
+      SwfdecAsValue val;
+
+      len = strlen (SWFDEC_AS_VALUE_GET_STRING (&argv[0]));
+
+      // special case: empty strings mean null
+      if (len == 0) {
+	format->tabStops = NULL;
+      } else {
+	if (cx->version >= 8) {
+	  SWFDEC_AS_VALUE_SET_INT (&val, -2147483648);
+	} else {
+	  SWFDEC_AS_VALUE_SET_INT (&val, 0);
+	}
+	for (i = 0; i < len; i++) {
+	  swfdec_as_array_push (format->tabStops, &val);
+	}
+      }
+    }
+  }
+
+}
+
+static void
 swfdec_text_format_get_target (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -596,6 +691,8 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_text_format_get_rightMargin, swfdec_text_format_set_rightMargin);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_size,
 	swfdec_text_format_get_size, swfdec_text_format_set_size);
+    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_tabStops,
+	swfdec_text_format_get_tabStops, swfdec_text_format_set_tabStops);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_target,
 	swfdec_text_format_get_target, swfdec_text_format_set_target);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_underline,

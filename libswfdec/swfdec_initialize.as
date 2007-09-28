@@ -299,6 +299,7 @@ TextField.StyleSheet.prototype._copy = function (o) {
 
 TextField.StyleSheet.prototype.clear = function () {
   this._css = {};
+  this._styles = {};
 };
 
 TextField.StyleSheet.prototype.getStyle = function (name) {
@@ -310,6 +311,7 @@ TextField.StyleSheet.prototype.setStyle = function (name, style) {
     this._css = {};
 
   this._css[name] = this._copy (style);
+  this.doTransform (name);
 };
 
 TextField.StyleSheet.prototype.getStyleNames = function () {
@@ -319,6 +321,83 @@ TextField.StyleSheet.prototype.getStyleNames = function () {
     names.push (prop);
   }
   return names;
+};
+
+TextField.StyleSheet.prototype.doTransform = function (name) {
+  if (!this._styles) {
+    this._styles = {};
+  }
+  this._styles[name] = this.transform (this._css[name]);
+};
+
+TextField.StyleSheet.prototype.transform = function (style) {
+  if (style == null)
+    return null;
+
+  var format = new TextFormat ();
+
+  if (style.textAlign)
+    format.align = style.textAlign;
+
+  if (style.fontWeight == "bold") {
+    format.bold = true;
+  } else if (style.fontWeight == "normal") {
+    format.bold = false;
+  }
+
+  if (style.color) {
+    var tmp = this.parseColor (style.color);
+    if (tmp != null)
+      format.color = tmp;
+  }
+
+  format.display = style.display;
+
+  if (style.fontFamily)
+    format.font = this.parseCSSFontFamily (style.fontFamily);
+
+  if (style.textIndent)
+    format.indent = parseInt (style.textIndent);
+
+  if (style.fontStyle == "italic") {
+    format.italic = true;
+  } else if (style.fontStyle == "normal") {
+    format.italic = false;
+  }
+
+  if (style.kerning == "true") {
+    format.kerning = true;
+  } else if (style.kerning == "false") {
+    format.kerning = false;
+  } else {
+    format.kerning = parseInt (style.kerning);
+  }
+
+  if (style.leading)
+    format.leading = parseInt (style.leading);
+
+  if (style.marginLeft)
+    format.leftMargin = parseInt (style.marginLeft);
+
+  if (style.letterSpacing)
+    format.letterSpacing = parseInt (style.letterSpacing);
+
+  if (style.marginRight)
+    format.rightMargin = parseInt (style.marginRight);
+
+  if (style.fontSize) {
+    var tmp = parseInt (style.fontSize);
+    if (tmp > 0)
+      format.size = tmp;
+  }
+
+  if (style.textDecoration == "underline") {
+    format.underline = true;
+  } else if (style.textDecoration == "none") {
+    format.underline = false;
+  }
+
+  return format;
 };
 
 TextField.StyleSheet.prototype.parseCSS = function (css) {
@@ -331,6 +410,7 @@ TextField.StyleSheet.prototype.parseCSS = function (css) {
 
   for (var prop in result) {
     this._css[prop] = this._copy (result[prop]);
+    this.doTransform (prop);
   }
 
   return true;

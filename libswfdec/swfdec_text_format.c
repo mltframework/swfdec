@@ -92,6 +92,7 @@ swfdec_text_format_set_string (SwfdecAsObject *object, size_t offset,
     guint argc, SwfdecAsValue *argv)
 {
   SwfdecTextFormat *format;
+  const char *s;
 
   if (!SWFDEC_IS_TEXTFORMAT (object))
     return;
@@ -100,12 +101,15 @@ swfdec_text_format_set_string (SwfdecAsObject *object, size_t offset,
   if (argc < 1)
     return;
 
+  swfdec_as_value_to_integer (object->context, &argv[0]);
+  swfdec_as_value_to_number (object->context, &argv[0]);
+  s = swfdec_as_value_to_string (object->context, &argv[0]);
+
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
     G_STRUCT_MEMBER (const char *, format, offset) = NULL;
   } else {
-    G_STRUCT_MEMBER (const char *, format, offset) =
-      swfdec_as_value_to_string (object->context, &argv[0]);
+    G_STRUCT_MEMBER (const char *, format, offset) = s;
   }
 }
 
@@ -118,8 +122,8 @@ swfdec_text_format_get_toggle (SwfdecAsObject *object, size_t offset,
 
   if (!SWFDEC_IS_TEXTFORMAT (object))
     return;
-
   format = SWFDEC_TEXTFORMAT (object);
+
   value = G_STRUCT_MEMBER (SwfdecToggle, format, offset);
 
   switch (value) {
@@ -150,6 +154,10 @@ swfdec_text_format_set_toggle (SwfdecAsObject *object, size_t offset,
   if (argc < 1)
     return;
 
+  swfdec_as_value_to_integer (object->context, &argv[0]);
+  swfdec_as_value_to_number (object->context, &argv[0]);
+  swfdec_as_value_to_string (object->context, &argv[0]);
+
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
     G_STRUCT_MEMBER (SwfdecToggle, format, offset) = SWFDEC_TOGGLE_UNDEFINED;
@@ -171,8 +179,8 @@ swfdec_text_format_get_int (SwfdecAsObject *object, size_t offset,
 
   if (!SWFDEC_IS_TEXTFORMAT (object))
     return;
-
   format = SWFDEC_TEXTFORMAT (object);
+
   value = G_STRUCT_MEMBER (double, format, offset);
 
   if (!isnan (value)) {
@@ -186,31 +194,41 @@ static double
 swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
     gboolean allow_negative, gboolean is_unsigned)
 {
+  double d;
+  int n;
+
+  if (cx->version >= 8 && is_unsigned) {
+    d = swfdec_as_value_to_number (cx, val);
+    n = swfdec_as_value_to_integer (cx, val);
+  } else {
+    n = swfdec_as_value_to_integer (cx, val);
+    d = swfdec_as_value_to_number (cx, val);
+  }
+  swfdec_as_value_to_string (cx, val);
+
   if (cx->version >= 8) {
-    double value = swfdec_as_value_to_number (cx, val);
-    if (!is_unsigned && !isnan (value) && !isfinite (value) && value > 0) {
+    if (!is_unsigned && !isnan (d) && !isfinite (d) && d > 0) {
       // don't check allow_negative here
       return -2147483648;
     } else {
       if (is_unsigned) {
-	return (unsigned)value;
+	return (unsigned)d;
       } else {
-	if (!allow_negative && (int)value < 0) {
+	if (!allow_negative && (int)d < 0) {
 	  return 0;
 	} else {
-	  return (int)value;
+	  return (int)d;
 	}
       }
     }
   } else {
-    int value = swfdec_as_value_to_integer (cx, val);
     if (is_unsigned) {
-      return (unsigned)value;
+      return (unsigned)n;
     } else {
-      if (!allow_negative && value < 0) {
+      if (!allow_negative && n < 0) {
 	return 0;
       } else {
-	return value;
+	return n;
       }
     }
   }
@@ -245,7 +263,9 @@ swfdec_text_format_get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
   switch (format->align) {
     case SWFDEC_TEXT_ALIGN_LEFT:
@@ -273,17 +293,26 @@ swfdec_text_format_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
-  const char *value;
+  const char *s;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "s", &value);
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
-  if (!g_ascii_strcasecmp (value, "left")) {
+  if (argc < 1)
+    return;
+
+  swfdec_as_value_to_integer (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+
+  if (!g_ascii_strcasecmp (s, "left")) {
     format->align = SWFDEC_TEXT_ALIGN_LEFT;
-  } else if (!g_ascii_strcasecmp (value, "center")) {
+  } else if (!g_ascii_strcasecmp (s, "center")) {
     format->align = SWFDEC_TEXT_ALIGN_CENTER;
-  } else if (!g_ascii_strcasecmp (value, "right")) {
+  } else if (!g_ascii_strcasecmp (s, "right")) {
     format->align = SWFDEC_TEXT_ALIGN_RIGHT;
-  } else if (!g_ascii_strcasecmp (value, "justify")) {
+  } else if (!g_ascii_strcasecmp (s, "justify")) {
     format->align = SWFDEC_TEXT_ALIGN_JUSTIFY;
   }
 }
@@ -359,7 +388,9 @@ swfdec_text_format_get_display (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
   switch (format->display) {
     case SWFDEC_TEXT_DISPLAY_NONE:
@@ -384,13 +415,20 @@ swfdec_text_format_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
-  const char *value;
+  const char *s;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "s", &value);
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
-  if (!g_ascii_strcasecmp (value, "none")) {
+  swfdec_as_value_to_integer (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_string (cx, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]); // oh yes, let's call it twice
+
+  if (!g_ascii_strcasecmp (s, "none")) {
     format->display = SWFDEC_TEXT_DISPLAY_NONE;
-  } else if (!g_ascii_strcasecmp (value, "inline")) {
+  } else if (!g_ascii_strcasecmp (s, "inline")) {
     format->display = SWFDEC_TEXT_DISPLAY_INLINE;
   } else {
     format->display = SWFDEC_TEXT_DISPLAY_BLOCK;
@@ -502,7 +540,9 @@ swfdec_text_format_get_letterSpacing (SwfdecAsContext *cx,
 {
   SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
   *ret = format->letterSpacing;
 }
@@ -513,11 +553,19 @@ swfdec_text_format_set_letterSpacing (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
+  double d;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
   if (argc < 1)
     return;
+
+  swfdec_as_value_to_integer (cx, &argv[0]);
+  d = swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_string (cx, &argv[0]);
+
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
@@ -526,8 +574,7 @@ swfdec_text_format_set_letterSpacing (SwfdecAsContext *cx,
   }
   else
   {
-    SWFDEC_AS_VALUE_SET_NUMBER (&format->letterSpacing,
-	swfdec_as_value_to_number (cx, &argv[0]));
+    SWFDEC_AS_VALUE_SET_NUMBER (&format->letterSpacing, d);
   }
 }
 
@@ -570,7 +617,9 @@ swfdec_text_format_get_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
   if (format->tabStops != NULL) {
     SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format->tabStops));
@@ -585,10 +634,16 @@ swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+  if (!SWFDEC_IS_TEXTFORMAT (object))
+    return;
+  format = SWFDEC_TEXTFORMAT (object);
 
   if (argc < 1)
     return;
+
+  swfdec_as_value_to_integer (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_string (cx, &argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
@@ -621,31 +676,32 @@ swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_as_array_set_value (format->tabStops, i, &val);
     }
   }
-  else
+  else if (SWFDEC_AS_VALUE_IS_STRING (&argv[0]))
   {
+    size_t i, len;
+    SwfdecAsValue val;
+
     format->tabStops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
-    if (SWFDEC_AS_VALUE_IS_STRING (&argv[0])) {
-      size_t i, len;
-      SwfdecAsValue val;
+    len = strlen (SWFDEC_AS_VALUE_GET_STRING (&argv[0]));
 
-      len = strlen (SWFDEC_AS_VALUE_GET_STRING (&argv[0]));
-
-      // special case: empty strings mean null
-      if (len == 0) {
-	format->tabStops = NULL;
+    // special case: empty strings mean null
+    if (len == 0) {
+      format->tabStops = NULL;
+    } else {
+      if (cx->version >= 8) {
+	SWFDEC_AS_VALUE_SET_INT (&val, -2147483648);
       } else {
-	if (cx->version >= 8) {
-	  SWFDEC_AS_VALUE_SET_INT (&val, -2147483648);
-	} else {
-	  SWFDEC_AS_VALUE_SET_INT (&val, 0);
-	}
-	for (i = 0; i < len; i++) {
-	  swfdec_as_array_push (format->tabStops, &val);
-	}
+	SWFDEC_AS_VALUE_SET_INT (&val, 0);
+      }
+      for (i = 0; i < len; i++) {
+	swfdec_as_array_push (format->tabStops, &val);
       }
     }
   }
-
+  else if (format->tabStops != NULL)
+  {
+    swfdec_as_array_set_length (format->tabStops, 0);
+  }
 }
 
 static void

@@ -47,6 +47,13 @@ typedef enum {
 } SwfdecTextAlign;
 
 typedef enum {
+  SWFDEC_TEXT_DISPLAY_UNDEFINED, // is this needed?
+  SWFDEC_TEXT_DISPLAY_NONE,
+  SWFDEC_TEXT_DISPLAY_INLINE,
+  SWFDEC_TEXT_DISPLAY_BLOCK,
+} SwfdecTextDisplay;
+
+typedef enum {
   SWFDEC_TOGGLE_UNDEFINED = -1,
   SWFDEC_TOGGLE_DISABLED = 0,
   SWFDEC_TOGGLE_ENABLED = 1
@@ -60,6 +67,7 @@ struct _SwfdecTextFormat {
   SwfdecToggle		bold;
   SwfdecToggle		bullet;
   double		color;
+  SwfdecTextDisplay	display;
   const char *		font;
   double		indent;
   SwfdecToggle		italic;

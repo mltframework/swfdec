@@ -354,6 +354,50 @@ swfdec_text_format_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
+swfdec_text_format_get_display (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "");
+
+  switch (format->display) {
+    case SWFDEC_TEXT_DISPLAY_NONE:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_none);
+      break;
+    case SWFDEC_TEXT_DISPLAY_INLINE:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_inline);
+      break;
+    case SWFDEC_TEXT_DISPLAY_BLOCK:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_block);
+      break;
+    case SWFDEC_TEXT_ALIGN_UNDEFINED:
+      SWFDEC_AS_VALUE_SET_NULL (ret);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+}
+
+static void
+swfdec_text_format_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+  const char *value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXTFORMAT, (gpointer)&format, "s", &value);
+
+  if (!g_ascii_strcasecmp (value, "none")) {
+    format->display = SWFDEC_TEXT_DISPLAY_NONE;
+  } else if (!g_ascii_strcasecmp (value, "inline")) {
+    format->display = SWFDEC_TEXT_DISPLAY_INLINE;
+  } else {
+    format->display = SWFDEC_TEXT_DISPLAY_BLOCK;
+  }
+}
+
+static void
 swfdec_text_format_get_font (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -709,6 +753,8 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_text_format_get_bullet, swfdec_text_format_set_bullet);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_color,
 	swfdec_text_format_get_color, swfdec_text_format_set_color);
+    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_display,
+	swfdec_text_format_get_display, swfdec_text_format_set_display);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_font,
 	swfdec_text_format_get_font, swfdec_text_format_set_font);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_indent,
@@ -749,6 +795,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   format->bold = SWFDEC_TOGGLE_UNDEFINED;
   format->bullet = SWFDEC_TOGGLE_UNDEFINED;
   format->color = NAN;
+  format->display = SWFDEC_TEXT_DISPLAY_BLOCK;
   format->indent = NAN;
   format->italic = SWFDEC_TOGGLE_UNDEFINED;
   format->kerning = SWFDEC_TOGGLE_UNDEFINED;

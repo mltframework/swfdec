@@ -727,6 +727,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
+  guint i;
 
   if (!swfdec_as_context_is_constructing (cx)) {
     SWFDEC_FIXME ("What do we do if not constructing?");
@@ -805,4 +806,32 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   format->rightMargin = NAN;
   format->size = NAN;
   format->underline = SWFDEC_TOGGLE_UNDEFINED;
+
+  i = 0;
+  if (argc > i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_font, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_size, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_color, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_url, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_target, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_align, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leftMargin, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_rightMargin, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_indent, &argv[i]);
+  if (argc > ++i)
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leading, &argv[i]);
 }

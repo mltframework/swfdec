@@ -35,7 +35,7 @@ values = [
   null, 
   true, false, 
   0, 1, 0.5, -1, -0.5, Infinity, -Infinity, NaN,
-  "", "0", "-0", "0.0", "1", "Hello World!", "true", "_level0",
+  "", "0", "-0", "0.0", "1", "Hello World!", "true", "_level0", "äöü",
   this, new Object (), Function, printall, printtostring, printvalueof, nothing ];
 
 var l = values.length;

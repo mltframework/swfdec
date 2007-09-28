@@ -66,8 +66,7 @@ swfdec_movie_init (SwfdecMovie * movie)
   swfdec_color_transform_init_identity (&movie->original_ctrans);
 
   movie->visible = TRUE;
-  /* FIXME: Is this correct? */
-  movie->cache_state = SWFDEC_MOVIE_INVALID_EXTENTS;
+  movie->cache_state = SWFDEC_MOVIE_INVALID_CONTENTS;
 
   swfdec_rect_init_empty (&movie->extents);
 }
@@ -84,7 +83,8 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
 {
   SwfdecRect rect = movie->extents;
 
-  SWFDEC_LOG ("invalidating %g %g  %g %g", rect.x0, rect.y0, rect.x1, rect.y1);
+  SWFDEC_LOG ("%s invalidating %g %g  %g %g", movie->name, 
+      rect.x0, rect.y0, rect.x1, rect.y1);
   if (swfdec_rect_is_empty (&rect))
     return;
   while (movie->parent) {
@@ -167,8 +167,6 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
     cairo_matrix_rotate (&movie->matrix, d * G_PI / 180);
   }
   swfdec_matrix_ensure_invertible (&movie->matrix, &movie->inverse_matrix);
-
-  swfdec_movie_update_extents (movie);
 }
 
 static void
@@ -184,20 +182,22 @@ swfdec_movie_do_update (SwfdecMovie *movie)
   }
 
   switch (movie->cache_state) {
-    case SWFDEC_MOVIE_INVALID_CHILDREN:
+    case SWFDEC_MOVIE_INVALID_MATRIX:
+      swfdec_movie_update_matrix (movie);
+      /* fall through */
+    case SWFDEC_MOVIE_INVALID_CONTENTS:
+      swfdec_movie_update_extents (movie);
+      swfdec_movie_invalidate (movie);
       break;
     case SWFDEC_MOVIE_INVALID_EXTENTS:
       swfdec_movie_update_extents (movie);
       break;
-    case SWFDEC_MOVIE_INVALID_MATRIX:
-      swfdec_movie_update_matrix (movie);
+    case SWFDEC_MOVIE_INVALID_CHILDREN:
       break;
     case SWFDEC_MOVIE_UP_TO_DATE:
     default:
       g_assert_not_reached ();
   }
-  if (movie->cache_state > SWFDEC_MOVIE_INVALID_EXTENTS)
-    swfdec_movie_invalidate (movie);
   movie->cache_state = SWFDEC_MOVIE_UP_TO_DATE;
 }
 

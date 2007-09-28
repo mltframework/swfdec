@@ -72,10 +72,9 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
   }
   SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (movie->graphic)->id,
       SWFDEC_CHARACTER (graphic)->id);
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
   g_object_unref (movie->graphic);
   movie->graphic = g_object_ref (graphic);
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
 }
 
 static void

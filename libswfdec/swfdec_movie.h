@@ -75,11 +75,13 @@ struct _SwfdecContent {
 #define SWFDEC_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_MOVIE, SwfdecMovieClass))
 #define SWFDEC_MOVIE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_MOVIE, SwfdecMovieClass))
 
+/* NB: each following state includes the previous */
 typedef enum {
-  SWFDEC_MOVIE_UP_TO_DATE = 0,
-  SWFDEC_MOVIE_INVALID_CHILDREN,
-  SWFDEC_MOVIE_INVALID_EXTENTS,
-  SWFDEC_MOVIE_INVALID_MATRIX
+  SWFDEC_MOVIE_UP_TO_DATE = 0,		/* everything OK */
+  SWFDEC_MOVIE_INVALID_CHILDREN,	/* call update on children */
+  SWFDEC_MOVIE_INVALID_EXTENTS,		/* recalculate extents */
+  SWFDEC_MOVIE_INVALID_CONTENTS,	/* trigger an invalidation */
+  SWFDEC_MOVIE_INVALID_MATRIX		/* matrix is invalid, recalculate */
 } SwfdecMovieCacheState;
 
 struct _SwfdecMovie {

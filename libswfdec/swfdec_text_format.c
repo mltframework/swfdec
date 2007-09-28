@@ -183,8 +183,8 @@ swfdec_text_format_get_int (SwfdecAsObject *object, size_t offset,
 }
 
 static void
-swfdec_text_format_set_int (SwfdecAsObject *object, size_t offset,
-    guint argc, SwfdecAsValue *argv, gboolean allow_negative)
+swfdec_text_format_set_int (SwfdecAsObject *object, size_t offset, guint argc,
+    SwfdecAsValue *argv, gboolean allow_negative, gboolean is_unsigned)
 {
   SwfdecTextFormat *format;
 
@@ -202,16 +202,26 @@ swfdec_text_format_set_int (SwfdecAsObject *object, size_t offset,
     if (object->context->version >= 8) {
       // FIXME: must be smarter way to get this result
       double value = swfdec_as_value_to_number (object->context, &argv[0]);
-      if (!isnan (value) && !isfinite (value) && value > 0) {
+      if (!is_unsigned && !isnan (value) && !isfinite (value) && value > 0) {
 	G_STRUCT_MEMBER (double, format, offset) = -2147483648;
+	// don't check allow_negative here
       } else {
-	G_STRUCT_MEMBER (double, format, offset) = (int)value;
+	if (is_unsigned) {
+	  G_STRUCT_MEMBER (double, format, offset) = (unsigned)value;
+	} else {
+	  G_STRUCT_MEMBER (double, format, offset) = (int)value;
+	}
 	if (!allow_negative && G_STRUCT_MEMBER (double, format, offset) < 0)
 	  G_STRUCT_MEMBER (double, format, offset) = 0;
       }
     } else {
-      G_STRUCT_MEMBER (double, format, offset) =
-	swfdec_as_value_to_integer (object->context, &argv[0]);
+      if (is_unsigned) {
+	G_STRUCT_MEMBER (double, format, offset) =
+	  (unsigned)swfdec_as_value_to_integer (object->context, &argv[0]);
+      } else {
+	G_STRUCT_MEMBER (double, format, offset) =
+	  swfdec_as_value_to_integer (object->context, &argv[0]);
+      }
       if (!allow_negative && G_STRUCT_MEMBER (double, format, offset) < 0)
 	G_STRUCT_MEMBER (double, format, offset) = 0;
     }
@@ -281,7 +291,7 @@ swfdec_text_format_set_blockIndent (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   swfdec_text_format_set_int (object,
       G_STRUCT_OFFSET (SwfdecTextFormat, blockIndent), argc, argv,
-      cx->version >= 8);
+      cx->version >= 8, FALSE);
 }
 
 static void
@@ -329,7 +339,7 @@ swfdec_text_format_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, color), argc, argv, FALSE);
+      G_STRUCT_OFFSET (SwfdecTextFormat, color), argc, argv, FALSE, TRUE);
 }
 
 static void
@@ -362,7 +372,7 @@ swfdec_text_format_set_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   swfdec_text_format_set_int (object,
       G_STRUCT_OFFSET (SwfdecTextFormat, indent), argc, argv,
-      cx->version >= 8);
+      cx->version >= 8, FALSE);
 }
 
 static void
@@ -411,7 +421,7 @@ swfdec_text_format_set_leading (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   swfdec_text_format_set_int (object,
       G_STRUCT_OFFSET (SwfdecTextFormat, leading), argc, argv,
-      cx->version >= 8);
+      cx->version >= 8, FALSE);
 }
 
 static void
@@ -427,7 +437,7 @@ swfdec_text_format_set_leftMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, leftMargin), argc, argv, FALSE);
+      G_STRUCT_OFFSET (SwfdecTextFormat, leftMargin), argc, argv, FALSE, FALSE);
 }
 
 static void
@@ -443,7 +453,8 @@ swfdec_text_format_set_rightMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, rightMargin), argc, argv, FALSE);
+      G_STRUCT_OFFSET (SwfdecTextFormat, rightMargin), argc, argv, FALSE,
+      FALSE);
 }
 
 static void
@@ -459,7 +470,7 @@ swfdec_text_format_set_size (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, size), argc, argv, TRUE);
+      G_STRUCT_OFFSET (SwfdecTextFormat, size), argc, argv, TRUE, FALSE);
 }
 
 static void
@@ -607,7 +618,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   format->leftMargin = NAN;
   SWFDEC_AS_VALUE_SET_NULL (&format->letterSpacing);
   format->rightMargin = NAN;
-  format->size = NAN; // ??
+  format->size = NAN;
   // tabStops?
   format->underline = SWFDEC_TOGGLE_UNDEFINED;
 }

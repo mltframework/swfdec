@@ -481,9 +481,18 @@ static void
 swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *extents,
     const SwfdecRectangle *rect, guint n_rects, SwfdecGtkWidget *widget)
 {
+  GdkRegion *region;
+  guint i;
+
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, (GdkRectangle *) extents, FALSE);
+
+  region = gdk_region_new ();
+  for (i = 0; i < n_rects; i++) {
+    gdk_region_union_with_rect (region, (GdkRectangle *) &rect[i]);
+  }
+  gdk_window_invalidate_region (GTK_WIDGET (widget)->window, region, FALSE);
+  gdk_region_destroy (region);
 }
 
 static void

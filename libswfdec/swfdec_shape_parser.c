@@ -294,19 +294,26 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, in
       SWFDEC_ERROR ("fillstyle too big (%u > %u)", parser->fill1style,
 	  parser->fillstyles->len);
     } else {
-      SwfdecSubPath reverse;
       SwfdecStyle *style = &g_array_index (parser->fillstyles, 
 	  SwfdecStyle, parser->fill1style - 1);
 
-      reverse.x_start = path->x_end;
-      reverse.y_start = path->y_end;
-      reverse.x_end = path->x_start;
-      reverse.y_end = path->y_start;
-      swfdec_path_init (&reverse.path);
-      swfdec_path_append_reverse (&reverse.path, &path->path, reverse.x_end, reverse.y_end);
-      style->subpaths = g_slist_prepend (style->subpaths, 
-	  GUINT_TO_POINTER (parser->subpaths->len));
-      g_array_append_val (parser->subpaths, reverse);
+      if (path->x_start == path->x_end && path->y_start == path->y_end) {
+	style->subpaths = g_slist_prepend (style->subpaths, 
+	    GUINT_TO_POINTER (parser->subpaths->len - 1));
+      } else {
+	SwfdecSubPath reverse;
+	g_print ("reversing path from %d %d to %d %d\n", path->x_start, path->y_start,
+	    path->x_end, path->y_end);
+	reverse.x_start = path->x_end;
+	reverse.y_start = path->y_end;
+	reverse.x_end = path->x_start;
+	reverse.y_end = path->y_start;
+	swfdec_path_init (&reverse.path);
+	swfdec_path_append_reverse (&reverse.path, &path->path, reverse.x_end, reverse.y_end);
+	style->subpaths = g_slist_prepend (style->subpaths, 
+	    GUINT_TO_POINTER (parser->subpaths->len));
+	g_array_append_val (parser->subpaths, reverse);
+      }
     }
   }
   if (parser->linestyle) {

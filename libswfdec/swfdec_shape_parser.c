@@ -269,12 +269,10 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, in
 {
   if (path == NULL)
     return;
-#if 0
   if (path->path.num_data == 0) {
     SWFDEC_INFO ("ignoring empty path");
     return;
   }
-#endif
 
   path->x_end = x;
   path->y_end = y;

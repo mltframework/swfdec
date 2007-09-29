@@ -304,7 +304,7 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, in
 	    GUINT_TO_POINTER (parser->subpaths->len - 1));
       } else {
 	SwfdecSubPath reverse;
-	g_print ("reversing path from %d %d to %d %d\n", path->x_start, path->y_start,
+	SWFDEC_LOG ("reversing path from %d %d to %d %d", path->x_start, path->y_start,
 	    path->x_end, path->y_end);
 	reverse.x_start = path->x_end;
 	reverse.y_start = path->y_end;

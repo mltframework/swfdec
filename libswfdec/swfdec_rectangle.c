@@ -89,7 +89,7 @@ swfdec_rectangle_is_empty (const SwfdecRectangle *rectangle)
 {
   g_return_val_if_fail (rectangle != NULL, FALSE);
 
-  return rectangle->width > 0 && rectangle->height > 0;
+  return rectangle->width <= 0 || rectangle->height <= 0;
 }
 
 /**
@@ -141,6 +141,8 @@ void
 swfdec_rectangle_union (SwfdecRectangle *dest, const SwfdecRectangle *a,
     const SwfdecRectangle *b)
 {
+  int x, y;
+
   g_return_if_fail (dest != NULL);
   g_return_if_fail (a != NULL);
   g_return_if_fail (b != NULL);
@@ -152,10 +154,12 @@ swfdec_rectangle_union (SwfdecRectangle *dest, const SwfdecRectangle *a,
     *dest = *a;
     return;
   }
-  dest->x = MIN (a->x, b->x);
-  dest->y = MIN (a->y, b->y);
-  dest->width = MAX (a->x + a->width, b->x + b->width) - dest->x;
-  dest->height = MIN (a->y + a->height, b->y + b->height) - dest->y;
+  x = MIN (a->x, b->x);
+  y = MIN (a->y, b->y);
+  dest->width = MAX (a->x + a->width, b->x + b->width) - x;
+  dest->height = MAX (a->y + a->height, b->y + b->height) - y;
+  dest->x = x;
+  dest->y = y;
 }
 
 /**
@@ -179,3 +183,21 @@ swfdec_rectangle_contains (const SwfdecRectangle *container, const SwfdecRectang
       container->y + container->height >= content->y + content->height;
 }
 
+/**
+ * swfdec_rectangle_contains_point:
+ * @rectangle: a rectangle
+ * @x: x coordinate of point to check
+ * @y: y coordinate of point to check
+ *
+ * Checks if the given point is inside the given rectangle.
+ *
+ * Returns: %TRUE if the point is inside the rectangle
+ **/
+gboolean
+swfdec_rectangle_contains_point (const SwfdecRectangle *rectangle, int x, int y)
+{
+  g_return_val_if_fail (rectangle != NULL, FALSE);
+
+  return rectangle->x <= x && rectangle->y <= y &&
+      rectangle->x + rectangle->width > x && rectangle->y + rectangle->height > y;
+}

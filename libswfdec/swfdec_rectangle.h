@@ -33,6 +33,10 @@ struct _SwfdecRectangle {
 
 GType		swfdec_rectangle_get_type	    (void);
 
+void		swfdec_rectangle_init_empty	    (SwfdecRectangle *		rectangle);
+
+gboolean	swfdec_rectangle_is_empty	    (const SwfdecRectangle *	rectangle);
+
 gboolean	swfdec_rectangle_intersect	    (SwfdecRectangle *		dest,
 						     const SwfdecRectangle *	a,
 						     const SwfdecRectangle *	b);

@@ -41,7 +41,9 @@
  * @height: height of rectangle or 0 for empty
  *
  * This structure represents a rectangular region. It is identical to the
- * #GdkRectangle structure.
+ * #GdkRectangle structure, so you can cast freely between them. The only 
+ * difference is that Gdk does not allow empty rectangles, while Swfdec does.
+ * You can use swfdec_rectangle_is_empty() to check for this.
  */
 
 static gpointer
@@ -60,6 +62,34 @@ swfdec_rectangle_get_type (void)
        swfdec_rectangle_copy, g_free);
 
   return type;
+}
+
+/**
+ * swfdec_rectangle_init_empty:
+ * @rectangle: rectangle to initialize
+ *
+ * Initializes the rectangle as empty.
+ **/
+void
+swfdec_rectangle_init_empty (SwfdecRectangle *rectangle)
+{
+  rectangle->x = rectangle->y = rectangle->width = rectangle->height = 0;
+}
+
+/**
+ * swfdec_rectangle_is_empty:
+ * @rectangle: rectangle to check
+ *
+ * Checks if the given @rectangle is empty.
+ *
+ * Returns: %TRUE if the rectangle is emtpy
+ **/
+gboolean
+swfdec_rectangle_is_empty (const SwfdecRectangle *rectangle)
+{
+  g_return_val_if_fail (rectangle != NULL, FALSE);
+
+  return rectangle->width > 0 && rectangle->height > 0;
 }
 
 /**
@@ -115,6 +145,13 @@ swfdec_rectangle_union (SwfdecRectangle *dest, const SwfdecRectangle *a,
   g_return_if_fail (a != NULL);
   g_return_if_fail (b != NULL);
 
+  if (swfdec_rectangle_is_empty (a)) {
+    *dest = *b;
+    return;
+  } else if (swfdec_rectangle_is_empty (b)) {
+    *dest = *a;
+    return;
+  }
   dest->x = MIN (a->x, b->x);
   dest->y = MIN (a->y, b->y);
   dest->width = MAX (a->x + a->width, b->x + b->width) - dest->x;

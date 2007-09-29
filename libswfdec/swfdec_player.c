@@ -650,9 +650,9 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   int width, height;
   double scale_x, scale_y;
 
-  width = player->stage_width >= 0 ? player->stage_width : (int) player->width;
-  height = player->stage_height >= 0 ? player->stage_height : (int) player->height;
-  if (height == 0 || width == 0) {
+  player->stage.width = player->stage_width >= 0 ? player->stage_width : (int) player->width;
+  player->stage.height = player->stage_height >= 0 ? player->stage_height : (int) player->height;
+  if (player->stage.height == 0 || player->stage.width == 0) {
     player->scale_x = 1.0;
     player->scale_y = 1.0;
     player->offset_x = 0;
@@ -663,8 +663,8 @@ swfdec_player_update_scale (SwfdecPlayer *player)
     scale_x = 1.0;
     scale_y = 1.0;
   } else {
-    scale_x = (double) width / player->width;
-    scale_y = (double) height / player->height;
+    scale_x = (double) player->stage.width / player->width;
+    scale_y = (double) player->stage.height / player->height;
   }
   switch (player->scale_mode) {
     case SWFDEC_SCALE_SHOW_ALL:
@@ -686,8 +686,8 @@ swfdec_player_update_scale (SwfdecPlayer *player)
     default:
       g_assert_not_reached ();
   }
-  width = width - ceil (player->width * player->scale_x);
-  height = height - ceil (player->height * player->scale_y);
+  width = player->stage.width - ceil (player->width * player->scale_x);
+  height = player->stage.height - ceil (player->height * player->scale_y);
   if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
     player->offset_x = 0;
   } else if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {
@@ -805,6 +805,8 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (player->system);
     player->system = NULL;
   }
+  g_array_free (player->invalidations, TRUE);
+  player->invalidations = NULL;
 }
 
 static void
@@ -998,19 +1000,11 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   GList *walk;
 
   /* emit invalidate signal */
-  if (!swfdec_rect_is_empty (&player->invalid)) {
-    double x, y, width, height;
-    /* FIXME: currently we clamp the rectangle to the visible area, it might
-     * be useful to allow out-of-bounds drawing. In that case this needs to be
-     * changed */
-    swfdec_player_global_to_stage (player, &player->invalid.x0, &player->invalid.y0);
-    swfdec_player_global_to_stage (player, &player->invalid.x1, &player->invalid.y1);
-    x = MAX (player->invalid.x0, 0.0);
-    y = MAX (player->invalid.y0, 0.0);
-    width = MIN (player->invalid.x1, player->stage_width) - x;
-    height = MIN (player->invalid.y1, player->stage_height) - y;
-    g_signal_emit (player, signals[INVALIDATE], 0, x, y, width, height);
-    swfdec_rect_init_empty (&player->invalid);
+  if (!swfdec_rectangle_is_empty (&player->invalid_extents)) {
+    g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid_extents,
+	player->invalidations->data, player->invalidations->len);
+    swfdec_rectangle_init_empty (&player->invalid_extents);
+    g_array_set_size (player->invalidations, 0);
   }
 
   /* emit audio-added for all added audio streams */
@@ -1173,32 +1167,22 @@ void
 swfdec_player_perform_actions (SwfdecPlayer *player)
 {
   GList *walk;
-  SwfdecRect old_inval;
-  double x, y;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  swfdec_rect_init_empty (&old_inval);
-  do {
+  while (swfdec_player_do_action (player));
+  for (walk = player->roots; walk; walk = walk->next) {
+    swfdec_movie_update (walk->data);
+  }
+  /* update the state of the mouse when stuff below it moved */
+  if (swfdec_rectangle_contains_point (&player->invalid_extents, player->mouse_x, player->mouse_y)) {
+    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
+    swfdec_player_update_mouse_position (player);
     while (swfdec_player_do_action (player));
     for (walk = player->roots; walk; walk = walk->next) {
       swfdec_movie_update (walk->data);
     }
-    /* update the state of the mouse when stuff below it moved */
-    x = player->mouse_x;
-    y = player->mouse_y;
-    swfdec_player_stage_to_global (player, &x, &y);
-    if (swfdec_rect_contains (&player->invalid, x, y)) {
-      SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
-      swfdec_player_update_mouse_position (player);
-      for (walk = player->roots; walk; walk = walk->next) {
-	swfdec_movie_update (walk->data);
-      }
-    }
-    swfdec_rect_union (&old_inval, &old_inval, &player->invalid);
-    swfdec_rect_init_empty (&player->invalid);
-  } while (swfdec_ring_buffer_get_n_elements (player->actions) > 0);
-  player->invalid = old_inval;
+  }
 }
 
 /* used for breakpoints */
@@ -1206,7 +1190,7 @@ void
 swfdec_player_lock_soft (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_assert (swfdec_rect_is_empty (&player->invalid));
+  g_assert (swfdec_rectangle_is_empty (&player->invalid_extents));
 
   g_object_freeze_notify (G_OBJECT (player));
   SWFDEC_DEBUG ("LOCKED");
@@ -1334,18 +1318,21 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   /**
    * SwfdecPlayer::invalidate:
    * @player: the #SwfdecPlayer affected
-   * @x: x coordinate of invalid region
-   * @y: y coordinate of invalid region
-   * @width: width of invalid region
-   * @height: height of invalid region
+   * @extents: the smallest rectangle enclosing the full region of changes
+   * @rectangles: a number of smaller rectangles for fine-grained control over 
+   *              changes
+   * @n_rectangles: number of rectangles in @rectangles
    *
    * This signal is emitted whenever graphical elements inside the player have 
-   * changed. The coordinates describe the smallest rectangle that includes all
-   * changes.
+   * changed. It provides two ways to look at the changes: By looking at the
+   * @extents parameter, it provides a simple way to get a single rectangle that
+   * encloses all changes. By looking at the @rectangles array, you can get
+   * finer control over changes which is very useful if your rendering system 
+   * provides a way to handle regions.
    */
   signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__DOUBLE_DOUBLE_DOUBLE_DOUBLE,
-      G_TYPE_NONE, 4, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__BOXED_POINTER_UINT,
+      G_TYPE_NONE, 3, SWFDEC_TYPE_RECTANGLE, G_TYPE_POINTER, G_TYPE_UINT);
   /**
    * SwfdecPlayer::advance:
    * @player: the #SwfdecPlayer affected
@@ -1481,6 +1468,7 @@ swfdec_player_init (SwfdecPlayer *player)
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
   player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
+  player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
   player->iterate_timeout.callback = swfdec_player_iterate;
@@ -1504,15 +1492,46 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
+  SwfdecRectangle r;
+  SwfdecRect tmp;
+  guint i;
+
   if (swfdec_rect_is_empty (rect)) {
     g_assert_not_reached ();
     return;
   }
 
-  swfdec_rect_union (&player->invalid, &player->invalid, rect);
-  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %g %g  %g %g",
+  tmp = *rect;
+  swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
+  swfdec_player_global_to_stage (player, &tmp.x1, &tmp.y1);
+  swfdec_rectangle_init_rect (&r, &tmp);
+  /* FIXME: currently we clamp the rectangle to the visible area, it might
+   * be useful to allow out-of-bounds drawing. In that case this needs to be
+   * changed */
+  swfdec_rectangle_intersect (&r, &r, &player->stage);
+  if (swfdec_rectangle_is_empty (&r))
+    return;
+
+  /* FIXME: get region code into swfdec? */
+  for (i = 0; i < player->invalidations->len; i++) {
+    SwfdecRectangle *cur = &g_array_index (player->invalidations, SwfdecRectangle, i);
+    if (swfdec_rectangle_contains (cur, &r))
+      break;
+    if (swfdec_rectangle_contains (&r, cur)) {
+      *cur = r;
+      swfdec_rectangle_union (&player->invalid_extents, &player->invalid_extents, &r);
+    }
+  }
+  if (i == player->invalidations->len) {
+    g_array_append_val (player->invalidations, r);
+    swfdec_rectangle_union (&player->invalid_extents, &player->invalid_extents, &r);
+  }
+  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %d %d  %d %d (%u subregions)",
       rect->x0, rect->y0, rect->x1, rect->y1,
-      player->invalid.x0, player->invalid.y0, player->invalid.x1, player->invalid.y1);
+      player->invalid_extents.x, player->invalid_extents.y, 
+      player->invalid_extents.x + player->invalid_extents.width,
+      player->invalid_extents.y + player->invalid_extents.height,
+      player->invalidations->len);
 }
 
 SwfdecMovie *
@@ -1625,8 +1644,8 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->rate = rate;
   player->width = width;
   player->height = height;
-  player->internal_width = player->stage_width >=0 ? (guint) player->stage_width : player->width;
-  player->internal_height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
+  player->internal_width = player->stage_width >= 0 ? (guint) player->stage_width : player->width;
+  player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
   player->initialized = TRUE;
   if (rate) {
     player->iterate_timeout.timestamp = player->time;

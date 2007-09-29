@@ -478,18 +478,12 @@ swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
 }
 
 static void
-swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, double x, double y, 
-    double width, double height, SwfdecGtkWidget *widget)
+swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *extents,
+    const SwfdecRectangle *rect, guint n_rects, SwfdecGtkWidget *widget)
 {
-  GdkRectangle rect;
-
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  rect.x = floor (x);
-  rect.y = floor (y);
-  rect.width = ceil (x + width) - rect.x;
-  rect.height = ceil (y + height) - rect.y;
-  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &rect, FALSE);
+  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, (GdkRectangle *) extents, FALSE);
 }
 
 static void

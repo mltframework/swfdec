@@ -65,6 +65,7 @@ struct _SwfdecPlayer
   guint			internal_height;	/* height used by the scripting engine */
   gint			stage_width;		/* width set by the user */
   gint			stage_height;		/* height set by the user */
+  SwfdecRectangle     	stage;			/* size of the stage set by user */
   guint			align_flags;		/* SwfdecAlignFlag */
   SwfdecScaleMode	scale_mode;		/* scale mode */
   double		scale_x;		/* cached x scale value */
@@ -83,7 +84,8 @@ struct _SwfdecPlayer
   SwfdecAsObject *	Video;			/* Video object */
 
   /* rendering */
-  SwfdecRect		invalid;      		/* area that needs a redraw in global coordinates */
+  SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
+  GArray *		invalidations;		/* fine-grained areas in need of redraw */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */

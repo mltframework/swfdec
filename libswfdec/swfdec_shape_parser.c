@@ -57,6 +57,12 @@ typedef struct {
   cairo_path_t		path;
 } SwfdecSubPath;
 
+static gboolean
+swfdec_sub_path_match (SwfdecSubPath *from, SwfdecSubPath *to)
+{
+  return from->x_end == to->x_start && from->y_end == to->y_start;
+}
+
 typedef struct {
   SwfdecDraw *		draw;		/* drawing operations that should take the subpaths */
   GSList *		subpaths;	/* indexes into SubPath array */
@@ -192,22 +198,18 @@ static void
 swfdec_style_collect_path (SwfdecStyle *style, gboolean line)
 {
   GSList *walk;
-  SwfdecSubPath *start, *cur;
-  double x, y;
+  SwfdecSubPath *start, *last, *cur;
 
-  start = style->subpaths->data;
+  last = start = style->subpaths->data;
   style->subpaths = g_slist_remove (style->subpaths, start);
   swfdec_path_move_to (&style->draw->path, start->x_start, start->y_start);
   swfdec_path_append (&style->draw->path, &start->path);
-  x = start->x_end;
-  y = start->y_end;
-  while (x != start->x_start || y != start->y_start) {
+  while (!swfdec_sub_path_match (last, start)) {
     for (walk = style->subpaths; walk; walk = walk->next) {
       cur = walk->data;
-      if (cur->x_start == x && cur->y_start == y) {
-	x = cur->x_end;
-	y = cur->y_end;
+      if (swfdec_sub_path_match (last, cur)) {
 	swfdec_path_append (&style->draw->path, &cur->path);
+	last = cur;
 	break;
       }
     }
@@ -297,7 +299,7 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, in
       SwfdecStyle *style = &g_array_index (parser->fillstyles, 
 	  SwfdecStyle, parser->fill1style - 1);
 
-      if (path->x_start == path->x_end && path->y_start == path->y_end) {
+      if (swfdec_sub_path_match (path, path)) {
 	style->subpaths = g_slist_prepend (style->subpaths, 
 	    GUINT_TO_POINTER (parser->subpaths->len - 1));
       } else {

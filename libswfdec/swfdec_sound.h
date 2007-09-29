@@ -52,10 +52,10 @@ struct _SwfdecSoundChunk
   int			stop;	      		/* stop the sample being played */
   int			no_restart;	      	/* don't restart if already playing */
 
-  guint		start_sample; 		/* sample at which to start playing */
-  guint		stop_sample;	      	/* first sample to not play anymore */
-  guint		loop_count;		/* amount of times this sample should be played back */
-  guint		n_envelopes;		/* amount of points in the envelope */
+  guint			start_sample; 		/* sample at which to start playing */
+  guint			stop_sample;	      	/* first sample to not play anymore */
+  guint			loop_count;		/* amount of times this sample should be played back */
+  guint			n_envelopes;		/* amount of points in the envelope */
   SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
 };
 
@@ -66,8 +66,8 @@ struct _SwfdecSound
   SwfdecAudioCodec	format;			/* format in use */
   gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
   SwfdecAudioFormat	original_format;      	/* channel/rate information */
-  guint		n_samples;		/* total number of samples when decoded to 44100kHz */
-  guint		skip;			/* samples to skip at start */
+  guint			n_samples;		/* total number of samples when decoded to 44100kHz */
+  guint			skip;			/* samples to skip at start */
   SwfdecBuffer *	encoded;		/* encoded data */
 
   SwfdecAudioFormat	decoded_format;		/* format of decoded data */

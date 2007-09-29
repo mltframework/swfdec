@@ -106,6 +106,7 @@ main (int argc, char *argv[])
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
   gboolean trace = FALSE, no_scripts = FALSE;
+  gboolean redraws = FALSE;
   char *variables = NULL;
   char *s;
   GtkWidget *window;
@@ -115,6 +116,7 @@ main (int argc, char *argv[])
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
     { "no-scripts", 0, 0, G_OPTION_ARG_NONE, &no_scripts, "don't execute scripts affecting the application", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
+    { "redraws", 'r', 0, G_OPTION_ARG_NONE, &redraws, "show redraw regions", NULL },
     { "speed", 0, 0, G_OPTION_ARG_INT, &speed, "replay speed (will deactivate sound)", "PERCENT" },
     { "trace", 't', 0, G_OPTION_ARG_NONE, &trace, "print trace output to stdout", NULL },
     { "variables", 'v', 0, G_OPTION_ARG_STRING, &variables, "variables to pass to player", "VAR=NAME[&VAR=NAME..]" },
@@ -160,6 +162,8 @@ main (int argc, char *argv[])
 
   window = view_swf (player, use_image);
   set_title (GTK_WINDOW (window), argv[1]);
+  if (redraws)
+    gdk_window_set_debug_updates (TRUE);
 
   if (!no_scripts)
     g_signal_connect (player, "fscommand", G_CALLBACK (do_fscommand), window);

@@ -209,3 +209,15 @@ swfdec_rect_inside (const SwfdecRect *outer, const SwfdecRect *inner)
 	 outer->y1 >= inner->y1;
 }
 
+void 
+swfdec_rectangle_init_rect (SwfdecRectangle *rectangle, const SwfdecRect *rect)
+{
+  g_return_if_fail (rectangle != NULL);
+  g_return_if_fail (rect != NULL);
+
+  rectangle->x = floor (rect->x0);
+  rectangle->y = floor (rect->y0);
+  rectangle->width = ceil (rect->x1) - rectangle->x;
+  rectangle->height = ceil (rect->y1) - rectangle->y;
+}
+

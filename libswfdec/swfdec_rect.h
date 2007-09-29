@@ -23,6 +23,7 @@
 #define __SWFDEC_RECT_H__
 
 #include <libswfdec/swfdec_types.h>
+#include <libswfdec/swfdec_rectangle.h>
 
 struct _SwfdecRect
 {
@@ -44,5 +45,7 @@ gboolean swfdec_rect_is_empty (const SwfdecRect * a);
 gboolean swfdec_rect_contains (const SwfdecRect *rect, double x, double y);
 gboolean swfdec_rect_inside (const SwfdecRect *outer, const SwfdecRect *inner);
 void swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo_matrix_t *matrix);
+
+void swfdec_rectangle_init_rect (SwfdecRectangle *rectangle, const SwfdecRect *rect);
 
 #endif

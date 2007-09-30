@@ -162,9 +162,12 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (argc == 1) {
     SwfdecMovie *other;
     SwfdecRect movie_rect, other_rect;
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
-        !SWFDEC_IS_MOVIE (other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
-      SWFDEC_ERROR ("FIXME: what happens now?");
+    const char *s;
+
+    s = swfdec_as_value_to_string (cx, &argv[0]);
+    other = swfdec_movie_get_by_path (movie, s);
+    if (other == NULL) {
+      SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
       return;
     }
     swfdec_movie_update (movie);

@@ -1434,6 +1434,15 @@ EXTRA_DIST = \
 	settarget-nomovie-7.swf.trace \
 	settarget-nomovie-8.swf \
 	settarget-nomovie-8.swf.trace \
+	settarget-relative.as \
+	settarget-relative-5.swf \
+	settarget-relative-5.swf.trace \
+	settarget-relative-6.swf \
+	settarget-relative-6.swf.trace \
+	settarget-relative-7.swf \
+	settarget-relative-7.swf.trace \
+	settarget-relative-8.swf \
+	settarget-relative-8.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	setvariable-callback.as \

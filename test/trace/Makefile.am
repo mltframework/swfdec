@@ -186,6 +186,15 @@ EXTRA_DIST = \
 	ASSetPropFlags-ignore-7.swf.trace \
 	ASSetPropFlags-ignore-8.swf \
 	ASSetPropFlags-ignore-8.swf.trace \
+	atan2-5.swf \
+	atan2-5.swf.trace \
+	atan2-6.swf \
+	atan2-6.swf.trace \
+	atan2-7.swf \
+	atan2-7.swf.trace \
+	atan2-8.swf \
+	atan2-8.swf.trace \
+	atan2.as \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

@@ -87,7 +87,7 @@ swfdec_as_math_atan2 (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double x, y;
 
-  SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
+  SWFDEC_AS_CHECK (0, NULL, "nn", &y, &x);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, atan2 (y, x));
 }

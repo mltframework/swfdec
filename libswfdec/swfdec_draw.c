@@ -152,6 +152,7 @@ swfdec_draw_contains (SwfdecDraw *draw, double x, double y)
   static GOnce empty_surface = G_ONCE_INIT;
   SwfdecDrawClass *klass;
   cairo_t *cr;
+  gboolean result;
       
   g_return_val_if_fail (SWFDEC_IS_DRAW (draw), FALSE);
 
@@ -163,7 +164,9 @@ swfdec_draw_contains (SwfdecDraw *draw, double x, double y)
   klass = SWFDEC_DRAW_GET_CLASS (draw);
   g_assert (klass->contains);
   cr = cairo_create (empty_surface.retval);
-  return klass->contains (draw, cr, x, y);
+  result = klass->contains (draw, cr, x, y);
+  cairo_destroy (cr);
+  return result;
 }
 
 /**

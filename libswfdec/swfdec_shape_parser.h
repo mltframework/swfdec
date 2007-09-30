@@ -39,6 +39,9 @@ GSList *		swfdec_shape_parser_free	(SwfdecShapeParser *	parser);
 
 void			swfdec_shape_parser_parse	(SwfdecShapeParser *	parser,
 							 SwfdecBits *		bits);
+void			swfdec_shape_parser_parse_morph	(SwfdecShapeParser *	parser,
+							 SwfdecBits *		bits1,
+							 SwfdecBits *		bits2);
 
 
 G_END_DECLS

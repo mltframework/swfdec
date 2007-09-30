@@ -66,6 +66,7 @@ swfdec_sub_path_match (SwfdecSubPath *from, SwfdecSubPath *to)
 typedef struct {
   SwfdecDraw *		draw;		/* drawing operations that should take the subpaths */
   GSList *		subpaths;	/* indexes into SubPath array */
+  GSList *		subpaths2;	/* indexes into SubPath array */
 } SwfdecStyle;
 
 struct _SwfdecShapeParser {
@@ -83,6 +84,13 @@ struct _SwfdecShapeParser {
   guint			linestyle;
   guint			n_fill_bits;
   guint			n_line_bits;
+  /* for morph styles */
+  GArray *		subpaths2;	/* SwfdecSubPath partial paths */
+  guint			fill0style2;
+  guint			fill1style2;
+  guint			linestyle2;
+  guint			n_fill_bits2;
+  guint			n_line_bits2;
 };
 
 static void
@@ -137,6 +145,7 @@ swfdec_shape_parser_new (SwfdecParseDrawFunc parse_fill,
   list->fillstyles = g_array_new (FALSE, TRUE, sizeof (SwfdecStyle));
   list->linestyles = g_array_new (FALSE, TRUE, sizeof (SwfdecStyle));
   list->subpaths = g_array_new (FALSE, TRUE, sizeof (SwfdecSubPath));
+  list->subpaths2 = g_array_new (FALSE, TRUE, sizeof (SwfdecSubPath));
 
   return list;
 }
@@ -167,6 +176,11 @@ swfdec_shape_parser_clear (SwfdecShapeParser *list)
     swfdec_path_reset (&path->path);
   }
   g_array_set_size (list->subpaths, 0);
+  for (i = 0; i < list->subpaths2->len; i++) {
+    SwfdecSubPath *path = &g_array_index (list->subpaths2, SwfdecSubPath, i);
+    swfdec_path_reset (&path->path);
+  }
+  g_array_set_size (list->subpaths2, 0);
 }
 
 GSList *
@@ -187,6 +201,7 @@ swfdec_shape_parser_free (SwfdecShapeParser *parser)
   g_array_free (parser->fillstyles, TRUE);
   g_array_free (parser->linestyles, TRUE);
   g_array_free (parser->subpaths, TRUE);
+  g_array_free (parser->subpaths2, TRUE);
   g_slice_free (SwfdecShapeParser, parser);
 
   draws = g_slist_reverse (draws);
@@ -195,46 +210,51 @@ swfdec_shape_parser_free (SwfdecShapeParser *parser)
 
 /* NB: assumes all fill paths are closed */
 static void
-swfdec_style_collect_path (SwfdecStyle *style, gboolean line)
+swfdec_style_finish (SwfdecStyle *style, SwfdecSubPath *paths, SwfdecSubPath *paths2, gboolean line)
 {
   GSList *walk;
-  SwfdecSubPath *start, *last, *cur;
 
-  last = start = style->subpaths->data;
-  style->subpaths = g_slist_remove (style->subpaths, start);
-  swfdec_path_move_to (&style->draw->path, start->x_start, start->y_start);
-  swfdec_path_append (&style->draw->path, &start->path);
-  while (!swfdec_sub_path_match (last, start)) {
-    for (walk = style->subpaths; walk; walk = walk->next) {
-      cur = walk->data;
-      if (swfdec_sub_path_match (last, cur)) {
-	swfdec_path_append (&style->draw->path, &cur->path);
-	last = cur;
+  /* accumulate paths one by one */
+  while (style->subpaths) {
+    SwfdecSubPath *start, *last, *cur;
+    SwfdecSubPath *start2, *last2, *cur2;
+
+    last = start = &paths[GPOINTER_TO_UINT (style->subpaths->data)];
+    swfdec_path_move_to (&style->draw->path, start->x_start, start->y_start);
+    swfdec_path_append (&style->draw->path, &start->path);
+    if (paths2) {
+      last2 = start2 = &paths2[GPOINTER_TO_UINT (style->subpaths->data)];
+      swfdec_path_move_to (&style->draw->end_path, start2->x_start, start2->y_start);
+      swfdec_path_append (&style->draw->end_path, &start2->path);
+    }
+    style->subpaths = g_slist_delete_link (style->subpaths, style->subpaths);
+    while (!swfdec_sub_path_match (last, start) ||
+	(paths2 != NULL && !swfdec_sub_path_match (last2, start2))) {
+      for (walk = style->subpaths; walk; walk = walk->next) {
+	cur = &paths[GPOINTER_TO_UINT (walk->data)];
+	if (swfdec_sub_path_match (last, cur)) {
+	  if (paths2) {
+	    cur2 = &paths2[GPOINTER_TO_UINT (walk->data)];
+	    if (!swfdec_sub_path_match (last2, cur2))
+	      continue;
+	    swfdec_path_append (&style->draw->end_path, &cur2->path);
+	    last2 = cur2;
+	  }
+	  swfdec_path_append (&style->draw->path, &cur->path);
+	  last = cur;
+	  break;
+	}
+      }
+      if (walk) {
+	style->subpaths = g_slist_delete_link (style->subpaths, walk);
+      } else {
+	if (!line) {
+	  SWFDEC_ERROR ("fill path not closed");
+	} 
 	break;
       }
     }
-    if (walk) {
-      style->subpaths = g_slist_delete_link (style->subpaths, walk);
-    } else {
-      if (!line) {
-	SWFDEC_ERROR ("fill path not closed");
-      } 
-      break;
-    }
   }
-}
-
-static void
-swfdec_style_finish (SwfdecStyle *style, SwfdecSubPath *paths, gboolean line)
-{
-  GSList *walk;
-
-  /* first, replace numbers with real references to the paths */
-  for (walk = style->subpaths; walk; walk = walk->next)
-    walk->data = &paths[GPOINTER_TO_UINT (walk->data)];
-  /* then, accumulate paths one by one */
-  while (style->subpaths)
-    swfdec_style_collect_path (style, line);
   swfdec_draw_recompute (style->draw);
 }
 
@@ -246,7 +266,8 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
   for (i = 0; i < parser->fillstyles->len; i++) {
     SwfdecStyle *style = &g_array_index (parser->fillstyles, SwfdecStyle, i);
     if (style->subpaths) {
-      swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, FALSE);
+      swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, 
+	  parser->subpaths2->len ? (SwfdecSubPath *) parser->subpaths->data : NULL, FALSE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
     } else if (parser->parse_fill) {
       SWFDEC_WARNING ("fillstyle %u has no path", i);
@@ -257,7 +278,8 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
   for (i = 0; i < parser->linestyles->len; i++) {
     SwfdecStyle *style = &g_array_index (parser->linestyles, SwfdecStyle, i);
     if (style->subpaths) {
-      swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, TRUE);
+      swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, 
+	  parser->subpaths2->len ? (SwfdecSubPath *) parser->subpaths->data : NULL, TRUE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
     } else {
       SWFDEC_WARNING ("linestyle %u has no path", i);
@@ -267,17 +289,38 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
 }
 
 static void
-swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, int x, int y)
+swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path1, SwfdecSubPath *path2, 
+    int x1, int y1, int x2, int y2)
 {
-  if (path == NULL)
+  if (path1 == NULL)
     return;
-  if (path->path.num_data == 0) {
+  if (path1->path.num_data == 0) {
     SWFDEC_INFO ("ignoring empty path");
     return;
   }
 
-  path->x_end = x;
-  path->y_end = y;
+  path1->x_end = x1;
+  path1->y_end = y1;
+
+  if (path2) {
+    path2->x_end = x2;
+    path2->y_end = y2;
+    /* check our assumptions about morph styles */
+    if ((parser->fill0style != parser->fill0style2 &&
+	 parser->fill0style != parser->fill1style2) ||
+        (parser->fill1style != parser->fill0style2 &&
+	 parser->fill1style != parser->fill1style2)) {
+      SWFDEC_ERROR ("fillstyle assumptions don't hold for %u %u vs %u %u",
+	  parser->fill0style, parser->fill1style, parser->fill0style2,
+	  parser->fill1style2);
+      return;
+    }
+    if (parser->linestyle != parser->linestyle2) {
+      SWFDEC_ERROR ("linestyle change from %u to %u", parser->linestyle,
+	  parser->linestyle2);
+      return;
+    }
+  }
 
   /* add the path to their styles */
   if (parser->fill0style) {
@@ -299,22 +342,31 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, in
       SwfdecStyle *style = &g_array_index (parser->fillstyles, 
 	  SwfdecStyle, parser->fill1style - 1);
 
-      if (swfdec_sub_path_match (path, path)) {
+      if (swfdec_sub_path_match (path1, path1)) {
 	style->subpaths = g_slist_prepend (style->subpaths, 
 	    GUINT_TO_POINTER (parser->subpaths->len - 1));
       } else {
 	SwfdecSubPath reverse;
-	SWFDEC_LOG ("reversing path from %d %d to %d %d", path->x_start, path->y_start,
-	    path->x_end, path->y_end);
-	reverse.x_start = path->x_end;
-	reverse.y_start = path->y_end;
-	reverse.x_end = path->x_start;
-	reverse.y_end = path->y_start;
+	SWFDEC_LOG ("reversing path from %d %d to %d %d", path1->x_start, path1->y_start,
+	    path1->x_end, path1->y_end);
+	reverse.x_start = path1->x_end;
+	reverse.y_start = path1->y_end;
+	reverse.x_end = path1->x_start;
+	reverse.y_end = path1->y_start;
 	swfdec_path_init (&reverse.path);
-	swfdec_path_append_reverse (&reverse.path, &path->path, reverse.x_end, reverse.y_end);
+	swfdec_path_append_reverse (&reverse.path, &path1->path, reverse.x_end, reverse.y_end);
 	style->subpaths = g_slist_prepend (style->subpaths, 
 	    GUINT_TO_POINTER (parser->subpaths->len));
 	g_array_append_val (parser->subpaths, reverse);
+	if (path2) {
+	  reverse.x_start = path2->x_end;
+	  reverse.y_start = path2->y_end;
+	  reverse.x_end = path2->x_start;
+	  reverse.y_end = path2->y_start;
+	  swfdec_path_init (&reverse.path);
+	  swfdec_path_append_reverse (&reverse.path, &path2->path, reverse.x_end, reverse.y_end);
+	  g_array_append_val (parser->subpaths2, reverse);
+	}
       }
     }
   }
@@ -332,10 +384,24 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path, in
 }
 
 static SwfdecSubPath *
-swfdec_shape_parser_parse_change (SwfdecShapeParser *parser, SwfdecBits *bits, 
-    SwfdecSubPath *path, int *x, int *y)
+swfdec_sub_path_create (GArray *array, int x, int y)
+{
+  SwfdecSubPath *path;
+
+  g_array_set_size (array, array->len + 1);
+  path = &g_array_index (array, SwfdecSubPath, array->len - 1);
+  swfdec_path_init (&path->path);
+  path->x_start = x;
+  path->y_start = y;
+
+  return path;
+}
+
+static SwfdecSubPath *
+swfdec_shape_parser_parse_change (SwfdecShapeParser *parser, SwfdecBits *bits, int *x, int *y)
 {
   int state_new_styles, state_line_styles, state_fill_styles1, state_fill_styles0, state_moveto;
+  SwfdecSubPath *path;
 
   if (swfdec_bits_getbit (bits) != 0) {
     g_assert_not_reached ();
@@ -347,10 +413,6 @@ swfdec_shape_parser_parse_change (SwfdecShapeParser *parser, SwfdecBits *bits,
   state_fill_styles0 = swfdec_bits_getbit (bits);
   state_moveto = swfdec_bits_getbit (bits);
 
-  swfdec_shape_parser_end_path (parser, path, *x, *y);
-  g_array_set_size (parser->subpaths, parser->subpaths->len + 1);
-  path = &g_array_index (parser->subpaths, SwfdecSubPath, parser->subpaths->len - 1);
-  swfdec_path_init (&path->path);
   if (state_moveto) {
     int n_bits = swfdec_bits_getbits (bits, 5);
     *x = swfdec_bits_getsbits (bits, n_bits);
@@ -358,8 +420,7 @@ swfdec_shape_parser_parse_change (SwfdecShapeParser *parser, SwfdecBits *bits,
 
     SWFDEC_LOG ("   moveto %d,%d", *x, *y);
   }
-  path->x_start = *x;
-  path->y_start = *y;
+  path = swfdec_sub_path_create (parser->subpaths, *x, *y);
   if (state_fill_styles0) {
     parser->fill0style = swfdec_bits_getbits (bits, parser->n_fill_bits);
     SWFDEC_LOG ("   * fill0style = %d", parser->fill0style);
@@ -467,10 +528,12 @@ swfdec_shape_parser_parse (SwfdecShapeParser *parser, SwfdecBits *bits)
   SwfdecShapeType type;
 
   swfdec_shape_parser_new_styles (parser, bits);
+
   while ((type = swfdec_shape_peek_type (bits))) {
     switch (type) {
       case SWFDEC_SHAPE_TYPE_CHANGE:
-	path = swfdec_shape_parser_parse_change (parser, bits, path, &x, &y);
+	swfdec_shape_parser_end_path (parser, path, NULL, x, y, 0, 0);
+	path = swfdec_shape_parser_parse_change (parser, bits, &x, &y);
 	break;
       case SWFDEC_SHAPE_TYPE_LINE:
 	swfdec_shape_parser_parse_line (bits, path, &x, &y, FALSE);
@@ -484,214 +547,123 @@ swfdec_shape_parser_parse (SwfdecShapeParser *parser, SwfdecBits *bits)
 	break;
     }
   }
-  swfdec_shape_parser_end_path (parser, path, x, y);
+  swfdec_shape_parser_end_path (parser, path, NULL, x, y, 0, 0);
   swfdec_bits_getbits (bits, 6);
   swfdec_bits_syncbits (bits);
 
   swfdec_shape_parser_finish (parser);
 }
 
-#if 0
-/*** MORPH SHAPE ***/
-
-#include "swfdec_morphshape.h"
-
-static SubPath *
-swfdec_morph_shape_do_change (SwfdecBits *end_bits, SubPath *other, SwfdecMorphShape *morph, 
-    GArray *path_array, SubPath *path, int *x, int *y)
+static SwfdecSubPath *
+swfdec_shape_parser_parse_morph_change (SwfdecShapeParser *parser, 
+    SwfdecBits *bits, int *x, int *y)
 {
-  if (path) {
-    path->x_end = *x;
-    path->y_end = *y;
-  }
-  g_array_set_size (path_array, path_array->len + 1);
-  path = &g_array_index (path_array, SubPath, path_array->len - 1);
-  *path = *other;
-  swfdec_path_init (&path->path);
-  if (swfdec_shape_peek_type (end_bits) == SWFDEC_SHAPE_TYPE_CHANGE) {
-    int state_line_styles, state_fill_styles1, state_fill_styles0, state_moveto;
+  SwfdecSubPath *path;
+  int state_line_styles, state_fill_styles1, state_fill_styles0, state_moveto;
 
-    if (swfdec_bits_getbit (end_bits) != 0) {
-      g_assert_not_reached ();
-    }
-    if (swfdec_bits_getbit (end_bits)) {
-      SWFDEC_ERROR ("new styles aren't allowed in end edges, ignoring");
-    }
-    state_line_styles = swfdec_bits_getbit (end_bits);
-    state_fill_styles1 = swfdec_bits_getbit (end_bits);
-    state_fill_styles0 = swfdec_bits_getbit (end_bits);
-    state_moveto = swfdec_bits_getbit (end_bits);
-    if (state_moveto) {
-      int n_bits = swfdec_bits_getbits (end_bits, 5);
-      *x = swfdec_bits_getsbits (end_bits, n_bits);
-      *y = swfdec_bits_getsbits (end_bits, n_bits);
-
-      SWFDEC_LOG ("   moveto %d,%d", *x, *y);
-    }
-    if (state_fill_styles0) {
-      guint check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
-	SWFDEC_SHAPE (morph)->fills_offset;
-      if (check != path->fill0style)
-	SWFDEC_ERROR ("end fill0style %u differs from start fill0style %u", check, path->fill0style);
-    }
-    if (state_fill_styles1) {
-      guint check = swfdec_bits_getbits (end_bits, morph->n_fill_bits) + 
-	SWFDEC_SHAPE (morph)->fills_offset;
-      if (check != path->fill1style)
-	SWFDEC_ERROR ("end fill1style %u differs from start fill1style %u", check, path->fill1style);
-    }
-    if (state_line_styles) {
-      guint check = swfdec_bits_getbits (end_bits, morph->n_line_bits) + 
-	SWFDEC_SHAPE (morph)->lines_offset;
-      if (check != path->linestyle)
-	SWFDEC_ERROR ("end linestyle %u differs from start linestyle %u", check, path->linestyle);
-    }
+  if (swfdec_bits_getbit (bits) != 0) {
+    g_assert_not_reached ();
   }
-  path->x_start = *x;
-  path->y_start = *y;
+  if (swfdec_bits_getbit (bits)) {
+    SWFDEC_ERROR ("new styles aren't allowed in end edges, ignoring");
+  }
+  state_line_styles = swfdec_bits_getbit (bits);
+  state_fill_styles1 = swfdec_bits_getbit (bits);
+  state_fill_styles0 = swfdec_bits_getbit (bits);
+  state_moveto = swfdec_bits_getbit (bits);
+  if (state_moveto) {
+    int n_bits = swfdec_bits_getbits (bits, 5);
+    *x = swfdec_bits_getsbits (bits, n_bits);
+    *y = swfdec_bits_getsbits (bits, n_bits);
+
+    SWFDEC_LOG ("   moveto %d,%d", *x, *y);
+  }
+  path = swfdec_sub_path_create (parser->subpaths2, *x, *y);
+  if (state_fill_styles0) {
+    parser->fill0style2 = swfdec_bits_getbits (bits, parser->n_fill_bits2);
+  }
+  if (state_fill_styles1) {
+    parser->fill1style2 = swfdec_bits_getbits (bits, parser->n_fill_bits2);
+  }
+  if (state_line_styles) {
+    parser->linestyle2 = swfdec_bits_getbits (bits, parser->n_line_bits2);
+  }
+
   return path;
 }
 
-static void
-swfdec_morph_shape_get_recs (SwfdecSwfDecoder * s, SwfdecMorphShape *morph, SwfdecBits *end_bits)
+void
+swfdec_shape_parser_parse_morph (SwfdecShapeParser *parser, SwfdecBits *bits1, SwfdecBits *bits2)
 {
-  int start_x = 0, start_y = 0, end_x = 0, end_y = 0;
-  SubPath *start_path = NULL, *end_path = NULL;
-  GArray *start_path_array, *end_path_array, *tmp;
-  SwfdecShapeType start_type, end_type;
-  SwfdecBits *start_bits = &s->b;
-  SwfdecShape *shape = SWFDEC_SHAPE (morph);
+  int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+  SwfdecSubPath *path1 = NULL, *path2 = NULL;
+  SwfdecShapeType type1, type2;
 
-  /* First, accumulate all sub-paths into an array */
-  start_path_array = g_array_new (FALSE, TRUE, sizeof (SubPath));
-  end_path_array = g_array_new (FALSE, TRUE, sizeof (SubPath));
+  swfdec_shape_parser_new_styles (parser, bits1);
+  parser->n_fill_bits2 = swfdec_bits_getbits (bits2, 4);
+  parser->n_line_bits2 = swfdec_bits_getbits (bits2, 4);
+  parser->fill0style2 = parser->fill0style;
+  parser->fill1style2 = parser->fill1style;
+  parser->linestyle2 = parser->linestyle;
+  SWFDEC_LOG ("%u fill bits, %u line bits in end shape", parser->n_fill_bits2, parser->n_line_bits2);
 
-  while ((start_type = swfdec_shape_peek_type (start_bits))) {
-    end_type = swfdec_shape_peek_type (end_bits);
-    if (end_type == SWFDEC_SHAPE_TYPE_CHANGE && start_type != SWFDEC_SHAPE_TYPE_CHANGE) {
-      SubPath *path;
-      if (start_path) {
-	start_path->x_end = start_x;
-	start_path->y_end = start_y;
+  while ((type1 = swfdec_shape_peek_type (bits1))) {
+    type2 = swfdec_shape_peek_type (bits2);
+    if (type2 == SWFDEC_SHAPE_TYPE_CHANGE || type1 == SWFDEC_SHAPE_TYPE_CHANGE) {
+      swfdec_shape_parser_end_path (parser, path1, path2, x1, y1, x2, y2);
+      if (type1 == SWFDEC_SHAPE_TYPE_CHANGE) {
+	path1 = swfdec_shape_parser_parse_change (parser, bits1, &x1, &y1);
+	parser->fill0style2 = parser->fill0style;
+	parser->fill1style2 = parser->fill1style;
+	parser->linestyle2 = parser->linestyle;
+      } else {
+	path1 = swfdec_sub_path_create (parser->subpaths, x1, y1);
       }
-      g_array_set_size (start_path_array, start_path_array->len + 1);
-      path = &g_array_index (start_path_array, SubPath, start_path_array->len - 1);
-      if (start_path)
-	*path = *start_path;
-      start_path = path;
-      swfdec_path_init (&start_path->path);
-      start_path->x_start = start_x;
-      start_path->y_start = start_y;
-      end_path = swfdec_morph_shape_do_change (end_bits, start_path, morph, end_path_array, end_path, &end_x, &end_y);
+      if (type2 == SWFDEC_SHAPE_TYPE_CHANGE) {
+	path2 = swfdec_shape_parser_parse_morph_change (parser, bits2, &x2, &y2);
+      } else {
+	path2 = swfdec_sub_path_create (parser->subpaths2, x2, y2);
+      }
       continue;
     }
-    switch (start_type) {
-      case SWFDEC_SHAPE_TYPE_CHANGE:
-	start_path = swfdec_shape_parse_change (s, shape, start_path_array, start_path, &start_x, &start_y, 
-	    swfdec_pattern_parse_morph, swfdec_stroke_parse_morph);
-	end_path = swfdec_morph_shape_do_change (end_bits, start_path, morph, end_path_array, end_path, &end_x, &end_y);
-	break;
+    switch (type2) {
       case SWFDEC_SHAPE_TYPE_LINE:
-	if (end_type == SWFDEC_SHAPE_TYPE_LINE) {
-	  swfdec_shape_parse_line (start_bits, start_path, &start_x, &start_y, FALSE);
-	  swfdec_shape_parse_line (end_bits, end_path, &end_x, &end_y, FALSE);
-	} else if (end_type == SWFDEC_SHAPE_TYPE_CURVE) {
-	  swfdec_shape_parse_line (start_bits, start_path, &start_x, &start_y, TRUE);
-	  swfdec_shape_parse_curve (end_bits, end_path, &end_x, &end_y);
-	} else {
-	  SWFDEC_ERROR ("edge type didn't match, wanted line or curve, but got %s",
-	      end_type ? "change" : "end");
-	  goto error;
-	}
+	swfdec_shape_parser_parse_line (bits2, path2, &x2, &y2, type1 != SWFDEC_SHAPE_TYPE_LINE);
 	break;
       case SWFDEC_SHAPE_TYPE_CURVE:
-	swfdec_shape_parse_curve (start_bits, start_path, &start_x, &start_y);
-	if (end_type == SWFDEC_SHAPE_TYPE_LINE) {
-	  swfdec_shape_parse_line (end_bits, end_path, &end_x, &end_y, TRUE);
-	} else if (end_type == SWFDEC_SHAPE_TYPE_CURVE) {
-	  swfdec_shape_parse_curve (end_bits, end_path, &end_x, &end_y);
-	} else {
-	  SWFDEC_ERROR ("edge type didn't match, wanted line or curve, but got %s",
-	      end_type ? "change" : "end");
-	  goto error;
-	}
+	swfdec_shape_parser_parse_curve (bits2, path2, &x2, &y2);
 	break;
+      case SWFDEC_SHAPE_TYPE_END:
+	SWFDEC_ERROR ("morph shape ends too early, aborting");
+	goto out;
+      case SWFDEC_SHAPE_TYPE_CHANGE:
+      default:
+	g_assert_not_reached ();
+	break;
+    }
+    switch (type1) {
+      case SWFDEC_SHAPE_TYPE_LINE:
+	swfdec_shape_parser_parse_line (bits1, path1, &x1, &y1, type2 != SWFDEC_SHAPE_TYPE_LINE);
+	break;
+      case SWFDEC_SHAPE_TYPE_CURVE:
+	swfdec_shape_parser_parse_curve (bits1, path1, &x1, &y1);
+	break;
+      case SWFDEC_SHAPE_TYPE_CHANGE:
       case SWFDEC_SHAPE_TYPE_END:
       default:
 	g_assert_not_reached ();
 	break;
     }
   }
-  if (start_path) {
-    start_path->x_end = start_x;
-    start_path->y_end = start_y;
-  }
-  if (end_path) {
-    end_path->x_end = end_x;
-    end_path->y_end = end_y;
-  }
-  swfdec_bits_getbits (start_bits, 6);
-  swfdec_bits_syncbits (start_bits);
-  if (swfdec_bits_getbits (end_bits, 6) != 0) {
+out:
+  swfdec_shape_parser_end_path (parser, path1, path2, x1, y1, x2, y2);
+  swfdec_bits_getbits (bits1, 6);
+  swfdec_bits_syncbits (bits1);
+  if (swfdec_bits_getbits (bits2, 6) != 0) {
     SWFDEC_ERROR ("end shapes are not finished when start shapes are");
   }
-  swfdec_bits_syncbits (end_bits);
+  swfdec_bits_syncbits (bits2);
 
-error:
-  /* FIXME: there's probably a problem if start and end paths get accumulated in 
-   * different ways, this could lead to the morphs not looking like they should. 
-   * Need a good testcase for this first though.
-   * FIXME: Also, due to error handling, there needs to be syncing of code paths
-   */
-  tmp = shape->vecs;
-  shape->vecs = morph->end_vecs;
-  swfdec_shape_initialize_from_sub_paths (shape, end_path_array);
-  morph->end_vecs = shape->vecs;
-  shape->vecs = tmp;
-  swfdec_shape_initialize_from_sub_paths (shape, start_path_array);
-  g_assert (morph->end_vecs->len == shape->vecs->len);
+  swfdec_shape_parser_finish (parser);
 }
-#endif
 
-#if 0
-  SwfdecBits end_bits;
-  SwfdecBits *bits = &s->b;
-  SwfdecMorphShape *morph;
-  guint offset;
-  int id;
-  id = swfdec_bits_get_u16 (bits);
-
-  morph = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_MORPH_SHAPE);
-  if (!morph)
-    return SWFDEC_STATUS_OK;
-
-  SWFDEC_INFO ("id=%d", id);
-
-  swfdec_bits_get_rect (bits, &SWFDEC_GRAPHIC (morph)->extents);
-  swfdec_bits_get_rect (bits, &morph->end_extents);
-  offset = swfdec_bits_get_u32 (bits);
-  end_bits = *bits;
-  if (swfdec_bits_skip_bytes (&end_bits, offset) != offset) {
-    SWFDEC_ERROR ("wrong offset in DefineMorphShape");
-    return SWFDEC_STATUS_OK;
-  }
-  bits->end = end_bits.ptr;
-
-  swfdec_shape_add_styles (s, SWFDEC_SHAPE (morph),
-      swfdec_pattern_parse_morph, swfdec_stroke_parse_morph);
-
-  morph->n_fill_bits = swfdec_bits_getbits (&end_bits, 4);
-  morph->n_line_bits = swfdec_bits_getbits (&end_bits, 4);
-  SWFDEC_LOG ("%u fill bits, %u line bits in end shape", morph->n_fill_bits, morph->n_line_bits);
-
-  swfdec_morph_shape_get_recs (s, morph, &end_bits);
-  if (swfdec_bits_left (&s->b)) {
-    SWFDEC_WARNING ("early finish when parsing start shapes: %u bytes",
-        swfdec_bits_left (&s->b));
-  }
-
-  s->b = end_bits;
-
-  return SWFDEC_STATUS_OK;
-}
-#endif

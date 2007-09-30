@@ -463,9 +463,8 @@ swfdec_action_get_movie_by_slash_path (SwfdecAsContext *cx, const char *path)
 }
 
 static SwfdecAsObject *
-swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *end)
+swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char *path, const char *end)
 {
-  SwfdecAsObject *o = NULL;
   gboolean dot_allowed = TRUE;
   const char *start;
 
@@ -535,6 +534,22 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, const char *path, const char *
   return o;
 }
 
+/* FIXME: this function belongs into swfdec_movie.c */
+SwfdecMovie *
+swfdec_movie_get_by_path (SwfdecMovie *movie, const char *path)
+{
+  SwfdecAsObject *o;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+  g_return_val_if_fail (path != NULL, NULL);
+  
+  o = SWFDEC_AS_OBJECT (movie);
+  o = swfdec_action_lookup_object (o->context, o, path, path + strlen (path));
+  if (!SWFDEC_IS_MOVIE (o))
+    return NULL;
+  return SWFDEC_MOVIE (o);
+}
+
 /**
  * swfdec_action_get_movie_by_path:
  * @cx: a #SwfdecAsContext
@@ -587,7 +602,7 @@ swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path,
   /* variable to use is the part after the last dot or colon */
   *variable = end + 1;
   /* look up object for start of path */
-  movie = swfdec_action_lookup_object (cx, path, end);
+  movie = swfdec_action_lookup_object (cx, NULL, path, end);
   if (movie) {
     *object = movie;
     return TRUE;
@@ -1520,10 +1535,10 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
 static void
 swfdec_action_do_set_target (SwfdecAsContext *cx, const char *target, const char *end)
 {
-  if (target == end) {
-    swfdec_as_frame_set_target (cx->frame, NULL);
-  } else {
-    SwfdecAsObject *o = swfdec_action_lookup_object (cx, target, end);
+  swfdec_as_frame_set_target (cx->frame, NULL);
+
+  if (target != end) {
+    SwfdecAsObject *o = swfdec_action_lookup_object (cx, NULL, target, end);
     if (o == NULL) {
       SWFDEC_WARNING ("target \"%s\" is not an object", target);
     } else if (!SWFDEC_IS_MOVIE (o)) {

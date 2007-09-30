@@ -244,6 +244,7 @@ swfdec_path_merge (cairo_path_t *dest, const cairo_path_t *start,
 
   swfdec_path_reset (dest);
   swfdec_path_ensure_size (dest, start->num_data);
+  dest->num_data = start->num_data;
   ddata = dest->data;
   sdata = start->data;
   edata = end->data;

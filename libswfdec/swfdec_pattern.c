@@ -268,7 +268,7 @@ swfdec_gradient_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio
   SwfdecGradientPattern *dpattern = SWFDEC_GRADIENT_PATTERN (dest);
   SwfdecGradientPattern *spattern = SWFDEC_GRADIENT_PATTERN (source);
 
-  g_return_if_fail (dpattern->end_gradient == NULL);
+  g_return_if_fail (spattern->end_gradient == NULL);
   dpattern->gradient = swfdec_gradient_morph (spattern->gradient, 
       spattern->end_gradient, ratio);
   dpattern->radial = spattern->radial;

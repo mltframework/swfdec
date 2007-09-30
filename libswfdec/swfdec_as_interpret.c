@@ -1582,7 +1582,7 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
   if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 1)) &&
       SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 1)))) {
-    swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), movie, center, &rect);
+    swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), movie, center, rectp);
   } else {
     SWFDEC_ERROR ("startDrag on something not a Movie");
   }

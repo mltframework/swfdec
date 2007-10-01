@@ -193,8 +193,8 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->sound = frame->sound_head;
   stream->playback_skip = frame->sound_skip;
   stream->current_frame = start_frame;
-  stream->decoder = swfdec_audio_decoder_new (stream->sound->format, 
-      stream->sound->original_format);
+  stream->decoder = swfdec_audio_decoder_new (stream->sound->codec, 
+      stream->sound->format);
   swfdec_audio_add (SWFDEC_AUDIO (stream), player);
 
   return SWFDEC_AUDIO (stream);

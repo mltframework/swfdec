@@ -67,11 +67,11 @@ get_audio_format_name (SwfdecAudioCodec codec)
 static void
 dump_sound (SwfdecSound *sound)
 {
-  g_print ("  codec: %s\n", get_audio_format_name (sound->format));
+  g_print ("  codec: %s\n", get_audio_format_name (sound->codec));
   if (verbose) {
-    g_print ("  format: %s\n", swfdec_audio_format_to_string (sound->original_format));
+    g_print ("  format: %s\n", swfdec_audio_format_to_string (sound->format));
     g_print ("  samples: %u (%gs)\n", sound->n_samples, 
-	(double) sound->n_samples / swfdec_audio_format_get_rate (sound->original_format));
+	(double) sound->n_samples / swfdec_audio_format_get_rate (sound->format));
   }
 }
 
@@ -97,8 +97,8 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	}
 	if (sound)
 	  g_print ("   %4u -%4u  sound: %s %s\n", i, j, 
-	      get_audio_format_name (sound->format),
-	      swfdec_audio_format_to_string (sound->original_format));
+	      get_audio_format_name (sound->codec),
+	      swfdec_audio_format_to_string (sound->format));
       }
     }
 

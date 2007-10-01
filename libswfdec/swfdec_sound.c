@@ -89,7 +89,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
   }
 
   n_samples = swfdec_bits_get_u16 (&s->b);
-  if (sound->format == SWFDEC_AUDIO_CODEC_MP3) {
+  if (sound->codec == SWFDEC_AUDIO_CODEC_MP3) {
     skip = swfdec_bits_get_s16 (&s->b);
   } else {
     skip = 0;
@@ -129,19 +129,19 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
   if (!sound)
     return SWFDEC_STATUS_OK;
 
-  sound->format = swfdec_bits_getbits (b, 4);
-  SWFDEC_LOG ("  codec: %u", sound->format);
-  sound->original_format = swfdec_audio_format_parse (b);
-  SWFDEC_LOG ("  format: %s", swfdec_audio_format_to_string (sound->original_format));
+  sound->codec = swfdec_bits_getbits (b, 4);
+  SWFDEC_LOG ("  codec: %u", sound->codec);
+  sound->format = swfdec_audio_format_parse (b);
+  SWFDEC_LOG ("  format: %s", swfdec_audio_format_to_string (sound->format));
   n_samples = swfdec_bits_get_u32 (b);
   sound->n_samples = n_samples;
 
-  switch (sound->format) {
+  switch (sound->codec) {
     case 0:
-      if (swfdec_audio_format_is_16bit (sound->original_format))
+      if (swfdec_audio_format_is_16bit (sound->format))
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
-      sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
+      sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       /* fall through */
     case 3:
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
@@ -156,9 +156,9 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     default:
-      SWFDEC_WARNING ("unknown format %d", sound->format);
+      SWFDEC_WARNING ("unknown codec %d", sound->codec);
   }
-  sound->n_samples *= swfdec_audio_format_get_granularity (sound->original_format);
+  sound->n_samples *= swfdec_audio_format_get_granularity (sound->format);
 
   return SWFDEC_STATUS_OK;
 }
@@ -182,7 +182,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   if (sound->encoded == NULL)
     return NULL;
 
-  decoder = swfdec_audio_decoder_new (sound->format, sound->original_format);
+  decoder = swfdec_audio_decoder_new (sound->codec, sound->format);
   if (decoder == NULL)
     return NULL;
   sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
@@ -249,20 +249,20 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
   SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback));
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
-  sound->format = swfdec_bits_getbits (b, 4);
-  sound->original_format = swfdec_audio_format_parse (b);
+  sound->codec = swfdec_bits_getbits (b, 4);
+  sound->format = swfdec_audio_format_parse (b);
   n_samples = swfdec_bits_get_u16 (b);
 
   if (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head)
     g_object_unref (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
-  switch (sound->format) {
+  switch (sound->codec) {
     case 0:
-      if (swfdec_audio_format_is_16bit (sound->original_format)) {
+      if (swfdec_audio_format_is_16bit (sound->format)) {
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
 	/* just assume LE and hope it works (FIXME: want a switch for this?) */
-	sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
+	sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       }
       break;
     case 2:
@@ -274,7 +274,7 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
     case 6:
       break;
     default:
-      SWFDEC_WARNING ("unknown format %d", sound->format);
+      SWFDEC_WARNING ("unknown codec %d", sound->codec);
   }
 
   return SWFDEC_STATUS_OK;

@@ -208,3 +208,120 @@ swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest,
   }
 }
 
+/*** SWFDEC_AUDIO_FORMAT ***/
+
+/* SwfdecAudioFormat is represented in the least significant bits of a uint:
+ * - the LSBit is 1 if it's 16bit audio, 0 for 8bit
+ * - the next bit is 1 for stereo, 0 for mono
+ * - the other two bits are for the rate, see swfdec_audio_format_new()
+ * This is the same format the Flash file format uses to store audio formats.
+ */
+
+SwfdecAudioFormat
+swfdec_audio_format_parse (SwfdecBits *bits)
+{
+  g_return_val_if_fail (bits != NULL, 0);
+
+  return swfdec_bits_getbits (bits, 4);
+}
+
+SwfdecAudioFormat
+swfdec_audio_format_new (guint rate, guint channels, gboolean is_16bit)
+{
+  SwfdecAudioFormat ret;
+
+  g_return_val_if_fail (channels == 1 || channels == 2, 0);
+
+  switch (rate) {
+    case 44100:
+      ret = 3 << 2; 
+      break;
+    case 22050:
+      ret = 2 << 2; 
+      break;
+    case 11025:
+      ret = 1 << 2; 
+    case 5512:
+      break;
+      ret = 0 << 2; 
+      break;
+    default:
+      g_return_val_if_reached (0);
+      break;
+  }
+  if (channels == 2)
+    ret |= 2;
+  if (is_16bit)
+    ret |= 1;
+
+  return ret;
+}
+
+guint
+swfdec_audio_format_get_channels (SwfdecAudioFormat	format)
+{
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 2);
+
+  return format & 0x2 ? 2 : 1;
+}
+
+gboolean
+swfdec_audio_format_is_16bit (SwfdecAudioFormat	format)
+{
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), TRUE);
+
+  return format & 0x1 ? TRUE : FALSE;
+}
+
+guint
+swfdec_audio_format_get_rate (SwfdecAudioFormat	format)
+{
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 44100);
+
+  return 44100 / swfdec_audio_format_get_granularity (format);
+}
+
+/**
+ * swfdec_audio_format_get_granularity:
+ * @format: an auio format
+ *
+ * The granularity is a Swfdec-specific name, describing how often a sample in
+ * a 44100Hz audio stream is defined. So for example 44100Hz has a granularity 
+ * of 1 and 11025Hz has a granularity of 2 (because only every fourth sample 
+ * is defined).
+ *
+ * Returns: the granularity of the format
+ **/
+guint
+swfdec_audio_format_get_granularity (SwfdecAudioFormat format)
+{
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 44100);
+
+  return 4 - (format >> 2);
+}
+
+const char *
+swfdec_audio_format_to_string (SwfdecAudioFormat format)
+{
+  static const char *names[] = {
+    "8bit 5.5kHz mono"
+    "16bit 5.5kHz mono"
+    "8bit 5.5kHz stereo"
+    "16bit 5.5kHz stereo"
+    "8bit 11kHz mono"
+    "16bit 11kHz mono"
+    "8bit 11kHz stereo"
+    "16bit 11kHz stereo"
+    "8bit 22kHz mono"
+    "16bit 22kHz mono"
+    "8bit 22kHz stereo"
+    "16bit 22kHz stereo"
+    "8bit 44kHz mono"
+    "16bit 44kHz mono"
+    "8bit 44kHz stereo"
+    "16bit 44kHz stereo"
+  };
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), "");
+
+  return names[format];
+}

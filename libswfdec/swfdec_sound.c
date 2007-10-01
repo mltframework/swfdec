@@ -121,58 +121,44 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   int id;
-  int format;
-  int rate;
-  int size;
-  int type;
   int n_samples;
   SwfdecSound *sound;
 
   id = swfdec_bits_get_u16 (b);
-  format = swfdec_bits_getbits (b, 4);
-  rate = swfdec_bits_getbits (b, 2);
-  size = swfdec_bits_getbits (b, 1);
-  type = swfdec_bits_getbits (b, 1);
-  n_samples = swfdec_bits_get_u32 (b);
-
   sound = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SOUND);
   if (!sound)
     return SWFDEC_STATUS_OK;
 
-  sound->width = size;
-  rate = 1 << (3 - rate);
-  sound->original_format = SWFDEC_AUDIO_FORMAT_GET (type ? 2 : 1, 44100 / rate);
+  sound->format = swfdec_bits_getbits (b, 4);
+  SWFDEC_LOG ("  codec: %u", sound->format);
+  sound->original_format = swfdec_audio_format_parse (b);
+  SWFDEC_LOG ("  format: %s", swfdec_audio_format_to_string (sound->original_format));
+  n_samples = swfdec_bits_get_u32 (b);
   sound->n_samples = n_samples;
-  SWFDEC_DEBUG ("%u samples, %sLE, %uch, %ukHz", n_samples,
-      size ? "S16" : "U8", SWFDEC_AUDIO_FORMAT_N_CHANNELS (sound->original_format),
-      SWFDEC_AUDIO_FORMAT_RATE (sound->original_format));
 
-  switch (format) {
+  switch (sound->format) {
     case 0:
-      if (size == 1)
+      if (swfdec_audio_format_is_16bit (sound->original_format))
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
+      sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       /* fall through */
     case 3:
-      sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 2:
-      sound->format = SWFDEC_AUDIO_CODEC_MP3;
       sound->skip = swfdec_bits_get_u16 (b);
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
     case 5:
     case 6:
-      sound->format = format;
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     default:
-      SWFDEC_WARNING ("unknown format %d", format);
-      sound->format = format;
+      SWFDEC_WARNING ("unknown format %d", sound->format);
   }
-  sound->n_samples *= rate;
+  sound->n_samples *= swfdec_audio_format_get_granularity (sound->original_format);
 
   return SWFDEC_STATUS_OK;
 }
@@ -196,11 +182,11 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   if (sound->encoded == NULL)
     return NULL;
 
-  decoder = swfdec_audio_decoder_new (sound->format, sound->width, sound->original_format);
+  decoder = swfdec_audio_decoder_new (sound->format, sound->original_format);
   if (decoder == NULL)
     return NULL;
   sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
-  sample_bytes = 2 * SWFDEC_AUDIO_FORMAT_N_CHANNELS (sound->decoded_format);
+  sample_bytes = 2 * swfdec_audio_format_get_channels (sound->decoded_format);
   /* FIXME: The size is only a guess */
   swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
 
@@ -222,21 +208,21 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
     tmp = tmp2;
   }
   /* sound buffer may be bigger due to mp3 not having sample boundaries */
-  if (tmp->length * SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format) 
+  if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
       > sound->n_samples * sample_bytes) {
     SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, 
-	sound->n_samples * sample_bytes / SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format));
+	sound->n_samples * sample_bytes / swfdec_audio_format_get_granularity (sound->decoded_format));
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
   }
-  if (tmp->length * SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format) 
+  if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
       < sound->n_samples * sample_bytes) {
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
      * It's probably not worth more than INFO for the usual case though */
     SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	sound->n_samples / SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format), 
-	sound->n_samples * sample_bytes / SWFDEC_AUDIO_FORMAT_GRANULARITY (sound->decoded_format), 
+	sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format), 
+	sound->n_samples * sample_bytes / swfdec_audio_format_get_granularity (sound->decoded_format), 
 	tmp->length);
   }
   /* only assign here, the decoding code checks this variable */
@@ -250,55 +236,45 @@ int
 tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
-  int format;
-  int rate;
-  int size;
-  int type;
+  SwfdecAudioFormat playback;
   int n_samples;
   int latency;
   SwfdecSound *sound;
 
   /* we don't care about playback suggestions */
-  swfdec_bits_getbits (b, 8);
-
-  format = swfdec_bits_getbits (b, 4);
-  rate = swfdec_bits_getbits (b, 2);
-  size = swfdec_bits_getbits (b, 1);
-  type = swfdec_bits_getbits (b, 1);
-  n_samples = swfdec_bits_get_u16 (b);
+  if (swfdec_bits_getbits (b, 4)) {
+    SWFDEC_ERROR ("0 bits aren't 0");
+  }
+  playback = swfdec_audio_format_parse (b);
+  SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback));
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
+  sound->format = swfdec_bits_getbits (b, 4);
+  sound->original_format = swfdec_audio_format_parse (b);
+  n_samples = swfdec_bits_get_u16 (b);
 
   if (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head)
     g_object_unref (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
-  sound->width = size;
-  sound->original_format = SWFDEC_AUDIO_FORMAT_GET (type ? 2 : 1, 44100 / (1 << (3 - rate)));
-
-  switch (format) {
+  switch (sound->format) {
     case 0:
-      if (size == 1)
+      if (swfdec_audio_format_is_16bit (sound->original_format)) {
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
-      /* just assume LE and hope it works (FIXME: want a switch for this?) */
-      /* fall through */
-    case 3:
-      sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
-      break;
-    case 1:
-      sound->format = SWFDEC_AUDIO_CODEC_ADPCM;
+	/* just assume LE and hope it works (FIXME: want a switch for this?) */
+	sound->format = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
+      }
       break;
     case 2:
-      sound->format = SWFDEC_AUDIO_CODEC_MP3;
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
+    case 1:
+    case 3:
     case 6:
-      sound->format = SWFDEC_AUDIO_CODEC_NELLYMOSER;
       break;
     default:
-      SWFDEC_WARNING ("unknown format %d", format);
-      sound->format = format;
+      SWFDEC_WARNING ("unknown format %d", sound->format);
   }
 
   return SWFDEC_STATUS_OK;
@@ -463,10 +439,10 @@ guint
 swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioFormat format)
 {
   g_return_val_if_fail (buffer != NULL, 0);
-  g_return_val_if_fail (buffer->length % (2 * SWFDEC_AUDIO_FORMAT_N_CHANNELS (format)) == 0, 0);
+  g_return_val_if_fail (buffer->length % (2 * swfdec_audio_format_get_channels (format)) == 0, 0);
 
-  return buffer->length / (2 * SWFDEC_AUDIO_FORMAT_N_CHANNELS (format)) *
-    SWFDEC_AUDIO_FORMAT_GRANULARITY (format);
+  return buffer->length / (2 * swfdec_audio_format_get_channels (format)) *
+    swfdec_audio_format_get_granularity (format);
 }
 
 /**
@@ -490,8 +466,8 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
     guint offset, guint n_samples)
 {
   guint i, j;
-  guint channels = SWFDEC_AUDIO_FORMAT_N_CHANNELS (format);
-  guint rate = SWFDEC_AUDIO_FORMAT_GRANULARITY (format);
+  guint channels = swfdec_audio_format_get_channels (format);
+  guint rate = swfdec_audio_format_get_granularity (format);
   gint16 *src, *end;
 
   g_return_if_fail (dest != NULL);

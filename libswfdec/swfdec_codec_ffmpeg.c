@@ -170,7 +170,7 @@ swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_ffmpeg_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioFormat format)
+swfdec_audio_decoder_ffmpeg_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderFFMpeg *ffmpeg;
   AVCodecContext *ctx;
@@ -192,12 +192,12 @@ swfdec_audio_decoder_ffmpeg_new (SwfdecAudioCodec type, gboolean width, SwfdecAu
   ffmpeg = g_slice_new (SwfdecAudioDecoderFFMpeg);
   ffmpeg->ctx = ctx;
   ffmpeg->queue = swfdec_buffer_queue_new ();
-  ffmpeg->decoder.out_format = SWFDEC_AUDIO_FORMAT_STEREO_44100;
+  ffmpeg->decoder.format = swfdec_audio_format_new (44100, 2, TRUE);
   ffmpeg->decoder.pull = swfdec_audio_decoder_ffmpeg_pull;
   ffmpeg->decoder.push = swfdec_audio_decoder_ffmpeg_push;
   ffmpeg->decoder.free = swfdec_audio_decoder_ffmpeg_free;
-  ctx->sample_rate = SWFDEC_AUDIO_FORMAT_RATE (format);
-  ctx->channels = SWFDEC_AUDIO_FORMAT_N_CHANNELS (format);
+  ctx->sample_rate = swfdec_audio_format_get_rate (format);
+  ctx->channels = swfdec_audio_format_get_channels (format);
 
   return &ffmpeg->decoder;
 }

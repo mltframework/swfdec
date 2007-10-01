@@ -101,7 +101,7 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;
   sprite->frames[frame].sound_samples = n_samples *
-    SWFDEC_AUDIO_FORMAT_GRANULARITY (sprite->frames[frame].sound_head->original_format);
+    swfdec_audio_format_get_granularity (sprite->frames[frame].sound_head->original_format);
 }
 
 void

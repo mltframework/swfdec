@@ -38,17 +38,16 @@ typedef enum {
 typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (SwfdecAudioCodec type, gboolean width,
     SwfdecAudioFormat format);
 struct _SwfdecAudioDecoder {
-  SwfdecAudioCodec	format;
-  SwfdecAudioFormat	out_format;
+  SwfdecAudioCodec	codec;
+  SwfdecAudioFormat	format;
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
   SwfdecBuffer *	(* pull)	(SwfdecAudioDecoder *	decoder);
   void		  	(* free)	(SwfdecAudioDecoder *	decoder);
 };
 
-SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioCodec	format,
-							 gboolean		width,
-							 SwfdecAudioFormat		data_format);
+SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioCodec	codec,
+							 SwfdecAudioFormat	format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
 SwfdecAudioFormat		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,

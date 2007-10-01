@@ -69,12 +69,9 @@ dump_sound (SwfdecSound *sound)
 {
   g_print ("  codec: %s\n", get_audio_format_name (sound->format));
   if (verbose) {
-    g_print ("  format: %uHz, %s, %ubit\n", 
-	SWFDEC_AUDIO_FORMAT_RATE (sound->original_format),
-	SWFDEC_AUDIO_FORMAT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
-	sound->width ? 16 : 8);
+    g_print ("  format: %s\n", swfdec_audio_format_to_string (sound->original_format));
     g_print ("  samples: %u (%gs)\n", sound->n_samples, 
-	(double) sound->n_samples / SWFDEC_AUDIO_FORMAT_RATE (sound->original_format));
+	(double) sound->n_samples / swfdec_audio_format_get_rate (sound->original_format));
   }
 }
 
@@ -99,11 +96,9 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	    break;
 	}
 	if (sound)
-	  g_print ("   %4u -%4u  sound: %s %uHz, %s, %ubit\n", i, j, 
+	  g_print ("   %4u -%4u  sound: %s %s\n", i, j, 
 	      get_audio_format_name (sound->format),
-	      SWFDEC_AUDIO_FORMAT_RATE (sound->original_format),
-	      SWFDEC_AUDIO_FORMAT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
-	      sound->width ? 16 : 8);
+	      swfdec_audio_format_to_string (sound->original_format));
       }
     }
 

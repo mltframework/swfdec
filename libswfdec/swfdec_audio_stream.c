@@ -134,7 +134,7 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   buffer = g_queue_peek_head (stream->playback_queue);
   while (buffer && stream->playback_skip >= 
 	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (stream->decoder)) 
-	 + SWFDEC_AUDIO_FORMAT_GRANULARITY (swfdec_audio_decoder_get_format (stream->decoder))) {
+	 + swfdec_audio_format_get_granularity (swfdec_audio_decoder_get_format (stream->decoder))) {
     buffer = g_queue_pop_head (stream->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
 	swfdec_sound_buffer_get_n_samples (buffer, 
@@ -194,7 +194,7 @@ swfdec_audio_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite, guint start
   stream->playback_skip = frame->sound_skip;
   stream->current_frame = start_frame;
   stream->decoder = swfdec_audio_decoder_new (stream->sound->format, 
-      stream->sound->width, stream->sound->original_format);
+      stream->sound->original_format);
   swfdec_audio_add (SWFDEC_AUDIO (stream), player);
 
   return SWFDEC_AUDIO (stream);

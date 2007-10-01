@@ -198,7 +198,7 @@ swfdec_audio_decoder_gst_handle_bus (GstBus *bus, GstMessage *message, gpointer 
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_gst_new (SwfdecAudioCodec type, gboolean width, SwfdecAudioFormat format)
+swfdec_audio_decoder_gst_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
 {
   SwfdecGstAudio *player;
   GstElement *fakesrc, *fakesink, *decoder, *convert;
@@ -218,7 +218,7 @@ swfdec_audio_decoder_gst_new (SwfdecAudioCodec type, gboolean width, SwfdecAudio
   g_assert (caps);
 
   player = g_slice_new0 (SwfdecGstAudio);
-  player->decoder.out_format = SWFDEC_AUDIO_FORMAT_STEREO_44100;
+  player->decoder.format = swfdec_audio_format_new (44100, 2, TRUE);
   player->decoder.pull = swfdec_audio_decoder_gst_pull;
   player->decoder.push = swfdec_audio_decoder_gst_push;
   player->decoder.free = swfdec_audio_decoder_gst_free;

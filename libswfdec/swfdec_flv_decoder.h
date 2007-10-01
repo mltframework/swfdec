@@ -68,8 +68,7 @@ gboolean	swfdec_flv_decoder_get_video_info     	(SwfdecFlvDecoder *	flv,
 							 guint *		last_timestamp);
 SwfdecBuffer *	swfdec_flv_decoder_get_audio		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,
-							 SwfdecAudioCodec *	codec_format,
-							 gboolean *		width,
+							 SwfdecAudioCodec *	codec,
 							 SwfdecAudioFormat *	format,
 							 guint *		real_timestamp,
 							 guint *		next_timestamp);

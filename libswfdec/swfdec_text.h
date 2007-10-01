@@ -30,7 +30,6 @@ G_BEGIN_DECLS
 typedef struct _SwfdecTextClass SwfdecTextClass;
 
 typedef struct _SwfdecTextGlyph SwfdecTextGlyph;
-typedef struct _SwfdecTextChunk SwfdecTextChunk;
 
 #define SWFDEC_TYPE_TEXT                    (swfdec_text_get_type())
 #define SWFDEC_IS_TEXT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEXT))

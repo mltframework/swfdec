@@ -87,6 +87,7 @@ IGNORE_HFILES= \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
+	swfdec_draw.h \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \
 	swfdec_enums.h \
@@ -110,6 +111,7 @@ IGNORE_HFILES= \
 	swfdec_movie.h \
 	swfdec_net_connection.h \
 	swfdec_net_stream.h \
+	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
@@ -120,6 +122,7 @@ IGNORE_HFILES= \
 	swfdec_script_internal.h \
 	swfdec_scriptable.h \
 	swfdec_shape.h \
+	swfdec_shape_parser.h \
 	swfdec_sound.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \

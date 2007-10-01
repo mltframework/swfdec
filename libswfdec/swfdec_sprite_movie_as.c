@@ -409,10 +409,22 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (swfdec_rect_is_empty (&movie->extents)) {
     x0 = x1 = y0 = y1 = 0x7FFFFFF;
   } else {
-    x0 = movie->extents.x0;
-    y0 = movie->extents.y0;
-    x1 = movie->extents.x1;
-    y1 = movie->extents.y1;
+    SwfdecRect rect = movie->extents;
+    if (argc > 0) {
+      const char *s = swfdec_as_value_to_string (cx, &argv[0]);
+      SwfdecMovie *other = swfdec_movie_get_by_path (movie, s);
+      if (other) {
+	if (movie->parent)
+	  swfdec_movie_rect_local_to_global (movie->parent, &rect);
+	swfdec_movie_rect_global_to_local (other, &rect);
+      } else {
+	SWFDEC_FIXME ("what's getBounds relative to invalid?");
+      }
+    }
+    x0 = rect.x0;
+    y0 = rect.y0;
+    x1 = rect.x1;
+    y1 = rect.y1;
   }
   SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (x0));
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_xMin, &val);

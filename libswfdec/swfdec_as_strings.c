@@ -383,6 +383,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("none")
   SWFDEC_AS_CONSTANT_STRING ("inline")
   SWFDEC_AS_CONSTANT_STRING ("block")
+  SWFDEC_AS_CONSTANT_STRING ("TextField")
+  SWFDEC_AS_CONSTANT_STRING ("text")
   /* add more here */
 ;
 

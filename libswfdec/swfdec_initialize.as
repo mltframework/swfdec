@@ -270,13 +270,14 @@ MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
 MovieClip.prototype.startDrag = ASnative (900, 20);
 MovieClip.prototype.stopDrag = ASnative (900, 21);
 MovieClip.prototype.createEmptyMovieClip = ASnative (901, 0);
+MovieClip.prototype.createTextField = ASnative (104, 200);
 ASSetPropFlags (MovieClip.prototype, "getDepth,createEmptyMovieClip", 128);
 
 ASSetPropFlags (MovieClip.prototype, null, 3);
 
 /* TextField */
 
-TextField = {};
+TextField = ASconstructor (104, 0);
 
 /* TextFormat */
 

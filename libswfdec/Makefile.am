@@ -62,6 +62,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_decoder.c \
 	swfdec_edittext.c \
 	swfdec_edittext_movie.c \
+	swfdec_edittext_movie_as.c \
 	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_file_loader.c \

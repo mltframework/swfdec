@@ -42,6 +42,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_edittext_movie.h" // for typeof
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,
@@ -2006,7 +2007,9 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
-	if (SWFDEC_IS_MOVIE (obj)) {
+	if (SWFDEC_IS_EDIT_TEXT_MOVIE (obj)) {
+	  type = SWFDEC_AS_STR_object;
+	} else if (SWFDEC_IS_MOVIE (obj)) {
 	  type = SWFDEC_AS_STR_movieclip;
 	} else if (SWFDEC_IS_AS_FUNCTION (obj)) {
 	  type = SWFDEC_AS_STR_function;

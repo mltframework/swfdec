@@ -2392,31 +2392,20 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  SwfdecAsObject *sprite;
-  SwfdecMovie *movie;
+  const char *s;
 
-  if (SWFDEC_AS_VALUE_IS_STRING (val)) {
-    const char *name = SWFDEC_AS_VALUE_GET_STRING (val);
-
-    swfdec_as_context_eval (cx, NULL, name, val);
-  }
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    sprite = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+    SWFDEC_FIXME ("target is not a movie in RemoveSprite");
   } else {
-    SWFDEC_FIXME ("unknown type in RemoveSprite");
-    goto fail;
+    SwfdecMovie *movie = swfdec_movie_get_by_path (SWFDEC_MOVIE (cx->frame->target), s);
+    if (movie && swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC) {
+      SWFDEC_LOG ("removing clip %s", movie->name);
+      swfdec_movie_remove (movie);
+    } else {
+      SWFDEC_INFO ("cannot remove \"%s\"", s);
+    }
   }
-  if (!SWFDEC_IS_MOVIE (sprite)) {
-    SWFDEC_FIXME ("cannot remove non movieclip objects");
-    goto fail;
-  }
-  movie = SWFDEC_MOVIE (sprite);
-  if (swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC) {
-    SWFDEC_LOG ("removing clip %s", movie->name);
-    swfdec_movie_remove (movie);
-  }
-fail:
   swfdec_as_stack_pop (cx);
 }
 

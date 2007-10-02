@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -118,6 +118,18 @@ swfdec_audio_event_create (SwfdecSound *sound, guint offset, guint n_loops)
   return event;
 }
 
+/**
+ * swfdec_audio_event_new:
+ * @player: the #SwfdecPlayer to play the sound in
+ * @sound: the sound to be played
+ * @offset: offset into sound at which to start playing
+ * @n_loops: number of times the sound should be played
+ *
+ * Starts playing back a sound from the given offset and loops the sound 
+ * @n_loops times.
+ *
+ * Returns: a new #SwfdecAudio
+ **/
 SwfdecAudio *
 swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSound *sound, guint	offset,
     guint n_loops)

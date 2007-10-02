@@ -536,18 +536,21 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
 
 /* FIXME: this function belongs into swfdec_movie.c */
 SwfdecMovie *
-swfdec_movie_get_by_path (SwfdecMovie *movie, const char *path)
+swfdec_player_get_movie_from_value (SwfdecPlayer *player, SwfdecAsValue *val)
 {
-  SwfdecAsObject *o;
+  SwfdecAsContext *cx;
+  const char *s;
+  SwfdecAsObject *ret;
 
-  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
-  g_return_val_if_fail (path != NULL, NULL);
-  
-  o = SWFDEC_AS_OBJECT (movie);
-  o = swfdec_action_lookup_object (o->context, o, path, path + strlen (path));
-  if (!SWFDEC_IS_MOVIE (o))
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (val != NULL, NULL);
+
+  cx = SWFDEC_AS_CONTEXT (player);
+  s = swfdec_as_value_to_string (cx, val);
+  ret = swfdec_action_lookup_object (cx, NULL, s, s + strlen (s));
+  if (!SWFDEC_IS_MOVIE (ret))
     return NULL;
-  return SWFDEC_MOVIE (o);
+  return SWFDEC_MOVIE (ret);
 }
 
 /**
@@ -2392,18 +2395,18 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  const char *s;
-
-  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
     SWFDEC_FIXME ("target is not a movie in RemoveSprite");
+  } else if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_INFO ("tried using RemoveSprite in a non-SwfdecPLayer context");
   } else {
-    SwfdecMovie *movie = swfdec_movie_get_by_path (SWFDEC_MOVIE (cx->frame->target), s);
+    SwfdecMovie *movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
+	swfdec_as_stack_peek (cx, 1));
     if (movie && swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC) {
       SWFDEC_LOG ("removing clip %s", movie->name);
       swfdec_movie_remove (movie);
     } else {
-      SWFDEC_INFO ("cannot remove \"%s\"", s);
+      SWFDEC_INFO ("cannot remove movie");
     }
   }
   swfdec_as_stack_pop (cx);

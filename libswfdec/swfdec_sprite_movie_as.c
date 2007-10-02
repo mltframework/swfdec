@@ -162,10 +162,8 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (argc == 1) {
     SwfdecMovie *other;
     SwfdecRect movie_rect, other_rect;
-    const char *s;
 
-    s = swfdec_as_value_to_string (cx, &argv[0]);
-    other = swfdec_movie_get_by_path (movie, s);
+    other = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), &argv[0]);
     if (other == NULL) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
       return;
@@ -411,8 +409,8 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *obj,
   } else {
     SwfdecRect rect = movie->extents;
     if (argc > 0) {
-      const char *s = swfdec_as_value_to_string (cx, &argv[0]);
-      SwfdecMovie *other = swfdec_movie_get_by_path (movie, s);
+      SwfdecMovie *other = swfdec_player_get_movie_from_value (
+	  SWFDEC_PLAYER (cx), &argv[0]);
       if (other) {
 	if (movie->parent)
 	  swfdec_movie_rect_local_to_global (movie->parent, &rect);

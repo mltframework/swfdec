@@ -209,6 +209,10 @@ void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
 void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);
+/* in swfdec_as_interpret.c */
+SwfdecMovie *	swfdec_player_get_movie_from_value 
+						(SwfdecPlayer *		player,
+						 SwfdecAsValue *	val);
 
 
 G_END_DECLS

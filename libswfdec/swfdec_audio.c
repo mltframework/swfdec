@@ -299,21 +299,21 @@ const char *
 swfdec_audio_format_to_string (SwfdecAudioFormat format)
 {
   static const char *names[] = {
-    "8bit 5.5kHz mono"
-    "16bit 5.5kHz mono"
-    "8bit 5.5kHz stereo"
-    "16bit 5.5kHz stereo"
-    "8bit 11kHz mono"
-    "16bit 11kHz mono"
-    "8bit 11kHz stereo"
-    "16bit 11kHz stereo"
-    "8bit 22kHz mono"
-    "16bit 22kHz mono"
-    "8bit 22kHz stereo"
-    "16bit 22kHz stereo"
-    "8bit 44kHz mono"
-    "16bit 44kHz mono"
-    "8bit 44kHz stereo"
+    "8bit 5.5kHz mono",
+    "16bit 5.5kHz mono",
+    "8bit 5.5kHz stereo",
+    "16bit 5.5kHz stereo",
+    "8bit 11kHz mono",
+    "16bit 11kHz mono",
+    "8bit 11kHz stereo",
+    "16bit 11kHz stereo",
+    "8bit 22kHz mono",
+    "16bit 22kHz mono",
+    "8bit 22kHz stereo",
+    "16bit 22kHz stereo",
+    "8bit 44kHz mono",
+    "16bit 44kHz mono",
+    "8bit 44kHz stereo",
     "16bit 44kHz stereo"
   };
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), "");

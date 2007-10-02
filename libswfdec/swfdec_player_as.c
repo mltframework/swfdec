@@ -124,6 +124,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
       return fun;
     }
   }
+  SWFDEC_WARNING ("no AsNative (%u, %u)", x, y);
   return NULL;
 }
 

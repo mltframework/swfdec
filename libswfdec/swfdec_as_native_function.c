@@ -308,7 +308,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
     *result = object;
   }
   for (i = 0; *args; i++, args++) {
-    if (!optional && i < argc && *args != '|')
+    if (!optional && i >= argc && *args != '|')
       break;
     switch (*args) {
       case 'v':

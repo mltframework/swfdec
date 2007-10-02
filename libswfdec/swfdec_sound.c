@@ -290,7 +290,7 @@ swfdec_sound_chunk_free (SwfdecSoundChunk *chunk)
 }
 
 SwfdecSoundChunk *
-swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
+swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
 {
   int has_envelope;
   int has_loops;
@@ -299,7 +299,6 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
   guint i, j;
   SwfdecSound *sound;
   SwfdecSoundChunk *chunk;
-  SwfdecBits *b = &s->b;
 
   sound = swfdec_swf_decoder_get_character (s, id);
   if (!SWFDEC_IS_SOUND (sound)) {
@@ -375,27 +374,6 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
 }
 
 int
-tag_func_start_sound (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecBits *b = &s->b;
-  SwfdecSoundChunk *chunk;
-  int id;
-  SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-
-  id = swfdec_bits_get_u16 (b);
-
-  chunk = swfdec_sound_parse_chunk (s, id);
-  if (chunk) {
-    /* append to keep order */
-    SWFDEC_DEBUG ("appending StartSound event for sound %u to frame %u", id,
-	s->parse_sprite->parse_frame);
-    frame->sound = g_slist_append (frame->sound, chunk);
-  }
-
-  return SWFDEC_STATUS_OK;
-}
-
-int
 tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
 {
   guint i;
@@ -418,7 +396,7 @@ tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
 	    SWFDEC_CHARACTER (button)->id, i);
 	swfdec_sound_chunk_free (button->sounds[i]);
       }
-      button->sounds[i] = swfdec_sound_parse_chunk (s, id);
+      button->sounds[i] = swfdec_sound_parse_chunk (s, &s->b, id);
     }
   }
 

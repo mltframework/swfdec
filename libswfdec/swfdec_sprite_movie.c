@@ -277,6 +277,22 @@ out:
   return TRUE;
 }
 
+static void
+swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
+{
+  SwfdecSoundChunk *chunk;
+  int id;
+
+  id = swfdec_bits_get_u16 (bits);
+  chunk = swfdec_sound_parse_chunk (SWFDEC_SWF_DECODER (movie->swf->decoder), bits, id);
+  if (chunk) {
+    SwfdecAudio *audio = swfdec_audio_event_new (SWFDEC_PLAYER (
+	  SWFDEC_AS_OBJECT (movie)->context), chunk);
+    if (audio)
+      g_object_unref (audio);
+  }
+}
+
 static gboolean
 swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, SwfdecBuffer *buffer,
     gboolean skip_scripts)
@@ -317,6 +333,9 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	if (!swfdec_sprite_movie_remove_child (mov, depth))
 	  SWFDEC_INFO ("could not remove, no child at depth %d", depth);
       }
+      return TRUE;
+    case SWFDEC_TAG_STARTSOUND:
+      swfdec_sprite_movie_start_sound (mov, &bits);
       return TRUE;
     case SWFDEC_TAG_SHOWFRAME:
       if (movie->frame < movie->n_frames) {
@@ -556,7 +575,6 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecSpriteFrame *last;
   SwfdecSpriteFrame *current;
-  GSList *walk;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
   if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
@@ -572,15 +590,6 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
     return TRUE;
   }
   current = &movie->sprite->frames[movie->frame - 1];
-  /* first start all event sounds */
-  /* FIXME: is this correct? */
-  if (movie->sound_frame != movie->frame) {
-    for (walk = current->sound; walk; walk = walk->next) {
-      SwfdecAudio *audio = swfdec_audio_event_new (player, walk->data);
-      if (audio)
-	g_object_unref (audio);
-    }
-  }
 
   /* then do the streaming thing */
   if (current->sound_head == NULL ||

@@ -661,7 +661,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
   [SWFDEC_TAG_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info, 0},
   [SWFDEC_TAG_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
-  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
+  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_enqueue, SPRITE},
   [SWFDEC_TAG_DEFINEBUTTONSOUND] =
       {"DefineButtonSound", tag_func_define_button_sound, 0},
   [SWFDEC_TAG_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SPRITE},

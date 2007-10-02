@@ -100,6 +100,7 @@ guint			swfdec_sound_buffer_get_n_samples (const SwfdecBuffer * buffer,
                                                          SwfdecAudioFormat		format);
 
 SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *	s,
+							 SwfdecBits *		bits,
 							 int			id);
 void			swfdec_sound_chunk_free		(SwfdecSoundChunk *	chunk);
 

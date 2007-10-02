@@ -382,6 +382,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case '|':
 	g_return_val_if_fail (optional == FALSE, FALSE);
 	optional = TRUE;
+	i--;
 	break;
       default:
 	g_warning ("'%c' is not a valid type conversion", *args);

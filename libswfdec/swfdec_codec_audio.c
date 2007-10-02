@@ -88,10 +88,10 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, SwfdecAudioFormat 
 {
   SwfdecAudioDecoderUncompressed *dec;
 
-  if (format != SWFDEC_AUDIO_CODEC_UNDEFINED &&
-      format != SWFDEC_AUDIO_CODEC_UNCOMPRESSED)
+  if (type != SWFDEC_AUDIO_CODEC_UNDEFINED &&
+      type != SWFDEC_AUDIO_CODEC_UNCOMPRESSED)
     return NULL;
-  if (format == SWFDEC_AUDIO_CODEC_UNDEFINED) {
+  if (type == SWFDEC_AUDIO_CODEC_UNDEFINED) {
     SWFDEC_WARNING ("endianness of audio unknown, assuming little endian");
   }
   dec = g_new (SwfdecAudioDecoderUncompressed, 1);

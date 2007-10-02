@@ -35,12 +35,11 @@ static guint
 swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
-  SwfdecSoundChunk *chunk = event->chunk;
 
   event->offset += remove;
-  if (event->offset >= chunk->stop_sample)
-    event->offset = chunk->stop_sample;
-  return chunk->stop_sample - event->offset;
+  if (event->offset >= event->stop_sample)
+    event->offset = event->stop_sample;
+  return event->stop_sample - event->offset;
 }
 
 static void
@@ -50,16 +49,20 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest,
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
 
-  if (offset >= event->chunk->stop_sample)
+  if (offset >= event->stop_sample)
     return;
-  //n_samples = MIN (n_samples, event->chunk->stop_sample - offset);
+  //n_samples = MIN (n_samples, event->stop_sample - offset);
   swfdec_sound_render (event->sound, dest, offset, n_samples);
 }
 
 static void
 swfdec_audio_event_dispose (GObject *object)
 {
-  //SwfdecAudioEvent *audio_event = SWFDEC_AUDIO_EVENT (object);
+  SwfdecAudioEvent *audio = SWFDEC_AUDIO_EVENT (object);
+
+  g_free (audio->envelope);
+  audio->envelope = NULL;
+  audio->n_envelopes = 0;
 
   G_OBJECT_CLASS (swfdec_audio_event_parent_class)->dispose (object);
 }
@@ -103,13 +106,12 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
 /**
  * swfdec_audio_event_new:
  * @player: a #SwfdecPlayer or NULL
- * @chunk: a sound chunk to start playing back
+ * @event: a sound event to start playing back
  *
- * Starts playback of the given sound chunk (or, when @player is NULL, creates
+ * Starts playback of the given sound event (or, when @player is NULL, creates
  * an element for playing back the given sound).
  *
- * Returns: the sound effect or NULL if no new sound was created. You don't
- *          own a reference to it.
+ * Returns: the sound effect or NULL if no new sound was created.
  **/
 SwfdecAudio *
 swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
@@ -131,16 +133,22 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
   if (chunk->no_restart &&
       (event = (SwfdecAudioEvent *) swfdec_audio_event_get (player, chunk->sound))) {
     SWFDEC_DEBUG ("sound %d is already playing, reusing it", 
-	SWFDEC_CHARACTER (chunk->sound)->id);
+	SWFDEC_CHARACTER (event->sound)->id);
     g_object_ref (event);
     return SWFDEC_AUDIO (event);
   }
   event = g_object_new (SWFDEC_TYPE_AUDIO_EVENT, NULL);
+  /* copy chunk data */
   event->sound = chunk->sound;
-  event->chunk = chunk;
-  event->offset = chunk->start_sample;
-  SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (chunk->sound)->id,
-      chunk->start_sample);
+  event->start_sample = chunk->start_sample;
+  event->start_sample = chunk->start_sample;
+  event->loop_count = chunk->loop_count;
+  event->n_envelopes = chunk->n_envelopes;
+  if (event->n_envelopes)
+    event->envelope = g_memdup (chunk->envelope, sizeof (SwfdecSoundEnvelope) * event->n_envelopes);
+  event->offset = event->start_sample;
+  SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (event->sound)->id,
+      event->start_sample);
   swfdec_audio_add (SWFDEC_AUDIO (event), player);
 
   return SWFDEC_AUDIO (event);

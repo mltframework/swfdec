@@ -41,9 +41,15 @@ struct _SwfdecAudioEvent
 {
   SwfdecAudio		audio;
 
-  SwfdecSound *		sound;	      	/* sound we're playing */
-  SwfdecSoundChunk *	chunk;		/* chunk we're playing back */
-  guint		offset;		/* current offset */
+  /* static data */
+  SwfdecSound *		sound;		      	/* sound we're playing */
+  guint			start_sample; 		/* sample at which to start playing */
+  guint			stop_sample;	      	/* first sample to not play anymore */
+  guint			loop_count;		/* amount of times this sample should be played back */
+  guint			n_envelopes;		/* amount of points in the envelope */
+  SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
+  /* dynamic data */
+  guint			offset;			/* current offset */
 };
 
 struct _SwfdecAudioEventClass

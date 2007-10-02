@@ -113,6 +113,7 @@ swfdec_audio_event_create (SwfdecSound *sound, guint offset, guint n_loops)
   event->start_sample = offset;
   event->offset = offset;
   event->loop_count = n_loops;
+  event->stop_sample = sound->n_samples;
 
   return event;
 }

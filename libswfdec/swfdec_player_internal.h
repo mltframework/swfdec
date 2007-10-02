@@ -22,6 +22,7 @@
 
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_as_context.h>
+#include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
 #include <libswfdec/swfdec_system.h>
@@ -36,6 +37,7 @@ typedef enum {
 } SwfdecAlignFlag;
 
 typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
+typedef gboolean (* SwfdecAudioRemoveFunc) (SwfdecAudio *audio, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
@@ -189,6 +191,9 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecRect *		rect);
 void		swfdec_player_set_align_flags	(SwfdecPlayer *		player,
 						 guint			flags);
+void		swfdec_player_stop_sounds	(SwfdecPlayer *		player,
+						 SwfdecAudioRemoveFunc	func,
+						 gpointer		data);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 SwfdecMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,

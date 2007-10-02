@@ -1496,6 +1496,23 @@ swfdec_player_stop_all_sounds (SwfdecPlayer *player)
   }
 }
 
+void
+swfdec_player_stop_sounds (SwfdecPlayer *player, SwfdecAudioRemoveFunc func, gpointer data)
+{
+  GList *walk;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (func);
+
+  walk = player->audio;
+  while (walk) {
+    SwfdecAudio *audio = walk->data;
+    walk = walk->next;
+    if (func (audio, data))
+      swfdec_audio_remove (audio);
+  }
+}
+
 /* rect is in global coordinates */
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)

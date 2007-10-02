@@ -37,9 +37,16 @@ swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
 
   event->offset += remove;
-  if (event->offset >= event->stop_sample)
-    event->offset = event->stop_sample;
-  return event->stop_sample - event->offset;
+  while (event->offset >= event->stop_sample) {
+    event->offset = event->offset - event->stop_sample - event->start_sample;
+    event->loop_count--;
+    if (event->loop_count == 0)
+      return 0;
+  }
+  if (event->loop_count > 1)
+    return G_MAXUINT;
+  else
+    return event->stop_sample - event->offset;
 }
 
 static void
@@ -48,11 +55,19 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest,
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
+  guint loop;
+  guint samples;
 
-  if (offset >= event->stop_sample)
-    return;
-  //n_samples = MIN (n_samples, event->stop_sample - offset);
-  swfdec_sound_render (event->sound, dest, offset, n_samples);
+  for (loop = event->loop_count; loop > 0 && n_samples > 0; loop--) {
+    if (offset >= event->stop_sample) {
+      offset -= event->stop_sample -= event->start_sample;
+      continue;
+    }
+    samples = MIN (n_samples, event->stop_sample - offset);
+    swfdec_sound_render (event->sound, dest, offset, samples);
+    n_samples -= samples;
+    dest += samples * 4;
+  }
 }
 
 static void

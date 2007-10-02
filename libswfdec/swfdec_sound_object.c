@@ -132,7 +132,26 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   g_object_unref (audio);
 }
 
-#if 0
+typedef struct {
+  SwfdecMovie *movie;
+  SwfdecSound *sound;
+} RemoveData;
+
+static gboolean
+swfdec_sound_object_should_stop (SwfdecAudio *audio, gpointer datap)
+{
+  RemoveData *data = datap;
+  SwfdecAudioEvent *event;
+
+  if (!SWFDEC_IS_AUDIO_EVENT (audio))
+    return FALSE;
+  event = SWFDEC_AUDIO_EVENT (audio);
+  if (data->sound != NULL && event->sound != data->sound)
+    return FALSE;
+  /* FIXME: also check the movie is identical */
+  return TRUE;
+}
+
 SWFDEC_AS_NATIVE (500, 6, swfdec_sound_object_stop)
 void
 swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, 
@@ -140,15 +159,26 @@ swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
 {
   SwfdecSoundObject *sound;
   const char *name;
+  RemoveData data;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "|s", &name);
 
-  if (argc > 0) {
-  } else if (sound->attached) {
+  if (sound->global) {
+    data.movie = NULL;
   } else {
+    data.movie = sound->target;
   }
+  if (argc > 0) {
+    data.sound = swfdec_sound_object_get_sound (sound, name);
+    if (data.sound == NULL)
+      return;
+  } else if (sound->attached) {
+    data.sound = sound->attached;
+  } else {
+    data.sound = NULL;
+  }
+  swfdec_player_stop_sounds (SWFDEC_PLAYER (cx), swfdec_sound_object_should_stop, &data);
 }
-#endif
 
 SWFDEC_AS_CONSTRUCTOR (500, 16, swfdec_sound_object_construct, swfdec_sound_object_get_type)
 void

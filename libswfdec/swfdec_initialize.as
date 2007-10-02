@@ -132,7 +132,7 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 /*** Sound ***/
 
 Sound = ASconstructor (500, 16);
-ASSetNative (Sound.prototype, 500, "attachSound,start", 7);
+ASSetNative (Sound.prototype, 500, "stop,attachSound,start", 6);
 
 /*** XMLNode ***/
 

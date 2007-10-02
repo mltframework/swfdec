@@ -1115,10 +1115,28 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
 }
 
 static void
+swfdec_player_advance_audio (SwfdecPlayer *player, guint samples)
+{
+  SwfdecAudio *audio;
+  GList *walk;
+
+  if (samples == 0)
+    return;
+
+  /* don't use for loop here, because we need to advance walk before 
+   * removing the audio */
+  walk = player->audio;
+  while (walk) {
+    audio = walk->data;
+    walk = walk->next;
+    if (swfdec_audio_iterate (audio, samples) == 0)
+      swfdec_audio_remove (audio);
+  }
+}
+
+static void
 swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_samples)
 {
-  GList *walk;
-  SwfdecAudio *audio;
   SwfdecTimeout *timeout;
   SwfdecTick target_time;
   guint frames_now;
@@ -1127,18 +1145,6 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
   target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %lu msecs (%u audio frames)", msecs, audio_samples);
 
-  player->audio_skip = audio_samples;
-  if (audio_samples) {
-    /* iterate all playing sounds */
-    walk = player->audio;
-    while (walk) {
-      audio = walk->data;
-      walk = walk->next;
-      if (swfdec_audio_iterate (audio, audio_samples) == 0)
-	swfdec_audio_remove (audio);
-    }
-  }
-
   for (timeout = player->timeouts ? player->timeouts->data : NULL;
        timeout && timeout->timestamp <= target_time; 
        timeout = player->timeouts ? player->timeouts->data : NULL) {
@@ -1146,7 +1152,8 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
     frames_now = SWFDEC_TICKS_TO_SAMPLES (timeout->timestamp) -
       SWFDEC_TICKS_TO_SAMPLES (player->time);
     player->time = timeout->timestamp;
-    player->audio_skip -= frames_now;
+    swfdec_player_advance_audio (player, frames_now);
+    audio_samples -= frames_now;
     SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT", target time is %"G_GUINT64_FORMAT,
 	timeout, timeout->timestamp, target_time);
     timeout->callback (timeout);
@@ -1156,9 +1163,10 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
     frames_now = SWFDEC_TICKS_TO_SAMPLES (target_time) -
       SWFDEC_TICKS_TO_SAMPLES (player->time);
     player->time = target_time;
-    player->audio_skip -= frames_now;
+    swfdec_player_advance_audio (player, frames_now);
+    audio_samples -= frames_now;
   }
-  g_assert (player->audio_skip == 0);
+  g_assert (audio_samples == 0);
   
   swfdec_player_unlock (player);
 }

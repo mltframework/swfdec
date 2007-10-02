@@ -107,7 +107,6 @@ struct _SwfdecPlayer
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
-  guint			audio_skip;		/* number of frames to auto-skip when adding new audio */
 
   /* events and advancing */
   SwfdecTick		time;			/* current time */

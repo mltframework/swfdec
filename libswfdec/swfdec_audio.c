@@ -102,11 +102,6 @@ swfdec_audio_add (SwfdecAudio *audio, SwfdecPlayer *player)
   audio->player = player;
   player->audio = g_list_append (player->audio, audio);
   SWFDEC_INFO ("adding %s %p", G_OBJECT_TYPE_NAME (audio), audio);
-  if (player->audio_skip) {
-    /* i wonder if removing a just added audio causes issues */
-    if (swfdec_audio_iterate (audio, player->audio_skip) == 0)
-      swfdec_audio_remove (audio);
-  }
 }
 
 void	

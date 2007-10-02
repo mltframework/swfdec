@@ -57,13 +57,24 @@ swfdec_as_native_function_call (SwfdecAsFunction *function)
 {
   SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (function);
   SwfdecAsFrame *frame;
+  SwfdecAsContext *cx;
 
-  frame = swfdec_as_frame_new_native (SWFDEC_AS_OBJECT (function)->context);
+  cx = SWFDEC_AS_OBJECT (function)->context;
+  frame = swfdec_as_frame_new_native (cx);
   if (frame == NULL)
     return NULL;
   g_assert (native->name);
   frame->function_name = native->name;
   frame->function = function;
+  /* We copy the target here so we have a proper SwfdecMovie reference inside native 
+   * functions. This is for example necessary for swfdec_player_get_movie_by_value()
+   * and probably other stuff that does variable lookups inside native functions.
+   */
+  /* FIXME: copy target or original target? */
+  if (frame->next) {
+    frame->target = frame->next->original_target;
+    frame->original_target = frame->target;
+  }
   return frame;
 }
 

@@ -103,8 +103,37 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
   return NULL;
 }
 
+static SwfdecAudioEvent *
+swfdec_audio_event_create (SwfdecSound *sound, guint offset, guint n_loops)
+{
+  SwfdecAudioEvent *event;
+  
+  event = g_object_new (SWFDEC_TYPE_AUDIO_EVENT, NULL);
+  event->sound = sound;
+  event->start_sample = offset;
+  event->offset = offset;
+  event->loop_count = n_loops;
+
+  return event;
+}
+
+SwfdecAudio *
+swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSound *sound, guint	offset,
+    guint n_loops)
+{
+  SwfdecAudioEvent *event;
+
+  g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
+
+  event = swfdec_audio_event_create (sound, offset, n_loops);
+  swfdec_audio_add (SWFDEC_AUDIO (event), player);
+
+  return SWFDEC_AUDIO (event);
+}
+
 /**
- * swfdec_audio_event_new:
+ * swfdec_audio_event_new_from_chunk:
  * @player: a #SwfdecPlayer or NULL
  * @event: a sound event to start playing back
  *
@@ -114,7 +143,7 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
  * Returns: the sound effect or NULL if no new sound was created.
  **/
 SwfdecAudio *
-swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
+swfdec_audio_event_new_from_chunk (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
 {
   SwfdecAudioEvent *event;
 
@@ -137,16 +166,11 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSoundChunk *chunk)
     g_object_ref (event);
     return SWFDEC_AUDIO (event);
   }
-  event = g_object_new (SWFDEC_TYPE_AUDIO_EVENT, NULL);
-  /* copy chunk data */
-  event->sound = chunk->sound;
-  event->start_sample = chunk->start_sample;
-  event->start_sample = chunk->start_sample;
-  event->loop_count = chunk->loop_count;
+  event = swfdec_audio_event_create (chunk->sound, chunk->start_sample, chunk->loop_count);
+  event->stop_sample = chunk->stop_sample;
   event->n_envelopes = chunk->n_envelopes;
   if (event->n_envelopes)
     event->envelope = g_memdup (chunk->envelope, sizeof (SwfdecSoundEnvelope) * event->n_envelopes);
-  event->offset = event->start_sample;
   SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (event->sound)->id,
       event->start_sample);
   swfdec_audio_add (SWFDEC_AUDIO (event), player);

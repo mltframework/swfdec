@@ -286,7 +286,7 @@ swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
   id = swfdec_bits_get_u16 (bits);
   chunk = swfdec_sound_parse_chunk (SWFDEC_SWF_DECODER (movie->swf->decoder), bits, id);
   if (chunk) {
-    SwfdecAudio *audio = swfdec_audio_event_new (SWFDEC_PLAYER (
+    SwfdecAudio *audio = swfdec_audio_event_new_from_chunk (SWFDEC_PLAYER (
 	  SWFDEC_AS_OBJECT (movie)->context), chunk);
     if (audio)
       g_object_unref (audio);

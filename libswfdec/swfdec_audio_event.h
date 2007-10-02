@@ -60,6 +60,10 @@ struct _SwfdecAudioEventClass
 GType		swfdec_audio_event_get_type		(void);
 
 SwfdecAudio *	swfdec_audio_event_new			(SwfdecPlayer *		player,
+							 SwfdecSound *		sound,
+							 guint			offset,
+							 guint			n_loops);
+SwfdecAudio *	swfdec_audio_event_new_from_chunk     	(SwfdecPlayer *		player,
 							 SwfdecSoundChunk *	chunk);
 
 G_END_DECLS

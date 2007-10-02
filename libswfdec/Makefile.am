@@ -102,6 +102,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
 	swfdec_sound.c \
+	swfdec_sound_object.c \
 	swfdec_stroke.c \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
@@ -219,6 +220,7 @@ noinst_HEADERS = \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
+	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_swf_decoder.h \

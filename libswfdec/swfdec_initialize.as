@@ -129,6 +129,11 @@ LoadVars.prototype.getBytesTotal = function () {
 
 ASSetPropFlags(LoadVars.prototype, null, 131);
 
+/*** Sound ***/
+
+Sound = ASconstructor (500, 16);
+ASSetNative (Sound.prototype, 500, "attachSound,start", 7);
+
 /*** XMLNode ***/
 
 XMLNode = ASconstructor (253, 0);

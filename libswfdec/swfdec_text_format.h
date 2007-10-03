@@ -18,8 +18,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_TEXTFORMAT_H_
-#define _SWFDEC_TEXTFORMAT_H_
+#ifndef _SWFDEC_TEXT_FORMAT_H_
+#define _SWFDEC_TEXT_FORMAT_H_
 
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_array.h>
@@ -31,15 +31,14 @@ G_BEGIN_DECLS
 typedef struct _SwfdecTextFormat SwfdecTextFormat;
 typedef struct _SwfdecTextFormatClass SwfdecTextFormatClass;
 
-#define SWFDEC_TYPE_TEXTFORMAT                    (swfdec_text_format_get_type())
-#define SWFDEC_IS_TEXTFORMAT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEXTFORMAT))
-#define SWFDEC_IS_TEXTFORMAT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TEXTFORMAT))
-#define SWFDEC_TEXTFORMAT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXTFORMAT, SwfdecTextFormat))
-#define SWFDEC_TEXTFORMAT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXTFORMAT, SwfdecTextFormatClass))
-#define SWFDEC_TEXTFORMAT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TEXTFORMAT, SwfdecTextFormatClass))
+#define SWFDEC_TYPE_TEXT_FORMAT                    (swfdec_text_format_get_type())
+#define SWFDEC_IS_TEXT_FORMAT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEXT_FORMAT))
+#define SWFDEC_IS_TEXT_FORMAT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TEXT_FORMAT))
+#define SWFDEC_TEXT_FORMAT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT_FORMAT, SwfdecTextFormat))
+#define SWFDEC_TEXT_FORMAT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FORMAT, SwfdecTextFormatClass))
+#define SWFDEC_TEXT_FORMAT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TEXT_FORMAT, SwfdecTextFormatClass))
 
 typedef enum {
-  SWFDEC_TEXT_ALIGN_UNDEFINED,
   SWFDEC_TEXT_ALIGN_LEFT,
   SWFDEC_TEXT_ALIGN_CENTER,
   SWFDEC_TEXT_ALIGN_RIGHT,
@@ -47,40 +46,57 @@ typedef enum {
 } SwfdecTextAlign;
 
 typedef enum {
-  SWFDEC_TEXT_DISPLAY_UNDEFINED, // is this needed?
   SWFDEC_TEXT_DISPLAY_NONE,
   SWFDEC_TEXT_DISPLAY_INLINE,
   SWFDEC_TEXT_DISPLAY_BLOCK,
 } SwfdecTextDisplay;
 
 typedef enum {
-  SWFDEC_TOGGLE_UNDEFINED = -1,
-  SWFDEC_TOGGLE_DISABLED = 0,
-  SWFDEC_TOGGLE_ENABLED = 1
-} SwfdecToggle;
+  SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN = 0,
+  SWFDEC_TEXT_FORMAT_PROPERTY_BLOCK_INDENT,
+  SWFDEC_TEXT_FORMAT_PROPERTY_BOLD,
+  SWFDEC_TEXT_FORMAT_PROPERTY_BULLET,
+  SWFDEC_TEXT_FORMAT_PROPERTY_COLOR,
+  SWFDEC_TEXT_FORMAT_PROPERTY_DISPLAY,
+  SWFDEC_TEXT_FORMAT_PROPERTY_FONT,
+  SWFDEC_TEXT_FORMAT_PROPERTY_INDENT,
+  SWFDEC_TEXT_FORMAT_PROPERTY_ITALIC,
+  SWFDEC_TEXT_FORMAT_PROPERTY_KERNING,
+  SWFDEC_TEXT_FORMAT_PROPERTY_LEADING,
+  SWFDEC_TEXT_FORMAT_PROPERTY_LEFT_MARGIN,
+  SWFDEC_TEXT_FORMAT_PROPERTY_LETTER_SPACING,
+  SWFDEC_TEXT_FORMAT_PROPERTY_RIGHT_MARGIN,
+  SWFDEC_TEXT_FORMAT_PROPERTY_SIZE,
+  SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS,
+  SWFDEC_TEXT_FORMAT_PROPERTY_TARGET,
+  SWFDEC_TEXT_FORMAT_PROPERTY_UNDERLINE,
+  SWFDEC_TEXT_FORMAT_PROPERTY_URL
+} SwfdecTextFormatProperty;
 
 struct _SwfdecTextFormat {
   SwfdecAsObject	object;
 
   SwfdecTextAlign	align;
-  double		blockIndent;
-  SwfdecToggle		bold;
-  SwfdecToggle		bullet;
-  double		color;
+  int			block_indent;
+  gboolean		bold;
+  gboolean		bullet;
+  SwfdecColor		color;
   SwfdecTextDisplay	display;
   const char *		font;
-  double		indent;
-  SwfdecToggle		italic;
-  SwfdecToggle		kerning;
-  double		leading;
-  double		leftMargin;
-  SwfdecAsValue		letterSpacing; // number or null
-  double		rightMargin;
-  double		size;
-  SwfdecAsArray *	tabStops;
+  int			indent;
+  gboolean		italic;
+  gboolean		kerning;
+  int			leading;
+  int			left_margin;
+  double		letter_spacing; // number or null
+  int			right_margin;
+  int			size;
+  SwfdecAsArray *	tab_stops;
   const char *		target;
-  SwfdecToggle		underline;
+  gboolean		underline;
   const char *		url;
+
+  int			values_set;
 };
 
 struct _SwfdecTextFormatClass {
@@ -88,6 +104,8 @@ struct _SwfdecTextFormatClass {
 };
 
 GType		swfdec_text_format_get_type	(void);
+
+SwfdecAsObject * swfdec_text_format_new		(SwfdecAsContext *	context);
 
 G_END_DECLS
 #endif

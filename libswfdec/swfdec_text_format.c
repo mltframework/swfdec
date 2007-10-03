@@ -36,16 +36,37 @@
 
 G_DEFINE_TYPE (SwfdecTextFormat, swfdec_text_format, SWFDEC_TYPE_AS_OBJECT)
 
+static int property_offsets[] = {
+  G_STRUCT_OFFSET (SwfdecTextFormat, align),
+  G_STRUCT_OFFSET (SwfdecTextFormat, block_indent),
+  G_STRUCT_OFFSET (SwfdecTextFormat, bold),
+  G_STRUCT_OFFSET (SwfdecTextFormat, bullet),
+  G_STRUCT_OFFSET (SwfdecTextFormat, color),
+  G_STRUCT_OFFSET (SwfdecTextFormat, display),
+  G_STRUCT_OFFSET (SwfdecTextFormat, font),
+  G_STRUCT_OFFSET (SwfdecTextFormat, indent),
+  G_STRUCT_OFFSET (SwfdecTextFormat, italic),
+  G_STRUCT_OFFSET (SwfdecTextFormat, kerning),
+  G_STRUCT_OFFSET (SwfdecTextFormat, leading),
+  G_STRUCT_OFFSET (SwfdecTextFormat, left_margin),
+  G_STRUCT_OFFSET (SwfdecTextFormat, letter_spacing),
+  G_STRUCT_OFFSET (SwfdecTextFormat, right_margin),
+  G_STRUCT_OFFSET (SwfdecTextFormat, size),
+  G_STRUCT_OFFSET (SwfdecTextFormat, tab_stops),
+  G_STRUCT_OFFSET (SwfdecTextFormat, target),
+  G_STRUCT_OFFSET (SwfdecTextFormat, underline),
+  G_STRUCT_OFFSET (SwfdecTextFormat, url)
+};
+
 static void
 swfdec_text_format_do_mark (SwfdecAsObject *object)
 {
-  SwfdecTextFormat *format = SWFDEC_TEXTFORMAT (object);
+  SwfdecTextFormat *format = SWFDEC_TEXT_FORMAT (object);
 
   if (format->font != NULL)
     swfdec_as_string_mark (format->font);
-  // no need to mark letterSpacing, it's always number or null
-  if (format->tabStops != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (format->tabStops));
+  if (format->tab_stops != NULL)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (format->tab_stops));
   if (format->target != NULL)
     swfdec_as_string_mark (format->target);
   if (format->url != NULL)
@@ -67,36 +88,56 @@ swfdec_text_format_init (SwfdecTextFormat *text_format)
 {
 }
 
-static void
-swfdec_text_format_get_string (SwfdecAsObject *object, size_t offset,
-    SwfdecAsValue *ret)
+static gboolean
+swfdec_text_format_is_set (SwfdecTextFormat *format,
+    SwfdecTextFormatProperty property)
 {
-  SwfdecTextFormat *format;
-  const char *value;
-
-  if (!SWFDEC_IS_TEXTFORMAT (object))
-    return;
-
-  format = SWFDEC_TEXTFORMAT (object);
-  value = G_STRUCT_MEMBER (const char *, format, offset);
-
-  if (value != NULL) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, value);
-  } else {
-    SWFDEC_AS_VALUE_SET_NULL (ret);
-  }
+  return (format->values_set & (1 << property));
 }
 
 static void
-swfdec_text_format_set_string (SwfdecAsObject *object, size_t offset,
-    guint argc, SwfdecAsValue *argv)
+swfdec_text_format_mark_set (SwfdecTextFormat *format,
+    SwfdecTextFormatProperty property)
+{
+  format->values_set |= (1 << property);
+}
+
+static void
+swfdec_text_format_mark_unset (SwfdecTextFormat *format,
+    SwfdecTextFormatProperty property)
+{
+  format->values_set &= ~(1 << property);
+}
+
+static void
+swfdec_text_format_get_string (SwfdecAsObject *object,
+    SwfdecTextFormatProperty property, SwfdecAsValue *ret)
+{
+  SwfdecTextFormat *format;
+
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
+    return;
+  format = SWFDEC_TEXT_FORMAT (object);
+
+  if (!swfdec_text_format_is_set (format, property)) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
+
+  SWFDEC_AS_VALUE_SET_STRING (ret,
+      G_STRUCT_MEMBER (const char *, format, property_offsets[property]));
+}
+
+static void
+swfdec_text_format_set_string (SwfdecAsObject *object,
+    SwfdecTextFormatProperty property, guint argc, SwfdecAsValue *argv)
 {
   SwfdecTextFormat *format;
   const char *s;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   if (argc < 1)
     return;
@@ -107,49 +148,45 @@ swfdec_text_format_set_string (SwfdecAsObject *object, size_t offset,
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
-    G_STRUCT_MEMBER (const char *, format, offset) = NULL;
+    G_STRUCT_MEMBER (const char *, format, property_offsets[property]) = NULL;
+    swfdec_text_format_mark_unset (format, property);
   } else {
-    G_STRUCT_MEMBER (const char *, format, offset) = s;
+    G_STRUCT_MEMBER (const char *, format, property_offsets[property]) = s;
+    swfdec_text_format_mark_set (format, property);
   }
 }
 
 static void
-swfdec_text_format_get_toggle (SwfdecAsObject *object, size_t offset,
-    SwfdecAsValue *ret)
+swfdec_text_format_get_boolean (SwfdecAsObject *object,
+    SwfdecTextFormatProperty property, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
-  SwfdecToggle value;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
-  value = G_STRUCT_MEMBER (SwfdecToggle, format, offset);
+  if (!swfdec_text_format_is_set (format, property)) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
 
-  switch (value) {
-    case SWFDEC_TOGGLE_DISABLED:
-      SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
-      break;
-    case SWFDEC_TOGGLE_ENABLED:
-      SWFDEC_AS_VALUE_SET_BOOLEAN (ret, TRUE);
-      break;
-    case SWFDEC_TOGGLE_UNDEFINED:
-      SWFDEC_AS_VALUE_SET_NULL (ret);
-      break;
-    default:
-      g_assert_not_reached ();
+  if (G_STRUCT_MEMBER (gboolean, format, property_offsets[property])) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, TRUE);
+  } else {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
   }
 }
 
 static void
-swfdec_text_format_set_toggle (SwfdecAsObject *object, size_t offset,
-    guint argc, SwfdecAsValue *argv)
+swfdec_text_format_set_boolean (SwfdecAsObject *object,
+    SwfdecTextFormatProperty property, guint argc, SwfdecAsValue *argv)
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   if (argc < 1)
     return;
@@ -160,100 +197,86 @@ swfdec_text_format_set_toggle (SwfdecAsObject *object, size_t offset,
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
-    G_STRUCT_MEMBER (SwfdecToggle, format, offset) = SWFDEC_TOGGLE_UNDEFINED;
+    swfdec_text_format_mark_unset (format, property);
   } else {
-    if (swfdec_as_value_to_boolean (object->context, &argv[0])) {
-      G_STRUCT_MEMBER (SwfdecToggle, format, offset) = SWFDEC_TOGGLE_ENABLED;
-    } else {
-      G_STRUCT_MEMBER (SwfdecToggle, format, offset) = SWFDEC_TOGGLE_DISABLED;
-    }
+    G_STRUCT_MEMBER (gboolean, format, property_offsets[property]) =
+      swfdec_as_value_to_boolean (object->context, &argv[0]);
+    swfdec_text_format_mark_set (format, property);
   }
 }
 
 static void
-swfdec_text_format_get_int (SwfdecAsObject *object, size_t offset,
-    SwfdecAsValue *ret)
+swfdec_text_format_get_integer (SwfdecAsObject *object,
+    SwfdecTextFormatProperty property, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
-  double value;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
-  value = G_STRUCT_MEMBER (double, format, offset);
-
-  if (!isnan (value)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, value);
-  } else {
+  if (!swfdec_text_format_is_set (format, property)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
   }
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+      (double)G_STRUCT_MEMBER (int, format, property_offsets[property]));
 }
 
-static double
+static int
 swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
-    gboolean allow_negative, gboolean is_unsigned)
+    gboolean allow_negative)
 {
   double d;
   int n;
 
-  if (cx->version >= 8 && is_unsigned) {
-    d = swfdec_as_value_to_number (cx, val);
-    n = swfdec_as_value_to_integer (cx, val);
-  } else {
-    n = swfdec_as_value_to_integer (cx, val);
-    d = swfdec_as_value_to_number (cx, val);
-  }
+  n = swfdec_as_value_to_integer (cx, val);
+  d = swfdec_as_value_to_number (cx, val);
   swfdec_as_value_to_string (cx, val);
 
   if (cx->version >= 8) {
-    if (!is_unsigned && !isnan (d) && !isfinite (d) && d > 0) {
+    if (!isnan (d) && ((!isfinite (d) && d > 0) || (isfinite (d) && d > (int)G_MAXINT32))) {
       // don't check allow_negative here
       return -2147483648;
     } else {
-      if (is_unsigned) {
-	return (unsigned)d;
+      if (!allow_negative && (int)d < 0) {
+	return 0;
       } else {
-	if (!allow_negative && (int)d < 0) {
-	  return 0;
-	} else {
-	  return (int)d;
-	}
+	return (int)d;
       }
     }
   } else {
-    if (is_unsigned) {
-      return (unsigned)n;
+    if (!allow_negative && n < 0) {
+      return 0;
     } else {
-      if (!allow_negative && n < 0) {
-	return 0;
-      } else {
-	return n;
-      }
+      return n;
     }
   }
 }
 
 static void
-swfdec_text_format_set_int (SwfdecAsObject *object, size_t offset, guint argc,
-    SwfdecAsValue *argv, gboolean allow_negative, gboolean is_unsigned)
+swfdec_text_format_set_integer (SwfdecAsObject *object,
+    SwfdecTextFormatProperty property, guint argc, SwfdecAsValue *argv,
+    gboolean allow_negative)
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   if (argc < 1)
     return;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
-    G_STRUCT_MEMBER (double, format, offset) = NAN;
+    swfdec_text_format_mark_unset (format, property);
   } else {
-    G_STRUCT_MEMBER (double, format, offset) =
+    G_STRUCT_MEMBER (int, format, property_offsets[property]) =
       swfdec_text_format_value_to_integer (object->context, &argv[0],
-	  allow_negative, is_unsigned);
+	  allow_negative);
+    swfdec_text_format_mark_set (format, property);
   }
 }
 
@@ -263,9 +286,14 @@ swfdec_text_format_get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
+
+  if (!swfdec_text_format_is_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN)) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
 
   switch (format->align) {
     case SWFDEC_TEXT_ALIGN_LEFT:
@@ -280,9 +308,6 @@ swfdec_text_format_get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     case SWFDEC_TEXT_ALIGN_JUSTIFY:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_justify);
       break;
-    case SWFDEC_TEXT_ALIGN_UNDEFINED:
-      SWFDEC_AS_VALUE_SET_NULL (ret);
-      break;
     default:
       g_assert_not_reached ();
   }
@@ -295,9 +320,9 @@ swfdec_text_format_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecTextFormat *format;
   const char *s;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   if (argc < 1)
     return;
@@ -308,78 +333,113 @@ swfdec_text_format_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!g_ascii_strcasecmp (s, "left")) {
     format->align = SWFDEC_TEXT_ALIGN_LEFT;
+    swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN);
   } else if (!g_ascii_strcasecmp (s, "center")) {
     format->align = SWFDEC_TEXT_ALIGN_CENTER;
+    swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN);
   } else if (!g_ascii_strcasecmp (s, "right")) {
     format->align = SWFDEC_TEXT_ALIGN_RIGHT;
+    swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN);
   } else if (!g_ascii_strcasecmp (s, "justify")) {
     format->align = SWFDEC_TEXT_ALIGN_JUSTIFY;
+    swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN);
   }
 }
 
 static void
-swfdec_text_format_get_blockIndent (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_get_block_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, blockIndent), ret);
+  swfdec_text_format_get_integer (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_BLOCK_INDENT, ret);
 }
 
 static void
-swfdec_text_format_set_blockIndent (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_set_block_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, blockIndent), argc, argv,
-      cx->version >= 8, FALSE);
+  swfdec_text_format_set_integer (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_BLOCK_INDENT, argc, argv, cx->version >= 8);
 }
 
 static void
 swfdec_text_format_get_bold (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, bold), ret);
+  swfdec_text_format_get_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_BOLD,
+      ret);
 }
 
 static void
 swfdec_text_format_set_bold (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, bold), argc, argv);
+  swfdec_text_format_set_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_BOLD,
+      argc, argv);
 }
 
 static void
 swfdec_text_format_get_bullet (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, bullet), ret);
+  swfdec_text_format_get_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_BULLET,
+      ret);
 }
 
 static void
 swfdec_text_format_set_bullet (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, bullet), argc, argv);
+  swfdec_text_format_set_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_BULLET,
+      argc, argv);
 }
 
 static void
 swfdec_text_format_get_color (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, color), ret);
+  SwfdecTextFormat *format;
+
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
+    return;
+  format = SWFDEC_TEXT_FORMAT (object);
+
+  if (!swfdec_text_format_is_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_COLOR)) {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, format->color);
 }
 
 static void
 swfdec_text_format_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, color), argc, argv, FALSE, TRUE);
+  SwfdecTextFormat *format;
+
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
+    return;
+  format = SWFDEC_TEXT_FORMAT (object);
+
+  if (argc < 1)
+    return;
+
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
+    swfdec_text_format_mark_unset (format, SWFDEC_TEXT_FORMAT_PROPERTY_COLOR);
+  } else {
+    if (cx->version >= 8) {
+      format->color = (unsigned)swfdec_as_value_to_number (cx, &argv[0]);
+    } else {
+      format->color = (unsigned)swfdec_as_value_to_integer (cx, &argv[0]);
+    }
+    swfdec_as_value_to_integer (cx, &argv[0]);
+    swfdec_as_value_to_string (cx, &argv[0]);
+
+    swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_COLOR);
+  }
 }
 
 static void
@@ -388,9 +448,15 @@ swfdec_text_format_get_display (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
+
+  if (!swfdec_text_format_is_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_DISPLAY))
+  {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
 
   switch (format->display) {
     case SWFDEC_TEXT_DISPLAY_NONE:
@@ -401,9 +467,6 @@ swfdec_text_format_get_display (SwfdecAsContext *cx, SwfdecAsObject *object,
       break;
     case SWFDEC_TEXT_DISPLAY_BLOCK:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_block);
-      break;
-    case SWFDEC_TEXT_ALIGN_UNDEFINED:
-      SWFDEC_AS_VALUE_SET_NULL (ret);
       break;
     default:
       g_assert_not_reached ();
@@ -417,9 +480,9 @@ swfdec_text_format_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecTextFormat *format;
   const char *s;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_as_value_to_number (cx, &argv[0]);
@@ -433,131 +496,137 @@ swfdec_text_format_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else {
     format->display = SWFDEC_TEXT_DISPLAY_BLOCK;
   }
+
+  swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_DISPLAY);
 }
 
 static void
 swfdec_text_format_get_font (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_string (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, font), ret);
+  swfdec_text_format_get_string (object, SWFDEC_TEXT_FORMAT_PROPERTY_FONT,
+      ret);
 }
 
 static void
 swfdec_text_format_set_font (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_string (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, font), argc, argv);
+  swfdec_text_format_set_string (object, SWFDEC_TEXT_FORMAT_PROPERTY_FONT,
+      argc, argv);
 }
 
 static void
 swfdec_text_format_get_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, indent), ret);
+  swfdec_text_format_get_integer (object, SWFDEC_TEXT_FORMAT_PROPERTY_INDENT,
+      ret);
 }
 
 static void
 swfdec_text_format_set_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, indent), argc, argv,
-      cx->version >= 8, FALSE);
+  swfdec_text_format_set_integer (object, SWFDEC_TEXT_FORMAT_PROPERTY_INDENT,
+      argc, argv, cx->version >= 8);
 }
 
 static void
 swfdec_text_format_get_italic (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, italic), ret);
+  swfdec_text_format_get_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_ITALIC, ret);
 }
 
 static void
 swfdec_text_format_set_italic (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, italic), argc, argv);
+  swfdec_text_format_set_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_ITALIC,
+      argc, argv);
 }
 
 static void
 swfdec_text_format_get_kerning (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, kerning), ret);
+  swfdec_text_format_get_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_KERNING,
+      ret);
 }
 
 static void
 swfdec_text_format_set_kerning (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, kerning), argc, argv);
+  swfdec_text_format_set_boolean (object, SWFDEC_TEXT_FORMAT_PROPERTY_KERNING,
+      argc, argv);
 }
 
 static void
 swfdec_text_format_get_leading (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, leading), ret);
+  swfdec_text_format_get_integer (object, SWFDEC_TEXT_FORMAT_PROPERTY_LEADING,
+      ret);
 }
 
 static void
 swfdec_text_format_set_leading (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, leading), argc, argv,
-      cx->version >= 8, FALSE);
+  swfdec_text_format_set_integer (object, SWFDEC_TEXT_FORMAT_PROPERTY_LEADING,
+      argc, argv, cx->version >= 8);
 }
 
 static void
-swfdec_text_format_get_leftMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_get_left_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, leftMargin), ret);
+  swfdec_text_format_get_integer (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_LEFT_MARGIN, ret);
 }
 
 static void
-swfdec_text_format_set_leftMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_set_left_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, leftMargin), argc, argv, FALSE, FALSE);
+  swfdec_text_format_set_integer (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_LEFT_MARGIN, argc, argv, FALSE);
 }
 
 static void
-swfdec_text_format_get_letterSpacing (SwfdecAsContext *cx,
+swfdec_text_format_get_letter_spacing (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
-  *ret = format->letterSpacing;
+  if (!swfdec_text_format_is_set (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_LETTER_SPACING))
+  {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
+  }
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, format->letter_spacing);
 }
 
 static void
-swfdec_text_format_set_letterSpacing (SwfdecAsContext *cx,
+swfdec_text_format_set_letter_spacing (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
   double d;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   if (argc < 1)
     return;
@@ -566,77 +635,82 @@ swfdec_text_format_set_letterSpacing (SwfdecAsContext *cx,
   d = swfdec_as_value_to_number (cx, &argv[0]);
   swfdec_as_value_to_string (cx, &argv[0]);
 
-
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
   {
-    SWFDEC_AS_VALUE_SET_NULL (&format->letterSpacing);
+    swfdec_text_format_mark_unset (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_LETTER_SPACING);
   }
   else
   {
-    SWFDEC_AS_VALUE_SET_NUMBER (&format->letterSpacing, d);
+    format->letter_spacing = d;
+    swfdec_text_format_mark_set (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_LETTER_SPACING);
   }
 }
 
 static void
-swfdec_text_format_get_rightMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_get_right_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, rightMargin), ret);
+  swfdec_text_format_get_integer (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_RIGHT_MARGIN, ret);
 }
 
 static void
-swfdec_text_format_set_rightMargin (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_set_right_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, rightMargin), argc, argv, FALSE,
-      FALSE);
+  swfdec_text_format_set_integer (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_RIGHT_MARGIN, argc, argv, FALSE);
 }
 
 static void
 swfdec_text_format_get_size (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, size), ret);
+  swfdec_text_format_get_integer (object, SWFDEC_TEXT_FORMAT_PROPERTY_SIZE,
+      ret);
 }
 
 static void
 swfdec_text_format_set_size (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_int (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, size), argc, argv, TRUE, FALSE);
+  swfdec_text_format_set_integer (object, SWFDEC_TEXT_FORMAT_PROPERTY_SIZE,
+      argc, argv, TRUE);
 }
 
 static void
-swfdec_text_format_get_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_get_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
-  if (format->tabStops != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format->tabStops));
-  } else {
+  if (!swfdec_text_format_is_set (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS))
+  {
     SWFDEC_AS_VALUE_SET_NULL (ret);
+    return;
   }
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (format->tab_stops));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format->tab_stops));
 }
 
 static void
-swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_text_format_set_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXTFORMAT (object))
+  if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
-  format = SWFDEC_TEXTFORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object);
 
   if (argc < 1)
     return;
@@ -648,7 +722,9 @@ swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
   {
-    format->tabStops = NULL;
+    format->tab_stops = NULL;
+    swfdec_text_format_mark_unset (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS);
   }
   else if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) &&
 	SWFDEC_IS_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))
@@ -656,24 +732,28 @@ swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
     SwfdecAsArray *array;
     SwfdecAsValue val;
     gint32 len, i;
-    double d;
+    int n;
 
     array = SWFDEC_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
     len = swfdec_as_array_get_length (array);
 
-    if (format->tabStops == NULL) {
+    if (!swfdec_text_format_is_set (format,
+	  SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS))
+    {
       // special case, if we have null and array is empty, keep it at null
       if (len == 0)
 	return;
-      format->tabStops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+      format->tab_stops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+      swfdec_text_format_mark_set (format,
+	  SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS);
     }
 
-    swfdec_as_array_set_length (format->tabStops, 0);
+    swfdec_as_array_set_length (format->tab_stops, 0);
     for (i = 0; i < len; i++) {
       swfdec_as_array_get_value (array, i, &val);
-      d = swfdec_text_format_value_to_integer (cx, &val, TRUE, FALSE);
-      SWFDEC_AS_VALUE_SET_NUMBER (&val, d);
-      swfdec_as_array_set_value (format->tabStops, i, &val);
+      n = swfdec_text_format_value_to_integer (cx, &val, TRUE);
+      SWFDEC_AS_VALUE_SET_INT (&val, n);
+      swfdec_as_array_set_value (format->tab_stops, i, &val);
     }
   }
   else if (SWFDEC_AS_VALUE_IS_STRING (&argv[0]))
@@ -681,26 +761,33 @@ swfdec_text_format_set_tabStops (SwfdecAsContext *cx, SwfdecAsObject *object,
     size_t i, len;
     SwfdecAsValue val;
 
-    format->tabStops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
     len = strlen (SWFDEC_AS_VALUE_GET_STRING (&argv[0]));
 
     // special case: empty strings mean null
     if (len == 0) {
-      format->tabStops = NULL;
+      format->tab_stops = NULL;
+      swfdec_text_format_mark_unset (format,
+	  SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS);
     } else {
+      format->tab_stops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+      swfdec_text_format_mark_set (format,
+	  SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS);
       if (cx->version >= 8) {
 	SWFDEC_AS_VALUE_SET_INT (&val, -2147483648);
       } else {
 	SWFDEC_AS_VALUE_SET_INT (&val, 0);
       }
       for (i = 0; i < len; i++) {
-	swfdec_as_array_push (format->tabStops, &val);
+	swfdec_as_array_push (format->tab_stops, &val);
       }
     }
   }
-  else if (format->tabStops != NULL)
+  else if (swfdec_text_format_is_set (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS))
   {
-    swfdec_as_array_set_length (format->tabStops, 0);
+    swfdec_as_array_set_length (format->tab_stops, 0);
+    swfdec_text_format_mark_set (format,
+	SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS);
   }
 }
 
@@ -708,48 +795,47 @@ static void
 swfdec_text_format_get_target (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_string (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, target), ret);
+  swfdec_text_format_get_string (object, SWFDEC_TEXT_FORMAT_PROPERTY_TARGET,
+      ret);
 }
 
 static void
 swfdec_text_format_set_target (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_string (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, target), argc, argv);
+  swfdec_text_format_set_string (object, SWFDEC_TEXT_FORMAT_PROPERTY_TARGET,
+      argc, argv);
 }
 
 static void
 swfdec_text_format_get_underline (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, underline), ret);
+  swfdec_text_format_get_boolean (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_UNDERLINE, ret);
 }
 
 static void
 swfdec_text_format_set_underline (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_toggle (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, underline), argc, argv);
+  swfdec_text_format_set_boolean (object,
+      SWFDEC_TEXT_FORMAT_PROPERTY_UNDERLINE, argc, argv);
 }
 
 static void
 swfdec_text_format_get_url (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_string (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, url), ret);
+  swfdec_text_format_get_string (object, SWFDEC_TEXT_FORMAT_PROPERTY_URL, ret);
 }
 
 static void
 swfdec_text_format_set_url (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_string (object,
-      G_STRUCT_OFFSET (SwfdecTextFormat, url), argc, argv);
+  swfdec_text_format_set_string (object, SWFDEC_TEXT_FORMAT_PROPERTY_URL, argc,
+      argv);
 }
 
 static void
@@ -777,12 +863,24 @@ swfdec_text_format_add_variable (SwfdecAsObject *object, const char *variable,
   swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
 }
 
+static void
+swfdec_text_format_clear (SwfdecTextFormat *format)
+{
+  format->font = NULL;
+  format->target = NULL;
+  format->tab_stops = NULL;
+  format->url = NULL;
+  format->values_set = 0;
+
+  format->display = SWFDEC_TEXT_DISPLAY_BLOCK;
+  swfdec_text_format_mark_set (format, SWFDEC_TEXT_FORMAT_PROPERTY_DISPLAY);
+}
+
 SWFDEC_AS_CONSTRUCTOR (110, 0, swfdec_text_format_construct, swfdec_text_format_get_type)
 void
 swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecTextFormat *format;
   guint i;
 
   if (!swfdec_as_context_is_constructing (cx)) {
@@ -790,7 +888,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  g_assert (SWFDEC_IS_TEXTFORMAT (object));
+  g_assert (SWFDEC_IS_TEXT_FORMAT (object));
 
   if (!SWFDEC_PLAYER (cx)->text_format_properties_initialized) {
     SwfdecAsValue val;
@@ -803,7 +901,8 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_align,
 	swfdec_text_format_get_align, swfdec_text_format_set_align);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_blockIndent,
-	swfdec_text_format_get_blockIndent, swfdec_text_format_set_blockIndent);
+	swfdec_text_format_get_block_indent,
+	swfdec_text_format_set_block_indent);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_bold,
 	swfdec_text_format_get_bold, swfdec_text_format_set_bold);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_bullet,
@@ -825,18 +924,20 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_leading,
 	swfdec_text_format_get_leading, swfdec_text_format_set_leading);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_leftMargin,
-	swfdec_text_format_get_leftMargin, swfdec_text_format_set_leftMargin);
+	swfdec_text_format_get_left_margin,
+	swfdec_text_format_set_left_margin);
     if (cx->version >= 8) {
       swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_letterSpacing,
-	  swfdec_text_format_get_letterSpacing,
-	  swfdec_text_format_set_letterSpacing);
+	  swfdec_text_format_get_letter_spacing,
+	  swfdec_text_format_set_letter_spacing);
     }
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_rightMargin,
-	swfdec_text_format_get_rightMargin, swfdec_text_format_set_rightMargin);
+	swfdec_text_format_get_right_margin,
+	swfdec_text_format_set_right_margin);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_size,
 	swfdec_text_format_get_size, swfdec_text_format_set_size);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_tabStops,
-	swfdec_text_format_get_tabStops, swfdec_text_format_set_tabStops);
+	swfdec_text_format_get_tab_stops, swfdec_text_format_set_tab_stops);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_target,
 	swfdec_text_format_get_target, swfdec_text_format_set_target);
     swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_underline,
@@ -847,21 +948,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_PLAYER (cx)->text_format_properties_initialized = TRUE;
   }
 
-  format = SWFDEC_TEXTFORMAT (object);
-  format->blockIndent = NAN;
-  format->bold = SWFDEC_TOGGLE_UNDEFINED;
-  format->bullet = SWFDEC_TOGGLE_UNDEFINED;
-  format->color = NAN;
-  format->display = SWFDEC_TEXT_DISPLAY_BLOCK;
-  format->indent = NAN;
-  format->italic = SWFDEC_TOGGLE_UNDEFINED;
-  format->kerning = SWFDEC_TOGGLE_UNDEFINED;
-  format->leading = NAN;
-  format->leftMargin = NAN;
-  SWFDEC_AS_VALUE_SET_NULL (&format->letterSpacing);
-  format->rightMargin = NAN;
-  format->size = NAN;
-  format->underline = SWFDEC_TOGGLE_UNDEFINED;
+  swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (object));
 
   i = 0;
   if (argc > i)
@@ -890,4 +977,28 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_indent, &argv[i]);
   if (argc > ++i)
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leading, &argv[i]);
+}
+
+SwfdecAsObject *
+swfdec_text_format_new (SwfdecAsContext *context)
+{
+  SwfdecAsObject *ret;
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecTextFormat)))
+    return NULL;
+
+  ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, NULL);
+  swfdec_as_object_add (ret, context, sizeof (SwfdecTextFormat));
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_TextFormat,
+      &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
+  swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (ret));
+
+  return ret;
 }

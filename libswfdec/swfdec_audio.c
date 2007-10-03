@@ -292,7 +292,7 @@ swfdec_audio_format_get_granularity (SwfdecAudioFormat format)
 {
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 44100);
 
-  return 4 - (format >> 2);
+  return 1 << (3 - (format >> 2));
 }
 
 const char *

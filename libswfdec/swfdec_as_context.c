@@ -752,17 +752,16 @@ start:
       } else {
 	SwfdecAsStack *stack;
 	SwfdecAsValue *cur;
-	guint i, n;
+	guint i;
 	if (frame->argc > 128) {
-	  SWFDEC_FIXME ("allow calling native functions with more than 128 args");
-	  n = 128;
-	} else {
-	  n = frame->argc;
+	  SWFDEC_FIXME ("allow calling native functions with more than 128 args (this one has %u)",
+	      frame->argc);
+	  frame->argc = 128;
 	}
-	argv = g_new (SwfdecAsValue, n);
+	argv = g_new (SwfdecAsValue, frame->argc);
 	stack = context->stack;
 	cur = context->cur;
-	for (i = 0; i < n; i++) {
+	for (i = 0; i < frame->argc; i++) {
 	  if (cur <= &stack->elements[0]) {
 	    stack = stack->next;
 	    cur = &stack->elements[stack->used_elements];

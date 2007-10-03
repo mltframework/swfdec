@@ -282,7 +282,7 @@ swfdec_audio_format_get_rate (SwfdecAudioFormat	format)
  *
  * The granularity is a Swfdec-specific name, describing how often a sample in
  * a 44100Hz audio stream is defined. So for example 44100Hz has a granularity 
- * of 1 and 11025Hz has a granularity of 2 (because only every fourth sample 
+ * of 1 and 11025Hz has a granularity of 4 (because only every fourth sample 
  * is defined).
  *
  * Returns: the granularity of the format
@@ -292,7 +292,7 @@ swfdec_audio_format_get_granularity (SwfdecAudioFormat format)
 {
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 44100);
 
-  return 4 - (format >> 2);
+  return (1 << (format >> 2));
 }
 
 const char *

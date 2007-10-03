@@ -67,6 +67,8 @@ gboolean		swfdec_audio_format_is_16bit	(SwfdecAudioFormat	format);
 guint			swfdec_audio_format_get_rate	(SwfdecAudioFormat	format);
 guint			swfdec_audio_format_get_granularity
 							(SwfdecAudioFormat	format);
+guint			swfdec_audio_format_get_bytes_per_sample
+							(SwfdecAudioFormat	format);
 const char *		swfdec_audio_format_to_string	(SwfdecAudioFormat	format);
 
 

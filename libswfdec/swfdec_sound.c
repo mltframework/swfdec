@@ -163,7 +163,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-static SwfdecBuffer *
+SwfdecBuffer *
 swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
 {
   gpointer decoder;
@@ -186,15 +186,16 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   if (decoder == NULL)
     return NULL;
   sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
-  sample_bytes = 2 * swfdec_audio_format_get_channels (sound->decoded_format);
+  sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
   /* FIXME: The size is only a guess */
   swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
 
   swfdec_audio_decoder_push (decoder, sound->encoded);
   swfdec_audio_decoder_push (decoder, NULL);
   queue = swfdec_buffer_queue_new ();
-  while ((tmp = swfdec_audio_decoder_pull (decoder)))
+  while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
+  }
   swfdec_audio_decoder_free (decoder);
   tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
   swfdec_buffer_queue_unref (queue);
@@ -207,15 +208,16 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
   }
-  /* sound buffer may be bigger due to mp3 not having sample boundaries */
   if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
       > sound->n_samples * sample_bytes) {
-    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, 
-	sound->n_samples * sample_bytes / swfdec_audio_format_get_granularity (sound->decoded_format));
+    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * sample_bytes);
+    SWFDEC_DEBUG ("%u samples in %u bytes should be available, but %u bytes are, cutting them off",
+	sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format), 
+	sound->n_samples * sample_bytes / swfdec_audio_format_get_granularity (sound->decoded_format), 
+	tmp->length);
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
-  }
-  if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
+  } else if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
       < sound->n_samples * sample_bytes) {
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
@@ -319,31 +321,35 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
   has_in_point = swfdec_bits_getbits (b, 1);
   if (has_in_point) {
     chunk->start_sample = swfdec_bits_get_u32 (b);
+    SWFDEC_LOG ("  start_sample = %u", chunk->start_sample);
   } else {
     chunk->start_sample = 0;
   }
   if (has_out_point) {
     chunk->stop_sample = swfdec_bits_get_u32 (b);
-    if (chunk->stop_sample > sound->n_samples) {
-      SWFDEC_INFO ("more samples specified (%u) than available (%u)", 
-	  chunk->stop_sample, sound->n_samples);
+    if (chunk->stop_sample == 0) {
+      SWFDEC_FIXME ("stop sample == 0???");
+    }
+    SWFDEC_LOG ("  stop_sample = %u", chunk->stop_sample);
+    if (chunk->stop_sample <= chunk->start_sample) {
+      SWFDEC_ERROR ("stopping before starting? (start sample %u, stop sample %u)",
+	  chunk->start_sample, chunk->stop_sample);
+      chunk->stop_sample = 0;
     }
   } else {
-    chunk->stop_sample = sound->n_samples;
+    chunk->stop_sample = 0;
   }
   if (has_loops) {
     chunk->loop_count = swfdec_bits_get_u16 (b);
+    SWFDEC_LOG ("  loop_count = %u", chunk->loop_count);
   } else {
     chunk->loop_count = 1;
   }
   if (has_envelope) {
     chunk->n_envelopes = swfdec_bits_get_u8 (b);
     chunk->envelope = g_new (SwfdecSoundEnvelope, chunk->n_envelopes);
+    SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
   }
-  SWFDEC_LOG ("  start_sample = %u", chunk->start_sample);
-  SWFDEC_LOG ("  stop_sample = %u", chunk->stop_sample);
-  SWFDEC_LOG ("  loop_count = %u", chunk->loop_count);
-  SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
 
   for (i = 0; i < chunk->n_envelopes; i++) {
     chunk->envelope[i].offset = swfdec_bits_get_u32 (b);

@@ -53,7 +53,7 @@ struct _SwfdecSoundChunk
   int			no_restart;	      	/* don't restart if already playing */
 
   guint			start_sample; 		/* sample at which to start playing */
-  guint			stop_sample;	      	/* first sample to not play anymore */
+  guint			stop_sample;	      	/* first sample to not play anymore or 0 for playing all */
   guint			loop_count;		/* amount of times this sample should be played back */
   guint			n_envelopes;		/* amount of points in the envelope */
   SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
@@ -86,6 +86,8 @@ int tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag);
 int tag_func_start_sound (SwfdecSwfDecoder * s, guint tag);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag);
 
+SwfdecBuffer *		swfdec_sound_get_decoded	(SwfdecSound *		sound,
+							 SwfdecAudioFormat *	format);
 void			swfdec_sound_render		(SwfdecSound *		sound, 
 							 gint16 *		dest, 
 							 guint		offset,

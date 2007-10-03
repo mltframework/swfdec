@@ -320,3 +320,22 @@ swfdec_audio_format_to_string (SwfdecAudioFormat format)
 
   return names[format];
 }
+
+/**
+ * swfdec_audio_format_get_bytes_per_sample:
+ * @format: audio format to check
+ *
+ * Computes the number of bytes required to store one sample of audio encoded
+ * in @format.
+ *
+ * Returns: The number of bytes for one sample
+ **/
+guint
+swfdec_audio_format_get_bytes_per_sample (SwfdecAudioFormat format)
+{
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 1);
+
+  /*     channels         16bit vs 8bit */
+  return (format & 0x2) * ((format & 0x1) ? 2 : 1);
+}
+

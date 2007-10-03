@@ -237,7 +237,6 @@ swfdec_audio_format_new (guint rate, guint channels, gboolean is_16bit)
     case 11025:
       ret = 1 << 2; 
     case 5512:
-      break;
       ret = 0 << 2; 
       break;
     default:

@@ -170,6 +170,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   SwfdecBuffer *tmp;
   SwfdecBufferQueue *queue;
   guint sample_bytes;
+  guint n_samples;
 
   g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
   g_return_val_if_fail (format != NULL, NULL);
@@ -187,8 +188,9 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
     return NULL;
   sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
   sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
+  n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
   /* FIXME: The size is only a guess */
-  swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
+  swfdec_cached_load (SWFDEC_CACHED (sound), n_samples * sample_bytes);
 
   swfdec_audio_decoder_push (decoder, sound->encoded);
   swfdec_audio_decoder_push (decoder, NULL);
@@ -201,31 +203,25 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   swfdec_buffer_queue_unref (queue);
 
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
-      tmp->length / sample_bytes, sound->n_samples, sound->skip);
+      tmp->length / sample_bytes, n_samples, sound->skip);
   if (sound->skip) {
     SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, sound->skip * sample_bytes, 
 	tmp->length - sound->skip * sample_bytes);
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
   }
-  if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
-      > sound->n_samples * sample_bytes) {
-    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, sound->n_samples * sample_bytes);
+  if (tmp->length > n_samples * sample_bytes) {
+    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, n_samples * sample_bytes);
     SWFDEC_DEBUG ("%u samples in %u bytes should be available, but %u bytes are, cutting them off",
-	sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format), 
-	sound->n_samples * sample_bytes / swfdec_audio_format_get_granularity (sound->decoded_format), 
-	tmp->length);
+	n_samples, n_samples * sample_bytes, tmp->length);
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
-  } else if (tmp->length * swfdec_audio_format_get_granularity (sound->decoded_format) 
-      < sound->n_samples * sample_bytes) {
+  } else if (tmp->length < n_samples * sample_bytes) {
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
      * It's probably not worth more than INFO for the usual case though */
     SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format), 
-	sound->n_samples * sample_bytes / swfdec_audio_format_get_granularity (sound->decoded_format), 
-	tmp->length);
+	n_samples, n_samples * sample_bytes, tmp->length);
   }
   /* only assign here, the decoding code checks this variable */
   sound->decoded = tmp;
@@ -243,10 +239,10 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
   int latency;
   SwfdecSound *sound;
 
-  /* we don't care about playback suggestions */
   if (swfdec_bits_getbits (b, 4)) {
     SWFDEC_ERROR ("0 bits aren't 0");
   }
+  /* we don't care about playback suggestions */
   playback = swfdec_audio_format_parse (b);
   SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback));
 

@@ -235,12 +235,14 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   SwfdecAudioFormat playback;
+  int ignore;
   int n_samples;
   int latency;
   SwfdecSound *sound;
 
-  if (swfdec_bits_getbits (b, 4)) {
-    SWFDEC_ERROR ("0 bits aren't 0");
+  ignore = swfdec_bits_getbits (b, 4);
+  if (ignore) {
+    SWFDEC_ERROR ("0 bits aren't 0, but %u", ignore);
   }
   /* we don't care about playback suggestions */
   playback = swfdec_audio_format_parse (b);

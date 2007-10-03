@@ -59,7 +59,11 @@ var tests = [
   "4,8,12",
   true,
   false,
-  null
+  null,
+  -2147483648,
+  -2147483650,
+  2147483648,
+  2147483650
 ];
 
 tests.push (new Array ());

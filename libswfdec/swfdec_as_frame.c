@@ -81,6 +81,8 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
   if (frame->argc == 0) {
+    iter->i = iter->n = 0;
+    iter->stack = NULL;
     iter->current = NULL;
     return NULL;
   }

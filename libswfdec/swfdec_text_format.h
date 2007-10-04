@@ -51,28 +51,6 @@ typedef enum {
   SWFDEC_TEXT_DISPLAY_BLOCK,
 } SwfdecTextDisplay;
 
-typedef enum {
-  SWFDEC_TEXT_FORMAT_PROPERTY_ALIGN = 0,
-  SWFDEC_TEXT_FORMAT_PROPERTY_BLOCK_INDENT,
-  SWFDEC_TEXT_FORMAT_PROPERTY_BOLD,
-  SWFDEC_TEXT_FORMAT_PROPERTY_BULLET,
-  SWFDEC_TEXT_FORMAT_PROPERTY_COLOR,
-  SWFDEC_TEXT_FORMAT_PROPERTY_DISPLAY,
-  SWFDEC_TEXT_FORMAT_PROPERTY_FONT,
-  SWFDEC_TEXT_FORMAT_PROPERTY_INDENT,
-  SWFDEC_TEXT_FORMAT_PROPERTY_ITALIC,
-  SWFDEC_TEXT_FORMAT_PROPERTY_KERNING,
-  SWFDEC_TEXT_FORMAT_PROPERTY_LEADING,
-  SWFDEC_TEXT_FORMAT_PROPERTY_LEFT_MARGIN,
-  SWFDEC_TEXT_FORMAT_PROPERTY_LETTER_SPACING,
-  SWFDEC_TEXT_FORMAT_PROPERTY_RIGHT_MARGIN,
-  SWFDEC_TEXT_FORMAT_PROPERTY_SIZE,
-  SWFDEC_TEXT_FORMAT_PROPERTY_TAB_STOPS,
-  SWFDEC_TEXT_FORMAT_PROPERTY_TARGET,
-  SWFDEC_TEXT_FORMAT_PROPERTY_UNDERLINE,
-  SWFDEC_TEXT_FORMAT_PROPERTY_URL
-} SwfdecTextFormatProperty;
-
 struct _SwfdecTextFormat {
   SwfdecAsObject	object;
 
@@ -106,6 +84,10 @@ struct _SwfdecTextFormatClass {
 GType		swfdec_text_format_get_type	(void);
 
 SwfdecAsObject * swfdec_text_format_new		(SwfdecAsContext *	context);
+void		swfdec_text_format_set_defaults	(SwfdecTextFormat *	format);
+SwfdecTextFormat * swfdec_text_format_copy	(const SwfdecTextFormat *copy_from);
+void		swfdec_text_format_add		(SwfdecTextFormat *	format,
+						 const SwfdecTextFormat *from);
 
 G_END_DECLS
 #endif

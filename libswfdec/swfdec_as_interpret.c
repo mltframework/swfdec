@@ -1204,7 +1204,9 @@ swfdec_action_string_add (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_push_duplicate (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  *swfdec_as_stack_push (cx) = *swfdec_as_stack_peek (cx, 1);
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
+
+  *swfdec_as_stack_push (cx) = *val;
 }
 
 static void

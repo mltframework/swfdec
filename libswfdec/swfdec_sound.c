@@ -235,15 +235,12 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   SwfdecAudioFormat playback;
-  int ignore;
+  guint playback_codec;
   int n_samples;
   int latency;
   SwfdecSound *sound;
 
-  ignore = swfdec_bits_getbits (b, 4);
-  if (ignore) {
-    SWFDEC_ERROR ("0 bits aren't 0, but %u", ignore);
-  }
+  playback_codec = swfdec_bits_getbits (b, 4);
   /* we don't care about playback suggestions */
   playback = swfdec_audio_format_parse (b);
   SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback));
@@ -252,6 +249,10 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
   sound->codec = swfdec_bits_getbits (b, 4);
   sound->format = swfdec_audio_format_parse (b);
   n_samples = swfdec_bits_get_u16 (b);
+  if (playback_codec != 0 && playback_codec != sound->codec) {
+    SWFDEC_FIXME ("playback codec %u doesn't match sound codec %u", 
+	playback_codec, sound->codec);
+  }
 
   if (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head)
     g_object_unref (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);

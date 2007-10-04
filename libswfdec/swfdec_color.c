@@ -274,35 +274,3 @@ swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
   dest->y0 = (start->y0 * inv_ratio + end->y0 * ratio) / 65535;
 }
 
-SwfdecGradient *
-swfdec_gradient_new (guint n_elements)
-{
-  SwfdecGradient *grad;
-  
-  grad = g_malloc0 (sizeof (SwfdecGradient) +
-      sizeof (SwfdecGradientEntry) * (MAX (n_elements, 1) - 1));
-  grad->n_gradients = n_elements;
-
-  return grad;
-}
-
-SwfdecGradient *
-swfdec_gradient_morph (SwfdecGradient *start, SwfdecGradient *end, guint ratio)
-{
-  SwfdecGradient *morph;
-  guint i;
-
-  g_return_val_if_fail (start != NULL, NULL);
-  g_return_val_if_fail (end != NULL, NULL);
-  g_return_val_if_fail (start->n_gradients == end->n_gradients, NULL);
-
-  morph = swfdec_gradient_new (start->n_gradients);
-  for (i = 0; i < morph->n_gradients; i++) {
-    morph->array[i].color = swfdec_color_apply_morph (start->array[i].color,
-	end->array[i].color, ratio);
-    morph->array[i].ratio = (start->array[i].ratio * (65535 - ratio) +
-	end->array[i + 1].ratio * ratio) / 65535;
-  }
-  return morph;
-}
-

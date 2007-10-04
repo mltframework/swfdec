@@ -284,6 +284,7 @@ swfdec_as_frame_dispose (GObject *object)
   while (frame->blocks->len > 0)
     swfdec_as_frame_pop_block (frame);
   g_array_free (frame->blocks, TRUE);
+  g_slist_free (frame->scope_chain);
 
   G_OBJECT_CLASS (swfdec_as_frame_parent_class)->dispose (object);
 }

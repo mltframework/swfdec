@@ -520,7 +520,7 @@ swfdec_as_object_hash_foreach_rename (gpointer key, gpointer value, gpointer dat
  * @func: function determining the new name
  * @data: data to pass to @func
  *
- * Calls @func for each variable of @object. If The function is then supposed 
+ * Calls @func for each variable of @object. The function is then supposed 
  * to return the new name of the variable or %NULL if the variable should be 
  * removed. This is an internal function for array operations.
  **/
@@ -683,6 +683,7 @@ swfdec_as_object_collect (SwfdecAsObject *object)
   object->properties = NULL;
   if (object->watches) {
     g_hash_table_foreach_steal (object->watches, swfdec_as_object_steal_watches, object);
+    g_hash_table_destroy (object->watches);
     object->watches = NULL;
   }
   if (object->size)

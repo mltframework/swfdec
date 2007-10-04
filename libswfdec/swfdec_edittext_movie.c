@@ -45,6 +45,11 @@ swfdec_edit_text_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   if (text->paragraph == NULL)
     return;
+  /* clip by extents to avoid artifacts */
+  cairo_rectangle (cr, movie->original_extents.x0, movie->original_extents.y0, 
+      movie->original_extents.x1 - movie->original_extents.x0, 
+      movie->original_extents.y1 - movie->original_extents.y0);
+  cairo_clip (cr);
   swfdec_edit_text_render (text->text, cr, text->paragraph, trans, inval);
 }
 

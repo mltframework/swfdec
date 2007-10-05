@@ -278,6 +278,7 @@ ASSetPropFlags (MovieClip.prototype, null, 3);
 /* TextField */
 
 TextField = ASconstructor (104, 0);
+TextField.prototype.setTextFormat = ASnative (104, 102);
 
 /* TextFormat */
 

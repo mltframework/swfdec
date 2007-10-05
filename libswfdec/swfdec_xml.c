@@ -77,7 +77,7 @@ static EntityConversion xml_entities[] = {
 };
 
 char *
-swfdec_xml_escape (const char *orginal)
+swfdec_xml_escape_len (const char *orginal, gssize length)
 {
   int i;
   const char *p, *start;
@@ -86,7 +86,7 @@ swfdec_xml_escape (const char *orginal)
   string = g_string_new ("");
 
   p = start = orginal;
-  while (*(p += strcspn (p, "&<>\"'")) != '\0') {
+  while (*(p += strcspn (p, "&<>\"'")) != '\0' && p - orginal < length) {
     string = g_string_append_len (string, start, p - start);
 
     // escape it
@@ -101,13 +101,19 @@ swfdec_xml_escape (const char *orginal)
     p++;
     start = p;
   }
-  string = g_string_append (string, start);
+  string = g_string_append_len (string, start, length - (start - orginal));
 
   return g_string_free (string, FALSE);
 }
 
 char *
-swfdec_xml_unescape (const char *orginal)
+swfdec_xml_escape (const char *orginal)
+{
+  return swfdec_xml_escape_len (orginal, strlen (orginal));
+}
+
+char *
+swfdec_xml_unescape_len (const char *orginal, gssize length)
 {
   int i;
   const char *p, *start;
@@ -116,7 +122,7 @@ swfdec_xml_unescape (const char *orginal)
   string = g_string_new ("");
 
   p = start = orginal;
-  while ((p = strchr (p, '&')) != NULL) {
+  while ((p = strchr (p, '&')) != NULL && p - orginal < length) {
     string = g_string_append_len (string, start, p - start);
 
     for (i = 0; xml_entities[i].escaped != NULL; i++) {
@@ -134,9 +140,15 @@ swfdec_xml_unescape (const char *orginal)
 
     start = p;
   }
-  string = g_string_append (string, start);
+  string = g_string_append_len (string, start, length - (start - orginal));
 
   return g_string_free (string, FALSE);
+}
+
+char *
+swfdec_xml_unescape (const char *orginal)
+{
+  return swfdec_xml_unescape_len (orginal, strlen (orginal));
 }
 
 // this is never declared, only available as ASnative (100, 5)

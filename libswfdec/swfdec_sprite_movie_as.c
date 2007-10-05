@@ -404,6 +404,7 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (object == NULL)
     return;
 
+  swfdec_movie_update (movie);
   if (swfdec_rect_is_empty (&movie->extents)) {
     x0 = x1 = y0 = y1 = 0x7FFFFFF;
   } else {

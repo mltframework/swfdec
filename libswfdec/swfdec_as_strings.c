@@ -385,6 +385,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("block")
   SWFDEC_AS_CONSTANT_STRING ("TextField")
   SWFDEC_AS_CONSTANT_STRING ("text")
+  SWFDEC_AS_CONSTANT_STRING ("htmlText")
+  SWFDEC_AS_CONSTANT_STRING ("html")
   SWFDEC_AS_CONSTANT_STRING ("TextFormat")
   SWFDEC_AS_CONSTANT_STRING ("Times New Roman")
   /* add more here */

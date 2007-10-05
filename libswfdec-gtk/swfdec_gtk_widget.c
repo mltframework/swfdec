@@ -313,7 +313,7 @@ swfdec_gtk_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation
 
   gtkwidget->allocation = *allocation;
 
-  if (priv->player)
+  if (priv->player && swfdec_player_is_initialized (priv->player))
     swfdec_player_set_size (priv->player, allocation->width, allocation->height);
   if (GTK_WIDGET_REALIZED (gtkwidget)) {
     gdk_window_move_resize (gtkwidget->window, 

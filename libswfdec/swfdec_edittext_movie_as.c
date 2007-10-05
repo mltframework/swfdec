@@ -31,6 +31,7 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
+#include "swfdec_xml.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
 
@@ -112,6 +113,7 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
   guint index_, index_prev;
   int change_level;
   gboolean textformat, bullet;
+  char *escaped;
 
   g_return_val_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text), string);
   g_return_val_if_fail (string != NULL, string);
@@ -195,8 +197,11 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
     index_ = ((SwfdecFormatIndex *)(iter->data))->index;
     format = ((SwfdecFormatIndex *)(iter->data))->format;
 
-    string = g_string_append_len (string, text->text_display + index_prev,
+    escaped = swfdec_xml_escape_len (text->text_display + index_prev,
 	index_ - index_prev);
+    string = g_string_append (string, escaped);
+    g_free (escaped);
+    escaped = NULL;
 
     // Figure out what tags need to be rewritten
     if (format->font != format_prev->font ||
@@ -291,8 +296,10 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
       string = g_string_append (string, "<U>");
   }
 
-  string = g_string_append_len (string, text->text_display + index_,
+  escaped = swfdec_xml_escape_len (text->text_display + index_,
       end_index - index_);
+  string = g_string_append (string, escaped);
+  g_free (escaped);
 
   if (format->underline)
     string = g_string_append (string, "</U>");

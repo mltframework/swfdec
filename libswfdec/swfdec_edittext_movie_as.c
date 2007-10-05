@@ -45,12 +45,15 @@ swfdec_edit_text_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   text = SWFDEC_EDIT_TEXT_MOVIE (object);
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ? swfdec_as_context_get_string (cx, text->text_display) : SWFDEC_AS_STR_EMPTY));
+  SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ?
+	swfdec_as_context_get_string (cx, text->text_display) :
+	SWFDEC_AS_STR_EMPTY));
 }
 
 static void
-swfdec_edit_text_movie_do_set_text (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_edit_text_movie_do_set_text (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SwfdecEditTextMovie *text;
   const char *value;
@@ -59,22 +62,6 @@ swfdec_edit_text_movie_do_set_text (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   swfdec_edit_text_movie_set_text (text, value);
 }
-
-/*
- * Order of tags:
- * TEXTFORMAT / P or LI / FONT / A / B / I / U
- *
- * Order of attributes:
- * TEXTFORMAT:
- * LEFTMARGIN / RIGHTMARGIN / INDENT / LEADING / BLOCKINDENT / TABSTOPS
- * P: ALIGN
- * LI: none
- * FONT: FACE / SIZE / COLOR / LETTERSPACING / KERNING
- * A: HREF / TARGET
- * B: none
- * I: none
- * U: none
- */
 
 static const char *
 align_to_string (SwfdecTextAlign align)
@@ -93,6 +80,21 @@ align_to_string (SwfdecTextAlign align)
   }
 }
 
+/*
+ * Order of tags:
+ * TEXTFORMAT / P or LI / FONT / A / B / I / U
+ *
+ * Order of attributes:
+ * TEXTFORMAT:
+ * LEFTMARGIN / RIGHTMARGIN / INDENT / LEADING / BLOCKINDENT / TABSTOPS
+ * P: ALIGN
+ * LI: none
+ * FONT: FACE / SIZE / COLOR / LETTERSPACING / KERNING
+ * A: HREF / TARGET
+ * B: none
+ * I: none
+ * U: none
+ */
 static GString *
 swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
     GString *string, guint start_index, guint end_index)
@@ -162,7 +164,10 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
     bullet = FALSE;
   }
 
-  g_string_append_printf (string, "<FONT FACE=\"%s\" SIZE=\"%i\" COLOR=\"#%06X\" LETTERSPACING=\"%i\" KERNING=\"%i\">", format->font, format->size, format->color, (int)format->letter_spacing, (format->kerning ? 1 : 0));
+  // note we don't escape format->font, even thought it can have evil chars
+  g_string_append_printf (string, "<FONT FACE=\"%s\" SIZE=\"%i\" COLOR=\"#%06X\" LETTERSPACING=\"%i\" KERNING=\"%i\">",
+      format->font, format->size, format->color, (int)format->letter_spacing,
+      (format->kerning ? 1 : 0));
   fonts = g_slist_prepend (NULL, format);
 
   if (format->url != SWFDEC_AS_STR_EMPTY)
@@ -244,6 +249,7 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
       fonts = g_slist_prepend (fonts, format);
 
       string = g_string_append (string, "<FONT");
+      // note we don't escape format->font, even thought it can have evil chars
       if (format->font != format_font->font)
 	g_string_append_printf (string, " FACE=\"%s\"", format->font);
       if (format->size != format_font->size)
@@ -553,7 +559,8 @@ swfdec_edit_text_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_add (object, cx, sizeof (SwfdecEditTextMovie));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_set_constructor (object, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+      swfdec_as_object_set_constructor (object,
+	  SWFDEC_AS_VALUE_GET_OBJECT (&val));
     } else {
       SWFDEC_INFO ("\"TextField\" is not an object");
     }

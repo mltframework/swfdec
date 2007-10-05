@@ -22,6 +22,8 @@
 
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_edittext.h>
+#include <libswfdec/swfdec_style_sheet.h>
+#include <libswfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
 
@@ -35,12 +37,51 @@ typedef struct _SwfdecEditTextMovieClass SwfdecEditTextMovieClass;
 #define SWFDEC_EDIT_TEXT_MOVIE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_EDIT_TEXT_MOVIE, SwfdecEditTextMovie))
 #define SWFDEC_EDIT_TEXT_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_EDIT_TEXT_MOVIE, SwfdecEditTextMovieClass))
 
+typedef struct {
+  guint			index;
+  SwfdecTextFormat *	format;
+} SwfdecFormatIndex;
+
+typedef enum {
+  SWFDEC_ANTI_ALIAS_TYPE_NORMAL,
+  SWFDEC_ANTI_ALIAS_TYPE_ADVANCED
+} SwfdecAntiAliasType;
+
+typedef enum {
+  SWFDEC_GRID_FIT_TYPE_NONE,
+  SWFDEC_GRID_FIT_TYPE_PIXEL,
+  SWFDEC_GRID_FIT_TYPE_SUBPIXEL
+} SwfdecGridFitType;
+
 struct _SwfdecEditTextMovie {
   SwfdecMovie		movie;
 
   SwfdecEditText *	text;		/* the edit_text object we render */
-  char *		str;		/* the string that gets rendered */
-  SwfdecParagraph *	paragraph;	/* edit_text parsed to paragraph */
+
+  const char *		text_input;
+  const char *		text_display;
+
+  const char *		variable;
+
+  SwfdecTextFormat *	format_new;
+  GSList *		formats;
+
+  SwfdecAntiAliasType	anti_alias_type;
+  gboolean		background_fill;
+  guint			border_color;
+  gboolean		condense_white;
+  gboolean		embed_fonts;
+  SwfdecGridFitType	grid_fit_type;
+  guint			hscroll;
+  gboolean		mouse_wheel_enabled;
+  const char *		restrict_;
+  guint			scroll;
+  int			sharpness;
+  SwfdecStyleSheet *	style_sheet;
+  int			thickness;
+
+  /* for rendering */
+  SwfdecTextRenderBlock *blocks;
 };
 
 struct _SwfdecEditTextMovieClass {
@@ -51,6 +92,7 @@ GType		swfdec_edit_text_movie_get_type		(void);
 
 void		swfdec_edit_text_movie_set_text		(SwfdecEditTextMovie *	movie,
 							 const char *		str);
+void		swfdec_edit_text_movie_format_changed	(SwfdecEditTextMovie *	text);
 
 G_END_DECLS
 #endif

@@ -45,8 +45,7 @@ swfdec_edit_text_create_movie (SwfdecGraphic *graphic, gsize *size)
   SwfdecEditTextMovie *ret = g_object_new (SWFDEC_TYPE_EDIT_TEXT_MOVIE, NULL);
 
   ret->text = text;
-  if (text->text)
-    swfdec_edit_text_movie_set_text (ret, text->text);
+
   *size = sizeof (SwfdecEditTextMovie);
 
   return SWFDEC_MOVIE (ret);
@@ -57,11 +56,11 @@ swfdec_edit_text_dispose (GObject *object)
 {
   SwfdecEditText *text = SWFDEC_EDIT_TEXT (object);
 
-  g_free (text->text);
-  text->text = NULL;
+  g_free (text->text_input);
+  text->text_input = NULL;
   g_free (text->variable);
   text->variable = NULL;
-  
+
   G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
 }
 
@@ -82,6 +81,68 @@ swfdec_edit_text_init (SwfdecEditText * text)
   text->max_length = G_MAXUINT;
 }
 
+void
+swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
+    const SwfdecTextRenderBlock *blocks, const SwfdecColorTransform *trans,
+    const SwfdecRect *inval, gboolean fill)
+{
+  guint i;
+  PangoFontDescription *desc;
+  PangoLayout *layout;
+  guint width;
+  SwfdecColor color;
+
+  g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
+  g_return_if_fail (cr != NULL);
+  g_return_if_fail (blocks != NULL);
+  g_return_if_fail (trans != NULL);
+  g_return_if_fail (inval != NULL);
+
+  // is this correct?
+  if (text->font == NULL) {
+    SWFDEC_ERROR ("no font to render with");
+    return;
+  }
+  if (text->font->desc == NULL) {
+    SWFDEC_INFO ("font %d has no cairo font description",
+	SWFDEC_CHARACTER (text->font)->id);
+    desc = pango_font_description_new ();
+    pango_font_description_set_family (desc, "Sans");
+  } else {
+    desc = pango_font_description_copy (text->font->desc);
+  }
+  pango_font_description_set_absolute_size (desc, text->height * PANGO_SCALE);
+  layout = pango_cairo_create_layout (cr);
+  pango_layout_set_font_description (layout, desc);
+  pango_font_description_free (desc);
+
+  cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
+      SWFDEC_GRAPHIC (text)->extents.y0);
+
+  color = swfdec_color_apply_transform (text->color, trans);
+  swfdec_color_set_source (cr, color);
+
+  for (i = 0; blocks[i].text != NULL; i++) {
+    g_print ("render! %i\n", i);
+
+    cairo_rel_move_to (cr, blocks[i].left_margin, 0);
+    width = SWFDEC_GRAPHIC (text)->extents.x1 -
+      SWFDEC_GRAPHIC (text)->extents.x0 - blocks[i].left_margin -
+      blocks[i].right_margin;
+    pango_layout_set_width (layout, width * PANGO_SCALE);
+
+    pango_layout_set_text (layout, blocks[i].text, blocks[i].text_length);
+    pango_layout_set_attributes (layout, blocks[i].attrs);
+    pango_layout_set_alignment (layout, blocks[i].align);
+    pango_layout_set_justify (layout, blocks[i].justify);
+    if (fill)
+      pango_cairo_show_layout (cr, layout);
+    else
+      pango_cairo_layout_path (cr, layout);
+  }
+  g_object_unref (layout);
+}
+
 int
 tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
 {
@@ -90,7 +151,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   int reserved, use_outlines;
   gboolean has_font, has_color, has_max_length, has_layout, has_text;
   SwfdecBits *b = &s->b;
-  
+
   id = swfdec_bits_get_u16 (b);
   SWFDEC_LOG ("  id = %u", id);
   text = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_EDIT_TEXT);
@@ -106,12 +167,13 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   text->wrap = swfdec_bits_getbit (b);
   text->multiline = swfdec_bits_getbit (b);
   text->password = swfdec_bits_getbit (b);
-  text->readonly = swfdec_bits_getbit (b);
+  text->input = !swfdec_bits_getbit (b);
   has_color = swfdec_bits_getbit (b);
   has_max_length = swfdec_bits_getbit (b);
   has_font = swfdec_bits_getbit (b);
   reserved = swfdec_bits_getbit (b);
-  text->autosize = swfdec_bits_getbit (b);
+  text->auto_size =
+    (swfdec_bits_getbit (b) ? SWFDEC_AUTO_SIZE_LEFT : SWFDEC_AUTO_SIZE_NONE);
   has_layout = swfdec_bits_getbit (b);
   text->selectable = !swfdec_bits_getbit (b);
   text->border = swfdec_bits_getbit (b);
@@ -146,16 +208,16 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     guint align = swfdec_bits_get_u8 (b);
     switch (align) {
       case 0:
-	text->align = PANGO_ALIGN_LEFT;
+	text->align = SWFDEC_TEXT_ALIGN_LEFT;
 	break;
       case 1:
-	text->align = PANGO_ALIGN_RIGHT;
+	text->align = SWFDEC_TEXT_ALIGN_RIGHT;
 	break;
       case 2:
-	text->align = PANGO_ALIGN_CENTER;
+	text->align = SWFDEC_TEXT_ALIGN_CENTER;
 	break;
       case 3:
-	text->justify = TRUE;
+	text->align = SWFDEC_TEXT_ALIGN_JUSTIFY;
 	break;
       default:
 	SWFDEC_ERROR ("undefined align value %u", align);
@@ -172,7 +234,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->variable = NULL;
   }
   if (has_text)
-    text->text = swfdec_bits_get_string (b);
+    text->text_input = swfdec_bits_get_string (b);
 
   return SWFDEC_STATUS_OK;
 }

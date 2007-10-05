@@ -25,6 +25,7 @@
 #include <libswfdec/swfdec_color.h>
 #include <libswfdec/swfdec_graphic.h>
 #include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
 
@@ -38,36 +39,60 @@ typedef struct _SwfdecEditTextClass SwfdecEditTextClass;
 #define SWFDEC_EDIT_TEXT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_EDIT_TEXT, SwfdecEditText))
 #define SWFDEC_EDIT_TEXT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_EDIT_TEXT, SwfdecEditTextClass))
 
+typedef struct {
+  const char		*text;
+  int			text_length;
+
+  gboolean		bullet;
+  int			indent;
+  int			leading;
+  int			block_indent;
+  int			left_margin;
+  int			right_margin;
+  int			spacing;
+  PangoTabArray *	tabs;
+
+  PangoAttrList *	attrs;
+  PangoAlignment	align;
+  gboolean		justify;
+} SwfdecTextRenderBlock;
+
+typedef enum {
+  SWFDEC_AUTO_SIZE_NONE,
+  SWFDEC_AUTO_SIZE_LEFT,
+  SWFDEC_AUTO_SIZE_CENTER,
+  SWFDEC_AUTO_SIZE_RIGHT
+} SwfdecAutoSize;
+
 struct _SwfdecEditText
 {
   SwfdecGraphic		graphic;
 
-  /* text info */
-  char *		text;		/* initial displayed text or NULL if none */
-  gboolean		password;	/* if text is a password and should be displayed as '*' */
-  guint		max_length;	/* maximum number of characters */
-  gboolean		html;		/* text is pseudo-html */
+  gboolean		html;
 
-  /* layout info */
-  SwfdecFont *	  	font;		/* font or NULL for default */
+  gboolean		input;
+  gboolean		password;
+  guint			max_length;
+  gboolean		selectable;
+
+  SwfdecFont *	  	font;
+
   gboolean		wrap;
   gboolean		multiline;
-  PangoAlignment	align;
-  gboolean		justify;
-  guint		indent;		/* first line indentation */
-  int			spacing;	/* spacing between lines */
-  /* visual info */
-  SwfdecColor		color;		/* text color */
-  gboolean		selectable;
-  gboolean		border;		/* draw a border around the text field */
-  guint		height;
-  guint		left_margin;
-  guint		right_margin;
-  gboolean		autosize;	/* FIXME: implement */
+  SwfdecAutoSize	auto_size;
 
-  /* variable info */
-  char *		variable;	/* full name of the variable in dot notation */
-  gboolean		readonly;
+  gboolean		border;
+  guint			height;
+
+  /* only to be passed to the movie object */
+  char *		text_input;
+  char *		variable;
+  SwfdecColor		color;
+  SwfdecTextAlign	align;
+  guint			left_margin;
+  guint			right_margin;
+  guint			indent;
+  int			spacing;
 };
 
 struct _SwfdecEditTextClass
@@ -88,7 +113,7 @@ SwfdecParagraph *	swfdec_paragraph_text_parse	(SwfdecEditText *       text,
 void			swfdec_paragraph_free		(SwfdecParagraph *	paragraphs);
 void			swfdec_edit_text_render		(SwfdecEditText *	text,
 							 cairo_t *		cr,
-							 const SwfdecParagraph *	paragraph,
+							 const SwfdecTextRenderBlock *	blocks,
 							 const SwfdecColorTransform *	trans,
 							 const SwfdecRect *	rect,
 							 gboolean		fill);

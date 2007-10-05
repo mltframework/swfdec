@@ -103,18 +103,187 @@ align_to_string (SwfdecTextAlign align)
   }
 }
 
+static GString *
+swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
+    GString *string, guint start_index, guint end_index)
+{
+  SwfdecTextFormat *format, *format_prev, *format_font;
+  GSList *iter, *fonts;
+  guint index_, index_prev;
+  int change_level;
+  gboolean bullet;
+
+  g_return_val_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text), string);
+  g_return_val_if_fail (string != NULL, string);
+  g_return_val_if_fail (start_index < end_index, string);
+
+  g_return_val_if_fail (text->formats != NULL, string);
+  for (iter = text->formats; iter->next != NULL &&
+      ((SwfdecFormatIndex *)(iter->next->data))->index <= start_index;
+      iter = iter->next);
+
+  index_ = start_index;
+  format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+  if (format->bullet) {
+    g_string_append (string, "<LI>");
+    bullet = TRUE;
+  } else {
+    g_string_append_printf (string, "<P ALIGN=\"%s\">",
+	align_to_string (format->align));
+    bullet = FALSE;
+  }
+
+  g_string_append_printf (string, "<FONT FACE=\"%s\" SIZE=\"%i\" COLOR=\"#%06X\" LETTERSPACING=\"%i\" KERNING=\"%i\">", format->font, format->size, format->color, (int)format->letter_spacing, (format->kerning ? 1 : 0));
+  fonts = g_slist_prepend (NULL, format);
+
+  if (format->url != SWFDEC_AS_STR_EMPTY)
+    g_string_append_printf (string, "<A HREF=\"%s\" TARGET=\"%s\">",
+	format->url, format->target);
+  if (format->bold)
+    string = g_string_append (string, "<B>");
+  if (format->italic)
+    string = g_string_append (string, "<I>");
+  if (format->underline)
+    string = g_string_append (string, "<U>");
+
+  // special case: use <= instead of < to add some extra markup
+  for (iter = iter->next;
+      iter != NULL && ((SwfdecFormatIndex *)(iter->data))->index <= end_index;
+      iter = iter->next)
+  {
+    index_prev = index_;
+    format_prev = format;
+    index_ = ((SwfdecFormatIndex *)(iter->data))->index;
+    format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+    string = g_string_append_len (string, text->text_display + index_prev,
+	index_ - index_prev);
+
+    // Figure out what tags need to be rewritten
+    if (format->font != format_prev->font ||
+	format->size != format_prev->size ||
+	format->color != format_prev->color ||
+	(int)format->letter_spacing != (int)format_prev->letter_spacing ||
+	format->kerning != format_prev->kerning) {
+      change_level = CHANGE_LEVEL_FONT;
+    } else if (format->url != format_prev->url ||
+	format->target != format_prev->target) {
+      change_level = CHANGE_LEVEL_A;
+    } else if (format->bold != format_prev->bold) {
+      change_level = CHANGE_LEVEL_BOLD;
+    } else if (format->italic != format_prev->italic) {
+      change_level = CHANGE_LEVEL_ITALIC;
+    } else if (format->underline != format_prev->underline) {
+      change_level = CHANGE_LEVEL_UNDERLINE;
+    } else {
+      change_level = CHANGE_LEVEL_NONE;
+    }
+
+    // Close tags
+    if (change_level >= CHANGE_LEVEL_UNDERLINE) {
+      GSList *iter_font;
+      for (iter_font = fonts; iter_font != NULL; iter_font = iter_font->next)
+      {
+	format_font = (SwfdecTextFormat *)iter_font->data;
+	if (format->font == format_font->font &&
+	  format->size == format_font->size &&
+	  format->color == format_font->color &&
+	  (int)format->letter_spacing == (int)format_font->letter_spacing &&
+	  format->kerning == format_font->kerning) {
+	  break;
+	}
+      }
+      if (iter_font != NULL) {
+	while (fonts != iter_font) {
+	  string = g_string_append (string, "</FONT>");
+	  fonts = g_slist_remove (fonts, fonts->data);
+	}
+      }
+    }
+    if (format_prev->underline && change_level >= CHANGE_LEVEL_UNDERLINE)
+      string = g_string_append (string, "</U>");
+    if (format_prev->italic && change_level >= CHANGE_LEVEL_UNDERLINE)
+      string = g_string_append (string, "</I>");
+    if (format_prev->bold && change_level >= CHANGE_LEVEL_UNDERLINE)
+      string = g_string_append (string, "</B>");
+    if (format_prev->url != SWFDEC_AS_STR_EMPTY &&
+	change_level >= CHANGE_LEVEL_UNDERLINE) {
+      string = g_string_append (string, "</A>");
+    }
+
+    // Open tags
+    format_font = (SwfdecTextFormat *)fonts->data;
+    if (change_level >= CHANGE_LEVEL_FONT &&
+	(format->font != format_font->font ||
+	 format->size != format_font->size ||
+	 format->color != format_font->color ||
+	 (int)format->letter_spacing != (int)format_font->letter_spacing ||
+	 format->kerning != format_font->kerning))
+    {
+      fonts = g_slist_prepend (fonts, format);
+
+      string = g_string_append (string, "<FONT");
+      if (format->font != format_font->font)
+	g_string_append_printf (string, " FONT=\"%s\"", format->font);
+      if (format->size != format_font->size)
+	g_string_append_printf (string, " SIZE=\"%i\"", format->size);
+      if (format->color != format_font->color)
+	g_string_append_printf (string, " COLOR=\"#%06X\"", format->color);
+      if ((int)format->letter_spacing != (int)format_font->letter_spacing) {
+	g_string_append_printf (string, " LETTERSPACING=\"%i\"",
+	    (int)format->letter_spacing);
+      }
+      if (format->kerning != format_font->kerning) {
+	g_string_append_printf (string, " KERNING=\"%i\"",
+	    (format->kerning ? 1 : 0));
+      }
+      string = g_string_append (string, ">");
+    }
+    if (format->url != SWFDEC_AS_STR_EMPTY &&
+	change_level >= CHANGE_LEVEL_UNDERLINE) {
+      g_string_append_printf (string, "<A HREF=\"%s\" TARGET=\"%s\">",
+	  format->url, format->target);
+    }
+    if (format->bold && change_level >= CHANGE_LEVEL_UNDERLINE)
+      string = g_string_append (string, "<B>");
+    if (format->italic && change_level >= CHANGE_LEVEL_UNDERLINE)
+      string = g_string_append (string, "<I>");
+    if (format->underline && change_level >= CHANGE_LEVEL_UNDERLINE)
+      string = g_string_append (string, "<U>");
+  }
+
+  string = g_string_append_len (string, text->text_display + index_,
+      end_index - index_);
+
+  if (format->underline)
+    string = g_string_append (string, "</U>");
+  if (format->italic)
+    string = g_string_append (string, "</I>");
+  if (format->bold)
+    string = g_string_append (string, "</B>");
+  if (format->url != SWFDEC_AS_STR_EMPTY)
+    string = g_string_append (string, "</A>");
+  for (iter = fonts; iter != NULL; iter = iter->next)
+    string = g_string_append (string, "</FONT>");
+  g_slist_free (fonts);
+  if (bullet) {
+    string = g_string_append (string, "</LI>");
+  } else {
+    string = g_string_append (string, "</P>");
+  }
+
+  return string;
+}
+
 static void
 swfdec_edit_text_movie_get_htmlText (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SwfdecEditTextMovie *text;
-  SwfdecTextFormat *format, *format_prev, *format_font;
+  const char *p, *end;
   GString *string;
-  GSList *iter, *fonts;
-  guint index_, index_prev;
-  int change_level;
-  gboolean bullet = FALSE;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
 
@@ -130,153 +299,20 @@ swfdec_edit_text_movie_get_htmlText (SwfdecAsContext *cx,
 
   string = g_string_new ("");
 
-  fonts = NULL;
-  index_prev = 0;
-  format_prev = NULL;
-  for (iter = text->formats; iter != NULL; iter = iter->next)
-  {
-    index_ = ((SwfdecFormatIndex *)(iter->data))->index;
-    format = ((SwfdecFormatIndex *)(iter->data))->format;
+  p = text->text_display;
+  while (*p != '\0') {
+    end = strchr (p, '\n');
+    if (end == NULL)
+      end = strchr (p, '\0');
 
-    string = g_string_append_len (string, text->text_display + index_prev,
-	index_ - index_prev);
+    string = swfdec_edit_text_movie_htmlText_append_paragraph (text, string,
+	p - text->text_display, end - text->text_display);
 
-    if (format_prev == NULL) {
-      if (format->bullet) {
-	g_string_append (string, "<LI>");
-	bullet = TRUE;
-      } else {
-	g_string_append_printf (string, "<P ALIGN=\"%s\">",
-	    align_to_string (format->align));
-	bullet = FALSE;
-      }
-      g_string_append_printf (string, "<FONT FACE=\"%s\" SIZE=\"%i\" COLOR=\"#%06X\" LETTERSPACING=\"%i\" KERNING=\"%i\">", format->font, format->size, format->color, (int)format->letter_spacing, (format->kerning ? 1 : 0));
-      fonts = g_slist_prepend (fonts, format);
-      if (format->url != SWFDEC_AS_STR_EMPTY)
-	g_string_append_printf (string, "<A HREF=\"%s\" TARGET=\"%s\">",
-	    format->url, format->target);
-      if (format->bold)
-	string = g_string_append (string, "<B>");
-      if (format->italic)
-	string = g_string_append (string, "<I>");
-      if (format->underline)
-	string = g_string_append (string, "<U>");
+    if (*end == '\n') {
+      p = end + 1;
     } else {
-      // Figure out what tags need to be rewritten
-      if (format->font != format_prev->font ||
-	  format->size != format_prev->size ||
-	  format->color != format_prev->color ||
-	  (int)format->letter_spacing != (int)format_prev->letter_spacing ||
-	  format->kerning != format_prev->kerning) {
-	change_level = CHANGE_LEVEL_FONT;
-      } else if (format->url != format_prev->url ||
-	  format->target != format_prev->target) {
-	change_level = CHANGE_LEVEL_A;
-      } else if (format->bold != format_prev->bold) {
-	change_level = CHANGE_LEVEL_BOLD;
-      } else if (format->italic != format_prev->italic) {
-	change_level = CHANGE_LEVEL_ITALIC;
-      } else if (format->underline != format_prev->underline) {
-	change_level = CHANGE_LEVEL_UNDERLINE;
-      } else {
-	change_level = CHANGE_LEVEL_NONE;
-      }
-
-      // Close tags
-      if (change_level >= CHANGE_LEVEL_UNDERLINE) {
-	GSList *iter_font;
-	for (iter_font = fonts; iter_font != NULL; iter_font = iter_font->next)
-	{
-	  format_font = (SwfdecTextFormat *)iter_font->data;
-	  if (format->font == format_font->font &&
-	    format->size == format_font->size &&
-	    format->color == format_font->color &&
-	    (int)format->letter_spacing == (int)format_font->letter_spacing &&
-	    format->kerning == format_font->kerning) {
-	    break;
-	  }
-	}
-	if (iter_font != NULL) {
-	  while (fonts != iter_font) {
-	    string = g_string_append (string, "</FONT>");
-	    fonts = g_slist_remove (fonts, fonts->data);
-	  }
-	}
-      }
-      if (format_prev->underline && change_level >= CHANGE_LEVEL_UNDERLINE)
-	string = g_string_append (string, "</U>");
-      if (format_prev->italic && change_level >= CHANGE_LEVEL_UNDERLINE)
-	string = g_string_append (string, "</I>");
-      if (format_prev->bold && change_level >= CHANGE_LEVEL_UNDERLINE)
-	string = g_string_append (string, "</B>");
-      if (format_prev->url != SWFDEC_AS_STR_EMPTY &&
-	  change_level >= CHANGE_LEVEL_UNDERLINE) {
-	string = g_string_append (string, "</A>");
-      }
-
-      // Open tags
-      format_font = (SwfdecTextFormat *)fonts->data;
-      if (change_level >= CHANGE_LEVEL_FONT &&
-	  (format->font != format_font->font ||
-	   format->size != format_font->size ||
-	   format->color != format_font->color ||
-	   (int)format->letter_spacing != (int)format_font->letter_spacing ||
-	   format->kerning != format_font->kerning))
-      {
-	fonts = g_slist_prepend (fonts, format);
-
-	string = g_string_append (string, "<FONT");
-	if (format->font != format_font->font)
-	  g_string_append_printf (string, " FONT=\"%s\"", format->font);
-	if (format->size != format_font->size)
-	  g_string_append_printf (string, " SIZE=\"%i\"", format->size);
-	if (format->color != format_font->color)
-	  g_string_append_printf (string, " COLOR=\"#%06X\"", format->color);
-	if ((int)format->letter_spacing != (int)format_font->letter_spacing) {
-	  g_string_append_printf (string, " LETTERSPACING=\"%i\"",
-	      (int)format->letter_spacing);
-	}
-	if (format->kerning != format_font->kerning) {
-	  g_string_append_printf (string, " KERNING=\"%i\"",
-	      (format->kerning ? 1 : 0));
-	}
-	string = g_string_append (string, ">");
-      }
-      if (format->url != SWFDEC_AS_STR_EMPTY &&
-	  change_level >= CHANGE_LEVEL_UNDERLINE) {
-	g_string_append_printf (string, "<A HREF=\"%s\" TARGET=\"%s\">",
-	    format->url, format->target);
-      }
-      if (format->bold && change_level >= CHANGE_LEVEL_UNDERLINE)
-	string = g_string_append (string, "<B>");
-      if (format->italic && change_level >= CHANGE_LEVEL_UNDERLINE)
-	string = g_string_append (string, "<I>");
-      if (format->underline && change_level >= CHANGE_LEVEL_UNDERLINE)
-	string = g_string_append (string, "<U>");
+      p = end;
     }
-
-    index_prev = index_;
-    format_prev = format;
-  }
-  string = g_string_append (string, text->text_display + index_prev);
-
-  g_assert (format_prev != NULL);
-
-  if (format_prev->underline)
-    string = g_string_append (string, "</U>");
-  if (format_prev->italic)
-    string = g_string_append (string, "</I>");
-  if (format_prev->bold)
-    string = g_string_append (string, "</B>");
-  if (format_prev->url != SWFDEC_AS_STR_EMPTY)
-    string = g_string_append (string, "</A>");
-  for (iter = fonts; iter != NULL; iter = iter->next)
-    string = g_string_append (string, "</FONT>");
-  g_slist_free (fonts);
-  if (bullet) {
-    string = g_string_append (string, "</LI>");
-  } else {
-    string = g_string_append (string, "</P>");
   }
 
   SWFDEC_AS_VALUE_SET_STRING (ret,

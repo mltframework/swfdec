@@ -950,10 +950,11 @@ swfdec_text_format_set_defaults (SwfdecTextFormat *format)
   format->left_margin = 0;
   format->letter_spacing = 0;
   format->right_margin = 0;
-  format->size = 12; // ??
-  format->tab_stops = NULL; // ??
-  format->target = NULL; // ??
-  format->url = NULL; // ??
+  format->size = 12;
+  format->tab_stops =
+    SWFDEC_AS_ARRAY (swfdec_as_array_new (SWFDEC_AS_OBJECT (format)->context));
+  format->target = SWFDEC_AS_STR_EMPTY;
+  format->url = SWFDEC_AS_STR_EMPTY;
   format->underline = FALSE;
 
   format->values_set = (1 << PROP_TOTAL) - 1;

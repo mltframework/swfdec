@@ -111,7 +111,7 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
   GSList *iter, *fonts;
   guint index_, index_prev;
   int change_level;
-  gboolean bullet;
+  gboolean textformat, bullet;
 
   g_return_val_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text), string);
   g_return_val_if_fail (string != NULL, string);
@@ -125,8 +125,46 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
   index_ = start_index;
   format = ((SwfdecFormatIndex *)(iter->data))->format;
 
+  if (format->left_margin != 0 || format->right_margin != 0 ||
+      format->indent != 0 || format->leading != 0 ||
+      format->block_indent != 0 ||
+      swfdec_as_array_get_length (format->tab_stops) > 0)
+  {
+    string = g_string_append (string, "<TEXTFORMAT");
+    if (format->left_margin) {
+      g_string_append_printf (string, " LEFTMARGIN=\"%i\"",
+	  format->left_margin);
+    }
+    if (format->right_margin) {
+      g_string_append_printf (string, " RIGHTMARGIN=\"%i\"",
+	  format->right_margin);
+    }
+    if (format->indent)
+      g_string_append_printf (string, " INDENT=\"%i\"", format->indent);
+    if (format->leading)
+      g_string_append_printf (string, " LEADING=\"%i\"", format->leading);
+    if (format->block_indent) {
+      g_string_append_printf (string, " BLOCKINDENT=\"%i\"",
+	  format->block_indent);
+    }
+    if (swfdec_as_array_get_length (format->tab_stops) > 0) {
+      SwfdecAsValue val;
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT  (format->tab_stops));
+      g_string_append_printf (string, " TABSTOPS=\"%s\"",
+	  swfdec_as_value_to_string (SWFDEC_AS_OBJECT
+	    (format->tab_stops)->context, &val));
+    }
+    string = g_string_append (string, ">");
+
+    textformat = TRUE;
+  }
+  else
+  {
+    textformat = FALSE;
+  }
+
   if (format->bullet) {
-    g_string_append (string, "<LI>");
+    string = g_string_append (string, "<LI>");
     bullet = TRUE;
   } else {
     g_string_append_printf (string, "<P ALIGN=\"%s\">",
@@ -272,6 +310,8 @@ swfdec_edit_text_movie_htmlText_append_paragraph (SwfdecEditTextMovie *text,
   } else {
     string = g_string_append (string, "</P>");
   }
+  if (textformat)
+    string = g_string_append (string, "</TEXTFORMAT>");
 
   return string;
 }

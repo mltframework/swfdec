@@ -29,6 +29,17 @@ EXTRA_DIST = \
 	image-jpeg-alpha.swf.png \
 	image-lossless-alpha.swf \
 	image-lossless-alpha.swf.png \
+	morph-gradient.c \
+	morph-gradient-4.swf \
+	morph-gradient-4.swf.png \
+	morph-gradient-5.swf \
+	morph-gradient-5.swf.png \
+	morph-gradient-6.swf \
+	morph-gradient-6.swf.png \
+	morph-gradient-7.swf \
+	morph-gradient-7.swf.png \
+	morph-gradient-8.swf \
+	morph-gradient-8.swf.png \
 	negative-color-transform.c \
 	negative-color-transform.swf \
 	negative-color-transform.swf.png \

@@ -77,6 +77,10 @@ Mouse.hide = ASnative (5, 1);
 AsBroadcaster.initialize (Mouse);
 ASSetPropFlags(Mouse, null, 7);
 
+/*** MOVIECLIP ***/
+
+ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip");
+
 /*** STAGE ***/
 
 Stage = { };

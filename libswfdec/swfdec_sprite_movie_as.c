@@ -24,6 +24,7 @@
 #endif
 
 #include "swfdec_movie.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
@@ -252,17 +253,17 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *obj,
   swfdec_movie_set_depth (movie, depth);
 }
 
-static void
-swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj,
+SWFDEC_AS_NATIVE (901, 0, swfdec_sprite_movie_createEmptyMovieClip)
+void
+swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie, *parent;
   int depth;
   const char *name;
 
-  parent = SWFDEC_MOVIE (obj);
-  name = swfdec_as_value_to_string (cx, &argv[0]);
-  depth = swfdec_as_value_to_number (cx, &argv[1]);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &parent, "si", &name, &depth);
+
   movie = swfdec_movie_find (parent, depth);
   if (movie)
     swfdec_movie_remove (movie);
@@ -458,10 +459,6 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
   /* now add all the functions */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachMovie, SWFDEC_TYPE_SPRITE_MOVIE,
       swfdec_sprite_movie_attachMovie, 3);
-  if (version >= 6) {
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_createEmptyMovieClip, SWFDEC_TYPE_SPRITE_MOVIE,
-	swfdec_sprite_movie_createEmptyMovieClip, 2);
-  }
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_duplicateMovieClip, SWFDEC_TYPE_SPRITE_MOVIE, 
       swfdec_sprite_movie_duplicateMovieClip, 2);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getBytesLoaded, SWFDEC_TYPE_SPRITE_MOVIE, 

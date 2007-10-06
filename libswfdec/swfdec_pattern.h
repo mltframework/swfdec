@@ -41,8 +41,9 @@ struct _SwfdecPattern
 {
   SwfdecDraw		draw;
 
-  cairo_matrix_t	start_transform;	/* user-to-pattern transform */
-  cairo_matrix_t	end_transform;		/* user-to-pattern transform */
+  cairo_matrix_t	transform;		/* user-to-pattern transform */
+  cairo_matrix_t	start_transform;	/* start transform */
+  cairo_matrix_t	end_transform;		/* end transform (if morph) */
 };
 
 struct _SwfdecPatternClass

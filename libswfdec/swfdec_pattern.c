@@ -66,6 +66,11 @@ swfdec_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
 
   swfdec_matrix_morph (&dpattern->start_transform,
       &spattern->start_transform, &spattern->end_transform, ratio);
+  dpattern->transform = dpattern->start_transform;
+  if (cairo_matrix_invert (&dpattern->transform)) {
+    SWFDEC_ERROR ("morphed paint transform matrix not invertible, using default");
+    dpattern->transform = spattern->transform;
+  }
 
   SWFDEC_DRAW_CLASS (swfdec_pattern_parent_class)->morph (dest, source, ratio);
 }
@@ -92,6 +97,7 @@ swfdec_pattern_class_init (SwfdecPatternClass *klass)
 static void
 swfdec_pattern_init (SwfdecPattern *pattern)
 {
+  cairo_matrix_init_identity (&pattern->transform);
   cairo_matrix_init_identity (&pattern->start_transform);
   cairo_matrix_init_identity (&pattern->end_transform);
 }
@@ -213,7 +219,7 @@ swfdec_image_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform
     return NULL;
   pattern = cairo_pattern_create_for_surface (surface);
   cairo_surface_destroy (surface);
-  cairo_pattern_set_matrix (pattern, &pat->start_transform);
+  cairo_pattern_set_matrix (pattern, &pat->transform);
   cairo_pattern_set_extend (pattern, image->extend);
   cairo_pattern_set_filter (pattern, image->filter);
   return pattern;
@@ -312,7 +318,7 @@ swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransf
   cairo_pattern_set_matrix (pattern, &pat->transform);
 #else
   {
-    cairo_matrix_t mat = pat->start_transform;
+    cairo_matrix_t mat = pat->transform;
     if (gradient->radial) {
       pattern = cairo_pattern_create_radial ((16384.0 / 256.0) * gradient->focus, 
 	  0, 0, 0, 0, 16384 / 256.0);
@@ -451,10 +457,10 @@ swfdec_pattern_do_parse (SwfdecBits *bits, SwfdecSwfDecoder *dec, gboolean rgba)
     SWFDEC_ERROR ("unknown paint style type 0x%02x", paint_style_type);
     return NULL;
   }
-  if (cairo_matrix_invert (&pattern->start_transform)) {
+  pattern->transform = pattern->start_transform;
+  if (cairo_matrix_invert (&pattern->transform)) {
     SWFDEC_ERROR ("paint transform matrix not invertible, resetting");
-    cairo_matrix_init_identity (&pattern->start_transform);
-    cairo_matrix_init_identity (&pattern->end_transform);
+    cairo_matrix_init_identity (&pattern->transform);
   }
   swfdec_bits_syncbits (bits);
   return SWFDEC_DRAW (pattern);
@@ -521,7 +527,7 @@ swfdec_pattern_parse_morph (SwfdecBits *bits, SwfdecSwfDecoder *dec)
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
     gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
-    pattern->end_transform = pattern->start_transform;
+    swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);
     switch (swfdec_bits_getbits (bits, 2)) {
       case 0:
 	gradient->extend = CAIRO_EXTEND_PAD;
@@ -595,13 +601,10 @@ swfdec_pattern_parse_morph (SwfdecBits *bits, SwfdecSwfDecoder *dec)
     SWFDEC_ERROR ("unknown paint style type 0x%02x", paint_style_type);
     return NULL;
   }
-  if (cairo_matrix_invert (&pattern->start_transform)) {
-    SWFDEC_ERROR ("paint start transform matrix not invertible, resetting");
-    cairo_matrix_init_identity (&pattern->start_transform);
-  }
-  if (cairo_matrix_invert (&pattern->end_transform)) {
-    SWFDEC_ERROR ("paint end transform matrix not invertible, resetting");
-    cairo_matrix_init_identity (&pattern->end_transform);
+  pattern->transform = pattern->start_transform;
+  if (cairo_matrix_invert (&pattern->transform)) {
+    SWFDEC_ERROR ("paint transform matrix not invertible, resetting");
+    cairo_matrix_init_identity (&pattern->transform);
   }
   swfdec_bits_syncbits (bits);
   return SWFDEC_DRAW (pattern);

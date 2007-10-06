@@ -521,7 +521,7 @@ swfdec_pattern_parse_morph (SwfdecBits *bits, SwfdecSwfDecoder *dec)
     pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
     gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
-    pattern->end_transform = pattern->start_transform;
+    swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);
     switch (swfdec_bits_getbits (bits, 2)) {
       case 0:
 	gradient->extend = CAIRO_EXTEND_PAD;

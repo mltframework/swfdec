@@ -125,8 +125,6 @@ struct _SwfdecMovie {
   /* leftover unimplemented variables from the Actionscript spec */
 #if 0
   int droptarget;
-  char *target;
-  char *url;
 #endif
 };
 

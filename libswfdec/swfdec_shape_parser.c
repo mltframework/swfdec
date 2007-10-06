@@ -64,7 +64,7 @@ swfdec_sub_path_match (SwfdecSubPath *from, SwfdecSubPath *to)
 }
 
 typedef struct {
-  SwfdecDraw *		draw;		/* drawing operations that should take the subpaths */
+  SwfdecDraw *		draw;		/* drawing operation that should take the subpaths or NULL on parsing error */
   GSList *		subpaths;	/* indexes into SubPath array */
   GSList *		subpaths2;	/* indexes into SubPath array */
 } SwfdecStyle;
@@ -157,7 +157,8 @@ swfdec_shape_parser_clear_one (GArray *array)
 
   for (i = 0; i < array->len; i++) {
     SwfdecStyle *style = &g_array_index (array, SwfdecStyle, i);
-    g_object_unref (style->draw);
+    if (style->draw)
+      g_object_unref (style->draw);
     g_slist_free (style->subpaths);
   }
   g_array_set_size (array, 0);
@@ -214,6 +215,9 @@ swfdec_style_finish (SwfdecStyle *style, SwfdecSubPath *paths, SwfdecSubPath *pa
 {
   GSList *walk;
 
+  /* checked before calling this function */
+  g_assert (style->draw);
+
   /* accumulate paths one by one */
   while (style->subpaths) {
     SwfdecSubPath *start, *last, *cur;
@@ -265,6 +269,8 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
   guint i;
   for (i = 0; i < parser->fillstyles->len; i++) {
     SwfdecStyle *style = &g_array_index (parser->fillstyles, SwfdecStyle, i);
+    if (style->draw == NULL)
+      continue;
     if (style->subpaths) {
       swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, 
 	  parser->subpaths2->len ? (SwfdecSubPath *) parser->subpaths->data : NULL, FALSE);
@@ -277,6 +283,8 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
   }
   for (i = 0; i < parser->linestyles->len; i++) {
     SwfdecStyle *style = &g_array_index (parser->linestyles, SwfdecStyle, i);
+    if (style->draw == NULL)
+      continue;
     if (style->subpaths) {
       swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, 
 	  parser->subpaths2->len ? (SwfdecSubPath *) parser->subpaths->data : NULL, TRUE);

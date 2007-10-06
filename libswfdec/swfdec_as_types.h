@@ -83,11 +83,11 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number)
 #define SWFDEC_AS_VALUE_SET_NUMBER(val,d) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->value.number = d; \
+  (__val)->value.number = (d); \
   (__val)->type = SWFDEC_AS_TYPE_NUMBER; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_SET_INT(val,d) SWFDEC_AS_VALUE_SET_NUMBER(val,d)
+#define SWFDEC_AS_VALUE_SET_INT(val,d) SWFDEC_AS_VALUE_SET_NUMBER(val,(int) (d))
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)

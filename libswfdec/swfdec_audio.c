@@ -237,27 +237,26 @@ swfdec_audio_format_new (guint rate, guint channels, gboolean is_16bit)
     case 11025:
       ret = 1 << 2; 
     case 5512:
-      break;
       ret = 0 << 2; 
       break;
     default:
       g_return_val_if_reached (0);
       break;
   }
-  if (channels == 2)
-    ret |= 2;
   if (is_16bit)
+    ret |= 2;
+  if (channels == 2)
     ret |= 1;
 
   return ret;
 }
 
 guint
-swfdec_audio_format_get_channels (SwfdecAudioFormat	format)
+swfdec_audio_format_get_channels (SwfdecAudioFormat format)
 {
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 2);
 
-  return format & 0x2 ? 2 : 1;
+  return (format & 0x1) + 1;
 }
 
 gboolean
@@ -265,7 +264,7 @@ swfdec_audio_format_is_16bit (SwfdecAudioFormat	format)
 {
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), TRUE);
 
-  return format & 0x1 ? TRUE : FALSE;
+  return format & 0x2 ? TRUE : FALSE;
 }
 
 guint
@@ -292,7 +291,7 @@ swfdec_audio_format_get_granularity (SwfdecAudioFormat format)
 {
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 44100);
 
-  return (1 << (format >> 2));
+  return 1 << (3 - (format >> 2));
 }
 
 const char *
@@ -300,23 +299,43 @@ swfdec_audio_format_to_string (SwfdecAudioFormat format)
 {
   static const char *names[] = {
     "8bit 5.5kHz mono",
-    "16bit 5.5kHz mono",
     "8bit 5.5kHz stereo",
+    "16bit 5.5kHz mono",
     "16bit 5.5kHz stereo",
     "8bit 11kHz mono",
-    "16bit 11kHz mono",
     "8bit 11kHz stereo",
+    "16bit 11kHz mono",
     "16bit 11kHz stereo",
     "8bit 22kHz mono",
-    "16bit 22kHz mono",
     "8bit 22kHz stereo",
+    "16bit 22kHz mono",
     "16bit 22kHz stereo",
     "8bit 44kHz mono",
-    "16bit 44kHz mono",
     "8bit 44kHz stereo",
+    "16bit 44kHz mono",
     "16bit 44kHz stereo"
   };
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), "");
 
   return names[format];
 }
+
+/**
+ * swfdec_audio_format_get_bytes_per_sample:
+ * @format: audio format to check
+ *
+ * Computes the number of bytes required to store one sample of audio encoded
+ * in @format.
+ *
+ * Returns: The number of bytes for one sample
+ **/
+guint
+swfdec_audio_format_get_bytes_per_sample (SwfdecAudioFormat format)
+{
+  guint bps[4] = { 1, 2, 2, 4 };
+
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), 1);
+
+  return bps [format & 0x3];
+}
+

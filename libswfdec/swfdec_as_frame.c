@@ -81,6 +81,8 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
   if (frame->argc == 0) {
+    iter->i = iter->n = 0;
+    iter->stack = NULL;
     iter->current = NULL;
     return NULL;
   }
@@ -282,6 +284,7 @@ swfdec_as_frame_dispose (GObject *object)
   while (frame->blocks->len > 0)
     swfdec_as_frame_pop_block (frame);
   g_array_free (frame->blocks, TRUE);
+  g_slist_free (frame->scope_chain);
 
   G_OBJECT_CLASS (swfdec_as_frame_parent_class)->dispose (object);
 }

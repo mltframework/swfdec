@@ -364,7 +364,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	    swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (cx), 
+	SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_push (cx), 
 	    (int) swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
@@ -1204,7 +1204,9 @@ swfdec_action_string_add (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_push_duplicate (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  *swfdec_as_stack_push (cx) = *swfdec_as_stack_peek (cx, 1);
+  SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
+
+  *swfdec_as_stack_push (cx) = *val;
 }
 
 static void
@@ -2398,7 +2400,7 @@ swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *da
   if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
     SWFDEC_FIXME ("target is not a movie in RemoveSprite");
   } else if (!SWFDEC_IS_PLAYER (cx)) {
-    SWFDEC_INFO ("tried using RemoveSprite in a non-SwfdecPLayer context");
+    SWFDEC_INFO ("tried using RemoveSprite in a non-SwfdecPlayer context");
   } else {
     SwfdecMovie *movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
 	swfdec_as_stack_peek (cx, 1));
@@ -2416,33 +2418,33 @@ static void
 swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecMovie *movie, *new_movie;
-  SwfdecAsObject *obj;
   const char *new_name;
   int depth;
 
   depth = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1)) - 16384;
   new_name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-  if (SWFDEC_AS_VALUE_IS_STRING (swfdec_as_stack_peek (cx, 3))) {
-    const char *name;
-    name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 3));
-    swfdec_as_context_eval (cx, NULL, name, swfdec_as_stack_peek (cx, 3));
-  }
-  obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 3));
-  if (!SWFDEC_IS_MOVIE(obj)) {
-    SWFDEC_ERROR ("Object is not an SwfdecMovie object");
-    swfdec_as_stack_pop_n (cx, 3);
-    return;
-  }
-  movie = SWFDEC_MOVIE(obj);
-  new_movie = swfdec_movie_duplicate (movie, new_name, depth);
-  if (new_movie) {
-    SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new_movie->name, new_movie->depth);
-    if (SWFDEC_IS_SPRITE_MOVIE (new_movie)) {
-      g_queue_push_tail (SWFDEC_PLAYER (cx)->init_queue, new_movie);
-      swfdec_movie_queue_script (new_movie, SWFDEC_EVENT_LOAD);
-      swfdec_movie_run_construct (new_movie);
+  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+    SWFDEC_FIXME ("target is not a movie in CloneSprite");
+  } else if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_INFO ("tried using CloneSprite in a non-SwfdecPlayer context");
+  } else {
+    movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), 
+	swfdec_as_stack_peek (cx, 3));
+    if (movie == NULL) {
+      SWFDEC_ERROR ("Object is not an SwfdecMovie object");
+      swfdec_as_stack_pop_n (cx, 3);
+      return;
     }
-    swfdec_movie_initialize (new_movie);
+    new_movie = swfdec_movie_duplicate (movie, new_name, depth);
+    if (new_movie) {
+      SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new_movie->name, new_movie->depth);
+      if (SWFDEC_IS_SPRITE_MOVIE (new_movie)) {
+	g_queue_push_tail (SWFDEC_PLAYER (cx)->init_queue, new_movie);
+	swfdec_movie_queue_script (new_movie, SWFDEC_EVENT_LOAD);
+	swfdec_movie_run_construct (new_movie);
+      }
+      swfdec_movie_initialize (new_movie);
+    }
   }
   swfdec_as_stack_pop_n (cx, 3);
 }

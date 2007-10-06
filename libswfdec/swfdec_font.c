@@ -393,9 +393,9 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s, guint tag)
     SWFDEC_ERROR (" wide codes should be set in DefineFont3");
   }
   font->italic = swfdec_bits_getbit (bits);
-  SWFDEC_LOG (" italic = %d", font->small);
+  SWFDEC_LOG (" italic = %d", font->italic);
   font->bold = swfdec_bits_getbit (bits);
-  SWFDEC_LOG (" bold = %d", font->small);
+  SWFDEC_LOG (" bold = %d", font->bold);
   language = swfdec_bits_get_u8 (&s->b);
   SWFDEC_LOG (" language = %u", (guint) language);
   len = swfdec_bits_get_u8 (&s->b);
@@ -408,22 +408,15 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s, guint tag)
   n_glyphs = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG (" n_glyphs = %u", n_glyphs);
   
-  offsets = *bits;
   if (wide_offsets) {
-    if (swfdec_bits_skip_bytes (bits, n_glyphs * 4 + 4) != n_glyphs * 4 + 4) {
-      SWFDEC_ERROR ("DefineFont3 too short");
-      return SWFDEC_STATUS_OK;
-    }
-    offset = swfdec_bits_get_u32 (&offsets);
+    offset = swfdec_bits_get_u32 (bits);
+    swfdec_bits_init_bits (&offsets, bits, n_glyphs * 4);
   } else {
-    if (swfdec_bits_skip_bytes (bits, n_glyphs * 2 + 2) != n_glyphs * 2 + 2) {
-      SWFDEC_ERROR ("DefineFont3 too short");
-      return SWFDEC_STATUS_OK;
-    }
-    offset = swfdec_bits_get_u16 (&offsets);
+    offset = swfdec_bits_get_u16 (bits);
+    swfdec_bits_init_bits (&offsets, bits, n_glyphs * 2);
   }
   g_array_set_size (font->glyphs, n_glyphs);
-  for (i = 0; i < n_glyphs && swfdec_bits_left (&s->b); i++) {
+  for (i = 0; i < n_glyphs && swfdec_bits_left (bits); i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
     if (wide_offsets)
       next_offset = swfdec_bits_get_u32 (&offsets);

@@ -122,11 +122,18 @@ struct _SwfdecMovie {
   gboolean		visible;		/* whether we currently can be seen or iterate */
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
+  /* drawing state */
+  /* FIXME: could it be that shape drawing (SwfdecGraphicMovie etc) uses these same objects? */
+  SwfdecRect		draw_extents;		/* extents of the items in the following list */
+  GSList *		draws;			/* all the items to draw */
+  SwfdecDraw *		draw_fill;	      	/* current fill style or NULL */
+  SwfdecDraw *		draw_line;	      	/* current line style or NULL */
+  int			draw_x;			/* current x position for drawing */
+  int			draw_y;			/* current y position for drawing */
+
   /* leftover unimplemented variables from the Actionscript spec */
 #if 0
   int droptarget;
-  char *target;
-  char *url;
 #endif
 };
 

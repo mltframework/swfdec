@@ -29,21 +29,6 @@ struct _SwfdecColorTransform {
   int ra, rb, ga, gb, ba, bb, aa, ab;
 };
 
-typedef struct swfdec_gradient_struct SwfdecGradient;
-typedef struct swfdec_gradient_entry_struct SwfdecGradientEntry;
-
-struct swfdec_gradient_entry_struct
-{
-  int ratio;
-  SwfdecColor color;
-};
-
-struct swfdec_gradient_struct
-{
-  guint n_gradients;
-  SwfdecGradientEntry array[1];
-};
-
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define SWFDEC_COLOR_INDEX_ALPHA (3)
 #define SWFDEC_COLOR_INDEX_RED (2)
@@ -82,10 +67,6 @@ double swfdec_matrix_get_yscale (const cairo_matrix_t *matrix);
 double swfdec_matrix_get_rotation (const cairo_matrix_t *matrix);
 void swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
     const cairo_matrix_t *end, guint ratio);
-
-SwfdecGradient *swfdec_gradient_new (guint n_elements);
-SwfdecGradient * swfdec_gradient_morph (SwfdecGradient *start, 
-    SwfdecGradient *end, guint ratio);
 
 
 #endif

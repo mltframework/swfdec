@@ -31,22 +31,26 @@
 
 G_DEFINE_TYPE (SwfdecAudioEvent, swfdec_audio_event, SWFDEC_TYPE_AUDIO)
 
+
 static guint
 swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
+  guint loops;
+
+  if (event->n_samples == 0)
+    return 0;
 
   event->offset += remove;
-  while (event->offset >= event->stop_sample) {
-    event->offset = event->offset - event->stop_sample - event->start_sample;
-    event->loop_count--;
-    if (event->loop_count == 0)
-      return 0;
+  loops = event->offset / event->n_samples;
+  event->offset %= event->n_samples;
+  if (loops >= event->loop_count) {
+    event->loop_count = 0;
+    return 0;
   }
-  if (event->loop_count > 1)
-    return G_MAXUINT;
-  else
-    return event->stop_sample - event->offset;
+  event->loop_count -= loops;
+
+  return event->n_samples * event->loop_count - event->offset;
 }
 
 static void
@@ -58,15 +62,17 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest,
   guint loop;
   guint samples;
 
-  for (loop = event->loop_count; loop > 0 && n_samples > 0; loop--) {
-    if (offset >= event->stop_sample) {
-      offset -= event->stop_sample -= event->start_sample;
-      continue;
-    }
-    samples = MIN (n_samples, event->stop_sample - offset);
-    swfdec_sound_render (event->sound, dest, offset, samples);
+  loop = offset / event->n_samples;
+  offset %= event->n_samples;
+  if (loop >= event->loop_count)
+    return;
+  for (loop = event->loop_count - loop; loop > 0 && n_samples > 0; loop--) {
+    samples = MIN (n_samples, event->n_samples - offset);
+    swfdec_sound_buffer_render	(dest, event->decoded, event->decoded_format,
+	event->decoded, offset, samples);
     n_samples -= samples;
     dest += samples * 4;
+    offset = 0;
   }
 }
 
@@ -99,36 +105,74 @@ swfdec_audio_event_init (SwfdecAudioEvent *audio_event)
 {
 }
 
-static SwfdecAudio *
-swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
+static void
+swfdec_audio_event_decode (SwfdecAudioEvent *event)
 {
-  GList *walk;
+  guint granule, bytes_per_sample;
 
-  if (player == NULL)
-    return NULL;
-
-  for (walk = player->audio; walk; walk = walk->next) {
-    SwfdecAudio *audio = walk->data;
-    if (!SWFDEC_IS_AUDIO_EVENT (audio))
-      continue;
-    if (SWFDEC_AUDIO_EVENT (audio)->sound == sound) {
-      return audio;
+  event->decoded = swfdec_sound_get_decoded (event->sound,
+      &event->decoded_format);
+  if (event->decoded == NULL) {
+    SWFDEC_INFO ("Could not decode audio. Will assume %u samples of silence instead.",
+	event->sound->n_samples);
+    event->decoded = swfdec_buffer_new_and_alloc0 (event->sound->n_samples / 4);
+    event->decoded_format = swfdec_audio_format_new (5512, 1, FALSE);
+  } else {
+    swfdec_buffer_ref (event->decoded);
+  }
+  granule = swfdec_audio_format_get_granularity (event->decoded_format);
+  bytes_per_sample = swfdec_audio_format_get_channels (event->decoded_format) *
+      (swfdec_audio_format_is_16bit (event->decoded_format) ? 2 : 1);
+  if (event->start_sample) {
+    guint skip;
+    if (event->start_sample % granule) {
+      SWFDEC_FIXME ("figure out how high resolution start samples work");
+    }
+    skip = bytes_per_sample * (event->start_sample / granule);
+    if (skip >= event->decoded->length) {
+      SWFDEC_WARNING ("start sample %u > total number of samples %u",
+	  event->start_sample / granule, event->decoded->length / bytes_per_sample);
+      swfdec_buffer_unref (event->decoded);
+      event->decoded = swfdec_buffer_new ();
+    } else {
+      SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (event->decoded,
+	  skip, event->decoded->length - skip);
+      swfdec_buffer_unref (event->decoded);
+      event->decoded = sub;
     }
   }
-  return NULL;
+  if (event->stop_sample) {
+    guint keep;
+    if (event->stop_sample % granule) {
+      SWFDEC_FIXME ("figure out how high resolution stop samples work");
+    }
+    keep = bytes_per_sample * (event->stop_sample / granule - event->start_sample / granule);
+    if (keep > event->decoded->length) {
+      SWFDEC_WARNING ("stop sample %u outside of decoded number of samples %u",
+	  event->stop_sample / granule, event->decoded->length / bytes_per_sample +
+	  event->start_sample / granule);
+    } else if (keep < event->decoded->length) {
+      SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (event->decoded,
+	  0, keep);
+      swfdec_buffer_unref (event->decoded);
+      event->decoded = sub;
+    }
+  }
+  event->n_samples = event->decoded->length / bytes_per_sample * granule;
 }
 
 static SwfdecAudioEvent *
-swfdec_audio_event_create (SwfdecSound *sound, guint offset, guint n_loops)
+swfdec_audio_event_create (SwfdecSound *sound, guint offset, guint end_offset, guint n_loops)
 {
   SwfdecAudioEvent *event;
   
   event = g_object_new (SWFDEC_TYPE_AUDIO_EVENT, NULL);
   event->sound = sound;
   event->start_sample = offset;
-  event->offset = offset;
   event->loop_count = n_loops;
-  event->stop_sample = sound->n_samples;
+  event->stop_sample = end_offset;
+  swfdec_audio_event_decode (event);
+  event->offset = 0;
 
   return event;
 }
@@ -154,10 +198,29 @@ swfdec_audio_event_new (SwfdecPlayer *player, SwfdecSound *sound, guint	offset,
   g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
 
-  event = swfdec_audio_event_create (sound, offset, n_loops);
+  event = swfdec_audio_event_create (sound, offset, 0, n_loops);
   swfdec_audio_add (SWFDEC_AUDIO (event), player);
 
   return SWFDEC_AUDIO (event);
+}
+
+static SwfdecAudio *
+swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
+{
+  GList *walk;
+
+  if (player == NULL)
+    return NULL;
+
+  for (walk = player->audio; walk; walk = walk->next) {
+    SwfdecAudio *audio = walk->data;
+    if (!SWFDEC_IS_AUDIO_EVENT (audio))
+      continue;
+    if (SWFDEC_AUDIO_EVENT (audio)->sound == sound) {
+      return audio;
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -194,8 +257,8 @@ swfdec_audio_event_new_from_chunk (SwfdecPlayer *player, SwfdecSoundChunk *chunk
     g_object_ref (event);
     return SWFDEC_AUDIO (event);
   }
-  event = swfdec_audio_event_create (chunk->sound, chunk->start_sample, chunk->loop_count);
-  event->stop_sample = chunk->stop_sample;
+  event = swfdec_audio_event_create (chunk->sound, chunk->start_sample, 
+      chunk->stop_sample, chunk->loop_count);
   event->n_envelopes = chunk->n_envelopes;
   if (event->n_envelopes)
     event->envelope = g_memdup (chunk->envelope, sizeof (SwfdecSoundEnvelope) * event->n_envelopes);

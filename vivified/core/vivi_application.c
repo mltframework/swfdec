@@ -141,6 +141,8 @@ vivi_application_init (ViviApplication *app)
   app->debugger = g_object_new (VIVI_TYPE_DEBUGGER, NULL);
   app->debugger->app = app;
   app->player = swfdec_gtk_player_new (SWFDEC_AS_DEBUGGER (app->debugger));
+  /* FIXME: to get rid of dead movie clips, we GC all the time */
+  g_object_set (app->player, "memory-until-gc", (gulong) 0, NULL);
 
   app->wraps = g_hash_table_new (g_direct_hash, g_direct_equal);
 }

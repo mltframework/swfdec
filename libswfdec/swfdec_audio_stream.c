@@ -54,6 +54,9 @@ swfdec_audio_stream_decode_one (SwfdecAudioStream *stream)
   SwfdecBuffer *buffer;
 
   g_assert (!stream->done);
+  if (stream->decoder == NULL)
+    return NULL;
+
   while (!(buffer = swfdec_audio_decoder_pull (stream->decoder)) &&
          !stream->done) {
     if (stream->current_frame >= stream->sprite->n_frames)

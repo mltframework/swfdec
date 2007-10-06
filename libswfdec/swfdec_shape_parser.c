@@ -372,7 +372,7 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path1, S
   }
   if (parser->linestyle) {
     if (parser->linestyle > parser->linestyles->len) {
-      SWFDEC_ERROR ("fillstyle too big (%u > %u)", parser->linestyle,
+      SWFDEC_ERROR ("linestyle too big (%u > %u)", parser->linestyle,
 	  parser->linestyles->len);
     } else {
       SwfdecStyle *style = &g_array_index (parser->linestyles, 

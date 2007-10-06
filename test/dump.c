@@ -147,6 +147,10 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	case SWFDEC_TAG_SHOWFRAME:
 	  j++;
 	  break;
+	case SWFDEC_TAG_STARTSOUND:
+	  /* FIXME add info about what sound etc */
+	  g_print ("   %4u start sound\n", j);
+	  break;
 	default:
 	  g_assert_not_reached ();
       }

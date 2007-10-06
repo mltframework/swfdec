@@ -67,10 +67,6 @@ char *swfdec_bits_get_string_length (SwfdecBits * bits, guint len);
 char *swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version);
 SwfdecColor swfdec_bits_get_color (SwfdecBits * bits);
 SwfdecColor swfdec_bits_get_rgba (SwfdecBits * bits);
-SwfdecGradient *swfdec_bits_get_gradient (SwfdecBits * bits);
-SwfdecGradient *swfdec_bits_get_gradient_rgba (SwfdecBits * bits);
-void swfdec_bits_get_morph_gradient (SwfdecBits * bits, 
-    SwfdecGradient **start, SwfdecGradient **end);
 void swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect);
 SwfdecBuffer *swfdec_bits_get_buffer (SwfdecBits *bits, int len);
 SwfdecBuffer *swfdec_bits_decompress (SwfdecBits *bits, int compressed, 

@@ -396,8 +396,8 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 	msecs = 0;
       else 
 	msecs = stream->current_time - msecs;
+      SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
     }
-    SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
     *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bytesLoaded) {

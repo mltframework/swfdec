@@ -32,6 +32,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
+#include "swfdec_draw.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
 #include "swfdec_loader_internal.h"
@@ -126,7 +127,7 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   SwfdecRect *rect = &movie->original_extents;
   SwfdecRect *extents = &movie->extents;
 
-  swfdec_rect_init_empty (rect);
+  *rect = movie->draw_extents;
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_rect_union (rect, rect, &SWFDEC_MOVIE (walk->data)->extents);
   }
@@ -765,6 +766,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   SwfdecMovieClass *klass;
   GList *g;
+  GSList *walk;
   int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
@@ -810,6 +812,17 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   swfdec_color_transform_chain (&trans, &movie->original_ctrans, color_transform);
   swfdec_color_transform_chain (&trans, &movie->color_transform, &trans);
 
+  /* exeute the movie's drawing commands */
+  for (walk = movie->draws; walk; walk = walk->next) {
+    SwfdecDraw *draw = walk->data;
+
+    if (!swfdec_rect_intersect (NULL, &draw->extents, &rect))
+      continue;
+    
+    swfdec_draw_paint (draw, cr, &trans);
+  }
+
+  /* draw the children movies */
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovie *child = g->data;
 

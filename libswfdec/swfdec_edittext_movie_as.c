@@ -458,7 +458,7 @@ swfdec_edit_text_movie_createTextField (SwfdecAsContext *cx,
   edittext->left_margin = 0;
   edittext->right_margin = 0;
   edittext->indent = 0;
-  edittext->spacing = 0;
+  edittext->letter_spacing = 0;
 
   edittext->graphic.extents.x0 = x;
   edittext->graphic.extents.x1 = x + width;

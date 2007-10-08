@@ -48,7 +48,7 @@ typedef struct {
   int			block_indent;
   int			left_margin;
   int			right_margin;
-  int			spacing;
+  int			letter_spacing;
   PangoTabArray *	tabs;
 
   PangoAttrList *	attrs;
@@ -91,7 +91,7 @@ struct _SwfdecEditText
   guint			left_margin;
   guint			right_margin;
   guint			indent;
-  int			spacing;
+  int			letter_spacing;
 };
 
 struct _SwfdecEditTextClass

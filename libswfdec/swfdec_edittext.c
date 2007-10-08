@@ -224,7 +224,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->left_margin = swfdec_bits_get_u16 (b);
     text->right_margin = swfdec_bits_get_u16 (b);
     text->indent = swfdec_bits_get_u16 (b);
-    text->spacing = swfdec_bits_get_s16 (b);
+    text->letter_spacing = swfdec_bits_get_s16 (b);
   }
   text->variable = swfdec_bits_get_string (b);
   if (text->variable && *text->variable == 0) {

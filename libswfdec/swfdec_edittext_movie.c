@@ -110,7 +110,7 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
     text->blocks[i].block_indent = findex->format->block_indent;
     text->blocks[i].left_margin = findex->format->left_margin;
     text->blocks[i].right_margin = findex->format->right_margin;
-    text->blocks[i].spacing = findex->format->letter_spacing;
+    text->blocks[i].letter_spacing = findex->format->letter_spacing;
     //PangoTabArray *	tabs;
 
     for (iter = start;
@@ -235,13 +235,12 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   // format
   text->format_new = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
   swfdec_text_format_set_defaults (text->format_new);
+  text->format_new->color = text->text->color;
   text->format_new->align = text->text->align;
-  /*SwfdecColor		color;
-  SwfdecTextAlign	align;
-  guint			left_margin;
-  guint			right_margin;
-  guint			indent;
-  int			spacing;*/
+  text->format_new->left_margin = text->text->left_margin;
+  text->format_new->right_margin = text->text->right_margin;
+  text->format_new->indent = text->text->indent;
+  text->format_new->letter_spacing = text->text->letter_spacing;
 
   // text
   if (text->text->text_input != NULL) {

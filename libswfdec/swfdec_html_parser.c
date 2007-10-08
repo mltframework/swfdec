@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "swfdec_edittext_movie.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_font.h"
 #include "swfdec_debug.h"
 
@@ -39,6 +40,24 @@ swfdec_edit_text_movie_html_parse_comment (ParserData *data, const char *p)
 
   // return NULL if no end found
   return end;
+}
+
+static void
+swfdec_edit_text_movie_html_tag_set_attribute (ParserTag *tag,
+    const char *name, int name_length, const char *value, int value_length)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *object;
+
+  object = SWFDEC_AS_OBJECT (tag->format);
+  SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
+	object->context, g_strndup (value, value_length)));
+
+  if (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) {
+    if (name_length == 5 && !g_strncasecmp (name, "align", 5)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_align, &val);
+    }
+  }
 }
 
 static const char *
@@ -76,6 +95,9 @@ swfdec_edit_text_movie_html_parse_attribute (ParserTag *tag, const char *p)
 
   value = p + 1;
   value_length = end - (p + 1);
+
+  swfdec_edit_text_movie_html_tag_set_attribute (tag, name, name_length, value,
+      value_length);
 
   g_return_val_if_fail (end + 1 > p, NULL);
 
@@ -222,6 +244,32 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
     }
   }
 
+  // close remaining tags
+  while (data.tags_open != NULL) {
+    ParserTag *tag = (ParserTag *)data.tags_open->data;
+
+    // add paragraph for closing P and LI tags
+    if ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
+	(tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))) {
+      data.text = g_string_append_c (data.text, '\n');
+    }
+    tag->end_index = data.text->len;
+
+    data.tags_open = g_slist_remove (data.tags_open, tag);
+    data.tags_closed = g_slist_prepend (data.tags_closed, tag);
+  }
+
+  // set parsed text
   text->text_display = swfdec_as_context_give_string (data.cx,
       g_string_free (data.text, FALSE));
+
+  // add parsed styles
+  while (data.tags_closed != NULL) {
+    ParserTag *tag = (ParserTag *)data.tags_closed->data;
+
+    swfdec_edit_text_movie_set_text_format (text, tag->format, tag->index,
+	tag->end_index);
+
+    data.tags_closed = g_slist_remove (data.tags_closed, tag);
+  }
 }

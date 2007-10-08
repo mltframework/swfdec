@@ -94,6 +94,10 @@ void		swfdec_edit_text_movie_set_text		(SwfdecEditTextMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
 void		swfdec_edit_text_movie_format_changed	(SwfdecEditTextMovie *	text);
+void		swfdec_edit_text_movie_set_text_format	(SwfdecEditTextMovie *	text,
+							 SwfdecTextFormat *	format,
+							 guint			start_index,
+							 guint			end_index);
 
 /* implemented in swfdec_html_parser.c */
 void		swfdec_edit_text_movie_html_parse	(SwfdecEditTextMovie *	text, 

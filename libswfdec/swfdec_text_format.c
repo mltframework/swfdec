@@ -321,11 +321,11 @@ swfdec_text_format_do_get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     case SWFDEC_TEXT_ALIGN_LEFT:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_left);
       break;
-    case SWFDEC_TEXT_ALIGN_CENTER:
-      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_center);
-      break;
     case SWFDEC_TEXT_ALIGN_RIGHT:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_right);
+      break;
+    case SWFDEC_TEXT_ALIGN_CENTER:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_center);
       break;
     case SWFDEC_TEXT_ALIGN_JUSTIFY:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_justify);
@@ -356,11 +356,11 @@ swfdec_text_format_do_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!g_ascii_strcasecmp (s, "left")) {
     format->align = SWFDEC_TEXT_ALIGN_LEFT;
     swfdec_text_format_mark_set (format, PROP_ALIGN);
-  } else if (!g_ascii_strcasecmp (s, "center")) {
-    format->align = SWFDEC_TEXT_ALIGN_CENTER;
-    swfdec_text_format_mark_set (format, PROP_ALIGN);
   } else if (!g_ascii_strcasecmp (s, "right")) {
     format->align = SWFDEC_TEXT_ALIGN_RIGHT;
+    swfdec_text_format_mark_set (format, PROP_ALIGN);
+  } else if (!g_ascii_strcasecmp (s, "center")) {
+    format->align = SWFDEC_TEXT_ALIGN_CENTER;
     swfdec_text_format_mark_set (format, PROP_ALIGN);
   } else if (!g_ascii_strcasecmp (s, "justify")) {
     format->align = SWFDEC_TEXT_ALIGN_JUSTIFY;

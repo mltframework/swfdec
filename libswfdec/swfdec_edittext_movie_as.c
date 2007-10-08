@@ -41,9 +41,7 @@ swfdec_edit_text_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecEditTextMovie *text;
 
-  if (!SWFDEC_IS_EDIT_TEXT_MOVIE (object))
-    return;
-  text = SWFDEC_EDIT_TEXT_MOVIE (object);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
 
   SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ?
 	swfdec_as_context_get_string (cx, text->text_display) :
@@ -391,11 +389,9 @@ swfdec_edit_text_movie_setTextFormat (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecEditTextMovie *text;
-  int i;
-  SwfdecFormatIndex *findex, *findex_new;
   SwfdecTextFormat *format;
-  guint findex_end_index, start_index, end_index;
-  GSList *iter, *next;
+  guint start_index, end_index;
+  int i;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
 
@@ -425,46 +421,7 @@ swfdec_edit_text_movie_setTextFormat (SwfdecAsContext *cx,
 
   format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]));
 
-  g_assert (text->formats != NULL);
-  g_assert (text->formats->data != NULL);
-  g_assert (((SwfdecFormatIndex *)text->formats->data)->index == 0);
-  for (iter = text->formats; iter != NULL &&
-      ((SwfdecFormatIndex *)iter->data)->index < end_index;
-      iter = next)
-  {
-    next = iter->next;
-    findex = iter->data;
-    if (iter->next != NULL) {
-      findex_end_index =
-	((SwfdecFormatIndex *)iter->next->data)->index;
-    } else {
-      findex_end_index = strlen (text->text_display);
-    }
-
-    if (findex_end_index < start_index)
-      continue;
-
-    if (findex_end_index > end_index) {
-      findex_new = g_new (SwfdecFormatIndex, 1);
-      findex_new->index = end_index;
-      findex_new->format = swfdec_text_format_copy (findex->format);
-
-      iter = g_slist_insert (iter, findex_new, 1);
-    }
-
-    if (findex->index < start_index) {
-      findex_new = g_new (SwfdecFormatIndex, 1);
-      findex_new->index = start_index;
-      findex_new->format = swfdec_text_format_copy (findex->format);
-      swfdec_text_format_add (findex_new->format, format);
-
-      iter = g_slist_insert (iter, findex_new, 1);
-    } else {
-      swfdec_text_format_add (findex->format, format);
-    }
-  }
-
-  swfdec_edit_text_movie_format_changed (text);
+  swfdec_edit_text_movie_set_text_format (text, format, start_index, end_index);
 }
 
 SWFDEC_AS_NATIVE (104, 200, swfdec_edit_text_movie_createTextField)

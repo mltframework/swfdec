@@ -40,8 +40,8 @@ typedef struct _SwfdecTextFormatClass SwfdecTextFormatClass;
 
 typedef enum {
   SWFDEC_TEXT_ALIGN_LEFT,
-  SWFDEC_TEXT_ALIGN_CENTER,
   SWFDEC_TEXT_ALIGN_RIGHT,
+  SWFDEC_TEXT_ALIGN_CENTER,
   SWFDEC_TEXT_ALIGN_JUSTIFY
 } SwfdecTextAlign;
 

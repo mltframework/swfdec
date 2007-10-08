@@ -294,6 +294,61 @@ swfdec_edit_text_movie_init (SwfdecEditTextMovie *text)
 }
 
 void
+swfdec_edit_text_movie_set_text_format (SwfdecEditTextMovie *text,
+    SwfdecTextFormat *format, guint start_index, guint end_index)
+{
+  SwfdecFormatIndex *findex, *findex_new;
+  guint findex_end_index;
+  GSList *iter, *next;
+
+  g_return_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
+  g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (format));
+  g_return_if_fail (start_index < end_index);
+  g_return_if_fail (end_index <= strlen (text->text_display));
+
+  g_assert (text->formats != NULL);
+  g_assert (text->formats->data != NULL);
+  g_assert (((SwfdecFormatIndex *)text->formats->data)->index == 0);
+  for (iter = text->formats; iter != NULL &&
+      ((SwfdecFormatIndex *)iter->data)->index < end_index;
+      iter = next)
+  {
+    next = iter->next;
+    findex = iter->data;
+    if (iter->next != NULL) {
+      findex_end_index =
+	((SwfdecFormatIndex *)iter->next->data)->index;
+    } else {
+      findex_end_index = strlen (text->text_display);
+    }
+
+    if (findex_end_index < start_index)
+      continue;
+
+    if (findex_end_index > end_index) {
+      findex_new = g_new (SwfdecFormatIndex, 1);
+      findex_new->index = end_index;
+      findex_new->format = swfdec_text_format_copy (findex->format);
+
+      iter = g_slist_insert (iter, findex_new, 1);
+    }
+
+    if (findex->index < start_index) {
+      findex_new = g_new (SwfdecFormatIndex, 1);
+      findex_new->index = start_index;
+      findex_new->format = swfdec_text_format_copy (findex->format);
+      swfdec_text_format_add (findex_new->format, format);
+
+      iter = g_slist_insert (iter, findex_new, 1);
+    } else {
+      swfdec_text_format_add (findex->format, format);
+    }
+  }
+
+  swfdec_edit_text_movie_format_changed (text);
+}
+
+void
 swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *text, const char *str,
     gboolean html)
 {

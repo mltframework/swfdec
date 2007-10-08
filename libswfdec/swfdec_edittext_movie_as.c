@@ -472,7 +472,7 @@ swfdec_edit_text_movie_setNewTextFormat (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "o", &obj);
 
-  if (SWFDEC_IS_TEXT_FORMAT (obj))
+  if (!SWFDEC_IS_TEXT_FORMAT (obj))
     return;
 
   text->format_new = swfdec_text_format_copy (SWFDEC_TEXT_FORMAT (obj));

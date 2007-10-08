@@ -91,8 +91,13 @@ struct _SwfdecEditTextMovieClass {
 GType		swfdec_edit_text_movie_get_type		(void);
 
 void		swfdec_edit_text_movie_set_text		(SwfdecEditTextMovie *	movie,
-							 const char *		str);
+							 const char *		str,
+							 gboolean		html);
 void		swfdec_edit_text_movie_format_changed	(SwfdecEditTextMovie *	text);
+
+/* implemented in swfdec_html_parser.c */
+void		swfdec_edit_text_movie_html_parse	(SwfdecEditTextMovie *	text, 
+							 const char *		str);
 
 G_END_DECLS
 #endif

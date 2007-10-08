@@ -123,8 +123,6 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
   swfdec_color_set_source (cr, color);
 
   for (i = 0; blocks[i].text != NULL; i++) {
-    g_print ("render! %i\n", i);
-
     cairo_rel_move_to (cr, blocks[i].left_margin, 0);
     width = SWFDEC_GRAPHIC (text)->extents.x1 -
       SWFDEC_GRAPHIC (text)->extents.x0 - blocks[i].left_margin -

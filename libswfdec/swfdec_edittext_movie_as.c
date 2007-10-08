@@ -60,7 +60,7 @@ swfdec_edit_text_movie_do_set_text (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "s", &value);
 
-  swfdec_edit_text_movie_set_text (text, value);
+  swfdec_edit_text_movie_set_text (text, value, FALSE);
 }
 
 static const char *
@@ -358,7 +358,7 @@ swfdec_edit_text_movie_set_htmlText (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "s", &value);
 
-  swfdec_edit_text_movie_set_text (text, value);
+  swfdec_edit_text_movie_set_text (text, value, text->text->html);
 }
 
 static void
@@ -475,14 +475,38 @@ swfdec_edit_text_movie_createTextField (SwfdecAsContext *cx,
 {
   SwfdecMovie *movie, *parent;
   SwfdecEditText *edittext;
-  int depth;
+  int depth, x, y, width, height;
   const char *name;
   SwfdecAsFunction *fun;
   SwfdecAsValue val;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&parent, "si", &name, &depth);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&parent, "siiiii", &name, &depth, &x, &y, &width, &height);
 
   edittext = g_object_new (SWFDEC_TYPE_EDIT_TEXT, NULL);
+  edittext->html = FALSE;
+  edittext->input = FALSE;
+  edittext->password = FALSE;
+  edittext->selectable = TRUE;
+  edittext->font = NULL; // FIXME
+  edittext->wrap = FALSE;
+  edittext->multiline = FALSE;
+  edittext->auto_size = SWFDEC_AUTO_SIZE_NONE;
+  edittext->border = FALSE;
+  edittext->height = 0; // FIXME
+
+  edittext->text_input = NULL;
+  edittext->variable = NULL;
+  edittext->color = 0;
+  edittext->align = SWFDEC_TEXT_ALIGN_LEFT;
+  edittext->left_margin = 0;
+  edittext->right_margin = 0;
+  edittext->indent = 0;
+  edittext->spacing = 0;
+
+  edittext->graphic.extents.x0 = x;
+  edittext->graphic.extents.x1 = x + width;
+  edittext->graphic.extents.y0 = y;
+  edittext->graphic.extents.y1 = y + height;
 
   movie = swfdec_movie_find (parent, depth);
   if (movie)

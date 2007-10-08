@@ -125,23 +125,18 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
 	  ((SwfdecFormatIndex *)(iter->next))->index :
 	  strlen (text->text_display));
 
-      g_print (":: %i - %i\n", findex->index, findex_end_index);
-
       attr = pango_attr_size_new_absolute (findex->format->size * 20 * PANGO_SCALE);
       attr->start_index = (findex->index < start_index ?
 	  0 : findex->index - start_index);
       attr->end_index = (findex_end_index > end_index ?
 	  end_index - start_index : findex_end_index - start_index);
       pango_attr_list_change (text->blocks[i].attrs, attr);
-      g_print (":: %i-%i :: %i\n", attr->start_index, attr->end_index, findex->format->size);
     };
 
     p = end;
     if (*p != '\0') p++;
     i++;
   }
-
-  g_print (":: %s\n", text->blocks[0].text);
 }
 
 static void
@@ -177,6 +172,8 @@ swfdec_edit_text_movie_format_changed (SwfdecEditTextMovie *text)
     }
     g_free (text->blocks);
     text->blocks = NULL;
+
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
 
@@ -221,7 +218,7 @@ swfdec_edit_text_movie_iterate (SwfdecMovie *movie)
   if (text->text_input == s)
     return;
 
-  swfdec_edit_text_movie_set_text (text, s);
+  swfdec_edit_text_movie_set_text (text, s, text->text->html);
 }
 
 static void
@@ -249,7 +246,8 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   // text
   if (text->text->text_input != NULL) {
     swfdec_edit_text_movie_set_text (text,
-	swfdec_as_context_get_string (cx, text->text->text_input));
+	swfdec_as_context_get_string (cx, text->text->text_input),
+	text->text->html);
   }
 
   // variable
@@ -263,7 +261,7 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
       s = swfdec_as_value_to_string (parent->context, &val);
       g_assert (s);
       if (text->text_input != s)
-	swfdec_edit_text_movie_set_text (text, s);
+	swfdec_edit_text_movie_set_text (text, s, text->text->html);
     } else {
       SWFDEC_LOG ("setting variable %s to \"%s\"", text->variable,
 	  text->text_input ? text->text_input : "");
@@ -296,14 +294,13 @@ swfdec_edit_text_movie_init (SwfdecEditTextMovie *text)
 }
 
 void
-swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *text, const char *str)
+swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *text, const char *str,
+    gboolean html)
 {
   SwfdecFormatIndex *block;
   GSList *iter;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
-
-  g_print ("SET_TEXT!\n");
 
   text->text_input = str;
 
@@ -323,14 +320,11 @@ swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *text, const char *str)
   block->format = text->format_new;
   text->formats = g_slist_prepend (text->formats, block);
 
-  //if (text->text->html == FALSE) {
+  if (html) {
+    swfdec_edit_text_movie_html_parse (text, str);
+  } else {
     text->text_display = str;
-  /*} else {
-    swfdec_edit_text_text_parse_html (str, &text->text_display,
-	&text->formats);
-  }*/
+  }
 
-  swfdec_edit_text_movie_generate_render_blocks (text);
-
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_edit_text_movie_format_changed (text);
 }

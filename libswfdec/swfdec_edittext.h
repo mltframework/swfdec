@@ -29,7 +29,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecParagraph SwfdecParagraph; /* see swfdec_html_parser.c */
 typedef struct _SwfdecEditText SwfdecEditText;
 typedef struct _SwfdecEditTextClass SwfdecEditTextClass;
 
@@ -105,19 +104,12 @@ GType			swfdec_edit_text_get_type	(void);
 int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
 							 guint			tag);
 
-/* implemented in swfdec_html_parser.c */
-SwfdecParagraph *	swfdec_paragraph_html_parse   	(SwfdecEditText *	text, 
-							 const char *		str);
-SwfdecParagraph *	swfdec_paragraph_text_parse	(SwfdecEditText *       text,
-							 const char *		str);
-void			swfdec_paragraph_free		(SwfdecParagraph *	paragraphs);
 void			swfdec_edit_text_render		(SwfdecEditText *	text,
 							 cairo_t *		cr,
 							 const SwfdecTextRenderBlock *	blocks,
 							 const SwfdecColorTransform *	trans,
 							 const SwfdecRect *	rect,
 							 gboolean		fill);
-
 
 G_END_DECLS
 #endif

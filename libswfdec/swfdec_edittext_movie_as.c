@@ -328,14 +328,14 @@ swfdec_edit_text_movie_get_htmlText (SwfdecAsContext *cx,
 
   p = text->text_display;
   while (*p != '\0') {
-    end = strchr (p, '\n');
+    end = strchr (p, '\r');
     if (end == NULL)
       end = strchr (p, '\0');
 
     string = swfdec_edit_text_movie_htmlText_append_paragraph (text, string,
 	p - text->text_display, end - text->text_display);
 
-    if (*end == '\n') {
+    if (*end == '\r') {
       p = end + 1;
     } else {
       p = end;

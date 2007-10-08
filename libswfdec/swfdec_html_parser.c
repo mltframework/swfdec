@@ -292,6 +292,7 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
 {
   ParserData data;
   const char *p;
+  char *string, *r;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
   g_return_if_fail (str != NULL);
@@ -324,8 +325,13 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
   }
 
   // set parsed text
-  text->text_display = swfdec_as_context_give_string (data.cx,
-      g_string_free (data.text, FALSE));
+  // change all \n to \r
+  string = g_string_free (data.text, FALSE);
+  r = string;
+  while ((r = strchr (r, '\n')) != NULL) {
+    *r = '\r';
+  }
+  text->text_display = swfdec_as_context_give_string (data.cx, string);
 
   // add parsed styles
   while (data.tags_closed != NULL) {

@@ -54,7 +54,7 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
   p = text->text_display;
   while (p != NULL && *p != '\0') {
     lines++;
-    p = strchr (p, '\n');
+    p = strchr (p, '\r');
     if (p != NULL) p++;
   }
 
@@ -68,7 +68,7 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
   p = text->text_display;
   while (*p != '\0') {
     g_assert (i < lines);
-    end = strchr (p, '\n');
+    end = strchr (p, '\r');
     if (end == NULL)
       end = strchr (p, '\0');
 
@@ -378,7 +378,20 @@ swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *text, const char *str,
   if (html) {
     swfdec_edit_text_movie_html_parse (text, str);
   } else {
-    text->text_display = str;
+    // change all \n to \r
+    if (strchr (str, '\n') != NULL) {
+      char *string, *p;
+
+      string = g_strdup (str);
+      p = string;
+      while ((p = strchr (p, '\n')) != NULL) {
+	*p = '\r';
+      }
+      text->text_display = swfdec_as_context_give_string (
+	  SWFDEC_AS_OBJECT (text)->context, string);
+    } else {
+      text->text_display = str;
+    }
   }
 
   swfdec_edit_text_movie_format_changed (text);

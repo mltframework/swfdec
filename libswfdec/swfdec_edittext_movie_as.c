@@ -418,6 +418,66 @@ swfdec_edit_text_movie_get_length (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_INT (ret, strlen (text->text_display));
 }
 
+static void
+swfdec_edit_text_movie_get_textColor (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
+
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (text->format_new),
+      SWFDEC_AS_STR_color, ret);
+}
+
+static void
+swfdec_edit_text_movie_set_textColor (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
+
+  if (argc < 1)
+    return;
+
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (text->format_new),
+      SWFDEC_AS_STR_color, &argv[0]);
+}
+
+SWFDEC_AS_NATIVE (104, 104, swfdec_edit_text_movie_getNewTextFormat)
+void
+swfdec_edit_text_movie_getNewTextFormat (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret,
+      SWFDEC_AS_OBJECT (swfdec_text_format_copy (text->format_new)));
+}
+
+SWFDEC_AS_NATIVE (104, 105, swfdec_edit_text_movie_setNewTextFormat)
+void
+swfdec_edit_text_movie_setNewTextFormat (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+  SwfdecAsObject *obj;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "o", &obj);
+
+  if (SWFDEC_IS_TEXT_FORMAT (obj))
+    return;
+
+  text->format_new = swfdec_text_format_copy (SWFDEC_TEXT_FORMAT (obj));
+}
+
 SWFDEC_AS_NATIVE (104, 102, swfdec_edit_text_movie_setTextFormat)
 void
 swfdec_edit_text_movie_setTextFormat (SwfdecAsContext *cx,
@@ -605,6 +665,9 @@ swfdec_edit_text_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_edit_text_movie_set_condenseWhite);
     swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_length,
 	swfdec_edit_text_movie_get_length, NULL);
+    swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
+	swfdec_edit_text_movie_get_textColor,
+	swfdec_edit_text_movie_set_textColor);
 
     SWFDEC_PLAYER (cx)->edittext_movie_properties_initialized = TRUE;
   }

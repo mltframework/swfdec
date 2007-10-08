@@ -208,12 +208,6 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
     if (tag != NULL && name_length == tag->name_length &&
 	!g_strncasecmp (name, tag->name, name_length))
     {
-      // add paragraph for closing P and LI tags
-      if ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
-	  (name_length == 2 && !g_strncasecmp (name, "li", 2))) {
-	data->text = g_string_append_c (data->text, '\n');
-      }
-
       tag->end_index = data->text->len;
 
       data->tags_open = g_slist_remove (data->tags_open, tag);
@@ -323,12 +317,6 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
   // close remaining tags
   while (data.tags_open != NULL) {
     ParserTag *tag = (ParserTag *)data.tags_open->data;
-
-    // add paragraph for closing P and LI tags
-    if ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
-	(tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))) {
-      data.text = g_string_append_c (data.text, '\n');
-    }
     tag->end_index = data.text->len;
 
     data.tags_open = g_slist_remove (data.tags_open, tag);

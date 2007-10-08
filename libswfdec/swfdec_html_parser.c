@@ -188,6 +188,7 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
     return end;
 
   // don't count trailing / as part of the name if it's followed by >
+  // we still act like it's a normal opening tag even if it has /
   if (*end == '>' && *(end - 1) == '/')
     end = end - 1;
 
@@ -220,34 +221,29 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
   }
   else
   {
-    if (name_length == 2 && !g_strncasecmp (name, "br", 2)) {
-      tag = NULL;
-      data->text = g_string_append_c (data->text, '\n');
-    } else {
-      SwfdecAsObject *object;
-      SwfdecAsValue val;
+    SwfdecAsObject *object;
+    SwfdecAsValue val;
 
-      tag = g_new0 (ParserTag, 1);
-      tag->name = name;
-      tag->name_length = name_length;
-      tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
-      tag->index = data->text->len;
+    tag = g_new0 (ParserTag, 1);
+    tag->name = name;
+    tag->name_length = name_length;
+    tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
+    tag->index = data->text->len;
 
-      data->tags_open = g_slist_prepend (data->tags_open, tag);
+    data->tags_open = g_slist_prepend (data->tags_open, tag);
 
-      // set format based on tag
-      object = SWFDEC_AS_OBJECT (tag->format);
-      SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
+    // set format based on tag
+    object = SWFDEC_AS_OBJECT (tag->format);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
 
-      if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
-      }
+    if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
+    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
+    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
+    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
     }
 
     // parse attributes
@@ -270,7 +266,8 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
 }
 
 static const char *
-swfdec_edit_text_movie_html_parse_text (ParserData *data, const char *p)
+swfdec_edit_text_movie_html_parse_text (ParserData *data, const char *p,
+    gboolean condense_white)
 {
   const char *end;
 
@@ -278,13 +275,32 @@ swfdec_edit_text_movie_html_parse_text (ParserData *data, const char *p)
   g_return_val_if_fail (p != NULL, NULL);
   g_return_val_if_fail (*p != '\0' && *p != '<', NULL);
 
-  end = strchr (p, '<');
-  if (end == NULL)
-    end = strchr (p, '\0');
+  // get the text
+  // if condense_white: all whitespace blocks are converted to a single space
+  // if not: all \n are converted to \r
+  while (*p != '\0' && *p != '<') {
+    if (condense_white) {
+      end = p + strcspn (p, "< \n\r\t");
+    } else {
+      end = p + strcspn (p, "<\n");
+    }
 
-  data->text = g_string_append_len (data->text, p, end - p);
+    data->text = g_string_append_len (data->text, p, end - p);
 
-  return end;
+    if (g_ascii_isspace (*end)) {
+      if (condense_white) {
+	data->text = g_string_append_c (data->text, ' ');
+	p = end + strspn (end, " \n\r\t");
+      } else {
+	data->text = g_string_append_c (data->text, '\r');
+	p = end + 1;
+      }
+    } else {
+      p = end;
+    }
+  }
+
+  return p;
 }
 
 void
@@ -311,7 +327,8 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
 	p = swfdec_edit_text_movie_html_parse_tag (&data, p);
       }
     } else {
-      p = swfdec_edit_text_movie_html_parse_text (&data, p);
+      p = swfdec_edit_text_movie_html_parse_text (&data, p,
+	  text->condense_white);
     }
   }
 
@@ -337,8 +354,10 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
   while (data.tags_closed != NULL) {
     ParserTag *tag = (ParserTag *)data.tags_closed->data;
 
-    swfdec_edit_text_movie_set_text_format (text, tag->format, tag->index,
-	tag->end_index);
+    if (tag->index != tag->end_index) {
+      swfdec_edit_text_movie_set_text_format (text, tag->format, tag->index,
+	  tag->end_index);
+    }
 
     data.tags_closed = g_slist_remove (data.tags_closed, tag);
   }

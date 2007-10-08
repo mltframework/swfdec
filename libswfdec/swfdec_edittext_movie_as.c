@@ -382,6 +382,31 @@ swfdec_edit_text_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
   text->text->html = value;
 }
 
+static void
+swfdec_edit_text_movie_get_condenseWhite (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->condense_white);
+}
+
+static void
+swfdec_edit_text_movie_set_condenseWhite (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "b", &value);
+
+  text->condense_white = value;
+}
+
 SWFDEC_AS_NATIVE (104, 102, swfdec_edit_text_movie_setTextFormat)
 void
 swfdec_edit_text_movie_setTextFormat (SwfdecAsContext *cx,
@@ -564,6 +589,9 @@ swfdec_edit_text_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_edit_text_movie_set_htmlText);
     swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_html,
 	swfdec_edit_text_movie_get_html, swfdec_edit_text_movie_set_html);
+    swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_condenseWhite,
+	swfdec_edit_text_movie_get_condenseWhite,
+	swfdec_edit_text_movie_set_condenseWhite);
 
     SWFDEC_PLAYER (cx)->edittext_movie_properties_initialized = TRUE;
   }

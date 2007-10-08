@@ -368,6 +368,8 @@ swfdec_edit_text_movie_set_text (SwfdecEditTextMovie *text, const char *str,
   text->formats = NULL;
 
   // add the default style
+  if (html && SWFDEC_AS_OBJECT (text)->context->version < 8)
+    swfdec_text_format_set_defaults (text->format_new);
   block = g_new (SwfdecFormatIndex, 1);
   block->index = 0;
   g_assert (SWFDEC_IS_TEXT_FORMAT (text->format_new));

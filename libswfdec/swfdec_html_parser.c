@@ -174,8 +174,10 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
   g_return_val_if_fail (p != NULL, NULL);
   g_return_val_if_fail (*p == '<', NULL);
 
+  p++;
+
   // closing tag or opening tag?
-  if (*(p + 1) == '/') {
+  if (*p == '/') {
     close = TRUE;
     p++;
   } else {
@@ -184,19 +186,20 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
 
   // find the end of the name
   end = p + strcspn (p, "> \r\n\t");
+
   if (*end == '\0')
-    return end;
+    return NULL;
 
   // don't count trailing / as part of the name if it's followed by >
   // we still act like it's a normal opening tag even if it has /
   if (*end == '>' && *(end - 1) == '/')
     end = end - 1;
 
-  if (end == p + 1) // empty name
+  if (end == p) // empty name
     return NULL;
 
-  name = p + 1;
-  name_length = end - (p + 1);
+  name = p;
+  name_length = end - p;
 
   if (close)
   {
@@ -209,14 +212,14 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
     if (tag != NULL && name_length == tag->name_length &&
 	!g_strncasecmp (name, tag->name, name_length))
     {
+      tag->end_index = data->text->len;
+
       if (data->cx->version == 6) {
 	if ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
 	    (name_length == 2 && !g_strncasecmp (name, "li", 2))) {
 	  data->text = g_string_append_c (data->text, '\r');
 	}
       }
-
-      tag->end_index = data->text->len;
 
       data->tags_open = g_slist_remove (data->tags_open, tag);
       data->tags_closed = g_slist_prepend (data->tags_closed, tag);
@@ -321,7 +324,6 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
 {
   ParserData data;
   const char *p;
-  char *string, *r;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
   g_return_if_fail (str != NULL);
@@ -332,7 +334,7 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
   data.tags_closed = NULL;
 
   p = str;
-  while (*p != '\0' && p != NULL) {
+  while (p != NULL && *p != '\0') {
     if (*p == '<') {
       if (strncmp (p + 1, "!--", strlen ("!--")) == 0) {
 	p = swfdec_edit_text_movie_html_parse_comment (&data, p);
@@ -363,13 +365,8 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
   }
 
   // set parsed text
-  // change all \n to \r
-  string = g_string_free (data.text, FALSE);
-  r = string;
-  while ((r = strchr (r, '\n')) != NULL) {
-    *r = '\r';
-  }
-  text->text_display = swfdec_as_context_give_string (data.cx, string);
+  text->text_display =
+    swfdec_as_context_give_string (data.cx, g_string_free (data.text, FALSE));
 
   // add parsed styles
   while (data.tags_closed != NULL) {

@@ -53,9 +53,66 @@ swfdec_edit_text_movie_html_tag_set_attribute (ParserTag *tag,
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
 	object->context, g_strndup (value, value_length)));
 
-  if (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) {
-    if (name_length == 5 && !g_strncasecmp (name, "align", 5)) {
+  if (tag->name_length == 10 && !g_strncasecmp (tag->name, "textformat", 10))
+  {
+    if (name_length == 10 && !g_strncasecmp (name, "leftmargin", 10))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leftMargin, &val);
+    }
+    else if (name_length == 11 && !g_strncasecmp (name, "rightmargin", 11))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_rightMargin, &val);
+    }
+    else if (name_length == 6 && !g_strncasecmp (name, "indent", 6))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_indent, &val);
+    }
+    else if (name_length == 11 && !g_strncasecmp (name, "blockindent", 11))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_blockIndent, &val);
+    }
+    else if (name_length == 8 && !g_strncasecmp (name, "tabstops", 8))
+    {
+      // FIXME
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_tabStops, &val);
+    }
+  }
+  else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))
+  {
+    if (name_length == 5 && !g_strncasecmp (name, "align", 5))
+    {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_align, &val);
+    }
+  }
+  else if (tag->name_length == 4 && !g_strncasecmp (tag->name, "font", 4))
+  {
+    if (name_length == 4 && !g_strncasecmp (name, "face", 4))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_font, &val);
+    }
+    else if (name_length == 4 && !g_strncasecmp (name, "size", 4))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_size, &val);
+    }
+    else if (name_length == 13 && !g_strncasecmp (name, "letterspacing", 13))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_letterSpacing,
+	  &val);
+    }
+    else if (name_length == 7 && !g_strncasecmp (name, "kerning", 7))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_kerning, &val);
+    }
+  }
+  else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "a", 1))
+  {
+    if (name_length == 4 && !g_strncasecmp (name, "href", 4))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_url, &val);
+    }
+    else if (name_length == 6 && !g_strncasecmp (name, "target", 6))
+    {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_target, &val);
     }
   }
 }
@@ -66,7 +123,6 @@ swfdec_edit_text_movie_html_parse_attribute (ParserTag *tag, const char *p)
   const char *end, *name, *value;
   int name_length, value_length;
 
-  g_return_val_if_fail (tag != NULL, NULL);
   g_return_val_if_fail ((*p != '>' && *p != '\0'), p);
 
   end = p + strcspn (p, "=> \r\n\t");
@@ -96,8 +152,10 @@ swfdec_edit_text_movie_html_parse_attribute (ParserTag *tag, const char *p)
   value = p + 1;
   value_length = end - (p + 1);
 
-  swfdec_edit_text_movie_html_tag_set_attribute (tag, name, name_length, value,
-      value_length);
+  if (tag != NULL) {
+    swfdec_edit_text_movie_html_tag_set_attribute (tag, name, name_length,
+	value, value_length);
+  }
 
   g_return_val_if_fail (end + 1 > p, NULL);
 
@@ -172,12 +230,30 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
       tag = NULL;
       data->text = g_string_append_c (data->text, '\n');
     } else {
+      SwfdecAsObject *object;
+      SwfdecAsValue val;
+
       tag = g_new0 (ParserTag, 1);
       tag->name = name;
       tag->name_length = name_length;
       tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
       tag->index = data->text->len;
+
       data->tags_open = g_slist_prepend (data->tags_open, tag);
+
+      // set format based on tag
+      object = SWFDEC_AS_OBJECT (tag->format);
+      SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
+
+      if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
+      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
+      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
+      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
+      }
     }
 
     // parse attributes

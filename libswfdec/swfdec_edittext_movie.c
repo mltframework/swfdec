@@ -47,9 +47,11 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
   SwfdecTextFormat *format, *format_prev;
   guint index_;
   GSList *iter;
-  PangoAttribute *attr_bold, *attr_color/*, *attr_font*/, *attr_italic/*,
-		 *attr_kerning, *attr_letter_spacing, *attr_size*/,
-		 *attr_underline;
+  gint32 length, i;
+  SwfdecAsValue val;
+  PangoAttribute *attr_bold, *attr_color, *attr_font, *attr_italic,
+		 *attr_letter_spacing, *attr_size, *attr_underline;
+  // TODO: kerning
 
   g_assert (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
   g_assert (block != NULL);
@@ -91,7 +93,15 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
   block->block_indent = format->block_indent;
   block->left_margin = format->left_margin;
   block->right_margin = format->right_margin;
-  //block->tab_stops = format->tab_stops;
+
+  length = swfdec_as_array_get_length (format->tab_stops);
+  block->tab_stops = pango_tab_array_new (length, TRUE);
+  for (i = 0; i < length; i++) {
+    swfdec_as_array_get_value (format->tab_stops, i, &val);
+    g_assert (SWFDEC_AS_VALUE_IS_NUMBER (&val));
+    pango_tab_array_set_tab (block->tab_stops, i, PANGO_TAB_LEFT,
+	SWFDEC_AS_VALUE_GET_NUMBER (&val));
+  }
 
   block->attrs = pango_attr_list_new ();
 
@@ -104,9 +114,21 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
       SWFDEC_COLOR_G (format->color), SWFDEC_COLOR_B (format->color));
   attr_color->start_index = 0;
 
+  if (text->text->embed_fonts)
+    SWFDEC_FIXME ("Using embed fonts in TextField not supported");
+  attr_font = pango_attr_family_new (format->font);
+  attr_font->start_index = 0;
+
   attr_italic = pango_attr_style_new (
       (format->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
   attr_italic->start_index = 0;
+
+  attr_letter_spacing = pango_attr_letter_spacing_new (
+      format->letter_spacing * 20 * PANGO_SCALE); // FIXME: correct scaling?
+  attr_letter_spacing->start_index = 0;
+
+  attr_size = pango_attr_size_new_absolute (format->size * 20 * PANGO_SCALE);
+  attr_size->start_index = 0;
 
   attr_underline = pango_attr_underline_new (
       (format->underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
@@ -139,6 +161,16 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
       attr_color->start_index = index_ - start_index;
     }
 
+    if (format_prev->font != format->font) {
+      attr_font->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_font);
+
+      if (text->text->embed_fonts)
+	SWFDEC_FIXME ("Using embed fonts in TextField not supported");
+      attr_font = pango_attr_family_new (format->font);
+      attr_font->start_index = index_ - start_index;
+    }
+
     if (format_prev->italic != format->italic) {
       attr_italic->end_index = index_ - start_index;
       pango_attr_list_insert (block->attrs, attr_italic);
@@ -146,6 +178,25 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
       attr_italic = pango_attr_style_new (
 	  (format->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
       attr_italic->start_index = index_ - start_index;
+    }
+
+    if (format_prev->letter_spacing != format->letter_spacing) {
+      attr_letter_spacing->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_letter_spacing);
+
+      // FIXME: correct scaling?
+      attr_letter_spacing = pango_attr_letter_spacing_new (
+	  format->letter_spacing * 20 * PANGO_SCALE);
+      attr_letter_spacing->start_index = index_ - start_index;
+    }
+
+    if (format_prev->size != format->size) {
+      attr_size->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_size);
+
+      attr_size =
+	pango_attr_size_new_absolute (format->size * 20 * PANGO_SCALE);
+      attr_size->start_index = index_ - start_index;
     }
 
     if (format_prev->underline != format->underline) {
@@ -167,9 +218,21 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
   pango_attr_list_insert (block->attrs, attr_color);
   attr_color = NULL;
 
+  attr_font->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_font);
+  attr_font = NULL;
+
   attr_italic->end_index = end_index - start_index;
   pango_attr_list_insert (block->attrs, attr_italic);
   attr_italic = NULL;
+
+  attr_letter_spacing->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_letter_spacing);
+  attr_letter_spacing = NULL;
+
+  attr_size->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_size);
+  attr_size = NULL;
 
   attr_underline->end_index = end_index - start_index;
   pango_attr_list_insert (block->attrs, attr_underline);

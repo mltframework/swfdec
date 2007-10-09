@@ -68,8 +68,8 @@ struct _SwfdecSwfDecoder
 
   gboolean    		compressed;	/* TRUE if this is a compressed flash file */
   z_stream		z;		/* decompressor in use or uninitialized memory */
-  SwfdecBuffer *	uncompressed_buffer; /* buffer containing uncompressed data or NULL if not compressed */
-  SwfdecBufferQueue *	input_queue;	/* queue containing undecoded data */
+  SwfdecBuffer *	buffer;		/* buffer containing uncompressed data */
+  guint			bytes_parsed;	/* number of bytes that have been processed by the parser */
 
   int			state;		/* where we are in the top-level state engine */
   SwfdecBits		parse;		/* where we are in global parsing */

@@ -54,7 +54,7 @@ struct _SwfdecAsFrame {
   SwfdecConstantPool *	constant_pool;	/* constant pool currently in use */
   SwfdecBuffer *	constant_pool_buffer;	/* buffer containing the raw data for constant_pool */
   SwfdecAsValue *	stack_begin;	/* beginning of stack */
-  guint8 *		pc;		/* program counter on stack */
+  const guint8 *	pc;		/* program counter on stack */
   /* native function */
 };
 

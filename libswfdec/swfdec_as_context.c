@@ -707,12 +707,12 @@ swfdec_as_context_run (SwfdecAsContext *context)
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
   SwfdecActionExec exec;
-  guint8 *startpc, *pc, *endpc, *nextpc;
+  const guint8 *startpc, *pc, *endpc, *nextpc;
 #ifndef G_DISABLE_ASSERT
   SwfdecAsValue *check;
 #endif
   guint action, len;
-  guint8 *data;
+  const guint8 *data;
   int version;
   guint original_version;
   void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);

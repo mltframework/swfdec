@@ -210,8 +210,8 @@ static void
 swfdec_script_skip_actions (SwfdecAsContext *cx, guint jump)
 {
   SwfdecScript *script = cx->frame->script;
-  guint8 *pc = cx->frame->pc;
-  guint8 *endpc = script->buffer->data + script->buffer->length;
+  const guint8 *pc = cx->frame->pc;
+  const guint8 *endpc = script->buffer->data + script->buffer->length;
 
   /* jump instructions */
   do {

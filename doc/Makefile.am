@@ -120,6 +120,7 @@ IGNORE_HFILES= \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
+	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_stroke.h \

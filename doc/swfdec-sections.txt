@@ -135,6 +135,7 @@ swfdec_buffer_new_subbuffer
 swfdec_buffer_new_from_file
 swfdec_buffer_ref
 swfdec_buffer_unref
+swfdec_buffer_get_super
 swfdec_buffer_queue_new
 swfdec_buffer_queue_clear
 swfdec_buffer_queue_ref

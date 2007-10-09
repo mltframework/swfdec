@@ -66,6 +66,7 @@ SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset,
     guint length);
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);
 SwfdecBuffer *swfdec_buffer_ref (SwfdecBuffer * buffer);
+SwfdecBuffer *swfdec_buffer_get_super (SwfdecBuffer *buffer);
 void swfdec_buffer_unref (SwfdecBuffer * buffer);
 
 SwfdecBufferQueue *swfdec_buffer_queue_new (void);

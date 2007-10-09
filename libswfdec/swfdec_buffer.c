@@ -194,19 +194,36 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset, guint length)
 
   subbuffer = swfdec_buffer_new ();
 
-  if (buffer->parent) {
-    swfdec_buffer_ref (buffer->parent);
-    subbuffer->parent = buffer->parent;
-  } else {
-    swfdec_buffer_ref (buffer);
-    subbuffer->parent = buffer;
-  }
+  subbuffer->parent = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));
   g_assert (subbuffer->parent->parent == NULL);
   subbuffer->data = buffer->data + offset;
   subbuffer->length = length;
   subbuffer->free = swfdec_buffer_free_subbuffer;
 
   return subbuffer;
+}
+
+/**
+ * swfdec_buffer_get_super:
+ * @buffer: a #SwfdecBuffer
+ *
+ * Returns the largest buffer that contains the memory pointed to by @buffer.
+ * This will either be the passed @buffer itself, or if the buffer was created
+ * via swfdec_buffer_new_subbuffer(), the buffer used for that.
+ *
+ * Returns: The largest @buffer available that contains the memory pointed to 
+ *          by @buffer.
+ **/
+SwfdecBuffer *
+swfdec_buffer_get_super (SwfdecBuffer *buffer)
+{
+  g_return_val_if_fail (buffer != NULL, NULL);
+
+  if (buffer->free == swfdec_buffer_free_subbuffer)
+    buffer = buffer->parent;
+
+  g_assert (buffer->free != swfdec_buffer_free_subbuffer);
+  return buffer;
 }
 
 static void

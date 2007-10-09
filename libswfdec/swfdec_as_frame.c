@@ -398,7 +398,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   frame->script = swfdec_script_ref (script);
   frame->function_name = script->name;
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
-  frame->pc = script->buffer->data;
+  frame->pc = script->main;
   frame->scope_chain = g_slist_prepend (frame->scope_chain, frame);
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);

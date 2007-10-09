@@ -267,6 +267,8 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
   } else {
     script->buffer = swfdec_bits_get_buffer (&org, len);
   }
+  script->main = script->buffer->data;
+  script->exit = script->buffer->data + script->buffer->length;
   return script;
 }
 

@@ -48,6 +48,8 @@ typedef gboolean (* SwfdecScriptForeachFunc) (gconstpointer bytecode, guint acti
 /* FIXME: May want to typedef to SwfdecBuffer directly */
 struct _SwfdecScript {
   SwfdecBuffer *	buffer;			/* buffer holding the script */
+  const guint8 *	main;			/* entry point for script */
+  const guint8 *	exit;			/* exit point for script */
   guint		 	refcount;		/* reference count */
   char *		name;			/* name identifying this script */
   guint			version;		/* version of the script */

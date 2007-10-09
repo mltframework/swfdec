@@ -707,7 +707,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
   SwfdecActionExec exec;
-  const guint8 *startpc, *pc, *endpc, *nextpc;
+  const guint8 *startpc, *pc, *endpc, *nextpc, *exitpc;
 #ifndef G_DISABLE_ASSERT
   SwfdecAsValue *check;
 #endif
@@ -789,6 +789,7 @@ start:
   context->version = script->version;
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
+  exitpc = script->exit;
   pc = frame->pc;
   check_block = TRUE;
 
@@ -800,11 +801,11 @@ start:
       if (frame != context->frame)
 	goto start;
     }
+    if (pc == exitpc) {
+      swfdec_as_frame_return (frame, NULL);
+      goto start;
+    }
     if (pc < startpc || pc >= endpc) {
-      if (pc == endpc) {
-	swfdec_as_frame_return (frame, NULL);
-	goto start;
-      }
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto error;
     }

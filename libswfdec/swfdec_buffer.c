@@ -94,12 +94,6 @@ swfdec_buffer_new (void)
   return buffer;
 }
 
-static void
-swfdec_buffer_free_mem (SwfdecBuffer * buffer, void *priv)
-{
-  g_free (buffer->data);
-}
-
 /**
  * swfdec_buffer_new_and_alloc:
  * @size: amount of bytes to allocate
@@ -116,7 +110,7 @@ swfdec_buffer_new_and_alloc (guint size)
 
   buffer->data = g_malloc (size);
   buffer->length = size;
-  buffer->free = swfdec_buffer_free_mem;
+  buffer->free = (SwfdecBufferFreeFunc) g_free;
 
   return buffer;
 }
@@ -137,7 +131,7 @@ swfdec_buffer_new_and_alloc0 (guint size)
 
   buffer->data = g_malloc0 (size);
   buffer->length = size;
-  buffer->free = swfdec_buffer_free_mem;
+  buffer->free = (SwfdecBufferFreeFunc) g_free;
 
   return buffer;
 }
@@ -162,15 +156,15 @@ swfdec_buffer_new_for_data (unsigned char *data, guint size)
   buffer = swfdec_buffer_new ();
   buffer->data = data;
   buffer->length = size;
-  buffer->free = swfdec_buffer_free_mem;
+  buffer->free = (SwfdecBufferFreeFunc) g_free;
 
   return buffer;
 }
 
 static void
-swfdec_buffer_free_subbuffer (SwfdecBuffer * buffer, void *priv)
+swfdec_buffer_free_subbuffer (unsigned char *data, gpointer priv)
 {
-  swfdec_buffer_unref (buffer->parent);
+  swfdec_buffer_unref (priv);
 }
 
 /**
@@ -194,8 +188,7 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset, guint length)
 
   subbuffer = swfdec_buffer_new ();
 
-  subbuffer->parent = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));
-  g_assert (subbuffer->parent->parent == NULL);
+  subbuffer->priv = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));
   subbuffer->data = buffer->data + offset;
   subbuffer->length = length;
   subbuffer->free = swfdec_buffer_free_subbuffer;
@@ -220,14 +213,14 @@ swfdec_buffer_get_super (SwfdecBuffer *buffer)
   g_return_val_if_fail (buffer != NULL, NULL);
 
   if (buffer->free == swfdec_buffer_free_subbuffer)
-    buffer = buffer->parent;
+    buffer = buffer->priv;
 
   g_assert (buffer->free != swfdec_buffer_free_subbuffer);
   return buffer;
 }
 
 static void
-swfdec_buffer_free_mapped (SwfdecBuffer * buffer, void *priv)
+swfdec_buffer_free_mapped (unsigned char *data, gpointer priv)
 {
   g_mapped_file_free (priv);
 }
@@ -299,7 +292,7 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
   buffer->ref_count--;
   if (buffer->ref_count == 0) {
     if (buffer->free)
-      buffer->free (buffer, buffer->priv);
+      buffer->free (buffer->data, buffer->priv);
     g_free (buffer);
   }
 }

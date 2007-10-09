@@ -28,18 +28,18 @@
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 
+typedef void (* SwfdecBufferFreeFunc) (unsigned char *data, gpointer priv);
+
 struct _SwfdecBuffer
 {
-  unsigned char *data;
-  guint length;
+  unsigned char *	data;		/* memory region (consider as read only) */
+  guint			length;		/* length of the memory region pointer do by @data */
 
   /*< private >*/
-  int ref_count;
+  int			ref_count;	/* guess */
 
-  SwfdecBuffer *parent;
-
-  void (*free) (SwfdecBuffer *, void *);
-  void *priv;
+  SwfdecBufferFreeFunc	free;		/* function to call to free @data */
+  gpointer		priv;	      	/* data to pass to @free */
 };
 
 #define SWFDEC_TYPE_BUFFER swfdec_buffer_get_type()

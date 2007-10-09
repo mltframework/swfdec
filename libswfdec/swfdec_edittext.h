@@ -42,18 +42,17 @@ typedef struct {
   const char		*text;
   int			text_length;
 
+  PangoAlignment	align;
+  gboolean		justify;
   gboolean		bullet;
   int			indent;
   int			leading;
   int			block_indent;
   int			left_margin;
   int			right_margin;
-  int			letter_spacing;
-  PangoTabArray *	tabs;
+  PangoTabArray *	tab_stops;
 
   PangoAttrList *	attrs;
-  PangoAlignment	align;
-  gboolean		justify;
 } SwfdecTextRenderBlock;
 
 typedef enum {

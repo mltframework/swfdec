@@ -41,14 +41,102 @@ swfdec_edit_text_movie_update_extents (SwfdecMovie *movie,
 }
 
 static void
+swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
+    SwfdecTextRenderBlock *block, guint start_index, guint end_index)
+{
+  SwfdecTextFormat *format;
+  guint index_;
+  GSList *iter;
+  PangoAttribute *attr_bold/*, *attr_color, *attr_font, *attr_italic,
+		 *attr_kerning, *attr_letter_spacing, *attr_size,
+		 *attr_underline*/;
+
+  g_assert (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
+  g_assert (block != NULL);
+  g_assert (start_index < end_index);
+  g_assert (end_index <= strlen (text->text_display));
+
+  block->text = text->text_display + start_index;
+  block->text_length = end_index - start_index;
+
+  g_assert (text->formats != NULL);
+  for (iter = text->formats; iter->next != NULL &&
+      ((SwfdecFormatIndex *)(iter->next->data))->index <= start_index;
+      iter = iter->next);
+
+  index_ = start_index;
+  format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+  switch (format->align) {
+    case SWFDEC_TEXT_ALIGN_LEFT:
+      block->align = PANGO_ALIGN_LEFT;
+      block->justify = FALSE;
+      break;
+    case SWFDEC_TEXT_ALIGN_RIGHT:
+      block->align = PANGO_ALIGN_RIGHT;
+      block->justify = FALSE;
+      break;
+    case SWFDEC_TEXT_ALIGN_CENTER:
+      block->align = PANGO_ALIGN_CENTER;
+      block->justify = FALSE;
+      break;
+    case SWFDEC_TEXT_ALIGN_JUSTIFY:
+      block->align = PANGO_ALIGN_LEFT;
+      block->justify = TRUE;
+      break;
+  }
+  block->bullet = format->bullet;
+  block->indent = format->indent;
+  block->leading = format->leading;
+  block->block_indent = format->block_indent;
+  block->left_margin = format->left_margin;
+  block->right_margin = format->right_margin;
+  //block->tab_stops = format->tab_stops;
+
+  block->attrs = pango_attr_list_new ();
+
+  if (format->bold) {
+    attr_bold = pango_attr_weight_new (PANGO_WEIGHT_BOLD);
+    attr_bold->start_index = 0;
+  } else {
+    attr_bold = NULL;
+  }
+
+  for (iter = iter->next;
+      iter != NULL && ((SwfdecFormatIndex *)(iter->data))->index < end_index;
+      iter = iter->next)
+  {
+    index_ = ((SwfdecFormatIndex *)(iter->data))->index;
+    format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+    // Close attributes
+    if (attr_bold && !format->bold) {
+      attr_bold->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_bold);
+      attr_bold = NULL;
+    }
+
+    // Open attributes
+    if (!attr_bold && format->bold) {
+      attr_bold = pango_attr_weight_new (PANGO_WEIGHT_BOLD);
+      attr_bold->start_index = index_ - start_index;
+    }
+  }
+
+  // Close attributes
+  if (attr_bold) {
+    attr_bold->end_index = end_index - start_index;
+    pango_attr_list_insert (block->attrs, attr_bold);
+  }
+}
+
+static void
 swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
 {
-  SwfdecFormatIndex *findex;
-  GSList *iter, *start;
-  PangoAttribute *attr;
   const char *p, *end;
-  int i, lines;
-  guint start_index, end_index, findex_end_index;
+  int lines, i;
+
+  g_assert (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
 
   lines = 0;
   p = text->text_display;
@@ -60,11 +148,7 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
 
   text->blocks = g_new0 (SwfdecTextRenderBlock, lines + 1);
 
-  if (lines == 0)
-    return;
-
   i = 0;
-  start = text->formats;
   p = text->text_display;
   while (*p != '\0') {
     g_assert (i < lines);
@@ -72,70 +156,11 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
     if (end == NULL)
       end = strchr (p, '\0');
 
-    start_index = p - text->text_display;
-    end_index = end - text->text_display;
-
-    text->blocks[i].text = p;
-    text->blocks[i].text_length = end - p;
-    text->blocks[i].attrs = pango_attr_list_new ();
-
-    while (start->next != NULL &&
-	((SwfdecFormatIndex *)(start->next))->index < start_index) {
-      start = start->next;
-    }
-
-    // things we only set on start of paragraph
-    findex = start->data;
-    switch (findex->format->align) {
-      case SWFDEC_TEXT_ALIGN_LEFT:
-	text->blocks[i].align = PANGO_ALIGN_LEFT;
-	text->blocks[i].justify = FALSE;
-	break;
-      case SWFDEC_TEXT_ALIGN_RIGHT:
-	text->blocks[i].align = PANGO_ALIGN_RIGHT;
-	text->blocks[i].justify = FALSE;
-	break;
-      case SWFDEC_TEXT_ALIGN_CENTER:
-	text->blocks[i].align = PANGO_ALIGN_CENTER;
-	text->blocks[i].justify = FALSE;
-	break;
-      case SWFDEC_TEXT_ALIGN_JUSTIFY:
-	text->blocks[i].align = PANGO_ALIGN_LEFT;
-	text->blocks[i].justify = TRUE;
-	break;
-    }
-    text->blocks[i].bullet = findex->format->bullet;
-    text->blocks[i].indent = findex->format->indent;
-    text->blocks[i].leading = findex->format->leading;
-    text->blocks[i].block_indent = findex->format->block_indent;
-    text->blocks[i].left_margin = findex->format->left_margin;
-    text->blocks[i].right_margin = findex->format->right_margin;
-    text->blocks[i].letter_spacing = findex->format->letter_spacing;
-    //PangoTabArray *	tabs;
-
-    for (iter = start;
-	iter != NULL && ((SwfdecFormatIndex *)iter)->index < end_index;
-	iter = iter->next)
-    {
-      findex = iter->data;
-      g_assert (findex != NULL);
-      g_assert (SWFDEC_IS_TEXT_FORMAT (findex->format));
-
-      findex_end_index = (iter->next != NULL ?
-	  ((SwfdecFormatIndex *)(iter->next))->index :
-	  strlen (text->text_display));
-
-      attr = pango_attr_size_new_absolute (findex->format->size * 20 * PANGO_SCALE);
-      attr->start_index = (findex->index < start_index ?
-	  0 : findex->index - start_index);
-      attr->end_index = (findex_end_index > end_index ?
-	  end_index - start_index : findex_end_index - start_index);
-      pango_attr_list_change (text->blocks[i].attrs, attr);
-    };
+    swfdec_edit_text_movie_generate_render_block (text, &text->blocks[i],
+	p - text->text_display, end - text->text_display);
 
     p = end;
-    if (*p != '\0') p++;
-    i++;
+    if (*p == '\r') p++;
   }
 }
 
@@ -187,8 +212,8 @@ swfdec_edit_text_movie_dispose (GObject *object)
     for (i = 0; text->blocks[i].text != NULL; i++) {
       if (text->blocks[i].attrs != NULL)
 	pango_attr_list_unref (text->blocks[i].attrs);
-      if (text->blocks[i].tabs != NULL)
-	pango_tab_array_free (text->blocks[i].tabs);
+      if (text->blocks[i].tab_stops != NULL)
+	pango_tab_array_free (text->blocks[i].tab_stops);
     }
     g_free (text->blocks);
     text->blocks = NULL;

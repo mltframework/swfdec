@@ -86,10 +86,12 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
     const SwfdecTextRenderBlock *blocks, const SwfdecColorTransform *trans,
     const SwfdecRect *inval, gboolean fill)
 {
-  guint i;
+  guint i, j;
   PangoLayout *layout;
+  PangoAttrList *attrs;
   guint width;
-  int height;
+  int height, extra_chars, line_num;
+  PangoLayoutLine *line;
   //SwfdecColor color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
@@ -106,6 +108,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 
   layout = pango_cairo_create_layout (cr);
 
+  extra_chars = 0;
   for (i = 0; blocks[i].text != NULL; i++) {
     cairo_rel_move_to (cr, blocks[i].left_margin + blocks[i].block_indent, 0);
     width = SWFDEC_GRAPHIC (text)->extents.x1 -
@@ -117,22 +120,48 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 
     // TODO: bullet
 
-    pango_layout_set_text (layout, blocks[i].text, blocks[i].text_length);
     pango_layout_set_alignment (layout, blocks[i].align);
     pango_layout_set_justify (layout, blocks[i].justify);
     pango_layout_set_indent (layout, blocks[i].indent);
     pango_layout_set_spacing (layout, blocks[i].leading);
     pango_layout_set_tabs (layout, blocks[i].tab_stops);
-    pango_layout_set_attributes (layout, blocks[i].attrs);
+
+    if (!blocks[i].end_paragraph) {
+      int prev_extra_chars = extra_chars;
+      extra_chars = 0;
+      attrs = pango_attr_list_copy (blocks[i].attrs);
+      for (j = i + 1; blocks[j].text != NULL && !blocks[j-1].end_paragraph; j++)
+      {
+	pango_attr_list_splice (attrs, blocks[j].attrs,
+	    blocks[i].text_length + extra_chars, blocks[j].text_length);
+	extra_chars += blocks[j].text_length;
+      }
+      pango_layout_set_text (layout, blocks[i].text + prev_extra_chars,
+	  blocks[i].text_length + extra_chars - prev_extra_chars);
+      pango_layout_set_attributes (layout, attrs);
+      pango_attr_list_unref (attrs);
+      attrs = NULL;
+
+      pango_layout_index_to_line_x (layout,
+	  blocks[i].text_length - prev_extra_chars, FALSE, &line_num, NULL);
+      line = pango_layout_get_line_readonly (layout, line_num);
+      extra_chars = line->start_index + line->length - (blocks[i].text_length - prev_extra_chars);
+      pango_layout_set_text (layout, blocks[i].text + prev_extra_chars,
+	  blocks[i].text_length + extra_chars - prev_extra_chars);
+    } else {
+      pango_layout_set_text (layout, blocks[i].text + extra_chars, blocks[i].text_length - extra_chars);
+      pango_layout_set_attributes (layout, blocks[i].attrs);
+      extra_chars = 0;
+    }
 
     if (fill)
       pango_cairo_show_layout (cr, layout);
     else
       pango_cairo_layout_path (cr, layout);
 
-    pango_layout_get_size (layout, NULL, &height);
+    pango_layout_get_pixel_size (layout, NULL, &height);
     cairo_rel_move_to (cr, -(blocks[i].left_margin + blocks[i].block_indent),
-	height / PANGO_SCALE);
+	height);
   }
 
   g_object_unref (layout);

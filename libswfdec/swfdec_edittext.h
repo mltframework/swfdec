@@ -42,6 +42,8 @@ typedef struct {
   const char		*text;
   int			text_length;
 
+  gboolean		end_paragraph;
+
   PangoAlignment	align;
   gboolean		justify;
   gboolean		bullet;

@@ -89,11 +89,11 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
       break;
   }
   block->bullet = format->bullet;
-  block->indent = format->indent;
-  block->leading = format->leading;
-  block->block_indent = format->block_indent;
-  block->left_margin = format->left_margin;
-  block->right_margin = format->right_margin;
+  block->indent = format->indent * 20;
+  block->leading = format->leading * 20 * PANGO_SCALE;
+  block->block_indent = format->block_indent * 20;
+  block->left_margin = format->left_margin * 20;
+  block->right_margin = format->right_margin * 20;
 
   length = swfdec_as_array_get_length (format->tab_stops);
   block->tab_stops = pango_tab_array_new (length, TRUE);
@@ -244,34 +244,88 @@ static void
 swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
 {
   const char *p, *end;
-  int lines, i;
+  SwfdecTextFormat *format, *format_prev;
+  GSList *iter;
+  int num, i;
 
   g_assert (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
 
-  lines = 0;
+  num = 0;
+  iter = text->formats;
+  format = ((SwfdecFormatIndex *)(iter->data))->format;
   p = text->text_display;
   while (p != NULL && *p != '\0') {
-    lines++;
-    p = strchr (p, '\r');
-    if (p != NULL) p++;
-  }
-
-  text->blocks = g_new0 (SwfdecTextRenderBlock, lines + 1);
-
-  i = 0;
-  p = text->text_display;
-  while (*p != '\0') {
-    g_assert (i < lines);
+    num++;
     end = strchr (p, '\r');
     if (end == NULL)
       end = strchr (p, '\0');
 
-    swfdec_edit_text_movie_generate_render_block (text, &text->blocks[i++],
-	p - text->text_display, end - text->text_display);
+    while (iter != NULL &&
+	((SwfdecFormatIndex *)(iter->data))->index < end - text->text_display)
+    {
+      format_prev = format;
+      format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+      if (format_prev->align != format->align ||
+	  format_prev->bullet != format->bullet ||
+	  format_prev->indent != format->indent ||
+	  format_prev->leading != format->leading ||
+	  format_prev->block_indent != format->block_indent ||
+	  format_prev->left_margin != format->left_margin)
+      {
+	end = text->text_display + ((SwfdecFormatIndex *)(iter->data))->index;
+	break;
+      }
+
+      iter = iter->next;
+    }
 
     p = end;
     if (*p == '\r') p++;
   }
+
+  text->blocks = g_new0 (SwfdecTextRenderBlock, num + 1);
+
+  i = 0;
+  iter = text->formats;
+  format = ((SwfdecFormatIndex *)(iter->data))->format;
+  p = text->text_display;
+  while (*p != '\0') {
+    g_assert (i < num);
+    end = strchr (p, '\r');
+    if (end == NULL)
+      end = strchr (p, '\0');
+
+    while (iter != NULL &&
+	((SwfdecFormatIndex *)(iter->data))->index < end - text->text_display)
+    {
+      format_prev = format;
+      format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+      if (format_prev->align != format->align ||
+	  format_prev->bullet != format->bullet ||
+	  format_prev->indent != format->indent ||
+	  format_prev->leading != format->leading ||
+	  format_prev->block_indent != format->block_indent ||
+	  format_prev->left_margin != format->left_margin)
+      {
+	end = text->text_display + ((SwfdecFormatIndex *)(iter->data))->index;
+	break;
+      }
+
+      iter = iter->next;
+    }
+
+    swfdec_edit_text_movie_generate_render_block (text, &text->blocks[i],
+	p - text->text_display, end - text->text_display);
+    text->blocks[i].end_paragraph = (*end == '\r' || *end == '\0');
+
+    p = end;
+    if (*p == '\r') p++;
+
+    i++;
+  }
+  g_assert (i == num);
 }
 
 static void
@@ -374,10 +428,10 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   text->format_new->align = text->text->align;
   text->format_new->font = text->text->font->name;
   text->format_new->size = text->text->size / 20;
-  text->format_new->left_margin = text->text->left_margin;
-  text->format_new->right_margin = text->text->right_margin;
-  text->format_new->indent = text->text->indent;
-  text->format_new->leading = text->text->leading;
+  text->format_new->left_margin = text->text->left_margin / 20;
+  text->format_new->right_margin = text->text->right_margin / 20;
+  text->format_new->indent = text->text->indent / 20;
+  text->format_new->leading = text->text->leading / 20;
 
   // text
   if (text->text->text_input != NULL) {

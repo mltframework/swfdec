@@ -91,7 +91,7 @@ struct _SwfdecEditText
   guint			left_margin;
   guint			right_margin;
   guint			indent;
-  int			letter_spacing;
+  int			leading;
 };
 
 struct _SwfdecEditTextClass

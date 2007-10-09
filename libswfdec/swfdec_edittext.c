@@ -87,10 +87,9 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
     const SwfdecRect *inval, gboolean fill)
 {
   guint i;
-  PangoFontDescription *desc;
   PangoLayout *layout;
   guint width;
-  SwfdecColor color;
+  //SwfdecColor color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
   g_return_if_fail (cr != NULL);
@@ -98,41 +97,31 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
   g_return_if_fail (trans != NULL);
   g_return_if_fail (inval != NULL);
 
-  // is this correct?
-  if (text->font == NULL) {
-    SWFDEC_ERROR ("no font to render with");
-    return;
-  }
-  if (text->font->desc == NULL) {
-    SWFDEC_INFO ("font %d has no cairo font description",
-	SWFDEC_CHARACTER (text->font)->id);
-    desc = pango_font_description_new ();
-    pango_font_description_set_family (desc, "Sans");
-  } else {
-    desc = pango_font_description_copy (text->font->desc);
-  }
-  pango_font_description_set_absolute_size (desc, text->height * PANGO_SCALE);
   layout = pango_cairo_create_layout (cr);
-  pango_layout_set_font_description (layout, desc);
-  pango_font_description_free (desc);
 
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
       SWFDEC_GRAPHIC (text)->extents.y0);
 
-  color = swfdec_color_apply_transform (text->color, trans);
-  swfdec_color_set_source (cr, color);
+  /*color = swfdec_color_apply_transform (text->color, trans);
+  swfdec_color_set_source (cr, color);*/
 
   for (i = 0; blocks[i].text != NULL; i++) {
-    cairo_rel_move_to (cr, blocks[i].left_margin, 0);
+    cairo_rel_move_to (cr, blocks[i].left_margin + blocks[i].block_indent, 0);
     width = SWFDEC_GRAPHIC (text)->extents.x1 -
       SWFDEC_GRAPHIC (text)->extents.x0 - blocks[i].left_margin -
-      blocks[i].right_margin;
+      blocks[i].right_margin - blocks[i].block_indent;
     pango_layout_set_width (layout, width * PANGO_SCALE);
 
+    // TODO: bullet
+
     pango_layout_set_text (layout, blocks[i].text, blocks[i].text_length);
-    pango_layout_set_attributes (layout, blocks[i].attrs);
     pango_layout_set_alignment (layout, blocks[i].align);
     pango_layout_set_justify (layout, blocks[i].justify);
+    pango_layout_set_indent (layout, blocks[i].indent);
+    pango_layout_set_spacing (layout, blocks[i].leading);
+    pango_layout_set_tabs (layout, blocks[i].tab_stops);
+    pango_layout_set_attributes (layout, blocks[i].attrs);
+
     if (fill)
       pango_cairo_show_layout (cr, layout);
     else
@@ -224,7 +213,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->left_margin = swfdec_bits_get_u16 (b);
     text->right_margin = swfdec_bits_get_u16 (b);
     text->indent = swfdec_bits_get_u16 (b);
-    text->letter_spacing = swfdec_bits_get_s16 (b);
+    text->leading = swfdec_bits_get_s16 (b);
   }
   text->variable = swfdec_bits_get_string (b);
   if (text->variable && *text->variable == 0) {

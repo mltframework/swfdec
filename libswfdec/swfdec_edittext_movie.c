@@ -374,7 +374,7 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   text->format_new->left_margin = text->text->left_margin;
   text->format_new->right_margin = text->text->right_margin;
   text->format_new->indent = text->text->indent;
-  text->format_new->letter_spacing = text->text->letter_spacing;
+  text->format_new->leading = text->text->leading;
 
   // text
   if (text->text->text_input != NULL) {

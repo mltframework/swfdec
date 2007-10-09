@@ -570,7 +570,7 @@ swfdec_edit_text_movie_createTextField (SwfdecAsContext *cx,
   edittext->multiline = FALSE;
   edittext->auto_size = SWFDEC_AUTO_SIZE_NONE;
   edittext->border = FALSE;
-  edittext->height = 0; // FIXME
+  edittext->size = 240; // FIXME: Correct?
 
   edittext->text_input = NULL;
   edittext->variable = NULL;

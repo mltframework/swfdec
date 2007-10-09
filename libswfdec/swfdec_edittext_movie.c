@@ -27,6 +27,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_text_format.h"
+#include "swfdec_font.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 
@@ -265,7 +266,7 @@ swfdec_edit_text_movie_generate_render_blocks (SwfdecEditTextMovie *text)
     if (end == NULL)
       end = strchr (p, '\0');
 
-    swfdec_edit_text_movie_generate_render_block (text, &text->blocks[i],
+    swfdec_edit_text_movie_generate_render_block (text, &text->blocks[i++],
 	p - text->text_display, end - text->text_display);
 
     p = end;
@@ -371,6 +372,8 @@ swfdec_edit_text_movie_init_movie (SwfdecMovie *movie)
   swfdec_text_format_set_defaults (text->format_new);
   text->format_new->color = text->text->color;
   text->format_new->align = text->text->align;
+  text->format_new->font = text->text->font->name;
+  text->format_new->size = text->text->size / 20;
   text->format_new->left_margin = text->text->left_margin;
   text->format_new->right_margin = text->text->right_margin;
   text->format_new->indent = text->text->indent;

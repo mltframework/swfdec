@@ -74,8 +74,6 @@ struct _SwfdecEditText
   gboolean		selectable;
 
   gboolean		embed_fonts;
-  SwfdecFont *		font;
-  guint			height;
 
   gboolean		wrap;
   gboolean		multiline;
@@ -84,8 +82,10 @@ struct _SwfdecEditText
   gboolean		border;
 
   /* only to be passed to the movie object */
+  SwfdecFont *		font;
   char *		text_input;
   char *		variable;
+  guint			size;
   SwfdecColor		color;
   SwfdecTextAlign	align;
   guint			left_margin;

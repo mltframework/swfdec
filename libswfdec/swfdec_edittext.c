@@ -89,6 +89,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
   guint i;
   PangoLayout *layout;
   guint width;
+  int height;
   //SwfdecColor color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
@@ -97,19 +98,21 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
   g_return_if_fail (trans != NULL);
   g_return_if_fail (inval != NULL);
 
-  layout = pango_cairo_create_layout (cr);
-
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
       SWFDEC_GRAPHIC (text)->extents.y0);
 
   /*color = swfdec_color_apply_transform (text->color, trans);
   swfdec_color_set_source (cr, color);*/
 
+  layout = pango_cairo_create_layout (cr);
+
   for (i = 0; blocks[i].text != NULL; i++) {
     cairo_rel_move_to (cr, blocks[i].left_margin + blocks[i].block_indent, 0);
     width = SWFDEC_GRAPHIC (text)->extents.x1 -
       SWFDEC_GRAPHIC (text)->extents.x0 - blocks[i].left_margin -
       blocks[i].right_margin - blocks[i].block_indent;
+
+    pango_cairo_update_layout (cr, layout);
     pango_layout_set_width (layout, width * PANGO_SCALE);
 
     // TODO: bullet
@@ -126,7 +129,12 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
       pango_cairo_show_layout (cr, layout);
     else
       pango_cairo_layout_path (cr, layout);
+
+    pango_layout_get_size (layout, NULL, &height);
+    cairo_rel_move_to (cr, -(blocks[i].left_margin + blocks[i].block_indent),
+	height / PANGO_SCALE);
   }
+
   g_object_unref (layout);
 }
 
@@ -178,8 +186,8 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     } else {
       SWFDEC_ERROR ("id %u does not specify a font", id);
     }
-    text->height = swfdec_bits_get_u16 (b);
-    SWFDEC_LOG ("  height = %u", text->height);
+    text->size = swfdec_bits_get_u16 (b);
+    SWFDEC_LOG ("  size = %u", text->size);
   }
   if (has_color) {
     text->color = swfdec_bits_get_rgba (b);

@@ -235,6 +235,7 @@ SwfdecScript *
 swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
 {
   SwfdecScript *script;
+  SwfdecBuffer *buffer;
   SwfdecBits org;
   guint len;
   
@@ -263,12 +264,14 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
   }
   len -= swfdec_bits_left (bits) / 8;
   if (len == 0) {
-    script->buffer = swfdec_buffer_new ();
+    buffer = swfdec_buffer_new ();
   } else {
-    script->buffer = swfdec_bits_get_buffer (&org, len);
+    buffer = swfdec_bits_get_buffer (&org, len);
   }
-  script->main = script->buffer->data;
-  script->exit = script->buffer->data + script->buffer->length;
+  script->main = buffer->data;
+  script->exit = buffer->data + buffer->length;
+  script->buffer = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));
+  swfdec_buffer_unref (buffer);
   return script;
 }
 

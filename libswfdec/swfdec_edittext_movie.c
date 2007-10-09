@@ -44,12 +44,12 @@ static void
 swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
     SwfdecTextRenderBlock *block, guint start_index, guint end_index)
 {
-  SwfdecTextFormat *format;
+  SwfdecTextFormat *format, *format_prev;
   guint index_;
   GSList *iter;
-  PangoAttribute *attr_bold/*, *attr_color, *attr_font, *attr_italic,
-		 *attr_kerning, *attr_letter_spacing, *attr_size,
-		 *attr_underline*/;
+  PangoAttribute *attr_bold, *attr_color/*, *attr_font*/, *attr_italic/*,
+		 *attr_kerning, *attr_letter_spacing, *attr_size*/,
+		 *attr_underline;
 
   g_assert (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
   g_assert (block != NULL);
@@ -95,39 +95,85 @@ swfdec_edit_text_movie_generate_render_block (SwfdecEditTextMovie *text,
 
   block->attrs = pango_attr_list_new ();
 
-  if (format->bold) {
-    attr_bold = pango_attr_weight_new (PANGO_WEIGHT_BOLD);
-    attr_bold->start_index = 0;
-  } else {
-    attr_bold = NULL;
-  }
+  // Open attributes
+  attr_bold = pango_attr_weight_new (
+      (format->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
+  attr_bold->start_index = 0;
+
+  attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (format->color),
+      SWFDEC_COLOR_G (format->color), SWFDEC_COLOR_B (format->color));
+  attr_color->start_index = 0;
+
+  attr_italic = pango_attr_style_new (
+      (format->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
+  attr_italic->start_index = 0;
+
+  attr_underline = pango_attr_underline_new (
+      (format->underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
+  attr_underline->start_index = 0;
 
   for (iter = iter->next;
       iter != NULL && ((SwfdecFormatIndex *)(iter->data))->index < end_index;
       iter = iter->next)
   {
+    format_prev = format;
     index_ = ((SwfdecFormatIndex *)(iter->data))->index;
     format = ((SwfdecFormatIndex *)(iter->data))->format;
 
-    // Close attributes
-    if (attr_bold && !format->bold) {
+    // Change attributes if necessary
+    if (format_prev->bold != format->bold) {
       attr_bold->end_index = index_ - start_index;
       pango_attr_list_insert (block->attrs, attr_bold);
-      attr_bold = NULL;
+
+      attr_bold = pango_attr_weight_new (
+	  (format->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
+      attr_bold->start_index = index_ - start_index;
     }
 
-    // Open attributes
-    if (!attr_bold && format->bold) {
-      attr_bold = pango_attr_weight_new (PANGO_WEIGHT_BOLD);
-      attr_bold->start_index = index_ - start_index;
+    if (format_prev->color != format->color) {
+      attr_color->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_color);
+
+      attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (format->color),
+	  SWFDEC_COLOR_G (format->color), SWFDEC_COLOR_B (format->color));
+      attr_color->start_index = index_ - start_index;
+    }
+
+    if (format_prev->italic != format->italic) {
+      attr_italic->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_italic);
+
+      attr_italic = pango_attr_style_new (
+	  (format->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
+      attr_italic->start_index = index_ - start_index;
+    }
+
+    if (format_prev->underline != format->underline) {
+      attr_underline->end_index = index_ - start_index;
+      pango_attr_list_insert (block->attrs, attr_underline);
+
+      attr_underline = pango_attr_underline_new (
+	  (format->underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
+      attr_underline->start_index = index_ - start_index;
     }
   }
 
   // Close attributes
-  if (attr_bold) {
-    attr_bold->end_index = end_index - start_index;
-    pango_attr_list_insert (block->attrs, attr_bold);
-  }
+  attr_bold->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_bold);
+  attr_bold = NULL;
+
+  attr_color->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_color);
+  attr_color = NULL;
+
+  attr_italic->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_italic);
+  attr_italic = NULL;
+
+  attr_underline->end_index = end_index - start_index;
+  pango_attr_list_insert (block->attrs, attr_underline);
+  attr_underline = NULL;
 }
 
 static void

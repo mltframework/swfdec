@@ -74,14 +74,15 @@ struct _SwfdecEditText
   guint			max_length;
   gboolean		selectable;
 
-  SwfdecFont *	  	font;
+  gboolean		embed_fonts;
+  SwfdecFont *		font;
+  guint			height;
 
   gboolean		wrap;
   gboolean		multiline;
   SwfdecAutoSize	auto_size;
 
   gboolean		border;
-  guint			height;
 
   /* only to be passed to the movie object */
   char *		text_input;

@@ -146,7 +146,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecEditText *text;
   guint id;
-  int reserved, use_outlines;
+  int reserved;
   gboolean has_font, has_color, has_max_length, has_layout, has_text;
   SwfdecBits *b = &s->b;
 
@@ -177,7 +177,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   text->border = swfdec_bits_getbit (b);
   reserved = swfdec_bits_getbit (b);
   text->html = swfdec_bits_getbit (b);
-  use_outlines = swfdec_bits_getbit (b); /* FIXME: what's this? */
+  text->embed_fonts = swfdec_bits_getbit (b);
   if (has_font) {
     SwfdecCharacter *font;
 

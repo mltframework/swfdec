@@ -408,6 +408,31 @@ swfdec_edit_text_movie_set_condenseWhite (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_edit_text_movie_get_embedFonts (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->embed_fonts);
+}
+
+static void
+swfdec_edit_text_movie_set_embedFonts (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecEditTextMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_EDIT_TEXT_MOVIE, (gpointer)&text, "b", &value);
+
+  text->text->embed_fonts = value;
+}
+
+static void
 swfdec_edit_text_movie_get_length (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
@@ -663,6 +688,9 @@ swfdec_edit_text_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_condenseWhite,
 	swfdec_edit_text_movie_get_condenseWhite,
 	swfdec_edit_text_movie_set_condenseWhite);
+    swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
+	swfdec_edit_text_movie_get_embedFonts,
+	swfdec_edit_text_movie_set_embedFonts);
     swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_length,
 	swfdec_edit_text_movie_get_length, NULL);
     swfdec_edit_text_movie_add_variable (proto, SWFDEC_AS_STR_textColor,

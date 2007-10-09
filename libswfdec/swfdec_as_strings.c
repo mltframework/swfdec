@@ -391,6 +391,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("Times New Roman")
   SWFDEC_AS_CONSTANT_STRING ("condenseWhite")
   SWFDEC_AS_CONSTANT_STRING ("textColor")
+  SWFDEC_AS_CONSTANT_STRING ("embedFonts")
   /* add more here */
 ;
 

@@ -158,7 +158,8 @@ swfdec_edit_text_movie_generate_paragraph (SwfdecEditTextMovie *text,
       format->letter_spacing * 20 * PANGO_SCALE); // FIXME: correct scaling?
   attr_letter_spacing->start_index = 0;
 
-  attr_size = pango_attr_size_new_absolute (format->size * 20 * PANGO_SCALE);
+  attr_size =
+    pango_attr_size_new_absolute (MAX (format->size, 1) * 20 * PANGO_SCALE);
   attr_size->start_index = 0;
 
   attr_underline = pango_attr_underline_new (
@@ -240,7 +241,7 @@ swfdec_edit_text_movie_generate_paragraph (SwfdecEditTextMovie *text,
       swfdec_text_paragraph_add_attribute (paragraph, attr_size);
 
       attr_size =
-	pango_attr_size_new_absolute (format->size * 20 * PANGO_SCALE);
+	pango_attr_size_new_absolute (MAX (1, format->size) * 20 * PANGO_SCALE);
       attr_size->start_index = index_ - start_index;
     }
 

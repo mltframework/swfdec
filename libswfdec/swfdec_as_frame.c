@@ -241,9 +241,8 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame)
     frame->block_start = block->start;
     frame->block_end = block->end;
   } else {
-    /* FIXME: do we need to set the block_start and block_end here? */
-    frame->block_start = NULL;
-    frame->block_end = NULL;
+    frame->block_start = frame->script->buffer->data;
+    frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
   }
 }
 
@@ -765,10 +764,9 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL && current_reg < script->n_registers) {
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
   }
-  /*** add a default block that protects the program counter */
-  swfdec_as_frame_push_block (frame, frame->script->buffer->data, 
-      frame->script->buffer->data + frame->script->buffer->length,
-      (SwfdecAsFrameBlockFunc) swfdec_as_frame_return, NULL, NULL);
+  /* set block boundaries */
+  frame->block_start = frame->script->buffer->data;
+  frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
 
 out:
   if (context->debugger) {

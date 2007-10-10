@@ -1844,9 +1844,9 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   /* see function-scope tests */
   if (cx->version > 5) {
     /* FIXME: or original target? */
-    fun = swfdec_as_script_function_new (frame->target, frame->scope_chain, script);
+    fun = swfdec_as_script_function_new (frame->original_target, frame->scope_chain, script);
   } else {
-    fun = swfdec_as_script_function_new (frame->target, NULL, script);
+    fun = swfdec_as_script_function_new (frame->original_target, NULL, script);
   }
   if (fun == NULL)
     return;

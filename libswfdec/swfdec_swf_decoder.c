@@ -470,7 +470,7 @@ swfdec_swf_decoder_add_script (SwfdecSwfDecoder *s, SwfdecScript *script)
   g_return_if_fail (script != NULL);
   g_return_if_fail (script->buffer != NULL);
 
-  g_hash_table_insert (s->scripts, script->buffer->data, script);
+  g_hash_table_insert (s->scripts, (gpointer) script->main, script);
 }
 
 SwfdecScript *

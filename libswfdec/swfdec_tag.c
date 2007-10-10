@@ -622,15 +622,17 @@ static int
 tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecScript *script;
+  SwfdecBits bits;
   char *name;
 
   name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
-  script = swfdec_script_new_from_bits (&s->b, name, s->version);
+  bits = s->b;
+  script = swfdec_script_new_from_bits (&bits, name, s->version);
   g_free (name);
   if (script) {
     swfdec_swf_decoder_add_script (s, script);
-    swfdec_sprite_add_action (s->parse_sprite, tag, swfdec_buffer_ref (script->buffer));
+    tag_func_enqueue (s, tag);
   }
 
   return SWFDEC_STATUS_OK;

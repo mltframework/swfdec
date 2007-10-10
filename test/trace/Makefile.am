@@ -389,6 +389,15 @@ EXTRA_DIST = \
 	definefunction2-this.swf \
 	definefunction2-this.swf.trace \
 	definefunction2-this.xml \
+	definefunction-target.as \
+	definefunction-target-5.swf \
+	definefunction-target-5.swf.trace \
+	definefunction-target-6.swf \
+	definefunction-target-6.swf.trace \
+	definefunction-target-7.swf \
+	definefunction-target-7.swf.trace \
+	definefunction-target-8.swf \
+	definefunction-target-8.swf.trace \
 	definelocal-function-target.as \
 	definelocal-function-target-5.swf \
 	definelocal-function-target-5.swf.trace \

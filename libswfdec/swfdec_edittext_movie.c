@@ -91,7 +91,7 @@ swfdec_text_paragraph_add_block_attributes (SwfdecParagraph *paragraph,
     swfdec_as_array_get_value (format->tab_stops, i, &val);
     g_assert (SWFDEC_AS_VALUE_IS_NUMBER (&val));
     pango_tab_array_set_tab (block->tab_stops, i, PANGO_TAB_LEFT,
-	SWFDEC_AS_VALUE_GET_NUMBER (&val));
+	SWFDEC_AS_VALUE_GET_NUMBER (&val) * 20);
   }
 
   paragraph->blocks = g_list_append (paragraph->blocks, block);

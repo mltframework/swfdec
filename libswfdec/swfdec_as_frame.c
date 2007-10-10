@@ -252,7 +252,8 @@ swfdec_as_frame_check_block (SwfdecAsFrame *frame)
   SwfdecAsFrameBlock *block;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  g_assert (frame->blocks->len > 0);
+  if (frame->blocks->len == 0)
+    return;
 
   block = &g_array_index (frame->blocks, SwfdecAsFrameBlock, frame->blocks->len - 1);
   block->func (frame, block->data);

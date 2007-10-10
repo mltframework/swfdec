@@ -83,20 +83,16 @@ swfdec_edit_text_init (SwfdecEditText * text)
 
 void
 swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
-    const SwfdecTextRenderBlock *blocks, const SwfdecColorTransform *trans,
+    const SwfdecParagraph *paragraphs, const SwfdecColorTransform *trans,
     const SwfdecRect *inval)
 {
-  guint i, j;
   PangoLayout *layout;
-  PangoAttrList *attrs;
-  guint width;
-  int height, extra_chars, line_num;
-  PangoLayoutLine *line;
+  guint i;
   //SwfdecColor color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
   g_return_if_fail (cr != NULL);
-  g_return_if_fail (blocks != NULL);
+  g_return_if_fail (paragraphs != NULL);
   g_return_if_fail (trans != NULL);
   g_return_if_fail (inval != NULL);
 
@@ -108,57 +104,109 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 
   layout = pango_cairo_create_layout (cr);
 
-  extra_chars = 0;
-  for (i = 0; blocks[i].text != NULL; i++) {
-    cairo_rel_move_to (cr, blocks[i].left_margin + blocks[i].block_indent, 0);
-    width = SWFDEC_GRAPHIC (text)->extents.x1 -
-      SWFDEC_GRAPHIC (text)->extents.x0 - blocks[i].left_margin -
-      blocks[i].right_margin - blocks[i].block_indent;
+  for (i = 0; paragraphs[i].text != NULL; i++)
+  {
+    GList *iter;
+    guint skip;
+    int block_num = 0;
 
-    pango_cairo_update_layout (cr, layout);
-    pango_layout_set_width (layout, width * PANGO_SCALE);
+    skip = 0;
+    for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next)
+    {
+      int height, width;
+      guint length;
+      SwfdecBlock *block;
+      PangoAttrList *attr_list;
 
-    // TODO: bullet
-
-    pango_layout_set_alignment (layout, blocks[i].align);
-    pango_layout_set_justify (layout, blocks[i].justify);
-    pango_layout_set_indent (layout, blocks[i].indent);
-    pango_layout_set_spacing (layout, blocks[i].leading);
-    pango_layout_set_tabs (layout, blocks[i].tab_stops);
-
-    if (!blocks[i].end_paragraph) {
-      int prev_extra_chars = extra_chars;
-      extra_chars = 0;
-      attrs = pango_attr_list_copy (blocks[i].attrs);
-      for (j = i + 1; blocks[j].text != NULL && !blocks[j-1].end_paragraph; j++)
-      {
-	pango_attr_list_splice (attrs, blocks[j].attrs,
-	    blocks[i].text_length + extra_chars, blocks[j].text_length);
-	extra_chars += blocks[j].text_length;
+      block = (SwfdecBlock *)iter->data;
+      if (iter->next != NULL) {
+	length =
+	  ((SwfdecBlock *)(iter->next->data))->index_ - block->index_;
+      } else {
+	length = paragraphs[i].text_length - block->index_;
       }
-      pango_layout_set_text (layout, blocks[i].text + prev_extra_chars,
-	  blocks[i].text_length + extra_chars - prev_extra_chars);
-      pango_layout_set_attributes (layout, attrs);
-      pango_attr_list_unref (attrs);
-      attrs = NULL;
 
-      pango_layout_index_to_line_x (layout,
-	  blocks[i].text_length - prev_extra_chars, FALSE, &line_num, NULL);
-      line = pango_layout_get_line_readonly (layout, line_num);
-      extra_chars = line->start_index + line->length - (blocks[i].text_length - prev_extra_chars);
-      pango_layout_set_text (layout, blocks[i].text + prev_extra_chars,
-	  blocks[i].text_length + extra_chars - prev_extra_chars);
-    } else {
-      pango_layout_set_text (layout, blocks[i].text + extra_chars, blocks[i].text_length - extra_chars);
-      pango_layout_set_attributes (layout, blocks[i].attrs);
-      extra_chars = 0;
+      if (skip > length) {
+	skip -= length;
+	continue;
+      }
+
+      // update position
+      cairo_rel_move_to (cr, block->left_margin + block->block_indent, 0);
+      width = SWFDEC_GRAPHIC (text)->extents.x1 -
+	SWFDEC_GRAPHIC (text)->extents.x0 - block->left_margin -
+	block->right_margin - block->block_indent;
+
+      pango_cairo_update_layout (cr, layout);
+      pango_layout_context_changed (layout);
+      pango_layout_set_width (layout, width * PANGO_SCALE);
+
+      // set paragraph styles
+      pango_layout_set_alignment (layout, block->align);
+      pango_layout_set_justify (layout, block->justify);
+      pango_layout_set_indent (layout, block->indent);
+      pango_layout_set_spacing (layout, block->leading);
+      pango_layout_set_tabs (layout, block->tab_stops);
+      // TODO: bullet
+
+      // set text attributes
+      if (block->index_ + skip > 0) {
+	GList *iter_attrs;
+
+	attr_list = pango_attr_list_new ();
+
+	for (iter_attrs = paragraphs[i].attrs; iter_attrs != NULL;
+	    iter_attrs = iter_attrs->next)
+	{
+	  PangoAttribute *attr;
+
+	  attr = (PangoAttribute *)iter_attrs->data;
+
+	  if (attr->end_index <= block->index_ + skip)
+	    continue;
+
+	  attr = pango_attribute_copy (attr);
+	  attr->start_index = (attr->start_index > block->index_ + skip ?
+	      attr->start_index - block->index_ + skip : 0);
+	  attr->end_index = attr->end_index - block->index_ + skip;
+	  pango_attr_list_insert (attr_list, attr);
+	}
+      } else {
+	attr_list = pango_attr_list_copy (paragraphs[i].attrs_list);
+      }
+      pango_layout_set_attributes (layout, attr_list);
+      pango_attr_list_unref (attr_list);
+      attr_list = NULL;
+
+      pango_layout_set_text (layout, paragraphs[i].text + block->index_ + skip,
+	  paragraphs[i].text_length - block->index_ - skip);
+
+      if (iter->next != NULL)
+      {
+	PangoLayoutLine *line;
+	int line_num;
+	guint skip_new;
+
+	pango_layout_index_to_line_x (layout, length - skip, FALSE, &line_num,
+	    NULL);
+	line = pango_layout_get_line_readonly (layout, line_num);
+	skip_new = line->start_index + line->length - (length - skip);
+	pango_layout_set_text (layout,
+	    paragraphs[i].text + block->index_ + skip,
+	    length - skip + skip_new);
+	skip = skip_new;
+      }
+      else
+      {
+	skip = 0;
+      }
+
+      pango_cairo_show_layout (cr, layout);
+
+      pango_layout_get_pixel_size (layout, NULL, &height);
+      cairo_rel_move_to (cr, -(block->left_margin + block->block_indent),
+	  height);
     }
-
-    pango_cairo_show_layout (cr, layout);
-
-    pango_layout_get_pixel_size (layout, NULL, &height);
-    cairo_rel_move_to (cr, -(blocks[i].left_margin + blocks[i].block_indent),
-	height);
   }
 
   g_object_unref (layout);

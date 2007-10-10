@@ -81,7 +81,7 @@ struct _SwfdecEditTextMovie {
   int			thickness;
 
   /* for rendering */
-  SwfdecTextRenderBlock *blocks;
+  SwfdecParagraph *	paragraphs;
 };
 
 struct _SwfdecEditTextMovieClass {

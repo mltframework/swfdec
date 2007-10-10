@@ -39,10 +39,7 @@ typedef struct _SwfdecEditTextClass SwfdecEditTextClass;
 #define SWFDEC_EDIT_TEXT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_EDIT_TEXT, SwfdecEditTextClass))
 
 typedef struct {
-  const char		*text;
-  int			text_length;
-
-  gboolean		end_paragraph;
+  guint			index_;
 
   PangoAlignment	align;
   gboolean		justify;
@@ -53,9 +50,17 @@ typedef struct {
   int			left_margin;
   int			right_margin;
   PangoTabArray *	tab_stops;
+} SwfdecBlock;
 
-  PangoAttrList *	attrs;
-} SwfdecTextRenderBlock;
+typedef struct {
+  const char		*text;
+  guint			text_length;
+
+  GList *		blocks;		// SwfdecBlock
+
+  GList *		attrs;	// PangoAttribute
+  PangoAttrList *	attrs_list;
+} SwfdecParagraph;
 
 typedef enum {
   SWFDEC_AUTO_SIZE_NONE,
@@ -108,7 +113,7 @@ int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
 
 void			swfdec_edit_text_render		(SwfdecEditText *	text,
 							 cairo_t *		cr,
-							 const SwfdecTextRenderBlock *	blocks,
+							 const SwfdecParagraph *	paragraphs,
 							 const SwfdecColorTransform *	trans,
 							 const SwfdecRect *		rect);
 

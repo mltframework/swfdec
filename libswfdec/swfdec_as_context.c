@@ -197,8 +197,8 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
   
   context->memory += bytes;
   context->memory_since_gc += bytes;
-  SWFDEC_LOG ("+%4u bytes, total %7u (%7u since GC)", bytes,
-      context->memory, context->memory_since_gc);
+  SWFDEC_LOG ("+%4"G_GSIZE_FORMAT" bytes, total %7"G_GSIZE_FORMAT" (%7"G_GSIZE_FORMAT" since GC)",
+      bytes, context->memory, context->memory_since_gc);
   /* FIXME: Don't foget to abort on OOM */
   return TRUE;
 }
@@ -219,8 +219,8 @@ swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize bytes)
   g_return_if_fail (context->memory >= bytes);
 
   context->memory -= bytes;
-  SWFDEC_LOG ("-%4u bytes, total %7u (%7u since GC)", bytes,
-      context->memory, context->memory_since_gc);
+  SWFDEC_LOG ("-%4"G_GSIZE_FORMAT" bytes, total %7"G_GSIZE_FORMAT" (%7"G_GSIZE_FORMAT" since GC)",
+      bytes, context->memory, context->memory_since_gc);
 }
 
 /*** GC ***/

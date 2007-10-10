@@ -1227,7 +1227,11 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  SWFDEC_AS_VALUE_SET_INT (retval, i);
+  if (i > G_MAXINT32 || i < G_MININT32) {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, i);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (retval, i);
+  }
 }
 
 SWFDEC_AS_NATIVE (100, 3, swfdec_as_context_parseFloat)

@@ -109,7 +109,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
     for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next)
     {
       int height, width;
-      guint length, trailing_space;
+      guint length;
       SwfdecBlock *block;
       PangoAttrList *attr_list;
 
@@ -200,13 +200,8 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
       pango_attr_list_unref (attr_list);
       attr_list = NULL;
 
-      trailing_space = 0;
-      while (g_ascii_isspace (*(paragraphs[i].text +
-	      paragraphs[i].text_length - trailing_space - 1))) {
-	  trailing_space++;
-      }
       pango_layout_set_text (layout, paragraphs[i].text + block->index_ + skip,
-	  paragraphs[i].text_length - block->index_ - skip - trailing_space);
+	  paragraphs[i].text_length - block->index_ - skip);
 
       if (iter->next != NULL)
       {
@@ -218,19 +213,9 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 	    NULL);
 	line = pango_layout_get_line_readonly (layout, line_num);
 	skip_new = line->start_index + line->length - (length - skip);
-	if ((guint)(line->start_index + line->length) ==
-	    paragraphs[i].text_length - block->index_ - skip) {
-	  skip_new += trailing_space;
-	} else {
-	  trailing_space = 0;
-	  while (g_ascii_isspace (*(paragraphs[i].text + block->index_ + skip +
-		  (length - skip + skip_new) - trailing_space - 1))) {
-	      trailing_space++;
-	  }
-	}
 	pango_layout_set_text (layout,
 	    paragraphs[i].text + block->index_ + skip,
-	    length - skip + skip_new - trailing_space);
+	    length - skip + skip_new);
 	skip = skip_new;
       }
       else

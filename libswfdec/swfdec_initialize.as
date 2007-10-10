@@ -239,7 +239,7 @@ MovieClip.prototype["loadVariables"] = function (url, method) {
   } else {
     loadVariables (url, this._target, "POST");
   }
-  setTarget (null);
+  setTarget ("");
 };
 
 // work around ming bug, causing loadMovie to be lower cased

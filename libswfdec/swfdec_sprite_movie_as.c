@@ -24,6 +24,7 @@
 #endif
 
 #include "swfdec_movie.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
@@ -200,9 +201,10 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc == 1) {
     SwfdecMovie *other;
     SwfdecRect movie_rect, other_rect;
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
-        !SWFDEC_IS_MOVIE (other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
-      SWFDEC_ERROR ("FIXME: what happens now?");
+
+    other = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), &argv[0]);
+    if (other == NULL) {
+      SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
       return;
     }
     swfdec_movie_update (movie);
@@ -224,7 +226,7 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     swfdec_movie_global_to_local (movie, &x, &y);
 
-    if (shape && FALSE) {
+    if (shape) {
       ret = swfdec_movie_mouse_in (movie, x, y);
     } else {
       ret = swfdec_rect_contains (&movie->original_extents, x, y);
@@ -305,7 +307,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
   int depth;
   const char *name;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&parent, "si", &name, &depth);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &parent, "si", &name, &depth);
 
   movie = swfdec_movie_find (parent, depth);
   if (movie)
@@ -462,13 +464,26 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (obj== NULL)
     return;
 
+  swfdec_movie_update (movie);
   if (swfdec_rect_is_empty (&movie->extents)) {
     x0 = x1 = y0 = y1 = 0x7FFFFFF;
   } else {
-    x0 = movie->extents.x0;
-    y0 = movie->extents.y0;
-    x1 = movie->extents.x1;
-    y1 = movie->extents.y1;
+    SwfdecRect rect = movie->extents;
+    if (argc > 0) {
+      SwfdecMovie *other = swfdec_player_get_movie_from_value (
+	  SWFDEC_PLAYER (cx), &argv[0]);
+      if (other) {
+	if (movie->parent)
+	  swfdec_movie_rect_local_to_global (movie->parent, &rect);
+	swfdec_movie_rect_global_to_local (other, &rect);
+      } else {
+	SWFDEC_FIXME ("what's getBounds relative to invalid?");
+      }
+    }
+    x0 = rect.x0;
+    y0 = rect.y0;
+    x1 = rect.x1;
+    y1 = rect.y1;
   }
   SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (x0));
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_xMin, &val);

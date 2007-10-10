@@ -26,8 +26,7 @@
 #include "swfdec_font.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
-#include "swfdec_shape.h"
-#include "swfdec_stroke.h"
+#include "swfdec_shape_parser.h"
 #include "swfdec_swf_decoder.h"
 #include "swfdec_tag.h"
 
@@ -41,7 +40,9 @@ swfdec_font_dispose (GObject *object)
 
   if (font->glyphs) {
     for (i = 0; i < font->glyphs->len; i++) {
-      g_object_unref (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
+      SwfdecDraw *draw = g_array_index (font->glyphs, SwfdecFontEntry, i).draw;
+      if (draw)
+	g_object_unref (draw);
     }
     g_array_free (font->glyphs, TRUE);
     font->glyphs = NULL;
@@ -83,7 +84,7 @@ swfdec_font_init (SwfdecFont * font)
  *
  * Returns: the shape of the requested glyph or %NULL if no such glyph exists.
  **/
-SwfdecShape *
+SwfdecDraw *
 swfdec_font_get_glyph (SwfdecFont * font, guint glyph)
 {
   g_return_val_if_fail (SWFDEC_IS_FONT (font), NULL);
@@ -91,7 +92,7 @@ swfdec_font_get_glyph (SwfdecFont * font, guint glyph)
   if (glyph >= font->glyphs->len)
     return NULL;
 
-  return g_array_index (font->glyphs, SwfdecFontEntry, glyph).shape;
+  return g_array_index (font->glyphs, SwfdecFontEntry, glyph).draw;
 }
 
 #if 0
@@ -180,27 +181,26 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, guint tag)
 static void
 swfdec_font_parse_shape (SwfdecSwfDecoder *s, SwfdecFontEntry *entry, guint size)
 {
-  SwfdecBits save_bits = s->b;
-  SwfdecShape *shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
-  entry->shape = shape;
+  SwfdecBits bits;
+  SwfdecShapeParser *parser;
+  GSList *list;
 
-  g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-  g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
-
-  swfdec_bits_init_bits (&s->b, &save_bits, size);
-
-  shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
-  SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
-  shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
-  SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
-  swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
-
-  swfdec_bits_syncbits (&s->b);
-  if (swfdec_bits_left (&s->b)) {
-    SWFDEC_WARNING ("parsing shape didn't use %d bytes",
-	swfdec_bits_left (&s->b) / 8);
+  swfdec_bits_init_bits (&bits, &s->b, size);
+  parser = swfdec_shape_parser_new (NULL, NULL, NULL);
+  swfdec_shape_parser_parse (parser, &bits);
+  list = swfdec_shape_parser_free (parser);
+  if (list) {
+    entry->draw = g_object_ref (list->data);
+    g_slist_foreach (list, (GFunc) g_object_unref, NULL);
+    g_slist_free (list);
+  } else {
+    entry->draw = NULL;
   }
-  s->b = save_bits;
+
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("parsing shape didn't use %d bytes",
+	swfdec_bits_left (&bits) / 8);
+  }
 }
 
 int
@@ -216,19 +216,16 @@ tag_func_define_font (SwfdecSwfDecoder * s, guint tag)
     return SWFDEC_STATUS_OK;
   font->scale_factor = SWFDEC_TEXT_SCALE_FACTOR;
 
-  offsets = s->b;
-  n_glyphs = swfdec_bits_get_u16 (&s->b);
-  if (n_glyphs % 2) {
+  offset = swfdec_bits_get_u16 (&s->b);
+  if (offset % 2) {
     SWFDEC_ERROR ("first offset is odd?!");
   }
-  n_glyphs /= 2;
-  if (swfdec_bits_skip_bytes (&s->b, n_glyphs * 2 - 2) != n_glyphs * 2 - 2) {
-    SWFDEC_ERROR ("invalid glyph offsets");
+  n_glyphs = offset / 2;
+  if (n_glyphs == 0)
     return SWFDEC_STATUS_OK;
-  }
+  swfdec_bits_init_bits (&offsets, &s->b, offset - 2);
 
   g_array_set_size (font->glyphs, n_glyphs);
-  offset = swfdec_bits_get_u16 (&offsets);
   for (i = 0; i < n_glyphs && swfdec_bits_left (&s->b); i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
     if (i + 1 == n_glyphs)
@@ -269,8 +266,8 @@ int
 tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *bits = &s->b;
+  SwfdecBits offset_bits;
   guint id;
-  SwfdecShape *shape;
   SwfdecFont *font;
   SwfdecRect rect;
 
@@ -285,12 +282,11 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
   int langcode;
   int font_name_len;
   int n_glyphs;
-  int code_table_offset;
   int font_ascent;
   int font_descent;
   int font_leading;
   int i;
-  guint skip;
+  guint offset;
 
   id = swfdec_bits_get_u16 (bits);
   font = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_FONT);
@@ -320,38 +316,25 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
 
   n_glyphs = swfdec_bits_get_u16 (bits);
   if (wide_offsets) {
-    skip = 4 * n_glyphs;
-    if (swfdec_bits_skip_bytes (bits, skip) != skip) {
-      SWFDEC_ERROR ("could not skip %u bytes", skip);
-      return SWFDEC_STATUS_OK;
-    }
-    code_table_offset = swfdec_bits_get_u32 (bits);
+    swfdec_bits_init_bits (&offset_bits, bits, 4 * n_glyphs + 4);
+    offset = swfdec_bits_get_u32 (&offset_bits);
   } else {
-    skip = 2 * n_glyphs;
-    if (swfdec_bits_skip_bytes (bits, skip) != skip) {
-      SWFDEC_ERROR ("could not skip %u bytes", skip);
-      return SWFDEC_STATUS_OK;
-    }
-    code_table_offset = swfdec_bits_get_u16 (bits);
+    swfdec_bits_init_bits (&offset_bits, bits, 2 * n_glyphs + 2);
+    offset = swfdec_bits_get_u16 (&offset_bits);
   }
 
   g_array_set_size (font->glyphs, n_glyphs);
 
   for (i = 0; i < n_glyphs && swfdec_bits_left (&s->b); i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
-    shape = g_object_new (SWFDEC_TYPE_SHAPE, NULL);
-    entry->shape = shape;
+    guint next_offset;
 
-    g_ptr_array_add (shape->fills, swfdec_pattern_new_color (0xFFFFFFFF));
-    g_ptr_array_add (shape->lines, swfdec_stroke_new (20, 0xFFFFFFFF));
-
-    shape->n_fill_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG ("n_fill_bits = %d", shape->n_fill_bits);
-    shape->n_line_bits = swfdec_bits_getbits (&s->b, 4);
-    SWFDEC_LOG ("n_line_bits = %d", shape->n_line_bits);
-
-    swfdec_shape_get_recs (s, shape, swfdec_pattern_parse, swfdec_stroke_parse);
-    swfdec_bits_syncbits (&s->b);
+    if (wide_offsets)
+      next_offset = swfdec_bits_get_u32 (&offset_bits);
+    else
+      next_offset = swfdec_bits_get_u16 (&offset_bits);
+    swfdec_font_parse_shape (s, entry, next_offset - offset);
+    offset = next_offset;
   }
   if (i < n_glyphs) {
     SWFDEC_ERROR ("data was only enough for %u glyphs, not %u", i, n_glyphs);
@@ -410,9 +393,9 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s, guint tag)
     SWFDEC_ERROR (" wide codes should be set in DefineFont3");
   }
   font->italic = swfdec_bits_getbit (bits);
-  SWFDEC_LOG (" italic = %d", font->small);
+  SWFDEC_LOG (" italic = %d", font->italic);
   font->bold = swfdec_bits_getbit (bits);
-  SWFDEC_LOG (" bold = %d", font->small);
+  SWFDEC_LOG (" bold = %d", font->bold);
   language = swfdec_bits_get_u8 (&s->b);
   SWFDEC_LOG (" language = %u", (guint) language);
   len = swfdec_bits_get_u8 (&s->b);
@@ -425,22 +408,15 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s, guint tag)
   n_glyphs = swfdec_bits_get_u16 (&s->b);
   SWFDEC_LOG (" n_glyphs = %u", n_glyphs);
   
-  offsets = *bits;
   if (wide_offsets) {
-    if (swfdec_bits_skip_bytes (bits, n_glyphs * 4 + 4) != n_glyphs * 4 + 4) {
-      SWFDEC_ERROR ("DefineFont3 too short");
-      return SWFDEC_STATUS_OK;
-    }
-    offset = swfdec_bits_get_u32 (&offsets);
+    offset = swfdec_bits_get_u32 (bits);
+    swfdec_bits_init_bits (&offsets, bits, n_glyphs * 4);
   } else {
-    if (swfdec_bits_skip_bytes (bits, n_glyphs * 2 + 2) != n_glyphs * 2 + 2) {
-      SWFDEC_ERROR ("DefineFont3 too short");
-      return SWFDEC_STATUS_OK;
-    }
-    offset = swfdec_bits_get_u16 (&offsets);
+    offset = swfdec_bits_get_u16 (bits);
+    swfdec_bits_init_bits (&offsets, bits, n_glyphs * 2);
   }
   g_array_set_size (font->glyphs, n_glyphs);
-  for (i = 0; i < n_glyphs && swfdec_bits_left (&s->b); i++) {
+  for (i = 0; i < n_glyphs && swfdec_bits_left (bits); i++) {
     SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
     if (wide_offsets)
       next_offset = swfdec_bits_get_u32 (&offsets);

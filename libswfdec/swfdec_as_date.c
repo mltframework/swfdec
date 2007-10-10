@@ -445,7 +445,7 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsDate *date;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (!swfdec_as_date_is_valid (date))
     swfdec_as_value_to_number (cx, &argv[0]); // calls valueOf
@@ -515,7 +515,7 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsDate *date;
   int number;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
@@ -552,7 +552,7 @@ swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   BrokenTime brokentime;
   char *result;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
     SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
@@ -579,7 +579,7 @@ swfdec_as_date_getTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsDate *date;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, date->milliseconds);
 }
@@ -591,7 +591,7 @@ swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsDate *date;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   // reverse of utc_offset
   SWFDEC_AS_VALUE_SET_NUMBER (ret, -(date->utc_offset));
@@ -760,7 +760,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsDate *date;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, (gpointer)&date, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (argc > 0) {
     swfdec_as_date_set_milliseconds_utc (date,

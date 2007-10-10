@@ -137,7 +137,7 @@ swfdec_audio_decoder_adpcm_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
   if (buffer == NULL)
     return;
 
-  channels = SWFDEC_AUDIO_OUT_N_CHANNELS (dec->out_format);
+  channels = swfdec_audio_format_get_channels (dec->format);
   swfdec_bits_init (&bits, buffer);
   n_bits = swfdec_bits_getbits (&bits, 2) + 2;
   SWFDEC_DEBUG ("starting decoding: %u channels, %u bits", channels, n_bits);
@@ -167,14 +167,15 @@ swfdec_audio_decoder_adpcm_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_adpcm_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_adpcm_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderAdpcm *adpcm;
 
-  if (type != SWFDEC_AUDIO_FORMAT_ADPCM)
+  if (type != SWFDEC_AUDIO_CODEC_ADPCM)
     return NULL;
   adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
-  adpcm->decoder.out_format = format;
+  adpcm->decoder.format = swfdec_audio_format_new (swfdec_audio_format_get_rate (format),
+      swfdec_audio_format_get_channels (format), TRUE);
   adpcm->decoder.push = swfdec_audio_decoder_adpcm_push;
   adpcm->decoder.pull = swfdec_audio_decoder_adpcm_pull;
   adpcm->decoder.free = swfdec_audio_decoder_adpcm_free;

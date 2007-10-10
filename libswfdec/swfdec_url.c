@@ -28,12 +28,13 @@
  * SECTION:SwfdecURL
  * @title: SwfdecURL
  * @short_description: URL handling in Swfdec
- * @see_also #SwfdecLoader
  *
  * SwfdecURL is Swfdec's way of handling URLs. You probably don't need to mess 
  * with this type unless you want to write a #SwfdecLoader. In that case you 
- * will want to use @swfdec_loader_get_url() to get its url and then use the 
+ * will want to use swfdec_loader_get_url() to get its url and then use the 
  * functions in this section to access it.
+ *
+ * @see_also: #SwfdecLoader
  */
 
 /**

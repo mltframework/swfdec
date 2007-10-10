@@ -36,7 +36,7 @@ typedef struct _SwfdecStrokeClass SwfdecStrokeClass;
 
 struct _SwfdecStroke
 {
-  GObject		object;
+  SwfdecDraw		draw;
 
   guint			start_width;		/* width of line */
   SwfdecColor		start_color;		/* color to paint with */
@@ -50,32 +50,26 @@ struct _SwfdecStroke
   guint			miter_limit;		/* only set when join = MITER */
   gboolean		no_vscale;		/* don't scale line in vertical direction */
   gboolean		no_hscale;		/* don't scale line in horizontal direction */
-  gboolean		align_pixel;		/* align control points on pixel boundaries */
   gboolean		no_close;		/* don't auto-close lines */
 };
 
 struct _SwfdecStrokeClass
 {
-  GObjectClass		object_class;
+  SwfdecDrawClass	draw_class;
 };
 
 GType		swfdec_stroke_get_type		(void);
 
-SwfdecStroke *	swfdec_stroke_new		(guint			width,
-						 SwfdecColor		color);
-
-void		swfdec_stroke_paint		(SwfdecStroke *		stroke,
-						 cairo_t *		cr,
-						 const cairo_path_t *	path,
-						 const SwfdecColorTransform *trans,
-						 guint			ratio);
-
-SwfdecStroke *	swfdec_stroke_parse		(SwfdecSwfDecoder *	dec);
-SwfdecStroke *	swfdec_stroke_parse_rgba      	(SwfdecSwfDecoder *	dec);
-SwfdecStroke *	swfdec_stroke_parse_extended	(SwfdecSwfDecoder *	dec);
-SwfdecStroke *	swfdec_stroke_parse_morph    	(SwfdecSwfDecoder *	dec);
-SwfdecStroke *	swfdec_stroke_parse_morph_extended
-						(SwfdecSwfDecoder *	dec);
+SwfdecDraw *	swfdec_stroke_parse		(SwfdecBits *		bits,
+						 SwfdecSwfDecoder *	dec);
+SwfdecDraw *	swfdec_stroke_parse_rgba      	(SwfdecBits *		bits,
+						 SwfdecSwfDecoder *	dec);
+SwfdecDraw *	swfdec_stroke_parse_extended	(SwfdecBits *		bits,
+						 SwfdecSwfDecoder *	dec);
+SwfdecDraw *	swfdec_stroke_parse_morph    	(SwfdecBits *		bits,
+						 SwfdecSwfDecoder *	dec);
+SwfdecDraw *	swfdec_stroke_parse_morph_extended (SwfdecBits *	bits,
+						 SwfdecSwfDecoder *	dec);
 
 
 G_END_DECLS

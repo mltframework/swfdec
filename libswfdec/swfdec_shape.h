@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,38 +35,16 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecShape SwfdecShape;
 typedef struct _SwfdecShapeClass SwfdecShapeClass;
 
-typedef SwfdecPattern * (* SwfdecPatternFunc) (SwfdecSwfDecoder * s);
-typedef SwfdecStroke * (* SwfdecStrokeFunc) (SwfdecSwfDecoder * s);
-
 #define SWFDEC_TYPE_SHAPE                    (swfdec_shape_get_type())
 #define SWFDEC_IS_SHAPE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SHAPE))
 #define SWFDEC_IS_SHAPE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SHAPE))
 #define SWFDEC_SHAPE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SHAPE, SwfdecShape))
 #define SWFDEC_SHAPE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SHAPE, SwfdecShapeClass))
 
-struct _SwfdecShapeVec
-{
-  gpointer pattern;			/* pattern or stroke to display */
-  cairo_path_t path;			/* accumulated path */
-  SwfdecRect extents;			/* extents of path */
-  guint last_index;			/* index of last segment that was added */
-  /* cache */
-  cairo_t *fill_cr;			/* use for mouse hit tests */
-};
+struct _SwfdecShape {
+  SwfdecGraphic		graphic;
 
-struct _SwfdecShape
-{
-  SwfdecGraphic graphic;
-
-  GArray *vecs;
-  GPtrArray *lines;
-  GPtrArray *fills;
-
-  /* used while defining */
-  guint fills_offset;
-  guint lines_offset;
-  guint n_fill_bits;
-  guint n_line_bits;
+  GSList *		draws;		/* drawing operations - first drawn first */
 };
 
 struct _SwfdecShapeClass
@@ -79,8 +57,6 @@ GType swfdec_shape_get_type (void);
 int tag_define_shape (SwfdecSwfDecoder * s, guint tag);
 int tag_define_shape_3 (SwfdecSwfDecoder * s, guint tag);
 int tag_define_shape_4 (SwfdecSwfDecoder * s, guint tag);
-void swfdec_shape_get_recs (SwfdecSwfDecoder * s, SwfdecShape * shape,
-    SwfdecPatternFunc pattern_func, SwfdecStrokeFunc stroke_func);
 
 
 G_END_DECLS

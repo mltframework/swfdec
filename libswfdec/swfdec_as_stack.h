@@ -36,12 +36,21 @@ void		swfdec_as_stack_pop_segment   	(SwfdecAsContext *	context);
 
 //#define SWFDEC_MAD_CHECKS
 #ifdef SWFDEC_MAD_CHECKS
-#define swfdec_as_stack_peek(cx,n) (&(cx)->cur[-(gssize)(n)])
+#include <libswfdec/swfdec_as_context.h>
+static inline SwfdecAsValue *
+swfdec_as_stack_peek (SwfdecAsContext *cx, guint n)
+{
+  g_assert (cx != NULL);
+  g_assert (n > 0);
+  g_assert (cx->cur - n >= cx->base);
+
+  return &(cx)->cur[-(gssize)(n)];
+}
 
 static inline SwfdecAsValue *
 swfdec_as_stack_pop (SwfdecAsContext *cx)
 {
-  g_assert (stack != NULL);
+  g_assert (cx != NULL);
   g_assert (cx->cur > cx->base);
 
   return --cx->cur;
@@ -62,6 +71,7 @@ swfdec_as_stack_push (SwfdecAsContext *cx)
   g_assert (cx != NULL);
   g_assert (cx->cur < cx->end);
 
+  cx->cur->type = SWFDEC_AS_TYPE_OBJECT + 1;
   return cx->cur++;
 }
 #else /* SWFDEC_MAD_CHECKS */

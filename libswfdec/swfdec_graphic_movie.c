@@ -44,9 +44,9 @@ swfdec_graphic_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_graphic_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
-  swfdec_graphic_render (movie->graphic, cr, trans, inval, fill);
+  swfdec_graphic_render (movie->graphic, cr, trans, inval);
 }
 
 static gboolean
@@ -70,12 +70,13 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
     SWFDEC_FIXME ("Can we replace with %s objects?", G_OBJECT_TYPE_NAME (graphic));
     return;
   }
+  if (movie->graphic == graphic)
+    return;
   SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (movie->graphic)->id,
       SWFDEC_CHARACTER (graphic)->id);
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
   g_object_unref (movie->graphic);
   movie->graphic = g_object_ref (graphic);
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
 }
 
 static void

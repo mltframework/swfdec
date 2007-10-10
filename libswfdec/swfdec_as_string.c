@@ -518,7 +518,7 @@ swfdec_as_string_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_as_context_give_string (cx, g_string_free (string, FALSE)));
 }
 
-static const char *
+const char *
 swfdec_as_str_sub (SwfdecAsContext *cx, const char *str, guint offset, guint len)
 {
   const char *end;
@@ -543,7 +543,7 @@ swfdec_as_string_substr (SwfdecAsContext *cx, SwfdecAsObject *object,
   from = swfdec_as_value_to_integer (cx, &argv[0]);
   len = g_utf8_strlen (string, -1);
   
-  if (argc > 1) {
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1])) {
     to = swfdec_as_value_to_integer (cx, &argv[1]);
     /* FIXME: wtf? */
     if (to < 0) {
@@ -579,7 +579,7 @@ swfdec_as_string_substring (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   len = g_utf8_strlen (string, -1);
   from = swfdec_as_value_to_integer (cx, &argv[0]);
-  if (argc > 1) {
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1])) {
     to = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
     to = len;

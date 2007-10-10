@@ -84,7 +84,7 @@ swfdec_edit_text_init (SwfdecEditText * text)
 void
 swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
     const SwfdecTextRenderBlock *blocks, const SwfdecColorTransform *trans,
-    const SwfdecRect *inval, gboolean fill)
+    const SwfdecRect *inval)
 {
   guint i, j;
   PangoLayout *layout;
@@ -154,10 +154,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
       extra_chars = 0;
     }
 
-    if (fill)
-      pango_cairo_show_layout (cr, layout);
-    else
-      pango_cairo_layout_path (cr, layout);
+    pango_cairo_show_layout (cr, layout);
 
     pango_layout_get_pixel_size (layout, NULL, &height);
     cairo_rel_move_to (cr, -(blocks[i].left_margin + blocks[i].block_indent),

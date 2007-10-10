@@ -37,6 +37,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_types.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h" /* for swfdec_player_preinit_global() */
 #include "swfdec_script.h"
 
 /*** GARBAGE COLLECTION DOCS ***/
@@ -196,6 +197,8 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
   
   context->memory += bytes;
   context->memory_since_gc += bytes;
+  SWFDEC_LOG ("+%4"G_GSIZE_FORMAT" bytes, total %7"G_GSIZE_FORMAT" (%7"G_GSIZE_FORMAT" since GC)",
+      bytes, context->memory, context->memory_since_gc);
   /* FIXME: Don't foget to abort on OOM */
   return TRUE;
 }
@@ -216,6 +219,8 @@ swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize bytes)
   g_return_if_fail (context->memory >= bytes);
 
   context->memory -= bytes;
+  SWFDEC_LOG ("-%4"G_GSIZE_FORMAT" bytes, total %7"G_GSIZE_FORMAT" (%7"G_GSIZE_FORMAT" since GC)",
+      bytes, context->memory, context->memory_since_gc);
 }
 
 /*** GC ***/
@@ -701,12 +706,12 @@ swfdec_as_context_run (SwfdecAsContext *context)
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
   SwfdecActionExec exec;
-  guint8 *startpc, *pc, *endpc, *nextpc;
+  const guint8 *startpc, *pc, *endpc, *nextpc, *exitpc;
 #ifndef G_DISABLE_ASSERT
   SwfdecAsValue *check;
 #endif
   guint action, len;
-  guint8 *data;
+  const guint8 *data;
   int version;
   guint original_version;
   void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);
@@ -750,17 +755,16 @@ start:
       } else {
 	SwfdecAsStack *stack;
 	SwfdecAsValue *cur;
-	guint i, n;
+	guint i;
 	if (frame->argc > 128) {
-	  SWFDEC_FIXME ("allow calling native functions with more than 128 args");
-	  n = 128;
-	} else {
-	  n = frame->argc;
+	  SWFDEC_FIXME ("allow calling native functions with more than 128 args (this one has %u)",
+	      frame->argc);
+	  frame->argc = 128;
 	}
-	argv = g_new (SwfdecAsValue, n);
+	argv = g_new (SwfdecAsValue, frame->argc);
 	stack = context->stack;
 	cur = context->cur;
-	for (i = 0; i < n; i++) {
+	for (i = 0; i < frame->argc; i++) {
 	  if (cur <= &stack->elements[0]) {
 	    stack = stack->next;
 	    cur = &stack->elements[stack->used_elements];
@@ -784,6 +788,7 @@ start:
   context->version = script->version;
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
+  exitpc = script->exit;
   pc = frame->pc;
   check_block = TRUE;
 
@@ -795,11 +800,11 @@ start:
       if (frame != context->frame)
 	goto start;
     }
+    if (pc == exitpc) {
+      swfdec_as_frame_return (frame, NULL);
+      goto start;
+    }
     if (pc < startpc || pc >= endpc) {
-      if (pc == endpc) {
-	swfdec_as_frame_return (frame, NULL);
-	goto start;
-      }
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto error;
     }
@@ -1222,7 +1227,11 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  SWFDEC_AS_VALUE_SET_INT (retval, i);
+  if (i > G_MAXINT32 || i < G_MININT32) {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, i);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (retval, i);
+  }
 }
 
 SWFDEC_AS_NATIVE (100, 3, swfdec_as_context_parseFloat)
@@ -1308,6 +1317,9 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   if (!swfdec_as_stack_push_segment (context))
     return;
   context->version = version;
+  /* init the two internal functions */
+  /* FIXME: remove them for normal contexts? */
+  swfdec_player_preinit_global (context, version);
   /* get the necessary objects up to define objects and functions sanely */
   swfdec_as_function_init_context (context, version);
   swfdec_as_object_init_context (context, version);

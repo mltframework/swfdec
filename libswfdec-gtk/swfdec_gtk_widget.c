@@ -313,7 +313,7 @@ swfdec_gtk_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation
 
   gtkwidget->allocation = *allocation;
 
-  if (priv->player)
+  if (priv->player && swfdec_player_is_initialized (priv->player))
     swfdec_player_set_size (priv->player, allocation->width, allocation->height);
   if (GTK_WIDGET_REALIZED (gtkwidget)) {
     gdk_window_move_resize (gtkwidget->window, 
@@ -478,18 +478,21 @@ swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
 }
 
 static void
-swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, double x, double y, 
-    double width, double height, SwfdecGtkWidget *widget)
+swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *extents,
+    const SwfdecRectangle *rect, guint n_rects, SwfdecGtkWidget *widget)
 {
-  GdkRectangle rect;
+  GdkRegion *region;
+  guint i;
 
   if (!GTK_WIDGET_REALIZED (widget))
     return;
-  rect.x = floor (x);
-  rect.y = floor (y);
-  rect.width = ceil (x + width) - rect.x;
-  rect.height = ceil (y + height) - rect.y;
-  gdk_window_invalidate_rect (GTK_WIDGET (widget)->window, &rect, FALSE);
+
+  region = gdk_region_new ();
+  for (i = 0; i < n_rects; i++) {
+    gdk_region_union_with_rect (region, (GdkRectangle *) &rect[i]);
+  }
+  gdk_window_invalidate_region (GTK_WIDGET (widget)->window, region, FALSE);
+  gdk_region_destroy (region);
 }
 
 static void

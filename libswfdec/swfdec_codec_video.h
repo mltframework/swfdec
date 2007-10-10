@@ -25,28 +25,48 @@
 #include <libswfdec/swfdec_buffer.h>
 
 typedef enum {
-  SWFDEC_VIDEO_FORMAT_UNDEFINED = 0,
-  SWFDEC_VIDEO_FORMAT_H263 = 2,
-  SWFDEC_VIDEO_FORMAT_SCREEN = 3,
-  SWFDEC_VIDEO_FORMAT_VP6 = 4,
-  SWFDEC_VIDEO_FORMAT_VP6_ALPHA = 5,
-  SWFDEC_VIDEO_FORMAT_SCREEN2 = 6
+  SWFDEC_VIDEO_CODEC_UNDEFINED = 0,
+  SWFDEC_VIDEO_CODEC_H263 = 2,
+  SWFDEC_VIDEO_CODEC_SCREEN = 3,
+  SWFDEC_VIDEO_CODEC_VP6 = 4,
+  SWFDEC_VIDEO_CODEC_VP6_ALPHA = 5,
+  SWFDEC_VIDEO_CODEC_SCREEN2 = 6
+} SwfdecVideoCodec;
+
+typedef enum {
+  SWFDEC_VIDEO_FORMAT_RGBA,
+  SWFDEC_VIDEO_FORMAT_I420
 } SwfdecVideoFormat;
 
-typedef struct _SwfdecVideoDecoder SwfdecVideoDecoder;
-typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (SwfdecVideoFormat format);
+typedef struct {
+  guint			width;	      	/* width of image in pixels */
+  guint			height;	    	/* height of image in pixels */
+  const guint8 *	plane[3];	/* planes of the image, not all might be used */
+  const guint8 *	mask;		/* A8 mask or NULL if none */
+  guint		  	rowstride[3];	/* rowstrides of the planes */
+  guint			mask_rowstride;	/* rowstride of mask plane */
+} SwfdecVideoImage;
 
+typedef struct _SwfdecVideoDecoder SwfdecVideoDecoder;
+typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (SwfdecVideoCodec format);
+
+/* notes about the decode function:
+ * - the data must be in the format specified by swfdec_video_codec_get_format()
+ * - the data returned in the image belongs to the decoder and must be valid 
+ *   until the next function is called on the decoder.
+ * - you need to explicitly set mask to %NULL.
+ */
 struct _SwfdecVideoDecoder {
-  SwfdecVideoFormat	format;
-  SwfdecBuffer *	(* decode)	(SwfdecVideoDecoder *	decoder,
+  SwfdecVideoCodec	codec;
+  gboolean		(* decode)	(SwfdecVideoDecoder *	decoder,
 					 SwfdecBuffer *		buffer,
-					 guint *		width,
-					 guint *		height,
-					 guint *		rowstride);
+					 SwfdecVideoImage *	result);
   void			(* free)	(SwfdecVideoDecoder *	decoder);
 };
 
-SwfdecVideoDecoder *	swfdec_video_decoder_new      	(SwfdecVideoFormat	format);
+SwfdecVideoFormat     	swfdec_video_codec_get_format	(SwfdecVideoCodec	codec);
+
+SwfdecVideoDecoder *	swfdec_video_decoder_new      	(SwfdecVideoCodec	codec);
 void			swfdec_video_decoder_free	(SwfdecVideoDecoder *   decoder);
 
 cairo_surface_t *     	swfdec_video_decoder_decode	(SwfdecVideoDecoder *	decoder,

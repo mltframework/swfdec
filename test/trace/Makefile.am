@@ -186,6 +186,15 @@ EXTRA_DIST = \
 	ASSetPropFlags-ignore-7.swf.trace \
 	ASSetPropFlags-ignore-8.swf \
 	ASSetPropFlags-ignore-8.swf.trace \
+	atan2-5.swf \
+	atan2-5.swf.trace \
+	atan2-6.swf \
+	atan2-6.swf.trace \
+	atan2-7.swf \
+	atan2-7.swf.trace \
+	atan2-8.swf \
+	atan2-8.swf.trace \
+	atan2.as \
 	attachmovie-object.c \
 	attachmovie-object-5.swf \
 	attachmovie-object-5.swf.trace \
@@ -560,6 +569,87 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	getvariable-delimiters.as \
+	getvariable-delimiters-5.swf \
+	getvariable-delimiters-5.swf.trace \
+	getvariable-delimiters-6.swf \
+	getvariable-delimiters-6.swf.trace \
+	getvariable-delimiters-7.swf \
+	getvariable-delimiters-7.swf.trace \
+	getvariable-delimiters-8.swf \
+	getvariable-delimiters-8.swf.trace \
+	getvariable-dotdot.as \
+	getvariable-dotdot-5.swf \
+	getvariable-dotdot-5.swf.trace \
+	getvariable-dotdot-6.swf \
+	getvariable-dotdot-6.swf.trace \
+	getvariable-dotdot-7.swf \
+	getvariable-dotdot-7.swf.trace \
+	getvariable-dotdot-8.swf \
+	getvariable-dotdot-8.swf.trace \
+	getvariable-exhaustive.c \
+	getvariable-exhaustive-5.swf \
+	getvariable-exhaustive-5.swf.trace \
+	getvariable-exhaustive-6.swf \
+	getvariable-exhaustive-6.swf.trace \
+	getvariable-exhaustive-7.swf \
+	getvariable-exhaustive-7.swf.trace \
+	getvariable-exhaustive-8.swf \
+	getvariable-exhaustive-8.swf.trace \
+	getvariable-length.as \
+	getvariable-length-5.swf \
+	getvariable-length-5.swf.trace \
+	getvariable-length-6.swf \
+	getvariable-length-6.swf.trace \
+	getvariable-length-7.swf \
+	getvariable-length-7.swf.trace \
+	getvariable-length-8.swf \
+	getvariable-length-8.swf.trace \
+	getvariable-scopechain.as \
+	getvariable-scopechain-5.swf \
+	getvariable-scopechain-5.swf.trace \
+	getvariable-scopechain-6.swf \
+	getvariable-scopechain-6.swf.trace \
+	getvariable-scopechain-7.swf \
+	getvariable-scopechain-7.swf.trace \
+	getvariable-scopechain-8.swf \
+	getvariable-scopechain-8.swf.trace \
+	getvariable-setvariable.as \
+	getvariable-setvariable-5.swf \
+	getvariable-setvariable-5.swf.trace \
+	getvariable-setvariable-6.swf \
+	getvariable-setvariable-6.swf.trace \
+	getvariable-setvariable-7.swf \
+	getvariable-setvariable-7.swf.trace \
+	getvariable-setvariable-8.swf \
+	getvariable-setvariable-8.swf.trace \
+	getvariable-slashpath.as \
+	getvariable-slashpath-5.swf \
+	getvariable-slashpath-5.swf.trace \
+	getvariable-slashpath-6.swf \
+	getvariable-slashpath-6.swf.trace \
+	getvariable-slashpath-7.swf \
+	getvariable-slashpath-7.swf.trace \
+	getvariable-slashpath-8.swf \
+	getvariable-slashpath-8.swf.trace \
+	getvariable-special.as \
+	getvariable-special-5.swf \
+	getvariable-special-5.swf.trace \
+	getvariable-special-6.swf \
+	getvariable-special-6.swf.trace \
+	getvariable-special-7.swf \
+	getvariable-special-7.swf.trace \
+	getvariable-special-8.swf \
+	getvariable-special-8.swf.trace \
+	getvariable-various.as \
+	getvariable-various-5.swf \
+	getvariable-various-5.swf.trace \
+	getvariable-various-6.swf \
+	getvariable-various-6.swf.trace \
+	getvariable-various-7.swf \
+	getvariable-various-7.swf.trace \
+	getvariable-various-8.swf \
+	getvariable-various-8.swf.trace \
 	global-function-properties.as \
 	global-function-properties-5.swf \
 	global-function-properties-5.swf.trace \
@@ -1375,6 +1465,42 @@ EXTRA_DIST = \
 	setinterval-this-6.swf.trace \
 	setinterval-this-7.swf \
 	setinterval-this-7.swf.trace \
+	settarget2-tostring.as \
+	settarget2-tostring-5.swf \
+	settarget2-tostring-5.swf.trace \
+	settarget2-tostring-6.swf \
+	settarget2-tostring-6.swf.trace \
+	settarget2-tostring-7.swf \
+	settarget2-tostring-7.swf.trace \
+	settarget2-tostring-8.swf \
+	settarget2-tostring-8.swf.trace \
+	settarget-delimiters.as \
+	settarget-delimiters-5.swf \
+	settarget-delimiters-5.swf.trace \
+	settarget-delimiters-6.swf \
+	settarget-delimiters-6.swf.trace \
+	settarget-delimiters-7.swf \
+	settarget-delimiters-7.swf.trace \
+	settarget-delimiters-8.swf \
+	settarget-delimiters-8.swf.trace \
+	settarget-nomovie.as \
+	settarget-nomovie-5.swf \
+	settarget-nomovie-5.swf.trace \
+	settarget-nomovie-6.swf \
+	settarget-nomovie-6.swf.trace \
+	settarget-nomovie-7.swf \
+	settarget-nomovie-7.swf.trace \
+	settarget-nomovie-8.swf \
+	settarget-nomovie-8.swf.trace \
+	settarget-relative.as \
+	settarget-relative-5.swf \
+	settarget-relative-5.swf.trace \
+	settarget-relative-6.swf \
+	settarget-relative-6.swf.trace \
+	settarget-relative-7.swf \
+	settarget-relative-7.swf.trace \
+	settarget-relative-8.swf \
+	settarget-relative-8.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	setvariable-callback.as \
@@ -1467,6 +1593,15 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-extract.as \
+	string-extract-5.swf \
+	string-extract-5.swf.trace \
+	string-extract-6.swf \
+	string-extract-6.swf.trace \
+	string-extract-7.swf \
+	string-extract-7.swf.trace \
+	string-extract-8.swf \
+	string-extract-8.swf.trace \
 	string-fake.as \
 	string-fake-5.swf \
 	string-fake-5.swf.trace \

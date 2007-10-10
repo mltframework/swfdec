@@ -89,7 +89,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
   }
 
   n_samples = swfdec_bits_get_u16 (&s->b);
-  if (sound->format == SWFDEC_AUDIO_FORMAT_MP3) {
+  if (sound->codec == SWFDEC_AUDIO_CODEC_MP3) {
     skip = swfdec_bits_get_s16 (&s->b);
   } else {
     skip = 0;
@@ -121,69 +121,56 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
   int id;
-  int format;
-  int rate;
-  int size;
-  int type;
   int n_samples;
   SwfdecSound *sound;
 
   id = swfdec_bits_get_u16 (b);
-  format = swfdec_bits_getbits (b, 4);
-  rate = swfdec_bits_getbits (b, 2);
-  size = swfdec_bits_getbits (b, 1);
-  type = swfdec_bits_getbits (b, 1);
-  n_samples = swfdec_bits_get_u32 (b);
-
   sound = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_SOUND);
   if (!sound)
     return SWFDEC_STATUS_OK;
 
-  sound->width = size;
-  rate = 1 << (3 - rate);
-  sound->original_format = SWFDEC_AUDIO_OUT_GET (type ? 2 : 1, 44100 / rate);
+  sound->codec = swfdec_bits_getbits (b, 4);
+  SWFDEC_LOG ("  codec: %u", sound->codec);
+  sound->format = swfdec_audio_format_parse (b);
+  SWFDEC_LOG ("  format: %s", swfdec_audio_format_to_string (sound->format));
+  n_samples = swfdec_bits_get_u32 (b);
   sound->n_samples = n_samples;
-  SWFDEC_DEBUG ("%u samples, %sLE, %uch, %ukHz", n_samples,
-      size ? "S16" : "U8", SWFDEC_AUDIO_OUT_N_CHANNELS (sound->original_format),
-      SWFDEC_AUDIO_OUT_RATE (sound->original_format));
 
-  switch (format) {
+  switch (sound->codec) {
     case 0:
-      if (size == 1)
+      if (swfdec_audio_format_is_16bit (sound->format))
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
       /* just assume LE and hope it works (FIXME: want a switch for this?) */
+      sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       /* fall through */
     case 3:
-      sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 2:
-      sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       sound->skip = swfdec_bits_get_u16 (b);
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     case 1:
     case 5:
     case 6:
-      sound->format = format;
       sound->encoded = swfdec_bits_get_buffer (&s->b, -1);
       break;
     default:
-      SWFDEC_WARNING ("unknown format %d", format);
-      sound->format = format;
+      SWFDEC_WARNING ("unknown codec %d", sound->codec);
   }
-  sound->n_samples *= rate;
+  sound->n_samples *= swfdec_audio_format_get_granularity (sound->format);
 
   return SWFDEC_STATUS_OK;
 }
 
-static SwfdecBuffer *
-swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
+SwfdecBuffer *
+swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
 {
   gpointer decoder;
   SwfdecBuffer *tmp;
   SwfdecBufferQueue *queue;
   guint sample_bytes;
+  guint n_samples;
 
   g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
   g_return_val_if_fail (format != NULL, NULL);
@@ -196,48 +183,45 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioOut *format)
   if (sound->encoded == NULL)
     return NULL;
 
-  decoder = swfdec_audio_decoder_new (sound->format, sound->width, sound->original_format);
+  decoder = swfdec_audio_decoder_new (sound->codec, sound->format);
   if (decoder == NULL)
     return NULL;
   sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
-  sample_bytes = 2 * SWFDEC_AUDIO_OUT_N_CHANNELS (sound->decoded_format);
+  sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
+  n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
   /* FIXME: The size is only a guess */
-  swfdec_cached_load (SWFDEC_CACHED (sound), sound->n_samples * sample_bytes);
+  swfdec_cached_load (SWFDEC_CACHED (sound), n_samples * sample_bytes);
 
   swfdec_audio_decoder_push (decoder, sound->encoded);
   swfdec_audio_decoder_push (decoder, NULL);
   queue = swfdec_buffer_queue_new ();
-  while ((tmp = swfdec_audio_decoder_pull (decoder)))
+  while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
+  }
   swfdec_audio_decoder_free (decoder);
   tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
   swfdec_buffer_queue_unref (queue);
 
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
-      tmp->length / sample_bytes, sound->n_samples, sound->skip);
+      tmp->length / sample_bytes, n_samples, sound->skip);
   if (sound->skip) {
     SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, sound->skip * sample_bytes, 
 	tmp->length - sound->skip * sample_bytes);
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
   }
-  /* sound buffer may be bigger due to mp3 not having sample boundaries */
-  if (tmp->length * SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format) 
-      > sound->n_samples * sample_bytes) {
-    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, 
-	sound->n_samples * sample_bytes / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format));
+  if (tmp->length > n_samples * sample_bytes) {
+    SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, n_samples * sample_bytes);
+    SWFDEC_DEBUG ("%u samples in %u bytes should be available, but %u bytes are, cutting them off",
+	n_samples, n_samples * sample_bytes, tmp->length);
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
-  }
-  if (tmp->length * SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format) 
-      < sound->n_samples * sample_bytes) {
+  } else if (tmp->length < n_samples * sample_bytes) {
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
      * It's probably not worth more than INFO for the usual case though */
     SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
-	sound->n_samples / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format), 
-	sound->n_samples * sample_bytes / SWFDEC_AUDIO_OUT_GRANULARITY (sound->decoded_format), 
-	tmp->length);
+	n_samples, n_samples * sample_bytes, tmp->length);
   }
   /* only assign here, the decoding code checks this variable */
   sound->decoded = tmp;
@@ -250,55 +234,48 @@ int
 tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecBits *b = &s->b;
-  int format;
-  int rate;
-  int size;
-  int type;
+  SwfdecAudioFormat playback;
+  guint playback_codec;
   int n_samples;
   int latency;
   SwfdecSound *sound;
 
+  playback_codec = swfdec_bits_getbits (b, 4);
   /* we don't care about playback suggestions */
-  swfdec_bits_getbits (b, 8);
-
-  format = swfdec_bits_getbits (b, 4);
-  rate = swfdec_bits_getbits (b, 2);
-  size = swfdec_bits_getbits (b, 1);
-  type = swfdec_bits_getbits (b, 1);
-  n_samples = swfdec_bits_get_u16 (b);
+  playback = swfdec_audio_format_parse (b);
+  SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback));
 
   sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
+  sound->codec = swfdec_bits_getbits (b, 4);
+  sound->format = swfdec_audio_format_parse (b);
+  n_samples = swfdec_bits_get_u16 (b);
+  if (playback_codec != 0 && playback_codec != sound->codec) {
+    SWFDEC_FIXME ("playback codec %u doesn't match sound codec %u", 
+	playback_codec, sound->codec);
+  }
 
   if (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head)
     g_object_unref (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
-  sound->width = size;
-  sound->original_format = SWFDEC_AUDIO_OUT_GET (type ? 2 : 1, 44100 / (1 << (3 - rate)));
-
-  switch (format) {
+  switch (sound->codec) {
     case 0:
-      if (size == 1)
+      if (swfdec_audio_format_is_16bit (sound->format)) {
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
-      /* just assume LE and hope it works (FIXME: want a switch for this?) */
-      /* fall through */
-    case 3:
-      sound->format = SWFDEC_AUDIO_FORMAT_UNCOMPRESSED;
-      break;
-    case 1:
-      sound->format = SWFDEC_AUDIO_FORMAT_ADPCM;
+	/* just assume LE and hope it works (FIXME: want a switch for this?) */
+	sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
+      }
       break;
     case 2:
-      sound->format = SWFDEC_AUDIO_FORMAT_MP3;
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
+    case 1:
+    case 3:
     case 6:
-      sound->format = SWFDEC_AUDIO_FORMAT_NELLYMOSER;
       break;
     default:
-      SWFDEC_WARNING ("unknown format %d", format);
-      sound->format = format;
+      SWFDEC_WARNING ("unknown codec %d", sound->codec);
   }
 
   return SWFDEC_STATUS_OK;
@@ -314,7 +291,7 @@ swfdec_sound_chunk_free (SwfdecSoundChunk *chunk)
 }
 
 SwfdecSoundChunk *
-swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
+swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
 {
   int has_envelope;
   int has_loops;
@@ -323,7 +300,6 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
   guint i, j;
   SwfdecSound *sound;
   SwfdecSoundChunk *chunk;
-  SwfdecBits *b = &s->b;
 
   sound = swfdec_swf_decoder_get_character (s, id);
   if (!SWFDEC_IS_SOUND (sound)) {
@@ -344,31 +320,35 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
   has_in_point = swfdec_bits_getbits (b, 1);
   if (has_in_point) {
     chunk->start_sample = swfdec_bits_get_u32 (b);
+    SWFDEC_LOG ("  start_sample = %u", chunk->start_sample);
   } else {
     chunk->start_sample = 0;
   }
   if (has_out_point) {
     chunk->stop_sample = swfdec_bits_get_u32 (b);
-    if (chunk->stop_sample > sound->n_samples) {
-      SWFDEC_INFO ("more samples specified (%u) than available (%u)", 
-	  chunk->stop_sample, sound->n_samples);
+    if (chunk->stop_sample == 0) {
+      SWFDEC_FIXME ("stop sample == 0???");
+    }
+    SWFDEC_LOG ("  stop_sample = %u", chunk->stop_sample);
+    if (chunk->stop_sample <= chunk->start_sample) {
+      SWFDEC_ERROR ("stopping before starting? (start sample %u, stop sample %u)",
+	  chunk->start_sample, chunk->stop_sample);
+      chunk->stop_sample = 0;
     }
   } else {
-    chunk->stop_sample = sound->n_samples;
+    chunk->stop_sample = 0;
   }
   if (has_loops) {
     chunk->loop_count = swfdec_bits_get_u16 (b);
+    SWFDEC_LOG ("  loop_count = %u", chunk->loop_count);
   } else {
     chunk->loop_count = 1;
   }
   if (has_envelope) {
     chunk->n_envelopes = swfdec_bits_get_u8 (b);
     chunk->envelope = g_new (SwfdecSoundEnvelope, chunk->n_envelopes);
+    SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
   }
-  SWFDEC_LOG ("  start_sample = %u", chunk->start_sample);
-  SWFDEC_LOG ("  stop_sample = %u", chunk->stop_sample);
-  SWFDEC_LOG ("  loop_count = %u", chunk->loop_count);
-  SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
 
   for (i = 0; i < chunk->n_envelopes; i++) {
     chunk->envelope[i].offset = swfdec_bits_get_u32 (b);
@@ -399,27 +379,6 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, int id)
 }
 
 int
-tag_func_start_sound (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecBits *b = &s->b;
-  SwfdecSoundChunk *chunk;
-  int id;
-  SwfdecSpriteFrame *frame = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-
-  id = swfdec_bits_get_u16 (b);
-
-  chunk = swfdec_sound_parse_chunk (s, id);
-  if (chunk) {
-    /* append to keep order */
-    SWFDEC_DEBUG ("appending StartSound event for sound %u to frame %u", id,
-	s->parse_sprite->parse_frame);
-    frame->sound = g_slist_append (frame->sound, chunk);
-  }
-
-  return SWFDEC_STATUS_OK;
-}
-
-int
 tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
 {
   guint i;
@@ -442,7 +401,7 @@ tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
 	    SWFDEC_CHARACTER (button)->id, i);
 	swfdec_sound_chunk_free (button->sounds[i]);
       }
-      button->sounds[i] = swfdec_sound_parse_chunk (s, id);
+      button->sounds[i] = swfdec_sound_parse_chunk (s, &s->b, id);
     }
   }
 
@@ -460,13 +419,13 @@ tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag)
  * Returns: Number of samples contained in @buffer when rendered
  **/
 guint
-swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut format)
+swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioFormat format)
 {
   g_return_val_if_fail (buffer != NULL, 0);
-  g_return_val_if_fail (buffer->length % (2 * SWFDEC_AUDIO_OUT_N_CHANNELS (format)) == 0, 0);
+  g_return_val_if_fail (buffer->length % (2 * swfdec_audio_format_get_channels (format)) == 0, 0);
 
-  return buffer->length / (2 * SWFDEC_AUDIO_OUT_N_CHANNELS (format)) *
-    SWFDEC_AUDIO_OUT_GRANULARITY (format);
+  return buffer->length / (2 * swfdec_audio_format_get_channels (format)) *
+    swfdec_audio_format_get_granularity (format);
 }
 
 /**
@@ -486,12 +445,12 @@ swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioOut fo
 /* NB: if you improve the upsampling algorithm, tests might start to break */
 void
 swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
-    SwfdecAudioOut format, const SwfdecBuffer *previous, 
+    SwfdecAudioFormat format, const SwfdecBuffer *previous, 
     guint offset, guint n_samples)
 {
   guint i, j;
-  guint channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
-  guint rate = SWFDEC_AUDIO_OUT_GRANULARITY (format);
+  guint channels = swfdec_audio_format_get_channels (format);
+  guint rate = swfdec_audio_format_get_granularity (format);
   gint16 *src, *end;
 
   g_return_if_fail (dest != NULL);
@@ -601,7 +560,7 @@ swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
     guint offset, guint n_samples)
 {
   SwfdecBuffer *buffer;
-  SwfdecAudioOut format;
+  SwfdecAudioFormat format;
   g_return_if_fail (SWFDEC_IS_SOUND (sound));
   /* FIXME: I need a return_if_fail for !created_by_define_sound */
 

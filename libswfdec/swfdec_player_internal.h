@@ -22,6 +22,7 @@
 
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_as_context.h>
+#include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
 #include <libswfdec/swfdec_system.h>
@@ -36,6 +37,7 @@ typedef enum {
 } SwfdecAlignFlag;
 
 typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
+typedef gboolean (* SwfdecAudioRemoveFunc) (SwfdecAudio *audio, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
@@ -65,6 +67,7 @@ struct _SwfdecPlayer
   guint			internal_height;	/* height used by the scripting engine */
   gint			stage_width;		/* width set by the user */
   gint			stage_height;		/* height set by the user */
+  SwfdecRectangle     	stage;			/* size of the stage set by user */
   guint			align_flags;		/* SwfdecAlignFlag */
   SwfdecScaleMode	scale_mode;		/* scale mode */
   double		scale_x;		/* cached x scale value */
@@ -85,7 +88,8 @@ struct _SwfdecPlayer
   SwfdecAsObject *	Video;			/* Video object */
 
   /* rendering */
-  SwfdecRect		invalid;      		/* area that needs a redraw in global coordinates */
+  SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
+  GArray *		invalidations;		/* fine-grained areas in need of redraw */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
@@ -107,7 +111,6 @@ struct _SwfdecPlayer
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
-  guint			audio_skip;		/* number of frames to auto-skip when adding new audio */
 
   /* events and advancing */
   SwfdecTick		time;			/* current time */
@@ -190,6 +193,9 @@ void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecRect *		rect);
 void		swfdec_player_set_align_flags	(SwfdecPlayer *		player,
 						 guint			flags);
+void		swfdec_player_stop_sounds	(SwfdecPlayer *		player,
+						 SwfdecAudioRemoveFunc	func,
+						 gpointer		data);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 SwfdecMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,
@@ -209,6 +215,10 @@ void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
 void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);
+/* in swfdec_as_interpret.c */
+SwfdecMovie *	swfdec_player_get_movie_from_value 
+						(SwfdecPlayer *		player,
+						 SwfdecAsValue *	val);
 
 
 G_END_DECLS

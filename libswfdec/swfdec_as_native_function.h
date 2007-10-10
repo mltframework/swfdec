@@ -86,7 +86,7 @@ gboolean	swfdec_as_native_function_checkv(SwfdecAsContext *	cx,
 						 const char *	      	args,
 						 va_list		varargs);
 #define SWFDEC_AS_CHECK(type,result,...) G_STMT_START {\
-  if (!swfdec_as_native_function_check (cx, object, type, result, argc, argv, __VA_ARGS__)) \
+  if (!swfdec_as_native_function_check (cx, object, type, (gpointer *) result, argc, argv, __VA_ARGS__)) \
     return; \
 }G_STMT_END
 

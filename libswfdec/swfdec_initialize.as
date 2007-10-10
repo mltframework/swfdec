@@ -129,6 +129,11 @@ LoadVars.prototype.getBytesTotal = function () {
 
 ASSetPropFlags(LoadVars.prototype, null, 131);
 
+/*** Sound ***/
+
+Sound = ASconstructor (500, 16);
+ASSetNative (Sound.prototype, 500, "stop,attachSound,start", 6);
+
 /*** XMLNode ***/
 
 XMLNode = ASconstructor (253, 0);
@@ -273,6 +278,7 @@ MovieClip.prototype.createEmptyMovieClip = ASnative (901, 0);
 MovieClip.prototype.createTextField = ASnative (104, 200);
 ASSetPropFlags (MovieClip.prototype, "getDepth,createEmptyMovieClip", 128);
 
+ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip,6beginFill,6beginGradientFill,6moveTo,6lineTo,6curveTo,6lineStyle,6endFill,6clear");
 ASSetPropFlags (MovieClip.prototype, null, 3);
 
 /* TextField */

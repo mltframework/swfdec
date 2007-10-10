@@ -49,9 +49,8 @@ static SwfdecBuffer *
 swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
 {
   SwfdecBuffer *buffer;
-  SwfdecAudioFormat format;
-  gboolean width;
-  SwfdecAudioOut in;
+  SwfdecAudioCodec format;
+  SwfdecAudioFormat in;
   guint now, soon;
 
   if  (g_queue_is_empty (flv->playback_queue)) {
@@ -59,7 +58,7 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
     guint last;
     swfdec_flv_decoder_get_audio (flv->flvdecoder, 
 	SWFDEC_TICKS_TO_MSECS (flv->timestamp),
-	NULL, NULL, NULL, &last, NULL);
+	NULL, NULL, &last, NULL);
     flv->playback_skip = SWFDEC_TICKS_TO_SAMPLES (
 	flv->timestamp - SWFDEC_MSECS_TO_TICKS (last));
     flv->next_timestamp = last;
@@ -75,7 +74,7 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
     if (flv->decoder && flv->next_timestamp == 0)
       return NULL;
     buffer = swfdec_flv_decoder_get_audio (flv->flvdecoder, flv->next_timestamp,
-      &format, &width, &in, &now, &soon);
+      &format, &in, &now, &soon);
 
     if (flv->next_timestamp != now) {
       /* FIXME: do sync on first frame here */
@@ -92,13 +91,11 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
 	flv->decoder = NULL;
       }
       flv->format = format;
-      flv->width = width;
       flv->in = in;
-      flv->decoder = swfdec_audio_decoder_new (flv->format, flv->width, flv->in);
+      flv->decoder = swfdec_audio_decoder_new (flv->format, flv->in);
       if (flv->decoder == NULL)
 	return NULL;
     } else if (format != flv->format ||
-	width != flv->width ||
 	in != flv->in) {
       SWFDEC_ERROR ("FIXME: format change not implemented");
       return NULL;
@@ -173,7 +170,7 @@ swfdec_audio_flv_iterate (SwfdecAudio *audio, guint remove)
   buffer = g_queue_peek_head (flv->playback_queue);
   while (buffer && flv->playback_skip >= 
 	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (flv->decoder)) 
-	 + SWFDEC_AUDIO_OUT_GRANULARITY (swfdec_audio_decoder_get_format (flv->decoder))) {
+	 + swfdec_audio_format_get_granularity (swfdec_audio_decoder_get_format (flv->decoder))) {
     buffer = g_queue_pop_head (flv->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
 	swfdec_sound_buffer_get_n_samples (buffer, 
@@ -189,7 +186,7 @@ swfdec_audio_flv_iterate (SwfdecAudio *audio, guint remove)
     return G_MAXUINT;
   swfdec_flv_decoder_get_audio (flv->flvdecoder,
       SWFDEC_TICKS_TO_MSECS (flv->timestamp),
-      NULL, NULL, NULL, NULL, &next);
+      NULL, NULL, NULL, &next);
   return next ? G_MAXUINT : 0;
 }
 

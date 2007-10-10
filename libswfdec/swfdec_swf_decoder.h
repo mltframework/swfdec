@@ -62,35 +62,34 @@ struct _SwfdecRootExportData {
 
 struct _SwfdecSwfDecoder
 {
-  SwfdecDecoder decoder;
+  SwfdecDecoder		decoder;
 
-  int version;
+  int			version;
 
-  int compressed;
-  z_stream z;
-  SwfdecBuffer *uncompressed_buffer;
-  SwfdecBufferQueue *input_queue;
+  gboolean    		compressed;	/* TRUE if this is a compressed flash file */
+  z_stream		z;		/* decompressor in use or uninitialized memory */
+  SwfdecBuffer *	buffer;		/* buffer containing uncompressed data */
+  guint			bytes_parsed;	/* number of bytes that have been processed by the parser */
 
-  int state;				/* where we are in the top-level state engine */
-  SwfdecBits parse;			/* where we are in global parsing */
-  SwfdecBits b;				/* temporary state while parsing */
+  int			state;		/* where we are in the top-level state engine */
+  SwfdecBits		parse;		/* where we are in global parsing */
+  SwfdecBits		b;		/* temporary state while parsing */
 
   /* defined objects */
-  GHashTable *characters;		/* list of all objects with an id (called characters) */
-  SwfdecSprite *main_sprite;
-  SwfdecSprite *parse_sprite;
-  GArray **root_actions;		/* actions to be executed by the root sprite */
-  GHashTable *scripts;			/* buffer -> script mapping for all scripts */
+  GHashTable *		characters;   	/* list of all objects with an id (called characters) */
+  SwfdecSprite *	main_sprite;	/* the root sprite */
+  SwfdecSprite *	parse_sprite;	/* the sprite that parsed at the moment */
+  GArray **		root_actions; 	/* actions to be executed by the root sprite */
+  GHashTable *		scripts;      	/* buffer -> script mapping for all scripts */
 
-  gboolean protection;			/* TRUE is this file is protected and may not be edited */
-  char *password;			/* MD5'd password to open for editing or NULL if may not be opened */
+  gboolean		protection;   	/* TRUE is this file is protected and may not be edited */
+  char *		password;     	/* MD5'd password to open for editing or NULL if may not be opened */
 
-  SwfdecBuffer *jpegtables;
-  char *url;
+  SwfdecBuffer *	jpegtables;	/* jpeg tables for DefineJPEG compressed jpeg files */
 };
 
 struct _SwfdecSwfDecoderClass {
-  SwfdecDecoderClass decoder_class;
+  SwfdecDecoderClass	decoder_class;
 };
 
 GType		swfdec_swf_decoder_get_type		(void);

@@ -29,6 +29,7 @@
 
 G_BEGIN_DECLS
 
+typedef struct _SwfdecAsDate SwfdecAsDate;
 typedef struct _SwfdecAsDateClass SwfdecAsDateClass;
 
 #define SWFDEC_TYPE_AS_DATE                    (swfdec_as_date_get_type())

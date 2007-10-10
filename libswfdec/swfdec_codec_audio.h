@@ -27,30 +27,29 @@
 typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
 
 typedef enum {
-  SWFDEC_AUDIO_FORMAT_UNDEFINED = 0,
-  SWFDEC_AUDIO_FORMAT_ADPCM = 1,
-  SWFDEC_AUDIO_FORMAT_MP3 = 2,
-  SWFDEC_AUDIO_FORMAT_UNCOMPRESSED = 3,
-  SWFDEC_AUDIO_FORMAT_NELLYMOSER_8KHZ = 5,
-  SWFDEC_AUDIO_FORMAT_NELLYMOSER = 6
-} SwfdecAudioFormat;
+  SWFDEC_AUDIO_CODEC_UNDEFINED = 0,
+  SWFDEC_AUDIO_CODEC_ADPCM = 1,
+  SWFDEC_AUDIO_CODEC_MP3 = 2,
+  SWFDEC_AUDIO_CODEC_UNCOMPRESSED = 3,
+  SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ = 5,
+  SWFDEC_AUDIO_CODEC_NELLYMOSER = 6
+} SwfdecAudioCodec;
 
-typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (SwfdecAudioFormat type, gboolean width,
-    SwfdecAudioOut format);
+typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (SwfdecAudioCodec type, gboolean width,
+    SwfdecAudioFormat format);
 struct _SwfdecAudioDecoder {
+  SwfdecAudioCodec	codec;
   SwfdecAudioFormat	format;
-  SwfdecAudioOut	out_format;
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
   SwfdecBuffer *	(* pull)	(SwfdecAudioDecoder *	decoder);
   void		  	(* free)	(SwfdecAudioDecoder *	decoder);
 };
 
-SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioFormat	format,
-							 gboolean		width,
-							 SwfdecAudioOut		data_format);
+SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioCodec	codec,
+							 SwfdecAudioFormat	format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
-SwfdecAudioOut		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
+SwfdecAudioFormat		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
 							 SwfdecBuffer *		buffer);
 SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);

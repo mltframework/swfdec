@@ -52,10 +52,10 @@ struct _SwfdecSoundChunk
   int			stop;	      		/* stop the sample being played */
   int			no_restart;	      	/* don't restart if already playing */
 
-  guint		start_sample; 		/* sample at which to start playing */
-  guint		stop_sample;	      	/* first sample to not play anymore */
-  guint		loop_count;		/* amount of times this sample should be played back */
-  guint		n_envelopes;		/* amount of points in the envelope */
+  guint			start_sample; 		/* sample at which to start playing */
+  guint			stop_sample;	      	/* first sample to not play anymore or 0 for playing all */
+  guint			loop_count;		/* amount of times this sample should be played back */
+  guint			n_envelopes;		/* amount of points in the envelope */
   SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
 };
 
@@ -63,14 +63,13 @@ struct _SwfdecSound
 {
   SwfdecCached		cached;
 
-  SwfdecAudioFormat	format;			/* format in use */
-  gboolean		width;			/* TRUE for 16bit, FALSE for 8bit */
-  SwfdecAudioOut	original_format;      	/* channel/rate information */
-  guint		n_samples;		/* total number of samples when decoded to 44100kHz */
-  guint		skip;			/* samples to skip at start */
+  SwfdecAudioCodec	codec;			/* codec in use */
+  SwfdecAudioFormat	format;	        	/* channel/rate/width information for codec */
+  guint			n_samples;		/* total number of samples when decoded to 44100kHz */
+  guint			skip;			/* samples to skip at start */
   SwfdecBuffer *	encoded;		/* encoded data */
 
-  SwfdecAudioOut	decoded_format;		/* format of decoded data */
+  SwfdecAudioFormat	decoded_format;		/* format of decoded data */
   SwfdecBuffer *	decoded;		/* decoded data */
 };
 
@@ -87,20 +86,23 @@ int tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag);
 int tag_func_start_sound (SwfdecSwfDecoder * s, guint tag);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag);
 
+SwfdecBuffer *		swfdec_sound_get_decoded	(SwfdecSound *		sound,
+							 SwfdecAudioFormat *	format);
 void			swfdec_sound_render		(SwfdecSound *		sound, 
 							 gint16 *		dest, 
 							 guint		offset,
 		  					 guint		len);
 void			swfdec_sound_buffer_render	(gint16 *		dest, 
 							 const SwfdecBuffer *	source, 
-							 SwfdecAudioOut		format,
+							 SwfdecAudioFormat		format,
 							 const SwfdecBuffer *	previous, 
 							 guint		offset,
 							 guint		n_samples);
 guint			swfdec_sound_buffer_get_n_samples (const SwfdecBuffer * buffer, 
-                                                         SwfdecAudioOut		format);
+                                                         SwfdecAudioFormat		format);
 
 SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *	s,
+							 SwfdecBits *		bits,
 							 int			id);
 void			swfdec_sound_chunk_free		(SwfdecSoundChunk *	chunk);
 

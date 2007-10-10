@@ -57,13 +57,24 @@ swfdec_as_native_function_call (SwfdecAsFunction *function)
 {
   SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (function);
   SwfdecAsFrame *frame;
+  SwfdecAsContext *cx;
 
-  frame = swfdec_as_frame_new_native (SWFDEC_AS_OBJECT (function)->context);
+  cx = SWFDEC_AS_OBJECT (function)->context;
+  frame = swfdec_as_frame_new_native (cx);
   if (frame == NULL)
     return NULL;
   g_assert (native->name);
   frame->function_name = native->name;
   frame->function = function;
+  /* We copy the target here so we have a proper SwfdecMovie reference inside native 
+   * functions. This is for example necessary for swfdec_player_get_movie_by_value()
+   * and probably other stuff that does variable lookups inside native functions.
+   */
+  /* FIXME: copy target or original target? */
+  if (frame->next) {
+    frame->target = frame->next->original_target;
+    frame->original_target = frame->target;
+  }
   return frame;
 }
 
@@ -249,6 +260,10 @@ swfdec_as_native_function_set_construct_type (SwfdecAsNativeFunction *function, 
  *                 %char pointer</para></listitem>
  * <listitem><para>"v": copy the value. The given argument must be a pointer 
  *                 to a #SwfdecAsValue</para></listitem>
+ * <listitem><para>"|": optional arguments follow. Optional arguments will be
+ *		   initialized to the empty value for their type. This 
+ *		   conversion character is only allowed once in the conversion 
+ *		   string.</para></listitem>
  * </itemizedlist>
  *
  * Returns: %TRUE if the conversion succeeded, %FALSE otherwise
@@ -292,6 +307,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
     const char *args, va_list varargs)
 {
   guint i;
+  gboolean optional = FALSE;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), FALSE);
   g_return_val_if_fail (type == 0 || result != NULL, FALSE);
@@ -302,46 +318,71 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       return FALSE;
     *result = object;
   }
-  for (i = 0; i < argc && *args; i++, args++) {
+  for (i = 0; *args; i++, args++) {
+    if (!optional && i >= argc && *args != '|')
+      break;
     switch (*args) {
       case 'v':
 	{
 	  SwfdecAsValue *val = va_arg (varargs, SwfdecAsValue *);
-	  *val = argv[i];
+	  if (i < argc)
+	    *val = argv[i];
+	  else
+	    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
 	}
 	break;
       case 'b':
 	{
 	  gboolean *b = va_arg (varargs, gboolean *);
-	  *b = swfdec_as_value_to_boolean (cx, &argv[i]);
+	  if (i < argc)
+	    *b = swfdec_as_value_to_boolean (cx, &argv[i]);
+	  else
+	    *b = FALSE;
 	}
 	break;
       case 'i':
 	{
 	  int *j = va_arg (varargs, int *);
-	  *j = swfdec_as_value_to_integer (cx, &argv[i]);
+	  if (i < argc)
+	    *j = swfdec_as_value_to_integer (cx, &argv[i]);
+	  else
+	    *j = 0;
 	}
 	break;
       case 'n':
 	{
 	  double *d = va_arg (varargs, double *);
-	  *d = swfdec_as_value_to_number (cx, &argv[i]);
+	  if (i < argc)
+	    *d = swfdec_as_value_to_number (cx, &argv[i]);
+	  else
+	    *d = 0;
 	}
 	break;
       case 's':
 	{
 	  const char **s = va_arg (varargs, const char **);
-	  *s = swfdec_as_value_to_string (cx, &argv[i]);
+	  if (i < argc)
+	    *s = swfdec_as_value_to_string (cx, &argv[i]);
+	  else
+	    *s = SWFDEC_AS_STR_EMPTY;
 	}
 	break;
       case 'o':
       case 'O':
 	{
 	  SwfdecAsObject **o = va_arg (varargs, SwfdecAsObject **);
-	  *o = swfdec_as_value_to_object (cx, &argv[i]);
+	  if (i < argc)
+	    *o = swfdec_as_value_to_object (cx, &argv[i]);
+	  else
+	    *o = NULL;
 	  if (*o == NULL && *args != 'O')
 	    return FALSE;
 	}
+	break;
+      case '|':
+	g_return_val_if_fail (optional == FALSE, FALSE);
+	optional = TRUE;
+	i--;
 	break;
       default:
 	g_warning ("'%c' is not a valid type conversion", *args);

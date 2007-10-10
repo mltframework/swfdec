@@ -81,6 +81,8 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
   if (frame->argc == 0) {
+    iter->i = iter->n = 0;
+    iter->stack = NULL;
     iter->current = NULL;
     return NULL;
   }
@@ -239,9 +241,8 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame)
     frame->block_start = block->start;
     frame->block_end = block->end;
   } else {
-    /* FIXME: do we need to set the block_start and block_end here? */
-    frame->block_start = NULL;
-    frame->block_end = NULL;
+    frame->block_start = frame->script->buffer->data;
+    frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
   }
 }
 
@@ -251,7 +252,8 @@ swfdec_as_frame_check_block (SwfdecAsFrame *frame)
   SwfdecAsFrameBlock *block;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  g_assert (frame->blocks->len > 0);
+  if (frame->blocks->len == 0)
+    return;
 
   block = &g_array_index (frame->blocks, SwfdecAsFrameBlock, frame->blocks->len - 1);
   block->func (frame, block->data);
@@ -282,6 +284,7 @@ swfdec_as_frame_dispose (GObject *object)
   while (frame->blocks->len > 0)
     swfdec_as_frame_pop_block (frame);
   g_array_free (frame->blocks, TRUE);
+  g_slist_free (frame->scope_chain);
 
   G_OBJECT_CLASS (swfdec_as_frame_parent_class)->dispose (object);
 }
@@ -395,7 +398,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   frame->script = swfdec_script_ref (script);
   frame->function_name = script->name;
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
-  frame->pc = script->buffer->data;
+  frame->pc = script->main;
   frame->scope_chain = g_slist_prepend (frame->scope_chain, frame);
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
@@ -762,10 +765,9 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL && current_reg < script->n_registers) {
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
   }
-  /*** add a default block that protects the program counter */
-  swfdec_as_frame_push_block (frame, frame->script->buffer->data, 
-      frame->script->buffer->data + frame->script->buffer->length,
-      (SwfdecAsFrameBlockFunc) swfdec_as_frame_return, NULL, NULL);
+  /* set block boundaries */
+  frame->block_start = frame->script->buffer->data;
+  frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
 
 out:
   if (context->debugger) {

@@ -32,6 +32,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
+#include "swfdec_draw.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
 #include "swfdec_loader_internal.h"
@@ -66,6 +67,7 @@ swfdec_movie_init (SwfdecMovie * movie)
   swfdec_color_transform_init_identity (&movie->original_ctrans);
 
   movie->visible = TRUE;
+  movie->cache_state = SWFDEC_MOVIE_INVALID_CONTENTS;
 
   swfdec_rect_init_empty (&movie->extents);
 }
@@ -82,7 +84,8 @@ swfdec_movie_invalidate (SwfdecMovie *movie)
 {
   SwfdecRect rect = movie->extents;
 
-  SWFDEC_LOG ("invalidating %g %g  %g %g", rect.x0, rect.y0, rect.x1, rect.y1);
+  SWFDEC_LOG ("%s invalidating %g %g  %g %g", movie->name, 
+      rect.x0, rect.y0, rect.x1, rect.y1);
   if (swfdec_rect_is_empty (&rect))
     return;
   while (movie->parent) {
@@ -124,7 +127,7 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   SwfdecRect *rect = &movie->original_extents;
   SwfdecRect *extents = &movie->extents;
 
-  swfdec_rect_init_empty (rect);
+  *rect = movie->draw_extents;
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_rect_union (rect, rect, &SWFDEC_MOVIE (walk->data)->extents);
   }
@@ -165,8 +168,6 @@ swfdec_movie_update_matrix (SwfdecMovie *movie)
     cairo_matrix_rotate (&movie->matrix, d * G_PI / 180);
   }
   swfdec_matrix_ensure_invertible (&movie->matrix, &movie->inverse_matrix);
-
-  swfdec_movie_update_extents (movie);
 }
 
 static void
@@ -182,20 +183,22 @@ swfdec_movie_do_update (SwfdecMovie *movie)
   }
 
   switch (movie->cache_state) {
-    case SWFDEC_MOVIE_INVALID_CHILDREN:
+    case SWFDEC_MOVIE_INVALID_MATRIX:
+      swfdec_movie_update_matrix (movie);
+      /* fall through */
+    case SWFDEC_MOVIE_INVALID_CONTENTS:
+      swfdec_movie_update_extents (movie);
+      swfdec_movie_invalidate (movie);
       break;
     case SWFDEC_MOVIE_INVALID_EXTENTS:
       swfdec_movie_update_extents (movie);
       break;
-    case SWFDEC_MOVIE_INVALID_MATRIX:
-      swfdec_movie_update_matrix (movie);
+    case SWFDEC_MOVIE_INVALID_CHILDREN:
       break;
     case SWFDEC_MOVIE_UP_TO_DATE:
     default:
       g_assert_not_reached ();
   }
-  if (movie->cache_state > SWFDEC_MOVIE_INVALID_EXTENTS)
-    swfdec_movie_invalidate (movie);
   movie->cache_state = SWFDEC_MOVIE_UP_TO_DATE;
 }
 
@@ -726,16 +729,49 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
   }
 }
 
+/* NB: Since there is no way to union paths in cairo, we use masks 
+ * instead. To create the mask, we force black rendering using the color 
+ * transform and then do the usual rendering.
+ * Using a mask will of course cause artifacts on non pixel-aligned 
+ * boundaries, but without the help of cairo, there is no way to avoid 
+ * this. */ 
+static cairo_pattern_t *
+swfdec_movie_push_clip (cairo_t *cr, SwfdecMovie *clip_movie, 
+    const SwfdecRect *inval)
+{
+  SwfdecColorTransform black;
+  cairo_pattern_t *mask;
+
+  swfdec_color_transform_init_color (&black, SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
+  cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
+  swfdec_movie_render (clip_movie, cr, &black, inval);
+  mask = cairo_pop_group (cr);
+  cairo_push_group (cr);
+
+  return mask;
+}
+
+static cairo_pattern_t *
+swfdec_movie_pop_clip (cairo_t *cr, cairo_pattern_t *mask)
+{
+  cairo_pop_group_to_source (cr);
+  cairo_mask (cr, mask);
+  cairo_pattern_destroy (mask);
+  return NULL;
+}
+
 void
 swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
-    const SwfdecColorTransform *color_transform, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *color_transform, const SwfdecRect *inval)
 {
   SwfdecMovieClass *klass;
   GList *g;
+  GSList *walk;
   int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
   gboolean group;
+  cairo_pattern_t *mask = NULL;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -776,49 +812,52 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   swfdec_color_transform_chain (&trans, &movie->original_ctrans, color_transform);
   swfdec_color_transform_chain (&trans, &movie->color_transform, &trans);
 
+  /* exeute the movie's drawing commands */
+  for (walk = movie->draws; walk; walk = walk->next) {
+    SwfdecDraw *draw = walk->data;
+
+    if (!swfdec_rect_intersect (NULL, &draw->extents, &rect))
+      continue;
+    
+    swfdec_draw_paint (draw, cr, &trans);
+  }
+
+  /* draw the children movies */
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovie *child = g->data;
-
-    if (child->clip_depth) {
-      if (clip_depth) {
-	/* FIXME: is clipping additive? */
-	SWFDEC_INFO ("unsetting clip depth %d for new clip depth", clip_depth);
-	cairo_restore (cr);
-	clip_depth = 0;
-      }
-      if (fill == FALSE) {
-	SWFDEC_WARNING ("clipping inside clipping not implemented");
-      } else {
-	/* FIXME FIXME FIXME: overlapping objects in the clip movie cause problems
-	 * due to them being accumulated with CAIRO_FILL_RULE_EVEN_ODD
-	 */
-	SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->clip_depth,
-	    child, child->depth);
-	clip_depth = child->clip_depth;
-	cairo_save (cr);
-	swfdec_movie_render (child, cr, &trans, &rect, FALSE);
-	cairo_clip (cr);
-	continue;
-      }
-    }
 
     if (clip_depth && child->depth > clip_depth) {
       SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
       clip_depth = 0;
-      cairo_restore (cr);
+      mask = swfdec_movie_pop_clip (cr, mask);
+    }
+
+    if (child->clip_depth) {
+      if (clip_depth) {
+	/* FIXME: is clipping additive? */
+	SWFDEC_FIXME ("unsetting clip depth %d for new clip depth %d", clip_depth,
+	    child->clip_depth);
+	mask = swfdec_movie_pop_clip (cr, mask);
+      }
+      SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->clip_depth,
+	  child, child->depth);
+      clip_depth = child->clip_depth;
+      mask = swfdec_movie_push_clip (cr, child, &rect);
+      continue;
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
-    swfdec_movie_render (child, cr, &trans, &rect, fill);
+    swfdec_movie_render (child, cr, &trans, &rect);
   }
   if (clip_depth) {
     SWFDEC_INFO ("unsetting clip depth %d after rendering", clip_depth);
     clip_depth = 0;
-    cairo_restore (cr);
+    mask = swfdec_movie_pop_clip (cr, mask);
   }
+  g_assert (mask == NULL);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   if (klass->render)
-    klass->render (movie, cr, &trans, &rect, fill);
+    klass->render (movie, cr, &trans, &rect);
 #if 0
   /* code to draw a red rectangle around the area occupied by this movie clip */
   {
@@ -955,6 +994,17 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
       return cur;
   }
   return NULL;
+}
+
+SwfdecMovie *
+swfdec_movie_get_root (SwfdecMovie *movie)
+{
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+
+  while (movie->parent)
+    movie = movie->parent;
+
+  return movie;
 }
 
 static gboolean
@@ -1130,6 +1180,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
+    /* invalidate the parent, so it gets visible */
+    swfdec_movie_queue_update (parent, SWFDEC_MOVIE_INVALID_CHILDREN);
   } else {
     player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
   }
@@ -1189,7 +1241,7 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   }
   if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
     movie->original_ratio = ratio;
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
   }
   if (clip_depth && clip_depth != movie->clip_depth) {
     movie->clip_depth = clip_depth;

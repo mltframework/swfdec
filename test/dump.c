@@ -48,16 +48,16 @@
 static gboolean verbose = FALSE;
 
 static const char *
-get_audio_format_name (SwfdecAudioFormat format)
+get_audio_format_name (SwfdecAudioCodec codec)
 {
-  switch (format) {
-    case SWFDEC_AUDIO_FORMAT_ADPCM:
+  switch (codec) {
+    case SWFDEC_AUDIO_CODEC_ADPCM:
       return "ADPCM";
-    case SWFDEC_AUDIO_FORMAT_MP3:
+    case SWFDEC_AUDIO_CODEC_MP3:
       return "MP3";
-    case SWFDEC_AUDIO_FORMAT_UNCOMPRESSED:
+    case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
       return "uncompressed";
-    case SWFDEC_AUDIO_FORMAT_NELLYMOSER:
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
       return "Nellymoser";
     default:
       return "Unknown";
@@ -67,14 +67,11 @@ get_audio_format_name (SwfdecAudioFormat format)
 static void
 dump_sound (SwfdecSound *sound)
 {
-  g_print ("  codec: %s\n", get_audio_format_name (sound->format));
+  g_print ("  codec: %s\n", get_audio_format_name (sound->codec));
   if (verbose) {
-    g_print ("  format: %uHz, %s, %ubit\n", 
-	SWFDEC_AUDIO_OUT_RATE (sound->original_format),
-	SWFDEC_AUDIO_OUT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
-	sound->width ? 16 : 8);
+    g_print ("  format: %s\n", swfdec_audio_format_to_string (sound->format));
     g_print ("  samples: %u (%gs)\n", sound->n_samples, 
-	(double) sound->n_samples / SWFDEC_AUDIO_OUT_RATE (sound->original_format));
+	(double) sound->n_samples / swfdec_audio_format_get_rate (sound->format));
   }
 }
 
@@ -99,11 +96,9 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	    break;
 	}
 	if (sound)
-	  g_print ("   %4u -%4u  sound: %s %uHz, %s, %ubit\n", i, j, 
-	      get_audio_format_name (sound->format),
-	      SWFDEC_AUDIO_OUT_RATE (sound->original_format),
-	      SWFDEC_AUDIO_OUT_IS_STEREO (sound->original_format) ? "mono" : "stereo",
-	      sound->width ? 16 : 8);
+	  g_print ("   %4u -%4u  sound: %s %s\n", i, j, 
+	      get_audio_format_name (sound->codec),
+	      swfdec_audio_format_to_string (sound->format));
       }
     }
 
@@ -152,6 +147,10 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	case SWFDEC_TAG_SHOWFRAME:
 	  j++;
 	  break;
+	case SWFDEC_TAG_STARTSOUND:
+	  /* FIXME add info about what sound etc */
+	  g_print ("   %4u start sound\n", j);
+	  break;
 	default:
 	  g_assert_not_reached ();
       }
@@ -197,15 +196,11 @@ dump_path (cairo_path_t *path)
 static void
 dump_shape (SwfdecShape *shape)
 {
-  SwfdecShapeVec *shapevec;
-  unsigned int i;
+  GSList *walk;
 
-  for (i = 0; i < shape->vecs->len; i++) {
-    shapevec = &g_array_index (shape->vecs, SwfdecShapeVec, i);
-
-    g_print("   %3u: ", shapevec->last_index);
-    if (SWFDEC_IS_PATTERN (shapevec->pattern)) {
-      SwfdecPattern *pattern = shapevec->pattern;
+  for (walk = shape->draws; walk; walk = walk->next) {
+    if (SWFDEC_IS_PATTERN (walk->data)) {
+      SwfdecPattern *pattern = walk->data;
       char *str = swfdec_pattern_to_string (pattern);
       g_print ("%s\n", str);
       g_free (str);
@@ -215,14 +210,14 @@ dump_shape (SwfdecShape *shape)
 	    pattern->start_transform.yx, pattern->start_transform.yy,
 	    pattern->start_transform.x0, pattern->start_transform.y0);
       }
-    } else if (SWFDEC_IS_STROKE (shapevec->pattern)) {
-      SwfdecStroke *line = SWFDEC_STROKE (shapevec->pattern);
+    } else if (SWFDEC_IS_STROKE (walk->data)) {
+      SwfdecStroke *line = walk->data;
       g_print ("line (width %u, color #%08X)\n", line->start_width, line->start_color);
     } else {
       g_print ("not filled\n");
     }
     if (verbose) {
-      dump_path (&shapevec->path);
+      dump_path (&SWFDEC_DRAW (walk->data)->path);
     }
   }
 }
@@ -277,8 +272,6 @@ dump_font (SwfdecFont *font)
       if (c == 0 || (s = g_utf16_to_utf8 (&c, 1, NULL, NULL, NULL)) == NULL) {
 	g_print (" ");
       } else {
-	if (g_str_equal (s, "D"))
-	  dump_shape (g_array_index (font->glyphs, SwfdecFontEntry, i).shape);
 	g_print ("%s ", s);
 	g_free (s);
       }
@@ -338,7 +331,7 @@ dump_image (SwfdecImage *image)
 }
 
 static void 
-dump_object (gpointer key, gpointer value, gpointer dec)
+dump_object (gpointer value, gpointer dec)
 {
   SwfdecCharacter *c = value;
 
@@ -374,6 +367,22 @@ dump_object (gpointer key, gpointer value, gpointer dec)
   }
 }
 
+static void 
+enqueue (gpointer key, gpointer value, gpointer listp)
+{
+  GList **list = listp;
+
+  *list = g_list_prepend (*list, value);
+}
+
+static int
+sort_by_id (gconstpointer a, gconstpointer b)
+{
+  if (SWFDEC_CHARACTER (a)->id < SWFDEC_CHARACTER (b)->id)
+    return -1;
+  return 1;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -385,6 +394,7 @@ main (int argc, char *argv[])
     { NULL }
   };
   GOptionContext *ctx;
+  GList *list = NULL;
 
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, "options");
@@ -425,7 +435,10 @@ main (int argc, char *argv[])
   g_print ("  rate   : %g fps\n",  SWFDEC_DECODER (s)->rate / 256.0);
   g_print ("  size   : %ux%u pixels\n", SWFDEC_DECODER (s)->width, SWFDEC_DECODER (s)->height);
   g_print ("objects:\n");
-  g_hash_table_foreach (s->characters, dump_object, s);
+  g_hash_table_foreach (s->characters, enqueue, &list);
+  list = g_list_sort (list, sort_by_id);
+  g_list_foreach (list, dump_object, s);
+  g_list_free (list);
 
   g_print ("main sprite:\n");
   dump_sprite (s, s->main_sprite);

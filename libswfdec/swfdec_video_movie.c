@@ -40,7 +40,7 @@ swfdec_video_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_video_movie_render (SwfdecMovie *mov, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (mov);
 

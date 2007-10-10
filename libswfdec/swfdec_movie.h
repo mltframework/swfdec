@@ -75,11 +75,13 @@ struct _SwfdecContent {
 #define SWFDEC_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_MOVIE, SwfdecMovieClass))
 #define SWFDEC_MOVIE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_MOVIE, SwfdecMovieClass))
 
+/* NB: each following state includes the previous */
 typedef enum {
-  SWFDEC_MOVIE_UP_TO_DATE = 0,
-  SWFDEC_MOVIE_INVALID_CHILDREN,
-  SWFDEC_MOVIE_INVALID_EXTENTS,
-  SWFDEC_MOVIE_INVALID_MATRIX
+  SWFDEC_MOVIE_UP_TO_DATE = 0,		/* everything OK */
+  SWFDEC_MOVIE_INVALID_CHILDREN,	/* call update on children */
+  SWFDEC_MOVIE_INVALID_EXTENTS,		/* recalculate extents */
+  SWFDEC_MOVIE_INVALID_CONTENTS,	/* trigger an invalidation */
+  SWFDEC_MOVIE_INVALID_MATRIX		/* matrix is invalid, recalculate */
 } SwfdecMovieCacheState;
 
 struct _SwfdecMovie {
@@ -120,11 +122,18 @@ struct _SwfdecMovie {
   gboolean		visible;		/* whether we currently can be seen or iterate */
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
+  /* drawing state */
+  /* FIXME: could it be that shape drawing (SwfdecGraphicMovie etc) uses these same objects? */
+  SwfdecRect		draw_extents;		/* extents of the items in the following list */
+  GSList *		draws;			/* all the items to draw */
+  SwfdecDraw *		draw_fill;	      	/* current fill style or NULL */
+  SwfdecDraw *		draw_line;	      	/* current line style or NULL */
+  int			draw_x;			/* current x position for drawing */
+  int			draw_y;			/* current y position for drawing */
+
   /* leftover unimplemented variables from the Actionscript spec */
 #if 0
   int droptarget;
-  char *target;
-  char *url;
 #endif
 };
 
@@ -141,8 +150,7 @@ struct _SwfdecMovieClass {
   void			(* render)		(SwfdecMovie *		movie, 
 						 cairo_t *		cr,
 						 const SwfdecColorTransform *trans,
-						 const SwfdecRect *	inval,
-						 gboolean		fill);
+						 const SwfdecRect *	inval);
 
   /* mouse handling */
   gboolean		(* mouse_in)		(SwfdecMovie *		movie,
@@ -176,6 +184,7 @@ SwfdecMovie *	swfdec_movie_find		(SwfdecMovie *		movie,
 						 int			depth);
 SwfdecMovie *	swfdec_movie_get_by_name	(SwfdecMovie *		movie,
 						 const char *		name);
+SwfdecMovie *	swfdec_movie_get_root		(SwfdecMovie *		movie);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_destroy		(SwfdecMovie *		movie);
 void		swfdec_movie_set_static_properties 
@@ -218,8 +227,7 @@ char *		swfdec_movie_get_path		(SwfdecMovie *		movie,
 void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,
-						 const SwfdecRect *	inval,
-						 gboolean		fill);
+						 const SwfdecRect *	inval);
 void		swfdec_movie_execute_script	(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
 gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,

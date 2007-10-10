@@ -57,8 +57,7 @@ struct _SwfdecGraphicClass
   void			(* render)	(SwfdecGraphic *	      	graphic, 
                                          cairo_t *			cr,
 					 const SwfdecColorTransform *	trans,
-					 const SwfdecRect *		inval,
-					 gboolean			fill);
+					 const SwfdecRect *		inval);
   gboolean		(* mouse_in)	(SwfdecGraphic *      		graphic,
 					 double				x,
 					 double				y);
@@ -69,8 +68,7 @@ GType		swfdec_graphic_get_type	(void);
 void		swfdec_graphic_render	(SwfdecGraphic *		graphic,
                                          cairo_t *			cr,
 					 const SwfdecColorTransform *	trans,
-					 const SwfdecRect *		inval,
-					 gboolean			fill);
+					 const SwfdecRect *		inval);
 gboolean	swfdec_graphic_mouse_in	(SwfdecGraphic *      		graphic,
 					 double				x,
 					 double				y);

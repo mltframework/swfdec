@@ -110,8 +110,7 @@ void			swfdec_edit_text_render		(SwfdecEditText *	text,
 							 cairo_t *		cr,
 							 const SwfdecTextRenderBlock *	blocks,
 							 const SwfdecColorTransform *	trans,
-							 const SwfdecRect *	rect,
-							 gboolean		fill);
+							 const SwfdecRect *		rect);
 
 G_END_DECLS
 #endif

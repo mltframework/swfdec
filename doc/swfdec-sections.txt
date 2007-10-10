@@ -107,6 +107,22 @@ SWFDEC_PLAYER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>SwfdecSystem</FILE>
+<TITLE>SwfdecSystem</TITLE>
+SwfdecSystem
+swfdec_system_new
+<SUBSECTION Standard>
+SwfdecSystemClass
+SWFDEC_IS_SYSTEM
+SWFDEC_IS_SYSTEM_CLASS
+SWFDEC_SYSTEM
+SWFDEC_SYSTEM_CLASS
+SWFDEC_SYSTEM_GET_CLASS
+SWFDEC_TYPE_SYSTEM
+swfdec_system_get_type
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecBuffer</FILE>
 <TITLE>SwfdecBuffer</TITLE>
 SwfdecBuffer
@@ -119,6 +135,7 @@ swfdec_buffer_new_subbuffer
 swfdec_buffer_new_from_file
 swfdec_buffer_ref
 swfdec_buffer_unref
+swfdec_buffer_get_super
 swfdec_buffer_queue_new
 swfdec_buffer_queue_clear
 swfdec_buffer_queue_ref
@@ -150,6 +167,20 @@ SwfdecMouseCursor
 SwfdecScaleMode
 </SECTION>
 
+<SECTION>
+<FILE>SwfdecRectangle</FILE>
+<TITLE>SwfdecRectangle</TITLE>
+SwfdecRectangle
+swfdec_rectangle_contains
+swfdec_rectangle_contains_point
+swfdec_rectangle_init_empty
+swfdec_rectangle_intersect
+swfdec_rectangle_is_empty
+swfdec_rectangle_union
+<SUBSECTION Standard>
+SWFDEC_TYPE_RECTANGLE
+swfdec_rectangle_get_type
+</SECTION>
 
 <SECTION>
 <FILE>SwfdecGtkPlayer</FILE>

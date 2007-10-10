@@ -57,7 +57,7 @@ struct _SwfdecNetStream
   /* video decoding */
   guint			current_time;	/* current playback timestamp */
   guint			next_time;	/* next video image at this timestamp */
-  SwfdecVideoFormat	format;		/* current format */
+  SwfdecVideoCodec	format;		/* current format */
   SwfdecVideoDecoder *	decoder;	/* decoder used for decoding */
   cairo_surface_t *	surface;	/* current image */
   SwfdecTimeout		timeout;	/* timeout to advance to */

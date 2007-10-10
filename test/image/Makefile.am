@@ -8,6 +8,9 @@ image_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 EXTRA_DIST = \
 	README \
 	bw.jpg \
+	clip-transparent.swf \
+	clip-transparent.swf.png \
+	clip-transparent.xml \
 	color-transform-add80.swf \
 	color-transform-add80.swf.png \
 	color-transform-add80-alpha.swf \
@@ -19,10 +22,24 @@ EXTRA_DIST = \
 	duplicate-depth-6.swf.png \
 	duplicate-depth-7.swf \
 	duplicate-depth-7.swf.png \
+	fillstyle-order.swf \
+	fillstyle-order.swf.png \
+	fillstyle-order.xml \
 	image-jpeg-alpha.swf \
 	image-jpeg-alpha.swf.png \
 	image-lossless-alpha.swf \
 	image-lossless-alpha.swf.png \
+	morph-gradient.c \
+	morph-gradient-4.swf \
+	morph-gradient-4.swf.png \
+	morph-gradient-5.swf \
+	morph-gradient-5.swf.png \
+	morph-gradient-6.swf \
+	morph-gradient-6.swf.png \
+	morph-gradient-7.swf \
+	morph-gradient-7.swf.png \
+	morph-gradient-8.swf \
+	morph-gradient-8.swf.png \
 	negative-color-transform.c \
 	negative-color-transform.swf \
 	negative-color-transform.swf.png \

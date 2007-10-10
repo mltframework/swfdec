@@ -3,10 +3,6 @@
 # We require automake 1.6 at least.
 AUTOMAKE_OPTIONS = 1.6
 
-# This works around a bug in gtk-doc. See http://bugzilla.gnome.org/show_bug.cgi?id=156643
-tmpl/*.sgml:
-	@true
-
 # This is a blank Makefile.am for using gtk-doc.
 # Copy this to your project's API docs directory and modify the variables to
 # suit your project. See the GTK+ Makefiles in gtk+/docs/reference for examples
@@ -87,6 +83,7 @@ IGNORE_HFILES= \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
+	swfdec_draw.h \
 	swfdec_edittext.h \
 	swfdec_edittext_movie.h \
 	swfdec_enums.h \
@@ -110,6 +107,7 @@ IGNORE_HFILES= \
 	swfdec_movie.h \
 	swfdec_net_connection.h \
 	swfdec_net_stream.h \
+	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
@@ -120,7 +118,9 @@ IGNORE_HFILES= \
 	swfdec_script_internal.h \
 	swfdec_scriptable.h \
 	swfdec_shape.h \
+	swfdec_shape_parser.h \
 	swfdec_sound.h \
+	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_stroke.h \

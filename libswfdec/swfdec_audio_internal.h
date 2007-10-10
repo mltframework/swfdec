@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,27 +24,14 @@
 
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_audio.h>
+#include <libswfdec/swfdec_bits.h>
 #include <libswfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
-#define SWFDEC_AUDIO_OUT_STEREO 256
-#define SWFDEC_AUDIO_OUT_GET(channels, rate) \
-  (((channels) == 2 ? SWFDEC_AUDIO_OUT_STEREO : 0) | 44100 / (rate))
-#define SWFDEC_AUDIO_OUT_IS_STEREO(out) ((out) & SWFDEC_AUDIO_OUT_STEREO)
-#define SWFDEC_AUDIO_OUT_N_CHANNELS(out) (SWFDEC_AUDIO_OUT_IS_STEREO (out) ? 2 : 1)
-#define SWFDEC_AUDIO_OUT_GRANULARITY(out) ((out) & 0xFF)
-#define SWFDEC_AUDIO_OUT_RATE(out) (44100 / SWFDEC_AUDIO_OUT_GRANULARITY (out))
-typedef enum {
-  SWFDEC_AUDIO_OUT_MONO_44100 = 1,
-  SWFDEC_AUDIO_OUT_MONO_22050 = 2,
-  SWFDEC_AUDIO_OUT_MONO_11025 = 4,
-  SWFDEC_AUDIO_OUT_MONO_5512 = 8,
-  SWFDEC_AUDIO_OUT_STEREO_44100 = SWFDEC_AUDIO_OUT_MONO_44100 | SWFDEC_AUDIO_OUT_STEREO,
-  SWFDEC_AUDIO_OUT_STEREO_22050 = SWFDEC_AUDIO_OUT_MONO_22050 | SWFDEC_AUDIO_OUT_STEREO,
-  SWFDEC_AUDIO_OUT_STEREO_11025 = SWFDEC_AUDIO_OUT_MONO_11025 | SWFDEC_AUDIO_OUT_STEREO,
-  SWFDEC_AUDIO_OUT_STEREO_5512 = SWFDEC_AUDIO_OUT_MONO_5512 | SWFDEC_AUDIO_OUT_STEREO,
-} SwfdecAudioOut;
+typedef guint SwfdecAudioFormat;
+#define SWFDEC_IS_AUDIO_FORMAT(format) ((format) <= 0xF)
+
 
 struct _SwfdecAudio {
   GObject		object;
@@ -56,20 +43,33 @@ struct _SwfdecAudio {
 struct _SwfdecAudioClass {
   GObjectClass		object_class;
 
-  guint			(* iterate)		(SwfdecAudio *	audio,
-						 guint		n_samples);
-  void			(* render)		(SwfdecAudio *	audio,
-						 gint16 *	dest,
-						 guint		start, 
-						 guint		n_samples);
+  guint			(* iterate)	  		(SwfdecAudio *	audio,
+							 guint		n_samples);
+  void			(* render)			(SwfdecAudio *	audio,
+							 gint16 *	dest,
+							 guint		start, 
+							 guint		n_samples);
 };
 
-void		swfdec_audio_add		(SwfdecAudio *	audio,
-						 SwfdecPlayer *	player);
-void		swfdec_audio_remove		(SwfdecAudio *	audio);
+void			swfdec_audio_add		(SwfdecAudio *	audio,
+							 SwfdecPlayer *	player);
+void			swfdec_audio_remove		(SwfdecAudio *	audio);
 
-guint		swfdec_audio_iterate		(SwfdecAudio *	audio,
-						 guint		n_samples);
+guint			swfdec_audio_iterate		(SwfdecAudio *	audio,
+							 guint		n_samples);
+
+SwfdecAudioFormat	swfdec_audio_format_parse	(SwfdecBits *	  	bits);
+SwfdecAudioFormat	swfdec_audio_format_new		(guint			rate,
+							 guint			channels,
+							 gboolean		is_16bit);
+guint			swfdec_audio_format_get_channels(SwfdecAudioFormat	format);
+gboolean		swfdec_audio_format_is_16bit	(SwfdecAudioFormat	format);
+guint			swfdec_audio_format_get_rate	(SwfdecAudioFormat	format);
+guint			swfdec_audio_format_get_granularity
+							(SwfdecAudioFormat	format);
+guint			swfdec_audio_format_get_bytes_per_sample
+							(SwfdecAudioFormat	format);
+const char *		swfdec_audio_format_to_string	(SwfdecAudioFormat	format);
 
 
 G_END_DECLS

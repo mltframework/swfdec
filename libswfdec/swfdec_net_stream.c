@@ -50,12 +50,40 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_onStatus, 1, &val, NULL);
 }
 
+static cairo_surface_t *
+swfdec_net_stream_decode_video (SwfdecNetStream *stream, SwfdecBuffer *buffer)
+{
+  SwfdecVideoDecoder *decoder = stream->decoder;
+  cairo_surface_t *surface;
+
+  if (decoder == NULL)
+    return NULL;
+
+  if (decoder->codec == SWFDEC_VIDEO_CODEC_VP6 ||
+      decoder->codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA) {
+    guint wsub, hsub;
+    SwfdecBuffer *tmp;
+    wsub = *buffer->data;
+    hsub = wsub & 0xF;
+    wsub >>= 4;
+    tmp = swfdec_buffer_new_subbuffer (buffer, 1, buffer->length - 1);
+    surface = swfdec_video_decoder_decode (decoder, tmp);
+    swfdec_buffer_unref (tmp);
+    if (hsub || wsub) {
+      SWFDEC_FIXME ("need to subtract %ux%u pixels", wsub, hsub);
+    }
+  } else {
+    surface = swfdec_video_decoder_decode (decoder, buffer);
+  }
+  return surface;
+}
+
 static void swfdec_net_stream_update_playing (SwfdecNetStream *stream);
 static void
 swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 {
   SwfdecBuffer *buffer;
-  SwfdecVideoFormat format;
+  SwfdecVideoCodec format;
   cairo_surface_t *old;
   gboolean process_events;
   guint process_events_from;
@@ -83,9 +111,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       stream->format = format;
       stream->decoder = swfdec_video_decoder_new (format);
     }
-    if (stream->decoder) {
-      stream->surface = swfdec_video_decoder_decode (stream->decoder, buffer);
-    }
+    stream->surface = swfdec_net_stream_decode_video (stream, buffer);
     if (stream->surface) {
       GList *walk;
       for (walk = stream->movies; walk; walk = walk->next) {
@@ -370,8 +396,8 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 	msecs = 0;
       else 
 	msecs = stream->current_time - msecs;
+      SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
     }
-    SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
     *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bytesLoaded) {

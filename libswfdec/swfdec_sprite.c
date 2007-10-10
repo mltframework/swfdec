@@ -101,7 +101,7 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;
   sprite->frames[frame].sound_samples = n_samples *
-    SWFDEC_AUDIO_OUT_GRANULARITY (sprite->frames[frame].sound_head->original_format);
+    swfdec_audio_format_get_granularity (sprite->frames[frame].sound_head->format);
 }
 
 void
@@ -146,10 +146,9 @@ tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
     /* can't use swfdec_player_set_background_color() here, because the player is locked and doesn't emit signals */
     player->bgcolor = color;
     player->bgcolor_set = TRUE;
-    player->invalid.x0 = SWFDEC_DOUBLE_TO_TWIPS (0.0);
-    player->invalid.y0 = SWFDEC_DOUBLE_TO_TWIPS (0.0);
-    player->invalid.x1 = SWFDEC_DOUBLE_TO_TWIPS (player->width);
-    player->invalid.y1 = SWFDEC_DOUBLE_TO_TWIPS (player->height);
+    player->invalid_extents = player->stage;
+    g_array_set_size (player->invalidations, 1);
+    g_array_index (player->invalidations, SwfdecRectangle, 0) = player->stage;
     g_object_notify (G_OBJECT (player), "background-color");
   }
 

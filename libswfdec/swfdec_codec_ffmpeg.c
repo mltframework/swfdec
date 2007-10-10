@@ -170,17 +170,17 @@ swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_ffmpeg_new (SwfdecAudioFormat type, gboolean width, SwfdecAudioOut format)
+swfdec_audio_decoder_ffmpeg_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderFFMpeg *ffmpeg;
   AVCodecContext *ctx;
   enum CodecID id;
 
   switch (type) {
-    case SWFDEC_AUDIO_FORMAT_ADPCM:
+    case SWFDEC_AUDIO_CODEC_ADPCM:
       id = CODEC_ID_ADPCM_SWF;
       break;
-    case SWFDEC_AUDIO_FORMAT_MP3:
+    case SWFDEC_AUDIO_CODEC_MP3:
       id = CODEC_ID_MP3;
       break;
     default:
@@ -192,12 +192,12 @@ swfdec_audio_decoder_ffmpeg_new (SwfdecAudioFormat type, gboolean width, SwfdecA
   ffmpeg = g_slice_new (SwfdecAudioDecoderFFMpeg);
   ffmpeg->ctx = ctx;
   ffmpeg->queue = swfdec_buffer_queue_new ();
-  ffmpeg->decoder.out_format = SWFDEC_AUDIO_OUT_STEREO_44100;
+  ffmpeg->decoder.format = swfdec_audio_format_new (44100, 2, TRUE);
   ffmpeg->decoder.pull = swfdec_audio_decoder_ffmpeg_pull;
   ffmpeg->decoder.push = swfdec_audio_decoder_ffmpeg_push;
   ffmpeg->decoder.free = swfdec_audio_decoder_ffmpeg_free;
-  ctx->sample_rate = SWFDEC_AUDIO_OUT_RATE (format);
-  ctx->channels = SWFDEC_AUDIO_OUT_N_CHANNELS (format);
+  ctx->sample_rate = swfdec_audio_format_get_rate (format);
+  ctx->channels = swfdec_audio_format_get_channels (format);
 
   return &ffmpeg->decoder;
 }
@@ -208,27 +208,36 @@ typedef struct {
   SwfdecVideoDecoder	decoder;
   AVCodecContext *	ctx;		/* out context (d'oh) */
   AVFrame *		frame;		/* the frame we use for decoding */
-  struct SwsContext *	sws;		/* the format conversion */
-  int			sws_width;	/* width used in resampler */
-  int			sws_height;	/* height used in resampler */
+  enum PixelFormat	format;		/* format we must output */
 } SwfdecVideoDecoderFFMpeg;
 
+static enum PixelFormat
+swfdec_video_decoder_ffmpeg_get_format (SwfdecVideoCodec codec)
+{
+  switch (swfdec_video_codec_get_format (codec)) {
+    case SWFDEC_VIDEO_FORMAT_RGBA:
+      return PIX_FMT_RGB32;
+    case SWFDEC_VIDEO_FORMAT_I420:
+      return PIX_FMT_YUV420P;
+  }
+  g_assert_not_reached ();
+  return PIX_FMT_RGB32;
+}
+
 #define ALIGNMENT 31
-static SwfdecBuffer *
+static gboolean
 swfdec_video_decoder_ffmpeg_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
-    guint *width, guint *height, guint *rowstride)
+    SwfdecVideoImage *image)
 {
   SwfdecVideoDecoderFFMpeg *codec = (SwfdecVideoDecoderFFMpeg *) dec;
   int got_image = 0;
-  SwfdecBuffer *ret;
-  AVPicture picture;
   guchar *tmp, *aligned;
 
   /* fullfill alignment and padding requirements */
   tmp = g_try_malloc (buffer->length + ALIGNMENT + FF_INPUT_BUFFER_PADDING_SIZE);
   if (tmp == NULL) {
     SWFDEC_WARNING ("Could not allocate temporary memory");
-    return NULL;
+    return FALSE;
   }
   aligned = (guchar *) (((uintptr_t) tmp + ALIGNMENT) & ~ALIGNMENT);
   memcpy (aligned, buffer->data, buffer->length);
@@ -237,38 +246,28 @@ swfdec_video_decoder_ffmpeg_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
 	aligned, buffer->length) < 0) {
     g_free (tmp);
     SWFDEC_WARNING ("error decoding frame");
-    return NULL;
+    return FALSE;
   }
   g_free (tmp);
   if (got_image == 0) {
     SWFDEC_WARNING ("did not get an image from decoding");
-    return NULL;
+    return FALSE;
   }
-  if (codec->sws &&
-      (codec->sws_width != codec->ctx->width ||
-       codec->sws_height != codec->ctx->height)) {
-    sws_freeContext (codec->sws);
-    codec->sws = NULL;
+  if (codec->ctx->pix_fmt != codec->format) {
+    SWFDEC_WARNING ("decoded to wrong format, expected %u, but got %u",
+	codec->format, codec->ctx->pix_fmt);
+    return FALSE;
   }
-  if (codec->sws == NULL) {
-    codec->sws = sws_getContext (codec->ctx->width, codec->ctx->height, codec->ctx->pix_fmt,
-	codec->ctx->width, codec->ctx->height, PIX_FMT_RGB32, 0, NULL, NULL, NULL);
-    if (codec->sws == NULL) {
-      SWFDEC_ERROR ("Could not get conversion context");
-      return NULL;
-    }
-    codec->sws_width = codec->ctx->width;
-    codec->sws_height = codec->ctx->height;
-  }
-  ret = swfdec_buffer_new_and_alloc (codec->ctx->width * codec->ctx->height * 4);
-  avpicture_fill (&picture, ret->data, PIX_FMT_RGB32, codec->ctx->width,
-      codec->ctx->height);
-  sws_scale (codec->sws, codec->frame->data, codec->frame->linesize, 0, codec->ctx->height,
-      picture.data, picture.linesize);
-  *width = codec->ctx->width;
-  *height = codec->ctx->height;
-  *rowstride = codec->ctx->width * 4;
-  return ret;
+  image->width = codec->ctx->width;
+  image->height = codec->ctx->height;
+  image->mask = NULL;
+  image->plane[0] = codec->frame->data[0];
+  image->plane[1] = codec->frame->data[1];
+  image->plane[2] = codec->frame->data[2];
+  image->rowstride[0] = codec->frame->linesize[0];
+  image->rowstride[1] = codec->frame->linesize[1];
+  image->rowstride[2] = codec->frame->linesize[2];
+  return TRUE;
 }
 
 static void
@@ -276,9 +275,6 @@ swfdec_video_decoder_ffmpeg_free (SwfdecVideoDecoder *dec)
 {
   SwfdecVideoDecoderFFMpeg *codec = (SwfdecVideoDecoderFFMpeg *) dec;
 
-  if (codec->sws) {
-    sws_freeContext (codec->sws);
-  };
   avcodec_close (codec->ctx);
   av_free (codec->ctx);
   av_free (codec->frame);
@@ -286,20 +282,20 @@ swfdec_video_decoder_ffmpeg_free (SwfdecVideoDecoder *dec)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_ffmpeg_new (SwfdecVideoFormat type)
+swfdec_video_decoder_ffmpeg_new (SwfdecVideoCodec type)
 {
   SwfdecVideoDecoderFFMpeg *codec;
   AVCodecContext *ctx;
   enum CodecID id;
 
   switch (type) {
-    case SWFDEC_VIDEO_FORMAT_H263:
+    case SWFDEC_VIDEO_CODEC_H263:
       id = CODEC_ID_FLV1;
       break;
-    case SWFDEC_VIDEO_FORMAT_SCREEN:
+    case SWFDEC_VIDEO_CODEC_SCREEN:
       id = CODEC_ID_FLASHSV;
       break;
-    case SWFDEC_VIDEO_FORMAT_VP6:
+    case SWFDEC_VIDEO_CODEC_VP6:
       id = CODEC_ID_VP6F;
       break;
     default:
@@ -314,6 +310,7 @@ swfdec_video_decoder_ffmpeg_new (SwfdecVideoFormat type)
   codec->decoder.free = swfdec_video_decoder_ffmpeg_free;
   codec->ctx = ctx;
   codec->frame = avcodec_alloc_frame ();
+  codec->format = swfdec_video_decoder_ffmpeg_get_format (type);
 
   return &codec->decoder;
 }

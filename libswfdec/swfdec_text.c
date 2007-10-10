@@ -25,6 +25,7 @@
 
 #include "swfdec_text.h"
 #include "swfdec_debug.h"
+#include "swfdec_draw.h"
 #include "swfdec_font.h"
 #include "swfdec_swf_decoder.h"
 
@@ -39,20 +40,18 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
   cairo_matrix_transform_point (&text->transform_inverse, &x, &y);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
-    SwfdecShape *shape;
+    SwfdecDraw *draw;
     double tmpx, tmpy;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
-    shape = swfdec_font_get_glyph (glyph->font, glyph->glyph);
-    if (shape == NULL) {
-      SWFDEC_ERROR ("failed getting glyph %d\n", glyph->glyph);
+    draw = swfdec_font_get_glyph (glyph->font, glyph->glyph);
+    if (draw == NULL)
       continue;
-    }
     tmpx = x - glyph->x;
     tmpy = y - glyph->y;
     tmpx = tmpx * glyph->font->scale_factor / glyph->height;
     tmpy = tmpy * glyph->font->scale_factor / glyph->height;
-    if (swfdec_graphic_mouse_in (SWFDEC_GRAPHIC (shape), tmpx, tmpy))
+    if (swfdec_draw_contains (draw, tmpx, tmpy))
       return TRUE;
   }
   return FALSE;
@@ -60,7 +59,7 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 
 static void
 swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval, gboolean fill)
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   guint i;
   SwfdecColor color;
@@ -73,14 +72,14 @@ swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr,
   swfdec_rect_transform (&inval_moved, inval, &text->transform_inverse);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
-    SwfdecShape *shape;
+    SwfdecDraw *draw;
     cairo_matrix_t pos;
 
     glyph = &g_array_index (text->glyphs, SwfdecTextGlyph, i);
 
-    shape = swfdec_font_get_glyph (glyph->font, glyph->glyph);
-    if (shape == NULL) {
-      SWFDEC_ERROR ("failed getting glyph %d\n", glyph->glyph);
+    draw = swfdec_font_get_glyph (glyph->font, glyph->glyph);
+    if (draw == NULL) {
+      SWFDEC_INFO ("failed getting glyph %d, maybe an empty glyph?", glyph->glyph);
       continue;
     }
 
@@ -95,8 +94,7 @@ swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr,
       swfdec_rect_transform (&rect, &inval_moved, &pos);
       color = swfdec_color_apply_transform (glyph->color, trans);
       swfdec_color_transform_init_color (&force_color, color);
-      swfdec_graphic_render (SWFDEC_GRAPHIC (shape), cr, 
-	  &force_color, &rect, fill);
+      swfdec_draw_paint (draw, cr, &force_color);
     } else {
       SWFDEC_ERROR ("non-invertible matrix!");
     }

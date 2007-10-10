@@ -124,6 +124,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
       return fun;
     }
   }
+  SWFDEC_WARNING ("no AsNative (%u, %u)", x, y);
   return NULL;
 }
 
@@ -287,14 +288,13 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 
-// this is ran before swfdec_as_context_startup
+/* This is ran at the beginning of swfdec_as_context_startup.
+ * Yes, this is a hack */
 void
-swfdec_player_preinit_global (SwfdecPlayer *player, guint version)
+swfdec_player_preinit_global (SwfdecAsContext *context, guint version)
 {
-  SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
-
-  // init these two before swfdec_as_context_startup, so they won't get
-  // __proto__ and constructor properties
+  /* init these two before swfdec_as_context_startup, so they won't get
+   * __proto__ and constructor properties */
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASnative, 
       0, swfdec_player_ASnative, 2);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,

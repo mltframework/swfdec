@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<swf version="7" compressed="1">
+  <Header framerate="30" frames="1">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <DefineShape2 objectID="1">
+        <bounds>
+          <Rectangle left="0" right="3000" top="0" bottom="3000"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+	      <Solid>
+		<color>
+		  <Color red="255" green="0" blue="0"/>
+		</color>
+	      </Solid>
+	      <Solid>
+		<color>
+		  <Color red="0" green="0" blue="255"/>
+		</color>
+	      </Solid>
+            </fillStyles>
+	    <lineStyles />
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="0" y="0" fillStyle0="1"/>
+              <LineTo x="0" y="3000"/>
+              <LineTo x="1000" y="0"/>
+              <LineTo x="0" y="-3000"/>
+	      <LineTo x="-1000" y="0"/>
+	      <ShapeSetup x="0" y="0" fillStyle0="2"/>
+              <LineTo x="0" y="1000"/>
+              <LineTo x="3000" y="0"/>
+              <LineTo x="0" y="-1000"/>
+	      <LineTo x="-3000" y="0"/>
+	      <ShapeSetup x="0" y="0" fillStyle0="1"/>
+              <LineTo x="0" y="2000"/>
+              <LineTo x="2000" y="0"/>
+              <LineTo x="0" y="-2000"/>
+	      <LineTo x="-2000" y="0"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape2>
+      <PlaceObject2 replace="0" depth="0" objectID="1" />
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

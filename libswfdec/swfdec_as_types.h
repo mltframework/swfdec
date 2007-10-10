@@ -38,7 +38,6 @@ typedef enum {
 typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
-typedef struct _SwfdecAsDate SwfdecAsDate;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsObject SwfdecAsObject;
@@ -84,11 +83,11 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number)
 #define SWFDEC_AS_VALUE_SET_NUMBER(val,d) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->value.number = d; \
+  (__val)->value.number = (d); \
   (__val)->type = SWFDEC_AS_TYPE_NUMBER; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_SET_INT(val,d) SWFDEC_AS_VALUE_SET_NUMBER(val,d)
+#define SWFDEC_AS_VALUE_SET_INT(val,d) SWFDEC_AS_VALUE_SET_NUMBER(val,(int) (d))
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)

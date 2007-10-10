@@ -47,6 +47,11 @@ struct _SwfdecAsStringClass {
 
 GType		swfdec_as_string_get_type	(void);
 
+const char *	swfdec_as_str_sub		(SwfdecAsContext *	cx,
+						 const char *		str,
+						 guint			offset,
+						 guint			len);
+
 char *		swfdec_as_string_escape		(SwfdecAsContext *	context,
 						 const char *		string);
 char *		swfdec_as_string_unescape	(SwfdecAsContext *	context,

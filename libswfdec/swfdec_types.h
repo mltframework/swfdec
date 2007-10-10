@@ -38,6 +38,7 @@ typedef struct _SwfdecCharacter SwfdecCharacter;
 typedef struct _SwfdecColorTransform SwfdecColorTransform;
 typedef struct _SwfdecContent SwfdecContent;
 typedef struct _SwfdecDecoder SwfdecDecoder;
+typedef struct _SwfdecDraw SwfdecDraw;
 typedef struct _SwfdecEventList SwfdecEventList;
 typedef struct _SwfdecFilter SwfdecFilter;
 typedef struct _SwfdecFont SwfdecFont;

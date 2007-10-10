@@ -622,15 +622,17 @@ static int
 tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecScript *script;
+  SwfdecBits bits;
   char *name;
 
   name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
-  script = swfdec_script_new_from_bits (&s->b, name, s->version);
+  bits = s->b;
+  script = swfdec_script_new_from_bits (&bits, name, s->version);
   g_free (name);
   if (script) {
     swfdec_swf_decoder_add_script (s, script);
-    swfdec_sprite_add_action (s->parse_sprite, tag, swfdec_buffer_ref (script->buffer));
+    tag_func_enqueue (s, tag);
   }
 
   return SWFDEC_STATUS_OK;
@@ -661,7 +663,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
   [SWFDEC_TAG_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info, 0},
   [SWFDEC_TAG_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
-  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_start_sound, SPRITE},
+  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_enqueue, SPRITE},
   [SWFDEC_TAG_DEFINEBUTTONSOUND] =
       {"DefineButtonSound", tag_func_define_button_sound, 0},
   [SWFDEC_TAG_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SPRITE},

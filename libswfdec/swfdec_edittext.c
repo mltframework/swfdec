@@ -132,21 +132,31 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 	SWFDEC_GRAPHIC (text)->extents.x0 - block->left_margin -
 	block->right_margin - block->block_indent;
 
+      if (block->index_ == 0 && paragraphs[i].indent < 0) {
+	cairo_rel_move_to (cr, paragraphs[i].indent / PANGO_SCALE, 0);
+	width += -paragraphs[i].indent / PANGO_SCALE;
+      }
+
       pango_cairo_update_layout (cr, layout);
       pango_layout_context_changed (layout);
       pango_layout_set_width (layout, width * PANGO_SCALE);
 
       // set paragraph styles
+      if (block->index_ == 0) {
+	pango_layout_set_indent (layout, paragraphs[i].indent);
+	// TODO: bullet
+      } else {
+	pango_layout_set_indent (layout, 0);
+      }
+
+      // set block styles
       pango_layout_set_alignment (layout, block->align);
       pango_layout_set_justify (layout, block->justify);
-      pango_layout_set_indent (layout, block->indent);
       pango_layout_set_spacing (layout, block->leading);
       pango_layout_set_tabs (layout, block->tab_stops);
-      // TODO: bullet
 
       // set text attributes
-      if (block->index_ + skip > 0 ||
-	  !swfdec_color_transform_is_identity (trans))
+      if (block->index_ > 0 || !swfdec_color_transform_is_identity (trans))
       {
 	GList *iter_attrs;
 
@@ -208,7 +218,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 	    NULL);
 	line = pango_layout_get_line_readonly (layout, line_num);
 	skip_new = line->start_index + line->length - (length - skip);
-	if (line->start_index + line->length ==
+	if ((guint)(line->start_index + line->length) ==
 	    paragraphs[i].text_length - block->index_ - skip) {
 	  skip_new += trailing_space;
 	} else {
@@ -232,7 +242,9 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 
       pango_layout_get_pixel_size (layout, NULL, &height);
       cairo_rel_move_to (cr, -(block->left_margin + block->block_indent),
-	  height);
+	  height + block->leading / PANGO_SCALE);
+      if (block->index_ == 0 && paragraphs[i].indent < 0)
+	cairo_rel_move_to (cr, -paragraphs[i].indent / PANGO_SCALE, 0);
     }
   }
 

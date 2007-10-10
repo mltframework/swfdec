@@ -80,8 +80,6 @@ swfdec_text_paragraph_add_block_attributes (SwfdecParagraph *paragraph,
       block->justify = TRUE;
       break;
   }
-  block->bullet = format->bullet;
-  block->indent = format->indent * 20;
   block->leading = format->leading * 20 * PANGO_SCALE;
   block->block_indent = format->block_indent * 20;
   block->left_margin = format->left_margin * 20;
@@ -129,6 +127,10 @@ swfdec_edit_text_movie_generate_paragraph (SwfdecEditTextMovie *text,
 
   index_ = start_index;
   format = ((SwfdecFormatIndex *)(iter->data))->format;
+
+  // Paragraph formats
+  paragraph->bullet = format->bullet;
+  paragraph->indent = format->indent * 20 * PANGO_SCALE;
 
   // Add new block
   swfdec_text_paragraph_add_block_attributes (paragraph, 0, format);

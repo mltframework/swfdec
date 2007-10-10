@@ -43,8 +43,6 @@ typedef struct {
 
   PangoAlignment	align;
   gboolean		justify;
-  gboolean		bullet;
-  int			indent;
   int			leading;
   int			block_indent;
   int			left_margin;
@@ -55,6 +53,9 @@ typedef struct {
 typedef struct {
   const char		*text;
   guint			text_length;
+
+  gboolean		bullet;
+  int			indent;
 
   GList *		blocks;		// SwfdecBlock
 

@@ -88,7 +88,6 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 {
   PangoLayout *layout;
   guint i;
-  //SwfdecColor color;
 
   g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
   g_return_if_fail (cr != NULL);
@@ -99,16 +98,12 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
       SWFDEC_GRAPHIC (text)->extents.y0);
 
-  /*color = swfdec_color_apply_transform (text->color, trans);
-  swfdec_color_set_source (cr, color);*/
-
   layout = pango_cairo_create_layout (cr);
 
   for (i = 0; paragraphs[i].text != NULL; i++)
   {
     GList *iter;
     guint skip;
-    int block_num = 0;
 
     skip = 0;
     for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next)
@@ -150,7 +145,9 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
       // TODO: bullet
 
       // set text attributes
-      if (block->index_ + skip > 0) {
+      if (block->index_ + skip > 0 ||
+	  !swfdec_color_transform_is_identity (trans))
+      {
 	GList *iter_attrs;
 
 	attr_list = pango_attr_list_new ();
@@ -166,9 +163,24 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 	    continue;
 
 	  attr = pango_attribute_copy (attr);
+	  if (attr->klass->type == PANGO_ATTR_FOREGROUND &&
+	      !swfdec_color_transform_is_identity (trans))
+	  {
+	    PangoColor pcolor;
+	    SwfdecColor color;
+
+	    pcolor = ((PangoAttrColor *)attr)->color;
+	    color = SWFDEC_COLOR_COMBINE (pcolor.red >> 8, pcolor.green >> 8,
+		pcolor.blue >> 8, 255);
+	    color = swfdec_color_apply_transform (color, trans);
+	    pcolor.red = SWFDEC_COLOR_R (color) << 8;
+	    pcolor.green = SWFDEC_COLOR_G (color) << 8;
+	    pcolor.blue = SWFDEC_COLOR_B (color) << 8;
+	    ((PangoAttrColor *)attr)->color = pcolor;
+	  }
 	  attr->start_index = (attr->start_index > block->index_ + skip ?
-	      attr->start_index - block->index_ + skip : 0);
-	  attr->end_index = attr->end_index - block->index_ + skip;
+	      attr->start_index - (block->index_ + skip) : 0);
+	  attr->end_index = attr->end_index - (block->index_ + skip);
 	  pango_attr_list_insert (attr_list, attr);
 	}
       } else {

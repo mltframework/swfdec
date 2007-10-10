@@ -138,8 +138,9 @@ swfdec_edit_text_movie_generate_paragraph (SwfdecEditTextMovie *text,
       (format->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
   attr_bold->start_index = 0;
 
-  attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (format->color),
-      SWFDEC_COLOR_G (format->color), SWFDEC_COLOR_B (format->color));
+  attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (format->color) * 255,
+      SWFDEC_COLOR_G (format->color) * 255,
+      SWFDEC_COLOR_B (format->color) * 255);
   attr_color->start_index = 0;
 
   if (text->text->embed_fonts)
@@ -196,8 +197,10 @@ swfdec_edit_text_movie_generate_paragraph (SwfdecEditTextMovie *text,
       attr_color->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_color);
 
-      attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (format->color),
-	  SWFDEC_COLOR_G (format->color), SWFDEC_COLOR_B (format->color));
+      attr_color = pango_attr_foreground_new (
+	  SWFDEC_COLOR_R (format->color) * 255,
+	  SWFDEC_COLOR_G (format->color) * 255,
+	  SWFDEC_COLOR_B (format->color) * 255);
       attr_color->start_index = index_ - start_index;
     }
 

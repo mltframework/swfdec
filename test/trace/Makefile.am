@@ -195,6 +195,13 @@ EXTRA_DIST = \
 	atan2-8.swf \
 	atan2-8.swf.trace \
 	atan2.as \
+	attachmovie-object.c \
+	attachmovie-object-5.swf \
+	attachmovie-object-5.swf.trace \
+	attachmovie-object-6.swf \
+	attachmovie-object-6.swf.trace \
+	attachmovie-object-7.swf \
+	attachmovie-object-7.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \
@@ -510,6 +517,13 @@ EXTRA_DIST = \
 	fromcharcode-6.swf.trace \
 	fromcharcode-7.swf \
 	fromcharcode-7.swf.trace \
+	fscommand.as \
+	fscommand-5.swf \
+	fscommand-5.swf.trace \
+	fscommand-6.swf \
+	fscommand-6.swf.trace \
+	fscommand-7.swf \
+	fscommand-7.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \
@@ -741,6 +755,13 @@ EXTRA_DIST = \
 	load-4.swf.trace \
 	load-5.swf \
 	load-5.swf.trace \
+	loadmovie-case.as \
+	loadmovie-case-5.swf \
+	loadmovie-case-5.swf.trace \
+	loadmovie-case-6.swf \
+	loadmovie-case-6.swf.trace \
+	loadmovie-case-7.swf \
+	loadmovie-case-7.swf.trace \
 	loadobject.as \
 	loadobject-5.swf \
 	loadobject-5.swf.trace \
@@ -748,6 +769,13 @@ EXTRA_DIST = \
 	loadobject-6.swf.trace \
 	loadobject-7.swf \
 	loadobject-7.swf.trace \
+	loadvariables.as \
+	loadvariables-5.swf \
+	loadvariables-5.swf.trace \
+	loadvariables-6.swf \
+	loadvariables-6.swf.trace \
+	loadvariables-7.swf \
+	loadvariables-7.swf.trace \
 	loadvars.as \
 	loadvars-5.swf \
 	loadvars-5.swf.trace \
@@ -817,6 +845,13 @@ EXTRA_DIST = \
 	mouse-show-hide-6.swf.trace \
 	mouse-show-hide-7.swf \
 	mouse-show-hide-7.swf.trace \
+	movieclip-target.as \
+	movieclip-target-5.swf \
+	movieclip-target-5.swf.trace \
+	movieclip-target-6.swf \
+	movieclip-target-6.swf.trace \
+	movieclip-target-7.swf \
+	movieclip-target-7.swf.trace \
 	name.swf \
 	name.swf.trace \
 	name2.swf \
@@ -876,6 +911,13 @@ EXTRA_DIST = \
 	object-math-6.swf.trace \
 	object-math-7.swf \
 	object-math-7.swf.trace \
+	object-properties.as \
+	object-properties-5.swf \
+	object-properties-5.swf.trace \
+	object-properties-6.swf \
+	object-properties-6.swf.trace \
+	object-properties-7.swf \
+	object-properties-7.swf.trace \
 	object-valueof.as \
 	object-valueof-5.swf \
 	object-valueof-5.swf.trace \
@@ -1153,6 +1195,15 @@ EXTRA_DIST = \
 	prototype-movie-7.swf.trace \
 	prototype-movie-8.swf \
 	prototype-movie-8.swf.trace \
+	prototype-propflags.as \
+	prototype-propflags-5.swf \
+	prototype-propflags-5.swf.trace \
+	prototype-propflags-6.swf \
+	prototype-propflags-6.swf.trace \
+	prototype-propflags-7.swf \
+	prototype-propflags-7.swf.trace \
+	prototype-propflags-8.swf \
+	prototype-propflags-8.swf.trace \
 	prototype-recursion-addProperty.as \
 	prototype-recursion-addProperty-5.swf \
 	prototype-recursion-addProperty-5.swf.trace \
@@ -1247,6 +1298,13 @@ EXTRA_DIST = \
 	round-direction-7.swf.trace \
 	round-direction-8.swf \
 	round-direction-8.swf.trace \
+	settarget.as \
+	settarget-5.swf \
+	settarget-5.swf.trace \
+	settarget-6.swf \
+	settarget-6.swf.trace \
+	settarget-7.swf \
+	settarget-7.swf.trace \
 	settimeout.as \
 	settimeout-5.swf \
 	settimeout-5.swf.trace \
@@ -1568,6 +1626,8 @@ EXTRA_DIST = \
 	string-lastIndexOf-8.swf \
 	string-lastIndexOf-8.swf.trace \
 	string-properties.as \
+	string-properties-5.swf \
+	string-properties-5.swf.trace \
 	string-properties-6.swf \
 	string-properties-6.swf.trace \
 	string-properties-7.swf \
@@ -1607,6 +1667,34 @@ EXTRA_DIST = \
 	stringlength-6.swf.trace \
 	stringlength-7.swf \
 	stringlength-7.swf.trace \
+	stylesheet-load.as \
+	stylesheet-load-5.swf \
+	stylesheet-load-5.swf.trace \
+	stylesheet-load-6.swf \
+	stylesheet-load-6.swf.trace \
+	stylesheet-load-7.swf \
+	stylesheet-load-7.swf.trace \
+	stylesheet-parse.as \
+	stylesheet-parse-5.swf \
+	stylesheet-parse-5.swf.trace \
+	stylesheet-parse-6.swf \
+	stylesheet-parse-6.swf.trace \
+	stylesheet-parse-7.swf \
+	stylesheet-parse-7.swf.trace \
+	stylesheet-parsecolor.as \
+	stylesheet-parsecolor-5.swf \
+	stylesheet-parsecolor-5.swf.trace \
+	stylesheet-parsecolor-6.swf \
+	stylesheet-parsecolor-6.swf.trace \
+	stylesheet-parsecolor-7.swf \
+	stylesheet-parsecolor-7.swf.trace \
+	stylesheet-parsecssfontfamily.as \
+	stylesheet-parsecssfontfamily-5.swf \
+	stylesheet-parsecssfontfamily-5.swf.trace \
+	stylesheet-parsecssfontfamily-6.swf \
+	stylesheet-parsecssfontfamily-6.swf.trace \
+	stylesheet-parsecssfontfamily-7.swf \
+	stylesheet-parsecssfontfamily-7.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \
@@ -1657,6 +1745,13 @@ EXTRA_DIST = \
 	super-missing-7.swf.trace \
 	super-missing-8.swf \
 	super-missing-8.swf.trace \
+	super-property.as \
+	super-property-5.swf \
+	super-property-5.swf.trace \
+	super-property-6.swf \
+	super-property-6.swf.trace \
+	super-property-7.swf \
+	super-property-7.swf.trace \
 	super-reference.as \
 	super-reference-6.swf \
 	super-reference-6.swf.trace \
@@ -1689,6 +1784,24 @@ EXTRA_DIST = \
 	targetpath-6.swf.trace \
 	targetpath-7.swf \
 	targetpath-7.swf.trace \
+	textformat.as \
+	textformat-5.swf \
+	textformat-5.swf.trace \
+	textformat-6.swf \
+	textformat-6.swf.trace \
+	textformat-7.swf \
+	textformat-7.swf.trace \
+	textformat-8.swf \
+	textformat-8.swf.trace \
+	textformat-valueof.as \
+	textformat-valueof-5.swf \
+	textformat-valueof-5.swf.trace \
+	textformat-valueof-6.swf \
+	textformat-valueof-6.swf.trace \
+	textformat-valueof-7.swf \
+	textformat-valueof-7.swf.trace \
+	textformat-valueof-8.swf \
+	textformat-valueof-8.swf.trace \
 	this-localfunction.as \
 	this-localfunction-5.swf \
 	this-localfunction-5.swf.trace \
@@ -1832,6 +1945,8 @@ EXTRA_DIST = \
 	xml-properties-7.swf \
 	xml-properties-7.swf.trace \
 	xml-properties2.as \
+	xml-properties2-5.swf \
+	xml-properties2-5.swf.trace \
 	xml-properties2-6.swf \
 	xml-properties2-6.swf.trace \
 	xml-properties2-7.swf \

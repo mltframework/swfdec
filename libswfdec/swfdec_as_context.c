@@ -361,8 +361,7 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   swfdec_as_object_mark (context->global);
   swfdec_as_object_mark (context->Function);
-  if (context->Function_prototype)
-    swfdec_as_object_mark (context->Function_prototype);
+  swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
   swfdec_as_object_mark (context->Object_prototype);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
@@ -1183,7 +1182,7 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
   char *tail;
   int radix;
-  long int i;
+  gint64 i;
 
   if (argc < 1)
     return;
@@ -1218,9 +1217,9 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (s[0] == '0' && s[1] == 'x') {
     s = s + 2;
-    i = strtol (s, &tail, (radix != 0 ? radix : 16));
+    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 16));
   } else {
-    i = strtol (s, &tail, (radix != 0 ? radix : 10));
+    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 10));
   }
 
   if (tail == s) {
@@ -1249,7 +1248,7 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
     *p = '\0';
   }
 
-  d = strtod (s, &tail);
+  d = g_ascii_strtod (s, &tail);
 
   if (tail == s) {
     SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);

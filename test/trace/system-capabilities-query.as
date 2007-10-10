@@ -8,6 +8,6 @@ o = {};
 o.Query = ASnative (11, 0);
 trace (o.Query());
 delete o.Query;
-trace_properties (o);
+trace_properties (o, "local", "o");
 
 loadMovie ("FSCommand:quit", "");

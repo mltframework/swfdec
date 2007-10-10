@@ -60,6 +60,7 @@ struct _SwfdecAsObject {
   SwfdecAsContext *	context;	/* context the object belongs to */
   /*< private >*/
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
+  guint			prototype_flags; /* propflags for the prototype object */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   GHashTable *		watches;	/* string->WatchData mapping or NULL when not watching anything */
   guint8		flags;		/* GC flags */
@@ -130,7 +131,8 @@ void		swfdec_as_object_set_variable_and_flags
 void		swfdec_as_object_add_variable	(SwfdecAsObject *	object,
 						 const char *		variable, 
 						 SwfdecAsFunction *	get,
-						 SwfdecAsFunction *	set);
+						 SwfdecAsFunction *	set,
+						 SwfdecAsVariableFlag	default_flags);
 #define swfdec_as_object_get_variable(object, variable, value) \
   swfdec_as_object_get_variable_and_flags (object, variable, value, NULL, NULL)
 gboolean	swfdec_as_object_get_variable_and_flags

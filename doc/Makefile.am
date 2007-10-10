@@ -124,6 +124,7 @@ IGNORE_HFILES= \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_stroke.h \
+	swfdec_style_sheet.h \
 	swfdec_swf_decoder.h \
 	swfdec_swf_instance.h \
 	swfdec_tag.h \

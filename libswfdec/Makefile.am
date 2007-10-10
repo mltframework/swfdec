@@ -109,12 +109,14 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_sprite_movie.c \
 	swfdec_sprite_movie_as.c \
 	swfdec_stage_as.c \
+	swfdec_style_sheet.c \
 	swfdec_swf_decoder.c \
 	swfdec_swf_instance.c \
 	swfdec_system.c \
 	swfdec_system_as.c \
 	swfdec_tag.c \
 	swfdec_text.c \
+	swfdec_text_format.c \
 	swfdec_url.c \
 	swfdec_utils.c \
 	swfdec_video.c \
@@ -224,11 +226,13 @@ noinst_HEADERS = \
 	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
+	swfdec_style_sheet.h \
 	swfdec_swf_decoder.h \
 	swfdec_swf_instance.h \
 	swfdec_stroke.h \
 	swfdec_tag.h \
 	swfdec_text.h \
+	swfdec_text_format.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \

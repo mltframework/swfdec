@@ -30,6 +30,7 @@
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
 
 #include <errno.h>
@@ -906,6 +907,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
 	  swfdec_as_object_get_variable_and_flags (frame->thisp, 
 	    name, NULL, NULL, &super->object) && 
 	  super->object == frame->thisp) {
+	// FIXME: Do we need to check prototype_flags here?
 	super->object = super->object->prototype;
       }
     }
@@ -1166,18 +1168,16 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     method = 0;
   }
 
-  if (data[0] & 128 && data[0] & 64) {
+  // FIXME: What difference should LoadTarget flag (data[0] & 64) do?
+
+  if (data[0] & 128) {
     if (SWFDEC_IS_MOVIE (cx->frame->target)) {
       swfdec_movie_load_variables (SWFDEC_MOVIE (cx->frame->target), url,
 	  target, method);
     } else {
       SWFDEC_WARNING ("no movie to load");
     }
-  } else if (data[0] & 128) {
-    SWFDEC_FIXME ("LoadVariables without LoadTarget?");
   } else {
-    if (data[0] & 64)
-      SWFDEC_FIXME ("implement LoadTarget");
     if (SWFDEC_IS_MOVIE (cx->frame->target)) {
       swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, method,
 	  NULL, 0);
@@ -1940,11 +1940,10 @@ swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val) ||
       !SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (val))) {
-    SWFDEC_FIXME ("What's the TargetPath for non-movies?");
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }
-  s = swfdec_movie_get_path (movie);
+  s = swfdec_movie_get_path (movie, TRUE);
   SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_give_string (cx, s));
 }
 
@@ -2191,7 +2190,7 @@ swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
   
   for (i = 0; i < 256 && object; i++) {
     swfdec_as_object_foreach (object, swfdec_action_enumerate_foreach, &list);
-    object = object->prototype;
+    object = swfdec_as_object_prototype_for_version (object, cx->version, TRUE);
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");

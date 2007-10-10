@@ -289,6 +289,30 @@ swfdec_as_watch_unref (SwfdecAsWatch *watch)
   }
 }
 
+SwfdecAsObject *
+swfdec_as_object_prototype_for_version (SwfdecAsObject *object, guint version,
+    gboolean check7)
+{
+  if (object->prototype == NULL)
+    return NULL;
+
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && version < 6)
+    return NULL;
+  // don't check for NOT_6 flag
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && version < 7)
+    return NULL;
+  // only check 8_UP for version < 6
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
+      version < 6)
+    return NULL;
+  if (check7) {
+    if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && version == 7)
+      return NULL;
+  }
+
+  return object->prototype;
+}
+
 static void
 swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val, guint flags)
@@ -302,13 +326,17 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
     guint i;
-    SwfdecAsObject *proto = object->prototype;
+    SwfdecAsObject *proto;
+
+    proto = swfdec_as_object_prototype_for_version (object,
+	object->context->version, FALSE);
 
     for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto; i++) {
       var = swfdec_as_object_hash_lookup (proto, variable);
       if (var && var->get)
 	break;
-      proto = proto->prototype;
+      proto = swfdec_as_object_prototype_for_version (proto,
+	  proto->context->version, FALSE);
       var = NULL;
     }
     if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
@@ -368,15 +396,17 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   } else if (watch == NULL) {
     var->value = *val;
   }
+
   if (variable == SWFDEC_AS_STR___proto__) {
     if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
 	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
       object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
+      object->prototype_flags = var->flags;
     } else {
       object->prototype = NULL;
+      object->prototype_flags = 0;
     }
   }
-
 }
 
 static void
@@ -384,8 +414,12 @@ swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, gui
 {
   SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
-  if (var)
+  if (var) {
     var->flags = (var->flags & ~mask) | flags;
+
+    if (variable == SWFDEC_AS_STR___proto__)
+      object->prototype_flags = var->flags;
+  }
 }
 
 static void
@@ -408,9 +442,10 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
     return SWFDEC_AS_DELETE_NOT_DELETED;
 
-  if (variable == SWFDEC_AS_STR___proto__ &&
-      object->context->version <= 6)
+  if (variable == SWFDEC_AS_STR___proto__ && object->context->version <= 6) {
     object->prototype = NULL;
+    object->prototype_flags = 0;
+  }
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();
@@ -789,7 +824,8 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
       *pobject = cur;
       return TRUE;
     }
-    cur = cur->prototype;
+    cur = swfdec_as_object_prototype_for_version (cur, cur->context->version,
+	FALSE);
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
@@ -1183,6 +1219,8 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
  * @variable: name of the variable
  * @get: getter function to call when reading the variable
  * @set: setter function to call when writing the variable or %NULL if read-only
+ * @default_flags: flags to use if creating the variable anew - the flags will
+ *                 be ignored if the property already exists.
  *
  * Adds a variable to @object in the same way as the Actionscript code 
  * "object.addProperty()" would do. Accessing the variable will from now on be
@@ -1191,7 +1229,7 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
  **/
 void
 swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable, 
-    SwfdecAsFunction *get, SwfdecAsFunction *set)
+    SwfdecAsFunction *get, SwfdecAsFunction *set, guint default_flags)
 {
   SwfdecAsVariable *var;
 
@@ -1201,8 +1239,8 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
   g_return_if_fail (set == NULL || SWFDEC_IS_AS_FUNCTION (set));
 
   var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL) 
-    var = swfdec_as_object_hash_create (object, variable, 0);
+  if (var == NULL)
+    var = swfdec_as_object_hash_create (object, variable, default_flags);
   if (var == NULL)
     return;
   var->get = get;
@@ -1236,7 +1274,7 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  swfdec_as_object_add_variable (object, name, get, set);
+  swfdec_as_object_add_variable (object, name, get, set, 0);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
@@ -1310,8 +1348,7 @@ swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
   if (class == NULL)
     return;
 
-  while (class->prototype != NULL) {
-    class = class->prototype;
+  while ((class = swfdec_as_object_prototype_for_version (class, cx->version, TRUE)) != NULL) {
     if (object == class) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
       return;
@@ -1470,13 +1507,13 @@ swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
       SWFDEC_AS_VARIABLE_CONSTANT);
-  if (context->Function_prototype) {
-    /* then finish the function prototype (use this order or 
-     * SWFDEC_AS_VARIABLE_CONSTANT won't let us */
-    swfdec_as_object_set_variable_and_flags (context->Function_prototype,
-	SWFDEC_AS_STR___proto__, &val,
-	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  }
+
+  /* then finish the function prototype (use this order or 
+   * SWFDEC_AS_VARIABLE_CONSTANT won't let us */
+  swfdec_as_object_set_variable_and_flags (context->Function_prototype,
+      SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

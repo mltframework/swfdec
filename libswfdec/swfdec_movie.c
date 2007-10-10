@@ -1064,7 +1064,7 @@ swfdec_movie_get_debug (SwfdecAsObject *object)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  return swfdec_movie_get_path (movie);
+  return swfdec_movie_get_path (movie, TRUE);
 }
 
 static gboolean
@@ -1348,7 +1348,8 @@ swfdec_movie_load_variables_on_data (SwfdecAsContext *cx,
 
   swfdec_as_object_decode (target, swfdec_as_value_to_string (cx, &argv[0]));
 
-  swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
+  if (cx->version >= 6)
+    swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
 }
 
 void
@@ -1390,14 +1391,21 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecPlayer *player;
+  guint version;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (url != NULL);
   g_return_if_fail (target != NULL);
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  version = SWFDEC_AS_CONTEXT (player)->version;
+
   /* yay for the multiple uses of GetURL - one of the crappier Flash things */
-  if (g_str_has_prefix (target, "_level")) {
+  if (g_ascii_strncasecmp (url, "FSCommand:", strlen ("FSCommand:")) != 0 &&
+      ((version >= 7 && g_str_has_prefix (target, "_level")) ||
+       (version < 7 &&
+	g_ascii_strncasecmp (target, "_level", strlen ("_level")) == 0)))
+  {
     const char *nr = target + strlen ("_level");
     char *end;
     guint depth;
@@ -1423,7 +1431,7 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
 }
 
 char *
-swfdec_movie_get_path (SwfdecMovie *movie)
+swfdec_movie_get_path (SwfdecMovie *movie, gboolean dot)
 {
   GString *s;
 
@@ -1433,16 +1441,24 @@ swfdec_movie_get_path (SwfdecMovie *movie)
   do {
     if (movie->parent) {
       g_string_prepend (s, movie->name);
-      g_string_prepend_c (s, '.');
+      g_string_prepend_c (s, (dot ? '.' : '/'));
     } else {
-      char *ret = g_strdup_printf ("_level%u%s",
-	movie->depth + 16384, s->str);
-      g_string_free (s, TRUE);
+      char *ret;
+      if (dot) {
+	ret = g_strdup_printf ("_level%u%s", movie->depth + 16384, s->str);
+	g_string_free (s, TRUE);
+      } else {
+	if (s->str[0] != '/')
+	  g_string_prepend_c (s, '/');
+	ret = g_string_free (s, FALSE);
+      }
       return ret;
     }
     movie = movie->parent;
   } while (TRUE);
+
   g_assert_not_reached ();
+
   return NULL;
 }
 

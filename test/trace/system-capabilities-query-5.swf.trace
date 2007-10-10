@@ -1,6 +1,6 @@
 test System.capabilites.Query
 undefined
-. = _global.Object.prototype
+local.o = object
   __proto__ (hp) = _global.Object.prototype
   avHardwareDisable = boolean : false
   constructor (hp) = _global.Object

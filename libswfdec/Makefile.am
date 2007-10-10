@@ -153,6 +153,7 @@ public_headers = \
 	swfdec_keys.h \
 	swfdec_loader.h \
 	swfdec_player.h \
+	swfdec_rectangle.h \
 	swfdec_script.h \
 	swfdec_system.h \
 	swfdec_url.h
@@ -217,7 +218,6 @@ noinst_HEADERS = \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
-	swfdec_rectangle.h \
 	swfdec_ringbuffer.h \
 	swfdec_script_internal.h \
 	swfdec_shape.h \

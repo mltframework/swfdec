@@ -205,7 +205,7 @@ swfdec_rect_inside (const SwfdecRect *outer, const SwfdecRect *inner)
   /* if outer is empty, below will return FALSE */
   return outer->x0 <= inner->x0 &&
 	 outer->y0 <= inner->y0 &&
-	 outer->x1 >= inner->y1 &&
+	 outer->x1 >= inner->x1 &&
 	 outer->y1 >= inner->y1;
 }
 

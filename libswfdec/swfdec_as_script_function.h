@@ -43,7 +43,7 @@ struct _SwfdecAsScriptFunction {
   /* for script script_functions */
   SwfdecScript *	script;		/* script being executed or NULL when native */
   GSList *		scope_chain;  	/* scope this script_function was defined in */
-  SwfdecAsObject *	target;		/* target this object was defined in */
+  SwfdecAsObject *	target;		/* target this object was defined in or NULL if in init script */
 };
 
 struct _SwfdecAsScriptFunctionClass {

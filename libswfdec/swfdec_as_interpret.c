@@ -1850,6 +1850,11 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   }
   if (fun == NULL)
     return;
+  /* This is a hack that should only trigger for functions defined in the init scripts.
+   * It is supposed to ensure that those functions inherit their target when being 
+   * called instead of when being defined */
+  if (!SWFDEC_IS_MOVIE (frame->original_target))
+    SWFDEC_AS_SCRIPT_FUNCTION (fun)->target = NULL;
   /* attach the function */
   if (*function_name == '\0') {
     swfdec_as_stack_ensure_free (cx, 1);

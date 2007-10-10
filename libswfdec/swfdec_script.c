@@ -179,6 +179,7 @@ swfdec_script_foreach (SwfdecScript *script, SwfdecScriptForeachFunc func, gpoin
   g_return_val_if_fail (func != NULL, FALSE);
 
   swfdec_bits_init (&bits, script->buffer);
+  bits.ptr = script->main;
   return swfdec_script_foreach_internal (&bits, func, user_data);
 }
 

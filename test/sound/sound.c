@@ -95,8 +95,11 @@ typedef struct {
 static void
 audio_added (SwfdecPlayer *player, SwfdecAudio *audio, TestData *data)
 {
-  char *name = g_strdup_printf ("%s.%u.%u.raw", data->filename, data->current_frame, data->current_frame_audio);
+  char *basename = g_path_get_basename (data->filename);
+  char *name = g_strdup_printf ("%s.%u.%u.raw", basename, data->current_frame, data->current_frame_audio);
   GList *found = g_list_find_custom (data->files, name, (GCompareFunc) strcmp);
+
+  g_free (basename);
   if (found == NULL) {
     g_print ("  ERROR: %s wasn't found\n", name);
     data->success = FALSE;
@@ -173,7 +176,7 @@ run_test (const char *filename)
   SwfdecPlayer *player = NULL;
   guint i, msecs;
   GError *error = NULL;
-  char *dirname, *basename, *file;
+  char *dirname, *basename;
   const char *name;
   GDir *dir;
   GList *walk;
@@ -193,8 +196,7 @@ run_test (const char *filename)
       continue;
     if (!g_str_has_suffix (name, ".raw"))
       continue;
-    file = g_build_filename (dirname, name, NULL);
-    data.files = g_list_prepend (data.files, file);
+    data.files = g_list_prepend (data.files, g_strdup (name));
   }
   g_dir_close (dir);
   g_free (dirname);

@@ -44,7 +44,10 @@ swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
   event->loop += event->offset / event->n_samples;
   event->offset %= event->n_samples;
   
-  return event->n_samples * (event->n_loops - event->loop) - event->offset;
+  if (event->loop < event->n_loops)
+    return event->n_samples * (event->n_loops - event->loop) - event->offset;
+  else
+    return 0;
 }
 
 static void

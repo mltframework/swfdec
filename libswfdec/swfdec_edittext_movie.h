@@ -18,8 +18,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_EDIT_TEXT_MOVIE_H_
-#define _SWFDEC_EDIT_TEXT_MOVIE_H_
+#ifndef _SWFDEC_TEXT_FIELD_MOVIE_H_
+#define _SWFDEC_TEXT_FIELD_MOVIE_H_
 
 #include <libswfdec/swfdec_movie.h>
 #include <libswfdec/swfdec_edittext.h>
@@ -29,14 +29,14 @@
 G_BEGIN_DECLS
 
 
-typedef struct _SwfdecEditTextMovie SwfdecEditTextMovie;
-typedef struct _SwfdecEditTextMovieClass SwfdecEditTextMovieClass;
+typedef struct _SwfdecTextFieldMovie SwfdecTextFieldMovie;
+typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 
-#define SWFDEC_TYPE_EDIT_TEXT_MOVIE                    (swfdec_edit_text_movie_get_type())
-#define SWFDEC_IS_EDIT_TEXT_MOVIE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_EDIT_TEXT_MOVIE))
-#define SWFDEC_IS_EDIT_TEXT_MOVIE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_EDIT_TEXT_MOVIE))
-#define SWFDEC_EDIT_TEXT_MOVIE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_EDIT_TEXT_MOVIE, SwfdecEditTextMovie))
-#define SWFDEC_EDIT_TEXT_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_EDIT_TEXT_MOVIE, SwfdecEditTextMovieClass))
+#define SWFDEC_TYPE_TEXT_FIELD_MOVIE                    (swfdec_text_field_movie_get_type())
+#define SWFDEC_IS_TEXT_FIELD_MOVIE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEXT_FIELD_MOVIE))
+#define SWFDEC_IS_TEXT_FIELD_MOVIE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TEXT_FIELD_MOVIE))
+#define SWFDEC_TEXT_FIELD_MOVIE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovie))
+#define SWFDEC_TEXT_FIELD_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovieClass))
 
 typedef struct {
   guint			index;
@@ -54,10 +54,10 @@ typedef enum {
   SWFDEC_GRID_FIT_TYPE_SUBPIXEL
 } SwfdecGridFitType;
 
-struct _SwfdecEditTextMovie {
+struct _SwfdecTextFieldMovie {
   SwfdecMovie		movie;
 
-  SwfdecEditText *	text;		/* the edit_text object we render */
+  SwfdecTextField *	text;		/* the text_field object we render */
 
   const char *		text_input;
   const char *		text_display;
@@ -85,23 +85,23 @@ struct _SwfdecEditTextMovie {
   SwfdecParagraph *	paragraphs;
 };
 
-struct _SwfdecEditTextMovieClass {
+struct _SwfdecTextFieldMovieClass {
   SwfdecMovieClass	movie_class;
 };
 
-GType		swfdec_edit_text_movie_get_type		(void);
+GType		swfdec_text_field_movie_get_type		(void);
 
-void		swfdec_edit_text_movie_set_text		(SwfdecEditTextMovie *	movie,
+void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
-void		swfdec_edit_text_movie_format_changed	(SwfdecEditTextMovie *	text);
-void		swfdec_edit_text_movie_set_text_format	(SwfdecEditTextMovie *	text,
+void		swfdec_text_field_movie_format_changed	(SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,
 							 guint			end_index);
 
 /* implemented in swfdec_html_parser.c */
-void		swfdec_edit_text_movie_html_parse	(SwfdecEditTextMovie *	text, 
+void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);
 
 G_END_DECLS

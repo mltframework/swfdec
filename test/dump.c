@@ -223,7 +223,7 @@ dump_shape (SwfdecShape *shape)
 }
 
 static void
-dump_edit_text (SwfdecEditText *text)
+dump_text_field (SwfdecTextField *text)
 {
   g_print ("  %s\n", text->text_input ? text->text_input : "");
   if (verbose) {
@@ -353,8 +353,8 @@ dump_object (gpointer value, gpointer dec)
   if (SWFDEC_IS_TEXT (c)) {
     dump_text (SWFDEC_TEXT (c));
   }
-  if (SWFDEC_IS_EDIT_TEXT (c)) {
-    dump_edit_text (SWFDEC_EDIT_TEXT (c));
+  if (SWFDEC_IS_TEXT_FIELD (c)) {
+    dump_text_field (SWFDEC_TEXT_FIELD (c));
   }
   if (SWFDEC_IS_FONT (c)) {
     dump_font (SWFDEC_FONT (c));

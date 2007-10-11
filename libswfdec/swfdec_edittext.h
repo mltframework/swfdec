@@ -18,8 +18,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_EDIT_TEXT_H_
-#define _SWFDEC_EDIT_TEXT_H_
+#ifndef _SWFDEC_TEXT_FIELD_H_
+#define _SWFDEC_TEXT_FIELD_H_
 
 #include <pango/pango.h>
 #include <libswfdec/swfdec_types.h>
@@ -30,14 +30,14 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecEditText SwfdecEditText;
-typedef struct _SwfdecEditTextClass SwfdecEditTextClass;
+typedef struct _SwfdecTextField SwfdecTextField;
+typedef struct _SwfdecTextFieldClass SwfdecTextFieldClass;
 
-#define SWFDEC_TYPE_EDIT_TEXT                    (swfdec_edit_text_get_type())
-#define SWFDEC_IS_EDIT_TEXT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_EDIT_TEXT))
-#define SWFDEC_IS_EDIT_TEXT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_EDIT_TEXT))
-#define SWFDEC_EDIT_TEXT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_EDIT_TEXT, SwfdecEditText))
-#define SWFDEC_EDIT_TEXT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_EDIT_TEXT, SwfdecEditTextClass))
+#define SWFDEC_TYPE_TEXT_FIELD                    (swfdec_text_field_get_type())
+#define SWFDEC_IS_TEXT_FIELD(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEXT_FIELD))
+#define SWFDEC_IS_TEXT_FIELD_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TEXT_FIELD))
+#define SWFDEC_TEXT_FIELD(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT_FIELD, SwfdecTextField))
+#define SWFDEC_TEXT_FIELD_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD, SwfdecTextFieldClass))
 
 typedef struct {
   guint			index_;
@@ -71,7 +71,7 @@ typedef enum {
   SWFDEC_AUTO_SIZE_RIGHT
 } SwfdecAutoSize;
 
-struct _SwfdecEditText
+struct _SwfdecTextField
 {
   SwfdecGraphic		graphic;
 
@@ -103,17 +103,17 @@ struct _SwfdecEditText
   int			leading;
 };
 
-struct _SwfdecEditTextClass
+struct _SwfdecTextFieldClass
 {
   SwfdecGraphicClass	graphic_class;
 };
 
-GType			swfdec_edit_text_get_type	(void);
+GType			swfdec_text_field_get_type	(void);
 
 int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
 							 guint			tag);
 
-void			swfdec_edit_text_render		(SwfdecEditText *	text,
+void			swfdec_text_field_render		(SwfdecTextField *	text,
 							 cairo_t *		cr,
 							 const SwfdecParagraph *	paragraphs,
 							 const SwfdecColorTransform *	trans,

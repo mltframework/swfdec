@@ -44,7 +44,7 @@ typedef struct {
 } ParserData;
 
 static const char *
-swfdec_edit_text_movie_html_parse_comment (ParserData *data, const char *p)
+swfdec_text_field_movie_html_parse_comment (ParserData *data, const char *p)
 {
   const char *end;
 
@@ -61,7 +61,7 @@ swfdec_edit_text_movie_html_parse_comment (ParserData *data, const char *p)
 }
 
 static void
-swfdec_edit_text_movie_html_tag_set_attribute (ParserTag *tag,
+swfdec_text_field_movie_html_tag_set_attribute (ParserTag *tag,
     const char *name, int name_length, const char *value, int value_length)
 {
   SwfdecAsValue val;
@@ -136,7 +136,7 @@ swfdec_edit_text_movie_html_tag_set_attribute (ParserTag *tag,
 }
 
 static const char *
-swfdec_edit_text_movie_html_parse_attribute (ParserTag *tag, const char *p)
+swfdec_text_field_movie_html_parse_attribute (ParserTag *tag, const char *p)
 {
   const char *end, *name, *value;
   int name_length, value_length;
@@ -171,7 +171,7 @@ swfdec_edit_text_movie_html_parse_attribute (ParserTag *tag, const char *p)
   value_length = end - (p + 1);
 
   if (tag != NULL) {
-    swfdec_edit_text_movie_html_tag_set_attribute (tag, name, name_length,
+    swfdec_text_field_movie_html_tag_set_attribute (tag, name, name_length,
 	value, value_length);
   }
 
@@ -181,7 +181,7 @@ swfdec_edit_text_movie_html_parse_attribute (ParserTag *tag, const char *p)
 }
 
 static const char *
-swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
+swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 {
   ParserTag *tag;
   const char *name, *end;
@@ -283,7 +283,7 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
     // parse attributes
     end = end + strspn (end, " \r\n\t");
     while (*end != '\0' && *end != '>' && (*end != '/' || *(end + 1) != '>')) {
-      end = swfdec_edit_text_movie_html_parse_attribute (tag, end);
+      end = swfdec_text_field_movie_html_parse_attribute (tag, end);
       if (end == NULL)
 	break;
       end = end + strspn (end, " \r\n\t");
@@ -300,7 +300,7 @@ swfdec_edit_text_movie_html_parse_tag (ParserData *data, const char *p)
 }
 
 static const char *
-swfdec_edit_text_movie_html_parse_text (ParserData *data, const char *p,
+swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p,
     gboolean condense_white)
 {
   const char *end;
@@ -338,12 +338,12 @@ swfdec_edit_text_movie_html_parse_text (ParserData *data, const char *p,
 }
 
 void
-swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
+swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
 {
   ParserData data;
   const char *p;
 
-  g_return_if_fail (SWFDEC_IS_EDIT_TEXT_MOVIE (text));
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
 
   data.cx = SWFDEC_AS_OBJECT (text)->context;
@@ -355,12 +355,12 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
   while (p != NULL && *p != '\0') {
     if (*p == '<') {
       if (strncmp (p + 1, "!--", strlen ("!--")) == 0) {
-	p = swfdec_edit_text_movie_html_parse_comment (&data, p);
+	p = swfdec_text_field_movie_html_parse_comment (&data, p);
       } else {
-	p = swfdec_edit_text_movie_html_parse_tag (&data, p);
+	p = swfdec_text_field_movie_html_parse_tag (&data, p);
       }
     } else {
-      p = swfdec_edit_text_movie_html_parse_text (&data, p,
+      p = swfdec_text_field_movie_html_parse_text (&data, p,
 	  text->condense_white);
     }
   }
@@ -391,7 +391,7 @@ swfdec_edit_text_movie_html_parse (SwfdecEditTextMovie *text, const char *str)
     ParserTag *tag = (ParserTag *)data.tags_closed->data;
 
     if (tag->index != tag->end_index) {
-      swfdec_edit_text_movie_set_text_format (text, tag->format, tag->index,
+      swfdec_text_field_movie_set_text_format (text, tag->format, tag->index,
 	  tag->end_index);
     }
 

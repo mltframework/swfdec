@@ -31,66 +31,66 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
 
-G_DEFINE_TYPE (SwfdecEditText, swfdec_edit_text, SWFDEC_TYPE_GRAPHIC)
+G_DEFINE_TYPE (SwfdecTextField, swfdec_text_field, SWFDEC_TYPE_GRAPHIC)
 
 static gboolean
-swfdec_edit_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
+swfdec_text_field_mouse_in (SwfdecGraphic *graphic, double x, double y)
 {
   return swfdec_rect_contains (&graphic->extents, x, y);
 }
 
 static SwfdecMovie *
-swfdec_edit_text_create_movie (SwfdecGraphic *graphic, gsize *size)
+swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
-  SwfdecEditText *text = SWFDEC_EDIT_TEXT (graphic);
-  SwfdecEditTextMovie *ret = g_object_new (SWFDEC_TYPE_EDIT_TEXT_MOVIE, NULL);
+  SwfdecTextField *text = SWFDEC_TEXT_FIELD (graphic);
+  SwfdecTextFieldMovie *ret = g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
 
   ret->text = text;
 
-  *size = sizeof (SwfdecEditTextMovie);
+  *size = sizeof (SwfdecTextFieldMovie);
 
   return SWFDEC_MOVIE (ret);
 }
 
 static void
-swfdec_edit_text_dispose (GObject *object)
+swfdec_text_field_dispose (GObject *object)
 {
-  SwfdecEditText *text = SWFDEC_EDIT_TEXT (object);
+  SwfdecTextField *text = SWFDEC_TEXT_FIELD (object);
 
   g_free (text->text_input);
   text->text_input = NULL;
   g_free (text->variable);
   text->variable = NULL;
 
-  G_OBJECT_CLASS (swfdec_edit_text_parent_class)->dispose (object);
+  G_OBJECT_CLASS (swfdec_text_field_parent_class)->dispose (object);
 }
 
 static void
-swfdec_edit_text_class_init (SwfdecEditTextClass * g_class)
+swfdec_text_field_class_init (SwfdecTextFieldClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
 
-  object_class->dispose = swfdec_edit_text_dispose;
-  graphic_class->create_movie = swfdec_edit_text_create_movie;
-  graphic_class->mouse_in = swfdec_edit_text_mouse_in;
+  object_class->dispose = swfdec_text_field_dispose;
+  graphic_class->create_movie = swfdec_text_field_create_movie;
+  graphic_class->mouse_in = swfdec_text_field_mouse_in;
 }
 
 static void
-swfdec_edit_text_init (SwfdecEditText * text)
+swfdec_text_field_init (SwfdecTextField * text)
 {
   text->max_length = G_MAXUINT;
 }
 
 void
-swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
+swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
     const SwfdecParagraph *paragraphs, const SwfdecColorTransform *trans,
     const SwfdecRect *inval)
 {
   PangoLayout *layout;
   guint i;
 
-  g_return_if_fail (SWFDEC_IS_EDIT_TEXT (text));
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
   g_return_if_fail (cr != NULL);
   g_return_if_fail (paragraphs != NULL);
   g_return_if_fail (trans != NULL);
@@ -240,7 +240,7 @@ swfdec_edit_text_render (SwfdecEditText *text, cairo_t *cr,
 int
 tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
 {
-  SwfdecEditText *text;
+  SwfdecTextField *text;
   guint id;
   int reserved;
   gboolean has_font, has_color, has_max_length, has_layout, has_text;
@@ -248,7 +248,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
 
   id = swfdec_bits_get_u16 (b);
   SWFDEC_LOG ("  id = %u", id);
-  text = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_EDIT_TEXT);
+  text = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_TEXT_FIELD);
   if (text == NULL)
     return SWFDEC_STATUS_OK;
 

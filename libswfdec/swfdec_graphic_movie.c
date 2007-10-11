@@ -63,7 +63,7 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
     /* nothing to do here, please move along */
   } else if (SWFDEC_IS_SPRITE (graphic) ||
       SWFDEC_IS_BUTTON (graphic) ||
-      SWFDEC_IS_EDIT_TEXT (graphic)) {
+      SWFDEC_IS_TEXT_FIELD (graphic)) {
     SWFDEC_INFO ("can't replace with scriptable objects");
     return;
   } else {

@@ -55,7 +55,7 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
   color = color | alpha;
   movie->draw_fill = SWFDEC_DRAW (swfdec_pattern_new_color (color));
   swfdec_path_move_to (&movie->draw_fill->path, movie->draw_x, movie->draw_y);
-  movie->draws = g_slist_prepend (movie->draws, movie->draw_fill);
+  movie->draws = g_slist_append (movie->draws, movie->draw_fill);
 }
 
 SWFDEC_AS_NATIVE (901, 2, swfdec_sprite_movie_beginGradientFill)
@@ -181,7 +181,7 @@ swfdec_sprite_movie_lineStyle (SwfdecAsContext *cx, SwfdecAsObject *object,
   stroke->start_width = SWFDEC_DOUBLE_TO_TWIPS (width);
   movie->draw_line = SWFDEC_DRAW (stroke);
   swfdec_path_move_to (&movie->draw_line->path, movie->draw_x, movie->draw_y);
-  movie->draws = g_slist_prepend (movie->draws, movie->draw_line);
+  movie->draws = g_slist_append (movie->draws, movie->draw_line);
 }
 
 SWFDEC_AS_NATIVE (901, 7, swfdec_sprite_movie_endFill)

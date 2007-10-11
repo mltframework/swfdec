@@ -212,7 +212,10 @@ swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
       return -2147483648;
     } else {
       if (is_unsigned) {
-	return (unsigned)d;
+	if (!isfinite (d))
+	  return 0;
+	else
+	  return (unsigned)d;
       } else {
 	if (!allow_negative && (int)d < 0) {
 	  return 0;
@@ -223,7 +226,10 @@ swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
     }
   } else {
     if (is_unsigned) {
-      return (unsigned)n;
+      if (!isfinite (d))
+	return 0;
+      else
+	return (unsigned)n;
     } else {
       if (!allow_negative && n < 0) {
 	return 0;

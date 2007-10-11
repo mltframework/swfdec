@@ -154,6 +154,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
     }
   }
   event->n_samples = event->decoded->length / bytes_per_sample * granule;
+  SWFDEC_LOG ("total 44100Hz samples: %u", event->n_samples);
 }
 
 static SwfdecAudioEvent *

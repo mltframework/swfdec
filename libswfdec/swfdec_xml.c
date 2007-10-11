@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 
 #include "swfdec_xml.h"
@@ -320,6 +321,8 @@ static void
 swfdec_xml_set_status (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  double d;
+
   if (!SWFDEC_IS_XML (object))
     return;
 
@@ -334,7 +337,11 @@ swfdec_xml_set_status (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     swfdec_as_value_to_string (cx, &argv[0]);
 
-  SWFDEC_XML (object)->status = swfdec_as_value_to_number (cx, &argv[0]);
+  d = swfdec_as_value_to_number (cx, &argv[0]);
+  if (!isfinite (d))
+    SWFDEC_XML (object)->status = G_MININT32;
+  else
+    SWFDEC_XML (object)->status = (int) d;
 }
 
 static const char *

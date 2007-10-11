@@ -278,7 +278,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       inval);
 
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
-      SWFDEC_GRAPHIC (text)->extents.y0);
+      SWFDEC_GRAPHIC (text)->extents.y0 + 1);
 
   for (iter = layouts; iter != NULL; iter = iter->next) {
     SwfdecLayout *layout = (SwfdecLayout *)iter->data;

@@ -382,6 +382,8 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (text->paragraphs == NULL)
     swfdec_text_field_movie_generate_paragraphs (text);
 
+  // FIXME: Temporary using image surface, until there is a way to get cairo_t
+  // outside the rendering functions
   surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
   cr = cairo_create (surface);
 
@@ -389,7 +391,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
       text->paragraphs, NULL, NULL);
 
   width = 0;
-  height = 0;
+  height = 3;
   for (iter = layouts; iter != NULL; iter = iter->next) {
     SwfdecLayout *layout = (SwfdecLayout *)iter->data;
 

@@ -373,7 +373,7 @@ static void
 swfdec_edit_text_movie_dispose (GObject *object)
 {
   SwfdecEditTextMovie *text;
-  GList *iter;
+  GSList *iter;
 
   text = SWFDEC_EDIT_TEXT_MOVIE (object);
 
@@ -386,6 +386,29 @@ swfdec_edit_text_movie_dispose (GObject *object)
   g_slist_free (text->formats);
 
   G_OBJECT_CLASS (swfdec_edit_text_movie_parent_class)->dispose (object);
+}
+
+static void
+swfdec_edit_text_movie_mark (SwfdecAsObject *object)
+{
+  SwfdecEditTextMovie *text;
+  GSList *iter;
+
+  text = SWFDEC_EDIT_TEXT_MOVIE (object);
+
+  swfdec_as_string_mark (text->text_input);
+  swfdec_as_string_mark (text->text_display);
+  swfdec_as_string_mark (text->variable);
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
+  for (iter = text->formats; iter != NULL; iter = iter->next) {
+    swfdec_as_object_mark (
+	SWFDEC_AS_OBJECT (((SwfdecFormatIndex *)(iter->data))->format));
+  }
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
+  if (text->style_sheet != NULL)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->style_sheet));
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_edit_text_movie_parent_class)->mark (object);
 }
 
 static void
@@ -470,9 +493,12 @@ static void
 swfdec_edit_text_movie_class_init (SwfdecEditTextMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
   object_class->dispose = swfdec_edit_text_movie_dispose;
+
+  asobject_class->mark = swfdec_edit_text_movie_mark;
 
   movie_class->init_movie = swfdec_edit_text_movie_init_movie;
   movie_class->update_extents = swfdec_edit_text_movie_update_extents;

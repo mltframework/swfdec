@@ -456,7 +456,6 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
   g_return_if_fail (dest != NULL);
   g_return_if_fail (source != NULL);
   g_return_if_fail (swfdec_sound_buffer_get_n_samples (source, format) > 0);
-  g_return_if_fail (format != 0);
   g_return_if_fail (previous == NULL || swfdec_sound_buffer_get_n_samples (previous, format) > 0);
 
   src = (gint16 *) source->data;

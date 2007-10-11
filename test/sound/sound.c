@@ -23,40 +23,65 @@
 #include <string.h>
 #include <libswfdec/swfdec.h>
 
+/**
+ * audio_diff:
+ * @compare: the buffer we rendered in 44.1kHz stereo 16bit
+ * @original: the original buffer in 5.5kHz stereo 16bit
+ * @filename: name of the file where @original came from
+ *
+ * Compares the 2 buffers for every 5.5kHz and complains with a useful 
+ * error message if they don't match.
+ *
+ * Returns: TRUE if the 2 files are equal
+ **/
 static gboolean
 audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
 {
-  guint i;
-  gint16 *comp_data, *org_data;
+  guint i, length;
+  gint16 *comp_data, *comp_end, *org_data;
   
   /* must hold since we are rendering it */
-  g_assert (compare->length % 2 == 0);
-  if (original->length % 2 != 0) {
+  g_assert (compare->length % 4 == 0);
+  if (original->length % 4 != 0) {
     g_print ("  ERROR: %s: filesize (%u bytes) not multiple of 4\n", filename,
 	original->length);
     return FALSE;
   }
-  if (compare->length != original->length) {
-    /* we allow to cut 0 bytes off the comparison files - at least as long as we render additional 0s */
-    for (i = compare->length; i < original->length; i++) {
-      if (compare->data[i] != 0)
-	break;
-    }
-    if (i < original->length) {
-      g_print ("  ERROR: %s: sample count doesn't match (is %u, should be %u)\n", 
-	  filename, compare->length / 4, original->length / 4);
-      goto dump;
-    }
-  }
+  length = original->length / 4;
   comp_data = (gint16 *) compare->data;
+  comp_end = (gint16 *) (compare->data + compare->length);
   org_data = (gint16 *) original->data;
-  for (i = 0; i < original->length / 2; i++) {
+  comp_data += 14;
+  for (i = 0; i < length && comp_data < comp_end; i++) {
     /* original data is little endian */
-    if (comp_data[i] != GINT16_FROM_LE (org_data[i])) {
-      g_print ("  ERROR: %s: data mismatch at sample %u (is %04hX, should be %04hX)\n",
-	  filename, i, comp_data[i], GINT16_FROM_LE (org_data[i]));
+    if (*comp_data != GINT16_FROM_LE (*org_data)) {
+      g_print ("  ERROR: %s: data mismatch at left channel for sample %u (is %04hX, should be %04hX)\n",
+	  filename, i, *comp_data, GINT16_FROM_LE (*org_data));
       goto dump;
     }
+    comp_data++;
+    org_data++;
+    if (*comp_data != GINT16_FROM_LE (*org_data)) {
+      g_print ("  ERROR: %s: data mismatch at right channel for sample %u (is %04hX, should be %04hX)\n",
+	  filename, i, *comp_data, GINT16_FROM_LE (*org_data));
+      goto dump;
+    }
+    comp_data += 15;
+    org_data++;
+  }
+  if (i < length) {
+    g_print ("  ERROR: %s: not enough data: Should be %u 5.5kHz samples, but is only %u samples",
+	filename, length, i);
+    goto dump;
+  }
+  while (comp_data < comp_end) {
+    if (comp_data[0] != 0 || comp_data[1] != 0) {
+      g_print ("  ERROR: %s: leftover data should be 0, but sample %u is %04hX, %04hX\n",
+	  filename, i, comp_data[0], comp_data[1]);
+      goto dump;
+    }
+    i++;
+    comp_data += 16;
   }
   return TRUE;
 dump:

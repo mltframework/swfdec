@@ -130,11 +130,15 @@ audio_added (SwfdecPlayer *player, SwfdecAudio *audio, TestData *data)
     data->success = FALSE;
   } else {
     TestStream *stream = g_new0 (TestStream, 1);
+    char *dirname;
+
+    dirname = g_path_get_dirname (data->filename);
     stream->audio = audio;
-    stream->name = found->data;
+    stream->name = g_build_filename (dirname, found->data, NULL);
     stream->queue = swfdec_buffer_queue_new ();
     data->files = g_list_delete_link (data->files, found);
     data->streams = g_list_prepend (data->streams, stream);
+    g_free (dirname);
   }
   g_free (name);
 }

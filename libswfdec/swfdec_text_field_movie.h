@@ -22,7 +22,7 @@
 #define _SWFDEC_TEXT_FIELD_MOVIE_H_
 
 #include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_edittext.h>
+#include <libswfdec/swfdec_text_field.h>
 #include <libswfdec/swfdec_style_sheet.h>
 #include <libswfdec/swfdec_text_format.h>
 

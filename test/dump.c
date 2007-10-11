@@ -32,7 +32,7 @@
 #include <glib-object.h>
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_button.h>
-#include <libswfdec/swfdec_edittext.h>
+#include <libswfdec/swfdec_text_field.h>
 #include <libswfdec/swfdec_font.h>
 #include <libswfdec/swfdec_image.h>
 #include <libswfdec/swfdec_movie.h>

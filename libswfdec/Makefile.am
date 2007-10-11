@@ -62,9 +62,9 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_debug.c \
 	swfdec_decoder.c \
 	swfdec_draw.c \
-	swfdec_edittext.c \
-	swfdec_edittext_movie.c \
-	swfdec_edittext_movie_as.c \
+	swfdec_text_field.c \
+	swfdec_text_field_movie.c \
+	swfdec_text_field_movie_as.c \
 	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_file_loader.c \
@@ -194,8 +194,8 @@ noinst_HEADERS = \
 	swfdec_debug.h \
 	swfdec_decoder.h \
 	swfdec_draw.h \
-	swfdec_edittext.h \
-	swfdec_edittext_movie.h \
+	swfdec_text_field.h \
+	swfdec_text_field_movie.h \
 	swfdec_event.h \
 	swfdec_filter.h \
 	swfdec_flv_decoder.h \

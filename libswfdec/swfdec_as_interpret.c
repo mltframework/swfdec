@@ -42,7 +42,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
-#include "swfdec_edittext_movie.h" // for typeof
+#include "swfdec_text_field_movie.h" // for typeof
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
  * This can be useful to find out about unimplemented native properties,

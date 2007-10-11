@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include "swfdec_edittext_movie.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_text_format.h"

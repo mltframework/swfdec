@@ -24,8 +24,8 @@
 
 #include <string.h>
 
-#include "swfdec_edittext.h"
-#include "swfdec_edittext_movie.h"
+#include "swfdec_text_field.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_as_native_function.h"

@@ -24,9 +24,9 @@
 
 #include <pango/pangocairo.h>
 #include <string.h>
-#include "swfdec_edittext.h"
+#include "swfdec_text_field.h"
 #include "swfdec_debug.h"
-#include "swfdec_edittext_movie.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_font.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"

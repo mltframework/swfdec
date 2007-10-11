@@ -32,7 +32,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_button.h"
 #include "swfdec_debug.h"
-#include "swfdec_edittext.h"
+#include "swfdec_text_field.h"
 #include "swfdec_filter.h"
 #include "swfdec_font.h"
 #include "swfdec_image.h"

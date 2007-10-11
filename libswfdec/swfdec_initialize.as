@@ -253,7 +253,7 @@ MovieClip.prototype["loadMovie"] = function (url, method) {
   } else {
     loadMovie (url, this._target, "POST");
   }
-  setTarget (null);
+  setTarget ("");
 };
 
 MovieClip.prototype.attachMovie = ASnative (900, 0);

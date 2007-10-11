@@ -156,7 +156,7 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
   attr_italic->start_index = 0;
 
   attr_letter_spacing = pango_attr_letter_spacing_new (
-      format->letter_spacing * 20 * PANGO_SCALE); // FIXME: correct scaling?
+      format->letter_spacing * 20 * PANGO_SCALE);
   attr_letter_spacing->start_index = 0;
 
   attr_size =

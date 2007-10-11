@@ -32,12 +32,50 @@
 /* FIXME: This whole code assumes it works for MovieClip, Button and TextField
  * objects. If it only works for MovieClip objects, fix this. */
 
+static SwfdecDraw *
+swfdec_stroke_copy (SwfdecDraw *draw)
+{
+  SwfdecStroke *sstroke = SWFDEC_STROKE (draw);
+  SwfdecStroke *dstroke = g_object_new (SWFDEC_TYPE_STROKE, NULL);
+
+  dstroke->start_width = sstroke->start_width;
+  dstroke->start_color = sstroke->start_color;
+  if (sstroke->pattern)
+    dstroke->pattern = g_object_ref (sstroke->pattern);
+  dstroke->start_cap = sstroke->start_cap;
+  dstroke->end_cap = sstroke->end_cap;
+  dstroke->join = sstroke->join;
+  dstroke->miter_limit = sstroke->miter_limit;
+  dstroke->no_vscale = sstroke->no_vscale;
+  dstroke->no_hscale = sstroke->no_hscale;
+
+  return SWFDEC_DRAW (dstroke);
+}
+
+static void
+swfdec_sprite_movie_end_fill (SwfdecMovie *movie, SwfdecDraw *new)
+{
+  /* FIXME: need to cairo_close_path()? */
+  movie->draw_fill = new;
+  if (new == NULL)
+    return;
+
+  movie->draws = g_slist_append (movie->draws, new);
+
+  /* need to begin a new line segment to ensure proper stacking order */
+  if (movie->draw_line) {
+    movie->draw_line = swfdec_stroke_copy (movie->draw_line);
+    movie->draws = g_slist_append (movie->draws, movie->draw_line);
+  }
+}
+
 SWFDEC_AS_NATIVE (901, 1, swfdec_sprite_movie_beginFill)
 void
 swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
+  SwfdecDraw *draw;
   int color, alpha;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|ii", &color, &alpha);
@@ -53,9 +91,9 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
     alpha = SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
   }
   color = color | alpha;
-  movie->draw_fill = SWFDEC_DRAW (swfdec_pattern_new_color (color));
-  swfdec_path_move_to (&movie->draw_fill->path, movie->draw_x, movie->draw_y);
-  movie->draws = g_slist_append (movie->draws, movie->draw_fill);
+  draw = SWFDEC_DRAW (swfdec_pattern_new_color (color));
+  swfdec_path_move_to (&draw->path, movie->draw_x, movie->draw_y);
+  swfdec_sprite_movie_end_fill (movie, draw);
 }
 
 SWFDEC_AS_NATIVE (901, 2, swfdec_sprite_movie_beginGradientFill)
@@ -192,8 +230,7 @@ swfdec_sprite_movie_endFill (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecMovie *movie;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
-  /* FIXME: need to cairo_close_path()? */
-  movie->draw_fill = NULL;
+  swfdec_sprite_movie_end_fill (movie, NULL);
 }
 
 SWFDEC_AS_NATIVE (901, 8, swfdec_sprite_movie_clear)

@@ -229,7 +229,7 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
       }
 
       pango_layout_get_pixel_size (playout, &layout->width, &layout->height);
-      layout->width += layout->render_offset_x;
+      layout->width += layout->render_offset_x + block->right_margin;
       layout->height += block->leading / PANGO_SCALE;
 
       if (!text->word_wrap)

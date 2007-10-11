@@ -289,7 +289,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 
     pango_cairo_show_layout (cr, layout->layout);
 
-    cairo_rel_move_to (cr, layout->render_offset_x, layout->height);
+    cairo_rel_move_to (cr, -layout->render_offset_x, layout->height);
 
     g_object_unref (layout->layout);
     g_free (layout);

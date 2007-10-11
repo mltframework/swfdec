@@ -339,13 +339,22 @@ swfdec_edit_text_movie_render (SwfdecMovie *movie, cairo_t *cr,
 static void
 swfdec_edit_text_movie_free_paragraphs (SwfdecEditTextMovie *text)
 {
+  GList *iter;
   int i;
 
   if (text->paragraphs) {
-    for (i = 0; text->paragraphs[i].text != NULL; i++) {
-      // FIXME
-      /*if (text->paragraphs[i].tab_stops != NULL)
-	pango_tab_array_free (text->paragraphs[i].tab_stops);*/
+    for (i = 0; text->paragraphs[i].text != NULL; i++)
+    {
+      for (iter = text->paragraphs[i].blocks; iter != NULL; iter = iter->next) {
+	pango_tab_array_free (((SwfdecBlock *)(iter->data))->tab_stops);
+      }
+      g_list_free (text->paragraphs[i].blocks);
+
+      for (iter = text->paragraphs[i].attrs; iter != NULL; iter = iter->next) {
+	pango_attribute_destroy ((PangoAttribute *)(iter->data));
+      }
+      g_list_free (text->paragraphs[i].attrs);
+
       if (text->paragraphs[i].attrs_list != NULL)
 	pango_attr_list_unref (text->paragraphs[i].attrs_list);
     }
@@ -363,9 +372,18 @@ swfdec_edit_text_movie_format_changed (SwfdecEditTextMovie *text)
 static void
 swfdec_edit_text_movie_dispose (GObject *object)
 {
-  SwfdecEditTextMovie *text = SWFDEC_EDIT_TEXT_MOVIE (object);
+  SwfdecEditTextMovie *text;
+  GList *iter;
+
+  text = SWFDEC_EDIT_TEXT_MOVIE (object);
 
   swfdec_edit_text_movie_free_paragraphs (text);
+
+  for (iter = text->formats; iter != NULL; iter = iter->next) {
+    g_free (text->formats->data);
+    text->formats->data = NULL;
+  }
+  g_slist_free (text->formats);
 
   G_OBJECT_CLASS (swfdec_edit_text_movie_parent_class)->dispose (object);
 }

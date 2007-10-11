@@ -40,6 +40,13 @@ typedef struct _SwfdecTextFieldClass SwfdecTextFieldClass;
 #define SWFDEC_TEXT_FIELD_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD, SwfdecTextFieldClass))
 
 typedef struct {
+  PangoLayout *		layout;
+  int			render_offset_x;
+  int			height;
+  int			width;
+} SwfdecLayout;
+
+typedef struct {
   guint			index_;
 
   PangoAlignment	align;
@@ -67,8 +74,8 @@ typedef struct {
 typedef enum {
   SWFDEC_AUTO_SIZE_NONE,
   SWFDEC_AUTO_SIZE_LEFT,
-  SWFDEC_AUTO_SIZE_CENTER,
-  SWFDEC_AUTO_SIZE_RIGHT
+  SWFDEC_AUTO_SIZE_RIGHT,
+  SWFDEC_AUTO_SIZE_CENTER
 } SwfdecAutoSize;
 
 struct _SwfdecTextField
@@ -114,6 +121,11 @@ GType			swfdec_text_field_get_type	(void);
 int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
 							 guint			tag);
 
+GList *			swfdec_text_field_generate_layouts	(SwfdecTextField *	text,
+							 cairo_t *			cr,
+							 const SwfdecParagraph *	paragraphs,
+							 const SwfdecColorTransform *	trans,
+							 const SwfdecRect *		inval);
 void			swfdec_text_field_render		(SwfdecTextField *	text,
 							 cairo_t *		cr,
 							 const SwfdecParagraph *	paragraphs,

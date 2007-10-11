@@ -23,6 +23,7 @@
 #endif
 
 #include <string.h>
+#include <math.h>
 
 #include "swfdec_text_field_movie.h"
 #include "swfdec_as_context.h"
@@ -363,10 +364,89 @@ swfdec_text_field_movie_free_paragraphs (SwfdecTextFieldMovie *text)
   }
 }
 
+static gboolean
+swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
+{
+  cairo_surface_t *surface;
+  cairo_t *cr;
+  GList *layouts, *iter;
+  guint height;
+  int width, diff;
+  gboolean changed;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
+
+  if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
+    return FALSE;
+
+  if (text->paragraphs == NULL)
+    swfdec_text_field_movie_generate_paragraphs (text);
+
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+  cr = cairo_create (surface);
+
+  layouts = swfdec_text_field_generate_layouts (text->text, cr,
+      text->paragraphs, NULL, NULL);
+
+  width = 0;
+  height = 0;
+  for (iter = layouts; iter != NULL; iter = iter->next) {
+    SwfdecLayout *layout = (SwfdecLayout *)iter->data;
+
+    if (!text->text->word_wrap) {
+      if (layout->width > width)
+	width = layout->width;
+    }
+
+    height += layout->height;
+  }
+
+  if (!text->text->word_wrap && SWFDEC_GRAPHIC (text->text)->extents.x1 -
+      SWFDEC_GRAPHIC (text->text)->extents.x0 != width)
+  {
+    switch (text->text->auto_size) {
+      case SWFDEC_AUTO_SIZE_LEFT:
+	SWFDEC_GRAPHIC (text->text)->extents.x1 =
+	  SWFDEC_GRAPHIC (text->text)->extents.x0 + width;
+	break;
+      case SWFDEC_AUTO_SIZE_RIGHT:
+	SWFDEC_GRAPHIC (text->text)->extents.x0 =
+	  SWFDEC_GRAPHIC (text->text)->extents.x1 - width;
+	break;
+      case SWFDEC_AUTO_SIZE_CENTER:
+	diff = width - (SWFDEC_GRAPHIC (text->text)->extents.x1 -
+	  SWFDEC_GRAPHIC (text->text)->extents.x0);
+	SWFDEC_GRAPHIC (text->text)->extents.x0 += floor (width / 2.0);
+	SWFDEC_GRAPHIC (text->text)->extents.x1 += ceil (width / 2.0);
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+    changed = TRUE;
+  }
+
+  if (SWFDEC_GRAPHIC (text->text)->extents.y1 -
+      SWFDEC_GRAPHIC (text->text)->extents.y0 != height)
+  {
+    SWFDEC_GRAPHIC (text->text)->extents.y1 =
+      SWFDEC_GRAPHIC (text->text)->extents.y0 + height;
+    changed = TRUE;
+  }
+
+  return changed;
+}
+
 void
 swfdec_text_field_movie_format_changed (SwfdecTextFieldMovie *text)
 {
   swfdec_text_field_movie_free_paragraphs (text);
+
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+
+  if (swfdec_text_field_movie_auto_size (text)) {
+    swfdec_movie_queue_update (SWFDEC_MOVIE (text),
+	SWFDEC_MOVIE_INVALID_CONTENTS);
+  }
 }
 
 static void

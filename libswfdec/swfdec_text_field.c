@@ -82,15 +82,172 @@ swfdec_text_field_init (SwfdecTextField * text)
   text->max_length = G_MAXUINT;
 }
 
+GList *
+swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
+    const SwfdecParagraph *paragraphs, const SwfdecColorTransform *trans,
+    const SwfdecRect *inval)
+{
+  GList *layouts;
+  guint i;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD (text), NULL);
+  g_return_val_if_fail (cr != NULL, NULL);
+  g_return_val_if_fail (paragraphs != NULL, NULL);
+
+  if (paragraphs[0].text == NULL)
+    return NULL;
+
+  layouts = NULL;
+  for (i = 0; paragraphs[i].text != NULL; i++)
+  {
+    GList *iter;
+    guint skip;
+
+    skip = 0;
+    for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next)
+    {
+      SwfdecLayout *layout;
+      PangoLayout *playout;
+      int width;
+      guint length;
+      SwfdecBlock *block;
+
+      block = (SwfdecBlock *)iter->data;
+      if (iter->next != NULL) {
+	length =
+	  ((SwfdecBlock *)(iter->next->data))->index_ - block->index_;
+      } else {
+	length = paragraphs[i].text_length - block->index_;
+      }
+
+      if (skip > length) {
+	skip -= length;
+	continue;
+      }
+
+      // create layout
+      layout = g_new0 (SwfdecLayout, 1);
+      playout = layout->layout = pango_cairo_create_layout (cr);
+      layouts = g_list_append (layouts, layout);
+
+      // set rendering position
+      layout->render_offset_x = block->left_margin + block->block_indent;
+      width = SWFDEC_GRAPHIC (text)->extents.x1 -
+	SWFDEC_GRAPHIC (text)->extents.x0 - block->left_margin -
+	block->right_margin - block->block_indent;
+
+      if (block->index_ == 0 && paragraphs[i].indent < 0) {
+	layout->render_offset_x += paragraphs[i].indent / PANGO_SCALE;
+	width += -paragraphs[i].indent / PANGO_SCALE;
+      }
+
+      pango_layout_set_width (playout,
+	  (text->word_wrap ? width * PANGO_SCALE : -1));
+
+      // set paragraph styles
+      if (block->index_ == 0) {
+	pango_layout_set_indent (playout, paragraphs[i].indent);
+	// TODO: bullet
+      } else {
+	pango_layout_set_indent (playout, 0);
+      }
+
+      // set block styles
+      pango_layout_set_alignment (playout, block->align);
+      pango_layout_set_justify (playout, block->justify);
+      pango_layout_set_spacing (playout, block->leading);
+      pango_layout_set_tabs (playout, block->tab_stops);
+
+      // set text attributes
+      if (block->index_ > 0 ||
+	  (trans != NULL && !swfdec_color_transform_is_identity (trans)))
+      {
+	PangoAttrList *attr_list;
+	GList *iter_attrs;
+
+	attr_list = pango_attr_list_new ();
+
+	for (iter_attrs = paragraphs[i].attrs; iter_attrs != NULL;
+	    iter_attrs = iter_attrs->next)
+	{
+	  PangoAttribute *attr;
+
+	  attr = (PangoAttribute *)iter_attrs->data;
+
+	  if (attr->end_index <= block->index_ + skip)
+	    continue;
+
+	  attr = pango_attribute_copy (attr);
+	  if (attr->klass->type == PANGO_ATTR_FOREGROUND && trans != NULL &&
+	      !swfdec_color_transform_is_identity (trans))
+	  {
+	    SwfdecColor color;
+	    PangoColor pcolor;
+
+	    pcolor = ((PangoAttrColor *)attr)->color;
+	    color = SWFDEC_COLOR_COMBINE (pcolor.red >> 8, pcolor.green >> 8,
+		pcolor.blue >> 8, 255);
+	    color = swfdec_color_apply_transform (color, trans);
+	    pcolor.red = SWFDEC_COLOR_R (color) << 8;
+	    pcolor.green = SWFDEC_COLOR_G (color) << 8;
+	    pcolor.blue = SWFDEC_COLOR_B (color) << 8;
+	    ((PangoAttrColor *)attr)->color = pcolor;
+	  }
+	  attr->start_index = (attr->start_index > block->index_ + skip ?
+	      attr->start_index - (block->index_ + skip) : 0);
+	  attr->end_index = attr->end_index - (block->index_ + skip);
+	  pango_attr_list_insert (attr_list, attr);
+	}
+	pango_layout_set_attributes (playout, attr_list);
+	pango_attr_list_unref (attr_list);
+      } else {
+	pango_layout_set_attributes (playout, paragraphs[i].attrs_list);
+      }
+
+      pango_layout_set_text (playout,
+	  paragraphs[i].text + block->index_ + skip,
+	  paragraphs[i].text_length - block->index_ - skip);
+
+      if (iter->next != NULL && text->word_wrap)
+      {
+	PangoLayoutLine *line;
+	int line_num;
+	guint skip_new;
+
+	pango_layout_index_to_line_x (playout, length - skip, FALSE, &line_num,
+	    NULL);
+	line = pango_layout_get_line_readonly (playout, line_num);
+	skip_new = line->start_index + line->length - (length - skip);
+	pango_layout_set_text (playout,
+	    paragraphs[i].text + block->index_ + skip,
+	    length - skip + skip_new);
+	skip = skip_new;
+      }
+      else
+      {
+	skip = 0;
+      }
+
+      pango_layout_get_pixel_size (playout, &layout->width, &layout->height);
+      layout->width += layout->render_offset_x;
+      layout->height += block->leading / PANGO_SCALE;
+
+      if (!text->word_wrap)
+	break;
+    }
+  }
+
+  return layouts;
+}
+
 void
 swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
     const SwfdecParagraph *paragraphs, SwfdecColor border_color,
     SwfdecColor background_color, const SwfdecColorTransform *trans,
     const SwfdecRect *inval)
 {
-  PangoLayout *layout;
+  GList *layouts, *iter;
   SwfdecColor color;
-  guint i;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
   g_return_if_fail (cr != NULL);
@@ -117,152 +274,31 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
     cairo_stroke (cr);
   }
 
-  if (paragraphs[0].text == NULL)
-    return;
+  layouts = swfdec_text_field_generate_layouts (text, cr, paragraphs, trans,
+      inval);
 
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
       SWFDEC_GRAPHIC (text)->extents.y0);
 
-  layout = pango_cairo_create_layout (cr);
+  for (iter = layouts; iter != NULL; iter = iter->next) {
+    SwfdecLayout *layout = (SwfdecLayout *)iter->data;
 
-  for (i = 0; paragraphs[i].text != NULL; i++)
-  {
-    GList *iter;
-    guint skip;
+    cairo_rel_move_to (cr, layout->render_offset_x, 0);
 
-    skip = 0;
-    for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next)
-    {
-      int height, width;
-      guint length;
-      SwfdecBlock *block;
-      PangoAttrList *attr_list;
+    pango_layout_context_changed (layout->layout);
 
-      block = (SwfdecBlock *)iter->data;
-      if (iter->next != NULL) {
-	length =
-	  ((SwfdecBlock *)(iter->next->data))->index_ - block->index_;
-      } else {
-	length = paragraphs[i].text_length - block->index_;
-      }
+    pango_cairo_show_layout (cr, layout->layout);
 
-      if (skip > length) {
-	skip -= length;
-	continue;
-      }
+    cairo_rel_move_to (cr, layout->render_offset_x, layout->height);
 
-      // update position
-      cairo_rel_move_to (cr, block->left_margin + block->block_indent, 0);
-      width = SWFDEC_GRAPHIC (text)->extents.x1 -
-	SWFDEC_GRAPHIC (text)->extents.x0 - block->left_margin -
-	block->right_margin - block->block_indent;
-
-      if (block->index_ == 0 && paragraphs[i].indent < 0) {
-	cairo_rel_move_to (cr, paragraphs[i].indent / PANGO_SCALE, 0);
-	width += -paragraphs[i].indent / PANGO_SCALE;
-      }
-
-      pango_cairo_update_layout (cr, layout);
-      pango_layout_context_changed (layout);
-      pango_layout_set_width (layout,
-	  (text->word_wrap ? width * PANGO_SCALE : -1));
-
-      // set paragraph styles
-      if (block->index_ == 0) {
-	pango_layout_set_indent (layout, paragraphs[i].indent);
-	// TODO: bullet
-      } else {
-	pango_layout_set_indent (layout, 0);
-      }
-
-      // set block styles
-      pango_layout_set_alignment (layout, block->align);
-      pango_layout_set_justify (layout, block->justify);
-      pango_layout_set_spacing (layout, block->leading);
-      pango_layout_set_tabs (layout, block->tab_stops);
-
-      // set text attributes
-      if (block->index_ > 0 || !swfdec_color_transform_is_identity (trans))
-      {
-	GList *iter_attrs;
-
-	attr_list = pango_attr_list_new ();
-
-	for (iter_attrs = paragraphs[i].attrs; iter_attrs != NULL;
-	    iter_attrs = iter_attrs->next)
-	{
-	  PangoAttribute *attr;
-
-	  attr = (PangoAttribute *)iter_attrs->data;
-
-	  if (attr->end_index <= block->index_ + skip)
-	    continue;
-
-	  attr = pango_attribute_copy (attr);
-	  if (attr->klass->type == PANGO_ATTR_FOREGROUND &&
-	      !swfdec_color_transform_is_identity (trans))
-	  {
-	    PangoColor pcolor;
-
-	    pcolor = ((PangoAttrColor *)attr)->color;
-	    color = SWFDEC_COLOR_COMBINE (pcolor.red >> 8, pcolor.green >> 8,
-		pcolor.blue >> 8, 255);
-	    color = swfdec_color_apply_transform (color, trans);
-	    pcolor.red = SWFDEC_COLOR_R (color) << 8;
-	    pcolor.green = SWFDEC_COLOR_G (color) << 8;
-	    pcolor.blue = SWFDEC_COLOR_B (color) << 8;
-	    ((PangoAttrColor *)attr)->color = pcolor;
-	  }
-	  attr->start_index = (attr->start_index > block->index_ + skip ?
-	      attr->start_index - (block->index_ + skip) : 0);
-	  attr->end_index = attr->end_index - (block->index_ + skip);
-	  pango_attr_list_insert (attr_list, attr);
-	}
-      } else {
-	attr_list = pango_attr_list_copy (paragraphs[i].attrs_list);
-      }
-      pango_layout_set_attributes (layout, attr_list);
-      pango_attr_list_unref (attr_list);
-      attr_list = NULL;
-
-      pango_layout_set_text (layout, paragraphs[i].text + block->index_ + skip,
-	  paragraphs[i].text_length - block->index_ - skip);
-
-      if (iter->next != NULL && text->word_wrap)
-      {
-	PangoLayoutLine *line;
-	int line_num;
-	guint skip_new;
-
-	pango_layout_index_to_line_x (layout, length - skip, FALSE, &line_num,
-	    NULL);
-	line = pango_layout_get_line_readonly (layout, line_num);
-	skip_new = line->start_index + line->length - (length - skip);
-	pango_layout_set_text (layout,
-	    paragraphs[i].text + block->index_ + skip,
-	    length - skip + skip_new);
-	skip = skip_new;
-      }
-      else
-      {
-	skip = 0;
-      }
-
-      pango_cairo_show_layout (cr, layout);
-
-      pango_layout_get_pixel_size (layout, NULL, &height);
-      cairo_rel_move_to (cr, -(block->left_margin + block->block_indent),
-	  height + block->leading / PANGO_SCALE);
-      if (block->index_ == 0 && paragraphs[i].indent < 0)
-	cairo_rel_move_to (cr, -paragraphs[i].indent / PANGO_SCALE, 0);
-
-      if (!text->word_wrap)
-	break;
-    }
+    g_object_unref (layout->layout);
+    g_free (layout);
+    iter->data = NULL;
   }
 
-  g_object_unref (layout);
+  g_list_free (layouts);
 }
+
 
 int
 tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)

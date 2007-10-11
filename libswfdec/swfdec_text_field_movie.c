@@ -332,9 +332,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (text->paragraphs == NULL)
     swfdec_text_field_movie_generate_paragraphs (text);
 
-  if (text->paragraphs[0].text == NULL)
-    return;
-  swfdec_text_field_render (text->text, cr, text->paragraphs, trans, inval);
+  swfdec_text_field_render (text->text, cr, text->paragraphs,
+      text->border_color, text->background_color, trans, inval);
 }
 
 static void
@@ -458,6 +457,9 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   text->format_new->right_margin = text->text->right_margin / 20;
   text->format_new->indent = text->text->indent / 20;
   text->format_new->leading = text->text->leading / 20;
+
+  text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
+  text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
 
   // text
   if (text->text->text_input != NULL) {

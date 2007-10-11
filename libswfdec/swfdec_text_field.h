@@ -89,6 +89,7 @@ struct _SwfdecTextField
   SwfdecAutoSize	auto_size;
 
   gboolean		border;
+  gboolean		background;
 
   /* only to be passed to the movie object */
   SwfdecFont *		font;
@@ -116,6 +117,8 @@ int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
 void			swfdec_text_field_render		(SwfdecTextField *	text,
 							 cairo_t *		cr,
 							 const SwfdecParagraph *	paragraphs,
+							 SwfdecColor		border_color,
+							 SwfdecColor		background_color,
 							 const SwfdecColorTransform *	trans,
 							 const SwfdecRect *		rect);
 

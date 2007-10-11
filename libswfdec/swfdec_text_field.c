@@ -84,10 +84,12 @@ swfdec_text_field_init (SwfdecTextField * text)
 
 void
 swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
-    const SwfdecParagraph *paragraphs, const SwfdecColorTransform *trans,
+    const SwfdecParagraph *paragraphs, SwfdecColor border_color,
+    SwfdecColor background_color, const SwfdecColorTransform *trans,
     const SwfdecRect *inval)
 {
   PangoLayout *layout;
+  SwfdecColor color;
   guint i;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
@@ -95,6 +97,28 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
   g_return_if_fail (paragraphs != NULL);
   g_return_if_fail (trans != NULL);
   g_return_if_fail (inval != NULL);
+
+  if (text->background) {
+    cairo_rectangle (cr, SWFDEC_GRAPHIC (text)->extents.x0,
+	SWFDEC_GRAPHIC (text)->extents.y0, SWFDEC_GRAPHIC (text)->extents.x1,
+	SWFDEC_GRAPHIC (text)->extents.y1);
+    color = swfdec_color_apply_transform (background_color, trans);
+    swfdec_color_set_source (cr, color);
+    cairo_fill (cr);
+  }
+
+  if (text->border) {
+    cairo_rectangle (cr, SWFDEC_GRAPHIC (text)->extents.x0,
+	SWFDEC_GRAPHIC (text)->extents.y0, SWFDEC_GRAPHIC (text)->extents.x1,
+	SWFDEC_GRAPHIC (text)->extents.y1);
+    color = swfdec_color_apply_transform (border_color, trans);
+    swfdec_color_set_source (cr, color);
+    cairo_set_line_width (cr, 20.0); // FIXME: Is this correct?
+    cairo_stroke (cr);
+  }
+
+  if (paragraphs[0].text == NULL)
+    return;
 
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0,
       SWFDEC_GRAPHIC (text)->extents.y0);
@@ -179,7 +203,6 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 	      !swfdec_color_transform_is_identity (trans))
 	  {
 	    PangoColor pcolor;
-	    SwfdecColor color;
 
 	    pcolor = ((PangoAttrColor *)attr)->color;
 	    color = SWFDEC_COLOR_COMBINE (pcolor.red >> 8, pcolor.green >> 8,
@@ -274,7 +297,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     (swfdec_bits_getbit (b) ? SWFDEC_AUTO_SIZE_LEFT : SWFDEC_AUTO_SIZE_NONE);
   has_layout = swfdec_bits_getbit (b);
   text->selectable = !swfdec_bits_getbit (b);
-  text->border = swfdec_bits_getbit (b);
+  text->background = text->border = swfdec_bits_getbit (b);
   reserved = swfdec_bits_getbit (b);
   text->html = swfdec_bits_getbit (b);
   text->embed_fonts = swfdec_bits_getbit (b);

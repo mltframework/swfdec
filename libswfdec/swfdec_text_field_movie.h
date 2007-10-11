@@ -68,8 +68,6 @@ struct _SwfdecTextFieldMovie {
   GSList *		formats;
 
   SwfdecAntiAliasType	anti_alias_type;
-  gboolean		background_fill;
-  guint			border_color;
   gboolean		condense_white;
   gboolean		embed_fonts;
   SwfdecGridFitType	grid_fit_type;
@@ -80,6 +78,9 @@ struct _SwfdecTextFieldMovie {
   int			sharpness;
   SwfdecStyleSheet *	style_sheet;
   int			thickness;
+
+  SwfdecColor		border_color;
+  SwfdecColor		background_color;
 
   /* for rendering */
   SwfdecParagraph *	paragraphs;

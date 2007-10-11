@@ -239,7 +239,7 @@ MovieClip.prototype["loadVariables"] = function (url, method) {
   } else {
     loadVariables (url, this._target, "POST");
   }
-  setTarget (null);
+  setTarget ("");
 };
 
 // work around ming bug, causing loadMovie to be lower cased
@@ -253,7 +253,7 @@ MovieClip.prototype["loadMovie"] = function (url, method) {
   } else {
     loadMovie (url, this._target, "POST");
   }
-  setTarget (null);
+  setTarget ("");
 };
 
 MovieClip.prototype.attachMovie = ASnative (900, 0);

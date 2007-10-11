@@ -1845,12 +1845,17 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   /* see function-scope tests */
   if (cx->version > 5) {
     /* FIXME: or original target? */
-    fun = swfdec_as_script_function_new (frame->target, frame->scope_chain, script);
+    fun = swfdec_as_script_function_new (frame->original_target, frame->scope_chain, script);
   } else {
-    fun = swfdec_as_script_function_new (frame->target, NULL, script);
+    fun = swfdec_as_script_function_new (frame->original_target, NULL, script);
   }
   if (fun == NULL)
     return;
+  /* This is a hack that should only trigger for functions defined in the init scripts.
+   * It is supposed to ensure that those functions inherit their target when being 
+   * called instead of when being defined */
+  if (!SWFDEC_IS_MOVIE (frame->original_target))
+    SWFDEC_AS_SCRIPT_FUNCTION (fun)->target = NULL;
   /* attach the function */
   if (*function_name == '\0') {
     swfdec_as_stack_ensure_free (cx, 1);

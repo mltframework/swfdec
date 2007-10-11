@@ -567,7 +567,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   edittext->password = FALSE;
   edittext->selectable = TRUE;
   edittext->font = NULL; // FIXME
-  edittext->wrap = FALSE;
+  edittext->word_wrap = FALSE;
   edittext->multiline = FALSE;
   edittext->auto_size = SWFDEC_AUTO_SIZE_NONE;
   edittext->border = FALSE;

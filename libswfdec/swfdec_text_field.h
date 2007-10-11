@@ -84,7 +84,7 @@ struct _SwfdecTextField
 
   gboolean		embed_fonts;
 
-  gboolean		wrap;
+  gboolean		word_wrap;
   gboolean		multiline;
   SwfdecAutoSize	auto_size;
 

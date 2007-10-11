@@ -140,7 +140,8 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 
       pango_cairo_update_layout (cr, layout);
       pango_layout_context_changed (layout);
-      pango_layout_set_width (layout, width * PANGO_SCALE);
+      pango_layout_set_width (layout,
+	  (text->word_wrap ? width * PANGO_SCALE : -1));
 
       // set paragraph styles
       if (block->index_ == 0) {
@@ -204,7 +205,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       pango_layout_set_text (layout, paragraphs[i].text + block->index_ + skip,
 	  paragraphs[i].text_length - block->index_ - skip);
 
-      if (iter->next != NULL)
+      if (iter->next != NULL && text->word_wrap)
       {
 	PangoLayoutLine *line;
 	int line_num;
@@ -231,6 +232,9 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 	  height + block->leading / PANGO_SCALE);
       if (block->index_ == 0 && paragraphs[i].indent < 0)
 	cairo_rel_move_to (cr, -paragraphs[i].indent / PANGO_SCALE, 0);
+
+      if (!text->word_wrap)
+	break;
     }
   }
 
@@ -258,7 +262,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_GRAPHIC (text)->extents.x1, SWFDEC_GRAPHIC (text)->extents.y1);
   swfdec_bits_syncbits (b);
   has_text = swfdec_bits_getbit (b);
-  text->wrap = swfdec_bits_getbit (b);
+  text->word_wrap = swfdec_bits_getbit (b);
   text->multiline = swfdec_bits_getbit (b);
   text->password = swfdec_bits_getbit (b);
   text->input = !swfdec_bits_getbit (b);

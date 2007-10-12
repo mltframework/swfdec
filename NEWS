@@ -5,7 +5,7 @@ Lots of new built-in objects and code cleanup are the highlights of yet another
 Swfdec release. And a little less condensed:
 - rework of what APIs call into the script engine. This greatly simplifies using
   libswfdec in applications.
-- reowkr invalidation handling. Less parts of the screen need to be redrawn on 
+- rework invalidation handling. Less parts of the screen need to be redrawn on 
   changes, but the SwfdecPlayer::invalidate signal changed.
 - support the built-in Date, XML, Sound, System.capabilities and TextFormat
   objects plus MovieClip drawing functions

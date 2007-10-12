@@ -112,7 +112,8 @@ swfdec_gtk_loader_headers (SoupMessage *msg, gpointer loader)
 
   errno = 0;
   l = strtoul (s, &end, 10);
-  if (errno == 0 && *end == 0)
+  // FIXME: need a way to allow 0-size files
+  if (errno == 0 && *end == 0 && l > 0)
     swfdec_loader_set_size (loader, l);
 }
 

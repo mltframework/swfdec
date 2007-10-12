@@ -42,7 +42,7 @@ swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ?
 	swfdec_as_context_get_string (cx, text->text_display) :
@@ -57,7 +57,7 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   SwfdecTextFieldMovie *text;
   const char *value;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "s", &value);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, FALSE);
 }
@@ -313,7 +313,7 @@ swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
   const char *p, *end;
   GString *string;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (text->text->html == FALSE) {
     swfdec_text_field_movie_get_text (cx, object, argc, argv, ret);
@@ -355,7 +355,7 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
   SwfdecTextFieldMovie *text;
   const char *value;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "s", &value);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, text->text->html);
 }
@@ -366,7 +366,7 @@ swfdec_text_field_movie_get_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->html);
 }
@@ -378,7 +378,7 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecTextFieldMovie *text;
   gboolean value;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "b", &value);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
   text->text->html = value;
 }
@@ -390,7 +390,7 @@ swfdec_text_field_movie_get_condenseWhite (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->condense_white);
 }
@@ -403,7 +403,7 @@ swfdec_text_field_movie_set_condenseWhite (SwfdecAsContext *cx,
   SwfdecTextFieldMovie *text;
   gboolean value;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "b", &value);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
   text->condense_white = value;
 }
@@ -415,7 +415,7 @@ swfdec_text_field_movie_get_embedFonts (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->embed_fonts);
 }
@@ -428,7 +428,7 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
   SwfdecTextFieldMovie *text;
   gboolean value;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "b", &value);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
   text->text->embed_fonts = value;
 }
@@ -439,7 +439,7 @@ swfdec_text_field_movie_get_length (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_INT (ret, strlen (text->text_display));
 }
@@ -451,7 +451,7 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (text->format_new),
       SWFDEC_AS_STR_color, ret);
@@ -464,7 +464,7 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (argc < 1)
     return;
@@ -549,7 +549,7 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret,
       SWFDEC_AS_OBJECT (swfdec_text_format_copy (text->format_new)));
@@ -564,7 +564,7 @@ swfdec_text_field_movie_setNewTextFormat (SwfdecAsContext *cx,
   SwfdecTextFieldMovie *text;
   SwfdecAsObject *obj;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "o", &obj);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &obj);
 
   if (!SWFDEC_IS_TEXT_FORMAT (obj))
     return;
@@ -583,7 +583,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   guint start_index, end_index;
   int i;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, (gpointer)&text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (argc < 1)
     return;
@@ -627,7 +627,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   SwfdecAsFunction *fun;
   SwfdecAsValue val;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&parent, "siiiii", &name, &depth, &x, &y, &width, &height);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &parent, "siiiii", &name, &depth, &x, &y, &width, &height);
 
   edittext = g_object_new (SWFDEC_TYPE_TEXT_FIELD, NULL);
   edittext->html = FALSE;

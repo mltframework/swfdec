@@ -473,6 +473,74 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
       SWFDEC_AS_STR_color, &argv[0]);
 }
 
+static void
+swfdec_text_field_movie_get_autoSize (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  switch (text->text->auto_size) {
+    case SWFDEC_AUTO_SIZE_NONE:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_none);
+      break;
+    case SWFDEC_AUTO_SIZE_LEFT:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_left);
+      break;
+    case SWFDEC_AUTO_SIZE_RIGHT:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_right);
+      break;
+    case SWFDEC_AUTO_SIZE_CENTER:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_center);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+}
+
+static void
+swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecAutoSize old;
+  const char *s;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (argc < 1)
+    return;
+
+  if (SWFDEC_AS_VALUE_IS_BOOLEAN (&argv[0])) {
+    if (SWFDEC_AS_VALUE_GET_BOOLEAN (&argv[0])) {
+      text->text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
+    } else {
+      text->text->auto_size = SWFDEC_AUTO_SIZE_NONE;
+    }
+    return;
+  }
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+
+  old = text->text->auto_size;
+  if (!g_ascii_strcasecmp (s, "none")) {
+    text->text->auto_size = SWFDEC_AUTO_SIZE_NONE;
+  } else if (!g_ascii_strcasecmp (s, "left")) {
+    text->text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
+  } else if (!g_ascii_strcasecmp (s, "right")) {
+    text->text->auto_size = SWFDEC_AUTO_SIZE_RIGHT;
+  } else if (!g_ascii_strcasecmp (s, "center")) {
+    text->text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
+  }
+
+  if (text->text->auto_size != old)
+    swfdec_text_field_movie_format_changed (text);
+}
+
 SWFDEC_AS_NATIVE (104, 104, swfdec_text_field_movie_getNewTextFormat)
 void
 swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
@@ -697,6 +765,9 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
 	swfdec_text_field_movie_get_textColor,
 	swfdec_text_field_movie_set_textColor);
+    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_autoSize,
+	swfdec_text_field_movie_get_autoSize,
+	swfdec_text_field_movie_set_autoSize);
 
     SWFDEC_PLAYER (cx)->edittext_movie_properties_initialized = TRUE;
   }

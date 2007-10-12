@@ -1,4 +1,23 @@
 
+ 0.5.3 ("Tennis")
+
+Lots of new built-in objects and code cleanup are the highlights of yet another
+Swfdec release. And a little less condensed:
+- rework of what APIs call into the script engine. This greatly simplifies using
+  libswfdec in applications.
+- reowkr invalidation handling. Less parts of the screen need to be redrawn on 
+  changes, but the SwfdecPlayer::invalidate signal changed.
+- support the built-in Date, XML, Sound, System.capabilities and TextField 
+  objects plus MovieClip drawing functions
+- add initial support for blend modes and filters (full support is expected with
+  Cairo 1.6)
+- clean up initialization, video engine, sound engine and shape parsing code. 
+  All the code should now be more robust, easier to read and have less broken 
+  corner cases. And Swfdec supports VP6 alpha video now.
+- lots of old Flash files that use Flash 4-style paths to lookup values should 
+  work correctly now.
+- a huge list of bugfixes and little features, see the git log for details.
+
  0.5.2 ("Kittencannon")
 
 This release saw a lot of internal cleanups and only little new features. But

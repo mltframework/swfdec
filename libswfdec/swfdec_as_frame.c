@@ -269,10 +269,6 @@ swfdec_as_frame_dispose (GObject *object)
   SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
 
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
-  if (frame->script) {
-    swfdec_script_unref (frame->script);
-    frame->script = NULL;
-  }
   if (frame->constant_pool) {
     swfdec_constant_pool_free (frame->constant_pool);
     frame->constant_pool = NULL;
@@ -285,6 +281,10 @@ swfdec_as_frame_dispose (GObject *object)
     swfdec_as_frame_pop_block (frame);
   g_array_free (frame->blocks, TRUE);
   g_slist_free (frame->scope_chain);
+  if (frame->script) {
+    swfdec_script_unref (frame->script);
+    frame->script = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_as_frame_parent_class)->dispose (object);
 }

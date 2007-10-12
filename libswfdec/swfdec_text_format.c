@@ -453,7 +453,12 @@ swfdec_text_format_do_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_text_format_mark_unset (format, PROP_COLOR);
   } else {
     if (cx->version >= 8) {
-      format->color = (unsigned)swfdec_as_value_to_number (cx, &argv[0]);
+      double d = swfdec_as_value_to_number (cx, &argv[0]);
+      if (!isfinite (d)) {
+	format->color = 0;
+      } else {
+	format->color = (unsigned)d;
+      }
     } else {
       format->color = (unsigned)swfdec_as_value_to_integer (cx, &argv[0]);
     }

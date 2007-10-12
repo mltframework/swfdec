@@ -55,7 +55,7 @@ struct _SwfdecXml {
   SwfdecXmlNode		xml_node;
 
   gboolean		ignoreWhite;
-  SwfdecXmlParseStatus	status;
+  int			status;
   const char		*xmlDecl;
   const char		*docTypeDecl;
 

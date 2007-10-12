@@ -220,8 +220,8 @@ swfdec_style_finish (SwfdecStyle *style, SwfdecSubPath *paths, SwfdecSubPath *pa
 
   /* accumulate paths one by one */
   while (style->subpaths) {
-    SwfdecSubPath *start, *last, *cur;
-    SwfdecSubPath *start2, *last2, *cur2;
+    SwfdecSubPath *start, *last;
+    SwfdecSubPath *start2 = NULL, *last2 = NULL;
 
     last = start = &paths[GPOINTER_TO_UINT (style->subpaths->data)];
     swfdec_path_move_to (&style->draw->path, start->x_start, start->y_start);
@@ -235,10 +235,10 @@ swfdec_style_finish (SwfdecStyle *style, SwfdecSubPath *paths, SwfdecSubPath *pa
     while (!swfdec_sub_path_match (last, start) ||
 	(paths2 != NULL && !swfdec_sub_path_match (last2, start2))) {
       for (walk = style->subpaths; walk; walk = walk->next) {
-	cur = &paths[GPOINTER_TO_UINT (walk->data)];
+	SwfdecSubPath *cur = &paths[GPOINTER_TO_UINT (walk->data)];
 	if (swfdec_sub_path_match (last, cur)) {
 	  if (paths2) {
-	    cur2 = &paths2[GPOINTER_TO_UINT (walk->data)];
+	    SwfdecSubPath *cur2 = &paths2[GPOINTER_TO_UINT (walk->data)];
 	    if (!swfdec_sub_path_match (last2, cur2))
 	      continue;
 	    swfdec_path_append (&style->draw->end_path, &cur2->path);

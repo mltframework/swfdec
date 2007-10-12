@@ -127,6 +127,7 @@ swfdec_system_get_type
 <TITLE>SwfdecBuffer</TITLE>
 SwfdecBuffer
 SwfdecBufferQueue
+SwfdecBufferFreeFunc
 swfdec_buffer_new
 swfdec_buffer_new_and_alloc
 swfdec_buffer_new_and_alloc0
@@ -368,6 +369,7 @@ swfdec_as_array_insert_with_flags
 swfdec_as_array_push
 swfdec_as_array_push_with_flags
 swfdec_as_array_get_length
+swfdec_as_array_set_length
 swfdec_as_array_get_value
 swfdec_as_array_set_value
 swfdec_as_array_remove

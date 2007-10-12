@@ -129,6 +129,7 @@ IGNORE_HFILES= \
 	swfdec_swf_instance.h \
 	swfdec_tag.h \
 	swfdec_text.h \
+	swfdec_text_format.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \
@@ -176,4 +177,4 @@ include $(top_srcdir)/gtk-doc.make
 EXTRA_DIST += 
 
 # Comment this out if you want your docs-status tested during 'make check'
-TESTS = $(GTKDOC_CHECK)
+#TESTS = $(GTKDOC_CHECK)

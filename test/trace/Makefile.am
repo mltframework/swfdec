@@ -346,6 +346,18 @@ EXTRA_DIST = \
 	constructor-prototype.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
+	crash-0.5.2-cvs-return-from-block.as \
+	crash-0.5.2-cvs-return-from-block-5.swf \
+	crash-0.5.2-cvs-return-from-block-5.swf.trace \
+	crash-0.5.2-cvs-return-from-block-6.swf \
+	crash-0.5.2-cvs-return-from-block-6.swf.trace \
+	crash-0.5.2-cvs-return-from-block-7.swf \
+	crash-0.5.2-cvs-return-from-block-7.swf.trace \
+	crash-0.5.2-cvs-return-from-block-8.swf \
+	crash-0.5.2-cvs-return-from-block-8.swf.trace \
+	crash-0.5.2-cvs-too-many-changes.swf \
+	crash-0.5.2-cvs-too-many-changes.swf.trace \
+	crash-0.5.2-cvs-too-many-changes.xml \
 	crash-0.5.2-new-netstream.as \
 	crash-0.5.2-new-netstream.swf \
 	crash-0.5.2-new-netstream.swf.trace \

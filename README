@@ -14,7 +14,7 @@ it crashes. If you encounter such a crash however, make sure to file a bug
 immediately.
 
 Swfdec contains some applications for testing and debugging the library. These 
-are availabole in the player/ and test/ directory. They are not installed. The
+are available in the player/ and test/ directory. They are not installed. The
 applications in the player/ directory require GTK and ALSO to build, while the
 library does not. So if you are packaging Swfdec, you probably do not want to 
 make it depend on GTK or ALSA.
@@ -24,7 +24,7 @@ provided SWF files in the directory. See the README files in those directories
 for details on how to run or add these tests.
 
 If you want to playing Flash files in your web browser, you need a browser 
-plugin additional to this library. The plugins are shipped in seperate 
+plugin additional to this library. The plugins are shipped in separate 
 packages, like swfdec-mozilla. You can get them at the same location as swfdec.
 
 
@@ -62,15 +62,16 @@ Limitations:
 Dependencies:
 
   cairo (>= 1.2.0 - >= 1.4.0 recommended)
+  glib (>= 2.10.0)
   liboil (>= 0.3.6)
   Pangocairo (aka Pango with cairo support)
   zlib (>= 1.1.4)
 
-  FFMpeg (>= 0.4.8 - optional, required for various audio and video formats)
+  FFMpeg (current SVN - optional, required for various audio and video formats)
   GStreamer (>= 0.10.11 - optional, required for various audio and video formats)
   MAD (>= 0.15.1b - optional, required for MP3 audio format support)
 
-  GTK+ (>= 2.0 - used by libswfdec-gtk)
+  GTK+ (>= 2.8.0 - used by libswfdec-gtk)
   ALSA (>= 1.0 - used by libswfdec-gtk)
 
 

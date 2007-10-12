@@ -434,6 +434,8 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
+  swfdec_as_value_to_number (cx, &argv[0]);
+
   text->text->embed_fonts = value;
 }
 
@@ -473,20 +475,26 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
       SWFDEC_AS_STR_color, ret);
 }
 
+// This doesn't work the same way as TextFormat's color setting
 static void
 swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
+  int value;
+  SwfdecAsValue val;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  if (argc < 1)
-    return;
+  if (value < 0) {
+    SWFDEC_AS_VALUE_SET_NUMBER (&val, 16777216 + value % 16777216);
+  } else {
+    SWFDEC_AS_VALUE_SET_NUMBER (&val, value);
+  }
 
   swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (text->format_new),
-      SWFDEC_AS_STR_color, &argv[0]);
+      SWFDEC_AS_STR_color, &val);
 }
 
 static void

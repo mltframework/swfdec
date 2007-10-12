@@ -59,6 +59,15 @@
  * swfdec_buffer_new_from_file() without the need for a different API.
  */
 
+/**
+ * SwfdecBufferFreeFunc:
+ * @data: The data to free
+ * @priv: The private data registered for passing to this function
+ *
+ * This is the function prototype for the function that is called for freeing
+ * the memory pointed to by a buffer. See swfdec_buffer_new() for an example.
+ */
+
 GType
 swfdec_buffer_get_type (void)
 {
@@ -80,7 +89,8 @@ swfdec_buffer_get_type (void)
  * <informalexample><programlisting>SwfdecBuffer *buffer = swfdec_buffer_new ();
  * buffer->data = mydata;
  * buffer->length = mydata_length;
- * buffer->free = mydata_freefunc;</programlisting></informalexample>
+ * buffer->free = mydata_freefunc;
+ * buffer->priv = mydata_private;</programlisting></informalexample>
  *
  * Returns: a new #SwfdecBuffer referencing nothing.
  **/

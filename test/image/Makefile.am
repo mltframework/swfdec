@@ -22,6 +22,18 @@ EXTRA_DIST = \
 	duplicate-depth-6.swf.png \
 	duplicate-depth-7.swf \
 	duplicate-depth-7.swf.png \
+	drawing-zorder.as \
+	drawing-zorder-5.swf \
+	drawing-zorder-5.swf.png \
+	drawing-zorder-6.swf \
+	drawing-zorder-6.swf.org.png \
+	drawing-zorder-6.swf.png \
+	drawing-zorder-7.swf \
+	drawing-zorder-7.swf.org.png \
+	drawing-zorder-7.swf.png \
+	drawing-zorder-8.swf \
+	drawing-zorder-8.swf.org.png \
+	drawing-zorder-8.swf.png \
 	fillstyle-order.swf \
 	fillstyle-order.swf.png \
 	fillstyle-order.xml \

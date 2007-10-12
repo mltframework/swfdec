@@ -249,7 +249,7 @@ AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
 
 AC_ARG_ENABLE(soup,
 	AS_HELP_STRING([--enable-soup],
-			[enable libaoup HTTP support for swfdec-gtk (default=yes)])],
+			[enable libsoup HTTP support for swfdec-gtk (default=yes)])],
 	enable_libsoup=$enableval,
 	enable_libsoup="yes")
 

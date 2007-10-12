@@ -7,7 +7,7 @@ Swfdec release. And a little less condensed:
   libswfdec in applications.
 - reowkr invalidation handling. Less parts of the screen need to be redrawn on 
   changes, but the SwfdecPlayer::invalidate signal changed.
-- support the built-in Date, XML, Sound, System.capabilities and TextField 
+- support the built-in Date, XML, Sound, System.capabilities and TextFormat
   objects plus MovieClip drawing functions
 - add initial support for blend modes and filters (full support is expected with
   Cairo 1.6)

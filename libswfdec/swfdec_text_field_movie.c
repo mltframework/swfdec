@@ -533,7 +533,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   swfdec_text_format_set_defaults (text->format_new);
   text->format_new->color = text->text->color;
   text->format_new->align = text->text->align;
-  text->format_new->font = text->text->font->name;
+  if (text->text->font != NULL && text->text->font->name != NULL)
+    text->format_new->font = text->text->font->name;
   text->format_new->size = text->text->size / 20;
   text->format_new->left_margin = text->text->left_margin / 20;
   text->format_new->right_margin = text->text->right_margin / 20;
@@ -547,6 +548,9 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   if (text->text->text_input != NULL) {
     swfdec_text_field_movie_set_text (text,
 	swfdec_as_context_get_string (cx, text->text->text_input),
+	text->text->html);
+  } else {
+    swfdec_text_field_movie_set_text (text, SWFDEC_AS_STR_EMPTY,
 	text->text->html);
   }
 

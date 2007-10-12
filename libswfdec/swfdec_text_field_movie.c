@@ -478,9 +478,11 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
-  swfdec_as_string_mark (text->text_input);
+  if (text->text_input != NULL)
+    swfdec_as_string_mark (text->text_input);
   swfdec_as_string_mark (text->text_display);
-  swfdec_as_string_mark (text->variable);
+  if (text->variable != NULL)
+    swfdec_as_string_mark (text->variable);
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
   for (iter = text->formats; iter != NULL; iter = iter->next) {
     swfdec_as_object_mark (

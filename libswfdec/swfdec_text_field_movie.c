@@ -531,7 +531,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   cx = SWFDEC_AS_OBJECT (movie)->context;
 
   // format
-  text->format_new = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
+  text->format_new =
+    SWFDEC_TEXT_FORMAT (swfdec_text_format_new_no_properties (cx));
   swfdec_text_format_set_defaults (text->format_new);
   text->format_new->color = text->text->color;
   text->format_new->align = text->text->align;

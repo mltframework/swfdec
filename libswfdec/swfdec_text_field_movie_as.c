@@ -380,6 +380,8 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
+  swfdec_as_value_to_number (cx, &argv[0]);
+
   text->text->html = value;
 }
 
@@ -404,6 +406,8 @@ swfdec_text_field_movie_set_condenseWhite (SwfdecAsContext *cx,
   gboolean value;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
 
   text->condense_white = value;
 }
@@ -431,6 +435,18 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
   text->text->embed_fonts = value;
+}
+
+// does nothing but calls valueOf
+static void
+swfdec_text_field_movie_set_length (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_as_value_to_number (cx, &argv[0]);
 }
 
 static void
@@ -761,7 +777,8 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_text_field_movie_get_embedFonts,
 	swfdec_text_field_movie_set_embedFonts);
     swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_length,
-	swfdec_text_field_movie_get_length, NULL);
+	swfdec_text_field_movie_get_length,
+	swfdec_text_field_movie_set_length);
     swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
 	swfdec_text_field_movie_get_textColor,
 	swfdec_text_field_movie_set_textColor);

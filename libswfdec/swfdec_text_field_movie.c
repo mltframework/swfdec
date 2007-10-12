@@ -525,10 +525,16 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecAsContext *cx;
   SwfdecAsObject *parent;
-  SwfdecAsValue val = { 0, };
+  SwfdecAsValue val;
   const char *s;
 
   cx = SWFDEC_AS_OBJECT (movie)->context;
+
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie),
+	SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  }
 
   // format
   text->format_new =

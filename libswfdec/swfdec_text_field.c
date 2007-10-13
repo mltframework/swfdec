@@ -252,8 +252,9 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
     const SwfdecRect *inval)
 {
   GList *layouts, *iter;
+  SwfdecRect limit;
   SwfdecColor color;
-  int y, y_min, y_max;
+  int y;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
   g_return_if_fail (cr != NULL);
@@ -261,10 +262,10 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
   g_return_if_fail (trans != NULL);
   g_return_if_fail (inval != NULL);
 
+  swfdec_rect_intersect (&limit, &SWFDEC_GRAPHIC (text)->extents, inval);
+
   if (text->background) {
-    cairo_rectangle (cr, SWFDEC_GRAPHIC (text)->extents.x0,
-	SWFDEC_GRAPHIC (text)->extents.y0, SWFDEC_GRAPHIC (text)->extents.x1,
-	SWFDEC_GRAPHIC (text)->extents.y1);
+    cairo_rectangle (cr, limit.x0, limit.y0, limit.x1, limit.y1);
     color = swfdec_color_apply_transform (background_color, trans);
     swfdec_color_set_source (cr, color);
     cairo_fill (cr);
@@ -284,20 +285,17 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       inval);
 
   y = SWFDEC_GRAPHIC (text)->extents.y0 + 1;
-  y_min = MAX (SWFDEC_GRAPHIC (text)->extents.y0, inval->y0);
-  y_max = MIN (SWFDEC_GRAPHIC (text)->extents.y1, inval->y1);
-
   cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0, y);
 
   for (iter = layouts; iter != NULL; iter = iter->next)
   {
     SwfdecLayout *layout = (SwfdecLayout *)iter->data;
 
-    if (y + layout->height < y_min) {
+    if (y + layout->height < limit.y0) {
       // no need to render
       cairo_rel_move_to (cr, 0, layout->height);
       y += layout->height;
-    } else if (y < y_min || y + layout->height > y_max) {
+    } else if (y < limit.y0 || y + layout->height > limit.y1) {
       // possibly skip some lines
       PangoLayoutIter *iter_line;
       PangoLayoutLine *line;
@@ -309,7 +307,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
-      while (y + rect.y + rect.height < y_min)
+      while (y + rect.y + rect.height < limit.y0)
       {
 	if (!pango_layout_iter_next_line (iter_line))
 	  g_assert_not_reached ();
@@ -317,7 +315,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 	pango_extents_to_pixels (NULL, &rect);
       }
 
-      while (y + rect.y <= y_max &&
+      while (y + rect.y <= limit.y1 &&
 	  y + rect.y + rect.height <= SWFDEC_GRAPHIC (text)->extents.y1)
       {
 	cairo_rel_move_to (cr, 0,
@@ -339,7 +337,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       cairo_rel_move_to (cr, -layout->render_offset_x, layout->height);
       y += layout->height;
 
-      if (y > y_max)
+      if (y > limit.y1)
 	break;
     } else {
       // render the whole layout

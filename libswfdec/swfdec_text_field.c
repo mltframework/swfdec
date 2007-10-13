@@ -254,7 +254,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
   GList *layouts, *iter;
   SwfdecRect limit;
   SwfdecColor color;
-  int y, linenum;
+  int y, x, linenum;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
   g_return_if_fail (cr != NULL);
@@ -285,8 +285,9 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       inval);
 
   linenum = 0;
+  x = SWFDEC_GRAPHIC (text)->extents.x0;
   y = SWFDEC_GRAPHIC (text)->extents.y0 + 1;
-  cairo_move_to (cr, SWFDEC_GRAPHIC (text)->extents.x0, y);
+  cairo_move_to (cr, x, y);
 
   for (iter = layouts; iter != NULL && y < limit.y1; iter = iter->next)
   {
@@ -307,18 +308,20 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
 
-      if (y + rect.y + rect.height < limit.y0)
-	continue;
-
       if (y + rect.y > limit.y1 ||
 	  y + rect.y + rect.height > SWFDEC_GRAPHIC (text)->extents.y1)
 	break;
 
-      cairo_rel_move_to (cr, layout->render_offset_x,
+      if (y + rect.y + rect.height < limit.y0 ||
+	  x + layout->render_offset_x + rect.x > limit.x1 ||
+	  x + layout->render_offset_x + rect.x + rect.width < limit.x0)
+	continue;
+
+      cairo_rel_move_to (cr, layout->render_offset_x + rect.x,
 	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE);
       line = pango_layout_iter_get_line_readonly (iter_line);
       pango_cairo_show_layout_line (cr, line);
-      cairo_rel_move_to (cr, -layout->render_offset_x,
+      cairo_rel_move_to (cr, -(layout->render_offset_x + rect.x),
 	  -pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE);
     } while (pango_layout_iter_next_line (iter_line));
 

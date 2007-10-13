@@ -26,6 +26,7 @@
 
 #include "swfdec_text_field_movie.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_xml.h"
 #include "swfdec_debug.h"
 
 typedef struct {
@@ -304,6 +305,7 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p,
     gboolean condense_white)
 {
   const char *end;
+  char *unescaped;
 
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (p != NULL, NULL);
@@ -319,7 +321,9 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p,
       end = p + strcspn (p, "<\n");
     }
 
-    data->text = g_string_append_len (data->text, p, end - p);
+    unescaped = swfdec_xml_unescape_len (p, end - p);
+    data->text = g_string_append (data->text, unescaped);
+    g_free (unescaped);
 
     if (g_ascii_isspace (*end)) {
       if (condense_white) {

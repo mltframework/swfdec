@@ -626,7 +626,7 @@ swfdec_text_field_movie_setNewTextFormat (SwfdecAsContext *cx,
   if (!SWFDEC_IS_TEXT_FORMAT (obj))
     return;
 
-  text->format_new = swfdec_text_format_copy (SWFDEC_TEXT_FORMAT (obj));
+  swfdec_text_format_add (text->format_new, SWFDEC_TEXT_FORMAT (obj));
 }
 
 SWFDEC_AS_NATIVE (104, 102, swfdec_text_field_movie_setTextFormat)

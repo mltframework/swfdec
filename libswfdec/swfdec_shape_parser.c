@@ -428,7 +428,6 @@ swfdec_shape_parser_parse_change (SwfdecShapeParser *parser, SwfdecBits *bits, i
 
     SWFDEC_LOG ("   moveto %d,%d", *x, *y);
   }
-  path = swfdec_sub_path_create (parser->subpaths, *x, *y);
   if (state_fill_styles0) {
     parser->fill0style = swfdec_bits_getbits (bits, parser->n_fill_bits);
     SWFDEC_LOG ("   * fill0style = %d", parser->fill0style);
@@ -452,6 +451,7 @@ swfdec_shape_parser_parse_change (SwfdecShapeParser *parser, SwfdecBits *bits, i
     swfdec_shape_parser_finish (parser);
     swfdec_shape_parser_new_styles (parser, bits);
   }
+  path = swfdec_sub_path_create (parser->subpaths, *x, *y);
   return path;
 }
 

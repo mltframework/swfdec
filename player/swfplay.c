@@ -65,7 +65,10 @@ do_fscommand (SwfdecPlayer *player, const char *command, const char *value, gpoi
 {
   if (g_str_equal (command, "quit")) {
     g_assert (loop);
-    g_main_loop_quit (loop);
+    if (g_main_loop_is_running (loop)) {
+      gtk_widget_destroy (window);
+      g_main_loop_quit (loop);
+    }
   }
   /* FIXME: add more */
 }

@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.5.2.1)
+AC_INIT(swfdec,0.5.3.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -33,7 +33,7 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="2:0:0"
+SWFDEC_LIBVERSION="3:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 

@@ -13,8 +13,8 @@ cruft <?xml version="1.0" encoding="UTF-8" ?>
 </normal>
 
 <!-- entities -->
-<entities entities_attribute="&lt; &gt; &quot; &apos; &amp;">
-  &lt; &gt; &quot; &apos; &amp;
+<entities entities_attribute="&lt; &gt; &quot; &apos; &amp; &nbsp;">
+  &lt; &gt; &quot; &apos; &amp; &nbsp;
 </entities>
 
 <!-- utf-8 -->
@@ -25,8 +25,8 @@ cruft <?xml version="1.0" encoding="UTF-8" ?>
 <no_comment_inside_text>comment text</no_comment_inside_text>
 
 <!-- unescaped entities -->
-<unescaped entities="> ' &">
-  > " ' &
+<unescaped entities="> ' &  (nbsp)">
+  > " ' &  (nbsp)
 </unescaped>
 
 <!-- missing end element -->

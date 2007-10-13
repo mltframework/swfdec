@@ -167,8 +167,8 @@ childNodes: 0:
 Loading: xml-parse-2.xml
 Success: true
 ---
-788
-788
+820
+820
 docTypeDecl: <!DOCTYPE foo [ <!ENTITY greeting "hello"> ]>
 ignoreWhite: true
 loaded: true
@@ -301,7 +301,7 @@ nextSibling: undefined
 previousSibling: TAG(1): 'empty_element'
 childNodes: 0: 
 ---
-attributes: 1: entities%5Fattribute=%3C%20%3E%20%22%20%27%20%26
+attributes: 1: entities%5Fattribute=%3C%20%3E%20%22%20%27%20%26%20%C2%A0
 localName: entities
 namespaceURI: 
 nodeName: entities
@@ -309,18 +309,18 @@ nodeType: 1
 nodeValue: null
 prefix: 
 parentNode: TAG(1): 'null'
-firstChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%0A'
-lastChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%0A'
+firstChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A'
+lastChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A'
 nextSibling: TAG(1): '俄語'
 previousSibling: TAG(1): 'normal'
-childNodes: 1: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%0A'
+childNodes: 1: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A'
 ---
 attributes: 0: 
 localName: null
 namespaceURI: null
 nodeName: null
 nodeType: 3
-nodeValue: %0A%20%20%3C%20%3E%20%22%20%27%20%26%0A
+nodeValue: %0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A
 prefix: null
 parentNode: TAG(1): 'entities'
 firstChild: undefined
@@ -427,7 +427,7 @@ nextSibling: undefined
 previousSibling: undefined
 childNodes: 0: 
 ---
-attributes: 1: entities=%3E%20%27%20%26
+attributes: 1: entities=%3E%20%27%20%26%20%C2%A0%28nbsp%29
 localName: unescaped
 namespaceURI: 
 nodeName: unescaped
@@ -435,18 +435,18 @@ nodeType: 1
 nodeValue: null
 prefix: 
 parentNode: TAG(1): 'null'
-firstChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%0A'
-lastChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%0A'
+firstChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A'
+lastChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A'
 nextSibling: TAG(1): 'end_not_missing'
 previousSibling: TAG(1): 'no_comment_inside_text'
-childNodes: 1: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%0A'
+childNodes: 1: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A'
 ---
 attributes: 0: 
 localName: null
 namespaceURI: null
 nodeName: null
 nodeType: 3
-nodeValue: %0A%20%20%3E%20%22%20%27%20%26%0A
+nodeValue: %0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A
 prefix: null
 parentNode: TAG(1): 'unescaped'
 firstChild: undefined
@@ -648,7 +648,7 @@ nextSibling: undefined
 previousSibling: TAG(1): 'empty_element'
 childNodes: 0: 
 ---
-attributes: 1: entities%5Fattribute=%3C%20%3E%20%22%20%27%20%26
+attributes: 1: entities%5Fattribute=%3C%20%3E%20%22%20%27%20%26%20%C2%A0
 localName: entities
 namespaceURI: 
 nodeName: entities
@@ -656,18 +656,18 @@ nodeType: 1
 nodeValue: null
 prefix: 
 parentNode: TAG(1): 'null'
-firstChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%0A'
-lastChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%0A'
+firstChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A'
+lastChild: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A'
 nextSibling: TAG(1): '俄語'
 previousSibling: TAG(1): 'normal'
-childNodes: 1: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%0A'
+childNodes: 1: TEXT(3): '%0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A'
 ---
 attributes: 0: 
 localName: null
 namespaceURI: null
 nodeName: null
 nodeType: 3
-nodeValue: %0A%20%20%3C%20%3E%20%22%20%27%20%26%0A
+nodeValue: %0A%20%20%3C%20%3E%20%22%20%27%20%26%20%C2%A0%0A
 prefix: null
 parentNode: TAG(1): 'entities'
 firstChild: undefined
@@ -774,7 +774,7 @@ nextSibling: undefined
 previousSibling: undefined
 childNodes: 0: 
 ---
-attributes: 1: entities=%3E%20%27%20%26
+attributes: 1: entities=%3E%20%27%20%26%20%C2%A0%28nbsp%29
 localName: unescaped
 namespaceURI: 
 nodeName: unescaped
@@ -782,18 +782,18 @@ nodeType: 1
 nodeValue: null
 prefix: 
 parentNode: TAG(1): 'null'
-firstChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%0A'
-lastChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%0A'
+firstChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A'
+lastChild: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A'
 nextSibling: TAG(1): 'end_not_missing'
 previousSibling: TAG(1): 'no_comment_inside_text'
-childNodes: 1: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%0A'
+childNodes: 1: TEXT(3): '%0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A'
 ---
 attributes: 0: 
 localName: null
 namespaceURI: null
 nodeName: null
 nodeType: 3
-nodeValue: %0A%20%20%3E%20%22%20%27%20%26%0A
+nodeValue: %0A%20%20%3E%20%22%20%27%20%26%20%C2%A0%28nbsp%29%0A
 prefix: null
 parentNode: TAG(1): 'unescaped'
 firstChild: undefined

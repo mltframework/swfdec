@@ -297,7 +297,7 @@ swfdec_text_field_movie_generate_paragraphs (SwfdecTextFieldMovie *text)
 
   num = 0;
   p = text->text_display;
-  while (p != NULL) {
+  while (p != NULL && *p != '\0') {
     num++;
     p = strchr (p, '\r');
     if (p != NULL) p++;

@@ -113,6 +113,24 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserTag *tag,
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_size, &val);
     }
+    else if (name_length == 5 && !g_strncasecmp (name, "color", 5))
+    {
+      SwfdecAsValue val_number;
+
+      if (value_length != 7 || *value != '#') {
+	SWFDEC_AS_VALUE_SET_NUMBER (&val_number, 0);
+      } else {
+	int number;
+	char *tail;
+
+	number = g_ascii_strtoll (value + 1, &tail, 16);
+	if (tail != value + 7)
+	  number = 0;
+	SWFDEC_AS_VALUE_SET_NUMBER (&val_number, number);
+      }
+
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_color, &val_number);
+    }
     else if (name_length == 13 && !g_strncasecmp (name, "letterspacing", 13))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_letterSpacing,

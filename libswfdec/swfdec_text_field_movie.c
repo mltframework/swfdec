@@ -108,7 +108,7 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
   GSList *iter;
   PangoAttribute *attr_bold, *attr_color, *attr_font, *attr_italic,
 		 *attr_letter_spacing, *attr_size, *attr_underline;
-  // TODO: kerning
+  // TODO: kerning, display
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (paragraph != NULL);
@@ -147,8 +147,7 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
       SWFDEC_COLOR_B (format->color) * 255);
   attr_color->start_index = 0;
 
-  if (text->text->embed_fonts)
-    SWFDEC_FIXME ("Using embed fonts in TextField not supported");
+  // FIXME: embed fonts
   attr_font = pango_attr_family_new (format->font);
   attr_font->start_index = 0;
 
@@ -213,8 +212,7 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
       attr_font->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_font);
 
-      if (text->text->embed_fonts)
-	SWFDEC_FIXME ("Using embed fonts in TextField not supported");
+      // FIXME: embed fonts
       attr_font = pango_attr_family_new (format->font);
       attr_font->start_index = index_ - start_index;
     }
@@ -232,7 +230,6 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
       attr_letter_spacing->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_letter_spacing);
 
-      // FIXME: correct scaling?
       attr_letter_spacing = pango_attr_letter_spacing_new (
 	  format->letter_spacing * 20 * PANGO_SCALE);
       attr_letter_spacing->start_index = index_ - start_index;

@@ -337,6 +337,8 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   reserved = swfdec_bits_getbit (b);
   text->html = swfdec_bits_getbit (b);
   text->embed_fonts = swfdec_bits_getbit (b);
+  if (text->embed_fonts)
+    SWFDEC_FIXME ("Using embed fonts in TextField is not supported");
   if (has_font) {
     SwfdecCharacter *font;
 

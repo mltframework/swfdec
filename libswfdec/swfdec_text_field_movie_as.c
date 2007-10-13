@@ -437,6 +437,9 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
   swfdec_as_value_to_number (cx, &argv[0]);
 
   text->text->embed_fonts = value;
+
+  if (text->text->embed_fonts)
+    SWFDEC_FIXME ("Using embed fonts in TextField not supported");
 }
 
 // does nothing but calls valueOf

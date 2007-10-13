@@ -258,15 +258,24 @@ swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
   swfdec_as_value_to_string (cx, val);
 
   if (cx->version >= 8) {
-    if (!isnan (d) && ((!isfinite (d) && d > 0) || (isfinite (d) && d > (int)G_MAXINT32))) {
-      // don't check allow_negative here
-      return -2147483648;
-    } else {
-      if (!allow_negative && (int)d < 0) {
-	return 0;
+    if (isnan (d))
+      return (allow_negative ? G_MININT32 : 0);
+
+    if (!isfinite (d)) {
+      if (d > 0) {
+	return G_MININT32;
       } else {
-	return (int)d;
+	return (allow_negative ? G_MININT32 : 0);
       }
+    }
+    if (d > (double)G_MAXINT32)
+      return G_MININT32;
+
+    n = (int)d;
+    if (!allow_negative && n < 0) {
+      return 0;
+    } else {
+      return n;
     }
   } else {
     if (!allow_negative && n < 0) {

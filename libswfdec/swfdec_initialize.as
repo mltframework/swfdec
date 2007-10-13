@@ -274,9 +274,8 @@ MovieClip.prototype["duplicateMovieClip"] = ASnative (900, 18);
 MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
 MovieClip.prototype.startDrag = ASnative (900, 20);
 MovieClip.prototype.stopDrag = ASnative (900, 21);
-MovieClip.prototype.createEmptyMovieClip = ASnative (901, 0);
 MovieClip.prototype.createTextField = ASnative (104, 200);
-ASSetPropFlags (MovieClip.prototype, "getDepth,createEmptyMovieClip", 128);
+ASSetPropFlags (MovieClip.prototype, "getDepth", 128);
 
 ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip,6beginFill,6beginGradientFill,6moveTo,6lineTo,6curveTo,6lineStyle,6endFill,6clear");
 ASSetPropFlags (MovieClip.prototype, null, 3);

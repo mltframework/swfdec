@@ -112,7 +112,7 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (paragraph != NULL);
-  g_assert (start_index < end_index);
+  g_assert (start_index <= end_index);
   g_assert (end_index <= strlen (text->text_display));
 
   paragraph->text = text->text_display + start_index;
@@ -121,6 +121,9 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
   paragraph->blocks = NULL;
   paragraph->attrs = NULL;
   paragraph->attrs_list = pango_attr_list_new ();
+
+  if (paragraph->text_length == 0)
+    return;
 
   g_assert (text->formats != NULL);
   for (iter = text->formats; iter->next != NULL &&

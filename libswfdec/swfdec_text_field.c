@@ -141,8 +141,12 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	width += -paragraphs[i].indent / PANGO_SCALE;
       }
 
-      pango_layout_set_width (playout,
-	  (text->word_wrap ? width * PANGO_SCALE : -1));
+      if (text->word_wrap) {
+	pango_layout_set_wrap (playout, PANGO_WRAP_WORD_CHAR);
+	pango_layout_set_width (playout, width * PANGO_SCALE);
+      } else {
+	pango_layout_set_width (playout, -1);
+      }
 
       // set paragraph styles
       if (block->index_ == 0) {

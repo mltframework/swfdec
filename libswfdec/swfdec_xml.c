@@ -74,6 +74,7 @@ static EntityConversion xml_entities[] = {
   { '\'', "&apos;" },
   { '<', "&lt;" },
   { '>', "&gt;" },
+  { '\xa0', "&nbsp;" },
   { '\0', NULL }
 };
 
@@ -86,6 +87,7 @@ swfdec_xml_escape_len (const char *orginal, gssize length)
 
   string = g_string_new ("");
 
+  // Note: we don't escape non-breaking space to &nbsp;
   p = start = orginal;
   while (*(p += strcspn (p, "&<>\"'")) != '\0' && p - orginal < length) {
     string = g_string_append_len (string, start, p - start);
@@ -129,6 +131,9 @@ swfdec_xml_unescape_len (const char *orginal, gssize length)
     for (i = 0; xml_entities[i].escaped != NULL; i++) {
       if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
 	    strlen (xml_entities[i].escaped))) {
+	// FIXME: Do this cleaner
+	if (xml_entities[i].character == '\xa0')
+	  string = g_string_append_c (string, '\xc2');
 	string = g_string_append_c (string, xml_entities[i].character);
 	p += strlen (xml_entities[i].escaped);
 	break;

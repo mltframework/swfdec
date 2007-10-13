@@ -749,7 +749,7 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
-  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextFormat, &val);
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
   object = SWFDEC_AS_VALUE_GET_OBJECT (&val);

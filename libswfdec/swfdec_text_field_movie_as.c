@@ -741,6 +741,47 @@ swfdec_text_field_movie_add_variable (SwfdecAsObject *object,
   swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
 }
 
+void
+swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *object, *proto;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextFormat, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  swfdec_as_object_get_variable (object, SWFDEC_AS_STR_prototype, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_text,
+      swfdec_text_field_movie_get_text, swfdec_text_field_movie_do_set_text);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_htmlText,
+      swfdec_text_field_movie_get_htmlText,
+      swfdec_text_field_movie_set_htmlText);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_html,
+      swfdec_text_field_movie_get_html, swfdec_text_field_movie_set_html);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_condenseWhite,
+      swfdec_text_field_movie_get_condenseWhite,
+      swfdec_text_field_movie_set_condenseWhite);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
+      swfdec_text_field_movie_get_embedFonts,
+      swfdec_text_field_movie_set_embedFonts);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_length,
+      swfdec_text_field_movie_get_length,
+      swfdec_text_field_movie_set_length);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
+      swfdec_text_field_movie_get_textColor,
+      swfdec_text_field_movie_set_textColor);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_autoSize,
+      swfdec_text_field_movie_get_autoSize,
+      swfdec_text_field_movie_set_autoSize);
+}
+
 SWFDEC_AS_CONSTRUCTOR (104, 0, swfdec_text_field_movie_construct, swfdec_text_field_movie_get_type)
 void
 swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -763,39 +804,7 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (object));
 
-  if (!SWFDEC_PLAYER (cx)->edittext_movie_properties_initialized) {
-    SwfdecAsValue val;
-    SwfdecAsObject *proto;
-
-    swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
-    g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-    proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_text,
-	swfdec_text_field_movie_get_text, swfdec_text_field_movie_do_set_text);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_htmlText,
-	swfdec_text_field_movie_get_htmlText,
-	swfdec_text_field_movie_set_htmlText);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_html,
-	swfdec_text_field_movie_get_html, swfdec_text_field_movie_set_html);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_condenseWhite,
-	swfdec_text_field_movie_get_condenseWhite,
-	swfdec_text_field_movie_set_condenseWhite);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
-	swfdec_text_field_movie_get_embedFonts,
-	swfdec_text_field_movie_set_embedFonts);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_length,
-	swfdec_text_field_movie_get_length,
-	swfdec_text_field_movie_set_length);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
-	swfdec_text_field_movie_get_textColor,
-	swfdec_text_field_movie_set_textColor);
-    swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_autoSize,
-	swfdec_text_field_movie_get_autoSize,
-	swfdec_text_field_movie_set_autoSize);
-
-    SWFDEC_PLAYER (cx)->edittext_movie_properties_initialized = TRUE;
-  }
+  swfdec_text_field_movie_init_properties (cx);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

@@ -101,6 +101,9 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 guint			start_index,
 							 guint			end_index);
 
+/* implemented in swfdec_text_field_movie_as.c */
+void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
+
 /* implemented in swfdec_html_parser.c */
 void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);

@@ -2104,10 +2104,12 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
-	if (SWFDEC_IS_TEXT_FIELD_MOVIE (obj)) {
-	  type = SWFDEC_AS_STR_object;
-	} else if (SWFDEC_IS_MOVIE (obj)) {
-	  type = SWFDEC_AS_STR_movieclip;
+	if (SWFDEC_IS_MOVIE (obj)) {
+	  if (SWFDEC_IS_TEXT_FIELD_MOVIE (obj)) {
+	    type = SWFDEC_AS_STR_object;
+	  } else {
+	    type = SWFDEC_AS_STR_movieclip;
+	  }
 	} else if (SWFDEC_IS_AS_FUNCTION (obj)) {
 	  type = SWFDEC_AS_STR_function;
 	} else {

@@ -598,6 +598,36 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
   }
 }
 
+static void
+swfdec_text_field_movie_get_border (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->border);
+}
+
+static void
+swfdec_text_field_movie_set_border (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  if (text->text->border != value) {
+    text->text->border = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
+}
+
 SWFDEC_AS_NATIVE (104, 104, swfdec_text_field_movie_getNewTextFormat)
 void
 swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
@@ -818,6 +848,8 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_wordWrap,
       swfdec_text_field_movie_get_wordWrap,
       swfdec_text_field_movie_set_wordWrap);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_border,
+      swfdec_text_field_movie_get_border, swfdec_text_field_movie_set_border);
 }
 
 SWFDEC_AS_CONSTRUCTOR (104, 0, swfdec_text_field_movie_construct, swfdec_text_field_movie_get_type)

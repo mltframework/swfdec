@@ -283,6 +283,9 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 
   swfdec_rect_intersect (&limit, &SWFDEC_GRAPHIC (text)->extents, inval);
 
+  cairo_rectangle (cr, limit.x0, limit.y0, limit.x1, limit.y1);
+  cairo_clip (cr);
+
   if (text->background) {
     cairo_rectangle (cr, limit.x0, limit.y0, limit.x1, limit.y1);
     color = swfdec_color_apply_transform (background_color, trans);

@@ -150,6 +150,8 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
       if (text->word_wrap) {
 	pango_layout_set_wrap (playout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_width (playout, width * PANGO_SCALE);
+	pango_layout_set_alignment (playout, block->align);
+	pango_layout_set_justify (playout, block->justify);
       } else {
 	pango_layout_set_width (playout, -1);
       }
@@ -163,8 +165,6 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
       }
 
       // set block styles
-      pango_layout_set_alignment (playout, block->align);
-      pango_layout_set_justify (playout, block->justify);
       pango_layout_set_spacing (playout, block->leading);
       pango_layout_set_tabs (playout, block->tab_stops);
 
@@ -235,6 +235,20 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
       }
       else
       {
+	if (block->align != PANGO_ALIGN_LEFT) {
+	  int line_width;
+	  pango_layout_get_pixel_size (playout, &line_width, 0);
+	  if (line_width < width) {
+	    if (block->align == PANGO_ALIGN_RIGHT) {
+	      layout->render_offset_x += width - line_width;
+	    } else if (block->align == PANGO_ALIGN_CENTER) {
+	      layout->render_offset_x += (width - line_width) / 2;
+	    } else {
+	      g_assert_not_reached ();
+	    }
+	  }
+	}
+
 	skip = 0;
       }
 

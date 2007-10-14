@@ -203,6 +203,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
     SWFDEC_ERROR ("decoding didn't produce any data, bailing");
+    swfdec_cached_unload (SWFDEC_CACHED (sound));
     return NULL;
   }
   tmp = swfdec_buffer_queue_pull (queue, depth);

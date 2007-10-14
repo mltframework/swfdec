@@ -138,8 +138,11 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	block->right_margin - block->block_indent;
 
       if (block->index_ == 0 && paragraphs[i].indent < 0) {
-	layout->render_offset_x += paragraphs[i].indent / PANGO_SCALE;
-	width += -paragraphs[i].indent / PANGO_SCALE;
+	// limit negative indent to not go over leftMargin + blockIndent
+	int indent = MAX (paragraphs[i].indent / PANGO_SCALE,
+	    -(block->left_margin + block->block_indent));
+	layout->render_offset_x += indent;
+	width += -indent;
       }
 
       if (text->word_wrap) {

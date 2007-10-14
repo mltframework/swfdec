@@ -396,6 +396,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("autoSize")
   SWFDEC_AS_CONSTANT_STRING ("wordWrap")
   SWFDEC_AS_CONSTANT_STRING ("border")
+  SWFDEC_AS_CONSTANT_STRING ("Key")
   /* add more here */
 ;
 

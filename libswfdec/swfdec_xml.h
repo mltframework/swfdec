@@ -69,10 +69,14 @@ struct _SwfdecXmlClass {
 
 GType		swfdec_xml_get_type	(void);
 
-char *		swfdec_xml_escape	(const char *orginal);
-char *		swfdec_xml_escape_len	(const char *orginal, gssize length);
-char *		swfdec_xml_unescape	(const char *orginal);
-char *		swfdec_xml_unescape_len	(const char *orginal, gssize length);
+char *		swfdec_xml_escape	(const char *		orginal);
+char *		swfdec_xml_escape_len	(const char *		orginal,
+					 gssize			length);
+char *		swfdec_xml_unescape	(SwfdecAsContext *	cx,
+					 const char *		orginal);
+char *		swfdec_xml_unescape_len	(SwfdecAsContext *	cx,
+					 const char *		orginal,
+					 gssize			length);
 
 G_END_DECLS
 #endif

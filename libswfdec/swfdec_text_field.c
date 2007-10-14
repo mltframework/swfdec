@@ -62,6 +62,8 @@ swfdec_text_field_dispose (GObject *object)
   text->text_input = NULL;
   g_free (text->variable);
   text->variable = NULL;
+  g_free (text->font);
+  text->font = NULL;
 
   G_OBJECT_CLASS (swfdec_text_field_parent_class)->dispose (object);
 }
@@ -138,8 +140,11 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	block->right_margin - block->block_indent;
 
       if (block->index_ == 0 && paragraphs[i].indent < 0) {
-	layout->render_offset_x += paragraphs[i].indent / PANGO_SCALE;
-	width += -paragraphs[i].indent / PANGO_SCALE;
+	// limit negative indent to not go over leftMargin + blockIndent
+	int indent = MAX (paragraphs[i].indent / PANGO_SCALE,
+	    -(block->left_margin + block->block_indent));
+	layout->render_offset_x += indent;
+	width += -indent;
       }
 
       if (text->word_wrap) {
@@ -295,18 +300,20 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
     PangoLayoutIter *iter_line;
     PangoLayoutLine *line;
     PangoRectangle rect;
+    int skipped;
 
     iter_line = pango_layout_get_iter (layout->layout);
 
+    skipped = 0;
     do {
-      /*if (++linenum < text->text->scroll) {
-	cairo_rel_move_to (cr, 0, -rect.height);
-	y -= rect.height;
+      if (++linenum < text->scroll + 1)
 	continue;
-      }*/
 
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
+
+      if (linenum == text->scroll + 1)
+	skipped = rect.y;
 
       if (y + rect.y > limit.y1 ||
 	  y + rect.y + rect.height > SWFDEC_GRAPHIC (text)->extents.y1)
@@ -318,15 +325,18 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 	continue;
 
       cairo_rel_move_to (cr, layout->render_offset_x + rect.x,
-	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE);
+	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped);
       line = pango_layout_iter_get_line_readonly (iter_line);
       pango_cairo_show_layout_line (cr, line);
       cairo_rel_move_to (cr, -(layout->render_offset_x + rect.x),
-	  -pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE);
+	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped));
     } while (pango_layout_iter_next_line (iter_line));
 
-    cairo_rel_move_to (cr, 0, layout->height);
-    y += layout->height;
+    if (linenum >= text->scroll + 1) {
+      cairo_rel_move_to (cr, 0, layout->height - skipped);
+      y += layout->height - skipped;
+      skipped = 0;
+    }
   }
 
   for (iter = layouts; iter != NULL; iter = iter->next)
@@ -388,7 +398,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     font = swfdec_swf_decoder_get_character (s, id);
     if (SWFDEC_IS_FONT (font)) {
       SWFDEC_LOG ("  font = %u", id);
-      text->font = SWFDEC_FONT (font);
+      text->font = g_strdup (SWFDEC_FONT (font)->name);
     } else {
       SWFDEC_ERROR ("id %u does not specify a font", id);
     }

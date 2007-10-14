@@ -95,13 +95,15 @@ struct _SwfdecTextField
   gboolean		multiline;
   SwfdecAutoSize	auto_size;
 
+  int			scroll;
+
   gboolean		border;
   gboolean		background;
 
   /* only to be passed to the movie object */
-  SwfdecFont *		font;
   char *		text_input;
   char *		variable;
+  char *		font;
   guint			size;
   SwfdecColor		color;
   SwfdecTextAlign	align;

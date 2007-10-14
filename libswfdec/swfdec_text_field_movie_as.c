@@ -737,12 +737,12 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   edittext->indent = 0;
   edittext->leading = 0;
 
-  edittext->graphic.extents.x0 = SWFDEC_DOUBLE_TO_TWIPS (x);
-  edittext->graphic.extents.x1 =
-    edittext->graphic.extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (width);
-  edittext->graphic.extents.y0 = SWFDEC_DOUBLE_TO_TWIPS (y);
-  edittext->graphic.extents.y1 =
-    edittext->graphic.extents.y0 + SWFDEC_DOUBLE_TO_TWIPS (height);
+  SWFDEC_GRAPHIC (edittext)->extents.x0 = SWFDEC_DOUBLE_TO_TWIPS (x);
+  SWFDEC_GRAPHIC (edittext)->extents.x1 =
+    SWFDEC_GRAPHIC (edittext)->extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (width);
+  SWFDEC_GRAPHIC (edittext)->extents.y0 = SWFDEC_DOUBLE_TO_TWIPS (y);
+  SWFDEC_GRAPHIC (edittext)->extents.y1 =
+    SWFDEC_GRAPHIC (edittext)->extents.y0 + SWFDEC_DOUBLE_TO_TWIPS (height);
 
   movie = swfdec_movie_find (parent, depth);
   if (movie)

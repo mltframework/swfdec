@@ -116,7 +116,8 @@ swfdec_xml_escape (const char *orginal)
 }
 
 char *
-swfdec_xml_unescape_len (const char *orginal, gssize length)
+swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
+    gssize length)
 {
   int i;
   const char *p, *start;
@@ -132,7 +133,7 @@ swfdec_xml_unescape_len (const char *orginal, gssize length)
       if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
 	    strlen (xml_entities[i].escaped))) {
 	// FIXME: Do this cleaner
-	if (xml_entities[i].character == '\xa0')
+	if (cx->version > 5 && xml_entities[i].character == '\xa0')
 	  string = g_string_append_c (string, '\xc2');
 	string = g_string_append_c (string, xml_entities[i].character);
 	p += strlen (xml_entities[i].escaped);
@@ -152,9 +153,9 @@ swfdec_xml_unescape_len (const char *orginal, gssize length)
 }
 
 char *
-swfdec_xml_unescape (const char *orginal)
+swfdec_xml_unescape (SwfdecAsContext *cx, const char *orginal)
 {
-  return swfdec_xml_unescape_len (orginal, strlen (orginal));
+  return swfdec_xml_unescape_len (cx, orginal, strlen (orginal));
 }
 
 // this is never declared, only available as ASnative (100, 5)
@@ -481,7 +482,7 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 
   text = g_strndup (p, end - p);
   name = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
-      swfdec_xml_unescape (text));
+      swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text));
   g_free (text);
 
   p = end + strspn (end, " \r\n\t");
@@ -506,9 +507,8 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
     return strchr (p, '\0');
   }
 
-  text = g_strndup (p + 1, end - (p + 1));
-  unescaped = swfdec_xml_unescape (text);
-  g_free (text);
+  unescaped = swfdec_xml_unescape_len (SWFDEC_AS_OBJECT (xml)->context, p + 1,
+      end - (p + 1));
   value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
       unescaped);
   SWFDEC_AS_VALUE_SET_STRING (&val, value);
@@ -638,7 +638,7 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
   if (!xml->ignoreWhite || strspn (p, " \t\r\n") < (size_t)(end - p))
   {
     text = g_strndup (p, end - p);
-    unescaped = swfdec_xml_unescape (text);
+    unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);
     g_free (text);
     child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (node)->context,
 	SWFDEC_XML_NODE_TEXT, unescaped);

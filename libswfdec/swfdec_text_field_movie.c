@@ -552,8 +552,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   text->format_new->indent = text->text->indent / 20;
   text->format_new->leading = text->text->leading / 20;
 
-  text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
-  text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
+  text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 0);
+  text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
 
   // text
   if (text->text->text_input != NULL) {

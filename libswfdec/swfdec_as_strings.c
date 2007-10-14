@@ -397,5 +397,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("wordWrap")
   SWFDEC_AS_CONSTANT_STRING ("border")
   SWFDEC_AS_CONSTANT_STRING ("Key")
+  SWFDEC_AS_CONSTANT_STRING ("background")
+  SWFDEC_AS_CONSTANT_STRING ("backgroundColor")
+  SWFDEC_AS_CONSTANT_STRING ("borderColor")
   /* add more here */
 ;

@@ -171,6 +171,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   SwfdecBufferQueue *queue;
   guint sample_bytes;
   guint n_samples;
+  guint depth;
 
   g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
   g_return_val_if_fail (format != NULL, NULL);
@@ -199,7 +200,12 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
     swfdec_buffer_queue_push (queue, tmp);
   }
   swfdec_audio_decoder_free (decoder);
-  tmp = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
+  depth = swfdec_buffer_queue_get_depth (queue);
+  if (depth == 0) {
+    SWFDEC_ERROR ("decoding didn't produce any data, bailing");
+    return NULL;
+  }
+  tmp = swfdec_buffer_queue_pull (queue, depth);
   swfdec_buffer_queue_unref (queue);
 
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 

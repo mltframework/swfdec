@@ -109,6 +109,35 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, SwfdecAudioFormat 
 
 /*** PUBLIC API ***/
 
+static SwfdecAudioDecoder *
+swfdec_audio_decoder_builtin_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
+{
+  SwfdecAudioDecoder *ret;
+
+  ret = swfdec_audio_decoder_uncompressed_new (codec, format);
+  if (ret == NULL)
+    ret = swfdec_audio_decoder_adpcm_new (codec, format);
+
+  return ret;
+}
+
+struct {
+  const char *		name;
+  SwfdecAudioDecoder *	(* func) (SwfdecAudioCodec, SwfdecAudioFormat);
+} audio_codecs[] = {
+  { "builtin",	swfdec_audio_decoder_builtin_new },
+#ifdef HAVE_MAD
+  { "mad",	swfdec_audio_decoder_mad_new },
+#endif
+#ifdef HAVE_GST
+  { "gst",	swfdec_audio_decoder_gst_new },
+#endif
+#ifdef HAVE_FFMPEG
+  { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new },
+#endif
+  { NULL, }
+};
+
 /**
  * swfdec_audio_decoder_new:
  * @format: #SwfdecAudioCodec to decode
@@ -122,24 +151,37 @@ SwfdecAudioDecoder *
 swfdec_audio_decoder_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoder *ret;
+  const char *list;
 
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), NULL);
 
-  ret = swfdec_audio_decoder_uncompressed_new (codec, format);
-  if (ret == NULL)
-    ret = swfdec_audio_decoder_adpcm_new (codec, format);
-#ifdef HAVE_MAD
-  if (ret == NULL)
-    ret = swfdec_audio_decoder_mad_new (codec, format);
-#endif
-#ifdef HAVE_FFMPEG
-  if (ret == NULL)
-    ret = swfdec_audio_decoder_ffmpeg_new (codec, format);
-#endif
-#ifdef HAVE_GST
-  if (ret == NULL)
-    ret = swfdec_audio_decoder_gst_new (codec, format);
-#endif
+  list = g_getenv ("SWFDEC_CODEC_AUDIO");
+  if (list == NULL)
+    list = g_getenv ("SWFDEC_CODEC");
+  if (list == NULL) {
+    guint i;
+    for (i = 0; audio_codecs[i].name != NULL; i++) {
+      ret = audio_codecs[i].func (codec, format);
+      if (ret)
+	break;
+    }
+  } else {
+    char **split = g_strsplit (list, ":", -1);
+    guint i, j;
+    ret = NULL;
+    SWFDEC_LOG ("codecs limited to \"%s\"", list);
+    for (i = 0; split[i] != NULL && ret == NULL; i++) {
+      for (j = 0; audio_codecs[j].name != NULL; j++) {
+	if (g_ascii_strcasecmp (audio_codecs[j].name, split[i]) != 0)
+	  continue;
+	ret = audio_codecs[j].func (codec, format);
+	if (ret)
+	  break;
+      }
+    }
+    g_strfreev (split);
+  }
+
   if (ret) {
     ret->codec = codec;
     g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (ret->format), NULL);

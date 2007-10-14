@@ -1023,6 +1023,7 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
 {
   g_assert (keycode < 256);
 
+  swfdec_player_lock (player);
   /* set the correct variables */
   player->last_keycode = keycode;
   player->last_character = character;
@@ -1032,6 +1033,8 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
     player->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp);
+  swfdec_player_perform_actions (player);
+  swfdec_player_unlock (player);
 
   return TRUE;
 }

@@ -2244,11 +2244,11 @@ swfdec_action_enumerate (SwfdecAsContext *cx, guint action, const guint8 *data, 
   swfdec_as_interpret_eval (cx, NULL, val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     SWFDEC_ERROR ("Enumerate not pointing to an object");
-    SWFDEC_AS_VALUE_SET_NULL (val);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }
   obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
-  SWFDEC_AS_VALUE_SET_NULL (val);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   swfdec_action_do_enumerate (cx, obj);
 }
 
@@ -2261,11 +2261,11 @@ swfdec_action_enumerate2 (SwfdecAsContext *cx, guint action, const guint8 *data,
   val = swfdec_as_stack_peek (cx, 1);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     SWFDEC_ERROR ("Enumerate2 called without an object");
-    SWFDEC_AS_VALUE_SET_NULL (val);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }
   obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
-  SWFDEC_AS_VALUE_SET_NULL (val);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   swfdec_action_do_enumerate (cx, obj);
 }
 

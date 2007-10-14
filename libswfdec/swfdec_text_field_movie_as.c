@@ -604,10 +604,10 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->embed_fonts = value;
-
-  if (text->text->embed_fonts)
+  if (!text->text->embed_fonts && value)
     SWFDEC_FIXME ("Using embed fonts in TextField not supported");
+
+  text->text->embed_fonts = value;
 }
 
 static void
@@ -619,8 +619,7 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (text->format_new),
-      SWFDEC_AS_STR_color, ret);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->format_new->color);
 }
 
 // This doesn't work the same way as TextFormat's color setting
@@ -631,18 +630,16 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
   int value;
-  SwfdecAsValue val;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
   if (value < 0) {
-    SWFDEC_AS_VALUE_SET_NUMBER (&val, 16777216 + value % 16777216);
+    value =  16777216 + value % 16777216;
   } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (&val, value);
+    value = value % 16777216;
   }
 
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (text->format_new),
-      SWFDEC_AS_STR_color, &val);
+  text->format_new->color = value;
 }
 
 /*

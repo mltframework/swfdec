@@ -27,6 +27,32 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 
+static SwfdecVideoDecoder *
+swfdec_video_decoder_builtin_new (SwfdecVideoCodec codec)
+{
+  SwfdecVideoDecoder *ret;
+
+  ret = swfdec_video_decoder_screen_new (codec);
+  if (ret == NULL)
+    ret = swfdec_video_decoder_vp6_alpha_new (codec);
+
+  return ret;
+}
+
+struct {
+  const char *		name;
+  SwfdecVideoDecoder *	(* func) (SwfdecVideoCodec);
+} video_codecs[] = {
+  { "builtin",	swfdec_video_decoder_builtin_new },
+#ifdef HAVE_FFMPEG
+  { "ffmpeg",	swfdec_video_decoder_ffmpeg_new },
+#endif
+#ifdef HAVE_GST
+  { "gst",	swfdec_video_decoder_gst_new },
+#endif
+  { NULL, }
+};
+
 /**
  * swfdec_video_decoder_new:
  * @codec: #SwfdecVideoCodec to create the #SwfdecVideoDecoder for
@@ -40,18 +66,34 @@ SwfdecVideoDecoder *
 swfdec_video_decoder_new (SwfdecVideoCodec codec)
 {
   SwfdecVideoDecoder *ret;
+  const char *list;
 
-  ret = swfdec_video_decoder_screen_new (codec);
-  if (ret == NULL)
-    ret = swfdec_video_decoder_vp6_alpha_new (codec);
-#ifdef HAVE_FFMPEG
-  if (ret == NULL)
-    ret = swfdec_video_decoder_ffmpeg_new (codec);
-#endif
-#ifdef HAVE_GST
-  if (ret == NULL)
-    ret = swfdec_video_decoder_gst_new (codec);
-#endif
+  list = g_getenv ("SWFDEC_CODEC_VIDEO");
+  if (list == NULL)
+    list = g_getenv ("SWFDEC_CODEC");
+  if (list == NULL) {
+    guint i;
+    for (i = 0; video_codecs[i].name != NULL; i++) {
+      ret = video_codecs[i].func (codec);
+      if (ret)
+	break;
+    }
+  } else {
+    char **split = g_strsplit (list, ":", -1);
+    guint i, j;
+    ret = NULL;
+    SWFDEC_LOG ("codecs limited to \"%s\"", list);
+    for (i = 0; split[i] != NULL && ret == NULL; i++) {
+      for (j = 0; video_codecs[j].name != NULL; j++) {
+	if (g_ascii_strcasecmp (video_codecs[j].name, split[i]) != 0)
+	  continue;
+	ret = video_codecs[j].func (codec);
+	if (ret)
+	  break;
+      }
+    }
+    g_strfreev (split);
+  }
 
   if (ret != NULL) {
     ret->codec = codec;

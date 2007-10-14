@@ -84,8 +84,8 @@ IGNORE_HFILES= \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
 	swfdec_draw.h \
-	swfdec_edittext.h \
-	swfdec_edittext_movie.h \
+	swfdec_text_field.h \
+	swfdec_text_field_movie.h \
 	swfdec_enums.h \
 	swfdec_event.h \
 	swfdec_filter.h \

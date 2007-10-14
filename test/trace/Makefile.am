@@ -590,6 +590,15 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	getsetproperty-target.as \
+	getsetproperty-target-5.swf \
+	getsetproperty-target-5.swf.trace \
+	getsetproperty-target-6.swf \
+	getsetproperty-target-6.swf.trace \
+	getsetproperty-target-7.swf \
+	getsetproperty-target-7.swf.trace \
+	getsetproperty-target-8.swf \
+	getsetproperty-target-8.swf.trace \
 	getvariable-delimiters.as \
 	getvariable-delimiters-5.swf \
 	getvariable-delimiters-5.swf.trace \

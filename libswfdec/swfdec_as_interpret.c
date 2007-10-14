@@ -470,8 +470,14 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
   gboolean dot_allowed = TRUE;
   const char *start;
 
-  if (path == end)
-    return NULL;
+  if (path == end) {
+    if (o == NULL)
+      o = cx->frame->target;
+    if (SWFDEC_IS_MOVIE (o))
+      return o;
+    else
+      return NULL;
+  }
 
   if (path[0] == '/') {
     o = cx->frame->target;
@@ -550,8 +556,10 @@ swfdec_player_get_movie_from_value (SwfdecPlayer *player, SwfdecAsValue *val)
   cx = SWFDEC_AS_CONTEXT (player);
   s = swfdec_as_value_to_string (cx, val);
   ret = swfdec_action_lookup_object (cx, NULL, s, s + strlen (s));
-  if (!SWFDEC_IS_MOVIE (ret))
+  if (!SWFDEC_IS_MOVIE (ret)) {
+    SWFDEC_WARNING ("\"%s\" does not reference a movie", s);
     return NULL;
+  }
   return SWFDEC_MOVIE (ret);
 }
 
@@ -607,7 +615,10 @@ swfdec_action_get_movie_by_path (SwfdecAsContext *cx, const char *path,
   /* variable to use is the part after the last dot or colon */
   *variable = end + 1;
   /* look up object for start of path */
-  movie = swfdec_action_lookup_object (cx, NULL, path, end);
+  if (path == end)
+    movie = NULL;
+  else
+    movie = swfdec_action_lookup_object (cx, NULL, path, end);
   if (movie) {
     *object = movie;
     return TRUE;
@@ -694,58 +705,59 @@ extern struct {
 static void
 swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val;
-  SwfdecAsObject *obj;
+  SwfdecMovie *movie;
   guint id;
 
-  id = swfdec_as_value_to_integer (cx, swfdec_as_stack_pop (cx));
-  if (id > (cx->version > 4 ? 21 : 18)) {
-    SWFDEC_WARNING ("trying to SetProperty %u, not allowed", id);
-    goto out;
-  }
-  val = swfdec_as_stack_peek (cx, 1);
-  swfdec_as_interpret_eval (cx, NULL, val);
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
-    obj = cx->frame->target;
-  } else if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
+  if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_INFO ("tried using GetProperty in a non-SwfdecPlayer context");
+    goto error;
   } else {
-    SWFDEC_WARNING ("not an object, can't GetProperty");
-    goto out;
+    movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
+	swfdec_as_stack_peek (cx, 2));
+    if (movie == NULL)
+      goto error;
   }
-  swfdec_as_object_get_variable (obj, swfdec_movieclip_props[id].name,
-      swfdec_as_stack_peek (cx, 1));
+  if (id > (cx->version > 4 ? 21 : 18)) {
+    SWFDEC_WARNING ("trying to SetProperty %u, doesn't exist", id);
+    goto error;
+  }
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (movie), swfdec_movieclip_props[id].name,
+      swfdec_as_stack_peek (cx, 2));
+  swfdec_as_stack_pop (cx);
   return;
 
-out:
+error :
+  swfdec_as_stack_pop (cx);
   SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 1));
 }
 
 static void
 swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val;
-  SwfdecAsObject *obj;
+  SwfdecMovie *movie;
   guint id;
 
   id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
-  if (id > (cx->version > 4 ? 21 : 18)) {
-    SWFDEC_WARNING ("trying to SetProperty %u, not allowed", id);
-    goto out;
-  }
-  val = swfdec_as_stack_peek (cx, 3);
-  swfdec_as_interpret_eval (cx, NULL, val);
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
-    obj = cx->frame->target;
-  } else if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_INFO ("tried using GetProperty in a non-SwfdecPlayer context");
+    goto error;
   } else {
-    SWFDEC_WARNING ("not an object, can't get SetProperty");
-    goto out;
+    movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
+	swfdec_as_stack_peek (cx, 3));
+    if (movie == NULL)
+      goto error;
   }
-  swfdec_as_object_set_variable (obj, swfdec_movieclip_props[id].name,
+  if (id > (cx->version > 4 ? 21 : 18)) {
+    SWFDEC_WARNING ("trying to SetProperty %u, doesn't exist", id);
+    goto error;
+  }
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), swfdec_movieclip_props[id].name,
       swfdec_as_stack_peek (cx, 1));
-out:
+  swfdec_as_stack_pop_n (cx, 3);
+  return;
+
+error :
   swfdec_as_stack_pop_n (cx, 3);
 }
 

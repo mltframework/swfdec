@@ -62,6 +62,8 @@ swfdec_text_field_dispose (GObject *object)
   text->text_input = NULL;
   g_free (text->variable);
   text->variable = NULL;
+  g_free (text->font);
+  text->font = NULL;
 
   G_OBJECT_CLASS (swfdec_text_field_parent_class)->dispose (object);
 }
@@ -396,7 +398,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     font = swfdec_swf_decoder_get_character (s, id);
     if (SWFDEC_IS_FONT (font)) {
       SWFDEC_LOG ("  font = %u", id);
-      text->font = SWFDEC_FONT (font);
+      text->font = g_strdup (SWFDEC_FONT (font)->name);
     } else {
       SWFDEC_ERROR ("id %u does not specify a font", id);
     }

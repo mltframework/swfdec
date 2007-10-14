@@ -542,8 +542,10 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   swfdec_text_format_set_defaults (text->format_new);
   text->format_new->color = text->text->color;
   text->format_new->align = text->text->align;
-  if (text->text->font != NULL && text->text->font->name != NULL)
-    text->format_new->font = text->text->font->name;
+  if (text->text->font != NULL)  {
+    text->format_new->font =
+      swfdec_as_context_get_string (cx, text->text->font);
+  }
   text->format_new->size = text->text->size / 20;
   text->format_new->left_margin = text->text->left_margin / 20;
   text->format_new->right_margin = text->text->right_margin / 20;

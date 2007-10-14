@@ -101,9 +101,9 @@ struct _SwfdecTextField
   gboolean		background;
 
   /* only to be passed to the movie object */
-  SwfdecFont *		font;
   char *		text_input;
   char *		variable;
+  char *		font;
   guint			size;
   SwfdecColor		color;
   SwfdecTextAlign	align;

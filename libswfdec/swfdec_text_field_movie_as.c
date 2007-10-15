@@ -513,6 +513,35 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_text_field_movie_get_selectable (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->selectable);
+}
+
+static void
+swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  text->text->selectable = value;
+
+  // FIXME: If selection made and removing selectable force redraw?
+}
+
+static void
 swfdec_text_field_movie_do_get_type (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -768,6 +797,36 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
 
   if (text->text->auto_size != old)
     swfdec_text_field_movie_format_changed (text);
+}
+
+static void
+swfdec_text_field_movie_get_password (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->password);
+}
+
+static void
+swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  if (text->text->password != value) {
+    text->text->password = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
 }
 
 static void
@@ -1085,9 +1144,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
       swfdec_text_field_movie_get_restrict,
       swfdec_text_field_movie_set_restrict);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
       swfdec_text_field_movie_get_selectable,
-      swfdec_text_field_movie_set_selectable);*/
+      swfdec_text_field_movie_set_selectable);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_type,
       swfdec_text_field_movie_do_get_type,
       swfdec_text_field_movie_do_set_type);
@@ -1140,9 +1199,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_autoSize,
       swfdec_text_field_movie_get_autoSize,
       swfdec_text_field_movie_set_autoSize);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_password,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_password,
       swfdec_text_field_movie_get_password,
-      swfdec_text_field_movie_set_password);*/
+      swfdec_text_field_movie_set_password);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_wordWrap,
       swfdec_text_field_movie_get_wordWrap,
       swfdec_text_field_movie_set_wordWrap);

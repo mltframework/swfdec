@@ -406,5 +406,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("dynamic")
   SWFDEC_AS_CONSTANT_STRING ("scroll")
   SWFDEC_AS_CONSTANT_STRING ("maxChars")
+  SWFDEC_AS_CONSTANT_STRING ("selectable")
+  SWFDEC_AS_CONSTANT_STRING ("password")
   /* add more here */
 ;

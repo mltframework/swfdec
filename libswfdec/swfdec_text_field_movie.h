@@ -88,6 +88,8 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 guint			end_index);
 void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
 							 int			value);
+const char *	swfdec_text_field_movie_get_variable_text (SwfdecTextFieldMovie *	text);
+const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 
 /* implemented in swfdec_text_field_movie_as.c */
 void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);

@@ -58,12 +58,18 @@ swfdec_text_field_dispose (GObject *object)
 {
   SwfdecTextField *text = SWFDEC_TEXT_FIELD (object);
 
-  g_free (text->text_input);
-  text->text_input = NULL;
-  g_free (text->variable);
-  text->variable = NULL;
-  g_free (text->font);
-  text->font = NULL;
+  if (text->text_input != NULL) {
+    g_free (text->text_input);
+    text->text_input = NULL;
+  }
+  if (text->variable != NULL) {
+    g_free (text->variable);
+    text->variable = NULL;
+  }
+  if (text->font != NULL) {
+    g_free (text->font);
+    text->font = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_text_field_parent_class)->dispose (object);
 }

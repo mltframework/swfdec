@@ -408,5 +408,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("maxChars")
   SWFDEC_AS_CONSTANT_STRING ("selectable")
   SWFDEC_AS_CONSTANT_STRING ("password")
+  SWFDEC_AS_CONSTANT_STRING ("variable")
   /* add more here */
 ;

@@ -400,5 +400,10 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("background")
   SWFDEC_AS_CONSTANT_STRING ("backgroundColor")
   SWFDEC_AS_CONSTANT_STRING ("borderColor")
+  SWFDEC_AS_CONSTANT_STRING ("multiline")
+  SWFDEC_AS_CONSTANT_STRING ("type")
+  SWFDEC_AS_CONSTANT_STRING ("input")
+  SWFDEC_AS_CONSTANT_STRING ("dynamic")
+  SWFDEC_AS_CONSTANT_STRING ("scroll")
   /* add more here */
 ;

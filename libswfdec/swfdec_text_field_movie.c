@@ -364,14 +364,107 @@ swfdec_text_field_movie_free_paragraphs (SwfdecTextFieldMovie *text)
   }
 }
 
+static cairo_surface_t *surface = NULL;
+static cairo_t *cr = NULL;
+
+static SwfdecLayout *
+swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), NULL);
+
+  if (text->paragraphs == NULL)
+    swfdec_text_field_movie_generate_paragraphs (text);
+
+  // FIXME: Temporary using image surface, until there is a way to get cairo_t
+  // outside the rendering functions
+  g_assert (surface == NULL);
+  g_assert (cr == NULL);
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+  cr = cairo_create (surface);
+
+  return swfdec_text_field_generate_layouts (text->text, cr,
+      text->paragraphs, NULL, NULL, num);
+}
+
+static void
+swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
+{
+  int i;
+
+  g_return_if_fail (layouts != NULL);
+
+  for (i = 0; layouts[i].layout != NULL; i++) {
+    g_object_unref (layouts[i].layout);
+  }
+
+  g_free (layouts);
+
+  g_assert (cr != NULL);
+  g_assert (surface != NULL);
+
+  cairo_destroy (cr);
+  cr = NULL;
+  cairo_surface_destroy (surface);
+  surface = NULL;
+}
+
+void
+swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
+{
+  SwfdecLayout *layouts;
+  int i, num, y, visible, all, height;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  layouts = swfdec_text_field_movie_get_layouts (text, &num);
+
+  height = SWFDEC_GRAPHIC (text->text)->extents.y1 -
+    SWFDEC_GRAPHIC (text->text)->extents.y0;
+  y = 0;
+  all = 0;
+  visible = 0;
+
+  for (i = num - 1; i >= 0; i--)
+  {
+    SwfdecLayout *layout = &layouts[i];
+    PangoLayoutIter *iter_line;
+    PangoRectangle rect;
+
+    y += layout->height;
+
+    iter_line = pango_layout_get_iter (layout->layout);
+
+    do {
+      pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
+      pango_extents_to_pixels (NULL, &rect);
+
+      if (y - rect.y <= height)
+	visible++;
+
+      all++;
+    } while (pango_layout_iter_next_line (iter_line));
+  }
+
+  swfdec_text_field_movie_free_layouts (layouts);
+
+  if (value < 1) {
+    value = 1;
+  } else if (value > all - visible + 1) {
+    value = all - visible + 1;
+  }
+
+  if (text->text->scroll != value) {
+    text->text->scroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
+}
+
 static gboolean
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
-  cairo_surface_t *surface;
-  cairo_t *cr;
-  GList *layouts, *iter;
+  SwfdecLayout *layouts;
   guint height;
-  int width, diff;
+  int i, width, diff;
   gboolean changed;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
@@ -379,29 +472,20 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
-  if (text->paragraphs == NULL)
-    swfdec_text_field_movie_generate_paragraphs (text);
-
-  // FIXME: Temporary using image surface, until there is a way to get cairo_t
-  // outside the rendering functions
-  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-  cr = cairo_create (surface);
-
-  layouts = swfdec_text_field_generate_layouts (text->text, cr,
-      text->paragraphs, NULL, NULL);
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL);
 
   width = 0;
   height = 3;
-  for (iter = layouts; iter != NULL; iter = iter->next) {
-    SwfdecLayout *layout = (SwfdecLayout *)iter->data;
-
+  for (i = 0; layouts[i].layout != NULL; i++) {
     if (!text->text->word_wrap) {
-      if (layout->width > width)
-	width = layout->width;
+      if (layouts[i].width > width)
+	width = layouts[i].width;
     }
 
-    height += layout->height;
+    height += layouts[i].height;
   }
+
+  swfdec_text_field_movie_free_layouts (layouts);
 
   if (!text->text->word_wrap && SWFDEC_GRAPHIC (text->text)->extents.x1 -
       SWFDEC_GRAPHIC (text->text)->extents.x0 != width)

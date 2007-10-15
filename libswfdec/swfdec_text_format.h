@@ -89,6 +89,10 @@ void		swfdec_text_format_set_defaults	(SwfdecTextFormat *	format);
 SwfdecTextFormat * swfdec_text_format_copy	(const SwfdecTextFormat *copy_from);
 void		swfdec_text_format_add		(SwfdecTextFormat *	format,
 						 const SwfdecTextFormat *from);
+gboolean	swfdec_text_format_equal	(const SwfdecTextFormat *a,
+						 const SwfdecTextFormat *b);
+gboolean	swfdec_text_format_equal_or_undefined	(const SwfdecTextFormat *a,
+						 const SwfdecTextFormat *b);
 
 G_END_DECLS
 #endif

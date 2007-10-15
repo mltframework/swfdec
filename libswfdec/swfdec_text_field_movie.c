@@ -686,7 +686,7 @@ void
 swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
     SwfdecTextFormat *format, guint start_index, guint end_index)
 {
-  SwfdecFormatIndex *findex, *findex_new;
+  SwfdecFormatIndex *findex, *findex_new, *findex_prev;
   guint findex_end_index;
   GSList *iter, *next;
 
@@ -698,10 +698,13 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
   g_assert (((SwfdecFormatIndex *)text->formats->data)->index == 0);
+
+  findex = NULL;
   for (iter = text->formats; iter != NULL &&
       ((SwfdecFormatIndex *)iter->data)->index < end_index;
       iter = next)
   {
+    findex_prev = findex;
     next = iter->next;
     findex = iter->data;
     if (iter->next != NULL) {
@@ -712,6 +715,9 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
     }
 
     if (findex_end_index < start_index)
+      continue;
+
+    if (swfdec_text_format_equal_or_undefined (findex->format, format))
       continue;
 
     if (findex_end_index > end_index) {
@@ -729,8 +735,25 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       swfdec_text_format_add (findex_new->format, format);
 
       iter = g_slist_insert (iter, findex_new, 1);
+      findex = findex_new;
     } else {
       swfdec_text_format_add (findex->format, format);
+
+      // if current format now equals previous one, remove current
+      if (findex_prev != NULL &&
+	  swfdec_text_format_equal (findex->format, findex_prev->format)) {
+	text->formats = g_slist_remove (text->formats, findex);
+	findex = findex_prev;
+      }
+    }
+
+    // if current format now equals the next one, remove current
+    if (findex_end_index <= end_index && next != NULL &&
+	swfdec_text_format_equal (findex->format,
+	  ((SwfdecFormatIndex *)next->data)->format))
+    {
+      text->formats = g_slist_remove (text->formats, findex);
+      findex = findex_prev;
     }
   }
 

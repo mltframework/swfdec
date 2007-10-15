@@ -85,6 +85,11 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, FALSE);
+
+  if (text->variable != NULL) {
+    swfdec_text_field_movie_set_variable_text (text,
+	swfdec_text_field_movie_get_html_text (text));
+  }
 }
 
 static void
@@ -136,6 +141,11 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, text->text->html);
+
+  if (text->variable != NULL) {
+    swfdec_text_field_movie_set_variable_text (text,
+	swfdec_text_field_movie_get_html_text (text));
+  }
 }
 
 static void

@@ -720,7 +720,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   swfdec_text_field_movie_format_changed (text);
 }
 
-static void
+void
 swfdec_text_field_movie_set_variable_text (SwfdecTextFieldMovie *text,
     const char *value)
 {
@@ -1040,7 +1040,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 {
   SwfdecFormatIndex *block;
   GSList *iter;
-  const char *html_text, *variable_text;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
@@ -1082,14 +1081,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     } else {
       text->text_display = str;
     }
-  }
-
-  if (text->variable != NULL) {
-    html_text = swfdec_text_field_movie_get_html_text (text);
-    variable_text = swfdec_text_field_movie_get_variable_text (text);
-
-    if (html_text != variable_text)
-      swfdec_text_field_movie_set_variable_text (text, html_text);
   }
 
   swfdec_text_field_movie_format_changed (text);

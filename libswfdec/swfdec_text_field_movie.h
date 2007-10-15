@@ -89,6 +89,8 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
 							 int			value);
 const char *	swfdec_text_field_movie_get_variable_text (SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_movie_set_variable_text (SwfdecTextFieldMovie		*text,
+							 const char *			value);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 
 /* implemented in swfdec_text_field_movie_as.c */

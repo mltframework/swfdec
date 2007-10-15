@@ -615,7 +615,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
     const char *str;
     text->variable = swfdec_as_context_get_string (cx, text->text->variable);
     str = swfdec_text_field_movie_get_variable_text (text);
-    swfdec_text_field_movie_set_text (text, str, text->text->html);
+    if (str != NULL)
+      swfdec_text_field_movie_set_text (text, str, text->text->html);
   }
 }
 

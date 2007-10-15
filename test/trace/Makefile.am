@@ -488,6 +488,24 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	enumerate.as \
+	enumerate2-5.swf \
+	enumerate2-5.swf.trace \
+	enumerate2-6.swf \
+	enumerate2-6.swf.trace \
+	enumerate2-7.swf \
+	enumerate2-7.swf.trace \
+	enumerate2-8.swf \
+	enumerate2-8.swf.trace \
+	enumerate2.as \
+	enumerate-5.swf \
+	enumerate-5.swf.trace \
+	enumerate-6.swf \
+	enumerate-6.swf.trace \
+	enumerate-7.swf \
+	enumerate-7.swf.trace \
+	enumerate-8.swf \
+	enumerate-8.swf.trace \
 	equality.as \
 	equality-5.swf \
 	equality-5.swf.trace \

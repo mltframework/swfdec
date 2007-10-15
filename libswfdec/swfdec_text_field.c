@@ -83,7 +83,6 @@ static void
 swfdec_text_field_init (SwfdecTextField * text)
 {
   text->scroll = 1;
-  text->max_length = G_MAXUINT;
 }
 
 SwfdecLayout *
@@ -434,7 +433,9 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
   }
   if (has_max_length) {
-    text->max_length = swfdec_bits_get_u16 (b);
+    text->max_chars = swfdec_bits_get_u16 (b);
+  } else {
+    text->max_chars = 0;
   }
   if (has_layout) {
     guint align = swfdec_bits_get_u8 (b);

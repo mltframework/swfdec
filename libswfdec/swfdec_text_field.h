@@ -86,7 +86,7 @@ struct _SwfdecTextField
 
   gboolean		input;
   gboolean		password;
-  guint			max_length;
+  int			max_chars;
   gboolean		selectable;
 
   gboolean		embed_fonts;

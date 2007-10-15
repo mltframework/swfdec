@@ -677,24 +677,6 @@ swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
   swfdec_as_stack_pop_n (cx, 2);
 }
 
-static const char *
-swfdec_as_interpret_eval (SwfdecAsContext *cx, SwfdecAsObject *obj, 
-    SwfdecAsValue *val)
-{
-  if (SWFDEC_AS_VALUE_IS_STRING (val)) {
-    const char *s = SWFDEC_AS_VALUE_GET_STRING (val);
-    if (s != SWFDEC_AS_STR_EMPTY) {
-      swfdec_as_context_eval (cx, obj, s, val);
-      return s;
-    }
-  } 
-  if (obj != NULL)
-    SWFDEC_AS_VALUE_SET_OBJECT (val, obj);
-  else
-    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
-  return SWFDEC_AS_STR_EMPTY;
-}
-
 /* FIXME: this sucks */
 extern struct {
   gboolean needs_movie;
@@ -1647,16 +1629,15 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
   SwfdecAsValue *constructor;
   SwfdecAsFunction *fun;
   guint n_args;
-  const char *name;
 
   swfdec_as_stack_ensure_size (cx, 2);
+  swfdec_action_get_variable (cx, action, data, len);
   constructor = swfdec_as_stack_peek (cx, 1);
-  name = swfdec_as_interpret_eval (cx, NULL, constructor);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
   n_args = MIN (swfdec_as_stack_get_size (cx) - 2, n_args);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor))) {
-    SWFDEC_WARNING ("%s is not a constructor", name);
+    SWFDEC_WARNING ("not a constructor");
     goto fail;
   }
 

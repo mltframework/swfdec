@@ -1599,9 +1599,6 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
   guint stack_size = 3;
 
   swfdec_as_stack_ensure_size (cx, 3);
-  if (swfdec_as_interpret_eval (cx, NULL, swfdec_as_stack_peek (cx, 1)) == SWFDEC_AS_STR_EMPTY) {
-    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 1), cx->frame->target);
-  }
   center = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 2));
   if (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 3))) {
     swfdec_as_stack_ensure_size (cx, 7);
@@ -1613,11 +1610,15 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
     stack_size = 7;
     rectp = &rect;
   }
-  if (SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 1)) &&
-      SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 1)))) {
-    swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), movie, center, rectp);
+  if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_ERROR ("called startDrag on a non-SwfdecPlayer");
   } else {
-    SWFDEC_ERROR ("startDrag on something not a Movie");
+    movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), swfdec_as_stack_peek (cx, 1));
+    if (movie != NULL) {
+      swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), movie, center, rectp);
+    } else {
+      SWFDEC_ERROR ("startDrag on something not a Movie");
+    }
   }
   swfdec_as_stack_pop_n (cx, stack_size);
 }

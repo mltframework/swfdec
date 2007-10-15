@@ -43,17 +43,6 @@ typedef struct {
   SwfdecTextFormat *	format;
 } SwfdecFormatIndex;
 
-typedef enum {
-  SWFDEC_ANTI_ALIAS_TYPE_NORMAL,
-  SWFDEC_ANTI_ALIAS_TYPE_ADVANCED
-} SwfdecAntiAliasType;
-
-typedef enum {
-  SWFDEC_GRID_FIT_TYPE_NONE,
-  SWFDEC_GRID_FIT_TYPE_PIXEL,
-  SWFDEC_GRID_FIT_TYPE_SUBPIXEL
-} SwfdecGridFitType;
-
 struct _SwfdecTextFieldMovie {
   SwfdecMovie		movie;
 
@@ -67,20 +56,17 @@ struct _SwfdecTextFieldMovie {
   SwfdecTextFormat *	format_new;
   GSList *		formats;
 
-  SwfdecAntiAliasType	anti_alias_type;
   gboolean		condense_white;
   gboolean		embed_fonts;
-  SwfdecGridFitType	grid_fit_type;
-  guint			hscroll;
-  gboolean		mouse_wheel_enabled;
-  const char *		restrict_;
-  guint			scroll;
-  int			sharpness;
   SwfdecStyleSheet *	style_sheet;
-  int			thickness;
 
   SwfdecColor		border_color;
   SwfdecColor		background_color;
+
+  // FIXME: Temporary using image surface, until there is a way to get cairo_t
+  // outside the rendering functions
+  cairo_surface_t *	surface;
+  cairo_t *		cr;
 
   /* for rendering */
   SwfdecParagraph *	paragraphs;
@@ -100,6 +86,8 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,
 							 guint			end_index);
+void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
+							 int			value);
 
 /* implemented in swfdec_text_field_movie_as.c */
 void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);

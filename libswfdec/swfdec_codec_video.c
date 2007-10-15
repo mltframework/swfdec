@@ -73,6 +73,7 @@ swfdec_video_decoder_new (SwfdecVideoCodec codec)
     list = g_getenv ("SWFDEC_CODEC");
   if (list == NULL) {
     guint i;
+    ret = NULL;
     for (i = 0; video_codecs[i].name != NULL; i++) {
       ret = video_codecs[i].func (codec);
       if (ret)

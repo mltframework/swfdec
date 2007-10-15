@@ -364,14 +364,89 @@ swfdec_text_field_movie_free_paragraphs (SwfdecTextFieldMovie *text)
   }
 }
 
+static SwfdecLayout *
+swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), NULL);
+
+  if (text->paragraphs == NULL)
+    swfdec_text_field_movie_generate_paragraphs (text);
+
+  return swfdec_text_field_generate_layouts (text->text, text->cr,
+      text->paragraphs, NULL, NULL, num);
+}
+
+static void
+swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
+{
+  int i;
+
+  g_return_if_fail (layouts != NULL);
+
+  for (i = 0; layouts[i].layout != NULL; i++) {
+    g_object_unref (layouts[i].layout);
+  }
+
+  g_free (layouts);
+}
+
+void
+swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
+{
+  SwfdecLayout *layouts;
+  int i, num, y, visible, all, height;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  layouts = swfdec_text_field_movie_get_layouts (text, &num);
+
+  height = SWFDEC_GRAPHIC (text->text)->extents.y1 -
+    SWFDEC_GRAPHIC (text->text)->extents.y0;
+  y = 0;
+  all = 0;
+  visible = 0;
+
+  for (i = num - 1; i >= 0; i--)
+  {
+    SwfdecLayout *layout = &layouts[i];
+    PangoLayoutIter *iter_line;
+    PangoRectangle rect;
+
+    y += layout->height;
+
+    iter_line = pango_layout_get_iter (layout->layout);
+
+    do {
+      pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
+      pango_extents_to_pixels (NULL, &rect);
+
+      if (y - rect.y <= height)
+	visible++;
+
+      all++;
+    } while (pango_layout_iter_next_line (iter_line));
+  }
+
+  swfdec_text_field_movie_free_layouts (layouts);
+
+  if (value < 1) {
+    value = 1;
+  } else if (value > all - visible + 1) {
+    value = all - visible + 1;
+  }
+
+  if (text->text->scroll != value) {
+    text->text->scroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
+}
+
 static gboolean
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
-  cairo_surface_t *surface;
-  cairo_t *cr;
-  GList *layouts, *iter;
+  SwfdecLayout *layouts;
   guint height;
-  int width, diff;
+  int i, width, diff;
   gboolean changed;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
@@ -379,29 +454,20 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
-  if (text->paragraphs == NULL)
-    swfdec_text_field_movie_generate_paragraphs (text);
-
-  // FIXME: Temporary using image surface, until there is a way to get cairo_t
-  // outside the rendering functions
-  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-  cr = cairo_create (surface);
-
-  layouts = swfdec_text_field_generate_layouts (text->text, cr,
-      text->paragraphs, NULL, NULL);
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL);
 
   width = 0;
   height = 3;
-  for (iter = layouts; iter != NULL; iter = iter->next) {
-    SwfdecLayout *layout = (SwfdecLayout *)iter->data;
-
+  for (i = 0; layouts[i].layout != NULL; i++) {
     if (!text->text->word_wrap) {
-      if (layout->width > width)
-	width = layout->width;
+      if (layouts[i].width > width)
+	width = layouts[i].width;
     }
 
-    height += layout->height;
+    height += layouts[i].height;
   }
+
+  swfdec_text_field_movie_free_layouts (layouts);
 
   if (!text->text->word_wrap && SWFDEC_GRAPHIC (text->text)->extents.x1 -
       SWFDEC_GRAPHIC (text->text)->extents.x0 != width)
@@ -466,6 +532,9 @@ swfdec_text_field_movie_dispose (GObject *object)
     text->formats->data = NULL;
   }
   g_slist_free (text->formats);
+
+  cairo_destroy (text->cr);
+  cairo_surface_destroy (text->surface);
 
   G_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->dispose (object);
 }
@@ -552,8 +621,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   text->format_new->indent = text->text->indent / 20;
   text->format_new->leading = text->text->leading / 20;
 
-  text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
-  text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
+  text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 0);
+  text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
 
   // text
   if (text->text->text_input != NULL) {
@@ -609,13 +678,15 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 static void
 swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 {
+  text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+  text->cr = cairo_create (text->surface);
 }
 
 void
 swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
     SwfdecTextFormat *format, guint start_index, guint end_index)
 {
-  SwfdecFormatIndex *findex, *findex_new;
+  SwfdecFormatIndex *findex, *findex_new, *findex_prev;
   guint findex_end_index;
   GSList *iter, *next;
 
@@ -627,10 +698,13 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
   g_assert (((SwfdecFormatIndex *)text->formats->data)->index == 0);
+
+  findex = NULL;
   for (iter = text->formats; iter != NULL &&
       ((SwfdecFormatIndex *)iter->data)->index < end_index;
       iter = next)
   {
+    findex_prev = findex;
     next = iter->next;
     findex = iter->data;
     if (iter->next != NULL) {
@@ -641,6 +715,9 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
     }
 
     if (findex_end_index < start_index)
+      continue;
+
+    if (swfdec_text_format_equal_or_undefined (findex->format, format))
       continue;
 
     if (findex_end_index > end_index) {
@@ -658,8 +735,25 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       swfdec_text_format_add (findex_new->format, format);
 
       iter = g_slist_insert (iter, findex_new, 1);
+      findex = findex_new;
     } else {
       swfdec_text_format_add (findex->format, format);
+
+      // if current format now equals previous one, remove current
+      if (findex_prev != NULL &&
+	  swfdec_text_format_equal (findex->format, findex_prev->format)) {
+	text->formats = g_slist_remove (text->formats, findex);
+	findex = findex_prev;
+      }
+    }
+
+    // if current format now equals the next one, remove current
+    if (findex_end_index <= end_index && next != NULL &&
+	swfdec_text_format_equal (findex->format,
+	  ((SwfdecFormatIndex *)next->data)->format))
+    {
+      text->formats = g_slist_remove (text->formats, findex);
+      findex = findex_prev;
     }
   }
 

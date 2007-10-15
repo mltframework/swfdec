@@ -947,6 +947,73 @@ swfdec_text_format_add (SwfdecTextFormat *format, const SwfdecTextFormat *from)
   format->values_set |= from->values_set;
 }
 
+gboolean
+swfdec_text_format_equal_or_undefined (const SwfdecTextFormat *a,
+    const SwfdecTextFormat *b)
+{
+  int set;
+
+  set = a->values_set & b->values_set;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (a), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (b), FALSE);
+
+  if (set & (1 << PROP_ALIGN) && a->align != b->align)
+    return FALSE;
+  if (set & (1 << PROP_BLOCK_INDENT) && a->block_indent != b->block_indent)
+    return FALSE;
+  if (set & (1 << PROP_BOLD) && a->bold != b->bold)
+    return FALSE;
+  if (set & (1 << PROP_BULLET) && a->bullet != b->bullet)
+    return FALSE;
+  if (set & (1 << PROP_COLOR) && a->color != b->color)
+    return FALSE;
+  if (set & (1 << PROP_DISPLAY) && a->display != b->display)
+    return FALSE;
+  if (set & (1 << PROP_FONT) && a->font != b->font)
+    return FALSE;
+  if (set & (1 << PROP_INDENT) && a->indent != b->indent)
+    return FALSE;
+  if (set & (1 << PROP_ITALIC) && a->italic != b->italic)
+    return FALSE;
+  if (set & (1 << PROP_KERNING) && a->kerning != b->kerning)
+    return FALSE;
+  if (set & (1 << PROP_LEADING) && a->leading != b->leading)
+    return FALSE;
+  if (set & (1 << PROP_LEFT_MARGIN) && a->left_margin != b->left_margin)
+    return FALSE;
+  if (set & (1 << PROP_LETTER_SPACING) &&
+      a->letter_spacing != b->letter_spacing) {
+    return FALSE;
+  }
+  if (set & (1 << PROP_RIGHT_MARGIN) && a->right_margin != b->right_margin)
+    return FALSE;
+  if (set & (1 << PROP_SIZE) && a->size != b->size)
+    return FALSE;
+  if (set & (1 << PROP_TAB_STOPS) && a->tab_stops != b->tab_stops)
+    return FALSE;
+  if (set & (1 << PROP_TARGET) && a->target != b->target)
+    return FALSE;
+  if (set & (1 << PROP_UNDERLINE) && a->underline != b->underline)
+    return FALSE;
+  if (set & (1 << PROP_URL) && a->url != b->url)
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+swfdec_text_format_equal (const SwfdecTextFormat *a, const SwfdecTextFormat *b)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (a), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (b), FALSE);
+
+  if (a->values_set != b->values_set)
+    return FALSE;
+
+  return swfdec_text_format_equal_or_undefined (a, b);
+}
+
 void
 swfdec_text_format_set_defaults (SwfdecTextFormat *format)
 {

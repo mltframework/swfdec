@@ -82,25 +82,24 @@ swfdec_text_field_class_init (SwfdecTextFieldClass * g_class)
 static void
 swfdec_text_field_init (SwfdecTextField * text)
 {
+  text->scroll = 1;
   text->max_length = G_MAXUINT;
 }
 
-GList *
+SwfdecLayout *
 swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
     const SwfdecParagraph *paragraphs, const SwfdecColorTransform *trans,
-    const SwfdecRect *inval)
+    const SwfdecRect *inval, int *num)
 {
-  GList *layouts;
+  GArray *layouts;
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD (text), NULL);
   g_return_val_if_fail (cr != NULL, NULL);
   g_return_val_if_fail (paragraphs != NULL, NULL);
 
-  if (paragraphs[0].text == NULL)
-    return NULL;
+  layouts = g_array_new (TRUE, TRUE, sizeof (SwfdecLayout));
 
-  layouts = NULL;
   for (i = 0; paragraphs[i].text != NULL; i++)
   {
     GList *iter;
@@ -109,7 +108,7 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
     skip = 0;
     for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next)
     {
-      SwfdecLayout *layout;
+      SwfdecLayout layout;
       PangoLayout *playout;
       int width;
       guint length;
@@ -129,12 +128,10 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
       }
 
       // create layout
-      layout = g_new0 (SwfdecLayout, 1);
-      playout = layout->layout = pango_cairo_create_layout (cr);
-      layouts = g_list_append (layouts, layout);
+      playout = layout.layout = pango_cairo_create_layout (cr);
 
       // set rendering position
-      layout->render_offset_x = block->left_margin + block->block_indent;
+      layout.render_offset_x = block->left_margin + block->block_indent;
       width = SWFDEC_GRAPHIC (text)->extents.x1 -
 	SWFDEC_GRAPHIC (text)->extents.x0 - block->left_margin -
 	block->right_margin - block->block_indent;
@@ -143,7 +140,7 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	// limit negative indent to not go over leftMargin + blockIndent
 	int indent = MAX (paragraphs[i].indent / PANGO_SCALE,
 	    -(block->left_margin + block->block_indent));
-	layout->render_offset_x += indent;
+	layout.render_offset_x += indent;
 	width += -indent;
       }
 
@@ -240,9 +237,9 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	  pango_layout_get_pixel_size (playout, &line_width, 0);
 	  if (line_width < width) {
 	    if (block->align == PANGO_ALIGN_RIGHT) {
-	      layout->render_offset_x += width - line_width;
+	      layout.render_offset_x += width - line_width;
 	    } else if (block->align == PANGO_ALIGN_CENTER) {
-	      layout->render_offset_x += (width - line_width) / 2;
+	      layout.render_offset_x += (width - line_width) / 2;
 	    } else {
 	      g_assert_not_reached ();
 	    }
@@ -252,16 +249,21 @@ swfdec_text_field_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	skip = 0;
       }
 
-      pango_layout_get_pixel_size (playout, &layout->width, &layout->height);
-      layout->width += layout->render_offset_x + block->right_margin;
-      layout->height += block->leading / PANGO_SCALE;
+      pango_layout_get_pixel_size (playout, &layout.width, &layout.height);
+      layout.width += layout.render_offset_x + block->right_margin;
+      layout.height += block->leading / PANGO_SCALE;
+
+      layouts = g_array_append_val (layouts, layout);
 
       if (!text->word_wrap)
 	break;
     }
   }
 
-  return layouts;
+  if (num != NULL)
+    *num = layouts->len;
+
+  return (SwfdecLayout *)g_array_free (layouts, FALSE);
 }
 
 void
@@ -270,10 +272,11 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
     SwfdecColor background_color, const SwfdecColorTransform *trans,
     const SwfdecRect *inval)
 {
-  GList *layouts, *iter;
+  SwfdecLayout *layouts;
   SwfdecRect limit;
   SwfdecColor color;
-  int y, x, linenum;
+  int i, y, x, linenum;
+  gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
   g_return_if_fail (cr != NULL);
@@ -304,16 +307,17 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
   }
 
   layouts = swfdec_text_field_generate_layouts (text, cr, paragraphs, trans,
-      inval);
+      inval, NULL);
 
+  first = TRUE;
   linenum = 0;
   x = SWFDEC_GRAPHIC (text)->extents.x0;
   y = SWFDEC_GRAPHIC (text)->extents.y0 + 1;
   cairo_move_to (cr, x, y);
 
-  for (iter = layouts; iter != NULL && y < limit.y1; iter = iter->next)
+  for (i = 0; layouts[i].layout != NULL && y < limit.y1; i++)
   {
-    SwfdecLayout *layout = (SwfdecLayout *)iter->data;
+    SwfdecLayout *layout = &layouts[i];
     PangoLayoutIter *iter_line;
     PangoLayoutLine *line;
     PangoRectangle rect;
@@ -323,17 +327,22 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 
     skipped = 0;
     do {
-      if (++linenum < text->scroll + 1)
+      if (++linenum < text->scroll)
 	continue;
 
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
 
-      if (linenum == text->scroll + 1)
+      if (linenum == text->scroll)
 	skipped = rect.y;
 
-      if (y + rect.y > limit.y1 ||
+      if (!first &&
 	  y + rect.y + rect.height > SWFDEC_GRAPHIC (text)->extents.y1)
+	break;
+
+      first = FALSE;
+
+      if (y + rect.y > limit.y1)
 	break;
 
       if (y + rect.y + rect.height < limit.y0 ||
@@ -349,23 +358,18 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
 	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped));
     } while (pango_layout_iter_next_line (iter_line));
 
-    if (linenum >= text->scroll + 1) {
+    if (linenum >= text->scroll) {
       cairo_rel_move_to (cr, 0, layout->height - skipped);
       y += layout->height - skipped;
       skipped = 0;
     }
   }
 
-  for (iter = layouts; iter != NULL; iter = iter->next)
-  {
-    SwfdecLayout *layout = (SwfdecLayout *)iter->data;
-
-    g_object_unref (layout->layout);
-    g_free (layout);
-    iter->data = NULL;
+  for (i = 0; layouts[i].layout != NULL; i++) {
+    g_object_unref (layouts[i].layout);
   }
 
-  g_list_free (layouts);
+  g_free (layouts);
 }
 
 

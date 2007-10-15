@@ -160,6 +160,7 @@ swfdec_audio_decoder_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
     list = g_getenv ("SWFDEC_CODEC");
   if (list == NULL) {
     guint i;
+    ret = NULL;
     for (i = 0; audio_codecs[i].name != NULL; i++) {
       ret = audio_codecs[i].func (codec, format);
       if (ret)

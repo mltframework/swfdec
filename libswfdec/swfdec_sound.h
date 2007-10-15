@@ -88,10 +88,6 @@ int tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag);
 
 SwfdecBuffer *		swfdec_sound_get_decoded	(SwfdecSound *		sound,
 							 SwfdecAudioFormat *	format);
-void			swfdec_sound_render		(SwfdecSound *		sound, 
-							 gint16 *		dest, 
-							 guint		offset,
-		  					 guint		len);
 void			swfdec_sound_buffer_render	(gint16 *		dest, 
 							 const SwfdecBuffer *	source, 
 							 SwfdecAudioFormat		format,

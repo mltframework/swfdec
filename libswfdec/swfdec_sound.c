@@ -552,27 +552,3 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
   }
 }
 
-/**
- * swfdec_sound_render:
- * @sound: a #SwfdecSound
- * @dest: target to add to
- * @offset: offset in samples into the data
- * @n_samples: amount of samples to render
- *
- * Renders the given sound onto the existing data in @dest.
- **/
-void
-swfdec_sound_render (SwfdecSound *sound, gint16 *dest,
-    guint offset, guint n_samples)
-{
-  SwfdecBuffer *buffer;
-  SwfdecAudioFormat format;
-  g_return_if_fail (SWFDEC_IS_SOUND (sound));
-  /* FIXME: I need a return_if_fail for !created_by_define_sound */
-
-  buffer = swfdec_sound_get_decoded (sound, &format);
-  if (buffer == NULL)
-    return;
-  swfdec_sound_buffer_render (dest, buffer, format, 
-      NULL, offset, n_samples);
-}

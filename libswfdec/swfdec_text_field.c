@@ -276,6 +276,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
   SwfdecRect limit;
   SwfdecColor color;
   int i, y, x, linenum;
+  gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD (text));
   g_return_if_fail (cr != NULL);
@@ -308,6 +309,7 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
   layouts = swfdec_text_field_generate_layouts (text, cr, paragraphs, trans,
       inval, NULL);
 
+  first = TRUE;
   linenum = 0;
   x = SWFDEC_GRAPHIC (text)->extents.x0;
   y = SWFDEC_GRAPHIC (text)->extents.y0 + 1;
@@ -334,8 +336,13 @@ swfdec_text_field_render (SwfdecTextField *text, cairo_t *cr,
       if (linenum == text->scroll)
 	skipped = rect.y;
 
-      if (y + rect.y > limit.y1 ||
+      if (!first &&
 	  y + rect.y + rect.height > SWFDEC_GRAPHIC (text)->extents.y1)
+	break;
+
+      first = FALSE;
+
+      if (y + rect.y > limit.y1)
 	break;
 
       if (y + rect.y + rect.height < limit.y0 ||

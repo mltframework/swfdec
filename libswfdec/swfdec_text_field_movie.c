@@ -364,9 +364,6 @@ swfdec_text_field_movie_free_paragraphs (SwfdecTextFieldMovie *text)
   }
 }
 
-static cairo_surface_t *surface = NULL;
-static cairo_t *cr = NULL;
-
 static SwfdecLayout *
 swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num)
 {
@@ -375,14 +372,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num)
   if (text->paragraphs == NULL)
     swfdec_text_field_movie_generate_paragraphs (text);
 
-  // FIXME: Temporary using image surface, until there is a way to get cairo_t
-  // outside the rendering functions
-  g_assert (surface == NULL);
-  g_assert (cr == NULL);
-  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-  cr = cairo_create (surface);
-
-  return swfdec_text_field_generate_layouts (text->text, cr,
+  return swfdec_text_field_generate_layouts (text->text, text->cr,
       text->paragraphs, NULL, NULL, num);
 }
 
@@ -398,14 +388,6 @@ swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
   }
 
   g_free (layouts);
-
-  g_assert (cr != NULL);
-  g_assert (surface != NULL);
-
-  cairo_destroy (cr);
-  cr = NULL;
-  cairo_surface_destroy (surface);
-  surface = NULL;
 }
 
 void
@@ -551,6 +533,9 @@ swfdec_text_field_movie_dispose (GObject *object)
   }
   g_slist_free (text->formats);
 
+  cairo_destroy (text->cr);
+  cairo_surface_destroy (text->surface);
+
   G_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->dispose (object);
 }
 
@@ -693,6 +678,8 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 static void
 swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 {
+  text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+  text->cr = cairo_create (text->surface);
 }
 
 void

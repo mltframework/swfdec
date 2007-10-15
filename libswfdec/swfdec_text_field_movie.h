@@ -63,6 +63,11 @@ struct _SwfdecTextFieldMovie {
   SwfdecColor		border_color;
   SwfdecColor		background_color;
 
+  // FIXME: Temporary using image surface, until there is a way to get cairo_t
+  // outside the rendering functions
+  cairo_surface_t *	surface;
+  cairo_t *		cr;
+
   /* for rendering */
   SwfdecParagraph *	paragraphs;
 };

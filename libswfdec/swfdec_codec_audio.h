@@ -49,7 +49,7 @@ struct _SwfdecAudioDecoder {
 SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioCodec	codec,
 							 SwfdecAudioFormat	format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
-SwfdecAudioFormat		swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
+SwfdecAudioFormat	swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
 							 SwfdecBuffer *		buffer);
 SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);

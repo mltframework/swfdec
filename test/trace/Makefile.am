@@ -921,6 +921,15 @@ EXTRA_DIST = \
 	netstream-onstatus-notfound.as \
 	netstream-onstatus-notfound.swf \
 	netstream-onstatus-notfound.swf.trace \
+	newobject-paths.as \
+	newobject-paths-5.swf \
+	newobject-paths-5.swf.trace \
+	newobject-paths-6.swf \
+	newobject-paths-6.swf.trace \
+	newobject-paths-7.swf \
+	newobject-paths-7.swf.trace \
+	newobject-paths-8.swf \
+	newobject-paths-8.swf.trace \
 	number.swf \
 	number.swf.trace \
 	number-properties.as \

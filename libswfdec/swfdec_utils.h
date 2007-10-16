@@ -27,6 +27,14 @@ gboolean	swfdec_str_case_equal		(gconstpointer	v1,
 						 gconstpointer	v2);
 guint		swfdec_str_case_hash		(gconstpointer	v);
 
+int		swfdec_strcmp			(guint		version,
+						 const char *	s1,
+						 const char *	s2);
+int		swfdec_strncmp			(guint		version,
+						 const char *	s1,
+						 const char *	s2,
+						 guint		n);
+
 
 G_END_DECLS
 #endif

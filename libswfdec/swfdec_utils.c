@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "swfdec_utils.h"
 
 gboolean
@@ -42,5 +44,31 @@ swfdec_str_case_hash (gconstpointer v)
     h = (h << 5) - h + (*p & 0xDF);
 
   return h;
+}
+
+int
+swfdec_strcmp (guint version, const char *s1, const char *s2)
+{
+  g_return_val_if_fail (s1 != NULL, 0);
+  g_return_val_if_fail (s2 != NULL, 0);
+
+  if (version < 7) {
+    return g_ascii_strcasecmp (s1, s2);
+  } else {
+    return strcmp (s1, s2);
+  }
+}
+
+int
+swfdec_strncmp (guint version, const char *s1, const char *s2, guint n)
+{
+  g_return_val_if_fail (s1 != NULL, 0);
+  g_return_val_if_fail (s2 != NULL, 0);
+
+  if (version < 7) {
+    return g_ascii_strncasecmp (s1, s2, n);
+  } else {
+    return strncmp (s1, s2, n);
+  }
 }
 

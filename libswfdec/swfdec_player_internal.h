@@ -205,8 +205,10 @@ void		swfdec_player_remove_level	(SwfdecPlayer *		player,
 SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *         player,
 						 const char *		url);
 void		swfdec_player_launch		(SwfdecPlayer *         player,
+						 SwfdecLoaderRequest	request,
 						 const char *		url,
-						 const char *		target);
+						 const char *		target,
+						 SwfdecBuffer *		data);
 void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);

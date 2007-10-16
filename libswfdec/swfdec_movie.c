@@ -1427,7 +1427,8 @@ swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
     /* FIXME: what do we do here? Is returning correct?*/
     return;
   }
-  swfdec_player_launch (player, url, target);
+  /* FIXME: add data */
+  swfdec_player_launch (player, request, url, target, NULL);
 }
 
 char *

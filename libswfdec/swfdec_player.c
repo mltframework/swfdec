@@ -1447,8 +1447,12 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   /**
    * SwfdecPlayer::launch:
    * @player: the #SwfdecPlayer affected
+   * @request: the type of request
    * @url: URL to open
    * @target: target to load the URL into
+   * @data: optional data to pass on with the request. Will be of mime type
+   *        application/x-www-form-urlencoded. Can be %NULL indicating no data
+   *        should be passed.
    *
    * Emitted whenever the @player encounters an URL that should be loaded into 
    * a target the Flash player does not recognize. In most cases this happens 
@@ -1457,8 +1461,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * The effect of calling any swfdec functions on the emitting @player is undefined.
    */
   signals[LAUNCH] = g_signal_new ("launch", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING,
-      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__ENUM_STRING_STRING_BOXED,
+      G_TYPE_NONE, 4, SWFDEC_TYPE_LOADER_REQUEST, G_TYPE_STRING, G_TYPE_STRING, 
+      SWFDEC_TYPE_BUFFER);
 
   context_class->mark = swfdec_player_mark;
   context_class->get_time = swfdec_player_get_time;
@@ -1613,7 +1618,8 @@ swfdec_player_load (SwfdecPlayer *player, const char *url)
 }
 
 void
-swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
+swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const char *url, 
+    const char *target, SwfdecBuffer *data)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (url != NULL);
@@ -1624,7 +1630,7 @@ swfdec_player_launch (SwfdecPlayer *player, const char *url, const char *target)
     g_signal_emit (player, signals[FSCOMMAND], 0, command, target);
     return;
   }
-  g_signal_emit (player, signals[LAUNCH], 0, url, target);
+  g_signal_emit (player, signals[LAUNCH], 0, request, url, target, data);
 }
 
 /**

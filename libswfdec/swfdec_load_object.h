@@ -51,7 +51,9 @@ struct _SwfdecLoadObjectClass {
 GType		swfdec_load_object_get_type	(void);
 
 SwfdecAsObject *swfdec_load_object_new		(SwfdecAsObject *	target,
-						 const char *		url);
+						 const char *		url,
+						 SwfdecLoaderRequest	request,
+						 SwfdecBuffer *		data);
 
 
 G_END_DECLS

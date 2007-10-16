@@ -195,6 +195,9 @@ void		swfdec_player_stop_sounds	(SwfdecPlayer *		player,
 						 SwfdecAudioRemoveFunc	func,
 						 gpointer		data);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
+SwfdecMovie *	swfdec_player_get_level		(SwfdecPlayer *		player,
+						 const char *		name,
+						 gboolean		create);
 SwfdecMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,
 						 guint			depth,
@@ -202,8 +205,13 @@ SwfdecMovie *	swfdec_player_add_level_from_loader
 						 const char *		variables);
 void		swfdec_player_remove_level	(SwfdecPlayer *		player,
 						 guint			depth);
+gboolean	swfdec_player_fscommand		(SwfdecPlayer *		player,
+						 const char *		command,
+						 const char *		value);
 SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *         player,
-						 const char *		url);
+						 const char *		url,
+						 SwfdecLoaderRequest	request,
+						 SwfdecBuffer *		buffer);
 void		swfdec_player_launch		(SwfdecPlayer *         player,
 						 SwfdecLoaderRequest	request,
 						 const char *		url,
@@ -219,6 +227,9 @@ void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
 SwfdecMovie *	swfdec_player_get_movie_from_value 
 						(SwfdecPlayer *		player,
 						 SwfdecAsValue *	val);
+SwfdecMovie *	swfdec_player_get_movie_from_string
+						(SwfdecPlayer *		player,
+						 const char *		s);
 
 
 G_END_DECLS

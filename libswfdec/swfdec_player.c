@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,6 +44,7 @@
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_instance.h"
+#include "swfdec_utils.h"
 
 /*** gtk-doc ***/
 
@@ -1417,9 +1419,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   /**
    * SwfdecPlayer::fscommand:
    * @player: the #SwfdecPlayer affected
-   * @command: the command to execute
-   * @paramter: parameter to pass to the command. The parameter depends on the 
-   *            function.
+   * @command: the command to execute. This is a lower case string.
+   * @parameter: parameter to pass to the command. The parameter depends on the 
+   *             function.
    *
    * This signal is emited whenever a Flash script command (also known as 
    * fscommand) is encountered. This method is ued by the Flash file to
@@ -1567,6 +1569,64 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
       player->invalidations->len);
 }
 
+/**
+ * swfdec_player_get_level:
+ * @player: a #SwfdecPlayer
+ * @name: name of the level to request
+ * @create: %TRUE to create if it doesn't exist
+ *
+ * This function is used to look up root movies in the given @player. The 
+ * algorithm used is like this: First, check that @name actually references a
+ * root level movie. If it does not, return %NULL. If the movie for the given 
+ * level already exists, return it. If it does not, create it when @create was 
+ * set to %TRUE and return the newly created movie. Otherwise return %NULL.
+ *
+ * Returns: the #SwfdecMovie referenced by the given @name or %NULL if no such
+ *          movie exists. Note that if a new movie is created, it will not be
+ *          fully initialized (yes, this function sucks).
+ **/
+SwfdecMovie *
+swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create)
+{
+  SwfdecMovie *movie;
+  GList *walk;
+  const char *s;
+  char *end;
+  int depth;
+  gulong l;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  /* check name starts with "_level" */
+  if (swfdec_strncmp (SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
+    return NULL;
+  name += 6;
+  /* extract depth from rest string (or fail if it's not a depth) */
+  errno = 0;
+  l = strtoul (name, &end, 10);
+  if (errno != 0 || *end != 0 || l > G_MAXINT)
+    return NULL;
+  depth = l - 16384;
+  /* find movie */
+  for (walk = player->roots; walk; walk = walk->next) {
+    movie = walk->data;
+    if (movie->depth < depth)
+      continue;
+    if (movie->depth == depth)
+      return movie;
+    break;
+  }
+  /* bail if create isn't set*/
+  if (!create)
+    return NULL;
+  /* create new root movie */
+  s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%lu", l));
+  movie = swfdec_movie_new (player, depth, NULL, NULL, s);
+  movie->name = SWFDEC_AS_STR_EMPTY;
+  return movie;
+}
+
 SwfdecMovie *
 swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     SwfdecLoader *loader, const char *variables)
@@ -1608,13 +1668,65 @@ swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
 }
 
 SwfdecLoader *
-swfdec_player_load (SwfdecPlayer *player, const char *url)
+swfdec_player_load (SwfdecPlayer *player, const char *url, 
+    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
   g_assert (player->loader);
-  return swfdec_loader_load (player->loader, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
+  if (buffer) {
+    return swfdec_loader_load (player->loader, url, request, 
+	(const char *) buffer->data, buffer->length);
+  } else {
+    return swfdec_loader_load (player->loader, url, request, NULL, 0);
+  }
+}
+
+static gboolean
+is_ascii (const char *s)
+{
+  while (*s) {
+    if (*s & 0x80)
+      return FALSE;
+    s++;
+  }
+  return TRUE;
+}
+
+/**
+ * swfdec_player_fscommand:
+ * @player: a #SwfdecPlayer
+ * @command: the command to parse
+ * @value: the value passed to the command
+ *
+ * Checks if @command is an FSCommand and if so, emits the 
+ * SwfdecPlayer::fscommand signal. 
+ *
+ * Returns: %TRUE if an fscommand was found and the signal emitted, %FALSE 
+ *          otherwise.
+ **/
+gboolean
+swfdec_player_fscommand (SwfdecPlayer *player, const char *command, const char *value)
+{
+  char *real_command;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (command != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if (g_ascii_strncasecmp (command, "FSCommand:", 10) != 0)
+    return FALSE;
+
+  command += 10;
+  if (!is_ascii (command)) {
+    SWFDEC_ERROR ("command \"%s\" are not ascii, skipping fscommand", command);
+    return TRUE;
+  }
+  real_command = g_ascii_strdown (command, -1);
+  g_signal_emit (player, signals[FSCOMMAND], 0, real_command, value);
+  g_free (real_command);
+  return TRUE;
 }
 
 void

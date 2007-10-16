@@ -1354,7 +1354,7 @@ swfdec_movie_load_variables_on_data (SwfdecAsContext *cx,
 
 void
 swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
-    const char *target, SwfdecLoaderRequest request)
+    SwfdecLoaderRequest request, SwfdecBuffer *data)
 {
   SwfdecAsObject *loader;
   SwfdecAsContext *context;
@@ -1362,16 +1362,6 @@ swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (url != NULL);
-  g_return_if_fail (target != NULL);
-
-  context = SWFDEC_AS_OBJECT (movie)->context;
-
-  swfdec_as_context_eval (context, SWFDEC_AS_OBJECT (movie), target, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&val))) {
-    SWFDEC_WARNING ("Target not a movie");
-    return;
-  }
 
   if (request != SWFDEC_LOADER_REQUEST_DEFAULT) {
     SWFDEC_FIXME ("loadVariables: Different request-modes not supported");
@@ -1383,52 +1373,23 @@ swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
       swfdec_movie_load_variables_on_data, 0);
   swfdec_as_object_set_variable (loader, SWFDEC_AS_STR_target, &val);
 
-  swfdec_load_object_new (loader, url);
+  swfdec_load_object_new (loader, url, request, data);
 }
 
 void
-swfdec_movie_load (SwfdecMovie *movie, const char *url, const char *target,
-    SwfdecLoaderRequest request, const char *data, gsize data_len)
+swfdec_movie_load (SwfdecMovie *movie, const char *url, SwfdecLoaderRequest request, 
+    SwfdecBuffer *data)
 {
-  SwfdecPlayer *player;
-  guint version;
+  SwfdecLoader *loader;
 
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
   g_return_if_fail (url != NULL);
-  g_return_if_fail (target != NULL);
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  version = SWFDEC_AS_CONTEXT (player)->version;
-
-  /* yay for the multiple uses of GetURL - one of the crappier Flash things */
-  if (g_ascii_strncasecmp (url, "FSCommand:", strlen ("FSCommand:")) != 0 &&
-      ((version >= 7 && g_str_has_prefix (target, "_level")) ||
-       (version < 7 &&
-	g_ascii_strncasecmp (target, "_level", strlen ("_level")) == 0)))
-  {
-    const char *nr = target + strlen ("_level");
-    char *end;
-    guint depth;
-
-    errno = 0;
-    depth = strtoul (nr, &end, 10);
-    if (errno == 0 && *end == '\0') {
-      if (url[0] == '\0') {
-	swfdec_player_remove_level (player, depth);
-      } else {
-	SwfdecLoader *loader = swfdec_loader_load (movie->swf->loader, url,
-	    request, data, data_len);
-	g_assert (loader);
-	swfdec_player_add_level_from_loader (player, depth, loader, NULL);
-      }
-    } else {
-      SWFDEC_ERROR ("%s does not specify a valid level", target);
-    }
-    /* FIXME: what do we do here? Is returning correct?*/
-    return;
-  }
-  /* FIXME: add data */
-  swfdec_player_launch (player, request, url, target, NULL);
+  /* FIXME: load relative to other movie? */
+  loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
+      url, request, data);
+  swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader, NULL);
+  g_object_unref (loader);
 }
 
 char *

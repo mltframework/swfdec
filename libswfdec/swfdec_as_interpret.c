@@ -548,14 +548,24 @@ swfdec_player_get_movie_from_value (SwfdecPlayer *player, SwfdecAsValue *val)
 {
   SwfdecAsContext *cx;
   const char *s;
-  SwfdecAsObject *ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (val != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (val), NULL);
 
   cx = SWFDEC_AS_CONTEXT (player);
   s = swfdec_as_value_to_string (cx, val);
-  ret = swfdec_action_lookup_object (cx, NULL, s, s + strlen (s));
+  return swfdec_player_get_movie_from_string (player, s);
+}
+
+SwfdecMovie *
+swfdec_player_get_movie_from_string (SwfdecPlayer *player, const char *s)
+{
+  SwfdecAsObject *ret;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (s != NULL, NULL);
+
+  ret = swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player), NULL, s, s + strlen (s));
   if (!SWFDEC_IS_MOVIE (ret)) {
     SWFDEC_WARNING ("\"%s\" does not reference a movie", s);
     return NULL;
@@ -1134,11 +1144,24 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   if (swfdec_bits_left (&bits)) {
     SWFDEC_WARNING ("leftover bytes in GetURL action");
   }
-  if (SWFDEC_IS_MOVIE (cx->frame->target))
-    swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
-  else
-    SWFDEC_WARNING ("no movie to load");
+  if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
+  } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
+    /* nothing to do here */
+  } else {
+    SwfdecMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, TRUE);
+    if (movie) {
+      if (movie->swf == NULL) {
+	swfdec_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+	swfdec_movie_initialize (movie);
+      } else {
+	swfdec_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+      }
+    } else {
+      swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, 
+	  url, target, NULL);
+    }
+  }
   g_free (url);
   g_free (target);
 }
@@ -1147,38 +1170,54 @@ static void
 swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *target, *url;
-  guint method;
+  guint method, internal, variables;
 
   if (len != 1) {
     SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
     return;
   }
 
-  target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  url = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
   method = data[0] & 3;
-
   if (method == 3) {
     SWFDEC_ERROR ("GetURL method 3 invalid");
     method = 0;
   }
+  internal = data[0] & 64;
+  variables = data[0] & 128;
+  if (method == 1 || method == 2) {
+    SWFDEC_FIXME ("encode variables");
+  }
 
-  // FIXME: What difference should LoadTarget flag (data[0] & 64) do?
+  target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  url = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
 
-  if (data[0] & 128) {
-    if (SWFDEC_IS_MOVIE (cx->frame->target)) {
-      swfdec_movie_load_variables (SWFDEC_MOVIE (cx->frame->target), url,
-	  target, method);
+  if (!SWFDEC_IS_PLAYER (cx)) {
+    SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
+  } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
+    /* nothing to do here */
+  } else if (internal) {
+    SwfdecMovie *movie;
+    /* FIXME: This code looks wrong - figure out how levels are handled */
+    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, !variables);
+    if (movie) {
+      if (movie->swf == NULL) {
+	swfdec_movie_load (movie, url, method, NULL);
+	swfdec_movie_initialize (movie);
+      }
     } else {
-      SWFDEC_WARNING ("no movie to load");
+      movie = swfdec_player_get_movie_from_string (
+	SWFDEC_PLAYER (cx), target);
+      if (movie == NULL) {
+	/* swfdec_player_get_movie_from_value() should have warned already */
+      } else if (variables) {
+	swfdec_movie_load_variables (movie, url, method, NULL);
+      } else {
+	swfdec_movie_load (movie, url, method, NULL);
+      }
     }
   } else {
-    if (SWFDEC_IS_MOVIE (cx->frame->target)) {
-      swfdec_movie_load (SWFDEC_MOVIE (cx->frame->target), url, target, method,
-	  NULL, 0);
-    } else {
-      SWFDEC_WARNING ("no movie to load");
-    }
+    /* load an external file */
+    swfdec_player_launch (SWFDEC_PLAYER (cx), method, url, target, NULL);
   }
 
   swfdec_as_stack_pop_n (cx, 2);

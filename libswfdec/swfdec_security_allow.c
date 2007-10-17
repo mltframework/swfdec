@@ -74,6 +74,6 @@ swfdec_security_allow_new (void)
     return g_object_ref (singleton);
 
   singleton = g_object_new (SWFDEC_TYPE_SECURITY_ALLOW, NULL);
-  g_object_add_weak_pointer (singleton, &singleton);
+  g_object_add_weak_pointer (G_OBJECT (singleton), (gpointer) &singleton);
   return singleton;
 }

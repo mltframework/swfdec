@@ -29,6 +29,7 @@
 #include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_flash_security.h"
 #include "swfdec_flv_decoder.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
@@ -52,6 +53,21 @@ swfdec_swf_instance_loader_target_get_player (SwfdecLoaderTarget *target)
 }
 
 static void
+swfdec_swf_instance_allow_network (SwfdecPlayer *player)
+{
+  SwfdecFlashSecurity *sec;
+
+  g_print ("enabling network access for %s\n", 
+      swfdec_url_get_url (swfdec_loader_get_url (player->loader)));
+  SWFDEC_INFO ("enabling network access for %s",
+      swfdec_url_get_url (swfdec_loader_get_url (player->loader)));
+
+  sec = SWFDEC_FLASH_SECURITY (player->security);
+  sec->allow_remote = TRUE;
+  sec->allow_local = FALSE;
+}
+
+static void
 swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
 {
   SwfdecSpriteMovie *movie = instance->movie;
@@ -60,9 +76,15 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
     return;
 
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {
-    movie->sprite = SWFDEC_SWF_DECODER (instance->decoder)->main_sprite;
-
+    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
+    movie->sprite = dec->main_sprite;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+    
+    /* if first instance */
+    if (player->loader == instance->loader && dec->use_network &&
+	swfdec_url_has_protocol (swfdec_loader_get_url (instance->loader), "file"))
+      swfdec_swf_instance_allow_network (player);
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
     /* nothing to do, please move along */
   } else {

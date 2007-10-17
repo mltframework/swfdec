@@ -741,6 +741,12 @@ start:
     swfdec_as_context_abort (context, "Stack overflow");
     return;
   }
+  /* if security is NULL, the function may not be called */
+  if (frame->security == NULL) {
+    SWFDEC_WARNING ("insufficient right to call %s", frame->function_name);
+    swfdec_as_frame_return (frame, NULL);
+    goto start;
+  }
   if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
     SwfdecAsValue rval = { 0, };

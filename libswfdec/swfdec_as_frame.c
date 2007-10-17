@@ -29,6 +29,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
+#include "swfdec_security_allow.h"
 
 /**
  * SECTION:SwfdecAsFrame
@@ -269,6 +270,10 @@ swfdec_as_frame_dispose (GObject *object)
   SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
 
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
+  if (frame->security) {
+    g_object_unref (frame->security);
+    frame->security = NULL;
+  }
   if (frame->constant_pool) {
     swfdec_constant_pool_free (frame->constant_pool);
     frame->constant_pool = NULL;
@@ -374,6 +379,11 @@ swfdec_as_frame_load (SwfdecAsFrame *frame)
 {
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (frame)->context;
 
+  if (context->frame) {
+    frame->security = g_object_ref (context->frame->security);
+  } else {
+    frame->security = swfdec_security_allow_new ();
+  }
   frame->stack_begin = context->cur;
   context->base = frame->stack_begin;
   frame->next = context->frame;

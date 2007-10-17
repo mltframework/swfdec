@@ -66,6 +66,10 @@ void		swfdec_as_object_decode		(SwfdecAsObject *	obj,
 SwfdecAsObject * swfdec_as_object_prototype_for_version (SwfdecAsObject *object,
 						 guint			version,
 						 gboolean		check7);
+void		swfdec_as_object_run_with_security 
+						(SwfdecAsObject *	object,
+						 SwfdecScript *		script,
+						 SwfdecSecurity *	sec);
 
 
 G_END_DECLS

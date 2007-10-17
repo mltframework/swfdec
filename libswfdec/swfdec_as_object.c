@@ -33,6 +33,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
+#include "swfdec_security_allow.h"
 
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
@@ -1013,6 +1014,28 @@ swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GTyp
   return function;
 }
 
+void
+swfdec_as_object_run_with_security (SwfdecAsObject *object, SwfdecScript *script,
+    SwfdecSecurity *sec)
+{
+  SwfdecAsContext *context;
+  SwfdecAsFrame *frame;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (script != NULL);
+  g_return_if_fail (SWFDEC_IS_SECURITY (sec));
+
+  context = object->context;
+  frame = swfdec_as_frame_new (context, script);
+  if (frame == NULL)
+    return;
+  swfdec_as_frame_set_security (frame, sec);
+  swfdec_as_frame_set_this (frame, object);
+  swfdec_as_frame_preload (frame);
+  swfdec_as_context_run (context);
+  swfdec_as_stack_pop (context);
+}
+
 /**
  * swfdec_as_object_run:
  * @object: a #SwfdecAsObject
@@ -1023,20 +1046,14 @@ swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GTyp
 void
 swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
 {
-  SwfdecAsContext *context;
-  SwfdecAsFrame *frame;
+  SwfdecSecurity *sec;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (script != NULL);
 
-  context = object->context;
-  frame = swfdec_as_frame_new (context, script);
-  if (frame == NULL)
-    return;
-  swfdec_as_frame_set_this (frame, object);
-  swfdec_as_frame_preload (frame);
-  swfdec_as_context_run (context);
-  swfdec_as_stack_pop (context);
+  sec = swfdec_security_allow_new ();
+  swfdec_as_object_run_with_security (object, script, sec);
+  g_object_unref (sec);
 }
 
 /**

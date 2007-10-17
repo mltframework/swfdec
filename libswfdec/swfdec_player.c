@@ -36,6 +36,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_flash_security.h"
 #include "swfdec_initialize.h"
 #include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
@@ -802,6 +803,10 @@ swfdec_player_dispose (GObject *object)
   if (player->loader) {
     g_object_unref (player->loader);
     player->loader = NULL;
+  }
+  if (player->security) {
+    g_object_unref (player->security);
+    player->security = NULL;
   }
   if (player->system) {
     g_object_unref (player->system);
@@ -1745,6 +1750,23 @@ swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const c
   g_signal_emit (player, signals[LAUNCH], 0, request, url, target, data);
 }
 
+static void
+swfdec_player_create_security (SwfdecPlayer *player, guint version)
+{
+  const SwfdecURL *url;
+  gboolean allow_local, allow_remote;
+
+  url = swfdec_loader_get_url (player->loader);
+  if (version > 7) {
+    allow_local = FALSE;
+    allow_remote = swfdec_url_has_protocol (url, "http");
+  } else {
+    allow_local = swfdec_url_has_protocol (url, "file");
+    allow_remote = TRUE;
+  }
+  player->security = swfdec_flash_security_new (allow_local, allow_remote);
+}
+
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1787,6 +1809,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
+  swfdec_player_create_security (player, version);
   player->rate = rate;
   player->width = width;
   player->height = height;

@@ -82,6 +82,8 @@ swfdec_flash_security_init (SwfdecFlashSecurity *sec)
 
 /**
  * swfdec_flash_security_new:
+ * @allow_local: %TRUE to allow playback of local files
+ * @allow_remote: %TRUE to allow playback of remote files
  *
  * Creates a new Security object that allows everything. These objects are used 
  * by default when no other security object is in use. This is particularly 
@@ -91,15 +93,12 @@ swfdec_flash_security_init (SwfdecFlashSecurity *sec)
  * Returns: a new #SwfdecSecurity object
  **/
 SwfdecSecurity *
-swfdec_flash_security_new (void)
+swfdec_flash_security_new (gboolean allow_local, gboolean allow_remote)
 {
-  static SwfdecSecurity *singleton = NULL;
+  SwfdecFlashSecurity *ret;
   
-  /* FIXME: not threadsafe */
-  if (singleton)
-    return g_object_ref (singleton);
-
-  singleton = g_object_new (SWFDEC_TYPE_FLASH_SECURITY, NULL);
-  g_object_add_weak_pointer (G_OBJECT (singleton), (gpointer) &singleton);
-  return singleton;
+  ret = g_object_new (SWFDEC_TYPE_FLASH_SECURITY, NULL);
+  ret->allow_local = allow_local;
+  ret->allow_remote = allow_remote;
+  return SWFDEC_SECURITY (ret);
 }

@@ -25,6 +25,7 @@
 #include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
+#include <libswfdec/swfdec_security.h>
 #include <libswfdec/swfdec_system.h>
 
 G_BEGIN_DECLS
@@ -62,6 +63,7 @@ struct _SwfdecPlayer
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
   SwfdecLoader *	loader;			/* initial loader */
+  SwfdecSecurity *	security;		/* the default security */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */

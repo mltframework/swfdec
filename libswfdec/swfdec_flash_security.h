@@ -49,7 +49,8 @@ struct _SwfdecFlashSecurityClass
 
 GType			swfdec_flash_security_get_type	(void);
 
-SwfdecSecurity *	swfdec_flash_security_new	(void);
+SwfdecSecurity *	swfdec_flash_security_new	(gboolean	allow_local,
+							 gboolean	allow_remote);
 
 
 G_END_DECLS

@@ -65,6 +65,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_file_loader.c \
 	swfdec_filter.c \
 	swfdec_filter_as.c \
+	swfdec_flash_security.c \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
 	swfdec_graphic.c \
@@ -195,6 +196,7 @@ noinst_HEADERS = \
 	swfdec_text_field_movie.h \
 	swfdec_event.h \
 	swfdec_filter.h \
+	swfdec_flash_security.h \
 	swfdec_flv_decoder.h \
 	swfdec_font.h \
 	swfdec_graphic.h \

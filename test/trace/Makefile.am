@@ -1841,6 +1841,33 @@ EXTRA_DIST = \
 	targetpath-6.swf.trace \
 	targetpath-7.swf \
 	targetpath-7.swf.trace \
+	text-field-length.as \
+	text-field-length-5.swf \
+	text-field-length-5.swf.trace \
+	text-field-length-6.swf \
+	text-field-length-6.swf.trace \
+	text-field-length-7.swf \
+	text-field-length-7.swf.trace \
+	text-field-length-8.swf \
+	text-field-length-8.swf.trace \
+	text-field-values.as \
+	text-field-values-5.swf \
+	text-field-values-5.swf.trace \
+	text-field-values-6.swf \
+	text-field-values-6.swf.trace \
+	text-field-values-7.swf \
+	text-field-values-7.swf.trace \
+	text-field-values-8.swf \
+	text-field-values-8.swf.trace \
+	text-field-variable.as \
+	text-field-variable-5.swf \
+	text-field-variable-5.swf.trace \
+	text-field-variable-6.swf \
+	text-field-variable-6.swf.trace \
+	text-field-variable-7.swf \
+	text-field-variable-7.swf.trace \
+	text-field-variable-8.swf \
+	text-field-variable-8.swf.trace \
 	textformat.as \
 	textformat-5.swf \
 	textformat-5.swf.trace \

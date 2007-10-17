@@ -144,5 +144,11 @@ typedef enum {
   SWFDEC_AS_ACTION_GOTO_FRAME2 = 0x9F
 } SwfdecAsAction;
 
+// FIXME: move
+SwfdecAsObject *	swfdec_action_lookup_object	(SwfdecAsContext *	cx,
+							 SwfdecAsObject *	o,
+							 const char *		path,
+							 const char *		end);
+
 G_END_DECLS
 #endif

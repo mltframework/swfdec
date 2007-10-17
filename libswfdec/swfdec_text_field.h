@@ -123,19 +123,5 @@ GType			swfdec_text_field_get_type	(void);
 int			tag_func_define_edit_text	(SwfdecSwfDecoder *	s,
 							 guint			tag);
 
-SwfdecLayout *		swfdec_text_field_generate_layouts	(SwfdecTextField *	text,
-							 cairo_t *			cr,
-							 const SwfdecParagraph *	paragraphs,
-							 const SwfdecColorTransform *	trans,
-							 const SwfdecRect *		inval,
-							 int *				num);
-void			swfdec_text_field_render		(SwfdecTextField *	text,
-							 cairo_t *		cr,
-							 const SwfdecParagraph *	paragraphs,
-							 SwfdecColor		border_color,
-							 SwfdecColor		background_color,
-							 const SwfdecColorTransform *	trans,
-							 const SwfdecRect *		rect);
-
 G_END_DECLS
 #endif

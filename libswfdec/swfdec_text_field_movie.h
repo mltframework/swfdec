@@ -60,6 +60,9 @@ struct _SwfdecTextFieldMovie {
   gboolean		embed_fonts;
   SwfdecStyleSheet *	style_sheet;
 
+  gboolean		mouse_wheel_enabled;
+  const char *		restrict_;
+
   SwfdecColor		border_color;
   SwfdecColor		background_color;
 

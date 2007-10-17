@@ -31,6 +31,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_object.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
@@ -246,6 +247,43 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
   swfdec_as_value_to_number (cx, &argv[0]);
 
   text->text->multiline = value;
+}
+
+static void
+swfdec_text_field_movie_get_restrict (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (text->restrict_ != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, text->restrict_);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_field_movie_set_restrict (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  const char *value;
+
+  if (argc > 0)
+    swfdec_as_value_to_number (cx, &argv[0]);
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
+    text->restrict_ = NULL;
+  } else {
+    text->restrict_ = value;
+  }
 }
 
 static void
@@ -476,6 +514,33 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
 /*
  * Native properties: Scrolling
  */
+static void
+swfdec_text_field_movie_get_mouseWheelEnabled (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->mouse_wheel_enabled);
+}
+
+static void
+swfdec_text_field_movie_set_mouseWheelEnabled (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  text->mouse_wheel_enabled = value;
+}
+
 static void
 swfdec_text_field_movie_do_get_scroll (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -914,9 +979,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_multiline,
       swfdec_text_field_movie_get_multiline,
       swfdec_text_field_movie_set_multiline);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
       swfdec_text_field_movie_get_restrict,
-      swfdec_text_field_movie_set_restrict);*/
+      swfdec_text_field_movie_set_restrict);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
       swfdec_text_field_movie_get_selectable,
       swfdec_text_field_movie_set_selectable);
@@ -961,9 +1026,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
       swfdec_text_field_movie_get_maxscroll,
       swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
       swfdec_text_field_movie_get_mouseWheelEnabled,
-      swfdec_text_field_movie_set_mouseWheelEnabled);*/
+      swfdec_text_field_movie_set_mouseWheelEnabled);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_scroll,
       swfdec_text_field_movie_do_get_scroll,
       swfdec_text_field_movie_do_set_scroll);
@@ -1005,17 +1070,17 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   // TODO: filters, menu, tabEnabled, tabIndex
 }
 
-SWFDEC_AS_CONSTRUCTOR (104, 0, swfdec_text_field_movie_construct, swfdec_text_field_movie_get_type)
+SWFDEC_AS_NATIVE (104, 0, swfdec_text_field_movie_construct)
 void
 swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecTextFieldMovie)))
+    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsObject)))
       return;
-    object = g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
-    swfdec_as_object_add (object, cx, sizeof (SwfdecTextFieldMovie));
+    object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
+    swfdec_as_object_add (object, cx, sizeof (SwfdecAsObject));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       swfdec_as_object_set_constructor (object,
@@ -1024,8 +1089,6 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       SWFDEC_INFO ("\"TextField\" is not an object");
     }
   }
-
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (object));
 
   swfdec_text_field_movie_init_properties (cx);
 

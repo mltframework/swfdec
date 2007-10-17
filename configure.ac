@@ -333,7 +333,6 @@ vivified/dock/Makefile
 vivified/ui/Makefile
 swfdec.pc
 swfdec-gtk.pc
-swfdec.spec
 )
 
 AC_OUTPUT

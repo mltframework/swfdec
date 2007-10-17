@@ -28,7 +28,6 @@ EXTRA_DIST=depcomp \
 	ChangeLog \
 	autogen.sh \
 	gtk-doc.make \
-	swfdec.spec \
 	m4/as-compiler-flag.m4 \
 	m4/ax_create_stdint_h.m4 \
 	m4/gtk-doc.m4

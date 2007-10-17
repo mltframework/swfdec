@@ -464,7 +464,7 @@ swfdec_action_get_movie_by_slash_path (SwfdecAsContext *cx, const char *path)
   return o;
 }
 
-static SwfdecAsObject *
+SwfdecAsObject *
 swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char *path, const char *end)
 {
   gboolean dot_allowed = TRUE;

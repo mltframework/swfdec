@@ -28,6 +28,7 @@
 #include "swfdec_text_field_movie.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_interpret.h"
 #include "swfdec_text_format.h"
 #include "swfdec_xml.h"
 #include "swfdec_debug.h"
@@ -525,8 +526,6 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
-  swfdec_text_field_movie_set_listen_variable (text, NULL);
-
   swfdec_text_field_movie_free_paragraphs (text);
 
   for (iter = text->formats; iter != NULL; iter = iter->next) {
@@ -618,6 +617,14 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 }
 
 static void
+swfdec_text_field_movie_finish_movie (SwfdecMovie *movie)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+
+  swfdec_text_field_movie_set_listen_variable (text, NULL);
+}
+
+static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -629,6 +636,7 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   asobject_class->mark = swfdec_text_field_movie_mark;
 
   movie_class->init_movie = swfdec_text_field_movie_init_movie;
+  movie_class->finish_movie = swfdec_text_field_movie_finish_movie;
   movie_class->update_extents = swfdec_text_field_movie_update_extents;
   movie_class->render = swfdec_text_field_movie_render;
 }
@@ -722,14 +730,40 @@ static void
 swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
     const char *variable, SwfdecAsObject **object, const char **name)
 {
+  SwfdecAsContext *cx;
+  SwfdecAsObject *parent;
+  const char *p1, *p2;
+
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (variable != NULL);
   g_return_if_fail (object != NULL);
   g_return_if_fail (name != NULL);
 
-  // FIXME: proper variable lookup (have fun)
-  *object = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
-  *name = variable;
+  *object = NULL;
+  *name = NULL;
+
+  if (SWFDEC_MOVIE (text)->parent == NULL)
+    return;
+
+  g_assert (SWFDEC_IS_AS_OBJECT (SWFDEC_MOVIE (text)->parent));
+  cx = SWFDEC_AS_OBJECT (text)->context;
+  parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
+
+  p1 = strrchr (variable, '.');
+  p2 = strrchr (variable, ':');
+  if (p1 == NULL && p2 == NULL) {
+    *object = parent;
+    *name = variable;
+  } else {
+    if (p1 == NULL || (p2 != NULL && p2 > p1))
+      p1 = p2;
+    if (strlen (p1) == 1)
+      return;
+    *object = swfdec_action_lookup_object (cx, parent, variable, p1);
+    if (*object == NULL)
+      return;
+    *name = swfdec_as_context_get_string (cx, p1 + 1);
+  }
 }
 
 void

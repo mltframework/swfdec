@@ -1101,9 +1101,9 @@ swfdec_movie_remove_variable_listener (SwfdecMovie *movie,
   if (iter == NULL)
     return;
 
+  g_free (iter->data);
   movie->variable_listeners =
     g_slist_remove (movie->variable_listeners, iter->data);
-  g_free (iter->data);
 }
 
 static void

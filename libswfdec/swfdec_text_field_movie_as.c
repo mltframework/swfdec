@@ -515,6 +515,31 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
  * Native properties: Scrolling
  */
 static void
+swfdec_text_field_movie_do_get_hscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll);
+}
+
+static void
+swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
+
+  swfdec_text_field_movie_set_hscroll (text, value);
+}
+  
+static void
 swfdec_text_field_movie_get_mouseWheelEnabled (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -1017,9 +1042,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_bottomScroll,
       swfdec_text_field_movie_get_bottomScroll,
       swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_hscroll,
-      swfdec_text_field_movie_get_hscroll,
-      swfdec_text_field_movie_set_hscroll);*/
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_hscroll,
+      swfdec_text_field_movie_do_get_hscroll,
+      swfdec_text_field_movie_do_set_hscroll);
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxhscroll,
       swfdec_text_field_movie_get_maxhscroll,
       swfdec_text_field_movie_set_readonly);*/

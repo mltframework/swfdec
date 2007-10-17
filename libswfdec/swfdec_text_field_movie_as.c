@@ -31,6 +31,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_object.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
@@ -1005,17 +1006,17 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   // TODO: filters, menu, tabEnabled, tabIndex
 }
 
-SWFDEC_AS_CONSTRUCTOR (104, 0, swfdec_text_field_movie_construct, swfdec_text_field_movie_get_type)
+SWFDEC_AS_NATIVE (104, 0, swfdec_text_field_movie_construct)
 void
 swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecTextFieldMovie)))
+    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsObject)))
       return;
-    object = g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
-    swfdec_as_object_add (object, cx, sizeof (SwfdecTextFieldMovie));
+    object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
+    swfdec_as_object_add (object, cx, sizeof (SwfdecAsObject));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       swfdec_as_object_set_constructor (object,
@@ -1024,8 +1025,6 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       SWFDEC_INFO ("\"TextField\" is not an object");
     }
   }
-
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (object));
 
   swfdec_text_field_movie_init_properties (cx);
 

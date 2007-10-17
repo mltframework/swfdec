@@ -52,8 +52,6 @@ struct _SwfdecSecurityClass
 
 GType			swfdec_security_get_type	(void);
 
-SwfdecSecurity *	swfdec_security_new_default	(SwfdecSecurity *	sec);
-
 SwfdecSecurity *	swfdec_security_allow		(SwfdecSecurity *	guard,
 							 SwfdecSecurity *	key);
 gboolean		swfdec_security_allow_url	(SwfdecSecurity *	guard,

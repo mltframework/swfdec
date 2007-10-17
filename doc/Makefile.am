@@ -116,7 +116,7 @@ IGNORE_HFILES= \
 	swfdec_root_sprite.h \
 	swfdec_script.h \
 	swfdec_script_internal.h \
-	swfdec_scriptable.h \
+	swfdec_security.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \

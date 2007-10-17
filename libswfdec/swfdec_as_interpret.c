@@ -1151,12 +1151,7 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else {
     SwfdecSpriteMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, TRUE);
     if (movie) {
-      if (SWFDEC_MOVIE (movie)->swf == NULL) {
-	swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
-	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
-      } else {
-	swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
-      }
+      swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
     } else {
       swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, 
 	  url, target, NULL);
@@ -1210,12 +1205,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     } else if (variables) {
       swfdec_movie_load_variables (SWFDEC_MOVIE (movie), url, method, NULL);
     } else {
-      if (SWFDEC_MOVIE (movie)->swf == NULL) {
-	swfdec_sprite_movie_load (movie, url, method, NULL);
-	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
-      } else {
-	swfdec_sprite_movie_load (movie, url, method, NULL);
-      }
+      swfdec_sprite_movie_load (movie, url, method, NULL);
     }
   } else {
     /* load an external file */

@@ -1573,8 +1573,6 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
  * swfdec_player_get_level:
  * @player: a #SwfdecPlayer
  * @name: name of the level to request
- * @ignore_case: %TRUE to always be case insensitive, otherwise use the version
- *               to determine case sensitivity
  * @create: %TRUE to create if it doesn't exist
  *
  * This function is used to look up root movies in the given @player. The 
@@ -1588,8 +1586,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
  *          fully initialized (yes, this function sucks).
  **/
 SwfdecSpriteMovie *
-swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean ignore_case,
-    gboolean create)
+swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create)
 {
   SwfdecSpriteMovie *movie;
   GList *walk;
@@ -1602,7 +1599,7 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean ignore
   g_return_val_if_fail (name != NULL, NULL);
 
   /* check name starts with "_level" */
-  if (swfdec_strncmp (ignore_case ? 6 : SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
+  if (swfdec_strncmp (SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
     return NULL;
   name += 6;
   /* extract depth from rest string (or fail if it's not a depth) */

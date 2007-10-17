@@ -54,9 +54,26 @@ swfdec_security_allow_init (SwfdecSecurityAllow *security_allow)
 {
 }
 
+/**
+ * swfdec_security_allow_new:
+ *
+ * Creates a new Security object that allows everything. These objects are used 
+ * by default when no other security object is in use. This is particularly 
+ * useful for script engines that are not security sensitive or code injection
+ * via debugging.
+ *
+ * Returns: a new #SwfdecSecurity object
+ **/
 SwfdecSecurity *
 swfdec_security_allow_new (void)
 {
+  static SwfdecSecurity *singleton = NULL;
   
-  return g_object_new (SWFDEC_TYPE_SECURITY_ALLOW, NULL);
+  /* FIXME: not threadsafe */
+  if (singleton)
+    return g_object_ref (singleton);
+
+  singleton = g_object_new (SWFDEC_TYPE_SECURITY_ALLOW, NULL);
+  g_object_add_weak_pointer (singleton, &singleton);
+  return singleton;
 }

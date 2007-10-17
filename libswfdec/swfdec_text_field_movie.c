@@ -561,6 +561,8 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
   if (text->style_sheet != NULL)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->style_sheet));
+  if (text->restrict_ != NULL)
+    swfdec_as_string_mark (text->restrict_);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->mark (object);
 }
@@ -646,6 +648,8 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 {
   text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
   text->cr = cairo_create (text->surface);
+
+  text->mouse_wheel_enabled = TRUE;
 }
 
 void

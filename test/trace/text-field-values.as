@@ -37,7 +37,7 @@ var properties = [
   "condenseWhite",
   "maxChars",
   "multiline",
-  //"restrict",
+  "restrict",
   "selectable",
   //"tabEnabled",
   //"tabIndex",
@@ -51,7 +51,7 @@ var properties = [
   "borderColor",
 
   // scrolling
-  //"mouseWheelEnabled",
+  "mouseWheelEnabled",
 
   // display
   "autoSize",

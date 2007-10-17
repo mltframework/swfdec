@@ -635,6 +635,106 @@ multiline: (58) input (string) = input (string)
 multiline: (59) 34000000 (number) = 34000000 (number)
 multiline: (60) -34000000 (number) = -34000000 (number)
 multiline: (61) input (dynamic) = dynamic (string)
+Testing: restrict (default: )
+restrict: (0)  (undefined) =  (undefined)
+restrict: (1) null (null) = null (null)
+restrict: (2) true (boolean) = true (boolean)
+restrict: (3) false (boolean) = false (boolean)
+restrict: (4) 0 (number) = 0 (number)
+restrict: (5) 1 (number) = 1 (number)
+restrict: (6) 0.5 (number) = 0.5 (number)
+restrict: (7) -1 (number) = -1 (number)
+restrict: (8) -0.5 (number) = -0.5 (number)
+restrict: (9) Infinity (number) = Infinity (number)
+restrict: (10) -Infinity (number) = -Infinity (number)
+restrict: (11) NaN (number) = NaN (number)
+restrict: (12)  (string) =  (string)
+restrict: (13) 0 (string) = 0 (string)
+restrict: (14) -0 (string) = -0 (string)
+restrict: (15) 0.0 (string) = 0.0 (string)
+restrict: (16) 1 (string) = 1 (string)
+restrict: (17) Hello World! (string) = Hello World! (string)
+restrict: (18) true (string) = true (string)
+restrict: (19) _level0 (string) = _level0 (string)
+restrict: (20) Ã¤Ã¶Ã¼ (string) = Ã¤Ã¶Ã¼ (string)
+restrict: (21) _level0 (movieclip) = _level0 (movieclip)
+restrict: (22) [object Object] (object) = [object Object] (object)
+restrict: (23)  (undefined) =  (undefined)
+valueOf called
+toString called
+restrict: (24) [type Object] (object) = [type Object] (object)
+toString called with 
+restrict: (25) [type Object] (object) = [type Object] (object)
+valueOf called with 
+restrict: (26) [object Object] (object) = [object Object] (object)
+restrict: (27)  (object) =  (object)
+0: valueOf!
+restrict: (28)  (object) =  (object)
+1: valueOf!
+restrict: (29) null (object) = null (object)
+2: valueOf!
+restrict: (30) true (object) = true (object)
+3: valueOf!
+restrict: (31) false (object) = false (object)
+4: valueOf!
+restrict: (32) 0 (object) = 0 (object)
+5: valueOf!
+restrict: (33) 1 (object) = 1 (object)
+6: valueOf!
+restrict: (34) 0.5 (object) = 0.5 (object)
+7: valueOf!
+restrict: (35) -1 (object) = -1 (object)
+8: valueOf!
+restrict: (36) -0.5 (object) = -0.5 (object)
+9: valueOf!
+restrict: (37) Infinity (object) = Infinity (object)
+10: valueOf!
+restrict: (38) -Infinity (object) = -Infinity (object)
+11: valueOf!
+restrict: (39) NaN (object) = NaN (object)
+12: valueOf!
+restrict: (40)  (object) =  (object)
+13: valueOf!
+restrict: (41) 0 (object) = 0 (object)
+14: valueOf!
+restrict: (42) -0 (object) = -0 (object)
+15: valueOf!
+restrict: (43) 0.0 (object) = 0.0 (object)
+16: valueOf!
+restrict: (44) 1 (object) = 1 (object)
+17: valueOf!
+restrict: (45) Hello World! (object) = Hello World! (object)
+18: valueOf!
+restrict: (46) true (object) = true (object)
+19: valueOf!
+restrict: (47) _level0 (object) = _level0 (object)
+20: valueOf!
+restrict: (48) Ã¤Ã¶Ã¼ (object) = Ã¤Ã¶Ã¼ (object)
+21: valueOf!
+restrict: (49) _level0 (object) = _level0 (object)
+22: valueOf!
+22: toString!
+restrict: (50) [type Object] (object) = [type Object] (object)
+23: valueOf!
+restrict: (51)  (object) =  (object)
+24: valueOf!
+24: toString!
+restrict: (52) [type Object] (object) = [type Object] (object)
+25: valueOf!
+25: toString!
+restrict: (53) [type Object] (object) = [type Object] (object)
+26: valueOf!
+26: toString!
+restrict: (54) [type Object] (object) = [type Object] (object)
+27: valueOf!
+27: toString!
+restrict: (55) [type Object] (object) = [type Object] (object)
+restrict: (56) 17000000 (number) = 17000000 (number)
+restrict: (57) -17000000 (number) = -17000000 (number)
+restrict: (58) input (string) = input (string)
+restrict: (59) 34000000 (number) = 34000000 (number)
+restrict: (60) -34000000 (number) = -34000000 (number)
+restrict: (61) input (dynamic) = dynamic (string)
 Testing: selectable (default: )
 selectable: (0)  (undefined) =  (undefined)
 selectable: (1) null (null) = null (null)
@@ -1335,6 +1435,106 @@ borderColor: (58) input (string) = input (string)
 borderColor: (59) 34000000 (number) = 34000000 (number)
 borderColor: (60) -34000000 (number) = -34000000 (number)
 borderColor: (61) input (dynamic) = dynamic (string)
+Testing: mouseWheelEnabled (default: )
+mouseWheelEnabled: (0)  (undefined) =  (undefined)
+mouseWheelEnabled: (1) null (null) = null (null)
+mouseWheelEnabled: (2) true (boolean) = true (boolean)
+mouseWheelEnabled: (3) false (boolean) = false (boolean)
+mouseWheelEnabled: (4) 0 (number) = 0 (number)
+mouseWheelEnabled: (5) 1 (number) = 1 (number)
+mouseWheelEnabled: (6) 0.5 (number) = 0.5 (number)
+mouseWheelEnabled: (7) -1 (number) = -1 (number)
+mouseWheelEnabled: (8) -0.5 (number) = -0.5 (number)
+mouseWheelEnabled: (9) Infinity (number) = Infinity (number)
+mouseWheelEnabled: (10) -Infinity (number) = -Infinity (number)
+mouseWheelEnabled: (11) NaN (number) = NaN (number)
+mouseWheelEnabled: (12)  (string) =  (string)
+mouseWheelEnabled: (13) 0 (string) = 0 (string)
+mouseWheelEnabled: (14) -0 (string) = -0 (string)
+mouseWheelEnabled: (15) 0.0 (string) = 0.0 (string)
+mouseWheelEnabled: (16) 1 (string) = 1 (string)
+mouseWheelEnabled: (17) Hello World! (string) = Hello World! (string)
+mouseWheelEnabled: (18) true (string) = true (string)
+mouseWheelEnabled: (19) _level0 (string) = _level0 (string)
+mouseWheelEnabled: (20) Ã¤Ã¶Ã¼ (string) = Ã¤Ã¶Ã¼ (string)
+mouseWheelEnabled: (21) _level0 (movieclip) = _level0 (movieclip)
+mouseWheelEnabled: (22) [object Object] (object) = [object Object] (object)
+mouseWheelEnabled: (23)  (undefined) =  (undefined)
+valueOf called
+toString called
+mouseWheelEnabled: (24) [type Object] (object) = [type Object] (object)
+toString called with 
+mouseWheelEnabled: (25) [type Object] (object) = [type Object] (object)
+valueOf called with 
+mouseWheelEnabled: (26) [object Object] (object) = [object Object] (object)
+mouseWheelEnabled: (27)  (object) =  (object)
+0: valueOf!
+mouseWheelEnabled: (28)  (object) =  (object)
+1: valueOf!
+mouseWheelEnabled: (29) null (object) = null (object)
+2: valueOf!
+mouseWheelEnabled: (30) true (object) = true (object)
+3: valueOf!
+mouseWheelEnabled: (31) false (object) = false (object)
+4: valueOf!
+mouseWheelEnabled: (32) 0 (object) = 0 (object)
+5: valueOf!
+mouseWheelEnabled: (33) 1 (object) = 1 (object)
+6: valueOf!
+mouseWheelEnabled: (34) 0.5 (object) = 0.5 (object)
+7: valueOf!
+mouseWheelEnabled: (35) -1 (object) = -1 (object)
+8: valueOf!
+mouseWheelEnabled: (36) -0.5 (object) = -0.5 (object)
+9: valueOf!
+mouseWheelEnabled: (37) Infinity (object) = Infinity (object)
+10: valueOf!
+mouseWheelEnabled: (38) -Infinity (object) = -Infinity (object)
+11: valueOf!
+mouseWheelEnabled: (39) NaN (object) = NaN (object)
+12: valueOf!
+mouseWheelEnabled: (40)  (object) =  (object)
+13: valueOf!
+mouseWheelEnabled: (41) 0 (object) = 0 (object)
+14: valueOf!
+mouseWheelEnabled: (42) -0 (object) = -0 (object)
+15: valueOf!
+mouseWheelEnabled: (43) 0.0 (object) = 0.0 (object)
+16: valueOf!
+mouseWheelEnabled: (44) 1 (object) = 1 (object)
+17: valueOf!
+mouseWheelEnabled: (45) Hello World! (object) = Hello World! (object)
+18: valueOf!
+mouseWheelEnabled: (46) true (object) = true (object)
+19: valueOf!
+mouseWheelEnabled: (47) _level0 (object) = _level0 (object)
+20: valueOf!
+mouseWheelEnabled: (48) Ã¤Ã¶Ã¼ (object) = Ã¤Ã¶Ã¼ (object)
+21: valueOf!
+mouseWheelEnabled: (49) _level0 (object) = _level0 (object)
+22: valueOf!
+22: toString!
+mouseWheelEnabled: (50) [type Object] (object) = [type Object] (object)
+23: valueOf!
+mouseWheelEnabled: (51)  (object) =  (object)
+24: valueOf!
+24: toString!
+mouseWheelEnabled: (52) [type Object] (object) = [type Object] (object)
+25: valueOf!
+25: toString!
+mouseWheelEnabled: (53) [type Object] (object) = [type Object] (object)
+26: valueOf!
+26: toString!
+mouseWheelEnabled: (54) [type Object] (object) = [type Object] (object)
+27: valueOf!
+27: toString!
+mouseWheelEnabled: (55) [type Object] (object) = [type Object] (object)
+mouseWheelEnabled: (56) 17000000 (number) = 17000000 (number)
+mouseWheelEnabled: (57) -17000000 (number) = -17000000 (number)
+mouseWheelEnabled: (58) input (string) = input (string)
+mouseWheelEnabled: (59) 34000000 (number) = 34000000 (number)
+mouseWheelEnabled: (60) -34000000 (number) = -34000000 (number)
+mouseWheelEnabled: (61) input (dynamic) = dynamic (string)
 Testing: autoSize (default: )
 autoSize: (0)  (undefined) =  (undefined)
 autoSize: (1) null (null) = null (null)

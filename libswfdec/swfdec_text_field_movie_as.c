@@ -250,6 +250,43 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_text_field_movie_get_restrict (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (text->restrict_ != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, text->restrict_);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_field_movie_set_restrict (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  const char *value;
+
+  if (argc > 0)
+    swfdec_as_value_to_number (cx, &argv[0]);
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
+    text->restrict_ = NULL;
+  } else {
+    text->restrict_ = value;
+  }
+}
+
+static void
 swfdec_text_field_movie_get_selectable (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -477,6 +514,33 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
 /*
  * Native properties: Scrolling
  */
+static void
+swfdec_text_field_movie_get_mouseWheelEnabled (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->mouse_wheel_enabled);
+}
+
+static void
+swfdec_text_field_movie_set_mouseWheelEnabled (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  text->mouse_wheel_enabled = value;
+}
+
 static void
 swfdec_text_field_movie_do_get_scroll (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -915,9 +979,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_multiline,
       swfdec_text_field_movie_get_multiline,
       swfdec_text_field_movie_set_multiline);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
       swfdec_text_field_movie_get_restrict,
-      swfdec_text_field_movie_set_restrict);*/
+      swfdec_text_field_movie_set_restrict);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
       swfdec_text_field_movie_get_selectable,
       swfdec_text_field_movie_set_selectable);
@@ -962,9 +1026,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
       swfdec_text_field_movie_get_maxscroll,
       swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
       swfdec_text_field_movie_get_mouseWheelEnabled,
-      swfdec_text_field_movie_set_mouseWheelEnabled);*/
+      swfdec_text_field_movie_set_mouseWheelEnabled);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_scroll,
       swfdec_text_field_movie_do_get_scroll,
       swfdec_text_field_movie_do_set_scroll);

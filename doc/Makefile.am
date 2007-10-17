@@ -90,6 +90,7 @@ IGNORE_HFILES= \
 	swfdec_event.h \
 	swfdec_filter.h \
 	swfdec_flv_decoder.h \
+	swfdec_flash_security.h \
 	swfdec_font.h \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
@@ -117,6 +118,7 @@ IGNORE_HFILES= \
 	swfdec_script.h \
 	swfdec_script_internal.h \
 	swfdec_security.h \
+	swfdec_security_allow.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \

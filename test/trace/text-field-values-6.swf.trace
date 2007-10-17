@@ -1,0 +1,1832 @@
+valueOf called
+toString called
+toString called with 
+valueOf called with 
+0: valueOf!
+1: valueOf!
+2: valueOf!
+3: valueOf!
+4: valueOf!
+5: valueOf!
+6: valueOf!
+7: valueOf!
+8: valueOf!
+9: valueOf!
+10: valueOf!
+11: valueOf!
+12: valueOf!
+13: valueOf!
+14: valueOf!
+15: valueOf!
+16: valueOf!
+17: valueOf!
+18: valueOf!
+19: valueOf!
+20: valueOf!
+21: valueOf!
+22: valueOf!
+22: toString!
+23: valueOf!
+23: toString!
+24: valueOf!
+24: toString!
+25: valueOf!
+25: toString!
+26: valueOf!
+26: toString!
+27: valueOf!
+27: toString!
+Testing: text (default: )
+text: (0)  (undefined) =  (string)
+text: (1) null (null) = null (string)
+text: (2) true (boolean) = true (string)
+text: (3) false (boolean) = false (string)
+text: (4) 0 (number) = 0 (string)
+text: (5) 1 (number) = 1 (string)
+text: (6) 0.5 (number) = 0.5 (string)
+text: (7) -1 (number) = -1 (string)
+text: (8) -0.5 (number) = -0.5 (string)
+text: (9) Infinity (number) = Infinity (string)
+text: (10) -Infinity (number) = -Infinity (string)
+text: (11) NaN (number) = NaN (string)
+text: (12)  (string) =  (string)
+text: (13) 0 (string) = 0 (string)
+text: (14) -0 (string) = -0 (string)
+text: (15) 0.0 (string) = 0.0 (string)
+text: (16) 1 (string) = 1 (string)
+text: (17) Hello World! (string) = Hello World! (string)
+text: (18) true (string) = true (string)
+text: (19) _level0 (string) = _level0 (string)
+text: (20) äöü (string) = äöü (string)
+text: (21) _level0 (movieclip) = _level0 (string)
+text: (22) [object Object] (object) = [object Object] (string)
+text: (23) [type Function] (function) = [type Function] (string)
+toString called
+text: (24) [type Object] (object) = [type Object] (string)
+toString called with 
+text: (25) [type Object] (object) = [type Object] (string)
+text: (26) [object Object] (object) = [object Object] (string)
+text: (27)  (object) = [type Object] (string)
+0: toString!
+text: (28)  (object) = [type Object] (string)
+1: toString!
+text: (29) null (object) = [type Object] (string)
+2: toString!
+text: (30) true (object) = [type Object] (string)
+3: toString!
+text: (31) false (object) = [type Object] (string)
+4: toString!
+text: (32) 0 (object) = [type Object] (string)
+5: toString!
+text: (33) 1 (object) = [type Object] (string)
+6: toString!
+text: (34) 0.5 (object) = [type Object] (string)
+7: toString!
+text: (35) -1 (object) = [type Object] (string)
+8: toString!
+text: (36) -0.5 (object) = [type Object] (string)
+9: toString!
+text: (37) Infinity (object) = [type Object] (string)
+10: toString!
+text: (38) -Infinity (object) = [type Object] (string)
+11: toString!
+text: (39) NaN (object) = [type Object] (string)
+12: toString!
+text: (40)  (object) =  (string)
+13: toString!
+text: (41) 0 (object) = 0 (string)
+14: toString!
+text: (42) -0 (object) = -0 (string)
+15: toString!
+text: (43) 0.0 (object) = 0.0 (string)
+16: toString!
+text: (44) 1 (object) = 1 (string)
+17: toString!
+text: (45) Hello World! (object) = Hello World! (string)
+18: toString!
+text: (46) true (object) = true (string)
+19: toString!
+text: (47) _level0 (object) = _level0 (string)
+20: toString!
+text: (48) äöü (object) = äöü (string)
+21: toString!
+text: (49) _level0 (object) = [type Object] (string)
+22: toString!
+text: (50) [type Object] (object) = [type Object] (string)
+23: toString!
+text: (51) [type Object] (object) = [type Object] (string)
+24: toString!
+text: (52) [type Object] (object) = [type Object] (string)
+25: toString!
+text: (53) [type Object] (object) = [type Object] (string)
+26: toString!
+text: (54) [type Object] (object) = [type Object] (string)
+27: toString!
+text: (55) [type Object] (object) = [type Object] (string)
+text: (56) 17000000 (number) = 17000000 (string)
+text: (57) -17000000 (number) = -17000000 (string)
+text: (58) input (string) = input (string)
+text: (59) 34000000 (number) = 34000000 (string)
+text: (60) -34000000 (number) = -34000000 (string)
+text: (61) input (dynamic) = dynamic (string)
+Testing: html (default: false)
+html: (0)  (undefined) = false (boolean)
+html: (1) null (null) = false (boolean)
+html: (2) true (boolean) = true (boolean)
+html: (3) false (boolean) = false (boolean)
+html: (4) 0 (number) = false (boolean)
+html: (5) 1 (number) = true (boolean)
+html: (6) 0.5 (number) = true (boolean)
+html: (7) -1 (number) = true (boolean)
+html: (8) -0.5 (number) = true (boolean)
+html: (9) Infinity (number) = true (boolean)
+html: (10) -Infinity (number) = true (boolean)
+html: (11) NaN (number) = false (boolean)
+html: (12)  (string) = false (boolean)
+html: (13) 0 (string) = false (boolean)
+html: (14) -0 (string) = false (boolean)
+html: (15) 0.0 (string) = false (boolean)
+html: (16) 1 (string) = true (boolean)
+html: (17) Hello World! (string) = false (boolean)
+html: (18) true (string) = false (boolean)
+html: (19) _level0 (string) = false (boolean)
+html: (20) äöü (string) = false (boolean)
+html: (21) _level0 (movieclip) = true (boolean)
+html: (22) [object Object] (object) = true (boolean)
+html: (23) [type Function] (function) = true (boolean)
+valueOf called
+html: (24) [type Object] (object) = true (boolean)
+html: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+html: (26) [object Object] (object) = true (boolean)
+html: (27)  (object) = true (boolean)
+0: valueOf!
+html: (28)  (object) = true (boolean)
+1: valueOf!
+html: (29) null (object) = true (boolean)
+2: valueOf!
+html: (30) true (object) = true (boolean)
+3: valueOf!
+html: (31) false (object) = true (boolean)
+4: valueOf!
+html: (32) 0 (object) = true (boolean)
+5: valueOf!
+html: (33) 1 (object) = true (boolean)
+6: valueOf!
+html: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+html: (35) -1 (object) = true (boolean)
+8: valueOf!
+html: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+html: (37) Infinity (object) = true (boolean)
+10: valueOf!
+html: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+html: (39) NaN (object) = true (boolean)
+12: valueOf!
+html: (40)  (object) = true (boolean)
+13: valueOf!
+html: (41) 0 (object) = true (boolean)
+14: valueOf!
+html: (42) -0 (object) = true (boolean)
+15: valueOf!
+html: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+html: (44) 1 (object) = true (boolean)
+17: valueOf!
+html: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+html: (46) true (object) = true (boolean)
+19: valueOf!
+html: (47) _level0 (object) = true (boolean)
+20: valueOf!
+html: (48) äöü (object) = true (boolean)
+21: valueOf!
+html: (49) _level0 (object) = true (boolean)
+22: valueOf!
+html: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+html: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+html: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+html: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+html: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+html: (55) [type Object] (object) = true (boolean)
+html: (56) 17000000 (number) = true (boolean)
+html: (57) -17000000 (number) = true (boolean)
+html: (58) input (string) = false (boolean)
+html: (59) 34000000 (number) = true (boolean)
+html: (60) -34000000 (number) = true (boolean)
+html: (61) input (dynamic) = false (boolean)
+Testing: htmlText (default: dynamic)
+htmlText: (0)  (undefined) =  (string)
+htmlText: (1) null (null) = null (string)
+htmlText: (2) true (boolean) = true (string)
+htmlText: (3) false (boolean) = false (string)
+htmlText: (4) 0 (number) = 0 (string)
+htmlText: (5) 1 (number) = 1 (string)
+htmlText: (6) 0.5 (number) = 0.5 (string)
+htmlText: (7) -1 (number) = -1 (string)
+htmlText: (8) -0.5 (number) = -0.5 (string)
+htmlText: (9) Infinity (number) = Infinity (string)
+htmlText: (10) -Infinity (number) = -Infinity (string)
+htmlText: (11) NaN (number) = NaN (string)
+htmlText: (12)  (string) =  (string)
+htmlText: (13) 0 (string) = 0 (string)
+htmlText: (14) -0 (string) = -0 (string)
+htmlText: (15) 0.0 (string) = 0.0 (string)
+htmlText: (16) 1 (string) = 1 (string)
+htmlText: (17) Hello World! (string) = Hello World! (string)
+htmlText: (18) true (string) = true (string)
+htmlText: (19) _level0 (string) = _level0 (string)
+htmlText: (20) äöü (string) = äöü (string)
+htmlText: (21) _level0 (movieclip) = _level0 (string)
+htmlText: (22) [object Object] (object) = [object Object] (string)
+htmlText: (23) [type Function] (function) = [type Function] (string)
+toString called
+htmlText: (24) [type Object] (object) = [type Object] (string)
+toString called with 
+htmlText: (25) [type Object] (object) = [type Object] (string)
+htmlText: (26) [object Object] (object) = [object Object] (string)
+htmlText: (27)  (object) = [type Object] (string)
+0: toString!
+htmlText: (28)  (object) = [type Object] (string)
+1: toString!
+htmlText: (29) null (object) = [type Object] (string)
+2: toString!
+htmlText: (30) true (object) = [type Object] (string)
+3: toString!
+htmlText: (31) false (object) = [type Object] (string)
+4: toString!
+htmlText: (32) 0 (object) = [type Object] (string)
+5: toString!
+htmlText: (33) 1 (object) = [type Object] (string)
+6: toString!
+htmlText: (34) 0.5 (object) = [type Object] (string)
+7: toString!
+htmlText: (35) -1 (object) = [type Object] (string)
+8: toString!
+htmlText: (36) -0.5 (object) = [type Object] (string)
+9: toString!
+htmlText: (37) Infinity (object) = [type Object] (string)
+10: toString!
+htmlText: (38) -Infinity (object) = [type Object] (string)
+11: toString!
+htmlText: (39) NaN (object) = [type Object] (string)
+12: toString!
+htmlText: (40)  (object) =  (string)
+13: toString!
+htmlText: (41) 0 (object) = 0 (string)
+14: toString!
+htmlText: (42) -0 (object) = -0 (string)
+15: toString!
+htmlText: (43) 0.0 (object) = 0.0 (string)
+16: toString!
+htmlText: (44) 1 (object) = 1 (string)
+17: toString!
+htmlText: (45) Hello World! (object) = Hello World! (string)
+18: toString!
+htmlText: (46) true (object) = true (string)
+19: toString!
+htmlText: (47) _level0 (object) = _level0 (string)
+20: toString!
+htmlText: (48) äöü (object) = äöü (string)
+21: toString!
+htmlText: (49) _level0 (object) = [type Object] (string)
+22: toString!
+htmlText: (50) [type Object] (object) = [type Object] (string)
+23: toString!
+htmlText: (51) [type Object] (object) = [type Object] (string)
+24: toString!
+htmlText: (52) [type Object] (object) = [type Object] (string)
+25: toString!
+htmlText: (53) [type Object] (object) = [type Object] (string)
+26: toString!
+htmlText: (54) [type Object] (object) = [type Object] (string)
+27: toString!
+htmlText: (55) [type Object] (object) = [type Object] (string)
+htmlText: (56) 17000000 (number) = 17000000 (string)
+htmlText: (57) -17000000 (number) = -17000000 (string)
+htmlText: (58) input (string) = input (string)
+htmlText: (59) 34000000 (number) = 34000000 (string)
+htmlText: (60) -34000000 (number) = -34000000 (string)
+htmlText: (61) input (dynamic) = dynamic (string)
+Testing: condenseWhite (default: false)
+condenseWhite: (0)  (undefined) = false (boolean)
+condenseWhite: (1) null (null) = false (boolean)
+condenseWhite: (2) true (boolean) = true (boolean)
+condenseWhite: (3) false (boolean) = false (boolean)
+condenseWhite: (4) 0 (number) = false (boolean)
+condenseWhite: (5) 1 (number) = true (boolean)
+condenseWhite: (6) 0.5 (number) = true (boolean)
+condenseWhite: (7) -1 (number) = true (boolean)
+condenseWhite: (8) -0.5 (number) = true (boolean)
+condenseWhite: (9) Infinity (number) = true (boolean)
+condenseWhite: (10) -Infinity (number) = true (boolean)
+condenseWhite: (11) NaN (number) = false (boolean)
+condenseWhite: (12)  (string) = false (boolean)
+condenseWhite: (13) 0 (string) = false (boolean)
+condenseWhite: (14) -0 (string) = false (boolean)
+condenseWhite: (15) 0.0 (string) = false (boolean)
+condenseWhite: (16) 1 (string) = true (boolean)
+condenseWhite: (17) Hello World! (string) = false (boolean)
+condenseWhite: (18) true (string) = false (boolean)
+condenseWhite: (19) _level0 (string) = false (boolean)
+condenseWhite: (20) äöü (string) = false (boolean)
+condenseWhite: (21) _level0 (movieclip) = true (boolean)
+condenseWhite: (22) [object Object] (object) = true (boolean)
+condenseWhite: (23) [type Function] (function) = true (boolean)
+valueOf called
+condenseWhite: (24) [type Object] (object) = true (boolean)
+condenseWhite: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+condenseWhite: (26) [object Object] (object) = true (boolean)
+condenseWhite: (27)  (object) = true (boolean)
+0: valueOf!
+condenseWhite: (28)  (object) = true (boolean)
+1: valueOf!
+condenseWhite: (29) null (object) = true (boolean)
+2: valueOf!
+condenseWhite: (30) true (object) = true (boolean)
+3: valueOf!
+condenseWhite: (31) false (object) = true (boolean)
+4: valueOf!
+condenseWhite: (32) 0 (object) = true (boolean)
+5: valueOf!
+condenseWhite: (33) 1 (object) = true (boolean)
+6: valueOf!
+condenseWhite: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+condenseWhite: (35) -1 (object) = true (boolean)
+8: valueOf!
+condenseWhite: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+condenseWhite: (37) Infinity (object) = true (boolean)
+10: valueOf!
+condenseWhite: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+condenseWhite: (39) NaN (object) = true (boolean)
+12: valueOf!
+condenseWhite: (40)  (object) = true (boolean)
+13: valueOf!
+condenseWhite: (41) 0 (object) = true (boolean)
+14: valueOf!
+condenseWhite: (42) -0 (object) = true (boolean)
+15: valueOf!
+condenseWhite: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+condenseWhite: (44) 1 (object) = true (boolean)
+17: valueOf!
+condenseWhite: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+condenseWhite: (46) true (object) = true (boolean)
+19: valueOf!
+condenseWhite: (47) _level0 (object) = true (boolean)
+20: valueOf!
+condenseWhite: (48) äöü (object) = true (boolean)
+21: valueOf!
+condenseWhite: (49) _level0 (object) = true (boolean)
+22: valueOf!
+condenseWhite: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+condenseWhite: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+condenseWhite: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+condenseWhite: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+condenseWhite: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+condenseWhite: (55) [type Object] (object) = true (boolean)
+condenseWhite: (56) 17000000 (number) = true (boolean)
+condenseWhite: (57) -17000000 (number) = true (boolean)
+condenseWhite: (58) input (string) = false (boolean)
+condenseWhite: (59) 34000000 (number) = true (boolean)
+condenseWhite: (60) -34000000 (number) = true (boolean)
+condenseWhite: (61) input (dynamic) = false (boolean)
+Testing: maxChars (default: null)
+maxChars: (0)  (undefined) = null (null)
+maxChars: (1) null (null) = null (null)
+maxChars: (2) true (boolean) = 1 (number)
+maxChars: (3) false (boolean) = null (null)
+maxChars: (4) 0 (number) = null (null)
+maxChars: (5) 1 (number) = 1 (number)
+maxChars: (6) 0.5 (number) = null (null)
+maxChars: (7) -1 (number) = -1 (number)
+maxChars: (8) -0.5 (number) = null (null)
+maxChars: (9) Infinity (number) = null (null)
+maxChars: (10) -Infinity (number) = null (null)
+maxChars: (11) NaN (number) = null (null)
+maxChars: (12)  (string) = null (null)
+maxChars: (13) 0 (string) = null (null)
+maxChars: (14) -0 (string) = null (null)
+maxChars: (15) 0.0 (string) = null (null)
+maxChars: (16) 1 (string) = 1 (number)
+maxChars: (17) Hello World! (string) = null (null)
+maxChars: (18) true (string) = null (null)
+maxChars: (19) _level0 (string) = null (null)
+maxChars: (20) äöü (string) = null (null)
+maxChars: (21) _level0 (movieclip) = null (null)
+maxChars: (22) [object Object] (object) = null (null)
+maxChars: (23) [type Function] (function) = null (null)
+valueOf called
+valueOf called
+maxChars: (24) [type Object] (object) = null (null)
+maxChars: (25) [type Object] (object) = null (null)
+valueOf called with 
+valueOf called with 
+maxChars: (26) [object Object] (object) = null (null)
+maxChars: (27)  (object) = null (null)
+0: valueOf!
+0: valueOf!
+maxChars: (28)  (object) = null (null)
+1: valueOf!
+1: valueOf!
+maxChars: (29) null (object) = null (null)
+2: valueOf!
+2: valueOf!
+maxChars: (30) true (object) = 1 (number)
+3: valueOf!
+3: valueOf!
+maxChars: (31) false (object) = null (null)
+4: valueOf!
+4: valueOf!
+maxChars: (32) 0 (object) = null (null)
+5: valueOf!
+5: valueOf!
+maxChars: (33) 1 (object) = 1 (number)
+6: valueOf!
+6: valueOf!
+maxChars: (34) 0.5 (object) = null (null)
+7: valueOf!
+7: valueOf!
+maxChars: (35) -1 (object) = -1 (number)
+8: valueOf!
+8: valueOf!
+maxChars: (36) -0.5 (object) = null (null)
+9: valueOf!
+9: valueOf!
+maxChars: (37) Infinity (object) = null (null)
+10: valueOf!
+10: valueOf!
+maxChars: (38) -Infinity (object) = null (null)
+11: valueOf!
+11: valueOf!
+maxChars: (39) NaN (object) = null (null)
+12: valueOf!
+12: valueOf!
+maxChars: (40)  (object) = null (null)
+13: valueOf!
+13: valueOf!
+maxChars: (41) 0 (object) = null (null)
+14: valueOf!
+14: valueOf!
+maxChars: (42) -0 (object) = null (null)
+15: valueOf!
+15: valueOf!
+maxChars: (43) 0.0 (object) = null (null)
+16: valueOf!
+16: valueOf!
+maxChars: (44) 1 (object) = 1 (number)
+17: valueOf!
+17: valueOf!
+maxChars: (45) Hello World! (object) = null (null)
+18: valueOf!
+18: valueOf!
+maxChars: (46) true (object) = null (null)
+19: valueOf!
+19: valueOf!
+maxChars: (47) _level0 (object) = null (null)
+20: valueOf!
+20: valueOf!
+maxChars: (48) äöü (object) = null (null)
+21: valueOf!
+21: valueOf!
+maxChars: (49) _level0 (object) = null (null)
+22: valueOf!
+22: valueOf!
+maxChars: (50) [type Object] (object) = null (null)
+23: valueOf!
+23: valueOf!
+maxChars: (51) [type Object] (object) = null (null)
+24: valueOf!
+24: valueOf!
+maxChars: (52) [type Object] (object) = null (null)
+25: valueOf!
+25: valueOf!
+maxChars: (53) [type Object] (object) = null (null)
+26: valueOf!
+26: valueOf!
+maxChars: (54) [type Object] (object) = null (null)
+27: valueOf!
+27: valueOf!
+maxChars: (55) [type Object] (object) = null (null)
+maxChars: (56) 17000000 (number) = 17000000 (number)
+maxChars: (57) -17000000 (number) = -17000000 (number)
+maxChars: (58) input (string) = null (null)
+maxChars: (59) 34000000 (number) = 34000000 (number)
+maxChars: (60) -34000000 (number) = -34000000 (number)
+maxChars: (61) input (dynamic) = null (null)
+Testing: multiline (default: false)
+multiline: (0)  (undefined) = false (boolean)
+multiline: (1) null (null) = false (boolean)
+multiline: (2) true (boolean) = true (boolean)
+multiline: (3) false (boolean) = false (boolean)
+multiline: (4) 0 (number) = false (boolean)
+multiline: (5) 1 (number) = true (boolean)
+multiline: (6) 0.5 (number) = true (boolean)
+multiline: (7) -1 (number) = true (boolean)
+multiline: (8) -0.5 (number) = true (boolean)
+multiline: (9) Infinity (number) = true (boolean)
+multiline: (10) -Infinity (number) = true (boolean)
+multiline: (11) NaN (number) = false (boolean)
+multiline: (12)  (string) = false (boolean)
+multiline: (13) 0 (string) = false (boolean)
+multiline: (14) -0 (string) = false (boolean)
+multiline: (15) 0.0 (string) = false (boolean)
+multiline: (16) 1 (string) = true (boolean)
+multiline: (17) Hello World! (string) = false (boolean)
+multiline: (18) true (string) = false (boolean)
+multiline: (19) _level0 (string) = false (boolean)
+multiline: (20) äöü (string) = false (boolean)
+multiline: (21) _level0 (movieclip) = true (boolean)
+multiline: (22) [object Object] (object) = true (boolean)
+multiline: (23) [type Function] (function) = true (boolean)
+valueOf called
+multiline: (24) [type Object] (object) = true (boolean)
+multiline: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+multiline: (26) [object Object] (object) = true (boolean)
+multiline: (27)  (object) = true (boolean)
+0: valueOf!
+multiline: (28)  (object) = true (boolean)
+1: valueOf!
+multiline: (29) null (object) = true (boolean)
+2: valueOf!
+multiline: (30) true (object) = true (boolean)
+3: valueOf!
+multiline: (31) false (object) = true (boolean)
+4: valueOf!
+multiline: (32) 0 (object) = true (boolean)
+5: valueOf!
+multiline: (33) 1 (object) = true (boolean)
+6: valueOf!
+multiline: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+multiline: (35) -1 (object) = true (boolean)
+8: valueOf!
+multiline: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+multiline: (37) Infinity (object) = true (boolean)
+10: valueOf!
+multiline: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+multiline: (39) NaN (object) = true (boolean)
+12: valueOf!
+multiline: (40)  (object) = true (boolean)
+13: valueOf!
+multiline: (41) 0 (object) = true (boolean)
+14: valueOf!
+multiline: (42) -0 (object) = true (boolean)
+15: valueOf!
+multiline: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+multiline: (44) 1 (object) = true (boolean)
+17: valueOf!
+multiline: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+multiline: (46) true (object) = true (boolean)
+19: valueOf!
+multiline: (47) _level0 (object) = true (boolean)
+20: valueOf!
+multiline: (48) äöü (object) = true (boolean)
+21: valueOf!
+multiline: (49) _level0 (object) = true (boolean)
+22: valueOf!
+multiline: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+multiline: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+multiline: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+multiline: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+multiline: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+multiline: (55) [type Object] (object) = true (boolean)
+multiline: (56) 17000000 (number) = true (boolean)
+multiline: (57) -17000000 (number) = true (boolean)
+multiline: (58) input (string) = false (boolean)
+multiline: (59) 34000000 (number) = true (boolean)
+multiline: (60) -34000000 (number) = true (boolean)
+multiline: (61) input (dynamic) = false (boolean)
+Testing: selectable (default: true)
+selectable: (0)  (undefined) = false (boolean)
+selectable: (1) null (null) = false (boolean)
+selectable: (2) true (boolean) = true (boolean)
+selectable: (3) false (boolean) = false (boolean)
+selectable: (4) 0 (number) = false (boolean)
+selectable: (5) 1 (number) = true (boolean)
+selectable: (6) 0.5 (number) = true (boolean)
+selectable: (7) -1 (number) = true (boolean)
+selectable: (8) -0.5 (number) = true (boolean)
+selectable: (9) Infinity (number) = true (boolean)
+selectable: (10) -Infinity (number) = true (boolean)
+selectable: (11) NaN (number) = false (boolean)
+selectable: (12)  (string) = false (boolean)
+selectable: (13) 0 (string) = false (boolean)
+selectable: (14) -0 (string) = false (boolean)
+selectable: (15) 0.0 (string) = false (boolean)
+selectable: (16) 1 (string) = true (boolean)
+selectable: (17) Hello World! (string) = false (boolean)
+selectable: (18) true (string) = false (boolean)
+selectable: (19) _level0 (string) = false (boolean)
+selectable: (20) äöü (string) = false (boolean)
+selectable: (21) _level0 (movieclip) = true (boolean)
+selectable: (22) [object Object] (object) = true (boolean)
+selectable: (23) [type Function] (function) = true (boolean)
+valueOf called
+selectable: (24) [type Object] (object) = true (boolean)
+selectable: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+selectable: (26) [object Object] (object) = true (boolean)
+selectable: (27)  (object) = true (boolean)
+0: valueOf!
+selectable: (28)  (object) = true (boolean)
+1: valueOf!
+selectable: (29) null (object) = true (boolean)
+2: valueOf!
+selectable: (30) true (object) = true (boolean)
+3: valueOf!
+selectable: (31) false (object) = true (boolean)
+4: valueOf!
+selectable: (32) 0 (object) = true (boolean)
+5: valueOf!
+selectable: (33) 1 (object) = true (boolean)
+6: valueOf!
+selectable: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+selectable: (35) -1 (object) = true (boolean)
+8: valueOf!
+selectable: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+selectable: (37) Infinity (object) = true (boolean)
+10: valueOf!
+selectable: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+selectable: (39) NaN (object) = true (boolean)
+12: valueOf!
+selectable: (40)  (object) = true (boolean)
+13: valueOf!
+selectable: (41) 0 (object) = true (boolean)
+14: valueOf!
+selectable: (42) -0 (object) = true (boolean)
+15: valueOf!
+selectable: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+selectable: (44) 1 (object) = true (boolean)
+17: valueOf!
+selectable: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+selectable: (46) true (object) = true (boolean)
+19: valueOf!
+selectable: (47) _level0 (object) = true (boolean)
+20: valueOf!
+selectable: (48) äöü (object) = true (boolean)
+21: valueOf!
+selectable: (49) _level0 (object) = true (boolean)
+22: valueOf!
+selectable: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+selectable: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+selectable: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+selectable: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+selectable: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+selectable: (55) [type Object] (object) = true (boolean)
+selectable: (56) 17000000 (number) = true (boolean)
+selectable: (57) -17000000 (number) = true (boolean)
+selectable: (58) input (string) = false (boolean)
+selectable: (59) 34000000 (number) = true (boolean)
+selectable: (60) -34000000 (number) = true (boolean)
+selectable: (61) input (dynamic) = false (boolean)
+Testing: type (default: dynamic)
+type: (0)  (undefined) = dynamic (string)
+type: (1) null (null) = dynamic (string)
+type: (2) true (boolean) = dynamic (string)
+type: (3) false (boolean) = dynamic (string)
+type: (4) 0 (number) = dynamic (string)
+type: (5) 1 (number) = dynamic (string)
+type: (6) 0.5 (number) = dynamic (string)
+type: (7) -1 (number) = dynamic (string)
+type: (8) -0.5 (number) = dynamic (string)
+type: (9) Infinity (number) = dynamic (string)
+type: (10) -Infinity (number) = dynamic (string)
+type: (11) NaN (number) = dynamic (string)
+type: (12)  (string) = dynamic (string)
+type: (13) 0 (string) = dynamic (string)
+type: (14) -0 (string) = dynamic (string)
+type: (15) 0.0 (string) = dynamic (string)
+type: (16) 1 (string) = dynamic (string)
+type: (17) Hello World! (string) = dynamic (string)
+type: (18) true (string) = dynamic (string)
+type: (19) _level0 (string) = dynamic (string)
+type: (20) äöü (string) = dynamic (string)
+type: (21) _level0 (movieclip) = dynamic (string)
+type: (22) [object Object] (object) = dynamic (string)
+type: (23) [type Function] (function) = dynamic (string)
+valueOf called
+toString called
+type: (24) [type Object] (object) = dynamic (string)
+toString called with 
+type: (25) [type Object] (object) = dynamic (string)
+valueOf called with 
+type: (26) [object Object] (object) = dynamic (string)
+type: (27)  (object) = dynamic (string)
+0: valueOf!
+0: toString!
+type: (28)  (object) = dynamic (string)
+1: valueOf!
+1: toString!
+type: (29) null (object) = dynamic (string)
+2: valueOf!
+2: toString!
+type: (30) true (object) = dynamic (string)
+3: valueOf!
+3: toString!
+type: (31) false (object) = dynamic (string)
+4: valueOf!
+4: toString!
+type: (32) 0 (object) = dynamic (string)
+5: valueOf!
+5: toString!
+type: (33) 1 (object) = dynamic (string)
+6: valueOf!
+6: toString!
+type: (34) 0.5 (object) = dynamic (string)
+7: valueOf!
+7: toString!
+type: (35) -1 (object) = dynamic (string)
+8: valueOf!
+8: toString!
+type: (36) -0.5 (object) = dynamic (string)
+9: valueOf!
+9: toString!
+type: (37) Infinity (object) = dynamic (string)
+10: valueOf!
+10: toString!
+type: (38) -Infinity (object) = dynamic (string)
+11: valueOf!
+11: toString!
+type: (39) NaN (object) = dynamic (string)
+12: valueOf!
+12: toString!
+type: (40)  (object) = dynamic (string)
+13: valueOf!
+13: toString!
+type: (41) 0 (object) = dynamic (string)
+14: valueOf!
+14: toString!
+type: (42) -0 (object) = dynamic (string)
+15: valueOf!
+15: toString!
+type: (43) 0.0 (object) = dynamic (string)
+16: valueOf!
+16: toString!
+type: (44) 1 (object) = dynamic (string)
+17: valueOf!
+17: toString!
+type: (45) Hello World! (object) = dynamic (string)
+18: valueOf!
+18: toString!
+type: (46) true (object) = dynamic (string)
+19: valueOf!
+19: toString!
+type: (47) _level0 (object) = dynamic (string)
+20: valueOf!
+20: toString!
+type: (48) äöü (object) = dynamic (string)
+21: valueOf!
+21: toString!
+type: (49) _level0 (object) = dynamic (string)
+22: valueOf!
+22: toString!
+type: (50) [type Object] (object) = dynamic (string)
+23: valueOf!
+23: toString!
+type: (51) [type Object] (object) = dynamic (string)
+24: valueOf!
+24: toString!
+type: (52) [type Object] (object) = dynamic (string)
+25: valueOf!
+25: toString!
+type: (53) [type Object] (object) = dynamic (string)
+26: valueOf!
+26: toString!
+type: (54) [type Object] (object) = dynamic (string)
+27: valueOf!
+27: toString!
+type: (55) [type Object] (object) = dynamic (string)
+type: (56) 17000000 (number) = dynamic (string)
+type: (57) -17000000 (number) = dynamic (string)
+type: (58) input (string) = input (string)
+type: (59) 34000000 (number) = input (string)
+type: (60) -34000000 (number) = input (string)
+type: (61) input (dynamic) = dynamic (string)
+Testing: variable (default: null)
+variable: (0)  (undefined) = null (null)
+variable: (1) null (null) = null (null)
+variable: (2) true (boolean) = true (string)
+variable: (3) false (boolean) = false (string)
+variable: (4) 0 (number) = 0 (string)
+variable: (5) 1 (number) = 1 (string)
+variable: (6) 0.5 (number) = 0.5 (string)
+variable: (7) -1 (number) = -1 (string)
+variable: (8) -0.5 (number) = -0.5 (string)
+variable: (9) Infinity (number) = Infinity (string)
+variable: (10) -Infinity (number) = -Infinity (string)
+variable: (11) NaN (number) = NaN (string)
+variable: (12)  (string) = null (null)
+variable: (13) 0 (string) = 0 (string)
+variable: (14) -0 (string) = -0 (string)
+variable: (15) 0.0 (string) = 0.0 (string)
+variable: (16) 1 (string) = 1 (string)
+variable: (17) Hello World! (string) = Hello World! (string)
+variable: (18) true (string) = true (string)
+variable: (19) _level0 (string) = _level0 (string)
+variable: (20) äöü (string) = äöü (string)
+variable: (21) _level0 (movieclip) = _level0 (string)
+variable: (22) [object Object] (object) = [object Object] (string)
+variable: (23) [type Function] (function) = [type Function] (string)
+valueOf called
+toString called
+variable: (24) [type Object] (object) = [type Object] (string)
+toString called with 
+variable: (25) [type Object] (object) = [type Object] (string)
+valueOf called with 
+variable: (26) [object Object] (object) = [object Object] (string)
+variable: (27)  (object) = [type Object] (string)
+0: valueOf!
+0: toString!
+variable: (28)  (object) = [type Object] (string)
+1: valueOf!
+1: toString!
+variable: (29) null (object) = [type Object] (string)
+2: valueOf!
+2: toString!
+variable: (30) true (object) = [type Object] (string)
+3: valueOf!
+3: toString!
+variable: (31) false (object) = [type Object] (string)
+4: valueOf!
+4: toString!
+variable: (32) 0 (object) = [type Object] (string)
+5: valueOf!
+5: toString!
+variable: (33) 1 (object) = [type Object] (string)
+6: valueOf!
+6: toString!
+variable: (34) 0.5 (object) = [type Object] (string)
+7: valueOf!
+7: toString!
+variable: (35) -1 (object) = [type Object] (string)
+8: valueOf!
+8: toString!
+variable: (36) -0.5 (object) = [type Object] (string)
+9: valueOf!
+9: toString!
+variable: (37) Infinity (object) = [type Object] (string)
+10: valueOf!
+10: toString!
+variable: (38) -Infinity (object) = [type Object] (string)
+11: valueOf!
+11: toString!
+variable: (39) NaN (object) = [type Object] (string)
+12: valueOf!
+12: toString!
+variable: (40)  (object) = null (null)
+13: valueOf!
+13: toString!
+variable: (41) 0 (object) = 0 (string)
+14: valueOf!
+14: toString!
+variable: (42) -0 (object) = -0 (string)
+15: valueOf!
+15: toString!
+variable: (43) 0.0 (object) = 0.0 (string)
+16: valueOf!
+16: toString!
+variable: (44) 1 (object) = 1 (string)
+17: valueOf!
+17: toString!
+variable: (45) Hello World! (object) = Hello World! (string)
+18: valueOf!
+18: toString!
+variable: (46) true (object) = true (string)
+19: valueOf!
+19: toString!
+variable: (47) _level0 (object) = _level0 (string)
+20: valueOf!
+20: toString!
+variable: (48) äöü (object) = äöü (string)
+21: valueOf!
+21: toString!
+variable: (49) _level0 (object) = [type Object] (string)
+22: valueOf!
+22: toString!
+variable: (50) [type Object] (object) = [type Object] (string)
+23: valueOf!
+23: toString!
+variable: (51) [type Object] (object) = [type Object] (string)
+24: valueOf!
+24: toString!
+variable: (52) [type Object] (object) = [type Object] (string)
+25: valueOf!
+25: toString!
+variable: (53) [type Object] (object) = [type Object] (string)
+26: valueOf!
+26: toString!
+variable: (54) [type Object] (object) = [type Object] (string)
+27: valueOf!
+27: toString!
+variable: (55) [type Object] (object) = [type Object] (string)
+variable: (56) 17000000 (number) = 17000000 (string)
+variable: (57) -17000000 (number) = -17000000 (string)
+variable: (58) input (string) = input (string)
+variable: (59) 34000000 (number) = 34000000 (string)
+variable: (60) -34000000 (number) = -34000000 (string)
+variable: (61) input (dynamic) = dynamic (string)
+Testing: background (default: false)
+background: (0)  (undefined) = false (boolean)
+background: (1) null (null) = false (boolean)
+background: (2) true (boolean) = true (boolean)
+background: (3) false (boolean) = false (boolean)
+background: (4) 0 (number) = false (boolean)
+background: (5) 1 (number) = true (boolean)
+background: (6) 0.5 (number) = true (boolean)
+background: (7) -1 (number) = true (boolean)
+background: (8) -0.5 (number) = true (boolean)
+background: (9) Infinity (number) = true (boolean)
+background: (10) -Infinity (number) = true (boolean)
+background: (11) NaN (number) = false (boolean)
+background: (12)  (string) = false (boolean)
+background: (13) 0 (string) = false (boolean)
+background: (14) -0 (string) = false (boolean)
+background: (15) 0.0 (string) = false (boolean)
+background: (16) 1 (string) = true (boolean)
+background: (17) Hello World! (string) = false (boolean)
+background: (18) true (string) = false (boolean)
+background: (19) _level0 (string) = false (boolean)
+background: (20) äöü (string) = false (boolean)
+background: (21) _level0 (movieclip) = true (boolean)
+background: (22) [object Object] (object) = true (boolean)
+background: (23) [type Function] (function) = true (boolean)
+valueOf called
+background: (24) [type Object] (object) = true (boolean)
+background: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+background: (26) [object Object] (object) = true (boolean)
+background: (27)  (object) = true (boolean)
+0: valueOf!
+background: (28)  (object) = true (boolean)
+1: valueOf!
+background: (29) null (object) = true (boolean)
+2: valueOf!
+background: (30) true (object) = true (boolean)
+3: valueOf!
+background: (31) false (object) = true (boolean)
+4: valueOf!
+background: (32) 0 (object) = true (boolean)
+5: valueOf!
+background: (33) 1 (object) = true (boolean)
+6: valueOf!
+background: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+background: (35) -1 (object) = true (boolean)
+8: valueOf!
+background: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+background: (37) Infinity (object) = true (boolean)
+10: valueOf!
+background: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+background: (39) NaN (object) = true (boolean)
+12: valueOf!
+background: (40)  (object) = true (boolean)
+13: valueOf!
+background: (41) 0 (object) = true (boolean)
+14: valueOf!
+background: (42) -0 (object) = true (boolean)
+15: valueOf!
+background: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+background: (44) 1 (object) = true (boolean)
+17: valueOf!
+background: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+background: (46) true (object) = true (boolean)
+19: valueOf!
+background: (47) _level0 (object) = true (boolean)
+20: valueOf!
+background: (48) äöü (object) = true (boolean)
+21: valueOf!
+background: (49) _level0 (object) = true (boolean)
+22: valueOf!
+background: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+background: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+background: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+background: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+background: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+background: (55) [type Object] (object) = true (boolean)
+background: (56) 17000000 (number) = true (boolean)
+background: (57) -17000000 (number) = true (boolean)
+background: (58) input (string) = false (boolean)
+background: (59) 34000000 (number) = true (boolean)
+background: (60) -34000000 (number) = true (boolean)
+background: (61) input (dynamic) = false (boolean)
+Testing: backgroundColor (default: 16777215)
+backgroundColor: (0)  (undefined) = 0 (number)
+backgroundColor: (1) null (null) = 0 (number)
+backgroundColor: (2) true (boolean) = 1 (number)
+backgroundColor: (3) false (boolean) = 0 (number)
+backgroundColor: (4) 0 (number) = 0 (number)
+backgroundColor: (5) 1 (number) = 1 (number)
+backgroundColor: (6) 0.5 (number) = 0 (number)
+backgroundColor: (7) -1 (number) = 16777215 (number)
+backgroundColor: (8) -0.5 (number) = 0 (number)
+backgroundColor: (9) Infinity (number) = 0 (number)
+backgroundColor: (10) -Infinity (number) = 0 (number)
+backgroundColor: (11) NaN (number) = 0 (number)
+backgroundColor: (12)  (string) = 0 (number)
+backgroundColor: (13) 0 (string) = 0 (number)
+backgroundColor: (14) -0 (string) = 0 (number)
+backgroundColor: (15) 0.0 (string) = 0 (number)
+backgroundColor: (16) 1 (string) = 1 (number)
+backgroundColor: (17) Hello World! (string) = 0 (number)
+backgroundColor: (18) true (string) = 0 (number)
+backgroundColor: (19) _level0 (string) = 0 (number)
+backgroundColor: (20) äöü (string) = 0 (number)
+backgroundColor: (21) _level0 (movieclip) = 0 (number)
+backgroundColor: (22) [object Object] (object) = 0 (number)
+backgroundColor: (23) [type Function] (function) = 0 (number)
+valueOf called
+backgroundColor: (24) [type Object] (object) = 0 (number)
+backgroundColor: (25) [type Object] (object) = 0 (number)
+valueOf called with 
+backgroundColor: (26) [object Object] (object) = 0 (number)
+backgroundColor: (27)  (object) = 0 (number)
+0: valueOf!
+backgroundColor: (28)  (object) = 0 (number)
+1: valueOf!
+backgroundColor: (29) null (object) = 0 (number)
+2: valueOf!
+backgroundColor: (30) true (object) = 1 (number)
+3: valueOf!
+backgroundColor: (31) false (object) = 0 (number)
+4: valueOf!
+backgroundColor: (32) 0 (object) = 0 (number)
+5: valueOf!
+backgroundColor: (33) 1 (object) = 1 (number)
+6: valueOf!
+backgroundColor: (34) 0.5 (object) = 0 (number)
+7: valueOf!
+backgroundColor: (35) -1 (object) = 16777215 (number)
+8: valueOf!
+backgroundColor: (36) -0.5 (object) = 0 (number)
+9: valueOf!
+backgroundColor: (37) Infinity (object) = 0 (number)
+10: valueOf!
+backgroundColor: (38) -Infinity (object) = 0 (number)
+11: valueOf!
+backgroundColor: (39) NaN (object) = 0 (number)
+12: valueOf!
+backgroundColor: (40)  (object) = 0 (number)
+13: valueOf!
+backgroundColor: (41) 0 (object) = 0 (number)
+14: valueOf!
+backgroundColor: (42) -0 (object) = 0 (number)
+15: valueOf!
+backgroundColor: (43) 0.0 (object) = 0 (number)
+16: valueOf!
+backgroundColor: (44) 1 (object) = 1 (number)
+17: valueOf!
+backgroundColor: (45) Hello World! (object) = 0 (number)
+18: valueOf!
+backgroundColor: (46) true (object) = 0 (number)
+19: valueOf!
+backgroundColor: (47) _level0 (object) = 0 (number)
+20: valueOf!
+backgroundColor: (48) äöü (object) = 0 (number)
+21: valueOf!
+backgroundColor: (49) _level0 (object) = 0 (number)
+22: valueOf!
+backgroundColor: (50) [type Object] (object) = 0 (number)
+23: valueOf!
+backgroundColor: (51) [type Object] (object) = 0 (number)
+24: valueOf!
+backgroundColor: (52) [type Object] (object) = 0 (number)
+25: valueOf!
+backgroundColor: (53) [type Object] (object) = 0 (number)
+26: valueOf!
+backgroundColor: (54) [type Object] (object) = 0 (number)
+27: valueOf!
+backgroundColor: (55) [type Object] (object) = 0 (number)
+backgroundColor: (56) 17000000 (number) = 222784 (number)
+backgroundColor: (57) -17000000 (number) = 16554432 (number)
+backgroundColor: (58) input (string) = 0 (number)
+backgroundColor: (59) 34000000 (number) = 445568 (number)
+backgroundColor: (60) -34000000 (number) = 16331648 (number)
+backgroundColor: (61) input (dynamic) = 0 (number)
+Testing: border (default: false)
+border: (0)  (undefined) = false (boolean)
+border: (1) null (null) = false (boolean)
+border: (2) true (boolean) = true (boolean)
+border: (3) false (boolean) = false (boolean)
+border: (4) 0 (number) = false (boolean)
+border: (5) 1 (number) = true (boolean)
+border: (6) 0.5 (number) = true (boolean)
+border: (7) -1 (number) = true (boolean)
+border: (8) -0.5 (number) = true (boolean)
+border: (9) Infinity (number) = true (boolean)
+border: (10) -Infinity (number) = true (boolean)
+border: (11) NaN (number) = false (boolean)
+border: (12)  (string) = false (boolean)
+border: (13) 0 (string) = false (boolean)
+border: (14) -0 (string) = false (boolean)
+border: (15) 0.0 (string) = false (boolean)
+border: (16) 1 (string) = true (boolean)
+border: (17) Hello World! (string) = false (boolean)
+border: (18) true (string) = false (boolean)
+border: (19) _level0 (string) = false (boolean)
+border: (20) äöü (string) = false (boolean)
+border: (21) _level0 (movieclip) = true (boolean)
+border: (22) [object Object] (object) = true (boolean)
+border: (23) [type Function] (function) = true (boolean)
+valueOf called
+border: (24) [type Object] (object) = true (boolean)
+border: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+border: (26) [object Object] (object) = true (boolean)
+border: (27)  (object) = true (boolean)
+0: valueOf!
+border: (28)  (object) = true (boolean)
+1: valueOf!
+border: (29) null (object) = true (boolean)
+2: valueOf!
+border: (30) true (object) = true (boolean)
+3: valueOf!
+border: (31) false (object) = true (boolean)
+4: valueOf!
+border: (32) 0 (object) = true (boolean)
+5: valueOf!
+border: (33) 1 (object) = true (boolean)
+6: valueOf!
+border: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+border: (35) -1 (object) = true (boolean)
+8: valueOf!
+border: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+border: (37) Infinity (object) = true (boolean)
+10: valueOf!
+border: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+border: (39) NaN (object) = true (boolean)
+12: valueOf!
+border: (40)  (object) = true (boolean)
+13: valueOf!
+border: (41) 0 (object) = true (boolean)
+14: valueOf!
+border: (42) -0 (object) = true (boolean)
+15: valueOf!
+border: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+border: (44) 1 (object) = true (boolean)
+17: valueOf!
+border: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+border: (46) true (object) = true (boolean)
+19: valueOf!
+border: (47) _level0 (object) = true (boolean)
+20: valueOf!
+border: (48) äöü (object) = true (boolean)
+21: valueOf!
+border: (49) _level0 (object) = true (boolean)
+22: valueOf!
+border: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+border: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+border: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+border: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+border: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+border: (55) [type Object] (object) = true (boolean)
+border: (56) 17000000 (number) = true (boolean)
+border: (57) -17000000 (number) = true (boolean)
+border: (58) input (string) = false (boolean)
+border: (59) 34000000 (number) = true (boolean)
+border: (60) -34000000 (number) = true (boolean)
+border: (61) input (dynamic) = false (boolean)
+Testing: borderColor (default: 0)
+borderColor: (0)  (undefined) = 0 (number)
+borderColor: (1) null (null) = 0 (number)
+borderColor: (2) true (boolean) = 1 (number)
+borderColor: (3) false (boolean) = 0 (number)
+borderColor: (4) 0 (number) = 0 (number)
+borderColor: (5) 1 (number) = 1 (number)
+borderColor: (6) 0.5 (number) = 0 (number)
+borderColor: (7) -1 (number) = 16777215 (number)
+borderColor: (8) -0.5 (number) = 0 (number)
+borderColor: (9) Infinity (number) = 0 (number)
+borderColor: (10) -Infinity (number) = 0 (number)
+borderColor: (11) NaN (number) = 0 (number)
+borderColor: (12)  (string) = 0 (number)
+borderColor: (13) 0 (string) = 0 (number)
+borderColor: (14) -0 (string) = 0 (number)
+borderColor: (15) 0.0 (string) = 0 (number)
+borderColor: (16) 1 (string) = 1 (number)
+borderColor: (17) Hello World! (string) = 0 (number)
+borderColor: (18) true (string) = 0 (number)
+borderColor: (19) _level0 (string) = 0 (number)
+borderColor: (20) äöü (string) = 0 (number)
+borderColor: (21) _level0 (movieclip) = 0 (number)
+borderColor: (22) [object Object] (object) = 0 (number)
+borderColor: (23) [type Function] (function) = 0 (number)
+valueOf called
+borderColor: (24) [type Object] (object) = 0 (number)
+borderColor: (25) [type Object] (object) = 0 (number)
+valueOf called with 
+borderColor: (26) [object Object] (object) = 0 (number)
+borderColor: (27)  (object) = 0 (number)
+0: valueOf!
+borderColor: (28)  (object) = 0 (number)
+1: valueOf!
+borderColor: (29) null (object) = 0 (number)
+2: valueOf!
+borderColor: (30) true (object) = 1 (number)
+3: valueOf!
+borderColor: (31) false (object) = 0 (number)
+4: valueOf!
+borderColor: (32) 0 (object) = 0 (number)
+5: valueOf!
+borderColor: (33) 1 (object) = 1 (number)
+6: valueOf!
+borderColor: (34) 0.5 (object) = 0 (number)
+7: valueOf!
+borderColor: (35) -1 (object) = 16777215 (number)
+8: valueOf!
+borderColor: (36) -0.5 (object) = 0 (number)
+9: valueOf!
+borderColor: (37) Infinity (object) = 0 (number)
+10: valueOf!
+borderColor: (38) -Infinity (object) = 0 (number)
+11: valueOf!
+borderColor: (39) NaN (object) = 0 (number)
+12: valueOf!
+borderColor: (40)  (object) = 0 (number)
+13: valueOf!
+borderColor: (41) 0 (object) = 0 (number)
+14: valueOf!
+borderColor: (42) -0 (object) = 0 (number)
+15: valueOf!
+borderColor: (43) 0.0 (object) = 0 (number)
+16: valueOf!
+borderColor: (44) 1 (object) = 1 (number)
+17: valueOf!
+borderColor: (45) Hello World! (object) = 0 (number)
+18: valueOf!
+borderColor: (46) true (object) = 0 (number)
+19: valueOf!
+borderColor: (47) _level0 (object) = 0 (number)
+20: valueOf!
+borderColor: (48) äöü (object) = 0 (number)
+21: valueOf!
+borderColor: (49) _level0 (object) = 0 (number)
+22: valueOf!
+borderColor: (50) [type Object] (object) = 0 (number)
+23: valueOf!
+borderColor: (51) [type Object] (object) = 0 (number)
+24: valueOf!
+borderColor: (52) [type Object] (object) = 0 (number)
+25: valueOf!
+borderColor: (53) [type Object] (object) = 0 (number)
+26: valueOf!
+borderColor: (54) [type Object] (object) = 0 (number)
+27: valueOf!
+borderColor: (55) [type Object] (object) = 0 (number)
+borderColor: (56) 17000000 (number) = 222784 (number)
+borderColor: (57) -17000000 (number) = 16554432 (number)
+borderColor: (58) input (string) = 0 (number)
+borderColor: (59) 34000000 (number) = 445568 (number)
+borderColor: (60) -34000000 (number) = 16331648 (number)
+borderColor: (61) input (dynamic) = 0 (number)
+Testing: autoSize (default: none)
+autoSize: (0)  (undefined) = none (string)
+autoSize: (1) null (null) = none (string)
+autoSize: (2) true (boolean) = left (string)
+autoSize: (3) false (boolean) = none (string)
+autoSize: (4) 0 (number) = none (string)
+autoSize: (5) 1 (number) = none (string)
+autoSize: (6) 0.5 (number) = none (string)
+autoSize: (7) -1 (number) = none (string)
+autoSize: (8) -0.5 (number) = none (string)
+autoSize: (9) Infinity (number) = none (string)
+autoSize: (10) -Infinity (number) = none (string)
+autoSize: (11) NaN (number) = none (string)
+autoSize: (12)  (string) = none (string)
+autoSize: (13) 0 (string) = none (string)
+autoSize: (14) -0 (string) = none (string)
+autoSize: (15) 0.0 (string) = none (string)
+autoSize: (16) 1 (string) = none (string)
+autoSize: (17) Hello World! (string) = none (string)
+autoSize: (18) true (string) = none (string)
+autoSize: (19) _level0 (string) = none (string)
+autoSize: (20) äöü (string) = none (string)
+autoSize: (21) _level0 (movieclip) = none (string)
+autoSize: (22) [object Object] (object) = none (string)
+autoSize: (23) [type Function] (function) = none (string)
+valueOf called
+toString called
+autoSize: (24) [type Object] (object) = none (string)
+toString called with 
+autoSize: (25) [type Object] (object) = none (string)
+valueOf called with 
+autoSize: (26) [object Object] (object) = none (string)
+autoSize: (27)  (object) = none (string)
+0: valueOf!
+0: toString!
+autoSize: (28)  (object) = none (string)
+1: valueOf!
+1: toString!
+autoSize: (29) null (object) = none (string)
+2: valueOf!
+2: toString!
+autoSize: (30) true (object) = none (string)
+3: valueOf!
+3: toString!
+autoSize: (31) false (object) = none (string)
+4: valueOf!
+4: toString!
+autoSize: (32) 0 (object) = none (string)
+5: valueOf!
+5: toString!
+autoSize: (33) 1 (object) = none (string)
+6: valueOf!
+6: toString!
+autoSize: (34) 0.5 (object) = none (string)
+7: valueOf!
+7: toString!
+autoSize: (35) -1 (object) = none (string)
+8: valueOf!
+8: toString!
+autoSize: (36) -0.5 (object) = none (string)
+9: valueOf!
+9: toString!
+autoSize: (37) Infinity (object) = none (string)
+10: valueOf!
+10: toString!
+autoSize: (38) -Infinity (object) = none (string)
+11: valueOf!
+11: toString!
+autoSize: (39) NaN (object) = none (string)
+12: valueOf!
+12: toString!
+autoSize: (40)  (object) = none (string)
+13: valueOf!
+13: toString!
+autoSize: (41) 0 (object) = none (string)
+14: valueOf!
+14: toString!
+autoSize: (42) -0 (object) = none (string)
+15: valueOf!
+15: toString!
+autoSize: (43) 0.0 (object) = none (string)
+16: valueOf!
+16: toString!
+autoSize: (44) 1 (object) = none (string)
+17: valueOf!
+17: toString!
+autoSize: (45) Hello World! (object) = none (string)
+18: valueOf!
+18: toString!
+autoSize: (46) true (object) = none (string)
+19: valueOf!
+19: toString!
+autoSize: (47) _level0 (object) = none (string)
+20: valueOf!
+20: toString!
+autoSize: (48) äöü (object) = none (string)
+21: valueOf!
+21: toString!
+autoSize: (49) _level0 (object) = none (string)
+22: valueOf!
+22: toString!
+autoSize: (50) [type Object] (object) = none (string)
+23: valueOf!
+23: toString!
+autoSize: (51) [type Object] (object) = none (string)
+24: valueOf!
+24: toString!
+autoSize: (52) [type Object] (object) = none (string)
+25: valueOf!
+25: toString!
+autoSize: (53) [type Object] (object) = none (string)
+26: valueOf!
+26: toString!
+autoSize: (54) [type Object] (object) = none (string)
+27: valueOf!
+27: toString!
+autoSize: (55) [type Object] (object) = none (string)
+autoSize: (56) 17000000 (number) = none (string)
+autoSize: (57) -17000000 (number) = none (string)
+autoSize: (58) input (string) = none (string)
+autoSize: (59) 34000000 (number) = none (string)
+autoSize: (60) -34000000 (number) = none (string)
+autoSize: (61) input (dynamic) = none (string)
+Testing: password (default: false)
+password: (0)  (undefined) = false (boolean)
+password: (1) null (null) = false (boolean)
+password: (2) true (boolean) = true (boolean)
+password: (3) false (boolean) = false (boolean)
+password: (4) 0 (number) = false (boolean)
+password: (5) 1 (number) = true (boolean)
+password: (6) 0.5 (number) = true (boolean)
+password: (7) -1 (number) = true (boolean)
+password: (8) -0.5 (number) = true (boolean)
+password: (9) Infinity (number) = true (boolean)
+password: (10) -Infinity (number) = true (boolean)
+password: (11) NaN (number) = false (boolean)
+password: (12)  (string) = false (boolean)
+password: (13) 0 (string) = false (boolean)
+password: (14) -0 (string) = false (boolean)
+password: (15) 0.0 (string) = false (boolean)
+password: (16) 1 (string) = true (boolean)
+password: (17) Hello World! (string) = false (boolean)
+password: (18) true (string) = false (boolean)
+password: (19) _level0 (string) = false (boolean)
+password: (20) äöü (string) = false (boolean)
+password: (21) _level0 (movieclip) = true (boolean)
+password: (22) [object Object] (object) = true (boolean)
+password: (23) [type Function] (function) = true (boolean)
+valueOf called
+password: (24) [type Object] (object) = true (boolean)
+password: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+password: (26) [object Object] (object) = true (boolean)
+password: (27)  (object) = true (boolean)
+0: valueOf!
+password: (28)  (object) = true (boolean)
+1: valueOf!
+password: (29) null (object) = true (boolean)
+2: valueOf!
+password: (30) true (object) = true (boolean)
+3: valueOf!
+password: (31) false (object) = true (boolean)
+4: valueOf!
+password: (32) 0 (object) = true (boolean)
+5: valueOf!
+password: (33) 1 (object) = true (boolean)
+6: valueOf!
+password: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+password: (35) -1 (object) = true (boolean)
+8: valueOf!
+password: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+password: (37) Infinity (object) = true (boolean)
+10: valueOf!
+password: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+password: (39) NaN (object) = true (boolean)
+12: valueOf!
+password: (40)  (object) = true (boolean)
+13: valueOf!
+password: (41) 0 (object) = true (boolean)
+14: valueOf!
+password: (42) -0 (object) = true (boolean)
+15: valueOf!
+password: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+password: (44) 1 (object) = true (boolean)
+17: valueOf!
+password: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+password: (46) true (object) = true (boolean)
+19: valueOf!
+password: (47) _level0 (object) = true (boolean)
+20: valueOf!
+password: (48) äöü (object) = true (boolean)
+21: valueOf!
+password: (49) _level0 (object) = true (boolean)
+22: valueOf!
+password: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+password: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+password: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+password: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+password: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+password: (55) [type Object] (object) = true (boolean)
+password: (56) 17000000 (number) = true (boolean)
+password: (57) -17000000 (number) = true (boolean)
+password: (58) input (string) = false (boolean)
+password: (59) 34000000 (number) = true (boolean)
+password: (60) -34000000 (number) = true (boolean)
+password: (61) input (dynamic) = false (boolean)
+Testing: wordWrap (default: false)
+wordWrap: (0)  (undefined) = false (boolean)
+wordWrap: (1) null (null) = false (boolean)
+wordWrap: (2) true (boolean) = true (boolean)
+wordWrap: (3) false (boolean) = false (boolean)
+wordWrap: (4) 0 (number) = false (boolean)
+wordWrap: (5) 1 (number) = true (boolean)
+wordWrap: (6) 0.5 (number) = true (boolean)
+wordWrap: (7) -1 (number) = true (boolean)
+wordWrap: (8) -0.5 (number) = true (boolean)
+wordWrap: (9) Infinity (number) = true (boolean)
+wordWrap: (10) -Infinity (number) = true (boolean)
+wordWrap: (11) NaN (number) = false (boolean)
+wordWrap: (12)  (string) = false (boolean)
+wordWrap: (13) 0 (string) = false (boolean)
+wordWrap: (14) -0 (string) = false (boolean)
+wordWrap: (15) 0.0 (string) = false (boolean)
+wordWrap: (16) 1 (string) = true (boolean)
+wordWrap: (17) Hello World! (string) = false (boolean)
+wordWrap: (18) true (string) = false (boolean)
+wordWrap: (19) _level0 (string) = false (boolean)
+wordWrap: (20) äöü (string) = false (boolean)
+wordWrap: (21) _level0 (movieclip) = true (boolean)
+wordWrap: (22) [object Object] (object) = true (boolean)
+wordWrap: (23) [type Function] (function) = true (boolean)
+valueOf called
+wordWrap: (24) [type Object] (object) = true (boolean)
+wordWrap: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+wordWrap: (26) [object Object] (object) = true (boolean)
+wordWrap: (27)  (object) = true (boolean)
+0: valueOf!
+wordWrap: (28)  (object) = true (boolean)
+1: valueOf!
+wordWrap: (29) null (object) = true (boolean)
+2: valueOf!
+wordWrap: (30) true (object) = true (boolean)
+3: valueOf!
+wordWrap: (31) false (object) = true (boolean)
+4: valueOf!
+wordWrap: (32) 0 (object) = true (boolean)
+5: valueOf!
+wordWrap: (33) 1 (object) = true (boolean)
+6: valueOf!
+wordWrap: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+wordWrap: (35) -1 (object) = true (boolean)
+8: valueOf!
+wordWrap: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+wordWrap: (37) Infinity (object) = true (boolean)
+10: valueOf!
+wordWrap: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+wordWrap: (39) NaN (object) = true (boolean)
+12: valueOf!
+wordWrap: (40)  (object) = true (boolean)
+13: valueOf!
+wordWrap: (41) 0 (object) = true (boolean)
+14: valueOf!
+wordWrap: (42) -0 (object) = true (boolean)
+15: valueOf!
+wordWrap: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+wordWrap: (44) 1 (object) = true (boolean)
+17: valueOf!
+wordWrap: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+wordWrap: (46) true (object) = true (boolean)
+19: valueOf!
+wordWrap: (47) _level0 (object) = true (boolean)
+20: valueOf!
+wordWrap: (48) äöü (object) = true (boolean)
+21: valueOf!
+wordWrap: (49) _level0 (object) = true (boolean)
+22: valueOf!
+wordWrap: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+wordWrap: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+wordWrap: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+wordWrap: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+wordWrap: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+wordWrap: (55) [type Object] (object) = true (boolean)
+wordWrap: (56) 17000000 (number) = true (boolean)
+wordWrap: (57) -17000000 (number) = true (boolean)
+wordWrap: (58) input (string) = false (boolean)
+wordWrap: (59) 34000000 (number) = true (boolean)
+wordWrap: (60) -34000000 (number) = true (boolean)
+wordWrap: (61) input (dynamic) = false (boolean)
+Testing: embedFonts (default: false)
+embedFonts: (0)  (undefined) = false (boolean)
+embedFonts: (1) null (null) = false (boolean)
+embedFonts: (2) true (boolean) = true (boolean)
+embedFonts: (3) false (boolean) = false (boolean)
+embedFonts: (4) 0 (number) = false (boolean)
+embedFonts: (5) 1 (number) = true (boolean)
+embedFonts: (6) 0.5 (number) = true (boolean)
+embedFonts: (7) -1 (number) = true (boolean)
+embedFonts: (8) -0.5 (number) = true (boolean)
+embedFonts: (9) Infinity (number) = true (boolean)
+embedFonts: (10) -Infinity (number) = true (boolean)
+embedFonts: (11) NaN (number) = false (boolean)
+embedFonts: (12)  (string) = false (boolean)
+embedFonts: (13) 0 (string) = false (boolean)
+embedFonts: (14) -0 (string) = false (boolean)
+embedFonts: (15) 0.0 (string) = false (boolean)
+embedFonts: (16) 1 (string) = true (boolean)
+embedFonts: (17) Hello World! (string) = false (boolean)
+embedFonts: (18) true (string) = false (boolean)
+embedFonts: (19) _level0 (string) = false (boolean)
+embedFonts: (20) äöü (string) = false (boolean)
+embedFonts: (21) _level0 (movieclip) = true (boolean)
+embedFonts: (22) [object Object] (object) = true (boolean)
+embedFonts: (23) [type Function] (function) = true (boolean)
+valueOf called
+embedFonts: (24) [type Object] (object) = true (boolean)
+embedFonts: (25) [type Object] (object) = true (boolean)
+valueOf called with 
+embedFonts: (26) [object Object] (object) = true (boolean)
+embedFonts: (27)  (object) = true (boolean)
+0: valueOf!
+embedFonts: (28)  (object) = true (boolean)
+1: valueOf!
+embedFonts: (29) null (object) = true (boolean)
+2: valueOf!
+embedFonts: (30) true (object) = true (boolean)
+3: valueOf!
+embedFonts: (31) false (object) = true (boolean)
+4: valueOf!
+embedFonts: (32) 0 (object) = true (boolean)
+5: valueOf!
+embedFonts: (33) 1 (object) = true (boolean)
+6: valueOf!
+embedFonts: (34) 0.5 (object) = true (boolean)
+7: valueOf!
+embedFonts: (35) -1 (object) = true (boolean)
+8: valueOf!
+embedFonts: (36) -0.5 (object) = true (boolean)
+9: valueOf!
+embedFonts: (37) Infinity (object) = true (boolean)
+10: valueOf!
+embedFonts: (38) -Infinity (object) = true (boolean)
+11: valueOf!
+embedFonts: (39) NaN (object) = true (boolean)
+12: valueOf!
+embedFonts: (40)  (object) = true (boolean)
+13: valueOf!
+embedFonts: (41) 0 (object) = true (boolean)
+14: valueOf!
+embedFonts: (42) -0 (object) = true (boolean)
+15: valueOf!
+embedFonts: (43) 0.0 (object) = true (boolean)
+16: valueOf!
+embedFonts: (44) 1 (object) = true (boolean)
+17: valueOf!
+embedFonts: (45) Hello World! (object) = true (boolean)
+18: valueOf!
+embedFonts: (46) true (object) = true (boolean)
+19: valueOf!
+embedFonts: (47) _level0 (object) = true (boolean)
+20: valueOf!
+embedFonts: (48) äöü (object) = true (boolean)
+21: valueOf!
+embedFonts: (49) _level0 (object) = true (boolean)
+22: valueOf!
+embedFonts: (50) [type Object] (object) = true (boolean)
+23: valueOf!
+embedFonts: (51) [type Object] (object) = true (boolean)
+24: valueOf!
+embedFonts: (52) [type Object] (object) = true (boolean)
+25: valueOf!
+embedFonts: (53) [type Object] (object) = true (boolean)
+26: valueOf!
+embedFonts: (54) [type Object] (object) = true (boolean)
+27: valueOf!
+embedFonts: (55) [type Object] (object) = true (boolean)
+embedFonts: (56) 17000000 (number) = true (boolean)
+embedFonts: (57) -17000000 (number) = true (boolean)
+embedFonts: (58) input (string) = false (boolean)
+embedFonts: (59) 34000000 (number) = true (boolean)
+embedFonts: (60) -34000000 (number) = true (boolean)
+embedFonts: (61) input (dynamic) = false (boolean)
+Testing: textColor (default: 0)
+textColor: (0)  (undefined) = 0 (number)
+textColor: (1) null (null) = 0 (number)
+textColor: (2) true (boolean) = 1 (number)
+textColor: (3) false (boolean) = 0 (number)
+textColor: (4) 0 (number) = 0 (number)
+textColor: (5) 1 (number) = 1 (number)
+textColor: (6) 0.5 (number) = 0 (number)
+textColor: (7) -1 (number) = 16777215 (number)
+textColor: (8) -0.5 (number) = 0 (number)
+textColor: (9) Infinity (number) = 0 (number)
+textColor: (10) -Infinity (number) = 0 (number)
+textColor: (11) NaN (number) = 0 (number)
+textColor: (12)  (string) = 0 (number)
+textColor: (13) 0 (string) = 0 (number)
+textColor: (14) -0 (string) = 0 (number)
+textColor: (15) 0.0 (string) = 0 (number)
+textColor: (16) 1 (string) = 1 (number)
+textColor: (17) Hello World! (string) = 0 (number)
+textColor: (18) true (string) = 0 (number)
+textColor: (19) _level0 (string) = 0 (number)
+textColor: (20) äöü (string) = 0 (number)
+textColor: (21) _level0 (movieclip) = 0 (number)
+textColor: (22) [object Object] (object) = 0 (number)
+textColor: (23) [type Function] (function) = 0 (number)
+valueOf called
+textColor: (24) [type Object] (object) = 0 (number)
+textColor: (25) [type Object] (object) = 0 (number)
+valueOf called with 
+textColor: (26) [object Object] (object) = 0 (number)
+textColor: (27)  (object) = 0 (number)
+0: valueOf!
+textColor: (28)  (object) = 0 (number)
+1: valueOf!
+textColor: (29) null (object) = 0 (number)
+2: valueOf!
+textColor: (30) true (object) = 1 (number)
+3: valueOf!
+textColor: (31) false (object) = 0 (number)
+4: valueOf!
+textColor: (32) 0 (object) = 0 (number)
+5: valueOf!
+textColor: (33) 1 (object) = 1 (number)
+6: valueOf!
+textColor: (34) 0.5 (object) = 0 (number)
+7: valueOf!
+textColor: (35) -1 (object) = 16777215 (number)
+8: valueOf!
+textColor: (36) -0.5 (object) = 0 (number)
+9: valueOf!
+textColor: (37) Infinity (object) = 0 (number)
+10: valueOf!
+textColor: (38) -Infinity (object) = 0 (number)
+11: valueOf!
+textColor: (39) NaN (object) = 0 (number)
+12: valueOf!
+textColor: (40)  (object) = 0 (number)
+13: valueOf!
+textColor: (41) 0 (object) = 0 (number)
+14: valueOf!
+textColor: (42) -0 (object) = 0 (number)
+15: valueOf!
+textColor: (43) 0.0 (object) = 0 (number)
+16: valueOf!
+textColor: (44) 1 (object) = 1 (number)
+17: valueOf!
+textColor: (45) Hello World! (object) = 0 (number)
+18: valueOf!
+textColor: (46) true (object) = 0 (number)
+19: valueOf!
+textColor: (47) _level0 (object) = 0 (number)
+20: valueOf!
+textColor: (48) äöü (object) = 0 (number)
+21: valueOf!
+textColor: (49) _level0 (object) = 0 (number)
+22: valueOf!
+textColor: (50) [type Object] (object) = 0 (number)
+23: valueOf!
+textColor: (51) [type Object] (object) = 0 (number)
+24: valueOf!
+textColor: (52) [type Object] (object) = 0 (number)
+25: valueOf!
+textColor: (53) [type Object] (object) = 0 (number)
+26: valueOf!
+textColor: (54) [type Object] (object) = 0 (number)
+27: valueOf!
+textColor: (55) [type Object] (object) = 0 (number)
+textColor: (56) 17000000 (number) = 222784 (number)
+textColor: (57) -17000000 (number) = 16554432 (number)
+textColor: (58) input (string) = 0 (number)
+textColor: (59) 34000000 (number) = 445568 (number)
+textColor: (60) -34000000 (number) = 16331648 (number)
+textColor: (61) input (dynamic) = 0 (number)

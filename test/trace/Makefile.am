@@ -1850,6 +1850,15 @@ EXTRA_DIST = \
 	text-field-length-7.swf.trace \
 	text-field-length-8.swf \
 	text-field-length-8.swf.trace \
+	text-field-values.as \
+	text-field-values-5.swf \
+	text-field-values-5.swf.trace \
+	text-field-values-6.swf \
+	text-field-values-6.swf.trace \
+	text-field-values-7.swf \
+	text-field-values-7.swf.trace \
+	text-field-values-8.swf \
+	text-field-values-8.swf.trace \
 	text-field-variable.as \
 	text-field-variable-5.swf \
 	text-field-variable-5.swf.trace \

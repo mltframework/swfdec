@@ -265,7 +265,11 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (queries[i].name == SWFDEC_AS_STR_screenResolutionY) {
       g_string_append_printf (server, "x%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (&val));
     } else if (queries[i].name == SWFDEC_AS_STR_pixelAspectRatio) {
-      g_string_append_printf (server, "&AR=%.1f", SWFDEC_AS_VALUE_GET_NUMBER (&val));
+      char buffer[10];
+      g_ascii_formatd (buffer, sizeof (buffer), "%.1f",
+	  SWFDEC_AS_VALUE_GET_NUMBER (&val));
+      g_string_append (server, "&AR=");
+      g_string_append (server, buffer);
     } else if (queries[i].name == SWFDEC_AS_STR_manufacturer) {
       char *s = swfdec_as_string_escape (cx, player->system->server_manufacturer);
       g_string_append_printf (server, "&M=%s", s);

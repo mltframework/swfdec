@@ -195,8 +195,10 @@ void		swfdec_player_stop_sounds	(SwfdecPlayer *		player,
 						 SwfdecAudioRemoveFunc	func,
 						 gpointer		data);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
-SwfdecMovie *	swfdec_player_get_level		(SwfdecPlayer *		player,
+SwfdecSpriteMovie *
+		swfdec_player_get_level		(SwfdecPlayer *		player,
 						 const char *		name,
+						 gboolean		ignore_case,
 						 gboolean		create);
 SwfdecMovie *	swfdec_player_add_level_from_loader 
 						(SwfdecPlayer *		player,

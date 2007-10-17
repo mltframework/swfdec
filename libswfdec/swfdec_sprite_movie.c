@@ -683,3 +683,44 @@ swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
   movie->playing = TRUE;
 }
 
+/* cute little hack */
+extern void
+swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval);
+/**
+ * swfdec_sprite_movie_unload:
+ * @movie: a #SwfdecMovie
+ *
+ * Unloads all contents from the given movie.
+ **/
+void
+swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
+{
+  SwfdecAsValue hack;
+
+  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
+
+  swfdec_sprite_movie_clear (SWFDEC_AS_OBJECT (movie)->context, 
+      SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
+  movie->frame = 0;
+  movie->sprite = NULL;
+}
+
+void
+swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoaderRequest request, 
+    SwfdecBuffer *data)
+{
+  SwfdecLoader *loader;
+
+  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
+  g_return_if_fail (url != NULL);
+
+  swfdec_sprite_movie_unload (movie);
+
+  /* FIXME: load relative to other movie? */
+  loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
+      url, request, data);
+  swfdec_swf_instance_new (movie, loader, NULL);
+  g_object_unref (loader);
+}
+

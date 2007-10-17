@@ -1573,6 +1573,8 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
  * swfdec_player_get_level:
  * @player: a #SwfdecPlayer
  * @name: name of the level to request
+ * @ignore_case: %TRUE to always be case insensitive, otherwise use the version
+ *               to determine case sensitivity
  * @create: %TRUE to create if it doesn't exist
  *
  * This function is used to look up root movies in the given @player. The 
@@ -1585,10 +1587,11 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
  *          movie exists. Note that if a new movie is created, it will not be
  *          fully initialized (yes, this function sucks).
  **/
-SwfdecMovie *
-swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create)
+SwfdecSpriteMovie *
+swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean ignore_case,
+    gboolean create)
 {
-  SwfdecMovie *movie;
+  SwfdecSpriteMovie *movie;
   GList *walk;
   const char *s;
   char *end;
@@ -1599,7 +1602,7 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create
   g_return_val_if_fail (name != NULL, NULL);
 
   /* check name starts with "_level" */
-  if (swfdec_strncmp (SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
+  if (swfdec_strncmp (ignore_case ? 6 : SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
     return NULL;
   name += 6;
   /* extract depth from rest string (or fail if it's not a depth) */
@@ -1610,11 +1613,11 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create
   depth = l - 16384;
   /* find movie */
   for (walk = player->roots; walk; walk = walk->next) {
-    movie = walk->data;
-    if (movie->depth < depth)
+    SwfdecMovie *cur = walk->data;
+    if (cur->depth < depth)
       continue;
-    if (movie->depth == depth)
-      return movie;
+    if (cur->depth == depth)
+      return SWFDEC_SPRITE_MOVIE (cur);
     break;
   }
   /* bail if create isn't set*/
@@ -1622,8 +1625,8 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create
     return NULL;
   /* create new root movie */
   s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%lu", l));
-  movie = swfdec_movie_new (player, depth, NULL, NULL, s);
-  movie->name = SWFDEC_AS_STR_EMPTY;
+  movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_new (player, depth, NULL, NULL, s));
+  SWFDEC_MOVIE (movie)->name = SWFDEC_AS_STR_EMPTY;
   return movie;
 }
 

@@ -1149,13 +1149,13 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else {
-    SwfdecMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, TRUE);
+    SwfdecSpriteMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, TRUE, TRUE);
     if (movie) {
-      if (movie->swf == NULL) {
-	swfdec_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
-	swfdec_movie_initialize (movie);
+      if (SWFDEC_MOVIE (movie)->swf == NULL) {
+	swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
       } else {
-	swfdec_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+	swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
       }
     } else {
       swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, 
@@ -1195,24 +1195,26 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
-  } else if (internal) {
-    SwfdecMovie *movie;
+  } else if (internal || variables) {
+    SwfdecSpriteMovie *movie;
     /* FIXME: This code looks wrong - figure out how levels are handled */
-    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, !variables);
-    if (movie) {
-      if (movie->swf == NULL) {
-	swfdec_movie_load (movie, url, method, NULL);
-	swfdec_movie_initialize (movie);
-      }
-    } else {
-      movie = swfdec_player_get_movie_from_string (
+    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, TRUE, !variables);
+    if (movie == NULL) {
+      movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (
 	SWFDEC_PLAYER (cx), target);
-      if (movie == NULL) {
-	/* swfdec_player_get_movie_from_value() should have warned already */
-      } else if (variables) {
-	swfdec_movie_load_variables (movie, url, method, NULL);
+      if (!SWFDEC_IS_SPRITE_MOVIE (movie))
+	movie = NULL;
+    }
+    if (movie == NULL) {
+      /* swfdec_player_get_movie_from_value() should have warned already */
+    } else if (variables) {
+      swfdec_movie_load_variables (SWFDEC_MOVIE (movie), url, method, NULL);
+    } else {
+      if (SWFDEC_MOVIE (movie)->swf == NULL) {
+	swfdec_sprite_movie_load (movie, url, method, NULL);
+	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
       } else {
-	swfdec_movie_load (movie, url, method, NULL);
+	swfdec_sprite_movie_load (movie, url, method, NULL);
       }
     }
   } else {

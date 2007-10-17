@@ -55,6 +55,7 @@ typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundChunk SwfdecSoundChunk;
 typedef struct _SwfdecSprite SwfdecSprite;
 typedef struct _SwfdecSpriteFrame SwfdecSpriteFrame;
+typedef struct _SwfdecSpriteMovie SwfdecSpriteMovie;
 typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecSwfInstance SwfdecSwfInstance;
 typedef struct _SwfdecText SwfdecText;

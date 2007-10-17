@@ -27,7 +27,7 @@
 G_BEGIN_DECLS
 
 
-typedef struct _SwfdecSpriteMovie SwfdecSpriteMovie;
+//typedef struct _SwfdecSpriteMovie SwfdecSpriteMovie;
 typedef struct _SwfdecSpriteMovieClass SwfdecSpriteMovieClass;
 
 #define SWFDEC_TYPE_SPRITE_MOVIE                    (swfdec_sprite_movie_get_type())
@@ -65,6 +65,12 @@ GType		swfdec_sprite_movie_get_type		(void);
 
 void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			goto_frame);
+
+void		swfdec_sprite_movie_unload		(SwfdecSpriteMovie *	movie);
+void		swfdec_sprite_movie_load		(SwfdecSpriteMovie *  	movie,
+							 const char *		url,
+					  		 SwfdecLoaderRequest	request,
+							 SwfdecBuffer *		data);
 
 
 G_END_DECLS

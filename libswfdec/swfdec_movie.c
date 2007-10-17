@@ -1368,28 +1368,14 @@ swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
     return;
   }
 
+  context = SWFDEC_AS_OBJECT (movie)->context;
   loader = swfdec_as_object_new_empty (context);
   swfdec_as_object_add_function (loader, SWFDEC_AS_STR_onData, 0,
       swfdec_movie_load_variables_on_data, 0);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
   swfdec_as_object_set_variable (loader, SWFDEC_AS_STR_target, &val);
 
   swfdec_load_object_new (loader, url, request, data);
-}
-
-void
-swfdec_movie_load (SwfdecMovie *movie, const char *url, SwfdecLoaderRequest request, 
-    SwfdecBuffer *data)
-{
-  SwfdecLoader *loader;
-
-  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
-  g_return_if_fail (url != NULL);
-
-  /* FIXME: load relative to other movie? */
-  loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
-      url, request, data);
-  swfdec_swf_instance_new (SWFDEC_SPRITE_MOVIE (movie), loader, NULL);
-  g_object_unref (loader);
 }
 
 char *

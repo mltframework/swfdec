@@ -58,12 +58,18 @@ swfdec_text_field_dispose (GObject *object)
 {
   SwfdecTextField *text = SWFDEC_TEXT_FIELD (object);
 
-  g_free (text->text_input);
-  text->text_input = NULL;
-  g_free (text->variable);
-  text->variable = NULL;
-  g_free (text->font);
-  text->font = NULL;
+  if (text->text_input != NULL) {
+    g_free (text->text_input);
+    text->text_input = NULL;
+  }
+  if (text->variable != NULL) {
+    g_free (text->variable);
+    text->variable = NULL;
+  }
+  if (text->font != NULL) {
+    g_free (text->font);
+    text->font = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_text_field_parent_class)->dispose (object);
 }
@@ -83,7 +89,6 @@ static void
 swfdec_text_field_init (SwfdecTextField * text)
 {
   text->scroll = 1;
-  text->max_length = G_MAXUINT;
 }
 
 SwfdecLayout *
@@ -434,7 +439,9 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
   }
   if (has_max_length) {
-    text->max_length = swfdec_bits_get_u16 (b);
+    text->max_chars = swfdec_bits_get_u16 (b);
+  } else {
+    text->max_chars = 0;
   }
   if (has_layout) {
     guint align = swfdec_bits_get_u8 (b);

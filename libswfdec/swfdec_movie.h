@@ -84,6 +84,15 @@ typedef enum {
   SWFDEC_MOVIE_INVALID_MATRIX		/* matrix is invalid, recalculate */
 } SwfdecMovieCacheState;
 
+typedef void (*SwfdecMovieVariableListenerFunction) (SwfdecAsObject *object,
+    const char *name, const SwfdecAsValue *val);
+
+typedef struct {
+  SwfdecAsObject *			object;
+  const char *				name;
+  SwfdecMovieVariableListenerFunction	function;
+} SwfdecMovieVariableListener;
+
 struct _SwfdecMovie {
   SwfdecAsObject	object;
 
@@ -93,6 +102,7 @@ struct _SwfdecMovie {
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   SwfdecMovieCacheState	cache_state;		/* whether we are up to date */
   SwfdecMovieState	state;			/* state the movie is in */
+  GSList		*variable_listeners;	/* textfield's listening to changes in variables - SwfdecMovieVariableListener */
 
   /* static properties (set by PlaceObject tags) */
   const char *		original_name;		/* the original name - GC'd and static */
@@ -253,6 +263,15 @@ gboolean	swfdec_movie_set_asprop		(SwfdecMovie *		movie,
 gboolean	swfdec_movie_get_asprop		(SwfdecMovie *		movie,
 						 const char *		name,
 						 SwfdecAsValue *	val);
+
+void		swfdec_movie_add_variable_listener (SwfdecMovie *	movie,
+						 SwfdecAsObject *	object,
+						 const char *		name,
+						 const SwfdecMovieVariableListenerFunction	function);
+void		swfdec_movie_remove_variable_listener (SwfdecMovie *	movie,
+						 SwfdecAsObject *	object,
+						 const char *		name,
+						 const SwfdecMovieVariableListenerFunction	function);
 
 G_END_DECLS
 #endif

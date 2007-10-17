@@ -32,7 +32,6 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
-#include "swfdec_xml.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
 
@@ -72,8 +71,7 @@ swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ?
-	swfdec_as_context_get_string (cx, text->text_display) :
-	SWFDEC_AS_STR_EMPTY));
+	text->text_display : SWFDEC_AS_STR_EMPTY));
 }
 
 static void
@@ -87,6 +85,11 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, FALSE);
+
+  if (text->variable != NULL) {
+    swfdec_text_field_movie_set_listen_variable_text (text,
+	swfdec_text_field_movie_get_html_text (text));
+  }
 }
 
 static void
@@ -114,289 +117,17 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
   text->text->html = value;
 }
 
-static const char *
-align_to_string (SwfdecTextAlign align)
-{
-  switch (align) {
-    case SWFDEC_TEXT_ALIGN_LEFT:
-      return "LEFT";
-    case SWFDEC_TEXT_ALIGN_RIGHT:
-      return "RIGHT";
-    case SWFDEC_TEXT_ALIGN_CENTER:
-      return "CENTER";
-    case SWFDEC_TEXT_ALIGN_JUSTIFY:
-      return "JUSTIFY";
-    default:
-      g_assert_not_reached ();
-  }
-}
-
-/*
- * Order of tags:
- * TEXTFORMAT / P or LI / FONT / A / B / I / U
- *
- * Order of attributes:
- * TEXTFORMAT:
- * LEFTMARGIN / RIGHTMARGIN / INDENT / LEADING / BLOCKINDENT / TABSTOPS
- * P: ALIGN
- * LI: none
- * FONT: FACE / SIZE / COLOR / LETTERSPACING / KERNING
- * A: HREF / TARGET
- * B: none
- * I: none
- * U: none
- */
-static GString *
-swfdec_text_field_movie_htmlText_append_paragraph (SwfdecTextFieldMovie *text,
-    GString *string, guint start_index, guint end_index)
-{
-  SwfdecTextFormat *format, *format_prev, *format_font;
-  GSList *iter, *fonts, *iter_font;
-  guint index_, index_prev;
-  gboolean textformat, bullet, font;
-  char *escaped;
-
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), string);
-  g_return_val_if_fail (string != NULL, string);
-  g_return_val_if_fail (start_index < end_index, string);
-
-  g_return_val_if_fail (text->formats != NULL, string);
-  for (iter = text->formats; iter->next != NULL &&
-      ((SwfdecFormatIndex *)(iter->next->data))->index <= start_index;
-      iter = iter->next);
-
-  index_ = start_index;
-  format = ((SwfdecFormatIndex *)(iter->data))->format;
-
-  if (format->left_margin != 0 || format->right_margin != 0 ||
-      format->indent != 0 || format->leading != 0 ||
-      format->block_indent != 0 ||
-      swfdec_as_array_get_length (format->tab_stops) > 0)
-  {
-    string = g_string_append (string, "<TEXTFORMAT");
-    if (format->left_margin) {
-      g_string_append_printf (string, " LEFTMARGIN=\"%i\"",
-	  format->left_margin);
-    }
-    if (format->right_margin) {
-      g_string_append_printf (string, " RIGHTMARGIN=\"%i\"",
-	  format->right_margin);
-    }
-    if (format->indent)
-      g_string_append_printf (string, " INDENT=\"%i\"", format->indent);
-    if (format->leading)
-      g_string_append_printf (string, " LEADING=\"%i\"", format->leading);
-    if (format->block_indent) {
-      g_string_append_printf (string, " BLOCKINDENT=\"%i\"",
-	  format->block_indent);
-    }
-    if (swfdec_as_array_get_length (format->tab_stops) > 0) {
-      SwfdecAsValue val;
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT  (format->tab_stops));
-      g_string_append_printf (string, " TABSTOPS=\"%s\"",
-	  swfdec_as_value_to_string (SWFDEC_AS_OBJECT
-	    (format->tab_stops)->context, &val));
-    }
-    string = g_string_append (string, ">");
-
-    textformat = TRUE;
-  }
-  else
-  {
-    textformat = FALSE;
-  }
-
-  if (format->bullet) {
-    string = g_string_append (string, "<LI>");
-    bullet = TRUE;
-  } else {
-    g_string_append_printf (string, "<P ALIGN=\"%s\">",
-	align_to_string (format->align));
-    bullet = FALSE;
-  }
-
-  // note we don't escape format->font, even thought it can have evil chars
-  g_string_append_printf (string, "<FONT FACE=\"%s\" SIZE=\"%i\" COLOR=\"#%06X\" LETTERSPACING=\"%i\" KERNING=\"%i\">",
-      format->font, format->size, format->color, (int)format->letter_spacing,
-      (format->kerning ? 1 : 0));
-  fonts = g_slist_prepend (NULL, format);
-
-  if (format->url != SWFDEC_AS_STR_EMPTY)
-    g_string_append_printf (string, "<A HREF=\"%s\" TARGET=\"%s\">",
-	format->url, format->target);
-  if (format->bold)
-    string = g_string_append (string, "<B>");
-  if (format->italic)
-    string = g_string_append (string, "<I>");
-  if (format->underline)
-    string = g_string_append (string, "<U>");
-
-  // special case: use <= instead of < to add some extra markup
-  for (iter = iter->next;
-      iter != NULL && ((SwfdecFormatIndex *)(iter->data))->index <= end_index;
-      iter = iter->next)
-  {
-    index_prev = index_;
-    format_prev = format;
-    index_ = ((SwfdecFormatIndex *)(iter->data))->index;
-    format = ((SwfdecFormatIndex *)(iter->data))->format;
-
-    escaped = swfdec_xml_escape_len (text->text_display + index_prev,
-	index_ - index_prev);
-    string = g_string_append (string, escaped);
-    g_free (escaped);
-    escaped = NULL;
-
-    // Figure out what tags need to be rewritten
-    if (format->font != format_prev->font ||
-	format->size != format_prev->size ||
-	format->color != format_prev->color ||
-	(int)format->letter_spacing != (int)format_prev->letter_spacing ||
-	format->kerning != format_prev->kerning) {
-      font = TRUE;
-    } else if (format->url == format_prev->url &&
-	format->target == format_prev->target &&
-	format->bold == format_prev->bold &&
-	format->italic == format_prev->italic &&
-	format->underline == format_prev->underline) {
-      continue;
-    }
-
-    // Close tags
-    for (iter_font = fonts; iter_font != NULL; iter_font = iter_font->next)
-    {
-      format_font = (SwfdecTextFormat *)iter_font->data;
-      if (format->font == format_font->font &&
-	format->size == format_font->size &&
-	format->color == format_font->color &&
-	(int)format->letter_spacing == (int)format_font->letter_spacing &&
-	format->kerning == format_font->kerning) {
-	break;
-      }
-    }
-    if (iter_font != NULL) {
-      while (fonts != iter_font) {
-	string = g_string_append (string, "</FONT>");
-	fonts = g_slist_remove (fonts, fonts->data);
-      }
-    }
-    if (format_prev->underline)
-      string = g_string_append (string, "</U>");
-    if (format_prev->italic)
-      string = g_string_append (string, "</I>");
-    if (format_prev->bold)
-      string = g_string_append (string, "</B>");
-    if (format_prev->url != SWFDEC_AS_STR_EMPTY)
-      string = g_string_append (string, "</A>");
-
-    // Open tags
-    format_font = (SwfdecTextFormat *)fonts->data;
-    if (font && (format->font != format_font->font ||
-	 format->size != format_font->size ||
-	 format->color != format_font->color ||
-	 (int)format->letter_spacing != (int)format_font->letter_spacing ||
-	 format->kerning != format_font->kerning))
-    {
-      fonts = g_slist_prepend (fonts, format);
-
-      string = g_string_append (string, "<FONT");
-      // note we don't escape format->font, even thought it can have evil chars
-      if (format->font != format_font->font)
-	g_string_append_printf (string, " FACE=\"%s\"", format->font);
-      if (format->size != format_font->size)
-	g_string_append_printf (string, " SIZE=\"%i\"", format->size);
-      if (format->color != format_font->color)
-	g_string_append_printf (string, " COLOR=\"#%06X\"", format->color);
-      if ((int)format->letter_spacing != (int)format_font->letter_spacing) {
-	g_string_append_printf (string, " LETTERSPACING=\"%i\"",
-	    (int)format->letter_spacing);
-      }
-      if (format->kerning != format_font->kerning) {
-	g_string_append_printf (string, " KERNING=\"%i\"",
-	    (format->kerning ? 1 : 0));
-      }
-      string = g_string_append (string, ">");
-    }
-    if (format->url != SWFDEC_AS_STR_EMPTY) {
-      g_string_append_printf (string, "<A HREF=\"%s\" TARGET=\"%s\">",
-	  format->url, format->target);
-    }
-    if (format->bold)
-      string = g_string_append (string, "<B>");
-    if (format->italic)
-      string = g_string_append (string, "<I>");
-    if (format->underline)
-      string = g_string_append (string, "<U>");
-  }
-
-  escaped = swfdec_xml_escape_len (text->text_display + index_,
-      end_index - index_);
-  string = g_string_append (string, escaped);
-  g_free (escaped);
-
-  if (format->underline)
-    string = g_string_append (string, "</U>");
-  if (format->italic)
-    string = g_string_append (string, "</I>");
-  if (format->bold)
-    string = g_string_append (string, "</B>");
-  if (format->url != SWFDEC_AS_STR_EMPTY)
-    string = g_string_append (string, "</A>");
-  for (iter = fonts; iter != NULL; iter = iter->next)
-    string = g_string_append (string, "</FONT>");
-  g_slist_free (fonts);
-  if (bullet) {
-    string = g_string_append (string, "</LI>");
-  } else {
-    string = g_string_append (string, "</P>");
-  }
-  if (textformat)
-    string = g_string_append (string, "</TEXTFORMAT>");
-
-  return string;
-}
-
 static void
 swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  const char *p, *end;
-  GString *string;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->html == FALSE) {
-    swfdec_text_field_movie_get_text (cx, object, argc, argv, ret);
-    return;
-  }
-
-  if (text->text_display == NULL) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
-    return;
-  }
-
-  string = g_string_new ("");
-
-  p = text->text_display;
-  while (*p != '\0') {
-    end = strchr (p, '\r');
-    if (end == NULL)
-      end = strchr (p, '\0');
-
-    string = swfdec_text_field_movie_htmlText_append_paragraph (text, string,
-	p - text->text_display, end - text->text_display);
-
-    if (*end == '\r') {
-      p = end + 1;
-    } else {
-      p = end;
-    }
-  }
-
   SWFDEC_AS_VALUE_SET_STRING (ret,
-      swfdec_as_context_give_string (cx, g_string_free (string, FALSE)));
+      swfdec_text_field_movie_get_html_text (text));
 }
 
 static void
@@ -410,6 +141,11 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, text->text->html);
+
+  if (text->variable != NULL) {
+    swfdec_text_field_movie_set_listen_variable_text (text,
+	swfdec_text_field_movie_get_html_text (text));
+  }
 }
 
 static void
@@ -454,6 +190,38 @@ swfdec_text_field_movie_set_condenseWhite (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_text_field_movie_get_maxChars (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (text->text->max_chars != 0) {
+    SWFDEC_AS_VALUE_SET_INT (ret, text->text->max_chars);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_field_movie_set_maxChars (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (argc < 1)
+    return;
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+  text->text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
+}
+
+static void
 swfdec_text_field_movie_get_multiline (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -478,6 +246,35 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
   swfdec_as_value_to_number (cx, &argv[0]);
 
   text->text->multiline = value;
+}
+
+static void
+swfdec_text_field_movie_get_selectable (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->selectable);
+}
+
+static void
+swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  text->text->selectable = value;
+
+  // FIXME: If selection made and removing selectable force redraw?
 }
 
 static void
@@ -514,6 +311,43 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
     text->text->input = FALSE;
   }
+}
+
+static void
+swfdec_text_field_movie_do_get_variable (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (text->variable) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, text->variable);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  const char *value;
+
+  if (argc > 0)
+    swfdec_as_value_to_number (cx, &argv[0]);
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (&argv[0]) || value == SWFDEC_AS_STR_EMPTY) {
+    value = NULL;
+  }
+
+  swfdec_text_field_movie_set_listen_variable (text, value);
 }
 
 /*
@@ -736,6 +570,36 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
 
   if (text->text->auto_size != old)
     swfdec_text_field_movie_format_changed (text);
+}
+
+static void
+swfdec_text_field_movie_get_password (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->password);
+}
+
+static void
+swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  gboolean value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  if (text->text->password != value) {
+    text->text->password = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
 }
 
 static void
@@ -1044,24 +908,24 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_condenseWhite,
       swfdec_text_field_movie_get_condenseWhite,
       swfdec_text_field_movie_set_condenseWhite);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxChars,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxChars,
       swfdec_text_field_movie_get_maxChars,
-      swfdec_text_field_movie_set_maxChars);*/
+      swfdec_text_field_movie_set_maxChars);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_multiline,
       swfdec_text_field_movie_get_multiline,
       swfdec_text_field_movie_set_multiline);
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
       swfdec_text_field_movie_get_restrict,
       swfdec_text_field_movie_set_restrict);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
       swfdec_text_field_movie_get_selectable,
-      swfdec_text_field_movie_set_selectable);*/
+      swfdec_text_field_movie_set_selectable);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_type,
       swfdec_text_field_movie_do_get_type,
       swfdec_text_field_movie_do_set_type);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_variable,
-      swfdec_text_field_movie_get_variable,
-      swfdec_text_field_movie_set_variable);*/
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_variable,
+      swfdec_text_field_movie_do_get_variable,
+      swfdec_text_field_movie_do_set_variable);
 
   // info
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textHeight,
@@ -1108,9 +972,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_autoSize,
       swfdec_text_field_movie_get_autoSize,
       swfdec_text_field_movie_set_autoSize);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_password,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_password,
       swfdec_text_field_movie_get_password,
-      swfdec_text_field_movie_set_password);*/
+      swfdec_text_field_movie_set_password);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_wordWrap,
       swfdec_text_field_movie_get_wordWrap,
       swfdec_text_field_movie_set_wordWrap);

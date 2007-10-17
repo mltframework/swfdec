@@ -24,7 +24,6 @@
 #include <string.h>
 #include "swfdec_security.h"
 #include "swfdec_debug.h"
-#include "swfdec_decoder.h"
 
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecSecurity, swfdec_security, G_TYPE_OBJECT)

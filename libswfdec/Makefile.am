@@ -97,6 +97,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_ringbuffer.c \
 	swfdec_script.c \
 	swfdec_security.c \
+	swfdec_security_allow.c \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
 	swfdec_sound.c \
@@ -218,6 +219,7 @@ noinst_HEADERS = \
 	swfdec_ringbuffer.h \
 	swfdec_script_internal.h \
 	swfdec_security.h \
+	swfdec_security_allow.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \

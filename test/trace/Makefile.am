@@ -1842,6 +1842,8 @@ EXTRA_DIST = \
 	targetpath-7.swf \
 	targetpath-7.swf.trace \
 	text-field-variable.as \
+	text-field-variable-5.swf \
+	text-field-variable-5.swf.trace \
 	text-field-variable-6.swf \
 	text-field-variable-6.swf.trace \
 	text-field-variable-7.swf \

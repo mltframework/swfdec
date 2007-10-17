@@ -289,33 +289,36 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
   attr_underline = NULL;
 }
 
-static void
-swfdec_text_field_movie_generate_paragraphs (SwfdecTextFieldMovie *text)
+static SwfdecParagraph *
+swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
 {
+  SwfdecParagraph *paragraphs;
   const char *p, *end;
-  int num, i;
+  int count, i;
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
-  num = 0;
+  count = 0;
   p = text->text_display;
   while (p != NULL && *p != '\0') {
-    num++;
+    count++;
     p = strchr (p, '\r');
     if (p != NULL) p++;
   }
 
-  text->paragraphs = g_new0 (SwfdecParagraph, num + 1);
+  paragraphs = g_new0 (SwfdecParagraph, count + 1);
+  if (num != NULL)
+    *num = count;
 
   i = 0;
   p = text->text_display;
   while (*p != '\0') {
-    g_assert (i < num);
+    g_assert (i < count);
     end = strchr (p, '\r');
     if (end == NULL)
       end = strchr (p, '\0');
 
-    swfdec_text_field_movie_generate_paragraph (text, &text->paragraphs[i],
+    swfdec_text_field_movie_generate_paragraph (text, &paragraphs[i],
 	p - text->text_display, end - text->text_display);
 
     p = end;
@@ -323,23 +326,60 @@ swfdec_text_field_movie_generate_paragraphs (SwfdecTextFieldMovie *text)
 
     i++;
   }
-  g_assert (i == num);
+  g_assert (i == count);
+
+  return paragraphs;
+}
+
+static void
+swfdec_text_field_movie_free_paragraphs (SwfdecParagraph *paragraphs)
+{
+  GList *iter;
+  int i;
+
+  g_return_if_fail (paragraphs != NULL);
+
+  for (i = 0; paragraphs[i].text != NULL; i++)
+  {
+    for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next) {
+      pango_tab_array_free (((SwfdecBlock *)(iter->data))->tab_stops);
+    }
+    g_list_free (paragraphs[i].blocks);
+
+    for (iter = paragraphs[i].attrs; iter != NULL; iter = iter->next) {
+      pango_attribute_destroy ((PangoAttribute *)(iter->data));
+    }
+    g_list_free (paragraphs[i].attrs);
+
+    if (paragraphs[i].attrs_list != NULL)
+      pango_attr_list_unref (paragraphs[i].attrs_list);
+  }
+  g_free (paragraphs);
 }
 
 /*
  * Rendering
  */
 static SwfdecLayout *
-swfdec_text_field_movie_generate_layouts (SwfdecTextField *text, cairo_t *cr,
-    const SwfdecParagraph *paragraphs, const SwfdecColorTransform *trans,
-    const SwfdecRect *inval, int *num)
+swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
+    cairo_t *cr, const SwfdecParagraph *paragraphs,
+    const SwfdecColorTransform *trans)
 {
   GArray *layouts;
   guint i;
+  SwfdecParagraph *paragraphs_free;
 
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD (text), NULL);
-  g_return_val_if_fail (cr != NULL, NULL);
-  g_return_val_if_fail (paragraphs != NULL, NULL);
+  g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  if (cr == NULL)
+    cr = text->cr;
+
+  if (paragraphs == NULL) {
+    paragraphs_free = swfdec_text_field_movie_get_paragraphs (text, NULL);
+    paragraphs = paragraphs_free;
+  } else {
+    paragraphs_free = NULL;
+  }
 
   layouts = g_array_new (TRUE, TRUE, sizeof (SwfdecLayout));
 
@@ -375,8 +415,8 @@ swfdec_text_field_movie_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 
       // set rendering position
       layout.render_offset_x = block->left_margin + block->block_indent;
-      width = SWFDEC_GRAPHIC (text)->extents.x1 -
-	SWFDEC_GRAPHIC (text)->extents.x0 - block->left_margin -
+      width = SWFDEC_MOVIE (text)->original_extents.x1 -
+	SWFDEC_MOVIE (text)->original_extents.x0 - block->left_margin -
 	block->right_margin - block->block_indent;
 
       if (block->index_ == 0 && paragraphs[i].indent < 0) {
@@ -387,7 +427,7 @@ swfdec_text_field_movie_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	width += -indent;
       }
 
-      if (text->word_wrap) {
+      if (text->text->word_wrap) {
 	pango_layout_set_wrap (playout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_width (playout, width * PANGO_SCALE);
 	pango_layout_set_alignment (playout, block->align);
@@ -458,7 +498,7 @@ swfdec_text_field_movie_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 	  paragraphs[i].text + block->index_ + skip,
 	  paragraphs[i].text_length - block->index_ - skip);
 
-      if (iter->next != NULL && text->word_wrap)
+      if (iter->next != NULL && text->text->word_wrap)
       {
 	PangoLayoutLine *line;
 	int line_num;
@@ -498,9 +538,15 @@ swfdec_text_field_movie_generate_layouts (SwfdecTextField *text, cairo_t *cr,
 
       layouts = g_array_append_val (layouts, layout);
 
-      if (!text->word_wrap)
+      if (!text->text->word_wrap)
 	break;
     }
+  }
+
+  if (paragraphs_free != NULL) {
+    swfdec_text_field_movie_free_paragraphs (paragraphs_free);
+    paragraphs_free = NULL;
+    paragraphs = NULL;
   }
 
   if (num != NULL)
@@ -509,6 +555,19 @@ swfdec_text_field_movie_generate_layouts (SwfdecTextField *text, cairo_t *cr,
   return (SwfdecLayout *)g_array_free (layouts, FALSE);
 }
 
+static void
+swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
+{
+  int i;
+
+  g_return_if_fail (layouts != NULL);
+
+  for (i = 0; layouts[i].layout != NULL; i++) {
+    g_object_unref (layouts[i].layout);
+  }
+
+  g_free (layouts);
+}
 
 static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
@@ -519,7 +578,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecLayout *layouts;
   SwfdecRect limit;
   SwfdecColor color;
-  const SwfdecParagraph *paragraphs;
+  SwfdecParagraph *paragraphs;
   int i, y, x;
   guint linenum;
   gboolean first;
@@ -532,9 +591,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   text_movie = SWFDEC_TEXT_FIELD_MOVIE (movie);
   text = SWFDEC_TEXT_FIELD (movie->graphic);
 
-  if (text_movie->paragraphs == NULL)
-    swfdec_text_field_movie_generate_paragraphs (text_movie);
-  paragraphs = text_movie->paragraphs;
+  paragraphs = swfdec_text_field_movie_get_paragraphs (text_movie, NULL);
 
   swfdec_rect_intersect (&limit, &movie->original_extents, inval);
 
@@ -558,8 +615,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_stroke (cr);
   }
 
-  layouts = swfdec_text_field_movie_generate_layouts (text, cr, paragraphs,
-      trans, inval, NULL);
+  layouts = swfdec_text_field_movie_get_layouts (text_movie, NULL, cr,
+      paragraphs, trans);
 
   first = TRUE;
   linenum = 0;
@@ -617,64 +674,9 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     }
   }
 
-  for (i = 0; layouts[i].layout != NULL; i++) {
-    g_object_unref (layouts[i].layout);
-  }
+  swfdec_text_field_movie_free_layouts (layouts);
 
-  g_free (layouts);
-}
-
-static void
-swfdec_text_field_movie_free_paragraphs (SwfdecTextFieldMovie *text)
-{
-  GList *iter;
-  int i;
-
-  if (text->paragraphs) {
-    for (i = 0; text->paragraphs[i].text != NULL; i++)
-    {
-      for (iter = text->paragraphs[i].blocks; iter != NULL; iter = iter->next) {
-	pango_tab_array_free (((SwfdecBlock *)(iter->data))->tab_stops);
-      }
-      g_list_free (text->paragraphs[i].blocks);
-
-      for (iter = text->paragraphs[i].attrs; iter != NULL; iter = iter->next) {
-	pango_attribute_destroy ((PangoAttribute *)(iter->data));
-      }
-      g_list_free (text->paragraphs[i].attrs);
-
-      if (text->paragraphs[i].attrs_list != NULL)
-	pango_attr_list_unref (text->paragraphs[i].attrs_list);
-    }
-    g_free (text->paragraphs);
-    text->paragraphs = NULL;
-  }
-}
-
-static SwfdecLayout *
-swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num)
-{
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), NULL);
-
-  if (text->paragraphs == NULL)
-    swfdec_text_field_movie_generate_paragraphs (text);
-
-  return swfdec_text_field_movie_generate_layouts (text->text, text->cr,
-      text->paragraphs, NULL, NULL, num);
-}
-
-static void
-swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
-{
-  int i;
-
-  g_return_if_fail (layouts != NULL);
-
-  for (i = 0; layouts[i].layout != NULL; i++) {
-    g_object_unref (layouts[i].layout);
-  }
-
-  g_free (layouts);
+  swfdec_text_field_movie_free_paragraphs (paragraphs);
 }
 
 void
@@ -686,7 +688,7 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, guint value)
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
-  layouts = swfdec_text_field_movie_get_layouts (text, &num);
+  layouts = swfdec_text_field_movie_get_layouts (text, &num, NULL, NULL, NULL);
 
   height = SWFDEC_GRAPHIC (text->text)->extents.y1 -
     SWFDEC_GRAPHIC (text->text)->extents.y0;
@@ -716,6 +718,7 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, guint value)
   }
 
   swfdec_text_field_movie_free_layouts (layouts);
+  layouts = NULL;
 
   if (value < 1) {
     value = 1;
@@ -742,7 +745,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
-  layouts = swfdec_text_field_movie_get_layouts (text, NULL);
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
 
   width = 0;
   height = 3;
@@ -756,6 +759,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   }
 
   swfdec_text_field_movie_free_layouts (layouts);
+  layouts = NULL;
 
   if (!text->text->word_wrap && SWFDEC_GRAPHIC (text->text)->extents.x1 -
       SWFDEC_GRAPHIC (text->text)->extents.x0 != width)
@@ -793,10 +797,8 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 }
 
 void
-swfdec_text_field_movie_format_changed (SwfdecTextFieldMovie *text)
+swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
 {
-  swfdec_text_field_movie_free_paragraphs (text);
-
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
 
   if (swfdec_text_field_movie_auto_size (text)) {
@@ -812,8 +814,6 @@ swfdec_text_field_movie_dispose (GObject *object)
   GSList *iter;
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
-
-  swfdec_text_field_movie_free_paragraphs (text);
 
   for (iter = text->formats; iter != NULL; iter = iter->next) {
     g_free (text->formats->data);
@@ -1015,7 +1015,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
     }
   }
 
-  swfdec_text_field_movie_format_changed (text);
+  swfdec_text_field_movie_changed (text);
 }
 
 static void
@@ -1460,5 +1460,5 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     }
   }
 
-  swfdec_text_field_movie_format_changed (text);
+  swfdec_text_field_movie_changed (text);
 }

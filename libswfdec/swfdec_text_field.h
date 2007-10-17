@@ -39,38 +39,6 @@ typedef struct _SwfdecTextFieldClass SwfdecTextFieldClass;
 #define SWFDEC_TEXT_FIELD(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT_FIELD, SwfdecTextField))
 #define SWFDEC_TEXT_FIELD_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD, SwfdecTextFieldClass))
 
-typedef struct {
-  PangoLayout *		layout;
-  int			render_offset_x;
-  int			height;
-  int			width;
-} SwfdecLayout;
-
-typedef struct {
-  guint			index_;
-
-  PangoAlignment	align;
-  gboolean		justify;
-  int			leading;
-  int			block_indent;
-  int			left_margin;
-  int			right_margin;
-  PangoTabArray *	tab_stops;
-} SwfdecBlock;
-
-typedef struct {
-  const char		*text;
-  guint			text_length;
-
-  gboolean		bullet;
-  int			indent;
-
-  GList *		blocks;		// SwfdecBlock
-
-  GList *		attrs;	// PangoAttribute
-  PangoAttrList *	attrs_list;
-} SwfdecParagraph;
-
 typedef enum {
   SWFDEC_AUTO_SIZE_NONE,
   SWFDEC_AUTO_SIZE_LEFT,

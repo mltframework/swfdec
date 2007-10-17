@@ -634,7 +634,7 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   }
 
   if (text->text->auto_size != old)
-    swfdec_text_field_movie_format_changed (text);
+    swfdec_text_field_movie_changed (text);
 }
 
 static void
@@ -693,7 +693,7 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   if (text->text->word_wrap != value) {
     text->text->word_wrap = value;
-    swfdec_text_field_movie_format_changed (text);
+    swfdec_text_field_movie_changed (text);
   }
 }
 

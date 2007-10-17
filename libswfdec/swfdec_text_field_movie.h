@@ -39,6 +39,38 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 #define SWFDEC_TEXT_FIELD_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovieClass))
 
 typedef struct {
+  PangoLayout *		layout;
+  int			render_offset_x;
+  int			height;
+  int			width;
+} SwfdecLayout;
+
+typedef struct {
+  guint			index_;
+
+  PangoAlignment	align;
+  gboolean		justify;
+  int			leading;
+  int			block_indent;
+  int			left_margin;
+  int			right_margin;
+  PangoTabArray *	tab_stops;
+} SwfdecBlock;
+
+typedef struct {
+  const char		*text;
+  guint			text_length;
+
+  gboolean		bullet;
+  int			indent;
+
+  GList *		blocks;		// SwfdecBlock
+
+  GList *		attrs;	// PangoAttribute
+  PangoAttrList *	attrs_list;
+} SwfdecParagraph;
+
+typedef struct {
   guint			index;
   SwfdecTextFormat *	format;
 } SwfdecFormatIndex;
@@ -72,9 +104,6 @@ struct _SwfdecTextFieldMovie {
   // outside the rendering functions
   cairo_surface_t *	surface;
   cairo_t *		cr;
-
-  /* for rendering */
-  SwfdecParagraph *	paragraphs;
 };
 
 struct _SwfdecTextFieldMovieClass {
@@ -86,7 +115,7 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
-void		swfdec_text_field_movie_format_changed	(SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_movie_changed		(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,

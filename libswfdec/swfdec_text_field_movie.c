@@ -609,14 +609,9 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   }
 
   // variable
-  if (text->text->variable != NULL)
-  {
-    // FIXME: test
-    const char *str;
-    text->variable = swfdec_as_context_get_string (cx, text->text->variable);
-    str = swfdec_text_field_movie_get_variable_text (text);
-    if (str != NULL)
-      swfdec_text_field_movie_set_text (text, str, text->text->html);
+  if (text->text->variable != NULL) {
+    swfdec_text_field_movie_set_listen_variable (text,
+	swfdec_as_context_get_string (cx, text->text->variable));
   }
 }
 
@@ -721,39 +716,92 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   swfdec_text_field_movie_format_changed (text);
 }
 
+static void
+swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
+    const char *variable, SwfdecAsObject **object, const char **name)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+  g_return_if_fail (variable != NULL);
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (name != NULL);
+
+  // FIXME: proper variable lookup (have fun)
+  *object = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
+  *name = variable;
+}
+
 void
-swfdec_text_field_movie_set_variable_text (SwfdecTextFieldMovie *text,
+swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie *text,
     const char *value)
 {
-  SwfdecAsObject *parent;
-  SwfdecAsValue val;
+  SwfdecAsObject *object;
+  const char *name;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (text->variable != NULL);
+  g_return_if_fail (value != NULL);
 
-  // FIXME: proper variable lookup
-  parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
-
-  SWFDEC_AS_VALUE_SET_STRING (&val, value);
-  swfdec_as_object_set_variable (parent, text->variable, &val);
+  swfdec_text_field_movie_parse_listen_variable (text, text->variable,
+      &object, &name);
+  if (object != NULL) {
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_STRING (&val, value);
+    swfdec_as_object_set_variable (object, name, &val);
+  }
 }
 
-const char *
-swfdec_text_field_movie_get_variable_text (SwfdecTextFieldMovie *text)
+static void
+swfdec_text_field_movie_variable_listener_callback (SwfdecAsObject *object,
+    const char *name, const SwfdecAsValue *val)
 {
-  SwfdecAsObject *parent;
-  SwfdecAsValue val;
+  SwfdecTextFieldMovie *text;
 
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), NULL);
-  g_return_val_if_fail (text->variable != NULL, NULL);
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (object));
 
-  // FIXME: proper variable lookup
-  parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
+  text = SWFDEC_TEXT_FIELD_MOVIE (object);
+  swfdec_text_field_movie_set_text (text,
+      swfdec_as_value_to_string (object->context, val), text->text->html);
+}
 
-  if (!swfdec_as_object_get_variable (parent, text->variable, &val))
-    return NULL;
+void
+swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
+    const char *value)
+{
+  SwfdecAsObject *object;
+  const char *name;
 
-  return swfdec_as_value_to_string (parent->context, &val);
+  // FIXME: case-insensitive when v < 7?
+  if (text->variable == value)
+    return;
+
+  if (text->variable != NULL) {
+    swfdec_text_field_movie_parse_listen_variable (text, text->variable,
+	&object, &name);
+    if (object != NULL && SWFDEC_IS_MOVIE (object)) {
+      swfdec_movie_remove_variable_listener (SWFDEC_MOVIE (object),
+	  SWFDEC_AS_OBJECT (text), name,
+	  swfdec_text_field_movie_variable_listener_callback);
+    }
+  }
+
+  text->variable = value;
+
+  if (value != NULL) {
+    SwfdecAsValue val;
+
+    swfdec_text_field_movie_parse_listen_variable (text, value, &object,
+	&name);
+    if (object != NULL && swfdec_as_object_get_variable (object, name, &val)) {
+      swfdec_text_field_movie_set_text (text,
+	  swfdec_as_value_to_string (SWFDEC_AS_OBJECT (text)->context, &val),
+	  text->text->html);
+    }
+    if (object != NULL && SWFDEC_IS_MOVIE (object)) {
+      swfdec_movie_add_variable_listener (SWFDEC_MOVIE (object),
+	  SWFDEC_AS_OBJECT (text), name,
+	  swfdec_text_field_movie_variable_listener_callback);
+    }
+  }
 }
 
 static const char *

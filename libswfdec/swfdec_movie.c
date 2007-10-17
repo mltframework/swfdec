@@ -947,11 +947,17 @@ swfdec_movie_mark (SwfdecAsObject *object)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
   GList *walk;
+  GSList *iter;
 
   swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_as_object_mark (walk->data);
+  }
+  for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
+    SwfdecMovieVariableListener *listener = iter->data;
+    swfdec_as_object_mark (listener->object);
+    swfdec_as_string_mark (listener->name);
   }
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
@@ -1046,6 +1052,72 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   return FALSE;
 }
 
+void
+swfdec_movie_add_variable_listener (SwfdecMovie *movie, SwfdecAsObject *object,
+    const char *name, const SwfdecMovieVariableListenerFunction function)
+{
+  SwfdecMovieVariableListener *listener;
+  GSList *iter;
+
+  for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
+    listener = iter->data;
+
+    if (listener->object == object && listener->name == name &&
+	listener->function == function)
+      break;
+  }
+  if (iter != NULL)
+    return;
+
+  listener = g_new0 (SwfdecMovieVariableListener, 1);
+  listener->object = object;
+  listener->name = name;
+  listener->function = function;
+
+  movie->variable_listeners = g_slist_prepend (movie->variable_listeners,
+      listener);
+}
+
+void
+swfdec_movie_remove_variable_listener (SwfdecMovie *movie,
+    SwfdecAsObject *object, const char *name,
+    const SwfdecMovieVariableListenerFunction function)
+{
+  GSList *iter;
+
+  for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
+    SwfdecMovieVariableListener *listener = iter->data;
+
+    if (listener->object == object && listener->name == name &&
+	listener->function == function)
+      break;
+  }
+  if (iter == NULL)
+    return;
+
+  movie->variable_listeners =
+    g_slist_remove (movie->variable_listeners, iter->data);
+  g_free (iter->data);
+}
+
+static void
+swfdec_movie_call_variable_listeners (SwfdecMovie *movie, const char *name,
+    const SwfdecAsValue *val)
+{
+  GSList *iter;
+
+  for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
+    SwfdecMovieVariableListener *listener = iter->data;
+
+    if (listener->name != name &&
+	(SWFDEC_AS_OBJECT (movie)->context->version >= 7 ||
+	 !swfdec_str_case_equal (listener->name, name)))
+      continue;
+
+    listener->function (listener->object, name, val);
+  }
+}
+
 static void
 swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable, 
     const SwfdecAsValue *val, guint flags)
@@ -1054,8 +1126,12 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
 
   if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
     return;
+
   if (swfdec_movie_set_asprop (movie, variable, val))
     return;
+
+  swfdec_movie_call_variable_listeners (movie, variable, val);
+
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
 }
 

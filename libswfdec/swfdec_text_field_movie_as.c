@@ -87,7 +87,7 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, FALSE);
 
   if (text->variable != NULL) {
-    swfdec_text_field_movie_set_variable_text (text,
+    swfdec_text_field_movie_set_listen_variable_text (text,
 	swfdec_text_field_movie_get_html_text (text));
   }
 }
@@ -143,7 +143,7 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, text->text->html);
 
   if (text->variable != NULL) {
-    swfdec_text_field_movie_set_variable_text (text,
+    swfdec_text_field_movie_set_listen_variable_text (text,
 	swfdec_text_field_movie_get_html_text (text));
   }
 }
@@ -335,7 +335,7 @@ swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  const char *value, *str;
+  const char *value;
 
   if (argc > 0)
     swfdec_as_value_to_number (cx, &argv[0]);
@@ -344,12 +344,10 @@ swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]) || value == SWFDEC_AS_STR_EMPTY) {
-    text->variable = NULL;
-  } else if (value != text->variable) {
-    text->variable = value;
-    str = swfdec_text_field_movie_get_variable_text (text);
-    swfdec_text_field_movie_set_text (text, str, text->text->html);
+    value = NULL;
   }
+
+  swfdec_text_field_movie_set_listen_variable (text, value);
 }
 
 /*

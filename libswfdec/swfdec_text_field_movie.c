@@ -525,6 +525,8 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
+  swfdec_text_field_movie_set_listen_variable (text, NULL);
+
   swfdec_text_field_movie_free_paragraphs (text);
 
   for (iter = text->formats; iter != NULL; iter = iter->next) {

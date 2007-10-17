@@ -922,6 +922,7 @@ static void
 swfdec_movie_dispose (GObject *object)
 {
   SwfdecMovie * movie = SWFDEC_MOVIE (object);
+  GSList *iter;
 
   g_assert (movie->list == NULL);
 
@@ -938,6 +939,11 @@ swfdec_movie_dispose (GObject *object)
     g_object_unref (movie->graphic);
     movie->graphic = NULL;
   }
+  for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
+    g_free (iter->data);
+  }
+  g_slist_free (movie->variable_listeners);
+  movie->variable_listeners = NULL;
 
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }

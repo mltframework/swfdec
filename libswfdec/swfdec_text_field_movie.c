@@ -520,7 +520,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecRect limit;
   SwfdecColor color;
   const SwfdecParagraph *paragraphs;
-  int i, y, x, linenum;
+  int i, y, x;
+  guint linenum;
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
@@ -578,13 +579,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
     skipped = 0;
     do {
-      if (++linenum < text->scroll)
+      if (++linenum < text_movie->scroll)
 	continue;
 
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
 
-      if (linenum == text->scroll)
+      if (linenum == text_movie->scroll)
 	skipped = rect.y;
 
       if (!first &&
@@ -609,7 +610,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped));
     } while (pango_layout_iter_next_line (iter_line));
 
-    if (linenum >= text->scroll) {
+    if (linenum >= text_movie->scroll) {
       cairo_rel_move_to (cr, 0, layout->height - skipped);
       y += layout->height - skipped;
       skipped = 0;
@@ -677,10 +678,11 @@ swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
 }
 
 void
-swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
+swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, guint value)
 {
   SwfdecLayout *layouts;
-  int i, num, y, visible, all, height;
+  int i, num;
+  guint y, visible, all, height;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
@@ -721,8 +723,8 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
     value = all - visible + 1;
   }
 
-  if (text->text->scroll != value) {
-    text->text->scroll = value;
+  if (text->scroll != value) {
+    text->scroll = value;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
@@ -934,6 +936,7 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
   text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
   text->cr = cairo_create (text->surface);
 
+  text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;
 }
 

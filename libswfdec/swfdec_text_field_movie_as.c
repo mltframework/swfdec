@@ -550,7 +550,7 @@ swfdec_text_field_movie_do_get_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->text->scroll);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll);
 }
 
 static void

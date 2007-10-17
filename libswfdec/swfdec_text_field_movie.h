@@ -60,7 +60,9 @@ struct _SwfdecTextFieldMovie {
   gboolean		embed_fonts;
   SwfdecStyleSheet *	style_sheet;
 
+  guint			scroll;
   gboolean		mouse_wheel_enabled;
+
   const char *		restrict_;
 
   SwfdecColor		border_color;
@@ -90,7 +92,7 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 guint			start_index,
 							 guint			end_index);
 void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
-							 int			value);
+							 guint			value);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

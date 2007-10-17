@@ -95,8 +95,6 @@ struct _SwfdecTextField
   gboolean		multiline;
   SwfdecAutoSize	auto_size;
 
-  int			scroll;
-
   gboolean		border;
   gboolean		background;
 

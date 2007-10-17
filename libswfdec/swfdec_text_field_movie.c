@@ -579,8 +579,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecRect limit;
   SwfdecColor color;
   SwfdecParagraph *paragraphs;
-  int i, y, x;
-  guint linenum;
+  int i, y, x, linenum;
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
@@ -620,8 +619,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   first = TRUE;
   linenum = 0;
-  x = SWFDEC_GRAPHIC (text)->extents.x0;
-  y = SWFDEC_GRAPHIC (text)->extents.y0 + 1;
+  x = movie->original_extents.x0;
+  y = movie->original_extents.y0 + 1;
   cairo_move_to (cr, x, y);
 
   for (i = 0; layouts[i].layout != NULL/* && y < limit.y1*/; i++)
@@ -646,7 +645,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	skipped = rect.y;
 
       if (!first &&
-	  y + rect.y + rect.height > SWFDEC_GRAPHIC (text)->extents.y1)
+	  y + rect.y + rect.height > movie->original_extents.y1)
 	break;
 
       first = FALSE;
@@ -680,18 +679,17 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 void
-swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, guint value)
+swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
 {
   SwfdecLayout *layouts;
-  int i, num;
-  guint y, visible, all, height;
+  int i, num, y, visible, all, height;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   layouts = swfdec_text_field_movie_get_layouts (text, &num, NULL, NULL, NULL);
 
-  height = SWFDEC_GRAPHIC (text->text)->extents.y1 -
-    SWFDEC_GRAPHIC (text->text)->extents.y0;
+  height = SWFDEC_MOVIE (text)->original_extents.y1 -
+    SWFDEC_MOVIE (text)->original_extents.y0;
   y = 0;
   all = 0;
   visible = 0;
@@ -728,6 +726,40 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, guint value)
 
   if (text->scroll != value) {
     text->scroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
+}
+
+void
+swfdec_text_field_movie_set_hscroll (SwfdecTextFieldMovie *text, int value)
+{
+  SwfdecLayout *layouts;
+  int i, width, width_max;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
+
+  width = SWFDEC_MOVIE (text)->original_extents.x1 -
+    SWFDEC_MOVIE (text)->original_extents.x1;
+
+  width_max = width;
+  for (i = 0; layouts[i].layout != NULL; i++) {
+    if (layouts[i].width > width_max)
+      width_max = layouts[i].width;
+  }
+
+  swfdec_text_field_movie_free_layouts (layouts);
+  layouts = NULL;
+
+  if (value < 0) {
+    value = 0;
+  } else if (value > width_max - width) {
+    value = width_max - width;
+  }
+
+  if (text->hscroll != value) {
+    text->hscroll = value;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
@@ -807,6 +839,7 @@ swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
   }
 
   swfdec_text_field_movie_set_scroll (text, text->scroll);
+  swfdec_text_field_movie_set_hscroll (text, text->scroll);
 }
 
 static void

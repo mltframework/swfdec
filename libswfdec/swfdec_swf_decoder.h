@@ -82,6 +82,8 @@ struct _SwfdecSwfDecoder
   GArray **		root_actions; 	/* actions to be executed by the root sprite */
   GHashTable *		scripts;      	/* buffer -> script mapping for all scripts */
 
+  gboolean		use_network;	/* allow network or local access */
+  gboolean		has_metadata;	/* TRUE if this file contains metadata */
   gboolean		protection;   	/* TRUE is this file is protected and may not be edited */
   char *		password;     	/* MD5'd password to open for editing or NULL if may not be opened */
 

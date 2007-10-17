@@ -509,17 +509,17 @@ tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 static int
 tag_func_file_attributes (SwfdecSwfDecoder *s, guint tag)
 {
-  int has_metadata, use_network;
-
   if (swfdec_bits_getbits (&s->b, 3))
     SWFDEC_INFO ("reserved bits (1) aren't 0");
-  has_metadata = swfdec_bits_getbit (&s->b);
+  s->has_metadata = swfdec_bits_getbit (&s->b);
+  SWFDEC_LOG ("  has metadata: %d", s->has_metadata);
   if (swfdec_bits_getbits (&s->b, 3))
     SWFDEC_INFO ("reserved bits (2) aren't 0");
-  use_network = swfdec_bits_getbit (&s->b);
-  /* FIXME: do something useful with this data */
+  s->use_network = swfdec_bits_getbit (&s->b);
+  SWFDEC_LOG ("  use network: %d", s->use_network);
   if (swfdec_bits_getbits (&s->b, 24))
     SWFDEC_INFO ("reserved bits (3) aren't 0");
+  /* initialize default security if it wasn't initialized yet */
 
   return SWFDEC_STATUS_OK;
 }

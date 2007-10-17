@@ -421,10 +421,16 @@ main (int argc, char *argv[])
   }
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
-  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->swf->decoder;
-  if (swfdec_player_get_rate (player) == 0 || 
-      !SWFDEC_IS_SWF_DECODER (s)) {
+  if (swfdec_player_is_initialized (player)) {
     g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
+    g_object_unref (player);
+    player = NULL;
+    return 1;
+  }
+  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->swf->decoder;
+  /* FIXME: can happen after a _root.loadMovie() call */
+  if (!SWFDEC_IS_SWF_DECODER (s)) {
+    g_printerr ("Movie already unloaded from \"%s\"\n", argv[1]);
     g_object_unref (player);
     player = NULL;
     return 1;

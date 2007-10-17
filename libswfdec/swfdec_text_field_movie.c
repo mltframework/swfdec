@@ -805,6 +805,8 @@ swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
     swfdec_movie_queue_update (SWFDEC_MOVIE (text),
 	SWFDEC_MOVIE_INVALID_CONTENTS);
   }
+
+  swfdec_text_field_movie_set_scroll (text, text->scroll);
 }
 
 static void

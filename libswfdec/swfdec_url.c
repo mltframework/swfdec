@@ -89,7 +89,7 @@ swfdec_url_new (const char *string)
     SWFDEC_ERROR ("URL %s has no protocol", string);
     return url;
   }
-  url->protocol = g_strndup (string, s - string);
+  url->protocol = g_utf8_strdown (string, s - string);
   string = s + 3;
   s = strchr (string, '/');
   if (s == NULL) {
@@ -138,7 +138,7 @@ swfdec_url_new_relative (const SwfdecURL *url, const char *string)
   g_string_append (str, "://");
   if (url->host)
     g_string_append (str, url->host);
-  if (string[0] == '/') {
+  if (string[0] == '/' && !g_str_equal (swfdec_url_get_protocol (url), "file")) {
     /* absolute URL */
     g_string_append (str, string);
   } else {

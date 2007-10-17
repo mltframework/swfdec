@@ -39,6 +39,8 @@ typedef struct _SwfdecAsFunctionClass SwfdecAsFunctionClass;
 struct _SwfdecAsFunction {
   /*< private >*/
   SwfdecAsObject	object;
+
+  gpointer		priv;		/* currently only contains the security context or NULL for any */
 };
 
 struct _SwfdecAsFunctionClass {

@@ -70,6 +70,8 @@ SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsContext *	context);
 void		swfdec_as_frame_return		(SwfdecAsFrame *	frame,
 						 SwfdecAsValue *	return_value);
 
+void		swfdec_as_frame_set_security	(SwfdecAsFrame *	frame,
+						 SwfdecSecurity *	guard);
 void		swfdec_as_frame_set_this	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	thisp);
 void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);

@@ -856,3 +856,30 @@ swfdec_as_frame_get_this (SwfdecAsFrame *frame)
 
   return frame->thisp;
 }
+
+/**
+ * swfdec_as_frame_set_security:
+ * @frame: the frame to be executed
+ * @guard: the security guarding this frame
+ *
+ * Checks that @guard allows executing the frame. The frame's security will
+ * be set to what @guard returns. By default, a frame has the security of
+ * its parent frame. If it's the first frame, it's allowed everything.
+ **/
+void
+swfdec_as_frame_set_security (SwfdecAsFrame *frame, SwfdecSecurity *guard)
+{
+  SwfdecSecurity *old;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (SWFDEC_IS_SECURITY (guard));
+
+  /* execution is not allowed anyway */
+  if (frame->security == NULL)
+    return;
+
+  old = frame->security;
+  frame->security = swfdec_security_allow (guard, old);
+  g_object_unref (old);
+}
+

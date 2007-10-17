@@ -134,6 +134,8 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   /* FIXME: figure out what to do in these situations */
   if (frame == NULL)
     return;
+  if (function->priv)
+    swfdec_as_frame_set_security (frame, function->priv);
   /* second check especially for super object */
   if (thisp != NULL && frame->thisp == NULL)
     swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
@@ -252,5 +254,23 @@ swfdec_as_function_init_context (SwfdecAsContext *context, guint version)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+}
+
+/**
+ * swfdec_as_function_set_security:
+ * @fun: a #SwfdecFunction
+ * @sec: the security guarding calls to this function
+ *
+ * Sets the security object guarding execution of this function. This function
+ * may only be called once per #SwfdecAsFunction.
+ **/
+void
+swfdec_as_function_set_security (SwfdecAsFunction *fun, SwfdecSecurity *sec)
+{
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
+  g_return_if_fail (SWFDEC_IS_SECURITY (sec));
+  g_return_if_fail (fun->priv == NULL);
+
+  fun->priv = g_object_ref (sec);
 }
 

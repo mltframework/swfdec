@@ -22,6 +22,7 @@
 
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
+#include <libswfdec/swfdec_security.h>
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,8 @@ G_BEGIN_DECLS
 
 
 void		swfdec_as_function_set_constructor (SwfdecAsFunction *	fun);
+void		swfdec_as_function_set_security	(SwfdecAsFunction *	fun,
+						 SwfdecSecurity *	sec);
 void		swfdec_as_function_init_context (SwfdecAsContext *	context,
 						 guint			version);
 

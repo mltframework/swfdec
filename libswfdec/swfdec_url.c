@@ -138,7 +138,7 @@ swfdec_url_new_relative (const SwfdecURL *url, const char *string)
   g_string_append (str, "://");
   if (url->host)
     g_string_append (str, url->host);
-  if (string[0] == '/' && !g_str_equal (swfdec_url_get_protocol (url), "file")) {
+  if (string[0] == '/' && !swfdec_url_has_protocol (url, "file")) {
     /* absolute URL */
     g_string_append (str, string);
   } else {
@@ -239,6 +239,24 @@ swfdec_url_get_protocol (const SwfdecURL *url)
     return url->protocol;
   else
     return "error";
+}
+
+/**
+ * swfdec_url_has_protocol:
+ * @url: a url
+ * @protocol: protocol name to check for
+ *
+ * Checks if the given @url references the given @protocol
+ *
+ * Returns: %TRUE if both protocols match, %FALSE otherwise
+ **/
+gboolean
+swfdec_url_has_protocol (const SwfdecURL *url, const char *protocol)
+{
+  g_return_val_if_fail (url != NULL, FALSE);
+  g_return_val_if_fail (protocol != NULL, FALSE);
+
+  return g_str_equal (url->protocol, protocol);
 }
 
 /**

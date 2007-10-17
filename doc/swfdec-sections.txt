@@ -58,6 +58,7 @@ swfdec_url_free
 swfdec_url_get_host
 swfdec_url_get_path
 swfdec_url_get_protocol
+swfdec_url_has_protocol
 swfdec_url_get_query
 swfdec_url_get_url
 swfdec_url_new

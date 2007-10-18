@@ -1328,6 +1328,15 @@ EXTRA_DIST = \
 	remove-depths-7.swf.trace \
 	remove-depths-8.swf \
 	remove-depths-8.swf.trace \
+	remove-movie.as \
+	remove-movie-5.swf \
+	remove-movie-5.swf.trace \
+	remove-movie-6.swf \
+	remove-movie-6.swf.trace \
+	remove-movie-7.swf \
+	remove-movie-7.swf.trace \
+	remove-movie-8.swf \
+	remove-movie-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \

@@ -53,18 +53,26 @@ swfdec_resource_loader_target_get_player (SwfdecLoaderTarget *target)
 }
 
 static void
-swfdec_resource_allow_network (SwfdecPlayer *player)
+swfdec_resource_check_rights (SwfdecResource *resource)
 {
-  SwfdecFlashSecurity *sec;
+  SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (resource);
+  SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (resource->decoder);
+  gboolean network;
 
-  g_print ("enabling network access for %s\n", 
-      swfdec_url_get_url (swfdec_loader_get_url (player->loader)));
+  if (dec->version < 8 ||
+      !swfdec_url_has_protocol (swfdec_loader_get_url (resource->loader), "file"))
+    return;
+
+  network = dec->use_network;
+  g_print ("enabling %s access for %s\n", network ? "network" : "local",
+      swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
+  SWFDEC_INFO ("enabling %s access for %s", network ? "network" : "local",
+      swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
   SWFDEC_INFO ("enabling network access for %s",
-      swfdec_url_get_url (swfdec_loader_get_url (player->loader)));
+      swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
 
-  sec = SWFDEC_FLASH_SECURITY (player->security);
-  sec->allow_remote = TRUE;
-  sec->allow_local = FALSE;
+  sec->allow_remote = network;
+  sec->allow_local = !network;
 }
 
 static void
@@ -82,9 +90,8 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
     
     /* if first instance */
-    if (player->loader == instance->loader && dec->use_network &&
-	swfdec_url_has_protocol (swfdec_loader_get_url (instance->loader), "file"))
-      swfdec_resource_allow_network (player);
+    if (player->resource == instance)
+      swfdec_resource_check_rights (instance);
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
     /* nothing to do, please move along */
   } else {

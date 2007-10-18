@@ -62,8 +62,7 @@ struct _SwfdecPlayer
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
-  SwfdecLoader *	loader;			/* initial loader */
-  SwfdecSecurity *	security;		/* the default security */
+  SwfdecResource *	resource;		/* initial resource loaded */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */
@@ -201,11 +200,6 @@ SwfdecSpriteMovie *
 		swfdec_player_get_level		(SwfdecPlayer *		player,
 						 const char *		name,
 						 SwfdecResource *	resource);
-SwfdecMovie *	swfdec_player_add_level_from_loader 
-						(SwfdecPlayer *		player,
-						 guint			depth,
-						 SwfdecLoader *		loader,
-						 const char *		variables);
 void		swfdec_player_remove_level	(SwfdecPlayer *		player,
 						 guint			depth);
 gboolean	swfdec_player_fscommand		(SwfdecPlayer *		player,

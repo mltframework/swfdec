@@ -411,5 +411,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("variable")
   SWFDEC_AS_CONSTANT_STRING ("restrict")
   SWFDEC_AS_CONSTANT_STRING ("mouseWheelEnabled")
+  SWFDEC_AS_CONSTANT_STRING ("_level0")
   /* add more here */
 ;

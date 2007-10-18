@@ -800,13 +800,9 @@ swfdec_player_dispose (GObject *object)
   g_queue_free (player->init_queue);
   g_queue_free (player->construct_queue);
   swfdec_cache_unref (player->cache);
-  if (player->loader) {
-    g_object_unref (player->loader);
-    player->loader = NULL;
-  }
-  if (player->security) {
-    g_object_unref (player->security);
-    player->security = NULL;
+  if (player->resource) {
+    g_object_unref (player->resource);
+    player->resource = NULL;
   }
   if (player->system) {
     g_object_unref (player->system);
@@ -1632,23 +1628,6 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, SwfdecResource 
   return movie;
 }
 
-SwfdecMovie *
-swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
-    SwfdecLoader *loader, const char *variables)
-{
-  SwfdecResource *resource;
-  SwfdecMovie *movie;
-  const char *name;
-
-  swfdec_player_remove_level (player, depth);
-  name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%u", depth));
-  resource = swfdec_resource_new (loader, variables);
-  movie = swfdec_movie_new (player, depth - 16384, NULL, resource, NULL, name);
-  movie->name = SWFDEC_AS_STR_EMPTY;
-  g_object_unref (loader);
-  return movie;
-}
-
 void
 swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
 {
@@ -1680,12 +1659,12 @@ swfdec_player_load (SwfdecPlayer *player, const char *url,
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
-  g_assert (player->loader);
+  g_assert (player->resource);
   if (buffer) {
-    return swfdec_loader_load (player->loader, url, request, 
+    return swfdec_loader_load (player->resource->loader, url, request, 
 	(const char *) buffer->data, buffer->length);
   } else {
-    return swfdec_loader_load (player->loader, url, request, NULL, 0);
+    return swfdec_loader_load (player->resource->loader, url, request, NULL, 0);
   }
 }
 
@@ -1755,17 +1734,17 @@ static void
 swfdec_player_create_security (SwfdecPlayer *player, guint version)
 {
   const SwfdecURL *url;
-  gboolean allow_local, allow_remote;
+  SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (player->resource);
 
-  url = swfdec_loader_get_url (player->loader);
+  url = swfdec_loader_get_url (player->resource->loader);
   if (version > 7) {
-    allow_local = FALSE;
-    allow_remote = swfdec_url_has_protocol (url, "http");
+    /* for local files we allow nothing by default, the FileAttributes tag fixes that */
+    sec->allow_local = FALSE;
+    sec->allow_remote = swfdec_url_has_protocol (url, "http");
   } else {
-    allow_local = swfdec_url_has_protocol (url, "file");
-    allow_remote = TRUE;
+    sec->allow_local = swfdec_url_has_protocol (url, "file");
+    sec->allow_remote = TRUE;
   }
-  player->security = swfdec_flash_security_new (allow_local, allow_remote);
 }
 
 /**
@@ -1931,13 +1910,15 @@ void
 swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
     const char *variables)
 {
+  SwfdecMovie *movie;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->loader == NULL);
+  g_return_if_fail (player->resource == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  player->loader = loader;
-  g_object_ref (loader);
-  swfdec_player_add_level_from_loader (player, 0, loader, variables);
+  player->resource = swfdec_resource_new (loader, variables);
+  movie = swfdec_movie_new (player, -16384, NULL, player->resource, NULL, SWFDEC_AS_STR__level0);
+  movie->name = SWFDEC_AS_STR_EMPTY;
 }
 
 /**

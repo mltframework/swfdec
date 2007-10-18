@@ -517,6 +517,7 @@ tag_func_file_attributes (SwfdecSwfDecoder *s, guint tag)
     SWFDEC_INFO ("reserved bits (2) aren't 0");
   s->use_network = swfdec_bits_getbit (&s->b);
   SWFDEC_LOG ("  use network: %d", s->use_network);
+  g_print ("  use network: %d\n", s->use_network);
   if (swfdec_bits_getbits (&s->b, 24))
     SWFDEC_INFO ("reserved bits (3) aren't 0");
   /* initialize default security if it wasn't initialized yet */

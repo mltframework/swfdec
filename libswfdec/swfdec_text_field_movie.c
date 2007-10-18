@@ -979,7 +979,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       findex_end_index = strlen (text->text_display);
     }
 
-    if (findex_end_index < start_index)
+    if (findex_end_index <= start_index)
       continue;
 
     if (swfdec_text_format_equal_or_undefined (findex->format, format))
@@ -1049,7 +1049,7 @@ swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
       iter = iter->next)
   {
     if (iter->next != NULL &&
-	((SwfdecFormatIndex *)iter->next->data)->index < start_index)
+	((SwfdecFormatIndex *)iter->next->data)->index <= start_index)
       continue;
 
     if (format == NULL) {

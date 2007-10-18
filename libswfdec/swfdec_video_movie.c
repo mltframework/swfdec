@@ -39,17 +39,39 @@ swfdec_video_movie_update_extents (SwfdecMovie *movie,
 }
 
 static void
+swfdec_video_movie_update_image (SwfdecVideoMovie *movie)
+{
+  if (!movie->needs_update)
+    return;
+
+  if (movie->input != NULL) {
+    if (movie->input->set_ratio)
+      movie->input->set_ratio (movie->input, movie);
+    
+    if (movie->image)
+      cairo_surface_destroy (movie->image);
+    movie->image = movie->input->get_image (movie->input);
+    if (movie->image)
+      cairo_surface_reference (movie->image);
+  }
+  movie->needs_update = FALSE;
+}
+
+static void
 swfdec_video_movie_render (SwfdecMovie *mov, cairo_t *cr, 
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (mov);
 
+  swfdec_video_movie_update_image (movie);
   if (movie->image == NULL)
     return;
 
   cairo_scale (cr, 
-      (mov->original_extents.x1 - mov->original_extents.x0) / movie->image_width,
-      (mov->original_extents.y1 - mov->original_extents.y0) / movie->image_height);
+      (mov->original_extents.x1 - mov->original_extents.x0)
+      / cairo_image_surface_get_width (movie->image),
+      (mov->original_extents.y1 - mov->original_extents.y0)
+      / cairo_image_surface_get_height (movie->image));
   cairo_set_source_surface (cr, movie->image, 0.0, 0.0);
   cairo_paint (cr);
 }
@@ -60,6 +82,7 @@ swfdec_video_movie_unset_input (SwfdecVideoMovie *movie)
   if (movie->input == NULL)
     return;
 
+  swfdec_video_movie_update_image (movie);
   if (movie->input->disconnect)
     movie->input->disconnect (movie->input, movie);
   movie->input = NULL;
@@ -71,28 +94,24 @@ swfdec_video_movie_dispose (GObject *object)
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (object);
 
   swfdec_video_movie_unset_input (movie);
+  g_object_unref (movie->video);
   if (movie->image) {
     cairo_surface_destroy (movie->image);
     movie->image = NULL;
   }
-  g_object_unref (movie->video);
 
   G_OBJECT_CLASS (swfdec_video_movie_parent_class)->dispose (object);
 }
 
-static gboolean
-swfdec_video_movie_iterate_end (SwfdecMovie *mov)
+static void
+swfdec_video_movie_set_ratio (SwfdecMovie *movie)
 {
-  SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (mov);
+  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (movie);
 
-  if (!SWFDEC_MOVIE_CLASS (swfdec_video_movie_parent_class)->iterate_end (mov))
-    return FALSE;
-
-  if (movie->input && movie->input->iterate) {
-    movie->input->iterate (movie->input);
+  if (video->input->set_ratio) {
+    video->needs_update = TRUE;
+    swfdec_movie_invalidate (movie);
   }
-
-  return TRUE;
 }
 
 static void
@@ -114,7 +133,7 @@ swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;
   movie_class->init_movie = swfdec_video_movie_init_movie;
-  movie_class->iterate_end = swfdec_video_movie_iterate_end;
+  movie_class->set_ratio = swfdec_video_movie_set_ratio;
 }
 
 static void
@@ -131,6 +150,10 @@ swfdec_video_movie_set_input (SwfdecVideoMovie *movie, SwfdecVideoMovieInput *in
   movie->input = input;
   if (input == NULL)
     return;
+  if (movie->input->set_ratio) {
+    swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+  }
+  movie->needs_update = TRUE;
   if (input->connect)
     input->connect (input, movie);
 }
@@ -140,26 +163,23 @@ swfdec_video_movie_clear (SwfdecVideoMovie *movie)
 {
   g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
 
-  if (movie->image == NULL)
-    return;
-
-  cairo_surface_destroy (movie->image);
-  movie->image = NULL;
+  if (movie->image) {
+    cairo_surface_destroy (movie->image);
+    movie->image = NULL;
+  }
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 
 void
-swfdec_video_movie_new_image (SwfdecVideoMovie *movie, cairo_surface_t *image)
+swfdec_video_movie_new_image (SwfdecVideoMovie *movie)
 {
   g_return_if_fail (SWFDEC_IS_VIDEO_MOVIE (movie));
-  g_return_if_fail (image != NULL);
 
-  if (movie->image)
+  if (movie->image) {
     cairo_surface_destroy (movie->image);
-  cairo_surface_reference (image);
-  movie->image = image;
-  movie->image_width = cairo_image_surface_get_width (image);
-  movie->image_height = cairo_image_surface_get_height (image);
+    movie->image = NULL;
+  }
+  movie->needs_update = TRUE;
   swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
 }
 

@@ -45,8 +45,11 @@ struct _SwfdecVideoMovieInput {
   /* called when input is unset */
   void			(* disconnect)	(SwfdecVideoMovieInput *input,
 					 SwfdecVideoMovie *	movie);
-  /* called when movie is iterating */
-  void			(* iterate)	(SwfdecVideoMovieInput *input);
+  /* called when movie ratio changed */
+  void			(* set_ratio)	(SwfdecVideoMovieInput *input,
+					 SwfdecVideoMovie *	movie);
+  /* called to request the current image */
+  cairo_surface_t *	(* get_image)	(SwfdecVideoMovieInput *input);
 };
 
 struct _SwfdecVideoMovie {
@@ -54,9 +57,8 @@ struct _SwfdecVideoMovie {
 
   SwfdecVideo *		video;		/* video we play back */
   SwfdecVideoMovieInput *input;		/* where we take the input from */
-  cairo_surface_t *	image;		/* current image or NULL */
-  guint			image_width;	/* width of current image */
-  guint			image_height; 	/* height of current image */
+  gboolean		needs_update;	/* TRUE if we should call set_ratio and get_image */
+  cairo_surface_t *	image;	 	/* currently displayed image */
 };
 
 struct _SwfdecVideoMovieClass {
@@ -69,8 +71,7 @@ void		swfdec_video_movie_set_input		(SwfdecVideoMovie *	movie,
 							 SwfdecVideoMovieInput *input);
 void		swfdec_video_movie_clear	      	(SwfdecVideoMovie *	movie);
 /* API for SwfdecVideoMovieInput */
-void		swfdec_video_movie_new_image		(SwfdecVideoMovie *	movie,
-							 cairo_surface_t *	surface);
+void		swfdec_video_movie_new_image		(SwfdecVideoMovie *	movie);
 
 G_END_DECLS
 #endif

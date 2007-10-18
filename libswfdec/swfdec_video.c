@@ -63,27 +63,52 @@ typedef struct {
   SwfdecVideo *		video;
   gpointer		decoder;
   guint			current_frame;
+  cairo_surface_t *	surface;
 } SwfdecVideoInput;
 
 static void
-swfdec_video_input_iterate (SwfdecVideoMovieInput *input_)
+swfdec_video_input_set_ratio (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *movie)
 {
   SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
+  guint ratio = SWFDEC_MOVIE (movie)->original_ratio;
   SwfdecBuffer *buffer;
-  cairo_surface_t *surface;
 
-  input->current_frame = (input->current_frame + 1) % input->video->n_frames;
   if (input->decoder == NULL)
     return;
-  buffer = swfdec_video_find_frame (input->video, input->current_frame);
-  if (buffer == NULL)
-    return;
+  ratio++;
+  if (ratio > input->video->n_frames) {
+    SWFDEC_ERROR ("ratio %u too big: only %u frames", ratio, input->video->n_frames);
+    ratio = input->video->n_frames - 1;
+  }
+  if (ratio < input->current_frame) {
+    /* FIXME: need to reset decoder here? */
+    input->current_frame = 0;
+  }
 
-  surface = swfdec_video_decoder_decode (input->decoder, buffer);
-  if (surface == NULL)
-    return;
-  swfdec_video_movie_new_image (input->movie, surface);
-  cairo_surface_destroy (surface);
+  while (input->current_frame < ratio) {
+    buffer = swfdec_video_find_frame (input->video, input->current_frame);
+    if (buffer == NULL) {
+      SWFDEC_INFO ("no buffer for frame %u", input->current_frame);
+    } else {
+      if (input->surface)
+	cairo_surface_destroy (input->surface);
+      input->surface = swfdec_video_decoder_decode (input->decoder, buffer);
+      if (input->surface == NULL)
+	return;
+      if (input->video->width < (guint) cairo_image_surface_get_width (input->surface) ||
+	  input->video->height < (guint) cairo_image_surface_get_height (input->surface)) {
+	static cairo_user_data_key_t key;
+	cairo_surface_t *old = input->surface;
+	input->surface = cairo_image_surface_create_for_data (
+	    cairo_image_surface_get_data (old), cairo_image_surface_get_format (old),
+	    input->video->width, input->video->height,
+	    cairo_image_surface_get_stride (old));
+	cairo_surface_set_user_data (input->surface, &key, old, 
+	    (cairo_destroy_func_t) cairo_surface_destroy);
+      }
+    }
+    input->current_frame++;
+  }
 }
 
 static void
@@ -104,7 +129,15 @@ swfdec_video_input_disconnect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *
   if (input->decoder)
     swfdec_video_decoder_free (input->decoder);
   g_object_unref (input->video);
-  g_free (input);
+  g_slice_free (SwfdecVideoInput, input);
+}
+
+static cairo_surface_t *
+swfdec_video_input_get_image (SwfdecVideoMovieInput *input_)
+{
+  SwfdecVideoInput *input = (SwfdecVideoInput *) input_;
+
+  return input->surface;
 }
 
 static SwfdecVideoMovieInput *
@@ -114,15 +147,16 @@ swfdec_video_input_new (SwfdecVideo *video)
   
   if (video->n_frames == 0)
     return NULL;
-  input = g_new0 (SwfdecVideoInput, 1);
+  input = g_slice_new0 (SwfdecVideoInput);
   input->decoder = swfdec_video_decoder_new (video->format);
   if (input->decoder == NULL) {
-    g_free (input);
+    g_slice_free (SwfdecVideoInput, input);
     return NULL;
   }
   input->input.connect = swfdec_video_input_connect;
-  input->input.iterate = swfdec_video_input_iterate;
   input->input.disconnect = swfdec_video_input_disconnect;
+  input->input.set_ratio = swfdec_video_input_set_ratio;
+  input->input.get_image = swfdec_video_input_get_image;
   g_object_ref (video);
   input->video = video;
   input->current_frame = (guint) -1;

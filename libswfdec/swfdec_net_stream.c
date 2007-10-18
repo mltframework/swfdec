@@ -115,7 +115,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
     if (stream->surface) {
       GList *walk;
       for (walk = stream->movies; walk; walk = walk->next) {
-	swfdec_video_movie_new_image (walk->data, stream->surface);
+	swfdec_video_movie_new_image (walk->data);
       }
     }
   }
@@ -350,6 +350,14 @@ swfdec_net_stream_input_disconnect (SwfdecVideoMovieInput *input, SwfdecVideoMov
   g_object_unref (stream);
 }
 
+static cairo_surface_t *
+swfdec_net_stream_input_get_image (SwfdecVideoMovieInput *input)
+{
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input));
+
+  return stream->surface;
+}
+
 /*** SWFDEC_NET_STREAM ***/
 
 G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_AS_OBJECT,
@@ -451,6 +459,7 @@ swfdec_net_stream_init (SwfdecNetStream *stream)
 {
   stream->input.connect = swfdec_net_stream_input_connect;
   stream->input.disconnect = swfdec_net_stream_input_disconnect;
+  stream->input.get_image = swfdec_net_stream_input_get_image;
 
   stream->buffer_time = 100; /* msecs */
 }

@@ -72,8 +72,6 @@ swfdec_flash_security_class_init (SwfdecFlashSecurityClass *klass)
 static void
 swfdec_flash_security_init (SwfdecFlashSecurity *sec)
 {
-  sec->allow_local = TRUE;
-  sec->allow_remote = TRUE;
 }
 
 /**

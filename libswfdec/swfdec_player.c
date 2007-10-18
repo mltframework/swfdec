@@ -1747,7 +1747,7 @@ swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const c
     g_signal_emit (player, signals[FSCOMMAND], 0, command, target);
     return;
   }
-  g_signal_emit (player, signals[LAUNCH], 0, request, url, target, data);
+  g_signal_emit (player, signals[LAUNCH], 0, (int) request, url, target, data);
 }
 
 /**

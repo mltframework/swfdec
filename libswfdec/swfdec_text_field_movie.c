@@ -1475,8 +1475,10 @@ void
 swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     guint start_index, guint end_index, const char *str)
 {
+  SwfdecFormatIndex *findex;
   char *text_new;
-  GSList *iter;
+  GSList *iter, *prev;
+  gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (end_index <= strlen (text->text_display));
@@ -1492,12 +1494,40 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
       text->text_display + end_index,
       strlen (text->text_display + end_index) + 1);
 
+  first = TRUE;
+  prev = NULL;
   for (iter = text->formats; iter != NULL; iter = iter->next)
   {
-    if (((SwfdecFormatIndex *)iter->data)->index > start_index) {
-      ((SwfdecFormatIndex *)iter->data)->index +=
-	strlen (str) - (end_index - start_index);
+    findex = iter->data;
+
+    if (findex->index >= start_index) {
+      if (end_index == strlen (text->text_display) || (iter->next != NULL &&
+	  ((SwfdecFormatIndex *)iter->next->data)->index <= end_index))
+      {
+	g_free (iter->data);
+	text->formats = g_slist_remove (text->formats, iter->data);
+	iter = (prev != NULL ? prev : text->formats);
+      }
+      else
+      {
+	findex->index += strlen (str) - (end_index - start_index);
+	if (first) {
+	  findex->index -= strlen (str);
+	  first = FALSE;
+	}
+      }
     }
+    prev = iter;
+  }
+  if (end_index == strlen (text->text_display)) {
+    if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
+      SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
+    }
+    findex = g_new0 (SwfdecFormatIndex, 1);
+    findex->index = start_index;
+    findex->format = swfdec_text_format_copy (
+	((SwfdecFormatIndex *)text->formats->data)->format);
+    text->formats = g_slist_append (text->formats, findex);
   }
 
   text->text_display =

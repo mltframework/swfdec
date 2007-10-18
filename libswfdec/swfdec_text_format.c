@@ -965,45 +965,45 @@ swfdec_text_format_remove_different (SwfdecTextFormat *format,
     set &= ~PROP_BLOCK_INDENT;
   }
   if (set & (1 << PROP_BOLD) && format->bold != from->bold)
-    set &= ~PROP_BOLD;
+    set &= ~(1 << PROP_BOLD);
   if (set & (1 << PROP_BULLET) && format->bullet != from->bullet)
-    set &= ~PROP_BULLET;
+    set &= ~(1 << PROP_BULLET);
   if (set & (1 << PROP_COLOR) && format->color != from->color)
-    set &= ~PROP_COLOR;
+    set &= ~(1 << PROP_COLOR);
   if (set & (1 << PROP_DISPLAY) && format->display != from->display)
-    set &= ~PROP_DISPLAY;
+    set &= ~(1 << PROP_DISPLAY);
   if (set & (1 << PROP_FONT) && format->font != from->font)
-    set &= ~PROP_FONT;
+    set &= ~(1 << PROP_FONT);
   if (set & (1 << PROP_INDENT) && format->indent != from->indent)
-    set &= ~PROP_INDENT;
+    set &= ~(1 << PROP_INDENT);
   if (set & (1 << PROP_ITALIC) && format->italic != from->italic)
-    set &= ~PROP_ITALIC;
+    set &= ~(1 << PROP_ITALIC);
   if (set & (1 << PROP_KERNING) && format->kerning != from->kerning)
-    set &= ~PROP_KERNING;
+    set &= ~(1 << PROP_KERNING);
   if (set & (1 << PROP_LEADING) && format->leading != from->leading)
-    set &= ~PROP_LEADING;
+    set &= ~(1 << PROP_LEADING);
   if (set & (1 << PROP_LEFT_MARGIN) &&
       format->left_margin != from->left_margin) {
-    set &= ~PROP_LEFT_MARGIN;
+    set &= ~(1 << PROP_LEFT_MARGIN);
   }
   if (set & (1 << PROP_LETTER_SPACING) &&
       format->letter_spacing != from->letter_spacing) {
-    set &= ~PROP_LETTER_SPACING;
+    set &= ~(1 << PROP_LETTER_SPACING);
   }
   if (set & (1 << PROP_RIGHT_MARGIN) &&
       format->right_margin != from->right_margin) {
-    set &= ~PROP_RIGHT_MARGIN;
+    set &= ~(1 << PROP_RIGHT_MARGIN);
   }
   if (set & (1 << PROP_SIZE) && format->size != from->size)
-    set &= ~PROP_SIZE;
+    set &= ~(1 << PROP_SIZE);
   if (set & (1 << PROP_TAB_STOPS) && format->tab_stops != from->tab_stops)
-    set &= ~PROP_TAB_STOPS;
+    set &= ~(1 << PROP_TAB_STOPS);
   if (set & (1 << PROP_TARGET) && format->target != from->target)
-    set &= ~PROP_TARGET;
+    set &= ~(1 << PROP_TARGET);
   if (set & (1 << PROP_UNDERLINE) && format->underline != from->underline)
-    set &= ~PROP_UNDERLINE;
+    set &= ~(1 << PROP_UNDERLINE);
   if (set & (1 << PROP_URL) && format->url != from->url)
-    set &= ~PROP_URL;
+    set &= ~(1 << PROP_URL);
 
   format->values_set = set;
 }

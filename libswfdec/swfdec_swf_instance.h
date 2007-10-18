@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,26 +17,27 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_SWF_INSTANCE_H_
-#define _SWFDEC_SWF_INSTANCE_H_
+#ifndef _SWFDEC_RESOURCE_H_
+#define _SWFDEC_RESOURCE_H_
 
 #include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec_flash_security.h>
 #include <libswfdec/swfdec_sprite_movie.h>
 
 G_BEGIN_DECLS
 
-//typedef struct _SwfdecSwfInstance SwfdecSwfInstance;
-typedef struct _SwfdecSwfInstanceClass SwfdecSwfInstanceClass;
+//typedef struct _SwfdecResource SwfdecResource;
+typedef struct _SwfdecResourceClass SwfdecResourceClass;
 
-#define SWFDEC_TYPE_SWF_INSTANCE                    (swfdec_swf_instance_get_type())
-#define SWFDEC_IS_SWF_INSTANCE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SWF_INSTANCE))
-#define SWFDEC_IS_SWF_INSTANCE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SWF_INSTANCE))
-#define SWFDEC_SWF_INSTANCE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_SWF_INSTANCE, SwfdecSwfInstance))
-#define SWFDEC_SWF_INSTANCE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_SWF_INSTANCE, SwfdecSwfInstanceClass))
+#define SWFDEC_TYPE_RESOURCE                    (swfdec_resource_get_type())
+#define SWFDEC_IS_RESOURCE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_RESOURCE))
+#define SWFDEC_IS_RESOURCE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_RESOURCE))
+#define SWFDEC_RESOURCE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_RESOURCE, SwfdecResource))
+#define SWFDEC_RESOURCE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_RESOURCE, SwfdecResourceClass))
 
-struct _SwfdecSwfInstance
+struct _SwfdecResource
 {
-  GObject		object;
+  SwfdecFlashSecurity	flash_security;
 
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
   guint			parse_frame;	/* next frame to parse */
@@ -49,23 +50,23 @@ struct _SwfdecSwfInstance
   GHashTable *		export_names;	/* SwfdecCharacter->string mapping of exported characters */
 };
 
-struct _SwfdecSwfInstanceClass
+struct _SwfdecResourceClass
 {
-  GObjectClass		object_class;
+  SwfdecFlashSecurityClass	flash_security_class;
 };
 
-GType		swfdec_swf_instance_get_type	  	(void);
+GType		swfdec_resource_get_type	  	(void);
 
-SwfdecSwfInstance *
-		swfdec_swf_instance_new			(SwfdecSpriteMovie *  	movie,
+SwfdecResource *
+		swfdec_resource_new			(SwfdecSpriteMovie *  	movie,
 							 SwfdecLoader *		loader,
 							 const char *		variables);
 
-void		swfdec_swf_instance_advance		(SwfdecSwfInstance *	instance);
+void		swfdec_resource_advance			(SwfdecResource *	instance);
 
-gpointer	swfdec_swf_instance_get_export		(SwfdecSwfInstance *	root,
+gpointer	swfdec_resource_get_export		(SwfdecResource *	root,
 							 const char *		name);
-const char *	swfdec_swf_instance_get_export_name    	(SwfdecSwfInstance *	root,
+const char *	swfdec_resource_get_export_name    	(SwfdecResource *	root,
 							 SwfdecCharacter *	character);
 
 G_END_DECLS

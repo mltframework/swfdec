@@ -927,9 +927,9 @@ swfdec_movie_dispose (GObject *object)
   g_assert (movie->list == NULL);
 
   SWFDEC_LOG ("disposing movie %s (depth %d)", movie->name, movie->depth);
-  if (movie->swf) {
-    g_object_unref (movie->swf);
-    movie->swf = NULL;
+  if (movie->resource) {
+    g_object_unref (movie->resource);
+    movie->resource = NULL;
   }
   if (movie->events) {
     swfdec_event_list_free (movie->events);
@@ -1258,7 +1258,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   /* set essential properties */
   movie->parent = parent;
   if (parent) {
-    movie->swf = g_object_ref (parent->swf);
+    movie->resource = g_object_ref (parent->resource);
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
@@ -1524,3 +1524,28 @@ swfdec_depth_classify (int depth)
     return SWFDEC_DEPTH_CLASS_RESERVED;
   return SWFDEC_DEPTH_CLASS_EMPTY;
 }
+
+/**
+ * swfdec_movie_get_own_resource:
+ * @movie: movie to query
+ *
+ * Queries the movie for his own resource. A movie only has its own resource if
+ * it contains data loaded with the loadMovie() function, or if it is the root
+ * movie.
+ *
+ * Returns: The own resource of @movie or %NULL
+ **/
+SwfdecResource *
+swfdec_movie_get_own_resource (SwfdecMovie *movie)
+{
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie))
+    return NULL;
+
+  if (SWFDEC_MOVIE (movie->resource->movie) != movie)
+    return NULL;
+
+  return movie->resource;
+}
+

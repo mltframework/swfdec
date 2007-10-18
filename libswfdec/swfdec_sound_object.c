@@ -83,7 +83,7 @@ swfdec_sound_object_get_sound (SwfdecSoundObject *sound, const char *name)
   if (sound->target == NULL)
     return NULL;
 
-  return swfdec_swf_instance_get_export (sound->target->swf, name);
+  return swfdec_resource_get_export (sound->target->resource, name);
 }
 
 /*** AS CODE ***/

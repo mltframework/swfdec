@@ -67,11 +67,13 @@ swfdec_sprite_movie_getBytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
+  SwfdecResource *resource;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
 
-  if (SWFDEC_MOVIE (movie->swf->movie) == movie) {
-    SWFDEC_AS_VALUE_SET_INT (rval, movie->swf->decoder->bytes_loaded);
+  resource = swfdec_movie_get_own_resource (movie);
+  if (resource) {
+    SWFDEC_AS_VALUE_SET_INT (rval, resource->decoder->bytes_loaded);
   } else {
     SWFDEC_AS_VALUE_SET_INT (rval, 0);
   }
@@ -83,11 +85,13 @@ swfdec_sprite_movie_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
+  SwfdecResource *resource;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
 
-  if (SWFDEC_MOVIE (movie->swf->movie) == movie) {
-    SWFDEC_AS_VALUE_SET_INT (rval, movie->swf->decoder->bytes_total);
+  resource = swfdec_movie_get_own_resource (movie);
+  if (resource) {
+    SWFDEC_AS_VALUE_SET_INT (rval, resource->decoder->bytes_total);
   } else {
     SWFDEC_AS_VALUE_SET_INT (rval, 0);
   }
@@ -372,7 +376,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else {
     initObject = NULL;
   }
-  sprite = swfdec_swf_instance_get_export (movie->swf, export);
+  sprite = swfdec_resource_get_export (movie->resource, export);
   if (!SWFDEC_IS_SPRITE (sprite)) {
     if (sprite == NULL) {
       SWFDEC_WARNING ("no symbol with name %s exported", export);

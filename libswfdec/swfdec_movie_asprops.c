@@ -391,7 +391,7 @@ mc_url_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_get_string (
 	SWFDEC_AS_OBJECT (movie)->context,
-	swfdec_url_get_url (swfdec_loader_get_url (movie->swf->loader))));
+	swfdec_url_get_url (swfdec_loader_get_url (movie->resource->loader))));
 }
 
 struct {

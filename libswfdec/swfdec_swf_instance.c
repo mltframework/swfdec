@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,20 +40,20 @@
 #include "swfdec_utils.h"
 
 
-static void swfdec_swf_instance_loader_target_init (SwfdecLoaderTargetInterface *iface);
-G_DEFINE_TYPE_WITH_CODE (SwfdecSwfInstance, swfdec_swf_instance, G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_swf_instance_loader_target_init))
+static void swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface);
+G_DEFINE_TYPE_WITH_CODE (SwfdecResource, swfdec_resource, SWFDEC_TYPE_FLASH_SECURITY,
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_resource_loader_target_init))
 
 /*** SWFDEC_LOADER_TARGET interface ***/
 
 static SwfdecPlayer *
-swfdec_swf_instance_loader_target_get_player (SwfdecLoaderTarget *target)
+swfdec_resource_loader_target_get_player (SwfdecLoaderTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (SWFDEC_SWF_INSTANCE (target)->movie)->context);
+  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (SWFDEC_RESOURCE (target)->movie)->context);
 }
 
 static void
-swfdec_swf_instance_allow_network (SwfdecPlayer *player)
+swfdec_resource_allow_network (SwfdecPlayer *player)
 {
   SwfdecFlashSecurity *sec;
 
@@ -68,7 +68,7 @@ swfdec_swf_instance_allow_network (SwfdecPlayer *player)
 }
 
 static void
-swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
+swfdec_resource_loader_target_image (SwfdecResource *instance)
 {
   SwfdecSpriteMovie *movie = instance->movie;
 
@@ -84,7 +84,7 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
     /* if first instance */
     if (player->loader == instance->loader && dec->use_network &&
 	swfdec_url_has_protocol (swfdec_loader_get_url (instance->loader), "file"))
-      swfdec_swf_instance_allow_network (player);
+      swfdec_resource_allow_network (player);
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
     /* nothing to do, please move along */
   } else {
@@ -93,9 +93,9 @@ swfdec_swf_instance_loader_target_image (SwfdecSwfInstance *instance)
 }
 
 static void
-swfdec_swf_instance_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
-  SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);
+  SwfdecResource *instance = SWFDEC_RESOURCE (target);
   const char *query;
 
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
@@ -110,9 +110,9 @@ swfdec_swf_instance_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader
 }
 
 static void
-swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
-  SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (target);
+  SwfdecResource *instance = SWFDEC_RESOURCE (target);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
@@ -159,7 +159,7 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
       case SWFDEC_STATUS_NEEDBITS:
 	return;
       case SWFDEC_STATUS_IMAGE:
-	swfdec_swf_instance_loader_target_image (instance);
+	swfdec_resource_loader_target_image (instance);
 	break;
       case SWFDEC_STATUS_INIT:
 	swfdec_player_initialize (player, 
@@ -176,17 +176,17 @@ swfdec_swf_instance_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoade
 }
 
 static void
-swfdec_swf_instance_loader_target_init (SwfdecLoaderTargetInterface *iface)
+swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
-  iface->get_player = swfdec_swf_instance_loader_target_get_player;
-  iface->open = swfdec_swf_instance_loader_target_open;
-  iface->parse = swfdec_swf_instance_loader_target_parse;
+  iface->get_player = swfdec_resource_loader_target_get_player;
+  iface->open = swfdec_resource_loader_target_open;
+  iface->parse = swfdec_resource_loader_target_parse;
 }
 
 static void
-swfdec_swf_instance_dispose (GObject *object)
+swfdec_resource_dispose (GObject *object)
 {
-  SwfdecSwfInstance *instance = SWFDEC_SWF_INSTANCE (object);
+  SwfdecResource *instance = SWFDEC_RESOURCE (object);
 
   swfdec_loader_set_target (instance->loader, NULL);
   g_object_unref (instance->loader);
@@ -198,41 +198,41 @@ swfdec_swf_instance_dispose (GObject *object)
   g_hash_table_destroy (instance->exports);
   g_hash_table_destroy (instance->export_names);
 
-  G_OBJECT_CLASS (swfdec_swf_instance_parent_class)->dispose (object);
+  G_OBJECT_CLASS (swfdec_resource_parent_class)->dispose (object);
 }
 
 static void
-swfdec_swf_instance_class_init (SwfdecSwfInstanceClass *klass)
+swfdec_resource_class_init (SwfdecResourceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->dispose = swfdec_swf_instance_dispose;
+  object_class->dispose = swfdec_resource_dispose;
 }
 
 static void
-swfdec_swf_instance_init (SwfdecSwfInstance *instance)
+swfdec_resource_init (SwfdecResource *instance)
 {
   instance->exports = g_hash_table_new (swfdec_str_case_hash, swfdec_str_case_equal);
   instance->export_names = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
-SwfdecSwfInstance *
-swfdec_swf_instance_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader, const char *variables)
+SwfdecResource *
+swfdec_resource_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader, const char *variables)
 {
   SwfdecMovie *mov;
-  SwfdecSwfInstance *swf;
+  SwfdecResource *swf;
 
   g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), NULL);
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
   mov = SWFDEC_MOVIE (movie);
-  swf = g_object_new (SWFDEC_TYPE_SWF_INSTANCE, NULL);
+  swf = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   /* set important variables */
   swf->variables = g_strdup (variables);
   swf->movie = movie;
-  if (mov->swf)
-    g_object_unref (mov->swf);
-  mov->swf = swf;
+  if (mov->resource)
+    g_object_unref (mov->resource);
+  mov->resource = swf;
   /* set loader (that depends on those vars) */
   swf->loader = g_object_ref (loader);
   swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (swf));
@@ -241,27 +241,27 @@ swfdec_swf_instance_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader, const c
 }
 
 gpointer
-swfdec_swf_instance_get_export (SwfdecSwfInstance *instance, const char *name)
+swfdec_resource_get_export (SwfdecResource *instance, const char *name)
 {
-  g_return_val_if_fail (SWFDEC_IS_SWF_INSTANCE (instance), NULL);
+  g_return_val_if_fail (SWFDEC_IS_RESOURCE (instance), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   return g_hash_table_lookup (instance->exports, name);
 }
 
 const char *
-swfdec_swf_instance_get_export_name (SwfdecSwfInstance *instance, SwfdecCharacter *character)
+swfdec_resource_get_export_name (SwfdecResource *instance, SwfdecCharacter *character)
 {
-  g_return_val_if_fail (SWFDEC_IS_SWF_INSTANCE (instance), NULL);
+  g_return_val_if_fail (SWFDEC_IS_RESOURCE (instance), NULL);
   g_return_val_if_fail (SWFDEC_IS_CHARACTER (character), NULL);
 
   return g_hash_table_lookup (instance->export_names, character);
 }
 
 static void
-swfdec_swf_instance_add_export (SwfdecSwfInstance *instance, SwfdecCharacter *character, const char *name)
+swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character, const char *name)
 {
-  g_return_if_fail (SWFDEC_IS_SWF_INSTANCE (instance));
+  g_return_if_fail (SWFDEC_IS_RESOURCE (instance));
   g_return_if_fail (SWFDEC_IS_CHARACTER (character));
   g_return_if_fail (name != NULL);
 
@@ -270,13 +270,13 @@ swfdec_swf_instance_add_export (SwfdecSwfInstance *instance, SwfdecCharacter *ch
 }
 
 void
-swfdec_swf_instance_advance (SwfdecSwfInstance *instance)
+swfdec_resource_advance (SwfdecResource *instance)
 {
   SwfdecSwfDecoder *s;
   GArray *array;
   guint i;
 
-  g_return_if_fail (SWFDEC_IS_SWF_INSTANCE (instance));
+  g_return_if_fail (SWFDEC_IS_RESOURCE (instance));
 
   s = SWFDEC_SWF_DECODER (instance->decoder);
   SWFDEC_LOG ("performing actions for frame %u", instance->parse_frame);
@@ -297,7 +297,7 @@ swfdec_swf_instance_advance (SwfdecSwfInstance *instance)
       case SWFDEC_ROOT_ACTION_EXPORT:
 	{
 	  SwfdecRootExportData *data = action->data;
-	  swfdec_swf_instance_add_export (instance, data->character, data->name);
+	  swfdec_resource_add_export (instance, data->character, data->name);
 	}
 	break;
       default:

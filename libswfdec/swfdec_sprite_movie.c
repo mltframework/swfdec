@@ -61,7 +61,7 @@ swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
 static int
 swfdec_get_clipeventflags (SwfdecMovie *movie, SwfdecBits * bits)
 {
-  if (SWFDEC_SWF_DECODER (movie->swf->decoder)->version <= 5) {
+  if (SWFDEC_SWF_DECODER (movie->resource->decoder)->version <= 5) {
     return swfdec_bits_get_u16 (bits);
   } else {
     return swfdec_bits_get_u32 (bits);
@@ -74,6 +74,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecMovie *cur;
+  SwfdecSwfDecoder *dec;
   gboolean has_clip_actions;
   gboolean has_clip_depth;
   gboolean has_name;
@@ -95,7 +96,8 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   guint blend_mode;
   SwfdecGraphic *graphic;
 
-  version = SWFDEC_SWF_DECODER (mov->swf->decoder)->version;
+  dec = SWFDEC_SWF_DECODER (mov->resource->decoder);
+  version = dec->version;
 
   /* 1) check which stuff is set */
   has_clip_actions = swfdec_bits_getbit (bits);
@@ -236,7 +238,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 
   /* 3) perform the actions depending on the set properties */
   cur = swfdec_movie_find (mov, depth);
-  graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->swf->decoder), id);
+  graphic = swfdec_swf_decoder_get_character (dec, id);
   if (move) {
     if (cur == NULL) {
       SWFDEC_INFO ("no movie at depth %d, ignoring move command", depth);
@@ -284,7 +286,7 @@ swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
   int id;
 
   id = swfdec_bits_get_u16 (bits);
-  chunk = swfdec_sound_parse_chunk (SWFDEC_SWF_DECODER (movie->swf->decoder), bits, id);
+  chunk = swfdec_sound_parse_chunk (SWFDEC_SWF_DECODER (movie->resource->decoder), bits, id);
   if (chunk) {
     SwfdecAudio *audio = swfdec_audio_event_new_from_chunk (SWFDEC_PLAYER (
 	  SWFDEC_AS_OBJECT (movie)->context), chunk);
@@ -301,7 +303,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   SwfdecBits bits;
 
-  g_assert (mov->swf);
+  g_assert (mov->resource);
   swfdec_bits_init (&bits, buffer);
 
   SWFDEC_LOG ("%p: executing %uth tag %s in frame %u", movie, movie->next_action - 1, 
@@ -311,7 +313,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       SWFDEC_LOG ("SCRIPT action");
       if (!skip_scripts) {
 	SwfdecScript *script = swfdec_swf_decoder_get_script (
-	    SWFDEC_SWF_DECODER (mov->swf->decoder), buffer->data);
+	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data);
 	g_assert (script);
 	swfdec_player_add_action (player, mov, swfdec_sprite_movie_run_script, script);
       }
@@ -435,10 +437,10 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
   while (n) {
     guint tag;
     SwfdecBuffer *buffer;
+    SwfdecResource *resource = swfdec_movie_get_own_resource (mov);
     /* FIXME: These actions should probably just be added to the action queue */
-    if (movie == mov->swf->movie &&
-	mov->swf->parse_frame <= movie->frame)
-      swfdec_swf_instance_advance (mov->swf);
+    if (resource && resource->parse_frame <= movie->frame)
+      swfdec_resource_advance (resource);
     if (!swfdec_sprite_get_action (movie->sprite, movie->next_action, &tag, &buffer))
       break;
     movie->next_action++;
@@ -515,14 +517,14 @@ swfdec_sprite_movie_do_init_movie (SwfdecSpriteMovie *movie)
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
   SwfdecAsObject *constructor = NULL;
 
-  g_assert (mov->swf != NULL);
+  g_assert (mov->resource != NULL);
 
   if (movie->sprite) {
     const char *name;
 
     g_assert (movie->sprite->parse_frame > 0);
     movie->n_frames = movie->sprite->n_frames;
-    name = swfdec_swf_instance_get_export_name (mov->swf,
+    name = swfdec_resource_get_export_name (mov->resource,
 	SWFDEC_CHARACTER (movie->sprite));
     if (name != NULL) {
       name = swfdec_as_context_get_string (context, name);
@@ -721,7 +723,7 @@ swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoade
   /* FIXME: load relative to other movie? */
   loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
       url, request, data);
-  swfdec_swf_instance_new (movie, loader, NULL);
+  swfdec_resource_new (movie, loader, NULL);
   g_object_unref (loader);
 }
 

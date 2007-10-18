@@ -114,7 +114,7 @@ struct _SwfdecMovie {
 
   /* parenting information */
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
-  SwfdecSwfInstance *	swf;			/* the instance that created us */
+  SwfdecResource *	resource;     		/* the resource that created us */
 
   /* positioning - the values are applied in this order */
   SwfdecRect		extents;		/* the extents occupied after transform is applied */
@@ -272,6 +272,7 @@ void		swfdec_movie_remove_variable_listener (SwfdecMovie *	movie,
 						 SwfdecAsObject *	object,
 						 const char *		name,
 						 const SwfdecMovieVariableListenerFunction	function);
+SwfdecResource *swfdec_movie_get_own_resource	(SwfdecMovie *		movie);
 
 G_END_DECLS
 #endif

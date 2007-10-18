@@ -38,11 +38,13 @@
 #include "swfdec_script.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite.h"
+#include "swfdec_tag.h"
 
 enum {
   SWFDEC_STATE_INIT1 = 0,
   SWFDEC_STATE_INIT2,
-  SWFDEC_STATE_PARSETAG,
+  SWFDEC_STATE_PARSE_FIRST_TAG,
+  SWFDEC_STATE_PARSE_TAG,
   SWFDEC_STATE_EOF,
 };
 
@@ -270,7 +272,7 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
 
   swfdec_swf_decoder_flush_bits (s, &s->b);
 
-  s->state = SWFDEC_STATE_PARSETAG;
+  s->state = SWFDEC_STATE_PARSE_FIRST_TAG;
   return SWFDEC_STATUS_INIT;
 }
 
@@ -292,7 +294,8 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	return SWFDEC_STATUS_ERROR;
       ret = swf_parse_header2 (s);
       break;
-    case SWFDEC_STATE_PARSETAG:
+    case SWFDEC_STATE_PARSE_FIRST_TAG:
+    case SWFDEC_STATE_PARSE_TAG:
     {
       guint header_length;
       guint x;
@@ -336,6 +339,10 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       func = swfdec_swf_decoder_get_tag_func (tag);
       if (tag == 0) {
 	s->state = SWFDEC_STATE_EOF;
+      } else if ((swfdec_swf_decoder_get_tag_flag (tag) & SWFDEC_TAG_FIRST_ONLY) 
+	  && s->state == SWFDEC_STATE_PARSE_TAG) {
+	SWFDEC_WARNING ("tag %d %s must be first tag in file, ignoring",
+	    tag, swfdec_swf_decoder_get_tag_name (tag));
       } else if (func == NULL) {
 	SWFDEC_WARNING ("tag function not implemented for %d %s",
 	    tag, swfdec_swf_decoder_get_tag_name (tag));
@@ -355,6 +362,7 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
 	ret = SWFDEC_STATE_EOF;
 	SWFDEC_ERROR ("data after last frame");
       }
+      s->state = SWFDEC_STATE_PARSE_TAG;
 
       break;
     }

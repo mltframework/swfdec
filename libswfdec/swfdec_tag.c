@@ -638,8 +638,6 @@ tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-/* may appear inside DefineSprite */
-#define SPRITE 1
 struct tag_func_struct
 {
   const char *name;
@@ -647,12 +645,12 @@ struct tag_func_struct
   int flag;
 };
 static struct tag_func_struct tag_funcs[] = {
-  [SWFDEC_TAG_END] = {"End", tag_func_end, SPRITE},
-  [SWFDEC_TAG_SHOWFRAME] = {"ShowFrame", tag_func_show_frame, SPRITE},
+  [SWFDEC_TAG_END] = {"End", tag_func_end, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_SHOWFRAME] = {"ShowFrame", tag_func_show_frame, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINESHAPE] = {"DefineShape", tag_define_shape, 0},
   [SWFDEC_TAG_FREECHARACTER] = {"FreeCharacter", NULL, 0},
-  [SWFDEC_TAG_PLACEOBJECT] = {"PlaceObject", NULL, SPRITE},
-  [SWFDEC_TAG_REMOVEOBJECT] = {"RemoveObject", tag_func_enqueue, SPRITE},
+  [SWFDEC_TAG_PLACEOBJECT] = {"PlaceObject", NULL, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_REMOVEOBJECT] = {"RemoveObject", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEBITSJPEG] = {"DefineBitsJPEG", tag_func_define_bits_jpeg, 0},
   [SWFDEC_TAG_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
   [SWFDEC_TAG_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
@@ -660,22 +658,22 @@ static struct tag_func_struct tag_funcs[] = {
       {"SetBackgroundColor", tag_func_set_background_color, 0},
   [SWFDEC_TAG_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
   [SWFDEC_TAG_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
-  [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SPRITE},
+  [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEFONTINFO] = {"DefineFontInfo", tag_func_define_font_info, 0},
   [SWFDEC_TAG_DEFINESOUND] = {"DefineSound", tag_func_define_sound, 0},
-  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_enqueue, SPRITE},
+  [SWFDEC_TAG_STARTSOUND] = {"StartSound", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEBUTTONSOUND] =
       {"DefineButtonSound", tag_func_define_button_sound, 0},
-  [SWFDEC_TAG_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SPRITE},
-  [SWFDEC_TAG_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, SPRITE},
+  [SWFDEC_TAG_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEBITSLOSSLESS] =
       {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
   [SWFDEC_TAG_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},
   [SWFDEC_TAG_DEFINESHAPE2] = {"DefineShape2", tag_define_shape, 0},
   [SWFDEC_TAG_DEFINEBUTTONCXFORM] = {"DefineButtonCXForm", NULL, 0},
   [SWFDEC_TAG_PROTECT] = {"Protect", tag_func_protect, 0},
-  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", tag_func_enqueue, SPRITE},
-  [SWFDEC_TAG_REMOVEOBJECT2] = {"RemoveObject2", tag_func_enqueue, SPRITE},
+  [SWFDEC_TAG_PLACEOBJECT2] = {"PlaceObject2", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_REMOVEOBJECT2] = {"RemoveObject2", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINESHAPE3] = {"DefineShape3", tag_define_shape_3, 0},
   [SWFDEC_TAG_DEFINETEXT2] = {"DefineText2", tag_func_define_text, 0},
   [SWFDEC_TAG_DEFINEBUTTON2] = {"DefineButton2", tag_func_define_button_2, 0},
@@ -688,8 +686,8 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_NAMECHARACTER] = {"NameCharacter", NULL, 0},
   [SWFDEC_TAG_SERIALNUMBER] = {"SerialNumber", NULL, 0},
   [SWFDEC_TAG_GENERATORTEXT] = {"GeneratorText", NULL, 0},
-  [SWFDEC_TAG_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, SPRITE},
-  [SWFDEC_TAG_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, SPRITE},
+  [SWFDEC_TAG_FRAMELABEL] = {"FrameLabel", tag_func_frame_label, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_SOUNDSTREAMHEAD2] = {"SoundStreamHead2", tag_func_sound_stream_head, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEMORPHSHAPE] =
       {"DefineMorphShape", tag_define_morph_shape, 0},
   [SWFDEC_TAG_DEFINEFONT2] = {"DefineFont2", tag_func_define_font_2, 0},
@@ -699,16 +697,16 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", tag_func_export_assets, 0},
   [SWFDEC_TAG_IMPORTASSETS] = {"ImportAssets", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
-  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SPRITE},
+  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", tag_func_define_video, 0},
-  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, SPRITE},
+  [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info, 0},
   [SWFDEC_TAG_MX4] = {"MX4", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER2] = {"EnableDebugger2", NULL, 0},
   [SWFDEC_TAG_SCRIPTLIMITS] = {"ScriptLimits", NULL, 0},
   [SWFDEC_TAG_SETTABINDEX] = {"SetTabIndex", NULL, 0},
-  [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, 0},
-  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", tag_func_enqueue, SPRITE},
+  [SWFDEC_TAG_FILEATTRIBUTES] = {"FileAttributes", tag_func_file_attributes, SWFDEC_TAG_FIRST_ONLY },
+  [SWFDEC_TAG_PLACEOBJECT3] = {"PlaceObject3", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_IMPORTASSETS2] = {"ImportAssets2", NULL, 0},
   [SWFDEC_TAG_DEFINEFONTALIGNZONES] = {"DefineFontAlignZones", NULL, 0},
   [SWFDEC_TAG_CSMTEXTSETTINGS] = {"CSMTextSettings", NULL, 0},

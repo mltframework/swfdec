@@ -679,7 +679,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 void
-swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
+swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text,
+    gboolean check_limits)
 {
   SwfdecLayout *layouts;
   int i, num, y, visible, all, height;
@@ -729,11 +730,16 @@ swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
   layouts = NULL;
 
   text->scroll_max = all - visible + 1;
-  text->scroll = CLAMP(text->scroll, 1, text->scroll_max);
-  text->scroll_bottom = text->scroll + (visible > 0 ? visible - 1 : 0);
-
   text->hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
-  text->hscroll = CLAMP(text->hscroll, 0, text->hscroll_max);
+
+  if (check_limits) {
+    text->scroll = CLAMP(text->scroll, 1, text->scroll_max);
+    text->scroll_bottom = text->scroll + (visible > 0 ? visible - 1 : 0);
+    text->hscroll = CLAMP(text->hscroll, 0, text->hscroll_max);
+  } else {
+    text->scroll_bottom = MAX (CLAMP(text->scroll, 1, text->scroll_max) +
+      (visible > 0 ? visible - 1 : 0), text->scroll);
+  }
 }
 
 gboolean
@@ -1018,7 +1024,8 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
-  swfdec_text_field_movie_update_scroll (text);
+  // special case: update the max values, not the current values
+  swfdec_text_field_movie_update_scroll (text, FALSE);
 }
 
 static void
@@ -1465,5 +1472,5 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
-  swfdec_text_field_movie_update_scroll (text);
+  swfdec_text_field_movie_update_scroll (text, TRUE);
 }

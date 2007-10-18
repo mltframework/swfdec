@@ -638,6 +638,7 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
 
   value = CLAMP (value, 1, text->scroll_max);
   if (value != text->scroll) {
+    text->scroll_bottom += value - text->scroll;
     text->scroll = value;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }

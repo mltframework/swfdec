@@ -916,6 +916,18 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text_format (text, format, start_index, end_index);
 }
 
+SWFDEC_AS_NATIVE (104, 106, swfdec_text_field_movie_getDepth)
+void
+swfdec_text_field_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_MOVIE (text)->depth);
+}
+
 /*
  * Creating TextFields
  */

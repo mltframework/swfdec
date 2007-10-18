@@ -1535,7 +1535,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   block = g_new (SwfdecFormatIndex, 1);
   block->index = 0;
   g_assert (SWFDEC_IS_TEXT_FORMAT (text->format_new));
-  block->format = text->format_new;
+  block->format = swfdec_text_format_copy (text->format_new);
   text->formats = g_slist_prepend (text->formats, block);
 
   if (html) {

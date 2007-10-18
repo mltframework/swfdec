@@ -742,33 +742,47 @@ swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text,
   }
 }
 
+void
+swfdec_text_field_get_size (SwfdecTextFieldMovie *text, int *width,
+    int *height)
+{
+  SwfdecLayout *layouts;
+  int i;
+
+  if (width != NULL)
+    *width = 0;
+  if (height != NULL)
+    *height = 3;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+  g_return_if_fail (width != NULL || height != NULL);
+
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
+
+  for (i = 0; layouts[i].layout != NULL; i++) {
+    if (!text->text->word_wrap) {
+      if (width != NULL && layouts[i].width > *width)
+	*width = layouts[i].width;
+    }
+
+    if (height != NULL)
+      *height += layouts[i].height;
+  }
+
+  swfdec_text_field_movie_free_layouts (layouts);
+}
+
 gboolean
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
-  SwfdecLayout *layouts;
-  guint height;
-  int i, width, diff;
+  int height, width, diff;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
 
   if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
-  layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
-
-  width = 0;
-  height = 3;
-  for (i = 0; layouts[i].layout != NULL; i++) {
-    if (!text->text->word_wrap) {
-      if (layouts[i].width > width)
-	width = layouts[i].width;
-    }
-
-    height += layouts[i].height;
-  }
-
-  swfdec_text_field_movie_free_layouts (layouts);
-  layouts = NULL;
+  swfdec_text_field_get_size (text, &width, &height);
 
   if ((text->text->word_wrap || SWFDEC_MOVIE (text)->original_extents.x1 -
       SWFDEC_MOVIE (text)->original_extents.x0 == width) &&

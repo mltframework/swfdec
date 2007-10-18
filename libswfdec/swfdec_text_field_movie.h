@@ -119,6 +119,9 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
+void		swfdec_text_field_get_size		(SwfdecTextFieldMovie *	text,
+							 int *			width,
+							 int *			height);
 gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie *	text,
 							 gboolean		check_limits);

@@ -418,5 +418,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("Sans")
   SWFDEC_AS_CONSTANT_STRING ("Serif")
   SWFDEC_AS_CONSTANT_STRING ("Monospace")
+  SWFDEC_AS_CONSTANT_STRING ("textHeight")
+  SWFDEC_AS_CONSTANT_STRING ("textWidth")
   /* add more here */
 ;

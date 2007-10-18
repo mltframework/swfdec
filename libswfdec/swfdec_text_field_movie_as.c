@@ -394,6 +394,37 @@ swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
 }
 
 /*
+ * Native properties: Info
+ */
+static void
+swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int height;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_get_size (text, NULL, &height);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, height);
+}
+
+static void
+swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int width;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_get_size (text, &width, NULL);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, width);
+}
+
+/*
  * Native properties: Background & border
  */
 static void
@@ -1172,12 +1203,12 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
       swfdec_text_field_movie_do_set_variable);
 
   // info
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textHeight,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textHeight,
       swfdec_text_field_movie_get_textHeight,
-      swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textWidth,
+      swfdec_text_field_movie_set_readonly);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textWidth,
       swfdec_text_field_movie_get_textWidth,
-      swfdec_text_field_movie_set_readonly);*/
+      swfdec_text_field_movie_set_readonly);
 
   // border & background
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_background,

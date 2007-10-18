@@ -947,6 +947,67 @@ swfdec_text_format_add (SwfdecTextFormat *format, const SwfdecTextFormat *from)
   format->values_set |= from->values_set;
 }
 
+void
+swfdec_text_format_remove_different (SwfdecTextFormat *format,
+    const SwfdecTextFormat *from)
+{
+  int set;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (format));
+  g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (from));
+
+  set = format->values_set & from->values_set;
+
+  if (set & (1 << PROP_ALIGN) && format->align != from->align)
+    set &= ~PROP_ALIGN;
+  if (set & (1 << PROP_BLOCK_INDENT) &&
+      format->block_indent != from->block_indent) {
+    set &= ~PROP_BLOCK_INDENT;
+  }
+  if (set & (1 << PROP_BOLD) && format->bold != from->bold)
+    set &= ~(1 << PROP_BOLD);
+  if (set & (1 << PROP_BULLET) && format->bullet != from->bullet)
+    set &= ~(1 << PROP_BULLET);
+  if (set & (1 << PROP_COLOR) && format->color != from->color)
+    set &= ~(1 << PROP_COLOR);
+  if (set & (1 << PROP_DISPLAY) && format->display != from->display)
+    set &= ~(1 << PROP_DISPLAY);
+  if (set & (1 << PROP_FONT) && format->font != from->font)
+    set &= ~(1 << PROP_FONT);
+  if (set & (1 << PROP_INDENT) && format->indent != from->indent)
+    set &= ~(1 << PROP_INDENT);
+  if (set & (1 << PROP_ITALIC) && format->italic != from->italic)
+    set &= ~(1 << PROP_ITALIC);
+  if (set & (1 << PROP_KERNING) && format->kerning != from->kerning)
+    set &= ~(1 << PROP_KERNING);
+  if (set & (1 << PROP_LEADING) && format->leading != from->leading)
+    set &= ~(1 << PROP_LEADING);
+  if (set & (1 << PROP_LEFT_MARGIN) &&
+      format->left_margin != from->left_margin) {
+    set &= ~(1 << PROP_LEFT_MARGIN);
+  }
+  if (set & (1 << PROP_LETTER_SPACING) &&
+      format->letter_spacing != from->letter_spacing) {
+    set &= ~(1 << PROP_LETTER_SPACING);
+  }
+  if (set & (1 << PROP_RIGHT_MARGIN) &&
+      format->right_margin != from->right_margin) {
+    set &= ~(1 << PROP_RIGHT_MARGIN);
+  }
+  if (set & (1 << PROP_SIZE) && format->size != from->size)
+    set &= ~(1 << PROP_SIZE);
+  if (set & (1 << PROP_TAB_STOPS) && format->tab_stops != from->tab_stops)
+    set &= ~(1 << PROP_TAB_STOPS);
+  if (set & (1 << PROP_TARGET) && format->target != from->target)
+    set &= ~(1 << PROP_TARGET);
+  if (set & (1 << PROP_UNDERLINE) && format->underline != from->underline)
+    set &= ~(1 << PROP_UNDERLINE);
+  if (set & (1 << PROP_URL) && format->url != from->url)
+    set &= ~(1 << PROP_URL);
+
+  format->values_set = set;
+}
+
 gboolean
 swfdec_text_format_equal_or_undefined (const SwfdecTextFormat *a,
     const SwfdecTextFormat *b)
@@ -1039,11 +1100,6 @@ swfdec_text_format_set_defaults (SwfdecTextFormat *format)
   format->underline = FALSE;
 
   format->values_set = (1 << PROP_TOTAL) - 1;
-
-  swfdec_text_format_mark_unset (format,
-      PROP_TAB_STOPS);
-  swfdec_text_format_mark_unset (format, PROP_TARGET);
-  swfdec_text_format_mark_unset (format, PROP_URL);
 }
 
 static void

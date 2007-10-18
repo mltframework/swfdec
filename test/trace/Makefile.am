@@ -608,6 +608,15 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	get-depth.as \
+	get-depth-5.swf \
+	get-depth-5.swf.trace \
+	get-depth-6.swf \
+	get-depth-6.swf.trace \
+	get-depth-7.swf \
+	get-depth-7.swf.trace \
+	get-depth-8.swf \
+	get-depth-8.swf.trace \
 	getsetproperty-target.as \
 	getsetproperty-target-5.swf \
 	getsetproperty-target-5.swf.trace \
@@ -1319,6 +1328,15 @@ EXTRA_DIST = \
 	remove-depths-7.swf.trace \
 	remove-depths-8.swf \
 	remove-depths-8.swf.trace \
+	remove-movie.as \
+	remove-movie-5.swf \
+	remove-movie-5.swf.trace \
+	remove-movie-6.swf \
+	remove-movie-6.swf.trace \
+	remove-movie-7.swf \
+	remove-movie-7.swf.trace \
+	remove-movie-8.swf \
+	remove-movie-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \
@@ -1850,6 +1868,15 @@ EXTRA_DIST = \
 	text-field-length-7.swf.trace \
 	text-field-length-8.swf \
 	text-field-length-8.swf.trace \
+	text-field-scroll.as \
+	text-field-scroll-5.swf \
+	text-field-scroll-5.swf.trace \
+	text-field-scroll-6.swf \
+	text-field-scroll-6.swf.trace \
+	text-field-scroll-7.swf \
+	text-field-scroll-7.swf.trace \
+	text-field-scroll-8.swf \
+	text-field-scroll-8.swf.trace \
 	text-field-values.as \
 	text-field-values-5.swf \
 	text-field-values-5.swf.trace \

@@ -39,6 +39,38 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 #define SWFDEC_TEXT_FIELD_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovieClass))
 
 typedef struct {
+  PangoLayout *		layout;
+  int			render_offset_x;
+  int			height;
+  int			width;
+} SwfdecLayout;
+
+typedef struct {
+  guint			index_;
+
+  PangoAlignment	align;
+  gboolean		justify;
+  int			leading;
+  int			block_indent;
+  int			left_margin;
+  int			right_margin;
+  PangoTabArray *	tab_stops;
+} SwfdecBlock;
+
+typedef struct {
+  const char		*text;
+  guint			text_length;
+
+  gboolean		bullet;
+  int			indent;
+
+  GList *		blocks;		// SwfdecBlock
+
+  GList *		attrs;	// PangoAttribute
+  PangoAttrList *	attrs_list;
+} SwfdecParagraph;
+
+typedef struct {
   guint			index;
   SwfdecTextFormat *	format;
 } SwfdecFormatIndex;
@@ -60,7 +92,13 @@ struct _SwfdecTextFieldMovie {
   gboolean		embed_fonts;
   SwfdecStyleSheet *	style_sheet;
 
+  int			scroll;
+  int			scroll_max;
+  int			scroll_bottom;
+  int			hscroll;
+  int			hscroll_max;
   gboolean		mouse_wheel_enabled;
+
   const char *		restrict_;
 
   SwfdecColor		border_color;
@@ -70,9 +108,6 @@ struct _SwfdecTextFieldMovie {
   // outside the rendering functions
   cairo_surface_t *	surface;
   cairo_t *		cr;
-
-  /* for rendering */
-  SwfdecParagraph *	paragraphs;
 };
 
 struct _SwfdecTextFieldMovieClass {
@@ -84,18 +119,28 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
-void		swfdec_text_field_movie_format_changed	(SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_get_size		(SwfdecTextFieldMovie *	text,
+							 int *			width,
+							 int *			height);
+gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie *	text,
+							 gboolean		check_limits);
 void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,
 							 guint			end_index);
-void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
-							 int			value);
+SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *	text,
+							 guint			start_index,
+							 guint			end_index);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);
 void		swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie		*text,
 							 const char *			value);
+void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *		text,
+							 guint				start_index,
+							 guint				end_index,
+							 const char *			str);
 
 /* implemented in swfdec_text_field_movie_as.c */
 void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);

@@ -23,6 +23,7 @@
 #endif
 
 #include <string.h>
+#include <pango/pangocairo.h>
 
 #include "swfdec_text_field.h"
 #include "swfdec_text_field_movie.h"
@@ -116,6 +117,8 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_to_number (cx, &argv[0]);
 
   text->text->html = value;
+
+  // FIXME: resize? invalidate?
 }
 
 static void
@@ -312,7 +315,7 @@ swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
 
   text->text->selectable = value;
 
-  // FIXME: If selection made and removing selectable force redraw?
+  // FIXME: invalidate
 }
 
 static void
@@ -349,6 +352,8 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
     text->text->input = FALSE;
   }
+
+  // FIXME: invalidate
 }
 
 static void
@@ -386,6 +391,37 @@ swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
   }
 
   swfdec_text_field_movie_set_listen_variable (text, value);
+}
+
+/*
+ * Native properties: Info
+ */
+static void
+swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int height;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_get_size (text, NULL, &height);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, height);
+}
+
+static void
+swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int width;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_get_size (text, &width, NULL);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, width);
 }
 
 /*
@@ -515,6 +551,75 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
  * Native properties: Scrolling
  */
 static void
+swfdec_text_field_movie_get_bottomScroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_bottom);
+}
+
+static void
+swfdec_text_field_movie_do_get_hscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll);
+}
+
+static void
+swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
+
+  value = CLAMP (value, 0, text->hscroll_max);
+  if (value != text->hscroll) {
+    text->hscroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
+}
+
+static void
+swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (!text->text->word_wrap) {
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll_max);
+  } else {
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, 0);
+  }
+}
+
+static void
+swfdec_text_field_movie_get_maxscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_max);
+}
+
+static void
 swfdec_text_field_movie_get_mouseWheelEnabled (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -550,7 +655,7 @@ swfdec_text_field_movie_do_get_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->text->scroll);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll);
 }
 
 static void
@@ -563,7 +668,12 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  swfdec_text_field_movie_set_scroll (text, value);
+  value = CLAMP (value, 1, text->scroll_max);
+  if (value != text->scroll) {
+    text->scroll_bottom += value - text->scroll;
+    text->scroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
 }
 
 /*
@@ -633,8 +743,10 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
     text->text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
   }
 
-  if (text->text->auto_size != old)
-    swfdec_text_field_movie_format_changed (text);
+  if (text->text->auto_size != old) {
+    swfdec_text_field_movie_auto_size (text);
+    // FIXME: fix scrolling
+  }
 }
 
 static void
@@ -693,7 +805,9 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   if (text->text->word_wrap != value) {
     text->text->word_wrap = value;
-    swfdec_text_field_movie_format_changed (text);
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_text_field_movie_auto_size (text);
+    // special case: don't set scrolling
   }
 }
 
@@ -728,6 +842,8 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
     SWFDEC_FIXME ("Using embed fonts in TextField not supported");
 
   text->text->embed_fonts = value;
+
+  // FIXME: resize
 }
 
 static void
@@ -798,7 +914,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
   SwfdecTextFormat *format;
-  guint start_index, end_index;
+  int start_index, end_index;
   int i;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
@@ -809,15 +925,16 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   i = 0;
   if (argc >= 2) {
     start_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    start_index = MIN (start_index, strlen (text->text_display));
+    start_index = CLAMP (start_index, 0, (int)strlen (text->text_display));
   } else {
     start_index = 0;
   }
   if (argc >= 3) {
     end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    end_index = CLAMP (end_index, start_index, strlen (text->text_display));
+    end_index = CLAMP (end_index, start_index,
+	(int)strlen (text->text_display));
   } else {
-    end_index = strlen (text->text_display);
+    end_index = (int)strlen (text->text_display);
   }
   if (start_index == end_index)
     return;
@@ -830,6 +947,124 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]));
 
   swfdec_text_field_movie_set_text_format (text, format, start_index, end_index);
+}
+
+SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)
+void
+swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecTextFormat *format;
+  guint start_index, end_index;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (argc == 0) {
+    start_index = 0;
+    end_index = strlen (text->text_display);
+  } else {
+    start_index = swfdec_as_value_to_integer (cx, &argv[0]);
+    start_index = MIN (start_index, strlen (text->text_display));
+    if (argc == 1) {
+      end_index = start_index + 1;
+    } else {
+      end_index = swfdec_as_value_to_integer (cx, &argv[1]);
+      end_index = CLAMP (end_index, start_index, strlen (text->text_display));
+    }
+  }
+
+  format =
+    swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+}
+
+SWFDEC_AS_NATIVE (104, 107, swfdec_text_field_movie_replaceText)
+void
+swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int start_index, end_index;
+  const char *str;
+
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "iis", &start_index,
+      &end_index, &str);
+
+  start_index = MIN (start_index, (int)strlen (text->text_display));
+  if (start_index < 0)
+    return;
+
+  end_index = MIN (end_index, (int)strlen (text->text_display));
+  if (end_index < start_index)
+    return;
+
+  swfdec_text_field_movie_replace_text (text, start_index, end_index, str);
+}
+
+// static
+SWFDEC_AS_NATIVE (104, 201, swfdec_text_field_movie_getFontList)
+void
+swfdec_text_field_movie_getFontList (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecAsArray *array;
+  SwfdecAsValue val;
+  PangoFontFamily **families;
+  int i, n_families;
+
+  pango_font_map_list_families (pango_cairo_font_map_get_default (),
+      &families, &n_families);
+
+  array = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+  for (i = 0; i < n_families; i++) {
+    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx,
+	  pango_font_family_get_name (families[i])));
+    swfdec_as_array_push (array, &val);
+  }
+  SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_Sans);
+  swfdec_as_array_push (array, &val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_Serif);
+  swfdec_as_array_push (array, &val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_Monospace);
+  swfdec_as_array_push (array, &val);
+
+  g_free (families);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (array));
+}
+
+SWFDEC_AS_NATIVE (104, 106, swfdec_text_field_movie_getDepth)
+void
+swfdec_text_field_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_MOVIE (text)->depth);
+}
+
+SWFDEC_AS_NATIVE (104, 103, swfdec_text_field_movie_removeTextField)
+void
+swfdec_text_field_movie_removeTextField (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  movie = SWFDEC_MOVIE (text);
+  if (swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC)
+    swfdec_movie_remove (movie);
 }
 
 /*
@@ -886,6 +1121,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
       SWFDEC_GRAPHIC (edittext), name);
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   swfdec_movie_initialize (movie);
+  swfdec_movie_update (movie);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
@@ -993,12 +1229,12 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
       swfdec_text_field_movie_do_set_variable);
 
   // info
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textHeight,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textHeight,
       swfdec_text_field_movie_get_textHeight,
-      swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textWidth,
+      swfdec_text_field_movie_set_readonly);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textWidth,
       swfdec_text_field_movie_get_textWidth,
-      swfdec_text_field_movie_set_readonly);*/
+      swfdec_text_field_movie_set_readonly);
 
   // border & background
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_background,
@@ -1014,18 +1250,18 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
       swfdec_text_field_movie_set_borderColor);
 
   // scrolling
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_bottomScroll,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_bottomScroll,
       swfdec_text_field_movie_get_bottomScroll,
-      swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_hscroll,
-      swfdec_text_field_movie_get_hscroll,
-      swfdec_text_field_movie_set_hscroll);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxhscroll,
+      swfdec_text_field_movie_set_readonly);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_hscroll,
+      swfdec_text_field_movie_do_get_hscroll,
+      swfdec_text_field_movie_do_set_hscroll);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxhscroll,
       swfdec_text_field_movie_get_maxhscroll,
-      swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
+      swfdec_text_field_movie_set_readonly);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
       swfdec_text_field_movie_get_maxscroll,
-      swfdec_text_field_movie_set_readonly);*/
+      swfdec_text_field_movie_set_readonly);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
       swfdec_text_field_movie_get_mouseWheelEnabled,
       swfdec_text_field_movie_set_mouseWheelEnabled);
@@ -1045,29 +1281,20 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
       swfdec_text_field_movie_set_wordWrap);
 
   // format
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_antiAliasType,
-      swfdec_text_field_movie_get_antiAliasType,
-      swfdec_text_field_movie_set_antiAliasType);*/
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
       swfdec_text_field_movie_get_embedFonts,
       swfdec_text_field_movie_set_embedFonts);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_gridFitType,
-      swfdec_text_field_movie_get_gridFitType,
-      swfdec_text_field_movie_set_gridFitType);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_sharpness,
-      swfdec_text_field_movie_get_sharpness,
-      swfdec_text_field_movie_set_sharpness);*/
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_styleSheet,
       swfdec_text_field_movie_get_styleSheet,
       swfdec_text_field_movie_set_styleSheet);*/
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
       swfdec_text_field_movie_get_textColor,
       swfdec_text_field_movie_set_textColor);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_thickness,
-      swfdec_text_field_movie_get_thickness,
-      swfdec_text_field_movie_set_thickness);*/
 
-  // TODO: filters, menu, tabEnabled, tabIndex
+  // TODO: menu, tabEnabled, tabIndex
+
+  // Version 8 properties have ASnative numbers:
+  // gridFitType, antiAliasType, thickness, sharpness and filters
 }
 
 SWFDEC_AS_NATIVE (104, 0, swfdec_text_field_movie_construct)

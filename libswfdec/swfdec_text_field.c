@@ -87,7 +87,6 @@ swfdec_text_field_class_init (SwfdecTextFieldClass * g_class)
 static void
 swfdec_text_field_init (SwfdecTextField * text)
 {
-  text->scroll = 1;
 }
 
 int

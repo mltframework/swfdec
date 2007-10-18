@@ -283,9 +283,17 @@ ASSetPropFlags (MovieClip.prototype, null, 3);
 /* TextField */
 
 TextField = ASconstructor (104, 0);
+TextField.getFontList = ASnative (104, 201);
+TextField.prototype.getTextFormat = ASnative (104, 101);
 TextField.prototype.setTextFormat = ASnative (104, 102);
+TextField.prototype.removeTextField = ASnative (104, 103);
 TextField.prototype.getNewTextFormat = ASnative (104, 104);
 TextField.prototype.setNewTextFormat = ASnative (104, 105);
+TextField.prototype.getDepth = ASnative (104, 106);
+TextField.prototype.replaceText = ASnative (104, 107);
+ASSetPropFlags (TextField.prototype, "replaceText", 1024);
+
+AsBroadcaster.initialize (TextField.prototype);
 
 ASSetPropFlags (TextField.prototype, null, 131);
 ASSetPropFlags (TextField, null, 131);

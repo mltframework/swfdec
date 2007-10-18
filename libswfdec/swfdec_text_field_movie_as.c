@@ -882,7 +882,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   if (movie)
     swfdec_movie_remove (movie);
 
-  movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent,
+  movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, parent->resource,
       SWFDEC_GRAPHIC (edittext), name);
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   swfdec_movie_initialize (movie);

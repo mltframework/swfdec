@@ -182,6 +182,7 @@ GType		swfdec_movie_get_type		(void);
 SwfdecMovie *	swfdec_movie_new		(SwfdecPlayer *		player,
 						 int			depth,
 						 SwfdecMovie *		parent,
+						 SwfdecResource *	resource,
 						 SwfdecGraphic *	graphic,
 						 const char *		name);
 SwfdecMovie *	swfdec_movie_new_for_content  	(SwfdecMovie *		parent,

@@ -57,10 +57,10 @@ struct _SwfdecResourceClass
 
 GType		swfdec_resource_get_type	  	(void);
 
-SwfdecResource *
-		swfdec_resource_new			(SwfdecSpriteMovie *  	movie,
-							 SwfdecLoader *		loader,
+SwfdecResource *swfdec_resource_new			(SwfdecLoader *		loader,
 							 const char *		variables);
+void		swfdec_resource_set_movie		(SwfdecResource *	resource,
+							 SwfdecSpriteMovie *	movie);
 
 void		swfdec_resource_advance			(SwfdecResource *	instance);
 

@@ -316,7 +316,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
   movie = swfdec_movie_find (parent, depth);
   if (movie)
     swfdec_movie_remove (movie);
-  movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, NULL, name);
+  movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, parent->resource, NULL, name);
   swfdec_movie_initialize (movie);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
@@ -391,7 +391,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   ret = swfdec_movie_find (movie, depth);
   if (ret)
     swfdec_movie_remove (ret);
-  ret = swfdec_movie_new (SWFDEC_PLAYER (object->context), depth, movie, sprite, name);
+  ret = swfdec_movie_new (SWFDEC_PLAYER (object->context), depth, movie, movie->resource, sprite, name);
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
   /* run init and construct */

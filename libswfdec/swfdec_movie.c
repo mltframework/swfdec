@@ -1214,6 +1214,7 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
  * @player: a #SwfdecPlayer
  * @depth: depth of movie
  * @parent: the parent movie or %NULL to make this a root movie
+ * @resource: the resource that is responsible for this movie
  * @graphic: the graphic that is displayed by this movie or %NULL to create an 
  *           empty movieclip
  * @name: a garbage-collected string to be used as the name for this movie or 
@@ -1229,13 +1230,15 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
  * Returns: a new #SwfdecMovie
  **/
 SwfdecMovie *
-swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGraphic *graphic, const char *name)
+swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecResource *resource,
+    SwfdecGraphic *graphic, const char *name)
 {
   SwfdecMovie *movie;
   gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (parent == NULL || SWFDEC_IS_MOVIE (parent), NULL);
+  g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), NULL);
   g_return_val_if_fail (graphic == NULL || SWFDEC_IS_GRAPHIC (graphic), NULL);
 
   /* create the right movie */
@@ -1257,8 +1260,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   g_object_ref (movie);
   /* set essential properties */
   movie->parent = parent;
+  movie->resource = g_object_ref (resource);
   if (parent) {
-    movie->resource = g_object_ref (parent->resource);
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
 	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
@@ -1288,6 +1291,11 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecGr
   player->movies = g_list_prepend (player->movies, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
+  /* only setup here, the resource assumes it can access the player via the movie */
+  if (resource->movie == NULL) {
+    g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
+    swfdec_resource_set_movie (resource, SWFDEC_SPRITE_MOVIE (movie));
+  }
   return movie;
 }
 
@@ -1372,7 +1380,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
     swfdec_movie_remove (copy);
   }
   copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), depth, 
-      parent, movie->graphic, name);
+      parent, movie->resource, movie->graphic, name);
   if (copy == NULL)
     return NULL;
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
@@ -1393,7 +1401,7 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
 
   SWFDEC_DEBUG ("new movie for parent %p", parent);
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (parent)->context);
-  movie = swfdec_movie_new (player, content->depth, parent, content->graphic, 
+  movie = swfdec_movie_new (player, content->depth, parent, parent->resource, content->graphic, 
       content->name ? swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (player), content->name) : NULL);
 
   swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,

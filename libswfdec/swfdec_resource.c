@@ -217,27 +217,30 @@ swfdec_resource_init (SwfdecResource *instance)
 }
 
 SwfdecResource *
-swfdec_resource_new (SwfdecSpriteMovie *movie, SwfdecLoader *loader, const char *variables)
+swfdec_resource_new (SwfdecLoader *loader, const char *variables)
 {
-  SwfdecMovie *mov;
   SwfdecResource *swf;
 
-  g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), NULL);
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
-  mov = SWFDEC_MOVIE (movie);
   swf = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   /* set important variables */
   swf->variables = g_strdup (variables);
-  swf->movie = movie;
-  if (mov->resource)
-    g_object_unref (mov->resource);
-  mov->resource = swf;
   /* set loader (that depends on those vars) */
   swf->loader = g_object_ref (loader);
-  swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (swf));
 
   return swf;
+}
+
+void
+swfdec_resource_set_movie (SwfdecResource *resource, SwfdecSpriteMovie *movie)
+{
+  g_return_if_fail (SWFDEC_IS_RESOURCE (resource));
+  g_return_if_fail (resource->movie == NULL);
+  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
+
+  resource->movie = movie;
+  swfdec_loader_set_target (resource->loader, SWFDEC_LOADER_TARGET (resource));
 }
 
 gpointer

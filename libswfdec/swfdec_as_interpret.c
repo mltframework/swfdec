@@ -1150,7 +1150,9 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else {
-    SwfdecSpriteMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, TRUE);
+    SwfdecSecurity *sec = cx->frame->security;
+    SwfdecSpriteMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, 
+	SWFDEC_IS_RESOURCE (sec) ? SWFDEC_RESOURCE (sec) : NULL);
     if (movie) {
       swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
     } else {
@@ -1192,9 +1194,12 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (internal || variables) {
+    SwfdecSecurity *sec = cx->frame->security;
     SwfdecSpriteMovie *movie;
+    
     /* FIXME: This code looks wrong - figure out how levels are handled */
-    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, !variables);
+    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, 
+	(SWFDEC_IS_RESOURCE (sec) && !variables) ? SWFDEC_RESOURCE (sec) : NULL);
     if (movie == NULL) {
       movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (
 	SWFDEC_PLAYER (cx), target);

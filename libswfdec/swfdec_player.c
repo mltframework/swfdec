@@ -1578,7 +1578,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
  * swfdec_player_get_level:
  * @player: a #SwfdecPlayer
  * @name: name of the level to request
- * @create: %TRUE to create if it doesn't exist
+ * @create: resource to create the movie with if it doesn't exist
  *
  * This function is used to look up root movies in the given @player. The 
  * algorithm used is like this: First, check that @name actually references a
@@ -1591,7 +1591,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
  *          fully initialized (yes, this function sucks).
  **/
 SwfdecSpriteMovie *
-swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create)
+swfdec_player_get_level (SwfdecPlayer *player, const char *name, SwfdecResource *create)
 {
   SwfdecSpriteMovie *movie;
   GList *walk;
@@ -1623,11 +1623,11 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, gboolean create
     break;
   }
   /* bail if create isn't set*/
-  if (!create)
+  if (create == NULL)
     return NULL;
   /* create new root movie */
   s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%lu", l));
-  movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_new (player, depth, NULL, NULL, s));
+  movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_new (player, depth, NULL, create, NULL, s));
   SWFDEC_MOVIE (movie)->name = SWFDEC_AS_STR_EMPTY;
   return movie;
 }
@@ -1636,14 +1636,15 @@ SwfdecMovie *
 swfdec_player_add_level_from_loader (SwfdecPlayer *player, guint depth,
     SwfdecLoader *loader, const char *variables)
 {
+  SwfdecResource *resource;
   SwfdecMovie *movie;
   const char *name;
 
   swfdec_player_remove_level (player, depth);
   name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%u", depth));
-  movie = swfdec_movie_new (player, depth - 16384, NULL, NULL, name);
+  resource = swfdec_resource_new (loader, variables);
+  movie = swfdec_movie_new (player, depth - 16384, NULL, resource, NULL, name);
   movie->name = SWFDEC_AS_STR_EMPTY;
-  swfdec_resource_new (SWFDEC_SPRITE_MOVIE (movie), loader, variables);
   g_object_unref (loader);
   return movie;
 }

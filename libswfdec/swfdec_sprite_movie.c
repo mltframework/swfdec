@@ -263,7 +263,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	swfdec_event_list_free (events);
       return FALSE;
     }
-    cur = swfdec_movie_new (player, depth, mov, graphic, name);
+    cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, blend_mode, events);
     if (SWFDEC_IS_SPRITE_MOVIE (cur)) {
@@ -714,6 +714,7 @@ void
 swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoaderRequest request, 
     SwfdecBuffer *data)
 {
+  SwfdecResource *resource;
   SwfdecLoader *loader;
 
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
@@ -724,7 +725,10 @@ swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoade
   /* FIXME: load relative to other movie? */
   loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
       url, request, data);
-  swfdec_resource_new (movie, loader, NULL);
+  resource = swfdec_resource_new (loader, NULL);
+  g_object_unref (SWFDEC_MOVIE (movie)->resource);
+  SWFDEC_MOVIE (movie)->resource = resource;
+  swfdec_resource_set_movie (resource, movie);
   g_object_unref (loader);
 }
 

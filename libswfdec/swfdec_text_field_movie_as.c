@@ -914,7 +914,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
   SwfdecTextFormat *format;
-  guint start_index, end_index;
+  int start_index, end_index;
   int i;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
@@ -925,15 +925,16 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   i = 0;
   if (argc >= 2) {
     start_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    start_index = MIN (start_index, strlen (text->text_display));
+    start_index = CLAMP (start_index, 0, (int)strlen (text->text_display));
   } else {
     start_index = 0;
   }
   if (argc >= 3) {
     end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    end_index = CLAMP (end_index, start_index, strlen (text->text_display));
+    end_index = CLAMP (end_index, start_index,
+	(int)strlen (text->text_display));
   } else {
-    end_index = strlen (text->text_display);
+    end_index = (int)strlen (text->text_display);
   }
   if (start_index == end_index)
     return;
@@ -978,6 +979,31 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
     swfdec_text_field_movie_get_text_format (text, start_index, end_index);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+}
+
+SWFDEC_AS_NATIVE (104, 107, swfdec_text_field_movie_replaceText)
+void
+swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int start_index, end_index;
+  const char *str;
+
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "iis", &start_index,
+      &end_index, &str);
+
+  start_index = MIN (start_index, (int)strlen (text->text_display));
+  if (start_index < 0)
+    return;
+
+  end_index = MIN (end_index, (int)strlen (text->text_display));
+  if (end_index < start_index)
+    return;
+
+  swfdec_text_field_movie_replace_text (text, start_index, end_index, str);
 }
 
 // static

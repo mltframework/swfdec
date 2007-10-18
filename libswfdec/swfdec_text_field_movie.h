@@ -137,6 +137,10 @@ void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);
 void		swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie		*text,
 							 const char *			value);
+void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *		text,
+							 guint				start_index,
+							 guint				end_index,
+							 const char *			str);
 
 /* implemented in swfdec_text_field_movie_as.c */
 void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);

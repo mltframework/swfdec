@@ -1472,6 +1472,43 @@ swfdec_text_field_movie_get_html_text (SwfdecTextFieldMovie *text)
 }
 
 void
+swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
+    guint start_index, guint end_index, const char *str)
+{
+  char *text_new;
+  GSList *iter;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+  g_return_if_fail (end_index <= strlen (text->text_display));
+  g_return_if_fail (start_index <= end_index);
+  g_return_if_fail (str != NULL);
+
+  text_new = g_malloc (strlen (text->text_display) -
+      (end_index - start_index) + strlen (str) + 1);
+
+  memcpy (text_new, text->text_display, start_index);
+  memcpy (text_new + start_index, str, strlen (str));
+  memcpy (text_new + start_index + strlen (str),
+      text->text_display + end_index,
+      strlen (text->text_display + end_index) + 1);
+
+  for (iter = text->formats; iter != NULL; iter = iter->next)
+  {
+    if (((SwfdecFormatIndex *)iter->data)->index > start_index) {
+      ((SwfdecFormatIndex *)iter->data)->index +=
+	strlen (str) - (end_index - start_index);
+    }
+  }
+
+  text->text_display =
+    swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, text_new);
+
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_text_field_movie_auto_size (text);
+  swfdec_text_field_movie_update_scroll (text, TRUE);
+}
+
+void
 swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     gboolean html)
 {

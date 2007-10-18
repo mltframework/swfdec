@@ -619,7 +619,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   first = TRUE;
   linenum = 0;
-  x = movie->original_extents.x0;
+  x = movie->original_extents.x0 + text_movie->hscroll;
   y = movie->original_extents.y0 + 1;
   cairo_move_to (cr, x, y);
 

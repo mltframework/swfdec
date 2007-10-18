@@ -40,22 +40,30 @@ swfdec_morph_movie_update_extents (SwfdecMovie *movie,
   extents->x1 = ((65535 - ratio) * graphic->extents.x1 + ratio * morph->end_extents.x1) / 65535;
   extents->y0 = ((65535 - ratio) * graphic->extents.y0 + ratio * morph->end_extents.y0) / 65535;
   extents->y1 = ((65535 - ratio) * graphic->extents.y1 + ratio * morph->end_extents.y1) / 65535;
+}
 
-  /* update the vectors */
-  if (ratio != mmovie->ratio) {
-    SwfdecShape *shape = SWFDEC_SHAPE (mmovie->morph);
-    GSList *walk;
+static void
+swfdec_morph_movie_set_ratio (SwfdecMovie *movie)
+{
+  SwfdecMorphMovie *mmovie = SWFDEC_MORPH_MOVIE (movie);
 
-    g_slist_foreach (mmovie->draws, (GFunc) g_object_unref, NULL);
-    g_slist_free (mmovie->draws);
-    mmovie->draws = NULL;
+  g_slist_foreach (mmovie->draws, (GFunc) g_object_unref, NULL);
+  g_slist_free (mmovie->draws);
+  mmovie->draws = NULL;
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
+}
 
-    for (walk = shape->draws; walk; walk = walk->next) {
-      mmovie->draws = g_slist_prepend (mmovie->draws, swfdec_draw_morph (walk->data, ratio));
-    }
-    mmovie->draws = g_slist_reverse (mmovie->draws);
-    mmovie->ratio = ratio;
+static void
+swfdec_morph_movie_create_morphs (SwfdecMorphMovie *mmovie)
+{
+  SwfdecShape *shape = SWFDEC_SHAPE (mmovie->morph);
+  guint ratio = SWFDEC_MOVIE (mmovie)->original_ratio;
+  GSList *walk;
+
+  for (walk = shape->draws; walk; walk = walk->next) {
+    mmovie->draws = g_slist_prepend (mmovie->draws, swfdec_draw_morph (walk->data, ratio));
   }
+  mmovie->draws = g_slist_reverse (mmovie->draws);
 }
 
 static void
@@ -64,6 +72,9 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
   GSList *walk;
+
+  if (morph->draws == NULL)
+    swfdec_morph_movie_create_morphs (morph);
 
   for (walk = morph->draws; walk; walk = walk->next) {
     SwfdecDraw *draw = walk->data;
@@ -98,6 +109,7 @@ swfdec_morph_movie_class_init (SwfdecMorphMovieClass * g_class)
 
   movie_class->update_extents = swfdec_morph_movie_update_extents;
   movie_class->render = swfdec_morph_movie_render;
+  movie_class->set_ratio = swfdec_morph_movie_set_ratio;
   /* FIXME */
   //movie_class->handle_mouse = swfdec_morph_movie_handle_mouse;
 }
@@ -105,6 +117,5 @@ swfdec_morph_movie_class_init (SwfdecMorphMovieClass * g_class)
 static void
 swfdec_morph_movie_init (SwfdecMorphMovie *morph)
 {
-  morph->ratio = (guint) -1;
 }
 

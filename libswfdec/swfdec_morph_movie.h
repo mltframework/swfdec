@@ -40,8 +40,7 @@ struct _SwfdecMorphMovie {
   SwfdecMovie		movie;
 
   SwfdecMorphShape *	morph;
-  guint			ratio;		/* current ratio for paths */
-  GSList *		draws;		/* drawing operations to use */
+  GSList *		draws;		/* drawing operations to use or NULL if not yet created */
 };
 
 struct _SwfdecMorphMovieClass {

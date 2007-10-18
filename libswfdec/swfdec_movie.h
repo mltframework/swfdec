@@ -155,6 +155,7 @@ struct _SwfdecMovieClass {
   void			(* finish_movie)	(SwfdecMovie *		movie);
   void			(* replace)		(SwfdecMovie *		movie,
 						 SwfdecGraphic *	graphic);
+  void			(* set_ratio)		(SwfdecMovie *		movie);
   void			(* update_extents)	(SwfdecMovie *		movie,
 						 SwfdecRect *   	extents);
   void			(* render)		(SwfdecMovie *		movie, 

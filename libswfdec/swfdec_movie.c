@@ -1330,8 +1330,11 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     swfdec_movie_invalidate (movie);
   }
   if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
+    SwfdecMovieClass *klass;
     movie->original_ratio = ratio;
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
+    klass = SWFDEC_MOVIE_GET_CLASS (movie);
+    if (klass->set_ratio)
+      klass->set_ratio (movie);
   }
   if (clip_depth && clip_depth != movie->clip_depth) {
     movie->clip_depth = clip_depth;

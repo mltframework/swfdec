@@ -683,14 +683,15 @@ swfdec_text_field_movie_get_scroll_info (SwfdecTextFieldMovie *text,
     int *scroll_last, int *scroll_max, int *hscroll_last, int *hscroll_max)
 {
   SwfdecLayout *layouts;
-  int i, num, y, visible, all, height, width, width_max;
+  int i, num, y, visible, all, height;
+  double width, width_max;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   layouts = swfdec_text_field_movie_get_layouts (text, &num, NULL, NULL, NULL);
 
   width = SWFDEC_MOVIE (text)->original_extents.x1 -
-    SWFDEC_MOVIE (text)->original_extents.x1;
+    SWFDEC_MOVIE (text)->original_extents.x0;
   height = SWFDEC_MOVIE (text)->original_extents.y1 -
     SWFDEC_MOVIE (text)->original_extents.y0;
 
@@ -729,14 +730,14 @@ swfdec_text_field_movie_get_scroll_info (SwfdecTextFieldMovie *text,
   layouts = NULL;
 
   if (scroll_last)
-    *scroll_last = text->scroll + visible;
+    *scroll_last = text->scroll + (visible > 0 ? visible - 1 : 0);
   if (scroll_max)
-    *scroll_max = all - visible;
+    *scroll_max = all - visible + 1;
 
   if (hscroll_last)
-    *hscroll_last = text->hscroll + width;
+    *hscroll_last = text->hscroll + SWFDEC_TWIPS_TO_DOUBLE (width);
   if (hscroll_max)
-    *hscroll_max = width_max - width;
+    *hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
 }
 
 void
@@ -810,8 +811,8 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   swfdec_text_field_movie_free_layouts (layouts);
   layouts = NULL;
 
-  if (!text->text->word_wrap && SWFDEC_GRAPHIC (text->text)->extents.x1 -
-      SWFDEC_GRAPHIC (text->text)->extents.x0 != width)
+  if (!text->text->word_wrap && SWFDEC_MOVIE (text)->original_extents.x1 -
+      SWFDEC_MOVIE (text)->original_extents.x0 != width)
   {
     switch (text->text->auto_size) {
       case SWFDEC_AUTO_SIZE_LEFT:

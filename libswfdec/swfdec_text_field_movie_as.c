@@ -953,6 +953,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
       SWFDEC_GRAPHIC (edittext), name);
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   swfdec_movie_initialize (movie);
+  swfdec_movie_update (movie);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))

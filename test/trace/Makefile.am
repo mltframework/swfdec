@@ -1,4 +1,4 @@
-check_PROGRAMS = trace thumb
+check_PROGRAMS = trace
 
 TESTS = $(check_PROGRAMS)
 
@@ -6,17 +6,11 @@ trace_SOURCES = \
 	swfdec_interaction.c \
 	trace.c
 
-thumb_SOURCES = \
-	thumb.c
-
 noinst_HEADERS = \
 	swfdec_interaction.h
 
 trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(GTHREAD_CFLAGS)
 trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(GTHREAD_LIBS)
-
-thumb_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
-thumb_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \

@@ -312,4 +312,20 @@ swfdec_url_get_query (const SwfdecURL *url)
   return url->query;
 }
 
+/**
+ * swfdec_url_is_local:
+ * @url: the url to check
+ *
+ * Checks if the given @url references a local resource. Local resources are
+ * treated differently by Flash, since they get a higher degree of trust.
+ *
+ * Returns: %TRUE if the given url is local.
+ **/
+gboolean
+swfdec_url_is_local (const SwfdecURL *url)
+{
+  g_return_val_if_fail (url != NULL, FALSE);
 
+  /* FIXME: If we ever support gnome-vfs, this might become tricky */
+  return swfdec_url_has_protocol (url, "file");
+}

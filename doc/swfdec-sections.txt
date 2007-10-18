@@ -61,6 +61,7 @@ swfdec_url_get_protocol
 swfdec_url_has_protocol
 swfdec_url_get_query
 swfdec_url_get_url
+swfdec_url_is_local
 swfdec_url_new
 swfdec_url_new_relative
 <SUBSECTION Standard>

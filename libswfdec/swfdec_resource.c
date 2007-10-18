@@ -59,8 +59,7 @@ swfdec_resource_check_rights (SwfdecResource *resource)
   SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (resource->decoder);
   gboolean network;
 
-  if (dec->version < 8 ||
-      !swfdec_url_has_protocol (swfdec_loader_get_url (resource->loader), "file"))
+  if (dec->version < 8 || !swfdec_url_is_local (swfdec_loader_get_url (resource->loader)))
     return;
 
   network = dec->use_network;

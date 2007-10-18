@@ -50,13 +50,10 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (guard);
 
-  if (swfdec_url_has_protocol (url, "http")) {
-    return sec->allow_remote;
-  } else if (swfdec_url_has_protocol (url, "file")) {
+  if (swfdec_url_is_local (url)) {
     return sec->allow_local;
   } else {
-    SWFDEC_ERROR ("unknown protocol %s, denying access", swfdec_url_get_protocol (url));
-    return FALSE;
+    return sec->allow_remote;
   }
 }
 

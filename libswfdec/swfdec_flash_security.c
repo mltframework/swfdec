@@ -37,15 +37,8 @@ swfdec_flash_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
   } else if (SWFDEC_IS_SECURITY_ALLOW (key)) {
     return g_object_ref (guard);
   } else if (SWFDEC_IS_FLASH_SECURITY (key)) {
-    SwfdecFlashSecurity *fguard, *fkey, *ret;
-    fguard = SWFDEC_FLASH_SECURITY (guard);
-    fkey = SWFDEC_FLASH_SECURITY (key);
-
-    SWFDEC_FIXME ("merging flash securities - this should create the right type");
-    ret = g_object_new (SWFDEC_TYPE_FLASH_SECURITY, NULL);
-    ret->allow_local = fguard->allow_local && fkey->allow_local;
-    ret->allow_remote = fguard->allow_remote && fkey->allow_remote;
-    return SWFDEC_SECURITY (ret);
+    SWFDEC_FIXME ("merging flash securities - how is this supposed to work?");
+    return key;
   } else {
     SWFDEC_ERROR ("unknown security %s, denying access", G_OBJECT_TYPE_NAME (key));
     return NULL;

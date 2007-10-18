@@ -415,5 +415,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("maxhscroll")
   SWFDEC_AS_CONSTANT_STRING ("maxscroll")
   SWFDEC_AS_CONSTANT_STRING ("bottomScroll")
+  SWFDEC_AS_CONSTANT_STRING ("Sans")
+  SWFDEC_AS_CONSTANT_STRING ("Serif")
+  SWFDEC_AS_CONSTANT_STRING ("Monospace")
   /* add more here */
 ;

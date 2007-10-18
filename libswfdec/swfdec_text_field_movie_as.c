@@ -23,6 +23,7 @@
 #endif
 
 #include <string.h>
+#include <pango/pangocairo.h>
 
 #include "swfdec_text_field.h"
 #include "swfdec_text_field_movie.h"
@@ -946,6 +947,39 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
     swfdec_text_field_movie_get_text_format (text, start_index, end_index);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+}
+
+// static
+SWFDEC_AS_NATIVE (104, 201, swfdec_text_field_movie_getFontList)
+void
+swfdec_text_field_movie_getFontList (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecAsArray *array;
+  SwfdecAsValue val;
+  PangoFontFamily **families;
+  int i, n_families;
+
+  pango_font_map_list_families (pango_cairo_font_map_get_default (),
+      &families, &n_families);
+
+  array = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+  for (i = 0; i < n_families; i++) {
+    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx,
+	  pango_font_family_get_name (families[i])));
+    swfdec_as_array_push (array, &val);
+  }
+  SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_Sans);
+  swfdec_as_array_push (array, &val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_Serif);
+  swfdec_as_array_push (array, &val);
+  SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_Monospace);
+  swfdec_as_array_push (array, &val);
+
+  g_free (families);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (array));
 }
 
 SWFDEC_AS_NATIVE (104, 106, swfdec_text_field_movie_getDepth)

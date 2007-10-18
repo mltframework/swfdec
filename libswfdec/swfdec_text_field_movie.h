@@ -126,6 +126,9 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,
 							 guint			end_index);
+SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *	text,
+							 guint			start_index,
+							 guint			end_index);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

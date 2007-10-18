@@ -1028,6 +1028,42 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   swfdec_text_field_movie_update_scroll (text, FALSE);
 }
 
+SwfdecTextFormat *
+swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
+    guint start_index, guint end_index)
+{
+  SwfdecTextFormat *format;
+  GSList *iter;
+
+  g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+  g_assert (start_index < end_index);
+  g_assert (end_index <= strlen (text->text_display));
+
+  g_assert (text->formats != NULL);
+  g_assert (text->formats->data != NULL);
+  g_assert (((SwfdecFormatIndex *)text->formats->data)->index == 0);
+
+  format = NULL;
+  for (iter = text->formats; iter != NULL &&
+      ((SwfdecFormatIndex *)iter->data)->index < end_index;
+      iter = iter->next)
+  {
+    if (iter->next != NULL &&
+	((SwfdecFormatIndex *)iter->next->data)->index < start_index)
+      continue;
+
+    if (format == NULL) {
+      format =
+	swfdec_text_format_copy (((SwfdecFormatIndex *)iter->data)->format);
+    } else {
+      swfdec_text_format_remove_different (format,
+	  ((SwfdecFormatIndex *)iter->data)->format);
+    }
+  }
+
+  return format;
+}
+
 static void
 swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
     const char *variable, SwfdecAsObject **object, const char **name)

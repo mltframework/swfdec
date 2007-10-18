@@ -916,6 +916,38 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text_format (text, format, start_index, end_index);
 }
 
+SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)
+void
+swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecTextFormat *format;
+  guint start_index, end_index;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (argc == 0) {
+    start_index = 0;
+    end_index = strlen (text->text_display);
+  } else {
+    start_index = swfdec_as_value_to_integer (cx, &argv[0]);
+    start_index = MIN (start_index, strlen (text->text_display));
+    if (argc == 1) {
+      end_index = start_index + 1;
+    } else {
+      end_index = swfdec_as_value_to_integer (cx, &argv[1]);
+      end_index = CLAMP (end_index, start_index, strlen (text->text_display));
+    }
+  }
+
+  format =
+    swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+}
+
 SWFDEC_AS_NATIVE (104, 106, swfdec_text_field_movie_getDepth)
 void
 swfdec_text_field_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *object,

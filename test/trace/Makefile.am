@@ -1,4 +1,4 @@
-check_PROGRAMS = trace
+check_PROGRAMS = trace thumb
 
 TESTS = $(check_PROGRAMS)
 
@@ -6,11 +6,17 @@ trace_SOURCES = \
 	swfdec_interaction.c \
 	trace.c
 
+thumb_SOURCES = \
+	thumb.c
+
 noinst_HEADERS = \
 	swfdec_interaction.h
 
 trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(GTHREAD_CFLAGS)
 trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(GTHREAD_LIBS)
+
+thumb_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
+thumb_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
@@ -1850,6 +1856,15 @@ EXTRA_DIST = \
 	text-field-length-7.swf.trace \
 	text-field-length-8.swf \
 	text-field-length-8.swf.trace \
+	text-field-scroll.as \
+	text-field-scroll-5.swf \
+	text-field-scroll-5.swf.trace \
+	text-field-scroll-6.swf \
+	text-field-scroll-6.swf.trace \
+	text-field-scroll-7.swf \
+	text-field-scroll-7.swf.trace \
+	text-field-scroll-8.swf \
+	text-field-scroll-8.swf.trace \
 	text-field-values.as \
 	text-field-values-5.swf \
 	text-field-values-5.swf.trace \

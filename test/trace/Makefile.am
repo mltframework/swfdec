@@ -608,6 +608,15 @@ EXTRA_DIST = \
 	forin-delete-6.swf.trace \
 	forin-delete-7.swf \
 	forin-delete-7.swf.trace \
+	get-depth.as \
+	get-depth-5.swf \
+	get-depth-5.swf.trace \
+	get-depth-6.swf \
+	get-depth-6.swf.trace \
+	get-depth-7.swf \
+	get-depth-7.swf.trace \
+	get-depth-8.swf \
+	get-depth-8.swf.trace \
 	getsetproperty-target.as \
 	getsetproperty-target-5.swf \
 	getsetproperty-target-5.swf.trace \
